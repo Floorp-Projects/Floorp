@@ -152,32 +152,32 @@ nsresult NS_NewMsgCompose(nsIMsgCompose** aInstancePtrResult)
 class RecipientEntry : public MSG_ZapIt {
 public:
 	RecipientEntry(const char* name, const char* description,
-				   RecipientType type, XP_Bool htmlok);
+				   RecipientType type, PRBool htmlok);
 	~RecipientEntry();
 
 	char* GetName() {return m_name;}
 	char* GetDescription() {return m_description;}
 	RecipientType GetType() {return m_type;}
-	XP_Bool GetHTMLOk() {return m_htmlok;}
-	XP_Bool GetNewHTMLOk() {return m_newhtmlok;}
-	void SetNewOK(XP_Bool value);
-	XP_Bool GetTouched() {return m_touched;}
+	PRBool GetHTMLOk() {return m_htmlok;}
+	PRBool GetNewHTMLOk() {return m_newhtmlok;}
+	void SetNewOK(PRBool value);
+	PRBool GetTouched() {return m_touched;}
 
 protected:
 	char* m_name;
 	char* m_description;
 	RecipientType m_type;
-	XP_Bool m_htmlok;
-	XP_Bool m_newhtmlok;
-	XP_Bool m_touched;
+	PRBool m_htmlok;
+	PRBool m_newhtmlok;
+	PRBool m_touched;
 };
 
 
 RecipientEntry::RecipientEntry(const char* name, const char* description,
-							   RecipientType type, XP_Bool htmlok)
+							   RecipientType type, PRBool htmlok)
 {
-	m_name = XP_STRDUP(name);
-	m_description = XP_STRDUP(description);
+	m_name = PL_strdup(name);
+	m_description = PL_strdup(description);
 	if (!m_description) {
 		PR_FREEIF(m_name);		// Checking for name being NULL is the hack
 								// used to see if we're out of memory.
@@ -193,10 +193,10 @@ RecipientEntry::~RecipientEntry()
 }
 
 void
-RecipientEntry::SetNewOK(XP_Bool value)
+RecipientEntry::SetNewOK(PRBool value)
 {
-	XP_ASSERT(!m_touched);
-	m_touched = TRUE;
+	PR_ASSERT(!m_touched);
+	m_touched = PR_TRUE;
 	m_newhtmlok = value;
 }
 
@@ -208,19 +208,19 @@ public:
 	~MSG_HTMLRecipients();
 
 	int AddOne(const char* name, const char* description,
-			   RecipientType type, XP_Bool htmlok);
-	MSG_RecipientList* GetList(XP_Bool htmlok);
+			   RecipientType type, PRBool htmlok);
+	MSG_RecipientList* GetList(PRBool htmlok);
 
-	int SetNewList(int32* notoklist, int32* oklist);
+	int SetNewList(PRInt32* notoklist, PRInt32* oklist);
 
-	char** GetChangedList(RecipientType type, XP_Bool htmlok);
+	char** GetChangedList(RecipientType type, PRBool htmlok);
 	void FreeChangedList(char** list);
 	int GetNum() {return m_num;}
 
 protected:
 	RecipientEntry** m_list;
-	int32 m_num;
-	int32 m_max;
+	PRInt32 m_num;
+	PRInt32 m_max;
 	MSG_RecipientList* m_generatedList[2];
 };
 
@@ -230,7 +230,7 @@ MSG_HTMLRecipients::MSG_HTMLRecipients() {
 MSG_HTMLRecipients::~MSG_HTMLRecipients() {
 	delete m_generatedList[0];
 	delete m_generatedList[1];
-	for (int32 i=0 ; i<m_num ; i++) {
+	for (PRInt32 i=0 ; i<m_num ; i++) {
 		delete m_list[i];
 	}
 	delete [] m_list;
@@ -238,12 +238,12 @@ MSG_HTMLRecipients::~MSG_HTMLRecipients() {
 
 int
 MSG_HTMLRecipients::AddOne(const char* name, const char* description,
-						   RecipientType type, XP_Bool htmlok)
+						   RecipientType type, PRBool htmlok)
 {
-	int32 i;
+	PRInt32 i;
 	for (i=0 ; i<m_num ; i++) {
 		if (m_list[i]->GetType() == type &&
-			XP_STRCMP(m_list[i]->GetName(), name) == 0) return 0;
+			PL_strcmp(m_list[i]->GetName(), name) == 0) return 0;
 	}
 	if (m_num >= m_max) {
 		RecipientEntry** tmp = new RecipientEntry* [m_max + 10];
@@ -267,9 +267,9 @@ MSG_HTMLRecipients::AddOne(const char* name, const char* description,
 
 
 MSG_RecipientList*
-MSG_HTMLRecipients::GetList(XP_Bool htmlok)
+MSG_HTMLRecipients::GetList(PRBool htmlok)
 {
-	int32 i, j;
+	PRInt32 i, j;
 	if (m_generatedList[0] == NULL) {
 		// Sort the entries in the list.  Within a given type, we want to
 		// keep things in the order they were generated, but they need to
@@ -291,7 +291,7 @@ MSG_HTMLRecipients::GetList(XP_Bool htmlok)
 			delete [] m_generatedList[0];
 			return NULL;
 		}
-		int32 cur[2];
+		PRInt32 cur[2];
 		cur[0] = cur[1] = 0;
 		for (i=0 ; i<m_num ; i++) {
 			int w = int(m_list[i]->GetHTMLOk());
@@ -309,28 +309,28 @@ MSG_HTMLRecipients::GetList(XP_Bool htmlok)
 
 
 int
-MSG_HTMLRecipients::SetNewList(int32* notoklist, int32* oklist)
+MSG_HTMLRecipients::SetNewList(PRInt32* notoklist, PRInt32* oklist)
 {
-	int32 i;
+	PRInt32 i;
 #ifdef DEBUG
 	for (i=0 ; i<m_num ; i++) {
-		XP_ASSERT(!m_list[i]->GetTouched());
+		PR_ASSERT(!m_list[i]->GetTouched());
 	}
 #endif
 	for (int w=0 ; w<2 ; w++) {
-		XP_Bool ok = (w == 1);
-		int32* list = ok ? oklist : notoklist;
-		XP_ASSERT(list);
+		PRBool ok = (w == 1);
+		PRInt32* list = ok ? oklist : notoklist;
+		PR_ASSERT(list);
 		if (!list) continue;
 		for ( ; *list >= 0 ; list++) {
-			XP_ASSERT(*list < m_num);
+			PR_ASSERT(*list < m_num);
 			if (*list >= m_num) break;
 			m_list[*list]->SetNewOK(ok);
 		}
 	}
 	int status = 0;
 	for (i=0 ; i<m_num ; i++) {
-		XP_ASSERT(m_list[i]->GetTouched());
+		PR_ASSERT(m_list[i]->GetTouched());
 		if (!m_list[i]->GetTouched()) {
 			status = -1;
 		}
@@ -340,12 +340,12 @@ MSG_HTMLRecipients::SetNewList(int32* notoklist, int32* oklist)
 
 
 char**
-MSG_HTMLRecipients::GetChangedList(RecipientType type, XP_Bool htmlok)
+MSG_HTMLRecipients::GetChangedList(RecipientType type, PRBool htmlok)
 {
 	char** result = new char * [m_num + 1];
 	if (!result) return NULL;
 	char** tmp = result;
-	for (int32 i=0 ; i<m_num ; i++) {
+	for (PRInt32 i=0 ; i<m_num ; i++) {
 		if (m_list[i]->GetType() == type &&
 			  m_list[i]->GetNewHTMLOk() == htmlok &&
 			  m_list[i]->GetHTMLOk() != htmlok) {
@@ -382,10 +382,10 @@ msg_delete_attached_files(struct MSG_AttachedFile *attachments)
 		PR_FREEIF(tmp->x_mac_creator);
 		if (tmp->file_name) {
 			XP_FileRemove(tmp->file_name, xpFileToPost);
-			XP_FREE(tmp->file_name);
+			PR_Free(tmp->file_name);
 		}
 	}
-	XP_FREEIF(attachments);
+	PR_FREEIF(attachments);
 }
 #endif 0 //JFD
 
@@ -442,9 +442,9 @@ nsMsgCompose::Initialize(MWContext* old_context,
 	InitializeHeaders(old_context, fields);
 	m_visible_headers = GetInterestingHeaders();
 	m_deliver_mode = MSG_DeliverNow;
-	m_haveAttachedVcard = FALSE;
+	m_haveAttachedVcard = PR_FALSE;
 
-	m_fields->SetForcePlainText(FALSE);	// Coming into us, this field meant
+	m_fields->SetForcePlainText(PR_FALSE);	// Coming into us, this field meant
 										// "bring up the editor in plaintext
 										// mode".  Well, that's already been
 										// done at this point.  Now, we want
@@ -462,9 +462,9 @@ nsMsgCompose::Dispose() {
 	// Don't interrupt if there's nothing to interrupt because we might lose
 	// mocha messages.
 	if (NET_AreThereActiveConnectionsForWindow(m_context))
-		msg_InterruptContext (m_context, FALSE);
+		msg_InterruptContext (m_context, PR_FALSE);
 	if (m_textContext != NULL) {
-		msg_InterruptContext(m_textContext, TRUE);
+		msg_InterruptContext(m_textContext, PR_TRUE);
 	}
 
 	msg_delete_attached_files (m_attachedFiles);
@@ -525,13 +525,13 @@ int nsMsgCompose::CreateVcardAttachment ()
 		{
 			AB_ExportVCardToTempFile (vCard, &filename);
 			if (vCard)
-				XP_FREE(vCard); // free our allocated VCardString...
+				PR_Free(vCard); // free our allocated VCardString...
 			char buf [ 2 * kMaxFullNameLength ];
 			if (FE_UsersFullName()) 
-				name = XP_STRDUP (FE_UsersFullName());
+				name = PL_strdup (FE_UsersFullName());
 			// write out a content description string
 			XP_SPRINTF (buf, XP_GetString (MK_ADDR_BOOK_CARD), name);
-			XP_FREEIF(name);
+			PR_FREEIF(name);
 
 
 			char* temp = WH_FileName(filename, xpFileToPost);
@@ -539,7 +539,7 @@ int nsMsgCompose::CreateVcardAttachment ()
 			if (temp)
 			{
 				fileurl = XP_PlatformFileToURL (temp);
-				XP_FREE(temp);
+				PR_Free(temp);
 			}
 			else
 				return -1;	
@@ -553,14 +553,14 @@ int nsMsgCompose::CreateVcardAttachment ()
 			PREF_CopyCharPref("mail.identity.useremail", &mailIdentityUserEmail);
 			if (mailIdentityUserEmail)
 			{
-				atSign = XP_STRCHR(mailIdentityUserEmail, '@');
+				atSign = PL_strchr(mailIdentityUserEmail, '@');
 				if (atSign) *atSign = 0;
 				vCardFileName = PR_smprintf ("%s.vcf", mailIdentityUserEmail);
-				XP_FREE(mailIdentityUserEmail);
+				PR_Free(mailIdentityUserEmail);
 			}
 			if (!vCardFileName)
 			{
-				vCardFileName = XP_STRDUP("vcard.vcf");
+				vCardFileName = PL_strdup("vcard.vcf");
 				if (!vCardFileName)
 					return MK_OUT_OF_MEMORY;
 			}
@@ -573,47 +573,47 @@ int nsMsgCompose::CreateVcardAttachment ()
 			MSG_AttachmentData *alist;
 			if (datacount) {
 				alist = (MSG_AttachmentData *)
-				XP_REALLOC(m_attachData, (datacount + 2) * sizeof(MSG_AttachmentData));
+				PR_REALLOC(m_attachData, (datacount + 2) * sizeof(MSG_AttachmentData));
 			}
 			else {
 				alist = (MSG_AttachmentData *)
-					XP_ALLOC((datacount + 2) * sizeof(MSG_AttachmentData));
+					PR_Malloc((datacount + 2) * sizeof(MSG_AttachmentData));
 			}
 			if (!alist)
 				return MK_OUT_OF_MEMORY;
 			m_attachData = alist;
-			XP_MEMSET (m_attachData + datacount, 0, 2 * sizeof (MSG_AttachmentData));
+			memset (m_attachData + datacount, 0, 2 * sizeof (MSG_AttachmentData));
 			m_attachData[datacount].url = fileurl;
-			m_attachData[datacount].real_type = XP_STRDUP(vCardMimeFormat);
-			m_attachData[datacount].description = XP_STRDUP (buf);
-			m_attachData[datacount].real_name = XP_STRDUP (vCardFileName);
+			m_attachData[datacount].real_type = PL_strdup(vCardMimeFormat);
+			m_attachData[datacount].description = PL_strdup (buf);
+			m_attachData[datacount].real_name = PL_strdup (vCardFileName);
 			m_attachData[datacount + 1].url = NULL;
 			
 			MSG_AttachedFile *aflist;
 			if (filecount) {
 				aflist = (struct MSG_AttachedFile *)
-				XP_REALLOC(m_attachedFiles, (filecount + 2) * sizeof(MSG_AttachedFile));
+				PR_REALLOC(m_attachedFiles, (filecount + 2) * sizeof(MSG_AttachedFile));
 			}
 			else {
 				aflist = (struct MSG_AttachedFile *)
-					XP_ALLOC((filecount + 2) * sizeof(MSG_AttachedFile));
+					PR_Malloc((filecount + 2) * sizeof(MSG_AttachedFile));
 			}
 
 			if (!aflist)
 				return MK_OUT_OF_MEMORY;
 
 			m_attachedFiles = aflist;
-			XP_MEMSET (m_attachedFiles + filecount, 0, 2 * sizeof (MSG_AttachedFile));
+			memset (m_attachedFiles + filecount, 0, 2 * sizeof (MSG_AttachedFile));
 			m_attachedFiles[filecount].orig_url = origurl;
 			m_attachedFiles[filecount].file_name = filename;
-			m_attachedFiles[filecount].type = XP_STRDUP(vCardMimeFormat);
-			m_attachedFiles[filecount].description = XP_STRDUP (buf);
-			m_attachedFiles[filecount].real_name = XP_STRDUP (vCardFileName);
+			m_attachedFiles[filecount].type = PL_strdup(vCardMimeFormat);
+			m_attachedFiles[filecount].description = PL_strdup (buf);
+			m_attachedFiles[filecount].real_name = PL_strdup (vCardFileName);
 			m_attachedFiles[filecount + 1].orig_url = NULL;
 
-			m_haveAttachedVcard = TRUE;
+			m_haveAttachedVcard = PR_TRUE;
 
-			XP_FREE(vCardFileName);
+			PR_Free(vCardFileName);
 		}
 	}
 	return status;
@@ -621,10 +621,10 @@ int nsMsgCompose::CreateVcardAttachment ()
 
 
 char*
-nsMsgCompose::FigureBcc(XP_Bool newsBcc)
+nsMsgCompose::FigureBcc(PRBool newsBcc)
 {
 	char* result = NULL;
-	XP_Bool useBcc = FALSE;
+	PRBool useBcc = PR_FALSE;
 
 	if (newsBcc)
 		PREF_GetBoolPref("news.use_default_cc", &useBcc);
@@ -637,9 +637,9 @@ nsMsgCompose::FigureBcc(XP_Bool newsBcc)
 			GetPrefs()->GetDefaultHeaderContents(
 				newsBcc ? MSG_NEWS_BCC_HEADER_MASK : MSG_BCC_HEADER_MASK) : NULL;
 		if (!GetPrefs()->GetDefaultBccSelf(newsBcc)) {
-			result = XP_STRDUP(tmp ? tmp : "");
+			result = PL_strdup(tmp ? tmp : "");
 		} else if (!tmp || !*tmp) {
-			result = XP_STRDUP(FE_UsersMailAddress());
+			result = PL_strdup(FE_UsersMailAddress());
 		} else {
 			result = PR_smprintf("%s, %s", FE_UsersMailAddress(), tmp);
 		}
@@ -661,7 +661,7 @@ nsMsgCompose::CheckForLosingFcc(const char* fcc)
 
 			const char *q = MSG_GetQueueFolderName();
 			if (q) {
-				if (!strcasecomp(q,QUEUE_FOLDER_NAME_OLD))
+				if (!PL_strcasecmp(q,QUEUE_FOLDER_NAME_OLD))
 					buf = PR_smprintf("%s%s", XP_GetString(MK_MSG_WHY_QUEUE_SPECIAL_OLD),
 												  XP_GetString(MK_MSG_NOT_AS_SENT_FOLDER));
 				else buf = PR_smprintf("%s%s", XP_GetString(MK_MSG_WHY_QUEUE_SPECIAL),
@@ -671,7 +671,7 @@ nsMsgCompose::CheckForLosingFcc(const char* fcc)
 							  XP_GetString(MK_MSG_NOT_AS_SENT_FOLDER));
 			if (buf) {
 				FE_Alert(m_context, buf);
-				XP_FREE(buf);
+				PR_Free(buf);
 			}
 
 			/* Now ignore the FCC file they passed in. */
@@ -685,18 +685,18 @@ nsMsgCompose::CheckForLosingFcc(const char* fcc)
 MsgERR
 nsMsgCompose::GetCommandStatus(MSG_CommandType command,
 										 const MSG_ViewIndex* indices,
-										 int32 numindices,
-						   XP_Bool *selectable_pP,
+										 PRInt32 numindices,
+						   PRBool *selectable_pP,
 						   MSG_COMMAND_CHECK_STATE *selected_pP,
 						   const char **display_stringP,
-						   XP_Bool *plural_pP)
+						   PRBool *plural_pP)
 {
 	const char *display_string = 0;
-	XP_Bool plural_p = FALSE;
-	// N.B. default is TRUE, so you don't need to set it in each case
-	XP_Bool selectable_p = TRUE;	
-	XP_Bool selected_p = FALSE;
-	XP_Bool selected_used_p = FALSE;
+	PRBool plural_p = PR_FALSE;
+	// N.B. default is PR_TRUE, so you don't need to set it in each case
+	PRBool selectable_p = PR_TRUE;	
+	PRBool selected_p = PR_FALSE;
+	PRBool selected_used_p = PR_FALSE;
 
 	switch (command)
 	{
@@ -707,24 +707,24 @@ nsMsgCompose::GetCommandStatus(MSG_CommandType command,
 	case MSG_SendMessage:
 		display_string = XP_GetString(MK_MSG_SEND);
         if (m_attachmentInProgress || m_deliveryInProgress)
-            selectable_p = FALSE;
+            selectable_p = PR_FALSE;
 		break;
 	case MSG_SendMessageLater:
 		display_string = XP_GetString(MK_MSG_SEND_LATER);
         if (m_attachmentInProgress || m_deliveryInProgress)
-            selectable_p = FALSE;
+            selectable_p = PR_FALSE;
 		break;
 	case MSG_Save:
 	case MSG_SaveDraft:
 	case MSG_SaveDraftThenClose:
 	    display_string = XP_GetString(MK_MSG_SAVE_DRAFT);
         if (m_attachmentInProgress || m_deliveryInProgress)
-            selectable_p = FALSE;
+            selectable_p = PR_FALSE;
 		break;
 	case MSG_SaveTemplate:
 	    display_string = XP_GetString(MK_MSG_SAVE_TEMPLATE);
         if (m_attachmentInProgress || m_deliveryInProgress)
-            selectable_p = FALSE;
+            selectable_p = PR_FALSE;
 		break;
 	case MSG_Attach:
 		display_string = XP_GetString(MK_MSG_ATTACH_ETC);
@@ -733,55 +733,55 @@ nsMsgCompose::GetCommandStatus(MSG_CommandType command,
 	case MSG_ShowFrom:
 		display_string = XP_GetString(MK_MSG_FROM);
 		selected_p = ShowingCompositionHeader(MSG_FROM_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowReplyTo:
 		display_string = XP_GetString(MK_MSG_REPLY_TO);
 		selected_p = ShowingCompositionHeader(MSG_REPLY_TO_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowTo:
 		display_string = XP_GetString(MK_MSG_MAIL_TO);
 		selected_p = ShowingCompositionHeader(MSG_TO_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowCC:
 		display_string = XP_GetString(MK_MSG_MAIL_CC);
 		selected_p = ShowingCompositionHeader(MSG_CC_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowBCC:
 		display_string = XP_GetString(MK_MSG_MAIL_BCC);
 		selected_p = ShowingCompositionHeader(MSG_BCC_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowFCC:
 		display_string = XP_GetString(MK_MSG_FILE_CC);
 		selected_p = ShowingCompositionHeader(MSG_FCC_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowPostTo:
 		display_string = XP_GetString(MK_MSG_POST_TO);
 		selected_p = ShowingCompositionHeader(MSG_NEWSGROUPS_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowFollowupTo:
 		display_string = XP_GetString(MK_MSG_FOLLOWUPS_TO);
 		selected_p = ShowingCompositionHeader(MSG_FOLLOWUP_TO_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowSubject:
 		display_string = XP_GetString(MK_MSG_SUBJECT);
 		selected_p = ShowingCompositionHeader(MSG_SUBJECT_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowAttachments:
 		display_string = XP_GetString(MK_MSG_ATTACHMENT);
 		selected_p = ShowingCompositionHeader(MSG_ATTACHMENTS_HEADER_MASK);
-		selected_used_p = TRUE;
+		selected_used_p = PR_TRUE;
 		break;
 	default:
-		selectable_p = FALSE;
+		selectable_p = PR_FALSE;
 		return MSG_Pane::GetCommandStatus(command, indices, numindices,
 			selectable_pP, selected_pP, display_stringP, plural_pP);
 	}
@@ -812,10 +812,10 @@ nsMsgCompose::GetCommandStatus(MSG_CommandType command,
 					 
 MsgERR
 nsMsgCompose::DoCommand(MSG_CommandType command, MSG_ViewIndex* indices,
-							   int32 numindices)
+							   PRInt32 numindices)
 {
 	MsgERR status = 0;
-	InterruptContext(FALSE);
+	InterruptContext(PR_FALSE);
 	switch (command) {
 	case MSG_SendMessage:
 		status = SendMessageNow();	/* ###tw Error-return-type mismatch! */
@@ -829,7 +829,7 @@ nsMsgCompose::DoCommand(MSG_CommandType command, MSG_ViewIndex* indices,
     case MSG_SaveDraft:
 	case MSG_SaveDraftThenClose:
 		if (command == MSG_SaveDraftThenClose)
-			m_closeAfterSave = TRUE;
+			m_closeAfterSave = PR_TRUE;
 		status = SaveMessageAsDraft(); /* ### Error-return-type mismatch! */
 		break;
 	case MSG_SaveTemplate:
@@ -874,7 +874,7 @@ nsMsgCompose::DoCommand(MSG_CommandType command, MSG_ViewIndex* indices,
 
 extern "C" void FE_MsgShowHeaders(MSG_Pane *pPane, MSG_HEADER_SET mhsHeaders);
 
-void nsMsgCompose::ToggleCompositionHeader(uint32 header)
+void nsMsgCompose::ToggleCompositionHeader(PRUint32 header)
 {
   if (m_visible_headers & header) {
 	m_visible_headers &= ~header;
@@ -884,14 +884,14 @@ void nsMsgCompose::ToggleCompositionHeader(uint32 header)
   FE_MsgShowHeaders(this, m_visible_headers);
 }
 
-XP_Bool 
+PRBool 
 nsMsgCompose::ShowingAllCompositionHeaders()
 {
   return m_visible_headers == ALL_HEADERS;
 }
 
-XP_Bool 
-nsMsgCompose::ShowingCompositionHeader(uint32 mask)
+PRBool 
+nsMsgCompose::ShowingCompositionHeader(PRUint32 mask)
 {
   return (m_visible_headers & mask) == mask;
 }
@@ -913,14 +913,14 @@ void
 nsMsgCompose::InitializeHeaders(MWContext* old_context,
 									   MSG_CompositionFields* fields)
 {
-	XP_ASSERT(m_fields == NULL);
-	XP_ASSERT(m_initfields == NULL);
+	PR_ASSERT(m_fields == NULL);
+	PR_ASSERT(m_initfields == NULL);
 
 	const char *real_addr = FE_UsersMailAddress ();
 	char *real_return_address;
 	const char* sig;
-	XP_Bool forward_quoted;
-	forward_quoted = FALSE;
+	PRBool forward_quoted;
+	forward_quoted = PR_FALSE;
 
 	m_fields = new MSG_CompositionFields(fields);
 	if (!m_fields)
@@ -936,10 +936,10 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 	const char* attachment = m_fields->GetAttachments();
 
 	if (attachment) {
-		if (!XP_STRNCMP(attachment, MSG_FORWARD_COOKIE,
-						strlen(MSG_FORWARD_COOKIE))) {
-			attachment += XP_STRLEN(MSG_FORWARD_COOKIE);
-			forward_quoted = TRUE;      /* set forward with quote flag */
+		if (!PL_strncmp(attachment, MSG_FORWARD_COOKIE,
+						PL_strlen(MSG_FORWARD_COOKIE))) {
+			attachment += PL_strlen(MSG_FORWARD_COOKIE);
+			forward_quoted = PR_TRUE;      /* set forward with quote flag */
 			m_fields->SetAttachments(attachment);
 			attachment = m_fields->GetAttachments();
 		}
@@ -955,18 +955,18 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 	real_return_address = MIME_MakeFromField(old_context->win_csid);
 */
 
-	XP_ASSERT (m_context->type == MWContextMessageComposition);
-	XP_ASSERT (XP_FindContextOfType(0, MWContextMessageComposition));
-	XP_ASSERT (!m_context->msg_cframe);
+	PR_ASSERT (m_context->type == MWContextMessageComposition);
+	PR_ASSERT (XP_FindContextOfType(0, MWContextMessageComposition));
+	PR_ASSERT (!m_context->msg_cframe);
 
-	int32 count = m_fields->GetNumForwardURL();
+	PRInt32 count = m_fields->GetNumForwardURL();
 	if (count > 0) {
 		// if forwarding one or more messages
-		XP_ASSERT(*attachment == '\0');
+		PR_ASSERT(*attachment == '\0');
 		MSG_AttachmentData *alist = (struct MSG_AttachmentData *)
-			XP_ALLOC((count + 1) * sizeof(MSG_AttachmentData));
+			PR_Malloc((count + 1) * sizeof(MSG_AttachmentData));
 		if (alist) {
-			XP_MEMSET(alist, 0, (count + 1) * sizeof(*alist));
+			memset(alist, 0, (count + 1) * sizeof(*alist));
 			for (count--; count >= 0; count--) {
 				alist[count].url = (char*) m_fields->GetForwardURL(count);
 				alist[count].real_name = (char*) m_fields->GetForwardURL(count);
@@ -974,7 +974,7 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 			SetAttachmentList(alist);
 			// Don't call msg_free_attachment_list because we are not duplicating
 			// url & real_name
-			XP_FREE(alist);;
+			PR_Free(alist);;
 		}
 	} else if (*attachment) {
 		// forwarding a single url
@@ -982,27 +982,27 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 		MSG_AttachmentData *alist;
 		count = 1;
 		alist = (struct MSG_AttachmentData *)
-			XP_ALLOC((count + 1) * sizeof(MSG_AttachmentData));
+			PR_Malloc((count + 1) * sizeof(MSG_AttachmentData));
 		if (alist) {
-			XP_MEMSET(alist, 0, (count + 1) * sizeof(*alist));
+			memset(alist, 0, (count + 1) * sizeof(*alist));
 			alist[0].url = (char *)attachment;
 			alist[0].real_name = (char *)attachment;
 			SetAttachmentList(alist);
 			// Don't call msg_free_attachment_list because we are not duplicating
 			// url & real_name
-			XP_FREE(alist);
+			PR_Free(alist);
 		}
 	}	// else if (*attachment)
 
 	if (*attachment) {
 		if (*attachment != '(') {
-			m_defaultUrl = XP_STRDUP(attachment);
+			m_defaultUrl = PL_strdup(attachment);
 		}
 	}
 	else if (old_context) {
 		History_entry *h = SHIST_GetCurrent(&old_context->hist);
 		if (h && h->address) {
-			m_defaultUrl = XP_STRDUP(h->address);
+			m_defaultUrl = PL_strdup(h->address);
 		}
 		if (m_defaultUrl)
 		{
@@ -1064,7 +1064,7 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 	}
 	if (!*m_fields->GetFcc()) 
 	{
-		XP_Bool useDefaultFcc = TRUE;
+		PRBool useDefaultFcc = PR_TRUE;
 		/*int prefError =*/ PREF_GetBoolPref(*newsgroups ? "news.use_fcc" : "mail.use_fcc",
 											&useDefaultFcc);
 		if (useDefaultFcc)
@@ -1088,7 +1088,7 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 		{
 		  m_fields->AppendBody(body);
 		  m_fields->AppendBody(LINEBREAK);
-		  /* m_bodyEdited = TRUE; */
+		  /* m_bodyEdited = PR_TRUE; */
 		}
 	}
 
@@ -1116,8 +1116,8 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 }
 
 
-XP_Bool nsMsgCompose::ShouldAutoQuote() {
-      if (m_haveQuoted) return FALSE;
+PRBool nsMsgCompose::ShouldAutoQuote() {
+      if (m_haveQuoted) return PR_FALSE;
 	if (m_replyType == MSG_ForwardMessageQuoted ||
 		    GetPrefs()->GetAutoQuoteReply()) {
 		switch (m_replyType) {
@@ -1126,13 +1126,13 @@ XP_Bool nsMsgCompose::ShouldAutoQuote() {
 		case MSG_PostReply:
 		case MSG_ReplyToAll:
 		case MSG_ReplyToSender:
-			return TRUE;
+			return PR_TRUE;
 
         default:
             break;
 		}
 	}
-	return FALSE;
+	return PR_FALSE;
 }
 
 
@@ -1148,7 +1148,7 @@ void nsMsgCompose::SetDefaultURL(const char *defaultURL,
 	PR_FREEIF(m_defaultUrl);
 	PR_FREEIF(m_quotedText);
 	if (defaultURL)
-		m_defaultUrl = XP_STRDUP(defaultURL);
+		m_defaultUrl = PL_strdup(defaultURL);
 	m_fields->SetHTMLPart(htmlPart);
 }
 
@@ -1222,7 +1222,7 @@ MSG_HEADER_SET nsMsgCompose::GetInterestingHeaders()
 		GetPrefs()->GetDefaultHeaderContents(MSG_REPLY_TO_HEADER_MASK);
 	if (reply_to && *reply_to &&
 		((default_reply_to && *default_reply_to)
-		 ? !!XP_STRCMP (reply_to, default_reply_to) : TRUE))
+		 ? !!PL_strcmp (reply_to, default_reply_to) : PR_TRUE))
 		desired_mask |= MSG_REPLY_TO_HEADER_MASK;
 
 	/* (see above.) */
@@ -1231,7 +1231,7 @@ MSG_HEADER_SET nsMsgCompose::GetInterestingHeaders()
 		GetPrefs()->GetDefaultHeaderContents(MSG_BCC_HEADER_MASK);
 	if (bcc && *bcc &&
 		((default_bcc && *default_bcc)
-		 ? !!XP_STRCMP (bcc, default_bcc) : TRUE))
+		 ? !!PL_strcmp (bcc, default_bcc) : PR_TRUE))
 		desired_mask |= MSG_BCC_HEADER_MASK;
 
 	/* FCC is never interesting.
@@ -1256,7 +1256,7 @@ MSG_HEADER_SET nsMsgCompose::GetInterestingHeaders()
 	   */
 	const char* followup_to = m_fields->GetFollowupTo();
 	if (followup_to && *followup_to &&
-		(newsgroups ? XP_STRCMP (followup_to, newsgroups) : TRUE))
+		(newsgroups ? PL_strcmp (followup_to, newsgroups) : PR_TRUE))
 		desired_mask |= MSG_FOLLOWUP_TO_HEADER_MASK;
 
 	return desired_mask;
@@ -1289,18 +1289,18 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 */
 	XP_StatStruct stat;
 	char* curquote = NULL;
-	int32 replyOnTop = 0, replyWithExtraLines = 0;
+	PRInt32 replyOnTop = 0, replyWithExtraLines = 0;
 
 	PREF_GetIntPref("mailnews.reply_on_top", &replyOnTop);
 	PREF_GetIntPref("mailnews.reply_with_extra_lines", &replyWithExtraLines);
 
-	int32 extra = (m_markup ? 0 : 
+	PRInt32 extra = (m_markup ? 0 : 
 	               (replyWithExtraLines ? LINEBREAK_LEN * replyWithExtraLines
 					: 0));
 
 /*JFD
 	if (XP_Stat(m_print->filename, &stat, xpTemporary) == 0) */{
-		m_quotedText = (char*) XP_ALLOC(stat.st_size + 1 + extra);
+		m_quotedText = (char*) PR_Malloc(stat.st_size + 1 + extra);
 		
 		/* Insert two line break at the begining of the quoted text */
 		if (!m_quotedText) return;
@@ -1309,7 +1309,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 
 		if (!m_markup && extra && replyOnTop == 1) {
 		  for (; replyWithExtraLines > 0; replyWithExtraLines--) {
-			XP_STRCPY(curquote, LINEBREAK);
+			PL_strcpy(curquote, LINEBREAK);
 			curquote += LINEBREAK_LEN;
 			if (m_quotefunc)
 				(*m_quotefunc)(m_quoteclosure, LINEBREAK);
@@ -1325,12 +1325,12 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 		char* buf = NULL;
 		while (!buf && (bufSize >= 512))
 		{
-			buf = (char*)XP_ALLOC(bufSize + 1);
+			buf = (char*)PR_Malloc(bufSize + 1);
 			if (!buf)
 				bufSize /= 2;
 		}
 		if (buf) {
-			int32 bufferLen;
+			PRInt32 bufferLen;
 			CCCDataObject conv;
 			int doConv;
 			INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_context);
@@ -1369,28 +1369,28 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 				}
 
 				if (m_quotedText && curquote) {
-					XP_ASSERT(curquote + bufferLen <= m_quotedText + stat.st_size + extra);
+					PR_ASSERT(curquote + bufferLen <= m_quotedText + stat.st_size + extra);
 					if (curquote + bufferLen <= m_quotedText + stat.st_size + extra) {
-						XP_STRCPY(curquote, newBuf);
+						PL_strcpy(curquote, newBuf);
 						curquote += bufferLen;
 					}
 				}
 
 				if (newBuf != buf) {
-					XP_FREE(newBuf);
+					PR_Free(newBuf);
 				}
 			}
 
 			if (!m_markup && extra && replyOnTop == 0) {
 			  for (; replyWithExtraLines > 1; replyWithExtraLines--) {
-				XP_STRCPY(curquote, LINEBREAK);
+				PL_strcpy(curquote, LINEBREAK);
 				curquote += LINEBREAK_LEN;
 				if (m_quotefunc)
 					(*m_quotefunc)(m_quoteclosure, LINEBREAK);
 			  }
 			}
 
-			XP_FREE(buf);
+			PR_Free(buf);
 			if (conv) {
 				INTL_DestroyCharCodeConverter(conv);
 			}
@@ -1398,7 +1398,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 		XP_FileClose(file);
 	}
 	if (curquote) *curquote = '\0';
-	m_cited = TRUE;
+	m_cited = PR_TRUE;
 /*JFD
 	XP_FileRemove(m_print->filename, xpTemporary);
 	PR_FREEIF(m_print->filename);
@@ -1429,19 +1429,19 @@ public:
 	~QuotePlainIntoHTML();
 
 	int DoQuote(const char* data);
-	static int32 QuoteLine_s(char* line, uint32 line_length, void* closure);
-	int32 QuoteLine(char* line, uint32 line_length);
+	static PRInt32 QuoteLine_s(char* line, PRUint32 line_length, void* closure);
+	PRInt32 QuoteLine(char* line, PRUint32 line_length);
 protected:
 	MWContext* m_context;
 	char* m_buffer;
-	uint32 m_size;
-	uint32 m_fp;
-	XP_Bool m_insertedpre;
+	PRUint32 m_size;
+	PRUint32 m_fp;
+	PRBool m_insertedpre;
 	char* m_outbuf;
-	int32 m_outbufsize;
+	PRInt32 m_outbufsize;
 	int m_maxLineWidth;
-	int32 m_replyOnTop;
-	int32 m_replyWithExtraLines;
+	PRInt32 m_replyOnTop;
+	PRInt32 m_replyWithExtraLines;
 };
 
 
@@ -1458,7 +1458,7 @@ MyQuoteFunc(void* closure, const char* data)
 QuotePlainIntoHTML::QuotePlainIntoHTML(MWContext* context)
 {
 	m_context = context;
-	if (EDT_PasteQuoteBegin(m_context, TRUE) != EDT_COP_OK) {
+	if (EDT_PasteQuoteBegin(m_context, PR_TRUE) != EDT_COP_OK) {
 		m_context = NULL;
 	}
 	PREF_GetIntPref("mailnews.reply_on_top", &m_replyOnTop);
@@ -1479,9 +1479,9 @@ QuotePlainIntoHTML::DoQuote(const char* data)
 {
 	if (data) {
 		if (!m_context) return 0;
-		return msg_LineBuffer(data, XP_STRLEN(data), &m_buffer, &m_size, &m_fp, FALSE, 
+		return msg_LineBuffer(data, PL_strlen(data), &m_buffer, &m_size, &m_fp, PR_FALSE, 
 #ifdef XP_OS2
-					(int32 (_Optlink*) (char*,uint32,void*))
+					(PRInt32 (_Optlink*) (char*,PRUint32,void*))
 #endif
 					QuoteLine_s, this);
 
@@ -1509,14 +1509,14 @@ QuotePlainIntoHTML::DoQuote(const char* data)
 }
 
 
-int32
-QuotePlainIntoHTML::QuoteLine_s(char* line, uint32 length, void* closure)
+PRInt32
+QuotePlainIntoHTML::QuoteLine_s(char* line, PRUint32 length, void* closure)
 {
 	return ((QuotePlainIntoHTML*)closure)->QuoteLine(line, length);
 }
 
-int32
-QuotePlainIntoHTML::QuoteLine(char* line, uint32 length)
+PRInt32
+QuotePlainIntoHTML::QuoteLine(char* line, PRUint32 length)
 {
 	if (length > m_maxLineWidth)
 		m_maxLineWidth = length;
@@ -1526,7 +1526,7 @@ QuotePlainIntoHTML::QuoteLine(char* line, uint32 length)
 		length -= 2;
 		if (!m_insertedpre) {
 			EDT_PasteQuote(m_context, "<BLOCKQUOTE TYPE=CITE><PRE NSCISAW>");
-			m_insertedpre = TRUE;
+			m_insertedpre = PR_TRUE;
 		}
 	}
 	else if (!m_insertedpre) {
@@ -1544,7 +1544,7 @@ QuotePlainIntoHTML::QuoteLine(char* line, uint32 length)
 	}
 	if (m_outbuf) {
 		*m_outbuf = '\0';
-		NET_ScanForURLs(NULL, line, length, m_outbuf, m_outbufsize, TRUE);
+		NET_ScanForURLs(NULL, line, length, m_outbuf, m_outbufsize, PR_TRUE);
 		EDT_PasteQuote(m_context, m_outbuf);
 	}
 	return 0;
@@ -1574,11 +1574,11 @@ MsgERR nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 {
 	MsgERR status = 0;
 	char* ptr;
-	 m_haveQuoted = TRUE;
+	 m_haveQuoted = PR_TRUE;
 	if (!m_defaultUrl) return 0; /* Nothing to quote. */
 	if (m_quoteUrl) return 0;	/* Currently already quoting! */
 
-	XP_ASSERT(m_quotefunc == NULL);
+	PR_ASSERT(m_quotefunc == NULL);
 
 	if (m_markup) {
 		func = MyQuoteFunc;
@@ -1594,7 +1594,7 @@ MsgERR nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 	{
 		if (msgPane->GetQuoteHtmlPart())
 		{
-			htmlpart = XP_STRDUP(msgPane->GetQuoteHtmlPart());
+			htmlpart = PL_strdup(msgPane->GetQuoteHtmlPart());
 			msgPane->SetQuoteHtmlPart(NULL);
 		}
 		else
@@ -1604,17 +1604,17 @@ MsgERR nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 	}
 	else
 	{
-		htmlpart = m_fields->GetHTMLPart() ? XP_STRDUP(m_fields->GetHTMLPart()) : NULL;
+		htmlpart = m_fields->GetHTMLPart() ? PL_strdup(m_fields->GetHTMLPart()) : NULL;
 	}
 
-	XP_Bool quotehtml = (m_markup && htmlpart != NULL && *htmlpart != '\0');
+	PRBool quotehtml = (m_markup && htmlpart != NULL && *htmlpart != '\0');
 
 	if (m_quotedText) {
 		if (func) {
 #ifdef	EXTRA_QUOTE_BEGIN
 			if (m_markup) {
 				if (EDT_PasteQuoteBegin(GetContext(),
-										TRUE) != EDT_COP_OK) {
+										PR_TRUE) != EDT_COP_OK) {
 					return eUNKNOWN;
 				}
 			}
@@ -1632,16 +1632,16 @@ MsgERR nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 
 	if (msgPane && msgPane->GetQuoteUrl())
 	{
-		m_quoteUrl = XP_STRDUP(msgPane->GetQuoteUrl());
+		m_quoteUrl = PL_strdup(msgPane->GetQuoteUrl());
 		msgPane->SetQuoteUrl(NULL);
 	}
 	else
-		m_quoteUrl = XP_STRDUP(m_defaultUrl);
+		m_quoteUrl = PL_strdup(m_defaultUrl);
 	if (!m_quoteUrl) return eOUT_OF_MEMORY;
 
 	/* remove any position information from the url
 	 */
-	ptr = XP_STRCHR(m_quoteUrl, '#');
+	ptr = PL_strchr(m_quoteUrl, '#');
 	if (ptr) *ptr = '\0';
 
 	if (quotehtml) {
@@ -1660,9 +1660,9 @@ MsgERR nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 		// (That is, we don't think it's necessary to re-download the entire message
 		// from the server.  We might be wrong about this, but so far haven't seen
 		// any examples to the contrary.)
-		url->allow_content_change = TRUE;
+		url->allow_content_change = PR_TRUE;
 /*JFD
-		MSG_UrlQueue::AddUrlToPane (url, QuoteHTMLDone_S, this, TRUE, FO_QUOTE_HTML_MESSAGE);
+		MSG_UrlQueue::AddUrlToPane (url, QuoteHTMLDone_S, this, PR_TRUE, FO_QUOTE_HTML_MESSAGE);
 */
 		PR_FREEIF(htmlpart);
 		return 0;
@@ -1705,7 +1705,7 @@ MsgERR nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 		if (htmlpart && *htmlpart) {
 			// We are quoting html message into plain text message
 			// Use wrapline width from preference
-			int32 width = 72;
+			PRInt32 width = 72;
 			PREF_GetIntPref("mailnews.wraplength", &width);
 			if (width == 0) width = 72;
 			else if (width < 10) width = 10;
@@ -1747,10 +1747,10 @@ MsgERR nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 */
 	m_exitQuoting = NULL;
 	m_dummyUrl = NET_CreateURLStruct("about:", NET_DONT_RELOAD);
-	m_dummyUrl->internal_url = TRUE;
+	m_dummyUrl->internal_url = PR_TRUE;
 	if (m_dummyUrl) {
 		FE_SetWindowLoading(m_context, m_dummyUrl, &m_exitQuoting);
-		XP_ASSERT(m_exitQuoting != NULL);
+		PR_ASSERT(m_exitQuoting != NULL);
 	}
 
 	/* Start the URL loading... (msg_get_url_done gets called later.) */
@@ -1787,7 +1787,7 @@ int
 nsMsgCompose::PastePlaintextQuotation(const char* str)
 {
 	if (str && *str) {
-		if (EDT_PasteQuoteBegin(m_context, TRUE) != EDT_COP_OK) {
+		if (EDT_PasteQuoteBegin(m_context, PR_TRUE) != EDT_COP_OK) {
 			return -1;
 		}
 		EDT_PasteQuote(m_context, "<BLOCKQUOTE TYPE=CITE><PRE>");
@@ -1820,38 +1820,38 @@ nsMsgCompose::SetAttachmentList(struct MSG_AttachmentData* list)
 
 	if (count > 0) {
 		m_attachData = (MSG_AttachmentData*)
-			XP_ALLOC((count + 1) * sizeof(MSG_AttachmentData));
+			PR_Malloc((count + 1) * sizeof(MSG_AttachmentData));
 		if (!m_attachData) {
 			FE_Alert(m_context, XP_GetString(MK_OUT_OF_MEMORY));
 			return MK_OUT_OF_MEMORY;
 		}
 
-		XP_MEMSET(m_attachData, 0, (count + 1) * sizeof(MSG_AttachmentData));
+		memset(m_attachData, 0, (count + 1) * sizeof(MSG_AttachmentData));
 	}
 
 	if (count > 0) {
 		for (tmp = list, tmp2 = m_attachData; tmp->url; tmp++, tmp2++) {
-			tmp2->url = XP_STRDUP(tmp->url);
+			tmp2->url = PL_strdup(tmp->url);
 			if (tmp->desired_type) {
-				tmp2->desired_type = XP_STRDUP(tmp->desired_type);
+				tmp2->desired_type = PL_strdup(tmp->desired_type);
 			}
 			if (tmp->real_type) {
-				tmp2->real_type = XP_STRDUP(tmp->real_type);
+				tmp2->real_type = PL_strdup(tmp->real_type);
 			}
 			if (tmp->real_encoding) {
-				tmp2->real_encoding = XP_STRDUP(tmp->real_encoding);
+				tmp2->real_encoding = PL_strdup(tmp->real_encoding);
 			}
 			if (tmp->real_name) {
-				tmp2->real_name = XP_STRDUP(tmp->real_name);
+				tmp2->real_name = PL_strdup(tmp->real_name);
 			}
 			if (tmp->description) {
-				tmp2->description = XP_STRDUP(tmp->description);
+				tmp2->description = PL_strdup(tmp->description);
 			}
 			if (tmp->x_mac_type) {
-				tmp2->x_mac_type = XP_STRDUP(tmp->x_mac_type);
+				tmp2->x_mac_type = PL_strdup(tmp->x_mac_type);
 			}
 			if (tmp->x_mac_creator) {
-				tmp2->x_mac_creator = XP_STRDUP(tmp->x_mac_creator);
+				tmp2->x_mac_creator = PL_strdup(tmp->x_mac_creator);
 			}
 		}
 	}
@@ -1859,7 +1859,7 @@ nsMsgCompose::SetAttachmentList(struct MSG_AttachmentData* list)
 	return status;
 }
 
-XP_Bool
+PRBool
 nsMsgCompose::NoPendingAttachments() const
 {
 	return (m_pendingAttachmentsCount == 0);
@@ -1879,16 +1879,16 @@ msg_free_attachment_list(struct MSG_AttachmentData *list)
 	MSG_AttachmentData* tmp;
 	if (!list) return;
 	for (tmp = list ; tmp->url ; tmp++) {
-		XP_FREE((char*) tmp->url);
-		if (tmp->desired_type) XP_FREE((char*) tmp->desired_type);
-		if (tmp->real_type) XP_FREE((char*) tmp->real_type);
-		if (tmp->real_encoding) XP_FREE((char*) tmp->real_encoding);
-		if (tmp->real_name) XP_FREE((char*) tmp->real_name);
-		if (tmp->description) XP_FREE((char*) tmp->description);
-		if (tmp->x_mac_type) XP_FREE((char*) tmp->x_mac_type);
-		if (tmp->x_mac_creator) XP_FREE((char*) tmp->x_mac_creator);
+		PR_Free((char*) tmp->url);
+		if (tmp->desired_type) PR_Free((char*) tmp->desired_type);
+		if (tmp->real_type) PR_Free((char*) tmp->real_type);
+		if (tmp->real_encoding) PR_Free((char*) tmp->real_encoding);
+		if (tmp->real_name) PR_Free((char*) tmp->real_name);
+		if (tmp->description) PR_Free((char*) tmp->description);
+		if (tmp->x_mac_type) PR_Free((char*) tmp->x_mac_type);
+		if (tmp->x_mac_creator) PR_Free((char*) tmp->x_mac_creator);
 	}
-	XP_FREEIF(list);
+	PR_FREEIF(list);
 }
 
 
@@ -1896,20 +1896,20 @@ msg_free_attachment_list(struct MSG_AttachmentData *list)
 /* Whether the given saved-attachment-file thing is a match for the given
    URL (in source and type-conversion.)
  */
-static XP_Bool
+static PRBool
 msg_attachments_match (MSG_AttachmentData *attachment,
 					   MSG_AttachedFile *file)
 {
 	const char *dt;
-	XP_ASSERT(attachment && file);
-	if (!attachment || !file) return FALSE;
-	XP_ASSERT(attachment->url && file->orig_url);
-	if (!attachment->url || !file->orig_url) return FALSE;
+	PR_ASSERT(attachment && file);
+	if (!attachment || !file) return PR_FALSE;
+	PR_ASSERT(attachment->url && file->orig_url);
+	if (!attachment->url || !file->orig_url) return PR_FALSE;
 
-	XP_ASSERT(file->type);
-	if (!file->type) return FALSE;
-	XP_ASSERT(file->file_name);
-	if (XP_STRCMP(attachment->url, file->orig_url)) return FALSE;
+	PR_ASSERT(file->type);
+	if (!file->type) return PR_FALSE;
+	PR_ASSERT(file->file_name);
+	if (PL_strcmp(attachment->url, file->orig_url)) return PR_FALSE;
 
 	/* If the attachment has a conversion type specified (and it's not the
 	   "no conversion" type) then this is only a match if the saved document
@@ -1918,14 +1918,14 @@ msg_attachments_match (MSG_AttachmentData *attachment,
 	dt = ((attachment->desired_type && *attachment->desired_type)
 		  ? attachment->desired_type
 		  : 0);
-	if (dt && !strcasecomp(dt, TEXT_HTML))
+	if (dt && !PL_strcasecmp(dt, TEXT_HTML))
 		dt = 0;
 
 	/* dt only has a value if it's "not `As Is', ie, text/plain or app/ps. */
-	if (dt && XP_STRCMP(dt, file->type))
-		return FALSE;
+	if (dt && PL_strcmp(dt, file->type))
+		return PR_FALSE;
 
-	return TRUE;
+	return PR_TRUE;
 }
 
 
@@ -1942,7 +1942,7 @@ nsMsgCompose::DownloadAttachments()
 
 	// *** Relax the rule a little bit to enable resume downloading at
 	// *** send time.
-	// XP_ASSERT(!m_deliveryInProgress);
+	// PR_ASSERT(!m_deliveryInProgress);
 
 	// Make sure we do not have an attachement already pending. If we do,
 	// then we do not want to interrupt it. The new attachement will be picked up
@@ -1965,10 +1965,10 @@ nsMsgCompose::DownloadAttachments()
 	   */
 	tmp2 = m_attachedFiles;
 	while (tmp2 && tmp2->orig_url) {
-		XP_Bool match = FALSE;
+		PRBool match = PR_FALSE;
 		for (tmp = m_attachData; tmp && tmp->url; tmp++) {
 			if (msg_attachments_match(tmp, tmp2)) {
-				match = TRUE;
+				match = PR_TRUE;
 				break;
 			}
 		}
@@ -1982,7 +1982,7 @@ nsMsgCompose::DownloadAttachments()
 
 			if (tmp2->file_name) {
 				XP_FileRemove(tmp2->file_name, xpFileToPost);
-				XP_FREE(tmp2->file_name);
+				PR_Free(tmp2->file_name);
 			}
 			PR_FREEIF(tmp2->orig_url);
 			PR_FREEIF(tmp2->type);
@@ -2005,20 +2005,20 @@ nsMsgCompose::DownloadAttachments()
 		new_download_count = attachment_count - download_overlap_count;
 		m_pendingAttachmentsCount = new_download_count;
 		downloads = (MSG_AttachmentData *)
-			XP_ALLOC(sizeof(MSG_AttachmentData) * (new_download_count + 1));
+			PR_Malloc(sizeof(MSG_AttachmentData) * (new_download_count + 1));
 		if (!downloads) {
 			FE_Alert(m_context, XP_GetString(MK_OUT_OF_MEMORY));
 			return MK_OUT_OF_MEMORY;
 		}
-		XP_MEMSET(downloads, 0, sizeof(*downloads) * (new_download_count + 1));
+		memset(downloads, 0, sizeof(*downloads) * (new_download_count + 1));
 
 		dfp = downloads;
 		for (tmp = m_attachData; tmp && tmp->url; tmp++) {
-			XP_Bool match = FALSE;
+			PRBool match = PR_FALSE;
 			if (m_attachedFiles)
 				for (tmp2 = m_attachedFiles; tmp2->orig_url; tmp2++) {
 					if (msg_attachments_match(tmp, tmp2)) {
-						match = TRUE;
+						match = PR_TRUE;
 						break;
 					}
 				}
@@ -2030,9 +2030,9 @@ nsMsgCompose::DownloadAttachments()
 		if (!downloads[0].url) return 0;
 		// *** Relax the rule a little bit to enable resume downloading at
 		// *** send time.
-		// XP_ASSERT(!m_deliveryInProgress);
-		XP_ASSERT(!m_attachmentInProgress);
-		m_attachmentInProgress = TRUE;
+		// PR_ASSERT(!m_deliveryInProgress);
+		PR_ASSERT(!m_attachmentInProgress);
+		m_attachmentInProgress = PR_TRUE;
 		FE_UpdateCompToolbar (this);
 /*JFD
 		returnValue = msg_DownloadAttachments(this, this, downloads,
@@ -2041,7 +2041,7 @@ nsMsgCompose::DownloadAttachments()
 #endif
 							   nsMsgCompose::DownloadAttachmentsDone_S);
 */
-		XP_FREE(downloads);
+		PR_Free(downloads);
 	}
 	return returnValue;
 }
@@ -2063,7 +2063,7 @@ nsMsgCompose::DownloadAttachmentsDone(MWContext* context, int status,
 											 const char* error_message,
 											 struct MSG_AttachedFile *attachments)
 {
-	XP_ASSERT(context == m_context);
+	PR_ASSERT(context == m_context);
 
 	int i, old_count = 0;
 	int new_count = 0;
@@ -2072,9 +2072,9 @@ nsMsgCompose::DownloadAttachmentsDone(MWContext* context, int status,
 
 	// *** Relax the rule a little bit to enable resume downloading at
 	// *** send time.
-	// XP_ASSERT(!m_deliveryInProgress);
+	// PR_ASSERT(!m_deliveryInProgress);
 	if (m_attachmentInProgress) {
-		m_attachmentInProgress = FALSE;
+		m_attachmentInProgress = PR_FALSE;
 		FE_UpdateCompToolbar (this);
 	}
 
@@ -2093,7 +2093,7 @@ nsMsgCompose::DownloadAttachmentsDone(MWContext* context, int status,
 
 	if (old_count + new_count == 0) goto FAIL;
 	newd = (MSG_AttachedFile *)
-		XP_REALLOC(m_attachedFiles,
+		PR_REALLOC(m_attachedFiles,
 				   ((old_count + new_count + 1)
 					* sizeof(MSG_AttachedFile)));
 
@@ -2112,33 +2112,33 @@ nsMsgCompose::DownloadAttachmentsDone(MWContext* context, int status,
 	for(i=0; i<new_count; i++)
 	{
 		if (attachments[i].orig_url)
-			newd[old_count+i].orig_url = XP_STRDUP(attachments[i].orig_url);
+			newd[old_count+i].orig_url = PL_strdup(attachments[i].orig_url);
 		if (attachments[i].file_name)
-			newd[old_count+i].file_name = XP_STRDUP(attachments[i].file_name);
+			newd[old_count+i].file_name = PL_strdup(attachments[i].file_name);
 		if (attachments[i].type)
-			newd[old_count+i].type = XP_STRDUP(attachments[i].type);
+			newd[old_count+i].type = PL_strdup(attachments[i].type);
 		if (attachments[i].encoding)
-			newd[old_count+i].encoding = XP_STRDUP(attachments[i].encoding);
+			newd[old_count+i].encoding = PL_strdup(attachments[i].encoding);
 		if (attachments[i].description)
-			newd[old_count+i].description = XP_STRDUP(attachments[i].description);
+			newd[old_count+i].description = PL_strdup(attachments[i].description);
 		if (attachments[i].x_mac_type)
-			newd[old_count+i].x_mac_type = XP_STRDUP(attachments[i].x_mac_type);
+			newd[old_count+i].x_mac_type = PL_strdup(attachments[i].x_mac_type);
 		if (attachments[i].x_mac_creator)
-			newd[old_count+i].x_mac_creator = XP_STRDUP(attachments[i].x_mac_creator);
+			newd[old_count+i].x_mac_creator = PL_strdup(attachments[i].x_mac_creator);
 		if (attachments[i].real_name)
-			newd[old_count+i].real_name = XP_STRDUP(attachments[i].real_name);
+			newd[old_count+i].real_name = PL_strdup(attachments[i].real_name);
 	}
 
-	XP_ASSERT (m_pendingAttachmentsCount >= new_count);
+	PR_ASSERT (m_pendingAttachmentsCount >= new_count);
 	m_pendingAttachmentsCount -= new_count;
 	if (m_deliveryInProgress) {
-		m_deliveryInProgress = FALSE;
+		m_deliveryInProgress = PR_FALSE;
 		DoneComposeMessage(m_deliver_mode);
 	}
 	return;
 
 FAIL:
-	XP_ASSERT(status < 0);
+	PR_ASSERT(status < 0);
 	if (error_message) {
 		FE_Alert(context, error_message);
 	}
@@ -2147,7 +2147,7 @@ FAIL:
 		errmsg = PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR), status);
 		if (errmsg) {
 			FE_Alert(context, errmsg);
-			XP_FREE(errmsg);
+			PR_Free(errmsg);
 		}
 	}
 }
@@ -2157,7 +2157,7 @@ FAIL:
 static void
 msg_mid_truncate_string (const char *input, char *output, int max_length)
 {
-	int L = XP_STRLEN(input);
+	int L = PL_strlen(input);
 	if (L <= max_length) {
 		XP_MEMCPY(output, input, L+1);
     } else {
@@ -2165,7 +2165,7 @@ msg_mid_truncate_string (const char *input, char *output, int max_length)
 		char *tmp = 0;
 		if (input == output) {
 			tmp = output;
-			output = (char *) XP_ALLOC(max_length + 1);
+			output = (char *) PR_Malloc(max_length + 1);
 			*tmp = 0;
 			if (!output) return;
 		}
@@ -2175,7 +2175,7 @@ msg_mid_truncate_string (const char *input, char *output, int max_length)
 
 		if (tmp) {
 			XP_MEMCPY(tmp, output, max_length + 1);
-			XP_FREE(output);
+			PR_Free(output);
 		}
     }
 }
@@ -2202,13 +2202,13 @@ nsMsgCompose::GetAttachmentString()
 	PR_FREEIF(m_attachmentString);
 
 	m_attachmentString =
-		(char *) XP_ALLOC(count * (chars_per_attachment + 3) + 20);
+		(char *) PR_Malloc(count * (chars_per_attachment + 3) + 20);
 	if (!m_attachmentString) return 0;
 	*m_attachmentString = 0;
 
 	for (tmp = m_attachData ; tmp && tmp->url ; tmp++) {
 		const char *url = tmp->real_name ? tmp->real_name : tmp->url;
-		const char *ptr = XP_STRCHR(url, ':');
+		const char *ptr = PL_strchr(url, ':');
 		char *result = 0;
 
 		if (!ptr) {
@@ -2217,15 +2217,15 @@ nsMsgCompose::GetAttachmentString()
 			goto DO_FILE;
 		}
 
-		if (!XP_STRNCMP(url, "news:", 5) ||
-			!XP_STRNCMP(url, "snews:", 6) ||
-			!XP_STRNCMP(url, "IMAP:", 5) ||
-			!XP_STRNCMP(url, "mailbox:", 8)) {
+		if (!PL_strncmp(url, "news:", 5) ||
+			!PL_strncmp(url, "snews:", 6) ||
+			!PL_strncmp(url, "IMAP:", 5) ||
+			!PL_strncmp(url, "mailbox:", 8)) {
 			/* ###tw Unfortunately, I don't think this stuff quite ports
 			   directly to the new world, so I'm gonna disable it for now... */
 #ifdef NOTDEF /* ###tw */
 			MWContext *c = XP_FindContextOfType (0,
-												 (XP_STRNCMP(url, "mailbox:",
+												 (PL_strncmp(url, "mailbox:",
 															 8)
 												  ? MWContextNews
 												  : MWContextMail));
@@ -2242,29 +2242,29 @@ nsMsgCompose::GetAttachmentString()
 
 
 				struct MSG_ThreadEntry *msg;
-				char *s = XP_STRDUP(ptr + 1);
+				char *s = PL_strdup(ptr + 1);
 				char *id = s;
 				if (!s) goto DONE;
-				if (!XP_STRNCMP(url, "mailbox:", 8)) {
+				if (!PL_strncmp(url, "mailbox:", 8)) {
 					char *s2;
-					id = XP_STRSTR(id, "?id=");
-					if (!id) id = XP_STRSTR(id, "&id=");
+					id = PL_strstr(id, "?id=");
+					if (!id) id = PL_strstr(id, "&id=");
 					if (!id) goto DONE;
 					id += 4;
-					s2 = XP_STRCHR(id, '&');
+					s2 = PL_strchr(id, '&');
 					if (s2) *s2 = 0;
 					NET_UnEscape (id);
 				} else {
-					char *s2 = XP_STRRCHR(id, '/');
+					char *s2 = PL_strrchr(id, '/');
 					if (s2) id = s2+1;
-					s2 = XP_STRCHR(id, '?');
+					s2 = PL_strchr(id, '?');
 					if (s2) *s2 = 0;
 					NET_UnEscape (id);
 				}
 
 				msg = (MSG_ThreadEntry *)
 					XP_Gethash (c->msgframe->msgs->message_id_table, id, 0);
-				XP_FREE(s);
+				PR_Free(s);
 				if (!msg) goto DO_FOLDER;
 
 				/* Found an entry in the thread list!  So now we know the
@@ -2274,18 +2274,18 @@ nsMsgCompose::GetAttachmentString()
 					char *conv_subject;
 					conv_subject = IntlDecodeMimePartIIStr(s,
 														   m_context->win_csid,
-														   FALSE);
+														   PR_FALSE);
 					if (conv_subject == NULL) conv_subject = (char *) s;
-					result = (char *) XP_ALLOC (XP_STRLEN(conv_subject) + 10);
+					result = (char *) PR_Malloc (PL_strlen(conv_subject) + 10);
 					if (!result) goto DONE;
-					XP_STRCPY(result, "\"");
+					PL_strcpy(result, "\"");
 					if (msg->flags & MSG_FLAG_HAS_RE) {
-						XP_STRCAT(result, "Re: ");
+						PL_strcat(result, "Re: ");
 					}
-					XP_STRCAT(result, conv_subject);
-					XP_STRCAT(result, "\"");
+					PL_strcat(result, conv_subject);
+					PL_strcat(result, "\"");
 					if (conv_subject != s) {
-						XP_FREE(conv_subject);
+						PR_Free(conv_subject);
 					}
 					goto DONE;
 				}
@@ -2302,7 +2302,7 @@ nsMsgCompose::GetAttachmentString()
 			   mail/news window has been deleted.  So, display a folder name
 			   instead.
 			   */
-			if (!XP_STRNCMP(url, "mailbox:", 8)) {
+			if (!PL_strncmp(url, "mailbox:", 8)) {
 			}
 #endif
 
@@ -2314,59 +2314,59 @@ nsMsgCompose::GetAttachmentString()
 		   */
 	DO_FILE:
 		{
-			char *ptr2 = XP_STRDUP(ptr);
+			char *ptr2 = PL_strdup(ptr);
 			if (!ptr2) goto DONE;
-			char* s = XP_STRCHR(ptr2, '?');
+			char* s = PL_strchr(ptr2, '?');
 			if (s) *s = 0;
-			s = XP_STRCHR(ptr2, '#');
+			s = PL_strchr(ptr2, '#');
 			if (s) *s = 0;
-			s = XP_STRRCHR(ptr2, '/');
+			s = PL_strrchr(ptr2, '/');
 			if(!s) {
-				XP_FREE(ptr2);
+				PR_Free(ptr2);
 				goto DONE;
 			}
 			s++;
-			if (!*s || !strcasecomp(s,"index.html") ||
-				  !strcasecomp(s,"index.htm")) {
+			if (!*s || !PL_strcasecmp(s,"index.html") ||
+				  !PL_strcasecmp(s,"index.htm")) {
 				/* This had a useless file name; take the last directory name. */
 				char *s2 = s-1;
 				if (*s2 == '/') s2--;
 				while (s2 > ptr2 && *s2 != '/') s2--;
 				if (*s2 == ':' || *s2 == '/') s2++;
-				result = (char *) XP_ALLOC (s - s2 + 1);
+				result = (char *) PR_Malloc (s - s2 + 1);
 				XP_MEMCPY (result, s2, s - s2);
 				result[s - s2] = 0;
 			} else {
 				/* The file name is ok; use it. */
-				result = XP_STRDUP (s);
+				result = PL_strdup (s);
 			}
 			NET_UnEscape (result);
-			XP_FREE(ptr2);
+			PR_Free(ptr2);
 			goto DONE;
 		}
 
 	DONE:
 		if (tmp != m_attachData) {
-			XP_STRCAT(m_attachmentString, "; ");
+			PL_strcat(m_attachmentString, "; ");
 		}
 
 		if (!result) {
-			if (!XP_STRNCMP(url, "news:", 5) ||
-				!XP_STRNCMP(url, "snews:", 6) ||
-				!XP_STRNCMP(url, "IMAP:", 5) ||
-				!XP_STRNCMP(url, "mailbox:", 8)) {
-				result = XP_STRDUP("<message>");
+			if (!PL_strncmp(url, "news:", 5) ||
+				!PL_strncmp(url, "snews:", 6) ||
+				!PL_strncmp(url, "IMAP:", 5) ||
+				!PL_strncmp(url, "mailbox:", 8)) {
+				result = PL_strdup("<message>");
 			} else {
-				result = XP_STRDUP(url);
+				result = PL_strdup(url);
 			}
 			if (!result) break;
 		}
 
 		msg_mid_truncate_string(result,
 								(m_attachmentString +
-								 XP_STRLEN(m_attachmentString)),
+								 PL_strlen(m_attachmentString)),
 								chars_per_attachment);
-		XP_FREE(result);
+		PR_Free(result);
 	}
 
 	return m_attachmentString;
@@ -2386,7 +2386,7 @@ nsMsgCompose::UpdateHeaderContents(MSG_HEADER_SET which_header,
 /*JFD
 	  ABook* addressbook = FE_GetAddressBook(this);
 	  if (addressbook) {
-		return AB_ExpandHeaderString(addressbook, value, FALSE);
+		return AB_ExpandHeaderString(addressbook, value, PR_FALSE);
 	  }
 */
 #endif
@@ -2399,7 +2399,7 @@ int
 nsMsgCompose::SetCompHeader(MSG_HEADER_SET header,
 								   const char *value)
 {
-	XP_ASSERT(header != MSG_ATTACHMENTS_HEADER_MASK);
+	PR_ASSERT(header != MSG_ATTACHMENTS_HEADER_MASK);
 	ClearCompositionMessageID();
 	return m_fields->SetHeader(header, value);
 }
@@ -2416,15 +2416,15 @@ nsMsgCompose::GetCompHeader(MSG_HEADER_SET header)
 
 int
 nsMsgCompose::SetCompBoolHeader(MSG_BOOL_HEADER_SET header,
-									   XP_Bool bValue)
+									   PRBool bValue)
 {
 	return m_fields->SetBoolHeader(header, bValue);
 }
 
-XP_Bool
+PRBool
 nsMsgCompose::GetCompBoolHeader(MSG_BOOL_HEADER_SET header)
 {
-	return m_fields ? m_fields->GetBoolHeader(header) : FALSE;
+	return m_fields ? m_fields->GetBoolHeader(header) : PR_FALSE;
 }
 
 const char*
@@ -2457,7 +2457,7 @@ nsMsgCompose::GetWindowTitle()
 }
 
 
-XP_Bool nsMsgCompose::SanityCheckNewsgroups (const char *newsgroups)
+PRBool nsMsgCompose::SanityCheckNewsgroups (const char *newsgroups)
 {
 	// This function just does minor syntax checking on the names of newsgroup 
 	// to make sure they conform to Son Of 1036: 
@@ -2470,7 +2470,7 @@ XP_Bool nsMsgCompose::SanityCheckNewsgroups (const char *newsgroups)
 	// allowed in newsgroup names, but when we tried to enforce that, we got
 	// bug reports from people who were trying to post to groups with capital letters
 
-	XP_Bool valid = TRUE;
+	PRBool valid = PR_TRUE;
 	if (newsgroups)
 	{
 		while (*newsgroups && valid)
@@ -2493,7 +2493,7 @@ XP_Bool nsMsgCompose::SanityCheckNewsgroups (const char *newsgroups)
 					case ',':
 						break; // ok to separate names in list
 					default:
-						valid = FALSE;
+						valid = PR_FALSE;
 					}
 				}
 			}
@@ -2523,11 +2523,11 @@ nsMsgCompose::SanityCheck(int skippast)
 	// Check if they have quoted a document and not edited it, and also
 	// attached the same document.
 	if (m_quotedText &&
-		XP_STRNCMP(body, m_quotedText, XP_STRLEN(m_quotedText)) == 0 &&
+		PL_strncmp(body, m_quotedText, PL_strlen(m_quotedText)) == 0 &&
 		m_attachData &&
 		m_attachData[0].url &&
 		m_defaultUrl &&
-		!XP_STRCMP (m_attachData[0].url, m_defaultUrl)) {
+		!PL_strcmp (m_attachData[0].url, m_defaultUrl)) {
 		return MK_MSG_DOUBLE_INCLUDE;
 	}
 
@@ -2536,7 +2536,7 @@ AFTER_DOUBLE_INCLUDE:
 	// edited.
 	if (!m_attachData || !m_attachData[0].url)
 	{
-		if (XP_STRCMP(body, m_initfields->GetBody()) == 0)
+		if (PL_strcmp(body, m_initfields->GetBody()) == 0)
 			return MK_MSG_EMPTY_MESSAGE;
 		if (m_markup)
 		{
@@ -2546,7 +2546,7 @@ AFTER_DOUBLE_INCLUDE:
 			const char *kDefaultComposerBody = 
 				"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n<HTML>\n&nbsp;</HTML>\n";
 
-			if (XP_STRCMP(body, kDefaultComposerBody) == 0)
+			if (PL_strcmp(body, kDefaultComposerBody) == 0)
 				return MK_MSG_EMPTY_MESSAGE;
 		}
 	}
@@ -2588,16 +2588,16 @@ AFTER_INVALID_FOLLOWUP_TO_HEADER:
 			m_attachData[1] &&
 			m_attachData[0]->url &&
 			m_defaultUrl &&
-			!XP_STRCMP (m_attachData[0]->url, m_defaultUrl))
+			!PL_strcmp (m_attachData[0]->url, m_defaultUrl))
 		/* They have quoted a document and have *also* attached it, so it's
 		   in there twice.  Offer to throw one away. */
 		)
 		{
-			int answer = FE_BogusQuotationQuery (m_context, FALSE);
+			int answer = FE_BogusQuotationQuery (m_context, PR_FALSE);
 			switch (answer)
 				{
 				case 0:
-					return FALSE;
+					return PR_FALSE;
 					break;
 				case 1:
 					/* protect me from myself */
@@ -2605,11 +2605,11 @@ AFTER_INVALID_FOLLOWUP_TO_HEADER:
 					break;
 				case 2:
 					/* let me be a loser */
-					return TRUE;
+					return PR_TRUE;
 					break;
 				default:
-					XP_ASSERT (0);
-					return FALSE;
+					PR_ASSERT (0);
+					return PR_FALSE;
 					break;
 				}
 		}
@@ -2631,7 +2631,7 @@ void
 nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 									const char* error_message)
 {
-	XP_ASSERT(context == m_context);
+	PR_ASSERT(context == m_context);
 
 	// *** We don't want to set m_status to status. The default value
 	// of m_status (-1) prevents the composition pane from closing down
@@ -2642,9 +2642,9 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 		(m_deliver_mode == MSG_SaveAsDraft && m_closeAfterSave))
 	  m_status = status;
 
-	XP_ASSERT(!m_attachmentInProgress);
+	PR_ASSERT(!m_attachmentInProgress);
 	if (m_deliveryInProgress) {
-		m_deliveryInProgress = FALSE;
+		m_deliveryInProgress = PR_FALSE;
 #ifndef XP_UNIX /* Does not need this function call for UNIX. 
 		   This will prevent toolbar to be enabled after msg sent on 
 		   UNIX. */
@@ -2661,7 +2661,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 								 status);
 			if (errmsg) {
 				FE_Alert(context, errmsg);
-				XP_FREE(errmsg);
+				PR_Free(errmsg);
 			}
 		}
     } else {
@@ -2676,7 +2676,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 			if ( mailFolderInfo && m_actionInfo->m_msgKeyArray.GetSize() > 0 ) 
 			{
 
-				MailDB::Open (mailFolderInfo->GetPathname(), FALSE, &mailDB);
+				MailDB::Open (mailFolderInfo->GetPathname(), PR_FALSE, &mailDB);
 				if (mailDB) {
 					switch ( m_actionInfo->m_flags ) {
 					case MSG_FLAG_EXPUNGED:
@@ -2684,7 +2684,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 							m_deliver_mode != MSG_SaveAsTemplate &&
 							m_deliver_mode != MSG_SaveAs && 
 							!(mailFolderInfo->GetFlags() & MSG_FOLDER_FLAG_TEMPLATES)) {
-							// XP_ASSERT(m_actionInfo->m_msgKeyArray.GetSize() == 1);
+							// PR_ASSERT(m_actionInfo->m_msgKeyArray.GetSize() == 1);
 							if (mailFolderInfo->GetType() == FOLDER_IMAPMAIL)
 							    DeleteIMAPOldUID(m_actionInfo);
 							else
@@ -2710,11 +2710,11 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 								if (m_actionInfo->m_flags == MSG_FLAG_FORWARDED)
 									mailDB->MarkForwarded
 										(m_actionInfo->m_msgKeyArray.GetAt(0),
-										 TRUE);
+										 PR_TRUE);
 								else
 									mailDB->MarkReplied
 										(m_actionInfo->m_msgKeyArray.GetAt(0),
-										 TRUE); 
+										 PR_TRUE); 
 
 								readIds.Add(m_actionInfo->m_msgKeyArray.GetAt(0));
 								
@@ -2723,10 +2723,10 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 							if (imapFolder && (imapFolder->GetType()
 											   == FOLDER_IMAPMAIL)) 
 							{
-								XP_Bool storeFlag = TRUE;
+								PRBool storeFlag = PR_TRUE;
 								PREF_GetBoolPref("mail.imap.store_answered_forwarded_flag", &storeFlag);
 								if (storeFlag)
-									imapFolder->StoreImapFlags(this, m_actionInfo->m_flags, TRUE, readIds);
+									imapFolder->StoreImapFlags(this, m_actionInfo->m_flags, PR_TRUE, readIds);
 							}
 							if (m_deliver_mode == MSG_SaveAsDraft ||
 								m_deliver_mode == MSG_SaveAs ||
@@ -2737,7 +2737,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 									GetMaster()->FindMagicMailFolder
 									(m_deliver_mode == MSG_SaveAsTemplate ?
 									 MSG_FOLDER_FLAG_TEMPLATES :
-									 MSG_FOLDER_FLAG_DRAFTS, TRUE);
+									 MSG_FOLDER_FLAG_DRAFTS, PR_TRUE);
 
 							}
 						}
@@ -2753,7 +2753,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 								GetMaster()->FindMagicMailFolder
 								(m_deliver_mode == MSG_SaveAsTemplate ?
 								 MSG_FOLDER_FLAG_TEMPLATES :
-								 MSG_FOLDER_FLAG_DRAFTS, TRUE);
+								 MSG_FOLDER_FLAG_DRAFTS, PR_TRUE);
 
 						}
 						break;
@@ -2769,7 +2769,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 					 m_actionInfo->m_flags & MSG_FLAG_EXPUNGED)
 			{
 				// *** jht - I doubt we will ever gets here.
-				XP_ASSERT(FALSE);
+				PR_ASSERT(PR_FALSE);
 				DeleteIMAPOldUID(m_actionInfo);
 			}
 		}
@@ -2812,11 +2812,11 @@ nsMsgCompose::MailCompositionAllConnectionsComplete ()
 {
 	/* This may be redundant, I'm not sure... */
 	if (m_deliveryInProgress) {
-		m_deliveryInProgress = FALSE;
+		m_deliveryInProgress = PR_FALSE;
 		FE_UpdateCompToolbar(this);
 	}
 	if (m_attachmentInProgress) {
-		m_attachmentInProgress = FALSE;
+		m_attachmentInProgress = PR_FALSE;
 		FE_UpdateCompToolbar(this);
 	}
 
@@ -2833,7 +2833,7 @@ nsMsgCompose::CheckExpansion(MSG_HEADER_SET header)
 }
 
 
-XP_Bool
+PRBool
 nsMsgCompose::DeliveryInProgress ()
 {
 	/* Disable the UI if delivery, attachment loading, or quoting is in
@@ -2846,12 +2846,12 @@ nsMsgCompose::DeliveryInProgress ()
 */
 
 void
-nsMsgCompose::SetHTMLMarkup(XP_Bool flag)
+nsMsgCompose::SetHTMLMarkup(PRBool flag)
 {
     m_markup = flag;
 }
 
-XP_Bool
+PRBool
 nsMsgCompose::GetHTMLMarkup(void)
 {
     return m_markup;
@@ -2861,11 +2861,11 @@ int
 nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 {
 	int attachment_count = 0;
-	XP_Bool digest_p = FALSE;
+	PRBool digest_p = PR_FALSE;
 	int status = 0;
 
 	if (m_pendingAttachmentsCount) {
-		m_deliveryInProgress = TRUE; // so that DoneComposeMessage is called again
+		m_deliveryInProgress = PR_TRUE; // so that DoneComposeMessage is called again
 		status = DownloadAttachments();
 		return status;
 	}
@@ -2889,7 +2889,7 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 				// if status > 0, cancel
 				if (status == 0) {
 					 action = DetermineHTMLAction();	// reget the new action
-					 XP_ASSERT(action != MSG_HTMLAskUser);
+					 PR_ASSERT(action != MSG_HTMLAskUser);
 					 if (action == MSG_HTMLAskUser) {
 						 // Boy, the FE is busted.  Use our own.
 						 status = -1;
@@ -2923,15 +2923,15 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 
 		switch (action) {
 		case MSG_HTMLUseMultipartAlternative:
-			m_fields->SetUseMultipartAlternative(TRUE);
+			m_fields->SetUseMultipartAlternative(PR_TRUE);
 			break;
 		case MSG_HTMLConvertToPlaintext:
-			m_fields->SetForcePlainText(TRUE);
+			m_fields->SetForcePlainText(PR_TRUE);
 			break;
 		case MSG_HTMLSendAsHTML:
 			break;
 		default:
-			XP_ASSERT(0);
+			PR_ASSERT(0);
 			return -1;
 		}
 	}
@@ -2943,7 +2943,7 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 	HJ74362
 
 	const char* body = m_fields->GetBody();
-	uint32 body_length = XP_STRLEN(body);
+	PRUint32 body_length = PL_strlen(body);
 
 
 	for (attachment_count = 0;
@@ -2953,30 +2953,30 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 
 	if (m_attachData && m_attachData[0].url && m_attachData[1].url ) {
 		MSG_AttachmentData* s;
-		digest_p = TRUE;
+		digest_p = PR_TRUE;
 		for (s = m_attachData ; s->url ; s++) {
 			/* When there are attachments, start out assuming it is a digest,
 			   and then decide that it is not if any of the attached URLs are
 			   not mail or news messages. */
-			if (XP_STRNCMP(s->url, "news:", 5) != 0 &&
-				XP_STRNCMP(s->url, "snews:", 6) != 0 &&
-				XP_STRNCMP(s->url, "IMAP:", 5) != 0 &&
-				XP_STRNCMP(s->url, "mailbox:", 8) != 0) {
-				digest_p = FALSE;
+			if (PL_strncmp(s->url, "news:", 5) != 0 &&
+				PL_strncmp(s->url, "snews:", 6) != 0 &&
+				PL_strncmp(s->url, "IMAP:", 5) != 0 &&
+				PL_strncmp(s->url, "mailbox:", 8) != 0) {
+				digest_p = PR_FALSE;
 			}
 		}
 	}
 
-	XP_ASSERT(!m_attachmentInProgress);
-	XP_ASSERT(!m_deliveryInProgress);
-	m_deliveryInProgress = TRUE;
+	PR_ASSERT(!m_attachmentInProgress);
+	PR_ASSERT(!m_deliveryInProgress);
+	m_deliveryInProgress = PR_TRUE;
 	FE_UpdateCompToolbar(this);
 	
 	if (m_messageId == NULL) {
 		m_messageId = msg_generate_message_id();
-		m_duplicatePost = FALSE;
+		m_duplicatePost = PR_FALSE;
 	} else {
-		m_duplicatePost = TRUE;
+		m_duplicatePost = PR_TRUE;
 	}
 	
 	m_fields->SetMessageId(m_messageId);
@@ -3001,7 +3001,7 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 						    deliver_mode == MSG_SaveAsTemplate || 
 							deliver_mode == MSG_SaveAs ) ?
                               ED_FINISHED_SAVE_DRAFT : ED_FINISHED_MAIL_SEND, 
-                          pRootPartName, fs, TRUE, TRUE);
+                          pRootPartName, fs, PR_TRUE, PR_TRUE);
 			// Note: EDT_SaveFileTo will delete fs, even if it returns an error.  So
 			// it is incorrect to delete it here.  Also, we ignore the result, because
 			// it calls FE_Alert itself.
@@ -3015,7 +3015,7 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 	{
 		msg_StartMessageDeliveryWithAttachments(this, this,
 												m_fields,
-												digest_p, FALSE, deliver_mode,
+												digest_p, PR_FALSE, deliver_mode,
 												(m_markup ? TEXT_HTML : 
 												 TEXT_PLAIN),
 												body, body_length,
@@ -3032,7 +3032,7 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 int
 nsMsgCompose::SendMessageNow()
 {
-	PREF_SetBoolPref("network.online", TRUE);	// make sure we're online.
+	PREF_SetBoolPref("network.online", PR_TRUE);	// make sure we're online.
 		// remember if we're queued so we know which folder
 	m_deliver_mode = MSG_DeliverNow;		
 							
@@ -3099,7 +3099,7 @@ nsMsgCompose::SaveMessageAsDraft()
 		  m_actionInfo->m_msgKeyArray.RemoveAt(0);
 	  if (! (m_actionInfo->m_folderInfo->GetFlags() & MSG_FOLDER_FLAG_DRAFTS))
 		  m_actionInfo->m_folderInfo = GetMaster()->FindMagicMailFolder
-			  (MSG_FOLDER_FLAG_DRAFTS, FALSE);
+			  (MSG_FOLDER_FLAG_DRAFTS, PR_FALSE);
   }
 */
   m_deliver_mode = MSG_SaveAsDraft;
@@ -3119,7 +3119,7 @@ nsMsgCompose::SaveMessageAsTemplate()
 	  m_actionInfo->m_msgKeyArray.RemoveAt(0);
 	  if (! (m_actionInfo->m_folderInfo->GetFlags() & MSG_FOLDER_FLAG_TEMPLATES))
 		  m_actionInfo->m_folderInfo = GetMaster()->FindMagicMailFolder
-			  (MSG_FOLDER_FLAG_TEMPLATES, FALSE);
+			  (MSG_FOLDER_FLAG_TEMPLATES, PR_FALSE);
   }
 */
   m_deliver_mode = MSG_SaveAsTemplate;
@@ -3133,7 +3133,7 @@ nsMsgCompose::SaveMessageAsTemplate()
   if (defaultName && *defaultName)
   {
 	  m_fields->SetTemplateName(defaultName);
-	  XP_FREEIF(defaultName);
+	  PR_FREEIF(defaultName);
   }
 #endif /* SUPPORT_X_TEMPLATE_NAME */
 
@@ -3141,15 +3141,15 @@ nsMsgCompose::SaveMessageAsTemplate()
 }
 
 static int
-StuffParams(char** params, const char* name, int32 value)
+StuffParams(char** params, const char* name, PRInt32 value)
 {
 	char* escaped = NET_EscapeHTML(name);
 	if (!escaped) return MK_OUT_OF_MEMORY;
 	char* tmp = PR_smprintf("<OPTION value=%ld>%s\n", (long) value, escaped);
-	XP_FREE(escaped);
+	PR_Free(escaped);
 	if (!tmp) return MK_OUT_OF_MEMORY;
 	NET_SACat(params, tmp);
-	XP_FREE(tmp);
+	PR_Free(tmp);
 	return 0;
 }
 
@@ -3160,8 +3160,8 @@ nsMsgCompose::PutUpRecipientsDialog(void *pWnd )
 	int status;
 	status = MungeThroughRecipients(NULL, NULL);
 	if (status < 0) return status;
-	MSG_RecipientList* ok = m_htmlrecip->GetList(TRUE);
-	MSG_RecipientList* notok = m_htmlrecip->GetList(FALSE);
+	MSG_RecipientList* ok = m_htmlrecip->GetList(PR_TRUE);
+	MSG_RecipientList* notok = m_htmlrecip->GetList(PR_FALSE);
 	if (m_callbacks.CreateRecipientsDialog) {
 		status = (*m_callbacks.CreateRecipientsDialog)(this, m_callbackclosure,
 													   notok, ok, pWnd);
@@ -3273,14 +3273,14 @@ function Doit(value) {\n\
 	}
 
     Chrome chrome;
-    XP_MEMSET(&chrome, 0, sizeof(chrome));
+    memset(&chrome, 0, sizeof(chrome));
     chrome.type = MWContextDialog;
 /*JFD
     chrome.w_hint = dialogInfo.width;
     chrome.h_hint = dialogInfo.height;
 */
-    chrome.is_modal = TRUE;
-    chrome.show_scrollbar = TRUE;
+    chrome.is_modal = PR_TRUE;
+    chrome.show_scrollbar = PR_TRUE;
 
 /*JFD
 	XP_MakeHTMLDialogWithChrome(GetContext(), &dialogInfo,
@@ -3291,7 +3291,7 @@ function Doit(value) {\n\
 }
 
 
-XP_Bool
+PRBool
 nsMsgCompose::IsDuplicatePost() {
   return m_duplicatePost;
 }
@@ -3327,21 +3327,21 @@ int
 nsMsgCompose::RemoveNoCertRecipientsFromList(MSG_HEADER_SET header)
 {
 	char *ptr, *oldptr, *list, *newlist;
-	XP_Bool changed = FALSE;
+	PRBool changed = PR_FALSE;
 	int status = 0;
 
 	const char* line = m_fields->GetHeader(header);
 	if (!line || !*line) return 0;
 	list = MSG_ExtractRFC822AddressMailboxes(line);
 	if (list && *list) {
-		newlist = (char *)XP_ALLOC(XP_STRLEN(list) + 1);
+		newlist = (char *)PR_Malloc(PL_strlen(list) + 1);
 		if (!newlist) {
 			status = MK_OUT_OF_MEMORY;
 		} else {
 			*newlist = '\0';
 			ptr = oldptr = list;
 			do {
-				if ((ptr = XP_STRCHR(oldptr, ',')) != NULL) {
+				if ((ptr = PL_strchr(oldptr, ',')) != NULL) {
 					*ptr = '\0';
 				}
 				if (oldptr) {
@@ -3356,9 +3356,9 @@ nsMsgCompose::RemoveNoCertRecipientsFromList(MSG_HEADER_SET header)
 			if (changed) {
 				m_fields->SetHeader(header, newlist);
 			}
-			XP_FREE(newlist);
+			PR_Free(newlist);
 		}
-		XP_FREE(list);
+		PR_Free(list);
 	}
 	return status;
 }
@@ -3372,29 +3372,29 @@ nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
 											   struct MSG_AttachedFile *attachments,
 											   int attachments_count )
 {
-  XP_ASSERT ( context == m_context );
-  XP_ASSERT ( attachments && attachmentData );
+  PR_ASSERT ( context == m_context );
+  PR_ASSERT ( attachments && attachmentData );
   if ( !attachments || !attachmentData ) return -1;
 
   int status = 0;
   const char *error_message = NULL;
   
-  XP_ASSERT ( m_attachData == NULL );
+  PR_ASSERT ( m_attachData == NULL );
 
-  m_attachData = (MSG_AttachmentData *) XP_ALLOC ( (attachments_count+1) *
+  m_attachData = (MSG_AttachmentData *) PR_Malloc ( (attachments_count+1) *
 												   sizeof (MSG_AttachmentData) );
   if ( !m_attachData ) {
 	FE_Alert ( m_context, XP_GetString ( MK_OUT_OF_MEMORY ) );
 	return MK_OUT_OF_MEMORY;
   }
 
-  XP_MEMSET (m_attachData, 0, (attachments_count +1) * sizeof (MSG_AttachmentData));
+  memset (m_attachData, 0, (attachments_count +1) * sizeof (MSG_AttachmentData));
 
   XP_MEMCPY ( m_attachData, attachmentData, 
 			  sizeof (MSG_AttachmentData) * attachments_count );
 	
   m_pendingAttachmentsCount = attachments_count;
-  m_attachmentInProgress = TRUE;
+  m_attachmentInProgress = PR_TRUE;
 
   DownloadAttachmentsDone ( context, status, error_message, attachments );
 
@@ -3404,10 +3404,10 @@ nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
 void 
 nsMsgCompose::SetIMAPMessageUID ( MessageKey key )
 {
-	XP_ASSERT (m_deliver_mode == MSG_SaveAsDraft || 
+	PR_ASSERT (m_deliver_mode == MSG_SaveAsDraft || 
 			   m_deliver_mode == MSG_SaveAs ||
 			   m_deliver_mode == MSG_SaveAsTemplate);
-	XP_ASSERT(key != MSG_MESSAGEKEYNONE);
+	PR_ASSERT(key != MSG_MESSAGEKEYNONE);
 
 	if (key == MSG_MESSAGEKEYNONE)
 		return;
@@ -3418,11 +3418,11 @@ nsMsgCompose::SetIMAPMessageUID ( MessageKey key )
 		m_actionInfo = new MSG_PostDeliveryActionInfo
 			(GetMaster()->FindMagicMailFolder
 			 ((m_deliver_mode == MSG_SaveAsTemplate ?
-			   MSG_FOLDER_FLAG_TEMPLATES : MSG_FOLDER_FLAG_DRAFTS), FALSE));
+			   MSG_FOLDER_FLAG_TEMPLATES : MSG_FOLDER_FLAG_DRAFTS), PR_FALSE));
 
 		m_actionInfo->m_flags = MSG_FLAG_EXPUNGED;
 	}
-	XP_ASSERT(m_actionInfo);
+	PR_ASSERT(m_actionInfo);
 
 	if (m_actionInfo)
 	{
@@ -3441,7 +3441,7 @@ nsMsgCompose::SetIMAPMessageUID ( MessageKey key )
 			m_actionInfo->m_folderInfo =
 				GetMaster()->FindMagicMailFolder
 				((m_deliver_mode == MSG_SaveAsTemplate ?
-				  MSG_FOLDER_FLAG_TEMPLATES : MSG_FOLDER_FLAG_DRAFTS), FALSE);
+				  MSG_FOLDER_FLAG_TEMPLATES : MSG_FOLDER_FLAG_DRAFTS), PR_FALSE);
 		}
 
 		m_actionInfo->m_msgKeyArray.Add(key);
@@ -3467,7 +3467,7 @@ nsMsgCompose::RetrieveStandardHeaders(MSG_HeaderEntry ** return_list)
   const char * field;
   MSG_HeaderEntry * list = NULL;
 
-  XP_ASSERT(return_list);
+  PR_ASSERT(return_list);
 
   *return_list = NULL;
 
@@ -3478,13 +3478,13 @@ nsMsgCompose::RetrieveStandardHeaders(MSG_HeaderEntry ** return_list)
 
     count = MSG_ExplodeHeaderField(standard_header_set[i],field,&entry);
     if (entry) {
-      list = (MSG_HeaderEntry*)XP_REALLOC(list,(total+count)*sizeof(MSG_HeaderEntry));
+      list = (MSG_HeaderEntry*)PR_REALLOC(list,(total+count)*sizeof(MSG_HeaderEntry));
       if (list == NULL) {
-        XP_FREE(entry);
+        PR_Free(entry);
         return(-1);
       }
       memcpy(&list[total],entry,count*sizeof(MSG_HeaderEntry));   
-      XP_FREE(entry);
+      PR_Free(entry);
       total += count;
     }
   }
@@ -3510,11 +3510,11 @@ nsMsgCompose::SetHeaderEntries(MSG_HeaderEntry * in_list, int count)
 		int i;
 		for (i=0; i<count; i++) 
 		{
-			XP_ASSERT(in_list[i].header_value);
+			PR_ASSERT(in_list[i].header_value);
 			status = SetCompHeader(in_list[i].header_type,in_list[i].header_value);
-			XP_FREE(in_list[i].header_value);
+			PR_Free(in_list[i].header_value);
 		}	
-		XP_FREE(in_list);
+		PR_Free(in_list);
 	}
 	return status;
 }
@@ -3550,7 +3550,7 @@ nsMsgCompose::AskDialogDone(XPDialogState * /*state*/, char **argv,
 			SetHTMLAction(MSG_HTMLSendAsHTML);
 			break;
 		default:
-			XP_ASSERT(0);
+			PR_ASSERT(0);
 		}
 		DoneComposeMessage(m_deliver_mode);
 		return PR_FALSE;
@@ -3563,7 +3563,7 @@ nsMsgCompose::AskDialogDone(XPDialogState * /*state*/, char **argv,
 		XP_NetHelp(GetContext(), HELP_HTML_MAIL_QUESTION);
 		return PR_TRUE;
 	default:
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 		break;
 	}
 */
@@ -3577,16 +3577,16 @@ extern "OPTLINK"
 #endif
 int DomainCompare(const void* e1, const void* e2)
 {
-	return XP_STRCMP(*((char**) e1), *((char**) e2));
+	return PL_strcmp(*((char**) e1), *((char**) e2));
 }
 
 int
-nsMsgCompose::ResultsRecipients(XP_Bool cancelled, int32* nohtml,
-									   int32* htmlok)
+nsMsgCompose::ResultsRecipients(PRBool cancelled, PRInt32* nohtml,
+									   PRInt32* htmlok)
 {
 	int status = 0;
 	if (cancelled) return 0;
-	XP_ASSERT(m_htmlrecip);
+	PR_ASSERT(m_htmlrecip);
 	if (!m_htmlrecip) return -1;
 	status = m_htmlrecip->SetNewList(nohtml, htmlok);
 	if (status < 0) return status;
@@ -3597,7 +3597,7 @@ nsMsgCompose::ResultsRecipients(XP_Bool cancelled, int32* nohtml,
 	char* endptr;
 	char* domainlist = NULL;
 	char** domainstrings = NULL;
-	XP_Bool changed;
+	PRBool changed;
 	int num = 0;
 	int max = 0;
 	int length;
@@ -3605,14 +3605,14 @@ nsMsgCompose::ResultsRecipients(XP_Bool cancelled, int32* nohtml,
 
   for (int w=0 ; w<2 ; w++) 
   {
-    XP_Bool html = (w == 1);
+    PRBool html = (w == 1);
     list = m_htmlrecip->GetChangedList(Address, html);
     for (tmp = list ; tmp && *tmp ; tmp++) 
     {
       char* names = NULL;
       char* addresses = NULL;
       int num = MSG_ParseRFC822Addresses(*tmp, &names, &addresses);
-      XP_ASSERT(num == 1);
+      PR_ASSERT(num == 1);
       if (num == 1) 
       {
         (void) AB_InsertOrUpdateABookEntry(this, names, addresses, html);          
@@ -3646,10 +3646,10 @@ nsMsgCompose::ResultsRecipients(XP_Bool cancelled, int32* nohtml,
 */
 
 	PREF_CopyCharPref("mail.htmldomains", &domainlist);
-	changed = FALSE;
+	changed = PR_FALSE;
 
-	length = domainlist ? XP_STRLEN(domainlist) : 0;
-	for (ptr = domainlist ; ptr && *ptr ; ptr = XP_STRCHR(ptr + 1, ',')) {
+	length = domainlist ? PL_strlen(domainlist) : 0;
+	for (ptr = domainlist ; ptr && *ptr ; ptr = PL_strchr(ptr + 1, ',')) {
 		max++;
 	}
 	max += m_htmlrecip->GetNum() + 1; // We be paranoid.
@@ -3659,33 +3659,33 @@ nsMsgCompose::ResultsRecipients(XP_Bool cancelled, int32* nohtml,
 		goto FAIL;
 	}
 	for (ptr = domainlist ; ptr && *ptr ; ptr = endptr) {
-		endptr = XP_STRCHR(ptr, ',');
+		endptr = PL_strchr(ptr, ',');
 		if (endptr) *endptr++ = '\0';
 		domainstrings[num++] = ptr;
 	}
-	list = m_htmlrecip->GetChangedList(Domain, FALSE);
+	list = m_htmlrecip->GetChangedList(Domain, PR_FALSE);
 	for (tmp = list ; tmp && *tmp ; tmp++) {
 		for (i=0 ; i<num ; i++) {
-			while (i<num && XP_STRCMP(domainstrings[i], *tmp) == 0) {
+			while (i<num && PL_strcmp(domainstrings[i], *tmp) == 0) {
 				num--;
 				domainstrings[i] = domainstrings[num];
-				changed = TRUE;
+				changed = PR_TRUE;
 			}
 		}
 	}
 	m_htmlrecip->FreeChangedList(list);
-	list = m_htmlrecip->GetChangedList(Domain, TRUE);
+	list = m_htmlrecip->GetChangedList(Domain, PR_TRUE);
 	for (tmp = list ; tmp && *tmp ; tmp++) {
 		domainstrings[num++] = *tmp;
-		changed = TRUE;
-		length += XP_STRLEN(*tmp) + 1;
+		changed = PR_TRUE;
+		length += PL_strlen(*tmp) + 1;
 	}
 	if (changed) {
 		// Now nuke dups.
 		XP_QSORT(domainstrings, num, sizeof(char*), DomainCompare);
 		for (i=0 ; i < num-1 ; i++) {
 			while (i < num-1 &&
-				   XP_STRCMP(domainstrings[i], domainstrings[i+1]) == 0) {
+				   PL_strcmp(domainstrings[i], domainstrings[i+1]) == 0) {
 				num--;
 				for (j=i+1 ; j<num ; j++) {
 					domainstrings[j] = domainstrings[j+1];
@@ -3699,8 +3699,8 @@ nsMsgCompose::ResultsRecipients(XP_Bool cancelled, int32* nohtml,
 		}
 		*ptr = '\0';
 		for (i=0 ; i<num ; i++) {
-			XP_STRCAT(ptr, domainstrings[i]);
-			if (i < num-1) XP_STRCAT(ptr, ",");
+			PL_strcat(ptr, domainstrings[i]);
+			if (i < num-1) PL_strcat(ptr, ",");
 		}
 		PREF_SetCharPref("mail.htmldomains", ptr);
 		PREF_SavePrefFile();
@@ -3730,10 +3730,10 @@ nsMsgCompose::RecipientDialogDone_s(XPDialogState *state, char **argv,
 
 
 static void
-Slurp(int32* list, const char* name, char** argv, int argc)
+Slurp(PRInt32* list, const char* name, char** argv, int argc)
 {
 	for (; argc > 0 ; argc -= 2 , argv += 2) {
-		if (XP_STRCMP(name, argv[0]) == 0) {
+		if (PL_strcmp(name, argv[0]) == 0) {
 			*list++ = XP_ATOI(argv[1]);
 		}
 	}
@@ -3748,30 +3748,30 @@ nsMsgCompose::RecipientDialogDone(XPDialogState * /*state*/,
 /*JFD
 	switch (XP_ATOI(XP_FindValueInArgs("cmd", argv, argc))) {
 	case 0: {
-		XP_ASSERT(argc > 0);
+		PR_ASSERT(argc > 0);
 		if (argc <= 0) return PR_FALSE;
-		int32* nohtml = new int32 [argc];
+		PRInt32* nohtml = new PRInt32 [argc];
 		if (!nohtml) return PR_FALSE;
-		int32* htmlok = new int32 [argc];
+		PRInt32* htmlok = new PRInt32 [argc];
 		if (!htmlok) {
 			delete [] nohtml;
 			return PR_FALSE;
 		}
 		Slurp(nohtml, "nohtml", argv, argc);
 		Slurp(htmlok, "html", argv, argc);
-		ResultsRecipients(FALSE, nohtml, htmlok);
+		ResultsRecipients(PR_FALSE, nohtml, htmlok);
 		delete [] nohtml;
 		delete [] htmlok;
 		return PR_FALSE;
 	}
 	case 1:
-		ResultsRecipients(TRUE, NULL, NULL);
+		ResultsRecipients(PR_TRUE, NULL, NULL);
 		return PR_FALSE;
 	case 2:
 		XP_NetHelp(GetContext(), HELP_HTML_MAIL_QUESTION_RECIPIENT);
 		return PR_TRUE;
 	default:
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 		break;
 	}
 */
@@ -3780,36 +3780,36 @@ nsMsgCompose::RecipientDialogDone(XPDialogState * /*state*/,
 
 typedef struct tagSkipData {
 	char*	pTag;
-	int		lenTag;		// 0 means use strlen
+	int		lenTag;		// 0 means use PL_strlen
 } SkipData;
 
 
-XP_Bool
+PRBool
 nsMsgCompose::HasNoMarkup()
 {
 
 	// we want a link with the same text and link to pass
 	// <A HREF="http://warp/client/dogbert">http://warp/client/dogbert</A>
 
-	XP_ASSERT(m_markup);
-	if (!m_markup) return TRUE;
+	PR_ASSERT(m_markup);
+	if (!m_markup) return PR_TRUE;
 	const char* body = m_fields->GetBody();
 	while (body && *body) {
-		body = XP_STRCHR(body, '<');
+		body = PL_strchr(body, '<');
 		if (!body) break;
-		char* endptr = XP_STRCHR(body, '>');
-		XP_ASSERT(endptr);
+		char* endptr = PL_strchr(body, '>');
+		PR_ASSERT(endptr);
 		if (!endptr) break;
 		char c = *++endptr;
 		*endptr = '\0';
-		XP_Bool recognized = FALSE;
+		PRBool recognized = PR_FALSE;
 		char* newEnd = endptr;
 		
 		if (XP_STRNCASECMP(body, "<A HREF=", 8) == 0) {
-			char* pLinkStart = XP_STRCHR(body, '"');		// find the open quote
+			char* pLinkStart = PL_strchr(body, '"');		// find the open quote
 			if (pLinkStart) {
 				++pLinkStart;								// past the open quote
-				char* pLinkEnd = XP_STRCHR(pLinkStart, '"');// find the close quote
+				char* pLinkEnd = PL_strchr(pLinkStart, '"');// find the close quote
 				if (pLinkEnd) {
 					char c2 = *pLinkEnd;					// save this char
 					*pLinkEnd = '\0';						// terminate the link
@@ -3818,11 +3818,11 @@ nsMsgCompose::HasNoMarkup()
 					// find the text to see if it's the same as the link
 					char* pTextStart = endptr;
 					*endptr = c;							// restore this char early because it's the lead char of our string
-					char* pTextEnd = XP_STRCHR(pTextStart, '<');
+					char* pTextEnd = PL_strchr(pTextStart, '<');
 					if (pTextEnd) {
 						char c3 = *pTextEnd;
 						*pTextEnd = '\0';					// terminate the text
-						recognized = (XP_STRCMP(pLinkStart, pTextStart) == 0);
+						recognized = (PL_strcmp(pLinkStart, pTextStart) == 0);
 						*pTextEnd = c3;						// restore this char
 						newEnd = pTextEnd + 1;				// skip past the opening of the </A>
 					}
@@ -3847,11 +3847,11 @@ nsMsgCompose::HasNoMarkup()
 				{NULL, 0},
 			};
 			for (SkipData* pTestItem = pSkipTags; (pTestItem->pTag != NULL) && !recognized; pTestItem++) {
-				// if len != 0, then use strncasecmp
+				// if len != 0, then use PL_strncasecmp
 				if (pTestItem->lenTag != 0) {
 					recognized = XP_STRNCASECMP(body, pTestItem->pTag, pTestItem->lenTag) == 0;
 				} else {
-					recognized = XP_STRCASECMP(body, pTestItem->pTag) == 0;
+					recognized = PL_strcasecmp(body, pTestItem->pTag) == 0;
 				}
 				
 			}
@@ -3859,31 +3859,31 @@ nsMsgCompose::HasNoMarkup()
 
 		*endptr = c;
 		body = newEnd;
-		if (!recognized) return FALSE;
+		if (!recognized) return PR_FALSE;
 	}
-	return TRUE;
+	return PR_TRUE;
 }
 
 int
-nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
-											XP_Bool* groupNonHTML)
+nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
+											PRBool* groupNonHTML)
 {
-	XP_Bool foo;
+	PRBool foo;
 	if (!someNonHTML) someNonHTML = &foo;
 	if (!groupNonHTML) groupNonHTML = &foo;
-	*someNonHTML = FALSE;
-	*groupNonHTML = FALSE;
+	*someNonHTML = PR_FALSE;
+	*groupNonHTML = PR_FALSE;
 	int status = 0;
 	char* names = NULL;
 	char* addresses = NULL;
 	const char* groups;
 	char* name = NULL;
 	char* end;
-	XP_Bool match = FALSE;
+	PRBool match = PR_FALSE;
 	m_host = NULL;				// Pure paranoia, in case we some day actually
 								// have a UI that lets people change this.
 
-	static int32 masks[] = {
+	static PRInt32 masks[] = {
 		MSG_TO_HEADER_MASK,
 		MSG_CC_HEADER_MASK,
 		MSG_BCC_HEADER_MASK
@@ -3898,21 +3898,21 @@ nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
 		const char* orig = m_fields->GetHeader(masks[i]);
 		if (!orig || !*orig) continue;
 		char* value = NULL;
-		value = XP_STRDUP(orig);
+		value = PL_strdup(orig);
 		if (!value) {
 			status = MK_OUT_OF_MEMORY;
 			goto FAIL;
 		}
 		
 		int num = MSG_ParseRFC822Addresses(value, &names, &addresses);
-		XP_FREE(value);
+		PR_Free(value);
 		value = NULL;
 		char* addr = NULL;
 		char* name = NULL;
 		for (int j=0 ; j<num ; j++) {
 			if (addr) {
-				addr = addr + XP_STRLEN(addr) + 1;
-				name = name + XP_STRLEN(name) + 1;
+				addr = addr + PL_strlen(addr) + 1;
+				name = name + PL_strlen(name) + 1;
 			} else {
 				addr = addresses;
 				name = names;
@@ -3923,11 +3923,11 @@ nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
       // we have to see if this person can receive MHTML mail.
       match = AB_GetHTMLCapability(this, addr);
 
-      char* at = XP_STRCHR(addr, '@');
+      char* at = PL_strchr(addr, '@');
 			char* tmp = MSG_MakeFullAddress(name, addr);
 			status = m_htmlrecip->AddOne(tmp, addr, Address, match);
 			if (status < 0) goto FAIL;
-			XP_FREE(tmp);
+			PR_Free(tmp);
 			tmp = NULL;
 
 			if (!at) {
@@ -3943,25 +3943,25 @@ nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
 			}
 			char* domain = at + 1;
 			for (;;) {
-				char* dot = XP_STRCHR(domain, '.');
+				char* dot = PL_strchr(domain, '.');
 				if (!dot) break;
-				int32 domainlength = XP_STRLEN(domain);
+				PRInt32 domainlength = PL_strlen(domain);
 				char* ptr;
 				char* endptr = NULL;
-				XP_Bool found = FALSE;
+				PRBool found = PR_FALSE;
 				for (ptr = domainlist ; ptr && *ptr ; ptr = endptr) {
-					endptr = XP_STRCHR(ptr, ',');
+					endptr = PL_strchr(ptr, ',');
 					int length;
 					if (endptr) {
 						length = endptr - ptr;
 						endptr++;
 					} else {
-						length = XP_STRLEN(ptr);
+						length = PL_strlen(ptr);
 					}
 					if (length == domainlength) {
 						if (XP_STRNCASECMP(domain, ptr, length) == 0) {
-							found = TRUE;
-							match = TRUE;
+							found = PR_TRUE;
+							match = PR_TRUE;
 							break;
 						}
 					}
@@ -3971,11 +3971,11 @@ nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
 										domain);
 				if (!tmp) return MK_OUT_OF_MEMORY;
 				status = m_htmlrecip->AddOne(domain, tmp, Domain, found);
-				XP_FREE(tmp);
+				PR_Free(tmp);
 				if (status < 0) goto FAIL;
 				domain = dot + 1;
 			}
-			if (!match) *someNonHTML = TRUE;
+			if (!match) *someNonHTML = PR_TRUE;
 		}
 	}
 
@@ -3989,9 +3989,9 @@ nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
 
 	end = NULL;
 	for ( ; groups && *groups ; groups = end) {
-		end = XP_STRCHR(groups, ',');
+		end = PL_strchr(groups, ',');
 		if (end) *end = '\0';
-		name = XP_STRDUP(groups);
+		name = PL_strdup(groups);
 		if (end) *end++ = ',';
 		if (!name) {
 			status = MK_OUT_OF_MEMORY;
@@ -4003,7 +4003,7 @@ nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
 */
 		status = m_htmlrecip->AddOne(group, group, Newsgroup, match);
 		if (status < 0) goto FAIL;
-		char* tmp = XP_STRDUP(group);
+		char* tmp = PL_strdup(group);
 		if (!tmp) {
 			status = MK_OUT_OF_MEMORY;
 			goto FAIL;
@@ -4011,7 +4011,7 @@ nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
 		
 		for (;;) {
 /*JFD
-			XP_Bool found = m_host->IsHTMLOKTree(tmp);
+			PRBool found = m_host->IsHTMLOKTree(tmp);
 */
 			char* desc = PR_smprintf("%s.*", tmp);
 			if (!desc) {
@@ -4021,24 +4021,24 @@ nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
 /*JFD
 			status = m_htmlrecip->AddOne(tmp, desc, GroupHierarchy, found);
 */
-			XP_FREE(desc);
+			PR_Free(desc);
 			if (status < 0) {
-				XP_FREE(tmp);
+				PR_Free(tmp);
 				tmp = NULL;
 				goto FAIL;
 			}
 /*JFD
-			if (found) match = TRUE;
+			if (found) match = PR_TRUE;
 */
-			char* p = XP_STRRCHR(tmp, '.');
+			char* p = PL_strrchr(tmp, '.');
 			if (p) *p = '\0';
 			else break;
 		}
-		XP_FREE(tmp);
+		PR_Free(tmp);
 		tmp = NULL;
 		if (!match) {
-			*someNonHTML = TRUE;
-			*groupNonHTML = TRUE;
+			*someNonHTML = PR_TRUE;
+			*groupNonHTML = PR_TRUE;
 		}
 	}
 
@@ -4055,7 +4055,7 @@ nsMsgCompose::MungeThroughRecipients(XP_Bool* someNonHTML,
 MSG_HTMLComposeAction
 nsMsgCompose::DetermineHTMLAction()
 {
-	XP_Bool someNonHTML, groupNonHTML;
+	PRBool someNonHTML, groupNonHTML;
 	int status;
 
 	MSG_HTMLComposeAction result = GetHTMLAction();
@@ -4076,7 +4076,7 @@ nsMsgCompose::DetermineHTMLAction()
 		// we do not honor that preference for newsgroups, only for e-mail
 		// addresses.
 		if (!groupNonHTML) {
-			int32 value;
+			PRInt32 value;
 			if (PREF_GetIntPref("mail.default_html_action", &value) >= 0) {
 				switch (value) {
 				case 1:				// Force plaintext.
@@ -4126,13 +4126,13 @@ MSG_NewsHost *nsMsgCompose::InferNewsHost (const char *group)
 			{
 				const char *base = retHost->GetURLBase();
 				if (base)
-					m_fields->SetHeader (MSG_NEWSPOSTURL_HEADER_MASK, XP_STRDUP(base));
+					m_fields->SetHeader (MSG_NEWSPOSTURL_HEADER_MASK, PL_strdup(base));
 			}
 
 			// Trick #3: This group isn't found among our subscribed groups, or there's more
 			// than one group with the same name, so just use the default host.
 			if (!retHost) 
-				retHost = hostTable->GetDefaultHost(TRUE);
+				retHost = hostTable->GetDefaultHost(PR_TRUE);
 		}
 */
 	}

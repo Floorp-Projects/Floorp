@@ -68,7 +68,7 @@ NS_IMPL_ISUPPORTS(nsMsgCompFields, NS_IMSGCOMPFIELDS_IID);
 nsMsgCompFields::nsMsgCompFields()
 {
 	PRInt16 i;
-	PRBool bReturnReceiptOn = FALSE;
+	PRBool bReturnReceiptOn = PR_FALSE;
 
 	m_owner = NULL;
 	for (i = 0; i < MAX_HEADERS; i ++)
@@ -228,7 +228,7 @@ nsresult nsMsgCompFields::GetBoolHeader(PRInt32 header, PRBool *_retval)
 
 	if ( (int) header < (int) MSG_RETURN_RECEIPT_BOOL_HEADER_MASK ||
 		 (int) header >= (int) MSG_LAST_BOOL_HEADER_MASK )
-		 return FALSE;
+		 return PR_FALSE;
 
 	return m_boolHeaders[header];
 */
@@ -521,7 +521,7 @@ PRInt16 nsMsgCompFields::ParseNewsgroupsForUrls (const char *value)
 	/* Here we pull apart the comma-separated header value and look for news
 	   URLs. We'll use the URL to set the newspost URL to determine the host */
 #if 0 //JFD
-	msg_StringArray values (TRUE /*owns memory for strings*/);
+	msg_StringArray values (PR_TRUE /*owns memory for strings*/);
 	values.ImportTokenList (value);
 
 	for (int i = 0; i < values.GetSize() && status == 0; i++)
@@ -597,7 +597,7 @@ nsMsgCompFields::AppendBody(const char* value)
     if (!m_body) {
 		return SetBody(value);
     } else {
-		char* tmp = (char*) PR_MALLOC(nsCRT::strlen(m_body) + nsCRT::strlen(value) + 1);
+		char* tmp = (char*) PR_MALLOC(nsCRT::PL_strlen(m_body) + nsCRT::PL_strlen(value) + 1);
 		if (tmp) {
 			tmp = nsCRT::strdup(m_body);
 			PL_strcat(tmp, value);
@@ -706,7 +706,7 @@ PRInt16 nsMsgCompFields::AddForwardURL(const char* url)
 		delete [] m_forwardurl;
 		m_forwardurl = tmp;
 	}
-	m_forwardurl[m_numforward] = new char[nsCRT::strlen(url) + 1];
+	m_forwardurl[m_numforward] = new char[nsCRT::PL_strlen(url) + 1];
 	if (!m_forwardurl[m_numforward]) return MK_OUT_OF_MEMORY;
 	m_forwardurl[m_numforward] = nsCRT::strdup(url);
 	m_numforward++;

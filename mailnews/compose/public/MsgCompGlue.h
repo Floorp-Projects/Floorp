@@ -11,10 +11,10 @@ class MSG_ZapIt
 class MSG_Prefs : public MSG_ZapIt 
 {
 public:
-	XP_Bool         GetDefaultBccSelf(XP_Bool newsBcc) {return PR_FALSE;}
+	PRBool         GetDefaultBccSelf(PRBool newsBcc) {return PR_FALSE;}
 	const char *    GetDefaultHeaderContents(MSG_HEADER_SET header) {return NULL;}
-	char *          MagicFolderName(uint32 flag, int *pStatus = 0) {return NULL;}
-	XP_Bool         GetAutoQuoteReply() {return PR_FALSE;}
+	char *          MagicFolderName(PRUint32 flag, int *pStatus = 0) {return NULL;}
+	PRBool         GetAutoQuoteReply() {return PR_FALSE;}
 };
 
 class MSG_Master
@@ -42,15 +42,15 @@ public:
 	PRInt32	GetCommandStatus(PRInt32 command,
 										 const unsigned long * indices,
 										 PRInt32 numindices,
-										 XP_Bool* selectable_p,
+										 PRBool* selectable_p,
 										 void* selected_p,
 										 const char **display_string,
-										 XP_Bool * plural_p) {return 0;};
+										 PRBool * plural_p) {return 0;};
 	PRInt32 DoCommand(PRInt32 command, const unsigned long* indices, PRInt32 numIndices)  {return 0;}
-	virtual void InterruptContext(XP_Bool safetoo)	{;}
+	virtual void InterruptContext(PRBool safetoo)	{;}
 	const char * GetHTMLPart()	{return NULL;}
 	MWContext* GetContext() {return m_context;}
-	MSG_Pane* FindPane(MWContext* context, PRInt32 type, XP_Bool contextMustMatch  = FALSE) {return NULL;}
+	MSG_Pane* FindPane(MWContext* context, PRInt32 type, PRBool contextMustMatch  = PR_FALSE) {return NULL;}
 	const char * GetQuoteUrl()	{return NULL;}
 	const char * GetQuoteHtmlPart()	{return NULL;}
 	void SetQuoteHtmlPart(const char * urlString) {/*NYI*/;}

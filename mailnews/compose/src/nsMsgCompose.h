@@ -91,13 +91,13 @@ public:
 
 	virtual MsgERR	GetCommandStatus(MSG_CommandType command,
 										 const MSG_ViewIndex* indices,
-										 int32 numindices,
-										 XP_Bool *selectable_p,
+										 PRInt32 numindices,
+										 PRBool *selectable_p,
 										 MSG_COMMAND_CHECK_STATE *selected_p,
 										 const char **display_string,
-										 XP_Bool * plural_p);
+										 PRBool * plural_p);
 	virtual MsgERR DoCommand(MSG_CommandType command,
-							 MSG_ViewIndex* indices, int32 numindices);
+							 MSG_ViewIndex* indices, PRInt32 numindices);
 
 	const char* GetDefaultURL();
 	virtual void SetDefaultURL(const char *defaultUrl = NULL, 
@@ -111,20 +111,20 @@ public:
 
 	MSG_HEADER_SET GetInterestingHeaders();
 	int SetAttachmentList(struct MSG_AttachmentData*);
-	XP_Bool NoPendingAttachments() const;
+	PRBool NoPendingAttachments() const;
 	char* GetAttachmentString();
-	XP_Bool ShouldAutoQuote();
+	PRBool ShouldAutoQuote();
 	const char* GetCompHeader(MSG_HEADER_SET);
 	int SetCompHeader(MSG_HEADER_SET, const char*);
-	XP_Bool GetCompBoolHeader(MSG_BOOL_HEADER_SET);
-	int SetCompBoolHeader(MSG_BOOL_HEADER_SET, XP_Bool);
+	PRBool GetCompBoolHeader(MSG_BOOL_HEADER_SET);
+	int SetCompBoolHeader(MSG_BOOL_HEADER_SET, PRBool);
 	const char* GetCompBody();
 	int SetCompBody(const char*);
-	void ToggleCompositionHeader(uint32 header);
-	XP_Bool ShowingAllCompositionHeaders();
-	XP_Bool ShowingCompositionHeader(uint32 mask);
-    XP_Bool GetHTMLMarkup(void);
-    void SetHTMLMarkup(XP_Bool flag);
+	void ToggleCompositionHeader(PRUint32 header);
+	PRBool ShowingAllCompositionHeaders();
+	PRBool ShowingCompositionHeader(PRUint32 mask);
+    PRBool GetHTMLMarkup(void);
+    void SetHTMLMarkup(PRBool flag);
 	MsgERR QuoteMessage(int (*func)(void* closure, const char* data),
 						void* closure);
 	int PastePlaintextQuotation(const char* str);
@@ -132,10 +132,10 @@ public:
 	int DownloadAttachments();
 	char* UpdateHeaderContents(MSG_HEADER_SET which_header, const char* value);
 	const char* GetWindowTitle();
-	void SetBodyEdited(XP_Bool value);
+	void SetBodyEdited(PRBool value);
 	void MailCompositionAllConnectionsComplete();
 	void CheckExpansion(MSG_HEADER_SET header);
-	XP_Bool DeliveryInProgress();
+	PRBool DeliveryInProgress();
 
 	int SendMessageNow();
     int QueueMessageForLater();
@@ -143,7 +143,7 @@ public:
     int SaveMessageAsDraft();
 	int SaveMessageAsTemplate();
 
-	XP_Bool IsDuplicatePost();
+	PRBool IsDuplicatePost();
 	const char* GetCompositionMessageID();
 	void ClearCompositionMessageID();
 	HJ13591
@@ -153,7 +153,7 @@ public:
 
 	int RemoveNoCertRecipients();
 
-	XP_Bool SanityCheckNewsgroups (const char *newsgroups);
+	PRBool SanityCheckNewsgroups (const char *newsgroups);
 	int SanityCheck(int skippast);
 
 	HJ42055
@@ -181,9 +181,9 @@ public:
 
   int PutUpRecipientsDialog(void *pWnd = NULL);
 
-  int ResultsRecipients(XP_Bool cancelled, int32* nohtml, int32* htmlok);
+  int ResultsRecipients(PRBool cancelled, PRInt32* nohtml, PRInt32* htmlok);
 
-  XP_Bool m_confirmed_uuencode_p; // Have we confirmed sending uuencoded data?
+  PRBool m_confirmed_uuencode_p; // Have we confirmed sending uuencoded data?
 
   // For qutoing plain text to html then convert back to plain text
   void SetLineWidth(int width) { m_lineWidth = width; }
@@ -197,7 +197,7 @@ protected:
 	void InitializeHeaders(MWContext* old_context,
 						   MSG_CompositionFields* fields);
 
-	char* FigureBcc(XP_Bool newsBcc);
+	char* FigureBcc(PRBool newsBcc);
 	const char* CheckForLosingFcc(const char* fcc);
 
 	static void GetUrlDone_S(PrintSetup*);
@@ -222,9 +222,9 @@ protected:
 
 	int RemoveNoCertRecipientsFromList(MSG_HEADER_SET header);
 
-	XP_Bool HasNoMarkup();
+	PRBool HasNoMarkup();
 	MSG_HTMLComposeAction DetermineHTMLAction();
-	int MungeThroughRecipients(XP_Bool* someNonHTML, XP_Bool* groupNonHTML);
+	int MungeThroughRecipients(PRBool* someNonHTML, PRBool* groupNonHTML);
 
 	static PRBool AskDialogDone_s(XPDialogState *state, char **argv, int argc,
 								  unsigned int button);
@@ -242,7 +242,7 @@ protected:
 	MSG_REPLY_TYPE m_replyType;		/* The kind of message composition in
 									   progress (reply, forward, etc.) */
 
-	XP_Bool m_markup;					/* Whether we should generate messages
+	PRBool m_markup;					/* Whether we should generate messages
 										   whose first part is text/html rather
 										   than text/plain. */
 
@@ -274,8 +274,8 @@ protected:
 	Net_GetUrlExitFunc *m_exitQuoting;
 	int (*m_quotefunc)(void* closure, const char* data);
 	void* m_quoteclosure;
-	XP_Bool m_deliveryInProgress;    /* True while mail is being sent. */
-	XP_Bool m_attachmentInProgress;  /* True while attachments being
+	PRBool m_deliveryInProgress;    /* True while mail is being sent. */
+	PRBool m_attachmentInProgress;  /* True while attachments being
 										  saved. */
 	int m_pendingAttachmentsCount;
 
@@ -286,9 +286,9 @@ protected:
 
     HJ21695
 
-	XP_Bool m_cited;
+	PRBool m_cited;
   
-	XP_Bool m_duplicatePost;		/* Whether we seem to be trying for a
+	PRBool m_duplicatePost;		/* Whether we seem to be trying for a
 									   second time to post the same message.
 									   (If this is true, then we know to ignore
 									   435 errors from the newsserver.) */
@@ -306,10 +306,10 @@ protected:
 								// lazily evaluated, so a NULL does necessarily
 								// mean we have no news host specified.
 
-	XP_Bool m_closeAfterSave;
+	PRBool m_closeAfterSave;
 
-	XP_Bool m_haveQuoted;
-	XP_Bool m_haveAttachedVcard;
+	PRBool m_haveQuoted;
+	PRBool m_haveAttachedVcard;
 
 	MSG_CompositionPaneCallbacks m_callbacks;
 	void* m_callbackclosure;
