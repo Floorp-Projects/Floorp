@@ -249,8 +249,11 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
     switch (aSystemSystemDirectory)
     {
         case OS_CurrentWorkingDirectory:
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
             if (!_getcwd(path, MAXPATHLEN))
+                return NS_ERROR_FAILURE;
+#elif defined(XP_OS2)
+            if (DosQueryPathInfo( ".", FIL_QUERYFULLNAME, path, MAXPATHLEN))
                 return NS_ERROR_FAILURE;
 #else
             if(!getcwd(path, MAXPATHLEN))
