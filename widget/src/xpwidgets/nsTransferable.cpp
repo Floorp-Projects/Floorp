@@ -247,10 +247,15 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
   if ( cacheFile && NS_SUCCEEDED(cacheFile->Exists(&exists)) && exists ) {
     // get the size of the file
     PRInt64 fileSize;
+    PRInt64 max32(LL_INIT(0, 0xFFFFFFFF));
     cacheFile->GetFileSize(&fileSize);
+    if (LL_CMP(fileSize, >, max32))
+      return NS_ERROR_OUT_OF_MEMORY;
+    PRUint32 size;
+    LL_L2UI(size, fileSize);
 
     // create new memory for the large clipboard data
-    char * data = (char *)nsMemory::Alloc(fileSize);
+    char * data = (char *)nsMemory::Alloc(size);
     if ( !data )
       return NS_ERROR_OUT_OF_MEMORY;
       
@@ -264,8 +269,7 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
     nsresult rv = inStr->Read(data, fileSize, aDataLen);
 
     // make sure we got all the data ok
-    if ( NS_SUCCEEDED(rv) && *aDataLen == (PRUint32)fileSize) {
-      *aDataLen = fileSize; 
+    if (NS_SUCCEEDED(rv) && *aDataLen == size) {
       nsPrimitiveHelpers::CreatePrimitiveForData ( mFlavor.get(), data, fileSize, aData );
       return *aData ? NS_OK : NS_ERROR_FAILURE;
     }
