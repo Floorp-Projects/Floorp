@@ -1538,7 +1538,7 @@ viewsource|end {color: purple;  font-weight:bold;}
 viewsource|end:before {content: "</"; color: black;} 
 viewsource|end:after {content: ">"; color: black;} 
 
-viewsource|viewsource { font-family: monospace; font-weight:normal; color:black; white-space:pre; font-size:9pt;} 
+viewsource|viewsource { font-family: monospace; font-weight:normal; color:black; white-space:pre; font-size:10pt;} 
 
 viewsource|txt {font-weight: normal; }
 
