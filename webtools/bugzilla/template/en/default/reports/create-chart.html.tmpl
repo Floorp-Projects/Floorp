@@ -123,7 +123,7 @@ function subcatSelected() {
 
             <td>
               [% IF series.creator != 0 %]
-                [% IF series.subscribed %]
+                [% IF series.isSubscribed(user.id) %]
                   <input type="submit" value="Unsubscribe" style="width: 12ex;"
                          name="action-unsubscribe[% series.series_id %]">
                 [% ELSE %]
@@ -134,7 +134,7 @@ function subcatSelected() {
             </td>
 
             <td align="center">
-              [% IF user.userid == series.creator OR UserInGroup("admin") %]
+              [% IF user.id == series.creator OR UserInGroup("admin") %]
                <a href="chart.cgi?action=edit&series_id=
                        [% series.series_id %]">Edit</a>
               [% END %]

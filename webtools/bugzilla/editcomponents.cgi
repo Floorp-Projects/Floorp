@@ -465,13 +465,9 @@ if ($action eq 'new') {
     push(@series, [$::FORM{'closed_name'}, $resolved . $prodcomp]);
 
     foreach my $sdata (@series) {
-        # We create the series with an nonsensical series_id, which is
-        # guaranteed not to exist. This is OK, because we immediately call
-        # createInDatabase().
-        my $series = new Bugzilla::Series(-1, $product, $component,
+        my $series = new Bugzilla::Series($product, $component,
                                           $sdata->[0], $::userid, 1,
-                                          $sdata->[1]);
-        $series->createInDatabase();
+                                          $sdata->[1], 1);
     }
 
     # Make versioncache flush

@@ -39,17 +39,22 @@ sub new {
 
     if ($#_ == 0) {
         if (ref($_[0])) {
-            # We've been given a CGI object
+            # We've been given a CGI object to create a new Series from.
             $self->readParametersFromCGI($_[0]);
             $self->createInDatabase();
         }
         else {
-            # We've been given a series_id.
+            # We've been given a series_id, which should represent an existing
+            # Series.
             $self->initFromDatabase($_[0]);
         }
     }
-    elsif ($#_ >= 3) {
-        $self->initFromParameters(@_);
+    elsif ($#_ == 6) {
+        # We've been given a load of parameters to create a new Series from.
+        # We don't get given a series_id; we generate that for ourselves
+        # when we call createInDatabase(). So we pass -1 here.
+        $self->initFromParameters(-1, @_);
+        $self->createInDatabase();
     }
     else {
         die("Bad parameters passed in - invalid number of args \($#_\)($_)");
@@ -77,7 +82,11 @@ sub initFromDatabase {
         "WHERE series.series_id = $series_id");
     
     if (@series) {
+        # Note that we calculate $self->{'public'} ourselves instead of passing
+        # it as the last parameter in @series; this is because isSubscribed()
+        # requires the rest of the object to be set up correctly.
         $self->initFromParameters(@series);
+        $self->{'public'} = $self->isSubscribed(0);
     }
     else {
         &::ThrowCodeError("invalid_series_id", { 'series_id' => $series_id });
@@ -87,14 +96,9 @@ sub initFromDatabase {
 sub initFromParameters {
     my $self = shift;
 
-    # The first four parameters are compulsory, unless you immediately call
-    # createInDatabase(), in which case series_id can be left off.
     ($self->{'series_id'}, $self->{'category'},  $self->{'subcategory'},
      $self->{'name'}, $self->{'creator'}, $self->{'frequency'},
-                                                        $self->{'query'}) = @_;
-
-    $self->{'public'} = $self->isSubscribed(0);
-    $self->{'subscribed'} = $self->isSubscribed($::userid);
+     $self->{'query'}, $self->{'public'}) = @_;
 }
 
 sub createInDatabase {
