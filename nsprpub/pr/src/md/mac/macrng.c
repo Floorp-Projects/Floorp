@@ -33,13 +33,6 @@
  */
 
 
-#if 0 /* XXX what the flip is this all about? No MAC Wizards here. */
-#ifdef notdef
-#include "xp_core.h"
-#include "xp_file.h"
-#endif
-#endif /* 0 */
-
 /* XXX are all these headers required for a call to TickCount()? */
 #include <Events.h>
 #include <OSUtils.h>
