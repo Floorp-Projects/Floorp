@@ -2477,18 +2477,31 @@ nsDocShell::SetFocus()
     GetPresShell(getter_AddRefs(presShell));
     if (!presShell)
         return NS_ERROR_FAILURE;
-    presShell->GetDocument(getter_AddRefs(document));
 
     nsCOMPtr<nsIPresContext> presContext;
     GetPresContext(getter_AddRefs(presContext));
     if (!presContext)
         return NS_ERROR_FAILURE;
 
+    /* Check to make sure the root frame for this document
+       is not collapsed. */
+    nsIFrame* rootFrame;
+    presShell->GetRootFrame(&rootFrame);
+    nsRect frameRect;
+    rootFrame->GetRect(frameRect);
+    if (frameRect.IsEmpty()) {
+#ifdef DEBUG_bryner
+        printf("SetFocus: empty frame rect, not accepting focus\n");
+#endif
+        return NS_ERROR_FAILURE;
+    }
+
     nsCOMPtr<nsIEventStateManager> esm;
     presContext->GetEventStateManager(getter_AddRefs(esm));
     if (!esm)
         return NS_ERROR_FAILURE;
 
+    presShell->GetDocument(getter_AddRefs(document));
     nsCOMPtr<nsIContent>
         rootContent(getter_AddRefs(document->GetRootContent()));
     if (!rootContent)
@@ -2572,12 +2585,10 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
                 *aTookFocus = PR_TRUE;
                 return NS_OK;
             }
-            else
-                return NS_ERROR_FAILURE;
         }
         //If we don't have focus, find the child that does then
         //offer focus to the next one.
-        if (child.get() == aCurrentFocus) {
+        else if (child.get() == aCurrentFocus) {
             while (++i < n) {
                 child =
                     do_QueryInterface((nsISupports *) mChildren.ElementAt(i));
@@ -2585,9 +2596,8 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
                     *aTookFocus = PR_TRUE;
                     return NS_OK;
                 }
-                else
-                    return NS_ERROR_FAILURE;
             }
+            break;
         }
     }
 
