@@ -367,7 +367,7 @@ NS_METHOD nsContextMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 nsEventStatus nsContextMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-#ifdef saari_debug
+#ifdef DEBUG_saari
   char* menuLabel = GetACPString(mLabel);
   printf("Menu Item Selected %s\n", menuLabel);
   delete[] menuLabel;
@@ -382,7 +382,9 @@ nsEventStatus nsContextMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 
 nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+#ifdef DEBUG
   //printf("nsMenu::MenuSelected called\n");
+#endif
   
   if(mConstructed){
 	MenuDestruct(aMenuEvent);
@@ -523,7 +525,10 @@ nsIMenuItem * nsContextMenu::FindMenuItem(nsIContextMenu * aMenu, PRUint32 aId)
 //-------------------------------------------------------------------------
 nsEventStatus nsContextMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
+#ifdef DEBUG
   //printf("nsMenu::MenuDeselected called\n");  
+#endif
+
   //MenuDestruct(aMenuEvent);
   //mConstructed = false;
 
@@ -541,7 +546,10 @@ nsEventStatus nsContextMenu::MenuConstruct(
     void              * menuNode,
 	void              * aWebShell)
 {
+#ifdef DEBUG
    //printf("nsMenu::MenuConstruct called \n");
+#endif
+
    // Begin menuitem inner loop
     nsCOMPtr<nsIDOMNode> menuitemNode;
     ((nsIDOMNode*)mDOMNode)->GetFirstChild(getter_AddRefs(menuitemNode));
@@ -575,7 +583,10 @@ nsEventStatus nsContextMenu::MenuConstruct(
 //-------------------------------------------------------------------------
 nsEventStatus nsContextMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
+#ifdef DEBUG
   //printf("nsMenu::MenuDestruct called \n");
+#endif
+
   // We cannot call RemoveAll() yet because menu item selection may need it
   //RemoveAll();
   
@@ -652,7 +663,9 @@ void nsContextMenu::LoadSubMenu(
 {
   nsString menuName;
   menuElement->GetAttribute(nsAutoString("label"), menuName);
-  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+#ifdef DEBUG
+  //printf("Creating Menu [%s] \n", NS_ConvertUCS2toUTF8(menuName).get());
+#endif
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
@@ -745,7 +758,9 @@ void nsContextMenu::LoadSubMenu(
 {
   nsString menuName;
   menuElement->GetAttribute(nsAutoString("label"), menuName);
-  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+#ifdef DEBUG
+  //printf("Creating Menu [%s] \n", NS_ConvertUCS2toUTF8(menuName).get());
+#endif
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;

@@ -95,7 +95,9 @@ nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+#ifdef DEBUG
   printf("nsMenuBar::MenuSelected \n");
+#endif
   // Find which menu was selected and call MenuConstruct on it
   HMENU aNativeMenu = (HMENU) aMenuEvent.nativeMsg;
 

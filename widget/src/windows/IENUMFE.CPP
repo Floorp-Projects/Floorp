@@ -130,7 +130,9 @@ STDMETHODIMP_(ULONG) CEnumFormatEtc::AddRef(void)
 {
   ++mRefCnt;
   NS_LOG_ADDREF(this, mRefCnt, "CEnumFormatEtc",sizeof(*this));
+#ifdef DEBUG
   //printf("CEnumFormatEtc::AddRef >>>>>>>>>>>>>>>>>> %d on %p\n", mRefCnt, this);
+#endif
   return mRefCnt;
 }
 
@@ -144,7 +146,9 @@ STDMETHODIMP_(ULONG) CEnumFormatEtc::Release(void)
   if (0L == mRefCnt)
       delete this;
 
+#ifdef DEBUG
   //printf("CEnumFormatEtc::Release >>>>>>>>>>>>>>>>>> %d on %p\n", mRefCnt, this);
+#endif
   return cRefT;
 }
 

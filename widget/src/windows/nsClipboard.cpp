@@ -477,7 +477,9 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
       case TYMED_GDI: 
         {
+#ifdef DEBUG
           printf("*********************** TYMED_GDI\n");
+#endif
         } break;
 
       default:

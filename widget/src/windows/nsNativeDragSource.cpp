@@ -72,23 +72,33 @@ STDMETHODIMP_(ULONG) nsNativeDragSource::Release(void)
 
 STDMETHODIMP nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
 {
-  //printf("QueryContinueDrag\n");
+#ifdef DEBUG
+  //printf("QueryContinueDrag: ");
+#endif
   if (fEsc) {
-    //printf("QueryContinueDrag: fEsc\n");
+#ifdef DEBUG
+    //printf("fEsc\n");
+#endif
     return ResultFromScode(DRAGDROP_S_CANCEL);
   }
 
   if (!(grfKeyState & MK_LBUTTON)) {
-    //printf("QueryContinueDrag: grfKeyState & MK_LBUTTON\n");
+#ifdef DEBUG
+    //printf("grfKeyState & MK_LBUTTON\n");
+#endif
     return ResultFromScode(DRAGDROP_S_DROP);
   }
 
-  //printf("QueryContinueDrag: NOERROR\n");
+#ifdef DEBUG
+  //printf("NOERROR\n");
+#endif
 	return NOERROR;
 }
 
 STDMETHODIMP nsNativeDragSource::GiveFeedback(DWORD dwEffect)
 {
+#ifdef DEBUG
   //printf("GiveFeedback\n");
+#endif
 	return ResultFromScode(DRAGDROP_S_USEDEFAULTCURSORS);
 }
