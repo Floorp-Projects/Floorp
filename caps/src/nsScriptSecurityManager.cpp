@@ -1668,6 +1668,12 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         if (*result)
             return NS_OK;
     } while ((fp = JS_FrameIterator(cx, &fp)) != nsnull);
+
+    if (!previousPrincipal)
+    {
+        // No principals on the stack, all native code.  Allow execution.
+        *result = PR_TRUE;
+    }
     return NS_OK;
 }
 
