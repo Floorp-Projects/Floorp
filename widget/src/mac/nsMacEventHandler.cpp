@@ -201,15 +201,16 @@ void nsMacEventDispatchHandler::SetWidgetHit(nsWindow *aWidgetHit)
 //-------------------------------------------------------------------------
 void nsMacEventDispatchHandler::SetWidgetPointed(nsWindow *aWidgetPointed)
 {
-	if (aWidgetPointed == mWidgetPointed)
+	if (aWidgetPointed == mWidgetPointed) {
 		return;
-
-	if (mWidgetPointed)
-	  if (! mWidgetPointed->RemoveDeleteObserver(this))
+    }
+       
+	if (mWidgetPointed) 
+	  if (! mWidgetPointed->RemoveDeleteObserver(this)) 
 	  	NS_WARNING("nsMacFocusHandler wasn't in the WidgetPointed observer list");
-
+    
 	mWidgetPointed = aWidgetPointed;
-
+    
 	if (mWidgetPointed)
 	  mWidgetPointed->AddDeleteObserver(this);
 }
@@ -222,14 +223,13 @@ void nsMacEventDispatchHandler::NotifyDelete(void* aDeletedObject)
 {
 	if (mActiveWidget == aDeletedObject)
 		mActiveWidget = nsnull;
-	else
+	
 	if (mWidgetHit == aDeletedObject)
 		mWidgetHit = nsnull;
-	else
+
 	if (mWidgetPointed == aDeletedObject)
 		mWidgetPointed = nsnull;
-	else
-		NS_WARNING("NotifyDelete: unknown widget");
+
 }
 
 
