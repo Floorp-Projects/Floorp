@@ -42,7 +42,11 @@
 
   <script language="JavaScript">
   <![CDATA[
-  
+  var _elementIDs = ["mousewheelWithNoKeyAction", "mousewheelWithNoKeyNumlines", "mousewheelWithNoKeySysNumlines", 
+                     "mousewheelWithAltKeyAction", "mousewheelWithAltKeyNumlines", "mousewheelWithAltKeySysNumlines", 
+                     "mousewheelWithCtrlKeyAction", "mousewheelWithCtrlKeyNumlines", "mousewheelWithCtrlKeySysNumlines", 
+                     "mousewheelWithShiftKeyAction", "mousewheelWithShiftKeyNumlines", "mousewheelWithShiftKeySysNumlines"]; 
+   
   function switchPage( aElement )
   {
     var deck = document.getElementById( "modifierDeck" );
@@ -69,6 +73,15 @@
     }
   }  
   
+   function enableField(aCheckbox, aNodeID) 
+   { 
+     var el = document.getElementById(aNodeID); 
+     if (aCheckbox.checked) 
+       el.setAttribute("disabled", "true"); 
+     else 
+       el.removeAttribute("disabled"); 
+   } 
+
   ]]>
   </script>
     
@@ -103,7 +116,7 @@
                        prefattribute="value"/>
             <checkbox id="mousewheelWithNoKeySysNumlines" value="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       pref="true" preftype="bool" prefstring="mousewheel.withnokey.sysnumlines"
-                      prefattribute="checked"/>
+                      prefattribute="checked" oncommand="enableField(this, 'mousewheelWithNoKeyNumlines');"/>
           </box>
         </box>
         <radio group="mousewheelWithNoKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
@@ -123,7 +136,7 @@
                        prefattribute="value"/>
             <checkbox id="mousewheelWithAltKeySysNumlines" value="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       pref="true" preftype="bool" prefstring="mousewheel.withaltkey.sysnumlines"
-                      prefattribute="checked"/>
+                      prefattribute="checked" oncommand="enableField(this, 'mousewheelWithAltKeyNumlines');"/>
           </box>
         </box>
         <radio group="mousewheelWithAltKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
@@ -143,7 +156,7 @@
                        prefattribute="value"/>
             <checkbox id="mousewheelWithCtrlKeySysNumlines" value="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       pref="true" preftype="bool" prefstring="mousewheel.withcontrolkey.sysnumlines"
-                      prefattribute="checked"/>
+                      prefattribute="checked" oncommand="enableField(this, 'mousewheelWithCtrlKeyNumlines');"/>
           </box>
         </box>
         <radio group="mousewheelWithCtrlKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
@@ -163,7 +176,7 @@
                        prefattribute="value"/>
             <checkbox id="mousewheelWithShiftKeySysNumlines" value="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       pref="true" preftype="bool" prefstring="mousewheel.withshiftkey.sysnumlines"
-                      prefattribute="checked"/>
+                      prefattribute="checked" oncommand="enableField(this, 'mousewheelWithShiftKeyNumlines');"/>
           </box>
         </box>
         <radio group="mousewheelWithShiftKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>

@@ -219,10 +219,12 @@
       </xul:box>
     </content>
     <interface>
-      <property name="progresstext"   onset="return this.setAttribute('progresstext',val);"
+      <property name="progresstext"   onset="this.setAttribute('progresstext',val); return val;"
                                       onget="return this.getAttribute('progresstext');"/>
-      <property name="value"          onset="return this.setAttribute('value',val);"
+      <property name="value"          onset="this.setAttribute('value',val); return val;"
                                       onget="return this.getAttribute('value');"/>
+      <property name="mode"           onset="this.setAttribute('mode', val); return val;"
+                                      onget="return this.getAttribute('mode');"/>
     </interface>
   </binding>
 
@@ -380,7 +382,7 @@
 
   <binding id="toolbar">
     <content>
-      <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip" 
+      <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
                          onclick="var v = parentNode;
                                   var attr = v.getAttribute('collapsed');
                                   if (attr == 'true') {
@@ -398,9 +400,8 @@
                                       parentNode.parentNode.collapseToolbar(parentNode);
                                     }
                                     catch(e) {}
-                                  }
-                                  "/>
-      <xul:box flex="1" class="toolbar-holder" inherits="collapsed">
+                                  }"/>
+      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" autostretch="never">
         <children/>
       </xul:box>
     </content>

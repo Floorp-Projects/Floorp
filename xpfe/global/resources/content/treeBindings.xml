@@ -180,7 +180,14 @@
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
-         this.selectedItems[0].close(); 
+         if (this.selectedItems[0].getAttribute("open") != "true") {
+           var el = this.selectedItems[0].parentNode.parentNode 
+           if (el) this.selectItem(el);
+         }
+         else {
+           var el = this.selectedItems[0];
+           el.close();
+         }
         ]]>
       </handler>
       <handler type="keypress" keycode="vk_right">
