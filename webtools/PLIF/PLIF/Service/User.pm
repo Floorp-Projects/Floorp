@@ -163,6 +163,10 @@ sub prepareAddressChange {
         $self->newFieldID($field->fieldID);
         $self->newFieldValue($newAddress);
         $self->newFieldPassword($password);
+        # XXX I don't like the way this is done. A better way would be
+        # to clone $self, then tweak the one field being changed. This
+        # still doesn't deal with telling the fields and the user
+        # object not to write themselves to the database though. XXX
         my $session = $self->objectCreate($self->app, $self->userID, $self->mode, $self->adminMessage, 
                                           $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
                                           # XXX need to pass the other fields in
@@ -182,6 +186,7 @@ sub prepareAddressAddition {
         $self->newFieldID($field->fieldID);
         $self->newFieldValue($newAddress);
         $self->newFieldPassword($password);
+        # XXX see comment above
         my $session = $self->objectCreate($self->app, $self->userID, $self->mode, $self->adminMessage, 
                                           $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
                                           # XXX need to pass the other fields in
@@ -301,7 +306,7 @@ sub DESTROY {
         if ($self->{'_DIRTY'}->{'groups'}) {
             $self->writeGroups();
         }
-    }
+    } # else, this is a fake user, don't save the data. Note: Fields still save data! XXX
 }
 
 sub writeProperties {
