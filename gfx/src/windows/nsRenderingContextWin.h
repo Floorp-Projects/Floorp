@@ -270,6 +270,14 @@ class nsRenderingContextWinA : public nsRenderingContextWin
 public:
   NS_IMETHOD GetWidth(const PRUnichar* aString, PRUint32 aLength,
                       nscoord& aWidth, PRInt32 *aFontID);
+  NS_IMETHOD GetWidth(const PRUnichar *aString,
+                      PRInt32          aLength,
+                      PRInt32          aAvailWidth,
+                      PRInt32*         aBreaks,
+                      PRInt32          aNumBreaks,
+                      nscoord&         aWidth,
+                      PRInt32&         aNumCharsFit,
+                      PRInt32*         aFontID);
   NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         PRInt32 aFontID,
