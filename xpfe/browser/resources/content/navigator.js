@@ -73,9 +73,6 @@
 
         if ( !explicitURL ) {
             var pref = Components.classes['component://netscape/preferences'];
-	    dump("Components = " + Components + "\n");
-	    dump("Components.classes = " + Components.classes + "\n");
-	    dump("Components.classes[component://netscape/preferences] = " + pref + "\n");
     
             // if all else fails, use trusty "about:blank" as the start page
             var startpage = "about:blank";  
