@@ -1443,6 +1443,10 @@ nsWindow::OnToplevelDragDrop       (GtkWidget      *aWidget,
 
   innerMostWidget->Release();
 
+  // before we unset the context we need to do a drop_finish
+
+  gdk_drop_finish(aDragContext, TRUE, aTime);
+
   // after a drop takes place we need to make sure that the drag
   // service doesn't think that it still has a context.  if the other
   // way ( besides the drop ) to end a drag event is during the leave
