@@ -266,7 +266,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
 
           nsCOMPtr<nsIMsgHeaderSink> msgHdrSink;
           rv = msgWindow->GetMsgHeaderSink(getter_AddRefs(msgHdrSink));
-          NS_ENSURE_SUCCESS(rv, rv);
+          NS_ENSURE_TRUE(msgHdrSink, rv);
 
           msgHdrSink->OnMsgHasRemoteContent(msgHdr); // notify the UI to show the remote content hdr bar so the user can overide
         } // if mBlockRemoteImages
