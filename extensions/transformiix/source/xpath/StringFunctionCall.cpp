@@ -57,7 +57,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
     switch (mType) {
         case CONCAT:
         {
-            if (!requireParams(2, aContext))
+            if (!requireParams(2, -1, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
                 
             nsAutoString resultStr;

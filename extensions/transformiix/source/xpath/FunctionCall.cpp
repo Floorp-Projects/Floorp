@@ -32,12 +32,6 @@
  * This class represents a FunctionCall as defined by the XSL Working Draft
 **/
 
-const nsString FunctionCall::INVALID_PARAM_COUNT(
-        NS_LITERAL_STRING("invalid number of parameters for function: "));
-
-const nsString FunctionCall::INVALID_PARAM_VALUE(
-        NS_LITERAL_STRING("invalid parameter value for function: "));
-
 FunctionCall::FunctionCall()
 {
 }
@@ -134,37 +128,23 @@ NodeSet* FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext)
     return (NodeSet*)exprResult;
 }
 
-/**
- * Called to check number of parameters
-**/
-MBool FunctionCall::requireParams (int paramCountMin,
-                                   int paramCountMax,
+PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,
+                                   PRInt32 aParamCountMax,
                                    txIEvalContext* aContext)
 {
-    int argc = params.getLength();
-    if ((argc < paramCountMin) || (argc > paramCountMax)) {
-        nsAutoString err(INVALID_PARAM_COUNT);
+    PRInt32 argc = params.getLength();
+    if (argc < aParamCountMin ||
+        (aParamCountMax > -1 && argc > aParamCountMax)) {
+        nsAutoString err(NS_LITERAL_STRING("invalid number of parameters "
+                                           "for function: "));
         toString(err);
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
-        return MB_FALSE;
-    }
-    return MB_TRUE;
-} //-- requireParams
 
-/**
- * Called to check number of parameters
-**/
-MBool FunctionCall::requireParams(int paramCountMin, txIEvalContext* aContext)
-{
-    int argc = params.getLength();
-    if (argc < paramCountMin) {
-        nsAutoString err(INVALID_PARAM_COUNT);
-        toString(err);
-        aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
-        return MB_FALSE;
+        return PR_FALSE;
     }
-    return MB_TRUE;
-} //-- requireParams
+
+    return PR_TRUE;
+}
 
 /**
  * Returns the String representation of this NodeExpr.
