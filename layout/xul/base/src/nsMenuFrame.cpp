@@ -447,9 +447,6 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     nsIFrame* frame = mPopupFrames.FirstChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
-    nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(frame);
-    UpdateDismissalListener(childPopup);
-
     if (menuPopup) {
       // Tell the menu bar we're active.
       if (mMenuParent)
@@ -464,6 +461,9 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     }
 
     ActivateMenu(PR_TRUE);
+  
+    nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(frame);
+    UpdateDismissalListener(childPopup);
 
     mMenuOpen = PR_TRUE;
 
