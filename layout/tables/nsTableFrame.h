@@ -901,11 +901,12 @@ public: /* ----- Cell Map public methods ----- */
 
 public:
   static nsIAtom* gColGroupAtom;
+#ifdef DEBUG
   void Dump(nsIPresContext* aPresContext,
             PRBool          aDumpRows,
             PRBool          aDumpCols, 
             PRBool          aDumpCellMap);
-
+#endif
   nsAutoVoidArray mColFrames; // XXX temporarily public 
 
 #ifdef DEBUG
@@ -914,9 +915,9 @@ public:
 #endif
 
 protected:
+#ifdef DEBUG
   void DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aChildFrame);
-  void DebugPrintCount() const; // Debugging routine
-
+#endif
   // DATA MEMBERS
 
   struct TableBits {

@@ -1957,7 +1957,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       if (!mPrevInFlow) {
         SetHadInitialReflow(PR_TRUE);
         SetNeedStrategyBalance(PR_TRUE); // force a balance and then a pass2 reflow 
-        nextReason = eReflowReason_Resize;
+        if (nextReason != eReflowReason_StyleChange) 
+          nextReason = eReflowReason_Resize;
       }
       else {
         nextReason = eReflowReason_Initial;
@@ -4371,6 +4372,7 @@ nsTableFrame::GetFrameAtOrBefore(nsIPresContext* aPresContext,
   return (nsTableCellFrame*)lastMatchingFrame;
 }
 
+#ifdef DEBUG
 void 
 nsTableFrame::DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aKidFrame)
 {
@@ -4449,12 +4451,11 @@ nsTableFrame::Dump(nsIPresContext* aPresContext,
   }
   if (aDumpCellMap) {
     nsTableCellMap* cellMap = GetCellMap();
-#ifdef NS_DEBUG
     cellMap->Dump();
-#endif
   }
   printf(" ***END TABLE DUMP*** \n");
 }
+#endif
 
 // nsTableIterator
 nsTableIterator::nsTableIterator(nsIPresContext*  aPresContext,
@@ -7538,7 +7539,7 @@ nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
         // The property isn't set yet, so allocate a new value, set the property,
         // and return the newly allocated value
         void* value = nsnull;
-        NSFMPropertyDtorFunc dtorFunc;
+        NSFMPropertyDtorFunc dtorFunc = nsnull;
         if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
           value = new nsPoint(0, 0);
           dtorFunc = DestroyPointFunc;
