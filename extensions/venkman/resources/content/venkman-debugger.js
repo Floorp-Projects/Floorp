@@ -68,7 +68,7 @@ function dh_exehook (aCx, state, type, rv)
     console.currentContext = aCx;
     console.currentThreadState = state;
 
-    display (getMsg(MSG_STOP_DEBUGGER), MT_STOP);
+    display (MSG_STOP_DEBUGGER, MT_STOP);
 
     console.jsds.enterNestedEventLoop(); 
 
@@ -79,7 +79,7 @@ function dh_exehook (aCx, state, type, rv)
     delete console.currentContext;
     delete console.currentThreadState;
 
-    display (getMsg(MSG_CONT_DEBUGGER), MT_CONT);
+    display (MSG_CONT_DEBUGGER, MT_CONT);
 
     return console.continueCodeStack.pop();
 }
