@@ -194,7 +194,7 @@ NS_IMETHODIMP nsDragService::GetData               (nsITransferable * aTransfera
 {
   nsresult errCode = NS_ERROR_FAILURE;
 #ifdef DEBUG_DD
-  printf("nsDragService::GetData\n");
+  g_print("nsDragService::GetData\n");
 #endif
 
   // make sure that we have a transferable
@@ -223,7 +223,7 @@ NS_IMETHODIMP nsDragService::GetData               (nsITransferable * aTransfera
       currentFlavor->ToString ( getter_Copies(flavorStr) );
       GdkAtom gdkFlavor = gdk_atom_intern(flavorStr, FALSE);
 #ifdef DEBUG_DD
-      printf("looking for data in type %s, gdk flavor %ld\n", NS_STATIC_CAST(const char*,flavorStr), gdkFlavor);
+      g_print("looking for data in type %s, gdk flavor %ld\n", NS_STATIC_CAST(const char*,flavorStr), gdkFlavor);
 #endif
       PRBool dataFound = PR_FALSE;
       if (gdkFlavor) {
@@ -231,21 +231,36 @@ NS_IMETHODIMP nsDragService::GetData               (nsITransferable * aTransfera
         GetNativeDragData(gdkFlavor);
       }
       if (mDragData) {
+#ifdef DEBUG_DD
+        g_print("dataFound = PR_TRUE\n");
+#endif
         dataFound = PR_TRUE;
       }
       else {
+#ifdef DEBUG_DD
+        g_print("dataFound = PR_FALSE\n");
+#endif
         // if we are looking for text/unicode and we fail to find it on the clipboard first,
         // try again with text/plain. If that is present, convert it to unicode.
         if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+#ifdef DEBUG_DD
+          g_print("we were looking for text/unicode...trying again with text/plain\n");
+#endif
           gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
           GetNativeDragData(gdkFlavor);
           if (mDragData) {
+#ifdef DEBUG_DD
+            g_print("Got text/plain data\n");
+#endif
             const char* castedText = NS_REINTERPRET_CAST(char*, mDragData);
             PRUnichar* convertedText = nsnull;
             PRInt32 convertedTextLen = 0;
             nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, mDragDataLen, 
                                                                         &convertedText, &convertedTextLen );
             if ( convertedText ) {
+#ifdef DEBUG_DD
+              g_print("successfully converted plain text to unicode.\n");
+#endif
               // out with the old, in with the new 
               g_free(mDragData);
               mDragData = convertedText;
@@ -268,7 +283,7 @@ NS_IMETHODIMP nsDragService::GetData               (nsITransferable * aTransfera
         nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, mDragData, mDragDataLen, getter_AddRefs(genericDataWrapper) );
         errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, mDragDataLen );
         #ifdef NS_DEBUG
-         if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
+         if ( errCode != NS_OK ) g_print("nsDragService:: Error setting data into transferable\n");
         #endif
           
         errCode = NS_OK;
@@ -308,9 +323,15 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported (const char *aDataFlavor, PRB
 #ifdef DEBUG_DD
     g_print("checking %s against %s\n", name, aDataFlavor);
 #endif
-    if (strcmp(name, aDataFlavor) == 0) {
+    if (name && (strcmp(name, aDataFlavor) == 0)) {
 #ifdef DEBUG_DD
       g_print("boioioioiooioioioing!\n");
+#endif
+      *_retval = PR_TRUE;
+    }
+    if (*_retval == PR_FALSE && name && (strcmp(name, kTextMime) == 0) && (strcmp(aDataFlavor, kUnicodeMime) == 0)) {
+#ifdef DEBUG_DD
+      g_print("viagra induced boioioioioioioioioing! ( it's text plain and we're checking against text/unicode )\n");
 #endif
       *_retval = PR_TRUE;
     }
@@ -485,6 +506,9 @@ NS_IMETHODIMP nsDragService::SetTimeCallback (nsIDragSessionGTKTimeCB aCallback)
 
 void nsDragService::ResetDragState(void)
 {
+#ifdef DEBUG_DD
+  g_print("nsDragService::ResetDragState\n");
+#endif
   // make sure that all of our last state is set
   mLastContext = NULL;
   mLastWidget = NULL;
@@ -514,13 +538,28 @@ NS_METHOD nsDragService::GetNativeDragData(GdkAtom aFlavor)
 {
   gtk_grab_add(mHiddenWidget);
   gtk_drag_get_data(mLastWidget, mLastContext, aFlavor, mLastTime);
+  // Make sure to set the mDataReceived to PR_FALSE since we're about
+  // to try to get the data.  It might have been left set to PR_TRUE
+  // if this is another request in the same drag session where the
+  // previous one failed.  However, there are cases where we can get
+  // the data received signal before we get to this point so only set
+  // it if there isn't any drag data.
+  if (!mDragData)
+    mDataReceived = PR_FALSE;
+#ifdef DEBUG_DD
+  g_print("about to start inner iteration.  mDataReceived is %d and mDoingDrag is %d\n",
+         mDataReceived, mDoingDrag);
+#endif
   while (mDataReceived == PR_FALSE && mDoingDrag) {
     // XXX check the number of iterations...we could grab forever and
     // that would make me sad.
+#ifdef DEBUG_DD
+    g_print("doing iteration...\n");
+#endif
     gtk_main_iteration();
   }
 #ifdef DEBUG_DD
-  g_print("got data\n");
+  g_print("finished inner iteration\n");
 #endif
   gtk_grab_remove(mHiddenWidget);
   return NS_OK;
@@ -621,6 +660,22 @@ GtkTargetList *targetListFromTransArr(nsISupportsArray *inArray)
             g_print("adding target %s with id %ld\n", target->target, atom);
 #endif
             targetArray.AppendElement(target);
+            // Check to see if this is text/unicode.  If it is, add
+            // text/plain since we automatically support text/plain if
+            // we support text/unicode.
+            if (strcmp(flavorStr, kUnicodeMime) == 0)
+            {
+              // get the atom for the unicode string
+              GdkAtom plainAtom = gdk_atom_intern(kTextMime, FALSE);
+              GtkTargetEntry *plainTarget = (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
+              plainTarget->target = g_strdup(kTextMime);
+              plainTarget->flags = 0;
+              plainTarget->info = plainAtom;
+#ifdef DEBUG_DD
+              g_print("automatically adding target %s with id %ld\n", plainTarget->target, atom);
+#endif
+              targetArray.AppendElement(plainTarget);
+            }
           }
         } // foreach flavor in item              
       } // if valid flavor list
