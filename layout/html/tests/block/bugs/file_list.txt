@@ -101,3 +101,10 @@ file:///s:/mozilla/layout/html/tests/block/bugs/43882-2.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-3.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-4.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-5.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-6.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-7.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-8.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-9.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-10.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-11.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-12.html
