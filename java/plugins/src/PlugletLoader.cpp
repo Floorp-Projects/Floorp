@@ -49,6 +49,9 @@ void PlugletLoader::Initialize(void) {
 	    ("PlugletLoader::Initialize\n"));
     //nb erors handling
     JNIEnv * env = PlugletEngine::GetJNIEnv();
+    if (!env) {
+      return;
+    }
     clazz = env->FindClass("org/mozilla/pluglet/PlugletLoader");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
@@ -75,7 +78,9 @@ void PlugletLoader::Destroy(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletLoader::destroy\n"));
     JNIEnv * env = PlugletEngine::GetJNIEnv();
-    env->DeleteGlobalRef(clazz);
+    if (env) {
+      env->DeleteGlobalRef(clazz);
+    }
 }
 
 char * PlugletLoader::GetMIMEDescription(const char * path) {

@@ -205,7 +205,7 @@ void PlugletEngine::StartJVM(void) {
 #endif /* OJI_DISABLE */
 
 JNIEnv * PlugletEngine::GetJNIEnv(void) {
-   JNIEnv * res;
+   JNIEnv * res = NULL;
 #ifndef OJI_DISABLE
    nsresult result;
    if (!jvmManager) {
@@ -217,18 +217,22 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
    if (!jvmManager) {
        return NULL;
    }
-   jvmManager->CreateProxyJNI(NULL,&res);
+   if (NS_FAILED(jvmManager->CreateProxyJNI(NULL,&res))) {
+       return NULL;
+   }
    if (!securityContext) {
        securityContext = new PlugletSecurityContext();
    }
    SetSecurityContext(res,securityContext);
 #else  /* OJI_DISABLE */
-    if (!jvm) {
-	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	       ("PlugletEngine::GetJNIEnv going to start our own jvm \n"));
-	StartJVM();
+   if (!jvm) {
+       PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+              ("PlugletEngine::GetJNIEnv going to start our own jvm \n"));
+       StartJVM();
    }
-   jvm->AttachCurrentThread(&res,NULL);
+   if (jvm) {
+       jvm->AttachCurrentThread(&res,NULL);
+   }
 #endif /* OJI_DISABLE */
    return res;
 }

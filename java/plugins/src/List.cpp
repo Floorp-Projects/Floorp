@@ -21,7 +21,7 @@ List::List() {
 
 List::~List() {
     ListNode *tmp;
-    for(ListNode * current=head;!current;tmp = current,current = current->next, delete tmp)
+    for(ListNode * current=head; current != NULL ;tmp = current,current = current->next, delete tmp)
 	;
 }
 
