@@ -778,13 +778,13 @@ PRBool nsXULWindow::LoadPositionFromXUL()
   // if we're the hidden window, don't try to validate our size/position. We're
   // special.
   if (mIsHiddenWindow)
-    return false;
+    return PR_FALSE;
 
   nsCOMPtr<nsIDOMElement> windowElement;
   GetWindowDOMElement(getter_AddRefs(windowElement));
   NS_ASSERTION(windowElement, "no xul:window");
   if (!windowElement)
-    return false;
+    return PR_FALSE;
 
   PRInt32 currX = 0;
   PRInt32 currY = 0;
@@ -846,13 +846,13 @@ PRBool nsXULWindow::LoadSizeFromXUL()
   // if we're the hidden window, don't try to validate our size/position. We're
   // special.
   if (mIsHiddenWindow)
-    return false;
+    return PR_FALSE;
 
   nsCOMPtr<nsIDOMElement> windowElement;
   GetWindowDOMElement(getter_AddRefs(windowElement));
   NS_ASSERTION(windowElement, "no xul:window");
   if (!windowElement)
-    return false;
+    return PR_FALSE;
 
   PRInt32 currWidth = 0;
   PRInt32 currHeight = 0;
