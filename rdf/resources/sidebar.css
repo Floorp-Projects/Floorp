@@ -8,11 +8,6 @@ iframe {
   height: 125px;
   border: 0px;
 }
-box#sidebox {
-  width: 100%;
-  height: 100%;
-  display:block;
-}
 
 tree { 
  display: table; 
@@ -32,7 +27,6 @@ treehead {
 
 treebody { 
  display: table-row-group; 
-
 } 
 
 treecol {
@@ -99,68 +93,37 @@ treeitem > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/document.gif");
 }
 
-toolbar#sidebarbar titledbutton{
-  color:#CCCCFF; 
-}
-
-toolbar#sidebarbar titledbutton[pseudoclass~="active"] {
-
-  text-decoration:none;
-  border: 10px inset;
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}
-
-toolbar#sidebarbar titledbutton[pseudoclass~="hover"] {
-  border: 1px outset #666699;
-  color:white;
-	//text-decoration:underline;
-  padding: 1px;
-}
-
-
-toolbar#sidebarbar {
-    background-color: #666699;
-    border-bottom: solid #333366 1px;
-    border-top: solid #9999AA 1px;
-    border-left: solid #9999AA 1px;
-    border-right: solid #333366 1px;
-    font: 10pt sans-serif;
-    min-height: 16px;
-    color: white;
-}
-
-toolbar[class=tabheader] titledbutton{
-  color:#7BB1B7; 
-}
 /*
-toolbar[class=tabheader] titledbutton[pseudoclass~="active"] {
-
-  text-decoration:none;
-  border: 1px inset;
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
+ *  Sidebar and Panel title buttons
+ */
+box#sidebox {
+  width: 100%;
+  height: 100%;
+  display:block;
 }
-*/
-toolbar[class=tabheader] titledbutton[pseudoclass~="hover"] {
-  border: 1px outset #666699;
-	color:white;
-	//text-decoration:underline;
+
+box.sidebartitle {
+  background-color: #505888;
+  padding: 0px;
+  border: 0px;
+  margin: 0px;
+  font: 10pt sans-serif;
+}
+
+box.panelbar {
+  background-color: #006870;
   padding: 1px;
+  border: 0px;
+  margin: 0px;
+  font: 10pt sans-serif;
 }
 
-toolbar[class=tabheader] {
-    background-color: #046B75;
-    border-bottom: solid #006400 1px;
-    border-top: solid #00FFFF 1px;
-    border-left: solid #00FFFF 1px;
-    border-right: solid #006400 1px;
-    font: 10pt sans-serif;
-    min-height: 16px;
-    color: white;
+div.sidebartitlelabel {
+  color: white;
+  padding: 5px;
+}
+
+titledbutton[class~=paneltitle] { 
+  color: white;
 }
 

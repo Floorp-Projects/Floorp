@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
-<?xml-stylesheet href="resource:/res/rdf/sidebar-browser.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
 
 <!DOCTYPE window
 [
@@ -18,11 +18,13 @@
 
 <box id="sidebox" align="vertical">
  <box class="sidebartitle">
-  <titledbutton class="sidebartitle" value="&sidebar.title.label;"/>
+  <html:div class="sidebartitlelabel">&sidebar.title.label;</html:div>
   <spring flex="100%"/>
-  <titledbutton value="&sidebar.reload.label;"
-                onclick="window.location.reload()"/>
-  <titledbutton value="&sidebar.customize.label;"/>
+  <titledbutton class="borderless paneltitle" 
+                value="&sidebar.reload.label;"
+                onclick="window.location.reload()" />
+  <titledbutton class="borderless paneltitle" 
+                value="&sidebar.customize.label;" />
  </box>
 </box>
 </window>

@@ -108,10 +108,11 @@ function createPanelTitle(titletext,customize_url, id)
   var spring     = document.createElement('spring');
 
   title.setAttribute('value', titletext);
-  title.setAttribute('class', 'paneltitle');
+  title.setAttribute('class', 'borderless paneltitle');
   title.setAttribute('onclick', 'resize("'+id+'")');
   spring.setAttribute('flex', '100%');
   customize.setAttribute('value', 'Customize');
+  customize.setAttribute('class', 'borderless paneltitle');
   if (customize_url) {
     customize.setAttribute('onclick',
 	                   'window.open("'+customize_url+'");');
@@ -160,9 +161,11 @@ function Schedule(url, pollInterval)
     setTimeout('Reload("' + url + '", ' + pollInterval + ')', pollInterval * 1000);
 }
 
-function OpenURL(node)
+function OpenURL(url)
 {
-    dump("open-url(" + node + ")\n");
+  window.frames[0].frames[1].location.href = url;
+  dump("window.frames[0].frames[1].location.href = "+window.frames[0].frames[1].location.href+"\n");
+  dump("OpenURL("+url+")\n");
 }
 
 
