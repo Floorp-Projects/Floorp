@@ -47,16 +47,8 @@ static const char* kNullURL = "Error: Null URL given";
 static const char* kOnStartNotCalled = "Error: OnStartBinding() must be called before OnDataAvailable()";
 static const char* kBadListenerInit  = "Error: Parser's IStreamListener API was not setup correctly in constructor.";
 
+//-------------------------------------------------------------------
  
-class CTokenDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    CToken* aToken = (CToken*)anObject;
-    delete aToken;
-    return 0;
-  }
-};
-
 
 class CDTDDeallocator: public nsDequeFunctor{
 public:
@@ -66,6 +58,8 @@ public:
     return 0;
   }
 };
+
+//-------------------------------------------------------------------
 
 class CDTDFinder: public nsDequeFunctor{
 public:
@@ -82,6 +76,8 @@ public:
   }
   nsIDTD* mTargetDTD;
 };
+
+//-------------------------------------------------------------------
 
 class CSharedParserObjects {
 public:
@@ -128,14 +124,6 @@ public:
 nsString nsParser::gHackMetaCharset = "";
 nsString nsParser::gHackMetaCharsetURL = "";
 
-//-------------------------------------------------------------------------
-
-CSharedParserObjects& GetSharedObjects() {
-  static CSharedParserObjects gSharedParserObjects;
-  return gSharedParserObjects;
-}
-
-
 /**********************************************************************************
   This class is used as an interface between an external agent (like the DOM) and
   the parser. It will contain a stack full of tagnames, which is used in our
@@ -173,8 +161,13 @@ public:
   nsDeque mTags;  //will hold a deque of prunichars...
 };
 
+//-------------------------------------------------------------------
 
-//-------------------------------------------------------------------------
+
+CSharedParserObjects& GetSharedObjects() {
+  static CSharedParserObjects gSharedParserObjects;
+  return gSharedParserObjects;
+}
 
 /** 
  *  default constructor
@@ -429,18 +422,28 @@ eParseMode DetermineParseMode(nsParser& aParser) {
   
   nsScanner* theScanner=aParser.GetScanner();
   if(theScanner){
+    nsString theBufCopy;
     nsString& theBuffer=theScanner->GetBuffer();
-    PRInt32 theIndex=theBuffer.Find("HTML 4.0");
-    if(kNotFound==theIndex)
-      theIndex=theBuffer.Find("html 4.0");
-    if(kNotFound<theIndex)
-      return eParseMode_raptor;
-    else {
-      PRInt32 theIndex=theBuffer.Find("noquirks");
-      if(kNotFound==theIndex)
-        theIndex=theBuffer.Find("NOQUIRKS");
-      if(kNotFound<theIndex)
-        return eParseMode_noquirks;
+    theBuffer.Left(theBufCopy,300);
+    theBufCopy.ToUpperCase();
+    PRInt32 theIndex=theBufCopy.Find("<!DOCTYPE");
+    if(kNotFound==theIndex){
+      theIndex=theBufCopy.Find("<DOCTYPE");
+    }
+
+    if(kNotFound<theIndex) {
+      //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
+      PRInt32 theSubIndex=theBufCopy.Find(kGreaterThan,theIndex+1);
+      theBufCopy.Truncate(theSubIndex);
+      theSubIndex=theBufCopy.Find("HTML 4.0");
+      if(kNotFound<theSubIndex) {
+        return eParseMode_raptor;
+      }
+    }
+
+    theIndex=theBufCopy.Find("NOQUIRKS");
+    if(kNotFound<theIndex) {
+      return eParseMode_noquirks;
     }
   }
 
@@ -712,7 +715,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
  * @param   aContentType tells us what type of content to expect in the given string
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall){
+nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aVerifyEnabled,PRBool aLastCall){
  
 #ifdef _rickgdebug
   {
@@ -751,7 +754,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
   // till we're completely done.
   NS_ADDREF(me);
   if(aSourceBuffer.Length() || mUnusedInput.Length()) {
-    mDTDVerification=aEnableVerify;
+    mDTDVerification=aVerifyEnabled;
     CParserContext* pc=0; 
 
     if((!mParserContext) || (mParserContext->mKey!=aKey))  {
@@ -1176,6 +1179,7 @@ void nsParser::DebugDumpSource(ostream& aStream) {
   }
 }
 
+
 /**
  * Call this to get a newly constructed tagstack
  * @update	gess 5/05/99
@@ -1188,3 +1192,4 @@ nsresult nsParser::CreateTagStack(nsITagStack** aTagStack){
     return NS_OK;
   return NS_ERROR_HTMLPARSER_MEMORYFAILURE;
 }
+

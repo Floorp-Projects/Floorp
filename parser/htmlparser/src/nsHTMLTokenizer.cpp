@@ -101,7 +101,7 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
  *  @param   
  *  @return  
  */
-nsHTMLTokenizer::nsHTMLTokenizer() : nsITokenizer(), mTokenDeque(new CTokenDeallocator()){
+nsHTMLTokenizer::nsHTMLTokenizer() : nsITokenizer(), mTokenDeque(0){
   NS_INIT_REFCNT();
   mDoXMLEmptyTags=PR_FALSE;
 }
@@ -114,6 +114,10 @@ nsHTMLTokenizer::nsHTMLTokenizer() : nsITokenizer(), mTokenDeque(new CTokenDeall
  *  @return  
  */
 nsHTMLTokenizer::~nsHTMLTokenizer(){
+  if(mTokenDeque.GetSize()){
+    CTokenDeallocator theDeallocator;
+    mTokenDeque.ForEach(theDeallocator);
+  }
 }
  
 
@@ -277,10 +281,10 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner) {
           
           case kNotFound:
             break;
-        
+          
           case 0: //preceeds a EOF...
             break;
-            
+
           default:
             if(!nsString::IsSpace(theChar)) {
               nsAutoString temp(theChar);
@@ -411,66 +415,15 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
 }
 
 /**
- *  This is a special case method. It's job is to consume 
- *  all of the given tag up to an including the end tag.
- *
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null
- */
-nsresult nsHTMLTokenizer::ConsumeContentToEndTag(PRUnichar aChar,
-                                eHTMLTags aChildTag,
-                                nsScanner& aScanner,
-                                CToken*& aToken){
-  
-  //In the case that we just read the given tag, we should go and
-  //consume all the input until we find a matching end tag.
-
-  nsAutoString endTag("</");
-  endTag.Append(NS_EnumToTag(aChildTag));
-  endTag.Append(">");
-
-  CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
-  aToken=theRecycler->CreateTokenOfType(eToken_skippedcontent,aChildTag,endTag);
-  return aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-}
-
-/**
- * 
+ * In the case that we just read the given tag, we should go and
+ * consume all the input until we find a matching end tag.
  * @update	gess12/28/98
  * @param  
  * @return
  */
-nsresult nsHTMLTokenizer::HandleSkippedContent(nsScanner& aScanner,CToken*& aToken) {
+nsresult nsHTMLTokenizer::ConsumeScriptContent(nsScanner& aScanner,CToken*& aToken) {
   nsresult result=NS_OK;
 
-  eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
-  if(eHTMLTag_unknown!=gHTMLElements[theTag].mSkipTarget) {
-
-      //Do special case handling for <script>, <style>, <title> or <textarea>...
-    CToken*   skippedToken=0;
-    PRUnichar theChar=0;
-    result=ConsumeContentToEndTag(theChar,gHTMLElements[theTag].mSkipTarget,aScanner,skippedToken);
-
-    CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
-    AddToken(skippedToken,result,mTokenDeque,theRecycler);
-
-    if(NS_SUCCEEDED(result) && skippedToken){
-      //In the case that we just read a given tag, we should go and
-      //consume all the tag content itself (and throw it all away).
-
-      nsString& theTagStr=skippedToken->GetStringValueXXX();
-      CToken* endtoken=theRecycler->CreateTokenOfType(eToken_end,theTag,theTagStr);
-      if(endtoken){
-        nsAutoString temp;
-        theTagStr.Mid(temp,2,theTagStr.Length()-3);
-        //now strip the leading and trailing delimiters...
-        endtoken->Reinitialize(theTag,temp);
-        AddToken(endtoken,result,mTokenDeque,theRecycler);
-      }
-    } //if
-  } //if
   return result;
 }
 
@@ -498,11 +451,18 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         result=ConsumeAttributes(aChar,(CStartToken*)aToken,aScanner);
       }
 
-      //now that that's over with, we have one more problem to solve.
-      //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
-      //consume all the content itself.
-      if(NS_SUCCEEDED(result)) {
-        result=HandleSkippedContent(aScanner,aToken);
+      /*  Now that that's over with, we have one more problem to solve.
+          In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
+          consume all the content itself.
+       */
+      if(NS_SUCCEEDED(result) && (eHTMLTag_script==theTag)) {
+        nsAutoString endTag("</script>");
+        CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
+        CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag,endTag);
+        result=((CTextToken*)textToken)->ConsumeUntil(0,aScanner,endTag);  //tell new token to finish consuming text...    
+        AddToken(textToken,result,mTokenDeque,theRecycler);
+        CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag);
+        AddToken(endToken,result,mTokenDeque,theRecycler);
       }
  
       //EEEEECCCCKKKK!!! 

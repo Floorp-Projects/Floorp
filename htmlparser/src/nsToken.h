@@ -99,6 +99,14 @@ class CToken {
     virtual nsString& GetStringValueXXX(void);
 
     /**
+     * Get string of full contents, suitable for debug dump.
+     * It should look exactly like the input source.
+     * @update	gess5/11/98
+     * @return  reference to string containing string value
+     */
+    virtual void GetSource(nsString& anOutputString);
+
+    /**
      * Setter method that changes the string value of this token
      * @update	gess5/11/98
      * @param   name is a char* value containing new string value

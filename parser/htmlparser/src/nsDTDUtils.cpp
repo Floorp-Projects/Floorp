@@ -19,9 +19,9 @@
 
 #include "nsDTDUtils.h"
 #include "CNavDTD.h" 
+
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
-#include "nsIElementObserver.h"
 
 static NS_DEFINE_IID(kIObserverServiceIID, NS_IOBSERVERSERVICE_IID);
 static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
@@ -51,6 +51,8 @@ nsEntryStack::nsEntryStack()  {
 nsEntryStack::~nsEntryStack() {
   if(mEntries)
     delete [] mEntries;
+  mCount=mCapacity=0;
+  mEntries=0;
 }
 
 /**
@@ -182,7 +184,6 @@ PRInt32 nsEntryStack::GetTopmostIndexOf(eHTMLTags aTag) const {
 /**
  * 
  * @update	gess9/10/98
- * @update  gess 4/26/99
  */
 nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
 #ifdef  NS_DEBUG
@@ -194,7 +195,6 @@ nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
 /**
  * 
  * @update	gess9/10/98
- * @update  gess 4/26/99
  */
 nsDTDContext::~nsDTDContext() {
 }
@@ -202,16 +202,14 @@ nsDTDContext::~nsDTDContext() {
 /**
  * 
  * @update  gess7/9/98, harishd 04/04/99 
- * @update  gess 4/26/99
  */
 PRInt32 nsDTDContext::GetCount(void) {
-  return mStack.GetSize();
+  return mStack.GetCount();
 }
 
 /**
  * 
  * @update  gess7/9/98, harishd 04/04/99
- * @update  gess 4/26/99
  */
 void nsDTDContext::Push(eHTMLTags aTag) {
 #ifdef  NS_DEBUG
@@ -224,13 +222,20 @@ void nsDTDContext::Push(eHTMLTags aTag) {
 
 /** 
  * @update  gess7/9/98, harishd 04/04/99
- * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::Pop() {
 #ifdef  NS_DEBUG
   if(mStack.mCount>0)
     mTags[mStack.mCount-1]=eHTMLTag_unknown;
 #endif
+
+  nsEntryStack* theStyles=0;
+  nsTagEntry& theEntry=mStack.EntryAt(mStack.mCount-1);
+  PRInt32 theIndex=theEntry.mStyleIndex;  
+  if(-1<theIndex){
+    theStyles=(nsEntryStack*)mStyles.ObjectAt(theIndex);
+    delete theStyles;
+  }
 
   eHTMLTags result=mStack.Pop();
   return result;
@@ -239,7 +244,6 @@ eHTMLTags nsDTDContext::Pop() {
 /**
  * 
  * @update  gess7/9/98
- * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::First() const {
   return mStack.First();
@@ -248,7 +252,6 @@ eHTMLTags nsDTDContext::First() const {
 /**
  * 
  * @update  gess7/9/98
- * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::TagAt(PRInt32 anIndex) const {
   return mStack.TagAt(anIndex);
@@ -258,7 +261,6 @@ eHTMLTags nsDTDContext::TagAt(PRInt32 anIndex) const {
 /**
  * 
  * @update  gess7/9/98
- * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::operator[](PRInt32 anIndex) const {
   return mStack[anIndex];
@@ -267,7 +269,6 @@ eHTMLTags nsDTDContext::operator[](PRInt32 anIndex) const {
 /**
  * 
  * @update  gess7/9/98
- * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::Last() const {
   return mStack.Last();
@@ -276,12 +277,12 @@ eHTMLTags nsDTDContext::Last() const {
 /**
  * 
  * @update  gess7/9/98
- * @update  gess 4/26/99
  */
-nsEntryStack* nsDTDContext::GetStyles(void) const {
+nsEntryStack* nsDTDContext::GetStylesAt(PRUint32 anIndex) const {
   nsEntryStack* result=0;
-  if(0<mStack.mCount){
-    PRInt32 theIndex=mStack.mEntries[mStack.mCount-1].mStyleIndex;  
+  if(anIndex<mStack.mCount){
+    nsTagEntry& theEntry=mStack.EntryAt(anIndex);
+    PRInt32 theIndex=theEntry.mStyleIndex;  
     if(-1<theIndex){
       result=(nsEntryStack*)mStyles.ObjectAt(theIndex);
     }
@@ -291,12 +292,52 @@ nsEntryStack* nsDTDContext::GetStyles(void) const {
 
 /**
  * 
+ * @update  gess 04/28/99
+ */
+void nsDTDContext::PushStyle(eHTMLTags aTag){
+
+  nsTagEntry& theEntry=mStack.EntryAt(mStack.mCount-1);
+  //ok, now go get the right tokenbank deque...
+  nsEntryStack* theStack=0;
+  if(-1<theEntry.mStyleIndex)
+    theStack=(nsEntryStack*)mStyles.ObjectAt(theEntry.mStyleIndex);
+  if(!theStack){
+    //time to make a databank for this element...
+    theStack=new nsEntryStack();
+    mStyles.Push(theStack);
+    theEntry.mStyleIndex=mStyles.GetSize()-1;
+  }
+  if(theStack){
+    theStack->Push(aTag);
+  }
+}
+
+/**
+ * 
+ * @update  gess 04/28/99
+ */
+eHTMLTags nsDTDContext::PopStyle(void){
+  eHTMLTags result=eHTMLTag_unknown;
+  nsTagEntry& theEntry=mStack.EntryAt(mStack.mCount-1);
+  //ok, now go get the right tokenbank deque...
+  nsEntryStack* theStack=0;
+  if(-1<theEntry.mStyleIndex)
+    theStack=(nsEntryStack*)mStyles.ObjectAt(theEntry.mStyleIndex);
+  if(theStack){
+    result=theStack->Pop();
+  }
+  return result;
+}
+
+
+/**
+ * 
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
 void nsDTDContext::SaveToken(CToken* aToken, PRInt32 aID)
 { 
-  NS_PRECONDITION(aID <= mStack.GetSize() && aID > -1,"Out of bounds");
+  NS_PRECONDITION(aID <= mStack.GetCount() && aID > -1,"Out of bounds");
 
   if(aToken) {
     nsTagEntry& theEntry=mStack.EntryAt(aID);
@@ -321,9 +362,9 @@ void nsDTDContext::SaveToken(CToken* aToken, PRInt32 aID)
  */
 CToken*  nsDTDContext::RestoreTokenFrom(PRInt32 aID)
 { 
-  NS_PRECONDITION(aID <= mStack.GetSize() && aID > -1,"Out of bounds");
+  NS_PRECONDITION(aID <= mStack.GetCount() && aID > -1,"Out of bounds");
   CToken* result=0;
-  if(0<mStack.GetSize()) {
+  if(0<mStack.GetCount()) {
     nsTagEntry theEntry=mStack.EntryAt(aID);
     nsDeque* theDeque=(nsDeque*)mSkipped.ObjectAt(theEntry.mBankIndex);
     if(theDeque){
@@ -340,7 +381,7 @@ CToken*  nsDTDContext::RestoreTokenFrom(PRInt32 aID)
  */
 PRInt32  nsDTDContext::TokenCountAt(PRInt32 aID) 
 { 
-  NS_PRECONDITION(aID <= mStack.GetSize(),"Out of bounds");
+  NS_PRECONDITION(aID <= mStack.GetCount(),"Out of bounds");
 
   nsTagEntry theEntry=mStack.EntryAt(aID);
   nsDeque* theDeque=(nsDeque*)mSkipped.ObjectAt(theEntry.mBankIndex);

@@ -43,6 +43,7 @@
 #include "nsHTMLTags.h"
 #include "nsParserError.h"
 #include <iostream.h>
+#include "nsString.h"
 
 class nsScanner;
 
@@ -121,6 +122,8 @@ class CStartToken: public CHTMLToken {
             PRBool      IsEmpty(void);
             void        SetEmpty(PRBool aValue);
     virtual void        DebugDumpSource(ostream& out);
+    virtual void        GetSource(nsString& anOutputString);
+
     virtual void        Reinitialize(PRInt32 aTag, const nsString& aString);
   
   protected:
@@ -145,6 +148,7 @@ class CEndToken: public CHTMLToken {
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
     virtual void        DebugDumpSource(ostream& out);
+    virtual void        GetSource(nsString& anOutputString);
 };
 
 
@@ -184,11 +188,8 @@ class CEntityToken : public CHTMLToken {
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner);
     static  PRInt32     ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
     static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
-//    static  PRInt32     FindEntityIndex(nsString& aString);
-//    static  PRInt32     FindEntityIndexMax(const char* aBuffer,PRInt32 aCount=-1);
-//    static  PRBool      VerifyEntityTable(void);
-//    static  PRInt32     ReduceEntities(nsString& aString);
     virtual  void       DebugDumpSource(ostream& out);
+    virtual void        GetSource(nsString& anOutputString);
 };
 
 
@@ -220,6 +221,7 @@ class CTextToken: public CHTMLToken {
                         CTextToken();
                         CTextToken(const nsString& aString);
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner);
+            nsresult    ConsumeUntil(PRUnichar aChar,nsScanner& aScanner,nsString& aTerminalString);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
 };
@@ -261,6 +263,7 @@ class CAttributeToken: public CHTMLToken {
     virtual PRInt32       GetTokenType(void);
     virtual nsString&     GetKey(void) {return mTextKey;}
     virtual void          DebugDumpToken(ostream& out);
+    virtual void          GetSource(nsString& anOutputString);
     virtual void          DebugDumpSource(ostream& out);
             PRBool        mLastAttribute;
     virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
@@ -337,6 +340,7 @@ class CSkippedContentToken: public CAttributeToken {
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
     virtual void        DebugDumpSource(ostream& out);
+    virtual void        GetSource(nsString& anOutputString);
   protected:
 };
 

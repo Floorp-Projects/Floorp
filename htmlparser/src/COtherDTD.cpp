@@ -255,20 +255,6 @@ nsresult COtherDTD::HandleCommentToken(CToken* aToken) {
 }
 
 /**
- *  This method gets called when a skippedcontent token has 
- *  been encountered in the parse process. After verifying 
- *  that the topmost container can contain text, we call 
- *  AddLeaf to store this token in the top container.
- *  
- *  @update  gess 3/25/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-nsresult COtherDTD::HandleSkippedContentToken(CToken* aToken) {
-  return CNavDTD::HandleSkippedContentToken(aToken);
-}
-
-/**
  *  This method gets called when an attribute token has been 
  *  encountered in the parse process. This is an error, since
  *  all attributes should have been accounted for in the prior
@@ -331,19 +317,6 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  */
 PRBool COtherDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
   return CNavDTD::CanOmit(aParent,aChild);
-}
-
-
-/**
- *  This method gets called to determine whether a given
- *  ENDtag can be omitted. Admittedly,this is a gross simplification.
- *  
- *  @update  gess 3/25/98
- *  @param   aTag -- tag to test for containership
- *  @return  PR_TRUE if given tag can contain other tags
- */
-PRBool COtherDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
-  return CNavDTD::CanOmitEndTag(aParent,aChild);
 }
 
 

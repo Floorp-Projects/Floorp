@@ -37,6 +37,7 @@
 #include <fstream.h>
 #include "nsITokenizer.h"
 #include "nsString.h"
+#include "nsIElementObserver.h"
 
 /***************************************************************
   Before digging into the NavDTD, we'll define a helper 
@@ -79,7 +80,7 @@ public:
   eHTMLTags   operator[](PRUint32 anIndex) const;
   eHTMLTags   Last() const;
   void        Empty(void); 
-  PRInt32     GetSize(void) const {return mCount;}
+  PRInt32     GetCount(void) const {return mCount;}
 
   nsTagEntry* mEntries;
   PRUint32    mCount;
@@ -106,7 +107,9 @@ public:
   eHTMLTags     Last() const;
   void          Empty(void); 
   PRInt32       GetCount(void);
-  nsEntryStack*   GetStyles(void) const;
+  nsEntryStack*   GetStylesAt(PRUint32 anIndex) const;
+  void          PushStyle(eHTMLTags aTag);
+  eHTMLTags     PopStyle(void);
 
   void          SaveToken(CToken* aToken, PRInt32 aID);
   CToken*       RestoreTokenFrom(PRInt32 aID);

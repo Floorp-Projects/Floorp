@@ -114,8 +114,6 @@ NS_IMPL_ADDREF(CWellFormedDTD)
 NS_IMPL_RELEASE(CWellFormedDTD)
 
 
-//static CTokenDeallocator gTokenKiller;
-
 /**
  *  Default constructor
  *  

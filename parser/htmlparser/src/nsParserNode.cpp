@@ -40,13 +40,13 @@ nsAutoString& GetEmptyString() {
  *  @param   aToken -- token to init internal token
  *  @return  
  */
-nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler): nsIParserNode() {
+nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler): 
+    nsIParserNode(), mSkippedContent("") {
   NS_INIT_REFCNT();
   mAttributeCount=0;
   mLineNumber=aLineNumber;
   mToken=aToken;
   memset(mAttributes,0,sizeof(mAttributes));
-  mSkippedContent=0;
   mRecycler=aRecycler;
 }
 
@@ -65,8 +65,6 @@ nsCParserNode::~nsCParserNode() {
     for(index=0;index<mAttributeCount;index++){
       mRecycler->RecycleToken(mAttributes[index]);
     }
-    if(mSkippedContent)
-      mRecycler->RecycleToken(mSkippedContent);
   }
 }
 
@@ -141,21 +139,6 @@ void nsCParserNode::AddAttribute(CToken* aToken) {
   }
 }
 
-/**
- *  This method gets called when the parser encounters 
- *  skipped content after a start token.
- *  
- *  @update  gess 3/26/98
- *  @param   aToken -- really a skippedcontent token
- *  @return  nada
- */
-void nsCParserNode::SetSkippedContent(CToken* aToken){
-  if(aToken) {
-    NS_ASSERTION(eToken_skippedcontent == aToken->GetTokenType(), "not a skipped content token");
-    mSkippedContent = aToken;
-  }
-}
-
 
 /**
  *  Gets the name of this node. Currently unused.
@@ -191,10 +174,19 @@ const nsString& nsCParserNode::GetText() const {
  *  @return  string ref of text from internal token
  */
 const nsString& nsCParserNode::GetSkippedContent() const {
-  if (nsnull != mSkippedContent) {
-    return ((CSkippedContentToken*)mSkippedContent)->GetKey();
-  }
-  return GetEmptyString();
+  return mSkippedContent;
+}
+
+/**
+ *  Get text value of this node, which translates into 
+ *  getting the text value of the underlying token
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  string ref of text from internal token
+ */
+void nsCParserNode::SetSkippedContent(nsString& aString) {
+  mSkippedContent=aString;
 }
 
 /**
@@ -303,5 +295,3 @@ CToken* nsCParserNode::PopAttributeToken()
   }
   return nsnull;
 }
-
-

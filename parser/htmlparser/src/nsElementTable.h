@@ -46,13 +46,14 @@ public:
     mTagList=aTagList;
   }
 
-  PRInt32 GetTopmostIndexOf(nsEntryStack& aTagStack);
-  PRInt32 GetBottommostIndexOf(nsEntryStack& aTagStack,PRInt32 aStartOffset);
-  PRBool  Contains(eHTMLTags aTag);
+  PRInt32   GetTopmostIndexOf(nsEntryStack& aTagStack);
+  PRInt32   GetBottommostIndexOf(nsEntryStack& aTagStack,PRInt32 aStartOffset);
+  PRBool    Contains(eHTMLTags aTag);
+  eHTMLTags GetTagAt(PRUint32 anIndex) const;
 
   eHTMLTags   mTags[5];
   eHTMLTags*  mTagList;
-  int         mCount;
+  PRUint32    mCount;
 };
 
 //*********************************************************************************************
@@ -68,11 +69,13 @@ public:
  */
 struct nsHTMLElement {
 
-  static  PRBool  IsContainerType(eHTMLTags aTag,int aType);
+  static  void    DebugDumpMembership(const char* aFilename);
+  static  void    DebugDumpContainment(const char* aFilename,const char* aTitle);
+  static  void    DebugDumpContainType(const char* aFilename);
 
-  static  PRBool  IsBlockElement(eHTMLTags aTag);
-  static  PRBool  IsInlineElement(eHTMLTags aTag);
-  static  PRBool  IsFlowElement(eHTMLTags aTag);
+  static  PRBool  IsBlockEntity(eHTMLTags aTag);
+  static  PRBool  IsInlineEntity(eHTMLTags aTag);
+  static  PRBool  IsFlowEntity(eHTMLTags aTag);
   static  PRBool  IsBlockCloser(eHTMLTags aTag);
 
   CTagList*       GetRootTags(void) const {return mRootNodes;}
@@ -80,6 +83,7 @@ struct nsHTMLElement {
   CTagList*       GetAutoCloseStartTags(void) const {return mAutocloseStart;}
   CTagList*       GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
   CTagList*       GetSynonymousTags(void) const {return mSynonymousTags;}
+  eHTMLTags       GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32 anIndex) const;
 
   CTagList*       GetSpecialChildren(void) const {return mSpecialKids;}
   CTagList*       GetSpecialParents(void) const {return mSpecialParents;}
@@ -89,9 +93,10 @@ struct nsHTMLElement {
   
   eHTMLTags       GetTag(void) const {return mTagID;}
   PRBool          CanContain(eHTMLTags aChild) const;
+  PRBool          CanExclude(eHTMLTags aChild) const;
   PRBool          CanOmitStartTag(eHTMLTags aChild) const;
-  PRBool          CanOmitEndTag(eHTMLTags aParent) const;
-  PRBool          CanContainSelf() const;
+  PRBool          CanOmitEndTag(void) const;
+  PRBool          CanContainSelf(void) const;
   PRBool          HasSpecialProperty(PRInt32 aProperty) const;
   PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch);
  
@@ -120,6 +125,7 @@ struct nsHTMLElement {
   int             mInclusionBits;     //defines parental and containment rules
   int             mExclusionBits;     //defines things you CANNOT contain
   int             mSpecialProperties; //used for various special purposes...
+  int             mPropagateRange;    //tells us how far a parent is willing to prop. badly formed children
   CTagList*       mSpecialParents;    //These are the special tags that contain this tag (directly)
   CTagList*       mSpecialKids;       //These are the extra things you can contain
   eHTMLTags       mSkipTarget;        //If set, then we skip all content until this tag is seen
@@ -134,7 +140,10 @@ static const int kDiscardTag      = 0x0001; //tells us to toss this tag
 static const int kOmitEndTag      = 0x0002; //safely ignore end tag
 static const int kLegalOpen       = 0x0004; //Lets BODY, TITLE, SCRIPT to reopen
 static const int kOmitWS          = 0x0008; //If set, the tag can omit all ws and newlines
-static const int kBadContentWatch = 0x0014; //Used in handling illegal contents
+static const int kNoPropagate     = 0x0010; //If set, this tag won't propagate as a child
+static const int kBadContentWatch = 0x0020; 
+static const int kNoStyleLeaksIn  = 0x0040; 
+static const int kNoStyleLeaksOut = 0x0080; 
 
 //*********************************************************************************************
 // The following ints define the standard groups of HTML elements...
@@ -150,21 +159,23 @@ static const int kSpecial       = 0x0008; //  A,    IMG,  APPLET, OBJECT, FONT, 
                                           //  MAP,  Q,    SUB,    SUP,    SPAN, BDO,      IFRAME
 
 static const int kFormControl   = 0x0010; //  INPUT SELECT  TEXTAREA  LABEL BUTTON
-static const int kPreformatted  = 0x0011; //  PRE
-static const int kPreExclusion  = 0x0012; //  IMG,  OBJECT, APPLET, BIG,  SMALL,  SUB,  SUP,  FONT, BASEFONT
-static const int kFontStyle     = 0x0014; //  TT, I, B, U, S, STRIKE, BIG, SMALL
-static const int kPhrase        = 0x0018; //  EM, STRONG, DFN, CODE, SAMP, KBD, VAR, CITE, ABBR, ACRONYM
-static const int kHeading       = 0x0020; //  H1..H6
-static const int kBlockMisc     = 0x0021; //  P, DL, DIV, CENTER, NOSCRIPT, NOFRAMES, BLOCKQUOTE
-                                          //  FORM, ISINDEX, HR, TABLE, FIELDSET, ADDRESS
+static const int kPreformatted  = 0x0020; //  PRE
+static const int kPreExclusion  = 0x0040; //  IMG,  OBJECT, APPLET, BIG,  SMALL,  SUB,  SUP,  FONT, BASEFONT
+static const int kFontStyle     = 0x0080; //  TT, I, B, U, S, STRIKE, BIG, SMALL, BLINK
+static const int kPhrase        = 0x0100; //  EM, STRONG, DFN, CODE, SAMP, KBD, VAR, CITE, ABBR, ACRONYM
+static const int kHeading       = 0x0200; //  H1..H6
+static const int kBlockMisc     = 0x0400; //  OBJECT, SCRIPT
+static const int kBlock         = 0x0800; //  ADDRESS, BLOCKQUOTE, CENTER, DIV, DL, FIELDSET, FORM, 
+                                          //  ISINDEX, HR, NOSCRIPT, NOFRAMES, P, TABLE
+static const int kList          = 0x1000; //  UL, OL, DIR, MENU
+static const int kPCDATA        = 0x2000; //  just plain text...
+static const int kSelf          = 0x4000; //  whatever THIS tag is...
+static const int kExtensions    = 0x8000; //  BGSOUND, WBR, NOBR
+static const int kTable         = 0x10000;//  TR,TD,THEAD,TBODY,TFOOT,CAPTION,TH
 
-static const int kList          = 0x0024; //  UL, OL, DIR, MENU
-static const int kPCDATA        = 0x0028; //  just plain text...
-static const int kSelf          = 0x0040; //  whatever THIS tag is...
-
-static const int kInline        = (kPCDATA|kFontStyle|kPhrase|kSpecial|kFormControl);  //  #PCDATA, %fontstyle, %phrase, %special, %formctrl
-static const int kBlock         = (kHeading|kList|kPreformatted|kBlockMisc); //  %heading, %list, %preformatted, %blockmisc
-static const int kFlow          = (kBlock|kInline); //  %block, %inline
+static const int kInlineEntity  = (kPCDATA|kFontStyle|kPhrase|kSpecial|kFormControl|kExtensions);  //  #PCDATA, %fontstyle, %phrase, %special, %formctrl
+static const int kBlockEntity   = (kHeading|kList|kPreformatted|kBlock); //  %heading, %list, %preformatted, %blockmisc
+static const int kFlowEntity    = (kBlockEntity|kInlineEntity); //  %block, %inline
 
 
 #endif

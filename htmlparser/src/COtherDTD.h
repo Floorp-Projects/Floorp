@@ -122,17 +122,6 @@ class COtherDTD : public CNavDTD {
     virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild)const;
 
     /**
-     *  This method gets called to determine whether a given 
-     *  tag can contain newlines. Most do not.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- tag type of parent
-     *  @param   aChild -- tag type of child
-     *  @return  PR_TRUE if given tag can contain other tags
-     */
-    virtual PRBool CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild)const;
-   
-    /**
      * This method gets called when a start token has been consumed and needs 
      * to be handled (possibly added to content model via sink).
      * @update	gess5/11/98
@@ -180,15 +169,6 @@ class COtherDTD : public CNavDTD {
      * @return  TRUE if the token was handled.
      */
     nsresult HandleCommentToken(CToken* aToken);
-
-    /**
-     * This method gets called when a skipped-content token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the skipped-content token to be handled
-     * @return  TRUE if the token was handled.
-     */
-    nsresult HandleSkippedContentToken(CToken* aToken);
 
     /**
      * This method gets called when an attribute token has been consumed and needs 
