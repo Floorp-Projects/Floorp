@@ -26,6 +26,7 @@
 
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
+#include "nsIRegion.h"
 
 #include "nsLookAndFeel.h"
 
@@ -42,7 +43,6 @@ typedef struct DamageQueueEntry_s
 
 #define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 #define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
-
 
 /**
  * Base of all Photon native widgets.
@@ -74,6 +74,7 @@ class nsWidget : public nsBaseWidget
 
     NS_IMETHOD SetModal(void);
     NS_IMETHOD Show(PRBool state);
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture);
     NS_IMETHOD IsVisible(PRBool &aState);
 
     NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
@@ -111,14 +112,17 @@ class nsWidget : public nsBaseWidget
 
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
-  // the following are nsWindow specific, and just stubbed here
+  // Use this to set the name of a widget for normal widgets.. not the same as the nsWindow version
+    NS_IMETHOD SetTitle(const nsString& aTitle);
 
+  // the following are nsWindow specific, and just stubbed here
     NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
     NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar);
     NS_IMETHOD ShowMenuBar(PRBool aShow);
 
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
+    NS_IMETHOD InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
     NS_IMETHOD Update(void);
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
     virtual void ScreenToWidget( PhPoint_t &pt );
@@ -131,10 +135,16 @@ class nsWidget : public nsBaseWidget
     PRBool     ConvertStatus(nsEventStatus aStatus);
 
 	/* Convert Photon key codes to Mozilla key codes */
-    PRUint32   nsConvertKey(unsigned long keysym, PRBool *aIsChar = nsnull);
+    PRUint32   nsConvertKey(unsigned long keysym, PRBool *aIsChar);
     void       InitKeyEvent(PhKeyEvent_t *aPhKeyEvent, nsWidget *aWidget,
-	                               nsKeyEvent &aKeyEvent, PRUint32 aEventType);
+                            nsKeyEvent &aKeyEvent, PRUint32 aEventType);
 
+    void       InitMouseEvent(PhPointerEvent_t * aPhButtonEvent,
+                              nsWidget         * aWidget,
+                              nsMouseEvent     & anEvent,
+                              PRUint32           aEventType);
+					  
+    PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
     PRBool     DispatchMouseEvent(PhPoint_t &aPos, PRUint32 aEvent);
     PRBool     DispatchStandardEvent(PRUint32 aMsg);
     PRBool     DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent);
@@ -173,15 +183,19 @@ class nsWidget : public nsBaseWidget
     static int        LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
 //    virtual void      NativePaint( PhRect_t &extent );
 
+#ifdef NS_DEBUG
+  nsCAutoString  debug_GetName(PtWidget_t * aPtWidget);
+  PRInt32       debug_GetRenderXID(PtWidget_t * aPtWidget);
+#endif
+
     PtWidget_t *mWidget;
     nsIWidget  *mParent;
     nsIMenuBar *mMenuBar;
     PtWidget_t *mClient;
-
+	
     // This is the composite update area (union of all the calls to
     // Invalidate)
-    nsRect mUpdateArea;
-
+    nsIRegion *mUpdateArea;
     PRBool mShown;
 
     PRUint32 mPreferredWidth, mPreferredHeight;
