@@ -1597,8 +1597,8 @@ ifdef NO_JAR_AUTO_REG
 _JAR_AUTO_REG=-a
 endif
 
-ifdef relativesrcdir
-_JAR_LOCALE_SOURCE = -c $(if $(filter en-US,$(AB_CD)),$(srcdir)/en-US,$(topsrcdir)/../l10n/$(AB_CD)/$(subst locales/,,$(relativesrcdir)))
+ifdef LOCALE_SRCDIR
+_JAR_LOCALE_SOURCE = -c $(LOCALE_SRCDIR)
 endif
 
 ifeq ($(OS_TARGET),WIN95)

@@ -796,3 +796,9 @@ endif
 # MOZ_UI_LOCALE directly, but use an intermediate variable that can be
 # overridden by the command line. (Besides, AB_CD is prettier).
 AB_CD = $(MOZ_UI_LOCALE)
+
+EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(topsrcdir)/../l10n/$(AB_CD)/$(subst /locales,,$(1)))
+
+ifdef relativesrcdir
+LOCALE_SRCDIR = $(call EXPAND_LOCALE_SRCDIR,$(relativesrcdir))
+endif
