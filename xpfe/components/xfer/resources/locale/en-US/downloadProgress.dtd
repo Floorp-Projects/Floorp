@@ -29,7 +29,7 @@
 <!-- LOCALIZATION NOTE (unknownTime):
     
     This string is used when the time remaining is unknown. -->
-<!ENTITY unknownTime "">
+<!ENTITY unknownTime "Unknown">
 
 <!-- LOCALIZATION NOTE (longTimeFormat):
 
