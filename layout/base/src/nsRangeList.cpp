@@ -409,6 +409,18 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
 }
 
 
+
+//compare the 2 passed in frames -1 first is smaller 1 second is smaller 0 they are the same
+PRInt32
+compareFrames(nsIFrame *aBegin, nsIFrame *aEnd)
+{
+  if (frame && NS_SUCCEEDED(frame->GetContent(*getter_AddRefs(beginContent)))){
+    nsCOMPtr<nsIDOMNode>oldDomNode = oldContent;
+
+}
+
+
+
 //the idea of this helper method is to select, deselect "top to bootom" traversing through the frames
 void
 selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEndOffset, PRBool aSelect)
@@ -443,7 +455,9 @@ selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEn
 }
 
 
-
+/**
+hard to go from nodes to frames, easy the other way!
+ */
 nsresult
 nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection)
 {
@@ -454,15 +468,19 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> domNode;
   if (NS_SUCCEEDED(aFrame->GetContent(*getter_AddRefs(content)))){
-    domNode = content;
+    domNode = (nsIContent *)content;
     if (domNode && NS_SUCCEEDED(aTracker->GetFocus(&frame, &anchor))){
       //traverse through document and unselect crap here
       if (!aContinueSelection){
-        if (frame && aFrame != frame)
-          frame->SetSelected(PR_FALSE,0,0,PR_TRUE);
-        if (anchor && aFrame != anchor)
-          anchor->SetSelected(PR_FALSE,0,0,PR_TRUE);
-
+        if (anchor && frame && anchor != frame && aFrame != frame)//selected across frames, must "deselect" frames between in correct order
+        {
+          PRInt32 compareResult = compareFrames(anchor,frame);
+          if ( compareResult < 0 )
+            selectFrames(anchor,0,frame,-1,PR_FALSE); //unselect all between
+          else if (compareResult > 0 )
+            selectFrames(frame,0,anchor,-1,PR_FALSE); //unselect all between
+//          else real bad put in assert here
+        }
 
 //DEBUG CRAP
 #if 1
@@ -471,12 +489,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
           nsCOMPtr<nsIDOMNode>oldDomNode = oldContent;
           if (oldDomNode  && oldDomNode == mFocusNode) {
             PRInt32 result1 = ComparePoints(domNode, aOffset + aContentOffset, mFocusNode, mFocusOffset);
-            if (result1 < 0)
-              printf("result1 < 0\n");
-            if (result1 == 0)
-              printf("result1 = 0\n");
-            if (result1  > 0)
-              printf("result1 > 0\n");
+            printf("result1 = %i\n",result1);
           }
         }
 #endif
@@ -513,18 +526,23 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
             aTracker->SetFocus(aFrame,anchor);
           }
   
-          if (anchor && NS_SUCCEEDED(anchor->GetSelected(&selected, &beginoffset, &endoffset, &begincontentoffset))){
-            nsCOMPtr<nsIDOMRange> range;
-            if (NS_SUCCEEDED(nsRepository::CreateInstance(kRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
-              if (domNode){
-                mFocusNode = domNode;
-                mFocusOffset = aOffset + aContentOffset;
-                range->SetStart(domNode,begincontentoffset);
-                range->SetEnd(domNode,aOffset + aContentOffset);
-                nsCOMPtr<nsISupports> rangeISupports;
-                if (rangeISupports = range) {
-                  AddItem(rangeISupports);
-                  return NS_OK;
+            nsCOMPtr<nsIContent>anchorContent;
+            if (anchor && NS_SUCCEEDED(anchor->GetContent(*getter_AddRefs(anchorContent)))){
+              nsCOMPtr<nsIDOMNode>anchorDomNode;
+              if ((anchorDomNode = anchorContent) && anchorDomNode == mAnchorNode) {
+                nsCOMPtr<nsIDOMRange> range;
+                if (NS_SUCCEEDED(nsRepository::CreateInstance(kRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
+                  if (domNode){
+                    mFocusNode = domNode;
+                    mFocusOffset = aOffset + aContentOffset;
+                    range->SetStart(anchorDomNode,mAnchorOffset);
+                    range->SetEnd(domNode,aOffset + aContentOffset);
+                    nsCOMPtr<nsISupports> rangeISupports;
+                    if (rangeISupports = range) {
+                      AddItem(rangeISupports);
+                      return NS_OK;
+                    }
+                  }
                 }
               }
             }
@@ -574,12 +592,12 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                     printf("continue selection from OLD FOCUS point to NEW FOCUS (growth)\n");
                     selectFrames(frame,focusFrameOffsetEnd, aFrame, aOffset, PR_TRUE);
                   }
-                  if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
+                  else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
                     //deselect from 2 to 1
                     printf("deselect from NEW FOCUS point to OLD FOCUS ( shrinkage) \n");
                     selectFrames(aFrame, aOffset, frame,focusFrameOffsetEnd, PR_FALSE);
                   }
-                  if (result1 >= 0 && result3 <= 0) {//1,a,2 or 1a,2 or 1,a2 or 1a2
+                  else if (result1 >= 0 && result3 <= 0) {//1,a,2 or 1a,2 or 1,a2 or 1a2
                     //deselect from 1 to a
                     printf("deselect from OLD FOCUS to ANCHOR\n");
                     selectFrames(frame, focusFrameOffsetEnd, anchor, anchorFrameOffsetBegin, PR_FALSE);
@@ -587,12 +605,12 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                     printf("select from ANCHOR to NEW FOCUS point \n");
                     selectFrames(anchor, anchorFrameOffsetBegin, aFrame, aOffset, PR_TRUE);
                   }
-                  if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
+                  else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
                     //deselect from 1 to 2
                     printf("deselect from OLD FOCUS to NEW FOCUS (shrinkage)\n");
                     selectFrames(frame, focusFrameOffsetEnd, aFrame, aOffset, PR_FALSE);
                   }
-                  if (result3 >= 0 && result1 <= 0) {//2,a,1 or 2a,1 or 2,a1 or 2a1
+                  else if (result3 >= 0 && result1 <= 0) {//2,a,1 or 2a,1 or 2,a1 or 2a1
                     //deselect from a to 1
                     printf("deselect from ANCHOR to OLD FOCUS \n");
                     selectFrames(anchor, anchorFrameOffsetBegin, frame, focusFrameOffsetEnd, PR_FALSE);
@@ -600,7 +618,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                     printf("select from NEW FOCUS to ANCHOR \n");
                     selectFrames(aFrame, aOffset, anchor, anchorFrameOffsetBegin, PR_TRUE);
                   }
-                  if (result2 <= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
+                  else if (result2 <= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
                     //continue selection from 2 to 1
                     printf("select from NEW FOCUS to OLD FOCUS (growth)\n");
                     selectFrames(aFrame, aOffset, frame,focusFrameOffsetEnd, PR_TRUE);
