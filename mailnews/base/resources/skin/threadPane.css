@@ -43,28 +43,34 @@ treeitem[Priority="Low"] > treerow > treecell.prioritycol > .tree-button
 }
 
 treeitem > treerow > treecell > .tree-icon {
- list-style-image: url("chrome://messenger/skin/mail-message.gif");
+  list-style-image: url("chrome://messenger/skin/mail-message.gif");
+  min-height: 14px;
 }
 
 treeitem[open="true"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/mail-message.gif");
+  list-style-image: url("chrome://messenger/skin/mail-message.gif");
+  min-height: 14px;
 }
 
 treecell.unreadcol > .tree-button {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
+  min-height: 14px;
 }
 
 treeitem[IsUnread="true"] > treerow > treecell.unreadcol > .tree-button {
   list-style-image: url("chrome://messenger/skin/unreadmail.gif");
+  min-height: 14px;
 }
 
 treecell.flagcol > .tree-button {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
+  min-height: 14px;
 }
 
 treeitem[Flagged="flagged"] > treerow > treecell.flagcol > .tree-button{
   list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
+  min-height: 14px;
 }
 
 treecell.threadColumnHeader[currentView="threaded"] > .tree-button{

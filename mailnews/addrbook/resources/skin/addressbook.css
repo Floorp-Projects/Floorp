@@ -123,7 +123,9 @@ tree[class="abDirectory"] treeitem > treerow > treecell > .tree-icon {
 }
 
 tree[class="abResults"] treeitem > treerow > treecell.cardicon {
-	 list-style-image: url("chrome://addressbook/skin/person.gif");
+	list-style-image: url("chrome://addressbook/skin/person.gif");
+	height: 14px;
+	min-height: 14px;
 }
 
 
