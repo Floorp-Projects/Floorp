@@ -1,0 +1,20 @@
+# 
+#           CONFIDENTIAL AND PROPRIETARY SOURCE CODE OF
+#              NETSCAPE COMMUNICATIONS CORPORATION
+# Copyright (C) 1996 Netscape Communications Corporation.  All Rights
+# Reserved.  Use of this Source Code is subject to the terms of the
+# applicable license agreement from Netscape Communications Corporation.
+# The copyright notice(s) in this Source Code does not indicate actual or
+# intended publication of this Source Code.
+#
+GDEPTH = ../../../../..
+
+MODULE = trex
+
+REQUIRES = raptor
+
+libs::
+	$(INSTALL) julian.cal $(DIST)/bin/res/ui
+	$(INSTALL) julian_day.cal $(DIST)/bin/res/ui
+	$(INSTALL) julian_html.cal $(DIST)/bin/res/ui
+	$(INSTALL) julian_cal_html.cal $(DIST)/bin/res/ui

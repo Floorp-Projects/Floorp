@@ -1,0 +1,16 @@
+<?xml version="1.0" standalone="no" encoding="UTF-8"?>
+<!DOCTYPE julian SYSTEM "http://kirkwood.mcom.com/julian.dtd">
+<Calendar>
+
+<panel name="HTMLCanvas"> 
+  <object class="htmlcanvas" src="resource://res/samples/test1.html" weightminor="0" weightmajor="0"/>
+</panel> 
+
+<rootpanel id="MainCalendarPanel" label="Calendar UI"> 
+  <control id="uhr" rule="HTMLCanvas" layout="xbox" weightminor="0" weightmajor="0"/>
+  <ctx id="StartContext" majorinterval="PT01H" minorinterval="PT15M" default="today"/>
+</rootpanel> 
+
+
+</Calendar>
+
