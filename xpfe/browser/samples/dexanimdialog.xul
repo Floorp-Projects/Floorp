@@ -29,6 +29,11 @@
 
     // OK button handler
     function DoOK() {
+      var toolkitCore = GetToolkitCore();
+      if (toolkitCore)
+        toolkitCore.CloseWindow(window);
+      return;
+
       // get checkbox
       // (using a document method available on HTML and XUL
       // documents, but not on XML documents)
@@ -65,6 +70,16 @@
       return element;
     }
 
+    function GetToolkitCore() {
+      var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+      if (!toolkitCore) {
+        toolkitCore = new ToolkitCore();
+        if (toolkitCore)
+          toolkitCore.Init("ToolkitCore");
+      }
+      return toolkitCore;
+    }
+
     function animateButtonImage() {
       var button = document.getElementById("animation");
       if (button) {
@@ -84,29 +99,29 @@
     }
   </html:script>
 
-  <table xmlns="http://www.w3.org/TR/REC-html40">
-    <tr>
-      <td>Give me your money</td>
-    </tr>
-    <tr>
-      <td>
+  <html:table>
+    <html:tr>
+      <html:td>Give me your money</html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>
         <!-- note the html namespace on the id attribute, which
              seems at this time to be required by getAttribute() -->
-        <input type="checkbox" html:id="remind"/>Remind me
-      </td>
-    </tr>
-    <tr>
-      <td><img src="sampleimages/bongo.gif"/></td>
-      <td><img id="animation" src="sampleimages/right.gif"/></td>
-    </tr>
-    <tr>
-      <td><button onclick="startAnimation()">Start Animation</button></td>
-      <td><button onclick="stopAnimation()">Stop Animation</button></td>
-    </tr>
-    <tr>
-      <td><button onclick="DoOK()">OK</button></td>
-      <td><button>Cancel</button></td>
-    </tr>
-  </table>
+        <html:input type="checkbox" html:id="remind"/>Remind me
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td><html:img src="sampleimages/bongo.gif"/></html:td>
+      <html:td><html:img id="animation" src="sampleimages/right.gif"/></html:td>
+    </html:tr>
+    <html:tr>
+      <html:td><html:button onclick="startAnimation()">Start Animation</html:button></html:td>
+      <html:td><html:button onclick="stopAnimation()">Stop Animation</html:button></html:td>
+    </html:tr>
+    <html:tr>
+      <html:td><button onclick="DoOK()">OK</html:button></html:td>
+      <html:td><button>Cancel</html:button></html:td>
+    </html:tr>
+  </html:table>
 
 </xul:window>

@@ -33,14 +33,13 @@
 
   <xul:toolbox> 
     <xul:toolbar>
-      <!-- buttons temporarily have (inappropriate) images because of
-           a bug in titledbutton -->
+      <!-- insert the next line should the bug where buttons don't show up
+           without an image specified ever return -->
+      <!-- src="resource:/res/toolbar/TB_Stop.gif" align="bottom" -->
       <xul:titledbutton
-         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
          value="Make Dialog" onclick="MakeDialog()"
          style="background-color:rgb(192,192,192);"/>
       <xul:titledbutton
-         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
          value="Modal Dialog" onclick="ModalDialog()"
          style="background-color:rgb(192,192,192);"/>
     </xul:toolbar>
