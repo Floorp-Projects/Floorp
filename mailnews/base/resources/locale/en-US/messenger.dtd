@@ -38,7 +38,7 @@ Rights Reserved.
 <!ENTITY saveAsFileCmd.accesskey		"f">  
 <!ENTITY saveAsTemplateCmd.label		"Template">  
 <!ENTITY saveAsTemplateCmd.accesskey	"t">  
-<!ENTITY getNewMsgCmd.label				"Get New Messages">
+<!ENTITY getNewMsgCmd.label				"Get New Messages">  
 <!ENTITY getNewMsgCmd.accesskey			"g">  
 <!ENTITY sendUnsentCmd.label			"Send Unsent Messages">  
 <!ENTITY sendUnsentCmd.accesskey		"d">  
@@ -231,7 +231,8 @@ Rights Reserved.
 <!ENTITY forwardCmd.label ".Forward">  
 <!ENTITY msgMenu.label "Message">  
 <!ENTITY msgMenu.accesskey "m">  
-<!ENTITY newMsgCmd.label "New Message">  
+<!ENTITY newMsgCmd.label "New Message"> 
+<!ENTITY newMsgCmd.accesskey "n"> 
 <!ENTITY replyMsgCmd.label "Reply">
 <!ENTITY replyMsgCmd.accesskey	"r">
 <!ENTITY replyMsgCmd.key	"r">

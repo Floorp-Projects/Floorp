@@ -323,9 +323,9 @@ Rights Reserved.
 	<menu id="menu_File">
 		<menupopup id="menu_FilePopup">
 			<menuitem value="&newMsgCmd.label;"
-                  accesskey="&newMsgCmd.label;"
-	 	      key="key_newMessage"
-		      oncommand="MsgNewMessage(event);"/>
+                                          accesskey="&newMsgCmd.accesskey;"
+			key="key_newMessage"
+			oncommand="MsgNewMessage(event);"/>
 			<menu id="menu_New">
 				<menupopup id="menu_NewPopup">
 					<menuitem value="&newFolderCmd.label;"
@@ -605,9 +605,9 @@ END of Deprecated -->
 <menu value="&msgMenu.label;" accesskey="&msgMenu.accesskey;">
 	<menupopup>
 		<menuitem value="&newMsgCmd.label;"
-                  accesskey="&newMsgCmd.label;"
-	 	      key="key_newMessage"
-		      oncommand="MsgNewMessage(event);"/>
+		accesskey="&newMsgCmd.accesskey;"
+		key="key_newMessage"
+		oncommand="MsgNewMessage(event);"/>
 		<menuitem value="&replyMsgCmd.label;" 
 			accesskey="&replyMsgCmd.accesskey;"
 			key="key_reply"
