@@ -56,6 +56,9 @@
 #include <gdk/gdkx.h>
 #include <freetype/tttables.h>
 
+#define FORCE_PR_LOG
+#include "prlog.h"
+
 // Class nsFontXft is an actual instance of a font.  The
 // |nsFontMetricsXft| class is made up of a collection of these little
 // fonts, really.
@@ -137,6 +140,8 @@ static void GdkRegionSetXftClip(GdkRegion *aGdkRegion, XftDraw *aDraw);
 
 static XftCharFontSpec  gFontSpecBuffer[FONT_SPEC_BUFFER_SIZE];
 
+PRLogModuleInfo *gXftFontLoad = nsnull;
+
 #undef DEBUG_XFT_MEMORY
 #ifdef DEBUG_XFT_MEMORY
 
@@ -155,6 +160,8 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
 nsFontMetricsXft::nsFontMetricsXft()
 {
     NS_INIT_ISUPPORTS();
+    if (!gXftFontLoad)
+        gXftFontLoad = PR_NewLogModule("XftFontLoad");
 }
 
 nsFontMetricsXft::~nsFontMetricsXft()
@@ -901,6 +908,34 @@ nsFontMetricsXft::FindFont(PRUnichar aChar)
 void
 nsFontMetricsXft::SetupFCPattern(void)
 {
+    printf("module level is %d\n", gXftFontLoad->level);
+    if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
+        printf("[%p] setting up pattern with the following specification:\n",
+               (void *)this);
+
+        // non-generic families
+        if (mFontList.Count() && !mFontIsGeneric[0]) {
+            printf("\tadding non-generic families: ");
+            for (int i=0; i < mFontList.Count(); ++i) {
+                if (mFontIsGeneric[i])
+                    break;
+
+                nsCString *familyName = mFontList.CStringAt(i);
+                printf("%s, ", familyName->get());
+            }
+            printf("\n");
+        }
+
+        // language group
+        const PRUnichar *name;
+        mLangGroup->GetUnicode(&name);
+        nsCAutoString cname;
+        cname.AssignWithConversion(nsDependentString(name));
+        printf("\tlang group: %s\n", cname.get());
+
+
+    }
+
     mPattern = FcPatternCreate();
     if (!mPattern)
         return;
@@ -949,6 +984,12 @@ nsFontMetricsXft::SetupFCPattern(void)
             if (FFRECountHyphens(value) < 3) {
                 nsCString tmpstr;
                 tmpstr.Append(value);
+
+                if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
+                    printf("\tadding generic font from preferences: %s\n",
+                           tmpstr.get());
+                }
+
                 AddFFRE(mPattern, &tmpstr, PR_FALSE);
             }
         }
@@ -958,7 +999,36 @@ nsFontMetricsXft::SetupFCPattern(void)
     if (mGenericFont)
         AddFFRE(mPattern, mGenericFont, PR_FALSE);
 
-    // add the pixel size
+    if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
+        // generic font
+        if (mGenericFont) {
+            printf("\tadding generic family: %s\n", mGenericFont->get());
+        }
+
+        // point size
+        printf("\tpoint,pixel size: %d,%d\n", mPointSize, mFont->size);
+
+        // slant type
+        printf("\tslant: ");
+        switch(mFont->style) {
+        case NS_FONT_STYLE_ITALIC:
+            printf("italic\n");
+            break;
+        case NS_FONT_STYLE_OBLIQUE:
+            printf("oblique\n");
+            break;
+        default:
+            printf("roman\n");
+            break;
+        }
+
+        // weight
+        printf("\tweight: (orig,calc) %d,%d\n",
+               mFont->weight, CalculateWeight(mFont->weight));
+
+    }        
+
+    // add the point size
     FcPatternAddInteger(mPattern, FC_SIZE, mPointSize);
 
     // Add the slant type
@@ -995,9 +1065,19 @@ nsFontMetricsXft::DoMatch(void)
         goto loser;
     }
 
+    if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
+        printf("matched the following (%d) fonts:\n", set->nfont);
+    }
+
     // Create a list of new font objects based on the fonts returned
     // as part of the query
     for (int i=0; i < set->nfont; ++i) {
+        if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
+            char *name;
+            FcPatternGetString(set->fonts[i], FC_FAMILY, 0, (FcChar8 **)&name);
+            printf("\t%s\n", name);
+        }
+
         nsFontXft *font = new nsFontXft(mPattern, set->fonts[i]);
         if (!font)
             goto loser;
