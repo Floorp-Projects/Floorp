@@ -22,8 +22,6 @@
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsIHTTPProtocolHandler.h"
-#include "nsHTTPCID.h"
-#include "nsHTTPHandlerFactory.h"
 
 #include "nsIFactory.h"
 #include "nsIGenericFactory.h"
@@ -41,9 +39,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPHandler);
 static nsModuleComponentInfo components[] =
 {
   { "HTTP Handler",
-    NS_HTTP_HANDLER_FACTORY_CID,
+    NS_IHTTPHANDLER_CID,
     NS_NETWORK_PROTOCOL_PROGID_PREFIX "http",
-    nsHTTPHandlerConstructor }
+    nsHTTPHandler::Create }
 };
 
   

@@ -49,6 +49,10 @@
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 
+#ifdef XP_PC
+#include <windows.h>
+#endif
+
 #if defined(PR_LOGGING)
 //
 // Log module for HTTP Protocol logging...
@@ -71,6 +75,28 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kAuthUrlParserCID, NS_AUTHORITYURLPARSER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+NS_IMPL_ISUPPORTS3(nsHTTPHandler,
+                   nsIHTTPProtocolHandler,
+                   nsIProtocolHandler,
+                   nsIProxy)
+
+// nsIProtocolHandler methods
+NS_IMETHODIMP
+nsHTTPHandler::GetDefaultPort(PRInt32 *result)
+{
+    static const PRInt32 defaultPort = 80;
+    *result = defaultPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetScheme(char * *o_Scheme)
+{
+    static const char* scheme = "http";
+    *o_Scheme = nsCRT::strdup(scheme);
+    return NS_OK;
+}
 
 /*
  * CategoryCreateService()
@@ -136,133 +162,43 @@ CategoryCreateService( const char *category )
     return (nFailed ? NS_ERROR_FAILURE : NS_OK);
 }
 
-// TODO Add an Init method on the handler instead of doing everything 
-// in the constructor
-nsHTTPHandler::nsHTTPHandler():
-    mAcceptLanguages(nsnull),
-    mDoKeepAlive(PR_FALSE),
-    mProxy(nsnull),
-    mUseProxy(PR_FALSE)
+NS_IMETHODIMP
+nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+                      nsIURI **result)
 {
-    nsresult rv;
-    NS_INIT_REFCNT();
+    nsresult rv = NS_OK;
 
-#if defined (PR_LOGGING)
-    gHTTPLog = PR_NewLogModule("nsHTTPProtocol");
-#endif /* PR_LOGGING */
-
-    mSessionStartTime = PR_Now();
-
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("Creating nsHTTPHandler [this=%x].\n", this));
-
-    // Initialize the Atoms used by the HTTP protocol...
-    nsHTTPAtoms::AddRefAtoms();
-
-    rv = NS_NewISupportsArray(getter_AddRefs(mConnections));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("unable to create new ISupportsArray");
-    }
-
-    rv = NS_NewISupportsArray(getter_AddRefs(mPendingChannelList));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("Failed to create the pending channel list");
-    }
-
-    rv = NS_NewISupportsArray(getter_AddRefs(mTransportList));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("Failed to create the transport list");
-    }
-    
-    // At some later stage we could merge this with the transport
-    // list and add a field to each transport to determine its 
-    // state. 
-    rv = NS_NewISupportsArray(getter_AddRefs(mIdleTransports));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("Failed to create the idle transport list");
-    }
-
-    // Prefs stuff. Is this the right place to do this? TODO check
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-
-    if (NS_FAILED(rv)) 
+    nsCOMPtr<nsIURI> url;
+    nsCOMPtr<nsIURLParser> urlparser;
+    if (aBaseURI)
     {
-        NS_ERROR("Failed to access preferences service.");
-        return;
+        rv = aBaseURI->Clone(getter_AddRefs(url));
+        if (NS_FAILED(rv)) return rv;
+        rv = url->SetRelativePath(aSpec);
     }
-    else 
+    else
     {
-#if 1   // only for keep alive
-        // This stuff only till Keep-Alive is not switched on by default
-        PRInt32 keepalive = -1;
-        rv = prefs->GetIntPref("network.http.keep-alive", &keepalive);
-        mDoKeepAlive = (keepalive == 1);
-#ifdef DEBUG_gagan
-        printf("Keep-alive switched ");
-        printf(mDoKeepAlive ? STARTYELLOW "on\n" ENDCOLOR : 
-                STARTRED "off\n" ENDCOLOR);
-#endif //DEBUG_gagan
-#endif  // remove till here
+        rv = nsComponentManager::CreateInstance(kAuthUrlParserCID, 
+                                    nsnull, NS_GET_IID(nsIURLParser),
+                                    getter_AddRefs(urlparser));
+        if (NS_FAILED(rv)) return rv;
+        rv = nsComponentManager::CreateInstance(kStandardUrlCID, 
+                                    nsnull, NS_GET_IID(nsIURI),
+                                    getter_AddRefs(url));
+        if (NS_FAILED(rv)) return rv;
 
-        nsXPIDLCString proxyServer;
-        nsXPIDLCString acceptLanguages;
-        PRInt32 proxyPort = -1;
-        PRInt32 type = -1;
-        rv = prefs->GetIntPref("network.proxy.type", &type);
-        //WARN for type==2
-        mUseProxy = (type == 1); //type == 2 is autoconfig stuff. 
-        if (NS_FAILED(rv))
-            return ; // NE_ERROR("Failed to get proxy type");
-        rv = prefs->CopyCharPref("network.proxy.http", 
-                getter_Copies(proxyServer));
-        if (NS_FAILED(rv)) 
-            return; //NS_ERROR("Failed to get the HTTP proxy server");
-        rv = prefs->GetIntPref("network.proxy.http_port",&proxyPort);
-        if (NS_FAILED(rv))
-            return; // NS_ERROR("Failed to get the HTTP port");
+        rv = url->SetURLParser(urlparser);
+        if (NS_FAILED(rv)) return rv;
 
-        if (NS_SUCCEEDED(rv) && (proxyPort>0)) // currently a bug in IntPref
-        {
-            if (NS_FAILED(SetProxyHost(proxyServer)))
-                NS_ERROR("Failed to set the HTTP proxy server");
-            if (NS_FAILED(SetProxyPort(proxyPort)))
-                NS_ERROR("Failed to set the HTTP proxy port");
-        }
-        rv = prefs->CopyCharPref("intl.accept_languages", 
-                getter_Copies(acceptLanguages));
-        if (NS_SUCCEEDED(rv))
-        {
-            if (NS_FAILED(SetAcceptLanguages(acceptLanguages)))
-            {
-                NS_ERROR("Failed to set the accept language");
-            }
-        }
+        rv = url->SetSpec((char*)aSpec);
     }
-
-    // Startup the http category
-    // Bring alive the objects in the http-protocol-startup category
-    (void) CategoryCreateService(NS_HTTP_STARTUP_CATEGORY);
+    if (NS_FAILED(rv)) return rv;
+    *result = url.get();
+    NS_ADDREF(*result);
+    return rv;
 }
 
-nsHTTPHandler::~nsHTTPHandler()
-{
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("Deleting nsHTTPHandler [this=%x].\n", this));
-
-    mConnections->Clear();
-    mIdleTransports->Clear();
-    mPendingChannelList->Clear();
-    mTransportList->Clear();
-
-    // Release the Atoms used by the HTTP protocol...
-    nsHTTPAtoms::ReleaseAtoms();
-
-    CRTFREEIF(mAcceptLanguages);
-    CRTFREEIF(mProxy);
-
-}
-
-NS_METHOD
+NS_IMETHODIMP
 nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
                           nsILoadGroup* aLoadGroup,
                           nsIInterfaceRequestor* notificationCallbacks,
@@ -352,61 +288,8 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
     return NS_ERROR_FAILURE;
 }
 
-NS_IMPL_ISUPPORTS3(nsHTTPHandler,
-                   nsIHTTPProtocolHandler,
-                   nsIProtocolHandler,
-                   nsIProxy)
 
-NS_METHOD
-nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                      nsIURI **result)
-{
-    nsresult rv;
-
-    nsIURI* url = nsnull;
-    nsIURLParser* urlparser = nsnull;
-    if (aBaseURI)
-    {
-        rv = aBaseURI->Clone(&url);
-        if (NS_FAILED(rv)) return rv;
-        rv = url->SetRelativePath(aSpec);
-    }
-    else
-    {
-        rv = nsComponentManager::CreateInstance(kAuthUrlParserCID, 
-                                    nsnull, NS_GET_IID(nsIURLParser),
-                                    (void**)&urlparser);
-        if (NS_FAILED(rv)) return rv;
-        rv = nsComponentManager::CreateInstance(kStandardUrlCID, 
-                                    nsnull, NS_GET_IID(nsIURI),
-                                    (void**)&url);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(urlparser);
-            return rv;
-        }
-        rv = url->SetURLParser(urlparser);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(urlparser);
-            NS_RELEASE(url);
-            return rv;
-        }
-        rv = url->SetSpec((char*)aSpec);
-    }
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
-        return rv;
-    }
-    *result = url;
-    return rv;
-}
-
-NS_METHOD
-nsHTTPHandler::FollowRedirects(PRBool bFollow)
-{
-    //mFollowRedirects = bFollow;
-    return NS_OK;
-}
-
+// nsIHTTPProtocolHandler methods
 NS_IMETHODIMP
 nsHTTPHandler::NewEncodeStream(nsIInputStream *rawStream, PRUint32 encodeFlags,
                                nsIInputStream **result)
@@ -454,6 +337,410 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
     }
 }
 
+NS_IMETHODIMP
+nsHTTPHandler::SetAcceptLanguages(const char* i_AcceptLanguages) 
+{
+    CRTFREEIF(mAcceptLanguages);
+    if (i_AcceptLanguages)
+    {
+        mAcceptLanguages = nsCRT::strdup(i_AcceptLanguages);
+        return (mAcceptLanguages == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetAcceptLanguages(char* *o_AcceptLanguages)
+{
+    if (!o_AcceptLanguages)
+        return NS_ERROR_NULL_POINTER;
+    if (mAcceptLanguages)
+    {
+        *o_AcceptLanguages = nsCRT::strdup(mAcceptLanguages);
+        return (*o_AcceptLanguages == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    else
+    {
+        *o_AcceptLanguages = nsnull;
+        return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetAuthEngine(nsAuthEngine** o_AuthEngine)
+{
+  *o_AuthEngine = &mAuthEngine;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetAppName(PRUnichar* *aAppName)
+{
+    *aAppName = mAppName.ToNewUnicode();
+    if (!*aAppName) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetAppVersion(PRUnichar* *aAppVersion) 
+{
+    *aAppVersion = mAppVersion.ToNewUnicode();
+    if (!*aAppVersion) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetVendorName(PRUnichar* *aVendorName)
+{
+    *aVendorName = mVendorName.ToNewUnicode();
+    if (!*aVendorName) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetVendorName(const PRUnichar* aVendorName)
+{
+    nsAutoString vendorName(aVendorName);
+    char *vName = vendorName.ToNewCString();
+    if (!vName) return NS_ERROR_OUT_OF_MEMORY;
+    mVendorName = vName;
+    nsAllocator::Free(vName);
+    return BuildUserAgent();
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetVendorVersion(PRUnichar* *aVendorVersion)
+{
+    *aVendorVersion = mVendorVersion.ToNewUnicode();
+    if (!*aVendorVersion) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetVendorVersion(const PRUnichar* aVendorVersion)
+{
+    nsAutoString vendorVersion(aVendorVersion);
+    char *vVer = vendorVersion.ToNewCString();
+    if (*vVer) return NS_ERROR_OUT_OF_MEMORY;
+    mVendorVersion = vVer;
+    nsAllocator::Free(vVer);
+    return BuildUserAgent();
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetLanguage(PRUnichar* *aLanguage)
+{
+    *aLanguage = mAppLanguage.ToNewUnicode();
+    if (!*aLanguage) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetLanguage(const PRUnichar* aLanguage)
+{
+    nsAutoString language(aLanguage);
+    char *lang = language.ToNewCString();
+    if (!lang) return NS_ERROR_OUT_OF_MEMORY;
+    mAppLanguage = lang;
+    nsAllocator::Free(lang);
+    return BuildUserAgent();
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetPlatform(PRUnichar* *aPlatform)
+{
+    *aPlatform = mAppPlatform.ToNewUnicode();
+    if (!*aPlatform) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetUserAgent(PRUnichar* *aUserAgent)
+{
+    if (mAppUserAgent.IsEmpty()) return NS_ERROR_NOT_INITIALIZED;
+    *aUserAgent = mAppUserAgent.ToNewUnicode();
+    if (!*aUserAgent) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetMisc(PRUnichar* *aMisc)
+{
+    *aMisc = mAppMisc.ToNewUnicode();
+    if (!*aMisc) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
+{
+    nsAutoString miscStr(aMisc);
+    char *misc = miscStr.ToNewCString();
+    if (!misc) return NS_ERROR_OUT_OF_MEMORY;
+    mAppMisc = misc;
+    nsAllocator::Free(misc);
+    return BuildUserAgent();
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetVendorComment(PRUnichar* *aComment)
+{
+    *aComment = mVendorComment.ToNewUnicode();
+    if (!*aComment) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetVendorComment(const PRUnichar* aComment)
+{
+    nsAutoString commentStr(aComment);
+    char *comment = commentStr.ToNewCString();
+    if (!comment) return NS_ERROR_OUT_OF_MEMORY;
+    mVendorComment = comment;
+    nsAllocator::Free(comment);
+    return BuildUserAgent();
+}
+
+
+// nsIProxy methods
+NS_IMETHODIMP
+nsHTTPHandler::GetProxyHost(char* *o_ProxyHost)
+{
+    if (!o_ProxyHost)
+        return NS_ERROR_NULL_POINTER;
+    if (mProxy)
+    {
+        *o_ProxyHost = nsCRT::strdup(mProxy);
+        return (*o_ProxyHost == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    else
+    {
+        *o_ProxyHost = nsnull;
+        return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetProxyHost(const char* i_ProxyHost) 
+{
+    CRTFREEIF(mProxy);
+    if (i_ProxyHost)
+    {
+        mProxy = nsCRT::strdup(i_ProxyHost);
+        return (mProxy == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetProxyPort(PRInt32 *aPort)
+{
+    *aPort = mProxyPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetProxyPort(PRInt32 i_ProxyPort) 
+{
+    mProxyPort = i_ProxyPort;
+    return NS_OK;
+}
+
+nsHTTPHandler::nsHTTPHandler():
+    mAcceptLanguages(nsnull),
+    mDoKeepAlive(PR_FALSE),
+    mProxy(nsnull),
+    mUseProxy(PR_FALSE)
+{
+    NS_INIT_REFCNT();
+}
+
+nsresult
+nsHTTPHandler::Init()
+{
+    nsresult rv = NS_OK;
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // initialize the version and app components
+    mAppName = "Mozilla";
+    mAppVersion = "5.0";
+    mAppSecurity = "N";
+
+    nsXPIDLCString locale;
+    rv = prefs->CopyCharPref("general.useragent.locale", 
+        getter_Copies(locale));
+    if (NS_FAILED(rv)) return rv;
+    mAppLanguage = locale;
+
+    nsXPIDLCString milestone;
+    rv = prefs->CopyCharPref("general.milestone",
+        getter_Copies(milestone));
+    if (NS_FAILED(rv)) return rv;
+    mAppVersion += milestone;
+
+    // Platform
+#if defined(XP_PC)
+    mAppPlatform = "Windows";
+#elif defined (XP_UNIX)
+    mAppPlatform = "X11";
+#else
+    mAppPlatform = "Macintosh";
+#endif
+
+    // OS/CPU
+#ifdef XP_PC
+    OSVERSIONINFO info = { sizeof OSVERSIONINFO };
+    if (GetVersionEx(&info)) {
+        if ( info.dwPlatformId == VER_PLATFORM_WIN32_NT ) {
+            if (info.dwMajorVersion == 4)
+                mAppOSCPU = "NT4.0";
+            else if (info.dwMajorVersion == 3) {
+                mAppOSCPU = "NT3.51";
+            } else {
+                mAppOSCPU = "NT";
+            }
+        } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+            if (info.dwMinorVersion > 0)
+                mAppOSCPU = "Win98";
+            else
+                mAppOSCPU = "Win95";
+        } else {
+            if (info.dwMajorVersion > 4)
+                mAppOSCPU = "Win2k";
+        }
+    }
+#elif defined (XP_UNIX)
+    struct utsname name;
+    
+    int ret = uname(&name);
+    if (ret >= 0) {
+       mAppOSCPU =  (char*)name.sysname;
+       mAppOSCPU += ' ';
+       mAppOSCPU += (char*)name.release;
+       mAppOSCPU += ' ';
+       mAppOSCPU += (char*)name.machine;
+    }
+#elif defined (XP_MAC)
+    mAppOSCPU = "PPC";
+#elif defined (XP_BEOS)
+    mAppOSCPU = "BeOS"
+#endif
+
+    rv = BuildUserAgent();
+    if (NS_FAILED(rv)) return rv;
+
+#if defined (PR_LOGGING)
+    gHTTPLog = PR_NewLogModule("nsHTTPProtocol");
+#endif /* PR_LOGGING */
+
+    mSessionStartTime = PR_Now();
+
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, ("Creating nsHTTPHandler [this=%x].\n", this));
+
+    // Initialize the Atoms used by the HTTP protocol...
+    nsHTTPAtoms::AddRefAtoms();
+
+    rv = NS_NewISupportsArray(getter_AddRefs(mConnections));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewISupportsArray(getter_AddRefs(mPendingChannelList));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewISupportsArray(getter_AddRefs(mTransportList));
+    if (NS_FAILED(rv)) return rv;
+    
+    // At some later stage we could merge this with the transport
+    // list and add a field to each transport to determine its 
+    // state. 
+    rv = NS_NewISupportsArray(getter_AddRefs(mIdleTransports));
+    if (NS_FAILED(rv)) return rv;
+
+#if 1   // only for keep alive
+    // This stuff only till Keep-Alive is not switched on by default
+    PRInt32 keepalive = -1;
+    rv = prefs->GetIntPref("network.http.keep-alive", &keepalive);
+    mDoKeepAlive = (keepalive == 1);
+#ifdef DEBUG_gagan
+    printf("Keep-alive switched ");
+    printf(mDoKeepAlive ? STARTYELLOW "on\n" ENDCOLOR : 
+            STARTRED "off\n" ENDCOLOR);
+#endif //DEBUG_gagan
+#endif  // remove till here
+
+    nsXPIDLCString proxyServer;
+    nsXPIDLCString acceptLanguages;
+    PRInt32 proxyPort = -1;
+    PRInt32 type = -1;
+    rv = prefs->GetIntPref("network.proxy.type", &type);
+    //WARN for type==2
+    mUseProxy = (type == 1); //type == 2 is autoconfig stuff. 
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->CopyCharPref("network.proxy.http", 
+        getter_Copies(proxyServer));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->GetIntPref("network.proxy.http_port",&proxyPort);
+    if (NS_FAILED(rv)) return rv;
+
+    if (NS_SUCCEEDED(rv) && (proxyPort>0)) // currently a bug in IntPref
+    {
+        rv = SetProxyHost(proxyServer);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = SetProxyPort(proxyPort);
+        if (NS_FAILED(rv)) return rv;
+    }
+    rv = prefs->CopyCharPref("intl.accept_languages", 
+            getter_Copies(acceptLanguages));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetAcceptLanguages(acceptLanguages);
+    if (NS_FAILED(rv)) return rv;
+   
+    // Startup the http category
+    // Bring alive the objects in the http-protocol-startup category
+    return CategoryCreateService(NS_HTTP_STARTUP_CATEGORY);
+}
+
+NS_METHOD
+nsHTTPHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsresult rv;
+    if (aOuter) return NS_ERROR_NO_AGGREGATION;
+
+    nsHTTPHandler* handler = new nsHTTPHandler();
+    if (!handler) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(handler);
+    rv = handler->Init();
+    if (NS_FAILED(rv)) {
+        delete handler;
+        return rv;
+    }
+    rv = handler->QueryInterface(aIID, aResult);
+    NS_RELEASE(handler);
+    return rv;
+}
+
+nsHTTPHandler::~nsHTTPHandler()
+{
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+           ("Deleting nsHTTPHandler [this=%x].\n", this));
+
+    mConnections->Clear();
+    mIdleTransports->Clear();
+    mPendingChannelList->Clear();
+    mTransportList->Clear();
+
+    // Release the Atoms used by the HTTP protocol...
+    nsHTTPAtoms::ReleaseAtoms();
+
+    CRTFREEIF(mAcceptLanguages);
+    CRTFREEIF(mProxy);
+
+}
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri, 
                                          nsHTTPChannel* i_Channel,
@@ -687,68 +974,55 @@ nsresult nsHTTPHandler::CancelPendingChannel(nsHTTPChannel* aChannel)
 
 }
 
-
 nsresult
-nsHTTPHandler::GetProxyHost(const char* *o_ProxyHost) const
+nsHTTPHandler::FollowRedirects(PRBool bFollow)
 {
-    if (!o_ProxyHost)
-        return NS_ERROR_NULL_POINTER;
-    if (mProxy)
-    {
-        *o_ProxyHost = nsCRT::strdup(mProxy);
-        return (*o_ProxyHost == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else
-    {
-        *o_ProxyHost = nsnull;
-        return NS_OK;
-    }
+    //mFollowRedirects = bFollow;
+    return NS_OK;
 }
 
+// This guy needs to be called each time one of it's comprising pieces changes.
 nsresult
-nsHTTPHandler::SetProxyHost(const char* i_ProxyHost) 
-{
-    CRTFREEIF(mProxy);
-    if (i_ProxyHost)
-    {
-        mProxy = nsCRT::strdup(i_ProxyHost);
-        return (mProxy == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+nsHTTPHandler::BuildUserAgent() {
+    // Mozilla portion
+    mAppUserAgent = mAppName;
+    mAppUserAgent += '/';
+    mAppUserAgent += mAppVersion;
+    mAppUserAgent += ' ';
+
+    // Mozilla comment
+    mAppUserAgent += '(';
+    mAppUserAgent += mAppPlatform;
+    mAppUserAgent += "; ";
+    mAppUserAgent += mAppSecurity;
+    mAppUserAgent += "; ";
+    mAppUserAgent += mAppOSCPU;
+    if (!mAppLanguage.IsEmpty()) {
+        mAppUserAgent += "; ";
+        mAppUserAgent += mAppLanguage;
+    }
+    if (!mAppMisc.IsEmpty()) {
+        mAppUserAgent += "; ";
+        mAppUserAgent += mAppMisc;
+    }
+    mAppUserAgent += ')';
+
+    // Vendor portion
+    if (!mVendorName.IsEmpty()) {
+        mAppUserAgent += ' ';
+        mAppUserAgent += mVendorName;
+        if (!mVendorVersion.IsEmpty()) {
+            mAppUserAgent += '/';
+            mAppUserAgent += mVendorVersion;
+        }
+    }
+    
+    // Vendor comment
+    if (!mVendorComment.IsEmpty()) {
+        mAppUserAgent += " (";
+        mAppUserAgent += mVendorComment;
+        mAppUserAgent += ')';
     }
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTTPHandler::GetAuthEngine(nsAuthEngine** o_AuthEngine)
-{
-  *o_AuthEngine = &mAuthEngine;
-  return NS_OK;
-}
-
-nsresult
-nsHTTPHandler::SetAcceptLanguages(const char* i_AcceptLanguages) 
-{
-    CRTFREEIF(mAcceptLanguages);
-    if (i_AcceptLanguages)
-    {
-        mAcceptLanguages = nsCRT::strdup(i_AcceptLanguages);
-        return (mAcceptLanguages == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    return NS_OK;
-}
-
-nsresult
-nsHTTPHandler::GetAcceptLanguages(char* *o_AcceptLanguages)
-{
-    if (!o_AcceptLanguages)
-        return NS_ERROR_NULL_POINTER;
-    if (mAcceptLanguages)
-    {
-        *o_AcceptLanguages = nsCRT::strdup(mAcceptLanguages);
-        return (*o_AcceptLanguages == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else
-    {
-        *o_AcceptLanguages = nsnull;
-        return NS_OK;
-    }
-}
