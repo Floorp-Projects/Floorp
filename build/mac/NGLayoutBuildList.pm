@@ -418,6 +418,11 @@ sub BuildLayoutProjects()
 	#//
 	#// Build Layout projects
 	#//
+
+	#// PowerPlant now used by widget, etc.
+	BuildProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp",							"PowerPlant$D.shlb");
+	MakeAlias(":mozilla:lib:mac:PowerPlant:PowerPlant$D.shlb",							"$dist_dir");
+
 	BuildProject(":mozilla:base:macbuild:base.mcp",										"base$D.shlb");
 	MakeAlias(":mozilla:base:macbuild:base$D.shlb",										"$dist_dir");
 	
@@ -450,10 +455,6 @@ sub BuildLayoutProjects()
 	BuildProject(":mozilla:view:macbuild:view.mcp",										"view$D.shlb");
 	MakeAlias(":mozilla:view:macbuild:view$D.shlb",										"$dist_dir");
 	$main::DEBUG ? MakeAlias(":mozilla:view:macbuild:view$D.shlb.xSYM",					"$dist_dir") : 0;
-
-	#// PowerPlant now used by widget, etc.
-	BuildProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp",							"PowerPlant$D.shlb");
-	MakeAlias(":mozilla:lib:mac:PowerPlant:PowerPlant$D.shlb",							"$dist_dir");
 
 	BuildProject(":mozilla:widget:macbuild:widget.mcp",									"widget$D.shlb");
 	MakeAlias(":mozilla:widget:macbuild:widget$D.shlb",									"$dist_dir");
