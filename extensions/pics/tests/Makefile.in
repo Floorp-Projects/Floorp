@@ -30,7 +30,6 @@ REQUIRES	= js pics pref xpcom include
 
 LIBS		= \
 	-lxpcom \
-	-lreg \
 	-lpics \
 	$(NSPR_LIBS) \
 	$(NULL)
