@@ -571,7 +571,9 @@ typedef enum
 #define TRANS_PROPERTY_TRANS      0
 #define TRANS_PROPERTY_OPACITY    1
 
+#ifdef SHOW_RECTS
 static evenodd = 0;
+#endif
 
 void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
@@ -1468,7 +1470,7 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
 
   if (gsDebug)
   {
-    printf("ViewManager::UpdateView: %x, rect ", aView);
+    printf("ViewManager::UpdateView: %p, rect ", aView);
     stdout << aRect;
     printf("\n");
   }
@@ -2347,9 +2349,7 @@ NS_IMETHODIMP nsViewManager :: GetRootScrollableView(nsIScrollableView **aScroll
 
 NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
 {
-  nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
-  nsDrawingSurface    ds = nsnull;
   nsRect              trect;
 
   if (PR_FALSE == mRefreshEnabled)
