@@ -41,6 +41,8 @@
 #include "nsImapMoveCoalescer.h"
 #include "nsMsgKeyArray.h"
 #include "nsImapService.h"
+#include "nsIMsgCopyService.h"
+#include "nsMsgBaseCID.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
@@ -149,9 +151,10 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
             messages->AppendElement(iSupports);
           }
         }
-        rv = destFolder->CopyMessages(m_sourceFolder,
-          messages, PR_TRUE, m_msgWindow, 
-          /*nsIMsgCopyServiceListener* listener*/ nsnull, PR_FALSE, PR_FALSE /*allowUndo*/);
+        nsCOMPtr<nsIMsgCopyService> copySvc = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
+        if (copySvc)
+          rv = copySvc->CopyMessages(m_sourceFolder, messages, destFolder, PR_TRUE,
+          /*nsIMsgCopyServiceListener* listener*/ nsnull, m_msgWindow, PR_FALSE /*allowUndo*/);
           //			   rv = imapService->OnlineMessageCopy(eventQueue,
           //						m_sourceFolder, messageIds.get(),
           //						destFolder, PR_TRUE, PR_TRUE,

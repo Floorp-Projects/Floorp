@@ -61,6 +61,8 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIMsgSearchSession.h"
+#include "nsIMsgCopyService.h"
+#include "nsMsgBaseCID.h"
 
 /* Implementation file */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -1977,7 +1979,9 @@ nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32
       messageArray->AppendElement(msgHdr);
   }
   m_deletingRows = isMove && mDeleteModel != nsMsgImapDeleteModels::IMAPDelete;
-  rv = destFolder->CopyMessages(m_folder /* source folder */, messageArray, isMove, window, nsnull /* listener */, PR_FALSE /* isFolder */, PR_TRUE /*allowUndo*/);
+  nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = copyService->CopyMessages(m_folder /* source folder */, messageArray, destFolder, isMove, nsnull /* listener */, window, PR_TRUE /*allowUndo*/);
 
   return rv;
 }
