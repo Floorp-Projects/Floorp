@@ -44,16 +44,16 @@ namespace Interpreter {
     
     class Context : public gc_base {
     public:
-        explicit Context(World& world, JSNamespace* aGlobal)
+        explicit Context(World& world, JSScope* aGlobal)
             : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0) {}
 
-        JSNamespace* getGlobalObject() { return mGlobal; }
+        JSScope* getGlobalObject() { return mGlobal; }
 
-        JSNamespace* setGlobalObject(JSNamespace* aGlobal)
+        JSScope* setGlobalObject(JSScope* aGlobal)
         {
-            JSNamespace* t = mGlobal;
+            JSScope* oldGlobal = mGlobal;
             mGlobal = aGlobal;
-            return t;
+            return oldGlobal;
         }
 
         InstructionIterator getPC() 
@@ -92,7 +92,7 @@ namespace Interpreter {
 
     private:
         World& mWorld;
-        JSNamespace* mGlobal;
+        JSScope* mGlobal;
         Linkage* mLinkage;
         std::vector<Listener*> mListeners;
         Activation* mActivation;

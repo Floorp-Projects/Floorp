@@ -308,7 +308,7 @@ static void testICG(World &world)
 
 static float64 testFunctionCall(World &world, float64 n)
 {
-    JSNamespace glob;
+    JSScope glob;
     Context cx(world, &glob);
     Tracer t;
     cx.addListener(&t);
@@ -361,7 +361,7 @@ static float64 testFunctionCall(World &world, float64 n)
 
 static float64 testFactorial(World &world, float64 n)
 {
-    JSNamespace glob;
+    JSScope glob;
     Context cx(world, &glob);
     // generate code for factorial, and interpret it.
     uint32 position = 0;
@@ -426,7 +426,7 @@ static float64 testFactorial(World &world, float64 n)
     
 static float64 testObjects(World &world, int32 n)
 {
-    JSNamespace glob;
+    JSScope glob;
     Context cx(world, &glob);
     // create some objects, put some properties, and retrieve them.
     uint32 position = 0;
@@ -492,7 +492,7 @@ static float64 testObjects(World &world, int32 n)
 
 static float64 testProto(World &world, int32 n)
 {
-    JSNamespace glob;
+    JSScope glob;
     Context cx(world, &glob);
 
     Tracer t;
@@ -547,7 +547,7 @@ static float64 testProto(World &world, int32 n)
     stdOut << initCG;
             
     // run initialization code.
-    JSValues args(1);
+    JSValues args;
     cx.interpret(initCode, args);
     
     // objects now exist, do real prototype chain manipulation.
@@ -565,7 +565,6 @@ static float64 testProto(World &world, int32 n)
     ICodeModule* callCode = callCG.complete();
     
     // call the increment method some number of times.
-    args[0] = JSValue(globalObject);
     while (n-- > 0)
         (void) cx.interpret(callCode, args);
     
