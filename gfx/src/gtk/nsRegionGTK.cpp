@@ -186,7 +186,7 @@ PRBool nsRegionGTK::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32
    
   containment = ::gdk_region_rect_in(mRegion, &rect);
 
-  if (containment == GDK_OVERLAP_RECTANGLE_IN)
+  if (containment != GDK_OVERLAP_RECTANGLE_OUT)
     return PR_TRUE;
   else
     return PR_FALSE;
