@@ -891,8 +891,6 @@ protected:
 
   nsresult StyleChangeReflow(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIAtom* aAttribute);
 
-  nsresult RecreateEntireFrameTree(nsIPresContext* aPresContext);
-
   /** Helper function that searches the immediate child frames 
     * (and their children if the frames are "special")
     * for a frame that maps the specified content object
