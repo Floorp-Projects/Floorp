@@ -81,6 +81,11 @@ interface nsIGenericWindow : nsISupports
 	Tells the window that intialization and setup is complete.  When this is
 	called the window can actually create itself based on the setup
 	information handed to it.
+
+	@return	NS_OK - Creation was successfull.
+				NS_ERROR_UNEXPECTED - This call was unexpected at this time.
+					Perhaps create() had already been called or not all
+					required initialization had been done.
 	*/
 	void create();
 
