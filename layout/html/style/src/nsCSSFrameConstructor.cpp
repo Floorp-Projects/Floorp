@@ -2744,21 +2744,8 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
 
-  if (nsHTMLAtoms::form == tag.get()) {
-    // A form doesn't get a psuedo frame parent, but it needs a frame.
-    // if the parent is a table, put the form in the outer table frame
-    // otherwise use aParentFrameIn as the parent
-    nsCOMPtr<nsIAtom> frameType;
-    aParentFrameIn->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableFrame == frameType.get()) {
-      aParentFrameIn->GetParent(&parentFrame);
-    }
-    else {
-      parentFrame = aParentFrameIn;
-    }
-  }
   // Do not construct pseudo frames for trees 
-  else if (MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag.get(), aContent, aStyleContext)) {
+  if (MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag.get(), aContent, aStyleContext)) {
     // this frame may have a pseudo parent, use block frame type to trigger foreign
     GetParentFrame(aPresShell, aPresContext, aTableCreator, *aParentFrameIn, 
                    nsLayoutAtoms::blockFrame, aState, parentFrame, aIsPseudoParent);
@@ -2939,9 +2926,22 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
     break;
 
   default:
-    rv = ConstructTableForeignFrame(aPresShell, aPresContext, aState, aChildContent, 
-                                    aParentFrame, childStyleContext, aTableCreator, 
-                                    aChildItems, childFrame, isPseudoParent);
+    {
+      nsCOMPtr<nsIAtom> tag;
+      aChildContent->GetTag(*getter_AddRefs(tag));
+      // A form doesn't get a psuedo frame parent, but it needs a frame, so just use the current parent
+      if (nsHTMLAtoms::form == tag.get()) {
+        nsFrameItems items;
+        rv = ConstructFrame(aPresShell, aPresContext, aState, aChildContent,         
+                            aParentFrame, items);
+        childFrame = items.childList;
+      }
+      else {
+        rv = ConstructTableForeignFrame(aPresShell, aPresContext, aState, aChildContent, 
+                                        aParentFrame, childStyleContext, aTableCreator, 
+                                        aChildItems, childFrame, isPseudoParent);
+      }
+    }
     break;
   }
 
