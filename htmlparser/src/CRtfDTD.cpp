@@ -354,6 +354,16 @@ PRBool CRtfDTD::IsContainer(PRInt32 aTag) const{
 }
 
 /**
+ *  
+ *  
+ *  @update  gess 4/01/99
+ *  @param   aTokenizer 
+ *  @return  
+ */
+void CRtfDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
+}
+
+/**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
  *  

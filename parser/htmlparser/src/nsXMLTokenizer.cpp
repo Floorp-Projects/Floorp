@@ -198,21 +198,22 @@ nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanne
 
   result = ConsumeConditional(aScanner, CDATAString, isCDATA);
   CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
-
-
-  if (NS_OK == result) {
-    nsAutoString  theEmpty;
-    if (isCDATA) {
-      aToken=theRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,theEmpty);
+  
+  if(theRecycler) {
+    if (NS_OK == result) {
+      nsAutoString  theEmpty;
+      if (isCDATA) {
+        aToken=theRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,theEmpty);
+      }
+      else {
+        aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
+      }
     }
-    else {
-      aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
-    }
-  }
 
-  if(aToken) {
-    result=aToken->Consume(aChar,aScanner);
-    AddToken(aToken,result,mTokenDeque);
+    if(aToken) {
+      result=aToken->Consume(aChar,aScanner);
+      AddToken(aToken,result,mTokenDeque,theRecycler);
+    }
   }
 
   return result;

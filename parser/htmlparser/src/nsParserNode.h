@@ -121,7 +121,7 @@ class nsCParserNode :  public nsIParserNode {
      * @param   anIndex is the index of the key you want
      * @return  string containing key.
      */
-    virtual const nsString& GetKeyAt(PRInt32 anIndex) const;
+    virtual const nsString& GetKeyAt(PRUint32 anIndex) const;
 
     /**
      * Retrieve the value (of key/value pair) at given index
@@ -129,7 +129,7 @@ class nsCParserNode :  public nsIParserNode {
      * @param   anIndex is the index of the value you want
      * @return  string containing value.
      */
-    virtual const nsString& GetValueAt(PRInt32 anIndex) const;
+    virtual const nsString& GetValueAt(PRUint32 anIndex) const;
 
     /**
      * NOTE: When the node is an entity, this will translate the entity
@@ -165,17 +165,13 @@ class nsCParserNode :  public nsIParserNode {
     virtual PRInt32 GetSourceLineNumber(void) const;
               
   protected:
-    PRInt32   mAttributeCount;    
+    PRUint32  mAttributeCount;    
     PRInt32   mLineNumber;
     CToken*   mToken;
     CToken*   mAttributes[eMaxAttr]; // XXX Ack! This needs to be dynamic! 
     CToken*   mSkippedContent;
     nsITokenRecycler* mRecycler;
     
-    // nsAutoString  mName;
-
-    static const nsString* mEmptyString;
-
 };
 
 #endif

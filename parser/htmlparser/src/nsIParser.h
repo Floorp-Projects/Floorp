@@ -126,6 +126,8 @@ class nsIParser : public nsISupports {
     virtual nsresult  Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE) = 0;
     virtual nsresult  Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall) = 0;
 
+    //virtual PRBool    IsValid(nsString& aSourceBuffer,const nsString& aContentTypeaLastCall) = 0;
+
     /**
      * This method gets called when the tokens have been consumed, and it's time
      * to build the model via the content sink.
@@ -164,6 +166,8 @@ class nsIParser : public nsISupports {
 #define NS_ERROR_HTMLPARSER_BADTOKENIZER          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1008)
 #define NS_ERROR_HTMLPARSER_BADATTRIBUTE          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1009)
 #define NS_ERROR_HTMLPARSER_UNRESOLVEDDTD         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1010)
+#define NS_ERROR_HTMLPARSER_MISPLACED             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1011)
+
 
 /**
  * Return codes for parsing routines.

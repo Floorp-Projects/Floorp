@@ -25,16 +25,17 @@ static char* tagTable[] = {
   "a", "abbr", "acronym", "address", "applet", "area", "b", "base", 
   "basefont", "bdo", "bgsound", "big", "blink", "blockquote", "body", "br", 
   "button", "caption", "center", "cite", "code", "col", "colgroup", "dd", 
-  "del", "dfn", "dir", "div", "dl", "dt", "em", "embed", "fieldset", "font", 
-  "form", "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6", "head", 
-  "hr", "html", "i", "iframe", "ilayer", "img", "input", "ins", "isindex", 
-  "kbd", "keygen", "label", "layer", "legend", "li", "link", "listing", 
-  "map", "menu", "meta", "multicol", "nobr", "noembed", "noframes", 
-  "nolayer", "noscript", "object", "ol", "optgroup", "option", "p", "param", 
-  "parsererror", "plaintext", "pre", "q", "s", "samp", "script", "select", 
-  "server", "small", "sound", "sourcetext", "spacer", "span", "strike", 
-  "strong", "style", "sub", "sup", "table", "tbody", "td", "textarea", 
-  "tfoot", "th", "thead", "title", "tr", "tt", "u", "ul", "var", "wbr", "xmp"
+  "del", "dfn", "dir", "div", "dl", "dt", "em", "embed", "endnote", 
+  "fieldset", "font", "form", "frame", "frameset", "h1", "h2", "h3", "h4", 
+  "h5", "h6", "head", "hr", "html", "i", "iframe", "ilayer", "image", "img", 
+  "input", "ins", "isindex", "kbd", "keygen", "label", "layer", "legend", 
+  "li", "link", "listing", "map", "menu", "meta", "multicol", "nobr", 
+  "noembed", "noframes", "nolayer", "noscript", "object", "ol", "optgroup", 
+  "option", "p", "param", "parsererror", "plaintext", "pre", "q", "s", 
+  "samp", "script", "select", "server", "small", "sound", "sourcetext", 
+  "spacer", "span", "strike", "strong", "style", "sub", "sup", "table", 
+  "tbody", "td", "textarea", "tfoot", "th", "thead", "title", "tr", "tt", 
+  "u", "ul", "var", "wbr", "xmp"
 };
 
 nsHTMLTag NS_TagToEnum(const char* aTagName) {

@@ -84,6 +84,7 @@ struct nsHTMLElement {
   static  PRBool  IsBlockParent(eHTMLTags aTag);
   static  PRBool  IsInlineParent(eHTMLTags aTag); 
   static  PRBool  IsFlowParent(eHTMLTags aTag);
+  static  PRBool  IsSectionTag(eHTMLTags aTag);
 
   CTagList*       GetSpecialChildren(void) const {return mSpecialKids;}
   CTagList*       GetSpecialParents(void) const {return mSpecialParents;}
@@ -104,8 +105,10 @@ struct nsHTMLElement {
   static  PRBool  IsHeadingTag(eHTMLTags aTag) ;
   static  PRBool  IsChildOfHead(eHTMLTags aTag) ;
   static  PRBool  IsTextTag(eHTMLTags aTag);
+  static  PRBool  IsWhitespaceTag(eHTMLTags aTag);
 
   eHTMLTags       mTagID;
+  eHTMLTags       mRequiredAncestor;
   CTagList*       mRootNodes;         //These are the tags above which you many not autoclose a START tag
   CTagList*       mEndRootNodes;      //These are the tags above which you many not autoclose an END tag
   CTagList*       mAutocloseStart;    //these are the start tags that you can automatically close with this START tag
@@ -125,9 +128,40 @@ extern CTagList      gFramesetKids;
 extern CTagList      gHeadingTags;
 
 //special property bits...
-static const int kDiscardTag      = 0x0001; //tells us to toss this tag
-static const int kOmitEndTag      = 0x0002; //safely ignore end tag
-static const int kLegalOpen       = 0x0004; //Lets BODY, TITLE, SCRIPT to reopen
+static const int kDiscardTag    = 0x0001; //tells us to toss this tag
+static const int kOmitEndTag    = 0x0002; //safely ignore end tag
+static const int kLegalOpen     = 0x0004; //Lets BODY, TITLE, SCRIPT to reopen
+static const int kOmitWS        = 0x0008; //If set, the tag can omit all ws and newlines
+
+//*********************************************************************************************
+// The following ints define the standard groups of HTML elements...
+//*********************************************************************************************
+
+static const int kNone= 0x0;
+
+static const int kHTMLContent   = 0x0001; //  HEAD, (FRAMESET | BODY)
+static const int kHeadContent   = 0x0002; //  TITLE, ISINDEX, BASE
+static const int kHeadMisc      = 0x0004; //  SCRIPT, STYLE, META,  LINK, OBJECT
+
+static const int kSpecial       = 0x0008; //  A,    IMG,  APPLET, OBJECT, FONT, BASEFONT, BR, SCRIPT, 
+                                          //  MAP,  Q,    SUB,    SUP,    SPAN, BDO,      IFRAME
+
+static const int kFormControl   = 0x0010; //  INPUT SELECT  TEXTAREA  LABEL BUTTON
+static const int kPreformatted  = 0x0011; //  PRE
+static const int kPreExclusion  = 0x0012; //  IMG,  OBJECT, APPLET, BIG,  SMALL,  SUB,  SUP,  FONT, BASEFONT
+static const int kFontStyle     = 0x0014; //  TT, I, B, U, S, STRIKE, BIG, SMALL
+static const int kPhrase        = 0x0018; //  EM, STRONG, DFN, CODE, SAMP, KBD, VAR, CITE, ABBR, ACRONYM
+static const int kHeading       = 0x0020; //  H1..H6
+static const int kBlockMisc     = 0x0021; //  P, DL, DIV, CENTER, NOSCRIPT, NOFRAMES, BLOCKQUOTE
+                                          //  FORM, ISINDEX, HR, TABLE, FIELDSET, ADDRESS
+
+static const int kList          = 0x0024; //  UL, OL, DIR, MENU
+static const int kPCDATA        = 0x0028; //  just plain text...
+static const int kSelf          = 0x0040; //  whatever THIS tag is...
+
+static const int kInline        = (kPCDATA|kFontStyle|kPhrase|kSpecial|kFormControl);  //  #PCDATA, %fontstyle, %phrase, %special, %formctrl
+static const int kBlock         = (kHeading|kList|kPreformatted|kBlockMisc); //  %heading, %list, %preformatted, %blockmisc
+static const int kFlow          = (kBlock|kInline); //  %block, %inline
 
 
 #endif

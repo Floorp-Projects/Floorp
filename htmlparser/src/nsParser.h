@@ -62,12 +62,15 @@
 #include "CParserContext.h"
 #include "nsParserCIID.h"
 #include "nsITokenizer.h"
+#include "nsHTMLTags.h"
 
 class IContentSink;
 class nsIHTMLContentSink;
 class nsIDTD;
 class nsScanner;
 class nsIParserFilter;
+class nsTagStack;
+
 #include <fstream.h>
 
 #ifndef XP_MAC
@@ -167,6 +170,9 @@ friend class CTokenHandler;
      * @return  TRUE if all went well -- FALSE otherwise
      */
     virtual nsresult Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE);
+
+    virtual PRBool IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,nsHTMLTag aTag,const nsString& aContentType);
+    virtual PRBool ParseFragment(nsString& aSourceBuffer,void* aKey,nsTagStack& aStack,nsHTMLTag aTag,const nsString& aContentType);
 
 
     /**

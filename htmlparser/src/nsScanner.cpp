@@ -620,7 +620,7 @@ nsString& nsScanner::GetBuffer(void) {
 void nsScanner::CopyUnusedData(nsString& aCopyBuffer) {
   PRInt32 theLen=mBuffer.Length();
   if(0<theLen) {
-    mBuffer.Right(aCopyBuffer,theLen-mOffset);
+    mBuffer.Right(aCopyBuffer,theLen-mMarkPos);
   }
 }
 

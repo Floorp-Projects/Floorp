@@ -135,6 +135,8 @@ class nsIDTD : public nsISupports {
 
     virtual  nsITokenRecycler* GetTokenRecycler(void)=0;
 
+    virtual  void EmitMisplacedContent(nsITokenizer* aTokenizer)=0;
+
     /**
      *  This method causes all tokens to be dispatched to the given tag handler.
      *

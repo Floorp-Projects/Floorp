@@ -189,9 +189,6 @@ class CEntityToken : public CHTMLToken {
 //    static  PRBool      VerifyEntityTable(void);
 //    static  PRInt32     ReduceEntities(nsString& aString);
     virtual  void       DebugDumpSource(ostream& out);
-
-  private:
-    static  PRInt32     mEntityTokenCount;
 };
 
 

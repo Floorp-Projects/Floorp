@@ -265,7 +265,9 @@ CTokenRecycler::CTokenRecycler() : nsITokenRecycler() {
   int i=0;
   for(i=0;i<eToken_last-1;i++) {
     mTokenCache[i]=new nsDeque(new CTokenDeallocator());
-    //mTotals[i]=0;
+#ifdef NS_DEBUG
+    mTotals[i]=0;
+#endif
   }
 }
 
@@ -330,16 +332,18 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
     result->Reinitialize(aTag,aString);
   }
   else {
-    //mTotals[aType-1]++;
+#ifdef  NS_DEBUG
+    mTotals[aType-1]++;
+#endif
     switch(aType){
       case eToken_start:      result=new CStartToken(aTag); break;
       case eToken_end:        result=new CEndToken(aTag); break;
       case eToken_comment:    result=new CCommentToken(); break;
-      case eToken_attribute:  result=new CAttributeToken(); break;
       case eToken_entity:     result=new CEntityToken(); break;
       case eToken_whitespace: result=new CWhitespaceToken(); break;
       case eToken_newline:    result=new CNewlineToken(); break;
       case eToken_text:       result=new CTextToken(aString); break;
+      case eToken_attribute:  result=new CAttributeToken(); break;
       case eToken_script:     result=new CScriptToken(); break;
       case eToken_style:      result=new CStyleToken(); break;
       case eToken_skippedcontent: result=new CSkippedContentToken(aString); break;
@@ -367,7 +371,9 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) 
     result->Reinitialize(aTag,theEmpty);
   }
   else {
-    //mTotals[aType-1]++;
+#ifdef  NS_DEBUG
+    mTotals[aType-1]++;
+#endif
     switch(aType){
       case eToken_start:            result=new CStartToken(aTag); break;
       case eToken_end:              result=new CEndToken(aTag); break;

@@ -23,11 +23,15 @@
 #include "nshtmlpars.h"
 #include "nsITokenizer.h"
 
-const nsString* nsCParserNode::mEmptyString=0;
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_NODE_IID); 
 static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID); 
+
+nsAutoString& GetEmptyString() {
+  static nsAutoString theEmptyString("");
+  return theEmptyString;
+}
 
 /**
  *  Default constructor
@@ -38,9 +42,6 @@ static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID);
  */
 nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler): nsIParserNode() {
   NS_INIT_REFCNT();
-  if(!mEmptyString) {
-    mEmptyString=new nsString("");  //this is going to leak, but it's a singleton
-  }
   mAttributeCount=0;
   mLineNumber=aLineNumber;
   mToken=aToken;
@@ -60,7 +61,7 @@ nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler
  */
 nsCParserNode::~nsCParserNode() {
   if(mRecycler) {
-    int index=0;
+    PRUint32 index=0;
     for(index=0;index<mAttributeCount;index++){
       mRecycler->RecycleToken(mAttributes[index]);
     }
@@ -140,7 +141,6 @@ void nsCParserNode::AddAttribute(CToken* aToken) {
   }
 }
 
-
 /**
  *  This method gets called when the parser encounters 
  *  skipped content after a start token.
@@ -165,7 +165,7 @@ void nsCParserNode::SetSkippedContent(CToken* aToken){
  *  @return  string ref containing node name
  */
 const nsString& nsCParserNode::GetName() const {
-  return *mEmptyString;
+  return GetEmptyString();
   // return mName;
 }
 
@@ -194,7 +194,7 @@ const nsString& nsCParserNode::GetSkippedContent() const {
   if (nsnull != mSkippedContent) {
     return ((CSkippedContentToken*)mSkippedContent)->GetKey();
   }
-  return *mEmptyString;
+  return GetEmptyString();
 }
 
 /**
@@ -244,12 +244,12 @@ PRInt32 nsCParserNode::GetAttributeCount(PRBool askToken) const{
  *  @param   anIndex-- offset of attribute to retrieve
  *  @return  string rep of given attribute text key
  */
-const nsString& nsCParserNode::GetKeyAt(PRInt32 anIndex) const {
+const nsString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
   if(anIndex<mAttributeCount) {
     CAttributeToken* tkn=(CAttributeToken*)(mAttributes[anIndex]);
     return tkn->GetKey();
   }
-  return *mEmptyString;
+  return GetEmptyString();
 }
 
 
@@ -260,12 +260,12 @@ const nsString& nsCParserNode::GetKeyAt(PRInt32 anIndex) const {
  *  @param   anIndex-- offset of attribute to retrieve
  *  @return  string rep of given attribute text value
  */
-const nsString& nsCParserNode::GetValueAt(PRInt32 anIndex) const {
+const nsString& nsCParserNode::GetValueAt(PRUint32 anIndex) const {
   NS_PRECONDITION(anIndex<mAttributeCount, "Bad attr index");
   if(anIndex<mAttributeCount){
     return (mAttributes[anIndex])->GetStringValueXXX();
   }
-  return *mEmptyString;
+  return GetEmptyString();
 }
 
 
