@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.34 2002/11/11 22:00:03 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.35 2002/11/26 00:13:54 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2114,7 +2114,7 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
     unsigned int i;
     unsigned char *tmpbuf;
     unsigned int nnlen = 0;
-    unsigned int eaddrlen = 0;
+    unsigned int eaddrslen = 0;
     int keyidoff;
     SECItem *certKeys;
     SECItem *keyIDs;
@@ -2122,15 +2122,18 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
     if ( entry->nickname ) {
 	nnlen = PORT_Strlen(entry->nickname) + 1;
     }
-    if ( entry->emailAddr ) {
-	eaddrlen = PORT_Strlen(entry->emailAddr) + 1;
+    if ( entry->emailAddrs ) {
+	eaddrslen = 2;
+	for (i=0; i < entry->nemailAddrs; i++) {
+	    eaddrslen += PORT_Strlen(entry->emailAddrs[i]) + 1 + 2;
+	}
     }
-    
+
     ncerts = entry->ncerts;
     
     /* compute the length of the entry */
-    keyidoff = DB_SUBJECT_ENTRY_HEADER_LEN + nnlen + eaddrlen;
-    len = keyidoff + 4 * ncerts;
+    keyidoff = DB_SUBJECT_ENTRY_HEADER_LEN + nnlen ;
+    len = keyidoff + 4 * ncerts + eaddrslen;
     for ( i = 0; i < ncerts; i++ ) {
 	len += entry->certKeys[i].len;
 	len += entry->keyIDs[i].len;
@@ -2154,12 +2157,11 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
     buf[1] = ncerts & 0xff;
     buf[2] = ( nnlen >> 8 ) & 0xff;
     buf[3] = nnlen & 0xff;
-    buf[4] = ( eaddrlen >> 8 ) & 0xff;
-    buf[5] = eaddrlen & 0xff;
+    /* v7 email field is NULL in v8 */
+    buf[4] = 0;
+    buf[5] = 0;
 
     PORT_Memcpy(&buf[DB_SUBJECT_ENTRY_HEADER_LEN], entry->nickname, nnlen);
-    PORT_Memcpy(&buf[DB_SUBJECT_ENTRY_HEADER_LEN+nnlen], entry->emailAddr,
-		eaddrlen);
     
     for ( i = 0; i < ncerts; i++ ) {
 
@@ -2185,6 +2187,20 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
 	keyIDs = entry->keyIDs;
 	PORT_Memcpy(tmpbuf, keyIDs[i].data, keyIDs[i].len);
 	tmpbuf = tmpbuf + keyIDs[i].len;
+    }
+
+    if (entry->emailAddrs) {
+	tmpbuf[0] =  (entry->nemailAddrs >> 8) & 0xff;
+	tmpbuf[1] =  entry->nemailAddrs  & 0xff;
+	tmpbuf += 2;
+	for (i=0; i < entry->nemailAddrs; i++) {
+	    int nameLen = PORT_Strlen(entry->emailAddrs[i]) + 1;
+	    tmpbuf[0] =  (nameLen >> 8) & 0xff;
+	    tmpbuf[1] =  nameLen & 0xff;
+	    tmpbuf += 2;
+	    PORT_Memcpy(tmpbuf,entry->emailAddrs[i],nameLen);
+	    tmpbuf +=nameLen;
+	}
     }
 
     PORT_Assert(tmpbuf == &buf[len]);
@@ -2225,10 +2241,13 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     PRArenaPool *arena;
     unsigned int len, itemlen;
     unsigned char *tmpbuf;
+    unsigned char *end;
     unsigned int i;
     SECStatus rv;
     unsigned int keyidoff;
     unsigned int nnlen, eaddrlen;
+    unsigned int nemailAddrs = 0;
+    unsigned int stdlen;
     
     arena = entry->common.arena;
 
@@ -2246,10 +2265,26 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     entry->ncerts = ncerts = ( ( dbentry->data[0] << 8 ) | dbentry->data[1] );
     nnlen = ( ( dbentry->data[2] << 8 ) | dbentry->data[3] );
     eaddrlen = ( ( dbentry->data[4] << 8 ) | dbentry->data[5] );
-    if ( dbentry->len < ( ncerts * 4 + DB_SUBJECT_ENTRY_HEADER_LEN +
-			 nnlen + eaddrlen) ) {
+    stdlen = ncerts * 4 + DB_SUBJECT_ENTRY_HEADER_LEN + nnlen + eaddrlen;
+    if ( dbentry->len < stdlen) {
 	PORT_SetError(SEC_ERROR_BAD_DATABASE);
 	goto loser;
+    }
+    if (eaddrlen == 0 && dbentry->len > stdlen+1) {
+	/* verify the email addr extensions lengths are valid */
+	unsigned int totalLen = stdlen;
+	tmpbuf = &dbentry->data[stdlen];
+	nemailAddrs = tmpbuf[0] << 8 | tmpbuf[1];
+	totalLen += 2;
+	for (i=0; i < nemailAddrs && totalLen+1 < dbentry->len; i++) {
+	    unsigned int nameLen = tmpbuf[0] << 8 | tmpbuf[1];
+	    tmpbuf += 2 + nameLen;
+	    totalLen += 2 + nameLen;
+	}
+	if (dbentry->len > totalLen) {
+	    PORT_SetError(SEC_ERROR_BAD_DATABASE);
+	    goto loser;
+	}
     }
     
     entry->certKeys = (SECItem *)PORT_ArenaAlloc(arena,
@@ -2274,18 +2309,26 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     } else {
 	entry->nickname = NULL;
     }
-    
+
+    /* if we have an old style email entry, there is only one */    
+    entry->nemailAddrs = 0;
     if ( eaddrlen > 1 ) { /* null terminator is stored */
-	entry->emailAddr = (char *)PORT_ArenaAlloc(arena, eaddrlen);
-	if ( entry->emailAddr == NULL ) {
+	entry->emailAddrs = (char **)PORT_ArenaAlloc(arena, sizeof(char *));
+	if ( entry->emailAddrs == NULL ) {
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
 	}
-	PORT_Memcpy(entry->emailAddr,
+	entry->emailAddrs[0] = (char *)PORT_ArenaAlloc(arena, eaddrlen);
+	if ( entry->emailAddrs[0] == NULL ) {
+	    PORT_SetError(SEC_ERROR_NO_MEMORY);
+	    goto loser;
+	}
+	PORT_Memcpy(entry->emailAddrs[0],
 		    &dbentry->data[DB_SUBJECT_ENTRY_HEADER_LEN+nnlen],
 		    eaddrlen);
+	 entry->nemailAddrs = 1;
     } else {
-	entry->emailAddr = NULL;
+	entry->emailAddrs = NULL;
     }
     
     /* collect the lengths of the certKeys and keyIDs, and total the
@@ -2336,8 +2379,29 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
 	PORT_Memcpy(entry->keyIDs[i].data, tmpbuf, entry->keyIDs[i].len);
 	tmpbuf = &tmpbuf[entry->keyIDs[i].len];
     }
+
+    end = &dbentry->data[dbentry->len];
+    if ((eaddrlen == 0) && (tmpbuf+1 < end)) {
+	/* read in the additional email addresses */
+	entry->nemailAddrs = nemailAddrs;
+	entry->emailAddrs = (char **)
+		PORT_ArenaAlloc(arena, nemailAddrs * sizeof(char *));
+	if (entry->emailAddrs == NULL) {
+	    PORT_SetError(SEC_ERROR_NO_MEMORY);
+	    goto loser;
+	}
+	for (i=0; i < entry->nemailAddrs; i++) {
+	    int nameLen = tmpbuf[0] << 8 | tmpbuf[1];
+	    entry->emailAddrs[i] = PORT_ArenaAlloc(arena,nameLen);
+	    if (entry->emailAddrs == NULL) {
+	        PORT_SetError(SEC_ERROR_NO_MEMORY);
+	        goto loser;
+	    }
+	    PORT_Memcpy(entry->emailAddrs[i],&tmpbuf[2],nameLen);
+	    tmpbuf += 2 + nameLen;
+	}
+    }
     
-    PORT_Assert(tmpbuf == &dbentry->data[dbentry->len]);
     
     return(SECSuccess);
 
@@ -2385,6 +2449,7 @@ NewDBSubjectEntry(SECItem *derSubject, SECItem *certKey,
     }
     
     entry->ncerts = 1;
+    entry->nemailAddrs = 0;
     /* copy nickname */
     if ( nickname && ( *nickname != '\0' ) ) {
 	nnlen = PORT_Strlen(nickname) + 1;
@@ -2402,21 +2467,27 @@ NewDBSubjectEntry(SECItem *derSubject, SECItem *certKey,
     if ( emailAddr && ( *emailAddr != '\0' ) ) {
 	emailAddr = nsslowcert_FixupEmailAddr(emailAddr);
 	if ( emailAddr == NULL ) {
-	    entry->emailAddr = NULL;
+	    entry->emailAddrs = NULL;
 	    goto loser;
 	}
 	
 	eaddrlen = PORT_Strlen(emailAddr) + 1;
-	entry->emailAddr = (char *)PORT_ArenaAlloc(arena, eaddrlen);
-	if ( entry->emailAddr == NULL ) {
+	entry->emailAddrs = (char **)PORT_ArenaAlloc(arena, sizeof(char *));
+	if ( entry->emailAddrs == NULL ) {
 	    PORT_Free(emailAddr);
 	    goto loser;
 	}
+	entry->emailAddrs[0] = (char *)PORT_ArenaAlloc(arena, eaddrlen);
+	entry->emailAddrs[0] = PORT_ArenaStrdup(arena,emailAddr);
+	if (entry->emailAddrs[0]) {
+	    entry->nemailAddrs = 1;
+	} else {
+	    entry->emailAddrs[0] = NULL;
+	}
 	
-	PORT_Memcpy(entry->emailAddr, emailAddr, eaddrlen);
 	PORT_Free(emailAddr);
     } else {
-	entry->emailAddr = NULL;
+	entry->emailAddrs = NULL;
     }
     
     /* allocate space for certKeys and keyIDs */
@@ -2587,12 +2658,15 @@ loser:
     
 }
 
+typedef enum { nsslowcert_remove, nsslowcert_add } nsslowcertUpdateType;
+
 static SECStatus
-UpdateSubjectWithEmailAddr(NSSLOWCERTCertDBHandle *dbhandle, 
-					SECItem *derSubject, char *emailAddr)
+nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle, 
+	SECItem *derSubject, char *emailAddr, nsslowcertUpdateType updateType)
 {
     PRBool save = PR_FALSE, delold = PR_FALSE;
     certDBEntrySubject *entry = NULL;
+    int index,i;
     SECStatus rv;
    
     if (emailAddr) { 
@@ -2606,49 +2680,54 @@ UpdateSubjectWithEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
     if (entry == NULL) {
 	goto loser;
     }
-    
-    if ( entry->emailAddr ) {
-	if ( (emailAddr == NULL) || 
-		(PORT_Strcmp(entry->emailAddr, emailAddr) != 0) ) {
-	    save = PR_TRUE;
-	    delold = PR_TRUE;
-	}
-    } else if (emailAddr) {
-	save = PR_TRUE;
-    }
 
-    if ( delold ) {
-	/* delete the old smime entry, because this cert now has a new
-	 * smime entry pointing to it
-	 */
-	PORT_Assert(save);
-	PORT_Assert(entry->emailAddr != NULL);
-	DeleteDBSMimeEntry(dbhandle, entry->emailAddr);
-    }
-
-    if ( save ) {
-	unsigned int len;
-	
-	PORT_Assert(entry != NULL);
-	if (emailAddr) {
-	    len = PORT_Strlen(emailAddr) + 1;
-	    entry->emailAddr = (char *)PORT_ArenaAlloc(entry->common.arena, len);
-	    if ( entry->emailAddr == NULL ) {
-		goto loser;
+    if ( entry->emailAddrs ) {
+	for (i=0; i < entry->nemailAddrs; i++) {
+	    if (PORT_Strcmp(entry->emailAddrs[i],emailAddr) == 0) {
+		index = i;
 	    }
-	    PORT_Memcpy(entry->emailAddr, emailAddr, len);
-	} else {
-	    entry->emailAddr = NULL;
 	}
-	
-	/* delete the subject entry */
-	DeleteDBSubjectEntry(dbhandle, derSubject);
+    }
 
-	/* write the new one */
-	rv = WriteDBSubjectEntry(dbhandle, entry);
-	if ( rv != SECSuccess ) {
+
+    if (updateType == nsslowcert_remove) {
+	if (index == -1) {
+	    return SECSuccess;
+	}
+
+	entry->nemailAddrs--;
+	for (i=index; i < entry->nemailAddrs; i++) {
+	   entry->emailAddrs[i] = entry->emailAddrs[i+1];
+	}
+    } else {
+	char **newAddrs = NULL;
+	if (index != -1) {
+	    return SECSuccess;
+	}
+	newAddrs = (char **)PORT_ArenaAlloc(entry->common.arena,
+		(entry->nemailAddrs+1)* sizeof(char *));
+	if (!newAddrs) {
 	    goto loser;
 	}
+	for (i=0; i < entry->nemailAddrs; i++) {
+	   newAddrs[i] = entry->emailAddrs[i];
+	}
+	newAddrs[entry->nemailAddrs] = 
+			PORT_ArenaStrdup(entry->common.arena,emailAddr);
+	if (!newAddrs[entry->nemailAddrs]) {
+	   goto loser;
+	}
+	entry->emailAddrs = newAddrs;
+	entry->nemailAddrs++;
+    }
+	
+    /* delete the subject entry */
+    DeleteDBSubjectEntry(dbhandle, derSubject);
+
+    /* write the new one */
+    rv = WriteDBSubjectEntry(dbhandle, entry);
+    if ( rv != SECSuccess ) {
+	    goto loser;
     }
 
     DestroyDBEntry((certDBEntry *)entry);
@@ -2894,9 +2973,11 @@ RemovePermSubjectNode(NSSLOWCERTCertificate *cert)
 	}
     } else {
 	/* no entries left, delete the perm entry in the DB */
-	if ( entry->emailAddr ) {
+	if ( entry->emailAddrs ) {
 	    /* if the subject had an email record, then delete it too */
-	    DeleteDBSMimeEntry(cert->dbhandle, entry->emailAddr);
+	    for (i=0; i < entry->nemailAddrs; i++) {
+		DeleteDBSMimeEntry(cert->dbhandle, entry->emailAddrs[i]);
+	    }
 	}
 	if ( entry->nickname ) {
 	    DeleteDBNicknameEntry(cert->dbhandle, entry->nickname);
@@ -3633,13 +3714,19 @@ UpdateV6DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
 			goto endloop;
 		    }
 		    
-		    subjectEntry->nickname =
-			(char *)PORT_ArenaAlloc(subjectEntry->common.arena,
+		    subjectEntry->emailAddrs = (char **)
+				PORT_ArenaAlloc(subjectEntry->common.arena,
 						key.size - 1);
-		    if ( subjectEntry->emailAddr ) {
-			PORT_Memcpy(subjectEntry->emailAddr, emailAddr,
+		    if ( subjectEntry->emailAddrs ) {
+			subjectEntry->emailAddrs[0] =
+			     (char *)PORT_ArenaAlloc(subjectEntry->common.arena,
+						key.size - 1);
+			if ( subjectEntry->emailAddrs[0] ) {
+			    PORT_Memcpy(subjectEntry->emailAddrs[0], emailAddr,
 				    key.size - 1);
-			rv = WriteDBSubjectEntry(handle, subjectEntry);
+			    subjectEntry->nemailAddrs = 1;
+			    rv = WriteDBSubjectEntry(handle, subjectEntry);
+			}
 		    }
 		}
 		
@@ -5080,7 +5167,8 @@ nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr,
     if ( entry ) {
 	/* keep our old db entry consistant for old applications. */
 	if (!SECITEM_ItemsAreEqual(derSubject, &entry->subjectName)) {
-	    UpdateSubjectWithEmailAddr(dbhandle, &entry->subjectName, NULL);
+	    nsslowcert_UpdateSubjectEmailAddr(dbhandle, &entry->subjectName, 
+				emailAddr, nsslowcert_remove);
 	} 
 	DestroyDBEntry((certDBEntry *)entry);
 	entry = NULL;
@@ -5100,7 +5188,8 @@ nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr,
     /* if delete fails, try to write new entry anyway... */
 
     /* link subject entry back here */
-    rv = UpdateSubjectWithEmailAddr(dbhandle, derSubject, emailAddr);
+    rv = nsslowcert_UpdateSubjectEmailAddr(dbhandle, derSubject, emailAddr,
+					nsslowcert_add);
     if ( rv != SECSuccess ) {
 	    nsslowcert_UnlockDB(dbhandle);
 	    goto loser;

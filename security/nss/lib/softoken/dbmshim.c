@@ -34,7 +34,7 @@
 /*
  * Berkeley DB 1.85 Shim code to handle blobs.
  *
- * $Id: dbmshim.c,v 1.5 2002/11/04 19:31:58 relyea%netscape.com Exp $
+ * $Id: dbmshim.c,v 1.6 2002/11/26 00:13:54 relyea%netscape.com Exp $
  */
 #include "mcom_db.h"
 #include "secitem.h"
@@ -53,7 +53,9 @@
 
 #include "pkcs11i.h"
 
-#define DBS_MAX_ENTRY_SIZE (30*1024) /* 32 k */
+#define DBS_BLOCK_SIZE (16*1024) /* 16 k */
+#define DBS_MAX_ENTRY_SIZE (DBS_BLOCK_SIZE - (2048)) /* 14 k */
+#define DBS_CACHE_SIZE	DBS_BLOCK_SIZE*8
 #define ROUNDDIV(x,y) (x+(y-1))/y
 #define BLOB_NAME_HEAD_LEN 4
 #define BLOB_NAME_LENGTH_START BLOB_NAME_HEAD_LEN
@@ -553,13 +555,14 @@ dbs_mkBlobDirName(const char *dbname)
 
 #define DBM_DEFAULT 0
 static const HASHINFO dbs_hashInfo = {
-	DBS_MAX_ENTRY_SIZE,	/* bucket size, must be greater than = to
-				 * or maximum entry size we allow before					 * blobing */
-	DBM_DEFAULT,
-	DBM_DEFAULT,
-	DBM_DEFAULT,
-	DBM_DEFAULT,
-	DBM_DEFAULT,
+	DBS_BLOCK_SIZE,		/* bucket size, must be greater than = to
+				 * or maximum entry size (+ header)
+				 * we allow before blobing */
+	DBM_DEFAULT,		/* Fill Factor */
+	DBM_DEFAULT,		/* number of elements */
+	DBS_CACHE_SIZE,		/* cache size */
+	DBM_DEFAULT,		/* hash function */
+	DBM_DEFAULT,		/* byte order */
 };
 
 /*
