@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: prototype,v 1.3 2005/02/26 02:20:41 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: prototype,v 1.4 2005/02/28 17:45:19 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -120,6 +120,8 @@ f none usr/include/mps/p12t.h 0644 root bin
 f none usr/include/mps/pk11func.h 0644 root bin
 f none usr/include/mps/pk11pqg.h 0644 root bin
 f none usr/include/mps/pk11sdr.h 0644 root bin
+f none usr/include/mps/pk11priv.h 0644 root bin
+f none usr/include/mps/pk11pub.h 0644 root bin
 f none usr/include/mps/pkcs11.h 0644 root bin
 f none usr/include/mps/pkcs11f.h 0644 root bin
 f none usr/include/mps/pkcs11p.h 0644 root bin

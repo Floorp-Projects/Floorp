@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident  "$Id: prototype_i386,v 1.3 2005/02/26 02:20:42 christophe.ravel.bugs%sun.com Exp $"
+#ident  "$Id: prototype_i386,v 1.4 2005/02/28 17:45:20 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -74,4 +74,5 @@
 #64#f none usr/sfw/bin/amd64/signtool 0755 root bin
 #64#f none usr/sfw/bin/amd64/signver 0755 root bin
 #64#f none usr/sfw/bin/amd64/ssltap 0755 root bin
+#64#f none usr/sfw/bin/amd64/addbuiltin 0755 root bin
 
