@@ -3,7 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "DikDik"=.\DikDik.dsp - Package Owner=<4>
+Project: "DikDik"=.\DikDik\DikDik.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -18,7 +18,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "DikDik_shell"=..\..\tests\cpp\winbuild\DikDik_shell.dsp - Package Owner=<4>
+Project: "DikDik_Shell"=..\..\tests\cpp\winbuild\DikDik_shell.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
