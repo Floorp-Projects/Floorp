@@ -330,6 +330,13 @@ public:
                                 const nsString *aValue = nsnull);
   nsresult MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset);
 
+  /* Method to replace certain CreateElementNS() calls. 
+     Arguments:
+      nsString& aTag          - tag you want
+      nsIContent** aContent   - returned Content that was created with above namespace.
+  */
+  nsresult CreateHTMLContent(const nsString& aTag, nsIContent** aContent);
+
 protected:
 
 

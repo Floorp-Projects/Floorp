@@ -28,6 +28,9 @@
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 
+//included for new nsEditor::CreateContent()
+#include "nsIContent.h"
+
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
 #else
@@ -41,7 +44,7 @@ CreateElementTxn::CreateElementTxn()
   /* log description initialized in parent constructor */
 }
 
-NS_IMETHODIMP CreateElementTxn::Init(nsIEditor      *aEditor,
+NS_IMETHODIMP CreateElementTxn::Init(nsEditor      *aEditor,
                                      const nsString &aTag,
                                      nsIDOMNode     *aParent,
                                      PRUint32        aOffsetInParent)
@@ -103,11 +106,12 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
   }
   else 
   {
+    nsCOMPtr<nsIContent> newContent;
     nsCOMPtr<nsIDOMElement>newElement;
-    nsString qualifiedTag;
-    qualifiedTag.AssignWithConversion("html:");
-    qualifiedTag+=mTag;
-    result = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/1999/xhtml"), qualifiedTag, getter_AddRefs(newElement));
+ 
+    //new call to use instead to get proper HTML element, bug# 39919
+    mEditor->CreateHTMLContent(mTag, getter_AddRefs(newContent));
+    newElement = do_QueryInterface(newContent);
     if (NS_FAILED(result)) return result;
     if (!newElement) return NS_ERROR_NULL_POINTER;
     mNewNode = do_QueryInterface(newElement);
