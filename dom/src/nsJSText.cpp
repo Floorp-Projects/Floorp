@@ -254,7 +254,6 @@ nsresult NS_InitNodeClass(JSContext *aContext, JSObject **aPrototype);
 nsresult NS_InitTextClass(JSContext *aContext, JSObject **aPrototype)
 {
   // look in the global object for this class prototype
-  jsval vp;
   static JSObject *proto = nsnull;
 
   if (nsnull == proto) {

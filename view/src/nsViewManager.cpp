@@ -608,9 +608,8 @@ nsIPresContext * nsViewManager :: GetPresContext()
 
 nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds)
 {
-  
-  //if ((nsnull == mDrawingSurface) || (mDSBounds != aBounds))
-  if((nsnull==mDrawingSurface) || ((mDSBounds.width < aBounds.width)||(mDSBounds.height<aBounds.height)))
+  if ((nsnull == mDrawingSurface) ||
+      (mDSBounds.width < aBounds.width) || (mDSBounds.height < aBounds.height))
   {
     if (nsnull != mDrawingSurface)
     {
@@ -618,7 +617,7 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
       aContext.DestroyDrawingSurface(mDrawingSurface);
     }
 
-    mDrawingSurface = aContext.CreateDrawingSurface(aBounds);
+    mDrawingSurface = aContext.CreateDrawingSurface(&aBounds);
     mDSBounds = aBounds;
   }
 
@@ -667,9 +666,7 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
   if (nsnull != win)
   {
     dx = mContext->GetDeviceContext();
-
     cx = dx->CreateRenderingContext(&aView);
-
     cx->Translate(ax, ay);
 
     NS_RELEASE(dx);

@@ -75,6 +75,12 @@ public:
   virtual void Reset() = 0;
 
   /**
+   * Get the DeviceContext that this RenderingContext was initialized with
+   * @result the device context
+   */
+  virtual nsIDeviceContext * GetDeviceContext(void) = 0;
+
+  /**
    * Selects an offscreen drawing surface into the RenderingContext to draw to.
    * @param aSurface is the offscreen surface we are going to draw to.
    */
@@ -161,29 +167,19 @@ public:
   virtual nsTransform2D * GetCurrentTransform() = 0;
 
   /**
-   * Create an offscreen drawingsurface compatible with this RenderingContext
-   * @param aBounds A rectangle representing the size for the renderingsurface
+   * Create an offscreen drawing surface compatible with this RenderingContext
+   * @param aBounds A rectangle representing the size for the drawing surface.
+   *                if nsnull then a bitmap will not be created and associated
+   *                with the new drawing surface
    * @return A nsDrawingSurface
    */
-  virtual nsDrawingSurface CreateDrawingSurface(nsRect &aBounds) = 0;
+  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds) = 0;
 
   /**
-   * Destroy the drawingsurface
-   * @param aDS A drawingsurface to destroy
+   * Destroy a drawing surface created by CreateDrawingSurface()
+   * @param aDS A drawing surface to destroy
    */
   virtual void DestroyDrawingSurface(nsDrawingSurface aDS) = 0;
-
-  /**
-   * Create a drawingsurface for use with an optimized bitmap
-   * @return The new nsDrawingSurface
-   */
-  virtual nsDrawingSurface CreateOptimizeSurface() = 0;
-
-  /**
-   * Return the drawingsurface for this RenderingContext
-   * @return A drawingsurface
-   */
-  virtual nsDrawingSurface getDrawingSurface() = 0;
 
   /**
    * Draw a line

@@ -101,6 +101,7 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
       ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mDC);
   }
 
+  NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mFontCache);
   NS_IF_RELEASE(mDCOwner);
@@ -140,6 +141,9 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
 {
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
+  mContext = aContext;
+  NS_IF_ADDREF(mContext);
+
   mDC = (HWND)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
   mDCOwner = aWindow;
 
@@ -162,6 +166,9 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
                                        nsDrawingSurface aSurface)
 {
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
+
+  mContext = aContext;
+  NS_IF_ADDREF(mContext);
 
   mDC = (HDC)aSurface;
   mDCOwner = nsnull;
@@ -188,6 +195,12 @@ nsresult nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface
 
 void nsRenderingContextWin :: Reset()
 {
+}
+
+nsIDeviceContext * nsRenderingContextWin :: GetDeviceContext(void)
+{
+  NS_IF_ADDREF(mContext);
+  return mContext;
 }
 
 void nsRenderingContextWin :: PushState()
@@ -350,11 +363,20 @@ nsTransform2D * nsRenderingContextWin :: GetCurrentTransform()
   return mTMatrix;
 }
 
-nsDrawingSurface nsRenderingContextWin :: CreateDrawingSurface(nsRect &aBounds)
+nsDrawingSurface nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds)
 {
   HDC hDC = ::CreateCompatibleDC(mDC);
-  HBITMAP hBits = ::CreateCompatibleBitmap(mDC, aBounds.width, aBounds.height);
-  ::SelectObject(hDC, hBits);
+
+  if (nsnull != aBounds)
+  {
+    HBITMAP hBits = ::CreateCompatibleBitmap(mDC, aBounds->width, aBounds->height);
+    ::SelectObject(hDC, hBits);
+  }
+  else
+  {
+    HBITMAP hBits = ::CreateCompatibleBitmap(mDC, 2, 2);
+    ::SelectObject(hDC, hBits);
+  }
 
   return hDC;
 }
@@ -366,20 +388,11 @@ void nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aDS)
   HBITMAP hTempBits = ::CreateCompatibleBitmap(hDC, 2, 2);
   HBITMAP hBits = ::SelectObject(hDC, hTempBits);
 
-  ::DeleteObject(hBits);
+  if (nsnull != hBits)
+    ::DeleteObject(hBits);
+
   ::DeleteObject(hTempBits);
   ::DeleteDC(hDC);
-}
-
-
-nsDrawingSurface nsRenderingContextWin::CreateOptimizeSurface()
-{
-  return(::CreateCompatibleDC(mDC));
-}
-
-nsDrawingSurface nsRenderingContextWin::getDrawingSurface()
-{
-  return(mDC);
 }
 
 void nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
@@ -698,8 +711,7 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
 }
 
 void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY,
-                                    nscoord aWidth)
+                                         nscoord aX, nscoord aY, nscoord aWidth)
 {
 	int		x,y;
   HFONT oldfnt = ::SelectObject(mDC, (HGDIOBJ) mFontMetrics->GetFontHandle()); 
@@ -720,8 +732,7 @@ void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLen
 }
 
 void nsRenderingContextWin :: DrawString(const nsString& aString,
-                                    nscoord aX, nscoord aY,
-                                    nscoord aWidth)
+                                         nscoord aX, nscoord aY, nscoord aWidth)
 {
   DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth);
 }
@@ -739,7 +750,7 @@ void nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY
 }
 
 void nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                                   nscoord aWidth, nscoord aHeight) 
+                                        nscoord aWidth, nscoord aHeight) 
 {
   nsRect  tr;
 
@@ -761,7 +772,7 @@ void nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aSRect, 
   dr = aDRect;
 	mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
-  ((nsImageWin *)aImage)->Draw(mDC,sr.x,sr.y,sr.width,sr.height,dr.x,dr.y,dr.width,dr.height);
+  ((nsImageWin *)aImage)->Draw(*this, mDC, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
 }
 
 void nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aRect)
@@ -771,7 +782,7 @@ void nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 	tr = aRect;
 	mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
 
-  ((nsImageWin *)aImage)->Draw(mDC, tr.x, tr.y, tr.width, tr.height);
+  ((nsImageWin *)aImage)->Draw(*this, mDC, tr.x, tr.y, tr.width, tr.height);
 }
 
 nsresult nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)

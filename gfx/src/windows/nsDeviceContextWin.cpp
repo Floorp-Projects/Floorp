@@ -40,11 +40,19 @@ nsDeviceContextWin :: nsDeviceContextWin()
   mAppUnitsToDevUnits = 1.0f;
 
   mZoom = 1.0f;
+
+  mSurface = NULL;
 }
 
 nsDeviceContextWin :: ~nsDeviceContextWin()
 {
   NS_IF_RELEASE(mFontCache);
+
+  if (NULL != mSurface)
+  {
+    DeleteDC(mSurface);
+    mSurface = NULL;
+  }
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextWin, kDeviceContextIID)
@@ -163,4 +171,12 @@ void nsDeviceContextWin :: SetZoom(float aZoom)
 float nsDeviceContextWin :: GetZoom() const
 {
   return mZoom;
+}
+
+nsDrawingSurface nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext)
+{
+  if (NULL == mSurface)
+    mSurface = aContext.CreateDrawingSurface(nsnull);
+
+  return mSurface;
 }

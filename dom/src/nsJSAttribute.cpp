@@ -232,7 +232,6 @@ Attribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 nsresult NS_InitAttributeClass(JSContext *aContext, JSObject **aPrototype)
 {
   // look in the global object for this class prototype
-  jsval vp;
   static JSObject *proto = nsnull;
 
   if (nsnull == proto) {

@@ -59,6 +59,8 @@ public:
   virtual void SetZoom(float aZoom);
   virtual float GetZoom() const;
 
+  virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
+
 protected:
   ~nsDeviceContextWin();
 
@@ -70,6 +72,7 @@ protected:
   float             mDevUnitsToAppUnits;
   nsIFontCache      *mFontCache;
   float             mZoom;
+  HDC               mSurface;
 };
 
 #endif /* nsDeviceContextWin_h___ */

@@ -57,6 +57,8 @@ public:
 
   virtual void Reset();
 
+  virtual nsIDeviceContext * GetDeviceContext(void);
+
   virtual nsresult SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
 
   virtual void PushState();
@@ -79,12 +81,8 @@ public:
   virtual void Scale(float aSx, float aSy);
   virtual nsTransform2D * GetCurrentTransform();
 
-  virtual nsDrawingSurface CreateDrawingSurface(nsRect &aBounds);
+  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds);
   virtual void DestroyDrawingSurface(nsDrawingSurface aDS);
-
-  virtual nsDrawingSurface CreateOptimizeSurface();  
-
-  virtual nsDrawingSurface getDrawingSurface();
 
   virtual void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
 
@@ -128,18 +126,19 @@ public:
 
 protected:
 
-  nscolor					mCurrentColor;
-  nsTransform2D		*mTMatrix;		// transform that all the graphics drawn here will obey
-  nsIFontMetrics	*mFontMetrics;
-  nsIFontCache    *mFontCache;
-  HDC             mDC;
-  COLORREF        mColor;
-  nsIWidget       *mDCOwner;
-//  int             mOldMapMode;
-  float           mP2T;
-  HDC             mMainDC;
-  GraphicsState   *mStates;
-  nsVoidArray     *mStateCache;
+  nscolor					  mCurrentColor;
+  nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
+  nsIFontMetrics	  *mFontMetrics;
+  nsIFontCache      *mFontCache;
+  HDC               mDC;
+  COLORREF          mColor;
+  nsIWidget         *mDCOwner;
+//  int               mOldMapMode;
+  float             mP2T;
+  HDC               mMainDC;
+  GraphicsState     *mStates;
+  nsVoidArray       *mStateCache;
+  nsIDeviceContext  *mContext;
 
 #ifdef NS_DEBUG
   PRBool          mInitialized;

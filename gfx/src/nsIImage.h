@@ -135,7 +135,7 @@ public:
    @param aHeight The destination height of the pixelmap
    @return if TRUE, no errors
    */
-  virtual PRBool Draw(nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
+  virtual PRBool Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
 
   /**
    * BitBlit the pixelmap to a device, the source and dest can be scaled
@@ -150,8 +150,8 @@ public:
    * @param aDHeight The destination height of the pixelmap
    * @return if TRUE, no errors
    */
-  virtual PRBool Draw(nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
+  virtual PRBool Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                      PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
   
 
   /**

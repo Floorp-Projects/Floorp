@@ -39,8 +39,8 @@ public:
   virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
   virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
-  virtual PRBool      Draw(nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual PRBool      Draw(nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+  virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
   virtual void CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation);
   virtual nsColorMap* GetColorMap() {return mColorMap;}
@@ -138,7 +138,6 @@ private:
                                           // for Set/GetColorMap
   HPALETTE            mHPalette;
   HBITMAP             mHBitmap;           // the GDI bitmap
-  static HDC          mOptimizeDC;        // optimized DC for hbitmap
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
 };
 

@@ -23,6 +23,7 @@
 #include "ni_pixmp.h"
 #include "il_util.h"
 #include "nsGfxCIID.h"
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kIImageRendererIID, IL_IIMAGERENDERER_IID);
 
@@ -206,7 +207,13 @@ ImageRendererImpl::ControlPixmapBits(void* aDisplayContext,
     nsIImage *img = (nsIImage *)aImage->client_data;
 
     if (aControlMsg == IL_RELEASE_BITS) {
-        img->Optimize(0);
+      nsIDeviceContext  *dx = rc->GetDeviceContext();
+      if (nsnull != dx) {
+        nsDrawingSurface  surf = dx->GetDrawingSurface(*rc);
+        if (nsnull != surf)
+          img->Optimize(surf);
+        NS_RELEASE(dx);
+      }
     }
 }
 
