@@ -26,17 +26,16 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/newFolderNameDialog.dtd">
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
         class="dialog"
         onload="newFolderNameOnLoad('msgRenameFolderPicker');"
         style="padding:10px"> 
 
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>       
-<html:script language="JavaScript" src="chrome://messenger/content/newFolderNameDialog.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>       
+<script language="JavaScript" src="chrome://messenger/content/newFolderNameDialog.js"/>
 
 	<keyset id="keyset"/>
 
@@ -44,8 +43,8 @@ Rights Reserved.
 		
 		<spring flex="100%"/>
 
-		<html:div style="margin-bottom:.3em">&name.label;</html:div>
-		<html:input tabindex="0" type="text" id="name" style="width:100%"/>
+		<text style="margin-bottom:.3em" value="&rename.label;" />
+		<textfield tabindex="0" id="name" style="width:100%"/>
 	
 		<box align="horizontal">
 			<menu id="msgRenameFolderPicker"/>

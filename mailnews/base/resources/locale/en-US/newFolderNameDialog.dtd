@@ -19,4 +19,5 @@ Rights Reserved.
 --> 
 
 <!-- Labels -->
-<!ENTITY name.label			"New Folder Name">
+<!ENTITY name.label			"Name:">
+<!ENTITY rename.label		"Enter the new name for your folder:">
