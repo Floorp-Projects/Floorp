@@ -640,6 +640,12 @@ namespace JavaScript {
                         s << "R" << t->itsOperand1;
                     }
                     break;
+                case NEW_ARRAY :
+                    {
+                        NewArray *t = static_cast<NewArray * >(instr);
+                        s << "R" << t->itsOperand1;
+                    }
+                    break;
                 case GET_PROP :
                     {
                         GetProp *t = static_cast<GetProp * >(instr);
@@ -655,13 +661,13 @@ namespace JavaScript {
                 case GET_ELEMENT :
                     {
                         GetElement *t = static_cast<GetElement * >(instr);
-                        s << "R" << t->itsOperand1 << ", R" << t->itsOperand2 << "[" << t->itsOperand3 << "]";
+                        s << "R" << t->itsOperand1 << ", R" << t->itsOperand2 << "[R" << t->itsOperand3 << "]";
                     }
                     break;
                 case SET_ELEMENT :
                     {
                         SetElement *t = static_cast<SetElement * >(instr);
-                        s << "R" << t->itsOperand1 << "[" << t->itsOperand2 <<  "], R" << t->itsOperand3;
+                        s << "R" << t->itsOperand1 << "[R" << t->itsOperand2 <<  "], R" << t->itsOperand3;
                     }
                     break;
                 case LOAD_IMMEDIATE :
