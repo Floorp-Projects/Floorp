@@ -214,7 +214,7 @@ public:
   NS_IMETHOD ProvideContent(const nsString& aFormType, 
                             nsVector& aContent,
                             nsString& aAttribute);
-  NS_DECL_ISUPPORTS;
+  NS_DECL_ISUPPORTS
 };
 
 
