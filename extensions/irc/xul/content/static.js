@@ -166,13 +166,13 @@ function initHost(obj)
     obj.eventPump = new CEventPump (200);
     
     obj.networks["efnet"] =
-	new CIRCNetwork ("efnet", [{name: "irc.mcs.net", port: 6667},
-                               {name: "irc.magic.ca", port: 6667},
-                               {name: "irc.freei.net", port: 6667},
-                               {name: "irc.cs.cmu.edu",   port: 6667}],
+        new CIRCNetwork ("efnet", [{name: "irc.mcs.net", port: 6667},
+                                   {name: "irc.magic.ca", port: 6667},
+                                   {name: "irc.freei.net", port: 6667},
+                                   {name: "irc.cs.cmu.edu",   port: 6667}],
                          obj.eventPump);
     obj.networks["moznet"] =
-	new CIRCNetwork ("moznet", [{name: "irc.mozilla.org", port: 6667}],
+        new CIRCNetwork ("moznet", [{name: "irc.mozilla.org", port: 6667}],
                          obj.eventPump);
     obj.networks["hybridnet"] =
         new CIRCNetwork ("hybridnet", [{name: "irc.ssc.net", port: 6667}],
@@ -181,7 +181,7 @@ function initHost(obj)
         new CIRCNetwork ("slashnet", [{name: "irc.slashnet.org", port:6667}],
                          obj.eventPump);
     obj.networks["dalnet"] =
-        new CIRCNetwork ("dalnet", [{name: "irc.dalnet.org", port:6667}],
+        new CIRCNetwork ("dalnet", [{name: "irc.dal.net", port:6667}],
                          obj.eventPump);
     obj.networks["undernet"] =
         new CIRCNetwork ("undernet", [{name: "irc.undernet.org", port:6667}],
