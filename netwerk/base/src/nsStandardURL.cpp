@@ -53,6 +53,7 @@
 #include "nsIIDNService.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
+#include "nsAutoPtr.h"
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
@@ -639,25 +640,6 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 }
 
 PRBool
-nsStandardURL::HostsAreEquivalent(nsStandardURL *that)
-{
-    // XXX now that hostnames are always normalized this special casing
-    // may be unnecessary.  we should be able to directly compare the
-    // contents of mSpec.
-
-    // optimize for the non-IDN case...
-    if ((this->mHostEncoding == eEncoding_ASCII) &&
-        (that->mHostEncoding == eEncoding_ASCII))
-        return SegmentIs(mHost, that->mSpec.get(), that->mHost);
-
-    nsCAutoString thisHost, thatHost;
-    this->GetAsciiHost(thisHost);
-    that->GetAsciiHost(thatHost);
-    
-    return !nsCRT::strcasecmp(thisHost.get(), thatHost.get());
-}
-
-PRBool
 nsStandardURL::SegmentIs(const URLSegment &seg, const char *val)
 {
     // one or both may be null
@@ -667,7 +649,7 @@ nsStandardURL::SegmentIs(const URLSegment &seg, const char *val)
         return PR_FALSE;
     // if the first |seg.mLen| chars of |val| match, then |val| must
     // also be null terminated at |seg.mLen|.
-    return !nsCRT::strncasecmp(mSpec.get() + seg.mPos, val, seg.mLen)
+    return !strncmp(mSpec.get() + seg.mPos, val, seg.mLen)
         && (val[seg.mLen] == '\0');
 }
 
@@ -681,7 +663,7 @@ nsStandardURL::SegmentIs(const char* spec, const URLSegment &seg, const char *va
         return PR_FALSE;
     // if the first |seg.mLen| chars of |val| match, then |val| must
     // also be null terminated at |seg.mLen|.
-    return !nsCRT::strncasecmp(spec + seg.mPos, val, seg.mLen)
+    return !strncmp(spec + seg.mPos, val, seg.mLen)
         && (val[seg.mLen] == '\0');
 }
 
@@ -692,7 +674,7 @@ nsStandardURL::SegmentIs(const URLSegment &seg1, const char *val, const URLSegme
         return PR_FALSE;
     if (seg1.mLen == -1 || (!val && mSpec.IsEmpty()))
         return PR_TRUE; // both are empty
-    return !nsCRT::strncasecmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen); 
+    return !strncmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen); 
 }
 
 PRInt32
@@ -1383,6 +1365,10 @@ nsStandardURL::SetHost(const nsACString &input)
         mAuthority.mLen += shift;
         ShiftFromPath(shift);
     }
+
+    // Now canonicalize the host to lowercase
+    net_ToLowerCase(mSpec.BeginWriting() + mHost.mPos, mHost.mLen);
+
     return NS_OK;
 }
              
@@ -1475,22 +1461,55 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
     NS_ENSURE_ARG_POINTER(unknownOther);
     NS_PRECONDITION(result, "null pointer");
 
-    nsStandardURL *other;
-    nsresult rv = unknownOther->QueryInterface(kThisImplCID, (void **) &other);
+    nsRefPtr<nsStandardURL> other;
+    nsresult rv = unknownOther->QueryInterface(kThisImplCID,
+                                               getter_AddRefs(other));
     if (NS_FAILED(rv)) {
         *result = PR_FALSE;
         return NS_OK;
     }
 
-    // XXX this needs to allow for case insensitive paths in some cases (e.g.,
-    // file: URLs under windows).
+    // First, check whether both URIs are nsIFileURLs.  If they are, compare
+    // the nsIFiles, since that will do case things appropriately for the OS
+    // we're running on.
+    if (mSupportsFileURL != other->mSupportsFileURL) {
+        *result = PR_FALSE;
+        return NS_OK;
+    }
+
+    if (mSupportsFileURL) {
+        // Assume not equal for failure cases... but failures in GetFile are
+        // really failures, so propagate them to caller.
+        *result = PR_FALSE;
+
+        if (!SegmentIs(mScheme, other->mSpec.get(), other->mScheme)) {
+            // No need to compare files -- these are different beasties
+            return NS_OK;
+        }
+        
+        rv = EnsureFile();
+        if (NS_FAILED(rv)) {
+            LOG(("nsStandardURL::Equals [this=%p spec=%s] failed to ensure file",
+                this, mSpec.get()));
+            return rv;
+        }
+        NS_ASSERTION(mFile, "EnsureFile() lied!");
+        rv = other->EnsureFile();
+        if (NS_FAILED(rv)) {
+            LOG(("nsStandardURL::Equals [other=%p spec=%s] other failed to ensure file",
+                other, other->mSpec.get()));
+            return rv;
+        }
+        NS_ASSERTION(other->mFile, "EnsureFile() lied!");
+        return mFile->Equals(other->mFile, result);
+    }
 
     *result = 
         SegmentIs(mScheme, other->mSpec.get(), other->mScheme) &&
         SegmentIs(mDirectory, other->mSpec.get(), other->mDirectory) &&
         SegmentIs(mBasename, other->mSpec.get(), other->mBasename) &&
         SegmentIs(mExtension, other->mSpec.get(), other->mExtension) &&
-        HostsAreEquivalent(other) &&
+        SegmentIs(mHost, other->mSpec.get(), other->mHost) &&
         SegmentIs(mQuery, other->mSpec.get(), other->mQuery) &&
         SegmentIs(mRef, other->mSpec.get(), other->mRef) &&
         SegmentIs(mUsername, other->mSpec.get(), other->mUsername) &&
@@ -1498,7 +1517,6 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
         SegmentIs(mParam, other->mSpec.get(), other->mParam) &&
         (Port() == other->Port());
 
-    NS_RELEASE(other);
     return NS_OK;
 }
 
@@ -1740,7 +1758,7 @@ nsStandardURL::GetCommonBaseSpec(nsIURI *uri2, nsACString &aResult)
     nsresult rv = uri2->QueryInterface(kThisImplCID, (void **) &stdurl2);
     isEquals = NS_SUCCEEDED(rv)
             && SegmentIs(mScheme, stdurl2->mSpec.get(), stdurl2->mScheme)    
-            && HostsAreEquivalent(stdurl2)
+            && SegmentIs(mHost, stdurl2->mSpec.get(), stdurl2->mHost)
             && SegmentIs(mUsername, stdurl2->mSpec.get(), stdurl2->mUsername)
             && SegmentIs(mPassword, stdurl2->mSpec.get(), stdurl2->mPassword)
             && (Port() == stdurl2->Port());
@@ -2257,24 +2275,39 @@ nsStandardURL::SetFileExtension(const nsACString &input)
 // nsStandardURL::nsIFileURL
 //----------------------------------------------------------------------------
 
+nsresult
+nsStandardURL::EnsureFile()
+{
+    NS_PRECONDITION(mSupportsFileURL,
+                    "EnsureFile() called on a URL that doesn't support files!");
+    if (mFile) {
+        // Nothing to do
+        return NS_OK;
+    }
+
+    // Parse the spec if we don't have a cached result
+    if (mSpec.IsEmpty()) {
+        NS_ERROR("url not initialized");
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    if (!SegmentIs(mScheme, "file")) {
+        NS_ERROR("not a file URL");
+        return NS_ERROR_FAILURE;
+    }
+
+    return net_GetFileFromURLSpec(mSpec, getter_AddRefs(mFile));
+}
+
 NS_IMETHODIMP
 nsStandardURL::GetFile(nsIFile **result)
 {
-    // reparse the spec if we don't have a cached result
-    if (!mFile) {
-        if (mSpec.IsEmpty()) {
-            NS_ERROR("url not initialized");
-            return NS_ERROR_NOT_INITIALIZED;
-        }
+    NS_PRECONDITION(mSupportsFileURL,
+                    "GetFile() called on a URL that doesn't support files!");
+    nsresult rv = EnsureFile();
+    if (NS_FAILED(rv))
+        return rv;
 
-        if (!SegmentIs(mScheme, "file")) {
-            NS_ERROR("not a file URL");
-            return NS_ERROR_FAILURE;
-        }
-
-        nsresult rv = net_GetFileFromURLSpec(mSpec, getter_AddRefs(mFile));
-        if (NS_FAILED(rv)) return rv;
-    }
 
 #if defined(PR_LOGGING)
     if (LOG_ENABLED()) {

@@ -52,8 +52,8 @@ class nsResURL : public nsStandardURL
 {
 public:
     nsResURL() : nsStandardURL(PR_TRUE) {}
-    NS_IMETHOD GetFile(nsIFile **);
     virtual nsStandardURL* StartClone();
+    virtual nsresult EnsureFile();
     NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID);
 };
 
