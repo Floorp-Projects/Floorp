@@ -1213,16 +1213,16 @@ nsHTTPFinalListener::OnDataAvailable(nsIChannel *aChannel,
 
     if (!mShutdown)
     {
-        NS_ASSERTION (mOnStopFired == PR_FALSE, "OnDataAvailable fired after OnStopRequest");
-
-        if (mOnStopFired)
-            return NS_ERROR_FAILURE;
-
         PRUint32 status;
         mChannel -> GetStatus (&status);
 
         if (NS_SUCCEEDED (status))
         {
+            NS_ASSERTION (mOnStopFired == PR_FALSE, "OnDataAvailable fired after OnStopRequest");
+
+            if (mOnStopFired)
+                return NS_OK;
+
             mBusy = PR_TRUE;
             nsresult rv = mListener -> OnDataAvailable (aChannel, aContext, 
                                 aStream, aSourceOffset, aCount);
