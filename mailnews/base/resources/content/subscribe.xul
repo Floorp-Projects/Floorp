@@ -31,8 +31,6 @@ Rights Reserved.
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
 		class="dialog"
-		height="300"
-		width="600"
         onload="SubscribeOnLoad()">
         
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
@@ -41,37 +39,33 @@ Rights Reserved.
 
 	<keyset id="keyset"/>
 
-	<box orient="horizontal" flex="100%">
-		<box orient="vertical" flex="100%">
-			<box orient="horizontal">
-				<text value="&server.label;"/>
-    			<menulist oncommand="onServerClick(event);" id="serverMenu"
-						rdf:datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-						rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
-                 		rdf:containment="http://home.netscape.com/NC-rdf#child"
-                 		ref="msgaccounts:/">
-        			<template>
-						<rule NC:CanSubscribe="true">
-      						<menupopup>
-          						<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-      						</menupopup>
-						</rule>
-        			</template>
-    			</menulist>
- 			</box>
-			<box orient="horizontal" flex="100%">
-				<text id="foldertextlabel" class="label" value="..." for="name"/>
-				<textfield id="name"/>
-			</box>
-		</box>
+	<box orient="horizontal" >
+		<text value="&server.label;"/>
+    	<menulist oncommand="onServerClick(event);" id="serverMenu"
+			rdf:datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+			rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
+           	rdf:containment="http://home.netscape.com/NC-rdf#child"
+            ref="msgaccounts:/">
+        	<template>
+				<rule NC:CanSubscribe="true">
+      				<menupopup>
+          				<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+      				</menupopup>
+				</rule>
+        	</template>
+    	</menulist>
+ 	</box>
+	<box orient="horizontal" >
+		<text id="foldertextlabel" class="label" value="..." for="name"/>
+		<textfield id="name"/>
 	</box>
-	<box orient="horizontal" flex="100%">
+	<box orient="horizontal" >
 		<box orient="vertical" flex="100%">
-
-<tree class="inset"
-				id="subscribetree"
-				datasources="rdf:subscribe"
-				onclick="SubscribeOnClick(event);"> 
+<tree class="inset"	
+	width="500px"
+	id="subscribetree"
+	datasources="rdf:subscribe"
+	onclick="SubscribeOnClick(event);"> 
 	<template>
 		<rule>
 			<treechildren>
@@ -87,9 +81,9 @@ Rights Reserved.
 	</template>
 
 	<treecolgroup id="theSubscribeColumns">
-		<treecol width="8*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-		<treecol width="1*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
-		<treecol width="1*" id="TotalMessagesColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+		<treecol width="7*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+		<treecol width="2*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
+		<treecol width="2*" id="TotalMessagesColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
 	</treecolgroup>
 
 	<treehead>	
@@ -100,7 +94,6 @@ Rights Reserved.
 		</treerow>
 	</treehead>	
 </tree>
-
 		</box>
 		<box orient="vertical" flex="20%">
 			<spring flex="100%"/>
@@ -112,5 +105,4 @@ Rights Reserved.
 		</box>
 	</box>
 	<box id="okCancelButtons"/>
-
 </window>
