@@ -2278,7 +2278,9 @@ PRInt16       borderRadii[4],i;
       }
     }
 
-#define DOTILE
+
+    aRenderingContext.DrawTile(image,x0,y0,x1,y1,tileWidth,tileHeight);
+
 #ifdef DOTILE
     nsIDrawingSurface  *theSurface,*ts=nsnull;
     nsRect              srcRect,destRect,vrect,tvrect;
