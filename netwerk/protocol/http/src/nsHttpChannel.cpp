@@ -1860,7 +1860,7 @@ nsHttpChannel::GetReferrer(nsIURI **referrer)
     return NS_OK;
 }
 
-#define numInvalidReferrerSchemes 9
+#define numInvalidReferrerSchemes 8
 
 static char * invalidReferrerSchemes [numInvalidReferrerSchemes] = 
 {
@@ -1871,8 +1871,7 @@ static char * invalidReferrerSchemes [numInvalidReferrerSchemes] =
   "imap",
   "news",
   "snews",
-  "imaps",
-  "https"
+  "imaps"
 };
 
 NS_IMETHODIMP
@@ -1893,6 +1892,29 @@ nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
       if (invalidScheme) return NS_OK; // kick out....
     }
 
+
+    // Handle secure referrals.
+    // Support referrals from a secure server if this is a secure site
+    // and the host names are the same.
+    if (referrer) {
+        PRBool isHTTPS = PR_FALSE;
+        referrer->SchemeIs("https", &isHTTPS);
+        if (isHTTPS) {
+            nsXPIDLCString referrerHost;
+            nsXPIDLCString host;
+            referrer->GetHost(getter_Copies(referrerHost));
+            mURI->GetHost(getter_Copies(host));
+            mURI->SchemeIs("https",&isHTTPS);
+
+            if (nsCRT::strcasecmp(referrerHost, host) != 0) {
+                return NS_OK;
+            }
+
+            if (!isHTTPS) {
+                return NS_OK;
+            }
+        }
+    }
 
     // save a copy of the referrer so we can return it if requested
     mReferrer = referrer;
