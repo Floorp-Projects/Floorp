@@ -125,13 +125,14 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
       if( urlObject )
       {
         nsXPIDLString urlInfo;
-        nsAutoString linkName, url;
+        nsAutoString linkName, url, holder;
         urlObject->GetData ( getter_Copies(urlInfo) );
-        PRInt32 lineIndex = urlInfo.FindChar ('\n');
+        holder = urlInfo;
+        PRInt32 lineIndex = holder.FindChar ('\n');
         if ( lineIndex != -1 )
         {
-          urlInfo.Left(url, lineIndex);
-          urlInfo.Mid ( linkName, lineIndex + 1, (len/2) - (lineIndex + 1) );
+          holder.Left(url, lineIndex);
+          holder.Mid ( linkName, lineIndex + 1, (len/2) - (lineIndex + 1) );
           dragitem.hstrTargetName = DrgAddStrHandle(ToNewCString(linkName));
           dragitem.hstrSourceName = DrgAddStrHandle(ToNewCString(url)); 
         }
