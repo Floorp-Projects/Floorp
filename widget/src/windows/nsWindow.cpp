@@ -142,9 +142,6 @@ UINT nsWindow::uMSH_MOUSEWHEEL     = 0;
 UINT nsWindow::uWM_MSIME_RECONVERT = 0; // reconvert messge for MSIME
 UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse messge for MSIME
 UINT nsWindow::uWM_ATOK_RECONVERT  = 0; // reconvert messge for ATOK
-#ifdef ACCESSIBILITY
-BOOL nsWindow::gIsAccessibilityOn = FALSE;
-#endif
 nsWindow* nsWindow::gCurrentWindow = nsnull;
 ////////////////////////////////////////////////////
 
@@ -533,10 +530,8 @@ UINT nsWindow::gCurrentKeyboardCP = 0;
 nsWindow::~nsWindow()
 {
 #ifdef ACCESSIBILITY
-  if (mRootAccessible) {
+  if (mRootAccessible)
     mRootAccessible->Release();
-    mRootAccessible = nsnull;
-  }
 #endif
 
   mIsDestroying = PR_TRUE;
@@ -3365,11 +3360,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           gJustGotActivate = PR_FALSE;
           result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
         }
-#ifdef ACCESSIBILITY
-        if (nsWindow::gIsAccessibilityOn && !mRootAccessible && mIsTopWidgetWindow) 
-          CreateRootAccessible();
-#endif
-
         break;
 
       case WM_KILLFOCUS:
@@ -3596,16 +3586,32 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifdef ACCESSIBILITY
       case WM_GETOBJECT: 
       {
-        nsWindow::gIsAccessibilityOn = TRUE;
-        LRESULT lAcc = 0;
-        if (mIsTopWidgetWindow && !mRootAccessible) 
-          CreateRootAccessible();
-        if (lParam == OBJID_CLIENT && mRootAccessible)   // oleacc.dll will be loaded dynamically
-          lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, mRootAccessible); // ref 1
-
-        return (*aRetValue = lAcc) != 0;
-
-      } 
+        if (lParam == OBJID_CLIENT) {
+          if (!mRootAccessible) {
+            nsCOMPtr<nsIAccessible> acc;
+            DispatchAccessibleEvent(NS_GETACCESSIBLE, getter_AddRefs(acc));
+            // create the COM accessible object
+            if (acc) 
+            {
+               HWND wnd = GetWindowHandle();
+               mRootAccessible = new RootAccessible(acc, wnd); // ref is 0       
+               mRootAccessible->AddRef();
+            }
+          }
+          if (mRootAccessible) {
+            // ask accessible to do this do it loads the library dynamically
+            LRESULT lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, mRootAccessible); // ref 1
+            if (lAcc == 0) {
+              *aRetValue = NULL;
+              return PR_FALSE;
+            }
+            *aRetValue = lAcc;
+            return PR_TRUE; // yes we handled it.
+          }
+        }
+        *aRetValue = NULL;
+        return PR_FALSE;
+      } break;
 #endif
       default: {
         // Handle both flavors of mouse wheel events.
@@ -5822,20 +5828,3 @@ VOID CALLBACK nsWindow::HookTimerForPopups( HWND hwnd, UINT uMsg, UINT idEvent, 
   }
 
 }
-
-
-#ifdef ACCESSIBILITY
-void nsWindow::CreateRootAccessible()
-{
-  // Create this as early as possible in new window, if accessibility is turned on
-  // We need it to be created early so it can generate accessibility events right away
-  nsCOMPtr<nsIAccessible> acc;
-  DispatchAccessibleEvent(NS_GETACCESSIBLE, getter_AddRefs(acc));
-  // create the COM accessible object
-  if (acc) {
-     HWND wnd = GetWindowHandle();
-     mRootAccessible = new RootAccessible(acc, wnd); // ref is 0       
-     mRootAccessible->AddRef();
-  }
-}
-#endif
