@@ -65,6 +65,7 @@ function createPanel(registry, service) {
   var panel_title     = getAttr(registry, service, 'title');
   var panel_customize = getAttr(registry, service, 'customize');
   var panel_content   = getAttr(registry, service, 'content');
+  var panel_height    = getAttr(registry, service, 'height');
 
   var box      = document.createElement('box');
   var iframe   = document.createElement('html:iframe');
@@ -74,7 +75,8 @@ function createPanel(registry, service) {
 
   box.setAttribute('align', 'vertical');
   iframe.setAttribute('src', panel_content);
-
+  if (panel_height)
+    iframe.setAttribute('style', 'height:' + panel_height + 'px');
   box.appendChild(panelbar);
   box.appendChild(iframe);
 
@@ -83,13 +85,19 @@ function createPanel(registry, service) {
 
 function resize(id) {
   var box = document.getElementById('sidebox');
-  dumpTree(box, 0);
   var iframe = document.getElementById(id);
-  dump(iframe.nodeName);
-  dump(" " + iframe.getAttribute('src'));
-  dump(" ID = "+id+"\n");
-  iframe.setAttribute('src', 'http://zeeb/');
-  dump("after " + iframe.getAttribute('src') +"\n");
+  var height = iframe.getAttribute('height');
+  dump ('height='+height+'\n');
+
+  if (iframe.getAttribute('display') == 'none') {
+    iframe.setAttribute('style', 'height:' + height + 'px; visibility:visible');
+    iframe.setAttribute('display','block');
+  } else {
+    iframe.setAttribute('style', 'height:0px; visibility:hidden');
+    iframe.setAttribute('display','none');
+    //var parent = iframe.parentNode;
+    //parent.removeChild(iframe);
+  }
 }
 
 function createPanelTitle(titletext,customize_url, id)
@@ -163,11 +171,11 @@ function Boot()
 {
     var root = document.documentElement;
     if (root == null) {
-        setTimeout(Boot, 0);
+        setTimeout(Boot, 1);
     }
     else {
         Init(sidebardb, sidebar_resource);
     }
 }
 
-setTimeout('Boot()', 0);
+setTimeout('Boot()', 1);
