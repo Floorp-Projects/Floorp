@@ -283,16 +283,52 @@ private:
 
     static PRUint32 gRefCnt;
     static nsSupportsHashtable* mKeyBindingTable;
+    static nsISupports* mMissObject;
     
     // The "xul key" modifier can be any of the known modifiers:
     enum {
         xulKeyNone, xulKeyShift, xulKeyControl, xulKeyAlt, xulKeyMeta
     } mXULKeyModifier;
+
+    PRBool mBrowserChecked; // Should become a general hashtable once any element can do this.
 }; 
+
+class nsMissObject : public nsISupports
+{
+    // nsISupports
+    NS_DECL_ISUPPORTS
+     
+    nsMissObject();
+};
+
+nsMissObject::nsMissObject() 
+{
+    NS_INIT_REFCNT();
+}
+
+NS_IMPL_ADDREF(nsMissObject)
+NS_IMPL_RELEASE(nsMissObject)
+
+NS_IMETHODIMP
+nsMissObject::QueryInterface(REFNSIID iid, void** result)
+{
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = nsnull;
+    if (iid.Equals(kISupportsIID)) {
+        *result = NS_STATIC_CAST(nsISupports*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+
+    return NS_NOINTERFACE;
+}
 
 PRUint32 nsXULKeyListenerImpl::gRefCnt = 0;
 nsSupportsHashtable* nsXULKeyListenerImpl::mKeyBindingTable = nsnull;
-    
+nsISupports* nsXULKeyListenerImpl::mMissObject = nsnull;
+   
 class nsProxyStream : public nsIInputStream
 {
 private:
@@ -355,14 +391,17 @@ nsXULKeyListenerImpl::nsXULKeyListenerImpl(void)
   gRefCnt++;
   if (gRefCnt == 1) {
     mKeyBindingTable = new nsSupportsHashtable();
+    mMissObject = new nsMissObject();
   }
 }
 
 nsXULKeyListenerImpl::~nsXULKeyListenerImpl(void)
 {
   gRefCnt--;
-  if (gRefCnt == 0)
+  if (gRefCnt == 0) {
     delete mKeyBindingTable;
+    delete mMissObject;
+  }
 }
 
 NS_IMPL_ADDREF(nsXULKeyListenerImpl)
@@ -463,7 +502,9 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 {
 	static PRBool executingKeyBind = PR_FALSE;
 	nsresult ret = NS_OK;
-	
+
+  mBrowserChecked = PR_FALSE;
+
 	if(executingKeyBind)
 		return NS_OK;
 	else 
@@ -508,11 +549,13 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
     if (tagName.EqualsIgnoreCase("input")) {
       nsAutoString type;
       focusedElement->GetAttribute(nsAutoString("type"), type);
-      if (type == "" || type.EqualsIgnoreCase("text"))
+      if (type == "" || type.EqualsIgnoreCase("text")) {
         keyFile = "chrome://global/content/inputBindings.xul";
+      }
     }
-    else if (tagName.EqualsIgnoreCase("textarea"))
+    else if (tagName.EqualsIgnoreCase("textarea")) {
       keyFile = "chrome://global/content/textAreaBindings.xul";
+    }
   }
    
   nsCOMPtr<nsIDOMXULDocument> document;
@@ -538,13 +581,15 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
         LocateAndExecuteKeyBinding(keyEvent, aEventType, xulWindowDoc, handled);
       }
 
-      if (!handled) {
+      if (!handled && !mBrowserChecked) {
         // Give the DOM window's associated key binding doc a shot.
         // XXX Check to see if we're in edit mode (how??!)
         // For now just assume we aren't.
         GetKeyBindingDocument(browserFile, getter_AddRefs(document));
         if (document)
           LocateAndExecuteKeyBinding(keyEvent, aEventType, document, handled);
+
+        mBrowserChecked = PR_TRUE;
       }
 
       // Move up to the parent DOM window. Need to use the private API
@@ -1047,13 +1092,19 @@ NS_IMETHODIMP nsXULKeyListenerImpl::GetKeyBindingDocument(nsCAutoString& aURLStr
 
     // We've got a file.  Check our key binding file cache.
     nsIURIKey key(uri);
-    document = NS_STATIC_CAST(nsIDOMXULDocument*, mKeyBindingTable->Get(&key));
-    
-    if (!document) {
-      LoadKeyBindingDocument(uri, getter_AddRefs(document));
-      if (document) {
-        // Put the key binding doc into our table.
-        mKeyBindingTable->Put(&key, document);
+    nsCOMPtr<nsISupports> supports;
+    supports = NS_STATIC_CAST(nsISupports*, mKeyBindingTable->Get(&key));
+
+    if (supports != mMissObject) {
+      document = do_QueryInterface(supports);
+      if (!document) {
+        LoadKeyBindingDocument(uri, getter_AddRefs(document));
+        if (document) {
+          // Put the key binding doc into our table.
+          mKeyBindingTable->Put(&key, document);
+        }
+        else 
+          mKeyBindingTable->Put(&key, mMissObject);
       }
     }
   }
