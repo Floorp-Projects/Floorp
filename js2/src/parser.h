@@ -823,6 +823,7 @@ namespace JavaScript {
         ExprList *parseParenthesizedExpressionList(bool optional);
         ExprNode *parseTypeExpression(bool noIn=false);
         ExprNode *parseTypeBinding(Token::Kind kind, bool noIn);
+        bool doubleColonFollows();
         VariableBinding *parseVariableBinding(size_t pos, bool noIn, bool untyped, bool constant);
         VariableBinding *parseParameter();
         void parseFunctionName(FunctionName &fn);

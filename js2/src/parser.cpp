@@ -213,8 +213,7 @@ JS::ExprNode *JS::Parser::parseQualifiedIdentifier(const Token &t, bool preferRe
 }
 
 
-// Parse and return an arrayLiteral. The opening bracket has already been
-// read into initialToken.
+// Parse and return an arrayLiteral. The opening bracket has already been read into initialToken.
 JS::PairListExprNode *JS::Parser::parseArrayLiteral(const Token &initialToken)
 {
     size_t initialPos = initialToken.getPos();
@@ -239,8 +238,7 @@ JS::PairListExprNode *JS::Parser::parseArrayLiteral(const Token &initialToken)
 }
 
 
-// Parse and return an objectLiteral. The opening brace has already been
-// read into initialToken.
+// Parse and return an objectLiteral. The opening brace has already been read into initialToken.
 JS::PairListExprNode *JS::Parser::parseObjectLiteral(const Token &initialToken)
 {
     size_t initialPos = initialToken.getPos();
@@ -294,8 +292,7 @@ JS::ExprNode *JS::Parser::parseUnitSuffixes(ExprNode *e)
 // if superState is ssStmt, parse either a SuperExpression or a SuperStatement, giving
 // preference to SuperExpression.  superState cannot be ssNone.  pos is the position of
 // the super token.
-// After parseSuper finishes, the next token might have been peeked with preferRegExp
-// set to false.
+// After parseSuper finishes, the next token might have been peeked with preferRegExp set to false.
 JS::ExprNode *JS::Parser::parseSuper(size_t pos, SuperState superState)
 {
     ASSERT(superState != ssNone);
@@ -321,8 +318,9 @@ JS::ExprNode *JS::Parser::parseSuper(size_t pos, SuperState superState)
 // Parse and return a PrimaryExpression.  If superState is ssExpr, also allow a SuperExpression;
 // if superState is ssStmt, also allow a SuperExpression or a SuperStatement.
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
-// After parsePrimaryExpression finishes, the next token might have been peeked with preferRegExp
-// set to false.
+// If the first token is 'private', the second token might have been peeked with preferRegExp set to false.
+//
+// After parsePrimaryExpression finishes, the next token might have been peeked with preferRegExp set to false.
 JS::ExprNode *JS::Parser::parsePrimaryExpression(SuperState superState)
 {
     ExprNode *e;
@@ -434,8 +432,7 @@ JS::ExprNode *JS::Parser::parsePrimaryExpression(SuperState superState)
 // and return the resulting ExprNode.
 // tOperator is the . token.  target is the first operand.  If target is a superExpr then
 // only a QualifiedIdentifier is allowed after the dot.
-// After parseMember finishes, the next token might have been peeked with the given
-// preferRegExp setting.
+// After parseMember finishes, the next token might have been peeked with the given preferRegExp setting.
 JS::ExprNode *JS::Parser::parseMember(ExprNode *target, const Token &tOperator, bool preferRegExp)
 {
     size_t pos = tOperator.getPos();
@@ -545,9 +542,9 @@ JS::ExprNode *JS::Parser::parsePostfixOperator(ExprNode *e, bool newExpression, 
 // If newExpression is true, this expression is immediately preceded by 'new',
 // so don't allow call, postincrement, or postdecrement operators on it.
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
+// If the first token is 'private', the second token might have been peeked with preferRegExp set to false.
 //
-// After parsePostfixExpression finishes, the next token might have been peeked with preferRegExp
-// set to false.
+// After parsePostfixExpression finishes, the next token might have been peeked with preferRegExp set to false.
 JS::ExprNode *JS::Parser::parsePostfixExpression(SuperState superState, bool newExpression)
 {
     ExprNode *e;
@@ -587,9 +584,9 @@ void JS::Parser::ensurePostfix(const ExprNode *e)
 // Parse and return a UnaryExpression.  If superState is ssExpr, also allow a SuperExpression;
 // if superState is ssStmt, also allow a SuperExpression or a SuperStatement.
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
+// If the first token is 'private', the second token might have been peeked with preferRegExp set to false.
 //
-// After parseUnaryExpression finishes, the next token might have been peeked with preferRegExp
-// set to false.
+// After parseUnaryExpression finishes, the next token might have been peeked with preferRegExp set to false.
 JS::ExprNode *JS::Parser::parseUnaryExpression(SuperState superState)
 {
     ExprNode::Kind eKind;
@@ -801,13 +798,12 @@ struct JS::Parser::StackedSubexpression {
 };
 
 
-// Parse and return a ListExpression.  If allowSuperStmt is true, also allow the expression to be a
-// SuperStatement.
-// If noAssignment is false, allow the = and op= operators.  If noComma is false, allow the comma
-// operator.  If the first token was peeked, it should have been done with preferRegExp set to true.
+// Parse and return a ListExpression.  If allowSuperStmt is true, also allow the expression to be a SuperStatement.
+// If noAssignment is false, allow the = and op= operators.  If noComma is false, allow the comma operator.
+// If the first token was peeked, it should have been done with preferRegExp set to true.
+// If the first token is 'private', the second token might have been peeked with preferRegExp set to false.
 //
-// After parseGeneralExpression finishes, the next token might have been peeked with preferRegExp
-// set to false.
+// After parseGeneralExpression finishes, the next token might have been peeked with preferRegExp set to false.
 JS::ExprNode *JS::Parser::parseGeneralExpression(bool allowSuperStmt, bool noIn, bool noAssignment, bool noComma)
 {
     ArrayBuffer<StackedSubexpression, 10> subexpressionStack;
@@ -895,8 +891,7 @@ JS::ExprNode *JS::Parser::parseGeneralExpression(bool allowSuperStmt, bool noIn,
 
 // Parse and return an Attribute.  The first token has already been read into t.
 //
-// After parseAttribute finishes, the next token might have been peeked with preferRegExp
-// set to true.
+// After parseAttribute finishes, the next token might have been peeked with preferRegExp set to true.
 JS::ExprNode *JS::Parser::parseAttribute(const Token &t)
 {
     bool b;
@@ -1044,6 +1039,18 @@ JS::ExprNode *JS::Parser::parseTypeBinding(Token::Kind kind, bool noIn)
 }
 
 
+// Return true the next token is a '::' without reading the next token.
+// If the next token is a '::', preferRegExp will be set to false for it;
+// otherwise, preferRegExp will be set to true for the next token.
+bool JS::Parser::doubleColonFollows()
+{
+    bool result = lexer.peek(true).hasKind(Token::doubleColon);
+    if (result)
+        lexer.redesignate(false); // Safe: the next token is '::'.
+    return result;
+}
+
+
 // Parse and return a VariableBinding (UntypedVariableBinding if untyped is true).
 // pos is the position of the binding or its first attribute, if any.
 // If noIn is false, allow the in operator.
@@ -1067,14 +1074,14 @@ JS::VariableBinding *JS::Parser::parseVariableBinding(size_t pos, bool noIn, boo
 
     ExprNode *initializer = 0;
     if (lexer.eat(true, Token::assignment)) {
-        const Token &t = lexer.peek(true);
+        const Token &t = lexer.get(true);
         size_t tPos = t.getPos();
-        if (t.getFlag(Token::isNonExpressionAttribute) && !untyped) {
-            lexer.skip();
+        if (!untyped && (t.getFlag(Token::isNonExpressionAttribute) || t.hasKind(Token::Private) && !doubleColonFollows())) {
             initializer = new(arena) IdentifierExprNode(t);
           makeAttribute:
             initializer = parseAttributes(tPos, initializer);
         } else {
+            lexer.unget();
             initializer = parseAssignmentExpression(noIn);
             lexer.redesignate(true); // Safe: a '/' or a '/=' would have been interpreted as an operator,
                                      // so it can't be the next token.
@@ -1589,8 +1596,12 @@ JS::ForStmtNode *JS::Parser::parseFor(size_t pos, bool &semicolonWanted)
         initializer = parseAnnotatableDirective(tPos, 0, t, true, false, semicolonWanted);
         break;
 
+      case Token::Private:
+        if (doubleColonFollows())
+            goto nonAttributePrivate;
+        // Falls through
       case CASE_TOKEN_NONEXPRESSION_ATTRIBUTE:
-        // Token::Private, Token::Public, Token::True, Token::False, and other attributes are
+        // Token::Public, Token::True, Token::False, and other attributes are
         // handled by the default case below.
         expr1 = new(arena) IdentifierExprNode(t);
       makeAttribute:
@@ -1605,6 +1616,7 @@ JS::ForStmtNode *JS::Parser::parseFor(size_t pos, bool &semicolonWanted)
         break;
 
       default:
+      nonAttributePrivate:
         lexer.unget();
         expr1 = parseListExpression(true);
         lexer.redesignate(true); // Safe: a '/' or a '/=' would have been interpreted as an operator,
@@ -1825,6 +1837,10 @@ JS::StmtNode *JS::Parser::parseDirective(bool substatement, bool inSwitch, bool 
         s = parsePackage(pos);
         break;
 
+      case Token::Private:
+        if (doubleColonFollows())
+            goto nonAttributePrivate;
+        // Falls through
       case CASE_TOKEN_NONEXPRESSION_ATTRIBUTE:
         e = new(arena) IdentifierExprNode(t);
       makeAttribute:
@@ -1884,13 +1900,13 @@ JS::StmtNode *JS::Parser::parseDirective(bool substatement, bool inSwitch, bool 
       case Token::False:
       case Token::New:
       case Token::Null:
-      case Token::Private:
       case Token::Public:
       case Token::Super:
       case Token::This:
       case Token::True:
       case Token::Typeof:
       case Token::Void:
+      nonAttributePrivate:
         lexer.unget();
         e = parseGeneralExpression(true, false, false, false);
         // Safe: a '/' or a '/=' would have been interpreted as an operator, so it can't be the next token.
