@@ -27,6 +27,7 @@
 interface nsIProtocolHandler;
 interface nsIStreamListener;
 interface nsIChannel;
+interface nsIURI;
 
 [scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
 interface nsIURIContentListener : nsISupports
@@ -35,8 +36,13 @@ interface nsIURIContentListener : nsISupports
      a specific content handler. Content listener's do not need to 
      support this method if they want the uri dispatcher to find the
      default protocol handler from the registry. 
+
+	 aURI --> the uri we need a protocol handler for
+	 aProtocolHandler --> the protocol handler you want the uri loader
+	 to use. You can pass back null if you want the uri loader to look
+	 up an appropriate protocol handler
    */
-   readonly attribute nsIProtocolHandler protocolHandler;
+   void getProtocolHandler(in nsIURI aURI, out nsIProtocolHandler aProtocolHandler);
 
   /* The URIDispatcher will give the content listener a shot at handling
      the content before it tries other means. If the content listener
