@@ -1,28 +1,16 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="internetresults.css" type="text/css"?>
-<?xml-stylesheet href="icons.css" type="text/css"?>
+<?xml-stylesheet href="chrome://search/skin/internetresults.css" type="text/css"?>
+<?xml-stylesheet href="chrome://search/skin/icons.css" type="text/css"?>
 
-
-<!DOCTYPE window
-[
-<!ENTITY results.title.label         "Results:">
-
-<!ENTITY name.column.label           "Name">
-<!ENTITY relevance.column.label      "Relevance">
-<!ENTITY site.column.label           "Internet Site">
-<!ENTITY engine.column.label         "Search Engine">
-
-<!ENTITY allresults.title.label      "All Search Results">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://search/locale/internetresults.dtd">
 
 <window style="width:100%; height:100%; background-color:white" align="vertical" onload="onLoadInternetResults()"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<html:script src="internetresults.js" />
-	<html:script src="shared.js" />
+	<html:script src="chrome://search/content/internetresults.js" />
+	<html:script src="chrome://search/content/shared.js" />
 
 	<box id="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" style="height: 64;" align="horizontal">
 		<template>
@@ -32,7 +20,9 @@
 		<titledbutton id="allEngines" onclick="doEngineClick(this)" class="engine" value="&allresults.title.label;" align="left" />
 	</box>
 
-	<tree id="internetresultstree" ref="" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch" onclick="doResultClick(event.target.parentNode.parentNode)" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
+	<tree id="internetresultstree" ref="" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch"
+		onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode); else doResultClick(event.target.parentNode.parentNode);">
+
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance" sortActive="true" sortDirection="descending" />
 		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"/>
@@ -87,4 +77,16 @@
 
 	<splitter id="searchHtmlAreaSplitter" persist="state" style="border-top:solid black 1px; border-bottom:solid black 1px; background-color:lightgray;" collapse="after" />
 	<html:iframe id="content" type="content-primary" style="height: 100; width: 100%;" flex="100%" src="resource:/res/samples/default.htm" />
+
+<!--
+This extra "status" bar is necessary because the bottom right corner of the window on MacOS is
+taken up by the growBox. If this window had a horizontal scrollbar, we'd be alright, but since
+it doesn't the bottom arrow on the vertical scrollbar was being hidden by this growBox. To
+combat this, we can just stick in a 15px high bar to bump up the bottom of the tree so that
+the scrollbar is visible. Yes, I know this is not necessary for win32 or gtk, but we can
+use this area for information (maybe full URL of selected item or the like) in the future.
+-->
+	<box id="status-bar" style="min-height:15px; max-height:15px;">
+		<titledbutton class="status-bar" align="left" value=""/>
+	</box>
 </window>

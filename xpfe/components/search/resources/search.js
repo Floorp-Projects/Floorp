@@ -9,13 +9,13 @@ function loadPage(thePage, searchStr)
 
 	if (thePage == "find")
 	{
-		content="find.xul";
-		results="findresults.xul";
+		content="chrome://search/content/find.xul";
+		results="chrome://search/content/findresults.xul";
 	}
 	else if (thePage == "internet")
 	{
-		content="internet.xul";
-		results="internetresults.xul";
+		content="chrome://search/content/internet.xul";
+		results="chrome://search/content/internetresults.xul";
 
 		if ((searchStr) && (searchStr != null))
 		{
