@@ -31,6 +31,7 @@ LIBRARY_NAME	= gkhtmlstyle_s
 REQUIRES	= xpcom \
 		  string \
 		  dom \
+		  js \
 		  content \
 		  gfx \
 		  widget \

@@ -430,7 +430,10 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
     nsCOMPtr<nsISecurityContext> javaSecurityContext = do_QueryInterface(credentials);
     if (javaSecurityContext) {
         if (pJSCX) {
-            nsCOMPtr<nsIScriptContext> scriptContext = NS_REINTERPRET_CAST(nsIScriptContext*, JS_GetContextPrivate(pJSCX));
+            nsCOMPtr<nsIScriptContext> scriptContext;
+            GetScriptContextFromJSContext(pJSCX,
+                                          getter_AddRefs(scriptContext));
+
             if (scriptContext) {
                 nsCOMPtr<nsIScriptGlobalObject> global;
                 scriptContext->GetGlobalObject(getter_AddRefs(global));
@@ -522,9 +525,8 @@ exit_js_impl(JNIEnv *jEnv, JSContext *cx)
     // The main idea is to execute terminate function if have any;
     if (cx)
     {
-        nsISupports* supports = NS_REINTERPRET_CAST(nsIScriptContext*, 
-                                                    JS_GetContextPrivate(cx));
-        nsCOMPtr<nsIScriptContext> scriptContext = do_QueryInterface(supports);
+        nsCOMPtr<nsIScriptContext> scriptContext;
+        GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
 
         if (scriptContext)
         {

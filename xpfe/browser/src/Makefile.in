@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  appshell \
 		  dom \
+		  js \
 		  uriloader \
 		  pref \
 		  appcomps \

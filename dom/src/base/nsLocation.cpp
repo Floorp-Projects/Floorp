@@ -570,10 +570,11 @@ LocationImpl::SetHrefWithBase(const nsAString& aHref,
 
       result = stack->Peek(&cx);
       if (cx) {
-        nsIScriptContext* scriptCX = (nsIScriptContext*)JS_GetContextPrivate(cx);
-       
-        if (scriptCX) {
-          scriptCX->GetProcessingScriptTag(&inScriptTag);
+        nsCOMPtr<nsIScriptContext> scriptContext;
+        nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(scriptContext));
+
+        if (scriptContext) {
+          scriptContext->GetProcessingScriptTag(&inScriptTag);
         }  
       } //cx
     }  // stack

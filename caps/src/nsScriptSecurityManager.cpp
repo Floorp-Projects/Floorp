@@ -93,11 +93,21 @@ static NS_DEFINE_IID(kObserverServiceIID, NS_IOBSERVERSERVICE_IID);
 ///////////////////////////
 // Result of this function should not be freed.
 static inline const PRUnichar *
-JSValIDToString(JSContext *cx, const jsval idval) {
+JSValIDToString(JSContext *cx, const jsval idval)
+{
     JSString *str = JS_ValueToString(cx, idval);
     if(!str)
         return nsnull;
     return NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str));
+}
+
+already_AddRefed<nsIScriptContext>
+GetScriptContext(JSContext *cx)
+{
+    nsIScriptContext *scriptContext;
+    GetScriptContextFromJSContext(cx, &scriptContext);
+
+    return scriptContext;
 }
 
 // Helper class to get stuff from the ClassInfo and not waste extra time with
@@ -1497,7 +1507,7 @@ nsScriptSecurityManager::GetRootDocShell(JSContext *cx, nsIDocShell **result)
     nsresult rv;
     *result = nsnull;
     nsCOMPtr<nsIDocShell> docshell;
-    nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
+    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
     if (!scriptContext) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
@@ -1549,7 +1559,7 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     }
 
     //-- See if the current window allows JS execution
-    nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
+    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
     if (!scriptContext) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
@@ -1808,20 +1818,20 @@ nsScriptSecurityManager::GetPrincipalFromContext(JSContext *cx,
                                                  nsIPrincipal **result)
 {
     *result = nsnull;
-    NS_ENSURE_TRUE(::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS,
-                   NS_ERROR_FAILURE);
-    nsISupports* scriptContextSupports =
-        NS_STATIC_CAST(nsISupports*, JS_GetContextPrivate(cx));
-    nsCOMPtr<nsIScriptContext> scriptContext(do_QueryInterface(scriptContextSupports));
 
-    if (scriptContext)
+    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
+
+    if (!scriptContext)
     {
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        scriptContext->GetGlobalObject(getter_AddRefs(global));
-        nsCOMPtr<nsIScriptObjectPrincipal> globalData(do_QueryInterface(global));
-        if (globalData)
-            globalData->GetPrincipal(result);
+        return NS_ERROR_FAILURE;
     }
+
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    scriptContext->GetGlobalObject(getter_AddRefs(global));
+    nsCOMPtr<nsIScriptObjectPrincipal> globalData(do_QueryInterface(global));
+    if (globalData)
+        globalData->GetPrincipal(result);
+
     return NS_OK;
 }
 
@@ -1930,8 +1940,7 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
     //   and return the innermost frame for annotations.
     if (cx)
     {
-        nsCOMPtr<nsIScriptContext> scriptContext =
-            NS_REINTERPRET_CAST(nsIScriptContext*,JS_GetContextPrivate(cx));
+        nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
         if (scriptContext)
         {
             nsCOMPtr<nsIScriptGlobalObject> global;
@@ -2153,7 +2162,7 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
     nsCOMPtr<nsIPrompt> prompter;
     if (cx)
     {
-        nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
+        nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
         if (scriptContext)
         {
             nsCOMPtr<nsIScriptGlobalObject> globalObject;

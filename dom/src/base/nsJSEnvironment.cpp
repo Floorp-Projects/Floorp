@@ -507,7 +507,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
-    ::JS_SetContextPrivate(mContext, (void *)this);
+    ::JS_SetContextPrivate(mContext, NS_STATIC_CAST(nsIScriptContext *, this));
 
     // Make sure the new context gets the default context options
     ::JS_SetOptions(mContext, mDefaultJSOptions);

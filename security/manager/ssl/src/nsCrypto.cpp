@@ -374,20 +374,19 @@ nsCrypto::GetScriptPrincipal(JSContext *cx)
   if (principal)
     return principal;
 
-  if (JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS) {
-    nsISupports* scriptContextSupports =
-      NS_STATIC_CAST(nsISupports*, JS_GetContextPrivate(cx));
-    nsCOMPtr<nsIScriptContext> scriptContext(do_QueryInterface(scriptContextSupports));
-    if (scriptContext)
-    {
-      nsCOMPtr<nsIScriptGlobalObject> global;
-      scriptContext->GetGlobalObject(getter_AddRefs(global));
-      NS_ENSURE_TRUE(global, nsnull);
-      nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
-      NS_ENSURE_TRUE(globalData, nsnull);
-      globalData->GetPrincipal(&principal);
-    }
+  nsCOMPtr<nsIScriptContext> scriptContext;
+  GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+
+  if (scriptContext)
+  {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    scriptContext->GetGlobalObject(getter_AddRefs(global));
+    NS_ENSURE_TRUE(global, nsnull);
+    nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
+    NS_ENSURE_TRUE(globalData, nsnull);
+    globalData->GetPrincipal(&principal);
   }
+
   return principal;
 }
 

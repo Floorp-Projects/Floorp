@@ -1114,8 +1114,8 @@ nsWindowWatcher::URIfromURL(const char *aURL,
      in nsGlobalWindow.cpp.) */
   JSContext *cx = GetJSContextFromCallStack();
   if (cx) {
-    nsISupports *cxsup = (nsISupports *) JS_GetContextPrivate(cx);
-    nsCOMPtr<nsIScriptContext> scriptcx(do_QueryInterface(cxsup));
+    nsCOMPtr<nsIScriptContext> scriptcx;
+    nsWWJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scriptcx));
     if (scriptcx) {
       nsCOMPtr<nsIScriptGlobalObject> gobj;
       scriptcx->GetGlobalObject(getter_AddRefs(gobj));

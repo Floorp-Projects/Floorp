@@ -591,11 +591,10 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
     aURI->GetSpec(spec);
 
     NS_ConvertUTF8toUCS2 fileName(spec);
-
     event.fileName = fileName.get();
 
     HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                        &status);
+                   &status);
   }
 
   return NS_OK;
