@@ -25,7 +25,7 @@ LIBRARY_NAME=raptorbase
 
 CPPSRCS=nsArena.cpp nsAtomTable.cpp nsBTree.cpp nsByteBuffer.cpp nsCRT.cpp \
     nsDeque.cpp nsInputStream.cpp nsRBTree.cpp nsString.cpp nsUnicharBuffer.cpp \
-    nsUnicharInputStream.cpp nsURL.cpp nsVoidArray.cpp 
+    nsUnicharInputStream.cpp nsVoidArray.cpp 
 
 CPP_OBJS=.\$(OBJDIR)\nsArena.obj .\$(OBJDIR)\nsAtomTable.obj \
     .\$(OBJDIR)\nsBTree.obj .\$(OBJDIR)\nsByteBuffer.obj \
@@ -33,20 +33,20 @@ CPP_OBJS=.\$(OBJDIR)\nsArena.obj .\$(OBJDIR)\nsAtomTable.obj \
     .\$(OBJDIR)\nsInputStream.obj .\$(OBJDIR)\nsRBTree.obj \
     .\$(OBJDIR)\nsString.obj \
     .\$(OBJDIR)\nsUnicharBuffer.obj .\$(OBJDIR)\nsUnicharInputStream.obj \
-    .\$(OBJDIR)\nsURL.obj .\$(OBJDIR)\nsVoidArray.obj 
+    .\$(OBJDIR)\nsVoidArray.obj 
 
 EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
     nsBTree.h nsCRT.h nsDeque.h nsIInputStream.h nsITimer.h \
     nsITimerCallback.h nsIUnicharBuffer.h nsRBTree.h \
-    nsIUnicharInputStream.h nsIURL.h nsString.h nsVoidArray.h \
+    nsIUnicharInputStream.h nsString.h nsVoidArray.h \
     nsUnitConversion.h 
 
 MODULE=raptor 
 
 REQUIRES=xpcom netlib raptor 
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\netlib \
-    -I$(XPDIST)\public\raptor 
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib \
+    -I$(PUBLIC)\raptor 
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorbase
@@ -63,7 +63,6 @@ LCFLAGS = \
 LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
  $(DIST)\lib\libplc21.lib       \
- $(DIST)\lib\netlib.lib         \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
