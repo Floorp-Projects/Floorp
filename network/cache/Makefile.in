@@ -17,8 +17,8 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -33,11 +33,22 @@ CSRCS		= \
 	mkmemcac.c	\
 	$(NULL)
 
+ifdef NU_CACHE
+CSRCS += \
+	nucacheproto.c	\
+	$(NULL)
+endif
+
 EXPORTS= netcache.h mkcache.h mkmemcac.h extcache.h
+EXPORTS:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+REQUIRES	= network nspr2 dbm util pref js java fileurl security layer img jtools cachelib
 
-REQUIRES	= network nspr2 dbm util pref js java fileurl security layer img jtools
+ifdef NU_CACHE
+REQUIRES += \
+	cachelib \
+	$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
