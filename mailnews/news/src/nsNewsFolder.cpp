@@ -355,20 +355,6 @@ nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
   return rv;
 }
 
-NS_IMETHODIMP
-nsMsgNewsFolder::AddUnique(nsISupports* element)
-{
-  NS_ASSERTION(0,"AddUnique not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMsgNewsFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
-{
-  NS_ASSERTION(0,"ReplaceElement not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)

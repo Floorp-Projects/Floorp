@@ -73,12 +73,11 @@
        MSG_FOLDER_FLAG_ELIDED bits set.
      */
 
-#define MSG_FOLDER_FLAG_MODERATED   0x0020  /* Whether this folder represents
-                                               a moderated newsgroup. */
+#define MSG_FOLDER_FLAG_UNUSED1   0x0020  /* used to be for a moderated newsgroup. */
 #define MSG_FOLDER_FLAG_SUBSCRIBED  0x0040  /* Whether this folder represents
                                                a subscribed newsgroup. */
-#define MSG_FOLDER_FLAG_NEW_GROUP   0x0080  /* A newsgroup which has just
-                                               been added by the `Check
+#define MSG_FOLDER_FLAG_UNUSED2   0x0080  /* used to be for new newsgroups
+                                               added by the `Check
                                                New Groups' command. */
 
 
@@ -115,11 +114,11 @@
 #define MSG_FOLDER_FLAG_IMAPBOX		0x2000	/* Whether this folder on online
 											   IMAP */
 
-#define MSG_FOLDER_FLAG_CAT_CONTAINER 0x4000 /* This group contains categories */
+#define MSG_FOLDER_FLAG_UNUSED3 0x4000 /* used to be for category container */
 
 #define MSG_FOLDER_FLAG_PROFILE_GROUP 0x8000 /* This is a virtual newsgroup */
 
-#define MSG_FOLDER_FLAG_CATEGORY	0x10000  /* this is a category */
+#define MSG_FOLDER_FLAG_UNUSED4	0x10000  /* used to be for categories */
 
 #define MSG_FOLDER_FLAG_GOT_NEW		0x20000		/* folder got new msgs */
 

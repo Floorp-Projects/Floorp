@@ -571,20 +571,6 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
   return rv;
 }
 
-NS_IMETHODIMP
-nsMsgLocalMailFolder::AddUnique(nsISupports* element)
-{
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
-{
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
@@ -2906,19 +2892,19 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
   
   if (NS_SUCCEEDED(rv) && mCopyState->m_messageService)
   {
-	nsMsgKeyArray keyArray;
-	PRUint32 numMessages = 0;
-	messages->Count(&numMessages);
-	for (PRUint32 i = 0; i < numMessages; i++)
-	{
-		nsCOMPtr<nsIMsgDBHdr> aMessage = do_QueryElementAt(messages, i, &rv);
-		if(NS_SUCCEEDED(rv) && aMessage)
-		{
-			nsMsgKey key;
-			aMessage->GetMessageKey(&key);
-			keyArray.Add(key);
-		}
-	}
+    nsMsgKeyArray keyArray;
+    PRUint32 numMessages = 0;
+    messages->Count(&numMessages);
+    for (PRUint32 i = 0; i < numMessages; i++)
+    {
+      nsCOMPtr<nsIMsgDBHdr> aMessage = do_QueryElementAt(messages, i, &rv);
+      if(NS_SUCCEEDED(rv) && aMessage)
+      {
+        nsMsgKey key;
+        aMessage->GetMessageKey(&key);
+        keyArray.Add(key);
+      }
+    }
     keyArray.QuickSort();
     rv = SortMessagesBasedOnKey(messages, &keyArray, srcFolder);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -3196,11 +3182,7 @@ nsMsgLocalMailFolder::GetIncomingServerType()
 
 nsresult nsMsgLocalMailFolder::CreateBaseMessageURI(const char *aURI)
 {
-	nsresult rv;
-
-	rv = nsCreateLocalBaseMessageURI(aURI, &mBaseMessageURI);
-	return rv;
-
+  return nsCreateLocalBaseMessageURI(aURI, &mBaseMessageURI);
 }
 
 NS_IMETHODIMP
@@ -3393,7 +3375,7 @@ nsMsgLocalMailFolder::SetFlagsOnDefaultMailboxes(PRUint32 flags)
   if (flags & MSG_FOLDER_FLAG_JUNK)
     setSubfolderFlag(NS_LITERAL_STRING("Junk").get(), MSG_FOLDER_FLAG_JUNK);
 
-	return NS_OK;
+  return NS_OK;
 }
 
 nsresult
@@ -3413,7 +3395,7 @@ nsMsgLocalMailFolder::setSubfolderFlag(const PRUnichar *aFolderName,
   if (!folder) 
     return NS_ERROR_FAILURE;
   
- 	nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder);
+  nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder);
   if (!msgFolder) 
     return NS_ERROR_FAILURE;
   

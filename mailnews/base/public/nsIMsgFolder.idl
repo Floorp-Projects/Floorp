@@ -76,16 +76,6 @@ const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
 const nsMsgBiffState nsMsgBiffState_NoMail =  1; // No new mail is waiting.
 const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is new mail.
 
-
-  /* already exists in nsIFolder */
-  /*	readonly attribute string name;   */
-  /*	void SetName(in string name); */
-
-
-  /* XXX should these 2 go on nsIFolder or nsICollection? */
-  void AddUnique(in nsISupports element);
-  void ReplaceElement(in nsISupports element, in nsISupports newElement);
-  
   nsISimpleEnumerator getMessages(in nsIMsgWindow aMsgWindow);
   
   void startFolderLoading();

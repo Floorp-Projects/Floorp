@@ -74,8 +74,6 @@ public:
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
 
   // nsIMsgFolder methods:
-  NS_IMETHOD AddUnique(nsISupports* element);
-  NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
   NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 

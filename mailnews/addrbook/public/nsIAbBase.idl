@@ -48,7 +48,4 @@ interface nsIAbBase : nsICollection {
 
     nsIEnumerator GetChildNodes();
 
-    void AddUnique(in nsISupports element);
-    void ReplaceElement(in nsISupports element, in nsISupports newElement);
-
 };

@@ -86,8 +86,6 @@ public:
   // are commented out below
   
   // begin NS_DECL_NSIMSGFOLDER
-  NS_IMETHOD AddUnique(nsISupports *element);
-  NS_IMETHOD ReplaceElement(nsISupports *element, nsISupports *newElement);
   NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator **_retval);
   NS_IMETHOD StartFolderLoading(void);
   NS_IMETHOD EndFolderLoading(void);

@@ -384,24 +384,6 @@ nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP
-nsMsgFolder::AddUnique(nsISupports* element)
-{
-  // XXX fix this
-  return mSubFolders->AppendElement(element) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-// I'm assuming this means "Replace Subfolder"?
-NS_IMETHODIMP
-nsMsgFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
-{
-  PRBool success=PR_FALSE;
-  PRInt32 location = mSubFolders->IndexOf(element);
-  if (location>0)
-    success = mSubFolders->ReplaceElementAt(newElement, location);
-
-  return success ? NS_OK : NS_ERROR_UNEXPECTED;
-}
 
 NS_IMETHODIMP
 nsMsgFolder::GetSubFolders(nsIEnumerator* *result)
