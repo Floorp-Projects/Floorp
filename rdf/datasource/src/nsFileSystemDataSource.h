@@ -77,14 +77,14 @@ private:
 	char			*mURI;
 	nsVoidArray		*mObservers;
 
-static	nsIRDFResource		*kNC_FileSystemRoot;
-static	nsIRDFResource		*kNC_Child;
-static	nsIRDFResource		*kNC_Name;
-static	nsIRDFResource		*kNC_URL;
-static	nsIRDFResource		*kNC_Columns;
+	nsIRDFResource		*kNC_FileSystemRoot;
+	nsIRDFResource		*kNC_Child;
+	nsIRDFResource		*kNC_Name;
+	nsIRDFResource		*kNC_URL;
+	nsIRDFResource		*kNC_Columns;
 
-static	nsIRDFResource		*kRDF_InstanceOf;
-static	nsIRDFResource		*kRDF_Bag;
+	nsIRDFResource		*kRDF_InstanceOf;
+	nsIRDFResource		*kRDF_Bag;
 
 public:
 
@@ -138,26 +138,6 @@ public:
 				PRBool *aResult);
 	NS_IMETHOD	DoCommand(const char *aCommand,
 				nsIRDFResource *aCommandTarget);
-};
-
-
-
-class FileSystem : public nsIRDFFileSystem
-{
-private:
-	char		*mURI;
-
-public:
-			FileSystem(const char *uri);
-	virtual		~FileSystem(void);
-
-	NS_DECL_ISUPPORTS
-	NS_DECL_IRDFRESOURCE
-
-	NS_IMETHOD	GetFolderList(nsIRDFResource *source,
-				nsVoidArray **array /* out */) const;
-	NS_IMETHOD	GetName(nsVoidArray **array /* out */) const;
-	NS_IMETHOD	GetURL(nsVoidArray **array /* out */) const;
 };
 
 
