@@ -7770,10 +7770,10 @@ you restart Communicator.")
 #define RDF_MSG_BASE XP_MSG_BASE + 2000
 
 ResDef(RDF_HTML_STR, RDF_MSG_BASE+1,  "\
-<CENTER><TABLE ALIGN=center WIDTH=480 BORDER=0>%0%</TABLE></CENTER><P>%1%")
+<CENTER><TABLE ALIGN=center WIDTH=470 BORDER=0>%0%</TABLE></CENTER><P>%1%")
 
 ResDef(RDF_HTML_STR_1, RDF_MSG_BASE+2,  "\
-<TR><TD ALIGN=RIGHT><B>%s:</B></TD><TD><INPUT TYPE=TEXT NAME='%s' WIDTH=40 SIZE=40 VALUE='%s'></TD></TR>\n")
+<TR><TD ALIGN=RIGHT><B>%s:</B></TD><TD><INPUT TYPE=TEXT NAME='%s' WIDTH=36 SIZE=36 VALUE='%s'></TD></TR>\n")
 
 ResDef(RDF_HTML_STR_2, RDF_MSG_BASE+3,  "\
 <TR><TD ALIGN=RIGHT><B>%s:</B></TD><TD><INPUT TYPE=PASSWORD NAME='%s' WIDTH=40 SIZE=40 VALUE='%s'></TD></TR>\n")
@@ -7866,6 +7866,92 @@ ResDef(RDF_CMD_34, RDF_CMD_BASE+34,  "Export All...")
 ResDef(RDF_CMD_35, RDF_CMD_BASE+35,  "Undo")
 ResDef(RDF_CMD_36, RDF_CMD_BASE+36,  "New Workspace...")
 ResDef(RDF_CMD_37, RDF_CMD_BASE+37,  "Rename")
+
+ResDef(RDF_MAIN_TITLE, RDF_MSG_BASE+100,  "Information")
+ResDef(RDF_COLOR_TITLE, RDF_MSG_BASE+101,  "Color Information")
+ResDef(RDF_MISSION_CONTROL_TITLE, RDF_MSG_BASE+102,  "Mission Control Settings")
+ResDef(RDF_TREE_COLORS_TITLE, RDF_MSG_BASE+103,  "Tree Colors")
+ResDef(RDF_SELECTION_COLORS_TITLE, RDF_MSG_BASE+104,  "Selection Colors")
+ResDef(RDF_COLUMN_COLORS_TITLE, RDF_MSG_BASE+105,  "Column Colors")
+ResDef(RDF_TITLEBAR_COLORS_TITLE, RDF_MSG_BASE+106,  "Title Bar Colors")
+ResDef(RDF_APPLETALK_TOP_NAME, RDF_MSG_BASE+107,  "Appletalk Zones and File Servers")
+ResDef(RDF_PERSONAL_TOOLBAR_NAME, RDF_MSG_BASE+108,  "Personal Toolbar")
+
+ResDef(RDF_HTML_STR_NUMBER, RDF_MSG_BASE+110,  "\
+<TR><TD ALIGN=RIGHT><B>%s:</B></TD><TD><INPUT TYPE=TEXT NAME='%s' WIDTH=6 SIZE=6 VALUE='%s'></TD></TR>\n")
+ResDef(RDF_HTML_INFOHEADER_STR, RDF_MSG_BASE+111,  "<TR><TD ALIGN=LEFT BGCOLOR='#7F7F7F' COLSPAN=2>\
+<FONT SIZE=+1 COLOR='#FFFFFF'><B>%s</B></FONT></TD></TR>\n")
+ResDef(RDF_HTML_MAININFOHEADER_STR, RDF_MSG_BASE+112,  "<TR><TD ALIGN=LEFT BGCOLOR='#7F7F7F' COLSPAN=2>\
+<FONT SIZE=+1 COLOR='#FFFFFF'><B>'%s' Information</B></FONT></TD></TR>\n")
+ResDef(RDF_HTML_EMPTYHEADER_STR, RDF_MSG_BASE+113,  "<TR><TD> <P></TD></TR>\n")
+ResDef(RDF_HTML_COLOR_STR, RDF_MSG_BASE+114,  "\
+<TR><TD ALIGN=RIGHT><B>%s:</B></TD><TD>\
+<INPUT TYPE=TEXT NAME='%s' WIDTH=36 SIZE=36 VALUE='%s' onChange='return setColor(\042%scube\042,this.value)'>\
+&nbsp;<IMG SRC='' SUPPRESS=true NAME='%simage' WIDTH=1 HEIGHT=1 BORDER=0 ALIGN=top VALIGN=top><BR></TD></TR>\n")
+
+ResDef(RDF_FOREGROUND_COLOR_STR, RDF_MSG_BASE+120,  "Foreground Color")
+ResDef(RDF_BACKGROUND_COLOR_STR, RDF_MSG_BASE+121,  "Background Color")
+ResDef(RDF_BACKGROUND_IMAGE_STR, RDF_MSG_BASE+122,  "Background Image URL")
+ResDef(RDF_SHOW_TREE_CONNECTIONS_STR, RDF_MSG_BASE+123,  "Show Tree Connections")
+ResDef(RDF_CONNECTION_FG_COLOR_STR, RDF_MSG_BASE+124,  "Connection Foreground Color")
+ResDef(RDF_OPEN_TRIGGER_IMAGE_STR, RDF_MSG_BASE+125,  "Open Trigger Image URL")
+ResDef(RDF_CLOSED_TRIGGER_IMAGE_STR, RDF_MSG_BASE+126,  "Closed Trigger Image URL")
+ResDef(RDF_SHOW_HEADERS_STR, RDF_MSG_BASE+127,  "Show Headers")
+ResDef(RDF_SHOW_HEADER_DIVIDERS_STR, RDF_MSG_BASE+128,  "Show Header Dividers")
+ResDef(RDF_SORT_COLUMN_FG_COLOR_STR, RDF_MSG_BASE+129,  "Sort Column Foreground Color")
+ResDef(RDF_SORT_COLUMN_BG_COLOR_STR, RDF_MSG_BASE+130,  "Sort Column Background Color")
+ResDef(RDF_DIVIDER_COLOR_STR, RDF_MSG_BASE+131,  "Divider Color")
+ResDef(RDF_SHOW_COLUMN_DIVIDERS_STR, RDF_MSG_BASE+132,  "Show Column Dividers")
+ResDef(RDF_SELECTED_HEADER_FG_COLOR_STR, RDF_MSG_BASE+133,  "Selected Header Foreground Color")
+ResDef(RDF_SELECTED_HEADER_BG_COLOR_STR, RDF_MSG_BASE+134,  "Selected Header Background Color")
+ResDef(RDF_SHOW_COLUMN_HILITING_STR, RDF_MSG_BASE+135,  "Show Column Hiliting")
+ResDef(RDF_TRIGGER_PLACEMENT_STR, RDF_MSG_BASE+136,  "Trigger Placement")
+
+ResDef(RDF_URL_STR, RDF_MSG_BASE+140,  "URL")
+ResDef(RDF_DESCRIPTION_STR, RDF_MSG_BASE+141,  "Description")
+ResDef(RDF_FIRST_VISIT_STR, RDF_MSG_BASE+142,  "First visited on")
+ResDef(RDF_LAST_VISIT_STR, RDF_MSG_BASE+143,  "Last visited on")
+ResDef(RDF_NUM_ACCESSES_STR, RDF_MSG_BASE+144,  "# of Accesses")
+ResDef(RDF_CREATED_ON_STR, RDF_MSG_BASE+145,  "Created on")
+ResDef(RDF_LAST_MOD_STR, RDF_MSG_BASE+146,  "Last modified on")
+ResDef(RDF_SIZE_STR, RDF_MSG_BASE+147,  "Size")
+ResDef(RDF_ADDED_ON_STR, RDF_MSG_BASE+148,  "Added on")
+ResDef(RDF_ICON_URL_STR, RDF_MSG_BASE+149,  "Icon URL")
+ResDef(RDF_LARGE_ICON_URL_STR, RDF_MSG_BASE+150,  "Large Icon URL")
+ResDef(RDF_HTML_URL_STR, RDF_MSG_BASE+151,  "HTML URL")
+ResDef(RDF_HTML_HEIGHT_STR, RDF_MSG_BASE+152,  "HTML Height")
+ResDef(RDF_NAME_STR, RDF_MSG_BASE+153,  "Name")
+ResDef(RDF_SHORTCUT_STR, RDF_MSG_BASE+154,  "Shortcut")
+
+ResDef(RDF_SETCOLOR_JS, RDF_MSG_BASE+160,  "\
+<SCRIPT>\
+function setColor(cubeName,rgb) {\
+if(rgb=='')rgb=document.bgColor;\
+for(x=0;x<document.layers.length;x++){\
+l=document.layers[x];\
+if(l.name==cubeName){\
+l.document.bgColor=rgb;\
+l.document.fgColor=rgb;\
+break;\
+}\
+}\
+return(true);\
+}\
+</SCRIPT>")
+
+ResDef(RDF_DEFAULTCOLOR_JS, RDF_MSG_BASE+161,  "\
+<SCRIPT>\
+document.layers['%scube'].x = document.images['%simage'].x;\
+document.layers['%scube'].y = document.images['%simage'].y;\
+setColor('%scube', document.forms[0].%s.value);\
+document.layers['%scube'].visibility='SHOW';\
+</SCRIPT>")
+
+ResDef(RDF_COLOR_LAYER, RDF_MSG_BASE+163,  "<LAYER NAME='%scube' CLIP='0,0,18,18' \
+WIDTH=18 HEIGHT=18 TOP=0 LEFT=0 VISIBILITY=HIDE><BODY></BODY></LAYER>")
+
+ResDef(RDF_HTMLCOLOR_STR, RDF_MSG_BASE+164,  "\
+%0%<CENTER><TABLE ALIGN=center WIDTH=470 BORDER=0>%1%</TABLE></CENTER><P>%2%")
 
 
 END_STR(mcom_include_xp_msg_i_strings)
