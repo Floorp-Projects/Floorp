@@ -96,6 +96,7 @@ EXPORTS		= \
 		nsObserverService.h \
 		nsQuickSort.h \
 		nsRecyclingAllocator.h \
+		nsRefPtrHashtable.h \
 		nsStaticNameTable.h \
 		nsStaticAtom.h \
 		nsSupportsArray.h \
