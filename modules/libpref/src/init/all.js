@@ -38,6 +38,9 @@
 // SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 //  The first character after a period must be alphabetic.
 
+pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
+pref("browser.chromeURL","chrome://navigator/content/navigator.xul");
+
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
 
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
@@ -559,12 +562,12 @@ pref("intl.locale.matchOS",                 false);
 pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
 
 // -- folders (Mac: these are binary aliases.)
-localDefPref("mail.signature_file",             "");
-localDefPref("mail.directory",                  "");
+pref("mail.signature_file",             "");
+pref("mail.directory",                  "");
 
 pref("images.dither", "auto");
-localDefPref("news.directory",                  "");
-localDefPref("security.directory",              "");
+pref("news.directory",                  "");
+pref("security.directory",              "");
 
 pref("autoupdate.enabled",              true);
 

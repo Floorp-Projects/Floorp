@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prefapi.h"
+#include "prefapi_private_data.h"
+#include "nsReadableUtils.h"
 #include "jsapi.h"
 
 #if defined(XP_MAC)
@@ -104,10 +106,7 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
 
 PR_STATIC_CALLBACK(JSBool) pref_NativeDefaultPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 PR_STATIC_CALLBACK(JSBool) pref_NativeUserPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-PR_STATIC_CALLBACK(JSBool) pref_NativeSetConfig(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-PR_STATIC_CALLBACK(JSBool) pref_NativeGetPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 /*----------------------------------------------------------------------------------------*/
-#include "prefapi_private_data.h"
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 global_enumerate(JSContext *cx, JSObject *obj)
@@ -147,13 +146,7 @@ static JSPropertySpec autoconf_props[] = {
                     };
 static JSFunctionSpec autoconf_methods[] = {
                     { "pref",               pref_NativeDefaultPref, 2,0,0 },
-                    { "defaultPref",        pref_NativeDefaultPref, 2,0,0 },
                     { "user_pref",          pref_NativeUserPref,    2,0,0 },
-                    { "config",             pref_NativeSetConfig,   2,0,0 },
-                    { "getPref",            pref_NativeGetPref,     1,0,0 },
-                    { "localPref",          pref_NativeDefaultPref, 1,0,0 },
-                    { "localUserPref",      pref_NativeUserPref,    2,0,0 },
-                    { "localDefPref",       pref_NativeDefaultPref, 2,0,0 },
                     { NULL,                 NULL,                   0,0,0 }
                     };
 
@@ -1149,43 +1142,6 @@ PR_STATIC_CALLBACK(JSBool) pref_NativeUserPref
     return pref_HashJSPref(argc, argv, PREF_SETUSER);
 }
 
-PR_STATIC_CALLBACK(JSBool) pref_NativeSetConfig
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-    return pref_HashJSPref(argc, argv, PREF_SETCONFIG);
-}
-
-PR_STATIC_CALLBACK(JSBool) pref_NativeGetPref
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-    /*void* value = NULL;*/
-    PrefHashEntry* pref;
-    /*PRBool prefExists = PR_TRUE;*/
-    
-    if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
-    {
-        const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        pref = pref_HashTableLookup(key);
-        
-        if (pref)
-        {
-            PRBool use_default = (PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref));      
-            if (pref->flags & PREF_STRING)
-            {
-                char* str = use_default ? pref->defaultPref.stringVal : pref->userPref.stringVal;
-                JSString* jsstr = JS_NewStringCopyZ(cx, str);
-                *rval = STRING_TO_JSVAL(jsstr);
-            }
-            else if (pref->flags & PREF_INT)
-                *rval = INT_TO_JSVAL(use_default ?
-                    pref->defaultPref.intVal : pref->userPref.intVal);
-            else if (pref->flags & PREF_BOOL)
-                *rval = BOOLEAN_TO_JSVAL(use_default ?
-                    pref->defaultPref.boolVal : pref->userPref.boolVal);
-        }
-    }
-    return JS_TRUE;
-}
 /* -- */
 
 PRBool
@@ -1388,7 +1344,7 @@ pref_ErrorReporter(JSContext *cx, const char *message,
     /* StandardAlert doesn't handle linefeeds. Use spaces to avoid garbage characters. */
     last = PR_sprintf_append(last, "  ");
 #else
-    last = PR_sprintf_append(last, LINEBREAK LINEBREAK);
+    last = PR_sprintf_append(last, NS_LINEBREAK NS_LINEBREAK);
 #endif
     if (!report)
         last = PR_sprintf_append(last, "%s\n", message);
@@ -1461,10 +1417,7 @@ void pref_Alert(char* msg)
 static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
 /* Native implementations of JavaScript functions
     pref        -> pref_NativeDefaultPref
-    defaultPref -> "
     userPref    -> pref_NativeUserPref
-    getPref     -> pref_NativeGetPref
-    config      -> pref_NativeSetConfig
  *--------------------------------------------------------------------------------------*/
 {   
     if (argc >= 2 && JSVAL_IS_STRING(argv[0]))

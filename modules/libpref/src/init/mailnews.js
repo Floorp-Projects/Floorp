@@ -118,7 +118,7 @@ pref("mail.addr_book.displayName.lastnamefirst", false); // generate display nam
 pref("mail.attach_vcard",                   false);
 pref("mail.html_compose",                   true);
 pref("mail.compose.other.header",	    "");
-localDefPref("mail.fcc_folder",                     "");
+pref("mail.fcc_folder",                     "");
 pref("mail.encrypt_outgoing_mail",          false);
 pref("mail.crypto_sign_outgoing_mail",      false);
 pref("mail.default_html_action", 0);          // 0=ask, 1=plain, 2=html, 3=both

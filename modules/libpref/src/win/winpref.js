@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-platform.windows = true;
-
 pref("ui.key.menuAccessKeyFocuses", true);
 
 pref("font.name.serif.ar", "Times New Roman");

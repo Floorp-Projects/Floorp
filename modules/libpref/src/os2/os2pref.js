@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-platform.windows = true;
-
 pref("ui.key.menuAccessKeyFocuses", true);
 pref("browser.display.screen_resolution", 0); // System setting
 

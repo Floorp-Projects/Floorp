@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-platform.beos = true;
-
 pref("intl.font_charset", "");
 pref("intl.font_spec_list", "");
 pref("mail.signature_date", 0);

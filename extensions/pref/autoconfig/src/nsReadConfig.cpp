@@ -140,8 +140,12 @@ nsresult nsReadConfig::readConfigFile()
             return rv;
         
         // Open and evaluate function calls to set/lock/unlock prefs
-        
         rv = openAndEvaluateJSFile("prefcalls.js", PR_FALSE, PR_FALSE);
+        if (NS_FAILED(rv)) 
+            return rv;
+
+        // Evaluate platform specific directives
+        rv = openAndEvaluateJSFile("platform.js", PR_FALSE, PR_FALSE);
         if (NS_FAILED(rv)) 
             return rv;
 

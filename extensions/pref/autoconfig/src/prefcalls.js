@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  * Mitesh Shah <mitesh@netscape.com>
+ * Brian Nesse <bnesse@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -42,6 +43,10 @@ const nsILDAPSyncQuery = Components.interfaces.nsILDAPSyncQuery;
 const LDAPSyncQueryContractID = "@mozilla.org/ldapsyncquery;1";
 const nsIPrefService = Components.interfaces.nsIPrefService;
 const PrefServiceContractID = "@mozilla.org/preferences-service;1";
+
+// set on a platform specific basis in platform.js
+platform = { value: "" };
+
 
 function getPrefBranch() {
     

@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 # Mitesh Shah <mitesh@netscape.com>
+# Brian Nesse <bnesse@netscape.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -106,3 +107,4 @@ OBJS =  .\$(OBJDIR)\nsConfigFactory.obj \
 include <$(DEPTH)\config\rules.mak>
 libs::
     $(MAKE_INSTALL) .\prefcalls.js $(DIST)\bin\defaults\autoconfig
+    $(MAKE_INSTALL) .\win\platform.js $(DIST)\bin\defaults\autoconfig
