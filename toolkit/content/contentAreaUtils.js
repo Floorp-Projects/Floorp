@@ -131,13 +131,6 @@ function foundHeaderInfo(aSniffer, aData)
   catch (e) {
   }
 
-  var fp = makeFilePicker();
-  var titleKey = aData.filePickerTitle || "SaveLinkTitle";
-  var bundle = getStringBundle();
-  fp.init(window, bundle.GetStringFromName(titleKey), 
-          Components.interfaces.nsIFilePicker.modeSave);
-
-
   var isDocument = aData.document != null && isDocumentType(contentType);
   if (!isDocument && !shouldDecode && contentEncodingType) {
     // The data is encoded, we are not going to decode it, and this is not a
@@ -147,57 +140,79 @@ function foundHeaderInfo(aSniffer, aData)
     // right.
     contentType = contentEncodingType;
   }
-    
-  appendFiltersForContentType(fp, contentType,
-                              isDocument ? MODE_COMPLETE : MODE_FILEONLY);  
 
-  const prefSvcContractID = "@mozilla.org/preferences-service;1";
-  const prefSvcIID = Components.interfaces.nsIPrefService;                              
-  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch("browser.download.");
-  
-  const nsILocalFile = Components.interfaces.nsILocalFile;
-  try {
-    fp.displayDirectory = prefs.getComplexValue("dir", nsILocalFile);
-  }
-  catch (e) {
-  }
-
-  if (isDocument) {
-    try {
-      fp.filterIndex = prefs.getIntPref("save_converter_index");
-    }
-    catch (e) {
-    }
-  }
-  
   // Determine what the 'default' string to display in the File Picker dialog 
   // should be. 
   var defaultFileName = getDefaultFileName(aData.fileName, 
                                            aSniffer.suggestedFileName, 
                                            aSniffer.uri,
                                            aData.document);
+
   var defaultExtension = getDefaultExtension(defaultFileName, aSniffer.uri, contentType);
-  fp.defaultExtension = defaultExtension;
-  fp.defaultString = getNormalizedLeafName(defaultFileName, defaultExtension);
-  
-  if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
-    return;
-    
+  var defaultString = getNormalizedLeafName(defaultFileName, defaultExtension);
+
+  const prefSvcContractID = "@mozilla.org/preferences-service;1";
+  const prefSvcIID = Components.interfaces.nsIPrefService;                              
+  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch("browser.download.");
   if (isDocument) 
     prefs.setIntPref("save_converter_index", fp.filterIndex);
-  var directory = fp.file.parent.QueryInterface(nsILocalFile);
-  prefs.setComplexValue("dir", nsILocalFile, directory);
+
+  const nsILocalFile = Components.interfaces.nsILocalFile;
+  try {
+    var dir = prefs.getComplexValue("dir", nsILocalFile);
+  }
+  catch (e) {
+  }
+
+  const lfContractID = "@mozilla.org/file/local;1";
+
+  var prompt = prefs.getBoolPref("promptWithFilepicker");
+  var filterIndex = 0;
+  var file;
+  if (prompt) {
+    var fp = makeFilePicker();
+    var titleKey = aData.filePickerTitle || "SaveLinkTitle";
+    var bundle = getStringBundle();
+    fp.init(window, bundle.GetStringFromName(titleKey), 
+            Components.interfaces.nsIFilePicker.modeSave);
     
-  fp.file.leafName = validateFileName(fp.file.leafName);
+    appendFiltersForContentType(fp, contentType,
+                                isDocument ? MODE_COMPLETE : MODE_FILEONLY);  
   
+    fp.displayDirectory = dir;
+    if (isDocument) {
+      try {
+        fp.filterIndex = prefs.getIntPref("save_converter_index");
+      }
+      catch (e) {
+      }
+    }
+  
+    fp.defaultExtension = defaultExtension;
+    fp.defaultString = defaultString;
+  
+    if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
+      return;
+  
+    var directory = fp.file.parent.QueryInterface(nsILocalFile);
+    prefs.setComplexValue("dir", nsILocalFile, directory);
+    fp.file.leafName = validateFileName(fp.file.leafName);
+    filterIndex = fp.filterIndex;
+    file = fp.file;
+  }
+  else {
+    dir.append(defaultString);
+    file = dir;
+  }
+
   // If we're saving a document, and are saving either in complete mode or 
   // as converted text, pass the document to the web browser persist component.
   // If we're just saving the HTML (second option in the list), send only the URI.
-  var source = (isDocument && fp.filterIndex != 1) ? aData.document : aSniffer.uri;
+  var source = (isDocument && filterIndex != 1) ? aData.document : aSniffer.uri;
   var persistArgs = {
     source      : source,
-    contentType : (isDocument && fp.filterIndex == 2) ? "text/plain" : contentType,
-    target      : fp.file,
+    contentType : (isDocument && filterIndex == 2) ? "text/plain" : contentType,
+    target      : file,
     postData    : aData.document ? getPostData() : null,
     bypassCache : aData.bypassCache
   };
@@ -218,13 +233,11 @@ function foundHeaderInfo(aSniffer, aData)
   // Create download and initiate it (below)
   var dl = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsIDownload);
 
-  if (isDocument && fp.filterIndex != 1) {
+  if (isDocument && filterIndex != 1) {
     // Saving a Document, not a URI:
     var filesFolder = null;
     if (persistArgs.contentType != "text/plain") {
       // Create the local directory into which to save associated files. 
-      const lfContractID = "@mozilla.org/file/local;1";
-      const lfIID = Components.interfaces.nsILocalFile;
       filesFolder = Components .classes[lfContractID].createInstance(lfIID);
       filesFolder.initWithPath(persistArgs.target.path);
       
