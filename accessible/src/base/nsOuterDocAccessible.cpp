@@ -103,7 +103,10 @@ NS_IMETHODIMP nsOuterDocAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
 
 NS_IMETHODIMP nsOuterDocAccessible::Init()
 {
-  nsresult rv = nsAccessibleWrap::Init(); 
+  nsresult rv = nsAccessibleWrap::Init();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   
   // We're in the accessibility cache now
   // In these variable names, "outer" relates to the nsOuterDocAccessible

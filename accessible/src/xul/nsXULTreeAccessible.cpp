@@ -164,13 +164,14 @@ NS_IMETHODIMP nsXULTreeAccessible::Shutdown()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTreeAccessible::GetRole(PRUint32 *aRole)
 {
+  NS_ASSERTION(mTree, "No tree view");
   PRInt32 colCount = 0;
   if (NS_SUCCEEDED(GetColumnCount(mTree, &colCount)) && (colCount > 1))
-    *_retval = ROLE_TREE_TABLE;
+    *aRole = ROLE_TREE_TABLE;
   else
-    *_retval = ROLE_OUTLINE;
+    *aRole = ROLE_OUTLINE;
   return NS_OK;
 }
 
@@ -460,11 +461,10 @@ nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMN
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeitemAccessible, nsLeafAccessible)
 
-NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& aName)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
-
-  return mTreeView->GetCellText(mRow, mColumn, _retval);
+  return mTreeView->GetCellText(mRow, mColumn, aName);
 }
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetValue(nsAString& _retval)
@@ -472,7 +472,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetValue(nsAString& _retval)
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   PRInt32 level;
-  mTreeView->GetLevel(mRow, &level);
+  if (NS_FAILED(mTreeView->GetLevel(mRow, &level))) {
+    return NS_OK;
+  }
 
   nsString str;
   str.AppendInt(level);
@@ -488,13 +490,13 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetUniqueID(void **aUniqueID)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeitemAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTreeitemAccessible::GetRole(PRUint32 *aRole)
 {
   PRInt32 colCount = 0;
   if (NS_SUCCEEDED(nsXULTreeAccessible::GetColumnCount(mTree, &colCount)) && colCount > 1)
-    *_retval = ROLE_CELL;
+    *aRole = ROLE_CELL;
   else
-    *_retval = ROLE_OUTLINEITEM;
+    *aRole = ROLE_OUTLINEITEM;
   return NS_OK;
 }
 

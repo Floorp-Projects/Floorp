@@ -58,9 +58,6 @@ typedef class nsHTMLTextFieldAccessible    nsHTMLTextFieldAccessibleWrap;
 typedef class nsHTMLLinkAccessible         nsHTMLLinkAccessibleWrap;
 typedef class nsHTMLTableCellAccessible    nsHTMLTableCellAccessibleWrap;
 typedef class nsHTMLTableAccessible        nsHTMLTableAccessibleWrap;
-typedef class nsXULTreeAccessible          nsXULTreeAccessibleWrap;
-typedef class nsXULTreeColumnsAccessible   nsXULTreeColumnsAccessibleWrap;
-typedef class nsXULTreeitemAccessible      nsXULTreeitemAccessibleWrap;
 typedef class nsXULProgressMeterAccessible nsXULProgressMeterAccessibleWrap;
 typedef class nsXULTextFieldAccessible     nsXULTextFieldAccessibleWrap;
 
