@@ -208,12 +208,11 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 
 	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIMessage> message;
-	PRBool equal;
 	
 	folder = do_QueryInterface(source, &rv);
 	if (NS_SUCCEEDED(rv))
 	{
-		if (NS_SUCCEEDED(property->EqualsResource(kNC_MessageChild, &equal)) && equal)
+		if (property == kNC_MessageChild)
 		{
 
 			if(mShowThreads)
@@ -256,7 +255,7 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 	}
 	else if (mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message))))
 	{
-		if(NS_SUCCEEDED(property->EqualsResource(kNC_MessageChild, &equal)) && equal)
+		if(property == kNC_MessageChild)
 		{
 			nsCOMPtr<nsIMsgFolder> msgfolder;
 			rv = message->GetMsgFolder(getter_AddRefs(msgfolder));

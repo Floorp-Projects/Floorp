@@ -262,7 +262,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv))
   {
-    if (peq(kNC_Child, property))
+    if ((kNC_Child == property))
     {
       nsCOMPtr<nsIEnumerator> subFolders;
 
@@ -278,7 +278,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 		  rv = NS_OK;
 	  }
     }
-    else if (peq(kNC_MessageChild, property))
+    else if ((kNC_MessageChild == property))
     {
       nsCOMPtr<nsIEnumerator> messages;
 
@@ -294,7 +294,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 		  rv = NS_OK;
 	  }
     }
-    else if(peq(kNC_Name, property) || peq(kNC_SpecialFolder, property))
+    else if((kNC_Name == property) || (kNC_SpecialFolder == property))
     {
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
@@ -469,11 +469,11 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
 		folder = do_QueryInterface(source, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- folder commands are always enabled
-      if (!(peq(aCommand, kNC_Delete) ||
-		    peq(aCommand, kNC_NewFolder) ||
-		    peq(aCommand, kNC_Copy) ||
-		    peq(aCommand, kNC_Move) ||
-			peq(aCommand, kNC_GetNewMessages))) {
+      if (!((aCommand == kNC_Delete) ||
+		    (aCommand == kNC_NewFolder) ||
+		    (aCommand == kNC_Copy) ||
+		    (aCommand == kNC_Move) ||
+			(aCommand == kNC_GetNewMessages))) {
         *aResult = PR_FALSE;
         return NS_OK;
       }
@@ -514,23 +514,23 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
     supports  = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {
-		if (peq(aCommand, kNC_Delete))
+		if ((aCommand == kNC_Delete))
 		{
 			rv = DoDeleteFromFolder(folder, aArguments, transactionManager);
 		}
-		else if(peq(aCommand, kNC_NewFolder)) 
+		else if((aCommand == kNC_NewFolder)) 
 		{
 			rv = DoNewFolder(folder, aArguments);
 		}
-		else if(peq(aCommand, kNC_GetNewMessages))
+		else if((aCommand == kNC_GetNewMessages))
 		{
 			rv = folder->GetNewMessages();
 		}
-		else if(peq(aCommand, kNC_Copy))
+		else if((aCommand == kNC_Copy))
 		{
 			rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_FALSE);
 		}
-		else if(peq(aCommand, kNC_Move))
+		else if((aCommand == kNC_Move))
 		{
 			rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_TRUE);
 		}
@@ -678,21 +678,21 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 {
   nsresult rv = NS_RDF_NO_VALUE;
   
-  if (peq(kNC_Name, property))
+  if ((kNC_Name == property))
 		rv = createFolderNameNode(folder, target);
-  else if (peq(kNC_SpecialFolder, property))
+  else if ((kNC_SpecialFolder == property))
 		rv = createFolderSpecialNode(folder,target);
-	else if (peq(kNC_TotalMessages, property))
+	else if ((kNC_TotalMessages == property))
 		rv = createTotalMessagesNode(folder, target);
-	else if (peq(kNC_TotalUnreadMessages, property))
+	else if ((kNC_TotalUnreadMessages == property))
 		rv = createUnreadMessagesNode(folder, target);
-	else if (peq(kNC_Charset, property))
+	else if ((kNC_Charset == property))
 		rv = createCharsetNode(folder, target);
-	else if (peq(kNC_BiffState, property))
+	else if ((kNC_BiffState == property))
 		rv = createBiffStateNode(folder, target);
-	else if (peq(kNC_Child, property))
+	else if ((kNC_Child == property))
 		rv = createFolderChildNode(folder, target);
-	else if (peq(kNC_MessageChild, property))
+	else if ((kNC_MessageChild == property))
 		rv = createFolderMessageNode(folder, target);
  
   return rv;
@@ -979,7 +979,7 @@ nsresult nsMsgFolderDataSource::DoFolderAssert(nsIMsgFolder *folder, nsIRDFResou
 {
 	nsresult rv = NS_ERROR_FAILURE;
 
-	if(peq(kNC_Charset, property))
+	if((kNC_Charset == property))
 	{
 		nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(target));
 		if(literal)
@@ -1015,7 +1015,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRD
 		return NS_OK;
 	}
 
-	if(peq(kNC_Child, property))
+	if((kNC_Child == property))
 	{
 		nsCOMPtr<nsIFolder> childFolder(do_QueryInterface(target, &rv));
 		if(NS_SUCCEEDED(rv))
@@ -1027,14 +1027,14 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRD
 							&& (childsParent.get() == folderasFolder.get()));
 		}
 	}
-	else if(peq(kNC_MessageChild, property))
+	else if((kNC_MessageChild == property))
 	{
 		nsCOMPtr<nsIMessage> message(do_QueryInterface(target, &rv));
 		if(NS_SUCCEEDED(rv))
 			rv = folder->HasMessage(message, hasAssertion);
 	}
-	else if (peq(kNC_Name, property) || peq(kNC_SpecialFolder, property) || peq(kNC_TotalMessages, property)
-		|| peq(kNC_TotalUnreadMessages, property) || peq(kNC_Charset, property) || peq(kNC_BiffState, property))
+	else if ((kNC_Name == property) || (kNC_SpecialFolder == property) || (kNC_TotalMessages == property)
+		|| (kNC_TotalUnreadMessages == property) || (kNC_Charset == property) || (kNC_BiffState == property))
 	{
 		nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder, &rv));
 

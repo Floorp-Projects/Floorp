@@ -35,13 +35,13 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode methods:
-    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result);
+    NS_IMETHOD EqualsNode(nsIRDFNode* aNode, PRBool* aResult);
 
     // nsIRDFResource methods:
-    NS_IMETHOD Init(const char* uri);
-    NS_IMETHOD GetValue(char* *uri);
-    NS_IMETHOD EqualsResource(nsIRDFResource* resource, PRBool* result);
-    NS_IMETHOD EqualsString(const char* uri, PRBool* result);
+    NS_IMETHOD Init(const char* aURI);
+    NS_IMETHOD GetValue(char* *aURI);
+    NS_IMETHOD GetValueConst(const char** aURI);
+    NS_IMETHOD EqualsString(const char* aURI, PRBool* aResult);
 
     // nsRDFResource methods:
     nsRDFResource(void);

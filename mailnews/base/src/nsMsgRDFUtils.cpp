@@ -26,17 +26,6 @@
  
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
-PRBool
-peq(nsIRDFResource* r1, nsIRDFResource* r2)
-{
-  PRBool result;
-  if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)) && result) {
-    return PR_TRUE;
-  } else {
-    return PR_FALSE;
-  }
-}
-
 static PRBool
 peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isParameter, const char *parameter)
 {
@@ -141,7 +130,7 @@ nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* fol
 		nsCOMPtr<nsIRDFLiteral> value2(do_QueryInterface(currentTarget));
 		if(value1 && value2)
 			//If the two values are equal then it has this assertion
-			rv = value1->EqualsLiteral(value2, hasAssertion);
+			*hasAssertion = (value1 == value2);
 	}
 	else
 		rv = NS_NOINTERFACE;

@@ -80,17 +80,6 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, NewCard);
 ////////////////////////////////////////////////////////////////////////
 // Utilities
 
-static PRBool
-peq(nsIRDFResource* r1, nsIRDFResource* r2)
-{
-  PRBool result;
-  if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)) && result) {
-    return PR_TRUE;
-  } else {
-    return PR_FALSE;
-  }
-}
-
 #if 0
 static PRBool
 peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
@@ -129,7 +118,7 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 		//In case the resources are equal but the values are different.  I'm not sure if this
 		//could happen but it is feasible given interface.
 		*isSort = PR_FALSE;
-		return(peq(r1, r2));
+		return(r1 == r2);
 	}
 }
 #endif 
@@ -305,10 +294,10 @@ NS_IMETHODIMP nsABCardDataSource::GetTargets(nsIRDFResource* source,
   nsCOMPtr<nsIAbCard> card(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv) && card)
   { 
-	if(peq(kNC_PersonName, property) || peq(kNC_ListName, property) || 
-		    peq(kNC_Email, property) || peq(kNC_City, property) || 
-		    peq(kNC_Organization, property) || peq(kNC_WorkPhone, property) || 
-		    peq(kNC_Nickname, property)) 
+	if((kNC_PersonName == property) || (kNC_ListName == property) || 
+		    (kNC_Email == property) || (kNC_City == property) || 
+		    (kNC_Organization == property) || (kNC_WorkPhone == property) || 
+		    (kNC_Nickname == property)) 
     { 
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
@@ -530,8 +519,8 @@ nsABCardDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSour
 		card = do_QueryInterface(source, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- card commands are always enabled
-      if (!(peq(aCommand, kNC_Delete) ||
-		    peq(aCommand, kNC_NewCard))) {
+      if (!((aCommand == kNC_Delete) ||
+		    (aCommand == kNC_NewCard))) {
         *aResult = PR_FALSE;
         return NS_OK;
       }
@@ -556,10 +545,10 @@ nsABCardDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIAbCard> card = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {
-      if (peq(aCommand, kNC_Delete)) {
+      if ((aCommand == kNC_Delete)) {
 		rv = DoDeleteFromCard(card, aArguments);
       }
-	  else if(peq(aCommand, kNC_NewCard)) {
+	  else if((aCommand == kNC_NewCard)) {
 		rv = DoNewCard(card, aArguments);
 	  }
 
@@ -655,19 +644,19 @@ nsresult nsABCardDataSource::createCardNode(nsIAbCard* card,
   char *name;
   nsresult rv = NS_RDF_NO_VALUE;
   
-  if (peq(kNC_PersonName, property))
+  if ((kNC_PersonName == property))
 	rv = card->GetPersonName(&name);
-  else if (peq(kNC_ListName, property))
+  else if ((kNC_ListName == property))
     rv = card->GetListName(&name);
-  else if (peq(kNC_Email, property))
+  else if ((kNC_Email == property))
     rv = card->GetEmail(&name);
-  else if (peq(kNC_City, property))
+  else if ((kNC_City == property))
     rv = card->GetCity(&name);
-  else if (peq(kNC_Organization, property))
+  else if ((kNC_Organization == property))
     rv = card->GetOrganization(&name);
-  else if (peq(kNC_WorkPhone, property))
+  else if ((kNC_WorkPhone == property))
     rv = card->GetWorkPhone(&name);
-  else if (peq(kNC_Nickname, property))
+  else if ((kNC_Nickname == property))
     rv = card->GetNickName(&name);
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);

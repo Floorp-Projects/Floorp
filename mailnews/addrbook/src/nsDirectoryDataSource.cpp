@@ -74,16 +74,6 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, NewDirectory);
 ////////////////////////////////////////////////////////////////////////
 // Utilities
 
-static PRBool
-peq(nsIRDFResource* r1, nsIRDFResource* r2)
-{
-	PRBool result;
-	if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)) && result) 
-		return PR_TRUE;
-	else 
-		return PR_FALSE;
-}
-
 #if 0
 static PRBool
 peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
@@ -122,7 +112,7 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 		//In case the resources are equal but the values are different.  I'm not sure if this
 		//could happen but it is feasible given interface.
 		*isSort = PR_FALSE;
-		return(peq(r1, r2));
+		return((r1 == r2));
 	}
 }
 #endif
@@ -303,7 +293,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::GetTargets(nsIRDFResource* source,
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv) && directory)
   {
-    if (peq(kNC_Child, property))
+    if ((kNC_Child == property))
     {
       nsCOMPtr<nsIEnumerator> subDirectories;
 
@@ -317,7 +307,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::GetTargets(nsIRDFResource* source,
       *targets = cursor;
       rv = NS_OK;
     }
-    else if(peq(kNC_DirName, property)) 
+    else if((kNC_DirName == property)) 
    { 
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
@@ -327,7 +317,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::GetTargets(nsIRDFResource* source,
       *targets = cursor;
       rv = NS_OK;
     }
-    else if(peq(kNC_CardChild, property))
+    else if((kNC_CardChild == property))
     { 
       nsCOMPtr<nsIEnumerator> cardChild;
 
@@ -341,7 +331,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::GetTargets(nsIRDFResource* source,
       *targets = cursor;
       rv = NS_OK;
     }
-    else if(peq(kNC_DirChild, property))
+    else if((kNC_DirChild == property))
     { 
       rv = NS_OK;
     }
@@ -556,8 +546,8 @@ nsABDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
 		directory = do_QueryInterface(source, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- directory commands are always enabled
-      if (!(peq(aCommand, kNC_Delete) ||
-		    peq(aCommand, kNC_NewDirectory))) {
+      if (!((aCommand == kNC_Delete) ||
+		    (aCommand == kNC_NewDirectory))) {
         *aResult = PR_FALSE;
         return NS_OK;
       }
@@ -582,10 +572,10 @@ nsABDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {
-      if (peq(aCommand, kNC_Delete)) {
+      if ((aCommand == kNC_Delete)) {
 		rv = DoDeleteFromDirectory(directory, aArguments);
       }
-	  else if(peq(aCommand, kNC_NewDirectory)) {
+	  else if((aCommand == kNC_NewDirectory)) {
 		rv = DoNewDirectory(directory, aArguments);
 	  }
 
@@ -679,11 +669,11 @@ nsresult nsABDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 {
   nsresult rv = NS_RDF_NO_VALUE;
   
-  if (peq(kNC_DirName, property))
+  if ((kNC_DirName == property))
 	rv = createDirectoryNameNode(directory, target);
-  else if (peq(kNC_Child, property))
+  else if ((kNC_Child == property))
     rv = createDirectoryChildNode(directory,target);
-  else if (peq(kNC_CardChild, property))
+  else if ((kNC_CardChild == property))
     rv = createCardChildNode(directory,target);
   
   return rv;

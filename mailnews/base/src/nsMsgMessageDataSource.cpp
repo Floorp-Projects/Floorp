@@ -248,8 +248,8 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 	*targets = nsnull;
 	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
 	if (NS_SUCCEEDED(rv)) {
-		if(peq(kNC_Subject, property) || peq(kNC_Date, property) ||
-			peq(kNC_Status, property))
+		if((kNC_Subject == property) || (kNC_Date == property) ||
+			(kNC_Status == property))
 		{
 			nsSingletonEnumerator* cursor =
 				new nsSingletonEnumerator(source);
@@ -429,9 +429,9 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
 		nsCOMPtr<nsIMessage> message = do_QueryInterface(source, &rv);
 		if (NS_SUCCEEDED(rv))
 		{
-			if(peq(aCommand, kNC_MarkRead))
+			if((aCommand == kNC_MarkRead))
 				rv = DoMarkMessageRead(message, PR_TRUE);
-			else if(peq(aCommand, kNC_MarkUnread))
+			else if((aCommand == kNC_MarkUnread))
 				rv = DoMarkMessageRead(message, PR_FALSE);
 		}
 	}
@@ -491,9 +491,9 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
       return createMessageNameNode(message, sort, target);
     else if (peqCollationSort(kNC_Sender, property, &sort))
       return createMessageSenderNode(message, sort, target);
-    else if (peq(kNC_Date, property))
+    else if ((kNC_Date == property))
       return createMessageDateNode(message, target);
-		else if (peq(kNC_Status, property))
+		else if ((kNC_Status == property))
       return createMessageStatusNode(message, target);
     else
       return NS_RDF_NO_VALUE;
