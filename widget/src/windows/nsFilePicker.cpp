@@ -150,7 +150,12 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     mFile.Append(fileBuffer);
   }
   
-  return((PRBool)result);
+  if (result)
+      *retval = returnOK;
+  else
+      *retval = returnCancel;
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -222,7 +227,10 @@ NS_IMETHODIMP nsFilePicker::AppendFilter(const PRUnichar *aTitle,
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
-  /*NS_ENSURE_ARG_POINTER(*aFile); */
+  NS_ENSURE_ARG_POINTER(aFile);
+
+  if (mFile.IsEmpty())
+      return NS_OK;
 
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
     
