@@ -6,7 +6,6 @@ editor
 embedcomponents
 gfx_gtk
 gklayout
-gkplugin
 htmlpars
 i18n
 imglib2
