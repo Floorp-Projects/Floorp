@@ -323,23 +323,6 @@ NS_IMETHODIMP nsDocShell::GetContentViewer(nsIContentViewer** aContentViewer)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
-{
-   NS_ENSURE_ARG_POINTER(aTreeOwner);
-
-   //XXXIMPL Implement this!
-   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
-{
-   //XXXIMPL Implement this!
-   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
-
-   return NS_OK;
-}
-
 NS_IMETHODIMP nsDocShell::GetParentURIContentListener(nsIURIContentListener**
    aParent)
 {
@@ -521,6 +504,23 @@ NS_IMETHODIMP nsDocShell::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
   }
   NS_IF_ADDREF(*aRootTreeItem);
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
+{
+   NS_ENSURE_ARG_POINTER(aTreeOwner);
+
+   //XXXIMPL Implement this!
+   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
+{
+   //XXXIMPL Implement this!
+   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
+
+   return NS_OK;
 }
 
 //*****************************************************************************
