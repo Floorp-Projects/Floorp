@@ -102,8 +102,37 @@ extern int  NET_PollSockets();
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENTOBSERVER_IID);
+static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMNOTIFICATION_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-NS_IMPL_ISUPPORTS(DocObserver, kIDocumentObserverIID);
+NS_IMPL_ADDREF(DocObserver);
+NS_IMPL_RELEASE(DocObserver);
+
+nsresult
+DocObserver::QueryInterface(const nsIID& aIID,
+                            void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIDocumentObserverIID)) {
+    *aInstancePtrResult = (void*) ((nsIDocumentObserver*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIStreamListenerIID)) {
+    *aInstancePtrResult = (void*) ((nsIStreamListener*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtrResult = (void*) ((nsISupports*)((nsIDocumentObserver*)this));
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
 
 // Pass title information through to all of the web widgets that
 // belong to this document.
@@ -119,6 +148,54 @@ NS_IMETHODIMP DocObserver::SetTitle(const nsString& aTitle)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DocObserver::GetBindInfo(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+                        const char *aMsg)
+{
+  fputs("[progress ", stdout);
+  fputs(mURL, stdout);
+  printf(" %d %d %s]\n", aProgressMax, aProgressMax,
+         aMsg ? aMsg : "");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::OnStartBinding(void)
+{
+  fputs("Loading ", stdout);
+  fputs(mURL, stdout);
+  fputs("\n", stdout);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::OnStopBinding(PRInt32 status, const char *msg)
+{
+  fputs("Done loading ", stdout);
+  fputs(mURL, stdout);
+  fputs("\n", stdout);
+  return NS_OK;
+}
+
+void
+DocObserver::LoadURL(const char* aURL)
+{
+  mURL = aURL;
+  mWebWidget->LoadURL(aURL, (nsIStreamListener*) this);
+}
+
 static DocObserver* NewObserver(nsIWebWidget* ww)
 {
   nsISupports* oldContainer;
@@ -127,7 +204,7 @@ static DocObserver* NewObserver(nsIWebWidget* ww)
     if (nsnull == oldContainer) {
       DocObserver* it = new DocObserver(ww);
       NS_ADDREF(it);
-      ww->SetContainer(it);
+      ww->SetContainer((nsIDocumentObserver*) it);
       return it;
     }
     else {
@@ -407,7 +484,7 @@ void nsViewer::OpenHTMLFile(WindowData* wd)
     PR_snprintf(lpszFileURL, _MAX_PATH, "%s%s", FILE_PROTOCOL, szFile);
 
     // Ask the Web widget to load the file URL
-    wd->ww->LoadURL(lpszFileURL);
+    wd->observer->LoadURL(lpszFileURL);
     free(lpszFileURL);
   }
 }
@@ -553,7 +630,7 @@ nsEventStatus nsViewer::DispatchMenuItem(nsGUIEvent *aEvent)
             PRIntn ix = menuEvent->menuItem - VIEWER_DEMO0;
             char* url = new char[500];
             PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, ix);
-            wd->ww->LoadURL(url);
+            wd->observer->LoadURL(url);
             delete url;
           }
           break;
@@ -689,7 +766,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow)
   }
   else {
       // Load the starting url if we have one
-    wd->ww->LoadURL(startURL ? startURL : START_URL);
+    wd->observer->LoadURL(startURL ? startURL : START_URL);
     if (gDoQuantify) {
       // Synthesize 20 ResizeReflow commands (+/- 10 pixels) and then
       // exit.

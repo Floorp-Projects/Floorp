@@ -20,14 +20,16 @@
 
 #include "nsIWebWidget.h"
 #include "nsIDocumentObserver.h"
+#include "nsIStreamListener.h"
 #include "nsDocLoader.h"
 #include "nsIAppShell.h"
+#include "nsString.h"
 
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
 #define VIEW_DLL   "raptorview.dll"
 
-class DocObserver : public nsIDocumentObserver {
+class DocObserver : public nsIDocumentObserver, nsIStreamListener {
 public:
   DocObserver(nsIWebWidget* aWebWidget) {
     NS_INIT_REFCNT();
@@ -35,10 +37,11 @@ public:
     NS_ADDREF(aWebWidget);
   }
 
+  // nsISupports
   NS_DECL_ISUPPORTS;
 
+  // nsIDocumentObserver
   NS_IMETHOD SetTitle(const nsString& aTitle);
-
   virtual void BeginUpdate() { }
   virtual void EndUpdate() { }
   virtual void ContentChanged(nsIContent* aContent,
@@ -59,6 +62,15 @@ public:
                                      PRInt32 aIndexInContainer) { }
   virtual void StyleSheetAdded(nsIStyleSheet* aStyleSheet) { }
 
+  // nsIStreamListener
+  NS_IMETHOD GetBindInfo(void);
+  NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+                        const char *aMsg);
+  NS_IMETHOD OnStartBinding(void);
+  NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
+  NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg);
+
+  void LoadURL(const char* aURL);
 
 protected:
   ~DocObserver() {
@@ -66,6 +78,7 @@ protected:
   }
 
   nsIWebWidget* mWebWidget;
+  nsString mURL;
 };
 
 struct WindowData {
