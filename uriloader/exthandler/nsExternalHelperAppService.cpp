@@ -256,7 +256,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  nsCAutoString fileExtension;
+  nsCAutoString fileExtension, query;
 
   // (1) Try to find a mime object by looking the mime type
   GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
@@ -269,15 +269,22 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     // url itself...
     if (url)
     {
-      url->GetFileExtension(fileExtension);    
-      GetFromExtension(fileExtension.get(), getter_AddRefs(mimeInfo));
-      // only over write mimeInfo if we got a non-null mime info object.
-      if (mimeInfo)
-      {
-        // The OS might have thought this extension was a different mime type.
-        // We must reset this to match the actual mime type.  Otherwise, we
-        // won't use this MIMEInfo when we see the real mime type next time.
-        mimeInfo->SetMIMEType(aMimeContentType);
+      // See if this URL specifies the output from a cgi script.
+      // If so, then the extension in the URL doesn't tell us
+      // anything about the content of the data, so don't try
+      // to find a handler based on that.
+      url->GetQuery(query);
+      if (query.IsEmpty()) {
+        url->GetFileExtension(fileExtension);    
+        GetFromExtension(fileExtension.get(), getter_AddRefs(mimeInfo));
+        // only over write mimeInfo if we got a non-null mime info object.
+        if (mimeInfo)
+        {
+          // The OS might have thought this extension was a different mime type.
+          // We must reset this to match the actual mime type.  Otherwise, we
+          // won't use this MIMEInfo when we see the real mime type next time.
+          mimeInfo->SetMIMEType(aMimeContentType);
+        }
       }
     }
   }
@@ -346,10 +353,14 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     // the URL extension.  If the URL extension matches the mime info,
     // set it as the primary extension.  In either case, fileExtension
     // should be the primary extension once we are doen.
+    // Ignore URL extension if data is output from a cgi script.
     if (fileExtension.IsEmpty()) {
       nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
       if (url) {
-        url->GetFileExtension(fileExtension);
+        url->GetQuery(query);
+        if (query.IsEmpty()) {
+          url->GetFileExtension(fileExtension);
+        }
       }
     }
 
@@ -1158,8 +1169,16 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   {
     // try to extract the file name from the url and use that as a first pass as the
     // leaf name of our temp file...
-    nsCAutoString leafName; // may be shortened by NS_UnescapeURL
-    url->GetFileName(leafName);
+    nsCAutoString leafName, query; // may be shortened by NS_UnescapeURL
+    // See if the source URL specifies the output from a cgi query.
+    url->GetQuery(query);
+    if (query.IsEmpty()) {
+      // Use the file name and extension from the URL.
+      url->GetFileName(leafName);
+    } else {
+      // Just use the file name, ignoring the extension.
+      url->GetFileBaseName(leafName);
+    }
     if (!leafName.IsEmpty())
     {
 
