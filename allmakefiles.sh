@@ -43,9 +43,10 @@ Makefile
 base/Makefile
 base/public/Makefile
 base/src/Makefile
-base/src/motif/Makefile
-base/src/rhapsody/Makefile
 base/src/gtk/Makefile
+base/src/motif/Makefile
+base/src/photon/Makefile
+base/src/rhapsody/Makefile
 base/src/xlib/Makefile
 base/tests/Makefile
 build/Makefile
@@ -101,6 +102,7 @@ gfx/src/Makefile
 gfx/src/gtk/Makefile
 gfx/src/ps/Makefile
 gfx/src/motif/Makefile
+gfx/src/photon/Makefile
 gfx/src/rhapsody/Makefile
 gfx/src/xlib/Makefile
 gfx/tests/Makefile
@@ -327,9 +329,10 @@ widget/Makefile
 widget/public/Makefile
 widget/src/Makefile
 widget/src/build/Makefile
-widget/src/motif/Makefile
-widget/src/rhapsody/Makefile
 widget/src/gtk/Makefile
+widget/src/motif/Makefile
+widget/src/photon/Makefile
+widget/src/rhapsody/Makefile
 widget/src/xlib/Makefile
 widget/src/xpwidgets/Makefile
 widget/tests/Makefile
