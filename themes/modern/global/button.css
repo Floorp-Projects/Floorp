@@ -12,13 +12,11 @@
     height            : 26px;
     background-color  : transparent;
     color					    : #1C1D1F;
+    font              : menu;
     -moz-user-focus   : normal !important;
   }
   
   .button-text-mid {
-    font-family			    : charcoal, ms sans serif;
-    font-size 			    : 12px;
-    font-weight			    : normal;
     padding-right       : 2px;
   }
     

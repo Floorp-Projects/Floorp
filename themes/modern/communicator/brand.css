@@ -2,7 +2,7 @@
 #navigator-throbber
   {
     -moz-binding          : url("chrome://global/skin/globalBindings.xml#throbber");
-    margin                : 2px 1px 6px 8px;
+    margin                : 4px 1px 0px 8px;
     border                : 0px;
     padding               : 0px;
     min-width             : 0px;
@@ -18,11 +18,6 @@
     list-style-image      : url("chrome://global/skin/animthrob.gif");
   }
   
-#navigator-throbber:hover:active
-  {
-    margin               : 2px 1px 6px 8px;
-  }
-
 .throbber-icon
   {
   	margin		: 0px;

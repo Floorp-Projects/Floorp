@@ -53,6 +53,7 @@
     -moz-binding		  : url(chrome://global/skin/globalBindings.xml#taskbar);
     min-height            : 1em;
     -moz-user-focus       : ignore;
+    background-color: #435772;
   }
 
 .taskbar-image-middle
@@ -92,6 +93,23 @@
 	width				  : 6px;
 	height				  : 17px;
   }
+
+#taskButtons > .button-toolbar-4 > .button-internal-box
+  {
+    vertical-align: bottom;
+  }
+
+.taskbar-mb-image-right-bg {
+  background: url("chrome://global/skin/taskbar-groove-right-bg.gif") repeat-y;
+}
+
+.taskbar-mb-image-left-bg {
+  background: url("chrome://global/skin/taskbar-groove-left-bg.gif") repeat-y;
+}
+
+.taskbar-image-right-bg {
+  background: url("chrome://global/skin/taskbar-image-right-bg.gif") repeat-y;
+}
 
 .taskbar-mb-middle-border-outer
   {

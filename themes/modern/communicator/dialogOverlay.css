@@ -3,17 +3,16 @@
  **/
 .box-smallheader 
   {
-    -moz-binding          : url(chrome://communicator/content/dialogBindings.xml#smallheader);
-    border                : 1px inset #CCCCCC;
-    margin                : 0px 5px 6px 5px;
-    max-height			  : 30px;
+    -moz-binding          : url(chrome://global/skin/globalBindings.xml#smallheader);
+    margin                : 0px 5px 5px 8px;
+    border                : 1px inset #B4C3D4;
+    background            : url("chrome://communicator/skin/prtb-mid-mid.gif") repeat-x;
   }
 
-.toolbar-primary
-  {
-    padding               : 0px 0px 0px 0px;
-    min-height            : 0px;
-  }
+.box-smallheader-text-container {
+  border                : 1px solid #000000;
+  padding               : 5px 0px 5px 8px;
+}
 
 .box-smallheader-left 
   {

@@ -41,7 +41,7 @@
     { 
       background-color    : #B4C3D4;
       padding             : 0px;
-      font-family         : Verdana, Geneva, Tahoma, Helvetica, Arial, sans-serif;
+      font: message-box;
       color               : #000000;
     }
   
@@ -120,8 +120,8 @@
       overflow            : hidden;
       margin			  : 0px;
       padding			  : 0px;
-      color				  : #D0E7E7;
-      font-size			  : 10px;
+      color				  : #ffffff;
+      font-size			  : smaller;
       min-width			  : 1px;      // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
 									  // Talk to evaughan@netscape.com for details.
     }
@@ -143,10 +143,15 @@
  **/
   
   progressmeter {
+    -moz-binding: url("chrome://global/skin/globalBindings.xml#progressmeter");
     margin              : 0px;
     border              : none;
     padding             : 2px 0px 2px 0px;
     min-width           : 128px;
+  }
+  
+  .progressmeter-internal-box {
+    vertical-align: middle;
   }
 
   .progressmeter-progressbar {

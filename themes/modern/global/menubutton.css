@@ -8,6 +8,7 @@
       border              : 1px solid #000000;
       margin              : 3px 5px 3px 5px;
       -moz-border-radius  : 3px 2px 2px 3px;
+      font: menu;
     }
     
   menubutton[disabled="true"] 

@@ -20,18 +20,29 @@
   </binding>
 
   <binding id="toolbar-primary" extends="chrome://global/content/toolbarBindings.xml#toolbar">
-  	<content>
-		<xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
-					tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
-		<xul:spring class="toolbar-primary-image-left"/> 
-		<xul:box flex="1" class="toolbar-primary-image-middle toolbar-holder" 
-			inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch" autostretch="never">
-			<children/>
-		</xul:box>
-		<xul:spring class="toolbar-primary-image-right"/>
-	</content>
+    <content>
+    <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
+        tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
+    <xul:box class="toolbar-primary-image-left" orient="vertical">
+      <xul:spring class="toolbar-primary-image-left-top"/> 
+      <xul:spring class="toolbar-primary-image-left-mid" flex="1"/> 
+      <xul:spring class="toolbar-primary-image-left-btm"/> 
+    </xul:box>
+    <xul:box class="toolbar-primary-image-mid toolbar-holder" orient="vertical" flex="1"
+      inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch">
+      <xul:box class="toolbar-primary-image-mid-mid" flex="1" autostretch="never">
+        <children/>
+      </xul:box>
+      <xul:spring class="toolbar-primary-image-mid-btm"/>
+    </xul:box>
+    <xul:box class="toolbar-primary-image-right" orient="vertical">
+      <xul:spring class="toolbar-primary-image-right-top"/> 
+      <xul:spring class="toolbar-primary-image-right-mid" flex="1"/> 
+      <xul:spring class="toolbar-primary-image-right-btm"/> 
+    </xul:box>
+  </content>
   </binding>
-	  
+    
   <binding id="toolbargrippy" extends="chrome://global/content/toolbarBindings.xml#toolbargrippy">
     <content orient="vertical">
       <xul:box class="toolbargrippy-top"/>
@@ -46,31 +57,46 @@
       <xul:box class="toolbargrippy-collapsed-context" flex="1"/>
     </content>
   </binding>
-
   
   <binding id="nav-bar-inner" extends="xul:box">
     <content>
-    	<xul:image class="navbar-inner-groove-image-left"/>
-		<xul:box flex="1" class="navbar-inner-border-outer">
- 			<xul:box flex="1" class="navbar-inner-border-middle">
- 				<xul:box flex="1" class="navbar-inner-border-inner">
-			    	<children/>
-	    		</xul:box>
-	    	</xul:box>
-		</xul:box>
-		<xul:image class="navbar-inner-groove-image-right"/>
+      <xul:box class="navbar-inner-groove-left" orient="vertical">
+        <xul:spring class="navbar-inner-groove-left-top"/>
+        <xul:spring class="navbar-inner-groove-left-mid" flex="1"/>
+        <xul:spring class="navbar-inner-groove-left-btm"/>
+      </xul:box>
+      <xul:box flex="1" class="navbar-inner-border-outer">
+        <xul:box flex="1" class="navbar-inner-border-middle">
+          <xul:box flex="1" class="navbar-inner-border-inner">
+            <children/>
+          </xul:box>
+        </xul:box>
+      </xul:box>
+      <xul:box class="navbar-inner-groove-right" orient="vertical">
+        <xul:spring class="navbar-inner-groove-right-top"/>
+        <xul:spring class="navbar-inner-groove-right-mid" flex="1"/>
+        <xul:spring class="navbar-inner-groove-right-btm"/>
+      </xul:box>
     </content>
   </binding>
   
   <binding id="urlbar-group" extends="xul:box">
     <content>
-    	<xul:image class="urlbar-image-left"/>
-		<xul:box flex="1" class="urlbar-border-outer">
-			<xul:box flex="1" class="urlbar-border-inner">
-		    	<children/>
-	    	</xul:box>
-	    </xul:box>
-		<xul:image class="urlbar-image-right"/>
+      <xul:box class="urlbar-left" orient="vertical">
+        <xul:spring class="urlbar-left-top"/>
+        <xul:spring class="urlbar-left-mid" flex="1"/>
+        <xul:spring class="urlbar-left-btm"/>
+      </xul:box>
+      <xul:box flex="1" class="urlbar-border-outer">
+        <xul:box flex="1" class="urlbar-border-inner">
+          <children/>
+        </xul:box>
+      </xul:box>
+      <xul:box class="urlbar-right" orient="vertical">
+        <xul:spring class="urlbar-right-top"/>
+        <xul:spring class="urlbar-right-mid" flex="1"/>
+        <xul:spring class="urlbar-right-btm"/>
+      </xul:box>
     </content>
   </binding>
 
@@ -79,13 +105,19 @@
         <xul:box flex="1" class="taskbar-image-middle">
         	  <children/>
         </xul:box>
-        <xul:spring class="taskbar-image-right"/>
+        <xul:box orient="vertical">
+          <xul:spring class="taskbar-image-right"/>
+          <xul:spring class="taskbar-image-right-bg" flex="1"/>
+        </xul:box>
     </content>
   </binding>
 
   <binding id="taskbar-menu-box" extends="xul:box">
   	<content>
-  		<xul:spring class="taskbar-mb-image-left"/>
+        <xul:box orient="vertical">
+          <xul:spring class="taskbar-mb-image-left"/>
+          <xul:spring class="taskbar-mb-image-left-bg" flex="1"/>
+        </xul:box>
         <xul:box flex="1" class="taskbar-mb-middle-border-outer">
         	<xul:box flex="1" class="taskbar-mb-middle-border-middle">
         		<xul:box flex="1" class="taskbar-mb-middle-border-inner">	
@@ -93,7 +125,10 @@
         		</xul:box>
         	</xul:box>
         </xul:box>
-        <xul:spring class="taskbar-mb-image-right"/>
+        <xul:box orient="vertical">
+          <xul:spring class="taskbar-mb-image-right"/>
+          <xul:spring class="taskbar-mb-image-right-bg" flex="1"/>
+        </xul:box>
     </content>
   </binding>
 
@@ -218,14 +253,25 @@
   </binding>
 
   <binding id="tab" extends="chrome://global/content/tabBindings.xml#tab">
-    <content>
-      <xul:box flex="1" orient="horizontal">
-        <xul:spring class="tab-image-left" inherits="selected"/>
-        <xul:box flex="1" class="tab-image-middle" orient="horizontal" align="center" inherits="selected" autostretch="never">
-  	      <xul:image class="tab-left"/>
-      	  <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+    <content orient="vertical">
+      <xul:box class="tab-top" flex="1" orient="horizontal">
+        <xul:box class="tab-image-left" orient="vertical">
+          <xul:spring class="tab-image-left-top" inherits="selected"/>
+          <xul:spring class="tab-image-left-mid" inherits="selected" flex="1"/>
+          <xul:spring class="tab-image-left-btm" inherits="selected"/>
         </xul:box>
-        <xul:spring class="tab-image-right" inherits="selected"/>
+        <xul:box flex="1" class="tab-image-middle" orient="vertical" inherits="selected">
+          <xul:box orient="horizontal" align="center" autostretch="never">
+    	      <xul:image class="tab-left"/>
+        	  <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+          </xul:box>
+          <xul:box class="tab-image-middle-btm" inherits="selected"/>
+        </xul:box>
+        <xul:box class="tab-image-right" orient="vertical">
+          <xul:spring class="tab-image-right-top" inherits="selected"/>
+          <xul:spring class="tab-image-right-mid" inherits="selected" flex="1"/>
+          <xul:spring class="tab-image-right-btm" inherits="selected"/>
+        </xul:box>
       </xul:box>
     </content>
   </binding>
@@ -265,6 +311,34 @@
         <children/>
       </xul:box>
   	</content>
+  </binding>
+  
+  <binding id="smallheader" extends="chrome://communicator/content/dialogBindings.xml#smallheader">
+    <content>
+      <xul:box class="box-smallheader-text-container" autostretch="never" flex="1">
+        <xul:text class="box-smallheader-left" inherits="value=title"/>
+        <xul:spring flex="1"/>
+        <xul:text class="box-smallheader-right" inherits="value=description"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="progressmeter" extends="chrome://global/content/xulBindings.xml#progressmeter">
+    <content>
+      <xul:box class="progressmeter-internal-box" flex="1" autostretch="never">
+        <xul:stack class="progressmeter-stack" flex="1">
+          <xul:progressbar class="progressmeter-progressbar" inherits="value,statusbar">
+            <xul:box class="progress-bar"/>
+            <xul:box class="progress-remainder"/>
+          </xul:progressbar>
+          <xul:box>
+            <xul:spring flex="1"/>
+            <xul:text class="progress-text" inherits="progresstext:value"/>
+            <xul:spring flex="1"/>
+          </xul:box>
+        </xul:stack>
+      </xul:box>
+    </content>
   </binding>
   
 </bindings>

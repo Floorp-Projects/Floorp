@@ -5,15 +5,15 @@
   .button-toolbar
     {
       -moz-binding          : url("chrome://global/content/xulBindings.xml#buttonleft");
-      border                : 0px solid transparent;
       margin                : 0px 0px 0px 0px;
+      border                : 0px solid transparent;
       -moz-border-radius    : 0px;
-      color                 : #FFFFFF;
       padding               : 0px;
-      font                  : 11px arial;
       max-width             : 10em;
       min-width             : 0px;
       height                : 1px;
+      font                  : message-box;
+      color                 : #FFFFFF;
       -moz-user-focus       : ignore !important;
     }
     
@@ -243,8 +243,7 @@
 
   .button-toolbar-3 > stack > box > .button-text-mid
     {
-      font-family   : Arial, sans-serif;
-      font-weight           : bold;
+      font-weight: bold;
     }
 
   button.button-toolbar-3[disabled="true"], .button-toolbar-3[disabled="true"]:hover, .button-toolbar-3[disabled="true"]:hover:active

@@ -1,7 +1,5 @@
  
-/**
- * toolbar-primary ::: main shaded toolbar used in all apps
- **/
+/* toolbar-primary ::: main shaded toolbar used in all apps */
 
 .toolbar-primary 
   {
@@ -17,60 +15,102 @@
     border-top            : 1px solid #DCEEFF;
   }
 
-.toolbar-primary-image-middle,
 .toolbar-primary-image-left,
+.toolbar-primary-image-mid,
 .toolbar-primary-image-right 
   {
-    height				        : 46px;
     border-top            : 1px solid #DCEEFF;
   }
     
 .toolbar-primary-image-left
   {
-    background            : url("chrome://global/skin/navbar-bg-leftcap.gif") no-repeat;
     width				          : 10px;
   }
 
-.toolbar-primary-image-middle
+.toolbar-primary-image-left-top {
+    background: url("chrome://communicator/skin/prtb-left-top.gif") no-repeat;
+    height: 27px;
+}
+
+.toolbar-primary-image-left-mid
   {
-    background            : url("chrome://global/skin/navbar-bg.gif") repeat-x;
+    background: url("chrome://communicator/skin/prtb-left-mid.gif") repeat-y;
   }
 
-.toolbar-primary-image-right
+.toolbar-primary-image-left-btm {
+    background: url("chrome://communicator/skin/prtb-left-btm.gif") no-repeat;
+    height : 5px;
+}
+
+.toolbar-primary-image-mid
+{
+}
+
+.toolbar-primary-image-mid-mid
   {
-    background            : url("chrome://global/skin/navbar-bg-rightcap.gif") no-repeat;
-  	width				          : 21px;
+    background: url("chrome://communicator/skin/prtb-mid-mid.gif") repeat-x;
+    background-color: #5E789B;
+    vertical-align: top !important;
   }
-  
-/** 
- * the grippy inside of the .toolbar-primary
- **/
+
+.toolbar-primary-image-mid-btm {
+    background: url("chrome://communicator/skin/prtb-mid-btm.gif") repeat-x;
+    height : 3px;
+}
+
+.toolbar-primary-image-right {
+  width: 21px;
+}
+
+.toolbar-primary-image-right-top {
+    background: url("chrome://communicator/skin/prtb-right-top.gif") no-repeat;
+    height: 27px;
+}
+
+.toolbar-primary-image-right-mid {
+  background: url("chrome://communicator/skin/prtb-right-mid.gif") repeat-y;
+}
+
+.toolbar-primary-image-right-btm {
+    background: url("chrome://communicator/skin/prtb-right-btm.gif") no-repeat;
+    height : 8px;
+}
+
+/* the grippy inside of the .toolbar-primary */
  
 .toolbar-primary-grippy
   { 
-    background-image     : url("chrome://communicator/skin/ptc-grippy-bg.gif");
+    background    : url("chrome://communicator/skin/prtb-grippy-mid.gif") repeat-y;
   } 
 
 .toolbar-primary-grippy > .toolbargrippy-top
   {
-    height               : 0px;
-    background           : none;
+    height               : 5px;
+    background           : url("chrome://communicator/skin/prtb-grippy-top.gif") top no-repeat;
   }
 
 .toolbar-primary-grippy > .toolbargrippy-btm
   {
-    height               : 0px;
-    background           : none;
+    height               : 38px;
+    background           : url("chrome://communicator/skin/prtb-grippy-btm.gif") bottom no-repeat;
   }
   
 .toolbar-primary-grippy:hover:active
   {
-    background-image     : url("chrome://communicator/skin/ptc-grippy-bg-active.gif");
+    background-image     : url("chrome://communicator/skin/prtb-grippy-mid-active.gif");
   }
 
-/**
- * toolbar-standard ::: used on the taskbar
- **/
+.toolbar-primary-grippy:hover:active > .toolbargrippy-top
+  {
+    background-image     : url("chrome://communicator/skin/prtb-grippy-top-active.gif");
+  }
+
+.toolbar-primary-grippy:hover:active > .toolbargrippy-btm
+  {
+    background-image     : url("chrome://communicator/skin/prtb-grippy-btm-active.gif");
+  }
+
+/* toolbar-standard ::: used on the taskbar */
 
 .toolbar-standard > toolbargrippy
   {

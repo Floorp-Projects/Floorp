@@ -124,7 +124,9 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
    
   .box-texttab-left
     {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkondark-left.gif");
+      background    : url("chrome://communicator/skin/sidebar/sbtab-darkondark-left.gif") no-repeat top;
+      width: 15px;
+      min-height: 18px;
     }
 
   .box-texttab-text-container
@@ -137,7 +139,9 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
 
   .box-texttab-right
     {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkondark-right.gif");
+      background: url("chrome://communicator/skin/sidebar/sbtab-darkondark-right.gif") no-repeat top;
+      width: 30px;
+      min-height: 18px;
     }
 
   .box-texttab-right-space 
@@ -162,12 +166,14 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
 
   .box-texttab[selected="true"]
     {
+      border-bottom: none;
       height              : 24px;
     }
     
   .box-texttab[selected="true"] > .box-texttab-left
     {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-lightondark-left.gif");
+      background: url("chrome://communicator/skin/sidebar/sbtab-lightondark-left.gif") no-repeat top;
+      background-color    : #C1C8D5;
     }
 
   .box-texttab[selected="true"] > .box-texttab-text-container
@@ -179,7 +185,8 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
 
   .box-texttab[selected="true"] > .box-texttab-right
     {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-lightondark-right.gif");
+      background: url("chrome://communicator/skin/sidebar/sbtab-lightondark-right.gif") no-repeat top;
+      background-color    : #C1C8D5;
     }
 
   .box-texttab[first-panel-after-selected="true"] 
@@ -190,17 +197,20 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
 
   .box-texttab[first-panel-after-selected="true"]  > .box-texttab-left
     {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkonlight-left.gif");
-      border-top          : 3px solid #C1C8D5;
+      background: url("chrome://communicator/skin/sidebar/sbtab-darkonlight-left.gif") no-repeat top;
+      background-color    : #5C7794;
+      margin-top: 3px;
     }
 
   .box-texttab[first-panel-after-selected="true"]  > .box-texttab-text-container
     {
       border-top          : 3px solid #C1C8D5;
+      background-color    : #5C7794;
     }
     
   .box-texttab[first-panel-after-selected="true"]  > .box-texttab-right
     {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkonlight-right.gif");
-      border-top          : 3px solid #C1C8D5;
+      background: url("chrome://communicator/skin/sidebar/sbtab-darkonlight-right.gif") no-repeat top;
+      background-color    : #5C7794;
+      margin-top: 3px;
     }

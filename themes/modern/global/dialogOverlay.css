@@ -3,7 +3,7 @@
  **/
 .box-smallheader 
   {
-    -moz-binding          : url(chrome://global/content/dialogBindings.xml#smallheader);
+    -moz-binding          : url(chrome://global/skin/globalBindings.xml#smallheader);
     border                : 1px inset #CCCCCC;
     margin                : 0px 5px 6px 5px;
   }
