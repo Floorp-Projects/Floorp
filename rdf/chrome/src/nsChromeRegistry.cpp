@@ -2090,23 +2090,39 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength) {
   nsCAutoString fileURL;
   nsCAutoString chromeURL;
 
-  static const char *delim = ",\r\n";
-
-  chromeType = strtok(aBuffer, delim);
-  do {
+  while (aBuffer < bufferEnd) {
     // parse one line of installed-chrome.txt
-    if (!chromeType)
+    chromeType = aBuffer;
+    while (aBuffer < bufferEnd && *aBuffer != ',')
+      ++aBuffer;
+    if (aBuffer >= bufferEnd)
       break;
-    chromeProfile = strtok(0, delim);
-    if (!chromeProfile || chromeProfile > bufferEnd)
-      break;
-    chromeLocType = strtok(0, delim);
-    if (!chromeLocType || chromeProfile > bufferEnd)
-      break;
-    chromeLocation = strtok(0, delim);
-    if (!chromeLocation || chromeProfile > bufferEnd)
-      break;
+    *aBuffer = '\0';
 
+    chromeProfile = ++aBuffer;
+    while (aBuffer < bufferEnd && *aBuffer != ',')
+      ++aBuffer;
+    if (aBuffer >= bufferEnd)
+      break;
+    *aBuffer = '\0';
+
+    chromeLocType = ++aBuffer;
+    while (aBuffer < bufferEnd && *aBuffer != ',')
+      ++aBuffer;
+    if (aBuffer >= bufferEnd)
+      break;
+    *aBuffer = '\0';
+
+    chromeLocation = ++aBuffer;
+    while (aBuffer < bufferEnd && (*aBuffer != '\r' && *aBuffer != '\n'))
+      ++aBuffer;
+    if (aBuffer >= bufferEnd)
+      break;
+    while (*--aBuffer == ' ')
+      ;
+    *++aBuffer = '\0';
+
+    // process the parsed line
     isProfile = profile.Equals(chromeProfile);
 
     if (path.Equals(chromeLocType)) {
@@ -2132,8 +2148,9 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength) {
     else if (locale.Equals(chromeType))
       InstallLocale(chromeURL, isProfile);
 
-    chromeType = strtok(0, delim);
-  } while (chromeType < bufferEnd);
+    while (aBuffer < bufferEnd && (*aBuffer == '\0' || *aBuffer == ' ' || *aBuffer == '\r' || *aBuffer == '\n'))
+      ++aBuffer;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
