@@ -422,6 +422,25 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
         {
           if (nsHTMLEditUtils::IsListItem(child) || nsHTMLEditUtils::IsList(child))
           {
+            // check if we are pasting into empty list item. If so
+            // delete it and paste into parent list instead.
+            if (nsHTMLEditUtils::IsListItem(parentNode))
+            {
+              PRBool isEmpty;
+              res = IsEmptyNode(parentNode, &isEmpty, PR_TRUE);
+              if ((NS_SUCCEEDED(res)) && isEmpty)
+              {
+                nsCOMPtr<nsIDOMNode> listNode;
+                PRInt32 newOffset;
+                GetNodeLocation(parentNode, address_of(listNode), &newOffset);
+                if (listNode)
+                {
+                  DeleteNode(parentNode);
+                  parentNode = listNode;
+                  offsetOfNewNode = newOffset;
+                }
+              }
+            } 
             res = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
             if (NS_SUCCEEDED(res)) 
             {
@@ -436,6 +455,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
           }
           curNode->GetFirstChild(getter_AddRefs(child));
         }
+        
       }
       // check for pre's going into pre's.  
       else if (nsHTMLEditUtils::IsPre(parentBlock) && nsHTMLEditUtils::IsPre(curNode))

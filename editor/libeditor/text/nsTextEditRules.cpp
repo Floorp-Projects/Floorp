@@ -936,7 +936,7 @@ nsTextEditRules::WillUndo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHa
   return NS_OK;
 }
 
-/* the idea here is to see if the magic empty node has suddenly reappeared as the res of the undo.
+/* the idea here is to see if the magic empty node has suddenly reappeared as the result of the undo.
  * if it has, set our state so we remember it.
  * There is a tradeoff between doing here and at redo, or doing it everywhere else that might care.
  * Since undo and redo are relatively rare, it makes sense to take the (small) performance hit here.
@@ -958,10 +958,8 @@ nsTextEditRules:: DidUndo(nsISelection *aSelection, nsresult aResult)
       res = mEditor->GetRootElement(getter_AddRefs(theBody));
       if (NS_FAILED(res)) return res;
       if (!theBody) return NS_ERROR_FAILURE;
-      res = mEditor->GetLeftmostChild(theBody,getter_AddRefs(node));
-      if (NS_FAILED(res)) return res;
-      if (!node) return NS_ERROR_NULL_POINTER;
-      if (mEditor->IsMozEditorBogusNode(node))
+      node = mEditor->GetLeftmostChild(theBody);
+      if (node && mEditor->IsMozEditorBogusNode(node))
         mBogusNode = do_QueryInterface(node);
     }
   }

@@ -387,13 +387,15 @@ public:
     */
   nsresult GetPriorNode(nsIDOMNode  *aCurrentNode, 
                         PRBool       aEditableNode,
-                        nsIDOMNode **aResultNode);
+                        nsCOMPtr<nsIDOMNode> *aResultNode,
+                        PRBool       bNoBlockCrossing = PR_FALSE);
 
   // and another version that takes a {parent,offset} pair rather than a node
   nsresult GetPriorNode(nsIDOMNode  *aParentNode, 
                         PRInt32      aOffset, 
                         PRBool       aEditableNode, 
-                        nsIDOMNode **aResultNode);
+                        nsCOMPtr<nsIDOMNode> *aResultNode,
+                        PRBool       bNoBlockCrossing = PR_FALSE);
                        
   /** get the node immediately after to aCurrentNode
     * @param aCurrentNode   the node from which we start the search
@@ -404,23 +406,30 @@ public:
     */
   nsresult GetNextNode(nsIDOMNode  *aCurrentNode, 
                        PRBool       aEditableNode,
-                       nsIDOMNode **aResultNode);
+                       nsCOMPtr<nsIDOMNode> *aResultNode,
+                       PRBool       bNoBlockCrossing = PR_FALSE);
 
   // and another version that takes a {parent,offset} pair rather than a node
   nsresult GetNextNode(nsIDOMNode  *aParentNode, 
                        PRInt32      aOffset, 
                        PRBool       aEditableNode, 
-                       nsIDOMNode **aResultNode);
-                       
-  /** Get the rightmost child of aCurrentNode, and return it in aResultNode
-    * aResultNode is set to nsnull if aCurrentNode has no children.
-    */
-  static nsresult GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+                       nsCOMPtr<nsIDOMNode> *aResultNode,
+                       PRBool       bNoBlockCrossing = PR_FALSE);
 
-  /** Get the leftmost child of aCurrentNode, and return it in aResultNode
-    * aResultNode is set to nsnull if aCurrentNode has no children.
+  // stub.  see comment in source.                     
+  PRBool IsBlockNode(nsIDOMNode *aNode);
+  
+  /** Get the rightmost child of aCurrentNode;
+    * return nsnull if aCurrentNode has no children.
     */
-  static nsresult GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  nsCOMPtr<nsIDOMNode> GetRightmostChild(nsIDOMNode *aCurrentNode, 
+                                         PRBool      bNoBlockCrossing = PR_FALSE);
+
+  /** Get the leftmost child of aCurrentNode;
+    * return nsnull if aCurrentNode has no children.
+    */
+  nsCOMPtr<nsIDOMNode> GetLeftmostChild(nsIDOMNode  *aCurrentNode, 
+                                        PRBool       bNoBlockCrossing = PR_FALSE);
 
   /** GetFirstTextNode ADDREFFS and will get the next available text node from the passed
    *  in node parameter it can also return NS_ERROR_FAILURE if no text nodes are available
