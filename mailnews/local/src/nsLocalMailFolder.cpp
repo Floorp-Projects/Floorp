@@ -329,7 +329,7 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
     nsresult rv = GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-	nsresult folderOpen;
+	nsresult folderOpen = NS_OK;
 	nsIMsgDatabase * mailDBFactory = nsnull;
 	nsIMsgDatabase *mailDB;
 
@@ -338,18 +338,19 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
 		folderOpen = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &mMailDatabase, PR_FALSE);
-	}
-	if(!NS_SUCCEEDED(folderOpen) &&
+		if(!NS_SUCCEEDED(folderOpen) &&
 			folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
-	{
-		// if it's out of date then reopen with upgrade.
-		if(!NS_SUCCEEDED(rv = mailDBFactory->Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
 		{
-			mailDBFactory->Release();
-			return rv;
+			// if it's out of date then reopen with upgrade.
+			if(!NS_SUCCEEDED(rv = mailDBFactory->Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
+			{
+				NS_RELEASE(mailDBFactory);
+				return rv;
+			}
 		}
+	
+		NS_RELEASE(mailDBFactory);
 	}
-	mailDBFactory->Release();
 
 	if(mMailDatabase)
 	{
