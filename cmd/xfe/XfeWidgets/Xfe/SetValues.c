@@ -177,16 +177,12 @@ _XfeManagerPropagateSetValues(Widget		ow,
 static void
 ApplyChildSetValue(Widget w,Widget child,XtPointer client_data)
 {
-	Arg				av[1];
-	Cardinal		ac = 0;
 	_ApplyDataRec *	data = (_ApplyDataRec *) client_data;
-	
-	XtSetArg(av[ac],data->resource_name,data->resource_value); ac++;
 
-	XtSetValues(child,av,ac);
+    XfeSetValue(child,data->resource_name,data->resource_value);
 
 #ifdef DEBUG_ramiro
-	printf("XtSetValues(%s,%s,%d)\n",
+	printf("XfeSetValue(%s,%s,%d)\n",
 		   XtName(child),
 		   data->resource_name,
 		   (int) data->resource_value);

@@ -1691,8 +1691,6 @@ _XfePrimitiveFocus(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 /* extern */ void
 XfeSetPretendSensitive(Widget w,Boolean state)
 {
-	Arg xargs[1];
-
 	assert( _XfeIsAlive(w) );
 	assert( XfeIsPrimitive(w) );
 
@@ -1707,9 +1705,7 @@ XfeSetPretendSensitive(Widget w,Boolean state)
 		return;
 	}
 
-	XtSetArg(xargs[0],XmNpretendSensitive,state);
-
-	XtSetValues(w,xargs,1);
+    XfeSetValue(w,XmNpretendSensitive,state);
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
