@@ -84,12 +84,10 @@ nsrefcnt nsMsgAccountManagerDataSource::gAccountManagerResourceRefCnt = 0;
 #define NC_RDF_IDENTITY NC_NAMESPACE_URI "Identity"
 #define NC_RDF_SETTINGS NC_NAMESPACE_URI "Settings"
 
-MOZ_DECL_CTOR_COUNTER(nsMsgAccountManagerDataSource);
 
 nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource():
   mAccountManager(null_nsCOMPtr())
 {
-  MOZ_COUNT_CTOR(nsMsgAccountManagerDataSource);
 
 #ifdef DEBUG_amds
   printf("nsMsgAccountManagerDataSource() being created\n");
@@ -108,7 +106,6 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource():
 
 nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
 {
-	MOZ_COUNT_DTOR(nsMsgAccountManagerDataSource);
 	if (--gAccountManagerResourceRefCnt == 0)
 	{
       NS_IF_RELEASE(kNC_Child);

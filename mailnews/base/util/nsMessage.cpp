@@ -20,18 +20,15 @@
 #include "nsMessage.h"
 #include "nsIMsgFolder.h"
 
-MOZ_DECL_CTOR_COUNTER(nsMessage);
 
 nsMessage::nsMessage(void)
   : nsRDFResource(), mFolder(nsnull)
 {
 
-	MOZ_COUNT_CTOR(nsMessage);
 }
 
 nsMessage::~nsMessage(void)
 {
-	MOZ_COUNT_DTOR(nsMessage);
 	//Member variables are either nsCOMPtr's or ptrs we don't want to own.
 }
 

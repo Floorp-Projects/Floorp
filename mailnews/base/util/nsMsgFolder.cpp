@@ -40,7 +40,6 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
 
 
-MOZ_DECL_CTOR_COUNTER(nsMsgFolder);
 
 nsMsgFolder::nsMsgFolder(void)
   : nsRDFResource(),
@@ -55,7 +54,6 @@ nsMsgFolder::nsMsgFolder(void)
     mIsServer(PR_FALSE)
 	{
 //  NS_INIT_REFCNT(); done by superclass
-	MOZ_COUNT_CTOR(nsMsgFolder);
 
   mSemaphoreHolder = NULL;
 
@@ -75,7 +73,6 @@ nsMsgFolder::nsMsgFolder(void)
 
 nsMsgFolder::~nsMsgFolder(void)
 {
-	MOZ_COUNT_DTOR(nsMsgFolder);
 	if(mSubFolders)
 	{
 		PRUint32 count;

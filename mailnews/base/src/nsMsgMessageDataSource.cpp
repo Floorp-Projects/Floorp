@@ -68,19 +68,16 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnflagged= nsnull;
 
 nsrefcnt nsMsgMessageDataSource::gMessageResourceRefCnt = 0;
 
-MOZ_DECL_CTOR_COUNTER(nsMsgMessageDataSource);
 
 nsMsgMessageDataSource::nsMsgMessageDataSource():
   mInitialized(PR_FALSE),
   mHeaderParser(nsnull)
 {
-	MOZ_COUNT_CTOR(nsMsgMessageDataSource);
 
 }
 
 nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 {
-	MOZ_COUNT_DTOR(nsMsgMessageDataSource);
 	nsresult rv;
 
 	if (!m_shuttingDown)

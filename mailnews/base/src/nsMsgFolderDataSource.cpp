@@ -74,12 +74,10 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_EmptyTrash= nsnull;
 
 nsrefcnt nsMsgFolderDataSource::gFolderResourceRefCnt = 0;
 
-MOZ_DECL_CTOR_COUNTER(nsMsgFolderDataSource);
 
 nsMsgFolderDataSource::nsMsgFolderDataSource():
   mInitialized(PR_FALSE)
 {
-	MOZ_COUNT_CTOR(nsMsgFolderDataSource);
 }
 
 nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
@@ -118,7 +116,6 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_Rename, refcnt);
 		NS_RELEASE2(kNC_EmptyTrash, refcnt);
 	}
-	MOZ_COUNT_DTOR(nsMsgFolderDataSource);
 }
 
 nsresult nsMsgFolderDataSource::Init()
