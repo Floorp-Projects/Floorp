@@ -219,8 +219,8 @@ MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
         font->mFont.name = familyList;
         nsAutoString face;
         if (NS_OK == dc->FirstExistingFont(font->mFont, face)) {
-          if (face.EqualsIgnoreCase("monospace")) {
-            font->mFont = font->mFixedFont;
+          if (face.EqualsIgnoreCase("-moz-fixed")) {
+            font->mFlags |= NS_STYLE_FONT_USE_FIXED;
           }
           else {
             font->mFixedFont.name = familyList;

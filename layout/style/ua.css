@@ -103,14 +103,14 @@ layer {
 }
 listing {
   display: block;
-  font-family: monospace;
+  font-family: -moz-fixed;
   font-size: medium;
   white-space: pre;
   margin: 1em 0;
 }
 plaintext, xmp, pre {
   display: block;
-  font-family: monospace;
+  font-family: -moz-fixed;
   white-space: pre;
   margin: 1em 0;
 }
@@ -241,7 +241,7 @@ i, cite, em, var {
 }
 tt, code, kbd, samp {
   display: inline;
-  font-family: monospace;
+  font-family: -moz-fixed;
 }
 u {
   display: inline;
