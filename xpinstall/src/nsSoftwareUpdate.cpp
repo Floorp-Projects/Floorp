@@ -127,6 +127,8 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /* Perform Scheduled Tasks             */
     /***************************************/
 
+/* XXX Temporary workaround: see bugs 8849, 8971 */
+#ifndef XP_UNIX 
     PR_CreateThread(PR_USER_THREAD,
                     PerformScheduledTasks,
                     nsnull, 
@@ -134,6 +136,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
                     PR_GLOBAL_THREAD, 
                     PR_UNJOINABLE_THREAD,
                     0);  
+#endif
 
 
     /***************************************/
