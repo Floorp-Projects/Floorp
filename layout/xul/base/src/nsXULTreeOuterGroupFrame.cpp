@@ -777,18 +777,18 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PR
     // get the starting row index and row count
     nsIBox* currBox;
     GetChildBox(&currBox);
+    nsBoxLayoutState state(mPresContext);
     while (currBox) {
       nsIBox* nextBox;
       currBox->GetNextBox(&nextBox);
       nsIFrame* frame;
       currBox->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame); 
       mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, frame, nsnull);
+      Remove(state, frame);
+      mFrames.DestroyFrame(mPresContext, frame);
+
       currBox = nextBox;
     }
-
-    nsBoxLayoutState state(mPresContext);
-    ClearChildren(state);
-    mFrames.DestroyFrames(mPresContext);
 
     nsCOMPtr<nsIContent> topRowContent;
     FindRowContentAtIndex(mCurrentIndex, mContent, getter_AddRefs(topRowContent));

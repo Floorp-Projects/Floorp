@@ -932,18 +932,17 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool a
     // go off screen, so blow them all away. Weeee!
     nsIBox* currBox;
     GetChildBox(&currBox);
+    nsBoxLayoutState state(mPresContext);
     while (currBox) {
       nsIBox* nextBox;
       currBox->GetNextBox(&nextBox);
       nsIFrame* frame;
       currBox->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame); 
       mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, frame, nsnull);
+      Remove(state, frame);
+      mFrames.DestroyFrame(mPresContext, frame);
       currBox = nextBox;
     }
-
-    nsBoxLayoutState state(mPresContext);
-    ClearChildren(state);
-    mFrames.DestroyFrames(mPresContext);
   }
 
   // clear frame markers so that CreateRows will re-create
@@ -1323,6 +1322,18 @@ nsListBoxBodyFrame::OnContentInserted(nsIPresContext* aPresContext, nsIContent* 
 {
   ++mRowCount;
 
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  // The RDF content builder will build content nodes such that they are all 
+  // ready when OnContentInserted is first called, meaning the first call
+  // to CreateRows will create all the frames, but OnContentInserted will
+  // still be called again for each content node - so we need to make sure
+  // that the frame for each content node hasn't already been created.
+  nsIFrame* childFrame = nsnull;
+  shell->GetPrimaryFrameFor(aChildContent, &childFrame);
+  if (childFrame)
+    return;
+
   PRInt32 siblingIndex;
   nsCOMPtr<nsIContent> nextSiblingContent;
   GetListItemNextSibling(aChildContent, getter_AddRefs(nextSiblingContent), siblingIndex);
@@ -1334,8 +1345,6 @@ nsListBoxBodyFrame::OnContentInserted(nsIPresContext* aPresContext, nsIContent* 
     mRowsToPrepend = 1;
   } else if (nextSiblingContent) {
     // we may be inserting before a frame that is on screen
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame* nextSiblingFrame = nsnull;
     shell->GetPrimaryFrameFor(nextSiblingContent, &nextSiblingFrame);
     mLinkupFrame = nextSiblingFrame;
@@ -1343,8 +1352,6 @@ nsListBoxBodyFrame::OnContentInserted(nsIPresContext* aPresContext, nsIContent* 
   
   nsBoxLayoutState state(aPresContext);
   MarkDirtyChildren(state);
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   shell->FlushPendingNotifications(PR_FALSE);
 }
 
