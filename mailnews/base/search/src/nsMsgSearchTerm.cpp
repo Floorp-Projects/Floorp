@@ -235,6 +235,11 @@ PRInt32 NS_MsgGetStatusValueFromName(char *name)
 nsMsgSearchTerm::nsMsgSearchTerm()
 {
     NS_INIT_REFCNT();
+
+    // initialize this to zero
+    m_value.string=nsnull;
+    m_value.attribute=0;
+    m_value.u.priority=0;
 }
 
 #if 0
