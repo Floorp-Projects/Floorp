@@ -143,12 +143,15 @@ nsFormHistory::FormHistoryEnabled()
 {
   if (!gPrefsInitialized) {
     nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    nsCOMPtr<nsIPrefBranch> branch;
-    prefService->GetBranch(PREF_FORMFILL_BRANCH, getter_AddRefs(branch));
-    branch->GetBoolPref(PREF_FORMFILL_ENABLE, &gFormHistoryEnabled);
 
-    nsCOMPtr<nsIPrefBranchInternal> branchInternal = do_QueryInterface(branch);
-    branchInternal->AddObserver(PREF_FORMFILL_BRANCH, gFormHistory, PR_TRUE);
+    prefService->GetBranch(PREF_FORMFILL_BRANCH,
+                           getter_AddRefs(gFormHistory->mPrefBranch));
+    gFormHistory->mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE,
+                                           &gFormHistoryEnabled);
+
+    nsCOMPtr<nsIPrefBranchInternal> branchInternal =
+      do_QueryInterface(gFormHistory->mPrefBranch);
+    branchInternal->AddObserver(PREF_FORMFILL_ENABLE, gFormHistory, PR_TRUE);
 
     gPrefsInitialized = PR_TRUE;
   }
@@ -338,8 +341,7 @@ NS_IMETHODIMP
 nsFormHistory::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData) 
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
-    branch->GetBoolPref(PREF_FORMFILL_ENABLE, &gFormHistoryEnabled);
+    mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE, &gFormHistoryEnabled);
   }
 
   return NS_OK;
