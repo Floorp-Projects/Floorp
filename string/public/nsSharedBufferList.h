@@ -55,8 +55,8 @@ class nsSharedBufferList
 
       struct Position
         {
-          nsSharedBufferList::Buffer* mBuffer;
-          PRUnichar*                  mPosInBuffer;
+          Buffer*     mBuffer;
+          PRUnichar*  mPosInBuffer;
         };
 
 
