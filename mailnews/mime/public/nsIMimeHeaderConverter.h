@@ -31,6 +31,12 @@
       { 0xfb953da, 0xd0b5, 0x11d2,   \
       { 0xb3, 0x73, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } };
 
+// default line length for calling the encoder
+#define kMIME_ENCODED_WORD_SIZE       72 
+
+// Max length of charset name. 
+#define kMAX_CSNAME                   64 
+
 class nsIMimeHeaderConverter : public nsISupports {
 public: 
   static const nsIID& IID() { static nsIID iid = NS_IMIME_HEADER_CONVERTER_IID; return iid; }
@@ -44,10 +50,10 @@ public:
                                  char **decodedString) = 0;
 
   // Encode routine
-  NS_IMETHOD EncodeMimePartIIStr(const char *header, 
-                                 const char *mailCharset, 
-                                 PRInt32     encodedWordSize, 
-                                 char       **encodedString) = 0;
+  NS_IMETHOD EncodeMimePartIIStr(const char    *header, 
+                                 const char    *mailCharset, 
+                                 const PRInt32 encodedWordSize, 
+                                 char          **encodedString) = 0;
 }; 
 
 #endif /* nsIMimeHeaderConverter_h_ */
