@@ -149,7 +149,7 @@ HRESULT           CheckInstances();
 long              RandomSelect(void);
 void              TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion);
 BOOL              GetFileVersion(LPSTR szFile, verBlock *vbVersion);
-BOOL              CheckLegacy(void);
+BOOL              CheckLegacy(HWND hDlg);
 int               CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew);
 COLORREF          DecryptFontColor(LPSTR szColor);
 
