@@ -170,9 +170,10 @@ unless (UserInGroup("editcomponents")) {
 #
 # often used variables
 #
-my $product = trim($::FORM{product} || '');
-my $version = trim($::FORM{version} || '');
-my $action  = trim($::FORM{action}  || '');
+my $cgi = Bugzilla->cgi;
+my $product = trim($cgi->param('product') || '');
+my $version = trim($cgi->param('version') || '');
+my $action  = trim($cgi->param('action')  || '');
 my $localtrailer;
 if ($version) {
     $localtrailer = "<A HREF=\"editversions.cgi?product=" . url_quote($product) . "\">edit</A> more versions";
@@ -492,7 +493,7 @@ if ($action eq 'edit') {
 if ($action eq 'update') {
     PutHeader("Update version of $product");
 
-    my $versionold = trim($::FORM{versionold} || '');
+    my $versionold = trim($cgi->param('versionold') || '');
 
     CheckVersion($product,$versionold);
     my $product_id = get_product_id($product);
