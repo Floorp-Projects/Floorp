@@ -905,7 +905,11 @@ Find_ComputeSearchRange( PRUint32 bigLen, PRUint32 littleLen, PRInt32& offset, P
   {
     // |count| specifies how many iterations to make from |offset|
 
-    if (offset < 0 || PRUint32(offset) > bigLen)
+    if (offset < 0)
+      {
+        offset = 0;
+      }
+    else if (PRUint32(offset) > bigLen)
       {
         count = 0;
         return;
