@@ -111,9 +111,6 @@
 
 #include "nsXBLBinding.h"
 
-// Static IIDs/CIDs. Try to minimize these.
-static char kNameSpaceSeparator = ':';
-
 // Helper classes
 
 /***********************************************************************/
@@ -504,7 +501,7 @@ PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosur
     }
     
     if (!pseudoPoint) {
-      NS_NewXBLInsertionPoint(parent.get(), -1, nsnull, getter_AddRefs(pseudoPoint));
+      NS_NewXBLInsertionPoint(parent.get(), (PRUint32)-1, nsnull, getter_AddRefs(pseudoPoint));
       contentList->AppendElement(pseudoPoint);
     }
 
@@ -842,13 +839,15 @@ nsXBLBinding::InstallEventHandlers()
     nsCOMPtr<nsIXBLPrototypeHandler> handlerChain;
     mPrototypeBinding->GetPrototypeHandlers(getter_AddRefs(handlerChain));
   
-    nsCOMPtr<nsIXBLPrototypeHandler> curr = handlerChain;
     nsXBLEventHandler* currHandler = nsnull;
 
-    while (curr) {
+    for (nsCOMPtr<nsIXBLPrototypeHandler> next, curr = handlerChain; curr; 
+         curr->GetNextHandler(getter_AddRefs(next)), curr = next) {
       // Fetch the event type.
       nsCOMPtr<nsIAtom> eventAtom;
       curr->GetEventName(getter_AddRefs(eventAtom));
+      if (!eventAtom) 
+        continue;
 
       nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
       // Figure out if we're using capturing or not.
@@ -981,10 +980,6 @@ nsXBLBinding::InstallEventHandlers()
         // Let the listener manager hold on to the handler.
         NS_RELEASE(handler);
       }
-      
-      nsCOMPtr<nsIXBLPrototypeHandler> next;
-      curr->GetNextHandler(getter_AddRefs(next));
-      curr = next;
     }
   }
 
