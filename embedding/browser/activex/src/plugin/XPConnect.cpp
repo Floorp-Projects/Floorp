@@ -60,7 +60,6 @@
 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIEventListenerManager.h"
-#include "nsGUIEvent.h"
 
 #include "nsIScriptEventManager.h"
 #include "jsapi.h"
