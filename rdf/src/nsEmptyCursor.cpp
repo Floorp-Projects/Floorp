@@ -19,84 +19,198 @@
 #include "nscore.h"
 #include "nsIRDFCursor.h"
 
-static NS_DEFINE_IID(kIRDFCursorIID, NS_IRDFCURSOR_IID);
-static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIRDFArcsInCursorIID,    NS_IRDFARCSINCURSOR_IID);
+static NS_DEFINE_IID(kIRDFArcsOutCursorIID,   NS_IRDFARCSOUTCURSOR_IID);
+static NS_DEFINE_IID(kIRDFAssertionCursorIID, NS_IRDFASSERTIONCURSOR_IID);
+static NS_DEFINE_IID(kIRDFCursorIID,          NS_IRDFCURSOR_IID);
+static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
-class EmptyCursorImpl : public nsIRDFCursor {
+////////////////////////////////////////////////////////////////////////
+
+class EmptyAssertionCursorImpl : public nsIRDFAssertionCursor
+{
 public:
-    EmptyCursorImpl(void);
-    virtual ~EmptyCursorImpl(void) {};
+    EmptyAssertionCursorImpl(void) {};
+    virtual ~EmptyAssertionCursorImpl(void) {};
 
     // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef(void);
-    NS_IMETHOD_(nsrefcnt) Release(void);
-    NS_IMETHOD QueryInterface(REFNSIID iid, void** result);
+    NS_IMETHOD_(nsrefcnt) AddRef(void) {
+        return 2;
+    }
+
+    NS_IMETHOD_(nsrefcnt) Release(void) {
+        return 1;
+    }
+
+    NS_IMETHOD QueryInterface(REFNSIID iid, void** result) {
+        if (! result)
+            return NS_ERROR_NULL_POINTER;
+
+        if (iid.Equals(kIRDFAssertionCursorIID) ||
+            iid.Equals(kIRDFCursorIID) ||
+            iid.Equals(kISupportsIID)) {
+            *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
+            /* AddRef(); // not necessary */
+            return NS_OK;
+        }
+        return NS_NOINTERFACE;
+    }
 
     // nsIRDFCursor
-    NS_IMETHOD HasMoreElements(PRBool* result);
-    NS_IMETHOD GetNext(nsIRDFNode** next, PRBool* tv);
+    NS_IMETHOD Advance(void) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // nsIRDFAssertionCursor
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetSubject(nsIRDFResource** aResource) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetObject(nsIRDFNode** aObject) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetTruthValue(PRBool* aTruthValue) {
+        return NS_ERROR_UNEXPECTED;
+    }
 };
 
-
-EmptyCursorImpl::EmptyCursorImpl(void)
+nsresult
+NS_NewEmptyRDFAssertionCursor(nsIRDFAssertionCursor** result)
 {
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-EmptyCursorImpl::AddRef(void)
-{
-    return 2;
-}
-
-
-NS_IMETHODIMP_(nsrefcnt)
-EmptyCursorImpl::Release(void)
-{
-    return 1;
-}
-
-NS_IMETHODIMP
-EmptyCursorImpl::QueryInterface(REFNSIID iid, void** result)
-{
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
-
-    if (iid.Equals(kIRDFCursorIID) ||
-        iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsIRDFCursor*, this);
-        /* AddRef(); // not necessary */
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-
-
-NS_IMETHODIMP
-EmptyCursorImpl::HasMoreElements(PRBool* result)
-{
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
-
-    *result = PR_FALSE;
+    static EmptyAssertionCursorImpl gEmptyAssertionCursor;
+    *result = &gEmptyAssertionCursor;
     return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP
-EmptyCursorImpl::GetNext(nsIRDFNode** next, PRBool* tv)
+class EmptyArcsOutCursorImpl : public nsIRDFArcsOutCursor
 {
-    if (! next)
-        return NS_ERROR_NULL_POINTER;
+public:
+    EmptyArcsOutCursorImpl(void) {};
+    virtual ~EmptyArcsOutCursorImpl(void) {};
 
-    *next = nsnull;
-    return NS_ERROR_UNEXPECTED;
-}
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef(void) {
+        return 2;
+    }
 
+    NS_IMETHOD_(nsrefcnt) Release(void) {
+        return 1;
+    }
+
+    NS_IMETHOD QueryInterface(REFNSIID iid, void** result) {
+        if (! result)
+            return NS_ERROR_NULL_POINTER;
+
+        if (iid.Equals(kIRDFArcsOutCursorIID) ||
+            iid.Equals(kIRDFCursorIID) ||
+            iid.Equals(kISupportsIID)) {
+            *result = NS_STATIC_CAST(nsIRDFArcsOutCursor*, this);
+            /* AddRef(); // not necessary */
+            return NS_OK;
+        }
+        return NS_NOINTERFACE;
+    }
+
+    // nsIRDFCursor
+    NS_IMETHOD Advance(void) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // nsIRDFArcsOutCursor
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetSubject(nsIRDFResource** aResource) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetTruthValue(PRBool* aTruthValue) {
+        return NS_ERROR_UNEXPECTED;
+    }
+};
 
 nsresult
-NS_NewEmptyRDFCursor(nsIRDFCursor** result)
+NS_NewEmptyRDFArcsOutCursor(nsIRDFArcsOutCursor** result)
 {
-    static EmptyCursorImpl gEmptyCursor;
-    *result = &gEmptyCursor;
+    static EmptyArcsOutCursorImpl gEmptyArcsOutCursor;
+    *result = &gEmptyArcsOutCursor;
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class EmptyArcsInCursorImpl : public nsIRDFArcsInCursor
+{
+public:
+    EmptyArcsInCursorImpl(void) {};
+    virtual ~EmptyArcsInCursorImpl(void) {};
+
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef(void) {
+        return 2;
+    }
+
+    NS_IMETHOD_(nsrefcnt) Release(void) {
+        return 1;
+    }
+
+    NS_IMETHOD QueryInterface(REFNSIID iid, void** result) {
+        if (! result)
+            return NS_ERROR_NULL_POINTER;
+
+        if (iid.Equals(kIRDFArcsInCursorIID) ||
+            iid.Equals(kIRDFCursorIID) ||
+            iid.Equals(kISupportsIID)) {
+            *result = NS_STATIC_CAST(nsIRDFArcsInCursor*, this);
+            /* AddRef(); // not necessary */
+            return NS_OK;
+        }
+        return NS_NOINTERFACE;
+    }
+
+    // nsIRDFCursor
+    NS_IMETHOD Advance(void) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // nsIRDFArcsInCursor
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetObject(nsIRDFNode** aNode) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    NS_IMETHOD GetTruthValue(PRBool* aTruthValue) {
+        return NS_ERROR_UNEXPECTED;
+    }
+};
+
+nsresult
+NS_NewEmptyRDFArcsInCursor(nsIRDFArcsInCursor** result)
+{
+    static EmptyArcsInCursorImpl gEmptyArcsInCursor;
+    *result = &gEmptyArcsInCursor;
     return NS_OK;
 }

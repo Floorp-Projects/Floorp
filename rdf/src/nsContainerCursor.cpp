@@ -52,8 +52,11 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+static NS_DEFINE_IID(kIRDFAssertionCursorIID, NS_IRDFASSERTIONCURSOR_IID);
+static NS_DEFINE_IID(kIRDFCursorIID,          NS_IRDFCURSOR_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
 
@@ -66,7 +69,7 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, nextVal); // ad hoc way to make contain
 
 ////////////////////////////////////////////////////////////////////////
 
-class ContainerCursorImpl : public nsIRDFCursor {
+class ContainerCursorImpl : public nsIRDFAssertionCursor {
 private:
     nsIRDFResourceManager* mResourceMgr;
     nsIRDFDataSource* mDataSource;
@@ -74,25 +77,25 @@ private:
     nsIRDFNode* mNext;
     PRInt32 mCounter;
 
-    void SkipToNext(void);
-
 public:
     ContainerCursorImpl(nsIRDFDataSource* ds, nsIRDFResource* container);
     virtual ~ContainerCursorImpl(void);
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD HasMoreElements(PRBool* result);
-    NS_IMETHOD GetNext(nsIRDFNode** next, PRBool* tv);
+    NS_IMETHOD Advance(void);
+
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
+    NS_IMETHOD GetSubject(nsIRDFResource** aResource);
+    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
+    NS_IMETHOD GetObject(nsIRDFNode** aObject);
+    NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
 };
 
 ContainerCursorImpl::ContainerCursorImpl(nsIRDFDataSource* ds,
                                          nsIRDFResource* container)
     : mDataSource(ds), mContainer(container), mNext(nsnull), mCounter(1)
 {
-    NS_ASSERTION(ds != nsnull, "null ptr");
-    NS_ASSERTION(container != nsnull, "null ptr");
-
     NS_INIT_REFCNT();
     NS_IF_ADDREF(mDataSource);
     NS_IF_ADDREF(mContainer);
@@ -105,7 +108,6 @@ ContainerCursorImpl::ContainerCursorImpl(nsIRDFDataSource* ds,
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to acquire resource manager");
 
     NS_ASSERTION(rdf_IsContainer(mResourceMgr, mDataSource, container), "not a container");
-    SkipToNext();
 }
 
 
@@ -120,52 +122,38 @@ ContainerCursorImpl::~ContainerCursorImpl(void)
     NS_IF_RELEASE(mDataSource);
 }
 
-static NS_DEFINE_IID(kIRDFCursorIID, NS_IRDFCURSOR_IID);
-NS_IMPL_ISUPPORTS(ContainerCursorImpl, kIRDFCursorIID);
+NS_IMPL_ADDREF(ContainerCursorImpl);
+NS_IMPL_RELEASE(ContainerCursorImpl);
 
-
-NS_IMETHODIMP
-ContainerCursorImpl::HasMoreElements(PRBool* result)
-{
+NS_IMETHODIMP_(nsresult)
+ContainerCursorImpl::QueryInterface(REFNSIID iid, void** result) {
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    *result = (mNext != nsnull);
-    return NS_OK;
+    if (iid.Equals(kIRDFAssertionCursorIID) ||
+        iid.Equals(kIRDFCursorIID) ||
+        iid.Equals(kISupportsIID)) {
+        *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
+        /* AddRef(); // not necessary */
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
 }
 
 
 NS_IMETHODIMP
-ContainerCursorImpl::GetNext(nsIRDFNode** next, PRBool* tv)
+ContainerCursorImpl::Advance(void)
 {
-    if (!next)
-        return NS_ERROR_NULL_POINTER;
-
-    if (! mNext)
-        return NS_ERROR_UNEXPECTED;
-
-    *next = mNext; // no need to addref, SkipToNext() did it
-    if (tv) *tv = PR_TRUE;
-
-    SkipToNext();
-    return NS_OK;
-}
-
-
-void
-ContainerCursorImpl::SkipToNext(void)
-{
-    if (!mDataSource || !mContainer)
-        return;
-
     nsresult rv;
-    mNext = nsnull;
+
+    // release the last value that we were holding
+    NS_IF_RELEASE(mNext);
 
     nsIRDFResource* RDF_nextVal = nsnull;
     nsIRDFNode* nextNode        = nsnull;
     nsIRDFLiteral* nextVal      = nsnull;
-    const PRUnichar* s;
-    nsAutoString next;
+    const PRUnichar* p;
+    nsAutoString s;
     PRInt32 last;
     PRInt32 err;
 
@@ -179,23 +167,23 @@ ContainerCursorImpl::SkipToNext(void)
     if (NS_FAILED(rv = nextNode->QueryInterface(kIRDFLiteralIID, (void**) &nextVal)))
         goto done;
 
-    if (NS_FAILED(rv = nextVal->GetValue(&s)))
+    if (NS_FAILED(rv = nextVal->GetValue(&p)))
         goto done;
 
-    next = s;
-    last = next.ToInteger(&err);
+    s = p;
+    last = s.ToInteger(&err);
     if (NS_FAILED(err))
         goto done;
 
-    while (mCounter < last) {
-        next = kRDFNameSpaceURI;
-        next.Append("_");
-        next.Append(mCounter, 10);
+    // initialize rv to the case where mCounter has advanced past the
+    // last element
+    rv = NS_ERROR_UNEXPECTED;
 
+    while (mCounter < last) {
         nsIRDFResource* ordinalProperty = nsnull;
-        if (NS_FAILED(rv = mResourceMgr->GetUnicodeResource(next, &ordinalProperty)))
+        if (NS_FAILED(rv = GetPredicate(&ordinalProperty)))
             break;
-            
+
         rv = mDataSource->GetTarget(mContainer, ordinalProperty, PR_TRUE, &mNext);
         NS_IF_RELEASE(ordinalProperty);
 
@@ -213,6 +201,76 @@ done:
     NS_IF_RELEASE(nextNode);
     NS_IF_RELEASE(nextVal);
     NS_IF_RELEASE(RDF_nextVal);
+    return rv;
+}
+
+
+
+NS_IMETHODIMP
+ContainerCursorImpl::GetDataSource(nsIRDFDataSource** aDataSource)
+{
+    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_ADDREF(mDataSource);
+    *aDataSource = mDataSource;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+ContainerCursorImpl::GetSubject(nsIRDFResource** aSubject)
+{
+    NS_PRECONDITION(aSubject != nsnull, "null ptr");
+    if (! aSubject)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_ADDREF(mContainer);
+    *aSubject = mContainer;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+ContainerCursorImpl::GetPredicate(nsIRDFResource** aPredicate)
+{
+    NS_PRECONDITION(aPredicate != nsnull, "null ptr");
+
+    nsAutoString s(kRDFNameSpaceURI);
+    s.Append("_");
+    s.Append(mCounter, 10);
+
+    // this'll AddRef(), null check, etc.
+    return mResourceMgr->GetUnicodeResource(s, aPredicate);
+}
+
+
+NS_IMETHODIMP
+ContainerCursorImpl::GetObject(nsIRDFNode** aObject)
+{
+    NS_PRECONDITION(aObject != nsnull, "null ptr");
+    if (! aObject)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! mNext)
+        return NS_ERROR_UNEXPECTED;
+
+    NS_ADDREF(mNext);
+    *aObject = mNext;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+ContainerCursorImpl::GetTruthValue(PRBool* aTruthValue)
+{
+    NS_PRECONDITION(aTruthValue != nsnull, "null ptr");
+    if (! aTruthValue)
+        return NS_ERROR_NULL_POINTER;
+
+    *aTruthValue = PR_TRUE;
+    return NS_OK;
 }
 
 
@@ -221,9 +279,16 @@ done:
 nsresult
 NS_NewContainerCursor(nsIRDFDataSource* ds,
                       nsIRDFResource* container,
-                      nsIRDFCursor** cursor)
+                      nsIRDFAssertionCursor** cursor)
 {
-    nsIRDFCursor* result = new ContainerCursorImpl(ds, container);
+    NS_PRECONDITION(ds != nsnull,        "null ptr");
+    NS_PRECONDITION(container != nsnull, "null ptr");
+    NS_PRECONDITION(cursor != nsnull,    "null ptr");
+
+    if (!ds || !container || !cursor)
+        return NS_ERROR_NULL_POINTER;
+
+    ContainerCursorImpl* result = new ContainerCursorImpl(ds, container);
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 

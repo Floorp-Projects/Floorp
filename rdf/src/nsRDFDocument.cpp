@@ -1093,8 +1093,7 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
 
 
     nsIRDFResource* resource = nsnull;
-    nsIRDFCursor* properties = nsnull;
-    PRBool moreProperties;
+    nsIRDFArcsOutCursor* properties = nsnull;
 
     if (NS_FAILED(rv = element->GetResource(resource)))
         goto done;
@@ -1103,19 +1102,11 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
     if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, &properties)))
         goto done;
 
-    while (NS_SUCCEEDED(rv = properties->HasMoreElements(&moreProperties)) && moreProperties) {
-        nsIRDFNode* node = nsnull;
+    while (NS_SUCCEEDED(rv = properties->Advance())) {
         nsIRDFResource* property = nsnull;
 
-        if (NS_FAILED(rv = properties->GetNext(&node, nsnull)))
+        if (NS_FAILED(rv = properties->GetPredicate(&property)))
             break;
-
-        if (NS_FAILED(rv = node->QueryInterface(kIRDFResourceIID, (void**) &property))) {
-            NS_RELEASE(node);
-            break;
-        }
-
-        NS_RELEASE(node);
 
         const char* s;
         if (NS_FAILED(rv = property->GetValue(&s))) {
@@ -1127,31 +1118,27 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
 
         // Create a second cursor that'll enumerate all of the values
         // for all of the arcs.
-        nsIRDFCursor* values;
-        if (NS_FAILED(rv = mDB->GetTargets(resource, property, PR_TRUE, &values))) {
+        nsIRDFAssertionCursor* assertions;
+        if (NS_FAILED(rv = mDB->GetTargets(resource, property, PR_TRUE, &assertions))) {
             NS_RELEASE(property);
             break;
         }
 
-        PRBool moreValues;
-        while (NS_SUCCEEDED(rv = values->HasMoreElements(&moreValues)) && moreValues) {
-            nsIRDFNode* valueNode;
-            PRBool tv;
-            if (NS_SUCCEEDED(rv = values->GetNext(&valueNode, &tv))) {
-                if (tv) {
-                    // At this point, the specific nsRDFDocument
-                    // implementations will create an appropriate child
-                    // element (or elements).
-                    rv = AddChild(element, property, valueNode);
-                }
-                NS_RELEASE(valueNode);
+        while (NS_SUCCEEDED(rv = assertions->Advance())) {
+            nsIRDFNode* value;
+            if (NS_SUCCEEDED(rv = assertions->GetObject(&value))) {
+                // At this point, the specific nsRDFDocument
+                // implementations will create an appropriate child
+                // element (or elements).
+                rv = AddChild(element, property, value);
+                NS_RELEASE(value);
             }
 
             if (NS_FAILED(rv))
                 break;
         }
 
-        NS_RELEASE(values);
+        NS_RELEASE(assertions);
         NS_RELEASE(property);
 
         if (NS_FAILED(rv))

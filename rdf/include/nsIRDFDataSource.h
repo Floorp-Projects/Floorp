@@ -25,7 +25,9 @@
 #define NS_IRDFDATASOURCE_IID \
 { 0xf78da58, 0x8321, 0x11d2, { 0x8e, 0xac, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
 
-class nsIRDFCursor;
+class nsIRDFAssertionCursor;
+class nsIRDFArcsInCursor;
+class nsIRDFArcsOutCursor;
 class nsIRDFDataBase;
 class nsIRDFNode;
 class nsIRDFObserver;
@@ -71,7 +73,7 @@ public:
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
                           PRBool tv,
-                          nsIRDFCursor** sources /* out */) = 0;
+                          nsIRDFAssertionCursor** sources /* out */) = 0;
 
     /**
      * Find a child of that is related to the source by the given arc
@@ -96,7 +98,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFCursor** targets /* out */) = 0;
+                          nsIRDFAssertionCursor** targets /* out */) = 0;
 
     /**
      * Add an assertion to the graph.
@@ -144,7 +146,7 @@ public:
      * possible empty) nsIRDFCursor object.
      */
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFCursor** labels /* out */) = 0;
+                           nsIRDFArcsInCursor** labels /* out */) = 0;
 
     /**
      * Get a cursor to iterate over all the arcs that originate in
@@ -155,7 +157,7 @@ public:
      * possible empty) nsIRDFCursor object.
      */
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFCursor** labels /* out */) = 0;
+                            nsIRDFArcsOutCursor** labels /* out */) = 0;
 
     /**
      * Request that a data source write it's contents out to 
