@@ -209,7 +209,7 @@ nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
     // adjust whitespace for insert text and delete actions
     if ((aInfo->action == kInsertText) || (aInfo->action == kDeleteSelection))
     {
-      res = AdjustWhitespace();
+      res = AdjustWhitespace(aSelection);
       if (NS_FAILED(res)) return res;
     }
     // clean up any empty nodes in the selection
@@ -3488,13 +3488,15 @@ nsHTMLEditRules::AdjustSpecialBreaks()
 
 
 nsresult 
-nsHTMLEditRules::AdjustWhitespace()
+nsHTMLEditRules::AdjustWhitespace(nsIDOMSelection *aSelection)
 {
   nsCOMPtr<nsIContentIterator> iter;
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
   nsCOMPtr<nsISupports> isupports;
   PRUint32 nodeCount,j;
   nsresult res;
+
+  nsAutoSelectionReset selectionResetter(aSelection);
   
   // special case for mDocChangeRange entirely in one text node.
   // This is an efficiency hack for normal typing in the editor.
