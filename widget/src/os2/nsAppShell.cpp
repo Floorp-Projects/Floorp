@@ -88,7 +88,8 @@ NS_METHOD nsAppShell::Run(void)
   nsCOMPtr<nsITimerManager> timerManager(do_GetService("@mozilla.org/timer/manager;1", &rv));
   if (NS_FAILED(rv)) return rv;
 
-  timerManager->SetUseIdleTimers(PR_TRUE);
+  // Using idle timers breaks drag drop, so turn it off for now
+  timerManager->SetUseIdleTimers(PR_FALSE);
 
   gKeepGoing = 1;
   // Process messages
