@@ -62,6 +62,7 @@ nsReservedColor sReservedColors[] = {
 
 nsDeviceContextMotif :: nsDeviceContextMotif()
 {
+  NS_INIT_REFCNT();
   mSurface = nsnull;
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
@@ -107,8 +108,6 @@ NS_IMPL_RELEASE(nsDeviceContextMotif)
 
 NS_IMETHODIMP nsDeviceContextMotif :: Init(nsNativeWidget aNativeWidget)
 {
-  NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
-
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
 
@@ -119,8 +118,10 @@ NS_IMETHODIMP nsDeviceContextMotif :: Init(nsNativeWidget aNativeWidget)
 
   if (nsnull != mWidget)
   {
-    mTwipsToPixels = (((float)::XDisplayWidth(XtDisplay((Widget)mWidget), DefaultScreen(XtDisplay((Widget)mWidget)))) /
-  		    ((float)::XDisplayWidthMM(XtDisplay((Widget)mWidget),DefaultScreen(XtDisplay((Widget)mWidget)) )) * 25.4) / 
+    Display *display = XtDisplay((Widget)mWidget);
+    Screen *screen = DefaultScreen(display);
+    mTwipsToPixels = (((float)::XDisplayWidth(display, screen)) /
+  		    ((float)::XDisplayWidthMM(display ,screen )) * 25.4) / 
       (float)NSIntPointsToTwips(72);
     
     mPixelsToTwips = 1.0f / mTwipsToPixels;
