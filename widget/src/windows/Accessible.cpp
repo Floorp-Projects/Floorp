@@ -20,8 +20,9 @@
  * Contributor(s): 
  */
 
-#include "Accessible.h"
 #include "nsIAccessible.h"
+
+#include "Accessible.h"
 #include "nsIWidget.h"
 #include "nsWindow.h"
 #include "nsCOMPtr.h"
@@ -310,43 +311,12 @@ STDMETHODIMP Accessible::get_accState(
    if (!a)
      return S_FALSE;
 
-   nsXPIDLString idlrole;
-   nsresult rv = a->GetAccRole(getter_Copies(idlrole));
-   if (NS_FAILED(rv))
-       return S_FALSE;
-
-   nsXPIDLString idlstate;
-   rv = a->GetAccState(getter_Copies(idlstate));
+   PRUint32 state;
+   nsresult rv = a->GetAccState(&state);
    if (NS_FAILED(rv))
      return S_FALSE;
+   pvarState->lVal = state;
 
-   nsAutoString state;
-
-   // make sure we have commas at the start and end
-   state.AssignWithConversion(',');
-   state.Append(idlrole);
-   state.AppendWithConversion(',');
-
-   nsAutoString role(idlrole);
-
-   if (state.EqualsIgnoreCase("list item")) {
-      if (InState(state, "selectable"))
-        pvarState->lVal |= STATE_SYSTEM_SELECTABLE;
-
-      if (InState(state, "selected"))
-        pvarState->lVal |= STATE_SYSTEM_SELECTED;
-
-      if (InState(state, "focused"))
-        pvarState->lVal |= STATE_SYSTEM_FOCUSED;
-   }
-
-   // is it invisible
-   if (InState(state, "invisible"))
-      pvarState->lVal |= STATE_SYSTEM_INVISIBLE;
-   
-   // is it focusable
-   if (InState(state, "focusable"))
-      pvarState->lVal |= STATE_SYSTEM_FOCUSABLE;
    return S_OK;
 }
 
