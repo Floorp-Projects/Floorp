@@ -366,16 +366,12 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
 nsresult
 nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
 {
-    PLDHashEntryHdr    *hashEntry;
-
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     if (!cacheEntry) return NS_ERROR_NULL_POINTER;
 
-    hashEntry = PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_REMOVE);
-    if (PL_DHASH_ENTRY_IS_FREE(hashEntry)) {
-        // it's not in the table!?!
-        return NS_ERROR_UNEXPECTED;
-    }
+    //** debug code to make sure we have the entry we're trying to remove
+
+    (void) PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_REMOVE);
     return NS_OK;
 }
 
