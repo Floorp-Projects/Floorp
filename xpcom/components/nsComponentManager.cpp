@@ -3113,7 +3113,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
                                   nsnull,
                                   "end");    
 
-    FlushPersistentStore(PR_TRUE);
+    if (mRegistryDirty)
+        FlushPersistentStore(PR_TRUE);
     return rv;
 }
 
