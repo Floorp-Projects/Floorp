@@ -1419,6 +1419,8 @@ static nscoord
 ComputeLineHeight(nsIRenderingContext* aRenderingContext,
                   nsIStyleContext* aStyleContext)
 {
+  NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
+
   nscoord lineHeight = -1;
 
   const nsStyleText* text = (const nsStyleText*)
