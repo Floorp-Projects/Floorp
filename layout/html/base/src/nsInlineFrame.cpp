@@ -893,7 +893,7 @@ nsInlineFrame::GetSkipSides() const
       skip |= 1 << NS_SIDE_LEFT;
     }
     else {
-      // If the prev-in-flow is empty, then go ahead and let our right
+      // If the prev-in-flow is empty, then go ahead and let our left
       // edge border render.
     }
   }
