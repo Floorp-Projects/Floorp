@@ -2239,13 +2239,16 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
   NS_IF_RELEASE(viewManager);
 }
 
-//#define MAX_REFLOW_DEPTH 500  get this from nsIHTMLContentSink.h; bug 55095
+// Define the MAX_FRAME_DEPTH to be the ContentSink's MAX_REFLOW_DEPTH plus
+// 4 for the frames above the document's frames: 
+//  the Viewport, GFXScroll, ScrollPort, and Canvas
+#define MAX_FRAME_DEPTH (MAX_REFLOW_DEPTH+4)
 
 PRBool
 nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
                             nsHTMLReflowMetrics& aMetrics)
 {
-  if (aReflowState.mReflowDepth > MAX_REFLOW_DEPTH) {
+  if (aReflowState.mReflowDepth >  MAX_FRAME_DEPTH) {
     mState |= NS_FRAME_IS_UNFLOWABLE;
     mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
     aMetrics.width = 0;
