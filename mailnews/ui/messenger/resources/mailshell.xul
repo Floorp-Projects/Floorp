@@ -210,7 +210,7 @@
       <menuitem name="Watch Thread" onclick="MsgWatchThread();"/>
     </menu>
     <menu name="Communicator">
-      <menuitem name="Navigatoe" onclick="NavigatorWindow();"/>
+      <menuitem name="Navigator" onclick="NavigatorWindow();"/>
       <menuitem name="Messenger" onclick="MessengerWindow();"/>
       <menuitem name="Composer" onclick="ComposerWindow();"/>
       <menuitem name="AOL Instant Messenger Service" onclick="AIMService();"/>
