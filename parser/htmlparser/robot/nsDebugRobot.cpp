@@ -35,7 +35,6 @@
 #include "nsIURL.h"
 #include "nsIIOService.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#include "nsIDTDDebug.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 
