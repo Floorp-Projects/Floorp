@@ -22,7 +22,7 @@ Contributor(s):
 -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
-
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <!DOCTYPE window [
 <!ENTITY % commRegionDTD SYSTEM "chrome://communicator-region/locale/region.dtd" >
 %commRegionDTD;
@@ -30,18 +30,15 @@ Contributor(s):
 %timebombDTD;
 ]>
 
-<window  title="&title.label;" 
+<dialog  title="&title.label;" 
          id="timebomb-window" 
          xmlns:html="http://www.w3.org/1999/xhtml"
-         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
-    
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         buttons="accept"
+         ondialogaccept="window.close()"> 
+
     <vbox>
-        <html:td align="center">
-		    <html:label>&expireText.label;</html:label>
-        </html:td>
-        <html:td align="center">
-		    <html:button onclick="return window.close();">&okButton.label;</html:button>
-        </html:td>
+       <description flex="1">&expireText.label;</description>
     </vbox>
 
-</window>
+</dialog>
