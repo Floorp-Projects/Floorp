@@ -920,7 +920,10 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mXULBuilder);
     NS_IF_RELEASE(mSelection);
     NS_IF_RELEASE(mAttrStyleSheet);
-    NS_IF_RELEASE(mCSSLoader);
+    if (mCSSLoader) {
+      mCSSLoader->DropDocumentReference();
+      NS_RELEASE(mCSSLoader);
+    }
     NS_IF_RELEASE(mRootContent);
     NS_IF_RELEASE(mDocumentURLGroup);
     NS_IF_RELEASE(mDocumentURL);
@@ -1804,6 +1807,7 @@ XULDocumentImpl::GetCSSLoader(nsICSSLoader*& aLoader)
                                                 (void**)&mCSSLoader);
     if (NS_SUCCEEDED(result)) {
       result = mCSSLoader->Init(this);
+      mCSSLoader->SetCaseSensitive(PR_TRUE);
     }
   }
   aLoader = mCSSLoader;
