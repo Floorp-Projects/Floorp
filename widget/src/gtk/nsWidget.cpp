@@ -767,7 +767,7 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
 
   if (nsnull != mMenuListener) {
     if (NS_MENU_EVENT == event->eventStructType)
-      aStatus = mMenuListener->MenuSelected(static_cast<nsMenuEvent&>(*event));
+      aStatus = mMenuListener->MenuSelected(NS_STATIC_CAST(nsMenuEvent&, *event));
   }
 
   aStatus = nsEventStatus_eIgnore;
