@@ -36,6 +36,7 @@ static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static NS_DEFINE_IID(kIClipViewIID, NS_ICLIPVIEW_IID);
+static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 static const PRBool gsDebug = PR_FALSE;
 
@@ -571,9 +572,7 @@ typedef enum
 #define TRANS_PROPERTY_TRANS      0
 #define TRANS_PROPERTY_OPACITY    1
 
-#ifdef SHOW_RECTS
 static evenodd = 0;
-#endif
 
 void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
@@ -1092,7 +1091,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
       case BACK_TO_FRONT_OPACITY:
         if (rgnrect > 0)
         {
-
           if (state == BACK_TO_FRONT_OPACITY)
           {
 #ifdef SHOW_RECTS
@@ -1281,10 +1279,11 @@ void nsViewManager :: UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) cons
 {
   nsRect    pardamage;
   nsRect    bounds;
+  PRUint32   flags;
 
   aView->GetBounds(bounds);
 
-  //translate parent region into child coords.
+  //translate parent rect into child coords.
 
   if (nsnull != aParentRect)
   {
@@ -1600,39 +1599,39 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
       {
         // The rect is in device units, and it's in the coordinate space of its
         // associated window.
-        nsRect  trect = *((nsPaintEvent*)aEvent)->rect;
+        nsRect  damrect = *((nsPaintEvent*)aEvent)->rect;
 
         float   p2t;
         mContext->GetDevUnitsToAppUnits(p2t);
-        trect.ScaleRoundOut(p2t);
+        damrect.ScaleRoundOut(p2t);
 
         // Do an immediate refresh
         if (nsnull != mContext)
         {
-          nsRect  vrect;
+          nsRect  viewrect;
           float   varea;
 
           // Check that there's actually something to paint
-          view->GetBounds(vrect);
-          varea = (float)vrect.width * vrect.height;
+          view->GetBounds(viewrect);
+          varea = (float)viewrect.width * viewrect.height;
 
           if (varea > 0.0000001f)
           {
-            nsRect     rrect = trect;
+            nsRect     arearect;
             PRUint32   updateFlags = 0;
 
             // Auto double buffering logic.
             // See if the paint region is greater than .25 the area of our view.
             // If so, enable double buffered painting.
 
-            rrect.IntersectRect(rrect, vrect);
+            arearect.IntersectRect(damrect, viewrect);
   
-            if ((((float)rrect.width * rrect.height) / varea) >  0.25f)
+            if ((((float)arearect.width * arearect.height) / varea) >  0.25f)
               updateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
 //printf("refreshing: view: %x, %d, %d, %d, %d\n", view, trect.x, trect.y, trect.width, trect.height);
             // Refresh the view
-            Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &trect, updateFlags);
+            Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &damrect, updateFlags);
           }
         }
 
@@ -2356,7 +2355,9 @@ NS_IMETHODIMP nsViewManager :: GetRootScrollableView(nsIScrollableView **aScroll
 
 NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
 {
+  nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
+  nsDrawingSurface    ds = nsnull;
   nsRect              trect;
 
   if (PR_FALSE == mRefreshEnabled)

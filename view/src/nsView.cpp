@@ -54,10 +54,11 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 //printf(" %d %d %d (%d,%d) \n", aEvent->widget, aEvent->widgetSupports, 
 //       aEvent->message, aEvent->point.x, aEvent->point.y);
   nsEventStatus result = nsEventStatus_eIgnore;
-  
-  nsIView*      view = nsView::GetViewFor(aEvent->widget);
-  if (nsnull != view) {
-    nsIViewManager*  vm;
+  nsIView       *view = nsView::GetViewFor(aEvent->widget);
+
+  if (nsnull != view)
+  {
+    nsIViewManager    *vm;
 
     view->GetViewManager(vm);
     vm->DispatchEvent(aEvent, result);
@@ -71,14 +72,13 @@ nsView :: nsView()
 {
   mVis = nsViewVisibility_kShow;
   mXForm = nsnull;
-  mVFlags = ~ALL_VIEW_FLAGS;
-  mEventFlags = 0;
+  mVFlags = 0;
   mOpacity = 1.0f;
 }
 
 nsView :: ~nsView()
 {
-  mVFlags |= VIEW_FLAG_DYING;
+  mVFlags |= NS_VIEW_PUBLIC_FLAG_DYING;
 
   PRInt32 numKids;
   GetChildCount(numKids);
@@ -777,7 +777,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
   PRBool handledByChild = PR_FALSE;
 
   //see if any of this view's children can process the event
-  if (aStatus == nsEventStatus_eIgnore && !(mVFlags & NS_VIEW_FLAG_DONT_CHECK_CHILDREN)) {
+  if (aStatus == nsEventStatus_eIgnore && !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN)) {
     PRInt32 numkids;
     nsRect  trect;
     nscoord x, y;
@@ -1149,16 +1149,16 @@ NS_IMETHODIMP nsView :: GetOpacity(float &aOpacity)
 
 NS_IMETHODIMP nsView :: HasTransparency(PRBool &aTransparent) const
 {
-  aTransparent = (mVFlags & VIEW_FLAG_TRANSPARENT) ? PR_TRUE : PR_FALSE;
+  aTransparent = (mVFlags & NS_VIEW_PUBLIC_FLAG_TRANSPARENT) ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsView :: SetContentTransparency(PRBool aTransparent)
 {
   if (aTransparent == PR_TRUE)
-    mVFlags |= VIEW_FLAG_TRANSPARENT;
+    mVFlags |= NS_VIEW_PUBLIC_FLAG_TRANSPARENT;
   else
-    mVFlags &= ~VIEW_FLAG_TRANSPARENT;
+    mVFlags &= ~NS_VIEW_PUBLIC_FLAG_TRANSPARENT;
 
   return NS_OK;
 }
@@ -1300,15 +1300,21 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
   fputs(">\n", out);
 }
 
-NS_IMETHODIMP nsView :: SetViewFlags(PRInt32 aFlags)
+NS_IMETHODIMP nsView :: SetViewFlags(PRUint32 aFlags)
 {
   mVFlags |= aFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: ClearViewFlags(PRInt32 aFlags)
+NS_IMETHODIMP nsView :: ClearViewFlags(PRUint32 aFlags)
 {
   mVFlags &= ~aFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsView :: GetViewFlags(PRUint32 *aFlags)
+{
+  *aFlags = mVFlags;
   return NS_OK;
 }
 

@@ -56,8 +56,6 @@ public:
   ~ScrollBarView();
 
   NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus &aStatus);
-  NS_IMETHOD  SetPosition(nscoord x, nscoord y);
-  NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
 
 public:
   nsScrollingView *mScrollingView;
@@ -96,52 +94,6 @@ NS_IMETHODIMP ScrollBarView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFl
 
   return NS_OK;
 }
-
-NS_IMETHODIMP ScrollBarView :: SetPosition(nscoord x, nscoord y)
-{
-  mBounds.MoveTo(x, y);
-
-  if (nsnull != mWindow)
-  {
-    nsIDeviceContext  *dx;
-    float             twipToPix;
-    nscoord           parx = 0, pary = 0;
-    nsIWidget         *pwidget = nsnull;
-
-    mViewManager->GetDeviceContext(dx);
-    dx->GetAppUnitsToDevUnits(twipToPix);  
-
-    GetOffsetFromWidget(&parx, &pary, pwidget);
-    NS_IF_RELEASE(pwidget);
-    
-    mWindow->Move(NSTwipsToIntPixels((x + parx), twipToPix),
-                  NSTwipsToIntPixels((y + pary), twipToPix));
-
-    NS_RELEASE(dx);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP ScrollBarView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
-{
-  mBounds.SizeTo(width, height);
-
-  if (nsnull != mWindow)
-  {
-    nsIDeviceContext  *dx;
-    float             t2p;
-  
-    mViewManager->GetDeviceContext(dx);
-    dx->GetAppUnitsToDevUnits(t2p);
-
-    mWindow->Resize(NSTwipsToIntPixels(width, t2p), NSTwipsToIntPixels(height, t2p),
-                    aPaint);
-
-    NS_RELEASE(dx);
-  }
-  return NS_OK;
-}
-
 
 class CornerView : public nsView
 {
@@ -554,36 +506,6 @@ NS_IMETHODIMP nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
   }
   return NS_OK;
 }
-
-#if 0
-NS_IMETHODIMP nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
-                                       PRUint32 aPaintFlags, PRBool &aResult)
-{
-  PRBool  clipres = PR_FALSE;
-  nsRect  brect;
-
-  rc.PushState();
-
-  GetBounds(brect);
-
-  //don't clip if we have a widget
-  if ((mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
-    rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
-
-  if (clipres == PR_FALSE)
-  {
-    nsView::Paint(rc, rect, aPaintFlags | NS_VIEW_FLAG_CLIP_SET, clipres);
-  }
-
-  rc.PopState(clipres);
-
-  if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
-    rc.SetClipRect(brect, nsClipCombine_kSubtract, clipres);
-
-  aResult = clipres;
-  return NS_OK;
-}
-#endif
 
 void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {
