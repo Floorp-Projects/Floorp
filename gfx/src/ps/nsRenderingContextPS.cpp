@@ -1275,7 +1275,8 @@ nsRenderingContextPS :: PostscriptTextOut(const char *aString, PRUint32 aLength,
 int             ptr = 0;
 unsigned int    i;
 char            *buf = 0;
-nscoord         fontHeight = 0,yCoord;
+nscoord         fontHeight = 0;
+//nscoord 	yCoord;
 const nsFont    *font;
 
   mFontMetrics->GetHeight(fontHeight);
