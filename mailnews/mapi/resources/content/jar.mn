@@ -1,4 +1,4 @@
 messenger.jar:
-     content/messenger-mapi/pref-mailnewsOverlay.xul
-     content/messenger-mapi/pref-mailnewsOverlay.js
-     content/messenger-mapi/contents.rdf                                
+     content/messenger-mapi/pref-mailnewsOverlay.xul                  (pref-mailnewsOverlay.xul)
+     content/messenger-mapi/pref-mailnewsOverlay.js                   (pref-mailnewsOverlay.js)
+     content/messenger-mapi/contents.rdf                              (contents.rdf)

@@ -1,0 +1,4 @@
+<!ENTITY  lang.version          "@MOZILLA_VERSION@">
+<!ENTITY  brandShortName        "Mozilla">
+<!ENTITY  vendorShortName       "Mozilla">
+<!ENTITY  sidebarName           "Sidebar">
