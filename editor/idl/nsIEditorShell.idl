@@ -36,6 +36,15 @@ interface nsIEditorShell : nsISupports
   readonly attribute nsIDOMDocument    editorDocument;
   readonly attribute nsIDOMSelection   editorSelection;
   
+%{C++
+
+  enum {
+    eDocumentStatusUnmodified,
+    eDocumentStatusModified
+  };
+%}
+  readonly attribute long              documentStatus;
+  
   attribute wstring    paragraphFormat;
   attribute long       wrapColumn;
    
