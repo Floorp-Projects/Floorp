@@ -845,10 +845,10 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
 
         // opacity: factor, percent, enum
         if (ourColor->mOpacity.GetUnit() == eCSSUnit_Percent) {
-          color->mOpacity.SetPercentValue(ourColor->mOpacity.GetPercentValue());
+          color->mOpacity = ourColor->mOpacity.GetPercentValue();
         }
         else if (ourColor->mOpacity.GetUnit() == eCSSUnit_Number) {
-          color->mOpacity.SetFactorValue(ourColor->mOpacity.GetFloatValue());
+          color->mOpacity = ourColor->mOpacity.GetFloatValue();
         }
         else if (ourColor->mOpacity.GetUnit() == eCSSUnit_Enumerated) {
           // Only enum value is inherit
