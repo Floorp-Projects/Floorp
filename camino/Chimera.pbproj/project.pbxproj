@@ -940,12 +940,6 @@
 			path = ../dist/Embed/libmozz.dylib;
 			refType = 2;
 		};
-		A7AC092804161EDB00A967F8 = {
-			fileRef = A7AC092704161E7200A967F8;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		A7DF2C6003C3C83E00A80196 = {
 			isa = PBXFileReference;
 			name = xmlextras.xpt;
@@ -10178,7 +10172,6 @@
 				F6BD638E01B30F5301A962F7,
 				F5F14E9802A5A43A01A967F3,
 				F50DCB4402C2856101A967F3,
-				A7AC092804161EDB00A967F8,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
