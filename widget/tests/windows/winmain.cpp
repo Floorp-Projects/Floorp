@@ -760,9 +760,16 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
     switch(aEvent->message) {
 
         case NS_SHOW_TOOLTIP:
-          statusText->SetText("Show tooltip");
-          tooltipWindow->Move(aEvent->point.x + 5, aEvent->point.y + 5);
-          tooltipWindow->Show(PR_TRUE);
+          {
+            statusText->SetText("Show tooltip");
+            nsRect oldPos;
+            oldPos.x = aEvent->point.x;
+            oldPos.y = aEvent->point.y;
+            nsRect newPos;
+            window->WidgetToScreen(oldPos, newPos);
+            tooltipWindow->Move(newPos.x + 5, newPos.y + 5);
+            tooltipWindow->Show(PR_TRUE);
+          }
           break;
 
         case NS_HIDE_TOOLTIP:

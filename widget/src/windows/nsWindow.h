@@ -112,6 +112,8 @@ public:
     virtual void            SetTooltips(PRUint32 aNumberOfTips,const nsRect* aTooltipAreas);
     virtual void            RemoveTooltips();
     virtual void            UpdateTooltips(const nsRect* aNewTips);
+    virtual void            WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
+    virtual void            ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
     virtual void            AddMouseListener(nsIMouseListener * aListener);
     virtual void            AddEventListener(nsIEventListener * aListener);
 
@@ -399,7 +401,15 @@ protected:
     void RemoveTooltips() \
     { \
       nsWindow::RemoveTooltips(); \
-    }
+    } \
+    void WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect) \
+    { \
+      nsWindow::WidgetToScreen(aOldRect, aNewRect); \
+    } \
+    void ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) \
+    { \
+      nsWindow::ScreenToWidget(aOldRect, aNewRect); \
+    } 
 
 
 
