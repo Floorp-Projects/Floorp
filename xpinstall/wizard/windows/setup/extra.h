@@ -106,7 +106,6 @@ HRESULT           ParseSetupIni(void);
 HRESULT           GetConfigIni(void);
 void              CleanTempFiles(void);
 void              OutputSetupTitle(HDC hDC);
-void              OutputSetupTitleHack(HDC hDC);
 HRESULT           SdArchives(LPSTR szFileIdi, LPSTR szDownloadDir);
 HRESULT           RetrieveArchives(void);
 /* HRESULT           SmartUpdateJars(void); */
@@ -149,6 +148,7 @@ void              TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion);
 BOOL              GetFileVersion(LPSTR szFile, verBlock *vbVersion);
 BOOL              CheckLegacy(void);
 int               CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew);
+COLORREF          DecryptFontColor(LPSTR szColor);
 
 BOOL              bSDInit;
 
