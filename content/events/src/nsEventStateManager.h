@@ -50,9 +50,9 @@ public:
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame);
 
-  NS_IMETHOD GetActiveLink(nsIContent **aLink);
+  NS_IMETHOD GetLinkState(nsIContent *aLink, nsLinkEventState& aState);
   NS_IMETHOD SetActiveLink(nsIContent *aLink);
-
+  NS_IMETHOD SetHoverLink(nsIContent *aLink);
 
 protected:
   void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, nsEventStatus& aStatus);
@@ -70,6 +70,7 @@ protected:
   nsIFrame* mLastRightMouseDownFrame;
 
   nsIContent* mActiveLink;
+  nsIContent* mHoverLink;
   nsIContent* mCurrentFocus;
 
   //Not refcnted

@@ -48,6 +48,7 @@ nsEventStateManager::nsEventStateManager() {
   mLastRightMouseDownFrame = nsnull;
 
   mActiveLink = nsnull;
+  mHoverLink = nsnull;
   mCurrentFocus = nsnull;
   mDocument = nsnull;
   mPresContext = nsnull;
@@ -56,6 +57,7 @@ nsEventStateManager::nsEventStateManager() {
 
 nsEventStateManager::~nsEventStateManager() {
   NS_IF_RELEASE(mActiveLink);
+  NS_IF_RELEASE(mHoverLink);
   NS_IF_RELEASE(mCurrentFocus);
   NS_IF_RELEASE(mDocument);
 }
@@ -89,7 +91,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
     break;
   case NS_GOTFOCUS:
     NS_IF_RELEASE(mCurrentFocus);
-    aTargetFrame->GetContent(mCurrentFocus);
+    if (nsnull != mCurrentTarget) {
+      mCurrentTarget->GetContent(mCurrentFocus);
+    }
     break;
   }
   return NS_OK;
@@ -112,9 +116,11 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-  case NS_MOUSE_RIGHT_BUTTON_DOWN:
-    if (nsnull != aEvent->widget) {
-      aEvent->widget->SetFocus();
+  case NS_MOUSE_RIGHT_BUTTON_DOWN: 
+    {
+      if (nsnull != aEvent->widget) {
+        aEvent->widget->SetFocus();
+      }
     }
     //Break left out on purpose
   case NS_MOUSE_LEFT_BUTTON_UP:
@@ -256,7 +262,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
           }
 
           //Now dispatch to the frame
-          mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+          if (nsnull != mLastMouseOverFrame) {
+            //XXX Get the new frame
+            mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+          }
         }
 
         //fire mouseover
@@ -276,6 +285,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
 
         //Now dispatch to the frame
         if (nsnull != mCurrentTarget) {
+          //XXX Get the new frame
           mCurrentTarget->HandleEvent(aPresContext, &event, status);
         }
 
@@ -307,7 +317,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         }
 
         //Now dispatch to the frame
-        mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+        if (nsnull != mLastMouseOverFrame) {
+          //XXX Get the new frame
+          mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+        }
       }
     }
     break;
@@ -490,12 +503,19 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
     if (nsnull != child) {
       nsIAtom* tag;
       PRBool disabled = PR_TRUE;
+      PRBool hidden = PR_FALSE;
 
       child->GetTag(tag);
       if (nsHTMLAtoms::input==tag) {
         nsIDOMHTMLInputElement *nextInput;
         if (NS_OK == child->QueryInterface(kIDOMHTMLInputElementIID,(void **)&nextInput)) {
           nextInput->GetDisabled(&disabled);
+
+          nsAutoString type;
+          nextInput->GetType(type);
+          if (type.EqualsIgnoreCase("hidden")) {
+            hidden = PR_TRUE;
+          }
           NS_RELEASE(nextInput);
         }
       }
@@ -523,7 +543,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         disabled = PR_FALSE;
       }
 
-      if (!disabled) {
+      if (!disabled && !hidden) {
         return child;
       }
       NS_RELEASE(child);
@@ -551,59 +571,69 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::GetActiveLink(nsIContent **aLink)
+nsEventStateManager::GetLinkState(nsIContent *aLink, nsLinkEventState& aState)
 {
-  NS_PRECONDITION(nsnull != aLink, "null ptr");
-  if (nsnull == aLink) {
-    return NS_ERROR_NULL_POINTER;
+  if (aLink == mActiveLink) {
+    aState = eLinkState_Active;
   }
-  *aLink = mActiveLink;
-  NS_IF_ADDREF(mActiveLink);
+  else if (aLink == mHoverLink) {
+    aState = eLinkState_Hover;
+  }
+  else {
+    aState = eLinkState_Unspecified;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEventStateManager::SetActiveLink(nsIContent *aLink)
 {
-#if 0
   nsIDocument *mDocument;
 
-  //XXX this should just be able to call ContentChanged for the link once
-  //either nsFrame::ContentChanged does something or we have a separate
-  //link class
   if (nsnull != mActiveLink) {
     if (NS_OK == mActiveLink->GetDocument(mDocument)) {
-      nsIContent *mKid;
-      PRInt32 numKids;
-      mActiveLink->ChildCount(numKids);
-      for (int i = 0; i < numKids; i++) {
-        mActiveLink->ChildAt(i, mKid);
-        mDocument->ContentChanged(mKid, nsnull);
-        NS_RELEASE(mKid);
-      }
+      mDocument->ContentChanged(mActiveLink, nsnull);
+      NS_RELEASE(mDocument);
     }
-    NS_RELEASE(mDocument);
   }
-#endif
   NS_IF_RELEASE(mActiveLink);
 
   mActiveLink = aLink;
+
   NS_IF_ADDREF(mActiveLink);
-#if 0
   if (nsnull != mActiveLink) {
     if (NS_OK == mActiveLink->GetDocument(mDocument)) {
-      nsIContent *mKid;
-      PRInt32 numKids;
-      mActiveLink->ChildCount(numKids);
-      for (int i = 0; i < numKids; i++) {
-        mActiveLink->ChildAt(i, mKid);
-        mDocument->ContentChanged(mKid, nsnull);
-        NS_RELEASE(mKid);
-      }
+      mDocument->ContentChanged(mActiveLink, nsnull);
+      NS_RELEASE(mDocument);
     }
-    NS_RELEASE(mDocument);
   }
-#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::SetHoverLink(nsIContent *aLink)
+{
+  nsIDocument *mDocument;
+
+  if (nsnull != mHoverLink) {
+    if (NS_OK == mHoverLink->GetDocument(mDocument)) {
+      mDocument->ContentChanged(mHoverLink, nsnull);
+      NS_RELEASE(mDocument);
+    }
+  }
+  NS_IF_RELEASE(mHoverLink);
+
+  mHoverLink = aLink;
+
+  NS_IF_ADDREF(mHoverLink);
+  if (nsnull != mHoverLink) {
+    if (NS_OK == mHoverLink->GetDocument(mDocument)) {
+      mDocument->ContentChanged(mHoverLink, nsnull);
+      NS_RELEASE(mDocument);
+    }
+  }
+
   return NS_OK;
 }
 

@@ -28,6 +28,12 @@ class nsIPresContext;
 class nsIDOMEvent;
 class nsIFrame;
 
+enum nsLinkEventState {
+  eLinkState_Unspecified  = 0,
+  eLinkState_Active       = 1,  // mouse is down on link
+  eLinkState_Hover        = 2   // mouse is hovering over link
+};
+
 /*
  * Event listener manager interface.
  */
@@ -55,8 +61,9 @@ public:
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame) = 0;
 
-  NS_IMETHOD GetActiveLink(nsIContent **aLink) = 0;
+  NS_IMETHOD GetLinkState(nsIContent *aLink, nsLinkEventState& aState) = 0;
   NS_IMETHOD SetActiveLink(nsIContent *aLink) = 0;
+  NS_IMETHOD SetHoverLink(nsIContent *aLink) = 0;
 };
 
 #endif // nsIEventStateManager_h__
