@@ -1975,6 +1975,10 @@ char *GetOSTypeString(char *szOSType, DWORD dwOSTypeBufSize)
     lstrcpy(szOSType, "NT3");
   else if(gSystemInfo.dwOSType & OS_NT4)
     lstrcpy(szOSType, "NT4");
+  else if(gSystemInfo.dwOSType & OS_NT50)
+    lstrcpy(szOSType, "NT50");
+  else if(gSystemInfo.dwOSType & OS_NT51)
+    lstrcpy(szOSType, "NT51");
   else
     lstrcpy(szOSType, "NT5");
 
@@ -2032,7 +2036,19 @@ void DetermineOSVersionEx()
 
         default:
           gSystemInfo.dwOSType |= OS_NT5;
+          switch(osVersionInfo.dwMinorVersion)
+          {
+            case 0:
+              /* a minor version of 0 (major.minor.build) indicates Win2000 */
+              gSystemInfo.dwOSType |= OS_NT50;
+              break;
+
+            case 1:
+              /* a minor version of 1 (major.minor.build) indicates WinXP */
+              gSystemInfo.dwOSType |= OS_NT51;
           break;
+      }
+      break;
       }
       break;
 
@@ -3725,6 +3741,50 @@ HRESULT VerifyDiskSpace()
     } while((dsnTemp != NULL) && (dsnTemp != gdsnComponentDSRequirement));
   }
   return(hRetValue);
+}
+
+/* Function: ParseOSType
+ *
+ * Input: char *
+ *
+ * Return: DWORD
+ *
+ * Description: This function parses an input string (szOSType) for specific
+ * string keys:
+ *     WIN95_DEBUTE, WIN95, WIN98, NT3, NT4, NT5, NT50, NT51
+ *
+ * It then stores the information in a DWORD, each bit corresponding to a
+ * particular OS type.
+ */ 
+DWORD ParseOSType(char *szOSType)
+{
+  char  szBuf[MAX_BUF];
+  DWORD dwOSType = 0;
+
+  lstrcpy(szBuf, szOSType);
+  strupr(szBuf);
+
+  if(strstr(szBuf, "WIN95 DEBUTE"))
+    dwOSType |= OS_WIN95_DEBUTE;
+  if(strstr(szBuf, "WIN95") &&
+     !strstr(szBuf, "WIN95 DEBUTE"))
+    dwOSType |= OS_WIN95;
+  if(strstr(szBuf, "WIN98"))
+    dwOSType |= OS_WIN98;
+  if(strstr(szBuf, "NT3"))
+    dwOSType |= OS_NT3;
+  if(strstr(szBuf, "NT4"))
+    dwOSType |= OS_NT4;
+  if(strstr(szBuf, "NT50"))
+    dwOSType |= OS_NT50;
+  if(strstr(szBuf, "NT51"))
+    dwOSType |= OS_NT51;
+  if(strstr(szBuf, "NT5") &&
+     !strstr(szBuf, "NT50") &&
+     !strstr(szBuf, "NT51"))
+    dwOSType |= OS_NT5;
+
+  return(dwOSType);
 }
 
 HRESULT ParseComponentAttributes(char *szAttribute)
