@@ -1,0 +1,697 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsFormFillController.h"
+
+#include "nsFormFillResult.h"
+#include "nsFormHistory.h"
+#include "nsIAutoCompleteResultTypes.h"
+#include "nsString.h"
+#include "nsReadableUtils.h"
+#include "nsIServiceManager.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIChromeEventHandler.h"
+#include "nsPIDOMWindow.h"
+#include "nsIWebNavigation.h"
+#include "nsIContentViewer.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMKeyEvent.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIContent.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIView.h"
+#include "nsIFrame.h"
+#include "nsIWidget.h"
+#include "nsRect.h"
+
+NS_INTERFACE_MAP_BEGIN(nsFormFillController)
+  NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteInput)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFocusListener)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsFormFillController);
+NS_IMPL_RELEASE(nsFormFillController);
+
+nsFormFillController::nsFormFillController() :
+  mTimeout(50),
+  mMinResultsForPopup(1),
+  mDisableAutoComplete(PR_FALSE), 
+  mCompleteDefaultIndex(PR_FALSE),
+  mForceComplete(PR_FALSE)
+{
+  NS_INIT_ISUPPORTS();
+
+  mController = do_GetService("@mozilla.org/autocomplete/controller;1");
+
+  mDocShells = do_CreateInstance("@mozilla.org/supports-array;1");
+  mPopups = do_CreateInstance("@mozilla.org/supports-array;1");
+}
+
+nsFormFillController::~nsFormFillController()
+{
+  // Remove ourselves as a focus listener from all cached docShells
+  PRUint32 count;
+  mDocShells->Count(&count);
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsCOMPtr<nsIDocShell> docShell;
+    mDocShells->GetElementAt(i, getter_AddRefs(docShell));
+    nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(docShell);
+    RemoveFocusListener(domWindow);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+nsRect&
+GetScreenOrigin(nsIDOMElement* aElement)
+{
+  nsRect* rect = new nsRect(0,0,0,0);
+  nsSize size;
+ 
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  nsCOMPtr<nsIDocument> doc;
+  content->GetDocument(*getter_AddRefs(doc));
+
+  if (doc) {
+    // Get Presentation shell 0
+    nsCOMPtr<nsIPresShell> presShell;
+    doc->GetShellAt(0, getter_AddRefs(presShell));
+    
+    if (presShell) {
+      nsCOMPtr<nsIPresContext> presContext;
+      presShell->GetPresContext(getter_AddRefs(presContext));
+
+      if (presContext) {
+        // Get the scale from that Presentation Context
+        float scale;
+        presContext->GetTwipsToPixels(&scale);
+
+        nsIFrame* frame;
+        nsresult rv = presShell->GetPrimaryFrameFor(content, &frame);
+
+        nsIView* view;
+        nsPoint offset;
+        frame->GetOffsetFromView(presContext, offset, &view);
+        if (view) {
+          nscoord dummy;
+          nsCOMPtr<nsIWidget> widget;
+          rv = view->GetOffsetFromWidget(&dummy, &dummy, *getter_AddRefs(widget));
+          if (widget) {
+            nsRect oldBox(0,0,0,0);
+            widget->WidgetToScreen(oldBox, *rect);
+          }
+          
+          nscoord viewX = 0, viewY = 0;
+          view->GetPosition(&viewX, &viewY);
+
+          rect->x += NSTwipsToIntPixels(offset.x+viewX, scale);
+          rect->y += NSTwipsToIntPixels(offset.y+viewY, scale);
+        }
+        
+        frame->GetSize(size);
+        rect->width = NSTwipsToIntPixels(size.width, scale);
+        rect->height = NSTwipsToIntPixels(size.height, scale);
+      }
+    }
+  }
+  
+  return *rect;
+}
+
+////////////////////////////////////////////////////////////////////////
+//// nsIFormFillController
+
+NS_IMETHODIMP
+nsFormFillController::AttachToBrowser(nsIDocShell *aDocShell, nsIAutoCompletePopup *aPopup)
+{
+  NS_ENSURE_TRUE(aDocShell && aPopup, NS_ERROR_ILLEGAL_VALUE);
+  
+  mDocShells->AppendElement(aDocShell);
+  mPopups->AppendElement(aPopup);
+  
+  printf("AttachToBrowser\n");
+  
+  // Listen for focus events on the domWindow of the docShell
+  nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(aDocShell);
+  AddFocusListener(domWindow);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::DetachFromBrowser(nsIDocShell *aDocShell)
+{
+  PRInt32 index = GetIndexOfDocShell(aDocShell);
+  NS_ENSURE_TRUE(index >= 0, NS_ERROR_FAILURE);
+  
+  // Stop listening for focus events on the domWindow of the docShell
+  nsCOMPtr<nsIDocShell> docShell;
+  mDocShells->GetElementAt(index, getter_AddRefs(docShell));
+  nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(docShell);
+  RemoveFocusListener(domWindow);
+    
+  mDocShells->RemoveElementAt(index);
+  mPopups->RemoveElementAt(index);
+  
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+//// nsIAutoCompleteInput
+
+NS_IMETHODIMP
+nsFormFillController::GetPopup(nsIAutoCompletePopup **aPopup)
+{
+  *aPopup = mFocusedPopup;
+  NS_IF_ADDREF(*aPopup);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetPopupOpen(PRBool *aPopupOpen)
+{
+  if (mFocusedPopup)
+    mFocusedPopup->GetPopupOpen(aPopupOpen);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::SetPopupOpen(PRBool aPopupOpen)
+{
+  if (aPopupOpen) {
+    nsRect popupRect = GetScreenOrigin(mFocusedInput);
+    if (mFocusedPopup)
+      mFocusedPopup->OpenPopup(this, popupRect.x, popupRect.y+popupRect.height, popupRect.width);
+  } else {
+    mFocusedPopup->ClosePopup();
+  }
+    
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetDisableAutoComplete(PRBool *aDisableAutoComplete)
+{
+  *aDisableAutoComplete = mDisableAutoComplete;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::SetDisableAutoComplete(PRBool aDisableAutoComplete)
+{
+  mDisableAutoComplete = aDisableAutoComplete;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetCompleteDefaultIndex(PRBool *aCompleteDefaultIndex)
+{
+  *aCompleteDefaultIndex = mCompleteDefaultIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::SetCompleteDefaultIndex(PRBool aCompleteDefaultIndex)
+{
+  mCompleteDefaultIndex = aCompleteDefaultIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetForceComplete(PRBool *aForceComplete)
+{
+  *aForceComplete = mForceComplete;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFormFillController::SetForceComplete(PRBool aForceComplete)
+{
+  mForceComplete = aForceComplete;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetMinResultsForPopup(PRUint32 *aMinResultsForPopup)
+{
+  *aMinResultsForPopup = mMinResultsForPopup;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFormFillController::SetMinResultsForPopup(PRUint32 aMinResultsForPopup)
+{
+  mMinResultsForPopup = aMinResultsForPopup;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetShowCommentColumn(PRUint32 *aShowCommentColumn)
+{
+  *aShowCommentColumn = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFormFillController::SetShowCommentColumn(PRUint32 aShowCommentColumn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetTimeout(PRUint32 *aTimeout)
+{
+  *aTimeout = mTimeout;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFormFillController::SetTimeout(PRUint32 aTimeout)
+{
+  mTimeout = aTimeout;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::SetSearchParam(const nsAString &aSearchParam)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetSearchParam(nsAString &aSearchParam)
+{
+  mFocusedInput->GetName(aSearchParam);
+  if (aSearchParam.IsEmpty())
+    mFocusedInput->GetId(aSearchParam);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetSearchCount(PRUint32 *aSearchCount)
+{
+  *aSearchCount = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetSearchAt(PRUint32 index, nsACString & _retval)
+{
+  _retval.Assign("form-history");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetTextValue(nsAString & aTextValue)
+{
+  mFocusedInput->GetValue(aTextValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::SetTextValue(const nsAString & aTextValue)
+{
+  mFocusedInput->SetValue(aTextValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetSelectionStart(PRInt32 *aSelectionStart)
+{
+  nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(mFocusedInput);
+  if (input)
+    input->GetSelectionStart(aSelectionStart);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetSelectionEnd(PRInt32 *aSelectionEnd)
+{
+  nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(mFocusedInput);
+  if (input)
+    input->GetSelectionEnd(aSelectionEnd);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::SelectTextRange(PRInt32 aStartIndex, PRInt32 aEndIndex)
+{
+  nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(mFocusedInput);
+  if (input)
+    input->SetSelectionRange(aStartIndex, aEndIndex);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::OnSearchComplete()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::OnTextEntered(PRBool *_retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::OnTextReverted(PRBool *_retval)
+{
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+//// nsIAutoCompleteSearch
+
+
+NS_IMETHODIMP
+nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAString &aSearchParam,
+                                  nsIAutoCompleteResult *aPreviousResult, nsIAutoCompleteObserver *aListener)
+{
+  nsFormHistory *history = nsFormHistory::GetInstance();
+
+  nsIAutoCompleteMdbResult *result = nsnull;
+  history->AutoCompleteSearch(aSearchParam, aSearchString, NS_STATIC_CAST(nsIAutoCompleteMdbResult *, aPreviousResult), &result);
+
+  NS_IF_RELEASE(history);
+
+  aListener->OnSearchResult(this, result);  
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::StopSearch()
+{
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+//// nsIDOMEventListener
+
+NS_IMETHODIMP
+nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK; 
+}
+
+////////////////////////////////////////////////////////////////////////
+//// nsIDOMFocusListener
+
+NS_IMETHODIMP
+nsFormFillController::Focus(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+  
+  nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(target);
+  if (input) {
+    nsAutoString type;
+    input->GetType(type);
+    if (type.Equals(NS_LITERAL_STRING("text")))
+      StartControllingInput(input);
+  }
+    
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::Blur(nsIDOMEvent* aEvent)
+{
+  if (mFocusedInput)
+    StopControllingInput();
+  
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+//// nsIDOMKeyListener
+
+NS_IMETHODIMP
+nsFormFillController::KeyDown(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+} 
+
+NS_IMETHODIMP
+nsFormFillController::KeyUp(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+  
+  PRBool cancel = PR_FALSE;
+
+  PRUint32 c;
+  keyEvent->GetCharCode(&c);
+  
+  if (c) {
+    mController->HandleText();
+  } else {
+    PRUint32 k;
+    keyEvent->GetKeyCode(&k);
+    switch (k) {
+      case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+      case nsIDOMKeyEvent::DOM_VK_DELETE:
+        mController->HandleText();
+        break;
+      case nsIDOMKeyEvent::DOM_VK_UP:
+        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_UP, &cancel);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_DOWN:
+        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_DOWN, &cancel);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_LEFT:
+        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_LEFT, &cancel);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_RIGHT:
+        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_RIGHT, &cancel);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
+        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_PAGE_UP, &cancel);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
+        mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_PAGE_DOWN, &cancel);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_ESCAPE:
+        mController->HandleEscape(&cancel);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_RETURN:
+        mController->HandleEnter(&cancel);
+        break;
+    }
+  }
+  
+  if (cancel) {
+    aEvent->StopPropagation();
+    aEvent->PreventDefault();
+  }
+  
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+//// nsFormFillController
+
+void
+nsFormFillController::AddFocusListener(nsIDOMWindow *aWindow)
+{
+  if (!aWindow)
+    return;
+
+  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
+  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  if (privateDOMWindow)
+    privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));
+
+  if (target)
+    target->AddEventListener(NS_LITERAL_STRING("focus"),
+                             NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                             PR_TRUE);
+}
+
+void
+nsFormFillController::RemoveFocusListener(nsIDOMWindow *aWindow)
+{
+  StopControllingInput();
+  
+  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
+  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  if (privateDOMWindow)
+    privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));
+
+  target->RemoveEventListener(NS_LITERAL_STRING("focus"),
+                            NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                            PR_TRUE);
+}
+
+void
+nsFormFillController::AddKeyListener(nsIDOMHTMLInputElement *aInput)
+{
+  if (aInput) {
+    mFocusedInput = aInput;
+    
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aInput);
+    target->AddEventListener(NS_LITERAL_STRING("keypress"),
+                             NS_STATIC_CAST(nsIDOMKeyListener *, this),
+                             PR_TRUE);
+  }
+}
+
+void
+nsFormFillController::RemoveKeyListener()
+{
+  if (mFocusedInput) {
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mFocusedInput);
+    target->RemoveEventListener(NS_LITERAL_STRING("keypress"),
+                             NS_STATIC_CAST(nsIDOMKeyListener *, this),
+                             PR_TRUE);
+
+    mFocusedInput = nsnull;
+  }
+}
+
+void
+nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
+{
+  // Make sure we're not still attached to an input
+  StopControllingInput(); 
+
+  // Find the currently focused docShell
+  nsCOMPtr<nsIDocShell> docShell = GetDocShellForInput(aInput);
+  PRInt32 index = GetIndexOfDocShell(docShell);
+  if (index < 0)
+    return;
+  
+  // Cache the popup for the focused docShell
+  mPopups->GetElementAt(index, getter_AddRefs(mFocusedPopup));
+  
+  // Start listening for key events
+  AddKeyListener(aInput);
+
+  // Now we are the autocomplete controller's bitch
+  mController->AttachToInput(this);
+}
+
+void
+nsFormFillController::StopControllingInput()
+{
+  RemoveKeyListener();
+
+  mController->DetachFromInput();
+
+  mFocusedInput = nsnull;
+  mFocusedPopup = nsnull;
+}
+
+nsIDocShell *
+nsFormFillController::GetDocShellForInput(nsIDOMHTMLInputElement *aInput)
+{
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aInput->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  
+  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+  doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(ourGlobal);
+
+  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(domWindow));
+  NS_ENSURE_TRUE(ifreq, NS_OK);
+  nsCOMPtr<nsIWebNavigation> webNav;
+  ifreq->GetInterface(NS_GET_IID(nsIWebNavigation), getter_AddRefs(webNav));
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
+  return docShell;
+}
+
+nsIDOMWindow *
+nsFormFillController::GetWindowForDocShell(nsIDocShell *aDocShell)
+{
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  aDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+  NS_ENSURE_TRUE(contentViewer, nsnull);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  contentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_TRUE(doc, nsnull);
+
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  doc->GetScriptGlobalObject(getter_AddRefs(global));
+  NS_ENSURE_TRUE(global, nsnull);
+
+  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
+  return domWindow;
+}
+
+PRInt32
+nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
+{
+  // Loop through our cached docShells looking for the given docShell
+  PRUint32 count;
+  mDocShells->Count(&count);
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsCOMPtr<nsIDocShell> docShell;
+    mDocShells->GetElementAt(i, getter_AddRefs(docShell));
+    if (docShell == aDocShell)
+      return i;
+  }
+
+  // Recursively check the parent docShell of this one
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(aDocShell);
+  nsCOMPtr<nsIDocShellTreeItem> parentItem;
+  treeItem->GetParent(getter_AddRefs(parentItem));
+  if (parentItem) {
+    nsCOMPtr<nsIDocShell> parentShell = do_QueryInterface(parentItem);
+    return GetIndexOfDocShell(parentShell);
+  }
+    
+  return -1;
+}
+

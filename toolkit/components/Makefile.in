@@ -1,0 +1,10 @@
+DEPTH   = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+DIRS = autocomplete satchel build
+
+include $(topsrcdir)/config/rules.mk

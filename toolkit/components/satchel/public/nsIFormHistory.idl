@@ -1,0 +1,87 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(48E227EC-1897-418f-A40B-C15EA18BBC4A)]
+interface nsIFormHistory : nsISupports
+{
+  /**
+   * The total number of rows in the form history.
+   */
+  readonly attribute unsigned long rowCount;
+  
+  /**
+   * Gets the name and value at a position in the form history.
+   */
+  void getEntryAt(in unsigned long index, out AString name, out AString value);
+  
+  /**
+   * Gets just the name at a position in the form history.
+   */
+  void getNameAt(in unsigned long index, out AString name);
+
+  /**
+   * Gets just the value at a position in the form history.
+   */
+  void getValueAt(in unsigned long index, out AString value);
+  
+  /**
+   * Appends a name and value pair to the end of the form history.
+   */
+  void addEntry(in AString name, in AString value);
+
+  /**
+   * Removes the entry at a position.
+   */
+  void removeEntryAt(in unsigned long index);
+
+  /**
+   * Removes all entries that are paired with a name.
+   */
+  void removeEntriesForName(in AString name);
+  
+  /**
+   * Removes all entries in the entire form history.
+   */
+  void removeAllEntries();
+
+  /**
+   * Gets whether a name and value pair exists in the form history.
+   */
+  boolean entryExists(in AString name, in AString value);
+};
