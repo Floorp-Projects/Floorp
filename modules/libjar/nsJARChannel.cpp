@@ -41,7 +41,7 @@ static NS_DEFINE_CID(kScriptSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
 #if defined(PR_LOGGING)
 //
-// Log module for SocketTransport logging...
+// Log module for JarChannel logging...
 //
 // To enable logging (see prlog.h for full details):
 //
