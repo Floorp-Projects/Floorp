@@ -305,8 +305,14 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
     return NS_OK;
   }
 
-  SetStatus(nsString());
-  SetDefaultStatus(nsString());
+  /* No mDocShell means we've already been partially closed down.
+     When that happens, setting status isn't a big requirement,
+     so don't. (Doesn't happen under normal circumstances, but
+     bug 49615 describes a case.) */
+  if (mDocShell) {
+    SetStatus(nsString());
+    SetDefaultStatus(nsString());
+  }
 
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
