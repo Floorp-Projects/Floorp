@@ -144,7 +144,7 @@ foreach (@src_roots) {
 
 unless ($found_rcs_file) {
   &print_top;
-  print "Rcs file, $filename, doeHs not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
+  print "Rcs file, $filename, does not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
 print "</BODY></HTML>\n";
   &print_bottom;
   exit;
