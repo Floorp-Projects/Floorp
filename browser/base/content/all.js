@@ -174,7 +174,7 @@ pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
 
 //Internet Search
-pref("browser.search.defaultenginename", "chrome://communicator-region/locale/region.properties");
+pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
 
 // Print header customization
 // Use the following codes:
