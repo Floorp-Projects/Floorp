@@ -451,20 +451,6 @@ function Shutdown()
     appCore.close();
 }
 
-function Translate()
-{
-  var service = pref.getCharPref("browser.translation.service");
-  var serviceDomain = pref.getCharPref("browser.translation.serviceDomain");
-  var targetURI = getWebNavigation().currentURI.spec;
-
-  // if we're already viewing a translated page, then just reload
-  if (targetURI.indexOf(serviceDomain) >= 0)
-    BrowserReload();
-  else {
-    loadURI(service + escape(targetURI));
-  }
-}
-
 function gotoHistoryIndex(aEvent)
 {
   var index = aEvent.target.getAttribute("index");
@@ -629,102 +615,6 @@ function addBookmarkAs(aBrowser)
   else
     BookmarksUtils.addBookmarkForBrowser(aBrowser.webNavigation, true);
 }
-
-function readRDFString(aDS,aRes,aProp)
-{
-  var n = aDS.GetTarget(aRes, aProp, true);
-  return n ? n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
-}
-
-
-function ensureDefaultEnginePrefs(aRDF,aDS) 
-{
-  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename", Components.interfaces.nsIPrefLocalizedString).data;
-  var kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
-  var kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
-  var kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
-          
-  var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
-  while (arcs.hasMoreElements()) {
-    var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);       
-    var name = readRDFString(aDS, engineRes, kNC_Name);
-    if (name == defaultName)
-      mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
-  }
-}
-
-function ensureSearchPref()
-{
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-  var ds = rdf.GetDataSource("rdf:internetsearch");
-  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  var kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
-  var defaultEngine;
-  try {
-    defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
-  } catch(ex) {
-    ensureDefaultEnginePrefs(rdf, ds);
-    defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
-  }
-}
-
-function getSearchUrl(attr)
-{
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService); 
-  var ds = rdf.GetDataSource("rdf:internetsearch"); 
-  var kNC_Root = rdf.GetResource("NC:SearchEngineRoot");
-  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  var defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
-  var engineRes = rdf.GetResource(defaultEngine);
-  var prop = "http://home.netscape.com/NC-rdf#" + attr;
-  var kNC_attr = rdf.GetResource(prop);
-  var searchURL = readRDFString(ds, engineRes, kNC_attr);
-  return searchURL;
-}
-
-function QualifySearchTerm()
-{
-  // If the text in the URL bar is the same as the currently loaded
-  // page's URL then treat this as an empty search term.  This way
-  // the user is taken to the search page where s/he can enter a term.
-  if (window.XULBrowserWindow.userTyped.value)
-    return document.getElementById("urlbar").value;
-  return "";
-}
-
-function BrowserSearchInternet()
-{
-  try {
-    var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
-    if (searchEngineURI) {          
-      var searchRoot = getSearchUrl("searchForm");
-      if (searchRoot) {
-        loadURI(searchRoot);
-        return;
-      } else {
-        // Get a search URL and guess that the front page of the site has a search form.
-        var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                 .getService(Components.interfaces.nsIInternetSearchService);
-        searchURL = searchDS.GetInternetSearchURL(searchEngineURI, "ABC", 0, 0, {value:0});
-        if (searchURL) {
-          searchRoot = searchURL.match(/[a-z]+:\/\/[a-z.-]+/);
-          if (searchRoot) {
-            loadURI(searchRoot + "/");
-            return;
-          }
-        }
-      }
-    }
-  } catch (ex) {
-  }
-
-  // Fallback if the stuff above fails: use the hard-coded search engine
-  loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
-}
-
-
-//Note: BrowserNewEditorWindow() was moved to globalOverlay.xul and renamed to NewEditorWindow()
 
 function BrowserOpenWindow()
 {
@@ -930,18 +820,6 @@ function readFromClipboard()
   return url;
 }
 
-function OpenMessenger()
-{
-  open("chrome://messenger/content/messenger.xul", "_blank",
-    "chrome,extrachrome,menubar,resizable,status,toolbar");
-}
-
-function OpenAddressbook()
-{
-  open("chrome://messenger/content/addressbook/addressbook.xul", "_blank",
-    "chrome,extrachrome,menubar,resizable,status,toolbar");
-}
-
 function BrowserViewSourceOfDocument(aDocument)
 {
   var docCharset;
@@ -1004,22 +882,6 @@ function BrowserPageInfo(doc)
                     "_blank",
                     "chrome,dialog=no",
                     doc);
-}
-
-function hiddenWindowStartup()
-{
-  // focus the hidden window
-  window.focus();
-
-  // Disable menus which are not appropriate
-  var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', 'Browser:PrintSetup', /*'Browser:PrintPreview',*/
-                       'Browser:Print', 'Browser:Back', 'Browser:Forward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo',
-                       'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll', 'menu_textZoom'];
-  for (var id in disabledItems) {
-    var broadcaster = document.getElementById(disabledItems[id]);
-    if (broadcaster)
-      broadcaster.setAttribute("disabled", "true");
-  }
 }
 
 // Initialize the LeakDetector class.
@@ -1254,59 +1116,6 @@ function stylesheetSwitchAll(frameset, title) {
   }
 }
 
-function applyTheme(themeName)
-{
-  var id = themeName.getAttribute('id'); 
-  var name=id.substring('urn:mozilla.skin.'.length, id.length);
-  if (!name)
-    return;
-
-  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Components.interfaces.nsIXULChromeRegistry);
-
-  var oldTheme = false;
-  try {
-    oldTheme = !chromeRegistry.checkThemeVersion(name);
-  }
-  catch(e) {
-  }
-
-
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-  if (oldTheme) {
-    var title = gNavigatorBundle.getString("oldthemetitle");
-    var message = gNavigatorBundle.getString("oldTheme");
-
-    message = message.replace(/%theme_name%/, themeName.getAttribute("displayName"));
-    message = message.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
-
-    if (promptService.confirm(window, title, message)){
-      var inUse = chromeRegistry.isSkinSelected(name, true);
-
-      chromeRegistry.uninstallSkin( name, true );
-
-      var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                          .createInstance(Components.interfaces.nsISupportsWString);
-
-      str.data = true;
-      pref.setComplexValue("general.skins.removelist." + name,
-                           Components.interfaces.nsISupportsWString, str);
-      
-      if (inUse)
-        chromeRegistry.refreshSkins();
-    }
-
-    return;
-  }
-
-chromeRegistry.selectSkin(name, true);                                        
-chromeRegistry.refreshSkins();
-}
-
-function getNewThemes()
-{
-  loadURI(gBrandRegionBundle.getString("getNewThemesURL"));
-}
 
 function URLBarFocusHandler(aEvent)
 {
@@ -1355,7 +1164,7 @@ function ShowAndSelectContentsOfURLBar()
   
   // If it's hidden, show it.
   if (navBar.getAttribute("hidden") == "true")
-    goToggleToolbar('nav-bar','cmd_viewnavbar');
+    goToggleToolbar('nav-bar','toggle_navbar');
 
   if (gURLBar.value)
     gURLBar.select();
@@ -1552,26 +1361,6 @@ function toHistory()
     setTimeout(enableHistory, 2000);
   }
 
-}
-
-function checkTheme()
-{
-  var theSkinKids = document.getElementById("theme");
-  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Components.interfaces.nsIXULChromeRegistry);
-  for (var i = 0; i < theSkinKids.childNodes.length; ++i) {
-    var child = theSkinKids.childNodes[i];
-    var id=child.getAttribute("id");
-    if (id.length > 0) {
-      var themeName = id.substring('urn:mozilla:skin:'.length, id.length);       
-      var selected = chromeRegistry.isSkinSelected(themeName, true);
-      if (selected == Components.interfaces.nsIChromeRegistry.FULL) {
-        var menuitem=document.getElementById(id);
-        menuitem.setAttribute("checked", true);
-        break;
-      }
-    }
-  } 
 }
 
 function getWebNavigation()
