@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -85,7 +85,10 @@ static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 ////////////////////////////////////////////////////
 static PRBool 			  gJustGotActivate = PR_FALSE;
 static PRBool 			  gJustGotDeactivate = PR_FALSE;
-
+////////////////////////////////////////////////////
+// Tracking last activated BWindow
+////////////////////////////////////////////////////
+static BWindow           * gLastActiveWindow = NULL;
 static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
 
 //-------------------------------------------------------------------------
@@ -843,39 +846,68 @@ nsIWidget* nsWindow::GetParent(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Show(PRBool bState)
 {
-	bool mustunlock = false;
-	bool havewindow = false;
-
-	if(mView)
+	if (mView && mView->LockLooper())
 	{
-		if(mView->LockLooper())
-			mustunlock = true;
-
-		if(mustunlock && mView->Parent() == 0)
-			havewindow = true;
-
-		if(PR_FALSE == bState)
+		switch (mWindowType)
 		{
-			// be careful : BWindow and BView's Show() and Hide() can be nested
-			if (!mView->IsHidden())
-				mView->Hide();
-			if(havewindow && !mView->Window()->IsHidden())
-				mView->Window()->Hide();
-		}
-		else
-		{
-			// be careful : BWindow and BView's Show() and Hide() can be nested
-			if (mView->IsHidden())
-				mView->Show();
-			if(havewindow && mView->Window()->IsHidden())
-				mView->Window()->Show();
-		}
-
-		if(mustunlock)
-			mView->UnlockLooper();
+			case eWindowType_popup:
+				{
+					if(PR_FALSE == bState)
+					{
+						// XXX BWindow::Hide() is needed ONLY for popups. No need to hide views for popups
+						if (mView->Window() && !mView->Window()->IsHidden())
+							mView->Window()->Hide();
+					}
+					else
+					{
+						if (mView->Window() && mView->Window()->IsHidden())
+							mView->Window()->Show();
+						}
+					}
+					break;
+				case eWindowType_child:
+					{
+						// XXX No BWindow deals for children
+						if(PR_FALSE == bState)
+						{
+							if (!mView->IsHidden())
+								mView->Hide();
+						}
+						else
+						{
+							if (mView->IsHidden())
+								mView->Show();              
+						}
+					}
+					break;
+				default: // toplevel and dialog
+					{
+						if(PR_FALSE == bState)
+						{
+							// XXX no need to BWindow::Hide() from Mozilla for normal windows - use deactivation instead.
+							//  also seems no sense to hide BViews for deactivated toplevel windows.
+							if (mView->Window() && mView->Window()->IsActive())
+								mView->Window()->Activate(false);
+						}
+						else
+						{
+							// XXX Both Show() here are only for "first run" purpose
+							if (mView->Window())
+							{
+								if (mView->Window()->IsHidden())
+									mView->Window()->Show();
+								// seems better approach in case of FFM than !IsFront() 
+								if (!mView->Window()->IsActive() && gLastActiveWindow != mView->Window()) 
+									mView->Window()->Activate(true);
+							}
+							if (mView->IsHidden())
+								mView->Show();
+						}
+					}
+		} //end switch	
+		mView->UnlockLooper();
+		mIsVisible = bState;	
 	}
-
-	mIsVisible = bState;
 	return NS_OK;
 }
 
@@ -3028,6 +3060,8 @@ void nsWindowBeOS::DoFrameResized()
 void nsWindowBeOS::WindowActivated(bool active)
 {
 // Calls method ONACTIVATE to handle gJustGotActivated | gJustGotDeactivated
+	if (active)
+		gLastActiveWindow = this;
 	nsWindow        *w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	t = w->GetToolkit();
