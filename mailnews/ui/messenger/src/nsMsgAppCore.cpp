@@ -28,6 +28,10 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsAppShellCIDs.h"
+#include "nsIAppShellService.h"
+#include "nsIServiceManager.h"
+#include "nsIURL.h"
 
 static NS_DEFINE_IID(kIMsgAppCoreIID, NS_IDOMMSGAPPCORE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);

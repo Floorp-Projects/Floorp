@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME=messenger
 
 CPPSRCS =	\
+	nsMessengerFactory.cpp \
 	nsJSMsgAppCore.cpp	\
 	nsMsgAppCore.cpp	\
 	$(NULL)

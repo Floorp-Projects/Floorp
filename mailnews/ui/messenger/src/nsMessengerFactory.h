@@ -16,21 +16,16 @@
  * Reserved.
  */
 
-#ifndef __nsMsgAppCore_h
-#define __nsMsgAppCore_h
+#ifndef __nsMessengerFactory_h
+#define __nsMessengerFactory_h
 
-#include "nsCom.h"
-#include "nsIDOMMsgAppCore.h"
-
-#define NS_MSGAPPCORE_CID \
-{ /* 3f181950-c14d-11d2-b7f2-00805f05ffa5 */      \
-  0x3f181950, 0xc14d, 0x11d2,											\
-    {0xb7, 0xf2, 0x0, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
+#include "nsMsgAppCore.h"
 
 NS_BEGIN_EXTERN_C
 
 nsresult
-NS_NewMsgAppCore(nsIDOMMsgAppCore **);
+NS_NewMessengerFactory(const nsCID& aClass,
+                       nsIFactory **aFactory);
 
 NS_END_EXTERN_C
 
