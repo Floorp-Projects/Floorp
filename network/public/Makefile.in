@@ -23,7 +23,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE			= netlib
-LIBRARY_NAME		= netlib
 
 EXPORTS = nsIStreamListener.h           \
           nsIStreamObserver.h           \
