@@ -51,7 +51,7 @@ Rights Reserved.
             </description>
 				</vbox>
 				
-				<vbox id="cvbHome" class="cardViewGroup" flex="1">
+				<vbox id="cvbHome" class="cardViewGroup">
           <description class="CardViewHeading" id="cvhHome">&home.heading;</description>          
           <hbox>
             <vbox>
