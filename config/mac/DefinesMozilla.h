@@ -88,4 +88,6 @@
 
 #define NECKO 1
 
+#define DETECT_WEBSHELL_LEAKS 1
+
 #endif /* DefinesMozilla_h_ */
