@@ -25,9 +25,9 @@
 #include "nscore.h"
 
 typedef enum {
-  eDetecting = 0,
-  eFoundIt = 1,
-  eNotMe = 2
+  eDetecting = 0,   //we are still detecting, no sure answer yet, but caller can ask for confidence.
+  eFoundIt = 1,     //That's a positive answer
+  eNotMe = 2        //negative answer
 } nsProbingState;
 
 #define SHORTCUT_THRESHOLD      (float)0.95

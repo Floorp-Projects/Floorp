@@ -1,7 +1,27 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ */
 
 #include "nscore.h"
 #include "JpCntx.h"
 
+//This is hiragana 2-char sequence table, the number in each cell represents its frequency category
 char jp2CharContext[83][83] = 
 { 
 { 0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,},
@@ -100,6 +120,12 @@ void JapaneseContextAnalysis::HandleData(const char* aBuf, PRUint32 aLen)
   if (mDone)
     return;
 
+  //The buffer we got is byte oriented, and a character may span in more than one
+  //buffers. In case the last one or two byte in last buffer is not complete, we 
+  //record how many byte needed to complete that character and skip these bytes here.
+  //We can choose to record those bytes as well and analyse the character once it 
+  //is complete, but since a character will not make much difference, by simply skipping
+  //this character will simply our logic and improve performance.
   for (i = mNeedToSkipCharNum; i < aLen; )
   {
     order = GetOrder(aBuf+i, &charLen);
@@ -140,6 +166,7 @@ void JapaneseContextAnalysis::Reset(void)
 
 float  JapaneseContextAnalysis::GetConfidence()
 {
+  //This is just one way to calculate confidence. It works well for me.
   if (mTotalRel > MINIMUM_DATA_THRESHOLD)
     return ((float)(mTotalRel - mRelSample[0]))/mTotalRel;
   else 
@@ -149,11 +176,14 @@ float  JapaneseContextAnalysis::GetConfidence()
 
 PRInt32 SJISContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
 {
+  //find out current char's byte length
   if ((unsigned char)*str >= (unsigned char)0x81 && (unsigned char)*str <= (unsigned char)0x9f || 
       (unsigned char)*str >= (unsigned char)0xe0 && (unsigned char)*str <= (unsigned char)0xfc )
       *charLen = 2;
   else 
       *charLen = 1;
+
+  //return its order if it is hiragana
   if (*str == '\202' && 
         (unsigned char)*(str+1) >= (unsigned char)0x9f && 
         (unsigned char)*(str+1) <= (unsigned char)0xf1)
@@ -164,6 +194,7 @@ PRInt32 SJISContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
 
 PRInt32 EUCJPContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
 {
+  //find out current char's byte length
   if ((unsigned char)*str == (unsigned char)0x8e ||
       (unsigned char)*str >= (unsigned char)0xa1 && 
       (unsigned char)*str <= (unsigned char)0xfe)
@@ -173,6 +204,7 @@ PRInt32 EUCJPContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
   else
     *charLen = 1;
 
+  //return its order if it is hiragana
   if ((unsigned char)*str == (unsigned char)0xa4)
     return (unsigned char)*(str+1) - (unsigned char)0xa1;
   else 
