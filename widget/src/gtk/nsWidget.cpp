@@ -146,6 +146,13 @@ nsWidget::~nsWidget()
   if (!sWidgetCount--) {
     NS_IF_RELEASE(sLookAndFeel);
   }
+
+#ifdef USE_XIM
+  if (mIMECompositionUniString) {
+    delete[] mIMECompositionUniString;
+    mIMECompositionUniString = nsnull;
+  }
+#endif /* USE_XIM */
 }
 
 NS_IMETHODIMP nsWidget::GetAbsoluteBounds(nsRect &aRect)

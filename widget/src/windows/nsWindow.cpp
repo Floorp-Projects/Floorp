@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+//#define KE_DEBUG
+
 #include "nsWindow.h"
 #include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
@@ -46,6 +48,9 @@
 #include "nsNativeDragTarget.h"
 #include "nsIRollupListener.h"
 
+// we define the following because there are some MS sample code say
+// we should do it. We are not sure we really need it.
+#define IME_FROM_ON_CHAR
 
 //~~~ windowless plugin support
 #include "nsplugindefs.h"
@@ -61,6 +66,7 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 BOOL nsWindow::sIsRegistered = FALSE;
 
+
 ////////////////////////////////////////////////////
 static nsIRollupListener * gRollupListener           = nsnull;
 static nsIWidget         * gRollupWidget             = nsnull;
@@ -68,7 +74,19 @@ static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 
 nsWindow* nsWindow::gCurrentWindow = nsnull;
 
+#if 0
+// #ifdef KE_DEBUG
+static PRBool is_vk_down(int vk)
+{
+   SHORT st = GetKeyState(vk);
+   printf("is_vk_down vk=%x st=%x\n",vk, st);
+   return (st & 0x80) ? PR_TRUE : PR_FALSE;
+}
+#define IS_VK_DOWN is_vk_down
+#else
 #define IS_VK_DOWN(a) (PRBool)(((GetKeyState(a) & 0x80)) ? (PR_TRUE) : (PR_FALSE))
+#endif
+
 
 // Global variable 
 //     g_hinst - handle of the application instance 
@@ -79,6 +97,46 @@ extern HINSTANCE g_hinst;
 //
 #define IME_X_OFFSET	35
 #define IME_Y_OFFSET	35
+
+
+#ifdef IME_FROM_ON_CHAR
+static PRBool NS_IsDBCSLeadByte(UINT aCP, BYTE aByte)
+{
+   switch(aCP) {
+       case 932: 
+         return (((0x81<=aByte)&&(aByte<=0x9F))||((0xE0<=aByte)&&(aByte<=0xFC)));
+       case 936:
+       case 949:
+       case 950: 
+         return ((0x81<=aByte)&&(aByte<=0xFE));
+       default: 
+         return PR_FALSE;
+   };
+}
+#endif // IME_FROM_ON_CHAR
+
+static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
+{
+	int localeid=MAKELCID(aLangID,SORT_DEFAULT);
+	int numchar=GetLocaleInfo(localeid,LOCALE_IDEFAULTANSICODEPAGE,NULL,0);
+        char cp_on_stack[32];
+
+	char* cp_name;
+        if(numchar > 32)
+           cp_name  = new char[numchar];
+        else 
+           cp_name = cp_on_stack;
+	if (cp_name) {
+           GetLocaleInfo(localeid,LOCALE_IDEFAULTANSICODEPAGE,cp_name,numchar);
+           oCP = atoi(cp_name);
+           if(cp_name != cp_on_stack)
+               delete [] cp_name;
+           return PR_TRUE;
+	} else {
+           oCP = CP_ACP;
+           return PR_FALSE;
+        }
+}
 
 //-------------------------------------------------------------------------
 //
@@ -133,12 +191,13 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mIMECompClauseString = NULL;
 	mIMECompClauseStringSize = 0;
 	mIMECompClauseStringLength = 0;
-	mCurrentKeyboardCP = CP_ACP;
+        WORD kblayout = (WORD)GetKeyboardLayout(0);
+        LangIDToCP((WORD)(0x0FFFFL & kblayout), mCurrentKeyboardCP);
 
-#if 1
+#ifdef IME_FROM_ON_CHAR
 	mHaveDBCSLeadByte = false;
 	mDBCSLeadByte = '\0';
-#endif
+#endif // IME_FROM_ON_CHAR
 
   mNativeDragTarget = nsnull;
   mIsTopWidgetWindow = PR_FALSE;
@@ -1961,11 +2020,29 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
   event.charCode = aCharCode;
   event.keyCode  = aVirtualCharCode;
 
-  //printf("Type: %s charCode %d  keyCode %d ",  (aEventType == NS_KEY_UP?"Up":"Down"), event.charCode, event.keyCode);
-  //printf("Shift: %s Control %s Alt: %s \n",  (mIsShiftDown?"D":"U"), (mIsControlDown?"D":"U"), (mIsAltDown?"D":"U"));
+#ifdef KE_DEBUG
+  static cnt=0;
+  printf("%d DispatchKE Type: %s charCode %d  keyCode %d ", cnt++,  
+        (NS_KEY_PRESS == aEventType)?"PRESS":(aEventType == NS_KEY_UP?"Up":"Down"), 
+         event.charCode, event.keyCode);
+  printf("Shift: %s Control %s Alt: %s \n",  (mIsShiftDown?"D":"U"), (mIsControlDown?"D":"U"), (mIsAltDown?"D":"U"));
+  printf("[%c][%c][%c] <==   [%c][%c][%c][ space bar ][%c][%c][%c]\n", 
+             IS_VK_DOWN(NS_VK_SHIFT) ? 'S' : ' ',
+             IS_VK_DOWN(NS_VK_CONTROL) ? 'C' : ' ',
+             IS_VK_DOWN(NS_VK_ALT) ? 'A' : ' ',
+             IS_VK_DOWN(VK_LSHIFT) ? 'S' : ' ',
+             IS_VK_DOWN(VK_LCONTROL) ? 'C' : ' ',
+             IS_VK_DOWN(VK_LMENU) ? 'A' : ' ',
+             IS_VK_DOWN(VK_RMENU) ? 'A' : ' ',
+             IS_VK_DOWN(VK_RCONTROL) ? 'C' : ' ',
+             IS_VK_DOWN(VK_RSHIFT) ? 'S' : ' '
+
+  );
+#endif
 
   event.isShift   = mIsShiftDown;
   event.isControl = mIsControlDown;
+  event.isMeta   =  PR_FALSE;
   event.isAlt     = mIsAltDown;
   event.eventStructType = NS_KEY_EVENT;
 
@@ -2061,10 +2138,8 @@ ULONG nsWindow::IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey)
     case VK_F10:   
     case VK_F11:   
     case VK_F12: 
-#if 1
 	case VK_RETURN:
 	case VK_BACK:
-#endif
 		*aAsciiKey = aVirtualKeyCode;
       break;
 
@@ -2154,7 +2229,11 @@ BOOL TranslateToAscii(BYTE *aKeyState,
 //
 //
 //-------------------------------------------------------------------------
-#if 1
+#define WM_CHAR_LATER(vk) ( ((vk)<= VK_SPACE) || \
+                                 (('0'<=(vk))&&((vk)<='9')) || \
+                                 (('A'<=(vk))&&((vk)<='Z')))
+#define NO_WM_CHAR_LATER(vk) (! WM_CHAR_LATER(vk))
+
 BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
 {
   WORD asciiKey;
@@ -2169,47 +2248,23 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   //      do the right thing for all SPECIAL_KEY codes
   // "SPECIAL_KEY" keys don't generate a WM_CHAR, so don't generate an NS_KEY_PRESS
   // this is a special case for the delete key
-  if (aVirtualKeyCode==VK_DELETE)
+  if (aVirtualKeyCode==VK_DELETE) 
   {
     DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
+  } 
+  else if (NO_WM_CHAR_LATER(aVirtualKeyCode)) 
+  {
+    DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
+  } 
+  else if (mIsControlDown && 
+           (( NS_VK_0 <= aVirtualKeyCode)&&( aVirtualKeyCode <= NS_VK_9)))
+  {
+    // put the 0 - 9 in charcode instead of keycode.
+    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode, 0);
   }
 
   return result;
 }
-#else
-BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
-{ 
-  WORD asciiKey;
-
-  asciiKey = 0;
-
-  switch (IsSpecialChar(aVirtualKeyCode, &asciiKey)) {
-    case EXTENDED_KEY:
-      break;
-
-    // special keys don't generate an action but don't even go 
-    // through WM_CHAR
-    case SPECIAL_KEY:
-      break;
-
-    // standard keys are processed through WM_CHAR
-    case STANDARD_KEY:
-      asciiKey = 0; // just to be paranoid
-      break;
-  }
-
-  //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, aVirtualKeyCode, aScanCode);
-
-  // if we enter this if statement we expect not to get a WM_CHAR
-  if (asciiKey) {
-    //printf("Dispatching Key Down [%d]\n", asciiKey);
-    return DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
-  }
-
-  // always let the def proc process a WM_KEYDOWN
-  return FALSE;
-}
-#endif
 
 //-------------------------------------------------------------------------
 //
@@ -2250,51 +2305,47 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 //
 //
 //-------------------------------------------------------------------------
-#if 1
 BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte )
 {
   wchar_t	uniChar;
   char		charToConvert[2];
   size_t	length;
 
+#ifdef IME_FROM_ON_CHAR
   if (isMultiByte) {
 	  charToConvert[0]=HIBYTE(mbcsCharCode);
 	  charToConvert[1] = LOBYTE(mbcsCharCode);
 	  length=2;
-  } else {
+  } 
+  else 
+#endif
+  {
 	  charToConvert[0] = LOBYTE(mbcsCharCode);
 	  length=1;
   }
-  // if we get a '\n', ignore it because we already processed it in OnKeyDown.
-  // This is the safest assumption since not always pressing enter produce a WM_CHAR
-  //if (IsDBCSLeadByte(aVirtualKeyCode) || aVirtualKeyCode == 0xD /*'\n'*/ ) {
-	//	return FALSE;
-	//}
-  //printf("OnChar (KeyDown) %d\n", virtualKeyCode);
-  ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
-	  &uniChar,sizeof(uniChar));
 
+  
+  if(mIsControlDown && (virtualKeyCode <= 0x1A)) // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details  
+  { 
+     uniChar = virtualKeyCode - 1 + NS_VK_A ;
+     virtualKeyCode = 0;
+  } 
+  else 
+  if(virtualKeyCode < 0x20) 
+  {
+     uniChar = 0;
+  } 
+  else 
+  {
+     ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
+	  &uniChar,sizeof(uniChar));
+     virtualKeyCode = 0;
+     mIsShiftDown = PR_FALSE;
+  }
   return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode);
 
   //return FALSE;
 }
-
-#else
-BOOL nsWindow::OnChar( UINT aVirtualKeyCode )
-{
-
-  // if we get a '\n', ignore it because we already processed it in OnKeyDown.
-  // This is the safest assumption since not always pressing enter produce a WM_CHAR
-  //if (IsDBCSLeadByte(aVirtualKeyCode) || aVirtualKeyCode == 0xD /*'\n'*/ ) {
-	//	return FALSE;
-	//}
-  //printf("OnChar (KeyDown) %d\n", aVirtualKeyCode);
-
-  return DispatchKeyEvent(NS_KEY_DOWN, aVirtualKeyCode, aVirtualKeyCode);
-
-  //return FALSE;
-}
-#endif
 
 
 
@@ -2399,86 +2450,98 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_PAINT:
             result = OnPaint();
             break;
-#if 1
-		case WM_SYSCHAR:
-		case WM_CHAR: 
-			{
-				unsigned char	ch = (unsigned char)wParam;
-				UINT			char_result;
-
-				//
-				// check first for backspace or return, handle them specially 
-				//
-				if (ch==0x0d || ch==0x08) {
-					mHaveDBCSLeadByte = PR_FALSE;
-					result = OnChar(ch,ch==0x0d ? VK_RETURN : VK_BACK,true);
-					break;
-				}
-
-				//
-				// check first to see if we have the first byte of a two-byte DBCS sequence
-				//  if so, store it away and do nothing until we get the second sequence
-				//
-				if (IsDBCSLeadByte(ch) && !mHaveDBCSLeadByte) {
-					mHaveDBCSLeadByte = TRUE;
-					mDBCSLeadByte = ch;
-					result = PR_TRUE;
-					break;
-				}
-
-				//
-				// at this point, we may have the second byte of a DBCS sequence or a single byte
-				// character, depending on the previous message.  Check and handle accordingly
-				//
-				if (mHaveDBCSLeadByte) {
-					char_result = (mDBCSLeadByte << 8) | ch;
-					mHaveDBCSLeadByte = FALSE;
-					mDBCSLeadByte = 0;
-					result = OnChar(char_result,ch,true);
-				} else {
-					char_result = ch;
-					result = OnChar(char_result,ch,false);
-				}
-
-				break;
-			}
-#else
-        case WM_SYSCHAR:
-        case WM_CHAR:
+	case WM_SYSCHAR:
+	case WM_CHAR: 
+        {
+#ifdef KE_DEBUG
+            printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , ch, wParam, lParam);
+#endif
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-
-            // Process non-standard Control Keys
-            // I am unclear whether I should process these like this (rods)
-            if (mIsControlDown && !mIsAltDown &&
-                (wParam >= 0x01 && wParam <= 0x1A)) {  // a-z
-              wParam += 0x40; // 64 decimal
-            } else if (!mIsControlDown && mIsAltDown &&
-                      (wParam >= 0x61 && wParam <= 0x7A)) {  // a-z
-              wParam -= 0x20; // 32 decimal
+            if(WM_SYSCHAR==msg)
+            {
+                mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+                mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+            } else { // WM_KEYUP
+                // If the Context Code bit is down and we got a WM_KEY
+                // it is a key press for character, not accelerator
+                // see p246 of Programming Windows 95 [Charles Petzold] for details
+                mIsControlDown = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_CONTROL);
+                mIsAltDown     = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_ALT);
             }
 
-			      if (!mIMEIsComposing)
-              result = OnChar(wParam);
-			      else
-				      result = PR_FALSE;
-             
-          break;
-#endif
+            unsigned char    ch = (unsigned char)wParam;
+            UINT            char_result;
+  
+            //
+            // check first for backspace or return, handle them specially 
+            //
+            if (ch==0x0d || ch==0x08) {
+
+#ifdef IME_FROM_ON_CHAR
+                mHaveDBCSLeadByte = PR_FALSE;
+#endif // IME_FROM_ON_CHAR
+
+                result = OnChar(ch,ch==0x0d ? VK_RETURN : VK_BACK,true);
+                break;
+            }
+  
+#ifdef IME_FROM_ON_CHAR
+            //
+            // check first to see if we have the first byte of a two-byte DBCS sequence
+            //  if so, store it away and do nothing until we get the second sequence
+            //
+            if (NS_IsDBCSLeadByte(mCurrentKeyboardCP, ch) && !mHaveDBCSLeadByte) {
+                mHaveDBCSLeadByte = TRUE;
+                mDBCSLeadByte = ch;
+                result = PR_TRUE;
+                break;
+            }
+  
+            //
+            // at this point, we may have the second byte of a DBCS sequence or a single byte
+            // character, depending on the previous message.  Check and handle accordingly
+            //
+            if (mHaveDBCSLeadByte) {
+                char_result = (mDBCSLeadByte << 8) | ch;
+                mHaveDBCSLeadByte = FALSE;
+                mDBCSLeadByte = 0;
+                result = OnChar(char_result,ch,true);
+            } 
+            else 
+#endif // IME_FROM_ON_CHAR
+            {
+                char_result = ch;
+                result = OnChar(char_result,ch,false);
+            }
+  
+            break;
+        }
         // Let ths fall through if it isn't a key pad
         case WM_SYSKEYUP:
             // if it's a keypad key don't process a WM_CHAR will come or...oh well...
             if (IsKeypadKey(wParam, lParam & 0x01000000)) {
-				      result = PR_TRUE;
-              break;
+                result = PR_TRUE;
+                break;
             }
         case WM_KEYUP: 
+#ifdef KE_DEBUG
+            printf("%s\t\twp=%x\tlp=%x\n",  
+                   (WM_KEYUP==msg)?"WM_KEYUP":"WM_SYSKEYUP" , wParam, lParam);
+#endif
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+            if(WM_SYSKEYUP==msg)
+            {
+                mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+                mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+            } else { // WM_KEYUP
+                // If the Context Code bit is down and we got a WM_KEY
+                // it is a key press for character, not accelerator
+                // see p246 of Programming Windows 95 [Charles Petzold] for details
+                mIsControlDown = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_CONTROL);
+                mIsAltDown     = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_ALT);
+            }
 
-			      if (!mIMEIsComposing)
+            if (!mIMEIsComposing)
               result = OnKeyUp(wParam, (HIWORD(lParam) & 0xFF));
 			      else
 				      result = PR_FALSE;
@@ -2504,14 +2567,27 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               break;
             }
         case WM_KEYDOWN: {
+#ifdef KE_DEBUG
+            printf("%s\t\twp=%4x\tlp=%8x\n",  
+                   (WM_KEYDOWN==msg)?"WM_KEYDOWN":"WM_SYSKEYDOWN" , wParam, lParam);
+#endif
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-
-			      if (!mIMEIsComposing)
-			        result = OnKeyDown(wParam, (HIWORD(lParam) & 0xFF));
-			      else
-				      result = PR_FALSE;
+            if(WM_SYSKEYDOWN==msg)
+            {
+                mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+                mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+            } else { // WM_KEYUP
+                // If the Context Code bit is down and we got a WM_KEY
+                // If the Context Code bit is down and we got a WM_KEY
+                // it is a key press for character, not accelerator
+                // see p246 of Programming Windows 95 [Charles Petzold] for details
+                mIsControlDown = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_CONTROL);
+                mIsAltDown     = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_ALT);
+            }
+            if (!mIMEIsComposing)
+               result = OnKeyDown(wParam, (HIWORD(lParam) & 0xFF));
+	    else
+	       result = PR_FALSE;
             }
             break;
 
@@ -2773,18 +2849,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			printf("input language changed\n");
 #endif
 
-			int langid =(int)(lParam&0xFFFF);
-			int localeid=MAKELCID(langid,SORT_DEFAULT);
-			int numchar=GetLocaleInfo(localeid,LOCALE_IDEFAULTANSICODEPAGE,NULL,0);
-			char* cp_name = new char[numchar];
-			if (cp_name) {
-				GetLocaleInfo(localeid,LOCALE_IDEFAULTANSICODEPAGE,cp_name,numchar);
-				mCurrentKeyboardCP = atoi(cp_name);
-				delete [] cp_name;
-				*aRetValue=TRUE;
-				result = PR_TRUE;
-			}
-
+			result = PR_FALSE;  // always pass to child window
+                        *aRetValue = LangIDToCP((WORD)(lParam&0x0FFFF),mCurrentKeyboardCP);
+#ifdef IME_FROM_ON_CHAR
+                        mHaveDBCSLeadByte=PR_FALSE; // reset this when we change keyboard layout
+#endif
+   
 			break;
 		}
 		case WM_IME_STARTCOMPOSITION: {
@@ -3248,6 +3318,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 
   event.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
   event.isControl = IS_VK_DOWN(NS_VK_CONTROL);
+  event.isMeta    = PR_FALSE;
   event.isAlt     = IS_VK_DOWN(NS_VK_ALT);
   event.eventStructType = NS_MOUSE_EVENT;
 
@@ -3679,6 +3750,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext)
   event.theText = mIMECompositionUniString;
   event.isShift	= mIsShiftDown;
   event.isControl = mIsControlDown;
+  event.isMeta	= PR_FALSE;
   event.isAlt = mIsAltDown;
   event.eventStructType = NS_TEXT_EVENT;
 

@@ -107,18 +107,15 @@ struct nsScrollbarEvent : public nsGUIEvent {
 
 
 struct nsInputEvent : public nsGUIEvent {
-                /// PR_TRUE indicates the shift key in down
+                /// PR_TRUE indicates the shift key is down
     PRBool          isShift;        
-                /// PR_TRUE indicates the control key in down
+                /// PR_TRUE indicates the control key is down
     PRBool          isControl;      
-                /// PR_TRUE indicates the alt key in down
+                /// PR_TRUE indicates the alt key is down
     PRBool          isAlt;          
-#ifdef XP_MAC
-                /// PR_TRUE indicates the command key in down
-                /// For now, it's only used in Widget: not for export
-                /// in nsIDOMEvent.h or nsJSEvent.cpp (later maybe)
-    PRBool          isCommand;          
-#endif
+                /// PR_TRUE indicates the meta key is down
+                /// (or, on Mac, the Command key)
+    PRBool          isMeta;
 };
 
 /**
