@@ -28,3 +28,7 @@ ecma_3/GetSet/getset-002.js
 js1_5/Scope/scope-001.js
 #Rhino implements Date.toLocaleTimeString() differently than SpiderMonkey
 ecma_3/Date/15.9.5.7.js
+#Rhino - as permitted by ECMA - does not allow indirect calls to eval
+js1_4/Eval/eval-001.js
+js1_4/Eval/eval-002.js
+js1_4/Eval/eval-003.js
