@@ -42,6 +42,12 @@ NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMXULDocument);
 NS_DEF_PTR(nsIDOMNodeList);
 
+//
+// XULDocument property ids
+//
+enum XULDocument_slots {
+  XULDOCUMENT_POPUP = -1
+};
 
 /***********************************************************************/
 //
@@ -59,7 +65,18 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case XULDOCUMENT_POPUP:
+      {
+        nsIDOMElement* prop;
+        if (NS_OK == a->GetPopup(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -87,7 +104,19 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case XULDOCUMENT_POPUP:
+      {
+        nsIDOMElement* prop;
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                kIElementIID, "Element",
+                                                cx, *vp)) {
+          return JS_FALSE;
+        }
+      
+        a->SetPopup(prop);
+        NS_IF_RELEASE(prop);
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
@@ -213,7 +242,7 @@ XULDocumentGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsva
 //
 JSClass XULDocumentClass = {
   "XULDocument", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetXULDocumentProperty,
@@ -230,6 +259,7 @@ JSClass XULDocumentClass = {
 //
 static JSPropertySpec XULDocumentProperties[] =
 {
+  {"popup",    XULDOCUMENT_POPUP,    JSPROP_ENUMERATE},
   {0}
 };
 

@@ -222,6 +222,8 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
         nsString popupAlignment("topleft");
         element->GetAttribute("popupalign", popupAlignment);
 
+		// Set the popup in the document for the duration of this call.
+		xulDocument->SetPopup(element);
         if (anchorAlignment == "") {
           // We aren't anchored. Create on the point.
           // Retrieve our x and y position.
@@ -239,6 +241,7 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
           domWindow->CreateAnchoredPopup(element, popupContent,
                                          anchorAlignment, type, popupAlignment);
         }
+		xulDocument->SetPopup(nsnull);
       }
       NS_RELEASE(global);
     }

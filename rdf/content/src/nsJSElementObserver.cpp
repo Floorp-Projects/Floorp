@@ -331,7 +331,7 @@ ElementObserverOnRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, j
 //
 JSClass ElementObserverClass = {
   "ElementObserver", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetElementObserverProperty,
