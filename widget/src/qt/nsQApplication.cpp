@@ -41,7 +41,7 @@
 #include "nsQApplication.h"
 #include "nsQWidget.h"
 
-#include <qwindowsstyle.h>
+#include <qstylefactory.h>
 #include <qcursor.h>
 
 #ifdef DBG_JCG
@@ -135,7 +135,7 @@ nsQApplication::nsQApplication(int argc,char** argv)
   NS_ASSERTION(!mInstance, "Attempt to create duplicate QApplication Object.");
   mInstance = this;
   setGlobalMouseTracking(true);
-  setStyle(new QWindowsStyle);
+  setStyle(QStyleFactory::create("windows"));
   setOverrideCursor(QCursor(ArrowCursor),PR_TRUE);
   connect(this,SIGNAL(lastWindowClosed()),this,SLOT(quit()));
   printf("Exit: QApplication::QApplication\n");
