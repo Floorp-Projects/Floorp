@@ -624,15 +624,18 @@ nsresult nsXIFDTD::HandleTextToken(CToken* aToken) {
 
 
 void nsXIFDTD::AddAttribute(nsIParserNode& aNode) {
-  nsString key;
-  nsString value;
-  PRBool   hasValue;
-
-  hasValue = GetAttributePair(aNode,key,value);
-  CAttributeToken* attribute = new CAttributeToken(key,value);
   nsIParserNode* top = PeekNode();
   if (top != nsnull)
+  {
+    nsString key;
+    nsString value;
+    PRBool   hasValue;
+
+    hasValue = GetAttributePair(aNode,key,value);
+    // XXX should we still be calling AddAttribute if hasValue is false?
+    CAttributeToken* attribute = new CAttributeToken(key,value);
     ((nsCParserNode*)top)->AddAttribute(attribute);
+  }
 }
 
 
