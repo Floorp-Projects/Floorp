@@ -132,6 +132,19 @@ ensure_entry_widget()
   if (!gEntryWidget) {
     gEntryWidget = gtk_entry_new();
     setup_widget_prototype(gEntryWidget);
+#ifdef _AIX
+    /* On AIX, calling gdk_widget_realize on a gtk entry with an
+     * input context style of type GDK_IM_STATUS_NOTHING causes a 
+     * root status window to come up. It remains up until the widget 
+     * is destroyed (which is never in this case). To work around 
+     * this problem, we destroy its XIC here to prevent the root 
+     * status window from remaining on the screen. */
+    if (GTK_EDITABLE(gEntryWidget)->ic &&
+        GTK_EDITABLE(gEntryWidget)->ic_attr->style & GDK_IM_STATUS_NOTHING) {
+      gdk_ic_destroy(GTK_EDITABLE(gEntryWidget)->ic);
+      GTK_EDITABLE(gEntryWidget)->ic = NULL;
+    }
+#endif
   }
   return MOZ_GTK_SUCCESS;
 }
