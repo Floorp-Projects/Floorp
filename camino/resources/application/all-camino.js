@@ -53,6 +53,8 @@ pref("font.size.fixed.x-western", 12);
 pref("font.size.minimum-size.x-western", 10);
 */
 
+pref("accessibility.tabfocus", 3);
+
 pref("browser.quartz.enable.all_font_sizes", true);
 
 pref("chimera.store_passwords_with_keychain", true);
