@@ -1,5 +1,3 @@
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
 toolbox
   {
     background-color      : -moz-Dialog;
@@ -44,7 +42,7 @@ toolbargrippy
     border-top            : 1px solid ThreeDHighlight;
     border-right          : 1px solid ThreeDShadow;
     border-bottom         : 1px solid ThreeDShadow;
-    width                 : 10px;
+    width                 : 9px;
     padding-bottom        : 1px;
   }
 
@@ -56,7 +54,7 @@ toolbargrippy
 
 .toolbargrippy-texture
   {
-    margin                : 5px 3px 1px 2px;
+    margin                : 2px 1px 0px 0px;
     background-image      : url("chrome://global/skin/toolbargrippy-texture.gif");
     background-position   : 50% 0%;
     background-repeat     : repeat-y;
@@ -69,8 +67,8 @@ toolbargrippy[tbgrippy-collapsed="true"]
     border-top            : 1px solid ThreeDHighlight;
     border-right          : 1px solid ThreeDShadow;
     border-bottom         : 1px solid ThreeDShadow;
-    height                : 12px;
-    padding-right         : 1px;
+    height                : 10px;
+    width                 : 30px;
   }
 
 .toolbargrippy-twisty-collapsed
@@ -79,15 +77,13 @@ toolbargrippy[tbgrippy-collapsed="true"]
     margin-left           : 2px;
   }
 
-
 .toolbargrippy-texture-collapsed
   {
-    margin                : 2px 1px 1px 5px;
+    margin:               : 1px 5px 1px 2px;
     background-image      : url("chrome://global/skin/tbg-texture-collapsed.gif");
     background-position   : 0% 50%;
     background-repeat     : repeat-x;
   } 
-
 
 .collapsed-tray-spacer
   {
