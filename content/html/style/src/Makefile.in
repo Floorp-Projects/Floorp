@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  view \
 		  intl \
+		  pref \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -71,6 +72,7 @@ CPPSRCS		= \
 		nsDOMCSSValueList.cpp \
 		nsDOMCSSRect.cpp \
 		nsDOMCSSRGBColor.cpp \
+		nsStyleUtil.cpp \
 		$(NULL)
 
 EXPORTS		= \

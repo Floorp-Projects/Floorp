@@ -8,3 +8,4 @@ nsICSSParser.h
 nsICSSPseudoComparator.h
 nsICSSStyleSheet.h
 nsIMediaList.h
+nsStyleUtil.h
