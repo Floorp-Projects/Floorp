@@ -41,8 +41,8 @@ MenuSpec XFE_NavCenterFrame::file_menu_spec[] = {
 
 MenuSpec XFE_NavCenterFrame::menu_bar_spec[] = {
   { xfeMenuFile, 	CASCADEBUTTON, (MenuSpec*)&XFE_NavCenterFrame::file_menu_spec },
-  { xfeMenuWindow, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::window_menu_spec },
   { "bookmarksSubmenu",	CASCADEBUTTON, XFE_Frame::bookmark_submenu_spec },
+  { xfeMenuWindow, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::window_menu_spec },
   { xfeMenuHelp, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::help_menu_spec },
   { NULL }
 };

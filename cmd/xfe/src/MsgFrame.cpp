@@ -208,8 +208,8 @@ MenuSpec XFE_MsgFrame::menu_bar_spec[] = {
   { xfeMenuView, 	CASCADEBUTTON, view_menu_spec },
   { xfeMenuGo,	 	CASCADEBUTTON, XFE_ThreadFrame::go_menu_spec },
   { xfeMenuMessage, 	CASCADEBUTTON, message_menu_spec },
-  { xfeMenuWindow,	CASCADEBUTTON, XFE_Frame::window_menu_spec },
   { "bookmarksSubmenu",	CASCADEBUTTON, XFE_Frame::bookmark_submenu_spec },
+  { xfeMenuWindow,	CASCADEBUTTON, XFE_Frame::window_menu_spec },
   { xfeMenuHelp, 	CASCADEBUTTON, XFE_Frame::help_menu_spec },
   { NULL }
 };

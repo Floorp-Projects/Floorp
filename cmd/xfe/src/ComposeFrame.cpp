@@ -192,8 +192,8 @@ MenuSpec XFE_ComposeFrame::menu_bar_spec[] = {
   { xfeMenuEdit, 	CASCADEBUTTON, (MenuSpec*)&XFE_ComposeFrame::edit_menu_spec },
   { xfeMenuView, 	CASCADEBUTTON, (MenuSpec*)&XFE_ComposeFrame::view_menu_spec },
   { xfeMenuTools, 	CASCADEBUTTON, (MenuSpec*)&text_tools_menu_spec },
-  { xfeMenuWindow, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::window_menu_spec },
   { "bookmarksSubmenu",	CASCADEBUTTON, XFE_Frame::bookmark_submenu_spec },
+  { xfeMenuWindow, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::window_menu_spec },
   { xfeMenuHelp,        CASCADEBUTTON, (MenuSpec*)&XFE_Frame::help_menu_spec},
   { NULL }
 };
