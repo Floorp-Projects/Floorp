@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Constantine A. Murenin <cnst+moz#bugmail.mojo.ru>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -103,26 +104,24 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             PRInt32 second, 
                             PRUnichar **dateTimeString)
 {
+  nsresult rv;
   nsAutoString localeName(aLocale);
   *dateTimeString = nsnull;
 
-  // get locale service 
-  nsCOMPtr<nsILocaleService> localeService = do_GetService(kLocaleServiceCID);
-  if (!localeService)
-    return NS_ERROR_NOT_AVAILABLE;
-
   nsCOMPtr<nsILocale> locale;
-  if (localeName.IsEmpty())
-    localeService->GetApplicationLocale(getter_AddRefs(locale));
-  else
-    localeService->NewLocale(localeName, getter_AddRefs(locale));
+  // re-initialise locale pointer only if the locale was given explicitly
+  if (!localeName.IsEmpty()) {
+    // get locale service
+    nsCOMPtr<nsILocaleService> localeService(do_GetService(kLocaleServiceCID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // get locale
+    rv = localeService->NewLocale(localeName, getter_AddRefs(locale));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  if (!locale)
-    return NS_ERROR_NOT_AVAILABLE;
+  nsCOMPtr<nsIDateTimeFormat> dateTimeFormat(do_CreateInstance(kDateTimeFormatCID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDateTimeFormat> dateTimeFormat = do_CreateInstance(kDateTimeFormatCID);
-  if (!dateTimeFormat)
-    return NS_ERROR_NOT_AVAILABLE;
   tm tmTime;
   time_t timetTime;
 
@@ -136,8 +135,6 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
   tmTime.tm_yday = tmTime.tm_wday = 0;
   tmTime.tm_isdst = -1;
   timetTime = mktime(&tmTime);
-
-  nsresult rv;
 
   if ((time_t)-1 != timetTime) {
     rv = dateTimeFormat->FormatTime(locale, dateFormatSelector, timeFormatSelector, 
