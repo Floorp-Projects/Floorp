@@ -708,7 +708,7 @@ $(MY_CONFIG) $(MY_RULES):
 # or in $(MY_RULES)
 #
 ifdef ETAGS
-ifneq ($(CSRCS)$(HEADERS),)
+ifneq ($(CSRCS)$(CPPSRCS)$(HEADERS),)
 all:: TAGS
 TAGS:: $(CSRCS) $(CPPSRCS) $(HEADERS)
 	$(ETAGS) $(CSRCS) $(CPPSRCS) $(HEADERS)
