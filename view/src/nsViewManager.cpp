@@ -2562,7 +2562,7 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegi
     if (parent != nsnull) {
       view->ConvertToParentCoords(&oldClipRect.x, &oldClipRect.y);
       view->ConvertToParentCoords(&newClipRect.x, &newClipRect.y);
-      InvalidateRectDifference(parent, oldClipRect, newClipRect, NS_VMREFRESH_NO_SYNC | NS_VMREFRESH_FORCHILD);
+      InvalidateRectDifference(parent, oldClipRect, newClipRect, NS_VMREFRESH_NO_SYNC);
     }
   }
 
