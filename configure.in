@@ -582,6 +582,10 @@ case "$target" in
 	DSO_LDOPTS='-b -E -L$(DIST)/bin'
 	DSO_CFLAGS=""
 	DSO_PIC_CFLAGS="+Z"
+    else
+	DSO_LDOPTS='-b -E -L$(DIST)/bin -L$(DIST)/lib'
+	MKSHLIB='$(LD) $(DSO_LDOPTS)'
+	MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     fi
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
