@@ -19,7 +19,7 @@
  * 
  * Contributor(s): 
  *   Dan Haddix (dan6992@hotmail.com)
- *   Brian King
+ *   Brian King (briano9@yahoo.com)
  */
 
 var tHide = false;
@@ -29,6 +29,9 @@ var mapName = '';
 var imageMap = null;
 var imageEl;
 var srcInputValue = null;
+var marquee = null;
+var frameDoc = null;
+var buttonArray = new Array();
 
 function Startup(){
   if (!InitEditorShell())
@@ -56,7 +59,7 @@ function initDialog(){
   //check for relative url
   if (!((srcInput.value.indexOf("http://") != -1) || (srcInput.value.indexOf("file://") != -1))){
     if (editorShell.editorDocument.location == "about:blank"){
-      alert("Relative URLs can only be used on documents which have been saved");
+      alert(GetString("ImapRelative"));
       window.close();
       //TODO: add option to save document now
     }
@@ -119,7 +122,7 @@ function initDialog(){
 }
 
 function imgError(){
-  alert("Error loading image "+srcInputValue+"\nPlease check the URL and try again");
+  alert(GetString("ImapError")+" " + srcInputValue+"."+GetString("ImapCheck"));
 }
 
 function fixBgDiv(){
@@ -138,23 +141,23 @@ function hideToolbar(){
     // If it is show it
     document.getElementById("toolbar").setAttribute("collapsed", "false");
     // Set the menu items text back to "Hide Toolbar"
-    document.getElementById("view_hidetoolbar").setAttribute("value", "Hide Toolbar");
+    document.getElementById("view_hidetoolbar").setAttribute("value", GetString("HideToolbar"));
     tHide = false
   }
   else{
     // If not hide it
     document.getElementById("toolbar").setAttribute("collapsed", "true");
     //Set the menu items text to "Show Toolbar"
-    document.getElementById("view_hidetoolbar").setAttribute("value", "Show Toolbar");
+    document.getElementById("view_hidetoolbar").setAttribute("value", GetString("ShowToolbar"));
     tHide = true;
   }
 }
 
 function highContrast(){
-  if (highCont){
+  if (highCont == true){
     frameDoc.getElementById("bgDiv").style.background = "url('chrome://editor/skin/images/Map_checker.gif')";
     frameDoc.getElementById("bgDiv").style.backgroundColor = "white";
-    imageEl.style.opacity = "1.0";
+    imageEl.style.setProperty("-moz-opacity", "1.0", true);
     document.getElementById("Map:Contrast").setAttribute("checked", "false");
     document.getElementById("Map:Contrast").setAttribute("toggled", "false");
     highCont = false;
@@ -162,7 +165,7 @@ function highContrast(){
   else{
     frameDoc.getElementById("bgDiv").style.background = "url('')";
     frameDoc.getElementById("bgDiv").style.backgroundColor = "#D2D2D2";
-    imageEl.style.opacity = ".3";
+    imageEl.style.setProperty("-moz-opacity", ".3", true);
     document.getElementById("Map:Contrast").setAttribute("checked", "true");
     document.getElementById("Map:Contrast").setAttribute("toggled", "true");
     highCont = true;
@@ -331,4 +334,12 @@ function deleteAreas(){
     area = imageMap.firstChild;
   }
   return true;
+}
+
+// This is contained in editor.js (should be in a common js file
+// I did not want to include the whole file so I copied the function here
+// It retrieves strings from editor string bundle
+function GetString(id)
+{
+  return editorShell.GetString(id);
 }
