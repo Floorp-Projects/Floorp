@@ -313,8 +313,21 @@ treecell[hidden="true"] {
 /********** Tab widget *********/
 
 tab {
-  behavior: url(chrome://global/content/xulBindings.xml#tab);
+  behavior: url(chrome://global/content/tabBindings.xml#tab);
 }
+
+tabpanel {
+  behavior: url(chrome://global/content/tabBindings.xml#tabpanel);
+}
+
+tabcontrol {
+  behavior: url(chrome://global/content/tabBindings.xml#tabcontrol);
+}
+
+tabbox {
+  behavior: url(chrome://global/content/tabBindings.xml#tabbox);
+}
+
 
 :-moz-deck-hidden {
    visibility: hidden;
@@ -353,7 +366,7 @@ button.bottom {
   behavior: url(chrome://global/content/xulBindings.xml#buttonbottom);
 }
 
-menuseparator, separator {
+toolbarseparator, menuseparator, separator {
   behavior: url(chrome://global/content/xulBindings.xml#separator);
 }
 
