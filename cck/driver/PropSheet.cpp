@@ -61,6 +61,7 @@ BEGIN_MESSAGE_MAP(CPropSheet, CPropertySheet)
 		// NOTE - the ClassWizard will add and remove mapping macros here.
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_FEEDBACK_BUTTON, OnButtonCopy)
+	ON_BN_CLICKED(IDCANCEL, OnCancelButn)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -106,4 +107,13 @@ void CPropSheet::OnButtonCopy()
 
 	theInterpreter->OpenBrowser((char*)(LPCTSTR)Feedback);
 
+}
+
+void CPropSheet::OnCancelButn()
+{
+
+	if(::MessageBox(m_hWnd, "Are you sure you want to exit?",
+       "Confirmation", MB_YESNO | MB_DEFBUTTON2 | MB_ICONQUESTION) == IDNO)
+		return;
+	CPropSheet::EndDialog(IDCANCEL);
 }
