@@ -64,7 +64,8 @@ function OnLoadImportDialog()
 	progressInfo.importType = null;
 
 	// look in arguments[0] for parameters
-	if (window.arguments && window.arguments[0] && window.arguments.importType)
+	if (window.arguments && window.arguments.length >= 1 && 
+            "importType" in window.arguments[0] && window.arguments[0].importType)
 	{
 		// keep parameters in global for later
 		importType = window.arguments[0].importType;
@@ -143,6 +144,7 @@ function ImportDialogOKButton()
 		selectedModuleName = name;
 		if (module) 
 		{
+			var meterText = "";
 			switch(importType)
 			{
 				case "mail":
@@ -164,7 +166,7 @@ function ImportDialogOKButton()
 							return( true);
 						}
 						else {
-							var meterText = GetFormattedBundleString('MailProgressMeterText', name);
+							meterText = GetFormattedBundleString('MailProgressMeterText', name);
               header.setAttribute("description", meterText);
               
               progressStatusEl.setAttribute("value", "");
@@ -201,7 +203,7 @@ function ImportDialogOKButton()
 							return( true);
 						}
 						else {
-							var meterText = GetFormattedBundleString('MailProgressMeterText', name);
+							meterText = GetFormattedBundleString('MailProgressMeterText', name);
               header.setAttribute("description", meterText);
               
               progressStatusEl.setAttribute("value", "");
@@ -306,13 +308,14 @@ function AddModuleToList(moduleName, index)
 function ContinueImport( info) {
   var isMail = info.importType == 'mail' ? true : false;
 	var clear = true;
+	var deck;
 
 	if (info.importInterface) {
 		if (!info.importInterface.ContinueImport()) {
 			info.importSuccess = false;
 			clearInterval( info.intervalState);
 			if (info.progressWindow != null) {
-				var deck = document.getElementById("stateDeck");
+				deck = document.getElementById("stateDeck");
         deck.setAttribute("index", "3");
 				info.progressWindow = null;
 			}
@@ -341,7 +344,7 @@ function ContinueImport( info) {
 			clearInterval( info.intervalState);
 			info.importSuccess = true;
 			if (info.progressWindow) {
-				var deck = document.getElementById("stateDeck");
+				deck = document.getElementById("stateDeck");
         deck.setAttribute("index", "3");
 				info.progressWindow = null;
 			}
@@ -517,7 +520,7 @@ function ImportSettings( module, newAccount, error) {
 	// interesting, we need to return the account that new
 	// mail should be imported into?
 	// that's really only useful for "Upgrade"
-	var result = setIntf.Import( newAccount);
+	result = setIntf.Import( newAccount);
 	if (result == false) {
 		error.value = GetBundleString( 'ImportSettingsFailed');
 	}
