@@ -4143,14 +4143,16 @@ PRBool
 nsHTMLDocument::IsInSelection(nsIDOMSelection* aSelection,
                               const nsIContent* aContent) const
 {
+  nsIAtom* tag;
+  nsresult rv = aContent->GetTag(tag);
+  PRBool retval;
+
 #if 0
   // HTML document has to include body in the selection,
   // so that output can see style nodes on the body
   // in case the caller doesn't know to specify wrap column
   // or preformatted or similar styles.
-  nsIAtom* tag;
-  nsresult rv = aContent->GetTag(tag);
-  PRBool retval = (NS_SUCCEEDED(rv) && tag == nsHTMLAtoms::body);
+  retval = (NS_SUCCEEDED(rv) && tag == nsHTMLAtoms::body);
   if (retval)
   {
     NS_IF_RELEASE(tag);
