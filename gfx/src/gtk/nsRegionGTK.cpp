@@ -45,8 +45,7 @@ NS_IMPL_RELEASE(nsRegionGTK)
 
 nsresult nsRegionGTK::Init(void)
 {
-  //NS_ADDREF_THIS();
-  // should this be here?
+  NS_ADDREF_THIS();
   mRegion = ::gdk_region_new();
   mRegionType = eRegionComplexity_empty;
   return NS_OK;

@@ -27,7 +27,7 @@ public:
   nsRegionGTK();
   virtual ~nsRegionGTK();
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   virtual nsresult Init();
 
