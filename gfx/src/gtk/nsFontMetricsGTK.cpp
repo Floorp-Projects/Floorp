@@ -78,8 +78,6 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
     mFont = nsnull;
   }
 
-#ifdef FONT_SWITCHING
-
   if (mFonts) {
     delete [] mFonts;
     mFonts = nsnull;
@@ -91,20 +89,9 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
   }
 
   mFontHandle = nsnull;
-
-#else
-
-  if (nsnull != mFontHandle) {
-    ::gdk_font_unref (mFontHandle);
-  }
-
-#endif
-
 }
 
 NS_IMPL_ISUPPORTS1(nsFontMetricsGTK, nsIFontMetrics)
-
-#ifdef FONT_SWITCHING
 
 static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
@@ -136,14 +123,10 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   return PR_TRUE;
 }
 
-#endif /* FONT_SWITCHING */
-
 NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIDeviceContext* aContext)
 {
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
-
-#ifdef FONT_SWITCHING
 
   mFont = new nsFont(aFont);
   mLangGroup = aLangGroup;
@@ -216,181 +199,6 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mFontHandle = f->mFont;
 
   RealizeFont();
-
-#else /* FONT_SWITCHING */
-
-  nsAutoString  firstFace;
-  if (NS_OK != aContext->FirstExistingFont(aFont, firstFace)) {
-    aFont.GetFirstFamily(firstFace);
-  }
-
-  char        **fnames = nsnull;
-  PRInt32     namelen = firstFace.Length() + 1;
-  char	      *wildstring = (char *)PR_Malloc((namelen << 1) + 200);
-  int         numnames = 0;
-  char        altitalicization = 0;
-  XFontStruct *fonts;
-  float       t2d;
-  aContext->GetTwipsToDevUnits(t2d);
-  PRInt32     dpi = NSToIntRound(t2d * 1440);
-
-  if (nsnull == wildstring)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  mFont = new nsFont(aFont);
-  mDeviceContext = aContext;
-  mFontHandle = nsnull;
-
-  firstFace.ToCString(wildstring, namelen);
-
-  if (abs(dpi - 75) < abs(dpi - 100))
-    dpi = 75;
-  else
-    dpi = 100;
-
-#ifdef NOISY_FONTS
-  g_print("looking for font %s (%d)", wildstring, aFont.size / 20);
-#endif
-
-  //font properties we care about:
-  //name
-  //weight (bold, medium)
-  //slant (r = normal, i = italic, o = oblique)
-  //size in nscoords >> 1
-
-  // XXX oddly enough, enabling font scaling *here* breaks the
-  // text-field widgets...
-  static PRBool allowFontScaling = PR_FALSE;
-#ifdef DEBUG
-  static PRBool firstTime = 1;
-  if (firstTime) {
-    gchar *gsf = g_getenv("GECKO_SCALE_FONTS");
-    if (gsf)
-    {
-      allowFontScaling = PR_TRUE;
-//      g_free(gsf);
-    }
-  }
-#endif
-  if (allowFontScaling)
-  {
-    // Try 0,0 dpi first in case we have a scalable font
-    PR_snprintf(&wildstring[namelen + 1], namelen + 200,
-                "-*-%s-%s-%c-normal-*-*-%d-0-0-*-*-*-*",
-                wildstring,
-                (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
-                ((aFont.style == NS_FONT_STYLE_NORMAL)
-                 ? 'r'
-                 : ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o')),
-                aFont.size / 2);
-    fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
-                                  200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-    g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
-  }
-
-  if (numnames <= 0)
-  {
-    // If no scalable font, then try using our dpi
-    PR_snprintf(&wildstring[namelen + 1], namelen + 200,
-                "-*-%s-%s-%c-normal-*-*-*-%d-%d-*-*-*-*",
-                wildstring,
-                (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
-                (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
-                ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
-    fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
-                                  200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-    g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
-
-    if (aFont.style == NS_FONT_STYLE_ITALIC)
-      altitalicization = 'o';
-    else if (aFont.style == NS_FONT_STYLE_OBLIQUE)
-      altitalicization = 'i';
-
-    if ((numnames <= 0) && altitalicization)
-    {
-      PR_snprintf(&wildstring[namelen + 1], namelen + 200,
-                  "-*-%s-%s-%c-normal-*-*-*-%d-%d-*-*-*-*",
-                  wildstring,
-                  (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
-                  altitalicization, dpi, dpi);
-
-      fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
-                                    200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-      g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
-    }
-
-
-    if (numnames <= 0)
-    {
-      //we were not able to match the font name at all...
-
-      char *newname = firstFace.ToNewCString();
-
-      PR_snprintf(&wildstring[namelen + 1], namelen + 200,
-                  "-*-%s-%s-%c-normal-*-*-*-%d-%d-*-*-*-*",
-                  newname,
-                  (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
-                  (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
-                  ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'),
-                  dpi, dpi);
-      fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
-                                    200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-      g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
-
-      if ((numnames <= 0) && altitalicization)
-      {
-        PR_snprintf(&wildstring[namelen + 1], namelen + 200,
-                    "-*-%s-%s-%c-normal-*-*-*-%d-%d-*-*-*-*",
-                    newname,
-                    (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
-                    altitalicization, dpi, dpi);
-        fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
-                                      200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-        g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
-      }
-
-      delete [] newname;
-    }
-  }
-
-  if (numnames > 0)
-  {
-    char *nametouse = PickAppropriateSize(fnames, fonts, numnames, aFont.size);
-
-    mFontHandle = ::gdk_font_load(nametouse);
-
-#ifdef NOISY_FONTS
-    g_print(" is: %s\n", nametouse);
-#endif
-
-    ::XFreeFontInfo(fnames, fonts, numnames);
-  }
-  else
-  {
-    //ack. we're in real trouble, go for fixed...
-
-#ifdef NOISY_FONTS
-    g_print(" is: %s\n", "fixed (final fallback)");
-#endif
-
-    mFontHandle = ::gdk_font_load("fixed");
-  }
-
-  RealizeFont();
-
-  PR_Free(wildstring);
-
-#endif /* FONT_SWITCHING */
 
   return NS_OK;
 }
@@ -642,8 +450,6 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
 }
 
 // ===================== new code -- erik ====================
-
-#ifdef FONT_SWITCHING
 
 /*
  * CSS2 "font properties":
@@ -2612,8 +2418,6 @@ nsFontMetricsGTK::GetSpaceWidth(nscoord &aSpaceWidth)
   aSpaceWidth = mSpaceWidth;
   return NS_OK;
 }
-
-#endif /* FONT_SWITCHING */
 
 
 // The Font Enumerator
