@@ -135,6 +135,25 @@ public:
 
     enum eUpdateAction { eSet, eClear };
 
+    PRBool
+    IsAttributePersisent(nsIContent *element, PRInt32 aNameSpaceID, nsIAtom* aAtom);
+
+    void
+    GetPersistentAttributes(nsIContent *realKid);
+
+    void
+    PersistAttribute(nsIContent *element,
+    			PRInt32 aNameSpaceID,
+    			nsIAtom* aAtom,
+    			nsString aValue,
+    			eUpdateAction action);
+
+    void
+    PersistProperty(nsIContent *element,
+    			nsIRDFResource *aProperty,
+    			nsIRDFNode *aTarget,
+    			eUpdateAction action);
+
     nsresult
     SynchronizeUsingTemplate(nsIContent *aTemplateNode,
                              nsIContent* aRealNode,
@@ -205,6 +224,8 @@ protected:
     nsIContent*                mRoot;
 
     nsITimer			*mTimer;
+    static nsIRDFDataSource	*mLocalstore;
+    static PRBool		persistLock;
 
     // pseudo-constants
     static nsrefcnt gRefCnt;
@@ -221,6 +242,7 @@ protected:
     static nsIAtom* kContainerContentsGeneratedAtom;
     static nsIAtom* kNaturalOrderPosAtom;
     static nsIAtom* kIdAtom;
+    static nsIAtom* kPersistAtom;
     static nsIAtom* kOpenAtom;
     static nsIAtom* kEmptyAtom;
     static nsIAtom* kResourceAtom;

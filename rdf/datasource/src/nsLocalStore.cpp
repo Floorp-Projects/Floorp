@@ -36,6 +36,10 @@
 #include "plstr.h"
 #include "rdf.h"
 
+#include "nsIProfile.h"
+
+static NS_DEFINE_CID(kProfileCID,               NS_PROFILE_CID);
+
 ////////////////////////////////////////////////////////////////////////
 
 class LocalStoreImpl : public nsILocalStore,
@@ -199,6 +203,17 @@ NS_NewLocalStore(nsILocalStore** aResult)
         return rv;
     }
 
+    // We need to read this synchronously.
+    rv = impl->Refresh(PR_TRUE);
+
+#if 0
+    // XXX for the moment, ignore any refresh errors
+    if (NS_FAILED(rv)) {
+        delete impl;
+        return rv;
+    }
+#endif
+
     NS_ADDREF(impl);
     *aResult = impl;
     return NS_OK;
@@ -283,18 +298,42 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
 
     nsresult rv;
 
-    // XXX use profile dir or something
-    nsSpecialSystemDirectory spec(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    spec += "localstore.rdf";
+	// Look for localstore.rdf in the current profile
+	// directory. This is as convoluted as it seems because we
+	// want to 1) not break viewer (which has no profiles), and 2)
+	// still deal reasonably (in the short term) when no
+	// localstore.rdf is installed in the profile directory.
 
-    if (! spec.Exists()) {
-        nsOutputFileStream os(spec);
-        os << "<?xml version=\"1.0\"?>" << nsEndl;
-        os << "<RDF:RDF xmlns:RDF=\"" << RDF_NAMESPACE_URI << "\"" << nsEndl;
-        os << "         xmlns:NC=\""  << NC_NAMESPACE_URI  << "\">" << nsEndl;
-        os << "  <!-- Empty -->" << nsEndl;
-        os << "</RDF:RDF>" << nsEndl;
-    }
+	nsFileSpec	spec;
+	do {
+		NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+		if (NS_SUCCEEDED(rv))
+		{
+			if (NS_SUCCEEDED(rv = profile->GetCurrentProfileDir(&spec)))
+			{
+				spec += "localstore.rdf";
+			}
+		}
+		else
+		{
+#ifdef DEBUG
+			nsSpecialSystemDirectory spec2(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+			spec2 += "localstore.rdf";
+			spec = spec2;
+			rv = NS_OK;
+#endif
+		}
+	} while(0);
+
+	if (! spec.Exists())
+	{
+		nsOutputFileStream	os(spec);
+		os << "<?xml version=\"1.0\"?>" << nsEndl;
+		os << "<RDF:RDF xmlns:RDF=\"" << RDF_NAMESPACE_URI << "\"" << nsEndl;
+		os << "         xmlns:NC=\""  << NC_NAMESPACE_URI  << "\">" << nsEndl;
+		os << "  <!-- Empty -->" << nsEndl;
+		os << "</RDF:RDF>" << nsEndl;
+	}
 
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,
