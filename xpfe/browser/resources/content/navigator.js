@@ -881,14 +881,18 @@ function OpenSearch(tabName, searchStr)
 {
 	var searchMode = 0;
 	var searchEngineURI = null;
+	var autoOpenSearchPanel = false;
 	try
 	{
 		searchMode = pref.GetIntPref("browser.search.powermode");
 		searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
+		autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
 	}
 	catch(ex)
 	{
 		searchMode = 0;
+		searchEngineURI = null;
+		autoOpenSearchPanel = false;
 	}
 	if (searchMode == 1)
 	{
@@ -924,6 +928,43 @@ function OpenSearch(tabName, searchStr)
 			}
 		}
 		window.content.location.href = defaultSearchURL;
+	}
+
+	// rjc Note: the following is all a hack until the sidebar has appropriate APIs
+	// to check whether its shown/hidden, open/closed, and can show a particular panel
+
+	// should we try and open up the sidebar to show the "Search Results" panel?
+	if (autoOpenSearchPanel == true)
+	{
+		var sidebar = document.getElementById('sidebar-box');
+		var sidebar_splitter = document.getElementById('sidebar-splitter');
+		var searchPanel = document.getElementById("urn:sidebar:panel:search");
+
+		if (sidebar && sidebar_splitter && searchPanel)
+		{
+			var is_hidden = sidebar.getAttribute('hidden');
+			if (is_hidden && is_hidden == "true")
+			{
+			 	{
+					sidebarShowHide();
+			 	}
+			}
+			var sidebar_style = sidebar.getAttribute("style");
+			if (sidebar_style)
+			{
+				var visibility = sidebar_style.match('visibility:([^;]*)')
+				if (visibility)
+				{
+					visibility = visibility[1];
+					if (visibility.indexOf("collapse") >= 0)
+					{
+						sidebar.removeAttribute("style");
+						sidebar.setAttribute("style", "width:100%; height:100%; hidden:false; visibility:show;");
+					}
+				}
+			}
+			sidebarOpenClosePanel(searchPanel);
+		}
 	}
 }
 

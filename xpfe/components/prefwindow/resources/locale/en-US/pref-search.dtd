@@ -8,5 +8,6 @@
 <!ENTITY  lHeader "Search">
 <!ENTITY  rHeader "Configure Search">
 <!ENTITY  legendHeader "When clicking the 'Search' button:">
-<!ENTITY  browserSearchButtonText.label "use a single search engine:">
-<!ENTITY  enablePowerSearch.label "open the Search window (search multiple engines)">
+<!ENTITY  browserSearchButtonText.label "Search using:">
+<!ENTITY  enablePowerSearch.label "Open the Search window (search multiple engines)">
+<!ENTITY  openSidebarSearchPanel.label "Automatically open the 'Search Results' panel in the Sidebar">
