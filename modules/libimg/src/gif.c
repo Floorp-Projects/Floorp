@@ -626,6 +626,11 @@ process_buffered_gif_input_data(gif_struct* gs)
     state = gs->state;
     if (gs->destroy_pending &&
         ((state == gif_done) || (state == gif_error) || (state == gif_oom))) {
+
+        /* test, stop loopers if error */
+        if( state == gif_error)
+            ic->loop_count = 0;
+
         il_gif_abort(ic);
         il_image_complete(ic);
     }
