@@ -44,6 +44,18 @@ interface nsIExternalProtocolService : nsISupports
   boolean externalProtocolHandlerExists(in string aProtocolScheme);
 
   /**
+   * Check whether a handler for a specific protocol is "exposed" as a visible
+   * feature of the current application.
+   *
+   * An exposed protocol handler is one that can be used in all contexts.  A
+   * non-exposed protocol handler is one that can only be used internally by the
+   * application.  For example, a non-exposed protocol would not be loaded by the
+   * application in response to a link click or a X-remote openURL command.
+   * Instead, it would be deferred to the system's external protocol handler.
+   */
+  boolean isExposedProtocol(in string aProtocolScheme);
+
+  /**
    * Used to load a url via an external protocol handler (if one exists)
    * @param aURL The url to load
    */

@@ -42,7 +42,6 @@ class XRemoteClient
 
 private:
 
-  Window         FindWindow       (void);
   Window         CheckWindow      (Window aWindow);
   Window         CheckChildren    (Window aWindow);
   nsresult       GetLock          (Window aWindow, PRBool *aDestroyed);
@@ -63,5 +62,4 @@ private:
   char          *mLockData;
 
   PRBool         mInitialized;
-
 };

@@ -118,10 +118,8 @@
 #include "nsIDocument.h"
 #include "nsITextToSubURI.h"
 
-#ifdef MOZ_THUNDERBIRD
 #include "nsIExternalProtocolService.h"
 #include "nsCExternalHandlerService.h"
-#endif
 
 #ifdef NS_DEBUG
 /**
@@ -561,39 +559,30 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                             nsIDocShell** aDocShell,
                             nsIRequest** aRequest)
 {
-#ifdef MOZ_THUNDERBIRD
-  // XXX ugly thunderbird hack to force all url clicks to go to the system default app
-  // I promise this will be removed once we figure out a better way. 
-  nsCAutoString scheme;
-  aURI->GetScheme(scheme);
-
-  nsCAutoString spec;
-  aURI->GetSpec(spec);
-                                          
-  static const char kMailToURI[] = "mailto";                                    
-  static const char kNewsURI[] = "news";                                        
-  static const char kSnewsURI[] = "snews";                                      
-  static const char kNntpURI[] = "nntp";                                        
-  static const char kImapURI[] = "imap"; 
-  static const char kAddbookURI[] = "addbook";
-  static const char kPopURI[] = "pop";
-  static const char kMailboxURI[] = "mailbox";
-
-
-  if (scheme.EqualsIgnoreCase(kMailToURI) || scheme.EqualsIgnoreCase(kNewsURI) || scheme.EqualsIgnoreCase(kSnewsURI)   || 
-      scheme.EqualsIgnoreCase(kNntpURI)   || scheme.EqualsIgnoreCase(kImapURI) || scheme.EqualsIgnoreCase(kAddbookURI) ||
-      scheme.EqualsIgnoreCase(kPopURI)    || scheme.EqualsIgnoreCase(kMailboxURI)) 
+  PRBool earlyReturn = PR_FALSE;
   {
-    // we can handle all mail schemes
-  } else 
-  {
-    // we don't handle this type, the the registered handler take it 
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-    return extProtService->LoadUrl(aURI);                                                                 
-  }                                                                               
-#endif
+    // defer to an external protocol handler if necessary...
+    nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
+    if (extProtService) {
+      nsCAutoString scheme;
+      aURI->GetScheme(scheme);
+      if (!scheme.IsEmpty()) {
+        // if the URL scheme does not correspond to an exposed protocol, then we
+        // need to hand this link click over to the external protocol handler.
+        PRBool isExposed;
+        nsresult rv = extProtService->IsExposedProtocol(scheme.get(), &isExposed);
+        if (NS_SUCCEEDED(rv) && !isExposed) {
+          rv = extProtService->LoadUrl(aURI);
+          if (NS_SUCCEEDED(rv))
+            earlyReturn = PR_TRUE;
+          else
+            NS_WARNING("failed to launch external protocol handler");
+        }
+      }
+    }
+  }
+  if (earlyReturn)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);

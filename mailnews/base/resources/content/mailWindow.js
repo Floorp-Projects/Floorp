@@ -230,6 +230,18 @@ function messagePaneOnClick(event)
   if (href.search(needABrowser) == -1) 
     return;
 
+  // however, if the protocol should not be loaded internally, then we should
+  // not put up a new browser window.  we should just let the usual processing
+  // take place.
+  try {
+    var extProtService = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"].getService();
+    extProtService = extProtService.QueryInterface(Components.interfaces.nsIExternalProtocolService);
+    var scheme = href.substring(0, href.indexOf(":"));
+    if (!extProtService.isExposedProtocol(scheme))
+      return;
+  } 
+  catch (ex) {} // ignore errors, and just assume that we can proceed.
+
   // if you get here, the user did a simple left click on a link
   // that we know should be in a browser window.
   // since we are in the message pane, send it to the top most browser window 

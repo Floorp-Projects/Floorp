@@ -637,6 +637,12 @@ pref("signon.SignonFileName", "signons.txt");
 pref("network.protocol-handler.external.mailto", true); // for mail
 pref("network.protocol-handler.external.news" , true); // for news 
 
+// By default, all protocol handlers are exposed.  This means that
+// the browser will respond to openURL commands for all URL types.
+// It will also try to open link clicks inside the browser before
+// failing over to the system handlers.
+pref("network.protocol-handler.expose-all", true);
+
 // Default security warning dialogs to off
 pref("security.warn_entering_secure", false);
 pref("security.warn_entering_weak", false);

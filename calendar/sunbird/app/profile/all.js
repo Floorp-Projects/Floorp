@@ -635,6 +635,11 @@ pref("signon.expireMasterPassword",         false);
 pref("network.protocol-handler.external.mailto", true); // for mail
 pref("network.protocol-handler.external.news" , true); // for news 
 
+// By default, all protocol handlers are hidden.  This means
+// that calendar will not respond to X-remote openURL commands
+// and it will also defer all link clicks to the user's browser.
+pref("network.protocol-handler.expose-all", false);
+
 // Default security warning dialogs to off
 pref("security.warn_entering_secure", false);
 pref("security.warn_entering_weak", false);

@@ -72,6 +72,9 @@ class XRemoteService : public nsIXRemoteService, public nsIObserver {
   nsresult GetMailLocation(char **_retval);
   nsresult GetComposeLocation(const char **_retval);
 
+  // returns true if the URL may be loaded.
+  PRBool   MayOpenURL(const nsCString &aURL);
+
   // remote command handlers
   nsresult OpenURL(nsCString &aArgument,
 		   nsIDOMWindowInternal *aParent,

@@ -483,6 +483,11 @@ pref("network.protocol-handler.external.javascript", false);
 pref("network.protocol-handler.external.ms-help", false);
 pref("network.protocol-handler.external.vnd.ms.radio", false);
 
+// By default, all protocol handlers are hidden.  This means
+// that composer will not respond to X-remote openURL commands
+// and it will also defer all link clicks to the user's browser.
+pref("network.protocol-handler.expose-all", false);
+
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 pref("network.protocols.useSystemDefaults",   false); // set to true if user links should use system default handlers
