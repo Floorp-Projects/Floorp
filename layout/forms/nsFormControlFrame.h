@@ -229,7 +229,7 @@ protected:
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
-  NS_IMETHOD nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
 //
 //-------------------------------------------------------------------------------------
