@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 
 <!DOCTYPE window
 [
@@ -16,18 +16,8 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&unknownWindow.title;"
-        width="425"
-        height="180">
-
-    <data>
-        <broadcaster id="data.location" type="url" value="url...to be replaced"/>
-        <broadcaster id="data.contentType" type="string" value="content-type...to be replaced"/>
-        <!-- Commands: more/pick/save/close -->
-        <broadcaster id="data.execute" command=""/>
-        <!-- Temporary onLoad() trigger -->
-        <broadcaster id="dialog.start" ready="false"/>
-        <observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
-    </data>
+        onload="onLoad()"
+        onunload="onUnload()">
 
     <html:script>
         var data;
@@ -36,9 +26,8 @@
         function initData() {
             // Create data object and initialize.
             data = new Object;
-            data.location      = document.getElementById("data.location");
-            data.contentType   = document.getElementById("data.contentType");
-            data.execute       = document.getElementById("data.execute");
+            data.location      = window.arguments[0];
+            data.contentType   = window.arguments[1];
         }
 
         function initDialog() {
@@ -53,7 +42,7 @@
 
         function loadDialog() {
             // Set initial dialog field contents.
-            dialog.contentType.childNodes[0].nodeValue = " " + data.contentType.getAttribute( "value" );
+            dialog.contentType.childNodes[0].nodeValue = " " + data.contentType;
         }
 
         function onLoad() {
@@ -67,37 +56,55 @@
             loadDialog();
         }
 
+        function onUnload() {
+            // Nothing for now.
+        }
+
         function more() {
-            // Have C++ code go to appropriate web page.
-            data.execute.setAttribute("command","more");
+            // Have parent browser window go to appropriate web page.
+            var moreInfo = "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi?";
+            moreInfo += data.contentType;
+            window.opener.content.location = moreInfo;
         }
 
         function pick() {
-            // Have C++ code prompt user for app and run it.
-            data.execute.setAttribute("command","pick");
+            alert( "PickApp not implemented yet!" );
         }
 
         function save() {
-            // Execute "save to disk" logic.
-            data.execute.setAttribute("command","save");
+            // Use stream xfer component to prompt for destination and save.
+            var xfer = Components.classes[ "component://netscape/appshell/component/xfer" ].getService();
+            xfer = xfer.QueryInterface( Components.interfaces.nsIStreamTransfer );
+            try {
+                // When Necko lands, we need to receive the real nsIChannel and
+                // do SelectFileAndTransferLocation!
+
+                // Use this for now...
+                xfer.SelectFileAndTransferLocationSpec( data.location );
+            } catch( exception ) {
+                // Failed (or cancelled), give them another chance.
+                return;
+            }
+            // Save underway, close this dialog.
+            window.close();
         }
 
         function cancel() {
             // Close the window.
-            data.execute.setAttribute("command","close");
+            window.close();
         }
 
     </html:script>
-
-    <html:div flex="100%">
 
     <html:table style="width:100%;">
         <html:tr>
             <html:td colspan="4">
                 &startDownload;
-                <html:div id="dialog.contentType" style="display:inline">
+                <html:strong>
+                <html:div id="dialog.contentType" style="display:inline;">
                     &contentType.label;
                 </html:div>
+                </html:strong>
             </html:td>
         </html:tr>
     
@@ -116,7 +123,5 @@
             </html:td>
         </html:tr>
     </html:table>
-
-    </html:div>
 
 </window>

@@ -17,12 +17,13 @@
  */
 
 #include "nsIAppShellComponent.idl"
+#include "domstubs.idl"
 
 interface nsIURI;
-interface nsIDocumentLoader;
 interface nsIChannel;
 
 %{C++
+class nsIDOMWindow; // Seems domstubs.idl should do this, though.
 #ifndef NECKO   // gross hack since we can't put ifdefs in idl:
 #define nsIChannel nsIURI
 #endif
@@ -50,15 +51,13 @@ interface nsIUnknownContentTypeHandler : nsIAppShellComponent {
 
     void HandleUnknownContentType( in nsIChannel aURL,
                                    in string aContentType, 
-                                   in nsIDocumentLoader aDocLoader );
+                                   in nsIDOMWindow aWindow );
 };
 
 
 %{C++
 #define NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/unknownContentType"
 #define NS_IUNKNOWNCONTENTTYPEHANDLER_CLASSNAME "Mozilla Unknown Content-Type Handler Component"
-#define NS_DECL_IUNKNOWNCONTENTTYPEHANDLER                                \
-    NS_IMETHOD HandleUnknownContentType( nsIChannel *aURL,                    \
-                                         const char *aContentType,        \
-                                         nsIDocumentLoader *aDocLoader );
+#define NS_DECL_IUNKNOWNCONTENTTYPEHANDLER               \
+    NS_IMETHOD HandleUnknownContentType( nsIChannel*, const char*, nsIDOMWindow*);
 %}

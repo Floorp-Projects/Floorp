@@ -50,6 +50,7 @@ interface nsIStreamTransfer : nsIAppShellComponent {
     | dialog.                                                                  |
     --------------------------------------------------------------------------*/
     void SelectFileAndTransferLocation( in nsIURI aURL );
+    void SelectFileAndTransferLocationSpec( in string aURL );
 };
 
 
@@ -57,5 +58,6 @@ interface nsIStreamTransfer : nsIAppShellComponent {
 #define NS_ISTREAMTRANSFER_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xfer"
 #define NS_ISTREAMTRANSFER_CLASSNAME "Mozilla Stream Transfer Component"
 #define NS_DECL_ISTREAMTRANSFER \
-    NS_IMETHOD SelectFileAndTransferLocation( nsIURI *aURL );
+    NS_IMETHOD SelectFileAndTransferLocation( nsIURI* ); \
+    NS_IMETHOD SelectFileAndTransferLocationSpec( char const* );
 %}

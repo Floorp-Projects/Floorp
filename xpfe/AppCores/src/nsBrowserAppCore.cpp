@@ -1249,11 +1249,22 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
 
     if ( NS_SUCCEEDED( rv ) ) {
         /* Have handler take care of this. */
+        // Get DOM window.
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        rv = mWebShellWin->ConvertWebShellToDOMWindow( mWebShell,
+                                                       getter_AddRefs( domWindow ) );
+        if ( NS_SUCCEEDED( rv ) && domWindow ) {
 #ifdef NECKO
-        rv = handler->HandleUnknownContentType( channel, aContentType, loader );
+            rv = handler->HandleUnknownContentType( channel, aContentType, domWindow );
 #else
-        rv = handler->HandleUnknownContentType( aURL, aContentType, loader );
+            rv = handler->HandleUnknownContentType( aURL, aContentType, domWindow );
 #endif
+        } else {
+            #ifdef NS_DEBUG
+            printf( "%s %d: ConvertWebShellToDOMWindow failed, rv=0x%08X\n",
+                    __FILE__, (int)__LINE__, (int)rv );
+            #endif
+        }
 
         // Release the unknown content type handler service object.
         nsServiceManager::ReleaseService( NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID, handler );
