@@ -44,11 +44,6 @@ NS_DEFINE_IID(kImgDecoderCID, NS_IMGDECODER_CID);
 
 /***************************************************/
 
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-/***************************************************/
-
 /* e41ac650-cd9f-11d2-802c-0060088f91a3 */
 #define NS_IMGDCALLBK_CID \
 { 0xe41ac650, 0xcd9f, 0x11d2, \

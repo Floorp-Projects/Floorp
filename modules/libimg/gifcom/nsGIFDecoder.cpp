@@ -83,6 +83,7 @@ GIFDecoder::~GIFDecoder(void)
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 };
 
+
 NS_IMPL_ADDREF(GIFDecoder)
 NS_IMPL_RELEASE(GIFDecoder)
 
@@ -92,6 +93,8 @@ GIFDecoder::QueryInterface(const nsIID& aIID, void** aInstPtr)
   if (NULL == aInstPtr) {
     return NS_ERROR_NULL_POINTER;
   }
+
+NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
   if (aIID.Equals(kGIFDecoderIID) ||
       aIID.Equals(kImgDecoderIID) ||
@@ -129,8 +132,8 @@ private:
 
 nsGIFDecFactory* gFactory = NULL;
 
+NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_IMPL_ISUPPORTS(nsGIFDecFactory, kIFactoryIID)
-
 
 nsGIFDecFactory::nsGIFDecFactory(const nsCID &aClass)
 {
@@ -140,8 +143,11 @@ nsGIFDecFactory::nsGIFDecFactory(const nsCID &aClass)
 
 nsGIFDecFactory::~nsGIFDecFactory(void)
 {
+
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
+
+
 /*----------------------------------for autoregistration ----*/
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -198,7 +204,9 @@ nsGIFDecFactory::CreateInstance(nsISupports *aOuter,
    GIFDecoder *gifdec = NULL;
    *ppv  = NULL;
    il_container* ic = NULL;
-   
+
+NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
    if (aOuter && !aIID.Equals(kISupportsIID))
        return NS_NOINTERFACE;  
    ic = new il_container();

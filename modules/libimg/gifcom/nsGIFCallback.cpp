@@ -37,7 +37,9 @@ NS_IMETHODIMP GIFCallbk::QueryInterface(const nsIID& aIID, void** aResult)
   if (NULL == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-   
+  
+NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
   if ( aIID.Equals(kGIFCallbkIID) ||
        aIID.Equals(kImgDCallbkIID)||
        aIID.Equals(kISupportsIID)) {

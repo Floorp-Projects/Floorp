@@ -93,7 +93,9 @@ JPGDecoder::QueryInterface(const nsIID& aIID, void** aInstPtr)
   if (NULL == aInstPtr) {
     return NS_ERROR_NULL_POINTER;
   }
-   
+
+NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
   if (aIID.Equals(kJPGDecoderIID) ||     
       aIID.Equals(kImgDecoderIID) ||
       aIID.Equals(kISupportsIID)) {
@@ -177,6 +179,8 @@ private:
 /*-----------------------------------------*/
 
 nsJPGDecFactory* gFactory = NULL;
+
+NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_IMPL_ISUPPORTS(nsJPGDecFactory, kIFactoryIID);
 
 
@@ -200,7 +204,9 @@ nsJPGDecFactory::CreateInstance(nsISupports *aOuter,
    JPGDecoder *jpgdec = NULL;
    *ppv  = NULL;
    il_container* ic = NULL;
-   
+
+NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
    if (aOuter && !aIID.Equals(kISupportsIID))
        return NS_NOINTERFACE;  
    ic = new il_container();
