@@ -98,7 +98,7 @@ static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 nsNntpService::nsNntpService()
 {
   mPrintingOperation = PR_FALSE;
-	mOpenAttachmentOperation = PR_FALSE;
+  mOpenAttachmentOperation = PR_FALSE;
 }
 
 nsNntpService::~nsNntpService()
@@ -237,12 +237,12 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
 {
   nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(aMessageURI);
-
+  
   nsCOMPtr <nsIMsgFolder> folder;
   nsMsgKey key = nsMsgKey_None;
   rv = DecomposeNewsMessageURI(aMessageURI, getter_AddRefs(folder), &key);
   NS_ENSURE_SUCCESS(rv,rv);
-
+  
   nsCAutoString urlStr;
   // if we are displaying (or printing), we want the news://host/message-id url
   // we keep the original uri around, for cancelling and so we can get to the
@@ -255,35 +255,35 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
   nsXPIDLCString messageIdURL;
   rv = CreateMessageIDURL(folder, key, getter_Copies(messageIdURL));
   NS_ENSURE_SUCCESS(rv,rv);
- 
+  
   urlStr = messageIdURL.get();
-
+  
   // rhp: If we are displaying this message for the purposes of printing, append
   // the magic operand.
   if (mPrintingOperation)
     urlStr.Append("?header=print");
-
+  
   nsNewsAction action = nsINntpUrl::ActionFetchArticle;
   if (mOpenAttachmentOperation)
     action = nsINntpUrl::ActionFetchPart;
-
+  
   nsCOMPtr<nsIURI> url;
   rv = ConstructNntpUrl(urlStr.get(), aUrlListener, aMsgWindow, aMessageURI, action, getter_AddRefs(url));
   NS_ENSURE_SUCCESS(rv,rv);
-
+  
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr <nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(url,&rv);
     NS_ENSURE_SUCCESS(rv,rv);
-
+    
     nsCOMPtr<nsIMsgI18NUrl> i18nurl = do_QueryInterface(msgUrl,&rv);
     NS_ENSURE_SUCCESS(rv,rv);
-
+    
     i18nurl->SetCharsetOverRide(aCharsetOverride);
-
+    
     PRBool shouldStoreMsgOffline = PR_FALSE;
     PRBool hasMsgOffline = PR_FALSE;
-
+    
     if (folder)
     {
       nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(folder);
@@ -297,7 +297,7 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
           if (!hasMsgOffline)
           {
             nsCOMPtr<nsIMsgIncomingServer> server;
-
+            
             rv = folder->GetServer(getter_AddRefs(server));
             if (server)
               return server->DisplayOfflineMsg(aMsgWindow);
@@ -306,26 +306,26 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
         newsFolder->SetSaveArticleOffline(shouldStoreMsgOffline);
       }
     }
-
+    
     // now is where our behavior differs....if the consumer is the docshell then we want to 
     // run the url in the webshell in order to display it. If it isn't a docshell then just
     // run the news url like we would any other news url. 
-	  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
-	  if (NS_SUCCEEDED(rv) && docShell) 
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
+    if (NS_SUCCEEDED(rv) && docShell) 
     {
-		nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-		// DIRTY LITTLE HACK --> if we are opening an attachment we want the docshell to
-        // treat this load as if it were a user click event. Then the dispatching stuff will be much
-        // happier.
+      nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+      // DIRTY LITTLE HACK --> if we are opening an attachment we want the docshell to
+      // treat this load as if it were a user click event. Then the dispatching stuff will be much
+      // happier.
       if (mOpenAttachmentOperation) 
       {
-			docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-			loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
-		}
-	    
-	    rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
-	  }
-	  else 
+        docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+        loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
+      }
+      
+      rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
+    }
+    else 
     {
       nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
       if (NS_SUCCEEDED(rv) && aStreamListener)
@@ -350,13 +350,14 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
         rv = aChannel->AsyncOpen(aStreamListener, aCtxt);
       }
       else
-		rv = RunNewsUrl(url, aMsgWindow, aDisplayConsumer);
-	  }
+        rv = RunNewsUrl(url, aMsgWindow, aDisplayConsumer);
+    }
   }
-
-  if (aURL) {
-	  *aURL = url;
-	  NS_IF_ADDREF(*aURL);
+  
+  if (aURL) 
+  {
+    *aURL = url;
+    NS_IF_ADDREF(*aURL);
   }
   return rv;
 }

@@ -59,17 +59,16 @@
 class nsMsgNewsFolder : public nsMsgDBFolder, public nsIMsgNewsFolder, public nsMsgLineBuffer
 {
 public:
-	nsMsgNewsFolder(void);
-	virtual ~nsMsgNewsFolder(void);
+  nsMsgNewsFolder(void);
+  virtual ~nsMsgNewsFolder(void);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIMSGNEWSFOLDER
-#if 0
-  static nsresult GetRoot(nsIMsgFolder* *result);
-#endif
   // nsICollection methods:
   NS_IMETHOD Enumerate(nsIEnumerator* *result);
 
+  // nsIUrlListener method
+  NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
   // nsIFolder methods:
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
 
@@ -146,11 +145,13 @@ protected:
 
 protected:
   PRUint32  mExpungedBytes;
-  PRBool    mGettingNews;
-  PRBool    mInitialized;
+  PRPackedBool mGettingNews;
+  PRPackedBool mInitialized;
+  PRPackedBool m_downloadMessageForOfflineUse;
+  PRPackedBool m_downloadingMultipleMessages;
+
   nsCString mOptionLines;
   nsCString mUnsubscribedNewsgroupLines;
-  PRBool m_downloadMessageForOfflineUse;
   nsMsgKeySet *mReadSet; 
 
   nsCOMPtr<nsIFileSpec> mNewsrcFilePath; 

@@ -281,15 +281,6 @@ NS_IMETHODIMP nsNewsDownloader::OnSearchHit(nsIMsgDBHdr *header, nsIMsgFolder *f
     nsMsgKey key;
     header->GetMessageKey(&key);
     m_keysToDownload.Add(key);
-#ifdef HAVE_PORT
-    char *statusTemplate = XP_GetString (MK_MSG_ARTICLES_TO_RETRIEVE);
-    char *statusString = PR_smprintf (statusTemplate,  (long) newsArticleState->m_keysToDownload.GetSize());
-    if (statusString)
-    {
-      FE_Progress (newsArticleState->m_context, statusString);
-      XP_FREE(statusString);
-    }
-#endif
   }
   return NS_OK;
 }

@@ -117,24 +117,24 @@ static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
      mExpungedBytes(0), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mOptionLines(""), mUnsubscribedNewsgroupLines(""), 
-    m_downloadMessageForOfflineUse(PR_FALSE), mReadSet(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull), mAsciiName(nsnull)
+    m_downloadMessageForOfflineUse(PR_FALSE), m_downloadingMultipleMessages(PR_FALSE), 
+    mReadSet(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull), mAsciiName(nsnull)
 {
   MOZ_COUNT_CTOR(nsNewsFolder); // double count these for now.
   /* we're parsing the newsrc file, and the line breaks are platform specific.
    * if MSG_LINEBREAK != CRLF, then we aren't looking for CRLF 
    */
-  if (PL_strcmp(MSG_LINEBREAK, CRLF)) {
+  if (PL_strcmp(MSG_LINEBREAK, CRLF))
     SetLookingForCRLF(PR_FALSE);
-  }
 }
 
 nsMsgNewsFolder::~nsMsgNewsFolder(void)
 {
   MOZ_COUNT_DTOR(nsNewsFolder);
   delete mReadSet;
-  PR_FREEIF(mGroupUsername);
-  PR_FREEIF(mGroupPassword);
-  PR_FREEIF(mAsciiName);
+  PR_Free(mGroupUsername);
+  PR_Free(mGroupPassword);
+  PR_Free(mAsciiName);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgNewsFolder, nsMsgDBFolder)
@@ -487,13 +487,11 @@ nsMsgNewsFolder::GetCanCompact(PRBool *aResult)
 NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
-  nsresult rv = NS_OK;
-
-  rv = GetDatabase(aMsgWindow);
+  nsresult rv = GetDatabase(aMsgWindow);
   *result = nsnull;
     
   if(NS_SUCCEEDED(rv))
-		rv = mDatabase->EnumerateMessages(result);
+    rv = mDatabase->EnumerateMessages(result);
 
   return rv;
 }
@@ -578,10 +576,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname
     nsCOMPtr<nsISupports> folderSupports;
     rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
     if(childSupports && NS_SUCCEEDED(rv))
-    {
-      
       NotifyItemAdded(folderSupports, childSupports, "folderView");
-    }
   }
   return rv;
 }
@@ -590,7 +585,8 @@ NS_IMETHODIMP nsMsgNewsFolder::Delete()
 {
   nsresult rv = GetDatabase(nsnull);
   
-  if(NS_SUCCEEDED(rv)) {
+  if(NS_SUCCEEDED(rv)) 
+  {
     mDatabase->ForceClosed();
     mDatabase = nsnull;
   }
@@ -745,10 +741,10 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
   }
 
   if (!prettyName)
-		return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_NULL_POINTER;
   // we are going to set *prettyName to something else, so free what was there
   
-  PR_FREEIF(*prettyName);
+  PR_Free(*prettyName);
   *prettyName = ToNewUnicode(out);
   
   return (*prettyName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -1512,8 +1508,7 @@ NS_IMETHODIMP nsMsgNewsFolder::SetReadSetFromStr(const char *newsrcLine)
 {
     if (!newsrcLine) return NS_ERROR_NULL_POINTER;
 
-    if (mReadSet)
-      delete mReadSet;
+    delete mReadSet;
 
     mReadSet = nsMsgKeySet::Create(newsrcLine);
 
@@ -1533,9 +1528,8 @@ nsMsgNewsFolder::GetUnsubscribedNewsgroupLines(char **aUnsubscribedNewsgroupLine
 {
     if (!aUnsubscribedNewsgroupLines) return NS_ERROR_NULL_POINTER;
 
-    if (!mUnsubscribedNewsgroupLines.IsEmpty()) {
+    if (!mUnsubscribedNewsgroupLines.IsEmpty())
         *aUnsubscribedNewsgroupLines= ToNewCString(mUnsubscribedNewsgroupLines);
-    }
     
     return NS_OK;
 }
@@ -1545,9 +1539,8 @@ nsMsgNewsFolder::GetOptionLines(char **optionLines)
 {
     if (!optionLines) return NS_ERROR_NULL_POINTER;
 
-    if (!mOptionLines.IsEmpty()) {
+    if (!mOptionLines.IsEmpty()) 
         *optionLines = ToNewCString(mOptionLines);
-    }
     
     return NS_OK;
 }
@@ -1562,25 +1555,25 @@ nsMsgNewsFolder::OnReadChanged(nsIDBChangeListener * aInstigator)
 NS_IMETHODIMP
 nsMsgNewsFolder::GetAsciiName(char **asciiName)
 {
-	nsresult rv;
+  nsresult rv;
   NS_ENSURE_ARG_POINTER(asciiName);
   if (!mAsciiName) {
-	  nsXPIDLString name;
-	  rv = GetName(getter_Copies(name));
+    nsXPIDLString name;
+    rv = GetName(getter_Copies(name));
     NS_ENSURE_SUCCESS(rv,rv);
-
+    
     // convert to ASCII
-	  nsCAutoString tmpStr;
-	  tmpStr.AssignWithConversion(name);
-
+    nsCAutoString tmpStr;
+    tmpStr.AssignWithConversion(name);
+    
     mAsciiName = nsCRT::strdup(tmpStr.get());
     if (!mAsciiName) return NS_ERROR_OUT_OF_MEMORY;
   }
-
-	*asciiName = nsCRT::strdup(mAsciiName);
-	if (!*asciiName) return NS_ERROR_OUT_OF_MEMORY;
-
-	return NS_OK;
+  
+  *asciiName = nsCRT::strdup(mAsciiName);
+  if (!*asciiName) return NS_ERROR_OUT_OF_MEMORY;
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1674,9 +1667,12 @@ NS_IMETHODIMP nsMsgNewsFolder::DownloadAllForOffline(nsIUrlListener *listener, n
       }
     }
   }
-  DownloadNewsArticlesToOfflineStore *downloadState = new DownloadNewsArticlesToOfflineStore(msgWindow, mDatabase, nsnull);
+  DownloadNewsArticlesToOfflineStore *downloadState = new DownloadNewsArticlesToOfflineStore(msgWindow, mDatabase, this);
   if (downloadState)
+  {
+    m_downloadingMultipleMessages = PR_TRUE;
     return downloadState->DownloadArticles(msgWindow, this, &srcKeyArray);
+  }
   else
     return NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1701,9 +1697,12 @@ NS_IMETHODIMP nsMsgNewsFolder::DownloadMessagesForOffline(nsISupportsArray *mess
     if (NS_SUCCEEDED(rv))
       srcKeyArray.Add(key);
   }
-  DownloadNewsArticlesToOfflineStore *downloadState = new DownloadNewsArticlesToOfflineStore(window, mDatabase, nsnull);
+  DownloadNewsArticlesToOfflineStore *downloadState = new DownloadNewsArticlesToOfflineStore(window, mDatabase, this);
   if (downloadState)
+  {
+    m_downloadingMultipleMessages = PR_TRUE;
     return downloadState->DownloadArticles(window, this, &srcKeyArray);
+  }
   else
     return NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1714,7 +1713,7 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
 {
   nsresult rv = NS_OK;
   PRBool commit = PR_FALSE;
-  if (m_downloadMessageForOfflineUse && !m_tempMessageStream)
+  if (m_downloadMessageForOfflineUse && !m_offlineHeader)
   {
     GetMessageHeader(keyOfArticle, getter_AddRefs(m_offlineHeader));
     rv = StartNewOfflineMessage();
@@ -1732,7 +1731,7 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
         EndNewOfflineMessage();
         commit = PR_TRUE;
       }
-      if (m_tempMessageStream)
+      if (m_tempMessageStream && !m_downloadingMultipleMessages)
       {
         m_tempMessageStream->Close();
         m_tempMessageStream = nsnull;
@@ -1883,3 +1882,16 @@ nsMsgNewsFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aRes
   NS_IF_ADDREF(*aResult = mFilterList);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgNewsFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
+{
+ if (m_tempMessageStream)
+  {
+    m_tempMessageStream->Close();
+    m_tempMessageStream = nsnull;
+  }
+  m_downloadingMultipleMessages = PR_FALSE;
+  return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
+}
+
