@@ -245,16 +245,6 @@ function Startup()
     return;
   }
 
-  // Do all UI building here:
-
-  // set home button tooltip text
-  var homePage = getHomePage();
-  if (homePage) {
-    var homeButton = document.getElementById("home-button");
-    if (homeButton)
-      homeButton.setAttribute("tooltiptext", homePage);
-  }
-
   // initialize observers and listeners
   window.XULBrowserWindow = new nsBrowserStatusHandler();
 
@@ -384,6 +374,14 @@ function Startup()
 
 function LoadBookmarksCallback()
 {
+  // set home button tooltip text
+  var homePage = getHomePage();
+  if (homePage) {
+    var homeButton = document.getElementById("home-button");
+    if (homeButton)
+      homeButton.setAttribute("tooltiptext", homePage);
+  }
+
   try {
     if (!gBookmarksService)
       gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
