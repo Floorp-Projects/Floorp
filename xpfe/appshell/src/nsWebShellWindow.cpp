@@ -337,7 +337,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   NS_IF_ADDREF(mCallbacks);
 
   if (nsnull != aUrl)  {
-    mWebShell->LoadURL(urlString);
+    mWebShell->LoadURL(urlString.GetUnicode());
   }
 
   // Create the IWidgetController for the document...
@@ -1272,7 +1272,7 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
   if (aWebShellName.Equals("this")) { // XXX small kludge for code reused
     childWebShell = do_QueryInterface(mWebShell);
   } else {
-    mWebShell->FindChildWithName(aWebShellName, *getter_AddRefs(childWebShell));
+    mWebShell->FindChildWithName(aWebShellName.GetUnicode(), *getter_AddRefs(childWebShell));
     if (!childWebShell)
       return domDoc;
   }
