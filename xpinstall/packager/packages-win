@@ -253,6 +253,7 @@ bin\res\quirk.css
 bin\res\viewsource.css
 bin\res\arrow.gif
 bin\res\html\*
+bin\res\fonts\*
 bin\defaults\wallet\VcardSchema.tbl
 bin\defaults\wallet\FieldSchema.tbl
 bin\defaults\wallet\SchemaConcat.tbl
