@@ -144,6 +144,14 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_CHARSET_CHANGE  = 0x0400; // Reload because of charset change, 
 
  /**
+  * If this flag is set, Stop() will be called before the load starts
+  * and will stop both content and network activity (the default is to
+  * only stop network activity).  Effectively, this passes the
+  * STOP_CONTENT flag to Stop(), in addition to the STOP_NETWORK flag.
+  */
+  const unsigned long LOAD_FLAGS_STOP_CONTENT    = 0x0800;
+  
+ /**
   * Loads a given URI.  This will give priority to loading the requested URI
   * in the object implementing	this interface.  If it can't be loaded here
   * however, the URL dispatcher will go through its normal process of content

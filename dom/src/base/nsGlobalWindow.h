@@ -522,7 +522,7 @@ protected:
   // PR_TRUE for aGetInnermostURI when that's the case.
   nsresult GetURI(nsIURI** aURL, PRBool aGetInnermostURI = PR_FALSE);
   nsresult GetWritableURI(nsIURI** aURL);
-  nsresult SetURI(nsIURI* aURL);
+  nsresult SetURI(nsIURI* aURL, PRBool aReplace = PR_FALSE);
   nsresult SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
                            PRBool aReplace);
   nsresult SetHrefWithContext(JSContext* cx, const nsAString& aHref,

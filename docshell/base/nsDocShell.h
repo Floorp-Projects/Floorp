@@ -102,6 +102,7 @@
 
 
 #define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
+#define LOAD_TYPE_HAS_FLAGS(type, flags) ((type) & ((flags) << 16))
 
 /* load commands were moved to nsIDocShell.h */
 
@@ -122,7 +123,9 @@ enum LoadType {
     LOAD_LINK = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_LINK),
     LOAD_REFRESH = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH),
     LOAD_RELOAD_CHARSET_CHANGE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE),
-    LOAD_BYPASS_HISTORY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY)
+    LOAD_BYPASS_HISTORY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY),
+    LOAD_STOP_CONTENT = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_STOP_CONTENT),
+    LOAD_STOP_CONTENT_AND_REPLACE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_STOP_CONTENT | nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)
     // NOTE: Adding a new value? Remember to update IsValidLoadType!
 };
 static inline PRBool IsValidLoadType(PRUint32 aLoadType)
@@ -140,6 +143,8 @@ static inline PRBool IsValidLoadType(PRUint32 aLoadType)
     case LOAD_REFRESH:
     case LOAD_RELOAD_CHARSET_CHANGE:
     case LOAD_BYPASS_HISTORY:
+    case LOAD_STOP_CONTENT:
+    case LOAD_STOP_CONTENT_AND_REPLACE:
         return PR_TRUE;
     }
     return PR_FALSE;
