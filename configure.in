@@ -270,8 +270,13 @@ AC_ARG_ENABLE(nglayout,
     [ if test "$enableval" = "yes"; then
 	USE_NGLAYOUT=1
 	OS_TARGET=`uname -s`
+    elif test "$enableval" = "gtk"; then
+	USE_NGLAYOUT=1
+	OS_TARGET=`uname -s`
+	USE_NGLAYOUT_GTK=1
     else 
 	USE_NGLAYOUT=
+	USE_NGLAYOUT_GTK=
     fi],
     USE_NGLAYOUT= )
 
@@ -431,6 +436,7 @@ AC_ARG_ENABLE(ldap,
 	fi] )
 
 AC_SUBST(USE_NGLAYOUT)
+AC_SUBST(USE_NGLAYOUT_GTK)
 AC_SUBST(OS_TARGET)
 AC_SUBST(MOZ_FE)
 AC_SUBST(MOZ_SECURITY)
