@@ -4087,7 +4087,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   //
   while (! inputFile.eof())
 	{
-    if (!inputFile.readline(ibuffer, ibuffer_size))
+    // check *ibuffer in case that ibuffer isn't big enough
+    if (!inputFile.readline(ibuffer, ibuffer_size) && *ibuffer == 0)
     {
       status = NS_ERROR_FAILURE;
       goto FAIL;
