@@ -28,7 +28,7 @@
 //***    nsWebBrowser: Object Management
 //*****************************************************************************
 
-nsWebBrowser::nsWebBrowser()
+nsWebBrowser::nsWebBrowser() : m_Created(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 }
@@ -63,18 +63,40 @@ NS_IMPL_ISUPPORTS6(nsWebBrowser, nsIWebBrowser, nsIWebBrowserNav, nsIProgress,
 // nsWebBrowser::nsIWebBrowser
 //*****************************************************************************   
 
-NS_IMETHODIMP nsWebBrowser::AddListener(nsIWebBrowserListener* listener, 
+NS_IMETHODIMP nsWebBrowser::AddListener(nsIInterfaceRequestor* listener, 
    PRInt32* cookie)
-{
-   //XXX Implement
-   return NS_ERROR_FAILURE;
+{                   
+   if(!m_ListenerList)
+      NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(m_ListenerList)), 
+         NS_ERROR_FAILURE);
+
+   // Make sure it isn't already in the list...  This is bad!
+   NS_ENSURE(m_ListenerList->IndexOf(listener) == -1, NS_ERROR_INVALID_ARG);
+
+   NS_ENSURE_SUCCESS(m_ListenerList->AppendElement(listener), NS_ERROR_FAILURE);
+
+   if(cookie)
+      *cookie = (PRInt32)listener;
+
+   if(m_Created)
+      UpdateListeners();
+   
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::RemoveListener(nsIWebBrowserListener* listener,
+NS_IMETHODIMP nsWebBrowser::RemoveListener(nsIInterfaceRequestor* listener,
    PRInt32 cookie)
 {
-   //XXX Implement
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(m_ListenerList);
+
+   if(!listener)
+      listener = (nsIInterfaceRequestor*)cookie;
+
+   NS_ENSURE(listener, NS_ERROR_INVALID_ARG);
+
+   NS_ENSURE(m_ListenerList->RemoveElement(listener), NS_ERROR_INVALID_ARG);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetDocShell(nsIDocShell** docShell)
@@ -318,6 +340,7 @@ NS_IMETHODIMP nsWebBrowser::GetChildPart(PRInt32 childPart,
 
 NS_IMETHODIMP nsWebBrowser::GetNumChildParts(PRInt32* numChildParts)
 {
+   NS_ENSURE_ARG_POINTER(numChildParts);
    //XXX First Check
 	/*
 	Number of Child progress parts.
@@ -401,6 +424,7 @@ NS_IMETHODIMP nsWebBrowser::SetPosition(PRInt32 x, PRInt32 y)
 
 NS_IMETHODIMP nsWebBrowser::GetPosition(PRInt32* x, PRInt32* y)
 {
+   NS_ENSURE_ARG_POINTER(x && y);
    //XXX First Check
 	/*
 	Gets the current x and y coordinates of the control.  This is relatie to the
@@ -420,6 +444,8 @@ NS_IMETHODIMP nsWebBrowser::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 
 NS_IMETHODIMP nsWebBrowser::GetSize(PRInt32* cx, PRInt32* cy)
 {
+   NS_ENSURE_ARG_POINTER(cx && cy);
+
    //XXX First Check
 	/*
 	Gets the width and height of the control.
@@ -459,6 +485,8 @@ NS_IMETHODIMP nsWebBrowser::Repaint(PRBool fForce)
 
 NS_IMETHODIMP nsWebBrowser::GetParentWidget(nsIWidget** parentWidget)
 {
+   NS_ENSURE_ARG_POINTER(parentWidget);
+
    //XXX First Check
 	/*			  
 	This is the parenting widget for the control.  This may be null if only the
@@ -482,6 +510,7 @@ NS_IMETHODIMP nsWebBrowser::SetParentWidget(nsIWidget* parentWidget)
 
 NS_IMETHODIMP nsWebBrowser::GetParentNativeWindow(nativeWindow* parentNativeWindow)
 {
+   NS_ENSURE_ARG_POINTER(parentNativeWindow);
    //XXX First Check
 	/*
 	This is the native window parent of the control.
@@ -500,6 +529,8 @@ NS_IMETHODIMP nsWebBrowser::SetParentNativeWindow(nativeWindow parentNativeWindo
 
 NS_IMETHODIMP nsWebBrowser::GetVisibility(PRBool* visibility)
 {
+   NS_ENSURE_ARG_POINTER(visibility);
+
    //XXX First Check
 	/*
 	Attribute controls the visibility of the object behind this interface.
@@ -522,6 +553,7 @@ NS_IMETHODIMP nsWebBrowser::SetVisibility(PRBool visibility)
 
 NS_IMETHODIMP nsWebBrowser::GetMainWidget(nsIWidget** mainWidget)
 {
+   NS_ENSURE_ARG_POINTER(mainWidget);
    //XXX First Check
 	/*
 	Allows you to find out what the widget is of a given object.  Depending
@@ -551,6 +583,8 @@ NS_IMETHODIMP nsWebBrowser::RemoveFocus()
 
 NS_IMETHODIMP nsWebBrowser::GetTitle(PRUnichar** title)
 {
+   NS_ENSURE_ARG_POINTER(title);
+
    //XXX First Check
    return NS_ERROR_FAILURE;
 }
@@ -563,6 +597,8 @@ NS_IMETHODIMP nsWebBrowser::SetTitle(const PRUnichar* title)
 
 NS_IMETHODIMP nsWebBrowser::GetZoom(float* zoom)
 {
+   NS_ENSURE_ARG_POINTER(zoom);
+
    //XXX First Check
 	/**
 	* Set/Get the document scale factor
@@ -586,6 +622,8 @@ NS_IMETHODIMP nsWebBrowser::SetZoom(float zoom)
 NS_IMETHODIMP nsWebBrowser::GetCurScrollPos(PRInt32 scrollOrientation, 
    PRInt32* curPos)
 {
+   NS_ENSURE_ARG_POINTER(curPos);
+
    //XXX First Check
 	/*
 	Retrieves or Sets the current thumb position to the curPos passed in for the
@@ -616,6 +654,7 @@ NS_IMETHODIMP nsWebBrowser::SetCurScrollPos(PRInt32 scrollOrientation,
 NS_IMETHODIMP nsWebBrowser::GetScrollRange(PRInt32 scrollOrientation,
    PRInt32* minPos, PRInt32* maxPos)
 {
+   NS_ENSURE_ARG_POINTER(minPos && maxPos);
    //XXX First Check
 	/*
 	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
@@ -646,6 +685,7 @@ NS_IMETHODIMP nsWebBrowser::SetScrollRange(PRInt32 scrollOrientation,
 NS_IMETHODIMP nsWebBrowser::GetScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32* scrollbarPref)
 {
+   NS_ENSURE_ARG_POINTER(scrollbarPref);
    //XXX First Check
 	/*
 	Retrieves of Set the preferences for the scroll bar.
@@ -702,3 +742,14 @@ NS_IMETHODIMP nsWebBrowser::ScrollByPages(PRInt32 numPages)
    */
    return NS_ERROR_FAILURE;
 }
+
+
+//*****************************************************************************
+// nsWebBrowser: Listener Helpers
+//*****************************************************************************   
+
+void nsWebBrowser::UpdateListeners()
+{
+}
+
+
