@@ -306,7 +306,6 @@ modules/libreg/src/Makefile
 
 MAKEFILES_libpref="
 modules/libpref/Makefile
-modules/libpref/admin/Makefile
 modules/libpref/public/Makefile
 modules/libpref/src/Makefile
 "
