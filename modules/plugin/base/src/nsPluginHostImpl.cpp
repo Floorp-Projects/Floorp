@@ -126,6 +126,8 @@
 #include "nsILocalFile.h"
 #include "nsIFileChannel.h"
 
+#include "nsPluginSafety.h"
+
 #ifdef XP_WIN
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -4377,6 +4379,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   // use nsPluginHostImpl::ReloadPlugins to enforce loading
   if(mPluginsLoaded)
     return NS_OK;
+
+  // check preferences on whether or not we want to try safe calls to plugins
+  NS_INIT_PLUGIN_SAFE_CALLS;
 
   // retrieve a path for layout module. Needed for plugin mime types registration
   nsCOMPtr<nsIFile> path;
