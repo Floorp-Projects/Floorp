@@ -27,9 +27,12 @@
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoImpl, nsIMIMEInfo);
 
 // nsMIMEInfoImpl methods
-nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) {
+nsMIMEInfoImpl::nsMIMEInfoImpl() {
     NS_INIT_REFCNT();
-    mMIMEType = getter_AddRefs(NS_NewAtom(aMIMEType));
+}
+
+nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType): mMIMEType( aMIMEType ) {
+    NS_INIT_REFCNT();
 }
 
 PRUint32
@@ -66,7 +69,7 @@ nsMIMEInfoImpl::ExtensionExists(const char *aExtension, PRBool *_retval) {
     if (!aExtension) return NS_ERROR_NULL_POINTER;
 
     for (PRUint8 i=0; i < extCount; i++) {
-        nsCString* ext = mExtensions.CStringAt(i);
+        nsCString* ext = (nsCString*)mExtensions.CStringAt(i);
         if (ext->Equals(aExtension)) {
             found = PR_TRUE;
             break;
@@ -87,14 +90,26 @@ nsMIMEInfoImpl::FirstExtension(char **_retval) {
     return NS_OK;    
 }
 
+NS_IMETHODIMP nsMIMEInfoImpl::AppendExtension(const char *aExtension)
+{
+	mExtensions.AppendCString( aExtension );
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMIMEInfoImpl::GetMIMEType(char * *aMIMEType) {
     if (!aMIMEType) return NS_ERROR_NULL_POINTER;
 
-    nsAutoString strMIMEType;
-    mMIMEType->ToString(strMIMEType);
-    *aMIMEType = strMIMEType.ToNewCString();
+    *aMIMEType = mMIMEType.ToNewCString();
     if (!*aMIMEType) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMIMEInfoImpl::SetMIMEType(const char* aMIMEType) {
+    if (!aMIMEType) return NS_ERROR_NULL_POINTER;
+
+    mMIMEType = aMIMEType;
     return NS_OK;
 }
 
@@ -105,6 +120,12 @@ nsMIMEInfoImpl::GetDescription(PRUnichar * *aDescription) {
     *aDescription = mDescription.ToNewUnicode();
     if (!*aDescription) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::SetDescription(const PRUnichar * aDescription) 
+{
+	mDescription =  aDescription;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -120,9 +141,31 @@ nsMIMEInfoImpl::Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval) {
     nsresult rv = aMIMEInfo->GetMIMEType(getter_Copies(type));
     if (NS_FAILED(rv)) return rv;
 
-      // STRING USE WARNING: perhaps |type1| should be an |nsCAutoString|? -- scc
-    nsAutoString type1;
-    mMIMEType->ToString(type1);
-    *_retval = type1.EqualsWithConversion(type);
+    *_retval = mMIMEType.EqualsWithConversion(type);
+
     return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::GetMacType(PRUint32 *aMacType)
+{
+	*aMacType = mMacType;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::SetMacType(PRUint32 aMacType)
+{
+	mMacType = aMacType;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::GetMacCreator(PRUint32 *aMacCreator)
+{
+	*aMacCreator = mMacCreator;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::SetMacCreator(PRUint32 aMacCreator)
+{
+	mMacCreator = aMacCreator;
+	return NS_OK;
 }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): Judson Valeski
+ *							 : David Matiskella
  */
 
 /*
@@ -29,11 +30,8 @@
 #define ___nsIMIMEService__h___
 
 #include "nsIMIMEService.h"
+#include "nsIMIMEDataSource.h"
 #include "nsCOMPtr.h"
-#include "nsIURI.h"
-#include "nsHashtable.h"
-#include "nsISupportsArray.h"
-
 
 class nsMIMEService : public nsIMIMEService {
 
@@ -43,19 +41,12 @@ class nsMIMEService : public nsIMIMEService {
     // nsMIMEService methods
     nsMIMEService();
     virtual ~nsMIMEService();
-    nsresult Init();
     static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
 private:
-    nsresult InitFromURI(nsIURI *aUri);
-    nsresult InitFromFile(const char *aFileName);
-    nsresult InitFromHack();
-
-    
-    nsHashtable                 *mInfoObjects; // used for fast access and
-                                               // multi index lookups
-
-    nsCOMPtr<nsISupportsArray>   mInfoArray;   // used for enumeration
+	nsresult Init();
+	nsCOMPtr<nsIMIMEDataSource>	mXML;
+	nsCOMPtr<nsIMIMEDataSource> mNative;
 };
 
 #endif // ___nsIMIMEService__h___

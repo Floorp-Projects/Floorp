@@ -31,6 +31,18 @@
 #include "nsISupports.idl"
 #include "nsIURI.idl"
 
+%{C++
+#define NS_MIMEINFO_CID                           \
+{ /* {95df6583-0001-11d4-a12b-a66ef662f0bc} */         \
+    0x95df6583,                                      \
+    0x0001,                                          \
+    0x11d4,                                          \
+    { 0xa1, 0x2b, 0xa6, 0x6e, 0xf6, 0x62, 0xf0, 0xbc } \
+}
+#define NS_MIMEINFO_PROGID \
+"component:||netscape|mimeinfo"
+%}
+
 [scriptable, uuid(6A57EAE0-2FE8-11d3-A164-0050041CAF44)]
 interface nsIMIMEInfo : nsISupports {
 	/* Gives you an array of file types associated with this type.
@@ -55,18 +67,23 @@ interface nsIMIMEInfo : nsISupports {
      * @return The first extension.
      */
     string FirstExtension();
+    
+    /*
+    *	Append a given extension to the set of extensions
+    */
+    void AppendExtension(in string aExtension);
 
 	/* The MIME type of this MIMEInfo.
      * 
      * @return String representing the MIME type.
      */
-	readonly attribute string MIMEType;
+	 attribute string MIMEType;
 
 	/* A human readable description of the MIME info
      *
      * @return The description
      */
-	readonly attribute wstring Description;
+	 attribute wstring Description;
 
     /* Gives you arbitrary data about the MIMEInfo. An example
      * of this is a generic image graphically representing
@@ -76,7 +93,13 @@ interface nsIMIMEInfo : nsISupports {
      * @return A URI representing the data location.
      */
     readonly attribute nsIURI DataURI;
-
+    
+    /*
+     *	Mac Type and creator types
+     */
+		attribute PRUint32 MacType;
+		attribute PRUint32 MacCreator;
+		
     /* Returns whether or not these two MIME infos are logically
      * equivelent maintaining the one-to-many relationship between
      * MIME types and file extensions.

@@ -36,6 +36,7 @@ CPPSRCS		= \
 		nsMIMEInfoImpl.cpp \
 		nsMIMEService.cpp \
 		nsMIMEServiceModule.cpp \
+		nsXMLMIMEDataSource.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

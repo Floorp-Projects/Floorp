@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): Judson Valeski
+ *							 : David Matiskella	
  */
 
  /* The MIME service is responsible for mapping file extensions to MIME-types
@@ -34,7 +35,8 @@
 #include "nsISupports.idl"
 #include "nsIMIMEInfo.idl"
 #include "nsIURI.idl"
-#include "nsISupportsArray.idl"
+#include "nsIMIMEDataSource.idl"
+#include "nsIFile.idl"
 
 %{C++
 #define NS_MIMESERVICE_CID                           \
@@ -81,51 +83,15 @@ interface nsIMIMEService : nsISupports {
      * @return The MIME type, if any.
      */
     string GetTypeFromURI(in nsIURI aURI);
-
-    /* Adds a MIME mapping to the database.
-     *
-     * @param MIME type to be registered.
-     * @param File extension to be associated.
-     * @param Description of this MIME type.
-     * @param Data URI typically used to retrieve an image
-     *        graphically representing the MIME type.
-     *
-     */
-    void AddMapping(in string aMIMEType, in string aExtension, in string aDesc, in nsIURI aURI);
-
-    /* Removes a MIME mapping from the database. All file extensions
-     * associated with this mapping are removed as well.
-     *
-     * @param MIME type to be removed.
-     * @return NS_OK
-     */
-    void RemoveMapping(in string aMIMEType);
-
-    /* Maps a file extension (don't include leading dot) to a MIME entry.
-     *
-     * @param MIME type to associate this extension with.
-     * @param File extension to associate with MIME type.
-     * @return NS_ERROR_FAILURE if the MIME entry doesn't exist, or for
-     *         general fialure. NS_OK otherwise.
-     */
-    void AppendExtension(in string aMIMEType, in string aExtension);
-
-    /* Removes a file extension association with a MIME entry.
-     *
-     * @param The file extension to be removed.
-     * @return NS_ERROR_FAILURE if the MIME entry doesn't exist, or for
-     *         general failure. NS_OK otherwise.
-     */
-    void RemoveExtension(in string aExtension);
-
-    /* Enumerates all the MIME types in the database. Each entry
-     * is represented as an nsIMIMEInfo interface.
-     *
-     * @return All the registered MIME types.
-     */
-    nsIBidirectionalEnumerator EnumerateEntries();
-
-    /* Makes the current mappings persistent.
-     */
-    void Serialize();
+    
+    //
+    string GetTypeFromFile ( in nsIFile aFile );
+    
+    
+   	/*
+   	*	The data sources
+   	*/
+   	readonly attribute nsIMIMEDataSource XMLDataSource;
+   	readonly attribute nsIMIMEDataSource NativeDataSource;
+   	
 };
