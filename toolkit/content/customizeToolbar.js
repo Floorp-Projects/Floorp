@@ -106,8 +106,9 @@ function slideClosed()
 function repositionDialog()
 {
   // Position the dialog touching the bottom of the toolbox and centered with it
-  window.screenY = gToolbox.boxObject.screenY + gToolbox.boxObject.height;
-  window.screenX = gToolbox.boxObject.screenX + ((gToolbox.boxObject.width - kWindowWidth) / 2);
+  var screenX = gToolbox.boxObject.screenX + ((gToolbox.boxObject.width - kWindowWidth) / 2);
+  var screenY = gToolbox.boxObject.screenY + gToolbox.boxObject.height;
+  window.moveTo(screenX, screenY);
 }
 
 function removeToolboxListeners()
