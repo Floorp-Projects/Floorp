@@ -30,7 +30,6 @@ TESTS_NOT_COMPILING = \
 		$(NULL)
 
 CPPSRCS		= \
-		RegFactory.cpp \
 		TestFactory.cpp \
 		TestCOMPtr.cpp \
 		TestID.cpp \
