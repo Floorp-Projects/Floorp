@@ -28,6 +28,14 @@
         command="cmd_selectCharPrevious"/>
     <handler type="keypress" id="key_rightshift" keycode="VK_RIGHT" shift="true" alt="false" control="false"
         command="cmd_selectCharNext"/>
+
+    <!-- Cut/copy/paste/undo -->
+    <handler type="keypress" id="key_copy" key="c" primary="true"
+        command="cmd_copy"/>
+    <handler type="keypress" id="key_cut" key="x" primary="true"
+        command="cmd_cut"/>
+    <handler type="keypress" id="key_paste" key="v" primary="true"
+        command="cmd_paste"/>
     <handler type="keypress" id="key_undo" key="z" primary="true" 
         command="cmd_undo"/>
 
@@ -57,6 +65,14 @@
         command="cmd_scrollPageUp"/>
     <handler type="keypress" id="key_pagedown" keycode="VK_PAGE_DOWN" alt="false" shift="false" control="false"
         command="cmd_scrollPageDown"/>
+
+    <!-- Cut/copy/paste -->
+    <handler type="keypress" id="key_copy" key="c" primary="true"
+        command="cmd_copy"/>
+    <handler type="keypress" id="key_cut" key="x" primary="true"
+        command="cmd_cut"/>
+    <handler type="keypress" id="key_paste" key="v" primary="true"
+        command="cmd_paste"/>
     <handler type="keypress" id="key_undo" key="z" primary="true"
         command="cmd_undo"/>
 

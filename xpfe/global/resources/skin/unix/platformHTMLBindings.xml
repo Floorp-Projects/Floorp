@@ -32,6 +32,8 @@
         command="cmd_copy"/>
     <handler type="keypress" id="key_wincut" key="x" control="true"
         command="cmd_cut"/>
+    <handler type="keypress" id="key_winpaste" key="v" control="true"
+        command="cmd_paste"/>
     <handler type="keypress" id="key_winundo" key="z" control="true"
         command="cmd_undo"/>
     <handler type="keypress" id="key_winredo" key="r" control="true"
@@ -93,6 +95,8 @@
         command="cmd_copy"/>
     <handler type="keypress" id="key_wincut" key="x" control="true"
         command="cmd_cut"/>
+    <handler type="keypress" id="key_winpaste" key="v" control="true"
+        command="cmd_paste"/>
     <handler type="keypress" id="key_winundo" key="z" control="true"
         command="cmd_undo"/>
     <handler type="keypress" id="key_winredo" key="r" control="true"
