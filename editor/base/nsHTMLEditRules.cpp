@@ -153,6 +153,8 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     
     if (mDocChangeRange && !((action == nsEditor::kOpUndo) || (action == nsEditor::kOpRedo)))
     {
+      nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
+      
       // expand the "changed doc range" as needed
       res = PromoteRange(mDocChangeRange, action);
       if (NS_FAILED(res)) return res;
@@ -2687,7 +2689,7 @@ nsHTMLEditRules::ReplaceContainer(nsIDOMNode *inNode,
 //                  the parent of inNode
 //
 nsresult
-nsHTMLEditRules::RemoveContainer(nsIDOMNode *inNode)
+nsHTMLEditRules::RemoveContainer(nsIDOMNode *inNode, PRBool aAddBRIfNeeded)
 {
   if (!inNode)
     return NS_ERROR_NULL_POINTER;
@@ -2698,6 +2700,38 @@ nsHTMLEditRules::RemoveContainer(nsIDOMNode *inNode)
   PRInt32 offset;
   res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
   if (NS_FAILED(res)) return res;
+  
+  // add BR's before and/or after the inNode
+  // if aAddBRIfNeeded is set and if the content
+  // before/after the node is inline.  
+  // Only do this if inNode is a block node.
+  if (aAddBRIfNeeded && mEditor->IsBlockNode(inNode))
+  {
+    nsCOMPtr<nsIDOMNode> nearNode, brNode;
+    res = GetPriorHTMLSibling(inNode, &nearNode);
+    if (NS_FAILED(res)) return res;
+    if (nearNode && mEditor->IsInlineNode(nearNode))
+    {
+      res = mEditor->CreateBR(parent, offset, &brNode);
+      if (NS_FAILED(res)) return res;
+      // refresh location info
+      res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
+      if (NS_FAILED(res)) return res;
+    }
+    res = GetNextHTMLSibling(inNode, &nearNode);
+    if (NS_FAILED(res)) return res;
+    if (nearNode && mEditor->IsInlineNode(nearNode))
+    {
+      res = mEditor->CreateBR(parent, offset+1, &brNode);
+      if (NS_FAILED(res)) return res;
+      // refresh location info
+      res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  
+  // loop through the child nodes of inNode and promote them
+  // into inNode's parent.
   PRBool bHasMoreChildren;
   inNode->HasChildNodes(&bHasMoreChildren);
   nsCOMPtr<nsIDOMNode> child;
@@ -3249,7 +3283,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
   
   // we special case an empty tag name to mean "remove block parents".
   // This is used for the "normal" paragraph style in mail-compose
-  if (aBlockTag->IsEmpty()) bNoParent = PR_TRUE;
+  if (aBlockTag->IsEmpty() || *aBlockTag=="normal") bNoParent = PR_TRUE;
   
   arrayOfNodes->Count(&listCount);
   
@@ -3272,11 +3306,6 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
       continue;  // do nothing to this block
     }
         
-    // if curNode is a <pre> and we are converting to non-pre, we need
-    // to process the text inside the <pre> so as to convert returns
-    // to breaks, and runs of spaces to nbsps.
-    // xxx floppy moose
-      
     // if curNode is a mozdiv, p, header, address, or pre, replace 
     // it with a new block of correct type.
     // xxx floppy moose: pre cant hold everything the others can
@@ -3294,10 +3323,10 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
       curBlock = 0;  // forget any previous block used for previous inline nodes
       if (bNoParent)
       {
-        nsCOMPtr<nsIDOMNode> brNode;
-        res = mEditor->CreateBR(curParent, offset+1, &brNode);
-        if (NS_FAILED(res)) return res;
-        res = RemoveContainer(curNode);
+//        nsCOMPtr<nsIDOMNode> brNode;
+//        res = mEditor->CreateBR(curParent, offset+1, &brNode);
+//        if (NS_FAILED(res)) return res;
+        res = RemoveContainer(curNode, PR_TRUE); 
       }
       else
       {
@@ -4029,10 +4058,22 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
   // unwrap list item contents if they are no longer in a list
   if (!IsList(curParPar) && IsListItem(curNode)) 
   {
-    nsCOMPtr<nsIDOMNode> mozDiv;
+    nsCOMPtr<nsIDOMNode> lastChild;
+    res = GetLastEditableChild(curNode, &lastChild);
+    if (NS_FAILED(res)) return res;
     res = RemoveContainer(curNode);
     if (NS_FAILED(res)) return res;
-
+    if (mEditor->IsInlineNode(lastChild))
+    {
+      // last thing inside of the listitem wasn't a block node.
+      // insert a BR to preserve the illusion of block boundaries
+      nsCOMPtr<nsIDOMNode> node, brNode;
+      PRInt32 offset;
+      res = nsEditor::GetNodeLocation(lastChild, &node, &offset);
+      if (NS_FAILED(res)) return res;
+      res = mEditor->CreateBR(node, offset+1, &brNode);
+      if (NS_FAILED(res)) return res;
+    }
     *aOutOfList = PR_TRUE;
   }
   return res;

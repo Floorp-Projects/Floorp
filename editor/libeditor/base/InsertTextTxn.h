@@ -25,8 +25,8 @@
 
 #include "EditTxn.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIEditor.h"
 #include "nsCOMPtr.h"
-#include "nsWeakPtr.h"
 
 #define INSERT_TEXT_TXN_CID \
 {/* 93276f00-ab2c-11d2-8f4b-006008159b0c*/ \
@@ -60,7 +60,7 @@ public:
   NS_IMETHOD Init(nsIDOMCharacterData *aElement,
                   PRUint32 aOffset,
                   const nsString& aString,
-                  nsWeakPtr aPresShellWeak);
+                  nsIEditor *aEditor);
 
 private:
 	
@@ -110,8 +110,8 @@ protected:
   /** the text to insert into mElement at mOffset */
   nsString mStringToInsert;
 
-  /** the presentation shell, which we'll need to get the selection */
-  nsWeakPtr mPresShellWeak;   // weak reference to the nsIPresShell
+  /** the editor, which we'll need to get the selection */
+  nsIEditor *mEditor;   
 
   friend class TransactionFactory;
 

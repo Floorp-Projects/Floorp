@@ -80,13 +80,13 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
   }
 
   NS_ASSERTION(mEditor && mParent, "bad state");
-	if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
+  if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
   // create a new node
   nsCOMPtr<nsIDOMDocument>doc;
   result = mEditor->GetDocument(getter_AddRefs(doc));
-	if (NS_FAILED(result)) return result;
-	if (!doc) return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(result)) return result;
+  if (!doc) return NS_ERROR_NULL_POINTER;
 
   nsAutoString textNodeTag;
   result = nsEditor::GetTextNodeTag(textNodeTag);
@@ -97,20 +97,20 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
     const nsString stringData;
     nsCOMPtr<nsIDOMText>newTextNode;
     result = doc->CreateTextNode(stringData, getter_AddRefs(newTextNode));
-		if (NS_FAILED(result)) return result;
-		if (!newTextNode) return NS_ERROR_NULL_POINTER;
+    if (NS_FAILED(result)) return result;
+    if (!newTextNode) return NS_ERROR_NULL_POINTER;
     mNewNode = do_QueryInterface(newTextNode);
   }
   else 
   {
     nsCOMPtr<nsIDOMElement>newElement;
     result = doc->CreateElement(mTag, getter_AddRefs(newElement));
-		if (NS_FAILED(result)) return result;
-		if (!newElement) return NS_ERROR_NULL_POINTER;
+    if (NS_FAILED(result)) return result;
+    if (!newElement) return NS_ERROR_NULL_POINTER;
     mNewNode = do_QueryInterface(newElement);
   }
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
-	if (!mNewNode) return NS_ERROR_NULL_POINTER;
+  if (!mNewNode) return NS_ERROR_NULL_POINTER;
 
   if (gNoisy) { printf("  newNode = %p\n", mNewNode.get()); }
   // insert the new node
@@ -130,23 +130,31 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
       if (mOffsetInParent>count)
         mOffsetInParent = count;
       result = childNodes->Item(mOffsetInParent, getter_AddRefs(mRefNode));
-      if (NS_SUCCEEDED(result)) // note, it's ok for mRefNode to be null.  that means append
+      if (NS_FAILED(result)) return result; // note, it's ok for mRefNode to be null.  that means append
+
+      result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
+      if (NS_FAILED(result)) return result; 
+
+      // only set selection to insertion point if editor gives permission
+      PRBool bAdjustSelection;
+      mEditor->ShouldTxnSetSelection(&bAdjustSelection);
+      if (bAdjustSelection)
       {
-        result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
-        if (NS_SUCCEEDED(result))
-        {
-          nsCOMPtr<nsIDOMSelection> selection;
-          result = mEditor->GetSelection(getter_AddRefs(selection));
-					if (NS_FAILED(result)) return result;
-					if (!selection) return NS_ERROR_NULL_POINTER;
+        nsCOMPtr<nsIDOMSelection> selection;
+        result = mEditor->GetSelection(getter_AddRefs(selection));
+        if (NS_FAILED(result)) return result;
+        if (!selection) return NS_ERROR_NULL_POINTER;
 
-          PRInt32 offset=0;
-          result = nsEditor::GetChildOffset(mNewNode, mParent, offset);
-    			if (NS_FAILED(result)) return result;
+        PRInt32 offset=0;
+        result = nsEditor::GetChildOffset(mNewNode, mParent, offset);
+        if (NS_FAILED(result)) return result;
 
-          result = selection->Collapse(mParent, offset+1);
-          NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after insert.");
-        }
+        result = selection->Collapse(mParent, offset+1);
+        NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after insert.");
+       }
+      else
+      {
+        // do nothing - dom range gravity will adjust selection
       }
     }
   }
@@ -158,25 +166,10 @@ NS_IMETHODIMP CreateElementTxn::Undo(void)
   if (gNoisy) { printf("Undo Create Element, mParent = %p, node = %p\n",
                         mParent.get(), mNewNode.get()); }
   NS_ASSERTION(mEditor && mParent, "bad state");
-	if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
+  if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->RemoveChild(mNewNode, getter_AddRefs(resultNode));
-  if (NS_SUCCEEDED(result))
-  {
-    nsCOMPtr<nsIDOMSelection> selection;
-    result = mEditor->GetSelection(getter_AddRefs(selection));
-		if (NS_FAILED(result)) return result;
-		if (!selection) return NS_ERROR_NULL_POINTER;
-
-    PRInt32 offset=0;
-    if (mRefNode) {
-      result = nsEditor::GetChildOffset(mRefNode, mParent, offset);
-      if (NS_FAILED(result)) return result;
-    }
-    result = selection->Collapse(mParent, offset);
-    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
-  }
   return result;
 }
 
@@ -184,7 +177,7 @@ NS_IMETHODIMP CreateElementTxn::Redo(void)
 {
   if (gNoisy) { printf("Redo Create Element\n"); }
   NS_ASSERTION(mEditor && mParent, "bad state");
-	if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
+  if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
   // first, reset mNewNode so it has no attributes or content
   nsCOMPtr<nsIDOMCharacterData>nodeAsText;
@@ -198,19 +191,6 @@ NS_IMETHODIMP CreateElementTxn::Redo(void)
   // now, reinsert mNewNode
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
-  if (NS_SUCCEEDED(result))
-  {
-    nsCOMPtr<nsIDOMSelection> selection;
-    result = mEditor->GetSelection(getter_AddRefs(selection));
-		if (NS_FAILED(result)) return result;
-		if (!selection) return NS_ERROR_NULL_POINTER;
-    PRInt32 offset=0;
-    result = nsEditor::GetChildOffset(mNewNode, mParent, offset);
-    if (NS_FAILED(result)) return result;
-
-    result = selection->Collapse(mParent, offset+1);
-    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after redo of insert.");
-  }
   return result;
 }
 

@@ -142,6 +142,7 @@ public:
 
   NS_IMETHOD BeginPlaceHolderTransaction(nsIAtom *aName);
   NS_IMETHOD EndPlaceHolderTransaction();
+  NS_IMETHOD ShouldTxnSetSelection(PRBool *aResult);
 
   // pure virtual, because the definition of 'empty' depends on the doc type
   NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)=0;
@@ -396,10 +397,10 @@ public:
    * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
    * @param aParent              the parent of aExistingRightNode
    */
-  static nsresult SplitNodeImpl(nsIDOMNode *aExistingRightNode,
-                                PRInt32      aOffset,
-                                nsIDOMNode *aNewLeftNode,
-                                nsIDOMNode *aParent);
+  nsresult SplitNodeImpl(nsIDOMNode *aExistingRightNode,
+                         PRInt32     aOffset,
+                         nsIDOMNode *aNewLeftNode,
+                         nsIDOMNode *aParent);
 
   /** 
    * JoinNodes() takes 2 nodes and merge their content|children.
@@ -410,10 +411,10 @@ public:
    * @param aNodeToKeepIsFirst  if PR_TRUE, the contents|children of aNodeToKeep come before the
    *                            contents|children of aNodeToJoin, otherwise their positions are switched.
    */
-  static nsresult JoinNodesImpl(nsIDOMNode *aNodeToKeep,
-                                nsIDOMNode *aNodeToJoin,
-                                nsIDOMNode *aParent,
-                                PRBool      aNodeToKeepIsFirst);
+  nsresult JoinNodesImpl(nsIDOMNode *aNodeToKeep,
+                         nsIDOMNode *aNodeToJoin,
+                         nsIDOMNode *aParent,
+                         PRBool      aNodeToKeepIsFirst);
 
   /**
    *  Set aOffset to the offset of aChild in aParent.  
@@ -629,6 +630,8 @@ public:
   nsresult BeginUpdateViewBatch(void);
   nsresult EndUpdateViewBatch(void);
 
+  PRBool GetShouldTxnSetSelection();
+  void   SetShouldTxnSetSelection(PRBool aShould);
 
 protected:
 
@@ -645,7 +648,7 @@ protected:
   PRInt32         mPlaceHolderBatch;   // nesting count for batching
   nsCOMPtr<nsIDOMNode> mTxnStartNode;  // saved selection info to pass to placeholder at init time
   PRInt32         mTxnStartOffset;     //  "  "  "  "
-
+  PRBool          mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   //
   // data necessary to build IME transactions
   //
@@ -666,6 +669,7 @@ protected:
   static PRInt32 gInstanceCount;
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
+  friend class nsAutoTxnsConserveSelection;
 };
 
 

@@ -71,14 +71,23 @@ NS_IMETHODIMP DeleteTextTxn::Do(void)
   nsresult result = mElement->SubstringData(mOffset, mNumCharsToDelete, mDeletedText);
   NS_ASSERTION(NS_SUCCEEDED(result), "could not get text to delete.");
   result = mElement->DeleteData(mOffset, mNumCharsToDelete);
-  if (NS_SUCCEEDED(result))
+  if (NS_FAILED(result)) return result;
+
+  // only set selection to deletion point if editor gives permission
+  PRBool bAdjustSelection;
+  mEditor->ShouldTxnSetSelection(&bAdjustSelection);
+  if (bAdjustSelection)
   {
     nsCOMPtr<nsIDOMSelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
-		if (NS_FAILED(result)) return result;
-		if (!selection) return NS_ERROR_NULL_POINTER;
+    if (NS_FAILED(result)) return result;
+    if (!selection) return NS_ERROR_NULL_POINTER;
     result = selection->Collapse(mElement, mOffset);
-    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
+    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of deletetext.");
+  }
+  else
+  {
+    // do nothing - dom range gravity will adjust selection
   }
   return result;
 }
@@ -93,15 +102,6 @@ NS_IMETHODIMP DeleteTextTxn::Undo(void)
 
   nsresult result;
   result = mElement->InsertData(mOffset, mDeletedText);
-  if (NS_SUCCEEDED(result))
-  {
-    nsCOMPtr<nsIDOMSelection> selection;
-    result = mEditor->GetSelection(getter_AddRefs(selection));
-		if (NS_FAILED(result)) return result;
-		if (!selection) return NS_ERROR_NULL_POINTER;
-    result = selection->Collapse(mElement, mOffset);
-    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
-  }
   return result;
 }
 

@@ -133,7 +133,7 @@ protected:
   nsresult ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString *aBlockTag);
 
   nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
-  nsresult RemoveContainer(nsIDOMNode *inNode);
+  nsresult RemoveContainer(nsIDOMNode *inNode, PRBool aAddBRIfNeeded=PR_FALSE);
   nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
 
   nsresult JoinNodesSmart( nsIDOMNode *aNodeLeft, 
