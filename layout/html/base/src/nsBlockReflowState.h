@@ -59,16 +59,16 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 
 #ifdef NS_DEBUG
 #undef NOISY_FIRST_LINE
-#undef REALLY_NOISY_FIRST_LINE
+#undef  REALLY_NOISY_FIRST_LINE
 #undef NOISY_FIRST_LETTER
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_FLOATER_CLEARING
 #undef NOISY_INCREMENTAL_REFLOW
-#undef REFLOW_STATUS_COVERAGE
 #undef NOISY_FINAL_SIZE
 #undef NOISY_REMOVE_FRAME
 #undef NOISY_DAMAGE_REPAIR
 #undef NOISY_COMBINED_AREA
+#undef REFLOW_STATUS_COVERAGE
 #else
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
@@ -76,11 +76,11 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_FLOATER_CLEARING
 #undef NOISY_INCREMENTAL_REFLOW
-#undef REFLOW_STATUS_COVERAGE
 #undef NOISY_FINAL_SIZE
 #undef NOISY_REMOVE_FRAME
 #undef NOISY_DAMAGE_REPAIR
 #undef NOISY_COMBINED_AREA
+#undef REFLOW_STATUS_COVERAGE
 #endif
 
 //----------------------------------------------------------------------
@@ -1153,6 +1153,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 #endif
 #ifdef NOISY_MAX_ELEMENT_SIZE
     if (aState.mComputeMaxElementSize) {
+      IndentBy(stdout, GetDepth());
+      if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
+        printf("PASS1 ");
+      }
       ListTag(stdout);
       printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
              maxWidth, maxHeight, aMetrics.width, aMetrics.height,
@@ -3053,13 +3057,26 @@ nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
   nscoord maxWidth, maxHeight;
   aState.mCurrentBand.GetMaxElementSize(&maxWidth, &maxHeight);
 #ifdef NOISY_MAX_ELEMENT_SIZE
+  IndentBy(stdout, GetDepth());
+  if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
+    printf("PASS1 ");
+  }
   ListTag(stdout);
   printf(": maxFloaterSize=%d,%d\n", maxWidth, maxHeight);
 #endif
 
-  // Add in the maximum width of any floaters in the band because we
-  // always place some non-floating content with a floater.
-  aMaxElementSize->width += maxWidth;
+  // If the floaters are wider than the content, then use the maximum
+  // floater width as the maximum width.
+  //
+  // It used to be the case that we would always place some content
+  // next to a floater, regardless of the amount of available space
+  // after subtracing off the floaters sizes. This can lead to content
+  // overlapping floaters, so we no longer do this (and pass CSS2's
+  // conformance tests). This is not how navigator 4-1 used to do
+  // things.
+  if (maxWidth > aMaxElementSize->width) {
+    aMaxElementSize->width = maxWidth;
+  }
 
   // Only update the max-element-size's height value if the floater is
   // part of the current line.
@@ -3083,17 +3100,27 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   if (aState.mComputeMaxElementSize) {
     if (aMaxElementSize.width > aState.mMaxElementSize.width) {
 #ifdef NOISY_MAX_ELEMENT_SIZE
-      ListTag(stdout); printf(": old max-element-size.width=%d new=%d\n",
-                              aState.mMaxElementSize.width,
-                              aMaxElementSize.width);
+      IndentBy(stdout, GetDepth());
+      if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
+        printf("PASS1 ");
+      }
+      ListTag(stdout);
+      printf(": old max-element-size.width=%d new=%d\n",
+             aState.mMaxElementSize.width,
+             aMaxElementSize.width);
 #endif
       aState.mMaxElementSize.width = aMaxElementSize.width;
     }
     if (aMaxElementSize.height > aState.mMaxElementSize.height) {
 #ifdef NOISY_MAX_ELEMENT_SIZE
-      ListTag(stdout); printf(": old max-element-size.height=%d new=%d\n",
-                              aState.mMaxElementSize.height,
-                              aMaxElementSize.height);
+      IndentBy(stdout, GetDepth());
+      if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
+        printf("PASS1 ");
+      }
+      ListTag(stdout);
+      printf(": old max-element-size.height=%d new=%d\n",
+             aState.mMaxElementSize.height,
+             aMaxElementSize.height);
 #endif
       aState.mMaxElementSize.height = aMaxElementSize.height;
     }
