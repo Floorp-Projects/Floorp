@@ -790,20 +790,3 @@ NS_IMETHODIMP nsIMAPHostSessionList::FindShellInCacheForHost(const char *serverK
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
-NS_IMETHODIMP NS_NewImapHostSessionList(nsISupports * aOuter, REFNSIID iid, void ** aResult)
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-
-  if (aOuter)
-  {
-      *aResult = nsnull;
-      return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsIMAPHostSessionList *imapHostSessionList = new nsIMAPHostSessionList();
-  if (!imapHostSessionList) return NS_ERROR_OUT_OF_MEMORY;
-  return imapHostSessionList->QueryInterface(iid, aResult); 
-}
-
-
-
