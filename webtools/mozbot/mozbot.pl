@@ -83,7 +83,7 @@
 $SIG{'INT'}  = sub { &killed('INT'); };
 $SIG{'KILL'} = sub { &killed('KILL'); };
 $SIG{'TERM'} = sub { &killed('TERM'); };
-$SIG{'CHLD'} = sub { wait(); };
+$SIG{'CHLD'} = 'IGNORE'; # autoreap children
 
 # this allows us to exit() without shutting down (by exec($0)ing)
 BEGIN { exit() if ((defined($ARGV[0])) and ($ARGV[0] eq '--abort')); }
@@ -988,7 +988,7 @@ sub bot_select {
     &debug("child ${$pipe}->{'BotModules_PID'} completed ${$pipe}->{'BotModules_ChildType'}".
            (${$pipe}->{'BotModules_Module'}->{'_shutdown'} ? 
             ' (nevermind, module has shutdown)': ''));
-    waitpid(${$pipe}->{'BotModules_PID'}, 0);
+    kill 9, ${$pipe}->{'BotModules_PID'}; # ensure child is dead
     &debug("child ${$pipe}->{'BotModules_PID'} exited.");
     return if ${$pipe}->{'BotModules_Module'}->{'_shutdown'}; # see unload()
     eval {
@@ -1495,7 +1495,8 @@ sub spawnChild {
                 # had been configured nicks...
 
                 eval {
-                    exec { $0 } ($0, '--abort'); # do not call shutdown handlers
+                    $0 =~ m/^(.*)$/os; # untaint $0 so that we can call it below:
+                    exec { $1 } ($1, '--abort'); # do not call shutdown handlers
                     # the previous line works because exec() bypasses
                     # the perl object garbarge collection and simply
                     # deallocates all the memory in one go. This means
