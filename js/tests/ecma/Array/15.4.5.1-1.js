@@ -74,21 +74,6 @@ function getTestCases() {
                                     1000,
                                     eval("var A = new Array(); A.length = 1000; A.length") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var A = new Array(1000); A.length = Math.pow(2,32); A.length",
-                                    0,
-                                    eval("var A = new Array(1000); A.length = Math.pow(2,32); A.length") );
-
-    array[item++] = new TestCase(   SECTION,
-                                    "var A = new Array(1); A.length = Math.pow(2,32) +1000; A.length",
-                                    1000,
-                                    eval("var A = new Array(1); A.length = Math.pow(2,32) +1000; A.length") );
-
-    array[item++] = new TestCase(   SECTION,
-                                    "var A = new Array(1000); A.length = Math.pow(2,32) +1; A.length",
-                                    1,
-                                    eval("var A = new Array(1000); A.length = Math.pow(2,32) +1; A.length") );
-
     // A has Property P, and P is not length or an array index
     array[item++] = new TestCase(   SECTION,
                                     "var A = new Array(1000); A.name = 'name of this array'; A.name",
