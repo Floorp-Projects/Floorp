@@ -258,7 +258,7 @@ NS_IMETHODIMP nsDrawingSurfaceMac::Init(nsIWidget *aTheWidget)
  * @return error status
  */
 
-NS_IMETHODIMP nsDrawingSurfaceMac::Init(PRUint32 aDepth,PRUint32 aWidth,PRUint32 aHeight, PRUint32 aFlags)
+NS_IMETHODIMP nsDrawingSurfaceMac::Init(PRUint32 aDepth, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags)
 {
   PRUint32	depth;
   Rect			macRect;
@@ -322,7 +322,7 @@ NS_IMETHODIMP nsDrawingSurfaceMac::Init(PRUint32 aDepth,PRUint32 aWidth,PRUint32
 	// erase the offscreen area
 	{
 	  StGWorldPortSetter  setter(offscreenGWorld);
-	::EraseRect(&macRect);
+	  ::EraseRect(&macRect);
   }
 
 	Init(offscreenGWorld);
