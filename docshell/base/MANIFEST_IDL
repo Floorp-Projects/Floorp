@@ -22,6 +22,7 @@
 
 nsCDocShell.idl
 nsIDocShell.idl
+nsIDocShellLoadInfo.idl
 nsIDocShellTreeItem.idl
 nsIDocShellTreeNode.idl
 nsIDocShellTreeOwner.idl
