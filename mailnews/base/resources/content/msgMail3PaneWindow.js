@@ -924,24 +924,37 @@ function UpgradeThreadPaneUI()
 
   try {
     threadPaneUIVersion = pref.getIntPref("mailnews.ui.threadpane.version");
-    if (threadPaneUIVersion < 3) {
-      var subjectCol = document.getElementById("subjectCol");
-      var junkCol = document.getElementById("junkStatusCol");
+    if (threadPaneUIVersion < 4) {
       var threadTree = document.getElementById("threadTree");
-      
-      var beforeCol = subjectCol.boxObject.nextSibling.boxObject.nextSibling;
-      if (beforeCol)
-        threadTree._reorderColumn(junkCol, beforeCol, true);
-      else // subjectCol was the last column, put it after
-        threadTree._reorderColumn(junkCol, subjectCol, false);
+      var junkCol = document.getElementById("junkStatusCol");
 
-      if (threadPaneUIVersion == 1) {
-        labelCol = document.getElementById("labelCol");
-        labelCol.setAttribute("hidden", "true");
+      if (threadPaneUIVersion < 3) {
+        var subjectCol = document.getElementById("subjectCol");
+      
+        var beforeCol = subjectCol.boxObject.nextSibling.boxObject.nextSibling;
+        if (beforeCol)
+          threadTree._reorderColumn(junkCol, beforeCol, true);
+        else // subjectCol was the last column, put it after
+          threadTree._reorderColumn(junkCol, subjectCol, false);
+
+        if (threadPaneUIVersion == 1) {
+          labelCol = document.getElementById("labelCol");
+          labelCol.setAttribute("hidden", "true");
+        }
       }
 
-      pref.setIntPref("mailnews.ui.threadpane.version", 3);
-    }    
+      var senderCol = document.getElementById("senderCol");
+      var recipientCol = document.getElementById("recipientCol");
+    
+      var beforeCol = junkCol.boxObject.nextSibling.boxObject.nextSibling;
+      if (beforeCol)
+        threadTree._reorderColumn(recipientCol, beforeCol, true);
+      else // junkCol was the last column, put it after
+        threadTree._reorderColumn(recipientCol, junkCol, false);
+      threadTree._reorderColumn(senderCol, recipientCol, true);
+
+      pref.setIntPref("mailnews.ui.threadpane.version", 4);
+    }
 	}
   catch (ex) {
     dump("UpgradeThreadPane: ex = " + ex + "\n");
