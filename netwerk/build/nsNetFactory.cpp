@@ -23,7 +23,7 @@
 #include "nsFileTransportService.h"
 #include "nsSocketTransportService.h"
 #include "nscore.h"
-#include "nsUrl.h"
+#include "nsStandardUrl.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
@@ -145,6 +145,8 @@ nsresult nsNetFactory::LockFactory(PRBool aLock)
 extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
              nsIFactory **aFactory)
 {
     if (aFactory == nsnull)
