@@ -133,7 +133,7 @@ nsCertificatePrincipal::HashValue(PRUint32 *result)
 {
     char* str;
     if (NS_FAILED(ToString(&str)) || !str) return NS_ERROR_FAILURE;
-    *result = nsCRT::HashCode(str);
+    *result = nsCRT::HashCode(str, nsnull);
     nsCRT::free(str);
     return NS_OK;
 }

@@ -21,7 +21,6 @@
  *   Chris Waterson <waterson@netscape.com>
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Ben Goodger <ben@netscape.com>
  */
 
@@ -5894,12 +5893,6 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     rv = doc->GetPrincipal(getter_AddRefs(docPrincipal));
     if (NS_FAILED(rv)) return rv;
 
-    // If we're an untrusted document, this will get the codebase
-    // principal of the document for comparison to each URL that the
-    // XUL wants to load. If we're a trusted document, this will just
-    // be null.
-    nsCOMPtr<nsICodebasePrincipal> codebase;
-
     if (docPrincipal.get() == gSystemPrincipal) {
         // If we're a privileged (e.g., chrome) document, then add the
         // local store as the first data source in the db. Note that
@@ -5912,17 +5905,6 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add local store to db");
             if (NS_FAILED(rv)) return rv;
         }
-    }
-    else {
-        // We're not privileged. So grab our codebase for comparison
-        // with the pricipals of the datasource's we're about to
-        // load. If, for some reason, we don't have a codebase
-        // principal, then panic and abort the template setup.
-        codebase = do_QueryInterface(docPrincipal);
-
-        NS_ASSERTION(codebase != nsnull, "no codebase principal for non-privileged XUL doc");
-        if (! codebase)
-            return NS_ERROR_UNEXPECTED;
     }
 
     // Parse datasources: they are assumed to be a whitespace
@@ -5954,7 +5936,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
         rv = rdf_MakeAbsoluteURI(docurl, uriStr);
         if (NS_FAILED(rv)) return rv;
 
-        if (codebase) {
+        if (docPrincipal.get() != gSystemPrincipal) {
             // Our document is untrusted, so check to see if we can
             // load the datasource that they've asked for.
             nsCOMPtr<nsIURI> uri;
@@ -5968,7 +5950,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
             if (NS_FAILED(rv)) return rv;
 
             PRBool same;
-            rv = codebase->SameOrigin(principal, &same);
+            rv = docPrincipal->Equals(principal, &same);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test same origin");
             if (NS_FAILED(rv)) return rv;
 

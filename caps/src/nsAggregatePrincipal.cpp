@@ -102,17 +102,6 @@ nsAggregatePrincipal::GetOrigin(char** aOrigin)
     return codebase->GetOrigin(aOrigin);
 }
 
-NS_IMETHODIMP 
-nsAggregatePrincipal::SameOrigin(nsIPrincipal* other, PRBool* result)
-{
-    if (!mCodebase)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(mCodebase);
-    return codebase->SameOrigin(other, result);
-}
-
-
 ////////////////////////////////////////////////
 // Methods implementing nsIAggregatePrincipal //
 ////////////////////////////////////////////////
@@ -264,7 +253,7 @@ nsAggregatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
     PRBool certEqual = PR_TRUE;
     if (mCertificate)
     {
-        mCertificate->Equals(other, &certEqual);
+        rv = mCertificate->Equals(other, &certEqual);
         if(NS_FAILED(rv)) return rv;
     }
     PRBool cbEqual = PR_TRUE;
