@@ -18,7 +18,7 @@
 
 #include "msgCore.h" // for pre-compiled headers
 #include "nsCOMPtr.h"
-#include "stdio.h"
+#include <stdio.h>
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
