@@ -294,6 +294,10 @@ endif
 ifdef MOZ_COVERAGE
 MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
 OS_LDFLAGS = /DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
+_ORDERFILE := $(wildcard $(srcdir)/win32.order)
+ifneq (,$(_ORDERFILE))
+OS_LDFLAGS += /ORDER:@$(srcdir)/win32.order
+endif
 endif
 # MOZ_COVERAGE
 
