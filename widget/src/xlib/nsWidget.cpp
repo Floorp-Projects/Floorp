@@ -630,6 +630,7 @@ nsWidget::GetWidgetForWindow(Window aWindow)
   }
   nsWindowKey *window_key = new nsWindowKey(aWindow);
   nsWidget *retval = (nsWidget *)window_list->Get(window_key);
+  delete window_key;
   return retval;
 }
 
