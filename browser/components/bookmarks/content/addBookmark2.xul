@@ -49,43 +49,42 @@
 
   <separator id="nameseparator" class="thin"/>
   
-  <hbox align="start">
-    <grid flex="1">
-      <columns>
-        <column/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row align="center">
-          <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
-          <textbox id="name" oninput="onFieldInput();"/>
-        </row>
-        <row align="center">
-          <label id="createinlabel" value="&createin.label;" accesskey="&createin.accesskey;" control="select-menu"/>
-          <menulist id="select-menu" class="folder-icon"
-                    oncommand="selectMenulistFolder(event);"
-                    datasources="rdf:bookmarks" ref="NC:LastModifiedFoldersRoot">
-            <template>
-              <rule parent="menulist">
-                <menupopup>
-                  <menuitem uri="rdf:*" class="menuitem-iconic folder-icon"
-                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                </menupopup>
-              </rule>
-            </template>
-          </menulist>
-        </row>
-        <row>
-          <spacer/>
-          <checkbox id="addgroup" label="&addGroup.label;"
-                    accesskey="&addGroup.accesskey;"/>
-        </row>
-      </rows>
-    </grid>
-    <button id="expander" class="down" oncommand="expandTree();"
-            tooltiptextdown="&expanderDown.tooltip;"
-            tooltiptextup="&expanderUp.tooltip;"/>
-  </hbox>
+  <grid flex="1">
+    <columns>
+      <column/>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows>
+      <row align="center">
+        <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
+        <textbox id="name" oninput="onFieldInput();"/>
+      </row>
+      <row align="center">
+        <label id="createinlabel" value="&createin.label;" accesskey="&createin.accesskey;" control="select-menu"/>
+        <menulist id="select-menu" class="folder-icon"
+                  oncommand="selectMenulistFolder(event);"
+                  datasources="rdf:bookmarks" ref="NC:LastModifiedFoldersRoot">
+          <template>
+            <rule parent="menulist">
+              <menupopup>
+                <menuitem uri="rdf:*" class="menuitem-iconic folder-icon"
+                          label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              </menupopup>
+            </rule>
+          </template>
+        </menulist>
+        <button id="expander" class="down" oncommand="expandTree();"
+                 tooltiptextdown="&expanderDown.tooltip;"
+                 tooltiptextup="&expanderUp.tooltip;"/>
+      </row>
+      <row>
+        <spacer/>
+        <checkbox id="addgroup" label="&addGroup.label;"
+                  accesskey="&addGroup.accesskey;"/>
+      </row>
+    </rows>
+  </grid>
 
   <separator class="thin"/>
 
