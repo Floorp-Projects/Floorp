@@ -123,13 +123,15 @@ interface(TreeState *state)
         }
     }
     fputs(" {\n"
-          " public: \n"
-          "  static const nsIID& IID() {\n"
-          "    static nsIID iid = ",
-          state->file);
-    if (!output_classname_iid_define(state->file, className))
-        return FALSE;
-    fputs(";\n    return iid;\n  }\n", state->file);
+          " public: \n", state->file);
+    if (iid) {
+        fputs("  static const nsIID& IID() {\n"
+              "    static nsIID iid = ",
+              state->file);
+        if (!output_classname_iid_define(state->file, className))
+            return FALSE;
+        fputs(";\n    return iid;\n  }\n", state->file);
+    }
 
     state->tree = IDL_INTERFACE(iface).body;
 
@@ -323,6 +325,20 @@ xpcom_param(TreeState *state)
 }
 
 /*
+ * A forward declaration, usually an interface.
+ */
+static gboolean
+forward_dcl(TreeState *state)
+{
+    IDL_tree iface = state->tree;
+    char *className = IDL_IDENT(IDL_FORWARD_DCL(iface).ident).str;
+    if (!className)
+        return FALSE;
+    fprintf(state->file, "class %s; /* forward decl */\n", className);
+    return TRUE;
+}
+
+/*
  * A method is an `operation', therefore a method decl is an `op dcl'.
  * I blame Elliot.
  */
@@ -395,6 +411,7 @@ xpidl_header_dispatch(void)
         table[IDLN_LIST] = list;
         table[IDLN_ATTR_DCL] = attr_dcl;
         table[IDLN_OP_DCL] = op_dcl;
+        table[IDLN_FORWARD_DCL] = forward_dcl;
         table[IDLN_TYPE_ENUM] = do_enum;
         table[IDLN_INTERFACE] = interface;
         table[IDLN_CODEFRAG] = codefrag;

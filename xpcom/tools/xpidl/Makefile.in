@@ -39,7 +39,7 @@ include $(topsrcdir)/config/config.mk
 CFLAGS += $(shell glib-config --cflags)
 
 # XXX need configure test
-EX_LIBS = -lIDL $(shell glib-config --libs)
+EX_LIBS = -lIDL -L$(DIST)/bin -lxpt $(NSPR_LIBS) $(shell glib-config --libs)
 
 PROGS = $(OBJDIR)/xpidl
 

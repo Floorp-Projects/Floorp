@@ -106,7 +106,7 @@ main(int argc, char *argv[])
             break;
         switch (argv[i][1]) {
           case '-':
-            argc++;
+            argc++;             /* pretend we didn't see this */
             /* fall through */
           case 0:               /* - is a legal input filename (stdin)  */
             goto done_options;
