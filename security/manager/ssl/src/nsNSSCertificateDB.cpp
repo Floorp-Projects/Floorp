@@ -299,14 +299,14 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
     cert1->GetIssuerName(cert1IssuerName);
     cert1->GetSubjectName(cert1SubjectName);
 
-    if (nsCRT::strcmp(cert1IssuerName.get(), cert0SubjectName.get()) == 0) {
+    if (cert1IssuerName.Equals(cert0SubjectName)) {
       // In this case, the first cert in the list signed the second,
       // so the first cert is the root.  Let's display the last cert 
       // in the list.
       selCertIndex = numCerts-1;
       certToShow = do_QueryElementAt(x509Certs, selCertIndex);
     } else 
-    if (nsCRT::strcmp(cert0IssuerName.get(), cert1SubjectName.get()) == 0) { 
+    if (cert0IssuerName.Equals(cert1SubjectName)) { 
       // In this case the second cert has signed the first cert.  The 
       // first cert is the leaf, so let's display it.
       selCertIndex = 0;
