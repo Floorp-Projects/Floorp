@@ -82,7 +82,7 @@ NS_NewXMLEntity(nsIContent** aInstancePtrResult,
                 const nsAReadableString& aName,
                 const nsAReadableString& aPublicId,
                 const nsAReadableString& aSystemId,
-                const nsString aNotationName)
+                const nsAReadableString& aNotationName)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
