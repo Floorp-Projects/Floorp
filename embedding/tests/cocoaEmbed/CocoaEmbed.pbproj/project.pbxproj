@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 34;
+	objectVersion = 38;
 	objects = {
 		080E96DCFE201CFB7F000001 = {
 			fileRef = 29B97318FDCFA39411CA2CEA;
@@ -128,6 +128,7 @@
 				4A9504CCFFE6A4B311CA0CBA,
 				4A9504CDFFE6A4B311CA0CBA,
 			);
+			hasScannedForEncodings = 1;
 			isa = PBXProject;
 			mainGroup = 29B97314FDCFA39411CA2CEA;
 			projectDirPath = "";
@@ -159,9 +160,10 @@
 			refType = 4;
 		};
 		29B97316FDCFA39411CA2CEA = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = main.m;
-			refType = 4;
+			path = main.mm;
+			refType = 2;
 		};
 		29B97317FDCFA39411CA2CEA = {
 			children = (
@@ -226,11 +228,14 @@
 			);
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = ../../../embedding/browser/cocoa/src/build;
-				HEADER_SEARCH_PATHS = ../../../embedding/browser/cocoa/src/build/NSBrowserView.framework/Headers;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				HEADER_SEARCH_PATHS = "../../../dist/include/string ../../../dist/include/nspr ../../../dist/include/xpcom ../../../dist/sdk/xpcom/include ../../../dist/include/embed_base ../../../embedding/browser/cocoa/src/build/CHBrowserView.framework/Headers";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = ../../../dist/bin;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
+				OPTIMIZATION_CFLAGS = "-O2";
+				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -DIBMBIDI";
+				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				PREBINDING = NO;
 				PRODUCT_NAME = CocoaEmbed;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -244,8 +249,8 @@
 			productName = CocoaEmbed;
 			productReference = 17587328FF379C6511CA2CBB;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
-<plist version=\"0.9\">
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
@@ -268,25 +273,22 @@
 </dict>
 </plist>
 ";
-			shouldUseHeadermap = 1;
 		};
 		29B97327FDCFA39411CA2CEA = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXHeadersBuildPhase;
-			name = Headers;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		29B97328FDCFA39411CA2CEA = {
 			buildActionMask = 2147483647;
 			files = (
 				080E96DCFE201CFB7F000001,
 				089C165EFE840E0CC02AAC07,
-				F51D673F02ABFDB701A968F5,
-				F51D674002ABFDB701A968F5,
 			);
 			isa = PBXResourcesBuildPhase;
-			name = "Bundle Resources";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		29B9732BFDCFA39411CA2CEA = {
 			buildActionMask = 2147483647;
@@ -295,7 +297,7 @@
 				F6BA6D4F01B2F8A601A962F7,
 			);
 			isa = PBXSourcesBuildPhase;
-			name = Sources;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		29B9732CFDCFA39411CA2CEA = {
 			fileRef = 29B97316FDCFA39411CA2CEA;
@@ -314,9 +316,11 @@
 				F6BD652801B3194901A962F7,
 				F6BD652901B3194901A962F7,
 				F6C4515E01B5A8A701A962F7,
+				F52978AA0371A46C01026DCE,
+				F52978AB0371A46C01026DCE,
 			);
 			isa = PBXFrameworksBuildPhase;
-			name = "Frameworks & Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 //290
 //291
@@ -334,6 +338,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "-DDEBUG -DMOZ_DEBUG -DTRACING";
 			};
 			isa = PBXBuildStyle;
 			name = Development;
@@ -357,26 +362,40 @@
 //F52
 //F53
 //F54
-		F51D673D02ABFDB601A968F5 = {
-			isa = PBXFileReference;
-			name = macprefs.js;
-			path = ../../../modules/libpref/src/mac/macprefs.js;
+		F52978A80371A46C01026DCE = {
+			includeInIndex = 1;
+			isa = PBXZipArchiveReference;
+			name = pipnss.jar;
+			path = ../../../dist/bin/chrome/pipnss.jar;
 			refType = 2;
 		};
-		F51D673E02ABFDB601A968F5 = {
-			isa = PBXFileReference;
-			name = macxprefs.js;
-			path = ../../../modules/libpref/src/mac/macxprefs.js;
+		F52978A90371A46C01026DCE = {
+			includeInIndex = 1;
+			isa = PBXZipArchiveReference;
+			name = pippki.jar;
+			path = ../../../dist/bin/chrome/pippki.jar;
 			refType = 2;
 		};
-		F51D673F02ABFDB701A968F5 = {
-			fileRef = F51D673D02ABFDB601A968F5;
+		F52978AA0371A46C01026DCE = {
+			fileRef = F52978A80371A46C01026DCE;
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		F51D674002ABFDB701A968F5 = {
-			fileRef = F51D673E02ABFDB601A968F5;
+		F52978AB0371A46C01026DCE = {
+			fileRef = F52978A90371A46C01026DCE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52978AC0371A74D01026DCE = {
+			fileRef = F6BD64D301B3172601A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52978AD0371A74D01026DCE = {
+			fileRef = F6BD64D501B3172601A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -404,6 +423,7 @@
 			};
 		};
 		F6901D3F01B70DB301A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = "installed-chrome.txt";
 			path = "../../config/installed-chrome.txt";
@@ -416,6 +436,7 @@
 			};
 		};
 		F6BA6D4E01B2F8A601A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = MyBrowserView.mm;
 			refType = 2;
@@ -434,7 +455,6 @@
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
 				F6BD638701B30F5301A962F7,
-				F6BD638801B30F5301A962F7,
 				F6BD645501B3167601A962F7,
 				F6BD64FB01B3184301A962F7,
 				F6BD638901B30F5301A962F7,
@@ -454,11 +474,10 @@
 				F6BD638C01B30F5301A962F7,
 				F6BD638D01B30F5301A962F7,
 				F6BD638E01B30F5301A962F7,
-				F6BD638F01B30F5301A962F7,
 				F6BD637D01B30E2901A962F7,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F6BD637C01B30E2901A962F7 = {
 			isa = PBXFileReference;
@@ -500,12 +519,6 @@
 			isa = PBXFileReference;
 			name = libgkgfx.dylib;
 			path = ../../../gfx/src/libgkgfx.dylib;
-			refType = 2;
-		};
-		F6BD638801B30F5301A962F7 = {
-			isa = PBXFileReference;
-			name = libtimer_mac.dylib;
-			path = ../../../widget/timer/src/mac/libtimer_mac.dylib;
 			refType = 2;
 		};
 		F6BD638901B30F5301A962F7 = {
@@ -595,7 +608,6 @@
 				F6BD642101B3156701A962F7,
 				F6BD642201B3156701A962F7,
 				F6BD642301B3156701A962F7,
-				F6BD642401B3156701A962F7,
 				F6BD642501B3156701A962F7,
 				F6BD642601B3156701A962F7,
 				F6BD642701B3156701A962F7,
@@ -640,12 +652,6 @@
 		};
 		F6BD638E01B30F5301A962F7 = {
 			fileRef = F6BD638701B30F5301A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD638F01B30F5301A962F7 = {
-			fileRef = F6BD638801B30F5301A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -740,7 +746,6 @@
 				F6BD64A801B3167601A962F7,
 				F6BD64A901B3167601A962F7,
 				F6BD64AA01B3167601A962F7,
-				F6BD64AB01B3167601A962F7,
 				F6BD64AC01B3167601A962F7,
 				F6BD64AD01B3167601A962F7,
 				F6BD64AE01B3167601A962F7,
@@ -755,7 +760,7 @@
 				F655020401B4812301A962F7,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F6BD639301B3131201A962F7 = {
 			isa = PBXFileReference;
@@ -1156,7 +1161,7 @@
 		F6BD641101B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libnslocale.dylib;
-			path = ../../../intl/locale/src/unix/libnslocale.dylib;
+			path = ../../../intl/locale/src/mac/libnslocale.dylib;
 			refType = 2;
 		};
 		F6BD641201B3156701A962F7 = {
@@ -1265,12 +1270,6 @@
 			isa = PBXFileReference;
 			name = uriloader.xpt;
 			path = ../../../uriloader/base/_xpidlgen/uriloader.xpt;
-			refType = 2;
-		};
-		F6BD642401B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = widget.xpt;
-			path = ../../../widget/src/cocoa/_xpidlgen/widget.xpt;
 			refType = 2;
 		};
 		F6BD642501B3156701A962F7 = {
@@ -1870,12 +1869,6 @@
 			settings = {
 			};
 		};
-		F6BD64AB01B3167601A962F7 = {
-			fileRef = F6BD642401B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD64AC01B3167601A962F7 = {
 			fileRef = F6BD642501B3156701A962F7;
 			isa = PBXBuildFile;
@@ -1960,36 +1953,41 @@
 				F6BD650901B3184301A962F7,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F6BD64B801B316DA01A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = charsetalias.properties;
 			path = ../../../intl/uconv/src/charsetalias.properties;
 			refType = 2;
 		};
 		F6BD64B901B316DA01A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = charsetData.properties;
 			path = ../../../intl/uconv/src/charsetData.properties;
 			refType = 2;
 		};
 		F6BD64BA01B316DA01A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = langGroups.properties;
 			path = ../../../intl/locale/src/langGroups.properties;
 			refType = 2;
 		};
 		F6BD64BB01B316DA01A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = language.properties;
 			path = ../../../intl/locale/src/language.properties;
 			refType = 2;
 		};
 		F6BD64BC01B316DA01A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
-			name = unixcharset.properties;
-			path = ../../../intl/uconv/src/unixcharset.properties;
+			name = maccharset.properties;
+			path = ../../../intl/uconv/src/maccharset.properties;
 			refType = 2;
 		};
 		F6BD64C201B316DA01A962F7 = {
@@ -2039,14 +2037,18 @@
 			refType = 2;
 		};
 		F6BD64D301B3172601A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = htmlBindings.xml;
-			refType = 4;
+			name = htmlBindings.xml;
+			path = ../../../content/xbl/builtin/htmlBindings.xml;
+			refType = 2;
 		};
 		F6BD64D501B3172601A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = platformHTMLBindings.xml;
-			refType = 4;
+			name = platformHTMLBindings.xml;
+			path = ../../../content/xbl/builtin/mac/platformHTMLBindings.xml;
+			refType = 2;
 		};
 		F6BD64D701B3172601A962F7 = {
 			children = (
@@ -2062,29 +2064,39 @@
 			refType = 2;
 		};
 		F6BD64D801B3172601A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = html40Latin1.properties;
-			refType = 4;
+			name = html40Latin1.properties;
+			path = ../../../intl/unicharutil/tables/html40Latin1.properties;
+			refType = 2;
 		};
 		F6BD64D901B3172601A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = html40Special.properties;
-			refType = 4;
+			name = html40Special.properties;
+			path = ../../../intl/unicharutil/tables/html40Special.properties;
+			refType = 2;
 		};
 		F6BD64DA01B3172601A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = html40Symbols.properties;
-			refType = 4;
+			name = html40Symbols.properties;
+			path = ../../../intl/unicharutil/tables/html40Symbols.properties;
+			refType = 2;
 		};
 		F6BD64DB01B3172601A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = htmlEntityVersions.properties;
-			refType = 4;
+			name = htmlEntityVersions.properties;
+			path = ../../../intl/unicharutil/tables/htmlEntityVersions.properties;
+			refType = 2;
 		};
 		F6BD64DC01B3172601A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = transliterate.properties;
-			refType = 4;
+			name = transliterate.properties;
+			path = ../../../intl/unicharutil/tables/transliterate.properties;
+			refType = 2;
 		};
 		F6BD64DD01B3172601A962F7 = {
 			isa = PBXFileReference;
@@ -2119,8 +2131,7 @@
 		F6BD64FB01B3184301A962F7 = {
 			children = (
 				F6BD64FC01B3184301A962F7,
-				F51D673D02ABFDB601A968F5,
-				F51D673E02ABFDB601A968F5,
+				F6BD64FE01B3184301A962F7,
 			);
 			isa = PBXGroup;
 			name = "Gecko Defaults";
@@ -2133,10 +2144,18 @@
 			path = ../../../modules/libpref/src/init/all.js;
 			refType = 2;
 		};
+		F6BD64FE01B3184301A962F7 = {
+			isa = PBXFileReference;
+			name = macprefs.js;
+			path = ../../../modules/libpref/src/mac/macprefs.js;
+			refType = 2;
+		};
 		F6BD64FF01B3184301A962F7 = {
 			children = (
 				F6BD650001B3184301A962F7,
 				F6901D3F01B70DB301A962F7,
+				F52978A80371A46C01026DCE,
+				F52978A90371A46C01026DCE,
 			);
 			isa = PBXGroup;
 			name = "Gecko Chrome";
@@ -2189,23 +2208,11 @@
 			dstPath = res/builtin;
 			dstSubfolderSpec = 6;
 			files = (
-				F6BD651501B3184301A962F7,
-				F6BD651701B3184301A962F7,
+				F52978AC0371A74D01026DCE,
+				F52978AD0371A74D01026DCE,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			name = "Copy Files";
-		};
-		F6BD651501B3184301A962F7 = {
-			fileRef = F6BD64D301B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD651701B3184301A962F7 = {
-			fileRef = F6BD64D501B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F6BD651901B3184301A962F7 = {
 			buildActionMask = 2147483647;
@@ -2219,7 +2226,7 @@
 				F6BD651E01B3184301A962F7,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F6BD651A01B3184301A962F7 = {
 			fileRef = F6BD64D801B3172601A962F7;
@@ -2257,12 +2264,19 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F6BD652001B3184301A962F7,
+				F6BD652201B3184301A962F7,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F6BD652001B3184301A962F7 = {
 			fileRef = F6BD64FC01B3184301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F6BD652201B3184301A962F7 = {
+			fileRef = F6BD64FE01B3184301A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -2276,7 +2290,7 @@
 				F6901D4001B70DB301A962F7,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F6BD652401B3184301A962F7 = {
 			fileRef = F6BD650001B3184301A962F7;
@@ -2310,8 +2324,8 @@
 		};
 		F6C4515D01B5A8A601A962F7 = {
 			isa = PBXFrameworkReference;
-			name = NSBrowserView.framework;
-			path = ../../browser/cocoa/src/build/NSBrowserView.framework;
+			name = CHBrowserView.framework;
+			path = ../../browser/cocoa/src/build/CHBrowserView.framework;
 			refType = 2;
 		};
 		F6C4515E01B5A8A701A962F7 = {

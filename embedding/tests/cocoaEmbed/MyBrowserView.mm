@@ -8,14 +8,13 @@
 - (IBAction)load:(id)sender
 {
   NSString* str = [urlbar stringValue];
-  NSURL* url = [NSURL URLWithString:str];
-  [browserView loadURI:url flags:NSLoadFlagsNone];
+  [browserView loadURI:str referrer:nil flags:NSLoadFlagsNone];
 }
 
 - (void)awakeFromNib 
 {
   NSRect bounds = [self bounds];
-  browserView = [[NSBrowserView alloc] initWithFrame:bounds];
+  browserView = [[CHBrowserView alloc] initWithFrame:bounds];
   [self addSubview:browserView];
   [browserView setContainer:self];
   [browserView addListener:self];
@@ -90,10 +89,9 @@
   }
 }
 
-- (void)onLocationChange:(NSURL*)url 
+- (void)onLocationChange:(NSString*)url 
 {
-  NSString* spec = [url absoluteString];
-  [urlbar setStringValue:spec];
+  [urlbar setStringValue:url];
   
 #ifdef DEBUG_vidur
   const char* str = [spec cString];
@@ -125,6 +123,29 @@
   }
 }
 
+- (void)onStatusChange:(NSString*)aMessage
+{
+  NSLog(@"Status is %@", aMessage);
+}
+
+- (void)onSecurityStateChange:(unsigned long)newState
+{
+}
+
+- (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode
+{
+  NSLog(@"Showing context menu");
+}
+
+- (void)onShowTooltip:(NSPoint)where withText:(NSString*)text
+{
+  NSLog(@"Showing tooltip %@", text);
+}
+
+- (void)onHideTooltip
+{
+}
+
 - (NSString *)title 
 {
   NSWindow* window = [self window];
@@ -152,10 +173,25 @@
   [window setFrame:frame display:YES];
 }
 
-- (NSBrowserView*)createBrowserWindow:(unsigned int)mask
+- (CHBrowserView*)createBrowserWindow:(unsigned int)mask
 {
   // XXX not implemented 
   return NULL;
+}
+
+- (NSMenu*)getContextMenu
+{
+  return nil;
+}
+
+- (NSWindow*)getNativeWindow
+{
+  return [self window];
+}
+
+- (BOOL)shouldAcceptDragFromSource:(id)dragSource
+{
+  return NO;
 }
 
 @end

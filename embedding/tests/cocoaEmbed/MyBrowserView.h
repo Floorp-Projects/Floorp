@@ -1,13 +1,13 @@
 #import <Cocoa/Cocoa.h>
-#import "NSBrowserView.h"
+#import "CHBrowserView.h"
 
-@interface MyBrowserView : NSView <NSBrowserListener, NSBrowserContainer>
+@interface MyBrowserView : NSView <CHBrowserListener, CHBrowserContainer>
 {
     IBOutlet id urlbar;
     IBOutlet id status;
     IBOutlet id progress;
     IBOutlet id progressSuper;
-    NSBrowserView* browserView;
+    CHBrowserView* browserView;
     NSString* defaultStatus;
     NSString* loadingStatus;
 }
@@ -15,17 +15,27 @@
 - (void)awakeFromNib;
 - (void)setFrame:(NSRect)frameRect;
 
-// NSBrowserListener messages
+// CHBrowserListener messages
 - (void)onLoadingStarted;
 - (void)onLoadingCompleted:(BOOL)succeeded;
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes;
-- (void)onLocationChange:(NSURL*)url;
+- (void)onLocationChange:(NSString*)url;
+- (void)onStatusChange:(NSString*)aMessage;
+- (void)onSecurityStateChange:(unsigned long)newState;
+// Called when a context menu should be shown.
+- (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode;
+// Called when a tooltip should be shown or hidden
+- (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;
+- (void)onHideTooltip;
 
-// NSBrowserContainer messages
+// CHBrowserContainer messages
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type;
 - (NSString *)title;
 - (void)setTitle:(NSString *)title;
 - (void)sizeBrowserTo:(NSSize)dimensions;
-- (NSBrowserView*)createBrowserWindow:(unsigned int)mask;
+- (CHBrowserView*)createBrowserWindow:(unsigned int)mask;
+- (NSMenu*)getContextMenu;
+- (NSWindow*)getNativeWindow;
+- (BOOL)shouldAcceptDragFromSource:(id)dragSource;
 
 @end
