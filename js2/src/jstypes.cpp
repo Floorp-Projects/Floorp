@@ -279,7 +279,7 @@ static JSValue array_toString(Context *, const JSValues& argv)
         if (theThis.isArray()) {
             StringFormatter f;
             f << theThis;
-            return JSValue(new JSString(f));
+            return JSValue(new JSString(f.getString()));
         }
         else
             throw new JSException("TypeError : Array::toString called on non array object");
@@ -526,7 +526,7 @@ String getRegisterValue(const JSValues& registerList, Register reg)
         sf << "<NaR>";
     else
         sf << "R" << reg << '=' << registerList[reg];
-    return sf;
+    return sf.getString();
 }
 
 Formatter& operator<<(Formatter& f, const JSValue& value)
