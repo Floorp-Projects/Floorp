@@ -101,7 +101,8 @@ const kRepeatDay_6 = 1<<6;//Saturday
 var gStartDate = new Date( );
 // Note: gEndDate is *exclusive* end date, so duration = end - start.
 // For all-day(s) events (no times), displayed end date is one day earlier.
-var gEndDate = new Date( );
+var gEndDate = new Date( ); // for events
+var gDueDate = new Date( ); // for todos
 
 /*-----------------------------------------------------------------
 *   W I N D O W      F U N C T I O N S
@@ -117,35 +118,22 @@ function loadCalendarEventDialog()
     var args = window.arguments[0];
 
     gOnOkFunction = args.onOk;
+
     // XXX I want to get rid of the use of gEvent
     gEvent = args.calendarEvent;
 
-
     event = args.calendarEvent;
-    var title;
 
+    // Set up dialog as event or todo
     if (isEvent(event)) {
-        document.getElementById("component-type").selectedIndex = 0;
-        // mode is "new or "edit" - show proper header
-        if ("new" == args.mode) {
-            title = document.getElementById("data-event-title-new").getAttribute("value");
-        } else {
-            title = document.getElementById("data-event-title-edit").getAttribute("value");
-        }
+        processComponentType("event");
     } else if (isTodo(event)) {
-        document.getElementById("component-type").selectedIndex = 1;
-        if ("new" == args.mode)
-            title = document.getElementById("data-todo-title-new").getAttribute("value");
-        else
-            title = document.getElementById("data-todo-title-edit").getAttribute("value");
+        processComponentType("todo");
     } else {
-        /* uh... */
-        dump("got a bogus event\n");
+        dump("loadCalendarEventDialog: ERROR! Got a bogus event! Not event or todo!\n");
+        // close the dialog before we screw anything else up
+        return false;
     }
-    debug("title: "+title);
-
-    //document.getElementById("calendar-new-component-window").setAttribute("title", title);
-    document.title = title;
 
     debug("-----");
     debug("event: "+event);
@@ -154,21 +142,137 @@ function loadCalendarEventDialog()
     debug("-----");
 
     // fill in fields from the event
-    gStartDate = event.startDate.jsDate;
-    document.getElementById("start-datetime").value = gStartDate;
+    if (isEvent(event)) {
+        gStartDate = event.startDate.jsDate;
+        document.getElementById("start-datetime").value = gStartDate;
 
-    gEndDate = event.endDate.jsDate;
-    var displayEndDate = new Date(gEndDate);
-    /*
-    if (event.isAllDay) {
-        //displayEndDate == icalEndDate - 1, in the case of allday events
-        displayEndDate.setDate(displayEndDate.getDate() - 1);
+        // only events have end dates. todos have due dates
+        gEndDate = event.endDate.jsDate;
+        var displayEndDate = new Date(gEndDate);
+        /*
+        if (event.isAllDay) {
+            //displayEndDate == icalEndDate - 1, in the case of allday events
+            displayEndDate.setDate(displayEndDate.getDate() - 1);
+        }
+        */
+        document.getElementById("end-datetime").value = displayEndDate;
+
+        gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
+
+        // event status fields
+        switch(event.status) {
+        case event.CAL_ITEM_STATUS_TENTATIVE:
+            setFieldValue("event-status-field", "ICAL_STATUS_TENTATIVE");
+            break;
+        case event.CAL_ITEM_STATUS_CONFIRMED:
+            setFieldValue("event-status-field", "ICAL_STATUS_CONFIRMED");
+            break;
+        case event.CAL_ITEM_STATUS_CANCELLED:
+            setFieldValue("event-status-field", "ICAL_STATUS_CANCELLED");
+            break;
+        }
+    } else if (isTodo(event)) {
+        var hasStart = event.start && event.start.isSet;
+        if (hasStart) 
+          gStartDate = event.startDate.jsDate;
+        var startPicker = document.getElementById( "start-datetime" );
+        startPicker.value = gStartDate;
+        startPicker.disabled = !hasStart;
+        document.getElementById("start-checkbox").checked = hasStart;
+
+        var hasDue = event.due && event.due.isSet;
+        if (hasDue)
+          gDueDate = event.dueDate.jsDate;
+        var duePicker = document.getElementById( "due-datetime" );
+        duePicker.value = gDueDate;
+        duePicker.disabled = !hasDue;
+        document.getElementById("due-checkbox").checked = hasDue;
+
+        gDuration = gDueDate.getTime() - gStartDate.getTime(); //in ms
+
+        // todo status fields
+        switch(event.status) {
+        case event.CAL_ITEM_STATUS_CANCELLED:
+            setFieldValue( "cancelled-checkbox", true, "checked" );
+            break;
+        case event.CAL_TODO_STATUS_COMPLETED:
+            setFieldValue( "completed-checkbox", true, "checked" );
+            setFieldValue( "percent-complete-menulist", "100" );
+            // XXX get the time for the completed event
+            /*var completedDate = document.getElementById( "completed-date-picker" ).value;
+      
+            gEvent.completed.year = completedDate.getYear() + 1900;
+            gEvent.completed.month = completedDate.getMonth();
+            gEvent.completed.day = completedDate.getDate();
+            gEvent.status = gEvent.ICAL_STATUS_COMPLETED;*/
+            break;
+
+        /* XXX Support these
+        case event.CAL_TODO_STATUS_NEEDSACTION:
+            // do something
+            break;
+        case event.CAL_TODO_STATUS_INPROCESS:
+            // do something
+            break;*/
+        }
     }
-    */
-    document.getElementById("end-datetime").value = displayEndDate;
 
-    gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
 
+
+
+    // GENERAL -----------------------------------------------------------
+    setFieldValue("title-field",       event.title  );
+    setFieldValue("description-field", event.getProperty("description"));
+    setFieldValue("location-field",    event.getProperty("location"));
+    setFieldValue("uri-field",         event.getProperty("url"));
+    // only enable "Go" button if there's a url
+    processTextboxWithButton( "uri-field", "load-url-button" );
+
+    setFieldValue("all-day-event-checkbox", event.isAllDay, "checked");
+
+
+    // PRIVACY -----------------------------------------------------------
+    switch(event.privacy) {
+    case "PUBLIC":
+    case "PRIVATE":
+    case "CONFIDENTIAL":
+        setFieldValue("privacy-menulist", event.privacy);
+        break;
+    case "":
+        setFieldValue("private-menulist", "PUBLIC");
+        break;
+    default:  // bogus value
+        dump("loadCalendarEventDialog: ERROR! Event has invalid " + 
+             "privacy string: " + event.privacy + "\n");
+        break;
+    }
+
+
+    // ALARMS ------------------------------------------------------------
+    // XXX Need to handle todo "before task starts/before task is due" 
+    if (!event.hasAlarm) {
+        // If the event has no alarm
+        setFieldValue("alarm-type", "none");
+    } else {
+        setFieldValue("alarm-length-field",     event.getProperty("alarmLength"));
+        setFieldValue("alarm-length-units",     event.getProperty("alarmUnits"));
+        setFieldValue("alarm-trigger-relation", event.getProperty("ICAL_RELATED_PARAMETER"));
+        // If the event has an alarm email address, assume email alarm type
+        var alarmEmailAddress = event.getProperty("alarmEmailAddress");
+        if (alarmEmailAddress && alarmEmailAddress != "") {
+            setFieldValue("alarm-type", "email");
+            setFieldValue("alarm-email-field", alarmEmailAddress);
+        } else {
+            setFieldValue("alarm-type", "popup");
+            /* XXX lilmatt: finish this by selection between popup and 
+               popupAndSound by checking pref "calendar.alarms.playsound" */
+        }
+    }
+    // hide/show fields and widgets for alarm type
+    processAlarmType();
+
+
+    // RECURRENCE --------------------------------------------------------
     if (event.recurrenceInfo) {
         // we can only display at most one rule and one set of exceptions;
         // nothing else.
@@ -199,7 +303,7 @@ function loadCalendarEventDialog()
         if (theRule) {
             setFieldValue("repeat-checkbox", true, "checked");
             setFieldValue("repeat-length-field", theRule.interval);
-        
+
             var typeMap = { "DAILY"   : "days",
                             "WEEKLY"  : "weeks",
                             "MONTHLY" : "months",
@@ -229,55 +333,10 @@ function loadCalendarEventDialog()
         }
     }
 
-    //file attachments;
-    /* XXX this could will work when attachments are supported by calItemBase
-    var count = event.attachments.length;
-    for(var i = 0; i < count; i++) {
-        var thisAttachment = event.attachments.queryElementAt(i, Components.interfaces.calIAttachment);
-        addAttachment(thisAttachment);
-    }
-    */
-
     document.getElementById("exceptions-date-picker").value = gStartDate;
 
-    setFieldValue("title-field",       event.title  );
-    setFieldValue("description-field", event.getProperty("description"));
-    setFieldValue("location-field",    event.getProperty("location"));
-    setFieldValue("uri-field",         event.getProperty("url"));
 
-    switch(event.status) {
-    case event.CAL_ITEM_STATUS_TENTATIVE:
-        setFieldValue("event-status-field", "ICAL_STATUS_TENTATIVE");
-        break;
-    case event.CAL_ITEM_STATUS_CONFIRMED:
-        setFieldValue("event-status-field", "ICAL_STATUS_CONFIRMED");
-        break;
-    case event.CAL_ITEM_STATUS_CANCELLED:
-        setFieldValue("event-status-field", "ICAL_STATUS_CANCELLED");
-        break;
-    }
-
-    setFieldValue("all-day-event-checkbox", event.isAllDay,  "checked");
-    setFieldValue("private-checkbox",       event.isPrivate, "checked");
-
-    if (!event.hasAlarm) {
-        // If the event has no alarm
-        setFieldValue("alarm-type", "none");
-    } else {
-        setFieldValue("alarm-length-field",     event.getProperty("alarmLength"));
-        setFieldValue("alarm-length-units",     event.getProperty("alarmUnits"));
-        setFieldValue("alarm-trigger-relation", event.getProperty("ICAL_RELATED_PARAMETER"));
-        // If the event has an alarm email address, assume email alarm type
-        var alarmEmailAddress = event.getProperty("alarmEmailAddress");
-        if (alarmEmailAddress && alarmEmailAddress != "") {
-            setFieldValue("alarm-type", "email");
-            setFieldValue("alarm-email-field", alarmEmailAddress);
-        } else {
-            setFieldValue("alarm-type", "popup");
-            /* XXX lilmatt: finish this by selection between popup and 
-               popupAndSound by checking pref "calendar.alarms.playsound" */
-        }
-    }
+    // INVITEES
 
     var inviteEmailAddress = event.getProperty("inviteEmailAddress");
     if (inviteEmailAddress != undefined && inviteEmailAddress != "") {
@@ -286,6 +345,8 @@ function loadCalendarEventDialog()
     } else {
         setFieldValue("invite-checkbox", false, "checked");
     }
+    processInviteCheckbox();
+
 
     // handle attendees
     attendeeList = event.getAttendees({});
@@ -293,6 +354,18 @@ function loadCalendarEventDialog()
         attendee = attendeeList[i];
         addAttendee(attendee.id);
     }
+
+
+    // ATTACHMENTS -------------------------------------------------------
+    /* XXX this could will work when attachments are supported by calItemBase
+    var count = event.attachments.length;
+    for(var i = 0; i < count; i++) {
+        var thisAttachment = event.attachments.queryElementAt(i, Components.interfaces.calIAttachment);
+        addAttachment(thisAttachment);
+    }
+    */
+
+
 
     /* Categories stuff */
 
@@ -349,7 +422,6 @@ function loadCalendarEventDialog()
     updateRepeatItemEnabled();
     updateStartEndItemEnabled();
     updateCompletedItemEnabled();
-    processInviteCheckbox();
 
     updateAddExceptionButton();
 
@@ -362,14 +434,8 @@ function loadCalendarEventDialog()
     setFieldValue("advanced-repeat-dayofweek-last", (gEvent.recurWeekNumber == 5), "selected");
     */
 
-    // hide/show fields and widgets for item type
-    processComponentType();
-
-    // hide/show fields and widgets for alarm type
-    processAlarmType();
 
     // enable/disable subordinate buttons of textboxes
-    processTextboxWithButton( "uri-field", "load-url-button" );
   /*  these are listboxes, not textboxes
     processTextboxWithButton( "exception-dates-listbox", "delete-exception-button" );
     processTextboxWithButton( "invite-email-field", "invite-email-button" ); */
@@ -410,10 +476,20 @@ function onOKCommand()
 
     // calIItemBase properties
     event.title = getFieldValue( "title-field" );
-    if (getFieldValue("private-checkbox", "checked"))
-        event.privacy = "PRIVATE";
-    else
-        event.privacy = "PUBLIC";
+
+    var privacyValue = getFieldValue( "privacy-menulist" );
+    switch(privacyValue) {
+    case "PUBLIC":
+    case "PRIVATE":
+    case "CONFIDENTIAL":
+        event.privacy = privacyValue;
+        break;
+    default:  // bogus value
+        dump( "onOKCommand: ERROR! Event has invalid privacy-menulist value: " +
+             privacyValue + "\n" );
+        break;
+    }
+
     if (getFieldValue( "alarm-type" ) != "" && getFieldValue( "alarm-type" ) != "none") {
         event.hasAlarm == 1
         alarmLength = getFieldValue( "alarm-length-field" );
@@ -528,6 +604,47 @@ function onOKCommand()
         attendee.id = label;
         event.addAttendee(attendee);
     }
+
+/* OLD ToDo crap we need to replace
+
+   gEvent.priority    = getFieldValue( "priority-levels", "value" );
+   var completed = getFieldValue( "completed-checkbox", "checked" );
+
+   var percentcomplete = getFieldValue( "percent-complete-menulist" );
+   percentcomplete =  parseInt( percentcomplete );
+   
+   if(percentcomplete > 100)
+      percentcomplete = 100;
+   else if(percentcomplete < 0)
+      percentcomplete = 0;
+      
+   gEvent.percent = percentcomplete;
+   
+   if( completed )
+   {
+      //get the time for the completed event
+      var completedDate = document.getElementById( "completed-date-picker" ).value;
+
+      gEvent.completed.year = completedDate.getYear() + 1900;
+      gEvent.completed.month = completedDate.getMonth();
+      gEvent.completed.day = completedDate.getDate();
+      gEvent.status = gEvent.ICAL_STATUS_COMPLETED;
+   }
+   else
+   {
+      gEvent.completed.clear();
+      
+      var cancelled = getFieldValue( "cancelled-checkbox", "checked" );
+      
+      if( cancelled )
+         gEvent.status = gEvent.ICAL_STATUS_CANCELLED;
+      else if (percentcomplete > 0)
+         gEvent.status = gEvent.ICAL_STATUS_INPROCESS;
+      else
+         gEvent.status = gEvent.ICAL_STATUS_NEEDSACTION;
+         
+       
+*/
 
 
    var Server = getFieldValue( "server-field" );
@@ -1461,35 +1578,20 @@ function formatTime( time )
 // XXX lilmatt's new crap for the new XUL
 
 
-// A textbox changed - see if its button needs to be enabled or disabled
+/*
+ *  A textbox changed - see if its button needs to be enabled or disabled
+ */
 
 function processTextboxWithButton( textboxId, buttonId )
 {
-    var textboxNotEmpty;
-    if(document.getElementById( textboxId ).textLength >= 1 )
-        textboxNotEmpty = true
-    else
-        textboxNotEmpty = false
-    var buttonDisabled  = document.getElementById( buttonId ).disabled;
-    var textboxAndButton = (textboxNotEmpty + buttonDisabled);
+    var theTextbox = document.getElementById( textboxId );
+    var theButton  = document.getElementById( buttonId );
 
-    debug("textboxNotEmpty: "  + textboxNotEmpty);
-    debug("buttonDisabled: "   + buttonDisabled);
-    debug("textboxAndButton: " + textboxAndButton);
-
-    // 0 = no text, button enabled (wrong - disable button)
-    // 1 = no text, button disabled  or text, button enabled (right) [most popular]
-    // 2 = text, button disabled (wrong - enable button)
-
-    switch(textboxAndButton) {
-    case 1:
-        break;
-    case 0:
+    // Only change things if we have to
+    if ( theTextbox.textLength == 0 && !theButton.disabled ) {
         disableElement( buttonId );
-        break;
-    case 2:
+    } else if ( theTextbox.textLength > 0 && theButton.disabled ) {
         enableElement( buttonId );
-        break;
     }
 }
 
@@ -1505,12 +1607,8 @@ function processAlarmType()
             hideElement("alarm-length-units");
             hideElement("alarm-box-email");
             break;
+        //case "popupAndSound":
         case "popup":
-            showElement("alarm-length-field");
-            showElement("alarm-length-units");
-            hideElement("alarm-box-email");
-            break;
-        case "popupAndSound":
             showElement("alarm-length-field");
             showElement("alarm-length-units");
             hideElement("alarm-box-email");
@@ -1528,96 +1626,106 @@ function processAlarmType()
 }
 
 
-function processComponentType()
+function processComponentType(componentType)
 {
     var title;
     var componentMenu = document.getElementById("component-type");
-    if( componentMenu.selectedItem) {
-        debug("processComponentType: " + componentMenu.selectedItem.value );
+
+    debug("processComponentType: " + componentType );
+
+    switch( componentType ) {
+    case "event":
+        // Set the menu properly if it isn't already
+        if( componentMenu.selectedItem.value != "event")
+            componentMenu.selectedItem.value = "event"
+
+        // Hide and show the appropriate fields and widgets
+        changeMenuState("todo", "event");
+
+        // calling just enableElement _should_ work here, but it doesn't
+        document.getElementById("start-datetime").setAttribute( "disabled", "false" );
+        enableElement("start-datetime");
+        enableElement("end-datetime");
+
+        // Set menubar title correctly
+        changeTitleBar("event")
+
+        break;
+
+    case "todo":
+        // Hide and show the appropriate fields and widgets
+        changeMenuState("event", "todo");
+
+        onDateTimeCheckbox("start-checkbox", "start-datetime")
+        onDateTimeCheckbox("due-checkbox", "due-datetime")
+        updateCompletedItemEnabled()
+
+        // Set menubar title correctly
+        changeTitleBar("todo")
+
+        break;
+
+        //case "journal":
+    default:
+        // We were passed an invalid value:
+        dump("processComponentType: ERROR! Tried to select invalid component type: "+componentType+"\n");
+        break;
+    }
+    // Make the window big enough for all the fields and widgets
+    window.sizeToContent();
+}
+
+
+/*
+ *  Hides/shows/enables/disables fields and widgets using "hidden-controller"
+ *  and "disable-controller" in the .xul
+ */
+
+function changeMenuState(hiddenController, showController, disableController, enableController)
+{
+    var hiddenList  = document.getElementsByAttribute( "hidden-controller",  hiddenController );
+    var showList    = document.getElementsByAttribute( "hidden-controller",  showController );
+    var disableList = document.getElementsByAttribute( "disable-controller", disableController );
+    var enableList  = document.getElementsByAttribute( "disable-controller", enableController );
+
+    for( var i = 0; i < hiddenList.length; ++i ) {
+        hideElement( hiddenList[i].id );
+    }
+
+    for( i = 0; i < showList.length; ++i ) {
+        showElement( showList[i].id );
+    }
+
+    for( i = 0; i < disableList.length; ++i ) {
+        disableElement( disableList[i].id );
+    }
+
+    for( i = 0; i < enableList.length; ++i ) {
+        enableElement( enableList[i].id );
+    }
+}
+
+
+/*
+ *  Changes window title bar title ("New Event", "Edit Task", etc.)
+ */
+
+function changeTitleBar(componentType)
+{
+    // Sanity check input
+    if ( componentType == "event" || componentType == "todo" ) {
         var args = window.arguments[0];
-        switch( componentMenu.selectedItem.value ) {
-        case "ICAL_COMPONENT_EVENT":
-            // Hide and show the appropriate fields and widgets
-            hideElement("todo-cancelled-label");
-            hideElement("todo-cancelled-checkbox");
-            hideElement("task-start-datetime-label");
-            hideElement("start-checkbox");
-            hideElement("due-checkbox");
-            hideElement("due-datetime");
-            hideElement("task-due-datetime-label");
-            hideElement("task-completed-label");
-            hideElement("completed-checkbox");
-            hideElement("completed-date-picker");
-            hideElement("percent-complete-menulist");
-            hideElement("percent-complete-label");
-            hideElement("task-priority-label");
-            hideElement("priority-levels");
-            showElement("start-datetime");
-            showElement("end-datetime");
-            showElement("event-start-datetime-label");
-            showElement("event-end-datetime-label");
-            showElement("event-status-label");
-            showElement("event-status-field");
-            showElement("all-day-event-checkbox");
 
-            // calling just enableElement _should_ work here, but it doesn't
-            document.getElementById("start-datetime").setAttribute( "disabled", "false" );
-            enableElement("start-datetime");
-            enableElement("end-datetime");
-
-            // Set menubar title correctly - New vs. Edit
-            if( "new" == args.mode )
-              title = document.getElementById( "data-event-title-new" ).getAttribute("value");
-            else
-              title = document.getElementById( "data-event-title-edit" ).getAttribute("value");
-            debug("title: "+title);
-            //document.getElementById("calendar-new-component-window").setAttribute("title", title);
-            document.title = title;
-            break;
-
-        case "ICAL_COMPONENT_TODO":
-            // Hide and show the appropriate fields and widgets
-            hideElement("end-datetime");
-            hideElement("event-start-datetime-label");
-            hideElement("event-end-datetime-label");
-            hideElement("event-status-label");
-            hideElement("event-status-field");
-            hideElement("all-day-event-checkbox");
-            showElement("todo-cancelled-label");
-            showElement("todo-cancelled-checkbox");
-            showElement("task-start-datetime-label");
-            showElement("start-checkbox");
-            showElement("due-checkbox");
-            showElement("due-datetime");
-            showElement("task-due-datetime-label");
-            showElement("task-completed-label");
-            showElement("completed-checkbox");
-            showElement("completed-date-picker");
-            showElement("percent-complete-menulist");
-            showElement("percent-complete-label");
-            showElement("task-priority-label");
-            showElement("priority-levels");
-
-            onDateTimeCheckbox("start-checkbox", "start-datetime")
-            onDateTimeCheckbox("due-checkbox", "due-datetime")
-            updateCompletedItemEnabled()
-
-            // Set menubar title correctly - New vs. Edit
-            if( "new" == args.mode )
-              title = document.getElementById( "data-todo-title-new" ).getAttribute("value");
-            else
-              title = document.getElementById( "data-todo-title-edit" ).getAttribute("value");
-            debug("title: "+title);
-            //document.getElementById("calendar-new-component-window").setAttribute("title", title);
-            document.title = title;
-            break;
-
-            //case "ICAL_COMPONENT_JOURNAL":
-        }
-        // Make the window big enough for all the fields and widgets
-        window.sizeToContent();
-    } else
-        dump("processComponentType: no componentMenu.selectedItem!\n");
+        // Is this a NEW event/todo, or are we EDITing an existing event/todo?
+        if( "new" == args.mode )
+          title = document.getElementById( "data-"+componentType+"-title-new" ).getAttribute("value");
+        else
+          title = document.getElementById( "data-"+componentType+"-title-edit" ).getAttribute("value");
+        debug("changeTitleBar: "+title);
+        document.title = title;
+    } else {
+        dump("changeTitleBar: ERROR! Tried to change titlebar to invalid value: "+componentType+"\n");
+    }
 }
 
 
@@ -1641,7 +1749,8 @@ function addAttendee(email)
 }
 
 
-/** Enable/Disable Alarm options with alarm checked.
+/** THIS IS FOR TODOS ONLY
+    Enable/Disable Alarm options with alarm checked.
 
     Enables/disables alarm trigger relations menulist depending on whether
     start/due dates are enabled.
@@ -1742,10 +1851,9 @@ function updateCompletedItemEnabled()
 
 function percentCompleteCommand()
 {
-    var percentcompletemenu = "percent-complete-menulist";
-    var percentcomplete = getFieldValue( "percent-complete-menulist" );
-    percentcomplete =  parseInt( percentcomplete );
-    if( percentcomplete == 100)
+    var percentCompleteMenu = getFieldValue( "percent-complete-menulist" );
+    percentCompleteMenu =  parseInt( percentcomplete );
+    if( percentCompleteMenu == 100)
         setFieldValue( "completed-checkbox", "true", "checked" );
 
     updateCompletedItemEnabled();

@@ -65,7 +65,7 @@
         ondialogaccept="return onOKCommand();"
         ondialogcancel="return true;"
         persist="screenX screenY"
-        minwidth="500" minheight="400"
+        minwidth="500" minheight="500"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#">
 
@@ -141,15 +141,16 @@
                   </hbox>
                   <hbox>
                     <menulist id="component-type" crop="none" 
-                              oncommand="processComponentType()">
+                              oncommand="processComponentType(this.value)">
                       <menupopup id="component-menulist-menupopup">
                         <menuitem label="&newevent.itemType.event.label;"
-                                  value="ICAL_COMPONENT_EVENT"/>
+                                  value="event"/>
                         <menuitem label="&newevent.itemType.todo.label;"
-                                  value="ICAL_COMPONENT_TODO"/>
-                        <menuitem label="newevent.itemType.journal.label"
-                                  value="ICAL_COMPONENT_JOURNAL"
-                                  hidden="true" disabled="true"/>
+                                  value="todo"/>
+                        <!--<menuitem label="newevent.itemType.journal.label"
+                                  value="journal"
+                                  hidden="true"
+                                  disabled="true"/>-->
                       </menupopup>
                     </menulist>
                     <spacer width="10px"/>
@@ -199,11 +200,19 @@
                     <spacer width="10px"/>
                     <!-- Status / Priority -->
                     <hbox align="center">
-                      <label id="event-status-label" for="event-status-menulist-menupopup"
-                             value="&newevent.status.label;" hidden="true"/>
-                      <label id="task-priority-label" for="priority-levels"
-                             value="&newtodo.priority.label;" hidden="true"/>
-                      <menulist id="event-status-field" hidden="true">
+                      <label id="event-status-label"
+                             for="event-status-menulist-menupopup"
+                             value="&newevent.status.label;"
+                             hidden-controller="event"
+                             hidden="true"/>
+                      <label id="task-priority-label"
+                             for="priority-levels"
+                             value="&newtodo.priority.label;"
+                             hidden-controller="todo"
+                             hidden="true"/>
+                      <menulist id="event-status-field"
+                                hidden-controller="event"
+                                hidden="true">
                         <menupopup id="event-status-menulist-menupopup">
                           <menuitem label="None"/>
                           <menuitem label="&newevent.status.tentative.label;"
@@ -214,7 +223,9 @@
                                     value="ICAL_STATUS_CANCELLED"/>
                         </menupopup>
                       </menulist>
-                      <menulist id="priority-levels" hidden="true">
+                      <menulist id="priority-levels"
+                                hidden-controller="todo"
+                                hidden="true">
                         <menupopup>
                           <menuitem label="&priority.level.none;"   value="0"/>
                           <menuitem label="&priority.level.low;"    value="9"/>
@@ -237,8 +248,12 @@
           <groupbox flex="1">
             <caption label="Schedule"/>
             <hbox>
-              <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;"
-                        oncommand="commandAllDay()" persist="checked" hidden="true"/>
+              <checkbox id="all-day-event-checkbox"
+                        label="&newevent.alldayevent.label;"
+                        oncommand="commandAllDay()"
+                        persist="checked"
+                        hidden-controller="event"
+                        hidden="true"/>
             </hbox>
             <separator class="thin"/>
             <hbox>
@@ -250,16 +265,25 @@
                 <rows>
                   <row>
                     <hbox pack="end" align="center">
-                      <label id="event-start-datetime-label" class="field-label-box-class"
-                             value="From" hidden="true"/>
-                      <label id="task-start-datetime-label" class="field-label-box-class"
-                             value="&newevent.startdate.label;" hidden="true"/>
+                      <label id="event-start-datetime-label"
+                             class="field-label-box-class"
+                             value="From"
+                             hidden-controller="event"
+                             hidden="true"/>
+                      <label id="task-start-datetime-label"
+                             class="field-label-box-class"
+                             value="&newevent.startdate.label;"
+                             hidden-controller="todo"
+                             hidden="true"/>
                     </hbox>
                     <hbox flex="1">
                       <checkbox id="start-checkbox"
                                 oncommand="onDateTimeCheckbox(this, 'start-datetime')"
-                                persist="checked" hidden="true"/>
-                      <datetimepicker id="start-datetime" value="" 
+                                persist="checked"
+                                hidden-controller="todo"
+                                hidden="true"/>
+                      <datetimepicker id="start-datetime"
+                                      value=""
                                       onchange="onDateTimePick( this );"/>
                       <spacer flex="1"/>
                     </hbox>
@@ -267,18 +291,30 @@
                   <row>
                     <hbox pack="end" align="center">
                       <label id="event-end-datetime-label"
-                             value="To" hidden="true"/>
+                             value="To"
+                             hidden-controller="event"
+                             hidden="true"/>
                       <label id="task-due-datetime-label"
-                             value="&newtodo.duedate.label;" hidden="true"/>
+                             value="&newtodo.duedate.label;"
+                             hidden-controller="todo"
+                             hidden="true"/>
                     </hbox>
                     <hbox flex="1">
                       <checkbox id="due-checkbox"
                                 oncommand="onDateTimeCheckbox(this, 'due-datetime')"
-                                persist="checked" hidden="true"/>
-                      <datetimepicker id="due-datetime" value=""
-                                      onchange="onDateTimePick( this );" hidden="true"/>
-                      <datetimepicker id="end-datetime" value=""
-                                      onchange="onDateTimePick( this );" hidden="true"/>
+                                persist="checked"
+                                hidden-controller="todo"
+                                hidden="true"/>
+                      <datetimepicker id="due-datetime"
+                                      value=""
+                                      onchange="onDateTimePick( this );"
+                                      hidden-controller="todo"
+                                      hidden="true"/>
+                      <datetimepicker id="end-datetime"
+                                      value=""
+                                      onchange="onDateTimePick( this );"
+                                      hidden-controller="event"
+                                      hidden="true"/>
                       <spacer flex="1"/>
                     </hbox>
                   </row>
@@ -311,17 +347,26 @@
                   <row>
                     <hbox pack="end" align="center">
                       <label id="task-completed-label"
-                             value="&newtodo.completed.label;" hidden="true"/>
+                             value="&newtodo.completed.label;"
+                             hidden-controller="todo"
+                             hidden="true"/>
                     </hbox>
                     <hbox flex="1" align="center">
-                      <checkbox id="completed-checkbox" hidden="true"
-                                oncommand="updateCompletedItemEnabled()"/>
+                      <checkbox id="completed-checkbox"
+                                oncommand="updateCompletedItemEnabled()"
+                                hidden-controller="todo"
+                                hidden="true"/>
                       <datepicker id="completed-date-picker"
-                                  disabled="true" value="" hidden="true"/>
+                                  value=""
+                                  disabled="true"
+                                  hidden-controller="todo"
+                                  hidden="true"/>
                       <spacer/>
                       <menulist id="percent-complete-menulist"
-                                editable="true" hidden="true"
-                                oncommand="percentCompleteCommand()">
+                                editable="true"
+                                oncommand="percentCompleteCommand()"
+                                hidden-controller="todo"
+                                hidden="true">
                         <menupopup>
                           <menuitem label="0"   value="0"/>
                           <menuitem label="10"  value="10"/>
@@ -339,6 +384,7 @@
                       <label id="percent-complete-label"
                              for="percent-complete-menulist"
                              value="&newtodo.percentcomplete.label;"
+                             hidden-controller="todo"
                              hidden="true"/>
                       <spacer flex="1"/>
                     </hbox>
@@ -348,11 +394,15 @@
                   <row>
                     <hbox pack="end" align="center">
                       <label id="todo-cancelled-label"
-                             value="&newtodo.cancelled.label;" hidden="true"/>
+                             value="&newtodo.cancelled.label;"
+                             hidden-controller="todo"
+                             hidden="true"/>
                     </hbox>
                     <hbox flex="1" align="center">
                       <checkbox id="todo-cancelled-checkbox"
-                                checked="false" hidden="true"/>
+                                checked="false"
+                                hidden-controller="todo"
+                                hidden="true"/>
                       <spacer flex="1"/>
                     </hbox>
                   </row>
@@ -641,9 +691,9 @@
               </row>
               <row>
                 <listbox id="exception-dates-listbox"
-                         oninput="textboxChanged( this.id, 'delete-exception-button' );"
                          disable-controller="repeat"
                          rows="4"/>
+                <!-- oninput="textboxChanged( this.id, 'delete-exception-button' );" -->
                 <vbox>
                   <button id="delete-exception-button"
                           label="&newevent.deleteexceptions.label;"
@@ -672,7 +722,7 @@
                                oncommand="processInviteCheckbox()"/>
                      <textbox id="invite-email-field"
                               size="39"
-                              oninput="textboxChanged( this.id, 'invite-email-button' );"
+                              oninput="processTextboxWithButton( this.id, 'invite-email-button' );"
                               disabled="true"/>
                      <button label="Add" id="invite-email-button" onclick="onIniviteAdd();"/>
                   </hbox>
@@ -807,7 +857,7 @@
                           </hbox>
                           <hbox>
                               <textbox id="uri-field"
-                                       oninput="textboxChanged( this.id, 'load-url-button' );"
+                                       oninput="processTextboxWithButton( this.id, 'load-url-button' );"
 #ifndef MOZ_SUNBIRD
                                        type="autocomplete"
                                        searchSessions="history"
@@ -820,12 +870,25 @@
                           </hbox>
                        </row>
 
-                       <!-- Private -->
+                       <!-- Privacy -->
                        <row align="center" flex="1">
-                          <spacer />
-                          <checkbox id="private-checkbox"
-                                    checked="false"
-                                    label="&newevent.private.label;"/>
+                         <hbox class="field-label-box-class" pack="end">
+                           <!-- XXX Localise this: &newevent.private.label; -->
+                           <label for="privacy-menulist" value="Privacy"/>
+                         </hbox>
+                         <hbox flex="1">
+                           <menulist id="privacy-menulist" crop="none">
+                             <menupopup>
+                               <menuitem label="Public"
+                                         value="PUBLIC"/>
+                               <menuitem label="Private"
+                                         value="PRIVATE"/>
+                               <menuitem label="Confidential"
+                                         value="CONFIDENTIAL"/>
+                             </menupopup>
+                           </menulist>
+                           <spacer flex="1"/>
+                         </hbox>
                        </row>
 
                        <!-- Description -->
