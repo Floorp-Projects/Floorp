@@ -468,15 +468,6 @@ NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveAll()
 {
-#ifdef notdef
-#if !TARGET_CARBON
-  MenuHandle helpmh;
-  ::HMGetHelpMenuHandle(&helpmh);
-  if ( helpmh != mMacMenuHandle)
-    helpmh = nsnull;
-#endif
-#endif
-
   PRUint32 curItem;
   mMenuItemsArray.Count(&curItem);
   while (curItem > 0)
