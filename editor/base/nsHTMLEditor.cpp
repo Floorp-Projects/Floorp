@@ -3792,16 +3792,20 @@ nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 NS_IMETHODIMP
 nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
+  NS_ASSERTION(aTextRangeList, "null ptr");
+  if(nsnull == aTextRangeList)
+		return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsICaret>  caretP;
   
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
 
+  mIMETextRangeList = aTextRangeList;
   nsAutoPlaceHolderBatch batch(this, gIMETxnName);
 
   result = InsertText(aCompositionString);
-  
+
   mIMEBufferLength = aCompositionString.Length();
 
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
