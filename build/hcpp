@@ -19,7 +19,8 @@
 #
 # Wrapper for brain-damaged compilers that don't understand -o and -c together.
 #
-
+CXX=`echo $1 | sed -e "s|'||g" -e 's|"||g'`
+shift
 DUMMY="XxxXxxX"
 DASH_C=0
 DASH_O=0
@@ -61,7 +62,7 @@ do
 	esac
 done
 
-CC $* || exit $?
+${CXX} $* || exit $?
 
 # LAME!!!
 if [ -f -O ]; then
@@ -83,4 +84,4 @@ elif [ "${S_SRC}" != "${DUMMY}" ]; then
 	OBJ=`basename ${S_SRC} .s`.o
 fi
 
-[ -f ${OBJECT} ] || [ -f ${OBJ} ] && mv -f ${OBJ} ${OBJECT}
+[ -f $OBJECT ] || ( [ -f $OBJ ] && mv -f $OBJ $OBJECT )

@@ -60,9 +60,12 @@ dnl ========================================================
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_CC_C_O
-if test -n "$NO_MINUS_C_MINUS_O"; then
-    CC='${topsrcdir}/build/hcc'
-    CXX='${topsrcdir}/build/hcpp'
+if grep "NO_MINUS_C_MINUS_O 1" ./confdefs.h >/dev/null; then
+    USING_HCC=1
+    _OLDCC=$CC
+    _OLDCXX=$CXX
+    CC="${srcdir}/build/hcc '$CC'"
+    CXX="${srcdir}/build/hcpp '$CXX'"
 fi
 AC_PROG_CPP
 AC_PROG_CXXCPP
@@ -87,12 +90,12 @@ if [ test "$no_x" != "yes" ]; then
 	MOTIF_XINCS="-xif -I$x_includes"
     fi
 
-    MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS`
-    MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -if`
-    MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -sf`
-    MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -df`
-    MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -dp`
-    MOTIF_REQUIRES_XPM=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -xpm`
+    MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS`
+    MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -if`
+    MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -sf`
+    MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -df`
+    MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -dp`
+    MOTIF_REQUIRES_XPM=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -xpm`
 
     ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
 fi
@@ -182,6 +185,55 @@ AC_HEADER_TIME
 AC_CHECK_HEADERS(fcntl.h limits.h malloc.h paths.h strings.h unistd.h)
 AC_CHECK_HEADERS(sys/bittypes.h sys/file.h sys/ioctl.h sys/time.h)
 AC_CHECK_HEADERS(getopt.h ioctl.h sys/cdefs.h filio.h systeminfo.h)
+
+dnl Checks for libraries.
+dnl ========================================================
+AC_CHECK_LIB(c_r, gethostbyname_r,,
+    AC_CHECK_LIB(c, strcpy))
+AC_CHECK_LIB(m, atan)
+AC_CHECK_LIB(dl, dlopen)
+if [ test -z "$GNU_CXX" ]; then
+    AC_CHECK_LIB(C, demangle)
+fi
+AC_CHECK_LIB(resolv, res_gethostbyaddr)
+AC_CHECK_LIB(socket, getnetbyaddr)
+AC_CHECK_LIB(util, login)
+AC_CHECK_LIB(nsl, xdr_string)
+AC_CHECK_LIB(elf, elf_rawdata)
+AC_CHECK_LIB(intl, textdomain)
+AC_CHECK_LIB(posix4, shm_open)
+AC_CHECK_LIB(w, iswupper)
+AC_CHECK_LIB(l, yywrap,,
+    AC_CHECK_LIB(fl, yywrap))
+
+dnl Replace `main' with a function in -lC_r:
+dnl AC_CHECK_LIB(C_r, main)
+dnl Replace `main' with a function in -lSgm:
+dnl AC_CHECK_LIB(Sgm, main)
+dnl Replace `main' with a function in -laudio:
+dnl AC_CHECK_LIB(audio, main)
+dnl Replace `main' with a function in -ldld:
+dnl AC_CHECK_LIB(dld, main)
+dnl Replace `main' with a function in -ldnet_stub:
+dnl AC_CHECK_LIB(dnet_stub, main)
+dnl Replace `main' with a function in -lgen:
+dnl AC_CHECK_LIB(gen, main)
+dnl Replace `main' with a function in -lhash:
+dnl AC_CHECK_LIB(hash, main)
+dnl Replace `main' with a function in -lip6:
+dnl AC_CHECK_LIB(ip6, main)
+dnl Replace `main' with a function in -lipc:
+dnl AC_CHECK_LIB(ipc, main)
+dnl Replace `main' with a function in -lmalloc_cv:
+dnl AC_CHECK_LIB(malloc_cv, main)
+dnl Replace `main' with a function in -lPW:
+dnl AC_CHECK_LIB(PW, main)
+dnl Replace `main' with a function in -lots:
+dnl AC_CHECK_LIB(ots, main)
+dnl Replace `main' with a function in -lrt:
+dnl AC_CHECK_LIB(rt, main)
+dnl Replace `main' with a function in -lsvld:
+dnl AC_CHECK_LIB(svld, main)
 
 dnl Checks for library functions.
 dnl ========================================================
@@ -285,55 +337,6 @@ else
   AC_MSG_RESULT(no)
 fi  
 CC=$_SAVE_CC
-
-dnl Checks for libraries.
-dnl ========================================================
-AC_CHECK_LIB(c_r, gethostbyname_r)
-AC_CHECK_LIB(c, strcpy)
-AC_CHECK_LIB(m, atan)
-AC_CHECK_LIB(dl, dlopen)
-if [ test -z "$GNU_CXX" ]; then
-    AC_CHECK_LIB(C, demangle)
-fi
-AC_CHECK_LIB(resolv, res_gethostbyaddr)
-AC_CHECK_LIB(socket, getnetbyaddr)
-AC_CHECK_LIB(util, login)
-AC_CHECK_LIB(nsl, xdr_string)
-AC_CHECK_LIB(elf, elf_rawdata)
-AC_CHECK_LIB(intl, textdomain)
-AC_CHECK_LIB(posix4, shm_open)
-AC_CHECK_LIB(w, iswupper)
-AC_CHECK_LIB(l, yywrap,,
-    AC_CHECK_LIB(fl, yywrap))
-
-dnl Replace `main' with a function in -lC_r:
-dnl AC_CHECK_LIB(C_r, main)
-dnl Replace `main' with a function in -lSgm:
-dnl AC_CHECK_LIB(Sgm, main)
-dnl Replace `main' with a function in -laudio:
-dnl AC_CHECK_LIB(audio, main)
-dnl Replace `main' with a function in -ldld:
-dnl AC_CHECK_LIB(dld, main)
-dnl Replace `main' with a function in -ldnet_stub:
-dnl AC_CHECK_LIB(dnet_stub, main)
-dnl Replace `main' with a function in -lgen:
-dnl AC_CHECK_LIB(gen, main)
-dnl Replace `main' with a function in -lhash:
-dnl AC_CHECK_LIB(hash, main)
-dnl Replace `main' with a function in -lip6:
-dnl AC_CHECK_LIB(ip6, main)
-dnl Replace `main' with a function in -lipc:
-dnl AC_CHECK_LIB(ipc, main)
-dnl Replace `main' with a function in -lmalloc_cv:
-dnl AC_CHECK_LIB(malloc_cv, main)
-dnl Replace `main' with a function in -lPW:
-dnl AC_CHECK_LIB(PW, main)
-dnl Replace `main' with a function in -lots:
-dnl AC_CHECK_LIB(ots, main)
-dnl Replace `main' with a function in -lrt:
-dnl AC_CHECK_LIB(rt, main)
-dnl Replace `main' with a function in -lsvld:
-dnl AC_CHECK_LIB(svld, main)
 
 dnl Mozilla specific options
 dnl ========================================================
@@ -863,6 +866,15 @@ AC_SUBST(MKSHLIB)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 AC_SUBST(DLL_SUFFIX)
+
+if test "$USING_HCC"; then
+   CC='${topsrcdir}/build/hcc'
+   CC="$CC '$_OLDCC'"
+   CXX='${topsrcdir}/build/hcpp'
+   CXX="$CXX '$_OLDCXX'"
+   AC_SUBST(CC)
+   AC_SUBST(CXX)
+fi
 
 dnl Check for missing components
 if [ test "$no_x" != "yes" ]; then
