@@ -360,7 +360,8 @@ PRBool ReadSectionHeader(nsManifestLineReader& reader,
             *p = 0;
 
             char* values[2];
-            if(2 != reader.ParseLine(values, 2))
+            int lengths[2];
+            if(2 != reader.ParseLine(values, lengths, 2))
                 break;
 
             // ignore the leading '['
@@ -395,6 +396,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
     int dir;
     int flags;
     char* values[6];    // 6 is currently the max items we need to parse
+    int lengths[6];
     PRUint32 size32;
     PRInt64 size;
     PRInt64 date;
@@ -427,7 +429,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         goto out;
 
     // index,VersionLiteral,major,minor
-    if(4 != reader.ParseLine(values, 4))
+    if(4 != reader.ParseLine(values, lengths, 4))
         goto out;
 
     // index
@@ -452,7 +454,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         goto out;
 
     // index,AppDirLiteral,directoryname
-    if(3 != reader.ParseLine(values, 3))
+    if(3 != reader.ParseLine(values, lengths, 3))
         goto out;
 
     // index
@@ -493,7 +495,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
             goto out;
        
         // index,directoryname
-        if(2 != reader.ParseLine(values, 2))
+        if(2 != reader.ParseLine(values, lengths, 2))
             goto out;
 
         // index
@@ -524,7 +526,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
             goto out;
 
         // index,filename,dirIndex,dilesSize,filesDate
-        if(5 != reader.ParseLine(values, 5))
+        if(5 != reader.ParseLine(values, lengths, 5))
             goto out;
 
         // index
@@ -576,7 +578,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
             goto out;
 
         // index,filename
-        if(2 != reader.ParseLine(values, 2))
+        if(2 != reader.ParseLine(values, lengths, 2))
             goto out;
 
         // index
@@ -611,7 +613,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
             goto out;
 
         // index,interfaceName,iid,fileIndex,zipIndex,flags
-        if(6 != reader.ParseLine(values, 6))
+        if(6 != reader.ParseLine(values, lengths, 6))
             goto out;
 
         // index
@@ -648,7 +650,8 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         else
             typelibRecord.Init(fileIndex, zipItemIndex);
         
-        entry = xptiInterfaceEntry::NewEntry(values[1], iid, typelibRecord, 
+        entry = xptiInterfaceEntry::NewEntry(values[1], lengths[1],
+                                             iid, typelibRecord, 
                                              aWorkingSet);
         if(!entry)
             goto out;    

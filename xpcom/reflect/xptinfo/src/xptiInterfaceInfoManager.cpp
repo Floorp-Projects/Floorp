@@ -1306,7 +1306,8 @@ xptiInterfaceInfoManager::VerifyAndAddEntryIfNew(xptiWorkingSet* aWorkingSet,
     
     // Build a new xptiInterfaceEntry object and hook it up. 
 
-    entry = xptiInterfaceEntry::NewEntry(iface->name, iface->iid,
+    entry = xptiInterfaceEntry::NewEntry(iface->name, strlen(iface->name),
+                                         iface->iid,
                                          typelibRecord, aWorkingSet);
     if(!entry)
     {

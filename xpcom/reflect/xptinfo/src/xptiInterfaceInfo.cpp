@@ -87,11 +87,11 @@ void xptiInterfaceInfo::DEBUG_ShutdownNotification()
 // static 
 xptiInterfaceEntry* 
 xptiInterfaceEntry::NewEntry(const char* name,
+                             int nameLength,
                              const nsID& iid,
                              const xptiTypelib& typelib,
                              xptiWorkingSet* aWorkingSet)
 {
-    size_t nameLength = PL_strlen(name);
     void* place = XPT_MALLOC(aWorkingSet->GetStructArena(),
                              sizeof(xptiInterfaceEntry) + nameLength);
     if(!place)
