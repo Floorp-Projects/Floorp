@@ -25,6 +25,8 @@
   # search/boolean-charts.html.tmpl.
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [% PROCESS global/header.html.tmpl 
   title = "Create New Data Set"
   onload = "selectProduct(document.forms['chartform']);"
@@ -48,7 +50,7 @@
     <td>
       <input type="radio" id="action-create" name="action" value="create">
       <label for="action-create">
-        Start recording bug count data for this search, as follows:
+        Start recording [% terms.bug %] count data for this search, as follows:
       </label>
       <br>
       

@@ -21,7 +21,11 @@
 
 [%# Define strings that will serve as the title and header of this page %]
 
-[% title = BLOCK %]Attachment #[% attachid %] for Bug #[% bugid %][% END %]
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]
+  Attachment #[% attachid %] for [% terms.Bug %] #[% bugid %]
+[% END %]
 
 [% style = BLOCK %]
 .file_head {
@@ -192,7 +196,7 @@ tbody.file pre:empty {
       <a href="[% new_url %]">[% new_desc FILTER html %]</a>
       (<a href="[% new_url %]">#[% newid %]</a>)
     [% END %]
-    for <a href="show_bug.cgi?id=[% bugid %]">Bug #[% bugid %]</a>
+    for <a href="show_bug.cgi?id=[% bugid %]">[% terms.Bug %] #[% bugid %]</a>
   [% END %]
   [% h2 = BLOCK %]
     [% bugsummary FILTER html %]
@@ -290,12 +294,12 @@ tbody.file pre:empty {
 <h2 class="warning">Warning: 
   [% IF warning == "interdiff1" %]
   this difference between two patches may show things in the wrong places due
-  to a limitation in Bugzilla when comparing patches with different sets of
-  files.
+  to a limitation in [% terms.Bugzilla %] when comparing patches with different
+  sets of files.
   [% END %]
   [% IF warning == "interdiff2" %]
   this difference between two patches may be inaccurate due to a limitation in
-  Bugzilla when comparing patches made against different revisions.
+  [% terms.Bugzilla %] when comparing patches made against different revisions.
   [% END %]
 </h2>
 [% END %]

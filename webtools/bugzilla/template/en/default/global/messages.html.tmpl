@@ -54,8 +54,9 @@
     OK, the <b>[% namedcmd FILTER html %]</b> query is gone.
 
   [% ELSIF message_tag == "buglist_sorted_by_relevance" %]
-    Bugs on this list are sorted by relevance, with the most relevant bugs
-    at the top.  Only the 200 most relevant bugs are shown.
+    [% terms.Bugs %] on this list are sorted by relevance, with the most
+    relevant [% terms.bugs %] at the top.  Only the 200 most relevant 
+    [%+ terms.bugs %] are shown.
 
   [% ELSIF message_tag == "change_columns" %]
     [% title = "Change columns" %]

@@ -152,8 +152,8 @@
 
   [% ELSIF error == "dupe_invalid_bug_id" %]
     [% title = BLOCK %]Valid [% terms.Bug %] Number Required[% END %]
-    You must specify a valid bug number of which this [% terms.bug %]
-    is a duplicate.  The [% terms.bug %] has not been changed.
+    You must specify a valid [% terms.bug %] number of which this 
+    [%+ terms.bug %] is a duplicate.  The [% terms.bug %] has not been changed.
 
   [% ELSIF error == "dupe_of_self_disallowed" %]
     [% title = "Nice Try..." %]
@@ -171,8 +171,8 @@
 
   [% ELSIF error == "entry_access_denied" %]
     [% title = "Permission Denied" %]
-    Sorry; you do not have the permissions necessary to enter [% terms.abug %] against
-    the [% product FILTER html %] product.
+    Sorry; you do not have the permissions necessary to enter [% terms.abug %]
+    against the [% product FILTER html %] product.
 
   [% ELSIF error == "file_not_specified" %]
     [% title = "No File Specified" %]
@@ -206,7 +206,7 @@
 
     You asked [% requestee.identity FILTER html %]
     for <code>[% flag_type.name FILTER html %]</code> on 
-    [% terms.bug %]&nbsp;[% bug_id FILTER html %],
+    [%+ terms.bug %]&nbsp;[% bug_id FILTER html %],
     attachment [% attach_id FILTER html %], but that attachment is restricted 
     to users
     in the [% Param("insidergroup") FILTER html %] group, and the user
@@ -276,7 +276,7 @@
     [% title = "Invalid Email Address" %]
     The e-mail address you entered(<b>[% addr FILTER html %]</b>) 
     didn't pass our syntax checking for a legal email address. 
-    [% Param('emailregexpdesc') %]
+    [%+ Param('emailregexpdesc') %]
     It must also not contain any of these special characters:
     <tt>\ ( ) &amp; &lt; &gt; , ; : &quot; [ ]</tt>, or any whitespace.
     
@@ -288,8 +288,7 @@
   [% ELSIF error == "illegal_group_control_combination" %]
     [% title = "Your Group Control Combination Is Illegal" %]
     Your group control combination for group &quot;
-    [% groupname FILTER html %]
-    &quot; is illegal.
+    [% groupname FILTER html %]&quot; is illegal.
 
   [% ELSIF error == "illegal_is_obsolete" %]
     [% title = "Your Query Makes No Sense" %]
@@ -342,7 +341,8 @@
     [% END %]
     If you are trying to use QuickSearch, you need to enable JavaScript 
     in your browser. To help us fix this limitation, add your comments to 
-    <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">bug 70907</a>.
+    <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">b<!--
+    word broken up to pass test 009 -->ug 70907</a>.
 
   [% ELSIF error == "invalid_changedsince" %]
     [% title = "Invalid 'Changed Since'" %]

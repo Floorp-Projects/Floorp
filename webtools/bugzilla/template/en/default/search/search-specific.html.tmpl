@@ -19,6 +19,8 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [% PROCESS global/header.html.tmpl 
   title = "Find a Specific Bug"
   h1 = ""
@@ -35,15 +37,15 @@
 [% PROCESS search/tabs.html.tmpl %]
 
 <p>
-Find a specific bug by entering words that describe it.  Bugzilla will search
-bug summaries, descriptions, and comments for those words and return a list
-of matching bugs sorted by relevance.
+Find a specific [% terms.bug %] by entering words that describe it.  
+[% terms.Bugzilla %] will search [% terms.bug %] summaries, descriptions, and
+comments for those words and return a list of matching [% terms.bugs %] sorted
+by relevance.
 </p>
 
 <p>
-For example, if the bug you are looking for is a browser crash when you go 
-to a secure web site with an embedded Flash animation, you might search for 
-"crash secure SSL flash".
+For example, if the [% terms.bug %] you are looking for is a browser crash when you go to a secure web site with an embedded Flash animation, you might search
+for "crash secure SSL flash".
 </p>
 
 <form method="get" action="buglist.cgi">
