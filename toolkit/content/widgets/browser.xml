@@ -538,18 +538,37 @@
          ]]>
        </body>
      </method>
-     <method name="isLink">
+     <method name="isAutoscrollBlocker">
        <parameter name="node"/>
        <body>
          <![CDATA[
            if (!node) return false;
-           var tagName = node.nodeName.toUpperCase();
-           if (tagName == "A" || tagName == "INPUT" || tagName == "TEXTAREA" ||
-               tagName == "AREA") {
-             return true;
+
+           var middleMousePaste;
+
+           try {
+             middleMousePaste = this.mPrefs.getBoolPref("middlemouse.paste");
            }
-           
-           return this.isLink(node.parentNode);
+           catch (ex) {
+             middleMousePaste = false;
+           }
+
+           if (node instanceof HTMLElement) {
+             const xhtml1NS = "http://www.w3.org/1999/xhtml";
+             var tagName = node.nodeName;
+
+             if (node.namespaceURI != xhtml1NS)
+               tagName = tagName.toLowerCase();
+
+             if ((tagName == "a" || tagName == "area") && node.hasAttribute("href"))
+               return true;
+
+             if (middleMousePaste && (tagName == "input" || tagName == "textarea"))
+               return true;
+
+           }
+
+           return this.isAutoscrollBlocker(node.parentNode);
          ]]>
        </body>
      </method>
@@ -697,7 +716,7 @@
       </handler>
       <handler event="mousedown">
         <![CDATA[
-          if (!this.autoscrollEnabled || this.isLink(event.originalTarget))
+          if (!this.autoscrollEnabled || this.isAutoscrollBlocker(event.originalTarget))
             return;
 
           if (!this._isScrolling) {
