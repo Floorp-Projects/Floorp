@@ -619,7 +619,6 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
     PRBool isca;
     PRBool isFortezzaV1 = PR_FALSE;
     SECStatus rv;
-    SECComparison rvCompare;
     SECStatus rvFinal = SECSuccess;
     int count;
     int currentPathLen = -1;
@@ -924,9 +923,7 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	/* make sure that the issuer is not self signed.  If it is, then
 	 * stop here to prevent looping.
 	 */
-	rvCompare = SECITEM_CompareItem(&issuerCert->derSubject,
-				 &issuerCert->derIssuer);
-	if (rvCompare == SECEqual) {
+	if (issuerCert->isRoot) {
 	    PORT_SetError(SEC_ERROR_UNTRUSTED_ISSUER);
 	    LOG_ERROR(log, issuerCert, count+1, 0);
 	    goto loser;

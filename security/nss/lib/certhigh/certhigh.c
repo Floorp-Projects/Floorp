@@ -1111,8 +1111,14 @@ loser:
 	derCert.data = (unsigned char *)stanCert->encoding.data;
 	derCert.type = siBuffer;
 	SECITEM_CopyItem(arena, &chain->certs[i], &derCert);
-	CERT_DestroyCertificate(cCert);
 	stanCert = stanChain[++i];
+	if (!stanCert && !cCert->isRoot) {
+	    /* reached the end of the chain, but the final cert is
+	     * not a root.  Don't discard it.
+	     */
+	    includeRoot = PR_TRUE;
+	}
+	CERT_DestroyCertificate(cCert);
     }
     if ( !includeRoot && len > 1) {
 	chain->len = len - 1;
