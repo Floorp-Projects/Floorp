@@ -41,6 +41,7 @@ class nsMenu : public nsIMenu, public nsDynamicMenu
    NS_IMETHOD GetParent( nsISupports *&aParent);
    NS_IMETHOD GetLabel( nsString &aText);
    NS_IMETHOD SetLabel( const nsString &aText);
+   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
 
    // Common methods
    DECL_DYNAMIC_MENU_METHODS

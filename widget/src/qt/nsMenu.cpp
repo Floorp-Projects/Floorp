@@ -422,6 +422,11 @@ NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
     return NS_OK;
 }
 
+NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
+{
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 // nsIMenuListener interface
 //-------------------------------------------------------------------------

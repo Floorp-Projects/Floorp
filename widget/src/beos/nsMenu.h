@@ -73,6 +73,7 @@ public:
   NS_IMETHOD GetNativeData(void** aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD SetEnabled(PRBool aIsEnabled);
 
   NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode);
   NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement);
