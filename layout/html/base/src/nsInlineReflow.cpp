@@ -124,15 +124,10 @@ nsInlineReflow::UpdateFrames()
 {
   if (NS_STYLE_DIRECTION_LTR == mOuterReflowState.mDirection) {
     if (mPlacedLeftFloater) {
-      // XXX revise loop
-      nsIFrame* frame = mFrameDataBase->mFrame;
-      PRInt32 n = mFrameNum;
-      while (--n >= 0) {
-        nsRect r;
-        frame->GetRect(r);
-        r.x = mX;
-        frame->SetRect(r);
-        frame->GetNextSibling(frame);
+      PerFrameData* pfd = mFrameDataBase;
+      PerFrameData* end = pfd + mFrameNum;
+      for (; pfd < end; pfd++) {
+        pfd->mBounds.x = mX;
       }
     }
   }
