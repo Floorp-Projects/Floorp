@@ -1,9 +1,0 @@
-LIBRARY     ngprefs.dll
-
-DESCRIPTION "ngprefs"
-
-EXPORTS
-   DllCanUnloadNow     PRIVATE
-   DllGetClassObject   PRIVATE
-   DllRegisterServer   PRIVATE
-   DllUnregisterServer PRIVATE
