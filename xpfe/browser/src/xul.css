@@ -86,6 +86,64 @@ progressmeter {
         color : #086975;         
 }
 
-:PROGRESSMETER-STRIPE {
+:progressmeter-stripe {
 	color: gray;
 }
+
+titledbutton {
+  display: block;
+  border: 3px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding-left: 1px;
+  padding-right: 1px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+titledbutton:-moz-focus-inner {
+   margin : 1px;
+   padding : 2px;
+}
+
+titledbutton:-moz-focus-outer {
+}
+
+titledbutton[pseudoclass~="hover"] {
+}
+
+titledbutton[pseudoclass~="hover"]:-moz-outline {
+   border : 1px solid black;
+}
+
+titledbutton[pseudoclass~="active"] {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+
+}
+
+titledbutton[pseudoclass~="active"]:-moz-outline {
+   border : 1px solid black;
+}
+
+titledbutton[pseudoclass~="focus"] {
+}
+
+titledbutton[pseudoclass~="focus"]:-moz-focus-inner {
+   margin : 1px;
+   padding : 1px;
+   border : 1px dotted black
+}
+
+titledbutton[pseudoclass~="focus"]:-moz-focus-outer {
+}
+
+titledbutton[pseudoclass~="disabled"] {
+   border-style: solid;
+}
+ 

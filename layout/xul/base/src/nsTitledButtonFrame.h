@@ -44,15 +44,18 @@ public:
 
   friend nsresult NS_NewTitledButtonFrame(nsIFrame*& aNewFrame);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+    NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
-                   nsIFrame*        aPrevInFlow);
+                   nsIFrame*        asPrevInFlow);
+
+  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
+                                      nsIStyleContext* aParentContext) ;
 
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
-   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
@@ -114,6 +117,7 @@ protected:
   virtual void GetTextSize(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, const nsString& aString, nsSize& aSize);
   virtual void setTitle(nsAutoString aTitle);
   virtual void setAlignment(nsAutoString aAlign);
+  virtual void SetDisabled(nsAutoString aDisabled);
 
 private:
 
@@ -131,6 +135,10 @@ private:
   nscoord mSpacing;
   nsSize mMinSize;
   nsButtonFrameRenderer mRenderer;
+  PRBool mHasImage;
+
+  PRBool mUpdateHappendedInInit;
+ 
  
 }; // class nsTitledButtonFrame
 
