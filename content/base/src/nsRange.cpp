@@ -555,24 +555,80 @@ errorLabel:
   return nsnull;
 }
 
-
-// sanity check routine for content helpers.  confirms that given 
-// is an nsIContent and that it owns one or both range endpoints.
-// returns the associated domNode for convenience 
-nsresult nsRange::ContentOwnsUs(nsIContent* aParentNode, nsIDOMNode** domNode)
+nsresult nsRange::GetDOMNodeFromContent(nsIContent* aParentNode, nsIDOMNode** domNode)
 {
   *domNode = nsnull;
   nsresult res = aParentNode->QueryInterface(kIDOMNodeIID, (void**)domNode);
   if (!NS_SUCCEEDED(res)) 
   {
-    NS_NOTREACHED("nsRange::ContentOwnsUs");
+    NS_NOTREACHED("nsRange::GetDOMNodeFromContent");
     NS_IF_RELEASE(*domNode);
     return res;
   }
-  if ((mStartParent != *domNode) && (mEndParent != *domNode))
+  return NS_OK;
+}
+
+nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode)
+{
+  // utility routine to pop all the range endpoints inside the content subtree defined by 
+  // aSourceNode, into the node/offset represented by aDestNode/aOffset.
+  
+  nsContentIterator iter(aSourceNode);
+  nsIContent* cN;
+  nsVoidArray* theRangeList;
+  nsresult res;
+  
+  res = iter.CurrentNode(&cN);
+  while (NS_COMFALSE == iter.IsDone())
+  {
+    cN->GetRangeList(theRangeList);
+    if (theRangeList)
+    {
+       nsRange* theRange;
+       PRInt32 loop = 0;
+       while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))
+       {
+          nsIDOMNode *domNode;
+          res = GetDOMNodeFromContent(cN, &domNode);
+          NS_PRECONDITION(NS_SUCCEEDED(res), "error updating range list");
+          NS_PRECONDITION(domNode, "error updating range list");
+          // sanity check - do range and content agree over ownership?
+          res = theRange->ContentOwnsUs(domNode);
+          NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
+
+          if (theRange->mStartParent == domNode)
+          {
+            // promote start point up to replacement point
+            theRange->SetStart(aDestNode, aOffset);
+          }
+          if (theRange->mEndParent == domNode)
+          {
+            // promote end point up to replacement point
+            theRange->SetEnd(aDestNode, aOffset);
+          }
+          
+          NS_IF_RELEASE(domNode);
+          loop++;
+       } 
+      
+    }
+    iter.Next();
+    NS_IF_RELEASE(cN);  // balances addref inside CurrentNode()
+    res = iter.CurrentNode(&cN);
+  }
+  
+  return NS_OK;
+}
+
+// sanity check routine for content helpers.  confirms that given 
+// node owns one or both range endpoints.
+nsresult nsRange::ContentOwnsUs(nsIDOMNode* domNode)
+{
+  NS_PRECONDITION(domNode, "null pointer");
+  if ((mStartParent != domNode) && (mEndParent != domNode))
   {
     NS_NOTREACHED("nsRange::ContentOwnsUs");
-    NS_IF_RELEASE(*domNode);
+    NS_IF_RELEASE(domNode);
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
@@ -1244,109 +1300,123 @@ toStringComplexLabel:
 }
 
 
-nsresult nsRange::OwnerDestroyed(nsIContent* aParentNode)
+nsresult nsRange::OwnerGone(nsIContent* aDyingNode)
 {
-  nsIDOMNode *domNode;
-  nsIDOMNode *grandma;
-  nsIDOMNode *newStartNode  = mStartParent;
-  nsIDOMNode *newEndNode    = mEndParent;
-  PRInt32    newStartOffset = mStartOffset;
-  PRInt32    newEndOffset   = mEndOffset;
-  
-  // sanity check - are we ourselves?
-  nsresult res = ContentOwnsUs(aParentNode,&domNode);
-  if (!NS_SUCCEEDED(res)) return res;
-   
-  if (mStartParent == domNode)
-  {
-    // promote (mStartParent,mStartOffset) to aParentNode's parent and offset
-    res = domNode->GetParentNode(&grandma);
-    if (!NS_SUCCEEDED(res))
-    {
-      // we just shot out the top of the document (or fragment).  We'd better unposition this range
-      DoSetRange(nsnull,0,nsnull,0);
-      NS_IF_RELEASE(grandma);
-      NS_RELEASE(domNode);
-      return NS_OK;
-    }
-    newStartOffset = IndexOf(domNode);
-    newStartNode = grandma;
-  }
-  if (mEndParent == domNode)
-  {
-    // promote (mStartParent,mStartOffset) to aParentNode's parent and offset
-    res = domNode->GetParentNode(&grandma);
-    if (!NS_SUCCEEDED(res))
-    {
-      // we just shot out the top of the document (or fragment).  We'd better unposition this range
-      DoSetRange(nsnull,0,nsnull,0);
-      NS_IF_RELEASE(grandma);
-      NS_RELEASE(domNode);
-      return NS_OK;
-    }
-    newEndOffset = IndexOf(domNode);
-    newEndNode = grandma;
-  }
-  res = DoSetRange(newStartNode,newStartOffset,newEndNode,newEndOffset);
-  NS_IF_RELEASE(grandma);
-  NS_RELEASE(domNode);
-  return res;
+  // nothing for now - ideally we would pop out all the enclosed
+  // ranges, but that it an expensive bunch of tests to do when
+  // destroying content nodes.  
+  return NS_OK;
 }
   
 
 nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
 {
+  // quick return if no range list
+  nsVoidArray *theRangeList;
+  aParentNode->GetRangeList(theRangeList);
+  if (theRangeList == nsnull) return NS_OK;
+  
+  PRInt32  loop = 0;
+  nsRange* theRange;
   nsIDOMNode *domNode;
-  // sanity check - are we ourselves?
-  nsresult res = ContentOwnsUs(aParentNode,&domNode);
-  if (!NS_SUCCEEDED(res)) return res;
+  nsresult res;
+  
+  res = GetDOMNodeFromContent(aParentNode, &domNode);
+  if (NS_SUCCEEDED(res))  return res;
+  if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  if (mStartParent == domNode)
+  while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) 
   {
-    // if child inserted before start, move start offset right one
-    if (aOffset <= mStartOffset) mStartOffset++;
-  }
-  if (mEndParent == domNode)
-  {
-    // if child inserted before end, move end offset right one
-    if (aOffset <= mEndOffset) mEndOffset++;
+    // sanity check - do range and content agree over ownership?
+    res = theRange->ContentOwnsUs(domNode);
+    NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
+    if (NS_SUCCEEDED(res))
+    {
+      if (theRange->mStartParent == domNode)
+      {
+        // if child inserted before start, move start offset right one
+        if (aOffset <= theRange->mStartOffset) theRange->mStartOffset++;
+      }
+      if (theRange->mEndParent == domNode)
+      {
+        // if child inserted before end, move end offset right one
+        if (aOffset <= theRange->mEndOffset) theRange->mEndOffset++;
+      }
+      NS_PRECONDITION(NS_SUCCEEDED(res), "error updating range list");
+    }
+    loop++;
   }
   NS_RELEASE(domNode);
+  return NS_OK;
+}
+  
+
+nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aRemovedNode)
+{
+  // quick return if no range list
+  nsVoidArray *theRangeList;
+  aParentNode->GetRangeList(theRangeList);
+  if (theRangeList == nsnull) return NS_OK;
+  
+  PRInt32  loop = 0;
+  nsRange *theRange;
+  nsIDOMNode *domNode;
+  nsresult res;
+  
+  res = GetDOMNodeFromContent(aParentNode, &domNode);
+  if (NS_SUCCEEDED(res))  return res;
+  if (!domNode) return NS_ERROR_UNEXPECTED;
+
+  // any ranges that are in the parentNode may need to have offsets updated
+  while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) 
+  {
+    // sanity check - do range and content agree over ownership?
+    res = theRange->ContentOwnsUs(domNode);
+    NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
+    if (NS_SUCCEEDED(res))
+    {
+      if (theRange->mStartParent == domNode)
+      {
+        // if child deleted before start, move start offset left one
+        if (aOffset <= theRange->mStartOffset) theRange->mStartOffset--;
+      }
+      if (theRange->mEndParent == domNode)
+      {
+        // if child deleted before end, move end offset left one
+        if (aOffset <= theRange->mEndOffset) 
+        {
+          if (theRange->mEndOffset>0) theRange->mEndOffset--;
+        }
+      }
+    }
+    loop++;
+  }
+  
+  // any ranges in the content subtree rooted by aRemovedNode need to
+  // have the enclosed endpoints promoted up to the parentNode/offset
+  res = PopRanges(domNode, aOffset, aRemovedNode);
+
+  NS_RELEASE(domNode);
+  return NS_OK;
+}
+  
+
+nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aReplacedNode)
+{
+  // don't need to adjust ranges whose endpoints are in this parent,
+  // but we do need to pop out any range endpoints inside the subtree
+  // rooted by aReplacedNode.
+  
+  nsIDOMNode* parentDomNode; 
+  nsresult res;
+  
+  res = GetDOMNodeFromContent(aParentNode, &parentDomNode);
+  if (NS_SUCCEEDED(res))  return res;
+  if (!parentDomNode) return NS_ERROR_UNEXPECTED;
+  
+  res = PopRanges(parentDomNode, aOffset, aReplacedNode);
+  
+  NS_RELEASE(parentDomNode);
   return res;
-}
-  
-
-nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset)
-{
-  nsIDOMNode *domNode;
-  // sanity check - are we ourselves?
-  nsresult res = ContentOwnsUs(aParentNode,&domNode);
-  if (!NS_SUCCEEDED(res)) return res;
-
-  if (mStartParent == domNode)
-  {
-    // if child deleted before start, move start offset left one
-    if (aOffset <= mStartOffset) 
-    {
-      if (mStartOffset>0) mStartOffset--;
-    }
-  }
-  if (mEndParent == domNode)
-  {
-    // if child deleted before end, move end offset left one
-    if (aOffset <= mEndOffset) 
-    {
-      if (mEndOffset>0) mEndOffset--;
-    }
-  }
-  NS_RELEASE(domNode);
-  return NS_OK;
-}
-  
-
-nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset)
-{
-  // for now, do nothing
-  return NS_OK;
 }
   

@@ -144,6 +144,9 @@ public:
   NS_IMETHOD RangeRemove(nsIDOMRange& aRange) {
     return mInner.RangeRemove(aRange); 
   }                                                                        
+  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {
+    return mInner.GetRangeList(aResult); 
+  }                                                                        
 
   // nsIXMLContent
   NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);

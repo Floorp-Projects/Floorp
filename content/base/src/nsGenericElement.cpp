@@ -28,6 +28,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMRange.h"
+#include "nsRange.h"
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptContextOwner.h"
@@ -592,6 +593,8 @@ nsGenericElement::nsGenericElement()
 
 nsGenericElement::~nsGenericElement()
 {
+  // pop any enclosed ranges out
+  // nsRange::OwnerGone(mContent); not used for now
   NS_IF_RELEASE(mTag);
   NS_IF_RELEASE(mListenerManager);
   if (nsnull != mDOMSlots) {
@@ -2088,6 +2091,7 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
+    nsRange::OwnerChildInserted(mContent, aIndex);
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
@@ -2110,6 +2114,7 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
+    nsRange::OwnerChildReplaced(mContent, aIndex, oldKid);
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
@@ -2132,6 +2137,7 @@ nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
+    // ranges don't need adjustment since new child is at end of list
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
@@ -2150,6 +2156,7 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
     PRBool rv = mChildren.RemoveElementAt(aIndex);
+    nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
     if (aNotify) {
       if (nsnull != doc) {
         doc->ContentRemoved(mContent, oldKid, aIndex);

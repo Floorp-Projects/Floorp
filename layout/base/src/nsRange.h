@@ -80,13 +80,13 @@ public:
   
   // nsRange interface extensions
   
-  NS_IMETHOD    OwnerDestroyed(nsIContent* aParentNode);
+  static NS_METHOD    OwnerGone(nsIContent* aParentNode);
   
-  NS_IMETHOD    OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset);
+  static NS_METHOD    OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset);
   
-  NS_IMETHOD    OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset);
+  static NS_METHOD    OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aRemovedNode);
   
-  NS_IMETHOD    OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset);
+  static NS_METHOD    OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aReplacedNode);
   
 
 private:
@@ -110,6 +110,8 @@ private:
   static PRInt32       IndexOf(nsIDOMNode* aNode);
   static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
   static nsIDOMNode*   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
+  static nsresult      GetDOMNodeFromContent(nsIContent* aParentNode, nsIDOMNode** domNode);
+  static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);
   
   static nsresult CloneSibsAndParents(nsIDOMNode* parentNode,
                                       PRInt32 nodeOffset,
@@ -135,8 +137,8 @@ private:
   nsresult      AddToListOf(nsIDOMNode* aNode);
   
   nsresult      RemoveFromListOf(nsIDOMNode* aNode);
-
-  nsresult      ContentOwnsUs(nsIContent* aParentNode, nsIDOMNode** domNode);
+ 
+  nsresult      ContentOwnsUs(nsIDOMNode* domNode);
 };
 
 // Make a new nsIDOMRange object
