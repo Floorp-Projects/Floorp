@@ -346,7 +346,7 @@
           if (aValue == "ShrinkToFit") {
             if (!settings.shrinkToFit) {
               settings.shrinkToFit = true;
-              PrintUtils.saveSettings(settings);
+              PrintUtils.savePrintSettings(settings);
               PrintUtils.printPreview();
             }
             return;
@@ -367,7 +367,7 @@
 
           settings.shrinkToFit = false;
           settings.scaling = aValue;
-          PrintUtils.saveSettings(settings);
+          PrintUtils.savePrintSettings(settings);
           PrintUtils.printPreview();
         ]]>
         </body>
@@ -395,7 +395,7 @@
           var print = PrintUtils.getWebBrowserPrint();
           var settings = print.currentPrintSettings;
           settings.orientation = orientValue;
-          PrintUtils.saveSettings(settings);
+          PrintUtils.savePrintSettings(settings);
           PrintUtils.printPreview();
         ]]>
         </body>
