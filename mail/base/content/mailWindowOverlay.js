@@ -2192,8 +2192,11 @@ var gMessageNotificationBar =
 
   setRemoteContentMsg: function (aMsgHdr)
   {  
-    this.updateMsgNotificationBar(aMsgHdr && aMsgHdr.getUint32Property("remoteContentPolicy") == kBlockRemoteContent ? 
-                                  kMsgNotificationRemoteImages : kMsgNotificationNoStatus);
+    // The phishing message and junk message takes precedence over the remote content msg
+    if (this.mMsgNotificationBar.selectedIndex != kMsgNotificationJunkBar && 
+        this.mMsgNotificationBar.selectedIndex != kMsgNotificationPhishingBar)
+      this.updateMsgNotificationBar(aMsgHdr && aMsgHdr.getUint32Property("remoteContentPolicy") == kBlockRemoteContent ? 
+                                    kMsgNotificationRemoteImages : kMsgNotificationNoStatus);
   },
 
   // aUrl is the nsIURI for the message currently loaded in the message pane
