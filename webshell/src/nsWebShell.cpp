@@ -57,6 +57,7 @@
 #include "nsIPresShell.h"
 #include "nsIStreamObserver.h"
 #include "nsIWebShellServices.h"
+#include "nsIGlobalHistory.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -2228,14 +2229,41 @@ nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 {
   nsString URLSpec(aURLSpec);
   aState = eLinkState_Unvisited;
-#ifdef NS_DEBUG
-  if (URLSpec.Equals("http://visited/")) {
-    aState = eLinkState_Visited;
+
+  static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIGlobalHistory, history, kGlobalHistoryCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    // XXX aURLSpec should really be a char*, not a PRUnichar*.
+    nsAutoString urlStr(aURLSpec);
+
+    char buf[256];
+    char* url = buf;
+
+    if (urlStr.Length() >= sizeof(buf)) {
+      url = new char[urlStr.Length() + 1];
+      if (! url) return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    urlStr.ToCString(url, urlStr.Length() + 1);
+
+    PRInt64 lastVisitDate;
+    rv = history->GetLastVisitDate(url, &lastVisitDate);
+
+    if (url != buf)
+      delete[] url;
+
+    if (NS_FAILED(rv)) return rv;
+
+    // a last-visit-date of zero means we've never seen it before; so
+    // if it's not zero, we must've seen it.
+    if (! LL_IS_ZERO(lastVisitDate))
+      aState = eLinkState_Visited;
+
+    // XXX how to tell if eLinkState_OutOfDate?
   }
-  else if (URLSpec.Equals("http://out-of-date/")) {
-    aState = eLinkState_OutOfDate;
-  }
-#endif
+
   return NS_OK;
 }
 
