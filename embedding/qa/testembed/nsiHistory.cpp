@@ -148,7 +148,7 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
 			//GetSHistoryEnumerator(getter_AddRefs(theSimpleEnum));
 			break ;
 		case ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_RUNALLTESTS :
-			RunAllHistoryEnrtyTests();
+			RunAllHistoryEntryTests();
 			break ;
 		case ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETURI :
 			GetURIHistTest(theHistoryEntry);
@@ -410,7 +410,7 @@ void CNsIHistory::PurgeHistoryTest(nsISHistory* theSessionHistory, PRInt32 numEn
    FormatAndPrintOutput("Number of removed entries = ", numEntries, 2);		 
 }
 
-void CNsIHistory::RunAllHistoryEnrtyTests() 
+void CNsIHistory::RunAllHistoryEntryTests() 
 {
    PRInt32 numEntries = 5;
    PRInt32 theIndex;

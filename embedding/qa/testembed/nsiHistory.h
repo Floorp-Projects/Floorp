@@ -84,7 +84,7 @@ public:
 	void PurgeHistoryTest(nsISHistory *, PRInt32);
 	void RunAllTests();
 	void OnStartTests(UINT nMenuID);
-	void RunAllHistoryEnrtyTests();
+	void RunAllHistoryEntryTests();
 	// Generated message map functions
 protected:
 
