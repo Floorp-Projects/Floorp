@@ -75,6 +75,7 @@ JSStringType *String_Type;
 JSType *Boolean_Type;
 JSType *Type_Type;
 JSType *Void_Type;
+JSType *Null_Type;
 JSType *Unit_Type;
 JSType *Attribute_Type;
 JSType *NamedArgument_Type;
@@ -1733,8 +1734,12 @@ static JSValue Object_forin(Context *cx, const JSValue& thisValue, JSValue * /*a
     IteratorDongle *itDude = new IteratorDongle();
     itDude->obj = obj;
     itDude->it = obj->mProperties.begin();
-    if (itDude->it == itDude->obj->mProperties.end())
-        return kNullValue;
+    while (itDude->it == itDude->obj->mProperties.end()) {
+		itDude->obj = itDude->obj->mPrototype;
+		if (itDude->obj == NULL)
+			return kNullValue;
+		itDude->it = itDude->obj->mProperties.begin();
+	}
 
     JSValue v(&PROPERTY_NAME(itDude->it));
     iteratorObject->setProperty(cx, cx->mWorld.identifiers["value"], 0, v);
@@ -1751,14 +1756,15 @@ static JSValue Object_next(Context *cx, const JSValue& /*thisValue*/, JSValue *a
     IteratorDongle *itDude = (IteratorDongle *)(iteratorObject->mPrivate);
     itDude->it++;
 
-    if (itDude->it == itDude->obj->mProperties.end())
-        return kNullValue;
-    else {
-        JSValue v(&PROPERTY_NAME(itDude->it));
-        iteratorObject->setProperty(cx, cx->mWorld.identifiers["value"], 0, v);
-        return iteratorValue;
-    }
-
+    while (itDude->it == itDude->obj->mProperties.end()) {
+		itDude->obj = itDude->obj->mPrototype;
+		if (itDude->obj == NULL)
+			return kNullValue;
+		itDude->it = itDude->obj->mProperties.begin();
+	}
+    JSValue v(&PROPERTY_NAME(itDude->it));
+    iteratorObject->setProperty(cx, cx->mWorld.identifiers["value"], 0, v);
+    return iteratorValue;
 }
 
 static JSValue Object_done(Context *, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
@@ -1880,8 +1886,7 @@ static JSValue Number_Constructor(Context *cx, const JSValue& thisValue, JSValue
 
 static JSValue Number_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isObject());
-    if (thisValue.getType() != Number_Type)
+    if (!thisValue.isObject() || (thisValue.getType() != Number_Type))
         cx->reportError(Exception::typeError, "Number.toString called on something other than a Number object");
     JSObject *thisObj = thisValue.object;
     return JSValue(numberToString(*((float64 *)(thisObj->mPrivate))));
@@ -1889,8 +1894,7 @@ static JSValue Number_toString(Context *cx, const JSValue& thisValue, JSValue * 
 
 static JSValue Number_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isObject());
-    if (thisValue.getType() != Number_Type)
+    if (!thisValue.isObject() || (thisValue.getType() != Number_Type))
         cx->reportError(Exception::typeError, "Number.valueOf called on something other than a Number object");
     JSObject *thisObj = thisValue.object;
     return JSValue(*((float64 *)(thisObj->mPrivate)));
@@ -2193,11 +2197,12 @@ void Context::initBuiltins()
         { "String",         String_Constructor,    &kNullValue          },
         { "Array",          Array_Constructor,     &kNullValue          },
         { "Boolean",        Boolean_Constructor,   &kFalseValue         },
-        { "Void",           NULL,                  &kNullValue          },
+        { "Void",           NULL,                  &kUndefinedValue     },
         { "Unit",           NULL,                  &kNullValue          },
         { "Attribute",      NULL,                  &kNullValue          },
         { "NamedArgument",  NULL,                  &kNullValue          },
         { "Date",           Date_Constructor,      &kPositiveZero       },
+        { "Null",           NULL,                  &kNullValue          },
     };
 
     Object_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
@@ -2233,6 +2238,7 @@ void Context::initBuiltins()
     Attribute_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[10].name)], Object_Type);
     NamedArgument_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[11].name)], Object_Type);
     Date_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[12].name)], Object_Type);
+    Null_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[13].name)], Object_Type);
 
     String_Type->defineVariable(this, FromCharCode_StringAtom, NULL, String_Type, JSValue(new JSFunction(this, String_fromCharCode, String_Type)));
 
@@ -2290,6 +2296,7 @@ void Context::initBuiltins()
     initClass(Attribute_Type,       &builtInClasses[10], NULL);
     initClass(NamedArgument_Type,   &builtInClasses[11], NULL);
     initClass(Date_Type,            &builtInClasses[12], getDateProtos() );
+    initClass(Null_Type,            &builtInClasses[13],  NULL);
 
     Type_Type->defineUnaryOperator(Index, new JSFunction(this, arrayMaker, Type_Type));
 

@@ -868,7 +868,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     const String &name = *mCurModule->getString(index);
                     JSObject *parent = mScopeChain->getNameValue(this, name, CURRENT_ATTR);
                     JSValue result = topValue();
-                    if (result.isFunction() && result.function->isMethod()) {
+                    if (result.isFunction()) {
                         popValue();
                         if (result.function->isConstructor())
                             // A constructor has to be called with a NULL 'this' in order to prompt it
@@ -877,6 +877,19 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         else
                             pushValue(JSValue((JSFunction *)(new JSBoundFunction(result.function, parent))));
                     }
+                }
+                break;
+            case SetNameOp:
+                {
+                    uint32 index = *((uint32 *)pc);
+                    pc += sizeof(uint32);
+                    const String &name = *mCurModule->getString(index);
+					JSValue v = topValue();
+					if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
+						popValue();
+						pushValue(JSValue(v.function->getFunction()));
+					}
+                    mScopeChain->setNameValue(this, name, CURRENT_ATTR);
                 }
                 break;
             case GetTypeOfNameOp:
@@ -889,14 +902,6 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     }
                     else
                         pushValue(kUndefinedValue);
-                }
-                break;
-            case SetNameOp:
-                {
-                    uint32 index = *((uint32 *)pc);
-                    pc += sizeof(uint32);
-                    const String &name = *mCurModule->getString(index);
-                    mScopeChain->setNameValue(this, name, CURRENT_ATTR);
                 }
                 break;
             case GetElementOp:
@@ -969,6 +974,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
 
                     if (target) {
                         JSValue v = popValue();     // need to have this sitting right above the base value
+						if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
+							v = JSValue(v.function->getFunction());
+						}
                         insertValue(v, mStackTop - dimCount);
 
                         JSValue result;
@@ -993,6 +1001,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         if (dimCount != 1)
                             reportError(Exception::typeError, "too many indices");
                         JSValue v = popValue();
+						if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
+							v = JSValue(v.function->getFunction());
+						}
                         JSValue index = popValue();
                         popValue();     // discard base
                         const String *name = index.toString(this).string;
@@ -1065,7 +1076,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     // if the result is a method of some kind, bind
                     // the base object to it
                     JSValue result = topValue();
-                    if (result.isFunction() && result.function->isMethod()) {
+                    if (result.isFunction()) {
                         popValue();
                         if (result.function->isConstructor())
                             // A constructor has to be called with a NULL 'this' in order to prompt it
@@ -1104,6 +1115,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
             case SetPropertyOp:
                 {
                     JSValue v = popValue();
+					if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
+						v = JSValue(v.function->getFunction());
+					}
                     JSValue base = popValue();
                     JSObject *obj = NULL;
                     if (!base.isObject() && !base.isType())
@@ -1307,7 +1321,11 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 {
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    mLocals[index] = topValue();
+					JSValue v = topValue();
+					if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
+						v = JSValue(v.function->getFunction());
+					}
+                    mLocals[index] = v;
                 }
                 break;
             case GetClosureVarOp:
@@ -1321,6 +1339,10 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case SetClosureVarOp:
                 {
+					JSValue v = topValue();
+					if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
+						v = JSValue(v.function->getFunction());
+					}
                     uint32 depth = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     uint32 index = *((uint32 *)pc);
@@ -1346,9 +1368,13 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case SetArgOp:
                 {
+					JSValue v = topValue();
+					if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
+						v = JSValue(v.function->getFunction());
+					}
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    mArgumentBase[index] = topValue();
+                    mArgumentBase[index] = v;
                 }
                 break;
             case GetMethodOp:
@@ -1381,6 +1407,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
             case SetFieldOp:
                 {
                     JSValue v = popValue();
+					if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
+						v = JSValue(v.function->getFunction());
+					}
                     JSValue base = popValue();
                     ASSERT(dynamic_cast<JSInstance *>(base.object));
                     uint32 index = *((uint32 *)pc);
@@ -1875,7 +1904,7 @@ static JSValue compareEqual(Context *cx, JSValue r1, JSValue r2)
     else {
         if (r1.isUndefined())
             return kTrueValue;
-        if (r1.isNull() || r2.isNull()) // because null->getType() == Object_Type
+        if (r1.isNull())
             return kTrueValue;
         if (r1.isObject() && r2.isObject()) // because new Boolean()->getType() == Boolean_Type
             return JSValue(r1.object == r2.object);
@@ -2401,7 +2430,7 @@ JSType *JSValue::getType() const {
     case string_tag:    return (JSType *)String_Type;
     case object_tag:    return object->getType();
     case undefined_tag: return Void_Type;
-    case null_tag:      return Object_Type;
+    case null_tag:      return Null_Type;
     case function_tag:  return Function_Type;
     case type_tag:      return Type_Type;
     default: 

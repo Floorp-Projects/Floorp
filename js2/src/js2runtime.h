@@ -111,6 +111,7 @@ static const double two31 = 2147483648.0;
                                         // has this type).
     extern JSType *Boolean_Type;
     extern JSType *Void_Type;
+    extern JSType *Null_Type;
     extern JSArrayType *Array_Type;
     extern JSType *Unit_Type;
     extern JSType *Function_Type;
