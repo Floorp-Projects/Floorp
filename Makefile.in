@@ -290,6 +290,17 @@ ifdef MOZ_ENABLE_XFT
 	$(MAKE) freetype
 	$(MAKE) expat
 endif
+
+install::
+ifndef MOZ_NATIVE_NSPR
+	$(MAKE) -C nsprpub real_install DESTDIR=$(DESTDIR) libdir=$(mozappdir) includedir=$(includedir)/nspr
+	$(RM) -f $(addprefix $(DESTDIR)$(mozappdir)/$(LIB_PREFIX), $(addsuffix .$(LIB_SUFFIX), nspr4 plds4 plc4))
+	$(RM) -f $(addprefix $(DESTDIR)$(bindir)/,nspr-config compile-et.pl prerr.properties)
+endif
+ifdef MOZ_LDAP_XPCOM
+	$(MAKE) -C directory/c-sdk real_install DESTDIR=$(DESTDIR) libdir=$(mozappdir) includedir=$(includedir)/ldap
+endif
+
 endif
 
 include $(topsrcdir)/config/rules.mk
