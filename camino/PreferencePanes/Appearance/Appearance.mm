@@ -75,6 +75,9 @@
 
 #pragma mark -
 
+// We use instances of this class as the field editor, to allow us to catch
+// |changeFont:| messages.
+
 @interface SampleTextView : NSTextView
 {
   id    mPrefPane;
@@ -83,7 +86,6 @@
 
 @end
 
-// try making these a real text view, then override changeFont:
 @implementation SampleTextView
 
 - (void)setPrefPane:(id)inPrefPane
@@ -94,6 +96,16 @@
 - (void)changeFont:(id)sender
 {
   [mPrefPane changeFont:sender];
+}
+
+- (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString *)fontName
+{
+  return [mPrefPane fontManager:theFontManager willIncludeFont:fontName];
+}
+
+- (unsigned int)validModesForFontPanel:(NSFontPanel *)fontPanel
+{
+  return [mPrefPane validModesForFontPanel:fontPanel];
 }
 
 @end
@@ -432,10 +444,11 @@
   NSMutableDictionary *fontTypeDict = [regionDict objectForKey:fontType];
   NSMutableDictionary *fontSizeDict = [regionDict objectForKey:@"fontsize"];
   
-  if ([[fontTypeDict objectForKey:@"missing"] boolValue]) // will be false if no object
-    return;
-
-  if (font) {
+  if (font)
+  {
+    // clear any missing flag
+    [fontTypeDict removeObjectForKey:@"missing"];
+    
     [fontTypeDict setObject:[font familyName] forKey:@"fontfamily"];
     [fontSizeDict setObject:[NSNumber numberWithInt:(int)[font pointSize]] forKey:[self getFontSizeType:fontType]];
   }
@@ -495,8 +508,10 @@
   NSTextField *sampleCell = [self getFontSampleForType:fontType];
   NSString *displayString = nil;
   
-  if (font == nil) {
-    if (regionDict) {
+  if (font == nil)
+  {
+    if (regionDict)
+    {
       NSDictionary *fontSizeDict = [regionDict objectForKey:@"fontsize"];
       NSString *fontName = [fontTypeDict objectForKey:@"fontfamily"];
       int fontSize = [[fontSizeDict objectForKey:[self getFontSizeType:fontType]] intValue];
@@ -505,27 +520,29 @@
       font = [NSFont userFontOfSize:14.0];
 
       // set the missing flag in the dict
-      if (![fontTypeDict objectForKey:@"missing"] || ![[fontTypeDict objectForKey:@"missing"] boolValue]) {
+      if (![fontTypeDict objectForKey:@"missing"] || ![[fontTypeDict objectForKey:@"missing"] boolValue])
         [fontTypeDict setObject:[NSNumber numberWithBool:YES] forKey:@"missing"];
-      }
-    } else {
+    }
+    else
+    {
       // should never happen
       // XXX localize
       displayString = @"Font missing";
       font = [NSFont userFontOfSize:16.0];
     }
-  } else {
-    NS_DURING
-      displayString = [NSString stringWithFormat:@"%@, %dpt", [font displayName], (int)[font pointSize]];
-    NS_HANDLER
-      displayString = [NSString stringWithFormat:@"%@, %dpt", [font familyName], (int)[font pointSize]];
-    NS_ENDHANDLER
+  }
+  else
+  {
+    displayString = [NSString stringWithFormat:@"%@, %dpt", [font familyName], (int)[font pointSize]];
     
     // make sure we don't have a missing entry
     [fontTypeDict removeObjectForKey:@"missing"];
   }
   
-  [sampleCell setFont:font];
+  // Set the font of the sample to a font that is not bold, italic etc.
+  NSFont* baseFont = [[NSFontManager sharedFontManager] fontWithFamily:[font familyName] traits:0 weight:5 /* normal weight */ size:[font pointSize]];
+  
+  [sampleCell setFont:baseFont];
   [sampleCell setStringValue:displayString];
 }
 
@@ -847,7 +864,6 @@ const int kMissingFontPopupItemTag = 9999;
   return nil;
 }
 
-
 - (void)changeFont:(id)sender
 {
   if (mFontButtonForEditor) {
@@ -859,7 +875,27 @@ const int kMissingFontPopupItemTag = 9999;
 - (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString *)fontName
 {
   // filter out fonts for the selected language
+  //NSLog(@"willIncludeFont:%@", fontName);
   return YES;
+}
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
+
+enum {
+    NSFontPanelFaceModeMask = 1 << 0,
+    NSFontPanelSizeModeMask = 1 << 1,
+    NSFontPanelCollectionModeMask = 1 << 2,
+    NSFontPanelStandardModesMask = 0xFFFF,
+    NSFontPanelAllModesMask = 0xFFFFFFFF
+};
+
+#endif
+
+// this allows us to hide the font face panel
+- (unsigned int)validModesForFontPanel:(NSFontPanel *)fontPanel
+{
+  // hide the face panel
+  return (NSFontPanelStandardModesMask & ~NSFontPanelFaceModeMask);
 }
 
 @end
