@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.29 2000/12/13 01:22:22 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.30 2000/12/15 05:38:09 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -3129,7 +3129,7 @@ CLEANUP:
 /* Add d to |mp| in place                                                 */
 mp_err   s_mp_add_d(mp_int *mp, mp_digit d)    /* unsigned digit addition */
 {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
   mp_word   w, k = 0;
   mp_size   ix = 1;
 
@@ -3186,7 +3186,7 @@ CLEANUP:
 /* Subtract d from |mp| in place, assumes |mp| > d                        */
 mp_err   s_mp_sub_d(mp_int *mp, mp_digit d)    /* unsigned digit subtract */
 {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
   mp_word   w, b = 0;
   mp_size   ix = 1;
 
@@ -3275,7 +3275,7 @@ CLEANUP:
 
 mp_err   s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
 {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_DIV_WORD)
   mp_word   w = 0, q;
 #else
   mp_digit  w, q;
@@ -3310,7 +3310,7 @@ mp_err   s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
   /* Make room for the quotient */
   MP_CHECKOK( mp_init_size(&quot, USED(mp)) );
 
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_DIV_WORD)
   for(ix = USED(mp) - 1; ix >= 0; ix--) {
     w = (w << DIGIT_BIT) | DIGIT(mp, ix);
 
@@ -3387,7 +3387,7 @@ CLEANUP:
 /* Compute a = |a| + |b|                                                  */
 mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
 {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
   mp_word   w = 0;
 #else
   mp_digit  d, sum, carry = 0;
@@ -3412,7 +3412,7 @@ mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
   pb = MP_DIGITS(b);
   used = MP_USED(b);
   for(ix = 0; ix < used; ix++) {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
     w = w + *pa + *pb++;
     *pa++ = ACCUM(w);
     w = CARRYOUT(w);
@@ -3429,7 +3429,7 @@ mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
      sure the carries get propagated upward...  
    */
   used = MP_USED(a);
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
   while (w && ix < used) {
     w = w + *pa;
     *pa++ = ACCUM(w);
@@ -3449,7 +3449,7 @@ mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
      it.  We could have done this initially, but why touch the memory
      allocator unless we're sure we have to?
    */
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
   if (w) {
     if((res = s_mp_pad(a, used + 1)) != MP_OKAY)
       return res;
@@ -3474,7 +3474,7 @@ mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
 mp_err   s_mp_add_3arg(const mp_int *a, const mp_int *b, mp_int *c)  
 {
   mp_digit *pa, *pb, *pc;
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
   mp_word   w = 0;
 #else
   mp_digit  sum, carry = 0, d;
@@ -3506,7 +3506,7 @@ mp_err   s_mp_add_3arg(const mp_int *a, const mp_int *b, mp_int *c)
   pc = MP_DIGITS(c);
   used = MP_USED(b);
   for (ix = 0; ix < used; ix++) {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
     w = w + *pa++ + *pb++;
     *pc++ = ACCUM(w);
     w = CARRYOUT(w);
@@ -3523,7 +3523,7 @@ mp_err   s_mp_add_3arg(const mp_int *a, const mp_int *b, mp_int *c)
      sure the carries get propagated upward...  
    */
   for (used = MP_USED(a); ix < used; ++ix) {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
     w = w + *pa++;
     *pc++ = ACCUM(w);
     w = CARRYOUT(w);
@@ -3537,7 +3537,7 @@ mp_err   s_mp_add_3arg(const mp_int *a, const mp_int *b, mp_int *c)
      it.  We could have done this initially, but why touch the memory
      allocator unless we're sure we have to?
    */
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
   if (w) {
     if((res = s_mp_pad(c, used + 1)) != MP_OKAY)
       return res;
@@ -3562,7 +3562,7 @@ mp_err   s_mp_add_3arg(const mp_int *a, const mp_int *b, mp_int *c)
 /* Compute a = |a| + ( |b| * (RADIX ** offset) )             */
 mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)   
 {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
   mp_word   w, k = 0;
 #else
   mp_digit  d, sum, carry = 0;
@@ -3586,7 +3586,7 @@ mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)
    */
   lim = USED(b);
   for(ib = 0, ia = offset; ib < lim; ib++, ia++) {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
     w = (mp_word)DIGIT(a, ia) + DIGIT(b, ib) + k;
     DIGIT(a, ia) = ACCUM(w);
     k = CARRYOUT(w);
@@ -3602,7 +3602,7 @@ mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)
   /* If we run out of 'b' digits before we're actually done, make
      sure the carries get propagated upward...  
    */
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
   for (lim = MP_USED(a); k && (ia < lim); ++ia) {
     w = (mp_word)DIGIT(a, ia) + k;
     DIGIT(a, ia) = ACCUM(w);
@@ -3620,7 +3620,7 @@ mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)
      it.  We could have done this initially, but why touch the memory
      allocator unless we're sure we have to?
    */
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
   if(k) {
     if((res = s_mp_pad(a, USED(a) + 1)) != MP_OKAY)
       return res;
@@ -3649,7 +3649,7 @@ mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)
 mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
 {
   mp_digit *pa, *pb, *limit;
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
   mp_sword  w = 0;
 #else
   mp_digit  d, diff, borrow = 0;
@@ -3665,7 +3665,7 @@ mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
   pb = MP_DIGITS(b);
   limit = pb + MP_USED(b);
   while (pb < limit) {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
     w = w + *pa - *pb++;
     *pa++ = ACCUM(w);
     w >>= MP_DIGIT_BIT;
@@ -3680,7 +3680,7 @@ mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
 #endif
   }
   limit = MP_DIGITS(a) + MP_USED(a);
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
   while (w && pa < limit) {
     w = w + *pa;
     *pa++ = ACCUM(w);
@@ -3702,7 +3702,7 @@ mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
      of our input invariant.  We've already done the work,
      but we'll at least complain about it...
    */
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
   return w ? MP_RANGE : MP_OKAY;
 #else
   return borrow ? MP_RANGE : MP_OKAY;
@@ -3715,7 +3715,7 @@ mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
 mp_err   s_mp_sub_3arg(const mp_int *a, const mp_int *b, mp_int *c)  
 {
   mp_digit *pa, *pb, *pc;
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
   mp_sword  w = 0;
 #else
   mp_digit  d, diff, borrow = 0;
@@ -3740,7 +3740,7 @@ mp_err   s_mp_sub_3arg(const mp_int *a, const mp_int *b, mp_int *c)
   pc = MP_DIGITS(c);
   limit = MP_USED(b);
   for (ix = 0; ix < limit; ++ix) {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
     w = w + *pa++ - *pb++;
     *pc++ = ACCUM(w);
     w >>= MP_DIGIT_BIT;
@@ -3755,7 +3755,7 @@ mp_err   s_mp_sub_3arg(const mp_int *a, const mp_int *b, mp_int *c)
 #endif
   }
   for (limit = MP_USED(a); ix < limit; ++ix) {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
     w = w + *pa++;
     *pc++ = ACCUM(w);
     w >>= MP_DIGIT_BIT;
@@ -3775,7 +3775,7 @@ mp_err   s_mp_sub_3arg(const mp_int *a, const mp_int *b, mp_int *c)
      of our input invariant.  We've already done the work,
      but we'll at least complain about it...
    */
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
   return w ? MP_RANGE : MP_OKAY;
 #else
   return borrow ? MP_RANGE : MP_OKAY;
@@ -3823,7 +3823,7 @@ mp_err   s_mp_mul(mp_int *a, const mp_int *b)
 /* c = a * b */
 void s_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_MUL_WORD)
   mp_digit   d = 0;
 
   /* Inner product:  Digits of a */
@@ -3855,7 +3855,7 @@ void s_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 void s_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, 
 			      mp_digit *c)
 {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_MUL_WORD)
   mp_digit   d = 0;
 
   /* Inner product:  Digits of a */
@@ -3890,7 +3890,7 @@ void s_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b,
 /* c += a * b */
 void s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_MUL_WORD)
   mp_digit   d = 0;
 
   /* Inner product:  Digits of a */
@@ -3962,7 +3962,7 @@ void s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit
 /* Add the squares of the digits of a to the digits of b. */
 void s_mpv_sqr_add_prop(const mp_digit *pa, mp_size a_len, mp_digit *ps)
 {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_MUL_WORD)
   mp_word  w;
   mp_digit d;
   mp_size  ix;
@@ -4031,7 +4031,8 @@ void s_mpv_sqr_add_prop(const mp_digit *pa, mp_size a_len, mp_digit *ps)
 }
 #endif
 
-#if defined(MP_NO_MP_WORD) && !defined(MP_ASSEMBLY_DIV_2DX1D)
+#if (defined(MP_NO_MP_WORD) || defined(MP_NO_DIV_WORD)) \
+&& !defined(MP_ASSEMBLY_DIV_2DX1D)
 /*
 ** Divide 64-bit (Nhi,Nlo) by 32-bit divisor, which must be normalized 
 ** so its high bit is 1.   This code is from NSPR.
@@ -4105,7 +4106,7 @@ mp_err   s_mp_sqr(mp_int *a)
 mp_err   s_mp_div(mp_int *a, mp_int *b)
 {
   mp_int   quot, rem, t;
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_DIV_WORD)
   mp_word  q;
 #else
   mp_digit q;
@@ -4166,7 +4167,7 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
     if (q >= b_msd) {
       q = 1;
     } else if (USED(&rem) > 1) {
-#if !defined(MP_NO_MP_WORD)
+#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_DIV_WORD)
       q = (q << DIGIT_BIT) | DIGIT(&rem, USED(&rem) - 2);
       q /= b_msd;
       if (q == RADIX)
