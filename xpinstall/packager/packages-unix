@@ -301,7 +301,7 @@ bin/components/libmsgimap.so
 bin/components/libmsgnews.so
 bin/components/libvcard.so
 bin/components/libsigned.so
-bin/components/libsmime.so
+bin/components/libsmimestb.so
 bin/components/libimport.so
 bin/components/libimpText.so
 bin/components/libabsyncsvc.so

@@ -322,7 +322,7 @@ bin\components\msgnews.xpt
 bin\components\msgsearch.xpt
 bin\components\vcard.dll
 ;bin\components\signed.dll
-bin\components\smime.dll
+bin\components\smimestb.dll
 bin\components\import.dll
 bin\components\import.xpt
 bin\components\importOE.dll
