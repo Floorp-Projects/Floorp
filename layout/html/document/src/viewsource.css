@@ -25,12 +25,15 @@
 html {
   background-color: white;
 }
-.viewsource {
+#viewsource {
   font-family: -moz-fixed;
   font-weight: normal;
   font-size: normal;
   color: black;
   white-space: pre;
+}
+#viewsource.wrap {
+  white-space: -moz-pre-wrap;
 }
 .start-tag {
  color: purple;

@@ -89,7 +89,11 @@ static int gErrorThreshold = 10;
 //  static const char* gDumpFileName = "\\temp\\viewsource.html";
 #endif // DUMP_TO_FILE
 
-static const char* kPreClass = "viewsource";
+// bug 22022 - these are used to toggle 'Wrap Long Lines' on the viewsource
+// window by selectively setting/unsetting the following class defined in
+// viewsource.css; the setting is remembered between invocations using a pref.
+static const char* kPreId = "viewsource";
+static const char* kPreClassWrap = "wrap";
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -323,10 +327,12 @@ CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
   mPopupTag = VIEW_SOURCE_POPUP;
   nsresult result=NS_OK;
   mSyntaxHighlight = PR_FALSE;
-  // This determines the value of the boolean syntax_highlight preference.
+  mWrapLongLines = PR_FALSE;
   nsCOMPtr<nsIPref> thePrefsService(do_GetService(NS_PREF_CONTRACTID));
-  if (thePrefsService)
+  if (thePrefsService) {
     thePrefsService->GetBoolPref("view_source.syntax_highlight", &mSyntaxHighlight);
+    thePrefsService->GetBoolPref("view_source.wrap_long_lines", &mWrapLongLines);
+  }
 
   mParser=0;
   mSink=0;
@@ -569,10 +575,16 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
 
           nsCParserNode theNode(theToken,0,theAllocator);
      
-          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreClass));
-          theAttr->SetKey(NS_LITERAL_STRING("class"));
+          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreId));
+          theAttr->SetKey(NS_LITERAL_STRING("id"));
           theNode.AddAttribute(theAttr);
-            
+
+          if (mWrapLongLines) {
+            theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreClassWrap));
+            theAttr->SetKey(NS_LITERAL_STRING("class"));
+            theNode.AddAttribute(theAttr);
+          }
+
           result=mSink->OpenContainer(theNode);
           if(NS_SUCCEEDED(result)) mHasOpenBody=PR_TRUE;
         }

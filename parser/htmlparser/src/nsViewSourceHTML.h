@@ -255,6 +255,7 @@ protected:
     PRInt32             mPopupTag;
     PRInt32             mSummaryTag;
     PRBool              mSyntaxHighlight;
+    PRBool              mWrapLongLines;
 
     nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
