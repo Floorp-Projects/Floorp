@@ -46,32 +46,26 @@
 
 NS_IMPL_ISUPPORTS1(nsImageBeOS, nsIImage)
 
-nsImageBeOS::nsImageBeOS() {
-	mImage = nsnull;
-	mImageBits = nsnull;
-	mWidth = 0;
-	mHeight = 0;
-	mDepth = 0;
-	mRowBytes = 0;
-	mSizeImage = 0;
-	
-	mNaturalWidth = 0;
-	mNaturalHeight = 0;
-	mDecodedX1 = 0;
-	mDecodedY1 = 0;
-	mDecodedX2 = 0;
-	mDecodedY2 = 0;
-	
-	mAlphaBits = nsnull;
-	mAlphaWidth = 0;
-	mAlphaHeight = 0;
-	mAlphaRowBytes = 0;
-	mAlphaDepth = 0;
-
-	mFlags = 0;
-	mNumBytesPixel = 0;
-	mImageCurrent = PR_FALSE;
-	mOptimized = PR_FALSE;
+nsImageBeOS::nsImageBeOS()
+  : mImage(nsnull)
+  , mImageBits(nsnull)
+  , mWidth(0)
+  , mHeight(0)
+  , mDepth(0)
+  , mRowBytes(0)
+  , mSizeImage(0)
+  , mDecodedX1(0)
+  , mDecodedY1(0)
+  , mDecodedX2(0)
+  , mDecodedY2(0)
+  , mAlphaBits(nsnull)
+  , mAlphaRowBytes(0)
+  , mAlphaDepth(0)
+  , mFlags(0)
+  , mNumBytesPixel(0)
+  , mImageCurrent(PR_FALSE)
+  , mOptimized(PR_FALSE)
+{
 }
 
 nsImageBeOS::~nsImageBeOS() {
@@ -90,21 +84,8 @@ nsImageBeOS::~nsImageBeOS() {
 }
 
 nsresult nsImageBeOS::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
-	nsMaskRequirements aMaskRequirements) {
-	
-	if (nsnull != mImageBits) {
-		delete [] mImageBits;
-		mImageBits = nsnull;
-	}
-	if (nsnull != mAlphaBits) {
-		delete [] mAlphaBits;
-		mAlphaBits = nsnull;
-	}
-
-	SetDecodedRect(0, 0, 0, 0);
-	SetNaturalWidth(0); 
-	SetNaturalHeight(0); 
-
+                           nsMaskRequirements aMaskRequirements) {
+	// Assumed: Init only gets called once by gfxIImageFrame
 	// Only 24 bit depths are supported for the platform independent bits
 	if (24 == aDepth) {
 		mNumBytesPixel = 3;
@@ -124,11 +105,6 @@ nsresult nsImageBeOS::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
 	mImageBits = new PRUint8[mSizeImage];
 
 	switch (aMaskRequirements) {
-		case nsMaskRequirements_kNoMask:
-			mAlphaBits = nsnull;
-			mAlphaWidth = 0;
-			mAlphaHeight = 0;
-			break;
 		case nsMaskRequirements_kNeeds1Bit:
 			mAlphaRowBytes = (aWidth + 7) / 8;
 			mAlphaDepth = 1;
@@ -137,8 +113,6 @@ nsresult nsImageBeOS::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
 			
 			mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
 			memset(mAlphaBits, 255, mAlphaRowBytes * aHeight);
-			mAlphaWidth = aWidth;
-			mAlphaHeight = aHeight;
 			break;
 		case nsMaskRequirements_kNeeds8Bit:
 			mAlphaRowBytes = aWidth;
@@ -147,24 +121,10 @@ nsresult nsImageBeOS::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
 			mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 			
 			mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
-			mAlphaWidth = aWidth;
-			mAlphaHeight = aHeight;
 			break;
 	}
 	
 	return NS_OK;
-}
-
-nsIImage *nsImageBeOS::DuplicateImage() {
-	return nsnull;
-}
-
-void nsImageBeOS::SetAlphaLevel(PRInt32 aAlphaLevel) {
-
-}
-
-void nsImageBeOS::MoveAlphaMask(PRInt32 aX, PRInt32 aY) {
-
 }
 
 // This is a notification that the platform independent bits have changed. Therefore,
@@ -176,6 +136,11 @@ void nsImageBeOS::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRec
 	// This should be 0'd out by Draw()
 	mFlags = aFlags;
 	mImageCurrent = PR_FALSE;
+
+  if (aUpdateRect->YMost() > mDecodedY2)
+    mDecodedY2 = aUpdateRect->YMost();
+  if (aUpdateRect->XMost() > mDecodedX2)
+    mDecodedX2 = aUpdateRect->XMost();
 } 
 
 // Draw the bitmap, this method has a source and destination coordinates
@@ -476,25 +441,6 @@ NS_IMETHODIMP nsImageBeOS::LockImagePixels(PRBool aMaskPixels) {
 
 // Same as above.
 NS_IMETHODIMP nsImageBeOS::UnlockImagePixels(PRBool aMaskPixels) {
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsImageBeOS::SetNaturalWidth(PRInt32 naturalwidth) {
-	mNaturalWidth = naturalwidth;
-	return NS_OK;
-} 
-
-NS_IMETHODIMP nsImageBeOS::SetNaturalHeight(PRInt32 naturalheight) {
-	mNaturalHeight = naturalheight;
-	return NS_OK;
-}
-
-// Set the decoded dimensions of the image
-NS_IMETHODIMP nsImageBeOS::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2) {
-	mDecodedX1 = x1;
-	mDecodedY1 = y1;
-	mDecodedX2 = x2;
-	mDecodedY2 = y2;
 	return NS_OK;
 }
 

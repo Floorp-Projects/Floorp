@@ -70,25 +70,17 @@ NS_IMPL_ISUPPORTS1(nsImageOS2, nsIImage)
 
 //------------------------------------------------------------
 nsImageOS2::nsImageOS2()
+: mInfo(0)
+, mRowBytes(0)
+, mImageBits(0)
+, mARowBytes(0)
+, mAlphaBits(0)
+, mAlphaDepth(0)
+, mColorMap(0)
+, mDeviceDepth(0)
+, mIsOptimized(PR_FALSE)
+, mDecodedRect()
 {
-   mInfo      = 0;
-   mRowBytes  = 0;
-   mImageBits = 0;
-
-   mARowBytes  = 0;
-   mAlphaBits  = 0;
-   mAlphaDepth = 0;
-   mAlphaLevel = 0;
-
-   mColorMap = 0;
-
-   mIsOptimized = PR_FALSE;
-   mIsTopToBottom = PR_FALSE;   
-
-   mDeviceDepth = 0;
-   mNaturalWidth = 0;
-   mNaturalHeight = 0;
-
    if (gBlenderReady != PR_TRUE)
      BuildBlenderLookup ();
 }
@@ -101,18 +93,13 @@ nsImageOS2::~nsImageOS2()
 nsresult nsImageOS2::Init( PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
                            nsMaskRequirements aMaskRequirements)
 {
-   // Guard against memory leak in multiple init
-   CleanUp(PR_TRUE);
+   // gfxIImageFrame only allows one init of nsImageOS2
 
    // (copying windows code - what about monochrome?  Oh well.)
    NS_ASSERTION( aDepth == 24 || aDepth == 8, "Bad image depth");
 
    // Work out size of bitmap to allocate
    mRowBytes = RASWIDTH(aWidth,aDepth);
-
-   SetDecodedRect(0,0,0,0);  //init
-   SetNaturalWidth(0);
-   SetNaturalHeight(0);
 
    mImageBits = new PRUint8 [ aHeight * mRowBytes ];
 
@@ -192,6 +179,8 @@ void nsImageOS2::CleanUp(PRBool aCleanUpAll)
 void nsImageOS2::ImageUpdated( nsIDeviceContext *aContext,
                                PRUint8 aFlags, nsRect *aUpdateRect)
 {
+   mDecodedRect.UnionRect(mDecodedRect, *aUpdateRect);
+
    if (!aContext) {
       return;
    } /* endif */
@@ -578,16 +567,6 @@ nsImageOS2::UnlockImagePixels(PRBool aMaskPixels)
   return NS_OK;
 } 
 
-// ---------------------------------------------------
-//	Set the decoded dimens of the image
-//
-NS_IMETHODIMP
-nsImageOS2::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
-{
-  mDecodedRect.SetRect (x1, y1, x2 - x1, y2 - y1); 
-  return NS_OK;
-}
-
 void
 nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInfo,
                        nscoord aTileWidth, nscoord aTileHeight)
@@ -873,8 +852,8 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
   // Set up blit coord array
   POINTL aptl [4] = { rcl.xLeft, rcl.yBottom,              // TLL - in
                       rcl.xRight, rcl.yTop,                // TUR - in
-                      0, mInfo->cy - mNaturalHeight,       // SLL - in
-                      mNaturalWidth, mInfo->cy };          // SUR - ex
+                      0, 0,                                // SLL - in
+                      mInfo->cx, mInfo->cy };              // SUR - ex
 
   if( 1==mAlphaDepth && mAlphaBits)
   {

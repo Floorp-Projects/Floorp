@@ -124,9 +124,6 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
   rv = mImage->Init(aWidth, aHeight, depth, maskReq);
   if (NS_FAILED(rv)) return rv;
 
-  mImage->SetNaturalWidth(aWidth);
-  mImage->SetNaturalHeight(aHeight);
-
   mInitalized = PR_TRUE;
   return NS_OK;
 }
@@ -291,10 +288,6 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
 
   PRInt32 row = (aOffset / row_stride);
 
-  PRInt32 decY2 = mImage->GetDecodedY2();
-  if (decY2 != mSize.height) {
-    mImage->SetDecodedRect(0, 0, mSize.width, row + 1);
-  }
   // adjust for aLength < row_stride
   PRInt32 numnewrows = ((aLength - 1) / row_stride) + 1;
   nsRect r(0, row, mSize.width, numnewrows);

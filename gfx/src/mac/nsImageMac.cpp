@@ -98,14 +98,12 @@ nsImageMac::nsImageMac()
 ,	mBytesPerPixel(0)
 ,	mMaskBitsHandle(nsnull)
 ,	mAlphaDepth(0)
-,	mAlphaWidth(0)
-,	mAlphaHeight(0)
 ,	mARowBytes(0)
-, mNaturalWidth(0)
-, mNaturalHeight(0)
 ,	mPixelDataSize(0)
-,	mIsTopToBottom(PR_TRUE)
-
+, mDecodedX1(0)
+, mDecodedY1(0)
+, mDecodedX2(0)
+, mDecodedY2(0)
 {
 	::memset(&mImagePixmap, 0, sizeof(PixMap));
 	::memset(&mMaskPixmap, 0, sizeof(PixMap));
@@ -192,27 +190,11 @@ nsImageMac::GetAlphaBits()
 nsresult 
 nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
 {
+  // Assumed: Init only runs once (due to gfxIImageFrame only allowing 1 Init)
   OSErr err = noErr;
   
-	// have we already been initted?
-	if (mImageBitsHandle)
-	{
-		NS_ASSERTION(0, "Initting image twice");
-		
-		::DisposeHandle(mImageBitsHandle);
-		mImageBitsHandle = nsnull;
-		
-		if (mMaskBitsHandle) {
-		  ::DisposeHandle(mMaskBitsHandle);
-		  mMaskBitsHandle = nsnull;
-		}		  
-	}
-
   mWidth = aWidth;
   mHeight = aHeight;
-  SetDecodedRect(0,0,0,0);  //init
-  SetNaturalWidth(0);
-  SetNaturalHeight(0);
 
   err = CreatePixMap(aWidth, aHeight, aDepth, nsnull, mImagePixmap, mImageBitsHandle);
   if (err != noErr)
@@ -244,10 +226,9 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 */					
 				mAlphaDepth = 8;		  				
 				break;
-				
-			default:
-				NS_NOTREACHED("Uknown mask depth");
-				break;
+
+      default:
+        break; // avoid compiler warning
 		}
 		
     err = CreatePixMap(aWidth, aHeight, mAlphaDepth, grayRamp, mMaskPixmap, mMaskBitsHandle);
@@ -259,8 +240,6 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
     }
 
     mARowBytes = mMaskPixmap.rowBytes & 0x3FFF;   // we only set the top bit, but QuickDraw can use the top 2 bits
-	  mAlphaWidth = aWidth;
-	  mAlphaHeight = aHeight;
 	}
 	
 	return NS_OK;
@@ -272,7 +251,10 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
  */
 void nsImageMac::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
-	// NS_NOTYETIMPLEMENTED("nsImageMac::ImageUpdated not implemented");
+  if (aUpdateRect->YMost() > mDecodedY2)
+    mDecodedY2 = aUpdateRect->YMost();
+  if (aUpdateRect->XMost() > mDecodedX2)
+    mDecodedX2 = aUpdateRect->XMost();
 }
 
 
@@ -443,29 +425,6 @@ NS_IMETHODIMP nsImageMac :: DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt3
 nsresult nsImageMac::Optimize(nsIDeviceContext* aContext)
 {
 	return NS_OK;
-}
-
-
-#pragma mark -
-
-/** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
- */
-void nsImageMac::SetAlphaLevel(PRInt32 aAlphaLevel)
-{
-	NS_NOTYETIMPLEMENTED("nsImageMac::SetAlphaLevel not implemented");
-}
-
-
-/** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
- */
-PRInt32 nsImageMac::GetAlphaLevel()
-{
-	NS_NOTYETIMPLEMENTED("nsImageMac::GetAlphaLevel not implemented");
-	return 0;
 }
 
 #pragma mark -
@@ -694,21 +653,6 @@ OSErr nsImageMac::AllocateBitsHandle(PRInt32 imageSizeBytes, Handle *outHandle)
   
   ::BlockZero(**outHandle, imageSizeBytes);
   return noErr;
-}
-
-
-/** ---------------------------------------------------
- *	Set the decoded dimens of the image
- */
-NS_IMETHODIMP
-nsImageMac::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
-{
-    
-  mDecodedX1 = x1; 
-  mDecodedY1 = y1; 
-  mDecodedX2 = x2; 
-  mDecodedY2 = y2; 
-  return NS_OK;
 }
 
 
@@ -1578,8 +1522,7 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
 	imageRect.right = mWidth;
 	imageRect.bottom = mHeight;
 
-  // this code assumes that, if we have a mask, it's the same size as the image
-  NS_ASSERTION((mMaskBitsHandle == nsnull) || (mAlphaWidth == mWidth && mAlphaHeight == mHeight), "Mask should be same dimensions as image");
+  NS_ASSERTION(mMaskBitsHandle == nsnull, "No MaskBits Handle");
   
   // get the destination pix map
   nsDrawingSurfaceMac* destSurface = static_cast<nsDrawingSurfaceMac*>(aSurface);

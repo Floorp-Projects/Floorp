@@ -182,27 +182,27 @@ NS_IMPL_ISUPPORTS1(nsImagePh, nsIImage)
 #define IMAGE_SHMEM_THRESHOLD	4096
 
 // ----------------------------------------------------------------
-nsImagePh :: nsImagePh()
+nsImagePh::nsImagePh()
+: mImageBits(nsnull)
+, mWidth(0)
+, mHeight(0)
+, mDepth(0)
+, mAlphaBits(nsnull)
+, mAlphaDepth(0)
+, mRowBytes(0)
+, mSizeImage(0)
+, mDecodedX1(0)
+, mDecodedY1(0)
+, mDecodedX2(0)
+, mDecodedY2(0)
+, mConvertedBits(nsnull)
+, mImageFlags(0)
+, mAlphaRowBytes(0)
+, mIsOptimized(PR_FALSE)
+, mPhImageCache(nsnull)
+, mPhImageZoom(nsnull)
 {
-	mImageBits = nsnull;
-	mWidth = 0;
-	mHeight = 0;
-	mDepth = 0;
-	mAlphaBits = nsnull;
-	mAlphaDepth = 0;
-	mRowBytes = 0;
-	mSizeImage = 0;
-	mAlphaHeight = 0;
-	mAlphaWidth = 0;
-	mConvertedBits = nsnull;
-	mImageFlags = 0;
-	mAlphaRowBytes = 0;
-	mNaturalWidth = 0;
-	mNaturalHeight = 0;
-	mIsOptimized = PR_FALSE;
 	memset(&mPhImage, 0, sizeof(PhImage_t));
-	mPhImageCache=NULL;
-	mPhImageZoom = NULL;
 }
 
 // ----------------------------------------------------------------
@@ -252,25 +252,9 @@ nsImagePh :: ~nsImagePh()
  */
 nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
+  // gfxIImageFrame protects nsImagePh from multiple Init calls
 	int type = -1;
 
-	if (mImageBits != nsnull)
-	{
-		if (mImageFlags & IMAGE_SHMEM)
-			DestroySRamImage(mImageBits);
-		else
-			delete [] mImageBits;
-		mImageBits = nsnull;
-	}
-
-	if (mAlphaBits != nsnull)
-	{
-		delete [] mAlphaBits;
-		mAlphaBits = nsnull;
-	}
-  
-  	SetDecodedRect(0,0,0,0);  //init
- 
     switch (aDepth)
     {
         case 24:
@@ -294,7 +278,6 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 	mWidth = aWidth;
 	mHeight = aHeight;
 	mDepth = aDepth;
-	mIsTopToBottom = PR_TRUE;
 
   	/* Allocate the Image Data */
 	mSizeImage = mNumBytesPixel * mWidth * mHeight;
@@ -319,14 +302,6 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 
 	switch(aMaskRequirements)
 	{
-		default:
-		case nsMaskRequirements_kNoMask:
-			mAlphaBits = nsnull;
-			mAlphaWidth = 0;
-			mAlphaHeight = 0;
-			mAlphaRowBytes = 0;
-			break;
-
 		case nsMaskRequirements_kNeeds1Bit:
 			mAlphaRowBytes = (aWidth + 7) / 8;
 			mAlphaDepth = 1;
@@ -335,8 +310,6 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 			mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 
 			mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
-			mAlphaWidth = aWidth;
-			mAlphaHeight = aHeight;
 			break;
 
 		case nsMaskRequirements_kNeeds8Bit:
@@ -346,9 +319,10 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 			// 32-bit align each row
 			mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 			mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
-			mAlphaWidth = aWidth;
-			mAlphaHeight = aHeight;
 			break;
+
+    default:
+      break; // avoid compiler warning
 	}
 
 	mPhImage.image_tag = PtCRC((char *)mImageBits, mSizeImage);
@@ -421,44 +395,19 @@ PRUint8* nsImagePh::GetAlphaBits()
   	return mAlphaBits;
 }
 
-PRInt32 nsImagePh::GetAlphaWidth()
-{
-  	return mAlphaWidth;
-}
-
-PRInt32 nsImagePh::GetAlphaHeight()
-{
-  	return mAlphaHeight;
-}
-
 PRInt32 nsImagePh::GetAlphaLineStride()
 {
   	return mAlphaRowBytes;
-}
-
-nsIImage *nsImagePh::DuplicateImage()
-{
-  	return nsnull;
-}
-
-void nsImagePh::SetAlphaLevel(PRInt32 aAlphaLevel)
-{
-  	mAlphaLevel=aAlphaLevel;
-}
-
-PRInt32 nsImagePh::GetAlphaLevel()
-{
-  	return(mAlphaLevel);
-}
-
-void nsImagePh::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
-{
 }
 
 void nsImagePh :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
 	/* does this mean it's dirty? */
   	mFlags = aFlags; // this should be 0'd out by Draw()
+  if (aUpdateRect->YMost() > mDecodedY2)
+    mDecodedY2 = aUpdateRect->YMost();
+  if (aUpdateRect->XMost() > mDecodedX2)
+    mDecodedX2 = aUpdateRect->XMost();
 }
 
 /** ----------------------------------------------------------------
@@ -536,8 +485,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 		{
 			PgMap_t map;
 
-			map.dim.w = mAlphaWidth;
-			map.dim.h = mAlphaHeight;
+			map.dim.w = mWidth;
+			map.dim.h = mHeight;
 			map.bpl = mAlphaRowBytes;
 			map.bpp = mAlphaDepth;
 			map.map = (char *)mAlphaBits;
@@ -590,8 +539,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 		{
 			PgMap_t map;
 
-			map.dim.w = mAlphaWidth;
-			map.dim.h = mAlphaHeight;
+			map.dim.w = mWidth;
+			map.dim.h = mHeight;
 			map.bpl = mAlphaRowBytes;
 			map.bpp = mAlphaDepth;
 			map.map = (char *)mAlphaBits;
@@ -768,19 +717,6 @@ nsImagePh::LockImagePixels(PRBool aMaskPixels)
 NS_IMETHODIMP
 nsImagePh::UnlockImagePixels(PRBool aMaskPixels)
 {
-  	return NS_OK;
-}
-
-/** ---------------------------------------------------
- *	Set the decoded dimens of the image
- */
-NS_IMETHODIMP
-nsImagePh::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
-{
-  	mDecodedX1 = x1; 
-  	mDecodedY1 = y1; 
-  	mDecodedX2 = x2; 
-  	mDecodedY2 = y2; 
   	return NS_OK;
 }
 

@@ -54,6 +54,23 @@ NS_IMPL_ISUPPORTS1(nsImageQT, nsIImage)
  
 //------------------------------------------------------------
 nsImageQT::nsImageQT()
+: mImageBits(nsnull)
+, mWidth(0)
+, mHeight(0)
+, mDepth(0)
+, mRequestDepth(0)
+, mAlphaBits(nsnull)
+, mAlphaPixmap(nsnull)
+, mImagePixmap(nsnull)
+, mAlphaDepth(0)
+, mRowBytes(0)
+, mSizeImage(0)
+, mAlphaRowBytes(0)
+, mNumBytesPixel(0)
+, mDecodedX1(0) 
+, mDecodedY1(0) 
+, mDecodedX2(0) 
+, mDecodedY2(0) 
 {
 #ifdef DEBUG
   gImageCount++;
@@ -61,28 +78,6 @@ nsImageQT::nsImageQT()
   PR_LOG(gQTLogModule, QT_BASIC,
       ("nsImageQT CTOR (%p) ID: %d, Count: %d\n", this, mID, gImageCount));
 #endif
-  mImageBits = nsnull;
-  mWidth = 0;
-  mHeight = 0;
-  mDepth = 0;
-  mRequestDepth = 0;
-  mAlphaBits = nsnull;
-  mAlphaPixmap = nsnull;
-  mImagePixmap = nsnull;
-  mAlphaDepth = 0;
-  mRowBytes = 0;
-  mSizeImage = 0;
-  mAlphaHeight = 0;
-  mAlphaWidth = 0;
-  mAlphaRowBytes = 0;
-  mNumBytesPixel = 0;
-  mIsTopToBottom = PR_TRUE;
-  mDecodedX1 = 0; 
-  mDecodedY1 = 0; 
-  mDecodedX2 = 0; 
-  mDecodedY2 = 0; 
-  mNaturalWidth = 0;
-  mNaturalHeight = 0;
 }
 
 //------------------------------------------------------------
@@ -114,25 +109,10 @@ nsresult nsImageQT::Init(PRInt32 aWidth,PRInt32 aHeight,
                          PRInt32 aDepth, 
                          nsMaskRequirements aMaskRequirements)
 {
+    // gfxImageFrame forces only one nsImageQT::Init
     if (aWidth == 0 || aHeight == 0) {
         return NS_ERROR_FAILURE;
     }
-    if (nsnull != mImageBits) {
-        delete[] (PRUint8*)mImageBits;
-        mImageBits = nsnull;
-    }
-    if (nsnull != mAlphaBits) {
-        delete[] (PRUint8*)mAlphaBits;
-        mAlphaBits = nsnull;
-    }
-    if (nsnull != mAlphaPixmap) {
-        delete mAlphaPixmap;
-        mAlphaPixmap = nsnull;
-    }
-    SetDecodedRect(0,0,0,0);  //init
-    SetNaturalWidth(0);
-    SetNaturalHeight(0);
-
     // mImagePixmap gets created once per unique image bits in Draw()
     // ImageUpdated(nsImageUpdateFlags_kBitsChanged) can cause the
     // image bits to change and mImagePixmap will be unrefed and nulled.
@@ -156,7 +136,6 @@ nsresult nsImageQT::Init(PRInt32 aWidth,PRInt32 aHeight,
     }
     mWidth = aWidth;
     mHeight = aHeight;
-    mIsTopToBottom = PR_TRUE;
 
     // create the memory for the image
     ComputeMetrics();
@@ -164,12 +143,6 @@ nsresult nsImageQT::Init(PRInt32 aWidth,PRInt32 aHeight,
     mImageBits = (PRUint8*)new PRUint8[mSizeImage];
 
     switch (aMaskRequirements) {
-      case nsMaskRequirements_kNoMask:
-        mAlphaBits = nsnull;
-        mAlphaWidth = 0;
-        mAlphaHeight = 0;
-        break;
-
       case nsMaskRequirements_kNeeds1Bit:
         mAlphaRowBytes = (aWidth + 7) / 8;
         mAlphaDepth = 1;
@@ -178,8 +151,6 @@ nsresult nsImageQT::Init(PRInt32 aWidth,PRInt32 aHeight,
         mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 
         mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
-        mAlphaWidth = aWidth;
-        mAlphaHeight = aHeight;
         break;
 
       case nsMaskRequirements_kNeeds8Bit:
@@ -189,8 +160,6 @@ nsresult nsImageQT::Init(PRInt32 aWidth,PRInt32 aHeight,
         // 32-bit align each row
         mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
         mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
-        mAlphaWidth = aWidth;
-        mAlphaHeight = aHeight;
         break;
     }
     PR_LOG(gQTLogModule, QT_BASIC, ("nsImageQT::Init succeeded"));
@@ -235,47 +204,14 @@ nsColorMap *nsImageQT::GetColorMap()
     return nsnull;
 }
 
-PRBool nsImageQT::IsOptimized()
-{
-    return PR_TRUE;
-}
-
 PRUint8 *nsImageQT::GetAlphaBits()
 {
     return mAlphaBits;
 }
 
-PRInt32 nsImageQT::GetAlphaWidth()
-{
-    return mAlphaWidth;
-}
-
-PRInt32 nsImageQT::GetAlphaHeight()
-{
-    return mAlphaHeight;
-}
-
 PRInt32 nsImageQT::GetAlphaLineStride()
 {
     return mAlphaRowBytes;
-}
-
-nsIImage *nsImageQT::DuplicateImage()
-{
-    return nsnull;
-}
-
-void nsImageQT::SetAlphaLevel(PRInt32 aAlphaLevel)
-{
-}
-
-PRInt32 nsImageQT::GetAlphaLevel()
-{
-    return 0;
-}
-
-void nsImageQT::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
-{
 }
 
 //------------------------------------------------------------
@@ -312,6 +248,10 @@ void nsImageQT::ImageUpdated(nsIDeviceContext *aContext,
             mImagePixmap = nsnull;
         }
     }
+    if (aUpdateRect->YMost() > mDecodedY2)
+        mDecodedY2 = aUpdateRect->YMost();
+    if (aUpdateRect->XMost() > mDecodedX2)
+        mDecodedX2 = aUpdateRect->XMost();
 }
 
 // Draw the bitmap, this method has a source and destination coordinates
@@ -495,11 +435,6 @@ PRInt32 nsImageQT::GetBytesPix()
     return mNumBytesPixel;
 }
  
-PRBool nsImageQT::GetIsRowOrderTopToBottom()
-{
-    return mIsTopToBottom;
-}
-
 //------------------------------------------------------------
 // lock the image pixels. Implement this if you need it.
 NS_IMETHODIMP
@@ -513,20 +448,6 @@ nsImageQT::LockImagePixels(PRBool aMaskPixels)
 NS_IMETHODIMP
 nsImageQT::UnlockImagePixels(PRBool aMaskPixels)
 {
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *	Set the decoded dimens of the image
- */
-NS_IMETHODIMP
-nsImageQT::SetDecodedRect(PRInt32 x1,PRInt32 y1,PRInt32 x2,PRInt32 y2)
-{
-  mDecodedX1 = x1; 
-  mDecodedY1 = y1; 
-  mDecodedX2 = x2; 
-  mDecodedY2 = y2; 
-
   return NS_OK;
 }
 
