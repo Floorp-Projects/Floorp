@@ -401,9 +401,9 @@ nsFindDialog::OnFind( nsIContent *aContent ) {
         // Get arguments and store into the search context.
         nsCOMPtr<nsIAtom> atomKey = nsDontQueryInterface<nsIAtom>( NS_NewAtom("key") );
         aContent->GetAttribute( kNameSpaceID_None, atomKey, mContext->mSearchString );
-        nsCOMPtr<nsIAtom> atomIgnoreCase = nsDontQueryInterface<nsIAtom>( NS_NewAtom("ignorecase") );
+        nsCOMPtr<nsIAtom> atomIgnoreCase = nsDontQueryInterface<nsIAtom>( NS_NewAtom("ignoreCase") );
         aContent->GetAttribute( kNameSpaceID_None, atomIgnoreCase, mContext->mIgnoreCase );
-        nsCOMPtr<nsIAtom> atomSearchBackward = nsDontQueryInterface<nsIAtom>( NS_NewAtom("searchbackward") );
+        nsCOMPtr<nsIAtom> atomSearchBackward = nsDontQueryInterface<nsIAtom>( NS_NewAtom("searchBackward") );
         aContent->GetAttribute( kNameSpaceID_None, atomSearchBackward, mContext->mSearchBackward );
 
         // Search for next occurrence.
@@ -480,9 +480,9 @@ nsFindComponent::FindNext( nsISupports *aContext ) {
         // For now, just record request to console.
         Context *context = (Context*)aContext;
         printf( "nsFindComponent::FindNext\n\tkey=%s\n\tignoreCase=%s\tsearchBackward=%s\n",
-                nsAutoCString( context->mSearchString ),
-                nsAutoCString( context->mIgnoreCase ),
-                nsAutoCString( context->mSearchBackward ) );
+                (const char *)nsAutoCString( context->mSearchString ),
+                (const char *)nsAutoCString( context->mIgnoreCase ),
+                (const char *)nsAutoCString( context->mSearchBackward ) );
 
         // Record this for out-of-the-blue FindNext calls.
         mLastSearchString   = context->mSearchString;
