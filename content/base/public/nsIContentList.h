@@ -72,6 +72,8 @@ public:
   virtual nsIContent *NamedItem(const nsAString& aName, PRBool aDoFlush) = 0;
 
   virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush) = 0;
+
+  virtual void RootDestroyed() = 0;
 };
 
 #endif /* nsIContentList_h___ */

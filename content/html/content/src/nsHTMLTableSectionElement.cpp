@@ -44,7 +44,7 @@
 #include "nsHTMLParts.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "GenericElementCollection.h"
+#include "nsContentList.h"
 #include "nsRuleNode.h"
 #include "nsDOMError.h"
 #include "nsIDocument.h"
@@ -83,7 +83,7 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
-  GenericElementCollection *mRows;
+  nsCOMPtr<nsIContentList> mRows;
 };
 
 nsresult
@@ -115,14 +115,12 @@ NS_NewHTMLTableSectionElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLTableSectionElement::nsHTMLTableSectionElement()
 {
-  mRows = nsnull;
 }
 
 nsHTMLTableSectionElement::~nsHTMLTableSectionElement()
 {
-  if (nsnull!=mRows) {
-    mRows->ParentDestroyed();
-    NS_RELEASE(mRows);
+  if (mRows) {
+    mRows->RootDestroyed();
   }
 }
 
@@ -180,12 +178,13 @@ nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
   *aValue = nsnull;
 
   if (!mRows) {
-    //XXX why was this here NS_ADDREF(nsHTMLAtoms::tr);
-    mRows = new GenericElementCollection(this, nsHTMLAtoms::tr);
+    mRows = new nsContentList(GetDocument(),
+                              nsHTMLAtoms::tr,
+                              mNodeInfo->NamespaceID(),
+                              this,
+                              PR_FALSE);
 
     NS_ENSURE_TRUE(mRows, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(mRows); // this table's reference, released in the destructor
   }
 
   return CallQueryInterface(mRows, aValue);

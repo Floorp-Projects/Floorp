@@ -44,7 +44,7 @@
 #include "nsIHTMLContent.h"
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
-#include "GenericElementCollection.h"
+#include "nsContentList.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -55,97 +55,6 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
-
-// nsTableCellCollection is needed because GenericElementCollection 
-// only supports element of a single tag. This collection supports
-// elements <td> or <th> elements.
-
-class nsTableCellCollection : public GenericElementCollection
-{
-public:
-  nsTableCellCollection(nsIContent* aParent, 
-                        nsIAtom*    aTag);
-  ~nsTableCellCollection();
-
-  NS_IMETHOD GetLength(PRUint32* aLength);
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-};
-
-
-nsTableCellCollection::nsTableCellCollection(nsIContent* aParent, 
-                                             nsIAtom*    aTag)
-  : GenericElementCollection(aParent, aTag)
-{
-}
-
-nsTableCellCollection::~nsTableCellCollection()
-{
-}
-
-static PRBool
-IsCell(nsIContent *aContent)
-{
-  nsINodeInfo *ni = aContent->GetNodeInfo();
-
-  return (ni && (ni->Equals(nsHTMLAtoms::td) || ni->Equals(nsHTMLAtoms::th)) &&
-          aContent->IsContentOfType(nsIContent::eHTML));
-}
-
-NS_IMETHODIMP 
-nsTableCellCollection::GetLength(PRUint32* aLength)
-{
-  if (!aLength) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aLength = 0;
-
-  nsresult result = NS_OK;
-
-  if (mParent) {
-    nsIContent *child;
-    PRUint32 childIndex = 0;
-
-    while ((child = mParent->GetChildAt(childIndex++))) {
-      if (IsCell(child)) {
-        (*aLength)++;
-      }
-    }
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP 
-nsTableCellCollection::Item(PRUint32     aIndex, 
-                            nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  PRUint32 theIndex = 0;
-  nsresult rv = NS_OK;
-
-  if (mParent) {
-    nsIContent *child;
-    PRUint32 childIndex = 0;
-
-    while ((child = mParent->GetChildAt(childIndex++))) {
-      if (IsCell(child)) {
-        if (aIndex == theIndex) {
-          CallQueryInterface(child, aReturn);
-          NS_ASSERTION(aReturn, "content element must be an nsIDOMNode");
-
-          break;
-        }
-
-        theIndex++;
-      }
-    }
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 
 class nsHTMLTableRowElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLTableRowElement
@@ -181,7 +90,7 @@ public:
 protected:
   nsresult GetSection(nsIDOMHTMLTableSectionElement** aSection);
   nsresult GetTable(nsIDOMHTMLTableElement** aTable);
-  nsTableCellCollection* mCells;
+  nsCOMPtr<nsIContentList> mCells;
 };
 
 #ifdef XXX_debugging
@@ -239,14 +148,12 @@ NS_NewHTMLTableRowElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLTableRowElement::nsHTMLTableRowElement()
 {
-  mCells = nsnull;
 }
 
 nsHTMLTableRowElement::~nsHTMLTableRowElement()
 {
-  if (nsnull != mCells) {
-    mCells->ParentDestroyed();
-    NS_RELEASE(mCells);
+  if (mCells) {
+    mCells->RootDestroyed();
   }
 }
 
@@ -395,15 +302,26 @@ nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
   return NS_OK;
 }
 
+PR_STATIC_CALLBACK(PRBool)
+IsCell(nsIContent *aContent, nsString* aData)
+{
+  nsIAtom* tag = aContent->Tag();
+
+  return ((tag == nsHTMLAtoms::td || tag == nsHTMLAtoms::th) &&
+          aContent->IsContentOfType(nsIContent::eHTML));
+}
+
 NS_IMETHODIMP
 nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
 {
   if (!mCells) {
-    mCells = new nsTableCellCollection(this, nsHTMLAtoms::td);
+    mCells = new nsContentList(GetDocument(),
+                               IsCell,
+                               EmptyString(),
+                               this,
+                               PR_FALSE);
 
     NS_ENSURE_TRUE(mCells, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(mCells); // this table's reference, released in the destructor
   }
 
   return CallQueryInterface(mCells, aValue);

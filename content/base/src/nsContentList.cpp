@@ -325,28 +325,38 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
 nsContentList::nsContentList(nsIDocument *aDocument,
                              nsIAtom* aMatchAtom,
                              PRInt32 aMatchNameSpaceId,
-                             nsIContent* aRootContent)
-  : nsBaseContentList(), nsContentListKey(aDocument, aMatchAtom, aMatchNameSpaceId, aRootContent)
+                             nsIContent* aRootContent,
+                             PRBool aDeep)
+  : nsBaseContentList(),
+    nsContentListKey(aDocument, aMatchAtom, aMatchNameSpaceId, aRootContent),
+    mFunc(nsnull),
+    mData(nsnull),
+    mState(LIST_DIRTY),
+    mDeep(aDeep)
 {
+  NS_ASSERTION(mDeep || mRootContent, "Must have root content for non-deep list!");
   if (nsLayoutAtoms::wildcard == mMatchAtom) {
     mMatchAll = PR_TRUE;
   }
   else {
     mMatchAll = PR_FALSE;
   }
-  mFunc = nsnull;
-  mData = nsnull;
-  mState = LIST_DIRTY;
   Init(aDocument);
 }
 
 nsContentList::nsContentList(nsIDocument *aDocument,
                              nsContentListMatchFunc aFunc,
                              const nsAString& aData,
-                             nsIContent* aRootContent)
-  : nsBaseContentList(), nsContentListKey(aDocument, nsnull, kNameSpaceID_Unknown, aRootContent)
+                             nsIContent* aRootContent,
+                             PRBool aDeep)
+  : nsBaseContentList(),
+    nsContentListKey(aDocument, nsnull, kNameSpaceID_Unknown, aRootContent),
+    mFunc(aFunc),
+    mMatchAll(PR_FALSE),
+    mState(LIST_DIRTY),
+    mDeep(aDeep)
 {
-  mFunc = aFunc;
+  NS_ASSERTION(mDeep || mRootContent, "Must have root content for non-deep list!");
   if (!aData.IsEmpty()) {
     mData = new nsString(aData);
     // If this fails, fail silently
@@ -354,10 +364,6 @@ nsContentList::nsContentList(nsIDocument *aDocument,
   else {
     mData = nsnull;
   }
-  mMatchAtom = nsnull;
-  mRootContent = aRootContent;
-  mMatchAll = PR_FALSE;
-  mState = LIST_DIRTY;
   Init(aDocument);
 }
 
@@ -473,6 +479,14 @@ nsContentList::IndexOf(nsIContent *aContent, PRBool aDoFlush)
   return mElements.IndexOf(aContent);
 }
 
+void
+nsContentList::RootDestroyed()
+{
+  // We shouldn't do anything useful from now on
+  DisconnectFromDocument();  // This dirties us so we lose all state
+  mRootContent = nsnull;
+}
+
 NS_IMETHODIMP
 nsContentList::GetLength(PRUint32* aLength)
 {
@@ -522,8 +536,6 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
   if (mState == LIST_DIRTY) 
     return;
 
-  PRInt32 count = aContainer->GetChildCount();
-
   /*
    * We want to handle the case of ContentAppended by sometimes
    * appending the content to our list, not just setting state to
@@ -533,7 +545,9 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
    * already have.
    */
   
-  if ((count > 0) && IsDescendantOfRoot(aContainer)) {
+  PRInt32 count = aContainer->GetChildCount();
+
+  if (count > 0 && MayContainRelevantNodes(aContainer)) {
     PRInt32 ourCount = mElements.Count();
     PRBool appendToList = PR_FALSE;
     if (ourCount == 0) {
@@ -610,7 +624,7 @@ nsContentList::ContentInserted(nsIDocument *aDocument,
   if (mState == LIST_DIRTY)
     return;
 
-  if (IsDescendantOfRoot(aContainer) && MatchSelf(aChild))
+  if (MayContainRelevantNodes(aContainer) && MatchSelf(aChild))
     mState = LIST_DIRTY;
 }
  
@@ -623,7 +637,7 @@ nsContentList::ContentRemoved(nsIDocument *aDocument,
   // Note that aContainer can be null here if we are inserting into
   // the document itself; any attempted optimizations to this method
   // should deal with that.
-  if (IsDescendantOfRoot(aContainer)) {
+  if (MayContainRelevantNodes(aContainer)) {
     if (MatchSelf(aChild)) {
       mState = LIST_DIRTY;
     }
@@ -685,9 +699,14 @@ PRBool
 nsContentList::MatchSelf(nsIContent *aContent)
 {
   NS_PRECONDITION(aContent, "Can't match null stuff, you know");
+  NS_PRECONDITION(mDeep || aContent->GetParent() == mRootContent,
+                  "MatchSelf called on a node that we can't possibly match");
   
   if (Match(aContent))
     return PR_TRUE;
+
+  if (!mDeep)
+    return PR_FALSE;
 
   PRUint32 i, count = aContent->GetChildCount();
 
@@ -704,6 +723,14 @@ void
 nsContentList::PopulateWith(nsIContent *aContent, PRBool aIncludeRoot,
                             PRUint32 & aElementsToAppend)
 {
+  NS_PRECONDITION(mDeep || aContent == mRootContent ||
+                  aContent->GetParent() == mRootContent,
+                  "PopulateWith called on nodes we can't possibly match");
+  NS_PRECONDITION(mDeep || aIncludeRoot || aContent == mRootContent,
+                  "Bogus root passed to PopulateWith in non-deep list");
+  NS_PRECONDITION(!aIncludeRoot || aContent != mRootContent,
+                  "We should never be trying to match mRootContent");
+  
   if (aIncludeRoot) {
     if (Match(aContent)) {
       mElements.AppendElement(aContent);
@@ -712,6 +739,11 @@ nsContentList::PopulateWith(nsIContent *aContent, PRBool aIncludeRoot,
         return;
     }
   }
+
+  // Don't recurse down if we're not doing a deep match and we're
+  // already looking at kids of the root.
+  if (!mDeep && aIncludeRoot)
+    return;
   
   PRUint32 i, count = aContent->GetChildCount();
 
@@ -727,24 +759,31 @@ nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
                                          nsIContent *aStartChild,
                                          PRUint32 & aElementsToAppend)
 {
+  NS_PRECONDITION(mDeep || aStartRoot == mRootContent ||
+                  (aStartRoot->GetParent() == mRootContent &&
+                   aStartChild == nsnull),
+                  "Bogus aStartRoot or aStartChild");
+
+  if (mDeep || aStartRoot == mRootContent) {
 #ifdef DEBUG
-  PRUint32 invariant = aElementsToAppend + mElements.Count();
+    PRUint32 invariant = aElementsToAppend + mElements.Count();
 #endif
-  PRInt32 i = 0;
-  if (aStartChild) {
-    i = aStartRoot->IndexOf(aStartChild);
-    NS_ASSERTION(i >= 0, "The start child must be a child of the start root!");
-    ++i;  // move to one past
-  }
+    PRInt32 i = 0;
+    if (aStartChild) {
+      i = aStartRoot->IndexOf(aStartChild);
+      NS_ASSERTION(i >= 0, "The start child must be a child of the start root!");
+      ++i;  // move to one past
+    }
 
-  PRUint32 childCount = aStartRoot->GetChildCount();
-  for ( ; ((PRUint32)i) < childCount; ++i) {
-    PopulateWith(aStartRoot->GetChildAt(i), PR_TRUE, aElementsToAppend);
-
-    NS_ASSERTION(aElementsToAppend + mElements.Count() == invariant,
-                 "Something is awry in PopulateWith!");
-    if (aElementsToAppend == 0)
-      return;
+    PRUint32 childCount = aStartRoot->GetChildCount();
+    for ( ; ((PRUint32)i) < childCount; ++i) {
+      PopulateWith(aStartRoot->GetChildAt(i), PR_TRUE, aElementsToAppend);
+    
+      NS_ASSERTION(aElementsToAppend + mElements.Count() == invariant,
+                   "Something is awry in PopulateWith!");
+      if (aElementsToAppend == 0)
+        return;
+    }
   }
 
   // We want to make sure we don't move up past our root node. So if
@@ -807,7 +846,7 @@ nsContentList::PopulateSelf(PRUint32 aNeededLength)
 }
 
 PRBool
-nsContentList::IsDescendantOfRoot(nsIContent* aContainer) 
+nsContentList::MayContainRelevantNodes(nsIContent* aContainer) 
 {
   if (!mRootContent) {
 #ifdef DEBUG
@@ -829,6 +868,11 @@ nsContentList::IsDescendantOfRoot(nsIContent* aContainer)
     return PR_FALSE;
   }
 
+  if (!mDeep) {
+    // We only care about cases when aContainer is our root content node.
+    return aContainer == mRootContent;
+  }
+  
   return nsContentUtils::ContentIsDescendantOf(aContainer, mRootContent);
 }
 
