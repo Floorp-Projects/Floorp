@@ -28,5 +28,5 @@ struct nsStaticModuleInfo {
 extern "C" {
 typedef nsresult (PR_CALLBACK *NSGetStaticModuleInfoFunc)(nsStaticModuleInfo **info, PRUint32 *count);
 extern NS_COM NSGetStaticModuleInfoFunc NSGetStaticModuleInfo;
-};
-     
+}
+
