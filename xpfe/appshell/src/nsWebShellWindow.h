@@ -283,7 +283,6 @@ protected:
   nsString mStatus;
   nsString mDefaultStatus;
 
-  PRBool mIntrinsicallySized; // Whether or not this window gets sized to its content.
 
 private:
 

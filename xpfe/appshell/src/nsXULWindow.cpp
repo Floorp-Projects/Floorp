@@ -61,7 +61,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull), 
    mContentTreeOwner(nsnull), mPrimaryContentTreeOwner(nsnull),
    mContinueModalLoop(PR_FALSE), mChromeLoaded(PR_FALSE), 
-   mShowAfterLoad(PR_FALSE) 
+   mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE) 
    
 {
 	NS_INIT_REFCNT();
@@ -363,6 +363,7 @@ NS_IMETHODIMP nsXULWindow::GetPosition(PRInt32* aX, PRInt32* aY)
 
 NS_IMETHODIMP nsXULWindow::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
+   mIntrinsicallySized = PR_FALSE;
    NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
    PersistPositionAndSize(PR_FALSE, PR_TRUE);
    return NS_OK;
@@ -376,6 +377,7 @@ NS_IMETHODIMP nsXULWindow::GetSize(PRInt32* aCX, PRInt32* aCY)
 NS_IMETHODIMP nsXULWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY, 
    PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
+   mIntrinsicallySized = PR_FALSE;
    NS_ENSURE_SUCCESS(mWindow->Resize(aX, aY, aCX, aCY, aRepaint), NS_ERROR_FAILURE);
    PersistPositionAndSize(PR_TRUE, PR_TRUE);
    return NS_OK;
