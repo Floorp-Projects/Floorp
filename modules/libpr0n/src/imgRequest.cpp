@@ -129,10 +129,11 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
       proxy->OnStopDecode(aStatus, nsnull);
     }
 
-    // make sure that observer gets an OnStopRequest message sent to it
-    if (!(mState & onStopRequest)) {
-      proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED);
-    }
+  }
+
+  // make sure that observer gets an OnStopRequest message sent to it
+  if (!(mState & onStopRequest)) {
+    proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED);
   }
 
   if (mObservers.Count() == 0) {
