@@ -3171,7 +3171,7 @@ if test "${enable_toolkit+set}" = set; then
         -o "$enableval" = "gtk" \
         -o "$enableval" = "xlib" \
         -o "$useRhapsody" \
-	-o "$useBeOS"; then
+        -o "$useBeOS"; then
                MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
    else
      { echo "configure: error: Toolkit must be Xlib" 1>&2; exit 1; }
@@ -9599,6 +9599,11 @@ EOF
 elif test "$OS_TARGET" = "WINNT"; then
   cat >> confdefs.h <<\EOF
 #define XP_PC 1
+EOF
+
+elif test "$OS_TARGET" = "BeOS"; then
+  cat >> confdefs.h <<\EOF
+#define XP_BEOS 1
 EOF
 
 else
