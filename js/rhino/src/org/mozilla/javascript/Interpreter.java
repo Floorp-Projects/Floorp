@@ -73,7 +73,7 @@ public class Interpreter {
     public ScriptOrFnNode
     transform(Context cx, IRFactory irFactory, ScriptOrFnNode tree)
     {
-        tree = (new NodeTransformer(irFactory)).transform(tree);
+        (new NodeTransformer(irFactory)).transform(tree);
         return tree;
     }
 

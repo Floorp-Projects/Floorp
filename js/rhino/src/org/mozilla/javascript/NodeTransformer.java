@@ -54,11 +54,11 @@ public class NodeTransformer {
      * Return new instance of this class. So that derived classes
      * can override methods of the transformer.
      */
-    public NodeTransformer newInstance() {
+    protected NodeTransformer newInstance() {
         return new NodeTransformer(irFactory);
     }
 
-    public ScriptOrFnNode transform(ScriptOrFnNode tree)
+    public void transform(ScriptOrFnNode tree)
     {
         loops = new ObjArray();
         loopEnds = new ObjArray();
@@ -80,8 +80,7 @@ public class NodeTransformer {
                     int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
                     FunctionNode fnNode = tree.getFunctionNode(fnIndex);
                     NodeTransformer inner = newInstance();
-                    fnNode = (FunctionNode)inner.transform(fnNode);
-                    tree.replaceFunctionNode(fnIndex, fnNode);
+                    inner.transform(fnNode);
                 }
                 break;
 
@@ -423,8 +422,6 @@ public class NodeTransformer {
               }
             }
         }
-
-        return tree;
     }
 
     protected void visitNew(Node node, ScriptOrFnNode tree) {
@@ -555,9 +552,9 @@ public class NodeTransformer {
                                        sourceName, lineno, null, 0);
     }
 
-    protected ObjArray loops;
-    protected ObjArray loopEnds;
-    protected boolean inFunction;
+    private ObjArray loops;
+    private ObjArray loopEnds;
+    private boolean inFunction;
     protected IRFactory irFactory;
 }
 

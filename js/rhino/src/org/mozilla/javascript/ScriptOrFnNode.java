@@ -84,11 +84,6 @@ public class ScriptOrFnNode extends Node {
         return (FunctionNode)functions.get(i);
     }
 
-    public final void replaceFunctionNode(int i, FunctionNode fnNode) {
-        if (fnNode == null) Context.codeBug();
-        functions.set(i, fnNode);
-    }
-
     public final int addFunction(FunctionNode fnNode) {
         if (fnNode == null) Context.codeBug();
         if (functions == null) { functions = new ObjArray(); }
