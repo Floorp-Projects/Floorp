@@ -943,7 +943,7 @@ AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
 
 # Add the groupset field here because this code is run before the
 # code that updates the database structure.
-AddField('profiles', 'groupset', 'bigint not null');
+&AddField('profiles', 'groupset', 'bigint not null');
 
 if (!GroupExists("editbugs")) {
     my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
@@ -1785,7 +1785,7 @@ if ($sth->fetchrow_array() == 5)
 		#										 BugItsADupeOf   Dupe
 	}
 	
-	$regenerateshadow = 1;
+	$::regenerateshadow = 1;
 }
 
 #
