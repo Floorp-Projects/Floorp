@@ -3410,10 +3410,14 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
         htmlReflow->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
       }
 
-      // Place the bullet now
-      nsMargin padding;
-      aState.mStyleSpacing->CalcPaddingFor(this, padding);
-      nscoord x = aState.mBorderPadding.left - (padding.left/2) -
+      // Place the bullet now; use its right margin to distance it
+      // from the rest of the frames in the line
+      nsMargin margin;
+      const nsStyleSpacing* spacing;
+      mBullet->GetStyleData(eStyleStruct_Spacing,
+                            (const nsStyleStruct*&) spacing);
+      spacing->CalcMarginFor(mBullet, margin);
+      nscoord x = aState.mBorderPadding.left - margin.right -
         metrics.width;
       // XXX This calculation is wrong, especially if
       // vertical-alignment occurs on the line!
