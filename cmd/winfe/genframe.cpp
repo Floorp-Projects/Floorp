@@ -2631,30 +2631,39 @@ int CGenericFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 			}
 	#endif
 
+
 			// Replace the bookmark menu with a new menu that can have ON_DRAWITEM overridden
-			CMenu *pOldBookmarksMenu = pMenu->GetSubMenu(nWindowPosition-1);
-			char bookmarksStr[30];
+			//BookMark is the First Popup in the Communicator Menu so loop through to find it.
+			UINT nBookmarksPosition = 0;
+			while(!pWindowMenu->GetSubMenu(nBookmarksPosition) && nBookmarksPosition < pWindowMenu->GetMenuItemCount())
+				nBookmarksPosition++;
 
-			if(pOldBookmarksMenu)
+			if(nBookmarksPosition < pWindowMenu->GetMenuItemCount())
 			{
-				m_pBookmarksMenu=new CTreeMenu;
+				CMenu *pOldBookmarksMenu = pWindowMenu->GetSubMenu(nBookmarksPosition);
+				char bookmarksStr[30];
 
-				m_pBookmarksMenu->CreatePopupMenu();
-				
-				m_OriginalBookmarksGarbageList = new CTreeItemList;
+				if(pOldBookmarksMenu)
+				{
+					m_pBookmarksMenu=new CTreeMenu;
 
-				CopyMenu(pOldBookmarksMenu, m_pBookmarksMenu, m_OriginalBookmarksGarbageList);
-				pMenu->GetMenuString(nWindowPosition-1, bookmarksStr, 30, MF_BYPOSITION);
-				pMenu->DeleteMenu(nWindowPosition-1, MF_BYPOSITION);
-				pMenu->InsertMenu(nWindowPosition-1, MF_BYPOSITION|MF_STRING|MF_POPUP, (UINT)m_pBookmarksMenu->GetSafeHmenu(), bookmarksStr);
+					m_pBookmarksMenu->CreatePopupMenu();
+					
+					m_OriginalBookmarksGarbageList = new CTreeItemList;
 
-				//FileBookmark is the First Popup in the BookMarks Menu so loop through to find it.
-				UINT nfileBookmarksPosition = 0;
-				while(!m_pBookmarksMenu->GetSubMenu(nfileBookmarksPosition) && nfileBookmarksPosition < m_pBookmarksMenu->GetMenuItemCount())
-					nfileBookmarksPosition++;
-				m_pFileBookmarkMenu = (CTreeMenu*)m_pBookmarksMenu->GetSubMenu(nfileBookmarksPosition);
+					CopyMenu(pOldBookmarksMenu, m_pBookmarksMenu, m_OriginalBookmarksGarbageList);
+					pWindowMenu->GetMenuString(nBookmarksPosition, bookmarksStr, 30, MF_BYPOSITION);
+					pWindowMenu->DeleteMenu(nBookmarksPosition, MF_BYPOSITION);
+					pWindowMenu->InsertMenu(nBookmarksPosition, MF_BYPOSITION|MF_STRING|MF_POPUP, (UINT)m_pBookmarksMenu->GetSafeHmenu(), bookmarksStr);
 
-				LoadBookmarkMenuBitmaps();
+					//FileBookmark is the First Popup in the BookMarks Menu so loop through to find it.
+					UINT nfileBookmarksPosition = 0;
+					while(!m_pBookmarksMenu->GetSubMenu(nfileBookmarksPosition) && nfileBookmarksPosition < m_pBookmarksMenu->GetMenuItemCount())
+						nfileBookmarksPosition++;
+					m_pFileBookmarkMenu = (CTreeMenu*)m_pBookmarksMenu->GetSubMenu(nfileBookmarksPosition);
+
+					LoadBookmarkMenuBitmaps();
+				}
 			}
 		}
 	}
