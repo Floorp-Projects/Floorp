@@ -602,6 +602,11 @@ nsObjectFrame::Destroy(nsIPresContext* aPresContext)
         inst->SetWindow(nsnull);
         inst->Stop();
       }
+
+      nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
+      if(pluginHost)
+        pluginHost->StopPluginInstance(inst);
+
       NS_RELEASE(inst);
     }
   }
@@ -1716,13 +1721,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     CancelTimer();
   }
 
-  if (nsnull != mInstance)
-  {
-    if (mPluginHost)
-      mPluginHost->StopPluginInstance(mInstance);
-    NS_IF_RELEASE(mInstance);
-  }
-
+  NS_IF_RELEASE(mInstance);
   NS_IF_RELEASE(mPluginHost);
   mOwner = nsnull;
 
