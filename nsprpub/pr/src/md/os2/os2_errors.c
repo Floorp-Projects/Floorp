@@ -35,6 +35,44 @@
 #include "prerror.h"
 #include "primpl.h"
 
+void _MD_os2_map_default_error(PRInt32 err)
+{
+	switch (err) {
+		case EWOULDBLOCK:
+			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
+			break;
+		case EBADF:
+			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
+			break;
+		case ENOTSOCK:
+			PR_SetError(PR_NOT_SOCKET_ERROR, err);
+			break;
+		case EMSGSIZE:
+		case EINVAL:
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
+			break;
+		case ENOBUFS:
+			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
+			break;
+		case ECONNREFUSED:
+			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
+			break;
+		case EISCONN:
+			PR_SetError(PR_IS_CONNECTED_ERROR, err);
+			break;
+#ifdef SOCEFAULT
+		case SOCEFAULT:
+			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
+			break;
+#endif
+		case ERROR_NETNAME_DELETED:
+			PR_SetError(PR_CONNECT_RESET_ERROR, err);
+			break;
+		default:
+			PR_SetError(PR_UNKNOWN_ERROR, err);
+			break;
+	}
+}
 void _MD_os2_map_opendir_error(PRInt32 err)
 {
 	switch (err) {
@@ -92,7 +130,7 @@ void _MD_os2_map_closedir_error(PRInt32 err)
 	}
 }
 
-void _MD_unix_readdir_error(PRInt32 err)
+void _MD_os2_readdir_error(PRInt32 err)
 {
 
 	switch (err) {
@@ -671,73 +709,17 @@ void _MD_os2_map_send_error(PRInt32 err)
 
 void _MD_os2_map_sendto_error(PRInt32 err)
 {
-	switch (err) {
-		case EWOULDBLOCK:
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EMSGSIZE:
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case ENOBUFS:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		case ECONNREFUSED:
-			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
-			break;
-		case EISCONN:
-			PR_SetError(PR_IS_CONNECTED_ERROR, err);
-			break;
-#ifdef SOCEFAULT
-		case SOCEFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-#endif
-		case ERROR_NETNAME_DELETED:
-			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+  _MD_os2_map_default_error(err);
+}
+
+void _MD_os2_map_writev_error(int err)
+{
+  _MD_os2_map_default_error(err);
 }
 
 void _MD_os2_map_accept_error(PRInt32 err)
 {
-	switch (err) {
-		case EWOULDBLOCK:
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EOPNOTSUPP:
-			PR_SetError(PR_NOT_TCP_SOCKET_ERROR, err);
-			break;
-#ifdef SOCEFAULT
-		case SOCEFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-#endif
-		case EMFILE:
-			PR_SetError(PR_PROC_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case ENOBUFS:
-			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+  _MD_os2_map_default_error(err);
 }
 
 void _MD_os2_map_acceptex_error(PRInt32 err)
@@ -757,6 +739,21 @@ void _MD_os2_map_acceptex_error(PRInt32 err)
 			PR_SetError(PR_UNKNOWN_ERROR, err);
 			break;
 	}
+}
+
+/*
+ * An error code of 0 means that the nonblocking connect succeeded.
+ */
+
+int _MD_os2_get_nonblocking_connect_error(int osfd)
+{
+    int err;
+    int len = sizeof(err);
+    if (getsockopt(osfd, SOL_SOCKET, SO_ERROR, (char *) &err, &len) == -1) {
+        return sock_errno();
+    } else {
+        return err;
+    }
 }
 
 void _MD_os2_map_connect_error(PRInt32 err)

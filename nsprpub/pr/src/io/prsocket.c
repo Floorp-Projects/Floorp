@@ -338,22 +338,11 @@ static PRStatus PR_CALLBACK SocketConnectContinue(
 
 #elif defined(XP_OS2)
 
-    if (out_flags & PR_POLL_EXCEPT) {
-        int len = sizeof(err);
-        if (getsockopt(osfd, SOL_SOCKET, SO_ERROR, (char *) &err, &len)
-                < 0) {
-            _PR_MD_MAP_GETSOCKOPT_ERROR(sock_errno());
-            return PR_FAILURE;
-        }
-        if (err != 0) {
-            _PR_MD_MAP_CONNECT_ERROR(err);
-        } else {
-            PR_SetError(PR_UNKNOWN_ERROR, 0);
-        }
+    err = _MD_os2_get_nonblocking_connect_error(osfd);
+    if (err != 0) {
+        _PR_MD_MAP_CONNECT_ERROR(err);
         return PR_FAILURE;
     }
-
-    PR_ASSERT(out_flags & PR_POLL_WRITE);
     return PR_SUCCESS;
 
 #elif defined(XP_MAC)
