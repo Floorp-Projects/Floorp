@@ -174,7 +174,7 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
 TX_LG_IMPL;
 static PRBool gInitialized = PR_FALSE;
 static nsIExceptionProvider *gXPathExceptionProvider = 0;
-nsINameSpaceManager *gNameSpaceManager = 0;
+nsINameSpaceManager *gTxNameSpaceManager = 0;
 
 // Perform our one-time intialization for this module
 PR_STATIC_CALLBACK(nsresult)
@@ -207,9 +207,9 @@ Initialize(nsIModule* aSelf)
         return rv;
     }
 
-    rv = CallGetService(NS_NAMESPACEMANAGER_CONTRACTID, &gNameSpaceManager);
+    rv = CallGetService(NS_NAMESPACEMANAGER_CONTRACTID, &gTxNameSpaceManager);
     if (NS_FAILED(rv)) {
-        gNameSpaceManager = nsnull;
+        gTxNameSpaceManager = nsnull;
         return rv;
     }
 
@@ -246,7 +246,7 @@ Shutdown(nsIModule* aSelf)
     txXSLTProcessor::txShutdown();
 
     NS_IF_RELEASE(gTxSecurityManager);
-    NS_IF_RELEASE(gNameSpaceManager);
+    NS_IF_RELEASE(gTxNameSpaceManager);
 
     TX_LG_DELETE;
 }

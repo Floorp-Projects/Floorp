@@ -354,11 +354,11 @@ PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
         NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
         if (rv != NS_CONTENT_ATTR_NOT_THERE) {
             PRInt32 nsId;
-            NS_ASSERTION(gNameSpaceManager, "No namespace manager");
-            if (!gNameSpaceManager) {
+            NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
+            if (!gTxNameSpaceManager) {
                 return kNameSpaceID_Unknown;
             }
-            gNameSpaceManager->RegisterNameSpace(uri, nsId);
+            gTxNameSpaceManager->RegisterNameSpace(uri, nsId);
             return nsId;
         }
 

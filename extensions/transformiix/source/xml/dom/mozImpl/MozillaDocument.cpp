@@ -373,9 +373,9 @@ Attr* Document::createAttribute(nsIDOMAttr* aAttr)
     aAttr->GetNamespaceURI(ns);
     PRInt32 namespaceID = kNameSpaceID_None;
     if (!ns.IsEmpty()) {
-        NS_ASSERTION(gNameSpaceManager, "No namespace manager");
-        if (gNameSpaceManager) {
-            gNameSpaceManager->GetNameSpaceID(ns, namespaceID);
+        NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
+        if (gTxNameSpaceManager) {
+            gTxNameSpaceManager->GetNameSpaceID(ns, namespaceID);
         }
     }
 
@@ -652,8 +652,8 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
 PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
 {
     PRInt32 namesspaceID = kNameSpaceID_Unknown;
-    if (gNameSpaceManager) {
-        gNameSpaceManager->RegisterNameSpace(aNamespaceURI,
+    if (gTxNameSpaceManager) {
+        gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI,
                                              namesspaceID);
     }
     return namesspaceID;
@@ -661,8 +661,8 @@ PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
 
 void Document::namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI)
 {
-    if (gNameSpaceManager) {
-        gNameSpaceManager->GetNameSpaceURI(aNamespaceID,
+    if (gTxNameSpaceManager) {
+        gTxNameSpaceManager->GetNameSpaceURI(aNamespaceID,
                                            aNamespaceURI);
     }
 }

@@ -64,7 +64,7 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsINameSpaceManager.h"
 
-extern nsINameSpaceManager* gNameSpaceManager;
+extern nsINameSpaceManager* gTxNameSpaceManager;
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_CID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
@@ -153,7 +153,7 @@ void txMozillaXMLOutput::attribute(const String& aName,
     }
     else {
         nsAutoString nsURI;
-        gNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
+        gTxNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
         element->SetAttributeNS(nsURI, aName, aValue);
     }
 }
@@ -373,7 +373,7 @@ void txMozillaXMLOutput::startElement(const String& aName,
     }
     else {
         nsAutoString nsURI;
-        gNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
+        gTxNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
         rv = mDocument->CreateElementNS(nsURI, aName,
                                         getter_AddRefs(element));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create element");

@@ -61,7 +61,7 @@ typedef UNICODE_CHAR DOM_CHAR;
 #define kTxAttrIndexOffset 0x40000000;
 #define kTxChildIndexOffset 0x80000000;
 
-extern nsINameSpaceManager* gNameSpaceManager;
+extern nsINameSpaceManager* gTxNameSpaceManager;
 
 class nsIDOMAttr;
 class nsIDOMDocument;
