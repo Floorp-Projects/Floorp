@@ -7261,7 +7261,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                            (lastChild == aFrameItems.lastChild))) {
     rv = ConstructMathMLFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                              tag, styleContext, aFrameItems);
+                              aTag, aStyleContext, aFrameItems);
   }
 #endif
 
@@ -7270,7 +7270,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                            (lastChild == aFrameItems.lastChild))) {
     rv = ConstructSVGFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                              tag, styleContext, aFrameItems);
+                              aTag, aStyleContext, aFrameItems);
   }
 #endif
 
