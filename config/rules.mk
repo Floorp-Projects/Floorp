@@ -426,8 +426,8 @@ ifeq ($(USE_TVFS),1)
 IFLAGS1 = -rb
 IFLAGS2 = -rb
 else
-IFLAGS1 = -m 444
-IFLAGS2 = -m 555
+IFLAGS1 = -m 644
+IFLAGS2 = -m 755
 endif
 
 ################################################################################
