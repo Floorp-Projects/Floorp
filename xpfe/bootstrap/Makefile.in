@@ -31,11 +31,9 @@ MODULE		= apprunner
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)
 EXTRA_DSO_LIBS	= gkgfx
-WEBSHELL_LIB	= $(DIST)/lib/webshell.$(LIB_SUFFIX)
 else
 PROGRAM		= mozilla-bin
 EXTRA_DSO_LIBS	= gkgfx
-WEBSHELL_LIB	= -lwebshell
 endif
 
 CPPSRCS		= \
@@ -70,14 +68,6 @@ endif
 
 ifdef NS_TRACE_MALLOC
 DEFINES		+= -DNS_TRACE_MALLOC
-endif
-
-ifeq ($(OS_ARCH),Rhapsody)
-DETECT_WEBSHELL_LEAKS=
-endif
-
-ifdef DETECT_WEBSHELL_LEAKS
-XP_LIBS         += $(WEBSHELL_LIB) -ldocshell -ljsdom
 endif
 
 ifdef MOZ_JPROF
