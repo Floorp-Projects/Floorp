@@ -449,7 +449,7 @@ function analyze(aMsgHdr, aNextFunction)
     var listener = {
         onMessageClassified: function(aMsgURI, aClassification)
         {
-            dump(aMsgURL + ' is ' 
+            dump(aMsgURI + ' is ' 
                  + (aClassification == nsIJunkMailPlugin.JUNK
                     ? 'JUNK' : 'GOOD') + '\n');
 
