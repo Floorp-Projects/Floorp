@@ -901,7 +901,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   // Fire up the walletService. Why the heck is this here?
   NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "wallet failed");
   if (NS_SUCCEEDED(rv))
   {
     // this is a no-op. What is going on?
