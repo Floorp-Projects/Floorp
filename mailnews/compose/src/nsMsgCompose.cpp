@@ -129,7 +129,6 @@ enum RecipientType {
 nsresult NS_NewMsgCompose(nsIMsgCompose** aInstancePtrResult)
 {
 	/* note this new macro for assertions...they can take a string describing the assertion */
-	nsresult result = NS_OK;
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
 	if (nsnull != aInstancePtrResult)
 	{
@@ -1348,7 +1347,7 @@ nsMsgCompose::GetUrlDone_S(PrintSetup* pptr)
 void
 nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 {
-	XP_File file;
+	XP_File file=(XP_File)nsnull;
 	PR_FREEIF(m_quoteUrl);
 	m_textContext = NULL;  /* since this is called as a result of
 							  TXFE_AllConnectionsComplete, we know this context
@@ -1552,13 +1551,12 @@ QuotePlainIntoHTML::~QuotePlainIntoHTML()
 
 
 
-
 int
 QuotePlainIntoHTML::DoQuote(const char* data)
 {
 	if (data) {
 		if (!m_context) return 0;
-		return msg_LineBuffer(data, PL_strlen(data), &m_buffer, &m_size, &m_fp, PR_FALSE, 
+		return (int)msg_LineBuffer(data, PL_strlen(data), &m_buffer, &m_size, &m_fp, PR_FALSE, 
 #ifdef XP_OS2
 					(PRInt32 (_Optlink*) (char*,PRUint32,void*))
 #endif
