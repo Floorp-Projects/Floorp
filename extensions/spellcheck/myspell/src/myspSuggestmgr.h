@@ -56,8 +56,6 @@
 #ifndef _SUGGESTMGR_HXX_
 #define _SUGGESTMGR_HXX_
 
-#include "license.readme"
-
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "myspAffixmgr.h"
