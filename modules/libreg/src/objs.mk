@@ -13,20 +13,19 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+MODULES_LIBREG_SRC_LCSRCS = \
+		reg.c \
+		VerReg.c \
+		vr_stubs.c \
+		$(NULL)
 
-include $(DEPTH)/config/autoconf.mk
 
-DIRS		= include src standalone
+MODULES_LIBREG_SRC_CSRCS := $(addprefix $(topsrcdir)/modules/libreg/src/, $(MODULES_LIBREG_SRC_LCSRCS))
 
-include $(topsrcdir)/config/rules.mk
 

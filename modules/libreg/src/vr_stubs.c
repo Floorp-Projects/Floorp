@@ -279,7 +279,7 @@ extern void vr_findGlobalRegName()
                 // we have no idea if this moves memory, so better lock the handle
             #if defined(STANDALONE_REGISTRY) || defined(USE_STDIO_MODES)
                 HLock(thePath);
-                globalRegName = XP_ALLOC(pathLen + 1);
+                globalRegName = (char *)XP_ALLOC(pathLen + 1);
                 XP_STRNCPY(globalRegName, *thePath, pathLen);
                 globalRegName[pathLen] = '\0';
             #else
@@ -338,7 +338,7 @@ extern char* vr_findVerRegName()
                // we have no idea if this moves memory, so better lock the handle
              #if defined(STANDALONE_REGISTRY) || defined(USE_STDIO_MODES)
                 HLock(thePath);
-                verRegName = XP_ALLOC(pathLen + 1);
+                verRegName = (char *)XP_ALLOC(pathLen + 1);
                 XP_STRNCPY(verRegName, *thePath, pathLen);
                 verRegName[pathLen] = '\0';
             #else
@@ -413,10 +413,7 @@ extern int nr_RenameFile(char *from, char *to)
 }
 
 
-#if 0
-/* Uncomment the following for older Mac build environments
- * that don't support these functions
- */
+#ifdef STANDALONE_REGISTRY
 char *strdup(const char *source)
 {
         char    *newAllocation;
@@ -489,7 +486,7 @@ int strncasecmp(const char *str1, const char *str2, int length)
 
     return currentChar1 - currentChar2;
 }
-#endif /* 0 */
+#endif /* STANDALONE_REGISTRY */
 
 #endif /* XP_MAC */
 
@@ -525,7 +522,6 @@ long BUILDNUM = NS_BUILD_ID;
 
 
 REGERR vr_ParseVersion(char *verstr, VERSION *result);
-int main(int argc, char *argv[]);
 
 #ifdef XP_UNIX
 
@@ -677,98 +673,5 @@ char* vr_findVerRegName ()
 }
 
 #endif /*XP_BEOS*/
-
-#if defined(STANDALONE_REGISTRY) && (defined(XP_UNIX) || defined(XP_OS2) || defined(XP_MAC) || defined(XP_BEOS))
-
-int main(int argc, char *argv[])
-{
-    XP_File fh;
-    char    *entry;
-    char    *p;
-    char    *v;
-    char    buff[1024];
-    char    name[MAXREGPATHLEN+1];
-    char    path[MAXREGPATHLEN+1];
-    char    ver[MAXREGPATHLEN+1];
-
-    if ( argc >= 3 )
-    {
-        TheRegistry = argv[1];
-        Flist = argv[2];
-    }
-    else
-    {
-        fprintf(stderr, "Usage: %s RegistryName FileList\n", argv[0]);
-        fprintf(stderr, "    The FileList file contains lines with comma-separated fields:\n");
-        fprintf(stderr, "    <regItemName>,<version>,<full filepath>\n");
-        exit (1);
-    }
-
-    /* tmp use of buff to get the registry directory, which must be
-     * the navigator home directory.  Preserve the slash to match
-     * FE_GetDirectoryPath() called during navigator set-up
-     */
-
-
-    strcpy(buff, TheRegistry);
-    p = strrchr( buff, '/' );
-    if ( p )
-    {
-       char pwd[1024];
-
-       *(p+1) = '\0';
-       getcwd(pwd, sizeof(pwd));
-       chdir(buff); getcwd(buff, sizeof(buff));
-       chdir(pwd); 
-    }
-    else
-    {
-       getcwd(buff, sizeof(buff));
-    }
-    strcat(buff, "/");
-
-
-    NR_StartupRegistry();
-    VR_SetRegDirectory(buff);
-
-
-#ifndef XP_MAC
-    if ( -1 == (access( TheRegistry, W_OK )) ) {
-        sprintf(ver,"4.50.0.%ld",BUILDNUM);
-        VR_CreateRegistry("Communicator", buff, ver);
-    }
-#endif
-
-    if ( !(fh = fopen( Flist, "r" )) )
-    {
-        fprintf(stderr, "%s: Cannot open \"%s\"\n", argv[0], Flist);
-        exit (1);
-    }
-
-    while ( fgets ( buff, 1024, fh ) )
-    {
-        if (  *(entry = &buff[strlen(buff)-1]) == '\n' )
-            *entry = '\0';
-
-        entry = strchr(buff, ',');
-        strcpy(name, strtok(buff, ","));
-        strcpy(ver,  strtok( NULL, ","));
-        strcpy(path, strtok( NULL, ","));
-
-        v = ver;
-        while (*v && *v == ' ')
-            v++;
-
-        p = path;
-        while (*p && *p == ' ')
-            p++;
-
-        VR_Install ( name, p, v, FALSE );
-    }
-    fclose( fh );
-    return 0;
-}
-
-#endif /* STANDALONE_REGISTRY && (XP_UNIX || XP_OS2 || XP_MAC) */
 
 #endif /* XP_UNIX || XP_OS2 */
