@@ -357,7 +357,7 @@ CNavDTD::CNavDTD() : nsIDTD(){
   mMapContext=0;
   mTokenizer=0;
 
-#ifndef NS_DEBUG
+#ifdef NS_DEBUG
   mComputedCRC32=0;
   mExpectedCRC32=0;
 #endif
