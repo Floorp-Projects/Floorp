@@ -12949,11 +12949,7 @@ elif test "$OS_TARGET" = "BeOS"; then
 #define XP_BEOS 1
 EOF
 
-  cat >> confdefs.h <<\EOF
-#define HAVE_MOVEMAIL 1
-EOF
-
-  HAVE_MOVEMAIL=1
+  MOZ_MOVEMAIL=1
   
 elif test "$OS_TARGET" = "Mac OS"; then
   cat >> confdefs.h <<\EOF
@@ -12990,11 +12986,7 @@ EOF
 #define UNIX_ASYNC_DNS 1
 EOF
 
-  cat >> confdefs.h <<\EOF
-#define HAVE_MOVEMAIL 1
-EOF
-
-  HAVE_MOVEMAIL=1
+  MOZ_MOVEMAIL=1
   
 fi
 
@@ -13447,7 +13439,7 @@ s%@OBJ_SUFFIX@%$OBJ_SUFFIX%g
 s%@BIN_SUFFIX@%$BIN_SUFFIX%g
 s%@ASM_SUFFIX@%$ASM_SUFFIX%g
 s%@USE_N32@%$USE_N32%g
-s%@HAVE_MOVEMAIL@%$HAVE_MOVEMAIL%g
+s%@MOZ_MOVEMAIL@%$MOZ_MOVEMAIL%g
 s%@LIBS_PATH@%$LIBS_PATH%g
 s%@MOZ_DEFINES@%$MOZ_DEFINES%g
 
