@@ -2574,15 +2574,12 @@ void ProcessWindowsMessages()
 
 void ShowMessage(LPSTR szMessage, BOOL bShow)
 {
-  char szBuf[MAX_BUF];
- 
-  if(!hDlgMessage ||!szMessage)
-    return;
-
   if(sgProduct.mode != SILENT)
   {
-    if(bShow)
+    if(bShow && szMessage)
     {
+      char szBuf[MAX_BUF];
+ 
       ZeroMemory(szBuf, sizeof(szBuf));
       GetPrivateProfileString("Messages", "MB_MESSAGE_STR", "", szBuf, sizeof(szBuf), szFileIniInstall);
       hDlgMessage = InstantiateDialog(hWndMain, DLG_MESSAGE, szBuf, DlgProcMessage);
