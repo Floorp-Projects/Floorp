@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = rdfcat
+DIRS = rdfcat rdfpoll
 
 
 include $(topsrcdir)/config/config.mk
