@@ -97,8 +97,7 @@ public:
                                  nsIChannel **aResult, PRInt32 aStatusCode);
 
     nsresult            ResponseCompleted(nsIStreamListener *aListener,
-                                          nsresult aStatus,
-                                          const PRUnichar* aMsg);
+                                          nsresult aStatus, const PRUnichar* aStatusArg);
 
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);

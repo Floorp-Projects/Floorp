@@ -54,7 +54,6 @@
 #include "nsITimer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
-
 #include "nsCRT.h"
 
 #if defined(XP_MAC)
@@ -154,12 +153,14 @@ public:
     return NS_NOINTERFACE;
   }
 
-  NS_IMETHOD OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax) {
+  NS_IMETHOD OnProgress(nsIChannel *channel, nsISupports *ctxt, 
+                        PRUint32 aProgress, PRUint32 aProgressMax) {
     putc('+', stderr);
     return NS_OK;
   }
 
-  NS_IMETHOD OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUnichar *aMsg) {
+  NS_IMETHOD OnStatus(nsIChannel *channel, nsISupports *ctxt, 
+                      nsresult aStatus, const PRUnichar* aStatusArg) {
     putc('?', stderr);
     return NS_OK;
   }
@@ -216,10 +217,8 @@ TestConnectionOpenObserver::OnStartRequest(nsIChannel* channel, nsISupports* con
 }
 
 NS_IMETHODIMP
-TestConnectionOpenObserver::OnStopRequest(nsIChannel* channel, 
-                                          nsISupports* context,
-                                          nsresult aStatus,
-                                          const PRUnichar* aMsg)
+TestConnectionOpenObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
+                                          nsresult aStatus, const PRUnichar* aStatusArg)
 {
   if (gVerbose || NS_FAILED(aStatus))
     printf("\n+++ TestConnectionOpenObserver::OnStopRequest (status = %x) +++."
@@ -276,10 +275,8 @@ TestConnection::OnDataAvailable(nsIChannel* channel, nsISupports* context,
 
 
 NS_IMETHODIMP
-TestConnection::OnStopRequest(nsIChannel* channel, 
-                              nsISupports* context,
-                              nsresult aStatus,
-                              const PRUnichar* aMsg)
+TestConnection::OnStopRequest(nsIChannel* channel, nsISupports* context,
+                              nsresult aStatus, const PRUnichar* aStatusArg)
 {
   if (gVerbose || NS_FAILED(aStatus))
     printf("\n+++ TestConnection::OnStopRequest (status = %x) +++."

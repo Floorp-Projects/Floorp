@@ -408,7 +408,7 @@ nsResChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
     } while (NS_FAILED(rv));
 
     if (NS_FAILED(rv)) {
-        (void)EndRequest(rv, nsnull);  // XXX need error message
+        (void)EndRequest(rv, nsnull);
     }
 
     return rv;
@@ -461,7 +461,7 @@ nsResChannel::AsyncWrite(nsIInputStream *fromStream,
     } while (NS_FAILED(rv));
 
     if (NS_FAILED(rv)) {
-        (void)EndRequest(rv, nsnull);  // XXX need error message
+        (void)EndRequest(rv, nsnull);
     }
 
     return rv;
@@ -679,7 +679,7 @@ nsResChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* context)
 
 NS_IMETHODIMP
 nsResChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
-                            nsresult aStatus, const PRUnichar* aMsg)
+                            nsresult aStatus, const PRUnichar* aStatusArg)
 {
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == PR_CurrentThread(),
@@ -696,18 +696,18 @@ nsResChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
             break;
         }
     }
-    return EndRequest(aStatus, aMsg);
+    return EndRequest(aStatus, aStatusArg);
 }
 
 nsresult
-nsResChannel::EndRequest(nsresult aStatus, const PRUnichar* aMsg)
+nsResChannel::EndRequest(nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
-    rv = mUserObserver->OnStopRequest(this, mUserContext, aStatus, aMsg);
+    rv = mUserObserver->OnStopRequest(this, mUserContext, aStatus, aStatusArg);
 #if 0 // we don't add the resource channel to the group (although maybe we should)
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {
-            mLoadGroup->RemoveChannel(this, context, aStatus, aMsg);
+            mLoadGroup->RemoveChannel(this, context, notif);
         }
     }
 #endif

@@ -91,7 +91,7 @@ protected:
     }
 
     nsresult EnsureNextResolvedChannel();
-    nsresult EndRequest(nsresult status, const PRUnichar* msg);
+    nsresult EndRequest(nsresult aStatus, const PRUnichar* aStatusArg);
 
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;

@@ -42,6 +42,9 @@
 
 #include "prprf.h"
 
+#include "nsIStringBundle.h"
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
 #ifdef NS_DEBUG
 #define DEBUG_PRINTF PR_fprintf
 #else
@@ -396,11 +399,17 @@ nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
 NS_IMETHODIMP
 nsStreamXferOp::OnStatus( nsIChannel      *channel,
                           nsISupports     *aContext,
-                          const PRUnichar *aMsg ) {
+                          nsresult        aStatus,
+                          const PRUnichar *aStatusArg) {
     nsresult rv = NS_OK;
 
     if ( mObserver ) {
-        nsString msg = aMsg;
+        nsCOMPtr<nsIStringBundleService> sbs = do_GetService(kStringBundleServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        nsXPIDLString str;
+        rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(str));
+        if (NS_FAILED(rv)) return rv;
+        nsAutoString msg = str;
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onStatus" ).GetUnicode(),
                                   msg.GetUnicode() );

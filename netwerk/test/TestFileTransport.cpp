@@ -51,8 +51,8 @@ public:
     }
 
     NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
-                             nsresult status, const PRUnichar *errorMsg) {
-        printf("ending status=%0x total=%d\n", status, mTotal);
+                             nsresult aStatus, const PRUnichar* aStatusArg) {
+        printf("ending status=%0x total=%d\n", aStatus, mTotal);
         if (--mStopCount == 0)
             gDone = PR_TRUE;
         return NS_OK;
@@ -240,8 +240,8 @@ public:
     }
 
     NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
-                             nsresult status, const PRUnichar *errorMsg) {
-        printf("stream closed: status %x\n", status);
+                             nsresult aStatus, const PRUnichar* aStatusArg) {
+        printf("stream closed: status %x\n", aStatus);
         return NS_OK;
     }
 

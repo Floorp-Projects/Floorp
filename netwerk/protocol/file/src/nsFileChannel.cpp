@@ -620,7 +620,7 @@ nsFileChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* context
 
 NS_IMETHODIMP
 nsFileChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
-                             nsresult aStatus, const PRUnichar* aMsg)
+                             nsresult aStatus, const PRUnichar* aStatusArg)
 {
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == PR_CurrentThread(),
@@ -629,11 +629,11 @@ nsFileChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
 
     nsresult rv;
 
-    rv = mRealListener->OnStopRequest(this, context, aStatus, aMsg);
+    rv = mRealListener->OnStopRequest(this, context, aStatus, aStatusArg);
 
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {
-            mLoadGroup->RemoveChannel(this, context, aStatus, aMsg);
+            mLoadGroup->RemoveChannel(this, context, aStatus, aStatusArg);
         }
     }
 
@@ -692,14 +692,12 @@ nsFileChannel::GetInterface(const nsIID &anIID, void **aResult )
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileChannel::OnStatus(nsIChannel *aChannel,
-                        nsISupports *aContext,
-                        const PRUnichar *aMsg)
+nsFileChannel::OnStatus(nsIChannel *aChannel, nsISupports* ctxt, 
+                        nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv = NS_OK;
-
     if (mProgress) {
-        mProgress->OnStatus(this, aContext, aMsg);
+        rv = mProgress->OnStatus(aChannel, ctxt, aStatus, aStatusArg);
     }
     return rv;
 }
@@ -710,12 +708,12 @@ nsFileChannel::OnProgress(nsIChannel* aChannel,
                           PRUint32 aProgress,
                           PRUint32 aProgressMax)
 {
-    nsresult rv = NS_OK;
-
+    nsresult rv;
     if (mProgress) {
         rv = mProgress->OnProgress(this, aContext, aProgress, aProgressMax);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "dropping error result");
     }
-    return rv;
+    return NS_OK;
 }
 
 

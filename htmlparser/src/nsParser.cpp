@@ -2030,13 +2030,15 @@ nsParser::OnProgress(nsIChannel* channel, nsISupports* aContext, PRUint32 aProgr
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
-nsParser::OnStatus(nsIChannel* channel, nsISupports* aContext, const PRUnichar* aMsg)
+nsParser::OnStatus(nsIChannel* channel, nsISupports* aContext,
+                   nsresult aStatus, const PRUnichar* aStatusArg)
 {
-  nsresult result=0;
+  nsresult rv;
   if (nsnull != mProgressEventSink) {
-    mProgressEventSink->OnStatus(channel, aContext, aMsg);
+    rv = mProgressEventSink->OnStatus(channel, aContext, aStatus, aStatusArg);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "dropping error result");
   }
-  return result;
+  return NS_OK;
 }
 
 #ifdef rickgdebug

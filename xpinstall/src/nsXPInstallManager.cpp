@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -817,7 +817,7 @@ nsXPInstallManager::OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 
             rv = channel->GetContentLength(&mContentLength);
             if (NS_FAILED(rv)) return rv;
         }
-	mLastUpdate = now;
+        mLastUpdate = now;
         rv = mDlg->SetProgress(aProgress, mContentLength, PROGRESS_BAR);
     }
 
@@ -825,13 +825,20 @@ nsXPInstallManager::OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 
 }
 
 NS_IMETHODIMP 
-nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUnichar *aMsg)
+nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, 
+                             nsresult aStatus, const PRUnichar *aStatusArg)
 {
+    nsresult rv;
     PRTime now = PR_Now();
     if (!mCancelled && TimeToUpdate(now))
     {
-	mLastUpdate = now;
-        return mDlg->SetActionText(aMsg);
+        mLastUpdate = now;
+        nsCOMPtr<nsIStringBundleService> sbs = do_GetService(kStringBundleServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        nsXPIDLString msg;
+        rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(msg));
+        if (NS_FAILED(rv)) return rv;
+        return mDlg->SetActionText(msg);
     }
     else
         return NS_OK;

@@ -277,7 +277,9 @@ NS_IMETHODIMP CWebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIRequ
 }
 
 
-NS_IMETHODIMP CWebBrowserChrome::OnLocationChange(nsIURI *location)
+NS_IMETHODIMP CWebBrowserChrome::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                  nsIRequest* aRequest,
+                                                  nsIURI *location)
 {
 	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 
@@ -295,6 +297,14 @@ NS_IMETHODIMP CWebBrowserChrome::OnLocationChange(nsIURI *location)
 	return NS_OK;
 }
 
+NS_IMETHODIMP 
+CWebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
+                                  nsIRequest* aRequest,
+                                  nsresult aStatus,
+                                  const PRUnichar* aMessage)
+{
+    return NS_OK;
+}
 
 //*****************************************************************************
 // CWebBrowserChrome::nsIBaseWindow

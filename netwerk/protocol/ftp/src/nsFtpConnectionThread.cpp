@@ -39,7 +39,7 @@
 #include "nsIDNSService.h" // for host error code
 #include "nsIWalletService.h"
 #include "nsIProxy.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
@@ -47,6 +47,7 @@ static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #define FTP_COMMAND_CHANNEL_SEG_SIZE 64
 #define FTP_COMMAND_CHANNEL_MAX_SIZE 512
@@ -1736,7 +1737,7 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     rv = mURL->GetPath(&path);
     if (NS_FAILED(rv)) return rv;
     mPath = nsUnescape(path);
-    nsAllocator::Free(path);
+    nsMemory::Free(path);
 
     // pull any username and/or password out of the uri
     nsXPIDLCString uname;
@@ -1794,20 +1795,16 @@ nsFtpConnectionThread::SetWriteStream(nsIInputStream* aInStream, PRUint32 aWrite
 nsresult
 nsFtpConnectionThread::StopProcessing() {
     nsresult rv;
-    PRUnichar* errorMsg = nsnull;
 
     // kill the event loop
     mKeepRunning = PR_FALSE;
 
-    // setup any internal error message to propegate
+#if 0
     if (NS_FAILED(mInternalError)) {
-        // generate a FTP specific error msg.
-        rv = MapResultCodeToString(mInternalError, &errorMsg);
-        if (NS_FAILED(rv)) return rv;
-
-        //if (mCPipe) (void)mCPipe->Cancel();
-        //if (mDPipe) (void)mDPipe->Cancel();
+        if (mCPipe) (void)mCPipe->Cancel();
+        if (mDPipe) (void)mDPipe->Cancel();
     }
+#endif
 
     // Release the transports
     mCPipe = 0;
@@ -1822,6 +1819,9 @@ nsFtpConnectionThread::StopProcessing() {
         // we never got to the point that the transport would be
         // taking over notifications. we'll handle them our selves.
 
+        nsCOMPtr<nsIIOService> serv = do_GetService(kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
         if (mObserver) {
             nsCOMPtr<nsIStreamObserver> asyncObserver;
             rv = NS_NewAsyncStreamObserver(getter_AddRefs(asyncObserver), mObserver, mEventQueue);
@@ -1829,7 +1829,7 @@ nsFtpConnectionThread::StopProcessing() {
 
             // we only want to fire OnStop. No OnStart has been fired, and
             // we only want to propagate an error.
-            rv = asyncObserver->OnStopRequest(mChannel, mObserverContext, mInternalError, errorMsg);
+            rv = asyncObserver->OnStopRequest(mChannel, mObserverContext, mInternalError, nsnull);
             if (NS_FAILED(rv)) return rv;
         }
 
@@ -1840,7 +1840,7 @@ nsFtpConnectionThread::StopProcessing() {
 
             // we only want to fire OnStop. No OnStart has been fired, and
             // we only want to propagate an error.
-            rv = asyncListener->OnStopRequest(mChannel, mListenerContext, mInternalError, errorMsg);
+            rv = asyncListener->OnStopRequest(mChannel, mListenerContext, mInternalError, nsnull);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -1869,36 +1869,6 @@ nsFtpConnectionThread::FindActionState(void) {
 
     return FTP_ERROR;
 }
-
-nsresult
-nsFtpConnectionThread::MapResultCodeToString(nsresult aResultCode, PRUnichar* *aOutMsg) {
-    nsCAutoString errorMsg;
-    switch (aResultCode) {
-    case NS_ERROR_FTP_LOGIN:
-            errorMsg = "FTP: Login failed.";
-            break;
-    case NS_ERROR_FTP_MODE:
-            errorMsg = "FTP: MODE command failed.";
-            break;
-    case NS_ERROR_FTP_CWD:
-            errorMsg = "FTP: CWD command failed.";
-            break;
-    case NS_ERROR_FTP_PASV:
-            errorMsg = "FTP: PASV command failed.";
-            break;
-    case NS_ERROR_FTP_DEL_DIR:
-            errorMsg = "FTP: DEL directory command failed.";
-            break;
-    case NS_ERROR_FTP_MKDIR:
-            errorMsg = "FTP: MKDIR command failed";
-            break;
-    default:
-            errorMsg = "Unknown FTP error.";
-    } // END: switch
-    *aOutMsg = errorMsg.ToNewUnicode();
-    return NS_OK;
-}
-
 
 void
 nsFtpConnectionThread::SetDirMIMEType(nsString& aString) {

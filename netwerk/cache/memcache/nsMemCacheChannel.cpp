@@ -138,15 +138,15 @@ public:
 
     NS_IMETHOD
     OnStopRequest(nsIChannel *channel, nsISupports *aContext,
-                  nsresult status, const PRUnichar *errorMsg) {
+                  nsresult aStatus, const PRUnichar* aStatusArg) {
         nsresult rv;
 
 		
 		NS_ASSERTION(mDownstreamListener, "no downstream listener");
 
 		if (mDownstreamListener) {
-			rv = mDownstreamListener->OnStopRequest(mChannel, aContext, status, errorMsg);
-		    mDownstreamListener = 0;
+            rv = mDownstreamListener->OnStopRequest(mChannel, aContext, aStatus, aStatusArg);
+            mDownstreamListener = 0;
 		}
 		// Tricky: causes this instance to be free'ed because mEventQueueStreamListener
 		// has a circular reference back to this.

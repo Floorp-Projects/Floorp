@@ -1151,19 +1151,19 @@ public:
     }
 
     NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
-                             nsresult status, const PRUnichar *errorMsg) {
-        if (NS_FAILED(status))
+                             nsresult aStatus, const PRUnichar* aStatusArg) {
+        if (NS_FAILED(aStatus))
             mCacheEntry->SetFlag(nsCachedNetData::TRUNCATED_CONTENT);
     
         mCacheEntry->ClearFlag(nsCachedNetData::VESTIGIAL);
         mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
 				
-				if (mCacheStream )
-					mCacheStream->Close();
+        if (mCacheStream )
+            mCacheStream->Close();
         // Tell any stream-as-file observers that the file has been completely written
         mCacheEntry->Notify(nsIStreamAsFileObserver::NOTIFY_AVAILABLE, NS_OK);
 
-        return mOriginalListener->OnStopRequest(channel, ctxt, status, errorMsg);
+        return mOriginalListener->OnStopRequest(channel, ctxt, aStatus, aStatusArg);
     }
 
     NS_IMETHOD OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,

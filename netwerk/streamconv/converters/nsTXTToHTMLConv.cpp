@@ -84,7 +84,7 @@ nsTXTToHTMLConv::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
 
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
-                               nsresult aStatus, const PRUnichar *aMsg) {
+                               nsresult aStatus, const PRUnichar* aStatusArg) {
     nsresult rv = NS_OK;
     if (mToken) {
         // we still have an outstanding token
@@ -109,7 +109,7 @@ nsTXTToHTMLConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
                                     inputData, 0, mBuffer.Length());
     if (NS_FAILED(rv)) return rv;
 
-    return mListener->OnStopRequest(aChannel, aContext, aStatus, aMsg);
+    return mListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg);
 }
 
 // nsITXTToHTMLConv methods

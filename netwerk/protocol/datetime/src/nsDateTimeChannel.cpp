@@ -339,7 +339,7 @@ NS_IMETHODIMP
 nsDateTimeChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
     if (mLoadGroup) // if we already had a load group remove ourselves...
-      (void)mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+      (void)mLoadGroup->RemoveChannel(this, nsnull, NS_OK, nsnull);
 
     mLoadGroup = aLoadGroup;
     if (mLoadGroup) {
@@ -394,12 +394,12 @@ nsDateTimeChannel::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
 
 NS_IMETHODIMP
 nsDateTimeChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
-                                      nsresult aStatus, const PRUnichar* aMsg) {
+                                 nsresult aStatus, const PRUnichar* aStatusArg) {
     if (mLoadGroup) {
-        nsresult rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
+        nsresult rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aStatusArg);
         if (NS_FAILED(rv)) return rv;
     }
-    return mListener->OnStopRequest(this, aContext, aStatus, aMsg);
+    return mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
 }
 
 

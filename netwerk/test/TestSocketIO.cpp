@@ -116,10 +116,8 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnStopRequest(nsIChannel* channel,
-                                 nsISupports* context,
-                                 nsresult aStatus,
-                                 const PRUnichar* aMsg)
+InputTestConsumer::OnStopRequest(nsIChannel* channel, nsISupports* context,
+                                 nsresult aStatus, const PRUnichar* aStatusArg)
 {
   gKeepRunning = 0;
   printf("\n+++ InputTestConsumer::OnStopRequest (status = %x) +++\n", aStatus);
@@ -169,8 +167,7 @@ TestWriteObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
 
 NS_IMETHODIMP
 TestWriteObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
-                                 nsresult aStatus,
-                                 const PRUnichar* aMsg)
+                                 nsresult aStatus, const PRUnichar* aStatusArg)
 {
   printf("\n+++ TestWriteObserver::OnStopRequest (status = %x) +++\n", aStatus);
 

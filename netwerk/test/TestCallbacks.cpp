@@ -118,7 +118,7 @@ Consumer::OnStartRequest(nsIChannel *aChannel, nsISupports* aContext) {
 
 NS_IMETHODIMP
 Consumer::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
-                        nsresult aStatus, const PRUnichar* aMsg) {
+                        nsresult aStatus, const PRUnichar* aStatusArg) {
     fprintf(stderr, "Consumer::OnStop() -> in\n\n");
 
     if (!mOnStart) {

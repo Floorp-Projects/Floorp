@@ -680,7 +680,9 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnStateChange(nsIWebProgress *progress, nsIRequ
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::OnLocationChange(nsIURI *aLocation)
+NS_IMETHODIMP GtkMozEmbedChrome::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                  nsIRequest* aRequest,
+                                                  nsIURI *aLocation)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnLocationChange\n"));
   char *newURIString = NULL;
@@ -692,6 +694,15 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnLocationChange(nsIURI *aLocation)
   if (mLocationCB)
     mLocationCB(mLocationCBData);
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+GtkMozEmbedChrome::OnStatusChange(nsIWebProgress* aWebProgress,
+                                  nsIRequest* aRequest,
+                                  nsresult aStatus,
+                                  const PRUnichar* aMessage)
+{
+    return NS_OK;
 }
 
 // nsIBaseWindow interface

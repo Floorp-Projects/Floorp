@@ -47,8 +47,6 @@
 #define MAX_OPEN_CONNECTIONS 50
 #define DEFAULT_POLL_TIMEOUT_IN_MS  35*1000
 
-#define NECKO_MSGS_URL  "chrome://necko/locale/necko.properties"
-
 // Forward declarations...
 class nsSocketTransport;
 

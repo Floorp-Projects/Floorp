@@ -540,6 +540,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
                     mOnStartReadFired  = PR_TRUE;
                     mReadListener -> OnStartRequest (this , mReadContext);
                 }
+
                 mReadListener -> OnStopRequest(this, mReadContext, mStatus, nsnull);
                 mReadListener = null_nsCOMPtr ();
                 mReadContext  = null_nsCOMPtr ();
@@ -570,6 +571,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
                     mOnStartWriteFired = PR_TRUE;
                     mWriteObserver -> OnStartRequest (this, mWriteContext);
                 }
+
                 mWriteObserver -> OnStopRequest(this, mWriteContext, mStatus, nsnull);
                 mWriteObserver = null_nsCOMPtr ();
                 mWriteContext  = null_nsCOMPtr ();
@@ -2410,82 +2412,36 @@ nsSocketTransport::SetSocketConnectTimeout (PRUint32   a_Seconds)
 nsresult
 nsSocketTransport::fireStatus(PRUint32 aCode)
 {
-  // need to optimize this - TODO
-  nsXPIDLString tempmesg;
-  nsresult rv = GetSocketErrorString(aCode, getter_Copies(tempmesg));
+    if (!mEventSink)
+        return NS_ERROR_FAILURE;
 
-  nsAutoString mesg(tempmesg);
-  mesg.AppendWithConversion(mHostName);
-
-  if (NS_FAILED(rv)) return rv;
-
-  return mEventSink ? mEventSink->OnStatus(this,
-                                           mReadContext, 
-                                           mesg.GetUnicode()) // this gets freed elsewhere.
-                    : NS_ERROR_FAILURE;
-}
-
-//TODO l10n and i18n stuff here!
-nsresult
-nsSocketTransport::GetSocketErrorString(PRUint32 iCode, 
-        PRUnichar** oString) const
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    if (!oString)
-        return NS_ERROR_NULL_POINTER;
-
-    *oString = nsnull;
-
-    switch (iCode) /* these are currently just nsSocketState 
-                      (as in nsSocketTransport.h) */
-    {
-        case eSocketState_Created: 
-        case eSocketState_WaitDNS:
-            {
-                // STRING USE WARNING: this needs to be looked at -- scc
-                mService -> GetNeckoStringByName ("ResolvingHost", oString);
-                if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
-                rv = NS_OK;
-            }
-            break;
-        case eSocketState_Connected:
-            {
-                  // STRING USE WARNING: this needs to be looked at -- scc
-                mService -> GetNeckoStringByName ("ConnectedTo", oString);
-                if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
-                rv = NS_OK;
-            }
-            break;
-        case eSocketState_WaitReadWrite:
-            {
-                  // STRING USE WARNING: this needs to be looked at -- scc
-                static nsAutoString frommesg; frommesg.AssignWithConversion("Transferring data from ");
-                static nsAutoString tomesg; tomesg.AssignWithConversion("Sending request to ");
-                if (mWriteContext == nsnull)
-                    mService -> GetNeckoStringByName ("SendingRequestTo", oString);
-                else
-                    mService -> GetNeckoStringByName ("TransferringDataFrom", oString);
-
-                if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
-                rv = NS_OK;
-            }
-            break;
-        case eSocketState_WaitConnect:
-            {
-                  // STRING USE WARNING: this needs to be looked at -- scc
-                mService -> GetNeckoStringByName ("ConnectingTo", oString);
-                if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
-                rv = NS_OK;
-            }
-            break;
-        case eSocketState_Closed:
-        case eSocketState_Done:
-        case eSocketState_Timeout:
-        case eSocketState_Error:
-        case eSocketState_Max:
-        default:
-            return rv; // just return error, ie no status strings for this case
-            break;
+    nsresult status;
+    switch (aCode) {
+      case eSocketState_Created: 
+      case eSocketState_WaitDNS:
+        status = NS_NET_STATUS_RESOLVING_HOST;
+        break;
+      case eSocketState_Connected:
+        status = NS_NET_STATUS_CONNECTED_TO;
+        break;
+      case eSocketState_WaitReadWrite:
+        status = mWriteContext
+            ? NS_NET_STATUS_RECEIVING_FROM
+            : NS_NET_STATUS_SENDING_TO;
+        break;
+      case eSocketState_WaitConnect:
+        status = NS_NET_STATUS_CONNECTING_TO;
+        break;
+      case eSocketState_Closed:
+      case eSocketState_Done:
+      case eSocketState_Timeout:
+      case eSocketState_Error:
+      case eSocketState_Max:
+      default: 
+        status = NS_OK;
+        break;
     }
-    return rv;
+
+    nsAutoString host; host.AssignWithConversion(mHostName);
+    return mEventSink->OnStatus(this, mReadContext, status, host.GetUnicode());
 }

@@ -28,7 +28,6 @@ interface nsIStreamObserver;
 interface nsIStreamListener;
 interface nsIInputStream;
 
-
 [scriptable, uuid(60fdf550-5392-11d3-9a97-0080c7cb1080)]
 interface nsILoadGroupListenerFactory : nsISupports
 {
@@ -75,7 +74,7 @@ interface nsILoadGroup : nsIRequest
     void removeChannel(in nsIChannel channel, 
                        in nsISupports ctxt,
                        in nsresult status,
-                       in wstring errorMsg);
+                       in wstring statusArg);
 
     /**
      * Returns the channels contained directly in this group.

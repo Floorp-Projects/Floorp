@@ -101,9 +101,10 @@ nsHTTPCompressConv::OnStartRequest (nsIChannel *aChannel, nsISupports *aContext)
 } 
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnStopRequest  (nsIChannel *aChannel, nsISupports *aContext, nsresult status, const PRUnichar *errorMsg)
+nsHTTPCompressConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext, 
+                                  nsresult aStatus, const PRUnichar* aStatusArg)
 {
-    return mListener -> OnStopRequest  (aChannel, aContext, status, errorMsg);
+    return mListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg);
 } 
 
 NS_IMETHODIMP

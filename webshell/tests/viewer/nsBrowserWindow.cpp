@@ -2176,11 +2176,19 @@ nsBrowserWindow::OnProgress(nsIChannel* channel, nsISupports *ctxt,
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::OnStatus(nsIChannel* channel, nsISupports *ctxt, const PRUnichar *aMsg)
+nsBrowserWindow::OnStatus(nsIChannel* channel, nsISupports *ctxt,
+                          nsresult aStatus, const PRUnichar *aStatusArg)
 {
   if (mStatus) {
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> sbs = do_GetService(kStringBundleServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLString msg;
+    rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(msg));
+    if (NS_FAILED(rv)) return rv;
     PRUint32 size;
-    mStatus->SetText(aMsg,size);
+    nsAutoString msg2 = msg;
+    mStatus->SetText(msg2, size);
   }
   return NS_OK;
 }

@@ -447,7 +447,9 @@ nsWebBrowserChrome::OnStateChange(nsIWebProgress* aProgress,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIURI* aURI)
+NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                   nsIRequest* aRequest,
+                                                   nsIURI* aURI)
 {
    nsXPIDLCString spec;
 
@@ -463,6 +465,19 @@ NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIURI* aURI)
       }
 
    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
+                                   nsIRequest* aRequest,
+                                   nsresult aStatus,
+                                   const PRUnichar* aMessage)
+{
+    if (mBrowserWindow->mStatus) {
+        PRUint32 size;
+        mBrowserWindow->mStatus->SetText(aMessage, size);
+    }
+    return NS_OK;
 }
 
 //*****************************************************************************
@@ -574,7 +589,7 @@ void nsWebBrowserChrome::OnLoadFinished(nsIRequest* aRequest,
 
   if(mBrowserWindow->mStatus)
      {
-     PRUint32 size;
+//     PRUint32 size;
 
      msg.AppendWithConversion(" done.");
 

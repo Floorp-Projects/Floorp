@@ -446,7 +446,9 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
 
 NS_IMETHODIMP 
-nsSecureBrowserUIImpl::OnLocationChange(nsIURI* aLocation)
+nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
+                                        nsIRequest* aRequest,
+                                        nsIURI* aLocation)
 {
     mCurrentURI = aLocation;
     
@@ -459,6 +461,14 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIURI* aLocation)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsSecureBrowserUIImpl::OnStatusChange(nsIWebProgress* aWebProgress,
+                                      nsIRequest* aRequest,
+                                      nsresult aStatus,
+                                      const PRUnichar* aMessage)
+{
+    return NS_OK;
+}
 
 nsresult
 nsSecureBrowserUIImpl::IsURLHTTPS(nsIURI* aURL, PRBool* value)

@@ -74,4 +74,11 @@ interface nsIFileTransportService : nsISupports
     0x11d2,                                          \
     {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
+
+/**
+ * Status nsresult codes: used with nsIProgressEventSink::OnStatus 
+ */
+#define NS_NET_STATUS_READ_FROM NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 8)
+#define NS_NET_STATUS_WROTE_TO  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 9)
+
 %}

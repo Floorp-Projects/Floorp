@@ -327,7 +327,8 @@ nsStreamIOChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 
   done:
     if (NS_FAILED(rv)) {
-        nsresult rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);       // XXX fix error message
+        nsresult rv2;
+        rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);
         NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
@@ -389,7 +390,8 @@ nsStreamIOChannel::AsyncWrite(nsIInputStream *fromStream,
 
   done:
     if (NS_FAILED(rv)) {
-        nsresult rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);       // XXX fix error message
+        nsresult rv2;
+        rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);
         NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
@@ -598,21 +600,24 @@ nsStreamIOChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* con
 
 NS_IMETHODIMP
 nsStreamIOChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
-                                 nsresult aStatus, const PRUnichar* aMsg)
+                                 nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
 
-    rv = mUserObserver->OnStopRequest(this, context, aStatus, aMsg);
+    rv = mUserObserver->OnStopRequest(this, context, aStatus, aStatusArg);
+    if (NS_FAILED(rv)) return rv;
 
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {
-            mLoadGroup->RemoveChannel(this, context, aStatus, aMsg);
+            rv = mLoadGroup->RemoveChannel(this, context, aStatus, aStatusArg);
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
     // Release the reference to the consumer stream listener...
     mUserObserver = null_nsCOMPtr();
     mFileTransport = null_nsCOMPtr();
+
     return mStreamIO->Close(aStatus);
 }
 

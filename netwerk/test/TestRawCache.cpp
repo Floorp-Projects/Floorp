@@ -37,6 +37,7 @@
 #include "prenv.h"
 #include "nsIFileStreams.h"
 #include "nsIFileSpec.h"
+
 // Number of test entries to be placed in the cache
 #define NUM_CACHE_ENTRIES  250
 
@@ -227,10 +228,8 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, 
-                             nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg) {
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
+                             nsresult aStatus, const PRUnichar* aStatusArg) {
         PRIntervalTime endTime;
         PRIntervalTime duration;
         

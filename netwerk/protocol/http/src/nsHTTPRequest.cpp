@@ -704,17 +704,16 @@ nsHTTPPipelinedRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_Conte
 
 NS_IMETHODIMP
 nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
-                              nsresult iStatus,
-                              const PRUnichar* i_Msg)
+                                      nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
     nsCOMPtr<nsISocketTransport> trans = do_QueryInterface(mTransport, &rv);
     
     nsHTTPRequest * req =(nsHTTPRequest *) mRequests->ElementAt(0);
-    
-    rv = iStatus;
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("\nnsHTTPRequest::OnStopRequest() [this=%x], iStatus=%u\n", this, iStatus));
+    rv = aStatus;
+
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("\nnsHTTPRequest::OnStopRequest() [this=%x], aStatus=%u\n", this, aStatus));
 
     if (NS_SUCCEEDED(rv))
     {
@@ -731,11 +730,11 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
             if (mInputStream)
             {
                 PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-("nsHTTPRequest [this=%x]. "
-                     "Writing PUT/POST data to the server.\n", this));
+                       ("nsHTTPRequest [this=%x]. "
+                        "Writing PUT/POST data to the server.\n", this));
 
                 rv = mTransport->AsyncWrite(mInputStream, this, 
-(nsISupports*)(nsIRequest*)req->mConnection);
+                                            (nsISupports*)(nsIRequest*)req->mConnection);
 
                 /* the mInputStream is released below... */
             }
@@ -745,9 +744,9 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
             else
             {
                 PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-("nsHTTPRequest [this=%x]. "
+                       ("nsHTTPRequest [this=%x]. "
                         "Finished writing request to server." 
-                        "\tStatus: %x\n", this, iStatus));
+                        "\tStatus: %x\n", this, aStatus));
 
                 if (mListener == nsnull)
                 {
@@ -783,9 +782,9 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
     else
     {
         PR_LOG(gHTTPLog, PR_LOG_ERROR, 
-("nsHTTPRequest [this=%x]. Error writing request to server."
-                 "\tStatus: %x\n", this, iStatus));
-        rv = iStatus;
+               ("nsHTTPRequest [this=%x]. Error writing request to server."
+                "\tStatus: %x\n", this, aStatus));
+        rv = aStatus;
     }
 
     //
@@ -833,7 +832,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
         {
             nsCOMPtr<nsIStreamListener> consumer;
             req->mConnection->GetResponseDataListener(getter_AddRefs(consumer));
-            req->mConnection->ResponseCompleted(consumer, rv, i_Msg);
+            req->mConnection->ResponseCompleted(consumer, rv, nsnull);
 
             // Notify the HTTPChannel that the request has finished
 

@@ -215,48 +215,48 @@ function nsXULBrowserWindow()
 
 nsXULBrowserWindow.prototype = 
 {
-	QueryInterface : function(iid)
-		{
-		if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
-			return this;
-		throw Components.results.NS_NOINTERFACE;
-		},
-	setJSStatus : function(status)
-		{
-		if(status == "")
-			jsStatus = null;
-		else
-			jsStatus = status;
-		UpdateStatusField();
-		},
-	setJSDefaultStatus : function(status)
-		{
-		if(status == "")
-			jsDefaultStatus = null;
-		else
-			jsDefaultStatus = status;
-		UpdateStatusField();
-		},
-	setDefaultStatus : function(status)
-		{
-		if(status == "")
-			defaultStatus = null;
-		else
-			defaultStatus = status;
-		UpdateStatusField();
-		},
-	setOverLink : function(link)
-		{
-		if(link == "")
-			overLink = null;
-		else
-			overLink = link;
-		UpdateStatusField();
-		},
+  QueryInterface : function(iid)
+  {
+    if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+  setJSStatus : function(status)
+  {
+    if(status == "")
+      jsStatus = null;
+    else
+      jsStatus = status;
+    UpdateStatusField();
+  },
+  setJSDefaultStatus : function(status)
+  {
+    if(status == "")
+      jsDefaultStatus = null;
+    else
+      jsDefaultStatus = status;
+    UpdateStatusField();
+  },
+  setDefaultStatus : function(status)
+  {
+    if(status == "")
+      defaultStatus = null;
+    else
+      defaultStatus = status;
+    UpdateStatusField();
+  },
+  setOverLink : function(link)
+  {
+    if(link == "")
+      overLink = null;
+    else
+      overLink = link;
+    UpdateStatusField();
+  },
   onProgress : function (channel, current, max)
   {
-   if(!statusMeter)
-     statusMeter = document.getElementById("statusbar-icon");
+    if(!statusMeter)
+      statusMeter = document.getElementById("statusbar-icon");
     var percentage = 0;
 
     if (!useRealProgressFlag && (channel != null)) {
@@ -275,19 +275,19 @@ nsXULBrowserWindow.prototype =
         statusMeter.setAttribute("mode","undetermined");
     }
   },
-	onStatusChange : function(channel, status)
-		{
-		if(!throbberElement)
-			throbberElement = document.getElementById("navigator-throbber");
-		if(!statusMeter)
-			statusMeter = document.getElementById("statusbar-icon");
-		if(!stopButton)
-			stopButton = document.getElementById("stop-button");
-		if(!stopMenu)
-			stopMenu = document.getElementById("menuitem-stop");
+  onStateChange : function(channel, state)
+  {
+    if(!throbberElement)
+      throbberElement = document.getElementById("navigator-throbber");
+    if(!statusMeter)
+      statusMeter = document.getElementById("statusbar-icon");
+    if(!stopButton)
+      stopButton = document.getElementById("stop-button");
+    if(!stopMenu)
+      stopMenu = document.getElementById("menuitem-stop");
 
-    if (status & Components.interfaces.nsIWebProgressListener.flag_start) {
-      if(status & Components.interfaces.nsIWebProgressListener.flag_is_network) {
+    if (state & Components.interfaces.nsIWebProgressListener.flag_start) {
+      if(state & Components.interfaces.nsIWebProgressListener.flag_is_network) {
         // Remember when loading commenced.
         startTime = (new Date()).getTime();
         // Turn progress meter on.
@@ -304,25 +304,27 @@ nsXULBrowserWindow.prototype =
         totalRequests = 0;
         finishedRequests = 0;
       }
-      if (status & Components.interfaces.nsIWebProgressListener.flag_is_request) {
+      if (state & Components.interfaces.nsIWebProgressListener.flag_is_request) {
         totalRequests += 1;
       }
     }
-    else if (status & Components.interfaces.nsIWebProgressListener.flag_stop) {
-      if (status & Components.interfaces.nsIWebProgressListener.flag_is_request) {
+    else if (state & Components.interfaces.nsIWebProgressListener.flag_stop) {
+      if (state & Components.interfaces.nsIWebProgressListener.flag_is_request) {
         finishedRequests += 1;
         if (!useRealProgressFlag) {
           this.onProgress(null, finishedRequests, totalRequests);
         }
       }
-      if(status & Components.interfaces.nsIWebProgressListener.flag_is_network) {
+      if(state & Components.interfaces.nsIWebProgressListener.flag_is_network) {
         // Record page loading time.
         var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
         var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
         dump( msg + "\n" );
         defaultStatus = msg;
         UpdateStatusField();
-        window.XULBrowserWindow.setDefaultStatus(msg);
+        //window.XULBrowserWindow.setDefaultStatus(msg);
+        //this.setDefaultStatus(msg);
+        this.setOverLink(msg);
         // Turn progress meter off.
         statusMeter.setAttribute("mode","normal");
         statusMeter.value = 0;  // be sure to clear the progress bar
@@ -334,8 +336,8 @@ nsXULBrowserWindow.prototype =
         stopMenu.setAttribute("disabled", true);
       }
     }
-    else if (status & Components.interfaces.nsIWebProgressListener.flag_transferring) {
-      if (status & Components.interfaces.nsIWebProgressListener.flag_is_document) {
+    else if (state & Components.interfaces.nsIWebProgressListener.flag_transferring) {
+      if (state & Components.interfaces.nsIWebProgressListener.flag_is_document) {
         var ctype=channel.contentType;
   
         if (ctype != "text/html") {
@@ -343,25 +345,30 @@ nsXULBrowserWindow.prototype =
         }
         statusMeter.setAttribute("mode", "normal");
       }
-      if (status & Components.interfaces.nsIWebProgressListener.flag_is_request) {
+      if (state & Components.interfaces.nsIWebProgressListener.flag_is_request) {
         if (!useRealProgressFlag) {
           this.onProgress(null, finishedRequests, totalRequests);
         }
       }
     }
 
-		},
-	onLocationChange : function(location)
-		{
-		if(!locationFld)
-			locationFld = document.getElementById("urlbar");
+  },
+  onLocationChange : function(location)
+  {
+    if(!locationFld)
+      locationFld = document.getElementById("urlbar");
 
-		// We should probably not do this if the value has changed since the user 
-		// searched
-		locationFld.setAttribute("value", location);
+    // We should probably not do this if the value has changed since the user 
+    // searched
+    locationFld.setAttribute("value", location);
 
-		UpdateBackForwardButtons();
-		}
+    UpdateBackForwardButtons();
+  },
+  onStatus : function(channel, status, msg)
+  {
+    this.setOverLink(msg);
+    //this.setDefaultStatus(msg);
+  }
 }
 
 function UpdateBackForwardButtons()
@@ -1503,8 +1510,13 @@ var leakDetector = null;
 
 // Dumps current set of memory leaks.
 function dumpMemoryLeaks() {
-	if (leakDetector == null)
-		leakDetector = createInstance("component://netscape/xpcom/leakdetector", "nsILeakDetector");
+    if (leakDetector == null) {
+        leakDetector = createInstance("component://netscape/xpcom/leakdetector", "nsILeakDetector");
+        if (leakDetector == null) {
+            dump("Could not create leak detector, leak detection probably\n");
+            dump("not compiled into this browser\n");
+        }
+    }
 	if (leakDetector != null)
 		leakDetector.dumpLeaks();
 }

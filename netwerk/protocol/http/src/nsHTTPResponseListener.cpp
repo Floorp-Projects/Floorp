@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -45,6 +45,7 @@
 #include "nsXPIDLString.h" 
 
 #include "nsIIOService.h"
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID) ;
 
 #if defined(PR_LOGGING) 
@@ -149,10 +150,8 @@ nsHTTPCacheListener::OnStartRequest(nsIChannel *aChannel,
 }
 
 NS_IMETHODIMP
-nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel,
-                                   nsISupports *aContext,
-                                   nsresult aStatus,
-                                   const PRUnichar *aErrorMsg) 
+nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
+                                   nsresult aStatus, const PRUnichar* aStatusArg) 
 {
     PR_LOG(gHTTPLog, PR_LOG_DEBUG,
             ("nsHTTPCacheListener::OnStopRequest [this=%x]\n", this)) ;
@@ -162,9 +161,7 @@ nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel,
     // is no socket transport involved nsnull is passed as the
     // transport...
     //
-    nsresult rv = mChannel->ResponseCompleted(mResponseDataListener, 
-                                     aStatus, 
-                                     aErrorMsg) ;
+    nsresult rv = mChannel->ResponseCompleted(mResponseDataListener, aStatus, aStatusArg) ;
 //    NS_IF_RELEASE(mChannel) ;
     return rv;
 }
@@ -664,7 +661,8 @@ nsHTTPServerListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContex
 }
 
 NS_IMETHODIMP
-nsHTTPServerListener::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext, nsresult i_Status, const PRUnichar* i_pMsg) 
+nsHTTPServerListener::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext, 
+                                    nsresult i_Status, const PRUnichar* aStatusArg) 
 {
     nsresult rv = i_Status, channelStatus = NS_OK;
 
@@ -672,7 +670,7 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext
         mChannel->GetStatus(&channelStatus) ;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-("nsHTTPServerListener::OnStopRequest [this=%x]."
+           ("nsHTTPServerListener::OnStopRequest [this=%x]."
             "\tStatus = %x, mDataReceived=%d\n", this, i_Status, mDataReceived)) ;
 
     if (NS_SUCCEEDED(channelStatus) && !mDataReceived
@@ -718,7 +716,7 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext
 
         if (status != 304 || !mChannel->mCachedResponse) 
         {
-            mChannel->ResponseCompleted(mResponseDataListener, i_Status, i_pMsg) ;
+            mChannel->ResponseCompleted(mResponseDataListener, i_Status, aStatusArg);
             mChannel->mHTTPServerListener = 0;
         }
 
@@ -787,7 +785,7 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext
             while (NS_SUCCEEDED(mPipelinedRequest->AdvanceToNextRequest()) ) 
             {
                 OnStartRequest(nsnull, nsnull) ;
-                mChannel->ResponseCompleted(mResponseDataListener, i_Status, i_pMsg) ;
+                mChannel->ResponseCompleted(mResponseDataListener, i_Status, aStatusArg);
                 mChannel->mHTTPServerListener = 0;
             }
 
@@ -1157,13 +1155,11 @@ nsHTTPFinalListener::OnStartRequest(nsIChannel *aChannel,
 }
 
 NS_IMETHODIMP
-nsHTTPFinalListener::OnStopRequest(nsIChannel *aChannel,
-                                   nsISupports *aContext,
-                                   nsresult aStatus,
-                                   const PRUnichar *aErrorMsg) 
+nsHTTPFinalListener::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
+                                   nsresult aStatus, const PRUnichar* aStatusArg) 
 {
     PR_LOG(gHTTPLog, PR_LOG_DEBUG,
-("nsHTTPFinalListener::OnStopRequest [this=%x]"
+           ("nsHTTPFinalListener::OnStopRequest [this=%x]"
             ", mOnStopFired=%u\n", this, mOnStopFired)) ;
 
     if (mShutdown || mOnStopFired) 
@@ -1192,7 +1188,7 @@ nsHTTPFinalListener::OnStopRequest(nsIChannel *aChannel,
     }
 
     mOnStopFired = PR_TRUE;
-    nsresult rv = mListener->OnStopRequest(aChannel, aContext, aStatus, aErrorMsg) ;
+    nsresult rv = mListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg) ;
 
     return rv;
 }

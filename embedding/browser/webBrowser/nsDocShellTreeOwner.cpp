@@ -452,12 +452,26 @@ nsDocShellTreeOwner::OnStateChange(nsIWebProgress* aProgress,
                                                 aStatus);
 }
 
-NS_IMETHODIMP nsDocShellTreeOwner::OnLocationChange(nsIURI* aURI)
+NS_IMETHODIMP nsDocShellTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                    nsIRequest* aRequest,
+                                                    nsIURI* aURI)
 {
    if(!mOwnerProgressListener)
       return NS_OK;
 
-   return mOwnerProgressListener->OnLocationChange(aURI);
+   return mOwnerProgressListener->OnLocationChange(aWebProgress, aRequest, aURI);
+}
+
+NS_IMETHODIMP 
+nsDocShellTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
+                                    nsIRequest* aRequest,
+                                    nsresult aStatus,
+                                    const PRUnichar* aMessage)
+{
+   if(!mOwnerProgressListener)
+      return NS_OK;
+
+   return mOwnerProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
 }
 
 //*****************************************************************************

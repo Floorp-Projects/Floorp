@@ -107,7 +107,8 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
+                             nsresult aStatus, const PRUnichar* aStatusArg)
     {
         return NS_OK;
     }

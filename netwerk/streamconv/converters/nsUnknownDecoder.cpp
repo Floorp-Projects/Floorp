@@ -196,10 +196,8 @@ nsUnknownDecoder::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
 }
 
 NS_IMETHODIMP
-nsUnknownDecoder::OnStopRequest(nsIChannel *aChannel,
-                                nsISupports *aCtxt,
-                                nsresult aStatus, 
-                                const PRUnichar *aErrorMsg)
+nsUnknownDecoder::OnStopRequest(nsIChannel *aChannel, nsISupports *aCtxt,
+                                nsresult aStatus, const PRUnichar* aStatusArg)
 {
   nsresult rv = NS_OK;
 
@@ -221,7 +219,7 @@ nsUnknownDecoder::OnStopRequest(nsIChannel *aChannel,
     }
   }
 
-  rv = mNextListener->OnStopRequest(aChannel, aCtxt, aStatus, aErrorMsg);
+  rv = mNextListener->OnStopRequest(aChannel, aCtxt, aStatus, aStatusArg);
   mNextListener = 0;
 
   return rv;
