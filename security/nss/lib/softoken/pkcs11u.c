@@ -408,6 +408,9 @@ pk11_GetPublicKey(PK11TokenObject *object)
     }
     privKey = nsslowkey_FindKeyByPublicKey(object->obj.slot->keyDB,
 				&object->dbKey, object->obj.slot->password);
+    if (privKey == NULL) {
+	return NULL;
+    }
     pubKey = nsslowkey_ConvertToPublicKey(privKey);
     nsslowkey_DestroyPrivateKey(privKey);
     object->obj.objectInfo = (void *) pubKey;
@@ -429,6 +432,9 @@ pk11_GetPrivateKey(PK11TokenObject *object)
     }
     privKey = nsslowkey_FindKeyByPublicKey(object->obj.slot->keyDB,
 				&object->dbKey, object->obj.slot->password);
+    if (privKey == NULL) {
+	return NULL;
+    }
     object->obj.objectInfo = (void *) privKey;
     object->obj.infoFree = (PK11Free) nsslowkey_DestroyPrivateKey ;
     return privKey;
