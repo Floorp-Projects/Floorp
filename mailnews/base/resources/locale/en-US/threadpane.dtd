@@ -27,7 +27,7 @@ Rights Reserved.
 <!ENTITY sizeColumn.label "Size">
 <!ENTITY unreadColumn.label "Unread">
 <!ENTITY totalColumn.label "Total">
-<!ENTITY orderReceivedColumn.label "Order Received">
+<!ENTITY orderReceivedColumn.label " ">
 
 <!--Tooltips-->
 <!ENTITY threadColumnHeader.tooltip "Click to display message threads"> 

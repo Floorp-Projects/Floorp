@@ -94,6 +94,9 @@ Rights Reserved.
 	<broadcaster id="button_replyall"/>
 	<broadcaster id="button_forward"/>
 
+	<broadcaster id="cmd_expandAllThreads" oncommand="goDoCommand('cmd_expandAllThreads')" disabled="true"/>
+	<broadcaster id="cmd_collapseAllThreads" oncommand="goDoCommand('cmd_collapseAllThreads')" disabled="true"/>
+
 </broadcasterset>
 
 <keyset id="keyset">
@@ -484,6 +487,12 @@ Rights Reserved.
 			 value="&threadsMsgsCmd.label;"
 			 accesskey="&threadsMsgsCmd.accesskey;"
 			 observes="cmd_sortByThread"/>
+			<menu  id="menu_expandOrCollapse" value="&expandOrCollapseMenu.label;" accesskey="&expandOrCollapseMenu.accesskey;">
+				<menupopup>
+					<menuitem value="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" disabled="true" observes="cmd_expandAllThreads"/>
+					<menuitem value="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" disabled="true" observes="cmd_collapseAllThreads"/>
+				</menupopup>
+			</menu>
 			<menuseparator/>
 			<menuitem value="&viewAttachmentsInlineCmd.label;" accesskey="&viewAttachmentsInlineCmd.accesskey;" disabled="true" oncommand="MsgViewAttachInline();"/>
 			<menuitem value="&wrapLongLinesCmd.label;" accesskey="&wrapLongLinesCmd.accesskey;" disabled="true" oncommand="MsgWrapLongLines();"/>

@@ -145,6 +145,9 @@ var ThreadPaneController =
 				var threadTree = GetThreadTree();
 				if ( threadTree )
 				{
+					//if we're threaded we need to expand everything before selecting all
+					if(messageView.showThreads)
+						ExpandOrCollapseThreads(true);
 					threadTree.selectAll();
 					if ( threadTree.selectedItems && threadTree.selectedItems.length != 1 )
 						ClearMessagePane();
@@ -200,6 +203,8 @@ var DefaultController =
 			case "cmd_viewUnreadMsgs":
             case "cmd_undo":
             case "cmd_redo":
+			case "cmd_expandAllThreads":
+			case "cmd_collapseAllThreads":
 				return true;
 			default:
 				return false;
@@ -250,6 +255,11 @@ var DefaultController =
 				{
 					return true;
 				}
+				break;
+			case "cmd_expandAllThreads":
+			case "cmd_collapseAllThreads":
+				return messageView.showThreads;
+				break;
 			case "cmd_nextFlaggedMsg":
 			case "cmd_previousFlaggedMsg":
 			case "cmd_sortBySubject":
@@ -360,6 +370,12 @@ var DefaultController =
 			case "cmd_redo":
 				messenger.Redo(msgWindow);
 				break;
+			case "cmd_expandAllThreads":
+				ExpandOrCollapseThreads(true);
+				break;
+			case "cmd_collapseAllThreads":
+				ExpandOrCollapseThreads(false);
+				break;
 		}
 	},
 	
@@ -417,6 +433,8 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_sortByThread');
 	goUpdateCommand('cmd_viewAllMsgs');
 	goUpdateCommand('cmd_viewUnreadMsgs');
+	goUpdateCommand('cmd_expandAllThreads');
+	goUpdateCommand('cmd_collapseAllThreads');
 }
 
 function SetupUndoRedoCommand(command)
@@ -667,5 +685,22 @@ function FillInFolderTooltip(cellNode)
 }
 
 
+//Sets the thread tree's template's treeitem to be open so that all threads are expanded.
+function ExpandOrCollapseThreads(expand)
+{
+	SetTemplateTreeItemOpen(expand);
+	RefreshThreadTreeView();
+}
 
+function SetTemplateTreeItemOpen(open)
+{
+	var templateTreeItem = document.getElementById("threadTreeTemplateTreeItem");
+	if(templateTreeItem)
+	{
+		if(open)
+			templateTreeItem.setAttribute("open", "true");
+		else
+			templateTreeItem.removeAttribute("open");
+	}
+}
 

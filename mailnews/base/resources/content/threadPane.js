@@ -149,6 +149,7 @@ function ChangeThreadView()
 			ShowThreads(false);
 			if(folder)
 				folder.setAttribute('threaded', "");
+			SetTemplateTreeItemOpen(false);
 		}
 		else if(currentView == 'unthreaded')
 		{

@@ -240,6 +240,8 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
 
   // Since SetSentFolderColumns() may alter the template's structure,
   // we need to explicitly force the builder to recompile its rules.
+  //when switching folders, switch back to closing threads
+  SetTemplateTreeItemOpen(false);
   folder.builder.rebuild();
 
   folder.setAttribute('ref', uri);

@@ -129,6 +129,12 @@ Rights Reserved.
 <!ENTITY threadsMsgsCmd.accesskey "t">  
 <!ENTITY allMsgsCmd.label ".All">  
 <!ENTITY allMsgsCmd.accesskey "a">  
+<!ENTITY expandOrCollapseMenu.label "Expand/Collapse">  
+<!ENTITY expandOrCollapseMenu.accesskey "x">  
+<!ENTITY expandAllThreadsCmd.label "Expand All Threads">  
+<!ENTITY expandAllThreadsCmd.accesskey "e">  
+<!ENTITY collapseAllThreadsCmd.label "Collapse All Threads">  
+<!ENTITY collapseAllThreadsCmd.accesskey "c">  
 <!ENTITY unreadMsgsCmd.label ".Unread">  
 <!ENTITY unreadMsgsCmd.accesskey "u">  
 <!ENTITY threadsWithUnreadMsgsCmd.label ".Threads with Unread">  

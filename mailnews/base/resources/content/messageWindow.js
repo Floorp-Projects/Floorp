@@ -74,6 +74,9 @@ function HideMenus()
 	var message_menuitem=document.getElementById('menu_showMessage');
 	if(message_menuitem)
 		message_menuitem.setAttribute("hidden", "true");
+	var expandOrCollapseMenu = document.getElementById('menu_expandOrCollapse');
+	if(expandOrCollapseMenu)
+		expandOrCollapseMenu.setAttribute("hidden", "true");
 
 }
 

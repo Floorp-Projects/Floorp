@@ -48,9 +48,9 @@ Rights Reserved.
   <template>
   	<rule>
     <treechildren flex="1" >
-        <treeitem uri="...">
+        <treeitem uri="..." id="threadTreeTemplateTreeItem">
 
-              <treerow class="tree-thread-row" IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread">
+              <treerow class="tree-thread-row" IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread" >
                 <treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
                 <treecell class="treecell-indent tree-cell-threadpane-icon"
                   indent="true"
