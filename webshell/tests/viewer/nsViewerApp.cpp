@@ -248,7 +248,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
         }
       }
       else if (PL_strcmp(argv[i], "-q") == 0) {
-        mDoQuantify = PR_TRUE;
+        mJiggleLayout = PR_TRUE;
       }
       else if (PL_strcmp(argv[i], "-f") == 0) {
         mLoadTestFromFile = PR_TRUE;
@@ -303,7 +303,7 @@ nsViewerApp::OpenWindow()
   bw->Show();
 
   if (mDoPurify) {
-    mDocLoader = new nsDocLoader(bw, this, mDelay);
+    mDocLoader = new nsDocLoader(bw, this, mDelay, PR_TRUE, mJiggleLayout);
     mDocLoader->AddRef();
     for (PRInt32 i = 0; i < mRepeatCount; i++) {
       for (int docnum = 0; docnum < mNumSamples; docnum++) {
@@ -315,7 +315,7 @@ nsViewerApp::OpenWindow()
     mDocLoader->StartTimedLoading();
   }
   else if (mLoadTestFromFile) {
-    mDocLoader = new nsDocLoader(bw, this, mDelay);
+    mDocLoader = new nsDocLoader(bw, this, mDelay, PR_TRUE, mJiggleLayout);
     mDocLoader->AddRef();
     for (PRInt32 i = 0; i < mRepeatCount; i++) {
       AddTestDocsFromFile(mDocLoader, mInputFileName);
@@ -327,32 +327,18 @@ nsViewerApp::OpenWindow()
       mDocLoader->StartTimedLoading();
     }
   }
+  else if (mJiggleLayout) {
+    mDocLoader = new nsDocLoader(bw, this, mDelay, PR_TRUE, PR_TRUE);
+    mDocLoader->AddRef();
+    mDocLoader->AddURL(mStartURL);
+    mDocLoader->StartLoading();
+  }
   else {
     bw->LoadURL(mStartURL);
   }
 
   return NS_OK;
 }
-
-#if XXX_fix_me
-    if (mDoQuantify) {
-      // Synthesize 20 ResizeReflow commands (+/- 10 pixels) and then
-      // exit.
-#define kNumReflows 20
-      for (PRIntn i = 0; i < kNumReflows; i++) {
-        nsRect r;
-        bw->GetBounds(r);
-        if (i & 1) {
-          r.width -= 10;
-        }
-        else {
-          r.width += 10;
-        }
-        bw->SizeTo(r.width, r.height);
-      }
-    }
-    mAppShell->Exit();
-#endif
 
 //----------------------------------------
 
