@@ -555,6 +555,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 
 	mPresShell->SetCaretEnabled(PR_TRUE);
 
+  // Set the selection to the beginning, to make sure we have one:
+  BeginningOfDocument();
+
   NS_POSTCONDITION(mDoc && mPresShell, "bad state");
 
   return NS_OK;
@@ -1063,20 +1066,26 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
-    nsCOMPtr<nsIDOMNodeList>nodeList;
+    nsCOMPtr<nsIDOMNodeList> nodeList;
     nsAutoString bodyTag = "body";
     result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
     if ((NS_SUCCEEDED(result)) && nodeList)
     {
       PRUint32 count;
       nodeList->GetLength(&count);
-      NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
-      nsCOMPtr<nsIDOMNode>bodyNode;
+      NS_VERIFY(1==count, "there is not exactly 1 body in the document!");
+      nsCOMPtr<nsIDOMNode> bodyNode;
       result = nodeList->Item(0, getter_AddRefs(bodyNode));
       if ((NS_SUCCEEDED(result)) && bodyNode)
       {
-        result = selection->Collapse(bodyNode, 0);
-        ScrollIntoView(PR_TRUE);
+        // Get the first child of the body node:
+        nsCOMPtr<nsIDOMNode> firstNode;
+        result = bodyNode->GetFirstChild(getter_AddRefs(firstNode));
+        if (NS_SUCCEEDED(result))
+        {
+          result = selection->Collapse(firstNode, 0);
+          ScrollIntoView(PR_TRUE);
+        }
       }
     }
   }
@@ -1098,25 +1107,26 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
   nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
-    nsCOMPtr<nsIDOMNodeList>nodeList;
+    nsCOMPtr<nsIDOMNodeList> nodeList;
     nsAutoString bodyTag = "body";
     result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
     if ((NS_SUCCEEDED(result)) && nodeList)
     {
       PRUint32 count;
       nodeList->GetLength(&count);
-      NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
-      nsCOMPtr<nsIDOMNode>bodyNode;
+      NS_VERIFY(1==count, "there is not exactly 1 body in the document!");
+      nsCOMPtr<nsIDOMNode> bodyNode;
       result = nodeList->Item(0, getter_AddRefs(bodyNode));
       if ((NS_SUCCEEDED(result)) && bodyNode)
       {
-        PRInt32 numBodyChildren=0;
-        nsCOMPtr<nsIDOMNode>lastChild;
+        nsCOMPtr<nsIDOMNode> lastChild;
         result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
         if ((NS_SUCCEEDED(result)) && lastChild)
         {
-          GetChildOffset(lastChild, bodyNode, numBodyChildren);
-          result = selection->Collapse(bodyNode, numBodyChildren+1);
+          // XXX this is wrong, should iterate to collapse to
+          // XXX last child of last child of last ...
+          // XXX instead of beginning of last child of body.
+          result = selection->Collapse(lastChild, 0);
           ScrollIntoView(PR_FALSE);
         }
       }
