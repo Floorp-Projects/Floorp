@@ -193,16 +193,18 @@
   </tr>
 
   [% IF UserInGroup('editbugs') %]
-    <tr>
-      <td align="right" valign="top">
-        <strong>
-          <a href="describekeywords.cgi">Keywords</a>:
-        </strong>
-      </td>
-      <td colspan="3">
-        <input name="keywords" size="60" value=""> (optional)
-      </td>
-    </tr>
+    [% IF use_keywords %]
+      <tr>
+        <td align="right" valign="top">
+          <strong>
+            <a href="describekeywords.cgi">Keywords</a>:
+          </strong>
+        </td>
+        <td colspan="3">
+          <input name="keywords" size="60" value=""> (optional)
+        </td>
+      </tr>
+    [% END %]
     <tr>
       <td align="right">
         <strong>Depends on:</strong>

@@ -356,6 +356,8 @@ $vars->{'group'} = \@groups;
 
 $vars->{'default'} = \%default;
 
+$vars->{'use_keywords'} = 1 if (@::legal_keywords);
+
 my $format = 
   GetFormat("bug/create/create", $::FORM{'format'}, $::FORM{'ctype'});
 
