@@ -167,7 +167,7 @@ NS_IMPL_STRING_ATTR(nsHTMLTableElement, CellSpacing, cellspacing, eSetAttrNotify
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, Frame, frame, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, Rules, rules, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, Summary, summary, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, Width, width, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, Width, width, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetCaption(nsIDOMHTMLTableCaptionElement** aValue)

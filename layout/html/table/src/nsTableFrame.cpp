@@ -1613,7 +1613,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     if (PR_FALSE==IsFirstPassValid())
     {
       if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: first pass is invalid, rebuilding...\n");
-      rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState, aStatus, nsnull, aReflowState.reason, PR_TRUE);
+      nsReflowReason reason = aReflowState.reason;
+      if (eReflowReason_Initial!=reason)
+        reason = eReflowReason_Resize;
+      rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState, aStatus, nsnull, reason, PR_TRUE);
       if (NS_FAILED(rv))
         return rv;
       needsRecalc=PR_TRUE;
@@ -1749,6 +1752,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
                                          availSize, aReason);
         if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 1 of unknown frame %p of type %d with reason=%d\n", 
                                        kidFrame, childDisplay->mDisplay, aReason);
+        // rv intentionally not set here
         ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
         continue;
       }
@@ -1920,12 +1924,15 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   aReflowState.reflowState.reflowCommand->GetType(type);
   nsIFrame *objectFrame;
   aReflowState.reflowState.reflowCommand->GetChildFrame(objectFrame); 
-  const nsStyleDisplay *childDisplay;
-  objectFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+  const nsStyleDisplay *childDisplay=nsnull;
+  if (nsnull!=objectFrame)
+    objectFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
   if (PR_TRUE==gsDebugIR) printf("TIF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type)
   {
   case nsIReflowCommand::FrameInserted :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       rv = IR_ColGroupInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -1943,6 +1950,8 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     break;
   
   case nsIReflowCommand::FrameAppended :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       rv = IR_ColGroupAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -1961,10 +1970,14 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
 
   /*
   case nsIReflowCommand::FrameReplaced :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
 
   */
 
   case nsIReflowCommand::FrameRemoved :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       rv = IR_ColGroupRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -1982,9 +1995,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     break;
 
   case nsIReflowCommand::StyleChanged :
-    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-    if (PR_TRUE==gsDebugIR) printf("TIF IR: StyleChanged not implemented.\n");
+    rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
   case nsIReflowCommand::ContentChanged :
@@ -2198,6 +2209,36 @@ NS_METHOD nsTableFrame::IR_ColGroupRemoved(nsIPresContext&        aPresContext,
   //XXX: what we want to do here is determine if the new COL information changes anything about layout
   //     if not, skip invalidating the first passs
   //     if so, and we can fix the first pass info
+  return rv;
+}
+
+NS_METHOD nsTableFrame::IR_StyleChanged(nsIPresContext&        aPresContext,
+                                        nsHTMLReflowMetrics&   aDesiredSize,
+                                        InnerTableReflowState& aReflowState,
+                                        nsReflowStatus&        aStatus)
+{
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_StyleChanged for frame %p\n", this);
+  nsresult rv = NS_OK;
+  // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
+  // XXX: we can optimize this when we know which style attribute changed
+  //      if something like border changes, we need to do pass1 again
+  //      but if something like width changes, we just need to do pass2
+  InvalidateFirstPassCache();
+
+  // we are obligated to pass along the reflow command to our children before doing anything else
+  /*
+  nsIFrame *childFrame = mFirstChild;
+  while (nsnull!=childFrame)
+  {
+    nsHTMLReflowState childReflowState(aPresContext, childFrame, aReflowState.reflowState,
+                                       aReflowState.availSize, eReflowReason_Incremental);
+    rv = ReflowChild(childFrame, aPresContext, aDesiredSize, childReflowState, aStatus);
+    if (NS_FAILED(rv))
+      break;
+    // the returned desired size is irrelevant, because we'll do a resize reflow in a moment
+    childFrame->GetNextSibling(childFrame);
+  }
+  */
   return rv;
 }
 
@@ -2446,7 +2487,6 @@ void nsTableFrame::PlaceChild(nsIPresContext&    aPresContext,
  * @return  true if we successfully reflowed all the mapped children and false
  *            otherwise, e.g. we pushed children to the next in flow
  */
- // XXX: this interface should change to pass in aStatus, return nsresult
 NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
                                              nsHTMLReflowMetrics& aDesiredSize,
                                              InnerTableReflowState& aReflowState,
@@ -2891,6 +2931,7 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
   // then the width attribute also acts as the width attribute for the entire column
   // if the cell has a colspan, the width is used provisionally, divided equally among 
   // the spanned columns
+  if (PR_TRUE==gsDebug) printf("TIF SetCSFromCell: cell %p in row %p\n", aCellFrame, aRowFrame); 
   if ((nsnull!=aCellFrame) && (nsnull!=aRowFrame))
   {
     // get the cell style info
@@ -2901,23 +2942,23 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
       // compute the width per column spanned
       PRInt32 colSpan = GetEffectiveColSpan(aCellFrame->GetColIndex(), aCellFrame);
       if (PR_TRUE==gsDebug)
-        printf("for col %d with colspan %d\n",aCellFrame->GetColIndex(), colSpan);
+        printf("TIF SetCSFromCell: for col %d with colspan %d\n",aCellFrame->GetColIndex(), colSpan);
       for (PRInt32 i=0; i<colSpan; i++)
       {
         // get the appropriate column frame
         nsTableColFrame *colFrame;
         GetColumnFrame(i+aCellFrame->GetColIndex(), colFrame);
         if (PR_TRUE==gsDebug)
-          printf("  for col %d\n",i+aCellFrame->GetColIndex()); 
+          printf("TIF SetCSFromCell: for col %d\n",i+aCellFrame->GetColIndex()); 
         if (nsTableColFrame::eWIDTH_SOURCE_CELL != colFrame->GetWidthSource()) 
         {
           if (PR_TRUE==gsDebug)
-            printf("  width not yet set from a cell...\n");
+            printf("TIF SetCSFromCell: width not yet set from a cell...\n");
           if ((1==colSpan) ||
               (nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN != colFrame->GetWidthSource()))
           {
             if (PR_TRUE==gsDebug)
-              printf("  colspan was 1 or width was not set from a span\n");
+              printf("TIF SetCSFromCell: colspan was 1 or width was not set from a span\n");
             // get the column style and set the width attribute
             nsIStyleContext *colSC;
             colFrame->GetStyleContext(&aPresContext, colSC);
@@ -2929,27 +2970,27 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
               nscoord width = cellPosition->mWidth.GetCoordValue();
               colPosition->mWidth.SetCoordValue(width/colSpan);
               if (PR_TRUE==gsDebug)
-                printf("  col fixed width set to %d ", (width/colSpan));
+                printf("TIF SetCSFromCell: col fixed width set to %d ", (width/colSpan));
             }
             else
             {
               float width = cellPosition->mWidth.GetPercentValue();
               colPosition->mWidth.SetPercentValue(width/colSpan);
               if (PR_TRUE==gsDebug)
-                printf("  col percent width set to %d ", (width/colSpan));
+                printf("TIF SetCSFromCell: col percent width set to %d ", (width/colSpan));
             }
             // set the column width-set-type
             if (1==colSpan)
             {
               colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL);
               if (PR_TRUE==gsDebug)
-                printf("  source=cell\n");
+                printf("  source = CELL\n");
             }
             else
             {
               colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN);
               if (PR_TRUE==gsDebug)
-                printf("  source=cell_with_span\n");
+                printf("  source = SPAN\n");
             }
           }
         }

@@ -361,6 +361,11 @@ protected:
                                 InnerTableReflowState& aReflowState,
                                 nsReflowStatus&        aStatus,
                                 nsTableRowGroupFrame * aDeletedFrame);
+
+  NS_IMETHOD IR_StyleChanged(nsIPresContext&        aPresContext,
+                             nsHTMLReflowMetrics&   aDesiredSize,
+                             InnerTableReflowState& aReflowState,
+                             nsReflowStatus&        aStatus);
   
   NS_IMETHOD AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
                                        InnerTableReflowState& aReflowState,

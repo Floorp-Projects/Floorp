@@ -111,9 +111,17 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *myColor, 0, 0);
-
+    
+    //XXX: this could be calculated once and remembered
+    // get border padding values
+    nsMargin borderPadding;
+    const nsStyleSpacing* cellSpacing;
+    GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)cellSpacing));
+    cellSpacing->CalcBorderPaddingFor(this, borderPadding);
+    nscoord contentWidth = mPass1DesiredSize.width - (borderPadding.left+borderPadding.right);
+    nscoord contentHeight = mPass1DesiredSize.height - (borderPadding.top+borderPadding.bottom);
     // empty cells do not render their border
-    if (0!=mPass1DesiredSize.width || 0!=mPass1DesiredSize.height)
+    if (0<contentWidth || 0<contentHeight)
     {
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *mySpacing, 0);
@@ -243,6 +251,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   //PreReflowCheck();
 #endif
 
+  nsresult rv = NS_OK;
+
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = 0;
@@ -288,11 +298,33 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     availSize.height -= topInset+bottomInset+margin.top+margin.bottom;
 
   // XXX Kipp added this hack
-  if (eReflowReason_Incremental == aReflowState.reason) {
+  if (eReflowReason_Incremental == aReflowState.reason) 
+  {
     // XXX We *must* do this otherwise incremental reflow that's
     // passing through will not work right.
     nsIFrame* next;
     aReflowState.reflowCommand->GetNext(next);
+
+    // if it is a StyleChanged reflow targeted at this cell frame,
+    // handle that here
+    // first determine if this frame is the target or not
+    nsIFrame *target=nsnull;
+    rv = aReflowState.reflowCommand->GetTarget(target);
+    if ((PR_TRUE==NS_SUCCEEDED(rv)) && (nsnull!=target))
+    {
+      if (this==target)
+      {
+        nsIReflowCommand::ReflowType type;
+        aReflowState.reflowCommand->GetType(type);
+        if (nsIReflowCommand::StyleChanged==type)
+        {
+          nsresult rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
+          aStatus = NS_FRAME_COMPLETE;
+          return rv;
+        }
+      }
+    }
+    // if any of these conditions are not true, we just pass the reflow command down
   }
 
   // Try to reflow the child into the available space. It might not
@@ -409,6 +441,40 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 #endif
 
   return NS_OK;
+}
+
+NS_METHOD nsTableCellFrame::IR_StyleChanged(nsIPresContext&          aPresContext,
+                                            nsHTMLReflowMetrics&     aDesiredSize,
+                                            const nsHTMLReflowState& aReflowState,
+                                            nsReflowStatus&          aStatus)
+{
+  if (PR_TRUE==gsDebug) printf("Cell IR: IR_StyleChanged for frame %p\n", this);
+  nsresult rv = NS_OK;
+  // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
+  // XXX: we can optimize this when we know which style attribute changed
+  nsTableFrame* tableFrame=nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
+  {
+    tableFrame->InvalidateCellMap();
+    tableFrame->InvalidateFirstPassCache();
+  }
+
+  // we are obligated to pass along the reflow command to our children before doing anything else
+  /*
+  nsIFrame *childFrame = mFirstChild;
+  while (nsnull!=childFrame)
+  {
+    nsHTMLReflowState childReflowState(aPresContext, childFrame, aReflowState,
+                                       aReflowState.maxSize, eReflowReason_Incremental);
+    rv = ReflowChild(childFrame, aPresContext, aDesiredSize, childReflowState, aStatus);
+    if (NS_FAILED(rv))
+      break;
+    // the returned desired size is irrelevant, because we'll do a resize reflow in a moment
+    childFrame->GetNextSibling(childFrame);
+  }
+  */
+  return rv;
 }
 
 NS_METHOD

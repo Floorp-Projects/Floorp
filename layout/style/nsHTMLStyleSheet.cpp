@@ -2005,6 +2005,19 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
           render = PR_TRUE;
         }
       }
+      else if (tag == nsHTMLAtoms::caption  ||
+               tag == nsHTMLAtoms::table    ||
+               tag == nsHTMLAtoms::col      ||
+               tag == nsHTMLAtoms::colgroup ||
+               tag == nsHTMLAtoms::tr       ||
+               tag == nsHTMLAtoms::tbody    ||
+               tag == nsHTMLAtoms::thead    ||
+               tag == nsHTMLAtoms::tfoot    ||
+               tag == nsHTMLAtoms::td || tag == nsHTMLAtoms::th)
+      {
+        restyle = PR_TRUE;
+        reflow = PR_TRUE;
+      }
       else {
       }
 
