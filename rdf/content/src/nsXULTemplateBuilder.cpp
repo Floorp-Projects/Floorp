@@ -2669,7 +2669,11 @@ public:
     PRBool
     IsElementInWidget(nsIContent* aElement);
    
-    nsresult RemoveGeneratedContent(nsIContent* aElement);
+    nsresult
+    RemoveGeneratedContent(nsIContent* aElement);
+
+    nsresult
+    NoteGeneratedSubtreeRemoved(nsIContent* aElement);
 
     PRBool
     IsLazyWidgetItem(nsIContent* aElement);
@@ -6239,15 +6243,20 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
                 continue;
             }
 
-            // If we get here, it's "generated". Bye bye! Remove it
+            // If we get here, it's "generated". Bye bye!  Remove it
             // from the content model "quietly", because we'll remove
             // and re-insert the top-level element into the document
             // to minimze reflow.
             element->RemoveChildAt(i, PR_FALSE);
             child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
+            // Do any book-keeping that we need to do on the subtree,
+            // since we're "quietly" removing the element from the
+            // content model.
+            NoteGeneratedSubtreeRemoved(child);
+
             // Remove element from the conflict set.
-            // XXXwaterson should this be recursive?
+            // XXXwaterson should this be moved into NoteGeneratedSubtreeRemoved?
             MatchSet firings, retractions;
             mConflictSet.Remove(ContentTestNode::Element(child), firings, retractions);
 
@@ -6291,6 +6300,38 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
 
     aElement->SetDocument(doc, PR_TRUE, PR_TRUE);
     parent->InsertChildAt(aElement, pos, PR_TRUE);
+    return NS_OK;
+}
+
+
+nsresult
+nsXULTemplateBuilder::NoteGeneratedSubtreeRemoved(nsIContent* aElement)
+{
+    // When we remove a generated subtree from the document, we need
+    // to update the document's element map. (Normally, this will
+    // happen when content is "noisily" removed from the tree.)
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    PRInt32 i = 0;
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    if (xulcontent)
+        xulcontent->PeekChildCount(i);
+    else
+        aElement->ChildCount(i);
+
+    while (--i >= 0) {
+        nsCOMPtr<nsIContent> child;
+        aElement->ChildAt(i, *getter_AddRefs(child));
+        NoteGeneratedSubtreeRemoved(child);
+    }
+
+    nsresult rv;
+    nsAutoString id;
+    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE)
+        mDocument->RemoveElementForID(id, aElement);
+
     return NS_OK;
 }
 
