@@ -1325,6 +1325,9 @@ public class ScriptRuntime {
                         && (cx.getRegExpProxy().isRegExp(jsThis)))
                 return call(cx, fun, jsThis, args);
         }
+        else    // could've been <java>.XXX.exec() that was re-directed here
+            if (fun instanceof NativeJavaMethod)
+                return call(cx, fun, jsThis, args);
                 
         if (isCall)
             return call(cx, fun, thisArg, args);
