@@ -53,9 +53,9 @@ class nsIWidget;
  * Event listener manager interface.
  */
 #define NS_IEVENTSTATEMANAGER_IID \
-{ /* 08bd45d8-db4a-4e06-918c-cebffb002fef */ \
-0x08bd45d8, 0xdb4a, 0x4e06, \
-{ 0x91, 0x8c, 0xce, 0xbf, 0xfb, 0x0, 0x2f, 0xef} };
+{ /* 4d45b9d0-fcf2-11d8-9669-0800200c9a66 */ \
+0x4d45b9d0, 0xfcf2, 0x11d8, \
+{0x96, 0x69, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66} }
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
 
@@ -77,11 +77,6 @@ public:
                              nsIFrame* aTargetFrame,
                              nsEventStatus* aStatus,
                              nsIView* aView) = 0;
-
-  // optional notification methods so downstream clients can know
-  // what event is being processed
-  NS_IMETHOD SetCurrentEvent(nsEvent *aEvent) = 0;
-  NS_IMETHOD GetCurrentEvent(nsEvent **aEvent) = 0; // 0 if none
 
   NS_IMETHOD SetPresContext(nsPresContext* aPresContext) = 0;
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
