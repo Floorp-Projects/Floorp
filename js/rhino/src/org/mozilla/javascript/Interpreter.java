@@ -1289,7 +1289,7 @@ public class Interpreter {
                             break;
                         }
                         case TokenStream.CLOSURE : {
-                            int i = getIndex(iCode, pc + 1);
+                            int i = getIndex(iCode, pc);
                             InterpretedFunction f = idata.itsNestedFunctions[i];
                             out.println(tname + " " + f);
                             pc += 2;
@@ -1300,7 +1300,7 @@ public class Interpreter {
                             int count = getIndex(iCode, pc + 2);
                             String name = strings[getIndex(iCode, pc)];
                             out.println(tname + " " + count + " \""
-                                        + name + "\"");
+                                        + name + '"');
                             pc += 4;
                             break;
                         }
@@ -1330,11 +1330,12 @@ public class Interpreter {
                         case TokenStream.NAME :
                         case TokenStream.NAMEINC :
                         case TokenStream.NAMEDEC :
-                        case TokenStream.STRING :
-                            out.println(tname + " \""
-                                        + strings[getIndex(iCode, pc)] + "\"");
+                        case TokenStream.STRING : {
+                            String str = strings[getIndex(iCode, pc)];
+                            out.println(tname + " \"" + str + '"');
                             pc += 2;
                             break;
+                        }
                         case LINE_ICODE : {
                             int line = getShort(iCode, pc);
                             out.println(tname + " : " + line);
