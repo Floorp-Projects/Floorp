@@ -884,7 +884,7 @@ BOOL CWizardMachineApp::GoToNextNode()
 
 			strPageName = tmpParentNode->subPages->pages.GetAt(tmpParentNode->currNodeIndex);
 			// skip Mac installer screen
-			if ((strPlatform != "MacintoshOSX") && (strPageName == "MacInstaller"))
+			if ((strPlatform != "Mac OS") && (strPageName == "MacInstaller"))
 				tmpParentNode->currNodeIndex++;
 
 			NODE* siblingNode = tmpParentNode->childNodes[tmpParentNode->currNodeIndex];
@@ -1246,7 +1246,7 @@ BOOL CWizardMachineApp::IsLastNode(NODE* treeNode)
 	// Close Wizard after creating customized Mac files
 	// and do not proceed to the windows installer screen
 	CString strPlatform = GetGlobal("lPlatform");
-	if ((strPlatform == "MacintoshOSX") && 
+	if ((strPlatform == "Mac OS") && 
 		((treeNode->localVars->pageName) == "MacInstaller"))
 		lastNode = TRUE;
 

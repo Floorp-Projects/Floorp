@@ -85,9 +85,9 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\Windows
 	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\Windows\enus
 	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\Windows\enus\Nscpxpi
-	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\MacintoshOSX
-	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\MacintoshOSX\enus
-	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\MacintoshOSX\enus\Nscpxpi
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\"Mac OS"
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\"Mac OS"\enus
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\"Mac OS"\enus\Nscpxpi
  
 #  We populate empty folders so zip will pick them up.
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Output

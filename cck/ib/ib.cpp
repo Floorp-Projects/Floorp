@@ -25,7 +25,7 @@
 #define WDISK_SPACE 27577549
 // Required disk space for Linux build
 #define LDISK_SPACE 84934656
-// Required disk space for MacintoshOSX build
+// Required disk space for Mac OS build
 #define MDISK_SPACE 5976884
 
 int interpret(char *cmd);
@@ -189,7 +189,7 @@ int ExtractJARFile(CString xpiname, CString jarname, CString xpifile)
 	CString command;
 	CString jarArchive;
 	
-	if (curPlatform == "MacintoshOSX")
+	if (curPlatform == "Mac OS")
 	{
 		jarname.Replace("/","\\");
 		jarname.Insert(0,"\\");
@@ -222,7 +222,7 @@ int ReplaceJARFiles()
 	{
 		// This copy preserves the existing archive if it exists - do we
 		// need to delete it the first time through?
-		if (curPlatform == "MacintoshOSX")
+		if (curPlatform == "Mac OS")
 			jarArchive = tempPath + jarList[i].jarname;
 		else
 			jarArchive = tempPath + "\\bin\\chrome\\" + jarList[i].jarname;
@@ -2041,7 +2041,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 			return FALSE;
 		}
 	}
-	else if (curPlatform == "MacintoshOSX")
+	else if (curPlatform == "Mac OS")
 	{
 		if ((nTotalAvailable.QuadPart) < MDISK_SPACE)
 		{
@@ -2283,7 +2283,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 		CreateLinuxInstaller();
 	}
 
-	else if (curPlatform == "MacintoshOSX")
+	else if (curPlatform == "Mac OS")
 	{
 		CreateMacZipFile();
 	}
