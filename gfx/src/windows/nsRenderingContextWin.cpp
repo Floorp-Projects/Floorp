@@ -1072,6 +1072,40 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoor
   return NS_OK;
 }
 
+  /** ---------------------------------------------------
+   *  See documentation in nsIRenderingContextImpl.h
+   *	@update 5/01/00 dwc
+   */
+NS_IMETHODIMP nsRenderingContextWin :: DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+{
+
+  if (nsLineStyle_kNone == mCurrLineStyle)
+    return NS_OK;
+
+  SetupPen();
+
+  if (nsLineStyle_kDotted == mCurrLineStyle)
+  {
+    lineddastruct dda_struct;
+
+    dda_struct.nDottedPixel = 1;
+    dda_struct.dc = mDC;
+    dda_struct.crColor = mColor;
+
+    LineDDA((int)(aX0),(int)(aY0),(int)(aX1),(int)(aY1),(LINEDDAPROC) LineDDAFunc,(long)&dda_struct);
+  }
+  else
+  {
+    ::MoveToEx(mDC, (int)(aX0), (int)(aY0), NULL);
+    ::LineTo(mDC, (int)(aX1), (int)(aY1));
+  }
+
+  return NS_OK;
+
+}
+
+
+
 NS_IMETHODIMP nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   if (nsLineStyle_kNone == mCurrLineStyle)

@@ -53,6 +53,12 @@ public:
    */
   NS_IMETHOD DrawPath(nsPathPoint aPointArray[],PRInt32 aNumPts);
 
+  /** ---------------------------------------------------
+   *  See documentation in nsIRenderingContext.h
+   *	@update 05/01/00 dwc
+   */
+  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) { return NS_OK;}
+
 protected:
   virtual ~nsRenderingContextImpl();
 
@@ -75,6 +81,7 @@ protected:
    *  @param aWidth -- width of the tile
    */
   void  TileImage(nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight);
+
 
 
 public:
@@ -102,11 +109,9 @@ public:
  *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
  *  else it is so small that it can be approximated by 2 lineto calls
  *  @param aRenderingContext -- The RenderingContext to use to draw with
- *  @param aPointArray[] -- A list of points we can put line calls into instead of drawing.  If null, lines are drawn
- *  @param aCurInex -- a pointer to an Integer that tells were to put the points into the array, incremented when finished
  *	@update 3/26/99 dwc
  */
-  void SubDivide(nsIRenderingContext *aRenderingContext,nsPoint  aPointArray[],PRInt32 *aCurIndex);
+  void SubDivide(nsIRenderingContext *aRenderingContext);
 
 /** ---------------------------------------------------
  *  Divide a Quadratic Bezier curve at the mid-point
