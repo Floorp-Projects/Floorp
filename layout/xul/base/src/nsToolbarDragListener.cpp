@@ -39,6 +39,8 @@
 #include "nsIDOMElement.h"
 #include "nsXULAtoms.h"
 
+#include "nsIEventStateManager.h"
+
 #include "nsIViewManager.h"
 #include "nsIView.h"
 
@@ -48,8 +50,8 @@ static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
-static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDOMEventReceiverIID,  NS_IDOMEVENTRECEIVER_IID);
+//static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
+//static NS_DEFINE_IID(kIDOMEventReceiverIID,  NS_IDOMEVENTRECEIVER_IID);
 
 #include "nsISupportsArray.h"
 
@@ -67,8 +69,8 @@ nsToolbarDragListener::nsToolbarDragListener()
 {
   NS_INIT_REFCNT();
   mPresContext = nsnull;
-  mMouseDown = PR_FALSE;
-  mMouseDrag = PR_FALSE;
+  mMouseDown   = PR_FALSE;
+  mMouseDrag   = PR_FALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -84,27 +86,27 @@ nsToolbarDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(kIDOMEventReceiverIID)) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIDOMEventReceiver>::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)(nsIDOMMouseMotionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMDragListener::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIDOMDragListener>::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMDragListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMMouseMotionListener::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseMotionListener>::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMMouseMotionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMMouseListener::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseListener>::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kISupportsIID)) {                                      
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {                                      
     *aInstancePtr = (void*)(nsISupports*)(nsIDOMMouseMotionListener*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
@@ -113,6 +115,7 @@ nsToolbarDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 ////////////////////////////////////////////////////////////////////////
+// This is temporary until the bubling of event for CSS actions work
 ////////////////////////////////////////////////////////////////////////
 static void ForceDrawFrame(nsIFrame * aFrame)
 {
@@ -181,16 +184,21 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, 
   uiEvent->GetClientX(&x);
   uiEvent->GetClientY(&y);
 
+  // This is kind of hooky but its the easiest thing to do
+  // The mPresContext is set into this class from the nsToolbarFrame
+  // It's needed here for figuring out twips & 
+  // resetting the active state in the event manager after the drop takes place.
   if (nsnull == mPresContext) {
     return NS_OK;
   }
 
+  // translate the mouse coords into twips
   float p2t;
   mPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-  nscoord xp = NSIntPixelsToTwips(x, p2t);
-  nscoord yp = NSIntPixelsToTwips(y, p2t);
-  nsPoint pnt(xp,yp);
+  nscoord xp       = NSIntPixelsToTwips(x, p2t);
+  nscoord yp       = NSIntPixelsToTwips(y, p2t);
+  nsPoint pnt(xp, yp);
 
   // get the toolbar's rect
   nsRect tbRect;
@@ -202,6 +210,7 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, 
   nsRect    prevRect(-1, -1, 0, 0);
   PRBool    found = PR_FALSE;
 
+  // Now lop through the child and see if the mouse is over a child
   mToolbar->FirstChild(nsnull, &childFrame); 
   while (nsnull != childFrame) {    
 
@@ -224,7 +233,7 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, 
         content->GetTag(*getter_AddRefs(tag));
 
         // for now I am checking for both titlebutton and toolbar items
-        // but the check for titlebutton should be removed in the future
+        // XXX but the check for titlebutton should be removed in the future
         if (tag.get() == nsXULAtoms::titledbutton || tag.get() == nsXULAtoms::toolbaritem) {
 
           // now check for natural order
@@ -233,6 +242,7 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, 
           domElement = do_QueryInterface(content);
           if (nsnull != domElement ) {
             nsAutoString value;
+            // maybe naturalorder needs to be an atom
             domElement->GetAttribute(nsAutoString("naturalorder"), value);
             naturalOrder = value.Equals("true");
 
@@ -242,23 +252,20 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, 
           
           found = PR_TRUE;
 
+          // if naturalorder than figure out if it is in the 
+          // left, middle, or right hand side of the item
           PRInt32 xc = -1;
           if (naturalOrder) {
-            //printf("%d   %d %d\n", pnt.x, rect.x, rect.width);
             if (pnt.x <= (rect.x + (rect.width / 4))) {
               xc = rect.x-tbRect.x;
-              //printf("1st\n");
-            } else if (pnt.x >= (rect.x + PRInt32(float(rect.width) *.75))) {
+            } else if (pnt.x >= (rect.x + PRInt32(float(rect.width) *0.75))) {
               xc = rect.x-tbRect.x+rect.width-onePixel;
-              //printf("last\n");
             } else {
               //printf("no-op\n");
             }
           } else {
-            //printf("no order\n");
             xc = rect.x-tbRect.x;
           }
-          //printf("xc = %d\n", xc);
           aXLoc = xc;
           aIsLegalChild = PR_TRUE;
         }
@@ -272,7 +279,7 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, 
   }
 
   if (!found) {
-    aXLoc = prevRect.x -tbRect.x;
+    aXLoc = prevRect.x - tbRect.x;
   }
 
   return PR_FALSE;
@@ -294,6 +301,7 @@ nsToolbarDragListener::DragOver(nsIDOMEvent* aDragEvent)
     if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(&toolbarItemFlavor)) {
       dragSession->SetCanDrop(PR_TRUE);
 
+      // Check to see if the mouse is over an item
       nscoord xLoc;
       PRBool isLegalChild;
       PRBool onChild = IsOnToolbarItem(aDragEvent, xLoc, isLegalChild);
@@ -358,7 +366,11 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 #ifdef TOOLBAR_DD
   mToolbar->SetDropfeedbackLocation(-1); // clears drawing of marker
 #endif
+  // XXX At the moment toolbar drags contain "text"
+  // in the future they will probably contain some form of content
+  // that will be translated into some RDF form
   ForceDrawFrame(mToolbar);
+
   // String for doing paste
   nsString stuffToPaste;
 
@@ -417,6 +429,16 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
               //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
             }
           } // foreach drag item
+
+          // this clear the active state of the button that was pressed to do the drag
+          // if the drag came from outside the app then make this call should have no effect
+          nsIEventStateManager *stateManager;
+          if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
+            //stateManager->SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
+            stateManager->SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
+            NS_RELEASE(stateManager);
+          }
+
         }
       } // if valid transferable
     } // if valid drag session
@@ -430,6 +452,10 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 nsresult
 nsToolbarDragListener::MouseMove(nsIDOMEvent* aMouseEvent)
 {
+  // XXX At the moment toolbar drags contain "text"
+  // in the future they will probably contain some form of content
+  // that will be translated into some RDF form
+
   nsresult rv = NS_OK;
   //printf("nsToolbarDragListener::MouseMove mMouseDown %d  mMouseDrag %d\n", mMouseDown, mMouseDrag);
   if (mMouseDown && !mMouseDrag) {
@@ -480,6 +506,8 @@ nsToolbarDragListener::MouseMove(nsIDOMEvent* aMouseEvent)
           } 
           nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
         } 
+      } else { // when it is isn't a legal child then don't consume
+        return NS_OK; // don't consume event
       }
       rv = NS_ERROR_BASE; // consumes the event
     }
@@ -500,7 +528,7 @@ nsresult
 nsToolbarDragListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   mMouseDown = PR_TRUE;
-  return NS_OK;
+  return NS_OK; // means I am NOT consuming event
 }
 
 ////////////////////////////////////////////////////////////////////////
