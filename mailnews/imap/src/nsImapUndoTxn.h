@@ -68,6 +68,7 @@ public:
                   PRBool idsAreUids, PRBool isMove, 
                   nsIEventQueue *eventQueue, 
                   nsIUrlListener *urlListener);
+    PRBool DeleteIsMoveToTrash(nsIMsgFolder* folder);
 
 private:
 

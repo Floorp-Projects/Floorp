@@ -3109,12 +3109,47 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             ClearCopyState(aExitCode);
           }
           break;
-        case nsIImapUrl::nsImapAddMsgFlags:
+        case nsIImapUrl::nsImapSubtractMsgFlags:
           // this isn't really right - we'd like to know we were 
           // deleting a message to start with, but it probably
           // won't do any harm.
             NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
 
+          break;
+        case nsIImapUrl::nsImapAddMsgFlags:
+        {
+            imapMessageFlagsType flags = 0;
+            imapUrl->GetMsgFlags(&flags);
+            if (flags & kImapMsgDeletedFlag && DeleteIsMoveToTrash())
+            {
+                nsCOMPtr<nsIMsgDatabase> db;
+                rv = GetMsgDatabase(nsnull, getter_AddRefs(db));
+                if (NS_SUCCEEDED(rv) && db)
+                {
+                    nsMsgKeyArray keyArray;
+                    char *keyString = nsnull;
+                    PRInt32 id = -1;
+                    imapUrl->CreateListOfMessageIdsString(&keyString);
+                    char *newString = nsnull, *idToken = nsnull;;
+                    if (keyString)
+                    {
+                        idToken = nsCRT::strtok(keyString, ", ",
+                                                &newString);
+                        while (idToken != nsnull)
+                        {
+                            id = atoi(idToken);
+                            keyArray.Add(id);
+                            idToken = nsCRT::strtok(newString, ", ", &newString);
+                        }
+                        db->DeleteMessages(&keyArray, nsnull);
+                        db->SetSummaryValid(PR_TRUE);
+                        db->Commit(nsMsgDBCommitType::kLargeCommit);
+                        nsCRT::free(keyString);
+                    }
+                }
+            }
+            NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+        }
           break;
         case nsIImapUrl::nsImapAppendMsgFromFile:
         case nsIImapUrl::nsImapAppendDraftFromFile:

@@ -25,9 +25,13 @@
 #include "nsMsgImapCID.h"
 #include "nsIMsgHdr.h"
 #include "nsImapUndoTxn.h"
+#include "nsXPIDLString.h"
+#include "nsIIMAPHostSessionList.h"
+#include "nsIMsgIncomingServer.h"
 
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
+static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 
 nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
     m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
@@ -158,23 +162,28 @@ nsImapMoveCopyMsgTxn::Undo(void)
         if (m_srcIsPop3)
         {
             rv = UndoMailboxDelete();
+            if (NS_FAILED(rv)) return rv;
         }
         else
         {
             nsCOMPtr<nsIUrlListener> srcListener =
                 do_QueryInterface(m_srcFolder, &rv);
+            if (NS_FAILED(rv)) return rv;
             // ** make sure we are in the selected state; use lite select
             // folder so we won't hit performance hard
-            if (NS_SUCCEEDED(rv))
-                rv = imapService->LiteSelectFolder(m_eventQueue, m_srcFolder,
-                                                   srcListener, nsnull);
-
+            rv = imapService->LiteSelectFolder(m_eventQueue, m_srcFolder,
+                                               srcListener, nsnull);
+            if (NS_FAILED(rv)) return rv;
             rv = imapService->SubtractMessageFlags(
                 m_eventQueue, m_srcFolder, srcListener, nsnull,
-                m_srcMsgIdString, kImapMsgDeletedFlag,
+                m_srcMsgIdString.GetBuffer(), kImapMsgDeletedFlag,
                 m_idsAreUids);
-            if (m_msgWindow)
-                m_srcFolder->UpdateFolder(m_msgWindow);
+            if (NS_FAILED(rv)) return rv;
+            if (DeleteIsMoveToTrash(m_srcFolder))
+                rv = imapService->GetHeaders(m_eventQueue, m_srcFolder,
+                                             srcListener, nsnull,
+                                             m_srcMsgIdString.GetBuffer(),
+                                             PR_TRUE); 
         }
     }
     if (m_dstKeyArray.GetSize() > 0)
@@ -182,18 +191,17 @@ nsImapMoveCopyMsgTxn::Undo(void)
         nsCOMPtr<nsIUrlListener> dstListener;
 
         dstListener = do_QueryInterface(m_dstFolder, &rv);
+        if (NS_FAILED(rv)) return rv;
         // ** make sire we are in the selected state; use lite select folder
         // so we won't hit preformace hard
-        if (NS_SUCCEEDED(rv))
-            rv = imapService->LiteSelectFolder(m_eventQueue, m_dstFolder,
+        rv = imapService->LiteSelectFolder(m_eventQueue, m_dstFolder,
                                            dstListener, nsnull);
+        if (NS_FAILED(rv)) return rv;
         rv = imapService->AddMessageFlags(m_eventQueue, m_dstFolder,
                                           dstListener, nsnull,
                                           m_dstMsgIdString.GetBuffer(),
                                           kImapMsgDeletedFlag,
                                           m_idsAreUids);
-        if (m_msgWindow)
-            m_dstFolder->UpdateFolder(m_msgWindow);
     }
 	return rv;
 }
@@ -209,24 +217,24 @@ nsImapMoveCopyMsgTxn::Redo(void)
         if (m_srcIsPop3)
         {
             rv = RedoMailboxDelete();
+            if (NS_FAILED(rv)) return rv;
         }
         else
         {
             nsCOMPtr<nsIUrlListener> srcListener =
                 do_QueryInterface(m_srcFolder, &rv); 
+            if (NS_FAILED(rv)) return rv;
             // ** make sire we are in the selected state; use lite select
             // folder so we won't hit preformace hard
-            if (NS_SUCCEEDED(rv))
-                rv = imapService->LiteSelectFolder(m_eventQueue, m_srcFolder,
+            rv = imapService->LiteSelectFolder(m_eventQueue, m_srcFolder,
                                                srcListener, nsnull);
+            if (NS_FAILED(rv)) return rv;
 
             rv = imapService->AddMessageFlags(m_eventQueue, m_srcFolder,
                                               srcListener, nsnull,
-                                              m_srcMsgIdString,
+                                              m_srcMsgIdString.GetBuffer(),
                                               kImapMsgDeletedFlag,
                                               m_idsAreUids);
-            if (m_msgWindow)
-                m_srcFolder->UpdateFolder(m_msgWindow);
         }
     }
     if (m_dstKeyArray.GetSize() > 0)
@@ -234,18 +242,23 @@ nsImapMoveCopyMsgTxn::Redo(void)
         nsCOMPtr<nsIUrlListener> dstListener;
 
         dstListener = do_QueryInterface(m_dstFolder, &rv); 
+        if (NS_FAILED(rv)) return rv;
         // ** make sire we are in the selected state; use lite select
         // folder so we won't hit preformace hard
-        if(NS_SUCCEEDED(rv))
-            rv = imapService->LiteSelectFolder(m_eventQueue, m_dstFolder,
+        rv = imapService->LiteSelectFolder(m_eventQueue, m_dstFolder,
                                            dstListener, nsnull);
+        if (NS_FAILED(rv)) return rv;
         rv = imapService->SubtractMessageFlags(m_eventQueue, m_dstFolder,
                                                dstListener, nsnull,
                                                m_dstMsgIdString.GetBuffer(),
                                                kImapMsgDeletedFlag,
                                                m_idsAreUids);
-        if (m_msgWindow)
-            m_dstFolder->UpdateFolder(m_msgWindow);
+        if (NS_FAILED(rv)) return rv;
+        if (DeleteIsMoveToTrash(m_dstFolder))
+            rv = imapService->GetHeaders(m_eventQueue, m_dstFolder,
+                                         dstListener, nsnull,
+                                         m_dstMsgIdString.GetBuffer(),
+                                         PR_TRUE);
     }
 	return rv;
 }
@@ -360,4 +373,24 @@ nsImapMoveCopyMsgTxn::RedoMailboxDelete()
         rv = NS_ERROR_FAILURE;
     }
     return rv;
+}
+
+PRBool nsImapMoveCopyMsgTxn::DeleteIsMoveToTrash(nsIMsgFolder *folder)
+{
+    nsresult rv;
+    PRBool retVal = PR_FALSE;
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    nsXPIDLCString serverKey;
+    if (!folder) return PR_FALSE;
+    rv = folder->GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return PR_FALSE;
+    rv = server->GetKey(getter_Copies(serverKey));
+    if (NS_FAILED(rv) || !serverKey) return PR_FALSE;
+    
+    NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
+                    kCImapHostSessionList, &rv);
+    if (NS_FAILED(rv) || !hostSession) return PR_FALSE;
+    rv = hostSession->GetDeleteIsMoveToTrashForHost((const char*) serverKey,
+                                                    retVal);
+    return retVal;
 }

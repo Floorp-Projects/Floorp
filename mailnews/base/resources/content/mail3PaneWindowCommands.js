@@ -30,8 +30,6 @@ var FolderPaneController =
 				return true;
 			
 			case "cmd_selectAll":
-			case "cmd_undo":
-			case "cmd_redo":
 			case "cmd_cut":
 			case "cmd_copy":
 			case "cmd_paste":
@@ -48,13 +46,10 @@ var FolderPaneController =
 		switch ( command )
 		{
 			case "cmd_selectAll":
-			case "cmd_undo":
-			case "cmd_redo":
 			case "cmd_cut":
 			case "cmd_copy":
 			case "cmd_paste":
 				return false;
-				
 			case "cmd_delete":
 			case "button_delete":
 				if ( command == "cmd_delete" )
@@ -100,8 +95,6 @@ var FolderPaneController =
 		if ( event == 'blur' )
         {
 			goSetMenuValue('cmd_delete', 'valueDefault');
-            goSetMenuValue('cmd_undo', 'valueDefault');
-            goSetMenuValue('cmd_redo', 'valueDefault');
         }
 	}
 };
@@ -114,8 +107,6 @@ var ThreadPaneController =
 	{
 		switch ( command )
 		{
-			case "cmd_undo":
-			case "cmd_redo":
 			case "cmd_selectAll":
 				return true;
 
@@ -141,10 +132,6 @@ var ThreadPaneController =
 			case "cmd_paste":
 				return false;
 				
-			case "cmd_undo":
-			case "cmd_redo":
-               return SetupUndoRedoCommand(command);
-
 			default:
 				return false;
 		}
@@ -163,14 +150,6 @@ var ThreadPaneController =
 						ClearMessagePane();
 				}
 				break;
-			
-			case "cmd_undo":
-				messenger.Undo(msgWindow);
-				break;
-			
-			case "cmd_redo":
-				messenger.Redo(msgWindow);
-				break;
 		}
 	},
 	
@@ -179,8 +158,6 @@ var ThreadPaneController =
 		// on blur events set the menu item texts back to the normal values
 		if ( event == 'blur' )
         {
-			goSetMenuValue('cmd_undo', 'valueDefault');
-			goSetMenuValue('cmd_redo', 'valueDefault');
 		}
 	}
 };
@@ -223,8 +200,9 @@ var DefaultController =
 			case "cmd_sortByThread":
 			case "cmd_viewAllMsgs":
 			case "cmd_viewUnreadMsgs":
+            case "cmd_undo":
+            case "cmd_redo":
 				return true;
-            
 			default:
 				return false;
 		}
@@ -291,6 +269,9 @@ var DefaultController =
 			case "cmd_viewAllMsgs":
 			case "cmd_viewUnreadMsgs":
 				return true;
+            case "cmd_undo":
+            case "cmd_redo":
+                return SetupUndoRedoCommand(command);
 			default:
 				return false;
 		}
@@ -383,6 +364,12 @@ var DefaultController =
 			case "cmd_viewUnreadMsgs":
 				MsgViewUnreadMsg();
 				break;
+			case "cmd_undo":
+				messenger.Undo(msgWindow);
+				break;
+			case "cmd_redo":
+				messenger.Redo(msgWindow);
+				break;
 		}
 	},
 	
@@ -392,6 +379,8 @@ var DefaultController =
 		if ( event == 'blur' )
         {
 			goSetMenuValue('cmd_delete', 'valueDefault');
+            goSetMenuValue('cmd_undo', 'valueDefault');
+            goSetMenuValue('cmd_redo', 'valueDefault');
         }
 	}
 };
@@ -477,6 +466,10 @@ function SetupUndoRedoCommand(command)
             goSetMenuValue(command, 'valueCopyMsg');
             break;
         }
+    }
+    else
+    {
+        goSetMenuValue(command, 'valueDefault');
     }
     return canUndoOrRedo;
 }
