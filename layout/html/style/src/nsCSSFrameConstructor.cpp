@@ -2078,6 +2078,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
   nsresult  rv = NS_OK;
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
+  PRBool    isReplaced = PR_FALSE;
 
   // Initialize the new frame
   nsIFrame* newFrame = nsnull;
@@ -2234,6 +2235,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
     // PROGRESS METER CONSTRUCTION
     else if (aTag == nsXULAtoms::progressmeter) {
       processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
       rv = NS_NewProgressMeterFrame(newFrame);
     }
     // End of PROGRESS METER CONSTRUCTION logic
@@ -2241,6 +2243,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
     // TITLED BUTTON CONSTRUCTION
     else if (aTag == nsXULAtoms::titledbutton) {
       processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
       rv = NS_NewTitledButtonFrame(newFrame);
     }
     // End of TITLED BUTTON CONSTRUCTION logic
@@ -2250,6 +2253,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
+    // If the frame is a replaced element, then set the frame state bit
+    if (isReplaced) {
+      nsFrameState  state;
+      newFrame->GetFrameState(&state);
+      newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
+    }
+
     nsIFrame* geometricParent = isAbsolutelyPositioned
       ? aAbsoluteItems.containingBlock
       : aParentFrame;
