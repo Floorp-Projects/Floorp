@@ -96,17 +96,14 @@
 <!ENTITY viewMenu.label "View">
 <!ENTITY viewToolbarsMenu.label "Toolbars"> 
 <!ENTITY viewToolbarsMenu.accesskey "t"> 
-<!ENTITY hideCompositionToolbarCmd.label "Hide Composition Toolbar">
-<!ENTITY viewcompositiontb.accesskey "c">
-<!ENTITY showCompositionToolbarCmd.label "Show Composition Toolbar">
-<!ENTITY hideFormattingToolbarCmd.label "Hide Format Toolbar">
-<!ENTITY viewformattingtb.accesskey "f">
-<!ENTITY showFormattingToolbarCmd.label "Show Format Toolbar">
-<!ENTITY showTaskbarCmd.label "Show Taskbar">  
-<!ENTITY showTaskbarCmd.accesskey "t"> 
+<!ENTITY compositionToolbarCmd.label "Composition Toolbar">
+<!ENTITY compositiontb.accesskey "c">
+<!ENTITY formattingToolbarCmd.label "Format Toolbar">
+<!ENTITY formattingtb.accesskey "f">
+<!ENTITY taskbarCmd.label "Taskbar">  
+<!ENTITY taskbarCmd.accesskey "t"> 
 <!ENTITY viewPageSource.label "Page Source">
 <!ENTITY viewpagesource.accesskey "s">
-
 
 <!-- Charset menu items -->
 <!ENTITY dcharMenu.label "Character Set  ISO">

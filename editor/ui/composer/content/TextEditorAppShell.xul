@@ -31,41 +31,51 @@
 
 <!-- NOTE: If we don't have "title" set, text editor doesn't work! -->
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
-			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="TextEditorOnLoad()"
-			  onunload="EditorShutdown()"
-        title="&textEditorWindow.titlemodifier;" 
-        titlemodifier="&textEditorWindow.titlemodifier;" 
+        onunload="EditorShutdown()"
+        titlemodifier="&textEditorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
+        windowtype="composer:text"
         align="vertical"
-			  width="640" height="480">
+        width="640" height="480"
+        screenX="10" screenY="10"
+        persist="screenX screenY width height"
+        >
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
+
+  <commands id="commands">
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="undoEditMenuItems"/>
+  </commands>
 
   <broadcaster id="args" value="chrome://editor/content/EditorInitPagePlain.html"/>
   <broadcaster id="canPrint"/>
   
   <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
   <broadcaster id="dialog.start" ready="false"/>
-  <observes element="dialog.start" attribute="ready" onbroadcast="EditorStartup('text', document.getElementById('content-frame'))"/>
+  <observes element="dialog.start" attribute="ready" onbroadcast="EditorStartup('text')"/>
     
   <!-- broadcaster nodes are appended here from the overlays -->
   <broadcasterset id="broadcasterset">
+    <broadcaster id="Editor:Throbber" busy="false"/>
   </broadcasterset>
 
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
 
-<menubar>
+  <menubar id="main-menubar" chromeclass="menubar">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
     <menu value="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
-    <menupopup>
-      <menuitem id="compToolbarMenuitem"/>
-      <menuitem id="formatToolbarMenuitem"/>
-      <menuseparator />
+    <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
+    <menupopup id="menu_View_Popup">
+      <menu id="viewToolbar"/>
+      <menuseparator/>
       <menuitem id="viewSourceMenuitem"/>
       <menuseparator />
       <menu id="charsetMenu"/>
@@ -92,9 +102,9 @@
   <spring flex="100%"/>
 </menubar>
 
-<toolbox>
+<toolbox id="EditorToolbox">
    <!-- toolbar filled out from editorOverlay -->
-   <toolbar id="EditToolbar" class="standard" persist="collapsed">
+  <toolbar id="EditToolbar" chromeclass="toolbar" class="standard" persist="collapsed">
       <titledbutton id="newButton"/>
       <titledbutton id="openButton"/>
       <titledbutton id="saveButton"/>
@@ -110,6 +120,6 @@
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
     <!-- status bar, from editorOverlay.xul -->
-    <box id="status-bar" />
+    <toolbar id="taskbar" chromeclass="extrachrome" />
 
 </window>
