@@ -51,6 +51,7 @@
 #include "nsJSUtils.h"
 #include "nsIJSRuntimeService.h"
 #include "nsXBLService.h"
+#include "nsIXBLInsertionPoint.h"
 
 // Event listeners
 #include "nsIEventListenerManager.h"
@@ -232,6 +233,7 @@ NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(nsIXBLPrototypeBinding* aBinding)
 : mFirstHandler(nsnull),
+  mInsertionPointTable(nsnull),
   mIsStyleBinding(PR_TRUE),
   mMarkedForDeath(PR_FALSE)
 {
@@ -277,6 +279,8 @@ nsXBLBinding::nsXBLBinding(nsIXBLPrototypeBinding* aBinding)
 
 nsXBLBinding::~nsXBLBinding(void)
 {
+  delete mInsertionPointTable;
+
   gRefCnt--;
   //  printf("REF COUNT DOWN: %d %s\n", gRefCnt, (const char*)mID);
 
@@ -437,6 +441,102 @@ nsXBLBinding::HasStyleSheets(PRBool* aResolveStyle)
   return NS_OK;
 }
 
+struct ContentListData {
+  nsXBLBinding* mBinding;
+  nsIBindingManager* mBindingManager;
+
+  ContentListData(nsXBLBinding* aBinding, nsIBindingManager* aManager)
+    :mBinding(aBinding), mBindingManager(aManager)
+  {};
+};
+
+PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  ContentListData* data = (ContentListData*)aClosure;
+  nsIBindingManager* bm = data->mBindingManager;
+  nsXBLBinding* binding = data->mBinding;
+
+  nsCOMPtr<nsIContent> boundElement;
+  binding->GetBoundElement(getter_AddRefs(boundElement));
+
+  nsISupportsArray* arr = (nsISupportsArray*)aData;
+  PRUint32 count;
+  arr->Count(&count);
+  
+  if (count == 0)
+    return NS_OK;
+
+  // XXX Could this array just be altered in place and passed directly to
+  // SetContentListFor?  We'd save space if we could pull this off.
+  nsCOMPtr<nsISupportsArray> contentList;
+  NS_NewISupportsArray(getter_AddRefs(contentList));
+
+  // Figure out the relevant content node.
+  PRUint32 j = 0;
+  nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(j));
+  nsCOMPtr<nsIContent> parent;
+  PRUint32 currIndex;
+  currPoint->GetInsertionParent(getter_AddRefs(parent));
+  currPoint->GetInsertionIndex(&currIndex);
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  if (parent == boundElement) {
+    // We are altering anonymous nodes to accommodate insertion points.
+    binding->GetAnonymousNodes(getter_AddRefs(nodeList));
+  }
+  else {
+    // We are altering the explicit content list of a node to accommodate insertion points.
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(parent));
+    node->GetChildNodes(getter_AddRefs(nodeList));
+  }
+
+  nsCOMPtr<nsIXBLInsertionPoint> pseudoPoint;
+  PRUint32 childCount;
+  nodeList->GetLength(&childCount);
+  for (PRUint32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIDOMNode> node;
+    nodeList->Item(i, getter_AddRefs(node));
+    nsCOMPtr<nsIContent> child(do_QueryInterface(node));
+    if (i == currIndex) {
+      // Add the currPoint to the supports array.
+      contentList->AppendElement(currPoint);
+
+      // Get the next real insertion point and update our currIndex.
+      j++;
+      if (j < count) {
+        currPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(j));
+        currPoint->GetInsertionIndex(&currIndex);
+      }
+
+      // Null out our current pseudo-point.
+      pseudoPoint = nsnull;
+    }
+    
+    if (!pseudoPoint) {
+      NS_NewXBLInsertionPoint(parent, 0, getter_AddRefs(pseudoPoint));
+      contentList->AppendElement(pseudoPoint);
+    }
+
+    pseudoPoint->AddChild(child);
+  }
+
+  // Add in all the remaining insertion points.
+  for ( ; j < count; j++) {
+      currPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(j));
+      contentList->AppendElement(currPoint);
+  }
+  
+  // Now set the content list using the binding manager,
+  // If the bound element is the parent, then we alter the anonymous node list
+  // instead.  This allows us to always maintain two distinct lists should
+  // insertion points be nested into an inner binding.
+  if (parent == boundElement)
+    bm->SetAnonymousNodesFor(parent, contentList);
+  else 
+    bm->SetContentListFor(parent, contentList);
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 {
@@ -499,6 +599,103 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
   
     clonedContent = do_QueryInterface(clonedNode);
     SetAnonymousContent(clonedContent);
+
+    mPrototypeBinding->SetInitialAttributes(mBoundElement, mContent);
+
+    if (hasInsertionPoints) {
+      // Now check and see if we have a single insertion point 
+      // or multiple insertion points.
+      nsCOMPtr<nsIDocument> doc;
+      mBoundElement->GetDocument(*getter_AddRefs(doc));
+        
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      doc->GetBindingManager(getter_AddRefs(bindingManager));
+
+      nsCOMPtr<nsIDOMNodeList> children;
+      bindingManager->GetContentListFor(mBoundElement, getter_AddRefs(children));
+      
+      // Enumerate the prototype binding's insertion table to build
+      // our table of instantiated insertion points.
+      mPrototypeBinding->InstantiateInsertionPoints(this);
+
+      // We now have our insertion point table constructed.  We
+      // enumerate this table.  For each array of insertion points
+      // bundled under the same content node, we generate a content
+      // list.  In the case of the bound element, we generate a new
+      // anonymous node list that will be used in place of the binding's
+      // cached anonymous node list.
+      ContentListData data(this, bindingManager);
+      mInsertionPointTable->Enumerate(BuildContentLists, &data);
+      
+      // We need to place the children
+      // at their respective insertion points.
+      nsCOMPtr<nsIContent> singlePoint;
+      PRUint32 index = 0;
+      PRBool multiplePoints = PR_FALSE;
+      GetSingleInsertionPoint(getter_AddRefs(singlePoint), &index, &multiplePoints);
+      
+      if (children) {
+        if (multiplePoints) {
+          // We must walk the entire content list in order to determine where
+          // each child belongs.
+          nsCOMPtr<nsIDOMNode> node;
+          nsCOMPtr<nsIContent> content;
+          PRUint32 length;
+          children->GetLength(&length);
+          for (PRUint32 i = 0; i < length; i++) {
+            children->Item(i, getter_AddRefs(node));
+            content = do_QueryInterface(node);
+
+            // Now determine the insertion point in the prototype table.
+            nsCOMPtr<nsIContent> point;
+            PRUint32 index;
+            GetInsertionPoint(content, getter_AddRefs(point), &index);
+            bindingManager->SetInsertionParent(content, point);
+
+            // Find the correct nsIXBLInsertion point in our table.
+            nsCOMPtr<nsIXBLInsertionPoint> insertionPoint;
+            nsCOMPtr<nsISupportsArray> arr;
+            GetInsertionPointsFor(point, getter_AddRefs(arr));
+            PRUint32 arrCount;
+            arr->Count(&arrCount);
+            for (PRUint32 j = 0; j < arrCount; j++) {
+              insertionPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(j));
+              PRBool matches;
+              insertionPoint->Matches(point, index, &matches);
+              if (matches)
+                break;
+              insertionPoint = nsnull;
+            }
+
+            if (!insertionPoint) {
+              NS_ERROR("Filtered insertion point wasn't properly constructed.\n");
+              return NS_ERROR_FAILURE;
+            }
+            else 
+              insertionPoint->AddChild(content);
+          }
+        }
+        else {
+          // All of our children are shunted to this single insertion point.
+          nsCOMPtr<nsISupportsArray> arr;
+          GetInsertionPointsFor(singlePoint, getter_AddRefs(arr));
+          PRUint32 arrCount;
+          arr->Count(&arrCount);
+          nsCOMPtr<nsIXBLInsertionPoint> insertionPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(0));
+        
+          nsCOMPtr<nsIDOMNode> node;
+          nsCOMPtr<nsIContent> content;
+          PRUint32 length;
+          children->GetLength(&length);
+          for (PRUint32 i = 0; i < length; i++) {
+            children->Item(i, getter_AddRefs(node));
+            content = do_QueryInterface(node);
+            bindingManager->SetInsertionParent(content, singlePoint);
+            insertionPoint->AddChild(content);
+          }
+        }
+      }
+    }
   }
 
   // Always check the content element for potential attributes.
@@ -529,9 +726,6 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
       mContent->UnsetAttribute(namespaceID, name, PR_FALSE);
   }
   
-  if (mContent)
-    mPrototypeBinding->SetInitialAttributes(mBoundElement, mContent);
-
   return NS_OK;
 }
 
@@ -1407,25 +1601,42 @@ nsXBLBinding::AllowScripts()
 }
 
 NS_IMETHODIMP
-nsXBLBinding::GetInsertionPoint(nsIContent* aChild, nsIContent** aResult)
+nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent, nsISupportsArray** aResult)
 {
-  *aResult = nsnull;
-  if (mContent)
-    return mPrototypeBinding->GetInsertionPoint(mBoundElement, mContent, aChild, aResult);
-  else if (mNextBinding)
-    return mNextBinding->GetInsertionPoint(aChild, aResult);
+  if (!mInsertionPointTable)
+    mInsertionPointTable = new nsSupportsHashtable(4);
+
+  nsISupportsKey key(aParent);
+  *aResult = NS_STATIC_CAST(nsISupportsArray*, mInsertionPointTable->Get(&key));
+
+  if (!*aResult) {
+    NS_NewISupportsArray(aResult);
+    mInsertionPointTable->Put(&key, *aResult);
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXBLBinding::GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints)
+nsXBLBinding::GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex)
+{
+  *aResult = nsnull;
+  if (mContent)
+    return mPrototypeBinding->GetInsertionPoint(mBoundElement, mContent, aChild, aResult, aIndex);
+  else if (mNextBinding)
+    return mNextBinding->GetInsertionPoint(aChild, aResult, aIndex);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, PRBool* aMultipleInsertionPoints)
 {
   *aResult = nsnull;
   *aMultipleInsertionPoints = PR_FALSE;
   if (mContent)
-    return mPrototypeBinding->GetSingleInsertionPoint(mBoundElement, mContent, aResult, aMultipleInsertionPoints);
+    return mPrototypeBinding->GetSingleInsertionPoint(mBoundElement, mContent, aResult, aIndex, aMultipleInsertionPoints);
   else if (mNextBinding)
-    return mNextBinding->GetSingleInsertionPoint(aResult, aMultipleInsertionPoints);
+    return mNextBinding->GetSingleInsertionPoint(aResult, aIndex, aMultipleInsertionPoints);
   return NS_OK;
 }
 
@@ -1480,16 +1691,15 @@ nsXBLBinding::ImplementsInterface(REFNSIID aIID, PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsXBLBinding::GetAnonymousNodes(nsIDOMNodeList** aResult, nsIContent** aParent, PRBool* aMultipleInsertionPoints)
+nsXBLBinding::GetAnonymousNodes(nsIDOMNodeList** aResult)
 {
   *aResult = nsnull;
   if (mContent) {
-    GetSingleInsertionPoint(aParent, aMultipleInsertionPoints);
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
     return elt->GetChildNodes(aResult);
   }
   else if (mNextBinding)
-    return mNextBinding->GetAnonymousNodes(aResult, aParent, aMultipleInsertionPoints);
+    return mNextBinding->GetAnonymousNodes(aResult);
   return NS_OK;
 }
 

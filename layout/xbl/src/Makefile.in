@@ -50,6 +50,7 @@ CPPSRCS		= \
     nsXBLScrollHandler.cpp \
 		nsXBLService.cpp \
 		nsBindingManager.cpp \
+		nsXBLInsertionPoint \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

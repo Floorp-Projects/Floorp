@@ -46,6 +46,7 @@ CPPSRCS=					\
   nsXBLLoadHandler.cpp \
   nsXBLPrototypeHandler.cpp \
   nsBindingManager.cpp \
+  nsXBLInsertionPoint.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
@@ -68,6 +69,7 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLPrototypeHandler.obj \
   .\$(OBJDIR)\nsXBLService.obj \
   .\$(OBJDIR)\nsBindingManager.obj \
+  .\$(OBJDIR)\nsXBLInsertionPoint.obj \
 	$(NULL)
 
 EXPORTS =					\

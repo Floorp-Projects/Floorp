@@ -2,6 +2,7 @@ nsIBindingManager.h
 nsIXBLBinding.h
 nsIXBLBindingAttachedHandler.h
 nsIXBLDocumentInfo.h
+nsIXBLInsertionPoint.h
 nsIXBLPrototypeBinding.h
 nsIXBLPrototypeHandler.h
 nsIXBLService.h

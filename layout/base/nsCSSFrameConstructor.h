@@ -40,9 +40,9 @@ struct nsStyleDisplay;
 class nsIPresShell;
 class nsVoidArray;
 class nsIFrameManager;
-
 class nsFrameConstructorState;
 class nsIDOMHTMLSelectElement;
+class nsIXBLService;
 
 class nsCSSFrameConstructor : public nsIStyleFrameConstruction {
 public:
@@ -524,15 +524,6 @@ protected:
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems);
 
-  nsresult CreateAnonymousTableCellFrames(nsIPresShell*        aPresShell, 
-                                             nsIPresContext*          aPresContext,
-                                             nsIAtom*                 aTag,
-                                             nsFrameConstructorState& aState,
-                                             nsIContent*              aParent,
-                                             nsIFrame*                aNewCellBodyFrame,
-                                             nsIFrame*                aNewCellFrame,
-                                             nsFrameItems&            aChildItems);
-
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
   nsresult ConstructMathMLFrame(nsIPresShell*            aPresShell,
@@ -954,12 +945,12 @@ protected:
   PRBool              mGotGfxPrefs;
   PRBool              mHasGfxScrollbars;
 
+  nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
+
 #ifdef NS_DEBUG
   PRBool              mVerifyFastFindFrame; // if true, run both the old and new find frame code
                                             // to validate that both ways get the same answer
 #endif
-
-  nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 };
 
 #endif /* nsCSSFrameConstructor_h___ */

@@ -75,11 +75,13 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding
 
   NS_IMETHOD HasInsertionPoints(PRBool* aResult) { *aResult = (mInsertionPointTable != nsnull); return NS_OK; };
 
+  NS_IMETHOD InstantiateInsertionPoints(nsIXBLBinding* aBinding);
+
   NS_IMETHOD GetInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                               nsIContent* aChild, nsIContent** aResult);
+                               nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex);
 
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                                     nsIContent** aResult, PRBool* aMultiple);
+                                     nsIContent** aResult, PRUint32* aIndex, PRBool* aMultiple);
 
   NS_IMETHOD GetBaseTag(PRInt32* aNamespaceID, nsIAtom** aTag);
   NS_IMETHOD SetBaseTag(PRInt32 aNamespaceID, nsIAtom* aTag);
@@ -107,7 +109,8 @@ public:
   static nsIAtom* kImplementationAtom;
   static nsIAtom* kImplementsAtom;
 
-  static nsFixedSizeAllocator kPool;
+  static nsFixedSizeAllocator kAttrPool;
+  static nsFixedSizeAllocator kInsPool;
 
 // Internal member functions
 public:

@@ -2396,7 +2396,8 @@ FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFram
       return NS_OK; // It is anonymous. Don't use the insertion point, since that's only
                     // for the explicit kids.
 
-    bindingManager->GetInsertionPoint(content, currContent, getter_AddRefs(insertionElement));
+    PRUint32 index;
+    bindingManager->GetInsertionPoint(content, currContent, getter_AddRefs(insertionElement), &index);
     if (insertionElement) {
       aShell->GetPrimaryFrameFor(insertionElement, &frame);
       if (frame) {
@@ -2414,7 +2415,8 @@ FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFram
   }
   else {
     PRBool dummy;
-    bindingManager->GetSingleInsertionPoint(content, getter_AddRefs(insertionElement), &dummy);
+    PRUint32 index;
+    bindingManager->GetSingleInsertionPoint(content, getter_AddRefs(insertionElement), &index, &dummy);
     if (insertionElement) {
       aShell->GetPrimaryFrameFor(insertionElement, &frame);
       if (frame) {

@@ -710,31 +710,6 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, 
   return NS_OK; 
 }
 
-// For a given element, returns a flat list of all the anonymous children that need
-// frames built.
-NS_IMETHODIMP
-nsXBLService::GetContentList(nsIContent* aContent, nsIDOMNodeList** aResult, nsIContent** aParent, 
-                             PRBool* aMultipleInsertionPoints)
-{ 
-  // Locate the primary binding and get the node list from its mContent parent.
-  *aResult = nsnull;
-  *aParent = nsnull;
-  *aMultipleInsertionPoints = PR_FALSE;
-
-  nsCOMPtr<nsIDocument> document;
-  aContent->GetDocument(*getter_AddRefs(document));
-  nsCOMPtr<nsIBindingManager> bindingManager;
-  NS_ASSERTION(document, "no document");
-  if (!document) return NS_ERROR_FAILURE;
-  document->GetBindingManager(getter_AddRefs(bindingManager));
-  
-  nsCOMPtr<nsIXBLBinding> binding;
-  bindingManager->GetBinding(aContent, getter_AddRefs(binding));
-  
-  binding->GetAnonymousNodes(getter_AddRefs(aResult), aParent, aMultipleInsertionPoints);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsXBLService::FlushStyleBindings(nsIContent* aContent)
 {

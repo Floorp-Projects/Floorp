@@ -545,57 +545,6 @@ nsDocumentChildNodes::DropReference()
 // =
 // ==================================================================
 
-MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList)
-
-nsAnonymousContentList::nsAnonymousContentList(nsISupportsArray* aElements)
-{
-  MOZ_COUNT_CTOR(nsAnonymousContentList);
-
-  // We don't reference count our Anonymous reference (to avoid circular
-  // references). We'll be told when the Anonymous goes away.
-  mElements = aElements;
-  NS_IF_ADDREF(mElements);
-}
- 
-nsAnonymousContentList::~nsAnonymousContentList()
-{
-  MOZ_COUNT_DTOR(nsAnonymousContentList);
-  NS_IF_RELEASE(mElements);
-}
-
-NS_IMETHODIMP
-nsAnonymousContentList::GetLength(PRUint32* aLength)
-{
-  NS_ASSERTION(aLength != nsnull, "null ptr");
-  if (! aLength)
-      return NS_ERROR_NULL_POINTER;
-
-  PRUint32 cnt;
-  nsresult rv = mElements->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  *aLength = cnt;
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-  PRUint32 cnt;
-  nsresult rv = mElements->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-
-  if (aIndex >= (PRUint32) cnt)
-      return NS_ERROR_INVALID_ARG;
-
-  // Cast is okay because we're in a closed system.
-  *aReturn = (nsIDOMNode*) mElements->ElementAt(aIndex);
-  return NS_OK;
-}
-
-// ==================================================================
-// =
-// ==================================================================
-
 nsDocument::nsDocument()
 {
   NS_INIT_REFCNT();
@@ -2211,17 +2160,12 @@ NS_IMETHODIMP
 nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
                               nsIDOMNodeList** aResult)
 {
-  nsresult rv;
-  
-  // Use the XBL service to get the anonymous node list.
-  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-  if (!xblService)
-    return rv;
-
-  PRBool dummy;
-  nsCOMPtr<nsIContent> dummyElt;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-  return xblService->GetContentList(content, aResult, getter_AddRefs(dummyElt), &dummy);
+  *aResult = nsnull;
+  if (mBindingManager) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+    return mBindingManager->GetAnonymousNodesFor(content, aResult);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
