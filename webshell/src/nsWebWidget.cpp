@@ -648,7 +648,7 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
     nsresult rv = NS_OK;
 ///    nsIDocumentLoader* DocLoader;
 
-    PR_ASSERT(0);
+    NS_ASSERTION(0, "The Viewer container loads documents now...");
 
 ///    rv = NS_NewDocumentLoader(&DocLoader);
 ///    if (NS_OK == rv) {
