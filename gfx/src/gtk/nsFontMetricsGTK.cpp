@@ -3623,18 +3623,9 @@ nsFontMetricsGTK::GetWidth  (const char* aString, PRUint32 aLength,
     gint rawWidth;
     
     if (mCurrentFont->IsFreeTypeFont()) {
-        PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-
-        // need to fix this for long strings
-        PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-
-        // convert 7 bit data to unicode
         // this function is only supposed to be called for ascii data
-        for (PRUint32 i=0; i<len; i++) {
-            unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-        }
-
-        rawWidth = mCurrentFont->GetWidth(unichars, len);
+        rawWidth = mCurrentFont->
+          GetWidth(NS_ConvertASCIItoUTF16(aString, aLength).get(), aLength);
     }
     else if (!mCurrentFont->GetXFontIs10646()) {
         NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
@@ -3759,19 +3750,10 @@ nsFontMetricsGTK::DrawString(const char *aString, PRUint32 aLength,
           aContext->GetTranMatrix()->TransformCoord(&xx, &yy);
 
           if (mCurrentFont->IsFreeTypeFont()) {
-              PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-
-              // need to fix this for long strings
-              PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-
-              // convert 7 bit data to unicode
               // this function is only supposed to be called for ascii data
-              for (PRUint32 i=0; i<len; i++) {
-                  unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-              }
-
-              rv = mCurrentFont->DrawString(aContext, aSurface, xx, yy,
-                                            unichars, len);
+              rv = mCurrentFont->DrawString(aContext, aSurface, xx, yy, 
+                                 NS_ConvertASCIItoUTF16(aString, aLength).get(),
+                                 aLength);
           }
           else if (!mCurrentFont->GetXFontIs10646()) {
               // 8 bit data with an 8 bit font
@@ -3792,19 +3774,10 @@ nsFontMetricsGTK::DrawString(const char *aString, PRUint32 aLength,
       aContext->GetTranMatrix()->TransformCoord(&x, &y);
 
       if (mCurrentFont->IsFreeTypeFont()) {
-          PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-
-          // need to fix this for long strings
-          PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-
-          // convert 7 bit data to unicode
           // this function is only supposed to be called for ascii data
-          for (PRUint32 i=0; i<len; i++) {
-              unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-          }
-
-          rv = mCurrentFont->DrawString(aContext, aSurface, x, y,
-                                        unichars, len);
+          rv = mCurrentFont->DrawString(aContext, aSurface, x, y, 
+                             NS_ConvertASCIItoUTF16(aString, aLength).get(),
+                             aLength);
       }
       else if (!mCurrentFont->GetXFontIs10646()) { // keep 8 bit path fast
           // 8 bit data with an 8 bit font
@@ -3966,19 +3939,10 @@ nsFontMetricsGTK::GetBoundingMetrics(const char *aString, PRUint32 aLength,
     nsXFont *xFont = mCurrentFont->GetXFont();
 
     if (mCurrentFont->IsFreeTypeFont()) {
-        PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-
-        // need to fix this for long strings
-        PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-
-        // convert 7 bit data to unicode
         // this function is only supposed to be called for ascii data
-        for (PRUint32 i=0; i<len; i++) {
-            unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-        }
-
-        rv = mCurrentFont->GetBoundingMetrics(unichars, len,
-                                              aBoundingMetrics);
+        rv = mCurrentFont->GetBoundingMetrics(
+                           NS_ConvertASCIItoUTF16(aString, aLength).get(),
+                           aLength, aBoundingMetrics);
     }
     else if (!mCurrentFont->GetXFontIs10646()) {
         // 8 bit data with an 8 bit font
