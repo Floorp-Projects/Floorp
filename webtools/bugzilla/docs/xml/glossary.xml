@@ -347,6 +347,17 @@
         </para>
       </glossdef>
     </glossentry>
+
+    <glossentry id="gloss-regexp">
+      <glossterm>Regular Expression</glossterm>
+      <acronym>regexp</acronym>
+
+      <glossdef>
+          <para>A regular expression is an expression used for pattern matching.
+              <ulink url="http://perldoc.com/perl5.6/pod/perlre.html#Regular-Expressions">Documentation</ulink>
+        </para>
+      </glossdef>
+    </glossentry>
   </glossdiv>
 
   <glossdiv id="gloss-s">
