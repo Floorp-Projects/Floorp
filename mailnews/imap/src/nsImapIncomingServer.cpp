@@ -3767,7 +3767,11 @@ nsImapIncomingServer::GetUriWithNamespacePrefixIfNecessary(PRInt32 namespaceType
       nsCAutoString resultUri(originalUri);
       PRInt32 index = resultUri.Find("//");           // find scheme
       index = resultUri.Find("/", PR_FALSE, index+2); // find '/' after scheme
-      if (resultUri.Find(namespacePrefix.get(), PR_FALSE, index+1) != index+1) // Necessary to insert namespace prefix
+      // it may be the case that this is the INBOX uri, in which case
+      // we don't want to prepend the namespace. In that case, the uri ends with "INBOX",
+      // but the namespace is "INBOX/", so they don't match.
+      if (resultUri.Find(namespacePrefix.get(), PR_FALSE, index+1) != index+1
+        && !Substring(resultUri, index + 1, resultUri.Length() - index - 1).LowerCaseEqualsLiteral("inbox"))
         resultUri.Insert(namespacePrefix, index+1);   // insert namespace prefix
       *convertedUri = nsCRT::strdup(resultUri.get());
     }
