@@ -87,10 +87,28 @@ interface nsIMsgMailNewsUrl : nsIURL {
 
 [scriptable, uuid(02338DD2-E7B9-11d2-8070-006008128C4E)]
 interface nsIMsgMessageUrl : nsISupports {
-	void GetURI(out string aURI); 
+	// get and set the RDF URI associated with the url. Note, not all urls have
+	// had uri's set on them so be prepared to handle cases where this string is empty.
+	attribute string uri;
 	// used by imap, pop and nntp in order to implement save message to disk
 	attribute nsIFileSpec messageFile;
 	attribute boolean AddDummyEnvelope;	
     attribute boolean canonicalLineEnding;
     attribute string originalSpec;
+};
+
+//////////////////////////////////////////////////////////////////////////////////
+// This is a very small interface which I'm grouping with the mailnewsUrl interface.
+// I want to isolate out all the I18N specific information that may be associated with
+// any given mailnews url. This gives I18N their own "sandbox" of routines they can add
+// and tweak as they see fit. For now it contains mostly charset information.
+//////////////////////////////////////////////////////////////////////////////////
+
+[scriptable, uuid(D71E0785-2862-11d4-98C1-001083010E9B)]
+interface nsIMsgI18NUrl : nsISupports {
+	// the charset associated with a folder for this url.....
+	readonly attribute wstring folderCharset;
+	// the charsetOverRide is a charset the user may have specified via the menu for
+	// a particular message
+	// attribute wstring charsetOverRide;
 };
