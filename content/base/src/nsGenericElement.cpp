@@ -3753,7 +3753,7 @@ nsGenericElement::GetContentsAsText(nsAString& aText)
 void*
 nsGenericElement::GetProperty(nsIAtom  *aPropertyName, nsresult *aStatus) const
 {
-  nsIDocument *doc = GetDocument();
+  nsIDocument *doc = GetOwnerDoc();
   if (!doc)
     return nsnull;
 
@@ -3765,7 +3765,7 @@ nsGenericElement::SetProperty(nsIAtom            *aPropertyName,
                               void               *aValue,
                               NSPropertyDtorFunc  aDtor)
 {
-  nsIDocument *doc = GetDocument();
+  nsIDocument *doc = GetOwnerDoc();
   if (!doc)
     return NS_ERROR_FAILURE;
 
@@ -3780,7 +3780,7 @@ nsGenericElement::SetProperty(nsIAtom            *aPropertyName,
 nsresult
 nsGenericElement::DeleteProperty(nsIAtom *aPropertyName)
 {
-  nsIDocument *doc = GetDocument();
+  nsIDocument *doc = GetOwnerDoc();
   if (!doc)
     return nsnull;
 
@@ -3790,7 +3790,7 @@ nsGenericElement::DeleteProperty(nsIAtom *aPropertyName)
 void*
 nsGenericElement::UnsetProperty(nsIAtom  *aPropertyName, nsresult *aStatus)
 {
-  nsIDocument *doc = GetDocument();
+  nsIDocument *doc = GetOwnerDoc();
   if (!doc)
     return nsnull;
 
