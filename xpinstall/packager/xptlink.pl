@@ -95,8 +95,12 @@ closedir (DESTDIR);
 foreach $component (@xptdirs) {
 	($debug >= 1) && print "[$component]\n";
 	chdir ("$destdir$PD$component");
-	if ( -d "$bindir$PD"."components" ) {
-		chdir ("$bindir$PD"."components") ;
+	if (( $os eq "MacOS" && -d "$PD$bindir$PD"."components") || ( -d "$bindir$PD"."components")) {
+		if ( $os eq "MacOS" ) {
+			chdir (":$bindir$PD"."components") ;
+		} else {
+			chdir ("$bindir$PD"."components") ;
+		}	
 		( -f "$component".".xpt" ) &&
 			warn "Warning:  file ".$component.".xpt already exists.\n";
 		( -f ":$component".".xpt" ) &&
@@ -121,7 +125,7 @@ foreach $component (@xptdirs) {
 		# merge .xpt files into one if we found any in the dir
 		if ( $#xptfiles >=1 ) {
 			if ( $os eq "MacOS" ) {
-				$cmdline = "'$srcdir$PD$bindir$PD"."xpt_link' $component".".xpt.new"." @xptfiles";
+				$cmdline = "'$srcdir$PD"."xpt_link' $component".".xpt.new"." @xptfiles";
 			} else {
 				$cmdline = "$srcdir$PD$bindir$PD"."xpt_link $component".".xpt.new"." @xptfiles";
 			}
