@@ -208,7 +208,6 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsGfxScrollFrame::Destroy(nsIPresContext* aPresContext)
-
 {
   nsIScrollableView *view = mInner.GetScrollableView();
   NS_ASSERTION(view, "unexpected null pointer");
@@ -625,7 +624,7 @@ NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::Release(void)
   return 1;
 }
 
-NS_IMPL_QUERY_INTERFACE1(nsGfxScrollFrameInner, nsIScrollPositionListener);
+NS_IMPL_QUERY_INTERFACE1(nsGfxScrollFrameInner, nsIScrollPositionListener)
 
 nsGfxScrollFrameInner::ScrollbarStyles
 nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
