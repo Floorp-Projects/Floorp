@@ -136,7 +136,7 @@
     }
   } // foreach character
 
-  return [super keyDown: aEvent];
+  [super keyDown: aEvent];
 }
 
 /*
