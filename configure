@@ -10177,7 +10177,7 @@ fi
 if test "${enable_perf_metrics+set}" = set; then
   enableval="$enable_perf_metrics"
   if test "$enableval" = "yes"; then
-    MOZ_PERF=1
+    MOZ_PERF_METRICS=1
   cat >> confdefs.h <<\EOF
 #define MOZ_PERF_METRICS 1
 EOF
