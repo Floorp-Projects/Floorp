@@ -42,7 +42,8 @@ static void GetPageSize(void)
     /* Get page size */
 #ifdef XP_UNIX
 #if defined SUNOS4 || defined LINUX || defined BSDI || defined AIX \
-	|| defined FREEBSD || defined NETBSD || defined OPENBSD || defined RHAPSODY
+        || defined FREEBSD || defined NETBSD || defined OPENBSD \
+        || defined RHAPSODY || defined NEXTSTEP
     _pr_pageSize = getpagesize();
 #elif defined(HPUX)
     /* I have no idea. Don't get me started. --Rob */

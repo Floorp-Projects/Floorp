@@ -43,7 +43,7 @@
 
 #define HAVE_LCHOWN
 
-#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(RHAPSODY)
+#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(RHAPSODY) || defined(NEXTSTEP)
 #undef HAVE_LCHOWN
 #endif
 
@@ -51,15 +51,39 @@
  * Does getcwd() take NULL as the first argument and malloc
  * the result buffer?
  */
-#if !defined(RHAPSODY)
+#if !defined(RHAPSODY) && !defined(NEXTSTEP)
 #define GETCWD_CAN_MALLOC
 #endif
+
+#ifdef NEXTSTEP
+#include <bsd/libc.h>
+
+/*
+** balazs.pataki@sztaki.hu: The getcwd is broken in NEXTSTEP (returns 0),
+** when called on a mounted fs. Did anyone notice this? Here's an ugly
+** workaround ...
+*/
+#define getcwd(b,s)   my_getcwd(b,s)
+
+static char *
+my_getcwd (char *buf, size_t size)
+{
+    FILE *pwd = popen("pwd", "r");
+    char *result = fgets(buf, size, pwd);
+
+    if (result) {
+        buf[strlen(buf)-1] = '\0';
+    }
+    pclose (pwd);
+    return buf;
+}
+#endif /* NEXTSTEP */
 
 #ifdef LINUX
 #include <getopt.h>
 #endif
 
-#if defined(SCO) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC)
+#if defined(SCO) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(NEXTSTEP)
 #if !defined(S_ISLNK) && defined(S_IFLNK)
 #define S_ISLNK(a)	(((a) & S_IFMT) == S_IFLNK)
 #endif

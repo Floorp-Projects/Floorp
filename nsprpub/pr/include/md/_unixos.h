@@ -27,7 +27,7 @@
  * Linux: FD_SETSIZE is defined in /usr/include/sys/select.h and should
  * not be redefined.
  */
-#if !defined(LINUX) && !defined(RHAPSODY)
+#if !defined(LINUX) && !defined(RHAPSODY) && !defined(NEXTSTEP)
 #ifndef FD_SETSIZE
 #define FD_SETSIZE  4096
 #endif
@@ -144,7 +144,7 @@ extern void _MD_unix_init_running_cpu(struct _PRCPU *cpu);
 ** work - it just means that we don't really have a functional
 ** redzone.
 */
-#if defined(DEBUG) && !defined(RHAPSODY)
+#if defined(DEBUG) && !defined(RHAPSODY) && !defined(NEXTSTEP)
 #if !defined(SOLARIS)	
 #include <string.h>  /* for memset() */
 #define _MD_INIT_STACK(ts,REDZONE)					\

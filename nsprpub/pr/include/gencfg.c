@@ -83,6 +83,12 @@
 #endif
 #endif
 
+#if defined(__NeXT__)
+#ifndef NEXTSTEP
+      error - NEXTSTEP is not defined
+#endif
+#endif
+
 /************************************************************************/
 
 /* Generate cpucfg.h */

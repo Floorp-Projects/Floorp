@@ -83,6 +83,9 @@ void PR_SetXtHackOkayToReleaseXLockFn(int (*fn)(void))
 
 #if defined(HPUX9)
 int select(size_t width, int *rl, int *wl, int *el, const struct timeval *tv)
+#elif defined(NEXTSTEP)
+int wrap_select(int width, fd_set *rd, fd_set *wr, fd_set *ex,
+        const struct timeval *tv)
 #elif defined(AIX4_1)
 int wrap_select(unsigned long width, void *rl, void *wl, void *el,
         struct timeval *tv)
