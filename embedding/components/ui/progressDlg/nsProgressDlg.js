@@ -33,6 +33,7 @@ var dialog;
 var helperAppLoader;
 var webBrowserPersist;                                                          
 var persistArgs;    
+const nsIWBP = Components.interfaces.nsIWebBrowserPersist;
 
 // random global variables...
 var completed = false;
@@ -79,7 +80,7 @@ var progressListener = {
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
 
-      if (!gRestartChecked) 
+      if (!gRestartChecked)
       {
         gRestartChecked = true;
         try 
@@ -302,9 +303,7 @@ function loadDialog()
       sourceUrl = persistArgs.source;
     }
     catch (e) {
-      // must be an nsIFile
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-      sourceUrl = { spec: ioService.getURLSpecFromFile(persistArgs.source) };
+      sourceUrl = { spec: persistArgs.source.URL };
     }
   
     // When saving web pages, we don't need to do anything special to receive the time
@@ -342,6 +341,7 @@ function onLoad() {
     }
     catch (e) {
       webBrowserPersist = window.arguments[0].QueryInterface( Components.interfaces.nsIWebBrowserPersist );
+      setTimeout("checkPersistComplete()", 100);
     }
  
     if ( !helperAppLoader && !webBrowserPersist ) {
@@ -382,6 +382,14 @@ function onLoad() {
       
       targetFile = persistArgs.target;
         
+      // If the code reaches this point, the user has agreed to replace existing files in the
+      // file picker. 
+      const flags = nsIWBP.PERSIST_FLAGS_NO_CONVERSION | nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+      if (persistArgs.bypassCache)
+        webBrowserPersist.persistFlags |= nsIWBP.PERSIST_FLAGS_BYPASS_CACHE;
+      else 
+        webBrowserPersist.persistFlags |= nsIWBP.PERSIST_FLAGS_FROM_CACHE;
+      
       try {
         var uri = persistArgs.source.QueryInterface(Components.interfaces.nsIURI);
         webBrowserPersist.saveURI(uri, persistArgs.postData, targetFile);
@@ -389,23 +397,36 @@ function onLoad() {
       catch (e) {
         // Saving a Document, not a URI:
         
-        // Create the local directory into which to save associated files. 
-        const lfContractID = "@mozilla.org/file/local;1";
-        const lfIID = Components.interfaces.nsILocalFile;
-        var filesFolder = Components .classes[lfContractID].createInstance(lfIID);
-        filesFolder.initWithUnicodePath(persistArgs.target.unicodePath);
-        
-        var nameWithoutExtension = filesFolder.leafName;
-        nameWithoutExtension = nameWithoutExtension.substring(0, nameWithoutExtension.lastIndexOf("."));
-        var filesFolderLeafName = getString("filesFolder");
-        filesFolderLeafName = filesFolderLeafName.replace(/\^BASE\^/, nameWithoutExtension);
+        var filesFolder = null;
+        if (persistArgs.contentType != "text/plain") {
+          // Create the local directory into which to save associated files. 
+          const lfContractID = "@mozilla.org/file/local;1";
+          const lfIID = Components.interfaces.nsILocalFile;
+          filesFolder = Components .classes[lfContractID].createInstance(lfIID);
+          filesFolder.initWithUnicodePath(persistArgs.target.unicodePath);
+          
+          var nameWithoutExtension = filesFolder.leafName;
+          nameWithoutExtension = nameWithoutExtension.substring(0, nameWithoutExtension.lastIndexOf("."));
+          var filesFolderLeafName = getString("filesFolder");
+          filesFolderLeafName = filesFolderLeafName.replace(/\^BASE\^/, nameWithoutExtension);
 
-        filesFolder.leafName = filesFolderLeafName;
+          filesFolder.leafName = filesFolderLeafName;
+          
+          if (!filesFolder.exists())
+            filesFolder.create(lfIID.DIRECTORY_TYPE, 0755);
+        }
+          
+        var encodingFlags = 0;
+        if (persistArgs.contentType == "text/plain") {
+          encodingFlags |= nsIWBP.ENCODE_FLAGS_FORMATTED;
+          encodingFlags |= nsIWBP.ENCODE_FLAGS_ABSOLUTE_LINKS;
+          encodingFlags |= nsIWBP.ENCODE_FLAGS_NOFRAMES_CONTENT;        
+        }
         
-        if (!filesFolder.exists())
-          filesFolder.create(lfIID.DIRECTORY_TYPE, 0755);
+        const kWrapColumn = 80;
 
-        webBrowserPersist.saveDocument(persistArgs.source, targetFile, filesFolder, null, 0, 0);
+        webBrowserPersist.saveDocument(persistArgs.source, targetFile, filesFolder, 
+                                       persistArgs.contentType, encodingFlags, kWrapColumn);
       }
     }
     
@@ -558,3 +579,13 @@ function doPauseButton() {
         dialog.request.suspend()
     }
 }
+
+function checkPersistComplete()
+{
+  const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
+  if (webBrowserPersist.currentState == nsIWebBrowserPersist.PERSIST_STATE_FINISHED) {
+    dump("*** all done\n");
+    processEndOfDownload();
+  }
+}
+
