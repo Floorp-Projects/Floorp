@@ -37,6 +37,7 @@ var targetFile;
 var docTitle = "";
 var docURL   = "";
 var progressParams = null;
+var switchUI = true;
 
 function elipseString(aStr, doFront)
 {
@@ -83,13 +84,25 @@ var progressListener = {
         var percentPrint = getString( "progressText" );
         percentPrint = replaceInsert( percentPrint, 1, 100 );
         dialog.progressText.setAttribute("value", percentPrint);
-
         window.close();
       }
     },
     
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
+      if (switchUI) 
+      {
+        dialog.tempLabel.setAttribute("hidden", "true");
+        dialog.progress.setAttribute("hidden", "false");
+        dialog.cancel.setAttribute("disabled", "false");
+
+        var progressLabel = getString("progress");
+        if (progressLabel == "") {
+          progressLabel = "Progress:"; // better than nothing
+        }
+        switchUI = false;
+      }
+
       if (progressParams)
       {
         var docTitleStr = elipseString(progressParams.docTitle, false);
@@ -243,7 +256,6 @@ function onLoad() {
     // set our web progress listener on the helper app launcher
     printProgress.registerListener(progressListener);
     moveToAlertPosition();
-
     //We need to delay the set title else dom will overwrite it
     window.setTimeout(doneIniting, 500);
 }
@@ -278,15 +290,5 @@ function onCancel ()
 
 function doneIniting() 
 {
-  dialog.tempLabel.setAttribute("hidden", "true");
-  dialog.progress.setAttribute("hidden", "false");
-  dialog.cancel.setAttribute("disabled", "false");
-
-  var progressLabel = getString("progress");
-  if (progressLabel == "") {
-    progressLabel = "Progress:"; // better than nothing
-  }
-  //dialog.progressLabel.value = progressLabel;
-
   printProgress.doneIniting();
 }

@@ -41,7 +41,6 @@
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 var gPrintSettingsAreGlobal = true;
 var gSavePrintSettings = true;
-var gPrintSettings = null;
 var gChromeState = null; // chrome state before we went into print preview
 var gOldCloseHandler = null; // close handler before we went into print preview
 var gInPrintPreviewMode = false;
@@ -175,37 +174,6 @@ function BrowserExitPrintPreview()
   mainWin.setAttribute("onclose", gOldCloseHandler);
 }
 
-function GetPrintSettings()
-{
-  var prevPS = gPrintSettings;
-
-  try {
-    if (gPrintSettings == null) {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
-      if (pref) {
-        gPrintSettingsAreGlobal = pref.getBoolPref("print.use_global_printsettings", false);
-        gSavePrintSettings = pref.getBoolPref("print.save_print_settings", false);
-      }
-
-      var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                                        .getService(Components.interfaces.nsIPrintSettingsService);
-      if (gPrintSettingsAreGlobal) {
-        gPrintSettings = psService.globalPrintSettings;        
-        if (gSavePrintSettings) {
-          psService.initPrintSettingsFromPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
-        }
-      } else {
-        gPrintSettings = psService.newPrintSettings;
-      }
-    }
-  } catch (e) {
-    dump("GetPrintSettings "+e);
-  }
-
-  return gPrintSettings;
-}
-
 // This observer is called once the progress dialog has been "opened"
 var gPrintPreviewObs = {
     observe: function(aSubject, aTopic, aData)
@@ -310,50 +278,6 @@ function FinishPrintPreview()
   }
 }
 
-
-function BrowserPrintSetup()
-{
-  var didOK = false;
-  try {
-    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
-    if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings();
-    }
-
-    didOK = goPageSetup(window, gPrintSettings);  // from utilityOverlay.js
-    if (didOK) {  // from utilityOverlay.js
-
-      if (webBrowserPrint) {
-        if (gPrintSettingsAreGlobal && gSavePrintSettings) {
-          var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                                            .getService(Components.interfaces.nsIPrintSettingsService);
-          psService.savePrintSettingsToPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
-        }
-      }
-    }
-  } catch (e) {
-    dump("BrowserPrintSetup "+e);
-  }
-  return didOK;
-}
-
-function BrowserPrint()
-{
-  try {
-    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
-    if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings();
-      webBrowserPrint.print(gPrintSettings, null);
-    }
-  } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-    // causing an exception to be thrown which we catch here.
-    // Unfortunately this will also consume helpful failures, so add a
-    // dump(e); // if you need to debug
-  }
-}
 
 function BrowserSetDefaultCharacterSet(aCharset)
 {

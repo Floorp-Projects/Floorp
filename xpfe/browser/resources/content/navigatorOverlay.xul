@@ -118,8 +118,8 @@
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
     <command id="Browser:EditPage" oncommand="editPageOrFrame();" observes="isImage"/>
     <command id="Browser:Open" oncommand="BrowserOpenWindow();"/>
-    <command id="Browser:PrintSetup" oncommand="BrowserPrintSetup();"/>
-    <command id="Browser:Print" oncommand="BrowserPrint();"/>
+    <command id="Browser:PrintSetup" oncommand="NSPrintSetup();"/>
+    <command id="Browser:Print" oncommand="NSPrint();"/>
     <command id="Browser:PrintPreview" oncommand="BrowserPrintPreview();"/>
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>

@@ -51,7 +51,7 @@
 
     <content>
       <xul:button label="&print.label;" accesskey="&print.accesskey;"
-        oncommand="BrowserPrint();"/>
+        oncommand="NSPrint();"/>
 
       <xul:button label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
         oncommand="doPageSetup();"/>
@@ -164,9 +164,11 @@
         this._debug("constructor");
 
         var print = _getWebBrowserPrint();
-        this.mTotalPages.value = print.printPreviewNumPages;
+        try {
+          this.mTotalPages.value = print.printPreviewNumPages;
+          _getValuesFromPS();
+        } catch(e) {}
 
-        _getValuesFromPS();
 
         // XXX TEMPORARY
         // XXX Until bug 119491 ("Cleanup global vars in PostScript and Xprint
@@ -202,7 +204,7 @@
       <method name="doPageSetup">
         <body>
         <![CDATA[
-          var didOK = BrowserPrintSetup();
+          var didOK = NSPrintSetup();
           if (didOK) {
             // the changes that effect the UI
             this._getValuesFromPS();
