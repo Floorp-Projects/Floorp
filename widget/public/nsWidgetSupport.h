@@ -79,7 +79,6 @@ NS_CreateTextWidget(nsISupports* aParent,
 
 
 extern NS_WIDGET nsresult 
-extern NS_WIDGET nsresult 
 NS_CreateScrollBar(nsISupports* aParent,	
                       nsIScrollbar* aWidget, 
                       const nsRect& aRect, 
