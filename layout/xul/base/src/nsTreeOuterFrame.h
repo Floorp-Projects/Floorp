@@ -53,6 +53,7 @@ public:
                                nsHTMLReflowState& aChildReflowState);
 
   NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines);
+  NS_IMETHOD CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide);
 
 protected:
   nsTreeOuterFrame();

@@ -618,6 +618,22 @@ nsTreeFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
 }
 
 NS_IMETHODIMP
+nsTreeFrame::CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide)
+{
+  // Get our treechildren child frame.
+  nsTreeRowGroupFrame* treeRowGroup = nsnull;
+  GetTreeBody(&treeRowGroup);
+  
+  if (!treeRowGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  treeRowGroup->CollapseScrollbar(aHide, aPresContext, nsnull);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsTreeFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 {
   // Get our treechildren child frame.
