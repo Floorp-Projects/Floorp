@@ -399,6 +399,17 @@ PRUint32 nsCRT::BufferHashCode(const char* s, PRUint32 len)
   return h;
 }
 
+PRUint32 nsCRT::BufferHashCode(const PRUnichar* s, PRUint32 len)
+{
+  PRUint32 h = 0;
+  const PRUnichar* done = s + len;
+
+  while ( s < done )
+    h = (h>>28) ^ (h<<4) ^ PRUint16(*s++); // cast to unsigned to prevent possible sign extension
+
+  return h;
+}
+
 // This should use NSPR but NSPR isn't exporting its PR_strtoll function
 // Until then...
 PRInt64 nsCRT::atoll(const char *str)
