@@ -50,7 +50,7 @@
 #include "nsIEntropyCollector.h"
 #include "nsString.h"
 #include "nsIStringBundle.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
@@ -208,8 +208,6 @@ private:
   nsresult ConfigureInternalPKCS11Token();
   nsresult RegisterPSMContentListener();
   nsresult RegisterObservers();
-  static int PR_CALLBACK PrefChangedCallback(const char* aPrefName, void* data);
-  void PrefChanged(const char* aPrefName);
   nsresult DownloadCrlSilently();
   nsresult PostCRLImportEvent(nsCAutoString *urlString, PSMContentDownloader *psmDownloader);
   nsresult getParamsForNextCrlToDownload(nsAutoString *url, PRTime *time, nsAutoString *key);
@@ -218,7 +216,7 @@ private:
   nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
-  nsCOMPtr<nsIPref> mPref;
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCOMPtr<nsITimer> mTimer;
   PRBool mNSSInitialized;
   PRBool mObserversRegistered;

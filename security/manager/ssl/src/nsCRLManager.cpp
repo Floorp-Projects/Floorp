@@ -48,6 +48,8 @@
 #include "nsIPrompt.h"
 #include "nsICertificateDialogs.h"
 #include "nsArray.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsNSSShutDown.h"
 
 #include "nsNSSCertHeader.h"
@@ -224,7 +226,8 @@ done:
     if(crlKey == nsnull){
       return NS_ERROR_FAILURE;
     }
-    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID,&rv);
+    nsCOMPtr<nsIPrefService> prefSvc = do_GetService(NS_PREFSERVICE_CONTRACTID,&rv);
+    nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID,&rv);
     if (NS_FAILED(rv)){
       return rv;
     }
@@ -282,7 +285,6 @@ done:
       pref->SetCharPref(updateUrlPrefStr.get(),updateURL.get());
       
       pref->SetIntPref(updateErrCntPrefStr.get(),0);
-      pref->SavePrefFile(nsnull);
       
       if(toBeRescheduled == PR_TRUE){
         nsAutoString hashKey(crlKey);
@@ -297,14 +299,13 @@ done:
       updateErrDetailPrefStr.AppendWithConversion(crlKey);
       errMsg.AssignWithConversion(errorMessage.get());
       rv = pref->GetIntPref(updateErrCntPrefStr.get(),&errCnt);
-      if( (NS_FAILED(rv)) || (errCnt ==0)){
-        pref->SetIntPref(updateErrCntPrefStr.get(),1);
-      }else{
-        pref->SetIntPref(updateErrCntPrefStr.get(),errCnt+1);
-      }
+      if(NS_FAILED(rv))
+        errCnt = 0;
+
+      pref->SetIntPref(updateErrCntPrefStr.get(),errCnt+1);
       pref->SetCharPref(updateErrDetailPrefStr.get(),errMsg.get());
-      pref->SavePrefFile(nsnull);
     }
+    prefSvc->SavePrefFile(nsnull);
   }
 
   return rv;

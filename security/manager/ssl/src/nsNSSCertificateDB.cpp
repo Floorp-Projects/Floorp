@@ -53,6 +53,8 @@
 #include "nsReadableUtils.h"
 #include "nsArray.h"
 #include "nsNSSShutDown.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "nspr.h"
 extern "C" {
@@ -1239,10 +1241,10 @@ finish:
 NS_IMETHODIMP 
 nsNSSCertificateDB::GetIsOcspOn(PRBool *aOcspOn)
 {
-  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
   PRInt32 ocspEnabled;
-  prefService->GetIntPref("security.OCSP.enabled", &ocspEnabled);
+  pref->GetIntPref("security.OCSP.enabled", &ocspEnabled);
   *aOcspOn = ( ocspEnabled == 0 ) ? PR_FALSE : PR_TRUE; 
   return NS_OK;
 }
