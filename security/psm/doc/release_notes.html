@@ -22,7 +22,7 @@ Release 1.3</h2></center>
 
 <center>
 <h2>
-8/29/2000</h2></center>
+9/10/2000</h2></center>
 
 <center>
 <hr WIDTH="100%"></center>
@@ -72,9 +72,9 @@ see <a href="http://docs.iPlanet.com/docs/manuals/psm.html">http://docs.iPlanet.
 <a NAME="Changes Since PSM 1.2"></a>Changes Since Personal Security Manager
 1.2</h2>
 Most changes since the Personal Security Manager 1.3 involves minor bug
-fixes and optimizaitons.
+fixes and optimizations.
 <p>Netscape 6 and Mozilla do not supported signed or encrypted email. For
-this reason, features related to email certifiates are not available in
+this reason, features related to email certificates are not available in
 this release.
 <p>
 <hr WIDTH="100%">
@@ -115,8 +115,8 @@ same Unix user you were logged in as when you installed it.
 <h3>
 Disabling Personal Security Manager</h3>
 To <b>disable</b> Personal Security Manager temporarily, remove the directory
-<tt>psm</tt> from the directory where the Netscape or Mozilla executable
-resides.
+<tt>psm</tt>
+from the directory where the Netscape or Mozilla executable resides.
 <p>
 <hr WIDTH="100%">
 <h2>
@@ -143,10 +143,6 @@ Manager with Netscape 6</a></li>
 <li>
 <a href="#Validate Certificates Using OSCP">Validate Certificates Using
 OCSP</a></li>
-
-<li>
-<a href="#Fetch Certificates Automatically from a Directory">Fetch Certificates
-Automatically from a Directory</a></li>
 </ul>
 The sections that follow briefly describe how to test some of the features
 listed above.
@@ -310,10 +306,11 @@ for both <tt>psm.exe</tt> and <tt>netscp6.exe</tt>.</li>
 stored internally by Personal Security Manager.</b> If exiting and relaunching
 Netscape 6 doesn't take care of the problem, in some rare cases it may
 work to exit Netscape 6, then delete or rename your <tt>cert7.db</tt> and
-<tt>key3.db</tt> files (located in your user profile directory on Windows
-95/98/2000/NT, or in the directory in which the Netscape or Mozilla executable
-resides on Unix) and relaunch the Netscape 6. You should also look for
-all other files in the same directory that begin with <tt>cert</tt> or
+<tt>key3.db</tt>
+files (located in your user profile directory on Windows 95/98/2000/NT,
+or in the directory in which the Netscape or Mozilla executable resides
+on Unix) and relaunch the Netscape 6. You should also look for all other
+files in the same directory that begin with <tt>cert</tt> or
 <tt>key</tt>
 and end in <tt>.db</tt> and delete those files as well before relaunching
 Netscape 6.</li>
