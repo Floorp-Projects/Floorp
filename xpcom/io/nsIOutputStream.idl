@@ -98,9 +98,9 @@ interface nsIOutputStream : nsISupports
 
     /**
      * Allows users to set an observer on an output stream to receive notifications
-     * about the consumer emptying the output stream's underlying buffer, or closing the
-     * stream. This is necessary for non-blocking streams so that the producer can suspend
-     * itself until more data can be written.
+     * about the producer writing data into the output stream, or filling the buffer.
+     * This is necessary for non-blocking streams so that the consumer can suspend
+     * itself until more data is available.
      */
     attribute nsIOutputStreamObserver observer;
 };
@@ -109,7 +109,7 @@ interface nsIOutputStream : nsISupports
 interface nsIOutputStreamObserver : nsISupports
 {
     /**
-     * Called when the input stream's producer has written more data into the stream.
+     * Called when the output stream's producer has written more data into the stream.
      */
     void onWrite(in nsIOutputStream inStr, 
                  in unsigned long amount);
