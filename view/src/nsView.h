@@ -55,18 +55,6 @@ class nsIViewManager;
 class nsViewManager;
 class nsZPlaceholderView;
 
-// IID for the nsIClipView interface
-#define NS_ICLIPVIEW_IID    \
-{ 0x4cc36160, 0xd282, 0x11d2, \
-{ 0x90, 0x67, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 } }
-
-class nsIClipView : public nsISupports
-{
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICLIPVIEW_IID)
-};
-
-
 class nsView : public nsIView
 {
 public:
