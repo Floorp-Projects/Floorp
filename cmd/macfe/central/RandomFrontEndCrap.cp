@@ -1206,6 +1206,8 @@ void FE_ShiftImage(
 
 MWContext *FE_GetNetHelpContext()
 {
+#if 0 	// no more NetHelp!
+
 	MWContext			*pActiveContext = NULL;
 	CNSContext			*pWindowContext = NULL;
 	CWindowIterator 	*iter;
@@ -1250,6 +1252,8 @@ MWContext *FE_GetNetHelpContext()
 	}
 	
 	return pActiveContext;
+#endif
+	return NULL;
 }
 
 
