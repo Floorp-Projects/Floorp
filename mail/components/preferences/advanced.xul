@@ -107,17 +107,26 @@
           <separator class="thin"/>
 
           <vbox>
-          <hbox align="center" pack="start">
-            <label value="&reuseExp.label;"/>
-          </hbox>
+            <hbox align="center" pack="start">
+              <label value="&reuseExp.label;"/>
+            </hbox>
           
-          <hbox class="indent">  
-            <radiogroup id="mailnewsDoubleClick2NewWindow" preference="mailnews.reuse_message_window" orient="horizontal">
-              <radio value="false" label="&reuseExpRadio0.label;" accesskey="&reuseExpRadio0.accesskey;" id="new"/>
-              <radio value="true" label="&reuseExpRadio1.label;" accesskey="&reuseExpRadio1.accesskey;" id="existing"/>
-            </radiogroup>
-          </hbox>
+            <hbox class="indent">  
+              <radiogroup id="mailnewsDoubleClick2NewWindow" preference="mailnews.reuse_message_window" orient="horizontal">
+                <radio value="false" label="&reuseExpRadio0.label;" accesskey="&reuseExpRadio0.accesskey;" id="new"/>
+                <radio value="true" label="&reuseExpRadio1.label;" accesskey="&reuseExpRadio1.accesskey;" id="existing"/>
+              </radiogroup>
+            </hbox>
           </vbox>
+          
+          <separator class="thin"/>
+
+          <hbox align="center">
+            <description flex="1">&offline.label;</description>
+            <button label="&showOfflineSettings.label;" 
+                    accesskey="&showOfflineSettings.accesskey;" 
+                    oncommand="gAdvancedPane.showOfflineSettings();"/>
+          </hbox>
         </tabpanel>
         
         <!-- Update --> 

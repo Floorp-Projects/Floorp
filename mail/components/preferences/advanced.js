@@ -82,6 +82,12 @@ var gAdvancedPane = {
                                         "width=600,height=400", null);
   },
 
+  showOfflineSettings: function()
+  {
+    document.documentElement.openSubDialog("chrome://messenger/content/preferences/offline.xul",
+                                           "", null);
+  },
+
   updateAppUpdateUI: function ()
   {
     var preference = document.getElementById("app.update.autoUpdateEnabled");
