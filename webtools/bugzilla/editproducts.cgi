@@ -418,6 +418,8 @@ if ($action eq 'del') {
              FROM products
              WHERE product=" . SqlQuote($product));
     my ($description, $milestoneurl, $disallownew) = FetchSQLData();
+    my $milestonelink = $milestoneurl ? "<a href=\"$milestoneurl\">$milestoneurl</a>"
+                                      : "<font color=\"red\">missing</font>";
     $description ||= "<FONT COLOR=\"red\">description missing</FONT>";
     $disallownew = $disallownew ? 'closed' : 'open';
     
@@ -437,7 +439,7 @@ if ($action eq 'del') {
     if (Param('usetargetmilestone')) {
         print "</TR><TR>\n";
         print "  <TD VALIGN=\"top\">Milestone URL:</TD>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"$milestoneurl\">$milestoneurl</A></TD>\n";
+        print "  <TD VALIGN=\"top\">$milestonelink</TD>\n";
     }
 
     # Added -JMR, 2/16/00

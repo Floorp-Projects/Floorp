@@ -487,9 +487,9 @@ if ($action eq 'del') {
 
     my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : "<FONT COLOR=\"red\">missing</FONT>";
     my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : "<FONT COLOR=\"red\">missing</FONT>";
-
+    my $milestonelink = $milestoneurl ? "<A HREF=\"$milestoneurl\">$milestoneurl</A>"
+                                      : "<FONT COLOR=\"red\">missing</FONT>";
     $pdesc            ||= "<FONT COLOR=\"red\">missing</FONT>";
-    $milestoneurl     ||= "<FONT COLOR=\"red\">missing</FONT>";
     $disallownew        = $disallownew ? 'closed' : 'open';
     $cdesc            ||= "<FONT COLOR=\"red\">missing</FONT>";
     
@@ -530,7 +530,7 @@ if ($action eq 'del') {
     if (Param('usetargetmilestone')) {
          print "</TR><TR>\n";
          print "  <TD VALIGN=\"top\">Milestone URL:</TD>\n";
-         print "  <TD VALIGN=\"top\"><A HREF=\"$milestoneurl\">$milestoneurl</A></TD>\n";
+         print "  <TD VALIGN=\"top\">$milestonelink</TD>\n";
     }
 
     print "</TR><TR>\n";
