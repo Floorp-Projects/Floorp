@@ -25,6 +25,10 @@ classic.jar:
     skin/classic/global/menulistBindings.xml
     skin/classic/global/tasksOverlay.css
     skin/classic/global/dialogOverlay.css
+    skin/classic/global/arrow-med-up.gif
+    skin/classic/global/arrow-med-up-hover.gif
+    skin/classic/global/arrow-med-down.gif
+    skin/classic/global/arrow-med-down-hover.gif
     skin/classic/global/button-def-disabled-left.gif
     skin/classic/global/button-def-disabled-middle.gif
     skin/classic/global/button-def-disabled-right.gif
