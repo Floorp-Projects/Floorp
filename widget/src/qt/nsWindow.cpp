@@ -43,7 +43,8 @@
 #include "nsIRenderingContext.h"
 #include "nsRect.h"
 #include "nsGfxCIID.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include <qapplication.h>
 
@@ -85,12 +86,11 @@ nsWindow::nsWindow()
     mGlobalsInitialized = PR_TRUE;
  
     // check to see if we should set our raise pref
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs) {
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefBranch) {
       PRBool val = PR_TRUE;
-      nsresult rv;
-      rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus",
-                              &val);
+      nsresult rv = prefBranch->GetBoolPref("mozilla.widget.raise-on-setfocus",
+                                            &val);
       if (NS_SUCCEEDED(rv))
         mRaiseWindows = val;
     }
