@@ -183,12 +183,16 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::AddMessageCopyOperation(const char *des
   return SetCopiesToDB();
 }
 
+// we write out the folders as one string, separated by 0x1.
+#define FOLDER_SEP_CHAR '\001'
+
 nsresult nsMsgOfflineImapOperation::GetCopiesFromDB()
 {
   nsXPIDLCString copyDests;
   m_copyDestinations.Clear();
   nsresult rv = m_mdb->GetProperty(m_mdbRow, PROP_COPY_DESTS, getter_Copies(copyDests));
   nsCAutoString copyDestsCString((const char *) copyDests);
+  // use 0x1 as the delimiter between folder names since it's not a legal character
   if (NS_SUCCEEDED(rv) && copyDestsCString.Length() > 0)
   {
     PRInt32 curCopyDestStart = 0;
@@ -197,7 +201,7 @@ nsresult nsMsgOfflineImapOperation::GetCopiesFromDB()
     while (nextCopyDestPos != -1)
     {
       nsCString curDest;
-      nextCopyDestPos = copyDestsCString.FindChar(' ', PR_FALSE, curCopyDestStart);
+      nextCopyDestPos = copyDestsCString.FindChar(FOLDER_SEP_CHAR, PR_FALSE, curCopyDestStart);
       if (nextCopyDestPos > 0)
         copyDestsCString.Mid(curDest, curCopyDestStart, nextCopyDestPos - curCopyDestStart);
       else
@@ -213,10 +217,11 @@ nsresult nsMsgOfflineImapOperation::SetCopiesToDB()
 {
   nsCAutoString copyDests;
 
+  // use 0x1 as the delimiter between folders
   for (PRInt32 i = 0; i < m_copyDestinations.Count(); i++)
   {
     if (i > 0)
-      copyDests.Append(' ');
+      copyDests.Append(FOLDER_SEP_CHAR);
     nsCString *curDest = m_copyDestinations.CStringAt(i);
     copyDests.Append(curDest->get());
   }
