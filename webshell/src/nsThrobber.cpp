@@ -241,7 +241,7 @@ HandleThrobberEvent(nsGUIEvent *aEvent)
       nsIImage *img;
       PRBool clipState;
    
-      pe->widget->GetBounds(bounds);
+      pe->widget->GetClientBounds(bounds);
 
       cx->SetClipRect(*pe->rect, nsClipCombine_kReplace, clipState);
 
