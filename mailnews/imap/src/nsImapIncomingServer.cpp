@@ -129,7 +129,7 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
 
 	rv = GetPublicNamespace(&publicNamespace);
 
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv) && publicNamespace && *publicNamespace)
 	{
 		hostSession->SetNamespaceFromPrefForHost(aKey, publicNamespace, kPublicNamespace);
 		PR_FREEIF(publicNamespace);
@@ -137,7 +137,7 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
 
 	rv = GetOtherUsersNamespace(&otherUsersNamespace);
 
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv) && otherUsersNamespace && *otherUsersNamespace)
 	{
 		hostSession->SetNamespaceFromPrefForHost(aKey, otherUsersNamespace, kOtherUsersNamespace);
 		PR_FREEIF(otherUsersNamespace);
