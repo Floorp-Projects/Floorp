@@ -242,7 +242,8 @@ nsBrowserStatusHandler.prototype =
     // We should probably not do this if the value has changed since the user
     // searched
     this.urlBar.value = location;
-
+    SetPageProxyState("valid");
+    
     UpdateBackForwardButtons();
   },
 

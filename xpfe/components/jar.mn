@@ -167,6 +167,7 @@ toolkit.jar:
     content/global/downloadProgress.xul                         (xfer/resources/downloadProgress.xul)
     content/global/downloadProgress.js                          (xfer/resources/downloadProgress.js)
     content/global/autocomplete.xml                             (autocomplete/resources/content/autocomplete.xml)
+    content/global/autocomplete.css                             (autocomplete/resources/content/autocomplete.css)
     content/global/filepicker.js				(filepicker/res/content/filepicker.js)
     content/global/filepicker.xul				(filepicker/res/content/filepicker.xul)
     content/global/filepicker.css				(filepicker/res/content/filepicker.css)

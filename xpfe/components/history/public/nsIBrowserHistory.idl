@@ -63,3 +63,10 @@ interface nsIBrowserHistory : nsISupports
     readonly attribute string lastPageVisited;
 
 };
+
+%{ C++
+
+#define NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID \
+    "@mozilla.org/autocompleteSession;1?type=history"
+
+%}

@@ -13,6 +13,8 @@ comm.jar:
         content/navigator/navigatorDD.js               (resources/content/navigatorDD.js)
         content/navigator/nsBrowserStatusHandler.js    (resources/content/nsBrowserStatusHandler.js)
         content/navigator/tooltip.js                   (resources/content/tooltip.js)
+        content/navigator/urlbarBindings.xml           (resources/content/urlbarBindings.xml)
+        content/navigator/navigator.css                (resources/content/navigator.css)
         content/navigator/metadata.xul                 (resources/content/metadata.xul)
         content/navigator/metadata.js                  (resources/content/metadata.js)
 	content/navigator/personalToolbar.js           (resources/content/personalToolbar.js)

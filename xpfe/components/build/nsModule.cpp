@@ -113,6 +113,8 @@ static nsModuleComponentInfo components[] = {
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,
       nsGlobalHistoryConstructor },
+    { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
+      nsGlobalHistoryConstructor },
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
       NS_LOCALSEARCH_SERVICE_CONTRACTID, LocalSearchDataSourceConstructor },
     { "Local Search", NS_RDFFINDDATASOURCE_CID,

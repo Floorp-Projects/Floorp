@@ -1,0 +1,351 @@
+<?xml version="1.0"?>
+
+<bindings id="urlbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="autocomplete-result-popup" extends="chrome://global/content/autocomplete.xml#autocomplete-result-popup">
+    <content menugenerated="true">
+      <xul:box class="autocomplete-result-box" flex="1">
+        <xul:outliner anonid="outliner" class="autocomplete-outliner" flex="1">
+          <xul:outlinerbody anonid="outlinerbody" class="autocomplete-outlinerbody" flex="1"/>
+        </xul:outliner>
+      </xul:box>
+      <xul:box role="search-box" class="autocomplete-search-box"/>
+    </content>
+    
+    <implementation>
+      <constructor><![CDATA[
+        // listen for changes to default search engine
+        this.mPrefs.addObserver("browser.search", this.mSearchPrefObserver);
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        this.mPrefs.removeObserver("browser.search", this.mSearchPrefObserver);
+      ]]></destructor>
+
+      <property name="selectedIndex"
+                onget="return this.textbox.view.selectedIndex;">
+        <setter>
+          this.mSelectedIndex = val;
+          if (val == null)
+            this.mSearchBox.selectedIndex = null;
+            
+          return val;
+        </setter>
+     </property>
+
+      <property name="mSelectedIndex">
+        <setter>
+          this.textbox.view.selectedIndex = val;
+          return val;
+        </setter>
+     </property>
+
+      <property name="defaultSearchEngine"
+                onget="return this.textbox.getAttribute('defaultSearchEngine') == 'true';"
+                onset="this.textbox.setAttribute('defaultSearchEngine', val); return val;"/>
+
+      <property name="mSearchBox">
+         document.getAnonymousElementByAttribute(this, "role", "search-box");
+      </property>
+
+      <property name="mPrefs">
+        Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+      </property>
+
+      <property name="mSearchPrefObserver"><![CDATA[
+        ({
+          resultsPopup: this,
+          
+          Observe: function() {
+            this.resultsPopup.updateEngines();
+          }
+        });
+      ]]></property>
+
+      <property name="mInputListener"><![CDATA[
+        (function(aEvent) {
+          // don't update when the user is using the up/down keys
+          if (!this.ignoreInputEvent)
+            this.resultsPopup.mSearchBox.searchValue = this.value;
+        });
+      ]]></property>
+
+      <property name="mEnginesReady">false</property>
+      
+      <!-- initialize the columns in the outliner -->
+      <method name="initColumns">
+        <body><![CDATA[
+          this.addColumn({id: "value", flex: 2});
+          this.addColumn({id: "comment", flex: 1});
+        ]]></body>
+      </method>
+
+      <method name="getOverrideValue">
+        <body><![CDATA[
+          if (this.mSearchBox.selectedIndex != null)
+            return this.mSearchBox.getOverrideValue();
+          return null;
+        ]]></body>
+      </method>
+
+      <method name="addEngine">
+        <parameter name="aEngineId"/>
+        <parameter name="aName"/>
+        <parameter name="aIcon"/>
+        <body><![CDATA[
+          var box = document.createElement("box");
+          box.setAttribute("class", "autocomplete-search-engine");
+          box.setAttribute("searchEngine", aEngineId);
+          box.setAttribute("name", aName);
+          box.setAttribute("icon", aIcon);
+          box.engineIndex = this.childNodes.length;
+          this.mSearchBox.appendChild(box);
+        ]]></body>
+      </method>
+
+      <method name="clearEngines">
+        <body><![CDATA[
+          var kids = this.mSearchBox.childNodes;
+          for (var i = kids.length-1; i >= 0; --i)
+            this.mSearchBox.removeChild(kids[i]);
+        ]]></body>
+      </method>
+
+      <method name="updateEngines">
+        <body><![CDATA[
+          var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+          var ds = rdf.GetDataSource("rdf:internetsearch");
+                      
+          const kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+          const kNC_Icon = rdf.GetResource("http://home.netscape.com/NC-rdf#Icon");
+        
+          var defaultEngine = null;
+          try {
+            defaultEngine = this.mPrefs.CopyUnicharPref("browser.search.defaultengine");
+          } catch(ex) {
+            this.ensureDefaultEnginePrefs(rdf, ds);
+            defaultEngine = this.mPrefs.CopyUnicharPref("browser.search.defaultengine");
+          }
+          
+          if (defaultEngine) {
+            this.clearEngines();
+            
+            if (ds) {
+              var res = rdf.GetResource(defaultEngine);
+              this.addEngine(res.Value, 
+                              this.readRDFString(ds, res, kNC_Name), 
+                              this.readRDFString(ds, res, kNC_Icon));
+            }
+          }
+          
+          this.mEnginesReady = true;
+        ]]></body>
+      </method>
+
+      <method name="ensureDefaultEnginePrefs">
+        <parameter name="aRDF"/>
+        <parameter name="aDS"/>
+        <body><![CDATA[
+          var defaultName = this.mPrefs.getLocalizedUnicharPref("browser.search.defaultenginename");
+        
+          const kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
+          const kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
+          const kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+          
+          var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
+          while (arcs.hasMoreElements()) {
+            var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+            var name = this.readRDFString(aDS, engineRes, kNC_Name);
+            if (name == defaultName)
+              this.mPrefs.SetUnicharPref("browser.search.defaultengine", engineRes.Value);
+          }
+        ]]></body>
+      </method>
+
+      <method name="readRDFString">
+        <parameter name="aDS"/>
+        <parameter name="aRes"/>
+        <parameter name="aProp"/>
+        <body><![CDATA[
+          var n = aDS.GetTarget(aRes, aProp, true);
+          if (n)
+            return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+        ]]></body>
+      </method>
+
+      <method name="selectBy">
+        <parameter name="aDir"/>
+        <parameter name="aAmount"/>
+        <body><![CDATA[
+          var bx = this.outliner.outlinerBoxObject;
+          var view = bx.view;
+          if (this.selectedIndex == null && aDir < 0) {
+            var sel = this.mSearchBox.selectBy(aDir, aAmount);
+            if (sel != null)
+              return null;
+          } 
+          
+          var sel = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
+          this.mSelectedIndex = sel;
+
+          if (sel == null && aDir > 0)
+            this.mSearchBox.selectBy(aDir, aAmount);
+          else if (this.mSearchBox.selectedIndex != null)
+            this.mSearchBox.selectedIndex = null;
+            
+          return sel;
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="create"><![CDATA[
+        if (!this.mEnginesReady && this.defaultSearchEngine)
+          this.updateEngines();
+          
+        this.textbox.addEventListener("input", this.mInputListener, false);
+        if ("searchValue" in this.mSearchBox)
+          this.mSearchBox.searchValue = this.textbox.value;
+        else
+          this.mSearchBox.setAttribute("searchvalue", this.textbox.value);
+      ]]></handler>
+      
+      <handler event="destroy"><![CDATA[
+        this.textbox.removeEventListener("input", this.mInputListener, false);
+      ]]></handler>      
+    </handlers>
+  </binding>
+
+  <binding id="autocomplete-search-box">
+    <content orient="vertical"/>
+    
+    <implementation>
+      <constructor><![CDATA[
+        var text = this.getAttribute("searchvalue");
+        if (text)
+          this.searchValue = text;
+        
+        this.mSelectedIndex = null;
+      ]]></constructor>
+      
+      <property name="parentMouseoverListener">
+        // ensure that if a result menuitem is moused-over, any
+        // search selection is cleared
+        (function(aEvent) {
+          if (aEvent.target.nodeName == "menuitem")
+            this.mSearchBox.selectedIndex = null;
+         })
+      </property>
+      
+      <property name="parentDestroyListener">
+        // ensure that if the popup closes, any search selection is cleared
+        (function(aEvent) {
+           this.mSearchBox.selectedIndex = null;
+         })
+      </property>
+      
+      <property name="activeChild" 
+                onget="return this.childNodes[this.mSelectedIndex]"/>
+
+      <property name="selectedIndex">
+        <getter>return this.mSelectedIndex;</getter>
+        
+        <setter><![CDATA[
+          if (this.mSelectedIndex != null)
+            this.activeChild.removeAttribute("menuactive");
+          
+          this.mSelectedIndex = val;
+
+          if (val != null) {
+            this.parentNode.mSelectedIndex = null;
+            this.parentNode.addEventListener("mouseover", this.parentMouseoverListener, false);
+            this.parentNode.addEventListener("destroy", this.parentDestroyListener, false);
+            if (this.activeChild)
+              this.activeChild.setAttribute("menuactive", "true");
+          } else {
+            this.parentNode.removeEventListener("mouseover", this.parentMouseoverListener, false);
+            this.parentNode.removeEventListener("destroy", this.parentDestroyListener, false);
+          }
+        ]]></setter>
+      
+      </property>
+      
+      <property name="searchValue">
+        <getter><![CDATA[
+          return this.mSearchValue;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mSearchValue = val;
+          var kids = this.childNodes;
+          for (var i = 0; i < kids.length; ++i) {
+            var name = kids[i].getAttribute("name");
+            kids[i].setAttribute("label", "Search " + name + " for \"" + val + "\"");
+          }
+        ]]></setter>
+      </property>
+      
+      <method name="selectBy">
+        <parameter name="aDir"/>
+        <parameter name="aAmount"/>
+        <body><![CDATA[
+          var sel = this.parentNode.getNextIndex(aDir, aAmount, this.selectedIndex, this.childNodes.length-1);
+          this.selectedIndex = sel;
+          return sel;
+        ]]></body>
+      </method>
+
+      <method name="getOverrideValue">
+        <body><![CDATA[
+          var item = this.activeChild;
+          if (item) {
+            const ISEARCH_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=internetsearch";
+            const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
+            
+            var searchService = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
+            return searchService.GetInternetSearchURL(item.getAttribute("searchEngine"), 
+                                                      escape(this.mSearchValue));
+          }
+          
+          return null;
+        ]]></body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="mouseup">
+        this.parentNode.textbox.onResultClick();
+      </handler>
+    </handlers>
+
+  </binding>
+
+  <binding id="autocomplete-search-engine">
+    <content>
+      <xul:image class="autocomplete-search-engine-img" inherits="src=icon"/>
+      <xul:text class="autocomplete-search-engine-text" inherits="value=label"/>
+    </content>
+    
+    <handlers>
+      <handler event="mouseover">
+        this.parentNode.selectedIndex = this.engineIndex;
+      </handler>
+
+      <handler event="mouseout">
+        this.parentNode.selectedIndex = null;
+      </handler>
+    </handlers>
+  </binding>
+  
+  <binding id="autocomplete-result" extends="chrome://global/content/xulBindings.xml#menuitem">
+    <content>
+      <xul:text class="menu-text autocomplete-page-url" inherits="value=label" flex="2" crop="right"/>
+      <xul:text class="autocomplete-page-title" inherits="value=comment" flex="1" crop="right"/>
+    </content>
+  </binding>
+  
+</bindings>
