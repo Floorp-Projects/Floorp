@@ -56,6 +56,14 @@ box#url-bar-box {
 	font: inherit;
 }
 
+box#searchbutton {
+	margin: 0px;
+	margin-left: 5px;
+	padding: 0px;
+	margin-bottom: 10px;
+	font: inherit;
+	//background-color: white;
+}
 
 #sessionhist-popup { 
 	background-color: white; 
@@ -70,7 +78,7 @@ box#url-bar-box {
 	margin: 0px;
 	margin-right: 2px;
 	background-color: #99CCCC;
-	border: 2px solid #99CCCC;
+	border: 3px solid #99CCCC;
 	-moz-border-radius: 4px;
 } 
 
