@@ -31,7 +31,6 @@ DIRS		= \
         memcache \
         filecache \
         mgr \
-        build \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
