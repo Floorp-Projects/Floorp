@@ -94,12 +94,14 @@ NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
 {
   PRInt32  c;
-  nsresult ret;
+  nsresult ret = NS_ERROR_NOT_IMPLEMENTED;
 
   nsAutoString uesc;
   uesc.AssignWithConversion("x-u-escaped");
 
+#ifndef XPCOM_STANDALONE
   ret = NS_NewConverterStream(&mIn, nsnull, aIn, 0, &uesc);
+#endif /* XPCOM_STANDALONE */
   if (ret != NS_OK) {
 #ifdef NS_DEBUG
       printf("NS_NewConverterStream failed\n");

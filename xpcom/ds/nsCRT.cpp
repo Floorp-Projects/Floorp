@@ -37,9 +37,11 @@
 
 
 #include "nsCRT.h"
-#include "nsUnicharUtilCIID.h"
 #include "nsIServiceManager.h"
+#ifndef XPCOM_STANDALONE
+#include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
+#endif /* XPCOM_STANDALONE */
 
 
 // XXX Bug: These tables don't lowercase the upper 128 characters properly
@@ -122,6 +124,7 @@ static const unsigned char kLower2Upper[256] = {
 #define TOUPPER(_ucs2) \
   (((_ucs2) < 128) ? PRUnichar(kLower2Upper[_ucs2]) : _ToUpper(_ucs2))
 
+#ifndef XPCOM_STANDALONE
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
 extern nsICaseConversion * gCaseConv;
@@ -140,24 +143,33 @@ static void CheckCaseConversion()
 
     NS_ASSERTION( gCaseConv != NULL , "cannot obtain UnicharUtil");
 }
+#endif /* XPCOM_STANDALONE */
 
 static PRUnichar _ToLower(PRUnichar aChar)
 {
+#ifndef XPCOM_STANDALONE
   PRUnichar oLower;
   CheckCaseConversion();
   nsresult err = gCaseConv->ToLower(aChar, &oLower);
   NS_ASSERTION( NS_SUCCEEDED(err),  "failed to communicate to UnicharUtil");
   return ( NS_SUCCEEDED(err) ) ? oLower : aChar ;
+#else
+  return aChar;
+#endif /* XPCOM_STANDALONE */
 }
 
 static PRUnichar _ToUpper(PRUnichar aChar)
 {
+#ifndef XPCOM_STANDALONE
   nsresult err;
   PRUnichar oUpper;
   CheckCaseConversion();
   err = gCaseConv->ToUpper(aChar, &oUpper);
   NS_ASSERTION( NS_SUCCEEDED(err),  "failed to communicate to UnicharUtil");
   return ( NS_SUCCEEDED(err) ) ? oUpper : aChar ;
+#else
+  return aChar;
+#endif /* XPCOM_STANDALONE */
 }
 
 //----------------------------------------------------------------------
