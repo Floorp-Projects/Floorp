@@ -3094,32 +3094,8 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
     nsRect absDirtyRectInPixels;
     ConvertTwipsToPixels(*mContext, absDirtyRect, absDirtyRectInPixels);
 #endif
+    FixUpPluginWindow();
 
-    // Add in child windows absolute position to get make the dirty rect
-    // relative to the top-level window.
-    nscoord absWidgetX = 0;
-    nscoord absWidgetY = 0;
-    nsRect widgetClip(0,0,0,0);
-    GetWidgetPosAndClip(mWidget,absWidgetX,absWidgetY,widgetClip);
-
-#ifdef DO_DIRTY_INTERSECT // skip intersection for now because possible bad aDirtyRect
-    absDirtyRectInPixels.x  += absWidgetX;
-    absDirtyRectInPixels.y  += absWidgetY;
-
-    widgetClip.IntersectRect(widgetClip, absDirtyRectInPixels);
-#endif
-
-    // set the port
-    mPluginWindow.x = absWidgetX;
-    mPluginWindow.y = absWidgetY;
-
-
-    // fix up the clipping region
-    mPluginWindow.clipRect.top = widgetClip.y;
-    mPluginWindow.clipRect.left = widgetClip.x;
-    mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
-    mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width;  
-  
     EventRecord updateEvent;
     ::OSEventAvail(0, &updateEvent);
     updateEvent.what = updateEvt;
@@ -3298,7 +3274,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
     mOwner->GetView(mContext, &view);
 
-    if (nsnull == view)
+    if (nsnull == view || nsnull == mWidget)
     {
       PRBool    windowless;
 
