@@ -39,7 +39,7 @@ GetVersionTable();
 
 my @masterlist = ("opendate", "changeddate", "severity", "priority",
                   "platform", "owner", "reporter", "status", "resolution",
-                  "component", "product", "version", "os", "votes");
+                  "product", "component", "version", "os", "votes");
 
 if (Param("usetargetmilestone")) {
     push(@masterlist, "target_milestone");
