@@ -104,7 +104,7 @@
 
     var expectedName          = "Open";
     var expectedRole          = "12";
-    var expectedState         = "1048580";
+    var expectedState         = "1146884";
     var expectedValue         = "NS_ERROR_NOT_IMPLEMENTED";
     var expectednodeFocus     = "Focused";
     var expectedaccFocused    = "Focused";
