@@ -122,8 +122,8 @@ sub Checkout()
 	#//
 	if ($main::pull{all})
 	{
-		$session->checkout("mozilla/modules/libpref",$LIBPREF_BRANCH)	|| die "checkout failure";
 		$session->checkout("RaptorMac")				|| die "checkout failure";
+		$session->checkout("mozilla/modules/libpref",$LIBPREF_BRANCH)	|| die "checkout failure";
 	}
 }
 
