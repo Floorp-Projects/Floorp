@@ -1424,7 +1424,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     nsCOMPtr<nsIStyleContext> sc;
     result = frame->GetStyleContext(getter_AddRefs(sc));
     if (NS_FAILED(result)) { return result; }
-    if (sc) { return NS_ERROR_NULL_POINTER; }
+    if (!sc.get()) { return NS_ERROR_NULL_POINTER; }
     sc->RemapStyle(presContext);
 	  // end HACK
 
