@@ -512,7 +512,37 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 				((CComboBox*)curWidget->control)->AddString(curWidget->options.value[i]);
 
 		if (curWidget->value && curWidget->value != "")
+		{
 			selRv = ((CComboBox*)curWidget->control)->SelectString(-1, curWidget->value);
+
+			CString rootPath1 = GetGlobal("Root");
+			CString tpath1 = rootPath1 + "nscpxpiLinux";
+			int direxist = GetFileAttributes(tpath1);
+			if (strcmp((curWidget->value),"Windows") == 0)
+			{
+				WIDGET *widg = findWidget("LinuxPath");
+				if (widg)
+				widg->control->EnableWindow(FALSE);
+				widg = findWidget("Text7888");
+				if (widg)
+				widg->control->EnableWindow(FALSE);
+				widg = findWidget("Button9888");
+				if (widg)
+				widg->control->EnableWindow(FALSE);
+			}
+			else if ((strcmp(curWidget->value,"Linux")==0) && (direxist == -1))
+			{
+				WIDGET *widg = findWidget("LinuxPath");
+				if (widg)
+				widg->control->EnableWindow(TRUE);
+				widg = findWidget("Text7888");
+				if (widg)
+				widg->control->EnableWindow(TRUE);
+				widg = findWidget("Button9888");
+				if (widg)
+				widg->control->EnableWindow(TRUE);
+			}
+		}
 
 		if (selRv == CB_ERR)
 			selRv = ((CComboBox*)curWidget->control)->SetCurSel(0);
@@ -721,7 +751,6 @@ void CWizardUI::CreateControls()
 		else if ((widgetType == "ComboBox") ||(widgetType == "DropBox")) {
 			curWidget->control = new CComboBox;
 			rv = ((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP|WS_VSCROLL   , tmpRect, this, ID);
-
 		}
 		else if ((widgetType == "GroupBox") || (widgetType == "BoldGroup")) {
 			curWidget->control = new CButton;
@@ -984,7 +1013,37 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 		{
 			char tmpStr[MIN_SIZE];
 			((CComboBox*)curWidget->control)->GetLBText(selectedIndex, tmpStr);
-			rv = tmpStr;
+			
+			CString rootPath1 = GetGlobal("Root");
+			CString tpath1 = rootPath1 + "nscpxpiLinux";
+			int direxist = GetFileAttributes(tpath1);
+			if ((strcmp(tmpStr,"Windows")) == 0)
+			{
+				WIDGET *widg = findWidget("LinuxPath");
+				if (widg)
+				widg->control->EnableWindow(FALSE);
+				widg = findWidget("Text7888");
+				if (widg)
+				widg->control->EnableWindow(FALSE);
+				widg = findWidget("Button9888");
+				if (widg)
+				widg->control->EnableWindow(FALSE);
+			}
+			else if ((strcmp(tmpStr,"Linux")==0) && (direxist == -1))
+			{
+				WIDGET *widg = findWidget("LinuxPath");
+				if (widg)
+				widg->control->EnableWindow(TRUE);
+				widg = findWidget("Text7888");
+				if (widg)
+				widg->control->EnableWindow(TRUE);
+				widg = findWidget("Button9888");
+				if (widg)
+				widg->control->EnableWindow(TRUE);
+			}
+			else
+			{}
+			rv = CString(tmpStr);
 		}
 	}
 /*	else if (widgetType == "DynamicText") 
