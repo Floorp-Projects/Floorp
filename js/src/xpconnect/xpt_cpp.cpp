@@ -448,7 +448,7 @@ InterfaceInfoManagerImpl::GetNameForIID(const nsIID* iid, char** name)
             int len = strlen(entry->name)+1;
             if(!(p = (char*)mAllocator->Alloc(len)))
                 break;
-            memcpy(p, &entry->name, len);
+            memcpy(p, entry->name, len);
             *name = p;
             return NS_OK;
         }
