@@ -488,7 +488,6 @@ nsHTMLValue::ToString(nsAString& aResult) const
 
   switch (GetUnit()) {
     case eHTMLUnit_Integer:
-    case eHTMLUnit_Pixel:
     case eHTMLUnit_Proportional:
       intStr.AppendInt(GetIntValue());
       aResult.Append(intStr);
@@ -496,6 +495,12 @@ nsHTMLValue::ToString(nsAString& aResult) const
         aResult.Append(PRUnichar('*'));
       }
       return PR_TRUE;
+
+    case eHTMLUnit_Pixel:
+      intStr.AppendInt(GetPixelValue());
+      aResult.Append(intStr);
+      return PR_TRUE;
+
     case eHTMLUnit_Percent:
     {
       float percentVal = GetPercentValue() * 100.0f;
