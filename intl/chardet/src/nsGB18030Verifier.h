@@ -98,7 +98,7 @@ static nsVerifier nsGB18030Verifier = {
        eUnitMsk4bits, 
        gb18030_cls 
     },
-    4,
+    7,
     {
        eIdxSft4bits, 
        eSftMsk4bits, 
