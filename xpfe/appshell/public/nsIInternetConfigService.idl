@@ -1,0 +1,53 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIMIMEInfo;
+interface nsIURL;
+
+%{C++
+
+#include <Files.h>
+
+#define NS_INTERNETCONFIGSERVICE_PROGID \
+"component://netscape/mac/internet-config-service"
+
+%}
+
+native FSSpec(FSSpec);
+
+[uuid(9B8B9D80-5F4F-11D4-9696-0060083A0BCF)]
+interface nsIInternetConfigService : nsISupports
+{
+  void launchURL(in string url);
+  
+  boolean hasMappingForMIMEType(in string mimetype);
+  
+  boolean hasProtocalHandler(in string protocol);
+  
+  void fillInMIMEInfo(in string mimetype, in nsIURL url, out nsIMIMEInfo mimeinfo);
+  
+  void getDownloadFolder(out FSSpec fsspec);
+  
+  void getString(in string key, out string value);
+};
