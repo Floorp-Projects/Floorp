@@ -4574,8 +4574,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
                                             PRBool                   aIsFixedPositioned)
 {
   nsIFrame * newFrame;
-  PRUint32 flags = aIsAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0;
-  nsresult rv = NS_NewFieldSetFrame(aPresShell, &newFrame, flags);
+  nsresult rv = NS_NewFieldSetFrame(aPresShell, &newFrame, NS_BLOCK_SPACE_MGR);
   if (!NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -4604,9 +4603,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   const nsStyleDisplay* styleDisplay;
   newFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
 
-  nsIFrame * areaFrame;
-  //NS_NewBlockFrame(shell, &areaFrame, flags);
-  NS_NewAreaFrame(shell, &areaFrame, flags | NS_BLOCK_SHRINK_WRAP);// | NS_BLOCK_MARGIN_ROOT);
+  nsIFrame* areaFrame;
+  NS_NewAreaFrame(shell, &areaFrame, NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP);
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
