@@ -1969,10 +1969,6 @@ function onButtonUpdate(button, commmandID)
   var commandNode = document.getElementById(commmandID);
   var state = commandNode.getAttribute("state");
   button.checked = state == "true";
-
-  // XXX why doesn't button.checked make the right thing happen here?
-  // Did it ever?
-  button.setAttribute("checked", state);
 }
 
 //--------------------------------------------------------------------
@@ -1982,10 +1978,6 @@ function onStateButtonUpdate(button, commmandID, onState)
   var state = commandNode.getAttribute("state");
 
   button.checked = state == onState;
-
-  // XXX why doesn't button.checked make the right thing happen here?
-  // Did it ever?
-  button.setAttribute("checked", state == onState);
 }
 
 // --------------------------- Status calls ---------------------------
