@@ -553,9 +553,38 @@ function Startup()
   if (!isPageCycling) {
     var uriToLoad = "";
 
-    // Check for window.arguments[0]. If present, use that for uriToLoad.
-    if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0]) {
-      var uriArray = window.arguments[0].toString().split('\n'); // stringify and split
+    // Check window.arguments[0]. If not null then use it for uriArray
+    // otherwise the new window is being called when another browser
+    // window already exists so use the New Window pref for uriArray
+    if ("arguments" in window && window.arguments.length >= 1) {
+      var uriArray;
+      if (window.arguments[0]) {
+        uriArray = window.arguments[0].toString().split('\n'); // stringify and split
+      } else {
+        try {
+          switch (pref.getIntPref("browser.windows.loadOnNewWindow"))
+          {
+            case -1:
+              var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser']
+                                      .getService(Components.interfaces.nsICmdLineHandler);
+              uriArray = handler.defaultArgs.split('\n');
+              break;
+            default:
+              uriArray = ["about:blank"];
+              break;
+            case 1:
+              uriArray = getHomePage();
+              break;
+            case 2:
+              history = Components.classes["@mozilla.org/browser/global-history;1"]
+                                  .getService(Components.interfaces.nsIBrowserHistory);
+              uriArray = [history.lastPageVisited];
+              break;
+          }
+        } catch(e) {
+          uriArray = ["about:blank"];
+        }
+      }
       uriToLoad = uriArray.splice(0, 1)[0];
 
       if (uriArray.length > 0)
