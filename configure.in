@@ -3449,6 +3449,7 @@ suite)
   MOZ_COMPOSER=1
   MOZ_PROFILESHARING=1
   MOZ_APP_VERSION=$MOZILLA_VERSION
+  MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming"
   ;;
 
 browser)
@@ -3456,6 +3457,7 @@ browser)
   MOZ_XUL_APP=1
   MOZ_PHOENIX=1
   MOZ_APP_VERSION=`cat $topsrcdir/browser/config/version.txt`
+  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref transformiix universalchardet webservices inspector gnomevfs negotiateauth"
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
@@ -3468,6 +3470,7 @@ mail)
   MOZ_STATIC_MAIL_BUILD=1
   MOZ_COMPOSER=1
   MOZ_APP_VERSION=`cat $topsrcdir/mail/config/version.txt`
+  MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck xmlextras webservices"
   AC_DEFINE(MOZ_THUNDERBIRD)
   ;;
 
@@ -3486,6 +3489,7 @@ calendar)
   MOZ_SUNBIRD=1
   MOZ_CALENDAR=1
   MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
+  MOZ_EXTENSIONS_DEFAULT=pref
   AC_DEFINE(MOZ_SUNBIRD)
   ;;
 
@@ -3494,12 +3498,14 @@ xulrunner)
   MOZ_XUL_APP=1
   MOZ_XULRUNNER=1 
   MOZ_APP_VERSION=`cat $topsrcdir/xulrunner/config/version.txt`
+  MOZ_EXTENSIONS_DEFAULT=" xml-rpc xmlextras pref transformiix universalchardet webservices gnomevfs negotiateauth"
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
 
 macbrowser) 
   MOZ_APP_NAME=mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
+  MOZ_EXTENSIONS_DEFAULT=" cookie xmlextras universalchardet typeaheadfind transformiix"
   ;;
 
 standalone) 
@@ -3866,10 +3872,13 @@ AC_SUBST(MOZ_EXTRA_X11CONVERTERS)
 dnl ========================================================
 dnl = Build Personal Security Manager
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(crypto,
-[  --enable-crypto         Enable crypto support (Personal Security Manager)],
-    MOZ_PSM=1,
-    MOZ_PSM= )
+
+MOZ_PSM=1
+
+MOZ_ARG_DISABLE_BOOL(crypto,
+[  --disable-crypto        Disable crypto support (Personal Security Manager)],
+    MOZ_PSM=,
+    MOZ_PSM=1 )
 case $target in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*)
     if test -n "$MOZ_PSM" -a ! -e "$AS_BIN"; then
@@ -4062,9 +4071,7 @@ dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
 
-MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming"
-
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm datetime finger cview layout-debug tasks sql xforms"
+MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms"
 
 MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
