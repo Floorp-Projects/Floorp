@@ -139,6 +139,7 @@ net_pop3_load_state(const char* searchhost,
                     const char* mailDirectory)
 {
   char* buf;
+  char* newStr;
   char* host;
   char* user;
   char* uidl;
@@ -176,9 +177,9 @@ net_pop3_load_state(const char* searchhost,
 	  if (buf[0] == '*') {
         /* It's a host&user line. */
         current = NULL;
-        host = strtok(buf + 1, " \t\r\n");
+        host = nsCRT::strtok(buf + 1, " \t\r\n", &newStr);
         /* XP_FileReadLine uses LF on all platforms */
-        user = strtok(NULL, " \t\r\n");
+        user = nsCRT::strtok(newStr, " \t\r\n", &newStr);
         if (host == NULL || user == NULL) continue;
         for (tmp = result ; tmp ; tmp = tmp->next) {
             if (PL_strcmp(host, tmp->host) == 0 &&
@@ -207,8 +208,8 @@ net_pop3_load_state(const char* searchhost,
 	  } else {
         /* It's a line with a UIDL on it. */
         if (current) {
-            flags = strtok(buf, " \t\r\n");		/* XP_FileReadLine uses LF on all platforms */
-            uidl = strtok(NULL, " \t\r\n");
+            flags = nsCRT::strtok(buf, " \t\r\n", &newStr);		/* XP_FileReadLine uses LF on all platforms */
+            uidl = nsCRT::strtok(newStr, " \t\r\n", &newStr);
             if (flags && uidl) {
                 PR_ASSERT((flags[0] == KEEP) || (flags[0] == DELETE_CHAR) ||
                           (flags[0] == TOO_BIG)); 
@@ -1091,6 +1092,7 @@ PRInt32
 nsPop3Protocol::GetStat()
 {
     char *num;
+    char* newStr;
 
     /* check stat response */
     if(!m_pop3ConData->command_succeeded)
@@ -1102,11 +1104,11 @@ nsPop3Protocol::GetStat()
      *
      *  grab the first and second arg of stat response
      */
-    num = strtok(m_pop3ConData->command_response, " ");
+    num = nsCRT::strtok(m_pop3ConData->command_response, " ", &newStr);
 
     m_pop3ConData->number_of_messages = atol(num);
 
-    num = strtok(NULL, " ");
+    num = nsCRT::strtok(newStr, " ", &newStr);
 
     m_pop3ConData->total_folder_size = (PRInt32) atol(num);
     m_pop3ConData->really_new_messages = 0;
@@ -1210,7 +1212,7 @@ PRInt32
 nsPop3Protocol::GetList(nsIInputStream* inputStream, 
                         PRUint32 length)
 {
-    char * line, *token;
+    char * line, *token, *newStr;
     PRUint32 ln = 0;
     PRInt32 msg_num;
 
@@ -1256,14 +1258,14 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
         return(0);
 	  }
     
-	token = strtok(line, " ");
+	token = nsCRT::strtok(line, " ", &newStr);
 	if (token)
 	{
-		msg_num = atol(strtok(line, " "));
+		msg_num = atol(token);
 
 		if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0)
 		{
-			token = strtok(NULL, " ");
+			token = nsCRT::strtok(newStr, " ", &newStr);
 			if (token)
 				m_pop3ConData->msg_info[msg_num-1].size = atol(token);
 		}
@@ -1306,7 +1308,7 @@ PRInt32
 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream, 
                                PRUint32 length)
 {
-    char * line;
+    char * line, *newStr;
     PRUint32 ln = 0;
 
     /* check list response 
@@ -1385,12 +1387,12 @@ nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
     {
         /* we are looking for a string of the form
 		   Message-Id: <199602071806.KAA14787@neon.netscape.com> */
-        char *firstToken = strtok(line, " ");
+        char *firstToken = nsCRT::strtok(line, " ", &newStr);
         int state = 0;
         
         if (firstToken && !PL_strcasecmp(firstToken, "MESSAGE-ID:") )
         {
-            char *message_id_token = strtok(NULL, " ");
+            char *message_id_token = nsCRT::strtok(newStr, " ", &newStr);
             state = (int)PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, message_id_token);
             
             if (!m_pop3ConData->only_uidl && message_id_token && (state == 0))
@@ -1493,7 +1495,7 @@ PRInt32
 nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream, 
                                  PRUint32 length)
 {
-    char * line;
+    char * line, *newStr;
     PRUint32 ln = 0;
     PRInt32 msg_num;
 
@@ -1515,8 +1517,6 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
 
     if(ln == 0)
     {
-        /* this shouldn't really happen, but...
-         */
         /* this shouldn't really happen, but...
          */
         m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
@@ -1546,11 +1546,11 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
         return(0);
 	  }
     
-    msg_num = atol(strtok(line, " "));
+    msg_num = atol(nsCRT::strtok(line, " ", &newStr));
 
     if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0) {
-/*	  char *eatMessageIdToken = strtok(NULL, " ");	*/
-        char *uidl = strtok(NULL, " ");/* not really a uidl but a unique token -km */
+/*	  char *eatMessageIdToken = nsCRT::strtok(newStr, " ", &newStr);	*/
+        char *uidl = nsCRT::strtok(newStr, " ", &newStr);/* not really a uidl but a unique token -km */
 
         if (!uidl)
             /* This is bad.  The server didn't give us a UIDL for this message.
@@ -1585,7 +1585,7 @@ PRInt32
 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream, 
                             PRUint32 length)
 {
-    char * line;
+    char * line, *newStr;
     PRUint32 ln;
     PRInt32 msg_num;
 
@@ -1638,8 +1638,6 @@ nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
     {
         /* this shouldn't really happen, but...
          */
-        /* this shouldn't really happen, but...
-         */
         m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
         m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
         return 0;
@@ -1667,11 +1665,11 @@ nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
         return(0);
 	}
 
-    msg_num = atol(strtok(line, " "));
+    msg_num = atol(nsCRT::strtok(line, " ", &newStr));
     
     if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0) 
 	{
-        char *uidl = strtok(NULL, " ");
+        char *uidl = nsCRT::strtok(newStr, " ", &newStr);
 
         if (!uidl)
             /* This is bad.  The server didn't give us a UIDL for this message.
@@ -2058,6 +2056,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     PRUint32 buffer_size;
     PRInt32 flags = 0;
     char *uidl = NULL;
+    char *newStr;
 #if 0
     PRInt32 old_bytes_received = ce->bytes_received;
 #endif 
@@ -2082,7 +2081,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         }
         else
             m_pop3ConData->cur_msg_size =
-                atol(strtok(m_pop3ConData->command_response, " "));
+                atol(nsCRT::strtok(m_pop3ConData->command_response, " ", &newStr));
         /* RETR complete message */
 
         if (m_pop3ConData->sender_info)
