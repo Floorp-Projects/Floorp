@@ -856,6 +856,14 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             {
                 *aReturn = SaveError( REBOOT_NEEDED );
                 nsSoftwareUpdate::mNeedCleanup = PR_TRUE;
+
+                // Broadcast the fact that we have an incomplete install so
+                // parts of Mozilla can take defensive action if necessary.
+                //
+                // This notification turns off turbo/server mode, for example 
+                nsPIXPIProxy* proxy = GetUIThreadProxy();
+                if (proxy)
+                    proxy->NotifyRestartNeeded();
             }
 
             // XXX for now all successful installs will trigger an Autoreg.
@@ -1201,7 +1209,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
       nsXPIDLCString spec;
       ret = resFile->GetURL(getter_Copies(spec));
       if (NS_FAILED(ret)) {
-        printf("cannot get url spec\n");
+        NS_WARNING("cannot get url spec\n");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
         return ret;
       }
@@ -1352,22 +1360,32 @@ nsInstall::RegisterChrome(nsIFile* chrome, PRUint32 chromeType, const char* path
         return SaveError(ScheduleForInstall( ri ));
 }
 
+nsPIXPIProxy* nsInstall::GetUIThreadProxy()
+{
+    if (!mUIThreadProxy)
+    {
+        nsresult rv;
+        NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsPIXPIProxy> tmp(do_QueryInterface(new nsXPIProxy()));
+            rv = pmgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsPIXPIProxy),
+                    tmp, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(mUIThreadProxy) );
+        }
+    }
+
+    return mUIThreadProxy;
+}
 
 PRInt32
 nsInstall::RefreshPlugins()
 {
-    nsresult rv;
-    NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-        nsCOMPtr<nsPIXPIProxy> tmp = do_QueryInterface(new nsXPIProxy());
-        nsCOMPtr<nsPIXPIProxy> proxy;
-        rv = pmgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsPIXPIProxy),
-                tmp, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(proxy) );
-        if (NS_SUCCEEDED(rv))
-            rv = proxy->RefreshPlugins(GetParentDOMWindow());
-    }
-    return rv;
+    nsPIXPIProxy* proxy = GetUIThreadProxy();
+
+    if (proxy)
+        return proxy->RefreshPlugins(GetParentDOMWindow());
+   
+    return NS_ERROR_FAILURE;
 }
 
 

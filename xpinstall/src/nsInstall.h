@@ -48,6 +48,7 @@
 #include "nsInstallFolder.h"
 
 #include "nsIXPINotifier.h"
+#include "nsPIXPIProxy.h"
 
 #include "nsIStringBundle.h"
 #include "nsILocale.h"
@@ -341,6 +342,7 @@ class nsInstall
         nsHashtable*        mPatchList;
 
         nsCOMPtr<nsIXPIListener>    mListener;
+        nsCOMPtr<nsPIXPIProxy>      mUIThreadProxy;
 
         nsCOMPtr<nsIStringBundle>   mStringBundle;
 
@@ -350,6 +352,7 @@ class nsInstall
         PRInt32     SanityCheck(void);
         void        GetTime(nsString &aString);
 
+        nsPIXPIProxy* GetUIThreadProxy();
 
         PRInt32     GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName );
         PRInt32     GetQualifiedPackageName( const nsString& name, nsString& qualifiedName );

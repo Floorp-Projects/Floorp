@@ -34,4 +34,5 @@
 interface nsPIXPIProxy : nsISupports
 {
     void refreshPlugins(in nsISupports aWindow);
+    void notifyRestartNeeded();
 };
