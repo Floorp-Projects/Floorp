@@ -40,7 +40,7 @@ NULL);
 	gtk_widget_show(label);
 	gtk_widget_show_all(window);
 
-	url = (argc > 1) ? argv[1] : "localhost";
+	url = (argc > 1) ? argv[1] : (char *)"localhost";
 	gtk_moz_embed_load_url(GTK_MOZ_EMBED(mozembed), url);
 
 	gtk_main();
