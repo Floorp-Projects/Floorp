@@ -99,7 +99,7 @@ sub check_webdotbase {
         # Check .htaccess allows access to generated images
         if(-e "data/webdot/.htaccess") {
             open HTACCESS, "data/webdot/.htaccess";
-            if(! grep(/png/,<HTACCESS>)) {
+            if(! grep(/ \\\.png\$/,<HTACCESS>)) {
                 return "Dependency graph images are not accessible.\nDelete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
             }
             close HTACCESS;

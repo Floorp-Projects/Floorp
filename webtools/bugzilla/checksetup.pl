@@ -873,14 +873,13 @@ END
 # Restrict access to .dot files to the public webdot server at research.att.com 
 # if research.att.com ever changed their IP, or if you use a different
 # webdot server, you'll need to edit this
-<FilesMatch ^[0-9]+\.dot$>
+<FilesMatch \.dot$>
   Allow from 192.20.225.10
   Deny from all
 </FilesMatch>
 
-# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
-# .map files
-<FilesMatch ^[0-9]+\.(png|gif|jpg|map)$>
+# Allow access to .png files created by a local copy of 'dot'
+<FilesMatch \.png$>
   Allow from all
 </FilesMatch>
 
