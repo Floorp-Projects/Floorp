@@ -898,7 +898,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
    mDC->Init(mInternalWidget->GetNativeData(NS_NATIVE_WINDOW));
 
    mRC = do_CreateInstance(kRenderingContextCID);
-   mRC->Init(mDC, mInternalWidget);
+   mRC->Init(mDC, mInternalWidget.get());
 
    // get the default background color for painting later
    SystemAttrStruct info;
