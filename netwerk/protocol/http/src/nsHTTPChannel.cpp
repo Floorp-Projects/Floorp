@@ -831,16 +831,25 @@ nsHTTPChannel::GetAuthTriedWithPrehost(PRBool* oTried)
 
 // nsIInterfaceRequestor method
 NS_IMETHODIMP
-nsHTTPChannel::GetInterface(const nsIID &anIID, void **aResult ) {
+nsHTTPChannel::GetInterface(const nsIID &anIID, void **aResult )
+{
+    nsresult rv = NS_OK;
+
+    *aResult = nsnull;
+
     // capture the progress event sink stuff. pass the rest through.
     if (anIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
         *aResult = NS_STATIC_CAST(nsIProgressEventSink*, this);
         NS_ADDREF(this);
-        return NS_OK;
-    } else {
-        return mCallbacks ? 
-            mCallbacks->GetInterface(anIID, aResult) : NS_ERROR_NO_INTERFACE;
+    } 
+    else if (mCallbacks) {
+        rv = mCallbacks->GetInterface(anIID, aResult);
     }
+    else {
+        rv = NS_ERROR_NO_INTERFACE;
+    }
+
+    return rv;
 }
 
 
@@ -1181,6 +1190,13 @@ nsHTTPChannel::ReadFromCache()
 
     // Create a cache transport to read the cached response...
     rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(mCacheTransport));
+    if (NS_FAILED(rv)) return rv;
+
+    //
+    // Propagate the load attributes of this channel into the cache channel.
+    // This will ensure that notifications are suppressed if necessary.
+    //
+    rv = mCacheTransport->SetLoadAttributes(mLoadAttributes);
     if (NS_FAILED(rv)) return rv;
 
     // Fake it so that HTTP headers come from cached versions
