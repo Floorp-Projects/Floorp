@@ -5593,7 +5593,7 @@ NET_DisplayCookieInfoAsHTML(MWContext * context)
 
 #else
 PUBLIC void
-NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry)
+NET_DisplayCookieInfoAsHTML(MWContext * context)
 {
 }
 #endif
