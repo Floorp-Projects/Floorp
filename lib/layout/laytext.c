@@ -1825,11 +1825,12 @@ lo_LayoutPreformattedText(MWContext *context,
 	int kinsoku_class, last_kinsoku_class;
 	int i;
 	int bytestocopy;
-	char * text;
+	char * text = NULL;
 	Bool lineBufMeasured;
-	
-	/* start at the current text position in this text block */
-	text = (char *) &block->text_buffer[ block->buffer_read_index ];
+    
+    /* start at the current text position in this text block */
+    if (block->text_buffer)
+	    text = (char *) &block->text_buffer[ block->buffer_read_index ];
 	
 	kinsoku_class = PROHIBIT_NOWHERE;
 	
@@ -1847,6 +1848,7 @@ lo_LayoutPreformattedText(MWContext *context,
 	{
 		return;
 	}
+
 
 	charset = block->text_attr->charset;
 	multi_byte = (INTL_CharSetType(charset) != SINGLEBYTE);
@@ -2542,11 +2544,7 @@ lo_LayoutFormattedText(MWContext *context,
 	int16 charset;
 	Bool multi_byte;
 	LO_TextStruct text_data;
-	char * text;
-	
-	/* start at the current text position in this text block */
-	text = (char *) &block->text_buffer[ block->buffer_read_index ];
-	
+	char * text = NULL;
 
 #ifdef XP_OS2                  /* performance                            */
    int32 maxw;            /* performance - max char width for font  */
@@ -2554,8 +2552,11 @@ lo_LayoutFormattedText(MWContext *context,
    int textsw;            /* performance                            */
    maxw  = 0;
    textsw = 0;            /* performance - need to mark no width taken */
-#endif
+#endif    
 
+	/* start at the current text position in this text block */
+    if (block->text_buffer)
+	    text = (char *) &block->text_buffer[ block->buffer_read_index ];
 
 	/*
 	 * Initialize the structures to 0 (mark)
