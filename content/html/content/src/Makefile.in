@@ -56,7 +56,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsAttributeContent.cpp \
 		nsGenericHTMLElement.cpp \
 		nsGenericDOMHTMLCollection.cpp \
 		GenericElementCollection.cpp \
