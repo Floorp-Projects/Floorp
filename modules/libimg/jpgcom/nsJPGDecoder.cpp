@@ -21,7 +21,7 @@
  */
 
 /* -*- Mode: C; tab-width: 4 -*-
- *   nsJPGDecoder.cpp --- interface to gif decoder
+ *   nsJPGDecoder.cpp --- interface to JPG decoder
  */
 
 
@@ -29,21 +29,47 @@
 #include "nsJPGDecoder.h"
 #include "jpeg.h"
 
-/*-----------class----------------*/
-/*-------------------------------------------------*/
+
+//////////////////////////////////////////////////////////////////////
+// JPG Decoder Implementation
+
+NS_IMPL_ISUPPORTS1(JPGDecoder, nsIImgDecoder);
 
 JPGDecoder::JPGDecoder(il_container* aContainer)
 {
   NS_INIT_REFCNT();
   ilContainer = aContainer;
-};
-
+}
 
 JPGDecoder::~JPGDecoder(void)
 {
-};
+}
 
-NS_IMPL_ISUPPORTS(JPGDecoder, NS_GET_IID(nsIImgDecoder))
+
+NS_METHOD
+JPGDecoder::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+  if (aOuter) return NS_ERROR_NO_AGGREGATION;
+
+  il_container *ic = new il_container();
+  if (!ic) return NS_ERROR_OUT_OF_MEMORY;
+
+  JPGDecoder *decoder = new JPGDecoder(ic);
+  if (!decoder) {
+    delete ic;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(decoder);
+  rv = decoder->QueryInterface(aIID, aResult);
+  NS_RELEASE(decoder);
+
+  /* why are we creating and destroying this object for no reason? */
+  delete ic; /* is a place holder */
+
+  return rv;
+}
 
 /*------------------------------------------------------*/
 /* api functions
