@@ -6297,7 +6297,7 @@ else
 #line 6298 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw();
+extern "C" void exit(int);
 #endif
 #include <stddef.h>
                      int main () {
@@ -9344,7 +9344,7 @@ else
 #line 9345 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw();
+extern "C" void exit(int);
 #endif
 class X { int i; public: virtual ~X() { } };
                             class Y { int j; public: virtual ~Y() { } };
@@ -12598,7 +12598,7 @@ else
 #line 12599 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw();
+extern "C" void exit(int);
 #endif
  int main () {
                 if (sizeof(long long) != 8) { return 1; } 
