@@ -389,7 +389,7 @@ protected:
                      nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect);
 
-  void PropogateReflowDamage(nsBlockReflowState& aState,
+  void PropagateReflowDamage(nsBlockReflowState& aState,
                              nsLineBox* aLine,
                              const nsRect& aOldCombinedArea,
                              nscoord aDeltaY);
