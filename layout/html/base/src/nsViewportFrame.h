@@ -120,9 +120,6 @@ public:
 #endif
 
 protected:
-  nsresult ReflowFixedFrames(nsIPresContext*          aPresContext,
-                             const nsHTMLReflowState& aReflowState);
-
   void AdjustReflowStateForScrollbars(nsIPresContext*    aPresContext,
                                       nsHTMLReflowState& aReflowState) const;
 
