@@ -30,6 +30,7 @@ REQUIRES = \
   intl \
   layout \
   layout_xul \
+  locale \
   necko \
   plugin \
   pref \
