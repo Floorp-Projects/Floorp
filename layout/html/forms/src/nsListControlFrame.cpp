@@ -97,7 +97,6 @@ nsListControlFrame::nsListControlFrame()
   mSelectedIndex      = kNothingSelected;
   mComboboxFrame      = nsnull;
   mFormFrame          = nsnull;
-  mDisplayed          = PR_FALSE;
   mButtonDown         = PR_FALSE;
   mLastFrame          = nsnull;
   mMaxWidth           = 0;
@@ -515,7 +514,6 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   //printf("List: aDesiredSize %d %d\n", aDesiredSize.width, aDesiredSize.height);
 
   aStatus = NS_FRAME_COMPLETE;
-  mDisplayed = PR_TRUE;
 
 #ifdef DEBUG_rodsXXX
   if (!isInDropDownMode) {
@@ -632,7 +630,7 @@ nsListControlFrame::DisplaySelected(nsIContent* aContent)
    // The event state manager supports selected states. KMM
   
   nsIAtom * selectedAtom = NS_NewAtom(kMozSelected);
-  if (PR_TRUE == mDisplayed) {
+  if (PR_TRUE == mIsAllFramesHere) {
     aContent->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_TRUE);
     //ForceRedraw();
   } else {
@@ -650,7 +648,7 @@ nsListControlFrame::DisplayDeselected(nsIContent* aContent)
    // The event state manager is functional. KMM
 
   nsIAtom * selectedAtom = NS_NewAtom(kMozSelected);
-  if (PR_TRUE == mDisplayed) {
+  if (PR_TRUE == mIsAllFramesHere) {
     aContent->UnsetAttribute(kNameSpaceID_None, selectedAtom, PR_TRUE);
     //ForceRedraw();
   } else {
@@ -1062,6 +1060,7 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
     if (CheckIfAllFramesHere()) {
       InitSelectionCache(-1);
       Reset(&aPresContext);
+      mHasBeenInitialized = PR_TRUE;
     }
   }
 
@@ -1800,7 +1799,7 @@ nsListControlFrame::DoneAddingContent()
 NS_IMETHODIMP
 nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
-/*  
+  
   if (!mIsAllContentHere) {
     nsCOMPtr<nsISelectElement> element(do_QueryInterface(mContent));
     if (element) {
@@ -1815,7 +1814,7 @@ nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
       }
     }
   }
-  */
+  
   if (!mHasBeenInitialized) {
     return NS_OK;
   }
@@ -2223,12 +2222,15 @@ NS_IMETHODIMP
 nsListControlFrame::AboutToDropDown()
 {
   mSelectedIndexWhenPoppedDown = mSelectedIndex;
-  if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized &&
-      mSelectedIndex != kNothingSelected) {
-    // make sure we scroll to the correct item before it drops down
-    nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
-    if (content) {
-      ScrollToFrame(content);
+  if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized) {
+    if (mSelectedIndex != kNothingSelected) {
+      // make sure we scroll to the correct item before it drops down
+      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
+      if (content) {
+        ScrollToFrame(content);
+      }
+    } else {
+      ScrollToFrame(nsnull); // this means it scrolls to 0,0
     }
   }
 
@@ -2582,6 +2584,20 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 nsresult
 nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 {
+  nsIView * scrollView;
+  GetView(mPresContext, &scrollView);
+  nsIScrollableView * scrollableView = nsnull;
+  nsresult rv = scrollView->QueryInterface(nsIScrollableView::GetIID(), (void**)&scrollableView);
+
+  // if null is passed in we scroll to 0,0
+  if (nsnull == aOptElement) {
+    if (NS_SUCCEEDED(rv) && scrollableView) {
+      scrollableView->ScrollTo(0, 0, PR_TRUE);
+    }
+    return NS_OK;
+  }
+  
+  // otherwise we find the content's frame and scroll to it
   nsIFrame * childframe;
   nsresult result;
   if (aOptElement) {
@@ -2593,11 +2609,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
   }
 
   if (childframe) {
-    nsIView * scrollView;
-    GetView(mPresContext, &scrollView);
-    nsIScrollableView * scrollableView = nsnull;
-    scrollView->QueryInterface(nsIScrollableView::GetIID(), (void**)&scrollableView);
-    if (scrollableView) {
+    if (NS_SUCCEEDED(rv) && scrollableView) {
       const nsIView * clippedView;
       scrollableView->GetClipView(&clippedView);
       nscoord x;
