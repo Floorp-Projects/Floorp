@@ -4433,8 +4433,9 @@ void CWinCX::LayoutNewDocument(MWContext *pContext, URL_Struct *pURL, int32 *pWi
 	m_lastTabFocus.pElement		= NULL;
 	m_lastTabFocus.mapAreaIndex	= 0;		// 0 means no focus, start with index 1.
 	m_lastTabFocus.pAnchor			= NULL;
-    m_isReEntry_setLastTabFocusElement  = 0;     // to provent re-entry
-	SetMainFrmTabFocusFlag(CMainFrame::TAB_FOCUS_IN_NULL);  // I don't have focus.
+	m_isReEntry_setLastTabFocusElement  = 0;     // to prevent re-entry
+
+	ClearMainFrmTabFocusFlag();
 
 //#endif	/* NO_TAB_NAVIGATION */
 	::SetTextAlign(GetContextDC(),TA_NOUPDATECP);
@@ -4448,6 +4449,27 @@ void CWinCX::SetMainFrmTabFocusFlag( int nn )
 		CFrameWnd * pFrameWindow = pFrame->GetFrameWnd();
 		if( pFrameWindow && pFrameWindow->IsKindOf(RUNTIME_CLASS(CMainFrame)))	{
 			((CMainFrame *)pFrameWindow)->SetTabFocusFlag( nn );
+		}
+	}
+}
+
+/* A specialized form of SetMainFrmTabFocusFlag used for setting that flag
+   to a generic state (outside of any frames).  This is intended for use
+   when loading new contents into this CWinCX.  It only clears the flag
+   if we are the main frame's current active view (or if the current
+   active view can't be identified).  This prevents the loading of one frame's
+   contents from affecting a tab focus currently within another frame.
+*/
+void CWinCX::ClearMainFrmTabFocusFlag(void) {
+
+	CFrameGlue * pFrame = GetFrame();
+	if( pFrame ) {
+		CFrameWnd * pFrameWindow = pFrame->GetFrameWnd();
+		if( pFrameWindow && pFrameWindow->IsKindOf(RUNTIME_CLASS(CMainFrame))) {
+			CMainFrame * pWin = (CMainFrame *) pFrameWindow;
+			CWinCX * pActiveContext = pWin->GetActiveWinContext();
+			if( pActiveContext == NULL || pActiveContext == this )
+				pWin->SetTabFocusFlag(CMainFrame::TAB_FOCUS_IN_NULL);
 		}
 	}
 }

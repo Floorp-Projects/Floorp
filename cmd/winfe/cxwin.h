@@ -385,6 +385,7 @@ private :
 	void		CWinCX::SetActiveWindow();
     void        CWinCX::setLastTabFocusElement( LO_TabFocusData *pNextTabFocus, int needSetFocus ); 
 	void		CWinCX::SetMainFrmTabFocusFlag( int nn );
+	void		CWinCX::ClearMainFrmTabFocusFlag( void );
 
 private :
 	LO_TabFocusData	m_lastTabFocus;	
