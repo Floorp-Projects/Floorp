@@ -41,10 +41,6 @@ public:
 
   nsresult Initialize();
 
-  static nsICSSStyleSheet* GetUAStyleSheet() {
-    return gUAStyleSheet;
-  }
-
 protected:
   void Shutdown();
 
@@ -56,7 +52,6 @@ protected:
 
   PRBool mInitialized;
 //  static nsIFactory* gFactory;
-  static nsICSSStyleSheet* gUAStyleSheet;
   static nsIScriptNameSetRegistry* gRegistry;
 };
 

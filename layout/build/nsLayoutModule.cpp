@@ -59,9 +59,6 @@
 
 #include "nsTextTransformer.h"
 
-// URL for the "user agent" style sheet
-#define UA_CSS_URL "resource:/res/ua.css"
-
 static nsLayoutModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
@@ -161,8 +158,6 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
 static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
 
-nsICSSStyleSheet* nsLayoutModule::gUAStyleSheet;
-
 nsIScriptNameSetRegistry* nsLayoutModule::gRegistry;
 
 nsLayoutModule::nsLayoutModule()
@@ -182,6 +177,8 @@ NS_IMPL_ISUPPORTS(nsLayoutModule, kIModuleIID)
 nsresult
 nsLayoutModule::Initialize()
 {
+  nsresult rv = NS_OK;
+
   if (mInitialized) {
     return NS_OK;
   }
@@ -203,25 +200,6 @@ nsLayoutModule::Initialize()
   nsMathMLOperators::AddRefTable();
   nsMathMLAtoms::AddRefAtoms();
 #endif
-
-  // Load the UA style sheet
-  nsCOMPtr<nsIURI> uaURL;
-  nsresult rv = NS_NewURI(getter_AddRefs(uaURL), UA_CSS_URL);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsICSSLoader> cssLoader;
-    rv = NS_NewCSSLoader(getter_AddRefs(cssLoader));
-    if (cssLoader) {
-      PRBool complete;
-      rv = cssLoader->LoadAgentSheet(uaURL, gUAStyleSheet, complete,
-                                     nsnull);
-    }
-  }
-  if (NS_FAILED(rv)) {
-#ifdef DEBUG
-    printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);
-#endif
-    return rv;
-  }
 
   // XXX Initialize the script name set thingy-ma-jigger
   if (!gRegistry) {
@@ -269,7 +247,6 @@ nsLayoutModule::Shutdown()
   nsTextTransformer::Shutdown();
 
   NS_IF_RELEASE(gRegistry);
-  NS_IF_RELEASE(gUAStyleSheet);
 }
 
 NS_IMETHODIMP

@@ -31,12 +31,17 @@
 #include "nsString.h"
 #include "nsLayoutCID.h"
 #include "prprf.h"
+#include "nsNetUtil.h"
+#include "nsICSSLoader.h"
 
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
 #include "nsIXULContentSink.h"
 #include "nsIStreamLoadableDocument.h"
 #include "nsIDocStreamLoaderFactory.h"
+
+// URL for the "user agent" style sheet
+#define UA_CSS_URL "resource:/res/ua.css"
 
 // Factory code for creating variations on html documents
 
@@ -117,6 +122,7 @@ class nsLayoutDLF : public nsIDocumentLoaderFactory,
 {
 public:
   nsLayoutDLF();
+  ~nsLayoutDLF();
 
   NS_DECL_ISUPPORTS
 
@@ -171,7 +177,16 @@ public:
   nsresult CreateRDFDocument(nsISupports*,
                              nsCOMPtr<nsIDocument>*,
                              nsCOMPtr<nsIDocumentViewer>*);
+
+  static nsICSSStyleSheet* GetUAStyleSheet() {
+    return gUAStyleSheet;
+  }
+
+public:
+  static nsCOMPtr<nsICSSStyleSheet> gUAStyleSheet;
 };
+
+nsCOMPtr<nsICSSStyleSheet> nsLayoutDLF::gUAStyleSheet;
 
 nsresult
 NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
@@ -190,6 +205,10 @@ NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
 nsLayoutDLF::nsLayoutDLF()
 {
   NS_INIT_REFCNT();
+}
+
+nsLayoutDLF::~nsLayoutDLF()
+{
 }
 
 NS_IMPL_ADDREF(nsLayoutDLF)
@@ -235,7 +254,27 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
                             nsIStreamListener** aDocListener,
                             nsIContentViewer** aDocViewer)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
+  if (!nsLayoutDLF::gUAStyleSheet) {
+    // Load the UA style sheet
+    nsCOMPtr<nsIURI> uaURL;
+    rv = NS_NewURI(getter_AddRefs(uaURL), UA_CSS_URL);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsICSSLoader> cssLoader;
+      rv = NS_NewCSSLoader(getter_AddRefs(cssLoader));
+      if (cssLoader) {
+        PRBool complete;
+        rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(nsLayoutDLF::gUAStyleSheet), complete,
+                                       nsnull);
+      }
+    }
+    if (NS_FAILED(rv)) {
+  #ifdef DEBUG
+      printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);
+  #endif
+      return rv;
+    }
+  }
 
   if(0==PL_strcmp(aCommand,"view-source")) {
     if(0==PL_strcmp(aContentType,gHTMLTypes[1])) {
@@ -317,7 +356,7 @@ nsLayoutDLF::CreateInstanceForDocument(nsISupports* aContainer,
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
-    docv->SetUAStyleSheet(nsLayoutModule::GetUAStyleSheet());
+    docv->SetUAStyleSheet(nsLayoutDLF::GetUAStyleSheet());
 
     // Bind the document to the Content Viewer
     rv = docv->BindToDocument(aDocument, aCommand);
@@ -366,7 +405,7 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
-    docv->SetUAStyleSheet(nsLayoutModule::GetUAStyleSheet());
+    docv->SetUAStyleSheet(nsLayoutDLF::GetUAStyleSheet());
 
     // Initialize the document to begin loading the data.  An
     // nsIStreamListener connected to the parser is returned in
@@ -429,7 +468,7 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
   if (NS_FAILED(rv)) return rv;
 
   // Load the UA style sheet if we haven't already done that
-  (*docv)->SetUAStyleSheet(nsLayoutModule::GetUAStyleSheet());
+  (*docv)->SetUAStyleSheet(nsLayoutDLF::GetUAStyleSheet());
 
   return NS_OK;
 }
