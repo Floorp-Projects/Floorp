@@ -200,6 +200,7 @@
       border                : 0px;
       background-color      : threedface;
       min-width             : 0px;
+      user-focus            : ignore;
     }  
     
   .button-toolbar-3:hover, .button-toolbar-3:hover:active
