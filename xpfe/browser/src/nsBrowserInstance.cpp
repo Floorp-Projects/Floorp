@@ -2195,7 +2195,6 @@ nsBrowserInstance::CanHandleContent(const char * aContentType,
   //    incoming Type                     Preferred type
   //      text/html
   //      text/xul
-  //      multipart/x-mixed-replace         text/html
   //      text/rdf
   //      text/xml
   //      text/css
@@ -2215,11 +2214,6 @@ nsBrowserInstance::CanHandleContent(const char * aContentType,
   {
      // (1) list all content types we want to  be the primary handler for....
      // and suggest a desired content type if appropriate...
-     if (nsCRT::strcasecmp(aContentType, "multipart/x-mixed-replace") == 0)
-     {
-       *aDesiredContentType = nsCRT::strdup("text/html");
-       *aCanHandleContent = PR_TRUE;
-     }
      if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
        || nsCRT::strcasecmp(aContentType, "text/xul") == 0
        || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 

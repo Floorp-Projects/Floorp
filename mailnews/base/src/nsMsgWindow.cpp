@@ -275,11 +275,6 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
     // for right now, if the load command is viewNormal just say we can handle it...
     if (aCommand == nsIURILoader::viewNormal)
     {
-       if (nsCRT::strcasecmp(aContentType, "multipart/x-mixed-replace") == 0)
-       {
-        *aDesiredContentType = nsCRT::strdup("text/html");
-        *aCanHandleContent = PR_TRUE;
-       }
        if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
            || nsCRT::strcasecmp(aContentType, "text/xul") == 0
            || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
