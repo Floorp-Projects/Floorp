@@ -80,7 +80,6 @@ nsResChannel::nsResChannel()
 nsresult
 nsResChannel::Init(nsIResProtocolHandler* handler, nsIURI* uri)
 {
-    mResolvedURI = uri;
     mHandler = handler;
     mResourceURI = uri;
     return NS_OK;
@@ -124,32 +123,24 @@ nsResChannel::Substitutions::Init()
     char* root;
     rv = channel->mResourceURI->GetHost(&root);
     if (NS_SUCCEEDED(rv)) {
-        rv = channel->mHandler->GetSubstitutions(root, &mSubstitutions);
+        rv = channel->mHandler->GetSubstitutions(root, getter_AddRefs(mSubstitutions));
         nsCRT::free(root);
     }
     return rv;
 }
 
 nsresult
-nsResChannel::Substitutions::Next(nsIURI* *result)
+nsResChannel::Substitutions::Next(char* *result)
 {
     nsresult rv;
     nsResChannel* channel = GET_SUBSTITUTIONS_CHANNEL(this);
 
-    nsCString* str = (nsCString*)mSubstitutions->CStringAt(0);
-    if (str == nsnull) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIURI> resolvedURI;
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                            NS_GET_IID(nsIURI),
-                                            getter_AddRefs(resolvedURI));
+    nsCOMPtr<nsIURI> substURI;
+    rv = mSubstitutions->GetElementAt(mCurrentIndex++, getter_AddRefs(substURI));
     if (NS_FAILED(rv)) return rv;
 
-    rv = resolvedURI->SetSpec(str->GetBuffer());
-    if (NS_FAILED(rv)) return rv;
-
-    PRBool ok = mSubstitutions->RemoveCStringAt(0);
-    if (!ok) return NS_ERROR_FAILURE;
+    if (substURI == nsnull)
+        return NS_ERROR_FAILURE;
 
     char* path = nsnull;
     rv = channel->mResourceURI->GetPath(&path);
@@ -157,17 +148,12 @@ nsResChannel::Substitutions::Next(nsIURI* *result)
 
     // XXX this path[0] check is a hack -- it seems to me that GetPath 
     // shouldn't include the leading slash:
-    nsXPIDLCString aResolvedURI;
-    rv = resolvedURI->Resolve(path[0] == '/' ? path+1 : path, 
-                              getter_Copies(aResolvedURI));
+    char* aResolvedURI;
+    rv = substURI->Resolve(path[0] == '/' ? path+1 : path, &aResolvedURI);
     nsCRT::free(path);
     if (NS_FAILED(rv)) return rv;
     
-    rv = resolvedURI->SetSpec(aResolvedURI);
-    if (NS_FAILED(rv)) return rv;
-
-    *result = resolvedURI;
-    NS_IF_ADDREF(*result);
+    *result = aResolvedURI;
     return NS_OK;
 }
 
@@ -204,7 +190,7 @@ nsResChannel::Cancel(nsresult status)
         rv = mResolvedChannel->Cancel(status);
     }
     mStatus = status;
-    mResolvedURI = mResourceURI;        // remove the resolution
+    mResolvedChannel = nsnull;        // remove the resolution
     return rv;
 }
 
@@ -254,9 +240,10 @@ nsResChannel::SetOriginalURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsResChannel::GetURI(nsIURI* *aURI)
 {
-    if (mResolvedURI == nsnull)
-        mResolvedURI = mResourceURI;
-    *aURI = mResolvedURI;
+    if (mResolvedChannel) {
+        return mResolvedChannel->GetURI(aURI);
+    }
+    *aURI = mResourceURI;
     NS_ADDREF(*aURI);
     return NS_OK;
 }
@@ -271,15 +258,16 @@ nsresult
 nsResChannel::EnsureNextResolvedChannel()
 {
     nsresult rv;
+    nsXPIDLCString resolvedURI;
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) goto done;
 
-    rv = mSubstitutions.Next(getter_AddRefs(mResolvedURI));
+    rv = mSubstitutions.Next(getter_Copies(resolvedURI));
     if (NS_FAILED(rv)) goto done;
 
-    rv = serv->NewChannelFromURI(mResolvedURI, 
-                                 getter_AddRefs(mResolvedChannel));
+    rv = serv->NewChannel(resolvedURI, nsnull,
+                          getter_AddRefs(mResolvedChannel));
     if (NS_FAILED(rv)) {
         rv = NS_OK;     // returning NS_OK lets us try again
         goto done;
@@ -322,15 +310,12 @@ nsResChannel::EnsureNextResolvedChannel()
 #if defined(PR_LOGGING)
     nsXPIDLCString resURI;
     (void)mResourceURI->GetSpec(getter_Copies(resURI));
-    nsXPIDLCString newURI;
-	if (mResolvedURI)
-        (void)mResolvedURI->GetSpec(getter_Copies(newURI));
     PR_LOG(gResChannelLog, PR_LOG_DEBUG,
            ("nsResChannel: resolving %s ",
             (const char*)resURI));
     PR_LOG(gResChannelLog, PR_LOG_DEBUG,
            ("                     to %s => status %x\n",
-            (const char*)newURI, rv));
+            (const char*)resolvedURI, rv));
 #endif /* PR_LOGGING */
     return rv;
 }

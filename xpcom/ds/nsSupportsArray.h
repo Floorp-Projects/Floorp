@@ -115,6 +115,8 @@ public:
   NS_IMETHOD_(PRBool) EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData);
   NS_IMETHOD_(PRBool) EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData);
 
+  NS_IMETHOD Clone(nsISupportsArray **_retval);
+
 protected:
   NS_IMETHOD_(nsISupportsArray&) operator=(const nsISupportsArray& aOther);
   NS_IMETHOD_(PRBool) operator==(const nsISupportsArray& aOther) { return Equals(&aOther); }

@@ -1038,16 +1038,16 @@ nsStdURL::SetFile(nsIFile * aFile)
 	    while (*s)
 	    {
 #ifndef XP_OS2
-                    // We need to call IsDBCSLeadByte because
-                    // Japanese windows can have 0x5C in the sencond byte 
-                    // of a Japanese character, for example 0x8F 0x5C is
-                    // one Japanese character
-                    if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
-                        s++;
+            // We need to call IsDBCSLeadByte because
+            // Japanese windows can have 0x5C in the sencond byte 
+            // of a Japanese character, for example 0x8F 0x5C is
+            // one Japanese character
+            if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
+                s++;
 		    } else 
 #endif
-                        if (*s == '\\')
-			    *s = '/';
+                if (*s == '\\')
+                    *s = '/';
 		    s++;
 	    }
 #endif
@@ -1057,8 +1057,14 @@ nsStdURL::SetFile(nsIFile * aFile)
 #endif
         // Escape the path with the directory mask
         rv = nsURLEscape(ePath,nsIIOService::url_Directory+
-                               nsIIOService::url_Forced,escPath);
+                         nsIIOService::url_Forced,escPath);
         if (NS_SUCCEEDED(rv)) {
+            PRBool dir;
+            rv = aFile->IsDirectory(&dir);
+            if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
+                // make sure we have a trailing slash
+                escPath += "/";
+            }
             rv = SetPath(escPath.GetBuffer());
         }
     }
