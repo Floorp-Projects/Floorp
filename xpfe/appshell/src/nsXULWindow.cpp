@@ -1182,6 +1182,8 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   nsContentShellInfo* shellInfo = nsnull;
   nsAutoString newID(aID);
 
+  PRBool resetTreeOwner = PR_FALSE;
+
   PRInt32 count = mContentShells.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
@@ -1191,6 +1193,16 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
       // We already exist. Do a replace.
       info->child = aContentShell;
       shellInfo = info;
+      break;
+    }
+    else if (info->child == aContentShell) {
+      if (info->primary == aPrimary)
+        return NS_OK; // Nothing to do.
+
+      // Do an update in place.
+      info->primary = aPrimary;
+      shellInfo = info;
+      resetTreeOwner = PR_TRUE;
       break;
     }
   }
@@ -1203,7 +1215,7 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   // Set the default content tree owner if one does not exist.
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   aContentShell->GetTreeOwner(getter_AddRefs(treeOwner));
-  if (!treeOwner) {
+  if (!treeOwner || resetTreeOwner) {
     if (aPrimary) {
       NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
       aContentShell->SetTreeOwner(mPrimaryContentTreeOwner);
