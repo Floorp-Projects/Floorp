@@ -39,6 +39,11 @@
 #include "nsSpecialSystemDirectory.h"
 #include "prmem.h"
 #include "prenv.h"
+#include "prerror.h"
+#include <sys/stat.h>
+
+#include "nsIPref.h"
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define PLUGIN_PATH 	"NS600_PLUGIN_PATH"	
 #define PLUGIN_DIR 	"/plugins"	
@@ -96,14 +101,190 @@ static void SetMIMETypeSeparator(char *minfo)
     p = minfo;
     while (p) {
 	if ((p = PL_strchr(p, MTYPE_PART)) != 0) {
-	    *p++;
+	    p++;
 	    if ((p = PL_strchr(p, MTYPE_END_OLD)) != 0) {
 	        *p = MTYPE_END;	
-		*p++;
+		p++;
 	    }
         }
     }
 }
+
+#ifdef MOZ_WIDGET_GTK 
+
+#define LOCAL_PLUGIN_DLL_SUFFIX ".so"
+#if defined(HPUX11)
+#define DEFAULT_X11_PATH "/usr/lib/X11R6/"
+#undef LOCAL_PLUGIN_DLL_SUFFIX
+#define LOCAL_PLUGIN_DLL_SUFFIX ".sl"
+#elif defined(SOLARIS)
+#define DEFAULT_X11_PATH "/usr/openwin/lib/"
+#elif defined(LINUX)
+#define DEFAULT_X11_PATH "/usr/X11R6/lib/"
+#else
+#define DEFAULT_X11_PATH ""
+#endif
+
+#define PLUGIN_MAX_LEN_OF_TMP_ARR 512
+
+static void DisplayPR_LoadLibraryErrorMessage(const char *libName)
+{
+    char errorMsg[PLUGIN_MAX_LEN_OF_TMP_ARR] = "Cannot get error from NSPR.";
+    if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
+        PR_GetErrorText(errorMsg);
+
+    fprintf(stderr, "LoadPlugin: failed to initialize shared library %s [%s]\n",
+        libName, errorMsg);
+}
+
+static void SearchForSoname(const char* name, char** soname)
+{
+    if (!(name && soname))
+        return;
+    PRDir *fdDir = PR_OpenDir(DEFAULT_X11_PATH);
+    if (!fdDir)
+        return;       
+
+    int n = PL_strlen(name);
+    PRDirEntry *dirEntry;
+    while ((dirEntry = PR_ReadDir(fdDir, PR_SKIP_BOTH))) {
+        if (!PL_strncmp(dirEntry->name, name, n)) {
+            if (dirEntry->name[n] == '.' && dirEntry->name[n+1] && !dirEntry->name[n+2]) {
+                // name.N, wild guess this is what we need
+                char out[PLUGIN_MAX_LEN_OF_TMP_ARR] = DEFAULT_X11_PATH;
+                PL_strcat(out, dirEntry->name);
+                *soname = PL_strdup(out);
+               break;
+            }
+        }
+    }
+
+    PR_CloseDir(fdDir);
+}
+
+static PRBool LoadExtraSharedLib(const char *name, char **soname, PRBool tryToGetSoname)
+{
+    PRBool ret = PR_TRUE;
+    PRLibSpec tempSpec;
+    PRLibrary *handle;
+    tempSpec.type = PR_LibSpec_Pathname;
+    tempSpec.value.pathname = name;
+    handle = PR_LoadLibraryWithFlags(tempSpec, PR_LD_NOW|PR_LD_GLOBAL);
+    if (!handle) {
+        ret = PR_FALSE;
+        DisplayPR_LoadLibraryErrorMessage(name);
+        if (tryToGetSoname) {
+            SearchForSoname(name, soname);
+            if (*soname) {
+                ret = LoadExtraSharedLib((const char *) *soname, NULL, PR_FALSE);
+            }
+        }
+    }
+    return ret;
+}
+
+#define PLUGIN_MAX_NUMBER_OF_EXTRA_LIBS 32
+#define PREF_PLUGINS_SONAME "plugin.soname.list"
+#define DEFAULT_EXTRA_LIBS_LIST "libXt" LOCAL_PLUGIN_DLL_SUFFIX ":libXext" LOCAL_PLUGIN_DLL_SUFFIX
+/*
+ this function looks for
+ user_pref("plugin.soname.list", "/usr/X11R6/lib/libXt.so.6:libXiext.so");
+ in user's pref.js
+ and loads all libs in specified order
+*/
+
+static void LoadExtraSharedLibs()
+{
+    // check out if user's prefs.js has libs name
+    nsresult res;
+    nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &res);
+    if (NS_SUCCEEDED(res) && (prefs != nsnull)) {
+        char *sonamesListFromPref = PREF_PLUGINS_SONAME;
+        char *sonameList = NULL;
+        PRBool prefSonameListIsSet = PR_TRUE;
+        res = prefs->CopyCharPref(sonamesListFromPref, &sonameList);
+        if (!sonameList) {
+            // pref is not set, lets use hardcoded list
+            prefSonameListIsSet = PR_FALSE;
+            sonameList = DEFAULT_EXTRA_LIBS_LIST;
+            sonameList = PL_strdup(sonameList);
+        }
+        if (sonameList) {
+            char *arrayOfLibs[PLUGIN_MAX_NUMBER_OF_EXTRA_LIBS] = {0};
+            int numOfLibs = 0;
+            char *nextToken;
+            char *p = nsCRT::strtok(sonameList,":",&nextToken);
+            if (p) {
+                while (p && numOfLibs < PLUGIN_MAX_NUMBER_OF_EXTRA_LIBS) {
+                    arrayOfLibs[numOfLibs++] = p;
+                    p = nsCRT::strtok(nextToken,":",&nextToken);
+                }
+            } else // there is just one lib
+                arrayOfLibs[numOfLibs++] = sonameList;
+
+            char sonameListToSave[PLUGIN_MAX_LEN_OF_TMP_ARR] = "";
+            for (int i=0; i<numOfLibs; i++) {
+                // trim out head/tail white spaces (just in case)
+                PRBool head = PR_TRUE;
+                p = arrayOfLibs[i];
+                while (*p) {
+                    if (*p == ' ' || *p == '\t') {
+                        if (head) {
+                            arrayOfLibs[i] = ++p;
+                        } else {
+                            *p = 0;
+                        }
+                    } else {
+                        head = PR_FALSE;
+                        p++;
+                    }
+                }
+                if (!arrayOfLibs[i][0]) {
+                    continue; // null string
+                }
+                PRBool tryToGetSoname = PR_TRUE;
+                if (PL_strchr(arrayOfLibs[i], '/')) {
+                    //assuming it's real name, try to stat it
+                    struct stat st;
+                    if (stat((const char*) arrayOfLibs[i], &st)) {
+                        //get just a file name
+                        arrayOfLibs[i] = PL_strrchr(arrayOfLibs[i], '/') + 1;
+                    } else
+                        tryToGetSoname = PR_FALSE;
+                }
+                char *soname = NULL;
+                if (LoadExtraSharedLib(arrayOfLibs[i], &soname, tryToGetSoname)) {
+                    //construct soname's list to save in prefs
+                    p = soname ? soname : arrayOfLibs[i];
+                    int n = PLUGIN_MAX_LEN_OF_TMP_ARR -
+                        (PL_strlen(sonameListToSave) + PL_strlen(p));
+                    if (n > 0) {
+                        PL_strcat(sonameListToSave, p);
+                        PL_strcat(sonameListToSave,":");
+                    }
+                    if (soname) {
+                        PL_strfree(soname); // it's from strdup
+                    }
+                    if (numOfLibs > 1)
+                        arrayOfLibs[i][PL_strlen(arrayOfLibs[i])] = ':'; //restore ":" in sonameList
+                }
+            }
+            for (p = &sonameListToSave[PL_strlen(sonameListToSave) - 1]; *p == ':'; p--)
+                *p = 0; //delete tail ":" delimiters
+
+            if (!prefSonameListIsSet || PL_strcmp(sonameList, sonameListToSave)) {
+                // if user specified some bogus soname I overwrite it here,
+                // otherwise it'll decrease performance by calling popen() in SearchForSoname
+                // every time for each bogus name
+                prefs->SetCharPref(sonamesListFromPref, (const char *)sonameListToSave);
+            }
+            PL_strfree(sonameList);
+        }
+    }
+}
+#endif //MOZ_WIDGET_GTK
+
+
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -172,8 +353,12 @@ nsPluginFile::~nsPluginFile()
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
     PRLibSpec libSpec;
-    PRLibSpec tempSpec;
-    PRLibrary * handle;
+    libSpec.type = PR_LibSpec_Pathname;
+    libSpec.value.pathname = this->GetCString();
+
+    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+
+#ifdef MOZ_WIDGET_GTK
 
     ///////////////////////////////////////////////////////////
     // Normally, Mozilla isn't linked against libXt and libXext
@@ -186,18 +371,14 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     // at runtime.  Explicitly opening Xt/Xext into the global
     // namespace before attempting to load the plug-in seems to
     // work fine.
+    if (!pLibrary) {
+        DisplayPR_LoadLibraryErrorMessage(libSpec.value.pathname);
+        LoadExtraSharedLibs();
+        // try reload plugin ones more
+        pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+    }
+#endif
 
-    tempSpec.type = PR_LibSpec_Pathname;
-    tempSpec.value.pathname = "libXt.so";
-    handle = PR_LoadLibraryWithFlags(tempSpec, PR_LD_NOW|PR_LD_GLOBAL);
-
-    tempSpec.value.pathname = "libXext.so";
-    handle = PR_LoadLibraryWithFlags(tempSpec, PR_LD_NOW|PR_LD_GLOBAL);
-
-    libSpec.type = PR_LibSpec_Pathname;
-    libSpec.value.pathname = this->GetCString();
-    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
-    
 #ifdef NS_DEBUG
     printf("LoadPlugin() %s returned %lx\n", 
            libSpec.value.pathname, (unsigned long)pLibrary);
