@@ -137,6 +137,7 @@ struct RDF_AssertionStruct {
   uint8 tags;
   struct RDF_AssertionStruct* next;
   struct RDF_AssertionStruct* invNext;
+  struct RDF_TranslatorStruct* db;
 } ;
 
 

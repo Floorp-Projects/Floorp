@@ -23,6 +23,9 @@ typedef struct _RDF_CoreVocabStruct {
   RDF_Resource RDF_parent;
   RDF_Resource RDF_name;
   RDF_Resource RDF_instanceOf;
+  RDF_Resource RDF_subClassOf;
+  RDF_Resource RDF_PropertyType;
+  RDF_Resource RDF_Class;
   RDF_Resource RDF_slotsHere;
   RDF_Resource RDF_slotsIn;
   RDF_Resource RDF_domain;
@@ -36,12 +39,10 @@ typedef struct _RDF_CoreVocabStruct {
   RDF_Resource RDF_greaterThanOrEqual;
   RDF_Resource RDF_stringEquals;
   RDF_Resource RDF_substring;
-  RDF_Resource RDF_notParent; 
-  RDF_Resource RDF_notInstanceOf; 
-  RDF_Resource RDF_notEquals; 
-  RDF_Resource RDF_notStringEquals; 
-  RDF_Resource RDF_notSubstring;
   RDF_Resource RDF_child;
+  RDF_Resource RDF_comment;
+  RDF_Resource RDF_content;
+  RDF_Resource RDF_summary;
 } RDF_CoreVocabStruct;
 
 typedef RDF_CoreVocabStruct* RDF_CoreVocab;

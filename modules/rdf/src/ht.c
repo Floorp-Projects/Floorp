@@ -6778,7 +6778,7 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
         nsmp->origin =  FROM_PAGE;
         nsmp->onDisplayp = 1;
 	SCookAssert3(sp, nu, gCoreVocab->RDF_name, nm,  RDF_STRING_TYPE, 1);
-	SCookAssert3(sp, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Sitemaps, 
+	SCookAssert3(sp, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Top, 
                      RDF_RESOURCE_TYPE, 1);
 	 
 
@@ -6807,11 +6807,11 @@ RetainOldSitemaps (HT_Pane htPane, char *pUrl)
             SCookAssert3(sp, nu, gCoreVocab->RDF_name, copyString(nsmp->name),  
                          RDF_STRING_TYPE, 1);
             SCookAssert3(sp, nu, gCoreVocab->RDF_parent, 
-                         gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE, 1);
+                         gNavCenter->RDF_Top, RDF_RESOURCE_TYPE, 1);
           }
         } else if (nsmp->onDisplayp) {
           SCookUnassert(sp, nsmp->sitemap, gCoreVocab->RDF_parent,
-                        gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE);
+                        gNavCenter->RDF_Top, RDF_RESOURCE_TYPE);
           nsmp->onDisplayp = 0;
         }
     }

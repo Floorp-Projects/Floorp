@@ -71,6 +71,9 @@ createCoreVocab ()
   gCoreVocab->RDF_parent = RDF_GetResource(gCoreDB, "parent", 1);
   gCoreVocab->RDF_name = RDF_GetResource(gCoreDB, "name", 1);
   gCoreVocab->RDF_instanceOf = RDF_GetResource(gCoreDB, "instanceOf", 1);
+  gCoreVocab->RDF_subClassOf = RDF_GetResource(gCoreDB, "subClassOf", 1);
+  gCoreVocab->RDF_Class = RDF_GetResource(gCoreDB, "Class", 1);
+  gCoreVocab->RDF_PropertyType = RDF_GetResource(gCoreDB, "PropertyType", 1);
   gCoreVocab->RDF_slotsHere = RDF_GetResource(gCoreDB, "slotsHere", 1);
   gCoreVocab->RDF_slotsIn = RDF_GetResource(gCoreDB, "slotsIn", 1);
   gCoreVocab->RDF_domain = RDF_GetResource(gCoreDB, "domain", 1);
@@ -84,12 +87,11 @@ createCoreVocab ()
   gCoreVocab->RDF_greaterThanOrEqual = RDF_GetResource(gCoreDB, "greaterThanOrEqualTo", 1);
   gCoreVocab->RDF_stringEquals = RDF_GetResource(gCoreDB, "stringEquals", 1);
   gCoreVocab->RDF_substring = RDF_GetResource(gCoreDB, "substring", 1);
-  gCoreVocab->RDF_notParent = RDF_GetResource(gCoreDB, "notParent", 1); 
-  gCoreVocab->RDF_notInstanceOf = RDF_GetResource(gCoreDB, "notInstanceOf", 1); 
-  gCoreVocab->RDF_notEquals = RDF_GetResource(gCoreDB, "notEquals", 1); 
-  gCoreVocab->RDF_notStringEquals = RDF_GetResource(gCoreDB, "notStringEquals", 1); 
-  gCoreVocab->RDF_notSubstring = RDF_GetResource(gCoreDB, "notSubstring", 1); 
   gCoreVocab->RDF_child = RDF_GetResource(gCoreDB, "child", 1);
+  gCoreVocab->RDF_content = RDF_GetResource(gCoreDB, "content", 1);
+  gCoreVocab->RDF_summary = RDF_GetResource(gCoreDB, "summary", 1);
+  gCoreVocab->RDF_comment = RDF_GetResource(gCoreDB, "comment", 1);
+  
 }
 
 
