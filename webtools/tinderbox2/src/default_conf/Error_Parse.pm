@@ -5,9 +5,9 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.3 $ 
-# $Date: 2001/01/06 01:33:22 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.4 $ 
+# $Date: 2001/03/15 18:00:00 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
 
@@ -37,6 +37,9 @@
 
 
 package Error_Parse;
+
+# This package must not use any tinderbox specific libraries.  It is
+# intended to be a base class.
 
 $VERSION = '#tinder_version#';
 
@@ -96,8 +99,20 @@ sub line_type {
 
   $error = (
 
-            ($line =~ /\b[Ee]rror\b/)		||		# C make error
+            ($line =~ /\sORA-\d/)		||		# Oracle
+            ($line =~ /\bNo such file or directory\b/)	||
+            ($line =~ /\b[Uu]nable to\b/)	||		
+            ($line =~ /\bnot found\b/)		||		# shell path
+            ($line =~ /\b[Dd]oes not\b/)	||		# javac error
+            ($line =~ /\b[Cc]ould not\b/)	||		# javac error
+            ($line =~ /\b[Cc]an\'t\b/)		||		# javac error
+            ($line =~ /\b[Cc]an not\b/)		||		# javac error
+            ($line =~ /\b\[javac\]\b/)		||		# javac error
+            # Remember: some source files are called $prefix/error.suffix
+            ($line =~ /\b(?<!\/)[Ee]rror(?!\.)\b/)||		# C make error
             ($line =~ /\b[Ff]atal\b/)		||		# link error
+            ($line =~ /\b[Ee]xception\b/)	||		# javac error
+            ($line =~ /\b[Dd]eprecated\b/)	||		# java error
             ($line =~ /\b[Aa]ssertion\b/)	||		# test error
             ($line =~ /\b[Aa]borted\b/)		||		# cvs error
             ($line =~ /\b[Ff]ailed\b/)		||		# java nmake
