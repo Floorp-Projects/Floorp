@@ -73,21 +73,17 @@ private:
   // init this interface to a specified locale
   NS_IMETHOD Initialize(nsILocale* locale);
 
-  // util function to call unicode converter
-  nsresult ConvertToUnicode(const char *inString, const PRInt32 inLen, PRUnichar *outString, PRInt32 *outLen);
-
   // call GetTimeFormatW or TimeFormatA
   int nsGetTimeFormatW(DWORD dwFlags, const SYSTEMTIME *lpTime,
                     const char* format, PRUnichar *timeStr, int cchTime);
 
   // call GetDateFormatW or GetDateFormatA
   int nsGetDateFormatW(DWORD dwFlags, const SYSTEMTIME *lpDate,
-                       const char* format, PRUnichar *dataStr, int cchDate);
+                       const char* format, PRUnichar *dateStr, int cchDate);
 
   nsString    mLocale;
   nsString    mAppLocale;
   PRBool      mW_API;            // W or A API
-  nsString    mCharset;          // for A version of API, we need to convert
   PRUint32    mLCID;             // Windows platform locale ID
 };
 
