@@ -226,7 +226,8 @@ nsTreeFrame::HandleEvent(nsIPresContext* aPresContext,
         keyCode == NS_VK_DOWN ||
         keyCode == NS_VK_LEFT ||
         keyCode == NS_VK_RIGHT ||
-        keyCode == NS_VK_ENTER) {
+        keyCode == NS_VK_ENTER ||
+        keyCode == NS_VK_RETURN) {
 
       // Get our treechildren child frame.
       nsTreeRowGroupFrame* treeRowGroup = nsnull;
