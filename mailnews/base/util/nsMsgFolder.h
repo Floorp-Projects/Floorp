@@ -28,7 +28,6 @@
 #include "msgCore.h"
 #include "nsIMsgFolder.h" /* include the interface we are going to support */
 #include "nsRDFResource.h"
-#include "nsIRDFResourceFactory.h"
 #include "nsIDBFolderInfo.h"
 #include "nsIMsgDatabase.h"
 
