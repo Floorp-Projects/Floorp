@@ -603,9 +603,9 @@ NET_SetupPrefs(const char * prefChanged)
 	}
 	
 	if (bSetupAll || !PL_strcmp(prefChanged,"browser.prefetch")) {
-		XP_Bool enabled;
-		PREF_GetBoolPref("browser.prefetch",&enabled);
-    	PRE_Enable(enabled);
+		int32 n;
+		PREF_GetIntPref("browser.prefetch",&n);
+    	PRE_Enable((PRUint8)n);
 	}
 		
 	if (bSetupAll || !PL_strcmp(prefChanged,"browser.cache.memory_cache_size")) {
