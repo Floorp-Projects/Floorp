@@ -54,7 +54,7 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
-//#include "nsTextTokenizer.h"
+
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -323,7 +323,8 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
     theNode.AddAttribute(&theAttr);
     mSink->OpenContainer(theNode);
   }
-  mIsText=!aCommand.Equals(kViewSourceCommand);
+  
+  mIsText=((!aCommand.Equals(kViewSourceCommand)) || (aSourceType.Equals(kPlainTextContentType)));
 
   mLineNumber=0;
   result = mSink->WillBuildModel();
@@ -459,10 +460,7 @@ nsresult  CViewSourceHTML::Terminate(void)
  */
 nsITokenizer* CViewSourceHTML::GetTokenizer(void) {
   if(!mTokenizer) {
-    /*if(mIsText)
-      mTokenizer = new nsTextTokenizer();
-    else */
-    mTokenizer = new nsHTMLTokenizer();
+    mTokenizer = new nsHTMLTokenizer(eParseMode_quirks,mIsText);
   }
   return mTokenizer;
 }

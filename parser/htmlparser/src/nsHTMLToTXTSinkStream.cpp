@@ -29,7 +29,6 @@
  * model.
  */
 
-
 #include "nsHTMLToTXTSinkStream.h"
 #include "nsHTMLTokens.h"
 #include "nsString.h"
@@ -45,14 +44,15 @@
 #include "nsIOutputStream.h"
 #include "nsFileStream.h"
 
-
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-const  PRInt32 gTabSize=2;
+const  PRInt32 gTabSize=4;
+const  PRInt32 gOLNumberWidth = 3;
+const  PRInt32 gIndentSizeList = MaxInt(gTabSize, gOLNumberWidth + 3);
+                               // Indention of non-first lines of ul and ol
 
 static PRBool IsInline(eHTMLTags aTag);
 static PRBool IsBlockLevel(eHTMLTags aTag);
-
 
 /**
  *  Inits the encoder instance variable for the sink based on the charset 
@@ -71,7 +71,6 @@ nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
     NS_IF_RELEASE(mUnicodeEncoder);
     return res;
   }
-
 
   nsICharsetAlias* calias = nsnull;
   res = nsServiceManager::GetService(kCharsetAliasCID,
@@ -110,7 +109,6 @@ nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
   return res;
 }
 
-
 /**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
@@ -147,10 +145,8 @@ nsHTMLToTXTSinkStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
-
 NS_IMPL_ADDREF(nsHTMLToTXTSinkStream)
 NS_IMPL_RELEASE(nsHTMLToTXTSinkStream)
-
 
 // Someday may want to make this non-const:
 static const PRUint32 TagStackSize = 500;
@@ -158,7 +154,7 @@ static const PRUint32 OLStackSize = 100;
 
 /**
  * Construct a content sink stream.
- * @update	gpk02/03/99
+ * @update      gpk02/03/99
  * @param 
  * @return
  */
@@ -191,10 +187,9 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
   mOLStackIndex = 0;
 }
 
-
 /**
  * 
- * @update	gpk02/03/99
+ * @update      gpk02/03/99
  * @param 
  * @return
  */
@@ -211,7 +206,7 @@ nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream()
 
 /**
  * 
- * @update	gpk04/30/99
+ * @update      gpk04/30/99
  * @param 
  * @return
  */
@@ -229,11 +224,10 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
 
 /**
  * 
- * @update	gpk04/30/99
+ * @update      gpk04/30/99
  * @param 
  * @return
  */
-
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::SetCharsetOverride(const nsString* aCharset)
 {
@@ -245,8 +239,6 @@ nsHTMLToTXTSinkStream::SetCharsetOverride(const nsString* aCharset)
   return NS_OK;
 }
 
-
-
 /**
   * This method gets called by the parser when it encounters
   * a title tag and wants to set the document title in the sink.
@@ -254,9 +246,10 @@ nsHTMLToTXTSinkStream::SetCharsetOverride(const nsString* aCharset)
   * @update gpk02/03/99
   * @param  nsString reference to new title value
   * @return PR_TRUE if successful. 
-  */     
+  */
 NS_IMETHODIMP
-nsHTMLToTXTSinkStream::SetTitle(const nsString& aValue){
+nsHTMLToTXTSinkStream::SetTitle(const nsString& aValue)
+{
   return NS_OK;
 }
 
@@ -278,7 +271,6 @@ nsHTMLToTXTSinkStream::opentag(const nsIParserNode& aNode) \
 NS_IMETHODIMP \
 nsHTMLToTXTSinkStream::closetag(const nsIParserNode& aNode) \
 { return CloseContainer(aNode); }
-
 
 USE_GENERAL_OPEN_METHOD(OpenHTML)
 USE_GENERAL_CLOSE_METHOD(CloseHTML)
@@ -344,7 +336,6 @@ nsHTMLToTXTSinkStream::AddProcessingInstruction(const nsIParserNode& aNode){
  *  This gets called by the parser when it encounters
  *  a DOCTYPE declaration in the HTML document.
  */
-
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
@@ -405,6 +396,15 @@ PRBool nsHTMLToTXTSinkStream::DoOutput()
   return mDoFragment || inBody;
 }
 
+nsAutoString
+Spaces(PRInt32 count)
+{
+  nsAutoString result;
+  while (result.Length() < count)
+    result += ' ';
+  return result;
+}
+    
 /**
   * This method is used to a general container. 
   * This includes: OL,UL,DIR,SPAN,TABLE,H[1..6],etc.
@@ -416,7 +416,6 @@ PRBool nsHTMLToTXTSinkStream::DoOutput()
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 {
-
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
 #ifdef DEBUG_bratell
   printf("OpenContainer: %d    ", type);
@@ -440,14 +439,12 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 
   if (type == eHTMLTag_body)
   {
-
     //    body ->  can turn on cacheing unless it's already preformatted
     if(!(mFlags & nsIDocumentEncoder::OutputPreformatted) && 
        ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
         (mFlags & nsIDocumentEncoder::OutputWrap))) {
       mCacheLine = PR_TRUE;
     }
-
     
     // Try to figure out here whether we have a
     // preformatted style attribute.
@@ -495,29 +492,53 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   if (!DoOutput())
     return NS_OK;
 
-  if (type == eHTMLTag_ol)
+  if (type == eHTMLTag_p)
+    EnsureVerticalSpace(1); // Should this be 0 in unformatted case?
+  // Else make sure we'll separate block level tags,
+  // even if we're about to leave before doing any other formatting.
+  // Oddly, I can't find a case where this actually makes any difference.
+  //else if (IsBlockLevel(type))
+  //  EnsureVerticalSpace(0);
+
+  // The rest of this routine is formatted output stuff,
+  // which we should skip if we're not formatted:
+  if (!(mFlags & nsIDocumentEncoder::OutputFormatted))
+    return NS_OK;
+
+  if (type == eHTMLTag_ul)
+  {
+    // Indent here to support nested list, which aren't included in li :-(
+    mIndent += gIndentSizeList;
+    EnsureVerticalSpace(1);
+  }
+  else if (type == eHTMLTag_ol)
   {
     if (mOLStackIndex < OLStackSize)
       mOLStack[mOLStackIndex++] = 1;  // XXX should get it from the node!
+    mIndent += gIndentSizeList;  // see ul
+    EnsureVerticalSpace(1);
   }
-
-  if (type == eHTMLTag_li)
+  else if (type == eHTMLTag_li)
   {
-    nsAutoString temp("*");
+    nsAutoString temp = Spaces(gIndentSizeList - gOLNumberWidth - 2);
     if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_ol)
     {
+      nsAutoString number;
       if (mOLStackIndex > 0)
-      {
         // This is what nsBulletFrame does for OLs:
-        char cbuf[40];
-        PR_snprintf(cbuf, sizeof(cbuf), "%ld.", (mOLStack[mOLStackIndex-1])++);
-        temp = cbuf;
-      }
+        number.Append(mOLStack[mOLStackIndex-1]++, 10);
       else
-        temp = "#";
+        number += "#";
+      temp += Spaces(gOLNumberWidth - number.Length()) + number + '.';
     }
-    Write(temp);
-    //    mColPos++;    This is done in Write(temp) above
+    else
+      temp += Spaces(gOLNumberWidth) + "*";
+    temp += ' ';
+
+
+    mIndent -= gIndentSizeList;    // don't indent first line so much
+    Write(temp);   //CHANGE: does not work as intended. waiting for bug #17883
+    mIndent += gIndentSizeList;
   }
   else if (type == eHTMLTag_blockquote)
   {
@@ -539,25 +560,49 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   {
     EnsureVerticalSpace(0);
   }
-
-  // Finally, the list of tags before which we want some vertical space:
-  switch (type)
+  else if (type == eHTMLTag_a)
   {
-    case eHTMLTag_table:
-    case eHTMLTag_ul:
-    case eHTMLTag_ol:
-    case eHTMLTag_p:
-    {
-      EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted) ? 1 : 0);
-      break;
-    }
-    default:
-      break;
+    nsAutoString url;
+    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "href", url)))
+      mURL = url;
+    else
+      mURL.Truncate();
   }
+  else if (type == eHTMLTag_img)
+  {
+    nsAutoString url;
+    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "src", url)))
+    {
+      nsAutoString temp, desc;
+      if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "alt", desc)))
+      {
+        temp += " (";
+        temp += desc;
+        temp += " <URL:";
+        temp += url;
+        temp += ">) ";
+      }
+      else
+      {
+        temp += " <URL:";
+        temp += url;
+        temp += "> ";
+      }
+      Write(temp);
+    }
+  }
+  else if (type == eHTMLTag_sup)
+    Write("^");
+  //don't know a plain text representation of sub
+  else if (type == eHTMLTag_strong || type == eHTMLTag_b)
+    Write("*");
+  else if (type == eHTMLTag_em || type == eHTMLTag_i)
+    Write("/");
+  else if (type == eHTMLTag_u)
+    Write("_");
 
   return NS_OK;
 }
-
 
 /**
   * This method is used to close a generic container.
@@ -576,10 +621,47 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
   if (mTagStackIndex > 0)
     --mTagStackIndex;
 
-  if (type == eHTMLTag_ol)
+  // End current line if we're ending a block level tag
+  if (IsBlockLevel(type)) {
+    if((type == eHTMLTag_body) || (type == eHTMLTag_html)) {
+      // We want the output to end with a new line,
+      // but in preformatted areas like text fields,
+      // we can't emit newlines that weren't there.
+      if (mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted))
+        FlushLine();
+      else
+        EnsureVerticalSpace(0);
+    } else if ((type == eHTMLTag_tr) ||
+               (type == eHTMLTag_li) ||
+               (type == eHTMLTag_blockquote)) {
+      EnsureVerticalSpace(0);
+    } else {
+      // All other blocks get 1 vertical space after them
+      // in formatted mode, otherwise 0.
+      // This is hard. Sometimes 0 is a better number, but
+      // how to know?
+      EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted) ? 1 : 0);
+    }
+  }
+
+  // The rest of this routine is formatted output stuff,
+  // which we should skip if we're not formatted:
+  if (!(mFlags & nsIDocumentEncoder::OutputFormatted))
+    return NS_OK;
+
+  if (type == eHTMLTag_ul)
+  {
+    mIndent -= gIndentSizeList;
+  }
+  else if (type == eHTMLTag_ol)
+  {
+    FlushLine(); // Doing this after decreasing OLStackIndex would be wrong.
     --mOLStackIndex;
+    mIndent -= gIndentSizeList;
+  }
   else if (type == eHTMLTag_blockquote)
   {
+    FlushLine();
     if (mCiteQuoteLevel>0)
       mCiteQuoteLevel--;
     else if(mIndent >= gTabSize)
@@ -604,32 +686,28 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
       mInWhitespace = PR_TRUE;
     }
   }
-
-  // End current line if we're ending a block level tag
-  if(IsBlockLevel(type)) {
-    if((type == eHTMLTag_body) || (type == eHTMLTag_html)) {
-      // We want the output to end with a new line,
-      // but in preformatted areas like text fields,
-      // we can't emit newlines that weren't there.
-      if (mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted))
-        FlushLine();
-      else
-        EnsureVerticalSpace(0);
-      
-    } else if((type == eHTMLTag_tr) ||
-              (type == eHTMLTag_blockquote)) {
-      EnsureVerticalSpace(0);
-    } else {
-      // All other blocks get 1 vertical space after them
-      // in formatted mode, otherwise 0.
-      // This is hard. Sometimes 0 is a better number, but
-      // how to know?
-      EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted) ? 1 : 0);
+  else if (type == eHTMLTag_a)
+  { // these brackets must stay here
+    if (!mURL.IsEmpty())
+    {
+      nsAutoString temp(" <URL:");
+      temp += mURL;
+      temp += ">";
+      Write(temp);
     }
   }
+  else if (type == eHTMLTag_sup)
+    Write(" ");
+  else if (type == eHTMLTag_strong || type == eHTMLTag_b)
+    Write("*");
+  else if (type == eHTMLTag_em || type == eHTMLTag_i)
+    Write("/");
+  else if (type == eHTMLTag_u)
+    Write("_");
 
   return NS_OK;
 }
+
 
 /**
   * This method is used to add a leaf to the currently 
@@ -688,16 +766,9 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
          && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
         (mPreFormatted && !mWrapColumn))
       {
-        text = aNode.GetText();
-        WriteSimple(text);
-        mColPos += text.Length();
-        mEmptyLines = -1;
+        Write(text); // XXX: spacestuffing (maybe call AddToLine if mCacheLine==true)
       } else if(!mInWhitespace) {
-        if(mCacheLine) {
-          AddToLine(" ");
-        } else {
-          WriteSimple(" ");
-        }
+        Write(" ");
         mInWhitespace = PR_TRUE;
       }
   }
@@ -712,13 +783,23 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
       EnsureVerticalSpace(mEmptyLines+1);
     }
   }
+  else if (type == eHTMLTag_hr &&
+           (mFlags & nsIDocumentEncoder::OutputFormatted))
+  {
+    // Make a line of dashes as wide as the wrap width
+    nsAutoString line;
+    int width = (mWrapColumn > 0 ? mWrapColumn : 25);
+    while (line.Length() < width)
+      line += '-';
+    Write(line);
+  }
   
   return NS_OK;
 }
 
 void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
 {  
-    if (mBufferSize < aNewSize)
+  if (mBufferSize < aNewSize)
   {
     nsAllocator::Free(mBuffer);
     mBufferSize = 2*aNewSize+1; // make the twice as large
@@ -730,8 +811,6 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
   }
 }
 
-
-
 void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
 {
   if (mUnicodeEncoder == nsnull)
@@ -741,8 +820,6 @@ void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
     aSrc.ToCString ( mBuffer, aSrc.Length()+1 );
     return;
   }
-
-#define CH_NBSP 160
 
   PRInt32       length = aSrc.Length();
   nsresult      result;
@@ -759,16 +836,15 @@ void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
     if (NS_SUCCEEDED(result))
       result = mUnicodeEncoder->Finish(mBuffer,&temp);
 
-
+// XXX UGH!  This is awful and needs to be removed.
+#define CH_NBSP 160
     for (PRInt32 i = 0; i < mBufferLength; i++)
     {
       if (mBuffer[i] == char(CH_NBSP))
         mBuffer[i] = ' ';
     }
   }
-  
 }
-
 
 void
 nsHTMLToTXTSinkStream::EnsureVerticalSpace(PRInt32 noOfRows)
@@ -777,18 +853,22 @@ nsHTMLToTXTSinkStream::EnsureVerticalSpace(PRInt32 noOfRows)
     EndLine(PR_FALSE);
 }
 
-
 // This empties the current line cache without adding a NEWLINE.
 // Should not be used if line wrapping is of importance since
 // this function destroys the cache information.
 void
 nsHTMLToTXTSinkStream::FlushLine()
 {
-  WriteSimple(mCurrentLine);
-  mCurrentLine.SetString("");
+  if(mCurrentLine.Length()>0) {
+    if(0 == mColPos)
+      WriteQuotesAndIndent();
+
+
+    WriteSimple(mCurrentLine);
+    mColPos += mCurrentLine.Length();
+    mCurrentLine.SetString("");
+  }
 }
-
-
 
 /**
  *  WriteSimple places the contents of aString into either the output stream
@@ -893,7 +973,19 @@ nsHTMLToTXTSinkStream::AddToLine(const nsString &linefragment)
         mCurrentLine.Right(restOfLine, linelength-goodSpace-1);
         mCurrentLine.Cut(goodSpace, linelength-goodSpace);
         EndLine(PR_TRUE);
-        mCurrentLine.SetString(restOfLine);
+        mCurrentLine.SetString("");
+        // Space stuff new line?
+        if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+          if((restOfLine[0] == '>') ||
+             (restOfLine[0] == ' ') ||
+             (!restOfLine.Compare("From ",PR_FALSE,5))) {
+            // Space stuffing a la RFC 2646 if this will be used in a mail,
+            // but how can I know that??? Now space stuffing is done always
+            // when formatting text as HTML and that is wrong! XXX: Fix this!
+            mCurrentLine.Append(' ');
+          }
+        }
+        mCurrentLine.Append(restOfLine);
         linelength = mCurrentLine.Length();
         mEmptyLines = -1;
       } else {
@@ -916,8 +1008,9 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
       return;
     }
     WriteQuotesAndIndent();
-    // Remove whitespace from the end of the line.
-    mCurrentLine.CompressWhitespace(PR_FALSE,PR_TRUE);
+    // Remove SPACE from the end of the line.
+    while(' ' == mCurrentLine[mCurrentLine.Length()-1])
+      mCurrentLine.SetLength(mCurrentLine.Length()-1);
     if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
       // Add the soft part of the soft linebreak (RFC 2646 4.1)
       mCurrentLine.Append(' ');
@@ -936,7 +1029,9 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
     if(mCurrentLine.Length()>0)
       mEmptyLines=-1;
     // Output current line
-    mCurrentLine.CompressWhitespace(PR_FALSE,PR_TRUE);
+    // Remove SPACE from the end of the line.
+    while(' ' == mCurrentLine[mCurrentLine.Length()-1])
+      mCurrentLine.SetLength(mCurrentLine.Length()-1);
     mCurrentLine.Append(NS_LINEBREAK);
     WriteSimple(mCurrentLine);
     mCurrentLine.SetString("");
@@ -976,7 +1071,6 @@ nsHTMLToTXTSinkStream::WriteQuotesAndIndent()
   }
 }
 
-
 #ifdef DEBUG_akkana_not
 #define DEBUG_wrapping 1
 #endif
@@ -995,8 +1089,6 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
   nsAllocator::Free(foo);
 #endif
 
-
-
   PRInt32 bol = 0;
   PRInt32 newline;
   
@@ -1005,10 +1097,8 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
   // Don't wrap mail-quoted text
   // Yes do! /Daniel Bratell
   //  PRUint32 wrapcol = (mCiteQuote ? 0 : mWrapColumn);
-
   //  PRInt32 prefixwidth = (mCiteQuoteLevel>0?mCiteQuoteLevel+1:0)+mIndent;
-    //  PRInt32 linewidth = mWrapColumn-prefixwidth;
-  
+  //  PRInt32 linewidth = mWrapColumn-prefixwidth;
   //  if ((!(mFlags & nsIDocumentEncoder::OutputFormatted)
   //       && !(mFlags & nsIDocumentEncoder::OutputWrap)) ||
   //      ((mTagStackIndex > 0) &&
@@ -1021,7 +1111,8 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
     // intelligent wrapping without clearing the mCurrentLine
     // buffer before!!!
 
-    NS_ASSERTION(mCurrentLine.Length() == 0, "Mixed wrapping data and nonwrapping data on the same line");
+    NS_ASSERTION(mCurrentLine.Length() == 0,
+                 "Mixed wrapping data and nonwrapping data on the same line");
     
     // Put the mail quote "> " chars in, if appropriate.
     // Have to put it in before every line.
@@ -1081,10 +1172,9 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
     return;
   }
 
-
   // Intelligent handling of text
-  // Strip out all "end of lines" and multiple whitespace between words
-
+  // If needed, strip out all "end of lines"
+  // and multiple whitespace between words
   PRInt32 nextpos;
   nsAutoString tempstr;
   
@@ -1110,7 +1200,8 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
       bol=totLen;
       mInWhitespace=PR_FALSE;
     } else {
-      if(mInWhitespace && (nextpos == bol)) {
+      if(mInWhitespace && (nextpos == bol) &&
+         !(mFlags & nsIDocumentEncoder::OutputPreformatted)) {
         // Skip whitespace
         bol++;
         continue;
@@ -1119,24 +1210,30 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
       if(nextpos == bol) {
         // Note that we are in whitespace.
         mInWhitespace = PR_TRUE;
+        nsAutoString whitestring=aString[nextpos];
         if(!mCacheLine) {
-          WriteSimple(" ");
+          WriteSimple(whitestring);
         } else {
-          AddToLine(" ");
+          AddToLine(whitestring);
         }
         bol++;
         continue;
       }
 
       aString.Mid(tempstr,bol,nextpos-bol);
-      tempstr.Append(" ");
+      if(mFlags & nsIDocumentEncoder::OutputPreformatted) {
+        bol = nextpos;
+      } else {
+        tempstr.Append(" ");
+        bol = nextpos + 1;
+        mInWhitespace = PR_TRUE;
+      }
+      
       if(!mCacheLine) {
         WriteSimple(tempstr);
       } else {
         AddToLine(tempstr);
       }
-      mInWhitespace = PR_TRUE;
-      bol = nextpos + 1;
     }
   } // Continue looping over the string
 }
@@ -1152,7 +1249,6 @@ nsHTMLToTXTSinkStream::WillBuildModel(void){
   return NS_OK;
 }
 
-
 /**
   * This method gets called when the parser concludes the process
   * of building the content model via the content sink.
@@ -1166,7 +1262,6 @@ nsHTMLToTXTSinkStream::DidBuildModel(PRInt32 aQualityLevel) {
   return NS_OK;
 }
 
-
 /**
   * This method gets called when the parser gets i/o blocked,
   * and wants to notify the sink that it may be a while before
@@ -1178,7 +1273,6 @@ NS_IMETHODIMP
 nsHTMLToTXTSinkStream::WillInterrupt(void) {
   return NS_OK;
 }
-
 
 /**
   * This method gets called when the parser i/o gets unblocked,
@@ -1201,7 +1295,6 @@ nsHTMLToTXTSinkStream::NotifyError(const nsParserError* aError)
 {
   return NS_OK;
 }
-
 
 PRBool IsInline(eHTMLTags aTag)
 {
@@ -1239,13 +1332,11 @@ PRBool IsInline(eHTMLTags aTag)
     case  eHTMLTag_u:
     case  eHTMLTag_var:
     case  eHTMLTag_wbr:
-           
       result = PR_TRUE;
       break;
 
     default:
       break;
-
   }
   return result;
 }
@@ -1254,4 +1345,3 @@ PRBool IsBlockLevel(eHTMLTags aTag)
 {
   return !IsInline(aTag);
 }
-

@@ -77,7 +77,6 @@ static eHTMLTags gFormElementTags[]= {
     eHTMLTag_textarea};
 
 
-
 #include "nsElementTable.h"
 
 
@@ -2286,32 +2285,29 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
 
   eHTMLTags theParentTag=mBodyContext->Last();
   if(!gHTMLElements[theParentTag].HasSpecialProperty(kNoStyleLeaksIn)) {
-    // if(!FindTagInSet(aChildTag,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(aChildTag)))
-    { 
-        //the following code builds the set of style tags to be opened...
-      PRUint32 theCount=mBodyContext->GetCount()-1;
-      PRUint32 theLevel=0;
-      for(theLevel=0;theLevel<theCount;theLevel++){
-        nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
-        if(theStack){
+      //the following code builds the set of style tags to be opened...
+    PRUint32 theCount=mBodyContext->GetCount()-1;
+    PRUint32 theLevel=0;
+    for(theLevel=0;theLevel<theCount;theLevel++){
+      nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
+      if(theStack){
 
-          PRUint32 scount=theStack->mCount;
-          PRUint32 sindex=0;
+        PRUint32 scount=theStack->mCount;
+        PRUint32 sindex=0;
 
-          nsTagEntry *theEntry=theStack->mEntries;
-          for(sindex=0;sindex<scount;sindex++){            
-            if(kNotFound==theEntry->mLevel) {
-              theEntry->mLevel=theLevel;
-              nsIParserNode* theNode=theEntry->mNode;
-              if(theNode) {
-                result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE,theLevel);
-              }
+        nsTagEntry *theEntry=theStack->mEntries;
+        for(sindex=0;sindex<scount;sindex++){            
+          if(kNotFound==theEntry->mLevel) {
+            theEntry->mLevel=theLevel;
+            nsIParserNode* theNode=theEntry->mNode;
+            if(theNode) {
+              result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE,theLevel);
             }
-            theEntry++;
           }
-        }
-      }
-    }
+          theEntry++;
+        } //for
+      } //if
+    } //for
   }
 #endif
   return result;
