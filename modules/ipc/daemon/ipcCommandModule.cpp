@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
 #include <string.h>
+#include "ipcLog.h"
 #include "ipcCommandModule.h"
 #include "ipcModule.h"
 #include "ipcClient.h"
@@ -58,14 +58,14 @@ public:
 
     void handlePing(ipcClient *client, const ipcMessage *rawMsg)
     {
-        printf("### got PING\n");
+        LOG(("got PING\n"));
 
         IPC_SendMsg(client, new ipcmMessagePing());
     }
 
     void handleClientHello(ipcClient *client, const ipcMessage *rawMsg)
     {
-        printf("### got CLIENT_HELLO\n");
+        LOG(("got CLIENT_HELLO\n"));
 
         ipcMessageCast<ipcmMessageClientHello> msg(rawMsg);
         const char *name = msg->PrimaryName();
@@ -77,7 +77,7 @@ public:
 
     void handleForward(ipcClient *client, const ipcMessage *rawMsg)
     {
-        printf("### got FORWARD\n");
+        LOG(("got FORWARD\n"));
 
         ipcMessageCast<ipcmMessageForward> msg(rawMsg);
         ipcClient *dest = IPC_GetClientByID(msg->DestClientID());
@@ -128,17 +128,6 @@ public:
                 (this->*handler)(client, rawMsg);
             }
         }
-
-#if 0
-        case IPCM_MSG_FWD:
-            printf("### got fwd\n");
-            {
-            }
-            break;
-        default:
-            printf("### got unknown message\n");
-        }
-#endif
     }
 };
 

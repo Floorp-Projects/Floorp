@@ -97,6 +97,8 @@ int IPCM_GetMsgType(const ipcMessage *msg);
 // IPCM_MSG_TYPE_PING
 //
 // this message may be sent from either the client or the daemon.
+// if the daemon receives this message, then it will respond by 
+// sending back a PING to the client.
 //
 class ipcmMessagePing : public ipcMessage_DWORD
 {

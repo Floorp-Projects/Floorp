@@ -59,7 +59,9 @@ class ipcTransport;
 class ipcTransportObserver
 {
 public:
-    virtual void OnMsgAvailable(const ipcMessage *) = 0;
+    virtual void OnConnectionEstablished(PRUint32 clientID) = 0;
+    virtual void OnConnectionLost() = 0;
+    virtual void OnMessageAvailable(const ipcMessage *) = 0;
 };
 
 //----------------------------------------------------------------------------
@@ -132,15 +134,19 @@ public:
         { }
     virtual ~ipcTransport();
 
-    nsresult Init(const nsACString &socketPath, ipcTransportObserver *);
+    nsresult Init(const nsACString &appName,
+                  const nsACString &socketPath,
+                  ipcTransportObserver *observer);
     nsresult Shutdown();
 
     // takes ownership of |msg|
     nsresult SendMsg(ipcMessage *msg);
 
+    PRBool   HaveConnection() const { return mHaveConnection; }
+
 public:
     // internal to implementation 
-    void OnMsgAvailable(const ipcMessage *);
+    void OnMessageAvailable(const ipcMessage *);
     void SetWriteSuspended(PRBool val) { mWriteSuspended = val; }
     void OnStartRequest(nsIRequest *req);
     void OnStopRequest(nsIRequest *req, nsresult status);
@@ -166,6 +172,7 @@ private:
     nsCOMPtr<nsIRequest>   mReadRequest;
     nsCOMPtr<nsIRequest>   mWriteRequest;
     nsCOMPtr<nsITimer>     mTimer;
+    nsCString              mAppName;
     nsCString              mSocketPath;
     PRFileDesc            *mFD;
     PRPackedBool           mWriteSuspended;

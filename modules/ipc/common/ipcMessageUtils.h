@@ -38,6 +38,8 @@
 #ifndef ipcMessageUtils_h__
 #define ipcMessageUtils_h__
 
+class ipcMessage;
+
 //
 // given code like this:
 //   

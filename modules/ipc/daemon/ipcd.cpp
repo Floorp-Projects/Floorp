@@ -42,6 +42,7 @@
 #ifdef XP_UNIX
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <signal.h>
 #endif
 
 #include "prio.h"
@@ -51,6 +52,7 @@
 #include "plstr.h"
 
 #include "ipcConfig.h"
+#include "ipcLog.h"
 #include "ipcMessage.h"
 #include "ipcClient.h"
 #include "ipcModuleReg.h"
@@ -81,7 +83,7 @@ static int        poll_fd_count;
 static int AddClient(PRFileDesc *fd)
 {
     if (poll_fd_count == MAX_CLIENTS + 1) {
-        printf("### reached maximum client limit\n");
+        LOG(("reached maximum client limit\n"));
         return -1;
     }
 
@@ -146,7 +148,7 @@ static void Process(PRFileDesc *listen_fd)
         //
         rv = PR_Poll(poll_fds, poll_fd_count, PR_SecondsToInterval(60 * 5));
         if (rv == -1) {
-            printf("### PR_Poll failed [%d]\n", PR_GetError());
+            LOG(("PR_Poll failed [%d]\n", PR_GetError()));
             return;
         }
 
@@ -173,7 +175,7 @@ static void Process(PRFileDesc *listen_fd)
             // check for new connection
             //
             if (poll_fds[0].out_flags & PR_POLL_READ) {
-                printf("### got new connection\n");
+                LOG(("got new connection\n"));
 
                 PRNetAddr client_addr;
                 memset(&client_addr, 0, sizeof(client_addr));
@@ -181,7 +183,7 @@ static void Process(PRFileDesc *listen_fd)
 
                 client_fd = PR_Accept(listen_fd, &client_addr, PR_INTERVAL_NO_WAIT);
                 if (client_fd == NULL) {
-                    printf("### PR_Accept failed [%d]\n", PR_GetError());
+                    LOG(("PR_Accept failed [%d]\n", PR_GetError()));
                     return;
                 }
 
@@ -200,7 +202,7 @@ static void Process(PRFileDesc *listen_fd)
         // shutdown if no clients
         //
         if (poll_fd_count == 1) {
-            printf("### shutting down\n");
+            LOG(("shutting down\n"));
             break;
         }
     }
@@ -214,7 +216,7 @@ static void InitModuleReg(const char *exePath)
 
     char *p = PL_strrchr(exePath, IPC_PATH_SEP_CHAR);
     if (p == NULL) {
-        printf("### unexpected exe path\n");
+        LOG(("unexpected exe path\n"));
         return;
     }
 
@@ -231,10 +233,6 @@ static void InitModuleReg(const char *exePath)
     free(buf);
 }
 
-#ifdef XP_UNIX
-#include <signal.h>
-#endif
-
 int main(int argc, char **argv)
 {
     PRFileDesc *listen_fd;
@@ -245,11 +243,15 @@ int main(int argc, char **argv)
     umask(0077); // ensure strict file permissions
 #endif
 
+#ifdef DEBUG
+    IPC_InitLog("###");
+#endif
+
 start:
 #ifdef IPC_USE_INET
     listen_fd = PR_OpenTCPSocket(PR_AF_INET);
     if (!listen_fd) {
-        printf("### PR_OpenUDPSocket failed [%d]\n", PR_GetError());
+        LOG(("PR_OpenUDPSocket failed [%d]\n", PR_GetError()));
         return -1;
     }
 
@@ -264,7 +266,7 @@ start:
 
     listen_fd = PR_OpenTCPSocket(PR_AF_LOCAL);
     if (!listen_fd) {
-        printf("### PR_OpenUDPSocket failed [%d]\n", PR_GetError());
+        LOG(("PR_OpenUDPSocket failed [%d]\n", PR_GetError()));
         return -1;
     }
 
@@ -273,7 +275,7 @@ start:
 #endif
 
     if (PR_Bind(listen_fd, &addr) != PR_SUCCESS) {
-        printf("### PR_Bind failed [%d]\n", PR_GetError());
+        LOG(("PR_Bind failed [%d]\n", PR_GetError()));
         //
         // failure here indicates that another process may be bound
         // to the socket already.  let's try connecting to that socket.
@@ -283,26 +285,26 @@ start:
             //
             // looks like another process is active.  silently exit.
             //
-            printf("### looks like another instance of the daemon is active; sleeping...\n");
+            LOG(("looks like another instance of the daemon is active; sleeping...\n"));
             //
             // sleep here to avoid triggering the shutdown procedure in the
             // other daemon.  10 seconds should be long enough for the client
             // to have established a connection.
             //
             PR_Sleep(PR_SecondsToInterval(10));
-            printf("### exiting\n");
+            LOG(("exiting\n"));
             PR_Close(listen_fd);
             return 0;
         }
         //
         // OK, the socket is probably stale.
         //
-        printf("### socket appears to be stale\n");
+        LOG(("socket appears to be stale\n"));
 #ifdef IPC_USE_INET
-        printf("### waiting for TIMEWAIT period to expire...\n");
+        LOG(("waiting for TIMEWAIT period to expire...\n"));
         PR_Sleep(PR_SecondsToInterval(60));
 #else
-        printf("### deleting socket at %s\n", socket_path);
+        LOG(("deleting socket at %s\n", socket_path));
         PR_Delete(socket_path);
 #endif
         PR_Close(listen_fd);
@@ -312,7 +314,7 @@ start:
     InitModuleReg(argv[0]);
 
     if (PR_Listen(listen_fd, 5) != PR_SUCCESS) {
-        printf("### PR_Listen failed [%d]\n", PR_GetError());
+        LOG(("PR_Listen failed [%d]\n", PR_GetError()));
         return -1;
     }
 
@@ -323,25 +325,25 @@ start:
     //
     // XXX enable this delay for startup testing
     //
-    //printf("### sleeping for 5 seconds...\n");
+    //LOG(("sleeping for 5 seconds...\n"));
     //PR_Sleep(PR_SecondsToInterval(5));
 
 #ifndef IPC_USE_INET
-    printf("### deleting socket at %s\n", socket_path);
+    LOG(("deleting socket at %s\n", socket_path));
     //
     // we delete the file itself first to avoid a race between shutting
     // ourselves down and another instance of the daemon starting up.
     //
     if (PR_Delete(socket_path) != PR_SUCCESS) {
-        printf("### PR_Delete failed [%d]\n", PR_GetError());
+        LOG(("PR_Delete failed [%d]\n", PR_GetError()));
         return -1;
     }
 #endif
 
-    printf("### closing socket\n");
+    LOG(("closing socket\n"));
 
     if (PR_Close(listen_fd) != PR_SUCCESS) {
-        printf("### PR_Close failed [%d]\n", PR_GetError());
+        LOG(("PR_Close failed [%d]\n", PR_GetError()));
         return -1;
     }
 
@@ -359,7 +361,7 @@ int IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
     if (module)
         module->HandleMsg(client, msg);
     else
-        printf("### no registered module; ignoring message\n");
+        LOG(("no registered module; ignoring message\n"));
     return 0;
 }
 

@@ -35,42 +35,82 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ipcMessageQ.h"
-#include "ipcMessage.h"
+#ifndef ipcQueue_h__
+#define ipcQueue_h__
 
-void
-ipcMessageQ::Append(ipcMessage *msg)
+#include "prtypes.h"
+
+//-----------------------------------------------------------------------------
+// simple queue of objects
+//-----------------------------------------------------------------------------
+
+template<class T>
+class ipcQueue
 {
-    msg->mNext = NULL;
-    if (mTail) {
-        mTail->mNext = msg;
-        mTail = msg;
+public:
+    ipcQueue()
+        : mHead(NULL)
+        , mTail(NULL)
+        { }
+   ~ipcQueue() { DeleteAll(); }
+
+    //
+    // appends msg to the end of the queue.  caller loses ownership of |msg|.
+    //
+    void Append(T *obj)
+    {
+        obj->mNext = NULL;
+        if (mTail) {
+            mTail->mNext = obj;
+            mTail = obj;
+        }
+        else
+            mTail = mHead = obj;
     }
-    else
-        mTail = mHead = msg;
-}
 
-void
-ipcMessageQ::AdvanceHead()
-{
-    mHead = mHead->mNext;
-    if (!mHead)
-        mTail = NULL;
-}
-
-void
-ipcMessageQ::DeleteFirst()
-{
-    ipcMessage *first = mHead;
-    if (first) {
-        AdvanceHead();
-        delete first;
+    // 
+    // removes first element w/o deleting it
+    //
+    void RemoveFirst()
+    {
+        if (mHead)
+            AdvanceHead();
     }
-}
 
-void
-ipcMessageQ::DeleteAll()
-{
-    while (mHead)
-        DeleteFirst();
-}
+    //
+    // deletes first element
+    //
+    void DeleteFirst()
+    {
+        T *first = mHead;
+        if (first) {
+            AdvanceHead();
+            delete first;
+        }
+    }
+
+    //
+    // deletes all elements
+    //
+    void DeleteAll()
+    {
+        while (mHead)
+            DeleteFirst();
+    }
+
+    T      *First()   { return mHead; }
+    PRBool  IsEmpty() { return mHead == NULL; }
+
+private:
+    void AdvanceHead()
+    {
+        mHead = mHead->mNext;
+        if (!mHead)
+            mTail = NULL;
+    }
+
+    T *mHead;
+    T *mTail;
+};
+
+#endif // !ipcQueue_h__

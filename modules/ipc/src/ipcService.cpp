@@ -37,7 +37,12 @@
 
 #include "plstr.h"
 
+#include "nsIServiceManager.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+
 #include "ipcConfig.h"
+#include "ipcLog.h"
 #include "ipcService.h"
 #include "ipcm.h"
 
@@ -54,8 +59,14 @@ ipcReleaseMessageObserver(nsHashKey *aKey, void *aData, void* aClosure)
 //-----------------------------------------------------------------------------
 
 ipcService::ipcService()
+    : mTransport(nsnull)
+    , mClientID(0)
 {
     NS_INIT_ISUPPORTS();
+
+#ifdef DEBUG
+    IPC_InitLog(">>>");
+#endif
 }
 
 ipcService::~ipcService()
@@ -78,8 +89,26 @@ ipcService::Init()
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mTransport);
 
+    // read preferences
+    nsCAutoString appName;
+    nsCOMPtr<nsIPrefService> prefserv(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefserv) {
+        nsCOMPtr<nsIPrefBranch> prefbranch;
+        prefserv->GetBranch(nsnull, getter_AddRefs(prefbranch));
+        if (prefbranch) {
+            nsXPIDLCString val;
+            prefbranch->GetCharPref("ipc.client-name", getter_Copies(val));
+            if (!val.IsEmpty())
+                appName = val;
+        }
+    }
+    if (appName.IsEmpty())
+        appName = NS_LITERAL_CSTRING("test-app");
+
     // XXX use directory service to locate socket
-    rv = mTransport->Init(NS_LITERAL_CSTRING(IPC_DEFAULT_SOCKET_PATH), this);
+    rv = mTransport->Init(appName,
+                          NS_LITERAL_CSTRING(IPC_DEFAULT_SOCKET_PATH),
+                          this);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -94,7 +123,11 @@ NS_IMPL_ISUPPORTS1(ipcService, ipcIService)
 NS_IMETHODIMP
 ipcService::GetClientID(PRUint32 *clientID)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mClientID == 0)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    *clientID = mClientID;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -114,7 +147,24 @@ ipcService::QueryClientByName(const nsACString &name,
                               ipcIClientObserver *observer,
                               PRUint32 *token)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!mTransport)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    ipcMessage *msg;
+
+    msg = new ipcmMessageQueryClientByName(PromiseFlatCString(name).get());
+    if (!msg)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    
+    rv = mTransport->SendMsg(msg);
+    if (NS_FAILED(rv)) return rv;
+
+    //
+    // now queue up the observer and generate a token.
+    //
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -174,8 +224,7 @@ ipcService::SendMessage(PRUint32 clientID,
     if (!msg)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mTransport->SendMsg(msg);
-    return NS_OK;
+    return mTransport->SendMsg(msg);
 }
 
 //-----------------------------------------------------------------------------
@@ -183,7 +232,19 @@ ipcService::SendMessage(PRUint32 clientID,
 //-----------------------------------------------------------------------------
 
 void
-ipcService::OnMsgAvailable(const ipcMessage *msg)
+ipcService::OnConnectionEstablished(PRUint32 clientID)
+{
+    mClientID = clientID;
+}
+
+void
+ipcService::OnConnectionLost()
+{
+    mClientID = 0;
+}
+
+void
+ipcService::OnMessageAvailable(const ipcMessage *msg)
 {
     nsIDKey key(msg->Target());
 

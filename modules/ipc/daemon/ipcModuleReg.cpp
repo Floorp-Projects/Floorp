@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "prlink.h"
@@ -44,6 +43,7 @@
 #include "plstr.h"
 
 #include "ipcConfig.h"
+#include "ipcLog.h"
 #include "ipcModuleReg.h"
 #include "ipcModule.h"
 #include "ipcCommandModule.h"
@@ -65,7 +65,7 @@ static PRStatus
 AddModule(const nsID &id, ipcModule *module, PRLibrary *lib)
 {
     if (ipcModuleCount == IPC_MAX_MODULE_COUNT) {
-        printf("### too many modules!\n");
+        LOG(("too many modules!\n"));
         return PR_FAILURE;
     }
 
@@ -80,7 +80,7 @@ AddModule(const nsID &id, ipcModule *module, PRLibrary *lib)
 static void
 InitModuleFromLib(const char *modulesDir, const char *fileName)
 {
-    printf("### InitModuleFromLib [%s]\n", fileName);
+    LOG(("InitModuleFromLib [%s]\n", fileName));
 
     int dLen = strlen(modulesDir);
     int fLen = strlen(fileName);
@@ -135,7 +135,7 @@ IPC_InitModuleReg(const char *modulesDir)
     AddModule(module->ID(), module, NULL);
 
     if (modulesDir) {
-        printf("### loading libraries in %s\n", modulesDir);
+        LOG(("loading libraries in %s\n", modulesDir));
         // 
         // scan directory for IPC modules
         //
