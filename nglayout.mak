@@ -86,6 +86,7 @@ DIST_DIRS =			\
   modules\libpref		\
   modules\libimg		\
   modules\plugin		\
+  modules\oji		\
   base                          \
   lib\xp			\
   lib\libpwcac			\
@@ -164,6 +165,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/security/freenav
 	$(CVSCO_LIBPREF) $(MOZ_TOP)/modules/libpref
 	$(CVSCO_PLUGIN) $(MOZ_TOP)/modules/plugin
+	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/oji
 !if defined(NGPREFS)
 	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/wincom
 	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/defaults.h

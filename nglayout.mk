@@ -55,6 +55,7 @@ DIRS =				\
   modules/libpref		\
   modules/libimg		\
   modules/plugin		\
+  modules/oji		\
   base				\
   lib/xp			\
   lib/libpwcac			\
@@ -120,6 +121,7 @@ pull_imglib:
 pull_plugin:
 	cd $(MOZ_SRC)/.; \
 	$(CVSCO_PLUGIN) mozilla/modules/plugin
+	$(CVSCO_LIZARD) mozilla/modules/oji
 
 pull_netlib:
 	cd $(MOZ_SRC)/.; \
