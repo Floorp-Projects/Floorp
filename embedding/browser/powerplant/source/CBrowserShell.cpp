@@ -149,9 +149,20 @@ void CBrowserShell::FinishCreateSelf()
 	Rect portFrame;
 	CalcPortFrameRect(portFrame);
 	nsRect   r(portFrame.left, portFrame.top, portFrame.right - portFrame.left, portFrame.bottom - portFrame.top);
-		
+	
+	nsresult rv;
+	
+	nsCOMPtr<nsIWebBrowserChrome> ourChrome;
+	ourWindow->GetIWebBrowserChrome(getter_AddRefs(ourChrome));
+	ThrowIfNil_(ourChrome);
+
+    mWebBrowser->SetContainerWindow(ourChrome);  		
     mWebBrowserAsBaseWin->InitWindow(aWidget->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
     mWebBrowserAsBaseWin->Create();
+
+    nsWeakPtr weakling(dont_AddRef(NS_GetWeakReference(ourChrome)));
+    rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Call to AddWebBrowserListener failed");
    
     // Set the global history
     nsCOMPtr<nsIDocShell> docShell(do_GetInterface(mWebBrowser));
@@ -159,7 +170,6 @@ void CBrowserShell::FinishCreateSelf()
     nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(docShell));
     if (dsHistory)
     {
-        nsresult rv;
         NS_WITH_SERVICE(nsIGlobalHistory, history, NS_GLOBALHISTORY_CONTRACTID, &rv);  
         if (history)
             dsHistory->SetGlobalHistory(history);
@@ -447,16 +457,7 @@ void CBrowserShell::ListenToMessage(MessageT			inMessage,
 
 NS_IMETHODIMP CBrowserShell::SetTopLevelWindow(nsIWebBrowserChrome * aTopLevelWindow)
 {
-    nsresult rv = NS_OK;
-    
-    mWebBrowser->SetContainerWindow(aTopLevelWindow);  
-    if (aTopLevelWindow) {
-        nsWeakPtr weakling(dont_AddRef(NS_GetWeakReference(aTopLevelWindow)));
-        rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Call to AddWebBrowserListener failed");
-    }
-
-    return rv;
+    return mWebBrowser->SetContainerWindow(aTopLevelWindow);
 }
 
 

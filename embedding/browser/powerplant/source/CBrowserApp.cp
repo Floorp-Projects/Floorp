@@ -50,6 +50,7 @@
 #include "UMacUnicode.h"
 #include "CAppFileLocationProvider.h"
 #include "EmbedEventHandling.h"
+#include "PromptService.h"
 
 #include "nsEmbedAPI.h"
 
@@ -71,6 +72,8 @@
 #include "nsIURL.h"
 
 #include <TextServices.h>
+
+#define NATIVE_PROMPTS
 
 #if USE_PROFILES
 #include "CProfileManager.h"
@@ -193,6 +196,7 @@ CBrowserApp::CBrowserApp()
 
    rv = NS_InitEmbedding(appDir, fileLocProvider);
 
+   OverrideComponents();
    InitializeWindowCreator();
    InitializeEmbedEventHandling(this);
 }
@@ -263,6 +267,35 @@ CBrowserApp::StartUp()
 
 	ObeyCommand(PP_PowerPlant::cmd_New, nil);	// EXAMPLE, create a new window
 }
+
+nsresult
+CBrowserApp::OverrideComponents()
+{
+    nsresult rv = NS_OK;
+
+#ifdef NATIVE_PROMPTS
+    #define NS_PROMPTSERVICE_CID \
+     {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
+    static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
+    
+    // Here, we're creating a factory using a method compiled into
+    // the application. This is preferable if you do not want to locate
+    // and load an external DLL. That approach is used by MfcEmbed if
+    // that's of interest.
+    
+    nsCOMPtr<nsIFactory> promptFactory;
+    rv = NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));
+    if (NS_FAILED(rv)) return rv;
+    rv = nsComponentManager::RegisterFactory(kPromptServiceCID,
+                                              "Prompt Service",
+                                              "@mozilla.org/embedcomp/prompt-service;1",
+                                              promptFactory,
+                                              PR_TRUE); // replace existing
+#endif
+
+    return rv;
+}
+
 
 // ---------------------------------------------------------------------------
 //		¥ MakeMenuBar

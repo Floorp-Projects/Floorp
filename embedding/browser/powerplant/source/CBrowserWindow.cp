@@ -294,6 +294,10 @@ void CBrowserWindow::FinishCreate()
 	if (NS_FAILED(rv))
 	   Throw_(NS_ERROR_GET_CODE(rv));
 
+	mBrowserShell = dynamic_cast<CBrowserShell*>(FindPaneByID(paneID_WebShellView));
+	ThrowIfNULL_(mBrowserShell);  // Curtains if we don't have this
+	mBrowserChrome->BrowserShell() = mBrowserShell;
+
    Inherited::FinishCreate();   
 }
 
@@ -304,14 +308,7 @@ void CBrowserWindow::FinishCreate()
 
 void CBrowserWindow::FinishCreateSelf()
 {
-	mBrowserShell = dynamic_cast<CBrowserShell*>(FindPaneByID(paneID_WebShellView));
-	ThrowIfNULL_(mBrowserShell);  // Curtains if we don't have this
 	SetLatentSub(mBrowserShell);
-	
-	// Tell our CBrowserShell about the chrome 
-	mBrowserShell->SetTopLevelWindow(mBrowserChrome);
-	// Tell our chrome about the CBrowserShell 
-	mBrowserChrome->BrowserShell() = mBrowserShell;
 	
 	// Find our subviews - When we have a way of creating this
 	// window with various chrome flags, we may or may not have
