@@ -41,4 +41,8 @@ CFLAGS		+= -DUSE_NSREG -D__STDC__
 
 REQUIRES	= $(MODULE) libxpcom
 
+EXTRA_DSO_LDOPTS =\
+				-L$(DIST)/lib -lneckoutil_s \
+				$(NULL)
+
 include $(topsrcdir)/config/rules.mk
