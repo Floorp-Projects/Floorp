@@ -44,10 +44,12 @@ if($#ARGV < 3)
        \n";
 }
 
-$inDefaultVersion = $ARGV[0];
-$inURLPath        = $ARGV[1];
-$inStagePath      = $ARGV[2];
-$inDistPath       = $ARGV[3];
+$inDefaultVersion     = $ARGV[0];
+$inURLPath            = $ARGV[1];
+$inStagePath          = $ARGV[2];
+$inDistPath           = $ARGV[3];
+$seiFileNameGeneric   = "nsinstall.exe";
+$seiFileNameSpecific  = "mozilla-win32-installer.exe";
 
 # Check for existance of staging path
 if(!(-e "$inStagePath"))
@@ -87,8 +89,9 @@ system("xcopy /f $inDistPath\\setup.exe     $inDistPath\\setup");
 system("xcopy /f $inDistPath\\setuprsc.dll  $inDistPath\\setup");
 
 # build the self-extracting .exe file.
-printf "\nbuilding self-extracting .exe installer...";
-system("$inDistPath\\nszip.exe $inDistPath\\nsinstall.exe $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
+print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";
+system("xcopy /F $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific");
+system("$inDistPath\\nszip.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
 
 print " done!\n";
 
