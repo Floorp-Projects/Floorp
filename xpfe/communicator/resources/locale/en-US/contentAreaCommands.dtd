@@ -41,7 +41,6 @@
 <!ENTITY saveFrameCmd.accesskey       "f">
 <!ENTITY saveLinkCmd.label            "Save Link As...">
 <!ENTITY saveLinkCmd.accesskey        "a">
-<!ENTITY saveImageCmd.label           "Save Image As...">
 <!ENTITY saveImageCmd.accesskey       "a">
 <!ENTITY saveBGImageCmd.label         "Save Background Image As...">
 <!ENTITY saveBGImageCmd.accesskey     "a">

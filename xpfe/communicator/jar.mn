@@ -32,6 +32,7 @@ en-US.jar:
         locale/en-US/communicator/tasksOverlay.dtd                  (resources/locale/en-US/tasksOverlay.dtd) 
         locale/en-US/communicator/taskbarOverlay.dtd                (resources/locale/en-US/taskbarOverlay.dtd) 
         locale/en-US/communicator/contentAreaCommands.dtd           (resources/locale/en-US/contentAreaCommands.dtd) 
+        locale/en-US/communicator/contentAreaCommands.properties    (resources/locale/en-US/contentAreaCommands.properties)
         locale/en-US/communicator/askViewZoom.dtd                   (resources/locale/en-US/askViewZoom.dtd)
         locale/en-US/communicator/viewZoomOverlay.dtd               (resources/locale/en-US/viewZoomOverlay.dtd)
         locale/en-US/communicator/viewZoomOverlay.properties        (resources/locale/en-US/viewZoomOverlay.properties)
