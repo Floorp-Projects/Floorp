@@ -26,11 +26,11 @@ XPIDLSRCS = \
 			.\nsIPop3Service.idl		\
 			.\nsIMailboxService.idl		\
 			.\nsIPop3Sink.idl			\
+			.\nsIPop3URL.idl			\
+			.\nsIMailboxUrl.idl			\
 			$(NULL)
 
 EXPORTS =								\
-			nsIPop3URL.h				\
-			nsIMailboxUrl.h				\
 			nsIMsgParseMailMsgState.h	\
 			$(NULL)
 
