@@ -89,6 +89,8 @@ static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 class RDFTreeBuilderImpl : public nsIRDFContentModelBuilder
 {
 private:
+    static nsrefcnt gRefCnt;
+
     nsIRDFDocument* mDocument;
     nsIRDFService*  mRDFService;
     nsIRDFCompositeDataSource* mDB;
@@ -194,6 +196,8 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 
+nsrefcnt RDFTreeBuilderImpl::gRefCnt = 0;
+
 static nsIAtom* kIdAtom;
 static nsIAtom* kOpenAtom;
 static nsIAtom* kResourceAtom;
@@ -233,7 +237,7 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
 {
     NS_INIT_REFCNT();
 
-    if (nsnull == kIdAtom) {
+    if (gRefCnt == 0) {
         kIdAtom           = NS_NewAtom("ID");
         kOpenAtom         = NS_NewAtom("OPEN");
         kResourceAtom     = NS_NewAtom("resource");
@@ -272,19 +276,8 @@ static const char kRDFNameSpaceURI[]
             NS_ERROR("couldn't create namepsace manager");
         }
     }
-    else {
-        NS_ADDREF(kIdAtom);
-        NS_ADDREF(kOpenAtom);
-        NS_ADDREF(kResourceAtom);
 
-        NS_ADDREF(kTreeAtom);
-        NS_ADDREF(kTreeBodyAtom);
-        NS_ADDREF(kTreeCellAtom);
-        NS_ADDREF(kTreeChildrenAtom);
-        NS_ADDREF(kTreeHeadAtom);
-        NS_ADDREF(kTreeItemAtom);
-        NS_ADDREF(kTreeRowAtom);
-    }
+    ++gRefCnt;
 }
 
 RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
@@ -294,22 +287,24 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
     if (mRDFService)
         nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
 
-    nsrefcnt refcnt;
 
-    NS_RELEASE2(kIdAtom,           refcnt);
-    NS_RELEASE2(kOpenAtom,         refcnt);
-    NS_RELEASE2(kResourceAtom,     refcnt);
+    --gRefCnt;
+    if (gRefCnt == 0) {
+        NS_RELEASE(kIdAtom);
+        NS_RELEASE(kOpenAtom);
+        NS_RELEASE(kResourceAtom);
 
-    NS_RELEASE2(kTreeAtom,         refcnt);
-    NS_RELEASE2(kTreeBodyAtom,     refcnt);
-    NS_RELEASE2(kTreeCellAtom,     refcnt);
-    NS_RELEASE2(kTreeChildrenAtom, refcnt);
-    NS_RELEASE2(kTreeHeadAtom,     refcnt);
-    NS_RELEASE2(kTreeItemAtom,     refcnt);
-    NS_RELEASE2(kTreeRowAtom,      refcnt);
+        NS_RELEASE(kTreeAtom);
+        NS_RELEASE(kTreeBodyAtom);
+        NS_RELEASE(kTreeCellAtom);
+        NS_RELEASE(kTreeChildrenAtom);
+        NS_RELEASE(kTreeHeadAtom);
+        NS_RELEASE(kTreeItemAtom);
+        NS_RELEASE(kTreeRowAtom);
 
-    NS_RELEASE2(kNC_Title,         refcnt);
-    NS_RELEASE2(kNC_Column,        refcnt);
+        NS_RELEASE(kNC_Title);
+        NS_RELEASE(kNC_Column);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
