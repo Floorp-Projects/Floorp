@@ -52,11 +52,7 @@ static nsresult PR_CALLBACK
 CreateDirectoryA( PSZ path, PEAOP2 ppEABuf);
 static int isleadbyte(int c);
 
-#ifdef XP_OS2_VACPP
-#include <direct.h>
-#else
 #include <unistd.h>
-#endif
 #include <io.h>
 
 
@@ -857,11 +853,7 @@ nsLocalFile::Remove(PRBool recursive)
                 iterator->HasMoreElements(&more);
             }
         }
-#ifdef XP_OS2_VACPP
-        rv = rmdir((char *) filePath) == -1 ? NSRESULT_FOR_ERRNO() : NS_OK;
-#else
         rv = rmdir(filePath) == -1 ? NSRESULT_FOR_ERRNO() : NS_OK;
-#endif
     }
     else
     {
