@@ -59,6 +59,7 @@
 #define FILE_NAME_KEY3DB          NS_LITERAL_STRING("key3.db")
 #define FILE_NAME_SECMODDB        NS_LITERAL_STRING("secmod.db")
 #define FILE_NAME_HISTORY         NS_LITERAL_STRING("history.dat")
+#define FILE_NAME_FORMHISTORY     NS_LITERAL_STRING("formhistory.dat")
 #define FILE_NAME_LOCALSTORE      NS_LITERAL_STRING("localstore.rdf")
 #define FILE_NAME_MIMETYPES       NS_LITERAL_STRING("mimeTypes.rdf")
 #define FILE_NAME_DOWNLOADS       NS_LITERAL_STRING("downloads.rdf")
@@ -152,6 +153,9 @@ nsPhoenixProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
                              nsIBrowserProfileMigrator::OTHERDATA,
                              PR_TRUE },
                            { ToNewUnicode(FILE_NAME_USERCONTENT),
+                             nsIBrowserProfileMigrator::OTHERDATA,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_FORMHISTORY),
                              nsIBrowserProfileMigrator::OTHERDATA,
                              PR_TRUE } };
 
@@ -408,6 +412,7 @@ nsPhoenixProfileMigrator::CopyOtherData(PRBool aReplace)
   rv |= CopyFile(FILE_NAME_DOWNLOADS, FILE_NAME_DOWNLOADS);
   rv |= CopyFile(FILE_NAME_SEARCH, FILE_NAME_SEARCH);
   rv |= CopyFile(FILE_NAME_LOCALSTORE, FILE_NAME_LOCALSTORE);
+  rv |= CopyFile(FILE_NAME_FORMHISTORY, FILE_NAME_FORMHISTORY);
 
   return rv;
 }
