@@ -219,8 +219,6 @@ void CnsIChannelTests::GetSecurityInfoTest(nsIChannel *theChannel, PRInt16 displ
 	}
 	rv = theChannel->GetSecurityInfo(getter_AddRefs(theSupports));	
 	RvTestResult(rv, "GetSecurityInfo", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "GetSecurityInfo");
 	if (!theSupports)
 	   QAOutput("Didn't get nsISupports object for GetSecurityInfoTest.", displayMode);
 }
@@ -228,9 +226,7 @@ void CnsIChannelTests::GetSecurityInfoTest(nsIChannel *theChannel, PRInt16 displ
 void CnsIChannelTests::SetContentTypeTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
 	rv = theChannel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
-	RvTestResult(rv, "SetContentType", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "SetContentType");	
+	RvTestResult(rv, "SetContentType", displayMode);	
 }
 
 void CnsIChannelTests::GetContentTypeTest(nsIChannel *theChannel, PRInt16 displayMode)
@@ -239,8 +235,6 @@ void CnsIChannelTests::GetContentTypeTest(nsIChannel *theChannel, PRInt16 displa
 
 	rv = theChannel->GetContentType(contentType);
 	RvTestResult(rv, "GetContentType", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "GetContentType");
 	FormatAndPrintOutput("the content type = ", contentType, displayMode);
 }
 
@@ -250,8 +244,6 @@ void CnsIChannelTests::SetContentCharsetTest(nsIChannel *theChannel, PRInt16 dis
 
 	rv = theChannel->SetContentCharset(NS_LITERAL_CSTRING("ISO-8859-1"));
 	RvTestResult(rv, "SetContentCharset", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "SetContentCharset");
 }
 
 void CnsIChannelTests::GetContentCharsetTest(nsIChannel *theChannel, PRInt16 displayMode)
@@ -260,8 +252,6 @@ void CnsIChannelTests::GetContentCharsetTest(nsIChannel *theChannel, PRInt16 dis
 
 	rv = theChannel->GetContentCharset(charsetType);
 	RvTestResult(rv, "GetContentCharset", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "GetContentCharset");
 	FormatAndPrintOutput("the charset type = ", charsetType, displayMode);
 }
 
@@ -272,8 +262,6 @@ void CnsIChannelTests::SetContentLengthTest(nsIChannel *theChannel, PRInt16 disp
 	contentLength = 10000;
 	rv = theChannel->SetContentLength(contentLength);
 	RvTestResult(rv, "SetContentLength", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "SetContentLength");
 }
 
 void CnsIChannelTests::GetContentLengthTest(nsIChannel *theChannel, PRInt16 displayMode)
@@ -282,8 +270,6 @@ void CnsIChannelTests::GetContentLengthTest(nsIChannel *theChannel, PRInt16 disp
 
 	rv = theChannel->GetContentLength(&contentLength);
 	RvTestResult(rv, "GetContentLength", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "GetContentLength");
 	FormatAndPrintOutput("the content length = ", contentLength, displayMode);
 }
 
@@ -291,8 +277,6 @@ void CnsIChannelTests::OpenTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
 	rv =  theChannel->Open(getter_AddRefs(theInputStream));
 	RvTestResult(rv, "OpenTest", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "OpenTest");
 	if (!theInputStream)
 	   QAOutput("Didn't get theInputStream object. OpenTest failed.", displayMode);
 }

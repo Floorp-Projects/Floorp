@@ -23,12 +23,12 @@ public:
 	nsIHttpChannel * GetHttpChannelObject(nsCAutoString);
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();
-	void SetRequestMethodTest(nsIHttpChannel *, PRInt16);
+	void SetRequestMethodTest(nsIHttpChannel *, const char *, PRInt16);
 	void GetRequestMethodTest(nsIHttpChannel *, PRInt16);
-	void SetReferrerTest(nsIHttpChannel *, PRInt16);
+	void SetReferrerTest(nsIHttpChannel *, const char *, PRInt16);
 	void GetReferrerTest(nsIHttpChannel *, PRInt16);
-	void SetRequestHeaderTest(nsIHttpChannel *, PRInt16);
-	void GetRequestHeaderTest(nsIHttpChannel *, PRInt16);
+	void SetRequestHeaderTest(nsIHttpChannel *, const char *, const char *, PRInt16);
+	void GetRequestHeaderTest(nsIHttpChannel *, const char *, PRInt16);
 	void VisitRequestHeadersTest(nsIHttpChannel *, PRInt16);
 	void SetAllowPipeliningTest(nsIHttpChannel *, PRBool, PRInt16);
 	void GetAllowPipeliningTest(nsIHttpChannel *, PRInt16);
