@@ -4427,42 +4427,47 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     }
   }
 
-  nsISupports *native_parent = nsnull;
+  nsISupports *native_parent;
 
   if (content) {
-    if (content->IsContentOfType(nsIContent::eELEMENT |
-                                 nsIContent::eHTML |
-                                 nsIContent::eHTML_FORM_CONTROL)) {
-      nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(content));
-
-      if (form_control) {
-        nsCOMPtr<nsIDOMHTMLFormElement> form;
-
-        form_control->GetForm(getter_AddRefs(form));
-
-        native_parent = form;
-      }
-    }
-
-    if (!native_parent) {
+    if (content->IsContentOfType(nsIContent::eXUL)) {
+      // For XUL elements, use the parent, if any.
       native_parent = content->GetParent();
 
       if (!native_parent) {
         native_parent = doc;
       }
-    }
-  }
+    } else {
+      // For non-XUL elements, use the document as scope parent.
+      native_parent = doc;
 
-  if (!native_parent) {
+      // But for HTML form controls, use the form as scope parent.
+      if (content->IsContentOfType(nsIContent::eELEMENT |
+                                   nsIContent::eHTML |
+                                   nsIContent::eHTML_FORM_CONTROL)) {
+        nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(content));
+
+        if (form_control) {
+          nsCOMPtr<nsIDOMHTMLFormElement> form;
+          form_control->GetForm(getter_AddRefs(form));
+
+          if (form) {
+            // Found a form, use it.
+            native_parent = form;
+          }
+        }
+      }
+    }
+  } else {
     // We're called for a document object (since content is null),
     // set the parent to be the document's global object, if there
     // is one
 
     // Get the script global object from the document.
 
-    nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
+    native_parent = doc->GetScriptGlobalObject();
 
-    if (!sgo) {
+    if (!native_parent) {
       // No global object reachable from this document, use the
       // global object that was passed to this method.
 
@@ -4470,8 +4475,6 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
 
       return NS_OK;
     }
-
-    native_parent = sgo;
   }
 
   jsval v;
