@@ -97,6 +97,7 @@ DOM_ElementOps lm_ElementOps = {
 static JSBool
 lm_CDataOp(JSContext *cx, DOM_CharacterData *cdata, DOM_CDataOperationCode op)
 {
+    JSBool ok;
     DOM_Node *node;
     MWContext *context;
     MochaDecoder *decoder;
@@ -133,10 +134,14 @@ lm_CDataOp(JSContext *cx, DOM_CharacterData *cdata, DOM_CDataOperationCode op)
     /*
      * Tell layout to use the new text instead.
      */
-#ifdef NOT_YET
-    return lo_RefillTextBlock(text, data, cdata->len);
-#endif              
-  
+    LO_LockLayout();
+    ok = lo_ChangeText(text, data);
+    LO_UnlockLayout();
+    if (!ok)
+        return JS_FALSE;
+
+    LO_RelayoutFromElement(context, (LO_Element *)text);
+
     return JS_TRUE;
 }
 
