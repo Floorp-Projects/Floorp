@@ -38,9 +38,15 @@ char *				XP_StripLine (char *) {return NULL;}
 XP_File				XP_FileOpen (const char* name, XP_FileType type, const XP_FilePerm permissions) {return NULL;}
 int					XP_Stat(const char * name, XP_StatStruct * outStat, XP_FileType type) {return 0;}
 int					XP_FileTruncate(const char* name, XP_FileType type, int32 length) {return 0;}
+
+#if defined (XP_PC)
 char *				XP_AppVersion = "5.0 (Dogfood)";
+#else
+const char *  XP_AppVersion = "5.0 (Dogfood)";
+#endif
 
 XP_BEGIN_PROTOS int	XP_LocalZoneOffset() {return -480;} XP_END_PROTOS
+
 Bool				XP_IsContextBusy(MWContext * context) {return PR_FALSE;}
 
 const char *		MSG_GetSpecialFolderName(int ) {return NULL;}
