@@ -42,7 +42,6 @@
 #include "nsIURL.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsLocalStringBundle.h"
-#include "nsIMsgFilterService.h"
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilter.h"
 #include "nsIIOService.h"
@@ -52,7 +51,6 @@
 
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1450,33 +1448,15 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
     if (NS_FAILED(rv)) 
 		return rv;
 
-	NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);
-	if (NS_FAILED(rv)) 
-		return rv;
+	nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+    NS_ENSURE_TRUE(rv, rv);
+    
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = rootMsgFolder->GetServer(getter_AddRefs(server));
+    if (NS_SUCCEEDED(rv))
+        rv = server->GetFilterList(getter_AddRefs(m_filterList));
 
-	// need a file spec for filters...
-
-	nsCOMPtr <nsIFileSpec> rootDir;
-
-	nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
-
-	rv = NS_ERROR_FAILURE;
-
-	if (rootMsgFolder)
-		rv = rootMsgFolder->GetPath(getter_AddRefs(rootDir));
-
-	if (NS_SUCCEEDED(rv))
-	{
-		nsFileSpec		filterFile;
-
-		rootDir->GetFileSpec(&filterFile);
-		// need a file spec for filters...
-		filterFile += "rules.dat";
-		nsresult res;
-        res = filterService->OpenFilterList(&filterFile, rootMsgFolder, getter_AddRefs(m_filterList));
-	}
-
-	m_logFile = nsnull;
+    m_logFile = nsnull;
 #ifdef DOING_MDN
 	if (m_filterList)
 	{
