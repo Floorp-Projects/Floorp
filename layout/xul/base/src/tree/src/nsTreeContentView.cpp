@@ -607,7 +607,7 @@ nsTreeContentView::ToggleOpenState(PRInt32 aIndex)
       OpenContainer(aIndex);
   } else {
     if (row->IsOpen())
-      row->mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
+      row->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::open, NS_LITERAL_STRING("false"), PR_TRUE);
     else
       row->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
   }
