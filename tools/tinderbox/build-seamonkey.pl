@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.1 $';
+$Version = '$Revision: 1.2 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -340,7 +340,7 @@ sub BuildIt {
 	} else {
 	    $CVSCO = $SaveCVSCO . ' -A';
 	}
-	$StartTime = time - 60 * 10;
+	$StartTime = time;
 	$StartTimeStr = &CVSTime($StartTime);
 
 	&StartBuild if ( $ReportStatus );
