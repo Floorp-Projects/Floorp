@@ -120,8 +120,8 @@
          <tabs>
             <tab label="&newtodo.newtodo.tab.label;"/>
             <tab label="&newevent.recurrence.tab.label;"/>
-            <tab label="&newevent.contacts.tab.label;"  collapsed="true"/>
-            <tab label="&newevent.files.tab.label;" collapsed="true"/>
+            <tab label="&newevent.contacts.tab.label;" hidden="true"/>
+            <tab label="&newevent.files.tab.label;" hidden="true"/>
          </tabs>
          <tabpanels>
             <tabpanel>
@@ -592,7 +592,7 @@
             </tabpanel>
       
             <!-- Contacts panel -->
-            <tabpanel orient="vertical" collapsed="true">
+            <tabpanel orient="vertical" hidden="true">
                <!-- Invite -->    
                <vbox collapsed="true">
                   <hbox id="invite-box" align="center">
