@@ -121,7 +121,9 @@ nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
   nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 
-  nsMailboxAction actionToUse = (moveMessage) ? nsIMailboxUrl::ActionMoveMessage : nsIMailboxUrl::ActionCopyMessage;
+  nsMailboxAction actionToUse = nsIMailboxUrl::ActionMoveMessage;
+  if (!moveMessage)
+     actionToUse = nsIMailboxUrl::ActionCopyMessage;
 
   rv = PrepareMessageCopyUrl(srcFolder, aUrlListener, actionToUse , getter_AddRefs(mailboxurl), aMsgWindow);
 
