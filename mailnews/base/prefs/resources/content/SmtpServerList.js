@@ -165,8 +165,13 @@ function fillSmtpServers(treechildren, servers, defaultServer)
     for (var i=0 ; i<serverCount; i++) {
         var server = servers.QueryElementAt(i, Components.interfaces.nsISmtpServer);
         var isDefault = (defaultServer.key == server.key);
-        var treeitem = createSmtpTreeItem(server, isDefault);
-        treechildren.appendChild(treeitem);
+        //ToDoList: add code that allows for the redirector type to specify whether to show values or not
+        if (!server.redirectorType) 
+        {
+          var treeitem = createSmtpTreeItem(server, isDefault);
+          treechildren.appendChild(treeitem);
+        }
+
     }
 
 }
