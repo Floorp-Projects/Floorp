@@ -71,8 +71,8 @@
 <!ENTITY publishas.accesskey "b">
 <!ENTITY exportToTextCmd.label "Export to Text...">
 <!ENTITY fileexporttotext.accesskey "T">
-<!ENTITY saveAsCharsetCmd.label "Save As Charset...">
-<!ENTITY filesaveascharset.accesskey "h">
+<!ENTITY saveAndChangeEncodingCmd.label "Save And Change Character Encoding">
+<!ENTITY filesaveandchangeencoding.accesskey "h">
 <!ENTITY previewCmd.label "Browse Page">
 <!ENTITY filepreview.accesskey "w">
 <!ENTITY sendPageCmd.label "Send Page...">
