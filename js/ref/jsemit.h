@@ -62,7 +62,7 @@ struct JSStmtInfo {
 };
 
 #define SET_STATEMENT_TOP(stmt, top) \
-    ((stmt)->top = (stmt)->update = (stmt)->breaks = (stmt)->continues = (top))
+    ((stmt)->top = (stmt)->update = (top), (stmt)->breaks = (stmt)->continues = (-1))
 
 struct JSTreeContext {              /* tree context for semantic checks */
     uint32          flags;          /* statement state flags, see below */

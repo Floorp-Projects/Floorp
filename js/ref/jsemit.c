@@ -290,7 +290,7 @@ PatchGotos(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
 
     pc = CG_CODE(cg, last);
     top = CG_CODE(cg, stmt->top);
-    while (pc > top) {
+    while (pc != CG_CODE(cg, -1)) {
 	PR_ASSERT(*pc == JSOP_GOTO);
 	delta = GET_JUMP_OFFSET(pc);
 	jumpOffset = PTRDIFF(target, pc, jsbytecode);
