@@ -1,7 +1,6 @@
 #! /usr/local/bin/perl5
 
 use File::Path;
-#use File::Copy;
 
 # The development branch is where primary development and checkins
 # are done on a day-to-day basis.
@@ -84,17 +83,6 @@ This script will assist with steps #2, #4 and #6:
   $0 -backpatch
   
 END
-}
-
-sub process_checkout {
-    local (*FH,*files) = @_;
-    
-    while (<FH>) {
-	if (/^[UP] (.*)/) {
-	    $file = $1;
-	    $files{$file} = 1;
-	}
-    }
 }
 
 sub log {
@@ -215,12 +203,22 @@ if ($do_merge) {
 if ($do_commit) {
     &die("No merged tree found.  Wrong directory ?") if (!chdir $trunk_dir);
 
-    &die("-commit not implemented yet");
-    &system("cvs ci"); # Message ?
+    ($_,$_,$_,$day,$mon,$year,$_,$_) = localtime(time());
+    if ($year < 30) {
+	$year = "20" . $year;
+    } else {
+	$year = "19" . $year;
+    }
+
+    $mmddyyyy = sprintf("%02d%02d%s", $mon, $day, $year);
+
+    print("Checking in code on trunk");
+    &system("cvs ci -m 'Stable drop of JavaScript interpreter code from " .
+	    "$development_branch'");
 
     # Tag merged result
-    &system("cvs tag JS_LANDING");
-    &system("cvs tag JS_LANDING_mmddyyyy");
+    &system("cvs tag -F JS_LANDING");
+    &system("cvs tag -F JS_LANDING_$mmddyyyy");
 
     # Move JS_LAST_STABLE_DROP tag forward
     &system("cvs tag -F -rJS_STABLE_DROP JS_LAST_STABLE_DROP");
