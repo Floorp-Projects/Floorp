@@ -160,7 +160,7 @@ nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
 		if (smtpProtocol == nsnull)
 			rv = NS_ERROR_OUT_OF_MEMORY;
 		else
-			smtpProtocol->LoadURL(smtpUrl); // protocol will get destroyed when url is completed...
+			smtpProtocol->LoadUrl(smtpUrl); // protocol will get destroyed when url is completed...
 	}
 
 	return rv;
