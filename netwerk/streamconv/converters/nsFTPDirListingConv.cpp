@@ -871,15 +871,15 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
 
         // MODIFIED DATE
         nsString lDate;
-        nsStr::Initialize(lDate, eOneByte);
-
+        
         rv = mDateTimeFormat->FormatPRExplodedTime(mLocale, kDateFormatShort, kTimeFormatNoSeconds, &thisEntry->mMDTM, lDate);
         if (NS_FAILED(rv)) {
             NS_DELETEXPCOM(thisEntry);
             return nsnull;
         }
 
-        char *escapedDate = nsEscape(lDate.GetBuffer(), url_Path);
+        nsCAutoString theDate(lDate);
+        char *escapedDate = nsEscape(theDate.GetBuffer(), url_Path);
 
         aString.Append(escapedDate);
         nsAllocator::Free(escapedDate);
