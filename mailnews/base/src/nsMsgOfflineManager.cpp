@@ -36,12 +36,13 @@
 #include "nsIIOService.h"
 #include "nsMsgNewsCID.h"
 #include "nsINntpService.h"
-
+#include "nsXPIDLString.h"
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsMsgOfflineManager,
                               nsIMsgOfflineManager,
@@ -190,6 +191,8 @@ nsresult nsMsgOfflineManager::SynchronizeOfflineImapChanges()
 nsresult nsMsgOfflineManager::SendUnsentMessages()
 {
 	nsresult rv;
+
+  ShowStatus("sendingUnsent");
 	nsCOMPtr<nsIMsgSendLater> pMsgSendLater = do_CreateInstance(kMsgSendLaterCID, &rv); 
   NS_ENSURE_SUCCESS(rv, rv);
   NS_WITH_SERVICE(nsIMsgAccountManager,accountManager,kCMsgAccountManagerCID,&rv);
@@ -248,9 +251,38 @@ nsresult nsMsgOfflineManager::SendUnsentMessages()
 
 }
 
+#define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
+
+nsresult nsMsgOfflineManager::ShowStatus(const char *statusMsgName)
+{
+  nsresult res = NS_OK;
+  if (!mStringBundle)
+  {
+    char    *propertyURL = MESSENGER_STRING_URL;
+
+    NS_WITH_SERVICE(nsIStringBundleService, sBundleService,
+                        kStringBundleServiceCID, &res);
+    if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+    {
+      res = sBundleService->CreateBundle(propertyURL, nsnull,
+                                               getter_AddRefs(mStringBundle));
+    }
+  }
+  if (mStringBundle)
+  {
+    nsXPIDLString statusString;
+		res = mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(statusMsgName).get(), getter_Copies(statusString));
+
+    if ( NS_SUCCEEDED(res))
+      OnStatus(statusString);
+  }
+  return res;
+}
+
 nsresult nsMsgOfflineManager::DownloadOfflineNewsgroups()
 {
 	nsresult rv;
+  ShowStatus("downloadingNewsgroups");
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && nntpService)
     rv = nntpService->DownloadNewsgroupsForOffline(m_window, this);
@@ -263,6 +295,7 @@ nsresult nsMsgOfflineManager::DownloadOfflineNewsgroups()
 nsresult nsMsgOfflineManager::DownloadMail()
 {
   nsresult rv = NS_OK;
+  ShowStatus("downloadingMail");
 	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   return imapService->DownloadAllOffineImapFolders(m_window, this);
@@ -293,7 +326,7 @@ NS_IMETHODIMP nsMsgOfflineManager::SynchronizeForOffline(PRBool downloadNews, PR
   m_downloadNews = downloadNews;
   m_downloadMail = downloadMail;
   m_sendUnsentMessages = sendUnsentMessages;
-  m_window = aMsgWindow;
+  SetWindow(aMsgWindow);
   m_goOfflineWhenDone = goOfflineWhenDone;
   m_curState = eNoState;
   if (!downloadNews && !downloadMail && !sendUnsentMessages)

@@ -31,6 +31,7 @@
 #include "nsIUrlListener.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgSendLaterListener.h"
+#include "nsIStringBundle.h"
 
 class nsMsgOfflineManager
 	: public nsIMsgOfflineManager,
@@ -80,6 +81,7 @@ private:
   nsresult DownloadMail();
 
   nsresult SetOnlineState(PRBool online);
+  nsresult ShowStatus(const char *statusMsgName);
 
   PRBool m_inProgress;
   PRBool m_sendUnsentMessages;
@@ -91,7 +93,7 @@ private:
   offlineManagerOperation m_curOperation;
   nsCOMPtr <nsIMsgWindow> m_window;
   nsCOMPtr <nsIMsgStatusFeedback> m_statusFeedback;
-
+  nsCOMPtr<nsIStringBundle>   mStringBundle;
 };
 
 #endif
