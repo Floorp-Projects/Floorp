@@ -217,36 +217,67 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 //
 //-------------------------------------------------------------------------
 NS_METHOD
-nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
+nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
+nsIWidget *aWidget,
                                   PRBool *aForWindow)
 {
-	*aForWindow = PR_TRUE;
-	return NS_OK;
-
 	*aForWindow = PR_FALSE;
 	EventRecord *theEvent = (EventRecord *) aEvent;
 
-	if (aRealEvent == PR_TRUE) {
+	if ( aRealEvent == PR_TRUE && theEvent->what != nullEvent ) {
 
-		// is it in the given window?
 		WindowPtr window = (WindowPtr) aWidget->GetNativeData(NS_NATIVE_DISPLAY);
-		if (window && window == (WindowPtr) theEvent->message)
-			*aForWindow = PR_TRUE;
+		WindowPtr eventWindow = nsnull;
+		PRInt16 where = ::FindWindow ( theEvent->where, &eventWindow );
 
-		// is it a mouse event?
-		if (theEvent->what == mouseDown || theEvent->what == mouseUp)
-			{ }
-		else if (theEvent->what == osEvt) {
-			unsigned char eventType = (theEvent->message >> 24) & 0x00ff;
-			if (eventType == mouseMovedMessage)
-				{}
-		}
-printf("event %d msg %ld win %d\n", theEvent->what, theEvent->message, *aForWindow);
+		switch ( theEvent->what ) {
+			// is it a mouse event?
+			case mouseDown:
+			case mouseUp:
+				// is it in the given window?
+				// (note we also let some events questionable for modal dialogs pass through.
+				// but it makes sense that the draggability et.al. of a modal window should
+				// be controlled by whether the window has a drag bar).
+				if ( window == eventWindow &&
+				     ( where == inContent || where == inDrag || where == inGrow ||
+				       where == inGoAway || where == inZoomIn || where == inZoomOut ))
+					*aForWindow = PR_TRUE;
+				break;
+
+			case updateEvt:
+				// always let update events through, because if we don't handle them, we're
+				// doomed!
+				*aForWindow = PR_TRUE;
+				break;
+
+			case activateEvt:
+				// certainly we have to let the obvious activate events through. hopefully
+				// our consumption of other events will keep any unwanted activate events
+				// from even getting this far
+				*aForWindow = PR_TRUE;
+				break;
+
+			case osEvt:
+				// check for mouseMoved or suspend/resume events. We especially need to
+				// let suspend/resume events through in order to make sure the clipboard is
+				// converted correctly.
+				unsigned char eventType = (theEvent->message >> 24) & 0x00ff;
+				if (eventType == mouseMovedMessage) {
+					// I'm guessing we don't want to let these through unless the mouse is
+					// in the modal dialog so we don't see rollover feedback in windows behind
+					// the dialog.
+					if ( where == inContent && window == eventWindow )
+						*aForWindow = PR_TRUE;
+				}
+				if ( eventType == suspendResumeMessage )
+					*aForWindow = PR_TRUE;
+				break;
+		} // case of which event type
 	} else
 		*aForWindow = PR_TRUE;
 
 	return NS_OK;
-}
+} // EventIsForModalWindow
 
 NS_METHOD
 nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
