@@ -99,17 +99,15 @@
 #include "nsICharsetAlias.h"
 #include "nsIPref.h"
 #include "nsLayoutUtils.h"
-
 #include "nsIDocumentCharsetInfo.h"
-
 #include "nsIDocumentEncoder.h" //for outputting selection
-
+#include "nsIBookmarksService.h"
 
 #define DETECTOR_PROGID_MAX 127
 static char g_detector_progid[DETECTOR_PROGID_MAX + 1];
 static PRBool gInitDetector = PR_FALSE;
 static PRBool gPlugDetector = PR_FALSE;
-
+static PRBool gBookmarkCharset = PR_TRUE;
 
 #ifdef PCB_USE_PROTOCOL_CONNECTION
 // beard: how else would we get the referrer to a URL?
@@ -151,6 +149,11 @@ static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
+static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+
+nsIRDFService* nsHTMLDocument::gRDF;
+nsrefcnt       nsHTMLDocument::gRefCntRDFService = 0;
 
 static int PR_CALLBACK
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
@@ -223,6 +226,17 @@ nsHTMLDocument::nsHTMLDocument()
   mForms = nsnull;
   mIsWriting = 0;
   mWriteLevel = 0;
+  
+  if (gRefCntRDFService++ == 0)
+  {
+    nsresult rv;    
+		rv = nsServiceManager::GetService(kRDFServiceCID,
+						  NS_GET_IID(nsIRDFService),
+						  (nsISupports**) &gRDF);
+
+    //NS_WITH_SERVICE(nsIRDFService, gRDF, kRDFServiceCID, &rv);
+  }
+
 }
 
 nsHTMLDocument::~nsHTMLDocument()
@@ -274,6 +288,11 @@ nsHTMLDocument::~nsHTMLDocument()
 
   delete mSearchStr;
   NS_IF_RELEASE(mBodyContent);
+
+  if (--gRefCntRDFService == 0)
+  {     
+     nsServiceManager::ReleaseService("component://netscape/rdf/rdf-service", gRDF);
+  }
 }
 
 NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
@@ -547,7 +566,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   PRUnichar* requestCharset = nsnull;
   nsCharsetSource requestCharsetSource = kCharsetUninitialized;
-  
+
   nsCOMPtr <nsIParserFilter> cdetflt;
   nsCOMPtr<nsIHTMLContentSink> sink;
 #ifdef rickgdebug
@@ -705,6 +724,35 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       }
       gInitDetector = PR_TRUE;
     }
+
+    if (kCharsetFromBookmarks > charsetSource)
+    {
+      nsCOMPtr<nsIRDFDataSource>  datasource;
+      if (NS_SUCCEEDED(rv = gRDF->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
+      {
+           nsCOMPtr<nsIBookmarksService>   bookmarks = do_QueryInterface(datasource);
+           if (bookmarks)
+           {
+                 char* urlSpec = nsnull;
+                 aURL->GetSpec(&urlSpec);
+
+                 if (urlSpec)
+                 {
+                            PRUnichar *pBookmarkedCharset;
+
+                            if (NS_SUCCEEDED(rv = bookmarks->GetLastCharset(urlSpec, &pBookmarkedCharset)) && 
+                               (rv != NS_RDF_NO_VALUE))
+                            {
+                              charset = pBookmarkedCharset;
+                              charsetSource = kCharsetFromBookmarks;
+                            }    
+
+                  } 
+
+                 nsCRT::free(urlSpec);
+           }
+       }
+    } 
 
     if((kCharsetFromAutoDetection > charsetSource )  && gPlugDetector)
     {
