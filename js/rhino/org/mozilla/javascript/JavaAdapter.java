@@ -252,7 +252,7 @@ public class JavaAdapter extends ScriptableObject {
                 "Lorg/mozilla/javascript/Scriptable;");
 
         // Set the prototype of the js object to be a LiveConnect 
-        // wapper of the generated class's object
+        // wrapper of the generated class's object
         cfw.add(ByteCode.ALOAD_1);  // first arg
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.INVOKESTATIC,
@@ -298,7 +298,7 @@ public class JavaAdapter extends ScriptableObject {
                 "Lorg/mozilla/javascript/Scriptable;");
 
         // Set the prototype of the js object to be a LiveConnect 
-        // wapper of the generated class's object
+        // wrapper of the generated class's object
         cfw.add(ByteCode.ALOAD_1);  // the Scriptable
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.INVOKESTATIC,
