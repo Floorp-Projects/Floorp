@@ -61,6 +61,10 @@ locale/en-US/communicator/pref/pref-themes.dtd,  	 en-US/locale/en-US/communicat
 locale/en-US/communicator/pref/pref.dtd,         	 en-US/locale/en-US/communicator/pref/pref.dtd
 locale/en-US/communicator/pref/preftree.dtd,     	 en-US/locale/en-US/communicator/pref/preftree.dtd
 locale/en-US/communicator/pref/prefutilities.properties, en-US/locale/en-US/communicator/pref/prefutilities.properties
+locale/en-US/communicator/pref/pref-applications.properties, en-US/locale/en-US/communicator/pref/pref-applications.properties
+locale/en-US/communicator/pref/pref-applications.dtd,    en-US/locale/en-US/communicator/pref/pref-applications.dtd
+locale/en-US/communicator/pref/pref-applications-edit.dtd, en-US/locale/en-US/communicator/pref/pref-applications-edit.dtd
+
 
 #################################################################################################
 # editor
