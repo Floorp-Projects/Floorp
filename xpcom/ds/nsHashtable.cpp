@@ -215,7 +215,7 @@ nsHashKey::~nsHashKey(void)
 MOZ_DECL_CTOR_COUNTER(nsHashtable);
 
 nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
-  : mLock(NULL)
+  : mLock(NULL), mEnumerating(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsHashtable);
   PRStatus status = PL_HashTableInit(&mHashtable,
@@ -259,7 +259,9 @@ PRBool nsHashtable::Exists(nsHashKey *aKey)
 
   if (mLock) PR_Lock(mLock);
 
-  PLHashEntry **hep = PL_HashTableRawLookup(&mHashtable, hash, (void *) aKey);
+  PLHashEntry *const*hep = mEnumerating ?
+    PL_HashTableRawLookupConst(&mHashtable, hash, (void *) aKey) :
+    PL_HashTableRawLookup(&mHashtable, hash, (void *) aKey);
 
   if (mLock) PR_Unlock(mLock);
 
@@ -273,6 +275,8 @@ void *nsHashtable::Put(nsHashKey *aKey, void *aData) {
 
   if (mLock) PR_Lock(mLock);
 
+  // shouldn't be adding an item during enumeration
+  PR_ASSERT(!mEnumerating);
   PLHashEntry **hep = PL_HashTableRawLookup(&mHashtable, hash, (void *) aKey);
 
   if ((he = *hep) != NULL) {
@@ -297,8 +301,9 @@ void *nsHashtable::Get(nsHashKey *aKey) {
 
   if (mLock) PR_Lock(mLock);
 
-  void *ret = PL_HashTableLookup(&mHashtable, (void *) aKey);
-
+  void *ret = mEnumerating ?
+    PL_HashTableLookupConst(&mHashtable, (void *) aKey) :
+    PL_HashTableLookup(&mHashtable, (void *) aKey);
   if (mLock) PR_Unlock(mLock);
 
   return ret;
@@ -309,7 +314,9 @@ void *nsHashtable::Remove(nsHashKey *aKey) {
   PLHashEntry *he;
 
   if (mLock) PR_Lock(mLock);
-
+  
+  // shouldn't be adding an item during enumeration
+  PR_ASSERT(!mEnumerating);
   PLHashEntry **hep = PL_HashTableRawLookup(&mHashtable, hash, (void *) aKey);
   void *res = NULL;
   
@@ -344,10 +351,13 @@ nsHashtable * nsHashtable::Clone() {
 }
 
 void nsHashtable::Enumerate(nsHashtableEnumFunc aEnumFunc, void* closure) {
+  PRBool wasEnumerating = mEnumerating;
+  mEnumerating = PR_TRUE;
   _HashEnumerateArgs thunk;
   thunk.fn = aEnumFunc;
   thunk.arg = closure;
   PL_HashTableEnumerateEntries(&mHashtable, _hashEnumerate, &thunk);
+  mEnumerating = wasEnumerating;
 }
 
 static PRIntn  PR_CALLBACK _hashEnumerateRemove(PLHashEntry *he, PRIntn i, void *arg)

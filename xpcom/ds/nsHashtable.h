@@ -79,6 +79,7 @@ protected:
   // members  
   PRLock*               mLock;
   PLHashTable           mHashtable;
+  PRBool                mEnumerating;
 
 public:
   nsHashtable(PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE);
