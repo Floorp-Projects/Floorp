@@ -21,7 +21,7 @@
 # 
 
 #
-# $Id: genstats.cgi,v 1.6 1999/09/09 16:04:46 dmose%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.7 1999/09/09 16:08:54 dmose%mozilla.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -212,7 +212,7 @@ if ($F::mozillaOrgAsNscp eq "yes") {
 } elsif ($F::mozillaOrgAsNscp eq "no" ) {
 	$NetscapeSQL = ' regexp "[@%]netscape\\.com"';
 } else {
-	die ("Internal error: mozillaOrgCountsAs not set");
+	die ("Internal error: mozillaOrgAsNscp not set");
 }
 
 print header();
