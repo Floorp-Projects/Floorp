@@ -279,17 +279,25 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
                                  const PRUnichar* aMsg)
 {
   URLLoadInfo* info = (URLLoadInfo*)context;
-  PRTime loadTime;
 
   if (info) {
+    double connectTime;
+    double readTime;
+
     info->mTotalTime = PR_Now() - info->mTotalTime;
-    loadTime = info->mTotalTime - info->mConnectTime;
+
+    connectTime = (info->mConnectTime/1000.0)/1000.0;
+    readTime    = ((info->mTotalTime-info->mConnectTime)/1000.0)/1000.0;
 
     printf("\nFinished loading: %s  Status Code: %x\n", info->Name(), aStatus);
     printf("\tRead: %d bytes.\n", info->mBytesRead);
-    printf("\tTime to connect: %f seconds\n", (info->mConnectTime/1000UL)/1000.0);
-    printf("\tTime to read: %f seconds.\n", (loadTime/1000UL)/1000.0);
-    printf("\tThroughput: %f bps.\n", (info->mBytesRead*8)/((loadTime/1000UL)/1000.0));
+    printf("\tTime to connect: %f seconds\n", connectTime);
+    printf("\tTime to read: %f seconds.\n", readTime);
+    if (readTime > 0.0) {
+      printf("\tThroughput: %f bps.\n", (info->mBytesRead*8)/readTime);
+    } else {
+      printf("\tThroughput: REAL FAST!!\n");
+    }
   } else {
     printf("\nFinished loading: UNKNOWN URL. Status Code: %x\n", aStatus);
   }
