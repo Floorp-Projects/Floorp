@@ -26,6 +26,7 @@
 #include "nsIURL.h"
 #include "nsRepository.h"
 #include "nsWidgetsCID.h"
+#include "nsILinkHandler.h"
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -36,6 +37,7 @@ static NS_DEFINE_IID(kIContentViewerIID, NS_ICONTENT_VIEWER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIPluginInstanceOwnerIID, NS_IPLUGININSTANCEOWNER_IID);
+static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 
 class PluginViewerImpl;
 
@@ -89,12 +91,13 @@ public:
 
   //locals
 
-  NS_IMETHOD Init(nsIWidget *aWindow);
+  NS_IMETHOD Init(PluginViewerImpl *aViewer, nsIWidget *aWindow);
 
 private:
   nsPluginWindow    mPluginWindow;
   nsIPluginInstance *mInstance;
   nsIWidget         *mWindow;       //we do not addref this...
+  PluginViewerImpl  *mViewer;       //we do not addref this...
 };
 
 class PluginViewerImpl : public nsIContentViewer
@@ -141,6 +144,8 @@ public:
                      nsIStreamListener*& aResult);
 
   void ForceRefresh(void);
+
+  nsresult GetURL(nsIURL *&aURL);
 
   nsIWidget* mWindow;
   nsIContentViewerContainer* mContainer;
@@ -253,7 +258,7 @@ PluginViewerImpl::Init(nsNativeWidget aNativeParent,
     mOwner = new nsPluginInstanceOwner();
     if (nsnull != mOwner) {
       NS_ADDREF(mOwner);
-      rv = mOwner->Init(mWindow);
+      rv = mOwner->Init(this, mWindow);
     }
   }
   return rv;
@@ -427,6 +432,13 @@ PluginViewerImpl::ForceRefresh()
   mWindow->Invalidate(PR_TRUE);
 }
 
+nsresult PluginViewerImpl::GetURL(nsIURL *&aURL)
+{
+  NS_IF_ADDREF(mURL);
+  aURL = mURL;
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 PluginListener::PluginListener(PluginViewerImpl* aViewer)
@@ -509,6 +521,7 @@ nsPluginInstanceOwner :: nsPluginInstanceOwner()
   memset(&mPluginWindow, 0, sizeof(mPluginWindow));
   mInstance = nsnull;
   mWindow = nsnull;
+  mViewer = nsnull;
 }
 
 nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
@@ -519,6 +532,9 @@ nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
     mInstance->Destroy();
     NS_RELEASE(mInstance);
   }
+
+  mWindow = nsnull;
+  mViewer = nsnull;
 }
 
 NS_IMPL_ISUPPORTS(nsPluginInstanceOwner, kIPluginInstanceOwnerIID)
@@ -599,14 +615,59 @@ NS_IMETHODIMP nsPluginInstanceOwner :: CreateWidget(void)
 
 NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTarget, void *aPostData)
 {
-printf("instance owner geturl called\n");
-  return NS_ERROR_FAILURE;
+  nsresult  rv;
+
+  if (nsnull != mViewer)
+  {
+    nsIContentViewerContainer *cont;
+
+    rv = mViewer->GetContainer(cont);
+
+    if (NS_OK == rv)
+    {
+      nsILinkHandler  *lh;
+
+      rv = cont->QueryInterface(kILinkHandlerIID, (void **)&lh);
+
+      if (NS_OK == rv)
+      {
+        nsIURL  *url;
+
+        rv = mViewer->GetURL(url);
+
+        if (NS_OK == rv)
+        {
+          nsAutoString  uniurl = nsAutoString(aURL);
+          nsAutoString  unitarget = nsAutoString(aTarget);
+          nsAutoString  base = nsAutoString(url->GetSpec());
+          nsAutoString  fullurl;
+
+          // Create an absolute URL
+          rv = NS_MakeAbsoluteURL(url, base, uniurl, fullurl);
+
+          if (NS_OK == rv)
+            rv = lh->OnLinkClick(nsnull, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
+
+          NS_RELEASE(url);
+        }
+
+        NS_RELEASE(lh);
+      }
+
+      NS_RELEASE(cont);
+    }
+  }
+  else
+    rv = NS_ERROR_FAILURE;
+
+  return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: Init(nsIWidget *aWindow)
+NS_IMETHODIMP nsPluginInstanceOwner :: Init(PluginViewerImpl *aViewer, nsIWidget *aWindow)
 {
   //do not addref
   mWindow = aWindow;
+  mViewer = aViewer;
 
   return NS_OK;
 }
