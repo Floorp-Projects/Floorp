@@ -28,3 +28,4 @@ nsIJVMPluginTagInfo.h
 nsISymantecDebugger.h
 nsISymantecDebugManager.h
 nsjvm.h
+nsISecureJNI2.h
