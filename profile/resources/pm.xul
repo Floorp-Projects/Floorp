@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome:/global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="pm.css" type="text/css"?>
 
 <window
@@ -9,43 +10,94 @@
 <html:script>
 var profileCore = "";
 var profileList = "";
-var lastNum     = -1;
-var lastName    = "";
+var selected    = null;
 
 function CreateProfile()
 {
 	// Need to call CreateNewProfile xuls
-	this.location.replace("resource:/res/profile/cpwManager.xul");
+	this.location = "resource:/res/profile/cpwManager.xul";
+}
+
+function MigrateProfile(override)
+{
+	// Hack to avoid writing two copies of this
+	if (override) 
+		selected = override;
+
+	if (!selected)
+	{
+		dump("Select a profile to migrate.\n");
+		return;
+	}
+
+	var name = selected.getAttribute("rowName");
+	var migrate = selected.getAttribute("rowMigrate");
+
+	if (migrate == "false")
+	{
+		dump("This profile doesn't need migration.\n");
+		return;
+	}
+
+	//profileCore.MigrateProfile(name);
+	//this.location.replace(this.location);
+	dump("Would have migrated " + name + ".\n");
+}
+
+function MigrateAllProfiles()
+{
+	var body = document.getElementById("theTreeBody");
+	var child = body.firstChild;
+	while (child)
+	{
+		if (child.getAttribute("rowMigrate") == "true")
+			MigrateProfile(child);
+		child = child.nextSibling;
+	}
 }
 
 function RenameProfile(w)
 {
-	dump("RenameProfile\n");
-	var newName = w.document.getElementById("NewName").value;
-	dump("RenameProfile : " + lastName + " to " + newName + "\n");
-	if (lastName != "")
+	if (!selected)
 	{
-		dump("Rename '" + lastName + "'\n");
-		profileCore.RenameProfile(lastName, newName);
-		this.location.replace(this.location);
+		dump("Select a profile to migrate.\n");
+		return;
 	}
-	else
-		dump("Select a profile before clicking the rename button.\n");
+
+	dump("RenameProfile\n");
+
+	var newName = w.document.getElementById("NewName").value;
+	var oldName = selected.getAttribute("rowName");
+	var migrate = selected.getAttribute("rowMigrate");
+
+	if (migrate == "true")
+	{
+		dump("Migrate this profile before renaming it.\n");
+		return;
+	}
+
+	dump("RenameProfile : " + oldName + " to " + newName + "\n");
+	profileCore.RenameProfile(oldName, newName);
+	this.location.replace(this.location);
 }
 
 function DeleteProfile()
 {
-	if (lastName != "")
+	if (!selected)
 	{
-		dump("Delete '" + lastName + "'\n");
-		profileCore.DeleteProfile(lastName);
-		this.location.replace(this.location);
+		dump("Select a profile to delete.\n");
+		return;
 	}
-	else
-		dump("Select a profile before clicking the delete button.\n");
+
+	var migrate = selected.getAttribute("rowMigrate");
+
+	var name = selected.getAttribute("rowName");
+	dump("Delete '" + name + "'\n");
+	profileCore.DeleteProfile(name);
+	this.location.replace(this.location);
 }
 
-function ExitManager()
+function ExitApp()
 {
 	var toolkitCore = XPAppCoresManager.Find("toolkitCore");
 	if (!toolkitCore) {
@@ -60,19 +112,20 @@ function ExitManager()
 	}
 }
 
-function addTreeItem(num, name)
+function addTreeItem(num, name, migrate)
 {
   dump("Adding element " + num + " : " + name + "\n");
   var body = document.getElementById("theTreeBody");
 
   var newitem = document.createElement('treeitem');
-  newitem.setAttribute("rowID", num);
+  newitem.setAttribute("rowNum", num);
   newitem.setAttribute("rowName", name);
+  newitem.setAttribute("rowMigrate", migrate);
 
   var elem = document.createElement('treecell');
 
   // Hack in a differentation for migration
-  if (num % 2 == 0)
+  if (migrate)
 	  var text = document.createTextNode('Migrate');
   else
 	  var text = document.createTextNode('');
@@ -94,9 +147,10 @@ function showSelection(node)
 	// Tree events originate in the smallest clickable object which is the cell.  The object 
 	// originating the event is available as event.target.  We want the cell's row, so we go 
 	// one further and get event.target.parentNode.
-	lastNum  = node.getAttribute("rowID");
-	lastName = node.getAttribute("rowName");
-	dump("Selected " + lastNum + " : " + lastName + "\n");
+	selected = node;
+	var num = node.getAttribute("rowNum");
+	var name = node.getAttribute("rowName");
+	dump("Selected " + num + " : " + name + "\n");
 }
 
 function loadElements()
@@ -123,7 +177,7 @@ function loadElements()
 	profileList = profileList.split(",");
 
 	for (var i=0; i &lt; profileList.length; i++)
-		addTreeItem(i, profileList[i]);
+		addTreeItem(i, profileList[i], (i%2==0));
 }
 
 // -------------------------------------------- begin Hack for OnLoad handling
@@ -132,16 +186,34 @@ setTimeout("loadElements()", 0);
 
 </html:script>
 
-[[[[     Please ignore these fields until popups behave better
 <popup id="renamePopup">
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="200" height="50">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="100" height="50">
 If you don't type in the input field, it works.
 <html:input type="text" id="NewName" size="20" value="zz"  />
 <titledbutton value="Ok" class="push" onclick="opener.RenameProfile(window);window.close();" />
 <titledbutton value="Cancel" class="push" onclick="window.close();" />
 </window>
 </popup>
-]]]]
+
+<popup id="deletePopup">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="100" height="50">
+Deleting an unmigrated profile will prevent you from ever migrating it in the future.
+<html:p> </html:p>
+Confirm delete?
+<html:p />
+<titledbutton value="Ok" class="push" onclick="opener.DeleteProfile();window.close();" />
+<titledbutton value="Cancel" class="push" onclick="window.close();" />
+</window>
+</popup>
+
+<popup id="migratePopup">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="100" height="50">
+Confirm migrate all profiles?
+<html:p />
+<titledbutton value="Ok" class="push" onclick="opener.MigrateAllProfiles();window.close();" />
+<titledbutton value="Cancel" class="push" onclick="window.close();" />
+</window>
+</popup>
 
 <html:center>
 <html:table>
@@ -180,10 +252,17 @@ bookmarks, and stored messages in your personal profile.
 </tree>
 
 <titledbutton value="New" class="push" onclick="CreateProfile();" />
+<titledbutton value="Migrate" class="push" onclick="MigrateProfile();" />
 <titledbutton value="Rename" class="push" popup="renamePopup" />
-<html:button onclick="DeleteProfile();">Delete</html:button>
-<html:button onclick="ExitManager();">Exit</html:button>
-
+<titledbutton value="Delete" class="push" popup="deletePopup" />
 </html:center>
+
+<html:p />
+<html:hr />
+<html:p />
+
+<titledbutton value="Migrate All" class="push" popup="migratePopup" />
+<titledbutton value="Start" class="push" onclick="window.close();" />
+<titledbutton value="Exit" class="push" onclick="ExitApp();" />
 
 </window>
