@@ -929,7 +929,7 @@ nsBrowserInstance::WalletRequestToCapture(nsIDOMWindow* aWin, PRUint32* status)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_RequestToCapture(presShell, status);
+    res = walletservice->WALLET_RequestToCapture(presShell, aWin, status);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     return NS_OK;
   } else {
