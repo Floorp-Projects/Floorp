@@ -114,12 +114,12 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
  *  @param   
  *  @return  
  */
-nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode) : nsITokenizer(), 
-                                                       mTokenDeque(0),
-                                                       mParseMode(aParseMode)
+nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,PRBool aPlainText) : 
+  nsITokenizer(), mTokenDeque(0), mParseMode(aParseMode)
 {
   NS_INIT_REFCNT();
   mDoXMLEmptyTags=PR_FALSE;
+  mPlainText=aPlainText;
 }
 
 
@@ -283,53 +283,46 @@ nsresult nsHTMLTokenizer::DidTokenize(PRBool aIsFinalChunk)
  */
 nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner) {
 
-  nsresult result=NS_OK;
-  if(NS_OK==result){
-    PRUnichar theChar;
-    result=aScanner.GetChar(theChar);
-    CToken* theToken=0;
-    switch(result) {
-      case kEOF:
-          //We convert from eof to complete here, because we never really tried to get data.
-          //All we did was try to see if data was available, which it wasn't.
-          //It's important to return process complete, so that controlling logic can know that
-          //everything went well, but we're done with token processing.
-        break;
+  PRUnichar theChar;
+  CToken* theToken=0;
 
-      case NS_OK:
-      default:
-        switch(theChar) {
-          case kLessThan:
-            result=ConsumeTag(theChar,theToken,aScanner);
-            break;
+  nsresult result=aScanner.GetChar(theChar);
 
-          case kAmpersand:
-            result=ConsumeEntity(theChar,theToken,aScanner);
-            break;
-          
-          case kCR: case kLF:
-            result=ConsumeNewline(theChar,theToken,aScanner);
-            break;
-          
-          case kNotFound:
-            break;
-          
-          case 0: //preceeds a EOF...
-            break;
+  switch(result) {
+    case kEOF:
+        //We convert from eof to complete here, because we never really tried to get data.
+        //All we did was try to see if data was available, which it wasn't.
+        //It's important to return process complete, so that controlling logic can know that
+        //everything went well, but we're done with token processing.
+      return result;
 
-          default:
-            if(!nsString::IsSpace(theChar)) {
-              nsAutoString temp(theChar);
-              result=ConsumeText(temp,theToken,aScanner);
-              break;
-            }
-            result=ConsumeWhitespace(theChar,theToken,aScanner);
-            break;
-        } //switch
-        break; 
-    } //switch
-  } //if
-  return result;
+    case NS_OK:
+    default:
+
+      if(!mPlainText) {
+        if(kLessThan==theChar) {
+          return ConsumeTag(theChar,theToken,aScanner);
+        }
+        else if(kAmpersand==theChar){
+          return ConsumeEntity(theChar,theToken,aScanner);
+        }
+      }
+      
+      if((kCR==theChar) || (kLF==theChar)) {
+        return ConsumeNewline(theChar,theToken,aScanner);
+      }
+      else {
+        if(!nsString::IsSpace(theChar)) {
+          nsAutoString temp(theChar);
+          result=ConsumeText(temp,theToken,aScanner);
+          break;
+        }
+        result=ConsumeWhitespace(theChar,theToken,aScanner);
+      } 
+      break; 
+  } //switch
+
+  return NS_OK;
 }
 
 

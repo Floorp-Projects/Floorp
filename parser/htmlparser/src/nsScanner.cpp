@@ -661,7 +661,7 @@ nsresult nsScanner::ReadIdentifier(nsString& aString) {
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
       mOffset-=1;
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
@@ -708,7 +708,7 @@ nsresult nsScanner::ReadNumber(nsString& aString) {
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
       mOffset-=1;
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
@@ -758,7 +758,7 @@ nsresult nsScanner::ReadWhitespace(nsString& aString) {
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
       mOffset-=1;
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
@@ -806,7 +806,7 @@ nsresult nsScanner::ReadWhile(nsString& aString,
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
       mOffset-=1;
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
@@ -855,7 +855,7 @@ nsresult nsScanner::ReadWhile(nsString& aString,
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
       mOffset-=1;
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
@@ -935,7 +935,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
       mOffset-=1;
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
@@ -985,7 +985,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
       mOffset-=1;
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
