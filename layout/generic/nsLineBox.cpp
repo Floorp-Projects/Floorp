@@ -44,6 +44,7 @@
 #include "nsBlockFrame.h"
 #include "nsITextContent.h"
 #include "nsLayoutAtoms.h"
+#include "nsFrameManager.h"
 
 #ifdef DEBUG
 static PRInt32 ctorCount;
@@ -62,6 +63,12 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
   MOZ_COUNT_CTOR(nsLineBox);
 #ifdef DEBUG
   ++ctorCount;
+  NS_ASSERTION(!aIsBlock || aCount == 1, "Blocks must have exactly one child");
+  nsIFrame* f = aFrame;
+  for (PRInt32 n = aCount; n > 0; f = f->GetNextSibling(), --n) {
+    NS_ASSERTION(aIsBlock == f->GetStyleDisplay()->IsBlockLevel(),
+                 "wrong kind of child frame");
+  }
 #endif
 
   mAllFlags = 0;
@@ -464,7 +471,6 @@ nsLineBox::RemoveFloat(nsIFrame* aFrame)
     if (fc) {
       // Note: the placeholder is part of the line's child list
       // and will be removed later.
-      fc->mPlaceholder->SetOutOfFlowFrame(nsnull);
       mInlineData->mFloats.Remove(fc);
       MaybeFreeData();
       return PR_TRUE;

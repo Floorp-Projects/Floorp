@@ -638,6 +638,20 @@ nsFrame::Destroy(nsPresContext* aPresContext)
 
   nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
+    if (mState & NS_FRAME_OUT_OF_FLOW) {
+      nsPlaceholderFrame* placeholder
+        = shell->FrameManager()->GetPlaceholderFrameFor(this);
+      if (placeholder) {
+        NS_WARNING("Deleting out of flow without tearing down placeholder relationship");
+        if (placeholder->GetOutOfFlowFrame()) {
+          NS_ASSERTION(placeholder->GetOutOfFlowFrame() == this,
+                       "no-one told the frame manager about this");
+          shell->FrameManager()->UnregisterPlaceholderFrame(placeholder);
+          placeholder->SetOutOfFlowFrame(nsnull);
+        }
+      }
+    }
+
     // If the frame contains generated context, remove it from
     // the quoteList.
     if (mState & NS_FRAME_GENERATED_CONTENT) {
@@ -2723,6 +2737,14 @@ nsFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
+  }
+  nsIFrame* prevInFlow = GetPrevInFlow();
+  nsIFrame* nextInFlow = GetNextInFlow();
+  if (nsnull != prevInFlow) {
+    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, prevInFlow));
+  }
+  if (nsnull != nextInFlow) {
+    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, nextInFlow));
   }
   fprintf(out, " [content=%p]", NS_STATIC_CAST(void*, mContent));
   nsFrame* f = NS_CONST_CAST(nsFrame*, this);

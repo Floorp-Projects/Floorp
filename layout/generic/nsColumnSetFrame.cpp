@@ -69,6 +69,10 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
+  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
+                               nsFramePaintLayer aWhichLayer,
+                               nsIFrame**     aFrame);
+
   virtual nsIFrame* GetContentInsertionFrame() {
     return GetFirstChild(nsnull)->GetContentInsertionFrame();
   }
@@ -161,6 +165,16 @@ nsIAtom*
 nsColumnSetFrame::GetType() const
 {
   return nsLayoutAtoms::columnSetFrame;
+}
+
+NS_IMETHODIMP
+nsColumnSetFrame::GetFrameForPoint(const nsPoint& aPoint, 
+                                   nsFramePaintLayer aWhichLayer,
+                                   nsIFrame**     aFrame)
+{
+  // This frame counts as part of the background.
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
+                               (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
 }
 
 NS_IMETHODIMP
@@ -260,6 +274,9 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
       // colWidth*nominalColumnCount is nearly availContentWidth
       // make sure to round down
       numColumns = (availContentWidth + colGap)/(colGap + colWidth);
+      if (numColumns <= 0) {
+        numColumns = 1;
+      }
     }
 
     // Compute extra space and divide it among the columns

@@ -772,7 +772,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
   else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     if (nsLayoutAtoms::placeholderFrame == aFrame->GetType()) {
       nsBlockReflowState* blockRS = lineLayout->mBlockRS;
-      blockRS->mBlock->SplitPlaceholder(*aPresContext, *aFrame);
+      blockRS->mBlock->SplitPlaceholder(*blockRS, aFrame);
     }
     else {
       nsIFrame* newFrame;

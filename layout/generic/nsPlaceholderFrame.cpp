@@ -40,6 +40,7 @@
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsLayoutAtoms.h"
+#include "nsFrameManager.h"
 
 nsresult
 NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -84,6 +85,18 @@ nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPlaceholderFrame::Destroy(nsPresContext* aPresContext)
+{
+  nsIPresShell* shell = aPresContext->GetPresShell();
+  if (shell && mOutOfFlowFrame) {
+    NS_ASSERTION(!shell->FrameManager()->GetPlaceholderFrameFor(mOutOfFlowFrame),
+                 "Placeholder relationship should have been torn down");
+  }
+
+  return nsSplittableFrame::Destroy(aPresContext);
 }
 
 nsIAtom*
@@ -135,6 +148,14 @@ nsPlaceholderFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
+  }
+  nsIFrame* prevInFlow = GetPrevInFlow();
+  nsIFrame* nextInFlow = GetNextInFlow();
+  if (nsnull != prevInFlow) {
+    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, prevInFlow));
+  }
+  if (nsnull != nextInFlow) {
+    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, nextInFlow));
   }
   if (mOutOfFlowFrame) {
     fprintf(out, " outOfFlowFrame=");

@@ -1012,11 +1012,16 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
         nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, aFrame);
+        PRBool didPlace;
         if (eReflowReason_Incremental == reason) {
-          InitFloat(placeholder, aReflowStatus);
+          didPlace = InitFloat(placeholder, aReflowStatus);
         }
         else {
-          AddFloat(placeholder, aReflowStatus);
+          didPlace = AddFloat(placeholder, aReflowStatus);
+        }
+        printf("*** Reflowed float, didPlace=%d, status=%d\n", aReflowStatus);
+        if (!didPlace) {
+          aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
         }
         if (outOfFlowFrame->GetType() == nsLayoutAtoms::letterFrame) {
           SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);

@@ -115,6 +115,14 @@ public:
 
   PRBool Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult);
 
+  /**
+   * Sort the frames according to content order so that the first
+   * frame in the list is the first in content order. Frames for
+   * the same content will be ordered so that a prev in flow
+   * comes before its next in flow.
+   */
+  void SortByContentOrder();
+
   nsIFrame* PullFrame(nsIFrame* aParent,
                       nsIFrame* aLastChild,
                       nsFrameList& aFromList);

@@ -68,21 +68,22 @@ public:
 
   void GetAvailableSpace(nscoord aY);
 
-  void InitFloat(nsLineLayout&       aLineLayout,
-                 nsPlaceholderFrame* aPlaceholderFrame,
-                 nsReflowStatus&     aReflowStatus);
-
-  void AddFloat(nsLineLayout&       aLineLayout,
-                nsPlaceholderFrame* aPlaceholderFrame,
-                PRBool              aInitialReflow,
-                nsReflowStatus&     aReflowStatus);
-
+  /*
+   * The following functions all return PR_TRUE if they were able to
+   * place the float, PR_FALSE if the float did not fit in available
+   * space.
+   */
+  PRBool InitFloat(nsLineLayout&       aLineLayout,
+                   nsPlaceholderFrame* aPlaceholderFrame,
+                   nsReflowStatus&     aReflowStatus);
+  PRBool AddFloat(nsLineLayout&       aLineLayout,
+                  nsPlaceholderFrame* aPlaceholderFrame,
+                  PRBool              aInitialReflow,
+                  nsReflowStatus&     aReflowStatus);
   PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats);
-
-  void FlowAndPlaceFloat(nsFloatCache* aFloatCache,
-                         PRBool*         aIsLeftFloat,
-                         nsReflowStatus& aReflowStatus);
-
+  PRBool FlowAndPlaceFloat(nsFloatCache* aFloatCache,
+                           PRBool*         aIsLeftFloat,
+                           nsReflowStatus& aReflowStatus);
   PRBool PlaceBelowCurrentLineFloats(nsFloatCacheList& aFloats);
 
   // Returns the first coordinate >= aY that clears the
@@ -161,6 +162,10 @@ public:
   // if the container reflowing this frame has given the frame an
   // unconstrained area.
   nsSize mContentArea;
+
+  // Placeholders for continuation out-of-flow frames that need to
+  // move to our next in flow are placed here during reflow.
+  nsFrameList mOverflowPlaceholders;
 
   //----------------------------------------
 
