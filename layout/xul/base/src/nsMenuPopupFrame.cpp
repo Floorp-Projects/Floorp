@@ -324,19 +324,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsRect parentRect;
   aFrame->GetRect(parentRect);
 
-#if 0
-  const nsStyleDisplay* disp; 
-  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
-  PRBool viewIsVisible = (NS_STYLE_VISIBILITY_VISIBLE == disp->mVisible);
-  nsViewVisibility  oldVisibility;
-  view->GetVisibility(oldVisibility);
-  PRBool viewWasVisible = (oldVisibility == nsViewVisibility_kShow);
-
-  if (viewWasVisible && (! viewIsVisible)) {
-    view->SetVisibility(nsViewVisibility_kHide);
-  }
-#endif
-
   float p2t, t2p;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
@@ -473,18 +460,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> myShell;
   mPresContext->GetShell(getter_AddRefs(myShell));
   myShell->ProcessReflowCommands ( PR_FALSE );
-  
-  nsAutoString shouldDisplay;
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
-  if ( shouldDisplay.Equals("true") )
-    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
-    
-#if 0
-  if ((! viewWasVisible) && viewIsVisible) {
-    view->SetVisibility(nsViewVisibility_kShow);
-  }
-#endif
-
+      
   return NS_OK;
 }
 
