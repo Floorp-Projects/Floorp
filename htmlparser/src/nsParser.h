@@ -144,6 +144,18 @@ friend class CTokenHandler;
      */
     virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE);
 
+
+    /**
+     *  Call this when you want control whether or not the parser will parse
+     *  and tokenize input (TRUE), or whether it just caches input to be 
+     *  parsed later (FALSE).
+     *  
+     *  @update  gess 9/1/98
+     *  @param   aState determines whether we parse/tokenize or just cache.
+     *  @return  current state
+     */
+    virtual PRBool EnableParser(PRBool aState);
+
     /**
      * This method gets called (automatically) during incremental parsing
      * @update	gess5/11/98
@@ -284,6 +296,7 @@ protected:
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
     PRBool              mDTDVerification;
+    PRBool              mParserEnabled;
 };
 
 
