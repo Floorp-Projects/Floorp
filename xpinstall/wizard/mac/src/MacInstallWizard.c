@@ -51,8 +51,10 @@ void main(void)
 void Init(void)
 {
 	Str255		 	winTitle;
+#if CFG_IS_REMOTE == 1
 	ThreadID		tid;
 	ThreadState		state;
+#endif
 	OSErr			err = noErr;
 	
 	gDone = false;
@@ -62,7 +64,7 @@ void Init(void)
 	if (err!=noErr)
 		SysBeep(10);	// XXX better error handling
 
-#ifdef SDINST_IS_DLL
+#if (SDINST_IS_DLL == 1) && (MOZILLA == 0)
 	if (!InitSDLib())
 	{
 		ErrorHandler();
@@ -132,7 +134,6 @@ GetCWD(long *outDirID, short *outVRefNum)
 void
 InitOptObject(void)
 {
-	int 	i;
 	FSSpec 	tmp;
 	OSErr	err=noErr;
 	
@@ -157,17 +158,6 @@ InitOptObject(void)
 	ERR_CHECK(FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, NULL, &tmp));
 	
 	pstrcpy( gControls->opt->folder, tmp.name );
-	
-	/* ComponentsWin options */
-	for (i=0; i<kMaxComponents; i++)
-	{
-	/* XXX Remove loop
-		if ((i<gControls->cfg->st[0].numComps) && (gControls->cfg->st[0].comp[i] == kInSetupType))
-			gControls->opt->compSelected[i] = kSelected;
-		else
-			gControls->opt->compSelected[i] = kNotSelected;
-	*/
-	}	
 }
 
 void
@@ -254,6 +244,9 @@ void MainEventLoop(void)
 	EventRecord evt;
 	Boolean		notHandled = true;
 	THz			ourHZ;
+	RgnHandle   mouseRgn;
+
+	mouseRgn = NewRgn();
 	
 	while (!gDone) 
 	{		
@@ -262,16 +255,21 @@ void MainEventLoop(void)
 		
 		if (!gDone)	 /* after cx switch back ensure not done */
 		{
-			if(WaitNextEvent(everyEvent, &evt, 0, NULL))
+			if(WaitNextEvent(everyEvent, &evt, 0, mouseRgn))
 			{
+				if (mouseRgn)
+					SetRectRgn(mouseRgn, evt.where.h, evt.where.v, evt.where.h + 1, evt.where.v + 1);
+					
 				if (gSDDlg)
 				{
 					ourHZ = GetZone();
-#ifdef SDINST_IS_DLL
+#if MOZILLA == 0
+#if SDINST_IS_DLL==1
 					notHandled = gSDIEvtHandler(&evt);
 #else			
 					notHandled = SDI_HandleEvent(&evt);	
-#endif
+#endif /* SDINST_IS_DLL */
+#endif /* MOZILLA */
 					SetZone(ourHZ);
 				}
 				else
@@ -283,6 +281,8 @@ void MainEventLoop(void)
 		}
 	}
 	
+	if (mouseRgn)
+		DisposeRgn(mouseRgn);
 	Shutdown();
 }
  
@@ -300,15 +300,21 @@ void Shutdown(void)
 {
 	WindowPtr	frontWin;
 	long 		MIWMagic = 0;
-		
+
+#if (SDINST_IS_DLL == 1) && (MOZILLA == 0)
 	UnloadSDLib(&gConnID);
+#endif
 	NavUnload();
 	
 /* deallocate config object */
 	// TO DO	
 	
 /* deallocate options object */
-	// TO DO
+	if (gControls->opt && gControls->opt->folder)
+	{
+		DisposePtr((Ptr) gControls->opt->folder);
+		DisposePtr((Ptr) gControls->opt);
+	}
 		
 /* deallocate all controls */	
 

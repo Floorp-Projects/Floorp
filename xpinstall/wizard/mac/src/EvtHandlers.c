@@ -104,7 +104,7 @@ void HandleKeyDown(EventRecord* evt)
 	ThreadID		tid;
 	
 	keyPressed = evt->message & charCodeMask;
-#ifdef DEBUG
+#ifdef MIW_DEBUG
 	if ( (keyPressed == 'z') || (keyPressed == 'Z'))
 		gDone = true;	// backdoor exit
 #endif
@@ -256,7 +256,17 @@ void HandleOSEvt(EventRecord* evt)
 				}
 				
 				InvalRect(&gWPtr->portRect);
-			}						
+			}	
+		case mouseMovedMessage:
+			switch(gCurrWin)
+			{
+				case kComponentsID:
+					MouseMovedInComponentsWin(evt); 
+				default:
+					break;
+			}
+		default:
+			break;					
 	}
 }
 

@@ -27,6 +27,12 @@
  *   Components Window
  *-----------------------------------------------------------*/
 
+#define INVERT_HIGHLIGHT(_rectPtr)          \
+			hiliteVal = LMGetHiliteMode();  \
+			BitClr(&hiliteVal, pHiliteBit); \
+			LMSetHiliteMode(hiliteVal);	    \
+			InvertRect(_rectPtr);
+			
 void 
 ShowComponentsWin(void)
 {
@@ -34,7 +40,7 @@ ShowComponentsWin(void)
 	Str255		compDescTitle;
 	StringPtr	selCompMsg;
 	Handle		listBoxRect;
-	Rect 		dataBounds, listBoxFrame;
+	Rect 		dataBounds, listBoxFrame, viewRect;
 	short		reserr;
 	int			totalRows = 0, i, instChoice;
 	Point		cSize;
@@ -90,6 +96,23 @@ ShowComponentsWin(void)
 	gControls->cw->compList = LNew((const Rect*)&gControls->cw->compListBox, (const Rect*)&dataBounds,
 									cSize, rCheckboxLDEF, gWPtr, true, false, false, true);
 	(*gControls->cw->compList)->selFlags = 68; /* NOTE: 64 (aka lExtendDrag) + 4 (aka lUseSense) = 68 */
+	
+	HLock((Handle)gControls->cw->compDescBox);
+	SetRect(&viewRect, (*gControls->cw->compDescBox)->contrlRect.left,
+					   (*gControls->cw->compDescBox)->contrlRect.top,
+					   (*gControls->cw->compDescBox)->contrlRect.right,
+					   (*gControls->cw->compDescBox)->contrlRect.bottom);
+	HUnlock((Handle)gControls->cw->compDescBox);
+	viewRect.top += kInterWidgetPad;
+	SetRect(&viewRect, viewRect.left + kTxtRectPad,
+						viewRect.top + kTxtRectPad,
+						viewRect.right - kTxtRectPad,
+						viewRect.bottom - kTxtRectPad);
+	TextFont(applFont);
+	TextSize(9);
+	gControls->cw->compDescTxt = TENew(&viewRect, &viewRect);
+	TextFont(systemFont);
+	TextSize(12);
 	
 	// populate controls
 	bCellSelected = PopulateCompInfo();
@@ -194,8 +217,11 @@ void
 InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 {	
 	Point 			localPt;
-	Rect			r;
+	Rect			r, currCellRect, checkbox;
 	ControlPartCode	part;
+	int				i;
+	Cell			currCell;
+	UInt8			hiliteVal;
 	GrafPtr			oldPort;
 	GetPort(&oldPort);
 	
@@ -206,6 +232,20 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	if ((evt->what == mouseUp) && (PtInRect( localPt, &gControls->cw->compListBox)))
 	{
 		LClick(localPt, evt->modifiers, gControls->cw->compList);
+		
+		/* invert the checkbox rect */
+		for (i=0; i<numRows; i++)
+		{
+			SetPt(&currCell, 0, i);
+			LRect(&currCellRect, currCell, gControls->cw->compList);
+			if (PtInRect(localPt, &currCellRect))
+			{
+				SetRect(&checkbox, currCellRect.left+4, currCellRect.top+2, 
+							currCellRect.left+16, currCellRect.top+14);		
+				INVERT_HIGHLIGHT(&checkbox);
+			}
+		}
+		
 		SetOptInfo();
 	}
 			
@@ -214,6 +254,10 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	HUnlock((Handle)gControls->backB);
 	if (PtInRect( localPt, &r))
 	{
+		/* reset all rows to be not highlighted */
+		for (i=0; i<numRows; i++)
+			gControls->cfg->comp[rowToComp[i]].highlighted = false;
+		
 		part = TrackControl(gControls->backB, evt->where, NULL);
 		if (part)
 		{ 
@@ -235,6 +279,10 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	HUnlock((Handle)gControls->nextB);
 	if (PtInRect( localPt, &r))
 	{
+		/* reset all rows to be not highlighted */
+		for (i=0; i<numRows; i++)
+			gControls->cfg->comp[rowToComp[i]].highlighted = false;
+			
 		part = TrackControl(gControls->nextB, evt->where, NULL);
 		if (part)
 		{	
@@ -247,6 +295,64 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 			return;
 		}
 	}
+	SetPort(oldPort);
+}
+
+void		
+MouseMovedInComponentsWin(EventRecord *evt)
+{
+	Point 			localPt;
+	Rect			currCellRect, oldCellRect, checkbox;
+	int				i, j;
+	Cell			currCell, oldCell;
+	UInt8			hiliteVal;
+	GrafPtr			oldPort;
+	GetPort(&oldPort);
+	
+	if (gWPtr)
+		SetPort(gWPtr);
+	
+	localPt = evt->where;
+	GlobalToLocal( &localPt );
+	
+	/* if within list box rect */
+	if (PtInRect( localPt, &((*gControls->cw->compList)->rView) ))
+	{		
+		for (i=0; i<numRows; i++) 
+		{
+			/* note: numComps above includes invisible components */
+			SetPt(&currCell, 0, i);
+			LRect(&currCellRect, currCell, gControls->cw->compList);
+			
+			/* mouse move landed over this cell */
+			if (PtInRect( localPt, &currCellRect ))
+			{
+				if (!gControls->cfg->comp[rowToComp[i]].highlighted)
+				{	
+		 			/* highlight this cell */
+					INVERT_HIGHLIGHT(&currCellRect);	
+					UpdateLongDesc(i);
+					
+					/* unhighlight old one */
+					for (j=0; j<numRows; j++)
+					{
+						if (gControls->cfg->comp[rowToComp[j]].highlighted)
+						{
+							SetPt(&oldCell, 0, j);
+							LRect(&oldCellRect, oldCell, gControls->cw->compList);
+							
+							INVERT_HIGHLIGHT(&oldCellRect);
+							gControls->cfg->comp[rowToComp[j]].highlighted = false;
+						}
+					}
+					
+					/* mark this row highlighted to prevent incorrect inversion */
+					gControls->cfg->comp[rowToComp[i]].highlighted = true; 
+				}
+			}
+		}
+	}
+	
 	SetPort(oldPort);
 }
 
@@ -289,17 +395,6 @@ SetOptInfo(void)
 				ErrorHandler();
 				return;
 			}
-			
-			TextFont(applFont);
-			TextSize(10);
-			gControls->cw->compDescTxt = TENew(&viewRect, &viewRect);
-			HLock(gControls->cfg->comp[rowToComp[i]].longDesc);
-			TESetText( *gControls->cfg->comp[rowToComp[i]].longDesc, 
-						strlen(*gControls->cfg->comp[rowToComp[i]].longDesc), gControls->cw->compDescTxt);
-			TEUpdate( &viewRect, gControls->cw->compDescTxt);
-			TextFont(systemFont);
-			TextSize(12);
-			HUnlock(gControls->cfg->comp[rowToComp[i]].longDesc);
 		}
 		else if (gControls->cfg->comp[rowToComp[i]].selected == true)
 		{
@@ -310,6 +405,31 @@ SetOptInfo(void)
 	
 	ClearDiskSpaceMsgs();
 	DrawDiskSpaceMsgs( gControls->opt->vRefNum );
+}
+
+void
+UpdateLongDesc(int row)
+{
+	Rect		viewRect;
+	
+	HLock((Handle)gControls->cw->compDescBox);
+	SetRect(&viewRect, (*gControls->cw->compDescBox)->contrlRect.left,
+					   (*gControls->cw->compDescBox)->contrlRect.top,
+					   (*gControls->cw->compDescBox)->contrlRect.right,
+					   (*gControls->cw->compDescBox)->contrlRect.bottom);
+	HUnlock((Handle)gControls->cw->compDescBox);
+	viewRect.top += kInterWidgetPad;
+	SetRect(&viewRect, viewRect.left + kTxtRectPad,
+						viewRect.top + kTxtRectPad,
+						viewRect.right - kTxtRectPad,
+						viewRect.bottom - kTxtRectPad);
+	EraseRect(&viewRect);
+	
+	HLock(gControls->cfg->comp[rowToComp[row]].longDesc);
+	TESetText( *gControls->cfg->comp[rowToComp[row]].longDesc, 
+				strlen(*gControls->cfg->comp[rowToComp[row]].longDesc), gControls->cw->compDescTxt);
+	TEUpdate( &viewRect, gControls->cw->compDescTxt);
+	HUnlock(gControls->cfg->comp[rowToComp[row]].longDesc);
 }
 
 void
