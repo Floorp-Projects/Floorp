@@ -131,15 +131,16 @@ namespace ICG {
         InstructionMap *mInstructionMap;
 
         bool mWithinWith;               // state from genStmt that indicates generating code beneath a with statement
+        bool mAtTopLevel;               // compiling at top level
         JSClass *mClass;                // enclosing class when generating code for methods
 
-        void markMaxRegister() \
+        void markMaxRegister()
         { if (topRegister > maxRegister) maxRegister = topRegister; }
         
-        Register getRegister() \
+        Register getRegister()
         { return topRegister++; }
 
-        void resetTopRegister() \
+        void resetTopRegister()
         { markMaxRegister(); topRegister = registerBase; }
         
 
@@ -182,7 +183,7 @@ namespace ICG {
         JSType *findType(const StringAtom& typeName);
     
     public:
-        ICodeGenerator(World *world, JSScope *global, JSClass *aClass = NULL);
+        ICodeGenerator(World *world, JSScope *global, JSClass *aClass = NULL, bool atTopLevel = true);
         
         ~ICodeGenerator()
         {
@@ -200,8 +201,6 @@ namespace ICG {
                     Label *falseBranch = NULL);
         void preprocess(StmtNode *p);
         TypedRegister genStmt(StmtNode *p, LabelSet *currentLabelSet = NULL);
-
-        void isScript() { mWithinWith = true; }
 
         void returnStmt(TypedRegister r);
         void returnStmt();
@@ -255,6 +254,11 @@ namespace ICG {
         TypedRegister propertyInc(TypedRegister base, const StringAtom &name);
         TypedRegister propertyDec(TypedRegister base, const StringAtom &name);
         
+        TypedRegister getStatic(JSClass *base, const StringAtom &name);
+        void setStatic(JSClass *base, const StringAtom &name, TypedRegister value);
+        TypedRegister staticInc(JSClass *base, const StringAtom &name);
+        TypedRegister staticDec(JSClass *base, const StringAtom &name);
+        
         TypedRegister getElement(TypedRegister base, TypedRegister index);
         void setElement(TypedRegister base, TypedRegister index, TypedRegister value);
         TypedRegister elementInc(TypedRegister base, TypedRegister index);
@@ -269,7 +273,7 @@ namespace ICG {
         TypedRegister varDec(TypedRegister var);
         
         Register getRegisterBase()                  { return topRegister; }
-        InstructionStream *get_iCode()              { return iCode; }
+        InstructionStream *getICode()               { return iCode; }
         
         Label *getLabel();
 

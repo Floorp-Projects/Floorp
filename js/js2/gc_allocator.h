@@ -122,6 +122,8 @@ namespace JavaScript {
 		gc_allocator() {}
 		template<typename U, typename UTraits> gc_allocator(const gc_allocator<U, UTraits>&) {}
 		// ~gc_allocator() {}
+
+                template<typename U, typename UTraits> int operator==(const gc_allocator<U, UTraits>&) { return 1; }
 		
 		static pointer address(reference r) { return &r; }
 		static const_pointer address(const_reference r) { return &r; }

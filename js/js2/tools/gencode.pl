@@ -162,6 +162,24 @@ $ops{"SET_SLOT"} =
    rem    => "object, slot number, source",
    params => [ ("TypedRegister", "uint32", "TypedRegister") ]
   };
+$ops{"GET_STATIC"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, class, name",
+   params => [ ("TypedRegister", "JSClass*", "const StringAtom*") ]
+  };
+$ops{"SET_STATIC"} =
+  {
+   super  => "Instruction_3",
+   rem    => "class, name, source",
+   params => [ ("JSClass*", "const StringAtom*", "TypedRegister") ]
+  };
+$ops{"STATIC_XCR"} =
+  {
+   super  => "Instruction_4",
+   rem    => "dest, class, name, value",
+   params => [ ("TypedRegister", "JSClass*", "const StringAtom*", "double") ]
+  };
 $ops{"SLOT_XCR"} =
   {
    super  => "Instruction_4",
@@ -485,7 +503,7 @@ sub get_print_body {
             push (@oplist, "\"R\" << mOp$op.first");
         } elsif ($type eq "Label*") {
             push (@oplist, "\"Offset \" << ((mOp$op) ? mOp$op->mOffset : NotAnOffset)")
-        } elsif ($type =~ /String/) {
+        } elsif ($type =~ /String|JSClass\*/) {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
         } elsif ($type =~ /bool/) {
             push (@oplist, "\"'\" << ((mOp$op) ? \"true\" : \"false\") << \"'\"");

@@ -125,18 +125,19 @@ struct Linkage : public Context::Frame, public gc_base {
     Linkage*            mNext;              // next linkage in linkage stack.
     InstructionIterator mReturnPC;
     Activation*         mActivation;        // caller's activation.
+    JSScope*            mScope;
     TypedRegister       mResult;            // the desired target register for the return value
 
     Linkage(Linkage* linkage, InstructionIterator returnPC,
-            Activation* activation, TypedRegister result) 
+            Activation* activation, JSScope* scope, TypedRegister result) 
         :   mNext(linkage), mReturnPC(returnPC),
-            mActivation(activation), mResult(result)
+            mActivation(activation), mScope(scope), mResult(result)
     {
     }
     
-Context::Frame* getNext() { return mNext; }
+    Context::Frame* getNext() { return mNext; }
     
-void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode)
+    void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode)
     {
         pc = mReturnPC;
         registers = &mActivation->mRegisters;
@@ -281,26 +282,26 @@ static JSValue equal_Default(const JSValue& r1, const JSValue& r2)
 static JSValue identical_Default(const JSValue& r1, const JSValue& r2)
 {
     if (r1.getType() != r2.getType())
-        return kFalse;
+        return kFalseValue;
     if (r1.isUndefined() )
-        return kTrue;
+        return kTrueValue;
     if (r1.isNull())
-        return kTrue;
+        return kTrueValue;
     if (r1.isNumber()) {
         if (r1.isNaN())
-            return kFalse;
+            return kFalseValue;
         if (r2.isNaN())
-            return kFalse;
+            return kFalseValue;
         return JSValue(r1.f64 == r2.f64);
     }
     else {
         if (r1.isString())
-            return kFalse;     // XXX implement me!! w_strcmp??
+            return kFalseValue;     // XXX implement me!! w_strcmp??
         if (r1.isBoolean())
             return JSValue(r1.boolean == r2.boolean);
         if (r1.isObject())
             return JSValue(r1.object == r2.object);
-        return kFalse;
+        return kFalseValue;
     }
 }
 
@@ -413,18 +414,18 @@ void Context::initContext()
 
 // predefine the predefined types;
 
-    mGlobal->defineVariable(widenCString("any"), JSValue(&Any_Type));
-    mGlobal->defineVariable(widenCString("Integer"), JSValue(&Integer_Type));
-    mGlobal->defineVariable(widenCString("Number"), JSValue(&Number_Type));
-    mGlobal->defineVariable(widenCString("Character"), JSValue(&Character_Type));
-    mGlobal->defineVariable(widenCString("String"), JSValue(&String_Type));
-    mGlobal->defineVariable(widenCString("Function"), JSValue(&Function_Type));
-    mGlobal->defineVariable(widenCString("Array"), JSValue(&Array_Type));
-    mGlobal->defineVariable(widenCString("Type"), JSValue(&Type_Type));
-    mGlobal->defineVariable(widenCString("Boolean"), JSValue(&Boolean_Type));
-    mGlobal->defineVariable(widenCString("Null"), JSValue(&Null_Type));
-    mGlobal->defineVariable(widenCString("Void"), JSValue(&Void_Type));
-    mGlobal->defineVariable(widenCString("none"), JSValue(&None_Type));
+    mGlobal->defineVariable(widenCString("any"), &Type_Type, JSValue(&Any_Type));
+    mGlobal->defineVariable(widenCString("Integer"), &Type_Type, JSValue(&Integer_Type));
+    mGlobal->defineVariable(widenCString("Number"), &Type_Type, JSValue(&Number_Type));
+    mGlobal->defineVariable(widenCString("Character"), &Type_Type, JSValue(&Character_Type));
+    mGlobal->defineVariable(widenCString("String"), &Type_Type, JSValue(&String_Type));
+    mGlobal->defineVariable(widenCString("Function"), &Type_Type, JSValue(&Function_Type));
+    mGlobal->defineVariable(widenCString("Array"), &Type_Type, JSValue(&Array_Type));
+    mGlobal->defineVariable(widenCString("Type"), &Type_Type, JSValue(&Type_Type));
+    mGlobal->defineVariable(widenCString("Boolean"), &Type_Type, JSValue(&Boolean_Type));
+    mGlobal->defineVariable(widenCString("Null"), &Type_Type, JSValue(&Null_Type));
+    mGlobal->defineVariable(widenCString("Void"), &Type_Type, JSValue(&Void_Type));
+    mGlobal->defineVariable(widenCString("none"), &Type_Type, JSValue(&None_Type));
 
 
 // hack - the following should be available only after importing the 'Operators' package
@@ -496,7 +497,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                     else {
                         base = (*registers)[op2(call).first];
-                        ASSERT(base.tag == JSValue::object_tag);        // XXX runtime error
+                        ASSERT(base.isObject());        // XXX runtime error
                         prop = base.object->getProperty(*((*registers)[op3(call).first].string));
                     }
                     ASSERT(prop.isFunction()); // XXX runtime error
@@ -517,8 +518,11 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                     else {
                         mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, op1(call));
+                                               mActivation, mGlobal, op1(call));
                         mActivation = new Activation(target->getICode(), mActivation, base, op4(call));
+                        JSClass *thisClass = dynamic_cast<JSClass*>(base.object->getType());
+                        if (thisClass)
+                            mGlobal = thisClass->getScope();
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();
@@ -541,7 +545,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (target->isNative()) {
                         RegisterList &params = op4(call);
                         JSValues argv(params.size() + 1);
-                        argv[0] = kNull;
+                        argv[0] = kNullValue;
                         JSValues::size_type i = 1;
                         for (RegisterList::const_iterator src = params.begin(), end = params.end();
                                         src != end; ++src, ++i) {
@@ -554,8 +558,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                     else {
                         mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, op1(call));
-                        mActivation = new Activation(target->getICode(), mActivation, kNull, op4(call));
+                                               mActivation, mGlobal, op1(call));
+                        mActivation = new Activation(target->getICode(), mActivation, kNullValue, op4(call));
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();
@@ -574,6 +578,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                     mLinkage = linkage->mNext;
                     mActivation = linkage->mActivation;
+                    mGlobal = linkage->mScope;
                     registers = &mActivation->mRegisters;
                     if (linkage->mResult.first != NotARegister)
                         (*registers)[linkage->mResult.first] = kUndefinedValue;
@@ -597,6 +602,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                     mLinkage = linkage->mNext;
                     mActivation = linkage->mActivation;
+                    mGlobal = linkage->mScope;
                     registers = &mActivation->mRegisters;
                     if (linkage->mResult.first != NotARegister)
                         (*registers)[linkage->mResult.first] = result;
@@ -646,7 +652,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                 ICodeModule* ctor = thisClass->getConstructor();
                                 if (ctor) {
                                     mLinkage = new Linkage(mLinkage, nextPC,
-                                                           mActivation, voidRegister);
+                                                           mActivation, mGlobal, voidRegister);
                                     mActivation = new Activation(ctor, args);
                                     registers = &mActivation->mRegisters;
                                     nextPC = ctor->its_iCode->begin();
@@ -666,13 +672,13 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEW_FUNCTION:
                 {
                     NewFunction* nf = static_cast<NewFunction*>(instruction);
-                    (*registers)[dst(nf).first] = JSValue(new JSFunction(src1(nf)));
+                    (*registers)[dst(nf).first] = new JSFunction(src1(nf));
                 }
                 break;
             case NEW_ARRAY:
                 {
                     NewArray* na = static_cast<NewArray*>(instruction);
-                    (*registers)[dst(na).first] = JSValue(new JSArray());
+                    (*registers)[dst(na).first] = new JSArray();
                 }
                 break;
             case GET_PROP:
@@ -681,6 +687,11 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue& value = (*registers)[src1(gp).first];
                     if (value.isObject()) {
                         JSObject* object = value.object;
+                        // REVISIT: when we implement statics with slots.
+                        if (value.isType()) {
+                            JSClass* c = dynamic_cast<JSClass*>(object);
+                            if (c) object = c->getScope();
+                        }
                         (*registers)[dst(gp).first] = object->getProperty(*src2(gp));
                     }
                     // XXX runtime error
@@ -692,8 +703,27 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue& value = (*registers)[dst(sp).first];
                     if (value.isObject()) {
                         JSObject* object = value.object;
+                        // REVISIT: when we implement statics with slots.
+                        if (value.isType()) {
+                            JSClass* c = dynamic_cast<JSClass*>(object);
+                            if (c) object = c->getScope();
+                        }
                         object->setProperty(*src1(sp), (*registers)[src2(sp).first]);
                     }
+                }
+                break;
+            case GET_STATIC:
+                {
+                    GetStatic* gs = static_cast<GetStatic*>(instruction);
+                    JSClass* c = src1(gs);
+                    (*registers)[dst(gs).first] = c->getScope()->getVariable(*src2(gs));
+                }
+                break;
+            case SET_STATIC:
+                {
+                    SetStatic* ss = static_cast<SetStatic*>(instruction);
+                    JSClass* c = dst(ss);
+                    c->getScope()->setProperty(*src1(ss), (*registers)[src2(ss).first]);
                 }
                 break;
 /*
@@ -758,19 +788,19 @@ using JSString throughout.
             case LOAD_IMMEDIATE:
                 {
                     LoadImmediate* li = static_cast<LoadImmediate*>(instruction);
-                    (*registers)[dst(li).first] = JSValue(src1(li));
+                    (*registers)[dst(li).first] = src1(li);
                 }
                 break;
             case LOAD_STRING:
                 {
                     LoadString* ls = static_cast<LoadString*>(instruction);
-                    (*registers)[dst(ls).first] = JSValue(src1(ls));
+                    (*registers)[dst(ls).first] = src1(ls);
                 }
                 break;
             case LOAD_BOOLEAN:
                 {
                     LoadBoolean* lb = static_cast<LoadBoolean*>(instruction);
-                    (*registers)[dst(lb).first] = JSValue(src1(lb));
+                    (*registers)[dst(lb).first] = src1(lb);
                 }
                 break;
             case BRANCH:
@@ -834,7 +864,7 @@ using JSString throughout.
                     }
                     else {
                         mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, dst(mul));
+                                               mActivation, mGlobal, dst(mul));
                         mActivation = new Activation(target->getICode(), r1, r2);
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
@@ -901,7 +931,7 @@ using JSString throughout.
             case NEGATE:
                 {
                     Negate* neg = static_cast<Negate*>(instruction);
-                    (*registers)[dst(neg).first] = JSValue(-(*registers)[src1(neg).first].toNumber().f64);
+                    (*registers)[dst(neg).first] = -(*registers)[src1(neg).first].toNumber().f64;
                 }
                 break;
             case POSATE:
@@ -913,7 +943,7 @@ using JSString throughout.
             case BITNOT:
                 {
                     Bitnot* bn = static_cast<Bitnot*>(instruction);
-                    (*registers)[dst(bn).first] = JSValue(~(*registers)[src1(bn).first].toInt32().i32);
+                    (*registers)[dst(bn).first] = ~(*registers)[src1(bn).first].toInt32().i32;
                 }
                 break;
 
@@ -921,7 +951,7 @@ using JSString throughout.
                 {
                     Not* nt = static_cast<Not*>(instruction);
                     ASSERT((*registers)[src1(nt).first].isBoolean());
-                    (*registers)[dst(nt).first] = JSValue(!(*registers)[src1(nt).first].boolean);
+                    (*registers)[dst(nt).first] = !(*registers)[src1(nt).first].boolean;
                 }
                 break;
 

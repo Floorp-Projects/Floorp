@@ -179,10 +179,10 @@ namespace JSTypes {
     typedef std::vector<JSValue, gc_allocator<JSValue> > JSValues;
 
     extern const JSValue kUndefinedValue;
-    extern const JSValue kNaN;
-    extern const JSValue kTrue;
-    extern const JSValue kFalse;
-    extern const JSValue kNull;
+    extern const JSValue kNaNValue;
+    extern const JSValue kTrueValue;
+    extern const JSValue kFalseValue;
+    extern const JSValue kNullValue;
 
     extern JSType Any_Type;
     extern JSType Integer_Type;
@@ -197,17 +197,19 @@ namespace JSTypes {
     extern JSType Void_Type;
     extern JSType None_Type;
 
+    typedef std::map<String, JSValue, std::less<String>, gc_map_allocator> JSProperties;
+
     /**
      * Basic behavior of all JS objects, mapping a name to a value,
      * with prototype-based inheritance.
      */
     class JSObject : public gc_base {
     protected:
-        typedef std::map<String, JSValue, std::less<String>, gc_map_allocator> JSProperties;
         JSProperties mProperties;
         JSObject* mPrototype;
+        JSType* mType;
     public:
-        JSObject() : mPrototype(0) {}
+        JSObject() : mPrototype(0), mType(&Any_Type) {}
     
         bool hasProperty(const String& name)
         {
@@ -248,11 +250,11 @@ namespace JSTypes {
             JSProperties::iterator i = mProperties.find(name);
             if (i != mProperties.end()) {
                 mProperties.erase(i);
-                return kTrue;
+                return kTrueValue;
             }
             if (mPrototype)
                 return mPrototype->deleteProperty(name);
-            return kFalse;
+            return kFalseValue;
         }
 
         void setPrototype(JSObject* prototype)
@@ -263,6 +265,11 @@ namespace JSTypes {
         JSObject* getPrototype()
         {
             return mPrototype;
+        }
+
+        JSType* getType()
+        {
+            return mType;
         }
 
         virtual void printProperties(Formatter& f);
@@ -396,12 +403,13 @@ namespace JSTypes {
         return f;
     }
 
-    /**
+   /**
      * Provides a set of nested scopes. 
      */
     class JSScope : public JSObject {
     protected:
         JSScope* mParent;
+        JSProperties mTypes;
     public:
         JSScope(JSScope* parent = 0, JSObject* prototype = 0)
             : mParent(parent)
@@ -437,34 +445,61 @@ namespace JSTypes {
             return setProperty(name, value);
         }
         
-        JSValue& defineVariable(const String& name, const JSValue& value)
+        JSValue& defineVariable(const String& name, JSType* type, const JSValue& value)
         {
+            if (type != &Any_Type) setType(name, type);
             return setProperty(name, value);
+        }
+
+        JSValue& defineVariable(const String& name, JSType* type)
+        {
+            if (type != &Any_Type) setType(name, type);
+            return setProperty(name, kUndefinedValue);
+        }
+
+        void setType(const String& name, JSType* type)
+        {
+            JSProperties::iterator i = mTypes.find(name);
+            if (i != mTypes.end())
+                i->second = type;
+            else
+                if (mParent)
+                    mParent->setType(name, type);
+        }
+
+        JSType* getType(const String& name)
+        {
+            JSProperties::const_iterator i = mTypes.find(name);
+            if (i != mTypes.end())
+                return i->second.type;
+            if (mParent)
+                return mParent->getType(name);
+            return &Any_Type;
         }
         
         JSValue& defineFunction(const String& name, ICodeModule* iCode)
         {
             JSValue value(new JSFunction(iCode));
-            return defineVariable(name, value);
+            return defineVariable(name, &Function_Type, value);
         }
 
         JSValue& defineNativeFunction(const String& name, JSNativeFunction::JSCode code)
         {
             JSValue value(new JSNativeFunction(code));
-            return defineVariable(name, value);
+            return defineVariable(name, &Function_Type, value);
         }
     };
 
     class JSType : public JSObject {
     protected:
-        JSString mName;
+        String mName;
         const JSType *mBaseType;
     public:
         JSType(const String &name, const JSType *baseType) : mName(name), mBaseType(baseType) { }
 
         enum { NoRelation = 0x7FFFFFFF };
 
-        const JSString& getName() const { return mName; }
+        const String& getName() const { return mName; }
 
         int32 distance(const JSType *other) const;
     };
