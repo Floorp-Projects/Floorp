@@ -39,6 +39,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
+  
   // nsITreeFrame
   NS_IMETHOD EnsureRowIsVisible(PRInt32 aRowIndex);
   NS_IMETHOD GetNextItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult);

@@ -106,6 +106,8 @@ public:
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
 
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
+
     // nsIReflowCallback
   NS_IMETHOD ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag);
 
@@ -138,6 +140,8 @@ public:
   
   void SetRowHeight(PRInt32 aRowHeight);
   PRBool IsFixedRowSize();
+
+  void SetLayingOut(PRBool aLayingOut) { mLayingOut = aLayingOut; };
 
   nscoord GetYPosition();
   nscoord GetAvailableHeight();
@@ -223,6 +227,7 @@ protected:
 
   nsTreeLayoutState mTreeLayoutState;
   PRBool mReflowCallbackPosted;
+  PRBool mLayingOut;
 }; // class nsXULTreeOuterGroupFrame
 
 
