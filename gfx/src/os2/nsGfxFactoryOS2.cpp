@@ -376,7 +376,7 @@ void nsGfxModuleData::Init()
    // get screen bit-depth
    hpsScreen = ::WinGetScreenPS (HWND_DESKTOP);
    HDC hdc = GFX (::GpiQueryDevice (hpsScreen), HDC_ERROR);
-   ::DevQueryCaps (hdc, CAPS_COLOR_BITCOUNT, 1, &lDisplayDepth);
+   GFX (::DevQueryCaps (hdc, CAPS_COLOR_BITCOUNT, 1, &lDisplayDepth), FALSE);
 }
 
 nsGfxModuleData::~nsGfxModuleData()
