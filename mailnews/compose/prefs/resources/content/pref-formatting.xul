@@ -19,9 +19,9 @@
   
   <!-- we are using these DTD values for localization -->
  
-  <html id="domaindlg" htmldlg_title="&add.htmltitle;" htmldlg_msg="&add.htmldomain;"
+  <data id="domaindlg" htmldlg_title="&add.htmltitle;" htmldlg_msg="&add.htmldomain;"
         plaintextdlg_title="&add.plaintexttitle;" plaintextdlg_msg="&add.plaintextdomain;"/>
-  <html id="domainerrdlg" domainerrdlg_title="&domainnameError.title;" duperr="&duplicationError.label;"
+  <data id="domainerrdlg" domainerrdlg_title="&domainnameError.title;" duperr="&duplicationError.label;"
         dualerr="&dualEntryError.label;"/>
 
   <broadcaster  id="mailhtmldomain" 
@@ -52,11 +52,7 @@
       <radio group="mailDefaultHTMLAction" value="3" label="&sendBoth.label;"/>
     </radiogroup>
     
-    <separator/>
-
     <html>&override.label;</html>
-  <separator/>
-  <html>&receiveHTML.label;</html>
 
   </titledbox>
   <titledbox orient="vertical" flex="1">
