@@ -109,41 +109,61 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kUnicodeEncodeHelperCID, NULL, NULL,
       path, PR_TRUE, PR_TRUE);
-  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) return rv;
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCharsetAliasCID, NULL, NULL, path, 
       PR_TRUE, PR_TRUE);
-  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) return rv;
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCharsetConverterManagerCID, NULL, NULL,
       path, PR_TRUE, PR_TRUE);
-  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) return rv;
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
   rv = compMgr->RegisterComponent(kPlatformCharsetCID, NULL, NULL, path, 
       PR_TRUE, PR_TRUE);
+
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterFactory(kUnicodeEncodeHelperCID, path);
-  if(NS_FAILED(rv)) return rv;
+  if(NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kCharsetAliasCID, path);
-  if(NS_FAILED(rv)) return rv;
+  if(NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kCharsetConverterManagerCID, path);
-  if(NS_FAILED(rv)) return rv;
+  if(NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kPlatformCharsetCID, path);
+
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }

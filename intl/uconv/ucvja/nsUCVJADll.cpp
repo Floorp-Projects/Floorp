@@ -150,29 +150,47 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     rv = compMgr->RegisterComponent(*(g_FactoryData[i].mCID), NULL, NULL,
       path, PR_TRUE, PR_TRUE);
-    if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) return rv;
+    if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
   }
 
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     rv = compMgr->UnregisterFactory(*(g_FactoryData[i].mCID), path);
-    if(NS_FAILED(rv)) return rv;
+    if(NS_FAILED(rv)) goto done;
   }
 
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 

@@ -133,7 +133,7 @@ public:
 //
 // and the automatic destructor will take care of releasing the service.
 
-#if 0
+#ifdef XP_WIN
 
 template<class T> class nsService {
 protected:

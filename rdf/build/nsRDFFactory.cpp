@@ -39,6 +39,7 @@
 #include "rdf.h"
 #include "nsIXULSortService.h"
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -271,7 +272,14 @@ extern "C" PR_IMPLEMENT(nsresult)
 NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 {
     nsresult rv;
-    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
     if (NS_FAILED(rv)) return rv;
 
     // register our build-in datasources:
@@ -279,95 +287,97 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          "Bookmarks",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "bookmarks",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFCompositeDataSourceCID, 
                                          "RDF Composite Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "composite-datasource",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFFileSystemDataSourceCID,  
                                          "RDF File System Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "files",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFHistoryDataSourceCID,  
                                          "RDF History Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "history",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFInMemoryDataSourceCID,
                                          "RDF In-Memory Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "in-memory-datasource",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFXMLDataSourceCID,
                                          "RDF XML Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "xml-datasource",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULDataSourceCID,
                                          "XUL Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "xul-datasource",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
     // register our built-in resource factories:
     rv = compMgr->RegisterComponent(kRDFDefaultResourceCID,
                                          "RDF Default Resource Factory",
                                          NS_RDF_RESOURCE_FACTORY_PROGID,        // default resource factory has no name= part
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
     // register all the other rdf components:
     rv = compMgr->RegisterComponent(kRDFContentSinkCID,
                                          "RDF Content Sink",
                                          NS_RDF_PROGID "|content-sink",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFHTMLBuilderCID,
                                          "RDF HTML Builder",
                                          NS_RDF_PROGID "|html-builder",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFServiceCID,
                                          "RDF Service",
                                          NS_RDF_PROGID "|rdf-service",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULSortServiceCID,
                                          "XUL Sort Service",
                                          NS_RDF_PROGID "|xul-sort-service",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFTreeBuilderCID,
                                          "RDF Tree Builder",
                                          NS_RDF_PROGID "|tree-builder",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFMenuBuilderCID,
                                          "RDF Menu Builder",
                                          NS_RDF_PROGID "|menu-builder",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFToolbarBuilderCID,
                                          "RDF Toolbar Builder",
                                          NS_RDF_PROGID "|toolbar-builder",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFXULBuilderCID,
                                          "RDF XUL Builder",
                                          NS_RDF_PROGID "|xul-builder",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULContentSinkCID,
                                          "XUL Content Sink",
                                          NS_RDF_PROGID "|xul-content-sink",
                                          aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULDocumentCID,
                                          "XUL Document",
                                          NS_RDF_PROGID "|xul-document",
                                          aPath, PR_TRUE, PR_TRUE);
+  done:
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
     return rv;
 }
 
@@ -376,46 +386,56 @@ extern "C" PR_IMPLEMENT(nsresult)
 NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
 {
     nsresult rv;
-    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->UnregisterComponent(kRDFBookmarkDataSourceCID,  aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFFileSystemDataSourceCID,aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFHistoryDataSourceCID,   aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFCompositeDataSourceCID, aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFInMemoryDataSourceCID,  aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFXMLDataSourceCID,       aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kXULDataSourceCID,          aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
     rv = compMgr->UnregisterComponent(kRDFDefaultResourceCID,     aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
     rv = compMgr->UnregisterComponent(kRDFContentSinkCID,         aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFHTMLBuilderCID,         aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFServiceCID,             aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kXULSortServiceCID,         aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFTreeBuilderCID,         aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFMenuBuilderCID,         aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFToolbarBuilderCID,      aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFXULBuilderCID,          aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kXULContentSinkCID,         aPath);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kXULDocumentCID,            aPath);
+
+  done:
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
     return rv;
 }
 
