@@ -1432,12 +1432,50 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
   return(aNewY);
 }
 
+
+//
+//-----------------------------------------------------
+// Resize handler code for child and main windows.
+//----------------------------------------------------- 
+//
+
+void nsWindow_ResetResize_Callback(XtPointer call_data)
+{
+    nsWindow* widgetWindow = (nsWindow*)call_data;
+    widgetWindow->SetResized(PR_FALSE);
+}
+
+void nsWindow_Refresh_Callback(XtPointer call_data)
+{
+    nsWindow* widgetWindow = (nsWindow*)call_data;
+    nsRect bounds;
+    widgetWindow->GetResizeRect(&bounds); 
+
+    nsSizeEvent event;
+    event.message = NS_SIZE;
+    event.widget  = widgetWindow;
+    event.time    = 0; //TBD
+    event.windowSize = &bounds;
+
+    widgetWindow->SetBounds(bounds); 
+    widgetWindow->OnResize(event);
+
+    nsPaintEvent pevent;
+    pevent.message = NS_PAINT;
+    pevent.widget = widgetWindow;
+    pevent.time = 0;
+    pevent.rect = (nsRect *)&bounds;
+    widgetWindow->OnPaint(pevent);
+
+    XtAppAddTimeOut(gAppContext, 50, (XtTimerCallbackProc)nsWindow_ResetResize_Callback, widgetWindow);
+}
+
 //
 // Resize a child window widget. All nsManageWidget's use
 // this to resize. The nsManageWidget passes all resize
 // request's directly to this function.
 
-extern "C" void ResizeWidget(Widget w)
+extern "C" void nsWindow_ResizeWidget(Widget w)
 {
   int width = 0;
   int height = 0;
@@ -1457,14 +1495,14 @@ extern "C" void ResizeWidget(Widget w)
   if (! win->GetResized()) {
     if (win->IsChild()) {
        // Call refresh directly. Don't filter resize events.
-      nsXtWidget_Refresh_Callback(win);
+      nsWindow_Refresh_Callback(win);
     }
     else {
        // KLUDGE: Do actual resize later. This lets most 
        // of the resize events come through before actually 
        // resizing. This is only needed for main (shell) 
        // windows.
-      XtAppAddTimeOut(gAppContext, 250, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, win);
+      XtAppAddTimeOut(gAppContext, 250, (XtTimerCallbackProc)nsWindow_Refresh_Callback, win);
     }
   }
 
