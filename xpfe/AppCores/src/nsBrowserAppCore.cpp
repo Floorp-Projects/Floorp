@@ -21,6 +21,7 @@
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
+#include "nsIClipboardCommands.h"
 #include "pratom.h"
 #include "prprf.h"
 #include "nsIComponentManager.h"
@@ -2252,6 +2253,13 @@ nsBrowserAppCore::Exit()
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   } 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::SelectAll()
+{
+  nsCOMPtr<nsIClipboardCommands> clip(do_QueryInterface(mContentAreaWebShell));
+  return clip->SelectAll();
 }
 
 void

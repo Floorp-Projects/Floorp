@@ -89,6 +89,8 @@ public:
 
   NS_IMETHOD    Exit()=0;
 
+  NS_IMETHOD    SelectAll()=0;
+
   NS_IMETHOD    Find()=0;
 
   NS_IMETHOD    FindNext()=0;
@@ -123,6 +125,7 @@ public:
   NS_IMETHOD    Print();  \
   NS_IMETHOD    Close();  \
   NS_IMETHOD    Exit();  \
+  NS_IMETHOD    SelectAll();  \
   NS_IMETHOD    Find();  \
   NS_IMETHOD    FindNext();  \
 
@@ -156,6 +159,7 @@ public:
   NS_IMETHOD    Print() { return _to Print(); }  \
   NS_IMETHOD    Close() { return _to Close(); }  \
   NS_IMETHOD    Exit() { return _to Exit(); }  \
+  NS_IMETHOD    SelectAll() { return _to SelectAll(); }  \
   NS_IMETHOD    Find() { return _to Find(); }  \
   NS_IMETHOD    FindNext() { return _to FindNext(); }  \
 

@@ -40,6 +40,7 @@ interface BrowserAppCore : BaseAppCore
 	void close();
 	void exit();
 
+	void selectAll();
 	void find();
 	void findNext();
 

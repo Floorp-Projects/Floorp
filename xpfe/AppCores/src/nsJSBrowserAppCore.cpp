@@ -1430,6 +1430,48 @@ BrowserAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
 
 //
+// Native method SelectAll
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.selectall", PR_FALSE, &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+    if (NS_OK != nativeThis->SelectAll()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Find
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1572,6 +1614,7 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"print",          BrowserAppCorePrint,     0},
   {"close",          BrowserAppCoreClose,     0},
   {"exit",          BrowserAppCoreExit,     0},
+  {"selectAll",          BrowserAppCoreSelectAll,     0},
   {"find",          BrowserAppCoreFind,     0},
   {"findNext",          BrowserAppCoreFindNext,     0},
   {0}
