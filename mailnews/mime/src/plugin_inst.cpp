@@ -19,19 +19,22 @@
 #include <string.h>
 #include "mimemoz2.h"
 #include "plugin_inst.h"
-#include "rebuffer.h"
+#include "nsIMimeEmitter.h"
+#include "nsRepository.h"
+
+// Need this for FO_NGLAYOUT
+#include "net.h"
 
 /* net.h includes xp_core.h which has trouble with "Bool" */
 #ifdef XP_UNIX
 #undef Bool
 #endif
-#include "net.h"
 
 static NS_DEFINE_IID(kINetPluginInstanceIID,  NS_INETPLUGININSTANCE_IID);
 static NS_DEFINE_IID(kINetOStreamIID,         NS_INETOSTREAM_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
-nsresult 
+extern "C" nsresult 
 NS_NewMimePluginInstance(MimePluginInstance **aInstancePtrResult)
 {
 	/* Note this new macro for assertions...they can take 
@@ -92,26 +95,41 @@ MimePluginInstance::MimePluginInstance(void)
   NS_INIT_REFCNT();  
   mOutStream = NULL;
   mBridgeStream = NULL;
-  mRebuffer = NULL;
+  mTotalRead = 0;
 }
 
 MimePluginInstance::~MimePluginInstance(void)
 {
 }
 
+static NS_DEFINE_IID(kMimeEmitterCID, NS_MIME_EMITTER_CID);
+
 NS_METHOD
 MimePluginInstance::Initialize(nsINetOStream* stream, const char *stream_name)
 {
+  int         format_out = FO_NGLAYOUT;
+
   mOutStream = stream;
-  mTotalWritten = 0;
-  mTotalRead = 0;
 
-  mBridgeStream = mime_bridge_create_stream(this, stream_name, FO_NGLAYOUT);
-  if (!mBridgeStream)
+  // I really think there needs to be a way to handle multiple output formats
+  // We will need to find an emitter in the repository that supports the appropriate
+  // output format. 
+  nsresult res = nsRepository::CreateInstance(kMimeEmitterCID, 
+                                  NULL, nsIMimeEmitter::GetIID(), 
+                                  (void **) &mEmitter); 
+  if ((NS_OK != res) || (!mEmitter))
+  {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  // Create rebuffering object
-  mRebuffer = new MimeRebuffer();
+  mBridgeStream = mime_bridge_create_stream(this, mEmitter, stream_name, format_out);
+  if (!mBridgeStream)
+  {
+    mEmitter->Release();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mEmitter->Initialize(stream);
   return NS_OK;
 }
 
@@ -124,6 +142,7 @@ MimePluginInstance::Destroy(void)
 NS_METHOD
 MimePluginInstance::GetMIMEOutput(const char* *result)
 {
+//  *result = "image/jpeg";
   *result = "text/html";
   return NS_OK;
 }
@@ -152,9 +171,6 @@ nsresult MimePluginInstance::Close(void)
   return rc;
 }
 
-extern "C" int
-sconverter_write_data(void *streamObj, const char *buf, PRUint32 size);
-
 nsresult MimePluginInstance::Complete(void)
 {
 
@@ -166,7 +182,7 @@ nsresult MimePluginInstance::Complete(void)
   //
   // Now complete the stream!
   //
-  mime_display_stream_complete(mBridgeStream);
+  mime_display_stream_complete((nsMIMESession *)mBridgeStream);
 
   // Make sure to do necessary cleanup!
   InternalCleanup();
@@ -176,22 +192,16 @@ nsresult MimePluginInstance::Complete(void)
 
 nsresult MimePluginInstance::InternalCleanup(void)
 {
-  // If we are here and still have data to write, we should try
-  // to flush it...if we try and fail, we should probably return
-  // an error!
-  if (mRebuffer->GetSize() > 0)
-    sconverter_write_data(this, "", 0);
-
-  printf("TOTAL READ    = %d\n", mTotalRead);
-  printf("TOTAL WRITTEN = %d\n", mTotalWritten);
-  printf("LEFTOVERS = %d\n", mRebuffer->GetSize());
-
   // 
-  // Now do necessary cleanup!
+  // Now complete the emitter and do necessary cleanup!
   //
+  printf("TOTAL READ    = %d\n", mTotalRead);
+  mEmitter->Complete();
+
+  if (mEmitter)
+    mEmitter->Release();
+
   mime_bridge_destroy_stream(mBridgeStream);
-  if (mRebuffer)
-    delete mRebuffer;
 
   Close();
   return NS_OK;
@@ -204,7 +214,7 @@ nsresult MimePluginInstance::Abort(PRInt32 status)
   if (!stream)
     return NS_ERROR_FAILURE;
 
-  mime_display_stream_abort (mBridgeStream, status);
+  mime_display_stream_abort ((nsMIMESession *)mBridgeStream, status);
 
   // Make sure to do necessary cleanup!
   InternalCleanup();
@@ -231,74 +241,10 @@ nsresult MimePluginInstance::Write(const char* aBuf, PRUint32 aCount,
   if (!stream)
     return NS_ERROR_FAILURE;
 
-  // SHERRY mTotalWritten = 0;
   mTotalRead += aCount;
-  rc = mime_display_stream_write(mBridgeStream, aBuf, aCount);
-  // *aWriteCount = mTotalWritten;
-  if (mRebuffer->GetSize() > 0)
-    *aWriteCount = 0;
-  else
-    *aWriteCount = aCount;
+  rc = mime_display_stream_write((nsMIMESession *) mBridgeStream, aBuf, aCount);
+  // SHERRY - returning the amount read here?
+  *aWriteCount = aCount;
   return rc;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// These are routines necessary for the C based routines in libmime
-// to access the new world streams.
-////////////////////////////////////////////////////////////////////////////////
-extern "C" int
-sconverter_write_data(void *streamObj, const char *buf, PRUint32 size)
-{
-  unsigned int        written = 0;
-  MimePluginInstance  *obj = (MimePluginInstance *)streamObj;
-  nsINetOStream       *newStream;
-  PRUint32            rc, aReadyCount = 0;
-
-  if (!obj)
-    return NS_ERROR_FAILURE;
-  newStream = (nsINetOStream *)(obj->mOutStream);
-
-  //
-  // Make sure that the buffer we are "pushing" into has enough room
-  // for the write operation. If not, we have to buffer, return, and get
-  // it on the next time through
-  //
-  rc = newStream->WriteReady(&aReadyCount);
-
-  // First, handle any old buffer data...
-  if (obj->mRebuffer->GetSize() > 0)
-  {
-    if (aReadyCount >= obj->mRebuffer->GetSize())
-    {
-      rc += newStream->Write(obj->mRebuffer->GetBuffer(), 
-                            obj->mRebuffer->GetSize(), &written);
-      obj->mTotalWritten += written;
-      obj->mRebuffer->ReduceBuffer(written);
-    }
-    else
-    {
-      rc += newStream->Write(obj->mRebuffer->GetBuffer(),
-                             aReadyCount, &written);
-      obj->mTotalWritten += written;
-      obj->mRebuffer->ReduceBuffer(written);
-      obj->mRebuffer->IncreaseBuffer(buf, size);
-      return rc;
-    }
-  }
-
-  // Now, deal with the new data the best way possible...
-  rc = newStream->WriteReady(&aReadyCount);
-  if (aReadyCount >= size)
-  {
-    rc += newStream->Write(buf, size, &written);
-    obj->mTotalWritten += written;
-    return rc;
-  }
-  else
-  {
-    rc += newStream->Write(buf, aReadyCount, &written);
-    obj->mTotalWritten += written;
-    obj->mRebuffer->IncreaseBuffer(buf+written, (size-written));
-    return rc;
-  }
-}

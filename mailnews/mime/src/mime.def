@@ -16,5 +16,3 @@
 LIBRARY mime.dll
 
 EXPORTS
-; Will be an XP-COM interface
-	MIME_MessageConverter

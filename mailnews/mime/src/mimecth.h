@@ -100,12 +100,7 @@
  * mime content handler plugins have a name prefixed by the 
  * MIME_PLUGIN_PREFIX.
  */
-#ifdef XP_PC
 #define   MIME_PLUGIN_PREFIX      "mimect-"
-#else
-#define   MIME_PLUGIN_PREFIX      "libmimect-"
-#endif
-
 #define   MIME_PLUGIN_DIR         "mimeplugins"
 
 typedef struct {

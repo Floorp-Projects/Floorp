@@ -117,7 +117,7 @@ struct MimeObjectClass {
   const char *class_name;
   int instance_size;
   struct MimeObjectClass *superclass;
-  int (*class_initialize) (MimeObjectClass *class);
+  int (*class_initialize) (MimeObjectClass *clazz);
   PRBool class_initialized;
 
   /* These are the methods shared by all MIME objects.  See comment above.
@@ -130,18 +130,18 @@ struct MimeObjectClass {
   int (*parse_eof) (MimeObject *obj, PRBool abort_p);
   int (*parse_end) (MimeObject *obj, PRBool abort_p);
 
-  PRBool (*displayable_inline_p) (MimeObjectClass *class, MimeHeaders *hdrs);
+  PRBool (*displayable_inline_p) (MimeObjectClass *clazz, MimeHeaders *hdrs);
 
 #if defined(DEBUG) && defined(XP_UNIX)
   int (*debug_print) (MimeObject *obj, FILE *stream, PRInt32 depth);
 #endif
 };
 
-extern MimeObjectClass mimeObjectClass;
+extern "C" MimeObjectClass mimeObjectClass;
 
 /* this one is typdedef'ed in mimei.h, since it is the base-class. */
 struct MimeObject {
-  MimeObjectClass *class;	/* Pointer to class object, for `type-of' */
+  MimeObjectClass *clazz;	/* Pointer to class object, for `type-of' */
 
   MimeHeaders *headers;		/* The header data associated with this object;
 							   this is where the content-type, disposition,

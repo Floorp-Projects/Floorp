@@ -20,14 +20,17 @@
 #include "plstr.h"
 
 // For xp to ns file translation
-#include "oldnsINetFile.h"
 #include "nsVoidArray.h"
 #ifndef XP_UNIX
 #include "direct.h"
 #endif
 
+#include "nsIComponentManager.h" 
+#include "oldnsINetFile.h"
+
 // The nsINetfile
 static nsINetFile *fileMgr = nsnull;
+
 
 typedef struct _xp_to_nsFile {
     nsFile *nsFp;
@@ -245,5 +248,4 @@ NET_I_XP_FileClose(XP_File fp) {
 
     return 1;
 }
-
 

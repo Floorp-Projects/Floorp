@@ -168,7 +168,7 @@
       static int
       FoobarClassInitialize(FoobarClass *class)
       {
-        class->method = FoobarMethod.
+        clazz->method = FoobarMethod.
         ...etc...
       }
 
@@ -177,7 +177,7 @@
   function.  The way to access earlier methods (methods defined on the
   superclass) is to simply extract them from the superclass's object.
   But note that you CANNOT get at methods by indirecting through
-  object->class->superclass: that will only work to one level, and will
+  object->clazz->superclass: that will only work to one level, and will
   go into a loop if some subclass tries to continue on this method.
 
   The easiest way to do this is to make use of the MIME_SUPERCLASS macro that
@@ -192,7 +192,7 @@
       {
         ((MimeObjectClass*)&MIME_SUPERCLASS)->finalize(object);  //  RIGHT
         parentClass.whatnot.object.finalize(object);             //  (works...)
-        object->class->superclass->finalize(object);             //  WRONG!!
+        object->clazz->superclass->finalize(object);             //  WRONG!!
       }
  */
 
@@ -224,7 +224,7 @@ extern MimeObject *mime_new (MimeObjectClass *clazz, MimeHeaders *hdrs,
 
 /* Destroys a MimeObject (or subclass) and all data associated with it.
  */
-extern void mime_free (MimeObject *object);
+extern "C" void mime_free (MimeObject *object);
 
 /* Given a content-type string, finds and returns an appropriate subclass
    of MimeObject.  A class object is returned.  If `exact_match_p' is true,
@@ -360,7 +360,7 @@ extern int MimeObject_write_separator(MimeObject *);
 /* Random junk
  */
 
-extern int MK_OUT_OF_MEMORY;
+extern "C" int MK_OUT_OF_MEMORY;
 
 
 /* Turn this on if you want to play with the idea of displaying icons in the
@@ -393,8 +393,6 @@ struct MimeDisplayData {            /* This struct is what we hang off of
 #ifdef LOCK_LAST_CACHED_MESSAGE
   char *previous_locked_url;
 #endif /* LOCK_LAST_CACHED_MESSAGE */
-
-  MSG_Pane* last_pane;
 };
 
 #endif /* _MIMEI_H_ */

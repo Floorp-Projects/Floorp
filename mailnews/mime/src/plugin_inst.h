@@ -18,7 +18,7 @@
 #ifndef plugin_inst_h_
 #define plugin_inst_h_
 
-#include "rebuffer.h"
+#include "nsIMimeEmitter.h"
 #include "nsINetOStream.h"
 #include "nsINetPluginInstance.h"
 
@@ -52,9 +52,9 @@ public:
     NS_IMETHOD    WriteReady(PRUint32 *aReadyCount);
   
     // nsIOutputStream interface
-    NS_IMETHOD    Write(const char *aBuf,
-                        PRUint32 aLen,
-                        PRUint32 *aWriteLength);
+    NS_IMETHOD    Write(const char  *aBuf,
+                        PRUint32    aLen,
+                        PRUint32    *aWriteLength);
 
     // nsIBaseStream interface
     NS_IMETHOD    Close(void);
@@ -64,14 +64,16 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     NS_IMETHOD    InternalCleanup(void);
 
-    nsINetOStream *mOutStream;
-    void          *mBridgeStream;
-    PRUint32      mTotalWritten;
-    PRUint32      mTotalRead;
-    MimeRebuffer  *mRebuffer;
+
+    // Counter variable
+    PRInt32         mTotalRead;
+
+    nsINetOStream   *mOutStream;
+    void            *mBridgeStream;
+    nsIMimeEmitter  *mEmitter;
 };
 
 /* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewMimePluginInstance(MimePluginInstance **aInstancePtrResult);
+extern "C" nsresult NS_NewMimePluginInstance(MimePluginInstance **aInstancePtrResult);
 
 #endif /* plugin_inst_h_ */

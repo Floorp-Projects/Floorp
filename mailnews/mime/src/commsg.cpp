@@ -26,6 +26,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "msgcom.h"
+#include "mimemoz2.h"
 
 extern "C" MSG_Pane * MSG_FindPane(MWContext* context, MSG_PaneType type) 
 {
@@ -91,10 +92,10 @@ MSG_GetMessagePaneCallbacks(MSG_Pane* messagepane,
     /* return CastMessagePane(messagepane)->GetMessagePaneCallbacks(closure); */
 }
 
-extern "C" NET_StreamClass *
+extern "C" nsMIMESession *
 MIME_MessageConverter2 (int format_out, void *closure, URL_Struct *url, MWContext *context);
 
-NET_StreamClass *
+nsMIMESession *
 MIME_MessageConverter (int format_out, void *closure,
                        URL_Struct *url, MWContext *context)
 {

@@ -112,11 +112,14 @@ extern MimeHeaders *MimeHeaders_copy (MimeHeaders *srcHeaders);
 
 extern void MimeHeaders_free (MimeHeaders *hdrs);
 
+
 /* Some defines for various standard header field names.
  */
 #define HEADER_BCC							"BCC"
 #define HEADER_CC							"CC"
 #define HEADER_CONTENT_BASE					"Content-Base"
+#define HEADER_CONTENT_LOCATION					"Content-Location"
+#define HEADER_CONTENT_ID					      "Content-ID"
 #define HEADER_CONTENT_DESCRIPTION			"Content-Description"
 #define HEADER_CONTENT_DISPOSITION			"Content-Disposition"
 #define HEADER_CONTENT_ENCODING				"Content-Encoding"
@@ -163,22 +166,25 @@ extern void MimeHeaders_free (MimeHeaders *hdrs);
 #define HEADER_X_SUN_ENCODING_INFO			"X-Sun-Encoding-Info"
 #define HEADER_X_PRIORITY                   "X-Priority"
 
+#define HEADER_PARM_START           "start"     
 #define HEADER_PARM_BOUNDARY				"BOUNDARY"
 #define HEADER_PARM_FILENAME				"FILENAME"
-#define HEADER_PARM_NAME					"NAME"
-#define HEADER_PARM_TYPE					"TYPE"
+#define HEADER_PARM_NAME					  "NAME"
+#define HEADER_PARM_TYPE					  "TYPE"
 
 
 typedef enum {
-  MimeHeadersAll,				/* Show all headers */
+  MimeHeadersAll,				  /* Show all headers */
   MimeHeadersSome,				/* Show all "interesting" headers */
-  MimeHeadersSomeNoRef,			/* Same, but suppress the `References' header
-								   (for when we're printing this message.) */
+  MimeHeadersSomeNoRef,		/* Same, but suppress the `References' header
+								             (for when we're printing this message.) */
   MimeHeadersMicro,				/* Show a one-line header summary */
-  MimeHeadersMicroPlus,			/* Same, but show the full recipient list as
-								   well (To, CC, etc.) */
-  MimeHeadersCitation			/* A one-line summary geared toward use in a
-								   reply citation ("So-and-so wrote:") */
+  MimeHeadersMicroPlus,		/* Same, but show the full recipient list as
+								             well (To, CC, etc.) */
+  MimeHeadersCitation,		/* A one-line summary geared toward use in a
+								             reply citation ("So-and-so wrote:") */
+  MimeHeadersOnly,        /* Just parse and output headers...nothing else! */
+  MimeHeadersNone         /* Skip showing any headers */
 } MimeHeadersState;
 
 
@@ -193,10 +199,6 @@ struct MimeDisplayOptions
 							   be freed by the caller, after the parser
 							   completes (possibly at the same time as the
 							   MimeDisplayOptions itself.) */
-
-  MSG_Pane* pane;				/* The libmsg pane object that corresponds to
-								   what we're showing.  This is used by very
-								   little... */
 
   MimeHeadersState headers;	/* How headers should be displayed. */
   PRBool fancy_headers_p;	/* Whether to do clever formatting of headers

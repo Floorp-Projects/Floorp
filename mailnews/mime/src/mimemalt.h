@@ -34,7 +34,7 @@ struct MimeMultipartAlternativeClass {
   MimeMultipartClass multipart;
 };
 
-extern MimeMultipartAlternativeClass mimeMultipartAlternativeClass;
+extern "C" MimeMultipartAlternativeClass mimeMultipartAlternativeClass;
 
 struct MimeMultipartAlternative {
   MimeMultipart multipart;			/* superclass variables */

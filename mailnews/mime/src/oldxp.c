@@ -23,11 +23,11 @@
 #include "prmem.h"
 #include "plstr.h"
 
-/* RICHIE - THIS HACK MUST GO!!! - INCLUDING FILE TO TRY TO KEEP DIRECTORY CLEAN */
 #ifdef XP_UNIX
 #define PUBLIC
 #endif
 
+/* RICHIE - THIS HACK MUST GO!!! - INCLUDING FILE TO TRY TO KEEP DIRECTORY CLEAN */
 #include "../../../lib/xp/xp_time.c"
 
 PUBLIC void * 
@@ -68,69 +68,6 @@ char *
 WH_TempName(XP_FileType type, const char * prefix)
 {
     MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-/*
-// The caller is responsible for PR_Free()ing the return string
-*/
-PUBLIC char *
-WH_FileName (const char *NetName, XP_FileType type)
-{
-    MOZ_FUNCTION_STUB;
-
-    if (type == xpHTTPCookie) {
-#ifdef XP_PC
-        return PL_strdup("cookies.txt");
-#else
-        return PL_strdup("cookies");
-#endif
-    } else if (type == xpCacheFAT) {
-;//		sprintf(newName, "%s\\fat.db", (const char *)theApp.m_pCacheDir);
-        
-    } else if ((type == xpURL) || (type == xpFileToPost)) {
-        /*
-         * This is the body of XP_NetToDosFileName(...) which is implemented 
-         * for Windows only in fegui.cpp
-         */
-        PRBool bChopSlash = PR_FALSE;
-        char *p, *newName;
-
-        if(!NetName)
-            return NULL;
-        
-        //  If the name is only '/' or begins '//' keep the
-        //    whole name else strip the leading '/'
-
-        if(NetName[0] == '/')
-            bChopSlash = PR_TRUE;
-
-        // save just / as a path
-        if(NetName[0] == '/' && NetName[1] == '\0')
-            bChopSlash = PR_FALSE;
-
-        // spanky Win9X path name
-        if(NetName[0] == '/' && NetName[1] == '/')
-            bChopSlash = PR_FALSE;
-
-        if(bChopSlash)
-            newName = PL_strdup(&(NetName[1]));
-        else
-            newName = PL_strdup(NetName);
-
-        if(!newName)
-            return NULL;
-
-        if( newName[1] == '|' )
-            newName[1] = ':';
-
-        for(p = newName; *p; p++){
-            if( *p == '/' )
-                *p = '\\';
-        }
-        return(newName);
-    }
-
     return NULL;
 }
 

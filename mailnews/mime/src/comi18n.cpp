@@ -1396,7 +1396,7 @@ PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, 
   return INTL_ConvertFromUnicode(to_charset, uniBuffer, uniLength, aBuffer);
 }
 
-char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
+extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
 {
   if (header == 0 || *header == '\0')
     return NULL;

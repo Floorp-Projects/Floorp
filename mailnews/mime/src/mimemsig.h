@@ -121,7 +121,7 @@ struct MimeMultipartSignedClass {
   void (*xlation_free) (void *xlation_closure);
 };
 
-extern MimeMultipartSignedClass mimeMultipartSignedClass;
+extern "C" MimeMultipartSignedClass mimeMultipartSignedClass;
 
 struct MimeMultipartSigned {
   MimeMultipart multipart;

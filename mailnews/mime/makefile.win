@@ -18,6 +18,6 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS=public src cthandlers tests
+DIRS=public src cthandlers emitters tests
 
 include <$(DEPTH)\config\rules.mak>

@@ -47,12 +47,8 @@ DEPTH=..\..\..
 #//------------------------------------------------------------------------
 MODULE  = mime
 REQUIRES= 
-CSS     = mail.css
-JS      = mail.js
-EXPORTS = 	nsRFC822toHTMLStreamConverter.h		\
-		nsMimeObjectClassAccess.h		\
-		nsMimeHeaderConverter.h			\
-		$(NULL)
+#EXPORTS =\
+#		$(NULL)
 
 
 #DEFINES= -DEBUG_rhp -DHAVE_MIME_DATA_SLOT -D_IMPL_NS_HTML 
@@ -68,17 +64,16 @@ OBJS=							\
 # Code for XP-COM Factory creation and interfaces...
 #
 			.\$(OBJDIR)\nsMimeFactory.obj	\
-			.\$(OBJDIR)\nsRFC822toHTMLStreamConverter.obj	\
 			.\$(OBJDIR)\nsMimeObjectClassAccess.obj		\
 			.\$(OBJDIR)\nsMimeHeaderConverter.obj		\
 #
 # Code for stream converter interface to netlib...
 #
 			.\$(OBJDIR)\plugin_inst.obj	\
-			.\$(OBJDIR)\rebuffer.obj	\
-# MIME parsing code
+# Converter CPP files
 			.\$(OBJDIR)\mimecont.obj	\
 			.\$(OBJDIR)\mimeebod.obj	\
+# MIME parsing code - C files for conversion
 			.\$(OBJDIR)\mimeenc.obj		\
 			.\$(OBJDIR)\mimeeobj.obj	\
 			.\$(OBJDIR)\mimehdrs.obj	\
@@ -103,11 +98,11 @@ OBJS=							\
 			.\$(OBJDIR)\mimetpla.obj	\
 			.\$(OBJDIR)\mimetric.obj	\
 			.\$(OBJDIR)\mimeunty.obj	\
-#			.\$(OBJDIR)\mimemoz.obj		\
-			.\$(OBJDIR)\mimemoz2.obj	\
 			.\$(OBJDIR)\mimecth.obj		\
 			.\$(OBJDIR)\mimebuf.obj		\
 			.\$(OBJDIR)\mimecom.obj		\
+#			.\$(OBJDIR)\mimemoz.obj		\
+			.\$(OBJDIR)\mimemoz2.obj	\
 #
 # THIS WILL NEED WORK AFTER WE GET A LIBMSG MORE XP-COM-afied
 #			.\$(OBJDIR)\mimedrft.obj	\
@@ -119,8 +114,11 @@ OBJS=							\
 			.\$(OBJDIR)\oldnet.obj		\
 			.\$(OBJDIR)\oldi18n.obj		\
 			.\$(OBJDIR)\oldmaddr.obj	\
-			.\$(OBJDIR)\oldfile.obj		\
 			.\$(OBJDIR)\oldxp.obj		\
+#
+# THIS IS TO SATISFY THE MIMETYPE DEPENDENCY 
+#
+			.\$(OBJDIR)\oldfile.obj		\
 			$(NULL)
 
 #//------------------------------------------------------------------------
@@ -191,8 +189,6 @@ include <$(DEPTH)/config/rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).lib $(DIST)\lib
-	$(MAKE_INSTALL) .\$(CSS) $(DIST)\bin\res
-	$(MAKE_INSTALL) .\$(JS)  $(DIST)\bin\res
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME)

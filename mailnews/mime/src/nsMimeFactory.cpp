@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "stdio.h"
 #include "pratom.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
@@ -31,7 +31,6 @@
 #ifdef XP_UNIX
 #undef Bool
 #endif
-#include "net.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -39,9 +38,6 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
  * Include all of the headers/defines for interfaces the libmime factory can 
  * generate components for
  */
-#include "nsRFC822toHTMLStreamConverter.h"
-static   NS_DEFINE_CID(kCMimeRFC822HTMLConverterCID, NS_RFC822_HTML_STREAM_CONVERTER_CID);
-
 #include "nsMimeObjectClassAccess.h"
 static   NS_DEFINE_CID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID);
 
@@ -136,14 +132,7 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 	// Whenever you add a new class that supports an interface, plug it in here!!!
 
   // ADD NEW CLASSES HERE!!!	
-	// do they want an an RFC822 - HTML interface ?
-	if (mClassID.Equals(kCMimeRFC822HTMLConverterCID))
-	{
-		res = NS_NewRFC822HTMLConverter((nsIStreamConverter **) &inst);
-		if (res != NS_OK)  // was there a problem creating the object ?
-		  return res;   
-	}
-  else if (mClassID.Equals(kCMimeMimeObjectClassAccessCID))
+  if (mClassID.Equals(kCMimeMimeObjectClassAccessCID))
   {
     res = NS_NewMimeObjectClassAccess((nsIMimeObjectClassAccess **) &inst);
 		if (res != NS_OK)  // was there a problem creating the object ?
@@ -228,7 +217,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  printf("*** Mime being registered\n");
+  printf("*** The NEW and Improved Mime being registered\n");
   
   // Content type handler object class access interface
   rv = compMgr->RegisterComponent(kCMimeMimeObjectClassAccessCID, NULL, NULL, path, 
@@ -242,11 +231,6 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 
   // The new interface for stream conversion                              
   rv = compMgr->RegisterComponent(kINetPluginMIMECID, NULL, PROGRAM_ID, path, 
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-
-  // The original interface (NOT FUNCTIONAL) for stream conversion
-  rv = compMgr->RegisterComponent(kCMimeRFC822HTMLConverterCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
@@ -278,8 +262,6 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   if (NS_FAILED(rv)) goto done;
 	rv = compMgr->UnregisterComponent(kINetPluginMIMECID, path);
   if (NS_FAILED(rv)) goto done;
-  // The original interface (NOT FUNCTIONAL) for stream conversion
-  rv = compMgr->UnregisterComponent(kCMimeRFC822HTMLConverterCID, path);
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);

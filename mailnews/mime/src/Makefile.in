@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=mime
 LIBRARY_NAME=mime
 IS_COMPONENT=1
-EXPORTS = 	nsRFC822toHTMLStreamConverter.h		\
+EXPORTS =\
 		nsMimeObjectClassAccess.h		\
 		nsMimeHeaderConverter.h			\
 		mimetext.h						\
@@ -44,96 +44,62 @@ EXPORTS = 	nsRFC822toHTMLStreamConverter.h		\
 		mimerosetta.h					\
 		$(NULL)
 
-EXPORT_RESOURCE_SAMPLES := \
-		mail.css	\
-		mail.js
-
 CPPSRCS = \
 		nsMimeFactory.cpp	\
-		nsRFC822toHTMLStreamConverter.cpp	\
 		nsMimeObjectClassAccess.cpp		\
 		nsMimeHeaderConverter.cpp		\
 		plugin_inst.cpp	\
-		rebuffer.cpp	\
+		mimecont.cpp	\
+		mimeebod.cpp	\
+		mimeenc.cpp	\
+		mimeeobj.cpp	\
+		mimehdrs.cpp	\
+		mimei.cpp	\
+		mimeiimg.cpp	\
+		mimeleaf.cpp	\
+		mimemalt.cpp	\
+		mimemapl.cpp	\
+		mimemdig.cpp	\
+		mimemmix.cpp	\
+		mimempar.cpp	\
+		mimemrel.cpp	\
+		mimemsg.cpp	\
+		mimemsig.cpp	\
+		mimemult.cpp	\
+		mimeobj.cpp	\
+		mimepbuf.cpp	\
+		mimesun.cpp	\
+		mimetenr.cpp	\
+		mimetext.cpp	\
+		mimethtm.cpp	\
+		mimetpla.cpp	\
+		mimetric.cpp	\
+		mimeunty.cpp	\
+		mimemoz2.cpp	\
+		mimecth.cpp	\
+		mimebuf.cpp	\
+		mimecom.cpp	\
+		comi18n.cpp	\
+		commsg.cpp	\
+		oldfile.cpp	\
 		$(NULL)
 
 CSRCS = \
-		mimecont.c	\
-		mimeebod.c	\
-		mimeenc.c	\
-		mimeeobj.c	\
-		mimehdrs.c	\
-		mimei.c		\
-		mimeiimg.c	\
-		mimeleaf.c	\
-		mimemalt.c	\
-		mimemapl.c	\
-		mimemdig.c	\
-		mimemmix.c	\
-		mimempar.c	\
-		mimemrel.c	\
-		mimemsg.c	\
-		mimemsig.c	\
-		mimemult.c	\
-		mimeobj.c	\
-		mimepbuf.c	\
-		mimesun.c	\
-		mimetenr.c	\
-		mimetext.c	\
-		mimethtm.c	\
-		mimetpla.c	\
-		mimetric.c	\
-		mimeunty.c	\
-		mimemoz2.c	\
-		mimecth.c	\
-		mimebuf.c	\
-		mimecom.c	\
-		comi18n.c	\
-		commsg.c	\
 		oldnet.c	\
 		oldi18n.c	\
 		oldmaddr.c	\
-		oldfile.c	\
 		oldxp.c		\
 		$(NULL)
 
 EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/bin	\
-	$(TK_LIBS) \
-	-labouturl \
-	-lfileurl \
-	-lftpurl \
-	-lgophurl \
-	-lremoturl \
-	-lhttpurl \
-	-lsockstuburl \
-	-lnetcache \
-	-lmimetype \
-	-lnetcnvts \
-	-lnetwork \
-	-lnetlib \
-	-lnetutil \
-	-lreg	\
-	-lxpcom	\
-	-lpwcac \
-	-lmozdbm	\
-	-lxp	\
-	-lpref	\
-	-ljs	\
-	-lraptorbase \
-	-lgmbase$(MOZ_TOOLKIT) \
-	-lsecfree \
-	-lraptorhtml \
-	-lraptorhtmlpars	\
-	-lraptorgfx	\
-	-ljsdom	\
-	-ljsurl	\
-	-limg	\
-	-lpng	\
-	-ljpeg	\
-	-lmozutil	\
-	-lz \
-	$(DIST)/lib/librdfbase_s.a \
+	$(NSPR_LIBS)	\
+	-ljs			\
+	-lraptorbase	\
+	-lpref			\
+	-lsecfree		\
+	-lxp			\
+	-lxpcom			\
 	$(NULL)
 
 #
@@ -146,5 +112,3 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(PROGRAM)
-	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res

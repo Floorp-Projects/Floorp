@@ -50,7 +50,14 @@ extern int MimeHeaders_parse_line (const char *buffer, PRInt32 size,
    output function.
  */
 extern int MimeHeaders_write_headers_html (MimeHeaders *hdrs,
-										   MimeDisplayOptions *opt);
+										   MimeDisplayOptions *opt, 
+                       PRBool             attachment);
+
+/*
+ * Writes all headers to the mime emitter.
+ */
+extern int 
+MimeHeaders_write_all_headers (MimeHeaders *, MimeDisplayOptions *, PRBool);
 
 /* Writes the headers as text/plain.
    This writes out a blank line after the headers, unless
