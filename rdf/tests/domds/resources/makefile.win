@@ -23,19 +23,16 @@ DEPTH=..\..\..\..
 MODULE=rdfdomds
 SAMPLES_DIR = $(DIST)/bin/chrome/communicator/content/domviewer
 
+CHROME_DIR = packages\core
+CHROME_CONTENT_DIR = communicator\content\domviewer
+
+CHROME_CONTENT = \
+	.\DOMDataSourceViewer.css \
+	.\DOMDataSourceViewer.js \
+	.\DOMDataSourceViewer.xul \
+	.\DOMTree.xul \
+	.\domviewer.html \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-	$(MAKE_INSTALL) DOMDataSourceViewer.css $(SAMPLES_DIR)
-	$(MAKE_INSTALL) DOMDataSourceViewer.js $(SAMPLES_DIR)
-	$(MAKE_INSTALL) DOMDataSourceViewer.xul $(SAMPLES_DIR)
-	$(MAKE_INSTALL) DOMTree.xul $(SAMPLES_DIR)
-	$(MAKE_INSTALL) domviewer.html $(SAMPLES_DIR)
-
-clobber::
-	rm -f $(SAMPLES_DIR)\DOMDataSourceViewer.css
-	rm -f $(SAMPLES_DIR)\DOMDataSourceViewer.js
-	rm -f $(SAMPLES_DIR)\DOMDataSourceViewer.xul
-	rm -f $(SAMPLES_DIR)\DOMTree.xul
-	rm -f $(SAMPLES_DIR)\domviewer.html
 

@@ -26,9 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content
+CHROME_DIR = packages/messenger
+CHROME_CONTENT_DIR = messenger/content
 
-EXPORT_RESOURCE_SAMPLES = \
+CHROME_CONTENT = \
 		SearchDialog.xul \
 		SearchOptions.xul \
 		SearchDialog.js \
@@ -41,9 +42,4 @@ EXPORT_RESOURCE_SAMPLES = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 

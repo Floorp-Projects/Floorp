@@ -26,9 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/locale
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = messenger/locale
 
-EXPORT_RESOURCE_SAMPLES = \
+CHROME_L10N = \
 		FilterEditor.dtd \
 		FilterListDialog.dtd \
 		SearchDialog.dtd \
@@ -39,9 +40,4 @@ EXPORT_RESOURCE_SAMPLES = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 

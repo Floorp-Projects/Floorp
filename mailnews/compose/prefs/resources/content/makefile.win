@@ -22,12 +22,13 @@
 DEPTH=..\..\..\..\..
 MODULE=msgcompo
 
+CHROME_DIR = packages\messenger
+CHROME_CONTENT_DIR = messenger\content\messengercompose
+
+CHROME_CONTENT = \
+	.\pref-composing_messages.xul \
+	.\pref-formatting.xul \
+	($NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-install:: 
-	$(MAKE_INSTALL) pref-composing_messages.xul $(DIST)\bin\chrome\messenger\content\messengercompose
-	$(MAKE_INSTALL) pref-formatting.xul $(DIST)\bin\chrome\messenger\content\messengercompose
-
-clobber::
-	rm -f $(DIST)\chrome\messenger\content\messengercompose\pref-composing_messages.xul
-	rm -f $(DIST)\chrome\messenger\content\messengercompose\pref-formatting.xul

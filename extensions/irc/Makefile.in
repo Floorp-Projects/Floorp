@@ -121,7 +121,7 @@ TESTFILES	= \
 
 include $(topsrcdir)/config/rules.mk
 
-INSTALLROOT = $(DIST)/bin/chrome/chatzilla
+INSTALLROOT = $(DIST)/bin/chrome/packages/chatzilla/chatzilla
 
 install::
 	$(INSTALL) $(JSLIBFILES) $(INSTALLROOT)/content/lib/js

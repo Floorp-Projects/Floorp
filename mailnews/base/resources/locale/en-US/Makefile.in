@@ -26,12 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR=messenger
-CHROME_L10N_DIR=locale
-CHROME_TYPE=locale
+CHROME_DIR=locales/en-US
+CHROME_L10N_DIR=messenger/locale
 
 CHROME_L10N = \
-		manifest.rdf \
 		messenger.dtd \
 		messenger.properties \
 		threadpane.dtd \

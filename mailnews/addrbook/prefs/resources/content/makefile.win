@@ -24,8 +24,8 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) pref-addressing.xul $(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) pref-addressbookOverlay.xul $(DIST)\bin\chrome\messenger\content\addressbook
+	$(MAKE_INSTALL) pref-addressing.xul $(DIST)\bin\chrome\packages\messenger\messenger\content\addressbook
+	$(MAKE_INSTALL) pref-addressbookOverlay.xul $(DIST)\bin\chrome\packages\messenger\messenger\content\addressbook
 
 clobber::
-	rm -f $(DIST)\chrome\messenger\content\addressbook\pref-addressing.xul
+	rm -f $(DIST)\chrome\packages\messenger\messenger\content\addressbook\pref-addressing.xul

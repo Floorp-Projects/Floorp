@@ -21,11 +21,11 @@
 
 DEPTH=..\..\..\..\..
 
-CHROME_DIR=communicator
-CHROME_L10N_DIR=locale
+CHROME_DIR=locales\en-US
+CHROME_MISC_DIR=.
 CHROME_TYPE=locale
 
-CHROME_L10N = \
+CHROME_MISC = \
 	.\manifest.rdf \
 	$(NULL)
   

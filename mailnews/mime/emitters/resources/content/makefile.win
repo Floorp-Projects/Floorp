@@ -21,10 +21,12 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR = packages/messenger
+CHROME_CONTENT_DIR = messenger/content
+
+CHROME_CONTENT = \
+	.\attach.js \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-install:: 
-	$(MAKE_INSTALL) attach.js			$(DIST)\bin\chrome\messenger\content
-
-clobber::
-	rm -f $(DIST)\chrome\messenger\content\attach.xul

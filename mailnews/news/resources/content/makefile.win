@@ -21,13 +21,13 @@
 
 DEPTH=..\..\..\..
 
+CHROME_DIR = packages\messenger
+CHROME_CONTENT_DIR = messenger\content
+
+CHROME_CONTENT = \
+	.\downloadheaders.js \
+	.\downloadheaders.xul \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-	$(MAKE_INSTALL) downloadheaders.js $(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) downloadheaders.xul $(DIST)\bin\chrome\messenger\content
-
-clobber::
-	rm -f $(DIST)\bin\chrome\messenger\content\downloadheaders.js
-	rm -f $(DIST)\bin\chrome\messenger\content\downloadheaders.xul
 

@@ -17,12 +17,12 @@
 
 DEPTH=..\..\..\..\..\..
 
+CHROME_DIR = locales\en-US
+CHROME_L10N_DIR = messenger\locale
+
+CHROME_L10N = \
+	.\textImportMsgs.properties \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-        $(MAKE_INSTALL) textImportMsgs.properties $(DIST)\bin\chrome\messenger\locale
-
-clobber::
-        rm -f $(DIST)bin\chrome\messenger\locale\textImportMsgs.properties
-
 

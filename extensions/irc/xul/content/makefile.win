@@ -21,23 +21,20 @@
 
 DEPTH	= ..\..\..\..
 
-CHROME_DIR=chatzilla
-CHROME_CONTENT_DIR=content
-CHROME_TYPE=content
+CHROME_DIR=packages\chatzilla
+CHROME_CONTENT_DIR=chatzilla\content
+
+CHROME_CONTENT = \
+	.\chatzillaOverlay.xul \
+	.\chatzillaOverlay.js \
+	$(NULL)
+
+EXPORT_PREF_CONTENT = \
+	.\pref-irc.xul \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
-EXPORT_PREF_CONTENT = \
-		.\pref-irc.xul \
-		$(NULL)
-
-EXPORT_RESOURCE_CONTENT = \
-		.\chatzillaOverlay.xul \
-		.\chatzillaOverlay.js \
-		.\manifest.rdf\
-		$(NULL)
-
 install:: 
-	$(MAKE_INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)\bin\chrome\communicator\content\pref
-	$(MAKE_INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)\bin\chrome\chatzilla\content
+	$(MAKE_INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)\bin\chrome\packages\core\communicator\content\pref
 

@@ -32,12 +32,17 @@ else
 DIRS		= unix
 endif
 
-CHROME_DIR=global
-CHROME_CONTENT_DIR=content
-
+CHROME_DIR=packages/widget-toolkit
+CHROME_CONTENT_DIR=global/content
+CHROME_MISC_DIR=.
 CHROME_TYPE=content
 
+CHROME_MISC= \
+		manifest.rdf \
+		$(NULL)
+
 CHROME_CONTENT= \
+		manifest.rdf \
 		browserBindings.xul \
 		editorBindings.xul \
 		inputBindings.xul \
@@ -74,7 +79,6 @@ CHROME_CONTENT= \
 		wizardOverlay.js \
 		wizardOverlay.xul \
 		treePopups.js \
-		manifest.rdf \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -21,25 +21,20 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR = packages\messenger
+CHROME_CONTENT_DIR = messenger\content
+
+CHROME_CONTENT = \
+	.\SearchDialog.xul \
+	.\SearchOptions.xul \
+	.\SearchDialog.js \
+	.\searchTermOverlay.js \
+	.\searchTermOverlay.xul \
+	.\FilterListDialog.xul \
+	.\FilterListDialog.js \
+	.\FilterEditor.xul \
+	.\FilterEditor.js \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-install:: 
-	$(MAKE_INSTALL) .\SearchDialog.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) .\SearchOptions.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) .\SearchDialog.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) .\FilterListDialog.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) .\FilterListDialog.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) .\FilterEditor.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) .\FilterEditor.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) .\searchTermOverlay.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) .\searchTermOverlay.js		$(DIST)\bin\chrome\messenger\content
-
-clobber::
-	rm -f $(DIST)\chrome\messenger\content\SearchDialog.xul
-	rm -f $(DIST)\chrome\messenger\content\SearchDialog.js
-	rm -f $(DIST)\chrome\messenger\content\FilterListDialog.xul
-	rm -f $(DIST)\chrome\messenger\content\FilterListDialog.js
-	rm -f $(DIST)\chrome\messenger\content\FilterEditor.xul
-	rm -f $(DIST)\chrome\messenger\content\FilterEditor.js
-	rm -f $(DIST)\chrome\messenger\content\searchTermOverlay.xul
-	rm -f $(DIST)\chrome\messenger\content\searchTermOverlay.js

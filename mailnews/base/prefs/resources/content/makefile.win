@@ -21,93 +21,61 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR = packages\messenger
+CHROME_CONTENT_DIR = messenger\content
+
+CHROME_CONTENT = \
+	.\AccountManager.xul \
+	.\AccountManager.js \
+	.\am-main.xul \
+	.\am-main.js \
+	.\am-identity-advanced.xul \
+	.\am-identity-advanced.js \
+	.\am-server.xul \
+	.\am-serverwithnoidentities.xul \
+	.\am-serverwithnoidentities.js \
+	.\am-server.js \
+	.\am-server-top.xul \
+	.\am-copies.xul \
+	.\am-copies.js \
+	.\am-advanced.xul \
+	.\am-imap-advanced.xul \
+	.\am-imap-advanced.js \
+	.\am-smtp.xul \
+	.\am-smtp.js \
+	.\pref-advanced_overlay.xul \
+	.\pref-appearance_overlay.xul \
+	.\pref-tree_overlay.xul \
+	.\pref-mailnews.xul \
+	.\pref-mailnews.js \
+	.\pref-viewing_messages.xul \
+	.\pref-receipts.xul \
+	.\custreceipt.xul \
+	.\pref-diskspace.xul \
+	.\AccountWizard.xul \
+	.\AccountWizard.js \
+	.\aw-accounttype.xul \
+	.\aw-accounttype.js \
+	.\aw-identity.xul \
+	.\aw-identity.js \
+	.\aw-server.xul \
+	.\aw-newsserver.xul \
+	.\aw-server.js \
+	.\aw-login.xul \
+	.\aw-login.js \
+	.\aw-accname.xul \
+	.\aw-accname.js \
+	.\aw-done.xul \
+	.\aw-done.js \
+	.\accountUtils.js \
+	.\ispUtils.js \
+	.\SmtpServerList.xul \
+	.\SmtpServerList.js \
+	.\SmtpServerEdit.xul \
+	.\SmtpServerEdit.js \
+	.\smtpEditOverlay.xul \
+	.\smtpEditOverlay.js \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-install:: 
-	$(MAKE_INSTALL) AccountManager.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) AccountManager.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-main.xul			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-main.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-identity-advanced.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-identity-advanced.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-server.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-serverwithnoidentities.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-serverwithnoidentities.js    $(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-server.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-server-top.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-copies.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-copies.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-advanced.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-imap-advanced.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-imap-advanced.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-smtp.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) am-smtp.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) pref-advanced_overlay.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) pref-appearance_overlay.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) pref-tree_overlay.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) pref-mailnews.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) pref-mailnews.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) pref-viewing_messages.xul $(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) pref-receipts.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) custreceipt.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) pref-diskspace.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) AccountWizard.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) AccountWizard.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-accounttype.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-accounttype.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-identity.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-identity.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-server.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-newsserver.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-server.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-login.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-login.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-accname.xul		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-accname.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-done.xul			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) aw-done.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) accountUtils.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) ispUtils.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) SmtpServerList.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) SmtpServerList.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) SmtpServerEdit.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) SmtpServerEdit.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) smtpEditOverlay.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) smtpEditOverlay.js	$(DIST)\bin\chrome\messenger\content
-
-clobber::
-	rm -f $(DIST)\chrome\messenger\content\AccountManager.xul
-	rm -f $(DIST)\chrome\messenger\content\AccountManager.js
-	rm -f $(DIST)\chrome\messenger\content\am-main.xul
-	rm -f $(DIST)\chrome\messenger\content\am-main.js
-	rm -f $(DIST)\chrome\messenger\content\am-server.xul
-	rm -f $(DIST)\chrome\messenger\content\am-serverwithnoidentities.xul
-	rm -f $(DIST)\chrome\messenger\content\am-serverwithnoidentities.js
-	rm -f $(DIST)\chrome\messenger\content\am-server.js
-	rm -f $(DIST)\chrome\messenger\content\am-server-top.xul
-	rm -f $(DIST)\chrome\messenger\content\am-copies.xul
-	rm -f $(DIST)\chrome\messenger\content\am-copies.js
-	rm -f $(DIST)\chrome\messenger\content\am-advanced.xul
-	rm -f $(DIST)\chrome\messenger\content\am-imap-advanced.xul
-	rm -f $(DIST)\chrome\messenger\content\am-imap-advanced.js
-	rm -f $(DIST)\chrome\messenger\content\am-smtp.xul
-	rm -f $(DIST)\chrome\messenger\content\am-smtp.js
-	rm -f $(DIST)\chrome\messenger\content\AccountWizard.xul
-	rm -f $(DIST)\chrome\messenger\content\AccountWizard.js
-	rm -f $(DIST)\chrome\messenger\content\aw-accounttype.xul
-	rm -f $(DIST)\chrome\messenger\content\aw-accounttype.js
-	rm -f $(DIST)\chrome\messenger\content\aw-identity.xul
-	rm -f $(DIST)\chrome\messenger\content\aw-server.xul
-	rm -f $(DIST)\chrome\messenger\content\aw-newsserver.xul
-	rm -f $(DIST)\chrome\messenger\content\aw-login.xul
-	rm -f $(DIST)\chrome\messenger\content\aw-accname.xul
-	rm -f $(DIST)\chrome\messenger\content\aw-done.xul
-	rm -f $(DIST)\chrome\messenger\content\pref-tree_overlay.xul
-	rm -f $(DIST)\chrome\messenger\content\pref-appearance_overlay.xul
-	rm -f $(DIST)\chrome\messenger\content\pref-advanced_overlay.xul
-	rm -f $(DIST)\chrome\messenger\content\pref-mailnews.xul
-	rm -f $(DIST)\chrome\messenger\content\pref-mailnews.js
-	rm -f $(DIST)\chrome\messenger\content\pref-viewing_messages.xul
-	rm -f $(DIST)\chrome\messenger\content\pref-receipts.xul
-	rm -f $(DIST)\chrome\messenger\content\custreceipt.xul
-	rm -f $(DIST)\chrome\messenger\content\pref-diskspace.xul

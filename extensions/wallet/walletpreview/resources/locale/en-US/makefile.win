@@ -24,7 +24,7 @@ include <$(DEPTH)\config\rules.mak>
 
 
 clobber::
-        rm -f $(DIST)\bin\chrome\communicator\locale\wallet\WalletPreview.properties
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\WalletPreview.properties
 
 install:: $(DLL)
-        $(MAKE_INSTALL) WalletPreview.properties $(DIST)\bin\chrome\communicator\locale\wallet
+        $(MAKE_INSTALL) WalletPreview.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet

@@ -21,11 +21,12 @@
 
 DEPTH=..\..\..\..
 
+CHROME_DIR = packages\messenger
+CHROME_CONTENT_DIR = messenger\content
+
+CHROME_CONTENT = \
+	.\mime.js \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-	$(MAKE_INSTALL) mime.js $(DIST)\bin\chrome\messenger\content
-
-clobber::
-	rm -f $(DIST)\chrome\messenger\content\mime.js
 

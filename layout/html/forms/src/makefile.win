@@ -90,8 +90,8 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-CHROME_DIR	= communicator
-CHROME_L10N_DIR	= locale\layout
+CHROME_DIR	= locales\en-US
+CHROME_L10N_DIR	= communicator\locale\layout
 CHROME_L10N	= .\HtmlForm.properties
 
 include <$(DEPTH)\config\rules.mak>

@@ -21,13 +21,13 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR = locales\en-US
+CHROME_L10N_DIR = messenger\locale
+
+CHROME_L10N = \
+	.\downloadheaders.dtd \
+	.\news.properties \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-LOCALEDIR=$(DIST)\bin\chrome\messenger\locale
-
-install::
-	$(MAKE_INSTALL) downloadheaders.dtd $(LOCALEDIR)
-	$(MAKE_INSTALL) news.properties	$(LOCALEDIR)
-
-clobber::
-	rm -f $(DIST)\bin\chrome\messenger\locale\*.*

@@ -26,9 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/locale
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = messenger/locale
 
-EXPORT_RESOURCE_SAMPLES = \
+CHROME_L10N = \
 		custreceipt.dtd \
 		pref-viewing_messages.dtd \
 		pref-diskspace.dtd \
@@ -51,15 +52,10 @@ EXPORT_RESOURCE_SAMPLES = \
 		am-identity-advanced.dtd \
 		am-server-top.dtd \
 		prefs.properties \
-        am-serverwithnoidentities.dtd   \
+		am-serverwithnoidentities.dtd   \
 		SmtpServerList.dtd \
 		smtpEditOverlay.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 

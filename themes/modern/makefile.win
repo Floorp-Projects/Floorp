@@ -24,12 +24,15 @@ THEME_ROOT_DEPTH = .
 
 DIRS=communicator editor global messenger navigator
 
-include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-clobber::
-	rm -rf $(DIST)\chrome\skins\$(THEME)\*.*
+CHROME_DIR = skins\$(THEME)
+CHROME_MISC_DIR = .
+CHROME_TYPE = skin
 
-install::
-	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\skins\$(THEME)
+CHROME_MISC = \
+	.\manifest.rdf \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
 

@@ -23,11 +23,8 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\content
-
-
 install::
-	$(MAKE_INSTALL) platformMailnewsOverlay.xul			$(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) platformMailnewsOverlay.xul			$(DIST)\bin\chrome\packages\messenger\messenger\content
 
 clobber::
-	rm -f $(DIST)\chrome\messenger\content\platformMailnewsOverlay.xul
+	rm -f $(DIST)\chrome\packages\messenger\messenger\content\platformMailnewsOverlay.xul

@@ -26,19 +26,19 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/importDialog.xul \
-		$(srcdir)/importDialog.js 	\
-		$(srcdir)/importProgress.xul \
-		$(srcdir)/importProgress.js \
-		$(srcdir)/fieldMapImport.xul \
-		$(srcdir)/fieldMapImport.js \
-		$(srcdir)/fieldMapExport.xul \
-		$(srcdir)/fieldMapExport.js \
+CHROME_DIR = packages/messenger
+CHROME_CONTENT_DIR = messenger/content
+
+CHROME_CONTENT = \
+		importDialog.xul \
+		importDialog.js \
+		importProgress.xul \
+		importProgress.js \
+		fieldMapImport.xul \
+		fieldMapImport.js \
+		fieldMapExport.xul \
+		fieldMapExport.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/messenger/content
 

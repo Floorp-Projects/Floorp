@@ -21,18 +21,15 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = messenger/locale
+
+CHROME_L10N = \
+	.\importMsgs.properties \
+	.\fieldMapExport.dtd \
+	.\fieldMapImport.dtd \
+	.\importDialog.dtd \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-	$(MAKE_INSTALL) importMsgs.properties $(DIST)\bin\chrome\messenger\locale
-	$(MAKE_INSTALL) fieldMapExport.dtd $(DIST)\bin\chrome\messenger\locale
-	$(MAKE_INSTALL) fieldMapImport.dtd $(DIST)\bin\chrome\messenger\locale
-	$(MAKE_INSTALL) importDialog.dtd $(DIST)\bin\chrome\messenger\locale
-
-clobber::
-	rm -f $(DIST)bin\chrome\messenger\locale\importMsgs.properties
-	rm -f $(DIST)bin\chrome\messenger\locale\fieldMapExport.dtd
-	rm -f $(DIST)bin\chrome\messenger\locale\fieldMapImport.dtd
-	rm -f $(DIST)bin\chrome\messenger\locale\importDialog.dtd
-
 

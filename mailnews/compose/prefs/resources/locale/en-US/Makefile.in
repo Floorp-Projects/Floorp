@@ -26,17 +26,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/locale/messengercompose
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = messenger/locale/messengercompose
 
-EXPORT_RESOURCE_SAMPLES = \
+CHROME_L10N = \
 		pref-composing_messages.dtd \
 		pref-formatting.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 

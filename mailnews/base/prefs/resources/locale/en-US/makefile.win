@@ -21,60 +21,36 @@
 
 DEPTH=..\..\..\..\..\..
 
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = messenger/locale
+
+CHROME_L10N = \
+	.\custreceipt.dtd \
+	.\pref-diskspace.dtd \
+	.\pref-mailnews.dtd \
+	.\pref-receipts.dtd \
+	.\pref-viewing_messages.dtd \
+	.\aw-accname.dtd \
+	.\aw-accounttype.dtd \
+	.\aw-done.dtd \
+	.\aw-email.dtd \
+	.\aw-identity.dtd \
+	.\aw-login.dtd \
+	.\aw-mailtype.dtd \
+	.\aw-server.dtd \
+	.\AccountManager.dtd \
+	.\AccountWizard.dtd \
+	.\am-advanced.dtd \
+	.\am-imap-advanced.dtd \
+	.\am-copies.dtd \
+	.\am-main.dtd \
+	.\am-identity-advanced.dtd \
+	.\am-server-top.dtd \
+	.\prefs.properties \
+	.\am-serverwithnoidentities.dtd \
+	.\SmtpServerList.dtd \
+	.\smtpEditOverlay.dtd \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\messenger\locale
-
-install::
-	$(MAKE_INSTALL) custreceipt.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) pref-diskspace.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) pref-mailnews.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) pref-receipts.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) pref-viewing_messages.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) aw-accname.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) aw-accounttype.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) aw-done.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) aw-email.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) aw-identity.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) aw-login.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) aw-mailtype.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) aw-server.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) AccountManager.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) AccountWizard.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) am-advanced.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) am-imap-advanced.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) am-copies.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) am-main.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) am-identity-advanced.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) am-server-top.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) prefs.properties $(DISTBROWSER)
-	$(MAKE_INSTALL) am-serverwithnoidentities.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) SmtpServerList.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) smtpEditOverlay.dtd $(DISTBROWSER)
-
-clobber::
-	rm -f $(DIST)\bin\chrome\messenger\locale\custreceipt.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\pref-diskspace.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\pref-mailnews.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\pref-receipts.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\pref-viewing_messages.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\aw-accname.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\aw-accounttype.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\aw-done.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\aw-email.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\aw-identity.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\aw-login.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\aw-mailtype.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\aw-server.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\AccountManager.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\AccountWizard.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\am-advanced.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\am-imap-advanced.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\am-copies.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\am-main.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\am-identity-advanced.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\am-server-top.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\prefs.properties
-	rm -f $(DIST)\bin\chrome\messenger\locale\am-serverwithnoidentities.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\SmtpServerList.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\smtpEditOverlay.dtd

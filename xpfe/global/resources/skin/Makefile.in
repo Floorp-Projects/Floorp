@@ -32,8 +32,6 @@ else
 DIRS		= unix
 endif
 
-CHROME_DIR=global
-
 EXPORT_CHROME	= xul.css \
 		htmlBindings.xml \
 		xulBindings.xml \

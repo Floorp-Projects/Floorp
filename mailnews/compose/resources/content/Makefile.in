@@ -26,9 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content/messengercompose
+CHROME_DIR = packages/messenger
+CHROME_CONTENT_DIR = messenger/content/messengercompose
 
-EXPORT_RESOURCE_SAMPLES = \
+CHROME_CONTENT = \
 		messengercompose.xul \
 		MsgComposeCommands.js \
 		addressingWidgetOverlay.js \
@@ -39,7 +40,3 @@ EXPORT_RESOURCE_SAMPLES = \
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)

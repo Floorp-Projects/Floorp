@@ -26,21 +26,18 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR=chatzilla
-CHROME_L10N_DIR=locale
-CHROME_TYPE=locale
+CHROME_DIR=packages/chatzilla
+CHROME_L10N_DIR=chatzilla/locale
+
+CHROME_L10N = \
+	$(srcdir)/chatzillaOverlay.dtd \
+	$(NULL)
 
 EXPORT_PREF_CONTENT = \
 	$(srcdir)/pref-irc.dtd \
 	$(NULL)
 
-EXPORT_RESOURCE_CONTENT = \
-	$(srcdir)/chatzillaOverlay.dtd \
-	$(srcdir)/manifest.rdf \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 install:: 
-	$(INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)/bin/chrome/communicator/locale/pref
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/chatzilla/locale
+	$(INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)/bin/chrome/locales/en-US/communicator/locale/pref

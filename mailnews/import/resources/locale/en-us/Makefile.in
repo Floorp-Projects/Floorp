@@ -26,15 +26,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/importDialog.dtd \
-		$(srcdir)/fieldMapImport.dtd \
-		$(srcdir)/fieldMapImport.dtd \
-		$(srcdir)/importMsgs.properties \
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = messenger/locale
+
+CHROME_L10N = \
+		importDialog.dtd \
+		fieldMapImport.dtd \
+		fieldMapImport.dtd \
+		importMsgs.properties \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/messenger/locale
 

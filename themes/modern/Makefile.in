@@ -28,9 +28,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)
+CHROME_DIR = skins/$(THEME)
+CHROME_MISC_DIR = .
+CHROME_TYPE = skin
 
-EXPORT_RESOURCE_SAMPLES = \
+CHROME_MISC = \
 	manifest.rdf \
 	$(NULL)
 
@@ -38,7 +40,3 @@ DIRS  = communicator global navigator editor messenger
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE += $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)

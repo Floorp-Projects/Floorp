@@ -23,13 +23,13 @@
 
 DEPTH=..\..\..\..\..
 
-include <$(DEPTH)\config\rules.mak>
-
-CHROME_DIR = global
+CHROME_DIR = packages\widget-toolkit
+CHROME_CONTENT_DIR = global\content
 
 CHROME_CONTENT = \
-	console.js \
-        console.xul \
+	.\console.js \
+        .\console.xul \
         $(NULL)
 
-CHROME_TYPE = content
+include <$(DEPTH)\config\rules.mak>
+

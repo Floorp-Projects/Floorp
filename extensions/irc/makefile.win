@@ -118,7 +118,7 @@ TESTFILES = \
 
 include <$(DEPTH)\config\rules.mak>
 
-INSTALLROOT = $(DIST)\bin\chrome\chatzilla
+INSTALLROOT = $(DIST)\bin\chrome\packages\chatzilla\chatzilla
 
 install::
     $(MAKE_INSTALL) $(JSLIBFILES) $(INSTALLROOT)\content\lib\js

@@ -39,9 +39,9 @@ VPATH      = @srcdir@
 srcdir     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR	= xmlterm
+CHROME_DIR	= packages/xmlterm
+CHROME_CONTENT_DIR = xmlterm/content
 
-CHROME_CONTENT_DIR = content
 CHROME_CONTENT	= \
 		xmlterm.html \
 		xmlterm.xul \
@@ -53,7 +53,7 @@ CHROME_CONTENT	= \
 		xmltblank.html \
 		$(NULL)
 
-CHROME_SKIN_DIR = skin
+CHROME_SKIN_DIR = xmlterm/skin
 CHROME_SKIN	= \
 		xmlterm.css \
 		xmltpage.css \

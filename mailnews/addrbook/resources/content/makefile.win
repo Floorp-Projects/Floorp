@@ -21,51 +21,31 @@
 
 DEPTH=..\..\..\..
 
+CHROME_DIR=packages\messenger
+CHROME_CONTENT_DIR=messenger\content\addressbook
+
+CHROME_CONTENT = \
+	.\abAddressBookNameDialog.js \
+	.\abAddressBookNameDialog.xul \
+	.\abCardOverlay.js \
+	.\abCardOverlay.xul \
+	.\abCardViewOverlay.js \
+	.\abCardViewOverlay.xul \
+	.\abCommon.js \
+	.\abDirTreeOverlay.xul \
+	.\abEditCardDialog.xul \
+	.\abNewCardDialog.xul \
+	.\abResultsTreeOverlay.xul \
+	.\abSelectAddressesDialog.js \
+	.\abSelectAddressesDialog.xul \
+	.\addressbook.js \
+	.\addressbook.xul \
+	.\abDragDrop.js \
+	.\abMailListDialog.xul \
+	.\abMailListDialog.js \
+	.\abListOverlay.xul \
+	.\abEditListDialog.xul \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-	$(MAKE_INSTALL) abAddressBookNameDialog.js	$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abAddressBookNameDialog.xul	$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abCardOverlay.js			$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abCardOverlay.xul			$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abCardViewOverlay.js		$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abCardViewOverlay.xul		$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abCommon.js			 		$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abDirTreeOverlay.xul		$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abEditCardDialog.xul		$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abNewCardDialog.xul			$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abResultsTreeOverlay.xul	$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abSelectAddressesDialog.js	$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abSelectAddressesDialog.xul	$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) addressbook.js				$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) addressbook.xul				$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abDragDrop.js				$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abMailListDialog.xul		$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abMailListDialog.js			$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abListOverlay.xul			$(DIST)\bin\chrome\messenger\content\addressbook
-	$(MAKE_INSTALL) abEditListDialog.xul		$(DIST)\bin\chrome\messenger\content\addressbook
-
-clobber::
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abAddressBookNameDialog.js
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abAddressBookNameDialog.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abCardOverlay.js
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abCardOverlay.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abCardViewOverlay.js
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abCardViewOverlay.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abCommon.js
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abDirTreeOverlay.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abEditCardDialog.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abNewCardDialog.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abResultsTreeOverlay.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abSelectAddressesDialog.js
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abSelectAddressesDialog.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\addressbook.js
-	rm -f $(DIST)\chrome\messenger\content\addressbook\addressbook.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abDragDrop.js
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abMailListDialog.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abMailListDialog.js
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abListOverlay.xul
-	rm -f $(DIST)\chrome\messenger\content\addressbook\abEditListDialog.xul
-
-
 

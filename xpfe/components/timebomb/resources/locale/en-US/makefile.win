@@ -21,10 +21,12 @@
 
 DEPTH=..\..\..\..\..\..
 
+CHROME_DIR = locales\en-US
+CHROME_L10N_DIR = communicator\locale\timebomb
+
+CHROME_L10N = \
+	.\timebomb.dtd \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-install::
-	$(MAKE_INSTALL) timebomb.dtd  $(DIST)\bin\chrome\communicator\locale\timebomb
-
-clobber::
-  rm -f $(DIST)\bin\chrome\communicator\locale\timebomb\*.*
