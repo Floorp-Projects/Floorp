@@ -2445,21 +2445,9 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
   nsresult result=NS_OK;
   
   if(eOnStart==mParserContext->mStreamListenerState) {
-    nsAutoString temp;
-
     //If you're here, then OnDataAvailable() never got called. 
     //Prior to necko, we never dealt with this case, but the problem may have existed.
-    //What we'll do (for now at least) is construct a blank HTML document.
-    if (!mParserContext->mMimeType.EqualsLiteral(kPlainTextContentType))
-    {
-      temp.AssignLiteral("<html><body></body></html>");
-    }
-    // XXX: until bug #108067 has been fixed we must ensure that *something*
-    //      is in the scanner!  so, for now just put in a single space.
-    else {
-      temp.AssignLiteral(" ");
-    }
-    mParserContext->mScanner->Append(temp);
+    //Everybody can live with an empty input stream, so just resume parsing.
     result=ResumeParse(PR_TRUE,PR_TRUE);    
   }
 
