@@ -66,13 +66,13 @@ protected:
    nsresult CreateDocShell(const PRUnichar* contentType);
 
 protected:
-   nsCOMPtr<nsISupportsArray> m_ListenerList;
-   nsCOMPtr<nsIDocShell>      m_DocShell;
-   PRBool                     m_Created;
-   nsWebBrowserInitInfo*      m_InitInfo;
-   nsCOMPtr<nsIWidget>        m_ParentWidget;
-   nativeWindow               m_ParentNativeWindow;
-   nsCOMPtr<nsIWidget>        m_InternalWidget;
+   nsCOMPtr<nsISupportsArray> mListenerList;
+   nsCOMPtr<nsIDocShell>      mDocShell;
+   PRBool                     mCreated;
+   nsWebBrowserInitInfo*      mInitInfo;
+   nsCOMPtr<nsIWidget>        mParentWidget;
+   nativeWindow               mParentNativeWindow;
+   nsCOMPtr<nsIWidget>        mInternalWidget;
 };
 
 #endif /* nsWebBrowser_h__ */
