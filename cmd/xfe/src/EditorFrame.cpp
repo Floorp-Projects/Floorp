@@ -29,6 +29,7 @@
 #include "PrefsDialog.h"
 #include "xpassert.h"
 #include "csid.h"
+#include "prefapi.h"
 
 #include "DtWidgets/ComboBox.h"
 
@@ -645,10 +646,13 @@ fe_EditorNewPopupMenu(XFE_Frame* frame, Widget parent, MWContext *context)
 	 */
 	popup->addMenuSpec(fe_editor_edit_popups);
 	
+
 	/*
 	 *    If they accidently deleted the menubar, help them out.
 	 */
-	if (!CONTEXT_DATA(context)->show_menubar_p)
+    XP_Bool show_menubar;
+    PREF_GetBoolPref("browser.chrome.show_menubar",&show_menubar);
+	if (!show_menubar)
 		popup->addMenuSpec(fe_editor_show_options_popups);
 
 	return popup;
@@ -806,12 +810,9 @@ XFE_EditorFrame::XFE_EditorFrame(Widget toplevel,
 		(XFE_FunctionNotification)newPageLoading_cb);
 
   /*
-   *    Hacks to make old XFE code work. These should go away
+   *    Hack to make old XFE code work. This should go away
    *    as old XFE code is sent to pasture.
    */
-  CONTEXT_DATA (m_context)->show_character_toolbar_p = TRUE;
-  CONTEXT_DATA (m_context)->show_paragraph_toolbar_p = TRUE;
-  CONTEXT_DATA (m_context)->top_area = getChromeParent();
   CONTEXT_DATA (m_context)->menubar = m_menubar->getBaseWidget();
 
   setView(editorview);
