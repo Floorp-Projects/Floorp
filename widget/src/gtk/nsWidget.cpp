@@ -1349,6 +1349,10 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   // If there is a button motion target, use that instead of the
   // current widget
 
+  // XXX pav
+  // i'm confused as to wtf this sButtonMoetionTarget thing is for.
+  // so i'm not going to use it.
+
   // XXX ramiro
   // 
   // Because of dynamic widget creation and destruction, this could
@@ -1362,6 +1366,22 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   // the GtkWidget corresponding to the sButtonMotionTarget and
   // marking if nsnull in there.
   //
+  gint x, y;
+
+  if (aGdkMotionEvent)
+  {
+    x = aGdkMotionEvent->x;
+    y = aGdkMotionEvent->y;
+ 
+    gdk_window_get_pointer(aGdkMotionEvent->window, &x, &y, nsnull);
+
+    event.point.x = nscoord(x);
+    event.point.y = nscoord(y);
+
+    event.widget = this;
+  }
+
+#if 0
   if (nsnull != sButtonMotionTarget)
   {
     gint diffX;
@@ -1396,7 +1416,8 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   {
     event.time = aGdkMotionEvent->time;
   }
-  
+#endif
+
   AddRef();
 
   DispatchMouseEvent(event);

@@ -293,7 +293,8 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                  GDK_FOCUS_CHANGE_MASK |
                  GDK_KEY_PRESS_MASK |
                  GDK_KEY_RELEASE_MASK |
-                 GDK_POINTER_MOTION_MASK);
+                 GDK_POINTER_MOTION_MASK |
+                 GDK_POINTER_MOTION_HINT_MASK);
 
 
   switch(mWindowType)
