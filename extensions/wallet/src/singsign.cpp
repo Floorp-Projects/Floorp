@@ -1999,11 +1999,15 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
     if (j<signonData->Count()) {
       data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
 
-      nsAutoString userName;
-      if (NS_SUCCEEDED(si_Decrypt (data->value, userName))) {
-        if (si_OkToSave(URLName, userName)) {
-          si_PutData(URLName, signonData, PR_TRUE);
+      if (si_OkToSave(URLName, data2->value)) {
+        for (j=0; j<signonData->Count(); j++) {
+          data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
+          nsAutoString value = data2->value;
+          if (NS_FAILED(si_Encrypt(value, data2->value))) {
+            return;
+          }
         }
+        si_PutData(URLName, signonData, PR_TRUE);
       }
     }
   } else if (passwordCount == 2) {
@@ -2019,18 +2023,13 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
     data1 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(pswd[1]));
     data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(pswd[2]));
     if (data0->value.Length() == 0 || data1->value.Length() == 0 ||
-        data2->value.Length() == 0 ||
-        !si_CompareEncryptedToEncrypted(data1->value, data2->value)) {
+        data2->value.Length() == 0 || data1->value != data2->value) {
       return;
     }
 
     /* ask user if this is a password change */
-    nsAutoString password;
-    if (NS_FAILED(si_Decrypt (data0->value, password))) {
-      return;
-    }
     si_lock_signon_list();
-    user = si_GetURLAndUserForChangeForm(password);
+    user = si_GetURLAndUserForChangeForm(data0->value);
 
     /* return if user said no */
     if (!user) {
@@ -2061,10 +2060,11 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
 //    si_Randomize(data1->value);
 //    data2->value = data1->value;
 
-    data->value = data1->value;
-    si_signon_list_changed = PR_TRUE;
-    si_SaveSignonDataLocked();
-    si_unlock_signon_list();
+    if (NS_SUCCEEDED(si_Encrypt(data1->value, data->value))) {
+      si_signon_list_changed = PR_TRUE;
+      si_SaveSignonDataLocked();
+      si_unlock_signon_list();
+    }
   }
 }
 

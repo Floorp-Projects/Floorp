@@ -3471,29 +3471,26 @@ WLLT_OnSubmit(nsIContent* currentForm) {
                       rv = inputElement->GetName(field);
                       if (NS_SUCCEEDED(rv)) {
                         data = new si_SignonDataStruct;
-                        if (NS_FAILED(Wallet_Encrypt (value, data->value))) {
-                          delete data;
+                        data->value = value;
+                        if (field.CharAt(0) == '\\') {
+                          /*
+                           * Note that data saved for browser-generated logins (e.g. http
+                           * authentication) use artificial field names starting with
+                           * \= (see USERNAMEFIELD and PASSWORDFIELD in singsign.cpp).  To
+                           * avoid mistakes whereby saved logins for http authentication is
+                           * then prefilled into a field on the html form at the same URL,
+                           * we will prevent html field names from starting with \=.  We
+                           * do that by doubling up a backslash if it appears in the first
+                           * character position
+                           */
+                          data->name = nsAutoString('\\');
+                          data->name.Append(field);
+
                         } else {
-                          if (field.CharAt(0) == '\\') {
-                            /*
-                             * Note that data saved for browser-generated logins (e.g. http
-                             * authentication) use artificial field names starting with
-                             * \= (see USERNAMEFIELD and PASSWORDFIELD in singsign.cpp).  To
-                             * avoid mistakes whereby saved logins for http authentication is
-                             * then prefilled into a field on the html form at the same URL,
-                             * we will prevent html field names from starting with \=.  We
-                             * do that by doubling up a backslash if it appears in the first
-                             * character position
-                             */
-                            data->name = nsAutoString('\\');
-                            data->name.Append(field);
-                          
-                          } else {
-                            data->name = field;
-                          }
-                          data->isPassword = isPassword;
-                          signonData->AppendElement(data);
+                          data->name = field;
                         }
+                        data->isPassword = isPassword;
+                        signonData->AppendElement(data);
 #ifdef AutoCapture
                         if (passwordcount == 0) {
                           /* get schema from field */
