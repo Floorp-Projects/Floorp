@@ -25,7 +25,7 @@
  *    -- changed constant short declarations in Token and ExprLexer to
  *       enumerations, commented with //--LF
  * 
- * $Id: ExprLexer.h,v 1.6 2001/04/08 14:36:50 peterv%netscape.com Exp $
+ * $Id: ExprLexer.h,v 1.7 2001/05/12 11:59:51 peterv%netscape.com Exp $
  */
 
 
@@ -41,7 +41,7 @@
  * This class was ported from XSL:P, an open source Java based 
  * XSLT processor, written by yours truly.
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2001/04/08 14:36:50 $
+ * @version $Revision: 1.7 $ $Date: 2001/05/12 11:59:51 $
 **/
 class Token {
 
@@ -100,7 +100,7 @@ public:
         //-- node type tokens
         COMMENT,
         NODE,
-        PI,
+        PROC_INST,
         TEXT
     };
 
@@ -173,7 +173,7 @@ public:
     //-- Nodetype tokens
     static const String COMMENT;
     static const String NODE;
-    static const String PI;
+    static const String PROC_INST;
     static const String TEXT;
 
     //-- boolean

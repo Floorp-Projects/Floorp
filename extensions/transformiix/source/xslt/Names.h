@@ -27,7 +27,7 @@
  *       W3C XPath 1.0 Recommendation
  *    -- Added lang attr declaration
 
- * $Id: Names.h,v 1.8 2001/04/08 14:35:15 peterv%netscape.com Exp $
+ * $Id: Names.h,v 1.9 2001/05/12 12:00:17 peterv%netscape.com Exp $
  */
 
 #ifndef TRANSFRMX_NAMES_H
@@ -64,7 +64,7 @@ extern const String NUMBER;
 extern const String OTHERWISE;
 extern const String OUTPUT;
 extern const String PARAM;
-extern const String PI;
+extern const String PROC_INST;
 extern const String PRESERVE_SPACE;
 extern const String STRIP_SPACE;
 extern const String SORT;

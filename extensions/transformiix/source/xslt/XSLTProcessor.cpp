@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.43 2001/04/17 11:13:13 peterv%netscape.com Exp $
+ * $Id: XSLTProcessor.cpp,v 1.44 2001/05/12 12:00:31 peterv%netscape.com Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -72,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.43 $ $Date: 2001/04/17 11:13:13 $
+ * @version $Revision: 1.44 $ $Date: 2001/05/12 12:00:31 $
 **/
 
 /**
@@ -115,7 +115,7 @@ XSLTProcessor::XSLTProcessor() {
     xslTypes.put(OTHERWISE,       new XSLType(XSLType::OTHERWISE));
     xslTypes.put(OUTPUT,          new XSLType(XSLType::OUTPUT));
     xslTypes.put(PARAM,           new XSLType(XSLType::PARAM));
-    xslTypes.put(PI,              new XSLType(XSLType::PI));
+    xslTypes.put(PROC_INST,       new XSLType(XSLType::PROC_INST));
     xslTypes.put(PRESERVE_SPACE,  new XSLType(XSLType::PRESERVE_SPACE));
     xslTypes.put(STRIP_SPACE,     new XSLType(XSLType::STRIP_SPACE));
     xslTypes.put(SORT,            new XSLType(XSLType::SORT));
@@ -1202,12 +1202,12 @@ void XSLTProcessor::processAction
                 //-- ignore in this loop already processed
                 break;
             //-- xsl:processing-instruction
-            case XSLType::PI:
+            case XSLType::PROC_INST:
             {
                 Attr* attr = actionElement->getAttributeNode(NAME_ATTR);
                 if ( !attr) {
                     String err("missing required name attribute for xsl:");
-                    err.append(PI);
+                    err.append(PROC_INST);
                     notifyError(err);
                 }
                 else {
@@ -1218,7 +1218,7 @@ void XSLTProcessor::processAction
                     //-- check name validity
                     if ( !XMLUtils::isValidQName(name)) {
                         String err("error processing xsl:");
-                        err.append(PI);
+                        err.append(PROC_INST);
                         err.append(", '");
                         err.append(name);
                         err.append("' is not a valid QName.");
@@ -1231,7 +1231,7 @@ void XSLTProcessor::processAction
                     String value;
                     if (!getText(dfrag, value, MB_FALSE,MB_TRUE)) {
                         String warning(NON_TEXT_TEMPLATE_WARNING);
-                        warning.append(PI);
+                        warning.append(PROC_INST);
                         notifyError(warning, ErrorObserver::WARNING);
                     }
                     XMLUtils::normalizePIValue(value);
