@@ -575,6 +575,23 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
 
   if (!aChannel) return NS_ERROR_NULL_POINTER;
 
+  // Let the window context's uriListener know that the open is starting.  This
+  // gives that window a chance to abort the load process.
+  nsCOMPtr<nsIURIContentListener> winContextListener(do_GetInterface(aOriginalWindowContext));
+  if(winContextListener)
+    {
+    nsCOMPtr<nsIURI> uri;
+    aChannel->GetURI(getter_AddRefs(uri));
+    if(uri)
+      {
+      PRBool abort = PR_FALSE;
+      winContextListener->OnStartURIOpen(uri, aWindowTarget, &abort);
+         
+      if(abort)
+         return NS_OK;
+      }   
+    }
+
   nsCOMPtr<nsISupports> retargetedWindowContext;
   NS_ENSURE_SUCCESS(GetTarget(aWindowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
 

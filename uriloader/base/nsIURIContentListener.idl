@@ -38,6 +38,17 @@ interface nsIURI;
 [scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
 interface nsIURIContentListener : nsISupports
 {
+  /*
+	  Gives the content listener first crack at stopping a load before it
+	  happens.
+	  
+	  aURI --> the uri we are going to try and open.
+	  aWindowTarget --> the window target passed to the uriloader to open.
+	  aAbortOpen --> specifies that the open should be aborted.  
+  */
+  void onStartURIOpen(in nsIURI aURI, in string aWindowTarget, 
+	 out boolean aAbortOpen);
+
   /* Give the content listener first crack at forcing us to use
      a specific content handler. Content listener's do not need to 
      support this method if they want the uri dispatcher to find the
