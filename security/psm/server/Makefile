@@ -310,6 +310,7 @@ build_xpi: $(PROGRAM)
 ifneq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -m 775 start-psm xpi/psm
 endif
+	$(NSINSTALL) -m 755 $(PROGRAM) xpi/psm
 	cp $(INSTALL_JS) xpi/install.js
 	cd xpi; zip -T -r ../$(PLATFORM)/psm.xpi psm install.js
 	rm -rf xpi
