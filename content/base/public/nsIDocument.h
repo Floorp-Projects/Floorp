@@ -142,10 +142,10 @@ public:
    * it's presentation context (presentation context's <b>must not</b> be
    * shared among multiple presentation shell's).
    */
-  virtual nsresult CreateShell(nsIPresContext* aContext,
-                               nsIViewManager* aViewManager,
-                               nsIStyleSet* aStyleSet,
-                               nsIPresShell** aInstancePtrResult) = 0;
+  NS_IMETHOD CreateShell(nsIPresContext* aContext,
+                         nsIViewManager* aViewManager,
+                         nsIStyleSet* aStyleSet,
+                         nsIPresShell** aInstancePtrResult) = 0;
   virtual PRBool DeleteShell(nsIPresShell* aShell) = 0;
   virtual PRInt32 GetNumberOfShells() = 0;
   virtual nsIPresShell* GetShellAt(PRInt32 aIndex) = 0;
