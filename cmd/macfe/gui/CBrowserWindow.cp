@@ -472,6 +472,12 @@ void CBrowserWindow::FindCommandStatus(
 			outEnabled = (mContext) ? !(mIsRootDocInfo || mIsViewSource || mIsHTMLHelp) : true;
 			break;
 		
+		case cmd_ToolbarButton:
+			// we always want the toolbar buttons that don't correspond to any real command (that are
+			// either HT containers or just simple url's) to be enabled and clickable.
+			outEnabled = true;
+			break;
+			
 		case cmd_Stop:
 		{
 			// Default name is STOP_LOADING_INDEX
