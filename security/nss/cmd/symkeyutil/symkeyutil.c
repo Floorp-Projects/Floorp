@@ -55,7 +55,6 @@
 #include <string.h>
 
 #if defined(WIN32)
-#include "fcntl.h"
 #include "io.h"
 #endif
 
@@ -79,7 +78,7 @@
 #include "nss.h"
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 
 typedef struct _KeyTypes {
     CK_KEY_TYPE	keyType;
@@ -277,7 +276,7 @@ BufToHex(SECItem *outbuf)
 {
     int len = outbuf->len * 2 +1;
     char *string, *ptr;
-    int i;
+    unsigned int i;
 
     string = PORT_Alloc(len);
 
