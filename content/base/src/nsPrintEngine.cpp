@@ -253,6 +253,8 @@ NS_IMPL_ISUPPORTS2(nsPrintEngine,
 //-- nsPrintEngine Class Impl
 //---------------------------------------------------
 nsPrintEngine::nsPrintEngine() :
+  mIsCreatingPrintPreview(PR_FALSE),
+  mIsDoingPrinting(PR_FALSE),
   mDocViewerPrint(nsnull),
   mDocViewer(nsnull),
   mContainer(nsnull),
@@ -267,9 +269,7 @@ nsPrintEngine::nsPrintEngine() :
   mOldPrtPreview(nsnull),
   mIsCachingPresentation(PR_FALSE),
   mCachedPresObj(nsnull),
-  mDebugFile(nsnull),
-  mIsCreatingPrintPreview(PR_FALSE),
-  mIsDoingPrinting(PR_FALSE)
+  mDebugFile(nsnull)
 
 {
   NS_INIT_ISUPPORTS();
