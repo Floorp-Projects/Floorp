@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.13 $ 
-# $Date: 2001/10/10 15:09:06 $ 
+# $Revision: 1.14 $ 
+# $Date: 2001/10/18 15:05:51 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -102,6 +102,12 @@ $ERROR_LOG = "/var/log/tinderbox2/tinderbox2.log";
   
 # Where the daemon mode lock (for all trees) is placed
 $LOCK_FILE = $TINDERBOX_HTML_DIR."/tinderd.lock";
+
+# Where to place file containing pid, this file makes writing
+# /etc/rc.d/inid.d scripts easier and its naming and location are OS
+# specific. 
+
+$PID_DIR = "/var/run/";
 
 # The time between auto refreshes for all pages in seconds.
 

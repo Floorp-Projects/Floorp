@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.9 $
-# $Date: 2001/09/06 18:15:53 $
+# $Revision: 1.10 $
+# $Date: 2001/10/18 15:05:53 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -294,6 +294,9 @@ sub fatal_error {
     print LOG "[$LOCALTIME] $_";
   }
   print LOG "\n";
+
+  unlink ($PID_FILE);
+
   die("\n");
 }
 
@@ -330,6 +333,19 @@ sub daemonize {
 
     setsid;
     umask 0;
+
+    # Do I want to stop multiple instances from running?  I am not
+    # sure how to deal with multiple instances.
+
+    if ($PID_FILE) {
+        die("Pid file: $PID_FILE already exists.\n");
+    }
+
+    # This file makes writing /etc/rc.d/inid.d scripts easier and its
+    # naming and location are OS specific.  
+    
+    my $pid="$$\n";  
+    overwrite_file($PID_FILE, $pid);  
 
     print "$PROGRAM pid: $$\n";
 

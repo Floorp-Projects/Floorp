@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.23 $ 
-# $Date: 2001/10/10 15:08:24 $ 
+# $Revision: 1.24 $ 
+# $Date: 2001/10/18 15:05:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -120,6 +120,15 @@ sub set_static_vars {
   
   $LOCK_FILE = ( $TinderConfig::LOCK_FILE ||
                  "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock");
+
+  # Where to place file containing pid, this file makes writing
+  # /etc/rc.d/inid.d scripts easier and its naming and location are OS
+  # specific.
+
+  $PID_DIR = ( $TinderConfig::PID_DIR ||
+                "/var/run/");
+
+  $PID_FILE= "$PID_DIR/$PROGRAM.pid";
 
   # the time between auto refreshes for all pages in seconds.
   
@@ -398,6 +407,7 @@ sub fatal_error {
   # we have trouble removing the file we we will be exiting anyway.
 
   unlink ($LOCK_FILE);
+  unlink ($PID_FILE);
 
 
   print "Content-type: text/html\n\n";
