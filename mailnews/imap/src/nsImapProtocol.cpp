@@ -3658,13 +3658,6 @@ char* nsImapProtocol::CreateNewLineFromSocket()
         PR_Wait(m_dataAvailableMonitor, /* PR_INTERVAL_NO_TIMEOUT */ 50);
         PR_ExitMonitor(m_dataAvailableMonitor);
 
-        // this is just a HACK to get around an awful unix bug involving
-        // the UI thread processing events from our event queue!!!
-        // if this is still here after say 12/05/99 please see
-        // mscott to take it away!!
-#if defined (XP_UNIX)
-        ClearFlag(IMAP_WAITING_FOR_DATA);
-#endif
         // now that we are awake...process some events
         m_eventQueue->ProcessPendingEvents();
       } while (TestFlag(IMAP_WAITING_FOR_DATA) && !DeathSignalReceived());
