@@ -51,7 +51,7 @@ public:
   NS_IMETHOD GetContainer(nsISupports** aResult);
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHander);
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
-  virtual nsRect GetVisibleArea();
+  virtual void GetVisibleArea(nsRect& aResult);
   virtual void SetVisibleArea(const nsRect& r);
   virtual float GetPixelsToTwips() const;
   virtual float GetTwipsToPixels() const;
