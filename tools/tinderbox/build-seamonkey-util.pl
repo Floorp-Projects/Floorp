@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.80 $ ';
+$::UtilsVersion = '$Revision: 1.81 $ ';
 
 package TinderUtils;
 
@@ -1427,7 +1427,7 @@ sub FileBasedTest {
 
 # Page loader (-f option):
 # If you are building optimized, you need to add
-#   --enable-logrefcnt --enable-perf-metrics
+#   --enable-logrefcnt
 # to turn the pageloader code on.  These are on by default for debug.
 #
 sub BloatTest {
@@ -1468,6 +1468,139 @@ sub BloatTest {
     print_log $_ while <DIFF>;
     close DIFF;
     print_log "######################## END BLOAT STATISTICS\n</a>\n";
+    
+    return 'success';
+}
+
+# Page loader (-f option):
+# If you are building optimized, you need to add
+#   --enable-trace-malloc --enable-perf-metrics
+# to turn the pageloader code on.  If you are building debug you only
+# need
+#   --enable-trace-malloc
+#
+
+sub ReadLeakstatsLog($) {
+    my ($filename) = @_;
+    my $leaks = 0;
+    my $leaked_allocs = 0;
+    my $mhs = 0;
+    my $bytes = 0;
+    my $allocs = 0;
+
+    open LEAKSTATS, "$filename"
+      or die "unable to open $filename";
+    while (<LEAKSTATS>) {
+        chop;
+        my $line = $_;
+        if ($line =~ /Leaks: (\d+) bytes, (\d+) allocations/) {
+            $leaks = $1;
+            $leaked_allocs = $2;
+        } elsif ($line =~ /Maximum Heap Size: (\d+) bytes/) {
+            $mhs = $1;
+        } elsif ($line =~ /(\d+) bytes were allocated in (\d+) allocations./) {
+            $bytes = $1;
+            $allocs = $2;
+        }
+    }
+
+    return {
+             'leaks' => $leaks,
+             'leaked_allocs' => $leaked_allocs,
+             'mhs' => $mhs,
+             'bytes' => $bytes,
+             'allocs' => $allocs
+           };
+}
+
+sub PercentChange($$) {
+    my ($old, $new) = @_;
+    if ($old == 0) {
+        return 0;
+    }
+    return ($new - $old) / $old;
+}
+
+sub PrintSize($) {
+
+    # print a number with 3 significant figures
+    sub PrintNum($) {
+        my ($num) = @_;
+        my $rv;
+        if ($num < 1) {
+            $rv = sprintf "%.3f", ($num);
+        } elsif ($num < 10) {
+            $rv = sprintf "%.2f", ($num);
+        } elsif ($num < 100) {
+            $rv = sprintf "%.1f", ($num);
+        } else {
+            $rv = sprintf "%d", ($num);
+        }
+    }
+
+    my ($size) = @_;
+    my $rv;
+    if ($size > 1000000000) {
+        $rv = PrintNum($size / 1000000000.0) . "G";
+    } elsif ($size > 1000000) {
+        $rv = PrintNum($size / 1000000.0) . "M";
+    } elsif ($size > 1000) {
+        $rv = PrintNum($size / 1000.0) . "K";
+    } else {
+        $rv = PrintNum($size);
+    }
+}
+
+sub BloatTest2 {
+    my ($binary, $build_dir, $timeout_secs) = @_;
+    my $binary_basename = File::Basename::basename($binary);
+    my $binary_dir = File::Basename::dirname($binary);
+    my $binary_log = "$build_dir/bloattest2.log";
+    my $malloc_log = "$build_dir/malloc.log";
+    my $leakstats_log = "$build_dir/leakstats.log";
+    my $old_leakstats_log = "$build_dir/leakstats.log.old";
+    local $_;
+
+    unless (-e "$binary_dir/bloaturls.txt") {
+        print_log "Error: bloaturls.txt does not exist.\n";
+        return 'testfailed';
+    }
+
+    my $cmd = "$binary_basename -f bloaturls.txt --trace-malloc $malloc_log";
+    my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
+                          $timeout_secs);
+
+    print_logfile($binary_log, "bloat test");
+    
+    if ($result->{timed_out}) {
+      print_log "Error: bloat test timed out after"
+        ." $timeout_secs seconds.\n";
+      return 'testfailed';
+    } elsif ($result->{exit_value}) {
+      print_test_errors($result, $binary_basename);
+      return 'testfailed';
+    }
+
+    rename($leakstats_log, $old_leakstats_log);
+
+    $cmd = "run-mozilla.sh ./leakstats $malloc_log";
+    $result = run_cmd($build_dir, $binary_dir, $cmd, $leakstats_log,
+                          $timeout_secs);
+    print_logfile($leakstats_log, "bloat test leakstats");
+
+    my $newstats = ReadLeakstatsLog($leakstats_log);
+    my $oldstats;
+    if (-e $old_leakstats_log) {
+        $oldstats = ReadLeakstatsLog($old_leakstats_log);
+    } else {
+        $oldstats = $newstats;
+    }
+    my $leakchange = PercentChange($oldstats->{'leaks'}, $newstats->{'leaks'});
+    my $mhschange = PercentChange($oldstats->{'mhs'}, $newstats->{'mhs'});
+    print_log "TinderboxPrint:";
+    print_log "Lk:" . PrintSize($newstats->{'leaks'}) . "B,";
+    print_log "MH:" . PrintSize($newstats->{'mhs'}) . "B,";
+    print_log "A:" . PrintSize($newstats->{'allocs'}) . "\n";
     
     return 'success';
 }
