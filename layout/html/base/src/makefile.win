@@ -60,7 +60,6 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
 EXPORTS = \
-	nsIHTMLContent.h \
 	nsILineIterator.h \
 	nsHTMLParts.h \
 !ifdef IBMBIDI

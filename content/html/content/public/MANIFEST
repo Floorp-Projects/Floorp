@@ -4,6 +4,7 @@
 nsIForm.h
 nsIFormControl.h
 nsIFormSubmission.h
+nsIHTMLContent.h
 nsILink.h
 nsIOptionElement.h
 nsIRadioControlElement.h
