@@ -26,20 +26,21 @@ MODULE=dom
 XPIDL_MODULE=dom_xul
 
 XPIDLSRCS =					\
+  	.\nsIDOMXULButtonElement.idl            \
+	.\nsIDOMXULCheckboxElement.idl          \
 	.\nsIDOMXULCommandDispatcher.idl	\
+	.\nsIDOMXULControlElement.idl          \
+  	.\nsIDOMXULDescriptionElement.idl       \
 	.\nsIDOMXULDocument.idl			\
 	.\nsIDOMXULElement.idl			\
-	.\nsIDOMXULTreeElement.idl		\
-	.\nsIDOMXULControlElement.idl          \
-	.\nsIDOMXULLabeledControlEl.idl          \
-	.\nsIDOMXULCheckboxElement.idl          \
-  	.\nsIDOMXULButtonElement.idl            \
-  	.\nsIDOMXULDescriptionElement.idl       \
-  	.\nsIDOMXULLabelElement.idl             \
 	.\nsIDOMXULImageElement.idl             \
+	.\nsIDOMXULLabeledControlEl.idl          \
+  	.\nsIDOMXULLabelElement.idl             \
+  	.\nsIDOMXULMenuListElement.idl     \
 	.\nsIDOMXULPopupElement.idl          \
   	.\nsIDOMXULSelectCntrlEl.idl     \
   	.\nsIDOMXULSelectCntrlItemEl.idl     \
+	.\nsIDOMXULTreeElement.idl		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -40,10 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXULSelectAccessible.h"
 #include "nsIAccessibilityService.h"
-#include "nsIFrame.h"
-#include "nsIComboboxControlFrame.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIListControlFrame.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIServiceManager.h"
@@ -251,57 +248,4 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetAccValue(nsAWritableString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-
-/** -----ComboboxButtonAccessible ----- */
-
-/** Constructor -- cache our parent */
-nsXULComboboxButtonAccessible::nsXULComboboxButtonAccessible(nsIAccessible* aParent, 
-                                                           nsIDOMNode* aDOMNode, 
-                                                           nsIWeakReference* aShell):
-nsComboboxButtonAccessible(aParent, aDOMNode, aShell)
-{
-}
-
-/**
-  * Programmaticaly click on the button, causing either the display or
-  *     the hiding of the drop down box ( window ).
-  *     Walks the Frame tree and checks for proper frames.
-  */
-NS_IMETHODIMP nsXULComboboxButtonAccessible::AccDoAction(PRUint8 index)
-{
-  /*
-  nsIFrame* frame = nsAccessible::GetBoundsFrame();
-  nsCOMPtr<nsIPresContext> context;
-  GetPresContext(context);
-  if (!context)
-    return NS_ERROR_FAILURE;
-
-  frame->FirstChild(context, nsnull, &frame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::blockFrame))
-    return NS_ERROR_FAILURE;
-#endif
-
-  frame->GetNextSibling(&frame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::gfxButtonControlFrame))
-    return NS_ERROR_FAILURE;
-#endif
-
-  nsCOMPtr<nsIContent> content;
-  frame->GetContent(getter_AddRefs(content));
-
-  // We only have one action, click. Any other index is meaningless(wrong)
-  if (index == eAction_Click) {
-    nsCOMPtr<nsIDOMXULInputElement> element(do_QueryInterface(content));
-    if (element)
-    {
-       element->Click();
-       return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-  }
-  */
-  return NS_ERROR_INVALID_ARG;
-}
 

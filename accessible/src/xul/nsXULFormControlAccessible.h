@@ -124,7 +124,7 @@ public:
   nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 };
 
-class nsXULStatusBarAccessible : public nsFormControlAccessible
+class nsXULStatusBarAccessible : public nsAccessible
 {
 public:
   nsXULStatusBarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGenericAccessible.h"
-#include "nsIFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIWeakReference.h"
 #include "nsReadableUtils.h"

@@ -143,23 +143,4 @@ public:
   NS_IMETHOD GetAccValue(nsAWritableString& _retval);
 };
 
-/*
- * A class the represents the text field in the Select to the left
- *     of the drop down button
- */
-/**
-  * A class that represents the button inside the Select to the
-  *     right of the text field
-  */
-class nsXULComboboxButtonAccessible  : public nsComboboxButtonAccessible
-{
-public:
-
-  nsXULComboboxButtonAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsXULComboboxButtonAccessible() {}
-
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD AccDoAction(PRUint8 index);
-};
-
-#endif //__nsXULSelectAccessible_h__
+#endif
