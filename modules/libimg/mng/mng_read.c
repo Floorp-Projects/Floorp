@@ -295,7 +295,7 @@ mng_retcode read_chunk (mng_datap  pData)
     {                                  /* determine chunklength */
       iChunklen = mng_get_uint32 (pBuf);
                                        /* read chunkname + data + crc */
-      iBuflen = sizeof (mng_chunkid) + iChunklen + sizeof (iCrc);
+      iBuflen = iChunklen + (mng_uint32)(sizeof (mng_chunkid) + sizeof (iCrc));
 
       if (iBuflen < iBufmax)           /* does it fit in default buffer ? */
       {                                /* note that we don't use the full size
@@ -319,13 +319,15 @@ mng_retcode read_chunk (mng_datap  pData)
         if (iRead != iBuflen)          /* did we get all the data ? */
           iRetcode = MNG_UNEXPECTEDEOF;
         else
-        {                              /* calculate the crc */
-          iCrc = crc (pData, pBuf, iBuflen - sizeof (iCrc));
+        {
+          mng_uint32 iL = iBuflen - (mng_uint32)(sizeof (iCrc));
+                                       /* calculate the crc */
+          iCrc = crc (pData, pBuf, iL);
                                        /* and check it */
-          if (!(iCrc == mng_get_uint32 (pBuf + iBuflen - sizeof (iCrc))))
+          if (!(iCrc == mng_get_uint32 (pBuf + iL)))
             iRetcode = MNG_INVALIDCRC;
           else
-            iRetcode = process_raw_chunk (pData, pBuf, iBuflen - sizeof (iCrc));
+            iRetcode = process_raw_chunk (pData, pBuf, iL);
         }
 
       }
@@ -354,13 +356,15 @@ mng_retcode read_chunk (mng_datap  pData)
         if (iRead != iBuflen)          /* did we get all the data ? */
           iRetcode = MNG_UNEXPECTEDEOF;
         else
-        {                              /* calculate the crc */
-          iCrc = crc (pData, pExtra, iBuflen - sizeof (iCrc));
+        {
+          mng_uint32 iL = iBuflen - (mng_uint32)(sizeof (iCrc));
+                                       /* calculate the crc */
+          iCrc = crc (pData, pExtra, iL);
                                        /* and check it */
-          if (!(iCrc == mng_get_uint32 (pExtra + iBuflen - sizeof (iCrc))))
+          if (!(iCrc == mng_get_uint32 (pExtra + iL)))
             iRetcode = MNG_INVALIDCRC;
           else
-            iRetcode = process_raw_chunk (pData, pExtra, iBuflen - sizeof (iCrc));
+            iRetcode = process_raw_chunk (pData, pExtra, iL);
         }
                                        /* cleanup additional large buffer */
         MNG_FREEX (pData, pExtra, iBuflen+1)

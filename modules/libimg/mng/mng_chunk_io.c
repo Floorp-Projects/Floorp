@@ -82,6 +82,8 @@
 /* *             - implemented support for PPLT chunk                       * */
 /* *             0.5.3 - 06/26/2000 - G.Juyn                                * */
 /* *             - added precaution against faulty iCCP chunks from PS      * */
+/* *             0.5.3 - 06/29/2000 - G.Juyn                                * */
+/* *             - fixed some 64-bit warnings                               * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -128,7 +130,7 @@ void make_crc_table (mng_datap pData)
     for (k = 0; k < 8; k++)
     {
       if (c & 1)
-        c = 0xedb88320L ^ (c >> 1);
+        c = 0xedb88320U ^ (c >> 1);
       else
         c = c >> 1;
     }
@@ -166,7 +168,7 @@ mng_uint32 crc (mng_datap  pData,
                 mng_uint8p buf,
                 mng_int32  len)
 {
-  return update_crc (pData, 0xffffffffL, buf, len) ^ 0xffffffffL;
+  return update_crc (pData, 0xffffffffU, buf, len) ^ 0xffffffffU;
 }
 
 /* ************************************************************************** */
@@ -296,7 +298,7 @@ mng_retcode inflate_buffer (mng_datap  pData,
                                        /* ok; let's inflate... */
       iRetcode = mngzlib_inflatedata (pData, iInsize, pInbuf);
                                        /* determine actual output size */
-      *iRealsize = pData->sZlib.total_out;
+      *iRealsize = (mng_uint32)pData->sZlib.total_out;
 
       mngzlib_inflatefree (pData);     /* zlib's done */
 
@@ -1650,7 +1652,7 @@ READ_CHUNK (read_iccp)
   if ((pTemp - pRawdata) > (mng_int32)iRawlen)
     MNG_ERROR (pData, MNG_NULLNOTFOUND)
                                        /* determine size of compressed profile */
-  iCompressedsize = iRawlen - (pTemp - pRawdata) - 2;
+  iCompressedsize = (mng_uint32)(iRawlen - (pTemp - pRawdata) - 2);
                                        /* decompress the profile */
   iRetcode = inflate_buffer (pData, pTemp+2, iCompressedsize,
                              &pBuf, &iBufsize, &iProfilesize);
@@ -2604,7 +2606,7 @@ READ_CHUNK (read_splt)
     if ((pTemp - pRawdata) > (mng_int32)iRawlen)
       MNG_ERROR (pData, MNG_NULLNOTFOUND)
 
-    iNamelen     = pTemp - pRawdata;
+    iNamelen     = (mng_uint32)(pTemp - pRawdata);
     iSampledepth = *(pTemp+1);
     iRemain      = (iRawlen - 2 - iNamelen);
 
@@ -3788,8 +3790,8 @@ READ_CHUNK (read_fram)
     if ((pTemp - pRawdata) > (mng_int32)iRawlen)
       MNG_ERROR (pData, MNG_NULLNOTFOUND)
 
-    iNamelen = (pTemp - pRawdata - 1);
-    iRemain  = iRawlen - (pTemp - pRawdata) - 1;
+    iNamelen = (mng_uint32)((pTemp - pRawdata) - 1);
+    iRemain  = (mng_uint32)(iRawlen - (pTemp - pRawdata) - 1);
                                        /* remains must be empty or at least 4 bytes */
     if ((iRemain != 0) && (iRemain < 4))
       MNG_ERROR (pData, MNG_INVALIDLENGTH)

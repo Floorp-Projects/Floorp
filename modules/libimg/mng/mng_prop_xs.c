@@ -37,6 +37,8 @@
 /* *             - added get for imagelevel during processtext callback     * */
 /* *             0.5.3 - 06/26/2000 - G.Juyn                                * */
 /* *             - changed userdata variable to mng_ptr                     * */
+/* *             0.5.3 - 06/29/2000 - G.Juyn                                * */
+/* *             - fixed incompatible return-types                          * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -833,7 +835,8 @@ mng_imgtype MNG_DECL mng_get_sigtype (mng_handle hHandle)
   MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_SIGTYPE, MNG_LC_START)
 #endif
 
-  MNG_VALIDHANDLEX (hHandle)
+  if ((hHandle == 0) || (((mng_datap)hHandle)->iMagic != MNG_MAGIC))
+    return mng_it_unknown;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_SIGTYPE, MNG_LC_END)
@@ -850,7 +853,8 @@ mng_imgtype MNG_DECL mng_get_imagetype (mng_handle hHandle)
   MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_IMAGETYPE, MNG_LC_START)
 #endif
 
-  MNG_VALIDHANDLEX (hHandle)
+  if ((hHandle == 0) || (((mng_datap)hHandle)->iMagic != MNG_MAGIC))
+    return mng_it_unknown;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_IMAGETYPE, MNG_LC_END)
@@ -1330,7 +1334,8 @@ mngjpeg_dctmethod MNG_DECL mng_get_jpeg_dctmethod (mng_handle hHandle)
   MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_JPEG_DCTMETHOD, MNG_LC_START)
 #endif
 
-  MNG_VALIDHANDLEX (hHandle)
+  if ((hHandle == 0) || (((mng_datap)hHandle)->iMagic != MNG_MAGIC))
+    return JDCT_ISLOW;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_JPEG_DCTMETHOD, MNG_LC_END)
@@ -1444,7 +1449,8 @@ mng_speedtype MNG_DECL mng_get_speed (mng_handle hHandle)
   MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_SPEED, MNG_LC_START)
 #endif
 
-  MNG_VALIDHANDLEX (hHandle)
+  if ((hHandle == 0) || (((mng_datap)hHandle)->iMagic != MNG_MAGIC))
+    return mng_st_normal;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_SPEED, MNG_LC_END)

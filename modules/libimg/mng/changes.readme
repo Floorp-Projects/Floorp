@@ -73,6 +73,9 @@ core:
 - changed definition for mng_handle (64-bit platforms)
 - swapped refresh parameters                              
 - fixed initialization routine for new mng_handle type    
+- added inclusion of stdlib.h for abs()
+- fixed some 64-bit warnings           
+- fixed incompatible return-types                     
 
 samples:
 
