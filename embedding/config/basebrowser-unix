@@ -94,7 +94,7 @@ components/layout_xul.xpt
 
 ; netwerk
 
-libzlib.so
+libz.so
 components/libnecko.so                    
 components/necko.xpt                    
 components/libnecko2.so                   
