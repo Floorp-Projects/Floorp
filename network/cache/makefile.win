@@ -18,6 +18,10 @@
 IGNORE_MANIFEST=1
 #
 
+!ifndef NU_CACHE
+DIRS=nu
+!endif
+
 #------------------------------------------------------------------------
 #
 # Makefile to build the cache LIB
