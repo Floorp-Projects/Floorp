@@ -773,45 +773,49 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
 nsresult
 nsEventStateManager::ChangeTextSize(PRInt32 change)
 {
+  if(!gLastFocusedDocument) return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
   gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+  if(!ourGlobal) return NS_ERROR_FAILURE;
+  
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
-  NS_ENSURE_TRUE(ourWindow, NS_ERROR_FAILURE);
+  if(!ourWindow) return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
   ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
-  NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
+  if(!rootWindow) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDOMWindowInternal> windowContent;
   rootWindow->Get_content(getter_AddRefs(windowContent));
-  NS_ENSURE_TRUE(windowContent, NS_ERROR_FAILURE);
+  if(!windowContent) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   windowContent->GetDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+  if(!domDoc) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  if(!doc) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+  if(!presShell) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+  if(!presContext) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISupports> pcContainer;
   presContext->GetContainer(getter_AddRefs(pcContainer));
-  NS_ENSURE_TRUE(pcContainer, NS_ERROR_FAILURE);
+  if(!pcContainer) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(pcContainer));
-  NS_ENSURE_TRUE(docshell, NS_ERROR_FAILURE);
+  if(!docshell) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContentViewer> cv;
   docshell->GetContentViewer(getter_AddRefs(cv));
-  NS_ENSURE_TRUE(cv, NS_ERROR_FAILURE);
+  if(!cv) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIMarkupDocumentViewer> mv(do_QueryInterface(cv));
-  NS_ENSURE_TRUE(mv, NS_ERROR_FAILURE);
+  if(!mv) return NS_ERROR_FAILURE;
 
   float textzoom;
   mv->GetTextZoom(&textzoom);
@@ -1040,7 +1044,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           if (pcContainer) {
             nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
             if (webNav) {
-              if (numLines > 0)
+              if (msEvent->deltaLines > 0)
                  webNav->GoBack();
               else
                  webNav->GoForward();
@@ -1050,7 +1054,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         break;
 
       case MOUSE_SCROLL_TEXTSIZE:
-        ChangeTextSize((numLines > 0) ? 1 : -1);
+        ChangeTextSize((msEvent->deltaLines > 0) ? 1 : -1);
         break;
       }
       *aStatus = nsEventStatus_eConsumeNoDefault;
