@@ -123,7 +123,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 {                                                                             \
   NS_PRECONDITION(_aggregator, "null aggregator");                            \
-  return (_aggregator)->AddRef();                                            \
+  return (_aggregator)->AddRef();                                             \
 }
 
 /**
