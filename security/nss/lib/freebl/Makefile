@@ -127,7 +127,8 @@ else
     ASFILES  = mpv_sparc32.S
     ASM_SUFFIX = .S
     MPI_SRCS += mpi_sparc.c
-    SOLARIS_FLAGS = -xchip=ultra -xarch=v8plusa -KPIC -mt 
+    SOLARIS_AS = /usr/ccs/bin/as
+    SOLARIS_FLAGS = -xarch=v8plusa -K PIC
 endif
 endif
 endif
@@ -206,11 +207,11 @@ SPARCFIX = $(OBJDIR)/sparcfix
 
 $(SPARCFIX): sparcfix.c
 	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -O sparcfix.c -l elf
+	$(CC) -o $@ -O sparcfix.c -lelf
 
 $(OBJDIR)/mpv_sparc32.o: $(SPARCFIX) mpv_sparc32.S
 	@$(MAKE_OBJDIR)
-	$(CC) -o $@ $(SOLARIS_FLAGS) -c mpv_sparc32.S
+	$(SOLARIS_AS) -o $@ $(SOLARIS_FLAGS) mpv_sparc32.S
 	$(SPARCFIX) $@
 
 $(OBJDIR)/mpv_sparc.o: vis_64.il vis_proto.h mpv_sparc.c
