@@ -455,9 +455,7 @@ SheetLoadData::~SheetLoadData(void)
   NS_IF_RELEASE(mParserToUnblock);
   NS_IF_RELEASE(mParentSheet);
   NS_IF_RELEASE(mObserver);
-  if (mNext) {
-    delete mNext;
-  }
+  NS_IF_RELEASE(mNext);
 }
 
 CSSLoaderImpl::CSSLoaderImpl(void)
