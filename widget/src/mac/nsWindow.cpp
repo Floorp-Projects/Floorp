@@ -85,6 +85,7 @@ nsWindow::nsWindow() : nsIWidget(),
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+nsRefData	*theRefData;
 
 	if(mWindowRegion!=nsnull)
 		{
@@ -94,6 +95,10 @@ nsWindow::~nsWindow()
 
 	if (mParent == nsnull)
 	{
+		theRefData = (nsRefData*)(((WindowPeek)mWindowPtr)->refCon);
+		if(theRefData)
+			delete theRefData;
+		
 		CloseWindow(mWindowPtr);
 		delete[] mWindowRecord;
 
@@ -130,7 +135,7 @@ void nsWindow::Create(nsIWidget *aParent,
 // Creates a main nsWindow using the native platforms window or widget
 //
 //-------------------------------------------------------------------------
-void nsWindow::Create(nsNativeWidget aParent,
+void nsWindow::Create(nsNativeWidget aParent,    						// this is a windowPtr, 
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -138,6 +143,8 @@ void nsWindow::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+nsRefData				*theRefData;
+
 	if (0==aParent)
 	{
 		mParent = nsnull;
@@ -145,7 +152,8 @@ void nsWindow::Create(nsNativeWidget aParent,
 	}
 	else
 	{
-		mParent = (nsWindow*)(((WindowPeek)aParent)->refCon);
+		theRefData = (nsRefData*)(((WindowPeek)aParent)->refCon);
+		mParent = (nsWindow*)theRefData->GetCurWidget();
 		CreateChildWindow(aParent,mParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 	}		
 }
@@ -198,8 +206,8 @@ nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-Rect		bounds;
-
+Rect			bounds;
+nsRefData		*theReferenceData;
 	
   mAppShell = aAppShell;
   NS_IF_ADDREF(mAppShell);
@@ -223,7 +231,11 @@ Rect		bounds;
 		mWindowRecord = (WindowRecord*)new char[sizeof(WindowRecord)];   // allocate our own windowrecord space
 		if (bounds.top <= 0)
 			bounds.top = LMGetMBarHeight()+20;
-		mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
+			
+			
+		theReferenceData = new nsRefData();	
+		theReferenceData->SetTopWidget(this);
+		mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)theReferenceData);
 		
 		// the bounds of the widget is the mac content region in global coordinates
 		::SetPort(mWindowPtr);
@@ -335,9 +347,13 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aPare
 //-------------------------------------------------------------------------
 void nsWindow::Destroy()
 {
+nsRefData		*theRefData;
 
 	if (mWindowMadeHere==PR_TRUE && mIsMainWindow==PR_TRUE)
 		{
+		theRefData = (nsRefData*)(((WindowPeek)mWindowPtr)->refCon);
+		delete theRefData;
+		
 		CloseWindow(mWindowPtr);
 		delete mWindowRecord;
 		}
@@ -772,18 +788,37 @@ GrafPtr	curport;
 //-------------------------------------------------------------------------
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
+PRInt32		offx,offy;
+nsRefData	*theRefData;
+
   switch(aDataType) 
   	{
 		case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
     case NS_NATIVE_GRAPHIC:
     case NS_NATIVE_DISPLAY:
+			// set the refcon up with the current widget we are referencing
+			theRefData = (nsRefData*)(((WindowPeek)mWindowPtr)->refCon);
+			if(theRefData)
+				{
+				theRefData->SetCurWidget(this);
+				}				
+				
       return (void*)mWindowPtr;
     	break;
     case NS_NATIVE_REGION:
     	return (void*) mWindowRegion;
     	break;
     case NS_NATIVE_COLORMAP:
+    	break;
+    case NS_NATIVE_OFFSETX:
+    	this->CalcOffset(offx,offy);
+    	return (void*) offx;
+    	break;
+    case NS_NATIVE_OFFSETY:
+    	this->CalcOffset(offx,offy);
+    	return (void*) offy;
+    	break;
     default:
       break;
   }
@@ -1061,7 +1096,6 @@ nsRect 					rr;
         
         if(mParent)
         	{
-					CalcOffset(offx,offy);
 					nsRectToMacRect(therect,macrect);
 					thergn = ::NewRgn();
 					::GetClip(thergn);

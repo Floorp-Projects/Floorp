@@ -123,13 +123,13 @@ void nsScrollbar::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-WindowPtr		theWindow;
 nsWindow		*theNsWindow=nsnull;
+nsRefData		*theRefData;
 
 	if(0!=aParent)
 		{
-		theWindow = (GrafPtr)aParent;
-		theNsWindow = (nsWindow*)(((WindowPeek)theWindow)->refCon);	
+		theRefData = (nsRefData*)(((WindowPeek)aParent)->refCon);
+		theNsWindow = (nsWindow*)theRefData->GetTopWidget();
 		}
 		
 	if(nsnull!=theNsWindow)
