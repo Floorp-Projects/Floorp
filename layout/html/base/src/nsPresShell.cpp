@@ -3517,7 +3517,6 @@ PresShell::EndLoad(nsIDocument *aDocument)
     if (scrollFrame) {
       nsIScrollableFrame* scrollableFrame;
       CallQueryInterface(scrollFrame, &scrollableFrame);
-      NS_ASSERTION(scrollableFrame, "RootScrollFrame is not scrollable?");
       if (scrollableFrame) {
         FrameManager()->RestoreFrameStateFor(scrollFrame, historyState,
                                              nsIStatefulFrame::eDocumentScrollState);
