@@ -19,8 +19,8 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../..
-THEME_ROOT_DEPTH = @srcdir@/../..
+DEPTH		= ../../../../..
+THEME_ROOT_DEPTH = @srcdir@/../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -28,14 +28,16 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/search
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/search/win
 
 EXPORT_RESOURCE_SAMPLES = \
-		category.gif \
-		result.gif \
+		findresults.css \
+		icons.css \
+		internet.css \
+		internetresults.css \
+		search-editor.css \
+		search.css \
 		$(NULL)
-
-DIRS		= win
 
 include $(topsrcdir)/config/rules.mk
 

@@ -1,0 +1,29 @@
+#multi-results-header 
+  {
+	  background-color      : inactivecaption; 
+    color                 : inactivecaptiontext;
+    border                : 1px outset inactivecaption;
+	  font-weight           : bold;
+  	padding               : 3px 0px 2px 6px;
+  }
+
+#engineTabs 
+  {
+    padding               : 2px 0px 2px 0px;
+    background-color      : threedface;
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+  }
+
+#internetresultstree
+  {
+    border-right          : none;
+    border-left           : none;
+  }  
+  
+#internetresultstree > .tree-container-treerows
+  {
+    border-right          : none;
+    border-left           : none;
+  }  

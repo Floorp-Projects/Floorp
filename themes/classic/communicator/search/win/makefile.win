@@ -19,17 +19,19 @@
 # Contributor(s): 
 #
 
-DEPTH		= ..\..\..\..
-THEME_ROOT_DEPTH = ..\..
-
-DIRS		= win
+DEPTH		= ..\..\..\..\..
+THEME_ROOT_DEPTH = ..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
-	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\search\*.*
+	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\search\win\*.*
 
 install:: 
-	$(MAKE_INSTALL) category.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
-	$(MAKE_INSTALL) result.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
+	$(MAKE_INSTALL) findresults.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
+	$(MAKE_INSTALL) icons.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
+	$(MAKE_INSTALL) internet.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
+	$(MAKE_INSTALL) internetresults.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
+	$(MAKE_INSTALL) search-editor.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
+	$(MAKE_INSTALL) search.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
