@@ -119,7 +119,7 @@ nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
       node.swap(parentNode);
     }
   } while (!resultNode &&
-           !nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("html")));
+           !nsEditor::NodeIsType(node, nsEditProperty::html));
 
   element = do_QueryInterface(resultNode ); 
   *_retval = element;
@@ -604,7 +604,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     PRBool hasStyleOrIdOrClass;
     res = HasStyleOrIdOrClass(aElement, &hasStyleOrIdOrClass);
     if (NS_FAILED(res)) return res;
-    if (!hasStyleOrIdOrClass && NodeIsType(node, NS_LITERAL_STRING("div"))) {
+    if (!hasStyleOrIdOrClass && nsHTMLEditUtils::IsDiv(node)) {
       nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
       if (!htmlRules) return NS_ERROR_FAILURE;
       res = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);

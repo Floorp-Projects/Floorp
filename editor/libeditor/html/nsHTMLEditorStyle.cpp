@@ -438,14 +438,14 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
         res = tmp->GetParentNode(getter_AddRefs(mergeParent));
         if (NS_FAILED(res)) return res;
         if (previousSibling &&
-            nsTextEditUtils::NodeIsType(previousSibling, NS_LITERAL_STRING("span")) &&
+            nsEditor::NodeIsType(previousSibling, nsEditProperty::span) &&
             NodesSameType(tmp, previousSibling))
         {
           res = JoinNodes(previousSibling, tmp, mergeParent);
           if (NS_FAILED(res)) return res;
         }
         if (nextSibling &&
-            nsTextEditUtils::NodeIsType(nextSibling, NS_LITERAL_STRING("span")) &&
+            nsEditor::NodeIsType(nextSibling, nsEditProperty::span) &&
             NodesSameType(tmp, nextSibling))
         {
           res = JoinNodes(tmp, nextSibling, mergeParent);
@@ -756,7 +756,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
     }
   }  
   if ( aProperty == nsEditProperty::font &&    // or node is big or small and we are setting font size
-       (NodeIsType(aNode, nsEditProperty::big) || NodeIsType(aNode, nsEditProperty::small)) &&
+       (nsHTMLEditUtils::IsBig(aNode) || nsHTMLEditUtils::IsSmall(aNode)) &&
        aAttribute->Equals(NS_LITERAL_STRING("size"),nsCaseInsensitiveStringComparator()))       
   {
     res = RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
@@ -1668,7 +1668,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   // look for siblings that are correct type of node
   nsCOMPtr<nsIDOMNode> sibling;
   GetPriorHTMLSibling(node, address_of(sibling));
-  if (sibling && NodeIsType(sibling, nodeType))
+  if (sibling && NodeIsType(sibling, (aSizeChange==1) ? nsEditProperty::big : nsEditProperty::small))
   {
     // previous sib is already right kind of inline node; slide this over into it
     res = MoveNode(node, sibling, -1);
@@ -1676,7 +1676,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   }
   sibling = nsnull;
   GetNextHTMLSibling(node, address_of(sibling));
-  if (sibling && NodeIsType(sibling, nodeType))
+  if (sibling && NodeIsType(sibling, (aSizeChange==1) ? nsEditProperty::big : nsEditProperty::small))
   {
     // following sib is already right kind of inline node; slide this over into it
     res = MoveNode(node, sibling, 0);
@@ -1794,7 +1794,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
     // if we find one, move aNode into it.
     nsCOMPtr<nsIDOMNode> sibling;
     GetPriorHTMLSibling(aNode, address_of(sibling));
-    if (sibling && NodeIsType(sibling, NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small")))
+    if (sibling && nsEditor::NodeIsType(sibling, (aSizeChange==1 ? nsEditProperty::big : nsEditProperty::small)))
     {
       // previous sib is already right kind of inline node; slide this over into it
       res = MoveNode(aNode, sibling, -1);
@@ -1802,7 +1802,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
     }
     sibling = nsnull;
     GetNextHTMLSibling(aNode, address_of(sibling));
-    if (sibling && NodeIsType(sibling, NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small")))
+    if (sibling && nsEditor::NodeIsType(sibling, (aSizeChange==1 ? nsEditProperty::big : nsEditProperty::small)))
     {
       // following sib is already right kind of inline node; slide this over into it
       res = MoveNode(aNode, sibling, 0);

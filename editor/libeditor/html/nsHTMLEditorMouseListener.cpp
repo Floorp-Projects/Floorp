@@ -58,6 +58,7 @@
 #include "nsIHTMLObjectResizer.h"
 #include "nsEditProperty.h"
 #include "nsTextEditUtils.h"
+#include "nsHTMLEditUtils.h"
 #include "nsIHTMLInlineTableEditor.h"
 
 /*
@@ -252,12 +253,12 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
             }
           }
 
-          if (nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("body")) ||
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("td")) ||
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("th")) ||
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("caption")) ||
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("tr")) ||
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("table")))
+// XXX: should we call nsHTMLEditUtils::IsTableElement here?
+// that also checks for thead, tbody, tfoot
+          if (nsTextEditUtils::IsBody(node) ||
+              nsHTMLEditUtils::IsTableCellOrCaption(node) ||
+              nsHTMLEditUtils::IsTableRow(node) ||
+              nsHTMLEditUtils::IsTable(node))
           {
             // This will place caret just inside table cell or at start of body
             selection->Collapse(parent, offset);

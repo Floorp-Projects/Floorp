@@ -2106,7 +2106,7 @@ void RemoveBodyAndHead(nsIDOMNode *aNode)
     {
       body = child;
     }
-    else if (nsEditor::NodeIsType(child, NS_LITERAL_STRING("head")))
+    else if (nsEditor::NodeIsType(child, nsEditProperty::head))
     {
       head = child;
     }

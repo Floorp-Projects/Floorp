@@ -47,6 +47,7 @@
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
 
+#include "nsIAtom.h"
 #include "nsIDOMDocument.h"
 #include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
@@ -454,8 +455,19 @@ public:
                                          PRBool      bNoBlockCrossing = PR_FALSE);
 
   /** returns PR_TRUE if aNode is of the type implied by aTag */
-  static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
-  static PRBool NodeIsType(nsIDOMNode *aNode, const nsAString &aTag);
+  static inline PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
+  {
+    nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
+    return (nodeAtom == aTag);
+  }
+
+  // we should get rid of this method if we can
+  static inline PRBool NodeIsTypeString(nsIDOMNode *aNode, const nsAString &aTag)
+  {
+    nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
+    return nodeAtom && nodeAtom->Equals(aTag);
+  }
+
 
   /** returns PR_TRUE if aParent can contain a child of type aTag */
   PRBool CanContainTag(nsIDOMNode* aParent, const nsAString &aTag);

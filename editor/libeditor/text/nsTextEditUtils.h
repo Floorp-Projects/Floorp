@@ -49,8 +49,6 @@ class nsPlaintextEditor;
 class nsTextEditUtils
 {
 public:
-  static PRBool NodeIsType(nsIDOMNode *aNode, const nsAString& aTag);
-
   // from nsTextEditRules:
   static PRBool IsBody(nsIDOMNode *aNode);
   static PRBool IsBreak(nsIDOMNode *aNode);

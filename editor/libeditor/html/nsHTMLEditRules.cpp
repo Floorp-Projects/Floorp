@@ -671,11 +671,11 @@ nsHTMLEditRules::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *
   {
     nsIDOMNode* curNode = arrayOfNodes[i];
     
-    if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::ul))
+    if (nsHTMLEditUtils::IsUnorderedList(curNode))
       *aUL = PR_TRUE;
-    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::ol))
+    else if (nsHTMLEditUtils::IsOrderedList(curNode))
       *aOL = PR_TRUE;
-    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::li))
+    else if (nsEditor::NodeIsType(curNode, nsEditProperty::li))
     {
       nsCOMPtr<nsIDOMNode> parent;
       PRInt32 offset;
@@ -686,9 +686,9 @@ nsHTMLEditRules::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *
       else if (nsHTMLEditUtils::IsOrderedList(parent))
         *aOL = PR_TRUE;
     }
-    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::dl) ||
-             mHTMLEditor->NodeIsType(curNode,nsEditProperty::dt) ||
-             mHTMLEditor->NodeIsType(curNode,nsEditProperty::dd) )
+    else if (nsEditor::NodeIsType(curNode, nsEditProperty::dl) ||
+             nsEditor::NodeIsType(curNode, nsEditProperty::dt) ||
+             nsEditor::NodeIsType(curNode, nsEditProperty::dd) )
     {
       *aDL = PR_TRUE;
     }
@@ -723,21 +723,21 @@ nsHTMLEditRules::GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBo
   {
     nsIDOMNode* curNode = arrayOfNodes[i];
     
-    if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::ul) ||
-        mHTMLEditor->NodeIsType(curNode,nsEditProperty::ol) ||
-        mHTMLEditor->NodeIsType(curNode,nsEditProperty::li) )
+    if (nsHTMLEditUtils::IsUnorderedList(curNode) ||
+        nsHTMLEditUtils::IsOrderedList(curNode) ||
+        nsEditor::NodeIsType(curNode, nsEditProperty::li) )
     {
       *aLI = PR_TRUE;
     }
-    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::dt))
+    else if (nsEditor::NodeIsType(curNode, nsEditProperty::dt))
     {
       *aDT = PR_TRUE;
     }
-    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::dd))
+    else if (nsEditor::NodeIsType(curNode, nsEditProperty::dd))
     {
       *aDD = PR_TRUE;
     }
-    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::dl))
+    else if (nsEditor::NodeIsType(curNode, nsEditProperty::dl))
     {
       // need to look inside dl and see which types of items it has
       PRBool bDT, bDD;
@@ -805,7 +805,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
     // if we are in a text node, then that is the node of interest
     nodeToExamine = parent;
   }
-  else if (nsTextEditUtils::NodeIsType(parent,NS_LITERAL_STRING("html")) &&
+  else if (nsEditor::NodeIsType(parent, nsEditProperty::html) &&
            offset == rootOffset)
   {
     // if we have selected the body, let's look at the first editable node
@@ -3055,7 +3055,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
         res = mHTMLEditor->MoveNode(curNode, curList, -1);
         if (NS_FAILED(res)) return res;
         // convert list item type if needed
-        if (!mHTMLEditor->NodeIsType(curNode,itemType))
+        if (!mHTMLEditor->NodeIsTypeString(curNode,itemType))
         {
           res = mHTMLEditor->ReplaceContainer(curNode, address_of(newBlock), itemType);
           if (NS_FAILED(res)) return res;
@@ -3076,7 +3076,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
             if (NS_FAILED(res)) return res;
           }
         }
-        if (!mHTMLEditor->NodeIsType(curNode,itemType))
+        if (!mHTMLEditor->NodeIsTypeString(curNode,itemType))
         {
           res = mHTMLEditor->ReplaceContainer(curNode, address_of(newBlock), itemType);
           if (NS_FAILED(res)) return res;
@@ -4143,13 +4143,13 @@ nsHTMLEditRules::ConvertListType(nsIDOMNode *aList,
   aList->GetFirstChild(getter_AddRefs(child));
   while (child)
   {
-    if (nsHTMLEditUtils::IsListItem(child) && !mHTMLEditor->NodeIsType(child, aItemType))
+    if (nsHTMLEditUtils::IsListItem(child) && !nsEditor::NodeIsTypeString(child, aItemType))
     {
       res = mHTMLEditor->ReplaceContainer(child, address_of(temp), aItemType);
       if (NS_FAILED(res)) return res;
       child = temp;
     }
-    else if (nsHTMLEditUtils::IsList(child) && !mHTMLEditor->NodeIsType(child, aListType))
+    else if (nsHTMLEditUtils::IsList(child) && !nsEditor::NodeIsTypeString(child, aListType))
     {
       res = ConvertListType(child, address_of(temp), aListType, aItemType);
       if (NS_FAILED(res)) return res;
@@ -4158,7 +4158,7 @@ nsHTMLEditRules::ConvertListType(nsIDOMNode *aList,
     child->GetNextSibling(getter_AddRefs(temp));
     child = temp;
   }
-  if (!mHTMLEditor->NodeIsType(aList, aListType))
+  if (!nsEditor::NodeIsTypeString(aList, aListType))
   {
     res = mHTMLEditor->ReplaceContainer(aList, outList, aListType);
   }
@@ -5894,8 +5894,8 @@ nsHTMLEditRules::GetDefinitionListItemTypes(nsIDOMNode *aNode, PRBool &aDT, PRBo
   res = aNode->GetFirstChild(getter_AddRefs(child));
   while (child && NS_SUCCEEDED(res))
   {
-    if (mHTMLEditor->NodeIsType(child,nsEditProperty::dt)) aDT = PR_TRUE;
-    else if (mHTMLEditor->NodeIsType(child,nsEditProperty::dd)) aDD = PR_TRUE;
+    if (nsEditor::NodeIsType(child, nsEditProperty::dt)) aDT = PR_TRUE;
+    else if (nsEditor::NodeIsType(child, nsEditProperty::dd)) aDD = PR_TRUE;
     res = child->GetNextSibling(getter_AddRefs(temp));
     child = temp;
   }
@@ -7703,21 +7703,21 @@ nsHTMLEditRules::RemoveEmptyNodes()
       if (!nsTextEditUtils::IsBody(node))
       {
         // only consider certain nodes to be empty for purposes of removal
-        if (  (bIsMailCite = nsHTMLEditUtils::IsMailCite(node))              ||
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("a"))      || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("b"))      || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("i"))      || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("u"))      || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("tt"))     || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("s"))      || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("strike")) || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("big"))    || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("small"))  || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("blink"))  || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("sub"))    || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("sup"))    || 
-              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("font"))   || 
-              nsHTMLEditUtils::IsList(node)      || 
+        if (  (bIsMailCite = nsHTMLEditUtils::IsMailCite(node))  ||
+              nsEditor::NodeIsType(node, nsEditProperty::a)      ||
+              nsEditor::NodeIsType(node, nsEditProperty::b)      ||
+              nsEditor::NodeIsType(node, nsEditProperty::i)      ||
+              nsEditor::NodeIsType(node, nsEditProperty::u)      ||
+              nsEditor::NodeIsType(node, nsEditProperty::tt)     ||
+              nsEditor::NodeIsType(node, nsEditProperty::s)      ||
+              nsEditor::NodeIsType(node, nsEditProperty::strike) ||
+              nsHTMLEditUtils::IsBig(node)                       ||
+              nsHTMLEditUtils::IsSmall(node)                     ||
+              nsEditor::NodeIsType(node, nsEditProperty::blink)  ||
+              nsEditor::NodeIsType(node, nsEditProperty::sub)    ||
+              nsEditor::NodeIsType(node, nsEditProperty::sup)    ||
+              nsEditor::NodeIsType(node, nsEditProperty::font)   ||
+              nsHTMLEditUtils::IsList(node)                      ||
               nsHTMLEditUtils::IsDiv(node)  )
         {
           bIsCandidate = PR_TRUE;
@@ -8427,7 +8427,7 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignTyp
         if (NS_FAILED(res)) return res;
       }
     }
-    else if (nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("center"))
+    else if (nsEditor::NodeIsType(child, nsEditProperty::center)
              || nsHTMLEditUtils::IsDiv(child))
     {
       // this is a CENTER or a DIV element and we have to remove it
@@ -8694,7 +8694,7 @@ nsHTMLEditRules::WillAbsolutePosition(nsISelection *aSelection, PRBool *aCancel,
   res = mHTMLEditor->GetSelectionContainer(getter_AddRefs(focusElement));
   if (focusElement) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(focusElement);
-    if (mHTMLEditor->NodeIsType(node, nsEditProperty::img)) {
+    if (nsHTMLEditUtils::IsImage(node)) {
       mNewBlock = node;
       return NS_OK;
     }
