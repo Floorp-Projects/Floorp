@@ -519,7 +519,12 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
 
       gint indicator_size, indicator_spacing;
       moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
-      aResult->width = aResult->height = indicator_size;
+
+      // Hack alert: several themes have indicators larger than the default
+      // 10px size, but don't set the indicator size property.  So, leave
+      // a little slop room by making the minimum size 14px.
+
+      aResult->width = aResult->height = MAX(indicator_size, 14);
       *aIsOverridable = PR_FALSE;
     }
     break;
