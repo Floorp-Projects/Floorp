@@ -127,6 +127,7 @@ mailnews/import/resources/Makefile
 mailnews/import/resources/content/Makefile
 mailnews/import/resources/locale/Makefile
 mailnews/import/resources/locale/en-us/Makefile
+mailnews/import/resources/skin/Makefile
 mailnews/import/src/Makefile
 mailnews/import/text/Makefile
 mailnews/import/text/resources/Makefile
