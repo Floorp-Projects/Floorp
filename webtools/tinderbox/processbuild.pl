@@ -22,35 +22,29 @@ require 'timelocal.pl';
 
 umask 0;
 
-#$logfile = '';
-
 %MAIL_HEADER = ();
-$DONE = 0;
 $building = 0;
 $endsection = 0;
 
 open( LOG, "<$ARGV[0]") || die "cant open $!";
-&parse_mail_header;
-while ($DONE == 0) {
-    %tbx = ();
-    &get_variables;
 
-    # run thru if EOF and we haven't hit our section end marker
- 
-    if ( !$DONE || !$endsection) {
-        &check_required_vars;
-        $tree = $tbx{'tree'} if (!defined($tree));
-        $logfile = "$builddate.$$.gz" if (!defined($logfile));
-	$building++ if ($tbx{'status'} =~ m/building/);
-        &lock;
-        &write_build_data;
-        &unlock;
-    }
-}
+&parse_mail_header;
+
+%tbx = ();
+&parse_log_variables(\%tbx);
+
 close(LOG);
 
-&compress_log_file;
-&unlink_log_file;
+&check_required_vars(\%tbx);
+
+$tree = $tbx{tree} unless defined $tree;
+$logfile = "$tbx{builddate}.$$.gz" unless defined $logfile;
+$building=1 if $tbx{status} =~ m/building/;
+
+&write_build_data(\%tbx);
+
+&compress_log_file(\%tbx);
+unlink($ARGV[0]);
 
 system "./buildwho.pl $tree";
 
@@ -58,184 +52,127 @@ system "./buildwho.pl $tree";
 $ENV{QUERY_STRING}="tree=$tree&static=1";
 system './showbuilds.cgi';
 
+# Generate build warnings (only for a successful shrike clobber build)
+if ($tbx{build} =~ /shrike.*\b(Clobber|Clbr)\b/ and
+    $tbx{status} eq 'success') {
+  system './.warnings.pl';
+}
+
 # end of main
 ######################################################################
 
-
-# This routine will scan through log looking for 'tinderbox:' variables
-#
-sub  get_variables{
-
-    #while( ($k,$v) = each( %MAIL_HEADER ) ){
-    #    print "$k='$v'\n";
-    #}
-
-    &parse_log_variables;
-
-    #while( ($k,$v) = each( %tbx ) ){
-    #    print "$k='$v'\n";
-    #}
-}
-
-
 sub parse_log_variables {
-    my ($line, $stop);
-    $stop = 0;
-    while($stop == 0){
-        $line = <LOG>;
-        $DONE++, return if !defined($line);
-        chomp($line);
-        if( $line =~ /^tinderbox\:/ ){
-            if( $line =~ /^tinderbox\:[ \t]*([^:]*)\:[ \t]*([^\n]*)/ ){
-                $tbx{$1} = $2;
-            } elsif ( $line =~ /^tinderbox: END/ ) {
-                $stop++, $endsection++;
-            }
-        }
+  my $tbx = shift;
+  local $_;
+  my $key, $value;
+  while (<LOG>) {
+    chomp;
+    if (/^tinderbox:/){
+      (undef, $key, $value) = split /:\s*/;
+      $tbx->{$key} = $value;
     }
+  }
 }
 
 sub parse_mail_header {
-    my $line;
-    my $name = '';
-    while($line = <LOG> ){
-        chomp($line);
-
-        if( $line eq '' ){
-            return;
-        }
-
-        if( $line =~ /([^ :]*)\:[ \t]+([^\n]*)/ ){
-            $name = $1;
-            $name =~ tr/A-Z/a-z/;
-            $MAIL_HEADER{$name} = $2;
-            #print "$name $2\n";
-        }
-        elsif( $name ne '' ){
-            $MAIL_HEADER{$name} .= $2;
-        }
-    }
-
+  my $name = '';
+  my $header = '';
+  local $_;
+  while (<LOG>) {
+    chomp;
+    
+    last if /^$/;
+    
+#     if (/[^ :]*:\s+.*/) {
+#       my ($name, $header) = split /:\s*/, $_, 2;
+#       $name =~ tr/A-Z/a-z/;
+#       $MAIL_HEADER{$name} = $header;
+#     }
+  }
 }
 
 sub check_required_vars {
-    $err_string = '';
-    if( $tbx{'tree'} eq ''){
-        $err_string .= "Variable 'tinderbox:tree' not set.\n";
-    }
-    elsif( ! -r $tbx{'tree'} ){
-        $err_string .= "Variable 'tinderbox:tree' not set to a valid tree.\n";
-    }
-    elsif(($MAIL_HEADER{'to'} =~ /external/i ||
-           $MAIL_HEADER{'cc'} =~ /external/i) &&
-          $tbx{'tree'} !~ /external/i) {
-        $err_string .= "Data from an external source didn't specify an 'external' tree.";
-    }
-    if( $tbx{'build'} eq ''){
-        $err_string .= "Variable 'tinderbox:build' not set.\n";
-    }
-    if( $tbx{'errorparser'} eq ''){
-        $err_string .= "Variable 'tinderbox:errorparser' not set.\n";
-    }
+  my $tbx = shift;
+  my $err = '';
 
-    #
-    # Grab the date in the form of mm/dd/yy hh:mm:ss
-    #
-    # Or a GMT unix date
-    #
-    if( $tbx{'builddate'} eq ''){
-        $err_string .= "Variable 'tinderbox:builddate' not set.\n";
-    }
-    else {
-        if( $tbx{'builddate'} =~ 
-            /([0-9]*)\/([0-9]*)\/([0-9]*)[ \t]*([0-9]*)\:([0-9]*)\:([0-9]*)/ ){
-            
-            $builddate = timelocal($6,$5,$4,$2,$1-1,$3);
-                        
-        }
-        elsif( $tbx{'builddate'} > 7000000 ){
-            $builddate = $tbx{'builddate'};
-        }
-        else {
-            $err_string .= "Variable 'tinderbox:builddate' not of the form MM/DD/YY HH:MM:SS or unix date\n";
-        }
+  foreach my $var ('tree','build','errorparser','builddate','status') {
+    $err .= "Variable tinderbox:$var not set.\n" if $tbx->{$var} eq '';
+  }
+  
+  if ($tbx->{tree} ne '' and not -r $tbx->{tree}) {
+    $err .= "Variable tinderbox:tree not a valid tree.\n";
+  }
+  
+  if ($tbx->{builddate} ne '' and $tbx->{builddate} < 7000000) {
+    $err .= "Variable tinderbox:builddate not a valid unix date.\n";
+  }
 
-    }
-
-    #
-    # Build Status
-    #
-    if( $tbx{'status'} eq ''){
-        $err_string .= "Variable 'tinderbox:status' not set.\n";
-    }
-    elsif( ! $tbx{'status'} =~ /success|busted|building|testfailed/ ){
-        $err_string .= "Variable 'tinderbox:status' must be 'success', 'busted', 'testfailed', or 'building'\n";
-    }
-
-    #
-    # Report errors
-    #
-    if( $err_string ne ''  ){
-        die $err_string;
-    }
+  if ($tbx->{status} ne '' 
+      and $tbx->{status} !~ /success|busted|building|testfailed/) {
+    $err .= "Variable tinderbox:status must be one of success,"
+                  ." busted, testfailed, or building\n";
+  }
+  
+  # Report errors
+  die $err if $err ne '';
 }
 
 sub write_build_data {
-    $t = time;
-    open( BUILDDATA, ">>$tbx{'tree'}/build.dat" )|| die "can't open $! for writing";
-    print BUILDDATA "$t|$builddate|$tbx{'build'}|$tbx{'errorparser'}|$tbx{'status'}|$logfile|$tbx{binaryname}\n";
-    close( BUILDDATA );
+  my $tbx = $_[0];
+  my $tt = time();
+  open(BUILDDATA, ">>$tbx->{tree}/build.dat" )
+    or die "can't open $! for writing";
+
+  # Lock it for exclusive access
+  use Fcntl qw(:DEFAULT :flock);
+  flock(BUILDATA, LOCK_EX);
+
+  print BUILDDATA "$tt|$tbx->{builddate}|$tbx->{build}|$tbx->{errorparser}"
+                 ."|$tbx->{status}|$logfile|$tbx->{binaryname}\n";
+  close(BUILDDATA);
 }
 
 sub compress_log_file {
-    local( $done, $line);
+  my $tbx = $_[0];
+  local $_;
 
-    return if ( $building );
+  return if $building;
+  
+  open(LOG2, "<$ARGV[0]");
+  
+  # Skip past the the RFC822.HEADER
+  #
+  while (<LOG2>) {
+    chomp;
+    last if /^$/;
+  }
 
-    open( LOG2, "<$ARGV[0]") || die "cant open $!";
+  open(ZIPLOG, "| $gzip -c > ${tree}/$logfile") 
+    or die "can't open $! for writing";
 
-    #
-    # Skip past the the RFC822.HEADER
-    #
-    $done = 0;
-    while( !$done && ($line = <LOG2>) ){
-        chomp($line);
-        $done = ($line eq '');
+  my $inBinary = 0;
+  my $hasBinary = ($tbx->{binaryname} ne '');
+  while (<LOG2>) {
+    if ($inBinary) {
+      $inBinary = 0 if /^end\n/;
+    } else {
+      $inBinary = (/^begin [0-7][0-7][0-7] /) if $hasBinary;
+      print ZIPLOG $_;
     }
+  }
+  close(ZIPLOG);
+  close(LOG2);
 
-    open( ZIPLOG, "| $gzip -c > ${tree}/$logfile" ) || die "can't open $! for writing";
-    $inBinary = 0;
-    $hasBinary = ($tbx{'binaryname'} ne '');
-    while( $line = <LOG2> ){
-        if( !$inBinary ){
-            print ZIPLOG $line;
-            if( $hasBinary ){
-                $inBinary = ($line =~ /^begin [0-7][0-7][0-7] /);
-            }
-        }
-        else {
-            if( $line =~ /^end\n/ ){
-                $inBinary = 0;
-            }
-        }
-    }
-    close( ZIPLOG );
-    close( LOG2 );
-
-    #
-    # If a uuencoded binary is part of the build, unpack it.
-    #
-    if( $hasBinary ){
-        $bin_dir = "$tbx{'tree'}/bin/$builddate/$tbx{'build'}";
-        $bin_dir =~ s/ //g;
-
-        system("mkdir -m 0777 -p $bin_dir");
-
-        # LTNOTE: I'm not sure this is cross platform.
-        system("/tools/ns/bin/uudecode --output-file=$bin_dir/$tbx{binaryname} < $ARGV[0]");
-    }
-}
-        
-sub unlink_log_file {
-    unlink( $ARGV[0] );
+  # If a uuencoded binary is part of the build, unpack it.
+  #
+  if ($hasBinary) {
+    my $bin_dir = "$tbx->{tree}/bin/$tbx->{builddate}/$tbx->{build}";
+    $bin_dir =~ s/ //g;
+    
+    system("mkdir -m 0777 -p $bin_dir");
+    
+    # LTNOTE: I'm not sure this is cross platform.
+    system("/tools/ns/bin/uudecode --output-file=$bin_dir/$tbx->{binaryname}"
+          ." < $ARGV[0]");
+  }
 }
