@@ -1,0 +1,69 @@
+body {margin: 30px;
+ background: #EEE url("../images/page-grid.gif") center fixed;
+ }
+
+#banner, #main, #menu {
+ background: #fff url("../images/raptor-fade.jpg") 90% 30px no-repeat fixed;
+ }
+
+#banner {
+ background-image: url("../images/raptor-head.jpg");
+ border: 1px solid #55A;
+ border-width: 1px 1px 1px 10px;
+ font: bold 23px Verdana, Arial, Tahoma, Helvetica, sans-serif;
+ height: 42px;
+ color: #448;
+ padding: 23px 0 0 20px;
+ }
+
+#main {
+ background-image: url("../images/raptor-fade.jpg");
+ border: 1px solid #AAB;
+ border-width: 0 1px 1px 10px;
+ margin: 0;
+ padding: 0px 30px 30px 30px;
+ font: 1em Verdana, Arial, Tahoma, Helvetica, sans-serif;
+ }
+
+#menu {
+ background-color: #E7EFFF; 
+ background-image: url("../images/raptor-menu.gif");
+ float: right; width: 230px;
+ border: 1px solid #889;
+ border-width: 2px 10px 2px 2px;
+ margin: 30px 0px 0px 30px;
+ padding: 5px 0;
+ font-size: .75em;
+ }
+ 
+#main a {padding: 2px 1px;}
+
+#menu a {
+ display: block;
+ text-indent: -1.33em;
+ margin: 0 1em;
+ padding: 0.5em 1em 0.5em 1.5em;}
+
+p {
+ line-height: 1.25;
+ color: #000000;
+ margin: 10px 10px 10px 10px;
+ padding: 0;
+ }
+
+h1, h2, h3 {
+ font-weight: 800;
+ font-family: Verdana, Arial, Tahoma, Helvetica, sans-serif;
+ color: #000000;
+ padding: 5px 0px;
+ }
+
+h1 {font-size: 150%;}
+h2 {font-size: 130%;}
+h3 {font-size: 110%;}
+
+a {font-weight: 800; }
+a:link {color: #339;}
+a:visited {color: #339;}
+a:link:hover {color: white; background: #339; text-decoration: none;}
+a:visited:hover {color: white; background: #339; text-decoration: none;}
