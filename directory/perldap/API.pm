@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: API.pm,v 1.5 1998/07/24 22:31:02 clayton Exp $
+# $Id: API.pm,v 1.6 1998/07/29 08:21:44 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -40,7 +40,7 @@ require AutoLoader;
 # Do not simply export all your public functions/methods/constants.
 
 %EXPORT_TAGS = (
-	constant=> [qw(
+	constant => [qw(
 	LDAPS_PORT
 	LDAP_ADMINLIMIT_EXCEEDED
 	LDAP_AFFECTS_MULTIPLE_DSAS
@@ -241,16 +241,11 @@ require AutoLoader;
 	ldapssl_enable_clientauth
 	ldapssl_clientauth_init
 	ldapssl_init
-	ldapssl_install_routines)],
+	ldapssl_install_routines)]
 );
 
 # Add Everything in %EXPORT_TAGS to @EXPORT_OK
-@EXPORT_OK = ();
-
-foreach my $EXP (keys %EXPORT_TAGS)
-{
-   push @EXPORT_OK, @{$EXPORT_TAGS{$EXP}};
-}
+Exporter::export_ok_tags(keys %EXPORT_TAGS);
 
 $VERSION = '0.90';
 
