@@ -41,6 +41,9 @@
 #include "CInlineEditField.h"
 #include "CContextMenuAttachment.h"
 
+#include "CBrowserWindow.h"		// needed for finding toplevel context
+#include "CNSContext.h"
+
 #include <vector.h>
 #include <algorithm>
 
@@ -624,8 +627,16 @@ CHyperTreeFlexTable :: OpenRow ( TableIndexT inRow )
 	HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inRow) );
 	if (node) {
 	
+		// try to get a context for HT_Launch()
+		MWContext* currentContext = NULL;
+		CWindowMediator* theMediator = CWindowMediator::GetWindowMediator();
+		CBrowserWindow* theTopWindow =
+				dynamic_cast<CBrowserWindow*>(theMediator->FetchTopWindow(WindowType_Browser, regularLayerType, false));
+		if (theTopWindow)
+			currentContext = *(theTopWindow->GetWindowContext());
+	
 		// we can ignore the click if it is a container.
-		if ( !HT_IsContainer(node) && !HT_IsSeparator(node) && !HT_Launch(node, NULL) )
+		if ( !HT_IsContainer(node) && !HT_IsSeparator(node) && !HT_Launch(node, currentContext) )
 			CFrontApp::DoGetURL( HT_GetNodeURL(node) );
 					
 	} // if valid node
