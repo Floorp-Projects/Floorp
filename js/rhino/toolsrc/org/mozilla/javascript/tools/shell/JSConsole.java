@@ -146,8 +146,8 @@ public class JSConsole extends JFrame implements ActionListener {
         consoleTextArea = new ConsoleTextArea(args);
         JScrollPane scroller = new JScrollPane(consoleTextArea);
         setContentPane(scroller);
-	consoleTextArea.setRows(24);
-	consoleTextArea.setColumns(80);
+        consoleTextArea.setRows(24);
+        consoleTextArea.setColumns(80);
         addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent e) {
                     System.exit(0);
