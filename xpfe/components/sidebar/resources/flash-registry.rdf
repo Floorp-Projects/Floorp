@@ -14,6 +14,11 @@
       <RDF:Description about="rdf:msgnotifications" />
     </RDF:li>
 
+    <RDF:li>
+	  <!-- Software Notification Flashes -->	 
+      <RDF:Description about="rdf:xpinstall-update-notifier" />
+    </RDF:li>
+
     <!-- for testing purposes only -->
     <!--
     <RDF:li>
