@@ -46,6 +46,9 @@
 <!ENTITY event.new.todo		"Neue Aufgabe">
 <!ENTITY event.new.todo.accesskey "a">
 
+<!ENTITY calendar.new.server.label "Neuer Kalender">
+<!ENTITY calendar.new.server.accesskey "l">
+
 <!ENTITY event.edit.event	"Bearbeiten">
 <!ENTITY event.edit.event.accesskey	"B">
 

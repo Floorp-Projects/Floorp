@@ -46,6 +46,9 @@
 <!ENTITY event.new.todo		"Nieuwe taak">
 <!ENTITY event.new.todo.accesskey "t">
 
+<!ENTITY calendar.new.server.label "Nieuwe kalender">
+<!ENTITY calendar.new.server.accesskey "l">
+
 <!ENTITY event.edit.event	"Bewerken">
 <!ENTITY event.edit.event.accesskey	"e">
 
@@ -61,11 +64,11 @@
 <!ENTITY calendar.print.label	"Gebeurtenissen afdrukken...">
 <!ENTITY calendar.print.accesskey	"r">
 
-<!ENTITY calendar.print.label	"Afdrukvoorbeeld">
-<!ENTITY calendar.print.accesskey	"v">
+<!ENTITY calendar.printpreview.label	"Afdrukvoorbeeld">
+<!ENTITY calendar.printpreview.accesskey	"v">
 
-<!ENTITY calendar.print.label	"Paginainstellingen...">
-<!ENTITY calendar.print.accesskey	"u">
+<!ENTITY calendar.pagesetup.label	"Paginainstellingen...">
+<!ENTITY calendar.pagesetup.accesskey	"u">
 
 <!ENTITY calendar.import.label	"Importeren vanuit bestand...">
 <!ENTITY calendar.import.accesskey	"i">

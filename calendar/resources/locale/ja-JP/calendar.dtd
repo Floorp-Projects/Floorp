@@ -64,10 +64,14 @@
 <!ENTITY repeat.units.months.singular   "月" >
 <!ENTITY repeat.units.years.singular    "年" >
 
-<!ENTITY priority.level.none     "なし" >
-<!ENTITY priority.level.low      "低" >
-<!ENTITY priority.level.medium   "中" >
-<!ENTITY priority.level.high     "高" >
+<!ENTITY priority.level.none              "なし" >
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "低" >
+<!ENTITY priority.level.low.accesskey     "L">
+<!ENTITY priority.level.medium            "中" >
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "高" >
+<!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "タイトル" >
 <!ENTITY newevent.location.label     "ロケーション" >
@@ -127,7 +131,6 @@
 <!ENTITY newevent.advanced.repeat.second.label "第 2 ">
 <!ENTITY newevent.advanced.repeat.third.label "第 3 ">
 <!ENTITY newevent.advanced.repeat.fourth.label "第 4 ">
-<!ENTITY newevent.advanced.repeat.last.label "最後の">
 <!ENTITY newevent.advanced.repeat.first.extension "st">
 <!ENTITY newevent.advanced.repeat.second.extension "nd">
 <!ENTITY newevent.advanced.repeat.third.extension "rd">
@@ -135,7 +138,7 @@
 
 <!ENTITY newevent.choosefile.label "ファイルを選択">
 <!ENTITY newevent.removeselectedfile.label "選択ファイルを削除">
-          
+
 <!ENTITY newtodo.completed.label "完了">
 <!ENTITY newtodo.duedate.label "期日">
 <!ENTITY newtodo.startdate.label "開始日付">
@@ -256,11 +259,14 @@
 <!ENTITY calendar.monthview.button.label        "マンス" >
 <!ENTITY calendar.multiweekview.button.label        "マルチウィーク" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "月〜金のみ表示" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
 <!ENTITY calendar.displaytodos.checkbox.label   "ビューに ToDo を表示" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
-<!ENTITY calendar.menu.options.modify       "修正" >
-<!ENTITY calendar.menu.options.remove       "削除" >
-<!ENTITY calendar.menu.options.close        "ウィンドウを閉じる" >
+<!ENTITY calendar.menu.options.modify           "修正" >
+<!ENTITY calendar.menu.options.remove           "削除" >
+<!ENTITY calendar.menu.options.close            "ウィンドウを閉じる" >
+<!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "イベント" >
 <!ENTITY calendar.search.tab.label			        "検索">
@@ -301,9 +307,9 @@
 <!ENTITY calendar.context.modifytask.label            "ToDo を編集">
 <!ENTITY calendar.context.modifytask.accesskey        "e">
 <!ENTITY calendar.context.deleteevent.label           "選択イベントを削除">
-<!ENTITY calendar.context.deletetask.accesskey        "l">
-<!ENTITY calendar.context.deletetask.label            "ToDo を削除">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
+<!ENTITY calendar.context.deletetask.label            "ToDo を削除">
+<!ENTITY calendar.context.deletetask.accesskey        "l">
 <!ENTITY calendar.context.cutevent.label              "切り取り">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
 <!ENTITY calendar.context.copyevent.label             "コピー">
@@ -335,13 +341,30 @@
 <!ENTITY calendar.context.priority.label              "優先度">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
+<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "新しいカレンダー">
+<!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "カレンダーを編集">
+<!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "カレンダーを削除">
+<!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.refreshserver.label          "サーバのカレンダーに反映">
+<!ENTITY calendar.context.refreshserver.accesskey      "R">
 <!ENTITY calendar.context.publish.label                "すべてのカレンダーを公開">
+<!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "Mozilla Calendar について">
@@ -372,6 +395,7 @@
 <!ENTITY calendar.server.dialog.browse.label        "ファイルをブラウズ...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "カレンダーファイルの作成フォルダを任意に指定することができます。">
 <!ENTITY calendar.server.dialog.help.label          "ローカルファイルパスを入力してください。 URL (例: http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics) を入力することもできます。">
+
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "配色">
 
@@ -390,7 +414,6 @@
 <!ENTITY calendar.publish.example.url.description   "例: http://www.myserver.com/webdav/test.ics">
 
 <!ENTITY allDayEvents.label "終日イベント">
-
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "インポート: ローカルファイルから既存のカレンダーにイベントをインポートします。">
@@ -413,6 +436,3 @@
 <!ENTITY calendar.print.listselected.label "選択したイベントをリスト">
 <!ENTITY calendar.print.onlyitemsstatus.label "このステータスの項目のみ印刷:">
 <!ENTITY calendar.print.onlyitemscategory.label "このカテゴリの項目のみ印刷:">
-
-
-

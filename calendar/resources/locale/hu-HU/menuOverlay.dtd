@@ -47,6 +47,9 @@
 <!ENTITY event.new.todo		"Új tennivaló">
 <!ENTITY event.new.todo.accesskey "t">
 
+<!ENTITY calendar.new.server.label "Új naptár">
+<!ENTITY calendar.new.server.accesskey "l">
+
 <!ENTITY event.edit.event	"Szerkesztés">
 <!ENTITY event.edit.event.accesskey	"z">
 
@@ -62,11 +65,11 @@
 <!ENTITY calendar.print.label	"Az aktív naptár nyomtatása...">
 <!ENTITY calendar.print.accesskey	"n">
 
-<!ENTITY calendar.print.label	"Nyomtatási előkép">
-<!ENTITY calendar.print.accesskey	"e">
+<!ENTITY calendar.printpreview.label	"Nyomtatási előkép">
+<!ENTITY calendar.printpreview.accesskey	"e">
 
-<!ENTITY calendar.print.label	"Oldalbeállítás...">
-<!ENTITY calendar.print.accesskey	"u">
+<!ENTITY calendar.pagesetup.label	"Oldalbeállítás...">
+<!ENTITY calendar.pagesetup.accesskey	"u">
 
 <!ENTITY calendar.import.label	"Importálás fájlból...">
 <!ENTITY calendar.import.accesskey	"i">

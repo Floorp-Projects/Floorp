@@ -61,10 +61,14 @@
 <!ENTITY repeat.units.months.singular   "měsíc" >
 <!ENTITY repeat.units.years.singular    "rok" >
 
-<!ENTITY priority.level.none     "Žádná" >
-<!ENTITY priority.level.low      "Nízká" >
-<!ENTITY priority.level.medium   "Střední" >
-<!ENTITY priority.level.high     "Vysoká" >
+<!ENTITY priority.level.none              "Žádná">
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "Nízká">
+<!ENTITY priority.level.low.accesskey     "L">
+<!ENTITY priority.level.medium            "Střední">
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "Vysoká">
+<!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "Název" >
 <!ENTITY newevent.location.label     "Místo" >
@@ -127,11 +131,11 @@
 <!ENTITY newevent.advanced.repeat.first.extension "."> 
 <!ENTITY newevent.advanced.repeat.second.extension "."> 
 <!ENTITY newevent.advanced.repeat.third.extension "."> 
-<!ENTITY newevent.advanced.repeat.nth.extension ".">         
+<!ENTITY newevent.advanced.repeat.nth.extension "."> 
 
 <!ENTITY newevent.choosefile.label "Zvolit soubor">
 <!ENTITY newevent.removeselectedfile.label "Odstranit vybraný soubor">
-          
+
 <!ENTITY newtodo.completed.label "Dokončeno">
 <!ENTITY newtodo.duedate.label "Splnit do">
 <!ENTITY newtodo.startdate.label "Začátek">
@@ -252,11 +256,14 @@
 <!ENTITY calendar.monthview.button.label        "Měsíční" >
 <!ENTITY calendar.multiweekview.button.label        "Více-týdenní" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Pouze pracovní týden" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Zobrazené úlohy" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
-<!ENTITY calendar.menu.options.modify       "Upravit" >
-<!ENTITY calendar.menu.options.remove       "Vymazat" >
-<!ENTITY calendar.menu.options.close        "Zavřít okno" >
+<!ENTITY calendar.menu.options.modify           "Upravit" >
+<!ENTITY calendar.menu.options.remove           "Vymazat" >
+<!ENTITY calendar.menu.options.close            "Zavřít okno" >
+<!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Události" >
 <!ENTITY calendar.search.tab.label			        "Hledej">
@@ -331,13 +338,30 @@
 <!ENTITY calendar.context.priority.label              "Priorita">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
+<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Nový kalendář">
+<!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Upravit kalendář">
+<!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Vymazat kalendář">
+<!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.refreshserver.label          "Obnovit vzdálené kalendáře">
+<!ENTITY calendar.context.refreshserver.accesskey      "R">
 <!ENTITY calendar.context.publish.label                "Publikovat celý kalendář">
+<!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "O Mozilla Kalendář">
@@ -368,6 +392,7 @@
 <!ENTITY calendar.server.dialog.browse.label        "Procházet lokální soubory...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Volitelně můžete zvolit soubor, kde bude kalendář uložen.">
 <!ENTITY calendar.server.dialog.help.label          "Můžete vložit cestu k lokálnímu, nebo vzálenému souboru jako http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Barva">
 
@@ -386,7 +411,6 @@
 <!ENTITY calendar.publish.example.url.description   "Například http://www.mujserver.com/webdav/test.ics">
 
 <!ENTITY allDayEvents.label "Všechny celodenní události">
-
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Import: Import událostí z lokálního souboru do aktuálního kalendáře.">

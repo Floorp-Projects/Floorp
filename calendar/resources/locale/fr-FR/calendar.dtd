@@ -61,10 +61,14 @@
 <!ENTITY repeat.units.months.singular   "Mois" >
 <!ENTITY repeat.units.years.singular    "Année" >
 
-<!ENTITY priority.level.none     "Aucune" >
-<!ENTITY priority.level.low      "Basse" >
-<!ENTITY priority.level.medium   "Moyenne" >
-<!ENTITY priority.level.high     "élevée" >
+<!ENTITY priority.level.none              "Aucune">
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "Basse">
+<!ENTITY priority.level.low.accesskey     "L">
+<!ENTITY priority.level.medium            "Moyenne">
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "élevée">
+<!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "Titre" >
 <!ENTITY newevent.location.label     "Lieu" >
@@ -201,8 +205,6 @@
 <!ENTITY calendar.listofcalendarstab.label "Calendriers">
 <!ENTITY calendar.gototoday.button.label        "Aller à aujourd'hui" >
 
-<!ENTITY calendar.listofcalendarstab.label "Calendriers">
-
 <!ENTITY calendar.calendarlistbox.label "Calendriers">
 
 <!ENTITY calendar.events.filter.all.label "Tous les événements">
@@ -254,11 +256,14 @@
 <!ENTITY calendar.monthview.button.label        "1 mois par vue" >
 <!ENTITY calendar.multiweekview.button.label        "Multisemaine" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Lundi-Vendredi seulement" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tâches en vue" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
-<!ENTITY calendar.menu.options.modify       "Modifier" >
-<!ENTITY calendar.menu.options.remove       "Supprimer" >
-<!ENTITY calendar.menu.options.close        "Fermer la fenêtre" >
+<!ENTITY calendar.menu.options.modify           "Modifier" >
+<!ENTITY calendar.menu.options.remove           "Supprimer" >
+<!ENTITY calendar.menu.options.close            "Fermer la fenêtre" >
+<!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Événements" >
 <!ENTITY calendar.search.tab.label			        "Chercher">
@@ -299,9 +304,9 @@
 <!ENTITY calendar.context.modifytask.label            "Modifier la tâche">
 <!ENTITY calendar.context.modifytask.accesskey        "e">
 <!ENTITY calendar.context.deleteevent.label           "Supprimer l'événement sélectionné">
-<!ENTITY calendar.context.deletetask.accesskey        "s">
-<!ENTITY calendar.context.deletetask.label            "Supprimer la tâche">
 <!ENTITY calendar.context.deleteevent.accesskey       "u">
+<!ENTITY calendar.context.deletetask.label            "Supprimer la tâche">
+<!ENTITY calendar.context.deletetask.accesskey        "s">
 <!ENTITY calendar.context.cutevent.label              "Couper">
 <!ENTITY calendar.context.cutevent.accesskey          "c">
 <!ENTITY calendar.context.copyevent.label             "Copier">
@@ -333,13 +338,30 @@
 <!ENTITY calendar.context.priority.label              "Priorité">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
+<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Nouveau calendrier">
+<!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Modifier le calendrier">
+<!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Supprimer le calendrier">
+<!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.refreshserver.label          "Rafraîchir les calendriers distants">
+<!ENTITY calendar.context.refreshserver.accesskey      "R">
 <!ENTITY calendar.context.publish.label                "Publier le calendrier en entier">
+<!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "À propos de Mozilla Calendar">
@@ -370,6 +392,7 @@
 <!ENTITY calendar.server.dialog.browse.label        "Parcourir à la recherche du fichier local...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Vous avez la possibilité de préciser une adresse de fichier où le calendrier devra être créé.">
 <!ENTITY calendar.server.dialog.help.label          "Vous pouvez entrer un chemin local, ou un chemin distant comme http://www.mozilla.org/projects/calendar/caldata/FranceHolidays.ics">
+
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Couleur">
 
@@ -388,7 +411,6 @@
 <!ENTITY calendar.publish.example.url.description   "Quelque chose comme http://www.monserveur.com/webdav/test.ics">
 
 <!ENTITY allDayEvents.label "Événement durant toute la journée">
-
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importer : Importer les événements d'un fichier local dans un calendrier existant.">
@@ -411,6 +433,3 @@
 <!ENTITY calendar.print.listselected.label "List Selected Events">
 <!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
 <!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
-
-
-

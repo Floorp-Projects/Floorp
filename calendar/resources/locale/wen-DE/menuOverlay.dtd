@@ -46,6 +46,9 @@
 <!ENTITY event.new.todo		"Nowy nadawk" >
 <!ENTITY event.new.todo.accesskey "a" >
 
+<!ENTITY calendar.new.server.label "Nowa protyka">
+<!ENTITY calendar.new.server.accesskey "l">
+
 <!ENTITY event.edit.event	"Wobdźěłać" >
 <!ENTITY event.edit.event.accesskey	"b" >
 

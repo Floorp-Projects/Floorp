@@ -60,10 +60,14 @@
 <!ENTITY repeat.units.months.singular   "Měsac" >
 <!ENTITY repeat.units.years.singular    "Lěto" >
 
-<!ENTITY priority.level.none     "Žana" >
-<!ENTITY priority.level.low      "Niska" >
-<!ENTITY priority.level.medium   "Srjedźna" >
-<!ENTITY priority.level.high     "Wysoka" >
+<!ENTITY priority.level.none              "Žana">
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "Niska">
+<!ENTITY priority.level.low.accesskey     "L">
+<!ENTITY priority.level.medium            "Srjedźna">
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "Wysoka">
+<!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "Titl" >
 <!ENTITY newevent.location.label     "Městno" >
@@ -251,11 +255,14 @@
 <!ENTITY calendar.monthview.button.label        "Měsačny wid" >
 <!ENTITY calendar.multiweekview.button.label        "Multitydźeń" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Jenož póndźela-pjatka" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Nadawki we widźe" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
-<!ENTITY calendar.menu.options.modify       "Wobdźěłać" >
-<!ENTITY calendar.menu.options.remove       "Wotstronić" >
-<!ENTITY calendar.menu.options.close        "Woknješko začinić" >
+<!ENTITY calendar.menu.options.modify           "Wobdźěłać" >
+<!ENTITY calendar.menu.options.remove           "Wotstronić" >
+<!ENTITY calendar.menu.options.close            "Woknješko začinić" >
+<!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Podawki" >
 <!ENTITY calendar.search.tab.label			        "Pytanje">
@@ -296,9 +303,9 @@
 <!ENTITY calendar.context.modifytask.label            "Nadawk wobdźěłać">
 <!ENTITY calendar.context.modifytask.accesskey        "d">
 <!ENTITY calendar.context.deleteevent.label           "Wubrany podawk wotstronić">
-<!ENTITY calendar.context.deletetask.accesskey        "t">
-<!ENTITY calendar.context.deletetask.label            "Nadawk wotstronić">
 <!ENTITY calendar.context.deleteevent.accesskey       "o">
+<!ENTITY calendar.context.deletetask.label            "Nadawk wotstronić">
+<!ENTITY calendar.context.deletetask.accesskey        "t">
 <!ENTITY calendar.context.cutevent.label              "Wutřihać">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
 <!ENTITY calendar.context.copyevent.label             "Kopěrować">
@@ -330,13 +337,30 @@
 <!ENTITY calendar.context.priority.label              "Priorita">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
+<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Nowa protyka">
+<!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Protyku wobdźěłać">
+<!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Protyku wostronić">
+<!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.refreshserver.label          "Nazdalne protyki aktualizować">
+<!ENTITY calendar.context.refreshserver.accesskey      "R">
 <!ENTITY calendar.context.publish.label                "Cyłu protyku publikować">
+<!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "Wo Mozilla-Protyce">
@@ -376,7 +400,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Protyku publikować">
 <!ENTITY calendar.publish.url.label                 "Publikowanska URL">
-<!ENTITY calendar.publish.remotefilename.label      "Mjeno nazdalneje dataje">
 <!ENTITY calendar.publish.username.label            "Wužiwarske mjeno">
 <!ENTITY calendar.publish.password.label            "Tajne hesło">
 <!ENTITY calendar.publish.username.description      "(Opciske) Wužiwarske mjeno za słanje na tutón server.">

@@ -21,6 +21,7 @@
    - Contributor(s): Mike Potter <mikep@oeone.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
    -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+   -                 Erico Mendonca <erico@techisa.srv.br>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,57 +37,57 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY calendar.label             "Calendar" >
-<!ENTITY calendarPanel.label        "Calendar" >
-<!ENTITY calendar.accesskey         "c" >
-<!ENTITY calendar.publish.label     "Publishing">
-<!ENTITY calendar.alarms.label      "Alarms">
-<!ENTITY calendar.views.label       "Views">
-<!ENTITY calendar.timezone.label    "My Timezone">
+<!ENTITY calendar.label             "Calend&#xE1;rio" >
+<!ENTITY calendarPanel.label        "Calend&#xE1;rio" >
+<!ENTITY calendar.accesskey         "C" >
+<!ENTITY calendar.publish.label     "Publica&#xE7;&#xE3;o">
+<!ENTITY calendar.alarms.label      "Alarmes">
+<!ENTITY calendar.views.label       "Vis&#xF5;es ">
+<!ENTITY calendar.timezone.label    "Fuso Hor&#xE1;rio">
 
-<!ENTITY pref.mainbox.label         "General Settings" >
-<!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
-<!ENTITY pref.playasound  "Play a sound" >
+<!ENTITY pref.mainbox.label         "Op&#xE7;&#xF5;es Gerais" >
+<!ENTITY pref.alarmgoesoff.label "Quando um alarme disparar:">
+<!ENTITY pref.playasound  "Tocar um som" >
 
-<!ENTITY pref.alarmbox.label    "Alarms" >
-<!ENTITY pref.showalarmbox    "Show an alarm box" >
-<!ENTITY pref.defaultemail.label "Default address to send alarms to:">
-<!ENTITY pref.defaulttext.label "Default text for alarms:">
-<!ENTITY pref.missedalarms    "Show missed alarms" >
-<!ENTITY pref.defalarm4events.label "Default alarm setting for events:">
-<!ENTITY pref.defalarm4todos.label "Default alarm setting for tasks:">
-<!ENTITY pref.alarm.on "On">
-<!ENTITY pref.alarm.off "Off">
-<!ENTITY pref.defalarmlen4events.label "Default time an alarm goes off before an event:">
-<!ENTITY pref.defalarmlen4todos.label "Default time an alarm goes off before a task:">
+<!ENTITY pref.alarmbox.label    "Alarmes" >
+<!ENTITY pref.showalarmbox    "Mostrar uma caixa de alarme" >
+<!ENTITY pref.defaultemail.label "Endere&#xE7;o padr&#xE3;o para enviar alarmes:">
+<!ENTITY pref.defaulttext.label "Texto padr&#xE3;o para alarmes:">
+<!ENTITY pref.missedalarms    "Mostrar alarmes perdidos" >
+<!ENTITY pref.defalarm4events.label "Op&#xE7;&#xE3;o padr&#xE3;o para eventos:">
+<!ENTITY pref.defalarm4todos.label "Op&#xE7;&#xE3;o padr&#xE3;o para tarefas:">
+<!ENTITY pref.alarm.on "Ligado">
+<!ENTITY pref.alarm.off "Desligado">
+<!ENTITY pref.defalarmlen4events.label "Tempo padr&#xE3;o em que um alarme dispara antes de um evento:">
+<!ENTITY pref.defalarmlen4todos.label "Tempo padr&#xE3;o em que um alarme dispara antes de uma tarefa:">
 
-<!ENTITY pref.dateformat.label      "Date Text Format:" >
-<!ENTITY pref.dateformat.long       "Long" >
-<!ENTITY pref.dateformat.short      "Short"  >
-<!ENTITY pref.defaultlength.label   "Default Event Length:" >
-<!ENTITY pref.defaultsnoozelength.label   "Default Snooze Length:" >
+<!ENTITY pref.dateformat.label      "Formato de Texto de Data:" >
+<!ENTITY pref.dateformat.long       "Longo" >
+<!ENTITY pref.dateformat.short      "Curto"  >
+<!ENTITY pref.defaultlength.label   "Dura&#xE7;&#xE3;o padr&#xE3;o de Evento:" >
+<!ENTITY pref.defaultsnoozelength.label   "Dura&#xE7;&#xE3;o padr&#xE3;o de Soneca:" >
 
-<!ENTITY pref.weekstarts.label     "First Day Of The Week:" >
-<!ENTITY pref.weekstarts.sunday    "Sunday" >
-<!ENTITY pref.weekstarts.monday    "Monday" >
-<!ENTITY pref.weekstarts.tuesday   "Tuesday" >
-<!ENTITY pref.weekstarts.wednesday "Wednesday" >
-<!ENTITY pref.weekstarts.thursday  "Thursday" >
-<!ENTITY pref.weekstarts.friday    "Friday" >
-<!ENTITY pref.weekstarts.saturday  "Saturday" >
+<!ENTITY pref.weekstarts.label     "Primeiro Dia da Semana:" >
+<!ENTITY pref.weekstarts.sunday    "Domingo" >
+<!ENTITY pref.weekstarts.monday    "Segunda" >
+<!ENTITY pref.weekstarts.tuesday   "Ter&#xE7;a" >
+<!ENTITY pref.weekstarts.wednesday "Quarta" >
+<!ENTITY pref.weekstarts.thursday  "Quinta" >
+<!ENTITY pref.weekstarts.friday    "Sexta" >
+<!ENTITY pref.weekstarts.saturday  "S&#xE1;bado" >
 
-<!ENTITY pref.numberofweeks.label     "Default total number of Weeks:" >
-<!ENTITY pref.numberofweeks.0      "None" >
-<!ENTITY pref.numberofweeks.1      "1 Week" >
-<!ENTITY pref.numberofweeks.2      "2 Weeks" >
-<!ENTITY pref.numberofweeks.3      "3 Weeks" >
-<!ENTITY pref.numberofweeks.4      "4 Weeks" >
-<!ENTITY pref.numberofweeks.5      "5 Weeks" >
-<!ENTITY pref.numberofweeks.6      "6 Weeks" >
-<!ENTITY pref.numberofpreviousweeks.label     "Number of Previous Weeks:" >
+<!ENTITY pref.numberofweeks.label     "N&#xFA;mero total padr&#xE3;o de Semanas:" >
+<!ENTITY pref.numberofweeks.0      "Nenhum" >
+<!ENTITY pref.numberofweeks.1      "1 Semana" >
+<!ENTITY pref.numberofweeks.2      "2 Semanas" >
+<!ENTITY pref.numberofweeks.3      "3 Semanas" >
+<!ENTITY pref.numberofweeks.4      "4 Semanas" >
+<!ENTITY pref.numberofweeks.5      "5 Semanas" >
+<!ENTITY pref.numberofweeks.6      "6 Semanas" >
+<!ENTITY pref.numberofpreviousweeks.label     "N&#xFA;mero de Semanas Anteriores:" >
 
 
-<!ENTITY pref.hour.help.description    "Overwritten if events are outside these times" >
+<!ENTITY pref.hour.help.description    "Omitir caso os eventos estejam fora destes hor&#xE1;rios" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
 <!ENTITY pref.hour.02    "02:00" >
@@ -112,35 +113,35 @@
 <!ENTITY pref.hour.22    "22:00" >
 <!ENTITY pref.hour.23    "23:00" >
 
-<!ENTITY pref.calendar.view.allview.caption "General"> 
-<!ENTITY pref.calendar.view.dayview.caption "Day View"> 
-<!ENTITY pref.calendar.view.weekview.caption "Week View"> 
-<!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views"> 
-<!ENTITY pref.calendar.view.monthview.caption "Month View"> 
-<!ENTITY pref.calendar.view.multiweekview.caption "Multiweek View"> 
+<!ENTITY pref.calendar.view.allview.caption "Geral">
+<!ENTITY pref.calendar.view.dayview.caption "Vis&#xE3;o do Dia">
+<!ENTITY pref.calendar.view.weekview.caption "Vis&#xE3;o  da Semana">
+<!ENTITY pref.calendar.view.weekanddayview.caption "Vis&#xF5;es Semanais e Di&#xE1;rias">
+<!ENTITY pref.calendar.view.monthview.caption "Vis&#xE3;o do M&#xEA;s">
+<!ENTITY pref.calendar.view.multiweekview.caption "Vis&#xE3;o Multi-Semanas">
 
-<!ENTITY pref.calendar.view.restrict.label "Restrict Views to "> 
-<!ENTITY pref.calendar.view.starttime.label "Start time:"> 
-<!ENTITY pref.calendar.view.endtime.label   "End time:"> 
+<!ENTITY pref.calendar.view.restrict.label "Restringir Vis&#xF5;es a ">
+<!ENTITY pref.calendar.view.starttime.label "Hor&#xE1;rio de In&#xED;cio:">
+<!ENTITY pref.calendar.view.endtime.label   "Hor&#xE1;rio de T&#xE9;rmino:">
 
-<!ENTITY pref.categories.label   "Categories" >
+<!ENTITY pref.categories.label   "Categorias" >
 
-<!ENTITY pref.categories.help.description   "Use a comma between each category you want to add.">
+<!ENTITY pref.categories.help.description   "Utilize v&#xED;rgula entre cada categoria que deseja acrescentar.">
 
-<!ENTITY pref.reloadonlaunch       "Reload Remote Calendars On Startup">
+<!ENTITY pref.reloadonlaunch       "Recarregar Calend&#xE1;rios Remotos ao Iniciar">
 
-<!ENTITY pref.publish.caption        "Publishing Settings">
-<!ENTITY pref.publish.path.label     "Default Remote Filename">
-<!ENTITY pref.publish.username.label "Username">
-<!ENTITY pref.publish.password.label "Password">
+<!ENTITY pref.publish.caption        "Op&#xE7;&#xF5;es de Publica&#xE7;&#xE3;o">
+<!ENTITY pref.publish.path.label     "Nome padr&#xE3;o do Arquivo Remoto">
+<!ENTITY pref.publish.username.label "Usu&#xE1;rio">
+<!ENTITY pref.publish.password.label "Senha">
 
-<!ENTITY pref.minutes.label "Minutes">
+<!ENTITY pref.minutes.label "Minutos">
 
-<!-- Calendar Timezone preferences information -->        
-        
-<!ENTITY pref.calendar.timezone.label "My Timezone">
-<!ENTITY pref.calendar.timezone.caption "Timezone">
-<!ENTITY pref.defaultzone.label     "Default Timezone:" >
+<!-- Calendar Timezone preferences information -->
+
+<!ENTITY pref.calendar.timezone.label "Fuso Hor&#xE1;rio">
+<!ENTITY pref.calendar.timezone.caption "Fuso Hor&#xE1;rio">
+<!ENTITY pref.defaultzone.label     "Fuso Hor&#xE1;rio Padr&#xE3;o:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Africa/Abidjan" >
 <!ENTITY pref.timezone.Africa.Accra "Africa/Accra" >

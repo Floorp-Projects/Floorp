@@ -1,8 +1,8 @@
 <!-- INSERT OPEN OEONE LICENSE -->
 
 <!-- Select addresses for mail message dialog -->
-<!ENTITY ab-selectAddressesDialog.title "Sele&#xE7;&#xF5;o de Endere&#xE7;os">
-<!ENTITY ab-selectAddressesDialogHeader.label "Selecione Endere&#xE7;os">
+<!ENTITY ab-selectAddressesDialog.title "Sele&#xE7;&#xE3;o de Endere&#xE7;os">
+<!ENTITY ab-selectAddressesDialogHeader.label "Selecionar Endere&#xE7;os">
 <!ENTITY ab-selectAddressesDialogLookIn.label "Procurar em: ">
 <!ENTITY ab-selectAddressesDialogNameColumn.label "Nome">
 <!ENTITY ab-selectAddressesDialogEmailColumn.label "Endere&#xE7;o de Email">
@@ -12,12 +12,12 @@
 <!ENTITY ab-selectAddressesDialogCcButton.label "Cc ">
 <!ENTITY ab-selectAddressesDialogBccButton.label "Bcc ">
 <!ENTITY ab-selectAddressesDialogRemoveButton.label "Remover">
-<!ENTITY ab-selectAddressesDialogAddressTo.label "Endere&#xE7;ar Mensagem Para:">
+<!ENTITY ab-selectAddressesDialogAddressTo.label "Endere&#xE7;ar Mensagem a:">
 <!ENTITY ab-selectAddressesDialogPrefixTo.label "Para: ">
 <!ENTITY ab-selectAddressesDialogPrefixCc.label "CC: ">
 <!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc: ">
 <!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Nenhum endere&#xE7;o de email">
 <!ENTITY ab-selectAddressesDialogInvite.label "Convidar">
 <!ENTITY ab-selectAddressesDialogUninvite.label "Remover">
-<!ENTITY ab-selectAddressesDialogInviteList.label "Lista de convidados:">
+<!ENTITY ab-selectAddressesDialogInviteList.label "Lista de Convidados:">
 

@@ -62,10 +62,14 @@
 <!ENTITY repeat.units.months.singular   "havonta" >
 <!ENTITY repeat.units.years.singular    "évente" >
 
-<!ENTITY priority.level.none     "nincs" >
-<!ENTITY priority.level.low      "alacsony" >
-<!ENTITY priority.level.medium   "közepes" >
-<!ENTITY priority.level.high     "magas" >
+<!ENTITY priority.level.none              "nincs">
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "alacsony">
+<!ENTITY priority.level.low.accesskey     "L">
+<!ENTITY priority.level.medium            "közepes">
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "magas">
+<!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "Címke" >
 <!ENTITY newevent.location.label     "Helyszín" >
@@ -132,7 +136,7 @@
 
 <!ENTITY newevent.choosefile.label "Fájl kiválasztása">
 <!ENTITY newevent.removeselectedfile.label "Kiválasztott fájl eltávolítása">
-          
+
 <!ENTITY newtodo.completed.label "Kész van">
 <!ENTITY newtodo.duedate.label "Határidő">
 <!ENTITY newtodo.startdate.label "Kezdő dátum">
@@ -253,11 +257,14 @@
 <!ENTITY calendar.monthview.button.label        "Havi nézet" >
 <!ENTITY calendar.multiweekview.button.label        "Többheti nézet" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Csak hétfő-péntek" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tennivalók a nézetben" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
-<!ENTITY calendar.menu.options.modify       "Szerkesztés" >
-<!ENTITY calendar.menu.options.remove       "Törlés" >
-<!ENTITY calendar.menu.options.close        "Ablak bezárás" >
+<!ENTITY calendar.menu.options.modify           "Szerkesztés" >
+<!ENTITY calendar.menu.options.remove           "Törlés" >
+<!ENTITY calendar.menu.options.close            "Ablak bezárás" >
+<!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Események" >
 <!ENTITY calendar.search.tab.label			        "Keresés">
@@ -298,9 +305,9 @@
 <!ENTITY calendar.context.modifytask.label            "Tennivaló szerkesztése">
 <!ENTITY calendar.context.modifytask.accesskey        "s">
 <!ENTITY calendar.context.deleteevent.label           "Kiválaszott esemény törlése">
-<!ENTITY calendar.context.deletetask.accesskey        "t">
-<!ENTITY calendar.context.deletetask.label            "Tennivaló törlése">
 <!ENTITY calendar.context.deleteevent.accesskey       "i">
+<!ENTITY calendar.context.deletetask.label            "Tennivaló törlése">
+<!ENTITY calendar.context.deletetask.accesskey        "t">
 <!ENTITY calendar.context.cutevent.label              "Kivág">
 <!ENTITY calendar.context.cutevent.accesskey          "v">
 <!ENTITY calendar.context.copyevent.label             "Másol">
@@ -332,13 +339,30 @@
 <!ENTITY calendar.context.priority.label              "Prioritás">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
+<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Új naptár">
+<!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Naptár szerkesztése">
+<!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Naptár törlése">
+<!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.refreshserver.label          "Távoli naptár frissítése">
+<!ENTITY calendar.context.refreshserver.accesskey      "R">
 <!ENTITY calendar.context.publish.label                "Teljes naptár közzététele">
+<!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "A Naptár névjegye">
@@ -369,6 +393,7 @@
 <!ENTITY calendar.server.dialog.browse.label        "Böngészés a hely fájlhoz...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Opcionálisan megadhatsz egy fájl elérési helyet, ahol a naptár létrejön.">
 <!ENTITY calendar.server.dialog.help.label          "Megadhatod egy helyi fájl elérését, vagy egy távoli fájl elérést, mint például http://www.mozilla.org/projects/calendar/caldata/HungarianHolidays.ics">
+
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Szín">
 
@@ -387,7 +412,6 @@
 <!ENTITY calendar.publish.example.url.description   "Valami olyasmi mint: http://www.azenszerverem.com/webdav/test.ics">
 
 <!ENTITY allDayEvents.label "Egésznapos események">
-
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importálás: Események importálása egy helyi fájlból mér létező naptárba">
@@ -410,6 +434,3 @@
 <!ENTITY calendar.print.listselected.label "Kiválasztott események listázása">
 <!ENTITY calendar.print.onlyitemsstatus.label "Csak a következő állapotú tételeket nyomtassuk:">
 <!ENTITY calendar.print.onlyitemscategory.label "Csak a következő kategóriájú tételeket nyomtassuk:"> 
-
-
-

@@ -18,10 +18,10 @@
    - Portions created by the Initial Developer are Copyright (C) 2001
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Garth Smedley <garths@oeone.com> 
+   - Contributor(s): Garth Smedley <garths@oeone.com>
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
-   -				 Erico Mendonca <erico@techisa.srv.br>
+   -                 Erico Mendonca <erico@techisa.srv.br>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +37,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- Event Menu -->                                      
+<!-- Event Menu -->
 <!ENTITY event.menu.title   "Evento">
 <!ENTITY eventMenuCmd.accesskey     "v">
 
@@ -46,6 +46,9 @@
 
 <!ENTITY event.new.todo		"Nova Tarefa">
 <!ENTITY event.new.todo.accesskey "t">
+
+<!ENTITY calendar.new.server.label "Novo Calend&#xE1;rio">
+<!ENTITY calendar.new.server.accesskey "l">
 
 <!ENTITY event.edit.event	"Editar">
 <!ENTITY event.edit.event.accesskey	"e">

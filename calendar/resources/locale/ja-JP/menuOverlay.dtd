@@ -49,6 +49,9 @@
 <!ENTITY event.new.todo		"新しい ToDo">
 <!ENTITY event.new.todo.accesskey "t">
 
+<!ENTITY calendar.new.server.label "新しいカレンダー">
+<!ENTITY calendar.new.server.accesskey "l">
+
 <!ENTITY event.edit.event	"編集">
 <!ENTITY event.edit.event.accesskey	"e">
 
@@ -64,11 +67,11 @@
 <!ENTITY calendar.print.label	"アクティブなカレンダを印刷...">
 <!ENTITY calendar.print.accesskey	"r">
 
-<!ENTITY calendar.print.label	"印刷プレビュー">
-<!ENTITY calendar.print.accesskey	"v">
+<!ENTITY calendar.printpreview.label	"印刷プレビュー">
+<!ENTITY calendar.printpreview.accesskey	"v">
 
-<!ENTITY calendar.print.label	"ページ設定...">
-<!ENTITY calendar.print.accesskey	"u">
+<!ENTITY calendar.pagesetup.label	"ページ設定...">
+<!ENTITY calendar.pagesetup.accesskey	"u">
 
 <!ENTITY calendar.import.label	"ファイルからインポート...">
 <!ENTITY calendar.import.accesskey	"i">

@@ -47,6 +47,9 @@
 <!ENTITY event.new.todo		"Nowe zadanie">
 <!ENTITY event.new.todo.accesskey "t">
 
+<!ENTITY calendar.new.server.label "Nowy kalendarz">
+<!ENTITY calendar.new.server.accesskey "l">
+
 <!ENTITY event.edit.event	"Edytuj">
 <!ENTITY event.edit.event.accesskey	"e">
 
@@ -62,11 +65,11 @@
 <!ENTITY calendar.print.label	"Drukuj aktywny kalendarz...">
 <!ENTITY calendar.print.accesskey	"r">
 
-<!ENTITY calendar.print.label	"Podgląd druku">
-<!ENTITY calendar.print.accesskey	"v">
+<!ENTITY calendar.printpreview.label	"Podgląd druku">
+<!ENTITY calendar.printpreview.accesskey	"v">
 
-<!ENTITY calendar.print.label	"Ustawienia strony...">
-<!ENTITY calendar.print.accesskey	"u">
+<!ENTITY calendar.pagesetup.label	"Ustawienia strony...">
+<!ENTITY calendar.pagesetup.accesskey	"u">
 
 <!ENTITY calendar.import.label	"Importuj z pliku...">
 <!ENTITY calendar.import.accesskey	"i">

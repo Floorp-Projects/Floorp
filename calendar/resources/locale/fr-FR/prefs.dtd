@@ -38,7 +38,7 @@
 
 <!ENTITY calendar.label             "Calendar" >
 <!ENTITY calendarPanel.label        "Calendar" >
-<!ENTITY calendar.accesskey         "c" >
+<!ENTITY calendar.accesskey         "C" >
 <!ENTITY calendar.publish.label     "Publication">
 <!ENTITY calendar.alarms.label      "Alarmes">
 <!ENTITY calendar.views.label       "Vues">

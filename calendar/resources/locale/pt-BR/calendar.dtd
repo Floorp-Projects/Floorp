@@ -18,7 +18,7 @@
    - Portions created by the Initial Developer are Copyright (C) 2001
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Garth Smedley <garths@oeone.com> 
+   - Contributor(s): Garth Smedley <garths@oeone.com>
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
@@ -59,13 +59,17 @@
 
 <!ENTITY repeat.units.days.singular    "Dia" >
 <!ENTITY repeat.units.weeks.singular    "Semana" >
-<!ENTITY repeat.units.months.singular   "M&#xE1;s" >
+<!ENTITY repeat.units.months.singular   "M&#xEA;s" >
 <!ENTITY repeat.units.years.singular    "Ano" >
 
-<!ENTITY priority.level.none     "Nenhum" >
-<!ENTITY priority.level.low      "Baixo" >
-<!ENTITY priority.level.medium   "M&#xE9;dio" >
-<!ENTITY priority.level.high     "Alto" >
+<!ENTITY priority.level.none              "Nenhum" >
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "Baixo" >
+<!ENTITY priority.level.low.accesskey     "L">
+<!ENTITY priority.level.medium            "M&#xE9;dio" >
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "Alto" >
+<!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "T&#xED;tulo" >
 <!ENTITY newevent.location.label     "Localiza&#xE7;&#xE4;o" >
@@ -89,7 +93,7 @@
 <!ENTITY newevent.repeat.label       "Repetir a cada" >
 <!ENTITY newevent.until.label        "At&#xE9;" >
 <!ENTITY newevent.forever.label      "Para Sempre" >
-<!ENTITY newevent.numberoftimes.label "Num&#xE9;ro de vezes" >
+<!ENTITY newevent.numberoftimes.label "N&#xFA;mero de vezes" >
 <!ENTITY newevent.category.label      "Categoria" >
 <!ENTITY newevent.exceptions.caption "Exce&#xE7;&#xF5;es">
 <!ENTITY newevent.addexceptions.label "Acrescentar Exce&#xE7;&#xE4;o">
@@ -99,7 +103,7 @@
 <!ENTITY newevent.repeatdate.tooltip    "Escolha uma data para t&#xE9;rmino" >
 <!ENTITY newevent.recurend.warning    "A sua hora de repeti&#xE7;&#xE4;o termina antes da sua hora de t&#xE9;rmino.">
 <!ENTITY newevent.endtime.tooltip    "Escolha uma hora de t&#xE9;rmino para este evento" >
-<!ENTITY newevent.starttimeerror.alertmessage "O seu evento n&#xE3;o pode terminar antes de ser iniciado. Por favor acerte a hora de in&#xED;cio ou a hora de t&#xE9;rmino." >        
+<!ENTITY newevent.starttimeerror.alertmessage "O seu evento n&#xE3;o pode terminar antes de ser iniciado. Por favor acerte a hora de in&#xED;cio ou a hora de t&#xE9;rmino." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "A hora de repeti&#xE7;&#xE4;o de seu evento n&#xE3;o pode ser anterior a hora de t&#xE9;rmino do evento. Por favor corrija, ou desligue a repeti&#xE7;&#xE4;o." >
 <!ENTITY newevent.newevent.tab.label "Evento" >
 <!ENTITY newevent.recurrence.tab.label "Recorr&#xEA;ncia" >
@@ -114,25 +118,25 @@
 <!ENTITY newevent.status.tentative.label   "Poss&#xED;vel" >
 <!ENTITY newevent.status.confirmed.label   "Confirmado" >
 
-<!ENTITY newevent.advanced.repeat.dayofmonth.label "No dia x do m&#xEA;s">          
-<!ENTITY newevent.advanced.repeat.dayofweek.label "Na 4&#xAA; ter&#xE7;a-feira do m&#xEA;s">          
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Na &#xFA;ltima ter&#xE7;a-feira do m&#xEA;s">          
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " do m&#xEA;s">          
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "No dia x do m&#xEA;s">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "Na 4&#xAA; ter&#xE7;a-feira do m&#xEA;s">
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Na &#xFA;ltima ter&#xE7;a-feira do m&#xEA;s">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " do m&#xEA;s">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "Na ">                   
-<!ENTITY newevent.advanced.repeat.last.label "&#xDA;ltima ">          
-<!ENTITY newevent.advanced.repeat.first.label "Primeira"> 
-<!ENTITY newevent.advanced.repeat.second.label "Segunda"> 
-<!ENTITY newevent.advanced.repeat.third.label "Terceira"> 
-<!ENTITY newevent.advanced.repeat.fourth.label "Quarta"> 
-<!ENTITY newevent.advanced.repeat.first.extension "o."> 
-<!ENTITY newevent.advanced.repeat.second.extension "o."> 
-<!ENTITY newevent.advanced.repeat.third.extension "o."> 
-<!ENTITY newevent.advanced.repeat.nth.extension "o."> 
+<!ENTITY newevent.advanced.repeat.onthe.label "Na ">
+<!ENTITY newevent.advanced.repeat.last.label "&#xDA;ltima ">
+<!ENTITY newevent.advanced.repeat.first.label "Primeira">
+<!ENTITY newevent.advanced.repeat.second.label "Segunda">
+<!ENTITY newevent.advanced.repeat.third.label "Terceira">
+<!ENTITY newevent.advanced.repeat.fourth.label "Quarta">
+<!ENTITY newevent.advanced.repeat.first.extension "o.">
+<!ENTITY newevent.advanced.repeat.second.extension "o.">
+<!ENTITY newevent.advanced.repeat.third.extension "o.">
+<!ENTITY newevent.advanced.repeat.nth.extension "o.">
 
 <!ENTITY newevent.choosefile.label "Escolher Arquivo">
 <!ENTITY newevent.removeselectedfile.label "Remover Arquivo Selecionado">
-          
+
 <!ENTITY newtodo.completed.label "Completo">
 <!ENTITY newtodo.duedate.label "Data Prevista">
 <!ENTITY newtodo.startdate.label "Data de In&#xED;cio">
@@ -149,7 +153,7 @@
 <!ENTITY newtodo.duetime.warning    "Sua hora de in&#xED;cio &#xE9; ap&#xF4;s a sua hora prevista para t&#xE9;rmino.">
 <!ENTITY newtodo.duedate.warning    "Sua data de in&#xED;cio &#xE9; ap&#xF4;s a sua data prevista para t&#xE9;rmino.">
 
-<!ENTITY calendar.confirm.deleteevent "Voc&#xEA; tem certeza de que quer apagar o seguinte evento: " >        
+<!ENTITY calendar.confirm.deleteevent "Voc&#xEA; tem certeza de que quer apagar o seguinte evento: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Voc&#xEA; tem certeza de que quer apagar este evento sem t&#xED;tulo?" >
 
 <!ENTITY event.alarm.checkbox.label "Lembre-me novamente em " >
@@ -206,9 +210,9 @@
 
 <!ENTITY calendar.events.filter.all.label "Todos os Eventos">
 <!ENTITY calendar.events.filter.today.label "Eventos de Hoje">
-<!ENTITY calendar.events.filter.week.label "Events Desta Semana">
+<!ENTITY calendar.events.filter.week.label "Eventos Desta Semana">
 <!ENTITY calendar.events.filter.2weeks.label "Eventos Das Pr&#xF3;ximas 2 Semanas">
-<!ENTITY calendar.events.filter.month.label "Events Do Pr&#xF3;ximo M&#xEA;s">
+<!ENTITY calendar.events.filter.month.label "Eventos Do Pr&#xF3;ximo M&#xEA;s">
 <!ENTITY calendar.events.filter.future.label "Todos os Eventos Futuros">
 <!ENTITY calendar.events.filter.current.label "Dia Atualmente Selecionado">
 
@@ -253,11 +257,14 @@
 <!ENTITY calendar.monthview.button.label        "M&#xEA;s" >
 <!ENTITY calendar.multiweekview.button.label        "Multi-semanas" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Segunda-Sexta Apenas" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tarefas na Vis&#xE3;o Atual" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
-<!ENTITY calendar.menu.options.modify       "Editar" >
-<!ENTITY calendar.menu.options.remove       "Apagar" >
-<!ENTITY calendar.menu.options.close        "Fechar Janela" >
+<!ENTITY calendar.menu.options.modify           "Editar" >
+<!ENTITY calendar.menu.options.remove           "Apagar" >
+<!ENTITY calendar.menu.options.close            "Fechar Janela" >
+<!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Eventos" >
 <!ENTITY calendar.search.tab.label			        "Procurar">
@@ -280,7 +287,7 @@
 <!ENTITY calendar.monthview.column.5.name "QUI">
 <!ENTITY calendar.monthview.column.6.name "SEX">
 <!ENTITY calendar.monthview.column.7.name "SAB">
-<!ENTITY week.short "W">
+<!ENTITY week.short "Sem">
 
 <!-- Statusbar -->
 <!ENTITY statusText.label            "Documento: Terminado">
@@ -298,9 +305,10 @@
 <!ENTITY calendar.context.modifytask.label            "Editar Tarefa">
 <!ENTITY calendar.context.modifytask.accesskey        "e">
 <!ENTITY calendar.context.deleteevent.label           "Apagar Evento Selecionado">
-<!ENTITY calendar.context.deletetask.accesskey        "l">
-<!ENTITY calendar.context.deletetask.label            "Apagar Tarefa">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
+<!ENTITY calendar.context.deletetask.label            "Apagar Tarefa">
+<!ENTITY calendar.context.deletetask.accesskey        "l">
+
 <!ENTITY calendar.context.cutevent.label              "Cortar">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
 <!ENTITY calendar.context.copyevent.label             "Copiar">
@@ -332,13 +340,30 @@
 <!ENTITY calendar.context.priority.label              "Prioridade">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
+<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Novo Calend&#xE1;rio">
+<!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Editar Calend&#xE1;rio">
+<!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Apagar Calend&#xE1;rio">
+<!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.refreshserver.label          "Atualizar Calend&#xE1;rios Remotos">
+<!ENTITY calendar.context.refreshserver.accesskey      "R">
 <!ENTITY calendar.context.publish.label                "Publicar Todo Calend&#xE1;rio">
+<!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "Sobre o Calend&#xE1;rio do Mozilla">
@@ -356,19 +381,20 @@
 <!ENTITY calendar.alarm.acknowledgeall.label        "Aceitar Todos os Alarmes" >
 <!ENTITY calendar.alarm.snooze.label                "Soneca" >
 
-  
+
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Acrescentar Novo Calend&#xE1;rio">
 <!ENTITY calendar.server.dialog.title.edit          "Editar Calend&#xE1;rio">
 <!ENTITY calendar.server.dialog.name.label          "Nome">
 <!ENTITY calendar.server.dialog.username.label      "Nome do Usu&#xE1;rio">
 <!ENTITY calendar.server.dialog.password.label      "Senha">
-<!ENTITY calendar.server.dialog.publish.label       "Publicar mudan&#xE7;as automaticamente? Para calend&#xE1;rios remotos, isto ir&#xE1; baixar uma nova vers&#xE3;o antes voc&#xEA; acrescentar, editar ou apagar um evento. S&#xF3; ent&#xE3;o a sua a&#xE7;&#xE3o ser&#xE1; executada, e o novo arquivo ser&#xE1; enviado para o servidor.">
+<!ENTITY calendar.server.dialog.publish.label       "Publicar mudan&#xE7;as automaticamente? Para calend&#xE1;rios remotos, isto ir&#xE1; baixar uma nova vers&#xE3;o antes de voc&#xEA; acrescentar, editar ou apagar um evento. S&#xF3; ent&#xE3;o a sua a&#xE7;&#xE3;o ser&#xE1; executada, e o novo arquivo ser&#xE1; enviado para o servidor.">
 <!ENTITY calendar.server.dialog.location.label      "Local">
 <!ENTITY calendar.server.dialog.local.location.label "Localiza&#xE7;&#xE3;o do Arquivo Local">
 <!ENTITY calendar.server.dialog.browse.label        "Procurar por Arquivo Local...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Voc&#xEA; pode opcionalmente especificar um local onde o calend&#xE1;rio dever&#xE1; ser criado.">
 <!ENTITY calendar.server.dialog.help.label          "Voc&#xEA; pode entrar um caminho de um arquivo local, ou um caminho de arquivo remoto, como http://www.mozilla.org/projects/calendar/caldata/BrasilHolidays.ics">
+
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Cor">
 
@@ -387,7 +413,6 @@
 <!ENTITY calendar.publish.example.url.description   "Algo como http://www.myserver.com/webdav/test.ics">
 
 <!ENTITY allDayEvents.label "Eventos de Dia Inteiro">
-
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importar: Importa eventos de um arquivo local em um calend&#xE1;rio existente.">
@@ -410,6 +435,3 @@
 <!ENTITY calendar.print.listselected.label "Listar Eventos Selecionados">
 <!ENTITY calendar.print.onlyitemsstatus.label "Imprimir apenas itens com este status:">
 <!ENTITY calendar.print.onlyitemscategory.label "Imprimir apenas itens com esta categoria:">
-
-
-

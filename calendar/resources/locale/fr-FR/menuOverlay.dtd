@@ -46,6 +46,9 @@
 <!ENTITY event.new.todo		"Nouvelle tâche">
 <!ENTITY event.new.todo.accesskey "t">
 
+<!ENTITY calendar.new.server.label "Nouveau calendrier">
+<!ENTITY calendar.new.server.accesskey "l">
+
 <!ENTITY event.edit.event	"Modifier">
 <!ENTITY event.edit.event.accesskey	"e">
 
@@ -61,11 +64,11 @@
 <!ENTITY calendar.print.label	"Imprimer le(s) calendrier(s) actif(s)...">
 <!ENTITY calendar.print.accesskey	"r">
 
-<!ENTITY calendar.print.label	"Aperçu avant impression">
-<!ENTITY calendar.print.accesskey	"v">
+<!ENTITY calendar.printpreview.label	"Aperçu avant impression">
+<!ENTITY calendar.printpreview.accesskey	"v">
 
-<!ENTITY calendar.print.label	"Mise en page...">
-<!ENTITY calendar.print.accesskey	"p">
+<!ENTITY calendar.pagesetup.label	"Mise en page...">
+<!ENTITY calendar.pagesetup.accesskey	"p">
 
 <!ENTITY calendar.import.label	"Importer depuis le fichier...">
 <!ENTITY calendar.import.accesskey	"i">

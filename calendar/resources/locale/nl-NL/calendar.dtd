@@ -60,10 +60,14 @@
 <!ENTITY repeat.units.months.singular   "Maand" >
 <!ENTITY repeat.units.years.singular    "Jaar" >
 
-<!ENTITY priority.level.none     "Geen" >
-<!ENTITY priority.level.low      "Laag" >
-<!ENTITY priority.level.medium   "Gemiddeld" >
-<!ENTITY priority.level.high     "Hoog" >
+<!ENTITY priority.level.none              "Geen">
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "Laag">
+<!ENTITY priority.level.low.accesskey     "L">
+<!ENTITY priority.level.medium            "Gemiddeld">
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "Hoog">
+<!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "Titel" >
 <!ENTITY newevent.location.label     "Lokatie" >
@@ -130,7 +134,7 @@
 
 <!ENTITY newevent.choosefile.label "Kies bestand">
 <!ENTITY newevent.removeselectedfile.label "Verwijder geselecteerd bestand">
-          
+
 <!ENTITY newtodo.completed.label "Voltooid">
 <!ENTITY newtodo.duedate.label "Vervaldatum">
 <!ENTITY newtodo.startdate.label "Startdatum">
@@ -200,8 +204,6 @@
 <!ENTITY calendar.listofcalendarstab.label "Kalenders">
 <!ENTITY calendar.gototoday.button.label        "Ga naar vandaag" >
 
-<!ENTITY calendar.listofcalendarstab.label "Kalenders">
-
 <!ENTITY calendar.calendarlistbox.label "Kalenders">
 
 <!ENTITY calendar.events.filter.all.label "Alle gebeurtenissen">
@@ -253,11 +255,14 @@
 <!ENTITY calendar.monthview.button.label        "Maandoverzicht" >
 <!ENTITY calendar.multiweekview.button.label        "Multiweek" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Alleen maandag-vrijdag" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tasks in View" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
-<!ENTITY calendar.menu.options.modify       "Bewerken" >
-<!ENTITY calendar.menu.options.remove       "Verwijderen" >
-<!ENTITY calendar.menu.options.close        "Sluit venster" >
+<!ENTITY calendar.menu.options.modify           "Bewerken" >
+<!ENTITY calendar.menu.options.remove           "Verwijderen" >
+<!ENTITY calendar.menu.options.close            "Sluit venster" >
+<!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Gebeurtenissen" >
 <!ENTITY calendar.search.tab.label			        "Zoeken">
@@ -298,9 +303,9 @@
 <!ENTITY calendar.context.modifytask.label            "Bewerk taak">
 <!ENTITY calendar.context.modifytask.accesskey        "e">
 <!ENTITY calendar.context.deleteevent.label           "Verwijder geselecteerde gebeurtenis">
-<!ENTITY calendar.context.deletetask.accesskey        "l">
-<!ENTITY calendar.context.deletetask.label            "Verwijder taak">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
+<!ENTITY calendar.context.deletetask.label            "Verwijder taak">
+<!ENTITY calendar.context.deletetask.accesskey        "l">
 <!ENTITY calendar.context.cutevent.label              "Knippen">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
 <!ENTITY calendar.context.copyevent.label             "Kopi&#xEB;ren">
@@ -332,13 +337,30 @@
 <!ENTITY calendar.context.priority.label              "Prioriteit">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
+<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Nieuwe kalender">
+<!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Bewerk kalender">
+<!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Verwijder kalender">
+<!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.refreshserver.label          "Ververs kalenders op andere computer(s)">
+<!ENTITY calendar.context.refreshserver.accesskey      "R">
 <!ENTITY calendar.context.publish.label                "Publiceer volledige kalender">
+<!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "Over Mozilla kalender">
@@ -369,6 +391,7 @@
 <!ENTITY calendar.server.dialog.browse.label        "Blader naar lokaal bestand...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "U kunt optioneel een bestandslokatie specificeren waar de kalender gecre&#xEB;erd zou moeten worden.">
 <!ENTITY calendar.server.dialog.help.label          "U kunt een lokaal bestandspad invoeren of een bestandspad op een andere computer, zoals http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Color">
 
@@ -387,7 +410,6 @@
 <!ENTITY calendar.publish.example.url.description   "Zoiets als http://www.myserver.com/webdav/test.ics">
 
 <!ENTITY allDayEvents.label "Gehele dag gebeurtenissen">
-
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importeren: Importeer gebeurtenissen uit een lokaal bestand naar een bestaande kalender.">
@@ -410,6 +432,3 @@
 <!ENTITY calendar.print.listselected.label "List Selected Events">
 <!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
 <!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
-
-
-

@@ -46,6 +46,9 @@
 <!ENTITY event.new.todo		"Nový úkol">
 <!ENTITY event.new.todo.accesskey "k">
 
+<!ENTITY calendar.new.server.label "Nový kalendář">
+<!ENTITY calendar.new.server.accesskey "l">
+
 <!ENTITY event.edit.event	"Upravit">
 <!ENTITY event.edit.event.accesskey	"r">
 
@@ -61,11 +64,11 @@
 <!ENTITY calendar.print.label	"Tisknout aktivní kalendář...">
 <!ENTITY calendar.print.accesskey	"T">
 
-<!ENTITY calendar.print.label	"Náhled tisku">
-<!ENTITY calendar.print.accesskey	"N">
+<!ENTITY calendar.printpreview.label	"Náhled tisku">
+<!ENTITY calendar.printpreview.accesskey	"N">
 
-<!ENTITY calendar.print.label	"Nastavení tisku...">
-<!ENTITY calendar.print.accesskey	"s">
+<!ENTITY calendar.pagesetup.label	"Nastavení tisku...">
+<!ENTITY calendar.pagesetup.accesskey	"s">
 
 <!ENTITY calendar.import.label	"Import ze souboru...">
 <!ENTITY calendar.import.accesskey	"I">

@@ -61,14 +61,14 @@
 <!ENTITY repeat.units.months.singular   "Month" >
 <!ENTITY repeat.units.years.singular    "Year" >
 
-<!ENTITY priority.level.none              "none">
-<!ENTITY priority.level.none.accesskey    "n">
-<!ENTITY priority.level.low              "low">
-<!ENTITY priority.level.low.accesskey     "l">
-<!ENTITY priority.level.medium            "medium">
-<!ENTITY priority.level.medium.accesskey  "m">
-<!ENTITY priority.level.high              "high">
-<!ENTITY priority.level.high.accesskey    "h">
+<!ENTITY priority.level.none              "None">
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "Low">
+<!ENTITY priority.level.low.accesskey     "L">
+<!ENTITY priority.level.medium            "Medium">
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "High">
+<!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "Title" >
 <!ENTITY newevent.location.label     "Location" >
@@ -86,7 +86,7 @@
 <!ENTITY newevent.alarm.label        "Alarm" >
 <!ENTITY newevent.server.label       "Calendar File" >
 <!ENTITY newevent.invite.label       "Invite" >
-<!ENTITY newevent.email.label        "Email Alarm To..." >
+<!ENTITY newevent.email.label        "Email Alarm To:" >
 <!ENTITY newevent.beforealarm.label  "before the event starts" >
 <!ENTITY newevent.beforealarmends.label  "before the event ends" >
 <!ENTITY newevent.repeat.label       "Repeat every" >
@@ -119,8 +119,8 @@
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "On the xth day of the month">          
 <!ENTITY newevent.advanced.repeat.dayofweek.label "4th Tuesday of the month">          
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Last Tuesday of the month">          
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">          
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Last Tuesday of the month">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">
 
 <!ENTITY newevent.advanced.repeat.onthe.label "On the ">                   
 <!ENTITY newevent.advanced.repeat.last.label "Last ">          
@@ -135,7 +135,7 @@
 
 <!ENTITY newevent.choosefile.label "Choose File">
 <!ENTITY newevent.removeselectedfile.label "Remove Selected File">
-          
+
 <!ENTITY newtodo.completed.label "Completed">
 <!ENTITY newtodo.duedate.label "Due Date">
 <!ENTITY newtodo.startdate.label "Start Date">
@@ -304,9 +304,9 @@
 <!ENTITY calendar.context.modifytask.label            "Edit Task">
 <!ENTITY calendar.context.modifytask.accesskey        "E">
 <!ENTITY calendar.context.deleteevent.label           "Delete Selected Event">
-<!ENTITY calendar.context.deletetask.accesskey        "l">
-<!ENTITY calendar.context.deletetask.label            "Delete Task">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
+<!ENTITY calendar.context.deletetask.label            "Delete Task">
+<!ENTITY calendar.context.deletetask.accesskey        "l">
 <!ENTITY calendar.context.cutevent.label              "Cut">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
 <!ENTITY calendar.context.copyevent.label             "Copy">
@@ -392,6 +392,7 @@
 <!ENTITY calendar.server.dialog.browse.label        "Browse For Local File...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "You can optionally specify a file location where the calendar should be created.">
 <!ENTITY calendar.server.dialog.help.label          "You can enter a local file path, or a remote file path like http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Color">
 
@@ -410,7 +411,6 @@
 <!ENTITY calendar.publish.example.url.description   "Something like http://www.myserver.com/webdav/test.ics">
 
 <!ENTITY allDayEvents.label "All Day Events">
-
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Import: Import events from a local file into an existing calendar.">
