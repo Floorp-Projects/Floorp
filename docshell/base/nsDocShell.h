@@ -103,16 +103,16 @@ protected:
    virtual ~nsDocShell();
 
    nsDocShellInitInfo* InitInfo();
-   nsresult GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
+   NS_IMETHOD GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
       PRInt32* aOffset);
-   nsresult GetRootScrollableView(nsIScrollableView** aOutScrollView);
-   nsresult EnsureContentListener();
-   nsresult EnsureScriptEnvironment();
+   NS_IMETHOD GetRootScrollableView(nsIScrollableView** aOutScrollView);
+   NS_IMETHOD EnsureContentListener();
+   NS_IMETHOD EnsureScriptEnvironment();
 
    void SetCurrentURI(nsIURI* aUri);
-   nsresult CreateContentViewer(const char* aContentType, nsURILoadCommand aCommand,
+   NS_IMETHOD CreateContentViewer(const char* aContentType, nsURILoadCommand aCommand,
       nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
-   nsresult NewContentViewerObj(const char* aContentType, nsURILoadCommand aCommand,
+   NS_IMETHOD NewContentViewerObj(const char* aContentType, nsURILoadCommand aCommand,
       nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
 
    NS_IMETHOD FireStartDocumentLoad(nsIDocumentLoader* aLoader,
@@ -127,7 +127,7 @@ protected:
    NS_IMETHOD InsertDocumentInDocTree();
    NS_IMETHOD DestroyChildren();
 
-   nsresult GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame);
+   NS_IMETHOD GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame);
 
 protected:
    PRBool                     mCreated;
@@ -154,7 +154,6 @@ protected:
    releasing the interface.*/
    nsIDocShellTreeItem*       mParent;  // Weak Reference
    nsIDocShellTreeOwner*      mTreeOwner; // Weak Reference
-   
 };
 
 #endif /* nsDocShell_h__ */

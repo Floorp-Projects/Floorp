@@ -327,6 +327,20 @@ NS_IMETHODIMP nsDocShell::GetContentViewer(nsIContentViewer** aContentViewer)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShell::SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHandler)
+{
+   //XXX Implement
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetChromeEventHandler(nsIChromeEventHandler** aChromeEventHandler)
+{
+   NS_ENSURE_ARG_POINTER(aChromeEventHandler);
+
+   //XXX Implement
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::GetParentURIContentListener(nsIURIContentListener**
    aParent)
 {
@@ -531,9 +545,9 @@ NS_IMETHODIMP nsDocShell::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
    while(parent)
       {
       *aRootTreeItem = parent;
-      NS_ENSURE_SUCCESS(parent->GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS((*aRootTreeItem)->GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
       }
-   NS_IF_ADDREF(*aRootTreeItem);
+   NS_ADDREF(*aRootTreeItem);
    return NS_OK;
 }
 
@@ -547,36 +561,47 @@ NS_IMETHODIMP nsDocShell::GetSameTypeRootTreeItem(nsIDocShellTreeItem** aRootTre
    while(parent)
       {
       *aRootTreeItem = parent;
-      NS_ENSURE_SUCCESS(parent->GetSameTypeParent(getter_AddRefs(parent)), 
+      NS_ENSURE_SUCCESS((*aRootTreeItem)->GetSameTypeParent(getter_AddRefs(parent)), 
          NS_ERROR_FAILURE);
       }
-   NS_IF_ADDREF(*aRootTreeItem);
+   NS_ADDREF(*aRootTreeItem);
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::FindItemWithName(const PRUnichar *aName, 
-   nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem **_retval)
+   nsISupports* aRequestor, nsIDocShellTreeItem **_retval)
 {
    NS_ENSURE_ARG(aName);
    NS_ENSURE_ARG_POINTER(_retval);
   
    *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
+   
+   // This QI may fail, but the places where we want to compare, comparing
+   // against nsnull serves the same purpose.
+   nsCOMPtr<nsIDocShellTreeItem> reqAsTreeItem(do_QueryInterface(aRequestor));
 
-   // First we check our children making sure not to ask a child if it
+   // First we check our name.
+   if(mName.Equals(aName))
+      {
+      *_retval = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+      NS_ADDREF(*_retval);
+      }
+
+   // Second we check our children making sure not to ask a child if it
    // is the aRequestor.
-   NS_ENSURE_SUCCESS(FindChildWithName(aName, PR_TRUE, aRequestor, _retval), 
+   NS_ENSURE_SUCCESS(FindChildWithName(aName, PR_TRUE, reqAsTreeItem, _retval), 
       NS_ERROR_FAILURE);
    if(*_retval)
       return NS_OK;
 
-   // Second if we have a parent and it isn't the requestor then we should ask
+   // Third if we have a parent and it isn't the requestor then we should ask
    // it to do the search.  If it is the requestor we should just stop here
    // and let the parent do the rest.
    // If we don't have a parent, then we should ask the docShellTreeOwner to do
    // the search.
    if(mParent)
       {
-      if(mParent == aRequestor)
+      if(mParent == reqAsTreeItem.get())
          return NS_OK;
 
       PRInt32 parentType;
@@ -591,7 +616,10 @@ NS_IMETHODIMP nsDocShell::FindItemWithName(const PRUnichar *aName,
       // If the parent isn't of the same type fall through and ask tree owner.
       }
 
-   if(mTreeOwner)
+   // This QI may fail, but comparing against null serves the same purpose
+   nsCOMPtr<nsIDocShellTreeOwner> reqAsTreeOwner(do_QueryInterface(aRequestor));
+
+   if(mTreeOwner && (mTreeOwner != reqAsTreeOwner.get()))
       {
       NS_ENSURE_SUCCESS(mTreeOwner->FindItemWithName(aName, 
          NS_STATIC_CAST(nsIDocShellTreeItem*, this), _retval),
@@ -728,7 +756,7 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName,
       if(name.Equals(childName))
          {
          *_retval = child;
-         NS_ADDREF(child);
+         NS_ADDREF(*_retval);
          break;
          }
 
