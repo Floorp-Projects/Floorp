@@ -193,6 +193,7 @@ NS_NewMsgAppCore(nsIDOMMsgAppCore **aResult)
 NS_IMETHODIMP    
 nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
 {
+  nsAutoString  webShellName("browser.webwindow");
   mWindow = aWin;
   NS_ADDREF(aWin);
 
@@ -205,24 +206,33 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
     return NS_ERROR_FAILURE;
   }
 
-  nsIWebShell *webShell;
-  globalObj->GetWebShell(&webShell);
-  if (nsnull != webShell) 
-  {
-    nsIWebShellContainer *webShellContainer;
-    webShell->GetContainer(webShellContainer);
-    if (nsnull != webShellContainer) 
-    {
-      /* NOTE: Need to know what the name of the frame for the message window is
-               named */
-      webShellContainer->FindWebShellWithName(nsAutoString("browser.messagewindow"), 
-                                              mWebShell);
-      NS_RELEASE(webShellContainer);
-      printf("nsMsgAppCore::SetWindow(): Got the webShell of interest...\n");
-    }
+  nsIWebShell *webShell = nsnull;
+  nsIWebShell *rootWebShell = nsnull;
 
-    NS_RELEASE(webShell);
+  globalObj->GetWebShell(&webShell);
+  if (nsnull == webShell) 
+  {
+    return NS_ERROR_FAILURE;
   }
 
+  webShell->GetRootWebShell(rootWebShell);
+  if (nsnull != rootWebShell) 
+  {
+    rootWebShell->FindChildWithName(webShellName, mWebShell);
+#ifdef NS_DEBUG
+    if (nsnull != mWebShell)
+        printf("nsMsgAppCore::SetWindow(): Got the webShell %s.\n", webShellName.ToNewCString());
+    else
+        printf("nsMsgAppCore::SetWindow(): Failed to find webshell %s.\n", webShellName.ToNewCString());
+#endif
+    NS_RELEASE(rootWebShell);
+  }
+
+  NS_RELEASE(webShell);
 	return NS_OK;
 }
+
+
+//  to load the webshell!
+//  mWebShell->LoadURL(nsAutoString("http://www.netscape.com"), 
+//                      nsnull, PR_TRUE, nsURLReload, 0);
