@@ -412,11 +412,11 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   if (NS_FAILED(rv)) return rv;
   
   // Assert source url information
-  nsXPIDLCString spec;
-  aSource->GetSpec(getter_Copies(spec));
+  nsCAutoString spec;
+  aSource->GetSpec(spec);
 
   nsCOMPtr<nsIRDFResource> urlResource;
-  gRDFService->GetResource(spec, getter_AddRefs(urlResource));
+  gRDFService->GetResource(spec.get(), getter_AddRefs(urlResource));
   rv = mDataSource->Assert(downloadRes, gNC_URL, urlResource, PR_TRUE);
   if (NS_FAILED(rv)) {
     downloads->IndexOf(downloadRes, &itemIndex);
