@@ -130,6 +130,7 @@ SECStatus pk11_CheckVerifyTest(PK11SlotInfo *slot);
 SECStatus PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts);
 SECStatus PK11_Authenticate(PK11SlotInfo *slot, PRBool loadCerts, void *wincx);
 void PK11_InitSlot(SECMODModule *mod,CK_SLOT_ID slotID,PK11SlotInfo *slot);
+SECStatus PK11_TokenRefresh(PK11SlotInfo *slot);
 
 
 /******************************************************************
