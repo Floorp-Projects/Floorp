@@ -96,6 +96,7 @@ public class ScriptRuntime {
 
     public final static Class
         ContextClass      = Kit.classOrNull("org.mozilla.javascript.Context"),
+        ContextFactoryClass = Kit.classOrNull("org.mozilla.javascript.ContextFactory"),
         FunctionClass     = Kit.classOrNull("org.mozilla.javascript.Function"),
         ScriptableClass   = Kit.classOrNull("org.mozilla.javascript.Scriptable"),
         ScriptableObjectClass = Kit.classOrNull("org.mozilla.javascript.ScriptableObject"),
@@ -118,7 +119,6 @@ public class ScriptRuntime {
     };
 
     private static final Object LIBRARY_SCOPE_KEY = new Object();
-    private static final Object CONTEXT_FACTORY_KEY = new Object();
 
     public static ScriptableObject initStandardObjects(Context cx,
                                                        ScriptableObject scope,
@@ -128,13 +128,6 @@ public class ScriptRuntime {
             scope = new NativeObject();
         }
         scope.associateValue(LIBRARY_SCOPE_KEY, scope);
-        ContextFactory factory = cx.getFactory();
-        if (factory == null) {
-            // factory is null for Context asociated with the current thread
-            // via Context.enter()
-            factory = ContextFactory.getGlobal();
-        }
-        scope.associateValue(CONTEXT_FACTORY_KEY, factory);
         (new ClassCache()).associate(scope);
 
         BaseFunction.init(cx, scope, sealed);
@@ -187,17 +180,6 @@ public class ScriptRuntime {
         libScope = (ScriptableObject)ScriptableObject.
                        getTopScopeValue(scope, LIBRARY_SCOPE_KEY);
         return libScope;
-    }
-
-    public static ContextFactory getContextFactory(Scriptable scope)
-    {
-        ContextFactory factory;
-        factory = (ContextFactory)ScriptableObject.
-                      getTopScopeValue(scope, CONTEXT_FACTORY_KEY);
-        if (factory == null) {
-            throw new IllegalStateException("Failed to find ContextFactory");
-        }
-        return factory;
     }
 
     // It is public so NativeRegExp can access it .
@@ -267,6 +249,7 @@ public class ScriptRuntime {
     public static boolean toBoolean(Object[] args, int index) {
         return (index < args.length) ? toBoolean(args[index]) : false;
     }
+
     /**
      * Convert the value to a number.
      *

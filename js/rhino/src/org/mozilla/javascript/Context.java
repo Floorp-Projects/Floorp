@@ -475,8 +475,9 @@ public class Context
                               Object[] args)
     {
         if (factory == null) {
-            factory = ScriptRuntime.getContextFactory(scope);
+            factory = ContextFactory.getGlobal();
         }
+
         Object[] storage = getThreadContextStorage();
         Context cx;
         if (storage != null) {
@@ -489,6 +490,7 @@ public class Context
             if (cx.factory != null) {
                 return callable.call(cx, scope, thisObj, args);
             } else {
+                // Context was associated with the thread via Context.enter
                 cx.factory = factory;
                 try {
                     return callable.call(cx, scope, thisObj, args);

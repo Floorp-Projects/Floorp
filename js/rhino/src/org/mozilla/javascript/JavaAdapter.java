@@ -190,8 +190,11 @@ public final class JavaAdapter implements IdFunctionCall
         Class adapterClass = getAdapterClass(scope, superClass, interfaces,
                                              obj);
 
-        Class[] ctorParms = { ScriptRuntime.ScriptableClass };
-        Object[] ctorArgs = { obj };
+        Class[] ctorParms = {
+            ScriptRuntime.ContextFactoryClass,
+            ScriptRuntime.ScriptableClass
+        };
+        Object[] ctorArgs = { cx.getFactory(), obj };
         try {
             Object adapter = adapterClass.getConstructor(ctorParms).
                                  newInstance(ctorArgs);
@@ -232,6 +235,14 @@ public final class JavaAdapter implements IdFunctionCall
                                            ObjectInputStream in)
         throws IOException, ClassNotFoundException
     {
+        ContextFactory factory;
+        Context cx = Context.getCurrentContext();
+        if (cx != null) {
+            factory = cx.getFactory();
+        } else {
+            factory = null;
+        }
+
         Class superClass = Class.forName((String)in.readObject());
 
         String[] interfaceNames = (String[])in.readObject();
@@ -246,10 +257,11 @@ public final class JavaAdapter implements IdFunctionCall
                                              delegee);
 
         Class[] ctorParms = {
+            ScriptRuntime.ContextFactoryClass,
             ScriptRuntime.ScriptableClass,
             ScriptRuntime.ScriptableClass
         };
-        Object[] ctorArgs = { delegee, self };
+        Object[] ctorArgs = { factory, delegee, self };
         try {
             return adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
         } catch(InstantiationException e) {
@@ -316,6 +328,9 @@ public final class JavaAdapter implements IdFunctionCall
         ClassFileWriter cfw = new ClassFileWriter(adapterName,
                                                   superClass.getName(),
                                                   "<adapter>");
+        cfw.addField("factory", "Lorg/mozilla/javascript/ContextFactory;",
+                     (short) (ClassFileWriter.ACC_PUBLIC |
+                              ClassFileWriter.ACC_FINAL));
         cfw.addField("delegee", "Lorg/mozilla/javascript/Scriptable;",
                      (short) (ClassFileWriter.ACC_PUBLIC |
                               ClassFileWriter.ACC_FINAL));
@@ -456,7 +471,8 @@ public final class JavaAdapter implements IdFunctionCall
      * Utility method which dynamically binds a Context to the current thread,
      * if none already exists.
      */
-    public static Object callMethod(final Scriptable thisObj,
+    public static Object callMethod(ContextFactory factory,
+                                    final Scriptable thisObj,
                                     final Function f, final Object[] args,
                                     final long argsToWrap)
     {
@@ -464,16 +480,19 @@ public final class JavaAdapter implements IdFunctionCall
             // See comments in getFunction
             return Undefined.instance;
         }
+        if (factory == null) {
+            factory = ContextFactory.getGlobal();
+        }
+
         final Scriptable scope = f.getParentScope();
         if (argsToWrap == 0) {
-            return Context.call(null, f, scope, thisObj, args);
+            return Context.call(factory, f, scope, thisObj, args);
         }
 
         Context cx = Context.getCurrentContext();
         if (cx != null) {
             return doCall(cx, scope, thisObj, f, args, argsToWrap);
         } else {
-            ContextFactory factory = ScriptRuntime.getContextFactory(scope);
             return factory.call(new ContextAction() {
                 public Object run(Context cx)
                 {
@@ -516,22 +535,29 @@ public final class JavaAdapter implements IdFunctionCall
                                      String superName)
     {
         cfw.startMethod("<init>",
-                        "(Lorg/mozilla/javascript/Scriptable;)V",
+                        "(Lorg/mozilla/javascript/ContextFactory;"
+                        +"Lorg/mozilla/javascript/Scriptable;)V",
                         ClassFileWriter.ACC_PUBLIC);
 
         // Invoke base class constructor
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "<init>", "()V");
 
+        // Save parameter in instance variable "factory"
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.ALOAD_1);  // first arg: ContextFactory instance
+        cfw.add(ByteCode.PUTFIELD, adapterName, "factory",
+                "Lorg/mozilla/javascript/ContextFactory;");
+
         // Save parameter in instance variable "delegee"
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.ALOAD_1);  // first arg
+        cfw.add(ByteCode.ALOAD_2);  // second arg: Scriptable delegee
         cfw.add(ByteCode.PUTFIELD, adapterName, "delegee",
                 "Lorg/mozilla/javascript/Scriptable;");
 
         cfw.add(ByteCode.ALOAD_0);  // this for the following PUTFIELD for self
         // create a wrapper object to be used as "this" in method calls
-        cfw.add(ByteCode.ALOAD_1);  // the Scriptable
+        cfw.add(ByteCode.ALOAD_2);  // the Scriptable delegee
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       "org/mozilla/javascript/JavaAdapter",
@@ -543,7 +569,7 @@ public final class JavaAdapter implements IdFunctionCall
                 "Lorg/mozilla/javascript/Scriptable;");
 
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)3); // 2: this + delegee
+        cfw.stopMethod((short)3); // 3: this + factory + delegee
     }
 
     private static void generateSerialCtor(ClassFileWriter cfw,
@@ -551,7 +577,8 @@ public final class JavaAdapter implements IdFunctionCall
                                            String superName)
     {
         cfw.startMethod("<init>",
-                        "(Lorg/mozilla/javascript/Scriptable;"
+                        "(Lorg/mozilla/javascript/ContextFactory;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
                         +"Lorg/mozilla/javascript/Scriptable;"
                         +")V",
                         ClassFileWriter.ACC_PUBLIC);
@@ -560,20 +587,25 @@ public final class JavaAdapter implements IdFunctionCall
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "<init>", "()V");
 
+        // Save parameter in instance variable "factory"
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.ALOAD_1);  // first arg: ContextFactory instance
+        cfw.add(ByteCode.PUTFIELD, adapterName, "factory",
+                "Lorg/mozilla/javascript/ContextFactory;");
+
         // Save parameter in instance variable "delegee"
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.ALOAD_1);  // first arg
+        cfw.add(ByteCode.ALOAD_2);  // second arg: Scriptable delegee
         cfw.add(ByteCode.PUTFIELD, adapterName, "delegee",
                 "Lorg/mozilla/javascript/Scriptable;");
-
         // save self
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.ALOAD_2);  // second arg
+        cfw.add(ByteCode.ALOAD_3);  // second arg: Scriptable self
         cfw.add(ByteCode.PUTFIELD, adapterName, "self",
                 "Lorg/mozilla/javascript/Scriptable;");
 
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)20); // TODO: magic number "20"
+        cfw.stopMethod((short)4); // 4: this + factory + delegee + self
     }
 
     private static void generateEmptyCtor(ClassFileWriter cfw,
@@ -586,6 +618,11 @@ public final class JavaAdapter implements IdFunctionCall
         // Invoke base class constructor
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "<init>", "()V");
+
+        // Set factory to null to use current global when necessary
+        cfw.add(ByteCode.ACONST_NULL);
+        cfw.add(ByteCode.PUTFIELD, adapterName, "factory",
+                "Lorg/mozilla/javascript/ContextFactory;");
 
         // Load script class
         cfw.add(ByteCode.NEW, scriptClassName);
@@ -793,14 +830,24 @@ public final class JavaAdapter implements IdFunctionCall
                                        Class returnType)
     {
         StringBuffer sb = new StringBuffer();
-        int firstLocal = appendMethodSignature(parms, returnType, sb);
+        int paramsEnd = appendMethodSignature(parms, returnType, sb);
         String methodSignature = sb.toString();
         cfw.startMethod(methodName, methodSignature,
                         ClassFileWriter.ACC_PUBLIC);
 
-        int FUNCTION = firstLocal;
-        int LOCALS_END = firstLocal + 1;
+        // Prepare stack to call calMethod
 
+        // push factory
+        cfw.add(ByteCode.ALOAD_0);
+        cfw.add(ByteCode.GETFIELD, genName, "factory",
+                "Lorg/mozilla/javascript/ContextFactory;");
+
+        // push self
+        cfw.add(ByteCode.ALOAD_0);
+        cfw.add(ByteCode.GETFIELD, genName, "self",
+                "Lorg/mozilla/javascript/Scriptable;");
+
+        // push function
         cfw.add(ByteCode.ALOAD_0);
         cfw.add(ByteCode.GETFIELD, genName, "delegee",
                 "Lorg/mozilla/javascript/Scriptable;");
@@ -811,16 +858,6 @@ public final class JavaAdapter implements IdFunctionCall
                       "(Lorg/mozilla/javascript/Scriptable;"
                       +"Ljava/lang/String;"
                       +")Lorg/mozilla/javascript/Function;");
-        cfw.add(ByteCode.DUP);
-        cfw.addAStore(FUNCTION);
-
-        // Prepare stack to call calMethod
-        // push thisObj
-        cfw.add(ByteCode.ALOAD_0);
-        cfw.add(ByteCode.GETFIELD, genName, "self",
-                "Lorg/mozilla/javascript/Scriptable;");
-        // push function
-        cfw.addALoad(FUNCTION);
 
         // push arguments
         generatePushWrappedArgs(cfw, parms, parms.length);
@@ -846,7 +883,8 @@ public final class JavaAdapter implements IdFunctionCall
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       "org/mozilla/javascript/JavaAdapter",
                       "callMethod",
-                      "(Lorg/mozilla/javascript/Scriptable;"
+                      "(Lorg/mozilla/javascript/ContextFactory;"
+                      +"Lorg/mozilla/javascript/Scriptable;"
                       +"Lorg/mozilla/javascript/Function;"
                       +"[Ljava/lang/Object;"
                       +"J"
@@ -854,7 +892,7 @@ public final class JavaAdapter implements IdFunctionCall
 
         generateReturnResult(cfw, returnType, true);
 
-        cfw.stopMethod((short)LOCALS_END);
+        cfw.stopMethod((short)paramsEnd);
     }
 
     /**
