@@ -1042,6 +1042,12 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/pics/src/Makefile
             extensions/pics/tests/Makefile
             " ;;
+        pref ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/pref/Makefile
+            extensions/pref/autoconfig/Makefile
+            extensions/pref/autoconfig/public/Makefile
+            extensions/pref/autoconfig/src/Makefile
+            " ;;
         transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_transformiix"
             ;;

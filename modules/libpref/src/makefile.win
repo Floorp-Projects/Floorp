@@ -37,31 +37,26 @@ DEPTH = ..\..\..
 #//
 #//------------------------------------------------------------------------
 
-MODULE		= pref
-LIBRARY_NAME	= xppref$(MOZ_BITS)
-MODULE_NAME	= nsPrefModule
-REQUIRES	= xpcom \
-		  string \
-		  js \
-		  xpconnect \
-		  caps \
-		  intl \
-		  necko \
-		  profile \
-		  $(NULL)
+MODULE       = pref
+LIBRARY_NAME = xppref$(MOZ_BITS)
+MODULE_NAME  = nsPrefModule
+REQUIRES     = xpcom \
+               string \
+               js \
+               xpconnect \
+               caps \
+               intl \
+               necko \
+               $(NULL)
 
 
 LCFLAGS = -DMOZILLA_CLIENT
 
-!ifdef MOZ_SECURITY
-HASHLIBS=$(DIST)\lib\hash.lib $(DIST)\lib\secutil.lib 
-!endif
 
 LLIBS	= \
 	$(LIBNSPR) \
 	$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
-	$(DIST)\lib\xpcom.lib \
-	$(HASHLIBS)
+	$(DIST)\lib\xpcom.lib
 
 #//------------------------------------------------------------------------
 #// 
@@ -74,7 +69,6 @@ OBJS =							\
 	.\$(OBJDIR)\nsPrefBranch.obj	\
 	.\$(OBJDIR)\nsPrefService.obj	\
 	.\$(OBJDIR)\nsPrefsFactory.obj	\
-	.\$(OBJDIR)\nsAutoConfig.obj	\
 	$(NULL)
 
 #//------------------------------------------------------------------------

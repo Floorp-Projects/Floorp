@@ -46,8 +46,6 @@ platform = new plat();
 
 // stubs for compatibility
 var default_pref = defaultPref;
-var lock_pref = lockPref;
-var unlock_pref = unlockPref;
 var userPref = user_pref;
 
 function mime_type(root, mimetype, extension, load_action, appname, appsig, filetype)

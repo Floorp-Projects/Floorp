@@ -52,7 +52,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsWeakReference.h"
 
-#include "nsIJSRuntimeService.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 

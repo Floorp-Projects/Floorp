@@ -1281,7 +1281,16 @@ $(DIST)/bin/defaults/pref::
 export:: $(PREF_JS_EXPORTS) $(DIST)/bin/defaults/pref
 	$(INSTALL) $(IFLAGS1) $^
 endif 
+################################################################################
+# Copy each element of AUTOCFG_JS_EXPORTS to $(DIST)/bin/defaults/autoconfig
 
+ifneq ($(AUTOCFG_JS_EXPORTS),)
+$(DIST)/bin/defaults/autoconfig::
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+
+export:: $(AUTOCFG_JS_EXPORTS) $(DIST)/bin/defaults/autoconfig
+	$(INSTALL) $(IFLAGS1) $^
+endif 
 ################################################################################
 # Export the elements of $(XPIDLSRCS), generating .h and .xpt files and
 # moving them to the appropriate places.

@@ -40,11 +40,11 @@
 #include "jsapi.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsICategoryManager.h"
 #include "nsIFileStreams.h"
 #include "nsIObserverService.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
-#include "nsIAutoConfig.h"
 
 #include "nsQuickSort.h"
 #include "prmem.h"
@@ -71,8 +71,8 @@ class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
 
 // Prototypes
 static nsresult nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec);
-static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerifyHash,
-                        PRBool aIsGlobalContext, PRBool aSkipFirstLine);
+static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
+                             PRBool aIsGlobalContext, PRBool aSkipFirstLine);
 static nsresult savePrefFile(nsIFile* aFile);
 
 
@@ -127,25 +127,33 @@ NS_INTERFACE_MAP_END
 
 nsresult nsPrefService::Init()
 {
+  nsXPIDLCString lockFileName;
   nsresult rv;
 
   if (!PREF_Init(nsnull))
     return NS_ERROR_FAILURE;
 
-  rv = readConfigFile();
-  if (NS_FAILED(rv))
-    return rv;
+  /*
+   * The following is a small hack which will allow us to only load the library
+   * which supports the netscape.cfg file if the preference is defined. We
+   * test for the existence of the pref, set in the all.js (mozilla) or
+   * all-ns.js (netscape 6), and if it exists we startup the pref config
+   * category which will do the rest.
+   */
+
+  rv = mRootBranch->GetCharPref("general.config.filename", getter_Copies(lockFileName));
+  if (NS_SUCCEEDED(rv))
+    NS_CreateServicesFromCategory("pref-config-startup",
+                                  NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(void *, this)),
+                                  "pref-config-startup");    
 
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService("@mozilla.org/observer-service;1", &rv);
   if (observerService) {
-    // Our refcnt must be > 0 when we call this, or we'll get deleted!
-    ++mRefCnt;
     rv = observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       rv = observerService->AddObserver(this, "profile-do-change", PR_TRUE);
     }
-    --mRefCnt;
   }
   return(rv);
 }
@@ -180,7 +188,9 @@ NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
     if (NS_SUCCEEDED(rv))
       useUserPrefFile(); 
 
-      JS_MaybeGC(gMochaContext);
+    notifyObservers(NS_PREFSERVICE_READ_TOPIC_ID);
+    
+    JS_MaybeGC(gMochaContext);
   } else {
     if (mCurrentFile == aFile)
       return NS_OK;
@@ -191,22 +201,20 @@ NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
     
     gErrorOpeningUserPrefs = PR_FALSE;
 
-    rv = openPrefFile(mCurrentFile, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE);
+    rv = openPrefFile(mCurrentFile, PR_TRUE, PR_FALSE, PR_TRUE);
   }
   return rv;
 }
 
 NS_IMETHODIMP nsPrefService::ResetPrefs()
 {
-  nsresult rv;
-
+  notifyObservers(NS_PREFSERVICE_RESET_TOPIC_ID);
   PREF_CleanupPrefs();
 
   if (!PREF_Init(nsnull))
     return NS_ERROR_FAILURE;
 
-  rv = readConfigFile();
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPrefService::ResetUserPrefs()
@@ -281,95 +289,17 @@ NS_IMETHODIMP nsPrefService::RemoveObserver(const char *aDomain, nsIObserver *aO
 }
 
 
-nsresult nsPrefService::readConfigFile()
+nsresult nsPrefService::notifyObservers(const char *aTopic)
 {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIFile> lockPrefFile;
-  nsXPIDLCString lockFileName;
-  nsXPIDLCString lockVendor;
-    
-  /*
-   * This preference is set in the all.js or all-ns.js (depending whether 
-   * running mozilla or netscp6) default - preference is commented out, so 
-   * it doesn't exist.
-   */
-  rv = mRootBranch->GetCharPref("general.config.filename", 
-                                getter_Copies(lockFileName));
-  if (NS_FAILED(rv)) {
-    /*
-     * if we got a "PREF_ERROR" back, the pref doesn't exist so, we ignore it
-     * - PREF_ERROR is converted to NS_ERROR_UNEXPECTED in _convertRes()
-     */
-   if (rv == NS_ERROR_UNEXPECTED)
-      rv = NS_OK;
-    return rv;
-  }
-
-  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
-                              getter_AddRefs(lockPrefFile));
-  if (NS_SUCCEEDED(rv)) {
-
-#ifdef XP_MAC
-    lockPrefFile->Append("Essential Files");
-#endif
-
-    rv = lockPrefFile->Append(lockFileName);
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-
-    if (NS_FAILED(openPrefFile(lockPrefFile, PR_FALSE, PR_TRUE, 
-                               PR_FALSE, PR_TRUE)))
-      return NS_ERROR_FAILURE;
-      // failure here means problem within the config file script
-  }
-
-  /*
-   * Once the config file is read, we should check that the vendor name 
-   * is consistent By checking for the vendor name after reading the config 
-   * file we allow for the preference to be set (and locked) by the creator 
-   * of the cfg file meaning the file can not be renamed (successfully).
-   */
-  rv = mRootBranch->GetCharPref("general.config.filename", 
-                                getter_Copies(lockFileName));
-  if (NS_FAILED(rv))         // There is NO REASON this should fail.
-    return NS_ERROR_FAILURE;
-
-  rv = mRootBranch->GetCharPref("general.config.vendor", 
-                                getter_Copies(lockVendor));
-
-  /*
-   * If the "vendor" preference exists, do this simple check to add a
-   * level of security, albeit a small one, to the validation of the
-   * contents of the .cfg file.
-   */
-  if (NS_SUCCEEDED(rv)) {
-    /*
-     * lockVendor and lockFileName should be the same with the addition of 
-     * .cfg to the filename.  By checking this post reading of the cfg file 
-     * this value can, and should, be set within the cfg file adding a level
-     * of security.
-     */
-
-    PRUint32 fileNameLen = PL_strlen(lockFileName);
-
-    if (PL_strncmp(lockFileName, lockVendor, fileNameLen -4) != 0)
-      return NS_ERROR_FAILURE;
-  }
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> observerService = 
+    do_GetService("@mozilla.org/observer-service;1", &rv);
   
-  // get the value of the autoconfig url
-  nsXPIDLCString urlName;
-  rv = mRootBranch->GetCharPref("autoadmin.global_config_url",
-                                getter_Copies(urlName));
-  if (NS_SUCCEEDED(rv) && *urlName != '\0' ) {  
-    
-    // Instantiating nsAutoConfig object if the pref is present
-    nsCOMPtr<nsIAutoConfig> autocfg = do_CreateInstance(NS_AUTOCONFIG_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return NS_ERROR_OUT_OF_MEMORY;
-    rv = autocfg->SetConfigURL(urlName);
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-  }
+  if (NS_FAILED(rv) || !observerService)
+    return rv;
+
+  nsISupports *subject = (nsISupports *)((nsIPrefService *)this);
+  observerService->NotifyObservers(subject, aTopic, nsnull);
   
   return NS_OK;
 }
@@ -398,7 +328,7 @@ nsresult nsPrefService::useDefaultPrefFile()
   }
 
   // need to save the prefs now
-  rv = SavePrefFile(aFile); 
+  SavePrefFile(aFile); 
 
   return rv;
 }
@@ -414,14 +344,14 @@ nsresult nsPrefService::useUserPrefFile()
   if (NS_SUCCEEDED(rv) && aFile) {
     rv = aFile->Append(userFiles[0]);
     if (NS_SUCCEEDED(rv)) {
-      rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+      rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE);
     }
   }
   return rv;
 }
 
-static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerifyHash,
-                                     PRBool aIsGlobalContext, PRBool aSkipFirstLine)
+static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
+                             PRBool aIsGlobalContext, PRBool aSkipFirstLine)
 {
   nsCOMPtr<nsIInputStream> inStr;
   char *readBuf;
@@ -456,13 +386,6 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerif
   rv = inStr->Read(readBuf, fileSize, &amtRead);
   NS_ASSERTION((amtRead == fileSize), "failed to read the entire prefs file!!");
   if (NS_SUCCEEDED(rv)) {
-    if (aVerifyHash) {
-      // Unobscure file by subtracting some value from every char - old value was 7
-      const int obscure_value = 13;
-      for (PRUint32 i = 0; i < amtRead; i++)
-        readBuf[i] -= obscure_value;
-    }
-
     if (!PREF_EvaluateConfigScript(readBuf, amtRead, nsnull, aIsGlobalContext, PR_TRUE,
                                    aSkipFirstLine))
     {
@@ -648,7 +571,7 @@ JSBool pref_InitInitialObjects()
   if (NS_FAILED(rv))
     return JS_FALSE;
 
-  rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+  rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE);
   NS_ASSERTION(NS_SUCCEEDED(rv), "initpref.js not parsed successfully");
 
   // Keep this child
@@ -691,7 +614,7 @@ JSBool pref_InitInitialObjects()
 
   int k;
   for (k = 0; k < numFiles; k++) {
-    rv = openPrefFile(defaultPrefFiles[k], PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+    rv = openPrefFile(defaultPrefFiles[k], PR_FALSE, PR_FALSE, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Config file not parsed successfully");
     NS_RELEASE(defaultPrefFiles[k]);
   }
@@ -705,7 +628,7 @@ JSBool pref_InitInitialObjects()
     if (NS_SUCCEEDED(rv)) {
       rv = aFile->Append((char*)specialFiles[k]);
       if (NS_SUCCEEDED(rv)) {
-        rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+        rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "<platform>.js was not parsed successfully");
       }
     }
