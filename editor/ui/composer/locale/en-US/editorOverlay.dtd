@@ -405,7 +405,7 @@
 <!ENTITY tableOrCellColor.label "Table or Cell Background Color...">
 <!ENTITY tableOrCellColor.accesskey "B">
 
-<!ENTITY formatremovestyles.keybinding "t">
+<!ENTITY formatremovestyles.keybinding "y">
 <!ENTITY formatremovelinks.keybinding "k">
 
 <!ENTITY formatindent.keybinding "]">
