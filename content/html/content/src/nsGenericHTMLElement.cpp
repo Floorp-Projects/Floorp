@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set tw=80 expandtab softtabstop=2 ts=2 sw=2: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -4393,3 +4394,345 @@ nsGenericHTMLElement::HandleFrameOnloadEvent(nsIDOMEvent* aEvent)
   return HandleDOMEvent(ctx, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 }
 
+nsresult
+nsGenericHTMLElement::SetProtocolInHrefString(const nsAReadableString &aHref,
+                                              const nsAReadableString &aProtocol,
+                                              nsAWritableString &aResult)
+{
+  aResult.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsAString::const_iterator start, end;
+  aProtocol.BeginReading(start);
+  aProtocol.EndReading(end);
+  nsAString::const_iterator iter(start);
+  FindCharInReadable(':', iter, end);
+  uri->SetScheme(NS_ConvertUCS2toUTF8(Substring(start, iter)).get());
+   
+  nsXPIDLCString newHref;
+  uri->GetSpec(getter_Copies(newHref));
+
+  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetHostnameInHrefString(const nsAReadableString &aHref,
+                                              const nsAReadableString &aHostname,
+                                              nsAWritableString &aResult)
+{
+  aResult.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  uri->SetHost(NS_ConvertUCS2toUTF8(aHostname).get());
+
+  nsXPIDLCString newHref;
+  uri->GetSpec(getter_Copies(newHref));
+
+  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetPathnameInHrefString(const nsAReadableString &aHref,
+                                              const nsAReadableString &aPathname,
+                                              nsAWritableString &aResult)
+{
+  aResult.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  url->SetFilePath(NS_ConvertUCS2toUTF8(aPathname).get());
+
+  nsXPIDLCString newHref;
+  uri->GetSpec(getter_Copies(newHref));
+  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetHostInHrefString(const nsAReadableString &aHref,
+                                          const nsAReadableString &aHost,
+                                          nsAWritableString &aResult)
+{
+  // Can't simply call nsURI::SetHost, because that would treat the name as an
+  // IPv6 address (like http://[server:443]/)
+
+  aResult.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString scheme;
+  uri->GetScheme(getter_Copies(scheme));
+  nsXPIDLCString preHost;
+  uri->GetPreHost(getter_Copies(preHost));
+  nsXPIDLCString path;
+  uri->GetPath(getter_Copies(path));
+
+  aResult.Assign(NS_ConvertUTF8toUCS2(scheme) + NS_LITERAL_STRING("://") +
+                 NS_ConvertUTF8toUCS2(preHost) + aHost + NS_ConvertUTF8toUCS2(path));
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetSearchInHrefString(const nsAReadableString &aHref,
+                                            const nsAReadableString &aSearch,
+                                            nsAWritableString &aResult)
+{
+  aResult.Truncate();
+  nsCOMPtr<nsIURI> uri;
+
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  url->SetQuery(NS_ConvertUCS2toUTF8(aSearch).get());
+
+  nsXPIDLCString newHref;
+  uri->GetSpec(getter_Copies(newHref));
+  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetHashInHrefString(const nsAReadableString &aHref,
+                                          const nsAReadableString &aHash,
+                                          nsAWritableString &aResult)
+{
+  aResult.Truncate();
+  nsCOMPtr<nsIURI> uri;
+
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = url->SetRef(NS_ConvertUCS2toUTF8(aHash).get());
+
+  nsXPIDLCString newHref;
+  uri->GetSpec(getter_Copies(newHref));
+  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetPortInHrefString(const nsAReadableString &aHref,
+                                          const nsAReadableString &aPort,
+                                          nsAWritableString &aResult)
+{
+  aResult.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRInt32 port;
+  port = nsString(aPort).ToInteger((PRInt32*)&rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  uri->SetPort(port);
+
+  nsXPIDLCString newHref;
+  uri->GetSpec(getter_Copies(newHref));
+  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  return NS_OK;
+}
+
+nsresult nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString& aHref,
+                                                         nsAWritableString& aProtocol)
+{
+  aProtocol.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString protocol;
+  rv = uri->GetScheme(getter_Copies(protocol));
+  if (NS_FAILED(rv))
+    return rv;
+
+  aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
+  aProtocol.Append(PRUnichar(':'));
+
+  return NS_OK;
+}
+
+nsresult nsGenericHTMLElement::GetHostFromHrefString(const nsAReadableString& aHref,
+                                                     nsAWritableString& aHost)
+{
+  aHost.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString host;
+  rv = uri->GetHost(getter_Copies(host));
+  if (NS_FAILED(rv))
+    return rv;
+
+  aHost.Assign(NS_ConvertASCIItoUCS2(host));
+
+  PRInt32 port;
+  uri->GetPort(&port);
+  if (-1 != port) {
+    aHost.Append(PRUnichar(':'));
+    nsAutoString portStr;
+    portStr.AppendInt(port, 10);
+    aHost.Append(portStr);
+  }
+
+  return NS_OK;
+}
+
+nsresult nsGenericHTMLElement::GetHostnameFromHrefString(const nsAReadableString& aHref,
+                                                         nsAWritableString& aHostname)
+{
+  aHostname.Truncate();
+  nsCOMPtr<nsIURI> url;
+  nsresult rv = NS_NewURI(getter_AddRefs(url), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString host;
+  rv = url->GetHost(getter_Copies(host));
+  if (NS_FAILED(rv))
+    return rv;
+
+  aHostname.Assign(NS_ConvertASCIItoUCS2(host));
+  return NS_OK;
+}
+
+nsresult nsGenericHTMLElement::GetPathnameFromHrefString(const nsAReadableString& aHref,
+                                                         nsAWritableString& aPathname)
+{
+  aPathname.Truncate();
+  nsCOMPtr<nsIURI> uri;
+
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString file;
+  rv = url->GetFilePath(getter_Copies(file));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // XXX is filepath really ASCII and not UTF8?
+  aPathname.Assign(NS_ConvertASCIItoUCS2(file));
+
+  return NS_OK;
+}
+
+nsresult nsGenericHTMLElement::GetSearchFromHrefString(const nsAReadableString& aHref,
+                                                       nsAWritableString& aSearch)
+{
+  aSearch.Truncate();
+  nsCOMPtr<nsIURI> uri;
+
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+  if (NS_FAILED(rv))
+    return rv;    
+
+  nsXPIDLCString search;
+  rv = url->GetEscapedQuery(getter_Copies(search));
+  if (NS_FAILED(rv))
+    return rv;
+
+  aSearch.Assign(PRUnichar('?'));
+  // XXX is escapedQuery really ASCII or UTF8
+  aSearch.Append(NS_ConvertASCIItoUCS2(search));
+
+  return NS_OK;
+
+}
+
+nsresult nsGenericHTMLElement::GetPortFromHrefString(const nsAReadableString& aHref,
+                                                     nsAWritableString& aPort)
+{
+  aPort.Truncate();
+  nsCOMPtr<nsIURI> url;
+  nsresult rv = NS_NewURI(getter_AddRefs(url), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  aPort.SetLength(0);
+  PRInt32 port;
+  rv = url->GetPort(&port);
+  if (NS_FAILED(rv))
+    return rv;
+  if (port == -1) {
+    aPort.Truncate();
+    return NS_OK;
+  }
+
+  nsAutoString portStr;
+  portStr.AppendInt(port, 10);
+  aPort.Assign(portStr);
+
+  return NS_OK;
+}
+
+nsresult nsGenericHTMLElement::GetHashFromHrefString(const nsAReadableString& aHref,
+                                                     nsAWritableString& aHash)
+{
+  aHash.Truncate();
+  nsCOMPtr<nsIURI> uri;
+
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString ref;
+  rv = url->GetRef(getter_Copies(ref));
+  if (NS_FAILED(rv))
+    return rv;
+
+  aHash.Assign(PRUnichar('#'));
+  aHash.Append(NS_ConvertASCIItoUCS2(ref));
+
+  return NS_OK;
+}
