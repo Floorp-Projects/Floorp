@@ -685,6 +685,16 @@ SECMOD_CanDeleteInternalModule;
 PK11_GetPBEIV;
 PK11_SaveContextAlloc;
 CERT_VerifyCertChain;
+CERT_DestroyOCSPRequest;
+CERT_EncodeOCSPRequest;
+CERT_AddOCSPAcceptableResponses;
+CERT_CreateOCSPRequest;
+CERT_GetOCSPStatusForCertID;
+CERT_DecodeOCSPResponse;
+CERT_VerifyOCSPResponseSignature;
+CERT_GetStatusValue;
+CERT_DestroyOCSPCertID;
+CERT_CreateOCSPCertID;
 ;+    local:
 ;+       *;
 ;+};

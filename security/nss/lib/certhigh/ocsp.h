@@ -34,7 +34,7 @@
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.2 2001/11/08 00:14:45 relyea%netscape.com Exp $
+ * $Id: ocsp.h,v 1.3 2002/07/03 00:02:34 javi%netscape.com Exp $
  */
 
 #ifndef _OCSP_H_
@@ -449,6 +449,50 @@ CERT_GetOCSPAuthorityInfoAccessLocation(CERTCertificate *cert);
 extern SECStatus 
 CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
 		     int64 time, void *pwArg);
+/*
+ * FUNCTION: CERT_GetOCSPStatusForCertID
+ *  Returns the OCSP status contained in the passed in paramter response
+ *  that corresponds to the certID passed in.
+ * INPUTS:
+ *  CERTCertDBHandle *handle
+ *    certificate DB of the cert that is being checked
+ *  CERTOCSPResponse *response
+ *    the OCSP response we want to retrieve status from.
+ *  CERTOCSPCertID *certID
+ *    the ID we want to look for from the response.
+ *  CERTCertificate *signerCert
+ *    the certificate that was used to sign the OCSP response.
+ *    must be obtained via a call to CERT_VerifyOCSPResponseSignature.
+ *  int64 time
+ *    The time at which we're checking the status for.
+ *  RETURN:
+ *    Return values are the same as those for CERT_CheckOCSPStatus
+ */
+extern SECStatus
+CERT_GetOCSPStatusForCertID(CERTCertDBHandle *handle, 
+			    CERTOCSPResponse *response,
+			    CERTOCSPCertID   *certID,
+			    CERTCertificate  *signerCert,
+                            int64             time);
+
+/*
+ * FUNCTION CERT_GetStatusValue
+ *   Returns the response status for the response passed.
+ * INPUTS:
+ *   CERTOCSPResponse *response
+ *     The response to query for status
+ *  RETURN:
+ *    OCSPResponseStatus an enumeration corresponding to the possible
+ *    return values listed in the OCSP spec.
+ */
+extern OCSPResponseStatus
+CERT_GetStatusValue(CERTOCSPResponse *response);
+
+extern CERTOCSPCertID*
+CERT_CreateOCSPCertID(CERTCertificate *cert, int64 time);
+
+extern SECStatus
+CERT_DestroyOCSPCertID(CERTOCSPCertID* certID);
 /************************************************************************/
 SEC_END_PROTOS
 

@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.7 2002/06/06 01:05:40 jpierre%netscape.com Exp $
+ * $Id: ocsp.c,v 1.8 2002/07/03 00:02:34 javi%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -596,6 +596,14 @@ loser:
     return NULL;
 }
 
+SECStatus
+CERT_DestroyOCSPCertID(CERTOCSPCertID* certID)
+{
+    if (certID->poolp)
+	PORT_FreeArena(certID->poolp, PR_FALSE);
+    return SECSuccess;
+}
+
 
 /*
  * Create and fill-in a CertID.  This function fills in the hash values
@@ -717,6 +725,21 @@ loser:
     PORT_ArenaRelease(arena, mark);
     return NULL;
 }
+
+CERTOCSPCertID*
+CERT_CreateOCSPCertID(CERTCertificate *cert, int64 time)
+{
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    CERTOCSPCertID *certID;
+    PORT_Assert(arena != NULL);
+    if (!arena)
+	return NULL;
+    
+    certID = ocsp_CreateCertID(arena, cert, time);
+    certID->poolp = arena;
+    return certID;
+}
+
 
 
 /*
@@ -1391,7 +1414,7 @@ CERT_DecodeOCSPResponse(SECItem *src)
     PRArenaPool *arena = NULL;
     CERTOCSPResponse *response = NULL;
     SECStatus rv = SECFailure;
-    ocspResponseStatus sv;
+    OCSPResponseStatus sv;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
@@ -1411,9 +1434,9 @@ CERT_DecodeOCSPResponse(SECItem *src)
 	goto loser;
     }
 
-    sv = (ocspResponseStatus) DER_GetInteger(&response->responseStatus);
+    sv = (OCSPResponseStatus) DER_GetInteger(&response->responseStatus);
     response->statusValue = sv;
-    if (sv != ocspResponse_successful) {
+    if (sv != OCSPResponse_successful) {
 	/*
 	 * If the response status is anything but successful, then we
 	 * are all done with decoding; the status is all there is.
@@ -3225,10 +3248,7 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
     CERTOCSPResponse *response = NULL;
     CERTCertificate *signerCert = NULL;
     CERTCertificate *issuerCert = NULL;
-    ocspResponseData *responseData;
-    int64 producedAt;
     CERTOCSPCertID *certID;
-    CERTOCSPSingleResponse *single;
     SECStatus rv = SECFailure;
 
 
@@ -3308,27 +3328,27 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
      * Otherwise, we continue to find the actual per-cert status
      * in the response.
      */
-    switch (response->statusValue) {
-      case ocspResponse_successful:
+    switch (CERT_GetStatusValue(response)) {
+      case OCSPResponse_successful:
 	break;
-      case ocspResponse_malformedRequest:
+      case OCSPResponse_malformedRequest:
 	PORT_SetError(SEC_ERROR_OCSP_MALFORMED_REQUEST);
 	goto loser;
-      case ocspResponse_internalError:
+      case OCSPResponse_internalError:
 	PORT_SetError(SEC_ERROR_OCSP_SERVER_ERROR);
 	goto loser;
-      case ocspResponse_tryLater:
+      case OCSPResponse_tryLater:
 	PORT_SetError(SEC_ERROR_OCSP_TRY_SERVER_LATER);
 	goto loser;
-      case ocspResponse_sigRequired:
+      case OCSPResponse_sigRequired:
 	/* XXX We *should* retry with a signature, if possible. */
 	PORT_SetError(SEC_ERROR_OCSP_REQUEST_NEEDS_SIG);
 	goto loser;
-      case ocspResponse_unauthorized:
+      case OCSPResponse_unauthorized:
 	PORT_SetError(SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST);
 	goto loser;
-      case ocspResponse_other:
-      case ocspResponse_unused:
+      case OCSPResponse_other:
+      case OCSPResponse_unused:
       default:
 	PORT_SetError(SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS);
 	goto loser;
@@ -3346,6 +3366,57 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
 
     PORT_Assert(signerCert != NULL);	/* internal consistency check */
     /* XXX probably should set error, return failure if signerCert is null */
+
+
+    /*
+     * Again, we are only doing one request for one cert.
+     * XXX When we handle cert chains, the following code will obviously
+     * have to be modified, in coordation with the code above that will
+     * have to determine how to make multiple requests, etc.  It will need
+     * to loop, and for each certID in the request, find the matching
+     * single response and check the status specified by it.
+     *
+     * We are helped here in that we know that the requests are made with
+     * the request list in the same order as the order of the certs we hand
+     * to it.  This is why I can directly access the first member of the
+     * single request array for the one cert I care about.
+     */
+
+    certID = request->tbsRequest->requestList[0]->reqCert;
+    rv = CERT_GetOCSPStatusForCertID(handle, response, certID, 
+                                     signerCert, time);
+    /*
+     * Add back the loser clause and corresponding free's...
+     */
+loser:
+    if (issuerCert != NULL)
+	CERT_DestroyCertificate(issuerCert);
+    if (signerCert != NULL)
+	CERT_DestroyCertificate(signerCert);
+    if (response != NULL)
+	CERT_DestroyOCSPResponse(response);
+    if (request != NULL)
+	CERT_DestroyOCSPRequest(request);
+    if (encodedResponse != NULL)
+	SECITEM_FreeItem(encodedResponse, PR_TRUE);
+    if (certList != NULL)
+	CERT_DestroyCertList(certList);
+    if (location != NULL)
+	PORT_Free(location);
+    return rv;
+}
+
+SECStatus
+CERT_GetOCSPStatusForCertID(CERTCertDBHandle *handle, 
+                            CERTOCSPResponse *response, 
+                            CERTOCSPCertID   *certID,
+                            CERTCertificate  *signerCert,
+                            int64             time)
+{
+    SECStatus rv;
+    ocspResponseData *responseData;
+    int64 producedAt;
+    CERTOCSPSingleResponse *single;
 
     /*
      * The ResponseData part is the real guts of the response.
@@ -3366,25 +3437,12 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
     if (rv != SECSuccess)
 	goto loser;
 
-    /*
-     * Again, we are only doing one request for one cert.
-     * XXX When we handle cert chains, the following code will obviously
-     * have to be modified, in coordation with the code above that will
-     * have to determine how to make multiple requests, etc.  It will need
-     * to loop, and for each certID in the request, find the matching
-     * single response and check the status specified by it.
-     *
-     * We are helped here in that we know that the requests are made with
-     * the request list in the same order as the order of the certs we hand
-     * to it.  This is why I can directly access the first member of the
-     * single request array for the one cert I care about.
-     */
-
-    certID = request->tbsRequest->requestList[0]->reqCert;
     single = ocsp_GetSingleResponseForCertID(responseData->responses,
 					     handle, certID);
-    if (single == NULL)
+    if (single == NULL) {
+	rv = SECFailure;
 	goto loser;
+    }
 
     rv = ocsp_VerifySingleResponse(single, handle, signerCert, producedAt);
     if (rv != SECSuccess)
@@ -3396,23 +3454,7 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
      */
 
     rv = ocsp_CertHasGoodStatus(single, time);
-
 loser:
-    if (issuerCert != NULL)
-	CERT_DestroyCertificate(issuerCert);
-    if (signerCert != NULL)
-	CERT_DestroyCertificate(signerCert);
-    if (response != NULL)
-	CERT_DestroyOCSPResponse(response);
-    if (request != NULL)
-	CERT_DestroyOCSPRequest(request);
-    if (encodedResponse != NULL)
-	SECITEM_FreeItem(encodedResponse, PR_TRUE);
-    if (certList != NULL)
-	CERT_DestroyCertList(certList);
-    if (location != NULL)
-	PORT_Free(location);
-
     return rv;
 }
 
@@ -3927,4 +3969,9 @@ loser:
     return(NULL);
 }
 
-
+OCSPResponseStatus
+CERT_GetStatusValue(CERTOCSPResponse *response)
+{
+    PORT_Assert(response);
+    return response->statusValue;
+}
