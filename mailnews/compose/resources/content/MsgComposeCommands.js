@@ -399,19 +399,20 @@ function InitCharsetMenuCheckMark()
     prefs = null;
   }
   var send_default_charset = prefs.CopyCharPref("mailnews.send_default_charset");
-
   var compFieldsCharset = msgCompose.compFields.GetCharacterSet();
-  if (compFieldsCharset.toUpperCase() == "US-ASCII")
+  compFieldsCharset = compFieldsCharset.toUpperCase();
+  if (compFieldsCharset == "US-ASCII")
     compFieldsCharset = "ISO-8859-1";
+  send_default_charset = send_default_charset.toUpperCase();
   menuitem = document.getElementById(compFieldsCharset);
 
   // charset may have been set implicitly in case of reply/forward
-  if (send_default_charset.toUpperCase() != compFieldsCharset.toUpperCase()) {
-    if (menuitem && menuitem.getAttribute('checked') == false) {
-      menuitem.setAttribute('checked', 'true');
-      return;
-    }
+  if (send_default_charset != compFieldsCharset) {
+    menuitem.setAttribute('checked', 'true');
+    return;
   } 
+
+  // use pref default
   menuitem = document.getElementById(send_default_charset);
   if (menuitem) 
     menuitem.setAttribute('checked', 'true'); 
