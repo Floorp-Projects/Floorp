@@ -253,6 +253,7 @@ nsresult nsDBFolderInfo::LoadMemberVariables()
 	GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
 	GetInt32PropertyWithToken(m_imapUidValidityColumnToken, m_ImapUidValidity);
 	GetInt32PropertyWithToken(m_expiredMarkColumnToken, (PRInt32 &) m_expiredMark);
+	GetInt32PropertyWithToken(m_expungedBytesColumnToken, (PRInt32 &) m_expungedBytes);
 
 	PRInt32 version;
 
@@ -340,8 +341,7 @@ NS_IMETHODIMP	nsDBFolderInfo::GetExpiredMark(nsMsgKey *result)
 NS_IMETHODIMP
 nsDBFolderInfo::ChangeExpungedBytes(PRInt32 delta)
 {
-    m_expungedBytes += delta;
-    return NS_OK;
+    return SetExpungedBytes(m_expungedBytes + delta);
 }
 
 PRBool nsDBFolderInfo::AddLaterKey(nsMsgKey key, PRTime until)
@@ -471,6 +471,19 @@ NS_IMETHODIMP	nsDBFolderInfo::SetNumVisibleMessages(PRInt32 numVisibleMessages)
 	m_numVisibleMessages = numVisibleMessages;
 	return SetUint32PropertyWithToken(m_numVisibleMessagesColumnToken, m_numVisibleMessages);
 }
+
+NS_IMETHODIMP nsDBFolderInfo::GetExpungedBytes(PRInt32 *result) 
+{
+	*result = m_expungedBytes;
+	return NS_OK;
+}
+
+NS_IMETHODIMP	nsDBFolderInfo::SetExpungedBytes(PRInt32 expungedBytes) 
+{
+	m_expungedBytes = expungedBytes;
+	return SetUint32PropertyWithToken(m_expungedBytesColumnToken, m_expungedBytes);
+}
+
 
 NS_IMETHODIMP	nsDBFolderInfo::GetFlags(PRInt32 *result)
 {

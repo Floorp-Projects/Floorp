@@ -45,6 +45,8 @@ interface  nsIDBFolderInfo : nsISupports {
 	void ChangeNumVisibleMessages(in long delta);
 	attribute long NumNewMessages;
 	attribute long NumMessages;
+
+	attribute long expungedBytes;
 	attribute long NumVisibleMessages;
 	attribute long ImapUidValidity;
 	attribute unsigned long Version;
