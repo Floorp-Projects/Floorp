@@ -49,6 +49,7 @@ class nsCaret : public nsICaret,
 
  		NS_IMETHOD    SetCaretVisible(PRBool inMakeVisible);
   	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
+  	NS_IMETHOD    Refresh();
 	
 	  /* nsIDOMSelectionListener interface */
 	  NS_IMETHOD    NotifySelectionChanged();

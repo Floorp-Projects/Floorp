@@ -49,7 +49,7 @@ nsCaret::nsCaret()
 :	mPresShell(nsnull)
 ,	mBlinkTimer(nsnull)
 ,	mBlinkRate(500)
-, mVisible(PR_TRUE)
+, mVisible(PR_FALSE)
 , mReadOnly(PR_TRUE)
 , mDrawn(PR_FALSE)
 {
@@ -75,7 +75,7 @@ NS_METHOD nsCaret::Init(nsIPresShell *inPresShell, nsCaretProperties *inCaretPro
 	mPresShell = inPresShell;		// the presshell owns us, so no addref
 	
 	mBlinkRate = inCaretProperties->GetCaretBlinkRate();
-	mCaretWidth = inCaretProperties->GetCaretWidth();
+	mCaretWidth = NSIntPointsToTwips(inCaretProperties->GetCaretWidth());
 	
 	// get the selection from the pres shell, and set ourselves up as a selection
 	// listener
@@ -150,13 +150,33 @@ NS_METHOD nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 	return NS_OK;
 }
 
+
+//-----------------------------------------------------------------------------
+NS_METHOD nsCaret::Refresh()
+{
+
+	if (mVisible)
+	{
+		StopBlinking();
+		StartBlinking();
+	}
+	
+	return NS_OK;
+}
+
+
 #pragma mark -
 
 //-----------------------------------------------------------------------------
 NS_METHOD nsCaret::NotifySelectionChanged()
 {
-	StopBlinking();
-	StartBlinking();
+
+	if (mVisible)
+	{
+		StopBlinking();
+		StartBlinking();
+	}
+	
 	return NS_OK;
 }
 
@@ -169,16 +189,21 @@ nsresult nsCaret::StartBlinking()
 	mBlinkTimer = nsnull;
 	
 	// set up the blink timer
-	nsresult	err = NS_NewTimer(&mBlinkTimer);
+	if (mBlinkRate > 0)
+	{
+		nsresult	err = NS_NewTimer(&mBlinkTimer);
+		
+		if (NS_FAILED(err))
+			return err;
+		
+		mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate);
+	}
 	
-	if (NS_FAILED(err))
-		return err;
-
   NS_ASSERTION(!mDrawn, "Caret should not be drawn here");
   
 	DrawCaret();		// draw it right away
 
-	return mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate);
+	return NS_OK;
 }
 
 
@@ -306,7 +331,8 @@ void nsCaret::DrawCaret()
 	}
 
 	// prime the timer again
-	mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate);
+	if (mBlinkTimer)
+		mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate);
 
 }
 

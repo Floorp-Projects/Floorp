@@ -41,6 +41,11 @@ public:
    *  PR_FALSE to show the caret in normal, editing state
    */
   NS_IMETHOD SetCaretReadOnly(PRBool inMakeReadonly) = 0;
+
+  /** Refresh
+   *  Refresh the caret after the frame it is being drawn in has painted
+   */
+ 	NS_IMETHOD Refresh() = 0;
 };
 
 extern nsresult NS_NewCaret(nsICaret** aInstancePtrResult);
