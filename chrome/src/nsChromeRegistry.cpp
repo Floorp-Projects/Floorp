@@ -115,6 +115,8 @@ public:
     NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult)  ;
     NS_IMETHOD GetAllCommands(nsIRDFResource* source,
                               nsIEnumerator/*<nsIRDFResource>*/** commands)  ;
+    NS_IMETHOD GetAllCmds(nsIRDFResource* source,
+                              nsISimpleEnumerator/*<nsIRDFResource>*/** commands)  ;
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments,
@@ -641,6 +643,13 @@ nsChromeRegistry::GetAllCommands(nsIRDFResource* source,
                           nsIEnumerator/*<nsIRDFResource>*/** commands)
 {
   return mInner->GetAllCommands(source, commands);
+}
+
+NS_IMETHODIMP 
+nsChromeRegistry::GetAllCmds(nsIRDFResource* source,
+                          nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
+{
+  return mInner->GetAllCmds(source, commands);
 }
 
 NS_IMETHODIMP 
