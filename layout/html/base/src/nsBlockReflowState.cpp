@@ -130,12 +130,7 @@ public:
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
-  // XXX CONSTRUCTION
-#if 0
-  NS_IMETHOD ContentAppended(nsIPresShell*   aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent*     aContainer);
-#endif
+
   NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
@@ -218,8 +213,6 @@ protected:
   nsresult FrameInsertedReflow(nsBlockReflowState& aState);
 
   nsresult FrameDeletedReflow(nsBlockReflowState& aState);
-
-  nsresult CreateNewFrames(nsIPresContext* aPresContext);
 
   nsresult FindTextRuns(nsBlockReflowState& aState);
 
@@ -1821,20 +1814,6 @@ nsBlockFrame::InitialReflow(nsBlockReflowState& aState)
     return rv;
   }
 
-  // XXX CONSTRUCTION
-  // Temporary hack. If we haven't had Init() called then go ahead and create
-  // frames the old way. This is needed until tables get converted...
-
-  // Create new frames
-  if (!mHasBeenInitialized) {
-    if (nsnull == mNextInFlow) {
-      rv = CreateNewFrames(aState.mPresContext);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
-  }
-
   // Generate text-run information
   rv = FindTextRuns(aState);
   if (NS_OK != rv) {
@@ -1849,15 +1828,6 @@ nsBlockFrame::InitialReflow(nsBlockReflowState& aState)
 nsresult
 nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
 {
-  // XXX CONSTRUCTION
-#if 0
-  // Create new frames for the appended content. Each line that is
-  // impacted by this will be marked dirty.
-  nsresult rv = CreateNewFrames(aState.mPresContext);
-  if (NS_OK != rv) {
-    return rv;
-  }
-#else
   nsresult  rv = NS_OK;
 
   // Get the first of the newly appended frames
@@ -1867,7 +1837,6 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
   // Add the new frames to the child list, and create new lines. Each
   // impacted line will be marked dirty
   AppendNewFrames(aState.mPresContext, firstAppendedFrame);
-#endif
 
   // Generate text-run information
   rv = FindTextRuns(aState);
@@ -1934,160 +1903,6 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
   // Reflow lines from there forward
   aState.mPrevLine = lastCleanLine;
   return ReflowLinesAt(aState, firstDirtyLine);
-}
-
-nsresult
-nsBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
-{
-  // If we need to be continued but aren't, we will have an overflow list
-  NS_ASSERTION((nsnull == mOverflowLines) && (nsnull == mNextInFlow),
-               "bad call to CreateNewFrames");
-
-  // Get our last line and then get its last child. Use that
-  // information to determine our kidContentIndex.
-  LineData* lastLine = LastLine(mLines);
-  nsIFrame* lastFrame;
-  PRInt32 kidContentIndex;
-  if (nsnull != lastLine) {
-    lastFrame = lastLine->LastChild();
-    lastFrame->GetContentIndex(kidContentIndex);
-    if (lastLine->GetLastContentIsComplete()) {
-      kidContentIndex++;
-    }
-    else {
-#ifdef NS_DEBUG
-      // Because we always create continuations as we find them (XXX
-      // sigh) instead of when we need them, we can assert that if the
-      // last child is not complete then it already has a continuation.
-      nsIFrame* kidNextInFlow;
-      lastFrame->GetNextInFlow(kidNextInFlow);
-      NS_ASSERTION(nsnull != kidNextInFlow, "whoops");
-#endif
-    }
-  }
-  else {
-    // We can't have an empty line list and have a prev-in-flow. If we
-    // have a prev-in-flow then we are its continuation which means it
-    // must have pushed some lines into its overflow list; therefore
-    // we must have some lines.
-    NS_ASSERTION(nsnull == mPrevInFlow, "prev-in-flow without overflow lines");
-    lastFrame = nsnull;
-    kidContentIndex = 0;
-  }
-
-  // Make sure that new inlines go onto the end of the lastLine when
-  // the lastLine is mapping inline frames.
-  PRInt32 pendingInlines = 0;
-  if (nsnull != lastLine) {
-    if (!lastLine->IsBlock()) {
-      pendingInlines = 1;
-    }
-  }
-
-  // Now create frames for all of the new content.
-  nsresult rv;
-  PRInt32 lastContentIndex;
-  mContent->ChildCount(lastContentIndex);
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("enter nsBlockFrame::CreateNewFrames: kidContentIndex=%d lastContentIndex=%d",
-      kidContentIndex, lastContentIndex));
-  for (; kidContentIndex < lastContentIndex; kidContentIndex++) {
-    nsIContent* kid;
-    mContent->ChildAt(kidContentIndex, kid);
-    if (nsnull == kid) {
-      break;
-    }
-
-    // Create frame for our new child and add it to the sibling list
-    nsIFrame* frame;
-    rv = nsHTMLBase::CreateFrame(aPresContext, this, kid, nsnull, frame);
-    NS_RELEASE(kid);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    if (nsnull != lastFrame) {
-      lastFrame->SetNextSibling(frame);
-    }
-    lastFrame = frame;
-//XXX    childPrevInFlow = nsnull;
-    NS_FRAME_TRACE(NS_FRAME_TRACE_NEW_FRAMES,
-       ("nsBlockFrame::CreateNewFrames: new-frame=%p", frame));
-
-    // See if the child is a block or non-block
-    const nsStyleDisplay* kidDisplay;
-    rv = frame->GetStyleData(eStyleStruct_Display,
-                             (const nsStyleStruct*&) kidDisplay);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    const nsStylePosition* kidPosition;
-    rv = frame->GetStyleData(eStyleStruct_Position,
-                             (const nsStyleStruct*&) kidPosition);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    PRBool isBlock =
-      nsLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
-
-    // If the child is an inline then add it to the lastLine (if it's
-    // an inline line, otherwise make a new line). If the child is a
-    // block then make a new line and put the child in that line.
-    if (isBlock) {
-      // If the previous line has pending inline data to be reflowed,
-      // do so now.
-      if (0 != pendingInlines) {
-        // Set this to true in case we don't end up reflowing all of the
-        // frames on the line (because they end up being pushed).
-        lastLine->SetLastContentIsComplete();
-        lastLine->MarkDirty();
-        pendingInlines = 0;
-      }
-
-      // Create a line for the block
-      LineData* line = new LineData(frame, 1,
-                                    (LINE_IS_BLOCK |
-                                     LINE_LAST_CONTENT_IS_COMPLETE));
-      if (nsnull == line) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      if (nsnull == lastLine) {
-        mLines = line;
-      }
-      else {
-        lastLine->mNext = line;
-      }
-      lastLine = line;
-    }
-    else {
-      // Queue up the inlines for reflow later on
-      if (0 == pendingInlines) {
-        LineData* line = new LineData(frame, 0, 0);
-        if (nsnull == line) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        if (nsnull == lastLine) {
-          mLines = line;
-        }
-        else {
-          lastLine->mNext = line;
-        }
-        lastLine = line;
-      }
-      lastLine->mChildCount++;
-      pendingInlines++;
-    }
-  }
-
-  if (0 != pendingInlines) {
-    // Set this to true in case we don't end up reflowing all of the
-    // frames on the line (because they end up being pushed).
-    lastLine->SetLastContentIsComplete();
-    lastLine->MarkDirty();
-  }
-
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("exit nsBlockFrame::CreateNewFrames"));
-  return NS_OK;
 }
 
 // XXX keep the text-run data in the first-in-flow of the block
@@ -3271,32 +3086,6 @@ nsBlockFrame::DrainOverflowLines()
 #endif
   return drained;
 }
-
-// XXX CONSTRUCTION
-#if 0
-// XXX a copy of nsHTMLContainerFrame's
-NS_IMETHODIMP
-nsBlockFrame::ContentAppended(nsIPresShell*   aShell,
-                                 nsIPresContext* aPresContext,
-                                 nsIContent*     aContainer)
-{
-  // Get the last-in-flow
-  nsBlockFrame* lastInFlow = (nsBlockFrame*)GetLastInFlow();
-
-  // Generate a reflow command for the frame
-  nsIReflowCommand* cmd;
-  nsresult          result;
-                                                  
-  result = NS_NewHTMLReflowCommand(&cmd, lastInFlow,
-                                   nsIReflowCommand::FrameAppended);
-  if (NS_OK == result) {
-    aShell->AppendReflowCommand(cmd);
-    NS_RELEASE(cmd);
-  }
-
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsBlockFrame::InsertNewFrame(nsBlockFrame* aParentFrame,
