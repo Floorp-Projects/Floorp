@@ -21,22 +21,29 @@
  */
 
 #include "nsClipboard.h"
-#include <Pt.h>
 
 #include "nsCOMPtr.h"
-//#include "nsDataObj.h"
+
+#include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
-#include "nsString.h"
-#include "nsIFormatConverter.h"
-#include "nsITransferable.h"
+#include "nsITransferable.h"   // kTextMime
+#include "nsISupportsPrimitives.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
+#include "nsXPIDLString.h"
+#include "nsPrimitiveHelpers.h"
 
 #include "nsVoidArray.h"
-#include "nsFileSpec.h"
+#include "nsPhWidgetLog.h"
 
+// Initialize the  class statics:
+
+#if defined(DEBUG)
+#define DEBUG_CLIPBOARD
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -45,15 +52,7 @@
 //-------------------------------------------------------------------------
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
-  //NS_INIT_REFCNT();
-  //mDataObj        = nsnull;
-  mIgnoreEmptyNotification = PR_FALSE;
-  mWindow         = nsnull;
-
-  // Create a Native window for the shell container...
-  //nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID, (void**)&mWindow);
-  //mWindow->Show(PR_FALSE);
-  //mWindow->Resize(1,1,PR_FALSE);
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::nsClipboard this=<%p>\n", this));
 }
 
 //-------------------------------------------------------------------------
@@ -61,140 +60,107 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 //-------------------------------------------------------------------------
 nsClipboard::~nsClipboard()
 {
-  //NS_IF_RELEASE(mWindow);
-
-  //EmptyClipboard();
-//  if (nsnull != mDataObj) {
-//    mDataObj->Release();
-//  }
-
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::~nsClipboard this=<%p>\n", this));
 }
 
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 {
-printf( "ForceDataToClipboard()\n" );
-  nsresult res = NS_ERROR_FAILURE;
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::ForceDataToClipboard this=<%p>\n", this));
 
-// REVISIT - Need to fix this
-#if 0
-  // make sure we have a good transferable
-  if( mTransferable )
-  {
-
-  //  HWND nativeWin = nsnull;//(HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
-  //  ::OpenClipboard(nativeWin);
-  ///  ::EmptyClipboard();
-
-    // Get the transferable list of data flavors
-    nsVoidArray * dfList;
-    mTransferable->GetTransferDataFlavors(&dfList);
-
-    // Walk through flavors and see which flavor is on the native clipboard,
-    int i;
-    int cnt = dfList->Count();
-
-    if( cnt )
-    {
-      PhClipHeader  *cliphdr = (PhClipHeader *) malloc( cnt * sizeof( PhClipHeader ));
-      if( cliphdr )
-      {
-        for(i=0;i<cnt;i++)
-        {
-          nsString  *df = (nsString *)dfList->ElementAt(i);
-          void      *data;
-          PRUint32  dataLen;
-
-          if( nsnull != df )
-          {
-            GetFormat( *df, &cliphdr[i] );
-            // Get the data as a bunch-o-bytes from the clipboard
-            mTransferable->GetTransferData( df, &data, &dataLen );
-            cliphdr[i].length = dataLen;
-            cliphdr[i].data = data;
-          }
-        }
-
-        PhClipboardCopy( 1, cnt, cliphdr );
-        res = NS_OK;
-      }
-
-      free( cliphdr );
-    }
-
-    delete dfList;
-  }
-
-  if( res == NS_OK )
-    printf( "  ok.\n" );
-  else
-    printf( "  failed.\n" );
+#ifdef DEBUG_CLIPBOARD
+  printf("nsClipboard::ForceDataToClipboard this=<%p>\n", this);
 #endif
 
-  return res;
+  // make sure we have a good transferable
+  if (nsnull == mTransferable) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 {
-printf( "SetNativeClipboardData()\n" );
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData this=<%p>\n", this));
+
+#ifdef DEBUG_CLIPBOARD
+  printf("nsClipboard::SetNativeClipboardData this=<%p>\n", this);
+#endif
 
   nsresult res = NS_ERROR_FAILURE;
 
-// REVISIT - Need to fix this
-#if 0
   // make sure we have a good transferable
-  if( mTransferable )
+  if (nsnull == mTransferable)
   {
-    mIgnoreEmptyNotification = PR_TRUE;
-
-    nsVoidArray * dfList;
-    mTransferable->FlavorsTransferableCanExport( &dfList );
-
-    PRUint32 cnt = dfList->Count();
-
-    if( cnt )
-    {
-      PhClipHeader *cliphdr = (PhClipHeader *) malloc( cnt * sizeof( PhClipHeader ));
-
-      if( cliphdr )
-      {    
-        PRUint32 i;
-        nsString *df;
-        void      *data;
-        PRUint32  dataLen;
-
-        for(i=0;i<cnt;i++)
-        {
-          df = (nsString *)dfList->ElementAt(i);
-          if (nsnull != df)
-          {
-            GetFormat( *df, &cliphdr[i] );
-            mTransferable->GetTransferData( df, &data, &dataLen );
-            cliphdr[i].length = dataLen;
-            cliphdr[i].data = data;
-          }
-        }
-
-        PhClipboardCopy( 1, cnt, cliphdr );
-        res = NS_OK;
-        free( cliphdr );
-      }
-    }
-
-    // Delete the data flavors list
-    delete dfList;
-
-    mIgnoreEmptyNotification = PR_FALSE;
+    printf("nsClipboard::SetNativeClipboardData(): no transferable!\n");
+    return NS_ERROR_FAILURE;
   }
 
-  if( res == NS_OK )
-    printf( "  ok.\n" );
-  else
-    printf( "  failed.\n" );
-#endif
+  // get flavor list that includes all flavors that can be written (including ones 
+  // obtained through conversion)
+  nsCOMPtr<nsISupportsArray> flavorList;
+  nsresult errCode = mTransferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
+  if ( NS_FAILED(errCode) )
+    return NS_ERROR_FAILURE;
+	
+  PRUint32 cnt;
+  flavorList->Count(&cnt);
+  if (cnt)
+  {
+    PhClipHeader *cliphdr = (PhClipHeader *) malloc( cnt * sizeof( PhClipHeader ));
+
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData cnt=<%d>\n", cnt));
+
+    if( cliphdr )
+    {    
+      PRUint32   i=0, index=0;
+      nsString  *df;
+      void      *data = nsnull;
+      PRUint32   dataLen;
+
+       mIgnoreEmptyNotification = PR_TRUE;
+
+       for ( PRUint32 i=0; i<cnt; ++i )
+       {
+         nsCOMPtr<nsISupports> genericFlavor;
+         flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+         nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+         if ( currentFlavor )
+		 {
+           nsXPIDLCString flavorStr;
+           currentFlavor->ToString(getter_Copies(flavorStr));
+ 		   nsresult err = GetFormat( flavorStr, &cliphdr[index] );
+           if (err != NS_OK)
+		     continue;
+
+           // Get data out of transferable.
+           nsCOMPtr<nsISupports> genericDataWrapper;
+           mTransferable->GetTransferData(flavorStr, 
+                                          getter_AddRefs(genericDataWrapper),
+                                          &dataLen);
+										  
+           nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataLen );
+ 
+           PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData adding %d index=<%d> type=<%s> length=%d data=<%s>\n", i, index, cliphdr[index].type, dataLen, data));
+
+           cliphdr[index].length = dataLen;
+           cliphdr[index].data = data;
+		   index++;
+         }
+       }
+       PhClipboardCopy( 1, index, cliphdr );
+	   for(i=0; i<index; i++)
+	     nsCRT::free ( NS_REINTERPRET_CAST(char*, cliphdr[i].data) );
+
+       res = NS_OK;
+       mIgnoreEmptyNotification = PR_FALSE;
+    }
+  }
+  
   return res;
 }
 
@@ -202,78 +168,158 @@ printf( "SetNativeClipboardData()\n" );
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 {
-printf( "GetNativeClipboardData()\n" );
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::GetNativeClipboardData this=<%p>\n", this));
+#ifdef DEBUG_CLIPBOARD
+  printf("nsClipboard::GetNativeClipboardData this=<%p>\n", this);
+#endif
 
   nsresult res = NS_ERROR_FAILURE;
 
-// REVISIT - Need to fix this
-#if 0
-  if( aTransferable )
-  {
-    nsVoidArray * dfList;
-    aTransferable->GetTransferDataFlavors(&dfList);
-
-    // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
-    int i;
-    int cnt = dfList->Count();
-
-    if( cnt > 0 )
-    {
-      PhClipHeader *cliphdr;
-      PhClipHeader cliptype;
-      void         *data;
-      PRUint32     dataLen;
-      nsString     *df;
-      void         *clipPtr;
-
-      clipPtr = PhClipboardPasteStart( 1 );
-        
-      for(i=0;i<cnt;i++)
-      {
-        df = (nsString *)dfList->ElementAt(i);
-        if( nsnull != df )
-        {
-          GetFormat( *df, &cliptype );
-          cliphdr = PhClipboardPasteType( clipPtr, cliptype.type );
-
-          aTransferable->SetTransferData( df, cliphdr->data, cliphdr->length );
-        } 
-      }
-      
-      PhClipboardPasteFinish( clipPtr );
-      res = NS_OK;
-    }
-
-    delete dfList;
+  // make sure we have a good transferable
+  if (nsnull == aTransferable) {
+    printf("  GetNativeClipboardData: Transferable is null!\n");
+    return NS_ERROR_FAILURE;
   }
 
-  if( res == NS_OK )
-    printf( "  ok.\n" );
-  else
-    printf( "  failed.\n" );
+  // get flavor list that includes all acceptable flavors (including ones obtained through
+  // conversion)
+  nsCOMPtr<nsISupportsArray> flavorList;
+  nsresult errCode = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
+  if ( NS_FAILED(errCode) )
+    return NS_ERROR_FAILURE;
+
+ // Walk through flavors and see which flavor matches the one being pasted:
+  PRUint32 cnt;
+
+  flavorList->Count(&cnt);
+  nsCAutoString foundFlavor;
+  if (cnt > 0)
+  {
+    void         *clipPtr;
+    PhClipHeader  cliptype;
+    PhClipHeader *cliphdr;
+    void         *data = nsnull;
+    PRUint32      dataLen;
+
+    clipPtr = PhClipboardPasteStart( 1 );
+
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::GetNativeClipboardData cnt=<%d>\n", cnt));
+
+    for ( PRUint32 i = 0; i < cnt; ++i )
+    {
+      nsCOMPtr<nsISupports> genericFlavor;
+      flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+      nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+      if ( currentFlavor )
+	  {
+        nsXPIDLCString flavorStr;
+        currentFlavor->ToString ( getter_Copies(flavorStr) );
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::GetNativeClipboardData looking for=<%s>\n", (const char *) flavorStr));
+        nsresult err = GetFormat( flavorStr, &cliptype);
+        if (err != NS_OK)
+		     continue;
+
+        cliphdr = PhClipboardPasteType( clipPtr, cliptype.type );
+        if (cliphdr)
+		{
+		  data = cliphdr->data;
+		  dataLen = cliphdr->length;
+          char *dataStr = cliphdr->data;
+		  
+		  /* If this is a TEXT, and is NULL teminated then strip it off */
+          if ( (strcmp(cliptype.type, Ph_CLIPBOARD_TYPE_TEXT) == 0)
+	           && (*(dataStr+(dataLen-1)) == NULL)
+			 )
+		  {
+			dataLen--;		  
+		  }
+
+          nsCOMPtr<nsISupports> genericDataWrapper;
+          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+          aTransferable->SetTransferData(flavorStr,
+                                         genericDataWrapper,
+                                        dataLen);
+          printf("nsClipboard::GetNativeClipboardData flavorStr=<%s> length=<%d> data=<%s>\n", cliptype.type, dataLen, data );
+          res = NS_OK;
+		  break;
+        }
+      }
+    }
+
+    PhClipboardPasteFinish( clipPtr );
+  }
+    
+  return res;
+}
+
+NS_IMETHODIMP
+nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::HasDataMatchingFlavors this=<%p>\n", this));
+
+#ifdef DEBUG_CLIPBOARD
+  PRUint32 cnt;
+  aFlavorList->Count(&cnt);
+  if (cnt)
+  {
+    PRUint32   i;
+
+      for ( PRUint32 i=0; i<cnt; ++i )
+      {
+         nsCOMPtr<nsISupports> genericFlavor;
+         aFlavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+         nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+         if ( currentFlavor )
+		 {
+           nsXPIDLCString flavorStr;
+           currentFlavor->ToString(getter_Copies(flavorStr));
+           printf("nsClipboard::HasDataMatchingFlavors : <%d>\n", (const char *) flavorStr);
+         }
+      }
+  }
 #endif
 
-  return res;
+  *outResult = PR_TRUE;  // say we always do.
+  return NS_OK;
 }
 
 //=========================================================================
 
 //-------------------------------------------------------------------------
-void nsClipboard::GetFormat(const nsString & aMimeStr, PhClipHeader *cliphdr )
+nsresult nsClipboard::GetFormat(const char* aMimeStr, PhClipHeader *cliphdr )
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::GetFormat this=<%p> aMimeStr=<%s>\n", this, aMimeStr));
+
+#ifdef DEBUG_CLIPBOARD
+  printf("nsClipboard::GetFormat this=<%p> aMimeStr=<%s>\n", this, aMimeStr);
+#endif
+
+  nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
+
   cliphdr->type[0]=0;
 
-  if (aMimeStr.Equals(kTextMime))
+  if (mimeStr.Equals(kTextMime))
   {
-    strcpy( cliphdr->type, "TEXT" );
+    strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_TEXT );
   }
-  else if (aMimeStr.Equals(kUnicodeMime))
+
+#if 0
+  else if (mimeStr.Equals("STRING"))
   {
-    strcpy( cliphdr->type, "TEXT" );
+    strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_TEXT );
   }
-  else if (aMimeStr.Equals(kJPEGImageMime))
+  else if (mimeStr.Equals(kUnicodeMime))
+  {
+    strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_TEXT );
+  }
+  else if (mimeStr.Equals(kJPEGImageMime))
   {
     strcpy( cliphdr->type, "BMAP" );
   }
-//  else if (aMimeStr.Equals(kDropFilesMime)) {
+#endif
+
+ if (cliphdr->type[0] == 0)
+   return NS_ERROR_FAILURE;
+ else
+   return NS_OK;
 }
