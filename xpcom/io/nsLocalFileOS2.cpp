@@ -912,7 +912,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const nsAC
         rc = DosMove(filePath.get(), (PSZ)NS_CONST_CAST(char*, destPath.get()));
     }
 
-    if (!move || rc == ERROR_NOT_SAME_DEVICE) {
+    if (!move || rc == ERROR_NOT_SAME_DEVICE || rc == ERROR_ACCESS_DENIED) {
         /* will get an error if the destination and source files aren't on the
          * same drive.  "MoveFile()" on Windows will go ahead and move the
          * file without error, so we need to do the same   IBM-AKR
