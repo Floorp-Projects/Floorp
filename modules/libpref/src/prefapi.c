@@ -2119,7 +2119,7 @@ PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const ch
 						}
 						break;
 					
-					case PREF_ERROR:
+					case PREF_INVALID:
 						/*	this is probably just a branch. Since we can have both
 							 a.b and a.b.c as valid prefs, this is OK.
 						*/
