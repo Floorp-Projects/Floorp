@@ -29,6 +29,8 @@
 #include "nsIDOMNodeList.h"
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
 
 //
 // NS_NewXULButtonFrame
@@ -99,6 +101,8 @@ nsButtonBoxFrame::HandleEvent(nsIPresContext* aPresContext,
 void 
 nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext) 
 {
+  nsresult rv = NS_OK;
+
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
@@ -110,5 +114,11 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext)
   event.isMeta = PR_FALSE;
   event.clickCount = 0;
   event.widget = nsnull;
-  mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+  // Have the content handle the event, propagating it according to normal DOM rules.
+  nsCOMPtr<nsIPresShell> shell;
+  rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    shell->HandleDOMEventWithTarget(mContent, &event, &status); 
+  }
 }

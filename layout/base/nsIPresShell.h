@@ -387,6 +387,13 @@ public:
                                    nsEventStatus* aStatus) = 0;
 
   /**
+   * Dispatch event to content only (NOT full processing)
+   */
+  NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                            nsEvent* aEvent,
+                            nsEventStatus* aStatus) = 0;
+
+  /**
     * Gets the current target event frame from the PresShell
     */
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame) = 0;

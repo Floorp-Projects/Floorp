@@ -696,6 +696,9 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus,
                          PRBool&         aHandled);
+  NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                            nsEvent* aEvent,
+                            nsEventStatus* aStatus);
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
@@ -3925,6 +3928,32 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, nsEventStatus* a
     NS_RELEASE(manager);
   }
   return rv;
+}
+
+// Dispatch event to content only (NOT full processing)
+// See also HandleEventWithTarget which does full event processing.
+NS_IMETHODIMP
+PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent, nsEvent* aEvent, nsEventStatus* aStatus)
+{
+  nsresult ret;
+
+  PushCurrentEventInfo(nsnull, aTargetContent);
+
+  // Bug 41013: Check if the event should be dispatched to content.
+  // It's possible that we are in the middle of destroying the window
+  // and the js context is out of date. This check detects the case
+  // that caused a crash in bug 41013, but there may be a better way
+  // to handle this situation!
+  nsCOMPtr<nsISupports> container;
+  ret = mPresContext->GetContainer(getter_AddRefs(container));
+  if (NS_SUCCEEDED(ret) && container) {
+
+    // Dispatch event to content
+    ret = aTargetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, NS_EVENT_FLAG_INIT, aStatus);
+  }
+
+  PopCurrentEventInfo();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

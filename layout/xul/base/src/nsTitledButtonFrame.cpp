@@ -1271,7 +1271,11 @@ nsTitledButtonFrame::MouseClicked (nsIPresContext* aPresContext)
   event.isMeta = PR_FALSE;
   event.clickCount = 0;
   event.widget = nsnull;
-  mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    shell->HandleDOMEventWithTarget(mContent, &event, &status);
+  }
 }
 
 //
