@@ -163,17 +163,11 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 		str = strdup("serif");
 	}
 	
-	const PRUnichar *uc;
-	aLangGroup->GetUnicode( &uc );
-	nsString language( uc );
-	char *cstring = ToNewCString(language);
+	const char *cstring;
+	aLangGroup->GetUTF8String( &uc );
 	
 	char prop[256];
 	sprintf( prop, "font.name.%s.%s", str, cstring );
-
-	/* Free cstring.  */
-	if (cstring)
-		free (cstring);
 
 	char *font_default = NULL;
 	nsIPref* prefs = nsnull;
