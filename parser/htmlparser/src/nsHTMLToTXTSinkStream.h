@@ -155,6 +155,7 @@ protected:
   NS_IMETHOD GetValueOfAttribute(const nsIParserNode& aNode,
                                  char* aMatchKey,
                                  nsString& aValueRet);
+  PRBool IsConverted(const nsIParserNode& aNode);
   PRBool DoOutput();
   PRBool MayWrap();
   

@@ -419,7 +419,26 @@ nsHTMLToTXTSinkStream::GetValueOfAttribute(const nsIParserNode& aNode,
   }
   return NS_ERROR_NOT_AVAILABLE;
 }
-    
+
+/**
+ * Returns true, if the element was inserted by Moz' TXT->HTML converter.
+ * In this case, we should ignore it.
+ */
+PRBool nsHTMLToTXTSinkStream::IsConverted(const nsIParserNode& aNode)
+{
+  nsAutoString value;
+  nsresult rv = GetValueOfAttribute(aNode, "class", value);
+  return
+    (
+      NS_SUCCEEDED(rv)
+      &&
+      (
+        value.EqualsWithConversion("txt", PR_TRUE, 3) ||
+        value.EqualsWithConversion("\"txt", PR_TRUE, 4)
+      )
+    );
+}
+
 PRBool nsHTMLToTXTSinkStream::DoOutput()
 {
   PRBool inBody = PR_FALSE;
@@ -627,16 +646,6 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     else
       mIndent += gTabSize; // Check for some maximum value?
   }
-  else if (type == eHTMLTag_a)
-  {
-    nsAutoString url;
-    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "href", url))
-        && !url.IsEmpty())
-      {
-        url.StripChars("\"");
-        mURL = url;
-      }
-  }
   else if (type == eHTMLTag_img)
   {
     nsAutoString url;
@@ -647,38 +656,43 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
           && !desc.IsEmpty())
       {
         temp.AppendWithConversion(" (");
-
         desc.StripChars("\"");
         temp += desc;
-
         temp.AppendWithConversion(" <");
-
         url.StripChars("\"");
         temp += url;
-
         temp.AppendWithConversion(">) ");
       }
       else
       {
         temp.AppendWithConversion(" <");
-
         url.StripChars("\"");
         temp += url;
-
         temp.AppendWithConversion("> ");
       }
       Write(temp);
     }
   }
-  else if (type == eHTMLTag_sup)
-    Write( NS_ConvertToString("^") );
-  // I don't know a plain text representation of sub
-  else if (type == eHTMLTag_strong || type == eHTMLTag_b)
-    Write( NS_ConvertToString("*") );
-  else if (type == eHTMLTag_em || type == eHTMLTag_i)
-    Write( NS_ConvertToString("/") );
-  else if (type == eHTMLTag_u)
-    Write( NS_ConvertToString("_") );
+  else if (type == eHTMLTag_a && !IsConverted(aNode))
+  {
+    nsAutoString url;
+    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "href", url))
+        && !url.IsEmpty())
+    {
+      url.StripChars("\"");
+      mURL = url;
+    }
+  }
+  else if (type == eHTMLTag_sup && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("^"));
+  else if (type == eHTMLTag_sub && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("_"));
+  else if ((type ==eHTMLTag_strong || type==eHTMLTag_b) && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("*"));
+  else if ((type == eHTMLTag_em || type == eHTMLTag_i) && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("/"));
+  else if (type == eHTMLTag_u && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("_"));
 
   return NS_OK;
 }
@@ -745,25 +759,22 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     else if(mIndent >= gTabSize)
       mIndent -= gTabSize;
   }
-  else if (type == eHTMLTag_a)
-  { // these brackets must stay here
-    if (!mURL.IsEmpty())
-    {
-      nsAutoString temp; temp.AssignWithConversion(" <");
-      temp += mURL;
-      temp.AppendWithConversion(">");
-      Write(temp);
-      mURL.Truncate();
-    }
+  else if (type == eHTMLTag_a && !IsConverted(aNode) && !mURL.IsEmpty())
+  {
+    nsAutoString temp; temp.AssignWithConversion(" <");
+    temp += mURL;
+    temp.AppendWithConversion(">");
+    Write(temp);
+    mURL.Truncate();
   }
-  else if (type == eHTMLTag_sup)
-    Write( NS_ConvertToString(" ") );
-  else if (type == eHTMLTag_strong || type == eHTMLTag_b)
-    Write( NS_ConvertToString("*") );
-  else if (type == eHTMLTag_em || type == eHTMLTag_i)
-    Write( NS_ConvertToString("/") );
-  else if (type == eHTMLTag_u)
-    Write( NS_ConvertToString("_") );
+  else if ((type== eHTMLTag_sup || type== eHTMLTag_sub) && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2(" "));
+  else if ((type== eHTMLTag_strong || type==eHTMLTag_b) && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("*"));
+  else if ((type == eHTMLTag_em || type == eHTMLTag_i) && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("/"));
+  else if (type == eHTMLTag_u && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("_"));
 
   return NS_OK;
 }
@@ -800,8 +811,15 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_text)
   {
-    // Bug 31994 says we shouldn't output the contents of SELECT elements.
-    if (mTagStackIndex <= 0 || (mTagStack[mTagStackIndex-1] != eHTMLTag_select))
+    /* Check, if some other MUA (e.g. 4.x) recognized the URL in
+       plain text and inserted an <a> element. If yes, output only once. */
+    if (!mURL.IsEmpty() && mURL == text)
+      mURL.Truncate();
+    if (
+         // Bug 31994 says we shouldn't output the contents of SELECT elements.
+         mTagStackIndex <= 0 ||
+         mTagStack[mTagStackIndex-1] != eHTMLTag_select
+       )
       Write(text);
   }
   else if (type == eHTMLTag_entity)
