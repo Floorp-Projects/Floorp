@@ -1809,7 +1809,6 @@ XULDocumentImpl::HandleDOMEvent(nsIPresContext& aPresContext,
                             PRUint32 aFlags,
                             nsEventStatus& aEventStatus)
 {
-    PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
