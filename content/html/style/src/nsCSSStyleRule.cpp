@@ -672,6 +672,12 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         nsStyleDisplay* display = (nsStyleDisplay*)
           aContext->GetData(eStyleStruct_Display);
 
+        nsStyleDisplay* parentDisplay = display;
+        nsIStyleContext* parentContext = aContext->GetParent();
+        if (nsnull != parentContext) {
+          parentDisplay = (nsStyleDisplay*)parentContext->GetData(eStyleStruct_Display);
+        }
+
         // display
         if (ourDisplay->mDisplay.GetUnit() == eCSSUnit_Enumerated) {
           display->mDisplay = ourDisplay->mDisplay.GetIntValue();
@@ -691,6 +697,69 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         if (ourDisplay->mFloat.GetUnit() == eCSSUnit_Enumerated) {
           display->mFloats = ourDisplay->mFloat.GetIntValue();
         }
+
+        // visibility: enum, inherit
+        if (ourDisplay->mVisibility.GetUnit() == eCSSUnit_Enumerated) {
+          display->mVisible = PRBool (NS_STYLE_VISIBILITY_VISIBLE == ourDisplay->mVisibility.GetIntValue());
+        }
+        else if (ourDisplay->mVisibility.GetUnit() == eCSSUnit_Inherit) {
+          display->mVisible = parentDisplay->mVisible;
+        }
+
+        // overflow
+        if (ourDisplay->mOverflow.GetUnit() == eCSSUnit_Enumerated) {
+          display->mOverflow = ourDisplay->mOverflow.GetIntValue();
+        }
+
+        // clip property: length, auto, inherit
+        if (nsnull != ourDisplay->mClip) {
+          if (ourDisplay->mClip->mTop.GetUnit() == eCSSUnit_Inherit) { // if one is inherit, they all are
+            display->mClipFlags = NS_STYLE_CLIP_INHERIT;
+          }
+          else {
+            PRBool  fullAuto = PR_TRUE;
+
+            display->mClipFlags = 0; // clear it
+
+            if (ourDisplay->mClip->mTop.GetUnit() == eCSSUnit_Auto) {
+              display->mClip.top = 0;
+              display->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
+            } else if (ourDisplay->mClip->mTop.IsLengthUnit()) {
+              display->mClip.top = CalcLength(ourDisplay->mClip->mTop, font, aPresContext);
+              fullAuto = PR_FALSE;
+            }
+            if (ourDisplay->mClip->mRight.GetUnit() == eCSSUnit_Auto) {
+              display->mClip.right = 0;
+              display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
+            } else if (ourDisplay->mClip->mRight.IsLengthUnit()) {
+              display->mClip.right = CalcLength(ourDisplay->mClip->mRight, font, aPresContext);
+              fullAuto = PR_FALSE;
+            }
+            if (ourDisplay->mClip->mBottom.GetUnit() == eCSSUnit_Auto) {
+              display->mClip.bottom = 0;
+              display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
+            } else if (ourDisplay->mClip->mBottom.IsLengthUnit()) {
+              display->mClip.bottom = CalcLength(ourDisplay->mClip->mBottom, font, aPresContext);
+              fullAuto = PR_FALSE;
+            }
+            if (ourDisplay->mClip->mLeft.GetUnit() == eCSSUnit_Auto) {
+              display->mClip.left = 0;
+              display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
+            } else if (ourDisplay->mClip->mLeft.IsLengthUnit()) {
+              display->mClip.left = CalcLength(ourDisplay->mClip->mLeft, font, aPresContext);
+              fullAuto = PR_FALSE;
+            }
+            display->mClipFlags &= ~NS_STYLE_CLIP_TYPE_MASK;
+            if (fullAuto) {
+              display->mClipFlags |= NS_STYLE_CLIP_AUTO;
+            }
+            else {
+              display->mClipFlags |= NS_STYLE_CLIP_RECT;
+            }
+          }
+        }
+
+        NS_IF_RELEASE(parentContext);
       }
     }
 
@@ -893,11 +962,6 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           }
         }
 
-        // overflow
-        if (ourPosition->mOverflow.GetUnit() == eCSSUnit_Enumerated) {
-          position->mOverflow = ourPosition->mOverflow.GetIntValue();
-        }
-
         // box offsets: length, percent, auto, inherit
         SetCoord(ourPosition->mLeft, position->mLeftOffset, SETCOORD_LPAH, font, aPresContext);
         SetCoord(ourPosition->mTop, position->mTopOffset, SETCOORD_LPAH, font, aPresContext);
@@ -906,54 +970,6 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
 
         // z-index
         SetCoord(ourPosition->mZIndex, position->mZIndex, SETCOORD_IAH, nsnull, nsnull);
-
-        // clip property: length, auto, inherit
-        if (nsnull != ourPosition->mClip) {
-          if (ourPosition->mClip->mTop.GetUnit() == eCSSUnit_Inherit) { // if one is inherit, they all are
-            position->mClipFlags = NS_STYLE_CLIP_INHERIT;
-          }
-          else {
-            PRBool  fullAuto = PR_TRUE;
-
-            position->mClipFlags = 0; // clear it
-
-            if (ourPosition->mClip->mTop.GetUnit() == eCSSUnit_Auto) {
-              position->mClip.top = 0;
-              position->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
-            } else if (ourPosition->mClip->mTop.IsLengthUnit()) {
-              position->mClip.top = CalcLength(ourPosition->mClip->mTop, font, aPresContext);
-              fullAuto = PR_FALSE;
-            }
-            if (ourPosition->mClip->mRight.GetUnit() == eCSSUnit_Auto) {
-              position->mClip.right = 0;
-              position->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
-            } else if (ourPosition->mClip->mRight.IsLengthUnit()) {
-              position->mClip.right = CalcLength(ourPosition->mClip->mRight, font, aPresContext);
-              fullAuto = PR_FALSE;
-            }
-            if (ourPosition->mClip->mBottom.GetUnit() == eCSSUnit_Auto) {
-              position->mClip.bottom = 0;
-              position->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
-            } else if (ourPosition->mClip->mBottom.IsLengthUnit()) {
-              position->mClip.bottom = CalcLength(ourPosition->mClip->mBottom, font, aPresContext);
-              fullAuto = PR_FALSE;
-            }
-            if (ourPosition->mClip->mLeft.GetUnit() == eCSSUnit_Auto) {
-              position->mClip.left = 0;
-              position->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
-            } else if (ourPosition->mClip->mLeft.IsLengthUnit()) {
-              position->mClip.left = CalcLength(ourPosition->mClip->mLeft, font, aPresContext);
-              fullAuto = PR_FALSE;
-            }
-            position->mClipFlags &= ~NS_STYLE_CLIP_TYPE_MASK;
-            if (fullAuto) {
-              position->mClipFlags |= NS_STYLE_CLIP_AUTO;
-            }
-            else {
-              position->mClipFlags |= NS_STYLE_CLIP_RECT;
-            }
-          }
-        }
       }
     }
 
