@@ -103,6 +103,7 @@ SimpleDOMNode::SimpleDOMNode(nsIAccessible* aNSAcc, nsIDOMNode *aNode, HWND aWnd
 //-----------------------------------------------------
 SimpleDOMNode::~SimpleDOMNode()
 {
+  mDOMNode = nsnull;
   MOZ_COUNT_DTOR(SimpleDOMNode);  // For catching leaks on tinderbox
   m_cRef = 0;
 #ifdef DEBUG_LEAKS

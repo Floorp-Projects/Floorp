@@ -67,5 +67,23 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
+class nsXULGroupboxAccessible : public nsAccessible
+{
+public:
+  nsXULGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetAccName(nsAWritableString& _retval);
+};
+
+class nsXULProgressMeterAccessible : public nsAccessible
+{
+public:
+  nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetAccValue(nsAWritableString &_retval);
+};
+
 #endif  
 

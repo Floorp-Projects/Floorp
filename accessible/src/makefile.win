@@ -60,7 +60,9 @@ CPP_OBJS= \
         .\$(OBJDIR)\nsRootAccessible.obj \
         .\$(OBJDIR)\nsSelectAccessible.obj \
         .\$(OBJDIR)\nsXULFormControlAccessible.obj \
+        .\$(OBJDIR)\nsXULMenuAccessible.obj           \
         .\$(OBJDIR)\nsXULTextAccessible.obj \
+        .\$(OBJDIR)\nsXULColorPickerAccessible.obj \
   $(NULL)
 
 EXPORTS = \

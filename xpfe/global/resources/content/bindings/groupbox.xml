@@ -11,6 +11,17 @@
   </binding>
 
   <binding id="groupbox" extends="chrome://global/content/bindings/groupbox.xml#groupbox-base">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULGroupboxAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+
     <content>
       <xul:hbox class="groupbox-title" align="center" pack="start">
         <children includes="caption"/>

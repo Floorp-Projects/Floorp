@@ -175,7 +175,16 @@
       </xul:hbox>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULMenubarAccessible(this): null);
+          ]]>
+        </getter>
+       </property>
+
       <constructor>
         <![CDATA[
           if (this.getAttribute("moz-collapsed") == "true" &&

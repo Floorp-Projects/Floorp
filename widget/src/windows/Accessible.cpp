@@ -106,6 +106,7 @@ Accessible::Accessible(nsIAccessible* aAcc, nsIDOMNode* aNode, HWND aWnd): Simpl
 Accessible::~Accessible()
 {
   m_cRef = 0;
+  mAccessible = mCachedChild = nsnull;
 #ifdef DEBUG_LEAKS
   printf("Accessibles=%d\n", --gAccessibles);
 #endif
@@ -939,12 +940,11 @@ RootAccessible::Release(void)
 
 RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):DocAccessible(aAcc,nsnull,aWnd)
 {
-
   mListCount = 0;
   mNextPos = 0;
 
   nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
-  if (r) 
+  if (r)
     r->AddAccessibleEventListener(this);
 }
 
@@ -996,7 +996,7 @@ PRUint32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
 
   nsCOMPtr<nsIDOMNode> domNode;
   aAccessible->AccGetDOMNode(getter_AddRefs(domNode));
-  PRUint32 uniqueID = - NS_REINTERPRET_CAST(PRUint32, (domNode.get()));
+  PRUint32 uniqueID = - NS_REINTERPRET_CAST(PRInt32, (domNode.get()));
 
   mList[mNextPos].mId = uniqueID;
   mList[mNextPos].mAccessible = aAccessible;

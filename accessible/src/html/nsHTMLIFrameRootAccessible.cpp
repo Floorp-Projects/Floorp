@@ -54,7 +54,6 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameRootAccessible, nsRootAccessible);
 NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameAccessible, nsBlockAccessible);
 NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameAccessible, nsBlockAccessible);
 
-
 NS_IMETHODIMP
 nsHTMLIFrameAccessible::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
@@ -68,7 +67,6 @@ nsHTMLIFrameAccessible::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   return nsBlockAccessible::QueryInterface(aIID, aInstancePtr); 
 }
-
 
 nsHTMLIFrameAccessible::nsHTMLIFrameAccessible(nsIDOMNode* aNode, nsIAccessible* aRoot, nsIWeakReference* aShell, nsIDocument *aDoc):
   nsBlockAccessible(aNode, aShell), mRootAccessible(aRoot), nsDocAccessibleMixin(aDoc)

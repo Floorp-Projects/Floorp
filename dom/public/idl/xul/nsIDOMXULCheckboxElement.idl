@@ -43,11 +43,11 @@
 
 [scriptable, uuid(5afaba88-1dd2-11b2-9249-dd65a129d0e4)]
 interface nsIDOMXULCheckboxElement : nsIDOMXULLabeledControlElement {
+  const short CHECKSTATE_UNCHECKED = 0;
+  const short CHECKSTATE_CHECKED = 1;
+  const short CHECKSTATE_MIXED = 2;
+
   attribute boolean checked;
   attribute long checkState;
   attribute boolean autoCheck;
 };
-
-
-
-

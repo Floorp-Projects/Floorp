@@ -2647,7 +2647,6 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
 #ifdef DEBUG_DOCSHELL_FOCUS
       printf("focusing next focusable content: %p\n", nextFocus.get());
 #endif
-      SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
       presShell->GetPrimaryFrameFor(nextFocus, &mCurrentTarget);
       ChangeFocus(nextFocus);
       

@@ -65,7 +65,7 @@ NS_IMETHODIMP nsBlockAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible 
   // We're going to find the child that contains coordinates (tx,ty)
   PRInt32 x,y,w,h;
   AccGetBounds(&x,&y,&w,&h);  // Get bounds for this accessible
-  if (tx > x && tx < x + w && ty > y && ty < y + h)
+  if (tx >= x && tx < x + w && ty >= y && ty < y + h)
   {
     // It's within this nsIAccessible, let's drill down
     nsCOMPtr<nsIAccessible> child;
@@ -87,7 +87,7 @@ NS_IMETHODIMP nsBlockAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible 
       // [[block #1 is long wrapped text that continues to
       // another line]]  [[here is a shorter block #2]]
 
-      if (tx > cx && tx < cx + cw && ty > cy && ty < cy + ch) 
+      if (tx >= cx && tx < cx + cw && ty >= cy && ty < cy + ch) 
       {
         if (smallestArea == -1 || cw*ch < smallestArea) {
           smallestArea = cw*ch;

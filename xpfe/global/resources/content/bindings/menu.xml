@@ -8,6 +8,20 @@
     <resources>
       <stylesheet src="chrome://global/skin/menu.css"/>
     </resources>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            if (accService) {
+              return ((this.localName == "menuseparator")? accService.createXULMenuSeparatorAccessible(this):
+                accService.createXULMenuitemAccessible(this));
+              }
+            return null;
+          ]]>
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="menu" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
