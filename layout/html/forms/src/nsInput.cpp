@@ -357,21 +357,6 @@ nsContentAttr nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue, nsHT
   }
 }
 
-nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, nsString& aValue) const
-{
-  nsHTMLValue htmlValue;
-  nsContentAttr result = GetAttribute(aAttribute, htmlValue);
-  if (eContentAttr_HasValue == result) {
-    htmlValue.GetStringValue(aValue);
-    return eContentAttr_HasValue;
-  }
-  else {
-    //aValue = "";  // XXX string class was crashing on this line
-    aValue.SetLength(0);
-    return eContentAttr_NoValue;
-  }
-}
-
 nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const
 {
   nsHTMLValue htmlValue;

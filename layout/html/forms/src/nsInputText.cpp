@@ -286,7 +286,7 @@ nsInputTextFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     nsInputText* content;
     GetContent((nsIContent *&) content);
     nsAutoString valAttr;
-    nsContentAttr valStatus = ((nsInput *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
+    nsContentAttr valStatus = ((nsHTMLTagContent *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
     text->SetText(valAttr);
     PRInt32 maxLength = content->GetMaxLength();
     if (ATTR_NOTSET != maxLength) {
