@@ -52,6 +52,9 @@ public:
   
   ~nsCollation();
 
+  nsresult CreateASCIISortKey(nsICollation *inst, const nsCollationStrength strength, 
+                              const PRUnichar* stringIn, char* key, PRUint32 *outLen);
+
   // compare two strings
   // result is same as strcmp
   nsresult CompareString(nsICollation *inst, const nsCollationStrength strength, 
