@@ -31,6 +31,8 @@
 class nsIBaseStream : public nsISupports {
 public:
 
+    static const nsIID& IID() { static nsIID iid = NS_IBASESTREAM_IID; return iid; }
+
     /** Close the stream. */
     NS_IMETHOD
     Close(void) = 0;

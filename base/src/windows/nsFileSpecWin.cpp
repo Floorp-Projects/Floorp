@@ -23,9 +23,18 @@
 #include <direct.h>
 #include <stdlib.h>
 #include "prio.h"
+#include "nsError.h"
+
+#include "windows.h"
+
+#ifdef UNICODE
+#define CreateDirectoryW  CreateDirectory
+#else
+#define CreateDirectoryA  CreateDirectory
+#endif 
 
 //----------------------------------------------------------------------------------------
-void nsFileSpecHelpers::Canonify(char*& ioPath, bool inMakeDirs)
+void nsFileSpecHelpers::Canonify(char*& ioPath, PRBool inMakeDirs)
 // Canonify, make absolute, and check whether directories exist. This
 // takes a (possibly relative) native path and converts it into a
 // fully qualified native path.
@@ -125,7 +134,7 @@ void nsFileSpecHelpers::NativeToUnix(char*& ioPath)
 }
 
 //----------------------------------------------------------------------------------------
-nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
+nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 :	mPath(NULL)
 {
@@ -133,15 +142,16 @@ nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 }
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::operator = (const nsFilePath& inPath)
+void nsFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
 	nsFileSpecHelpers::StringAssign(mPath, (const char*)inPath);
 	nsFileSpecHelpers::UnixToNative(mPath);
-} // nsNativeFileSpec::operator =
+	mError = NS_OK;
+} // nsFileSpec::operator =
 
 //----------------------------------------------------------------------------------------
-nsFilePath::nsFilePath(const nsNativeFileSpec& inSpec)
+nsFilePath::nsFilePath(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 :	mPath(NULL)
 {
@@ -149,7 +159,7 @@ nsFilePath::nsFilePath(const nsNativeFileSpec& inSpec)
 } // nsFilePath::nsFilePath
 
 //----------------------------------------------------------------------------------------
-void nsFilePath::operator = (const nsNativeFileSpec& inSpec)
+void nsFilePath::operator = (const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
 	nsFileSpecHelpers::StringAssign(mPath, inSpec.mPath);
@@ -157,84 +167,86 @@ void nsFilePath::operator = (const nsNativeFileSpec& inSpec)
 } // nsFilePath::operator =
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::SetLeafName(const char* inLeafName)
+void nsFileSpec::SetLeafName(const char* inLeafName)
 //----------------------------------------------------------------------------------------
 {
 	nsFileSpecHelpers::LeafReplace(mPath, '\\', inLeafName);
-} // nsNativeFileSpec::SetLeafName
+} // nsFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
-char* nsNativeFileSpec::GetLeafName() const
+char* nsFileSpec::GetLeafName() const
 //----------------------------------------------------------------------------------------
 {
 	return nsFileSpecHelpers::GetLeaf(mPath, '\\');
-} // nsNativeFileSpec::GetLeafName
+} // nsFileSpec::GetLeafName
 
 //----------------------------------------------------------------------------------------
-bool nsNativeFileSpec::Exists() const
+PRBool nsFileSpec::Exists() const
 //----------------------------------------------------------------------------------------
 {
 	struct stat st;
 	return 0 == stat(mPath, &st); 
-} // nsNativeFileSpec::Exists
+} // nsFileSpec::Exists
 
 //----------------------------------------------------------------------------------------
-bool nsNativeFileSpec::IsFile() const
+PRBool nsFileSpec::IsFile() const
 //----------------------------------------------------------------------------------------
 {
   struct stat st;
   return 0 == stat(mPath, &st) && (_S_IFREG & st.st_mode); 
-} // nsNativeFileSpec::IsFile
+} // nsFileSpec::IsFile
 
 //----------------------------------------------------------------------------------------
-bool nsNativeFileSpec::IsDirectory() const
+PRBool nsFileSpec::IsDirectory() const
 //----------------------------------------------------------------------------------------
 {
 	struct stat st;
 	return 0 == stat(mPath, &st) && (_S_IFDIR & st.st_mode); 
-} // nsNativeFileSpec::IsDirectory
+} // nsFileSpec::IsDirectory
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::GetParent(nsNativeFileSpec& outSpec) const
+void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 //----------------------------------------------------------------------------------------
 {
 	nsFileSpecHelpers::StringAssign(outSpec.mPath, mPath);
 	char* cp = strrchr(outSpec.mPath, '\\');
 	if (cp)
 		*cp = '\0';
-} // nsNativeFileSpec::GetParent
+} // nsFileSpec::GetParent
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::operator += (const char* inRelativePath)
+void nsFileSpec::operator += (const char* inRelativePath)
 //----------------------------------------------------------------------------------------
 {
 	if (!inRelativePath || !mPath)
 		return;
 	
-	if (mPath[strlen(mPath) - 1] != '\\')
-		char* newPath = nsFileSpecHelpers::ReallocCat(mPath, "\\");
+	if (mPath[strlen(mPath) - 1] == '\\')
+		nsFileSpecHelpers::ReallocCat(mPath, "x");
+	else
+		nsFileSpecHelpers::ReallocCat(mPath, "\\x");
 	SetLeafName(inRelativePath);
-} // nsNativeFileSpec::operator +=
+} // nsFileSpec::operator +=
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::CreateDirectory(int /*mode*/)
+void nsFileSpec::CreateDirectory(int /*mode*/)
 //----------------------------------------------------------------------------------------
 {
 	// Note that mPath is canonical!
 	mkdir(mPath);
-} // nsNativeFileSpec::CreateDirectory
+} // nsFileSpec::CreateDirectory
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::Delete(bool inRecursive)
+void nsFileSpec::Delete(PRBool inRecursive)
 //----------------------------------------------------------------------------------------
 {
   if (IsDirectory())
     {
 	    if (inRecursive)
         {
-          for (nsDirectoryIterator i(*this); i; i++)
+          for (nsDirectoryIterator i(*this); i.Exists(); i++)
             {
-              nsNativeFileSpec& child = (nsNativeFileSpec&)i;
+              nsFileSpec& child = (nsFileSpec&)i;
               child.Delete(inRecursive);
             }		
         }
@@ -244,7 +256,106 @@ void nsNativeFileSpec::Delete(bool inRecursive)
     {
       remove(mPath);
     }
-} // nsNativeFileSpec::Delete
+} // nsFileSpec::Delete
+
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::Rename(const char* inNewName)
+//----------------------------------------------------------------------------------------
+{
+    // This function should not be used to move a file on disk. 
+    if (strchr(inNewName, '/')) 
+        return NS_FILE_FAILURE;
+
+    if (PR_Rename(*this, inNewName) != NS_OK)
+    {
+        return NS_FILE_FAILURE;
+    }
+    SetLeafName(inNewName);
+    return NS_OK;
+} // nsFileSpec::Rename
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
+//----------------------------------------------------------------------------------------
+{
+    // We can only copy into a directory, and (for now) can not copy entire directories
+
+    if (inParentDirectory.IsDirectory() && (! IsDirectory() ) )
+    {
+        char *leafname = GetLeafName();
+        char* destPath = nsFileSpecHelpers::StringDup(inParentDirectory, ( strlen(inParentDirectory) + 1 + strlen(leafname) ) );
+        strcat(destPath, "\\");
+        strcat(destPath, leafname);
+        delete [] leafname;
+        
+        // CopyFile returns non-zero if succeeds
+        int copyOK = CopyFile(*this, destPath, true);
+
+        delete[] destPath;
+
+        if (copyOK)
+        {
+            return NS_OK;
+        }
+    }
+
+    return NS_FILE_FAILURE;
+} // nsFileSpec::Copy
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::Move(const nsFileSpec& nsNewParentDirectory) const
+//----------------------------------------------------------------------------------------
+{
+    // We can only copy into a directory, and (for now) can not copy entire directories
+
+    if (nsNewParentDirectory.IsDirectory() && (! IsDirectory() ) )
+    {
+        char *leafname = GetLeafName();
+        char *destPath = nsFileSpecHelpers::StringDup(nsNewParentDirectory, ( strlen(nsNewParentDirectory) + 1 + strlen(leafname) ));
+        strcat(destPath, "\\");
+        strcat(destPath, leafname);
+        delete [] leafname;
+
+        // MoveFile returns non-zero if succeeds
+        int copyOK = MoveFile(*this, destPath);
+ 
+        delete [] destPath;
+
+        if (copyOK)
+        {
+            return NS_OK;
+        }
+    }
+
+    return NS_FILE_FAILURE;
+} // nsFileSpec::Move
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::Execute(const char* inArgs ) const
+//----------------------------------------------------------------------------------------
+{
+    
+    if (! IsDirectory())
+    {
+        char* fileNameWithArgs = NULL;
+
+	    fileNameWithArgs = nsFileSpecHelpers::StringDup(mPath, ( strlen(mPath) + 1 + strlen(inArgs) ) );
+        strcat(fileNameWithArgs, " ");
+        strcat(fileNameWithArgs, inArgs);
+
+        int execResult = WinExec( fileNameWithArgs, SW_NORMAL );
+        
+        delete [] fileNameWithArgs;
+
+        if (execResult > 31)
+        {
+            return NS_OK;
+        }
+    }
+
+    return NS_FILE_FAILURE;
+} // nsFileSpec::Execute
 
 //========================================================================================
 //								nsDirectoryIterator
@@ -252,7 +363,7 @@ void nsNativeFileSpec::Delete(bool inRecursive)
 
 //----------------------------------------------------------------------------------------
 nsDirectoryIterator::nsDirectoryIterator(
-	const nsNativeFileSpec& inDirectory
+	const nsFileSpec& inDirectory
 ,	int inIterateDirection)
 //----------------------------------------------------------------------------------------
 	: mCurrent(inDirectory)

@@ -39,6 +39,7 @@ CPPSRCS =                       \
     nsEscape.cpp                \
     nsFileSpec.cpp              \
     nsFileStream.cpp            \
+    nsIFileStream.cpp            \
     nsProperties.cpp            \
     nsRBTree.cpp                \
     nsSizeOfHandler.cpp		\

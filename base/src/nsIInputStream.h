@@ -28,6 +28,8 @@
 class nsIInputStream : public nsIBaseStream {
 public:
 
+    static const nsIID& IID() { static nsIID iid = NS_IINPUTSTREAM_IID; return iid; }
+
     /** Return the number of bytes in the stream
      *  @param aLength out parameter to hold the length
      *         of the stream. if an error occurs, the length

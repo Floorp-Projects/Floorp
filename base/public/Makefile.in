@@ -32,6 +32,7 @@ EXPORTS =		\
     nsEscape.h          \
     nsFileSpec.h        \
     nsFileStream.h      \
+    nsIFileStream.h     \
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
