@@ -98,6 +98,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 nsMenuItem::~nsMenuItem()
 {
   NS_IF_RELEASE(mTarget);
+  g_print("nsMenuItem::~nsMenuItem called\n");
 }
 
 //-------------------------------------------------------------------------

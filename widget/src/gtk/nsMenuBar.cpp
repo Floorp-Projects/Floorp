@@ -91,7 +91,6 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 //-------------------------------------------------------------------------
 nsMenuBar::~nsMenuBar()
 {
-  g_print("nsMenuBar::~nsMenuBar() called\n");
   // Release the menus
   RemoveAll();
 }
@@ -198,7 +197,12 @@ NS_METHOD nsMenuBar::RemoveAll()
 	//}
 	NS_RELEASE(menu);
 	
-	((nsISupports*)mMenusVoidArray[i-1])->Release();
+	g_print("menu release \n");
+	int num =((nsISupports*)mMenusVoidArray[i-1])->Release();
+	while(num) {
+	  g_print("menu release again!\n");
+	  num = ((nsISupports*)mMenusVoidArray[i-1])->Release();
+        }
       }
     }
   }
@@ -288,18 +292,17 @@ nsEventStatus nsMenuBar::MenuConstruct(
                   pnsMenu->Create(supports, menuName);
                   NS_RELEASE(supports);
 
+                  pnsMenu->SetLabel(menuName); 
                   pnsMenu->SetDOMNode(menuNode);
                   pnsMenu->SetDOMElement(menuElement);
+                  pnsMenu->SetWebShell(mWebShell);
 
-                  // Set nsMenu Name
-                  pnsMenu->SetLabel(menuName); 
                   // Make nsMenu a child of nsMenuBar
+		  // nsMenuBar takes ownership of the nsMenu
                   pnsMenuBar->AddMenu(pnsMenu); 
-		  // Set the WebShell
-		  pnsMenu->SetWebShell(mWebShell);
-                  
+		  
                   // Release the menu now that the menubar owns it
-                  //NS_RELEASE(pnsMenu);
+                  NS_RELEASE(pnsMenu);
                 }
              } 
 
