@@ -85,24 +85,11 @@
 #include "nsCharsetDetectionAdaptorCID.h"
 #include "nsICharsetAlias.h"
 #include "nsIPref.h"
-static char g_detector_progid[128];
+#define DETECTOR_PROGID_MAX 127
+static char g_detector_progid[DETECTOR_PROGID_MAX + 1];
 static PRBool gInitDetector = PR_FALSE;
 static PRBool gPlugDetector = PR_FALSE;
 
-static int
-MyPrefChangedCallback(const char*aPrefName, void* instance_data)
-{
-	char* pName = (char*) instance_data;
-	if(nsCRT::strlen(pName) > 0)
-	{
-	    PL_strcpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE);
-        PL_strcat(g_detector_progid, pName);
-        gPlugDetector = PR_TRUE;
-	} else {
-		gPlugDetector = PR_FALSE;
-	}
-	return 0;
-}
 
 #ifdef PCB_USE_PROTOCOL_CONNECTION
 // beard: how else would we get the referrer to a URL?
@@ -151,6 +138,28 @@ static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 
 static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
+static int
+MyPrefChangedCallback(const char*aPrefName, void* instance_data)
+{
+        nsresult rv;
+        NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+        char* detector_name = nsnull;
+        if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(
+             rv = prefs->CopyCharPref("intl.charset.detector",
+                                     &detector_name)))
+        {
+			if(nsCRT::strlen(detector_name) > 0) {
+				PL_strncpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE,DETECTOR_PROGID_MAX);
+				PL_strncat(g_detector_progid, detector_name,DETECTOR_PROGID_MAX);
+				gPlugDetector = PR_TRUE;
+			} else {
+				g_detector_progid[0]=0;
+				gPlugDetector = PR_FALSE;
+			}
+            PR_FREEIF(detector_name);
+        }
+	return 0;
+}
 // ==================================================================
 // =
 // ==================================================================
@@ -556,12 +565,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                  rv_detect = pref->CopyCharPref("intl.charset.detector",
                                      &detector_name)))
              {
-                PL_strcpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE);
-                PL_strcat(g_detector_progid, detector_name);
+                PL_strncpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE,DETECTOR_PROGID_MAX);
+                PL_strncat(g_detector_progid, detector_name,DETECTOR_PROGID_MAX);
                 gPlugDetector = PR_TRUE;
                 PR_FREEIF(detector_name);
              }
-             pref->RegisterCallback("intl.charset.detector", MyPrefChangedCallback, (void*) g_detector_progid);
+             pref->RegisterCallback("intl.charset.detector", MyPrefChangedCallback, nsnull);
            }
            NS_IF_RELEASE(pref);
            gInitDetector = PR_TRUE;
