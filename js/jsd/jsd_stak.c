@@ -328,7 +328,7 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
 {
     JSBool retval;
     JSBool valid;
-    JSExceptionState* exceptionState;
+    JSExceptionState* exceptionState = NULL;
     JSContext* cx;
 
     JS_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
@@ -366,7 +366,7 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
 {
     JSBool retval;
     JSBool valid;
-    JSExceptionState* exceptionState;
+    JSExceptionState* exceptionState = NULL;
     JSContext *cx;
 
     JS_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
