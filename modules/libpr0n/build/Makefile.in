@@ -47,18 +47,18 @@ CPPSRCS = \
 		nsImageModule.cpp \
 		$(NULL)
 
-DEFINES		+= $(foreach d,$(filter-out icon mng,$(MOZ_IMG_DECODERS)),\
+DEFINES		+= $(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)),\
 			-DIMG_BUILD_${d})
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../src \
-		$(foreach d,$(filter-out icon mng,$(MOZ_IMG_DECODERS)), \
+		$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
 			-I$(srcdir)/../decoders/${d}) \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 		../src/$(LIB_PREFIX)imglib2_s.$(LIB_SUFFIX) \
-		$(foreach d,$(filter-out icon mng,$(MOZ_IMG_DECODERS)), \
+		$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
 			../decoders/${d}/$(LIB_PREFIX)img${d}_s.$(LIB_SUFFIX))\
 		$(NULL)
 

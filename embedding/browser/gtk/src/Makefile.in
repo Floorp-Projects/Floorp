@@ -82,7 +82,6 @@ CPPSRCS		+= EmbedComponents.cpp
 
 XP_LIBS		+= \
 		$(PNG_LIBS) \
-		$(MNG_LIBS) \
 		$(JPEG_LIBS) \
 		$(ZLIB_LIBS) \
 		$(MOZ_GDK_PIXBUF_LIBS) \

@@ -143,7 +143,6 @@ bin/components/xultmpl.xpt
 bin/components/gklayout.dll
 bin/components/gkparser.dll
 bin/components/gkplugin.dll
-bin/components/imgmng.dll
 bin/components/imglib2.dll
 bin/components/imglib2.xpt
 bin/components/imgicon.dll

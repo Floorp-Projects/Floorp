@@ -197,7 +197,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   newHttpChannel = do_QueryInterface(*aResult);
   if (newHttpChannel) {
     newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                     NS_LITERAL_CSTRING("video/x-mng,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1"),
+                                     NS_LITERAL_CSTRING("image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1"),
                                      PR_FALSE);
 
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal = do_QueryInterface(newHttpChannel);
@@ -762,22 +762,6 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLeng
   // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
   else if (aLength >= 4 && !memcmp(aContents, "\000\000\001\000", 4)) {
     *aContentType = nsCRT::strndup("image/x-icon", 12);
-  }
-
-  else if (aLength >= 4 && ((unsigned char)aContents[0]==0x8A &&
-                   (unsigned char)aContents[1]==0x4D &&
-                   (unsigned char)aContents[2]==0x4E &&
-                   (unsigned char)aContents[3]==0x47))
-  { 
-    *aContentType = nsCRT::strndup("video/x-mng", 11);
-  }
-
-  else if (aLength >= 4 && ((unsigned char)aContents[0]==0x8B &&
-                   (unsigned char)aContents[1]==0x4A &&
-                   (unsigned char)aContents[2]==0x4E &&
-                   (unsigned char)aContents[3]==0x47))
-  { 
-    *aContentType = nsCRT::strndup("image/x-jng", 11);
   }
 
   else if (aLength >= 8 && !nsCRT::strncmp(aContents, "#define ", 8)) {

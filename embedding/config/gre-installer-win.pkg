@@ -43,7 +43,6 @@ components\htmlparser.xpt
 ;
 components\imgbmp.dll
 components\imgxbm.dll
-components\imgmng.dll
 components\imgicon.dll
 components\imgicon.xpt
 components\imglib2.xpt

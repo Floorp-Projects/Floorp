@@ -65,7 +65,6 @@ my %map = (
   'imgicon',            'modules/libpr0n/decoders/icon',
   'imgjpeg',            'modules/libpr0n/decoders/jpeg',
   'imglib2',            'modules/libpr0n/public  modules/libpr0n/src',
-  'imgmng',             'modules/libpr0n/decoders/mng',
   'imgpng',             'modules/libpr0n/decoders/png',
   'imgxbm',             'modules/libpr0n/decoders/xbm',
   'impComm4xMail',      'mailnews/import/comm4x',

@@ -124,7 +124,6 @@ bin/components/libgfx_gtk.so
 bin/components/libgfxps.so
 bin/components/libgfxxprint.so
 bin/components/libimglib2.so
-bin/components/libimgmng.so
 bin/components/libi18n.so
 bin/components/libmork.so
 bin/components/libmozfind.so
