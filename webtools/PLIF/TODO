@@ -12,3 +12,12 @@ Move PLIF/Service/ContactMethods to PLIF/ProtocolHelper/...
 
 
 CGI input needs POST support
+
+
+Change output system (again) by removing the pointless
+dispatch.generic layer. All it does is convert a set of parameters
+into a hash labelling those parameters. The callers can do that, it's
+just like requiring named arguments.
+
+
+Need to move default default strings to the PLIF directory
