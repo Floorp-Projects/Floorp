@@ -1311,6 +1311,7 @@ nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 {
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
+  NS_ENSURE_ARG_POINTER(aN);
 
   nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
   nsCOMPtr<nsIDOMNodeList> aChildNodes;
