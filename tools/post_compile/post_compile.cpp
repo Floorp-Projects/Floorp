@@ -217,7 +217,8 @@ int DIGIT_MAP[256] = {
 */
 char reg_name[8][4] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi" };
 
-char instr_name[8][8] = { "unknown", "push", "add", "sub", "cmp", "mov", "j", "lea" };
+char instr_name[][8] = { "unknown", "push", "add", "sub", "cmp", "mov", "j", "lea",
+        "incr", "pop", "xor", "nop", "ret" };
 
 
 enum eRegister {
@@ -226,7 +227,8 @@ enum eRegister {
 };
 
 enum eInstruction {
-    kunknown, kpush, kadd, ksub, kcmp, kmov, kjmp, klea
+    kunknown, kpush, kadd, ksub, kcmp, kmov, kjmp, klea,
+    kincr, kpop, kxor, knop, kret,
 };
 
 
@@ -318,6 +320,16 @@ CInstruction *am_non_reg( eInstruction instr, eRegister reg )
 }
 
 
+CInstruction *am_non_non( eInstruction instr ) 
+{
+    CInstruction    *retInstr = new CInstruction;
+    retInstr->isize = 1;
+    retInstr->instr = instr;
+    retInstr->src = kNoReg;
+    retInstr->dest = kNoReg;
+}
+
+
 CInstruction *am_imm8( eInstruction instr, unsigned char *theCode )
 {
     CInstruction    *retInstr = new CInstruction;
@@ -381,20 +393,40 @@ CInstruction* get_next_instruction( unsigned char *theCode )
         case 0x01:
             retInstr = am_rm32_reg( kadd, reg );
             break;
+        case 0x31:
+            retInstr = am_rm32_reg( kxor, reg );
+            break;
+        case 0x50:
+        case 0x51:
+        case 0x52:
+        case 0x53:
+        case 0x54:
         case 0x55:
-            retInstr = am_non_reg( kpush, (eRegister)(0x55 & 0x07) );
+        case 0x56:
+        case 0x57:
+            retInstr = am_non_reg( kpush, (eRegister)(*theCode & 0x07) );
+            break;
+        case 0x58:
+        case 0x59:
+        case 0x5a:
+        case 0x5b:
+        case 0x5c:
+        case 0x5d:
+        case 0x5e:
+        case 0x5f:
+            retInstr = am_non_reg( kpop, (eRegister)(*theCode & 0x07) );
             break;
         case 0x83:
-            switch (DIGIT_MAP[*(theCode+1)])
+            switch (DIGIT_MAP[*reg])
             {
                 case 5:
-                    retInstr = am_rm32_imm8( ksub, theCode+1 );
+                    retInstr = am_rm32_imm8( ksub, reg );
                     break;
                 case 7:
-                    retInstr = am_rm32_imm8( kcmp, theCode+1 );
+                    retInstr = am_rm32_imm8( kcmp, reg );
                     break;
                 default:
-                    retInstr = am_rm32_imm8( kunknown, theCode+1 );
+                    retInstr = am_rm32_imm8( kunknown, reg );
                     break;
             }
             break;
@@ -403,29 +435,48 @@ CInstruction* get_next_instruction( unsigned char *theCode )
             break;
         case 0x88:
         case 0x8a:
-            retInstr = am_rm32_imm8( kunknown, theCode +1 );
+            retInstr = am_rm32_imm8( kunknown, reg );
             break;
         case 0x8b:
             retInstr = am_reg_rm32( kmov, reg );
             break;
         case 0x8c:
         case 0x8e:
-            retInstr = am_rm32_imm8( kunknown, theCode +1 );
+            retInstr = am_rm32_imm8( kunknown, reg );
             break;
         case 0x8d:
             retInstr = am_rm32_imm8( klea, reg );
        //     retInstr->isize++;  // ek need to handle the 16/32 instead of 8/32 for lea
             break;
-        case 0xc7:
-            retInstr = am_rm32_imm32( kmov, theCode +1);
+        case 0x90:
+            retInstr = am_non_non( knop );
             break;
+        case 0xc3:
+            retInstr = am_non_non( kret );
+            break;
+        case 0xc7:
+            retInstr = am_rm32_imm32( kmov, reg );
+            break;
+
+
         case 0x7e:
         case 0xeb:
-            retInstr = am_imm8( kjmp, theCode +1);
+            retInstr = am_imm8( kjmp, reg );
+            break;
+        case 0xff:
+            switch (DIGIT_MAP[*reg])
+            {
+                case 0:     // ek check this out, since I believe the book is wrong
+                    retInstr = am_reg_rm32( kincr, reg );
+                    break;
+                default:
+                    retInstr = am_rm32_imm8( kunknown, reg );
+                    break;
+            } 
             break;
 
         default:
-            retInstr = am_rm32_imm8( kunknown, theCode +1);
+            retInstr = am_rm32_imm8( kunknown, reg);
             break;
     }
 
