@@ -298,7 +298,7 @@ nsFTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
     mUserContext = ctxt;
 
     if (mEventSink) {
-        nsAutoString statusMsg("Beginning FTP transaction.");
+        nsAutoString statusMsg; statusMsg.AssignWithConversion("Beginning FTP transaction.");
         rv = mEventSink->OnStatus(this, ctxt, statusMsg.GetUnicode());
         if (NS_FAILED(rv)) return rv;
     }
@@ -619,7 +619,7 @@ nsFTPChannel::OnStatus(nsIChannel *aChannel,
         // XXX coming from the proxy channel progress notifications.
         // XXX This assumes the proxy channel was setup using a null host name
         nsAutoString msg(aMsg);
-        msg += (const char*)mHost;
+        msg.AppendWithConversion(NS_STATIC_CAST(const char*, mHost));
         return mEventSink ? mEventSink->OnStatus(this, aContext, msg.GetUnicode()) : NS_OK;
     } else {
         return mEventSink ? mEventSink->OnStatus(this, aContext, aMsg) : NS_OK;
