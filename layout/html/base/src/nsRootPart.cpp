@@ -65,6 +65,10 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
 
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+
 protected:
   void CreateFirstChild(nsIPresContext* aPresContext);
 };
@@ -158,7 +162,8 @@ NS_METHOD RootFrame::HandleEvent(nsIPresContext& aPresContext,
     NS_RELEASE(mManager);
   }
   mContent->HandleDOMEvent(aPresContext, aEvent, nsnull, aEventStatus);
-  
+
+#if 0
   if (aEventStatus != nsEventStatus_eConsumeNoDefault) {
     switch (aEvent->message) {
     case NS_MOUSE_MOVE:
@@ -192,7 +197,7 @@ NS_METHOD RootFrame::HandleEvent(nsIPresContext& aPresContext,
       break;
     }
   }
-
+#endif
   return NS_OK;
 }
 
@@ -484,6 +489,59 @@ NS_METHOD RootContentFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  return NS_OK;
+}
+
+NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext, 
+                                        nsGUIEvent* aEvent,
+                                        nsEventStatus& aEventStatus)
+{
+#if 0
+  nsIEventStateManager *mManager;
+
+  if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
+    mManager->SetEventTarget((nsISupports*)mContent);
+    NS_RELEASE(mManager);
+  }
+  mContent->HandleDOMEvent(aPresContext, aEvent, nsnull, aEventStatus);
+#else
+  nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+#endif
+  
+  if (aEventStatus != nsEventStatus_eConsumeNoDefault) {
+    switch (aEvent->message) {
+    case NS_MOUSE_MOVE:
+    case NS_MOUSE_ENTER:
+      {
+        nsIFrame* target = this;
+        PRInt32 cursor;
+       
+        GetCursorAt(aPresContext, aEvent->point, &target, cursor);
+        if (cursor == NS_STYLE_CURSOR_INHERIT) {
+          cursor = NS_STYLE_CURSOR_DEFAULT;
+        }
+        nsCursor c;
+        switch (cursor) {
+        default:
+        case NS_STYLE_CURSOR_DEFAULT:
+          c = eCursor_standard;
+          break;
+        case NS_STYLE_CURSOR_HAND:
+          c = eCursor_hyperlink;
+          break;
+        case NS_STYLE_CURSOR_IBEAM:
+          c = eCursor_select;
+          break;
+        }
+        nsIWidget* window;
+        target->GetWindow(window);
+        window->SetCursor(c);
+        NS_RELEASE(window);
+      }
+      break;
+    }
+  }
+
   return NS_OK;
 }
 
