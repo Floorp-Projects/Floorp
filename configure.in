@@ -1840,9 +1840,13 @@ dnl in NSPR to be 'make -j1' - or just 'make'
 dnl 
 dnl Only set this if 'make' is found.
 
-_make_try=`make -v 2> /dev/null`
+_make_command='make'
+_make_version=`$_make_command -v 2> /dev/null`
+_make_is_gnu=`echo $_make_version | head -1 | awk '{ print $1; }'`
 
-if test "$_make_try"
+echo "_make_is_gnu=$_make_is_gnu"
+
+if test "$_make_is_gnu" = "GNU"
 then
 	MOZ_NSPRENV_OVERRIDE_MAKE=make
 fi
