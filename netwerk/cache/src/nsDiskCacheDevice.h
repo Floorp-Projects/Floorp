@@ -28,8 +28,7 @@
 #include "nsILocalFile.h"
 #include "nsCacheEntry.h"
 
-class nsDiskCacheDevice : public nsCacheDevice
-{
+class nsDiskCacheDevice : public nsCacheDevice {
 public:
     nsDiskCacheDevice();
     virtual ~nsDiskCacheDevice();
@@ -58,6 +57,8 @@ public:
 /* private: */
     void                    setCacheDirectory(nsILocalFile* directory);
     void                    setCacheCapacity(PRUint32 capacity);
+    PRUint32                getCacheCapacity();
+    PRUint32                getCacheSize();
 
 private:
     nsresult getFileForKey(const char* key, PRBool meta, nsIFile**);
@@ -71,7 +72,6 @@ private:
 private:
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
     nsCacheEntryHashTable   mBoundEntries;
-    PRBool                  mScannedEntries;
     PRUint32                mCacheCapacity;
     PRUint32                mCacheSize;
 };

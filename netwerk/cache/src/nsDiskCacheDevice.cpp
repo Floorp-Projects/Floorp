@@ -248,15 +248,21 @@ private:
 NS_IMPL_ISUPPORTS1(nsDiskCacheDeviceInfo, nsICacheDeviceInfo);
 
 /* readonly attribute string description; */
-NS_IMETHODIMP nsDiskCacheDeviceInfo::GetDescription(char * *aDescription)
+NS_IMETHODIMP nsDiskCacheDeviceInfo::GetDescription(char ** aDescription)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    char* result = nsCRT::strdup("disk cache device");
+    if (!result) return NS_ERROR_OUT_OF_MEMORY;
+    *aDescription = result;
+    return NS_OK;
 }
 
 /* readonly attribute string usageReport; */
-NS_IMETHODIMP nsDiskCacheDeviceInfo::GetUsageReport(char * *aUsageReport)
+NS_IMETHODIMP nsDiskCacheDeviceInfo::GetUsageReport(char ** aUsageReport)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    char* result = nsCRT::strdup("disk cache usage report");
+    if (!result) return NS_ERROR_OUT_OF_MEMORY;
+    *aUsageReport = result;
+    return NS_OK;
 }
 
 /* readonly attribute unsigned long entryCount; */
@@ -268,13 +274,15 @@ NS_IMETHODIMP nsDiskCacheDeviceInfo::GetEntryCount(PRUint32 *aEntryCount)
 /* readonly attribute unsigned long totalSize; */
 NS_IMETHODIMP nsDiskCacheDeviceInfo::GetTotalSize(PRUint32 *aTotalSize)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aTotalSize = mDevice->getCacheSize();
+    return NS_OK;
 }
 
 /* readonly attribute unsigned long maximumSize; */
 NS_IMETHODIMP nsDiskCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aMaximumSize = mDevice->getCacheCapacity();
+    return NS_OK;
 }
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -496,7 +504,7 @@ NS_IMETHODIMP nsCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 nsDiskCacheDevice::nsDiskCacheDevice()
-    :   mScannedEntries(PR_FALSE), mCacheCapacity(0), mCacheSize(0)
+    :   mCacheCapacity(0), mCacheSize(0)
 {
 }
 
@@ -695,6 +703,16 @@ void nsDiskCacheDevice::setCacheCapacity(PRUint32 capacity)
 {
     // XXX start evicting entries if the new size is smaller!
     mCacheCapacity = capacity;
+}
+
+PRUint32 nsDiskCacheDevice::getCacheCapacity()
+{
+    return mCacheCapacity;
+}
+
+PRUint32 nsDiskCacheDevice::getCacheSize()
+{
+    return mCacheSize;
 }
 
 nsresult nsDiskCacheDevice::getFileForKey(const char* key, PRBool meta, nsIFile ** result)
