@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: dsa.c,v 1.7 2001/01/12 14:30:44 mcgreer%netscape.com Exp $
+ * $Id: dsa.c,v 1.8 2002/09/05 20:44:09 ian.mcgreer%sun.com Exp $
  */
 
 #include "secerr.h"
@@ -172,7 +172,7 @@ DSA_NewKeyFromSeed(const PQGParams *params,
     return rv;
 }
 
-SECStatus 
+static SECStatus 
 dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
                const unsigned char *kb)
 {
