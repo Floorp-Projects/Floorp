@@ -32,5 +32,9 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public res src stub
 
+ifdef MOZ_ENABLE_GTK
+DIRS		+= wizard/unix/src2
+endif
+
 include $(topsrcdir)/config/rules.mk
 
