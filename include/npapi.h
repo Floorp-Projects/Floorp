@@ -22,7 +22,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.12 $
+ *  npapi.h $Revision: 3.13 $
  *  Netscape client plug-in API spec
  */
 
@@ -330,8 +330,8 @@ typedef struct _NPWindow
     void*	window;		/* Platform specific window handle */
                                         /* OS/2: x - Position of bottom left corner  */
                                         /* OS/2: y - relative to visible netscape window */
-    uint32	x;			/* Position of top left corner relative */
-    uint32	y; 			/*	to a netscape page.					*/
+    int32	x;			/* Position of top left corner relative */
+    int32	y; 			/*	to a netscape page.					*/
     uint32	width;		/* Maximum window size */
     uint32	height;
     NPRect	clipRect;	/* Clipping rectangle in port coordinates */
