@@ -41,13 +41,13 @@ ifeq ($(USE_PTHREADS),1)
 	IMPL_STRATEGY = _PTH
 endif
 
-CC			= gcc
-CCC			= g++
+CC			= qcc
+CCC			= qcc
 RANLIB			= ranlib
 
-DEFAULT_COMPILER = gcc
-ifeq ($(OS_TEST),ppc)
-	CPU_ARCH	= ppc
+DEFAULT_COMPILER = qcc
+ifeq ($(OS_TEST),mips)
+	CPU_ARCH	= mips
 else
 	CPU_ARCH	= x86
 endif
@@ -57,12 +57,14 @@ ifdef BUILD_OPT
 	OPTIMIZER	= -O2
 endif
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wall -pipe -DNTO -DHAVE_STRERROR -D_QNX_SOURCE -D_POSIX_C_SOURCE=199506 -D_XOPEN_SOURCE=500
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Vgcc_ntox86 -Wall -pipe -DNTO -DHAVE_STRERROR -D_QNX_SOURCE -D_POSIX_C_SOURCE=199506 -D_XOPEN_SOURCE=500
 
 ifdef USE_PTHREADS
 	DEFINES		+= -D_REENTRANT
 endif
 
-DSO_CFLAGS		= -fPIC
+ARCH			= QNX
+
+DSO_CFLAGS		= -Wc,-fPIC
 DSO_LDOPTS		= -shared
 DSO_LDFLAGS		=
