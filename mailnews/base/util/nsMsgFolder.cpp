@@ -1046,7 +1046,7 @@ NS_IMETHODIMP nsMsgFolder::Compact()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::EmptyTrash()
+NS_IMETHODIMP nsMsgFolder::EmptyTrash(nsIMsgWindow *msgWindow)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

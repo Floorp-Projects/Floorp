@@ -125,7 +125,7 @@ interface nsIMsgFolder : nsIFolder {
   [noscript] nsIMsgFolder addSubfolder(in nsAutoString folderName);
   
   void compact();
-  void emptyTrash();
+  void emptyTrash(in nsIMsgWindow aMsgWindow);
 
   /**
    * change the name of the folder

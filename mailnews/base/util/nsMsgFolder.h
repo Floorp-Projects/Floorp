@@ -91,7 +91,7 @@ public:
   NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
   NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder **newFolder);
   NS_IMETHOD Compact(void);
-  NS_IMETHOD EmptyTrash(void);
+  NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);
   NS_IMETHOD Rename(const PRUnichar *name);
   NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval);

@@ -100,7 +100,7 @@ public:
   NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder** newFolder);
 
   NS_IMETHOD Compact();
-  NS_IMETHOD EmptyTrash();
+  NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const PRUnichar *aNewName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);

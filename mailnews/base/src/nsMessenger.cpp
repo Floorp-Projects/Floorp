@@ -976,7 +976,8 @@ nsMessenger::CompactFolder(nsIRDFCompositeDataSource* db,
   if (NS_FAILED(rv)) return rv;
   folderArray->AppendElement(folderResource);
   rv = DoCommand(db, NC_RDF_COMPACT, folderArray, nsnull);
-
+  if (NS_SUCCEEDED(rv) && mTxnMgr)
+      mTxnMgr->Clear();
   return rv;
 }
 
@@ -993,7 +994,8 @@ nsMessenger::EmptyTrash(nsIRDFCompositeDataSource* db,
   if (NS_FAILED(rv)) return rv;
   folderArray->AppendElement(folderResource);
   rv = DoCommand(db, NC_RDF_EMPTYTRASH, folderArray, nsnull);
-
+  if (NS_SUCCEEDED(rv) && mTxnMgr)
+      mTxnMgr->Clear();
   return rv;
 }
 

@@ -810,7 +810,7 @@ NS_IMETHODIMP nsImapMailFolder::Compact()
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
+NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
 {
     nsresult rv;
     nsCOMPtr<nsIMsgFolder> trashFolder;
@@ -820,7 +820,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
         nsCOMPtr<nsIMsgDatabase> trashDB;
 
         rv = trashFolder->Delete(); // delete summary spec
-        rv = trashFolder->GetMsgDatabase(nsnull, getter_AddRefs(trashDB));
+        rv = trashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(trashDB));
 
         nsCOMPtr<nsIUrlListener> urlListener =
             do_QueryInterface(trashFolder);
@@ -1771,16 +1771,20 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 	{
 		rv = nsComponentManager::CreateInstance(kParseMailMsgStateCID, nsnull, 
 			NS_GET_IID(nsIMsgParseMailMsgState), (void **) getter_AddRefs(m_msgParser));
-		if (NS_SUCCEEDED(rv))
-			m_msgParser->SetMailDB(mDatabase);
 	}
 	else
 		m_msgParser->Clear();
 	
 	if (m_msgParser)
-		return m_msgParser->SetState(nsIMsgParseMailMsgState::ParseHeadersState);
+    {
+        m_msgParser->SetMailDB(mDatabase);
+		return
+            m_msgParser->SetState(nsIMsgParseMailMsgState::ParseHeadersState);
+    }
 	else
+    {
 		return NS_ERROR_OUT_OF_MEMORY;
+    }
     return rv;
 }
 

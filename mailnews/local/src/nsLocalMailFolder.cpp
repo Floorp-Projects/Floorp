@@ -685,7 +685,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
 }
 
 
-NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash()
+NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
 {
     nsresult rv;
     nsCOMPtr<nsIMsgFolder> trashFolder;
@@ -1303,6 +1303,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   }
   else
   {
+    msgTxn->SetMsgWindow(msgWindow);
     if (isMove)
     {
       if (mFlags & MSG_FOLDER_FLAG_TRASH)
@@ -1682,9 +1683,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 {
   nsresult rv = copySucceeded ? NS_OK : NS_ERROR_FAILURE;
   nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
+  nsCOMPtr<nsIMsgWindow> msgWindow;
 
   if (mCopyState->m_undoMsgTxn)
+  {
 		localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
+    if (NS_SUCCEEDED(rv))
+      localUndoTxn->GetMsgWindow(getter_AddRefs(msgWindow));
+  }
 
   
 	//Copy the header to the new database
@@ -1701,16 +1707,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     
     if(!mCopyState->m_parseMsgState)
     {
+      nsCOMPtr<nsIMsgDatabase> msgDatabase;
       if(NS_SUCCEEDED(rv))
-        rv = GetDatabase(nsnull);
+        rv = GetMsgDatabase(msgWindow, getter_AddRefs(msgDatabase));
       
       if(NS_SUCCEEDED(rv))
       {
         rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey,
                                                msgDBHdr, 
                                                getter_AddRefs(newHdr));
-        mDatabase->SetSummaryValid(PR_TRUE);
-        mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+        msgDatabase->SetSummaryValid(PR_TRUE);
+        msgDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
       }
     }
 
@@ -1740,7 +1747,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
     mCopyState->m_parseMsgState->FinishHeader();
 
-    result = GetMsgDatabase(nsnull, getter_AddRefs(msgDb));
+    result = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
     if (NS_SUCCEEDED(result) && msgDb)
 	{
 	  if (!mCopyState->m_copyingMultipleMessages)
@@ -1849,10 +1856,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::StartMessage()
 NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
 {
 	nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
+  nsCOMPtr<nsIMsgWindow> msgWindow;
 	nsresult rv;
 
   if (mCopyState->m_undoMsgTxn)
+  {
 		localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
+    if (NS_SUCCEEDED(rv))
+      localUndoTxn->GetMsgWindow(getter_AddRefs(msgWindow));
+  }
 
   // I think this is always true for online to offline copy
   mCopyState->m_dummyEnvelopeNeeded = PR_TRUE;
@@ -1878,7 +1890,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
       mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
     if (NS_SUCCEEDED(result) && newHdr)
     {
-      result = GetMsgDatabase(nsnull, getter_AddRefs(msgDb));
+      result = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
       if (NS_SUCCEEDED(result) && msgDb)
       {
         msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
