@@ -236,93 +236,6 @@ nsPopupSetFrame::Layout(nsBoxLayoutState& aState)
   return rv;
 }
 
-/** Replaced by layout
-NS_IMETHODIMP
-nsPopupSetFrame::Reflow(nsIPresContext*   aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus)
-{
-    nsIFrame* popupChild = GetActiveChild();
-
-    nsHTMLReflowState boxState(aReflowState);
-
-    if (aReflowState.reason == eReflowReason_Incremental) {
-
-        nsIFrame* incrementalChild;
-
-        // get the child but don't pull it off
-        aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
-        
-        // see if it is in the mPopupFrames list
-        nsIFrame* child = mPopupFrames.FirstChild();
-        popupChild = nsnull;
-
-        while (nsnull != child) 
-        { 
-            // if it is then flow the popup incrementally then flow
-            // us with a resize just to get our correct desired size.
-            if (child == incrementalChild) {
-                // pull it off now
-                aReflowState.reflowCommand->GetNext(incrementalChild);
-
-                // we know what child
-                popupChild = child;
-
-                // relow the box with resize just to get the
-                // aDesiredSize set correctly
-                boxState.reason = eReflowReason_Resize;
-                break;
-            }
-
-            nsresult rv = child->GetNextSibling(&child);
-            NS_ASSERTION(rv == NS_OK,"failed to get next child");
-        }   
-    } else if (aReflowState.reason == eReflowReason_Dirty) {
-    // sometimes incrementals are converted to dirty. This is done in the case just above this. So lets check
-    // to see if this was converted. If it was it will still have a reflow state.
-    if (aReflowState.reflowCommand) {
-        // it was converted so lets see if the next child is this one. If it is then convert it back and
-        // pass it down.
-        nsIFrame* incrementalChild = nsnull;
-        aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
-        if (incrementalChild == popupChild) 
-        {
-            nsHTMLReflowState state(aReflowState);
-            state.reason = eReflowReason_Incremental;
-            return Reflow(aPresContext, aDesiredSize, state, aStatus);
-            
-        } 
-    }
-  }
-
-  // Handle reflowing our subordinate popup
-  if (popupChild) {
-      // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
-      nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, popupChild,
-                                       availSize);
-      kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
-      kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
-
-       // Reflow child
-      nsHTMLReflowMetrics kidDesiredSize(aDesiredSize);
-
-      nsRect rect;
-      popupChild->GetRect(rect);
-      nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
-                                  rect.x, rect.y, NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS, aStatus);
-
-       // Set the child's width and height to its desired size
-      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y,
-                          NS_FRAME_NO_SIZE_VIEW |NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS);
-  }
-
-  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, boxState, aStatus);
-
-  return rv;
-}
-*/
 
 NS_IMETHODIMP
 nsPopupSetFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
@@ -466,16 +379,17 @@ nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent,
 {
   // Cache the element frame.
   mElementFrame = aElementFrame;
-
+  mPopupType = aPopupType;
+  
   // Show the popup at the specified position.
   mXPos = aXPos;
   mYPos = aYPos;
 
-  printf("X Pos: %d\n", mXPos);
-  printf("Y Pos: %d\n", mYPos);
-
   if (!OnCreate(aPopupContent))
     return NS_OK;
+
+  printf("X Pos: %d\n", mXPos);
+  printf("Y Pos: %d\n", mYPos);
 
   // Generate the popup.
   MarkAsGenerated(aPopupContent);
@@ -505,6 +419,7 @@ NS_IMETHODIMP
 nsPopupSetFrame::DestroyPopup()
 {
   OpenPopup(PR_FALSE);
+  mPopupType.SetLength(0);  
   return NS_OK;
 }
 
@@ -548,17 +463,17 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
   if (aActivateFlag) {
     ActivatePopup(PR_TRUE);
 
+    // register the rollup listeners, etc, but not if we're a tooltip
     nsIFrame* activeChild = GetActiveChild();
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);
-    UpdateDismissalListener(childPopup);
+    if ( ! mPopupType.EqualsWithConversion("tooltip") )
+      UpdateDismissalListener(childPopup);
     
     // First check and make sure this popup wants keyboard navigation
   
-    // popupsetframe::mElementFrame
     nsCOMPtr<nsIContent> content;
     GetContent(getter_AddRefs(content));
-    nsAutoString property;
-    
+    nsAutoString property;    
     content->GetAttribute(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
     if ( !property.EqualsWithConversion("true") && childPopup )
       childPopup->InstallKeyboardNavigator();
@@ -567,11 +482,12 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     if (!OnDestroy())
       return;
 
-    // Unregister.
-    if (nsMenuFrame::mDismissalListener) {
-      nsMenuFrame::mDismissalListener->Unregister();
+    // Unregister, but not if we're a tooltip
+    if ( ! mPopupType.EqualsWithConversion("tooltip") ) {
+      if (nsMenuFrame::mDismissalListener)
+        nsMenuFrame::mDismissalListener->Unregister();
     }
-
+    
     // Remove any keyboard navigators
     nsIFrame* activeChild = GetActiveChild();
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);

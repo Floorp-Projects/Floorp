@@ -130,7 +130,7 @@ protected:
 
   PRInt32 mXPos; // Active child's x position
   PRInt32 mYPos; // Active child's y position
-
+  nsAutoString mPopupType;
 
 }; // class nsPopupSetFrame
 
