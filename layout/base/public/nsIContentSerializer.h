@@ -50,22 +50,22 @@ class nsIContentSerializer : public nsISupports {
   NS_IMETHOD AppendText(nsIDOMText* aText, nsAWritableString& aStr) = 0;
 
   NS_IMETHOD AppendCDATASection(nsIDOMCDATASection* aCDATASection,
-			     nsAWritableString& aStr) = 0;
+                                nsAWritableString& aStr) = 0;
 
   NS_IMETHOD AppendProcessingInstruction(nsIDOMProcessingInstruction* aPI,
-				      nsAWritableString& aStr) = 0;
+                                         nsAWritableString& aStr) = 0;
 
   NS_IMETHOD AppendComment(nsIDOMComment* aComment,
-			nsAWritableString& aStr) = 0;
+                           nsAWritableString& aStr) = 0;
 
   NS_IMETHOD AppendDoctype(nsIDOMDocumentType *aDoctype,
-			nsAWritableString& aStr) = 0;
+                           nsAWritableString& aStr) = 0;
 
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
-			     nsAWritableString& aStr) = 0;
+                                nsAWritableString& aStr) = 0;
 
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
-			   nsAWritableString& aStr) = 0;
+                              nsAWritableString& aStr) = 0;
 };
 
 #define NS_CONTENTSERIALIZER_PROGID_PREFIX \
