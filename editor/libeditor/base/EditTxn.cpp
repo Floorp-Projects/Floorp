@@ -78,14 +78,14 @@ NS_IMETHODIMP EditTxn::Write(nsIOutputStream *aOutputStream)
 NS_IMETHODIMP EditTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
-    *aString="";
+    aString->SetLength(0);
   return NS_OK;
 }
 
 NS_IMETHODIMP EditTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
-    *aString="";
+    aString->SetLength(0);
   return NS_OK;
 }
 

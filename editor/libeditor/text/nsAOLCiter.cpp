@@ -64,7 +64,7 @@ nsAOLCiter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsAOLCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
 {
-  aOutString = "\n\n>> ";
+  aOutString.AssignWithConversion("\n\n>> ");
   aOutString += aInString;
 
   // See if the last char is a newline, and replace it if so
@@ -72,11 +72,11 @@ nsAOLCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
   if (aOutString.Last() == newline)
   {
     aOutString.SetCharAt(' ',aOutString.Length());
-    aOutString += "<<\n";
+    aOutString.AppendWithConversion("<<\n");
   }
   else
   {
-    aOutString += " <<\n";
+    aOutString.AppendWithConversion(" <<\n");
   }
 
   return NS_OK;

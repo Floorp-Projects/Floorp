@@ -178,10 +178,10 @@ SetChromeAttribute( nsIDocShell *shell, const char *id,
     {
       // Find specified element.
       nsCOMPtr<nsIDOMElement> elem;
-      rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
+      rv = xulDoc->GetElementById( NS_ConvertASCIItoUCS2(id), getter_AddRefs(elem) );
       if ( elem )
         // Set the text attribute.
-        rv = elem->SetAttribute( name, value );
+        rv = elem->SetAttribute( NS_ConvertASCIItoUCS2(name), value );
     }
   }
   return rv;
@@ -273,7 +273,7 @@ nsEditorShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 NS_IMETHODIMP    
 nsEditorShell::Init()
 {  
-  nsAutoString    editorType = "html";      // default to creating HTML editor
+  nsAutoString    editorType; editorType.AssignWithConversion("html");      // default to creating HTML editor
   mEditorTypeString = editorType;
   mEditorTypeString.ToLowerCase();
 
@@ -462,7 +462,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   // Load style sheet with settings that should never
   //  change, even in "Browser" mode
   // We won't unload this, so we don't need to be returned the style sheet pointer
-  styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorOverride.css", nsnull);
+  styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorOverride.css"), nsnull);
 
   // Load the edit mode override style sheet
   // This will be remove for "Browser" mode
@@ -472,9 +472,9 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   // Activate the debug menu only in debug builds
   // by removing the "hidden" attribute set "true" in XUL
   nsCOMPtr<nsIDOMElement> elem;
-  rv = xulDoc->GetElementById("debugMenu", getter_AddRefs(elem));
+  rv = xulDoc->GetElementById(NS_ConvertASCIItoUCS2("debugMenu"), getter_AddRefs(elem));
   if (elem)
-    elem->RemoveAttribute("hidden");
+    elem->RemoveAttribute(NS_ConvertASCIItoUCS2("hidden"));
 #endif
 
   // Force initial focus to the content window -- HOW?
@@ -567,7 +567,7 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
     
   nsAutoString  theType = editorType;
   theType.ToLowerCase();
-  if (theType.Equals("text") || theType.Equals("html") || theType.IsEmpty() || theType.Equals("htmlmail"))
+  if (theType.EqualsWithConversion("text") || theType.EqualsWithConversion("html") || theType.IsEmpty() || theType.EqualsWithConversion("htmlmail"))
   {
     mEditorTypeString = theType;
     return NS_OK;
@@ -599,17 +599,17 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     
   if (NS_SUCCEEDED(err))
   {
-    if (mEditorTypeString.Equals("text"))
+    if (mEditorTypeString.EqualsWithConversion("text"))
     {
       err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorPlaintextMask);
       mEditorType = ePlainTextEditorType;
     }
-    else if (mEditorTypeString.Equals("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
+    else if (mEditorTypeString.EqualsWithConversion("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
     {
       err = editor->Init(aDoc, aPresShell, 0);
       mEditorType = eHTMLTextEditorType;
     }
-    else if (mEditorTypeString.Equals("htmlmail"))  //  HTML editor with special mail rules
+    else if (mEditorTypeString.EqualsWithConversion("htmlmail"))  //  HTML editor with special mail rules
     {
       err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorMailMask);
       mEditorType = eHTMLTextEditorType;
@@ -618,9 +618,9 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     {
       err = NS_ERROR_INVALID_ARG;    // this is not an editor we know about
 #if DEBUG
-      nsAutoString  errorMsg = "Failed to init editor. Unknown editor type \"";
+      nsAutoString  errorMsg; errorMsg.AssignWithConversion("Failed to init editor. Unknown editor type \"");
       errorMsg += mEditorTypeString;
-      errorMsg += "\"\n";
+      errorMsg.AppendWithConversion("\"\n");
       char  *errorMsgCString = errorMsg.ToNewCString();
          NS_WARNING(errorMsgCString);
          nsCRT::free(errorMsgCString);
@@ -861,7 +861,7 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
   nsAutoString  aAttr(attr);
   
   allStr.ToLowerCase();
-  PRBool    doingAll = (allStr.Equals("all"));
+  PRBool    doingAll = (allStr.EqualsWithConversion("all"));
   nsresult  err = NS_OK;
 
   if (doingAll)
@@ -989,7 +989,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
     
     //Load the editmode style sheet
     nsCOMPtr<nsICSSStyleSheet> styleSheet;
-    res = styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorContent.css",
+    res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
                                                 getter_AddRefs(styleSheet));
     
     // Save the returned style sheet so we can remove it later
@@ -1008,7 +1008,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
       // Note: using "@import url(chrome://editor/content/EditorContent.css);"
       //   in EditorAllTags.css doesn't seem to work!?
       nsCOMPtr<nsICSSStyleSheet> styleSheet;
-      res = styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorContent.css",
+      res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
                                                   getter_AddRefs(styleSheet));
     
       // Save the returned style sheet so we can remove it later
@@ -1018,7 +1018,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
 
     //Load the editmode style sheet
     nsCOMPtr<nsICSSStyleSheet> styleSheet;
-    res = styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorAllTags.css",
+    res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorAllTags.css"),
                                                 getter_AddRefs(styleSheet));
     
     // Save the returned style sheet so we can remove it later
@@ -1045,7 +1045,7 @@ nsEditorShell::DisplayParagraphMarks(PRBool aShowMarks)
 
     //Load the style sheet
     nsCOMPtr<nsICSSStyleSheet> styleSheet;
-    res = styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorParagraphMarks.css",
+    res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorParagraphMarks.css"),
                                                 getter_AddRefs(styleSheet));
     
     // Save the returned style sheet so we can remove it later
@@ -1255,19 +1255,19 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
         // Ask user if they want to save current changes
         nsAutoString reasonToSaveStr(reasonToSave);
         nsAutoString tmp1, tmp2, title;
-        GetBundleString("Save", tmp1);
-        GetBundleString("DontSave", tmp2);
+        GetBundleString(NS_ConvertASCIItoUCS2("Save"), tmp1);
+        GetBundleString(NS_ConvertASCIItoUCS2("DontSave"), tmp2);
         GetDocumentTitleString(title);
         // If title is empty, use "untitled"
         if (title.Length() == 0)
-          GetBundleString("untitled", title);
+          GetBundleString(NS_ConvertASCIItoUCS2("untitled"), title);
 
         nsAutoString saveMsg;
-        GetBundleString("SaveFilePrompt", saveMsg);
-        saveMsg.ReplaceSubstring("%title%", title).ReplaceSubstring("%reason%", reasonToSaveStr);
+        GetBundleString(NS_ConvertASCIItoUCS2("SaveFilePrompt"), saveMsg);
+        saveMsg.ReplaceSubstring(NS_ConvertASCIItoUCS2("%title%"), title).ReplaceSubstring(NS_ConvertASCIItoUCS2("%reason%"), reasonToSaveStr);
 
         nsAutoString saveDocString;
-        GetBundleString("SaveDocument", saveDocString);
+        GetBundleString(NS_ConvertASCIItoUCS2("SaveDocument"), saveDocString);
         EConfirmResult result = ConfirmWithCancel(saveDocString, saveMsg, &tmp1, &tmp2);
         if (result == eCancel)
         {
@@ -1334,8 +1334,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               PRUnichar *titleUnicode;
               nsAutoString captionStr, msgStr;
               
-              GetBundleString("DocumentTitle", captionStr);
-              GetBundleString("NeedDocTitle", msgStr); 
+              GetBundleString(NS_ConvertASCIItoUCS2("DocumentTitle"), captionStr);
+              GetBundleString(NS_ConvertASCIItoUCS2("NeedDocTitle"), msgStr); 
               
               PRBool retVal = PR_FALSE;
               res = dialog->Prompt(mContentWindow, captionStr.GetUnicode(), msgStr.GetUnicode(),
@@ -1361,7 +1361,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
           if (NS_SUCCEEDED(res) && fileWidget)
           {
             nsAutoString  promptString;
-            GetBundleString("SaveDocumentAs", promptString);
+            GetBundleString(NS_ConvertASCIItoUCS2("SaveDocumentAs"), promptString);
 
             nsString* titles = nsnull;
             nsString* filters = nsnull;
@@ -1385,19 +1385,19 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             nextTitle = titles;
             nextFilter = filters;
             // The names of the file types are localizable
-            GetBundleString("HTMLFiles", HTMLFiles);
-            GetBundleString("TextFiles", TextFiles);
+            GetBundleString(NS_ConvertASCIItoUCS2("HTMLFiles"), HTMLFiles);
+            GetBundleString(NS_ConvertASCIItoUCS2("TextFiles"), TextFiles);
             if (! (HTMLFiles.Length() == 0 || TextFiles.Length() == 0))
             {
               nsAutoString allFilesStr;
-              GetBundleString("AllFiles", allFilesStr);
+              GetBundleString(NS_ConvertASCIItoUCS2("AllFiles"), allFilesStr);
               
             *nextTitle++ = HTMLFiles;
-            *nextFilter++ = "*.htm; *.html; *.shtml";
+            (*nextFilter++).AssignWithConversion("*.htm; *.html; *.shtml");
             *nextTitle++ = TextFiles;
-            *nextFilter++ = "*.txt";
+            (*nextFilter++).AssignWithConversion("*.txt");
             *nextTitle++ = allFilesStr;
-            *nextFilter++ = "*.*";
+            (*nextFilter++).AssignWithConversion("*.*");
             fileWidget->SetFilterList(3, titles, filters);
             }
             
@@ -1412,8 +1412,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
      //         do a QI to get an nsIURL and then call GetFileName()
 
               // if it's not a local file already, grab the current file name
-              if ( (urlstring.Compare("file", PR_TRUE, 4) != 0 )
-                && (urlstring.Compare("about:blank", PR_TRUE, -1) != 0) )
+              if ( (urlstring.CompareWithConversion("file", PR_TRUE, 4) != 0 )
+                && (urlstring.CompareWithConversion("about:blank", PR_TRUE, -1) != 0) )
               {
                 PRInt32 index = urlstring.RFindChar((PRUnichar)'/', PR_FALSE, -1, -1 );
                 if ( index != -1 )
@@ -1422,7 +1422,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                   // if the url ends with a '/' then the whole string will be cut
                   urlstring.Cut(0, index + 1);
                   if (urlstring.Length() > 0)
-                    fileName = urlstring;
+                    fileName.Assign( urlstring );
                 }
               }
               
@@ -1437,14 +1437,14 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                 PRUnichar at = (PRUnichar)'@';
                 PRUnichar colon = (PRUnichar)':';
                 PRUnichar underscore = (PRUnichar)'_';
-                title = title.ReplaceChar(space, underscore);
-                title = title.ReplaceChar(dot, underscore);
-                title = title.ReplaceChar(bslash, underscore);
-                title = title.ReplaceChar(fslash, underscore);
-                title = title.ReplaceChar(at, underscore);
-                title = title.ReplaceChar(colon, underscore);
+                title.ReplaceChar(space, underscore);
+                title.ReplaceChar(dot, underscore);
+                title.ReplaceChar(bslash, underscore);
+                title.ReplaceChar(fslash, underscore);
+                title.ReplaceChar(at, underscore);
+                title.ReplaceChar(colon, underscore);
                 fileName = title;
-                fileName.Append(".html");
+                fileName.AppendWithConversion(".html");
               }
             } 
             else
@@ -1452,7 +1452,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               char *leafName = docFileSpec.GetLeafName();
               if (leafName)
               {
-                fileName = leafName;
+                fileName.AssignWithConversion(leafName);
                 nsCRT::free(leafName);
               }
               docFileSpec.GetParent(parentPath);
@@ -1488,7 +1488,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
           if (webShell)
           {
             nsFileURL fileURL(docFileSpec);
-            nsAutoString fileURLString(fileURL.GetURLString());
+            nsAutoString fileURLString; fileURLString.AssignWithConversion(fileURL.GetURLString());
             PRUnichar *fileURLUnicode = fileURLString.ToNewUnicode();
             if (fileURLUnicode)
             {
@@ -1505,8 +1505,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         if (NS_FAILED(res))
         {
           nsAutoString saveDocStr, failedStr;
-          GetBundleString("SaveDocument", saveDocStr);
-          GetBundleString("SaveFileFailed", failedStr);
+          GetBundleString(NS_ConvertASCIItoUCS2("SaveDocument"), saveDocStr);
+          GetBundleString(NS_ConvertASCIItoUCS2("SaveFileFailed"), failedStr);
           Alert(saveDocStr, failedStr);
         } else {
           // File was saved successfully
@@ -1530,7 +1530,7 @@ NS_IMETHODIMP
 nsEditorShell::CloseWindow( PRBool *_retval )
 {
   nsAutoString beforeClosingStr;
-  GetBundleString("BeforeClosing", beforeClosingStr);
+  GetBundleString(NS_ConvertASCIItoUCS2("BeforeClosing"), beforeClosingStr);
   
   nsresult rv = CheckAndSaveDocument(beforeClosingStr.GetUnicode(), _retval);
  
@@ -1581,7 +1581,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 
   nsCOMPtr<nsIFileWidget>  fileWidget;
   nsAutoString HTMLTitle;
-  GetBundleString("OpenHTMLFile", HTMLTitle);
+  GetBundleString(NS_ConvertASCIItoUCS2("OpenHTMLFile"), HTMLTitle);
 
   // An empty string should just result in "Open" for the dialog
   nsAutoString title;
@@ -1590,7 +1590,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
     title = HTMLTitle;
   } else {
     nsAutoString ImageTitle;
-    GetBundleString("SelectImageFile", ImageTitle);
+    GetBundleString(NS_ConvertASCIItoUCS2("SelectImageFile"), ImageTitle);
 
     if (ImageTitle.Length() > 0 && imgFilter)
       title = ImageTitle;
@@ -1623,12 +1623,12 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 
       nextTitle = titles;
       nextFilter = filters;
-      GetBundleString("HTMLFiles", tempStr);
+      GetBundleString(NS_ConvertASCIItoUCS2("HTMLFiles"), tempStr);
       *nextTitle++ = tempStr;
-      GetBundleString("TextFiles", tempStr);
+      GetBundleString(NS_ConvertASCIItoUCS2("TextFiles"), tempStr);
       *nextTitle++ = tempStr;
-      *nextFilter++ = "*.htm; *.html; *.shtml";
-      *nextFilter++ = "*.txt";
+      (*nextFilter++).AssignWithConversion("*.htm; *.html; *.shtml");
+      (*nextFilter++).AssignWithConversion("*.txt");
       fileWidget->SetFilterList(3, titles, filters);
     } else {
       titles = new nsString[2];
@@ -1637,14 +1637,14 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
         return NS_ERROR_OUT_OF_MEMORY;
       nextTitle = titles;
       nextFilter = filters;
-      GetBundleString("IMGFiles", tempStr);
+      GetBundleString(NS_ConvertASCIItoUCS2("IMGFiles"), tempStr);
       *nextTitle++ = tempStr;
-      *nextFilter++ = "*.gif; *.jpg; *.jpeg; *.png", "*.*";
+      (*nextFilter++).AssignWithConversion("*.gif; *.jpg; *.jpeg; *.png; *.*");
       fileWidget->SetFilterList(2, titles, filters);
     }
-    GetBundleString("AllFiles", tempStr);
+    GetBundleString(NS_ConvertASCIItoUCS2("AllFiles"), tempStr);
     *nextTitle++ = tempStr;
-    *nextFilter++ = "*.*";
+    (*nextFilter++).AssignWithConversion("*.*");
     // First param should be Parent window, but type is nsIWidget*
     // Bug is filed to change this to a more suitable window type
     dialogResult = fileWidget->GetFile(/*parent*/ nsnull, title, fileSpec);
@@ -1660,7 +1660,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
       // Convert it to the string version of the URL format
       // NOTE: THIS CRASHES IF fileSpec is empty
       nsFileURL url(fileSpec);
-      nsAutoString  returnVal = url.GetURLString();
+      nsAutoString  returnVal; returnVal.AssignWithConversion(url.GetURLString());
       *_retval = returnVal.ToNewUnicode();
     }
     // TODO: SAVE THIS TO THE PREFS?
@@ -1686,7 +1686,7 @@ nsEditorShell::UpdateWindowTitle()
   res = GetDocumentTitleString(windowCaption);
   // If title is empty, use "untitled"
   if (windowCaption.Length() == 0)
-    GetBundleString("untitled", windowCaption);
+    GetBundleString(NS_ConvertASCIItoUCS2("untitled"), windowCaption);
 
   // Append just the 'leaf' filename to the Doc. Title for the window caption
   if (NS_SUCCEEDED(res))
@@ -1704,9 +1704,9 @@ nsEditorShell::UpdateWindowTitle()
         {
           nsAutoString name;
           docFileSpec.GetLeafName(name);
-          windowCaption += " [";
+          windowCaption.AppendWithConversion(" [");
           windowCaption += name;
-          windowCaption += "]";
+          windowCaption.AppendWithConversion("]");
         }
       }
     }
@@ -1755,7 +1755,7 @@ nsEditorShell::GetDocumentTitle(PRUnichar **title)
     *title = titleStr.ToNewUnicode();
   } else {
     // Don't fail, just return an empty string    
-    nsAutoString empty("");
+    nsAutoString empty;
     *title = empty.ToNewUnicode();
     res = NS_OK;
   }
@@ -1796,7 +1796,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
       nsCOMPtr<nsIDOMNode>titleNode;
       nsCOMPtr<nsIDOMNode>headNode;
       nsCOMPtr<nsIDOMNode> resultNode;
-      res = domDoc->GetElementsByTagName("title", getter_AddRefs(titleList));
+      res = domDoc->GetElementsByTagName(NS_ConvertASCIItoUCS2("title"), getter_AddRefs(titleList));
       if (NS_SUCCEEDED(res))
       {
         if(titleList)
@@ -1832,7 +1832,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
       }
       // Get the <HEAD> node, create a <TITLE> and insert it under the HEAD
       nsCOMPtr<nsIDOMNodeList> headList;
-      res = domDoc->GetElementsByTagName("head",getter_AddRefs(headList));
+      res = domDoc->GetElementsByTagName(NS_ConvertASCIItoUCS2("head"),getter_AddRefs(headList));
       if (NS_FAILED(res)) return res;
       if (headList) 
       {
@@ -1844,7 +1844,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
           {
             // Didn't find one above: Create a new one
             nsCOMPtr<nsIDOMElement>titleElement;
-            res = domDoc->CreateElement("title",getter_AddRefs(titleElement));
+            res = domDoc->CreateElement(NS_ConvertASCIItoUCS2("title"),getter_AddRefs(titleElement));
             if (NS_SUCCEEDED(res) && titleElement)
             {
               titleNode = do_QueryInterface(titleElement);
@@ -2367,7 +2367,7 @@ nsEditorShell::GetString(const PRUnichar *name, PRUnichar **_retval)
     return NS_ERROR_NULL_POINTER;
 
   // Don't fail, just return an empty string    
-  nsAutoString empty("");
+  nsAutoString empty;
 
   if (mStringBundle)
   {
@@ -2391,13 +2391,13 @@ void nsEditorShell::GetBundleString(const nsString& name, nsString &outString)
     if (NS_SUCCEEDED(mStringBundle->GetStringFromName(name.GetUnicode(), &ptrv)))
       outString = ptrv;
     else
-      outString = "";
+      outString.SetLength(0);
     
     nsAllocator::Free(ptrv);
   }
   else
   {
-    outString = "";
+    outString.SetLength(0);
   }
 }
 
@@ -2417,22 +2417,22 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     // Stuff in Parameters 
     block->SetInt( nsICommonDialogs::eNumberButtons,3 ); 
     block->SetString( nsICommonDialogs::eMsg, aQuestion.GetUnicode()); 
-    nsAutoString url( "chrome://global/skin/question-icon.gif"  ); 
+    nsAutoString url; url.AssignWithConversion( "chrome://global/skin/question-icon.gif"  ); 
     block->SetString( nsICommonDialogs::eIconURL, url.GetUnicode()); 
 
     nsAutoString yesStr, noStr;
     if (aYesString)
-      yesStr = *aYesString;
+      yesStr.Assign(*aYesString);
     else
-      GetBundleString("Yes", yesStr);
+      GetBundleString(NS_ConvertASCIItoUCS2("Yes"), yesStr);
 
     if (aNoString)
-      noStr = *aNoString;
+      noStr.Assign(*aNoString);
     else
-      GetBundleString("No", noStr);
+      GetBundleString(NS_ConvertASCIItoUCS2("No"), noStr);
 
     nsAutoString cancelStr;
-    GetBundleString("Cancel", cancelStr);
+    GetBundleString(NS_ConvertASCIItoUCS2("Cancel"), cancelStr);
 
     block->SetString( nsICommonDialogs::eDialogTitle, aTitle.GetUnicode() );
     //Note: "button0" is always Ok or Yes action, "button1" is Cancel
@@ -2729,12 +2729,12 @@ nsEditorShell::MakeOrChangeList(const PRUnichar *listType)
     case eHTMLTextEditorType:
       if (aListType.IsEmpty())
       {
-        err = mEditor->RemoveList("ol");
+        err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("ol"));
         if(NS_SUCCEEDED(err))
         {
-          err = mEditor->RemoveList("ul");
+          err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("ul"));
           if(NS_SUCCEEDED(err))
-            err = mEditor->RemoveList("dl");
+            err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("dl"));
         }
       }
       else
@@ -2761,12 +2761,12 @@ nsEditorShell::RemoveList(const PRUnichar *listType)
     case eHTMLTextEditorType:
       if (aListType.IsEmpty())
       {
-        err = mEditor->RemoveList("ol");
+        err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("ol"));
         if(NS_SUCCEEDED(err))
         {
-          err = mEditor->RemoveList("ul");
+          err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("ul"));
           if(NS_SUCCEEDED(err))
-            err = mEditor->RemoveList("dl");
+            err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("dl"));
         }
       }
       else
@@ -3746,7 +3746,7 @@ nsEditorShell::GetSuggestedWord(PRUnichar **aSuggestedWord)
       mSuggestedWordIndex++;
     } else {
       // A blank string signals that there are no more strings
-      word = "";
+      word.SetLength(0);
     }
     result = NS_OK;
   }
@@ -3820,7 +3820,7 @@ nsEditorShell::GetPersonalDictionaryWord(PRUnichar **aDictionaryWord)
       mDictionaryIndex++;
     } else {
       // A blank string signals that there are no more strings
-      word = "";
+      word.SetLength(0);
     }
     result = NS_OK;
   }
@@ -4001,7 +4001,7 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
 {
   // Start the throbber
   // TODO: We should also start/stop it for saving and publishing?
-  SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", "true" );
+  SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", NS_ConvertASCIItoUCS2("true") );
 
   // Disable JavaScript in this document:
   nsCOMPtr<nsIScriptGlobalObjectOwner> sgoo (do_QueryInterface(mContentAreaDocShell));
@@ -4073,8 +4073,8 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
   if (mCloseWindowWhenLoaded && isRootDoc)
   {
     nsAutoString alertLabel, alertMessage;
-    GetBundleString("Alert", alertLabel);
-    GetBundleString("CantEditFramesetMsg", alertMessage);
+    GetBundleString(NS_ConvertASCIItoUCS2("Alert"), alertLabel);
+    GetBundleString(NS_ConvertASCIItoUCS2("CantEditFramesetMsg"), alertMessage);
     Alert(alertLabel, alertMessage);
 
     nsCOMPtr<nsIBaseWindow> baseWindow;
@@ -4093,11 +4093,11 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
     nsCOMPtr<nsIURI>  aUrl;
     aChannel->GetURI(getter_AddRefs(aUrl));
     res = PrepareDocumentForEditing(aLoader, aUrl);
-    SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", "false" );
+    SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", NS_ConvertASCIItoUCS2("false") );
   }
 
   nsAutoString doneText;
-  GetBundleString("LoadingDone", doneText);
+  GetBundleString(NS_ConvertASCIItoUCS2("LoadingDone"), doneText);
   SetChromeAttribute(mDocShell, "statusText", "value", doneText);
 
   return res;

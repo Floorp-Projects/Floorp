@@ -146,7 +146,7 @@ NS_IMETHODIMP InsertElementTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Remove Element: ";
+    aString->AssignWithConversion("Remove Element: ");
   }
   return NS_OK;
 }
@@ -155,7 +155,7 @@ NS_IMETHODIMP InsertElementTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Insert Element: ";
+    aString->AssignWithConversion("Insert Element: ");
   }
   return NS_OK;
 }

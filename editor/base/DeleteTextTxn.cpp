@@ -58,7 +58,7 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
   aElement->GetLength(&count);
   NS_ASSERTION(count>=aNumCharsToDelete, "bad arg, numCharsToDelete.  Not enough characters in node");
   NS_ASSERTION(count>=aOffset+aNumCharsToDelete, "bad arg, numCharsToDelete.  Not enough characters in node");
-  mDeletedText = "";
+  mDeletedText.SetLength(0);
   return NS_OK;
 }
 
@@ -121,7 +121,7 @@ NS_IMETHODIMP DeleteTextTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Insert Text: ";
+    aString->AssignWithConversion("Insert Text: ");
     *aString += mDeletedText;
   }
   return NS_OK;
@@ -131,7 +131,7 @@ NS_IMETHODIMP DeleteTextTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Remove Text: ";
+    aString->AssignWithConversion("Remove Text: ");
     *aString += mDeletedText;
   }
   return NS_OK;

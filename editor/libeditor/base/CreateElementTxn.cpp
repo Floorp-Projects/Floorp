@@ -212,7 +212,7 @@ NS_IMETHODIMP CreateElementTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Remove Element: ";
+    aString->AssignWithConversion("Remove Element: ");
     *aString += mTag;
   }
   return NS_OK;
@@ -222,7 +222,7 @@ NS_IMETHODIMP CreateElementTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Create Element: ";
+    aString->AssignWithConversion("Create Element: ");
     *aString += mTag;
   }
   return NS_OK;

@@ -359,12 +359,12 @@ nsEditorTxnLog::GetString(nsITransaction *aTransaction, char *aBuffer, PRInt32 a
 
   aBuffer[0] = '\0';
 
-  nsString str = "";
+  nsString str;
 
   aTransaction->GetRedoString(&str);
 
   if (str.Length() == 0)
-    str = "<NULL>";
+    str.AssignWithConversion("<NULL>");
 
   str.ToCString(aBuffer, aBufferLength);
   aBuffer[aBufferLength - 1] = '\0';

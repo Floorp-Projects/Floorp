@@ -78,23 +78,19 @@ NS_IMETHODIMP nsEditorController::Init()
 #define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                                \
   {                                                                                 \
   _cmdClass* theCmd = new _cmdClass;                                                \
-  nsAutoString cmdString(_cmdName);                                                 \
-  rv = RegisterOneCommand(cmdString.GetUnicode(), inCommandManager, theCmd);        \
+  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd); \
   }
 
 #define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                              \
   {                                                                                 \
   _cmdClass* theCmd = new _cmdClass;                                                \
-  nsAutoString cmdString(_cmdName);                                                 \
-  rv = RegisterOneCommand(cmdString.GetUnicode(), inCommandManager, theCmd);        \
+  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd);        \
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                               \
-  cmdString = _cmdName;                                                             \
-  rv = RegisterOneCommand(cmdString.GetUnicode(), inCommandManager, theCmd);
+  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd);
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                               \
-  cmdString = _cmdName;                                                             \
-  rv = RegisterOneCommand(cmdString.GetUnicode(), inCommandManager, theCmd);        \
+  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd);        \
   }
 
 
@@ -217,7 +213,7 @@ NS_IMETHODIMP nsEditorController::IsCommandEnabled(const PRUnichar *aCommand, PR
   {
 #if DEBUG
     nsCAutoString msg("EditorController asked about a command that it does not handle -- ");
-    msg.Append(aCommand);
+    msg.AppendWithConversion(aCommand);
     NS_WARNING(msg);
 #endif
     return NS_OK;    // we don't handle this command
@@ -263,7 +259,7 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
   {
 #if DEBUG
     nsCAutoString msg("EditorController asked to do a command that it does not handle -- ");
-    msg.Append(aCommand);
+    msg.AppendWithConversion(aCommand);
     NS_WARNING(msg);
 #endif
     return NS_OK;    // we don't handle this command

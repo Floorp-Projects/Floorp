@@ -67,12 +67,12 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
   // begin debug output
   nsCOMPtr<nsIDOMElement> element;
   element = do_QueryInterface(mElement);
-  nsAutoString elementTag="text node";
+  nsAutoString elementTag; elementTag.AssignWithConversion("text node");
   if (element)
     element->GetTagName(elementTag);
   nsCOMPtr<nsIDOMElement> parentElement;
   parentElement = do_QueryInterface(mParent);
-  nsAutoString parentElementTag="text node";
+  nsAutoString parentElementTag; parentElementTag.AssignWithConversion("text node");
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
   char *c, *p;
@@ -106,12 +106,12 @@ NS_IMETHODIMP DeleteElementTxn::Undo(void)
   // begin debug output
   nsCOMPtr<nsIDOMElement> element;
   element = do_QueryInterface(mElement);
-  nsAutoString elementTag="text node";
+  nsAutoString elementTag; elementTag.AssignWithConversion("text node");
   if (element)
     element->GetTagName(elementTag);
   nsCOMPtr<nsIDOMElement> parentElement;
   parentElement = do_QueryInterface(mParent);
-  nsAutoString parentElementTag="text node";
+  nsAutoString parentElementTag; parentElementTag.AssignWithConversion("text node");
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
   char *c, *p;
@@ -160,7 +160,7 @@ NS_IMETHODIMP DeleteElementTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Insert Element: ";
+    aString->AssignWithConversion("Insert Element: ");
   }
   return NS_OK;
 }
@@ -169,7 +169,7 @@ NS_IMETHODIMP DeleteElementTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Remove Element: ";
+    aString->AssignWithConversion("Remove Element: ");
   }
   return NS_OK;
 }

@@ -103,7 +103,7 @@ NS_IMETHODIMP IMECommitTxn::GetUndoString(nsString *aString)
   if(nsnull == aString) {
 	return NS_ERROR_NULL_POINTER;
   } else {
-    *aString="Remove IMECommit: ";
+    aString->AssignWithConversion("Remove IMECommit: ");
     return NS_OK;
   }
 }
@@ -114,7 +114,7 @@ NS_IMETHODIMP IMECommitTxn::GetRedoString(nsString *aString)
   if(nsnull == aString) {
 	return NS_ERROR_NULL_POINTER;
   } else {
-    *aString="Insert IMECommit: ";
+    aString->AssignWithConversion("Insert IMECommit: ");
     return NS_OK;
   }
 }

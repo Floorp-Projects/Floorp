@@ -203,7 +203,7 @@ NS_IMETHODIMP DeleteRangeTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Insert Range: ";
+    aString->AssignWithConversion("Insert Range: ");
   }
   return NS_OK;
 }
@@ -212,7 +212,7 @@ NS_IMETHODIMP DeleteRangeTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Remove Range: ";
+    aString->AssignWithConversion("Remove Range: ");
   }
   return NS_OK;
 }
