@@ -1205,7 +1205,6 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
     zip->ClearReleaseTime();
   }
   else {
-printf("******************** Cache Miss %s \n",(const char*)path );
     zip = new nsJAR();
     if (zip == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
