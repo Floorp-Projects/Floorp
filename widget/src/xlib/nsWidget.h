@@ -143,7 +143,6 @@ extern Display         *gDisplay;
 extern Screen          *gScreen;
 extern int              gDepth;
 extern Visual          *gVisual;
-extern XVisualInfo     *gVisualInfo;
 
 // this is from the xlibrgb code.
 

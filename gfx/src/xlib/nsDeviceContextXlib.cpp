@@ -67,7 +67,6 @@ extern Display *  gDisplay;
 extern Screen *   gScreen;
 extern Visual *   gVisual;
 extern int        gDepth;
-extern XVisualInfo     *gVisualInfo;
 
 NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 {
