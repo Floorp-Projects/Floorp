@@ -144,6 +144,9 @@ public:
   // URI we're loading.  Null for inline sheets
   nsCOMPtr<nsIURI>           mURI;
 
+  // Should be 1 for non-inline sheets.
+  PRUint32                   mLineNumber;
+
   // The sheet we're loading data for
   nsCOMPtr<nsICSSStyleSheet> mSheet;
 
@@ -227,7 +230,8 @@ public:
   NS_IMETHOD RecycleParser(nsICSSParser* aParser);
 
   NS_IMETHOD LoadInlineStyle(nsIContent* aElement,
-                             nsIUnicharInputStream* aIn, 
+                             nsIUnicharInputStream* aStream, 
+                             PRUint32 aLineNumber,
                              const nsAString& aTitle, 
                              const nsAString& aMedia, 
                              nsIParser* aParserToUnblock,

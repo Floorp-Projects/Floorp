@@ -145,6 +145,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mTitle(aTitle),
     mParserToUnblock(aParserToUnblock),
     mURI(aURI),
+    mLineNumber(1),
     mSheet(aSheet),
     mNext(nsnull),
     mParentData(nsnull),
@@ -169,6 +170,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
   : mLoader(aLoader),
     mParserToUnblock(nsnull),
     mURI(aURI),
+    mLineNumber(1),
     mSheet(aSheet),
     mNext(nsnull),
     mParentData(aParentData),
@@ -199,6 +201,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
   : mLoader(aLoader),
     mParserToUnblock(nsnull),
     mURI(aURI),
+    mLineNumber(1),
     mSheet(aSheet),
     mNext(nsnull),
     mParentData(nsnull),
@@ -1474,7 +1477,8 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
   mParsingDatas.AppendElement(aLoadData);
   nsCOMPtr<nsIURI> uri;
   aLoadData->mSheet->GetURL(*getter_AddRefs(uri));
-  rv = parser->Parse(aStream, uri, *getter_AddRefs(dummySheet));
+  rv = parser->Parse(aStream, uri, aLoadData->mLineNumber,
+                     *getter_AddRefs(dummySheet));
   mParsingDatas.RemoveElementAt(mParsingDatas.Count() - 1);
   RecycleParser(parser);
 
@@ -1617,6 +1621,7 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
 NS_IMETHODIMP
 CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
                                nsIUnicharInputStream* aStream, 
+                               PRUint32 aLineNumber,
                                const nsAString& aTitle, 
                                const nsAString& aMedia, 
                                nsIParser* aParserToUnblock,
@@ -1663,6 +1668,7 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
   }
 
   NS_ADDREF(data);
+  data->mLineNumber = aLineNumber;
   // Parse completion releases the load data
   return ParseSheet(aStream, data, aCompleted);
 }        

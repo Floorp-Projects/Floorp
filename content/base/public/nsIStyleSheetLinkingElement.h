@@ -108,6 +108,11 @@ public:
    * @param aCharset the charset
    */
   NS_IMETHOD GetCharset(nsAString& aCharset) = 0;
+
+  // This doesn't entirely belong here since they only make sense for
+  // some types of linking elements, but it's a better place than
+  // anywhere else.
+  virtual void SetLineNumber(PRUint32 aLineNumber) = 0;
 };
 
 #endif // nsILinkingElement_h__

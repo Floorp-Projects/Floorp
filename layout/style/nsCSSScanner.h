@@ -124,7 +124,7 @@ class nsCSSScanner {
   ~nsCSSScanner();
 
   // Init the scanner.
-  void Init(nsIUnicharInputStream* aInput, nsIURI* aURI);
+  void Init(nsIUnicharInputStream* aInput, nsIURI* aURI, PRUint32 aLineNumber);
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   void AddToError(const nsAString& aErrorText);
@@ -132,7 +132,7 @@ class nsCSSScanner {
   void ClearError();
 #endif
 
-  PRUint32 GetLineNumber();
+  PRUint32 GetLineNumber() { return mLineNumber; }
 
   // Get the next token. Return nsfalse on EOF or ERROR. aTokenResult
   // is filled in with the data for the token.

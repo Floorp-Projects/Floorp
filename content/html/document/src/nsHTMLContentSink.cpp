@@ -4292,6 +4292,9 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(element);
 
+  NS_ASSERTION(ssle,
+               "html:style doesn't implement nsIStyleSheetLinkingElement");
+
   if (ssle) {
     // XXX need prefs. check here.
     if (!mInsideNoXXXTag) {
@@ -4320,6 +4323,10 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   PRInt32 lineNo = 0;
 
   dtd->CollectSkippedContent(eHTMLTag_style, content, lineNo);
+
+  if (ssle) {
+    ssle->SetLineNumber(lineNo);
+  }
 
   if (!content.IsEmpty()) {
     // Create a text node holding the content

@@ -54,9 +54,10 @@
 #include "nsVoidArray.h"
 #include "nsCRT.h"
 
-nsStyleLinkElement::nsStyleLinkElement() :
-    mDontLoadStyle(PR_FALSE),
-    mUpdatesEnabled(PR_TRUE)
+nsStyleLinkElement::nsStyleLinkElement()
+  : mDontLoadStyle(PR_FALSE)
+  , mUpdatesEnabled(PR_TRUE)
+  , mLineNumber(1)
 {
 }
 
@@ -137,6 +138,12 @@ nsStyleLinkElement::GetCharset(nsAString& aCharset)
 {
   // descendants have to implement this themselves
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* virtual */ void
+nsStyleLinkElement::SetLineNumber(PRUint32 aLineNumber)
+{
+  mLineNumber = aLineNumber;
 }
 
 void nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes,
@@ -317,7 +324,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
 
     // Now that we have a url and a unicode input stream, parse the
     // style sheet.
-    rv = loader->LoadInlineStyle(thisContent, uin, title, media,
+    rv = loader->LoadInlineStyle(thisContent, uin, mLineNumber, title, media,
                                  ((blockParser) ? parser.get() : nsnull),
                                  doneLoading, aObserver);
   }

@@ -68,6 +68,7 @@ public:
                               nsICSSLoaderObserver* aObserver = nsnull);
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
   NS_IMETHOD GetCharset(nsAString& aCharset);
+  virtual void SetLineNumber(PRUint32 aLineNumber);
 
   static void ParseLinkTypes(const nsAString& aTypes, nsStringArray& aResult);
 
@@ -84,6 +85,7 @@ protected:
   nsCOMPtr<nsIParser> mParser;
   PRPackedBool mDontLoadStyle;
   PRPackedBool mUpdatesEnabled;
+  PRUint32 mLineNumber;
 };
 
 #endif /* nsStyleLinkElement_h___ */

@@ -86,6 +86,7 @@ public:
   //   will be marked complete when complete
   NS_IMETHOD LoadInlineStyle(nsIContent* aElement,
                              nsIUnicharInputStream* aStream, 
+                             PRUint32 aLineNumber,
                              const nsAString& aTitle, 
                              const nsAString& aMedia, 
                              nsIParser* aParserToUnblock,
