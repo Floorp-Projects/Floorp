@@ -580,20 +580,22 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
-	nsresult rv = NS_OK;
-	//If we don't currently have a database, get it.  Otherwise, the folder has been updated (presumably this
-	//changes when we download headers when opening inbox).  If it's updated, send NotifyFolderLoaded.
-	if(!mDatabase)
-      rv = GetDatabase(aWindow); // this will cause a reparse, if needed.
-	else
-    {
-      NotifyFolderEvent(mFolderLoadedAtom);
-      rv = AutoCompact(aWindow);
-      NS_ENSURE_SUCCESS(rv,rv);
-    }
-     
-    return rv;
-}NS_IMETHODIMP
+  nsresult rv = NS_OK;
+  //If we don't currently have a database, get it.  Otherwise, the folder has been updated (presumably this
+  //changes when we download headers when opening inbox).  If it's updated, send NotifyFolderLoaded.
+  if(!mDatabase)
+    rv = GetDatabase(aWindow); // this will cause a reparse, if needed.
+  else
+  {
+    NotifyFolderEvent(mFolderLoadedAtom);
+    rv = AutoCompact(aWindow);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
 	nsresult rv = GetDatabase(aMsgWindow);
@@ -2014,6 +2016,8 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
     nsCOMPtr<nsIMsgDatabase> msgDb;
     mCopyState->m_parseMsgState = do_QueryInterface(parseMsgState, &rv);
     rv = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
+    if (NS_FAILED(rv))
+      goto done;
     if (msgDb)
       parseMsgState->SetMailDB(msgDb);
   }
@@ -2067,26 +2071,26 @@ nsresult nsMsgLocalMailFolder::DeleteMessage(nsISupports *message,
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener)
 {
-    nsresult rv = NS_OK;
-
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = GetServer(getter_AddRefs(server)); 
-    if (NS_FAILED(rv)) return rv;
-    if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
-
-    nsCOMPtr<nsILocalMailIncomingServer> localMailServer = do_QueryInterface(server, &rv);
-    if (NS_FAILED(rv)) return rv;
-    if (!localMailServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
-
-	//GGGGGGG
-	nsCOMPtr<nsIMsgFolder> inbox;
-	nsCOMPtr<nsIMsgFolder> rootFolder;
-	rv = GetRootFolder(getter_AddRefs(rootFolder));
-	if(NS_SUCCEEDED(rv) && rootFolder)
-	{
-		PRUint32 numFolders;
-		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
-	}
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = GetServer(getter_AddRefs(server)); 
+  if (NS_FAILED(rv)) return rv;
+  if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
+  
+  nsCOMPtr<nsILocalMailIncomingServer> localMailServer = do_QueryInterface(server, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!localMailServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
+  
+  //GGGGGGG
+  nsCOMPtr<nsIMsgFolder> inbox;
+  nsCOMPtr<nsIMsgFolder> rootFolder;
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if(NS_SUCCEEDED(rv) && rootFolder)
+  {
+    PRUint32 numFolders;
+    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
+  }
   PRBool parsingInbox;
   nsCOMPtr<nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
   if (NS_SUCCEEDED(rv) && localInbox)
