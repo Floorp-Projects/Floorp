@@ -45,6 +45,7 @@ BASE_DSO_FLAGS = -lgmbasemotif
 endif
 
 EXTRA_DSO_LDOPTS = \
+	$(LD_ALL) \
 	-L$(DIST)/lib	\
 	-lraptorhtmldoc_s	\
 	-lnglhtmlcon_s		\
@@ -54,6 +55,7 @@ EXTRA_DSO_LDOPTS = \
 	-lraptorhtmltable_s	\
 	-lraptorlayout_s        \
 	-lraptorevents_s	\
+	$(LD_NONE) \
 	-L$(DIST)/bin		\
 	-lraptorhtmlpars	\
 	-lraptorgfx	\
