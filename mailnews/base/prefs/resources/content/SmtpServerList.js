@@ -138,7 +138,7 @@ function refreshServerList()
     for (var i=0; i< oldSelectedIds.length; i++) {
         var element = document.getElementById(oldSelectedIds[i]);
         if (element)
-            element.setAttribute("selected", "true");
+            serverList.selectItem(element);
     }
 }
 

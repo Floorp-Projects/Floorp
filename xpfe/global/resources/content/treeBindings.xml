@@ -280,15 +280,49 @@
   <binding id="treerows">
     <content flex="1"/>
     <handlers>
-      <handler type="click" shift="false" control="false" 
-               value="if (event.target.localName == 'treecell') 
-                        parentNode.selectItem(event.target.parentNode.parentNode);"/>
-      <handler type="click" shift="false" control="true"
-               value="if (event.target.localName == 'treecell') 
-                        parentNode.toggleItemSelection(event.target.parentNode.parentNode);"/>
-      <handler type="click" shift="true" control="false"
-               value="if (event.target.localName == 'treecell') 
-                        parentNode.selectItemRange(null, event.target.parentNode.parentNode);"/>
+      <!-- If there is no modifier key, we select on mousedown, not
+           click, so that drags work correctly. -->
+      <handler type="mousedown" shift="false" control="false">
+      <![CDATA[
+         if (event.target.localName == 'treecell') {
+           var isSelected = event.target.parentNode.parentNode.getAttribute("selected");
+           if (!isSelected) {
+             parentNode.selectItem(event.target.parentNode.parentNode);
+           }
+           parentNode.currentItem = event.target.parentNode.parentNode;
+         }
+      ]]>
+      </handler>
+
+      <!-- On a click (up+down on the same item), deselect everything
+           except this item. -->
+      <handler type="click" shift="false" control="false">
+      <![CDATA[
+         if (event.target.localName == 'treecell') {
+           parentNode.clearItemSelection();
+           parentNode.selectItem(event.target.parentNode.parentNode);
+         }
+      ]]>
+      </handler>
+
+      <handler type="click" shift="false" control="true">
+      <![CDATA[
+         if (event.target.localName == 'treecell') {
+           parentNode.toggleItemSelection(event.target.parentNode.parentNode);
+           parentNode.currentItem = event.target.parentNode.parentNode;
+         }
+      ]]>
+      </handler>
+
+      <handler type="click" shift="true" control="false">
+      <![CDATA[
+         if (event.target.localName == 'treecell') {
+           parentNode.selectItemRange(null, event.target.parentNode.parentNode);
+           parentNode.currentItem = event.target.parentNode.parentNode;
+          }
+      ]]>
+      </handler>
+
       <handler type="click" shift="false" control="false" clickcount="2">
       <![CDATA[
          if (event.target.localName == 'treecell') {

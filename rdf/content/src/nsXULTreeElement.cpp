@@ -105,6 +105,7 @@ nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
   mSelectedItems = children;
 
   mCurrentItem = nsnull;
+  mSelectionStart = nsnull;
 }
 
 nsXULTreeElement::~nsXULTreeElement()
@@ -160,6 +161,7 @@ nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
   AddItemToSelectionInternal(aTreeItem);
 
   SetCurrentItem(aTreeItem);
+  mSelectionStart = nsnull;
 
   FireOnSelectHandler();
 
@@ -170,6 +172,7 @@ NS_IMETHODIMP
 nsXULTreeElement::ClearItemSelection()
 {
   ClearItemSelectionInternal();
+  mSelectionStart = nsnull;
   FireOnSelectHandler();
   return NS_OK;
 }
@@ -262,8 +265,10 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
 
   nsCOMPtr<nsIDOMXULElement> startItem;
   if (aStartItem == nsnull) {
-    // Continue the ranged selection based off the current item.
-    startItem = mCurrentItem;
+    // Continue the ranged selection based off the first item selected
+    if (!mSelectionStart)
+      mSelectionStart = mCurrentItem;
+    startItem = mSelectionStart;
   }
   else startItem = aStartItem;
 
@@ -287,11 +292,10 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
   treebox->GetIndexOfItem(startItem, &startIndex);
   treebox->GetIndexOfItem(aEndItem, &endIndex);
 
-  PRBool didSwap = (endIndex < startIndex);
   nsCOMPtr<nsIDOMElement> currentItem;
   // If it's a backward selection, swap the starting and
   // ending items so we always iterate forward
-  if (didSwap) {
+  if (endIndex < startIndex) {
       currentItem = do_QueryInterface(aEndItem);
       aEndItem = startItem;
       startItem = do_QueryInterface(currentItem);
@@ -315,11 +319,6 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
       currentItem = nextItem;
   }
 
-  // We want the focused item to end up being the last one the user clicked
-  if (didSwap)
-      SetCurrentItem(startItem);
-  else
-      SetCurrentItem(aEndItem);
   FireOnSelectHandler();
 
   return NS_OK;
@@ -328,8 +327,6 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
 NS_IMETHODIMP
 nsXULTreeElement::SelectAll()
 {
-  nsIDOMXULElement* oldItem = mCurrentItem;
-
   PRInt32 childCount;
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
   content->ChildCount(childCount);
@@ -360,9 +357,6 @@ nsXULTreeElement::SelectAll()
 
   // Select the whole range.
   SelectItemRange(startContent, endContent);
-
-  // We shouldn't move the active item.
-  mCurrentItem = oldItem;
 
   return NS_OK;
 }

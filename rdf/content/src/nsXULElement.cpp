@@ -2989,12 +2989,6 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
                 nsCOMPtr<nsIDOMNodeList> nodes;
                 treeElement->GetSelectedItems(getter_AddRefs(nodes));
                 nodeList = do_QueryInterface(nodes);
-                nsCOMPtr<nsIDOMXULElement> current;
-                treeElement->GetCurrentItem(getter_AddRefs(current));
-                nsCOMPtr<nsIContent> currentContent(do_QueryInterface(current));
-                nsIContent* us = NS_STATIC_CAST(nsIStyledContent*, this);
-                if (currentContent.get() == us)
-                  treeElement->SetCurrentItem(nsnull);
             }
         }
         

@@ -584,7 +584,7 @@ function selectItems(treeRoot, containerID, targetID)
 
 		if (id == containerID)
 		{
-			node.setAttribute("selected", "true");
+			treeRoot.selectItem(node);
 			break;
 		}
 	}
