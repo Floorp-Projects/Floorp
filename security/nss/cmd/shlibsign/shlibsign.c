@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.2 2003/02/04 23:18:07 relyea%netscape.com Exp $
+ * $Id: shlibsign.c,v 1.3 2003/02/04 23:39:15 relyea%netscape.com Exp $
  */
 
 #ifdef XP_UNIX
@@ -58,6 +58,10 @@
 #include "unistd.h"
 #include "sys/types.h"
 #include "sys/stat.h"
+
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024
+#endif
 #endif
 
 static void
