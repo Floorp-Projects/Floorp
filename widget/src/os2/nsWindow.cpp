@@ -1911,6 +1911,42 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             result = OnKey( mp1, mp2);
             break;
 
+        case WM_QUERYCONVERTPOS:
+          {
+            PRECTL pCursorRect = (PRECTL)mp1;
+            nsCompositionEvent event;
+            nsPoint point;
+            point.x = 0;
+            point.y = 0;
+            InitEvent(event,NS_COMPOSITION_START,&point);
+            event.eventStructType = NS_COMPOSITION_START;
+            event.compositionMessage = NS_COMPOSITION_START;
+            DispatchWindowEvent(&event);
+            NS_RELEASE(event.widget);
+            if(event.theReply.mCursorPosition.height)
+            {
+              pCursorRect->xLeft = event.theReply.mCursorPosition.x + 1;
+              pCursorRect->xRight = pCursorRect->xLeft + event.theReply.mCursorPosition.width - 1;
+              pCursorRect->yTop = GetClientHeight() - event.theReply.mCursorPosition.y;
+              pCursorRect->yBottom = pCursorRect->yTop - event.theReply.mCursorPosition.height + 1;
+
+              point.x = 0;
+              point.y = 0;
+              InitEvent(event,NS_COMPOSITION_END,&point);
+              event.eventStructType = NS_COMPOSITION_END;
+              event.compositionMessage = NS_COMPOSITION_END;
+              DispatchWindowEvent(&event);
+              NS_RELEASE(event.widget);
+
+              rc = (MRESULT)QCP_CONVERT;
+            }
+            else
+              rc = (MRESULT)QCP_NOCONVERT;
+
+            result = PR_TRUE;
+            break;
+          }
+
         // Mouseclicks: we don't dispatch CLICK events because they just cause
         // trouble: gecko seems to expect EITHER buttondown/up OR click events
         // and so that's what we give it.
