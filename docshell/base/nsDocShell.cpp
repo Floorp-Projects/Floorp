@@ -3007,11 +3007,15 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
   {
     nsXPIDLCString urlScheme;
     aURI->GetScheme(getter_Copies(urlScheme));
-    nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_PROGID));
-    PRBool haveHandler = PR_FALSE;
-    extProtService->ExternalProtocolHandlerExists(urlScheme, &haveHandler);
-    if (haveHandler)
-      return extProtService->LoadUrl(aURI);
+    // don't do it for javascript urls!
+    if (urlScheme && nsCRT::strcasecmp("javascript", urlScheme))
+    {
+      nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_PROGID));
+      PRBool haveHandler = PR_FALSE;
+      extProtService->ExternalProtocolHandlerExists(urlScheme, &haveHandler);
+      if (haveHandler)
+        return extProtService->LoadUrl(aURI);
+    }
   }
    nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
    NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
