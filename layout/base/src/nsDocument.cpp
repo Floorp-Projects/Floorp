@@ -845,6 +845,7 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
                                     nsEventStatus& aEventStatus)
 {
   nsresult mRet = NS_OK;
+  nsIDOMEvent* mDOMEvent = nsnull;
 
   if (DOM_EVENT_INIT == aFlags) {
     nsIEventStateManager *mManager;
@@ -853,7 +854,6 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
       NS_RELEASE(mManager);
     }
  
-    nsIDOMEvent* mDOMEvent = nsnull;
     aDOMEvent = &mDOMEvent;
   }
   
@@ -888,6 +888,7 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
         }
       }
     }
+    aDOMEvent = nsnull;
   }
 
   return mRet;
