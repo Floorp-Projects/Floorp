@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.62 2004/01/28 23:23:43 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.63 2004/02/07 01:41:15 wchang0222%aol.com Exp $
  */
 
 #include "nssilock.h"
@@ -659,7 +659,9 @@ cert_GetCertType(CERTCertificate *cert)
 	PORT_Free(encodedExtKeyUsage.data);
 	CERT_DestroyOidSequence(extKeyUsage);
     }
-    PR_AtomicSet(&cert->nsCertType, nsCertType);
+    /* Assert that it is safe to cast &cert->nsCertType to "PRInt32 *" */
+    PORT_Assert(sizeof(cert->nsCertType) == sizeof(PRInt32));
+    PR_AtomicSet((PRInt32 *)&cert->nsCertType, nsCertType);
     return(SECSuccess);
 }
 
