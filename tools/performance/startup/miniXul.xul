@@ -1,0 +1,18 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+
+<!DOCTYPE window>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onload()">
+    <script type="application/x-javascript">
+        <![CDATA[
+            function onload {
+                var n = window.arguments[0] - 1;
+                if ( n ) {
+                    // We need to open more windows.
+                    window.opener.openWindows(n);
+                }
+            }
+        ]]>
+    </script>
+</window>
