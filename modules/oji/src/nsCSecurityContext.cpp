@@ -108,7 +108,7 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
     nsresult rv      = NS_OK;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
-    if (NS_FAILED(rv) || !secMan) return FALSE;
+    if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
 
     if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
@@ -127,7 +127,7 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
             if( origin ) {
                 nsCRT::free(origin);
             }
-            return FALSE;
+            return PR_FALSE;
         }
 
         // Copy the string into to user supplied buffer. Is there a better
@@ -154,7 +154,7 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
     nsresult rv      = NS_OK;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
-    if (NS_FAILED(rv) || !secMan) return FALSE;
+    if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
 
     secMan->GetSubjectPrincipal(getter_AddRefs(principal));
@@ -169,7 +169,7 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
         PRInt32 certlen = (PRInt32) nsCRT::strlen(certificate);
         if( buflen<=certlen ) {
             nsCRT::free(certificate);
-            return FALSE;
+            return PR_FALSE;
         }
         nsCRT::memcpy(buf,certificate,certlen);
         buf[certlen]=nsnull;
@@ -187,8 +187,8 @@ extern PRUintn tlsIndex3_g;
 nsCSecurityContext::nsCSecurityContext(JSContext* cx)
                    : m_pJStoJavaFrame(NULL), m_pJSCX(NULL),
                      m_pPrincipal(NULL),
-                     m_HasUniversalBrowserReadCapability(FALSE),
-                     m_HasUniversalJavaCapability(FALSE)
+                     m_HasUniversalBrowserReadCapability(PR_FALSE),
+                     m_HasUniversalJavaCapability(PR_FALSE)
 {
     NS_INIT_REFCNT();
 
