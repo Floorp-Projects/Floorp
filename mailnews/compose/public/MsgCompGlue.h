@@ -119,8 +119,8 @@ class ParseOutgoingMessage
 public:
 	ParseOutgoingMessage() {return;}
 	virtual ~ParseOutgoingMessage() {return;}
-	void			SetOutFile(XP_File out_file) {m_out_file = out_file;}
-	XP_File			GetOutFile() {return m_out_file;}
+	void			SetOutFile(PRFileDesc *out_file) {m_out_file = out_file;}
+	PRFileDesc		*GetOutFile() {return m_out_file;}
 	void			SetWriteMozillaStatus(XP_Bool writeMozStatus) 
 						{m_writeMozillaStatus = writeMozStatus;}
 	virtual int		StartNewEnvelope(const char *line, uint32 lineLength) {return 0;}
@@ -143,7 +143,7 @@ protected:
 	XP_Bool			m_writeMozillaStatus;
 	XP_Bool			m_writeToOutFile;
 	XP_Bool			m_lastBodyLineEmpty;
-	XP_File			m_out_file;
+	PRFileDesc  *m_out_file;
 	uint32			m_ouputBufferSize;
 	char			*m_outputBuffer;
 	uint32			m_outputBufferIndex;
