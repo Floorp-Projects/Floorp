@@ -1108,14 +1108,15 @@ Usage(char *progName)
 	"\t\t [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -K [-n key-name] [-h token-name] [-k dsa|rsa|all]\n", 
 	progName);
-    FPS "\t\t [-f pwfile] [-d certdir] [-P dbprefix]\n");
-    FPS "\t%s -L [-n cert-name] [-d certdir] [-P dbprefix] [-r] [-a]\n", progName);
+    FPS "\t\t [-f pwfile] [-X] [-d certdir] [-P dbprefix]\n");
+    FPS "\t%s -L [-n cert-name] [-X] [-d certdir] [-P dbprefix] [-r] [-a]\n", progName);
     FPS "\t%s -M -n cert-name -t trustargs [-d certdir] [-P dbprefix]\n",
 	progName);
     FPS "\t%s -R -s subj -o cert-request-file [-d certdir] [-P dbprefix] [-p phone] [-a]\n"
 	"\t\t [-k key-type] [-h token-name] [-f pwfile] [-g key-size]\n",
 	progName);
-    FPS "\t%s -V -n cert-name -u usage [-b time] [-e] [-d certdir] [-P dbprefix]\n",
+    FPS "\t%s -V -n cert-name -u usage [-b time] [-e] \n",
+	"\t\t[-X] [-d certdir] [-P dbprefix]\n",
 	progName);
     FPS "\t%s -S -n cert-name -s subj [-c issuer-name | -x]  -t trustargs\n"
 	"\t\t [-k key-type] [-h token-name] [-g key-size]\n"
@@ -1123,7 +1124,7 @@ Usage(char *progName)
 	"\t\t [-f pwfile] [-d certdir] [-P dbprefix]\n"
         "\t\t [-p phone] [-1] [-2] [-3] [-4] [-5] [-6]\n",
 	progName);
-    FPS "\t%s -U [-d certdir] [-P dbprefix]\n", progName);
+    FPS "\t%s -U [-X] [-d certdir] [-P dbprefix]\n", progName);
     exit(1);
 }
 
@@ -1234,6 +1235,9 @@ static void LongUsage(char *progName)
         "   -d moddir");
     FPS "%-20s Cert & Key database prefix\n",
 	"   -P dbprefix");
+    FPS "%-20s force the database to open R/W\n",
+	"   -X");
+    FPS "\n");
 
     FPS "%-15s List all keys\n", /*, or print out a single named key\n",*/
         "-K");
@@ -1248,6 +1252,8 @@ static void LongUsage(char *progName)
 	"   -d keydir");
     FPS "%-20s Cert & Key database prefix\n",
 	"   -P dbprefix");
+    FPS "%-20s force the database to open R/W\n",
+	"   -X");
     FPS "\n");
 
     FPS "%-15s List all certs, or print out a single named cert\n",
@@ -1258,6 +1264,8 @@ static void LongUsage(char *progName)
 	"   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
 	"   -P dbprefix");
+    FPS "%-20s force the database to open R/W\n",
+	"   -X");
     FPS "%-20s For single cert, print binary DER encoding\n",
 	"   -r");
     FPS "%-20s For single cert, print ASCII encoding (RFC1113)\n",
@@ -1334,6 +1342,8 @@ static void LongUsage(char *progName)
 	"   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
 	"   -P dbprefix");
+    FPS "%-20s force the database to open R/W\n",
+	"   -X");
     FPS "\n");
 
     FPS "%-15s Make a certificate and add to database\n",
@@ -2211,6 +2221,7 @@ enum {
     opt_Validity,
     opt_OffsetMonths,
     opt_SelfSign,
+    opt_RW,
     opt_Exponent,
     opt_NoiseFile
 };
@@ -2272,6 +2283,7 @@ static secuCommandFlag certutil_options[] =
 	{ /* opt_Validity            */  'v', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_OffsetMonths        */  'w', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_SelfSign            */  'x', PR_FALSE, 0, PR_FALSE },
+	{ /* opt_RW                  */  'X', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_Exponent            */  'y', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_NoiseFile           */  'z', PR_TRUE,  0, PR_FALSE }
 };
@@ -2300,6 +2312,7 @@ main(int argc, char **argv)
     int         commandsEntered = 0;
     char        commandToRun    = '\0';
     secuPWData  pwdata          = { PW_NONE, 0 };
+    PRBool 	readOnly	= PR_FALSE;
 
     SECKEYPrivateKey *privkey;
     SECKEYPublicKey *pubkey = NULL;
@@ -2448,6 +2461,15 @@ main(int argc, char **argv)
     if (commandsEntered == 0) {
 	PR_fprintf(PR_STDERR, "%s: you must enter a command!\n", progName);
 	Usage(progName);
+    }
+
+    if (certutil.commands[cmd_ListCerts].activated ||
+         certutil.commands[cmd_PrintHelp].activated ||
+         certutil.commands[cmd_ListKeys].activated ||
+         certutil.commands[cmd_ListModules].activated ||
+         certutil.commands[cmd_CheckCertValidity].activated ||
+         certutil.commands[cmd_Version].activated ) {
+	readOnly = !certutil.options[opt_RW].activated;
     }
 
     /*  -A, -D, -F, -M, -S, -V, and all require -n  */
@@ -2608,7 +2630,7 @@ main(int argc, char **argv)
     /*  Initialize NSPR and NSS.  */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
     rv = NSS_Initialize(SECU_ConfigDirectory(NULL), certPrefix, certPrefix,
-                        "secmod.db", 0);
+                        "secmod.db", readOnly ? NSS_INIT_READONLY: 0);
     if (rv != SECSuccess) {
 	SECU_PrintPRandOSError(progName);
 	rv = SECFailure;
