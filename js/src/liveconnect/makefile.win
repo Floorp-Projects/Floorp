@@ -1,0 +1,203 @@
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+IGNORE_MANIFEST=1
+
+#//------------------------------------------------------------------------
+#//
+#// Makefile to build the Java reflections of JavaScript objects
+#//
+#//------------------------------------------------------------------------
+
+
+#//------------------------------------------------------------------------
+#//
+#// Specify the depth of the current directory relative to the
+#// root of NS
+#//
+#//------------------------------------------------------------------------
+DEPTH= ..\..\..
+
+include <$(DEPTH)/config/config.mak>
+
+!ifdef JAVA_OR_OJI
+!ifdef REGENERATE
+DIRS = classes
+!endif
+!endif
+
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
+#//
+#//------------------------------------------------------------------------
+DLLNAME=jsj$(MOZ_BITS)$(VERSION_NUMBER)
+PDBFILE=$(DLLNAME).pdb
+MAPFILE		= $(DLLNAME).map
+RESFILE		= jsj1640.res
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MAKE_OBJ_TYPE	= DLL
+
+!if "$(MOZ_BITS)" == "16"
+DEFFILE		= $(DLLNAME).def
+!endif
+
+!ifdef JAVA_OR_NSJVM
+LLIBS=$(LIBNSPR) $(DIST)\lib\jrt$(MOZ_BITS)$(VERSION_NUMBER).lib \
+	$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib
+!else
+LLIBS=$(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib
+!endif
+
+#//------------------------------------------------------------------------
+#// 
+#// Define the files necessary to build the target (ie. OBJS)
+#//
+#//------------------------------------------------------------------------
+!ifdef MOZ_OJI
+OBJS=                                       \
+    .\$(OBJDIR)\jsj.obj                     \
+    .\$(OBJDIR)\jsj_JSObject.obj            \
+    .\$(OBJDIR)\jsj_JavaArray.obj           \
+    .\$(OBJDIR)\jsj_JavaClass.obj           \
+    .\$(OBJDIR)\jsj_JavaObject.obj          \
+    .\$(OBJDIR)\jsj_JavaPackage.obj         \
+    .\$(OBJDIR)\jsj_array.obj               \
+    .\$(OBJDIR)\jsj_class.obj               \
+    .\$(OBJDIR)\jsj_convert.obj             \
+    .\$(OBJDIR)\jsj_field.obj               \
+    .\$(OBJDIR)\jsj_hash.obj                \
+    .\$(OBJDIR)\jsj_method.obj              \
+    .\$(OBJDIR)\jsj_utils.obj               \
+!if "$(MOZ_BITS)" == "16"
+    .\$(OBJDIR)\jsj_nodl.obj                \
+!endif
+    $(NULL)
+!endif # MOZ_OJI
+#
+
+#//------------------------------------------------------------------------
+#//
+#// install headers
+#//
+#//------------------------------------------------------------------------
+INSTALL_DIR=$(PUBLIC)\js
+INSTALL_FILE_LIST=	\
+	jsjava.h
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
+#// (these must be defined before the common makefiles are included)
+#//		  
+#//------------------------------------------------------------------------
+
+!ifdef REGENERATE
+
+JNI_GEN=                            \
+        netscape.javascript.JSObject            \
+        netscape.javascript.JSException         \
+	$(NULL)
+
+!endif
+
+!ifdef JAVA_OR_OJI
+MODULE = java
+EXPORTS =				       \
+	$(JNI_GEN_DIR)/netscape_javascript_JSObject.h    \
+	$(JNI_GEN_DIR)/netscape_javascript_JSException.h \
+	$(NULL)
+!endif
+
+
+#//------------------------------------------------------------------------
+#//
+#// Define any local options for the make tools 
+#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
+#//
+#//------------------------------------------------------------------------
+
+LINCS=$(LINCS) -I_jni \
+               -I$(PUBLIC)\js \
+               -I$(PUBLIC)\java \
+	$(NULL)
+
+#!ifdef SERVER_BUILD
+#LLIBS=$(DIST)/lib/httpdlw.lib $(DIST)/lib/libsjboot.lib
+#!endif
+
+#//------------------------------------------------------------------------
+#//
+#// Include the common makefile rules
+#//
+#//------------------------------------------------------------------------
+include <$(DEPTH)/config/rules.mak>
+
+export::  INSTALL_FILES
+
+!ifndef REGENERATE
+
+export:: jsj10.jar
+        $(MAKE_INSTALL) jsj10.jar $(JAVA_DESTPATH)
+	cd $(JAVA_DESTPATH)
+	unzip -o jsj10.jar
+	cd ..\..\js\src\liveconnect
+
+!endif
+
+!ifdef JAVA_OR_OJI
+libs::  $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+!endif
+
+!ifdef REGENERATE
+
+clobber::
+    $(RM_R) _jni 
+
+!endif
+
+####
+# this bit of extreme scariness came from the js/src makefile
+#  reproduced here since that's where jsjava.c lives now...
+
+!if ("$(MOZ_BITS)" == "16") 
+#//
+#// Win16 Hoovers SO BAD!!!   
+#//
+
+!if !defined(MOZ_DEBUG)
+#//
+#// We must turn off codeview debug info so jni.c can build.  
+#// Otherwise the linker gives errors about data in the $SYMBOLS 
+#// segment being beyond a segment boundary.
+#//
+$(OBJDIR)\jsjava.obj: jsjava.c
+    @$(CC) @<<$(CFGFILE)
+        -c 
+        -Od 
+        $(CFLAGS)
+        $(LCFLAGS)
+        $(LINCS) 
+        $(LINCS_1) 
+        $(INCS)
+        -Fd$(PDBFILE)
+        -Fo.\$(OBJDIR)\
+        $(*B).c
+<<KEEP
+!endif
+!endif
