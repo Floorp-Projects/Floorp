@@ -198,6 +198,8 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
       PL_strncpy(fmtD, "", NSDATETIME_FORMAT_BUFFER_LEN);
       break; 
     case kDateFormatLong:
+      PL_strncpy(fmtD, "%c", NSDATETIME_FORMAT_BUFFER_LEN);
+      break; 
     case kDateFormatShort:
       PL_strncpy(fmtD, "%x", NSDATETIME_FORMAT_BUFFER_LEN);
       break; 
