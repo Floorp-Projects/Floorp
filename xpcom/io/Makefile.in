@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsInputStreamTee.cpp \
 		nsLinebreakConverter.cpp \
 		nsLocalFileCommon.cpp \
+		nsLocalFileUnicode.cpp \
 		nsPipe2.cpp \
 		nsScriptableInputStream.cpp \
 		nsSegmentedBuffer.cpp \

@@ -36,19 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIServiceManager.h"
 #ifndef XPCOM_STANDALONE
-#include "nsIPlatformCharset.h"
-#include "nsICharsetConverterManager.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsIURLParser.h"
 #include "nsNetCID.h"
 #endif /* XPCOM_STANDALONE */
 
-#include "nsFileSpec.h"  // evil ftang hack
 
 #include "nsLocalFile.h" // includes platform-specific headers
+#include "nsLocalFileUnicode.h"
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -59,222 +53,6 @@ static NS_DEFINE_CID(kURLParserCID, NS_NOAUTHURLPARSER_CID);
 #endif
 
 
-class nsFSStringConversion {
-public:
-     static void CleanUp();
-     static nsresult UCSToNewFS( const PRUnichar* aIn, char** aOut);  
-     static nsresult FSToNewUCS( const char* aIn, PRUnichar** aOut);  
-
-private:
-     static nsresult PrepareFSCharset();
-     static nsresult PrepareEncoder();
-     static nsresult PrepareDecoder();
-     static nsString* mFSCharset;
-#ifndef XPCOM_STANDALONE
-     static nsIUnicodeEncoder* mEncoder;
-     static nsIUnicodeDecoder* mDecoder;
-#endif /* XPCOM_STANDALONE */
-};
-
-nsString* nsFSStringConversion::mFSCharset = nsnull;
-#ifndef XPCOM_STANDALONE
-nsIUnicodeEncoder* nsFSStringConversion::mEncoder = nsnull;
-nsIUnicodeDecoder* nsFSStringConversion::mDecoder = nsnull;
-#endif /* XPCOM_STANDALONE */
-
-#define GET_UCS( func , arg)                                    \
-{                                                               \
-   char* tmp;                                                   \
-   nsresult res;                                                \
-   if(NS_SUCCEEDED(res = (func)(&tmp))) {                       \
-     if(NS_SUCCEEDED(res = nsFSStringConversion::FSToNewUCS(tmp, (arg)))){ \
-       nsMemory::Free(tmp);                                     \
-     }                                                          \
-   }                                                            \
-   return res;                                                  \
-}
-#define VOID_SET_UCS( func , arg, assertion_msg)                \
- {                                                              \
-   char* tmp;                                                   \
-   nsresult res;                                                \
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((arg), &tmp))) { \
-     (func)(tmp);                                               \
-     nsMemory::Free(tmp);                                       \
-   }                                                            \
-   NS_ASSERTION(NS_SUCCEEDED(res), assertion_msg);              \
-}
-#define SET_UCS( func , arg)                                    \
- {                                                              \
-   char* tmp;                                                   \
-   nsresult res;                                                \
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((arg), &tmp))) { \
-     res = (func)(tmp);                                         \
-     nsMemory::Free(tmp);                                       \
-   }                                                            \
-   return res;                                                  \
-}
-#define SET_UCS_2ARGS_2( func , arg1, arg2)                     \
- {                                                              \
-   char* tmp;                                                   \
-   nsresult res;                                                \
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((arg2), &tmp))){ \
-     res = (func)(arg1, tmp);                                   \
-     nsMemory::Free(tmp);                                       \
-   }                                                            \
-   return res;                                                  \
-}
-#define SET_UCS_2ARGS_1( func , path, followLinks, result)      \
- {                                                              \
-   char* tmp;                                                   \
-   nsresult res;                                                \
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((path), &tmp))){ \
-     res = (func)(tmp, followLinks, result);                    \
-     nsMemory::Free(tmp);                                       \
-   }                                                            \
-   return res;                                                  \
-}
-
-void
-nsFSStringConversion::CleanUp()
-{
-#ifndef XPCOM_STANDALONE
-  NS_IF_RELEASE(mEncoder);
-  NS_IF_RELEASE(mDecoder);
-#endif /* XPCOM_STANDALONE */
-}
-
-/* static */ nsresult
-nsFSStringConversion::PrepareFSCharset()
-{
-   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
-#ifndef XPCOM_STANDALONE
-   res = NS_OK;
-   if(!mFSCharset)
-   { 
-     // lazy eval of the file system charset
-     nsCOMPtr<nsIPlatformCharset> pcharset = 
-              do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
-     if (NS_SUCCEEDED(res) && !pcharset) res = NS_ERROR_NULL_POINTER;
-     if (NS_SUCCEEDED(res)) {
-        mFSCharset = new nsString();
-        if (!mFSCharset)
-          res = NS_ERROR_OUT_OF_MEMORY;
-     }
-     if(NS_SUCCEEDED(res)) {
-        res = pcharset->GetCharset(kPlatformCharsetSel_FileName, *mFSCharset);
-     } 
-     if (NS_FAILED(res)) {
-       NS_WARNING("cannot get platform charset");
-     }
-   }
-#endif /* XPCOM_STANDALONE */
-   return res;
-}
-/* static */ nsresult
-nsFSStringConversion::PrepareEncoder()
-{
-   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
-#ifndef XPCOM_STANDALONE
-   res = NS_OK;
-   if(! mEncoder)
-   {
-       res = PrepareFSCharset();
-       if(NS_SUCCEEDED(res)) {
-           nsCOMPtr<nsICharsetConverterManager> ucmgr = 
-                    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-           NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
-                   "cannot get charset converter manager ");
-           if(NS_SUCCEEDED(res) && ucmgr) 
-               res = ucmgr->GetUnicodeEncoder( mFSCharset, &mEncoder);
-           NS_ASSERTION((NS_SUCCEEDED(res) && mEncoder), 
-                   "cannot find the unicode encoder");
-       }
-   }
-#endif /* XPCOM_STANDALONE */
-   return res;
-}
-/* static */ nsresult
-nsFSStringConversion::PrepareDecoder()
-{
-   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
-#ifndef XPCOM_STANDALONE
-   res = NS_OK;
-   if(! mDecoder)
-   {
-       res = PrepareFSCharset();
-       if(NS_SUCCEEDED(res)) {
-           nsCOMPtr<nsICharsetConverterManager> ucmgr = 
-                    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-           NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
-                   "cannot get charset converter manager ");
-           if(NS_SUCCEEDED(res) && ucmgr) 
-               res = ucmgr->GetUnicodeDecoder( mFSCharset, &mDecoder);
-           NS_ASSERTION((NS_SUCCEEDED(res) && mDecoder), 
-                   "cannot find the unicode decoder");
-       }
-   }
-#endif /* XPCOM_STANDALONE */
-   return res;
-}
-/* static */ nsresult
-nsFSStringConversion::UCSToNewFS( const PRUnichar* aIn, char** aOut)
-{
-   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
-#ifndef XPCOM_STANDALONE
-   res = PrepareEncoder();
-   if(NS_SUCCEEDED(res)) 
-   {
-        PRInt32 inLength = nsCRT::strlen(aIn);
-        PRInt32 outLength;
-        res= mEncoder->GetMaxLength(aIn, inLength,&outLength);
-        if(NS_SUCCEEDED(res)) {
-           *aOut = (char*)nsMemory::Alloc(outLength+1);
-           if(nsnull != *aOut) {
-              res = mEncoder->Convert(aIn, &inLength, *aOut,  &outLength);
-              if(NS_SUCCEEDED(res)) {
-                 (*aOut)[outLength] = '\0';
-              } else {
-                 nsMemory::Free(*aOut);
-                 *aOut = nsnull;
-              }
-           } else {
-              res = NS_ERROR_OUT_OF_MEMORY;
-           }
-        }
-   }
-#endif /* XPCOM_STANDALONE */
-   return res;
-}
-/* static */ nsresult
-nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
-{
-   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
-#ifndef XPCOM_STANDALONE
-   res = PrepareDecoder();
-   if(NS_SUCCEEDED(res)) 
-   {
-        PRInt32 inLength = nsCRT::strlen(aIn);
-        PRInt32 outLength;
-        res= mDecoder->GetMaxLength(aIn, inLength,&outLength);
-        if(NS_SUCCEEDED(res)) {
-           *aOut = (PRUnichar*)nsMemory::Alloc(2*(outLength+1));
-           if(nsnull != *aOut) {
-              res = mDecoder->Convert(aIn, &inLength, *aOut,  &outLength);
-              if(NS_SUCCEEDED(res)) {
-                 (*aOut)[outLength] = '\0';
-              } else {
-                 nsMemory::Free(*aOut);
-                 *aOut = nsnull;
-              }
-           } else {
-              res = NS_ERROR_OUT_OF_MEMORY;
-           }
-        }
-   }
-#endif /* XPCOM_STANDALONE */
-   return res;
-}
-
 void NS_StartupLocalFile()
 {
 #ifdef XP_WIN
@@ -284,75 +62,15 @@ void NS_StartupLocalFile()
 
 void NS_ShutdownLocalFile()
 {
-#ifndef XPCOM_STANDALONE
-  nsFSStringConversion::CleanUp();
-#endif /* XPCOM_STANDALONE */
-
+  NS_ShutdownLocalFileUnicode();
+  
 #ifdef XP_WIN
   CoUninitialize();
 #endif
-
 }
 
-// Unicode interface Wrapper
-NS_IMETHODIMP  
-nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
-{
-   SET_UCS(InitWithPath, filePath);
-}
-NS_IMETHODIMP  
-nsLocalFile::AppendUnicode(const PRUnichar *node)
-{
-   SET_UCS( Append , node);
-}
-NS_IMETHODIMP  
-nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
-{
-   SET_UCS( AppendRelativePath , node);
-}
-NS_IMETHODIMP  
-nsLocalFile::GetUnicodeLeafName(PRUnichar **aLeafName)
-{
-   GET_UCS(GetLeafName, aLeafName);
-}
-NS_IMETHODIMP  
-nsLocalFile::SetUnicodeLeafName(const PRUnichar * aLeafName)
-{
-   SET_UCS( SetLeafName , aLeafName);
-}
-NS_IMETHODIMP  
-nsLocalFile::GetUnicodePath(PRUnichar **_retval)
-{
-   GET_UCS(GetPath, _retval);
-}
-NS_IMETHODIMP  
-nsLocalFile::CopyToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
-{
-   SET_UCS_2ARGS_2( CopyTo , newParentDir, newName);
-}
-NS_IMETHODIMP  
-nsLocalFile::CopyToFollowingLinksUnicode(nsIFile *newParentDir, const PRUnichar *newName)
-{
-   SET_UCS_2ARGS_2( CopyToFollowingLinks , newParentDir, newName);
-}
-NS_IMETHODIMP  
-nsLocalFile::MoveToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
-{
-   SET_UCS_2ARGS_2( MoveTo , newParentDir, newName);
-}
-NS_IMETHODIMP
-nsLocalFile::GetUnicodeTarget(PRUnichar **_retval)
-{   
-   GET_UCS(GetTarget, _retval);
-}
-nsresult 
-NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result)
-{
-   SET_UCS_2ARGS_1( NS_NewLocalFile, path, followLinks, result)
-}
 // should work on Macintosh, Unix, and Win32.
 #define kMaxFilenameLength 31  
-
 
 NS_IMETHODIMP
 nsLocalFile::CreateUnique(const char* suggestedName, PRUint32 type, PRUint32 attributes)
@@ -460,68 +178,4 @@ nsresult nsLocalFile::ParseURL(const char* inURL, char **outHost, char **outDire
 #endif /* XPCOM_STANDALONE */
 
     return NS_OK;
-}
- 
-
-// E_V_I_L Below! E_V_I_L Below! E_V_I_L Below! E_V_I_L Below!
-
-
-// FTANG need to move this crap out of here.  Mixing nsFileSpec here is
-// E_V_I_L
-
-// ==================================================================
-//  nsFileSpec stuff . put here untill nsFileSpec get obsoleted     
-// ==================================================================
-
-void nsFileSpec::operator = (const nsString& inNativePath)
-{
-   char* tmp;                                                   
-   nsresult res;                                                
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inNativePath.get()), &tmp))) { 
-     *this = tmp;
-     nsMemory::Free(tmp);                                    
-   }                                                            
-   mError = res;
-   NS_ASSERTION(NS_SUCCEEDED(res), "nsFileSpec = filed");
-}
-nsFileSpec nsFileSpec::operator + (const nsString& inRelativeUnixPath) const
-{
-   nsFileSpec resultSpec;
-   char* tmp;                                                   
-   nsresult res;                                                
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inRelativeUnixPath.get()), &tmp))) { 
-     resultSpec = *this;
-     resultSpec += tmp;
-     nsMemory::Free(tmp);                                    
-   }                                                            
-   NS_ASSERTION(NS_SUCCEEDED(res), "nsFileSpec + filed");
-   return resultSpec;
-}
-void nsFileSpec::operator += (const nsString& inRelativeUnixPath)
-{
-   char* tmp;                                                   
-   nsresult res;                                                
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inRelativeUnixPath.get()), &tmp))) { 
-     *this += tmp;
-     nsMemory::Free(tmp);                                    
-   }                                                            
-   mError = res;
-   NS_ASSERTION(NS_SUCCEEDED(res), "nsFileSpec + filed");
-}
-
-void nsFileSpec::SetLeafName (const nsString& inLeafName)
-{
-  VOID_SET_UCS( SetLeafName , inLeafName.get(),"nsFileSpec::SetLeafName failed");
-}
-void nsFileSpec::MakeUnique(const nsString& inSuggestedLeafName)
-{
-  VOID_SET_UCS( MakeUnique,inSuggestedLeafName.get(),"nsFileSpec::MakeUnique failed");
-}
-nsresult nsFileSpec::Rename(const nsString& inNewName)
-{
-  SET_UCS( Rename , inNewName.get());
-}
-nsresult nsFileSpec::Execute(const nsString& args) const
-{
-  SET_UCS( Execute , args.get());
 }
