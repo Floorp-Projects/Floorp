@@ -42,6 +42,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS		= profile
+
+PREF_JS_EXPORTS = \
+    $(srcdir)/profile/all.js \
+    $(NULL)
+
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = phoenix$(BIN_SUFFIX)
 else
@@ -91,10 +97,11 @@ phoenix:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 
 libs:: phoenix
 	$(INSTALL) $< $(DIST)/bin
-	
+
 install:: phoenix
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
 GARBAGE += phoenix
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js)
 
 endif
