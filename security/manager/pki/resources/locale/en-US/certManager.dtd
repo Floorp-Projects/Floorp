@@ -33,7 +33,7 @@
 <!ENTITY certmgr.mine "You have certificates from these organizations that identify you:">
 <!ENTITY certmgr.others "You have certificates on file that identify these people:">
 <!ENTITY certmgr.websites "You have certificates on file that identify these web sites:">
-<!ENTITY certmgr.cas "You have certificates on file that identify these Certificate Authories:">
+<!ENTITY certmgr.cas "You have certificates on file that identify these Certificate Authorities:">
 
 <!ENTITY certmgr.detail.general_tab.title "General">
 <!ENTITY certmgr.detail.prettyprint_tab.title "Details">
