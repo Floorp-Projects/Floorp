@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   David W. Hyatt <hyatt@netscape.com> (Original Author)
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #ifndef nsIFocusController_h__
@@ -26,6 +27,7 @@
 #include "nsISupports.h"
 
 class nsIDOMElement;
+class nsIDOMNode;
 class nsIDOMWindowInternal;
 class nsIController;
 class nsIControllers;
@@ -52,6 +54,9 @@ public:
   
   NS_IMETHOD GetActive(PRBool* aActive)=0;
   NS_IMETHOD SetActive(PRBool aActive)=0;
+
+  NS_IMETHOD GetPopupNode(nsIDOMNode** aNode)=0;
+  NS_IMETHOD SetPopupNode(nsIDOMNode* aNode)=0;
 
   NS_IMETHOD GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aResult)=0;
   NS_IMETHOD GetControllers(nsIControllers** aResult)=0;

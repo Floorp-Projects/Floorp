@@ -121,7 +121,12 @@
     <command id="cmd_paste"/>
     <command id="cmd_delete"/>
     <command id="cmd_selectAll"/>
-  
+
+    <!-- Content area context menu -->
+    <command id="cmd_copyLink"/>
+    <command id="cmd_copyImageLocation"/>
+    <command id="cmd_copyImageContents"/>
+
     <!-- View Menu -->
     <command id="View:PageSource" oncommand="BrowserViewSource();"/>
     <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>

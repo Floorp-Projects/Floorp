@@ -121,6 +121,9 @@ Rights Reserved.
   <command id="cmd_cut"/>
   <command id="cmd_copy"/>
   <command id="cmd_paste"/>
+  <command id="cmd_copyLink"/>
+  <command id="cmd_copyImageLocation"/>
+  <command id="cmd_copyImageContents"/>
   <command id="cmd_delete"
          valueFolder="&deleteFolderCmd.label;"
          valueFolderAccessKey="&deleteFolderCmd.accesskey;"
@@ -673,11 +676,11 @@ Rights Reserved.
         <menuitem id="context-copylink"
                   label="&copyLinkCmd.label;"
                   accesskey="&copyLinkCmd.accesskey;"
-                  oncommand="gMessagePaneContextMenu.copyLink();"/>
+                  command="cmd_copyLink"/>
         <menuitem id="context-copyimage"
                   label="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
-                  oncommand="gMessagePaneContextMenu.copyImage();"/>
+                  command="cmd_copyImageLocation"/>
         <menuseparator id="messagePaneContext-sep-copy"/>
         <menuitem id="context-savelink"
                   label="&saveLinkCmd.label;"

@@ -18,8 +18,10 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *    Travis Bogard <travis@netscape.com> 
+ *   Travis Bogard <travis@netscape.com>
+ *   Dan Rosen <dr@netscape.com>
  */
+
 #ifndef nsGlobalWindow_h___
 #define nsGlobalWindow_h___
 
@@ -412,6 +414,9 @@ private:
   nsresult GetPresShell(nsIPresShell **aPresShell);
 	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);
   nsresult GetSelectionController(nsISelectionController ** aSelCon);
+
+  nsresult DoCommandWithEditInterface(const nsCAutoString& aCommandName);
+  nsresult DoCommandWithSelectionController(const nsCAutoString& aCommandName);
 
 	nsIDOMWindowInternal *mWindow;
   PRBool mBrowseWithCaret;

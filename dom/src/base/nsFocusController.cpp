@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   David W. Hyatt <hyatt@netscape.com> (Original Author)
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsIContent.h"
@@ -431,3 +432,27 @@ nsFocusController::SetActive(PRBool aActive)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFocusController::GetPopupNode(nsIDOMNode** aNode)
+{
+#ifdef DEBUG_dr
+  printf("dr :: nsFocusController::GetPopupNode\n");
+#endif
+
+  *aNode = mPopupNode;
+  NS_IF_ADDREF(*aNode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFocusController::SetPopupNode(nsIDOMNode* aNode)
+{
+#ifdef DEBUG_dr
+  printf("dr :: nsFocusController::SetPopupNode\n");
+#endif
+
+  mPopupNode = aNode;
+  return NS_OK;
+}
+
+  

@@ -23,6 +23,7 @@
  * Contributor(s): 
  *   Ben Goodger <ben@netscape.com>
  *   Pete Collins <petejc@collab.net>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 /*
@@ -116,6 +117,7 @@
 #include "nsRDFDOMNodeList.h"
 #include "nsXPIDLString.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsXULCommandDispatcher.h"
 #include "nsXULDocument.h"
 #include "nsXULElement.h"
@@ -2840,16 +2842,41 @@ nsXULDocument::SetDir(const nsAReadableString& aDirection)
 NS_IMETHODIMP
 nsXULDocument::GetPopupNode(nsIDOMNode** aNode)
 {
-    *aNode = mPopupNode;
-    NS_IF_ADDREF(*aNode);
-    return NS_OK;
+#ifdef DEBUG_dr
+    printf("dr :: nsXULDocument::GetPopupNode\n");
+#endif
+
+    nsresult rv;
+
+    // get focus controller
+    nsCOMPtr<nsIFocusController> focusController;
+    rv = GetFocusController(getter_AddRefs(focusController));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+    // get popup node
+    rv = focusController->GetPopupNode(aNode); // addref happens here
+
+    return rv;
 }
 
 NS_IMETHODIMP
 nsXULDocument::SetPopupNode(nsIDOMNode* aNode)
 {
-    mPopupNode = dont_QueryInterface(aNode);
-    return NS_OK;
+#ifdef DEBUG_dr
+    printf("dr :: nsXULDocument::SetPopupNode\n");
+#endif
+
+    nsresult rv;
+
+    // get focus controller
+    nsCOMPtr<nsIFocusController> focusController;
+    rv = GetFocusController(getter_AddRefs(focusController));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+    // set popup node
+    rv = focusController->SetPopupNode(aNode);
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -6368,3 +6395,29 @@ XULElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
 
 
 
+nsresult nsXULDocument::GetFocusController(nsIFocusController** aController)
+{
+    NS_ENSURE_ARG_POINTER(aController);
+
+    nsresult rv;
+
+    // get the script global object
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    rv = GetScriptGlobalObject(getter_AddRefs(global));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+    // get the internal dom window
+    nsCOMPtr<nsIDOMWindowInternal> internalWin(do_QueryInterface(global, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(internalWin, NS_ERROR_FAILURE);
+    // get the private dom window
+    nsCOMPtr<nsPIDOMWindow> privateWin(do_QueryInterface(internalWin, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(privateWin, NS_ERROR_FAILURE);
+    // get the focus controller
+    rv = privateWin->GetRootFocusController(aController); // addref is here
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(*aController, NS_ERROR_FAILURE);
+
+    return rv;
+}

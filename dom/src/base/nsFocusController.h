@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   David W. Hyatt <hyatt@netscape.com> (Original Author)
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #ifndef nsFocusController_h__
@@ -62,6 +63,9 @@ public:
   NS_IMETHOD GetActive(PRBool* aActive);
   NS_IMETHOD SetActive(PRBool aActive);
 
+  NS_IMETHOD GetPopupNode(nsIDOMNode** aNode);
+  NS_IMETHOD SetPopupNode(nsIDOMNode* aNode);
+
   NS_IMETHOD GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aResult);
   NS_IMETHOD GetControllers(nsIControllers** aResult);
 
@@ -84,6 +88,7 @@ public:
 protected:
   nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
   nsCOMPtr<nsIDOMWindowInternal> mCurrentWindow; // [OWNER]
+  nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
 
   PRUint32 mSuppressFocus;
   PRBool mSuppressFocusScroll;

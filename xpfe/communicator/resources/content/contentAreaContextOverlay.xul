@@ -150,11 +150,11 @@
       <menuitem id="context-copylink"
                 label="&copyLinkCmd.label;"
                 accesskey="&copyLinkCmd.accesskey;"
-                oncommand="contextMenu.copyLink();"/>
+                command="cmd_copyLink"/>
       <menuitem id="context-copyimage"
                 label="&copyImageCmd.label;"
                 accesskey="&copyImageCmd.accesskey;"
-                oncommand="contextMenu.copyImage();"/>
+                command="cmd_copyImageLocation"/>
       <menuseparator id="context-sep-clip"/>
       <!-- Metadata ================================ -->
       <menuitem id="context-metadata"

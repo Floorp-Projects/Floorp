@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -20,6 +20,7 @@
  *   Travis Bogard <travis@netscape.com>
  *   Adam Lock <adamlock@netscape.com>
  *   Mike Pinkerton <pinkerton@netscape.com>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 // Local Includes
@@ -1466,6 +1467,27 @@ ChromeContextMenuListener :: ContextMenu ( nsIDOMEvent* aMouseEvent )
     node->GetParentNode(getter_AddRefs(parentNode));
     node = parentNode;
   } while (node);
+
+  // we need to cache the event target into the focus controller's popupNode
+  // so we can get at it later from command code, etc.:
+
+  // get the dom window
+  nsCOMPtr<nsIDOMWindow> win;
+  res = mWebBrowser->GetContentDOMWindow(getter_AddRefs(win));
+  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
+  // get the private dom window
+  nsCOMPtr<nsPIDOMWindow> privateWin(do_QueryInterface(win, &res));
+  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_TRUE(privateWin, NS_ERROR_FAILURE);
+  // get the focus controller
+  nsCOMPtr<nsIFocusController> focusController;
+  res = privateWin->GetRootFocusController(getter_AddRefs(focusController));
+  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+  // set the focus controller's popup node to the event target
+  res = focusController->SetPopupNode(targetDOMnode);
+  NS_ENSURE_SUCCESS(res, res);
 
   // Tell the listener all about the event
   nsCOMPtr<nsIContextMenuListener> menuListener(do_QueryInterface(mWebBrowserChrome));

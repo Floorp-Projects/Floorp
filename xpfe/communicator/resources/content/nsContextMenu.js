@@ -170,6 +170,11 @@ nsContextMenu.prototype = {
         this.showItem( "context-cut", this.onTextInput );
         this.showItem( "context-paste", this.onTextInput );
 
+        // XXX dr
+        // ------
+        // nsDocumentViewer.cpp has code to determine whether we're
+        // on a link or an image. we really ought to be using that...
+
         // Copy link location depends on whether we're on a link.
         this.showItem( "context-copylink", this.onLink );
 
@@ -421,14 +426,6 @@ nsContextMenu.prototype = {
     saveBGImage : function () {
         this.savePage( this.bgImageURL(), true );
     },
-    // Generate link URL and put it on clibboard.
-    copyLink : function () {
-        this.copyToClipboard( this.linkURL() );
-    },
-    // Generate image URL and put it on the clipboard.
-    copyImage : function () {
-        this.copyToClipboard( this.imageURL );
-    },
 
     // Open Metadata window for node
     showMetadata : function () {
@@ -586,48 +583,6 @@ nsContextMenu.prototype = {
     isNoTextSelected : function ( event ) {
         // Not implemented so all text-selected-based options are disabled.
         return "true";
-    },
-    // Copy link/image url to clipboard.
-    copyToClipboard : function ( text ) {
-        // Get clipboard.
-        var clipboard = this.getService( "@mozilla.org/widget/clipboard;1",
-                                         "nsIClipboard" );
-
-        // Create tranferable that will transfer the text.
-        var transferable = this.createInstance( "@mozilla.org/widget/transferable;1",
-                                                "nsITransferable" );
-
-        if ( clipboard && transferable ) {
-          transferable.addDataFlavor( "text/unicode" );
-          // Create wrapper for text.
-          var data = this.createInstance( "@mozilla.org/supports-wstring;1",
-                                          "nsISupportsWString" );
-          if ( data ) {
-            data.data = text;
-            transferable.setTransferData( "text/unicode", data, text.length * 2 );
-            // Put on clipboard.
-            clipboard.setData( transferable, null, Components.interfaces.nsIClipboard.kGlobalClipboard );
-          }
-        }
-
-        // Create a second transferable to copy selection.  Unix needs this,
-        // other OS's will probably map to a no-op.
-        var transferableForSelection = this.createInstance( "@mozilla.org/widget/transferable;1",
-                                                         "nsITransferable" );
-
-        if ( clipboard && transferableForSelection ) {
-          transferableForSelection.addDataFlavor( "text/unicode" );
-          // Create wrapper for text.
-          var selectionData = this.createInstance( "@mozilla.org/supports-wstring;1",
-                                          "nsISupportsWString" );
-          if ( selectionData ) {
-            selectionData.data = text;
-            transferableForSelection.setTransferData( "text/unicode", selectionData, text.length * 2 );
-            // Put on clipboard.
-            clipboard.setData( transferableForSelection, null,
-                               Components.interfaces.nsIClipboard.kSelectionClipboard );
-          }
-        }
     },
     // Determine if target <object> is an image.
     objectIsImage : function ( objElem ) {
