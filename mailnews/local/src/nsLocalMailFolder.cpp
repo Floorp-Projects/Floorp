@@ -73,6 +73,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 #include "nsString.h"
+#include "nsIMsgFolderCacheElement.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsLocalFolderSummarySpec.h"
@@ -191,7 +192,8 @@ nsShouldIgnoreFile(nsString& name)
   if (firstChar == '.' || firstChar == '#' || name.CharAt(name.Length() - 1) == '~')
     return PR_TRUE;
 
-  if (name.EqualsIgnoreCase("rules.dat") || 
+  if (name.EqualsIgnoreCase("msgFilterRules.dat") ||
+      name.EqualsIgnoreCase("rules.dat") || 
       name.EqualsIgnoreCase("filterlog.html") || 
       name.EqualsIgnoreCase("junklog.html") || 
       name.EqualsIgnoreCase("rulesbackup.dat"))
@@ -243,9 +245,16 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 		if (nsShouldIgnoreFile(currentFolderNameStr))
 			continue;
 
-    rv = AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
+    rv = AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));  
     if (child)
-      child->SetPrettyName(currentFolderNameStr.get());
+    { 
+      nsXPIDLString folderName;
+      child->GetName(getter_Copies(folderName));  //try to get it from cache/db
+      if (folderName.IsEmpty())
+        child->SetPrettyName(currentFolderNameStr.get());
+      else
+        child->SetPrettyName(folderName.get());
+    }
   }
 	return rv;
 }
@@ -785,35 +794,42 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* urlLi
 }
 
 nsresult 
-nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *folderName, nsFileSpec &path, nsIMsgWindow *msgWindow)
+nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *newFolderName, nsIMsgFolder *parentFolder, nsIMsgWindow *msgWindow)
 {
-   nsresult rv = NS_OK;
-   nsAutoString leafName;
-   for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++)
-   {
-      nsFileSpec currentFolderPath = dir.Spec();
-
-      char *leaf = currentFolderPath.GetLeafName();
-      nsMsgGetNativePathString(leaf,leafName);
-      PR_FREEIF(leaf);
-
-      if (!leafName.IsEmpty() &&
-          leafName.Equals(nsDependentString(folderName), 
-                          nsCaseInsensitiveStringComparator()))
-      {
-           if (msgWindow)
-              ThrowAlertMsg("folderExists", msgWindow);
-           return NS_MSG_FOLDER_EXISTS;
-      }
-   }
-   return rv;
+  NS_ENSURE_ARG_POINTER(newFolderName);
+  NS_ENSURE_ARG_POINTER(parentFolder);
+  nsCOMPtr<nsIEnumerator> subfolders;
+  nsresult rv = parentFolder->GetSubFolders(getter_AddRefs(subfolders));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = subfolders->First();    //will fail if no subfolders 
+  while (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsISupports> supports;
+    subfolders->CurrentItem(getter_AddRefs(supports));
+    nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(supports);
+    nsAutoString folderNameString;
+    PRUnichar *folderName;
+    if (msgFolder)
+      msgFolder->GetName(&folderName);
+    folderNameString.Adopt(folderName);
+    if (folderNameString.Equals(newFolderName, nsCaseInsensitiveStringComparator()))
+    {
+      if (msgWindow)
+        ThrowAlertMsg("folderExists", msgWindow);
+      return NS_MSG_FOLDER_EXISTS;
+    }
+    rv = subfolders->Next();
+  }
+  return NS_OK;
 }
 
 nsresult
 nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow )
 {
-  nsresult rv = NS_OK;
-	    
+  nsresult rv = CheckIfFolderExists(folderName, this, msgWindow);
+  if(NS_FAILED(rv))  //we already throw an alert - no need for an assertion
+     return rv;
+
   nsFileSpec path;
   nsCOMPtr<nsIMsgFolder> child;
 	//Get a directory based on our current path.
@@ -823,10 +839,6 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
-  rv = CheckIfFolderExists(folderName, path, msgWindow);
-  if(NS_FAILED(rv))
-     return rv;
-
   nsXPIDLCString nativeFolderName;
   rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(folderName),
                      getter_Copies(nativeFolderName));
@@ -839,8 +851,14 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
   nsCAutoString safeFolderName;
   safeFolderName.Assign(nativeFolderName.get());
   NS_MsgHashIfNecessary(safeFolderName);
-	path += safeFolderName.get();
-		
+  
+  path += safeFolderName.get();		
+  if (path.Exists()) //check this because localized names are different from disk names
+  {
+    ThrowAlertMsg("folderExists", msgWindow);
+    return NS_MSG_FOLDER_EXISTS;
+  }
+	
 	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
   if (outputStream.is_open())
   {
@@ -894,7 +912,6 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 		nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this), &rv));
 		if(childSupports && NS_SUCCEEDED(rv))
 		{
-
 			NotifyItemAdded(folderSupports, childSupports, "folderView");
 		}
 	}
@@ -982,7 +999,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
         nsXPIDLCString trashUri;
         trashFolder->GetURI(getter_Copies(trashUri));
         trashFolder->GetFlags(&flags);
-        trashFolder->RecursiveSetDeleteIsMoveToTrash(PR_FALSE);
         PRInt32 totalMessages = 0;
         rv = trashFolder->GetTotalMessages(PR_TRUE, &totalMessages);
                   
@@ -1073,73 +1089,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
   
   nsLocalFolderSummarySpec summarySpec(path);
 
-  if (!mDeleteIsMoveToTrash)
+  //Clean up .sbd folder if it exists.
+  if(NS_SUCCEEDED(rv))
   {
-    //Clean up .sbd folder if it exists.
-    if(NS_SUCCEEDED(rv))
-    {
-      // Remove summary file.
-      summarySpec.Delete(PR_FALSE);
+    // Remove summary file.
+    summarySpec.Delete(PR_FALSE);
       
-      //Delete mailbox
-      path.Delete(PR_FALSE);
+    //Delete mailbox
+    path.Delete(PR_FALSE);
       
-      if (!path.IsDirectory())
-        AddDirectorySeparator(path);
+    if (!path.IsDirectory())
+      AddDirectorySeparator(path);
       
-      //If this is a directory, then remove it.
-      if (path.IsDirectory())
-        {
-          path.Delete(PR_TRUE);
-        }
-    }
-  }
-  else
-  {   // move to trash folder
-    nsXPIDLString idlName;
-    nsCOMPtr<nsIMsgFolder> child;
-    nsAutoString folderName;
-    nsCOMPtr<nsIMsgFolder> trashFolder;
-    nsCOMPtr<nsIFileSpec> trashSpec;
-    nsFileSpec trashPath;
-
-    GetName(getter_Copies(idlName));
-    folderName.Assign(idlName);
-
-    rv = GetTrashFolder(getter_AddRefs(trashFolder));
-    if (NS_FAILED(rv)) return rv;
-    rv = trashFolder->GetPath(getter_AddRefs(trashSpec));
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = trashSpec->GetFileSpec(&trashPath);
-    if (NS_FAILED(rv)) return rv;
-    AddDirectorySeparator(trashPath);
-    if (!trashPath.IsDirectory())
-      trashPath.CreateDirectory();
-    
-    nsFileSpec oldPath = path;
-
-    rv = path.MoveToDir(trashPath);
-    if (NS_SUCCEEDED(rv))
-    {
-      summarySpec.MoveToDir(trashPath);
-
-      AddDirectorySeparator(oldPath);
-      if (oldPath.IsDirectory())
-        oldPath.Delete(PR_TRUE);
-
-      trashFolder->AddSubfolder(&folderName, getter_AddRefs(child));
-      if (child) 
-      {
-        child->SetName(folderName.get());
-        nsCOMPtr<nsISupports> childSupports = do_QueryInterface(child);
-        nsCOMPtr<nsISupports> trashSupports = do_QueryInterface(trashFolder);
-        if (childSupports && trashSupports)
-        {
-          NotifyItemAdded(trashSupports, childSupports, "folderView");
-        }
-      }
-    }
+    //If this is a directory, then remove it.
+    if (path.IsDirectory())
+      path.Delete(PR_TRUE);
   }
   return rv;
 }
@@ -1152,19 +1116,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
   rv = IsChildOfTrash(&isChildOfTrash);
 
   if (isChildOfTrash)
-  {
-	PRUint32 count;
-	rv = folders->Count(&count);
-	nsCOMPtr<nsIMsgFolder> folder;
-	for(PRUint32 i = 0; i < count; i++)
-	{
-		nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(i));
-		folder = do_QueryInterface(supports);
-		if(folder)	
-	          folder->RecursiveSetDeleteIsMoveToTrash(PR_FALSE);
-	}
     return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
-  }
 
   if (!msgWindow) 
     return NS_ERROR_NULL_POINTER;
@@ -1174,8 +1126,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
   if (NS_SUCCEEDED(rv))
   {
     // we don't allow multiple folder selection so this is ok.
-    nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(0));
-    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports);
+    nsCOMPtr<nsIMsgFolder> folder;
+    folders->QueryElementAt(0, NS_GET_IID(nsIMsgFolder), (void **) getter_AddRefs(folder));
     if (folder)
       trashFolder->CopyFolder(folder, PR_TRUE, msgWindow, nsnull);
   }
@@ -1244,12 +1196,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 	nsXPIDLCString convertedNewName;
 	if (NS_FAILED(ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(aNewName), getter_Copies(convertedNewName))))
 		return NS_ERROR_FAILURE;
-	nsCAutoString newNameStr(convertedNewName.get());
+  
+  nsCAutoString newDiskName;
+  newDiskName.Assign(convertedNewName.get());
+  NS_MsgHashIfNecessary(newDiskName);
 
   nsXPIDLCString oldLeafName;
   oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
 
-  if (PL_strcasecmp(oldLeafName, convertedNewName) == 0) 
+  if (mName.Equals(aNewName, nsCaseInsensitiveStringComparator()))
   {
     if(msgWindow)
       rv=ThrowAlertMsg("folderExists", msgWindow);
@@ -1268,20 +1223,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
     if (!parentPath.IsDirectory())
     AddDirectorySeparator(parentPath);
 
-    rv = CheckIfFolderExists(aNewName, parentPath, msgWindow);
+    rv = CheckIfFolderExists(aNewName, parentFolder, msgWindow);
     if (NS_FAILED(rv)) 
       return rv;
-
   }
     
 	NotifyStoreClosedAllHeaders();
 	ForceDBClosed();
+  
+  nsCAutoString newNameDirStr(newDiskName.get());  //save of dir name before appending .msf 
 
-  rv = oldPathSpec->Rename(newNameStr.get());
+  rv = oldPathSpec->Rename(newDiskName.get());
   if (NS_SUCCEEDED(rv))
   {
-  	newNameStr += ".msf";
-	  oldSummarySpec.Rename(newNameStr.get());
+  	newDiskName += ".msf";
+	  oldSummarySpec.Rename(newDiskName.get());
   }
   else
   {
@@ -1292,7 +1248,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 	if (NS_SUCCEEDED(rv) && cnt > 0) 
   {
     // rename "*.sbd" directory
-    nsCAutoString newNameDirStr(convertedNewName.get());
     newNameDirStr += ".sbd";
     dirSpec.Rename(newNameDirStr.get());
 	}
@@ -1304,7 +1259,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
     rv = parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
     if (newFolder) 
     {
-      newFolder->SetName(newFolderName.get());
+      newFolder->SetPrettyName(newFolderName.get());
       PRBool changed = PR_FALSE;
       MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
       if (changed)
@@ -1356,7 +1311,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, ns
      AddSubfolder(&folderNameStr, getter_AddRefs(newFolder));
      if (newFolder)
      {
-       newFolder->SetName(folderName);
+       newFolder->SetPrettyName(folderName.get());
        PRBool changed = PR_FALSE;
        msgFolder->MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
        if (changed)
@@ -1372,6 +1327,20 @@ NS_IMETHODIMP nsMsgLocalMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, ns
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
 	return nsMsgFolder::GetPrettyName(prettyName);
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::SetPrettyName(const PRUnichar *aName)
+{
+  NS_ENSURE_ARG_POINTER(aName);
+  nsresult rv = nsMsgFolder::SetPrettyName(aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return SetStringProperty("folderName", NS_ConvertUCS2toUTF8(mName).get());
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::GetName(PRUnichar **aName)
+{
+  ReadDBFolderInfo(PR_FALSE);
+  return nsMsgFolder::GetName(aName);
 }
 
 NS_IMETHODIMP
@@ -1400,6 +1369,25 @@ nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgD
   if (NS_SUCCEEDED(openErr)&& *db)
     openErr = (*db)->GetDBFolderInfo(folderInfo);
   return openErr;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element)
+{
+  NS_ENSURE_ARG_POINTER(element);
+  nsresult rv = nsMsgDBFolder::ReadFromFolderCacheElem(element);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsXPIDLCString utf8Name;
+  rv = element->GetStringProperty("folderName", getter_Copies(utf8Name));
+  NS_ENSURE_SUCCESS(rv, rv);
+  mName = NS_ConvertUTF8toUCS2(utf8Name.get());
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *element)
+{
+  NS_ENSURE_ARG_POINTER(element);
+  nsMsgDBFolder::WriteToFolderCacheElem(element);
+  return element->SetStringProperty("folderName", NS_ConvertUCS2toUTF8(mName).get());
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals(PRBool force)
@@ -1433,15 +1421,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDeletable(PRBool *deletable)
 
   PRBool isServer;
   GetIsServer(&isServer);
-  // These are specified in the "Mail/News Windows" UI spec
-  if (mFlags & MSG_FOLDER_FLAG_TRASH)
-  {
-    PRBool moveToTrash;
-    GetDeleteIsMoveToTrash(&moveToTrash);
-    if(moveToTrash)
-      *deletable = PR_TRUE;  // allow delete of trash if we don't use trash
-  }
-  else if (isServer)
+  // These are specified in the "Mail/News Windows" UI spe 
+  if (isServer)
     *deletable = PR_FALSE;
   else if (mFlags & MSG_FOLDER_FLAG_INBOX || 
     mFlags & MSG_FOLDER_FLAG_DRAFTS || 
@@ -2078,18 +2059,22 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
     newPath.CreateDirectory();
   }
   
-  rv = CheckIfFolderExists(idlName.get(), newPath, msgWindow);
-  if(NS_FAILED(rv)) return rv;
+  rv = CheckIfFolderExists(folderName.get(), this, msgWindow);
+  if(NS_FAILED(rv)) 
+    return rv;
   
   nsFileSpec path = oldPath;
   
   rv = path.CopyToDir(newPath);   //copying necessary for aborting.... if failure return
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);     //would fail if a file by that name exists
 
   rv = summarySpec.CopyToDir(newPath);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  AddSubfolder(&folderName, getter_AddRefs(newMsgFolder));  
+  rv = AddSubfolder(&folderName, getter_AddRefs(newMsgFolder));  
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  newMsgFolder->SetPrettyName(folderName.get());
   
   PRUint32 flags;
   srcFolder->GetFlags(&flags);
@@ -2120,16 +2105,14 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   
   if (isMoveFolder && NS_SUCCEEDED(copyStatus))
   {
-    if (newMsgFolder)  //notifying the "folder" that was dragged and dropped has been created.
-    {                  //no need to do this for its subfolders - isMoveFolder will be true for "folder"
-      newMsgFolder->SetName(folderName.get());
-      nsCOMPtr<nsISupports> supports = do_QueryInterface(newMsgFolder);
-      nsCOMPtr <nsISupports> parentSupports = do_QueryInterface((nsIMsgLocalMailFolder*)this);
+    //notifying the "folder" that was dragged and dropped has been created.
+    //no need to do this for its subfolders - isMoveFolder will be true for "folder"
+    nsCOMPtr<nsISupports> supports = do_QueryInterface(newMsgFolder);
+    nsCOMPtr <nsISupports> parentSupports = do_QueryInterface((nsIMsgLocalMailFolder*)this);
     
-      if (supports && parentSupports)
-        NotifyItemAdded(parentSupports, supports, "folderView");
-    }
-
+    if (supports && parentSupports)
+      NotifyItemAdded(parentSupports, supports, "folderView");
+    
     nsCOMPtr<nsIMsgFolder> msgParent;
     srcFolder->GetParentMsgFolder(getter_AddRefs(msgParent));
     srcFolder->SetParent(nsnull);
@@ -2146,7 +2129,6 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
       }
     }
   }
-  
   return NS_OK;
 }
 
@@ -2660,7 +2642,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
           srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);	 
         
         (void) OnCopyCompleted(mCopyState->m_srcSupport, PR_TRUE);
-      // enable the dest folder
+        // enable the dest folder
         EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
       }
     }

@@ -450,6 +450,11 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 				folderInfo->GetNumNewMessages(&mNumUnreadMessages);
         folderInfo->GetExpungedBytes((PRInt32 *)&mExpungedBytes);
 
+        nsXPIDLCString utf8Name;
+        folderInfo->GetFolderName(getter_Copies(utf8Name));
+        if (!utf8Name.IsEmpty())
+          mName = NS_ConvertUTF8toUCS2(utf8Name.get());
+
 				//These should be put in IMAP folder only.
 				//folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
 				//folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
@@ -948,7 +953,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetFlags(PRUint32 *_retval)
 NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element)
 {
 	nsresult rv = NS_OK;
-	char *charset;
+	nsXPIDLCString charset;
 
 	element->GetInt32Property("flags", (PRInt32 *) &mFlags);
 
@@ -968,7 +973,7 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
   element->GetInt32Property("expungedBytes", (PRInt32 *) &mExpungedBytes);
   element->GetInt32Property("folderSize", (PRInt32 *) &mFolderSize);
 
-	element->GetStringProperty("charset", &charset);
+	element->GetStringProperty("charset", getter_Copies(charset));
 
 #ifdef DEBUG_bienvenu1
 	char *uri;
@@ -977,8 +982,7 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
 	printf("read total %ld for %s\n", mNumTotalMessages, uri);
 	PR_Free(uri);
 #endif
-	mCharset.AssignWithConversion(charset);
-	PR_FREEIF(charset);
+	mCharset.AssignWithConversion(charset.get());
 
   mInitializedFromCache = PR_TRUE;
 	return rv;

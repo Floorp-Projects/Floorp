@@ -101,11 +101,6 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * URL for this folder
    */
   readonly attribute string folderURL;
-
-  /**
-   * should probably move to the server
-   */
-	attribute boolean deleteIsMoveToTrash;
   
   /**
    * should probably move to the server
@@ -291,8 +286,6 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 	void onFlagChange (in unsigned long flag);
   
 	attribute unsigned long flags;
-
-  void RecursiveSetDeleteIsMoveToTrash(in boolean bVal);
 
 	nsIMsgFolder getFoldersWithFlag(in unsigned long flags,
                          in unsigned long resultsize, out unsigned long numFolders);
