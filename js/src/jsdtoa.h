@@ -52,7 +52,12 @@ JS_BEGIN_EXTERN_C
  * the  character terminating the scan is returned in the location pointed
  * to by se.  If no number can be  formed, se is set to s00r, and
  * zero is returned.
+ *
+ * *err is set to zero on success; it's set to JS_DTOA_ERANGE on range
+ * errors and JS_DTOA_ENOMEM on memory failure.
  */
+#define JS_DTOA_ERANGE 1
+#define JS_DTOA_ENOMEM 2
 JS_FRIEND_API(double)
 JS_strtod(const char *s00, char **se, int *err);
 

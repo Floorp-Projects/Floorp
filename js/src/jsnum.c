@@ -47,7 +47,6 @@
  * JS number type and wrapper class.
  */
 #include "jsstddef.h"
-#include <errno.h>
 #ifdef XP_PC
 #include <float.h>
 #endif
@@ -829,7 +828,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 
     /* Use cbuf to avoid malloc */
     if (length >= sizeof cbuf) {
-        cstr = (char *) malloc(length + 1);
+        cstr = (char *) JS_malloc(cx, length + 1);
         if (!cstr)
            return JS_FALSE;
     } else {
@@ -837,33 +836,39 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
     }
    
     for (i = 0; i <= length; i++) {
-	if (s1[i] >> 8) {
-	    cstr[i] = 0;
-	    break;
-	}
-	cstr[i] = (char)s1[i];
+        if (s1[i] >> 8) {
+            cstr[i] = 0;
+            break;
+        }
+        cstr[i] = (char)s1[i];
     }
 
     istr = cstr;
     if ((negative = (*istr == '-')) != 0 || *istr == '+')
-	istr++;
+        istr++;
     if (!strncmp(istr, js_Infinity_str, sizeof js_Infinity_str - 1)) {
-	d = *(negative ? cx->runtime->jsNegativeInfinity : cx->runtime->jsPositiveInfinity);
-	estr = istr + 8;
+        d = *(negative ? cx->runtime->jsNegativeInfinity : cx->runtime->jsPositiveInfinity);
+        estr = istr + 8;
     } else {
-	int err;
-	d = JS_strtod(cstr, &estr, &err);
-	if (err == ERANGE) {
-	    if (d == HUGE_VAL)
-		d = *cx->runtime->jsPositiveInfinity;
-	    else if (d == -HUGE_VAL)
-		d = *cx->runtime->jsNegativeInfinity;
+        int err;
+        d = JS_strtod(cstr, &estr, &err);
+        if (err == JS_DTOA_ENOMEM) {
+            JS_ReportOutOfMemory(cx);
+            if (cstr != cbuf)
+                JS_free(cx, cstr);
+            return JS_FALSE;
+        }
+        if (err == JS_DTOA_ERANGE) {
+            if (d == HUGE_VAL)
+                d = *cx->runtime->jsPositiveInfinity;
+            else if (d == -HUGE_VAL)
+                d = *cx->runtime->jsNegativeInfinity;
         }
 #ifdef HPUX
         if (d == 0.0 && negative) {
             /*
              * "-0", "-1e-2000" come out as positive zero
-    		 * here on HPUX. Force a negative zero instead.
+             * here on HPUX. Force a negative zero instead.
              */
             JSDOUBLE_HI32(d) = JSDOUBLE_HI32_SIGNBIT;
             JSDOUBLE_LO32(d) = 0;
@@ -873,7 +878,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 
     i = estr - cstr;
     if (cstr != cbuf)
-        free(cstr);
+        JS_free(cx, cstr);
     *ep = i ? s1 + i : s;
     *dp = d;
     return JS_TRUE;
@@ -881,11 +886,11 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 
 struct BinaryDigitReader
 {
-    uintN base;			/* Base of number; must be a power of 2 */
-    uintN digit;		/* Current digit value in radix given by base */
-    uintN digitMask;		/* Mask to extract the next bit from digit */
-    const jschar *digits;	/* Pointer to the remaining digits */
-    const jschar *end;		/* Pointer to first non-digit */
+    uintN base;                 /* Base of number; must be a power of 2 */
+    uintN digit;                /* Current digit value in radix given by base */
+    uintN digitMask;            /* Mask to extract the next bit from digit */
+    const jschar *digits;       /* Pointer to the remaining digits */
+    const jschar *end;          /* Pointer to first non-digit */
 };
 
 /* Return the next binary digit from the number or -1 if done */
@@ -894,18 +899,18 @@ static intN GetNextBinaryDigit(struct BinaryDigitReader *bdr)
     intN bit;
 
     if (bdr->digitMask == 0) {
-	uintN c;
+        uintN c;
 
-	if (bdr->digits == bdr->end)
-	    return -1;
+        if (bdr->digits == bdr->end)
+            return -1;
 
-	c = *bdr->digits++;
-	if ('0' <= c && c <= '9')
-	    bdr->digit = c - '0';
-	else if ('a' <= c && c <= 'z')
-	    bdr->digit = c - 'a' + 10;
-	else bdr->digit = c - 'A' + 10;
-	bdr->digitMask = bdr->base >> 1;
+        c = *bdr->digits++;
+        if ('0' <= c && c <= '9')
+            bdr->digit = c - '0';
+        else if ('a' <= c && c <= 'z')
+            bdr->digit = c - 'a' + 10;
+        else bdr->digit = c - 'A' + 10;
+        bdr->digitMask = bdr->base >> 1;
     }
     bit = (bdr->digit & bdr->digitMask) != 0;
     bdr->digitMask >>= 1;
@@ -921,24 +926,24 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
     const jschar *s1 = js_SkipWhiteSpace(s);
 
     if ((negative = (*s1 == '-')) != 0 || *s1 == '+')
-	s1++;
+        s1++;
 
     if (base == 0) {
-	/* No base supplied, or some base that evaluated to 0. */
-	if (*s1 == '0') {
-	    /* It's either hex or octal; only increment char if str isn't '0' */
-	    if (s1[1] == 'X' || s1[1] == 'x') { /* Hex */
-		s1 += 2;
-		base = 16;
-	    } else {    /* Octal */
-		base = 8;
+        /* No base supplied, or some base that evaluated to 0. */
+        if (*s1 == '0') {
+            /* It's either hex or octal; only increment char if str isn't '0' */
+            if (s1[1] == 'X' || s1[1] == 'x') { /* Hex */
+                s1 += 2;
+                base = 16;
+            } else {    /* Octal */
+                base = 8;
             }
-	} else {
-	    base = 10; /* Default to decimal. */
+        } else {
+            base = 10; /* Default to decimal. */
         }
     } else if (base == 16 && *s1 == '0' && (s1[1] == 'X' || s1[1] == 'x')) {
-	/* If base is 16, ignore hex prefix. */
-	s1 += 2;
+        /* If base is 16, ignore hex prefix. */
+        s1 += 2;
     }
 
     /*
@@ -948,46 +953,51 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
     start = s1; /* Mark - if string is empty, we return NaN. */
     value = 0.0;
     while (1) {
-	uintN digit;
-	jschar c = *s1;
-	if ('0' <= c && c <= '9')
-	    digit = c - '0';
-	else if ('a' <= c && c <= 'z')
-	    digit = c - 'a' + 10;
-	else if ('A' <= c && c <= 'Z')
-	    digit = c - 'A' + 10;
-	else
-	    break;
-	if (digit >= (uintN)base)
-	    break;
-	value = value * base + digit;
-	s1++;
+        uintN digit;
+        jschar c = *s1;
+        if ('0' <= c && c <= '9')
+            digit = c - '0';
+        else if ('a' <= c && c <= 'z')
+            digit = c - 'a' + 10;
+        else if ('A' <= c && c <= 'Z')
+            digit = c - 'A' + 10;
+        else
+            break;
+        if (digit >= (uintN)base)
+            break;
+        value = value * base + digit;
+        s1++;
     }
 
     if (value >= 9007199254740992.0) {
-	if (base == 10) {
+        if (base == 10) {
             /*
              * If we're accumulating a decimal number and the number is >=
              * 2^53, then the result from the repeated multiply-add above may
              * be inaccurate.  Call JS_strtod to get the correct answer.
              */
-	    size_t i;
-	    size_t length = s1 - start;
-	    char *cstr = (char *) malloc(length + 1);
-	    char *estr;
+            size_t i;
+            size_t length = s1 - start;
+            char *cstr = (char *) JS_malloc(cx, length + 1);
+            char *estr;
             int err=0;
 
-	    if (!cstr)
-		return JS_FALSE;
-	    for (i = 0; i != length; i++)
-		cstr[i] = (char)start[i];
-	    cstr[length] = 0;
+            if (!cstr)
+                return JS_FALSE;
+            for (i = 0; i != length; i++)
+                cstr[i] = (char)start[i];
+            cstr[length] = 0;
 
-	    value = JS_strtod(cstr, &estr, &err);
-	    if (err == ERANGE && value == HUGE_VAL)
-		value = *cx->runtime->jsPositiveInfinity;
-	    free(cstr);
-	} else if ((base & (base - 1)) == 0) {
+            value = JS_strtod(cstr, &estr, &err);
+            if (err == JS_DTOA_ENOMEM) {
+                JS_ReportOutOfMemory(cx);
+                JS_free(cx, cstr);
+                return JS_FALSE;
+            }
+            if (err == JS_DTOA_ERANGE && value == HUGE_VAL)
+                value = *cx->runtime->jsPositiveInfinity;
+            JS_free(cx, cstr);
+        } else if ((base & (base - 1)) == 0) {
             /*
              * The number may also be inaccurate for power-of-two bases.  This
              * happens if the addition in value * base + digit causes a round-
@@ -998,56 +1008,56 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
              * example occurs when reading the number 0x1000000000000081, which
              * rounds to 0x1000000000000000 instead of 0x1000000000000100.
              */
-	    struct BinaryDigitReader bdr;
-	    intN bit, bit2;
-	    intN j;
+            struct BinaryDigitReader bdr;
+            intN bit, bit2;
+            intN j;
 
-	    bdr.base = base;
-	    bdr.digitMask = 0;
-	    bdr.digits = start;
-	    bdr.end = s1;
-	    value = 0.0;
+            bdr.base = base;
+            bdr.digitMask = 0;
+            bdr.digits = start;
+            bdr.end = s1;
+            value = 0.0;
 
-	    /* Skip leading zeros. */
-	    do {
-		bit = GetNextBinaryDigit(&bdr);
-	    } while (bit == 0);
+            /* Skip leading zeros. */
+            do {
+                bit = GetNextBinaryDigit(&bdr);
+            } while (bit == 0);
 
-	    if (bit == 1) {
-		/* Gather the 53 significant bits (including the leading 1) */
-		value = 1.0;
-		for (j = 52; j; j--) {
-		    bit = GetNextBinaryDigit(&bdr);
-		    if (bit < 0)
-			goto done;
-		    value = value*2 + bit;
-		}
-		/* bit2 is the 54th bit (the first dropped from the mantissa) */
-		bit2 = GetNextBinaryDigit(&bdr);
-		if (bit2 >= 0) {
-		    jsdouble factor = 2.0;
-		    intN sticky = 0;  /* sticky is 1 if any bit beyond the 54th is 1 */
-		    intN bit3;
+            if (bit == 1) {
+                /* Gather the 53 significant bits (including the leading 1) */
+                value = 1.0;
+                for (j = 52; j; j--) {
+                    bit = GetNextBinaryDigit(&bdr);
+                    if (bit < 0)
+                        goto done;
+                    value = value*2 + bit;
+                }
+                /* bit2 is the 54th bit (the first dropped from the mantissa) */
+                bit2 = GetNextBinaryDigit(&bdr);
+                if (bit2 >= 0) {
+                    jsdouble factor = 2.0;
+                    intN sticky = 0;  /* sticky is 1 if any bit beyond the 54th is 1 */
+                    intN bit3;
 
-		    while ((bit3 = GetNextBinaryDigit(&bdr)) >= 0) {
-			sticky |= bit3;
-			factor *= 2;
-		    }
-		    value += bit2 & (bit | sticky);
-		    value *= factor;
-		}
-	      done:;
-	    }
-	}
+                    while ((bit3 = GetNextBinaryDigit(&bdr)) >= 0) {
+                        sticky |= bit3;
+                        factor *= 2;
+                    }
+                    value += bit2 & (bit | sticky);
+                    value *= factor;
+                }
+              done:;
+            }
+        }
     }
     /* We don't worry about inaccurate numbers for any other base. */
 
     if (s1 == start) {
-	*dp = 0.0;
-	*ep = s;
+        *dp = 0.0;
+        *ep = s;
     } else {
-	*dp = negative ? -value : value;
-	*ep = s1;
+        *dp = negative ? -value : value;
+        *ep = s1;
     }
     return JS_TRUE;
 }
