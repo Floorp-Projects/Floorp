@@ -325,16 +325,15 @@ public:
     this gets called to close a tag in the given context
    **********************************************************/
   virtual nsresult  CloseContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
-    nsresult result=NS_OK;
     nsEntryStack  *theStack=0;
     nsIParserNode *theNode=aContext->Pop(theStack);
 
     CElement *theElement=(aTag==mTag) ? this : GetElement(aTag);
-    result=theElement->NotifyClose(theNode,aTag,aContext,aSink);
+    theElement->NotifyClose(theNode,aTag,aContext,aSink);
 
     aContext->RecycleNode((nsCParserNode*)theNode);
 
-    return result;
+    return NS_OK;
   }
 
   /**********************************************************
@@ -1202,35 +1201,11 @@ public:
     anElement.mIncludeKids=kHeadKids;
   }
 
-  virtual nsresult OpenContext(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    NS_ASSERTION(aContext!=nsnull,"cannot make a decision without a context");
-
-    nsresult result=NS_OK;
-    if(aSink && aContext) {
-      if(aContext->mHasOpenHead==PR_FALSE) {
-        result=aSink->OpenHead(*aNode);
-        aContext->mHasOpenHead=PR_TRUE;
-      }
-    }
-    return result;
-  }
-
-  virtual nsresult CloseContext(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    NS_ASSERTION(aContext!=nsnull,"cannot make a decision without a context");
-
-    nsresult result=NS_OK;
-    if(aSink && aContext) {
-      if(aContext->mHasOpenHead==PR_TRUE) {
-        result=aSink->CloseHead(*aNode);
-        aContext->mHasOpenHead=PR_FALSE;
-      }
-    }
-    return result;
-  }
-      
   CHeadElement(eHTMLTags aTag) : CElement(aTag) {
     CHeadElement::Initialize(*this,aTag);
   }
+
+
 };
 
 
@@ -1291,8 +1266,8 @@ public:
     nsresult result=NS_OK;
 
     switch(aTag) {
-      case eHTMLTag_text:
       case eHTMLTag_whitespace:
+      case eHTMLTag_text:
         mText.Append(aNode->GetText());
         break;
       default:
@@ -1329,17 +1304,10 @@ public:
    **********************************************************/
   virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
-    CElement* theHead=GetElement(eHTMLTag_head);
-    if(theHead) {
-      result=theHead->OpenContext(aNode,aTag,aContext,aSink);
-      if(NS_SUCCEEDED(result)) {
-        result=aSink->SetTitle(mText);
-        mText.Truncate(0);
-        if(NS_SUCCEEDED(result)) {
-          result=theHead->CloseContext(aNode,aTag,aContext,aSink);
-        }
-      }
-    }
+    aSink->OpenHead(*aNode);
+    aSink->SetTitle(mText);
+    aSink->CloseHead(*aNode);
+    mText.Truncate(0);
     return result;
   }
 
@@ -1350,14 +1318,8 @@ public:
     nsresult result=NS_OK;
 
     switch(aTag) {
-      case eHTMLTag_text:
-        if(aNode && aNode->GetTokenType()==eToken_entity) {
-          nsAutoString tmp;
-          aNode->TranslateToUnicodeStr(tmp);
-          mText.Append(tmp);
-          break;
-        }
       case eHTMLTag_whitespace:
+      case eHTMLTag_text:
         mText.Append(aNode->GetText());
         break;
       default:
@@ -1385,14 +1347,8 @@ public:
     nsresult result=NS_OK;
 
     switch(aTag) {
-     case eHTMLTag_text:
-       if(aNode && aNode->GetTokenType()==eToken_entity) {
-          nsAutoString tmp;
-          aNode->TranslateToUnicodeStr(tmp);
-          mText.Append(tmp);
-          break;
-        }
       case eHTMLTag_whitespace:
+      case eHTMLTag_text:
       case eHTMLTag_newline:
         mText.Append(aNode->GetText());
         break;
@@ -1424,18 +1380,10 @@ public:
     Call this for each element as it get's closed
    **********************************************************/
   virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
-    CElement* theHead=GetElement(eHTMLTag_head);
-    if(theHead) {
-      result=theHead->OpenContext(aNode,aTag,aContext,aSink);
-      if(NS_SUCCEEDED(result)) {
-        result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
-        mText.Truncate(0);
-        if(NS_SUCCEEDED(result)) {
-          result=theHead->CloseContext(aNode,aTag,aContext,aSink);
-        }
-      }
-    }
+    aSink->OpenHead(*aNode);
+    nsresult result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
+    aSink->CloseHead(*aNode);
+    mText.Truncate(0);
     return result;
   }
 
@@ -1488,20 +1436,19 @@ public:
 
     if(aContext->HasOpenContainer(eHTMLTag_body)) {
       //add the script to the body
-      result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
+      CScriptToken theToken(mText);  
+      PRInt32 theLineNumber=0;
+      nsCParserNode theNode(&theToken,theLineNumber);
+      theNode.SetSkippedContent(mText);
+      //result=aSink->AddLeaf(theNode);
+
+      result=aSink->AddLeaf(*aNode);
     }
     else {
         //add it to the head...
-      CElement* theHead=GetElement(eHTMLTag_head);
-      if(theHead) {
-        result=theHead->OpenContext(aNode,aTag,aContext,aSink);
-        if(NS_SUCCEEDED(result)) {
-          result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
-          if(NS_SUCCEEDED(result)) {
-            result=theHead->CloseContext(aNode,aTag,aContext,aSink);
-          }
-        }
-      }
+      aSink->OpenHead(*aNode);
+      result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
+      aSink->CloseHead(*aNode);
     }
     mText.Truncate(0);
     return result;
@@ -1544,6 +1491,7 @@ public:
   }
 
 };
+
 
 /**********************************************************
   This is used for both applet and object elements
@@ -1804,6 +1752,12 @@ public:
         result=HandleDoctypeDecl(aNode,aTag,aContext,aSink);
         break;
 
+      case eHTMLTag_body:
+        result=aSink->OpenBody(*aNode);
+        result=OpenContext(aNode,aTag,aContext,aSink);
+        aContext->mHadBody=PR_TRUE;
+        break;
+
       case eHTMLTag_frameset:
         result=aSink->OpenFrameset(*aNode); 
         result=OpenContext(aNode,aTag,aContext,aSink);
@@ -1814,30 +1768,14 @@ public:
       case eHTMLTag_isindex:
       case eHTMLTag_link:
       case eHTMLTag_meta:
-        {
-          CElement* theHead=GetElement(eHTMLTag_head);
-          if(theHead) {
-            result=theHead->OpenContext(aNode,aTag,aContext,aSink);
-            if(NS_SUCCEEDED(result)) {
-              result=aSink->AddLeaf(*aNode);
-              if(NS_SUCCEEDED(result)) {
-                result=theHead->CloseContext(aNode,aTag,aContext,aSink);
-              }
-            }
-          }
-        }
+        aSink->OpenHead(*aNode);
+        result=aSink->AddLeaf(*aNode);
+        aSink->CloseHead(*aNode);
         break;
 
       case eHTMLTag_object:
-        {
-          CElement* theHead=GetElement(eHTMLTag_head);
-          if(theHead) {
-            result=theHead->OpenContext(aNode,aTag,aContext,aSink);
-            if(NS_SUCCEEDED(result)) {
-              result=OpenContainerInContext(aNode,aTag,aContext,aSink);
-            }
-          }
-        }
+        aSink->OpenHead(*aNode);
+        result=OpenContainerInContext(aNode,aTag,aContext,aSink);
         break;
 
       case eHTMLTag_script:
@@ -1862,7 +1800,7 @@ public:
             CToken* theToken=new CStartToken(eHTMLTag_body);
             nsCParserNode* theNode=new nsCParserNode(theToken,0,0);
 
-            result=theBody->HandleStartToken(theNode,eHTMLTag_body,aContext,aSink);
+            result=HandleStartToken(theNode,eHTMLTag_body,aContext,aSink);
 
             if(NS_SUCCEEDED(result)) {
               if(eHTMLTag_body==aContext->Last()) {
@@ -1954,35 +1892,12 @@ public:
   virtual nsresult  OpenContainer(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
     nsresult result=NS_OK;
     if(mTag==aTag) {
-      // Close the head before opening a body.
-      CElement* theHead=GetElement(eHTMLTag_head);
-      result=theHead->CloseContext(aNode,aTag,aContext,aSink);
-      if(NS_SUCCEEDED(result)) {
-        result=aSink->OpenBody(*aNode);
-      }
+      result=aSink->OpenBody(*aNode);
     }
     else result=CElement::OpenContainer(aNode,aTag,aContext,aSink);
     return result;
   }
 
-  /**********************************************************
-    this gets called after each tag is opened in the given context
-   **********************************************************/
-  virtual nsresult OpenContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
-    NS_ASSERTION(aContext!=nsnull,"need a valid context");
-    nsresult result=NS_OK;
-    // Since BODY is optional, we might come across more than one BODY!.
-    // That is, one that's auto opened and one that came from the document itself.
-    // If that's the case then make sure that we don't open up multiple contexts, however,
-    // don't forget to inform the sink because it needs to account for the BODY attributes.
-    if(aContext) {
-      if(!aContext->mHadBody) {
-        result=OpenContext(aNode,aTag,aContext,aSink);
-        aContext->mHadBody=PR_TRUE;
-      }
-    }
-    return (NS_SUCCEEDED(result))? OpenContainer(aNode,aTag,aContext,aSink):result;
-  }
 
   /**********************************************************
     Body handles the opening of it's own children
@@ -2064,8 +1979,7 @@ public:
     mObjectElement(eHTMLTag_object),
     mFieldsetElement(),
     mCounterElement(),
-    mFormElement(),
-    mHeadElement(eHTMLTag_head)
+    mFormElement()
   {
     memset(mElements,0,sizeof(mElements));
     InitializeElements();
@@ -2112,7 +2026,6 @@ public:
   CFieldsetElement  mFieldsetElement;
   CCounterElement   mCounterElement;
   CFormElement      mFormElement;
-  CHeadElement      mHeadElement;
 };
 
 
@@ -2323,8 +2236,6 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_option].mContainsGroups.mBits.mLeaf=1;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_p],          eHTMLTag_p, CBlockElement::GetGroup(), CInlineElement::GetContainedGroups());
-  mDfltElements[eHTMLTag_p].mContainsGroups.mBits.mSelf=0;
-
   CElement::InitializeLeaf(         mDfltElements[eHTMLTag_param],      eHTMLTag_param, CElement::GetEmptyGroup(), CLeafElement::GetContainedGroups());
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_parsererror],eHTMLTag_parsererror);
   CElement::Initialize(             mDfltElements[eHTMLTag_plaintext],  eHTMLTag_plaintext);
@@ -2418,7 +2329,6 @@ void CElementTable::InitializeElements() {
   mElements[eHTMLTag_fieldset]=&mFieldsetElement;
   mElements[eHTMLTag_counter]=&mCounterElement;
   mElements[eHTMLTag_form]=&mFormElement;
-  mElements[eHTMLTag_head]=&mHeadElement;
 }
 
 void CElementTable::DebugDumpGroups(CElement* aTag){
@@ -2827,9 +2737,9 @@ nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDConte
     CElement* theElement=gElementTable->mElements[aTag];
     if(theElement) {
       if(theElement->IsSinkContainer()) {
-        result=CloseContainerInContext(aNode,aTag,aContext,aSink);
+        CloseContainerInContext(aNode,aTag,aContext,aSink);
       }
-      else result=CloseContext(aNode,aTag,aContext,aSink);
+      else CloseContext(aNode,aTag,aContext,aSink);
       return result;
     }
   }
