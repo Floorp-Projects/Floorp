@@ -3726,14 +3726,20 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent, nsIContent** aConten
     return NS_OK;
   }
 
+  *aContent = nsnull;
+
   nsCOMPtr<nsIPresShell> presShell;
   mPresContext->GetShell(getter_AddRefs(presShell));
   if (presShell) {
     presShell->GetEventTargetContent(aEvent, aContent);
-    return NS_OK;
   }
 
-  *aContent = nsnull;
+  // Some events here may set mCurrentTarget but not set the corresponding
+  // event target in the PresShell.
+  if (!*aContent && mCurrentTarget) {
+    mCurrentTarget->GetContentForEvent(mPresContext, aEvent, aContent);
+  }
+
   return NS_OK;
 }
 
