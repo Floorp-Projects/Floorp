@@ -118,6 +118,8 @@ ImageManagerImpl::GetImageType(const char *buf, PRInt32 length)
       return nsImageType_kPPM;
     case(IL_PNG):
       return nsImageType_kPNG;
+    case(IL_ART):
+      return nsImageType_kART;
     default:
       return nsImageType_kUnknown;
   }
