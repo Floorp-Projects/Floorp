@@ -1612,6 +1612,7 @@ static PRBool GetWantSplashScreen(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
   NS_TIMELINE_MARK("enter main");
+  int i; //Moved here due to portability guideline 20. See bug 258055
 
 #if defined(DEBUG) && defined(XP_WIN32)
   // Disable small heap allocator to get heapwalk() giving us
@@ -1671,7 +1672,7 @@ int main(int argc, char* argv[])
    * (currently this is only for testing, future builds may use this by
    * default) */
   PRBool x11threadsafe = PR_FALSE;
-  for (int i=1; i<argc; i++) {
+  for (i=1; i<argc; i++) {
     if (PL_strcmp(argv[i], "-xinitthreads") == 0) {
       x11threadsafe = PR_TRUE;
       break;
@@ -1695,7 +1696,7 @@ int main(int argc, char* argv[])
   // in nsAppShell::Create, but we need to get in before gtk
   // has been initialized to make sure everything is running
   // consistently.
-  for (int i=1; i<argc; i++)
+  for (i=1; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-install") == 0)
         || (PL_strcasecmp(argv[i], "--install") == 0)) {
       gdk_rgb_set_install(TRUE);
