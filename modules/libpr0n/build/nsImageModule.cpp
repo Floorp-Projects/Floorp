@@ -33,8 +33,6 @@
 // gif
 #include "nsGIFDecoder2.h"
 
-// jpeg
-#include "nsJPEGDecoder.h"
 
 // bmp/ico
 #include "nsBMPDecoder.h"
@@ -42,6 +40,9 @@
 
 // png
 #include "nsPNGDecoder.h"
+
+// jpeg
+#include "nsJPEGDecoder.h"
 
 // xbm
 #include "nsXBMDecoder.h"
