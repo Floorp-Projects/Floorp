@@ -46,6 +46,7 @@ public:
   NS_IMETHOD DestroyPopup(nsIFrame* aPopup) = 0;
 
   NS_IMETHOD AddPopupFrame(nsIFrame* aPopup) = 0;
+  NS_IMETHOD RemovePopupFrame(nsIFrame* aPopup) = 0;
 };
 
 #endif

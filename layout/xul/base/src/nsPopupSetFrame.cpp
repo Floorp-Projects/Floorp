@@ -394,8 +394,7 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup)
     entry->mLastPref.width = -1;
     entry->mLastPref.height = -1;
 
-    // remove the frame and ungenerate the popup.
-    entry->mPopupFrame = nsnull;
+    // ungenerate the popup.
     entry->mPopupContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, PR_TRUE);
   }
 
@@ -676,6 +675,39 @@ nsPopupSetFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
   // Make sure the menu dismissal listener knows what the current
   // innermost menu popup frame is.
   nsMenuFrame::sDismissalListener->SetCurrentMenuParent(aMenuParent);
+}
+
+NS_IMETHODIMP
+nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
+{
+  // This was called by the Destroy() method of the popup, so all we have to do is
+  // get the popup out of our list, so we don't reflow it later.
+  nsPopupFrameList* currEntry = mPopupList;
+  nsPopupFrameList* temp = nsnull;
+  while (currEntry) {
+    if (currEntry->mPopupFrame == aPopup) {
+      // Remove this entry.
+      if (temp)
+        temp->mNextPopup = currEntry->mNextPopup;
+      else
+        mPopupList = currEntry->mNextPopup;
+      
+      // Destroy the frame.
+      currEntry->mPopupFrame->Destroy(mPresContext);
+
+      // Delete the entry.
+      currEntry->mNextPopup = nsnull;
+      delete currEntry;
+
+      // Break out of the loop.
+      break;
+    }
+
+    temp = currEntry;
+    currEntry = currEntry->mNextPopup;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
