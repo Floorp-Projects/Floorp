@@ -216,11 +216,11 @@ mork_size morkZone::zone_grow_at(morkEnv* ev, mork_size inNeededSize)
     if ( prev ) // another node in free list precedes run?
       prev->RunSetNext(next); // unlink run
     else
-      mZone_FreeOldRunList = run; // unlink run from head of list
+      mZone_FreeOldRunList = next; // unlink run from head of list
       
     morkOldRun *oldRun = (morkOldRun *) run;
     oldRun->OldSetSize(runSize);
-    mZone_At = (mork_u1*) run->RunAsBlock();
+    mZone_At = (mork_u1*) run;
     mZone_AtSize = runSize;
 
 #ifdef morkZone_CONFIG_DEBUG
