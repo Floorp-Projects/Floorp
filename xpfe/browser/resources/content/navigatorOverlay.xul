@@ -295,7 +295,7 @@
     </menu>       
 
     <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
-          datasources="rdf:bookmarks rdf:localsearch rdf:internetsearch" 
+          datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
           ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
           oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)">
       <template id="bookmarksMenuTemplate">
