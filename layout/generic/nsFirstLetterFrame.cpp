@@ -274,7 +274,9 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
     kid->GetNextInFlow(&kidNextInFlow);
     if (nsnull != kidNextInFlow) {
       // Remove all of the childs next-in-flows
-      DeleteNextInFlowChild(aPresContext, kidNextInFlow);
+      nsContainerFrame* parent;
+      kidNextInFlow->GetParent((nsIFrame**)&parent);
+      parent->DeleteNextInFlowChild(aPresContext, kidNextInFlow);
     }
   }
   else {
