@@ -128,7 +128,7 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
      * Mark the URL as background loading.  This prevents many
      * client upcall notifications...
      */
-    URL_s->load_background = TRUE;
+    URL_s->load_background = FALSE;
 
     /*
      * Attach the Data Consumer to the URL_Struct.
@@ -211,7 +211,7 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
          * Mark the URL as background loading.  This prevents many
          * client upcall notifications...
          */
-        URL_s->load_background = TRUE;
+        URL_s->load_background = FALSE;
 
         /*
          * Attach the ConnectionInfo object to the URL_Struct.

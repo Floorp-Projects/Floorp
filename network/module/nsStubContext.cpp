@@ -90,6 +90,12 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
 {
     nsConnectionInfo *pConn;
 
+    /*
+     * XXX: Currently this function never calls OnProgress(...) because
+     *      netlib calls FE_GraphProgressDestroy(...) after closing the
+     *      stream...  So, OnStopBinding(...) has already been called and
+     *      the nsConnectionInfo->pConsumer has been released and NULLed...
+     */
     if (NULL != URL_s->fe_data) {
         /* 
          * Retrieve the nsConnectionInfo object from the fe_data field
