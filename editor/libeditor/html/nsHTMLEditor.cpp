@@ -5353,3 +5353,70 @@ nsHTMLEditor::ParseStyleAttrIntoCSSRule(const PRUnichar *aString, nsIDOMCSSStyle
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNode * aNewBlock,
+                                          nsIDOMNode **aOutBrNode)
+{
+  *aOutBrNode = nsnull;
+  nsCOMPtr<nsIDOMNode> child = aPreviousBlock, tmp = aPreviousBlock;
+  nsresult res;
+  while (tmp) {
+    child = tmp;
+    res = GetLastEditableChild(child, address_of(tmp));
+    if (NS_FAILED(res)) return res;
+  }
+  while (child && nsTextEditUtils::IsBreak(child)) {
+    nsCOMPtr<nsIDOMNode> priorNode;
+    res = GetPriorHTMLNode(child, address_of(priorNode));
+    if (NS_FAILED(res)) return res;
+    child = priorNode;
+  }
+  nsCOMPtr<nsIDOMNode> newStyles = nsnull, deepestStyle = nsnull;
+  while (child && (child != aPreviousBlock)) {
+    if (nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("a"))      ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("b"))      ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("i"))      ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("u"))      ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("tt"))     ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("s"))      ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("strike")) ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("big"))    ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("small"))  ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("blink"))  ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("sub"))    ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("sup"))    ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("font"))   ||
+        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("span"))) {
+      nsAutoString domTagName;
+      child->GetNodeName(domTagName);
+      ToLowerCase(domTagName);
+      if (newStyles) {
+        nsCOMPtr<nsIDOMNode> newContainer;
+        res = InsertContainerAbove(newStyles, address_of(newContainer), domTagName);
+        if (NS_FAILED(res)) return res;
+        newStyles = newContainer;
+      }
+      else {
+        res = CreateNode(domTagName, aNewBlock, 0, getter_AddRefs(newStyles));
+        if (NS_FAILED(res)) return res;
+        deepestStyle = newStyles;
+      }
+      res = CloneAttributes(newStyles, child);
+      if (NS_FAILED(res)) return res;
+    }
+    nsCOMPtr<nsIDOMNode> tmp;
+    res = child->GetParentNode(getter_AddRefs(tmp));
+    if (NS_FAILED(res)) return res;
+    child = tmp;
+  }
+  if (deepestStyle) {
+    nsCOMPtr<nsIDOMNode> outBRNode;
+    res = CreateBR(deepestStyle, 0, address_of(outBRNode));
+    if (NS_FAILED(res)) return res;
+    // Getters must addref
+    *aOutBrNode = outBRNode;
+    NS_ADDREF(*aOutBrNode);
+  }
+  return NS_OK;
+}
