@@ -285,7 +285,7 @@ nsTreeFrame::HandleEvent(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   *aEventStatus = nsEventStatus_eConsumeDoDefault;
-  if (aEvent->message == NS_KEY_DOWN) {
+  if (aEvent->message == NS_KEY_PRESS) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
     PRUint32 keyCode = keyEvent->keyCode;
     if (keyCode == NS_VK_UP ||
