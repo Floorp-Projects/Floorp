@@ -50,10 +50,11 @@ while (@row = FetchSQLData()) {
 
 my $template = Param('whinemail');
 my $urlbase = Param('urlbase');
+my $emailsuffix = Param('emailsuffix');
 
 foreach my $email (sort (keys %bugs)) {
     my %substs;
-    $substs{'email'} = $email;
+    $substs{'email'} = $email . $emailsuffix;
     my $msg = PerformSubsts($template, \%substs);
 
     foreach my $i (@{$bugs{$email}}) {
