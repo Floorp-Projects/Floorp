@@ -61,6 +61,7 @@ libs::
 	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsrootidl.h .\include
 	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsTraceRefcnt.h .\include
 	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsXPCOM.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIComponentManagerObsolete.h .\include
 
 	$(INSTALL) $(XPDIST)/include/nspr/pratom.h ./include
 	$(INSTALL) $(XPDIST)/include/nspr/prcpucfg.h ./include
