@@ -57,10 +57,6 @@
 #include <sys/stat.h>
 #endif
 
-#ifdef XP_OS2_VACPP
-#include <direct.h>
-#endif
-
 #ifndef FALSE
 #define FALSE 0
 #endif

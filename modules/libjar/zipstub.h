@@ -60,7 +60,7 @@
 #if defined(XP_MAC)
 #define PR_EXTERN(__type)       extern __declspec(export) __type
 #define PR_PUBLIC_API(__type)   __declspec(export) __type
-#elif defined(XP_WIN) || defined(XP_OS2_VACPP)
+#elif defined(XP_WIN)
 #define PR_EXTERN(__type)       extern _declspec(dllexport) __type
 #define PR_PUBLIC_API(__type)   _declspec(dllexport) __type
 #else /* XP_UNIX */
@@ -68,14 +68,8 @@
 #define PR_PUBLIC_API(__type)   __type 
 #endif
 
-#ifdef XP_OS2_VACPP
-#define PR_CALLBACK _Optlink
-#define PR_STATIC_CALLBACK(__x) static __x PR_CALLBACK
-#else
 #define PR_CALLBACK
 #define PR_STATIC_CALLBACK(__x) static __x
-#endif
-
 
 #define NS_STATIC_CAST(__type, __ptr)      ((__type)(__ptr))
 
