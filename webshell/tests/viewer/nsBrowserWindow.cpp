@@ -1111,26 +1111,38 @@ nsBrowserWindow::DoCopy()
           char* str = data.str();
 
 #if defined(WIN32)
-          HGLOBAL     hGlobalMemory;
-          PSTR        pGlobalMemory;
+          PRUint32 aolMail = RegisterClipboardFormat("AOLMAIL");
+          PRUint32 textHtml = RegisterClipboardFormat("text/html");
+
+
+          HGLOBAL     hGlobalMemory1;
+          PSTR        pGlobalMemory1;
+
+          HGLOBAL     hGlobalMemory2;
+          PSTR        pGlobalMemory2;
 
           PRInt32 len = data.pcount();
           if (len)
           {
             // Copy text to Global Memory Area
-            hGlobalMemory = (HGLOBAL)GlobalAlloc(GHND, len+1);
-            if (hGlobalMemory != NULL) {
-              pGlobalMemory = (PSTR) GlobalLock(hGlobalMemory);
+            hGlobalMemory1 = (HGLOBAL)GlobalAlloc(GHND, len+1);
+            hGlobalMemory2 = (HGLOBAL)GlobalAlloc(GHND, len+1);
+            if (hGlobalMemory1 != NULL && hGlobalMemory2 != NULL) {
+              pGlobalMemory1 = (PSTR) GlobalLock(hGlobalMemory1);
+              pGlobalMemory2 = (PSTR) GlobalLock(hGlobalMemory2);
               char * s  = str;
               for (int i=0;i< len;i++) {
-                *pGlobalMemory++ = *s++;
+                *pGlobalMemory1++ = *s;
+                *pGlobalMemory2++ = *s++;
               }
 
               // Put data on Clipboard
-              GlobalUnlock(hGlobalMemory);
+              GlobalUnlock(hGlobalMemory1);
+              GlobalUnlock(hGlobalMemory2);
               OpenClipboard(NULL);
               EmptyClipboard();
-              SetClipboardData(CF_TEXT, hGlobalMemory);
+              SetClipboardData(aolMail, hGlobalMemory1);
+              SetClipboardData(textHtml, hGlobalMemory2);
               CloseClipboard();
             }
           }
