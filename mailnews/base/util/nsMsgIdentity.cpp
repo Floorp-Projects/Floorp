@@ -31,7 +31,7 @@
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-NS_IMPL_ISUPPORTS1(nsMsgIdentity,
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgIdentity,
                    nsIMsgIdentity)
 
 nsMsgIdentity::nsMsgIdentity():

@@ -30,7 +30,7 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgWindow.h"
 
-NS_IMPL_ISUPPORTS1(nsMsgMailSession, nsIMsgMailSession);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgMailSession, nsIMsgMailSession);
 
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
