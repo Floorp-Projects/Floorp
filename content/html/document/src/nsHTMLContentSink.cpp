@@ -891,9 +891,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     nsCOMPtr<nsIDTD> dtd;
     rv = mParser->GetDTD(getter_AddRefs(dtd));
     if (NS_SUCCEEDED(rv)) {
-      nsAutoString str;
-      dtd->IntTagToStringTag(aNodeType, str);
-      tmp.Append(str);
+      dtd->IntTagToStringTag(aNodeType, tmp);
     }
   }
 
