@@ -239,9 +239,11 @@ Rights Reserved.
         <button id="button_search" class="other28" align="top" label="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
 			</box>
 
-      <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
+     <box id="throbber-box" autostretch="never">
+      <button id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
         <observes element="broadcaster_throbber" attribute="busy"/>
       </button>
+     </box>
     </toolbar>
   </toolbox>
 
