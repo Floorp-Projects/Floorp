@@ -487,7 +487,7 @@ nsFileOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsFileOutputStream
+// nsSafeFileOutputStream
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsSafeFileOutputStream, 
                              nsFileOutputStream,
