@@ -60,30 +60,20 @@ nsresult nsCollationMac::GetSortKeyLen(const nsCollationStrength strength,
 nsresult nsCollationMac::CreateSortKey(const nsCollationStrength strength, 
                            const nsString& stringIn, PRUint8* key, PRUint32* outLen)
 {
-  // temporary implementation, call FE eventually
   PRUint32 byteLenIn = stringIn.Length() * sizeof(PRUnichar);
+  nsAutoString stringNormalized(stringIn);
 
   if (byteLenIn > *outLen) {
-    *outLen = 0;
+    byteLenIn = 0;
   }
   else {
-    if (mCollation != NULL) {
-      mCollation->NormalizeString(stringIn);
+    if (mCollation != NULL && strength != kCollationCaseSensitive) {
+      mCollation->NormalizeString(stringNormalized);
     }
-    if (strength != kCollationCaseSensitive) {
-      nsString *stringLower = new nsString(stringIn);
-      if (NULL == stringLower)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      stringLower->ToLowerCase();
-      memcpy((void *) key, (void *) stringLower->GetUnicode(), byteLenIn);
-      delete stringLower;
-    }
-   else {
-      memcpy((void *) key, (void *) stringIn.GetUnicode(), byteLenIn);
+    // temporary implementation, call FE eventually
+    memcpy((void *) key, (void *) stringNormalized.GetUnicode(), byteLenIn);
    }
-   *outLen = byteLenIn;
-  }
+  *outLen = byteLenIn;
 
   return NS_OK;
 }
