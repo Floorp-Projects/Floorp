@@ -214,9 +214,11 @@ checkout:
 	@date > $(CVSCO_LOGFILE)
 	cd $(ROOTDIR) && \
 	  $(CVSCO) $(MOZ_CO_MODULE) 2>&1 | tee -a $(CVSCO_LOGFILE)
-	@if egrep "^C " $(CVSCO_LOGFILE) > /dev/null 2>&1 ; then \
-	  echo "$(MAKE): *** Conflicts during checkout. \
-	       Refer to $(CVSCO_LOGFILE)."; \
+	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
+	if test "$$conflicts" ; then \
+	  echo "$(MAKE): *** Conflicts during checkout." ;\
+	  echo "$$conflicts" ;\
+	  echo "$(MAKE): Refer to $(CVSCO_LOGFILE) for full log." ;\
 	  exit 1; \
 	fi
 
