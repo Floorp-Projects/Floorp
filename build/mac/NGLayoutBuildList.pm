@@ -535,6 +535,7 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
     _InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
     _InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
+    _InstallFromManifest(":mozilla:widget:timer:public:MANIFEST",						"$distdirectory:widget:");
 
     #RDF
     _InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
