@@ -56,6 +56,11 @@ static NS_DEFINE_IID(kDrawingSurfaceCID, NS_DRAWING_SURFACE_CID);
 
 #define FLAGS_ALL             (FLAG_CLIP_VALID | FLAG_CLIP_CHANGED | FLAG_LOCAL_CLIP_VALID)
 
+int cur_color = 0;
+char FillColorName[8][20] = {"Pg_BLACK","Pg_BLUE","Pg_RED","Pg_YELLOW","Pg_GREEN","Pg_MAGENTA","Pg_CYAN","Pg_WHITE"};
+long FillColorVal[8] = {Pg_BLACK,Pg_BLUE,Pg_RED,Pg_YELLOW,Pg_GREEN,Pg_MAGENTA,Pg_CYAN,Pg_WHITE};
+//PRBool            mBufferIsEmpty;
+
 // Macro for creating a palette relative color if you have a COLORREF instead
 // of the reg, green, and blue values. The color is color-matches to the nearest
 // in the current logical palette. This has no effect on a non-palette device
@@ -78,7 +83,8 @@ unsigned char   PhGfxLogState = 0;		/* 0 == Not Enabled */
 /* Global Variable for Alpha Blending */
 void *Mask;
 
-#define SELECT(surf) if (surf->Select()) ApplyClipping(surf->GetGC());
+#define SELECT(surf) mBufferIsEmpty = PR_FALSE; if (surf->Select()) ApplyClipping(surf->GetGC());
+//#define SELECT(surf) if (surf->Select()) ApplyClipping(surf->GetGC());
 
 class GraphicsState
 {
@@ -152,6 +158,8 @@ nsRenderingContextPh :: nsRenderingContextPh()
   #ifdef NS_DEBUG
   mInitialized     = PR_FALSE;
   #endif
+
+  mBufferIsEmpty = PR_TRUE;
 
   PushState();
 }
@@ -401,13 +409,20 @@ NS_IMETHODIMP nsRenderingContextPh::UnlockDrawingSurface(void)
 
 NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface\n"));
+//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface (%s)\n", FillColorName[cur_color]));
 
 //  printf ("kedl: surface select: %lu\n",aSurface);
   if (nsnull==aSurface)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  selecting offscreen (private)\n"));
     mSurface = mOffscreenSurface;
+  }
   else
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  selecting passed-in (%p)\n", aSurface));
     mSurface = (nsDrawingSurfacePh *) aSurface;
+  }
 
 //  printf ("kedl2: select pixmap %p\n", ((nsDrawingSurfacePh *)mSurface)->mPixmap);
   mSurface->Select();
@@ -415,8 +430,12 @@ NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSur
 // to clear the buffer to black to clean up transient rips during redraw....
   PgSetClipping( 0, NULL );
   PgSetMultiClip( 0, NULL );
-  PgSetFillColor(Pg_BLACK);
-  PgDrawIRect( 0, 0, 1024,768, Pg_DRAW_FILL_STROKE );
+  PgSetFillColor(FillColorVal[cur_color]);
+//  PgDrawIRect( 0, 0, 1024,768, Pg_DRAW_FILL_STROKE );
+  cur_color++;
+  cur_color &= 0x7;
+
+  mBufferIsEmpty = PR_TRUE;
 
 //1  ApplyClipping(mSurface->GetGC());
   return NS_OK;
@@ -570,30 +589,37 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
 
   if ((mTMatrix) && (mRegion))
   {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  prev clip empty = %i\n", mRegion->IsEmpty()));
+
     mTMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
 
     switch(aCombine)
     {
       case nsClipCombine_kIntersect:
+   	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  combine type = intersect\n"));
         mRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
         break;
       case nsClipCombine_kUnion:
+   	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  combine type = union\n"));
         mRegion->Union(trect.x,trect.y,trect.width,trect.height);
         break;
       case nsClipCombine_kSubtract:
+   	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  combine type = subtract\n"));
         mRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
         break;
       case nsClipCombine_kReplace:
+   	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  combine type = replace\n"));
         mRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
         break;
       default:
    	PR_LOG(PhGfxLog, PR_LOG_ERROR, ("nsRenderingContextPh::SetClipRect  Unknown Combine type\n"));
         break;
-     }
+    }
 
-     aClipEmpty = mRegion->IsEmpty();
+    aClipEmpty = mRegion->IsEmpty();
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  new clip empty = %i\n", aClipEmpty ));
 
-       ApplyClipping(mGC);
+    ApplyClipping(mGC);
 
 // kirk    mRegion->GetNativeRegion((void*&)rgn);
 // kirk    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRect Calling PgSetCliping (%ld,%ld,%ld,%ld)\n", rgn->ul.x, rgn->ul.y, rgn->lr.x, rgn->lr.y));
@@ -846,15 +872,16 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUi
 {
 // REVISIT; what are the flags???
 
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface\n"));
+
   if (nsnull==mSurface) {
     aSurface = nsnull;
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  mSurface is NULL - failure!\n"));
     return NS_ERROR_FAILURE;
   }
 
   extern int double_buffer;
   if (!double_buffer) return NS_OK;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface\n"));
 
  nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
 //printf ("create2: %p %d\n",surf,aSurfFlags);
@@ -867,7 +894,9 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUi
 //2   ApplyClipping(mSurface->GetGC());
  }
 
- aSurface = (nsDrawingSurface)surf;
+  aSurface = (nsDrawingSurface)surf;
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  new surface = %p\n", aSurface));
 
   return NS_OK;
 }
@@ -1512,6 +1541,8 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
                                                          PRUint32 aCopyFlags)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits.\n"));
+
+
   PhArea_t    area;
   PRInt32               srcX = aSrcX;
   PRInt32               srcY = aSrcY;
@@ -1519,6 +1550,24 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   nsDrawingSurfacePh  *destsurf;
 
   PhGC_t *saveGC=PgGetGC();
+
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+  {
+    NS_ASSERTION(!(nsnull == mSurface), "no back buffer");
+    destsurf = mSurface;
+  }
+  else
+    destsurf = mOffscreenSurface;
+
+  if( mBufferIsEmpty )
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  Buffer empty, skipping.\n"));
+    SELECT( destsurf );
+    PgSetGC(saveGC);
+    return NS_OK;
+  }
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  flags=%X\n", aCopyFlags ));
 
 #if 0
   printf("nsRenderingContextPh::CopyOffScreenBits() flags=\n");
@@ -1537,14 +1586,6 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
   printf("\n");
 #endif
-
-  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
-  {
-    NS_ASSERTION(!(nsnull == mSurface), "no back buffer");
-    destsurf = mSurface;
-  }
-  else
-    destsurf = mOffscreenSurface;
 
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
     mTMatrix->TransformCoord(&srcX, &srcY);
