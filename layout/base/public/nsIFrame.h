@@ -133,6 +133,11 @@ struct nsReflowState {
  * for a frame that is not complete, i.e. you wouldn't set both
  * NS_FRAME_COMPLETE and NS_FRAME_REFLOW_NEXTINFLOW
  *
+ * The low 8 bits of the nsReflowStatus are reserved for future extensions;
+ * the remaining 24 bits are zero (and available for extensions; however
+ * API's that accept/return nsReflowStatus must not receive/return any
+ * extension bits).
+ *
  * @see #Reflow()
  * @see #CreateContinuingFrame()
  */
@@ -142,11 +147,15 @@ typedef PRUint32 nsReflowStatus;
 #define NS_FRAME_NOT_COMPLETE      0x1
 #define NS_FRAME_REFLOW_NEXTINFLOW 0x2
 
-#define NS_FRAME_IS_COMPLETE(status)\
+#define NS_FRAME_IS_COMPLETE(status) \
   (0 == ((status) & NS_FRAME_NOT_COMPLETE))
 
-#define NS_FRAME_IS_NOT_COMPLETE(status)\
+#define NS_FRAME_IS_NOT_COMPLETE(status) \
   (0 != ((status) & NS_FRAME_NOT_COMPLETE))
+
+// This macro tests to see if an nsReflowStatus is an error value
+// or just a regular return value
+#define NS_IS_REFLOW_ERROR(_status) (PRInt32(_status) < 0)
 
 //----------------------------------------------------------------------
 
