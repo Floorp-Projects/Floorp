@@ -817,6 +817,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     if (folderStart > 0)
     {
         nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
         nsCOMPtr<nsIRDFResource> res;
         nsCOMPtr<nsIMsgImapMailFolder> parentFolder;
         nsCAutoString uri (mURI);
@@ -5243,21 +5244,22 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
   // in the acl response.
   server->GetRealUsername(getter_Copies(myUserName));
 
-  char *ourUserName = nsnull;
+  nsCAutoString ourUserName;
   
   if (!userName)
-    ourUserName = PL_strdup(myUserName.get());
+    ourUserName.Assign(myUserName);
   else
-    ourUserName = PL_strdup(userName);
-  
+    ourUserName.Assign(userName);
+
+  ToLowerCase(ourUserName);
   char *rightsWeOwn = PL_strdup(rights);
   nsCStringKey hashKey(ourUserName);
-  if (rightsWeOwn && ourUserName)
+  if (rightsWeOwn && !ourUserName.IsEmpty())
   {
     char *oldValue = (char *) m_rightsHash->Get(&hashKey);
     if (oldValue)
     {
-      PR_FREEIF(oldValue);
+      PR_Free(oldValue);
       m_rightsHash->Remove(&hashKey);
       m_aclCount--;
       NS_ASSERTION(m_aclCount >= 0, "acl count can't go negative");
@@ -5266,8 +5268,8 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
     ret = (m_rightsHash->Put(&hashKey, rightsWeOwn) == 0);
   }
   
-  if (ourUserName && 
-    (myUserName.Equals(ourUserName) || !strcmp(ourUserName, IMAP_ACL_ANYONE_STRING)))
+  if (!ourUserName.IsEmpty() && 
+    (myUserName.Equals(ourUserName) || ourUserName.Equals(IMAP_ACL_ANYONE_STRING)))
   {
     // if this is setting an ACL for me, cache it in the folder pref flags
     UpdateACLCache();
@@ -5291,6 +5293,7 @@ const char *nsMsgIMAPFolderACL::GetRightsStringForUser(const char *inUserName)
     // in the acl response.
     server->GetRealUsername(getter_Copies(userName));
   }
+  ToLowerCase(userName);
   nsCStringKey userKey(userName.get());
   
   return (const char *)m_rightsHash->Get(&userKey);
