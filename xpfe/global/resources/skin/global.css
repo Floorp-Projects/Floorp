@@ -1977,3 +1977,8 @@ html|select[size="1"]:focus > html|input#-moz-display {
   border: none;
 }
 
+toolbarseparator.line {
+  width: 30px;
+  border : 1px solid red;
+  background-color: #99CCCC;
+}
