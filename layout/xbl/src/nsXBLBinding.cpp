@@ -948,12 +948,14 @@ nsXBLBinding::GetBaseTag(nsIAtom** aResult)
       if (xmlContent) {
         xmlContent->GetContainingNameSpace(*getter_AddRefs(nameSpace));
 
-        nsCOMPtr<nsINameSpace> tagSpace;
-        nameSpace->FindNameSpace(prefixAtom, *getter_AddRefs(tagSpace));
-        if (tagSpace) {
-          // Score! Return the tag.
+        if (nameSpace) {
+          nsCOMPtr<nsINameSpace> tagSpace;
+          nameSpace->FindNameSpace(prefixAtom, *getter_AddRefs(tagSpace));
+          if (tagSpace) {
+            // Score! Return the tag.
           // XXX We should really return the namespace as well.
-          *aResult = NS_NewAtom(extends); // The addref happens here
+            *aResult = NS_NewAtom(extends); // The addref happens here
+          }
         }
       }
     }
