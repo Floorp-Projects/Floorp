@@ -74,8 +74,12 @@
     <vbox>
       <spacer flex="1"/>
       <button id="up_button" class="up small" disabled="true"
+              label="&charset.customize.moveUp.label;"
+              accesskey="&charset.customize.moveUp.accesskey;"
               oncommand="MoveUp();"/>
       <button id="down_button" class="down small" disabled="true"
+              label="&charset.customize.moveDown.label;"
+              accesskey="&charset.customize.moveDown.accesskey;"
               oncommand="MoveDown();"/>
       <spacer flex="1"/>
     </vbox>
