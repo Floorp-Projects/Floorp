@@ -749,6 +749,7 @@ sub EmailFromUsername {
           $name = $2;
           $last = ">$3";
      }
+     $name =~ s/%/@/;
      $name .= '@' . Param("userdomain", 1)
           unless ($name =~ /\@/);
      $name = $first . trim($name) . $last;
