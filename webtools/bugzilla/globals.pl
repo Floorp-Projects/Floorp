@@ -445,8 +445,10 @@ sub GenerateRandomPassword {
     $size ||= 8;
 
     # The list of characters that can appear in a randomly generated password.
-    # Note that users can put any character into a password they choose themselves.
-    my @pwchars = (0..9, 'A'..'Z', 'a'..'z', '-', '_', '!', '@', '#', '$', '%', '^', '&', '*');
+    # Note that users can put any character into a password they choose
+    # themselves.
+    my @pwchars = (0..9, 'A'..'Z', 'a'..'z', '-', '_', '!', '@', '#', '$',
+        '%', '^', '*');
 
     # The number of characters in the list.
     my $pwcharslen = scalar(@pwchars);
