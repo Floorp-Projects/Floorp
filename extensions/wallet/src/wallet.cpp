@@ -880,6 +880,15 @@ Wallet_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool*
 nsresult
 wallet_GetString(nsAutoString& result, PRUnichar * szMessage, PRUnichar * szMessage1)
 {
+  /* doing wrap manually because of bug 27732 */
+  PRInt32 i=0;
+  while (szMessage[i] != '\0') {
+    if (szMessage[i] == '#') {
+      szMessage[i] = '\n';
+    }
+  i++;
+  }
+
   nsAutoString password;
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
@@ -930,6 +939,15 @@ wallet_GetString(nsAutoString& result, PRUnichar * szMessage, PRUnichar * szMess
 nsresult
 wallet_GetDoubleString(nsAutoString& result, PRUnichar * szMessage, PRUnichar * szMessage1, PRUnichar * szMessage2, PRBool& matched)
 {
+  /* doing wrap manually because of bug 27732 */
+  PRInt32 i=0;
+  while (szMessage[i] != '\0') {
+    if (szMessage[i] == '#') {
+      szMessage[i] = '\n';
+    }
+  i++;
+  }
+
   nsAutoString password, password2;
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
@@ -1713,12 +1731,6 @@ Wallet_SetKey(PRBool isNewkey) {
 
   if (Wallet_KeySize() < 0) { /* no key has yet been established */
 
-// following lines are temporary for the beta1 release
-PRUnichar * message0 = Wallet_Localize("disclaimer");
-res = Wallet_Confirm(message0);
-if (res) {
-// end of temporary lines
-
     PRUnichar * message = Wallet_Localize("firstPassword");
     PRUnichar * message1 = Wallet_Localize("enterPassword");
     PRUnichar * message2 = Wallet_Localize("confirmPassword");
@@ -1743,14 +1755,6 @@ if (res) {
     PR_FREEIF(message);
     Recycle(message1);
     PR_FREEIF(message2);
-
-// following lines are temporary for the beta1 release
-} else {
-Recycle(message0);
-return FALSE;
-}
-Recycle(message0);
-// end of temporary lines
 
   } else { /* key has previously been established */
     PRUnichar * message;
