@@ -86,6 +86,7 @@
 #include "nsVoidArray.h"
 #include "nsDeque.h"
 
+
 #define NS_INAVHTML_DTD_IID      \
   {0x5c5cce40, 0xcfd6,  0x11d1,  \
   {0xaa, 0xda, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
@@ -97,48 +98,9 @@ class nsIParserNode;
 class nsCParserNode;
 class CITokenHandler;
 class nsParser;
+class nsDTDContext;
+class nsTagStack;
 
-
-
-/***************************************************************
-  Before digging into the NavDTD, we'll define a helper 
-  class called CTagStack.
-
-  Simply put, we've built ourselves a little data structure that
-  serves as a stack for htmltags (and associated bits). 
-  What's special is that if you #define _dynstack 1, the stack
-  size can grow dynamically (like you'ld want in a release build.)
-  If you don't #define _dynstack 1, then the stack is a fixed size,
-  equal to the eStackSize enum. This makes debugging easier, because
-  you can see the htmltags on the stack if its not dynamic.
- ***************************************************************/
-
-//#define _dynstack 1
-CLASS_EXPORT_HTMLPARS CTagStack {
-  enum {eStackSize=200};
-
-public:
-
-            CTagStack(int aDefaultSize=50);
-            ~CTagStack();
-  void      Push(eHTMLTags aTag);
-  eHTMLTags Pop();
-  eHTMLTags First() const;
-  eHTMLTags Last() const;
-  void      Empty(void); 
-
-  int       mSize;
-  int       mCount;
-
-#ifdef _dynstack
-  eHTMLTags*  mTags;
-  PRBool*     mBits;
-#else
-  eHTMLTags   mTags[200];
-  PRBool      mBits[200];
-	CTagStack*	mPrevious;
-#endif
-};
 
 /***************************************************************
   Now the main event: CNavDTD.
@@ -381,7 +343,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool ForwardPropagate(CTagStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag);
+    virtual PRBool ForwardPropagate(nsTagStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag);
 
     /**
      * This method tries to design a context map (without actually
@@ -392,7 +354,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool BackwardPropagate(CTagStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
+    virtual PRBool BackwardPropagate(nsTagStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
 
     /**
      * Ask parser if a given container is open ANYWHERE on stack
@@ -601,8 +563,6 @@ protected:
 
 protected:
 
-		void				PushStack(CTagStack& aStack);
-		CTagStack*	PopStack();
 		PRInt32			CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
 		PRInt32			CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
 
@@ -612,8 +572,10 @@ protected:
 
     CITokenHandler*     mTokenHandlers[eToken_last];
 
-    CTagStack           mContextStack;
-    CTagStack*          mStyleStack;
+    nsDTDContext*       mHeadContext;
+    nsDTDContext*       mBodyContext;
+    nsDTDContext*       mFormContext;
+    nsDTDContext*       mMapContext;
 
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
