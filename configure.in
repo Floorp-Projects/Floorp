@@ -1389,6 +1389,8 @@ mailnews/compose/Makefile
 mailnews/compose/public/Makefile
 mailnews/compose/src/Makefile
 mailnews/compose/tests/Makefile
+mailnews/compose/tests/smtp/Makefile
+mailnews/compose/tests/compose/Makefile
 mailnews/public/Makefile
 "
 
