@@ -1822,7 +1822,7 @@ dnl
 dnl These are set just to be safe.  It is possible that NSPR doesnt
 dnl use these anymore.
 dnl 
-MOZ_NSPRENV_MOZILLA_CLIENT=1
+MOZ_NSPRENV_MOZILLA_CLIENT=
 MOZ_NSPRENV_NO_MDUPDATE=1
 
 dnl 
