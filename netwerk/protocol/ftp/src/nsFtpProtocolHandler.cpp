@@ -65,24 +65,28 @@ PRLogModuleInfo* gFTPLog = nsnull;
 
 #endif /* PR_LOGGING */
 
+static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,       NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
+nsSupportsHashtable* nsFtpProtocolHandler::mRootConnectionList = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
+nsFtpProtocolHandler::nsFtpProtocolHandler() {
+        NS_INIT_REFCNT();
+}
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpProtocolHandler() called"));
-    if (mLock) PR_DestroyLock(mLock);
+     if (mRootConnectionList) {
+        NS_DELETEXPCOM(mRootConnectionList);
+        mRootConnectionList = nsnull;
+    }
+    mIOSvc = 0;
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsFtpProtocolHandler);
-NS_IMPL_THREADSAFE_RELEASE(nsFtpProtocolHandler);
-NS_IMPL_QUERY_INTERFACE3(nsFtpProtocolHandler, 
-                         nsIProtocolHandler, 
-                         nsIConnectionCache, 
-                         nsIObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsFtpProtocolHandler, nsIProtocolHandler);
 
 nsresult
 nsFtpProtocolHandler::Init() {
@@ -95,22 +99,12 @@ nsFtpProtocolHandler::Init() {
     mProxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
    
-    NS_NEWXPCOM(mRootConnectionList, nsHashtable);
-    if (!mRootConnectionList) return NS_ERROR_OUT_OF_MEMORY;
-    rv = NS_NewThreadPool(getter_AddRefs(mPool), 
-                          NS_FTP_MIN_CONNECTION_COUNT,
-                          NS_FTP_MAX_CONNECTION_COUNT,
-                          NS_FTP_CONNECTION_STACK_SIZE);
+    mIOSvc = do_GetService(kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIObserverService> obsServ = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-        obsServ->AddObserver(this, topic.GetUnicode());
-    }
-
-    mLock = PR_NewLock();
-    if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
+    mRootConnectionList = new nsSupportsHashtable(16, PR_TRUE);  /* xxx what should be the size of this hashtable?? */
+    if (!mRootConnectionList) return NS_ERROR_OUT_OF_MEMORY;
+    NS_LOG_NEW_XPCOM(mRootConnectionList, "nsSupportsHashtable", sizeof(nsSupportsHashtable), __FILE__, __LINE__);
 
     // XXX hack until xpidl supports error info directly (http://bugzilla.mozilla.org/show_bug.cgi?id=13423)
     nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID, &rv);
@@ -166,18 +160,17 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     nsresult rv = NS_OK;
 
     PRBool useProxy = PR_FALSE;
-    
-    nsFTPChannel* channel;
+
+    nsFTPChannel* channel = nsnull;
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
-
-    rv = channel->Init(url, this, mPool);
+    
+    rv = channel->Init(url);
     if (NS_FAILED(rv)) {
-        NS_RELEASE(channel);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));
         return rv;
     }
-    
+
     if (NS_SUCCEEDED(mProxySvc->GetProxyEnabled(&useProxy)) && useProxy)
     {
         rv = mProxySvc->ExamineForProxy(url, channel);
@@ -241,49 +234,53 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     return rv;
 }
 
-// nsIConnectionCache methods
-NS_IMETHODIMP
-nsFtpProtocolHandler::RemoveConn(const char *aKey, nsConnectionCacheObj* *_retval) {
+// connection cache methods
+nsresult
+nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsISupports* *_retval) {
     NS_ASSERTION(_retval, "null pointer");
-    nsCStringKey key(aKey);
-    nsAutoLock lock(mLock);
-    *_retval = (nsConnectionCacheObj*)mRootConnectionList->Remove(&key);
-    return NS_OK;
+    NS_ASSERTION(aKey, "null pointer");
+    
+    *_retval = nsnull;
+
+    if (!mRootConnectionList)
+        return NS_ERROR_NULL_POINTER;
+
+    nsXPIDLCString spec;
+    aKey->GetPrePath(getter_Copies(spec));
+    
+    nsCStringKey stringKey(spec);
+    
+    // Do not have to addRef since there is only one connection (with this key)
+    // in this hash table at any time and that one has been addRef'ed
+    // by the Put().  If we change connection caching, we will have 
+    // to re-address this.
+    if (mRootConnectionList)
+        mRootConnectionList->Remove(&stringKey, (nsISupports**)_retval);
+
+    if (*_retval)
+        return NS_OK;
+
+    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsFtpProtocolHandler::InsertConn(const char *aKey, nsConnectionCacheObj *aConn) {
+nsresult
+nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn) {
     NS_ASSERTION(aConn, "null pointer");
-    nsCStringKey key(aKey);
-    nsAutoLock lock(mLock);
-    mRootConnectionList->Put(&key, aConn);
-    return NS_OK;
-}
+    NS_ASSERTION(aKey, "null pointer");
+    
+    if (!mRootConnectionList)
+        return NS_ERROR_NULL_POINTER;
 
-// cleans up a connection list entry
-static PRBool PR_CALLBACK CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
-    delete (nsConnectionCacheObj*)aData;
-    return PR_TRUE;
-}
-
-// nsIObserver method
-NS_IMETHODIMP
-nsFtpProtocolHandler::Observe(nsISupports     *aSubject,
-                              const PRUnichar *aTopic,
-                              const PRUnichar *someData ) {
-    nsresult rv;
-    if (mRootConnectionList) {
-        mRootConnectionList->Reset(CleanupConnEntry);
-        NS_DELETEXPCOM(mRootConnectionList);
-        mRootConnectionList = nsnull;
-    }
-    // remove ourself from the observer service.
-    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-        obsServ->RemoveObserver(this, topic.GetUnicode());
-    }
-    return NS_OK;
+    nsXPIDLCString spec;
+    aKey->GetPrePath(getter_Copies(spec));
+    nsCStringKey stringKey(spec);
+    
+    if (mRootConnectionList)
+    {
+        mRootConnectionList->Put(&stringKey, aConn);
+        return NS_OK;
+    }        
+    return NS_ERROR_FAILURE;    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
