@@ -87,7 +87,7 @@
     
     [% preset_queries = user.showmybugslink %]
     [% FOREACH q = user.queries %]
-      [% preset_queries = 1 IF q.linkinfooter %]
+      [% SET preset_queries = 1 IF q.linkinfooter %]
     [% END %]
       
     <tr>
