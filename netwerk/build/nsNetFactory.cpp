@@ -24,7 +24,7 @@
 //#include "nsFileTransportService.h"
 #include "nsSocketTransportService.h"
 #include "nscore.h"
-#include "nsStdURL.h"
+#include "nsStandardUrl.h"
 #include "nsSimpleURI.h"
 #include "nsDnsService.h"
 #include "nsLoadGroup.h"
@@ -70,7 +70,7 @@ NSGetFactory(nsISupports* aServMgr,
         rv = NS_NewGenericFactory(&fact, nsDNSService::Create);
     }
     else if (aClass.Equals(kStandardURLCID)) {
-        rv = NS_NewGenericFactory(&fact, nsStdURL::Create);
+        rv = NS_NewGenericFactory(&fact, nsStandardURL::Create);
     }
     else if (aClass.Equals(kSimpleURICID)) {
         rv = NS_NewGenericFactory(&fact, nsSimpleURI::Create);
