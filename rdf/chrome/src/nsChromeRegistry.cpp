@@ -253,7 +253,7 @@ nsChromeRegistry::nsChromeRegistry()
 }
 
 
-static PRBool DatasourceEnumerator(nsHashKey *aKey, void *aData, void* closure)
+static PRBool PR_CALLBACK DatasourceEnumerator(nsHashKey *aKey, void *aData, void* closure)
 {
     if (!closure || !aData)
         return PR_FALSE;
