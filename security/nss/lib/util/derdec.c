@@ -326,7 +326,7 @@ der_decode(PRArenaPool *arena, void *dest, DERTemplate *dtemplate,
 	 * have to have all this extra logic.
 	 */
 	wrong = PR_TRUE;
-	expect_tag = encode_kind & DER_TAG_MASK;
+	expect_tag = (unsigned char)encode_kind & DER_TAG_MASK;
 	expect_num = expect_tag & DER_TAGNUM_MASK;
 	if (expect_num == DER_SET || expect_num == DER_SEQUENCE) {
 	    if (*buf == (expect_tag | DER_CONSTRUCTED))
