@@ -1,0 +1,137 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<?xml-stylesheet href="bookmarks.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+<!ENTITY menu.file.label            "File">
+<!ENTITY menuitem.newWindow.label     "New Window">
+<!ENTITY menuitem.newBookmark.label   "New Bookmark...">
+<!ENTITY menuitem.newFolder.label     "New Folder...">
+<!ENTITY menuitem.newSeparator.label  "New Separator">
+<!ENTITY menuitem.close.label         "Close">
+<!ENTITY menu.edit.label            "Edit">
+<!ENTITY menuitem.undo.label          "Undo">
+<!ENTITY menuitem.redo.label          "Redo">
+<!ENTITY menuitem.cut.label           "Cut">
+<!ENTITY menuitem.copy.label          "Copy">
+<!ENTITY menuitem.paste.label         "Paste">
+<!ENTITY menuitem.delete.label        "Delete">
+<!ENTITY menuitem.selectAll.label     "Select All">
+<!ENTITY menuitem.find.label          "Find in Bookmarks...">
+<!ENTITY menuitem.findAgain.label     "Find Again">
+<!ENTITY menuitem.properties.label    "Bookmark Properties...">
+<!ENTITY tree.header.name.label           "Name">
+<!ENTITY tree.header.url.label            "URL">
+<!ENTITY tree.header.shortcut.label       "Shortcut URL">
+<!ENTITY bookmarksWindowTitle.label	"Bookmarks">
+]>
+
+<xul:window title="&bookmarksWindowTitle.label;"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script src="bookmarks.js"/>
+
+  <menubar>
+    <menu name="&menu.file.label;">
+      <menuitem name="&menuitem.newWindow.label;"
+                onclick="BookmarksNewWindow();"/>
+      <menuitem name="x&menuitem.newBookmark.label;"/>
+      <menuitem name="x&menuitem.newFolder.label;"/>
+      <menuitem name="x&menuitem.newSeparator.label;"/>
+      <separator/>
+      <menuitem name="x&menuitem.close.label;"/>
+    </menu>
+    <menu name="&menu.edit.label;">
+      <menuitem name="x&menuitem.undo.label;"/>
+      <menuitem name="x&menuitem.redo.label;"/>
+      <separator/>
+      <menuitem name="x&menuitem.cut.label;"/>
+      <menuitem name="x&menuitem.copy.label;"/>
+      <menuitem name="x&menuitem.paste.label;"/>
+      <menuitem name="x&menuitem.delete.label;"/>
+      <menuitem name="x&menuitem.selectAll.label;"/>
+      <separator/>
+      <menuitem name="x&menuitem.find.label;"/>
+      <menuitem name="x&menuitem.findAgain.label;"/>
+      <separator/>
+      <menuitem name="&menuitem.properties.label;"
+                onclick="return BookmarkProperties();"/>
+    </menu>
+  </menubar>
+
+<tree  id="bookmarksTree" 
+       datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find"
+       ondblclick="return OpenURL(event,event.target.parentNode);"
+       flex="100%">
+
+  <template>
+  	<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treebody" subcontainment="treechildren">
+  		<treeitem uri="...">
+  			<treecell>
+  				<html:hr width="75%" align="center" size="1" />
+  			</treecell>
+		</treeitem>  		
+  	</rule>
+  	
+  	<rule rootcontainment="treebody" subcontainment="treechildren">
+	  	<treeitem uri="...">
+			<treecell>
+				<treeindentation />
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+			</treecell>
+			<treecell>
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+			</treecell>
+			<treecell>
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
+			</treecell>
+	  	</treeitem>
+	</rule>
+  </template>
+
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
+  <treehead>
+    <treeitem>
+      <treecell onclick="return doSort('NameColumn');">
+	<xul:observes element="NameColumn" attribute="sortActive"/>
+	<xul:observes element="NameColumn" attribute="sortDirection"/>
+      &tree.header.name.label;</treecell>
+      <treecell onclick="return doSort('URLColumn');">
+	<xul:observes element="URLColumn" attribute="sortActive"/>
+	<xul:observes element="URLColumn" attribute="sortDirection"/>
+      &tree.header.url.label;</treecell>
+      <treecell onclick="return doSort('ShortcutURLColumn');">
+	<xul:observes element="ShortcutURLColumn" attribute="sortActive"/>
+	<xul:observes element="ShortcutURLColumn" attribute="sortDirection"/>
+      &tree.header.shortcut.label;</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody id="NC:BookmarksRoot" />
+</tree>
+
+</xul:window>
+

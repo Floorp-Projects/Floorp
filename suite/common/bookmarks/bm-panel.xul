@@ -1,0 +1,79 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
+
+<xul:window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script src="bookmarks.js"/>
+
+<tree id="bookmarksTree"
+      datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find" 
+      ondblclick="return OpenURL(event,event.target.parentNode);">
+
+  <template>
+    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator"
+          rootcontainment="treebody" subcontainment="treechildren">
+      <treeitem uri="...">
+        <treecell>
+          <html:hr width="75%" align="center" size="1" />
+        </treecell>
+      </treeitem>  		
+    </rule>
+  	
+    <rule rootcontainment="treebody" subcontainment="treechildren">
+      <treeitem uri="...">
+        <treecell>
+          <treeindentation />
+          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        align="right" />
+        </treecell>
+        <treecell>
+          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL"
+                        align="right" style="list-style-image: none;" />
+        </treecell>
+      </treeitem>
+    </rule>
+  </template>
+
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treehead>
+    <treeitem>
+      <treecell onclick="return doSort('NameColumn');">
+	<observes element="NameColumn" attribute="sortActive"/>
+	<observes element="NameColumn" attribute="sortDirection"/>
+      Name</treecell>
+      <treecell onclick="return doSort('URLColumn');">
+	<observes element="URLColumn" attribute="sortActive"/>
+	<observes element="URLColumn" attribute="sortDirection"/>
+      URL</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody id="NC:BookmarksRoot">
+  </treebody>
+</tree>
+
+</xul:window>
+
