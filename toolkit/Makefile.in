@@ -45,8 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 DIRS	= xre components skin/win
 
 # skin/unix contains css rules that more closely match gtk widgets
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS	+= skin/unix
-endif
+### killing this for now until we know how qute looks on linux
+# ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+# DIRS	+= skin/unix
+# endif
 
 include $(topsrcdir)/config/rules.mk

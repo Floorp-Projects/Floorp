@@ -31,11 +31,8 @@
 
 groupbox {
   margin: 5px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDHighlight ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDHighlight;
+  border: 1px solid ThreeDShadow;
+  -moz-border-radius: 5px;
   padding: 5px;
 }
 
@@ -46,5 +43,5 @@ groupbox {
 caption {
   margin: 0px 6px 2px 6px;
   padding: 0px 3px;
-  background-color: -moz-Dialog; 
+  background-color: -moz-Dialog;
 }
