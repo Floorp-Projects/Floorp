@@ -45,7 +45,7 @@ of the Bugzilla Guide in the docs/ directory.
    email address and password. These will be used for the initial
    Bugzilla administrator account.
 
-7. Configure Apache (or install and configure, if you don't have one up
+7. Configure Apache (or install and configure, if you don't have it up
    yet) to point to the Bugzilla directory. You should enable and
    activate mod_cgi, and add the configuration entries
     
