@@ -230,7 +230,7 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
     nsresult rv;
 
     // XXX use profile dir or something
-    nsSpecialSystemDirectory spec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+    nsSpecialSystemDirectory spec(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     spec += "localstore.rdf";
 
     if (! spec.Exists()) {
