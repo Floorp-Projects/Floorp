@@ -1379,8 +1379,8 @@ NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
 
     // Next, get CSS style declaration.
     nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-    nsAutoString empty;
-    viewCSS->GetComputedStyle(windowElement, empty, getter_AddRefs(cssDecl));
+    viewCSS->GetComputedStyle(windowElement, EmptyString(),
+                              getter_AddRefs(cssDecl));
     NS_ENSURE_TRUE(cssDecl, NS_ERROR_FAILURE);
 
     // Whew.  Now get "list-style-image" property value.
