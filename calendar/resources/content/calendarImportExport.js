@@ -176,7 +176,7 @@ function addEventsToCalendar( calendarEventArray, silent )
 
    for(var i = 0; i < calendarEventArray.length; i++)
    {
-      calendarEvent = calendarEventArray[i]
+      calendarEvent = calendarEventArray[i];
 	       
       // Check if event with same ID already in Calendar. If so, import event with new ID.
       if( gICalLib.fetchEvent( calendarEvent.id ) != null ) {
@@ -191,8 +191,7 @@ function addEventsToCalendar( calendarEventArray, silent )
       if( silent )
       {
          var DefaultServer = gCalendarWindow.calendarManager.getDefaultServer();
-
-         gICalLib.addEvent( calendarEvent, DefaultServer.path );
+         gICalLib.addEvent( calendarEvent, DefaultServer );
       }
       else
          editNewEvent( calendarEvent );
