@@ -610,6 +610,11 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     aConsumer->OnStopRequest(aURL, 0, nsnull);
 #endif
 
+	// don't leak proxy!
+	proxy->Close();
+	delete proxy;
+	proxy = nsnull;
+
 done:
     NS_RELEASE(in);
     return rv;
