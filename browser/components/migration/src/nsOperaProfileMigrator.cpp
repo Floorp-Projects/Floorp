@@ -109,10 +109,10 @@ nsOperaProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnicha
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
 
-  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS,  NS_LITERAL_STRING("settings").get());
-  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES,   NS_LITERAL_STRING("cookies").get());
-  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY,   NS_LITERAL_STRING("history").get());
-  COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS, NS_LITERAL_STRING("bookmarks").get());
+  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS);
+  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES);
+  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY);
+  COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS);
 
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 
@@ -909,9 +909,15 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
                    getter_AddRefs(root));
   nsCOMPtr<nsIRDFResource> parentFolder;
   if (!aReplace) {
+    nsXPIDLString sourceNameOpera;
+    bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameOpera").get(), 
+                              getter_Copies(sourceNameOpera));
+
+    const PRUnichar* sourceNameStrings[] = { sourceNameOpera.get() };
     nsXPIDLString importedOperaHotlistTitle;
-    bundle->GetStringFromName(NS_LITERAL_STRING("importedOperaHotlistTitle").get(), 
-                              getter_Copies(importedOperaHotlistTitle));
+    bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
+                                 sourceNameStrings, 1, 
+                                 getter_Copies(importedOperaHotlistTitle));
 
     bms->CreateFolderInContainer(importedOperaHotlistTitle.get(), 
                                  root, -1, getter_AddRefs(parentFolder));
@@ -954,9 +960,15 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
   if (!parser)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsXPIDLString sourceNameOpera;
+  aBundle->GetStringFromName(NS_LITERAL_STRING("sourceNameOpera").get(), 
+                             getter_Copies(sourceNameOpera));
+
+  const PRUnichar* sourceNameStrings[] = { sourceNameOpera.get() };
   nsXPIDLString importedSearchUrlsTitle;
-  aBundle->GetStringFromName(NS_LITERAL_STRING("importedOperaSearchUrls").get(), 
-                             getter_Copies(importedSearchUrlsTitle));
+  aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
+                                sourceNameStrings, 1, 
+                                getter_Copies(importedSearchUrlsTitle));
 
   nsCOMPtr<nsIRDFResource> keywordsFolder;
   aBMS->CreateFolderInContainer(importedSearchUrlsTitle.get(), 

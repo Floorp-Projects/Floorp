@@ -90,10 +90,10 @@ nsSafariProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnich
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
   
-  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS,  NS_LITERAL_STRING("settings").get());
-  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES,   NS_LITERAL_STRING("cookies").get());
-  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY,   NS_LITERAL_STRING("history").get());
-  COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS, NS_LITERAL_STRING("bookmarks").get());
+  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS);
+  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES);
+  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY);
+  COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS);
 
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 

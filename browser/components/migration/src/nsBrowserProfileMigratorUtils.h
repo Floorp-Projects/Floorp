@@ -47,11 +47,13 @@
   if (sObserverService) \
     sObserverService->NotifyObservers(nsnull, message, item)
 
-#define COPY_DATA(func, replace, itemIndex, itemString) \
+#define COPY_DATA(func, replace, itemIndex) \
   if (NS_SUCCEEDED(rv) && (aItems & itemIndex || !aItems)) { \
-    NOTIFY_OBSERVERS(MIGRATION_ITEMBEFOREMIGRATE, itemString); \
+    nsAutoString index; \
+    index.AppendInt(itemIndex); \
+    NOTIFY_OBSERVERS(MIGRATION_ITEMBEFOREMIGRATE, index.get()); \
     rv = func(replace); \
-    NOTIFY_OBSERVERS(MIGRATION_ITEMAFTERMIGRATE, itemString); \
+    NOTIFY_OBSERVERS(MIGRATION_ITEMAFTERMIGRATE, index.get()); \
   }
 
 #include "nsIPrefBranch.h"

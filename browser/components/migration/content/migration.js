@@ -1,44 +1,9 @@
-const nsIBPM = Components.interfaces.nsIBrowserProfileMigrator;
-
-function MigrationItem(aID, aKey)
-{
-  this._id = aID;
-  this._key = aKey;
-}
+const kIMig = Components.interfaces.nsIBrowserProfileMigrator;
 
 var MigrationWizard = {
-  _items:    [new MigrationItem(nsIBPM.SETTINGS,  "settings"),
-              new MigrationItem(nsIBPM.COOKIES,   "cookies"),
-              new MigrationItem(nsIBPM.HISTORY,   "history"),
-              new MigrationItem(nsIBPM.FORMDATA,  "formdata"),
-              new MigrationItem(nsIBPM.PASSWORDS, "passwords"),
-              new MigrationItem(nsIBPM.BOOKMARKS, "bookmarks"),
-              new MigrationItem(nsIBPM.OTHERDATA, "otherdata")],
-  _dataSources: { 
-#ifdef XP_WIN
-    "ie":       { _migrate: [nsIBPM.SETTINGS, nsIBPM.COOKIES, nsIBPM.HISTORY, nsIBPM.FORMDATA, nsIBPM.PASSWORDS, nsIBPM.BOOKMARKS], 
-                   _import: [0, 1, 2, 3, 4, 5] },
-#endif
-#ifdef XP_MACOSX
-    "safari":   { _migrate: [nsIBPM.SETTINGS, nsIBPM.COOKIES, nsIBPM.HISTORY, nsIBPM.BOOKMARKS],
-                   _import: [0, 1, 2, 5] },
-    "omniweb":  { _migrate: [],
-                   _import: [] },
-    "macie":    { _migrate: [],
-                   _import: [] },
-#endif
-    "opera":    { _migrate: [nsIBPM.SETTINGS, nsIBPM.COOKIES, nsIBPM.HISTORY, nsIBPM.BOOKMARKS, nsIBPM.OTHERDATA],    
-                   _import: [0, 1, 2, 5, 6] },
-    "dogbert":  { _migrate: [nsIBPM.SETTINGS, nsIBPM.COOKIES, nsIBPM.BOOKMARKS],          
-                   _import: [1, 5] },
-    "seamonkey":{ _migrate: [nsIBPM.SETTINGS, nsIBPM.COOKIES, nsIBPM.HISTORY, nsIBPM.PASSWORDS, nsIBPM.BOOKMARKS, nsIBPM.OTHERDATA], 
-                   _import: [1, 4, 5] },
-  },
-  
-  _source: "",
-  _itemsFlags: 0,
-  _selectedIndices: [],
-  _selectedProfile: null,
+  _source: "",                  // Source Profile Migrator ContractID suffix
+  _itemsFlags: kIMig.ALL,       // Selected Import Data Sources (32-bit bitfield)
+  _selectedProfile: null,       // Selected Profile name to import from
   _wiz: null,
   _migrator: null,
   _autoMigrate: false,
@@ -56,7 +21,7 @@ var MigrationWizard = {
     if ("arguments" in window) {
       this._source = window.arguments[0];
       this._migrator = window.arguments[1].QueryInterface(nsIBPM);
-      this._automigrate = true;
+      this._autoMigrate = true;
       
       // Advance past the first page
       this._wiz.advance();
@@ -76,14 +41,23 @@ var MigrationWizard = {
   onImportSourcePageShow: function ()
   {
     document.documentElement.getButton("back").disabled = true;
+    
+    // Figure out what source apps are are available to import from:
+    var group = document.getElementById("importSourceGroup");
+    for (var i = 0; i < group.childNodes.length; ++i) {
+      var suffix = group.childNodes[i].id;
+      var contractID = "@mozilla.org/profile/migrator;1?app=browser&type=" + suffix;
+      var migrator = Components.classes[contractID].createInstance(nsIBPM);
+      if (!migrator.sourceExists)
+        group.childNodes[i].setAttribute("hidden", "true");
+    }
 
-    var importSourceGroup = document.getElementById("importSourceGroup");
-    importSourceGroup.selectedItem = document.getElementById(this._source == "" ? "ie" : this._source);
+    group.selectedItem = this._source == "" ? group.firstChild : document.getElementById(this._source);
   },
   
   onImportSourcePageAdvanced: function ()
   {
-    if (!this._automigrate)
+    if (!this._autoMigrate)
       this._source = document.getElementById("importSourceGroup").selectedItem.id;
 
     // Create the migrator for the selected source.
@@ -93,30 +67,14 @@ var MigrationWizard = {
       this._migrator = Components.classes[contractID].createInstance(nsIBPM);
     }
     
-    dump("*** source = " + this._source + "\n");
-
-    switch (this._source) {
-# Opera only supports profiles on Windows. 
-#ifdef XP_WIN
-    case "opera":
-#endif
-    case "dogbert":
-    case "seamonkey":
-      // check for more than one Opera profile
-      this._wiz.currentPage.next = this._migrator.sourceHasMultipleProfiles ? "selectProfile" : "importItems";
-      break;
-    default:
-      // Don't show the Select Profile page for sources that don't support
-      // multiple profiles
-      this._wiz.currentPage.next = "importItems";
-      break;
-    }
+    // check for more than one source profile
+    this._wiz.currentPage.next = this._migrator.sourceHasMultipleProfiles ? "selectProfile" : "importItems";
   },
   
   // 2 - [Profile Selection]
   onSelectProfilePageShow: function ()
   {
-    if (this._automigrate)
+    if (this._autoMigrate)
       document.documentElement.getButton("back").disabled = true;
       
     var profiles = document.getElementById("profiles");
@@ -148,11 +106,8 @@ var MigrationWizard = {
     this._selectedProfile = profiles.selectedItem.id;
     
     // If we're automigrating, don't show the item selection page, just grab everything.
-    if (this._automigrate) {
-      this._itemsFlags = nsIBPM.ALL;
-      this._selectedIndices = this._dataSources[this._source]._migrate;
+    if (this._autoMigrate)
       this._wiz.currentPage.next = "migrating";
-    }
   },
   
   // 3 - ImportItems
@@ -164,14 +119,14 @@ var MigrationWizard = {
     
     var bundle = document.getElementById("bundle");
     
-    var ds = this._dataSources[this._source]._import;
-    for (var i = 0; i < ds.length; ++i) {
-      var item = this._items[ds[i]];
+    var items = this._migrator.getMigrateData(this._selectedProfile);
+    for (var i = 0; i < 32; ++i) {
+      var itemID = Math.pow(2, (items >> i) & 0x1);
       var checkbox = document.createElement("checkbox");
-      checkbox.id = item._id;
-      checkbox.setAttribute("label", bundle.getString(item._key + "_" + this._source));
+      checkbox.id = itemID;
+      checkbox.setAttribute("label", bundle.getString(itemID + "_" + this._source));
       dataSources.appendChild(checkbox);
-      if (!this._itemsFlags || this._itemsFlags & item._id)
+      if (!this._itemsFlags || this._itemsFlags & itemID)
         checkbox.checked = true;
     }
   },
@@ -179,18 +134,12 @@ var MigrationWizard = {
   onImportItemsPageAdvanced: function ()
   {
     var dataSources = document.getElementById("dataSources");
-    var params = 0;
-    this._selectedIndices = [];
+    this._itemsFlags = 0;
     for (var i = 0; i < dataSources.childNodes.length; ++i) {
       var checkbox = dataSources.childNodes[i];
-      if (checkbox.localName == "checkbox") {
-        if (checkbox.checked) {
-          params |= parseInt(checkbox.id);
-          this._selectedIndices.push(parseInt(checkbox.id));
-        }
-      }
+      if (checkbox.localName == "checkbox" && checkbox.checked)
+        this._itemsFlags |= parseInt(checkbox.id);
     }
-    this._itemsFlags = params;
   },
   
   onImportItemCommand: function (aEvent)
@@ -218,7 +167,7 @@ var MigrationWizard = {
   
   onMigratingMigrate: function (aOuter)
   {
-    aOuter._migrator.migrate(aOuter._itemsFlags, aOuter._automigrate, aOuter._selectedProfile);
+    aOuter._migrator.migrate(aOuter._itemsFlags, aOuter._autoMigrate, aOuter._selectedProfile);
   },
   
   _listItems: function (aID)
@@ -227,44 +176,37 @@ var MigrationWizard = {
     while (items.hasChildNodes())
       items.removeChild(items.firstChild);
     
-    var idToIndex = { "1": 0, "2": 1, "4": 2, "8": 3, "16": 4, "32": 5, "64": 6 };
     var bundle = document.getElementById("bundle");
-    for (var i = 0; i < this._selectedIndices.length; ++i) {
-      var index = this._selectedIndices[i];
+    for (var i = 0; i < 32; ++i) {
+      var itemID = Math.pow(2, (this._itemsFlags >> i) & 0x1);
       var label = document.createElement("label");
-      var item = this._items[idToIndex[index.toString()]];
-      label.id = item._key;
-      label.setAttribute("value", bundle.getString(item._key + "_" + this._source));
+      label.id = itemID + "_migrated";
+      label.setAttribute("value", bundle.getString(itemID + "_" + this._source));
       items.appendChild(label);
-    } 
+    }
   },
   
   observe: function (aSubject, aTopic, aData)
   {
-    var itemToIndex = { "settings": 0, "cookies": 1, "history": 2, "formdata": 3, "passwords": 4, "bookmarks": 5, "otherdata": 6 };
     switch (aTopic) {
     case "Migration:Started":
       dump("*** started\n");
       break;
     case "Migration:ItemBeforeMigrate":
       dump("*** before " + aData + "\n");
-      var index = itemToIndex[aData];
-      var item = this._items[index];
-      var label = document.getElementById(item._key);
+      var label = document.getElementById(aData + "_migrated");
       if (label)
         label.setAttribute("style", "font-weight: bold");
       break;
     case "Migration:ItemAfterMigrate":
       dump("*** after " + aData + "\n");
-      var index = itemToIndex[aData];
-      var item = this._items[index];
-      var label = document.getElementById(item._key);
+      var label = document.getElementById(aData + "_migrated");
       if (label)
         label.removeAttribute("style");
       break;
     case "Migration:Ended":
       dump("*** done\n");
-      if (this._automigrate) {
+      if (this._autoMigrate) {
         // We're done now.
         window.close();
       }

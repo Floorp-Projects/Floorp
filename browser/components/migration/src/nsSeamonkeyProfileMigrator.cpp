@@ -100,12 +100,12 @@ nsSeamonkeyProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUn
   if (!mSourceProfile)
     GetSourceProfile(aProfile);
 
-  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS,  NS_LITERAL_STRING("settings").get());
-  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES,   NS_LITERAL_STRING("cookies").get());
-  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY,   NS_LITERAL_STRING("history").get());
-  COPY_DATA(CopyPasswords,    aReplace, nsIBrowserProfileMigrator::PASSWORDS, NS_LITERAL_STRING("passwords").get());
-  COPY_DATA(CopyOtherData,    aReplace, nsIBrowserProfileMigrator::OTHERDATA, NS_LITERAL_STRING("otherdata").get());
-  COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS, NS_LITERAL_STRING("bookmarks").get());
+  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS);
+  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES);
+  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY);
+  COPY_DATA(CopyPasswords,    aReplace, nsIBrowserProfileMigrator::PASSWORDS);
+  COPY_DATA(CopyOtherData,    aReplace, nsIBrowserProfileMigrator::OTHERDATA);
+  COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS);
 
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 
@@ -723,7 +723,7 @@ nsSeamonkeyProfileMigrator::CopyBookmarks(PRBool aReplace)
   if (aReplace)
     return CopyFile(FILE_NAME_BOOKMARKS, FILE_NAME_BOOKMARKS);
   return ImportNetscapeBookmarks(FILE_NAME_BOOKMARKS, 
-                                 NS_LITERAL_STRING("importedSeamonkeyBookmarksTitle").get());
+                                 NS_LITERAL_STRING("sourceNameSeamonkey").get());
 }
 
 nsresult

@@ -264,7 +264,7 @@ nsNetscapeProfileMigratorBase::CopyFile(const nsAString& aSourceFileName, const 
 
 nsresult
 nsNetscapeProfileMigratorBase::ImportNetscapeBookmarks(const nsAString& aBookmarksFileName,
-                                                       const PRUnichar* aImportFolderTitleKey)
+                                                       const PRUnichar* aImportSourceNameKey)
 {
   nsCOMPtr<nsIFile> bookmarksFile;
   mSourceProfile->Clone(getter_AddRefs(bookmarksFile));
@@ -293,11 +293,17 @@ nsNetscapeProfileMigratorBase::ImportNetscapeBookmarks(const nsAString& aBookmar
   nsCOMPtr<nsIRDFResource> root;
   rdfs->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), getter_AddRefs(root));
 
-  nsXPIDLString importedDogbertBookmarksTitle;
-  mBundle->GetStringFromName(aImportFolderTitleKey, getter_Copies(importedDogbertBookmarksTitle));
+  nsXPIDLString sourceName;
+  mBundle->GetStringFromName(aImportSourceNameKey, getter_Copies(sourceName));
+
+  const PRUnichar* sourceNameStrings[] = { sourceName.get() };
+  nsXPIDLString importedBookmarksTitle;
+  mBundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
+                                sourceNameStrings, 1, 
+                                getter_Copies(importedBookmarksTitle));
 
   nsCOMPtr<nsIRDFResource> folder;
-  bms->CreateFolderInContainer(importedDogbertBookmarksTitle.get(), root, -1, getter_AddRefs(folder));
+  bms->CreateFolderInContainer(importedBookmarksTitle.get(), root, -1, getter_AddRefs(folder));
   
   nsCOMPtr<nsIRDFResource> folderProp;
   rdfs->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#Folder"), 

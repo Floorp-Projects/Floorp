@@ -433,12 +433,12 @@ nsIEProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* 
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
 
-  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS,  NS_LITERAL_STRING("settings").get());
-  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES,   NS_LITERAL_STRING("cookies").get());
-  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY,   NS_LITERAL_STRING("history").get());
-  COPY_DATA(CopyFormData,     aReplace, nsIBrowserProfileMigrator::FORMDATA,  NS_LITERAL_STRING("formdata").get());
-  COPY_DATA(CopyPasswords,    aReplace, nsIBrowserProfileMigrator::PASSWORDS, NS_LITERAL_STRING("passwords").get());
-  COPY_DATA(CopyFavorites,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS, NS_LITERAL_STRING("bookmarks").get());
+  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS);
+  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES);
+  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY);
+  COPY_DATA(CopyFormData,     aReplace, nsIBrowserProfileMigrator::FORMDATA);
+  COPY_DATA(CopyPasswords,    aReplace, nsIBrowserProfileMigrator::PASSWORDS);
+  COPY_DATA(CopyFavorites,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS);
 
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 
@@ -1033,8 +1033,14 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     nsCOMPtr<nsIStringBundle> bundle;
     bundleService->CreateBundle(TRIDENTPROFILE_BUNDLE, getter_AddRefs(bundle));
 
+    nsXPIDLString sourceNameIE;
+    bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameIE").get(), 
+                              getter_Copies(sourceNameIE));
+
+    const PRUnichar* sourceNameStrings[] = { sourceNameIE.get() };
     nsXPIDLString importedIEFavsTitle;
-    bundle->GetStringFromName(NS_LITERAL_STRING("importedIEFavsTitle").get(), getter_Copies(importedIEFavsTitle));
+    bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
+                                 sourceNameStrings, 1, getter_Copies(importedIEFavsTitle));
 
     bms->CreateFolderInContainer(importedIEFavsTitle.get(), root, -1, getter_AddRefs(folder));
   }
@@ -1098,10 +1104,16 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
         break;
 
       if (!keywordsFolder) {
-        nsXPIDLString importedIESearchUrlsTitle;
-        bundle->GetStringFromName(NS_LITERAL_STRING("importedIESearchUrls").get(), getter_Copies(importedIESearchUrlsTitle));
+        nsXPIDLString sourceNameIE;
+        bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameIE").get(), 
+                                  getter_Copies(sourceNameIE));
 
-        bms->CreateFolderInContainer(importedIESearchUrlsTitle.get(), aParentFolder, -1, getter_AddRefs(keywordsFolder));
+        const PRUnichar* sourceNameStrings[] = { sourceNameIE.get() };
+        nsXPIDLString importedIESearchUrlsTitle;
+        bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
+                                    sourceNameStrings, 1, getter_Copies(importedIESearchUrlsTitle));
+        bms->CreateFolderInContainer(importedIESearchUrlsTitle.get(), aParentFolder, -1, 
+                                     getter_AddRefs(keywordsFolder));
       }
 
       nsCAutoString keyNameStr(keyName);
@@ -1121,7 +1133,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
 
           const PRUnichar* nameStrings[] = { host.get() };
           nsXPIDLString keywordName;
-          rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedIESearchUrlTitle").get(),
+          rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsTitle").get(),
                                             nameStrings, 1, getter_Copies(keywordName));
 
           nsAutoString keyword; keyword.AssignWithConversion(keyName);
