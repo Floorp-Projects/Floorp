@@ -343,8 +343,9 @@ Contributor(s): ______________________________________. -->
   </box>
   <html:script src="chrome://bookmarks/content/bookmark-popup.js" />
   <tree id="bmpopuptree" context="contextual"
+   flex="100%" style="height: 100%"
      datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
-     onclick="return opener.BookmarkPopupSingleClick(window,event.target.parentNode.parentNode);" flex="100%">
+     onclick="return opener.BookmarkPopupSingleClick(window,event.target.parentNode.parentNode);">
   
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#Bookmarkmenuseparator">
