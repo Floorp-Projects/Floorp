@@ -6211,17 +6211,8 @@ xml_parent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     xml = (JSXML *) JS_GetPrivate(cx, obj);
     parent = xml->parent;
-
-    /*
-     * Erratum?  ECMA-357 says xml parent is null, not undefined.  Rhino's E4X
-     * testcase js/tests/e4x/XML/13.4.4.27 wants undefined all around.
-     */
-    *rval = JSVAL_VOID;
-
-    if (xml->xml_class != JSXML_CLASS_LIST) {
-        if (!parent)
-            return JS_TRUE;
-    } else {
+    if (xml->xml_class == JSXML_CLASS_LIST) {
+        *rval = JSVAL_VOID;
         n = xml->xml_kids.length;
         if (n == 0)
             return JS_TRUE;
@@ -6233,6 +6224,11 @@ xml_parent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (kid->parent != parent)
                 return JS_TRUE;
         }
+    }
+
+    if (!parent) {
+        *rval = JSVAL_NULL;
+        return JS_TRUE;
     }
 
     parentobj = js_GetXMLObject(cx, parent);
