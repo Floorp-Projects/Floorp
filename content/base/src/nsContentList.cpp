@@ -647,20 +647,12 @@ nsContentList::Match(nsIContent *aContent)
     return PR_FALSE;
 
   if (mMatchAtom) {
+    if (!aContent->IsContentOfType(nsIContent::eELEMENT)) {
+      return PR_FALSE;
+    }
+
     nsINodeInfo *ni = aContent->GetNodeInfo();
-    if (!ni)
-      return PR_FALSE;
-
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
-
-    if (!node)
-      return PR_FALSE;
-
-    PRUint16 type;
-    node->GetNodeType(&type);
-
-    if (type != nsIDOMNode::ELEMENT_NODE)
-      return PR_FALSE;
+    NS_ASSERTION(ni, "Element without nodeinfo!");
 
     if (mMatchNameSpaceId == kNameSpaceID_Unknown) {
       return (mMatchAll || ni->Equals(mMatchAtom));
@@ -760,7 +752,7 @@ nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
   if (aStartRoot == mRootContent)
     return;
   
-  nsCOMPtr<nsIContent> parent = aStartRoot->GetParent();
+  nsIContent* parent = aStartRoot->GetParent();
   
   if (parent)
     PopulateWithStartingAfter(parent, aStartRoot, aElementsToAppend);
