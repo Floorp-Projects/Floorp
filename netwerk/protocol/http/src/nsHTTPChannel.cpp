@@ -172,7 +172,7 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsIEventQueue *eventQueue,
                          nsIStreamListener *listener)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return Open();
 }
 
 NS_IMETHODIMP
@@ -313,7 +313,6 @@ nsHTTPChannel::Open(void)
 
     nsISimpleEnumerator* pModules = nsnull;
     rv = pNetModuleMgr->EnumerateModules("http-request", &pModules);
-    NS_RELEASE(pNetModuleMgr);
     if (NS_FAILED(rv)) return rv;
 
     nsIProxyObjectManager*  proxyObjectManager = nsnull; 
