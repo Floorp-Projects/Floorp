@@ -56,7 +56,6 @@ public:
 
 	NS_IMETHOD CreateSubfolder(const char *folderName);
 
-	NS_IMETHOD RemoveSubFolder (nsIMsgFolder *which);
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const char *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);

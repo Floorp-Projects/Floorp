@@ -653,16 +653,6 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::RemoveSubFolder(nsIMsgFolder *which)
-{
-#if 0
-  // Let the base class do list management
-  nsMsgFolder::RemoveSubFolder(which);
-#endif
-  PR_ASSERT(0);  
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsMsgNewsFolder::Delete()
 {
   PR_ASSERT(0);

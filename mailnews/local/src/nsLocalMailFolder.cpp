@@ -609,13 +609,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::RemoveSubFolder(nsIMsgFolder *folder)
-{
-
-  // Derived class is responsible for managing the subdirectory
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 {
 	nsresult rv = GetDatabase();
