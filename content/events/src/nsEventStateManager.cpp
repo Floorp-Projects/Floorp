@@ -907,7 +907,6 @@ nsEventStateManager :: BeginTrackingDragGesture ( nsIPresContext* aPresContext, 
 void
 nsEventStateManager :: StopTrackingDragGesture ( )
 {
-  SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
   mIsTrackingDragGesture = PR_FALSE;
   mGestureDownPoint = nsPoint(0,0);
   mGestureDownFrame = nsnull;
