@@ -44,8 +44,8 @@ static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 ////////////////////////////////////////////////////////////////////////
 
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
-nsIServiceManager* ns4xPlugin::mServiceMgr;
-nsIMemory *         ns4xPlugin::mMalloc;
+nsIServiceManager* gServiceMgr;
+nsIMemory *         gMalloc;
 
 void
 ns4xPlugin::CheckClassInitialized(void)
@@ -55,8 +55,8 @@ ns4xPlugin::CheckClassInitialized(void)
     if (initialized)
         return;
 
-    mServiceMgr = nsnull;
-    mMalloc = nsnull;
+    gServiceMgr = nsnull;
+    gMalloc = nsnull;
 
     // XXX It'd be nice to make this const and initialize it
     // statically...
@@ -120,7 +120,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
 	fShutdownEntry = aShutdown;
 
     fLibrary = aLibrary;
-	mServiceMgr = serviceMgr;
+	gServiceMgr = serviceMgr;
 }
 
 
@@ -198,8 +198,8 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 
 	// set up the MemAllocator service now because it might be used by the plugin
 	if (aServiceMgr != nsnull) {
-		if (nsnull == mMalloc)
-			aServiceMgr->GetService(kMemoryCID, kIMemoryIID, (nsISupports**)&mMalloc);
+		if (nsnull == gMalloc)
+			aServiceMgr->GetService(kMemoryCID, kIMemoryIID, (nsISupports**)&gMalloc);
 	}
 
 #ifdef NS_DEBUG
@@ -445,7 +445,7 @@ ns4xPlugin::Shutdown(void)
 
     fShutdownEntry = nsnull;
   }
-  NS_IF_RELEASE(mMalloc);
+  NS_IF_RELEASE(gMalloc);
 
   return NS_OK;
 }
@@ -487,7 +487,7 @@ ns4xPlugin::GetValue(nsPluginVariable variable, void *value)
 //
 
 NPError NP_EXPORT
-ns4xPlugin::_geturl(NPP npp, const char* relativeURL, const char* target)
+_geturl(NPP npp, const char* relativeURL, const char* target)
 {
 	if(!npp)
 		return NPERR_INVALID_INSTANCE_ERROR;
@@ -495,12 +495,12 @@ ns4xPlugin::_geturl(NPP npp, const char* relativeURL, const char* target)
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
   NS_ASSERTION(inst != NULL, "null instance");
-  NS_ASSERTION(mServiceMgr != NULL, "null service manager");
+  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
 
   if (inst == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  if(mServiceMgr == nsnull)
+  if(gServiceMgr == nsnull)
 		return NPERR_GENERIC_ERROR;
 
 	nsIPluginStreamListener* listener = nsnull;
@@ -508,7 +508,7 @@ ns4xPlugin::_geturl(NPP npp, const char* relativeURL, const char* target)
 		inst->NewStream(&listener);
 
   nsIPluginManager * pm;
-  mServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
+  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
 
 	if(pm->GetURL(inst, relativeURL, target, listener) != NS_OK)
 		return NPERR_GENERIC_ERROR;
@@ -519,7 +519,7 @@ ns4xPlugin::_geturl(NPP npp, const char* relativeURL, const char* target)
 }
 
 NPError NP_EXPORT
-ns4xPlugin::_geturlnotify(NPP npp, const char* relativeURL, const char* target,
+_geturlnotify(NPP npp, const char* relativeURL, const char* target,
                           void* notifyData)
 {
 	if(!npp)
@@ -528,12 +528,12 @@ ns4xPlugin::_geturlnotify(NPP npp, const char* relativeURL, const char* target,
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
   NS_ASSERTION(inst != NULL, "null instance");
-  NS_ASSERTION(mServiceMgr != NULL, "null service manager");
+  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
 
   if (inst == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  if(mServiceMgr == nsnull)
+  if(gServiceMgr == nsnull)
 		return NPERR_GENERIC_ERROR;
 
 	nsIPluginStreamListener* listener = nsnull;
@@ -541,7 +541,7 @@ ns4xPlugin::_geturlnotify(NPP npp, const char* relativeURL, const char* target,
 		((ns4xPluginInstance*)inst)->NewNotifyStream(&listener, notifyData);
 
   nsIPluginManager * pm;
-  mServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
+  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
 
 	if(pm->GetURL(inst, relativeURL, target, listener) != NS_OK)
 		return NPERR_GENERIC_ERROR;
@@ -552,7 +552,7 @@ ns4xPlugin::_geturlnotify(NPP npp, const char* relativeURL, const char* target,
 }
 
 NPError NP_EXPORT
-ns4xPlugin::_posturlnotify(NPP npp, const char* relativeURL, const char *target,
+_posturlnotify(NPP npp, const char* relativeURL, const char *target,
                            uint32 len, const char *buf, NPBool file,
                            void* notifyData)
 {
@@ -562,12 +562,12 @@ ns4xPlugin::_posturlnotify(NPP npp, const char* relativeURL, const char *target,
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
   NS_ASSERTION(inst != NULL, "null instance");
-  NS_ASSERTION(mServiceMgr != NULL, "null service manager");
+  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
 
   if (inst == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  if(mServiceMgr == nsnull)
+  if(gServiceMgr == nsnull)
 		return NPERR_GENERIC_ERROR;
 
 	nsIPluginStreamListener* listener = nsnull;
@@ -575,7 +575,7 @@ ns4xPlugin::_posturlnotify(NPP npp, const char* relativeURL, const char *target,
 		((ns4xPluginInstance*)inst)->NewNotifyStream(&listener, notifyData);
 
   nsIPluginManager * pm;
-  mServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
+  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
 
 	if(pm->PostURL(inst, relativeURL, len, buf, file, target, listener) != NS_OK)
 		return NPERR_GENERIC_ERROR;
@@ -587,7 +587,7 @@ ns4xPlugin::_posturlnotify(NPP npp, const char* relativeURL, const char *target,
 
 
 NPError NP_EXPORT
-ns4xPlugin::_posturl(NPP npp, const char* relativeURL, const char *target, uint32 len,
+_posturl(NPP npp, const char* relativeURL, const char *target, uint32 len,
                      const char *buf, NPBool file)
 {
 	if(!npp)
@@ -596,12 +596,12 @@ ns4xPlugin::_posturl(NPP npp, const char* relativeURL, const char *target, uint3
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
   NS_ASSERTION(inst != NULL, "null instance");
-  NS_ASSERTION(mServiceMgr != NULL, "null service manager");
+  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
 
   if (inst == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  if(mServiceMgr == nsnull)
+  if(gServiceMgr == nsnull)
 		return NPERR_GENERIC_ERROR;
 
 	nsIPluginStreamListener* listener = nsnull;
@@ -609,7 +609,7 @@ ns4xPlugin::_posturl(NPP npp, const char* relativeURL, const char *target, uint3
 		inst->NewStream(&listener);
 
   nsIPluginManager * pm;
-  mServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
+  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
 
 	if(pm->PostURL(inst, relativeURL, len, buf, file, target, listener) != NS_OK)
 		return NPERR_GENERIC_ERROR;
@@ -673,7 +673,7 @@ ns4xStreamWrapper::GetStream(nsIOutputStream* &result)
 
 
 NPError NP_EXPORT
-ns4xPlugin::_newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
+_newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
 {
 	if(!npp)
 		return NPERR_INVALID_INSTANCE_ERROR;
@@ -716,7 +716,7 @@ ns4xPlugin::_newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *
 }
 
 int32 NP_EXPORT
-ns4xPlugin::_write(NPP npp, NPStream *pstream, int32 len, void *buffer)
+_write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 {
 	// negative return indicates failure to the plugin
 	if(!npp)
@@ -742,7 +742,7 @@ ns4xPlugin::_write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 }
 
 NPError NP_EXPORT
-ns4xPlugin::_destroystream(NPP npp, NPStream *pstream, NPError reason)
+_destroystream(NPP npp, NPStream *pstream, NPError reason)
 {
 	if(!npp)
 		return NPERR_INVALID_INSTANCE_ERROR;
@@ -774,7 +774,7 @@ ns4xPlugin::_destroystream(NPP npp, NPStream *pstream, NPError reason)
 }
 
 void NP_EXPORT
-ns4xPlugin::_status(NPP npp, const char *message)
+_status(NPP npp, const char *message)
 {
 	if(!npp)
 		return;
@@ -796,30 +796,30 @@ ns4xPlugin::_status(NPP npp, const char *message)
 }
 
 void NP_EXPORT
-ns4xPlugin::_memfree (void *ptr)
+_memfree (void *ptr)
 {
 	if(ptr)
-	    mMalloc->Free(ptr);
+	    gMalloc->Free(ptr);
 }
 
 uint32 NP_EXPORT
-ns4xPlugin::_memflush(uint32 size)
+_memflush(uint32 size)
 {
-    mMalloc->HeapMinimize(PR_TRUE);
+    gMalloc->HeapMinimize(PR_TRUE);
 
     return 0;
 }
 
 void NP_EXPORT
-ns4xPlugin::_reloadplugins(NPBool reloadPages)
+_reloadplugins(NPBool reloadPages)
 {
-  NS_ASSERTION(mServiceMgr != NULL, "null service manager");
+  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
 
-  if(mServiceMgr == nsnull)
+  if(gServiceMgr == nsnull)
 		return;
 
   nsIPluginManager * pm;
-  mServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
+  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
 
   pm->ReloadPlugins(reloadPages);
 
@@ -827,7 +827,7 @@ ns4xPlugin::_reloadplugins(NPBool reloadPages)
 }
 
 void NP_EXPORT
-ns4xPlugin::_invalidaterect(NPP npp, NPRect *invalidRect)
+_invalidaterect(NPP npp, NPRect *invalidRect)
 {
 	if(!npp)
 		return;
@@ -856,7 +856,7 @@ ns4xPlugin::_invalidaterect(NPP npp, NPRect *invalidRect)
 }
 
 void NP_EXPORT
-ns4xPlugin::_invalidateregion(NPP npp, NPRegion invalidRegion)
+_invalidateregion(NPP npp, NPRegion invalidRegion)
 {
 	if(!npp)
 		return;
@@ -885,7 +885,7 @@ ns4xPlugin::_invalidateregion(NPP npp, NPRegion invalidRegion)
 }
 
 void NP_EXPORT
-ns4xPlugin::_forceredraw(NPP npp)
+_forceredraw(NPP npp)
 {
 	if(!npp)
 		return;
@@ -913,7 +913,7 @@ ns4xPlugin::_forceredraw(NPP npp)
 }
 
 NPError NP_EXPORT
-ns4xPlugin::_getvalue(NPP npp, NPNVariable variable, void *result)
+_getvalue(NPP npp, NPNVariable variable, void *result)
 {
   nsresult res;
 
@@ -986,7 +986,7 @@ ns4xPlugin::_getvalue(NPP npp, NPNVariable variable, void *result)
 }
 
 NPError NP_EXPORT
-ns4xPlugin::_setvalue(NPP npp, NPPVariable variable, void *result)
+_setvalue(NPP npp, NPPVariable variable, void *result)
 {
 	if(!npp)
 		return NPERR_INVALID_INSTANCE_ERROR;
@@ -1032,7 +1032,7 @@ ns4xPlugin::_setvalue(NPP npp, NPPVariable variable, void *result)
 }
 
 NPError NP_EXPORT
-ns4xPlugin::_requestread(NPStream *pstream, NPByteRange *rangeList)
+_requestread(NPStream *pstream, NPByteRange *rangeList)
 {
     return NPERR_STREAM_NOT_SEEKABLE;
 }
@@ -1050,22 +1050,22 @@ ns4xPlugin::_requestread(NPStream *pstream, NPByteRange *rangeList)
 
 
 JRIEnv* NP_EXPORT
-ns4xPlugin::_getJavaEnv(void)
+_getJavaEnv(void)
 {
     return NULL;
 }
 
 const char * NP_EXPORT
-ns4xPlugin::_useragent(NPP npp)
+_useragent(NPP npp)
 {
-  NS_ASSERTION(mServiceMgr != NULL, "null service manager");
-  if (mServiceMgr == NULL)
+  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
+  if (gServiceMgr == NULL)
     return NULL;
 
   char *retstr;
 
   nsIPluginManager * pm;
-  mServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
+  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
 
   pm->UserAgent((const char **)&retstr);
 
@@ -1075,13 +1075,13 @@ ns4xPlugin::_useragent(NPP npp)
 }
 
 void * NP_EXPORT
-ns4xPlugin::_memalloc (uint32 size)
+_memalloc (uint32 size)
 {
-    return mMalloc->Alloc(size);
+    return gMalloc->Alloc(size);
 }
 
 java_lang_Class* NP_EXPORT
-ns4xPlugin::_getJavaClass(void* handle)
+_getJavaClass(void* handle)
 {
     return NULL;
 }
@@ -1089,7 +1089,7 @@ ns4xPlugin::_getJavaClass(void* handle)
 
 
 jref NP_EXPORT
-ns4xPlugin::_getJavaPeer(NPP npp)
+_getJavaPeer(NPP npp)
 {
     return NULL;
 }

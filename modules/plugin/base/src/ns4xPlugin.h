@@ -37,7 +37,11 @@
  * right calling conventions on Win16.
  */
 
+#ifdef XP_OS2
+#define NP_EXPORT _System
+#else
 #define NP_EXPORT
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -129,6 +133,28 @@ protected:
    * Ensures that the static CALLBACKS is properly initialized
    */
   static void CheckClassInitialized(void);
+
+
+#ifdef XP_MAC
+  short fPluginRefNum;
+#endif
+
+  /**
+   * The plugin-side callbacks that the browser calls. One set of
+   * plugin callbacks for each plugin.
+   */
+  NPPluginFuncs fCallbacks;
+  PRLibrary*    fLibrary;
+
+  NP_PLUGINSHUTDOWN fShutdownEntry;
+
+  /**
+   * The browser-side callbacks that a 4.x-style plugin calls.
+   */
+  static NPNetscapeFuncs CALLBACKS;
+};
+
+XP_BEGIN_PROTOS
 
   ////////////////////////////////////////////////////////////////////////
   // Static stub functions that are exported to the 4.x plugin as entry
@@ -232,26 +258,6 @@ protected:
 #pragma pointers_in_A0
 #endif
 
-#ifdef XP_MAC
-  short fPluginRefNum;
-#endif
-
-  /**
-   * The plugin-side callbacks that the browser calls. One set of
-   * plugin callbacks for each plugin.
-   */
-  NPPluginFuncs fCallbacks;
-  PRLibrary*    fLibrary;
-
-  NP_PLUGINSHUTDOWN fShutdownEntry;
-
-  /**
-   * The browser-side callbacks that a 4.x-style plugin calls.
-   */
-  static NPNetscapeFuncs CALLBACKS;
-
-  static nsIServiceManager   *mServiceMgr;
-  static nsIMemory          *mMalloc;
-};
+XP_END_PROTOS
 
 #endif // ns4xPlugin_h__
