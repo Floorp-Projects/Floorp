@@ -246,7 +246,7 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
   *outString = dstPtr;      // set the result string
 
   // set error code so that the caller can do own fall back
-  if ((NS_ERROR_UENC_NOMAPPING == saveResult) && ATTR_NO_FALLBACK(mAttribute)) {
+  if (NS_ERROR_UENC_NOMAPPING == saveResult) {
     rv = NS_ERROR_UENC_NOMAPPING;
   }
 
