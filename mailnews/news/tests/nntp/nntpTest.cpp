@@ -615,7 +615,7 @@ nsNntpTestDriver::OnPostMessage()
 
     printf("Ready to post the message:\n");
     printf("Subject: %s\n", subject);
-    printf("Message:\n %s\n", message);
+    printf("Message:\n%s\n", message);
     
     SetupUrl(m_userData);
 
