@@ -142,7 +142,7 @@ int main(int argc, char **argv)
         }
         (*counter_addr)++;
         if (PR_PostSemaphore(sem2) == PR_FAILURE) {
-            fprintf(stderr, "PR_WaitSemaphore failed\n");
+            fprintf(stderr, "PR_PostSemaphore failed\n");
             exit(1);
         }
     }
