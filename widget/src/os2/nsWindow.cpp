@@ -149,10 +149,6 @@ static PRBool gGlobalsInitialized = PR_FALSE;
 static HPOINTER gPtrArray[IDC_COUNT];
 static PRBool gIsTrackPoint = PR_FALSE;
 static PRBool gIsDBCS = PR_FALSE;
-static CHAR gNumPadMap[] = {NS_VK_NUMPAD7, NS_VK_NUMPAD8, NS_VK_NUMPAD9, 0,
-                           NS_VK_NUMPAD4, NS_VK_NUMPAD5, NS_VK_NUMPAD6, 0,
-                           NS_VK_NUMPAD1, NS_VK_NUMPAD2, NS_VK_NUMPAD3, NS_VK_NUMPAD0, NS_VK_DECIMAL};
-#define CHAR_CODE_MASK 0x00FF
 
 // The last user input event time in milliseconds. If there are any pending
 // native toolkit input events it returns the current time. The value is
@@ -2156,18 +2152,13 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    UCHAR      uchScan = CHAR4FROMMP(mp1);
    int        unirc = ULS_SUCCESS;
 
-   if (fsFlags & KC_KEYUP)  // On OS/2 the scancode is in the upper byte of
-   {                        // usChar when KC_KEYUP is set so mask it off
-     usChar = usChar & CHAR_CODE_MASK;
-   }
    // It appears we're not supposed to transmit shift, control & alt events
    // to gecko.  Shrug.
    //
    // XXX this may be wrong, but is what gtk is doing...
-// Comment out since this is blocking out the shift and  ctrl keys..
-//   if( fsFlags & KC_VIRTUALKEY && !(fsFlags & KC_KEYUP) &&  // Added if KC_KEYUP then send thru
-//      (usVKey == VK_SHIFT || usVKey == VK_CTRL ||
-//       usVKey == VK_ALTGRAF)) return PR_FALSE;
+   if( fsFlags & KC_VIRTUALKEY &&
+      (usVKey == VK_SHIFT || usVKey == VK_CTRL ||
+       usVKey == VK_ALTGRAF)) return PR_FALSE;
 
    // My gosh this is ugly
    // Workaround bug where using Alt+Esc let an Alt key creep through
@@ -2203,13 +2194,6 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    event.isAlt     = (fsFlags & KC_ALT) ? PR_TRUE : PR_FALSE;
    event.isMeta    = PR_FALSE;
    event.charCode = 0;
-   // OS2 does not set the shift, ctl, or alt on keyup
-   if( fsFlags & (KC_VIRTUALKEY|KC_KEYUP|KC_LONEKEY))
-   {
-      if (usVKey == VK_SHIFT)   event.isShift = PR_TRUE;
-      if (usVKey == VK_CTRL)    event.isControl = PR_TRUE;
-      if (usVKey == VK_ALTGRAF || usVKey == VK_ALT) event.isAlt = PR_TRUE;
-   }    
 
    /* Checking for a scroll mouse event vs. a keyboard event */
    /* The way we know this is that the repeat count is 0 and */
@@ -2288,12 +2272,6 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
          else if (usVKey == VK_SPACE)
          {
 //            pressEvent.isShift = PR_FALSE;
-         }
-         else if (fsFlags & KC_VIRTUALKEY   &&
-                  isNumPadScanCode(uchScan) &&
-                  event.keyCode != 0)
-         {
-           // this is NumLock+numpad (no Alt) use the pressEvent.charCode
          }
          else  // Real virtual key 
          {
@@ -3688,171 +3666,39 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
    if( !(flags & (KC_VIRTUALKEY | KC_DEADKEY)))
    {
       rc = SHORT1FROMMP(mp2);
-      if (flags & KC_KEYUP)  // On OS/2 the scancode is in the upper byte of
-      {                      // usChar when KC_KEYUP is set so mask it off
-        rc = rc & CHAR_CODE_MASK;
-      }
-      else  // not KC_KEYUP
-      {
-        if ( ! (flags & KC_CHAR))
-        {  
-           if  ((flags & KC_ALT) || (flags & KC_CTRL))
-           {
-             rc = rc & CHAR_CODE_MASK;
-           }
-           else rc = 0;
-        }
-      }
 
       if( rc < 0xFF)
       {
-         if (rc >= 'a' && rc <= 'z')   // The DOM_VK are for upper case only so
-         {                             // if rc is lower case upper case it.
-           rc = rc - 'a' + NS_VK_A;
-         }
-         else if (rc >= 'A' && rc <= 'Z')   // Upper case
+         switch( rc)
          {
-           rc = rc - 'A' + NS_VK_A;
-         }
-         else if ((rc >= '0' && rc <= '9') && (CHAR4FROMMP(mp1) != 0x4C))   // Number keys excepting numpad5
-         {
-           rc = rc - '0' + NS_VK_0;
-         }
-         else if (CHAR4FROMMP(mp1) != 0) {
-           /* For some characters, map the scan code to the NS_VK value */
-           /* This only happens in the char case NOT the VK case! */
-           switch (CHAR4FROMMP(mp1)) {
-             case 0x02:
-               rc = NS_VK_1;
-               break;
-             case 0x03:
-               rc = NS_VK_2;
-               break;
-             case 0x04:
-               rc = NS_VK_3;
-               break;
-             case 0x05:
-               rc = NS_VK_4;
-               break;
-             case 0x06:
-               rc = NS_VK_5;
-               break;
-             case 0x07:
-               rc = NS_VK_6;
-               break;
-             case 0x08:
-               rc = NS_VK_7;
-               break;
-             case 0x09:
-               rc = NS_VK_8;
-               break;
-             case 0x0A:
-               rc = NS_VK_9;
-               break;
-             case 0x0B:
-               rc = NS_VK_0;
-               break;
-             case 0x0D:
-               rc = NS_VK_EQUALS;
-               break;
-            case 0x1A:
-               rc = NS_VK_OPEN_BRACKET;
-               break;
-            case 0x1B:
-               rc = NS_VK_CLOSE_BRACKET;
-               break;
-            case 0x27:
-               rc = NS_VK_SEMICOLON;
-               break;
-            case 0x28:
-               rc = NS_VK_QUOTE;
-               break;
-            case 0x29:
-               rc = NS_VK_BACK_QUOTE;
-               break;
-            case 0x2B:
-               rc = NS_VK_BACK_SLASH;
-               break;
-            case 0x33:
-               rc = NS_VK_COMMA;
-               break;
-            case 0x34:
-               rc = NS_VK_PERIOD;
-               break;
-            case 0x35:
-               rc = NS_VK_SLASH;
-               break;
-            case 0x37:
-               rc = NS_VK_MULTIPLY;
-               break;
-            case 0x4A:
-               rc = NS_VK_SUBTRACT;
-               break;
-            case 0x4C:
-               if (rc == '5') {
-                 rc = NS_VK_NUMPAD5;
-               } else {
-                 rc = NS_VK_CLEAR;
-               }
-               break;
-            case 0x4E:
-               rc = NS_VK_ADD;
-               break;
-            case 0x5C:
-               rc = NS_VK_DIVIDE;
-               break;
-
-            case 0x0C:
-               rc = NS_VK_SUBTRACT; /* THIS IS WRONG! */
-               break;
-
-             default:
-               break;
-           }
-         } else {
-           /* If we got here, it is an IME input */
-           /* Just set rc to 0 so that it is ignored */
-           /* Other values cause bad things to happen */
-           rc = 0;
+            case ';':  rc = NS_VK_SEMICOLON;     break;
+            case '=':  rc = NS_VK_EQUALS;        break;
+            case '*':  rc = NS_VK_MULTIPLY;      break;
+            case '+':  rc = NS_VK_ADD;           break;
+            case '-':  rc = NS_VK_SUBTRACT;      break;
+            case '.':  rc = NS_VK_PERIOD;        break; // NS_VK_DECIMAL ?
+            case '|':  rc = NS_VK_SEPARATOR;     break;
+            case ',':  rc = NS_VK_COMMA;         break;
+            case '/':  rc = NS_VK_SLASH;         break; // NS_VK_DIVIDE ?
+            case '`':  rc = NS_VK_BACK_QUOTE;    break;
+            case '(':  rc = NS_VK_OPEN_BRACKET;  break;
+            case '\\': rc = NS_VK_BACK_SLASH;    break;
+            case ')':  rc = NS_VK_CLOSE_BRACKET; break;
+            case '\'': rc = NS_VK_QUOTE;         break;
          }
       }
    }
    else if( flags & KC_VIRTUALKEY)
    {
-      USHORT vk = SHORT2FROMMP(mp2);
-      USHORT sc = CHAR4FROMMP(mp1);
-      USHORT rc2 = SHORT1FROMMP(mp2);
-      if (flags & KC_KEYUP)  // On OS/2 there are extraneous bits in the upper byte of
-      {                        // usChar when KC_KEYUP is set so mask them off
-        rc2 = rc2 & CHAR_CODE_MASK;
-      }
-      if( isNumPadScanCode(sc) && 
-          ( ((flags & KC_ALT) && ( sc != PMSCAN_PADPERIOD)) || 
-            ((flags & (KC_CHAR | KC_SHIFT)) == KC_CHAR)  ||
-            ((flags & KC_KEYUP) && rc2 != 0) )  )
+      USHORT vk = SHORT2FROMMP( mp2);
+      if( isNumPadScanCode(CHAR4FROMMP(mp1)) && 
+          ( ((flags & KC_ALT) && (CHAR4FROMMP(mp1) != PMSCAN_PADPERIOD)) || 
+            ((flags & (KC_CHAR | KC_SHIFT)) == KC_CHAR) ) )
       {
-#if 0
-        // If this is the Numpad must not return VK for ALT+Numpad or ALT+NumLock+NumPad
-        // NumLock+NumPad is OK
-         if( gNumPadMap[sc - PMSCAN_PAD7] != 0)
-         {
-            if (flags & KC_ALT )
-            {
-               rc = 0;
-            }
-            else
-            {
-               rc = gNumPadMap[sc - PMSCAN_PAD7];
-            }
-         }  
-         else
-#endif         
-         {
-            // No virtual key for Alt+NumPad or NumLock+NumPad
-            rc = 0;
-         }  
+         // No virtual key for Alt+NumPad or NumLock+NumPad
+         rc = 0;
       }
-      else if( !(flags & KC_CHAR) || isNumPadScanCode(sc) ||
+      else if( !(flags & KC_CHAR) || isNumPadScanCode(CHAR4FROMMP(mp1)) ||
           (vk == VK_BACKSPACE) || (vk == VK_TAB) || (vk == VK_BACKTAB) ||
           (vk == VK_ENTER) || (vk == VK_NEWLINE) || (vk == VK_SPACE) )
       {
