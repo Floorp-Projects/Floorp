@@ -367,7 +367,11 @@ sub GenerateVersionTable {
         $carray{$c} = 1;
     }
 
-    my $dotargetmilestone = Param("usetargetmilestone");
+    my $dotargetmilestone = 1;  # This used to check the param, but there's
+                                # enough code that wants to pretend we're using
+                                # target milestones, even if they don't get
+                                # shown to the user.  So we cache all the data
+                                # about them anyway.
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
     SendSQL("select product, description, votesperuser, disallownew$mpart from products");
