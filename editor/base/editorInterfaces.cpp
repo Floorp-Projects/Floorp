@@ -18,7 +18,11 @@
 #include "editorInterfaces.h"
 #include "nsString.h"
 #include "editor.h"
+#include "ChangeAttributeTxn.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+
+static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
  
 /*
  * nsEditorKeyListener implementation
@@ -113,25 +117,30 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
       NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
       NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey))
       ) {
-    switch(keyCode) {
-    case nsIDOMEvent::VK_BACK:
-      break;
-    case nsIDOMEvent::VK_RETURN:
-      // Need to implement creation of either <P> or <BR> nodes.
-      mEditor->Commit(ctrlKey);
-      break;
-    default:
-      // XXX Replace with x-platform NS-virtkeycode transform.
-      if (NS_OK == GetCharFromKeyCode(keyCode, isShift, & character)) {
-        nsString* key = new nsString();
-        *key += character;
-        if (!isShift) {
-          key->ToLowerCase();
+    PRBool keyProcessed;
+    ProcessShortCutKeys(aKeyEvent, keyProcessed);
+    if (PR_FALSE==keyProcessed)
+    {
+      switch(keyCode) {
+      case nsIDOMEvent::VK_BACK:
+        break;
+      case nsIDOMEvent::VK_RETURN:
+        // Need to implement creation of either <P> or <BR> nodes.
+        mEditor->Commit(ctrlKey);
+        break;
+      default:
+        // XXX Replace with x-platform NS-virtkeycode transform.
+        if (NS_OK == GetCharFromKeyCode(keyCode, isShift, & character)) {
+          nsString* key = new nsString();
+          *key += character;
+          if (!isShift) {
+            key->ToLowerCase();
+          }
+          mEditor->InsertString(key);
+          delete key;
         }
-        mEditor->InsertString(key);
-        delete key;
+        break;
       }
-      break;
     }
   }
   
@@ -151,6 +160,90 @@ nsEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
+  return NS_OK;
+}
+
+nsresult
+nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed)
+{
+  aProcessed=PR_FALSE;
+  PRUint32 keyCode;
+  PRBool isShift;
+  PRBool ctrlKey;
+  
+  if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
+      NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
+      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey))
+      ) 
+  {
+    // XXX: please please please get these mappings from an external source!
+    switch (keyCode)
+    {
+      // hard-coded undo
+      case nsIDOMEvent::VK_Z:
+        if (PR_TRUE==ctrlKey)
+        {
+          if (nsnull!=mEditor)
+            mEditor->Undo();
+        }
+        aProcessed=PR_TRUE;
+        break;
+
+      // hard-coded redo
+      case nsIDOMEvent::VK_Y:
+        if (PR_TRUE==ctrlKey)
+        {
+          if (nsnull!=mEditor)
+            mEditor->Redo();
+        }
+        aProcessed=PR_TRUE;
+        break;
+
+      case nsIDOMEvent::VK_TAB:
+        {
+          //XXX: should be from a factory
+          //XXX: should manage the refcount of txn
+          nsString attribute("width");
+          nsString value("400");
+
+          nsString tableTag("TABLE");
+          nsCOMPtr<nsIDOMNode> currentNode;
+          nsCOMPtr<nsIDOMElement> element;
+          if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, tableTag, getter_AddRefs(currentNode))))
+          {
+            if (NS_SUCCEEDED(currentNode->QueryInterface(kIDOMElementIID, getter_AddRefs(element)))) 
+            {
+              ChangeAttributeTxn *txn = new ChangeAttributeTxn(mEditor, element, attribute, value);
+              mEditor->ExecuteTransaction(txn);        
+            }
+          }
+        }
+        aProcessed=PR_TRUE;
+        break;
+
+      case nsIDOMEvent::VK_SPACE:
+        {
+          //XXX: should be from a factory
+          //XXX: should manage the refcount of txn
+          nsString attribute("height");
+          nsString value("200");
+
+          nsString tableTag("TABLE");
+          nsCOMPtr<nsIDOMNode> currentNode;
+          nsCOMPtr<nsIDOMElement> element;
+          if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, tableTag, getter_AddRefs(currentNode))))
+          {
+            if (NS_SUCCEEDED(currentNode->QueryInterface(kIDOMElementIID, getter_AddRefs(element)))) 
+            {
+              ChangeAttributeTxn *txn = new ChangeAttributeTxn(mEditor, element, attribute, value);
+              mEditor->ExecuteTransaction(txn);        
+            }
+          }
+        }
+        aProcessed=PR_TRUE;
+        break;
+    }
+  }
   return NS_OK;
 }
 

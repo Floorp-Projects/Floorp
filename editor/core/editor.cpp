@@ -22,11 +22,15 @@
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMAttr.h"
 #include "nsIDocument.h"
 #include "nsRepository.h"
+#include "nsIServiceManager.h"
 #include "nsEditFactory.h"
 #include "nsEditorCID.h"
-
+#include "nsTransactionManagerCID.h"
+#include "nsITransactionManager.h"
+#include "nsIAtom.h"
 
 
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
@@ -41,6 +45,20 @@ static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID,           NS_IEDITOR_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kEditorCID,            NS_EDITOR_CID);
+static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
+static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACTORY_CID);
+
+
+#ifdef XP_PC
+#define TRANSACTION_MANAGER_DLL "txmgr.dll"
+#else
+#ifdef XP_MAC
+#define TRANSACTION_MANAGER_DLL "TRANSACTION_MANAGER_DLL"
+#else // XP_UNIX
+#define TRANSACTION_MANAGER_DLL "libtxmgr.so"
+#endif
+#endif
+
 
 
 //monitor for the editor
@@ -98,26 +116,29 @@ NSRegisterSelf(const char *path)
                                        PR_TRUE, PR_TRUE); //this will register the factory with the xpcom dll.
 }
 
-
-
 extern "C" NS_EXPORT nsresult 
 NSUnregisterSelf(const char *path)
 {
   return nsRepository::UnregisterFactory(kIEditFactoryIID, path);//this will unregister the factory with the xpcom dll.
 }
 
-
-
 //END EXPORTS
 
 
 //class implementations are in order they are declared in editor.h
 
-
+static PRBool needsInit=PR_TRUE;
 nsEditor::nsEditor()
 {
   //initialize member variables here
   NS_INIT_REFCNT();
+  if (PR_TRUE==needsInit)
+  {
+    needsInit=PR_FALSE;
+    nsRepository::RegisterFactory(kCTransactionManagerFactoryCID,
+                                TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
+  }
+  mTxnMgr = nsnull;
 }
 
 
@@ -210,6 +231,8 @@ nsEditor::Init(nsIDOMDocument *aDomInterface)
   erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
   //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
 
+  /* fire up the transaction manager */
+
   /*
   now to handle selection
   */
@@ -229,6 +252,29 @@ nsEditor::Init(nsIDOMDocument *aDomInterface)
     return t_result;
   }
 */
+
+  nsISupports  *isup          = 0;
+  nsresult result;
+
+  result = nsServiceManager::GetService(kCTransactionManagerFactoryCID,
+                                        kITransactionManagerIID, &isup);
+
+  if (NS_FAILED(result) || !isup) {
+    printf("ERROR: Failed to get TransactionManager nsISupports interface.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  result = isup->QueryInterface(kITransactionManagerIID, (void **)&mTxnMgr);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Failed to get TransactionManager interface. (%d)\n", result);
+    return result;
+  }
+
+  if (!mTxnMgr) {
+    printf("ERROR: QueryInterface() returned NULL pointer.\n");
+    return NS_ERROR_NULL_POINTER;
+  }
   
   return NS_OK;
 }
@@ -255,6 +301,40 @@ nsresult
 nsEditor::GetProperties(PROPERTIES **)
 {
   return NS_OK;
+}
+
+
+nsresult 
+nsEditor::SetAttribute(nsIDOMElement *aElement, const nsString& aAttribute, const nsString& aValue)
+{
+  return aElement->SetDOMAttribute(aAttribute, aValue);
+}
+
+nsresult 
+nsEditor::GetAttributeValue(nsIDOMElement *aElement, 
+                            const nsString& aAttribute, 
+                            nsString& aResultValue, 
+                            PRBool&   aResultIsSet)
+{
+  aResultIsSet=PR_FALSE;
+  nsresult result=NS_OK;
+  if (nsnull!=aElement)
+  {
+    nsIDOMAttr* attNode=nsnull;
+    result = aElement->GetAttributeNode(aAttribute, &attNode);
+    if ((NS_SUCCEEDED(result)) && (nsnull!=attNode))
+    {
+      attNode->GetSpecified(&aResultIsSet);
+      attNode->GetValue(aResultValue);
+    }
+  }
+  return result;
+}
+
+nsresult 
+nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute)
+{
+  return aElement->RemoveAttribute(aAttribute);
 }
 
 
@@ -337,6 +417,59 @@ nsEditor::GetCurrentNode(nsIDOMNode ** aNode)
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult)
+{
+  nsresult result=NS_OK;
+
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  /* If no node set, get root node */
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIDOMElement> element;
+
+  if (nsnull==aStartNode)
+  {
+    mDomInterfaceP->GetDocumentElement(getter_AddRefs(element));
+    result = element->QueryInterface(kIDOMNodeIID,getter_AddRefs(node));
+    if (NS_FAILED(result))
+      return result;
+    if (!node)
+      return NS_ERROR_NULL_POINTER;
+  }
+  else
+    node=aStartNode;
+
+  *aResult = nsnull;
+  nsCOMPtr<nsIDOMNode> childNode;
+  result = node->GetFirstChild(getter_AddRefs(childNode));
+  while (childNode)
+  {
+    result = childNode->QueryInterface(kIDOMNodeIID,getter_AddRefs(element));
+    nsString tag;
+    if (NS_SUCCEEDED(result) && (element))
+    {    
+      element->GetTagName(tag);
+      if (PR_TRUE==aTag.Equals(tag))
+      {
+        return (childNode->QueryInterface(kIDOMNodeIID,(void **) aResult)); // does the addref
+      }
+      else
+      {
+        nsresult result = GetFirstNodeOfType(childNode, aTag, aResult);
+        if (nsnull!=*aResult)
+          return result;
+      }
+    }
+    nsCOMPtr<nsIDOMNode> xNode;
+    childNode->GetNextSibling(getter_AddRefs(xNode));
+    childNode=xNode;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 
 
 nsresult
@@ -385,6 +518,46 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
     return NS_ERROR_FAILURE;
 
   return NS_OK;
+}
+
+nsresult 
+nsEditor::ExecuteTransaction(nsITransaction *aTxn)
+{
+  nsresult result = NS_OK;
+  if (nsnull!=aTxn)
+  {
+    if (nsnull!=mTxnMgr)
+    {
+      result = mTxnMgr->Do(aTxn);
+    }
+    else
+    {
+      result = aTxn->Do();
+    }
+  }
+  return result;
+}
+
+nsresult 
+nsEditor::Undo()
+{
+  nsresult result = NS_OK;
+  if (nsnull!=mTxnMgr)
+  {
+    result = mTxnMgr->Undo();
+  }
+  return result;
+}
+
+nsresult 
+nsEditor::Redo()
+{
+  nsresult result = NS_OK;
+  if (nsnull!=mTxnMgr)
+  {
+    result = mTxnMgr->Redo();
+  }
+  return result;
 }
 
 //END nsEditor Private methods
