@@ -34,7 +34,7 @@
 #include "nsRect.h"
 #include "plhash.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 static PLHashNumber
@@ -191,7 +191,7 @@ nsWebCrawler::~nsWebCrawler()
     delete mOutputDir;
 }
 
-NS_IMPL_ISUPPORTS(nsWebCrawler, kISupportsIID)
+NS_IMPL_ISUPPORTS(nsWebCrawler, kIStreamObserverIID)
 
 NS_IMETHODIMP
 nsWebCrawler::OnStartBinding(nsIURL* aURL, const char *aContentType)
