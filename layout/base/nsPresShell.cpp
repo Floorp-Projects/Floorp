@@ -158,7 +158,7 @@ FrameHashTable::Remove(nsIFrame* aKey)
 //----------------------------------------------------------------------
 
 // Class IID's
-static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
 
@@ -174,6 +174,7 @@ static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_IID(kICaretIID, NS_ICARET_IID);
 static NS_DEFINE_IID(kICaretID,  NS_ICARET_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
@@ -299,6 +300,11 @@ public:
 
   NS_IMETHOD GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame);
 
+  // caret handling
+  NS_IMETHOD GetCaret(nsICaret **outCaret);
+  NS_IMETHOD RefreshCaret();
+
+
   // implementation
   void HandleCantRenderReplacedElementEvent(nsIFrame* aFrame);
 
@@ -307,6 +313,12 @@ protected:
 
   nsresult ReconstructFrames(void);
 
+  // turn the caret on and off.
+  nsresult EnableCaret();
+  nsresult DisableCaret();
+  
+  PRBool    mCaretEnabled;
+  
 #ifdef NS_DEBUG
   void VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
@@ -550,6 +562,8 @@ PresShell::Init(nsIDocument* aDocument,
  
 #endif
 
+  mCaretEnabled = PR_FALSE;
+  
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
   nsCaretProperties  *caretProperties = NewCaretProperties();
@@ -754,6 +768,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
   nsIContent* root = nsnull;
 
+  DisableCaret();
   EnterReflowLock();
 
   if (nsnull != mPresContext) {
@@ -814,6 +829,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   ExitReflowLock();
+  EnableCaret();
 
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -821,6 +837,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
+  DisableCaret();
   EnterReflowLock();
 
   if (nsnull != mPresContext) {
@@ -874,7 +891,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #endif
   }
   ExitReflowLock();
-
+  EnableCaret();
+  
   return NS_OK; //XXX this needs to be real. MMP
 }
 
@@ -898,7 +916,37 @@ PresShell::GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame){
   *aAnchorFrame = mAnchorEventFrame; 
   return NS_OK;
 }
-  
+
+
+NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
+{
+  if (!outCaret || !mCaret)
+    return NS_ERROR_NULL_POINTER;
+  return mCaret->QueryInterface(kICaretIID,(void **)outCaret);
+}
+
+NS_IMETHODIMP PresShell::RefreshCaret()
+{
+  if (mCaret)
+  	mCaret->Refresh();
+
+  return NS_OK;
+}
+
+nsresult PresShell::DisableCaret()
+{
+	if (mCaret)
+		return mCaret->SetCaretVisible(PR_FALSE);
+	return NS_OK;
+}
+
+nsresult PresShell::EnableCaret()
+{
+	if (mCaret && mCaretEnabled)
+		return mCaret->SetCaretVisible(PR_TRUE);
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 PresShell::StyleChangeReflow()
 {
