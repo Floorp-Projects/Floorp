@@ -1310,9 +1310,8 @@ nsHTMLCopyEncoder::IncludeInContext(nsIDOMNode *aNode)
       tag.get() == nsHTMLAtoms::h3       ||
       tag.get() == nsHTMLAtoms::h4       ||
       tag.get() == nsHTMLAtoms::h5       ||
-      tag.get() == nsHTMLAtoms::h6       ||
-      tag.get() == nsHTMLAtoms::ol       ||
-      tag.get() == nsHTMLAtoms::li) {
+      tag.get() == nsHTMLAtoms::h6) 
+  {
     return PR_TRUE;
   }
 
