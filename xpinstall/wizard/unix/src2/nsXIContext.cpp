@@ -68,20 +68,6 @@ nsXIContext::~nsXIContext()
     XI_IF_DELETE(idlg);
 
     XI_IF_DELETE(opt);
-
-    XI_GTK_IF_FREE(back);
-    XI_GTK_IF_FREE(next);
-    XI_GTK_IF_FREE(cancel);
-    XI_GTK_IF_FREE(nextLabel);
-    XI_GTK_IF_FREE(backLabel);
-    XI_GTK_IF_FREE(acceptLabel);
-    XI_GTK_IF_FREE(declineLabel);
-    XI_GTK_IF_FREE(installLabel);
-    XI_GTK_IF_FREE(logo);
-    XI_GTK_IF_FREE(mainbox);
-    XI_GTK_IF_FREE(canvas);
-    XI_GTK_IF_FREE(notebook);
-    XI_GTK_IF_FREE(window);
 }
 
 char *
