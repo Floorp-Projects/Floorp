@@ -433,7 +433,7 @@ nsComposeAppCore::SetWindowFields(nsIDOMDocument *domDoc, nsString& msgTo, nsStr
 
 	if (domDoc) 
 	{
-		res = domDoc->GetElementsByTagName("input", getter_AddRefs(nodeList));
+		res = domDoc->GetElementsByTagName("INPUT", getter_AddRefs(nodeList));
 		if ((NS_SUCCEEDED(res)) && nodeList)
 		{
 			PRUint32 count;
