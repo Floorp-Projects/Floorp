@@ -93,8 +93,10 @@ nsPrefWindow.prototype =
               }
             hPrefWindow.wsm.savePageData( tag );
             for( var i = 0; i < hPrefWindow.okHandlers.length; i++ )
-              {
+              try {
                 hPrefWindow.okHandlers[i]();
+              } catch (e) {
+                debug("some silly ok handler /*"+hPrefWindow.okHandlers[i]+"*/ failed: "+ e);
               }
             hPrefWindow.savePrefs();
           },
@@ -103,8 +105,10 @@ nsPrefWindow.prototype =
         function ()
           {
             for( var i = 0; i < hPrefWindow.cancelHandlers.length; i++ )
-              {
+              try {
                 hPrefWindow.cancelHandlers[i]();
+              } catch (e) {
+                debug("some silly cancel handler /*"+hPrefWindow.cancelHandlers[i]+"*/ failed: "+ e);
               }
           },
 
