@@ -148,6 +148,15 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
     PRBool bMoreHeaders;
 
     if (pHTTPCon) {
+        nsXPIDLCString value;
+
+        printf("Channel Info:\n");
+        pHTTPCon->GetContentType(getter_Copies(value));
+        printf("\tContent-Type: %s\n", (const char*)value);
+
+        pHTTPCon->GetCharset(getter_Copies(value));
+        printf("\tCharset: %s\n", (const char*)value);
+
         pHTTPCon->GetRequestHeaderEnumerator(getter_AddRefs(enumerator));
 
         printf("Request headers:\n");
@@ -162,8 +171,6 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
             if (header) {
                 nsCOMPtr<nsIAtom> key;
                 nsAutoString field;
-                nsXPIDLCString value;
-
                 header->GetField(getter_AddRefs(key));
                 key->ToString(field);
                 nsCAutoString theField(field);
@@ -190,7 +197,6 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
             if (header) {
                 nsCOMPtr<nsIAtom> key;
                 nsAutoString field;
-                nsXPIDLCString value;
 
                 header->GetField(getter_AddRefs(key));
                 key->ToString(field);

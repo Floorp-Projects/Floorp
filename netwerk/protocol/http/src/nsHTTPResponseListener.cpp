@@ -184,6 +184,11 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
 
             rv = mConsumer->OnDataAvailable(mConnection, mResponseContext, i_pStream, 0, 
                                               i_Length);
+            if (NS_FAILED(rv)) {
+              PR_LOG(gHTTPLog, PR_LOG_ERROR, 
+                     ("\tOnDataAvailable [this=%x]. Consumer failed!"
+                      "Status: %x\n", this, rv));
+            }
         }
     } 
 
@@ -221,7 +226,8 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     nsresult rv = NS_OK;
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-           ("nsHTTPResponseListener::OnStopRequest [this=%x].\n", this));
+           ("nsHTTPResponseListener::OnStopRequest [this=%x]."
+            "\tStatus = %x\n", this, i_Status));
 
     if (NS_SUCCEEDED(rv) && !mHeadersDone) {
         //
@@ -241,6 +247,11 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     // Pass the notification out to the consumer...
     if (mConsumer) {
         rv = mConsumer->OnStopRequest(mConnection, mResponseContext, i_Status, i_pMsg);
+        if (NS_FAILED(rv)) {
+            PR_LOG(gHTTPLog, PR_LOG_ERROR, 
+                   ("\tOnStopRequest [this=%x]. Consumer failed!"
+                    "Status: %x\n", this, rv));
+        }
     }
 
     // Notify the HTTPChannel that the response has completed...
@@ -614,7 +625,7 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
   nsCOMPtr<nsIAtom> headerAtom;
 
   colonOffset = mHeaderBuffer.FindChar(':');
-  if (-1 == colonOffset) {
+  if (kNotFound == colonOffset) {
     //
     // The header is malformed... Just clear it.
     //
@@ -667,7 +678,11 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
   //
   if (NS_SUCCEEDED(rv) && mConsumer) {
     rv = mConsumer->OnStartRequest(mConnection, mResponseContext);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      PR_LOG(gHTTPLog, PR_LOG_ERROR, 
+             ("\tOnStartRequest [this=%x]. Consumer failed!"
+              "Status: %x\n", this, rv));
+    }
   } 
 
   return rv;
@@ -679,21 +694,38 @@ nsresult nsHTTPResponseListener::ProcessHeader(nsIAtom* aHeader,
 {
   nsresult rv;
 
+  //
+  // When the Content-Type response header is processed, the Content-Type
+  // and Charset information must be set into the nsHTTPChannel...
+  //
   if (nsHTTPAtoms::Content_Type == aHeader) {
     nsAutoString buffer(eOneByte);
     PRInt32 semicolon;
 
-    //
     // Set the content-type in the HTTPChannel...
-    //
     semicolon = aValue.FindChar(';');
-    if (-1 != semicolon) {
+    if (kNotFound != semicolon) {
       aValue.Left(buffer, semicolon);
       mConnection->SetContentType(buffer.GetBuffer());
-    } else {
+
+      // Does the Content-Type contain a charset attribute?
+      aValue.Mid(buffer, semicolon+1, -1);
+      buffer.Trim(" ");
+      if (0 == buffer.Find("charset=", PR_TRUE)) {
+        //
+        // Set the charset in the HTTPChannel...
+        //
+        // XXX: Currently, the charset is *everything* past the "charset="
+        //      This includes comments :-(
+        //
+        buffer.Cut(0, 8);
+        mConnection->SetCharset(buffer.GetBuffer());
+      }
+    } 
+    else {
       mConnection->SetContentType(aValue.GetBuffer());
     }
-  }
+  } 
 
   //
   // Set the response header...
