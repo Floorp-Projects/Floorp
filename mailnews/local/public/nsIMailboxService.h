@@ -67,25 +67,6 @@ public:
 	NS_IMETHOD ParseMailbox(const nsFileSpec& aMailboxPath, nsIStreamListener * aMailboxParser, 
 							nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
-	/////////////////////////////////////////////////////////////////////////////////////////////
-	// Pass in the URI for the message you want to have copied. We can extract the message id
-	// and the mail folder from the URI. aMailboxCopy already knows about the destination folder.
-	// Set moveMessage to TRUE if you want the message to be moved. FALSE leaves it as just a copy.
-	/////////////////////////////////////////////////////////////////////////////////////////////
-
-	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURL **aURL) = 0;
-//	NS_IMETHOD CopyMessages(PRUnichar * aSrcMailboxURI[], PRBool moveMessage);
-
-	/////////////////////////////////////////////////////////////////////////////////////////////
-	// When you want a message from the mailbox displayed, pass in the path to the mailbox, 
-	// the starting and ending byte values in the mailbox for the message. 
-	// aDisplayConsumer is (for now) a nsIWebshell which we'll use to load the message into. 
-	// It would be nice if we can figure this out for ourselves in the protocol but we can't do 
-	// that right now. 
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-							  nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// This is more of a convience function for testing purposes. We want to able to say: display 
