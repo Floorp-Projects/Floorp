@@ -327,6 +327,12 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 // widget or something.
   mIsOffscreen = PR_FALSE;
 
+  /* remove the clip mask of the GC so that it has a "fresh" clip mask (i.e. 
+     the whole window).  this might should be done on a per-drawable basis
+     instead of having a 1 gc for the whole app which seems to be somewhat problematic.
+  */
+  gdk_gc_set_clip_mask(aGC, nsnull);
+
   if (mImage)
     gdk_image_destroy(mImage);
   mImage = nsnull;
@@ -349,6 +355,13 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
   mIsOffscreen = PR_TRUE;
 
   mPixmap = ::gdk_pixmap_new(nsnull, mWidth, mHeight, mDepth);
+
+
+  /* remove the clip mask of the GC so that it has a "fresh" clip mask (i.e. 
+     the whole window).  this might should be done on a per-drawable basis
+     instead of having a 1 gc for the whole app which seems to be somewhat problematic.
+  */
+  gdk_gc_set_clip_mask(aGC, nsnull);
 
   if (mImage)
     gdk_image_destroy(mImage);
