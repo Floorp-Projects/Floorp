@@ -62,16 +62,6 @@ REQUIRES	= xpcom \
 		  js \
 		  xpconnect \
 		  caps \
-		  locale \
-		  unicharutil \
-		  htmlparser \
-		  webshell \
-		  docshell \
-		  layout \
-		  uconv \
-		  windowwatcher \
-		  mimetype \
-		  intl \
 		  htmlparser \
 		  $(NULL)
 
