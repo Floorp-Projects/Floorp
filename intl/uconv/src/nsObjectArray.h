@@ -51,8 +51,9 @@ public:
   ~nsObjectArray();
 
   nsObject ** GetArray();
+  nsObject * GetObject(PRInt32 aIndex);
   PRInt32 GetUsage();
   nsresult InsureCapacity(PRInt32 aCapacity);
-  nsresult AddObject(nsObject * aObject);
+  nsresult AddObject(nsObject * aObject, PRInt32 aPosition = -1);
 };
 
