@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.23 $ 
-# $Date: 2002/04/27 00:47:33 $ 
+# $Revision: 1.24 $ 
+# $Date: 2002/04/27 04:11:58 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -299,15 +299,17 @@ $LOG_PERFORMANCE = 0;
 # Define IP addresses/domain names which are allowed to run the
 # administrative functions.
 
-$ADMINISTRATIVE_NETWORK_PAT = ( 
-                                '(^127\.0\.0\.[0-9\.]*$)|'.
-                                '(^10\.10\.[0-9\.]*$)|'.
-                                '(^207\.200\.81\.[0-9\.]*)$|'.
-                                '(^172\.24\.127\.[0-9\.]*$)|'.
-                                '(\.mozilla\.org$)|'.
-                                '(\.netscape\.com$)|'.
-                                '(^localhost$)'
-                              );
+#$ADMINISTRATIVE_NETWORK_PAT = ( 
+#                                '(^127\.0\.0\.[0-9\.]*$)|'.
+#                                '(^10\.10\.[0-9\.]*$)|'.
+#                                '(^207\.200\.81\.[0-9\.]*)$|'.
+#                                '(^172\.24\.127\.[0-9\.]*$)|'.
+#                                '(\.mozilla\.org$)|'.
+#                                '(\.netscape\.com$)|'.
+#                                '(^localhost$)'
+#                              );
 
+$ADMINISTRATIVE_NETWORK_PAT = '.*';
+ 
 
 1;
