@@ -326,8 +326,6 @@ NS_IMETHODIMP nsStreamConverter::QueryInterface(REFNSIID aIID, void** aInstanceP
 NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutListener, nsIChannel *aChannel)
 {
 	nsresult rv = NS_OK;
-	if (!aOutListener)
-		return NS_ERROR_NULL_POINTER;
 
 	mOutListener = aOutListener;
 
@@ -391,8 +389,8 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	// or nsMimeMessageEditorTemplate where we don't need any emitters
 	//
 
-	if ( (newType != nsMimeOutput::nsMimeMessageDraftOrTemplate) ||
-		 (newType != nsMimeOutput::nsMimeMessageEditorTemplate) )
+	if ( (newType != nsMimeOutput::nsMimeMessageDraftOrTemplate) && 
+             (newType != nsMimeOutput::nsMimeMessageEditorTemplate) )
 	{
 		nsAutoString progID (eOneByte);
 		progID = "component://netscape/messenger/mimeemitter;type=";
@@ -567,7 +565,8 @@ nsStreamConverter::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
 #endif
 
 	// forward the start rquest to any listeners
-	mOutListener->OnStartRequest(aChannel, ctxt);
+  if (mOutListener)
+  	mOutListener->OnStartRequest(aChannel, ctxt);
 	return NS_OK;
 }
 
@@ -607,7 +606,8 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
   InternalCleanup();
 
   // forward on top request to any listeners
-  mOutListener->OnStopRequest(aChannel, ctxt, status, errorMsg);
+  if (mOutListener)
+    mOutListener->OnStopRequest(aChannel, ctxt, status, errorMsg);
 
   // Time to return...
   return NS_OK;

@@ -41,6 +41,7 @@
 #include "nsMsgCompCID.h"
 #include "nsIStreamConverter2.h"
 #include "nsIMsgComposeService.h"
+#include "nsIMsgCompose.h"
 
 //
 // Header strings...
@@ -200,46 +201,84 @@ typedef enum {
 	nsMsg_UUENCODE_BINARY_BOOL_HEADER_MASK,
 	nsMsg_ATTACH_VCARD_BOOL_HEADER_MASK,
 	nsMsg_LAST_BOOL_HEADER_MASK			// last boolean header mask; must be the last one 
-										            // DON'T remove.
+										              // DON'T remove.
 } nsMsgBoolHeaderSet;
+
+static void
+mime_dump_attachments ( nsMsgAttachmentData *attachData )
+{
+  PRInt32     i = 0;
+  struct nsMsgAttachmentData  *tmp = attachData;
+
+  while ( (tmp) && (tmp->real_name) )
+  {
+	  printf("Real Name         : %s\n", tmp->real_name);
+
+    if ( tmp->url ) 
+    {
+      char *spec = nsnull;
+
+      tmp->url->GetSpec(&spec);
+  	  printf("URL               : %s\n", spec);
+    }
+
+	  printf("Desired Type      : %s\n", tmp->desired_type);
+    printf("Real Type         : %s\n", tmp->real_type);
+	  printf("Real Encoding     : %s\n", tmp->real_encoding); 
+    printf("Description       : %s\n", tmp->description);
+    printf("Mac Type          : %s\n", tmp->x_mac_type);
+    printf("Mac Creator       : %s\n", tmp->x_mac_creator);
+    i++;
+    tmp++;
+  }
+}
 
 nsresult
 CreateTheComposeWindow(nsIMsgCompFields     *compFields,
-                       nsMsgAttachmentData  *remoteAttachments)
+                       nsMsgAttachmentData  *attachmentList,
+                       nsMsgEditorType      editorType)
 {
-nsresult rv;
+nsresult            rv;
+MSG_ComposeFormat   format = MSGCOMP_FORMAT_Default;
 
+#ifdef NS_DEBUG
 printf("RICHIE: Need to do something with the attachment data!!!!\n");
+mime_dump_attachments ( attachmentList );
+#endif
 
   NS_WITH_SERVICE(nsIMsgComposeService, msgComposeService, kCMsgComposeServiceCID, &rv); 
   if ((NS_FAILED(rv)) || (!msgComposeService))
     return rv; 
-  
+
+  if (editorType == nsMsgPlainTextEditor)
+    format = MSGCOMP_FORMAT_PlainText;
+  else if (editorType == nsMsgHTMLEditor)
+    format = MSGCOMP_FORMAT_HTML;
+    
   rv = msgComposeService->OpenComposeWindowWithCompFields(
                         nsString2("chrome://messengercompose/content/").GetUnicode(),
-                        MSGCOMP_TYPE_New,
-                        compFields);
+                        format, compFields);
   return rv;
 }
 
 nsIMsgCompFields * 
-CreateCompositionFields(const char *from,
-									      const char *reply_to,
-									      const char *to,
-									      const char *cc,
-									      const char *bcc,
-									      const char *fcc,
-									      const char *newsgroups,
-									      const char *followup_to,
-									      const char *organization,
-									      const char *subject,
-									      const char *references,
-									      const char *other_random_headers,
-									      const char *priority,
-									      const char *attachment,
-                        const char *newspost_url,
-                        PRBool     xlate_p,
-                        PRBool     sign_p)
+CreateCompositionFields(const char        *from,
+									      const char        *reply_to,
+									      const char        *to,
+									      const char        *cc,
+									      const char        *bcc,
+									      const char        *fcc,
+									      const char        *newsgroups,
+									      const char        *followup_to,
+									      const char        *organization,
+									      const char        *subject,
+									      const char        *references,
+									      const char        *other_random_headers,
+									      const char        *priority,
+									      const char        *attachment,
+                        const char        *newspost_url,
+                        PRBool            xlate_p,
+                        PRBool            sign_p)
 {
   nsIMsgCompFields *cFields = nsnull;
 
@@ -253,6 +292,7 @@ CreateCompositionFields(const char *from,
 
   // Now set all of the passed in stuff...
   cFields->SetFrom(nsString2(from).GetUnicode());
+  cFields->SetSubject(nsString2(subject).GetUnicode());
   cFields->SetReplyTo(nsString2(reply_to).GetUnicode());
   cFields->SetTo(nsString2(to).GetUnicode());
   cFields->SetCc(nsString2(cc).GetUnicode());
@@ -330,7 +370,6 @@ mime_free_attach_data ( nsMsgAttachmentData *attachData, int cleanupCount)
 
   for ( i=0; i < cleanupCount; i++, tmp++ ) 
   {
-	  PR_FREEIF(tmp->real_name);
 	  if ( tmp->url ) 
       delete tmp->url;
     PR_FREEIF(tmp->real_name);
@@ -366,7 +405,7 @@ mime_free_attachments ( nsMsgAttachedFile *attachments, int count )
 	  PR_FREEIF ( cur->x_mac_creator );
 	  if ( cur->file_spec ) 
     {
-	    cur->file_spec->Delete(PR_FALSE);
+      cur->file_spec->Delete(PR_FALSE);
 	    delete ( cur->file_spec );
 	  }
   }
@@ -424,10 +463,6 @@ mime_draft_process_attachments(mime_draft_data *mdd)
 	    if (!tmp->real_name)
   	    mime_SACopy ( &(tmp->real_name), tmpSpec );
 	  }
-
-printf("ATTACHMENT %d: Type = %s\n", i, tmpFile->type);
-printf("ATTACHMENT %d: Encoding = %s\n", i, tmpFile->encoding);
-printf("ATTACHMENT %d: Description = %s\n", i, tmpFile->description);
 
 	  if ( tmpFile->type ) 
     {
@@ -1247,6 +1282,11 @@ mime_parse_stream_complete (nsMIMESession *stream)
         {
           editorType = nsMsgPlainTextEditor;
         }
+  
+        // Since we have body text, then we should set the compose fields with
+        // this data.      
+        if (editorType == nsMsgPlainTextEditor)
+          fields->SetTheForcePlainText(PR_TRUE);
         
         if (forward_inline)
         {
@@ -1267,11 +1307,30 @@ mime_parse_stream_complete (nsMIMESession *stream)
 		    if ( (NS_SUCCEEDED(res)) && (newBody && newBody != body))
 		    {
 			    PR_FREEIF(body);
-			    body = newBody;
-          bodyLen = newBodyLen;
+          // RICHIE SHERRY
+          //
+          // Insert the META tag to tell Gecko it's UTF-8...
+          //
+          nsString      aNewBody("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">");
+          aNewBody.Append(newBody);
+
+          PR_FREEIF(newBody);
+
+          fields->SetCharacterSet(nsString("UTF-8").GetUnicode());
+          fields->SetBody(aNewBody.GetUnicode());
+          // RICHIE SHERRY
+          // RICHIE SHERRY OLD STUFF body = newBody;
+          // RICHIE SHERRY OLD STUFF bodyLen = newBodyLen;
 		    }
+        else
+        {
+          fields->SetCharacterSet(nsString(mdd->mailcharset).GetUnicode());
+          fields->SetBody(nsString(body).GetUnicode());
+        }
+
+        PR_FREEIF(body);
       } // end if (messageBody)
-      
+  
       //
       // At this point, we need to create a message compose window or editor
       // window via XP-COM with the information that we have retrieved from 
@@ -1286,7 +1345,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITH a body!!!!\n");
 #endif
-        CreateTheComposeWindow(fields, newAttachData);
+        CreateTheComposeWindow(fields, newAttachData, editorType);
       }
       
       PR_FREEIF(body);
@@ -1301,14 +1360,14 @@ mime_parse_stream_complete (nsMIMESession *stream)
       if (mdd->format_out == nsMimeOutput::nsMimeMessageEditorTemplate)
       {
         printf("RICHIE: Time to create the EDITOR with this template - NO body!!!!\n");
-        CreateTheComposeWindow(fields, newAttachData);
+        CreateTheComposeWindow(fields, newAttachData, nsMsgDefault);
       }
       else
       {
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITHOUT a body!!!!\n");
 #endif
-        CreateTheComposeWindow(fields, newAttachData);
+        CreateTheComposeWindow(fields, newAttachData, nsMsgDefault);
       }
     }    
   }
@@ -1319,7 +1378,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
                                       GetMailXlateionPreference(), 
                                       GetMailSigningPreference());
     if (fields)
-      CreateTheComposeWindow(fields, newAttachData);
+      CreateTheComposeWindow(fields, newAttachData, nsMsgDefault);
   }
   
   if ( mdd->headers )
@@ -1327,12 +1386,27 @@ mime_parse_stream_complete (nsMIMESession *stream)
 
   // 
   // Free the original attachment structure...
+  // Make sure we only cleanup the local copy of the memory and not kill 
+  // files we need on disk
   //
   if (mdd->attachments)
+  {
+    int               i;
+    nsMsgAttachedFile *cur = mdd->attachments;
+
+    for ( i = 0; i < mdd->attachments_count; i++, cur++ ) 
+    {
+	    if ( cur->file_spec ) 
+      {
+	      delete ( cur->file_spec );
+        cur->file_spec = nsnull;
+      }
+    }
+
     mime_free_attachments( mdd->attachments, mdd->attachments_count );
+  }
 
   PR_FREEIF(mdd);
-  
   if (fields)
     NS_RELEASE(fields);
   
@@ -1433,6 +1507,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   char *hdr_value = NULL, *parm_value = NULL;
   PRBool needURL = PR_FALSE;
   PRBool creatingMsgBody = PR_TRUE;
+  PRBool bodyPart = PR_FALSE;
   
   PR_ASSERT (mdd && headers);
   if (!mdd || !headers) 
@@ -1477,6 +1552,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
       return MIME_OUT_OF_MEMORY;
     newAttachment = mdd->messageBody;
     creatingMsgBody = PR_TRUE;
+    bodyPart = PR_TRUE;
   }
   else 
   {
@@ -1522,30 +1598,8 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     workURLSpec = PL_strdup(contLoc);
 
   PR_FREEIF(contLoc);
-  if (workURLSpec)
-  {
-    parm_value = PL_strdup(workURLSpec);
-    if (parm_value) 
-    {
-      char *cp = NULL, *cp1=NULL ;
-      nsUnescape(parm_value);
-      // strip '"' 
-      cp = parm_value;
-      while (*cp == '"') 
-        cp++;
-      if ((cp1 = PL_strchr(cp, '"')))
-        *cp1 = 0;
 
-      nsMimeNewURI(&(newAttachment->orig_url), cp);
-      NS_ADDREF(newAttachment->orig_url);
-      PR_FREEIF(workURLSpec);
-      workURLSpec = PL_strdup(cp);
-      PR_FREEIF(parm_value);
-    }
-  }
-
-  mdd->curAttachment = newAttachment;
-  
+  mdd->curAttachment = newAttachment;  
   newAttachment->type =  MimeHeaders_get ( headers, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE );
   
   //
@@ -1592,6 +1646,29 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
       ++ptr;
       workURLSpec = PR_smprintf("nsmail.%s", ptr);
       tmpSpec = nsMsgCreateTempFileSpec(workURLSpec);
+    }
+  }
+
+  // This needs to be done so the attachment structure has a handle 
+  // on the temp file for this attachment...
+  // if ( (tmpSpec) && (!bodyPart) )
+  if (tmpSpec)
+  {
+    char *tmpSpecStr = PR_smprintf("file://%s", tmpSpec->GetNativePathCString());
+
+    if (tmpSpecStr)
+    {
+      char *slashPtr = tmpSpecStr;
+      while (*slashPtr)
+      {
+        if (*slashPtr == '\\') 
+          *slashPtr = '/';
+
+        slashPtr++;
+      }
+      nsMimeNewURI(&(newAttachment->orig_url), tmpSpecStr);
+      NS_IF_ADDREF(newAttachment->orig_url);
+      PR_FREEIF(tmpSpecStr);
     }
   }
 

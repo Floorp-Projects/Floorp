@@ -36,6 +36,8 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsMsgQuote.h"
+#include "nsIMsgDraft.h"
+#include "nsMsgCreate.h"    // For drafts...I know, awful file name...
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -48,6 +50,7 @@ static NS_DEFINE_CID(kCSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kCMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
 static NS_DEFINE_CID(kCMsgQuoteCID, NS_MSGQUOTE_CID);
 static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
+static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
 
 
 ////////////////////////////////////////////////////////////
@@ -185,6 +188,12 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 		return NS_NewMsgSendLater(aIID, aResult);
 	}
 
+  // do they want a Draft interface?
+	else if (mClassID.Equals(kMsgDraftCID)) 
+	{
+		return NS_NewMsgDraft(aIID, aResult);
+	}
+
 	else if (mClassID.Equals(kCMsgComposeServiceCID)) 
 	{
 		nsMsgComposeService * aMsgCompService = new nsMsgComposeService();
@@ -310,6 +319,13 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
 
+  // For Drafts...
+  rv = compMgr->RegisterComponent(kMsgDraftCID,
+										"Message Drafts",
+										"Xcomponent://netscape/messengercompose/drafts",
+										path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) finalResult = rv;
+
   return finalResult;
 }
 
@@ -344,6 +360,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCMsgQuoteCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->UnregisterComponent(kMsgDraftCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	return finalResult;

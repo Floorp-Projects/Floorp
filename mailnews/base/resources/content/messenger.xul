@@ -47,6 +47,7 @@ Rights Reserved.
 <!ENTITY saveAsTemplateCmd.label ".Template">  
 <!ENTITY getNewMsgCmd.label "Get New Messages">  
 <!ENTITY sendUnsentCmd.label "Send Unsent Messages">  
+<!ENTITY loadFirstDraft.label "Load First Draft Message">
 <!ENTITY subscribeCmd.label "Subscribe">  
 <!ENTITY emptyTrashCmd.label ".Empty Trash">  
 <!ENTITY importCmd.label ".Import...">  
@@ -281,6 +282,7 @@ Rights Reserved.
       <menuseparator/>
       <menuitem value="&getNewMsgCmd.label;" onaction="MsgGetMessage();"/>
       <menuitem value="&sendUnsentCmd.label;" onaction="MsgSendUnsentMsg();"/>
+      <menuitem value="&loadFirstDraft.label;" onaction="MsgLoadFirstDraft();"/>      
       <menuitem value="&emptyTrashCmd.label;" onaction="MsgEmptyTrash();"/>
       <menuitem value="&subscribeCmd.label;" onaction="MsgSubscribe();"/>
       <menuseparator/>

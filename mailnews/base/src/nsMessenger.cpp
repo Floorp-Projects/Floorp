@@ -75,6 +75,7 @@
 #include "nsIMsgSendLater.h" 
 #include "nsMsgCompCID.h"
 #include "nsIMsgSendLaterListener.h"
+#include "nsIMsgDraft.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -86,6 +87,7 @@ static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID); 
+static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
 
 class nsMessenger : public nsIMessenger
 {
@@ -125,6 +127,7 @@ public:
   NS_IMETHOD Undo();
   NS_IMETHOD Redo();
   NS_IMETHOD SendUnsentMessages();
+  NS_IMETHOD LoadFirstDraft();
   NS_IMETHOD SetDocumentCharset(const PRUnichar *characterSet);
 
 protected:
@@ -1304,4 +1307,23 @@ nsMessenger::SendUnsentMessages()
     NS_RELEASE(sendLaterListener);
 	} 
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMessenger::LoadFirstDraft()
+{
+	nsresult              rv;
+	nsCOMPtr<nsIMsgDraft> pMsgDraft; 
+
+	rv = nsComponentManager::CreateInstance(kMsgDraftCID, NULL, nsCOMTypeInfo<nsIMsgDraft>::GetIID(),
+																					(void **)getter_AddRefs(pMsgDraft)); 
+	if (NS_SUCCEEDED(rv) && pMsgDraft) 
+	{ 
+		printf("We succesfully obtained a nsIMsgDraft interface....\n");     
+
+    // This should really pass in a URI, but for now, just to test, we can pass in nsnull
+    pMsgDraft->OpenDraftMsg(nsnull, nsnull); 
+  } 
+
+  return NS_OK;
 }

@@ -315,8 +315,10 @@ nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, co
     UtilityWrite("\" target=new>");
   }
 
-  UtilityWrite("<img SRC=\"resource:/res/network/gopher-unknown.gif\" BORDER=0 ALIGN=ABSCENTER>");
+  UtilityWrite("<CENTER>");
+  UtilityWrite("<img SRC=\"resource:/chrome/editor/skin/default/images/ED_NewFile.gif\" BORDER=0 ALIGN=ABSCENTER>");
   UtilityWrite(name);
+  UtilityWrite("</CENTER>");
 
   if (mAttachContentType)
     UtilityWrite("</a>");

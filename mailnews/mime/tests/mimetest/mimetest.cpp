@@ -41,6 +41,14 @@
 #include "msgCore.h"
 #include "nsIIOService.h"
 #include "nsMimeEmitterCID.h"
+#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
+#include "nsMsgBaseCID.h"
+#include "nsIMsgMailSession.h"
+
+#ifdef XP_PC
+#include <windows.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////
 // THIS IS THE STUFF TO GET THE TEST HARNESS OFF THE GROUND
@@ -77,6 +85,7 @@
 // I18N
 static NS_DEFINE_CID(charsetCID,  CONV_CID);
 NS_DEFINE_IID(kConvMeIID,             CONV_IID);
+static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 
 // prefs
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -95,6 +104,8 @@ static NS_DEFINE_CID(kStreamConverterCID,    NS_STREAM_CONVERTER_CID);
 static NS_DEFINE_CID(kHtmlEmitterCID, NS_HTML_MIME_EMITTER_CID);
 static NS_DEFINE_CID(kXmlEmitterCID, NS_XML_MIME_EMITTER_CID);
 static NS_DEFINE_CID(kRawEmitterCID, NS_RAW_MIME_EMITTER_CID);
+
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsICharsetConverterManager *ccMan = nsnull;
 
@@ -198,7 +209,9 @@ private:
   PRBool              mInClosingTag;
   nsMimeOutputType    mOutFormat;
 };
-NS_IMPL_ISUPPORTS(ConsoleOutputStreamListener, nsIOutputStream::GetIID());
+
+//NS_IMPL_ISUPPORTS2(ConsoleOutputStreamListener, nsIOutputStream, nsIStreamListener);
+NS_IMPL_ISUPPORTS(ConsoleOutputStreamListener, nsIStreamListener::GetIID());
 
 #define TAB_SPACES    2
 
@@ -413,12 +426,15 @@ main(int argc, char** argv)
 
   // Get an event queue started...
   NS_WITH_SERVICE(nsIEventQueueService, theEventQueueService, kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) 
+    return rv;
 
   rv = theEventQueueService->CreateThreadEventQueue();
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create thread event queue");
-  if (NS_FAILED(rv)) return rv;
-
+  if (NS_FAILED(rv)) 
+    return rv;
+ 
+  // Do the conversion!
   DoRFC822toHTMLConversion(argv[1], argc);
 
   // Cleanup stuff necessary...
@@ -434,6 +450,11 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
   nsIURI            *theURI = nsnull;
   nsMimeOutputType  outFormat;
   char              *contentType = nsnull;
+
+  if (numArgs >= 3)
+    outFormat = nsMimeOutput::nsMimeMessageDraftOrTemplate;
+  else
+    outFormat = nsMimeOutput::nsMimeMessageQuoting;
 
   char *opts = PL_strchr(filename, '?');
   char save;
@@ -466,14 +487,18 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
     return rv;
   }
   
-  // Create the consumer output stream.. this will receive all the HTML from libmime
-  ConsoleOutputStreamListener   *ptr = new ConsoleOutputStreamListener();
-  nsCOMPtr<nsIStreamListener> out = (nsIStreamListener *) ptr;
-
-  if (!out)
+  nsCOMPtr<nsIStreamListener> out = nsnull;
+  ConsoleOutputStreamListener   *ptr = nsnull;
+  if (outFormat != nsMimeOutput::nsMimeMessageDraftOrTemplate)
   {
-    printf("Failed to create nsIOutputStream\n");
-    return NS_ERROR_FAILURE;
+    // Create the consumer output stream.. this will receive all the HTML from libmime
+    ptr = new ConsoleOutputStreamListener();
+    out = do_QueryInterface(ptr);
+    if (!out)
+    {
+      printf("Failed to create nsIOutputStream\n");
+      return NS_ERROR_FAILURE;
+    }
   }
  
   // This is the producer stream that will deliver data from the disk file...
@@ -501,16 +526,14 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
   }
 
   // Set us as the output stream for HTML data from libmime...
-  // if (numArgs >= 3)
   nsCOMPtr<nsIMimeStreamConverter> mimeStream = do_QueryInterface(mimeParser);
-  mimeStream->SetMimeOutputType(nsMimeOutput::nsMimeMessageHeaderDisplay);
-	rv = mimeParser->Init(theURI, out, nsnull);
+  mimeStream->SetMimeOutputType(outFormat);
+  rv = mimeParser->Init(theURI, out, nsnull);
   if (NS_FAILED(rv) || !mimeParser)
   {
     printf("Unable to set the output stream for the mime parser...\ncould be failure to create internal libmime data\n");
     return NS_ERROR_FAILURE;
   }
-
 
   if (contentType)
   {
@@ -518,7 +541,8 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
     PR_FREEIF(contentType);
   }
 
-  ptr->SetFormat(outFormat);
+  if (ptr)
+    ptr->SetFormat(outFormat);
 
   // Assuming this is an RFC822 message...
   mimeParser->OnStartRequest(nsnull, theURI);

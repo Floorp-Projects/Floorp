@@ -384,7 +384,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
       //
       NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
       if (NS_SUCCEEDED(rv) && prefs)
-    		prefs->GetBoolPref("mail.really_delete_unsent_messages", &deleteMsgs);
+    		prefs->GetBoolPref("mail.default_drafts_uri", &deleteMsgs);
 
       if (deleteMsgs)
       {

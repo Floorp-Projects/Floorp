@@ -236,11 +236,6 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   }
   
   // Set us as the output stream for HTML data from libmime...
-  // SHERRY --> rhp, i need you to verify the arguments for this call...
-  // i just hacked them up to get it to build. 
-  char * contentType = nsnull;
-  nsMimeOutputType outType;
-
   nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
   if (mimeConverter)
 	  mimeConverter->SetMimeOutputType(nsMimeOutput::nsMimeMessageQuoting);

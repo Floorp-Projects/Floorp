@@ -305,7 +305,7 @@ nsMimeXmlEmitter::StartAttachment(const char *name, const char *contentType, con
 
   ++mAttachCount;
 
-  sprintf(buf, "<mailattachment id=%d>", mAttachCount);
+  sprintf(buf, "<mailattachment id=\"%d\">", mAttachCount);
   UtilityWrite(buf);
 
   AddAttachmentField(HEADER_PARM_FILENAME, name);

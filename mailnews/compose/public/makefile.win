@@ -27,6 +27,7 @@ XPIDLSRCS =										\
 				.\nsIMsgSendLaterListener.idl		\
 				.\nsIMsgSend.idl		\
 				.\nsIMsgSendLater.idl		\
+				.\nsIMsgDraft.idl			\
 				$(NULL)
 
 ################################################################################

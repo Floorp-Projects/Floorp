@@ -19,7 +19,40 @@
 #ifndef _nsMsgCreate_H_
 #define _nsMsgCreate_H_
 
+#include "nsIMsgDraft.h" 
+#include "nsFileSpec.h"
+#include "nsIFileSpec.h"
+#include "nsIMsgMessageService.h"
+#include "nsIMimeStreamConverter.h"
 
+class nsMsgDraft: public nsIMsgDraft {
+public: 
+	nsMsgDraft();
+	virtual ~nsMsgDraft();
 
+	/* this macro defines QueryInterface, AddRef and Release for this class */
+	NS_DECL_ISUPPORTS
+
+  /* long QuoteMessage (in wstring msgURI, in nsIOutputStream outStream, nsIMessage **aMsgToReplace); */
+  NS_IMETHOD  OpenDraftMsg(const PRUnichar *msgURI, nsIMessage **aMsgToReplace);
+
+  /* long QuoteMessage (in wstring msgURI, in nsIOutputStream outStream, nsIMessage **aMsgToReplace); */
+  NS_IMETHOD  OpenEditorTemplate(const PRUnichar *msgURI, nsIMessage **aMsgToReplace);
+
+  nsresult    ProcessDraftOrTemplateOperation(const PRUnichar *msgURI, nsMimeOutputType aOutType,
+                                              nsIMessage **aMsgToReplace);
+
+  // 
+  // Implementation data...
+  //
+  nsFileSpec            *mTmpFileSpec;
+  nsIFileSpec           *mTmpIFileSpec;
+  char                  *mURI;
+  nsIMsgMessageService  *mMessageService;
+  nsMimeOutputType      mOutType;
+};
+
+// Will be used by factory to generate a nsMsgQuote class...
+nsresult      NS_NewMsgDraft(const nsIID &aIID, void ** aInstancePtrResult);
 
 #endif /* _nsMsgCreate_H_ */
