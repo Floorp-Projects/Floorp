@@ -1018,6 +1018,14 @@ MAKEFILES_sunbird="
 calendar/sunbird/Makefile
 calendar/sunbird/app/Makefile
 calendar/sunbird/base/Makefile
+calendar/base/Makefile
+calendar/base/public/Makefile
+calendar/base/src/Makefile
+calendar/base/build/Makefile
+calendar/providers/Makefile
+calendar/providers/memory/Makefile
+calendar/providers/storage/Makefile
+calendar/providers/composite/Makefile
 "
 
 MAKEFILES_macbrowser="
