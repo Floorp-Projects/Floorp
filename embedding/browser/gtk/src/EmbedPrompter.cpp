@@ -204,6 +204,8 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
 
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckBox),
                                      mCheckValue);
+        gtk_label_set_line_wrap(GTK_LABEL(gtk_bin_get_child(GTK_BIN(mCheckBox))),
+				TRUE);
 
         gtk_box_pack_start(GTK_BOX(contentsVBox), mCheckBox, FALSE, FALSE, 0);
     }
