@@ -66,6 +66,12 @@ protected:
   nsCOMPtr<nsIExternalProtocolService> m_extProtService;
 };
 
+class nsBlockedExternalProtocolHandler: public nsExternalProtocolHandler
+{
+public:
+  nsBlockedExternalProtocolHandler();
+  NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel **_retval);
+};
 
 #endif // nsExternalProtocolHandler_h___
 
