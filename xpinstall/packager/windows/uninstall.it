@@ -57,7 +57,7 @@ Uninstall Filename=$UninstallFile$
 
 
 [Dialog Uninstall]
-Show Dialog=FALSE
+Show Dialog=TRUE
 Title=$ProductName$ $UserAgentShort$ Uninstaller
 Message0=This will uninstall %s from your system.  Click Uninstall to begin uninstallation.
 
