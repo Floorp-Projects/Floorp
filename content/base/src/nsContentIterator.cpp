@@ -38,6 +38,7 @@
 #include "nsIPresContext.h"
 #include "nsIComponentManager.h"
 #include "nsLayoutCID.h"
+#include "nsVoidArray.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
@@ -151,6 +152,8 @@ protected:
   nsCOMPtr<nsIContent> mFirst;
   nsCOMPtr<nsIContent> mLast;
   nsCOMPtr<nsIContent> mCommonParent;
+  nsCOMPtr<nsIContent> mCachedNode;
+  PRInt32 mCachedIndex;
 
   PRBool mIsDone;
   PRBool mPre;
@@ -458,12 +461,16 @@ nsresult nsContentIterator::GetNextSibling(nsCOMPtr<nsIContent> aNode, nsCOMPtr<
   if (NS_FAILED(aNode->GetParent(*getter_AddRefs(parent))) || !parent)
     return NS_ERROR_FAILURE;
 
-  if (NS_FAILED(parent->IndexOf(aNode, indx)))
+  if (mCachedNode == aNode)
+    indx = mCachedIndex;
+  else if (NS_FAILED(parent->IndexOf(aNode, indx)))
     return NS_ERROR_FAILURE;
 
   if (NS_SUCCEEDED(parent->ChildAt(++indx, *getter_AddRefs(sib))) && sib)
   {
     *aSibling = sib;
+    mCachedNode = sib;
+    mCachedIndex = indx;
   }
   else if (parent != mCommonParent)
   {
@@ -778,6 +785,10 @@ protected:
   nsContentSubtreeIterator& operator=(const nsContentSubtreeIterator&);
 
   nsCOMPtr<nsIDOMRange> mRange;
+  nsVoidArray mStartNodes;
+  nsVoidArray mStartOffsets;
+  nsVoidArray mEndNodes;
+  nsVoidArray mEndOffsets;
 };
 
 nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
@@ -871,6 +882,10 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
     }
   }
   
+  // cache ancestors
+  nsRange::GetAncestorsAndOffsets(startParent, startIndx, &mStartNodes, &mStartOffsets);
+  nsRange::GetAncestorsAndOffsets(endParent, endIndx, &mEndNodes, &mEndOffsets);
+
   // find first node in range
   aRange->GetStartOffset(&indx);
   numChildren = GetNumChildren(startParent);
@@ -1012,8 +1027,28 @@ nsresult nsContentSubtreeIterator::Next()
   nsCOMPtr<nsIContent> nextNode;
   if (NS_FAILED(GetNextSibling(mCurNode, address_of(nextNode))))
     return NS_OK;
+/*
   nextNode = GetDeepFirstChild(nextNode);
   return GetTopAncestorInRange(nextNode, address_of(mCurNode));
+*/
+  PRInt32 i = mEndNodes.IndexOf((void*)nextNode);
+  while (i != -1)
+  {
+    // as long as we are finding ancestors of the endpoint of the range,
+    // dive down into their children
+    nsCOMPtr<nsIContent> cChild;
+    nextNode->ChildAt(0,*getter_AddRefs(cChild));
+    if (!cChild) return NS_ERROR_NULL_POINTER;
+    // should be impossible to get a null pointer.  If we went all the 
+    // down the child chain to the bottom without finding an interior node, 
+    // then the previous node should have been the last, which was
+    // was tested at top of routine.
+    nextNode = cChild;
+    i = mEndNodes.IndexOf((void*)nextNode);
+  }
+
+  mCurNode = do_QueryInterface(nextNode);
+  return NS_OK;
 }
 
 
