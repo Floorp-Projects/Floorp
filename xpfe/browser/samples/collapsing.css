@@ -1,9 +1,9 @@
-window[sitemode="hideAOL"] box#AOLBox
+window[sitemode="hideSiteOne"] box#SiteOneBox
 {
 visibility:collapse;
 }
 
-window[sitemode="hideNetcenter"] box#NetcenterBox
+window[sitemode="hideSiteTwo"] box#SiteTwoBox
 {
 visibility:collapse;
 }
