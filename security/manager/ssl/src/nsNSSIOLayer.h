@@ -112,4 +112,7 @@ nsresult nsSSLIOLayerAddToSocket(const char *host,
                                  PRBool forTLSStepUp);
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
+nsresult displayAlert(nsXPIDLString formattedString, nsNSSSocketInfo *infoObject);
+nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo *infoObject, int error);
+ 
 #endif /* _NSNSSIOLAYER_H */

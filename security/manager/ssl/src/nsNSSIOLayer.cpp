@@ -393,6 +393,43 @@ nsSSLIOLayerFreeTLSIntolerantSites()
   return NS_OK;
 }
 
+nsresult
+displayAlert(nsXPIDLString formattedString, nsNSSSocketInfo *infoObject)
+{
+	
+	// The interface requestor object may not be safe, so
+    // proxy the call to get the nsIPrompt.
+
+     nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+     if (!proxyman) 
+       return NS_ERROR_FAILURE;
+ 
+     nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
+     proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                 NS_GET_IID(nsIInterfaceRequestor),
+                                 NS_STATIC_CAST(nsIInterfaceRequestor*,infoObject),
+                                 PROXY_SYNC,
+                                 getter_AddRefs(proxiedCallbacks));
+
+     nsCOMPtr<nsIPrompt> prompt (do_GetInterface(proxiedCallbacks));
+  
+     if (!prompt)
+       return NS_ERROR_NO_INTERFACE;
+
+     nsCOMPtr<nsIPrompt> proxyPrompt;
+     // Finally, get a proxy for the nsIPrompt
+     proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                 NS_GET_IID(nsIPrompt),
+                                 prompt,
+                                 PROXY_SYNC,
+                                 getter_AddRefs(proxyPrompt));
+     proxyPrompt->Alert(nsnull, formattedString.get());
+     return NS_OK;
+     
+}
+
+
+
 static nsresult
 nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
 {
@@ -457,35 +494,10 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
     break;
   }
 
-  // The interface requestor object may not be safe, so
-  // proxy the call to get the nsIPrompt.
-
-  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-  if (!proxyman) 
-    return NS_ERROR_FAILURE;
- 
-  nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
-  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                              NS_GET_IID(nsIInterfaceRequestor),
-                              NS_STATIC_CAST(nsIInterfaceRequestor*,socketInfo),
-                              PROXY_SYNC,
-                              getter_AddRefs(proxiedCallbacks));
-
-  nsCOMPtr<nsIPrompt> prompt (do_GetInterface(proxiedCallbacks));
-  
-  if (!prompt)
-    return NS_ERROR_NO_INTERFACE;
-
-  nsCOMPtr<nsIPrompt> proxyPrompt;
-  // Finally, get a proxy for the nsIPrompt
-  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                              NS_GET_IID(nsIPrompt),
-                              prompt,
-                              PROXY_SYNC,
-                              getter_AddRefs(proxyPrompt));
-  proxyPrompt->Alert(nsnull, formattedString.get());
-  return NS_OK;
+   rv = displayAlert(formattedString, socketInfo);
+   return rv;
 }
+
 
 static PRStatus PR_CALLBACK
 nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
@@ -817,18 +829,7 @@ nsSSLIOLayerNewSocket(const char *host,
   return NS_OK;
 }
 
-static PRBool
-nsCertErrorNeedsDialog(int error)
-{
-  return ((error == SEC_ERROR_UNKNOWN_ISSUER) ||
-          (error == SEC_ERROR_UNTRUSTED_ISSUER) ||
-          (error == SSL_ERROR_BAD_CERT_DOMAIN) ||
-          (error == SSL_ERROR_POST_WARNING) ||
-          (error == SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE) ||
-          (error == SEC_ERROR_CA_CERT_INVALID) ||
-          (error == SEC_ERROR_CRL_EXPIRED) ||
-          (error == SEC_ERROR_EXPIRED_CERTIFICATE));
-}
+
 
 static char* defaultServerNickname(CERTCertificate* cert)
 {
@@ -946,6 +947,12 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
   case SEC_ERROR_UNKNOWN_ISSUER:
   case SEC_ERROR_CA_CERT_INVALID:
   case SEC_ERROR_UNTRUSTED_ISSUER:
+  /* This is a temporay fix for bug# - We are showing a unknown ca dialog,
+     when actually the ca cert has expired/not yet valid. We need to change
+     this in future - need to define a proper ui for this situation
+  */
+  case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+
     rv = badCertHandler->UnknownIssuer(csi, callBackCert, &addType, &retVal);
     break;
   case SSL_ERROR_BAD_CERT_DOMAIN:
@@ -989,6 +996,7 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     }
     break;
   default:
+    displayUnknownCertErrorAlert(infoObject, error);
     rv = NS_ERROR_FAILURE;
     break;
   }
@@ -999,6 +1007,42 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
   CERT_DestroyCertificate(peerCert);
   return NS_FAILED(rv) ? PR_FALSE : retVal;
 }
+
+
+
+nsresult
+displayUnknownCertErrorAlert(nsNSSSocketInfo *infoObject, int error)
+{
+    nsresult rv;
+    NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
+    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
+    if (NS_FAILED(rv))
+      return rv;
+    nsXPIDLString formattedString;
+    nsXPIDLCString hostName;
+    infoObject->GetHostName(getter_Copies(hostName));
+    NS_ConvertASCIItoUCS2 hostNameU(hostName);
+    const PRUnichar *params[2];
+    char buf[80];
+    PR_snprintf(buf, 80, "%ld", error);
+    NS_ConvertASCIItoUCS2 errorCode(buf);
+    params[0] = hostNameU.get();
+    params[1] = errorCode.get();
+	
+    //This is not a very precise String - should add some entry like 'unknown cert
+    //error code etc. ...' in the .property file. Using 'Generic ssl error for now.
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSLGenericError").get(),
+                                                  params, 2, 
+                                                  getter_Copies(formattedString));
+    
+    rv = displayAlert(formattedString, infoObject);
+
+    //Possibly, in most of the cases, we would never not look into this return 
+    //value in the caller
+    return rv;
+}
+
+
 
 static SECStatus
 verifyCertAgain(CERTCertificate *cert, 
@@ -1924,7 +1968,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   CERTCertificate *peerCert;
   nsNSSCertificate *nssCert;
 
-
+  error = PR_GetError();
   peerCert = SSL_PeerCertificate(sslSocket);
   nssCert = new nsNSSCertificate(peerCert);
   if (!nssCert) {
@@ -1932,16 +1976,14 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   } 
   NS_ADDREF(nssCert);
   while (rv != SECSuccess) {
-    error = PR_GetError();
-    if (!nsCertErrorNeedsDialog(error)) {
-      // Some weird error we don't really know how to handle.
-      break;
-    }
-    if (!nsContinueDespiteCertError(infoObject, sslSocket, 
+     //Func nsContinueDespiteCertError does the same set of checks as func.
+     //nsCertErrorNeedsDialog. So, removing call to nsCertErrorNeedsDialog
+     if (!nsContinueDespiteCertError(infoObject, sslSocket, 
                                     error, nssCert)) {
       break;
     }
     rv = verifyCertAgain(peerCert, sslSocket, infoObject);
+	error = PR_GetError();
   }
   NS_RELEASE(nssCert);
   CERT_DestroyCertificate(peerCert); 
