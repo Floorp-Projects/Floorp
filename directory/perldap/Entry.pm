@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Entry.pm,v 1.3 1998/07/29 08:25:57 leif Exp $
+# $Id: Entry.pm,v 1.4 1998/07/30 22:12:24 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -59,7 +59,7 @@ sub DESTROY
 #
 sub STORE
 {
-  my ($self, $attr, $val) = ($_[0], lc $_[1], $_[2]);
+  my ($self, $attr, $val) = ($_[$[], lc $_[$[ + 1], $_[$[ + 2]);
 
   return if (($val eq "") || ($attr eq ""));
 
@@ -81,7 +81,7 @@ sub STORE
 #
 sub FETCH
 {
-  my ($self, $attr) = ($_[0], lc $_[1]);
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return unless defined($self->{$attr});
 
@@ -94,7 +94,7 @@ sub FETCH
 #
 sub DELETE
 {
-  my ($self, $attr) = ($_[0], lc $_[1]);
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return if ($attr eq "");
   return unless defined($self->{$attr});
@@ -109,7 +109,7 @@ sub DELETE
 #
 sub attrModified
 {
-  my ($self, $attr) = ($_[0], lc $_[1]);
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return 0 if ($attr eq "");
   return 0 unless defined($self->{$attr});
@@ -128,7 +128,7 @@ sub attrModified
 #
 sub remove
 {
-  my ($self, $attr) = ($_[0], lc $_[1]);
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return 0 if ($attr eq "");
   return 0 unless defined($self->{$attr});
@@ -147,7 +147,7 @@ sub remove
 #
 sub removeValue
 {
-  my ($self, $attr, $val) = ($_[0], lc $_[1], $_[2]);
+  my ($self, $attr, $val) = ($_[$[], lc $_[$[ + 1], $_[$[ + 2]);
   my $i = 0;
   local $_;
 
@@ -181,7 +181,7 @@ sub removeValue
 sub addValue
 {
   my $self = shift;
-  my ($attr, $val, $force) = (lc $_[0], $_[1], $_[2]);
+  my ($attr, $val, $force) = (lc $_[$[], $_[$[ + 1], $_[$[ + 2]);
   local $_;
 
   return 0 if (($val eq "") || ($attr eq ""));
@@ -260,23 +260,12 @@ sub getDN
 
 
 #############################################################################
-# Modify the RDN, and update the entry accordingly
-#
-sub modifyRDN
-{
-  my ($self, $rdn) = ($_[0], lc $_[1]);
-
-  return 0;
-}
-
-
-#############################################################################
 #
 # Return the number of elements in an attribute.
 #
 sub size
 {
-  my ($self, $attr) = ($_[0], lc $_[1]);
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
   my @val;
 
   return 0 if ($attr eq "");
@@ -293,7 +282,7 @@ sub size
 #
 sub exists
 {
-  my ($self, $attr) = ($_[0], lc $_[1]);
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return 0 if ($attr eq "");
   return defined($self->{$attr});
