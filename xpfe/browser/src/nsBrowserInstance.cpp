@@ -271,6 +271,7 @@ nsBrowserAppCore::SetDocumentCharset(const PRUnichar *aCharset)
       nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
       if (markupCV) {
         NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(aCharset), NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(markupCV->SetForceCharacterSet(aCharset), NS_ERROR_FAILURE);
       }
     }
   }
