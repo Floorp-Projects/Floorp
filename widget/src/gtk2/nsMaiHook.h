@@ -46,6 +46,8 @@
 
 struct MaiHook
 {
+    PRBool (*MaiShutdown)(void);
+    PRBool (*MaiStartup)(void);
     PRBool (*AddTopLevelAccessible)(nsIAccessible *toplevel);
     PRBool (*RemoveTopLevelAccessible)(nsIAccessible *toplevel);
 };
