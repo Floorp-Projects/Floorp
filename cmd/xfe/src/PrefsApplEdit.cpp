@@ -1102,9 +1102,15 @@ void XFE_PrefsApplEditDialog::buildPluginList(char *mimeType)
 		while (plugins[i]) {
 			xms = XmStringCreateLtoR(plugins[i], XmFONTLIST_DEFAULT_TAG);
 			DtComboBoxAddItem(fep->plugin_combo, xms, 0, True);
-			if ((i == 0) || 
-				(!strcmp(current_plugin, plugins[i])))
+
+			/*
+			 * Linux crashes in strcmp() if current_plugin is NULL, so
+			 * make sure it aint 
+			 */
+			if ((i == 0) || (current_plugin && (!strcmp(current_plugin, plugins[i]))))
+			{
 				DtComboBoxSelectItem(fep->plugin_combo, xms);
+			}
 			XmStringFree(xms);
 			i++;
 		}
