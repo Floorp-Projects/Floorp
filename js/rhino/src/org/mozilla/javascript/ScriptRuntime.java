@@ -538,20 +538,14 @@ public class ScriptRuntime {
     public static Scriptable newObject(Context cx, Scriptable scope,
                                        String constructorName, Object[] args)
     {
-        Exception re = null;
+        scope = ScriptableObject.getTopLevelScope(scope);
+        Function ctor = getExistingCtor(cx, scope, constructorName);
         try {
-            return cx.newObject(scope, constructorName, args);
+            if (args == null) { args = ScriptRuntime.emptyArgs; }
+            return ctor.construct(cx, scope, args);
+        } catch (JavaScriptException e) {
+            throw cx.reportRuntimeError(e.getMessage());
         }
-        catch (NotAFunctionException e) {
-            re = e;
-        }
-        catch (PropertyException e) {
-            re = e;
-        }
-        catch (JavaScriptException e) {
-            re = e;
-        }
-        throw cx.reportRuntimeError(re.getMessage());
     }
 
     /**
@@ -727,18 +721,23 @@ public class ScriptRuntime {
     }
 
     public static Object getTopLevelProp(Scriptable scope, String id) {
-        Scriptable s = ScriptableObject.getTopLevelScope(scope);
-        Object v;
-        do {
-            v = s.get(id, s);
-            if (v != Scriptable.NOT_FOUND)
-                return v;
-            s = s.getPrototype();
-        } while (s != null);
-        return v;
+        scope = ScriptableObject.getTopLevelScope(scope);
+        return ScriptableObject.getProperty(scope, id);
     }
 
-
+    static Function getExistingCtor(Context cx, Scriptable scope,
+                                    String constructorName)
+    {
+        Object ctorVal = ScriptableObject.getProperty(scope, constructorName);
+        if (ctorVal instanceof Function) {
+            return (Function)ctorVal;
+        }
+        if (ctorVal == Scriptable.NOT_FOUND) {
+            throw cx.reportRuntimeError1("msg.ctor.not.found", constructorName);
+        } else {
+            throw cx.reportRuntimeError1("msg.not.ctor", constructorName);
+        }
+    }
 
 /***********************************************************************/
 
