@@ -70,7 +70,10 @@
                  sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
                  sortDirection="ascending" ref="msgaccounts:/">
         <template>
-          <rule nc:CanGetIncomingMessages="true">
+		  <rule nc:IsServer="true" nc:ServerType="nntp">
+		    <!-- no support for news yet -->
+		  </rule>
+          <rule nc:IsServer="true">
             <menuitem uri="..." value="..."
                  class="folderMenuItem menuitem-iconic"
                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"

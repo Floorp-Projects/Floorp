@@ -71,10 +71,8 @@ function setupForAccountFromFolder(aURI)
     var msgFolder = GetMsgFolderFromUri(aURI, false);
     gCurrentServer = msgFolder.server;
 
-    var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + gCurrentServer.type];
-    protocolInfo = protocolInfo.getService(Components.interfaces.nsIMsgProtocolInfo);
-    if (!protocolInfo.canGetIncomingMessages)
-      throw "this can happen if the selected folder (or account) doesn't have junk controls (like news or local folder)"
+    if (gCurrentServer.type == "nntp")
+      throw "this can happen if the selected folder (or account) doesn't have junk controls (news)"
   }
   catch (ex) {
     // get server for default account
