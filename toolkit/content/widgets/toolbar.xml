@@ -32,7 +32,7 @@
     </implementation>
   </binding>
 
-  <binding id="toolbarseparator" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base"/>
+  <binding id="toolbarseparator" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base"/>
 
 </bindings>          
 
