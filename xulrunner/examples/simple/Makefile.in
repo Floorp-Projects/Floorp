@@ -85,7 +85,7 @@ libs:: $(ICONS)
 	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/chrome/icons/default
 
 libs:: $(PREFS)
-	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/defaults/pref
+	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/defaults/preferences
 
 libs:: $(APPNAME).xulapp
 	$(EXIT_ON_ERROR) \
