@@ -191,7 +191,7 @@ sub GetBugText {
     my $status_whiteboard = "";
     if (Param('useqacontact') && $::bug{'qa_contact'} > 0) {
         $::bug{'qa_contact'} = DBID_to_name($::bug{'qa_contact'});
-        $qa_contact = "QAContact: $::bug{'qa_contact'}\n";
+        $qa_contact = "$::bug{'qa_contact'}\n";
     } else {
         $::bug{'qa_contact'} = "";
     }
@@ -463,10 +463,12 @@ sub NewProcessOneBug {
     my $newcomments = GetLongDescriptionAsText($id, $start, $end);
 
     my $count = 0;
-    for my $person ($values{'assigned_to'}, $values{'reporter'},
-                    split(/,/, $values{'cc'}),
-                    @voterlist,
-                    @forcecc) {
+    my @personlist = ($values{'assigned_to'}, $values{'reporter'},
+                      split(/,/, $values{'cc'}),
+                      @voterlist,
+                      @forcecc);
+    if ($values{'qa_contact'}) { push @personlist, $values{'qa_contact'} }
+    for my $person (@personlist) {
         $count++;
 
         NewProcessOnePerson($person, $count, \@headerlist, \%values,
