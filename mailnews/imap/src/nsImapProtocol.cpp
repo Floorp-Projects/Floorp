@@ -1985,7 +1985,10 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   mailurl->SetAddToMemoryCache(PR_FALSE);
                   // need to proxy this over to the ui thread
                   if (m_imapMessageSink)
+                  {
+                    m_imapMessageSink->SetNotifyDownloadedLines(PR_FALSE);
                     m_imapMessageSink->SetImageCacheSessionForUrl(mailurl);
+                  }
                   
                 }
                 SetContentModified(modType);  // This will be looked at by the cache
@@ -3910,13 +3913,13 @@ void nsImapProtocol::SetContentModified(IMAP_ContentModifiedType modified)
 
 PRBool	nsImapProtocol::GetShouldFetchAllParts()
 {
-	if (m_runningUrl  && !DeathSignalReceived())
-	{
-		nsImapContentModifiedType contentModified;
-		if (NS_SUCCEEDED(m_runningUrl->GetContentModified(&contentModified)))
-			return (contentModified == IMAP_CONTENT_FORCE_CONTENT_NOT_MODIFIED);
-	}
-	return PR_TRUE;
+  if (m_runningUrl  && !DeathSignalReceived())
+  {
+    nsImapContentModifiedType contentModified;
+    if (NS_SUCCEEDED(m_runningUrl->GetContentModified(&contentModified)))
+      return (contentModified == IMAP_CONTENT_FORCE_CONTENT_NOT_MODIFIED);
+  }
+  return PR_TRUE;
 }
 
 PRInt32 nsImapProtocol::OpenTunnel (PRInt32 maxNumberOfBytesToRead)
