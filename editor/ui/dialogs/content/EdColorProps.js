@@ -35,6 +35,7 @@
 var BodyElement;
 var prefs;
 var backgroundImage;
+var dialog;
 
 // Initialize in case we can't get them from prefs???
 var defaultTextColor="#000000";
@@ -59,7 +60,7 @@ var bgcolorStr =     "bgcolor";
 var backgroundStr =  "background";
 var colorStyle =     "color: ";
 var backColorStyle = "background-color: ";
-var backImageStyle = " background-image: url(";
+var backImageStyle = "; background-image: url(";
 
 // dialog initialization code
 function Startup()
@@ -97,31 +98,20 @@ function Startup()
 
   // Initialize default colors from browser prefs
   var prefs = GetPrefs();
-  if (prefs)
+  if (prefs && window.arguments[1])
   {
-    // This doesn't necessarily match what appears in the page
-    // It is complicated by browser.display.use_document_colors
-    // TODO: WE MUST FORCE WINDOW TO USE DOCUMENT COLORS!!!
-    //       How do we do that without changing browser prefs?
-    var useDocumentColors =    prefs.GetBoolPref("browser.display.use_document_colors");
-    if (useDocumentColors)
-    {
-      // How do I get current colors as show in page?
-    } else {
-      try {
-        // Use author's browser pref colors
-        defaultTextColor =         prefs.CopyCharPref("browser.display.foreground_color");
-        defaultLinkColor =         prefs.CopyCharPref("browser.anchor_color");
-        // Note: Browser doesn't store a value for ActiveLinkColor
-        defaultActiveColor = defaultLinkColor;
-        defaultVisitedColor =  prefs.CopyCharPref("browser.visited_color");
-        defaultBackgroundColor=    prefs.CopyCharPref("browser.display.background_color");
-      }
-      catch (ex) {
-        dump("Failed getting browser colors from prefs\n");
-      }
-    }
+    // XXX TODO: This is a problem! If this is false, it overrides ability to display colors set in document!!!
+//    var useDocumentColors =    prefs.GetBoolPref("browser.display.use_document_colors");
+
+    // Use author's browser pref colors passed into dialog
+    defaultTextColor = window.arguments[1].TextColor;
+    defaultLinkColor = window.arguments[1].LinkColor;
+    // Note: Browser doesn't store a value for ActiveLinkColor
+    defaultActiveColor = defaultLinkColor;
+    defaultVisitedColor =  window.arguments[1].VisitedLinkColor;
+    defaultBackgroundColor=  window.arguments[1].BackgroundColor;
   }
+
   InitDialog();
 
   if (dialog.DefaultColorsRadio.checked)
@@ -148,19 +138,22 @@ function InitDialog()
   customVisitedColor     = globalElement.getAttribute(vlinkStr);
   customBackgroundColor  = globalElement.getAttribute(bgcolorStr);
 
-  if (customTextColor       ||
-      customLinkColor       ||
-      customVisitedColor    ||
-      customActiveColor     ||
-      customBackgroundColor)
-  {
-    // Set default color explicitly for any that are missing
-    if (!customTextColor) customTextColor = defaultTextColor;
-    if (!customLinkColor) customLinkColor = defaultLinkColor;
-    if (!customActiveColor) customActiveColor = defaultActiveColor;
-    if (!customVisitedColor) customVisitedColor = defaultVisitedColor;
-    if (!customBackgroundColor) customBackgroundColor = defaultBackgroundColor;
+  var haveCustomColor = 
+        customTextColor       ||
+        customLinkColor       ||
+        customVisitedColor    ||
+        customActiveColor     ||
+        customBackgroundColor;
 
+  // Set default color explicitly for any that are missing
+  if (!customTextColor) customTextColor = defaultTextColor;
+  if (!customLinkColor) customLinkColor = defaultLinkColor;
+  if (!customActiveColor) customActiveColor = defaultActiveColor;
+  if (!customVisitedColor) customVisitedColor = defaultVisitedColor;
+  if (!customBackgroundColor) customBackgroundColor = defaultBackgroundColor;
+
+  if (haveCustomColor)
+  {
     // If any colors are set, then check the "Custom" radio button
     dialog.CustomColorsRadio.checked = true;
     UseCustomColors();
@@ -214,7 +207,7 @@ function GetColorAndUpdate(ColorWellID)
   if (colorObj.Cancel)
     return;
 
-  color = "";
+  var color = "";
   switch( ColorWellID )
   {
     case "textCW":
@@ -259,7 +252,7 @@ function SetColorPreview(ColorWellID, color)
       break;
     case "backgroundCW":
       // Must combine background color and image style values
-      styleValue = backColorStyle+color;
+      var styleValue = backColorStyle+color;
       if (backgroundImage.length > 0)
         styleValue += ";"+backImageStyle+backgroundImage+");";
 
@@ -275,6 +268,11 @@ function UseCustomColors()
   SetElementEnabledById("ActiveLinkButton", true);
   SetElementEnabledById("VisitedLinkButton", true);
   SetElementEnabledById("BackgroundButton", true);
+  SetElementEnabledById("Text", true);
+  SetElementEnabledById("Link", true);
+  SetElementEnabledById("Active", true);
+  SetElementEnabledById("Visited", true);
+  SetElementEnabledById("Background", true);
 
   SetColorPreview("textCW",       customTextColor);
   SetColorPreview("linkCW",       customLinkColor);
@@ -304,12 +302,17 @@ function UseDefaultColors()
   setColorWell("visitedCW",    "");
   setColorWell("backgroundCW", "");
 
-  // Disable color buttons
+  // Disable color buttons and labels
   SetElementEnabledById("TextButton", false);
   SetElementEnabledById("LinkButton", false);
   SetElementEnabledById("ActiveLinkButton", false);
   SetElementEnabledById("VisitedLinkButton", false);
   SetElementEnabledById("BackgroundButton", false);
+  SetElementEnabledById("Text", false);
+  SetElementEnabledById("Link", false);
+  SetElementEnabledById("Active", false);
+  SetElementEnabledById("Visited", false);
+  SetElementEnabledById("Background", false);
 }
 
 function chooseFile()
@@ -326,6 +329,7 @@ function chooseFile()
 
 function ChangeBackgroundImage()
 {
+dump("***ChangeBackgroundImage\n");
   // Don't show error message for image while user is typing
   ValidateAndPreviewImage(false);
 }
@@ -336,7 +340,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   var styleValue = backColorStyle+dialog.backgroundColor+";";
 
   var image = dialog.BackgroundImageInput.value.trimString();
-  if (image.length > 0)
+  if (image)
   {
     if (IsValidImage(image))
     {
@@ -357,6 +361,8 @@ function ValidateAndPreviewImage(ShowErrorMessage)
     }
   }
   else backgroundImage = null;
+
+dump("ValidateAndPreviewImage: styleValue ="+styleValue+"\n");
 
   // Set style on preview (removes image if not valid)
   dialog.ColorPreview.setAttribute(styleStr, styleValue);

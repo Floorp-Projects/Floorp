@@ -236,7 +236,8 @@ function ValidateData()
 
 function onOK()
 {
-  if (!ValidateData()) return;
+  if (!ValidateData())
+    return false;
 
   // Set return values and save in persistent color attributes
   if (TextType)

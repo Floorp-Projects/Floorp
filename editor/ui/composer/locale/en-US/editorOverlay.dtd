@@ -248,6 +248,7 @@
 <!ENTITY insertMenu.label "Insert">
 <!ENTITY insertmenu.accesskey "i">
 <!ENTITY insertLinkCmd.label "Link...">
+<!ENTITY createLinkCmd.label "Create Link...">
 <!ENTITY insertlink.accesskey "l">
 <!ENTITY link.keybinding "l">
 <!ENTITY insertAnchorCmd.label "Named Anchor...">
@@ -351,12 +352,10 @@
 <!ENTITY formatfontcolor.accesskey "c">
 <!ENTITY tableOrCellColor.label "Table or Cell Background Color...">
 <!ENTITY tableOrCellColor.accesskey "b">
-<!ENTITY removeAllStylesCmd.label "Remove All Text Styles">
-<!ENTITY formatremovestyles.accesskey "r">
+
 <!ENTITY formatremovestyles.keybinding "k">
-<!ENTITY removeLinksCmd.label "Remove Link(s)">
-<!ENTITY formatremovelinks.accesskey "m">
 <!ENTITY formatremovelinks.keybinding "l">
+
 <!ENTITY formatindent.keybinding "=">
 <!ENTITY formatoutdent.keybinding "-">
 <!ENTITY paragraphMenu.label "Paragraph">
@@ -403,7 +402,7 @@
 <!ENTITY bodyTextCmd.label "Body Text">
 <!ENTITY bodytext.accesskey "t">
 <!-- isn't used in menu now, but may be added in future -->
-<!ENTITY advancedPropertiesCmd.label "Advanced Properties...">
+<!ENTITY advancedPropertiesCmd.label "Advanced Properties">
 <!ENTITY advancedproperties.accesskey "v">
 
 <!ENTITY NormalAbbr.label "Text">
@@ -445,9 +444,9 @@
 <!ENTITY decreaseindent.accesskey "d">
 <!ENTITY decreaseindentkb "-">
 
-<!ENTITY pageProperties.label "Page Title and Properties">
+<!ENTITY pageProperties.label "Page Title and Properties...">
 <!ENTITY pageproperties.accesskey "g">
-<!ENTITY colorsAndBackground.label "Page Colors and Background">
+<!ENTITY colorsAndBackground.label "Page Colors and Background...">
 <!ENTITY colorsandbackground.accesskey "u">
 
 <!-- Table Menu -->
@@ -456,6 +455,10 @@
 <!-- Select submenu -->
 <!ENTITY tableSelectMenu.label "Select">
 <!ENTITY tableselectmenu.accesskey "s">
+
+<!ENTITY tableSelectMenu2.label "Table Select">
+<!ENTITY tableInsertMenu2.label "Table Insert">
+<!ENTITY tableDeleteMenu2.label "Table Delete">
 
 <!-- Insert SubMenu -->
 <!ENTITY tableInsertMenu.label "Insert">
@@ -502,10 +505,8 @@
 <!ENTITY tablejoincells.accesskey "j">
 <!ENTITY tableSplitCell.label "Split Cell">
 <!ENTITY tablesplitcell.accesskey "i">
-<!ENTITY tableProperties.label "Table Properties">
-<!-- These may be shared in other menus -->
-<!ENTITY properties.label "Properties...">
-<!ENTITY properties.accesskey "o">
+<!ENTITY tableProperties.label "Table Properties...">
+<!ENTITY tableProperties.accesskey "o">
 
 <!-- Tools Menu -->
 <!ENTITY toolsmenu.accesskey "l">

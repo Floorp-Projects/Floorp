@@ -935,7 +935,6 @@ function SaveWindowLocation()
   {
     var newOffsetX = window.screenX - window.opener.screenX;
     var newOffsetY = window.screenY - window.opener.screenY;
-dump("*** New offsets saved: x="+newOffsetX+", y="+newOffsetY+"\n");
     gLocation.setAttribute("offsetX", window.screenX - window.opener.screenX);
     gLocation.setAttribute("offsetY", window.screenY - window.opener.screenY);
   }

@@ -569,8 +569,6 @@ function MoveSelection(forward)
   }  
 
   // Get the cell at the new location
-//dump("*** Move from row="+curRowIndex+", col="+curColIndex+" to NewRow="+newRowIndex+", NewCol="+newColIndex+"\n");
-  
   do {
     if (!GetCellData(newRowIndex, newColIndex))
     {

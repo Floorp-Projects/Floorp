@@ -20,151 +20,199 @@
  * Contributor(s): 
  */
 
-
 //Cancel() is in EdDialogCommon.js
 var tagname = "TAG NAME"
-var ListTypeList;
-var BulletStyleList;
-var BulletStyleLabel;
-var StartingNumberInput;
-var StartingNumberLabel;
 var BulletStyleIndex = 0;
 var NumberStyleIndex = 0;
-var ListElement = 0;
+var ListElement;
 var originalListType = "";
 var ListType = "";
 var MixedListSelection = false;
-var AdvancedEditButton;
+var dialog;
 
 // dialog initialization code
 function Startup()
 {
   if (!InitEditorShell())
     return;
+  dialog = new Object;
+  if (!dialog)
+    window.close();
 
   doSetOKCancel(onOK, onCancel);
 
-  ListTypeList = document.getElementById("ListType");
-  BulletStyleList = document.getElementById("BulletStyle");
-  BulletStyleLabel = document.getElementById("BulletStyleLabel");
-  StartingNumberInput = document.getElementById("StartingNumber");
-  StartingNumberLabel = document.getElementById("StartingNumberLabel");
-  AdvancedEditButton = document.getElementById("AdvancedEditButton1");
+  dialog.ListTypeList = document.getElementById("ListType");
+  dialog.BulletStyleList = document.getElementById("BulletStyle");
+  dialog.BulletStyleLabel = document.getElementById("BulletStyleLabel");
+  dialog.StartingNumberInput = document.getElementById("StartingNumber");
+  dialog.StartingNumberLabel = document.getElementById("StartingNumberLabel");
+  dialog.StartExample = document.getElementById("StartExample").firstChild;
+  dialog.AdvancedEditButton = document.getElementById("AdvancedEditButton1");
+  dialog.RadioGroup = document.getElementById("RadioGroup");
+  dialog.ChangeAllRadio = document.getElementById("ChangeAll");
+  dialog.ChangeSelectedRadio = document.getElementById("ChangeSelected");
   
-  // Try to get an existing list
+  // Try to get an existing list(s)
+  var mixedObj = new Object;
+  ListType = editorShell.GetListState(mixedObj);
+  // We may have mixed list and non-list, or > 1 list type in selection
+  MixedListSelection = mixedObj.value;
 
-  // This gets a single list element enclosing the entire selection
-  ListElement = editorShell.GetSelectedElement("list");
+  // Get the list element at the anchor node
+  ListElement = editorShell.GetElementOrParentByTagName("list", null);
 
-  if (!ListElement)
-  {
-    // Get the list at the anchor node
-    ListElement = editorShell.GetElementOrParentByTagName("list", null);
-
-    // Remember if we have a list at anchor node, but focus node
-    //   is not in a list or is a different type of list
-    if (ListElement)
-      MixedListSelection = true;
-  }
-  
   // The copy to use in AdvancedEdit
   if (ListElement)
     globalElement = ListElement.cloneNode(false);
 
-  //dump("List and global elements: "+ListElement+globalElement+"\n");
+  // Show extra options for changing entire list if we have one already.
+  dialog.RadioGroup.setAttribute("collapsed", ListElement ? "false" : "true");
+  if (ListElement)
+  {
+    // Radio button index is persistant
+    if (dialog.RadioGroup.getAttribute("index") == "1")
+      dialog.ChangeSelectedRadio.checked = true;
+    else
+      dialog.ChangeAllRadio.checked = true;
+  }
 
   InitDialog();
 
   originalListType = ListType;
 
-  ListTypeList.focus();
+  dialog.ListTypeList.focus();
 
   SetWindowLocation();
 }
 
 function InitDialog()
 {
+  // Note that if mixed, we we pay attention 
+  //   only to the anchor node's list type
+  // (i.e., don't confuse user with "mixed" designation)
   if (ListElement)
     ListType = ListElement.nodeName.toLowerCase();
   else
     ListType = "";
   
   BuildBulletStyleList();
+  dialog.StartingNumberInput.value = "";
+
+  var type = globalElement.getAttribute("type");
+
+  var index = 0;
+  if (ListType == "ul")
+  {
+    if (type)
+    {
+      type = type.toLowerCase();
+      if (type == "circle")
+        index = 1;
+      else if (type == "square")
+        index = 2;
+    }
+  }
+  else if (ListType == "ol")
+  {
+    switch (type)
+    {
+      case "I":
+        index = 1;
+        break;
+      case "i":
+        index = 2;
+        break;
+      case "A":
+        index = 3;
+        break;
+      case "a":
+        index = 4;
+        break;
+    }
+    dialog.StartingNumberInput.value = globalElement.getAttribute("start");
+  }
+  dialog.BulletStyleList.selectedIndex = index;
 }
 
 function BuildBulletStyleList()
 {
-  ClearMenulist(BulletStyleList);
-  var label = "";
-  var selectedIndex = -1;
-
-dump("List Type: "+ListType+" globalElement: "+globalElement+"\n");
+  ClearMenulist(dialog.BulletStyleList);
+  var label;
 
   if (ListType == "ul")
   {
-    BulletStyleList.removeAttribute("disabled");
-    BulletStyleLabel.removeAttribute("disabled");
-    StartingNumberInput.setAttribute("disabled", "true");
-    StartingNumberLabel.setAttribute("disabled", "true");
+    dialog.BulletStyleList.removeAttribute("disabled");
+    dialog.BulletStyleLabel.removeAttribute("disabled");
+    dialog.StartingNumberInput.setAttribute("disabled", "true");
+    dialog.StartingNumberLabel.setAttribute("disabled", "true");
+    dialog.StartExample.setAttribute("disabled", "true");
+
     label = GetString("BulletStyle");
 
-    AppendStringToMenulistById(BulletStyleList,"SolidCircle");
-    AppendStringToMenulistById(BulletStyleList,"OpenCircle");
-    AppendStringToMenulistById(BulletStyleList,"SolidSquare");
+    AppendStringToMenulistById(dialog.BulletStyleList,"SolidCircle");
+    AppendStringToMenulistById(dialog.BulletStyleList,"OpenCircle");
+    AppendStringToMenulistById(dialog.BulletStyleList,"SolidSquare");
 
-    BulletStyleList.selectedIndex = BulletStyleIndex;
-    ListTypeList.selectedIndex = 1;
+    dialog.BulletStyleList.selectedIndex = BulletStyleIndex;
+    dialog.ListTypeList.selectedIndex = 1;
   }
   else if (ListType == "ol")
   {
-    BulletStyleList.removeAttribute("disabled");
-    BulletStyleLabel.removeAttribute("disabled");
-    StartingNumberInput.removeAttribute("disabled");
-    StartingNumberLabel.removeAttribute("disabled");
+    dialog.BulletStyleList.removeAttribute("disabled");
+    dialog.BulletStyleLabel.removeAttribute("disabled");
+    dialog.StartingNumberInput.removeAttribute("disabled");
+    dialog.StartingNumberLabel.removeAttribute("disabled");
+    dialog.StartExample.removeAttribute("disabled");
     label = GetString("NumberStyle");
 
-    AppendStringToMenulistById(BulletStyleList,"Style_1");
-    AppendStringToMenulistById(BulletStyleList,"Style_I");
-    AppendStringToMenulistById(BulletStyleList,"Style_i");
-    AppendStringToMenulistById(BulletStyleList,"Style_A");
-    AppendStringToMenulistById(BulletStyleList,"Style_a");
+    AppendStringToMenulistById(dialog.BulletStyleList,"Style_1");
+    AppendStringToMenulistById(dialog.BulletStyleList,"Style_I");
+    AppendStringToMenulistById(dialog.BulletStyleList,"Style_i");
+    AppendStringToMenulistById(dialog.BulletStyleList,"Style_A");
+    AppendStringToMenulistById(dialog.BulletStyleList,"Style_a");
 
-    BulletStyleList.selectedIndex = NumberStyleIndex;
-    ListTypeList.selectedIndex = 2;
+    dialog.BulletStyleList.selectedIndex = NumberStyleIndex;
+    dialog.ListTypeList.selectedIndex = 2;
   } 
   else 
   {
-    BulletStyleList.setAttribute("disabled", "true");
-    BulletStyleLabel.setAttribute("disabled", "true");
-    StartingNumberInput.setAttribute("disabled", "true");
-    StartingNumberLabel.setAttribute("disabled", "true");
+    dialog.BulletStyleList.setAttribute("disabled", "true");
+    dialog.BulletStyleLabel.setAttribute("disabled", "true");
+    dialog.StartingNumberInput.setAttribute("disabled", "true");
+    dialog.StartingNumberLabel.setAttribute("disabled", "true");
 
     if (ListType == "dl")
-      ListTypeList.selectedIndex = 3;
+      dialog.ListTypeList.selectedIndex = 3;
     else
-      ListTypeList.selectedIndex = 0;
+    {
+      // No list or mixed selection that starts outside a list
+      // ??? Setting index to 0 fails to draw menulist correctly!
+      dialog.ListTypeList.selectedIndex = 1;
+      dialog.ListTypeList.selectedIndex = 0;
+    }
   }
   
   // Disable advanced edit button if changing to "normal"
-  if (ListType == "")
-    AdvancedEditButton.setAttribute("disabled","true");
+  if (ListType)
+    dialog.AdvancedEditButton.removeAttribute("disabled");
   else
-    AdvancedEditButton.removeAttribute("disabled");
+    dialog.AdvancedEditButton.setAttribute("disabled","true");
 
   if (label)
-    BulletStyleLabel.setAttribute("value",label);
+    dialog.BulletStyleLabel.setAttribute("value",label);
 }
 
 function SelectListType()
 {
-//dump(ListTypeList+"ListTypeList\n");
-  switch (ListTypeList.selectedIndex)
+  var NewType;
+  switch (dialog.ListTypeList.selectedIndex)
   {
     case 1:
       NewType = "ul";
       break;
     case 2:
       NewType = "ol";
+      SetTextfieldFocus(dialog.StartingNumberInput);
       break;
     case 3:
       NewType = "dl";
@@ -178,7 +226,7 @@ function SelectListType()
     ListType = NewType;
     
     // Create a newlist object for Advanced Editing
-    if (ListType != "")
+    if (ListType)
       globalElement = editorShell.CreateElementWithDefaults(ListType);
 
     BuildBulletStyleList();
@@ -190,41 +238,15 @@ function SelectBulletStyle()
   // Save the selected index so when user changes
   //   list style, restore index to associated list
   if (ListType == "ul")
-    BulletStyleIndex = BulletStyleList.selectedIndex;
+    BulletStyleIndex = dialog.BulletStyleList.selectedIndex;
   else if (ListType == "ol")
   {
-    if (NumberStyleIndex != BulletStyleList.selectedIndex)
-      StartingNumberInput.value = "";  
-    NumberStyleIndex = BulletStyleList.selectedIndex;
-  }
-}
-
-function FilterStartNumber()
-{
-  var stringIn = StartingNumberInput.value.trimString();
-  if (stringIn.length > 0)
-  {
-    switch (NumberStyleIndex)
+    var index = dialog.BulletStyleList.selectedIndex;
+    if (NumberStyleIndex != index)
     {
-      case 0:
-        // Allow only integers
-        stringIn = stringIn.replace(/\D+/g,"");
-        break;
-      case 1:  // "I";
-        stringIn = stringIn.toUpperCase().replace(/[^ICDVXL]+/g,"");
-        break;
-      case 2:  // "i";
-        stringIn = stringIn.toLowerCase().replace(/[^icdvxl]+/g,"");
-        break;
-      case 3:  // "A";
-        stringIn.toUpperCase();
-        break;
-      case 4:  // "a";
-        stringIn.toLowerCase();
-        break;
+      NumberStyleIndex = index;
+      SetTextfieldFocus(dialog.StartingNumberInput);
     }
-    if (!stringIn) stringIn = "";
-    StartingNumberInput.value = stringIn;
   }
 }
 
@@ -232,13 +254,12 @@ function ValidateData()
 {
   var type = 0;
   // globalElement should already be of the correct type 
-  //dump("Global List element="+globalElement+"  should be type: "+ListType+"\n");
 
   if (globalElement)
   {
     if (ListType == "ul")
     {
-      switch (BulletStyleList.selectedIndex)
+      switch (dialog.BulletStyleList.selectedIndex)
       {
         // Index 0 = "disc", the default, so we don't set it explicitly
         case 1:
@@ -253,9 +274,10 @@ function ValidateData()
       else
         globalElement.removeAttribute("type");
 
-    } else if (ListType == "ol")
+    } 
+    else if (ListType == "ol")
     {
-      switch (BulletStyleList.selectedIndex)
+      switch (dialog.BulletStyleList.selectedIndex)
       {
         // Index 0 = "1", the default, so we don't set it explicitly
         case 1:
@@ -276,7 +298,7 @@ function ValidateData()
       else
         globalElement.removeAttribute("type");
         
-      var startingNumber = StartingNumberInput.value.trimString();
+      var startingNumber = dialog.StartingNumberInput.value.trimString();
       if (startingNumber)
         globalElement.setAttribute("start",startingNumber);
       else
@@ -293,22 +315,38 @@ function onOK()
     // Coalesce into one undo transaction
     editorShell.BeginBatchChanges();
 
-    // We may need to create new list element(s)
-    //   or change to a different list type.
-    if (!ListElement || MixedListSelection || ListType != originalListType)
+
+    // Remember which radio button was checked
+    if (ListElement)
+      dialog.RadioGroup.setAttribute("index", dialog.ChangeAllRadio.checked ? "0" : "1");
+
+    var changeList;
+    if (ListElement && dialog.ChangeAllRadio.checked)
+    {
+      // Select the entire list element so all items are
+      //   changed to the requested new type
+      editorShell.SelectElement(ListElement);
+      changeList = true;
+    }
+    else
+      changeList = MixedListSelection || ListType != originalListType;
+
+    if (changeList)
     {
       editorShell.MakeOrChangeList(ListType);
+
       // Get the new list created:
-      //ListElement = editorShell.GetSelectedElement("list");
       ListElement = editorShell.GetElementOrParentByTagName(ListType, null);
     }
-    // Set the list attributes
+
+    // Set the new list attributes
     if (ListElement)
       editorShell.CloneAttributes(ListElement, globalElement);
 
     editorShell.EndBatchChanges();
     
     SaveWindowLocation();
+
     return true;
   }
   return false;

@@ -280,6 +280,7 @@ var nsSaveCommand =
       var doSaveAs = window.editorShell.editorDocument.location == "about:blank";
       return window.editorShell.saveDocument(doSaveAs, false);
     }
+    return false;
   }
 }
 
@@ -297,6 +298,7 @@ var nsSaveAsCommand =
       FinishHTMLSource();
       return window.editorShell.saveDocument(true, false);
     }
+    return false;
   }
 }
 
@@ -585,8 +587,6 @@ var nsSpellingCommand =
         }
         catch(ex) {
           dump("*** Exception error: SpellChecker Dialog Closing\n");
-          window._content.focus();
-          return;
         }
       }
     }
@@ -635,11 +635,6 @@ var nsHLineCommand =
         // We change the default attributes to those saved in the user prefs
 
         if (gPrefs) {
-          var percent;
-          var height;
-          var shading;
-          var ud = "undefined";
-
           try {
             var align = gPrefs.GetIntPref("editor.hrule.align");
             if (align == 0 ) {
@@ -799,20 +794,15 @@ var nsObjectPropertiesCommand =
     var isEnabled = false;
     if (window.editorShell && window.editorShell.documentEditable)
     {
-      try {
-      // Launch Object properties for appropriate selected element 
-        isEnabled = (GetSelectedElementOrParentCellOrLink() != null ||
-                window.editorShell.GetSelectedElement("href") != null);
-      } catch(e)
-      {
-      }
+      isEnabled = (GetObjectForProperties() != null ||
+                   window.editorShell.GetSelectedElement("href") != null);
     }
     return isEnabled;
   },
   doCommand: function(aCommand)
   {
     // Launch Object properties for appropriate selected element 
-    var element = GetSelectedElementOrParentCellOrLink();
+    var element = GetObjectForProperties();
     if (element)
     {
       var name = element.nodeName.toLowerCase();
@@ -828,7 +818,13 @@ var nsObjectPropertiesCommand =
           EditorInsertOrEditTable(false);
           break;
         case 'td':
+        case 'th':
           EditorTableCellProperties();
+          break;
+        case 'ol':
+        case 'ul':
+        case 'dl':
+          goDoCommand("cmd_listProperties");
           break;
         case 'a':
           if (element.name)
@@ -886,7 +882,9 @@ var nsColorPropertiesCommand =
   },
   doCommand: function(aCommand)
   {
-    window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", "");
+    window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", "", 
+                       GetDefaultBrowserColors());
+
     window._content.focus();
   }
 };
@@ -996,7 +994,6 @@ var nsSelectTableCommand =
   },
   doCommand: function(aCommand)
   {
-//dump("nsSelectTableCommand\n");
     window.editorShell.SelectTable();
     window._content.focus();
   }
@@ -1010,7 +1007,6 @@ var nsSelectTableRowCommand =
   },
   doCommand: function(aCommand)
   {
-//dump("nsSelectTableRowCommand\n");
     window.editorShell.SelectTableRow();
     window._content.focus();
   }
@@ -1024,7 +1020,6 @@ var nsSelectTableColumnCommand =
   },
   doCommand: function(aCommand)
   {
-//dump("nsSelectTableColumnCommand\n");
     window.editorShell.SelectTableColumn();
     window._content.focus();
   }
@@ -1038,7 +1033,6 @@ var nsSelectTableCellCommand =
   },
   doCommand: function(aCommand)
   {
-//dump("nsSelectTableCellCommand\n");
     window.editorShell.SelectTableCell();
     window._content.focus();
   }
@@ -1169,7 +1163,6 @@ var nsDeleteTableRowCommand =
   },
   doCommand: function(aCommand)
   {
-//dump("nsDeleteTableRowCommand: doCommand\n");
     window.editorShell.DeleteTableRow(1);
     window._content.focus();
   }
@@ -1328,6 +1321,7 @@ var nsPreferencesCommand =
   doCommand: function(aCommand)
   {
     goPreferences('navigator.xul', 'chrome://editor/content/pref-composer.xul','editor');
+    window._content.focus();
   }
 };
 

@@ -20,47 +20,91 @@
  *
  */
 
-function fillContentContextMenu(event, contextMenuNode)
-{
-  if ( event.target != contextMenuNode )
-    return;
-   
-  HideDisabledItem("menu_undo_cm");
-  HideDisabledItem("menu_redo_cm");
-  HideDisabledItem("menu_cut_cm");
-  HideDisabledItem("menu_copy_cm");
-  HideDisabledItem("menu_paste_cm");
-  HideDisabledItem("menu_delete_cm");
-  HideDisabledItem("menu_selectAll_cm");
-  HideDisabledItem("removeLinksMenuitem");
-
-  ShowMenuItem("undoredo-separator", ShowUndoRedoSeparator());
-  ShowMenuItem("menu_edit-separator", ShowCCPSeparator());
-  ShowMenuItem("menu_selectAll-separator", ShowSelectAllSeparator());
-  ShowMenuItem("menu_link-separator", ShowLinkSeparator());
-  ShowMenuItem("tableMenu-separator", ShowTableMenuSeparator());
-}
-
-function cleanupContextMenu( event, contextMenuNode )
+function EditorFillContextMenu(event, contextMenuNode)
 {
   if ( event.target != contextMenuNode )
     return;
 
-  ShowHiddenItemOnCleanup("menu_undo_cm");
-  ShowHiddenItemOnCleanup("menu_redo_cm");
-  ShowHiddenItemOnCleanup("menu_cut_cm");
-  ShowHiddenItemOnCleanup("menu_copy_cm");
-  ShowHiddenItemOnCleanup("menu_paste_cm");
-  ShowHiddenItemOnCleanup("menu_delete_cm");
-  ShowHiddenItemOnCleanup("menu_selectAll_cm");
-  ShowHiddenItemOnCleanup("removeLinksMenuitem");
+  // Setup object property menuitem
+  var objectName = InitObjectPropertiesMenuitem("objectProperties_cm");
+  InitRemoveStylesMenuitems("removeStylesMenuitem_cm", "removeLinksMenuitem_cm");
+
+  var inCell = IsInTableCell();
+  if (inCell)
+  {
+    // Set appropriate text for join cells command
+    InitJoinCellMenuitem("joinTableCells_cm");
+
+    // If displaying cell commands,
+    //   these are the only commands that need enable/disabling
+    goUpdateCommand("cmd_JoinTableCells");
+    goUpdateCommand("cmd_SplitTableCell");
+    goUpdateCommand("cmd_TableOrCellColor");
+  }
+
+  // Loop through all children to hide disabled items
+  var children = contextMenuNode.childNodes;
+  if (children)
+  {
+    var count = children.length;
+    for (var i = 0; i < count; i++)
+      HideDisabledItem(children.item(i));
+  }
+
+  // Remove separators if all items in immediate group above are hidden
+  // A bit complicated to account if multiple groups are completely hidden!
+  var haveUndo = 
+    IsMenuItemShowing("menu_undo_cm") ||
+    IsMenuItemShowing("menu_redo_cm");
+
+  var haveEdit = 
+    IsMenuItemShowing("menu_cut_cm")   ||
+		IsMenuItemShowing("menu_copy_cm")  ||
+		IsMenuItemShowing("menu_paste_cm") ||
+		IsMenuItemShowing("menu_delete_cm");
+
+  var haveStyle = 
+    IsMenuItemShowing("removeStylesMenuitem_cm") ||
+    IsMenuItemShowing("createLink_cm") ||
+    IsMenuItemShowing("removeLinksMenuitem_cm");
+
+  var haveProps = IsMenuItemShowing("objectProperties_cm");
+
+  ShowMenuItem("undoredo-separator", haveUndo && haveEdit);
+
+  ShowMenuItem("edit-separator", haveEdit || !haveUndo);
+	             
+  // Note: Item "menu_selectAll_cm" and 
+  // folowing separator are ALWAYS enabled,
+  // so there will always be 1 separator here
+
+  ShowMenuItem("styles-separator", haveStyle && (haveProps || inCell));
+
+  ShowMenuItem("property-separator", (haveProps && inCell) || !haveStyle);
+
+  // Remove table submenus if not in table
+  ShowMenuItem("tableInsertMenu_cm",  inCell);
+  ShowMenuItem("tableSelectMenu_cm",  inCell);
+  ShowMenuItem("tableDeleteMenu_cm",  inCell);
 }
 
-function HideDisabledItem( id )
+function EditorCleanupContextMenu( event, contextMenuNode )
 {
-  var item = document.getElementById(id);
-  if (!item)
-    return false;
+  if ( event.target != contextMenuNode )
+    return;
+
+  var children = contextMenuNode.childNodes;
+  if (children)
+  {
+    var count = children.length;
+    for (var i = 0; i < count; i++)
+    ShowHiddenItemOnCleanup(children.item(i));
+  }
+}
+
+function HideDisabledItem( item )
+{
+  if (!item) return false;
 
   var enabled = (item.getAttribute('disabled') !='true');
   if (!enabled)
@@ -69,15 +113,12 @@ function HideDisabledItem( id )
     item.setAttribute('contexthidden', 'true');
     return true;
   }
-  
   return false;
 }
 
-function ShowHiddenItemOnCleanup( id )
+function ShowHiddenItemOnCleanup( item )
 {
-  var item = document.getElementById(id);
-  if (!item)
-    return false;
+  if (!item) return false;
 
   var isHidden = (item.getAttribute('contexthidden') == 'true');
   if (isHidden)
@@ -86,7 +127,6 @@ function ShowHiddenItemOnCleanup( id )
     item.removeAttribute('contexthidden');
     return true;
   }
-  
   return false;
 }
 
@@ -111,56 +151,4 @@ function IsMenuItemShowing(menuID)
 		return(item.getAttribute('hidden') !='true');
 	}
 	return false;
-}
-
-function ShowUndoRedoSeparator()
-{
-	return(IsMenuItemShowing("menu_undo_cm")
-		  || IsMenuItemShowing("menu_redo_cm")
-		  );
-}
-
-function ShowCCPSeparator()
-{
-	return(IsMenuItemShowing("menu_cut_cm")
-		  || IsMenuItemShowing("menu_copy_cm")
-		  || IsMenuItemShowing("menu_paste_cm")
-		  || IsMenuItemShowing("menu_delete_cm")
-		  );
-}
-
-function ShowSelectAllSeparator()
-{
-	return(IsMenuItemShowing("menu_selectAll_cm")
-		  );
-}
-
-function ShowLinkSeparator()
-{
-	return(IsMenuItemShowing("menu_preview_cm")
-		  || IsMenuItemShowing("removeLinksMenuitem_cm")
-		  );
-}
-
-function ShowTableMenuSeparator()
-{
-	return(IsMenuItemShowing("tableMenu_cm")
-		  || IsMenuItemShowing("tableProperties_cm")
-		  );
-}
-
-function EnableMenuItem(id, enableItem)
-{
-	var item = document.getElementById(id);
-	var enabled = (item.getAttribute('disabled') !='true');
-	if(item && (enableItem != enabled))
-	{
-		item.setAttribute('disabled', enableItem ? '' : 'true');
-	}
-}
-
-function SetupCopyMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, !forceHide);
-	EnableMenuItem(menuID, (numSelected > 0));
 }

@@ -132,7 +132,7 @@ function ValidateData()
   }
 
   // Set attributes: NOTE: These may be empty strings
-  borderText = TrimString(dialog.borderInput.value);
+  var borderText = TrimString(dialog.borderInput.value);
   if (borderText) 
   {
     // Set the other attributes on the table
@@ -142,7 +142,7 @@ function ValidateData()
 
   var maxLimit;
   var isPercent = (dialog.widthPixelOrPercentMenulist.selectedIndex == 1);
-  widthText = TrimString(dialog.widthInput.value);
+  var widthText = TrimString(dialog.widthInput.value);
   if (widthText.length > 0)
   {
     if (isPercent)
@@ -161,7 +161,7 @@ function ValidateData()
   }
 
   isPercent = (dialog.heightPixelOrPercentMenulist.selectedIndex == 1);
-  heightText = TrimString(dialog.heightInput.value);
+  var heightText = TrimString(dialog.heightInput.value);
   if (heightText.length > 0)
   {
     if (isPercent)
@@ -206,7 +206,7 @@ function onOK()
           tableBody.appendChild(newRow);
           for (var j = 0; j < columns; j++)
           {
-            newCell = editorShell.CreateElementWithDefaults("td");
+            var newCell = editorShell.CreateElementWithDefaults("td");
             if (newCell)
             {
               newRow.appendChild(newCell);
