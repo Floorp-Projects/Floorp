@@ -7,7 +7,9 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgIncomingServer.h" /* interface nsIMsgIncomingServer */
+#include "nsISupportsArray.h" /* interface nsISupportsArray */
 #include "nsIMsgSignature.h" /* interface nsIMsgSignature */
+#include "nsICollection.h" /* interface nsICollection */
 #include "nsIMsgIdentity.h" /* interface nsIMsgIdentity */
 #include "nsIMsgVCard.h" /* interface nsIMsgVCard */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
@@ -37,8 +39,8 @@ class nsIMsgAccount : public nsISupports {
   NS_IMETHOD GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer) = 0;
   NS_IMETHOD SetIncomingServer(nsIMsgIncomingServer * aIncomingServer) = 0;
 
-  /* nsIEnumerator getIdentities (); */
-  NS_IMETHOD getIdentities(nsIEnumerator **_retval) = 0;
+  /* nsISupportsArray GetIdentities (); */
+  NS_IMETHOD GetIdentities(nsISupportsArray **_retval) = 0;
 
   /* attribute nsIMsgIdentity defaultIdentity; */
   NS_IMETHOD GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity) = 0;

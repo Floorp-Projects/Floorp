@@ -45,8 +45,8 @@ public:
   NS_IMETHOD GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer);
   NS_IMETHOD SetIncomingServer(nsIMsgIncomingServer * aIncomingServer);
 
-  /* nsIEnumerator getIdentities (); */
-  NS_IMETHOD getIdentities(nsIEnumerator **_retval);
+  /* nsISupportsArray getIdentities (); */
+  NS_IMETHOD GetIdentities(nsISupportsArray **_retval);
 
   /* attribute nsIMsgIdentity defaultIdentity; */
   NS_IMETHOD GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity);
@@ -186,9 +186,9 @@ nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
   return NS_OK;
 }
 
-/* nsIEnumerator getIdentities (); */
+/* nsISupportsArray GetIdentities (); */
 NS_IMETHODIMP
-nsMsgAccount::getIdentities(nsIEnumerator **_retval)
+nsMsgAccount::GetIdentities(nsISupportsArray **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

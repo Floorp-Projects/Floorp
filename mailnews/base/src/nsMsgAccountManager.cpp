@@ -19,6 +19,7 @@
 #include "nsIMsgAccountManager.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsISupportsArray.h"
 #include "nsMsgAccountManager.h"
 #include "nsHashtable.h"
 #include "nsMsgBaseCID.h"
@@ -67,24 +68,35 @@ public:
   NS_IMETHOD GetDefaultAccount(nsIMsgAccount * *aDefaultAccount) ;
   NS_IMETHOD SetDefaultAccount(nsIMsgAccount * aDefaultAccount) ;
   
-  /* nsIEnumerator getAccounts (); */
-  NS_IMETHOD getAccounts(nsIEnumerator **_retval) ;
+  /* nsISupportsArray getAccounts (); */
+  NS_IMETHOD getAccounts(nsISupportsArray **_retval) ;
   
   /* string getAccountKey (in nsIMsgAccount account); */
   NS_IMETHOD getAccountKey(nsIMsgAccount *account, char **_retval) ;
 
-  /* nsIEnumerator getAllIdentities (); */
-  NS_IMETHOD getAllIdentities(nsIEnumerator **_retval) ;
+  /* nsISupportsArray getAllIdentities (); */
+  NS_IMETHOD getAllIdentities(nsISupportsArray **_retval) ;
 
-  /* nsIEnumerator getAllServers (); */
-  NS_IMETHOD getAllServers(nsIEnumerator **_retval) ;
+  /* nsISupportsArray getAllServers (); */
+  NS_IMETHOD getAllServers(nsISupportsArray **_retval) ;
 
   NS_IMETHOD LoadAccounts();
+
 private:
   nsHashtable *m_accounts;
   nsIMsgAccount *m_defaultAccount;
 
+
   nsHashKey *findAccount(nsIMsgAccount *);
+
+  // hash table enumerators
+
+  // add the server to the nsISupportsArray closure
+  static PRBool addServerToArray(nsHashKey *aKey, void *aData, void *closure);
+
+  // add all identities in the account
+  static PRBool addIdentitiesToArray(nsHashKey *aKey, void *aData,
+                                     void *closure);
   static PRBool hashTableFindAccount(nsHashKey *aKey, void *aData,
                                      void *closure);
   static PRBool hashTableFindFirst(nsHashKey *aKey, void *aData,
@@ -275,9 +287,9 @@ nsMsgAccountManager::hashTableFindFirst(nsHashKey *aKey,
 
 
 
-/* nsIEnumerator getAccounts (); */
+/* nsISupportsArray getAccounts (); */
 NS_IMETHODIMP
-nsMsgAccountManager::getAccounts(nsIEnumerator **_retval)
+nsMsgAccountManager::getAccounts(nsISupportsArray **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -290,18 +302,71 @@ nsMsgAccountManager::getAccountKey(nsIMsgAccount *account, char **_retval)
 }
 
 
-/* nsIEnumerator getAllIdentities (); */
-NS_IMETHODIMP
-nsMsgAccountManager::getAllIdentities(nsIEnumerator **_retval)
+PRBool
+nsMsgAccountManager::addIdentitiesToArray(nsHashKey *key, void *aData, void *closure)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsISupportsArray *array = (nsISupportsArray*)closure;
+  nsIMsgAccount* account = (nsIMsgAccount *)aData;
+
+  nsISupportsArray *identities;
+  nsISupports *identity;
+
+  // add each list of identities to the list
+  nsresult rv = account->GetIdentities(&identities);
+  array->AppendElements(identities);
+  NS_RELEASE(identities);
+  
+  return PR_TRUE;
 }
 
-/* nsIEnumerator getAllServers (); */
-NS_IMETHODIMP
-nsMsgAccountManager::getAllServers(nsIEnumerator **_retval)
+PRBool
+nsMsgAccountManager::addServerToArray(nsHashKey *key, void *aData,
+                                      void *closure)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsISupportsArray *array = (nsISupportsArray *)closure;
+  nsIMsgAccount *account = (nsIMsgAccount *)aData;
+
+  nsIMsgIncomingServer *server;
+  nsresult rv = account->GetIncomingServer(&server);
+  if (NS_SUCCEEDED(rv)) {
+      array->AppendElement(server);
+      NS_RELEASE(server);
+  }
+  return PR_TRUE;
+}
+
+/* nsISupportsArray getAllIdentities (); */
+NS_IMETHODIMP
+nsMsgAccountManager::getAllIdentities(nsISupportsArray **_retval)
+{
+  nsresult rv;
+  nsISupportsArray *identities;
+  rv = NS_NewISupportsArray(&identities);
+  if (NS_FAILED(rv)) return rv;
+
+  // convert hash table->nsISupportsArray of identities
+  m_accounts->Enumerate(addIdentitiesToArray, (void *)identities);
+
+  // convert nsISupportsArray->nsISupportsArray
+  // when do we free the nsISupportsArray?
+  *_retval = identities;
+  return rv;
+}
+
+/* nsISupportsArray getAllServers (); */
+NS_IMETHODIMP
+nsMsgAccountManager::getAllServers(nsISupportsArray **_retval)
+{
+  nsresult rv;
+  nsISupportsArray *servers;
+  rv = NS_NewISupportsArray(&servers);
+
+  if (NS_FAILED(rv)) return rv;
+
+  // convert hash table->nsISupportsArray of servers
+  m_accounts->Enumerate(addServerToArray, (void *)servers);
+  
+  return rv;
 }
 
 nsresult

@@ -7,11 +7,13 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgIncomingServer.h" /* interface nsIMsgIncomingServer */
+#include "nsISupportsArray.h" /* interface nsISupportsArray */
+#include "nsICollection.h" /* interface nsICollection */
 #include "nsIMsgSignature.h" /* interface nsIMsgSignature */
 #include "nsIMsgIdentity.h" /* interface nsIMsgIdentity */
 #include "nsIMsgVCard.h" /* interface nsIMsgVCard */
-#include "nsIMsgAccount.h" /* interface nsIMsgAccount */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
+#include "nsIMsgAccount.h" /* interface nsIMsgAccount */
 #include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
@@ -43,17 +45,17 @@ class nsIMsgAccountManager : public nsISupports {
   NS_IMETHOD GetDefaultAccount(nsIMsgAccount * *aDefaultAccount) = 0;
   NS_IMETHOD SetDefaultAccount(nsIMsgAccount * aDefaultAccount) = 0;
 
-  /* nsIEnumerator getAccounts (); */
-  NS_IMETHOD getAccounts(nsIEnumerator **_retval) = 0;
+  /* nsISupportsArray getAccounts (); */
+  NS_IMETHOD getAccounts(nsISupportsArray **_retval) = 0;
 
   /* string getAccountKey (in nsIMsgAccount account); */
   NS_IMETHOD getAccountKey(nsIMsgAccount *account, char **_retval) = 0;
 
-  /* nsIEnumerator getAllIdentities (); */
-  NS_IMETHOD getAllIdentities(nsIEnumerator **_retval) = 0;
+  /* nsISupportsArray getAllIdentities (); */
+  NS_IMETHOD getAllIdentities(nsISupportsArray **_retval) = 0;
 
-  /* nsIEnumerator getAllServers (); */
-  NS_IMETHOD getAllServers(nsIEnumerator **_retval) = 0;
+  /* nsISupportsArray getAllServers (); */
+  NS_IMETHOD getAllServers(nsISupportsArray **_retval) = 0;
 
   /* void LoadAccounts (); */
   NS_IMETHOD LoadAccounts() = 0;

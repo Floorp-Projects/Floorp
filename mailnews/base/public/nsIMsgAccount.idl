@@ -19,7 +19,7 @@
 #include "nsISupports.idl"
 #include "nsIMsgIncomingServer.idl"
 #include "nsIMsgIdentity.idl"
-#include "nsIEnumerator.idl"
+#include "nsISupportsArray.idl"
 
 /* an account consists of an incoming server and one or more
    outgoing identities
@@ -35,7 +35,7 @@ interface nsIMsgAccount : nsISupports {
   attribute nsIMsgIncomingServer incomingServer;
 
   /* outgoing identity list */
-  nsIEnumerator getIdentities();
+  nsISupportsArray GetIdentities();
 
   attribute nsIMsgIdentity defaultIdentity;
   

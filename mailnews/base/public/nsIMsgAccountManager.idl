@@ -17,6 +17,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsISupportsArray.idl"
 #include "nsIMsgAccount.idl"
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgIncomingServer.idl"
@@ -41,15 +42,15 @@ interface nsIMsgAccountManager : nsISupports {
    * in the account manager. You can only set the defaultAccount to an
    * account already in the account manager */
   attribute nsIMsgAccount defaultAccount;
-  nsIEnumerator getAccounts();
+  nsISupportsArray getAccounts();
 
   /* Each account will have a unique key, which should not change
    * for the life of the account. */
   string getAccountKey(in nsIMsgAccount account);
 
   /* utility routines to enumerate elements in all accounts */
-  nsIEnumerator getAllIdentities();
-  nsIEnumerator getAllServers();
+  nsISupportsArray getAllIdentities();
+  nsISupportsArray getAllServers();
 
   void LoadAccounts();
 };
