@@ -81,6 +81,7 @@ interface nsIComponentManager : nsISupports
     const long NS_Startup = 0;
     const long NS_Script = 1;
     const long NS_Timer = 2;
+    const long NS_Shutdown = 3;
 
     void       autoRegister(in long when, in nsIFileSpec directory);
     void       autoRegisterComponent(in long when, in nsIFileSpec component);
