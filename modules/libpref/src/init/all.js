@@ -303,6 +303,7 @@ pref("mime.table.allow_remove", true);
 //prefs for product registration/activation
 pref("browser.registration.enable", false);
 pref("browser.registration.url", "");
+pref("browser.registration.domain", "");
 
 pref("signed.applets.codebase_principal_support", false);
 
