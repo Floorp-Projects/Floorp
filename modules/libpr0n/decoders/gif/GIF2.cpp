@@ -91,7 +91,7 @@ mailing address.
  * and reuses them; automatically fails over to use calloc/free when all
  * buckets are full.
  */
-const int kGifAllocatorNBucket = 6;
+const int kGifAllocatorNBucket = 9;
 nsRecyclingAllocator *gGifAllocator = nsnull;
 
 #define MAX_HOLD 768        /* for now must be big enough for a cmap */
@@ -460,7 +460,7 @@ static inline void *
 gif_calloc(size_t n, size_t s)
 {
   if (!gGifAllocator)
-    gGifAllocator = new nsRecyclingAllocator(kGifAllocatorNBucket);
+    gGifAllocator = new nsRecyclingAllocator(kGifAllocatorNBucket, NS_DEFAULT_RECYCLE_TIMEOUT, "gif");
   if (gGifAllocator)
     return gGifAllocator->Calloc(n, s);
   else
@@ -926,7 +926,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
         case gif_global_colormap:
         {
             
-#ifdef DEBUG_dp
+#if defined(DEBUG_dp) && 0
             printf("DEBUG: global_colormap - %d [%d x %d]\n", gs->global_colormap_size * sizeof(GIF_RGB),
                    gs->global_colormap_size, sizeof(GIF_RGB));
 #endif
@@ -1531,7 +1531,7 @@ gif_destroy(gif_struct *gs)
     gif_free(gs->prefix);
     gif_free(gs->suffix);
     gif_free(gs->stack);
-    gif_free(gs->hold);
+    PR_FREEIF(gs->hold);
 
     /* Free the colormap that is not in use.  The other one, if
      * present, will be freed when the image container is
