@@ -1389,7 +1389,7 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
 
       static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,eHTMLTag_dd,eHTMLTag_dt,
                                     eHTMLTag_td,eHTMLTag_tfoot,eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr,
-                                    eHTMLTag_optgroup};
+                                    eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul};
       result=FindTagInSet(aTag,gClosers,sizeof(gClosers)/sizeof(eHTMLTag_body));
     }
   }
