@@ -910,40 +910,33 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
     if (NS_FAILED(rv))
         return rv;
 
-    int copyOK;
+    APIRET rc;
+    if (!move) {
+        rc = DosCopy(filePath, (PSZ)destPath, DCPY_EXISTING);
+        /* WSOD2 HACK */
+        if (rc == 65) { // NETWORK_ACCESS_DENIED
+          CHAR         achProgram[CCHMAXPATH];  // buffer for program name, parameters
+          RESULTCODES  rescResults;             // buffer for results of dosexecpgm
 
-    if (!move)
-#ifdef XP_OS2
-    {
-        rv = DosCopy(filePath, (PSZ)destPath, DCPY_EXISTING);
-
-        if (NS_FAILED(rv))
-            copyOK = PR_FALSE;
-        else
-            copyOK = PR_TRUE;
-    } 
-#else  
-        copyOK = CopyFile(filePath, destPath, PR_TRUE);
-#endif
-    else
-#ifdef XP_OS2
-   {
-        rv = DosMove(filePath, (PSZ)destPath);
-        if (NS_FAILED(rv))
-            copyOK = PR_FALSE;
-        else
-            copyOK = PR_TRUE;
-   }
-#else  
-        copyOK = MoveFile(filePath, destPath);
-#endif
+          strcpy(achProgram, "CMD.EXE  /C ");
+          strcat(achProgram, """COPY ");
+          strcat(achProgram, filePath);
+          strcat(achProgram, " ");
+          strcat(achProgram, (PSZ)destPath);
+          strcat(achProgram, """");
+          achProgram[strlen(achProgram) + 1] = '\0';
+          achProgram[7] = '\0';
+          DosExecPgm(NULL, 0,
+                     EXEC_SYNC, achProgram, (PSZ)NULL,
+                     &rescResults, achProgram);
+          rc = 0; // Assume it worked
+        } /* endif */
+    } else {
+        rc = DosMove(filePath, (PSZ)destPath);
+    }
     
-    if (!copyOK)  // CopyFile and MoveFile returns non-zero if succeeds (backward if you ask me).
-#ifdef XP_OS2
-        rv = ConvertOS2Error(rv);
-#else
-        rv = ConvertWinError(GetLastError());
-#endif
+    if (rc)
+        rv = ConvertOS2Error(rc);
     
     nsMemory::Free(filePath);
 
