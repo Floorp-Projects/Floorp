@@ -265,11 +265,6 @@ public:
     void setCurrentTemplateRule(TemplateRule* aTemplateRule);
 
     /**
-     * Determines if the given XSL node allows Whitespace stripping
-    **/
-    MBool isXSLStripSpaceAllowed(Node* node);
-
-    /**
      * Adds the set of names to the Whitespace preserving element set
     **/
     void preserveSpace(String& names);
@@ -351,8 +346,6 @@ public:
                                  Element* aElem, FunctionCall*& aFunction);
 
 private:
-
-    enum XMLSpaceMode {STRIP = 0, DEFAULT, PRESERVE};
 
     class MatchableTemplate {
     public:
@@ -450,12 +443,6 @@ private:
     Document*      mSourceDocument;
     Document*      xslDocument;
     Document*      resultDocument;
-
-    /**
-     * Returns the closest xml:space value for the given node
-    **/
-    XMLSpaceMode getXMLSpaceMode(Node* aNode);
-
 };
 
 /**

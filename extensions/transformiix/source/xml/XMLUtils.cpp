@@ -30,6 +30,7 @@
  */
 
 #include "XMLUtils.h"
+#include "txAtoms.h"
 
 nsresult txExpandedName::init(const String& aQName,
                               Node* aResolver,
@@ -184,6 +185,37 @@ void XMLUtils::normalizePIValue(String& piValue)
         prevCh = ch;
         ++conversionLoop;
     }
+}
+
+/*
+ * Walks up the document tree and returns true if the closest xml:space
+ * attribute is "preserve"
+ */
+//static
+MBool XMLUtils::getXMLSpacePreserve(Node* aNode)
+{
+    NS_ASSERTION(aNode, "Calling preserveXMLSpace with NULL node!");
+
+    String value;
+    Node* parent = aNode;
+    while (parent) {
+        if (parent->getNodeType() == Node::ELEMENT_NODE) {
+            Element* elem = (Element*)parent;
+            if (elem->getAttr(txXMLAtoms::space, kNameSpaceID_XML, value)) {
+                txAtom* val = TX_GET_ATOM(value);
+                if (val == txXMLAtoms::preserve) {
+                    TX_IF_RELEASE_ATOM(val);
+                    return MB_TRUE;
+                }
+                if (val == txXMLAtoms::_default) {
+                    TX_IF_RELEASE_ATOM(val);
+                    return MB_FALSE;
+                }
+            }
+        }
+        parent = parent->getParentNode();
+    }
+    return MB_FALSE;
 }
 
 // macros for inclusion of char range headers

@@ -673,17 +673,6 @@ void ProcessorState::setLocalVariables(txVariableMap* aMap)
     mLocalVariables = aMap;
 }
 
-/*
- * Determines if the given XSL node allows Whitespace stripping
- */
-MBool ProcessorState::isXSLStripSpaceAllowed(Node* node) {
-
-    if (!node)
-        return MB_FALSE;
-    return (MBool)(getXMLSpaceMode(node) != PRESERVE);
-
-}
-
 void ProcessorState::processAttrValueTemplate(const String& aAttValue,
                                               Element* aContext,
                                               String& aResult)
@@ -1012,12 +1001,12 @@ nsresult ProcessorState::getVariable(PRInt32 aNamespace, txAtom* aLName,
 /**
  * Determines if the given XML node allows Whitespace stripping
 **/
-MBool ProcessorState::isStripSpaceAllowed(Node* node)
+MBool ProcessorState::isStripSpaceAllowed(Node* aNode)
 {
-    if (!node)
+    if (!aNode)
         return MB_FALSE;
 
-    switch (node->getNodeType()) {
+    switch (aNode->getNodeType()) {
         case Node::ELEMENT_NODE:
         {
             // check Whitespace stipping handling list against given Node
@@ -1028,34 +1017,30 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node)
                 txListIterator iter(&frame->mWhiteNameTests);
                 while (iter.hasNext()) {
                     txNameTestItem* iNameTest = (txNameTestItem*)iter.next();
-                    if (iNameTest->matches(node, this))
-                        return iNameTest->stripsSpace();
+                    if (iNameTest->matches(aNode, this)) {
+                        if (iNameTest->stripsSpace() && 
+                            !XMLUtils::getXMLSpacePreserve(aNode)) {
+                            return MB_TRUE;
+                        }
+                        return MB_FALSE;
+                    }
                 }
-            }
-            if (mOutputFormat.mMethod == eHTMLOutput) {
-                String ucName = node->getNodeName();
-                ucName.toUpperCase();
-                if (ucName.isEqual("SCRIPT"))
-                    return MB_FALSE;
             }
             break;
         }
         case Node::TEXT_NODE:
         case Node::CDATA_SECTION_NODE:
         {
-            if (!XMLUtils::isWhitespace(node->getNodeValue()))
+            if (!XMLUtils::isWhitespace(aNode->getNodeValue()))
                 return MB_FALSE;
-            return isStripSpaceAllowed(node->getParentNode());
+            return isStripSpaceAllowed(aNode->getParentNode());
         }
         case Node::DOCUMENT_NODE:
         {
             return MB_TRUE;
         }
     }
-    XMLSpaceMode mode = getXMLSpaceMode(node);
-    if (mode == DEFAULT)
-        return MB_FALSE;
-    return (MBool)(STRIP == mode);
+    return MB_FALSE;
 }
 
 /**
@@ -1128,42 +1113,6 @@ nsresult ProcessorState::resolveFunctionCall(txAtom* aName, PRInt32 aID,
   //-------------------/
  //- Private Methods -/
 //-------------------/
-
-/*
- * Returns the closest xml:space value for the given Text node
- */
-ProcessorState::XMLSpaceMode ProcessorState::getXMLSpaceMode(Node* aNode)
-{
-    NS_ASSERTION(aNode, "Calling getXMLSpaceMode with NULL node!");
-
-    Node* parent = aNode;
-    while (parent) {
-        switch (parent->getNodeType()) {
-            case Node::ELEMENT_NODE:
-            {
-                String value;
-                ((Element*)parent)->getAttr(txXMLAtoms::space,
-                                            kNameSpaceID_XML, value);
-                if (value.isEqual(PRESERVE_VALUE))
-                    return PRESERVE;
-                break;
-            }
-            case Node::TEXT_NODE:
-            case Node::CDATA_SECTION_NODE:
-            {
-                // We will only see this the first time through the loop
-                // if the argument node is a text node.
-                break;
-            }
-            default:
-            {
-                return DEFAULT;
-            }
-        }
-        parent = parent->getParentNode();
-    }
-    return DEFAULT;
-}
 
 ProcessorState::ImportFrame::ImportFrame(ImportFrame* aFirstNotImported)
     : mNamedTemplates(MB_FALSE),

@@ -53,7 +53,9 @@
 #define XML_ATOMS        \
 TX_ATOM(_empty, "");     \
 TX_ATOM(base, "base");   \
+TX_ATOM(_default, "default");   \
 TX_ATOM(lang, "lang");   \
+TX_ATOM(preserve, "preserve");   \
 TX_ATOM(space, "space"); \
 TX_ATOM(xml, "xml");     \
 TX_ATOM(xmlns, "xmlns")
