@@ -37,8 +37,6 @@
 #include "nsILocalFile.h"
 #include "nsReadableUtils.h"
 
-#include "nsIFileSpec.h"
-
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Processes.h>
 #include <CFBundle.h>
@@ -1181,21 +1179,18 @@ nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
         if ( ! unixProfileName.IsEmpty() && ! unixProfileDirectory.IsEmpty() ) {
             nsCAutoString profileLocation(unixProfileDirectory);
             profileLocation += "/.netscape";
-            nsCOMPtr<nsIFileSpec> users4xDotNetscapeDirectory;
 
-            rv = NS_NewFileSpec(getter_AddRefs(users4xDotNetscapeDirectory));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = users4xDotNetscapeDirectory->SetNativePath(profileLocation.get());
-            if (NS_FAILED(rv)) return rv;
-            rv = users4xDotNetscapeDirectory->Exists(&exists);
-
-            if (NS_FAILED(rv)) return rv;
-
+            nsCOMPtr<nsILocalFile> fileInNSDir;
+            rv = NS_NewNativeLocalFile(profileLocation + NS_LITERAL_CSTRING("/preferences.js"),
+                                       PR_TRUE,
+                                       getter_AddRefs(fileInNSDir));
+            if (NS_FAILED(rv))
+              return rv;
+            rv = fileInNSDir->Exists(&exists);
 #ifdef DEBUG
-            printf("%s exists:  %d\n",profileLocation.get(), exists);
+            printf("%s/preferences.js exists:  %d\n",profileLocation.get(), NS_SUCCEEDED(rv) && exists);
 #endif
-            if (exists) {
+            if (NS_SUCCEEDED(rv) && exists) {
                 ProfileStruct*  profileItem     = new ProfileStruct();
                 if (!profileItem)
                     return NS_ERROR_OUT_OF_MEMORY;
