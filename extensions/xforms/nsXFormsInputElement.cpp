@@ -218,6 +218,8 @@ nsXFormsInputElement::OnDestroyed()
     targ->RemoveEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
   }
 
+  mElement = nsnull;
+
   return NS_OK;
 }
 
