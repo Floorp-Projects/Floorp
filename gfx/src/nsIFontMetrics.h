@@ -33,56 +33,99 @@ class nsIDeviceContext;
 
 //----------------------------------------------------------------------
 
-// Native font handle
+/**
+ * A native font handle
+ */
 typedef void* nsFontHandle;
 
-// FontMetrics interface
+/**
+ * Font metrics interface
+ */
 class nsIFontMetrics : public nsISupports
 {
-  //what about encoding, where do we put that? MMP
+  // XXX what about encoding, where do we put that? MMP
 
 public:
-  //initializer
+  /**
+   * Initialize the font metrics. Call this after creating the font metrics.
+   * Font metrics you get from the font cache do NOT need to be initialized
+   *
+   * @see nsIFontCache#GetMetricsFor()
+   */
   NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext *aContext) = 0;
 
-  //get the width of an 8 bit char
+  /**
+   * Returns the width (in app units) of an 8-bit character
+   */
   NS_IMETHOD  GetWidth(char aC, nscoord &aWidth) = 0;
 
-  //get the width of a unicode char
+  /**
+   * Returns the width (in app units) of a unicode character
+   */
   NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth) = 0;
 
-  //get the width of an nsString
+  /**
+   * Returns the width (in app units) of an nsString
+   */
   NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth) = 0;
 
-  //get the width of 8 bit character string
+  /**
+   * Returns the width (in app units) of an 8-bit character string
+   */
   NS_IMETHOD  GetWidth(const char *aString, nscoord &aWidth) = 0;
 
-  //get the width of a Unicode character string
+  /**
+   * Returns the width (in app units) of a Unicode character string
+   */
   NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth) = 0;
 
+  /**
+   * Returns the width (in app units) of an 8-bit character
+   */
   NS_IMETHOD  GetWidth(nsIDeviceContext *aContext, const nsString& aString, nscoord &aWidth) = 0;
 
-  //get the height as this font
+  /**
+   * Returns the height (in app units) of the font. This is ascent plus descent
+   * plus any internal leading
+   */
   NS_IMETHOD  GetHeight(nscoord &aHeight) = 0;
 
-  //get height - (ascent + descent)
+  /**
+   * Returns the amount of internal leading (in app units) for the font. This
+   * is computed as the "height  - (ascent + descent)"
+   */
   NS_IMETHOD  GetLeading(nscoord &aLeading) = 0;
 
-  //get the maximum character ascent
+  /**
+   * Returns, in app units, the maximum distance characters in this font extend
+   * above the base line.
+   */
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent) = 0;
 
-  //get the maximum character descent
+  /**
+   * Returns, in app units, the maximum distance characters in this font extend
+   * below the base line.
+   */
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent) = 0;
 
-  //get the maximum character advance for the font
+  /**
+   * Returns, in app units, the maximum character advance for the font
+   */
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance) = 0;
 
-  //get the widths of the first 256 characters of the font
+  /**
+   * Get the widths (in app units) of the first 256 characters of the font
+   */
   NS_IMETHOD  GetWidths(const nscoord *&aWidths) = 0;
 
-  //get the font associated width these metrics
+  /**
+   * Returns the font associated with these metrics
+   */
   NS_IMETHOD  GetFont(const nsFont *&aFont) = 0;
 
+  /**
+   * Returns the font handle associated with these metrics
+   */
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle) = 0;
 };
 
