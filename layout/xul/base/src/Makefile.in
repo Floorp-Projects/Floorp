@@ -32,7 +32,7 @@ LIBRARY_NAME	= raptorxulbase_s
 CPPSRCS		= \
        nsMenuBoxObject.cpp \
        nsTreeBoxObject.cpp \
-       nsPopupSetObject.cpp \
+       nsPopupSetBoxObject.cpp \
        nsBoxObject.cpp \
        nsGridLayout.cpp \
        nsObeliskLayout.cpp \
