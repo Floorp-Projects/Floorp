@@ -69,6 +69,7 @@
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewSource.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewPartialSource.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 
@@ -84,6 +85,8 @@
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
   <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
   <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
+  <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
+  <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
 
   <keyset id="editMenuKeys"/>
   <keyset id="viewSourceKeys">
@@ -91,6 +94,10 @@
     <key id="key_print" key="&printCmd.commandkey;" modifiers="accel" command="cmd_print"/>
     <key id="key_close" key="&closeCmd.commandkey;" modifiers="accel" command="cmd_close"/>
     <key keycode="VK_ESCAPE" command="cmd_close"/>
+
+    <key id="key_textZoomEnlarge" key="&textEnlarge.commandkey;" command="cmd_textZoomEnlarge" modifiers="accel"/>
+    <key id="key_textZoomReduce"  key="&textReduce.commandkey;" command="cmd_textZoomReduce" modifiers="accel"/>
+    <key id="key_textZoomReset" key="&textReset.commandkey;" oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
   </keyset>
 
   <popup id="viewSourceContextMenu">
@@ -140,7 +147,14 @@
 
       <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
         <menupopup>
+          <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge"
+                    label="&menu_textEnlarge.label;" accesskey="&menu_textEnlarge.accesskey;"
+                    key="key_textZoomEnlarge"/>
+          <menuitem id="menu_textReduce" command="cmd_textZoomReduce"
+                    label="&menu_textReduce.label;" accesskey="&menu_textReduce.accesskey;"
+                    key="key_textZoomReduce"/>
           <menu id="charsetMenu"/>
+          <menuseparator/>
           <menuitem id="menu_wrapLongLines" type="checkbox" command="cmd_wrapLongLines"
                     label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;"/>
           <menuitem type="checkbox" id="menu_highlightSyntax" command="cmd_highlightSyntax"
