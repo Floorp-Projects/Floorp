@@ -36,3 +36,4 @@ nsIScriptNameSetRegistry.h
 nsIScriptExternalNameSet.h
 nsIScriptNameSpaceManager.h
 nsDOMError.h
+nsIJSEventListener.h

@@ -30,6 +30,7 @@
 #include "nsIDOMNativeObjectRegistry.h"
 #include "nsScriptNameSetRegistry.h"
 #include "nsIScriptEventListener.h"
+#include "nsIJSEventListener.h"
 #include "nsIScriptContext.h"
 #include "nsHTMLTagsEnums.h"
 #include "nsIDOMAttr.h"

@@ -42,7 +42,8 @@ EXPORTS=nsIScriptContext.h 		\
 	nsIScriptExternalNameSet.h	\
 	nsIScriptNameSpaceManager.h \
 	nsIScriptGlobalObjectData.h \
-	nsDOMError.h
+	nsDOMError.h \
+	nsIJSEventListener.h
 
 MODULE=dom 
 
