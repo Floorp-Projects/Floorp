@@ -62,6 +62,7 @@ PRThread *NS_SOCKET_THREAD = 0;
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kDNSService, NS_DNSSERVICE_CID);
 
 nsSocketTransportService::nsSocketTransportService ()   :
     mConnectedTransports (0),
@@ -199,6 +200,16 @@ nsSocketTransportService::Init(void)
   if (NS_SUCCEEDED(rv) && !mThread) {
     mThreadRunning = PR_TRUE;
     rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
+  }
+
+  //
+  // Cache the DNS service...
+  //
+  if (NS_SUCCEEDED(rv) && !mDNSService) {
+    mDNSService = do_GetService(kDNSService);
+    if (!mDNSService) {
+      rv = NS_ERROR_UNEXPECTED;
+    }
   }
   return rv;
 }
