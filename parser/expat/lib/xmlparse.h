@@ -14,6 +14,50 @@ extern "C" {
 #define XMLPARSEAPI /* as nothing */
 #endif
 
+/* avoid conflicts with system version of libexpat */
+#define XML_ParserCreateNS MOZ_XML_ParserCreateNS
+#define XML_SetUnparsedEntityDeclHandler MOZ_XML_SetUnparsedEntityDeclHandler
+#define XML_GetCurrentByteIndex MOZ_XML_GetCurrentByteIndex
+#define XML_SetElementHandler MOZ_XML_SetElementHandler
+#define XML_SetDefaultHandlerExpand MOZ_XML_SetDefaultHandlerExpand
+#define XML_GetCurrentByteCount MOZ_XML_GetCurrentByteCount
+#define XML_Parse MOZ_XML_Parse
+#define XML_SetDoctypeDeclHandler MOZ_XML_SetDoctypeDeclHandler
+#define XML_ParserFree MOZ_XML_ParserFree
+#define XML_GetIdAttributeIndex MOZ_XML_GetIdAttributeIndex
+#define XML_SetNotStandaloneHandler MOZ_XML_SetNotStandaloneHandler
+#define XML_SetDefaultHandler MOZ_XML_SetDefaultHandler
+#define XML_SetExternalEntityRefHandler MOZ_XML_SetExternalEntityRefHandler
+#define XML_GetCurrentColumnNumber MOZ_XML_GetCurrentColumnNumber
+#define XML_SetCharacterDataHandler MOZ_XML_SetCharacterDataHandler
+#define XML_GetBase MOZ_XML_GetBase
+#define XML_UnblockParser MOZ_XML_UnblockParser
+#define XML_ErrorString MOZ_XML_ErrorString
+#define XML_ParseBuffer MOZ_XML_ParseBuffer
+#define XML_SetNotationDeclHandler MOZ_XML_SetNotationDeclHandler
+#define XML_ExternalEntityParserCreate MOZ_XML_ExternalEntityParserCreate
+#define XML_SetParamEntityParsing MOZ_XML_SetParamEntityParsing
+#define XML_GetMismatchedTag MOZ_XML_GetMismatchedTag
+#define XML_SetBase MOZ_XML_SetBase
+#define XML_DefaultCurrent MOZ_XML_DefaultCurrent
+#define XML_SetUnknownEncodingHandler MOZ_XML_SetUnknownEncodingHandler
+#define XML_ParserCreate MOZ_XML_ParserCreate
+#define XML_SetInternalParsedEntityDeclHandler MOZ_XML_SetInternalParsedEntityDeclHandler
+#define XML_SetCdataSectionHandler MOZ_XML_SetCdataSectionHandler
+#define XML_SetUserData MOZ_XML_SetUserData
+#define XML_SetProcessingInstructionHandler MOZ_XML_SetProcessingInstructionHandler
+#define XML_SetEncoding MOZ_XML_SetEncoding
+#define XML_UseParserAsHandlerArg MOZ_XML_UseParserAsHandlerArg
+#define XML_SetExternalEntityRefHandlerArg MOZ_XML_SetExternalEntityRefHandlerArg
+#define XML_GetErrorCode MOZ_XML_GetErrorCode
+#define XML_GetBuffer MOZ_XML_GetBuffer
+#define XML_SetExternalParsedEntityDeclHandler MOZ_XML_SetExternalParsedEntityDeclHandler
+#define XML_GetSpecifiedAttributeCount MOZ_XML_GetSpecifiedAttributeCount
+#define XML_SetCommentHandler MOZ_XML_SetCommentHandler
+#define XML_GetCurrentLineNumber MOZ_XML_GetCurrentLineNumber
+#define XML_SetNamespaceDeclHandler MOZ_XML_SetNamespaceDeclHandler
+#define XML_BlockParser MOZ_XML_BlockParser
+
 typedef void *XML_Parser;
 
 #ifdef XML_UNICODE_WCHAR_T
