@@ -114,7 +114,7 @@ nsOffscreenSurface::nsOffscreenSurface() : mDC(0), mBitmap(0),
 // Setup a new offscreen surface which is to be compatible with the
 // passed-in presentation space.
 nsresult nsOffscreenSurface::Init( HPS     aCompatiblePS,
-                                   PRInt32 aWidth, PRInt32 aHeight)
+                                   PRInt32 aWidth, PRInt32 aHeight, PRUint32 aFlags)
 {
    nsresult rc = NS_ERROR_FAILURE;
 
@@ -376,7 +376,7 @@ void nsOnscreenSurface::EnsureProxy()
       GetDimensions( &width, &height);
 
       mProxySurface = new nsOffscreenSurface;
-      if( NS_SUCCEEDED(mProxySurface->Init( mPS, width, height)))
+      if( NS_SUCCEEDED(mProxySurface->Init( mPS, width, height, 0)))
       {
          NS_ADDREF(mProxySurface);
       }
@@ -486,7 +486,7 @@ nsresult nsWindowSurface::GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight)
 nsPrintSurface::nsPrintSurface() : mHeight(0), mWidth(0)
 {}
 
-nsresult nsPrintSurface::Init( HPS aPS, PRInt32 aWidth, PRInt32 aHeight)
+nsresult nsPrintSurface::Init( HPS aPS, PRInt32 aWidth, PRInt32 aHeight, PRUint32 aFlags)
 {
    mPS = aPS;
    mHeight = aHeight;

@@ -309,7 +309,7 @@ nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aCont
      return NS_ERROR_OUT_OF_MEMORY;
    NS_ADDREF(surf);
 
-   surf->Init( mPrintPS, mWidth, mHeight);
+   surf->Init( mPrintPS, mWidth, mHeight, 0);
 
    nsresult rc = pContext->Init( this, (void*)((nsDrawingSurfaceOS2 *) surf));
 

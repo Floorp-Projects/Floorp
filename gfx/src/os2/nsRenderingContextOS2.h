@@ -260,7 +260,7 @@ protected:
   PRUint8           *mGammaTable;
    nscolor              mCurrTextColor;   // currently selected text color
    nsLineStyle          mCurrLineStyle;   // currently selected line style
-   HDC                  mDC;  
+   HPS                  mPS;
    nsIWidget            *mDCOwner;
 
 };

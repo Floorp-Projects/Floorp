@@ -70,6 +70,7 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
    void FlushFontCache();
 
    NS_IMETHOD GetBitmap( HBITMAP &aBitmap); // yuck (for blender, may go)
+   HPS GetPS() {return mPS;};
 
  protected:
    void DisposeFonts();     // MUST be called before disposing of PS
@@ -94,7 +95,7 @@ class nsOffscreenSurface : public nsDrawingSurfaceOS2
    virtual ~nsOffscreenSurface();
 
    // os/2 methods
-   NS_IMETHOD Init( HPS aCompatiblePS, PRInt32 aWidth, PRInt32 aHeight);
+   NS_IMETHOD Init( HPS aCompatiblePS, PRInt32 aWidth, PRInt32 aHeight, PRUint32 aFlags);
    NS_IMETHOD GetBitmap( HBITMAP &aBitmap);
 
    // nsIDrawingSurface methods
@@ -151,7 +152,7 @@ class nsPrintSurface : public nsOnscreenSurface
    nsPrintSurface();
    virtual ~nsPrintSurface();
 
-   NS_IMETHOD Init( HPS aPS, PRInt32 aWidth, PRInt32 aHeight);
+   NS_IMETHOD Init( HPS aPS, PRInt32 aWidth, PRInt32 aHeight, PRUint32 aFlags);
    NS_IMETHOD GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight);
 };
 
