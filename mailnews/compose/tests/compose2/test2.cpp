@@ -99,6 +99,38 @@ GetTheTempDirectoryOnTheSystem(void)
   return retPath;
 }
 
+nsIMsgIdentity *
+GetHackIdentity()
+{
+nsresult rv;
+
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure on Mail Session Init!\n");
+    return nsnull;
+  }  
+
+  nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
+  nsCOMPtr<nsIMsgAccountManager>  accountManager;
+
+  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure getting account Manager!\n");
+    return nsnull;
+  }  
+
+  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure getting Identity!\n");
+    return nsnull;
+  }  
+
+  return identity;
+}
+
 //
 // Create a file spec for the a unique temp file
 // on the local machine. Caller must free memory
@@ -289,7 +321,7 @@ int main(int argc, char *argv[])
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
-	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kMimeURLUtilsCID,  NULL, NULL, MIME_DLL, PR_FALSE, PR_FALSE);
 
   // Create the Event Queue for this thread...
@@ -374,12 +406,13 @@ int main(int argc, char *argv[])
         return NS_ERROR_FAILURE;
       }
 
-      pMsgSend->SendMessageFile(nsnull,  // identity...
+      pMsgSend->SendMessageFile(GetHackIdentity(),  // identity...
                           pMsgCompFields, // nsIMsgCompFields                  *fields,
                           mailFile,             // nsFileSpec                        *sendFileSpec,
                           PR_TRUE,              // PRBool                            deleteSendFileOnCompletion,
 						              PR_FALSE,             // PRBool                            digest_p,
 						              nsMsgDeliverNow,      // nsMsgDeliverMode                  mode,
+			  nsnull, // nsIMessage *msgToReplace
                           tArray);              // nsIMsgSendListener array
     }    
   }

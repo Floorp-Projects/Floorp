@@ -150,7 +150,10 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 	{
 		nsSmtpService * smtpService = new nsSmtpService();
 		// okay now turn around and give inst a handle on it....
-		return smtpService->QueryInterface(kISupportsIID, aResult);
+    if (smtpService)
+  		return smtpService->QueryInterface(kISupportsIID, aResult);
+    else
+      return NS_ERROR_OUT_OF_MEMORY;
 	}
 
 	// do they want a Message Compose interface ?
@@ -158,7 +161,10 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 	{
 		nsMsgCompose * msgCompose = new nsMsgCompose();
 		// okay now turn around and give inst a handle on it....
-		return msgCompose->QueryInterface(kISupportsIID, aResult);
+    if (msgCompose)
+  		return msgCompose->QueryInterface(kISupportsIID, aResult);
+    else
+      return NS_ERROR_OUT_OF_MEMORY;
 	}
 
 	// do they want a Message Compose Fields interface ?
@@ -183,7 +189,10 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 	{
 		nsMsgComposeService * aMsgCompService = new nsMsgComposeService();
 		// okay now turn around and give inst a handle on it....
-		return aMsgCompService->QueryInterface(kISupportsIID, aResult);
+    if (aMsgCompService)
+  		return aMsgCompService->QueryInterface(kISupportsIID, aResult);
+    else
+      return NS_ERROR_OUT_OF_MEMORY;
 	}
 
 	// Quoting anyone?

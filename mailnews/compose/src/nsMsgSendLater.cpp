@@ -86,13 +86,13 @@ nsMsgSendLater::nsMsgSendLater()
   mFirstTime = PR_TRUE;
   mTotalSentSuccessfully = 0;
   mTotalSendCount = 0;
-  mTagData = nsnull;
   mMessageFolder = nsnull;
   mMessage = nsnull;
   mLeftoverBuffer = nsnull;
 
   mSendListener = nsnull;
   mListenerArray = nsnull;
+  mListenerArrayCount = 0;
 
   m_to = nsnull;
   m_bcc = nsnull;
@@ -157,15 +157,28 @@ char *
 FindEOL(char *inBuf, char *buf_end)
 {
   char *buf = inBuf;
-  while (*buf != 0 && *buf != LF)
-    buf++;
+  char *findLoc = nsnull;
 
-  if (*buf == '\0')
-    return buf;
-  else if (buf+1 > buf_end)
+  while (buf <= buf_end)
+    if (*buf == 0) 
+      return buf;
+    else if ( (*buf == LF) || (*buf == CR) )
+    {
+      findLoc = buf;
+      break;
+    }
+    else
+      ++buf;
+
+  if (!findLoc)
     return nsnull;
-  else
-    return (++buf);
+  else if ((findLoc + 1) > buf_end)
+    return buf;
+
+  if ( (*findLoc == LF && *(findLoc+1) == CR) || 
+       (*findLoc == CR && *(findLoc+1) == LF))
+    findLoc++; // possibly a pair.       
+  return findLoc;
 }
 
 nsresult
@@ -194,6 +207,7 @@ nsMsgSendLater::BuildNewBuffer(const char* aBuf, PRUint32 aCount, PRUint32 *tota
     return NS_ERROR_FAILURE;
 
   nsCRT::memcpy(mLeftoverBuffer + leftoverSize, aBuf, aCount);
+  *totalBufSize = aCount + leftoverSize;
   return NS_OK;
 }
 
@@ -220,7 +234,8 @@ nsMsgSendLater::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
   }
   else  // yum, leftovers...new buffer created...sitting in mLeftoverBuffer
   {
-    newbuf = startBuf = mLeftoverBuffer;
+    newbuf = mLeftoverBuffer;
+    startBuf = newbuf; 
     endBuf = startBuf + size - 1;
     mLeftoverBuffer = nsnull; // null out this 
   }
@@ -234,16 +249,11 @@ nsMsgSendLater::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
       break;
     }
 
-    rv = DeliverQueuedLine(startBuf, (lineEnd - startBuf));
+    rv = DeliverQueuedLine(startBuf, (lineEnd - startBuf) + 1);
     if (NS_FAILED(rv))
       break;
 
-    char c = *lineEnd;
-    *lineEnd = 0;
-    printf("LINE: [%s]\n", startBuf);
-    *lineEnd = c;
-
-    startBuf = lineEnd;
+    startBuf = lineEnd+1;
   }
 
   if (newbuf)
@@ -418,14 +428,6 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   if (!created)
     return NS_ERROR_FAILURE;
 
-  //
-  // Now we have to build the "real" list of recipients since we can't rely
-  // on what is in the database. We do this by actually parsing the message
-  // headers and building a new list.
-  rv = BuildHeaders();
-  if (NS_FAILED(rv))
-    return rv;
-
   // Get the recipients...
   if (NS_FAILED(mMessage->GetRecipients(recips)))
     return NS_ERROR_FAILURE;
@@ -448,6 +450,9 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
     return NS_ERROR_FAILURE;
   }
 
+  // Since we have already parsed all of the headers, we are simply going to
+  // set the composition fields and move on.
+  //
   if (m_to)
   	compFields->SetTo(m_to, NULL);
 
@@ -490,6 +495,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
                             PR_TRUE,         // PRBool                            deleteSendFileOnCompletion,
                             PR_FALSE,        // PRBool                            digest_p,
                             nsMsgDeliverNow, // nsMsgDeliverMode                  mode,
+                            nsnull,          // nsIMessage *msgToReplace, 
                             tArray); 
   NS_RELEASE(mSendListener);
   if (NS_FAILED(rv))
@@ -653,8 +659,7 @@ nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity)
 //
 nsresult 
 nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
-                                   nsIMsgSendLaterListener          **listenerArray,
-                                   void                             *tagData)
+                                   nsIMsgSendLaterListener          **listenerArray)
 {
   mIdentity = identity;
   if (!mIdentity)
@@ -664,8 +669,6 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
   // Set the listener array 
   if (listenerArray)
     SetListenerArray(listenerArray);
-
-  mTagData = tagData;
 
   mMessageFolder = GetUnsentMessagesFolder(mIdentity);
   if (!mMessageFolder)
@@ -772,7 +775,7 @@ nsMsgSendLater::BuildHeaders()
 		  break;
 		case 'N': case 'n':
 		  if (!PL_strncasecmp ("Newsgroups", buf, end - buf))
-			header = &m_newsgroups;
+  			header = &m_newsgroups;
 		  break;
 		case 'S': case 's':
 		  if (!PL_strncasecmp ("Sender", buf, end - buf))
@@ -810,10 +813,10 @@ nsMsgSendLater::BuildHeaders()
 
 SEARCH_NEWLINE:
 	  while (*buf != 0 && *buf != CR && *buf != LF)
-		buf++;
+		  buf++;
 
 	  if (buf+1 >= buf_end)
-		;
+		  ;
 	  // If "\r\n " or "\r\n\t" is next, that doesn't terminate the header.
 	  else if (buf+2 < buf_end &&
 			   (buf[0] == CR  && buf[1] == LF) &&
@@ -984,16 +987,15 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
   
   m_bytesRead += length;
   
-  // convert existing newline to CRLF 
-  if (length > 0 &&
-    (line[length-1] == CR ||
-	   (line[length-1] == LF &&
-     (length < 2 || line[length-2] != CR))))
-  {
-    line[length-1] = CR;
-    line[length++] = LF;
-  }
-  
+// convert existing newline to CRLF 
+// Don't need this because the calling routine is taking care of it.
+//  if (length > 0 && (line[length-1] == CR || 
+//     (line[length-1] == LF && (length < 2 || line[length-2] != CR))))
+//  {
+//    line[length-1] = CR;
+//    line[length++] = LF;
+//  }
+//
   if (m_inhead)
   {
     if (m_headersPosition == 0)

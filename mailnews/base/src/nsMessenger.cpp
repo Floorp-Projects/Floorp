@@ -1007,7 +1007,7 @@ nsMessenger::SendUnsentMessages()
     rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
     if (NS_FAILED(rv)) return rv;
       
-    pMsgSendLater->SendUnsentMessages(identity, nsnull, nsnull); 
+    pMsgSendLater->SendUnsentMessages(identity, nsnull); 
     NS_RELEASE(sendLaterListener);
 	} 
 	return NS_OK;

@@ -626,39 +626,54 @@ mime_generate_headers (nsMsgCompFields *fields,
 				PL_strcpy(ptr+1, ptr2);
 		}
 
-    // RICHIE-SHERRY: This is where I will need to make some changes for Seth's
-    // new feature to allow for full specification of news hosts.
+    // Ok, if we are here, we need to decide the Newsgroup related headers
+    // to write to the outgoing message. In ANY case, we need to write the
+    // "Newsgroup" header which is the "proper" header as opposed to the
+    // HEADER_X_MOZILLA_NEWSHOST which can contain the "news:" URL's.
     //
-    if (deliver_mode == nsMsgDeliverNow) 
+    // Since n2 can contain data in the form of:
+    // "news://news.mozilla.org./netscape.test,news://news.mozilla.org./netscape.junk"
+    // we need to turn that into: "netscape.test,netscape.junk"
+    //
+    NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv); 
+    char *newHeader = nsnull;
+    rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
+    if (NS_SUCCEEDED(rv) && nntpService) 
     {
-      // This is going out now...so we need to run this header through the 
-      // call to parse it into just the group names and put that into the 
-      // outgoing message.
-      char *newHeader = nsnull;
-      NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv); 
-      if (NS_SUCCEEDED(rv) && nntpService) {
-        // caller frees the memory in newHeader
-        // ConvertNewsgroupsString takes "news://news.mozilla.org./netscape.test,news://news.mozilla.org./netscape.junk"
-        // and turns it into "netscape.test,netscape.junk"
-        rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
-        if (NS_FAILED(rv)) {
-          printf("FAILURE to convert!\n");
-          printf("rhp, we need to figure out how to handle this\n");
-        }
-        else {
-          printf("SUCCESS:  %s -> %s\n",n2,newHeader);
-        }
+      // caller frees the memory in newHeader
+      // ConvertNewsgroupsString takes "news://news.mozilla.org./netscape.test,news://news.mozilla.org./netscape.junk"
+      // and turns it into "netscape.test,netscape.junk"
+      rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
+      if (NS_FAILED(rv)) 
+      {
+#ifdef NS_DEBUG
+        printf("FAILURE to convert!\n");
+        printf("RICHIE, we need to figure out how to handle this\n");
+#endif
       }
       else {
-        printf("FAILURE to get nntpService\n");
-        printf("rhp, we need to figure out how to handle this\n");
+#ifdef NS_DEBUG
+        printf("SUCCESS:  %s -> %s\n",n2,newHeader);
+#endif
       }
-      
-      PUSH_STRING ("Newsgroups: ");
-		  PUSH_STRING (newHeader);
-      PR_FREEIF(newHeader);
     }
-    else
+    else {
+#ifdef NS_DEBUG
+      printf("FAILURE to get nntpService\n");
+      printf("RICHIE, we need to figure out how to handle this\n");
+#endif
+    }
+
+    PUSH_STRING ("Newsgroups: ");
+		PUSH_STRING (newHeader);
+    PR_FREEIF(newHeader);
+  	PUSH_NEWLINE ();
+
+    // If we are here, we are NOT going to send this now. (i.e. it is a Draft, 
+    // Send Later file, etc...). Because of that, we need to store what the user
+    // typed in on the original composition window for use later when rebuilding
+    // the headers
+    if (deliver_mode != nsMsgDeliverNow) 
     {
       // This is going to be saved for later, that means we should just store
       // what the user typed into the "Newsgroup" line in the HEADER_X_MOZILLA_NEWSHOST
@@ -666,10 +681,10 @@ mime_generate_headers (nsMsgCompFields *fields,
       PUSH_STRING (HEADER_X_MOZILLA_NEWSHOST);
       PUSH_STRING (": ");
       PUSH_STRING(n2);
+		  PUSH_NEWLINE ();
     }
 
-		PR_Free (n2);
-		PUSH_NEWLINE ();
+		PR_FREEIF(n2);
 	}
 
 	/* #### shamelessly duplicated from above */

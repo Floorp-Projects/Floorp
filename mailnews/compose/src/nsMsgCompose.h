@@ -81,6 +81,8 @@ class nsMsgCompose : public nsIMsgCompose
 	NS_IMETHOD GetWrapLength(PRInt32 *aWrapLength);
 /******/
 
+  nsresult LoadBody();
+
 private:
 
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports* object);
@@ -98,6 +100,7 @@ private:
   QuotingOutputStreamImpl *mOutStream;
   nsCOMPtr<nsIOutputStream>          mBaseStream;
   nsCOMPtr<nsIMsgQuote>              mQuote;
+  PRBool                             mBodyLoaded;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +125,8 @@ public:
     NS_IMETHOD Flush(void);
 
     NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
+
+    NS_IMETHOD  ConvertToPlainText();
 
 private:
     nsMsgCompose    *mComposeObj;

@@ -82,8 +82,7 @@ public:
 
   // nsIMsgSendLater support
   NS_IMETHOD                SendUnsentMessages(nsIMsgIdentity *identity,
-                                               nsIMsgSendLaterListener          **listenerArray, // SHERRY nsMsgSendUnsentMessagesCallback  msgCallback,
-                                               void *tagData);
+                                               nsIMsgSendLaterListener          **listenerArray);
 
   // Methods needed for implementing interface...
   nsIMsgFolder              *GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity);

@@ -39,7 +39,7 @@
 #include "prmem.h"
 
 #include "nsIMimeURLUtils.h"
-#include "nsMsgSendLater.h"
+#include "nsIMsgSendLater.h"
 
 
 #ifdef XP_PC
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
-	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kMimeURLUtilsCID,  NULL, NULL, MIME_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kNetSupportDialogCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kAppShellServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
   if (NS_SUCCEEDED(rv) && pMsgSendLater) 
   { 
     printf("We succesfully obtained a nsIMsgSendLater interface....\n");    
-    pMsgSendLater->SendUnsentMessages(identity, nsnull, nsnull);
+    pMsgSendLater->SendUnsentMessages(identity, nsnull);
   }
 
 #ifdef XP_PC

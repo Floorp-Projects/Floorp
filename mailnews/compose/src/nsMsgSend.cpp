@@ -1184,6 +1184,7 @@ nsMsgComposeAndSend::Init(
 						  PRBool digest_p,
 						  PRBool dont_deliver_p,
 						  nsMsgDeliverMode mode,
+              nsIMessage      *msgToReplace,
 						  const char *attachment1_type,
 						  const char *attachment1_body,
 						  PRUint32 attachment1_body_length,
@@ -1200,6 +1201,7 @@ nsMsgComposeAndSend::Init(
   //
 	m_dont_deliver_p = dont_deliver_p;
 	m_deliver_mode = mode;
+  mMsgToReplace = msgToReplace;
 
   mUserIdentity = aUserIdentity;
   NS_ASSERTION(mUserIdentity, "Got null identity!\n");
@@ -2007,6 +2009,7 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 						  PRBool                            digest_p,
 						  PRBool                            dont_deliver_p,
 						  nsMsgDeliverMode                  mode,
+              nsIMessage                        *msgToReplace,
 						  const char                        *attachment1_type,
 						  const char                        *attachment1_body,
 						  PRUint32                          attachment1_body_length,
@@ -2023,7 +2026,7 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 		attachment1_type = attachment1_body = 0;
 
   rv = Init(aUserIdentity, (nsMsgCompFields *)fields, nsnull,
-					digest_p, dont_deliver_p, mode,
+					digest_p, dont_deliver_p, mode, msgToReplace,
 					attachment1_type, attachment1_body,
 					attachment1_body_length,
 					attachments, preloaded_attachments,
@@ -2043,6 +2046,7 @@ nsMsgComposeAndSend::SendMessageFile(
               PRBool                            deleteSendFileOnCompletion,
 						  PRBool                            digest_p,
 						  nsMsgDeliverMode                  mode,
+              nsIMessage                        *msgToReplace,
               nsIMsgSendListener                **aListenerArray)
 {
   nsresult      rv;
@@ -2071,7 +2075,7 @@ nsMsgComposeAndSend::SendMessageFile(
   }
 
   rv = Init(aUserIndentity, (nsMsgCompFields *)fields, sendFileSpec,
-					    digest_p, PR_FALSE, mode,
+					    digest_p, PR_FALSE, mode, msgToReplace, 
 					    nsnull, nsnull, nsnull,
 					    nsnull, nsnull, nsnull);
 	if (NS_SUCCEEDED(rv))
@@ -2158,6 +2162,7 @@ nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity                    *aUserIndenti
 						  PR_FALSE, //PRBool                            digest_p,
 						  PR_FALSE, //PRBool                            dont_deliver_p,
 						  mode,   //nsMsgDeliverMode                  mode,
+              nsnull, //  nsIMessage      *msgToReplace,
 						  TEXT_PLAIN, //const char                        *attachment1_type,
               msgBody, //const char                        *attachment1_body,
 						  bodyLen, // PRUint32                          attachment1_body_length,

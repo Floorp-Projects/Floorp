@@ -10,6 +10,7 @@
 #include "nsIMsgSendListener.h"
 #include "nsIMsgIdentity.h"
 #include "nsMsgComposeBE.h"
+#include "nsIMessage.h"
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -33,6 +34,7 @@ class nsIMsgSend : public nsISupports {
 						            PRBool                            digest_p,
 						            PRBool                            dont_deliver_p,
 						            nsMsgDeliverMode                  mode, 
+                        nsIMessage                        *msgToReplace,
 						            const char                        *attachment1_type,
 						            const char                        *attachment1_body,
 						            PRUint32                          attachment1_body_length,
@@ -48,6 +50,7 @@ class nsIMsgSend : public nsISupports {
                           PRBool                            deleteSendFileOnCompletion,
 						              PRBool                            digest_p,
 						              nsMsgDeliverMode                  mode,
+                          nsIMessage                        *msgToReplace,
                           nsIMsgSendListener                **aListenerArray) = 0;
 
   NS_IMETHOD  SendWebPage(

@@ -397,7 +397,8 @@ int main(int argc, char *argv[])
     if (rv == NS_OK && pMsgCompFields)
     { 
       pMsgCompFields->SetFrom(", rhp@netscape.com, ", NULL);
-      pMsgCompFields->SetTo("rhp@netscape.com", NULL);
+      //pMsgCompFields->SetTo("rhp@netscape.com", NULL);
+      pMsgCompFields->SetNewsgroups("news://news.mozilla.org./netscape.test", nsnull);
       pMsgCompFields->SetSubject("[spam] test", NULL);
       // pMsgCompFields->SetTheForcePlainText(PR_TRUE, &rv);
       pMsgCompFields->SetBody(email, NULL);
@@ -423,11 +424,12 @@ int main(int argc, char *argv[])
       if (tagBuf)
         PL_strcpy(tagBuf, "Do that voodo, that you do, soooo weeeelllll!");
 
-      pMsgSend->CreateAndSendMessage(nsnull, // identity
+      pMsgSend->CreateAndSendMessage(identity,
                                      pMsgCompFields, 
 						    PR_FALSE,         // PRBool                            digest_p,
                 PR_FALSE,         // PRBool                            dont_deliver_p,
-						    nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
+		nsMsgQueueForLater,				    // nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
+		nsnull, // nsIMessage *msgToReplace
 						    TEXT_HTML, //TEXT_PLAIN,       // const char                        *attachment1_type,
 						    pBody,            // const char                        *attachment1_body,
 						    nBodyLength,      // PRUint32                          attachment1_body_length,

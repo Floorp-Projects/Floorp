@@ -46,6 +46,7 @@ EXPORTS = \
 	nsMsgTransition.h \
 	nsMsgQuote.h \
 	nsURLFetcher.h \
+	nsMsgSend.h \
 	$(NULL)
 
 CPPSRCS = \

@@ -41,8 +41,7 @@ class nsIMsgSendLater : public nsIOutputStream {
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGSENDLATER_IID)
 
   NS_IMETHOD  SendUnsentMessages(nsIMsgIdentity           *identity, 
-                                 nsIMsgSendLaterListener  **listenerArray,
-                                 void                     *tagData) = 0;
+                                 nsIMsgSendLaterListener  **listenerArray) = 0;
 
   NS_IMETHOD  RemoveListener(nsIMsgSendLaterListener *aListener) = 0; 
   NS_IMETHOD  AddListener(nsIMsgSendLaterListener *aListener) = 0; 

@@ -257,7 +257,7 @@ SetupRegistry(void)
   // prefs
   nsComponentManager::RegisterComponent(kPrefCID,              NULL, NULL, PREF_DLL,  PR_FALSE, PR_FALSE);
 
-  nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }
@@ -403,7 +403,7 @@ main(int argc, char *argv[])
         return NS_ERROR_FAILURE;
       }
 
-      pMsgSend->SendWebPage(nsnull, pMsgCompFields, url, nsMsgDeliverNow, tArray);
+      pMsgSend->SendWebPage(ident, pMsgCompFields, url, nsMsgDeliverNow, tArray);
     }    
   }
 
