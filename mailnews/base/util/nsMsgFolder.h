@@ -269,8 +269,16 @@ protected:
   char * mBaseMessageURI; //The uri with the message scheme
 
   // static stuff for cross-instance objects like atoms
-  static PRInt32 gInstanceCount;
+  static nsrefcnt gInstanceCount;
 
+  static nsresult initializeStrings();
+
+  static PRUnichar *kInboxName;
+  static PRUnichar *kTrashName;
+  static PRUnichar *kSentName;
+  static PRUnichar *kDraftsName;
+  static PRUnichar *kTemplatesName;
+  
   static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kBiffStateAtom;
   static nsIAtom* kNumNewBiffMessagesAtom;
@@ -278,6 +286,12 @@ protected:
   static nsIAtom* kStatusAtom;
   static nsIAtom* kFlaggedAtom;
   static nsIAtom* kNameAtom;
+
+#ifdef MSG_FASTER_URI_PARSING
+  // cached parsing URL object
+  static nsCOMPtr<nsIURL> mParsingURL;
+  static PRBool mParsingURLInUse;
+#endif
 
 };
 

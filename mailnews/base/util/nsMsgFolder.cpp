@@ -23,35 +23,48 @@
 
 #include "msgCore.h"    // precompiled header...
 
-#include "nsMsgFolder.h"	 
+#include "prprf.h"
+
+#include "nsISupportsArray.h"
+#include "nsIServiceManager.h"
+#include "nsXPIDLString.h"
+#include "nsCOMPtr.h"
+#include "nsAutoLock.h"
+#include "nsIAllocator.h"
+#include "nsIStringBundle.h"
+
+#include "nsMsgFolder.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMessage.h"
-#include "prprf.h"
 #include "nsMsgKeyArray.h"
 #include "nsMsgDatabase.h"
 #include "nsIDBFolderInfo.h"
-#include "nsISupportsArray.h"
-#include "nsIPref.h"
-#include "nsIRDFService.h"
-#include "nsIServiceManager.h"
-#include "nsRDFCID.h"
-#include "nsXPIDLString.h"
-#include "nsCOMPtr.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgIdentity.h"
 #include "nsMsgBaseCID.h"
-#include "nsIAllocator.h"
-#include "nsIURL.h"
 #include "nsMsgUtils.h" // for NS_MsgHashIfNecessary()
 
+#include "nsIPref.h"
+
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
+
 #include "nsIIOService.h"
+#include "nsIURL.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgFolderListenerManagerCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-PRInt32 nsMsgFolder::gInstanceCount	= 0;
+nsrefcnt nsMsgFolder::gInstanceCount	= 0;
+
+PRUnichar *nsMsgFolder::kInboxName = 0;
+PRUnichar *nsMsgFolder::kTrashName = 0;
+PRUnichar *nsMsgFolder::kSentName = 0;
+PRUnichar *nsMsgFolder::kDraftsName = 0;
+PRUnichar *nsMsgFolder::kTemplatesName = 0;
 
 nsIAtom * nsMsgFolder::kTotalMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kBiffStateAtom	= nsnull;
@@ -61,6 +74,10 @@ nsIAtom * nsMsgFolder::kFlaggedAtom	= nsnull;
 nsIAtom * nsMsgFolder::kStatusAtom	= nsnull;
 nsIAtom * nsMsgFolder::kNameAtom	= nsnull;
 
+#ifdef MSG_FASTER_URI_PARSING
+nsCOMPtr<nsIURL> nsMsgFolder::mParsingURL;
+PRBool nsMsgFolder::mParsingURLInUse=PR_FALSE;
+#endif
 
 nsMsgFolder::nsMsgFolder(void)
   : nsRDFResource(),
@@ -98,6 +115,11 @@ nsMsgFolder::nsMsgFolder(void)
     kStatusAtom              = NS_NewAtom("Status");
     kFlaggedAtom             = NS_NewAtom("Flagged");
 
+    initializeStrings();
+
+#ifdef MSG_FASTER_URI_PARSING
+    mParsingURL = do_CreateInstance(kStandardUrlCID);
+#endif
   }
   
   gInstanceCount++;
@@ -131,6 +153,16 @@ nsMsgFolder::~nsMsgFolder(void)
       NS_IF_RELEASE(kFlaggedAtom);
       NS_IF_RELEASE(kStatusAtom);
       NS_IF_RELEASE(kNameAtom);
+
+      CRTFREEIF(kInboxName);
+      CRTFREEIF(kTrashName);
+      CRTFREEIF(kSentName);
+      CRTFREEIF(kDraftsName);
+      CRTFREEIF(kTemplatesName);
+
+#ifdef MSG_FASTER_URI_PARSING
+      mParsingURL = nsnull;
+#endif
     }
 }
 
@@ -142,6 +174,33 @@ NS_IMPL_QUERY_INTERFACE_INHERITED3(nsMsgFolder, nsRDFResource,
                                    nsIFolder,
                                    nsISupportsWeakReference)
 
+nsresult
+nsMsgFolder::initializeStrings()
+{
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        do_GetService(kStringBundleServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
+                                     nsnull,
+                                     getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("inboxFolderName").GetUnicode(),
+                              &kInboxName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("trashFolderName").GetUnicode(),
+                              &kTrashName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("sentFolderName").GetUnicode(),
+                              &kSentName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("draftsFolderName").GetUnicode(),
+                              &kDraftsName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("templatesFolderName").GetUnicode(),
+                              &kTemplatesName);
+    return NS_OK;
+}
+  
 NS_IMETHODIMP
 nsMsgFolder::Init(const char* aURI)
 {
@@ -446,15 +505,41 @@ NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
 	return NS_OK;
 }
 
+#ifdef MSG_FASTER_URI_PARSING
+class nsMsgAutoBool {
+public:
+  nsMsgAutoBool() : mValue(nsnull) {}
+  void autoReset(PRBool *aValue) { mValue = aValue; }
+  ~nsMsgAutoBool() { if (mValue) *mValue = PR_FALSE; }
+private:
+  PRBool *mValue;
+};
+#endif
+
 nsresult
 nsMsgFolder::parseURI(PRBool needServer)
 {
   nsresult rv;
   nsCOMPtr<nsIURL> url;
+
+#ifdef MSG_FASTER_URI_PARSING
+  nsMsgAutoBool parsingUrlState;
+  if (mParsingURLInUse) {
+    url = do_CreateInstance(kStandardUrlCID, &rv);
+  }
+
+  else {
+    url = mParsingURL;
+    mParsingURLInUse = PR_TRUE;
+    parsingUrlState.autoReset(&mParsingURLInUse);
+  }
+  
+#else
   rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
                                           NS_GET_IID(nsIURL),
                                           (void **)getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
+#endif
   
   rv = url->SetSpec(mURI);
   if (NS_FAILED(rv)) return rv;
@@ -488,9 +573,9 @@ nsMsgFolder::parseURI(PRBool needServer)
       // XXX conversion to unicode here? is fileName in UTF8?
 		// yes, let's say it is in utf8
 
-      char* result = nsnull;
-      rv = ioServ->Unescape(fileName, &result);
-	  mName.AssignWithConversion(result);
+      nsXPIDLCString result;
+      rv = ioServ->Unescape(fileName, getter_Copies(result));
+      mName.AssignWithConversion(result);
     }
   }
 
@@ -558,8 +643,8 @@ nsMsgFolder::parseURI(PRBool needServer)
     nsXPIDLCString urlPath;
     url->GetFilePath(getter_Copies(urlPath));
 
-    char* result = nsnull;
-    rv = ioServ->Unescape(urlPath, &result);
+    nsXPIDLCString result;
+    rv = ioServ->Unescape(urlPath, getter_Copies(result));
 
     // transform the filepath from the URI, such as
     // "/folder1/folder2/foldern"
@@ -588,7 +673,6 @@ nsMsgFolder::parseURI(PRBool needServer)
 
     // URI is completely parsed when we've attempted to get the server
     mHaveParsedURI=PR_TRUE;
-    CRTFREEIF(result);
   }
     
   return NS_OK;
