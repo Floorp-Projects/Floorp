@@ -6,8 +6,6 @@
    CHANGES REVIEWED BY hyatt@netscape.com.
 **/
 
-@import url("chrome://global/content/platformXUL.css");
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 @namespace xbl url("http://www.mozilla.org/xbl"); /* namespace for XBL elements */
@@ -208,6 +206,13 @@ toolbar {
   -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbar");
 }
 
+#ifdef XP_MACOSX
+toolbar[type="menubar"] {
+  min-height: 0 !important;
+  border: 0 !important;
+}
+#endif
+
 toolbarseparator {
   -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbardecoration");
 }
@@ -310,9 +315,15 @@ tooltip {
   margin-top: 21px;
 }
 
+#ifdef XP_MACOSX
+.statusbar-resizerpanel {
+  display: none;
+}
+#else
 window[sizemode="maximized"] statusbarpanel.statusbar-resizerpanel {
   visibility: collapse;
 }
+#endif
 
 /********** floating popups **********/
 
@@ -814,6 +825,9 @@ autorepeatbutton {
 statusbar 
 {
   -moz-binding: url("chrome://global/content/widgets/general.xml#statusbar");
+#ifdef XP_MACOSX
+  padding-right: 14px;
+#endif
 }
 
 statusbarpanel {
@@ -849,12 +863,12 @@ stringbundle {
 /********** dialog **********/
 
 dialog {
-  -moz-binding: url("chrome://global/content/bindings/dialog.xml#dialog");
+  -moz-binding: url("chrome://global/content/widgets/dialog.xml#dialog");
   -moz-box-orient: vertical;
 }
 
 dialogheader {
-  -moz-binding: url("chrome://global/content/bindings/dialog.xml#dialogheader");
+  -moz-binding: url("chrome://global/content/widgets/dialog.xml#dialogheader");
 }
 
 /********* page ************/
@@ -866,22 +880,22 @@ page {
 /********** wizard **********/
 
 wizard {
-  -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard");
+  -moz-binding: url("chrome://global/content/widgets/wizard.xml#wizard");
   -moz-box-orient: vertical;
 }
 
 wizardpage {
-  -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizardpage");
+  -moz-binding: url("chrome://global/content/widgets/wizard.xml#wizardpage");
   -moz-box-orient: vertical;
   overflow: auto;
 }
 
 .wizard-header {
-  -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard-header");
+  -moz-binding: url("chrome://global/content/widgets/wizard.xml#wizard-header");
 }
 
 .wizard-buttons {
-  -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard-buttons");
+  -moz-binding: url("chrome://global/content/widgets/wizard.xml#wizard-buttons");
 }
 
 /********** expander ********/

@@ -405,6 +405,57 @@
     </implementation>
   </binding>
 
+#ifdef XP_MACOSX
+  <binding id="wizard-header" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+    <content>
+      <xul:stack class="wizard-header-stack" flex="1">
+        <xul:vbox class="wizard-header-box-1">
+          <xul:vbox class="wizard-header-box-2">
+            <xul:vbox class="wizard-header-box-text">
+              <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
+            </xul:vbox>
+          </xul:vbox>
+        </xul:vbox>
+        <xul:hbox class="wizard-header-box-icon">
+          <xul:spacer flex="1"/>
+          <xul:image class="wizard-header-icon" xbl:inherits="src=iconsrc"/>
+        </xul:hbox>
+      </xul:stack>
+    </content>
+  </binding>
+  
+  <binding id="wizard-buttons" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+    <content>
+      <xul:vbox flex="1">
+        <xul:hbox class="wizard-buttons-top" xbl:inherits="hidden=hidetoprow">
+          <xul:spacer flex="1"/>
+          <xul:button class="wizard-button" dlgtype="cancel"/> 
+          <xul:button class="wizard-button" dlgtype="finish" default="true"/> 
+        </xul:hbox>
+        <xul:separator class="wizard-buttons-separator groove"/>
+        <xul:hbox class="wizard-buttons-btm">
+          <xul:spacer flex="1"/>
+          <xul:button class="wizard-button wizard-nav-button" dlgtype="back"/>
+          <xul:hbox class="wizard-label-box" align="center">
+            <xul:label class="wizard-page-label" xbl:inherits="value=pagestep"/>
+          </xul:hbox>
+          <xul:button class="wizard-button wizard-nav-button" dlgtype="next" default="true" xbl:inherits="disabled=lastpage"/> 
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <method name="onPageChange">
+        <body><![CDATA[
+          this.setAttribute("hidetoprow", !(this.getAttribute("lastpage") == "true"));
+        ]]></body>
+      </method>
+    </implementation>
+
+  </binding>
+
+#else
+
   <binding id="wizard-header" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
     <content>
       <xul:hbox class="wizard-header-box-1" flex="1">
@@ -453,53 +504,6 @@
       </method>
     </implementation>
   </binding>
-
-  <binding id="wizard-header-mac" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
-    <content>
-      <xul:stack class="wizard-header-stack" flex="1">
-        <xul:vbox class="wizard-header-box-1">
-          <xul:vbox class="wizard-header-box-2">
-            <xul:vbox class="wizard-header-box-text">
-              <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
-            </xul:vbox>
-          </xul:vbox>
-        </xul:vbox>
-        <xul:hbox class="wizard-header-box-icon">
-          <xul:spacer flex="1"/>
-          <xul:image class="wizard-header-icon" xbl:inherits="src=iconsrc"/>
-        </xul:hbox>
-      </xul:stack>
-    </content>
-  </binding>
-  
-  <binding id="wizard-buttons-mac" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
-    <content>
-      <xul:vbox flex="1">
-        <xul:hbox class="wizard-buttons-top" xbl:inherits="hidden=hidetoprow">
-          <xul:spacer flex="1"/>
-          <xul:button class="wizard-button" dlgtype="cancel"/> 
-          <xul:button class="wizard-button" dlgtype="finish" default="true"/> 
-        </xul:hbox>
-        <xul:separator class="wizard-buttons-separator groove"/>
-        <xul:hbox class="wizard-buttons-btm">
-          <xul:spacer flex="1"/>
-          <xul:button class="wizard-button wizard-nav-button" dlgtype="back"/>
-          <xul:hbox class="wizard-label-box" align="center">
-            <xul:label class="wizard-page-label" xbl:inherits="value=pagestep"/>
-          </xul:hbox>
-          <xul:button class="wizard-button wizard-nav-button" dlgtype="next" default="true" xbl:inherits="disabled=lastpage"/> 
-        </xul:hbox>
-      </xul:vbox>
-    </content>
-
-    <implementation>
-      <method name="onPageChange">
-        <body><![CDATA[
-          this.setAttribute("hidetoprow", !(this.getAttribute("lastpage") == "true"));
-        ]]></body>
-      </method>
-    </implementation>
-
-  </binding>
+#endif
 
 </bindings>

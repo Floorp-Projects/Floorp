@@ -17,14 +17,26 @@
         <children/>
       </xul:vbox>
           
-      <xul:hbox class="dialog-button-box" pack="end" anonid="buttons"
-                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
+      <xul:hbox class="dialog-button-box" anonid="buttons"
+                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient"
+#ifdef XP_MACOSX
+                >
+        <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
+        <xul:spacer flex="1"/>
+        <xul:button dlgtype="cancel" class="dialog-button"/>
+        <xul:button dlgtype="accept" class="dialog-button"/>
+#else
+                pack="end">
         <xul:button dlgtype="accept" class="dialog-button"/>
         <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
         <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>
         <xul:button dlgtype="cancel" class="dialog-button"/>
         <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
+#endif
       </xul:hbox>
     </content>
 
@@ -34,7 +46,13 @@
         if (!document.documentElement.cancelDialog())
           event.preventDefault();
       })</field>
-      <field name="enterDefaultAlways">false</field>
+      <field name="enterDefaultAlways">
+#ifdef XP_MACOSX
+        true
+#else
+        false
+#endif
+      </field>
 
       <property name="buttons"
                 onget="return this.getAttribute('buttons');"
@@ -290,8 +308,13 @@
       </method>
 
       <method name="_hitEnter">
+        <parameter name="evt"/>
         <body>
         <![CDATA[
+          var target = evt.originalTarget;
+          if ((target.localName == "textarea")&&(target.namespaceURI == "http://www.w3.org/1999/xhtml")) {
+            return;
+          }
           // if a button is focused, do nothing, so that activating the button 
           // doesn't cause the dialog to exit
           if (!this.enterDefaultAlways) {
@@ -311,9 +334,12 @@
     </implementation>
     
     <handlers>
-      <handler event="keypress" keycode="VK_ENTER" action="this._hitEnter();"/>
-      <handler event="keypress" keycode="VK_RETURN" action="this._hitEnter();"/>
+      <handler event="keypress" keycode="VK_ENTER" action="this._hitEnter(event);"/>
+      <handler event="keypress" keycode="VK_RETURN" action="this._hitEnter(event);"/>
       <handler event="keypress" keycode="VK_ESCAPE" action="this.cancelDialog();"/>
+#ifdef XP_MACOSX
+      <handler event="keypress" key="." modifiers="meta" phase="capturing" action="this.cancelDialog();"/>
+#endif
     </handlers>
 
   </binding>
