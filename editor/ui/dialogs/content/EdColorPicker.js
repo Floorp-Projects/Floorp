@@ -37,9 +37,7 @@ var gColorObj;
 
 // dialog initialization code
 function Startup()
-{
-  // if (!InitEditorShell()) return;
- 
+{ 
   if (!window.arguments[1])
   {
     dump("EdColorPicker: Missing color object param\n");
@@ -59,7 +57,7 @@ function Startup()
   gDialog.CellRadio        = document.getElementById("CellRadio");
   gDialog.ColorSwatch      = document.getElementById("ColorPickerSwatch");
   gDialog.Ok               = document.documentElement.getButton("accept");
-  
+
   // The type of color we are setting: 
   //  text: Text, Link, ActiveLink, VisitedLink, 
   //  or background: Page, Table, or Cell
@@ -70,13 +68,15 @@ function Startup()
     //   (note constraint on editor.properties string name)
     var prefs = GetPrefs();
     var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
-    if (ColorType == "Page" && IsCSSPrefChecked && editorShell.editorType == "html")
+
+    editorShell = window.opener.editorShell;
+    if (editorShell)
     {
-      window.title = GetString("BlockColor");
-    }
-    else
-    {
+      editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+
       window.title = GetString(ColorType+"Color");
+      if (editorShell && ColorType == "Page" && IsCSSPrefChecked && editorShell.editorType == "html")
+        window.title = GetString("BlockColor");
     }
   }
   if (!window.title)
