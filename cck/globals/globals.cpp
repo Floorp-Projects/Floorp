@@ -328,7 +328,7 @@ void PopulateNscpxpi(CString rootPath, CString platformInfo,
 	CString command, 
 			quotes = "\"", 
 			spaces = " ",
-			nscpzipFile = nscpxpiPath + "\\N6Setup.zip";
+			nscpzipFile = nscpxpiPath + "\\NSSetup.zip";
 	if (platformInfo == "Linux")
 	{
 		CString strNscpInstaller = "\\netscape-installer";
