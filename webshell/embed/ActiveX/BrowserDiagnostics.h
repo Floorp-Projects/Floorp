@@ -21,6 +21,14 @@
 #ifdef _DEBUG
 #  include <assert.h>
 #  define NG_TRACE ATLTRACE
+#  define NG_TRACE_METHOD(fn) \
+	{ \
+		NG_TRACE(_T("0x%04x %s()\n"), (int) GetCurrentThreadId(), _T(#fn)); \
+	}
+#  define NG_TRACE_METHOD_ARGS(fn, pattern, args) \
+	{ \
+		NG_TRACE(_T("0x%04x %s(") _T(pattern) _T(")\n"), (int) GetCurrentThreadId(), _T(#fn), args); \
+	}
 #  define NG_ASSERT(expr) assert(expr)
 #  define NG_ASSERT_POINTER(p, type) \
 	NG_ASSERT(((p) != NULL) && NgIsValidAddress((p), sizeof(type), FALSE))
@@ -28,6 +36,8 @@
 	NG_ASSERT(((p) == NULL) || NgIsValidAddress((p), sizeof(type), FALSE))
 #else
 #  define NG_TRACE ATLTRACE
+#  define NG_TRACE_METHOD(fn)
+#  define NG_TRACE_METHOD_ARGS(fn, pattern, args)
 #  define NG_ASSERT(X)
 #  define NG_ASSERT_POINTER(p, type)
 #  define NG_ASSERT_NULL_OR_POINTER(p, type)
