@@ -57,20 +57,13 @@ expectedmatch = Array(string, 'Test', 'this');  //NO space in front of 'this'
 addThis();
 
 status = inSection(3);
-pattern = /(\S+)????(.*)/;
-string= 'Test this';
-actualmatch = string.match(pattern);
-expectedmatch = Array(string, undefined, string);
-addThis();
-
-status = inSection(4);
 pattern = /(\S+)?(.*)/;
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string, 'Stupid', ' phrase, with six - (short) words');  //single space in front of 'phrase'
 addThis();
 
-status = inSection(5);
+status = inSection(4);
 pattern = /(\S+)? ?(.*)/;  //single space between the ? characters
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
@@ -79,28 +72,28 @@ addThis();
 
 
 // let's add an extra back-reference this time - three instead of two -
-status = inSection(6);
+status = inSection(5);
 pattern = /(\S+)?( ?)(.*)/;  //single space before second ? character
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string, 'Stupid', cnSingleSpace, 'phrase, with six - (short) words');
 addThis();
 
-status = inSection(7);
+status = inSection(6);
 pattern = /^(\S+)?( ?)(B+)$/;  //single space before second ? character
 string = 'AAABBB';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string, 'AAABB', cnEmptyString, 'B');
 addThis();
 
-status = inSection(8);
+status = inSection(7);
 pattern = /(\S+)?(!?)(.*)/;
 string = 'WOW !!! !!!';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string, 'WOW', cnEmptyString, ' !!! !!!');
 addThis();
 
-status = inSection(9);
+status = inSection(8);
 pattern = /(.+)?(!?)(!+)/;
 string = 'WOW !!! !!!';
 actualmatch = string.match(pattern);
