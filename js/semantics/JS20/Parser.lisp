@@ -32,9 +32,10 @@
        (production :qualified-identifier (:qualifier \:\: :qualified-identifier) qualified-identifier-qualifier)
 
        (production :qualifier (:identifier) qualifier-identifier)
-       (production :qualifier (super) qualifier-super)
-       (production :qualifier (private) qualifier-private)
+       (production :qualifier (public) qualifier-public)
        (production :qualifier (package) qualifier-package)
+       (production :qualifier (private) qualifier-private)
+       (production :qualifier (super) qualifier-super)
        (production :qualifier (:parenthesized-expression) qualifier-parenthesized-expression)
        
        
