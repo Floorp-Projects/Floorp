@@ -1371,9 +1371,10 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   aWindow->GetFrames(getter_AddRefs(frames));
   PRUint32 length;
   frames->GetLength(&length);
-  for (PRUint32 i = 0; i < length; i++) {
+  PRUint32 j;
+  for (j = 0; j < length; j++) {
     nsCOMPtr<nsIDOMWindow> childWin;
-    frames->Item(i, getter_AddRefs(childWin));
+    frames->Item(j, getter_AddRefs(childWin));
     nsCOMPtr<nsIDOMWindowInternal> childInt(do_QueryInterface(childWin));
     RefreshWindow(childInt);
   }
