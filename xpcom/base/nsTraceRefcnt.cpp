@@ -137,6 +137,7 @@ public:
     : mClassName(className), mClassSize(classSize) { 
     Clear(&mNewStats);
     Clear(&mAllStats);
+    mTotalLeaked = 0;
   }
 
   ~BloatEntry() {}
@@ -243,6 +244,9 @@ public:
     total->mAllStats.mObjsOutstandingSquared += mNewStats.mObjsOutstandingSquared + mAllStats.mObjsOutstandingSquared;
     PRInt32 count = (mNewStats.mCreates + mAllStats.mCreates);
     total->mClassSize += mClassSize * count;    // adjust for average in DumpTotal
+    total->mTotalLeaked += mClassSize *
+                          ((mNewStats.mCreates + mAllStats.mCreates)
+                          -(mNewStats.mDestroys + mAllStats.mDestroys));
   }
 
   nsresult DumpTotal(PRUint32 nClasses, FILE* out) {
@@ -314,7 +318,9 @@ public:
       fprintf(out, "%4d %-20.20s %8d %8d %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f)\n",
               i+1, mClassName,
               (PRInt32)mClassSize,
-              (PRInt32)((stats->mCreates - stats->mDestroys) * mClassSize),
+              (nsCRT::strcmp(mClassName, "TOTAL"))
+                  ?(PRInt32)((stats->mCreates - stats->mDestroys) * mClassSize)
+                  :mTotalLeaked,
               stats->mCreates,
               (stats->mCreates - stats->mDestroys),
               meanObjs,
@@ -330,6 +336,7 @@ public:
 protected:
   const char*   mClassName;
   double        mClassSize;     // this is stored as a double because of the way we compute the avg class size for total bloat
+  PRInt32       mTotalLeaked; // used only for TOTAL entry
   nsTraceRefcntStats mNewStats;
   nsTraceRefcntStats mAllStats;
 };
