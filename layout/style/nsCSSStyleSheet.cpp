@@ -1345,12 +1345,9 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
 
   if (aCopy.mMedia) {
     nsCOMPtr<nsISupportsArray> tmp;
-    NS_NewISupportsArray(getter_AddRefs(tmp));
-    if (tmp) {
-      tmp->AppendElements(NS_STATIC_CAST(nsISupportsArray *, aCopy.mMedia));
-      mMedia = new DOMMediaListImpl(tmp, this);
-      NS_IF_ADDREF(mMedia);
-    }
+    (NS_STATIC_CAST(nsISupportsArray *, aCopy.mMedia))->Clone(getter_AddRefs(tmp));
+    mMedia = new DOMMediaListImpl(tmp, this);
+    NS_IF_ADDREF(mMedia);
   }
 
   if (aCopy.mFirstChild) {
