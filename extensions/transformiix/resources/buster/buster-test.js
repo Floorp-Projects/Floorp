@@ -307,12 +307,10 @@ runItem.prototype =
     doTransform : function()
     {
         this.kProcessor.reset();
-        this.kProcessor.importStylesheet(this.mStyleDoc);
-        this.mResDoc = this.kProcessor.transformToDocument(this.mSourceDoc);
-        //var proc = new XSLTProcessor;
-        //proc.importStylesheet(this.mStyleDoc);
-        //this.mResDoc = proc.transformToDocument(this.mSourceDoc);
         try {
+            this.kProcessor.importStylesheet(this.mStyleDoc);
+            this.mResDoc =
+                this.kProcessor.transformToDocument(this.mSourceDoc);
             this.mRefDoc.normalize();
             isGood = DiffDOM(this.mResDoc.documentElement,
                              this.mRefDoc.documentElement,
