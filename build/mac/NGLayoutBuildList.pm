@@ -948,7 +948,7 @@ sub BuildCommonProjects()
 		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "resource.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 		# mime service
-		BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mime$D.shlb", "mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mimetype$D.shlb", "mimetype.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	}
 	else
 	{
