@@ -34,7 +34,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.4 2002/02/01 17:57:05 relyea%netscape.com Exp $
+ * $Id: cmsdecode.c,v 1.5 2003/04/28 17:56:46 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -59,6 +59,13 @@ struct NSSCMSDecoderContextStr {
     void *				cb_arg;
 };
 
+struct NSSCMSDecoderDataStr {
+    SECItem data; 	/* must be first */
+    SECItem storage;
+};
+
+typedef struct NSSCMSDecoderDataStr NSSCMSDecoderData;
+
 static void nss_cms_decoder_update_filter (void *arg, const char *data, unsigned long len,
                           int depth, SEC_ASN1EncodingPart data_kind);
 static SECStatus nss_cms_before_data(NSSCMSDecoderContext *p7dcx);
@@ -66,8 +73,26 @@ static SECStatus nss_cms_after_data(NSSCMSDecoderContext *p7dcx);
 static SECStatus nss_cms_after_end(NSSCMSDecoderContext *p7dcx);
 static void nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx, 
 			     const unsigned char *data, unsigned long len, PRBool final);
+static NSSCMSDecoderData *nss_cms_create_decoder_data(PRArenaPool *poolp);
 
 extern const SEC_ASN1Template NSSCMSMessageTemplate[];
+
+static NSSCMSDecoderData *
+nss_cms_create_decoder_data(PRArenaPool *poolp)
+{
+    NSSCMSDecoderData *decoderData = NULL;
+
+    decoderData = (NSSCMSDecoderData *)
+			PORT_ArenaAlloc(poolp,sizeof(NSSCMSDecoderData));
+    if (!decoderData) {
+	return NULL;
+    }
+    decoderData->data.data = NULL;
+    decoderData->data.len = 0;
+    decoderData->storage.data = NULL;
+    decoderData->storage.len = 0;
+    return decoderData;
+}
 
 /* 
  * nss_cms_decoder_notify -
@@ -250,8 +275,8 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
     childtype = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
 
     if (childtype == SEC_OID_PKCS7_DATA) {
-	cinfo->content.data = SECITEM_AllocItem(poolp, NULL, 0);
-	if (cinfo->content.data == NULL)
+	cinfo->content.pointer = (void *) nss_cms_create_decoder_data(poolp);
+	if (cinfo->content.pointer == NULL)
 	    /* set memory error */
 	    return SECFailure;
 
@@ -414,7 +439,6 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
     unsigned char *dest;
     unsigned int offset;
     SECStatus rv;
-    SECItem *storage;
 
     /*
      * We should really have data to process, or we should be trying
@@ -510,27 +534,32 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
     if (NSS_CMSContentInfo_GetContentTypeTag(cinfo) == SEC_OID_PKCS7_DATA) {
 	/* store it in "inner" data item as well */
 	/* find the DATA item in the encapsulated cinfo and store it there */
-	storage = cinfo->content.data;
+	NSSCMSDecoderData *decoderData = 
+				(NSSCMSDecoderData *)cinfo->content.pointer;
+	SECItem *storage = &decoderData->storage;
+	SECItem *dataItem = &decoderData->data;
 
-	offset = storage->len;
-	if (storage->len == 0) {
-	    dest = (unsigned char *)PORT_ArenaAlloc(p7dcx->cmsg->poolp, len);
-	} else {
-	    dest = (unsigned char *)PORT_ArenaGrow(p7dcx->cmsg->poolp, 
-				  storage->data,
-				  storage->len,
-				  storage->len + len);
-	}
-	if (dest == NULL) {
-	    p7dcx->error = SEC_ERROR_NO_MEMORY;
-	    goto loser;
-	}
+	offset = dataItem->len;
+	if (dataItem->len+len > storage->len) {
+	    int needLen = (dataItem->len+len) * 2;
+	    dest = (unsigned char *)
+				PORT_ArenaAlloc(p7dcx->cmsg->poolp, needLen);
+	    if (dest == NULL) {
+		p7dcx->error = SEC_ERROR_NO_MEMORY;
+		goto loser;
+	    }
 
-	storage->data = dest;
-	storage->len += len;
+	    storage->data = dest;
+	    storage->len = needLen;
+	    if (dataItem->len) {
+		PORT_Memcpy(storage->data , dataItem->data, dataItem->len);
+	    }
+	    dataItem->data = storage->data;
+	}
 
 	/* copy it in */
-	PORT_Memcpy(storage->data + offset, data, len);
+	PORT_Memcpy(dataItem->data + offset, data, len);
+	dataItem->len += len;
     }
 
 done:
