@@ -171,7 +171,6 @@ Rights Reserved.
 			 <menuseparator/>
 			<menuitem value="&accountManagerCmd.label;" oncommand="MsgAccountManager();"/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul')"/>
-			<menuitem value="&accountWizardCmd.label;" oncommand="MsgAccountWizard();"/>
 		</menupopup>
 	</menu>
     
