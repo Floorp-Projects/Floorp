@@ -555,7 +555,9 @@ NS_METHOD nsTableRowFrame::Paint(nsPresContext*      aPresContext,
     aFlags |= NS_PAINT_FLAG_TABLE_BG_PAINT;
   }
 
-  PRBool clip = GetStyleDisplay()->IsTableClip();
+  PRUint8 overflow = GetStyleDisplay()->mOverflow;
+  PRBool clip = overflow == NS_STYLE_OVERFLOW_CLIP ||
+                overflow == NS_STYLE_OVERFLOW_HIDDEN;
   if (clip) {
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);

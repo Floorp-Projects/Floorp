@@ -2708,7 +2708,7 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsIPresShell*            aPre
   rv = aTableCreator.CreateTableRowGroupFrame(&aNewFrame);
 
   nsIFrame* scrollFrame = nsnull;
-  if (styleDisplay->IsScrollableOverflow()) {
+  if (IsScrollable(aPresContext, styleDisplay)) {
     // Create an area container for the frame
     BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, 
                      aNewFrame, parentFrame, nsnull, scrollFrame, aStyleContext);
@@ -3341,19 +3341,6 @@ nsCSSFrameConstructor::ConstructDocElementTableFrame(nsIPresShell*        aPresS
   return NS_OK;
 }
 
-static PRBool CheckOverflow(nsPresContext* aPresContext,
-                            const nsStyleDisplay* aDisplay)
-{
-  if (aDisplay->mOverflow == NS_STYLE_OVERFLOW_VISIBLE)
-    return PR_FALSE;
-
-  if (aDisplay->mOverflow == NS_STYLE_OVERFLOW_CLIP)
-    aPresContext->SetViewportOverflowOverride(NS_STYLE_OVERFLOW_HIDDEN);
-  else
-    aPresContext->SetViewportOverflowOverride(aDisplay->mOverflow);
-  return PR_TRUE;
-}
-
 /**
  * This checks the root element and the HTML BODY, if any, for an "overflow" property
  * that should be applied to the viewport. If one is found then we return the
@@ -3379,12 +3366,14 @@ nsCSSFrameConstructor::PropagateScrollToViewport(nsPresContext* aPresContext)
 
   // Check the style on the document root element
   nsStyleSet *styleSet = aPresContext->PresShell()->StyleSet();
-  nsRefPtr<nsStyleContext> rootStyle;
-  rootStyle = styleSet->ResolveStyleFor(docElement, nsnull);
-  if (!rootStyle) {
+  nsRefPtr<nsStyleContext> styleContext;
+  styleContext = styleSet->ResolveStyleFor(docElement, nsnull);
+  if (!styleContext) {
     return nsnull;
   }
-  if (CheckOverflow(aPresContext, rootStyle->GetStyleDisplay())) {
+  const nsStyleDisplay* display = styleContext->GetStyleDisplay();
+  if (display->mOverflow != NS_STYLE_OVERFLOW_VISIBLE) {
+    aPresContext->SetViewportOverflowOverride(display->mOverflow);
     // tell caller we stole the overflow style from the root element
     return docElement;
   }
@@ -3410,13 +3399,15 @@ nsCSSFrameConstructor::PropagateScrollToViewport(nsPresContext* aPresContext)
     return nsnull;
   }
 
-  nsRefPtr<nsStyleContext> bodyStyle;
-  bodyStyle = styleSet->ResolveStyleFor(bodyElement, rootStyle);
-  if (!bodyStyle) {
+  nsRefPtr<nsStyleContext> bodyContext;
+  bodyContext = styleSet->ResolveStyleFor(bodyElement, styleContext);
+  if (!bodyContext) {
     return nsnull;
   }
 
-  if (CheckOverflow(aPresContext, bodyStyle->GetStyleDisplay())) {
+  display = bodyContext->GetStyleDisplay();
+  if (display->mOverflow != NS_STYLE_OVERFLOW_VISIBLE) {
+    aPresContext->SetViewportOverflowOverride(display->mOverflow);
     // tell caller we stole the overflow style from the body element
     return bodyElement;
   }
@@ -3530,7 +3521,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 
   // The document root should not be scrollable in any paginated context,
   // even in print preview.
-  PRBool isScrollable = display->IsScrollableOverflow()
+  PRBool isScrollable = IsScrollable(aPresContext, display)
     && !aPresContext->IsPaginated()
     && !propagatedScrollToViewport;
 
@@ -3805,6 +3796,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   // for print-preview, but not when printing), then create a scroll frame that
   // will act as the scrolling mechanism for the viewport. 
   // XXX Do we even need a viewport when printing to a printer?
+  PRBool isScrollable = PR_TRUE;
 
   //isScrollable = PR_FALSE;
 
@@ -3817,6 +3809,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   //  2) NS_STYLE_OVERFLOW_AUTO = scrollbars appear if needed
   //  3) NS_STYLE_OVERFLOW_SCROLL = scrollbars always
   // Only need to create a scroll frame/view for cases 2 and 3.
+  // Currently OVERFLOW_SCROLL isn't honored, as
+  // scrollportview::SetScrollPref is not implemented.
 
   PRBool isHTML = aDocElement->IsContentOfType(nsIContent::eHTML);
   PRBool isXUL = PR_FALSE;
@@ -3826,13 +3820,28 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   }
 
   // Never create scrollbars for XUL documents
-  PRBool isScrollable = !isXUL;
-
-  // Never create scrollbars for frameset documents.
-  if (isHTML) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-    if (htmlDoc && htmlDoc->GetIsFrameset())
-      isScrollable = PR_FALSE;
+#ifdef MOZ_XUL
+  if (isXUL) {
+    isScrollable = PR_FALSE;
+  } else 
+#endif
+  {
+    nsresult rv;
+    if (aPresContext) {
+      nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+      if (container) {
+        nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(container, &rv);
+        if (NS_SUCCEEDED(rv) && scrollableContainer) {
+          PRInt32 scrolling = -1;
+          // XXX We should get prefs for X and Y and deal with these independently!
+          scrollableContainer->GetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,&scrolling);
+          if (NS_STYLE_OVERFLOW_HIDDEN == scrolling) {
+            isScrollable = PR_FALSE;
+          }
+          // XXX NS_STYLE_OVERFLOW_SCROLL should create 'always on' scrollbars
+        }
+      }
+    }
   }
 
   if (isPaginated) {
@@ -5471,7 +5480,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         }
 
         // Boxes can scroll.
-        if (display->IsScrollableOverflow()) {
+        if (IsScrollable(aPresContext, display)) {
 
           nsIFrame* scrollPort = nsnull;
           if (listboxScrollPort) {
@@ -5571,7 +5580,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 #endif
     }
 
-    if (mayBeScrollable && display->IsScrollableOverflow()) {
+    if (mayBeScrollable && IsScrollable(aPresContext, display)) {
       // set the top to be the newly created scrollframe
       BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
                        aStyleContext, newFrame, aParentFrame, nsnull,
@@ -6079,7 +6088,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
   // XXX Ignore tables for the time being
   if (aDisplay->IsBlockLevel() &&
       aDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE &&
-      aDisplay->IsScrollableOverflow() &&
+      IsScrollable(aPresContext, aDisplay) &&
       !propagatedScrollToViewport) {
 
     if (!pseudoParent && !aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
@@ -6484,6 +6493,25 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
   return rv;
 }
+
+
+PRBool
+nsCSSFrameConstructor::IsScrollable(nsPresContext*       aPresContext,
+                                    const nsStyleDisplay* aDisplay)
+{
+  // For the time being it's scrollable if the overflow property is auto or
+  // scroll, regardless of whether the width or height is fixed in size
+  switch (aDisplay->mOverflow) {
+    case NS_STYLE_OVERFLOW_SCROLL:
+    case NS_STYLE_OVERFLOW_AUTO:
+    case NS_STYLE_OVERFLOW_HIDDEN:
+    case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
+    case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 
 nsresult 
 nsCSSFrameConstructor::InitAndRestoreFrame(nsPresContext*          aPresContext,

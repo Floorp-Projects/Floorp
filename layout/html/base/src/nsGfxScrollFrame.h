@@ -63,6 +63,8 @@ public:
   typedef nsIScrollableFrame::ScrollbarStyles ScrollbarStyles;
   ScrollbarStyles GetScrollbarStylesFromFrame() const;
 
+  nsIScrollableFrame::nsScrollPref GetScrollPreference() const;
+
   // If a child frame was added or removed on the scrollframe,
   // reload our child frame list.
   // We need this if a scrollbar frame is recreated.
@@ -244,11 +246,17 @@ public:
   NS_IMETHOD GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const;
   NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
+  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
+                                    PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible);
+
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
 
   NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
                                     nsIContent* aChild,
                                     PRInt32 aModType);
+
+  NS_IMETHOD  GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();
@@ -369,11 +377,17 @@ public:
   NS_IMETHOD GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const;
   NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
+  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
+                                    PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible);
+
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
 
   NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
                                     nsIContent* aChild,
                                     PRInt32 aModType);
+
+  NS_IMETHOD  GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();
