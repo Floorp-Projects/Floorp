@@ -37,6 +37,7 @@
 
 class nsIContent;
 class nsIDocument;
+class nsIDOMNodeList;
 class nsIScriptContext;
 class nsIXBLPrototypeBinding;
 
@@ -100,6 +101,9 @@ public:
   NS_IMETHOD MarkedForDeath(PRBool* aResult)=0;
 
   NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult)=0;
+
+  NS_IMETHOD GetAnonymousNodes(nsIDOMNodeList** aResult, 
+                               nsIContent** aParent, PRBool* aMultipleInsertionPoints)=0;
 
   NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult)=0;
 };

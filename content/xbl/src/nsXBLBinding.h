@@ -96,6 +96,8 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult);
 
+  NS_IMETHOD GetAnonymousNodes(nsIDOMNodeList** aResult, nsIContent** aParent, PRBool* aMultipleInsertionPoints);
+
   NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult);
 
 public:
