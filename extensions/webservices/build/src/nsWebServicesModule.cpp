@@ -506,12 +506,12 @@ static const nsModuleComponentInfo gComponents[] = {
 };
 
 void PR_CALLBACK
-nsWebServiceModuleDestructor(nsIModule* self)
+nsWebServicesModuleDestructor(nsIModule* self)
 {
   nsSchemaAtoms::DestroySchemaAtoms();
   nsWSDLAtoms::DestroyWSDLAtoms();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsWebServiceModule, gComponents, 
-                              nsWebServiceModuleDestructor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsWebServicesModule, gComponents, 
+                              nsWebServicesModuleDestructor)
 
