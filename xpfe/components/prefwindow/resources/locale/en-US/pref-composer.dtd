@@ -17,7 +17,7 @@
 <!ENTITY  pageColorHeader "Default Page Colors">
 <!ENTITY  img "Images:">
 <!ENTITY  UseNavigatorColor.label "Use Navigator's Color Settings">
-<!ENTITY  UseCustomColors.label "Use Custom Colors">
+<!ENTITY  UseCustomColors.label "Use Custom Colors:">
 <!ENTITY  NormalText.label "Normal Text">
 <!ENTITY  LinkText.label "Link Text">
 <!ENTITY  ActiveLinkText.label "Active Link Text">

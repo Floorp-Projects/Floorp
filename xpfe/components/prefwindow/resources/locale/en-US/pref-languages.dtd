@@ -3,7 +3,7 @@
 <!--LOCALIZATION NOTE : FILE 'Languages' preferences dialog -->
 <!ENTITY  window.title "Languages">
 <!ENTITY  lHeader "Languages">
-<!ENTITY  rHeader "Preferred order of languages">
+<!ENTITY  rHeader "Languages in which webpages are displayed">
 <!ENTITY  prefLangDecript "Choose in order of preference the language(s) 
 			in which you prefer to view web pages. Web pages are sometimes 
 			available in several languages.  Navigator presents pages in 
