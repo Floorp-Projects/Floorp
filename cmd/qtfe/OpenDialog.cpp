@@ -1,4 +1,4 @@
-/* $Id: OpenDialog.cpp,v 1.1 1998/09/25 18:01:26 ramiro%netscape.com Exp $
+/* $Id: OpenDialog.cpp,v 1.2 1998/09/25 23:30:38 cls%seawood.org Exp $
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -119,15 +119,15 @@ void OpenDialog::chooseFile()
 	edit->setText( file );
 }
 
-#ifdef EDITOR
 void OpenDialog::openInComposer()
 {
+#ifdef EDITOR
     if( !strlen( edit->text() ) )
 	return;
 
     context->editorEdit( 0, edit->text() );
-}
 #endif
+}
 
 void OpenDialog::openInNavigator()
 {

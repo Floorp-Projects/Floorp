@@ -1,4 +1,4 @@
-/* $Id: OpenDialog.h,v 1.1 1998/09/25 18:01:26 ramiro%netscape.com Exp $
+/* $Id: OpenDialog.h,v 1.2 1998/09/25 23:30:38 cls%seawood.org Exp $
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -34,9 +34,7 @@ public:
 
 private slots:
     void chooseFile();
-#ifdef EDITOR
     void openInComposer();
-#endif
     void openInNavigator();
     void clear();
 
