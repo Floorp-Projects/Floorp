@@ -94,7 +94,7 @@ private:
 
   void add_row(HT_Resource node);
   void add_row(int node);
-  void delete_row(int row, PRBool deleteChildren);
+  void delete_row(int row);
   void add_column(int index, char *name, uint32 width,
                   void *token, uint32 token_type);
 
