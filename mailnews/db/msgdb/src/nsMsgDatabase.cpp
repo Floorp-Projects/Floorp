@@ -91,7 +91,6 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 
 #define MSG_HASH_SIZE 512
 
@@ -2897,15 +2896,10 @@ nsMsgDatabase::CreateCollationKey(const PRUnichar *sourceString, PRUint8 **resul
 
 nsIMsgHeaderParser *nsMsgDatabase::GetHeaderParser()
 {
-
 	if (!m_HeaderParser)
 	{
-		nsresult rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-													NULL, 
-													NS_GET_IID(nsIMsgHeaderParser), 
-													(void **) &m_HeaderParser);
-		if (NS_FAILED(rv))
-			m_HeaderParser = nsnull;
+    nsCOMPtr <nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
+    NS_IF_ADDREF(m_HeaderParser = parser);
 	}
 	return m_HeaderParser;
 }

@@ -48,8 +48,6 @@
 #include "MoreFiles.h"
 #include "MoreFilesExtras.h"
 
-
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kSmtpServiceCID,		NS_SMTPSERVICE_CID); 
@@ -204,7 +202,7 @@ nsresult nsEudoraMac::FindMailboxes( nsIFileSpec *pRoot, nsISupportsArray **ppAr
 		return( rv);
 	}
 		
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 	if (NS_FAILED( rv))
 		return( rv);
 	
@@ -1089,7 +1087,7 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 		return( rv);
 	}
 		
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 	if (NS_FAILED( rv))
 		return( rv);
 	

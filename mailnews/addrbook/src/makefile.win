@@ -45,6 +45,8 @@ REQUIRES	= xpcom \
 		  content \
 		  mozldap \
 		  intl \
+		  layout_xul \
+		  import \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
@@ -56,8 +58,6 @@ EXPORTS=								\
 			nsAddressBook.h				\
 			nsAddrBookSession.h			\
 			nsAbRDFDataSource.h			\
-			nsAbMDBRDFResource.h			\
-			nsCardDataSource.h			\
 			nsDirectoryDataSource.h		\
 			nsAbCardProperty.h			\
 			nsDirPrefs.h				\
@@ -80,6 +80,7 @@ EXPORTS=								\
 			nsAbDirectoryQuery.h    \
 			nsAbDirectoryQueryProxy.h    \
 			nsAbDirSearchListener.h    \
+			nsAbView.h    \
 !if !defined(DISABLE_LDAP)
 			nsAbLDAPDirectoryQuery.h \
 			nsAbLDAPDirectory.h \
@@ -100,8 +101,6 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAddressBook.obj				\
     .\$(OBJDIR)\nsAddrBookSession.obj			\
     .\$(OBJDIR)\nsAbRDFDataSource.obj			\
-    .\$(OBJDIR)\nsAbMDBRDFResource.obj				\
-    .\$(OBJDIR)\nsCardDataSource.obj			\
     .\$(OBJDIR)\nsDirectoryDataSource.obj		\
     .\$(OBJDIR)\nsAbCardProperty.obj			\
     .\$(OBJDIR)\nsDirPrefs.obj					\
@@ -126,6 +125,7 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAbDirectoryQuery.obj    \
     .\$(OBJDIR)\nsAbDirectoryQueryProxy.obj    \
     .\$(OBJDIR)\nsAbDirSearchListener.obj    \
+    .\$(OBJDIR)\nsAbView.obj    \
 !if !defined(DISABLE_LDAP)
     .\$(OBJDIR)\nsAbLDAPDirectory.obj \
     .\$(OBJDIR)\nsAbLDAPDirFactory.obj	\

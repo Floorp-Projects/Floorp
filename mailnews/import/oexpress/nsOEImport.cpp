@@ -71,11 +71,7 @@
 
 #include "OEDebugLog.h"
 
-
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
-
-
 
 class ImportOEMailImpl : public nsIImportMail
 {
@@ -260,7 +256,7 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 		nsIImportGeneric *pGeneric = nsnull;
 		rv = ImportOEMailImpl::Create( &pMail);
 		if (NS_SUCCEEDED( rv)) {
-			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericMail( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -283,7 +279,7 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 		nsIImportGeneric *		pGeneric = nsnull;
 		rv = ImportOEAddressImpl::Create( &pAddress);
 		if (NS_SUCCEEDED( rv)) {
-			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericAddressBooks( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -599,7 +595,7 @@ NS_IMETHODIMP ImportOEAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISu
 	
 	if (m_pWab->Loaded()) {
 		// create a new nsIImportABDescriptor and add it to the array
-		nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+		nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 		if (NS_SUCCEEDED( rv)) {
 			rv = impSvc->CreateNewABDescriptor( &pID);
 			if (NS_SUCCEEDED( rv)) {
@@ -654,7 +650,8 @@ NS_IMETHODIMP ImportOEAddressImpl::ImportAddressBook(	nsIImportABDescriptor *sou
     m_pWab->IterateWABContents( pIter, &m_doneSoFar);
     delete pIter;
     
-	return( NS_OK);
+  nsresult rv = destination->Commit(nsAddrDBCommitType::kLargeCommit);
+	return rv;
 }
 
 	

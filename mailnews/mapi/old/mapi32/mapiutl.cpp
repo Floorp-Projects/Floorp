@@ -445,7 +445,7 @@ LPSTR   endTag = "/HTML>";
 DWORD   i;
 DWORD   realLen = 0;
 DWORD   startPos = 0;
-DWORD   len = strlen(noteText);;
+DWORD   len = strlen(noteText);
 
   // create a new buffer...
   newBuf = (char *) malloc((size_t)(len + totalCR));

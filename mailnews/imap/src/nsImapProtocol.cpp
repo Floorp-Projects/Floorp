@@ -6161,7 +6161,7 @@ void nsImapProtocol::Search(const char * searchCriteria,
      protocolString.Append(" uid");
   protocolString.Append(" ");
   protocolString.Append(searchCriteria);
-  protocolString.Append(CRLF);;
+  protocolString.Append(CRLF);
 
   nsresult rv = SendData(protocolString.get());
   if (NS_SUCCEEDED(rv))
@@ -6474,7 +6474,7 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
         flagString .Append("$MDNSent ");  // if supported
 
     // replace the final space with ')'
-    flagString.SetCharAt(')',flagString.Length() - 1);;
+    flagString.SetCharAt(')',flagString.Length() - 1);
     
     Store(messageIdsString, flagString.get(), idsAreUids);
 }

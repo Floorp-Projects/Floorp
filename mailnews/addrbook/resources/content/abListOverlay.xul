@@ -29,8 +29,9 @@ Rights Reserved.
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
   </stringbundleset>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abMailListDialog.js"/>
-
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
 
 <vbox id="editlist">
 

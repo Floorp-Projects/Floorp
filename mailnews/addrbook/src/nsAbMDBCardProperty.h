@@ -53,30 +53,17 @@ public:
 	nsAbMDBCardProperty(void);
 	virtual ~nsAbMDBCardProperty();
 
-	// nsIAbCard methods
-	NS_IMETHODIMP GetPrintCardUrl(char * *aPrintCardUrl);
-	NS_IMETHODIMP EditCardToDatabase(const char *uri);
+	NS_IMETHOD EditCardToDatabase(const char *uri);
+  NS_IMETHOD Equals(nsIAbCard *card, PRBool *result);
 
 protected:
 	nsresult GetCardDatabase(const char *uri);
 
-	PRUint32 m_Key;
+	PRUint32 m_key;
 	PRUint32 m_dbTableID;
 	PRUint32 m_dbRowID;
 
 	nsCOMPtr<nsIAddrDatabase> mCardDatabase;  
-
-	nsresult RemoveAnonymousList(nsVoidArray* pArray);
-	nsresult SetAnonymousAttribute(nsVoidArray** pAttrAray, 
-					nsVoidArray** pValueArray, void *attrname, void *value);
-
-	nsVoidArray* m_pAnonymousStrAttributes;
-	nsVoidArray* m_pAnonymousStrValues;
-	nsVoidArray* m_pAnonymousIntAttributes;
-	nsVoidArray* m_pAnonymousIntValues;
-	nsVoidArray* m_pAnonymousBoolAttributes;
-	nsVoidArray* m_pAnonymousBoolValues;
-
 };
 
 #endif // nsAbMDBCardProperty_h__

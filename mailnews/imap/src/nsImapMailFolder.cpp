@@ -2014,7 +2014,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     PRUint32 i, folderCount = 0;
     nsresult rv;
     // "this" is the folder we're deleting from
-    PRBool deleteNoTrash = TrashOrDescendentOfTrash(this);;
+    PRBool deleteNoTrash = TrashOrDescendentOfTrash(this);
     PRBool confirmed = PR_FALSE;
 
     nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
@@ -2775,7 +2775,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
         {
           // set value to trash folder
           nsCOMPtr <nsIMsgFolder> mailTrash;
-          rv = GetTrashFolder(getter_AddRefs(mailTrash));;
+          rv = GetTrashFolder(getter_AddRefs(mailTrash));
           if (NS_SUCCEEDED(rv) && mailTrash)
             rv = mailTrash->GetURI(getter_Copies(actionTargetFolderUri));
 

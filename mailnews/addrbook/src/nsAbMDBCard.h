@@ -45,18 +45,10 @@
 #define nsAbMDBCard_h__
 
 #include "nsAbMDBCardProperty.h"
-#include "nsAbMDBRDFResource.h"
-#include "nsISupportsArray.h"
-#include "nsVoidArray.h"
 #include "nsCOMPtr.h"
-#include "nsIAddrDBListener.h"
 #include "nsIAddrDatabase.h"
 
- /* 
-  * Address Book Directory
-  */ 
-
-class nsAbMDBCard: public nsAbMDBRDFResource, public nsAbMDBCardProperty
+class nsAbMDBCard: public nsAbMDBCardProperty
 {
 public: 
 
@@ -65,17 +57,10 @@ public:
 	nsAbMDBCard(void);
 	virtual ~nsAbMDBCard(void);
 
-	// nsIAddrDBListener methods:
-	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
-	
 protected:
 
-	nsresult NotifyPropertyChanged(const char *property, PRUnichar* oldValue, PRUnichar* newValue);
-	nsresult AddSubNode(nsAutoString name, nsIAbCard **childDir);
-
-protected:
+	nsresult NotifyPropertyChanged(const char *property, const PRUnichar* oldValue, const PRUnichar* newValue);
 	 
-	nsVoidArray *mListeners;
 };
 
 #endif

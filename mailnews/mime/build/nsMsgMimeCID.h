@@ -38,9 +38,6 @@
 #ifndef nsMessageMimeCID_h__
 #define nsMessageMimeCID_h__
 
-#define NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID \
-  "@mozilla.org/messenger/headerparser;1"
-
 #define NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID \
 	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822&to=application/vnd.mozilla.xul+xml"
 
@@ -63,5 +60,10 @@
 #define NS_MIME_OBJECT_CLASS_ACCESS_CID   \
         { 0x403b0540, 0xb7c3, 0x11d2,         \
         { 0xb3, 0x5e, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } }
+
+// {932C53A5-F398-11d2-82B7-444553540002}
+#define NS_MSGHEADERPARSER_CID \
+        { 0x932c53a5, 0xf398, 0x11d2, \
+        { 0x82, 0xb7, 0x44, 0x45, 0x53, 0x54, 0x0, 0x2 } }
 	
 #endif // nsMessageMimeCID_h__

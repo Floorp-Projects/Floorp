@@ -61,7 +61,6 @@
 #include "nsMsgSimulateError.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
-static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 
@@ -1322,7 +1321,7 @@ mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_p)
 
   if (addr_p) {
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(kMsgHeaderParserCID, &rv);
+    nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       char *n;
       pHeader->ReformatHeaderAddresses(nsnull, string, &n);
@@ -1789,7 +1788,7 @@ GenerateFileNameFromURI(nsIURI *aURL)
 {
   nsresult    rv; 
   nsXPIDLCString file;
-  nsXPIDLCString spec;;
+  nsXPIDLCString spec;
   char        *returnString;
   char        *cp = nsnull;
   char        *cp1 = nsnull;

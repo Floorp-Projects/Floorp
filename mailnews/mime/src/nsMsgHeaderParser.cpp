@@ -278,18 +278,15 @@ nsresult nsMsgHeaderParser::RemoveDuplicateAddresses (const char *charset, const
 
 nsresult nsMsgHeaderParser::MakeFullAddress (const char *charset, const char* name, const char* addr, char ** fullAddress)
 {
-	if (fullAddress)
-	{
-#if DEBUG
-    if (addr)
-      (void) NS_ConvertUTF8toUCS2(addr).get(); // asserts if invalid UTF-8
-#endif
+  NS_ENSURE_ARG_POINTER(fullAddress);
 
-		*fullAddress = msg_make_full_address(name, addr);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
+#if DEBUG
+  if (addr)
+    (void) NS_ConvertUTF8toUCS2(addr).get(); // asserts if invalid UTF-8
+#endif
+  
+  *fullAddress = msg_make_full_address(name, addr);
+  return NS_OK;
 }
 
 nsresult nsMsgHeaderParser::UnquotePhraseOrAddr (const char *charset, const char *line, char** lineout)

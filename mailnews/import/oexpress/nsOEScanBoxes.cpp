@@ -52,9 +52,7 @@
 
 */
 
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
-
 
 nsOEScanBoxes::nsOEScanBoxes()
 {
@@ -77,7 +75,7 @@ void nsOEScanBoxes::ConvertToUnicode(const char *pStr, nsString &dist)
 	nsresult rv = NS_OK;
 
 	if (!mService)
-		mService = do_GetService(kImportServiceCID);
+		mService = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
 
 	if (mService)
 		rv = mService->SystemStringToUnicode(pStr, dist);
@@ -709,7 +707,7 @@ void nsOEScanBoxes::BuildMailboxList( MailboxEntry *pBox, nsIFileSpec * root, PR
 	nsISupports *					pInterface;
 	PRUint32						size;
 	
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 	if (NS_FAILED( rv))
 		return;
 	

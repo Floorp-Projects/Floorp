@@ -49,8 +49,6 @@
 #include "nsProxiedService.h"
 #include "TextDebugLog.h"
 
-
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kPrefServiceCID,		NS_PREF_CID);
 
@@ -207,7 +205,7 @@ NS_IMETHODIMP nsTextImport::GetImportInterface( const char *pImportType, nsISupp
 		nsIImportGeneric *		pGeneric = nsnull;
 		rv = ImportAddressImpl::Create( &pAddress);
 		if (NS_SUCCEEDED( rv)) {
-			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericAddressBooks( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -341,7 +339,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 		return( rv);
 	}
 		
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Failed to obtain the import service\n");
 		return( rv);
@@ -513,7 +511,7 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 		// to have an .ldi extension so if it doesn't we may need to
 		// copy the file to a temp file with the correct name, then
 		// import it!
-		rv = m_text.ImportLDIF( &addrAbort, name.get(), inFile, pDestination, error);
+		rv = m_text.ImportLDIF( &addrAbort, name.get(), inFile, pDestination, error, &m_bytesImported);
 	}
 	else {	
 		rv = m_text.ImportAddresses( &addrAbort, name.get(), inFile, pDestination, fieldMap, error, &m_bytesImported);
@@ -533,29 +531,23 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 	SetLogs( success, error, pErrorLog, pSuccessLog);
 
 	IMPORT_LOG0( "*** Text address import done\n");
-
-    return( rv);
+  return rv;
 }
 
 
 NS_IMETHODIMP ImportAddressImpl::GetImportProgress(PRUint32 *_retval)
 {
-    NS_PRECONDITION(_retval != nsnull, "null ptr");
-	if (!_retval)
-		return( NS_ERROR_NULL_POINTER);
+  NS_ENSURE_ARG_POINTER(_retval);
 	
 	*_retval = m_bytesImported;
-
-	return( NS_OK);
+	return NS_OK;
 }
 
 
 NS_IMETHODIMP ImportAddressImpl::GetNeedsFieldMap(nsIFileSpec *location, PRBool *_retval)
 {
-    NS_PRECONDITION(_retval != nsnull, "null ptr");
-    NS_PRECONDITION(location != nsnull, "null ptr");
-	if (!location || !_retval)
-		return( NS_ERROR_NULL_POINTER);
+  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(location);
 
 	*_retval = PR_TRUE;
 	PRBool	exists = PR_FALSE;
@@ -634,7 +626,7 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 	PRInt32	bufSz = 10240;
 	char	*pLine = new char[bufSz];
 	
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 
 	rv = nsTextAddress::ReadRecordNumber( m_fileLoc, pLine, bufSz, m_delim, &lineLen, index);
 	if (NS_SUCCEEDED( rv)) {

@@ -114,32 +114,6 @@ NS_IMETHODIMP nsAbBooleanConditionString::SetValue(const PRUnichar * aValue)
     return NS_OK;
 }
 
-NS_METHOD nsAbBooleanConditionString::Create(nsISupports* aOuter, REFNSIID aIID, void* *aResult)
-{
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsAbBooleanConditionString* it = new nsAbBooleanConditionString ();
-    if (it == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_IF_ADDREF(it);
-    nsresult rv = it->QueryInterface(aIID, aResult);
-    NS_RELEASE(it);
-    return rv;
-}
-
-nsresult NS_NewIAbBooleanConditionString(nsIAbBooleanConditionString** aInstancePtrResult)
-{
-    nsresult rv;
-    rv = nsAbBooleanConditionString::Create(NULL, NS_GET_IID(nsIAbBooleanConditionString), NS_REINTERPRET_CAST(void**,aInstancePtrResult));
-    return rv;
-}
-
-
-
-
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbBooleanExpression, nsIAbBooleanExpression)
 
 nsAbBooleanExpression::nsAbBooleanExpression() :
@@ -178,13 +152,10 @@ NS_IMETHODIMP nsAbBooleanExpression::GetExpressions(nsISupportsArray** aExpressi
     if (!mExpressions)
         NS_NewISupportsArray(getter_AddRefs(mExpressions));
 
-    *aExpressions = mExpressions;
-    NS_IF_ADDREF(*aExpressions);
-
+    NS_IF_ADDREF(*aExpressions = mExpressions);
     return NS_OK;
-
-    
 }
+
 NS_IMETHODIMP nsAbBooleanExpression::SetExpressions(nsISupportsArray* aExpressions)
 {
     if (!aExpressions)
@@ -205,27 +176,5 @@ NS_IMETHODIMP nsAbBooleanExpression::AsetExpressions(PRUint32 aExpressionsSize, 
 NS_IMETHODIMP nsAbBooleanExpression::AgetExpressions(PRUint32 *aExpressionsSize, nsISupports ***aExpressionsArray)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsAbBooleanExpression::Create(nsISupports* aOuter, REFNSIID aIID, void* *aResult)
-{
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsAbBooleanExpression* it = new nsAbBooleanExpression();
-    if (it == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_IF_ADDREF(it);
-    nsresult rv = it->QueryInterface(aIID, aResult);
-    NS_RELEASE(it);
-    return rv;
-}
-
-nsresult NS_NewIAbBooleanExpression(nsIAbBooleanExpression** aInstancePtrResult)
-{
-    nsresult rv;
-    rv = nsAbBooleanExpression::Create(NULL, NS_GET_IID(nsIAbBooleanExpression), NS_REINTERPRET_CAST(void**, aInstancePtrResult));
-    return rv;
 }
 

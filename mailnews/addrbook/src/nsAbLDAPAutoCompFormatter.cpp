@@ -144,9 +144,7 @@ nsAbLDAPAutoCompFormatter::Format(nsILDAPMessage *aMsg,
     }
 
     // all done; return the item
-    //
     NS_IF_ADDREF(*aItem = item);
-
     return NS_OK;
 }
 
@@ -343,7 +341,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
         }
     }
 
-    // this is a remote addresbook, set the class name so the autocomplete 
+    // this is a remote addressbook, set the class name so the autocomplete 
     // item can be styled to show this
     //
     rv = item->SetClassName("remote-err");
@@ -355,7 +353,6 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
     // all done; return the item
     //
     NS_IF_ADDREF(*aItem = item);
-
     return NS_OK;
 }
 

@@ -980,7 +980,7 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		for (PRUint32 i = 0; i < count && result == boolContinueLoop; i++)
 		{
 			walkNames = names + namePos;
-			walkAddresses = addresses + addressPos;;
+			walkAddresses = addresses + addressPos;
 			err = MatchRfc2047String (walkNames.get(), charset, charsetOverride, &result);
 			if (boolContinueLoop == result)
 				err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
@@ -1204,11 +1204,10 @@ nsMsgSearchTerm::MatchPriority (nsMsgPriorityValue priorityToMatch,
 nsresult nsMsgSearchTerm::InitHeaderAddressParser()
 {
 	nsresult res = NS_OK;
-	NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
     
 	if (!m_headerAddressParser)
 	{
-    m_headerAddressParser = do_GetService(kMsgHeaderParserCID, &res);
+    m_headerAddressParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
 	}
 	return res;
 }

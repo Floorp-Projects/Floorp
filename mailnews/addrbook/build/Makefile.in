@@ -37,8 +37,9 @@ REQUIRES	= xpcom \
 		  necko \
 		  msgcompose \
 		  mime \
-		  msgbase \
 		  rdf \
+		  msgbase \
+		  msgbaseutil \
 		  rdfutil \
 		  docshell \
 		  appshell \
@@ -47,6 +48,8 @@ REQUIRES	= xpcom \
 		  locale \
 		  mork \
 		  appcomps \
+		  layout \
+		  intl \
 		  $(NULL)
 
 CPPSRCS		= nsAbFactory.cpp
@@ -61,9 +64,17 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+EXTRA_DSO_LIBS = rdfutil_s
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS += msgbsutl
+else
+EXTRA_DSO_LIBS += msgbaseutil
+endif
+
 EXTRA_DSO_LDOPTS = \
 	$(LIBS_DIR) \
-	$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
+	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)

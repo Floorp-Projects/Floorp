@@ -101,7 +101,11 @@ Rights Reserved.
   <command id="toggleSidebar"/>
 </commandset>
 
-<broadcasterset id="mailBroadcasters"/>
+<broadcasterset id="mailBroadcasters">
+  <!-- File Menu -->
+  <broadcaster id="Communicator:WorkMode"/>
+  <!-- Edit Menu -->
+</broadcasterset>
 
 <keyset id="mailKeys">
   <key id="showHideSidebar"/>

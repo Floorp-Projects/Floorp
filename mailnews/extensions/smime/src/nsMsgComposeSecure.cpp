@@ -42,8 +42,6 @@
 // String bundle for smime. Class static.
 nsCOMPtr<nsIStringBundle> nsMsgComposeSecure::mSMIMEBundle = nsnull;
 
-static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
-
 // XXX These strings should go in properties file XXX //
 #define MIME_MULTIPART_SIGNED_BLURB "This is a cryptographically signed message in MIME format."
 #define MIME_SMIME_ENCRYPTED_CONTENT_DESCRIPTION "S/MIME Encrypted Message"
@@ -788,10 +786,10 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   const char *mailbox = 0;
   PRUint32 count = 0;
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
-  nsCOMPtr<nsIMsgHeaderParser>  pHeader;
-  nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                                     NULL, NS_GET_IID(nsIMsgHeaderParser), 
-                                                     (void **) getter_AddRefs(pHeader)); 
+  nsresult res;
+  nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
+  NS_ENSURE_SUCCESS(res,res);
+
   res = NS_NewISupportsArray(getter_AddRefs(mCerts));
   if (NS_FAILED(res)) {
     return res;

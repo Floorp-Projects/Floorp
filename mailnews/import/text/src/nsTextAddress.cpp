@@ -27,7 +27,6 @@
 #include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 #include "TextDebugLog.h"
 
@@ -60,7 +59,7 @@ nsTextAddress::~nsTextAddress()
 void nsTextAddress::ConvertToUnicode( const char *pStr, nsString& str)
 {
 	if (!m_pService) {
-		m_pService = do_GetService( kImportServiceCID);
+		m_pService = do_GetService( NS_IMPORTSERVICE_CONTRACTID);
 	}
 	if (m_pService) {
 		m_pService->SystemStringToUnicode( pStr, str);
@@ -69,7 +68,7 @@ void nsTextAddress::ConvertToUnicode( const char *pStr, nsString& str)
 		str.AssignWithConversion( pStr);
 }
 
-nsresult nsTextAddress::ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors)
+nsresult nsTextAddress::ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors, PRUint32 *pProgress)
 {
 	NS_IF_RELEASE( m_database);
 	NS_IF_RELEASE( m_fieldMap);
@@ -83,11 +82,13 @@ nsresult nsTextAddress::ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIF
 		return( rv);
 	}
 
-	rv = ParseLdifFile( pSrc);
+	rv = ParseLdifFile(pSrc, pProgress);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "parse ldif failed");
 
 	pSrc->CloseStream();
-	
-	return( rv);
+
+  rv = pDb->Commit(nsAddrDBCommitType::kLargeCommit);
+	return rv;
 }
 
 
@@ -142,10 +143,8 @@ nsresult nsTextAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pName,
 		return( NS_ERROR_FAILURE);
 	}
 	
-	
-	// BuildABCards( pDb);
-	
-	return( NS_OK);
+	rv = pDb->Commit(nsAddrDBCommitType::kLargeCommit);
+	return rv;
 }
 
 
@@ -888,7 +887,7 @@ nsresult nsTextAddress::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32& sto
 		return NS_ERROR_FAILURE;
 }
 
-nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc)
+nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
 {
     char buf[1024];
 	char* pBuf = &buf[0];
@@ -919,6 +918,7 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc)
 				savedStartPos = filePos + startPos;
 			}
 			filePos += len;
+      *pProgress = (PRUint32)filePos;
 		}
 	}
 	//last row

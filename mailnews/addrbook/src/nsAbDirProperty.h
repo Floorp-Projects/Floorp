@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -76,7 +77,7 @@ protected:
 	nsString m_ListName;
 	nsString m_ListNickName;
 	nsString m_Description;
-	PRBool   m_bIsMailList;
+	PRBool   m_IsMailList;
 
 	nsCOMPtr<nsISupportsArray> m_AddressList;
 

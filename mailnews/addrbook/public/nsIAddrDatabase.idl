@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -42,15 +43,16 @@
 
 %{C++
 #include "mdb.h"
-#include "nsString.h"
 %}
 
 [ptr] native nsIMdbTableRowCursor(nsIMdbTableRowCursor);
 [ptr] native nsIMdbEnv(nsIMdbEnv);
 [ptr] native nsIMdbRow(nsIMdbRow);
-[ref] native nsStringRef(nsString);
 
 %{C++
+// note, GeneratedName is not a real column
+// if you change any of this, make sure to change 
+// Get / Set CardValue in nsAbCardProperty.cpp
 #define kFirstNameColumn          "FirstName"
 #define kLastNameColumn           "LastName"
 #define kDisplayNameColumn        "DisplayName"
@@ -94,7 +96,17 @@
 #define kMailListNickName         "ListNickName"
 #define kMailListDescription      "ListDescription"
 #define kMailListTotalAddresses   "ListTotalAddresses"
+
 %}
+
+[scriptable, uuid(ca536e0e-1dd1-11b2-951a-e02b86e4f60e)]
+interface nsAddrDBCommitType 
+{
+  const long kSmallCommit = 0;
+  const long kLargeCommit = 1;
+  const long kSessionCommit = 2;
+  const long kCompressCommit = 3;
+};
 
 [scriptable, uuid(A4186D8B-1DD0-11d3-A303-001083003D0C)] 
 interface nsIAddrDatabase : nsIAddrDBAnnouncer {
@@ -105,47 +117,35 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void close(in boolean forceCommit);
 	[noscript] void openMDB(in nsFileSpec dbName, in boolean create);
 	void closeMDB(in boolean commit);
-	void openAnonymousDB(out nsIAddrDatabase pCardDB);
-	void closeAnonymousDB(in boolean forceCommit);
 
 	void commit(in unsigned long commitType);
 	void forceClosed();
 
-	void createNewCardAndAddToDB(in nsIAbCard newCard, in boolean beNotify);
-	void createNewCardAndAddToDBWithKey(in nsIAbCard newCard, in boolean beNotify, out unsigned long key);	
-	void createNewListCardAndAddToDB(in unsigned long listRowID, in nsIAbCard newCard, in boolean beNotify);
-	void createMailListAndAddToDB(in nsIAbDirectory newList, in boolean beNotify);
+	void createNewCardAndAddToDB(in nsIAbCard newCard, in boolean aNotify);
+	void createNewCardAndAddToDBWithKey(in nsIAbCard newCard, in boolean aNotify, out unsigned long key);	
+	void createNewListCardAndAddToDB(in nsIAbDirectory list, in unsigned long listRowID, in nsIAbCard newCard, in boolean aNotify);
+	void createMailListAndAddToDB(in nsIAbDirectory newList, in boolean aNotify);
 	nsIEnumerator enumerateCards(in nsIAbDirectory directory);
 	nsIEnumerator enumerateListAddresses(in nsIAbDirectory directory);
 	void getMailingListsFromDB(in nsIAbDirectory parentDir);
-	void deleteCard(in nsIAbCard card, in boolean beNotify);
-	void editCard(in nsIAbCard card, in boolean beNotify);
+	void deleteCard(in nsIAbCard card, in boolean aNotify);
+	void editCard(in nsIAbCard card, in boolean aNotify);
 	boolean containsCard(in nsIAbCard card);
-	void deleteMailList(in nsIAbDirectory mailList, in boolean beNotify);
-	void editMailList(in nsIAbDirectory mailList, in boolean beNotify);
+	void deleteMailList(in nsIAbDirectory mailList, in boolean aNotify);
+	void editMailList(in nsIAbDirectory mailList, in nsIAbCard listCard, in boolean aNotify);
 	boolean containsMailList(in nsIAbDirectory mailList);
-	void deleteCardFromMailList(in nsIAbDirectory mailList, in nsIAbCard card, in boolean beNotify);
-	wstring getDirectoryName();
+	void deleteCardFromMailList(in nsIAbDirectory mailList, in nsIAbCard card, in boolean aNotify);
+	readonly attribute wstring directoryName;
 
-	nsIAbCard getCardForEmailAddress(in nsIAbDirectory directory, in string emailAddress);
+    /**
+	 * aUTF8Value needs to be in UTF-8
+	 */
+	nsIAbCard getCardFromAttribute(in nsIAbDirectory directory, in string aName, in string aUTF8Value, in boolean caseInsensitive);
 
 	PRBool findMailListbyUnicodeName(in wstring listName);
 
 	void getCardCount(out PRUint32 count);
-	void RemoveExtraCardsInCab(in PRUint32 cardTotal, in PRUint32 cabMax);
-
-	void setAnonymousStringAttribute(in string attrname, in string value);
-	string getAnonymousStringAttribute(in string attrname);
-	void setAnonymousIntAttribute(in string attrname, in unsigned long value);
-	unsigned long getAnonymousIntAttribute(in string attrname);
-	void setAnonymousBoolAttribute(in string attrname, in boolean value);
-	boolean getAnonymousBoolAttribute(in string attrname);
-	void addAnonymousAttributesToDB();
-	void removeAnonymousAttributesFromDB();
-	void editAnonymousAttributesInDB();
-	void addAnonymousAttributesFromCard(in nsIAbCard card);
-	void removeAnonymousAttributesFromCard(in nsIAbCard card);
-	void editAnonymousAttributesFromCard(in nsIAbCard card);
+	void removeExtraCardsInCab(in PRUint32 cardTotal, in PRUint32 cabMax);
 
 	[noscript] readonly attribute nsIMdbRow newRow;
 	[noscript] readonly attribute nsIMdbRow newListRow;
@@ -192,8 +192,12 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addListName(in nsIMdbRow row, in string value);
 	[noscript] void addListNickName(in nsIMdbRow row, in string value);
 	[noscript] void addListDescription(in nsIMdbRow row, in string value);
-	[noscript] void AddListDirNode(in nsIMdbRow listRow);
- 
-	[noscript] void createCollationKey(in wstring sourceStr, in nsStringRef resultStr);
+	[noscript] void addListDirNode(in nsIMdbRow listRow);
 
+    /**
+     * use for getting and setting generic string attributes
+     * like _AimScreenName
+     */
+    void setCardValue(in nsIAbCard card, in string name, in wstring value, in boolean notify);
+    wstring getCardValue(in nsIAbCard card, in string name);
 };

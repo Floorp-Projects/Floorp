@@ -48,19 +48,12 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 
-/* Include all of the interfaces our factory can generate components for */
-
 #include "nsDirectoryDataSource.h"
-#include "nsCardDataSource.h"
-
 #include "nsAbBSDirectory.h"
-
 #include "nsAbMDBDirectory.h"
 #include "nsAbMDBCard.h"
-
 #include "nsAbDirFactoryService.h"
 #include "nsAbMDBDirFactory.h"
-
 #include "nsAddrDatabase.h"
 #include "nsAddressBook.h"
 #include "nsAddrBookSession.h"
@@ -79,6 +72,7 @@
 #include "nsAbDirectoryQuery.h"
 #include "nsAbBooleanExpression.h"
 #include "nsAbDirectoryQueryProxy.h"
+#include "nsAbView.h"
 
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsAbLDAPDirectory.h"
@@ -88,26 +82,20 @@
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddressBook)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbDirectoryDataSource,Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbCardDataSource,Init)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirProperty)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbCardProperty)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbBSDirectory)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBDirectory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBCard)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrDatabase)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrBookSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAutoCompleteSession)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAddressCollecter)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbAddressCollecter,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookUrl)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirFactoryService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBDirFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookProtocolHandler)
 
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookDirectory)
@@ -127,8 +115,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPAutoCompFormatter)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
-
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbView);
 
 static nsModuleComponentInfo components[] =
 {
@@ -149,19 +136,10 @@ static nsModuleComponentInfo components[] =
     NS_ABDIRECTORYDATASOURCE_CONTRACTID,
     nsAbDirectoryDataSourceConstructor },
 
-  { "Address Book Card Datasource",
-    NS_ABCARDDATASOURCE_CID,
-    NS_ABCARDDATASOURCE_CONTRACTID,
-    nsAbCardDataSourceConstructor },
-
-
-
   { "Address Boot Strap Directory",
     NS_ABDIRECTORY_CID,
     NS_ABDIRECTORY_CONTRACTID,
     nsAbBSDirectoryConstructor },
-
-
 
   { "Address MDB Book Directory",
     NS_ABMDBDIRECTORY_CID,
@@ -172,7 +150,6 @@ static nsModuleComponentInfo components[] =
     NS_ABMDBCARD_CID,
     NS_ABMDBCARD_CONTRACTID,
     nsAbMDBCardConstructor },
-
 
   { "Address Database",
     NS_ADDRDATABASE_CID,
@@ -208,7 +185,7 @@ static nsModuleComponentInfo components[] =
   { "The addbook Protocol Handler", 
     NS_ADDBOOK_HANDLER_CID,
     NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "addbook",
-    nsAddbookProtocolHandler::Create },
+    nsAddbookProtocolHandlerConstructor },
 
   { "The directory factory service interface",
     NS_ABDIRFACTORYSERVICE_CID,
@@ -278,7 +255,13 @@ static nsModuleComponentInfo components[] =
   { "The directory query proxy interface",
     NS_ABDIRECTORYQUERYPROXY_CID,
     NS_ABDIRECTORYQUERYPROXY_CONTRACTID,
-    nsAbDirectoryQueryProxyConstructor }
+    nsAbDirectoryQueryProxyConstructor },
+
+  { "addressbook view",
+    NS_ABVIEW_CID,
+    NS_ABVIEW_CONTRACTID,
+    nsAbViewConstructor }
+
 };
 
 

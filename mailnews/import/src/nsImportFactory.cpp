@@ -53,7 +53,7 @@ extern NS_METHOD NS_NewImportService(nsISupports* aOuter, REFNSIID aIID, void **
 static nsModuleComponentInfo components[] = {
 	{	
 		"Import Service Component", NS_IMPORTSERVICE_CID,
-		"@mozilla.org/import/import-service;1", NS_NewImportService
+		NS_IMPORTSERVICE_CONTRACTID, NS_NewImportService
 	},
 	{
 		"Import Mime Encoder", NS_IMPORTMIMEENCODE_CID,

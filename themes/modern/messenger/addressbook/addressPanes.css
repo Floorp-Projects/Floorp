@@ -52,8 +52,6 @@
   list-style-image: url("chrome://messenger/skin/addressbook/icons/list.gif");
 }
 
-/* ::::: result pane icons ::::: */
-
-.ab-results-icon {
-  list-style-image: url("chrome://messenger/skin/addressbook/icons/person.gif");
+.ab-directory-icon[IsRemote="true"] {
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/directory.gif");
 }

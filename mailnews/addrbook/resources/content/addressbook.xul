@@ -17,6 +17,9 @@ The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
+
+Contributor(s):
+  Seth Spitzer <sspitzer@netscape.com>
 --> 
 
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
@@ -25,13 +28,15 @@ Rights Reserved.
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/addressbook/abResultsTreeOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/addressbook/abResultsPaneOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abCardViewOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % abMainWindowDTD SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd" >
 %abMainWindowDTD;
+<!ENTITY % abResultsPaneOverlayDTD SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd" >
+%abResultsPaneOverlayDTD;
 <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
 %messengerDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -53,7 +58,7 @@ Rights Reserved.
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   </stringbundleset>
-  
+
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
@@ -61,7 +66,7 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgPrintEngine.js"/>
 
-<commandset id="tasksCommands">
+<commandset id="addressBook">
   <commandset id="CommandUpdate_AddressBook"
         commandupdater="true"
         events="focus,tree-select"
@@ -71,11 +76,12 @@ Rights Reserved.
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
     <command id="cmd_printSetup" oncommand="goPageSetup()"/>
-    <command id="cmd_PrintCard" oncommand="AbPrintCard()"/>
+    <command id="cmd_printCard" oncommand="AbPrintCard()"/>
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="AbClose()"/>
     <command id="cmd_properties" oncommand="goDoCommand('button_edit');"/>
     <command id='cmd_selectAll'/>
+    <commandset id="tasksCommands"/>
     <command id="toggleSidebar"/>
 </commandset>
 
@@ -95,7 +101,7 @@ Rights Reserved.
 <keyset id="tasksKeys">
   <!-- File Menu -->
   <key id="key_newNavigator"/>
-  <key id="key_PrintCard"  key="&printCardViewCmd.key;" command="cmd_PrintCard"  modifiers="accel"/>
+  <key id="key_printCard"  key="&printCardViewCmd.key;" command="cmd_printCard"  modifiers="accel"/>
   <key id="key_close"/>
   <key id="key_quit"/>
   <!-- Edit Menu -->
@@ -125,9 +131,10 @@ Rights Reserved.
 				<menuitem id="menu_close"/>
 				<menuseparator/>
         <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
+        <menuitem label="&exportCmd.label;" accesskey="&exportCmd.accesskey;" oncommand="AbExport()"/>
 				<menuseparator/>
         <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
-        <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_PrintCard" command="cmd_PrintCard"/>
+        <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
 			</menupopup>
 		</menu>
 		
@@ -155,6 +162,11 @@ Rights Reserved.
 								  accesskey="&showAbToolbarCmd.accesskey;"
 								  oncommand="goToggleToolbar('abToolbar', 'menu_showAbToolbar')"
 								  checked="true" type="checkbox"/>
+            <menuitem id="menu_showCardPane"
+                  label="&showCardPane.label;"
+								  accesskey="&showCardPane.accesskey;"
+								  oncommand="goToggleSplitter('results-splitter', 'menu_showCardPane')"
+								  checked="true" type="checkbox"/>
 						<menuitem id="menu_showTaskbar" type="checkbox"/>
 					</menupopup>
 				</menu>
@@ -179,27 +191,58 @@ Rights Reserved.
 					</menupopup>
 				</menu>
         <menu label="&sortMenu.label;" accesskey="&sortMenu.accesskey;">
-				    <menupopup>
-            <menuitem label="&sortByNameCmd.label;"
-								  id="cmd_SortByName"
-								  disabled="true"
-								  accesskey="&SortByName.accesskey;"
-								  oncommand="top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName')" name="sortas" type="radio" checked="true"/>
-            <menuitem label="&sortByEmailCmd.label;"
-								  id="cmd_SortByEmail"
-								  disabled="true"
-								  accesskey="&SortByEmail.accesskey;"
-								  oncommand="top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail')" name="sortas" type="radio"/>
-            <menuitem label="&sortByWorkPhoneCmd.label;"
+				    <menupopup id="sortMenuPopup" onpopupshowing="InitViewSortByMenu()">
+            <menuitem label="&GeneratedName.label;" 
+								  id="cmd_SortByGeneratedName"
+								  accesskey="&GeneratedName.accesskey;"
+								  oncommand="SortResultPane('GeneratedName');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&PrimaryEmail.label;"
+								  id="cmd_SortByPrimaryEmail"
+								  accesskey="&PrimaryEmail.accesskey;"
+								  oncommand="SortResultPane('PrimaryEmail');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&Company.label;"
+								  id="cmd_SortByCompany"
+								  accesskey="&Company.accesskey;"
+								  oncommand="SortResultPane('Company');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&NickName.label;"
+								  id="cmd_SortByNickName"
+								  accesskey="&NickName.accesskey;"
+								  oncommand="SortResultPane('NickName');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&SecondEmail.label;"
+								  id="cmd_SortBySecondEmail"
+								  accesskey="&SecondEmail.accesskey;"
+								  oncommand="SortResultPane('SecondEmail');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&Department.label;"
+								  id="cmd_SortByDepartment"
+								  accesskey="&Department.accesskey;"
+								  oncommand="SortResultPane('Department');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&JobTitle.label;"
+								  id="cmd_SortByJobTitle"
+								  accesskey="&JobTitle.accesskey;"
+								  oncommand="SortResultPane('JobTitle');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&CellularNumber.label;"
+								  id="cmd_SortByCellularNumber"
+								  accesskey="&CellularNumber.accesskey;"
+								  oncommand="SortResultPane('CellularNumber');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&PagerNumber.label;"
+								  id="cmd_SortByPagerNumber"
+								  accesskey="&PagerNumber.accesskey;"
+								  oncommand="SortResultPane('PagerNumber');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&FaxNumber.label;"
+								  id="cmd_SortByFaxNumber"
+								  accesskey="&FaxNumber.accesskey;"
+								  oncommand="SortResultPane('FaxNumber');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&HomePhone.label;"
+								  id="cmd_SortByHomePhone"
+								  accesskey="&HomePhone.accesskey;"
+								  oncommand="SortResultPane('HomePhone');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&WorkPhone.label;"
 								  id="cmd_SortByWorkPhone"
-								  disabled="true"
-								  accesskey="&SortByWorkPhone.accesskey;"
-								  oncommand="top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone')" name="sortas" type="radio"/>
-						<menuitem label="&sortByOrganizationCmd.label;"
-								  id="cmd_SortByOrganization"
-								  disabled="true"
-								  accesskey="&SortByOrganization.accesskey;"
-								  oncommand="top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company')" name="sortas" type="radio"/>
+								  accesskey="&WorkPhone.accesskey;"
+								  oncommand="SortResultPane('WorkPhone');" name="sortas" type="radio" checked="true"/>
+            <menuseparator/>
+            <menuitem id="sortAscending" type="radio" name="sortdirection" label="&sortAscending.label;" accesskey="&sortAscending.accesskey;" oncommand="AbSortAscending()"/>
+            <menuitem id="sortDescending" type="radio" name="sortdirection" label="&sortDescending.label;" accesskey="&sortDescending.accesskey;" oncommand="AbSortDescending()"/>
 					</menupopup>
 				</menu>
 			</menupopup>
@@ -251,9 +294,9 @@ Rights Reserved.
     
     <vbox flex="100%" style="min-width:100px">
 
-      <!-- results tree -->
+      <!-- results pane -->
       <vbox id="results_box" flex="1">
-        <tree id="resultsTree" flex="1" style="height:0px"/>
+        <outliner id="abResultsOutliner" flex="2" persist="height" />
       </vbox>
       
       <splitter id="results-splitter" collapse="after" persist="state">
@@ -264,12 +307,7 @@ Rights Reserved.
       <hbox id="CardViewOuterBox" flex="1">
         <vbox id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
       </hbox>
-    
-      
-
     </vbox>
-    
- 
   </hbox>
   
   <statusbar id="status-bar" class="chromeclass-status">

@@ -52,14 +52,13 @@ REQUIRES	= xpcom \
 		  msgcompose \
 		  appcomps \
 		  intl \
+		  import \
 		  $(NULL)
 
 CPPSRCS		= \
 		nsAddressBook.cpp \
 		nsAddrBookSession.cpp \
 		nsAbRDFDataSource.cpp \
-		nsAbMDBRDFResource.cpp \
-		nsCardDataSource.cpp \
 		nsDirectoryDataSource.cpp \
 		nsAbCardProperty.cpp \
 		nsDirPrefs.cpp \
@@ -83,14 +82,13 @@ CPPSRCS		= \
                 nsAbBooleanExpression.cpp \
                 nsAbDirectoryRDFResource.cpp \
                 nsAbQueryStringToExpression.cpp \
+                nsAbView.cpp \
 		$(NULL)
 
 EXPORTS		= \
 		nsAddressBook.h \
 		nsAddrBookSession.h \
 		nsAbRDFDataSource.h \
-		nsAbMDBRDFResource.h \
-		nsCardDataSource.h \
 		nsDirectoryDataSource.h \
 		nsAbCardProperty.h \
 		nsDirPrefs.h \
@@ -112,6 +110,7 @@ EXPORTS		= \
                 nsAbDirSearchListener.h \
 		nsAbBooleanExpression.h \
                 nsAbDirectoryRDFResource.h \
+                nsAbView.h \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

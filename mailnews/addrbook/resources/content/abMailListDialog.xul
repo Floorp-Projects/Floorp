@@ -21,7 +21,6 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abListOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
@@ -31,16 +30,17 @@ Rights Reserved.
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     title="&mailListWindow.title;"
     ondialogaccept="return MailListOKButton();"
-    onload="OnLoadMailList()"
-    ondragover="return DragOverTree(event);"
-    ondragdrop="return DropOnAddressListTree(event);">
+    onload="OnLoadNewMailList()"
+    ondragover="DragOverAddressListTree(event);"
+    ondragdrop="DropOnAddressListTree(event);">
 
   <stringbundleset id="stringbundleset"/>
 
   <hbox align="center" valign="center">
     <label control="abPopup" value="&addToAddressBook.label;" accesskey="&addToAddressBook.accesskey;"/>
     <menulist id="abPopup">
-      <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory">
+      <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" 
+        datasources="rdf:addressdirectory">
         <template> 
         <rule nc:IsMailList="false">
           <menuitem uri="..."

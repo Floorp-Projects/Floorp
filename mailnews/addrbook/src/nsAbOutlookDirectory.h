@@ -68,11 +68,11 @@ public:
     NS_IMETHOD HasDirectory(nsIAbDirectory *aDirectory, PRBool *aHasDirectory) ;
     NS_IMETHOD DeleteCards(nsISupportsArray *aCardList) ;
     NS_IMETHOD DeleteDirectory(nsIAbDirectory *aDirectory) ;
-    NS_IMETHOD AddCard(nsIAbCard *aData, nsIAbCard **aCard) ;
-    NS_IMETHOD DropCard(nsIAbCard *aData, nsIAbCard **aCard) ;
+  NS_IMETHOD AddCard(nsIAbCard *aData, nsIAbCard **addedCard);
+  NS_IMETHOD DropCard(nsIAbCard *aData, PRBool needToCopyCard);
     NS_IMETHOD AddMailList(nsIAbDirectory *aMailList) ;
-    NS_IMETHOD EditMailListToDatabase(const char *aUri) ;
-    NS_IMETHOD GetTotalCards(PRBool aSubDirectoryCount, PRUint32 *aNbCards) ;
+  NS_IMETHOD EditMailListToDatabase(const char *aUri, nsIAbCard *listCard) ;
+  
     // nsAbDirectoryRDFResource method
     NS_IMETHOD Init(const char *aUri) ;
     // nsIAbDirectoryQuery methods
@@ -113,8 +113,6 @@ protected:
     PRInt32 mSearchContext ;
     // Windows AB type
     PRUint32 mAbWinType ;
-
-private:
 };
 
 #endif // nsAbOutlookDirectory_h___

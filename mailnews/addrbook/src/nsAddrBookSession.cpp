@@ -61,25 +61,32 @@ nsAddrBookSession::~nsAddrBookSession()
 
 // nsIAddrBookSession
 
-NS_IMETHODIMP nsAddrBookSession::AddAddressBookListener(nsIAbListener * listener)
+NS_IMETHODIMP nsAddrBookSession::AddAddressBookListener(nsIAbListener *listener, PRUint32 notifyFlags)
 {
   if (!mListeners)
     NS_NewISupportsArray(getter_AddRefs(mListeners));
 
   NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
   mListeners->AppendElement(listener);
+  mListenerNotifyFlags.Add(notifyFlags);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsAddrBookSession::RemoveAddressBookListener(nsIAbListener * listener)
 {
   NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+
+  PRInt32 index;
+  nsresult rv = mListeners->GetIndexOf(listener, &index);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  mListenerNotifyFlags.RemoveAt(index);
+
   mListeners->RemoveElement(listener);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged
-(nsISupports *item, const char *property, const PRUnichar* oldValue, const PRUnichar* newValue)
+NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged(nsISupports *item, const char *property, const PRUnichar* oldValue, const PRUnichar* newValue)
 {
   NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
 
@@ -89,14 +96,14 @@ NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged
   NS_ENSURE_SUCCESS(rv, rv);
   for(i = 0; i < count; i++)
   {
-    nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
-    NS_ASSERTION(listener, "listener is null");
-    if (listener)
-      listener->OnItemPropertyChanged(item, property, oldValue, newValue);
+    if (mListenerNotifyFlags[i] & nsIAbListener::changed) {
+      nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+      NS_ASSERTION(listener, "listener is null");
+      if (listener)
+        listener->OnItemPropertyChanged(item, property, oldValue, newValue);
+    }
   }
-
   return NS_OK;
-
 }
 
 NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemAdded(nsIAbDirectory *directory, nsISupports *item)
@@ -109,10 +116,12 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemAdded(nsIAbDirectory *direct
     NS_ENSURE_SUCCESS(rv, rv);
     for(i = 0; i < count; i++)
     {
-      nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
-      NS_ASSERTION(listener, "listener is null");
-      if (listener)
-        listener->OnItemAdded(directory, item);
+      if (mListenerNotifyFlags[i] & nsIAbListener::added) {
+        nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+        NS_ASSERTION(listener, "listener is null");
+        if (listener)
+          listener->OnItemAdded(directory, item);
+      }
     }
   }
   return NS_OK;
@@ -129,15 +138,38 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemDeleted(nsIAbDirectory *dire
     NS_ENSURE_SUCCESS(rv, rv);
     for(i = 0; i < count; i++)
     {
-      nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
-      NS_ASSERTION(listener, "listener is null");
-      if (listener)
-        listener->OnItemRemoved(directory, item);
+      if (mListenerNotifyFlags[i] & nsIAbListener::directoryItemRemoved) {
+        nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+        NS_ASSERTION(listener, "listener is null");
+        if (listener)
+          listener->OnItemRemoved(directory, item);
+      }
     }
   }
   return NS_OK;
-
 }
+
+NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryDeleted(nsIAbDirectory *directory, nsISupports *item)
+{
+  if (mListeners)
+  {
+    PRUint32 count = 0;
+    PRUint32 i;
+    nsresult rv = mListeners->Count(&count);
+    NS_ENSURE_SUCCESS(rv, rv);
+    for(i = 0; i < count; i++)
+    {
+      if (mListenerNotifyFlags[i] & nsIAbListener::directoryRemoved) {
+        nsCOMPtr<nsIAbListener> listener = getter_AddRefs(NS_STATIC_CAST(nsIAbListener *,mListeners->ElementAt(i)));
+        NS_ASSERTION(listener, "listener is null");
+        if (listener)
+          listener->OnItemRemoved(directory, item);
+      }
+    }
+  }
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
 {
@@ -159,16 +191,64 @@ NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
   return rv;
 }
 
-// used to live in the msg view navigation service
-NS_IMETHODIMP nsAddrBookSession::EnsureDocumentIsLoaded(nsIDOMXULDocument *xulDocument)
+#define kDisplayName 0
+#define kLastFirst   1
+#define kFirstLast   2
+
+NS_IMETHODIMP nsAddrBookSession::GenerateNameFromCard(nsIAbCard *card, PRInt32 generateFormat, PRUnichar **aName)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
+	
+  if (generateFormat == kDisplayName) {
+    rv = card->GetDisplayName(aName);
+  }
+  else  {
+    nsXPIDLString firstName;
+    nsXPIDLString lastName;
+    
+    rv = card->GetFirstName(getter_Copies(firstName));
+    NS_ENSURE_SUCCESS(rv, rv);       
 
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(xulDocument, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
+    rv = card->GetLastName(getter_Copies(lastName));
+    NS_ENSURE_SUCCESS(rv,rv);
 
-  if (!document) return NS_ERROR_FAILURE;
-  rv = document->FlushPendingNotifications();
+    if (!lastName.IsEmpty() && !firstName.IsEmpty()) {
+      if (!mBundle) {       
+        nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
+        NS_ENSURE_SUCCESS(rv,rv);
+        
+        rv = stringBundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(mBundle));
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
+
+      nsXPIDLString generatedName;
+
+      if (generateFormat == kLastFirst) {
+        const PRUnichar *stringParams[2] = {lastName.get(), firstName.get()};
+        
+        rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("lastFirstFormat").get(), stringParams, 2, 
+          getter_Copies(generatedName));
+      }
+      else {
+        const PRUnichar *stringParams[2] = {firstName.get(), lastName.get()};
+        
+        rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("firstLastFormat").get(), stringParams, 2, 
+          getter_Copies(generatedName));
+        
+      }
+      
   NS_ENSURE_SUCCESS(rv,rv); 
+      *aName = ToNewUnicode(generatedName);
+    }
+    else {
+      if (lastName.Length())
+        *aName = ToNewUnicode(lastName);
+      else if (firstName.Length())
+        *aName = ToNewUnicode(firstName);
+      else
+        *aName = ToNewUnicode(NS_LITERAL_STRING(""));
+    }
+  }
+
   return NS_OK;
 }

@@ -90,8 +90,6 @@
 
 static PRLogModuleInfo *SMTPLogModule = nsnull;
 
-static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
-
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
  *
@@ -579,7 +577,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	else
 	{
 		/* else send the MAIL FROM: command */
-		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
     char *fullAddress = nsnull;
 		 if (parser) {
 			 // pass nsnull for the name, since we just want the email.
@@ -1301,7 +1299,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 			*/
 
 			nsXPIDLCString addresses;
-			nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+			nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 
 			m_runningURL->GetRecipients(getter_Copies(addresses));
 

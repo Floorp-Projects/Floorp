@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -52,34 +53,24 @@
 #include "nsReadableUtils.h"
 #include "prmem.h"
   
-  // For the new pref API's
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
-static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-
 NS_IMPL_ISUPPORTS1(nsAbAddressCollecter, nsIAbAddressCollecter)
 
-static const char *PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT = "mail.collect_email_address_enable_size_limit";
-static const char *PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT = "mail.collect_email_address_size_limit";
+#define PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT "mail.collect_email_address_enable_size_limit"
+#define PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT "mail.collect_email_address_size_limit"
 
 nsAbAddressCollecter::nsAbAddressCollecter()
 {
 	NS_INIT_REFCNT();
-	maxCABsize = -1;
-	sizeLimitEnabled = -1;
 
-	//set up the pref callbacks:
-	setupPrefs();
+	m_maxCABsize = -1;
+	m_sizeLimitEnabled = PR_FALSE;
 }
 
 nsAbAddressCollecter::~nsAbAddressCollecter()
 {
 	if (m_historyAB)
 	{
-		m_historyAB->Commit(kSessionCommit);
+		m_historyAB->Commit(nsAddrDBCommitType::kSessionCommit);
 		m_historyAB->Close(PR_FALSE);
 		m_historyAB = nsnull;
 	}
@@ -106,24 +97,8 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 {
 	nsresult rv;
 
-
-	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
+  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
   NS_ENSURE_SUCCESS(rv, rv);
-
-	if(sizeLimitEnabled == -1){
-		rv = pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &sizeLimitEnabled);
-		if (NS_FAILED(rv))
-			return rv;
-	}
-
-	//maxCABsize = 20;
-	if(sizeLimitEnabled && maxCABsize == -1){
-		PRInt32 max = 0;
-    rv = pPref->GetIntPref(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, &max);
-		if (NS_FAILED(rv))
-			return rv;
-		maxCABsize = max;
-	}
 
 	if (!m_historyAB)
 	{
@@ -138,7 +113,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 	char	*addresses;
 
   nsresult res = NS_OK;
-	nsCOMPtr<nsIMsgHeaderParser>  pHeader = do_GetService(kMsgHeaderParserCID, &res);
+	nsCOMPtr<nsIMsgHeaderParser>  pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
 
 	if (NS_FAILED(res)) return res;
 
@@ -159,12 +134,11 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 				nsCOMPtr <nsIAbCard> existingCard;
 				nsCOMPtr <nsIAbCard> cardInstance;
 
-				rv = m_historyAB->GetCardForEmailAddress(m_historyDirectory, curAddress, getter_AddRefs(existingCard));
+				rv = m_historyAB->GetCardFromAttribute(m_historyDirectory, kPriEmailColumn, curAddress, PR_TRUE /* caseInsensitive */, getter_AddRefs(existingCard));
 
 				if (!existingCard)
 				{
-					nsCOMPtr<nsIAbCard> senderCard;
-					rv = nsComponentManager::CreateInstance(kAbCardPropertyCID, nsnull, NS_GET_IID(nsIAbCard), getter_AddRefs(senderCard));
+					nsCOMPtr<nsIAbCard> senderCard = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID, &rv);
 					if (NS_SUCCEEDED(rv) && senderCard)
 					{
 						if (curName && nsCRT::strlen(curName) > 0)
@@ -178,23 +152,29 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 							if (atSignIndex > 0)
 							{
 								senderFromEmail.Truncate(atSignIndex);
-								senderCard->SetDisplayName((PRUnichar*)senderFromEmail.get());
+								senderCard->SetDisplayName(senderFromEmail.get());
 							}
 						}
 						nsAutoString email; email.AssignWithConversion(curAddress);
-						senderCard->SetPrimaryEmail((PRUnichar*)email.get());
-						senderCard->AddCardToDatabase(kCollectedAddressbookUri, getter_AddRefs (cardInstance));
+						senderCard->SetPrimaryEmail(email.get());
+
+						rv = AddCardToCollectedAddressBook(senderCard);
+            NS_ENSURE_SUCCESS(rv,rv);
 					}
 				}
 				else //address is already in the CAB
 				{
-					if(sizeLimitEnabled) 
+					if (m_sizeLimitEnabled) 
 					{
-						//remove card from ab, and
-						m_historyAB->DeleteCard( existingCard, PR_TRUE );
+            // XXX todo
+            // there has to be a better way to do this, without deleting
+            // and adding the card.  perhaps using modified time
+            // this doesn't seem like the best way to do LRU
+						m_historyAB->DeleteCard(existingCard, PR_TRUE /* notify */);
 						SetNamesForCard(existingCard, curName);
 						//append it to the bottom.
-						existingCard->AddCardToDatabase(kCollectedAddressbookUri, getter_AddRefs (cardInstance));
+            rv = AddCardToCollectedAddressBook(existingCard);
+            NS_ENSURE_SUCCESS(rv,rv);
 					}
 					else
 					{
@@ -203,15 +183,15 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 					}
 				}
 
-				if(sizeLimitEnabled) 
+				if (m_sizeLimitEnabled) 
 				{
 					PRUint32 count = 0;
 					rv = m_historyAB->GetCardCount( &count );
 
-					if( count > (PRUint32)maxCABsize )
-						rv = m_historyAB->RemoveExtraCardsInCab(count, maxCABsize);
+					if( count > (PRUint32)m_maxCABsize )
+						rv = m_historyAB->RemoveExtraCardsInCab(count, m_maxCABsize);
 
-				} //if sizeLimitEnabled
+				} //if m_sizeLimitEnabled
 			}
 			curName += strlen(curName) + 1;
 			curAddress += strlen(curAddress) + 1;
@@ -234,7 +214,7 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 	nsFileSpec* dbPath = nsnull;
 
 	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(kAddrBookSessionCID, &rv); 
+	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -243,7 +223,7 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 		(*dbPath) += kCollectedAddressbook;
 
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-		         do_GetService(kAddressBookDBCID, &rv);
+		         do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
                 {
@@ -256,7 +236,7 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
                 }
 		delete dbPath;
 	}
-	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
+	nsCOMPtr<nsIRDFService> rdfService(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr <nsIRDFResource> resource;
@@ -292,6 +272,7 @@ nsresult nsAbAddressCollecter::IsDomainExcluded(const char *address, nsIPref *pP
 		char *rest = NS_CONST_CAST(char*,(const char*)excludedDomainList);
 		nsCAutoString str;
 
+                // XXX todo, fix this leak
 		token = nsCRT::strtok(rest, ",", &rest);
 		while (token && *token) 
 		{
@@ -317,24 +298,17 @@ nsresult nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char
 {
 	char *firstName = nsnull;
 	char *lastName = nsnull;
-	PRUnichar *unicodeStr = nsnull;
 
+	senderCard->SetDisplayName(NS_ConvertUTF8toUCS2(fullName).get());
 
-	INTL_ConvertToUnicode((const char *)fullName, nsCRT::strlen(fullName), (void**)&unicodeStr);
-	senderCard->SetDisplayName(unicodeStr);
-	PR_Free(unicodeStr);
 	nsresult rv = SplitFullName (fullName, &firstName, &lastName);
 	if (NS_SUCCEEDED(rv))
 	{
-		INTL_ConvertToUnicode((const char *)firstName, nsCRT::strlen(firstName), (void**)&unicodeStr);
-		senderCard->SetFirstName(unicodeStr);
-		PR_Free(unicodeStr);
-        if (lastName) {
-            INTL_ConvertToUnicode((const char *)lastName, nsCRT::strlen(lastName), (void**)&unicodeStr);
-            senderCard->SetLastName(unicodeStr);
-            PR_Free(unicodeStr);
-        }
-	}
+		senderCard->SetFirstName(NS_ConvertUTF8toUCS2(firstName).get());
+	  
+    if (lastName)
+      senderCard->SetLastName(NS_ConvertUTF8toUCS2(lastName).get());
+  }
 	PR_FREEIF(firstName);
 	PR_FREEIF(lastName);
 	return rv;
@@ -374,40 +348,66 @@ nsresult nsAbAddressCollecter::SplitFullName (const char *fullName, char **first
 }
 
 int PR_CALLBACK 
-nsAbAddressCollecter::collectEmailAddressEnableSizeLimitPrefChanged(const char *newpref, void *data){
+nsAbAddressCollecter::collectEmailAddressEnableSizeLimitPrefChanged(const char *newpref, void *data)
+{
 	nsresult rv;
 	nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) data;
-	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
-	if(NS_FAILED(pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &adCol->sizeLimitEnabled))){
-		adCol->sizeLimitEnabled = PR_TRUE;
+	nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+	if(NS_FAILED(pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &adCol->m_sizeLimitEnabled))){
+		adCol->m_sizeLimitEnabled = PR_TRUE;
 	}
-
-	
 	return 0;
 }
 
 int PR_CALLBACK 
-nsAbAddressCollecter::collectEmailAddressSizeLimitPrefChanged(const char *newpref, void *data){
+nsAbAddressCollecter::collectEmailAddressSizeLimitPrefChanged(const char *newpref, void *data)
+{
 	nsresult rv;
-	PRInt32 max = 0;
 	nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) data;
-	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
-	if(NS_FAILED(pPref->GetIntPref(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, &max))){
-		adCol->maxCABsize = 0;
-	} else 
-		adCol->maxCABsize = max;
-
+	nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+	if(NS_FAILED(pPref->GetIntPref(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, &adCol->m_maxCABsize))){
+		adCol->m_maxCABsize = 0;
+	}
 	return 0;
 }
 
-void nsAbAddressCollecter::setupPrefs(void){
+nsresult nsAbAddressCollecter::Init(void)
+{
 	nsresult rv;
-	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
+	nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+	NS_ENSURE_SUCCESS(rv,rv);
+  
+	rv = pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, collectEmailAddressEnableSizeLimitPrefChanged, this);
+	NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, collectEmailAddressSizeLimitPrefChanged, this);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-	if (NS_FAILED(rv)) 
-		return;
+  rv = pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &m_sizeLimitEnabled);
+	NS_ENSURE_SUCCESS(rv,rv);
 
-	pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, collectEmailAddressEnableSizeLimitPrefChanged, this);
-	pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, collectEmailAddressSizeLimitPrefChanged, this);
+  rv = pPref->GetIntPref(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, &m_maxCABsize);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
 
+nsresult nsAbAddressCollecter::AddCardToCollectedAddressBook(nsIAbCard *card)
+{
+  NS_ENSURE_ARG_POINTER(card);
+
+  nsresult rv = NS_OK;
+	nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(kCollectedAddressbookUri, getter_AddRefs(res));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr <nsIAbCard> addedCard;
+	rv = directory->AddCard(card, getter_AddRefs(addedCard));
+  NS_ENSURE_SUCCESS(rv,rv);
+	return rv;
 }

@@ -48,8 +48,6 @@
 #include "nsIFileChannel.h"
 #include "nsReadableUtils.h"
 
-static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
-
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgCompFields, nsIMsgCompFields)
 
@@ -577,7 +575,7 @@ NS_IMETHODIMP nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBo
 	rv = pAddrArray->QueryInterface(NS_GET_IID(nsIMsgRecipientArray), (void **)_retval);
 	if (NS_SUCCEEDED(rv))
 	{
-		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);;
+		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 		if (parser)
 		{
 			char * recipientsStr;
@@ -672,7 +670,7 @@ nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgR
 	
 	if (pAddrsArray || pEmailsArray)
 	{
-		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);;
+		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 		if (parser)
 		{
 			char * recipientsStr;

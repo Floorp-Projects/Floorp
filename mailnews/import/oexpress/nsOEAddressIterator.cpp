@@ -59,7 +59,6 @@
 #include "OEDebugLog.h"
 
 static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 typedef struct {
 	PRInt32		mozField;
@@ -273,7 +272,7 @@ PRBool nsOEAddressIterator::BuildCard( const PRUnichar * pName, nsIMdbRow *newRo
 	nsresult	rv;
 	// Create a field map
 
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 	if (NS_SUCCEEDED( rv)) {
 		nsIImportFieldMap *		pFieldMap = nsnull;
 		rv = impSvc->CreateNewFieldMap( &pFieldMap);

@@ -336,6 +336,10 @@ NS_IMETHODIMP nsAbView::GetRowProperties(PRInt32 index, nsISupportsArray *proper
 
 NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArray *properties)
 {
+  // XXX todo remove once #116341 is fixed
+  if (!colID[0])
+    return NS_OK;
+
   if (mCards.Count() <= row)
     return NS_OK;
 
@@ -448,6 +452,10 @@ nsresult nsAbView::GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnich
 
 NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnichar **_retval)
 {
+  // XXX todo remove once #116341 is fixed
+  if (!colID[0])
+    return NS_OK;
+
   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
   return GetCardValue(card, colID, _retval);
 }
@@ -1034,7 +1042,7 @@ nsresult nsAbView::ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard)
   PRUint32 count;
   PRUint32 i;
 
-  if (!mOutlinerSelection)
+  if (!mOutlinerSelection || !cards)
     return NS_OK;
 
   nsresult rv = mOutlinerSelection->ClearSelection();

@@ -73,19 +73,6 @@
 }
 
 //
-// nsAbCardDataSource
-//
-#define NS_ABCARDDATASOURCE_CONTRACTID \
-  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "addresscard"
-
-#define NS_ABCARDDATASOURCE_CID				\
-{ /* 1920E486-0709-11d3-A2EC-001083003D0C */		\
-    0x1920e486, 0x709, 0x11d3,				\
-    {0xa2, 0xec, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
-}
-
-
-//
 // nsAbBSDirectory
 //
 #define NS_ABDIRECTORY_CONTRACTID \
@@ -114,7 +101,7 @@
 // nsAbMDBCard
 //
 #define NS_ABMDBCARD_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-abmdbcard"
+  "@mozilla.org/addressbook/moz-abmdbcard;1"
 
 #define NS_ABMDBCARD_CID				\
 { /* {f578a5d2-1dd1-11b2-8841-f45cc5e765f8} */		\
@@ -204,7 +191,8 @@
 // addbook URL
 //
 #define NS_ADDBOOKURL_CONTRACTID \
-  "@mozilla.org/addressbook/services/addbookurl;1"
+  "@mozilla.org/addressbook/services/url;1?type=addbook"
+
 #define NS_ADDBOOKURL_CID \
 {	/* ff04c8e6-501e-11d3-a527-0060b0fc0444 */		\
 	0xff04c8e6, 0x501e, 0x11d3,						\
@@ -263,7 +251,7 @@
 // nsAbOutlookCard
 //
 #define NS_ABOUTLOOKCARD_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-aboutlookcard"
+  "@mozilla.org/addressbook/moz-aboutlookcard"
 
 #define NS_ABOUTLOOKCARD_CID                                    \
 { /* {32cf9734-4ee8-4f5d-acfc-71b75eee1819}*/           \
@@ -341,7 +329,7 @@
 // nsAbLDAPCard
 //
 #define NS_ABLDAPCARD_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-abldapcard"
+  "@mozilla.org/addressbook/moz-abldapcard"
 
 #define NS_ABLDAPCARD_CID					\
 { /* {10307B01-EBD6-465F-B972-1630410F70E6}*/			\
@@ -371,5 +359,14 @@
 
 #define NS_ABLDAPAUTOCOMPFORMATTER_CONTRACTID \
  "@mozilla.org/ldap-autocomplete-formatter;1?type=addrbook"
+
+// nsABView
+
+#define NS_ABVIEW_CID \
+{ 0xc5eb5d6a, 0x1dd1, 0x11b2, \
+ { 0xa0, 0x25, 0x94, 0xd1, 0x18, 0x1f, 0xc5, 0x9c }}
+
+#define NS_ABVIEW_CONTRACTID \
+ "@mozilla.org/addressbook/abview;1"
 
 #endif // nsAbBaseCID_h__

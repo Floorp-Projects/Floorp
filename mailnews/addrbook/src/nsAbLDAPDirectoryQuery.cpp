@@ -19,8 +19,11 @@
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
+ * Original Author: 
+ *   Paul Sandoz   <paul.sandoz@sun.com>
+ *
  * Contributor(s):
- * Created by: Paul Sandoz   <paul.sandoz@sun.com> 
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -45,6 +48,7 @@
 
 #include "nsXPIDLString.h"
 #include "nsAutoLock.h"
+#include "nsIProxyObjectManager.h"
 
 class nsAbQueryLDAPMessageListener : public nsILDAPMessageListener
 {
@@ -247,7 +251,14 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsresult aStatus)
         do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = ldapOperation->Init(mConnection, this);
+    nsCOMPtr<nsILDAPMessageListener> proxyListener;
+    rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                     NS_GET_IID(nsILDAPMessageListener),
+                     NS_STATIC_CAST(nsILDAPMessageListener *, this),
+                     PROXY_SYNC | PROXY_ALWAYS,
+                     getter_AddRefs(proxyListener));
+
+    rv = ldapOperation->Init(mConnection, proxyListener);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Bind
@@ -267,7 +278,16 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
     mSearchOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mSearchOperation->Init (mConnection, this);
+    nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
+	    do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);
+	  NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsILDAPMessageListener> proxyListener;
+    rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsILDAPMessageListener),
+									this, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(proxyListener));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mSearchOperation->Init (mConnection, proxyListener);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLCString dn;
@@ -316,29 +336,9 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
         n.Assign (properties[i]);
 
         nsAbDirectoryQueryPropertyValue* _propertyValue = 0;
-        if (n.Equals(NS_LITERAL_CSTRING("card:URI")))
+        if (n.Equals("card:nsIAbCard"))
         {
             // Meta property
-            //
-
-            nsXPIDLString dn;
-            rv = aMessage->GetDn (getter_Copies (dn));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsXPIDLCString uri;
-            rv = mDirectoryQuery->CreateCardURI (mUrl, NS_ConvertUCS2toUTF8(dn).get(), getter_Copies (uri));
-            NS_ENSURE_SUCCESS(rv, rv);
-            NS_ConvertUTF8toUCS2 v (uri.get ());
-
-            _propertyValue = new nsAbDirectoryQueryPropertyValue(n.get (), v.get ());
-            if (_propertyValue == NULL)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-        else if (n.Equals(NS_LITERAL_CSTRING("card:nsIAbCard")))
-        {
-            // Meta property
-            //
-
             nsXPIDLString dn;
             rv = aMessage->GetDn (getter_Copies (dn));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -433,12 +433,10 @@ nsresult nsAbQueryLDAPMessageListener::QueryResultStatus (nsISupportsArray* prop
         resultStatus,
         (resultStatus == nsIAbDirectoryQueryResult::queryResultMatch) ? properties : 0);
 
-    if (_queryResult == NULL)
+    if (!_queryResult)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    *result = _queryResult;
-    NS_IF_ADDREF(*result);
-
+    NS_IF_ADDREF(*result = _queryResult);
     return NS_OK;
 }
 
@@ -672,13 +670,7 @@ nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (
     {
         n.Assign (properties[i]);
 
-        if (n.Equals(NS_LITERAL_CSTRING("card:URI")))
-        {
-            // Meta property
-            //
-            continue;
-        }
-        else if (n.Equals(NS_LITERAL_CSTRING("card:nsIAbCard")))
+        if (n.Equals("card:nsIAbCard"))
         {
             // Meta property
             // require all attributes

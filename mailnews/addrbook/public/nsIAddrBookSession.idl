@@ -51,26 +51,40 @@
 #include "nsIAbDirectory.idl"
 #include "nsIAbCard.idl"
 
-interface nsIDOMXULDocument;
-
 [scriptable, uuid(C5339441-303F-11d3-9E13-00A0C92B5F0D)]
 interface nsIAddrBookSession : nsISupports {
 
-  void addAddressBookListener(in nsIAbListener listener);
+  void addAddressBookListener(in nsIAbListener listener, in abListenerNotifyFlagValue notifyFlags);
   void removeAddressBookListener(in nsIAbListener listener);
   void notifyItemPropertyChanged(in nsISupports item,
                                  in string property,
                                  in wstring oldValue,
                                  in wstring newValue);
   void notifyDirectoryItemAdded(in nsIAbDirectory directory, in nsISupports item);
+  
+  /**
+   * when a card is deleted 
+   */
   void notifyDirectoryItemDeleted(in nsIAbDirectory directory, in nsISupports item);
+  
+  /**
+   * when a directory is deleted 
+   */
+  void notifyDirectoryDeleted(in nsIAbDirectory directory, in nsISupports item);
 
   [noscript] readonly attribute nsFileSpec userProfileDirectory;
 
   /** 
-   * this is used to flush the pending notifcations on the document
-   * used to be in the msg view navigation service, but that is gone 
+   * generate the name from the card, using the firstName and lastName and the displayName
+   *
+   * format follows the "mail.addr_book.lastnamefirst" pref values
+   *
+   * 0 = generated name is displayName
+   * 1 = lastFirst, formatted following lastFirstFormat (see addressBook.properties)
+   * 2 = firstLast, formatted following firstLastFormat (see addressBook.properties)
+   *
+   * we allow the caller to cache the pref value, so we don't have to go to prefs every time.
    */
-  void ensureDocumentIsLoaded(in nsIDOMXULDocument xulDocument);
+  wstring generateNameFromCard(in nsIAbCard card, in long generateFormat);
 };
 

@@ -30,7 +30,6 @@ abCommon.js
 abDirTreeOverlay.xul
 abEditCardDialog.xul
 abNewCardDialog.xul
-abResultsTreeOverlay.xul
 abSelectAddressesDialog.js
 abSelectAddressesDialog.xul
 addressbook.js

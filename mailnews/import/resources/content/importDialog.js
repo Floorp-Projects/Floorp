@@ -116,6 +116,15 @@ function CheckIfLocalFolderExists()
   }
 }
 
+function GetStringBundle(aURL) 
+{
+  var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService();
+  stringBundleService = stringBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+  var stringBundle = stringBundleService.createBundle(aURL);
+  if (stringBundle)
+    return stringBundle.QueryInterface(Components.interfaces.nsIStringBundle);
+}
+
 function ImportDialogOKButton()
 {
   var tree = document.getElementById('moduleList');
@@ -213,7 +222,7 @@ function ImportDialogOKButton()
               return( true);
             }
             else {
-              meterText = gImportMsgsBundle.getFormattedString('MailProgressMeterText',
+              meterText = gImportMsgsBundle.getFormattedString('AddrProgressMeterText',
                                                                [ name ]);
               header.setAttribute("description", meterText);
 
@@ -230,6 +239,10 @@ function ImportDialogOKButton()
           else
           {
             ShowImportResults(false, 'Address');
+            // re-enable the next button, as we are here
+            // because the user cancelled when picking an addressbook file to import.
+            // enable next, so they can try again
+            nextButton.removeAttribute("disabled");
             return( false);
           }
           break;
@@ -283,6 +296,15 @@ function ImportSelectionChanged()
   }
 }
 
+function CompareImportModuleName(a, b)
+{
+  if (a.name > b.name)
+    return 1;
+  if (a.name < b.name)
+    return -1;
+  return 0;
+}
+
 function ListModules() {
   if (top.importService == null)
     return;
@@ -294,9 +316,19 @@ function ListModules() {
     max--;
   }
 
-  var count = top.importService.GetModuleCount( top.importType);
-  for (var i = 0; i < count; i++) {
-    AddModuleToList( top.importService.GetModuleName( top.importType, i), i);
+  var count = top.importService.GetModuleCount(top.importType);
+  var i;
+
+  var moduleArray = new Array(count);
+  for (i = 0; i < count; i++) {
+    moduleArray[i] = {name:top.importService.GetModuleName(top.importType, i), index:i };
+  }
+
+  // sort the array of modules by name, so that they'll show up in the right order
+  moduleArray.sort(CompareImportModuleName);
+
+  for (i = 0; i < count; i++) {
+    AddModuleToList(moduleArray[i].name, moduleArray[i].index);
   }
 }
 
@@ -382,7 +414,7 @@ function ShowResults(doesWantProgress, result)
                        var progressStatusEl = document.getElementById("progressStatus");
                        var progressTitleEl = document.getElementById("progressTitle");
 
-                       var meterText = gImportMsgsBundle.getFormattedString('MailProgressMeterText',
+                       var meterText = gImportMsgsBundle.getFormattedString('AddrProgressMeterText',
                                                                                                                   [ name ]);
                        header.setAttribute("description", meterText);
       
@@ -743,13 +775,23 @@ function ImportAddress( module, success, error) {
         filePicker.init( top.window, gImportMsgsBundle.getString('ImportSelectAddrFile'), Components.interfaces.nsIFilePicker.modeOpen);
 	if (selectedModuleName == gImportMsgsBundle.getString('Comm4xImportName'))
 		filePicker.appendFilter(gImportMsgsBundle.getString('Comm4xFiles'),"*.na2");
-        filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
-        filePicker.show();
+        else {
+          var addressbookBundle = GetStringBundle("chrome://messenger/locale/addressbook/addressBook.properties");
+          filePicker.appendFilter(addressbookBundle.GetStringFromName('LDIFFiles'), "*.ldi;*.ldif");
+          filePicker.appendFilter(addressbookBundle.GetStringFromName('CSVFiles'), "*.csv");
+          filePicker.appendFilter(addressbookBundle.GetStringFromName('TABFiles'), "*.tab;*.txt");
+          filePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
+        }
+
+        if (filePicker.show() == Components.interfaces.nsIFilePicker.returnCancel)
+          return false;
+
         if (filePicker.file && (filePicker.file.path.length > 0))
           file = filePicker.file.path;
         else
           file = null;
       } catch( ex) {
+        dump("ImportAddress(): failure when picking a file to import:  " + ex + "\n");
         file = null;
       }
     }
@@ -840,6 +882,7 @@ function next()
     var radioGroup = document.getElementById("importFields");
     SwitchType(radioGroup.value);
     deck.setAttribute("selectedIndex", "1");
+    SelectFirstItem();
     enableAdvance();
     break;
   case "1":
@@ -873,6 +916,13 @@ function ExportComm4x()
   }
 
   return true ;
+}
+
+function SelectFirstItem()
+{
+  var tree = document.getElementById("moduleList");
+  tree.selectedIndex = 0;
+  ImportSelectionChanged();
 }
 
 function enableAdvance()

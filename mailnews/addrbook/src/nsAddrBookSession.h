@@ -41,6 +41,8 @@
 #include "nsIAddrBookSession.h"
 #include "nsISupports.h"
 #include "nsVoidArray.h"
+#include "nsIStringBundle.h"
+#include "nsUInt32Array.h"
 
 class nsAddrBookSession : public nsIAddrBookSession
 {
@@ -52,9 +54,9 @@ public:
 	NS_DECL_NSIADDRBOOKSESSION
   
 protected:
-
-	nsCOMPtr<nsISupportsArray> mListeners; 
-
+  nsCOMPtr <nsISupportsArray> mListeners;
+  nsUInt32Array mListenerNotifyFlags;
+  nsCOMPtr<nsIStringBundle> mBundle;
 };
 
 #endif /* nsAddrBookSession_h__ */

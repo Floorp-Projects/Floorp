@@ -41,7 +41,7 @@ public:
 	virtual ~nsTextAddress();
 
 	nsresult	ImportAddresses( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsIImportFieldMap *fieldMap, nsString& errors, PRUint32 *pProgress);
-	nsresult	ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors);
+	nsresult	ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors, PRUint32 *pProgress);
 
 	nsresult	DetermineDelim( nsIFileSpec *pSrc);
 	char		GetDelim( void) { return( m_delim);}
@@ -65,7 +65,7 @@ private:
 	nsresult	str_parse_line( char *line, char **type, char **value, int *vlen);
 	char *		str_getline( char **next);
 	nsresult	GetLdifStringRecord(char* buf, PRInt32 len, PRInt32& stopPos);
-	nsresult	ParseLdifFile( nsIFileSpec *pSrc);
+	nsresult	ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress);
 	void		AddLdifRowToDatabase( PRBool bIsList);
 	void		AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList);
 

@@ -46,7 +46,7 @@
 #include "nsISupportsArray.h"
 #include "nsITextToSubURI.h"
 #include "nsAbBooleanExpression.h"
-
+#include "nsAbBaseCID.h"
 
 nsresult nsAbQueryStringToExpression::Convert (
     const char* queryString,
@@ -69,9 +69,7 @@ nsresult nsAbQueryStringToExpression::Convert (
     nsCOMPtr<nsIAbBooleanExpression> e(do_QueryInterface(s, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *expression = e;
-    NS_IF_ADDREF(*expression);
-
+    NS_IF_ADDREF(*expression = e);
     return rv;
 }
 
@@ -119,8 +117,7 @@ nsresult nsAbQueryStringToExpression::ParseExpression (
         rv = ParseExpressions (index, e);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        *expression = e;
-        NS_IF_ADDREF(*expression);
+        NS_IF_ADDREF(*expression = e);
     }
     // Case" "(*)"
     else if (*indexBracket == ')')
@@ -132,8 +129,7 @@ nsresult nsAbQueryStringToExpression::ParseExpression (
             getter_AddRefs(conditionString));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        *expression = conditionString;
-        NS_IF_ADDREF(*expression);
+        NS_IF_ADDREF(*expression = conditionString);
     }
 
     if (**index != ')')
@@ -210,9 +206,7 @@ nsresult nsAbQueryStringToExpression::ParseCondition (
         getter_AddRefs (c));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *conditionString = c;
-    NS_IF_ADDREF(*conditionString);
-
+    NS_IF_ADDREF(*conditionString = c);
     return NS_OK;
 }
 
@@ -271,11 +265,12 @@ nsresult nsAbQueryStringToExpression::CreateBooleanExpression(
 
     nsresult rv;
 
-           rv = NS_NewIAbBooleanExpression(expression);
+    nsCOMPtr <nsIAbBooleanExpression> expr = do_CreateInstance(NS_BOOLEANEXPRESSION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = (*expression)->SetOperation (op);
-
+    NS_IF_ADDREF(*expression = expr);
+    
+    rv = expr->SetOperation (op);
     return rv;
 }
 
@@ -315,8 +310,7 @@ nsresult nsAbQueryStringToExpression::CreateBooleanConditionString (
 
     nsresult rv;
 
-    nsCOMPtr<nsIAbBooleanConditionString> cs;
-    rv = NS_NewIAbBooleanConditionString (getter_AddRefs(cs));
+    nsCOMPtr<nsIAbBooleanConditionString> cs = do_CreateInstance(NS_BOOLEANCONDITIONSTRING_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = cs->SetCondition (c);
@@ -354,9 +348,7 @@ nsresult nsAbQueryStringToExpression::CreateBooleanConditionString (
     }
             
 
-    *conditionString = cs;
-    NS_IF_ADDREF(*conditionString);
-
+    NS_IF_ADDREF(*conditionString = cs);
     return NS_OK;
 }
 

@@ -47,8 +47,6 @@ var gNextMessageAfterLoad = null;
 var gNextMessageViewIndexAfterDelete = -2;
 var gCurrentlyDisplayedMessage=-1;
 
-var gActiveThreadPaneSortColumn = "";
-
 var gStartFolderUri = null;
 var gStartMsgKey = -1;
 
@@ -940,27 +938,6 @@ function ChangeSelection(outliner, newIndex)
         outliner.outlinerBoxObject.selection.select(newIndex);
         outliner.outlinerBoxObject.ensureRowIsVisible(newIndex);
     }
-}
-
-function SetActiveThreadPaneSortColumn(column)
-{
-	gActiveThreadPaneSortColumn = column;
-}
-
-function GetActiveThreadPaneSortColumn()
-{
-	return gActiveThreadPaneSortColumn;
-}
-
-function ClearActiveThreadPaneSortColumn()
-{
-	var activeColumn = document.getElementById(gActiveThreadPaneSortColumn);
-	if(activeColumn)
-	{
-		activeColumn.removeAttribute("sortActive");
-		activeColumn = "";
-	}
-
 }
 
 function GetSelectedFolders()

@@ -70,35 +70,18 @@ typedef struct _nsAbRDFNotification {
 } nsAbRDFNotification;
                                                 
 
-
-static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
-
-////////////////////////////////////////////////////////////////////////
-// Utilities
-
-
-nsresult nsAbRDFDataSource::createNode(nsString& str, nsIRDFNode **node)
+nsresult nsAbRDFDataSource::createNode(const PRUnichar *str, nsIRDFNode **node)
 {
 	*node = nsnull;
 	nsresult rv; 
-    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv)); 
+    nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv)); 
 	NS_ENSURE_SUCCESS(rv, rv); // always check this before proceeding 
 	nsCOMPtr<nsIRDFLiteral> value;
-	rv = rdf->GetLiteral(str.get(), getter_AddRefs(value));
+	rv = rdf->GetLiteral(str, getter_AddRefs(value));
 	if (NS_SUCCEEDED(rv)) 
 	{
-		*node = value;
-		NS_IF_ADDREF(*node);
+		NS_IF_ADDREF(*node = value);
 	}
-	return rv;
-}
-
-nsresult nsAbRDFDataSource::createNode(PRUint32 value, nsIRDFNode **node)
-{
-	nsresult rv;
-	nsAutoString str;
-	str.AppendInt((PRInt32)value);
-	rv = createNode(str, node);
 	return rv;
 }
 
@@ -301,8 +284,7 @@ nsresult nsAbRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 	const PRUnichar *newValue)
 {
 	nsCOMPtr<nsIRDFNode> newValueNode;
-	nsString newValueStr(newValue);
-	createNode(newValueStr, getter_AddRefs(newValueNode));
+	createNode(newValue, getter_AddRefs(newValueNode));
 	NotifyObservers(resource, propertyResource, newValueNode, PR_FALSE, PR_TRUE);
 	return NS_OK;
 }
@@ -325,7 +307,7 @@ nsAbRDFDataSource::~nsAbRDFDataSource (void)
 	if (mRDFService)
 	{
 		mRDFService->UnregisterDataSource(this);
-		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
+		nsServiceManager::ReleaseService("@mozilla.org/rdf/rdf-service;1", mRDFService); 
 		mRDFService = nsnull;
 	}
 
@@ -336,7 +318,7 @@ nsAbRDFDataSource::~nsAbRDFDataSource (void)
 nsresult nsAbRDFDataSource::Init()
 {
 
-	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+	nsresult rv = nsServiceManager::GetService("@mozilla.org/rdf/rdf-service;1",
 		NS_GET_IID(nsIRDFService),
 		(nsISupports**) &mRDFService); 
 	NS_ENSURE_SUCCESS(rv, rv);

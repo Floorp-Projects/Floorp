@@ -8,6 +8,9 @@ var dialogResult = null;
 var dragStart = false;
 var dragData = null;
 
+var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
+gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
+
 function OnLoadFieldMapImport()
 {
   top.importService = Components.classes["@mozilla.org/import/import-service;1"].getService();
@@ -137,28 +140,19 @@ function BeginDrag( event)
   var tree = document.getElementById("fieldList");
   if ( event.target == tree ) {
     return( true);          // continue propagating the event
-    }
-
-  if (!tree) {
-    return( false);
   }
 
-  var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
-  if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
-  if ( !dragService ) {
-    return(false);
+  if (!tree) {
+    return false;
   }
 
   var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance();
-  if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
-  if ( !trans ) {
-    return(false);
-  }
-
+  trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+  
   var genData = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
   if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsWString);
   if (!genData) {
-    return(false);
+    return false;
   }
 
     // trans.addDataFlavor( "text/unicode");
@@ -185,7 +179,7 @@ function BeginDrag( event)
   var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance();
   if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
   if ( !transArray )  {
-    return(false);
+    return false;
   }
 
   // put it into the transferable as an |nsISupports|
@@ -195,8 +189,7 @@ function BeginDrag( event)
   var nsIDragService = Components.interfaces.nsIDragService;
   top.dragStart = true;
 
-  dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_MOVE);
-
+  gDragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_MOVE);
 
   return( false);  // don't propagate the event if a drag has begun
 }
@@ -255,11 +248,11 @@ function DropOnTree( event)
 {
 
   var treeRoot = document.getElementById("fieldList");
-  if (!treeRoot)  return(false);
+  if (!treeRoot)  return false;
 
   // target is the <treecell>, and the <treeitem> is two levels above
   var treeItem = event.target.parentNode.parentNode;
-  if (!treeItem)  return(false);
+  if (!treeItem)  return false;
 
   // get drop hint attributes
   var dropBefore = treeItem.getAttribute("dd-droplocation");
@@ -280,16 +273,11 @@ function DropOnTree( event)
     containerItem = treeItem.parentNode.parentNode;
   */
 
-  var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
-  if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
-  if ( !dragService ) return(false);
-
-  var dragSession = dragService.getCurrentSession();
-  if ( !dragSession ) return(false);
-
+  var dragSession = gDragService.getCurrentSession();
+ 
   var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance();
   if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
-  if ( !trans )   return(false);
+  if ( !trans )   return false;
   trans.addDataFlavor( top.transferType);
   // trans.addDataFlavor( "text/unicode");
 
@@ -389,31 +377,25 @@ function DropOnTree( event)
     }
   }
 
-  return(false);
+  return false;
 }
 
 
-function DragOverTree( event)
+function DragOverTree(event)
 {
   if (!top.dragStart)
-    return( false);
+    return;
 
   var validFlavor = false;
-  var dragSession = null;
-  var retVal = true;
 
-  var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
-  if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
-  if ( !dragService ) return(false);
+  var dragSession = gDragService.getCurrentSession();
 
-  dragSession = dragService.getCurrentSession();
-  if ( !dragSession ) return(false);
-
-  if ( dragSession.isDataFlavorSupported( top.transferType) ) validFlavor = true;
-  // if ( dragSession.isDataFlavorSupported( "text/unicode") )  validFlavor = true;
-
-  if (event.target == document.getElementById( "fieldBody")) return( false);
-
+  if ( dragSession.isDataFlavorSupported( top.transferType) ) 
+    validFlavor = true;
+ 
+  if (event.target == document.getElementById( "fieldBody")) 
+    return;
+    
   // touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
   if ( validFlavor )
   {
@@ -421,10 +403,7 @@ function DragOverTree( event)
     var rowGroup = event.target.parentNode.parentNode;
     rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
     dragSession.canDrop = true;
-    // necessary??
-    retVal = false; // do not propagate message
   }
-  return(retVal);
 }
 
 function ShowSampleData( data)

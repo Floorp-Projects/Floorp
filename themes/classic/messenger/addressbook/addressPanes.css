@@ -23,7 +23,7 @@
  */
 
 /* ===== addressPanes.css ================================================
-  == Styles for directory and address panes.
+  == Styles for directory pane.
   ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -42,10 +42,9 @@
   margin-left: 1px;
 }
 
-/* ::::: result pane icons ::::: */
-
-.ab-results-icon {
-  list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.gif");
+.ab-directory-icon[IsRemote="true"] {
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook.gif");
   margin-right: 1px;
+  margin-left: 1px;
 }
 

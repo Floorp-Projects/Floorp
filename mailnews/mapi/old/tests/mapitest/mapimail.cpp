@@ -299,9 +299,9 @@ DoMAPISendMail(HWND hWnd)
   char    subject[128];
   char    noteText[4096];
   char    dateReceived[128] = "N/A";
-  char    threadID[128] = "N/A";;
-  char    origName[128] = "N/A";;
-  char    origAddress[128] = "N/A";;
+  char    threadID[128] = "N/A";
+  char    origName[128] = "N/A";
+  char    origAddress[128] = "N/A";
 
   GetDlgItemText(hWnd, ID_EDIT_TOADDRESS, toAddr, sizeof(toAddr));
   GetDlgItemText(hWnd, ID_EDIT_CCADDRESS, ccAddr, sizeof(ccAddr));
@@ -490,9 +490,9 @@ DoMAPISaveMail(HWND hWnd)
   char    subject[128];
   char    noteText[4096];
   char    dateReceived[128] = "N/A";
-  char    threadID[128] = "N/A";;
-  char    origName[128] = "N/A";;
-  char    origAddress[128] = "N/A";;
+  char    threadID[128] = "N/A";
+  char    origName[128] = "N/A";
+  char    origAddress[128] = "N/A";
 
   GetDlgItemText(hWnd, ID_EDIT_TOADDRESS, toAddr, sizeof(toAddr));
   GetDlgItemText(hWnd, ID_EDIT_CCADDRESS, ccAddr, sizeof(ccAddr));

@@ -65,13 +65,13 @@ public:
     NS_IMETHOD GetChildNodes(nsIEnumerator* *result);
     NS_IMETHOD GetChildCards(nsIEnumerator* *result);
      NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
-    NS_IMETHOD GetTotalCards(PRBool subDirectoryCount, PRUint32 *_retval);
+    NS_IMETHOD GetSupportsMailingLists(PRBool *aSupportsMailingsLists);
+    NS_IMETHOD GetIsRemote(PRBool *aIsRemote);
 
     // nsAbLDAPDirectoryQuery methods
     nsresult GetLDAPConnection (nsILDAPConnection** connection);
     nsresult GetLDAPURL (nsILDAPURL** url);
     nsresult CreateCard (nsILDAPURL* uri, const char* dn, nsIAbCard** card);
-    nsresult CreateCardURI (nsILDAPURL* uri, const char* dn, char** cardUri);
 
     // nsIAbDirectorySearch methods
     NS_DECL_NSIABDIRECTORYSEARCH
@@ -89,6 +89,7 @@ protected:
     PRBool mInitializedConnection;
     PRBool mPerformingQuery;
     PRInt32 mContext;
+    PRInt32 mMaxHits;
 
     nsCOMPtr<nsILDAPURL> mURL ;
     nsCOMPtr<nsILDAPConnection> mConnection;

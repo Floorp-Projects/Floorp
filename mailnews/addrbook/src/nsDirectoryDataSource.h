@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -118,6 +119,8 @@ protected:
                                       nsIRDFNode **target);
 	nsresult createDirectoryIsMailListNode(nsIAbDirectory *directory,
                                       nsIRDFNode **target);
+  nsresult createDirectoryIsRemoteNode(nsIAbDirectory *directory,
+    nsIRDFNode **target);
 	static nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 										   nsISupportsArray **arcs);
 
@@ -142,6 +145,7 @@ protected:
 	static nsIRDFResource* kNC_CardChild;
 	static nsIRDFResource* kNC_DirUri;
 	static nsIRDFResource* kNC_IsMailList;
+  static nsIRDFResource* kNC_IsRemote;
 
 	// commands
 	static nsIRDFResource* kNC_Delete;

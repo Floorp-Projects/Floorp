@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -49,16 +50,12 @@
 #include "nsIAbListener.h"
 #include "nsIAddrBookSession.h"
 #include "nsIAddressBook.h"
+#include "nsIAbMDBCard.h"
 
 #include "mdb.h"
 #include "prlog.h"
 #include "prprf.h"
 #include "prmem.h"
-
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-// static NS_DEFINE_CID(kAbCardCID, NS_ABCARD_CID);
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 
 nsAbMDBDirProperty::nsAbMDBDirProperty(void)
 {
@@ -152,12 +149,6 @@ NS_IMETHODIMP nsAbMDBDirProperty::CopyDBMailList(nsIAbMDBDirectory* srcListDB)
 
 // nsIAbMDBDirectory NOT IMPLEMENTED methods
 
-/* nsIAbCard addChildCards (in string uriName); */
-NS_IMETHODIMP nsAbMDBDirProperty::AddChildCards(const char *uriName, nsIAbCard **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* nsIAbDirectory addDirectory (in string uriName); */
 NS_IMETHODIMP nsAbMDBDirProperty::AddDirectory(const char *uriName, nsIAbDirectory **_retval)
 {
@@ -194,3 +185,30 @@ NS_IMETHODIMP nsAbMDBDirProperty::ClearDatabase()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsAbMDBDirProperty::GetValueForCard(nsIAbCard *card, const char *name, PRUnichar **value)
+{
+  nsresult rv;
+  nsCOMPtr <nsIAbMDBCard> mdbcard = do_QueryInterface(card, &rv);
+  if (NS_FAILED(rv) || !mdbcard) {
+    // XXX this shouldn't happen
+    // but it is, after ab sync
+    // I think are nsAbCardProperties are getting into the nsAbView
+    // and later, on paint, we are asking for them.
+    return NS_OK;
+  }
+
+  rv = mdbcard->GetStringAttribute(name, value);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
+NS_IMETHODIMP nsAbMDBDirProperty::SetValueForCard(nsIAbCard *card, const char *name, const PRUnichar *value)
+{
+  nsresult rv;
+  nsCOMPtr <nsIAbMDBCard> mdbcard = do_QueryInterface(card, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = mdbcard->SetStringAttribute(name, value);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}

@@ -39,16 +39,12 @@
 #include "nsUnicharUtils.h"
 #include "EudoraDebugLog.h"
 
-
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kSmtpServiceCID,		NS_SMTPSERVICE_CID); 
 static NS_DEFINE_CID(kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
 
-
 static const char *	kWhitespace = "\b\t\r\n ";
-
 
 // ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Accounts", 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &sKey) == ERROR_SUCCESS)
 
@@ -183,7 +179,7 @@ nsresult nsEudoraWin32::FindMailboxes( nsIFileSpec *pRoot, nsISupportsArray **pp
 		return( rv);
 	}
 		
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 	if (NS_FAILED( rv))
 		return( rv);
 	
@@ -1181,7 +1177,7 @@ nsresult nsEudoraWin32::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray *
 		return( rv);
 	}
 		
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 	if (NS_FAILED( rv))
 		return( rv);
 	

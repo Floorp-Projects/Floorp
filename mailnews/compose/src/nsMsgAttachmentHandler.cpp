@@ -629,7 +629,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 
     //We need to retrieve the file type and creator...
     nsFileSpec scr_fileSpec(src_filename);
-    FSSpec fsSpec = scr_fileSpec.GetFSSpec();;
+    FSSpec fsSpec = scr_fileSpec.GetFSSpec();
     FInfo info;
     if (FSpGetFInfo (&fsSpec, &info) == noErr)
     {

@@ -40,29 +40,25 @@
 #include "nsIAddrDatabase.idl"
 #include "nsISupportsArray.idl"
 
-
 interface nsIDOMWindowInternal;
 interface nsIDOMXULElement;
 interface nsIDOMNodeList;
 interface nsIFileSpec;
+interface nsIAbDirectory;
 
 [scriptable, uuid(D60B84F1-2A8C-11d3-9E07-00A0C92B5F0D)]
-interface nsIAddressBook : nsISupports {
-
-  void deleteCards(in nsIDOMXULElement tree, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
-  void newAddressBook(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in unsigned long prefCount,[array, size_is(prefCount)] in string prefName, [array, size_is(prefCount)] in wstring prefValue);
+interface nsIAddressBook : nsISupports 
+{
+  void newAddressBook(in nsIRDFCompositeDataSource db, in unsigned long prefCount,[array, size_is(prefCount)] in string prefName, [array, size_is(prefCount)] in wstring prefValue);
   void deleteAddressBooks(in nsIRDFCompositeDataSource db, in nsISupportsArray parentDir, in nsIDOMNodeList node);
   void printCard();
   void printAddressbook();
   void setDocShellWindow(in nsIDOMWindowInternal win);
-	void importAddressBook();
+  void exportAddressBook(in nsIAbDirectory aDirectory);
   void convertLDIFtoMAB(in nsIFileSpec fileSpec, in boolean migrating, in nsIAddrDatabase db, in boolean bStoreLocAsHome, in boolean bImportingComm4x);
   void convertNA2toLDIF(in nsIFileSpec srcFileSpec, in nsIFileSpec dstFileSpec);
-  void getAbDatabaseFromURI(in string URI, out nsIAddrDatabase db);
-	boolean mailListNameExistsInDB(in wstring name, in string URI);
-	boolean mailListNameExists(in wstring name);
-	unsigned long getTotalCards(in string URI);
-
-	void createCollationKey(in wstring source, out wstring result);
+  nsIAddrDatabase getAbDatabaseFromURI(in string URI);
+  boolean mailListNameExistsInDB(in wstring name, in string URI);
+  boolean mailListNameExists(in wstring name);
 };
 

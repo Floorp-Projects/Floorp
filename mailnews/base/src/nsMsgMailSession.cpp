@@ -85,7 +85,6 @@ nsresult nsMsgMailSession::Shutdown()
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsMsgMailSession::AddFolderListener(nsIFolderListener * listener, PRUint32 notifyFlags)
 {
   NS_ASSERTION(mListeners, "no listeners");

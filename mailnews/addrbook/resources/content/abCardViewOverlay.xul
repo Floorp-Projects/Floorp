@@ -31,40 +31,57 @@ Rights Reserved.
 	
 	<vbox id="CardViewInnerBox" collapsed="true" flex="1">
 		
-		<description hide="true" id="CardTitle"/>
+		<description id="CardTitle"/>
 
 		<hbox style="width:100%" flex="1">
 			
 			<vbox flex="1" style="width:200px">
 				<vbox id="cvbName" class="cardViewGroup">
-					<description class="CardViewHeading" hide="true" id="cvhName"/>
-                                        <description class="CardViewText" hide="true" id="cvDisplayName"/>
-                                        <description class="CardViewText" hide="true" id="cvNickname"/>
-                                        <description class="CardViewLink" hide="true" id="cvEmail1Box">
-						<html:p><html:a href="" id="cvEmail1"/></html:p></description>
-                                        <description class="CardViewLink" hide="true" id="cvEmail2Box">
-						<html:p><html:a href="" id="cvEmail2"/>
-                                        </html:p></description>
+					  <description class="CardViewHeading" id="cvhName"/>
+            <description class="CardViewLink" id="cvListNameBox">
+						  <html:p><html:a href="" id="cvListName"/></html:p>
+            </description>
+            <description class="CardViewText" id="cvDisplayName"/>
+            <description class="CardViewText" id="cvNickname"/>
+            <description class="CardViewLink" id="cvEmail1Box">
+						  <html:p><html:a href="" id="cvEmail1"/></html:p>
+            </description>
+            <description class="CardViewLink" id="cvEmail2Box">
+						  <html:p><html:a href="" id="cvEmail2"/></html:p>
+            </description>
 				</vbox>
 				
 				<vbox id="cvbHome" class="cardViewGroup">
-                                        <description class="CardViewHeading" hide="true" id="cvhHome">&home.heading;</description>
-                                        <description class="CardViewText" hide="true" id="cvHomeAddress"/>
-                                        <description class="CardViewText" hide="true" id="cvHomeAddress2"/>
-                                        <description class="CardViewText" hide="true" id="cvHomeCityStZip"/>
-                                        <description class="CardViewText" hide="true" id="cvHomeCountry"/>
-                                        <description class="CardViewLink" hide="true" id="cvHomeWebPageBox">
-						<html:p><html:a onclick="return openLink('cvHomeWebPage');" href="" id="cvHomeWebPage"/>
-                                        </html:p></description>
+          <description class="CardViewHeading" id="cvhHome">&home.heading;</description>
+          <description class="CardViewText" id="cvHomeAddress"/>
+          <description class="CardViewText" id="cvHomeAddress2"/>
+          <description class="CardViewText" id="cvHomeCityStZip"/>
+          <description class="CardViewText" id="cvHomeCountry"/>
+          <hbox id="cvbHomeMapItBox" autostretch="never">
+            <button id="cvHomeMapIt" url="" label="&mapItButton.label;" onclick="MapIt('cvHomeMapIt');"/>
+          </hbox>
+          <description class="CardViewLink" id="cvHomeWebPageBox">
+					  <html:p><html:a onclick="return openLink('cvHomeWebPage');" href="" id="cvHomeWebPage"/></html:p>
+          </description>
 				</vbox>
 
 				<vbox id="cvbOther" class="cardViewGroup">
-                                        <description class="CardViewHeading" hide="true" id="cvhOther">&other.heading;</description>
-                                        <description class="CardViewText" hide="true" id="cvCustom1"/>
-                                        <description class="CardViewText" hide="true" id="cvCustom2"/>
-                                        <description class="CardViewText" hide="true" id="cvCustom3"/>
-                                        <description class="CardViewText" hide="true" id="cvCustom4"/>
-                                        <description class="CardViewText" hide="true" id="cvNotes"/>
+                                        <description class="CardViewHeading" id="cvhOther">&other.heading;</description>
+                                        <description class="CardViewText" id="cvCustom1"/>
+                                        <description class="CardViewText" id="cvCustom2"/>
+                                        <description class="CardViewText" id="cvCustom3"/>
+                                        <description class="CardViewText" id="cvCustom4"/>
+                                        <description class="CardViewText" id="cvNotes"/>
+				</vbox>
+
+        <vbox id="cvbDescription" class="cardViewGroup">
+                                        <description class="CardViewHeading" id="cvhDescription">&description.heading;</description>
+                                        <description class="CardViewText" id="cvDescription"/>
+				</vbox>
+
+        <vbox id="cvbAddresses" class="cardViewGroup">
+                                        <description class="CardViewHeading" id="cvhAddresses">&addresses.heading;</description>
+                                        <description class="CardViewText" id="cvAddresses"/>
 				</vbox>
 			</vbox>
 			
@@ -72,26 +89,29 @@ Rights Reserved.
 
 			<vbox flex="1" style="width:200px">
 				<vbox id="cvbPhone" class="cardViewGroup">
-                                        <description class="CardViewHeading" hide="true" id="cvhPhone">&phone.heading;</description>
-                                        <description class="CardViewText" hide="true" id="cvPhWork"/>
-                                        <description class="CardViewText" hide="true" id="cvPhHome"/>
-                                        <description class="CardViewText" hide="true" id="cvPhFax"/>
-                                        <description class="CardViewText" hide="true" id="cvPhCellular"/>
-                                        <description class="CardViewText" hide="true" id="cvPhPager"/>
+                                        <description class="CardViewHeading" id="cvhPhone">&phone.heading;</description>
+                                        <description class="CardViewText" id="cvPhWork"/>
+                                        <description class="CardViewText" id="cvPhHome"/>
+                                        <description class="CardViewText" id="cvPhFax"/>
+                                        <description class="CardViewText" id="cvPhCellular"/>
+                                        <description class="CardViewText" id="cvPhPager"/>
 				</vbox>
 				
 				<vbox id="cvbWork" class="cardViewGroup">
-                                        <description class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</description>
-                                        <description class="CardViewText" hide="true" id="cvJobTitle"/>
-                                        <description class="CardViewText" hide="true" id="cvDepartment"/>
-                                        <description class="CardViewText" hide="true" id="cvCompany"/>
-                                        <description class="CardViewText" hide="true" id="cvWorkAddress"/>
-                                        <description class="CardViewText" hide="true" id="cvWorkAddress2"/>
-                                        <description class="CardViewText" hide="true" id="cvWorkCityStZip"/>
-                                        <description class="CardViewText" hide="true" id="cvWorkCountry"/>
-                                        <description class="CardViewLink" hide="true" id="cvWorkWebPageBox">
-						<html:p><html:a onclick="return openLink('cvWorkWebPage');" href="" id="cvWorkWebPage"/>
-                                        </html:p></description>
+                                        <description class="CardViewHeading" id="cvhWork">&work.heading;</description>
+                                        <description class="CardViewText" id="cvJobTitle"/>
+                                        <description class="CardViewText" id="cvDepartment"/>
+                                        <description class="CardViewText" id="cvCompany"/>
+                                        <description class="CardViewText" id="cvWorkAddress"/>
+                                        <description class="CardViewText" id="cvWorkAddress2"/>
+                                        <description class="CardViewText" id="cvWorkCityStZip"/>
+                                        <description class="CardViewText" id="cvWorkCountry"/>
+                                        <hbox id="cvbWorkMapItBox" autostretch="never">
+                                          <button id="cvWorkMapIt" url="" label="&mapItButton.label;" onclick="MapIt('cvWorkMapIt');"/>
+                                        </hbox>
+                                        <description class="CardViewLink" id="cvWorkWebPageBox">
+						                              <html:p><html:a onclick="return openLink('cvWorkWebPage');" href="" id="cvWorkWebPage"/></html:p>
+                                        </description>
 				</vbox>
 			</vbox>
 

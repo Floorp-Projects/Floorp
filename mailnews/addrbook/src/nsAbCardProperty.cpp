@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -49,12 +50,8 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-
 #include "nsIPref.h"
 #include "nsIAbDirectory.h"
-#include "nsIAddressBook.h"
-
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsAbCardProperty::nsAbCardProperty(void)
 {
@@ -63,33 +60,16 @@ nsAbCardProperty::nsAbCardProperty(void)
 	m_LastModDate = 0;
 
 	m_PreferMailFormat = nsIAbPreferMailFormat::unknown;
-	m_bIsMailList = PR_FALSE;
-	m_MailListURI = 0;
-
-
+	m_IsMailList = PR_FALSE;
+	m_MailListURI = nsnull;
 }
 
 nsAbCardProperty::~nsAbCardProperty(void)
 {
-  PR_FREEIF(m_MailListURI);
+  CRTFREEIF(m_MailListURI);
 }
 
-NS_IMPL_ADDREF(nsAbCardProperty)
-NS_IMPL_RELEASE(nsAbCardProperty)
-
-NS_IMETHODIMP nsAbCardProperty::QueryInterface(REFNSIID aIID, void** aResult)
-{   
-    if (aResult == NULL)  
-        return NS_ERROR_NULL_POINTER;  
-
-    if (aIID.Equals(NS_GET_IID(nsIAbCard)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aResult = NS_STATIC_CAST(nsIAbCard*, this);   
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}   
+NS_IMPL_ISUPPORTS1(nsAbCardProperty, nsIAbCard)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -129,13 +109,13 @@ NS_IMETHODIMP nsAbCardProperty::SetPreferMailFormat(PRUint32 aFormat)
 
 NS_IMETHODIMP nsAbCardProperty::GetIsMailList(PRBool *aIsMailList)
 {
-	*aIsMailList = m_bIsMailList;
+	*aIsMailList = m_IsMailList;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsAbCardProperty::SetIsMailList(PRBool aIsMailList)
 {
-	m_bIsMailList = aIsMailList;
+	m_IsMailList = aIsMailList;
 	return NS_OK;
 }
 
@@ -168,200 +148,407 @@ NS_IMETHODIMP nsAbCardProperty::SetMailListURI(const char *aMailListURI)
 
 NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **value)
 {
-    if (!PL_strcmp(attrname, kFirstNameColumn))
-		GetFirstName(value);
-    else if (!PL_strcmp(attrname, kLastNameColumn))
-		GetLastName(value);
-    else if (!PL_strcmp(attrname, kDisplayNameColumn))
-		GetDisplayName(value);
-    else if (!PL_strcmp(attrname, kNicknameColumn))
-		GetNickName(value);
-    else if (!PL_strcmp(attrname, kPriEmailColumn))
-		GetPrimaryEmail(value);
-    else if (!PL_strcmp(attrname, k2ndEmailColumn))
-		GetSecondEmail(value);
-    else if (!PL_strcmp(attrname, kWorkPhoneColumn))
-		GetWorkPhone(value);
-    else if (!PL_strcmp(attrname, kHomePhoneColumn))
-		GetHomePhone(value);
-    else if (!PL_strcmp(attrname, kDepartmentColumn))
-		GetDepartment(value);
-    else if (!PL_strcmp(attrname, kCompanyColumn))
-		GetCompany(value);
-    else if (!PL_strcmp(attrname, kJobTitleColumn))
-		GetJobTitle(value);
-    else if (!PL_strcmp(attrname, kFaxColumn))
-		GetFaxNumber(value);
-    else if (!PL_strcmp(attrname, kPagerColumn))
-		GetPagerNumber(value);
-    else if (!PL_strcmp(attrname, kCellularColumn))
-		GetCellularNumber(value);
-    else if (!PL_strcmp(attrname, kHomeAddressColumn))
-		GetHomeAddress(value);
-    else if (!PL_strcmp(attrname, kHomeAddress2Column))
-		GetHomeAddress2(value);
-    else if (!PL_strcmp(attrname, kHomeCityColumn))
-		GetHomeCity(value);
-    else if (!PL_strcmp(attrname, kHomeStateColumn))
-		GetHomeState(value);
-    else if (!PL_strcmp(attrname, kHomeZipCodeColumn))
-		GetHomeZipCode(value);
-    else if (!PL_strcmp(attrname, kHomeCountryColumn))
-		GetHomeCountry(value);
-    else if (!PL_strcmp(attrname, kWorkAddressColumn))
-		GetWorkAddress(value);
-    else if (!PL_strcmp(attrname, kWorkAddress2Column))
-		GetWorkAddress2(value);
-    else if (!PL_strcmp(attrname, kWorkCityColumn))
-		GetWorkCity(value);
-    else if (!PL_strcmp(attrname, kWorkStateColumn))
-		GetWorkState(value);
-    else if (!PL_strcmp(attrname, kWorkZipCodeColumn))
-		GetWorkZipCode(value);
-    else if (!PL_strcmp(attrname, kWorkCountryColumn))
-		GetWorkCountry(value);
-    else if (!PL_strcmp(attrname, kWebPage1Column))
-		GetWebPage1(value);
-    else if (!PL_strcmp(attrname, kWebPage2Column))
-		GetWebPage2(value);
-    else if (!PL_strcmp(attrname, kBirthYearColumn))
-		GetBirthYear(value);
-    else if (!PL_strcmp(attrname, kBirthMonthColumn))
-		GetBirthMonth(value);
-    else if (!PL_strcmp(attrname, kBirthDayColumn))
-		GetBirthDay(value);
-    else if (!PL_strcmp(attrname, kCustom1Column))
-		GetCustom1(value);
-    else if (!PL_strcmp(attrname, kCustom2Column))
-		GetCustom2(value);
-    else if (!PL_strcmp(attrname, kCustom3Column))
-		GetCustom3(value);
-    else if (!PL_strcmp(attrname, kCustom4Column))
-		GetCustom4(value);
-    else if (!PL_strcmp(attrname, kNotesColumn))
-		GetNotes(value);
-    else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
-    {
-        PRUint32 format = nsIAbPreferMailFormat::unknown;
-        GetPreferMailFormat(&format);
-        nsString formatStr;
-        switch (format) {
-        case nsIAbPreferMailFormat::unknown :
-            formatStr.Assign(NS_LITERAL_STRING("unknown"));
+  NS_ENSURE_ARG_POINTER(attrname);
+  NS_ENSURE_ARG_POINTER(value);
+
+  nsresult rv = NS_OK;
+
+  switch (attrname[0]) {
+    case 'A':
+      // kAddressCharSetColumn?
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+    case 'B':
+      // BirthYear, BirthMonth, BirthDay
+      switch (attrname[5]) {
+        case 'Y':
+          rv = GetBirthYear(value);
+          break;
+        case 'M':
+          rv = GetBirthMonth(value);
+          break;
+        case 'D':
+          rv = GetBirthDay(value);
+          break;
+        default:
+          rv = NS_ERROR_UNEXPECTED;
+          break;
+      }
+      break;
+    case 'C':
+      switch (attrname[1]) {
+        case 'o':
+          rv = GetCompany(value);
+          break;
+        case 'e':
+          rv = GetCellularNumber(value);
+          break;
+        case 'u':
+          switch (attrname[6]) {
+            case '1':
+              rv = GetCustom1(value);
+              break;
+            case '2':
+              rv = GetCustom2(value);
+              break;
+            case '3':
+              rv = GetCustom3(value);
+              break;
+            case '4':
+              rv = GetCustom4(value);
+              break;
+            default:
+              rv = NS_ERROR_UNEXPECTED;
+              break;
+          }
+          break;
+        default:
+          rv = NS_ERROR_UNEXPECTED;
+          break;
+      }
+      break;
+    case 'D':
+      if (attrname[1] == 'i') 
+        rv = GetDisplayName(value);
+      else 
+        rv = GetDepartment(value);
+      break;
+    case 'F':
+      if (attrname[1] == 'i') 
+        rv = GetFirstName(value);
+      else
+        rv = GetFaxNumber(value);
+      break;
+    case 'H':
+      switch (attrname[4]) {
+        case 'A':
+          if (attrname[11] == '\0')
+            rv = GetHomeAddress(value);
+          else 
+            rv = GetHomeAddress2(value);
+          break;
+        case 'C':
+          if (attrname[5] == 'i')
+            rv = GetHomeCity(value);
+          else 
+            rv = GetHomeCountry(value);
+          break;
+        case 'P':
+          rv = GetHomePhone(value);
+          break;
+        case 'S':
+          rv = GetHomeState(value);
+          break;
+        case 'Z':
+          rv = GetHomeZipCode(value);
+          break;
+        default:
+          rv = NS_ERROR_UNEXPECTED;
+          break;
+      }
+      break;
+    case 'J':
+      rv = GetJobTitle(value);
+      break;
+    case 'L':
+      if (attrname[1] == 'a') {
+        if (attrname[4] == 'N') 
+          rv = GetLastName(value);
+        else {
+          // XXX todo
+          // fix me?  LDAP code gets here
+          PRUint32 lastModifiedDate;
+          rv = GetLastModifiedDate(&lastModifiedDate);
+          *value = nsCRT::strdup(NS_LITERAL_STRING("0Z").get()); 
+        }
+      }
+      else
+        rv = NS_ERROR_UNEXPECTED;
+      break;
+    case 'N':
+      if (attrname[1] == 'o')
+        rv = GetNotes(value);
+      else 
+        rv = GetNickName(value);
+      break;
+    case 'P':
+      switch (attrname[2]) { 
+        case 'e':
+	  PRUint32 format;
+          rv = GetPreferMailFormat(&format);
+          const PRUnichar *formatStr;
+
+          switch (format) {
+            case nsIAbPreferMailFormat::html:
+              formatStr = NS_LITERAL_STRING("html").get();
+              break;
+            case nsIAbPreferMailFormat::plaintext :
+              formatStr = NS_LITERAL_STRING("plaintext").get();
+              break;
+            case nsIAbPreferMailFormat::unknown:
+            default :
+              formatStr = NS_LITERAL_STRING("unknown").get();
+              break;
+          }
+          *value = nsCRT::strdup(formatStr);
+          break;
+        case 'g':
+          rv = GetPagerNumber(value);
+          break;
+        case 'i':
+          rv = GetPrimaryEmail(value);
+          break;
+        default:
+          rv = NS_ERROR_UNEXPECTED;
+          break;
+      }
+      break;
+    case 'S':
+      rv = GetSecondEmail(value);
+      break;
+    case 'W': 
+      if (attrname[1] == 'e') {
+        if (attrname[7] == '1')
+          rv = GetWebPage1(value);
+        else 
+          rv = GetWebPage2(value);
+      }
+      else {
+        switch (attrname[4]) {
+          case 'A':
+            if (attrname[11] == '\0')
+              rv = GetWorkAddress(value);
+            else 
+              rv = GetWorkAddress2(value);
             break;
-        case nsIAbPreferMailFormat::plaintext :
-            formatStr.Assign(NS_LITERAL_STRING("plaintext"));
+          case 'C':
+            if (attrname[5] == 'i')
+              rv = GetWorkCity(value);
+            else 
+              rv = GetWorkCountry(value);
             break;
-        case nsIAbPreferMailFormat::html :
-            formatStr.Assign(NS_LITERAL_STRING("html"));
+          case 'P':
+            rv = GetWorkPhone(value);
             break;
-        default :
-            formatStr.Assign(NS_LITERAL_STRING("unknown"));
+          case 'S':
+            rv = GetWorkState(value);
+            break;
+          case 'Z':
+            rv = GetWorkZipCode(value);
+            break;
+          default:
+            rv = NS_ERROR_UNEXPECTED;
             break;
         }
-        *value = ToNewUnicode(formatStr);
-    }
-    
-	/* else handle pass down attribute */
+      }
+      break;
+    default:
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+  }
 
-	return NS_OK;
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }
 
 NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnichar *value)
 {
-	if (!attrname && !value)
-		return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(attrname);
+  NS_ENSURE_ARG_POINTER(value);
 
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
-    if (!PL_strcmp(attrname, kFirstNameColumn))
-		rv = SetFirstName((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kLastNameColumn))
-		rv = SetLastName((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kDisplayNameColumn))
-		rv = SetDisplayName((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kNicknameColumn))
-		rv = SetNickName((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kPriEmailColumn))
-		rv = SetPrimaryEmail((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, k2ndEmailColumn))
-		rv = SetSecondEmail((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kWorkPhoneColumn))
-		rv = SetWorkPhone((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kHomePhoneColumn))
-		rv = SetHomePhone((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kFaxColumn))
-		rv = SetFaxNumber((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kPagerColumn))
-		rv = SetPagerNumber((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kCellularColumn))
-		rv = SetCellularNumber((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kHomeAddressColumn))
-		rv = SetHomeAddress((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kHomeAddress2Column))
-		rv = SetHomeAddress2((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kHomeCityColumn))
-		rv = SetHomeCity((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kHomeStateColumn))
-		rv = SetHomeState((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kHomeZipCodeColumn))
-		rv = SetHomeZipCode((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kHomeCountryColumn))
-		rv = SetHomeCountry((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kWorkAddressColumn))
-		rv = SetWorkAddress((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kWorkAddress2Column))
-		rv = SetWorkAddress2((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kWorkCityColumn))
-		rv = SetWorkCity((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kWorkStateColumn))
-		rv = SetWorkState((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kWorkZipCodeColumn))
-		rv = SetWorkZipCode((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kWorkCountryColumn))
-		rv = SetWorkCountry((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kWebPage1Column))
-		rv = SetWebPage1((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kWebPage2Column))
-		rv = SetWebPage2((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kBirthYearColumn))
-		rv = SetBirthYear((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kBirthMonthColumn))
-		rv = SetBirthMonth((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kBirthDayColumn))
-		rv = SetBirthDay((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kCustom1Column))
-		rv = SetCustom1((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kCustom2Column))
-		rv = SetCustom2((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kCustom3Column))
-		rv = SetCustom3((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kCustom4Column))
-		rv = SetCustom4((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kNotesColumn))
-		rv = SetNotes((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kDepartmentColumn))
-		rv = SetDepartment((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kCompanyColumn))
-		rv = SetCompany((PRUnichar *)value);
-    else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
-   	{
-        PRUint32 format = nsIAbPreferMailFormat::unknown;
-        nsString formatStr(value);
-        if (Compare(formatStr, NS_LITERAL_STRING("unknown"), nsCaseInsensitiveStringComparator()))
-            format = nsIAbPreferMailFormat::unknown;
-        if (Compare(formatStr, NS_LITERAL_STRING("plaintext"), nsCaseInsensitiveStringComparator()))
-            format = nsIAbPreferMailFormat::plaintext;
-        if (Compare(formatStr, NS_LITERAL_STRING("html"), nsCaseInsensitiveStringComparator()))
-            format = nsIAbPreferMailFormat::html;
-        SetPreferMailFormat(format);
-    }
-    else
-        rv = NS_ERROR_FAILURE;
+  switch (attrname[0]) {
+    case 'A':
+      // kAddressCharSetColumn?
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+    case 'B':
+      // BirthYear, BirthMonth, BirthDay
+      switch (attrname[5]) {
+        case 'Y':
+          rv = SetBirthYear(value);
+          break;
+        case 'M':
+          rv = SetBirthMonth(value);
+          break;
+        case 'D':
+          rv = SetBirthDay(value);
+          break;
+        default:
+          rv = NS_ERROR_UNEXPECTED;
+          break;
+      }
+      break;
+    case 'C':
+      switch (attrname[1]) {
+        case 'o':
+          rv = SetCompany(value);
+          break;
+        case 'e':
+          rv = SetCellularNumber(value);
+          break;
+        case 'u':
+          switch (attrname[6]) {
+            case '1':
+              rv = SetCustom1(value);
+              break;
+            case '2':
+              rv = SetCustom2(value);
+              break;
+            case '3':
+              rv = SetCustom3(value);
+              break;
+            case '4':
+              rv = SetCustom4(value);
+              break;
+            default:
+              rv = NS_ERROR_UNEXPECTED;
+              break;
+          }
+          break;
+        default:
+          rv = NS_ERROR_UNEXPECTED;
+          break;
+      }
+      break;
+    case 'D':
+      if (attrname[1] == 'i') 
+        rv = SetDisplayName(value);
+      else 
+        rv = SetDepartment(value);
+      break;
+    case 'F':
+      if (attrname[1] == 'i') 
+        rv = SetFirstName(value);
+      else
+        rv = SetFaxNumber(value);
+      break;
+    case 'H':
+      switch (attrname[4]) {
+        case 'A':
+          if (attrname[11] == '\0')
+            rv = SetHomeAddress(value);
+          else 
+            rv = SetHomeAddress2(value);
+          break;
+        case 'C':
+          if (attrname[5] == 'i')
+            rv = SetHomeCity(value);
+          else 
+            rv = SetHomeCountry(value);
+          break;
+        case 'P':
+          rv = SetHomePhone(value);
+          break;
+        case 'S':
+          rv = SetHomeState(value);
+          break;
+        case 'Z':
+          rv = SetHomeZipCode(value);
+          break;
+        default:
+          rv = NS_ERROR_UNEXPECTED;
+          break;
+      }
+      break;
+    case 'J':
+      rv = SetJobTitle(value);
+      break;
+    case 'L':
+      if (attrname[1] == 'a') {
+        if (attrname[4] == 'N') 
+          rv = SetLastName(value);
+        else {
+          // XXX todo 
+          // fix me?  LDAP code gets here
+          rv = SetLastModifiedDate(0);
+        }
+      }
+      else
+        rv = NS_ERROR_UNEXPECTED;
+      break;
+    case 'N':
+      if (attrname[1] == 'o')
+        rv = SetNotes(value);
+      else 
+        rv = SetNickName(value);
+      break;
+    case 'P':
+      switch (attrname[2]) { 
+        case 'e':
+          switch (value[0]) {
+            case 'h':
+            case 'H':
+              rv = SetPreferMailFormat(nsIAbPreferMailFormat::html);
+              break;
+            case 'p':
+            case 'P':
+              rv = SetPreferMailFormat(nsIAbPreferMailFormat::plaintext);
+              break;
+            default:
+              rv = SetPreferMailFormat(nsIAbPreferMailFormat::unknown);
+              break;
+          }
+          break;
+        case 'g':
+          rv = SetPagerNumber(value);
+          break;
+        case 'i':
+          rv = SetPrimaryEmail(value);
+          break;
+        default:
+          rv = NS_ERROR_UNEXPECTED;
+          break;
+      }
+      break;
+    case 'S':
+      rv = SetSecondEmail(value);
+      break;
+    case 'W': 
+      if (attrname[1] == 'e') {
+        if (attrname[7] == '1')
+          rv = SetWebPage1(value);
+        else 
+          rv = SetWebPage2(value);
+      }
+      else {
+        switch (attrname[4]) {
+          case 'A':
+            if (attrname[11] == '\0')
+              rv = SetWorkAddress(value);
+            else 
+              rv = SetWorkAddress2(value);
+            break;
+          case 'C':
+            if (attrname[5] == 'i')
+              rv = SetWorkCity(value);
+            else 
+              rv = SetWorkCountry(value);
+            break;
+          case 'P':
+            rv = SetWorkPhone(value);
+            break;
+          case 'S':
+            rv = SetWorkState(value);
+            break;
+          case 'Z':
+            rv = SetWorkZipCode(value);
+            break;
+          default:
+            rv = NS_ERROR_UNEXPECTED;
+            break;
+        }
+      }
+      break;
+    default:
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+  }
 
-    return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }
-
 
 NS_IMETHODIMP
 nsAbCardProperty::GetFirstName(PRUnichar * *aFirstName)
@@ -659,79 +846,6 @@ NS_IMETHODIMP
 nsAbCardProperty::SetLastModifiedDate(PRUint32 aLastModifiedDate)
 { return m_LastModDate = aLastModifiedDate; }
 
-
-
-NS_IMETHODIMP 
-nsAbCardProperty::SetName(const PRUnichar * aName)
-{
-	return NS_OK;
-}
-NS_IMETHODIMP 
-nsAbCardProperty::GetName(PRUnichar * *aName)
-{
-    nsresult rv = NS_OK;
-	// get name depend on "mail.addr_book.lastnamefirst" 
-	// 0= displayname, 1= lastname first, 2=firstname first
-	nsCOMPtr<nsIPref> pPref = do_GetService(NS_PREF_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-	PRInt32 lastNameFirst = 0;
-    rv = pPref->GetIntPref("mail.addr_book.lastnamefirst", &lastNameFirst);
-	if (lastNameFirst == 0)
-		GetDisplayName(aName);
-	else
-	{
-		if (aName)
-		{
-			nsString name;
-			nsString firstName;
-			nsString lastName;
-      nsXPIDLString str;
-			GetFirstName(getter_Copies(str));
-			if (str)
-			{
-				firstName = str;
-			}
-			GetLastName(getter_Copies(str));
-			if (str)
-			{
-				lastName = str;
-			}
-
-			if (lastName.Length() == 0)
-				name = firstName;
-			else if (firstName.Length() == 0)
-				name = lastName;
-			else
-			{
-				if (lastNameFirst == 1)
-				{
-					name = lastName;
-					name.Append(NS_LITERAL_STRING(", "));
-					name += firstName;
-				}
-				else
-				{
-					name = firstName;
-					name.Append(NS_LITERAL_STRING(" "));
-					name += lastName;
-				}
-			}
-				
-			*aName = ToNewUnicode(name);
-			if (!(*aName)) 
-				return NS_ERROR_OUT_OF_MEMORY;
-			else
-				return NS_OK;
-		}
-		else
-			return NS_ERROR_NULL_POINTER;
-
-	}
-
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 {
 	nsXPIDLString str;
@@ -749,7 +863,7 @@ NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 	srcCard->GetSecondEmail(getter_Copies(str));
 	SetSecondEmail(str);
 
-	PRUint32 format = nsIAbPreferMailFormat::unknown;
+	PRUint32 format;
 	srcCard->GetPreferMailFormat(&format);
 	SetPreferMailFormat(format);
 
@@ -817,73 +931,13 @@ NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri, nsIAbCard **_retval)
-{
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri, getter_AddRefs(res));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIAbCard> cardInstance;
-	rv = directory->AddCard (this, getter_AddRefs (cardInstance));
-	
-	*_retval = cardInstance;
-	NS_IF_ADDREF(*_retval);
-	return rv;
-}
-
-NS_IMETHODIMP nsAbCardProperty::DropCardToDatabase(const char *uri, nsIAbCard **_retval)
-{
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri, getter_AddRefs(res));
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
-	NS_ENSURE_SUCCESS(rv, rv);       
-
-	nsCOMPtr<nsIAbCard> cardInstance;
-	rv = directory->DropCard (this, getter_AddRefs (cardInstance));
-	
-	*_retval = cardInstance;
-	NS_IF_ADDREF(*_retval);
-	return rv;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetCollationKey(const PRUnichar *str, PRUnichar **key)
-{
-	nsresult rv;
-
-	if (!addressBook)
-	{
-		// Keep a local copy of the addressBook service
-		// for performance reasons
-		addressBook = do_GetService (NS_ADDRESSBOOK_CONTRACTID, &rv);
-		NS_ENSURE_SUCCESS(rv, rv);       
-	}
-
-	rv = addressBook->CreateCollationKey(str, key);
-
-	return rv;
-}
-
-// nsIAbCard NOT IMPLEMENTED methods
-
 NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsAbCardProperty::GetPrintCardUrl(char * *aPrintCardUrl)
+NS_IMETHODIMP nsAbCardProperty::Equals(nsIAbCard *card, PRBool *result)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+  *result = (card == this);
+  return NS_OK;
 }

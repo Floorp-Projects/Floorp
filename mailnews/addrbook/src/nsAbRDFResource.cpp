@@ -106,7 +106,7 @@ nsresult nsAbRDFResource::GetAbDatabase()
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kMDBDirectoryRoot)]));
+		NS_ConvertUTF8toUCS2 file(&(mURI[strlen(kMDBDirectoryRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			file.Truncate(pos);

@@ -59,11 +59,7 @@
 
 #include "EudoraDebugLog.h"
 
-
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
-
-
 
 class ImportEudoraMailImpl : public nsIImportMail
 {
@@ -184,7 +180,7 @@ void ConvertToUnicode(const char *pStr, nsString &dist)
 	nsresult rv = NS_OK;
 
 	if (!gService)
-		gService = do_GetService(kImportServiceCID);
+		gService = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
 
 	if (gService)
 		rv = gService->SystemStringToUnicode(pStr, dist);
@@ -283,7 +279,7 @@ NS_IMETHODIMP nsEudoraImport::GetImportInterface( const char *pImportType, nsISu
 		nsIImportGeneric *pGeneric = nsnull;
 		rv = ImportEudoraMailImpl::Create( &pMail);
 		if (NS_SUCCEEDED( rv)) {
-			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericMail( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -306,7 +302,7 @@ NS_IMETHODIMP nsEudoraImport::GetImportInterface( const char *pImportType, nsISu
 		nsIImportGeneric *		pGeneric = nsnull;
 		rv = ImportEudoraAddressImpl::Create( &pAddress);
 		if (NS_SUCCEEDED( rv)) {
-			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericAddressBooks( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {

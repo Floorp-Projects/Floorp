@@ -217,7 +217,7 @@ nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool exists)
 		{
 			nsIMdbThumb *thumb = nsnull;
 			char	*nativeFileName = nsCRT::strdup(dbName);
-			nsIMdbHeap* dbHeap = 0;;
+			nsIMdbHeap* dbHeap = 0;
 			mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
 
 			if (!nativeFileName)

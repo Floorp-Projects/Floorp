@@ -1458,7 +1458,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
   if (m_expungedBytes > 0)
   {
     PRInt32 purgeThreshhold = m_master->GetPrefs()->GetPurgeThreshhold();
-    PRBool purgePrompt = m_master->GetPrefs()->GetPurgeThreshholdEnabled();;
+    PRBool purgePrompt = m_master->GetPrefs()->GetPurgeThreshholdEnabled();
     return (purgePrompt && m_expungedBytes / 1000L > purgeThreshhold);
   }
   return PR_FALSE;
@@ -2912,7 +2912,7 @@ nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages
     nsCOMPtr<nsISupports> aSupport =
       getter_AddRefs(messages->ElementAt(i));
     
-    nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryInterface(aSupport, &rv));;
+    nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryInterface(aSupport, &rv));
     
     PRUint32 flags = 0;
     

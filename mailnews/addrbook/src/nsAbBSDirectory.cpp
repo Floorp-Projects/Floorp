@@ -58,15 +58,6 @@
 #include "prmem.h"
 #include "prprf.h"
 
-
-
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-
-static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
-
 const char* kDescriptionPropertyName	= "description";
 const char* kFileNamePropertyName	= "filename";
 const char* kURIPropertyName		= "uri";
@@ -99,7 +90,7 @@ nsresult nsAbBSDirectory::NotifyItemAdded(nsISupports *item)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(kAddrBookSessionCID, &rv); 
+	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->NotifyDirectoryItemAdded(this, item);
 	return NS_OK;
@@ -109,9 +100,10 @@ nsresult nsAbBSDirectory::NotifyItemDeleted(nsISupports *item)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(kAddrBookSessionCID, &rv); 
+	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
+
 	if(NS_SUCCEEDED(rv))
-		abSession->NotifyDirectoryItemDeleted(this, item);
+		abSession->NotifyDirectoryDeleted(this, item);
 
 	return NS_OK;
 }

@@ -486,7 +486,7 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   EndCopy(nsnull, status);
   if (m_curIndex >= m_size)
   {
-    msgHdr = nsnull;;
+    msgHdr = nsnull;
     newMsgHdr = nsnull;
     // no more to copy finish it up
    FinishCompact();
@@ -592,7 +592,7 @@ nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt
   if (m_curIndex >= m_size)
   {
     m_db->Commit(nsMsgDBCommitType::kLargeCommit);
-    msgHdr = nsnull;;
+    msgHdr = nsnull;
     newMsgHdr = nsnull;
     // no more to copy finish it up
    FinishCompact();

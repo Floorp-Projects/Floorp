@@ -52,20 +52,12 @@
 #include "nsIPref.h"
 #include "prmem.h"
 
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kAutoCompleteResultsCID, NS_AUTOCOMPLETERESULTS_CID);
-static NS_DEFINE_CID(kAutoCompleteItemCID, NS_AUTOCOMPLETEITEM_CID);
-
-
 NS_IMPL_ISUPPORTS2(nsAbAutoCompleteSession, nsIAbAutoCompleteSession, nsIAutoCompleteSession)
 
 nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 {
 	NS_INIT_REFCNT();
-    mParser = do_GetService(kHeaderParserCID);
+    mParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 }
 
 
@@ -166,7 +158,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
       if (!fullAddress.IsEmpty())
       {
         /* We need to convert back the result from UTF-8 to Unicode */
-        INTL_ConvertToUnicode(fullAddress.get(), fullAddress.Length(), (void**)&fullAddrStr);
+        fullAddrStr = nsCRT::strdup(NS_ConvertUTF8toUCS2(fullAddress.get()).get());
       }
     }
   
@@ -198,8 +190,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
     
   if (fullAddrStr && ! ItsADuplicate(fullAddrStr, results))
   {    
-    nsCOMPtr<nsIAutoCompleteItem> newItem;
-    rv = nsComponentManager::CreateInstance(kAutoCompleteItemCID, nsnull, NS_GET_IID(nsIAutoCompleteItem), getter_AddRefs(newItem));
+    nsCOMPtr<nsIAutoCompleteItem> newItem = do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
       nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pDisplayNameStr, pFirstNameStr, pLastNameStr, pEmailStr, pNotesStr, pDirName, bIsMailList, type);
@@ -253,7 +244,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
 
 static PRBool CommonPrefix(const PRUnichar *aString, const PRUnichar *aSubstr, PRInt32 aSubstrLen)
 {
-  if (aSubstrLen == 0 || nsCRT::strlen(aString) < aSubstrLen)
+  if (!aSubstrLen || (nsCRT::strlen(aString) < NS_STATIC_CAST(PRUint32, aSubstrLen)))
     return PR_FALSE;
 
   return (Compare(Substring(aString, aString+aSubstrLen),
@@ -480,23 +471,21 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
 }
 
 
-nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory)
+nsresult nsAbAutoCompleteSession::SearchDirectory(const char *fileName, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory)
 {
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
+    nsCOMPtr<nsIRDFService> rdfService(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr <nsIRDFResource> resource;
-    char * strFileName = ToNewCString(fileName);
-    rv = rdfService->GetResource(strFileName, getter_AddRefs(resource));
-    Recycle(strFileName);
+    rv = rdfService->GetResource(fileName, getter_AddRefs(resource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // query interface 
     nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    if (!fileName.EqualsWithConversion(kAllDirectoryRoot))
+    if (nsCRT::strcmp(kAllDirectoryRoot, fileName))
         rv = SearchCards(directory, searchStr, results);
     
     if (!searchSubDirectory)
@@ -520,9 +509,7 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, nsAbAutoCo
 		                    {
 		                        nsXPIDLCString URI;
 		                        subResource->GetValue(getter_Copies(URI));
-		                        nsAutoString subURI;
-		                        subURI.AssignWithConversion(URI);
-		                        rv = SearchDirectory(subURI, searchStr, results, PR_TRUE);
+		                        rv = SearchDirectory(URI.get(), searchStr, results, PR_TRUE);
 		                    }
                     }
                 }
@@ -603,7 +590,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     
     PRBool enableAutocomplete = PR_TRUE;
 
-    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
     NS_ENSURE_SUCCESS(rv, rv);
 
     pPref->GetBoolPref("mail.enable_autocomplete", &enableAutocomplete);
@@ -634,13 +621,11 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     nsAbAutoCompleteSearchString searchStrings(uSearchString);
     
 	  ResetMatchTypeConters();       
-    nsCOMPtr<nsIAutoCompleteResults> results;
-    rv = nsComponentManager::CreateInstance(kAutoCompleteResultsCID, nsnull, NS_GET_IID(nsIAutoCompleteResults), getter_AddRefs(results));
+    nsCOMPtr<nsIAutoCompleteResults> results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
 		  if (NS_FAILED(SearchPreviousResults(&searchStrings, previousSearchResult, results)))
 		  {
-			  nsAutoString root; root.AssignWithConversion(kAllDirectoryRoot);
-			  rv = SearchDirectory(root, &searchStrings, results, PR_TRUE);
+			  rv = SearchDirectory(kAllDirectoryRoot, &searchStrings, results, PR_TRUE);
 		  }
                 
     AutoCompleteStatus status = nsIAutoCompleteStatus::failed;

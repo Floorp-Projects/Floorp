@@ -31,6 +31,7 @@ REQUIRES	= xpcom \
 		  msgcompo \
 		  mime \
 		  msgbase \
+		  msgbaseutil \
 		  rdf \
 		  rdfutil \
 		  docshell \
@@ -41,6 +42,8 @@ REQUIRES	= xpcom \
 		  mork \
 		  appcomps \
 		  mozldap \
+		  layout_xul \
+		  intl \
 		  $(NULL)
 
 ################################################################################
@@ -67,6 +70,7 @@ SUB_LIBRARIES=\
 
 LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
+	$(DIST)\lib\msgbsutl.lib			\
     $(LIBNSPR)						\
     $(DIST)\lib\rdfutil_s.lib		\
 	$(DIST)\lib\unicharutil_s.lib	\

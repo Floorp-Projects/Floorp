@@ -37,8 +37,9 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (newDirectoryCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY newDirectoryCmd.accesskey			"d">  
 <!ENTITY importCmd.label                                "Import..."> 
-<!ENTITY importCmd.accesskey				"i"> 
-<!ENTITY exportCmd.label                                ".Export...">  
+<!ENTITY importCmd.accesskey				"I"> 
+<!ENTITY exportCmd.label                                "Export...">  
+<!ENTITY exportCmd.accesskey				"E"> 
 <!ENTITY printPreviewCmd.label                          ".Print Preview">  
 <!ENTITY printCardViewCmd.label                         "Print Card...">
 <!ENTITY printCardViewCmd.accesskey                     "p">
@@ -59,7 +60,9 @@ Rights Reserved.
 <!ENTITY showAbToolbarCmd.label                         "Address Book Toolbar">  
 <!-- LOCALIZATION NOTE (showAbToolbarCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY showAbToolbarCmd.accesskey                     "o">  
-<!ENTITY showCardPane.label                             ".Card Pane">  
+<!ENTITY showCardPane.label                             "Card Summary">
+<!ENTITY showCardPane.accesskey                         "C">
+  
 <!ENTITY menu_ShowNameAs.label                          "Show Name As"> 
 <!ENTITY menu_ShowNameAs.accesskey                      "n"> 
 <!ENTITY firstLastCmd.label                             "First Last">  
@@ -69,15 +72,6 @@ Rights Reserved.
 <!ENTITY displayNameCmd.label				"Display Name">  
 <!ENTITY displayNameCmd.accesskey			"d"> 
 <!ENTITY sortMenu.label                                 "Sort by"> 
-<!ENTITY sortMenu.accesskey                             "s"> 
-<!ENTITY sortByNameCmd.label                            "Name">  
-<!ENTITY SortByName.accesskey                           "n">  
-<!ENTITY sortByEmailCmd.label                           "Email">  
-<!ENTITY SortByEmail.accesskey				"e">  
-<!ENTITY sortByWorkPhoneCmd.label			"Work Phone">  
-<!ENTITY SortByWorkPhone.accesskey			"w">  
-<!ENTITY sortByOrganizationCmd.label                    "Organization">  
-<!ENTITY SortByOrganization.accesskey                   "O">  
 <!ENTITY stopSearchingCmd.label                         ".Stop Searching"> 
 
 <!-- Toolbar items -->  

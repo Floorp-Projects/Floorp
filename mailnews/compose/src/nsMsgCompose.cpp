@@ -110,9 +110,9 @@
 #include "nsUnicharUtils.h"
 #include "nsNetUtil.h"
 #include "nsMsgSimulateError.h"
+#include "nsIAddrDatabase.h"
 
 // Defines....
-static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -173,7 +173,7 @@ static nsresult RemoveDuplicateAddresses(const char * addresses, const char * an
 {
   nsresult rv;
 
-  nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
+  nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
   if (parser)
     rv= parser->RemoveDuplicateAddresses("UTF-8", addresses, anothersAddresses, removeAliasesToMe, newAddress);
   else
@@ -758,7 +758,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     identity->GetOrganization(getter_Copies(organization));
     
     char * sender = nsnull;
-    nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
+    nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
     if (parser) {
       // convert to UTF8 before passing to MakeFullAddress
       parser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(fullName).get(), email, &sender);
@@ -1679,7 +1679,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       rv = originalMsgHdr->GetMime2DecodedAuthor(getter_Copies(author));
       if (NS_SUCCEEDED(rv))
       {
-        nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
+        nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
 
         if (parser)
         {
@@ -3176,27 +3176,16 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval
   return NS_OK;
 }
 
-static nsresult OpenAddressBook(const char * dbUri, nsIAddrDatabase** aDatabase, nsIAbDirectory** aDirectory)
+static nsresult OpenAddressBook(const char * dbUri, nsIAddrDatabase** aDatabase)
 {
-  if (!aDatabase || !aDirectory)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aDatabase);
 
   nsresult rv;
-  nsCOMPtr<nsIAddressBook> addresBook (do_GetService(NS_ADDRESSBOOK_CONTRACTID)); 
-  if (addresBook)
-    rv = addresBook->GetAbDatabaseFromURI(dbUri, aDatabase);
+  nsCOMPtr<nsIAddressBook> addressBook = do_GetService(NS_ADDRESSBOOK_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr<nsIRDFService> rdfService (do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource(dbUri, getter_AddRefs(resource));
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  // query interface 
-  rv = resource->QueryInterface(nsIAbDirectory::GetIID(), (void **)aDirectory);
+  rv = addressBook->GetAbDatabaseFromURI(dbUri, aDatabase);
+  NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
 
@@ -3304,7 +3293,7 @@ nsresult nsMsgCompose::BuildMailListArray(nsIAddrDatabase* database, nsIAbDirect
               nsXPIDLString listName;
               nsXPIDLString listDescription;
 
-              directory->GetListName(getter_Copies(listName));
+              directory->GetDirName(getter_Copies(listName));
               directory->GetDescription(getter_Copies(listDescription));
 
               nsMsgMailList* mailList = new nsMsgMailList(nsAutoString((const PRUnichar*)listName),
@@ -3435,7 +3424,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
   nsCOMPtr<nsIAbDirectory> abDirectory;   
   nsCOMPtr <nsIAbCard> existingCard;
   nsCOMPtr <nsISupportsArray> mailListAddresses;
-  nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
+  nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
   nsCOMPtr<nsISupportsArray> mailListArray (do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
@@ -3464,11 +3453,16 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       rv = source->GetValue(getter_Copies(uri));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = OpenAddressBook((const char *)uri, getter_AddRefs(abDataBase), getter_AddRefs(abDirectory));
-      if (NS_FAILED(rv) || !abDataBase || !abDirectory)
+      PRBool supportsMailingLists;
+      rv = abDirectory->GetSupportsMailingLists(&supportsMailingLists);
+      if (NS_FAILED(rv) || !supportsMailingLists)
         continue;
 
-      /* Collect all mailing list defined in this AddresBook */
+      rv = OpenAddressBook(uri.get(), getter_AddRefs(abDataBase));
+      if (NS_FAILED(rv) || !abDataBase)
+        continue;
+
+      /* Collect all mailing list defined in this address book */
       rv = BuildMailListArray(abDataBase, abDirectory, mailListArray);
       if (NS_FAILED(rv))
         return rv;
@@ -3584,7 +3578,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
 
             /* Then if we have a card for this email address */
             nsCAutoString emailStr; emailStr.AssignWithConversion(recipient->mEmail);
-            rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr.get(), getter_AddRefs(existingCard));
+            rv = abDataBase->GetCardFromAttribute(abDirectory, kPriEmailColumn, emailStr.get(), PR_TRUE /* caseInsensitive */, getter_AddRefs(existingCard));
             if (NS_SUCCEEDED(rv) && existingCard)
             {
               recipient->mPreferFormat = nsIAbPreferMailFormat::unknown;
@@ -4233,7 +4227,7 @@ nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbD
 {
   NS_INIT_ISUPPORTS();
  
-  nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
+  nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
 
   if (parser)
   {

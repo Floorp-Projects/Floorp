@@ -500,7 +500,7 @@ nsMessengerWinIntegration::SetupInbox()
     
     nsCOMPtr<nsIFolder> rootFolder;
     rv = server->GetRootFolder(getter_AddRefs(rootFolder));
-    nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);;
+    nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
  
     if (!rootMsgFolder)

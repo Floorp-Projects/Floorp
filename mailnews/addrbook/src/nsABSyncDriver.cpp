@@ -41,8 +41,6 @@
 
 NS_IMPL_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
 
-static NS_DEFINE_CID(kAbSync, NS_ABSYNC_SERVICE_CID);
-
 nsAbSyncDriver::nsAbSyncDriver()
 {
   NS_INIT_ISUPPORTS();
@@ -84,7 +82,7 @@ NS_IMETHODIMP nsAbSyncDriver::OnStopOperation(PRInt32 aTransactionID, nsresult a
 NS_IMETHODIMP nsAbSyncDriver::KickIt()
 {
   nsresult rv = NS_OK;
-	nsCOMPtr<nsIAbSync> sync(do_GetService(kAbSync, &rv)); 
+	nsCOMPtr<nsIAbSync> sync(do_GetService(NS_ABSYNC_SERVICE_CONTRACTID, &rv)); 
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add ourselves to the party!

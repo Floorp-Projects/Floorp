@@ -493,7 +493,7 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
     {
       nsCOMPtr<nsIImapUrl> imapUrl;
       nsCAutoString urlSpec;
-      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);;
+      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
       rv = CreateStartOfImapUrl(aMessageURI, getter_AddRefs(imapUrl), folder, nsnull, urlSpec, hierarchySeparator);
       if (NS_FAILED(rv)) return rv;
     	imapUrl->SetImapMessageSink(imapMessageSink);
@@ -3047,7 +3047,7 @@ char *CreateImapManageMailAccountUrl(const char *imapHost)
 	static const char *formatString = "netscape";
 
 	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + 1);
-	NS_MsgSACat(&returnString, formatString);;
+	NS_MsgSACat(&returnString, formatString);
 	
 	return returnString;
 }

@@ -136,7 +136,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
     prefix.Append(unichars) ;
     SetDirName(prefix.get()) ; 
     if (objectType == MAPI_DISTLIST) {
-        SetListName(unichars.get()) ; 
+        SetDirName(unichars.get()) ; 
         SetIsMailList(PR_TRUE) ;
     }
     else { 
@@ -219,7 +219,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::GetChildCards(nsIEnumerator **aCards)
                     m_AddressList->AppendElement(mailList) ;
                     NotifyItemAddition(mailList) ;
                 }
-                else if (m_bIsMailList) {
+                else if (m_IsMailList) {
                     m_AddressList->AppendElement(card) ;
                     NotifyItemAddition(card) ;
                 }
@@ -320,7 +320,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
                 nsVoidKey key (NS_STATIC_CAST(void *, element)) ;
                 
                 mCardList.Remove(&key) ;
-                if (m_bIsMailList) { m_AddressList->RemoveElement(element) ; }
+                if (m_IsMailList) { m_AddressList->RemoveElement(element) ; }
                 retCode = NotifyItemDeletion(element) ;
                 NS_ENSURE_SUCCESS(retCode, retCode) ;
             }
@@ -361,11 +361,13 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteDirectory(nsIAbDirectory *aDirectory)
     return retCode ;
 }
 
-NS_IMETHODIMP nsAbOutlookDirectory::AddCard(nsIAbCard *aData, nsIAbCard **aCard) 
+NS_IMETHODIMP nsAbOutlookDirectory::AddCard(nsIAbCard *aData, nsIAbCard **addedCard)
 {
-    if (mIsQueryURI) { return NS_ERROR_NOT_IMPLEMENTED ; }
-    if (!aData || !aCard) { return NS_ERROR_NULL_POINTER ; }
-    *aCard = nsnull ;
+    if (mIsQueryURI)
+      return NS_ERROR_NOT_IMPLEMENTED;
+
+    NS_ENSURE_ARG_POINTER(aData);
+
     nsresult retCode = NS_OK ;
     PRBool hasCard = PR_FALSE ;
     
@@ -373,28 +375,30 @@ NS_IMETHODIMP nsAbOutlookDirectory::AddCard(nsIAbCard *aData, nsIAbCard **aCard)
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (hasCard) {
         PRINTF(("Has card.\n")) ;
+        NS_IF_ADDREF(*addedCard = aData);
         return NS_OK ; 
     }
-    retCode = CreateCard(aData, aCard) ;
+    retCode = CreateCard(aData, addedCard) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    nsVoidKey newKey (NS_STATIC_CAST(void *, *aCard)) ;
+    nsVoidKey newKey (NS_STATIC_CAST(void *, *addedCard)) ;
     
-    mCardList.Put(&newKey, *aCard) ;
-    if (m_bIsMailList) { m_AddressList->AppendElement(*aCard) ; }
-    NotifyItemAddition(*aCard) ;
+    mCardList.Put(&newKey, *addedCard) ;
+    if (m_IsMailList) { m_AddressList->AppendElement(*addedCard) ; }
+    NotifyItemAddition(*addedCard) ;
     return retCode ;
 }
 
-NS_IMETHODIMP nsAbOutlookDirectory::DropCard(nsIAbCard *aData, nsIAbCard **aCard)
+NS_IMETHODIMP nsAbOutlookDirectory::DropCard(nsIAbCard *aData, PRBool needToCopyCard)
 {
-    return AddCard(aData, aCard) ;
+    nsCOMPtr <nsIAbCard> addedCard;
+    return AddCard(aData, getter_AddRefs(addedCard));
 }
 
 NS_IMETHODIMP nsAbOutlookDirectory::AddMailList(nsIAbDirectory *aMailList)
 {
     if (mIsQueryURI) { return NS_ERROR_NOT_IMPLEMENTED ; }
     if (!aMailList) { return NS_ERROR_NULL_POINTER ; }
-    if (m_bIsMailList) { return NS_OK ; }
+    if (m_IsMailList) { return NS_OK ; }
     nsresult retCode = NS_OK ;
     nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
     nsCAutoString entryString ;
@@ -429,7 +433,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::AddMailList(nsIAbDirectory *aMailList)
     if (!didCopy) {
         retCode = newList->CopyMailList(aMailList) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
-        retCode = newList->EditMailListToDatabase(mURINoQuery.get()) ;
+        retCode = newList->EditMailListToDatabase(mURINoQuery.get(), nsnull) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
     }
     m_AddressList->AppendElement(newList) ;
@@ -437,7 +441,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::AddMailList(nsIAbDirectory *aMailList)
     return retCode ;
 }
 
-NS_IMETHODIMP nsAbOutlookDirectory::EditMailListToDatabase(const char *aUri)
+NS_IMETHODIMP nsAbOutlookDirectory::EditMailListToDatabase(const char *aUri, nsIAbCard *listCard)
 {
     if (mIsQueryURI) { return NS_ERROR_NOT_IMPLEMENTED ; }
     nsresult retCode = NS_OK ;
@@ -445,20 +449,13 @@ NS_IMETHODIMP nsAbOutlookDirectory::EditMailListToDatabase(const char *aUri)
     nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
 
     if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
-    retCode = GetListName(getter_Copies(name)) ;
+    retCode = GetDirName(getter_Copies(name)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (!mapiAddBook->SetPropertyUString(*mMapiData, PR_DISPLAY_NAME_W, name.get())) {
         return NS_ERROR_FAILURE ;
     }
     retCode = CommitAddressList() ;
     return retCode ;
-}
-
-NS_IMETHODIMP nsAbOutlookDirectory::GetTotalCards(PRBool aSubDirectoryCount, PRUint32 *aNbCards)
-{
-    if (!aNbCards) { return NS_ERROR_NULL_POINTER ; }
-    *aNbCards = mCardList.Count();
-    return NS_OK ;
 }
 
 struct OutlookTableAttr
@@ -509,6 +506,7 @@ struct OutlookTableAttr
 // operators do not work on unicode strings in mapi.
 static const OutlookTableAttr OutlookTableStringToProp [] = 
 {
+    // replace "PrimaryEmail" with kPriEmailColumn etc.
     {"FirstName", PR_GIVEN_NAME_A},
     {"LastName", PR_SURNAME_A},
     {"DisplayName", PR_DISPLAY_NAME_A},
@@ -868,22 +866,14 @@ nsresult FillPropertyValues(nsIAbCard *aCard, nsIAbDirectoryQueryArguments *aArg
     for (i = 0 ; i < properties.GetSize() ; ++ i) {
         const char* cPropName = properties[i] ;
         newValue = nsnull ;
-		if (!nsCRT::strcmp(cPropName, "card:nsIAbCard")) {
+		
+    if (!nsCRT::strcmp(cPropName, "card:nsIAbCard")) {
 			nsCOMPtr<nsISupports> bogusInterface (do_QueryInterface(aCard, &retCode)) ;
 
 			NS_ENSURE_SUCCESS(retCode, retCode) ;
 			newValue = new nsAbDirectoryQueryPropertyValue (cPropName, bogusInterface) ;
 		}
-		else if (!nsCRT::strcmp(cPropName, "card:URI")) {
-			nsCOMPtr<nsIRDFResource> rdfResource (do_QueryInterface(aCard, &retCode)) ;
-			nsXPIDLCString uri;
-
-			NS_ENSURE_SUCCESS(retCode, retCode) ;
-			retCode = rdfResource->GetValue(getter_Copies(uri)) ;
-			NS_ENSURE_SUCCESS(retCode, retCode) ;
-			newValue = new nsAbDirectoryQueryPropertyValue(cPropName, NS_ConvertASCIItoUCS2(uri).get()) ;
-		}
-        else {
+    else {
 			nsXPIDLString value ;
 
 			retCode = aCard->GetCardValue(cPropName, getter_Copies(value)) ;
@@ -989,10 +979,12 @@ NS_IMETHODIMP nsAbOutlookDirectory::StartSearch(void)
     retCode = StopSearch() ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     mCardList.Reset() ;
-    nsCOMPtr<nsIAbDirectoryQueryArguments> arguments ;
+
     nsCOMPtr<nsIAbBooleanExpression> expression ;
 
-    NS_NewIAbDirectoryQueryArguments(getter_AddRefs(arguments)) ;
+    nsCOMPtr<nsIAbDirectoryQueryArguments> arguments = do_CreateInstance(NS_ABDIRECTORYQUERYARGUMENTS_CONTRACTID,&retCode);
+    NS_ENSURE_SUCCESS(retCode, retCode);
+
     retCode = nsAbQueryStringToExpression::Convert(mQueryString.get (), getter_AddRefs(expression)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     retCode = arguments->SetExpression(expression) ;
@@ -1032,7 +1024,7 @@ nsresult nsAbOutlookDirectory::OnSearchFoundCard(nsIAbCard *aCard)
     nsresult retCode = NS_OK ;
     
     mCardList.Put(&newKey, aCard) ;
-    nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &retCode);;
+    nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &retCode);
     if (NS_SUCCEEDED(retCode)) { abSession->NotifyDirectoryItemAdded(this, aCard) ; }
     return retCode ;
 }
@@ -1166,7 +1158,7 @@ nsresult nsAbOutlookDirectory::NotifyItemDeletion(nsISupports *aItem)
 {
     nsresult retCode = NS_OK ;
     
-    nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &retCode);;
+    nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &retCode);
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     retCode = abSession->NotifyDirectoryItemDeleted(this, aItem) ;
     return retCode ;
@@ -1176,7 +1168,7 @@ nsresult nsAbOutlookDirectory::NotifyItemAddition(nsISupports *aItem)
 {
     nsresult retCode = NS_OK ;
     
-    nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &retCode);;
+    nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &retCode);
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     retCode = abSession->NotifyDirectoryItemAdded(this, aItem) ;
     return retCode ;
@@ -1192,7 +1184,7 @@ nsresult nsAbOutlookDirectory::CommitAddressList(void)
     PRUint32 nbCards = 0 ;
     PRUint32 i = 0 ;
     
-    if (!m_bIsMailList) { 
+    if (!m_IsMailList) { 
         PRINTF(("We are not in a mailing list, no commit can be done.\n")) ;
         return NS_ERROR_UNEXPECTED ;
     }
@@ -1225,7 +1217,7 @@ nsresult nsAbOutlookDirectory::UpdateAddressList(void)
 {
     nsresult retCode = S_OK ;
     
-    if (m_bIsMailList) {
+    if (m_IsMailList) {
         retCode = GetChildCards(getter_AddRefs(m_AddressList), nsnull) ; 
     }
     else { 
@@ -1253,7 +1245,7 @@ nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard
         
         
         sourceEntry.Assign(entryString) ;
-        if (m_bIsMailList) {
+        if (m_IsMailList) {
             // In the case of a mailing list, we can use the address
             // as a direct template to build the new one (which is done
             // by CopyEntry).
@@ -1271,7 +1263,7 @@ nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard
         // In the case of a mailing list, we cannot directly create a new card,
         // we have to create a temporary one in a real folder (to be able to use
         // templates) and then copy it to the mailing list.
-        if (m_bIsMailList) {
+        if (m_IsMailList) {
             nsMapiEntry parentEntry ;
             nsMapiEntry temporaryEntry ;
 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,195 +36,143 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function debugDump(msg)
+var abResultsPaneObserver = {
+  onDragStart: function (aEvent, aXferData, aDragAction)
 {
-  // uncomment for noise
-  // dump(msg+"\n");
-}
+      aXferData.data = new TransferData();
+      var selectedRows = GetSelectedRows();
+      var selectedAddresses = GetSelectedAddresses();
 
-function GetDragService()
+      aXferData.data.addDataForFlavour("moz/abcard", selectedRows);
+      aXferData.data.addDataForFlavour("text/x-moz-address", selectedAddresses);
+    },
+
+  onDrop: function (aEvent, aXferData, aDragSession)
 {
-	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
-	if (dragService) 
-		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+    },
 
-	return dragService;
-}
+  onDragExit: function (aEvent, aDragSession)
+    {
+    },
 
-function DragOverTree(event)
-{
-	var validFlavor = false;
-	var dragSession = null;
-	var retVal = true;
+  onDragOver: function (aEvent, aFlavour, aDragSession)
+    {
+    },
 
-	var dragService = GetDragService();
-	if ( !dragService )	return(false);
-
-	dragSession = dragService.getCurrentSession();
-	if ( !dragSession )	return(false);
-
-	if ( dragSession.isDataFlavorSupported("text/nsabcard") )	validFlavor = true;
-	//XXX other flavors here...
-
-	// touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
-	if ( validFlavor )
+  getSupportedFlavours: function ()
 	{
-		//XXX this is really slow and likes to refresh N times per second.
-		var treeItem = event.target.parentNode.parentNode;
-		treeItem.setAttribute ( "dd-triggerrepaint", 0 );
-		dragSession.canDrop = true;
-		// necessary??
-		retVal = false; // do not propagate message
-	}
-	return(retVal);
+     return null;
 }
+};
 
-function BeginDragResultTree(event)
+var abDirTreeObserver = {
+  onDragStart: function (aEvent, aXferData, aDragAction)
 {
-	debugDump("BeginDragResultTree\n");
+    },
 
-	//XXX we rely on a capturer to already have determined which item the mouse was over
-	//XXX and have set an attribute.
-    
-	// if the click is on the tree proper, ignore it. We only care about clicks on items.
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+	    var xferData = aXferData.data.split("\n");
 
-    if (event.target.localName != "treecell" &&
-        event.target.localName != "treeitem")
-        return false;
+      // XXX do we still need this check, since we do it in onDragOver?
+      if (aEvent.target.localName != "treecell") {
+         return;
+      }
 
-	var tree = resultsTree;
-	if ( event.target == tree )
-		return(true);					// continue propagating the event
+      // target is the <treecell>, and "id" is on the <treeitem> two levels above
+      var treeItem = aEvent.target.parentNode.parentNode;
+      if (!treeItem)  
+        return;
 
-	var dragStarted = false;
+      var targetURI = treeItem.getAttribute("id");
+      var directory = GetDirectoryFromURI(targetURI);
 
-	var dragService = GetDragService();
-	if ( !dragService )	return(false);
-
-	var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-	if ( !transArray ) return(false); 
-
-	var selArray = tree.selectedItems;
-	var count = selArray.length;
-	debugDump("selArray.length = " + count + "\n");
-	for ( var i = 0; i < count; ++i )
-	{
-		var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-		if ( !trans )		return(false);
-
-		var genTextData = Components.classes["@mozilla.org/supports-wstring;1"].createInstance(Components.interfaces.nsISupportsWString);
-		if (!genTextData)	return(false);
-
-		trans.addDataFlavor("text/nsabcard");
+      var abView = GetAbView();
         
-		// get id (url) 
-		var id = selArray[i].getAttribute("id");
-		genTextData.data = id;
-		debugDump("    ID #" + i + " = " + id + "\n");
+      var rows = xferData[0].split(",");
+      var numrows = rows.length;
+      var srcURI = GetAbViewURI();
 
-		trans.setTransferData ( "text/nsabcard", genTextData, id.length * 2 );  // doublebyte byte data
+      if (srcURI == targetURI) {
+        // should not be here
+        return;
+      }
 
-		// put it into the transferable as an |nsISupports|
-		var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
-		transArray.AppendElement(genTrans);
-	}
+      var result;
+      var needToCopyCard = true;
+      if (srcURI.length > targetURI.length) {
+        result = srcURI.split(targetURI); 
+        if (result != srcURI) {
+          // src directory is a mailing list on target directory, no need to copy card
+          needToCopyCard = false;
+        }
+      }
+      else {
+        result = targetURI.split(srcURI);
+        if (result != targetURI) {
+          // target directory is a mailing list on src directory, no need to copy card
+          needToCopyCard = false;
+        }
+	    }
 
-	var nsIDragService = Components.interfaces.nsIDragService;
-	dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
-		nsIDragService.DRAGDROP_ACTION_MOVE );
-	dragStarted = true;
+      // if we still think we have to copy the card,
+      // check if srcURI and targetURI are mailing lists on same directory
+      // if so, we don't have to copy the card
+      if (needToCopyCard) {
+        var targetParentURI = GetParentDirectoryFromMailingListURI(targetURI);
+        if (targetParentURI && (targetParentURI == GetParentDirectoryFromMailingListURI(srcURI)))
+          needToCopyCard = false;
+      }
 
-	return(!dragStarted);  // don't propagate the event if a drag has begun
-}
+      for (var i=0;i<numrows;i++) {
+        var card = abView.getCardFromRow(rows[i]);
+        directory.dropCard(card, needToCopyCard);
+      }
+      var statusText = document.getElementById("statusText");
+      // XXX get this approved, move it to a string bundle
+      statusText.setAttribute("label", i + " Card(s) Copied");
+    },
 
-function DropOnDirectoryTree(event)
+  onDragExit: function (aEvent, aDragSession)
 {
-	debugDump("DropOnTree\n");
+    },
 
-    if (event.target.localName != "treecell" &&
-        event.target.localName != "treeitem")
+  onDragOver: function (aEvent, aFlavour, aDragSession)
+    {
+      if (aEvent.target.localName != "treecell") {
+         aDragSession.canDrop = false;
         return false;
-
-  var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService().QueryInterface(Components.interfaces.nsIRDFService);
-	if (!RDF) return(false);
-
-	var treeRoot = dirTree;
-	if (!treeRoot)	return(false);
-	var treeDatabase = treeRoot.database;
-	if (!treeDatabase)	return(false);
+      }
 
 	// target is the <treecell>, and "id" is on the <treeitem> two levels above
-	var treeItem = event.target.parentNode.parentNode;
-	if (!treeItem)	return(false);
+      var treeItem = aEvent.target.parentNode.parentNode;
+      if (!treeItem)  
+        return false;
 
-	// drop action is always "on" not "before" or "after"
-	// get drop hint attributes
-	var dropBefore = treeItem.getAttribute("dd-droplocation");
-	var dropOn = treeItem.getAttribute("dd-dropon");
+      var targetURI = treeItem.getAttribute("id");
+      var srcURI = GetAbViewURI();
 
-	var dropAction;
-	if (dropOn == "true") 
-		dropAction = "on";
-	else
-		return(false);
-
-	var targetID = treeItem.getAttribute("id");
-	if (!targetID)	return(false);
-
-	debugDump("***targetID = " + targetID + "\n");
-
-	var dragService = GetDragService();
-	if ( !dragService )	return(false);
-	
-	var dragSession = dragService.getCurrentSession();
-	if ( !dragSession )	return(false);
-
-	var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-	if ( !trans ) return(false);
-	trans.addDataFlavor("text/nsabcard");
-
-	for ( var i = 0; i < dragSession.numDropItems; ++i )
-	{
-		dragSession.getData ( trans, i );
-		var dataObj = new Object();
-		var bestFlavor = new Object();
-		var len = new Object();
-		trans.getAnyTransferData ( bestFlavor, dataObj, len );
-		if ( dataObj )	dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
-		if ( !dataObj )	continue;
-
-		// pull the URL out of the data object
-		var sourceID = dataObj.data.substring(0, len.value);
-		if (!sourceID)	continue;
-
-		debugDump("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'");
-		debugDump("\n");
-
-		var sourceNode = RDF.GetResource(sourceID, true);
-		if (!sourceNode)
-			continue;
-		
-		var targetNode = RDF.GetResource(targetID, true);
-		if (!targetNode) 
-			continue;
-
-		// Prevent dropping of a node before, after, or on itself
-		if (sourceNode == targetNode)	continue;
-
-		if (sourceID.substring(0,targetID.length) != targetID)
-		{
-			var cardResource = rdf.GetResource(sourceID);
-			var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
-			if (card.isMailList == false)
-				card.dropCardToDatabase(targetID);
-		}
+      // you can't drop a card onto the directory it comes from
+      if (targetURI == srcURI) {
+        aDragSession.canDrop = false;
+        return false;
 	}
 
-	return(false);
+      // determine if we dragging from a mailing list on a directory x to the parent (directory x).
+      // if so, don't allow the drop
+      var result = srcURI.split(targetURI);
+      if (result != srcURI) {
+        aDragSession.canDrop = false;
+        return false;
 }
+      return true;
+    },
 
-function DropOnResultTree(event)
+  getSupportedFlavours: function ()
 {
-	debugDump("DropOnResultTree\n");
-	return false;
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("moz/abcard");
+      return flavourSet;
 }
+};
+

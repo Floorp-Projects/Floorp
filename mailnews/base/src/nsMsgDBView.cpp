@@ -468,7 +468,7 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
 {
   nsXPIDLString unparsedAuthor;
   if (!mHeaderParser)
-    mHeaderParser = do_CreateInstance(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
+    mHeaderParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 
   nsresult rv = NS_OK;
   if (mIsSpecialFolder)
@@ -999,6 +999,10 @@ NS_IMETHODIMP nsMsgDBView::GetColumnProperties(const PRUnichar *colID, nsIDOMEle
 
 NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colID, nsISupportsArray *properties)
 {
+  // remove once #116341 is fixed
+  if (!colID[0])
+    return NS_OK;
+
   nsMsgLabelValue label;
 
   if (!IsValidIndex(aRow))
@@ -1259,6 +1263,10 @@ nsresult nsMsgDBView::GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **d
 
 NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, PRUnichar ** aValue)
 {
+  // remove once #116341 is fixed
+  if (!aColID[0])
+    return NS_OK;
+
   nsresult rv = NS_OK;
 
   if (!IsValidIndex(aRow))
@@ -1367,6 +1375,10 @@ NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement *
 
 NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
 {
+  // remove once #116341 is fixed
+  if (!colID[0])
+    return NS_OK;
+
   if (!IsValidIndex(row))
     return NS_MSG_INVALID_DBVIEW_INDEX;
 
@@ -3315,7 +3327,7 @@ nsresult nsMsgDBView::CollapseByIndex(nsMsgViewIndex index, PRUint32 *pNumCollap
 
 nsresult nsMsgDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool /*ensureListed*/)
 {
-	nsresult rv = NS_MSG_MESSAGE_NOT_FOUND;;
+	nsresult rv = NS_MSG_MESSAGE_NOT_FOUND;
 	// views can override this behaviour, which is to append to view.
 	// This is the mail behaviour, but threaded views will want
 	// to insert in order...

@@ -121,7 +121,6 @@ NS_IMETHODIMP nsAbLDAPDirFactory::CreateDirectory(
     directory->SetDirName(description);
 
     NS_IF_ADDREF(*_retval = new nsSingletonEnumerator(directory));
-
     return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

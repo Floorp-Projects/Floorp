@@ -90,13 +90,10 @@ NS_IMETHODIMP nsAbDirectoryQuerySimpleBooleanExpression::GetExpressions(nsISuppo
     if (!mExpressions)
         NS_NewISupportsArray(getter_AddRefs(mExpressions));
 
-    *aExpressions = mExpressions;
-    NS_IF_ADDREF(*aExpressions);
-
+    NS_IF_ADDREF(*aExpressions = mExpressions);
     return NS_OK;
-
-    
 }
+
 NS_IMETHODIMP nsAbDirectoryQuerySimpleBooleanExpression::SetExpressions(nsISupportsArray* aExpressions)
 {
     if (!aExpressions)
@@ -134,35 +131,6 @@ NS_IMETHODIMP nsAbDirectoryQuerySimpleBooleanExpression::AgetExpressions(PRUint3
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsAbDirectoryQuerySimpleBooleanExpression::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsAbDirectoryQuerySimpleBooleanExpression* it = new nsAbDirectoryQuerySimpleBooleanExpression ();
-    if (it == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_IF_ADDREF(it);
-    nsresult rv = it->QueryInterface(aIID, aResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_RELEASE(it);
-    return rv;
-}
-
-nsresult NS_NewAbDirectoryQuerySimpleBooleanExpression(nsIAbBooleanExpression** aInstancePtrResult)
-{
-    nsresult rv;
-    rv = nsAbDirectoryQuerySimpleBooleanExpression::Create(NULL, NS_GET_IID(nsIAbBooleanExpression), NS_REINTERPRET_CAST(void**, aInstancePtrResult));
-    return rv;
-}
-
-
-
-
-
-
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQueryArguments, nsIAbDirectoryQueryArguments)
 
 nsAbDirectoryQueryArguments::nsAbDirectoryQueryArguments() :
@@ -181,16 +149,13 @@ NS_IMETHODIMP nsAbDirectoryQueryArguments::GetExpression(nsISupports** aExpressi
     if (!aExpression)
         return NS_ERROR_NULL_POINTER;
 
-    *aExpression = mExpression;
-    NS_IF_ADDREF(*aExpression);
-
+    NS_IF_ADDREF(*aExpression = mExpression);
     return NS_OK;
 }
 
 NS_IMETHODIMP nsAbDirectoryQueryArguments::SetExpression(nsISupports* aExpression)
 {
     mExpression = aExpression;
-
     return NS_OK;
 }
 
@@ -236,33 +201,6 @@ NS_IMETHODIMP nsAbDirectoryQueryArguments::GetReturnProperties(PRUint32* returnP
 
     return rv;
 }
-
-NS_METHOD nsAbDirectoryQueryArguments::Create(nsISupports* aOuter, REFNSIID aIID, void* *aResult)
-{
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsAbDirectoryQueryArguments* it = new nsAbDirectoryQueryArguments();
-    if (it == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_IF_ADDREF(it);
-    nsresult rv = it->QueryInterface(aIID, aResult);
-    NS_RELEASE(it);
-    return rv;
-}
-
-nsresult NS_NewIAbDirectoryQueryArguments(nsIAbDirectoryQueryArguments** aInstancePtrResult)
-{
-    nsresult rv;
-    rv = nsAbDirectoryQueryArguments::Create(NULL, NS_GET_IID(nsIAbDirectoryQueryArguments),
-                   NS_REINTERPRET_CAST(void**,aInstancePtrResult));
-    return rv;
-}
-
-
-
-
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQueryPropertyValue, nsIAbDirectoryQueryPropertyValue)
 
@@ -323,15 +261,9 @@ NS_IMETHODIMP nsAbDirectoryQueryPropertyValue::GetValueISupports(nsISupports*  *
     if (!mValueISupports)
         return NS_ERROR_NULL_POINTER;
 
-    *aValueISupports = mValueISupports;
-    NS_IF_ADDREF(*aValueISupports);
-
+    NS_IF_ADDREF(*aValueISupports = mValueISupports);
     return NS_OK;
 }
-
-
-
-
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQueryResult, nsIAbDirectoryQueryResult)
 
@@ -373,9 +305,7 @@ NS_IMETHODIMP nsAbDirectoryQueryResult::GetContextArgs(nsIAbDirectoryQueryArgume
     if (!mContextArgs)
         return NS_ERROR_NULL_POINTER;
 
-    *aContextArgs = mContextArgs;
-    NS_IF_ADDREF(*aContextArgs);
-
+    NS_IF_ADDREF(*aContextArgs = mContextArgs);
     return NS_OK;
 }
 
@@ -393,9 +323,7 @@ NS_IMETHODIMP nsAbDirectoryQueryResult::GetResult(nsISupportsArray*  *aResult)
     if (!mResult)
         return NS_ERROR_NULL_POINTER;
 
-    *aResult = mResult;
-    NS_IF_ADDREF(*aResult);
-
+    NS_IF_ADDREF(*aResult = mResult);
     return NS_OK;
 }
 
@@ -652,8 +580,7 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
     rv = condition->GetName (getter_Copies (name));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (name.Equals ("card:URI") ||
-        name.Equals ("card:nsIAbCard"))
+    if (name.Equals ("card:nsIAbCard"))
     {
         if (conditionType == nsIAbBooleanConditionTypes::Exists)
             *matchFound = PR_TRUE;
@@ -754,29 +681,13 @@ nsresult nsAbDirectoryQuery::queryMatch (nsIAbCard* card,
         n.Assign (properties[i]);
 
         nsAbDirectoryQueryPropertyValue* _propertyValue = 0;
-        if (n.Equals(NS_LITERAL_CSTRING("card:nsIAbCard")))
+        if (n.Equals("card:nsIAbCard"))
         {
             nsCOMPtr<nsISupports> supports(do_QueryInterface(card, &rv));
             NS_ENSURE_SUCCESS(rv, rv);
 
             _propertyValue = new nsAbDirectoryQueryPropertyValue(n.get (), supports);
-            if (_propertyValue == NULL)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-        else if (n.Equals(NS_LITERAL_CSTRING("card:URI")))
-        {
-            nsCOMPtr<nsIRDFResource> rdfResource(do_QueryInterface(card, &rv));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsXPIDLCString uri;
-            rv = rdfResource->GetValue (getter_Copies (uri));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsAutoString v;
-            v.AssignWithConversion (uri.get ());
-
-            _propertyValue = new nsAbDirectoryQueryPropertyValue(n.get (), v.get ());
-            if (_propertyValue == NULL)
+            if (!_propertyValue)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
         else
@@ -789,7 +700,7 @@ nsresult nsAbDirectoryQuery::queryMatch (nsIAbCard* card,
                 continue;
 
             _propertyValue = new nsAbDirectoryQueryPropertyValue(n.get (), value.get ());
-            if (_propertyValue == NULL)
+            if (!_propertyValue)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -819,7 +730,7 @@ nsresult nsAbDirectoryQuery::queryMatch (nsIAbCard* card,
         arguments,
         nsIAbDirectoryQueryResult::queryResultMatch,
         propertyValues);
-    if (_queryResult == NULL)
+    if (!_queryResult)
         return NS_ERROR_OUT_OF_MEMORY;
     queryResult = _queryResult;
 
@@ -835,7 +746,7 @@ nsresult nsAbDirectoryQuery::queryFinished (nsIAbDirectoryQueryArguments* argume
         arguments,
         nsIAbDirectoryQueryResult::queryResultComplete,
         0);
-    if (_queryResult == NULL)
+    if (!_queryResult)
         return NS_ERROR_OUT_OF_MEMORY;
     queryResult = _queryResult;
 
@@ -850,7 +761,7 @@ nsresult nsAbDirectoryQuery::queryError (nsIAbDirectoryQueryArguments* arguments
         arguments,
         nsIAbDirectoryQueryResult::queryResultError,
         0);
-    if (_queryResult == NULL)
+    if (!_queryResult)
         return NS_ERROR_OUT_OF_MEMORY;
     queryResult = _queryResult;
 

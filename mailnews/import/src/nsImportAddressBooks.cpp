@@ -67,7 +67,6 @@
 
 #include "ImportDebug.h"
 
-static NS_DEFINE_CID(kImportServiceCID, NS_IMPORTSERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -464,7 +463,7 @@ void nsImportGenericAddressBooks::GetDefaultFieldMap( void)
 	NS_IF_RELEASE( m_pFieldMap);
 	
 	nsresult	rv;
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 	if (NS_FAILED(rv)) {
 		IMPORT_LOG0( "*** Unable to get nsIImportService.\n");
 		return;
@@ -881,8 +880,8 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 	PRBool						import;
 	PRUint32					size;
 	nsCOMPtr<nsIAddrDatabase>	destDB( getter_AddRefs( GetAddressBookFromUri( pData->pDestinationUri)));
-	nsIAddrDatabase *			pDestDB = nsnull;
-	
+	nsCOMPtr<nsIAddrDatabase> pDestDB;
+  
 	nsString					success;
 	nsString					error;
 
@@ -902,16 +901,24 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 					PRUnichar *pName;
 					book->GetPreferredName( &pName);
 					if (destDB) {
-						destDB->QueryInterface( NS_GET_IID(nsIAddrDatabase), (void **)&pDestDB);
+            pDestDB = destDB;
 					}
 					else {
 						pDestDB = GetAddressBook( pName, PR_TRUE);
 					}
 
+          nsCOMPtr<nsIAddrDatabase> proxyAddrDatabase;
+          rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                     NS_GET_IID(nsIAddrDatabase),
+                     pDestDB,
+                     PROXY_SYNC | PROXY_ALWAYS,
+                     getter_AddRefs(proxyAddrDatabase));
+          if (NS_FAILED(rv))
+            return;
 
 					PRBool fatalError = PR_FALSE;
 					pData->currentSize = size;
-					if (pDestDB) {
+					if (proxyAddrDatabase) {
 						PRUnichar *pSuccess = nsnull;
 						PRUnichar *pError = nsnull;
 
@@ -931,7 +938,7 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 						*/
 
 						rv = pData->addressImport->ImportAddressBook(	book, 
-																	pDestDB, // destination
+																	proxyAddrDatabase, // destination
 																	pData->fieldMap, // fieldmap
 													pData->bAddrLocInput,
 																	&pError,
@@ -955,11 +962,9 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 					pData->currentSize = 0;
 					pData->currentTotal += size;
 					
-					if (!destDB) {
-						pDestDB->Close( PR_TRUE);
+					if (!proxyAddrDatabase) {
+						proxyAddrDatabase->Close( PR_TRUE);
 					}
-
-					NS_IF_RELEASE( pDestDB);
 
 					if (fatalError) {
 						pData->fatalError = PR_TRUE;

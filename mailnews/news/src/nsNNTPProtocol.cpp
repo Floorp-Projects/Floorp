@@ -172,7 +172,6 @@ protected:
 };
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
@@ -4229,11 +4228,7 @@ PRBool nsNNTPProtocol::CheckIfAuthor(nsISupports *aElement, void *data)
         PR_LOG(NNTP,PR_LOG_ALWAYS,("from = %s", cancelInfo->from));
     }
     
-    nsCOMPtr<nsIMsgHeaderParser> parser;                  
-    rv = nsComponentManager::CreateInstance(kCHeaderParserCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIMsgHeaderParser),
-                                            getter_AddRefs(parser));
+    nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
 
     if (NS_FAILED(rv)) {
         PR_FREEIF(cancelInfo->from);

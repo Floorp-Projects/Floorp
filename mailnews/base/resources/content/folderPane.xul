@@ -35,7 +35,7 @@
     <outlinerbody flex="1"
                   datasources="rdf:null"
                   statedatasource="rdf:mailnewsfolders"
-                  ondraggesture="return BeginDragFolderOutliner(event);"
+                  ondraggesture="BeginDragFolderOutliner(event);"
                   onselect="FolderPaneSelectionChange();">
       <template>
         <rule>

@@ -59,7 +59,7 @@ Rights Reserved.
   </outlinercols>
   <outlinerbody flex="1"
     onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();"
-    ondraggesture="return BeginDragThreadPane(event);"/>
+    ondraggesture="BeginDragThreadPane(event);"/>
 </outliner>
 
 </overlay>

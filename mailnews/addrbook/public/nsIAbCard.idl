@@ -37,14 +37,6 @@
  
 #include "nsISupports.idl"
 
-interface nsIAddrDatabase;
-
-[ptr] native nsVoidArray(nsVoidArray);
-
-%{C++
-#include "nsVoidArray.h"
-%}
-
 [scriptable, uuid(97448252-F189-11d4-A422-001083003D0C)]
 interface nsIAbPreferMailFormat { 
     const unsigned long unknown   = 0; 
@@ -54,7 +46,6 @@ interface nsIAbPreferMailFormat {
 
 [scriptable, uuid(FA5C977F-04C8-11d3-A2EB-001083003D0C)]
 interface nsIAbCard : nsISupports {
-
 	// Card properties
 	attribute wstring firstName;
 	attribute wstring lastName;
@@ -93,53 +84,30 @@ interface nsIAbCard : nsISupports {
 	attribute wstring custom4;
 	attribute wstring notes;
 	attribute unsigned long lastModifiedDate;
-	attribute wstring name;
 
 	attribute unsigned long preferMailFormat;
 	attribute boolean isMailList;
-	// If isMailList==true then this string
-	// will contain the URI of the associated
-	// mail list
+	/**
+	 * If isMailList is true then mailListURI
+	 * will contain the URI of the associated
+	 * mail list
+	 */
 	attribute string mailListURI;
 
-	wstring getCardValue(in string attrname);
+	wstring getCardValue(in string name);
+
 	void setCardValue(in string attrname, in wstring value);
 
 	// Copies the card attributes from srcCard
 	void copy(in nsIAbCard srcCard);
 	
-	readonly attribute string printCardUrl;
-
-	// Adds a new card to the directory defined by 'uri'
-	// Rename to addCardToDirectory
-	//
-	// Returns an intstance of a card which
-	// is an RDF resource component
-	nsIAbCard addCardToDatabase(in string uri);
-
-	// Behaviour wise this is very similar to the
-	// addCardToDatabase method, except that it
-	// assumes the uri refers to a directory that
-	// is not a mail list
-	// This method is rendundent, droping a card
-	// onto a list should be allowed.
-	// Rename to dropCardToDirectory
-	//
-	// Returns an intstance of a card which
-	// is an RDF resource component
-	nsIAbCard dropCardToDatabase(in string uri);
-
 	// Edits an existing card in the directory defined by 'uri'
 	// Rename to editCardInDirectory
 	// Component will be an RDF card, since it has already
 	// been created
 	//
+	// XXX FIX ME, this should not be a the card, it should be on the addressbook.
 	void  editCardToDatabase(in string uri);
 
-	// Not sure what this does. Used by the
-	// card data source for values of collation
-	// properties, somthing to do with locales
-	// and sorting. Gets called when selecting
-	// table headers like Name and Email.
-	wstring getCollationKey(in wstring str);
+	boolean equals(in nsIAbCard card);
 };

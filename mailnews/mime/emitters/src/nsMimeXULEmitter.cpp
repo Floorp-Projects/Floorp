@@ -63,7 +63,6 @@
 #include "nsIMimeStreamConverter.h"
 #include "prprf.h"
 
-static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -84,9 +83,9 @@ nsMimeXULEmitter::nsMimeXULEmitter()
   mMiscStatusArray = new nsVoidArray();
   BuildListOfStatusProviders();
 
-  nsresult rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                          NULL, NS_GET_IID(nsIMsgHeaderParser), 
-                                          (void **) getter_AddRefs(mHeaderParser));
+  nsresult rv;
+  mHeaderParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
+  
   if (NS_FAILED(rv))
     mHeaderParser = nsnull;
 }

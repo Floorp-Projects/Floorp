@@ -214,7 +214,7 @@ outlinerbody:-moz-outliner-image(remote-abook) {
 outlinerbody:-moz-outliner-image(remote-err) {
   margin: 2px -3px 2px 2px;
   border: none;
-  list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook-errorgif");
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook-error.gif");
 }
 
 

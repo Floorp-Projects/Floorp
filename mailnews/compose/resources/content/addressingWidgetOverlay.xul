@@ -32,8 +32,8 @@ Rights Reserved.
     class="addressingWidget inset toolbar" multiple="true"
     onkeydown="awKeyDown(event, this)"
     onclick="awClickEmptySpace(event.originalTarget, true)"
-    ondragover="return DragOverTree(event);"
-    ondragdrop="return DropOnAddressingWidgetTree(event);">
+    ondragover="DragOverTree(event);"
+    ondragdrop="DropOnAddressingWidgetTree(event);">
     
     <treecolgroup>
       <treecol id="listcol-addressingWidget"/>

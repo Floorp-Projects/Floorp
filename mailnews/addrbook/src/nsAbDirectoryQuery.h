@@ -53,8 +53,6 @@ public:
     nsAbDirectoryQuerySimpleBooleanExpression();
     virtual ~nsAbDirectoryQuerySimpleBooleanExpression();
 
-    static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
 public:
     nsCOMPtr<nsISupportsArray> mExpressions;
     nsAbBooleanOperationType mOperation;
@@ -69,8 +67,6 @@ public:
 
     nsAbDirectoryQueryArguments();
     virtual ~nsAbDirectoryQueryArguments();
-
-    static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
     nsCOMPtr<nsISupports> mExpression;
@@ -168,12 +164,5 @@ protected:
 protected:
     nsCOMPtr<nsIAbDirectory> mDirectory;
 };
-
-nsresult
-NS_NewAbDirectoryQuerySimpleBooleanExpression(nsIAbBooleanExpression** aInstancePtrResult);
-
-nsresult
-NS_NewIAbDirectoryQueryArguments(nsIAbDirectoryQueryArguments** aInstancePtrResult);
-
 
 #endif

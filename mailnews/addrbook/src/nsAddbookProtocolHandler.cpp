@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -60,14 +61,10 @@
 #include "nsRDFCID.h"
 #include "prmem.h"
 
-extern const char *kWorkAddressBook;
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
-static NS_DEFINE_CID(kCAddbookUrlCID, NS_ADDBOOKURL_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID); 
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+extern const char *kWorkAddressBook;
 
 nsAddbookProtocolHandler::nsAddbookProtocolHandler()
 {
@@ -82,18 +79,6 @@ nsAddbookProtocolHandler::~nsAddbookProtocolHandler()
 }
 
 NS_IMPL_ISUPPORTS1(nsAddbookProtocolHandler, nsIProtocolHandler);
-
-NS_METHOD
-nsAddbookProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsAddbookProtocolHandler* ph = new nsAddbookProtocolHandler();
-    if (ph == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return ph->QueryInterface(aIID, aResult);
-}
 
 NS_IMETHODIMP nsAddbookProtocolHandler::GetScheme(char * *aScheme)
 {
@@ -118,11 +103,9 @@ NS_IMETHODIMP nsAddbookProtocolHandler::GetProtocolFlags(PRUint32 *aUritype)
 
 NS_IMETHODIMP nsAddbookProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
-  // get a new smtp url
+  // get a new addrbook url
   nsresult rv = NS_OK;
-	nsCOMPtr <nsIURI> addbookUrl;
-
-	rv = nsComponentManager::CreateInstance(kCAddbookUrlCID, NULL, NS_GET_IID(nsIURI), getter_AddRefs(addbookUrl));
+	nsCOMPtr <nsIURI> addbookUrl = do_CreateInstance(NS_ADDBOOKURL_CONTRACTID, &rv);
 
 	if (NS_SUCCEEDED(rv))
 	{
@@ -239,7 +222,7 @@ nsAddbookProtocolHandler::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
 	nsFileSpec* dbPath = nsnull;
 
 	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(kAddrBookSessionCID, &rv); 
+	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -251,7 +234,7 @@ nsAddbookProtocolHandler::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
       (*dbPath) += aAbName;
 
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-		         do_GetService(kAddressBookDBCID, &rv);
+		         do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
@@ -299,29 +282,7 @@ nsAddbookProtocolHandler::FindPossibleAbName(nsIAbCard  *aCard,
   nsCOMPtr<nsIAbMDBCard> dbaCard(do_QueryInterface(aCard, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_SUCCEEDED(dbaCard->GetAnonymousStrAttrubutesList(&attrlist)) && attrlist)
-  {
-    if (NS_SUCCEEDED(dbaCard->GetAnonymousStrValuesList(&valuelist)) && valuelist)
-    {
-      char    *attr = nsnull;
-
-      for (PRInt32 i = 0; i<attrlist->Count(); i++)
-      {
-        attr = (char *)attrlist->ElementAt(i);
-
-        if ((attr) && (!nsCRT::strcasecmp(kWorkAddressBook, attr)))
-        {
-          char *val = (char *)valuelist->ElementAt(i);
-          if ( (val) && (*val) )
-          {
-            *retName = ToNewUnicode(nsDependentCString(val));
-            rv = NS_OK;
-          }
-        }
-      }
-    }
-  }
-
+  NS_ASSERTION(0, "fix me, FindPossibleAbName");
   return rv;
 }
 
@@ -348,7 +309,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
 
   rv = NS_OK;
   // Get the RDF service...
-  nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
+  nsCOMPtr<nsIRDFService> rdfService(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
   if (NS_FAILED(rv)) 
     goto EarlyExit;
 
@@ -383,7 +344,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
     if (!charAb)
       goto EarlyExit;
 
-    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		  goto EarlyExit;
 
@@ -436,6 +397,8 @@ EarlyExit:
   return rv;
 }
 
+#define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
+
 NS_IMETHODIMP    
 nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirectory *directory, 
                                           char *charEmail, nsString &workBuffer)
@@ -446,7 +409,7 @@ nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirec
   if (NS_FAILED(InitPrintColumns()))
     return NS_ERROR_FAILURE;
 
-  nsresult rv = aDatabase->GetCardForEmailAddress(directory, charEmail, getter_AddRefs(workCard));
+  nsresult rv = aDatabase->GetCardFromAttribute(directory, kPriEmailColumn, charEmail, PR_TRUE /* caseInsensitive */, getter_AddRefs(workCard));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!workCard) 
     return NS_ERROR_FAILURE;
@@ -456,7 +419,21 @@ nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirec
   workBuffer.Append(NS_LITERAL_STRING("<CENTER>"));
   workBuffer.Append(NS_LITERAL_STRING("<TABLE BORDER>"));
 
-  if (NS_SUCCEEDED(workCard->GetName(&aName)) && (aName))
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PRInt32 format;
+  rv = prefBranch->GetIntPref(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, &format);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (NS_SUCCEEDED(abSession->GenerateNameFromCard(workCard, format, &aName)) && (aName))
   {
     workBuffer.Append(NS_LITERAL_STRING("<caption><b>"));
     workBuffer.Append(aName);

@@ -1389,7 +1389,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   mNewSyncMapingTable = (syncMappingRecord *) PR_MALLOC(mNewTableSize * sizeof(syncMappingRecord));
   if (!mNewSyncMapingTable)
   {
-    rv = NS_ERROR_OUT_OF_MEMORY;;
+    rv = NS_ERROR_OUT_OF_MEMORY;
     goto GetOut;
   }
 
@@ -2237,7 +2237,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
                                        sizeof(syncMappingRecord), &writeSize))
                                        || (writeSize != sizeof(syncMappingRecord)))
       {
-        rv = NS_ERROR_OUT_OF_MEMORY;;
+        rv = NS_ERROR_OUT_OF_MEMORY;
         goto ExitEarly;
       }
     }
@@ -2260,7 +2260,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
                                        sizeof(syncMappingRecord), &writeSize))
                                        || (writeSize != sizeof(syncMappingRecord)))
       {
-        rv = NS_ERROR_OUT_OF_MEMORY;;
+        rv = NS_ERROR_OUT_OF_MEMORY;
         goto ExitEarly;
       }
 

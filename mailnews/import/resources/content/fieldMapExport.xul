@@ -87,10 +87,10 @@ Rights Reserved.
         <html:div style="width:10em; height:200px" flex="1">
           <tree id="exportList" style="width:100%; height:100%" 
               onselect="ExportSelectionChanged()"
-              onkeyup="if (event.keyCode == 8) return( DeleteExportItems());"
-              ondragover="return DragOverTree(event);"
-              ondraggesture="return BeginDrag( event, true);"
-              ondragdrop="return DropOnTree( event);">
+              onkeyup="if (event.keyCode == 8) return(DeleteExportItems());"
+              ondragover="DragOverTree(event);"
+              ondraggesture="BeginDrag(event, true);"
+              ondragdrop="DropOnTree(event);">
             <treecol style="width:100%"/>
             <treechildren id="exportBody"/>
           </tree>

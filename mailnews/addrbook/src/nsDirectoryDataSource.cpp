@@ -63,17 +63,12 @@ typedef struct _nsAbRDFNotification {
   nsIRDFNode *object;
 } nsAbRDFNotification;
                                                 
-static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
-
-static NS_DEFINE_CID(kAbDirectoryDataSourceCID, NS_ABDIRECTORYDATASOURCE_CID);
-// static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID); 
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-
 nsIRDFResource* nsAbDirectoryDataSource::kNC_Child = nsnull;
 nsIRDFResource* nsAbDirectoryDataSource::kNC_DirName = nsnull;
 nsIRDFResource* nsAbDirectoryDataSource::kNC_CardChild = nsnull;
 nsIRDFResource* nsAbDirectoryDataSource::kNC_DirUri = nsnull;
 nsIRDFResource* nsAbDirectoryDataSource::kNC_IsMailList = nsnull;
+nsIRDFResource* nsAbDirectoryDataSource::kNC_IsRemote = nsnull;
 
 // commands
 nsIRDFResource* nsAbDirectoryDataSource::kNC_Delete = nsnull;
@@ -85,6 +80,7 @@ nsIRDFResource* nsAbDirectoryDataSource::kNC_NewDirectory = nsnull;
 #define NC_RDF_CARDCHILD			"http://home.netscape.com/NC-rdf#CardChild"
 #define NC_RDF_DIRURI				"http://home.netscape.com/NC-rdf#DirUri"
 #define NC_RDF_ISMAILLIST			"http://home.netscape.com/NC-rdf#IsMailList"
+#define NC_RDF_ISREMOTE			"http://home.netscape.com/NC-rdf#IsRemote"
 
 //Directory Commands
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
@@ -105,13 +101,13 @@ nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
 	if (mRDFService)
 	{
 		mRDFService->UnregisterDataSource(this);
-		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
+		nsServiceManager::ReleaseService("@mozilla.org/rdf/rdf-service;1", mRDFService); 
 		mRDFService = nsnull;
 	}
 	
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(kAddrBookSessionCID, &rv); 
+	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->RemoveAddressBookListener(this);
 
@@ -121,6 +117,7 @@ nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
 	NS_RELEASE2(kNC_CardChild, refcnt);
 	NS_RELEASE2(kNC_DirUri, refcnt);
 	NS_RELEASE2(kNC_IsMailList, refcnt);
+  NS_RELEASE2(kNC_IsRemote, refcnt);
 
 	NS_RELEASE2(kNC_Delete, refcnt);
 	NS_RELEASE2(kNC_DeleteCards, refcnt);
@@ -136,16 +133,19 @@ nsAbDirectoryDataSource::Init()
 	if (mInitialized)
 		return NS_ERROR_ALREADY_INITIALIZED;
 
-	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+	nsresult rv = nsServiceManager::GetService("@mozilla.org/rdf/rdf-service;1",
 											 NS_GET_IID(nsIRDFService),
 											 (nsISupports**) &mRDFService); 
 	NS_ENSURE_SUCCESS(rv, rv);
 
-	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(kAddrBookSessionCID, &rv); 
-	if (NS_SUCCEEDED(rv))
-		abSession->AddAddressBookListener(this);
-
+  nsCOMPtr<nsIAddrBookSession> abSession = 
+    do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  // this listener cares about all events
+  rv = abSession->AddAddressBookListener(this, nsIAbListener::all);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
 	mRDFService->RegisterDataSource(this, PR_FALSE);
 
 	if (!kNC_Child)
@@ -155,6 +155,7 @@ nsAbDirectoryDataSource::Init()
 		mRDFService->GetResource(NC_RDF_CARDCHILD, &kNC_CardChild);
 		mRDFService->GetResource(NC_RDF_DIRURI, &kNC_DirUri);
 		mRDFService->GetResource(NC_RDF_ISMAILLIST, &kNC_IsMailList);
+    mRDFService->GetResource(NC_RDF_ISREMOTE, &kNC_IsRemote);
 
 		mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
 		mRDFService->GetResource(NC_RDF_DELETECARDS, &kNC_DeleteCards);
@@ -167,24 +168,7 @@ nsAbDirectoryDataSource::Init()
 	return NS_OK;
 }
 
-NS_IMPL_ADDREF_INHERITED(nsAbDirectoryDataSource, nsAbRDFDataSource)
-NS_IMPL_RELEASE_INHERITED(nsAbDirectoryDataSource, nsAbRDFDataSource)
-
-NS_IMETHODIMP nsAbDirectoryDataSource::QueryInterface(REFNSIID iid, void** result)
-{
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-	if(iid.Equals(NS_GET_IID(nsIAbListener)))
-	{
-		*result = NS_STATIC_CAST(nsIAbListener*, this);
-		NS_ADDREF(this);
-		return NS_OK;
-	}
-	else
-		return nsAbRDFDataSource::QueryInterface(iid, result);
-}
+NS_IMPL_ISUPPORTS_INHERITED1(nsAbDirectoryDataSource, nsAbRDFDataSource, nsIAbListener)
 
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsAbDirectoryDataSource::GetURI(char* *uri)
@@ -243,7 +227,8 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
 	}
     else if((kNC_DirName == property) ||
             (kNC_DirUri == property) ||
-            (kNC_IsMailList == property)) 
+            (kNC_IsMailList == property) ||
+            (kNC_IsRemote == property)) 
 	{ 
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
@@ -312,7 +297,8 @@ nsAbDirectoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc
                aArc == kNC_Child ||
                aArc == kNC_CardChild ||
                aArc == kNC_DirUri ||
-               aArc == kNC_IsMailList);
+               aArc == kNC_IsMailList ||
+               aArc == kNC_IsRemote);
   }
   else {
     *result = PR_FALSE;
@@ -361,6 +347,7 @@ nsAbDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 	(*arcs)->AppendElement(kNC_CardChild);
 	(*arcs)->AppendElement(kNC_DirUri);
 	(*arcs)->AppendElement(kNC_IsMailList);
+  (*arcs)->AppendElement(kNC_IsRemote);
 	return NS_OK;
 }
 
@@ -538,7 +525,8 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 	rv = createDirectoryChildNode(directory, target);
   if ((kNC_IsMailList == property))
 	rv = createDirectoryIsMailListNode(directory, target);
-  
+  if ((kNC_IsRemote == property))
+    rv = createDirectoryIsRemoteNode(directory, target);
   return rv;
 }
 
@@ -546,20 +534,14 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 nsresult nsAbDirectoryDataSource::createDirectoryNameNode(nsIAbDirectory *directory,
                                                      nsIRDFNode **target)
 {
-	PRUnichar *name = nsnull;
-	PRBool bIsMailList = PR_FALSE;
 	nsresult rv = NS_OK;
 
-	directory->GetIsMailList(&bIsMailList);
-	if (bIsMailList)
-		rv = directory->GetListName(&name);
-	else
-		rv = directory->GetDirName(&name);
+        nsXPIDLString name;
+	rv = directory->GetDirName(getter_Copies(name));
 	NS_ENSURE_SUCCESS(rv, rv);
-	nsString nameString(name);
-	createNode(nameString, target);
-	nsCRT::free(name);
-	return NS_OK;
+	rv = createNode(name.get(), target);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }
 
 nsresult nsAbDirectoryDataSource::createDirectoryUriNode(nsIAbDirectory *directory,
@@ -571,8 +553,9 @@ nsresult nsAbDirectoryDataSource::createDirectoryUriNode(nsIAbDirectory *directo
   nsresult rv = source->GetValue(getter_Copies(uri));
   NS_ENSURE_SUCCESS(rv, rv);
   nsAutoString nameString; nameString.AssignWithConversion(uri);
-  createNode(nameString, target);
-  return NS_OK;
+  rv = createNode(nameString.get(), target);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }
 
 nsresult
@@ -590,9 +573,9 @@ nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 			return NS_RDF_NO_VALUE;
 		else
 		{
-			PRBool bIsMailList = PR_FALSE;
-			directory->GetIsMailList(&bIsMailList);
-			if (bIsMailList)
+			PRBool isMailList = PR_FALSE;
+			directory->GetIsMailList(&isMailList);
+			if (isMailList)
 			{
 				return NS_RDF_NO_VALUE;
 			}
@@ -614,32 +597,47 @@ nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 }
 
 nsresult
-nsAbDirectoryDataSource::createDirectoryIsMailListNode(nsIAbDirectory* directory,
+nsAbDirectoryDataSource::createDirectoryIsRemoteNode(nsIAbDirectory* directory,
                                                   nsIRDFNode **target)
 {
 	nsresult rv;
-	PRBool bIsMailList = PR_FALSE;
-	rv = directory->GetIsMailList(&bIsMailList);
+	PRBool isRemote;
+	rv = directory->GetIsRemote(&isRemote);
 	NS_ENSURE_SUCCESS(rv, rv);
 
-	*target = nsnull;
-
-	nsString nameString;
-	if (bIsMailList)
+	if (isRemote)
 		*target = kTrueLiteral;
 	else
 		*target = kFalseLiteral;
 	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
 
+nsresult
+nsAbDirectoryDataSource::createDirectoryIsMailListNode(nsIAbDirectory* directory,
+                                                  nsIRDFNode **target)
+{
+	nsresult rv;
+	PRBool isMailList;
+	rv = directory->GetIsMailList(&isMailList);
+	NS_ENSURE_SUCCESS(rv, rv);
+
+	if (isMailList)
+		*target = kTrueLiteral;
+	else
+		*target = kFalseLiteral;
+	NS_IF_ADDREF(*target);
 	return NS_OK;
 }
 
 nsresult nsAbDirectoryDataSource::CreateLiterals(nsIRDFService *rdf)
 {
-	nsAutoString str(NS_LITERAL_STRING("true"));
-	createNode(str, getter_AddRefs(kTrueLiteral));
-	str.Assign(NS_LITERAL_STRING("false"));
-	createNode(str, getter_AddRefs(kFalseLiteral));
+	nsresult rv = createNode(NS_LITERAL_STRING("true").get(), getter_AddRefs(kTrueLiteral));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+	rv = createNode(NS_LITERAL_STRING("false").get(), getter_AddRefs(kFalseLiteral));
+  NS_ENSURE_SUCCESS(rv,rv);
+
 	return NS_OK;
 }
 
@@ -774,7 +772,7 @@ nsresult nsAbDirectoryDataSource::DoDirectoryHasAssertion(nsIAbDirectory *direct
 		if(NS_SUCCEEDED(rv))
 			rv = directory->HasDirectory(newDirectory, hasAssertion);
 	}
-	else if ((kNC_IsMailList == property))
+	else if ((kNC_IsMailList == property) || (kNC_IsRemote == property))
 	{
 		nsCOMPtr<nsIRDFResource> dirResource(do_QueryInterface(directory, &rv));
 		NS_ENSURE_SUCCESS(rv, rv);
@@ -831,3 +829,5 @@ nsresult NS_NewAbDirectoryDataSource(const nsIID& iid, void **result)
 
 	return datasource->QueryInterface(iid, result);
 }
+
+

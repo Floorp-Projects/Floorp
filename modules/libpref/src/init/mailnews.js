@@ -101,6 +101,16 @@ pref("mail.strictly_mime_headers",          true);
 pref("mail.file_attach_binary",             false);
 pref("mail.show_headers",                   1); // some
 pref("mail.pane_config",                    0);
+// the format for "mail.addr_book.mapit_url.format" is:
+// @A1 == address, part 1
+// @A2 == address, part 2
+// @CI == city
+// @ST == state
+// @ZI == zip code
+// @CO == country
+//
+// if the format is "", no mapit buttons will appear in the addressbook
+pref("mail.addr_book.mapit_url.format", "http://www.mapquest.com/maps/map.adp?country=@CO&address=@A1%20@A2&city=@CI&state=@ST&zipcode=@ZI");
 pref("mail.addr_book.lastnamefirst", 0); //0=displayname, 1=lastname first, 2=firstname first
 pref("mail.addr_book.displayName.autoGeneration", true);
 pref("mail.addr_book.displayName.lastnamefirst", false); // generate display names in last first order
@@ -339,7 +349,21 @@ pref("mail.ui.folderpane.version", 1);
 // 1 -> 2 is for the thread pane outliner landing, to hide the
 // labels column, see msgMail3PaneWindow.js
 pref("mailnews.ui.threadpane.version", 1);                                          
-
+// for manual upgrades of certain UI features.
+// 1 -> 2 is for the ab results pane outliner landing
+// to hide the non default columns in the addressbook dialog
+// see abCommon.js and addressbook.js
+pref("mailnews.ui.addressbook_results.version", 1);                                          
+// for manual upgrades of certain UI features.
+// 1 -> 2 is for the ab results pane outliner landing
+// to hide the non default columns in the addressbook sidebar panel
+// see abCommon.js and addressbook-panel.js
+pref("mailnews.ui.addressbook_panel_results.version", 1);                                          
+// for manual upgrades of certain UI features.
+// 1 -> 2 is for the ab results pane outliner landing
+// to hide the non default columns in the select addresses dialog
+// see abCommon.js and abSelectAddressesDialog.js
+pref("mailnews.ui.select_addresses_results.version", 1);                                          
 //If set to a number greater than 0, msg compose windows will be recycled in order to open them quickly
 pref("mail.compose.max_recycled_windows", 0); 
 

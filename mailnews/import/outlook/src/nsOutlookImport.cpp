@@ -70,10 +70,7 @@
 
 #include "MapiApi.h"
 
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
-
-
 
 class ImportOutlookMailImpl : public nsIImportMail
 {
@@ -262,7 +259,7 @@ NS_IMETHODIMP nsOutlookImport::GetImportInterface( const char *pImportType, nsIS
 		nsIImportGeneric *pGeneric = nsnull;
 		rv = ImportOutlookMailImpl::Create( &pMail);
 		if (NS_SUCCEEDED( rv)) {
-			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericMail( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -285,7 +282,7 @@ NS_IMETHODIMP nsOutlookImport::GetImportInterface( const char *pImportType, nsIS
 		nsIImportGeneric *		pGeneric = nsnull;
 		rv = ImportOutlookAddressImpl::Create( &pAddress);
 		if (NS_SUCCEEDED( rv)) {
-			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericAddressBooks( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -626,8 +623,8 @@ NS_IMETHODIMP ImportOutlookAddressImpl::ImportAddressBook(	nsIImportABDescriptor
 
 	IMPORT_LOG0( "*** Returning from outlook address import\n");
 
-    return( rv);
-	
+  rv = destination->Commit(nsAddrDBCommitType::kLargeCommit);
+	return rv;
 }
 
 	

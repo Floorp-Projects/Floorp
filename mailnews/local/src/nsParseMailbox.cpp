@@ -499,9 +499,8 @@ nsParseMailMessageState::nsParseMailMessageState()
 	m_IgnoreXMozillaStatus = PR_FALSE;
 	m_state = nsIMsgParseMailMsgState::ParseBodyState;
 	Clear();
-  NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
-  m_HeaderAddressParser = do_GetService(kMsgHeaderParserCID);
+  m_HeaderAddressParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 }
 
 nsParseMailMessageState::~nsParseMailMessageState()

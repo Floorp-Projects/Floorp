@@ -73,7 +73,6 @@ static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +85,7 @@ static void ConvertToUnicode(const char *pStr, nsString &dist)
 	nsresult rv;
 
 	if (!gService)
-		gService = do_GetService(kImportServiceCID, &rv);
+		gService = do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv);
 
 	if (gService)
 		rv = gService->SystemStringToUnicode(pStr, dist);
@@ -104,7 +103,7 @@ static void ConvertFromUnicode(const PRUnichar *pStr, nsCString &dist)
 	nsresult rv;
 
 	if (!gService)
-		gService = do_GetService(kImportServiceCID, &rv);
+		gService = do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv);
 
 	if (gService)
 		rv = gService->SystemStringFromUnicode(pStr, dist);

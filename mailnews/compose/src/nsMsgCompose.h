@@ -54,11 +54,13 @@
 #include "nsIAbDirectory.h"
 #include "nsIAbCard.h"
 #include "nsIWebProgressListener.h"
+#include "nsIAbDirectory.h"
 
 // Forward declares
 class QuotingOutputStreamListener;
 class nsMsgComposeSendListener;
 class nsMsgDocumentStateListener;
+class nsIAddrDatabase;
 
 class nsMsgCompose : public nsIMsgCompose, public nsSupportsWeakReference
 {

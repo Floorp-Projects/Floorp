@@ -31,7 +31,6 @@ CHROME_L10N = \
 	.\abDirTreeOverlay.dtd \
 	.\abMainWindow.dtd \
 	.\abNewCardDialog.dtd \
-	.\abResultsTreeOverlay.dtd \
 	.\abSelectAddressesDialog.dtd \
 	.\abMailListDialog.dtd \
 	.\addressBook.properties \

@@ -18,7 +18,6 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!-- Labels -->
 <!ENTITY Name.tab				"Name"> 
 	<!ENTITY Name.box				"Name"> 
 		<!ENTITY FirstName.label		"First:"> 

@@ -45,22 +45,15 @@
 
 const char *kWorkAddressBook = "AddbookWorkAddressBook";
 
- 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-static NS_DEFINE_CID(kAbCardProperty, NS_ABCARDPROPERTY_CID);
-
-
 /////////////////////////////////////////////////////////////////////////////////////
 // addbook url definition
 /////////////////////////////////////////////////////////////////////////////////////
 nsAddbookUrl::nsAddbookUrl()
 {
   NS_INIT_ISUPPORTS();
-  nsComponentManager::CreateInstance(kSimpleURICID, nsnull, 
-                                     NS_GET_IID(nsIURI), 
-                                     (void **) getter_AddRefs(m_baseURL));
-  nsComponentManager::CreateInstance(kAbCardProperty, nsnull, NS_GET_IID(nsAbCardProperty), 
-                                     (void **) getter_AddRefs(mAbCardProperty));
+  
+  m_baseURL = do_CreateInstance(NS_SIMPLEURI_CONTRACTID);
+  mAbCardProperty = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID);
 
   mOperationType = nsIAddbookUrlOperation::InvalidUrl; 
 }

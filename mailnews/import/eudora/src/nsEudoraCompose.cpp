@@ -56,7 +56,6 @@ static NS_DEFINE_CID( kMsgMailSessionCID,	NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID( kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID( kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID( kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_CID( kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 
 // We need to do some calculations to set these numbers to something reasonable!
@@ -574,7 +573,7 @@ nsMsgAttachedFile * nsEudoraCompose::GetLocalAttachments( void)
 void nsEudoraCompose::ConvertSysToUnicode( const char *pStr, nsString& uniStr)
 {
 	if (!m_pImportService) {
-		m_pImportService = do_GetService( kImportServiceCID);
+		m_pImportService = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
 	}
 	if (m_pImportService) {
 		m_pImportService->SystemStringToUnicode( pStr, uniStr);

@@ -180,22 +180,6 @@ NS_IMETHODIMP nsAbLDAPDirectory::HasCard(nsIAbCard* card, PRBool* hasCard)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAbLDAPDirectory::GetTotalCards(PRBool subDirectoryCount,
-        PRUint32 *_retval)
-{
-    nsresult rv;
-
-    rv = Initiate ();
-    NS_ENSURE_SUCCESS(rv, rv);
-    // Enter lock
-    nsAutoLock lock (mLock);
-    *_retval = NS_STATIC_CAST(PRUint32 ,mCache.Count ());
-
-    return NS_OK;
-}
-
-
-
 /* 
  *
  * nsAbLDAPDirectoryQuery methods
@@ -209,9 +193,7 @@ nsresult nsAbLDAPDirectory::GetLDAPConnection (nsILDAPConnection** connection)
     rv = InitiateConnection ();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *connection = mConnection;
-    NS_IF_ADDREF(*connection);
-
+    NS_IF_ADDREF(*connection = mConnection);
     return rv;
 }
 
@@ -222,52 +204,20 @@ nsresult nsAbLDAPDirectory::GetLDAPURL (nsILDAPURL** url)
     rv = InitiateConnection ();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *url = mURL;
-    NS_IF_ADDREF(*url);
-
+    NS_IF_ADDREF(*url = mURL);
     return rv;
 }
 
-nsresult nsAbLDAPDirectory::CreateCard (nsILDAPURL* uri, const char* dn, nsIAbCard** card)
+nsresult nsAbLDAPDirectory::CreateCard (nsILDAPURL* uri, const char* dn, nsIAbCard** result)
 {
     nsresult rv;
 
-    nsXPIDLCString cardUri;
-    rv = CreateCardURI (uri, dn, getter_Copies (cardUri));
+    nsCOMPtr <nsIAbCard> card = do_CreateInstance(NS_ABLDAPCARD_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIRDFResource> res;
-    rv = gRDFService->GetResource(cardUri, getter_AddRefs(res));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = res->QueryInterface(NS_GET_IID(nsIAbCard), NS_REINTERPRET_CAST(void**, card));
-    NS_IF_ADDREF(*card);
-
-    return rv;
+    NS_IF_ADDREF(*result = card);
+    return NS_OK;
 }
-
-nsresult nsAbLDAPDirectory::CreateCardURI (nsILDAPURL* uri, const char* dn, char** cardUri)
-{
-    nsresult rv;
-
-    nsXPIDLCString host;
-    rv = uri->GetHost(getter_Copies (host));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt32 port;
-    rv = uri->GetPort(&port);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *cardUri = PR_smprintf("moz-abldapcard://%s:%d/%s", host.get (), port, dn);
-    if(!cardUri)
-    {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return rv;
-}
-
-
 
 /* 
  *
@@ -290,8 +240,8 @@ NS_IMETHODIMP nsAbLDAPDirectory::StartSearch ()
     rv = StopSearch ();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIAbDirectoryQueryArguments> arguments;
-    NS_NewIAbDirectoryQueryArguments (getter_AddRefs(arguments));
+    nsCOMPtr<nsIAbDirectoryQueryArguments> arguments = do_CreateInstance(NS_ABDIRECTORYQUERYARGUMENTS_CONTRACTID,&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = arguments->SetExpression (mExpression);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -317,7 +267,14 @@ NS_IMETHODIMP nsAbLDAPDirectory::StartSearch ()
     queryListener = _queryListener;
 
     // Perform the query
-    rv = DoQuery (arguments, queryListener, 100, 0, &mContext);
+    //
+    // XXX todo, instead of 100, use the ldap_2.servers.xxx.maxHits pref
+    // the problem is how to get that value here.
+    //
+    // I'm thinking that nsAbDirectories should know their key so that
+    // they can do a lookup of server values from the key, when they need it
+    // (as those values can change)
+    rv = DoQuery(arguments, queryListener, 100, 0, &mContext);
     NS_ENSURE_SUCCESS(rv, rv);
     
     // Enter lock
@@ -383,10 +340,23 @@ nsresult nsAbLDAPDirectory::OnSearchFoundCard (nsIAbCard* card)
     }
     // Exit lock
 
-    nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);;
+    nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
     if(NS_SUCCEEDED(rv))
         abSession->NotifyDirectoryItemAdded(this, card);
 
     return NS_OK;
 }
 
+NS_IMETHODIMP nsAbLDAPDirectory::GetSupportsMailingLists(PRBool *aSupportsMailingsLists)
+{
+  NS_ENSURE_ARG_POINTER(aSupportsMailingsLists);
+  *aSupportsMailingsLists = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbLDAPDirectory::GetIsRemote(PRBool *aIsRemote)
+{
+  NS_ENSURE_ARG_POINTER(aIsRemote);
+  *aIsRemote = PR_TRUE;
+  return NS_OK;
+}

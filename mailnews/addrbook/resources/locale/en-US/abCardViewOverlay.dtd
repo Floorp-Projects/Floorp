@@ -23,3 +23,9 @@ Rights Reserved.
 <!ENTITY other.heading	 "Other">
 <!ENTITY phone.heading	 "Phone">
 <!ENTITY work.heading	 "Work">
+<!-- Special Box Headings, for mailing lists -->
+<!ENTITY description.heading "Description">
+<!ENTITY addresses.heading "Addresses">
+<!-- For Map It -->
+<!ENTITY mapItButton.label "Map It!">
+

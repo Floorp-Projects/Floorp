@@ -135,7 +135,8 @@ nsresult nsEudoraAddress::ImportAddresses( PRUint32 *pBytes, PRBool *pAbort, con
 	
 	BuildABCards( pBytes, pDb);
 	
-	return( NS_OK);
+  rv = pDb->Commit(nsAddrDBCommitType::kLargeCommit);
+	return rv;
 }
 
 

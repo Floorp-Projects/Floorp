@@ -18,82 +18,69 @@
    - Copyright (C) 1998-1999 Netscape Communications Corporation. All
    - Rights Reserved.
  
+   Original Author:
+     Blake Ross <blakeross@telocity.com>
    Contributor(s): 
-     - Blake Ross <blakeross@telocity.com> (Original Author)
+     Seth Spitzer <sspitzer@netscape.com>
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/sidebarPanel.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressPanes.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/abResultsPane.css" type="text/css"?>
 
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsTreeOverlay.dtd" >
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd" >
 <page id="addressbook-panel"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="InitCommonJS(); abPanelStartup();"
+      onload="AbPanelLoad();"
+      onunload="AbPanelUnload();"
       xmlns:nc="http://home.netscape.com/NC-rdf#"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
-  <script type="application/x-javascript">
-    <![CDATA[
-      function abPanelStartup() {
-        var abList = document.getElementById('addressbookList');
-        ChangeDirectoryByDOMNode(abList.selectedItem);
-        // XXXbar this should definitely not be necessary
-        // for some reason, the menulist is getting its label set to
-        // the label of its first item automatically even though its
-        // selectedItem is correct; this is not done in its constructor.
-        abList.label = abList.selectedItem.getAttribute('label');
-      }
-    ]]>
-  </script>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abResultsPane.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook-panel.js"/>
+    
   <popup id="composeMail">
     <menuitem label="&composeEmail.label;" accesskey="&composeEmail.accesskey;" oncommand="AbNewMessage();" default="true"/>
     <menuitem label="&deleteAddrBookCard.label;" accesskey="&deleteAddrBookCard.accesskey;" oncommand="AbDelete();"/>
     <menuseparator/>
-    <menuitem label="&newAddrBookCard.label;" accesskey="&newAddrBookCard.accesskey;" oncommand="AbNewCard('addressbookList');"/>
-    <menuitem label="&newAddrBookMailingList.label;" accesskey="&newAddrBookMailingList.accesskey;" oncommand="AbNewList('addressbookList');"/>
+    <menuitem label="&newAddrBookCard.label;" accesskey="&newAddrBookCard.accesskey;" oncommand="AbPanelNewCard();"/>
+    <menuitem label="&newAddrBookMailingList.label;" accesskey="&newAddrBookMailingList.accesskey;" oncommand="AbPanelNewList();"/>
     <menuseparator/>
-    <menuitem label="&addrBookCardProperties.label;" accesskey="&addrBookCardProperties.accesskey;" oncommand="AbEditCard();"/>
+    <menuitem label="&addrBookCardProperties.label;" accesskey="&addrBookCardProperties.accesskey;" oncommand="AbEditSelectedCard();"/>
   </popup>
   <vbox id="results_box" flex="1">
     <hbox id="panel-bar" class="toolbar">
-      <menulist id="addressbookList" oncommand="ChangeDirectoryByDOMNode(event.target);" flex="1">
-        <menupopup id="addressbookPopup" datasources="rdf:addressdirectory" ref="moz-abdirectory://">
+      <menulist id="addressbookList" persist="selectedAB" oncommand="AbPanelOnChange(event)" flex="1">
+        <menupopup id="addressbookList-menupopup" 
+          datasources="rdf:addressdirectory" 
+          ref="moz-abdirectory://">
           <template>
             <rule nc:IsMailList="false">
-              <menuitem label="rdf:http://home.netscape.com/NC-rdf#DirName" uri="..." persist="selected"/>
+              <menuitem uri="..."
+                    label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                    value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
             </rule>
           </template>
         </menupopup>
       </menulist>
     </hbox>
-    <tree id="resultsTree" flex="1" datasources="rdf:addressdirectory rdf:addresscard"
-          style="height:0px" ondblclick="if (event.button == 0) AbNewMessage();" class="abResults"
-          containment="http://home.netscape.com/NC-rdf#CardChild"
-          allownegativeassertions="false" context="composeMail"
-          coalesceduplicatearcs="false"
-          onselect="window.updateCommands('tree-select'); window.updateCommands('select');">
-      <template>
-        <rule>
-          <treechildren flex="1">
-            <treeitem uri="...">
-              <treerow id="AbRows">
-                  <treecell class="treecell-iconic cardicon" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              </treerow>
-            </treeitem>
-          </treechildren>
-        </rule>
-      </template>
-      <treecolgroup id="theColumns">
-        <treecol persist="hidden width" flex="2" id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
-      </treecolgroup>
-      <treehead>
-        <treerow id="headRow">
-          <treecell id="NameColumnHeader" label="&nameColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#Name');"/>
-       </treerow>
-      </treehead>
-    </tree>
+
+<outliner id="abResultsOutliner" flex="1" context="composeMail" onclick="AbResultsPaneOnClick(event);" class="plain">
+  <outlinercols>
+  <!-- these column ids must match up to the mork column names, see nsIAddrDatabase.idl -->
+  <outlinercol id="GeneratedName" class="sortDirectionIndicator" 
+    persist="hidden ordinal width" flex="1" label="&GeneratedName.label;" primary="true"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="PrimaryEmail" class="sortDirectionIndicator" 
+    persist="hidden ordinal width" 
+    hiddenbydefault="true"
+    flex="1" label="&PrimaryEmail.label;"/>
+  </outlinercols>
+  <outlinerbody flex="1" />
+</outliner>
+
   </vbox>
 </page>

@@ -553,7 +553,7 @@ nsresult
 nsMsgSendLater::StartNextMailFileSend()
 {
   nsFileSpec    fileSpec;
-  nsresult      rv = NS_OK;;
+  nsresult      rv = NS_OK;
   nsXPIDLCString  aMessageURI;
 
   PRBool hasMore = PR_FALSE;

@@ -41,11 +41,6 @@
 class nsVoidArray;
 class nsIPref;
 
-PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength, 
-							  void** uniBuffer);
-PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer, 
-								const PRInt32 uniLength, char** aBuffer);
-
 #define kPreviousListVersion   2
 #define kCurrentListVersion    3
 #define PREF_LDAP_GLOBAL_TREE_NAME "ldap_2"
@@ -56,7 +51,6 @@ PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer,
 /* use this to get all directories, create new directory*/
 #define kAllDirectoryRoot          "moz-abdirectory://" 
 
-#define kMDBCardRoot               "moz-abmdbcard://"
 #define kMDBDirectoryRoot          "moz-abmdbdirectory://"
 #define kPersonalAddressbook       "abook.mab"
 #define kPersonalAddressbookUri    "moz-abmdbdirectory://abook.mab"

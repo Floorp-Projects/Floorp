@@ -55,9 +55,6 @@
 #include "xp_str.h"
 #include "prprf.h"
 
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 #define LDAP_PORT 389
 #define LDAPS_PORT 636
 #define PREF_NOERROR 0
@@ -297,38 +294,6 @@ void DIR_SetFileName(char** filename, const char* leafName);
 
 static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *pref, void *inst_data);
 
-
-// Do not use void* that was inherited from old libmime when it could not include C++, use PRUnichar* instead.
-PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
-                                      void** uniBuffer)
-{
-	if (nsnull == aBuffer) 
-	{
-		return -1;
-	}
-
-  NS_ConvertUTF8toUCS2 temp(aBuffer, aLength);
-  *uniBuffer = nsCRT::strdup(temp.get());
-  return (*uniBuffer) ? 0 : -1;
-}
-
-// This can now use ToNewUTF8String (or this function itself can be substitued by that).
-// e.g.
-// nsAutoString aStr(uniBuffer);
-// *aBuffer = ToNewUTF8String(aStr);
-// Do not use void* that was inherited from old libmime when it could not include C++, use PRUnichar* instead.
-PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer, const PRInt32 uniLength, char** aBuffer)
-{
-	if (nsnull == uniBuffer) 
-	{
-		return -1;
-	}
-
-  NS_ConvertUCS2toUTF8 temp(uniBuffer, uniLength);
-  *aBuffer = ToNewCString(temp);
-  return (*aBuffer) ? 0 : -1;
-}
-
 /*****************************************************************************
  * Functions for creating the new back end managed DIR_Server list.
  */
@@ -450,8 +415,6 @@ nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. 
 	return NS_OK;
 }
 
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
-
 nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir)
 {
 	if (dir_ServerList)
@@ -481,10 +444,9 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
 	if (dir_ServerList)
 	{
 		PRInt32 count = dir_ServerList->Count();
-		nsString descString(dirName);
-		PRInt32 unicharLength = descString.Length();
 
-		INTL_ConvertFromUnicode(dirName, unicharLength, &server->description);
+    NS_ConvertUCS2toUTF8 utf8str(dirName);
+    server->description = ToNewCString(utf8str);
 		server->position = count + 1;
 
 		if (fileName)
@@ -2007,7 +1969,7 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 	nsFileSpec* dbPath = nsnull;
 
 	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(kAddrBookSessionCID, &rv); 
+	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -2019,7 +1981,7 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 
 		// close file before delete it
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-		         do_GetService(kAddressBookDBCID, &rv);
+		         do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_FALSE, getter_AddRefs(database), PR_TRUE);
@@ -2233,13 +2195,11 @@ static char *DIR_GetLocalizedStringPref
 	char *value = nsnull;
 	if ((const PRUnichar*)wvalue)
 	{
-		nsString descString(wvalue);
-		PRInt32 unicharLength = descString.Length();
-		// convert to UTF8 string
-		INTL_ConvertFromUnicode(wvalue, unicharLength, &value);
+    NS_ConvertUCS2toUTF8 utf8str(wvalue.get());
+    value = ToNewCString(utf8str);
 	}
 	else
-        value = defaultValue ? nsCRT::strdup(defaultValue) : nsnull;
+    value = defaultValue ? nsCRT::strdup(defaultValue) : nsnull;
 
 	return value;
 }
@@ -2835,7 +2795,7 @@ void DIR_SetFileName(char** fileName, const char* defaultName)
 	nsFileSpec* dbPath = nsnull;
 
 	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(kAddrBookSessionCID, &rv); 
+	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	if (dbPath)

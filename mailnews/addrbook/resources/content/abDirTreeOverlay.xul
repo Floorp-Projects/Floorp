@@ -17,6 +17,9 @@ The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
+
+Contributors:
+  Seth Spitzer <sspitzer@netscape.com>
 --> 
 
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressPanes.css" type="text/css"?>
@@ -26,6 +29,10 @@ Rights Reserved.
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
+
   <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
   <tree id="dirTree" 
       class="abDirectory" 
@@ -33,32 +40,25 @@ Rights Reserved.
       datasources="rdf:addressdirectory"
       containment="http://home.netscape.com/NC-rdf#child"
       onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
+      ondblclick="DirPaneDoubleClick();"
       onblur="goOnEvent(this,'blur')"
-      allownegativeassertions="false"
-          coalesceduplicatearcs="false"
-          multiple="true"
-          ondragover="return DragOverTree(event);"
-          ondragdrop="return DropOnDirectoryTree(event);">
-    
+      ondragover="nsDragAndDrop.dragOver(event, abDirTreeObserver);"
+      ondragdrop="nsDragAndDrop.drop(event, abDirTreeObserver);">
+    <treecolgroup>
+      <treecol flex="1"/>
+    </treecolgroup>
     <template>
       <rule>
-            <treechildren>
+       <treechildren flex="1">
         <treeitem uri="..." persist="sortColumn sortKey sortDirection">
           <treerow>
             <treecell indent="true" class="treecell-indent ab-directory-icon" label="rdf:http://home.netscape.com/NC-rdf#DirName"
-                     IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"/>
+                     IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"
+                     IsRemote="rdf:http://home.netscape.com/NC-rdf#IsRemote"/>
           </treerow>
         </treeitem>
             </treechildren>
       </rule>
     </template>
-
-                <treecolgroup>
-      <treecol resource="http://home.netscape.com/NC-rdf#DirName" flex="1"/>
-                </treecolgroup>
-
-    <treechildren id="dirTreeBody" flex="1">
-    </treechildren>
   </tree>
-
 </overlay>

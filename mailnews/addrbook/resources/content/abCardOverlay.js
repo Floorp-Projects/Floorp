@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,7 +38,7 @@
 
 var editCard;
 var gOnSaveListeners = new Array;
-
+var gOkCallback = null;
 var gAddressBookBundle;
 
 function OnLoadNewCard()
@@ -46,19 +47,36 @@ function OnLoadNewCard()
 
   doSetOKCancel(NewCardOKButton, 0);
 
-  var cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance();
-  cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
+  var cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance(Components.interfaces.nsIAbCard);
 
   editCard.card = cardproperty;
-  editCard.okCallback = 0;
   editCard.titleProperty = "newCardTitle"
 
   if ("arguments" in window && window.arguments[0])
   {
-    if ("selectedAB" in window.arguments[0])
+    if ("selectedAB" in window.arguments[0]) {
+      // check if selected ab is a mailing list
+      var abURI = window.arguments[0].selectedAB;
+      
+      var directory = GetDirectoryFromURI(abURI);
+      if (directory.isMailList) {
+        var parentURI = GetParentDirectoryFromMailingListURI(abURI);
+        if (parentURI) {
+          editCard.selectedAB = parentURI;
+        }
+        else {
+          // it's a mailing list, but we failed to determine the parent directory
+          // use the personal addressbook
+          editCard.selectedAB = kPersonalAddressbookURI;
+        }
+      }
+      else {
       editCard.selectedAB = window.arguments[0].selectedAB;
-    else
-      editCard.selectedAB = "moz-abmdbdirectory://abook.mab";
+      }
+    }
+    else {
+      editCard.selectedAB = kPersonalAddressbookURI;
+    }
 
     // we may have been given properties to pre-initialize the window with....
     // we'll fill these in here...
@@ -96,14 +114,30 @@ function OnLoadNewCard()
 
   GetCardValues(editCard.card, document);
 
-  //// FIX ME - looks like we need to focus on both the text field and the tab widget
-  //// probably need to do the same in the addressing widget
+  // FIX ME - looks like we need to focus on both the text field and the tab widget
+  // probably need to do the same in the addressing widget
 
   // focus on first name
   var firstName = document.getElementById('FirstName');
   if ( firstName )
     firstName.focus();
   moveToAlertPosition();
+}
+
+
+function EditCardOKButton()
+{
+  SetCardValues(editCard.card, document);
+
+  editCard.card.editCardToDatabase(editCard.abURI);
+  
+  NotifySaveListeners();
+
+  // callback to allow caller to update
+  if (gOkCallback)
+    gOkCallback();
+
+  return true;  // close the window
 }
 
 
@@ -118,11 +152,9 @@ function OnLoadEditCard()
     if ( window.arguments[0].card )
       editCard.card = window.arguments[0].card;
     if ( window.arguments[0].okCallback )
-      editCard.okCallback = window.arguments[0].okCallback;
+      gOkCallback = window.arguments[0].okCallback;
     if ( window.arguments[0].abURI )
       editCard.abURI = window.arguments[0].abURI;
-    if ( window.arguments[0].abCardURI )
-      editCard.abCardURI = window.arguments[0].abCardURI;
   }
 
   // set global state variables
@@ -141,13 +173,17 @@ function OnLoadEditCard()
                                                            [ displayName ]);
 }
 
+// this is used by people who extend the ab card dialog
+// like Netscape does for screenname
 function RegisterSaveListener(func)
 {
   var length = gOnSaveListeners.length;
   gOnSaveListeners[length] = func;
 }
 
-function CallSaveListeners()
+// this is used by people who extend the ab card dialog
+// like Netscape does for screenname
+function NotifySaveListeners()
 {
   for ( var i = 0; i < gOnSaveListeners.length; i++ )
     gOnSaveListeners[i]();
@@ -159,30 +195,15 @@ function InitEditCard()
   // create editCard object that contains global variables for editCard.js
   editCard = new Object;
 
-  // get pointer to nsIPref object
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"];
-  if ( prefs )
-  {
-    prefs = prefs.getService();
-    if ( prefs )
-    {
-      prefs = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
-      editCard.prefs = prefs;
-    }
-  }
+  editCard.prefs = gPrefs;
 
   // get specific prefs that editCard will need
-  if ( prefs )
-  {
-    try {
-      editCard.displayLastNameFirst = prefs.getBoolPref("mail.addr_book.displayName.lastnamefirst");
-      editCard.generateDisplayName = prefs.getBoolPref("mail.addr_book.displayName.autoGeneration");
-      editCard.lastFirstSeparator = ", ";
-      editCard.firstLastSeparator = " ";
-    }
-    catch (ex) {
-      dump("failed to get pref\n");
-    }
+  try {
+    editCard.displayLastNameFirst = gPrefs.getBoolPref("mail.addr_book.displayName.lastnamefirst");
+    editCard.generateDisplayName = gPrefs.getBoolPref("mail.addr_book.displayName.autoGeneration");
+  }
+  catch (ex) {
+    dump("ex: failed to get pref" + ex + "\n");
   }
 }
 
@@ -202,28 +223,20 @@ function NewCardOKButton()
     if ( editCard.card )
     {
       SetCardValues(editCard.card, document);
-      editCard.card.addCardToDatabase(uri);
-        CallSaveListeners();
+
+      var directory = GetDirectoryFromURI(uri);
+
+      // replace editCard.card with the card we added
+      // so that save listeners can get / set attributes on
+      // the card that got created.
+      var addedCard = directory.addCard(editCard.card);
+      editCard.card = addedCard;
+      NotifySaveListeners();
     }
   }
 
   return true;  // close the window
 }
-
-function EditCardOKButton()
-{
-  SetCardValues(editCard.card, document);
-
-  editCard.card.editCardToDatabase(editCard.abURI);
-    CallSaveListeners();
-
-  // callback to allow caller to update
-  if ("okCallback" in editCard)
-    editCard.okCallback();
-
-  return true;  // close the window
-}
-
 
 // Move the data from the cardproperty to the dialog
 function GetCardValues(cardproperty, doc)
@@ -274,7 +287,6 @@ function GetCardValues(cardproperty, doc)
     doc.getElementById('Notes').value = cardproperty.notes;
   }
 }
-
 
 // Move the data from the dialog to the cardproperty to be stored in the database
 function SetCardValues(cardproperty, doc)
@@ -362,22 +374,16 @@ function GenerateDisplayName()
     var lastNameField = document.getElementById('LastName');
     var displayNameField = document.getElementById('DisplayName');
 
-    /* todo: i18N work todo here */
-    /* this used to be XP_GetString(MK_ADDR_FIRST_LAST_SEP) */
-
-    var separator = "";
-    if ( lastNameField.value && firstNameField.value )
-    {
+    if (lastNameField.value && firstNameField.value) {
       if ( editCard.displayLastNameFirst )
-        separator = editCard.lastFirstSeparator;
+        displayName = gAddressBookBundle.getFormattedString("lastFirstFormat",[ lastNameField.value, firstNameField.value ]);
       else
-        separator = editCard.firstLastSeparator;
+        displayName = gAddressBookBundle.getFormattedString("firstLastFormat",[ firstNameField.value, lastNameField.value ]);
     }
-
-    if ( editCard.displayLastNameFirst )
-      displayName = lastNameField.value + separator + firstNameField.value;
-    else
-      displayName = firstNameField.value + separator + lastNameField.value;
+    else {
+      // one (or both) of these is empty, so this works.
+      displayName = firstNameField.value + lastNameField.value;
+    }
 
     displayNameField.value = displayName;
         top.window.title = gAddressBookBundle.getFormattedString(editCard.titleProperty,

@@ -19,8 +19,11 @@
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
+ * Original Author:
+ *   Cyrille Moureaux <Cyrille.Moureaux@sun.com>
+ *
  * Contributor(s):
- * Created by Cyrille Moureaux <Cyrille.Moureaux@sun.com>
+ *    Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,6 +40,10 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsAbOutlookCard.h"
 #include "nsAbWinHelper.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIAddrBookSession.h"
+#include "nsAbBaseCID.h"
 
 #include "prlog.h"
 
@@ -241,7 +248,9 @@ static void UnicodeToWord(const PRUnichar *aUnicode, WORD& aWord)
     }
 }
 
-NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUri)
+#define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
+
+NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUru)
 {
     nsresult retCode = NS_OK ;
     nsXPIDLString *properties = nsnull ;
@@ -263,8 +272,25 @@ NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUri)
     // name, and when all fails, on the email address.
     GetDisplayName(getter_Copies(properties [index_DisplayName])) ;
     if (*properties [index_DisplayName].get() == 0) {
-        GetName(getter_Copies(properties [index_DisplayName])) ;
-        if (*properties [index_DisplayName].get() == 0) {
+      nsresult rv;
+      nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      nsCOMPtr<nsIPrefBranch> prefBranch;
+      rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      PRInt32 format;
+      rv = prefBranch->GetIntPref(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, &format);
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      rv = abSession->GenerateNameFromCard(this, format, getter_Copies(properties [index_DisplayName]));
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+        if (*properties[index_DisplayName].get() == 0) {
             GetPrimaryEmail(getter_Copies(properties [index_DisplayName])) ;
         }
     }

@@ -1,7 +1,53 @@
-var dirTree = 0;
-var resultsTree = 0;
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Addressbook.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 1999-2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Original Author:
+ *   Paul Hangas <hangas@netscape.com>
+ *
+ * Contributor(s):
+ *   Seth Spitzer <sspitzer@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-// functions needed from abMainWindow and abSelectAddresses
+var gResultsOutliner = 0;
+var dirTree = 0;
+var gAbView = null;
+
+const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
+const kCollectedAddressbookURI = "moz-abmdbdirectory://history.mab";
+
+var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+var gHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
 
 // Controller object for Results Pane
 var ResultsPaneController =
@@ -21,15 +67,19 @@ var ResultsPaneController =
 
   isCommandEnabled: function(command)
   {
-    var numSelected = 0
     switch (command) {
       case "cmd_selectAll":
         return true;
 
       case "cmd_delete":
       case "button_delete":
-        if (resultsTree && resultsTree.selectedItems)
-          numSelected = resultsTree.selectedItems.length;
+        var numSelected;
+        if (gAbView && gAbView.selection)
+          numSelected = gAbView.selection.count;
+        else 
+          numSelected = 0;
+
+        // fix me, don't update on isCommandEnabled
         if (command == "cmd_delete") {
           if (numSelected < 2)
             goSetMenuValue(command, "valueCard");
@@ -38,9 +88,7 @@ var ResultsPaneController =
         }
         return (numSelected > 0);
       case "button_edit":
-        if (resultsTree && resultsTree.selectedItems)
-          numSelected = resultsTree.selectedItems.length;
-        return (numSelected == 1);
+        return (GetSelectedCardIndex() != -1);
       default:
         return false;
     }
@@ -50,18 +98,15 @@ var ResultsPaneController =
   {
     switch (command) {
       case "cmd_selectAll":
-        if (resultsTree)
-          resultsTree.selectAll();
+        if (gAbView)
+          gAbView.selectAll();
         break;
       case "cmd_delete":
       case "button_delete":
-        if (resultsTree) {
-          var cardList = resultsTree.selectedItems;
-          top.addressbook.deleteCards(resultsTree, resultsTree, cardList);
-        }
+        AbDelete();
         break;
       case "button_edit":
-        AbEditCard();
+        AbEditSelectedCard();
         break;
     }
   },
@@ -108,7 +153,7 @@ var DirPaneController =
         var selectedItems = dirTree.selectedItems;
         if (selectedItems.length == 1) {
           var mailingListUri = selectedItems[0].getAttribute('id');
-          var directory = rdf.GetResource(mailingListUri).QueryInterface(Components.interfaces.nsIAbDirectory);
+          var directory = GetDirectoryFromURI(mailingListUri);
           if (directory.isMailList)
              return true;
         }
@@ -130,18 +175,9 @@ var DirPaneController =
       case "button_delete":
         if (dirTree)
           AbDeleteDirectory();
-//        top.addressbook.deleteAddressBooks(dirTree.database, dirTree, dirTree.selectedItems);
         break;
       case "button_edit":
-        var selectedItems = dirTree.selectedItems;
-        if (selectedItems.length == 1) {
-          var mailingListUri = selectedItems[0].getAttribute('id');
-          var directory = rdf.GetResource(mailingListUri).QueryInterface(Components.interfaces.nsIAbDirectory);
-          if (directory.isMailList) {
-            var parentURI = selectedItems[0].parentNode.parentNode.getAttribute('id');
-            goEditListDialog(parentURI, mailingListUri);
-          }
-        }
+        AbEditSelectedDirectory();
         break;
     }
   },
@@ -154,35 +190,68 @@ var DirPaneController =
   }
 };
 
+function AbEditSelectedDirectory()
+{
+  var selectedItems = dirTree.selectedItems;
+  if (selectedItems.length == 1) {
+    var mailingListUri = selectedItems[0].getAttribute('id');
+    var directory = GetDirectoryFromURI(mailingListUri);
+    if (directory.isMailList) {
+      var parentURI = selectedItems[0].parentNode.parentNode.getAttribute('id');
+      goEditListDialog(parentURI, null, mailingListUri, UpdateCardView);
+    }
+  }
+}
+        
 function InitCommonJS()
 {
   dirTree = document.getElementById("dirTree");
-  resultsTree = document.getElementById("resultsTree");
+  gResultsOutliner = document.getElementById("abResultsOutliner");
 }
 
-function SetupCommandUpdateHandlers()
+// builds prior to 12-08-2001 did not use an outliner for
+// the results pane.  so for any existing profiles will 
+// get all columns, whereas new profile only get a select few
+// because we hide them by default in localStore.rdf
+// to work around this, we hide the non-default columns once.
+// there is more than one results pane (addressbook, select addresses,
+// addressbook sidebar channel, etc) so we'll pass in the 
+// the pref so that we'll migrate each of them once.
+function UpgradeAddressBookResultsPaneUI(prefName)
+{
+  var resultsPaneUIVersion;
+
+  try {
+    resultsPaneUIVersion = gPrefs.getIntPref(prefName);
+    if (resultsPaneUIVersion == 1) {
+      // hide all columns with hiddenbydefault="true" 
+      var elements = document.getElementsByAttribute("hiddenbydefault","true");
+      for (var i=0; i<elements.length; i++) {
+        elements[i].setAttribute("hidden","true");
+      }
+      gPrefs.setIntPref(prefName, 2);
+    }
+  }
+  catch (ex) {
+    dump("UpgradeAddressBookResultsPaneUI " + prefName + " ex = " + ex + "\n");
+  }
+}
+
+function SetupAbCommandUpdateHandlers()
 {
   // dir pane
   if (dirTree)
     dirTree.controllers.appendController(DirPaneController);
 
   // results pane
-  if (resultsTree)
-    resultsTree.controllers.appendController(ResultsPaneController);
+  if (gResultsOutliner)
+    gResultsOutliner.controllers.appendController(ResultsPaneController);
 }
 
 function AbDelete()
 {
-  var resultsTree = document.getElementById('resultsTree');
-  if ( resultsTree )
-  {
-    //get the selected elements
-    var cardList = resultsTree.selectedItems;
-    // get AB service
-    addressbook = Components.classes["@mozilla.org/addressbook;1"].getService(Components.interfaces.nsIAddressBook);
-    // delete selected cards
-    addressbook.deleteCards(resultsTree, resultsTree, cardList);
-  }
+  if (gAbView) 
+    gAbView.deleteSelectedCards();
 }
 
 function AbNewCard(abListItem)
@@ -192,26 +261,51 @@ function AbNewCard(abListItem)
   goNewCardDialog(selectedAB);
 }
 
-function AbEditCard()
+// NOTE, will return -1 if more than one card selected, or no cards selected.
+function GetSelectedCardIndex()
 {
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-  rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+  if (!gAbView)
+    return -1;
 
-  if (resultsTree.selectedItems && resultsTree.selectedItems.length == 1) {
-    var uri = resultsTree.selectedItems[0].getAttribute("id");
-    var card = rdf.GetResource(uri);
-    card = card.QueryInterface(Components.interfaces.nsIAbCard);
-    if (card.isMailList) {
-      var listUri = card.mailListURI;
-      goEditListDialog(resultsTree.getAttribute("ref"), listUri);
-    }
-    else {
-      var updateFunc = ("gUpdateCardView" in top) ? top.gUpdateCardView : null;
-      goEditCardDialog(resultsTree.getAttribute("ref"), card, updateFunc, uri);
-    }
+  var outlinerSelection = gAbView.selection;
+  if (outlinerSelection.getRangeCount() == 1) {
+    var start = new Object;
+    var end = new Object;
+    outlinerSelection.getRangeAt(0,start,end);
+    if (start.value == end.value)
+      return start.value;
   }
+
+  return -1;
 }
 
+// NOTE, returns the card if exactly one card is selected, null otherwise
+function GetSelectedCard()
+{
+  var index = GetSelectedCardIndex();
+  if (index == -1)
+    return null;
+  else 
+    return gAbView.getCardFromRow(index);
+}
+
+function AbEditSelectedCard()
+{
+  AbEditCard(GetSelectedCard());
+}
+
+function AbEditCard(card)
+{
+  if (!card)
+    return;
+
+  if (card.isMailList) {
+    goEditListDialog(gAbView.URI, card, card.mailListURI, UpdateCardView);
+  }
+  else {
+    goEditCardDialog(gAbView.URI, card, UpdateCardView);
+  }
+}
 function AbNewMessage()
 {
   var msgComposeType = Components.interfaces.nsIMsgCompType;
@@ -219,12 +313,12 @@ function AbNewMessage()
   var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
   msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 
-  params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
+  var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
   if (params)
   {
     params.type = msgComposeType.New;
     params.format = msgComposFormat.Default;
-    composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
+    var composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
     if (composeFields)
     {
       composeFields.to = GetSelectedAddresses();
@@ -234,302 +328,349 @@ function AbNewMessage()
   }
 }
 
+function GetOneOrMoreCardsSelected()
+{
+  if (!gAbView)
+    return false;
+
+  return (gAbView.selection.getRangeCount() > 0);
+}
+
+// XXX todo
+// could this be moved into utilityOverlay.js?
+function goToggleSplitter( id, elementID )
+{
+  var splitter = document.getElementById( id );
+  var element = document.getElementById( elementID );
+  if ( splitter )
+  {
+    var attribValue = splitter.getAttribute("state") ;
+
+    if ( attribValue == "collapsed" )
+    {
+      splitter.setAttribute("state", "open" );
+      if ( element )
+        element.setAttribute("checked","true")
+    }
+    else
+    {
+      splitter.setAttribute("state", "collapsed");
+      if ( element )
+        element.setAttribute("checked","false")
+    }
+    document.persist(id, 'state');
+    document.persist(elementID, 'checked');
+  }
+}
+
 function GetSelectedAddresses()
 {
-  var item, uri, rdf, cardResource, card;
   var selectedAddresses = "";
 
-  rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-  rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+  var cards = GetSelectedAbCards();
+  if (!cards)
+    return selectedAddresses;
 
-  if (resultsTree.selectedItems && resultsTree.selectedItems.length) {
-    for (item = 0; item < resultsTree.selectedItems.length; item++) {
-      uri = resultsTree.selectedItems[item].getAttribute("id");
-      cardResource = rdf.GetResource(uri);
-      card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
-      if (selectedAddresses)
-        selectedAddresses += ",";
-      selectedAddresses += "\"" + card.displayName + "\" <" + card.primaryEmail + ">";
+  var count = cards.length;
+  if (count > 0)
+    selectedAddresses += GenerateAddressFromCard(cards[0]);
+  
+  for (var i = 1; i < count; i++) { 
+    var generatedAddress = GenerateAddressFromCard(cards[i]);
+
+    if (generatedAddress)
+      selectedAddresses += "," + generatedAddress;
+  }
+
+  return selectedAddresses;
+}
+
+function GetNumSelectedCards()
+{
+ try {
+   var outlinerSelection = gAbView.selection;
+   return outlinerSelection.count;
+ }
+ catch (ex) {
+ }
+
+ // if something went wrong, return 0 for the count.
+ return 0;
+}
+
+// XXX todo
+// an optimization might be to make this return 
+// the selected ranges, which would be faster
+// when the user does large selections, but for now, let's keep it simple.
+function GetSelectedRows()
+{
+  var selectedRows = "";
+
+  if (!gAbView)
+    return selectedRows;
+
+  var i,j;
+  var rangeCount = gAbView.selection.getRangeCount();
+  var current = 0;
+
+  for (i=0; i < rangeCount; i++) {
+    var start = new Object;
+    var end = new Object;
+    gAbView.selection.getRangeAt(i,start,end);
+    for (j=start.value;j<=end.value;j++) {
+      if (selectedRows)
+        selectedRows += ",";
+      selectedRows += j;
     }
   }
-  return selectedAddresses;
+  return selectedRows;
+}
+
+function GetSelectedAbCards()
+{
+  if (!gAbView)
+    return null;
+
+  var cards = new Array(gAbView.selection.count);
+  var i,j;
+  var count = gAbView.selection.getRangeCount();
+  
+  var current = 0;
+
+  for (i=0; i < count; i++) {
+    var start = new Object;
+    var end = new Object;
+    gAbView.selection.getRangeAt(i,start,end);
+    for (j=start.value;j<=end.value;j++) {
+      cards[current] = gAbView.getCardFromRow(j);
+      current++;
+    }
+  }
+
+  return cards;
 }
 
 
 function SelectFirstAddressBook()
 {
-  var body = document.getElementById("dirTreeBody");
-  if (dirTree && body) {
-    var treeitems = body.getElementsByTagName("treeitem");
-    if (treeitems && treeitems.length > 0) {
-      dirTree.selectItem(treeitems[0]);
-      ChangeDirectoryByDOMNode(treeitems[0]);
+  var children = dirTree.childNodes;
+
+  var treechildren;
+  for (var i=0;i<children.length; i++) {
+    if (children[i].localName == "treechildren") {
+      treechildren = children[i];
+      break;
+    }
+  }
+
+  children = treechildren.childNodes;
+  for (i=0; i<children.length; i++) {
+    if (children[i].localName == "treeitem") {
+      dirTree.selectItem(children[i]);
+      ChangeDirectoryByDOMNode(children[i]);
+      // ok, we've got the first treeitem, we can stop.
+      return;
     }
   }
 }
 
 function SelectFirstCard()
 {
-  var body = GetResultsTreeChildren();
-  if (resultsTree && body) {
-    var treeitems = body.getElementsByTagName("treeitem");
-    if (treeitems && treeitems.length > 0) {
-      resultsTree.selectItem(treeitems[0]);
-      ResultsPaneSelectionChange();
-    }
+  if (gAbView && gAbView.selection) {
+    gAbView.selection.select(0);
   }
+}
+
+function DirPaneDoubleClick()
+{
+  if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1))
+    AbEditSelectedDirectory();
 }
 
 function DirPaneSelectionChange()
 {
   if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1))
     ChangeDirectoryByDOMNode(dirTree.selectedItems[0]);
-  else {
-    if (resultsTree) {
-      ClearResultsTreeSelection();
-      resultsTree.setAttribute("ref", null);
-    }
+}
+
+function GetAbResultsBoxObject()
+{
+  var outliner = GetAbResultsOutliner();
+  return outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+}
+
+var gAbResultsOutliner = null;
+
+function GetAbResultsOutliner()
+{
+  if (gAbResultsOutliner) 
+    return gAbResultsOutliner;
+
+  gAbResultsOutliner = document.getElementById('abResultsOutliner');
+  return gAbResultsOutliner;
+}
+
+function CloseAbView()
+{
+  var boxObject = GetAbResultsBoxObject();
+  boxObject.view = null;
+
+  if (gAbView) {
+    gAbView.close();
+    gAbView = null;
   }
+}
+
+function SetAbView(uri, sortColumn, sortDirection)
+{
+  CloseAbView();
+
+  gAbView = Components.classes["@mozilla.org/addressbook/abview;1"].createInstance(Components.interfaces.nsIAbView);
+
+  var actualSortColumn = gAbView.init(uri, GetAbViewListener(), sortColumn, sortDirection);
+  
+  var boxObject = GetAbResultsBoxObject();
+  boxObject.view = gAbView.QueryInterface(Components.interfaces.nsIOutlinerView);
+  return actualSortColumn;
+}
+
+const kDefaultSortColumn = "GeneratedName";
+const kDefaultAscending = "ascending";
+const kDefaultDescending = "descending";
+
+function GetAbView()
+{
+  return gAbView;
+}
+
+function GetAbViewURI()
+{
+  if (gAbView)
+    return gAbView.URI;
+  else 
+    return null;
 }
 
 function ChangeDirectoryByDOMNode(dirNode)
 {
   var uri = dirNode.getAttribute("id");
-  if (resultsTree) {
-    if (uri != resultsTree.getAttribute("ref")) {
-      ClearResultsTreeSelection();
-      resultsTree.setAttribute("ref", uri);
-      WaitUntilDocumentIsLoaded();
-      SortToPreviousSettings();
-      SelectFirstCard();
-      UpdateStatusCardCounts(uri);
+
+  if (!uri)
+    uri = kPersonalAddressbookURI;
+
+  if (gAbView && gAbView.URI == uri)
+    return;
+  
+  var sortColumn = dirNode.getAttribute("sortColumn");
+  var sortDirection = dirNode.getAttribute("sortDirection");
+  
+  if (!sortColumn)
+    sortColumn = kDefaultSortColumn;
+
+  if (!sortDirection)
+    sortDirection = kDefaultAscending;
+
+  var actualSortColumn = SetAbView(uri, sortColumn, sortDirection);
+
+  UpdateSortIndicators(actualSortColumn, sortDirection);
+
+  // only select the first card if there is a first card
+  if (gAbView && gAbView.getCardFromRow(0)) {
+    SelectFirstCard();
+    }
+  else {
+    // the selection changes if we were switching directories.
+    ResultsPaneSelectionChanged()
+  }
+  return;
+}
+
+function AbSortAscending()
+{
+  var sortColumn = kDefaultSortColumn;
+
+  if (gAbView) {
+    var node = document.getElementById(gAbView.URI);
+    sortColumn = node.getAttribute("sortColumn");
+  }
+
+  SortAndUpdateIndicators(sortColumn, kDefaultAscending);
+}
+
+function AbSortDescending()
+{
+  var sortColumn = kDefaultSortColumn;
+
+  if (gAbView) {
+    var node = document.getElementById(gAbView.URI);
+    sortColumn = node.getAttribute("sortColumn");
+  }
+
+  SortAndUpdateIndicators(sortColumn, kDefaultDescending);
+}
+
+function SortResultPane(sortColumn)
+{
+  var sortDirection = kDefaultAscending;
+
+  if (gAbView) {
+     sortDirection = gAbView.sortDirection;
+  }
+
+  SortAndUpdateIndicators(sortColumn, sortDirection);
+}
+
+function SortAndUpdateIndicators(sortColumn, sortDirection)
+{
+  // XXX todo remove once #116341 is fixed
+  if (!sortColumn)
+    return;
+    
+  UpdateSortIndicators(sortColumn, sortDirection);
+
+  if (gAbView)
+    gAbView.sortBy(sortColumn, sortDirection);
+
+  SaveSortSetting(sortColumn, sortDirection);
+}
+
+function SaveSortSetting(column, direction)
+{
+  if (dirTree && gAbView) {
+    var node = document.getElementById(gAbView.URI);
+    if (node) {
+      node.setAttribute("sortColumn", column);
+      node.setAttribute("sortDirection", direction);
     }
   }
 }
 
-function ResultsPaneSelectionChange()
+function UpdateSortIndicators(colID, sortDirection)
 {
-  if ("gUpdateCardView" in top)
-    top.gUpdateCardView();
-
-  if ("gDialogResultsPaneSelectionChanged" in top)
-    top.gDialogResultsPaneSelectionChanged();
-}
-
-function ClearResultsTreeSelection()
-{
-  if (resultsTree)
-    resultsTree.clearItemSelection();
-}
-
-function RedrawResultsTree()
-{
-  if (resultsTree) {
-    var ref = resultsTree.getAttribute("ref");
-    resultsTree.setAttribute("ref", ref);
-  }
-}
-
-function RememberResultsTreeSelection()
-{
-  var selectionArray = 0;
-
-  if (resultsTree) {
-    var selectedItems = resultsTree.selectedItems;
-    var numSelected = selectedItems.length;
-
-    selectionArray = new Array(numSelected);
-
-    for (var i = 0; i < numSelected; i++) {
-      selectionArray[i] = selectedItems[i].getAttribute("id");
-      dump("selectionArray["+i+"] = " + selectionArray[i] + "\n");
+  var sortedColumn;
+  // set the sort indicator on the column we are sorted by
+  if (colID) {
+    sortedColumn = document.getElementById(colID);
+    if (sortedColumn) {
+      sortedColumn.setAttribute("sortDirection",sortDirection);
     }
   }
-  return selectionArray;
-}
 
-function RestoreResultsTreeSelection(selectionArray)
-{
-  if (resultsTree && selectionArray) {
-    var numSelected = selectionArray.length;
-
-    WaitUntilDocumentIsLoaded();
-
-    var rowElement;
-    for (var i = 0 ; i < numSelected; i++) {
-      rowElement = document.getElementById(selectionArray[i]);
-      resultsTree.addItemToSelection(rowElement);
-      if (rowElement && (i==0))
-        resultsTree.ensureElementIsVisible(rowElement);
-    }
-    ResultsPaneSelectionChange();
+  // remove the sort indicator from all the columns
+  // except the one we are sorted by
+  var currCol = GetAbResultsOutliner().firstChild.firstChild;
+  while (currCol) {
+    if (currCol != sortedColumn && currCol.localName == "outlinercol")
+      currCol.removeAttribute("sortDirection");
+    currCol = currCol.nextSibling;
   }
 }
 
-var addrbooksession =Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
-
-function WaitUntilDocumentIsLoaded()
+function InvalidateResultsPane()
 {
-  try {
-    addrbooksession.ensureDocumentIsLoaded(document);
-  }
-  catch (ex) {
-    dump("failed to flush pending notifications: " + ex + "\n");
-  }
-}
-
-function GetResultsTreeChildren()
-{
-  if (resultsTree && resultsTree.childNodes) {
-    for (var index = resultsTree.childNodes.length - 1; index >= 0; index--) {
-      if (resultsTree.childNodes[index].localName == "treechildren")
-        return(resultsTree.childNodes[index]);
-    }
-  }
-  return null;
-}
-
-function GetResultsTreeItem(row)
-{
-  var treechildren = GetResultsTreeChildren();
-
-  if (treechildren && row > 0) {
-    var treeitems = treechildren.getElementsByTagName("treeitem");
-    if (treeitems && treeitems.length >= row)
-      return treeitems[row-1];
-  }
-  return null;
-}
-
-function SortResultPane(column, sortKey)
-{
-  var node = document.getElementById(column);
-  if (!node)
-    return false;
-
-  var sortDirection = "ascending";
-  var currentDirection = node.getAttribute("sortDirection");
-
-  if (currentDirection == "ascending")
-    sortDirection = "descending";
-  else
-    sortDirection = "ascending";
-
-  UpdateSortIndicator(column, sortDirection);
-
-  DoSort(column, sortKey, sortDirection);
-
-  SaveSortSetting(column, sortKey, sortDirection);
-
-  return true;
-}
-
-function DoSort(column, key, direction)
-{
-  var isupports = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
-  if (!isupports)
-    return false;
-
-  var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
-  if (!xulSortService)
-    return false;
-
-  var node = document.getElementById(column);
-
-  if (node) {
-    var selectionArray = RememberResultsTreeSelection();
-    if (selectionArray.length) {
-      xulSortService.Sort(node, key, direction);
-      ClearResultsTreeSelection();
-      WaitUntilDocumentIsLoaded();
-      RestoreResultsTreeSelection(selectionArray);
-    }
-    else {
-      try {
-        xulSortService.Sort(node, key, direction);
-        WaitUntilDocumentIsLoaded();
-      }
-      catch(ex) {
-        dump("failed to do sort\n");
-      }
-    }
-  }
-  return true;
-}
-function SortToPreviousSettings()
-{
-  if (dirTree && resultsTree) {
-    var ref = resultsTree.getAttribute("ref");
-    var folder = document.getElementById(ref);
-    if (folder) {
-      var column = folder.getAttribute("sortColumn");
-      var key = folder.getAttribute("sortKey");
-      var direction = folder.getAttribute("sortDirection");
-
-      if (!column || !key) {
-        column = "NameColumn";
-        key = "http://home.netscape.com/NC-rdf#Name";
-      }
-      if (!direction)
-        direction = "ascending";
-
-      UpdateSortIndicator(column,direction);
-
-      DoSort(column, key, direction);
-    }
-  }
-}
-
-function SaveSortSetting(column, key, direction)
-{
-  if (dirTree && resultsTree) {
-    var ref = resultsTree.getAttribute("ref");
-    var folder = document.getElementById(ref);
-    if (folder) {
-      folder.setAttribute("sortColumn", column);
-      folder.setAttribute("sortKey", key);
-      folder.setAttribute("sortDirection", direction);
-    }
-  }
-}
-
-//------------------------------------------------------------
-// Sets the column header sort icon based on the requested
-// column and direction.
-//
-// Notes:
-// (1) This function relies on the first part of the
-//     <treecell id> matching the <treecol id>.  The treecell
-//     id must have a "Header" suffix.
-// (2) By changing the "sortDirection" attribute, a different
-//     CSS style will be used, thus changing the icon based on
-//     the "sortDirection" parameter.
-//------------------------------------------------------------
-function UpdateSortIndicator(column,sortDirection)
-{
-  // Find the <treerow> element
-  var treerow = document.getElementById("headRow");
-  var id = column + "Header";
-
-  if (treerow) {
-    // Grab all of the <treecell> elements
-    var treecell = treerow.getElementsByTagName("treecell");
-    if (treecell) {
-      // Loop through each treecell...
-      var node_count = treecell.length;
-      for (var i=0; i < node_count; i++) {
-        // Is this the requested column ?
-        if (id == treecell[i].getAttribute("id")) {
-          // Set the sortDirection so the class (CSS) will add the
-          // appropriate icon to the header cell
-          treecell[i].setAttribute("sortDirection", sortDirection);
-        }
-        else {
-          // This is not the sorted row
-          treecell[i].removeAttribute("sortDirection");
-        }
-      }
-    }
+  var outliner = GetAbResultsOutliner();
+  if (outliner) {
+    outliner.boxObject.invalidate();
   }
 }
 
@@ -537,10 +678,7 @@ function AbNewList(abListItem)
 {
   var selectedAB = GetSelectedAddressBookDirID(abListItem);
 
-  window.openDialog("chrome://messenger/content/addressbook/abMailListDialog.xul",
-                    "",
-                    "chrome,titlebar,centerscreen,resizable=no",
-                    {selectedAB:selectedAB});
+  goNewListDialog(selectedAB);
 }
 
 function GetSelectedAddressBookDirID(abListItem)
@@ -560,12 +698,20 @@ function GetSelectedAddressBookDirID(abListItem)
   return selectedAB;
 }
 
-function goEditListDialog(abURI, listURI)
+function goNewListDialog(selectedAB)
+{
+  window.openDialog("chrome://messenger/content/addressbook/abMailListDialog.xul",
+                    "",
+                    "chrome,titlebar,centerscreen,resizable=no",
+                    {selectedAB:selectedAB});
+}
+
+function goEditListDialog(abURI, abCard, listURI, okCallback)
 {
   window.openDialog("chrome://messenger/content/addressbook/abEditListDialog.xul",
                     "",
                     "chrome,titlebar,resizable=no",
-                    {abURI:abURI, listURI:listURI});
+                    {abURI:abURI, abCard:abCard, listURI:listURI, okCallback:okCallback});
 }
 
 function goNewCardDialog(selectedAB)
@@ -576,10 +722,76 @@ function goNewCardDialog(selectedAB)
                     {selectedAB:selectedAB});
 }
 
-function goEditCardDialog(abURI, card, okCallback, abCardURI)
+function goEditCardDialog(abURI, card, okCallback)
 {
   window.openDialog("chrome://messenger/content/addressbook/abEditCardDialog.xul",
 					  "",
 					  "chrome,resizable=no,modal,titlebar,centerscreen",
-					  {abURI:abURI, card:card, okCallback:okCallback, abCardURI:abCardURI});
+					  {abURI:abURI, card:card, okCallback:okCallback});
 }
+
+
+function setSortByMenuItemCheckState(id, value)
+{
+    var menuitem = document.getElementById(id);
+    if (menuitem) {
+      menuitem.setAttribute("checked", value);
+    }
+}
+
+function InitViewSortByMenu()
+{
+    var sortColumn = kDefaultSortColumn;
+    var sortDirection = kDefaultAscending;
+
+    if (gAbView) {
+      sortColumn = gAbView.sortColumn;
+      sortDirection = gAbView.sortDirection;
+    }
+
+    // this approach is necessary to support generic columns that get overlayed.
+    var elements = document.getElementsByAttribute("name","sortas");
+    for (var i=0; i<elements.length; i++) {
+        var cmd = elements[i].getAttribute("id");
+        var columnForCmd = cmd.split("cmd_SortBy")[1];
+        setSortByMenuItemCheckState(cmd, (sortColumn == columnForCmd));
+    }
+
+    setSortByMenuItemCheckState("sortAscending", (sortDirection == kDefaultAscending));
+    setSortByMenuItemCheckState("sortDescending", (sortDirection == kDefaultDescending));
+}
+
+function GenerateAddressFromCard(card)
+{
+  var email;
+
+  if (card.isMailList)
+    email = card.displayName;
+  else
+    email = card.primaryEmail;
+    
+  return gHeaderParser.MakeFullAddress("UTF-8", card.displayName, email);
+}
+
+function GetDirectoryFromURI(uri)
+{
+  var directory = rdf.GetResource(uri).QueryInterface(Components.interfaces.nsIAbDirectory);
+  return directory;
+}
+
+// returns null if abURI is not a mailing list URI
+function GetParentDirectoryFromMailingListURI(abURI)
+{
+  var abURIArr = abURI.split("/");
+  /*
+   turn turn "moz-abmdbdirectory://abook.mab/MailList6"
+   into ["moz-abmdbdirectory:","","abook.mab","MailList6"]
+   then, turn ["moz-abmdbdirectory:","","abook.mab","MailList6"]
+   into "moz-abmdbdirectory://abook.mab"
+  */
+  if (abURIArr.length == 4 && abURIArr[0] == "moz-abmdbdirectory:" && abURIArr[3] != "") {
+    return abURIArr[0] + "/" + abURIArr[1] + "/" + abURIArr[2];
+  }
+
+  return null;
+} 

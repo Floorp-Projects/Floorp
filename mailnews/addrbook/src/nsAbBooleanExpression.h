@@ -52,8 +52,6 @@ public:
     nsAbBooleanConditionString();
     virtual ~nsAbBooleanConditionString();
 
-    static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
 protected:
     nsAbBooleanConditionType mCondition;
     nsCString mName;
@@ -69,16 +67,9 @@ public:
     nsAbBooleanExpression();
     virtual ~nsAbBooleanExpression();
 
-    static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 protected:
     nsAbBooleanOperationType mOperation;
     nsCOMPtr<nsISupportsArray> mExpressions;
 };
-
-nsresult
-NS_NewIAbBooleanConditionString(nsIAbBooleanConditionString** aInstancePtrResult);
-
-nsresult
-NS_NewIAbBooleanExpression(nsIAbBooleanExpression** aInstancePtrResult);
 
 #endif

@@ -46,7 +46,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsICmdLineHandler.h"
 #include "nsIComponentManager.h"
-#include "nsICollation.h"
+
+class nsILocalFile;
+class nsIAbDirectory;
 
 #define NC_RDF_NEWABCARD			"http://home.netscape.com/NC-rdf#NewCard"
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
@@ -73,8 +75,9 @@ protected:
 	nsresult GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **db);
 
 private:
-	 nsIDocShell        *mDocShell;            // weak reference
-	nsCOMPtr<nsICollation> mCollationKeyGenerator;
+        nsIDocShell        *mDocShell;            // weak reference
+        nsresult ExportDirectory(nsIAbDirectory *aDirectory, const char *aDelim, PRUint32 aDelimLen, nsILocalFile *aLocalFile); 
+
 };
 
 #endif

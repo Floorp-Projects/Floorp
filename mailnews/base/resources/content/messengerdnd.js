@@ -59,7 +59,7 @@ function CanDropOnFolderOutliner(index)
     if (! dragSession)
         return false;
 
-    if (dragSession.isDataFlavorSupported("text/nsmessageOrfolder"))
+    if (dragSession.isDataFlavorSupported("text/x-moz-message-or-folder"))
         flavor = true;
 
     var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
@@ -74,7 +74,7 @@ function CanDropOnFolderOutliner(index)
     var sourceServer;
     var sourceResource;
 
-    trans.addDataFlavor("text/nsmessageOrfolder");
+    trans.addDataFlavor("text/x-moz-message-or-folder");
    
     for (var i = 0; i < dragSession.numDropItems; i++)
     {
@@ -222,7 +222,7 @@ function DropOnFolderOutliner(row, orientation)
         return false;
 
     var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-    trans.addDataFlavor("text/nsmessageOrfolder");
+    trans.addDataFlavor("text/x-moz-message-or-folder");
 
     var list = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 
@@ -360,7 +360,7 @@ function BeginDragFolderOutliner(event)
     }
 
     var selectedFolders = GetSelectedFolders();
-    return BeginDragOutliner(event, folderOutliner, selectedFolders, "text/nsmessageOrfolder");
+    return BeginDragOutliner(event, folderOutliner, selectedFolders, "text/x-moz-message-or-folder");
 }
 
 function BeginDragThreadPane(event)
@@ -369,7 +369,7 @@ function BeginDragThreadPane(event)
 
     var threadOutliner = GetThreadOutliner();
     var selectedMessages = GetSelectedMessages();
-    return BeginDragOutliner(event, threadOutliner, selectedMessages, "text/nsmessageOrfolder");
+    return BeginDragOutliner(event, threadOutliner, selectedMessages, "text/x-moz-message-or-folder");
 }
 
 function BeginDragOutliner(event, outliner, selArray, flavor)
@@ -377,7 +377,8 @@ function BeginDragOutliner(event, outliner, selArray, flavor)
     var dragStarted = false;
 
     var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    if ( !transArray ) return(false);
+    if ( !transArray ) 
+      return false;
 
     // let's build the drag region
     var region = null;
@@ -412,10 +413,12 @@ function BeginDragOutliner(event, outliner, selArray, flavor)
     debugDump("selArray.length = " + count + "\n");
     for (i = 0; i < count; ++i ) {
         var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-        if (!trans) return(false);
+        if (!trans) 
+          return false;
 
         var genTextData = Components.classes["@mozilla.org/supports-wstring;1"].createInstance(Components.interfaces.nsISupportsWString);
-        if (!genTextData) return(false);
+        if (!genTextData) 
+          return false;
 
         trans.addDataFlavor(flavor);
 

@@ -197,9 +197,8 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(
     nsSingletonEnumerator* cursor =    new nsSingletonEnumerator(directory);
     if(!cursor)
         return NS_ERROR_NULL_POINTER;
-    *_retval = cursor;
-    NS_IF_ADDREF(*_retval);
-
+    
+    NS_IF_ADDREF(*_retval = cursor);
     return rv;
 }
 

@@ -40,9 +40,9 @@ Rights Reserved.
   <!-- field list -->
   <vbox id="fieldList-box">
     <tree id="fieldList" flex="1"
-        ondragover="return DragOverTree(event);"
-        ondraggesture="return BeginDrag( event);"
-        ondragdrop="return DropOnTree( event);">
+        ondragover="DragOverTree(event);"
+        ondraggesture="BeginDrag(event);"
+        ondragdrop="DropOnTree(event);">
       <treecolgroup>
         <treecol flex="35" style="width:0px"/>
         <treecol flex="65" id="dataColumn" style="width:0px"/>

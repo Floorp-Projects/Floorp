@@ -30,8 +30,8 @@ Rights Reserved.
         title="&mailListWindow.title;"
         onload="OnLoadEditList()"
         ondialogaccept="return EditListOKButton();"
-        ondragover="return DragOverTree(event);"
-        ondragdrop="return DropOnAddressListTree(event);">
+        ondragover="DragOverAddressListTree(event);"
+        ondragdrop="DropOnAddressListTree(event);">
 
 <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
 

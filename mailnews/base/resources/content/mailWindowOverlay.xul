@@ -260,12 +260,6 @@ Rights Reserved.
     <command id="cmd_label5" oncommand="goDoCommand('cmd_label5');" disabled="true"/>
 </commandset>
 
-<broadcasterset id="mailBroadcasters">
-  <!-- File Menu -->
-  <broadcaster id="Communicator:WorkMode"/>
-  <!-- Edit Menu -->
-</broadcasterset>
-
 <keyset id="mailKeys">
     <key id="space" key=" " oncommand="SpaceHit()"/>
 

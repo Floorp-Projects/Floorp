@@ -90,7 +90,6 @@ interface nsIAbDirectory : nsISupports {
 	// Delete the array of cards
 	void deleteCards(in nsISupportsArray cards);
 
-
 	// Check if directory contains card
 	// If the implementation is asynchronous the card
 	// may not yet have arrived. If it is in the process
@@ -102,15 +101,27 @@ interface nsIAbDirectory : nsISupports {
 	// Check if directory contains directory
 	boolean hasDirectory(in nsIAbDirectory dir);
 
-	// Creates a new card in the directory
-	// with the properties defined by card
-	nsIAbCard  addCard(in nsIAbCard card);
-	nsIAbCard  dropCard(in nsIAbCard card);
+    /**
+     * return value is the card that got added
+     * we need to do this, as the card we pass in might
+     * be an abstract nsIAbCard, and the caller might need
+     * the "real" card (the mdbcard) to get / set 
+     * non-standard card values
+     */
+    nsIAbCard addCard(in nsIAbCard card);
 
+    void dropCard(in nsIAbCard card, in boolean needToCopyCard);
 
-	// Mail list specific
-	//
+    /**
+     * directory is local (example, mork based) or remote (example, LDAP)
+     */
+    readonly attribute boolean isRemote;
 
+    // Mail list specific
+    readonly attribute boolean supportsMailingLists;
+
+        // XXX todo
+        // fix this, ugh
 	// This attribute servers two purposes 
 	// depending if the directory is a mail list.
 	// If not mail list directories are stored here
@@ -118,28 +129,28 @@ interface nsIAbDirectory : nsISupports {
 	attribute nsISupportsArray addressLists;
 
 	// Specific to a directory which stores mail lists
-	//
 
 	// Creates a new mailing list in the directory
 	// with the properties defined by list
 	void addMailList (in nsIAbDirectory list);
 
 	// Specific to a directory which is a mail list
-	//
-
-	// listName is not needed, dirName could be used
-	// instead
-	attribute wstring listName;
 	attribute wstring listNickName;
 	attribute wstring description;
 
-	// Adds a new mail list into the directory
-	// defined by the uri
+	/**
+	 * Adds a new mail list into the directory
+	 * defined by the uri
+	 * XXX javadoc me
+	 */
 	void addMailListToDatabase(in string uri);
 
-	// Edits an existing mail in the directory
-	// defined by the uri
-	void editMailListToDatabase(in string uri);
+    /**
+     * Edits an existing mailing list (specified as listCard)
+	 * into the directory specified by the uri
+	 * XXX javadoc me
+     */
+	void editMailListToDatabase(in string uri, in nsIAbCard listCard);
 
 	// Copies mail list properties from the srcList
 	void copyMailList(in nsIAbDirectory srcList);
@@ -157,13 +168,8 @@ interface nsIAbDirectory : nsISupports {
 	void createNewDirectory(in unsigned long prefCount,[array, size_is(prefCount)] in string prefName, [array, size_is(prefCount)] in wstring prefValue);
 
     /* create a directory by passing the display name and address book uri */
-	void CreateDirectoryByURI(in wstring displayName, in string uri, in boolean migrating);
+	void createDirectoryByURI(in wstring displayName, in string uri, in boolean migrating);
 
-	// Returns the total number of cards
-	// If the implementation is asynchronous the total number
-	// is representative of the current number of cards obtained
-	// For example a search on LDAP will return card asynchronously
-	// and may take n seconds to complete the search.
-	unsigned long getTotalCards(in boolean subDirectoryCount);
-
+	wstring getValueForCard(in nsIAbCard card, in string name);
+	void setValueForCard(in nsIAbCard card, in string name, in wstring value);
 };

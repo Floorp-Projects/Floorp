@@ -43,7 +43,7 @@ LOCALIZATION NOTE : Do not translate any of the occurances of the word "&brandSh
 <!ENTITY select.label             "Select the type of material to import:">
 
 <!ENTITY title.label              "Title">
-<!ENTITY processing.label         "Processing">
+<!ENTITY processing.label         "Importing...">
 
 <!ENTITY FieldDiscInputText1.label  "Netscape Communicator 4.x has one mailing address for each card, while &brandShortName; has two (Home and Work).">
 <!ENTITY FieldDiscInputText2.label	"Select the category in which you want to store the imported mailing addresses:">

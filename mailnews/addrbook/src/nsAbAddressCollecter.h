@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -43,6 +44,7 @@
 #include "nsIAbAddressCollecter.h"
 #include "nsIAddrDatabase.h"
 #include "nsAddrDatabase.h"
+#include "nsIAbCard.h"
 
 class nsIPref;
 
@@ -59,15 +61,18 @@ public:
 	nsresult IsDomainExcluded(const char *address, nsIPref *pPref, PRBool *bExclude);
 	nsresult SetNamesForCard(nsIAbCard *senderCard, const char *fullName);
 	nsresult SplitFullName (const char *fullName, char **firstName, char **lastName);
+  nsresult Init();
+
 private:
 	static int PR_CALLBACK collectEmailAddressEnableSizeLimitPrefChanged(const char *newpref, void *data);
 	static int PR_CALLBACK collectEmailAddressSizeLimitPrefChanged(const char *newpref, void *data);
-	void setupPrefs(void);
+	nsresult AddCardToCollectedAddressBook(nsIAbCard *card);
+
 protected:
 	nsCOMPtr <nsIAddrDatabase> m_historyAB;
 	nsCOMPtr <nsIAbDirectory> m_historyDirectory;
-	PRInt32 maxCABsize;
-	PRInt32 sizeLimitEnabled;
+	PRInt32 m_maxCABsize;
+	PRBool m_sizeLimitEnabled;
 
 };
 

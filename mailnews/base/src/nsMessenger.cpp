@@ -382,14 +382,13 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
 
         nsMsgGetNativePathString(fileSpec.GetNativePathCString(),path);
         const PRUnichar *pathFormatStrings[] = { path.get() };
-        NS_NAMED_LITERAL_STRING(fileExistsPropertyTag, "fileExists");
-        const PRUnichar *fpropertyTag = fileExistsPropertyTag.get();
+
         if (!mStringBundle)
         {
             rv = InitStringBundle();
             if (NS_FAILED(rv)) return rv;
         }
-        rv = mStringBundle->FormatStringFromName(fpropertyTag,
+        rv = mStringBundle->FormatStringFromName(NS_LITERAL_STRING("fileExists").get(),
                                                  pathFormatStrings, 1,
                                                  getter_Copies(errorMessage));
         if (NS_FAILED(rv)) return rv;
@@ -406,9 +405,8 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
             nsCOMPtr<nsIFilePicker> filePicker =
                 do_CreateInstance("@mozilla.org/filepicker;1", &rv);
             if (NS_FAILED(rv)) return rv;
-            NS_NAMED_LITERAL_STRING(saveAttachmentTag, "Save Attachment");
-            const PRUnichar *spropertyTag = saveAttachmentTag.get();
-            filePicker->Init(nsnull, spropertyTag, nsIFilePicker::modeSave);
+            // XXX i18n fix me
+            filePicker->Init(nsnull, NS_LITERAL_STRING("Save Attachment").get(), nsIFilePicker::modeSave);
             filePicker->SetDefaultString(path.get());
             filePicker->AppendFilters(nsIFilePicker::filterAll);
             filePicker->Show(&dialogReturn);

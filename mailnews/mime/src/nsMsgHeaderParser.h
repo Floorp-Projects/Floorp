@@ -64,9 +64,6 @@ public:
 	NS_DECL_ISUPPORTS
 
   NS_DECL_NSIMSGHEADERPARSER
-	
-protected:
-  nsCOMPtr<nsIMimeConverter> mUnicodeConverter;
 }; 
 
 #endif /* nsMSGRFCPARSER_h__ */

@@ -16,16 +16,17 @@
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
  * Contributor(s):
- * Paul Hangas <hangas@netscape.com>
- * Alec Flett <alecf@netscape.com>
+ *   Paul Hangas <hangas@netscape.com>
+ *   Alec Flett <alecf@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  */
 
 var addressbook = 0;
 var composeWindow = 0;
 var msgCompFields = 0;
 var editCardCallback = 0;
-var gDialogResultsPaneSelectionChanged = 0;
 
 var gAddressBookBundle;
 
@@ -33,6 +34,23 @@ var gAddressBookBundle;
 var prefixTo;
 var prefixCc;
 var prefixBcc;
+
+var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
+gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
+
+var gSelectAddressesAbViewListener = {
+	onSelectionChanged: function() {
+    ResultsPaneSelectionChanged();
+  },
+  onCountChanged: function(total) {
+    // do nothing
+  }
+};
+
+function GetAbViewListener()
+{
+  return gSelectAddressesAbViewListener;
+}
 
 function OnLoadSelectAddress()
 {
@@ -43,14 +61,13 @@ function OnLoadSelectAddress()
 
   InitCommonJS();
 
+  UpgradeAddressBookResultsPaneUI("mailnews.ui.select_addresses_results.version");
+
   var toAddress="", ccAddress="", bccAddress="";
 
   doSetOKCancel(SelectAddressOKButton, 0);
 
-  top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance();
-  top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
-
-  top.gDialogResultsPaneSelectionChanged = DialogResultsPaneSelectionChanged;
+  top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
 
   // look in arguments[0] for parameters
   if (window.arguments && window.arguments[0])
@@ -67,9 +84,6 @@ function OnLoadSelectAddress()
     if ( window.arguments[0].bccAddress )
       bccAddress = window.arguments[0].bccAddress;
 
-    dump("onload top.composeWindow: " + top.composeWindow + "\n");
-    dump("onload toAddress: " + toAddress + "\n");
-
     // put the addresses into the bucket
     AddAddressFromComposeWindow(toAddress, prefixTo);
     AddAddressFromComposeWindow(ccAddress, prefixCc);
@@ -78,8 +92,12 @@ function OnLoadSelectAddress()
 
   SelectFirstAddressBook();
 
-  DialogResultsPaneSelectionChanged();
   DialogBucketPaneSelectionChanged();
+}
+
+function OnUnloadSelectAddress()
+{
+  CloseAbView();
 }
 
 function AddAddressFromComposeWindow(addresses, prefix)
@@ -98,7 +116,6 @@ function AddAddressFromComposeWindow(addresses, prefix)
     }
   }
 }
-
 
 function SelectAddressOKButton()
 {
@@ -179,30 +196,22 @@ function SelectAddressBccButton()
 
 function AddSelectedAddressesIntoBucket(prefix)
 {
-  var item, uri, rdf, cardResource, card, address;
-  var email ="";
-  rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-  rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+  var cards = GetSelectedAbCards();
+  var count = cards.length;
 
-  if ( resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length )
-  {
-    for ( item = 0; item < resultsTree.selectedItems.length; item++ )
-    {
-      uri = resultsTree.selectedItems[item].getAttribute('id');
-      cardResource = rdf.GetResource(uri);
-      card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
-      if (card.isMailList)
-      {
-        address = prefix + "\"" + card.name + "\" <" + card.name + ">";
-        email = card.name;
+  for (var i = 0; i < count; i++) {
+    AddCardIntoBucket(prefix, cards[i]);
       }
-      else
-      {
-        address = prefix + "\"" + card.name + "\" <" + card.primaryEmail + ">";
-        email = card.primaryEmail;
       }
-      AddAddressIntoBucket(address,email);
+
+function AddCardIntoBucket(prefix, card)
+{
+  var address = prefix + GenerateAddressFromCard(card);
+  if (card.isMailList) {
+    AddAddressIntoBucket(address, card.displayName);
     }
+  else {
+    AddAddressIntoBucket(address, card.primaryEmail);
   }
 }
 
@@ -236,8 +245,8 @@ function RemoveSelectedFromBucket()
   }
 }
 
-/* Function: DialogResultsPaneSelectionChanged()
- * Callers : OnLoadSelectAddress(), abCommon.js:ResultsPaneSelectionChange()
+/* Function: ResultsPaneSelectionChanged()
+ * Callers : OnLoadSelectAddress(), abCommon.js:ResultsPaneSelectionChanged()
  * -------------------------------------------------------------------------
  * This function is used to grab the selection state of the results tree to maintain
  * the appropriate enabled/disabled states of the "Edit", "To:", "CC:", and "Bcc:" buttons.
@@ -245,17 +254,21 @@ function RemoveSelectedFromBucket()
  * Otherwise, if nothing is selected, "disabled" is set to true.
  */
 
-function DialogResultsPaneSelectionChanged()
-{
-  var resultsTree = document.getElementById("resultsTree");
+function ResultsPaneSelectionChanged()
+{;
   var editButton = document.getElementById("edit");
   var toButton = document.getElementById("toButton");
   var ccButton = document.getElementById("ccButton");
   var bccButton = document.getElementById("bccButton");
 
-  if (editButton && toButton && ccButton && bccButton && resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length)
+  var numSelected = GetNumSelectedCards();
+  if (numSelected > 0)
   {
+    if (numSelected == 1)
     editButton.removeAttribute("disabled");
+    else
+      editButton.setAttribute("disabled", "true");
+
     toButton.removeAttribute("disabled");
     ccButton.removeAttribute("disabled");
     bccButton.removeAttribute("disabled");
@@ -289,4 +302,59 @@ function DialogBucketPaneSelectionChanged()
     removeButton.setAttribute("disabled", "true");
 }
 
+function AbResultsPaneDoubleClick(card)
+{
+  AddCardIntoBucket(prefixTo, card);
+}
 
+function OnClickedCard(card)
+{
+  // in the select address dialog, do nothing on click
+}
+
+function UpdateCardView()
+{
+  // in the select address dialog, do nothing
+}
+
+function DragOverBucketPane(event)
+{
+  var dragSession = gDragService.getCurrentSession();
+
+  if (dragSession.isDataFlavorSupported("text/x-moz-address"))
+    dragSession.canDrop = true;
+}
+
+function DropOnBucketPane(event)
+{
+  var dragSession = gDragService.getCurrentSession();
+  var trans;
+  
+  try {
+    trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+    trans.addDataFlavor("text/x-moz-address");
+  }
+  catch (ex) {
+    return;
+  }
+
+  for ( var i = 0; i < dragSession.numDropItems; ++i )
+  {
+    dragSession.getData ( trans, i );
+    var dataObj = new Object();
+    var bestFlavor = new Object();
+    var len = new Object();
+    trans.getAnyTransferData ( bestFlavor, dataObj, len );
+    if ( dataObj )  
+      dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+    if ( !dataObj ) 
+      continue;
+
+    // pull the address out of the data object
+    var address = dataObj.data.substring(0, len.value);
+    if (!address)
+      continue;
+
+    AddAddressIntoBucket(prefixTo + address, address);
+  }
+}
