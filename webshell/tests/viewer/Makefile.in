@@ -134,16 +134,13 @@ ifdef MOZ_PERF_METRICS
 XP_DIST_LIBS		+= -lmozutil_s
 endif
 
-XP_DIST_LIBS		+= \
+XP_LIBS			= \
+			$(MOZ_WIDGET_SUPPORT_LIBS) \
 			$(EXTRA_DSO_LIBS) \
+			$(XP_DIST_LIBS) \
 			$(MOZ_JS_LIBS) \
 			$(MOZ_UNICHARUTIL_LIBS) \
 			$(XPCOM_LIBS) \
-			$(NULL)
-
-XP_LIBS			= \
-			$(MOZ_WIDGET_SUPPORT_LIBS) \
-			$(XP_DIST_LIBS) \
 			$(NSPR_LIBS) \
 			$(NULL)
 
@@ -151,9 +148,10 @@ LIBS			= \
 			$(VIEWER_TK_LIBS) \
 			$(GTK_GLUE) \
 			$(XP_LIBS) \
-			$(TK_LIBS) \
 			$(PROFILER_LIBS) \
 			$(NULL)
+
+EXTRA_LIBS		= $(TK_LIBS)
 
 XLIB_LIBS		= unix/xlib/libviewer_xlib_s.a $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
 GTK_LIBS		= unix/gtk/libviewer_gtk_s.a -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
@@ -183,13 +181,11 @@ ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-config.mk
 
 EXTRA_DEPS     += $(STATIC_EXTRA_DEPS)
-EXTRA_DSO_LIBS += $(STATIC_EXTRA_DSO_LIBS)
 ifneq ($(OS_ARCH),WINNT)
-EXTRA_LIBS     += -L$(DEPTH)/dist/lib/components
+LDFLAGS        += -L$(DEPTH)/dist/lib/components
 endif # !WINNT
-EXTRA_LIBS     += $(EXTRA_DSO_LIBS) $(STATIC_EXTRA_LIBS)
-XLIB_LIBS      += $(EXTRA_LIBS)
-GTK_LIBS       += $(EXTRA_LIBS)
+EXTRA_DSO_LIBS += $(STATIC_EXTRA_DSO_LIBS)
+XP_DIST_LIBS   += $(STATIC_EXTRA_LIBS)
 DEFINES        += $(STATIC_DEFINES)
 CPPSRCS        += $(STATIC_CPPSRCS)
 
@@ -207,7 +203,7 @@ endif # BUILD_STATIC_LIBS
 ifeq ($(OS_ARCH),Darwin)
 LOCAL_INCLUDES		+= -I$(topsrcdir)/widget/src/mac
 ifdef BUILD_STATIC_LIBS
-LDFLAGS	+= -framework QuickTime $(TK_LIBS)
+EXTRA_LIBS		+= -framework QuickTime
 endif
 endif
 
