@@ -34,11 +34,27 @@ skin/classic/communicator/formatting.css,            classic/skin/classic/commun
 skin/classic/communicator/prefpanels.css,            classic/skin/classic/communicator/prefpanels.css
 skin/classic/communicator/smileys.css,               classic/skin/classic/communicator/smileys.css
 
-skin/classic/communicator/icons/offline.gif,         classic/skin/classic/communicator/icons/offline.gif
-skin/classic/communicator/icons/online.gif,          classic/skin/classic/communicator/icons/online.gif
-skin/classic/communicator/icons/smileys,             classic/skin/classic/communicator/icons/smileys
-skin/classic/communicator/pref/pref.css,             classic/skin/classic/communicator/pref/pref.css
+skin/classic/communicator/icons/offline.gif,                      classic/skin/classic/communicator/icons/offline.gif
+skin/classic/communicator/icons/online.gif,                       classic/skin/classic/communicator/icons/online.gif
+skin/classic/communicator/icons/smileys/smiley-smile.png,         classic/skin/classic/communicator/icons/smileys/smiley-smile.png
+skin/classic/communicator/icons/smileys/smiley-frown.png,         classic/skin/classic/communicator/icons/smileys/smiley-frown.png
+skin/classic/communicator/icons/smileys/smiley-wink.png,          classic/skin/classic/communicator/icons/smileys/smiley-wink.png
+skin/classic/communicator/icons/smileys/smiley-tongue-out.png,    classic/skin/classic/communicator/icons/smileys/smiley-tongue-out.png
+skin/classic/communicator/icons/smileys/smiley-laughing.png,      classic/skin/classic/communicator/icons/smileys/smiley-laughing.png
+skin/classic/communicator/icons/smileys/smiley-embarassed.png,    classic/skin/classic/communicator/icons/smileys/smiley-embarassed.png
+skin/classic/communicator/icons/smileys/smiley-undecided.png,     classic/skin/classic/communicator/icons/smileys/smiley-undecided.png
+skin/classic/communicator/icons/smileys/smiley-surprised.png,     classic/skin/classic/communicator/icons/smileys/smiley-surprised.png
+skin/classic/communicator/icons/smileys/smiley-kiss.png,          classic/skin/classic/communicator/icons/smileys/smiley-kiss.png
+skin/classic/communicator/icons/smileys/smiley-yell.png,          classic/skin/classic/communicator/icons/smileys/smiley-yell.png
+skin/classic/communicator/icons/smileys/smiley-cool.png,          classic/skin/classic/communicator/icons/smileys/smiley-cool.png
+skin/classic/communicator/icons/smileys/smiley-money-mouth.png,   classic/skin/classic/communicator/icons/smileys/smiley-money-mouth.png
+skin/classic/communicator/icons/smileys/smiley-foot-in-mouth.png, classic/skin/classic/communicator/icons/smileys/smiley-foot-in-mouth.png
+skin/classic/communicator/icons/smileys/smiley-innocent.png,      classic/skin/classic/communicator/icons/smileys/smiley-innocent.png
+skin/classic/communicator/icons/smileys/smiley-cry.png,           classic/skin/classic/communicator/icons/smileys/smiley-cry.png
+skin/classic/communicator/icons/smileys/smiley-smile.png,         classic/skin/classic/communicator/icons/smileys/smiley-smile.png
+skin/classic/communicator/icons/smileys/smiley-sealed.png,        classic/skin/classic/communicator/icons/smileys/smiley-sealed.png
 
+skin/classic/communicator/pref/pref.css,             classic/skin/classic/communicator/pref/pref.css
 skin/classic/communicator/xpinstall/xpinstall.css,   classic/skin/classic/communicator/xpinstall/xpinstall.css 
 
 #################################################################################################
