@@ -71,7 +71,7 @@ public:
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus);
 
-  NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
+  NS_IMETHOD Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
 
   NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
                            nsIPresShell&   aPresShell,

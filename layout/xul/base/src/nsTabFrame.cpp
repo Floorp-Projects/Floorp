@@ -58,12 +58,6 @@ NS_NewTabFrame ( nsIFrame** aNewFrame )
   
 } // NS_NewTabFrame
 
-/*
-nsTabFrame::nsTabFrame()
-{
-}
-*/
-
 void
 nsTabFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
@@ -83,28 +77,37 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
 	return;
    }
 
-   /*
-    // set visiblity
-    PRInt32 count = 0;
-    tabpanel->ChildCount(count); 
-    for (PRInt32 i = 0; i < count; i++)
-    {
-       nsIContent* child;
-       tabpanel->ChildAt(i,child); 
+   // unselect the old tab
 
-       if (i != index)
-          child->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: hidden", PR_TRUE);
-       else
-          child->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: visible", PR_TRUE);
-    }
-    */
+   // get the current index
+   nsAutoString v;
+   PRInt32 error;
+   tabpanel->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, v);
+   PRInt32 oldIndex = v.ToInteger(&error);
 
+   if (oldIndex != index)
+   {
+      // get the tab box
+      nsIContent* parent;
+      mContent->GetParent(parent);
+
+      // get child
+      nsIContent* child;
+      parent->ChildAt(oldIndex, child);
+
+      // set the old tab to be unselected
+      child->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::selected, "false", PR_TRUE);
+
+      // set the new tab to be selected
+      mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::selected, "true", PR_TRUE);
+   }
 
    // set the panels index
    char value[100];
    sprintf(value, "%d", index);
 
    tabpanel->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, value, PR_TRUE);
+
 }
 
 nsresult

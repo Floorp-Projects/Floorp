@@ -85,6 +85,7 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
 
    // if the index changed hide the old element and make the now element visible
   if (aAttribute == nsHTMLAtoms::index) {
+      /*
             nsCOMPtr<nsIPresShell> shell;
             aPresContext->GetShell(getter_AddRefs(shell));
 
@@ -93,6 +94,37 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
                                          nsIReflowCommand::StyleChanged);
             if (NS_SUCCEEDED(rv)) 
               shell->AppendReflowCommand(reflowCmd);
+     */
+
+    Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+
+     int index = 0;
+
+      // get the index attribute
+      nsAutoString value;
+      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, value))
+      {
+        PRInt32 error;
+
+        // convert it to an integer
+        index = value.ToInteger(&error);
+      }
+
+      nsIFrame* childFrame = mFrames.FirstChild(); 
+      nscoord count = 0;
+      while (nsnull != childFrame) 
+      {
+        // make collapsed children not show up
+        if (index != count) 
+           CollapseChild(*aPresContext, childFrame, PR_TRUE);
+        else
+           CollapseChild(*aPresContext, childFrame, PR_FALSE);
+
+        rv = childFrame->GetNextSibling(&childFrame);
+        NS_ASSERTION(rv == NS_OK,"failed to get next child");
+        count++;
+      }
+
   }
 
 
@@ -202,7 +234,6 @@ nsDeckFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                               nsIFrame*       aChildList)
 {
   nsresult r = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-
   return r;
 }
 
@@ -236,6 +267,36 @@ nsDeckFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
 nsresult
 nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 {
+  // ------- set the childs positions ---------
+  nsIFrame* childFrame = mFrames.FirstChild(); 
+  nscoord count = 0;
+  while (nsnull != childFrame) 
+  {
+    nsresult rv;
+    // make collapsed children not show up
+    if (mSprings[count].collapsed) {
+       //nsRect rect(0,0,0,0);
+       //childFrame->GetRect(rect);
+       //if (rect.width > 0 || rect.height > 0) {
+       //   childFrame->SizeTo(0,0);
+          CollapseChild(aPresContext, childFrame, PR_TRUE);
+       //}
+    } else {
+      childFrame->MoveTo(&aPresContext, boxRect.x, boxRect.y);
+    }
+
+    rv = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    count++;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDeckFrame::DidReflow(nsIPresContext& aPresContext,
+                      nsDidReflowStatus aStatus)
+{
   int index = 0;
 
   // get the index attribute
@@ -248,52 +309,27 @@ nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
     index = value.ToInteger(&error);
   }
 
-  // ------- set the childs positions ---------
+  nsresult rv = nsBoxFrame::DidReflow(aPresContext, aStatus);
+  NS_ASSERTION(rv == NS_OK,"DidReflow failed");
+
   nsIFrame* childFrame = mFrames.FirstChild(); 
   nscoord count = 0;
   while (nsnull != childFrame) 
   {
-    nsresult rv;
-
-    /*
-    // see if the child has a view. If it doesn't make one for it.
-    nsIView* childView = nsnull;
-    childFrame->GetView(&childView);
-    if (childView == nsnull) {
-       nsCOMPtr<nsIStyleContext> context;
-       childFrame->GetStyleContext(getter_AddRefs(context));
-       CreateViewForFrame(aPresContext,childFrame,context,PR_TRUE);
-       childFrame->GetView(&childView);
-       NS_ASSERTION(childView != nsnull, "Deck could not create a view for its child!!!");
-    }
-    */
-
-    //nsCOMPtr<nsIViewManager> vm;
-   // childView->GetViewManager(*getter_AddRefs(vm));
-  
     // make collapsed children not show up
-    if (mSprings[count].collapsed || count != index) {
-       CollapseChild(&aPresContext, childFrame);
-  //  } if (count != index) {
-      // if the child is not in view then make sure its view is 0 so it clips
-      // out all its children.
-      //vm->ResizeView(childView, 0,0);
-      //childFrame->SizeTo(0,0);
-      //childView->SetParent(nsnull);
-    } else {
-      ////nsIView* pv;
-      //GetView(&pv);
-      //childView->SetParent(pv);
-      childFrame->MoveTo(&aPresContext, boxRect.x, boxRect.y);
-    }
+    if (index != count) 
+       CollapseChild(aPresContext, childFrame, PR_TRUE);
+    else
+       CollapseChild(aPresContext, childFrame, PR_FALSE);
 
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
   }
 
-  return NS_OK;
+  return rv;
 }
+
 
 void
 nsDeckFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)

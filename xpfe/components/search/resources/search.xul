@@ -49,10 +49,11 @@
 
 	<tabcontrol align="vertical"> 
 		<tabbox align="horizontal"> 
-			<tab onclick="loadPage('find', null);">&find.title.label;</tab> 
+			<tab selected="true" onclick="loadPage('find', null);">&find.title.label;</tab> 
 			<tab onclick="loadPage('internet', null);">&internet.title.label;</tab> 
 			<tab onclick="loadPage('mail', null);">&mailnews.title.label;</tab> 
 			<tab onclick="loadPage('addressbook', null);">&addressbook.title.label;</tab> 
+			<spring flex="1"/>
 		</tabbox> 
                     
 		<tabpanel />

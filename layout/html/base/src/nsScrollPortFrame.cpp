@@ -690,7 +690,7 @@ nsScrollPortFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsScrollPortFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsScrollPortFrame::Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
   mIncremental = PR_FALSE;
   incrementalChild = nsnull;
@@ -702,7 +702,7 @@ nsScrollPortFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incre
     
   nsIBox* ibox;
   if (NS_SUCCEEDED(childFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
-      ibox->Dirty(aReflowState, incrementalChild);
+      ibox->Dirty(aPresContext, aReflowState, incrementalChild);
   else {
       incrementalChild = frame;
   // if we found a leaf that is not a box. Then mark it as being incremental. So if we are ever

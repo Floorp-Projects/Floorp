@@ -75,9 +75,12 @@ public:
 
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
+  NS_IMETHOD Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
+
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+                      nsDidReflowStatus aStatus);
 
 
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
@@ -171,7 +174,7 @@ protected:
     virtual PRIntn GetSkipSides() const { return 0; }
 
     virtual void GetInset(nsMargin& margin); 
-    virtual void CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame);
+    virtual void CollapseChild(nsIPresContext& aPresContext, nsIFrame* frame, PRBool hide);
 
     nsresult GenerateDirtyReflowCommand(nsIPresContext& aPresContext,
                                         nsIPresShell&   aPresShell);

@@ -46,8 +46,9 @@
 
       <tabcontrol align="vertical">
 	      <tabbox align="horizontal" flex="100%">
-		      <tab>&tableTab.label;</tab>
+		      <tab selected="true">&tableTab.label;</tab>
 		      <tab>&cellTab.label;</tab>
+	  		  <spring flex="1"/>
 	      </tabbox>
    
     	  <tabpanel flex="100%">
