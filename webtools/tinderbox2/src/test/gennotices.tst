@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2001/12/03 19:53:31 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/05/10 21:17:56 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/gennotices.tst,v $ 
 # $Name:  $ 
@@ -94,6 +94,42 @@ $TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
 
 
 
+@ASSOCIATION_NAMES = (
+
+		      # bug tracking
+		      'Progress',
+		      'Slippage',
+
+		      # build
+#		      'Build_Packages_(Solaris)', 'Build_Packages_(Linux)',
+#		      'Coverage_Tests', 'Performance_Tests', 'Failover_Tests', 
+#		      'Lint_Tests', 
+		      'Next_Milestone',
+
+	       );
+
+
+
+sub generate_associations {
+    # most notes are for only one build though occasionally there is
+    # one note which effects all builds.
+    
+    $num_associations = rand 10;
+    if ($num_associations >= 5) {
+	$num_associations = 0;
+    }
+    $num_associations =~ s/\..*//;
+    
+    my %assocations;
+    if ($num_associations > 0) {
+	foreach $j (0 .. $num_associations) {
+	    my $random_association = rand scalar(@ASSOCIATION_NAMES);
+	    $assocations{$ASSOCIATION_NAMES[$random_association]} = 1;
+	}
+    }
+
+    return \%assocations;
+}
 
 
 foreach $tree (@TREES) {
@@ -121,7 +157,7 @@ foreach $tree (@TREES) {
       $num_notes = 0;
     }
     $num_notes =~ s/\..*//;
-    
+
     foreach $j (0 .. $num_notes) {
       
       my ($random_user) = rand scalar(@NAMES);
@@ -135,6 +171,8 @@ foreach $tree (@TREES) {
       my ($localtimenow) = localtime($timenow);
 
       my ($pretty_time) = HTMLPopUp::timeHTML($timenow);
+      $associations = generate_associations();
+
       my (%data) = (
 		    'tree' => $tree,
 		    'mailaddr' => $mailaddr,
@@ -142,6 +180,7 @@ foreach $tree (@TREES) {
 		    'time' => $timenow,
 		    'localtime' => $localtimenow,
 	            'remote_host' => '127.0.0.1',
+		    'associations' => $associations,
 		   );
 
       my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
