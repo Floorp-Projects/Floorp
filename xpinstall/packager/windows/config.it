@@ -84,6 +84,13 @@ url=$ArchiveUrl$
 ;   Setup Type 3 - fourth radio button (usually the Custom option)
 Default Setup Type=Setup Type 1
 
+; Forces the icons on the system to be refreshed.
+; Default value is FALSE.
+; Possible values:
+;   FALSE
+;   TRUE
+Refresh Icons=TRUE
+
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.
 ; By default, this feature is enabled, unless disabled.
