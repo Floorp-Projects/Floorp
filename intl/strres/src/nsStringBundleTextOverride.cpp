@@ -46,6 +46,69 @@
 
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
+
+// first we need a simple class which wraps a nsIPropertyElement and
+// cuts out the leading URL from the key
+class URLPropertyElement : public nsIPropertyElement
+{
+public:
+    URLPropertyElement(nsIPropertyElement *aRealElement, PRUint32 aURLLength) :
+        mRealElement(aRealElement),
+        mURLLength(aURLLength)
+    { NS_INIT_ISUPPORTS(); }
+    virtual ~URLPropertyElement() {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIPROPERTYELEMENT
+    
+private:
+    nsCOMPtr<nsIPropertyElement> mRealElement;
+    PRUint32 mURLLength;
+};
+
+NS_IMPL_ISUPPORTS1(URLPropertyElement, nsIPropertyElement)
+
+// we'll tweak the key on the way through, and remove the url prefix
+NS_IMETHODIMP
+URLPropertyElement::GetKey(nsACString& aKey)
+{
+    nsresult rv =  mRealElement->GetKey(aKey);
+    if (NS_FAILED(rv)) return rv;
+
+    // chop off the url
+    aKey.Cut(0, mURLLength);
+    
+    return NS_OK;
+}
+
+// values are unaffected
+NS_IMETHODIMP
+URLPropertyElement::GetValue(nsAString& aValue)
+{
+    return mRealElement->GetValue(aValue);
+}
+
+// setters are kind of strange, hopefully we'll never be called
+NS_IMETHODIMP
+URLPropertyElement::SetKey(const nsACString& aKey)
+{
+    // this is just wrong - ideally you'd take the key, append it to
+    // the url, and set that as the key. However, that would require
+    // us to hold onto a copy of the string, and thats a waste,
+    // considering nobody should ever be calling this.
+    NS_ASSERTION(0, "This makes no sense!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+URLPropertyElement::SetValue(const nsAString& aValue)
+{
+    return mRealElement->SetValue(aValue);
+}
+
+
+// this is a special enumerator which returns only the elements which
+// are prefixed with a particular url
 class nsPropertyEnumeratorByURL : public nsISimpleEnumerator
 {
 public:
@@ -54,12 +117,13 @@ public:
         mURL(aURL),
         mOuter(aOuter)
     {
+        // prepare the url once so we can use its value later
         // persistent properties uses ":" as a delimiter, so escape
         // that character
         mURL.ReplaceSubstring(":", "%3A");
-        // append the hash mark now, so we don't have to add it after each
-        // compare
+        // there is always a # between the url and the real key
         mURL.Append('#');
+        NS_INIT_ISUPPORTS();
     }
 
     NS_DECL_ISUPPORTS
@@ -70,14 +134,17 @@ private:
 
     // actual enumerator of all strings from nsIProperties
     nsCOMPtr<nsISimpleEnumerator> mOuter;
+
+    // the current element that is valid for this url
     nsCOMPtr<nsIPropertyElement> mCurrent;
+
+    // the url in question, pre-escaped and with the # already in it
     nsCString mURL;
 };
 
 //
 // nsStringBundleTextOverride implementation
 //
-
 NS_IMPL_ISUPPORTS1(nsStringBundleTextOverride,
                    nsIStringBundleOverride)
 
@@ -189,6 +256,7 @@ nsStringBundleTextOverride::EnumerateKeysInBundle(const nsACString& aURL,
     return NS_OK;
 }
 
+
 //
 // nsPropertyEnumeratorByURL implementation
 //
@@ -201,8 +269,13 @@ nsPropertyEnumeratorByURL::GetNext(nsISupports **aResult)
 {
     if (!mCurrent) return NS_ERROR_UNEXPECTED;
 
-    NS_ADDREF(*aResult = mCurrent);
+    // wrap mCurrent instead of returning it
+    *aResult = new URLPropertyElement(mCurrent, mURL.Length());
+    NS_ADDREF(*aResult);
 
+    // release it so we don't return it twice
+    mCurrent = nsnull;
+    
     return NS_OK;
 }
 
@@ -210,7 +283,8 @@ NS_IMETHODIMP
 nsPropertyEnumeratorByURL::HasMoreElements(PRBool * aResult)
 {
     PRBool hasMore;
-    do {
+    mOuter->HasMoreElements(&hasMore);
+    while (hasMore) {
 
         nsCOMPtr<nsISupports> supports;
         mOuter->GetNext(getter_AddRefs(supports));
@@ -226,7 +300,7 @@ nsPropertyEnumeratorByURL::HasMoreElements(PRBool * aResult)
         }
         
         mOuter->HasMoreElements(&hasMore);
-    } while (hasMore);
+    }
 
     if (!hasMore)
         mCurrent = PR_FALSE;

@@ -266,7 +266,7 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 }
 
 nsresult
-nsStringBundle::GetCombinedEnumeration(nsISimpleEnumerator* aOverrideEnumerator,
+nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings,
                                        nsISimpleEnumerator** aResult)
 {
   nsCOMPtr<nsISupports> supports;
@@ -274,34 +274,26 @@ nsStringBundle::GetCombinedEnumeration(nsISimpleEnumerator* aOverrideEnumerator,
   
   nsresult rv;
 
-  PRBool hasMore;
-
   nsCOMPtr<nsIMutableArray> resultArray;
   NS_NewArray(getter_AddRefs(resultArray));
 
-  // first, append the override elements only if
-  // they don't already exist in mProps
-  do {
+  // first, append the override elements
+  nsCOMPtr<nsISimpleEnumerator> overrideEnumerator;
+  rv = aOverrideStrings->EnumerateKeysInBundle(mPropertiesURL,
+                                               getter_AddRefs(overrideEnumerator));
+  
+  PRBool hasMore;
+  overrideEnumerator->HasMoreElements(&hasMore);
+  while (hasMore) {
 
-    rv = aOverrideEnumerator->GetNext(getter_AddRefs(supports));
-    if (NS_SUCCEEDED(rv) &&
-        (propElement = do_QueryInterface(supports, &rv))) {
-        
-      nsCAutoString key;
-      rv = propElement->GetKey(key);
-      if (NS_SUCCEEDED(rv)) {
-          
-          PRBool hasKey;
-          mProps->Has(key.get(), &hasKey);
-          if (!hasKey)
-            resultArray->AppendElement(propElement, PR_FALSE);
-      }
-    }
+    rv = overrideEnumerator->GetNext(getter_AddRefs(supports));
+    if (NS_SUCCEEDED(rv))
+      resultArray->AppendElement(supports, PR_FALSE);
 
-    aOverrideEnumerator->HasMoreElements(&hasMore);
-  } while (hasMore);
+    overrideEnumerator->HasMoreElements(&hasMore);
+  }
 
-  // ok, now we have the "unique" elements in resultArray
+  // ok, now we have the override elements in resultArray
   nsCOMPtr<nsISimpleEnumerator> propEnumerator;
   rv = mProps->Enumerate(getter_AddRefs(propEnumerator));
   if (NS_FAILED(rv)) {
@@ -313,16 +305,24 @@ nsStringBundle::GetCombinedEnumeration(nsISimpleEnumerator* aOverrideEnumerator,
   do {
     rv = propEnumerator->GetNext(getter_AddRefs(supports));
     if (NS_SUCCEEDED(rv) &&
-        (propElement = do_QueryInterface(supports, &rv)))
+        (propElement = do_QueryInterface(supports, &rv))) {
 
-      resultArray->AppendElement(propElement, PR_FALSE);
+      // now check if its in the override bundle
+      nsCAutoString key;
+      propElement->GetKey(key);
+
+      nsAutoString value;
+      rv = aOverrideStrings->GetStringFromName(mPropertiesURL, key, value);
+
+      // if it isn't there, then it is safe to append
+      if (NS_FAILED(rv))
+        resultArray->AppendElement(propElement, PR_FALSE);
+    }
 
     propEnumerator->HasMoreElements(&hasMore);
   } while (hasMore);
 
-  NS_ADDREF(*aResult = propEnumerator);
-
-  return NS_OK;
+  return resultArray->Enumerate(aResult);
 }
                                 
 
@@ -336,13 +336,8 @@ nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
   rv = LoadProperties();
   if (NS_FAILED(rv)) return rv;
   
-  if (mOverrideStrings) {
-    nsCOMPtr<nsISimpleEnumerator> overrideEnumerator;
-    rv = mOverrideStrings->EnumerateKeysInBundle(mPropertiesURL,
-                                                 getter_AddRefs(overrideEnumerator));
-    if (NS_SUCCEEDED(rv))
-      return GetCombinedEnumeration(overrideEnumerator, elements);
-  }
+  if (mOverrideStrings)
+      return GetCombinedEnumeration(mOverrideStrings, elements);
   
   return mProps->Enumerate(elements);
 }
