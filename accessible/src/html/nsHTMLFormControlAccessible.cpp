@@ -56,7 +56,7 @@
 #include "nsIEditor.h"
 #include "nsIEventStateManager.h"
 #include "nsIFrame.h"
-#include "nsIGfxTextControlFrame.h"
+#include "nsITextControlFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPlaintextEditor.h"
 #include "nsISelectionController.h"
@@ -323,7 +323,7 @@ nsFormControlAccessible(aNode, aShell)
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsIFrame *frame = nsnull;
   shell->GetPrimaryFrameFor(content, &frame);
-  nsCOMPtr<nsIGfxTextControlFrame2> tframe(do_QueryInterface(frame));
+  nsCOMPtr<nsITextControlFrame> tframe(do_QueryInterface(frame));
   if (!tframe)
     return;
 
@@ -463,7 +463,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::MakeSelection(PRInt32 aStartPos, PRInt3
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsIFrame *frame = nsnull;
   shell->GetPrimaryFrameFor(content, &frame);
-  nsCOMPtr<nsIGfxTextControlFrame2> tframe(do_QueryInterface(frame));
+  nsCOMPtr<nsITextControlFrame> tframe(do_QueryInterface(frame));
   if (!tframe)
     return NS_ERROR_FAILURE;  
 

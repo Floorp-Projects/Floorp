@@ -66,7 +66,7 @@
 #include "nsINodeInfo.h"
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
-#include "nsIGfxTextControlFrame.h"
+#include "nsITextControlFrame.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 
 #include "nsIPrintPreviewContext.h"
@@ -400,7 +400,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                          nsISupportsArray& aAnonymousChildren)
 {
   // The anonymous <div> used by <inputs> never gets scrollbars.
-  nsCOMPtr<nsIGfxTextControlFrame2> textFrame(do_QueryInterface(mParent));
+  nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(mParent));
   if (textFrame) {
     // Make sure we are not a text area.
     nsCOMPtr<nsIContent> content;
@@ -1312,7 +1312,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
       frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)ourVis);
 
       if (NS_STYLE_DIRECTION_RTL == ourVis->mDirection) {
-        nsCOMPtr<nsIGfxTextControlFrame2> textControl(
+        nsCOMPtr<nsITextControlFrame> textControl(
           do_QueryInterface(mOuter->mParent) );
         if (textControl) {
           needsLayout = PR_TRUE;

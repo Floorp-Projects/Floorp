@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsGfxTextControlFrame2_h___
-#define nsGfxTextControlFrame2_h___
+#ifndef nsTextControlFrame_h___
+#define nsTextControlFrame_h___
 
 #include "nsStackFrame.h"
 #include "nsAreaFrame.h"
@@ -44,7 +44,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIEditor.h"
-#include "nsIGfxTextControlFrame.h"
+#include "nsITextControlFrame.h"
 #include "nsFormControlHelper.h"//for the inputdimensions
 #include "nsHTMLValue.h" //for nsHTMLValue
 #include "nsIFontMetrics.h"
@@ -65,15 +65,15 @@ class nsIAccessible;
 #endif
 
 
-class nsGfxTextControlFrame2 : public nsStackFrame,
+class nsTextControlFrame : public nsStackFrame,
                                public nsIAnonymousContentCreator,
-                               public nsIGfxTextControlFrame2,
+                               public nsITextControlFrame,
                                public nsIScrollableViewProvider
 
 {
 public:
-  nsGfxTextControlFrame2(nsIPresShell* aShell);
-  virtual ~nsGfxTextControlFrame2();
+  nsTextControlFrame(nsIPresShell* aShell);
+  virtual ~nsTextControlFrame();
 
   virtual void RemovedAsPrimaryFrame(nsIPresContext* aPresContext); 
 
@@ -179,7 +179,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-public: //for methods who access nsGfxTextControlFrame2 directly
+public: //for methods who access nsTextControlFrame directly
 
   NS_IMETHOD InternalContentChanged();//notify that we have some kind of change.
   /**

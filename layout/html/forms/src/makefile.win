@@ -57,7 +57,7 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsListControlFrame.obj \
   .\$(OBJDIR)\nsFormControlFrame.obj \
   .\$(OBJDIR)\nsFileControlFrame.obj \
-  .\$(OBJDIR)\nsGfxTextControlFrame2.obj \
+  .\$(OBJDIR)\nsTextControlFrame.obj \
   .\$(OBJDIR)\nsFieldSetFrame.obj \
   .\$(OBJDIR)\nsLegendFrame.obj \
   .\$(OBJDIR)\nsHTMLButtonControlFrame.obj \

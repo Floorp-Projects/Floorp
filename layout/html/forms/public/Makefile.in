@@ -38,7 +38,7 @@ EXPORTS		= \
 		nsIFormSubmitObserver.h \
 		nsIFormProcessor.h \
 		nsISelectControlFrame.h \
-		nsIGfxTextControlFrame.h \
+		nsITextControlFrame.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -57,7 +57,7 @@
 #include "nsIPresContext.h"
 #include "nsHTMLAttributes.h"
 #include "nsIFormControlFrame.h"
-#include "nsIGfxTextControlFrame.h"
+#include "nsITextControlFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
 #include "nsLinebreakConverter.h"
@@ -117,7 +117,7 @@ public:
   NS_IMETHOD RestoreState(nsIPresState* aState);
 
   // nsITextControlElement
-  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsIGfxTextControlFrame2* aFrame);
+  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsITextControlFrame* aFrame);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIContent
@@ -434,7 +434,7 @@ nsHTMLTextAreaElement::GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap)
   // there won't be a value in it we don't already have even if we
   // force the frame to be created.
   nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
-  nsIGfxTextControlFrame2* textControlFrame = nsnull;
+  nsITextControlFrame* textControlFrame = nsnull;
   if (primaryFrame) {
     CallQueryInterface(primaryFrame, &textControlFrame);
   }
@@ -459,9 +459,9 @@ nsHTMLTextAreaElement::GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap)
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetValueGuaranteed(const nsAString& aValue,
-                                          nsIGfxTextControlFrame2* aFrame)
+                                          nsITextControlFrame* aFrame)
 {
-  nsIGfxTextControlFrame2* textControlFrame = aFrame;
+  nsITextControlFrame* textControlFrame = aFrame;
   nsIFormControlFrame* formControlFrame = textControlFrame;
   if (!textControlFrame) {
     // No need to flush here, if there is no frame for this yet forcing
@@ -625,7 +625,7 @@ nsHTMLTextAreaElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt
 {
   // XXX Bug 50280 - It is unclear why we need to do this here for 
   // rows and cols and why the AttributeChanged method in
-  // nsGfxTextControlFrame2 does take care of the entire problem, but
+  // nsTextControlFrame does take care of the entire problem, but
   // it doesn't and this makes things better
   if (aAttribute == nsHTMLAtoms::align ||
       aAttribute == nsHTMLAtoms::rows ||
@@ -857,7 +857,7 @@ nsHTMLTextAreaElement::GetSelectionStart(PRInt32 *aSelectionStart)
   NS_ENSURE_ARG_POINTER(aSelectionStart);
   nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
 
-  nsCOMPtr<nsIGfxTextControlFrame2>
+  nsCOMPtr<nsITextControlFrame>
     textControlFrame(do_QueryInterface(formControlFrame));
     
   if (textControlFrame) {
@@ -873,7 +873,7 @@ nsHTMLTextAreaElement::SetSelectionStart(PRInt32 aSelectionStart)
 {
   nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
 
-  nsCOMPtr<nsIGfxTextControlFrame2>
+  nsCOMPtr<nsITextControlFrame>
     textControlFrame(do_QueryInterface(formControlFrame));
 
   if (textControlFrame)
@@ -888,7 +888,7 @@ nsHTMLTextAreaElement::GetSelectionEnd(PRInt32 *aSelectionEnd)
   NS_ENSURE_ARG_POINTER(aSelectionEnd);
   nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
 
-  nsCOMPtr<nsIGfxTextControlFrame2>
+  nsCOMPtr<nsITextControlFrame>
     textControlFrame(do_QueryInterface(formControlFrame));
     
   if (textControlFrame) {
@@ -904,7 +904,7 @@ nsHTMLTextAreaElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
   nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
 
-  nsCOMPtr<nsIGfxTextControlFrame2>
+  nsCOMPtr<nsITextControlFrame>
     textControlFrame(do_QueryInterface(formControlFrame));
 
   if (textControlFrame)
