@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.174 $ ';
+$::UtilsVersion = '$Revision: 1.175 $ ';
 
 package TinderUtils;
 
@@ -901,7 +901,391 @@ sub find_pref_file {
 }
 
 
+
+sub BinaryExists {
+    my ($binary) = @_;
+    my ($binary_basename) = File::Basename::basename($binary);
+
+    if (not -e $binary) {
+        print_log "$binary does not exist.\n";
+        0;
+    } elsif (not -s _) {
+        print_log "$binary is zero-size.\n";
+        0;
+    } elsif (not -x _) {
+        print_log "$binary is not executable.\n";
+        0;
+    } else {
+        print_log "$binary_basename exists, is nonzero, and executable.\n";
+        1;
+    }
+}
+
+sub min {
+    my $m = $_[0];
+    my $i;
+    foreach $i (@_) {
+        $m = $i if ($m > $i);
+    }
+    return $m;
+}
+
+
+sub DeleteBinary {
+    my ($binary) = @_;
+    my ($binary_basename) = File::Basename::basename($binary);
+
+    if (BinaryExists($binary)) {
+        print_log "Deleting binary: $binary_basename\n";
+        print_log "unlinking $binary\n";
+        unlink $binary or print_log "Error: Unlinking $binary failed\n";
+    } else {
+        print_log "No binary detected; none deleted.\n";
+    }
+}
+
+sub DeleteBinaryDir {
+    my ($binarydir) = @_;
+    if (-e $binarydir) {
+        print_log "Deleting $binarydir\n";
+        my $count = File::Path::rmtree($binarydir, 0, 0);
+        if (-e "$binarydir") {
+            print_log "Error: rmtree('$binarydir', 0, 0) failed.\n";
+        }
+    } else {
+        print_log "No binarydir detected; none deleted.\n";
+    }
+}
+
+sub PrintEnv {
+    local $_;
+
+    # Print out environment settings.
+    my $key;
+    foreach $key (sort keys %ENV) {
+        print_log "$key=$ENV{$key}\n";
+    }
+
+    # Print out mozconfig if found.
+    if (defined $ENV{MOZCONFIG} and -e $ENV{MOZCONFIG}) {
+        print_log "-->mozconfig<----------------------------------------\n";
+        open CONFIG, "$ENV{MOZCONFIG}";
+        print_log $_ while <CONFIG>;
+        close CONFIG;
+        print_log "-->end mozconfig<----------------------------------------\n";
+    }
+
+    # Say if we found post-mozilla.pl
+    if(-e "$Settings::BaseDir/post-mozilla.pl") {
+        print_log "Found post-mozilla.pl\n";
+    } else {
+        print_log "Didn't find $Settings::BaseDir/post-mozilla.pl\n";
+    }
+
+    # Print compiler setting
+    if ($Settings::Compiler ne '') {
+        print_log "===============================\n";
+        if ($Settings::Compiler eq 'gcc' or $Settings::Compiler eq 'egcc') {
+            my $comptmp = `$Settings::Compiler --version`;
+            chomp($comptmp);
+            print_log "Compiler is -- $Settings::Compiler ($comptmp)\n";
+        } else {
+            print_log "Compiler is -- $Settings::Compiler\n";
+        }
+        print_log "===============================\n";
+    }
+}
+
+# Parse a file for $token, given a file handle.
+sub file_has_token {
+    my ($filename, $token) = @_;
+    local $_;
+    my $has_token = 0;
+    open TESTLOG, "<$filename" or die "Cannot open file, $filename: $!";
+    while (<TESTLOG>) {
+        if (/$token/) {
+            $has_token = 1;
+            last;
+        }
+    }
+    close TESTLOG;
+    return $has_token;
+}
+
+# Parse a file for $token, return the token.
+# Look for the line "<token><delimiter><return-value>", e.g.
+# for "__startuptime,5501"
+#   token        = "__startuptime"
+#   delimiter    = ","
+#   return-value = "5501";
 #
+sub extract_token_from_file {
+    my ($filename, $token, $delimiter) = @_;
+    local $_;
+    my $token_value = 0;
+    open TESTLOG, "<$filename" or die "Cannot open file, $filename: $!";
+    while (<TESTLOG>) {
+        if (/$token/) {
+            # pull the token out of $_
+            $token_value = substr($_, index($_, $delimiter) + 1);
+            last;
+        }
+    }
+    close TESTLOG;
+    return $token_value;
+}
+
+
+
+sub kill_process {
+    my ($target_pid) = @_;
+    my $start_time = time;
+
+    # Try to kill and wait 10 seconds, then try a kill -9
+    my $sig;
+    for $sig ('TERM', 'KILL') {
+        kill $sig => $target_pid;
+        my $interval_start = time;
+        while (time - $interval_start < 10) {
+            # the following will work with 'cygwin' perl on win32, but not 
+            # with 'MSWin32' (ActiveState) perl
+            my $pid = waitpid($target_pid, POSIX::WNOHANG());
+            if (($pid == $target_pid and POSIX::WIFEXITED($?)) or $pid == -1) {
+                my $secs = time - $start_time;
+                $secs = $secs == 1 ? '1 second' : "$secs seconds";
+                print_log "Process killed. Took $secs to die.\n";
+                return;
+            }
+            sleep 1;
+        }
+    }
+    die "Unable to kill process: $target_pid";
+}
+
+BEGIN {
+    my %sig_num = ();
+    my @sig_name = ();
+
+    sub signal_name {
+        # Find the name of a signal number
+        my ($number) = @_;
+
+        unless (@sig_name) {
+            unless($Config::Config{sig_name} && $Config::Config{sig_num}) {
+                die "No sigs?";
+            } else {
+                my @names = split ' ', $Config::Config{sig_name};
+                @sig_num{@names} = split ' ', $Config::Config{sig_num};
+                foreach (@names) {
+                    $sig_name[$sig_num{$_}] ||= $_;
+                }
+            }
+        }
+        return $sig_name[$number];
+    }
+}
+
+sub fork_and_log {
+    # Fork a sub process and log the output.
+    my ($home, $dir, $cmd, $logfile) = @_;
+
+    my $pid = fork; # Fork off a child process.
+
+    unless ($pid) { # child
+
+        # Chimera doesn't want to reset home dir.
+        if ($Settings::ResetHomeDirForTests) {
+            $ENV{HOME} = $home if ($Settings::OS ne "BeOS");
+        }
+            
+        # Explicitly set cwd to home dir.
+        chdir $home or die "chdir($home): $!\n";
+
+        # Now cd to dir where binary is..
+        chdir $dir or die "chdir($dir): $!\n";
+
+        open STDOUT, ">$logfile";
+        open STDERR, ">&STDOUT";
+        select STDOUT; $| = 1;  # make STDOUT unbuffered
+        select STDERR; $| = 1;  # make STDERR unbuffered
+        exec $cmd;
+        die "Could not exec()";
+    }
+    return $pid;
+}
+
+# Stripped down version of fork_and_log().
+sub system_fork_and_log {
+    # Fork a sub process and log the output.
+    my ($cmd) = @_;
+
+    my $pid = fork; # Fork off a child process.
+
+    unless ($pid) { # child
+        exec $cmd;
+        die "Could not exec()";
+    }
+    return $pid;
+}
+
+
+sub wait_for_pid {
+    # Wait for a process to exit or kill it if it takes too long.
+    my ($pid, $timeout_secs) = @_;
+    my ($exit_value, $signal_num, $dumped_core, $timed_out) = (0,0,0,0);
+    my $sig_name;
+    my $loop_count;
+
+    die ("Invalid timeout value passed to wait_for_pid()\n")
+        if ($timeout_secs <= 0);
+
+    eval {
+        $loop_count = 0;
+        while (++$loop_count < $timeout_secs) {
+            my $wait_pid = waitpid($pid, POSIX::WNOHANG());
+            # the following will work with 'cygwin' perl on win32, but not 
+            # with 'MSWin32' (ActiveState) perl
+            last if ($wait_pid == $pid and POSIX::WIFEXITED($?)) or $wait_pid == -1;
+            sleep 1;
+        }
+
+        $exit_value = $? >> 8;
+        $signal_num = $? >> 127;
+        $dumped_core = $? & 128;
+        if ($loop_count >= $timeout_secs) {
+            die "timeout";
+        }
+        return "done";
+    };
+
+    if ($@) {
+        if ($@ =~ /timeout/) {
+            kill_process($pid);
+            $timed_out = 1;
+        } else { # Died for some other reason.
+            die; # Propagate the error up.
+        }
+    }
+    $sig_name = $signal_num ? signal_name($signal_num) : '';
+
+    return { timed_out=>$timed_out,
+             exit_value=>$exit_value,
+             sig_name=>$sig_name,
+             dumped_core=>$dumped_core };
+}
+
+#
+# Note that fork_and_log() sets the HOME env variable to do
+# the command, this allows us to have a local profile in the
+# shared cltbld user account.
+#
+sub run_cmd {
+    my ($home_dir, $binary_dir, $cmd, $logfile, $timeout_secs) = @_;
+    my $now = localtime();
+
+    print_log "Begin: $now\n";
+    print_log "cmd = $cmd\n";
+
+    my $pid = fork_and_log($home_dir, $binary_dir, $cmd, $logfile);
+    my $result = wait_for_pid($pid, $timeout_secs);
+
+    $now = localtime();
+    print_log "End:   $now\n";
+
+    return $result;
+}
+
+# System version of run_cmd().
+sub run_system_cmd {
+    my ($cmd, $timeout_secs) = @_;
+
+    print_log "cmd = $cmd\n";
+    my $pid = system_fork_and_log($cmd);
+    my $result = wait_for_pid($pid, $timeout_secs);
+
+    return $result;
+}
+
+sub get_system_cwd {
+    my $a = Cwd::getcwd()||`pwd`;
+    chomp($a);
+    return $a;
+}
+
+sub print_test_errors {
+    my ($result, $name) = @_;
+
+    if (not $result->{timed_out} and $result->{exit_value} != 0) {
+        if ($result->{sig_name} ne '') {
+            print_log "Error: $name: received SIG$result->{sig_name}\n";
+        }
+        print_log "Error: $name: exited with status $result->{exit_value}\n";
+        if ($result->{dumped_core}) {
+            print_log "Error: $name: dumped core.\n";
+        }
+    }
+}
+
+
+# Report test results back to a server.
+# Netscape-internal now, will push to mozilla.org, ask
+# mcafee or jrgm for details.
+#
+# Needs the following perl stubs, installed for rh7.1:
+# perl-Digest-MD5-2.13-1.i386.rpm
+# perl-MIME-Base64-2.12-6.i386.rpm
+# perl-libnet-1.0703-6.noarch.rpm
+# perl-HTML-Tagset-3.03-3.i386.rpm
+# perl-HTML-Parser-3.25-2.i386.rpm
+# perl-URI-1.12-5.noarch.rpm
+# perl-libwww-perl-5.53-3.noarch.rpm
+#
+sub send_results_to_server {
+    my ($value, $data, $testname, $tbox) = @_;
+
+    my $tmpurl = "http://$Settings::results_server/graph/collect.cgi";
+    $tmpurl .= "?value=$value&data=$data&testname=$testname&tbox=$tbox";
+
+    print_log "send_results_to_server(): \n";
+    print_log "tmpurl = $tmpurl\n";
+
+    my $res = eval q{
+        use LWP::UserAgent;
+        use HTTP::Request;
+        my $ua  = LWP::UserAgent->new;
+        $ua->timeout(10); # seconds
+        my $req = HTTP::Request->new(GET => $tmpurl);
+        my $res = $ua->request($req);
+        return $res;
+    };
+    if ($@) {
+        warn "Failed to submit startup results: $@";
+        print_log "send_results_to_server() failed.\n";
+    } else {
+        print "Results submitted to server: \n",
+        $res->status_line, "\n", $res->content, "\n";
+        print_log "send_results_to_server() succeeded.\n";
+    }
+
+}
+
+
+sub print_logfile {
+    my ($logfile, $test_name) = @_;
+    print_log "----------- Output from $test_name ------------- \n";
+    open READRUNLOG, "$logfile";
+    print_log "  $_" while <READRUNLOG>;
+    close READRUNLOG;
+    print_log "----------- End Output from $test_name --------- \n";
+}
+
+
+##################################################
+#                                                #
+#  Test definitions start here.                  #
+#                                                #
+##################################################
+
 # Run all tests.  Had to pass in both binary and embed_binary.
 #
 sub run_all_tests {
@@ -1360,383 +1744,6 @@ sub run_all_tests {
     return $test_result;
 }
 
-sub BinaryExists {
-    my ($binary) = @_;
-    my ($binary_basename) = File::Basename::basename($binary);
-
-    if (not -e $binary) {
-        print_log "$binary does not exist.\n";
-        0;
-    } elsif (not -s _) {
-        print_log "$binary is zero-size.\n";
-        0;
-    } elsif (not -x _) {
-        print_log "$binary is not executable.\n";
-        0;
-    } else {
-        print_log "$binary_basename exists, is nonzero, and executable.\n";
-        1;
-    }
-}
-
-sub min {
-    my $m = $_[0];
-    my $i;
-    foreach $i (@_) {
-        $m = $i if ($m > $i);
-    }
-    return $m;
-}
-
-
-sub DeleteBinary {
-    my ($binary) = @_;
-    my ($binary_basename) = File::Basename::basename($binary);
-
-    if (BinaryExists($binary)) {
-        print_log "Deleting binary: $binary_basename\n";
-        print_log "unlinking $binary\n";
-        unlink $binary or print_log "Error: Unlinking $binary failed\n";
-    } else {
-        print_log "No binary detected; none deleted.\n";
-    }
-}
-
-sub DeleteBinaryDir {
-    my ($binarydir) = @_;
-    if (-e $binarydir) {
-        print_log "Deleting $binarydir\n";
-        my $count = File::Path::rmtree($binarydir, 0, 0);
-        if (-e "$binarydir") {
-            print_log "Error: rmtree('$binarydir', 0, 0) failed.\n";
-        }
-    } else {
-        print_log "No binarydir detected; none deleted.\n";
-    }
-}
-
-sub PrintEnv {
-    local $_;
-
-    # Print out environment settings.
-    my $key;
-    foreach $key (sort keys %ENV) {
-        print_log "$key=$ENV{$key}\n";
-    }
-
-    # Print out mozconfig if found.
-    if (defined $ENV{MOZCONFIG} and -e $ENV{MOZCONFIG}) {
-        print_log "-->mozconfig<----------------------------------------\n";
-        open CONFIG, "$ENV{MOZCONFIG}";
-        print_log $_ while <CONFIG>;
-        close CONFIG;
-        print_log "-->end mozconfig<----------------------------------------\n";
-    }
-
-    # Say if we found post-mozilla.pl
-    if(-e "$Settings::BaseDir/post-mozilla.pl") {
-        print_log "Found post-mozilla.pl\n";
-    } else {
-        print_log "Didn't find $Settings::BaseDir/post-mozilla.pl\n";
-    }
-
-    # Print compiler setting
-    if ($Settings::Compiler ne '') {
-        print_log "===============================\n";
-        if ($Settings::Compiler eq 'gcc' or $Settings::Compiler eq 'egcc') {
-            my $comptmp = `$Settings::Compiler --version`;
-            chomp($comptmp);
-            print_log "Compiler is -- $Settings::Compiler ($comptmp)\n";
-        } else {
-            print_log "Compiler is -- $Settings::Compiler\n";
-        }
-        print_log "===============================\n";
-    }
-}
-
-# Parse a file for $token, given a file handle.
-sub file_has_token {
-    my ($filename, $token) = @_;
-    local $_;
-    my $has_token = 0;
-    open TESTLOG, "<$filename" or die "Cannot open file, $filename: $!";
-    while (<TESTLOG>) {
-        if (/$token/) {
-            $has_token = 1;
-            last;
-        }
-    }
-    close TESTLOG;
-    return $has_token;
-}
-
-# Parse a file for $token, return the token.
-# Look for the line "<token><delimiter><return-value>", e.g.
-# for "__startuptime,5501"
-#   token        = "__startuptime"
-#   delimiter    = ","
-#   return-value = "5501";
-#
-sub extract_token_from_file {
-    my ($filename, $token, $delimiter) = @_;
-    local $_;
-    my $token_value = 0;
-    open TESTLOG, "<$filename" or die "Cannot open file, $filename: $!";
-    while (<TESTLOG>) {
-        if (/$token/) {
-            # pull the token out of $_
-            $token_value = substr($_, index($_, $delimiter) + 1);
-            last;
-        }
-    }
-    close TESTLOG;
-    return $token_value;
-}
-
-
-
-sub kill_process {
-    my ($target_pid) = @_;
-    my $start_time = time;
-
-    # Try to kill and wait 10 seconds, then try a kill -9
-    my $sig;
-    for $sig ('TERM', 'KILL') {
-        kill $sig => $target_pid;
-        my $interval_start = time;
-        while (time - $interval_start < 10) {
-            # the following will work with 'cygwin' perl on win32, but not 
-            # with 'MSWin32' (ActiveState) perl
-            my $pid = waitpid($target_pid, POSIX::WNOHANG());
-            if (($pid == $target_pid and POSIX::WIFEXITED($?)) or $pid == -1) {
-                my $secs = time - $start_time;
-                $secs = $secs == 1 ? '1 second' : "$secs seconds";
-                print_log "Process killed. Took $secs to die.\n";
-                return;
-            }
-            sleep 1;
-        }
-    }
-    die "Unable to kill process: $target_pid";
-}
-
-BEGIN {
-    my %sig_num = ();
-    my @sig_name = ();
-
-    sub signal_name {
-        # Find the name of a signal number
-        my ($number) = @_;
-
-        unless (@sig_name) {
-            unless($Config::Config{sig_name} && $Config::Config{sig_num}) {
-                die "No sigs?";
-            } else {
-                my @names = split ' ', $Config::Config{sig_name};
-                @sig_num{@names} = split ' ', $Config::Config{sig_num};
-                foreach (@names) {
-                    $sig_name[$sig_num{$_}] ||= $_;
-                }
-            }
-        }
-        return $sig_name[$number];
-    }
-}
-
-sub fork_and_log {
-    # Fork a sub process and log the output.
-    my ($home, $dir, $cmd, $logfile) = @_;
-
-    my $pid = fork; # Fork off a child process.
-
-    unless ($pid) { # child
-
-        # Chimera doesn't want to reset home dir.
-        if ($Settings::ResetHomeDirForTests) {
-            $ENV{HOME} = $home if ($Settings::OS ne "BeOS");
-        }
-            
-        # Explicitly set cwd to home dir.
-        chdir $home or die "chdir($home): $!\n";
-
-        # Now cd to dir where binary is..
-        chdir $dir or die "chdir($dir): $!\n";
-
-        open STDOUT, ">$logfile";
-        open STDERR, ">&STDOUT";
-        select STDOUT; $| = 1;  # make STDOUT unbuffered
-        select STDERR; $| = 1;  # make STDERR unbuffered
-        exec $cmd;
-        die "Could not exec()";
-    }
-    return $pid;
-}
-
-# Stripped down version of fork_and_log().
-sub system_fork_and_log {
-    # Fork a sub process and log the output.
-    my ($cmd) = @_;
-
-    my $pid = fork; # Fork off a child process.
-
-    unless ($pid) { # child
-        exec $cmd;
-        die "Could not exec()";
-    }
-    return $pid;
-}
-
-
-sub wait_for_pid {
-    # Wait for a process to exit or kill it if it takes too long.
-    my ($pid, $timeout_secs) = @_;
-    my ($exit_value, $signal_num, $dumped_core, $timed_out) = (0,0,0,0);
-    my $sig_name;
-    my $loop_count;
-
-    die ("Invalid timeout value passed to wait_for_pid()\n")
-        if ($timeout_secs <= 0);
-
-    eval {
-        $loop_count = 0;
-        while (++$loop_count < $timeout_secs) {
-            my $wait_pid = waitpid($pid, POSIX::WNOHANG());
-            # the following will work with 'cygwin' perl on win32, but not 
-            # with 'MSWin32' (ActiveState) perl
-            last if ($wait_pid == $pid and POSIX::WIFEXITED($?)) or $wait_pid == -1;
-            sleep 1;
-        }
-
-        $exit_value = $? >> 8;
-        $signal_num = $? >> 127;
-        $dumped_core = $? & 128;
-        if ($loop_count >= $timeout_secs) {
-            die "timeout";
-        }
-        return "done";
-    };
-
-    if ($@) {
-        if ($@ =~ /timeout/) {
-            kill_process($pid);
-            $timed_out = 1;
-        } else { # Died for some other reason.
-            die; # Propagate the error up.
-        }
-    }
-    $sig_name = $signal_num ? signal_name($signal_num) : '';
-
-    return { timed_out=>$timed_out,
-             exit_value=>$exit_value,
-             sig_name=>$sig_name,
-             dumped_core=>$dumped_core };
-}
-
-#
-# Note that fork_and_log() sets the HOME env variable to do
-# the command, this allows us to have a local profile in the
-# shared cltbld user account.
-#
-sub run_cmd {
-    my ($home_dir, $binary_dir, $cmd, $logfile, $timeout_secs) = @_;
-    my $now = localtime();
-
-    print_log "Begin: $now\n";
-    print_log "cmd = $cmd\n";
-
-    my $pid = fork_and_log($home_dir, $binary_dir, $cmd, $logfile);
-    my $result = wait_for_pid($pid, $timeout_secs);
-
-    $now = localtime();
-    print_log "End:   $now\n";
-
-    return $result;
-}
-
-# System version of run_cmd().
-sub run_system_cmd {
-    my ($cmd, $timeout_secs) = @_;
-
-    print_log "cmd = $cmd\n";
-    my $pid = system_fork_and_log($cmd);
-    my $result = wait_for_pid($pid, $timeout_secs);
-
-    return $result;
-}
-
-sub get_system_cwd {
-    my $a = Cwd::getcwd()||`pwd`;
-    chomp($a);
-    return $a;
-}
-
-sub print_test_errors {
-    my ($result, $name) = @_;
-
-    if (not $result->{timed_out} and $result->{exit_value} != 0) {
-        if ($result->{sig_name} ne '') {
-            print_log "Error: $name: received SIG$result->{sig_name}\n";
-        }
-        print_log "Error: $name: exited with status $result->{exit_value}\n";
-        if ($result->{dumped_core}) {
-            print_log "Error: $name: dumped core.\n";
-        }
-    }
-}
-
-
-# Report test results back to a server.
-# Netscape-internal now, will push to mozilla.org, ask
-# mcafee or jrgm for details.
-#
-# Needs the following perl stubs, installed for rh7.1:
-# perl-Digest-MD5-2.13-1.i386.rpm
-# perl-MIME-Base64-2.12-6.i386.rpm
-# perl-libnet-1.0703-6.noarch.rpm
-# perl-HTML-Tagset-3.03-3.i386.rpm
-# perl-HTML-Parser-3.25-2.i386.rpm
-# perl-URI-1.12-5.noarch.rpm
-# perl-libwww-perl-5.53-3.noarch.rpm
-#
-sub send_results_to_server {
-    my ($value, $data, $testname, $tbox) = @_;
-
-    my $tmpurl = "http://$Settings::results_server/graph/collect.cgi";
-    $tmpurl .= "?value=$value&data=$data&testname=$testname&tbox=$tbox";
-
-    print_log "send_results_to_server(): \n";
-    print_log "tmpurl = $tmpurl\n";
-
-    my $res = eval q{
-        use LWP::UserAgent;
-        use HTTP::Request;
-        my $ua  = LWP::UserAgent->new;
-        $ua->timeout(10); # seconds
-        my $req = HTTP::Request->new(GET => $tmpurl);
-        my $res = $ua->request($req);
-        return $res;
-    };
-    if ($@) {
-        warn "Failed to submit startup results: $@";
-        print_log "send_results_to_server() failed.\n";
-    } else {
-        print "Results submitted to server: \n",
-        $res->status_line, "\n", $res->content, "\n";
-        print_log "send_results_to_server() succeeded.\n";
-    }
-
-}
-
-
-sub print_logfile {
-    my ($logfile, $test_name) = @_;
-    print_log "----------- Output from $test_name ------------- \n";
-    open READRUNLOG, "$logfile";
-    print_log "  $_" while <READRUNLOG>;
-    close READRUNLOG;
-    print_log "----------- End Output from $test_name --------- \n";
-}
-
 
 # Start up Mozilla, test passes if Mozilla is still alive
 # after $timeout_secs (seconds).
@@ -1868,7 +1875,10 @@ sub FileBasedTest {
 } # FileBasedTest
 
 
-# Page loader (-f option):
+
+
+
+# Page loader/cycling mechanism (mozilla -f option):
 # If you are building optimized, you need to add
 #   --enable-logrefcnt
 # to turn the pageloader code on.  These are on by default for debug.
