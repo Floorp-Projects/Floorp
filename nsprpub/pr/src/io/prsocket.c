@@ -1539,20 +1539,14 @@ failed:
 PR_IMPLEMENT(PRInt32)
 PR_FileDesc2NativeHandle(PRFileDesc *fd)
 {
-	if (fd) {
-		/*
-		 * The fd may be layered.  Chase the links to the
-		 * bottom layer to get the osfd.
-		 */
-		PRFileDesc *bottom = fd;
-		while (bottom->lower != NULL) {
-			bottom = bottom->lower;
-		}
-		return bottom->secret->md.osfd;
-	} else {
-		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-		return -1;
-	}
+    if (fd) {
+        fd = PR_GetIdentitiesLayer(fd, PR_NSPR_IO_LAYER);
+    }
+    if (!fd) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return -1;
+    }
+    return fd->secret->md.osfd;
 }
 
 PR_IMPLEMENT(void)
