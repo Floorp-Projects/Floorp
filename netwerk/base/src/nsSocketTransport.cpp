@@ -132,112 +132,113 @@ nsSocketTransport::nsSocketTransport():
     mSelectFlags(0),
     mService(nsnull),
     mSocketFD(nsnull),
-    mSocketType(nsnull),
-    mReadOffset(0),
+    mSocketType (nsnull),
+    mReadOffset (0),
     mWriteOffset(0),
-    mStatus(NS_OK),
+    mStatus     (NS_OK),
     mSuspendCount(0),
-    mWriteCount(0),
+    mWriteCount (0),
     mBytesExpected(-1),
-    mReuseCount(0),
-    mLastReuseCount(0),
-    mWriteBuffer(nsnull),
-    mWriteBufferIndex(0),
-    mWriteBufferLength(0),
-    mBufferSegmentSize(0),
-    mBufferMaxSize(0),
+    mReuseCount (0),
+    mLastReuseCount       (0),
+    mWriteBuffer          (nsnull),
+    mWriteBufferIndex     (0),
+    mWriteBufferLength    (0),
+    mBufferSegmentSize    (0),
+    mBufferMaxSize        (0),
     mSocketTimeout        (PR_INTERVAL_NO_TIMEOUT),
-    mSocketConnectTimeout (PR_MillisecondsToInterval (DEFAULT_SOCKET_CONNECT_TIMEOUT_IN_MS))
+    mSocketConnectTimeout (PR_MillisecondsToInterval (DEFAULT_SOCKET_CONNECT_TIMEOUT_IN_MS)),
+    mWasConnected (PR_FALSE)
 {
-  NS_INIT_REFCNT();
-
-  PR_INIT_CLIST(&mListLink);
-
-  mLastActiveTime  =  PR_INTERVAL_NO_WAIT;
-
-  SetReadType (eSocketRead_None);
-  SetWriteType(eSocketWrite_None);
-
-  //
-  // Set up Internet defaults...
-  //
-  memset(&mNetAddress, 0, sizeof(mNetAddress));
-  PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, 0, &mNetAddress);
-
-  //
-  // Initialize the global connect timeout value if necessary...
-  //
-  if (PR_INTERVAL_NO_WAIT == gConnectTimeout) {
-    gConnectTimeout  = PR_MillisecondsToInterval(CONNECT_TIMEOUT_IN_MS);
-  }
-
+    NS_INIT_REFCNT();
+    
+    PR_INIT_CLIST(&mListLink);
+    
+    mLastActiveTime  =  PR_INTERVAL_NO_WAIT;
+    
+    SetReadType (eSocketRead_None);
+    SetWriteType(eSocketWrite_None);
+    
+    //
+    // Set up Internet defaults...
+    //
+    memset(&mNetAddress, 0, sizeof(mNetAddress));
+    PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, 0, &mNetAddress);
+    
+    //
+    // Initialize the global connect timeout value if necessary...
+    //
+    if (PR_INTERVAL_NO_WAIT == gConnectTimeout) {
+        gConnectTimeout  = PR_MillisecondsToInterval(CONNECT_TIMEOUT_IN_MS);
+    }
+    
 #if defined(PR_LOGGING)
-  //
-  // Initialize the global PRLogModule for socket transport logging 
-  // if necessary...
-  //
-  if (nsnull == gSocketLog) {
-    gSocketLog = PR_NewLogModule("nsSocketTransport");
-  }
+    //
+    // Initialize the global PRLogModule for socket transport logging 
+    // if necessary...
+    //
+    if (nsnull == gSocketLog) {
+        gSocketLog = PR_NewLogModule("nsSocketTransport");
+    }
 #endif /* PR_LOGGING */
-
-  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("Creating nsSocketTransport [%x], TotalCreated=%d, TotalDeleted=%d\n", this, ++sTotalTransportsCreated, sTotalTransportsDeleted));
+    
+    PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+        ("Creating nsSocketTransport [%x], TotalCreated=%d, TotalDeleted=%d\n", this, ++sTotalTransportsCreated, sTotalTransportsDeleted));
 }
 
 
 nsSocketTransport::~nsSocketTransport()
 {
-  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("Deleting nsSocketTransport [%s:%d %x], TotalCreated=%d, TotalDeleted=%d\n", 
-          mHostName, mPort, this, sTotalTransportsCreated, ++sTotalTransportsDeleted));
+    PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+        ("Deleting nsSocketTransport [%s:%d %x], TotalCreated=%d, TotalDeleted=%d\n", 
+        mHostName, mPort, this, sTotalTransportsCreated, ++sTotalTransportsDeleted));
+    
+    // Release the nsCOMPtrs...
+    //
+    // It is easier to debug problems if these are released before the 
+    // nsSocketTransport context is lost...
+    //
+    mReadListener = null_nsCOMPtr();
+    mReadContext  = null_nsCOMPtr();
+    mReadPipeIn   = null_nsCOMPtr();
+    mReadPipeOut  = null_nsCOMPtr();
+    
+    mWriteObserver = null_nsCOMPtr();
+    mWriteContext  = null_nsCOMPtr();
+    mWritePipeIn   = null_nsCOMPtr();
+    mWritePipeOut  = null_nsCOMPtr();
+    //
+    // Cancel any pending DNS request...
+    //
+    if (mDNSRequest) {
+        mDNSRequest->Cancel(NS_BINDING_ABORTED);
+    }
+    mDNSRequest = null_nsCOMPtr();
+    
+    CloseConnection ();
 
-  // Release the nsCOMPtrs...
-  //
-  // It is easier to debug problems if these are released before the 
-  // nsSocketTransport context is lost...
-  //
-  mReadListener = null_nsCOMPtr();
-  mReadContext  = null_nsCOMPtr();
-  mReadPipeIn   = null_nsCOMPtr();
-  mReadPipeOut  = null_nsCOMPtr();
+    NS_IF_RELEASE (mService);
+    
+    CRTFREEIF (mPrintHost );
+    CRTFREEIF ( mHostName );
+    CRTFREEIF (mSocketType);
 
-  mWriteObserver = null_nsCOMPtr();
-  mWriteContext  = null_nsCOMPtr();
-  mWritePipeIn   = null_nsCOMPtr();
-  mWritePipeOut  = null_nsCOMPtr();
-  //
-  // Cancel any pending DNS request...
-  //
-  if (mDNSRequest) {
-    mDNSRequest->Cancel(NS_BINDING_ABORTED);
-  }
-  mDNSRequest = null_nsCOMPtr();
+    if (mMonitor) {
+        PR_DestroyMonitor(mMonitor);
+        mMonitor = nsnull;
+    }
+    
+    if (mWriteBuffer) {
+        PR_Free(mWriteBuffer);
+        mWriteBuffer = nsnull;
+    }
 
-  NS_IF_RELEASE(mService);
-
-  CRTFREEIF(mPrintHost);
-  CRTFREEIF(mHostName);
-  CRTFREEIF(mSocketType);
-
-  if (mSocketFD) {
-    PR_Close(mSocketFD);
-    mSocketFD = nsnull;
-  }
-
-  if (mMonitor) {
-    PR_DestroyMonitor(mMonitor);
-    mMonitor = nsnull;
-  }
-  
-  if (mWriteBuffer) {
-    PR_Free(mWriteBuffer);
-    mWriteBuffer = nsnull;
-  }
+    if (mService)
+        PR_AtomicDecrement (&mService -> mTotalTransports);
 }
 
 
-nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
+nsresult nsSocketTransport::Init (nsSocketTransportService* aService,
                                  const char* aHost, 
                                  PRInt32 aPort,
                                  const char* aSocketType,
@@ -245,60 +246,60 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  PRUint32 bufferSegmentSize,
                                  PRUint32 bufferMaxSize)
 {
-  nsresult rv = NS_OK;
-
-  mBufferSegmentSize = bufferSegmentSize != 0
-    ? bufferSegmentSize : NS_SOCKET_TRANSPORT_SEGMENT_SIZE;
-  mBufferMaxSize = bufferMaxSize != 0
-    ? bufferMaxSize : NS_SOCKET_TRANSPORT_BUFFER_SIZE;
-
-  mService = aService;
-  NS_ADDREF(mService);
-
-  mPort = aPort;
-  if (aHost && *aHost) {
-    mHostName = nsCRT::strdup(aHost);
-    if (!mHostName) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = NS_OK;
+    
+    mBufferSegmentSize = bufferSegmentSize != 0
+        ? bufferSegmentSize : NS_SOCKET_TRANSPORT_SEGMENT_SIZE;
+    mBufferMaxSize = bufferMaxSize != 0
+        ? bufferMaxSize : NS_SOCKET_TRANSPORT_BUFFER_SIZE;
+    
+    mService = aService;
+    NS_ADDREF(mService);
+    
+    mPort = aPort;
+    if (aHost && *aHost)
+    {
+        mHostName = nsCRT::strdup(aHost);
+        if (!mHostName)
+            rv = NS_ERROR_OUT_OF_MEMORY;
+    } 
+    // hostname was nsnull or empty...
+    else
+        rv = NS_ERROR_FAILURE;
+    
+    if (aPrintHost)
+    {
+        mPrintHost = nsCRT::strdup(aPrintHost);
+        if (!mPrintHost)
+            rv = NS_ERROR_OUT_OF_MEMORY;
     }
-  } 
-  // hostname was nsnull or empty...
-  else {
-    rv = NS_ERROR_FAILURE;
-  }
-
-  if (aPrintHost)
-  {
-      mPrintHost = nsCRT::strdup(aPrintHost);
-      if (!mPrintHost)
-          rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (NS_SUCCEEDED(rv) && aSocketType) {
-    mSocketType = nsCRT::strdup(aSocketType);
-    if (!mSocketType) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_SUCCEEDED(rv) && aSocketType)
+    {
+        mSocketType = nsCRT::strdup(aSocketType);
+        if (!mSocketType)
+            rv = NS_ERROR_OUT_OF_MEMORY;
+    } 
+    
+    //
+    // Create the lock used for synchronizing access to the transport instance.
+    //
+    if (NS_SUCCEEDED(rv))
+    {
+        mMonitor = PR_NewMonitor();
+        if (!mMonitor)
+            rv = NS_ERROR_OUT_OF_MEMORY;
     }
-  } 
-
-  //
-  // Create the lock used for synchronizing access to the transport instance.
-  //
-  if (NS_SUCCEEDED(rv)) {
-    mMonitor = PR_NewMonitor();
-    if (!mMonitor) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  // Update the active time for timeout purposes...
-  mLastActiveTime  = PR_IntervalNow();
-
-  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("Initializing nsSocketTransport [%s:%d %x].  rv = %x",
-          mHostName, mPort, this, rv));
-
-  return rv;
+    
+    // Update the active time for timeout purposes...
+    mLastActiveTime  = PR_IntervalNow ();
+    PR_AtomicIncrement (&mService -> mTotalTransports);
+    
+    PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+        ("Initializing nsSocketTransport [%s:%d %x].  rv = %x",
+        mHostName, mPort, this, rv));
+    
+    return rv;
 }
 
 
@@ -417,6 +418,9 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         //
         // A connection has been established with the server
         //
+        PR_AtomicIncrement (&mService -> mConnectedTransports);
+        mWasConnected = PR_TRUE;
+
         mSelectFlags = PR_POLL_EXCEPT;
 
         if (GetReadType() != eSocketRead_None) {
@@ -454,7 +458,8 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         SetFlag(eSocketRead_Done);
         SetFlag(eSocketWrite_Done);
 
-        CloseConnection();
+        CloseConnection ();
+
         //
         // Fall into the Done state...
         //
@@ -1222,40 +1227,51 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
 }
 
 
-nsresult nsSocketTransport::CloseConnection(PRBool bNow)
+nsresult nsSocketTransport::CloseConnection (PRBool bNow)
 {
-  PRStatus status;
-  nsresult rv = NS_OK;
+    PRStatus status;
+    nsresult rv = NS_OK;
+    
+    if (!bNow) // close connection once done. 
+    {
+        mCloseConnectionOnceDone = PR_TRUE;
+        return NS_OK;
+    }
+    
+    if (!mSocketFD)
+    {
+        mCurrentState = eSocketState_Closed;
+        return NS_OK;
+    }
+    
+    status = PR_Close (mSocketFD);
+    if (PR_SUCCESS != status)
+        rv = NS_ERROR_FAILURE;
 
-  if (!bNow) // close connection once done. 
-  {
-    mCloseConnectionOnceDone = PR_TRUE;
-    return NS_OK;
-  }
+    mSocketFD = nsnull;
 
-  if (!mSocketFD) {
-    mCurrentState = eSocketState_Closed;
-    return NS_OK;
-  }
+    if (mWasConnected)
+    {
+        if (mService)
+            PR_AtomicDecrement (&mService -> mConnectedTransports);
 
-  status = PR_Close(mSocketFD);
-  if (PR_SUCCESS != status) {
-    rv = NS_ERROR_FAILURE;
-  }
-  mSocketFD = nsnull;
-
-  if (NS_SUCCEEDED(rv)) {
-    mCurrentState = eSocketState_Closed;
-  }
-  if (mOpenObserver) {
-    nsresult rv2 = mOpenObserver->OnStopRequest(this, mOpenContext,
-                                                rv, nsnull);    // XXX need error message
+        mWasConnected = PR_FALSE;
+    }
+    
     if (NS_SUCCEEDED(rv))
-      rv = rv2;
-    mOpenObserver = null_nsCOMPtr();
-    mOpenContext = null_nsCOMPtr();
-  }
-  return rv;
+        mCurrentState = eSocketState_Closed;
+
+    if (mOpenObserver)
+    {
+        nsresult rv2 = mOpenObserver -> OnStopRequest (this, mOpenContext, rv, nsnull); // XXX need error message
+
+        if (NS_SUCCEEDED(rv))
+            rv = rv2;
+    
+        mOpenObserver = null_nsCOMPtr ();
+        mOpenContext  = null_nsCOMPtr ();
+    }
+    return rv;
 }
 
 

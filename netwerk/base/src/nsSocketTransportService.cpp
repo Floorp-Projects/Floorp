@@ -31,7 +31,9 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-nsSocketTransportService::nsSocketTransportService()
+nsSocketTransportService::nsSocketTransportService ()   :
+    mConnectedTransports (0),
+    mTotalTransports (0)
 {
   NS_INIT_REFCNT();
 
@@ -620,4 +622,34 @@ nsSocketTransportService::Shutdown(void)
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::GetTotalTransportCount    (PRUint32 * o_TransCount)
+{
+    if (!o_TransCount)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_TransCount = (PRUint32) mTotalTransports;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::GetConnectedTransportCount (PRUint32 * o_TransCount)
+{
+    if (!o_TransCount)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_TransCount = (PRUint32) mConnectedTransports;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::GetInUseTransportCount     (PRUint32 * o_TransCount)
+{
+    if (!o_TransCount)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_TransCount = (PRUint32) mSelectFDSetCount;
+    return NS_OK;
 }
