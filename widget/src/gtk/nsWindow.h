@@ -37,7 +37,7 @@ class nsFont;
 
 
 /**
- * Native Motif window wrapper.
+ * Native GTK+ window wrapper.
  */
 
 class nsWindow : public nsIWidget

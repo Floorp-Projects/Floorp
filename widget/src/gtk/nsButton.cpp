@@ -61,9 +61,10 @@ NS_METHOD nsButton::Create(nsIWidget        *aParent,
 
   mWidget = gtk_button_new_with_label("");
 
-  gtk_widget_set_usize(GTK_WIDGET(mWidget), aRect.width, aRect.height);
-  gtk_widget_show(mWidget);
   gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
+
+  gtk_widget_show(mWidget);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;

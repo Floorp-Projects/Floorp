@@ -67,7 +67,6 @@ public:
   virtual PRBool OnResize(nsSizeEvent &aEvent);
 
 protected:
-  GtkWidget *mWidget;
   unsigned char GetNativeAlignment();
   nsLabelAlignment mAlignment;
 

@@ -69,10 +69,13 @@ NS_METHOD nsCheckButton::Create(nsIWidget *aParent,
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 
-
   mWidget = gtk_check_button_new();
-  mLabel = gtk_label_new(NULL);
 
+  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
+
+  gtk_widget_show(mWidget);
+      
 /*
   mWidget = ::XtVaCreateManagedWidget("",
                                     xmToggleButtonWidgetClass,
@@ -85,7 +88,7 @@ NS_METHOD nsCheckButton::Create(nsIWidget *aParent,
                                     XmNy, aRect.y,
                                     XmNresizeHeight, False,
                                     XmNresizeWidth, False,
-                                    XmNmarginHeight, 0,
+                                    xmNmarginHeight, 0,
                                     XmNmarginWidth, 0,
                                     XmNadjustMargin, False,
                                     XmNspacing, 0,
