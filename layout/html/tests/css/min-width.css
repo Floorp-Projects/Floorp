@@ -16,10 +16,10 @@
  */
 
 
-GOOD :before { max-width: 5ex } 
-GOOD :before { max-width: 15%; } 
-GOOD :before { max-width: none } 
-GOOD :before { max-width: inherit; } 
+GOOD { max-width: 5ex } 
+GOOD { max-width: 15%; } 
+GOOD { max-width: none } 
+GOOD { max-width: inherit; } 
 BAD { max-width: babushka }
 BAD { max-width: auto; }
 BAD { max-width: 5cm .5in; }
