@@ -22,6 +22,7 @@ bin/chrome/en-win.jar
 ; US
 bin/chrome/US.jar
 bin/defaults/profile/US/*
+bin/defaults/messenger/US/*
 bin/searchplugins/*
 
 [deflenus]
@@ -32,6 +33,7 @@ bin/defaults/profile/panels.rdf
 bin/defaults/profile/localstore.rdf
 bin/defaults/profile/search.rdf
 bin/defaults/profile/mimeTypes.rdf
+bin/defaults/messenger/mailViews.dat
 
 [xpcom]
 bin/libmozjs.so
