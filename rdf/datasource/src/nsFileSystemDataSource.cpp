@@ -297,6 +297,17 @@ FileSystemDataSource::FileSystemDataSource(void)
 */
 #endif
 
+#ifdef XP_BEOS
+		nsSpecialSystemDirectory	netPositiveFolder(nsSpecialSystemDirectory::BeOS_SettingsDirectory);
+		nsFileURL			netPositiveURLSpec(netPositiveFolder);
+		netPositiveURLSpec += "NetPositive/Bookmarks/";
+		const char			*netPositiveURI = netPositiveURLSpec.GetAsString();
+		if (netPositiveURI)
+		{
+			netPositiveDir = nsCRT::strdup(netPositiveURI);
+		}
+#endif
+
 		gRDFService->GetResource(kURINC_FileSystemRoot,                &kNC_FileSystemRoot);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "child",            &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "Name",             &kNC_Name);
@@ -1456,13 +1467,15 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 #endif
 
 #ifdef	XP_BEOS
-#if 0 	// XXX fix me
 	// under BEOS, try and get the "META:title" attribute (if its a file)
 	nsAutoString		theURI; theURI.AssignWithConversion(uri);
 	if (theURI.Find(netPositiveDir) == 0)
 	{
-		nsFileSpec		spec(url);
-		if (spec.IsFile() && (!spec.IsHidden()))
+		nsFileURL		url(uri);
+		nsFilePath		path(url);
+		nsFileSpec		spec(path);
+//		if (spec.IsFile() && (!spec.IsHidden()))
+		if (spec.IsFile())
 		{
 			const char	*nativeURI = spec.GetNativePathCString();
 			if (nativeURI)
@@ -1474,16 +1487,19 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 					ssize_t		len;
 
 					if ((len = bf.ReadAttr("META:title", B_STRING_TYPE,
-						0, beNameAttr, sizeof(beNameAttr-1))) > 0)
+						0, beNameAttr, sizeof(beNameAttr)-1)) > 0)
 					{
 						beNameAttr[len] = '\0';
-						name.AssignWithConversion(beNameAttr);
+						name = NS_ConvertUTF8toUCS2(beNameAttr);
 					}
 				}
 			}
 		}
+		else if (spec.IsDirectory())
+		{
+			name = NS_ConvertUTF8toUCS2(spec.GetLeafName());
+		}
 	}
-#endif
 #endif
 
 	gRDFService->GetLiteral(name.GetUnicode(), aResult);
@@ -1641,8 +1657,10 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
 	*urlLiteral = nsnull;
 
 	nsFileURL		url(aFileURL);
-	nsFileSpec		uri(url);
-	if (uri.IsFile() && (!uri.IsHidden()))
+	nsFilePath		path(url);
+	nsFileSpec		uri(path);
+//	if (uri.IsFile() && (!uri.IsHidden()))
+	if (uri.IsFile())
 	{
 		const char	*nativeURI = uri.GetNativePathCString();
 		if (nativeURI)
@@ -1654,7 +1672,7 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
 				ssize_t		len;
 
 				if ((len = bf.ReadAttr("META:url", B_STRING_TYPE,
-					0, beURLattr, sizeof(beURLattr-1))) > 0)
+					0, beURLattr, sizeof(beURLattr)-1)) > 0)
 				{
 					beURLattr[len] = '\0';
 					nsAutoString	bookmarkURL;
