@@ -74,21 +74,10 @@ if [ $SHOWHELP ]; then
     echo "  the total size of all code and data, and a delta from the prior."
     echo "  the old results."
     echo "For much more detail on size drifts refer to the summary report."
+    echo ""
+    echo "This tool reports on all executables in the directory tree."
     exit
 fi
-
-
-#
-#   Exclude certain path patterns.
-#   Be sure to modify the grep command below as well.
-#
-EXCLUDE_PATTERN_01="test"
-EXCLUDE_PATTERN_02="tools"
-EXCLUDE_PATTERN_03="dbg"
-EXCLUDE_PATTERN_04="sample"
-
-EXCLUDE_NAME_01="mkdepend.map"
-EXCLUDE_NAME_02="IBMNEC.map"
 
 
 #
@@ -113,19 +102,10 @@ find ./mozilla -type f -name *.map > $ALLMAPSFILE
 
 
 #
-#   Reduce the map files to a revelant set.
-#
-NOPATMAPSFILE="$MYTMPDIR/nopatmaps.list"
-grep -vi $EXCLUDE_PATTERN_01 < $ALLMAPSFILE | grep -vi $EXCLUDE_PATTERN_02 | grep -vi $EXCLUDE_PATTERN_03 | grep -vi $EXCLUDE_PATTERN_04 > $NOPATMAPSFILE
-MAPSFILE="$MYTMPDIR/maps.list"
-grep -vi $EXCLUDE_NAME_01 < $NOPATMAPSFILE | grep -vi $EXCLUDE_NAME_02 > $MAPSFILE
-
-
-#
 #   Produce the TSV output.
 #
 RAWTSVFILE="$MYTMPDIR/raw.tsv"
-xargs -n 1 ./mozilla/dist/bin/msmap2tsv --input < $MAPSFILE > $RAWTSVFILE
+xargs -n 1 ./mozilla/dist/bin/msmap2tsv --input < $ALLMAPSFILE > $RAWTSVFILE
 
 
 #

@@ -34,6 +34,9 @@
 #
 
 
+MANIFEST="./mozilla/embedding/config/basebrowser-win"
+
+
 #
 #   A little help for my friends.
 #
@@ -75,6 +78,9 @@ if [ $SHOWHELP ]; then
     echo "  the total size of all code and data, and a delta from the prior."
     echo "  the old results."
     echo "For much more detail on size drifts refer to the summary report."
+    echo ""
+    echo "This tool reports on executables listed in the following file:"
+    echo "$MANIFEST"
     exit
 fi
 
@@ -106,7 +112,7 @@ find ./mozilla -type f -name *.map > $ALLMAPSFILE
 #       in the file mozilla/embedding/config/basebrowser-win.
 #
 RELEVANTSETFILE="$MYTMPDIR/relevant.set"
-grep -v '\;' < ./mozilla/embedding/config/basebrowser-win | sed 's/.*\\//' | grep '\.[eEdD][xXlL][eElL]' | sed 's/\.[eEdD][xXlL][eElL]//' > $RELEVANTSETFILE
+grep -v '\;' < $MANIFEST | sed 's/.*\\//' | grep '\.[eEdD][xXlL][eElL]' | sed 's/\.[eEdD][xXlL][eElL]//' > $RELEVANTSETFILE
 RELEVANTARG=`xargs -n 1 echo --match-module < $RELEVANTSETFILE`
 
 #

@@ -74,25 +74,10 @@ if [ $SHOWHELP ]; then
     echo "  the total size of all code and data, and a delta from the prior."
     echo "  the old results."
     echo "For much more detail on size drifts refer to the summary report."
+    echo ""
+    echo "This tool reports on all executables in the directory tree."
     exit
 fi
-
-
-#
-#   Exclude certain path patterns.
-#   Be sure to modify the grep command below as well.
-#
-EXCLUDE_PATTERN_01="test"
-EXCLUDE_PATTERN_02="tsv"
-
-EXCLUDE_NAMES="-not -name viewer"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name spacetrace"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name xpidl"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name bloadblame"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name leakstats"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name codesighs"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name htmlrobot"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name DumpColors"
 
 
 #
@@ -113,14 +98,7 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 #   Find all relevant files.
 #
 ALLFILES="$MYTMPDIR/allfiles.list"
-find ./mozilla/dist/bin -not -type d $EXCLUDE_NAMES > $ALLFILES
-
-
-#
-#   Reduce the files to a revelant set.
-#
-THEFILES="$MYTMPDIR/files.list"
-grep -vi $EXCLUDE_PATTERN_01 < $ALLFILES | grep -vi $EXCLUDE_PATTERN_02 > $THEFILES
+find ./mozilla/dist/bin -not -type d > $ALLFILES
 
 
 #
@@ -129,7 +107,7 @@ grep -vi $EXCLUDE_PATTERN_01 < $ALLFILES | grep -vi $EXCLUDE_PATTERN_02 > $THEFI
 #   nm --format=bsd --size-sort --print-file-name --demangle
 #
 NMRESULTS="$MYTMPDIR/nm.txt"
-xargs -n 1 nm --format=bsd --size-sort --print-file-name --demangle < $THEFILES > $NMRESULTS 2> /dev/null
+xargs -n 1 nm --format=bsd --size-sort --print-file-name --demangle < $ALLFILES > $NMRESULTS 2> /dev/null
 
 
 #
