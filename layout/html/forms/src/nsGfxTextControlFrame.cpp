@@ -492,11 +492,15 @@ nsGfxTextControlFrame::GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode)
 
   PRUint32 numChildNodes = 0;
   childNodesList->GetLength(&numChildNodes);
+#if 0
+  // editor can leave empty text node droppings around after deleting
+  // all the text in a widget, so disable this check for now.
   if (numChildNodes != 1)
   {
     NS_WARNING("Found zero or several child nodes in a text widget doc!");
     return NS_ERROR_FAILURE;
   }
+#endif
 
   nsCOMPtr<nsIDOMNode> firstChild;
   nsresult rv = bodyNode->GetFirstChild(getter_AddRefs(firstChild));
@@ -518,7 +522,7 @@ nsGfxTextControlFrame::SelectAllContents()
   
   if (IsSingleLineInput())
   {
-    rv = SetSelectionRange(0, 0x7FFFFFFF);
+    rv = SetSelectionRange(0, eSelectToEnd);
   }
   else
   {
@@ -545,8 +549,8 @@ nsGfxTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
   nsresult rv = GetFirstTextNode(getter_AddRefs(firstTextNode));
   if (NS_FAILED(rv) || !firstTextNode)
   {
-    NS_WARNING("No first child node!");
-    return rv;
+    // probably an empty document. not an error
+    return NS_OK;
   }
   
   nsCOMPtr<nsIDOMNode> firstNode = do_QueryInterface(firstTextNode, &rv);
@@ -556,24 +560,24 @@ nsGfxTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
   PRUint32 nodeLengthU;
   firstTextNode->GetLength(&nodeLengthU);
   PRInt32 nodeLength = (PRInt32)nodeLengthU;
-  
-  if (aSelStart < 0)
-    aSelStart = 0;
-  if (aSelStart > nodeLength)
-    aSelStart = nodeLength;
-
-  if (aSelEnd < 0)
-    aSelEnd = 0;
-  if (aSelEnd > nodeLength)
-    aSelEnd = nodeLength;
-  
+    
   nsCOMPtr<nsIDOMSelection> selection;
   mEditor->GetSelection(getter_AddRefs(selection));  
   if (!selection) return NS_ERROR_FAILURE;
 
   // are we setting both start and end?
-  if (aSelStart != -1 && aSelEnd != -1)
+  if (aSelStart != eIgnoreSelect && aSelEnd != eIgnoreSelect)
   {
+    if (aSelStart == eSelectToEnd || aSelStart > nodeLength)
+      aSelStart = nodeLength;
+    if (aSelStart < 0)
+      aSelStart = 0;
+
+    if (aSelEnd == eSelectToEnd || aSelEnd > nodeLength)
+      aSelEnd = nodeLength;
+    if (aSelEnd < 0)
+      aSelEnd = 0;
+
     // remove existing ranges
     selection->ClearSelection();  
 
@@ -591,43 +595,44 @@ nsGfxTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
     // does a range exist?
     nsCOMPtr<nsIDOMRange> firstRange;
     selection->GetRangeAt(0, getter_AddRefs(firstRange));
-    if (!firstRange)
-    {
-      // no range. Make a new one. We'll have to rearrange
-      // the endpoints to be in legal order
-      nsCOMPtr<nsIDOMRange> selectionRange;
-      NS_NewRange(getter_AddRefs(selectionRange));
-      if (!selectionRange) return NS_ERROR_OUT_OF_MEMORY;
-      
-      PRInt32 selStart = 0, selEnd = 0;
-      
-      if (aSelStart != -1)
-        selStart = aSelStart;
+    PRBool mustAdd = PR_FALSE;
+    PRInt32 selStart = 0, selEnd = 0;
 
-      if (aSelEnd != -1)
-        selEnd = aSelEnd;
-      
-      // swap them
-      if (selEnd < selStart)
-      {
-        PRInt32 temp = selStart;
-        selStart = selEnd;
-        selEnd = temp;
-      }
-      
-      selectionRange->SetStart(firstTextNode, selStart);
-      selectionRange->SetEnd(firstTextNode, selEnd);      
-      selection->AddRange(selectionRange);
+    if (firstRange)
+    {
+     firstRange->GetStartOffset(&selStart);
+     firstRange->GetEndOffset(&selEnd);
     }
     else
     {
-      // we have a range. Just set the endpoints
-      if (aSelStart != -1)
-        firstRange->SetStart(firstNode, aSelStart);
-
-      if (aSelEnd != -1)
-        firstRange->SetStart(firstNode, aSelEnd);
+      // no range. Make a new one.
+      NS_NewRange(getter_AddRefs(firstRange));
+      if (!firstRange) return NS_ERROR_OUT_OF_MEMORY;
+      mustAdd = PR_TRUE;
     }
+    
+    if (aSelStart == eSelectToEnd)
+      selStart = nodeLength;
+    else if (aSelStart != eIgnoreSelect)
+      selStart = aSelStart;
+
+    if (aSelEnd == eSelectToEnd)
+      selEnd = nodeLength;
+    else if (aSelEnd != eIgnoreSelect)
+      selEnd = aSelEnd;
+    
+    // swap them
+    if (selEnd < selStart)
+    {
+      PRInt32 temp = selStart;
+      selStart = selEnd;
+      selEnd = temp;
+    }
+    
+    firstRange->SetStart(firstTextNode, selStart);
+    firstRange->SetEnd(firstTextNode, selEnd);
+    if (mustAdd)  
+      selection->AddRange(firstRange);
   }
 
   return NS_OK;
@@ -661,7 +666,7 @@ nsGfxTextControlFrame::SetSelectionStart(PRInt32 aSelectionStart)
   NS_ASSERTION(mEditor, "Should have an editor here");
   NS_ASSERTION(mDoc, "Should have an editor here");
   
-  return SetSelectionEndPoints(aSelectionStart, -1);
+  return SetSelectionEndPoints(aSelectionStart, eIgnoreSelect);
 }
 
 NS_IMETHODIMP
@@ -676,7 +681,7 @@ nsGfxTextControlFrame::SetSelectionEnd(PRInt32 aSelectionEnd)
   NS_ASSERTION(mEditor, "Should have an editor here");
   NS_ASSERTION(mDoc, "Should have an editor here");
   
-  return SetSelectionEndPoints(-1, aSelectionEnd);
+  return SetSelectionEndPoints(eIgnoreSelect, aSelectionEnd);
 }
 
 NS_IMETHODIMP
@@ -694,8 +699,8 @@ nsGfxTextControlFrame::GetTextLength(PRInt32* aTextLength)
   rv = GetFirstTextNode(getter_AddRefs(firstTextNode));
   if (NS_FAILED(rv) || !firstTextNode)
   {
-    NS_WARNING("No first child node!");
-    return rv;
+    // just an empty field. not an error
+    return NS_OK;
   }
 
   PRUint32 nodeLengthU;
@@ -739,16 +744,22 @@ nsGfxTextControlFrame::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSel
     nsCOMPtr<nsIDOMRange> firstRange;
     selection->GetRangeAt(0, getter_AddRefs(firstRange));
     if (!firstRange) return NS_ERROR_FAILURE;
-    
+#if 0    
     // make sure this range is pointing at the first child
     nsCOMPtr<nsIDOMCharacterData> firstTextNode;
     rv = GetFirstTextNode(getter_AddRefs(firstTextNode));
     nsCOMPtr<nsIDOMNode> firstNode = do_QueryInterface(firstTextNode);
-  
+    if (!firstNode)
+    {
+      *aSelectionStart = 0;
+      *aSelectionEnd = 0;
+      return NS_OK;
+    }
+    
     nsCOMPtr<nsIDOMNode> rangeStartNode;
     firstRange->GetStartParent(getter_AddRefs(rangeStartNode));   // maybe we should compare the end too?
     if (rangeStartNode != firstNode) return NS_ERROR_FAILURE;
-    
+#endif    
     firstRange->GetStartOffset(aSelectionStart);
     firstRange->GetEndOffset(aSelectionEnd);
   }
