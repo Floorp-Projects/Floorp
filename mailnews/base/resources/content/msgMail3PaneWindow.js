@@ -378,6 +378,42 @@ function loadStartPage() {
     }
 }
 
+function PerformExpandForAllOpenServers(tree)
+{
+	dump("PerformExpandForAllOpenServers()\n");
+
+	var uri = null;
+	var open = null;
+	var treechild = null;
+    var server = null;
+
+	if ( tree && tree.childNodes ) {
+		for ( var i = tree.childNodes.length - 1; i >= 0; i-- ) {
+			treechild = tree.childNodes[i];
+			if (treechild.tagName == 'treechildren') {
+				var treeitems = treechild.childNodes;
+				for ( var j = treeitems.length - 1; j >= 0; j--) {
+					open = treeitems[j].getAttribute('open');
+					dump("open="+open+"\n");
+					if (open == "true") {
+						var isServer = (treeitems[j].getAttribute('IsServer') == "true");
+						dump("isServer="+isServer+"\n");
+						if (isServer) {
+							uri = treeitems[j].getAttribute('id');
+							dump("uri="+uri+"\n");
+							server = GetServer(uri);
+							if (server) {
+								dump("PerformExpand on " + uri + "\n");
+								server.PerformExpand();
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 function loadStartFolder(startFolderUri)
 {
 	//First get default account
@@ -414,6 +450,10 @@ function loadStartFolder(startFolderUri)
 
 		var folderTree= GetFolderTree();
 		ChangeSelection(folderTree, startFolder);
+
+		// because the "open" state persists, we'll call
+		// PerformExpand() for all servers that are open at startup.
+		PerformExpandForAllOpenServers(folderTree);
 	}
 	catch(ex)
 	{
@@ -692,15 +732,14 @@ function ThreadPaneDoubleClick(treeitem)
 	}
 }
 
-function IfServerGetServer(uri)
+function GetServer(uri)
 {
 	try {
 		var folder = GetMsgFolderFromUri(uri);
-		if (folder.isServer) {
-			return folder.server;
-		}
+		return folder.server;
 	}
 	catch (ex) {
+		dump("GetServer("+uri+") failed, ex="+ex+"\n");
 	}
 
 	return null;
@@ -724,10 +763,13 @@ function FolderPaneOnClick(event)
 
 			var item = event.target.parentNode.parentNode.parentNode;
 			if (item.nodeName == "treeitem") {
-	    		var uri = treeitem.getAttribute("id");
-				var server = IfServerGetServer(uri);
-				if (server) {
-					server.PerformExpand();
+				var isServer = (treeitem.getAttribute('IsServer') == "true");
+				if (isServer) {
+	    			var uri = treeitem.getAttribute("id");
+					var server = GetServer(uri);
+					if (server) {
+						server.PerformExpand();
+					}
 				}
 			}
 		}
@@ -742,25 +784,29 @@ function FolderPaneOnClick(event)
 
 function FolderPaneDoubleClick(treeitem)
 {
-	var server = null;
+	var isServer = false;
 
 	if (treeitem) {
-	    var uri = treeitem.getAttribute("id");
-		var open = treeitem.getAttribute('open');
-		server = IfServerGetServer(uri);
-
-		if (server && (open == "true")) {
-			dump("double clicking open, PerformExpand()\n");
-			server.PerformExpand();
-		}
-		else {
-			dump("double clicking close, don't PerformExpand()\n");
+		isServer = (treeitem.getAttribute('IsServer') == "true");
+		if (isServer) {
+			var open = treeitem.getAttribute('open');
+			if (open == "true") {
+				var uri = treeitem.getAttribute("id");
+				server = GetServer(uri);
+				if (server) {
+					dump("double clicking open, PerformExpand()\n");
+					server.PerformExpand();
+				}
+			}
+			else {
+				dump("double clicking close, don't PerformExpand()\n");
+			}
 		}
 	}
 
 	// don't open a new msg window if we are double clicking on a server.
 	// only do it for folders or newsgroups
-	if (!server) {
+	if (!isServer) {
 		MsgOpenNewWindowForFolder(treeitem);
 	}
 }
