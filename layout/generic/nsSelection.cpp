@@ -659,7 +659,7 @@ nsresult NS_NewSelection(nsIFrameSelection **aFrameSelection)
   if (!rlist)
     return NS_ERROR_OUT_OF_MEMORY;
   *aFrameSelection = (nsIFrameSelection *)rlist;
-  rlist->AddRef();
+  NS_ADDREF(rlist);
   return NS_OK;
 }
 
@@ -671,7 +671,7 @@ nsresult NS_NewDomSelection(nsISelection **aDomSelection)
   if (!rlist)
     return NS_ERROR_OUT_OF_MEMORY;
   *aDomSelection = (nsISelection *)rlist;
-  rlist->AddRef();
+  NS_ADDREF(rlist);
   return NS_OK;
 }
 
@@ -899,7 +899,7 @@ nsSelection::nsSelection()
     mDomSelections[i] = new nsTypedSelection(this);
     if (!mDomSelections[i])
       return;
-    mDomSelections[i]->AddRef();
+    NS_ADDREF(mDomSelections[i]);
     mDomSelections[i]->SetType(GetSelectionTypeFromIndex(i));
   }
   mBatching = 0;
@@ -940,8 +940,7 @@ nsSelection::~nsSelection()
 {
   PRInt32 i;
   for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
-    if (mDomSelections[i])
-        NS_IF_RELEASE(mDomSelections[i]);
+    NS_IF_RELEASE(mDomSelections[i]);
   }
 }
 
@@ -2685,7 +2684,7 @@ nsSelection::GetSelection(SelectionType aType, nsISelection **aDomSelection)
   if (index < 0)
     return NS_ERROR_INVALID_ARG;
   *aDomSelection = NS_REINTERPRET_CAST(nsISelection *,mDomSelections[index]);
-  (*aDomSelection)->AddRef();
+  NS_ADDREF(*aDomSelection);
   return NS_OK;
 }
 
