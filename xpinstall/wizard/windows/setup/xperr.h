@@ -72,5 +72,5 @@ char *XpErrorList[] = {"-200",  "BAD_PACKAGE_NAME",
                        "-5551", "GESTALT_INVALID_ARGUMENT",
                        ""};
 
-#endif
+#endif /* _XPERR_H_ */
 

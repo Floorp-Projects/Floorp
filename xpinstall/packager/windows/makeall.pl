@@ -54,24 +54,29 @@ $inDefaultVersion     = $ARGV[0];
 $inStagePath          = $ARGV[1];
 $inDistPath           = $ARGV[2];
 
-$inRedirIniUrl        = "ftp://not.needed.com/because/the/xpi/files/will/be/located/in/the/same/dir/as/the/installer";
-$inXpiUrl             = "ftp://not.needed.com/because/the/xpi/files/will/be/located/in/the/same/dir/as/the/installer";
+#$inRedirIniUrl        = "ftp://not.needed.yet.until.release.eng.is.ready";
+#$inXpiURL             = "ftp://not.needed.yet.until.release.eng.is.ready";
+$inRedirIniUrl        = "ftp://sweetlou/products/client/temp/ssu/moztest";
+$inXpiURL             = "ftp://sweetlou/products/client/temp/ssu/moztest";
 
 $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mozilla-win32-installer.exe";
+$seiFileNameSpecificStub  = "mozilla-win32-stub-installer.exe";
 $seuFileNameSpecific  = "MozillaUninstall.exe";
 
 # set environment vars for use by other .pl scripts called from this script.
-$ENV{WIZ_userAgent}            = "5.0a1 (en)";
-$ENV{WIZ_nameCompany}          = "Mozilla";
-$ENV{WIZ_nameProduct}          = "Mozilla Seamonkey";
+$ENV{WIZ_userAgent}            = "0.8 (en)";
+$ENV{WIZ_userAgentShort}       = "0.8";
+$ENV{WIZ_xpinstallVersion}     = "0.8.0";
+$ENV{WIZ_nameCompany}          = "Mozilla.org";
+$ENV{WIZ_nameProduct}          = "Mozilla";
 $ENV{WIZ_fileMainExe}          = "Mozilla.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 
 # Set the location of the local tmp stage directory
 $gLocalTmpStage = "$inDistPath\\tmpstage";
 
-# Check for existance of staging path
+# Check for existence of staging path
 if(!(-d "$inStagePath"))
 {
   die "\n Invalid path: $inStagePath\n";
@@ -146,6 +151,10 @@ if(MakeConfigFile())
 RemoveLocalTmpStage();
 
 # Copy the setup files to the dist setup directory.
+if(system("copy redirect.ini $inDistPath"))
+{
+  die "\n Error: copy redirect.ini $inDistPath\n";
+}
 if(system("copy config.ini $inDistPath"))
 {
   die "\n Error: copy config.ini $inDistPath\n";
@@ -164,7 +173,72 @@ if(system("copy $inDistPath\\setuprsc.dll $inDistPath\\setup"))
 }
 
 # build the self-extracting .exe (installer) file.
-print "\n Building self-extracting installer ($seiFileNameSpecific)...\n";
+print "\nbuilding self-extracting stub installer ($seiFileNameSpecificStub)...\n";
+if(system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecificStub"))
+{
+  die "\n Error: copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecificStub\n";
+}
+if(system("$inDistPath\\nsztool.exe $inDistPath\\$seiFileNameSpecificStub $inDistPath\\setup\\*.*"))
+{
+  die "\n Error: inDistPath\\nsztool.exe $inDistPath\\$seiFileNameSpecificStub $inDistPath\\setup\\*.*\n";
+}
+
+# copy the lean installer to stub\ dir
+print "\n****************************\n";
+print "*                          *\n";
+print "*  creating Stub files...  *\n";
+print "*                          *\n";
+print "****************************\n";
+if(-d "$inDistPath\\stub")
+{
+  unlink <$inDistPath\\stub\\*>;
+}
+else
+{
+  mkdir ("$inDistPath\\stub",0775);
+}
+if(system("copy $inDistPath\\$seiFileNameSpecificStub $inDistPath\\stub"))
+{
+  die "\n Error: copy $inDistPath\\$seiFileNameSpecificStub $inDistPath\\stub\n";
+}
+
+# group files for CD
+print "\n************************************\n";
+print "*                                  *\n";
+print "*  creating Compact Disk files...  *\n";
+print "*                                  *\n";
+print "************************************\n";
+if(-d "$inDistPath\\cd")
+{
+  unlink <$inDistPath\\cd\\*>;
+}
+else
+{
+  mkdir ("$inDistPath\\cd",0775);
+}
+if(system("copy $inDistPath\\$seiFileNameSpecificStub $inDistPath\\cd"))
+{
+  die "\n Error: copy $inDistPath\\$seiFileNameSpecificStub $inDistPath\\cd\n";
+}
+if(system("copy $inDistPath\\xpi $inDistPath\\cd"))
+{
+  die "\n Error: copy $inDistPath\\xpi $inDistPath\\cd\n";
+}
+
+# create the big self extracting .exe installer
+print "\n**************************************************************\n";
+print "*                                                            *\n";
+print "*  creating Self Extracting Executable Full Install file...  *\n";
+print "*                                                            *\n";
+print "**************************************************************\n";
+if(-d "$inDistPath\\sea")
+{
+  unlink <$inDistPath\\sea\\*>;
+}
+else
+{
+  mkdir ("$inDistPath\\sea",0775);
+}
 if(system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific"))
 {
   die "\n Error: copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific\n";
@@ -173,6 +247,11 @@ if(system("$inDistPath\\nsztool.exe $inDistPath\\$seiFileNameSpecific $inDistPat
 {
   die "\n Error: $inDistPath\\nsztool.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*\n";
 }
+if(system("copy $inDistPath\\$seiFileNameSpecific $inDistPath\\sea"))
+{
+  die "\n Error: copy $inDistPath\\$seiFileNameSpecific $inDistPath\\sea\n";
+}
+unlink <$inDistPath\\$seiFileNameSpecificStub>;
 
 print " done!\n\n";
 
@@ -207,9 +286,16 @@ exit(0);
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiUrl"))
+  if(system("perl makecfgini.pl config.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiURL"))
   {
-    print "\n Error: perl makecfgini.pl config.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiUrl\n";
+    print "\n Error: perl makecfgini.pl config.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiURL\n";
+    return(1);
+  }
+
+  # Make redirect.ini file
+  if(system("perl makecfgini.pl redirect.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiURL"))
+  {
+    print "\n Error: perl makecfgini.pl redirect.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiURL\n";
     return(1);
   }
   return(0);
@@ -370,7 +456,7 @@ sub VerifyComponents()
   my($mComponent);
   my($mError) = 0;
 
-  print "\n Verifying existance of required components...\n";
+  print "\n Verifying existence of required components...\n";
   foreach $mComponent (@gComponentList)
   {
     if(-d "$inStagePath\\$mComponent")

@@ -1,26 +1,3 @@
-function updateWindowsRegistry(psmPath)
-{
-  var winReg = getWinRegistry();
-  if(winReg != null)
-  {
-    winReg.setRootKey(winReg.HKEY_LOCAL_MACHINE);
-    subKey    = "SOFTWARE\\$CompanyName$";
-    err       = winReg.createKey(subKey, "");
-
-    subKey    = "SOFTWARE\\$CompanyName$\\Personal Security Manager";
-    err       = winReg.createKey(subKey, "");
-
-    subKey    = "SOFTWARE\\$CompanyName$\\Personal Security Manager\\Main";
-    valueName = "Install Directory";
-    err       = winReg.createKey(subKey, "");
-    err       = winReg.setValueString(subKey, valueName, psmPath);
-  }
-  else
-  {
-    logComment("getWinRegsitry() failed: " + winReg);
-  }
-}
-
 // main
 var srDest;
 var err;
@@ -52,7 +29,6 @@ if(verifyDiskSpace(fProgram, srDest))
   // check return value
   if(err == SUCCESS)
   {
-    updateWindowsRegistry(fProgram);
     err = performInstall(); 
     logComment("performInstall() returned: " + err);
   }

@@ -9,6 +9,7 @@ Run Mode=Normal
 
 Company Name=$CompanyName$
 Product Name=$ProductName$
+User Agent=$UserAgent$
 
 ; Destination Path values:
 ;   PROGRAMFILESDIR
@@ -16,7 +17,7 @@ Product Name=$ProductName$
 ;   WINDIR
 ;   WINSYSDIR
 Path=[PROGRAMFILESDIR]\$CompanyName$
-Sub Path=Seamonkey
+Sub Path=$ProductName$
 Program Name=$MainExeFile$
 
 ; Program Folder Path values:
@@ -53,17 +54,8 @@ Program Folder Path=[COMMON_PROGRAMS]
 
 Uninstall Filename=$UninstallFile$
 
-; The key(s) are used as a fail over key(s).  The url(s) here will be used
+; This key is used as a fail over key.  The url here will be used
 ; when the redirect.ini file is not found (ie. failed to download).
-; There can be more than one url listed here.  The naming convention needs to
-; be as follows:
-;
-;   url=
-;   url.0=
-;   url.1=
-;   url.2=
-;
-; and so on...
 url=$ArchiveUrl$
 
 ; Default Setup Type values:
@@ -95,7 +87,7 @@ Setup Title2 Font Shadow=TRUE
 ; Decrypt HKey:      there are times when '[' and ']' are valid part of windows registry key names.
 ; Contains Filename: tells setup that the path contains filename needed to be removed before
 ;                    using it as a path.
-; Verify Existance:  FILE or PATH
+; Verify Existence:  FILE or PATH
 ;
 [Locate Previous Product Path0]
 HRoot=HKEY_LOCAL_MACHINE
@@ -103,14 +95,14 @@ HKey=[Product CurrentVersion]\Main
 Name=Install Directory
 Decrypt HKey=TRUE
 Contains Filename=FALSE
-Verify Existance=
+Verify Existence=
 
 ; This section checks for legacy files.
 ; If the file(s), indicated by the Filename= key, is found to have a version of less than the value
 ; indicated by the Version= key, then display the string in the Message= key.
 [Legacy Check0]
 Filename=[SETUP PATH]\$MainExeFile$
-Version=5.0.0.0
+Version=$XPInstallVersion$.0
 ;*** LOCALIZE ME BABY ***
 Message0=The destination directory already contains an earlier version of $ProductName$. To avoid problems, the installer will delete the destination directory and all its files, and then re-create the directory and install $ProductName$.
 ;*** LOCALIZE ME BABY ***
@@ -152,7 +144,7 @@ Readme App=notepad.exe
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
 [Setup Type0]
 ;*** LOCALIZE ME BABY ***
-Description Short=B&rowser only
+Description Short=Bro&wser only
 ;*** LOCALIZE ME BABY ***
 Description Long=Program will be installed with the minimal options.
 
@@ -247,18 +239,25 @@ Title=$ProductName$ Setup - Select Program Folder
 Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folders list.  Click Next to continue.
 
 [Dialog Download Options]
-Show Dialog=FALSE
-Title=
-Message0=
-Message1=
-Message2=
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=$ProductName$ Setup - Download Options
+;*** LOCALIZE ME BABY ***
+Message0=Select the region you wish to download from, or leave on Default to download from the nearest geographic location.
+;*** LOCALIZE ME BABY ***
+Message1=Select the following option if you wish to save downloaded Setup files on your own computer.  This allows you to re-run Setup without downloading the files again.  The Setup files will be saved to the path below.
 Save Installer=
 
 [Dialog Advanced Settings]
-Show Dialog=FALSE
-Title=
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=$ProductName$ Setup - Advanced Settings
+;*** LOCALIZE ME BABY ***
+Message0=If your Internet connection requires a proxy server, enter your server name and port information.  If your Internet connection doesn't require a proxy server, leave the fields blank.
 Proxy Server=
 Proxy Port=
+Proxy User=
+Proxy Password=
 
 [Dialog Start Install]
 Show Dialog=TRUE
@@ -268,6 +267,15 @@ Title=$ProductName$ Setup - Start Install
 Message Install=Setup has enough information to start copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, click Install to begin copying files.
 ;*** LOCALIZE ME BABY ***
 Message Download=Setup has enough information to start downloading and copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, make sure you are currently connected to the internet and click Install to begin downloading files.
+
+[Dialog Download]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=$ProductName$ Setup - Download
+;*** LOCALIZE ME BABY ***
+Message Download0=Downloading files now
+;*** LOCALIZE ME BABY ***
+Message Retry0=Redownloading files that have failed CRC checks now
 
 [Dialog Reboot]
 ; Show Dialog values are:
@@ -303,13 +311,9 @@ Window Name=
 ;*** LOCALIZE ME BABY ***
 Message=Setup has detected that $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
 
-;[Check Instance1]
-;Process Name=psm.exe
-;Message=Setup has detected that Personal Security Manager (PSM) is currently running.  When no applications need PSM it will quit.  You should try closing applications that might use PSM.  Setup can continue if PSM quits.  Click Retry to perform the check again, or Cancel to exit Setup.  If this dialog persists you should try logging off or rebooting.
 
-; These are the components to be offered to the user (shown in the Select
-; Components dialog) for installation.
-; There is no limit to the number of components to install.
+
+
 [Component XPCOM]
 Description Short=Mozilla XPCOM
 ;*** LOCALIZE ME BABY ***
@@ -318,12 +322,45 @@ Archive=xpcom.xpi
 $InstallSize$:xpcom
 $InstallSizeSystem$
 $InstallSizeArchive$:xpcom.xpi
-;Dependency0=
 ;Dependee0=
+;Dependency0=
 ; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED|INVISIBLE
+;
+;   SELECTED      - Component is selected to be installed by default.
+;
+;   INVISIBLE     - Component is not shown in the Select Components dialog.
+;
+;   LAUNCHAPP     - Component is downloaded and simply run (like a .exe file)
+;                   after all the components have been downloaded and xpinstall'ed.
+;
+;   DOWNLOAD_ONLY - Component is to be only downloaded to the ns_temp folder,
+;                   then deleted as Setup is quitting.
+;
+;   ADDITIONAL    - Component will is to be shown in the Additional Options dialog
+;                   (2nd Options dialog) instead of the 1st Options dialog.
+;
+;   DISABLED      - Component is to be shown as disabled (greyed out) in either of
+;                   two Options dialog.
+;
+;   UNSELECTED    - Component it to be displayed unselected in the Options dialog.
+;                   If the component is listed in the non-custom Setup Type section,
+;                   it will be assumed to be selected by default.
+;
+;   FORCE_UPGRADE - Force Upgrade checks for a particular file or directory provided
+;                   in the Force Upgrade FileX= key(s).  If any of the listed file or
+;                   directory exists, then this component will have it's SELECTED and
+;                   DISABLED Attributes set automatically.  Force Upgrade will
+;                   override the following:
+;
+;                       Random Install Percentage= setting
+;                       UNSELECTED Attribute setting
+;                       Dependency settings
+;                       Dependee settings
+;                       Setup Type settings - meaning that even if this component is
+;                                             not listed in the selected Setup Type,
+;                                             it will be affected.
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\xpcom.dll
 
 [Component Navigator]
 Description Short=Mozilla Navigator
@@ -333,11 +370,8 @@ Archive=browser.xpi
 $InstallSize$:browser
 $InstallSizeSystem$
 $InstallSizeArchive$:browser.xpi
-;Dependency0=
-; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED|DISABLED
+Attributes=SELECTED|DISABLED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\$MainExeFile$
 
 [Component MailNews]
 Description Short=Mail & News
@@ -347,12 +381,8 @@ Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
 $InstallSizeArchive$:mail.xpi
-;Dependency0=
-; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED
-Parameter=
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\msgbsutl.dll
 
 [Component Uninstaller]
 Description Short=$CompanyName$ Uninstaller
@@ -362,12 +392,7 @@ Archive=$UninstallFile$
 $InstallSize$:$UninstallFile$
 $InstallSizeSystem$
 $InstallSizeArchive$:$UninstallFile$
-;Dependency0=
-; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
-Parameter=
 
 ;Since the uninstaller program is going to be installed into the Windows folder,
 ;Setup.exe need to know to calculate the disk space required for the Windows folder.
@@ -383,12 +408,8 @@ Archive=chatzilla.xpi
 $InstallSize$:chatzilla
 $InstallSizeSystem$
 $InstallSizeArchive$:chatzilla.xpi
-;Dependency0=
-; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED
-Parameter=
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\Chrome\chatzilla.jar
 
 [Component US English Profile Defaults]
 Description Short=US English profile defaults
@@ -398,14 +419,11 @@ Archive=deflenus.xpi
 $InstallSize$:deflenus
 $InstallSizeSystem$
 $InstallSizeArchive$:deflenus.xpi
-;Dependency0=
-; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED|INVISIBLE
-Parameter=
+Attributes=SELECTED|INVISIBLE|FOCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\defaults\profile\bookmarks.html
 
 [Component En US lang pack]
+;*** LOCALIZE ME BABY ***
 Description Short=English-US language pack
 ;*** LOCALIZE ME BABY ***
 Description Long=English-US language pack
@@ -413,12 +431,8 @@ Archive=langenus.xpi
 $InstallSize$:langenus
 $InstallSizeSystem$
 $InstallSizeArchive$:langenus.xpi
-;Dependency0=
-; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED|INVISIBLE
-Parameter=
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\Chrome\en-US.jar
 
 [Component PSM]
 Description Short=Personal Security Manager
@@ -428,12 +442,9 @@ Archive=psm.xpi
 $InstallSize$:psm
 $InstallSizeSystem$
 $InstallSizeArchive$:psm.xpi
-;Dependency0=
-; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED
-Parameter=
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\psm.exe
+
 
 
 
@@ -446,7 +457,7 @@ Cleanup=TRUE
 Message=Preparing Install, please wait...
 
 [Redirect]
-Status=Disabled
+Status=Enabled
 ; This is used in conjunction with the Site Selector info to build a
 ; url to where to download the needed redirect.ini file from.
 ; If there's more than one server path, they will be used as fail
@@ -459,8 +470,9 @@ Status=Disabled
 ;   Server Path2=
 ;
 ; and so on...
-Server Path0=
-Description=
+Server Path=redirect.ini
+;*** LOCALIZE ME BABY ***
+Description=Redirect File
 Message=
 
 
@@ -473,6 +485,8 @@ Message=
 ;   post smartupdate - process after the smartupdate engine has been launched.
 ;   pre launchapp    - process before the launching of executables.
 ;   post launchapp   - process after the launching of executables.
+;   pre archive      - process before the launching of each individual archive file.
+;   post archive     - process after the launching of each individual archive file.
 ;   depend reboot    - process depending on if a reboot is necessary or not.
 ;                      if reboot is necessary, installer can set it up so
 ;                      the app runs once upon windows reboot.
@@ -504,7 +518,7 @@ Message=
 ;Copy FileX sections
 [Copy File0]
 Timing=post launchapp
-Source=[JRE BIN PATH]\npjava*.dll
+Source=[JRE BIN PATH]\np*.dll
 Destination=[SETUP PATH]\Plugins
 Fail If Exists=FALSE
 
@@ -596,20 +610,6 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=post smartupdate
 
-;[Windows Registry3]
-;Root Key=HKEY_CURRENT_USER
-;Key=Software\Microsoft\Windows\CurrentVersion\Internet Settings
-;Name=EnableAutodial
-;Name Value=1
-;Size=4
-;Type=REG_BINARY
-;Decrypt Key=FALSE
-;Decrypt Name=FALSE
-;Decrypt Name Value=FALSE
-;Overwrite Key=TRUE
-;Overwrite Name=TRUE
-;Timing=post smartupdate
-
 ; Values for Show Folder:
 ;   HIDE             Hides the window and activates another window.
 ;   MAXIMIZE         Maximizes the specified window.
@@ -684,4 +684,47 @@ Program Folder=[Default Folder]
 ;Description=Perl
 ;Icon Path=c:\perl\bin\perl.exe
 ;Icon Id=0
+
+[Strings]
+;*** LOCALIZE ME BABY ***
+Message Unfinished Download Restart=Setup has detected that a previous session of this Setup did not finish its download of all the necessary archives.  Would you like to keep the archives currently downloaded, so as to not redownload them again, during this session?
+;*** LOCALIZE ME BABY ***
+Error Corrupted Archives Detected=Setup has detected that the following archives within this Setup are corrupted:%sYou will need to obtain another copy of the $ProductName$ Setup in order for installation to proceed.
+;*** LOCALIZE ME BABY ***
+Error Corrupted Archives Detected AUTO mode=Setup has detected that at least one archive within this Setup is corrupt.  You will need to obtain another copy of the $ProductName$ Setup in order for installation to proceed.
+;*** LOCALIZE ME BABY ***
+Error Too Many CRC Failures=Too many download failures.  Setup will cancel.  You can restart Setup to continue where it left off.
+;*** LOCALIZE ME BABY ***
+Error Too Many Network Errors=Too network errors.  Please retry again later.  You can restart Setup to continue where it left off.
+;*** LOCALIZE ME BABY ***
+Message Verifying Archives=Verifying integrity of archives, please wait...
+;*** LOCALIZE ME BABY ***
+Error Undefined=Error undefined
+;*** LOCALIZE ME BABY ***
+Error Out Of Memory=Out of memory!
+;*** LOCALIZE ME BABY ***
+Status Download=Downloading file %d of %d
+;*** LOCALIZE ME BABY ***
+Status Retry=Redownloading file %d of %d
+;*** LOCALIZE ME BABY ***
+Dialog Download Title Minimized=%d%% for all files
+;*** LOCALIZE ME BABY ***
+STR Force Upgrade Required=(Required)
+;*** LOCALIZE ME BABY ***
+Message Cancel Setup AUTO mode=Canceling Setup, please wait...
+
+
+[Site Selector]
+Identifier0=Site0
+;*** LOCALIZE ME BABY ***
+Description0=Default
+;*** LOCALIZE ME BABY ***
+Domain0=ftp://sweetlou.mcom.com$RedirectServerPath$
+;Domain0=ftp://ftp.netscape.com/pub/netscape6/english/6_PR3/windows/win32
+
+Identifier1=Site1
+;*** LOCALIZE ME BABY ***
+Description1=North America
+;*** LOCALIZE ME BABY ***
+Domain1=ftp://ftp.mozilla.org/pub/mozilla/win32
 

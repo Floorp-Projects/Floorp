@@ -43,8 +43,6 @@ extern HWND             hDlgCurrent;
 extern HWND             hDlgMessage;
 extern HWND             hWndMain;
 
-extern SDI_NETINSTALL   pfnNetInstall;
-
 extern LPSTR            szEGlobalAlloc;
 extern LPSTR            szEStringLoad;
 extern LPSTR            szEDllLoad;
@@ -73,6 +71,7 @@ extern BOOL             bIdiArchivesExists;
 extern BOOL             bCreateDestinationDir;
 extern BOOL             bReboot;
 extern BOOL             gbILUseTemp;
+extern BOOL             gbPreviousUnfinishedDownload;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;
@@ -86,6 +85,7 @@ extern diPF             diProgramFolder;
 extern diDO             diDownloadOptions;
 extern diAS             diAdvancedSettings;
 extern diSI             diStartInstall;
+extern diD              diDownload;
 extern diR              diReboot;
 extern siSD             siSDObject;
 extern siCF             siCFXpcomFile;
@@ -93,4 +93,5 @@ extern siC              *siComponents;
 extern ssi              *ssiSiteSelector;
 extern char             *SetupFileList[];
 
-#endif
+#endif /* _EXTERN_H */
+

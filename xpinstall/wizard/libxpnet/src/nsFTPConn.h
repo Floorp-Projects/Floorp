@@ -74,6 +74,7 @@ public:
         E_SMALL_BUF         = -810, /* buffer too small, provide bigger one */
         E_CANT_OVWRITE      = -811, /* cannot overwrite existing file */
         E_LOCL_INIT         = -812, /* local file open/init failed */
+        E_USER_CANCEL       = -813, /* user canceled the download */
         E_INVALID_ADDR      = -814  /* couldn't parse address/port */
     };
 

@@ -180,7 +180,8 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aOvWrite,
             goto BAIL;
         totBytesRd += respBufSize;
         if (err == nsSocket::E_READ_MORE && aCBFunc)
-            aCBFunc(totBytesRd, fileSize);
+            if ((err = aCBFunc(totBytesRd, fileSize)) == E_USER_CANCEL)
+              goto BAIL;
             
         /* append to local file */
         wrote = fwrite((void *)resp, 1, respBufSize, loclfd);

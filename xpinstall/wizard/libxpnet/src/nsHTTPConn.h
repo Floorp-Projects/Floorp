@@ -53,7 +53,8 @@ public:
         E_MALFORMED_URL     = -803,
         E_REQ_INCOMPLETE    = -804,
         E_B64_ENCODE        = -805,
-        E_OPEN_FILE         = -806
+        E_OPEN_FILE         = -806,
+        E_USER_CANCEL       = -813
     };
 
 private:

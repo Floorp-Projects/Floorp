@@ -83,6 +83,11 @@ void RemoveUninstaller(LPSTR szUninstallFilename)
   char      szWinDir[MAX_BUF];
   char      szUninstallFile[MAX_BUF];
 
+  if(SearchForUninstallKeys(szUninstallFilename))
+    /* Found the uninstall file name in the windows registry uninstall
+     * key sections.  We should not try to delete ourselves. */
+    return;
+
   if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
     return;
 

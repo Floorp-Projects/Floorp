@@ -43,8 +43,6 @@ HWND            hDlgCurrent;
 HWND            hDlgMessage;
 HWND            hWndMain;
 
-SDI_NETINSTALL  pfnNetInstall;
-
 LPSTR           szEGlobalAlloc;
 LPSTR           szEStringLoad;
 LPSTR           szEDllLoad;
@@ -73,6 +71,7 @@ BOOL            bIdiArchivesExists;
 BOOL            bCreateDestinationDir;
 BOOL            bReboot;
 BOOL            gbILUseTemp;
+BOOL            gbPreviousUnfinishedDownload;
 
 setupGen        sgProduct;
 diS             diSetup;
@@ -86,6 +85,7 @@ diPF            diProgramFolder;
 diDO            diDownloadOptions;
 diAS            diAdvancedSettings;
 diSI            diStartInstall;
+diD             diDownload;
 diR             diReboot;
 siSD            siSDObject;
 siCF            siCFXpcomFile;
@@ -111,11 +111,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
   MSG   msg;
   char  szBuf[MAX_BUF];
+  int   iRv = WIZ_OK;
+  HWND  hwndFW;
 
   if(!hPrevInstance)
   {
-//    hInstance = GetModuleHandle(NULL);
-    if(Initialize(hInstance))
+    /* Allow only one instance of setup to run.
+     * Detect a previous instance of setup, bring it to the 
+     * foreground, and quit current instance */
+    if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
+    {
+      ShowWindow(hwndFW, SW_RESTORE);
+      SetForegroundWindow(hwndFW);
+      iRv = WIZ_SETUP_ALREADY_RUNNING;
+      PostQuitMessage(1);
+    }
+    else if(Initialize(hInstance))
       PostQuitMessage(1);
     else if(!InitApplication(hInstance, hSetupRscInst))
     {
@@ -162,8 +173,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
   }
 
-  /* Do clean up before exiting from the application */
-  DeInitialize();
+  if(iRv != WIZ_SETUP_ALREADY_RUNNING)
+    /* Do clean up before exiting from the application */
+    DeInitialize();
 
   return(msg.wParam);
 } /*  End of WinMain */

@@ -324,8 +324,9 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile)
 
         if (fwriteLen > 0)
             bytesWritten += fwriteLen;
-        if (aCallback)
-            aCallback(bytesWritten, expectedSize);
+        if (aCallback && (aCallback(bytesWritten, expectedSize) == E_USER_CANCEL))
+              rv = E_USER_CANCEL; /* we want to ignore all errors returned
+                                   * from aCallback() except E_USER_CANCEL */
 
     } while (rv == nsSocket::E_READ_MORE || rv == nsSocket::OK);
 
@@ -390,10 +391,13 @@ nsHTTPConn::ParseURL(const char *aProto, char *aURL, char **aHost,
             copyLen = strlen(pos);
 
         *aHost = (char *) malloc(copyLen + 1); // to NULL terminate
+        if (!aHost)
+            return E_MEM;
+        memset(*aHost, 0, copyLen + 1);
         strncpy(*aHost, pos, copyLen);
 
         *aPath = (char *) malloc(2);
-        *aPath = "/\0";
+        strcpy(*aPath, "/");
 
         return OK;
     }
@@ -530,7 +534,7 @@ nsHTTPConn::Base64Encode(const unsigned char *in_str, int in_len,
 
             i += 3;
 
-            if((curr_out_len + 4) > out_len)
+            if ((curr_out_len + 4) > out_len)
             {
                 return(-1);
             }

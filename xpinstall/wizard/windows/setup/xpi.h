@@ -25,10 +25,6 @@
 #ifndef _XPI_H_
 #define _XPI_H_
 
-#define BAR_MARGIN    1
-#define BAR_SPACING   2
-#define BAR_WIDTH     6
-
 typedef HRESULT (_cdecl *XpiInit)(const char *, const char *aLogName, pfnXPIProgress);
 typedef HRESULT (_cdecl *XpiInstall)(const char *, const char *, long);
 typedef void    (_cdecl *XpiExit)(void);
@@ -43,4 +39,5 @@ void            InitProgressDlg(void);
 void            DeInitProgressDlg(void);
 void            GetTotalArchivesToInstall(void);
 
-#endif
+#endif /* _XPI_H_ */
+

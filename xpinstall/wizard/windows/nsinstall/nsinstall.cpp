@@ -43,6 +43,8 @@
 #define PP_PATH_ONLY                    2
 #define PP_ROOT_ONLY                    3
 
+#define CLASS_NAME_SETUP_DLG            "MozillaSetupDlg"
+
 char      szTitle[MAX_BUF];
 char      szCmdLineToSetup[MAX_BUF];
 BOOL      gbUncompressOnly;
@@ -929,6 +931,7 @@ int APIENTRY
 WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	WNDCLASS	wc;
+  HWND      hwndFW;
 
 	hInst = hInstance;
 	LoadString(hInst, IDS_TITLE, szTitle, MAX_BUF);
@@ -938,6 +941,16 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdS
    * foreground, and quit current instance */
   if(FindWindow("NSExtracting", "Extracting...") != NULL)
     return(1);
+
+  /* Allow only one instance of Setup to run.
+   * Detect a previous instance of Setup, and quit */
+  if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
+  {
+    ShowWindow(hwndFW, SW_RESTORE);
+    SetForegroundWindow(hwndFW);
+    return(1);
+  }
+
 
   // Parse the command line
   ParseCommandLine(lpCmdLine);

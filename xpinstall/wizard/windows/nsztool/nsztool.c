@@ -31,7 +31,7 @@
 #include "zlib.h"
 #include "math.h"
 
-//#define SSU_DEBUG
+#define DEFAULT_SEA_FILE "nsinstall.exe"
 
 /* Function to show the usage for this application */
 void ShowUsage(char *name)
@@ -367,17 +367,19 @@ LPSTR GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize)
 
 /* Function to add a file to a self-extracting .exe file.
  * It compresses the file, then adds it as a resource type "FILE". */
-void AddFile(LPSTR lpszSeaExe, LPSTR lpszFile)
+void AddFile(HANDLE hExe, LPSTR lpszFile)
 {
   char        szBuf[MAX_BUF];
   char        szResourceName[MAX_BUF];
-  HANDLE      hSeaExe;
   HANDLE      hInputFile;
   DWORD       dwBytesRead;
   DWORD       dwFileSize;
   DWORD       dwFileSizeCmp;
   LPBYTE      lpBuf;
   LPBYTE      lpBufCmp;
+
+  if(!hExe)
+    exit(1);
 
   ParsePath(lpszFile, szResourceName, sizeof(szResourceName), PP_FILENAME_ONLY);
   strupr(szResourceName);
@@ -416,31 +418,10 @@ void AddFile(LPSTR lpszSeaExe, LPSTR lpszFile)
   *(LPDWORD)lpBufCmp = dwFileSizeCmp;
   *(LPDWORD)(lpBufCmp + sizeof(DWORD)) = dwFileSize;
 
-  if((hSeaExe = BeginUpdateResource(lpszSeaExe, FALSE)) == NULL)
-  {
-    DWORD dwErr;
-
-    dwErr = GetLastError();
-    if(dwErr == ERROR_CALL_NOT_IMPLEMENTED)
-    {
-      MessageBox(NULL, "This application does not run under this OS", NULL, MB_ICONEXCLAMATION);
-      exit(0);
-    }
-    else
-    {
-      PrintError("BeginUpdateResource() error", ERROR_CODE_SHOW);
-      exit(1);
-    }
-  }
-  if(!UpdateResource(hSeaExe, "FILE", szResourceName, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+  if(!UpdateResource(hExe, "FILE", szResourceName, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
                      lpBufCmp, dwFileSizeCmp + (sizeof(DWORD) * 2)))
   {
     PrintError("UpdateResource() failed", ERROR_CODE_SHOW);
-    exit(1);
-  }
-  if(!EndUpdateResource(hSeaExe, FALSE))
-  {
-    PrintError("EndUpdateResource() failed", ERROR_CODE_SHOW);
     exit(1);
   }
 
@@ -522,6 +503,38 @@ BOOL APIENTRY ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName
   return TRUE;  // keep enumerating
 }
 
+HANDLE InitResource(LPSTR lpszSeaExe)
+{
+  HANDLE hExe;
+
+  if((hExe = BeginUpdateResource(lpszSeaExe, FALSE)) == NULL)
+  {
+    DWORD dwErr;
+
+    dwErr = GetLastError();
+    if(dwErr == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+      MessageBox(NULL, "This application does not run under this OS", NULL, MB_ICONEXCLAMATION);
+      exit(0);
+    }
+    else
+    {
+      PrintError("BeginUpdateResource() error", ERROR_CODE_SHOW);
+      exit(1);
+    }
+  }
+  return(hExe);
+}
+
+void DeInitResource(HANDLE hExe)
+{
+  if(!EndUpdateResource(hExe, FALSE))
+  {
+    PrintError("EndUpdateResource() failed", ERROR_CODE_SHOW);
+    exit(1);
+  }
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
   int               i;
@@ -532,23 +545,27 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
   char              szSeaExe[MAX_BUF];
   char              szNsZipName[MAX_BUF];
   char              szAppName[MAX_BUF];
+  char              szAppPath[MAX_BUF];
 
 #ifdef SSU_DEBUG
   char              szOutputStr[MAX_BUF];
 #endif
 
   WIN32_FIND_DATA   findFileData;
+  HANDLE            hExe;
   HANDLE            hFindFile;
   BOOL              bSelfUpdate;
 
+  if(GetModuleFileName(NULL, szAppName, sizeof(szAppName)) == 0L)
+  {
+    PrintError("GetModuleFileName() failed", ERROR_CODE_SHOW);
+    exit(1);
+  }
+  ParsePath(szAppName, szBuf, sizeof(szBuf), PP_FILENAME_ONLY);
+  ParsePath(szAppPath, szBuf, sizeof(szBuf), PP_PATH_ONLY);
+
   if(*lpszCmdLine == '\0')
   {
-    if(GetModuleFileName(NULL, szAppName, sizeof(szAppName)) == 0L)
-    {
-      PrintError("GetModuleFileName() failed", ERROR_CODE_SHOW);
-      exit(1);
-    }
-    ParsePath(szAppName, szBuf, sizeof(szBuf), PP_FILENAME_ONLY);
     ShowUsage(szBuf);
     exit(1);
   }
@@ -606,7 +623,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
       exit(1);
     }
 
-    AddFile(szNsZipName, szSeaExe);
+    hExe = InitResource(szNsZipName);
+    AddFile(hExe, szSeaExe);
+    DeInitResource(hExe);
     return(0);
   }
   else
@@ -615,7 +634,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
      * self-extracting .exe to be saved as.  So lets create it only if it does not exist. */
 
     if(!FileExists(szSeaExe))
+    {
       EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)ExtractFilesProc, (LONG)szSeaExe);
+
+      // if still does not exist, copy nsinstall.exe to szSeaExe
+      if(!FileExists(szSeaExe))
+      {
+        if(FileExists(DEFAULT_SEA_FILE))
+          CopyFile(DEFAULT_SEA_FILE, szSeaExe, FALSE);
+        else
+        {
+          wsprintf(szBuf, "file not found: %s", DEFAULT_SEA_FILE);
+          PrintError(szBuf, ERROR_CODE_HIDE);
+          exit(1);
+        }
+      }
+    }
 
     if(!FileExists(szSeaExe))
     {
@@ -625,6 +659,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
   }
 
+  hExe = InitResource(szSeaExe);
   for(i = 1; i < iArgC; i++)
   {
     GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
@@ -648,13 +683,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
         // e.g. simple, relative, full
         strcpy(szFile, szFileFullPath);
         strcpy(strrchr(szFile, '\\') + 1, findFileData.cFileName);
-        AddFile(szSeaExe, szFile);
+        AddFile(hExe, szFile);
       }
     } while(FindNextFile(hFindFile, &findFileData));
 
     FindClose(hFindFile);
   }
 
+  DeInitResource(hExe);
   return(0);
 }
 
