@@ -22,14 +22,13 @@
 
 */
 
-window
-{
-  overflow: auto;
-}
-
-iframe
+iframe.notlast
 {
   height: 125px;
+}
+
+iframe.panelframe
+{
   border: 0px;
 }
 
