@@ -89,7 +89,7 @@
 
   <groupbox align="start">
     <caption label="&languagesTitle.label;"/>
-    <description>&coding.label;</description>
+    <description>&encoding.label;</description>
     <hbox align="center">
       <label control="sendDefaultCharsetList"
              value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>

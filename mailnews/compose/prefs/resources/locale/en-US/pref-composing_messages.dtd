@@ -51,10 +51,10 @@ Rights Reserved.
 <!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding. Leave unchecked to send the messages as is.">
 <!ENTITY useMIME.accesskey                    "o">
 
-<!ENTITY sendDefaultCharset.label             "Character Coding:">
+<!ENTITY sendDefaultCharset.label             "Character Encoding:">
 <!ENTITY sendDefaultCharset.accesskey         "h">
 <!ENTITY languagesTitle.label				  "Languages">
-<!ENTITY languagesText.label				  "Use the following character coding as the default for composing messages:">
+<!ENTITY languagesText.label				  "Use the following character encoding as the default for composing messages:">
 
 <!ENTITY defaultMessagesHeader.label          "Defaults for HTML Messages">
 <!ENTITY font.label                           "Font:">

@@ -1,5 +1,5 @@
 <!-- extracted from charsetOverlay.xul -->
-<!ENTITY charsetMenu.label				"Character Coding">
+<!ENTITY charsetMenu.label				"Character Encoding">
 <!ENTITY charsetMenu.accesskey				"C">
 <!ENTITY charsetMenuAutodet.label			"Auto-Detect">
 <!ENTITY charsetMenuAutodet.accesskey			"a">

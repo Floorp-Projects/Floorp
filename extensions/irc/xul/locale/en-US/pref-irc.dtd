@@ -88,10 +88,10 @@
 <!ENTITY global.nickCompleteStr.label "Nickname completion string:">
 <!ENTITY global.nickCompleteStr.accesskey "k">
 <!ENTITY global.nickCompleteStr.desc "This is appended to a nickname when tab-completed as the first word.">
-<!ENTITY global.Charset.grouplabel         "Character Coding">
-<!ENTITY global.DefaultCharset.label       "Default Character Coding:">
+<!ENTITY global.Charset.grouplabel         "Character Encoding">
+<!ENTITY global.DefaultCharset.label       "Default Character Encoding:">
 <!ENTITY global.DefaultCharset.accesskey   "d">
-<!-- LOCALIZATION NOTE  Charset Coding Preferences Dialog: Do NOT localize the terms "en-bz, ar-jo"  -->
+<!-- LOCALIZATION NOTE  Charset Encoding Preferences Dialog: Do NOT localize the terms "en-bz, ar-jo"  -->
 <!ENTITY interface.window.title "Interface">
 
 <!ENTITY tabs.title "Tab Options">

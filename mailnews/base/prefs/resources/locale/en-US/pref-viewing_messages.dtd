@@ -38,10 +38,10 @@ Rights Reserved.
 <!ENTITY displayText.label				  "Use the following settings when  displaying quoted plain text messages:">
 <!ENTITY viewingPlainText.label			  "When viewing plain text messages:">
 <!ENTITY languagesTitle.label			  "Languages">
-<!ENTITY coding.label					  "Use the following character coding as the default for viewing messages:">
-<!ENTITY sendDefaultCharset.label         "Character Coding:">
+<!ENTITY encoding.label					  "Use the following character encoding as the default for viewing messages:">
+<!ENTITY sendDefaultCharset.label         "Character Encoding:">
 <!ENTITY sendDefaultCharset.accesskey	  "r">
-<!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character coding specified by MIME header)">
+<!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character encoding specified by MIME header)">
 <!ENTITY forceCharsetOverride.accesskey   "A">
 <!ENTITY fixedWidth.label                 "Fixed width font">
 <!ENTITY fixedWidth.accesskey             "f">

@@ -160,7 +160,7 @@
     <command id="cmd_save"           label="&saveCmd.label;"           oncommand="goDoCommand('cmd_save')"/>
     <command id="cmd_saveAs"         label="&saveAsCmd.label;"         oncommand="goDoCommand('cmd_saveAs')"/>
     <command id="cmd_exportToText"   label="&exportToTextCmd.label;"   oncommand="goDoCommand('cmd_exportToText')"/>
-    <command id="cmd_saveAsCharset"  label="&saveAsCharsetCmd.label;"  oncommand="goDoCommand('cmd_saveAsCharset')"/>
+    <command id="cmd_saveAndChangeEncoding"  label="&saveAsChangeEncodingCmd.label;"  oncommand="goDoCommand('cmd_saveAndChangeEncoding')"/>
     <command id="cmd_publish"        label="&publishCmd.label;"        oncommand="goDoCommand('cmd_publish')"/>
     <command id="cmd_publishAs"      label="&publishAsCmd.label;"      oncommand="goDoCommand('cmd_publishAs')"/>
     <command id="cmd_revert"         label="&fileRevert.label;"        oncommand="goDoCommand('cmd_revert')"/>
@@ -341,7 +341,7 @@
       <menuseparator/>
       <menuitem id="saveMenuitem" accesskey="&filesave.accesskey;" key="savekb" observes="cmd_save"/>
       <menuitem accesskey="&filesaveas.accesskey;" observes="cmd_saveAs"/>
-      <menuitem accesskey="&filesaveascharset.accesskey;" observes="cmd_saveAsCharset"/>
+      <menuitem accesskey="&filesaveandchangeencoding.accesskey;" observes="cmd_saveAndChangeEncoding"/>
       <menuseparator/>
       <menuitem id="publishMenuitem" accesskey="&publishcmd.accesskey;" key="publishkb" observes="cmd_publish"/>
       <menuitem accesskey="&publishas.accesskey;" observes="cmd_publishAs"/>

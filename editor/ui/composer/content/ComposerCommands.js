@@ -180,7 +180,7 @@ function SetupComposerWindowCommands()
   commandTable.registerCommand("cmd_save",           nsSaveCommand);
   commandTable.registerCommand("cmd_saveAs",         nsSaveAsCommand);
   commandTable.registerCommand("cmd_exportToText",   nsExportToTextCommand);
-  commandTable.registerCommand("cmd_saveAsCharset",  nsSaveAsCharsetCommand);
+  commandTable.registerCommand("cmd_saveAndChangeEncoding",  nsSaveAndChangeEncodingCommand);
   commandTable.registerCommand("cmd_publish",        nsPublishCommand);
   commandTable.registerCommand("cmd_publishAs",      nsPublishAsCommand);
   commandTable.registerCommand("cmd_publishSettings",nsPublishSettingsCommand);
@@ -614,7 +614,7 @@ var nsExportToTextCommand =
   }
 }
 
-var nsSaveAsCharsetCommand =
+var nsSaveAndChangeEncodingCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {

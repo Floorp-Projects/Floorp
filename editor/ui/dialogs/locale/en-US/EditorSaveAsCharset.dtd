@@ -25,10 +25,10 @@
 <!-- This button is for the progressive disclosure of additional editing functionality -->
 
 <!-- These strings are for use specifically in the editor's link dialog. -->
-<!ENTITY windowTitle.label "Save As Charset">
+<!ENTITY windowTitle.label "Save And Change Character Encoding">
 <!ENTITY documentTitleTitle.label "Page Title">
-<!ENTITY documentCharsetTitle.label "Character Set">
-<!ENTITY documentCharsetDesc.label "Select the charset you want to save as:">
+<!ENTITY documentCharsetTitle.label "Character Encoding">
+<!ENTITY documentCharsetDesc.label "Select the character encoding you want to save a document in:">
 <!ENTITY documentExportToText.label "Export to Text">
 
 

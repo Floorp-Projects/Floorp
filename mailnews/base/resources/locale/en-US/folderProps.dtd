@@ -25,8 +25,8 @@
 
 <!ENTITY generalInfo.label            "General Information">
 <!ENTITY generalInfo.accesskey        "G">
-<!ENTITY folderCharsetTab.label       "Default Character Coding:">
-<!ENTITY folderCharsetOverride.label  "Apply default to all messages in the folder (individual message character coding settings and auto-detection will be ignored)">
+<!ENTITY folderCharsetTab.label       "Default Character Encoding:">
+<!ENTITY folderCharsetOverride.label  "Apply default to all messages in the folder (individual message character encoding settings and auto-detection will be ignored)">
 
 <!ENTITY folderOfflineTab.label                             "Offline">
 <!ENTITY folderOfflineTab.accesskey                         "O">
