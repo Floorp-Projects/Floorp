@@ -24,6 +24,8 @@
 #include "nsCoord.h"
 #include "nsMargin.h"
 #include "nsFont.h"
+#include "nsStyleCoord.h"
+
 class nsIFrame;
 class nsIPresContext;
 class nsIContent;
@@ -67,11 +69,6 @@ class nsISupportsArray;
 #define NS_SIDE_BOTTOM  2
 #define NS_SIDE_LEFT    3
 
-union nsStyleValue {
-  nscoord coord;
-  float percent;
-};
-
 // The lifetime of these objects is managed by the nsIStyleContext.
 
 struct nsStyleStruct {
@@ -110,8 +107,8 @@ protected:
 struct nsStyleSpacing: public nsStyleStruct {
   nsMargin  mMargin;
   nsMargin  mPadding;
-  nsMargin  mBorder;                    // automatic computed value
-  nsMargin  mBorderPadding;             // automatic computed value
+  nsMargin  mBorder;                    // automatic computed value (DON'T SET)
+  nsMargin  mBorderPadding;             // automatic computed value (DON'T SET)
 
 protected:
   nsStyleSpacing(void);
@@ -167,18 +164,13 @@ struct nsStyleText : public nsStyleStruct {
   PRUint8 mTextAlign;                   // see nsStyleConsts.h
   PRUint8 mTextDecoration;              // see nsStyleConsts.h
   PRUint8 mTextTransform;               // see nsStyleConsts.h
-  PRUint8 mVerticalAlignFlags;          // see nsStyleConsts.h
   PRUint8 mWhiteSpace;                  // see nsStyleConsts.h
-  PRUint8 mLetterSpacingFlags;
-  PRUint8 mLineHeightFlags;
-  PRUint8 mTextIndentFlags;
-  PRUint8 mWordSpacingFlags;
 
-  nsStyleValue mLetterSpacing;
-  nsStyleValue mLineHeight;
-  nsStyleValue mTextIndent;
-  nsStyleValue mWordSpacing;
-  nsStyleValue mVerticalAlign;
+  nsStyleCoord  mLetterSpacing;
+  nsStyleCoord  mLineHeight;
+  nsStyleCoord  mTextIndent;
+  nsStyleCoord  mWordSpacing;
+  nsStyleCoord  mVerticalAlign;         // see nsStyleConsts.h for enums
 
 protected:
   nsStyleText();
@@ -214,6 +206,9 @@ public:
 
   // get a style data struct by ID, may return null 
   virtual nsStyleStruct* GetData(const nsIID& aSID) = 0;
+
+  // call if you change style data after creation
+  virtual void    RecalcAutomaticData(void) = 0;
 };
 
 // this is private to nsStyleSet, don't call it

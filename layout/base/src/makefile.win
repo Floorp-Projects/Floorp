@@ -23,7 +23,8 @@ DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 CPPSRCS=nsContainerFrame.cpp nsDocument.cpp nsFrame.cpp \
     nsGalleyContext.cpp nsPresContext.cpp nsPresShell.cpp \
     nsPrintPreviewContext.cpp nsReflowCommand.cpp nsSpaceManager.cpp \
-    nsSplittableFrame.cpp nsStyleContext.cpp nsStyleSet.cpp 
+    nsSplittableFrame.cpp nsStyleCoord.cpp nsStyleContext.cpp \
+    nsStyleSet.cpp 
 MODULE=raptor 
 REQUIRES=xpcom raptor dom 
 CPP_OBJS=.\$(OBJDIR)\nsContainerFrame.obj .\$(OBJDIR)\nsDocument.obj \
@@ -31,8 +32,8 @@ CPP_OBJS=.\$(OBJDIR)\nsContainerFrame.obj .\$(OBJDIR)\nsDocument.obj \
     .\$(OBJDIR)\nsPresContext.obj .\$(OBJDIR)\nsPresShell.obj \
     .\$(OBJDIR)\nsPrintPreviewContext.obj \
     .\$(OBJDIR)\nsReflowCommand.obj .\$(OBJDIR)\nsSpaceManager.obj \
-    .\$(OBJDIR)\nsSplittableFrame.obj .\$(OBJDIR)\nsStyleContext.obj \
-    .\$(OBJDIR)\nsStyleSet.obj 
+    .\$(OBJDIR)\nsSplittableFrame.obj .\$(OBJDIR)\nsStyleCoord.obj \
+	.\$(OBJDIR)\nsStyleContext.obj .\$(OBJDIR)\nsStyleSet.obj 
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
     -I$(XPDIST)\public\dom -I$(XPDIST)\public\js

@@ -32,6 +32,7 @@ CPPSRCS =				\
 	nsReflowCommand.cpp		\
 	nsSpaceManager.cpp		\
 	nsSplittableFrame.cpp		\
+	nsStyleCoord.cpp		\
 	nsStyleContext.cpp		\
 	nsStyleSet.cpp			\
 	$(NULL)
