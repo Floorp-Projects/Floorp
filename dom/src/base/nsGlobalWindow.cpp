@@ -290,7 +290,7 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
 {
   *aDocument = mDocument;
-  NS_ADDREF(mDocument);
+  NS_IF_ADDREF(mDocument);
 
   return NS_OK;
 }
