@@ -20,6 +20,7 @@
  * Original Author: Gagan Saksena <gagan@netscape.com>
  *
  * Contributor(s): 
+ *   Adrian Havill <havill@redhat.com>
  */
 
 #include "nsIProtocolHandler.idl"
@@ -72,6 +73,7 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
 
     attribute string acceptLanguages; 
     attribute string acceptEncodings; 
+    attribute string acceptCharset; 
     attribute unsigned long httpVersion; 
     /* i'll file a bug on the http guys to make nsAuthEngine scriptable
 	   and then we can get rid of this no script code! */

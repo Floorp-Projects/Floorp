@@ -20,6 +20,7 @@
  * Original Author: Gagan Saksena <gagan@netscape.com>
  *
  * Contributor(s): 
+ *   Adrian Havill <havill@redhat.com>
  */
 
 #include "nspr.h"
@@ -312,13 +313,11 @@ nsHTTPRequest::formHeaders(PRUint32 capabilities)
             SetHeader(nsHTTPAtoms::Host, mHost);
     }
 
-    // Add the user-agent 
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIHTTPProtocolHandler, httpHandler, kHTTPHandlerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv;
 
+    // Add the user-agent 
     nsXPIDLString ua;
-    if (NS_SUCCEEDED(httpHandler->GetUserAgent(getter_Copies(ua)))) {
+    if (NS_SUCCEEDED(mHandler->GetUserAgent(getter_Copies(ua)))) {
         nsCAutoString uaString;
         uaString.AssignWithConversion(NS_STATIC_CAST(const PRUnichar*, ua));
         SetHeader(nsHTTPAtoms::User_Agent, uaString.get());
@@ -352,18 +351,22 @@ nsHTTPRequest::formHeaders(PRUint32 capabilities)
     // image/pjpeg, image/png, */*");
     SetHeader(nsHTTPAtoms::Accept, "*/*");
 
-    nsXPIDLCString acceptLanguages;
-    // Add the Accept-Language header
-    rv = httpHandler->GetAcceptLanguages(getter_Copies(acceptLanguages));
-    
-    if (NS_SUCCEEDED(rv) && acceptLanguages && *acceptLanguages)
-        SetHeader(nsHTTPAtoms::Accept_Language, acceptLanguages);
+    nsXPIDLCString str;
 
-    nsXPIDLCString acceptEncodings;
-    rv = httpHandler->GetAcceptEncodings(getter_Copies(acceptEncodings));
-    
-    if (NS_SUCCEEDED(rv) && acceptEncodings && *acceptEncodings)
-        SetHeader(nsHTTPAtoms::Accept_Encoding, acceptEncodings);
+    // Add the Accept-Language header
+    rv = mHandler->GetAcceptLanguages(getter_Copies(str));
+    if (NS_SUCCEEDED(rv) && str && *str)
+        SetHeader(nsHTTPAtoms::Accept_Language, str);
+
+    // Add the Accept-Encodings header
+    rv = mHandler->GetAcceptEncodings(getter_Copies(str));
+    if (NS_SUCCEEDED(rv) && str && *str)
+        SetHeader(nsHTTPAtoms::Accept_Encoding, str);
+
+    // Add the Accept-Charset header
+    rv = mHandler->GetAcceptCharset(getter_Copies(str));
+    if (NS_SUCCEEDED(rv) && str && *str)
+        SetHeader(nsHTTPAtoms::Accept_Charset, str);
 
     if (capabilities &
             (nsIHTTPProtocolHandler::ALLOW_KEEPALIVE |
@@ -392,7 +395,6 @@ nsHTTPRequest::formBuffer(nsCString * requestBuffer, PRUint32 capabilities)
 
     nsString methodString;
     nsCString cp;
-
     
     if (mDoingProxySSLConnect) { 
         nsCOMPtr<nsITransport> trans;
