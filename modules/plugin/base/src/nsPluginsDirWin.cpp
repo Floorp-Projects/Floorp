@@ -182,6 +182,7 @@ nsPluginsDir::~nsPluginsDir()
 PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
 	const char* filename;
+	char* extension;
 	PRUint32 len;
 	const char* pathname = fileSpec.GetCString();
 
@@ -194,13 +195,17 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 
 	len = PL_strlen(filename);
 	// the filename must be: "np*.dll"
+	extension = PL_strrchr(filename, '.');
+	if(extension)
+	    ++extension;
+
 	if(len > 5)
 	{
-		if(filename[0] == 'n' && filename[1] == 'p')
-			return true;
+		if(!PL_strncasecmp(filename, "np", 2) && !PL_strcasecmp(extension, "dll"))
+			return PR_TRUE;
 	}
 
-	return false;
+	return PR_FALSE;
 }
 
 ///////////////////////////////////////////////////////////////////////////
