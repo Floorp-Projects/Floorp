@@ -797,25 +797,9 @@ HRESULT nsPluginHostCtrl::SizeToFitPluginInstance()
     return S_OK;
 }
 
-HRESULT nsPluginHostCtrl::OpenURLStream(const TCHAR *szURL, void *pNotifyData, const void *pPostData, unsigned long nDataLength)
+HRESULT nsPluginHostCtrl::OpenURLStream(const TCHAR *szURL, void *pNotifyData, const void *pPostData, unsigned long nPostDataLength)
 {
-    // Create a callback object and open a stream to feed data out to it
-    CComObject<nsURLDataCallback> *pCallback = NULL;
-    CComObject<nsURLDataCallback>::CreateInstance(&pCallback);
-    if (!pCallback)
-    {
-        return E_OUTOFMEMORY;
-    }
-
-    pCallback->SetOwner(this);
-    pCallback->SetNotifyData(pNotifyData);
-    if (pPostData)
-    {
-        pCallback->SetPostData(pPostData, nDataLength);
-    }
-
-    URLOpenStream(NULL, szURL, 0, pCallback);
-
+    nsURLDataCallback::OpenURL(this, szURL, pNotifyData, pPostData, nPostDataLength);
     return S_OK;
 }
 

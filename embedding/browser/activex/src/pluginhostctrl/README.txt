@@ -77,9 +77,7 @@ Still to do
 ===========
 
 * Only hosts windowed plugins.
-* Untested on Win98/95/Me.
 * Doesn't work for the Adobe Acrobat plugin yet.
-* Streaming data blocks the UI because it's running on the same thread.
-  Should be moved to another thread.
+* No progress indication to show when there is network activity
 * Plugins cannot create writeable streams.
 * Package pluginhostctrl.dll into a CAB file automatic installation in IE.

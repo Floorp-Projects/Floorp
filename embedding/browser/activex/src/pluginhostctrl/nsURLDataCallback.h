@@ -41,10 +41,60 @@
 
 class nsPluginHostCtrl;
 
+#define WM_NPP_NEWSTREAM      WM_USER 
+#define WM_NPP_DESTROYSTREAM  WM_USER + 1
+#define WM_NPP_URLNOTIFY      WM_USER + 2
+#define WM_NPP_WRITEREADY     WM_USER + 3
+#define WM_NPP_WRITE          WM_USER + 4
+
+#define WM_CLASS_CLEANUP      WM_USER + 10
+#define WM_CLASS_CREATEPLUGININSTANCE WM_USER + 11
+
+struct _DestroyStreamData
+{
+    NPP npp;
+    NPStream *stream;
+    NPReason reason;
+};
+
+struct _UrlNotifyData
+{
+    NPP npp;
+    char *url;
+    NPReason reason;
+    void *notifydata;
+};
+
+struct _NewStreamData
+{
+    NPP npp;
+    char *contenttype;
+    NPStream *stream;
+    NPBool seekable;
+    uint16 *stype;
+};
+
+struct _WriteReadyData
+{
+    NPP npp;
+    NPStream *stream;
+    int32 result;
+};
+
+struct _WriteData
+{
+    NPP npp;
+    NPStream *stream;
+    int32 offset;
+    int32 len;
+    void* buffer;
+};
+
 /////////////////////////////////////////////////////////////////////////////
 // nsURLDataCallback
 class ATL_NO_VTABLE nsURLDataCallback : 
-	public CComObjectRootEx<CComSingleThreadModel>,
+	public CComObjectRootEx<CComMultiThreadModel>,
+    public CWindowImpl<nsURLDataCallback, CWindow, CNullTraits>,
 	public CComCoClass<nsURLDataCallback, &CLSID_NULL>,
 	public IBindStatusCallback
 {
@@ -56,6 +106,27 @@ DECLARE_PROTECT_FINAL_CONSTRUCT()
 BEGIN_COM_MAP(nsURLDataCallback)
 	COM_INTERFACE_ENTRY(IBindStatusCallback)
 END_COM_MAP()
+
+    DECLARE_WND_CLASS(_T("MozStreamWindow"))
+
+BEGIN_MSG_MAP(nsURLDataCallback)
+    MESSAGE_HANDLER(WM_NPP_NEWSTREAM, OnNPPNewStream)
+    MESSAGE_HANDLER(WM_NPP_DESTROYSTREAM, OnNPPDestroyStream)
+    MESSAGE_HANDLER(WM_NPP_URLNOTIFY, OnNPPURLNotify)
+    MESSAGE_HANDLER(WM_NPP_WRITEREADY, OnNPPWriteReady)
+    MESSAGE_HANDLER(WM_NPP_WRITE, OnNPPWrite)
+    MESSAGE_HANDLER(WM_CLASS_CLEANUP, OnClassCleanup)
+    MESSAGE_HANDLER(WM_CLASS_CREATEPLUGININSTANCE, OnClassCreatePluginInstance)
+END_MSG_MAP()
+
+    LRESULT OnNPPNewStream(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnNPPDestroyStream(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnNPPURLNotify(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnNPPWriteReady(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnNPPWrite(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+
+    LRESULT OnClassCreatePluginInstance(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnClassCleanup(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
 protected:
     virtual ~nsURLDataCallback();
@@ -73,10 +144,24 @@ protected:
 
     CComPtr<IBinding> m_cpBinding;
 
-public:
+    void SetURL(const char *szURL)
+    {
+        if (m_szURL) { free(m_szURL); m_szURL = NULL; }
+        if (szURL) { m_szURL = strdup(szURL); }
+    }
+    void SetContentType(const char *szContentType)
+    {
+        if (m_szContentType) { free(m_szContentType); m_szContentType = NULL; }
+        if (szContentType) { m_szContentType = strdup(szContentType); }
+    }
     void SetPostData(const void *pData, unsigned long nSize);
     void SetOwner(nsPluginHostCtrl *pOwner) { m_pOwner = pOwner; }
     void SetNotifyData(void *pNotifyData)   { m_pNotifyData = pNotifyData; }
+    
+    static void __cdecl StreamThread(void *pThis);
+
+public:
+    static HRESULT OpenURL(nsPluginHostCtrl *pOwner, const TCHAR *szURL, void *pNotifyData, const void *pData, unsigned long nSize);
 
 // IBindStatusCallback
 public:
