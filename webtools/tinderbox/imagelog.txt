@@ -1,6 +1,5 @@
 http://cedric.cnam.fr/ABU/BIB/lesmains.gif`300`267`Les mains
 http://cnn.com/ALLPOLITICS/stories/1999/09/27/president.2000/quayle.drop.out/quayle.jpg`220`170`Dan Quayle announced Monday that he is no longer be a candidate. He stated "I will stay focused and begin work on the 2002 Presidential election".
-http://graphics.theonion.com/pics3525/zestitos.gif`120`113`Salvation
 http://gs.cdnow.com/graphics/COVERART/local/L/69/29/00136929.jpg`170`170`You didn't get your checkin reviewed first?
 http://home.hiwaay.net/~stephena/link_pics/mos31d_full.jpg`300`223`If I find out you broke the build.....
 http://homepages.ihug.co.nz/~rgoodger/keyboard.gif`350`191`New Microsoft Keyboard
@@ -50,7 +49,6 @@ http://home.c2i.net/dark/blackbug_red.jpg`103`75`You can't honestly mean you wan
 http://www.blueskystudios.com/splash/anim_nick.gif`108`92`"I keep walking but I don't seem to get anywhere." 
 http://segfault.org/binary.php3?relatedto=stories&relatedid=38fde210-070f7380&filename=matzillah-logo.jpg`225`253`Matzillah
 http://www.bigidea.com/kids/king_george/images/img_main.gif`224`271`I'm A Cucumber!
-http://www.sourceware.net/files/linuxpropaganda/titanic.gif`300`253`How ironic.
 http://www.whitehouse.gov/WH/EOP/OVP/images/vp11s.jpg`190`100`Vote for me...I invented the Internet.
 http://www.designfoundry.com/p-zone/images/T-float.jpg`200`295`
 http://www.godsey.net/~mm/dilemna.jpg`300`301`decisions, decisions.
@@ -67,7 +65,6 @@ http://www.thespark.com/content/120399/greenspan.jpg`220`220`"It was </i>this<i>
 http://www.avid.force9.co.uk/people/mozillaorganisation/lu_map.gif`399`317`You see, the development roadmap really is simple...
 http://www.reeveswilson.com/yawner.jpg`398`177`Poweruser Reeves, still waiting for version 5, then hearing about 6!
 http://www.sigkill.com/stupid.jpg`382`125`It *said* "Best viewed with IE 5.0 or higher," so I fired up Mozilla...
-http://a772.g.akamai.net/7/772/51/33694af6ccb2c7/www.apple.com/macosx/images/macoslogo.jpg`71`70`Something about MacOS X (apple.com)
 http://www.animationartist.com/upcoming/Chicken/ChickenRun03a.jpg`350`251`What's all this about unapproved chickens?
 http://bandits.aist-nara.ac.jp/~masata-y/gyve/sq2.gif`291`227`Stop squirreling around!
 http://galileo.jpl.nasa.gov/graphics/PIA02535_thumb.jpg`130`100`Ground zero, mozilla release date.
@@ -90,7 +87,6 @@ http://www.modernhumorist.com/mh/0004/propaganda/mp3.gif`111`150`
 http://www.m-ms.com/studios/trailers/images/rphoto.gif`333`202`M is for Mozilla
 http://www.elephants.com/jupclosesm.jpg`306`223`Don't think about elephants.
 http://iww.ca/images/mini_infowork.jpg`327`250`We're wage slaves, too.
-http://iww.ca/IWWLABEL.GIF`108`108`iww.org -- 'cuz we all need unions
 http://www.nswfb.nsw.gov.au/photo/gallery_images/pic_3.jpg`200`156`We take the heat off you
 http://grafica.mareotis.com/mozilla/img/comic_mozi_garabat.gif`261`310`La la la
 http://grafica.mareotis.com/mozilla/img/version1_b.gif`258`258`Pixel me harder
