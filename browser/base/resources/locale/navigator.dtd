@@ -13,9 +13,9 @@
 
 <!ENTITY nothingAvailable.label "(Nothing Available)">
 
-<!ENTITY browserCmd.label	"New Navigator Window">
+<!ENTITY browserCmd.label	"New Window">
 <!ENTITY browserCmd.accesskey	"N">
-<!ENTITY tabCmd.label "New Navigator Tab">
+<!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
 <!ENTITY openCmd.label "Open Location">
