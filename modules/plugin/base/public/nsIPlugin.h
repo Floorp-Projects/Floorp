@@ -56,6 +56,16 @@
 #include "nsplugindefs.h"
 #include "nsIFactory.h"
 
+/**
+ * nsIPlugin
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 // {df773070-0199-11d2-815b-006008119d7a}
 #define NS_IPLUGIN_IID \
 { 0xdf773070, 0x0199, 0x11d2, { 0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a } }

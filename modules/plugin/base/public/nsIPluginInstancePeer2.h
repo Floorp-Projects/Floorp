@@ -43,6 +43,16 @@
 struct JSObject;
 struct JSContext;
 
+/**
+ * nsIPluginInstancePeer2
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 // {e7d48c00-e1f1-11d2-8360-fbc8abc4ae7c}
 #define NS_IPLUGININSTANCEPEER2_IID \
 { 0xe7d48c00, 0xe1f1, 0x11d2, { 0x83, 0x60, 0xfb, 0xc8, 0xab, 0xc4, 0xae, 0x7c } }

@@ -42,6 +42,16 @@
 #include "nsplugindefs.h"
 #include "nsISupports.h"
 
+/**
+ * nsIPluginStreamInfo
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 #define NS_IPLUGINSTREAMINFO_IID                     \
 { /* ed7d4ca0-b005-11d2-adaa-00805f6dec49 */         \
     0xed7d4ca0,                                      \

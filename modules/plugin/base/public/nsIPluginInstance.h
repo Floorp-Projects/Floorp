@@ -35,6 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * nsIPluginInstance
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>

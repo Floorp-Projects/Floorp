@@ -56,6 +56,16 @@
 #include "nsplugindefs.h"
 #include "nsISupports.h"
 
+/**
+ * nsIJRILiveConnectPluginInstancePeer
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 ////////////////////////////////////////////////////////////////////////////////
 // JRI-Based LiveConnect Classes
 ////////////////////////////////////////////////////////////////////////////////

@@ -55,6 +55,16 @@
 
 #include "nsIPluginTagInfo.h"
 
+/**
+ * nsIPluginTagInfo2
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Tag Info Interface
 // These extensions to nsIPluginTagInfo are only available in Communicator 5.0.
