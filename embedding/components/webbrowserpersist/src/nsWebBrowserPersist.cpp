@@ -2121,7 +2121,7 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
     // Create a URI from the key
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), ((nsCStringKey *) aKey)->GetString());
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     // Make a URI to save the data to
     nsCOMPtr<nsIURI> fileAsURI;
@@ -2773,8 +2773,11 @@ nsWebBrowserPersist::StoreURIAttribute(
     {
         nsAutoString oldValue;
         attrNode->GetNodeValue(oldValue);
-        nsCAutoString oldCValue; oldCValue.AssignWithConversion(oldValue);
-        return StoreURI(oldCValue.get(), aNeedsPersisting, aData);
+        if (!oldValue.IsEmpty())
+        {
+            nsCAutoString oldCValue; oldCValue.AssignWithConversion(oldValue);
+            return StoreURI(oldCValue.get(), aNeedsPersisting, aData);
+        }
     }
 
     return NS_OK;
@@ -2924,7 +2927,7 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
         // Make a new URI to replace the current one
         nsCOMPtr<nsIURI> newURI;
         rv = NS_NewURI(getter_AddRefs(newURI), oldCValue.get(), relativeURI);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv) && newURI)
         {
             newURI->SetUserPass(NS_LITERAL_CSTRING(""));
             nsCAutoString uriSpec;
