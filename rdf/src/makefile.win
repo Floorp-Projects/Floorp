@@ -39,9 +39,9 @@ CPP_OBJS=\
         .\$(OBJDIR)\netglue.obj            \
         .\$(OBJDIR)\nsRDFDataModel.obj     \
         .\$(OBJDIR)\nsRDFDataModelItem.obj \
-        .\$(OBJDIR)\nsRDFTreeItem.obj      \
-        .\$(OBJDIR)\nsRDFTreeDataModel.obj \
         .\$(OBJDIR)\nsRDFTreeColumn.obj    \
+        .\$(OBJDIR)\nsRDFTreeDataModel.obj \
+        .\$(OBJDIR)\nsRDFTreeItem.obj      \
 	$(NULL)
 
 LLIBS=\
