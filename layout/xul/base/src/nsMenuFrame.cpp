@@ -17,6 +17,7 @@
  */
 
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsMenuFrame.h"
 #include "nsBoxFrame.h"
 #include "nsIContent.h"
@@ -193,6 +194,10 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
                              nsEventStatus&  aEventStatus)
 {
   aEventStatus = nsEventStatus_eConsumeDoDefault;
+  
+  if (IsDisabled()) // Disabled menus process no events.
+    return NS_OK;
+
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
     PRBool isMenuBar = PR_TRUE;
     if (mMenuParent)
@@ -468,4 +473,14 @@ nsMenuFrame::Notify(nsITimer* aTimer)
     }
   }
   mOpenTimer = nsnull;
+}
+
+PRBool 
+nsMenuFrame::IsDisabled()
+{
+  nsString disabled = "";
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+  if (disabled == "true")
+    return PR_TRUE;
+  return PR_FALSE;
 }

@@ -77,6 +77,9 @@ public:
   // Called to execute a menu item.
   void Enter();
 
+  PRBool IsValidItem(nsIContent* aContent);
+  PRBool IsDisabled(nsIContent* aContent);
+
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
   PRBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
