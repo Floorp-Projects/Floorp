@@ -80,6 +80,7 @@ REQUIRES	= \
 		  XfeBm \
 		  XfeToolBar \
 		  XfeToolTip \
+		  XfeComboBox \
 		  Microline \
 		  addr \
 		  applet \
@@ -295,6 +296,7 @@ BASIC_LIBS	= \
 		  $(XFE_WIDGETS_BM_LIB) \
 		  $(XFE_WIDGETS_TOOL_BAR_LIB) \
 		  $(XFE_WIDGETS_TOOL_TIP_LIB) \
+		  $(XFE_WIDGETS_COMBO_BOX_LIB) \
 		  $(XFE_WIDGETS_LIB) \
 		  $(DIST)/lib/libxlate.a \
 		  $(DIST)/lib/libmimetype.a \
