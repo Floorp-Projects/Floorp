@@ -658,7 +658,7 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
     PK11SlotInfo *slot = NULL;
     NSSCertificate *c;
     NSSCryptoContext *cc;
-    nssSMIMEProfile *stanProfile;
+    nssSMIMEProfile *stanProfile = NULL;
     
     emailAddr = cert->emailAddr;
     
