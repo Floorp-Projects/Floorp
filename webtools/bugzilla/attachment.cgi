@@ -77,6 +77,7 @@ elsif ($action eq "insert")
 {
   confirm_login();
   ValidateBugID($::FORM{'bugid'});
+  ValidateComment($::FORM{'comment'});
   validateFilename();
   validateData();
   validateDescription();
@@ -95,6 +96,7 @@ elsif ($action eq "edit")
 elsif ($action eq "update") 
 { 
   confirm_login();
+  ValidateComment($::FORM{'comment'});
   validateID();
   validateCanEdit($::FORM{'id'});
   validateDescription();

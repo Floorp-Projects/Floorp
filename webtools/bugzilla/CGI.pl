@@ -324,6 +324,19 @@ sub ValidateBugID {
 
 }
 
+
+sub ValidateComment {
+    # Make sure a comment is not too large (greater than 64K).
+    
+    my ($comment) = @_;
+    
+    if (defined($comment) && length($comment) > 65535) {
+        DisplayError("Comments cannot be longer than 65,535 characters.");
+        exit;
+    }
+}
+
+
 # check and see if a given string actually represents a positive
 # integer, and abort if not.
 # 

@@ -49,6 +49,8 @@ sub sillyness {
 
 confirm_login();
 
+ValidateComment($::FORM{'comment'});
+
 my $cookiepath = Param("cookiepath");
 print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n" if ( exists $::FORM{'product'} );
 print "Set-Cookie: VERSION-$::FORM{'product'}=$::FORM{'version'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n" if ( exists $::FORM{'product'} && exists $::FORM{'version'} );
