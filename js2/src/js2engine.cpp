@@ -813,7 +813,7 @@ namespace MetaData {
         ASSERT(obj->kind == ClassKind);
         JS2Class *c = checked_cast<JS2Class *>(obj);
         if (c->prototype)
-            return OBJECT_TO_JS2VAL(new PrototypeInstance(c->prototype, c));
+            return OBJECT_TO_JS2VAL(new PrototypeInstance(meta, c->prototype, c));
         else
             return OBJECT_TO_JS2VAL(new SimpleInstance(c));
     }

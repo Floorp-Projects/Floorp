@@ -89,7 +89,7 @@
                         else {
                             pFrame = new ParameterFrame(fWrap->compileFrame);
                             pFrame->instantiate(meta->env);
-                            PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
+                            PrototypeInstance *pInst = new PrototypeInstance(meta, protoObj, meta->objectClass);
                             baseVal = OBJECT_TO_JS2VAL(pInst);
                             pFrame->thisObject = baseVal;
                             pFrame->assignArguments(meta, obj, base(argCount), argCount);

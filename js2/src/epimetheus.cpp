@@ -264,6 +264,9 @@ void printFrameBindings(NonWithFrame *f)
 js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
 {
     if (argc) {
+        if (JS2VAL_IS_UNDEFINED(argv[0]))
+            stdOut << "Undefined\n";
+        else
         if (JS2VAL_IS_OBJECT(argv[0])) {
             JS2Object *fObj = JS2VAL_TO_OBJECT(argv[0]);
             if (((fObj->kind == SimpleInstanceKind)
@@ -335,6 +338,16 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
     }
     return JS2VAL_UNDEFINED;
 }
+
+js2val dumpAt(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
+{
+    if (JS2VAL_IS_INT(argv[0])) {
+        argv[0] = OBJECT_TO_JS2VAL(JS2VAL_TO_INT(argv[0]));
+        return dump(meta, JS2VAL_NULL, argv, argc);
+    }
+    return JS2VAL_VOID;
+}
+
 #endif
 
 js2val load(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
@@ -386,6 +399,7 @@ int main(int argc, char **argv)
     metadata->addGlobalObjectFunction("load", load, 1);
 #ifdef DEBUG
     metadata->addGlobalObjectFunction("dump", dump, 1);
+    metadata->addGlobalObjectFunction("dumpAt", dumpAt, 1);
     metadata->addGlobalObjectFunction("trees", trees, 0);
     metadata->addGlobalObjectFunction("trace", trace, 0);
 #endif

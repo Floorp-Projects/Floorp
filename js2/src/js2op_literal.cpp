@@ -115,7 +115,7 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            PrototypeInstance *pInst = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
+            PrototypeInstance *pInst = new PrototypeInstance(meta, meta->objectClass->prototype, meta->objectClass);
             baseVal = OBJECT_TO_JS2VAL(pInst);
             for (uint16 i = 0; i < argCount; i++) {
                 a = pop();

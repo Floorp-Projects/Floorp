@@ -57,7 +57,7 @@ namespace MetaData {
 
     js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {   
-        js2val thatValue = OBJECT_TO_JS2VAL(new NumberInstance(meta->numberClass->prototype, meta->numberClass));
+        js2val thatValue = OBJECT_TO_JS2VAL(new NumberInstance(meta, meta->numberClass->prototype, meta->numberClass));
         NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thatValue));
 
         if (argc > 0)
@@ -139,7 +139,7 @@ namespace MetaData {
             { NULL }
         };
 
-        meta->numberClass->prototype = new NumberInstance(meta->objectClass->prototype, meta->numberClass);
+        meta->numberClass->prototype = new NumberInstance(meta, meta->objectClass->prototype, meta->numberClass);
 
         // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
         meta->env->addFrame(meta->numberClass);
@@ -165,7 +165,7 @@ namespace MetaData {
     /*
         Dynamic property of the prototype:
     */
-            FunctionInstance *fInst = new FunctionInstance(meta->functionClass->prototype, meta->functionClass);
+            FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
             fInst->fWrap = callInst->fWrap;
             meta->writeDynamicProperty(meta->numberClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
             meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);

@@ -91,7 +91,7 @@ namespace MetaData {
         JS2Object *result;
         
         if (prototype) {
-            FunctionInstance *fInst = new FunctionInstance(functionClass->prototype, functionClass);
+            FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
             fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
             fnDef->fWrap = fInst->fWrap;
             result = fInst;
@@ -3259,7 +3259,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         v = new Variable(classClass, OBJECT_TO_JS2VAL(objectClass), true);
         defineLocalMember(env, &world.identifiers["Object"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         // Function properties of the Object prototype object
-        objectClass->prototype = new PrototypeInstance(NULL, objectClass);
+        objectClass->prototype = new PrototypeInstance(this, NULL, objectClass);
         // Adding "prototype" as a static member of the class - not a dynamic property
         env->addFrame(objectClass);
             v = new Variable(objectClass, OBJECT_TO_JS2VAL(objectClass->prototype), true);
@@ -3273,7 +3273,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         initFunctionObject(this);
 
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
-        FunctionInstance *fInst = new FunctionInstance(functionClass->prototype, functionClass);
+        FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
         objectClass->prototype->writeProperty(this, engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), 0);
         fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(0), DynamicPropertyValue::READONLY);
@@ -4467,6 +4467,14 @@ deleteClassProperty:
  *
  ************************************************************************************/
 
+    PrototypeInstance::PrototypeInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) 
+        : JS2Object(PrototypeInstanceKind), parent(parent), type(type) 
+    {
+        // Add prototype property
+        writeProperty(meta, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(parent), 0);
+    }
+
+
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void PrototypeInstance::markChildren()
     {
@@ -4483,8 +4491,8 @@ deleteClassProperty:
  *
  ************************************************************************************/
 
-    FunctionInstance::FunctionInstance(JS2Object *parent, JS2Class *type)
-     : PrototypeInstance(parent, type), fWrap(NULL) 
+    FunctionInstance::FunctionInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type)
+     : PrototypeInstance(meta, parent, type), fWrap(NULL) 
     {
     }
 
@@ -4589,7 +4597,7 @@ deleteClassProperty:
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
-        PrototypeInstance *argsObj = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
+        PrototypeInstance *argsObj = new PrototypeInstance(meta, meta->objectClass->prototype, meta->objectClass);
 
         // Add the 'arguments' property
         QualifiedName qn(meta->publicNamespace, &meta->world.identifiers["arguments"]);

@@ -614,8 +614,7 @@ public:
 // contain no fixed properties.
 class PrototypeInstance : public JS2Object {
 public:
-    PrototypeInstance(JS2Object *parent, JS2Class *type) : JS2Object(PrototypeInstanceKind), parent(parent), type(type) { }
-
+    PrototypeInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type);
 
     JS2Object   *parent;        // If this instance was created by calling new on a prototype function,
                                 // the value of the function’s prototype property at the time of the call;
@@ -633,7 +632,7 @@ public:
 // that contains the millisecond count
 class DateInstance : public PrototypeInstance {
 public:
-    DateInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
+    DateInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type) { }
 
     float64     ms;
 };
@@ -642,7 +641,7 @@ public:
 // that contains the string data
 class StringInstance : public PrototypeInstance {
 public:
-    StringInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type), mValue(NULL) { }
+    StringInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type), mValue(NULL) { }
 
     String     *mValue;             // has been allocated by engine in the GC'able Pond
 
@@ -654,7 +653,7 @@ public:
 // that contains the float64 data
 class NumberInstance : public PrototypeInstance {
 public:
-    NumberInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type), mValue(0.0) { }
+    NumberInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type), mValue(0.0) { }
 
     float64     mValue;
     virtual ~NumberInstance()            { }
@@ -664,7 +663,7 @@ public:
 // that contains the bool data
 class BooleanInstance : public PrototypeInstance {
 public:
-    BooleanInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type), mValue(false) { }
+    BooleanInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type), mValue(false) { }
 
     bool     mValue;
     virtual ~BooleanInstance()           { }
@@ -674,7 +673,7 @@ public:
 // that contains a pointer to the function implementation
 class FunctionInstance : public PrototypeInstance {
 public:
-    FunctionInstance(JS2Object *parent, JS2Class *type);
+    FunctionInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type);
 
     FunctionWrapper *fWrap;
 
@@ -687,7 +686,7 @@ public:
 // are added.
 class ArrayInstance : public PrototypeInstance {
 public:
-    ArrayInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { setLength(meta, this, 0); }
+    ArrayInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(meta, parent, type) { setLength(meta, this, 0); }
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags);
     virtual ~ArrayInstance()             { }

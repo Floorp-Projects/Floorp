@@ -57,7 +57,7 @@ namespace MetaData {
 
     js2val Boolean_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {   
-        js2val thatValue = OBJECT_TO_JS2VAL(new BooleanInstance(meta->booleanClass->prototype, meta->booleanClass));
+        js2val thatValue = OBJECT_TO_JS2VAL(new BooleanInstance(meta, meta->booleanClass->prototype, meta->booleanClass));
         BooleanInstance *boolInst = checked_cast<BooleanInstance *>(JS2VAL_TO_OBJECT(thatValue));
         JS2Object::RootIterator ri = JS2Object::addRoot(&boolInst);
 
@@ -119,7 +119,7 @@ namespace MetaData {
         NamespaceList publicNamespaceList;
         publicNamespaceList.push_back(meta->publicNamespace);
 
-        meta->booleanClass->prototype = new BooleanInstance(meta->objectClass->prototype, meta->booleanClass);
+        meta->booleanClass->prototype = new BooleanInstance(meta, meta->objectClass->prototype, meta->booleanClass);
         
 
         // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
@@ -131,7 +131,7 @@ namespace MetaData {
         meta->env->removeTopFrame();
 
         // Add "constructor" as a dynamic property of the prototype
-        FunctionInstance *fInst = new FunctionInstance(meta->functionClass->prototype, meta->functionClass);
+        FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
         meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(1), RunPhase);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Boolean_Constructor);
         meta->writeDynamicProperty(meta->booleanClass->prototype, new Multiname(&meta->world.identifiers["constructor"], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
@@ -152,7 +152,7 @@ namespace MetaData {
     /*
         Dynamic property of the prototype:
     */
-            FunctionInstance *fInst = new FunctionInstance(meta->functionClass->prototype, meta->functionClass);
+            FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
             fInst->fWrap = callInst->fWrap;
             meta->writeDynamicProperty(meta->booleanClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
             meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);

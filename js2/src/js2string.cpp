@@ -59,7 +59,7 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
 {
     // XXX GC might happen after the new StringInstance, but before the
     // object gets rooted somewhere - this is a general problem...
-    js2val thatValue = OBJECT_TO_JS2VAL(new StringInstance(meta->stringClass->prototype, meta->stringClass));
+    js2val thatValue = OBJECT_TO_JS2VAL(new StringInstance(meta, meta->stringClass->prototype, meta->stringClass));
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thatValue));
     JS2Object::RootIterator ri = JS2Object::addRoot(&strInst);
     if (argc > 0)
@@ -798,7 +798,7 @@ void initStringObject(JS2Metadata *meta)
     meta->stringClass->construct = String_Constructor;
     meta->stringClass->call = String_Call;
 
-    meta->stringClass->prototype = new StringInstance(meta->objectClass->prototype, meta->booleanClass);
+    meta->stringClass->prototype = new StringInstance(meta, meta->objectClass->prototype, meta->booleanClass);
     
     // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
     meta->env->addFrame(meta->stringClass);
@@ -824,7 +824,7 @@ XXX not prototype object function properties, like ECMA3, but members of the Str
         InstanceMember *m = new InstanceMethod(callInst);
         meta->defineInstanceMember(meta->stringClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
 
-        FunctionInstance *fInst = new FunctionInstance(meta->functionClass->prototype, meta->functionClass);
+        FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
         fInst->fWrap = callInst->fWrap;
         meta->writeDynamicProperty(meta->stringClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
         meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);

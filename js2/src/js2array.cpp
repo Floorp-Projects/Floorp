@@ -844,7 +844,7 @@ void initArrayObject(JS2Metadata *meta)
 /*
     Dynamic property of the prototype:
 */
-        FunctionInstance *fInst = new FunctionInstance(meta->functionClass->prototype, meta->functionClass);
+        FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
         fInst->fWrap = callInst->fWrap;
         meta->writeDynamicProperty(meta->arrayClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
         fInst->writeProperty(meta, meta->engine->length_StringAtom, INT_TO_JS2VAL(pf->length), DynamicPropertyValue::PERMANENT | DynamicPropertyValue::READONLY);
