@@ -56,6 +56,8 @@ CPPSRCS = \
 	strset.cpp \
 	$(NULL)
 
+REQUIRES = xpcom
+
 LIBS = \
 	-lbfd \
 	-liberty \
