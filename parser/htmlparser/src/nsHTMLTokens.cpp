@@ -64,6 +64,10 @@ CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(aTag) {
 
 }
 
+CHTMLToken::~CHTMLToken() {
+
+}
+
 /**
  * Setter method that changes the string value of this token
  * @update	gess5/11/98
