@@ -239,15 +239,18 @@ function ShowInputErrorMessage(message)
 //  but elementInDoc is needed to find parent context in document
 function GetAppropriatePercentString(elementForAtt, elementInDoc)
 {
-  var name = elementForAtt.nodeName.toLowerCase();
-  if ( name == "td" || name == "th")
-    return GetString("PercentOfTable");
+  var editor = GetCurrentEditor();
+  try {
+    var name = elementForAtt.nodeName.toLowerCase();
+    if ( name == "td" || name == "th")
+      return GetString("PercentOfTable");
 
-  // Check if element is within a table cell
-  if (editorShell.GetElementOrParentByTagName("td", elementInDoc))
-    return GetString("PercentOfCell");
-  else
-    return GetString("PercentOfWindow");
+    // Check if element is within a table cell
+    if (editor.getElementOrParentByTagName("td", elementInDoc))
+      return GetString("PercentOfCell");
+    else
+      return GetString("PercentOfWindow");
+  } catch (e) { return "";}
 }
 
 function AppendStringToMenulistById(menulist, stringID)
@@ -267,10 +270,7 @@ function AppendStringToMenulist(menulist, string)
       if (menupopup)
         menulist.appendChild(menupopup);
       else
-      {
-        dump("Failed to create menupoup\n");
         return null;
-      }
     }
     var menuItem = document.createElementNS(XUL_NS, "menuitem");
     if (menuItem)
@@ -304,139 +304,6 @@ function ClearListbox(listbox)
     while (listbox.firstChild)
       listbox.removeChild(listbox.firstChild);
   }
-}
-
-/* These help using a <tree> for simple lists
-  Assumes this simple structure:
-  <tree>
-    <treecols><treecol flex="1"/></treecols>
-    <treechildren>
-      <treeitem>
-        <treerow>
-          <treecell label="the text the user sees"/>
-*/
-
-function AppendStringToTreelistById(tree, stringID)
-{
-  return AppendStringToTreelist(tree, GetString(stringID));
-}
-
-function AppendStringToTreelist(tree, string)
-{
-  if (tree)
-  {
-    var treecols = tree.firstChild;
-    if (!treecols)
-    {
-      dump("Bad XUL: Must have <treecols> as first child\n");
-    }
-    var treechildren = treecols.nextSibling;
-    if (!treechildren)
-    {
-      treechildren = document.createElementNS(XUL_NS, "treechildren");
-      if (treechildren)
-      {
-        treechildren.setAttribute("flex","1");
-        tree.appendChild(treechildren);
-      }
-      else
-      {
-        dump("Failed to create <treechildren>\n");
-        return null;
-      }
-    }
-    var treeitem = document.createElementNS(XUL_NS, "treeitem");
-    var treerow = document.createElementNS(XUL_NS, "treerow");
-    var treecell = document.createElementNS(XUL_NS, "treecell");
-    if (treeitem && treerow && treecell)
-    {
-      treerow.appendChild(treecell);
-      treeitem.appendChild(treerow);
-      treechildren.appendChild(treeitem)
-      treecell.setAttribute("label", string);
-      //var len = Number(tree.getAttribute("length"));
-      //if (!len) len = -1;
-      tree.setAttribute("length", treechildren.childNodes.length);
-      return treeitem;
-    }
-  }
-  return null;
-}
-
-function ClearTreelist(tree)
-{
-  if (tree)
-  {
-    tree.treeBoxObject.selection.clearSelection();
-    // Skip over the first <treecols> child
-    if (tree.firstChild)
-    {
-      var nextChild = tree.firstChild.nextSibling;
-      while (nextChild)
-      {
-        var nextTmp = nextChild.nextSibling;
-        tree.removeChild(nextChild);
-        nextChild = nextTmp;
-      }
-    }
-    // Count list items
-    tree.setAttribute("length", 0);
-  }
-}
-
-function GetSelectedTreelistAttribute(tree, attr)
-{
-  if (tree)
-  {
-    if (tree.treeBoxObject.selection.count > 0) {
-      var selectedItem = tree.contentView.getItemAtIndex(tree.currentIndex);
-      if (selectedItem &&
-          selectedItem.firstChild &&
-          selectedItem.firstChild.firstChild)
-      {
-        return selectedItem.firstChild.firstChild.getAttribute(attr);
-      }
-    }
-  }
-  return "";
-}
-
-function GetSelectedTreelistValue(tree)
-{
-  return GetSelectedTreelistAttribute(tree,"label")
-}
-
-function RemoveSelectedTreelistItem(tree)
-{
-  if (tree)
-  {
-    if (tree.treeBoxObject.selection.count > 0)
-    {
-      // Get the node to delete
-      var treeItem = tree.contentView.getItemAtIndex(tree.currentIndex);
-      if (treeItem)
-      {
-        tree.treeBoxObject.selection.clearSelection();
-        var parent = treeItem.parentNode;
-        if (parent)
-        {
-          parent.removeChild(treeItem);
-          tree.setAttribute("length", parent.childNodes.length);
-        }
-      }
-    }
-  }
-}
-
-function GetTreelistValueAt(tree, index)
-{
-  if (tree)
-  {
-    var item = tree.getItemAtIndex(index);
-    if (item && item.firstChild && item.firstChild.firstChild)
-      return item.firstChild.firstChild.getAttribute("label");
-  }
-  return "";
 }
 
 function forceInteger(elementID)
@@ -689,16 +556,16 @@ function GetMetaElement(name)
     name = name.toLowerCase();
     if (name != "")
     {
-      var metaNodes = editorShell.editorDocument.getElementsByTagName("meta");
-      if (metaNodes && metaNodes.length > 0)
-      {
+      var editor = GetCurrentEditor();
+      try {
+        var metaNodes = editor.document.getElementsByTagName("meta");
         for (var i = 0; i < metaNodes.length; i++)
         {
           var metaNode = metaNodes.item(i);
           if (metaNode && metaNode.getAttribute("name") == name)
             return metaNode;
         }
-      }
+      } catch (e) {}
     }
   }
   return null;
@@ -706,13 +573,14 @@ function GetMetaElement(name)
 
 function CreateMetaElement(name)
 {
-  var metaElement = editorShell.CreateElementWithDefaults("meta");
-  if (metaElement)
+  var editor = GetCurrentEditor();
+  try {
+    var metaElement = editor.createElementWithDefaults("meta");
     metaElement.setAttribute("name", name);
-  else
-    dump("Failed to create metaElement!\n");
+    return metaElement;
+  } catch (e) {}
 
-  return metaElement;
+  return null;
 }
 
 function GetHTTPEquivMetaElement(name)
@@ -722,9 +590,9 @@ function GetHTTPEquivMetaElement(name)
     name = name.toLowerCase();
     if (name != "")
     {
-      var metaNodes = editorShell.editorDocument.getElementsByTagName("meta");
-      if (metaNodes && metaNodes.length > 0)
-      {
+      var editor = GetCurrentEditor();
+      try {
+        var metaNodes = editor.document.getElementsByTagName("meta");
         for (var i = 0; i < metaNodes.length; i++)
         {
           var metaNode = metaNodes.item(i);
@@ -735,7 +603,7 @@ function GetHTTPEquivMetaElement(name)
               return metaNode;
           }
         }
-      }
+      } catch (e) {}
     }
   }
   return null;
@@ -743,24 +611,26 @@ function GetHTTPEquivMetaElement(name)
 
 function CreateHTTPEquivMetaElement(name)
 {
-  metaElement = editorShell.CreateElementWithDefaults("meta");
-  if (metaElement)
+  var editor = GetCurrentEditor();
+  try {
+    var metaElement = editor.createElementWithDefaults("meta");
     metaElement.setAttribute("http-equiv", name);
-  else
-    dump("Failed to create httpequivMetaElement!\n");
+    return metaElement;
+  } catch (e) {}
 
-  return metaElement;
+  return null;
 }
 
 function CreateHTTPEquivElement(name)
 {
-  metaElement = editorShell.CreateElementWithDefaults("meta");
-  if (metaElement)
+  var editor = GetCurrentEditor();
+  try {
+    var metaElement = editor.createElementWithDefaults("meta");
     metaElement.setAttribute("http-equiv", name);
-  else
-    dump("Failed to create metaElement for http-equiv!\n");
+    return metaElement;
+  } catch (e) {}
 
-  return metaElement;
+  return null;
 }
 
 // Change "content" attribute on a META element,
@@ -770,29 +640,34 @@ function SetMetaElementContent(metaElement, content, insertNew)
 {
   if (metaElement)
   {
-    if(!content || content == "")
-    {
-      if (!insertNew)
-        editorShell.DeleteElement(metaElement);
-    }
-    else
-    {
-      if (insertNew)
+    var editor = GetCurrentEditor();
+    try {
+      if(!content || content == "")
       {
-        metaElement.setAttribute("content", content);
-        AppendHeadElement(metaElement);
+        if (!insertNew)
+          editor.deleteElement(metaElement);
       }
       else
-        editorShell.SetAttribute(metaElement, "content", content);
-    }
+      {
+        if (insertNew)
+        {
+          metaElement.setAttribute("content", content);
+          AppendHeadElement(metaElement);
+        }
+        else
+          editor.setAttribute(metaElement, "content", content);
+      }
+    } catch (e) {}
   }
 }
 
 function GetHeadElement()
 {
-  var headList = editorShell.editorDocument.getElementsByTagName("head");
-  if (headList)
+  var editor = GetCurrentEditor();
+  try {
+    var headList = editor.document.getElementsByTagName("head");
     return headList.item(0);
+  } catch (e) {}
 
   return null;
 }
@@ -806,9 +681,12 @@ function AppendHeadElement(element)
     if (head.hasChildNodes())
       position = head.childNodes.length;
 
-    // Use editor's undoable transaction
-    // Last param "true" says "don't change the selection"
-    editorShell.InsertElement(element, head, position, true);
+    var editor = GetCurrentEditor();
+    try {
+      // Use editor's undoable transaction
+      // Last param "true" says "don't change the selection"
+      editor.insertElement(element, head, position, true);
+    } catch (e) {}
   }
 }
 
@@ -850,8 +728,9 @@ function SetRelativeCheckbox(checkbox)
       return;
   }
 
+  var editor = GetCurrentEditor();
   // Mail never allows relative URLs, so hide the checkbox
-  if (editorShell.editorType == "htmlmail")
+  if (editor && (editor.flags & Components.interfaces.nsIPlaintextEditor.eEditorMailMask))
   {
     checkbox.setAttribute("collapsed", "true");
     return;
@@ -982,125 +861,130 @@ function nthParent(node, n)
 function nodeIsBlock(node)
 {
   // HR doesn't count because it's not a container
-  return !node || (node.localName != 'HR' && editorShell.NodeIsBlock(node));
+  var editor = GetCurrentEditor();
+  return !editor || !node || 
+          (node.localName != 'HR' && editor.nodeIsBlock(node));
 }
 
 /* Ugly code alert! If only I could do this:
- * var range = editorShell.editorSelection;
- * range = editorShell.FlattenRange(range); // ensure anchorNode == parentNode
- * if (editorShell.IsInlineRange(range) && editorShell.NodeIsBlock(node)) return false;
- * while (!editorShell.ContainmentAllowed(range.anchorNode, element))
- *   range = editorShell.ParentRangeOf(range);
- * editorShell.InsertElementAtRange(element, range);
+ * var range = editor.selection.flattenRange(range); // ensure anchorNode == parentNode
+ * if (editor.isInlineRange(range) && editor.nodeIsBlock(node)) return false;
+ * while (!editor.containmentAllowed(range.anchorNode, element))
+ *   range = editor.parentRangeOf(range);
+ * editor.insertElementAtRange(element, range);
  * return true;
  */
 function InsertElementAroundSelection(element)
 {
-  // We need to find a suitable container for the element.
-  // First get the selection
-  var anchorParent = editorShell.editorSelection.anchorNode;
-  if (!anchorParent.localName)
-    var anchorSelected = true;
-  else if (editorShell.editorSelection.anchorOffset < anchorParent.childNodes.length)
-    var anchor = anchorParent.childNodes[editorShell.editorSelection.anchorOffset];
-  var focusParent = editorShell.editorSelection.focusNode;
-  if (!focusParent.localName)
-    var focusSelected = true;
-  else if (editorShell.editorSelection.focusOffset < focusParent.childNodes.length)
-    var focus = focusParent.childNodes[editorShell.editorSelection.focusOffset];
+  var editor = GetCurrentEditor();
 
-  // Find the common ancestor
-  var anchorDepth = nodeDepth(anchorParent);
-  var focusDepth = nodeDepth(focusParent);
-  if (anchorDepth > focusDepth)
-  {
-    anchor = nthParent(anchorParent, anchorDepth - focusDepth - 1);
-    anchorParent = anchor.parentNode;
-    anchorSelected = true;
-  }
-  else if (anchorDepth < focusDepth)
-  {
-    focus = nthParent(focusParent, focusDepth - anchorDepth - 1);
-    focusParent = focus.parentNode;
-    focusSelected = true;
-  }
-  var ordered = false;
-  while (anchorParent != focusParent)
-  {
-    anchor = anchorParent;
-    anchorParent = anchor.parentNode;
-    focus = focusParent;
-    focusParent = focus.parentNode;
-    anchorSelected = focusSelected = true;
-  }
+  try {
+    // We need to find a suitable container for the element.
+    // First get the selection
+    var anchorParent = editor.selection.anchorNode;
+    if (!anchorParent.localName)
+      var anchorSelected = true;
+    else if (editor.selection.anchorOffset < anchorParent.childNodes.length)
+      var anchor = anchorParent.childNodes[editor.selection.anchorOffset];
+    var focusParent = editor.selection.focusNode;
+    if (!focusParent.localName)
+      var focusSelected = true;
+    else if (editor.selection.focusOffset < focusParent.childNodes.length)
+      var focus = focusParent.childNodes[editor.selection.focusOffset];
 
-  // The common ancestor may not be suitable, so find a suitable one.
-  if (editorShell.NodeIsBlock(element))
-  {
-    // Block element parent must be a valid block
-    while (!(anchorParent.localName in IsBlockParent))
+    // Find the common ancestor
+    var anchorDepth = nodeDepth(anchorParent);
+    var focusDepth = nodeDepth(focusParent);
+    if (anchorDepth > focusDepth)
     {
-      anchor = focus = anchorParent;
-      anchorSelected = focusSelected = true;
+      anchor = nthParent(anchorParent, anchorDepth - focusDepth - 1);
       anchorParent = anchor.parentNode;
-      ordered = true;
+      anchorSelected = true;
     }
-  }
-  else
-  {
-    // Inline element parent must not be an invalid block
-    while (anchorParent.localName in NotAnInlineParent)
+    else if (anchorDepth < focusDepth)
     {
-      anchor = focus = anchorParent;
-      anchorSelected = focusSelected = true;
+      focus = nthParent(focusParent, focusDepth - anchorDepth - 1);
+      focusParent = focus.parentNode;
+      focusSelected = true;
+    }
+    var ordered = false;
+    while (anchorParent != focusParent)
+    {
+      anchor = anchorParent;
       anchorParent = anchor.parentNode;
-      ordered = true;
+      focus = focusParent;
+      focusParent = focus.parentNode;
+      anchorSelected = focusSelected = true;
     }
-  }
 
-  // We now have an ancestor to hold the element
-  // and a range of child nodes to move into the element
-  if (anchor != focus)
-  {
-    if (!ordered)
+    // The common ancestor may not be suitable, so find a suitable one.
+    if (editor.nodeIsBlock(element))
     {
-      // Ensure anchor <= focus
-      for (var node = anchorParent.firstChild; node != anchor; node = node.nextSibling)
+      // Block element parent must be a valid block
+      while (!(anchorParent.localName in IsBlockParent))
       {
-        if (node == focus)
-        {
-          focus = anchor;
-          anchor = node;
-          focusSelected = anchorSelected;
-          break;
-        }
+        anchor = focus = anchorParent;
+        anchorSelected = focusSelected = true;
+        anchorParent = anchor.parentNode;
+        ordered = true;
       }
     }
-    if (focus && !focusSelected)
-      focus = focus.previousSibling;
-  }
-  if (!editorShell.NodeIsBlock(element))
-  {
-    // Fail if we're not inserting a block
-    if (!anchor) return false;
-    for (node = anchor; ; node = node.nextSibling)
-      if (!node)
-        return false;
-      else if (nodeIsBlock(node))
-        break;
-      else if (node == focus)
-        return false;
-  }
+    else
+    {
+      // Inline element parent must not be an invalid block
+      while (anchorParent.localName in NotAnInlineParent)
+      {
+        anchor = focus = anchorParent;
+        anchorSelected = focusSelected = true;
+        anchorParent = anchor.parentNode;
+        ordered = true;
+      }
+    }
 
-  // The range may be contained by body text, which should all be selected.
-  if (!nodeIsBlock(anchor))
-    while (!nodeIsBlock(anchor.previousSibling))
-      anchor = anchor.previousSibling;
-  if (!nodeIsBlock(focus))
-    while (!nodeIsBlock(focus.nextSibling))
-      focus = focus.nextSibling;
+    // We now have an ancestor to hold the element
+    // and a range of child nodes to move into the element
+    if (anchor != focus)
+    {
+      if (!ordered)
+      {
+        // Ensure anchor <= focus
+        for (var node = anchorParent.firstChild; node != anchor; node = node.nextSibling)
+        {
+          if (node == focus)
+          {
+            focus = anchor;
+            anchor = node;
+            focusSelected = anchorSelected;
+            break;
+          }
+        }
+      }
+      if (focus && !focusSelected)
+        focus = focus.previousSibling;
+    }
+    if (!editor.nodeIsBlock(element))
+    {
+      // Fail if we're not inserting a block
+      if (!anchor) return false;
+      for (node = anchor; ; node = node.nextSibling)
+        if (!node)
+          return false;
+        else if (nodeIsBlock(node))
+          break;
+        else if (node == focus)
+          return false;
+    }
 
-  editorShell.BeginBatchChanges();
+    // The range may be contained by body text, which should all be selected.
+    if (!nodeIsBlock(anchor))
+      while (!nodeIsBlock(anchor.previousSibling))
+        anchor = anchor.previousSibling;
+    if (!nodeIsBlock(focus))
+      while (!nodeIsBlock(focus.nextSibling))
+        focus = focus.nextSibling;
+  } catch (e) {return false;}
+
+  editor.beginTransaction();
   try {
     var anchorOffset = 0;
     // Calculate the insertion point for the undoable InsertElement method
@@ -1109,10 +993,9 @@ function InsertElementAroundSelection(element)
     else
       for (node = anchorParent.firstChild; node != anchor; node = node.nextSibling)
         anchorOffset++;
-    editorShell.InsertElement(element, anchorParent, anchorOffset, true);
+    editor.insertElement(element, anchorParent, anchorOffset, true);
     // Move all the old child nodes to the element
     // Use editor methods in case of text nodes
-    var editor = editorShell.editor;
     while (anchor)
     {
       node = anchor.nextSibling;
@@ -1124,20 +1007,21 @@ function InsertElementAroundSelection(element)
   }
   catch (ex) {}
 
-  editorShell.EndBatchChanges();
+  editor.endTransaction();
   return true;
 }
 
 // Should I set the selection to the element, then insert HTML the element's innerHTML?
-// I would prefer to say editorShell.DeleteElement(element, FLAG_TO_KEEP_CHILD_NODES);
+// I would prefer to say editor.deleteElement(element, FLAG_TO_KEEP_CHILD_NODES);
 function RemoveElementKeepingChildren(element)
 {
-  editorShell.BeginBatchChanges();
+  var editor = GetCurrentEditor();
+
   try {
+    editor.beginTransaction();
     if (element.firstChild)
     {
       // Use editor methods in case of text nodes
-      var editor = editorShell.editor;
       var parent = element.parentNode;
       var offset = 0;
       for (var node = parent.firstChild; node != element; node = node.nextSibling)
@@ -1148,61 +1032,64 @@ function RemoveElementKeepingChildren(element)
         editor.insertNode(node, parent, offset++);
       }
     }
-    editorShell.DeleteElement(element);
+    editor.deleteElement(element);
   }
   catch (ex) {}
 
-  editorShell.EndBatchChanges();
+  editor.endTransaction();
 }
 
 function FillLinkMenulist(linkMenulist, headingsArray)
 {
-  var NamedAnchorNodeList = editorShell.editorDocument.anchors;
-  var NamedAnchorCount = NamedAnchorNodeList.length;
-  if (NamedAnchorCount > 0)
-  {
-    for (var i = 0; i < NamedAnchorCount; i++)
-      linkMenulist.appendItem("#" + NamedAnchorNodeList.item(i).name);
-  } 
-  for (var j = 1; j <= 6; j++)
-  {
-    var headingList = editorShell.editorDocument.getElementsByTagName("h" + j);
-    for (var k = 0; k < headingList.length; k++)
+  var editor = GetCurrentEditor();
+  try {
+    var NamedAnchorNodeList = editor.document.anchors;
+    var NamedAnchorCount = NamedAnchorNodeList.length;
+    if (NamedAnchorCount > 0)
     {
-      var heading = headingList.item(k);
-
-      // Skip headings that already have a named anchor as their first child
-      //  (this may miss nearby anchors, but at least we don't insert another
-      //   under the same heading)
-      var child = heading.firstChild;
-      if (child && child.nodeName == "A" && child.name && (child.name.length>0))
-        continue;
-
-      var range = editorShell.editorDocument.createRange();
-      range.setStart(heading,0);
-      var lastChildIndex = heading.childNodes.length;
-      range.setEnd(heading,lastChildIndex);
-      var text = range.toString();
-      if (text)
+      for (var i = 0; i < NamedAnchorCount; i++)
+        linkMenulist.appendItem("#" + NamedAnchorNodeList.item(i).name);
+    } 
+    for (var j = 1; j <= 6; j++)
+    {
+      var headingList = editor.document.getElementsByTagName("h" + j);
+      for (var k = 0; k < headingList.length; k++)
       {
-        // Use just first 40 characters, don't add "...",
-        //  and replace whitespace with "_" and strip non-word characters
-        text = "#" + ConvertToCDATAString(TruncateStringAtWordEnd(text, 40, false));
-        // Append "_" to any name already in the list
-        while (linkMenulist.getElementsByAttribute("label", text).length)
-          text += "_";
-        linkMenulist.appendItem(text);
+        var heading = headingList.item(k);
 
-        // Save nodes in an array so we can create anchor node under it later
-        headingsArray[NamedAnchorCount++] = heading;
+        // Skip headings that already have a named anchor as their first child
+        //  (this may miss nearby anchors, but at least we don't insert another
+        //   under the same heading)
+        var child = heading.firstChild;
+        if (child && child.nodeName == "A" && child.name && (child.name.length>0))
+          continue;
+
+        var range = editor.document.createRange();
+        range.setStart(heading,0);
+        var lastChildIndex = heading.childNodes.length;
+        range.setEnd(heading,lastChildIndex);
+        var text = range.toString();
+        if (text)
+        {
+          // Use just first 40 characters, don't add "...",
+          //  and replace whitespace with "_" and strip non-word characters
+          text = "#" + ConvertToCDATAString(TruncateStringAtWordEnd(text, 40, false));
+          // Append "_" to any name already in the list
+          while (linkMenulist.getElementsByAttribute("label", text).length)
+            text += "_";
+          linkMenulist.appendItem(text);
+
+          // Save nodes in an array so we can create anchor node under it later
+          headingsArray[NamedAnchorCount++] = heading;
+        }
       }
     }
-  }
-  if (!linkMenulist.firstChild.hasChildNodes()) 
-  {
-    var item = linkMenulist.appendItem(GetString("NoNamedAnchorsOrHeadings"));
-    item.setAttribute("disabled", "true");
-  }
+    if (!linkMenulist.firstChild.hasChildNodes()) 
+    {
+      var item = linkMenulist.appendItem(GetString("NoNamedAnchorsOrHeadings"));
+      item.setAttribute("disabled", "true");
+    }
+  } catch (e) {}
 }
 
 // Shared by Image and Link dialogs for the "Choose" button for links
