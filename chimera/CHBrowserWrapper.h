@@ -95,6 +95,8 @@
 - (void)onLocationChange:(NSURL*)url;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;
+- (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;
+- (void)onHideTooltip;
 
 // NSBrowserContainer messages
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type;
