@@ -39,9 +39,6 @@ endif
 
 CSRCS		+= prefapi.c
 
-include $(DEPTH)/config/rules.mk
-
-INCLUDES	+= -I$(DEPTH)/cmd/xfe/icons -Iunix
 
 GARBAGE		+= unix/jsbuffer.h
 
@@ -81,13 +78,47 @@ CONFIG_FILES	+= \
 		  unix/unix.js \
 		  $(NULL)
 
+HEADER_DEST_DIR = prefnames
+# figure out what the headers are (including paths)
+CONFIG_FILE_HEADERS = $(notdir $(CONFIG_FILES:%.js=%.h))
+
+# strip out the path and add the dest and pref_ prefix
+CONFIG_FILE_EXPORTS = $(addprefix $(HEADER_DEST_DIR)/pref_,$(CONFIG_FILE_HEADERS))
+
+EXPORTS += $(CONFIG_FILE_EXPORTS)
+
+include $(DEPTH)/config/rules.mk
+
+INCLUDES	+= -I$(DEPTH)/cmd/xfe/icons -Iunix
+
 $(LIBRARY): $(OBJS)
 
+
 unix/unixpref.c: unix/jsbuffer.h
- 
+
+
 unix/jsbuffer.h: Makefile $(CONFIG_FILES)
 	@echo "/* This is an automatically generated file */" > $@
 	@echo >> $@
 	@echo "static char* pref_init_buffer = " >> $@
 	@cat $(CONFIG_FILES) | sed 's/\\/\\\\/g' | sed 's/\\r/\\n/' | sed 's/\"/\\\"/g' | sed 's/^M//g' | sed 's/^/"/' | sed 's/$$/\\n"/' >> $@
 	@echo \; >> $@
+
+$(HEADER_DEST_DIR):
+	mkdir $(HEADER_DEST_DIR)
+
+# these rules are ugly because we have already stripped out
+# path of the source .js file
+# (i.e. we've lost the file.h -> sourcedir/source.h mapping)
+
+# we have to make seperate rules for each subdirectory to appease gmake
+# (if anyone knows how to do this more cleanly, feel free)
+
+$(HEADER_DEST_DIR)/pref_%.h: init/%.js $(HEADER_DEST_DIR)
+	$(PERL) prefheader.pl $< > $@
+
+$(HEADER_DEST_DIR)/pref_%.h: unix/%.js $(HEADER_DEST_DIR)
+	$(PERL) prefheader.pl $< > $@
+
+$(HEADER_DEST_DIR)/pref_%.h: %.js 	$(HEADER_DEST_DIR)
+	$(PERL) prefheader.pl $< > $@
