@@ -49,7 +49,10 @@ function InspectorApp_initialize()
 
 function InspectorApp() // implements inIViewerPaneContainer
 {
-  this.mInstallURL = this.getSpecialDirectory(kInstallDirId).URL;
+  // XXX HACK nsIFile.URL not implemented on unix and mac
+  this.mInstallURL = "file://"+this.getSpecialDirectory(kInstallDirId).path+'/';
+  //this.mInstallURL = this.getSpecialDirectory(kInstallDirId).URL;
+
   kHistoryURL = this.prependBaseURL(kHistoryURL);
   kViewerRegURL = this.prependBaseURL(kViewerRegURL);
   kSearchRegURL = this.prependBaseURL(kSearchRegURL);
