@@ -1438,7 +1438,7 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             nsIURI* url = nsnull;
             nsAutoString absURL;
 #ifdef NECKO    // we need to be passed the nsILoadGroup here
-            rv = NS_NewURI(&url, absURL/*, group*/);
+            rv = NS_NewURI(&url, src, mDocumentBaseURL/*, group*/);
 #else
             nsILoadGroup* LoadGroup;
 
