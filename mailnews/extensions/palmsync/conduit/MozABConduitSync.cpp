@@ -283,7 +283,7 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
     CPString ** mozABNameList = NULL; // freed by MSCOM/Mozilla
     CPString ** mozABUrlList = NULL; // freed by MSCOM/Mozilla
     BOOL * mozDirFlagsList = NULL; // freed by MSCOM/Mozilla
-    BOOL neverDidPalmSyncBefore; // 1st time palm sync?
+    BOOL neverDidPalmSyncBefore = TRUE; // 1st time palm sync?
     DWORD mozABIndex;
 
     retval = sync->m_dbHH->OpenDB(FALSE);
