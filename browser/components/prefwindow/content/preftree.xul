@@ -85,6 +85,12 @@
       <treechildren id="advancedChildren">
         <treeitem>
           <treerow>
+            <treecell url="chrome://browser/content/pref/pref-popups.xul" label="&popups.label;"/>
+          </treerow>
+        </treeitem>
+
+        <treeitem>
+          <treerow>
             <treecell url="chrome://browser/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
           </treerow>
         </treeitem>

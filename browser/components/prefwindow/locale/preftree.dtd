@@ -9,5 +9,6 @@
 <!ENTITY privacy.label "Privacy">
 <!ENTITY advance.label "Advanced">
 <!ENTITY connection.label "Connection">
-<!ENTITY scriptsAndWindows.label "Scripts &amp; Windows">
+<!ENTITY popups.label "Popup Windows">
+<!ENTITY scriptsAndWindows.label "Javascript Settings">
 <!ENTITY tabs.label "Tabbed Browsing">
