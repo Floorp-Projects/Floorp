@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.37 $ 
-# $Date: 2002/05/01 02:06:26 $ 
+# $Revision: 1.38 $ 
+# $Date: 2002/05/02 01:52:33 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -503,7 +503,10 @@ sub event_times_vec {
 sub status_table_legend {
   my ($out)='';
 
+  my $print_legend = BuildStatus::TinderboxPrintLegend();
+
 # print all the possible links which can be included in a build
+# Much of this is Mozilla.org specific.
 
 $out .=<<EOF;
         <td align=right valign=top>
@@ -513,17 +516,14 @@ $out .=<<EOF;
 		<td align=left>Cell Links</td>
 	</tr></thead>
               <tr><td align=center><TT>l</TT></td>
-                  <td>= Show Brief Build Log</td></tr>
+                  <td>= Brief Build Log</td></tr>
               <tr><td align=center><TT>L</TT></td>
-                  <td>= Show Full Build Log</td></tr>
+                  <td>= Full Build Log</td></tr>
               <tr><td align=center><TT>C</TT></td>
-                  <td>= Show Builds new Contents</td></tr>
+                  <td>= Builds new Contents</td></tr>
               <tr><td align=center><TT>B</TT></td>
                   <td>= Get Binaries</td></tr>
-              <tr><td align=center><TT>Lk:XXX</TT></td>
-                  <td>=  (bytes leaked)</td></tr>
-              <tr><td align=center><TT>Bl:XXX</TT></td>
-                  <td>=  (bytes allocated, bloat)</td></tr>
+                      $print_legend
 	</table>
         </td>
 EOF
@@ -560,7 +560,7 @@ $out .=<<EOF;
         <td align=right valign=top>
 	<table $TinderDB::LEGEND_BORDER>
 		<thead>
-		<tr><td align=center>Build Cell Colors</td></tr>
+		<tr><td align=center>Build State Cell Colors</td></tr>
 		</thead>
 $state_rows
 	</table>
@@ -721,25 +721,35 @@ sub status_table_header {
       $num_lines++;
     }
 
-    $buildname =~ s/Clobber/Clbr/g;
-    $buildname =~ s/Depend/Dep/g;    
-
     my $title = "Build Status Buildname: $buildname";
+
+    my ($bg) = BuildStatus::status2html_colors($latest_status);
+    my ($background) = BuildStatus::status2header_background($latest_status);
+    if ($background) {
+        $background = "background='$background'";
+        $buildname = (
+                      "<font color=white>".
+                      $buildname.
+                      "</font>"
+                      );
+    }
 
     my $link = HTMLPopUp::Link(
                                "windowtxt"=>$txt,
                                "windowtitle" => $title,
-                               "linktxt"=>$buildname,
+                               "linktxt"=> (
+                                            $fontcolor_end.
+                                            $buildname.
+                                            $fontcolor_end
+                                            ),
                                "windowheight" => (25 * $num_lines)+100,
                                "href"=>"",
                          );
 
-    my $font_face = "<font face='Arial,Helvetica' size=-1>";
-
-    my ($bg) = BuildStatus::status2html_colors($latest_status);
-    my ($header) = ("\t<th rowspan=1 bgcolor=$bg>".
-                    $font_face.
-                    "$link</font></th>\n");
+    my ($header) = ("\t<th rowspan=1 bgcolor=$bg $background>".
+                    "<font face='Arial,Helvetica' size=-1>".
+                    $link.
+                    "</font></th>\n");
     
     if (
         ($latest_status ne 'success') &&
@@ -898,6 +908,10 @@ sub apply_db_updates {
       $record->{'deadtime'} = ( $record->{'starttime'} - 
                                 $previous_rec->{'endtime'} );
 
+      # fix for mozilla.org issues
+
+      $record->{'deadtime'} = max( 0, $record->{'deadtime'} );
+
       $record->{'endtime'} = $record->{'timenow'};
 
       # construct text to be displayed to users interested in this cell
@@ -915,7 +929,7 @@ sub apply_db_updates {
       $info .= ("runtime: ".
                 sprintf("%.2f", ($record->{'runtime'}/60)).
                 " (minutes)<br>");
-      if ($record->{'deadtime'} > 0) {
+      if ($record->{'deadtime'}) {
         $info .= ("deadtime: ".
                   sprintf("%.2f", ($record->{'deadtime'}/60)).
                   " (minutes)<br>");
