@@ -1708,7 +1708,7 @@ Rights Reserved.
                   observes="button_print" oncommand="goDoCommand('cmd_print')" tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu" onpopupshowing="goUpdateCommand('cmd_printpreview');">
           <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
-          <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="cmd_printpreview"/>
+          <menuitem id="printPreviewMenuItemToolbar" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="cmd_printpreview"/>
         </menupopup>
       </toolbarbutton>
       <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;" tooltiptext="&stopButton.tooltip;" command="cmd_stop"/>

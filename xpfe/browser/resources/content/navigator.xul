@@ -215,7 +215,7 @@ Contributor(s):
         <menupopup id="printMenu">
           <menuitem id="printMenuItemToolbar" label="&printCmd.label;" accesskey="&printCmd.accesskey;"
                     default="true" oncommand="NSPrint()"/>
-          <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"
+          <menuitem id="printPreviewMenuItemToolbar" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"
                     oncommand="setTimeout(BrowserPrintPreview, 0);"/>
         </menupopup>
       </toolbarbutton>
