@@ -566,12 +566,21 @@ nsHttpChannel::ProcessNormal()
     // as well as Content-Encoding: gzip, which is completely wrong.  In
     // this case, we choose to ignore the rogue Content-Encoding header. We
     // must do this early on so as to prevent it from being seen up stream.
+    // The same problem exists for Content-Encoding: compress in default
+    // Apache installs.
     const char *encoding = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
     if (encoding && PL_strcasestr(encoding, "gzip") && (
         !PL_strcmp(mResponseHead->ContentType(), APPLICATION_GZIP) ||
-        !PL_strcmp(mResponseHead->ContentType(), APPLICATION_GZIP2))) {
+        !PL_strcmp(mResponseHead->ContentType(), APPLICATION_GZIP2) ||
+        !PL_strcmp(mResponseHead->ContentType(), APPLICATION_GZIP3))) {
         // clear the Content-Encoding header
         mResponseHead->SetHeader(nsHttp::Content_Encoding, nsnull); 
+    }
+    else if (encoding && PL_strcasestr(encoding, "compress") && (
+             !PL_strcmp(mResponseHead->ContentType(), APPLICATION_COMPRESS) ||
+             !PL_strcmp(mResponseHead->ContentType(), APPLICATION_COMPRESS2))) {
+        // clear the Content-Encoding header
+        mResponseHead->SetHeader(nsHttp::Content_Encoding, nsnull);
     }
 
     // this must be called before firing OnStartRequest, since http clients,
