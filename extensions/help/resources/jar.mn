@@ -4,7 +4,6 @@ help.jar:
         content/help/help.js                            (content/help.js)
         content/help/contents.rdf                       (content/contents.rdf)
         content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
-        content/help/test.xul                           (content/test.xul)
         content/help/helpContextOverlay.xul             (content/helpContextOverlay.xul)
 
 en-US.jar:
