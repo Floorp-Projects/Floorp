@@ -563,7 +563,7 @@ DEPENDENT_LIBS = $(filter-out %_s$(DLL_SUFFIX), $(patsubst -l%,$(LIB_PREFIX)%$(D
 endif
 
 ifneq (,$(strip $(DEPENDENT_LIBS)))
-DEFINES += -DDEPENDENT_LIBS="$(foreach f,$(DEPENDENT_LIBS),\"${f}\",)"
+CXXFLAGS += -DDEPENDENT_LIBS="$(foreach f,$(DEPENDENT_LIBS),\"${f}\",)"
 endif
 endif
 endif
