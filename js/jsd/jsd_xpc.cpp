@@ -482,11 +482,11 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
         {
             /* tell the user this script has been destroyed */
 #ifdef CAUTIOUS_SCRIPTHOOK
-            JS_DISABLE_GC(rt);
+            JS_UNKEEP_ATOMS(rt);
 #endif
             hook->OnScriptDestroyed (ds->script);
 #ifdef CAUTIOUS_SCRIPTHOOK
-            JS_ENABLE_GC(rt);
+            JS_KEEP_ATOMS(rt);
 #endif
         }
         /* get next deleted script */
@@ -720,13 +720,13 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
         nsCOMPtr<jsdIScript> script = 
             getter_AddRefs(jsdScript::FromPtr(jsdc, jsdscript));
 #ifdef CAUTIOUS_SCRIPTHOOK
-        JS_DISABLE_GC(rt);
+        JS_UNKEEP_ATOMS(rt);
 #endif
         gJsds->Pause(nsnull);
         hook->OnScriptCreated (script);
         gJsds->UnPause(nsnull);
 #ifdef CAUTIOUS_SCRIPTHOOK
-        JS_ENABLE_GC(rt);
+        JS_KEEP_ATOMS(rt);
 #endif
     } else {
         /* a script is being destroyed.  even if there is no registered hook
@@ -745,14 +745,14 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
             /* if GC *isn't* running, we can tell the user about the script
              * delete now. */
 #ifdef CAUTIOUS_SCRIPTHOOK
-            JS_DISABLE_GC(rt);
+            JS_UNKEEP_ATOMS(rt);
 #endif
                 
             gJsds->Pause(nsnull);
             hook->OnScriptDestroyed (jsdis);
             gJsds->UnPause(nsnull);
 #ifdef CAUTIOUS_SCRIPTHOOK
-            JS_ENABLE_GC(rt);
+            JS_KEEP_ATOMS(rt);
 #endif
         } else {
             /* if a GC *is* running, we've got to wait until it's done before
