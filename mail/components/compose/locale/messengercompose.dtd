@@ -200,6 +200,9 @@
 <!ENTITY attachButton.tooltip "Include an attachment"> 
 <!ENTITY saveButton.tooltip "Save this message"> 
 <!ENTITY throbber.tooltip "Go to the &vendorShortName; home page">
+<!ENTITY cutButton.tooltip              "Cut">
+<!ENTITY copyButton.tooltip             "Copy">
+<!ENTITY pasteButton.tooltip            "Paste">
 
 <!-- Headers -->
 <!ENTITY fromAddr.label "From:">

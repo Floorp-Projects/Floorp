@@ -508,6 +508,9 @@ function ConvertColumnIDToSortType(columnID)
     case "idCol":
       sortKey = nsMsgViewSortType.byId;
       break;
+    case "attachmentCol":
+	    sortKey = nsMsgViewSortType.byAttachments;
+	    break;
     default:
       dump("unsupported sort column: " + columnID + "\n");
       sortKey = 0;
@@ -568,6 +571,9 @@ function ConvertSortTypeToColumnID(sortKey)
     case nsMsgViewSortType.byJunkStatus:
       columnID = "junkStatusCol";
       break;
+	  case nsMsgViewSortType.byAttachments:
+	    columnID = "attachmentCol";
+	    break;
     default:
       dump("unsupported sort key: " + sortKey + "\n");
       columnID = null;

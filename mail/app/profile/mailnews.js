@@ -465,6 +465,14 @@ pref("mailnews.show_send_progress", true); //Will show a progress dialog when sa
 pref("mail.server.default.retainBy", 1);
 pref("mailnews.ui.junk.firstuse", true);
 
+// for manual upgrades of certain UI features.
+// 1 -> 2 is for the thread pane tree landing, to hide the
+// labels column, see msgMail3PaneWindow.js
+// 2 -> 3 is for the junk status column
+// 3 -> 4 is for the sender column
+// 4 -> 5 is for the attachment column
+pref("mailnews.ui.threadpane.version", 1);
+
 //If set to a number greater than 0, msg compose windows will be recycled in order to open them quickly
 pref("mail.compose.max_recycled_windows", 1); 
 

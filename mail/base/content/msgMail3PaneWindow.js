@@ -921,6 +921,7 @@ function AddToSession()
 function InitPanes()
 {
     OnLoadFolderPane();
+    OnLoadThreadPane();
     SetupCommandUpdateHandlers();
 }
 
@@ -962,6 +963,69 @@ function OnLoadFolderPane()
     folderTreeBuilder.addObserver(folderObserver);
     folderTree.addEventListener("click",FolderPaneOnClick,true);
     folderTree.addEventListener("mousedown",TreeOnMouseDown,true);
+}
+
+// builds prior to 12-08-2001 did not have the labels column
+// in the thread pane.  so if a user ran an old build, and then
+// upgraded, they get the new column, and this causes problems.
+// We're trying to avoid a similar problem to bug #96979.
+// to work around this, we hide the column once, using the 
+// "mailnews.ui.threadpane.version" pref.
+function UpgradeThreadPaneUI()
+{
+  var labelCol;
+  var threadPaneUIVersion;
+
+  try {
+
+    threadPaneUIVersion = pref.getIntPref("mailnews.ui.threadpane.version");
+
+    if (threadPaneUIVersion < 5) {
+      var threadTree = document.getElementById("threadTree");        
+      var junkCol = document.getElementById("junkStatusCol");
+      var beforeCol;
+
+      if (threadPaneUIVersion < 4) {
+
+        if (threadPaneUIVersion < 3) {
+          
+          // in thunderbird, we are inserting the junk column just before the 
+          // date column. 
+          var dateCol = document.getElementById("dateCol");
+          threadTree._reorderColumn(junkCol, dateCol, true);
+
+          // hide labels column by default
+          if (threadPaneUIVersion == 1) {
+            labelCol = document.getElementById("labelCol");
+            labelCol.setAttribute("hidden", "true");
+          }
+        }
+
+        var senderCol = document.getElementById("senderCol");
+        var recipientCol = document.getElementById("recipientCol");    
+        threadTree._reorderColumn(recipientCol, junkCol, true);        
+        threadTree._reorderColumn(senderCol, recipientCol, true);
+
+      } // version 4 upgrades
+
+      // version 5 adds a new column called attachments
+      var attachmentCol = document.getElementById("attachmentCol");
+      var subjectCol = document.getElementById("subjectCol");
+      
+      threadTree._reorderColumn(attachmentCol, subjectCol, true);
+
+      pref.setIntPref("mailnews.ui.threadpane.version", 5);
+
+    } // version 5 upgrades
+	}
+  catch (ex) {
+    dump("UpgradeThreadPane: ex = " + ex + "\n");
+  }
+}
+
+function OnLoadThreadPane()
+{
+    UpgradeThreadPaneUI();
 }
 
 function GetFolderDatasource()

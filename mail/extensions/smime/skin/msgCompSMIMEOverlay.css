@@ -44,19 +44,19 @@
 
 #button-security {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 160px 32px 128px);
+  -moz-image-region: rect(0px 150px 30px 120px);
 }
 
 #button-security[buttonover] {
-  -moz-image-region: rect(32px 160px 64px 128px);
+  -moz-image-region: rect(30px 150px 60px 120px);
 } 
 
 #button-security[buttondown] {
-  -moz-image-region: rect(32px 160px 64px 128px);
+  -moz-image-region: rect(30px 150px 60px 120px);
 } 
 
 #button-security[disabled] {
-  -moz-image-region: rect(64px 160px 96px 128px) !important;
+  -moz-image-region: rect(60px 150px 90px 120px) !important;
 } 
 
 toolbar[iconsize="small"] #button-security {

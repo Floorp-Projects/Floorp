@@ -127,6 +127,8 @@
 <!ENTITY sortByDateCmd.accesskey "e">
 <!ENTITY sortByFlagCmd.label "Flag">
 <!ENTITY sortByFlagCmd.accesskey "F">
+<!ENTITY sortByAttachmentsCmd.label "Attachments">
+<!ENTITY sortByAttachmentsCmd.accesskey "A">
 <!ENTITY sortByPriorityCmd.label "Priority">
 <!ENTITY sortByPriorityCmd.accesskey "P">
 <!ENTITY sortBySizeCmd.label "Size">
@@ -494,6 +496,7 @@
 <!ENTITY flagColumn.label "Flag">
 <!ENTITY locationColumn.label "Location">
 <!ENTITY idColumn.label "Order Received">
+<!ENTITY attachmentColumn.label "Attachments">
 
 <!-- Thread Pane Tooltips -->
 <!ENTITY columnChooser.tooltip "Click to select columns to display">
@@ -513,6 +516,7 @@
 <!ENTITY flagColumn.tooltip "Click to sort by flag">
 <!ENTITY locationColumn.tooltip "Click to sort by location">
 <!ENTITY idColumn.tooltip "Click to sort by order received">
+<!ENTITY attachmentColumn.tooltip "Click to sort by attachments">
 
 <!-- Thread Pane Context Menu -->
 <!ENTITY contextOpenNewWindow.label "Open Message in New Window">

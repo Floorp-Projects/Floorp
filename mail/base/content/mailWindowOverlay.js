@@ -246,6 +246,7 @@ function InitViewSortByMenu()
     setSortByMenuItemCheckState("sortByJunkStatusMenuitem", (sortType == nsMsgViewSortType.byJunkStatus));
     setSortByMenuItemCheckState("sortBySenderMenuitem", (sortType == nsMsgViewSortType.byAuthor));
     setSortByMenuItemCheckState("sortByRecipientMenuitem", (sortType == nsMsgViewSortType.byRecipient)); 
+    setSortByMenuItemCheckState("sortByAttachmentsMenuitem", (sortType == nsMsgViewSortType.byAttachments)); 	
 
     var sortOrder = gDBView.sortOrder;
 
@@ -1695,7 +1696,6 @@ function SetUpToolbarButtons(uri)
     // pop, and news.  for now, just tweak it based on if it is news or not.
     var forNews = isNewsURI(uri);
 
-    if(!gMarkButton) gMarkButton = document.getElementById("button-mark");
     if(!gDeleteButton) gDeleteButton = document.getElementById("button-delete");
 
     var buttonToHide = null;
@@ -1703,10 +1703,8 @@ function SetUpToolbarButtons(uri)
 
     if (forNews) {
         buttonToHide = gDeleteButton;
-        buttonToShow = gMarkButton;
     }
     else {
-        buttonToHide = gMarkButton;
         buttonToShow = gDeleteButton;
     }
 
