@@ -248,35 +248,21 @@
                <box align="center">
                   <checkbox id="only-completed-checkbox" label="&calendar.unifinder.hidecompletedtodos.label;" oncommand="toDoUnifinderRefesh( event )"/>
                </box>
-               <listbox flex="1" id="unifinder-todo-listbox">
+               <listbox flex="1" id="unifinder-todo-listbox" seltype="single">
                   <listhead>
                      <listheader label="&calendar.unifinder.listbox.done.label;"/>
-                     <!--<listheader label="&calendar.unifinder.listbox.priority.label;"/>-->
                      <listheader label="&calendar.unifinder.listbox.title.label;"/>
                      <listheader label="&calendar.unifinder.listbox.duedate.label;"/>
                   </listhead>
                   <listcols>
                      <listcol flex="1"/>
-                     <!--<listcol flex="2"/>-->
                      <listcol flex="5"/>
                      <listcol flex="3"/>
                   </listcols>
-                  <listitem collapsed="true" seltype="single" name="sample-todo-listitem" allowevents="true"
-                     ondblclick="unifinderDoubleClickToDo( event )" onclick="unifinderClickToDo( event )">
+                  <listitem allowevents="true" collapsed="true" name="sample-todo-listitem" ondblclick="unifinderDoubleClickToDo( event )">
                      <listcell name="checkbox-listcell">
                         <checkbox name="firstcheckbox" oncommand="checkboxClick( event )"/>
                      </listcell>
-                     <!--<listcell name="priority-listcell">
-                     <menulist crop="none">
-                        <menupopup>
-                           <menuitem label="1" value="1" />
-                           <menuitem label="2" value="2"/>
-                           <menuitem label="3" value="3"/>
-                           <menuitem label="4" value="4" />
-                           <menuitem label="5" value="5" />
-                        </menupopup>
-                     </menulist>
-                     </listcell>-->
                      <listcell name="title-listcell" label=""/>
                      <listcell name="due-date-listcell" label=""/>
                   </listitem>

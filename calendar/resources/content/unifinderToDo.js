@@ -128,10 +128,6 @@ function toDoUnifinderRefesh()
 
 function unifinderClickToDo( event )
 {
-   var ThisToDo = event.currentTarget.toDo;
-
-   //the following line causes the selection to NOT happen for some reason.
-   event.currentTarget.parentNode.selectItem( event.currentTarget );
 }
 
 /**
