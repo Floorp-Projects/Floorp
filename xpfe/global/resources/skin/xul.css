@@ -179,11 +179,11 @@ treecell {
 } 
 
 treeitem > treechildren {
-  visibility: collapse;
+  display: none;
 }
 
 treeitem[open="true"] > treechildren {
-  visibility: visible;
+  display: table-row-group;
 }
 
 treecol {
