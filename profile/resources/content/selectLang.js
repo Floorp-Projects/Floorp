@@ -116,7 +116,7 @@ function onAccept()
 
   if (selectedItem) {
     var langName = selectedItem.getAttribute("value");
-    var langStore = opener.document.getElementById("ProfileLanguage");
+    var langStore = opener.document.getElementById("profileLanguage");
 
     if (langStore)
       langStore.setAttribute("data", langName);
@@ -128,7 +128,7 @@ function onAccept()
 
   if (selectedItem) {
     var regionName = selectedItem.getAttribute("value");
-    var regionStore = opener.document.getElementById("ProfileRegion");
+    var regionStore = opener.document.getElementById("profileRegion");
 
     if (regionStore)
       regionStore.setAttribute("data", regionName);
