@@ -32,7 +32,7 @@
 #define VIEW_SHOW_UNREAD 0x4
 #define VIEW_SHOW_WATCHED 0x8
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(gISupportsIID, NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
@@ -55,16 +55,16 @@ nsMessageViewDataSource::QueryInterface(REFNSIID iid, void** result)
   *result = nsnull;
   if (iid.Equals(nsIRDFCompositeDataSource::GetIID()) ||
     iid.Equals(nsIRDFDataSource::GetIID()) ||
-      iid.Equals(kISupportsIID))
+      iid.Equals(gISupportsIID))
   {
     *result = NS_STATIC_CAST(nsIRDFCompositeDataSource*, this);
-    AddRef();
+    NS_ADDREF(this);
     return NS_OK;
   }
 	else if(iid.Equals(nsIMessageView::GetIID()))
 	{
     *result = NS_STATIC_CAST(nsIMessageView*, this);
-    AddRef();
+    NS_ADDREF(this);
     return NS_OK;
 	}
   return NS_NOINTERFACE;
@@ -79,10 +79,10 @@ nsMessageViewDataSource::nsMessageViewDataSource(void)
 	mInitialized = PR_FALSE;
 	mShowThreads = PR_TRUE;
 
-	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-											nsIRDFService::GetIID(),
-                                            (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
-
+	nsServiceManager::GetService(kRDFServiceCID,
+                               nsIRDFService::GetIID(),
+                               (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
+  
 }
 
 nsMessageViewDataSource::~nsMessageViewDataSource (void)
@@ -229,12 +229,12 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 	{
 		if(NS_SUCCEEDED(property->EqualsResource(kNC_MessageChild, &equal)) && equal)
 		{
-			nsCOMPtr<nsIMsgFolder> folder;
-			rv = message->GetMsgFolder(getter_AddRefs(folder));
+			nsCOMPtr<nsIMsgFolder> msgfolder;
+			rv = message->GetMsgFolder(getter_AddRefs(msgfolder));
 			if(NS_SUCCEEDED(rv))
 			{
 				nsCOMPtr<nsIMsgThread> thread;
-				rv =folder->GetThreadForMessage(message, getter_AddRefs(thread));
+				rv = msgfolder->GetThreadForMessage(message, getter_AddRefs(thread));
 				if(NS_SUCCEEDED(rv))
 				{
 					nsCOMPtr<nsIEnumerator> messages;
@@ -242,7 +242,7 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 					message->GetMessageKey(&msgKey);
 					thread->EnumerateMessages(msgKey, getter_AddRefs(messages));
 					nsCOMPtr<nsMessageFromMsgHdrEnumerator> converter;
-					NS_NewMessageFromMsgHdrEnumerator(messages, folder, getter_AddRefs(converter));
+					NS_NewMessageFromMsgHdrEnumerator(messages, msgfolder, getter_AddRefs(converter));
 					nsMessageViewMessageEnumerator * messageEnumerator = 
 						new nsMessageViewMessageEnumerator(converter, mShowStatus);
 					if(!messageEnumerator)
