@@ -116,34 +116,62 @@ function processFile(f, fname, inputdir, out) {
 	  // match the beginning of the function
 	  // NB we also match functions without a comment!
 	  // if we have two comments one after another only the last one will be taken
-	  m = s.match(/^\s*function\s+((\w+)|(\w+)(\s+))\(([^)]*)\)/);
+	  m = s.match(/^\s*function\s+((\w+)|(\w+)(\s+))\(([^)]*)\)/); 
 	  if (m != null)
 	  {
-        // Found a function start
-		var htmlText = processFunction(m[1], m[2], comment);
+			// Found a function start
+			var htmlText = processFunction(m[1], m[5], comment); // sjm changed from 2nd to 5th arg
 
-		// Save the text in a global variable, so we
-		// can write out a table of contents first.
-		functionDocArray[functionDocArray.length] = 
-				{name:m[1], text:htmlText};
-			
-		// Store the function also in the indexFunctionArray 
-		// so we can have a seperate file with the function table of contents
-		if (indexFunctionArray[m[1]]) {
- 			//  print("ERROR: function: " + m[1] + " is defined more than once!");
-			// Allow multiple files for a function
-			  with (indexFunctionArray[m[1]]) {
-			    filename = filename + "|" + fname;
-				// print("filename = " + filename);
-			  }
-		} else {
-			  indexFunctionArray[m[1]] = 
-					{filename:fname};
-        }
-		//reset comment 
-		comment = "";
-      }  
-	  firstLine = false;
+			// Save the text in a global variable, so we
+			// can write out a table of contents first.
+			functionDocArray[functionDocArray.length] = {name:m[1], text:htmlText};
+
+			// Store the function also in the indexFunctionArray 
+			// so we can have a seperate file with the function table of contents
+			if (indexFunctionArray[m[1]]) {
+				//  print("ERROR: function: " + m[1] + " is defined more than once!");
+				// Allow multiple files for a function
+				with (indexFunctionArray[m[1]]) {
+					filename = filename + "|" + fname;
+					// print("filename = " + filename);
+				}
+			} 
+			else {
+				indexFunctionArray[m[1]] = {filename:fname};
+			}
+			//reset comment 
+			comment = "";
+		}  
+		// match a method being bound to a prototype
+	  m = s.match(/^\s*(\w*)\.prototype\.(\w*)\s*=\s*function\s*\(([^)]*)\)/);
+	  if (m != null)
+	  {
+			// Found a method being bound to a prototype. 
+			var htmlText = processPrototypeMethod(m[1], m[2], m[3], comment);
+
+			// Save the text in a global variable, so we
+			// can write out a table of contents first.
+			functionDocArray[functionDocArray.length] = {name:m[1]+".prototype."+m[2], text:htmlText};
+
+			// Store the function also in the indexFunctionArray 
+			// so we can have a seperate file with the function table of contents
+			if (indexFunctionArray[m[1]]) {
+				//  print("ERROR: function: " + m[1] + " is defined more than once!");
+				// Allow multiple files for a function
+				with (indexFunctionArray[m[1]]) {
+					filename = filename + "|" + fname;
+					// print("filename = " + filename);
+				}
+			} 
+			else {
+				indexFunctionArray[m[1]] = {filename:fname};
+			}
+			//reset comment 
+			comment = "";
+		}  
+		
+		
+		firstLine = false;
 	}
 
 	// Write table of contents.
@@ -186,7 +214,24 @@ function processFunction(name, args, comment) {
 		"<P><BR><BR>";
 }
 
-
+/**
+ * Process a method being bound to a prototype. 
+ * @param proto the name of the prototype
+ * @param name the name of the function
+ * @param args the args of the function as a single string
+ * @param comment the text of the comment
+ * @return a string for the HTML text of the documentation
+ */
+function processPrototypeMethod(proto, name, args, comment) {
+   if (debug)
+    print("Processing " + proto + ".prototype." + name + " " + args + " " + comment);
+	return "<H2> Method " + proto + ".prototype." + name + "</H2>" +
+		"<PRE>" +
+		proto + ".prototype." + name + " = function(" + args + ")" +
+		"</PRE>" +
+		processComment(comment,0,name) +
+		"<P><BR><BR>";
+}
 
 
 /**
