@@ -24,7 +24,6 @@
    -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/toolsWindowOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -100,6 +99,7 @@
     <key                          key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel,shift"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomResetCmd.commandkey;"    command="cmd_textZoomReset"   modifiers="accel"/>
+    <key id="key_history" key="&historyCmd.commandkey;" modifiers="accel" command="cmd_history"/>    
     <keyset id="navigationKeys"/>  
     <keyset id="tasksKeys"/>
   </keyset>
@@ -175,6 +175,7 @@
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="cmd_textZoomReset"   oncommand="ZoomManager.prototype.getInstance().reset();"/>
     <commandset id="tasksCommands"/>
+    <command id="cmd_history" oncommand="toHistory();"/>
   </commandset>
 
   <broadcasterset id="navBroadcasters">
@@ -469,9 +470,15 @@
       </menupopup>
     </menu>
       
-  <menu id="tasksMenu"/> 
-  <menu id="menu_Help"
-        label="&helpMenu.label;"
+   <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
+    <menupopup id="taskPopup" onpopupshowing="javaItemEnabling();">
+      <menuitem id="downloadmgr" label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
+      <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
+      <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
+      <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" key="key_history" command="cmd_history"/>
+    </menupopup>
+  </menu>
+  <menu label="&helpMenu.label;"
         accesskey="&helpMenu.accesskey;">
     <menupopup>
       <menuitem accesskey="&releaseCmd.accesskey;"

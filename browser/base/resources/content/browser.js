@@ -1035,34 +1035,10 @@ function BrowserOpenFileWindow()
   }
 }
 
-// Set up a lame hack to avoid opening two bookmarks.
-// Could otherwise happen with two Ctrl-B's in a row.
-var gDisableBookmarks = false;
-function enableBookmarks()
-{
-  gDisableBookmarks = false;
-}
-
 function BrowserEditBookmarks()
 {
-  // Use a single sidebar bookmarks dialog
-  var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
-                                .getService(Components.interfaces.nsIWindowMediator);
-
-  var bookmarksWindow = windowManager.getMostRecentWindow("bookmarks:manager");
-
-  if (bookmarksWindow) {
-    bookmarksWindow.focus();
-  } else {
-    // while disabled, don't open new bookmarks window
-    if (!gDisableBookmarks) {
-      gDisableBookmarks = true;
-
-      open("chrome://communicator/content/bookmarks/bookmarks.xul", "_blank",
-        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
-      setTimeout(enableBookmarks, 2000);
-    }
-  }
+  openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", "Bookmarks",
+             "chrome,all,dialog=no");
 }
 
 function BrowserCloseTabOrWindow()
@@ -1826,4 +1802,78 @@ function setTextZoomOther()
     zoom.textZoom = o.value;
 }
 
+function toHistory()
+{
+  openDialog("chrome://communicator/content/history/history.xul", "History",
+             "chrome,all,dialog=no" );
+}
+
+function toDownloadManager()
+{
+  var dlmgr = Components.classes['@mozilla.org/download-manager;1'].getService();
+  dlmgr = dlmgr.QueryInterface(Components.interfaces.nsIDownloadManager);
+  dlmgr.open(window);
+}
+  
+function toJavaScriptConsole()
+{
+    toOpenWindowByType("global:console", "chrome://global/content/console.xul");
+}
+
+function javaItemEnabling()
+{
+    var element = document.getElementById("java");
+    if (navigator.javaEnabled())
+      element.removeAttribute("disabled");
+    else
+      element.setAttribute("disabled", "true");
+}
+            
+function toJavaConsole()
+{
+    var jvmMgr = Components.classes['@mozilla.org/oji/jvm-mgr;1']
+                            .getService(Components.interfaces.nsIJVMManager)
+    jvmMgr.showJavaConsole();
+}
+
+function toOpenWindowByType( inType, uri )
+{
+  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+
+  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+
+  var topWindow = windowManagerInterface.getMostRecentWindow( inType );
+  
+  if ( topWindow )
+    topWindow.focus();
+  else
+    window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+}
+
+function OpenBrowserWindow()
+{
+  var charsetArg = new String();
+  var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser'];
+  handler = handler.getService();
+  handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
+  var startpage = handler.defaultArgs;
+  const url = "chrome://browser/content/browser.xul";
+  var wintype = document.firstChild.getAttribute('windowtype');
+
+  // if and only if the current window is a browser window and it has a document with a character
+  // set, then extract the current charset menu setting from the current document and use it to
+  // initialize the new browser window...
+  if (window && (wintype == "navigator:browser") && window._content && window._content.document)
+  {
+    var DocCharset = window._content.document.characterSet;
+    charsetArg = "charset="+DocCharset;
+
+    //we should "inherit" the charset menu setting in a new window
+    window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage, charsetArg);
+  }
+  else // forget about the charset information.
+  {
+    window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
+  }
+}
 
