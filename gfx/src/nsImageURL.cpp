@@ -30,7 +30,7 @@
 #include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsString.h"
-#include "il_strm.h"
+
 
 
 static NS_DEFINE_IID(kIImageURLIID, IL_IURL_IID);
