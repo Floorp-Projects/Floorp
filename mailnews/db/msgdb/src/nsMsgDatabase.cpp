@@ -1407,6 +1407,24 @@ nsresult	nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
 	return rv;
 }
 
+nsresult nsMsgDatabase::SetMsgHdrFlag(nsIMsgDBHdr *msgHdr, PRBool set, PRUint32 flag, nsIDBChangeListener *instigator)
+{
+	nsresult rv;
+	PRUint32 oldFlags;
+	msgHdr->GetFlags(&oldFlags);
+
+	SetHdrFlag(msgHdr, set, flag);
+
+    PRUint32 flags;
+    (void)msgHdr->GetFlags(&flags);
+	PRUint32 key;
+	rv = msgHdr->GetMessageKey(&key);
+	if(NS_SUCCEEDED(rv))
+		NotifyKeyChangeAll(key, oldFlags, flags, instigator);
+
+	return rv;
+}
+
 // Helper routine - lowest level of flag setting - returns PR_TRUE if flags change,
 // PR_FALSE otherwise.
 PRBool nsMsgDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags flag)
@@ -1456,6 +1474,20 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	}
 	return rv;
 }
+
+NS_IMETHODIMP nsMsgDatabase::MarkHdrReplied(nsIMsgDBHdr *msgHdr, PRBool bReplied,
+                         nsIDBChangeListener *instigator)
+{
+	return SetMsgHdrFlag(msgHdr, bReplied, MSG_FLAG_REPLIED, instigator);
+}
+
+
+NS_IMETHODIMP nsMsgDatabase::MarkHdrMarked(nsIMsgDBHdr *msgHdr, PRBool mark,
+                         nsIDBChangeListener *instigator)
+{
+	return SetMsgHdrFlag(msgHdr, mark, MSG_FLAG_MARKED, instigator);
+}
+
 
 NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 {

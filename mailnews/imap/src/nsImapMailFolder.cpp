@@ -2761,9 +2761,17 @@ nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
 {
 	if (NS_SUCCEEDED(GetDatabase(nsnull)) && mDatabase)
     {
-        mDatabase->MarkRead(msgKey, (flags & kImapMsgSeenFlag) != 0, nsnull);
-        mDatabase->MarkReplied(msgKey, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
-        mDatabase->MarkMarked(msgKey, (flags & kImapMsgFlaggedFlag) != 0, nsnull);
+		nsCOMPtr<nsIMsgDBHdr> dbHdr;
+		nsresult rv;
+		rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(dbHdr));
+
+		if(NS_SUCCEEDED(rv) && dbHdr)
+		{
+
+	        mDatabase->MarkHdrRead(dbHdr, (flags & kImapMsgSeenFlag) != 0, nsnull);
+		    mDatabase->MarkHdrReplied(dbHdr, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
+			mDatabase->MarkHdrMarked(dbHdr, (flags & kImapMsgFlaggedFlag) != 0, nsnull);
+		}
     }
     return NS_OK;
 }

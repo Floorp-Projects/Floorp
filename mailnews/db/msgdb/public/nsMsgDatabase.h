@@ -109,6 +109,12 @@ public:
   NS_IMETHOD MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
                          nsIDBChangeListener *instigator);
 
+  NS_IMETHOD MarkHdrReplied(nsIMsgDBHdr *msgHdr, PRBool bReplied,
+                         nsIDBChangeListener *instigator);
+
+  NS_IMETHOD MarkHdrMarked(nsIMsgDBHdr *msgHdr, PRBool mark,
+                         nsIDBChangeListener *instigator);
+
   // MDN support
   NS_IMETHOD MarkMDNNeeded(nsMsgKey key, PRBool bNeeded,
                            nsIDBChangeListener *instigator);
@@ -281,6 +287,9 @@ protected:
 	// Flag handling routines
 	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
 							  nsIDBChangeListener *instigator = NULL);
+	virtual nsresult SetMsgHdrFlag(nsIMsgDBHdr *msgHdr, PRBool set, PRUint32 flag, 
+								nsIDBChangeListener *instigator);
+
 	virtual PRBool	SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
     virtual PRBool  SetHdrReadFlag(nsIMsgDBHdr *, PRBool pRead);
 	virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags);

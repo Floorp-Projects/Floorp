@@ -91,6 +91,12 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   void MarkHdrRead(in nsIMsgDBHdr msgHdr, in boolean bRead,
                          in nsIDBChangeListener instigator);
 
+  void MarkHdrReplied(in nsIMsgDBHdr msgHdr, in boolean bReplied,
+                         in nsIDBChangeListener instigator);
+
+  void MarkHdrMarked(in nsIMsgDBHdr msgHdr, in boolean mark,
+                         in nsIDBChangeListener instigator);
+
   // MDN support
   void MarkMDNNeeded(in nsMsgKey key, in boolean bNeeded,
                            in nsIDBChangeListener instigator);
