@@ -95,20 +95,19 @@ function InitProxyMenu()
   var networkProxyNo = document.getElementById("network-proxy-no");
   var networkProxyManual = document.getElementById("network-proxy-manual");
   var networkProxyPac = document.getElementById("network-proxy-pac");
-  if (!networkProxyNo || !networkProxyManual || !networkProxyPac)
-    return;
-
-  var networkProxyStatus = [networkProxyNo, networkProxyManual, networkProxyPac];
+  var networkProxyWpad = document.getElementById("network-proxy-wpad");
   var prefService = Components.classes["@mozilla.org/preferences-service;1"];
   prefService = prefService.getService(Components.interfaces.nsIPrefService);
   var prefBranch = prefService.getBranch(null);
 
   var proxyLocked = prefBranch.prefIsLocked("network.proxy.type");
   if (proxyLocked) {
-        networkProxyNo.setAttribute("disabled", "true");
+    networkProxyNo.setAttribute("disabled", "true");
+    networkProxyWpad.setAttribute("disabled", "true");
   }
   else {
-        networkProxyNo.removeAttribute("disabled");
+    networkProxyNo.removeAttribute("disabled");
+    networkProxyWpad.removeAttribute("disabled");
   }
 
   // If no proxy is configured, disable the menuitems.
@@ -145,6 +144,10 @@ function InitProxyMenu()
     networkProxyType = prefBranch.getIntPref("network.proxy.type");
   } catch(e) {}
 
+  // The pref value 3 for network.proxy.type is unused to maintain
+  // backwards compatibility. Treat 3 equally to 0. See bug 115720.
+  var networkProxyStatus = [networkProxyNo, networkProxyManual, networkProxyPac,
+                            networkProxyNo, networkProxyWpad];
   networkProxyStatus[networkProxyType].setAttribute("checked", "true");
 }
 

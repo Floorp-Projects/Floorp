@@ -71,12 +71,14 @@
 <!ENTITY aboutCommPluginsCmd.label			"About Plug-ins">
 <!ENTITY aboutCommPluginsCmd.accesskey			"p">
 
-<!ENTITY direct.label                                   "Online (proxy: none)">
-<!ENTITY direct.accesskey                               "n">
-<!ENTITY manual.label                                   "Online (proxy: manual)">
-<!ENTITY manual.accesskey                               "m">
-<!ENTITY pac.label                                      "Online (proxy: auto)">
-<!ENTITY pac.accesskey                                  "a">
+<!ENTITY direct.label                                   "Online (Proxy: None)">
+<!ENTITY direct.accesskey                               "N">
+<!ENTITY manual.label                                   "Online (Proxy: Manual)">
+<!ENTITY manual.accesskey                               "M">
+<!ENTITY pac.label                                      "Online (Proxy: Auto URL)">
+<!ENTITY pac.accesskey                                  "A">
+<!ENTITY wpad.label                                     "Online (Proxy: Auto Discover)">
+<!ENTITY wpad.accesskey                                 "D">
 
 <!ENTITY proxy.label                                    "Proxy Configuration...">
 <!ENTITY proxy.accesskey                                "C">
