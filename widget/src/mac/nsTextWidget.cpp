@@ -171,8 +171,41 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 							switch (menuItem)
 							{
 //								case cmd_Undo:
-//								case cmd_Cut:	//¥TODO
-//								case cmd_Copy:	//¥TODO
+
+								case cmd_Cut:
+								case cmd_Copy:
+								{
+									PRUint32 startSel = 0, endSel = 0;
+									GetSelection ( &startSel, &endSel );
+									if ( startSel != endSel ) {
+										const Uint32 selectionLen = (endSel - startSel) + 1;
+										
+										// extract out the selection into a different nsString so
+										// we can keep it unicode as long as possible
+										PRUint32 unused = 0;
+										nsString str, selection;
+										GetText ( str, 0, unused );
+										str.Mid ( selection, startSel, (endSel-startSel)+1 );
+										
+										// now |selection| holds the current selection in unicode.
+										// We need to convert it to a c-string for MacOS.
+										auto_ptr<char> cRepOfSelection ( new char[selection.Length() + 1] );
+										selection.ToCString ( cRepOfSelection.get(), selectionLen );
+										
+										// copy it to the scrapMgr
+										::ZeroScrap();
+										::PutScrap ( selectionLen, 'TEXT', cRepOfSelection.get() );
+									
+										// if we're cutting, remove the text from the widget
+										if ( menuItem == cmd_Cut ) {
+											unused = 0;
+											str.Cut ( startSel, selectionLen );
+											SetText ( str, unused );
+										}
+									} // if there is a selection
+									break;
+								}
+									
 								case cmd_Paste:
 								{
 									long scrapOffset;
@@ -197,6 +230,7 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 
 										::HUnlock(scrapH);
 									}
+									::DisposeHandle(scrapH);
 									break;
 								}
 								case cmd_Clear:
@@ -216,7 +250,7 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 						}
 					}
 					break;
-				}
+				} // case NS_MENU_SELECTED
 
 				case NS_GOTFOCUS:
 				{
