@@ -4363,8 +4363,10 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
 
     do {
       selectionNode->GetParentNode(getter_AddRefs(testNode));
-      if (!testNode || testNode == endSelectionNode)
+      if (!testNode || testNode == endSelectionNode) {
+        selectionNode = nsnull;
         break;
+      }
       testNode->GetNextSibling(getter_AddRefs(selectionNode));
       if (selectionNode)
         break;
@@ -4480,11 +4482,13 @@ nsresult nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell, n
   nsCOMPtr<nsICaret> caret;
   aPresShell->GetCaret(getter_AddRefs(caret));
 
-  nsIFrame *focusFrame = nsnull;
-  aPresShell->GetPrimaryFrameFor(aFocusedContent, &focusFrame);
-  
   nsCOMPtr<nsIFrameSelection> frameSelection, docFrameSelection;
-  GetSelection(focusFrame, mPresContext, getter_AddRefs(frameSelection));
+  if (aFocusedContent) {
+    nsIFrame *focusFrame = nsnull;
+    aPresShell->GetPrimaryFrameFor(aFocusedContent, &focusFrame);
+
+    GetSelection(focusFrame, mPresContext, getter_AddRefs(frameSelection));
+  }
   aPresShell->GetFrameSelection(getter_AddRefs(docFrameSelection));
 
   if (docFrameSelection && caret && 
@@ -4519,6 +4523,9 @@ nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
   mPresContext->GetContainer(getter_AddRefs(pcContainer));
   PRInt32 itemType;
   nsCOMPtr<nsIDocShellTreeItem> shellItem(do_QueryInterface(pcContainer));
+  if (!shellItem)
+    return NS_ERROR_FAILURE;
+
   shellItem->GetItemType(&itemType);
 
   if (itemType == nsIDocShellTreeItem::typeChrome) 
@@ -4532,7 +4539,7 @@ nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
 
   // Make caret visible or not, depending on what's appropriate
   if (presShell)
-    SetContentCaretVisible(presShell, mCurrentFocus, *aBrowseWithCaret && gLastFocusedDocument == mDocument);
+    return SetContentCaretVisible(presShell, mCurrentFocus, *aBrowseWithCaret && gLastFocusedDocument == mDocument);
 
   return NS_ERROR_FAILURE;
 }
