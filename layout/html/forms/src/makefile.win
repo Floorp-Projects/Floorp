@@ -20,8 +20,7 @@ IGNORE_MANIFEST=1
 
 LIBRARY_NAME=raptorhtmlforms_s 
 
-DEFINES=-D_IMPL_NS_HTML -I..\..\base\src -I..\..\style\src \
-    -I$(PUBLIC)\dom 
+DEFINES=-D_IMPL_NS_HTML
 MODULE=raptor 
 REQUIRES=xpcom raptor 
 
@@ -36,7 +35,10 @@ CPP_OBJS=.\$(OBJDIR)\nsForm.obj .\$(OBJDIR)\nsInput.obj \
     .\$(OBJDIR)\nsInputPassword.obj .\$(OBJDIR)\nsInputRadio.obj \
     .\$(OBJDIR)\nsInputText.obj 
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
+  -I..\..\base\src -I..\..\style\src \
+  -I..\..\..\base\src \
+  -I$(PUBLIC)\dom 
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -22,8 +22,7 @@ LIBRARY_NAME=raptorhtmldoc_s
 MODULE=raptor 
 REQUIRES=xpcom raptor 
 
-DEFINES=-D_IMPL_NS_HTML -I..\..\base\src -I..\..\forms\src \
-    -I..\..\style\src -I..\..\table\src -I$(PUBLIC)\dom 
+DEFINES=-D_IMPL_NS_HTML
 
 CPPSRCS=nsHTMLContentSink.cpp nsHTMLDocument.cpp 
 
@@ -34,7 +33,10 @@ EXPORTS =		\
  nsIHTMLDocument.h	\
  $(NULL)
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
+  -I..\..\base\src -I..\..\forms\src \
+  -I..\..\style\src -I..\..\table\src -I$(PUBLIC)\dom \
+  -I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \
