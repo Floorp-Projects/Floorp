@@ -76,7 +76,8 @@ private:
 
   void getCertNames(CERTCertList *certList,
                     PRUint32      type, 
-                    nsString&     nameList);
+                    PRUint32     *_count,
+                    PRUnichar  ***_certNameList);
 
   PRUint32 getCertType(CERTCertificate *cert);
 

@@ -43,6 +43,7 @@
 #include "nsIPref.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIX509Cert.h"
+#include "nsIX509CertDB.h"
 #include "nsILocaleService.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
@@ -672,10 +673,10 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
   rv = block->GetInt(4, &objsign);
   if (NS_FAILED(rv)) return rv;
  
-  *_trust = nsIX509Cert::UNTRUSTED;
-  *_trust |= (ssl) ? nsIX509Cert::TRUSTED_SSL : 0;
-  *_trust |= (email) ? nsIX509Cert::TRUSTED_EMAIL : 0;
-  *_trust |= (objsign) ? nsIX509Cert::TRUSTED_OBJSIGN : 0;
+  *_trust = nsIX509CertDB::UNTRUSTED;
+  *_trust |= (ssl) ? nsIX509CertDB::TRUSTED_SSL : 0;
+  *_trust |= (email) ? nsIX509CertDB::TRUSTED_EMAIL : 0;
+  *_trust |= (objsign) ? nsIX509CertDB::TRUSTED_OBJSIGN : 0;
 
   *_canceled = (status == 0)?PR_TRUE:PR_FALSE;
 

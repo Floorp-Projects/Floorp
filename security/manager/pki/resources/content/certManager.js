@@ -27,7 +27,7 @@ const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 
 var selected_certs = [];
-var certmgr;
+var certdb;
 
 function getSelectedCerts()
 {
@@ -88,58 +88,59 @@ function AddNameWithToken(children, cells, prefix, idfier)
 
 function GetNameList(type, node)
 {
-  certNameList = certmgr.getCertNicknames(type);
+  var obj1 = {};
+  var obj2 = {};
+  certdb.getCertNicknames(null, type, obj1, obj2);
+  var count = obj1.value;
+  var certNameList = obj2.value;
   if (certNameList.length > 0) {
-    var delim = certNameList[0];
-    certNameList = certNameList.split(delim);
     certNameList.sort();
-  }
-  for (var i=1; i<certNameList.length; i++) {
-    var certname = certNameList[i];
-    var ti = certname.indexOf(":");
-    var token = "";
-    if (ti > 0) {
-      token = certname.substring(0, ti);
-      certname = certname.substring(ti+1, certname.length);
+    for (var i=0; i<certNameList.length; i++) {
+      var certname = certNameList[i];
+      var ti = certname.indexOf(":");
+      var token = "";
+      if (ti > 0) {
+        token = certname.substring(0, ti);
+        certname = certname.substring(ti+1, certname.length);
+      }
+      AddNameWithToken(node, [certname, token], node + "_", i);
     }
-    AddNameWithToken(node, [certname, token], node + "_", i);
   }
 }
 
 function LoadCertNames()
 {
-  certmgr = Components
-            .classes["@mozilla.org/security/certmanager;1"]
-            .createInstance();
-  certmgr = certmgr.QueryInterface(Components
-                                   .interfaces
-                                   .nsICertificateManager);
-  certNameList = certmgr.getCertNicknames(1);
+  certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+  var obj1 = {};
+  var obj2 = {};
+  certdb.getCertNicknames(null, 
+                          Components.interfaces.nsIX509Cert.CA_CERT, 
+                          obj1, obj2);
+  var count = obj1.value;
+  var certNameList = obj2.value;
   if (certNameList.length > 0) {
-    var delim = certNameList[0];
-    certNameList = certNameList.split(delim);
     certNameList.sort();
-  }
-  var nb = 0;
-  var nm = 0;
-  for (var i=1; i<certNameList.length; i++) {
-    var certname = certNameList[i];
-    var ti = certname.indexOf(":");
-    var token = "";
-    if (ti > 0) {
-      token = certname.substring(0, ti);
-      certname = certname.substring(ti+1, certname.length);
+    var nb = 0;
+    var nm = 0;
+    for (var i=0; i<certNameList.length; i++) {
+      var certname = certNameList[i];
+      var ti = certname.indexOf(":");
+      var token = "";
+      if (ti > 0) {
+        token = certname.substring(0, ti);
+        certname = certname.substring(ti+1, certname.length);
+      }
+      if (token == "Builtin Object Token") {
+        AddNameWithToken("builtins", [certname, token], "builtin_", nb);
+        nb++;
+      } else {
+        AddNameWithToken("mycas", [certname, token], "myca_", nm);
+        nm++;
+      }
     }
-    if (token == "Builtin Object Token") {
-      AddNameWithToken("builtins", [certname, token], "builtin_", nb);
-      nb++;
-    } else {
-      AddNameWithToken("mycas", [certname, token], "myca_", nm);
-      nm++;
-    }
   }
-  GetNameList(8, "servers");
-  GetNameList(2, "mine");
+  GetNameList(Components.interfaces.nsIX509Cert.USER_CERT, "mine");
+  GetNameList(Components.interfaces.nsIX509Cert.SERVER_CERT, "servers");
 }
 
 function ca_enableButtons()
@@ -213,7 +214,6 @@ function backupCerts()
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK ||
       fp.show() == nsIFilePicker.returnReplace) {
-    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     certdb.exportPKCS12File(null, fp.file, numcerts, certs);
   }
   // don't really know it was successful...
