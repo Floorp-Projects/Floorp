@@ -93,3 +93,6 @@ DSO_LDOPTS	= -elf -shared -all
 ifdef DSO_BACKEND
 	DSO_LDOPTS += -soname $(DSO_NAME)
 endif
+
+AR_ALL  = -all
+AR_NONE = -none

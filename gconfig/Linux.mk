@@ -67,3 +67,7 @@ DSO_LDOPTS		= -shared
 DSO_LDFLAGS		=
 
 G++INCLUDES		= -I/usr/include/g++
+
+AR_ALL = --whole-archive
+AR_NONE = --no-whole-archive
+LINK_PROGRAM += -rdynamic

@@ -48,6 +48,9 @@ NATIVE_PLATFORM = unix
 NATIVE_RAPTOR_WIDGET = widgetunix
 NATIVE_RAPTOR_GFX = gfxunix
 
+AR_ALL =
+AR_NONE =
+
 ####################################################################
 #
 # One can define the makefile variable NSDISTMODE to control
