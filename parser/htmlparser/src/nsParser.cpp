@@ -958,14 +958,13 @@ aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
       eAutoDetectResult theStatus=eUnknownDetect; 
 
       if(mParserContext && (mParserContext->mSourceType==aContentType)) { 
-        theDTD=mParserContext->mDTD; 
+        mParserContext->mDTD->CreateNewInstance(&theDTD); // To fix bug 32263
         theStatus=mParserContext->mAutoDetectStatus; 
 
         //added this to fix bug 32022.
       } 
 
       pc=new CParserContext(theScanner,aKey, 0,theDTD,theStatus,aLastCall); 
-  
 
       if(pc && theScanner) { 
         PushContext(*pc); 
