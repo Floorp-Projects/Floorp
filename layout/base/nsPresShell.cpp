@@ -4549,21 +4549,28 @@ NS_IMETHODIMP PresShell::DoCopyImageContents(nsIDOMNode* aNode)
 nsresult
 PresShell::GetSelectionForCopy(nsISelection** outSelection)
 {
+  nsresult rv = NS_OK;
+
   *outSelection = nsnull;
 
   nsCOMPtr<nsIDocument> doc;
   GetDocument(getter_AddRefs(doc));
   if (!doc) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIEventStateManager> manager;
-  nsresult rv = mPresContext->GetEventStateManager(getter_AddRefs(manager));
-  if (NS_FAILED(rv)) return rv;
-  if (!manager) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
+  if (ourWindow) {
+    nsCOMPtr<nsIFocusController> focusController;
+    ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+    if (focusController) {
+      nsCOMPtr<nsIDOMElement> focusedElement;
+      focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+      content = do_QueryInterface(focusedElement);
+    }
+  }
 
   nsCOMPtr<nsISelection> sel;
-  nsCOMPtr<nsIContent> content;
-  rv = manager->GetFocusedContent(getter_AddRefs(content));
-  if (NS_SUCCEEDED(rv) && content)
+  if (content)
   {
     //check to see if we need to get selection from frame
     //optimization that MAY need to be expanded as more things implement their own "selection"
