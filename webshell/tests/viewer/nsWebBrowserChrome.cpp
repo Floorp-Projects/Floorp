@@ -80,6 +80,12 @@ NS_IMETHODIMP nsWebBrowserChrome::SetJSStatus(const PRUnichar* aStatus)
    return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsWebBrowserChrome::SetJSDefaultStatus(const PRUnichar* aStatus)
+{
+   NS_ERROR("Haven't Implemented this yet");
+   return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsWebBrowserChrome::SetOverLink(const PRUnichar* aLink)
 {
    NS_ERROR("Haven't Implemented this yet");
@@ -143,6 +149,19 @@ NS_IMETHODIMP nsWebBrowserChrome::ContentShellAdded(nsIDocShellTreeItem* aConten
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
+{
+   NS_ERROR("Haven't Implemented this yet");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebBrowserChrome::SizeShellTo(nsIDocShellTreeItem* aShell,
+   PRInt32 aCX, PRInt32 aCY)
+{
+   NS_ERROR("Haven't Implemented this yet");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebBrowserChrome::ShowModal()
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
