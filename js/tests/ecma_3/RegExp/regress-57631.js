@@ -37,34 +37,34 @@ var singlequote = "'";
 var i = -1; var j = -1; var s = ''; var f = '';
 var obj = {};
 var status = ''; var actual = ''; var expect = ''; var msg = '';
-var legalmatch = new Array(); var illegalmatch = new Array();
-var legalflag = new Array();  var illegalflag = new Array();
+var legalpatterns = new Array(); var illegalpatterns = new Array();
+var legalflags = new Array();  var illegalflags = new Array();
 
 
 // valid regular expressions to try - 
-legalmatch[0] = '';
-legalmatch[1] = 'abc';
-legalmatch[2] = '(.*)(3-1)\s\w';
-legalmatch[3] = '(.*)(...)\\s\\w';
-legalmatch[4] = '[^A-Za-z0-9_]';
-legalmatch[5] = '[^\f\n\r\t\v](123.5)([4 - 8]$)';
+legalpatterns[0] = '';
+legalpatterns[1] = 'abc';
+legalpatterns[2] = '(.*)(3-1)\s\w';
+legalpatterns[3] = '(.*)(...)\\s\\w';
+legalpatterns[4] = '[^A-Za-z0-9_]';
+legalpatterns[5] = '[^\f\n\r\t\v](123.5)([4 - 8]$)';
 
 // invalid regular expressions to try - 
-illegalmatch[0] = '()';
-illegalmatch[1] = '(a';
-illegalmatch[2] = '( ]';
-illegalmatch[3] = '\d{s}';
+illegalpatterns[0] = '()';
+illegalpatterns[1] = '(a';
+illegalpatterns[2] = '( ]';
+illegalpatterns[3] = '\d{s}';
 
 // valid flags to try -
-legalflag[0] = 'i';
-legalflag[1] = 'g';
-legalflag[2] = 'm';
-legalflag[3] = undefined;
+legalflags[0] = 'i';
+legalflags[1] = 'g';
+legalflags[2] = 'm';
+legalflags[3] = undefined;
 
 // invalid flags to try -
-illegalflag[0] = 'a';
-illegalflag[1] = 123;
-illegalflag[2] = new RegExp();
+illegalflags[0] = 'a';
+illegalflags[1] = 123;
+illegalflags[2] = new RegExp();
 
 
 
@@ -79,9 +79,9 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
-  testIllegalRegExps(legalmatch, illegalflag);
-  testIllegalRegExps(illegalmatch, legalflag);
-  testIllegalRegExps(illegalmatch, illegalflag);
+  testIllegalRegExps(legalpatterns, illegalflags);
+  testIllegalRegExps(illegalpatterns, legalflags);
+  testIllegalRegExps(illegalpatterns, illegalflags);
 
   exitFunc ('test');
 }
