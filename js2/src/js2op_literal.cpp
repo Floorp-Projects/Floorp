@@ -112,7 +112,7 @@
     case eThis: // XXX literal?
         {
             pFrame = meta->env->getEnclosingParameterFrame();
-            if ((pFrame == NULL) || JS2VAL_IS_INACCESSIBLE(pFrame->thisObject))
+            if ((pFrame == NULL) || JS2VAL_IS_INACCESSIBLE(pFrame->thisObject) || JS2VAL_IS_NULL(pFrame->thisObject))
                 a = OBJECT_TO_JS2VAL(meta->env->getPackageFrame());
 //                meta->reportError(Exception::compileExpressionError, "'this' not available", errorPos());
             else

@@ -112,6 +112,7 @@
             FunctionWrapper *fWrap = NULL;
             if ((fObj->kind == SimpleInstanceKind)
                         && (meta->objectType(b) == meta->functionClass)) {
+doCall:
                 FunctionInstance *fInst = checked_cast<FunctionInstance *>(fObj);
                 fWrap = fInst->fWrap;
                 if (fInst->isMethodClosure) {
@@ -158,7 +159,7 @@
                         // Still need to mark the frame as a runtime frame (see stmtnode::return in validate)
                         pFrame = new ParameterFrame(a, fWrap->compileFrame->prototype);
                         pFrame->pluralFrame = fWrap->compileFrame;
-                        meta->env->addFrame(pFrame, a);
+                        meta->env->addFrame(pFrame);
                     }
                 }
             }
@@ -171,6 +172,17 @@
                     a = JS2VAL_UNDEFINED;
                 pop(argCount + 2);
                 push(a);
+            }
+            else
+            if ((fObj->kind == SimpleInstanceKind)
+                        && (meta->objectType(b) == meta->regexpClass)) {
+                // ECMA extension, call exec()
+                js2val exec_fnVal;
+                if (!meta->regexpClass->ReadPublic(meta, &b, &meta->world.identifiers["exec"], RunPhase, &exec_fnVal))
+                    ASSERT(false);
+                ASSERT(JS2VAL_IS_OBJECT(exec_fnVal));
+                fObj = JS2VAL_TO_OBJECT(exec_fnVal);
+                goto doCall;
             }
             else
                 meta->reportError(Exception::badValueError, "{0} is not a function", errorPos(), JS2VAL_TO_STRING(typeofString(b)));
