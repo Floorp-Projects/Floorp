@@ -1,4 +1,9 @@
 nsCOMPtr.h
 nsDebug.h
+nsIGenericFactory.h
+nsIInterfaceRequestorUtils.h
+nsISupportsImpl.h
+nsISupportsUtils.h
+nsIWeakReferenceUtils.h
 nsMemory.h
 nsWeakReference.h

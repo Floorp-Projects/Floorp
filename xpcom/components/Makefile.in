@@ -37,7 +37,6 @@ CPPSRCS		= \
 		nsCategoryManager.cpp \
 		nsComponentManager.cpp \
 		nsComponentManagerObsolete.cpp \
-		nsGenericFactory.cpp \
 		nsNativeComponentLoader.cpp \
 		nsRegistry.cpp \
 		nsServiceManagerObsolete.cpp \
@@ -53,7 +52,6 @@ endif
 EXPORTS		= \
 		nsComponentManagerUtils.h \
 		nsComponentManagerObsolete.h \
-		nsIGenericFactory.h \
 		nsIRegistryUtils.h \
 		nsIServiceManagerUtils.h \
 		nsIServiceManagerObsolete.h \

@@ -30,17 +30,24 @@ MODULE		= xpcom
 XPIDL_MODULE	= xpcom_glue
 LIBRARY_NAME	= xpcomglue
 
-REQUIRES	= $(NULL)
-
 CPPSRCS		= \
 		nsCOMPtr.cpp \
 		nsDebug.cpp \
+		nsGenericFactory.cpp \
 		nsMemory.cpp \
 		nsWeakReference.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../build \
+		$(NULL)
+
+EXPORTS		= \
+		nsIGenericFactory.h \
+		nsIInterfaceRequestorUtils.h \
+		nsISupportsImpl.h \
+		nsISupportsUtils.h \
+		nsIWeakReferenceUtils.h \
 		$(NULL)
 
 SDK_HEADERS     = \
@@ -52,12 +59,6 @@ SDK_HEADERS     = \
 
 SDK_BINARY     =                        \
 		$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(NULL)
-
-EXPORTS		= \
-		$(NULL)
-
-XPIDLSRCS	= \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
