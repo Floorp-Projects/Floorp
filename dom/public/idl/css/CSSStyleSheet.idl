@@ -3,6 +3,7 @@
       readonly attribute HTMLElement owningElement;
       readonly attribute CSSStyleSheet parentStyleSheet;
       readonly attribute wstring href;
+      readonly attribute wstring title;
 
       readonly attribute StyleSheetCollection imports;
       readonly attribute CSSStyleRuleCollection rules;
