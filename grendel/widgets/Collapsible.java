@@ -23,11 +23,13 @@
 
 package grendel.widgets;
 
-public abstract interface Collapsible {
+public interface Collapsible {
+  
+  final boolean collapsible = true;
 
-    public abstract void collapse();
+    public void collapse();
 
-    public abstract void expand();
+    public void expand();
 
     public boolean isCollapsible();
 
