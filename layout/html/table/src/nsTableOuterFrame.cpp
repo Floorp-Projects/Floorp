@@ -44,6 +44,7 @@ static const PRBool gsDebugIR = PR_FALSE;
 #endif
 
 // temporary timer code
+#ifdef CWK_TIMER
 #include <windows.h>
 static const PRInt32 MS_PER_SEC  = 1000;
 static const PRInt32 MS_PER_MIN  = 60 * 1000;
@@ -110,6 +111,7 @@ void nsTimer::Stop()
   mCumMS2 += endTime - mStartTime;
 
 }
+#endif
 
 // these macros are defined to improve the readability of the main code
 // XXX they need to be put in an include file and shared 
@@ -1001,8 +1003,10 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
                                     const nsHTMLReflowState& aReflowState,
                                     nsReflowStatus&          aStatus)
 {
+#ifdef CWK_TIMER
   nsTimer myTimer; // CWK
   myTimer.Start();
+#endif
   nsresult rv = NS_OK;
   TDBG_SPDD(gsDebug,"%p: nsTableOuterFrame::Reflow : maxSize=%d,%d\n", 
             this, aReflowState.availableWidth, aReflowState.availableHeight);
@@ -1174,8 +1178,10 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
            endTime-startTime, this);/* XXX need to use LL_* macros! */
   }
 
+#ifdef CWK_TIMER
   myTimer.Stop(); // CWK
   printf("outer reflow time=%d time2=%d starts=%d \n", myTimer.GetTime(), myTimer.GetTime2(), myTimer.GetStarts()); // CWK
+#endif
   return rv;
 }
 
