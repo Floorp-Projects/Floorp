@@ -29,10 +29,13 @@
   margin-right: 3px;
   width: 16px;
   height: 16px;
+}
+
+tab {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
 }
 
-tab[busy] > .tab-icon {
+tab[busy] {
   list-style-image: url("chrome://communicator/skin/icons/loading.gif");
 }
 

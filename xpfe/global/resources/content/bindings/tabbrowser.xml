@@ -180,6 +180,8 @@
                                          aCurSelfProgress, aMaxSelfProgress,
                                          aCurTotalProgress, aMaxTotalProgress)
             {
+              if (aMaxTotalProgress > 0)
+                this.mTab.setAttribute("progress", Math.floor(aCurTotalProgress * 9.9 / aMaxTotalProgress));
               if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
@@ -212,6 +214,7 @@
                   this.mBrowser.userTypedClear++;
 
                 if (!this.mBlank) {
+                  this.mTab.removeAttribute("progress");
                   this.mTab.setAttribute("busy", "true");
                   this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.loading");
                   this.mTab.removeAttribute("image");
@@ -838,6 +841,7 @@
               t.setAttribute("label", aURI);
 
             t.setAttribute("crop", "end");
+            t.className = "tabbrowser-tab";
             t.maxWidth = 250;
             t.minWidth = 30;
             t.width = 0;
