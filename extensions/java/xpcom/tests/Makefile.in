@@ -41,12 +41,39 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/config.mk
 
-TestArray::
-	javac -classpath .:./..:$(srcdir) -d . $(srcdir)/TestArray.java
+XPIDL_MODULE = javaxpcomtest
+
+XPIDLSRCS = \
+	IFoo.idl \
+	$(NULL)
+
+JAVA_SRCS_ = \
+	TestArray.java \
+	$(NULL)
+
+SEP = :
+
+JAVA_CLASSPATH = ./..$(SEP)$(XPIDL_GEN_DIR)
 
 GARBAGE += *.class
 
 include $(topsrcdir)/config/rules.mk
 
+$(XPIDL_GEN_DIR)/%.java: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
+	$(REPORT_BUILD)
+	$(ELOG) $(XPIDL_COMPILE) -m java -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
+
+ifdef JAVA_CLASSPATH
+_JAVA_CLASSPATH = .$(SEP)$(srcdir)$(SEP)$(JAVA_CLASSPATH)
+else
+_JAVA_CLASSPATH = .$(SEP)$(srcdir)
+endif
+
+%.class: %.java Makefile Makefile.in
+	$(REPORT_BUILD)
+	$(ELOG) javac -classpath $(_JAVA_CLASSPATH) -d . $(_VPATH_SRCS)
+
+export:: $(XPIDL_GEN_DIR)/$(XPIDLSRCS:.idl=.java)
+
+libs:: $(JAVA_SRCS_:.java=.class)

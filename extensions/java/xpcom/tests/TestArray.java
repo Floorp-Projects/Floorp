@@ -44,12 +44,24 @@ import org.mozilla.xpcom.*;
  *    - Creating an XPCOM object in Java, and calling its methods.
  *    - Calling several of the Gecko embedding funtions.
  *    - Passing Java class objects to XPCOM.
+ *    - Have XPCOM call Java class' queryInterface() method.
  *    - Catching GeckoException.
+ *    - Lifetime of JNI structures and Java objects (everything should be
+ *      garbage collected or destroyed at the appropriate time).
+ *
+ * NOTE: The System.gc() calls throughout the testcase are used to tell the
+ *    JVM that now would be a good time to garbage collect.  This helps us see
+ *    if everything is getting freed properly.  However, since the System.gc()
+ *    call is only a suggestion to the JVM (you can't force garbage collection),
+ *    this testcase may not work the same on every system.  On my system, it
+ *    usually works as expected (that is, Java objects that are no longer in
+ *    use are destroyed whenever System.gc() is called).  But I have seen some
+ *    instances where the garbage collector ran later in the testcase.
  */
 
 public class TestArray {
   public static void main(String [] args) {
-    System.loadLibrary ("javaxpcom");
+    System.loadLibrary("javaxpcom");
 
     String mozillaPath = System.getProperty("MOZILLA_FIVE_HOME");
     if (mozillaPath == null) {
@@ -110,29 +122,36 @@ public class TestArray {
 
     System.out.println("ReplaceElementAt(8):");
     replaceElementAt(array, foo, 8);
+    System.gc();
     int replaceResult[] = {3, 0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
     dumpArray(array, 13, replaceResult, 9);
 
     System.out.println("RemoveElementAt(0):");
     array.removeElementAt(0);
+    System.gc();
     int removeResult[] = {0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
     dumpArray(array, 12, removeResult, 9);
     System.out.println("RemoveElementAt(7):");
     array.removeElementAt(7);
+    System.gc();
     int removeResult2[] = {0, 1, 2, 3, 4, 3, 5, 7, 8, 9, 3};
     dumpArray(array, 11, removeResult2, 9);
     System.out.println("RemoveElement(foo):");
     removeElement(array, foo);
+    System.gc();
     int removeResult3[] = {0, 1, 2, 4, 3, 5, 7, 8, 9, 3};
     dumpArray(array, 10, removeResult3, 9);
     System.out.println("RemoveLastElement(foo):");
     removeLastElement(array, foo);
+    System.gc();
     int removeResult4[] = {0, 1, 2, 4, 3, 5, 7, 8, 9};
     dumpArray(array, 9, removeResult4, 9);
 
     // test clear
+    foo = null;  // remove ref now, so everything is cleared
     System.out.println("clear array:");
     array.clear();
+    System.gc();
     dumpArray(array, 0, null, 0);
     System.out.println("add 4 new:");
     fillArray(array, 4);
@@ -170,9 +189,9 @@ public class TestArray {
 
     for (int index = 0; (index < count) && (index < aExpectedCount); index++) {
       IFoo foo = (IFoo) aArray.queryElementAt(index, IFoo.IFOO_IID);
-        System.out.println(index + ": " + aElementIDs[index] + "=" + foo.id() +
-                           " (" + foo.hashCode() + ") " + 
-                           assertEqual(foo.id(), aElementIDs[index]));
+        System.out.println(index + ": " + aElementIDs[index] + "=" +
+                           foo.getId() + " (" + foo.hashCode() + ") " + 
+                           assertEqual(foo.getId(), aElementIDs[index]));
         foo = null;
       }
   }
