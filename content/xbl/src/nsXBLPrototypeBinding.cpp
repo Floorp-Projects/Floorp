@@ -100,14 +100,14 @@ public:
 
   static nsXBLAttributeEntry*
   Create(nsIAtom* aSrcAtom, nsIAtom* aDstAtom, nsIContent* aContent) {
-    void* place = nsXBLPrototypeBinding::kAttrPool.Alloc(sizeof(nsXBLAttributeEntry));
+    void* place = nsXBLPrototypeBinding::kAttrPool->Alloc(sizeof(nsXBLAttributeEntry));
     return place ? ::new (place) nsXBLAttributeEntry(aSrcAtom, aDstAtom, aContent) : nsnull;
   }
 
   static void
   Destroy(nsXBLAttributeEntry* aSelf) {
     aSelf->~nsXBLAttributeEntry();
-    nsXBLPrototypeBinding::kAttrPool.Free(aSelf, sizeof(*aSelf));
+    nsXBLPrototypeBinding::kAttrPool->Free(aSelf, sizeof(*aSelf));
   }
 
   nsCOMPtr<nsIAtom> mSrcAttribute;
@@ -121,6 +121,8 @@ protected:
     NS_INIT_REFCNT(); mSrcAttribute = aSrcAtom; mDstAttribute = aDstAtom; mElement = aContent;
   }
 
+  virtual ~nsXBLAttributeEntry() {}
+
 private:
   // Hide so that only Create() and Destroy() can be used to
   // allocate and deallocate from the heap
@@ -128,7 +130,9 @@ private:
   static void operator delete(void*, size_t) {}
 };
 
-NS_IMPL_ISUPPORTS1(nsXBLAttributeEntry, nsIXBLAttributeEntry)
+NS_IMPL_ADDREF(nsXBLAttributeEntry)
+NS_IMPL_RELEASE_WITH_DESTROY(nsXBLAttributeEntry, nsXBLAttributeEntry::Destroy(this))
+NS_IMPL_QUERY_INTERFACE1(nsXBLAttributeEntry, nsIXBLAttributeEntry)
 
 // nsIXBLInsertionPointEntry and helpers.  This class stores all the necessary
 // info to figure out the position of an insertion point.
@@ -171,14 +175,14 @@ public:
 
   static nsXBLInsertionPointEntry*
   Create(nsIContent* aParent) {
-    void* place = nsXBLPrototypeBinding::kInsPool.Alloc(sizeof(nsXBLInsertionPointEntry));
+    void* place = nsXBLPrototypeBinding::kInsPool->Alloc(sizeof(nsXBLInsertionPointEntry));
     return place ? ::new (place) nsXBLInsertionPointEntry(aParent) : nsnull;
   }
 
   static void
   Destroy(nsXBLInsertionPointEntry* aSelf) {
     aSelf->~nsXBLInsertionPointEntry();
-    nsXBLPrototypeBinding::kInsPool.Free(aSelf, sizeof(*aSelf));
+    nsXBLPrototypeBinding::kInsPool->Free(aSelf, sizeof(*aSelf));
   }
   
   NS_DECL_ISUPPORTS
@@ -190,6 +194,8 @@ protected:
     mInsertionParent = aParent;
   };
 
+  virtual ~nsXBLInsertionPointEntry() {}
+
 private:
   // Hide so that only Create() and Destroy() can be used to
   // allocate and deallocate from the heap
@@ -198,7 +204,7 @@ private:
 };
 
 NS_IMPL_ADDREF(nsXBLInsertionPointEntry)
-NS_IMPL_RELEASE_WITH_DESTROY(nsXBLInsertionPointEntry, Destroy(this))
+NS_IMPL_RELEASE_WITH_DESTROY(nsXBLInsertionPointEntry, nsXBLInsertionPointEntry::Destroy(this))
 NS_IMPL_QUERY_INTERFACE1(nsXBLInsertionPointEntry, nsIXBLInsertionPointEntry)
 
 // =============================================================================
@@ -222,8 +228,8 @@ nsIAtom* nsXBLPrototypeBinding::kConstructorAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kDestructorAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kImplementationAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kImplementsAtom = nsnull;
-nsFixedSizeAllocator nsXBLPrototypeBinding::kAttrPool;
-nsFixedSizeAllocator nsXBLPrototypeBinding::kInsPool;
+nsFixedSizeAllocator* nsXBLPrototypeBinding::kAttrPool;
+nsFixedSizeAllocator* nsXBLPrototypeBinding::kInsPool;
 
 static const PRInt32 kNumElements = 128;
 
@@ -267,8 +273,10 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
   //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 1) {
-    kAttrPool.Init("XBL Attribute Entries", kAttrBucketSizes, kAttrNumBuckets, kAttrInitialSize);
-    kInsPool.Init("XBL Insertion Point Entries", kInsBucketSizes, kInsNumBuckets, kInsInitialSize);
+    kAttrPool = new nsFixedSizeAllocator();
+    kAttrPool->Init("XBL Attribute Entries", kAttrBucketSizes, kAttrNumBuckets, kAttrInitialSize);
+    kInsPool = new nsFixedSizeAllocator();
+    kInsPool->Init("XBL Insertion Point Entries", kInsBucketSizes, kInsNumBuckets, kInsInitialSize);
 
     kInheritStyleAtom = NS_NewAtom("inheritstyle");
     kHandlersAtom = NS_NewAtom("handlers");
@@ -337,6 +345,9 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
     NS_RELEASE(kDestructorAtom);
     NS_RELEASE(kImplementationAtom);
     NS_RELEASE(kImplementsAtom);
+
+    delete kAttrPool;
+    delete kInsPool;
   }
 }
 
