@@ -46,9 +46,11 @@ public:
 
     NS_IMETHOD GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _result) = 0;
     NS_IMETHOD PutPrototype(nsIXULPrototypeDocument* aDocument) = 0;
+    NS_IMETHOD FlushPrototypes() = 0;
 
     NS_IMETHOD GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result) = 0;
     NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet) = 0;
+    NS_IMETHOD FlushStyleSheets() = 0;
 
     /**
      * Flush the cache; remove all XUL prototype documents, style
