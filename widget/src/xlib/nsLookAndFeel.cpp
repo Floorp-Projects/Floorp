@@ -44,6 +44,7 @@ nsLookAndFeel::~nsLookAndFeel()
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor()\n"));
+    nsresult res = NS_OK;
 
     if (mXPLookAndFeel)
     {
