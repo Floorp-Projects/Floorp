@@ -220,3 +220,11 @@ OPDEF(JSOP_EVAL,      121,"eval",       NULL,         3, -1,  1, 11,  JOF_UINT16
  * ECMA-compliant helper for 'for (x[i] in o)' loops.
  */
 OPDEF(JSOP_ENUMELEM,  122,"enumelem",   NULL,         1,  3,  0,  1,  JOF_BYTE |JOF_ELEM|JOF_SET)
+
+/*
+ * Getter and setter prefix bytecodes.  These modify the next bytecode, either
+ * an assignment or a property initializer code, which then defines a property
+ * getter or setter.
+ */
+OPDEF(JSOP_GETTER,    123,js_getter_str,js_getter_str,1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_SETTER,    124,js_setter_str,js_setter_str,1,  0,  0,  0,  JOF_BYTE)

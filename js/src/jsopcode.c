@@ -47,6 +47,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+char js_function_str[]      = "function";
 char js_in_str[]            = "in";
 char js_instanceof_str[]    = "instanceof";
 char js_new_str[]           = "new";
@@ -408,12 +409,13 @@ struct JSPrinter {
     Sprinter        sprinter;       /* base class state */
     JSArenaPool     pool;           /* string allocation pool */
     uintN           indent;         /* indentation in spaces */
+    JSBool          pretty;         /* pretty-print, indent, add newlines */
     JSScript        *script;        /* script being printed */
     JSScope         *scope;         /* script function scope */
 };
 
 JSPrinter *
-js_NewPrinter(JSContext *cx, const char *name, uintN indent)
+js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
 {
     JSPrinter *jp;
     JSStackFrame *fp;
@@ -426,6 +428,7 @@ js_NewPrinter(JSContext *cx, const char *name, uintN indent)
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
     JS_InitArenaPool(&jp->pool, name, 256, 1);
     jp->indent = indent;
+    jp->pretty = pretty;
     jp->script = NULL;
     jp->scope = NULL;
     fp = cx->fp;
@@ -469,27 +472,45 @@ js_GetPrinterOutput(JSPrinter *jp)
 }
 
 int
-js_printf(JSPrinter *jp, char *format, ...)
+js_printf(JSPrinter *jp, const char *format, ...)
 {
     va_list ap;
-    char *bp;
+    char *bp, *fp;
     int cc;
+
+    if (*format == '\0')
+        return 0;
 
     va_start(ap, format);
 
-    /* Expand magic tab into a run of jp->indent spaces. */
+    /* If pretty-printing, expand magic tab into a run of jp->indent spaces. */
     if (*format == '\t') {
-	if (Sprint(&jp->sprinter, "%*s", jp->indent, "") < 0)
+        if (jp->pretty && Sprint(&jp->sprinter, "%*s", jp->indent, "") < 0)
 	    return -1;
 	format++;
     }
 
+    /* Suppress newlines (must be once per format, at the end) if not pretty. */
+    fp = NULL;
+    if (!jp->pretty && format[cc = strlen(format)-1] == '\n') {
+        fp = JS_strdup(jp->sprinter.context, format);
+        if (!fp)
+            return -1;
+        fp[cc] = '\0';
+        format = fp;
+    }
+
     /* Allocate temp space, convert format, and put. */
     bp = JS_vsmprintf(format, ap);	/* XXX vsaprintf */
+    if (fp) {
+        JS_free(jp->sprinter.context, fp);
+        format = NULL;
+    }
     if (!bp) {
 	JS_ReportOutOfMemory(jp->sprinter.context);
 	return -1;
     }
+
     cc = strlen(bp);
     if (SprintPut(&jp->sprinter, bp, (size_t)cc) < 0)
 	cc = -1;
@@ -500,7 +521,7 @@ js_printf(JSPrinter *jp, char *format, ...)
 }
 
 JSBool
-js_puts(JSPrinter *jp, char *s)
+js_puts(JSPrinter *jp, const char *s)
 {
     return SprintPut(&jp->sprinter, s, strlen(s)) >= 0;
 }
@@ -786,6 +807,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		break;
 
 	      case 0:
+#if JS_HAS_GETTER_SETTER
+                if (op == JSOP_GETTER || op == JSOP_SETTER) {
+                    todo = -2;
+                    break;
+                }
+#endif
 		todo = SprintPut(&ss->sprinter, cs->token, strlen(cs->token));
 		break;
 
@@ -929,11 +956,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    obj = ATOM_TO_OBJECT(atom);
 		    fun = JS_GetPrivate(cx, obj);
 		    jp2 = js_NewPrinter(cx, JS_GetFunctionName(fun),
-					jp->indent);
+					jp->indent, jp->pretty);
 		    if (!jp2)
 			return JS_FALSE;
 		    jp2->scope = jp->scope;
-		    if (js_DecompileFunction(jp2, fun, JS_TRUE)) {
+		    if (js_DecompileFunction(jp2, fun)) {
 			str = js_GetPrinterOutput(jp2);
 			if (str)
 			    js_printf(jp, "%s\n", JS_GetStringBytes(str));
@@ -1352,7 +1379,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		if ((sn = js_GetSrcNote(jp->script, pc - 1)) != NULL &&
 		    SN_TYPE(sn) == SRC_ASSIGNOP) {
 		    todo = Sprint(&ss->sprinter, "%s %s= %s",
-				  lval, js_CodeSpec[pc[-1]].token, rval);
+				  lval, js_CodeSpec[lastop].token, rval);
 		} else {
 		    sn = js_GetSrcNote(jp->script, pc);
 		    todo = Sprint(&ss->sprinter, "%s%s = %s",
@@ -1544,7 +1571,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    SN_TYPE(sn) == SRC_ASSIGNOP) {
 		    todo = Sprint(&ss->sprinter, "%s.%s %s= %s",
 				  lval, ATOM_BYTES(atom),
-				  js_CodeSpec[pc[-1]].token, rval);
+				  js_CodeSpec[lastop].token, rval);
 		} else {
 		    todo = Sprint(&ss->sprinter, "%s.%s = %s",
 				  lval, ATOM_BYTES(atom), rval);
@@ -1574,7 +1601,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    SN_TYPE(sn) == SRC_ASSIGNOP) {
 		    todo = Sprint(&ss->sprinter, "%s[%s] %s= %s",
 				  lval, xval,
-				  js_CodeSpec[pc[-1]].token, rval);
+				  js_CodeSpec[lastop].token, rval);
 		} else {
 		    todo = Sprint(&ss->sprinter, "%s[%s] = %s",
 				  lval, xval, rval);
@@ -1615,7 +1642,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    todo = Sprint(&ss->sprinter, "%ld", ival);
 		} else if (JSVAL_IS_DOUBLE(key)) {
 		    char buf[DTOSTR_STANDARD_BUFFER_SIZE];
-		    char *numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, *JSVAL_TO_DOUBLE(key));
+		    char *numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD,
+                                             0, *JSVAL_TO_DOUBLE(key));
 		    if (!numStr) {
 			JS_ReportOutOfMemory(cx);
 			return JS_FALSE;
@@ -1838,12 +1866,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 	      do_closure:
 		obj = ATOM_TO_OBJECT(atom);
 		fun = JS_GetPrivate(cx, obj);
-		jp2 = js_NewPrinter(cx, JS_GetFunctionName(fun), jp->indent);
+		jp2 = js_NewPrinter(cx, JS_GetFunctionName(fun), jp->indent,
+                                    jp->pretty);
 		if (!jp2)
 		    return JS_FALSE;
 		jp2->scope = jp->scope;
 		todo = -1;
-		if (js_DecompileFunction(jp2, fun, JS_FALSE)) {
+		if (js_DecompileFunction(jp2, fun)) {
 		    str = js_GetPrinterOutput(jp2);
 		    if (str) {
 			todo = SprintPut(&ss->sprinter,
@@ -1942,9 +1971,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		xval = ATOM_BYTES(atom);
 		lval = POP_STR();
 	      do_initprop:
-		todo = Sprint(&ss->sprinter, "%s%s%s:%s",
-			      lval, (lval[1] != '\0') ? ", " : "",
-			      xval, rval);
+		todo = Sprint(&ss->sprinter, "%s%s%s%s%s:%s",
+			      lval,
+                              (lval[1] != '\0') ? ", " : "",
+			      xval,
+                              (lastop == JSOP_GETTER || lastop == JSOP_SETTER)
+                              ? " " : "",
+                              (lastop == JSOP_GETTER) ? js_getter_str :
+                              (lastop == JSOP_SETTER) ? js_setter_str :
+                              "",
+                              rval);
 		break;
 
 	      case JSOP_INITELEM:
@@ -2062,28 +2098,30 @@ js_DecompileScript(JSPrinter *jp, JSScript *script)
     return js_DecompileCode(jp, script, script->code, (uintN)script->length);
 }
 
+static const char native_code_str[] = "\t[native code]\n";
+
 JSBool
-js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun, JSBool newlines)
+js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun)
 {
-    JSScript *script = fun->script;
-    if (script) {
-        JSScope *oldScope, *scope = NULL;
-        JSBool ok;
-        if (fun->object) scope = (JSScope *)fun->object->map;
-        oldScope = jp->scope;
-        jp->scope = scope;
-        ok = js_DecompileCode(jp, script, script->code, (uintN)script->length);
-        jp->scope = oldScope;
-        return ok;
-    }
-    else {
-	js_printf(jp, "\t[native code]\n");
+    JSScript *script;
+    JSScope *scope, *save;
+    JSBool ok;
+
+    script = fun->script;
+    if (!script) {
+	js_printf(jp, native_code_str);
         return JS_TRUE;
     }
+    scope = fun->object ? (JSScope *)fun->object->map : NULL;
+    save = jp->scope;
+    jp->scope = scope;
+    ok = js_DecompileCode(jp, script, script->code, (uintN)script->length);
+    jp->scope = save;
+    return ok;
 }
 
 JSBool
-js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
+js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
 {
     JSScope *scope, *oldscope;
     JSScopeProperty *sprop, *snext;
@@ -2092,23 +2130,29 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
     uintN indent;
     intN i;
 
-    if (newlines) {
+    if (jp->pretty) {
 	js_puts(jp, "\n");
 	js_printf(jp, "\t");
     }
-    js_printf(jp, "function %s(", fun->atom ? ATOM_BYTES(fun->atom) : "");
+    if (fun->flags & JSFUN_GETTER)
+        js_printf(jp, "%s ", js_getter_str);
+    else if (fun->flags & JSFUN_SETTER)
+        js_printf(jp, "%s ", js_setter_str);
+    js_printf(jp, "%s %s(",
+              js_function_str, fun->atom ? ATOM_BYTES(fun->atom) : "");
 
     scope = NULL;
     if (fun->script && fun->object) {
-	/* Print the parameters.
+	/*
+	 * Print the parameters.
 	 *
-	 * This code is complicated by the need to handle duplicate parameter names.
-	 * A duplicate parameter is stored as a property with id equal to the parameter
-	 * number, but will not be in order in the linked list of symbols. So for each
-	 * parameter we search the list of symbols for the appropriately numbered
-	 * parameter, which we can then print.
+	 * This code is complicated by the need to handle duplicate parameter
+	 * names.  A duplicate parameter is stored as a property with id equal
+	 * to the parameter number, but will not be in order in the linked list
+	 * of symbols. So for each parameter we search the list of symbols for
+	 * the appropriately numbered parameter, which we can then print.
 	 */
-	for (i=0;;i++) {
+	for (i = 0; ; i++) {
 	    jsid id;
 	    atom = NULL;
 	    scope = (JSScope *)fun->object->map;
@@ -2131,7 +2175,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
 	    js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(atom));
 	}
     }
-    js_puts(jp, ") {\n");
+    js_printf(jp, ") {\n");
     indent = jp->indent;
     jp->indent += 4;
     if (fun->script && fun->object) {
@@ -2144,11 +2188,11 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
 	    return JS_FALSE;
 	}
     } else {
-	js_printf(jp, "\t[native code]\n");
+	js_printf(jp, native_code_str);
     }
     jp->indent -= 4;
     js_printf(jp, "\t}");
-    if (newlines)
+    if (jp->pretty)
 	js_puts(jp, "\n");
     return JS_TRUE;
 }
@@ -2303,7 +2347,7 @@ js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
 	tmp = NULL;
     }
 
-    jp = js_NewPrinter(cx, "js_DecompileValueGenerator", 0);
+    jp = js_NewPrinter(cx, "js_DecompileValueGenerator", 0, JS_FALSE);
     if (jp && js_DecompileCode(jp, script, begin, len))
 	name = js_GetPrinterOutput(jp);
     else

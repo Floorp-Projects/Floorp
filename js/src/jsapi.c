@@ -869,7 +869,8 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 	cx->globalObject = obj;
 
 #if JS_HAS_UNDEFINED
-    /* Define a top-level property 'undefined' with the undefined value.
+    /*
+     * Define a top-level property 'undefined' with the undefined value.
      * (proposed ECMA v2.)
      */
     if (!OBJ_DEFINE_PROPERTY(cx, obj,
@@ -1515,7 +1516,6 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
 	    if (OBJ_IS_NATIVE(obj)) {
 		sprop = (JSScopeProperty *)prop;
 		sprop->id = INT_TO_JSVAL(ps->tinyid);
-		sprop->attrs |= JSPROP_TINYIDHACK;
 	    }
 	    OBJ_DROP_PROPERTY(cx, obj, prop);
 	}
@@ -1547,7 +1547,6 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
 	if (OBJ_IS_NATIVE(obj)) {
 	    sprop = (JSScopeProperty *)prop;
 	    sprop->id = INT_TO_JSVAL(tinyid);
-	    sprop->attrs |= JSPROP_TINYIDHACK;
 	}
 	OBJ_DROP_PROPERTY(cx, obj, prop);
     }
@@ -1819,7 +1818,6 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
 	if (OBJ_IS_NATIVE(obj)) {
 	    sprop = (JSScopeProperty *)prop;
 	    sprop->id = INT_TO_JSVAL(tinyid);
-	    sprop->attrs |= JSPROP_TINYIDHACK;
 	}
 	OBJ_DROP_PROPERTY(cx, obj, prop);
     }
@@ -2488,7 +2486,9 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = js_NewPrinter(cx, name, indent);
+    jp = js_NewPrinter(cx, name,
+                       indent & ~JS_DONT_PRETTY_PRINT,
+                       !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
 	return NULL;
     if (js_DecompileScript(jp, script))
@@ -2506,10 +2506,12 @@ JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = js_NewPrinter(cx, JS_GetFunctionName(fun), indent);
+    jp = js_NewPrinter(cx, JS_GetFunctionName(fun),
+                       indent & ~JS_DONT_PRETTY_PRINT,
+                       !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
 	return NULL;
-    if (js_DecompileFunction(jp, fun, JS_TRUE))
+    if (js_DecompileFunction(jp, fun))
 	str = js_GetPrinterOutput(jp);
     else
 	str = NULL;
@@ -2524,10 +2526,12 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = js_NewPrinter(cx, JS_GetFunctionName(fun), indent);
+    jp = js_NewPrinter(cx, JS_GetFunctionName(fun),
+                       indent & ~JS_DONT_PRETTY_PRINT,
+                       !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
 	return NULL;
-    if (js_DecompileFunctionBody(jp, fun, JS_TRUE))
+    if (js_DecompileFunctionBody(jp, fun))
 	str = js_GetPrinterOutput(jp);
     else
 	str = NULL;

@@ -195,6 +195,10 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     JSIdArray *ida;
     JSBool ok;
     jsint i, length;
+    jsid id;
+    JSObject *obj2;
+    JSProperty *prop;
+    uintN attrs;
     jsval val;
 
     map = &cx->sharpObjectMap;
@@ -214,9 +218,39 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
 	    return NULL;
 	ok = JS_TRUE;
 	for (i = 0, length = ida->length; i < length; i++) {
-	    ok = OBJ_GET_PROPERTY(cx, obj, ida->vector[i], &val);
-	    if (!ok)
-		break;
+            id = ida->vector[i];
+#if JS_HAS_GETTER_SETTER
+            ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
+            if (!ok)
+                break;
+            ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, &attrs);
+            if (ok) {
+                if (prop &&
+                    OBJ_IS_NATIVE(obj2) &&
+                    (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+                    val = JSVAL_NULL;
+                    if (attrs & JSPROP_GETTER)
+                        val = (jsval) ((JSScopeProperty *)prop)->getter;
+                    if (attrs & JSPROP_SETTER) {
+                        if (val != JSVAL_NULL) {
+                            /* Mark the getter here, then set val to setter. */
+                            ok = (MarkSharpObjects(cx, JSVAL_TO_OBJECT(val),
+                                                   NULL)
+                                  != NULL);
+                        }
+                        val = (jsval) ((JSScopeProperty *)prop)->setter;
+                    }
+                } else {
+                    ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
+                }
+            }
+            if (prop)
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
+#else
+            ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
+#endif
+            if (!ok)
+                break;
 	    if (!JSVAL_IS_PRIMITIVE(val) &&
 		!MarkSharpObjects(cx, JSVAL_TO_OBJECT(val), NULL)) {
 		ok = JS_FALSE;
@@ -353,7 +387,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
     }
 }
 
-#define OBJ_TOSTRING_EXTRA	2	/* for 2 GC roots */
+#define OBJ_TOSTRING_EXTRA	3	/* for 3 local GC roots */
 
 #if JS_HAS_INITIALIZERS || JS_HAS_TOSOURCE
 JSBool
@@ -366,9 +400,15 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     size_t nchars, vlength, vsharplength;
     JSBool ok;
     char *comma;
-    jsint i, length;
+    jsint i, j, length, valcnt;
     jsid id;
-    jsval val;
+    JSObject *obj2;
+    JSProperty *prop;
+    uintN attrs;
+    jsval val[2];
+#if JS_HAS_GETTER_SETTER
+    JSString *gsop[2];
+#endif
     JSString *idstr, *valstr, *str;
 
     he = js_EnterSharpObject(cx, obj, &ida, &chars);
@@ -409,11 +449,44 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     comma = NULL;
 
     for (i = 0, length = ida->length; i < length; i++) {
-	/* Get strings for id and val and GC-root them via argv. */
+	/* Get strings for id and value and GC-root them via argv. */
 	id = ida->vector[i];
-	ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
+#if JS_HAS_GETTER_SETTER
+	ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
 	if (!ok)
 	    goto error;
+        ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &attrs);
+        if (ok) {
+            if (prop &&
+                OBJ_IS_NATIVE(obj2) &&
+                (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+                valcnt = 0;
+                if (attrs & JSPROP_GETTER) {
+                    val[valcnt] = (jsval) ((JSScopeProperty *)prop)->getter;
+                    gsop[valcnt] =
+                        ATOM_TO_STRING(cx->runtime->atomState.getterAtom);
+                    valcnt++;
+                }
+                if (attrs & JSPROP_SETTER) {
+                    val[valcnt] = (jsval) ((JSScopeProperty *)prop)->setter;
+                    gsop[valcnt] =
+                        ATOM_TO_STRING(cx->runtime->atomState.setterAtom);
+                    valcnt++;
+                }
+            } else {
+                valcnt = 1;
+                gsop[0] = NULL;
+                ok = OBJ_GET_PROPERTY(cx, obj, id, &val[0]);
+            }
+        }
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+#else
+        valcnt = 1;
+        ok = OBJ_GET_PROPERTY(cx, obj, id, &val[0]);
+#endif
+        if (!ok)
+            goto error;
 
 	/* Convert id to a jsval and then to a string. */
 	id = js_IdToValue(id);
@@ -424,80 +497,94 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	}
 	argv[0] = STRING_TO_JSVAL(idstr);
 
-	/* If id is a non-identifier string, it needs to be quoted. */
-	if (JSVAL_IS_STRING(id) && !js_IsIdentifier(idstr)) {
-	    idstr = js_QuoteString(cx, idstr, (jschar)'\'');
-	    if (!idstr) {
-		ok = JS_FALSE;
-		goto error;
-	    }
-	    argv[0] = STRING_TO_JSVAL(idstr);
-	}
+        /* If id is a non-identifier string, it needs to be quoted. */
+        if (JSVAL_IS_STRING(id) && !js_IsIdentifier(idstr)) {
+            idstr = js_QuoteString(cx, idstr, (jschar)'\'');
+            if (!idstr) {
+                ok = JS_FALSE;
+                goto error;
+            }
+            argv[0] = STRING_TO_JSVAL(idstr);
+        }
 
-	/* Convert val to its canonical source form. */
-	valstr = js_ValueToSource(cx, val);
-	if (!valstr) {
-	    ok = JS_FALSE;
-	    goto error;
-	}
-	argv[1] = STRING_TO_JSVAL(valstr);
-	vchars = valstr->chars;
-	vlength = valstr->length;
+        for (j = 0; j < valcnt; j++) {
+            /* Convert val[j] to its canonical source form. */
+            valstr = js_ValueToSource(cx, val[j]);
+            if (!valstr) {
+                ok = JS_FALSE;
+                goto error;
+            }
+            argv[1+j] = STRING_TO_JSVAL(valstr);
+            vchars = valstr->chars;
+            vlength = valstr->length;
 
-	/* If val is a non-sharp object, consider sharpening it. */
-	vsharp = NULL;
-	vsharplength = 0;
+            /* If val[j] is a non-sharp object, consider sharpening it. */
+            vsharp = NULL;
+            vsharplength = 0;
 #if JS_HAS_SHARP_VARS
-	if (!JSVAL_IS_PRIMITIVE(val) && vchars[0] != '#') {
-	    he = js_EnterSharpObject(cx, JSVAL_TO_OBJECT(val), NULL, &vsharp);
-	    if (!he) {
-		ok = JS_FALSE;
-		goto error;
-	    }
-	    if (IS_SHARP(he)) {
-		vchars = vsharp;
-		vlength = js_strlen(vchars);
-	    } else {
-		if (vsharp) {
-		    vsharplength = js_strlen(vsharp);
-		    MAKE_SHARP(he);
-		}
-		js_LeaveSharpObject(cx, NULL);
-	    }
-	}
+            if (!JSVAL_IS_PRIMITIVE(val[j]) && vchars[0] != '#') {
+                he = js_EnterSharpObject(cx, JSVAL_TO_OBJECT(val[j]), NULL,
+                                         &vsharp);
+                if (!he) {
+                    ok = JS_FALSE;
+                    goto error;
+                }
+                if (IS_SHARP(he)) {
+                    vchars = vsharp;
+                    vlength = js_strlen(vchars);
+                } else {
+                    if (vsharp) {
+                        vsharplength = js_strlen(vsharp);
+                        MAKE_SHARP(he);
+                    }
+                    js_LeaveSharpObject(cx, NULL);
+                }
+            }
 #endif
 
-	/* Allocate 1 + 1 at end for closing brace and terminating 0. */
-	chars = realloc((ochars = chars),
-			(nchars + (comma ? 2 : 0) +
-			 idstr->length + 1 + vsharplength + vlength +
-			 1 + 1) * sizeof(jschar));
-	if (!chars) {
-	    /* Save code space on error: let JS_free ignore null vsharp. */
-	    JS_free(cx, vsharp);
-	    free(ochars);
-	    goto error;
-	}
+            /* Allocate 1 + 1 at end for closing brace and terminating 0. */
+            chars = realloc((ochars = chars),
+                            (nchars + (comma ? 2 : 0) +
+                             idstr->length + 1 +
+#if JS_HAS_GETTER_SETTER
+                             (gsop[j] ? 1 + gsop[j]->length : 0) +
+#endif
+                             vsharplength + vlength +
+                             1 + 1) * sizeof(jschar));
+            if (!chars) {
+                /* Save code space on error: let JS_free ignore null vsharp. */
+                JS_free(cx, vsharp);
+                free(ochars);
+                goto error;
+            }
 
-	if (comma) {
-	    chars[nchars++] = comma[0];
-	    chars[nchars++] = comma[1];
-	}
-	comma = ", ";
+            if (comma) {
+                chars[nchars++] = comma[0];
+                chars[nchars++] = comma[1];
+            }
+            comma = ", ";
 
-	js_strncpy(&chars[nchars], idstr->chars, idstr->length);
-	nchars += idstr->length;
-	chars[nchars++] = ':';
+            js_strncpy(&chars[nchars], idstr->chars, idstr->length);
+            nchars += idstr->length;
+#if JS_HAS_GETTER_SETTER
+            if (gsop[j]) {
+                chars[nchars++] = ' ';
+                js_strncpy(&chars[nchars], gsop[j]->chars, gsop[j]->length);
+                nchars += gsop[j]->length;
+            }
+#endif
+            chars[nchars++] = ':';
 
-	if (vsharplength) {
-	    js_strncpy(&chars[nchars], vsharp, vsharplength);
-	    nchars += vsharplength;
-	}
-	js_strncpy(&chars[nchars], vchars, vlength);
-	nchars += vlength;
+            if (vsharplength) {
+                js_strncpy(&chars[nchars], vsharp, vsharplength);
+                nchars += vsharplength;
+            }
+            js_strncpy(&chars[nchars], vchars, vlength);
+            nchars += vlength;
 
-	if (vsharp)
-	    JS_free(cx, vsharp);
+            if (vsharp)
+                JS_free(cx, vsharp);
+        }
     }
 
     if (chars) {
@@ -1397,6 +1484,40 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     /* Lock if object locking is required by this implementation. */
     JS_LOCK_OBJ(cx, obj);
 
+#if JS_HAS_GETTER_SETTER
+    /*
+     * If defining a getter or setter, we must check for its counterpart and
+     * update the attributes and property ops.  A getter or setter is really
+     * only half of a property.
+     */
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        JSObject *pobj;
+
+        if (!js_LookupProperty(cx, obj, id, &pobj, (JSProperty **)&sprop))
+            goto bad;
+        if (sprop &&
+            pobj == obj &&
+            (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+            sprop->attrs |= attrs;
+            if (attrs & JSPROP_GETTER)
+                sprop->getter = getter;
+            else
+                sprop->setter = setter;
+            if (propp)
+                *propp = (JSProperty *) sprop;
+#ifdef JS_THREADSAFE
+            else {
+                /* Release sprop and the lock acquired by js_LookupProperty. */
+                js_DropProperty(cx, obj, (JSProperty *)sprop);
+            }
+#endif
+            /* Release our lock on obj, in which js_LookupProperty's nested. */
+            JS_UNLOCK_OBJ(cx, obj);
+            return JS_TRUE;
+        }
+    }
+#endif /* JS_HAS_GETTER_SETTER */
+
     /* Use the object's class getter and setter by default. */
     clasp = LOCKED_OBJ_GET_CLASS(obj);
     if (!getter)
@@ -1480,7 +1601,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 	if (!sym) {
 	    clasp = LOCKED_OBJ_GET_CLASS(obj);
 	    resolve = clasp->resolve;
-	    if (resolve && resolve != JS_ResolveStub) {
+	    if (resolve != JS_ResolveStub) {
 		if (clasp->flags & JSCLASS_NEW_RESOLVE) {
 		    newresolve = (JSNewResolveOp)resolve;
 		    flags = 0;
@@ -1793,10 +1914,30 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 		if (protosym) {
 		    protosprop = sym_property(protosym);
 		    if (protosprop) {
+			protoattrs = protosprop->attrs;
+#if JS_HAS_GETTER_SETTER
+                        if (protoattrs & JSPROP_SETTER) {
+                            JSBool ok;
+
+#ifdef JS_THREADSAFE
+                            JS_ATOMIC_ADDREF(&protosprop->nrefs, 1);
+#endif
+                            JS_UNLOCK_OBJ(cx, proto);
+
+                            ok = SPROP_SET(cx, protosprop, obj, obj, vp);
+#ifdef JS_THREADSAFE
+                            JS_LOCK_OBJ_VOID(cx, proto,
+                                             js_DropScopeProperty(cx,
+                                                                  protoscope,
+                                                                  protosprop));
+#endif
+                            return ok;
+                        }
+#endif /* JS_HAS_GETTER_SETTER */
+
 			protoid = protosprop->id;
 			protogetter = protosprop->getter;
 			protosetter = protosprop->setter;
-			protoattrs = protosprop->attrs;
 			JS_UNLOCK_OBJ(cx, proto);
 			break;
 		    }

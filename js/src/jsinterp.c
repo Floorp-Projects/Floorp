@@ -499,7 +499,7 @@ have_fun:
 	if (fun->flags) {
 	    if (fun->flags & JSFUN_BOUND_METHOD)
 		thisp = parent;
-	    else
+	    if (fun->flags & JSFUN_GLOBAL_PARENT)
 		parent = NULL;
 	}
     }
@@ -528,8 +528,9 @@ have_fun:
      * "Call" objects with private data) may not be referred to by 'this'
      * as dictated by ECMA.
      */
-    if (thisp && !(OBJ_GET_CLASS(cx, thisp) == &js_CallClass &&
-		   JS_GetPrivate(cx, thisp) != NULL))
+    if (thisp &&
+        !(OBJ_GET_CLASS(cx, thisp) == &js_CallClass &&
+          JS_GetPrivate(cx, thisp) != NULL))
     {
 	/* Some objects (e.g., With) delegate 'this' to another object. */
 	thisp = OBJ_THIS_OBJECT(cx, thisp);
@@ -941,7 +942,7 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
 	} else {
 	    prop = NULL;
 	}
-	if (prop && (target == obj2)) {
+	if (prop && target == obj2) {
 	    ok = OBJ_SET_PROPERTY(cx, target, id, &value);
 	} else {
 	    ok = OBJ_DEFINE_PROPERTY(cx, target, id, value, NULL, NULL,
@@ -1011,8 +1012,11 @@ js_Interpret(JSContext *cx, jsval *result)
     JSFunction *fun2;
     JSObject *closure;
 #endif
-#if JS_HAS_EXPORT_IMPORT
+#if JS_HAS_EXPORT_IMPORT || JS_HAS_GETTER_SETTER
     uintN attrs;
+#endif
+#if JS_HAS_GETTER_SETTER
+    JSPropertyOp getter, setter;
 #endif
 #if JS_HAS_EXCEPTIONS
     JSTryNote *tn;
@@ -1505,7 +1509,7 @@ js_Interpret(JSContext *cx, jsval *result)
     PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);                   \
     if (PROP_FOUND(prop) &&                                                   \
 	!(sprop = (JSScopeProperty *)prop,                                    \
-	  sprop->attrs & (JSPROP_READONLY | JSPROP_ASSIGNHACK))) {            \
+	  sprop->attrs & JSPROP_READONLY)) {                                  \
 	ok = SPROP_SET(cx, sprop, obj, obj, &rval);                           \
 	if (ok) {                                                             \
 	    SET_ENUMERATE_ATTR(sprop);                                        \
@@ -2476,10 +2480,16 @@ js_Interpret(JSContext *cx, jsval *result)
 	     */
 	    if (fun2->atom) {
 		SAVE_SP(fp);
-		ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)fun2->atom,
-					 OBJECT_TO_JSVAL(closure),
-					 NULL, NULL, JSPROP_ENUMERATE,
-					 NULL);
+                ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)fun2->atom,
+                                         OBJECT_TO_JSVAL(closure),
+                                         (fun2->flags & JSFUN_GETTER)
+                                         ? (JSPropertyOp) closure
+                                         : NULL,
+                                         (fun2->flags & JSFUN_SETTER)
+                                         ? (JSPropertyOp) closure
+                                         : NULL,
+                                         fun2->flags | JSPROP_ENUMERATE,
+                                         NULL);
 		if (!ok) {
 		    cx->newborn[GCX_OBJECT] = NULL;
 		    goto out;
@@ -2618,6 +2628,79 @@ js_Interpret(JSContext *cx, jsval *result)
 	    GC_POKE(cx, *vp);
 	    *vp = sp[-1];
 	    break;
+
+#if JS_HAS_GETTER_SETTER
+          case JSOP_GETTER:
+          case JSOP_SETTER:
+            JS_ASSERT(len == 1);
+            op2 = *++pc;
+            cs = &js_CodeSpec[op2];
+            len = cs->length;
+            switch (op2) {
+              case JSOP_SETNAME2:
+              case JSOP_SETPROP:
+                atom = GET_ATOM(cx, script, pc);
+                id   = (jsid)atom;
+                rval = POP();
+                goto gs_pop_lval;
+
+              case JSOP_SETELEM:
+                rval = POP();
+                POP_ELEMENT_ID(id);
+              gs_pop_lval:
+                lval = POP();
+                VALUE_TO_OBJECT(cx, lval, obj);
+                break;
+
+#if JS_HAS_INITIALIZERS
+              case JSOP_INITPROP:
+                JS_ASSERT(sp - newsp >= 2);
+                rval = POP();
+                atom = GET_ATOM(cx, script, pc);
+                id   = (jsid)atom;
+                goto gs_get_lval;
+
+              case JSOP_INITELEM:
+                JS_ASSERT(sp - newsp >= 3);
+                rval = POP();
+                POP_ELEMENT_ID(id);
+              gs_get_lval:
+                lval = sp[-1];
+                JS_ASSERT(JSVAL_IS_OBJECT(lval));
+                obj = JSVAL_TO_OBJECT(lval);
+                break;
+#endif
+
+              default:
+                JS_ASSERT(0);
+            }
+            if (JS_TypeOfValue(cx, rval) != JSTYPE_FUNCTION) {
+		JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				     JSMSG_BAD_GETTER_OR_SETTER,
+                                     (op == JSOP_GETTER)
+                                     ? js_getter_str
+                                     : js_setter_str);
+		ok = JS_FALSE;
+                goto out;
+            }
+            if (op == JSOP_GETTER) {
+                getter = (JSPropertyOp) JSVAL_TO_OBJECT(rval);
+                setter = NULL;
+                attrs = JSPROP_GETTER;
+            } else {
+                getter = NULL;
+                setter = (JSPropertyOp) JSVAL_TO_OBJECT(rval);
+                attrs = JSPROP_SETTER;
+            }
+            attrs |= JSPROP_ENUMERATE;
+            ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, getter, setter,
+                                     attrs, NULL);
+            if (!ok)
+                goto out;
+            if (cs->ndefs)
+                PUSH_OPND(rval);
+            break;
+#endif
 
 #if JS_HAS_INITIALIZERS
 	  case JSOP_NEWINIT:

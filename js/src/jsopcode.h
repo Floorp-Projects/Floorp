@@ -107,6 +107,7 @@ struct JSCodeSpec {
     uint32              format;         /* immediate operand format */
 };
 
+extern char             js_function_str[];
 extern char             js_in_str[];
 extern char             js_instanceof_str[];
 extern char             js_new_str[];
@@ -135,7 +136,7 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote);
  * a GC'ed string.
  */
 extern JSPrinter *
-js_NewPrinter(JSContext *cx, const char *name, uintN indent);
+js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty);
 
 extern void
 js_DestroyPrinter(JSPrinter *jp);
@@ -144,10 +145,10 @@ extern JSString *
 js_GetPrinterOutput(JSPrinter *jp);
 
 extern int
-js_printf(JSPrinter *jp, char *format, ...);
+js_printf(JSPrinter *jp, const char *format, ...);
 
 extern JSBool
-js_puts(JSPrinter *jp, char *s);
+js_puts(JSPrinter *jp, const char *s);
 
 #ifdef DEBUG
 /*
@@ -173,10 +174,10 @@ extern JSBool
 js_DecompileScript(JSPrinter *jp, JSScript *script);
 
 extern JSBool
-js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun, JSBool newlines);
+js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun);
 
 extern JSBool
-js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines);
+js_DecompileFunction(JSPrinter *jp, JSFunction *fun);
 
 /*
  * Find the source expression that resulted in v, and return a new string
