@@ -50,6 +50,7 @@
 #include "nsIComponentManager.h"
 #include "prtypes.h"
 #include "prio.h"
+#include "prprf.h"
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -448,7 +449,7 @@ nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void*
 // nsLocalFile::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsLocalFile, nsILocalFile, nsIFile)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile, nsILocalFile, nsIFile, nsILocalFileWin)
 
 
 //-----------------------------------------------------------------------------
@@ -995,6 +996,77 @@ nsLocalFile::GetNativePath(nsACString &_retval)
     return NS_OK;
 }
 
+typedef struct {
+    WORD wLanguage;
+    WORD wCodePage;
+} LANGANDCODEPAGE;
+
+NS_IMETHODIMP
+nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
+{
+    nsresult rv = ResolveAndStat();
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = NS_ERROR_FAILURE;
+
+    // Cast away const-ness here because WinAPI functions don't understand it, 
+    // the path is used for [in] parameters only however so it's safe. 
+    char *path = NS_CONST_CAST(char*, mFollowSymlinks ? mResolvedPath.get() 
+                                                      : mWorkingPath.get());
+
+    // Per http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/resources/versioninformation/versioninformationreference/versioninformationfunctions/getfileversioninfosize.asp
+    // if the "short" version of this file name is > 125 characters, 
+    // GetFileVersionInfoSize will not work (for Win9x compatibility)
+    char shortPath[126];
+    ::GetShortPathName(path, shortPath, sizeof(shortPath));
+
+    DWORD dummy;
+    DWORD size = ::GetFileVersionInfoSize(shortPath, &dummy);
+    if (!size)
+        return rv;
+
+    void* ver = calloc(size, 1);
+    if (!ver)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (::GetFileVersionInfo(path, 0, size, ver)) 
+    {
+        LANGANDCODEPAGE* translate = nsnull;
+        UINT pageCount;
+        BOOL queryResult = ::VerQueryValue(ver, "\\VarFileInfo\\Translation", 
+                                            (void**)&translate, &pageCount);
+        if (queryResult && translate) 
+        {
+            for (PRInt32 i = 0; i < 2; ++i) 
+            { 
+                char subBlock[MAX_PATH];
+                PR_snprintf(subBlock, sizeof(subBlock), 
+                            "\\StringFileInfo\\%04x%04x\\%s", 
+                            (i == 0 ? translate[0].wLanguage 
+                                    : ::GetUserDefaultLangID()),
+                            translate[0].wCodePage, aField);
+
+                LPVOID value = nsnull;
+                UINT size;
+                queryResult = ::VerQueryValue(ver, subBlock, &value, &size);
+                if (queryResult && value)
+                {
+                    NS_CopyNativeToUnicode(nsDependentCString((const char*)value), _retval);
+                    if (!_retval.IsEmpty()) 
+                    {
+                        rv = NS_OK;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    free(ver);
+    
+    return rv;
+}
+ 
 nsresult
 nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const nsACString &newName, 
                             PRBool followSymlinks, PRBool move)
