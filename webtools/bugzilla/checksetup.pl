@@ -217,7 +217,7 @@ unless (have_vers("Date::Parse",0)) { # 0 = any version
 print "The following two modules are optional:\n";
 my $charts = 0;
 $charts++ if have_vers("GD","1.19");
-$charts++ if have_vers("Chart::Base","0.99b");
+$charts++ if have_vers("Chart::Base","0.99");
 if ($charts != 2) {
     print "If you you want to see graphical bug dependency charts, you may install\n",
     "the optional libgd and the Perl modules GD-1.19 and Chart::Base-0.99b, e.g. by\n",
