@@ -62,7 +62,9 @@ echo >$RSH_FILE
 TMPFILES="$TMPFILES $WARNINGLIST $RSH_FILE "
 RSH_WAIT_TIME=80 #maximum time allowed for the 2 rsh to finish...
 #TOTAL_TESTS=106
-TOTAL_TESTS=133
+TOTAL_TESTS=123 #3.3.2
+BCT_TOTAL_TESTS=122 #3.2.2
+#TOTAL_TESTS=133 #tip
 
 Debug "NTDIST $NTDIST"
 Debug "UXDIST $UXDIST"
@@ -905,6 +907,9 @@ qa_stat_main()
     rsaperf >>$TMP_HTML_FILE
     bc_header >>$TMP_HTML_FILE
     MACHINES_TO_CHECK="bct/"
+    TOTAL_TESTS=$BCT_TOTAL_TESTS
+    BEFORE_CONTEXT_GREP="" #WORKAROUND - errors in one outputlog within the first 
+    AFTER_CONTEXT_GREP=""  # or last lines will show up in the next/previos file
     qa_errorlist > $ERRORLIST
     platformlist 
     missing_platforms 
