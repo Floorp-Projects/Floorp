@@ -562,7 +562,6 @@ function launchBrowser()
 
 
 
-
 /**
 *   Helper function for filling the form, set the value of a property of a XUL element
 *
@@ -622,10 +621,7 @@ function getFieldValue( elementId, propertyName )
    }
    else
    {
-      if( field )
-         return field.value;
-      else
-         alert( elementId );
+      return field.value;
    }
 }
 
