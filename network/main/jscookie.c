@@ -34,6 +34,7 @@
 #include "jscookie.h"
 #include "ds.h"
 #include "xpgetstr.h"
+#include "net_xp_file.h"
 
 extern int MK_ACCESS_JAVASCRIPT_COOKIE_FILTER;
 
@@ -468,7 +469,7 @@ compileJSCookieFilters(void)
     PR_LogPrint("+Filename for script filter is %s\n", filename);
 
 	/* If we can't get to the file, get the hell outa dodge. */
-    if(XP_Stat(filename, &stats, xpJSCookieFilters))
+    if(NET_XP_Stat(filename, &stats, xpJSCookieFilters))
 		return ret_val;
 
     if (stats.st_mtime > m_time || need_compile)
@@ -486,21 +487,21 @@ compileJSCookieFilters(void)
                             return ret_val;
                     }
             
-            if( !(fp = XP_FileOpen(filename, xpJSCookieFilters, "r")) ) {
+            if( !(fp = NET_XP_FileOpen(filename, xpJSCookieFilters, "r")) ) {
 					    ret_val = JS_FALSE;
 					    return ret_val;
 				    }
             
             buffer = (char*)malloc(fileLength);
             if (!buffer) {
-                XP_FileClose(fp);
+                NET_XP_FileClose(fp);
                 ret_val = JS_FALSE;
                 return ret_val;
             }
             
-            fileLength = XP_FileRead(buffer, fileLength, fp);
+            fileLength = NET_XP_FileRead(buffer, fileLength, fp);
 
-            XP_FileClose(fp);
+            NET_XP_FileClose(fp);
 
             PR_LogPrint("+Compiling filters.js...\n");
 

@@ -29,6 +29,7 @@
 #include "mkselect.h"
 #include "mktcp.h"
 #include "mkgeturl.h"
+#include "net_xp_file.h"
 #include "prerror.h"
 #include "prmem.h"
 #include "plstr.h"
@@ -1488,7 +1489,7 @@ net_get_ftp_file_type(ActiveEntry *ce)
 			
 			for(i=0; array[i]; i++)
 			  {
-				if(XP_Stat(array[i], 
+				if(NET_XP_Stat(array[i], 
 						   &stat_entry, xpFileToPost) != -1)
 					cd->total_size_of_files_to_post += stat_entry.st_size;
 			  }
@@ -2624,7 +2625,7 @@ net_ftp_push_partial_cache_file(ActiveEntry * ce)
 
     write_ready = MIN(write_ready, NET_Socket_Buffer_Size);
 
-    status = XP_FileRead(NET_Socket_Buffer, write_ready, cd->partial_cache_fp);
+    status = NET_XP_FileRead(NET_Socket_Buffer, write_ready, cd->partial_cache_fp);
 
     if( status < 0 )
     {
@@ -2638,7 +2639,7 @@ net_ftp_push_partial_cache_file(ActiveEntry * ce)
         TRACEMSG(("Closing FTP cache file"));
         NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_FILEDONE));
         NET_ClearFileReadSelect(ce->window_id, XP_Fileno(cd->partial_cache_fp));
-        XP_FileClose(cd->partial_cache_fp);
+        NET_XP_FileClose(cd->partial_cache_fp);
         cd->partial_cache_fp = NULL;
         ce->socket = cd->dsock;
         NET_SetReadSelect(ce->window_id, ce->socket);
@@ -2672,7 +2673,7 @@ net_start_ftp_read_file(ActiveEntry * ce)
 
         TRACEMSG(("Opening FTP cache file"));
 
-        if( (NULL == cache_file) || (NULL == (fp = XP_FileOpen(cache_file, xpCache, XP_FILE_READ_BIN))) )
+        if( (NULL == cache_file) || (NULL == (fp = NET_XP_FileOpen(cache_file, xpCache, XP_FILE_READ_BIN))) )
         {
             ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_OPEN_FILE, cache_file);
             return MK_UNABLE_TO_OPEN_FILE;
@@ -4566,7 +4567,7 @@ net_ProcessFTP(ActiveEntry * ce)
 
 			if(cd->file_to_post_fp)
 			  {
-				XP_FileClose(cd->file_to_post_fp);
+				NET_XP_FileClose(cd->file_to_post_fp);
 				cd->file_to_post_fp = 0;
 			  }
     

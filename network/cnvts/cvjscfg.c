@@ -24,6 +24,7 @@
 #include "xpgetstr.h"
 #include "jsapi.h"
 #include "fe_proto.h"
+#include "net_xp_file.h"
 
 static XP_Bool                  m_GettingConfigFile = FALSE;
 static XP_Bool                  m_FindProxyInJSC = FALSE;
@@ -191,10 +192,10 @@ jsc_save_config(char* bytes, int32 num_bytes)
  
 	if ( bytes == NULL || num_bytes <= 0 ) return;
  
-	if( (fp = XP_FileOpen("", xpJSConfig, XP_FILE_WRITE)) == NULL ) return;
+	if( (fp = NET_XP_FileOpen("", xpJSConfig, XP_FILE_WRITE)) == NULL ) return;
  
-	XP_FileWrite(bytes, num_bytes, fp);
-	XP_FileClose(fp);
+	NET_XP_FileWrite(bytes, num_bytes, fp);
+	NET_XP_FileClose(fp);
 }
 
 
@@ -222,9 +223,9 @@ jsc_try_failover(MWContext* w)
 
 	if ( !FE_Confirm(w, XP_GetString(XP_CONF_LOAD_FAILED_USE_PREV)) ) return -1;
 
-	if (XP_Stat("", &st, xpJSConfig) == -1) goto failed;
+	if (NET_XP_Stat("", &st, xpJSConfig) == -1) goto failed;
  
-	if ( (fp = XP_FileOpen("", xpJSConfig, XP_FILE_READ)) == NULL ) goto failed;
+	if ( (fp = NET_XP_FileOpen("", xpJSConfig, XP_FILE_READ)) == NULL ) goto failed;
  
 	num_bytes = st.st_size;
 
@@ -234,7 +235,7 @@ jsc_try_failover(MWContext* w)
 
 	if ( bytes == NULL ) goto failed;
 
-	if ( (num_bytes = XP_FileRead(bytes, num_bytes, fp)) <= 0 ) goto failed;
+	if ( (num_bytes = NET_XP_FileRead(bytes, num_bytes, fp)) <= 0 ) goto failed;
 
 	bytes[num_bytes] = '\0';
 
@@ -244,14 +245,14 @@ jsc_try_failover(MWContext* w)
     if ( !PREF_EvaluateConfigScript(bytes, num_bytes, NULL, TRUE, TRUE) )goto failed;
 #endif
 
-	XP_FileClose(fp);
+	NET_XP_FileClose(fp);
 	XP_FREEIF(bytes);
 
 	return 0;
 
 failed:
 	FE_Alert(w, XP_GetString(XP_GLOBAL_EVEN_SAVED_IS_BAD));
-	if ( fp != NULL ) XP_FileClose(fp);
+	if ( fp != NULL ) NET_XP_FileClose(fp);
 	XP_FREEIF(bytes);
 	return -1;
 }

@@ -29,9 +29,9 @@
 #endif
 #endif
 
-
 #include "rosetta.h"
 #include "mkutils.h"
+#include "net_xp_file.h"
 #include "gui.h"
 #include "mkparse.h"
 #include "mkgeturl.h"
@@ -167,7 +167,7 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
           }
 
         /* skip over subdirectory names */
-        if(-1 != XP_Stat(file_to_post, &stat_entry, xpFileToPost) && S_ISDIR(stat_entry.st_mode) )
+        if(-1 != NET_XP_Stat(file_to_post, &stat_entry, xpFileToPost) && S_ISDIR(stat_entry.st_mode) )
           {
             PR_Free(file_to_post);
             continue;
@@ -567,7 +567,7 @@ NET_free_write_post_data_object(struct WritePostDataData *obj)
 		return;
 
 	if (obj->fp)
-		XP_FileClose(obj->fp);
+		NET_XP_FileClose(obj->fp);
 
 	FREEIF(obj->buffer);
 	FREE(obj);
@@ -673,14 +673,14 @@ NET_WritePostData(MWContext  *context,
 
 		/* stat the file to get the size
 		 */
-		if(-1 != XP_Stat(URL_s->post_data, &stat_entry, xpFileToPost))
+		if(-1 != NET_XP_Stat(URL_s->post_data, &stat_entry, xpFileToPost))
 		  {
 		  	data_obj->file_size = stat_entry.st_size;
 		  }
 		  	
         /* open the post data file
          */
-        data_obj->fp = XP_FileOpen(URL_s->post_data, xpFileToPost, XP_FILE_READ_BIN);
+        data_obj->fp = NET_XP_FileOpen(URL_s->post_data, xpFileToPost, XP_FILE_READ_BIN);
 
         if(!data_obj->fp)
           {
@@ -717,7 +717,7 @@ NET_WritePostData(MWContext  *context,
 				do {
 				  int L;
 
-				  line = XP_FileReadLine(b, bsize-5, data_obj->fp);
+				  line = NET_XP_FileReadLine(b, bsize-5, data_obj->fp);
 
 				  if (!line)
 					break;
@@ -774,7 +774,7 @@ NET_WritePostData(MWContext  *context,
 			  }
 			else
 			  {
-				data_obj->amt_in_buffer = XP_FileRead(data_obj->buffer,
+				data_obj->amt_in_buffer = NET_XP_FileRead(data_obj->buffer,
 											   POST_DATA_BUFFER_SIZE-1,
 											   data_obj->fp);
 			  }
@@ -788,7 +788,7 @@ HG29784
 				/* 
 				 * handled by NET_free_write_post_data_object 
 				 *
-				XP_FileClose(data_obj->fp);
+				NET_XP_FileClose(data_obj->fp);
 				*/
 				PR_ASSERT(data_obj->total_amt_sent >= data_obj->file_size);
 				NET_free_write_post_data_object(data_obj);
@@ -823,7 +823,7 @@ HG29784
             URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, err);
 			/*
 			 * handled by net_free_write_post_data
-			XP_FileClose(data_obj->fp);
+			NET_XP_FileClose(data_obj->fp);
 			*/
 
 			NET_free_write_post_data_object(data_obj);
@@ -2432,7 +2432,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		 */
   		tmpfilename = WH_TempName (xpFileToPost, "nsform");
 		if (!tmpfilename) return 0;
-  		fp = XP_FileOpen (tmpfilename, xpFileToPost, XP_FILE_WRITE_BIN);
+  		fp = NET_XP_FileOpen (tmpfilename, xpFileToPost, XP_FILE_WRITE_BIN);
   		if (!fp) {
 			PR_Free(tmpfilename);
 			return 0;
@@ -2440,14 +2440,14 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 
 		if (url_struct->post_headers)
 		  {
-			len = XP_FileWrite(url_struct->post_headers,
+			len = NET_XP_FileWrite(url_struct->post_headers,
 						 PL_strlen (url_struct->post_headers),
 						 fp);
 			PR_Free (url_struct->post_headers);
 			url_struct->post_headers = 0;
 			if (len < 0)
 			{
-				XP_FileClose(fp);
+				NET_XP_FileClose(fp);
 				return 0;
 			}
 		  }
@@ -2455,18 +2455,18 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		PL_strcpy (buffer,
 				   "Content-type: text/plain" CRLF
 				   "Content-Disposition: inline; form-data" CRLF CRLF);
-		len = XP_FileWrite(buffer, PL_strlen(buffer), fp);
+		len = NET_XP_FileWrite(buffer, PL_strlen(buffer), fp);
 
 		for(i=0; (len >= 0) && (i < sub_data->value_cnt); i++)
 		  {
 			if(name_array[i])
-				XP_FileWrite(name_array[i], PL_strlen(name_array[i]), fp);
-			XP_FileWrite("=", 1, fp);
+				NET_XP_FileWrite(name_array[i], PL_strlen(name_array[i]), fp);
+			NET_XP_FileWrite("=", 1, fp);
 			if(value_array[i])
-				XP_FileWrite(value_array[i], PL_strlen(value_array[i]), fp);
-			len = XP_FileWrite(CRLF, 2, fp);
+				NET_XP_FileWrite(value_array[i], PL_strlen(value_array[i]), fp);
+			len = NET_XP_FileWrite(CRLF, 2, fp);
 		  }
-		XP_FileClose(fp);
+		NET_XP_FileClose(fp);
 	
 		StrAllocCopy(url_struct->post_data, tmpfilename);
 		PR_Free(tmpfilename);
@@ -2497,7 +2497,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		 */
   		tmpfilename = WH_TempName (xpFileToPost, "nsform");
 		if (!tmpfilename) return 0;
-  		fp = XP_FileOpen (tmpfilename, xpFileToPost, XP_FILE_WRITE_BIN);
+  		fp = NET_XP_FileOpen (tmpfilename, xpFileToPost, XP_FILE_WRITE_BIN);
   		if (!fp) {
 			PR_Free(tmpfilename);
     		return 0;
@@ -2508,7 +2508,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 
 		if(url_struct->post_headers)
 		  {
-			len = XP_FileWrite(url_struct->post_headers,
+			len = NET_XP_FileWrite(url_struct->post_headers,
 					 	PL_strlen (url_struct->post_headers),
 					 	fp);
 			PR_Free (url_struct->post_headers);
@@ -2521,7 +2521,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 				"Content-type: multipart/form-data;"
 				" boundary=%s" CRLF,
 			    separator);
-		len = XP_FileWrite(buffer, PL_strlen(buffer), fp);
+		len = NET_XP_FileWrite(buffer, PL_strlen(buffer), fp);
 
 #define CONTENT_DISPOSITION "Content-Disposition: form-data; name=\""
 #define PLUS_FILENAME "\"; filename=\""
@@ -2614,7 +2614,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			     	* need to stat the file to get the size
 			     	*/
 					if(value_array[i] && *value_array[i])
-				    	if(-1 != XP_Stat (value_array[i], &stat_entry, xpFileToPost))
+				    	if(-1 != NET_XP_Stat (value_array[i], &stat_entry, xpFileToPost))
 					    	total_size += stat_entry.st_size;
 
 					/* if we can't stat the file just add zero */
@@ -2632,24 +2632,24 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		total_size += boundary_len+2;
 
 		sprintf(buffer, "Content-Length: %ld%s", total_size, CRLF);
-		len = XP_FileWrite(buffer, PL_strlen(buffer), fp);
+		len = NET_XP_FileWrite(buffer, PL_strlen(buffer), fp);
 
 		for(i=0; (len >= 0) && (i < sub_data->value_cnt); i++)
 		  {
 			sprintf(buffer, "%s--%s%s", CRLF, separator, CRLF);
-			XP_FileWrite(buffer, PL_strlen(buffer), fp);
+			NET_XP_FileWrite(buffer, PL_strlen(buffer), fp);
 			
 			/* WARNING!!! If you change the size of any of the
 			 * sprintf's here you must change the size
 			 * in the counting for loop above
 			 */
-			XP_FileWrite(CONTENT_DISPOSITION, cont_disp_len, fp);
+			NET_XP_FileWrite(CONTENT_DISPOSITION, cont_disp_len, fp);
 			if(name_array[i])
-				XP_FileWrite(name_array[i], PL_strlen(name_array[i]), fp);
+				NET_XP_FileWrite(name_array[i], PL_strlen(name_array[i]), fp);
 
 			if(type_array[i] == FORM_TYPE_FILE)
 			  {
-				XP_FileWrite(PLUS_FILENAME, PL_strlen(PLUS_FILENAME), fp);
+				NET_XP_FileWrite(PLUS_FILENAME, PL_strlen(PLUS_FILENAME), fp);
 				if(value_array[i])
 				  {
 					/* only write the filename, not the whole path */
@@ -2658,12 +2658,12 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 						slash++;
 					else
 						slash = value_array[i];
-					XP_FileWrite(slash, PL_strlen(slash), fp);
+					NET_XP_FileWrite(slash, PL_strlen(slash), fp);
 
 				  }
 			  }
   			/* end the content disposition line */
-			len = XP_FileWrite("\"" CRLF, PL_strlen("\"" CRLF), fp);
+			len = NET_XP_FileWrite("\"" CRLF, PL_strlen("\"" CRLF), fp);
 
 			if(type_array[i] == FORM_TYPE_FILE && value_array[i])
 			{
@@ -2671,13 +2671,13 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 				if(encoding_array[i] == INPUT_TYPE_ENCODING_MACBIN)
 				{
 					/* add the content_type header */
-                	XP_FileWrite(CONTENT_TYPE_HEADER, 
+                	NET_XP_FileWrite(CONTENT_TYPE_HEADER, 
 									 	PL_strlen(CONTENT_TYPE_HEADER),
 									 	fp);
-                	XP_FileWrite(APPLICATION_MACBINARY, 
+                	NET_XP_FileWrite(APPLICATION_MACBINARY, 
 									 	PL_strlen(APPLICATION_MACBINARY),
 									 	fp);
-					len = XP_FileWrite(CRLF, PL_strlen(CRLF), fp);
+					len = NET_XP_FileWrite(CRLF, PL_strlen(CRLF), fp);
 				}
 				else
 #endif /* XP_MAC */
@@ -2691,19 +2691,19 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 	                	/* we have determined it's type. Send the
 	                 	* content-type
 	                 	*/
-	                	XP_FileWrite(CONTENT_TYPE_HEADER, 
+	                	NET_XP_FileWrite(CONTENT_TYPE_HEADER, 
 										 	PL_strlen(CONTENT_TYPE_HEADER),
 										 	fp);
-	                	XP_FileWrite(ctype->type,
+	                	NET_XP_FileWrite(ctype->type,
 	                        			 	PL_strlen(ctype->type),
 										 	fp);
-						len = XP_FileWrite(CRLF, PL_strlen(CRLF), fp);
+						len = NET_XP_FileWrite(CRLF, PL_strlen(CRLF), fp);
 					}
 	            }
 			}
 
 			/* end the header */
-			len = XP_FileWrite(CRLF, PL_strlen(CRLF), fp);
+			len = NET_XP_FileWrite(CRLF, PL_strlen(CRLF), fp);
 
 			/* send the value of the form field */
 
@@ -2729,7 +2729,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 											  		  NET_Socket_Buffer_Size, 
 											  		  &mbFile)) != 0)
 							  {
-								XP_FileWrite(NET_Socket_Buffer, size, fp);
+								NET_XP_FileWrite(NET_Socket_Buffer, size, fp);
 							  }
 							MB_Close(&mbFile);
 						  }
@@ -2742,34 +2742,34 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 					int32 size;
 
 					if(value_array[i] && *value_array[i])
-						ext_fp = XP_FileOpen(value_array[i], 
+						ext_fp = NET_XP_FileOpen(value_array[i], 
 									 	xpFileToPost, 
 									 	XP_FILE_READ_BIN);
 
 
 					if(ext_fp)
 					  {
-						while((size = XP_FileRead(NET_Socket_Buffer, 
+						while((size = NET_XP_FileRead(NET_Socket_Buffer, 
 										  		  NET_Socket_Buffer_Size, 
 										  		  ext_fp)) != 0)
 						  {
-							XP_FileWrite(NET_Socket_Buffer, size, fp);
+							NET_XP_FileWrite(NET_Socket_Buffer, size, fp);
 						  }
-						XP_FileClose(ext_fp);
+						NET_XP_FileClose(ext_fp);
 					  }
 				 }
 			  }
 			else
 			  {
 				if(value_array[i])
-					XP_FileWrite(value_array[i], PL_strlen(value_array[i]), fp);
+					NET_XP_FileWrite(value_array[i], PL_strlen(value_array[i]), fp);
 			  }
 		  }
 
 		sprintf(buffer, "%s--%s--%s", CRLF, separator, CRLF);
-		XP_FileWrite(buffer, PL_strlen(buffer), fp);
+		NET_XP_FileWrite(buffer, PL_strlen(buffer), fp);
 
-		XP_FileClose(fp);
+		NET_XP_FileClose(fp);
 	
 		StrAllocCopy(url_struct->post_data, tmpfilename);
 		PR_Free(tmpfilename);
@@ -3230,7 +3230,7 @@ net_return_local_file_part_from_url(char *address)
 		 * the local file system can
 		 * have url's of the form \\prydain\dist
 		 */
-		if(-1 != XP_Stat(address+5, &stat_entry, xpURL))
+		if(-1 != NET_XP_Stat(address+5, &stat_entry, xpURL))
 		  {
 			PR_Free(host);
 			/* skip "file:" */

@@ -36,6 +36,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "timing.h"
+#include "net_xp_file.h"
 
 /* For 197 java hookup */
 #include "jri.h"
@@ -212,7 +213,7 @@ net_SaveExtCacheInfo(void)
 	XP_File fp;
 	XP_List *list_ptr;
 
-	fp = XP_FileOpen("", xpExtCacheIndex, XP_FILE_WRITE);
+	fp = NET_XP_FileOpen("", xpExtCacheIndex, XP_FILE_WRITE);
 	list_ptr = ext_cache_database_list;
 
 	cache_SaveCacheInfo(fp, list_ptr, EXTCACHE);
@@ -224,7 +225,7 @@ net_ReadExtCacheInfo(void)
 {
 	XP_File fp;
 
-	fp = XP_FileOpen("", xpExtCacheIndex, XP_FILE_READ);
+	fp = NET_XP_FileOpen("", xpExtCacheIndex, XP_FILE_READ);
 
 	cache_ReadCacheInfo(fp, &ext_cache_database_list, EXTCACHE);
 }
@@ -382,7 +383,7 @@ CACHE_GetManagedCacheList()
 	/* If the Cache Index is not open, we can not see if the cache is open now can we */
 	if (!SARCacheIndexOpen)
 	{
-		fp = XP_FileOpen("", xpSARCacheIndex, XP_FILE_READ);
+		fp = NET_XP_FileOpen("", xpSARCacheIndex, XP_FILE_READ);
 
 		/* check to see if the open succeeds */
 		if (fp) 
@@ -413,11 +414,11 @@ CACHE_CloseAllOpenSARCache()
 		CACHE_CloseCache(db_info);
 
 		if ( db_info->logFile )
-			XP_FileClose(db_info->logFile);
+			NET_XP_FileClose(db_info->logFile);
 
 		/* stat the db file to see if it exists, if it doesn't remove it from */
 		/* the archive.fat file to keep things consistent */
-	    if(db_info->filename && (XP_Stat(db_info->filename, &stat_entry, xpSARCache) == -1) )
+	    if(db_info->filename && (NET_XP_Stat(db_info->filename, &stat_entry, xpSARCache) == -1) )
 	    {
 		    /* file does not exist!!
 		     * remove the entry 
@@ -450,7 +451,7 @@ CACHE_OpenAllSARCache()
 
 	if (!SARCacheIndexOpen)
 	{
-		fp = XP_FileOpen("", xpSARCacheIndex, XP_FILE_READ);
+		fp = NET_XP_FileOpen("", xpSARCacheIndex, XP_FILE_READ);
 
 		/* check to see if the open succeeds */
 		if (fp)
@@ -610,7 +611,7 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 	/* If the Cache Index is not open, we can not see if the cache is open now can we */
 	if (!SARCacheIndexOpen)
 	{
-		fp = XP_FileOpen("", xpSARCacheIndex, XP_FILE_READ);
+		fp = NET_XP_FileOpen("", xpSARCacheIndex, XP_FILE_READ);
 
 		/* check to see if the open succeeds */
 		if (fp)
@@ -837,13 +838,13 @@ cache_SaveCacheInfo(XP_File fp, XP_List *list_ptr, int type)
 	if(!fp)
 		return;
 
-	len = XP_FileWrite("# Netscape External Cache Index" LINEBREAK
+	len = NET_XP_FileWrite("# Netscape External Cache Index" LINEBREAK
 				 "# This is a generated file!  Do not edit." LINEBREAK
 				 LINEBREAK,
 				 -1, fp);
 	if (len < 0)
 	{
-		XP_FileClose(fp);
+		NET_XP_FileClose(fp);
 		return;
 	}
 
@@ -856,37 +857,37 @@ cache_SaveCacheInfo(XP_File fp, XP_List *list_ptr, int type)
 		if( !db_info->filename && ( (type == EXTCACHE && !db_info->name) || (type == SARCACHE && !db_info->path) ) )
 			continue;
 
-		len = XP_FileWrite(db_info->filename, -1, fp);
+		len = NET_XP_FileWrite(db_info->filename, -1, fp);
 		if (len < 0)
 		{
-			XP_FileClose(fp);
+			NET_XP_FileClose(fp);
 			return;
 		}
-		XP_FileWrite("\t", -1, fp);
+		NET_XP_FileWrite("\t", -1, fp);
 
 		if ( type == EXTCACHE )
-			XP_FileWrite(db_info->name, -1, fp);
+			NET_XP_FileWrite(db_info->name, -1, fp);
 		else
 		{
 			if ( db_info->path == NULL || *(db_info->path) == '\0' || *(db_info->path) == ' ')
 			{
-				XP_FileWrite("\\", -1, fp);
+				NET_XP_FileWrite("\\", -1, fp);
 			}
 			else
 			{
-				XP_FileWrite(db_info->path, -1, fp);
+				NET_XP_FileWrite(db_info->path, -1, fp);
 			}
 		}
 
-		len = XP_FileWrite(LINEBREAK, -1, fp);
+		len = NET_XP_FileWrite(LINEBREAK, -1, fp);
 		if (len < 0)
 		{
-			XP_FileClose(fp);
+			NET_XP_FileClose(fp);
 			return;
 		}
       }
 
-	XP_FileClose(fp);
+	NET_XP_FileClose(fp);
 }
 
 PRIVATE void 
@@ -895,7 +896,7 @@ cache_SaveSARCacheInfo(void)
 	XP_File fp;
 	XP_List *list_ptr;
 
-	fp = XP_FileOpen("", xpSARCacheIndex, XP_FILE_WRITE);
+	fp = NET_XP_FileOpen("", xpSARCacheIndex, XP_FILE_WRITE);
 	list_ptr = SAR_cache_database_list;
 
 	cache_SaveCacheInfo(fp, list_ptr, SARCACHE);
@@ -924,7 +925,7 @@ cache_ReadCacheInfo(XP_File fp, XP_List **list_ptr, int type)
 	/* file format is:
 	 *   Filename  <TAB> database_name
 	 */
-	while(XP_FileReadLine(buf, BUF_SIZE-1, fp))
+	while(NET_XP_FileReadLine(buf, BUF_SIZE-1, fp))
 	  {
 		if (*buf == 0 || *buf == '#' || *buf == CR || *buf == LF)
 		  continue;
@@ -955,7 +956,7 @@ cache_ReadCacheInfo(XP_File fp, XP_List **list_ptr, int type)
         XP_ListAddObject(*list_ptr, new_db_info);
 	  }
 	
-	XP_FileClose(fp);
+	NET_XP_FileClose(fp);
 }
 
 /*
@@ -994,7 +995,7 @@ PUBLIC int CACHE_EmptyCache(ExtCacheDBInfo *db)
 
             TRACEMSG(("Removing file: %s due to disk"       
                       " cache remove",filename));     
-            XP_FileRemove(filename, xpSARCache);			/* *X* What will happen if I pass this */
+            NET_XP_FileRemove(filename, xpSARCache);			/* *X* What will happen if I pass this */
             PR_Free(filename);                                 /*     a relative path */
           }  
 	  }
@@ -1035,7 +1036,7 @@ PUBLIC int CACHE_RemoveCache(ExtCacheDBInfo *db)
 
 	/* Remove the cache from SAR_cache_database_list */
 	if ( XP_ListRemoveObject(SAR_cache_database_list, db_info) )
-		ret = XP_FileRemove(db->filename, xpSARCache);
+		ret = NET_XP_FileRemove(db->filename, xpSARCache);
 
 	/* This was released in the call to CACHE_CloseCache above */
 	db_info->database = 0;
@@ -1170,10 +1171,10 @@ CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt)
 	  }
 
 	/* make sure the file still exists
-	 * Looks like the new cache is ok since xpExtCache tells XP_Stat to use it's default
+	 * Looks like the new cache is ok since xpExtCache tells NET_XP_Stat to use it's default
 	 * settings, which is what we want so I won't touch it.
 	 */
-	if(XP_Stat(filename, &stat_entry, fileType) == -1)
+	if(NET_XP_Stat(filename, &stat_entry, fileType) == -1)
 	  {
 		/* file does not exist!!
 		 * remove the entry 

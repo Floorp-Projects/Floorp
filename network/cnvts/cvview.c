@@ -540,7 +540,7 @@ NET_ExtViewerConverter   (int         format_out,
         PR_Free(path);
 		PR_Free(tmp_filename);
 
-		obj->fp = XP_FileOpen(obj->filename, xpTemporary, XP_FILE_WRITE);
+		obj->fp = NET_XP_FileOpen(obj->filename, xpTemporary, XP_FILE_WRITE);
 			
 		TRACEMSG(("Trying to open output file: %s\n", obj->filename));
     

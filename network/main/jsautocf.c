@@ -30,6 +30,7 @@
 #include "mkstream.h"
 #include "mkgeturl.h"
 #include "mkformat.h"
+#include "net_xp_file.h"
 /* acharya: This file is obsolete and not used in this file.
 #include "il.h" 
 */
@@ -94,11 +95,11 @@ PRIVATE int jsacf_save_config(void)
 	int32 len = 0;
 
 	// TODO: jonm
-    if(!(fp = XP_FileOpen("", xpProxyConfig, XP_FILE_WRITE)))
+    if(!(fp = NET_XP_FileOpen("", xpProxyConfig, XP_FILE_WRITE)))
 	return -1;
 
-    len = XP_FileWrite(jsacf_src_buf, jsacf_src_len, fp);
-    XP_FileClose(fp);
+    len = NET_XP_FileWrite(jsacf_src_buf, jsacf_src_len, fp);
+    NET_XP_FileClose(fp);
 	if (len != jsacf_src_len)
 		return -1;
 
@@ -118,21 +119,21 @@ PRIVATE int jsacf_read_config(void)
     XP_StatStruct st;
     XP_File fp;
 
-    if (XP_Stat("", &st, xpProxyConfig) == -1)
+    if (NET_XP_Stat("", &st, xpProxyConfig) == -1)
 	return -1;
 
-    if (!(fp = XP_FileOpen("", xpProxyConfig, XP_FILE_READ)))
+    if (!(fp = NET_XP_FileOpen("", xpProxyConfig, XP_FILE_READ)))
 	return -1;
 
     jsacf_src_len = st.st_size;
     jsacf_src_buf = (char *)PR_Malloc(jsacf_src_len + 1);
     if (!jsacf_src_buf) {
-	XP_FileClose(fp);
+	NET_XP_FileClose(fp);
 	jsacf_src_len = 0;
 	return -1;
     }
 
-    if ((jsacf_src_len = XP_FileRead(jsacf_src_buf, jsacf_src_len, fp)) > 0)
+    if ((jsacf_src_len = NET_XP_FileRead(jsacf_src_buf, jsacf_src_len, fp)) > 0)
       {
 	  jsacf_src_buf[jsacf_src_len] = '\0';
       }
@@ -143,7 +144,7 @@ PRIVATE int jsacf_read_config(void)
 	  jsacf_src_len = 0;
       }
 
-    XP_FileClose(fp);
+    NET_XP_FileClose(fp);
 
     return 0;
 }
