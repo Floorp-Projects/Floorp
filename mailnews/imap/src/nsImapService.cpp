@@ -350,6 +350,8 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
                                             &imapUrl);
 	if (NS_SUCCEEDED(rv) && imapUrl)
     {
+		imapUrl->Initialize(username);
+
         // *** jefft -- let's only do hostname now. I'll do username later
         // when the incoming server works were done. We might also need to
         // pass in the port number
