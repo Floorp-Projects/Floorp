@@ -432,10 +432,11 @@ NS_IMETHODIMP XPCVariant::GetAsInterface(nsIID * *iid, void * *iface)
     return nsVariant::ConvertToInterface(mData, iid, iface);
 }
 
-/* [noscript] void getAsArray (out PRUint16 type, out PRUint32 count, out voidPtr ptr); */
-NS_IMETHODIMP XPCVariant::GetAsArray(PRUint16 *type, PRUint32 *count, void * *ptr)
+
+/* [notxpcom] nsresult getAsArray (out PRUint16 type, out nsIID iid, out PRUint32 count, out voidPtr ptr); */
+NS_IMETHODIMP_(nsresult) XPCVariant::GetAsArray(PRUint16 *type, nsIID *iid, PRUint32 *count, void * *ptr)
 {
-    return nsVariant::ConvertToArray(mData, type, count, ptr);
+    return nsVariant::ConvertToArray(mData, type, iid, count, ptr);
 }
 
 /* void getAsStringWithSize (out PRUint32 size, [size_is (size), retval] out string str); */
