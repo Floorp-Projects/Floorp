@@ -56,6 +56,9 @@ CPPSRCS		= \
 		EmbedWindowCreator.cpp \
 		EmbedStream.cpp
 
+DEFINES		+= -DXPCOM_GLUE 
+
+
 ifdef BUILD_STATIC_LIBS
 # Static build stuff
 DEFINES         += -D_BUILD_STATIC_BIN=1
@@ -80,6 +83,7 @@ endif
 endif
 
 SHARED_LIBRARY_LIBS= \
+		$(XPCOM_GLUE_LIBS) \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libmpfilelocprovider_s.$(LIB_SUFFIX) \
 		$(NULL)
