@@ -478,6 +478,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     if (controlType == NS_FORM_SELECT || 
         controlType == NS_FORM_TEXTAREA ||
         controlType == NS_FORM_INPUT_TEXT ||
+        controlType == NS_FORM_INPUT_PASSWORD ||
         controlType == NS_FORM_INPUT_FILE) {
       // Don't steal keys from these form controls 
       // - selects have their own incremental find for options
