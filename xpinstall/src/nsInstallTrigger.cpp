@@ -189,8 +189,7 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
     }
     else
     {
-        // no prefs manager: we're in the install wizard and always work
-        *aReturn = PR_TRUE;
+        *aReturn = PR_FALSE;  /* no prefs manager.  set to false */
     }
 
     return NS_OK;
