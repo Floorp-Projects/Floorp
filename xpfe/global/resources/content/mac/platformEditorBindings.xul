@@ -16,11 +16,11 @@
     controller.doCommand('cmd_redo');"/>
 
 <!-- Mac bindings for home and end -->
-<key id="macHomekb" keycode="VK_HOME" control="false" shift="false"
+<key id="macHomekb" keycode="VK_HOME" control="false" shift="false" alt="false"
    onkeypress="
      var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollTop');
      controller.doCommand('cmd_scrollTop');"/>
-<key id="macEndkb" keycode="VK_END" control="false" shift="false"
+<key id="macEndkb" keycode="VK_END" control="false" shift="false" alt="false"
    onkeypress="
      var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollBottom');
      controller.doCommand('cmd_scrollBottom');"/>
