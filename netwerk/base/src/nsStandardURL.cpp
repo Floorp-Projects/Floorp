@@ -2185,43 +2185,38 @@ nsStandardURL::SetFileExtension(const nsACString &input)
 NS_IMETHODIMP
 nsStandardURL::GetFile(nsIFile **result)
 {
-    // use cached result if present
-    if (mFile) {
-        NS_ADDREF(*result = mFile);
-        return NS_OK;
+    // reparse the spec if we don't have a cached result
+    if (!mFile) {
+        if (mSpec.IsEmpty()) {
+            NS_ERROR("url not initialized");
+            return NS_ERROR_NOT_INITIALIZED;
+        }
+
+        if (!SegmentIs(mScheme, "file")) {
+            NS_ERROR("not a file URL");
+            return NS_ERROR_FAILURE;
+        }
+
+        nsresult rv = net_GetFileFromURLSpec(mSpec, getter_AddRefs(mFile));
+        if (NS_FAILED(rv)) return rv;
     }
 
-    if (mSpec.IsEmpty()) {
-        NS_ERROR("url not initialized");
-        return NS_ERROR_NOT_INITIALIZED;
-    }
-
-    if (!SegmentIs(mScheme, "file")) {
-        NS_ERROR("not a file URL");
-        return NS_ERROR_FAILURE;
-    }
-
-    nsresult rv = net_GetFileFromURLSpec(mSpec, result);
-    
-    // XXX ultimately, we should probably cache this result to speed
-    //     up subsequent calls, but past attempts to do so have been
-    //     met with nasty smoketest blockers (e.g., see bug 161921).
-    //     it seems that some folks like to modify the returned nsIFile,
-    //     so we'd have to clone the result before handing it out.
-    //     unfortunately, there are bugs in the implementation(s) of
-    //     nsIFile::clone that prevent us from using this as a solution
-    //     right now (see bug 122892).
-    
 #if defined(PR_LOGGING)
-    if (NS_SUCCEEDED(rv) && LOG_ENABLED()) {
+    if (LOG_ENABLED()) {
         nsCAutoString path;
-        (*result)->GetNativePath(path);
+        mFile->GetNativePath(path);
         LOG(("nsStandardURL::GetFile [this=%p spec=%s resulting_path=%s]\n",
             this, mSpec.get(), path.get()));
     }
 #endif
 
-    return rv;
+    // clone the file, so the caller can modify it.
+    // XXX nsIFileURL.idl specifies that the consumer must _not_ modify the
+    // nsIFile returned from this method; but it seems that some folks do
+    // (see bug 161921). until we can be sure that all the consumers are
+    // behaving themselves, we'll stay on the safe side and clone the file.
+    // see bug 212724 about fixing the consumers.
+    return mFile->Clone(result);
 }
 
 NS_IMETHODIMP
