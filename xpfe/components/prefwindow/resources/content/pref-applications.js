@@ -107,6 +107,10 @@ function selectApplication()
     delete handlerOverride;
   } else {
     updateLockedButtonState(false)
+    gHandlerField.removeAttribute("value");
+    document.getElementById("contentTypeImage").removeAttribute("src");
+    gExtensionField.removeAttribute("value");
+    gMIMETypeField.removeAttribute("value");
   }
 } 
 
