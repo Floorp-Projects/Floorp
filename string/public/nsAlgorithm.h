@@ -25,6 +25,11 @@
 #ifndef nsAlgorithm_h___
 #define nsAlgorithm_h___
 
+#ifndef nsCharTraits_h___
+#include "nsCharTraits.h"
+  // for |nsCharSourceTraits|, |nsCharSinkTraits|
+#endif
+
 #ifndef prtypes_h___
 #include "prtypes.h"
   // for |PRUint32|...
