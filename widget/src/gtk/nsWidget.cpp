@@ -312,7 +312,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   // just to be safe. If we're going away and for some reason we're still
   // the rollup widget, rollup and turn off capture.
   nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
-  if ( this == gRollupWidget.get() ) {
+  if ( this == rollupWidget.get() ) {
     if ( gRollupListener )
       gRollupListener->Rollup();
     gRollupWidget = nsnull;
