@@ -618,6 +618,7 @@ pk11_handleCertObject(PK11Session *session,PK11Object *object)
 	attribute = pk11_FindAttribute(object,CKA_VALUE);
 	PORT_Assert(attribute);
 
+	derCert.type = 0;
 	derCert.data = (unsigned char *)attribute->attrib.pValue;
 	derCert.len = attribute->attrib.ulValueLen ;
 
@@ -625,7 +626,7 @@ pk11_handleCertObject(PK11Session *session,PK11Object *object)
 
 	cert =  nsslowcert_FindCertByDERCert(slot->certDB, &derCert);
         if (cert == NULL) {
-	    cert = nsslowcert_DecodeDERCertificate(&derCert,PR_FALSE,label);
+	    cert = nsslowcert_DecodeDERCertificate(&derCert, label);
 	    inDB = PR_FALSE;
 	}
 	if (cert == NULL) {
@@ -738,7 +739,7 @@ pk11_handleTrustObject(PK11Session *session,PK11Object *object)
         CK_TRUST clientTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
         CK_TRUST emailTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
         CK_TRUST signTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
-	NSSLOWCERTCertTrust dbTrust = { 0 } ;
+ 	NSSLOWCERTCertTrust dbTrust = { 0 };
 	SECStatus rv;
 
 

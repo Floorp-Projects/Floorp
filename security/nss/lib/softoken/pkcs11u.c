@@ -1054,7 +1054,7 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	if (((cert->trust->sslFlags & CERTDB_USER) == 0) &&
 		((cert->trust->emailFlags & CERTDB_USER) == 0) &&
 		((cert->trust->objectSigningFlags & CERTDB_USER) == 0)) {
-	    return (PK11Attribute *)&pk11_StaticNullAttr;
+	    return NULL;
 	}
 	pubKey = nsslowcert_ExtractPublicKey(cert);
 	if (pubKey == NULL) break;
@@ -1744,10 +1744,10 @@ pk11_deleteTokenKeyByHandle(PK11Slot *slot, CK_OBJECT_HANDLE handle)
    PRBool rem;
 
    item = (SECItem *)PL_HashTableLookup(slot->tokenHashTable, (void *)handle);
-   if (item) {
+   rem = PL_HashTableRemove(slot->tokenHashTable,(void *)handle) ;
+   if (rem && item) {
 	SECITEM_FreeItem(item,PR_TRUE);
    }
-   rem = PL_HashTableRemove(slot->tokenHashTable,(void *)handle) ;
    return rem ? SECSuccess : SECFailure;
 }
 

@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.5 2002/06/20 18:46:46 relyea%netscape.com Exp $
+ * $Id: pcertt.h,v 1.6 2002/06/24 21:54:40 relyea%netscape.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -111,11 +111,13 @@ struct NSSLOWCERTCertTrustStr {
 ** PKCS11 Trust representation
 */
 struct NSSLOWCERTTrustStr {
+    NSSLOWCERTTrust *next;
     NSSLOWCERTCertDBHandle *dbhandle;
     SECItem dbKey;			/* database key for this cert */
     certDBEntryCert *dbEntry;		/* database entry struct */
     NSSLOWCERTCertTrust *trust;
     SECItem *derCert;			/* original DER for the cert */
+    unsigned char dbKeySpace[512];
 };
 
 /*
@@ -128,7 +130,7 @@ struct NSSLOWCERTCertificateStr {
      * cert is decoded, destroyed, and at some times when it changes
      * state
      */
-    PRArenaPool *arena;
+    NSSLOWCERTCertificate *next;
     NSSLOWCERTCertDBHandle *dbhandle;
 
     SECItem derCert;			/* original DER for the cert */
@@ -150,7 +152,11 @@ struct NSSLOWCERTCertificateStr {
      * or destroys a certificate
      */
     int referenceCount;
+
+    char nicknameSpace[200];
+    char certKeySpace[512];
 };
+
 #define SEC_CERTIFICATE_VERSION_1		0	/* default created */
 #define SEC_CERTIFICATE_VERSION_2		1	/* v2 */
 #define SEC_CERTIFICATE_VERSION_3		2	/* v3 extensions */
@@ -253,9 +259,12 @@ typedef struct {
  */
 struct _certDBEntryCert {
     certDBEntryCommon common;
+    certDBEntryCert *next;
     NSSLOWCERTCertTrust trust;
     SECItem derCert;
     char *nickname;
+    char nicknameSpace[200];
+    unsigned char derCertSpace[2048];
 };
 
 /*

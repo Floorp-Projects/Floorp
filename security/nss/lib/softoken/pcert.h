@@ -147,7 +147,7 @@ char *nsslowcert_FixupEmailAddr(char *emailAddr);
 **              then a temporary nickname is generated.
 */
 extern NSSLOWCERTCertificate *
-nsslowcert_DecodeDERCertificate (SECItem *derSignedCert, PRBool copyDER, char *nickname);
+nsslowcert_DecodeDERCertificate (SECItem *derSignedCert, char *nickname);
 
 SECStatus
 nsslowcert_KeyFromDERCert(PRArenaPool *arena, SECItem *derCert, SECItem *key);
@@ -215,6 +215,20 @@ nsslowcert_hasTrust(NSSLOWCERTCertTrust *trust);
 void
 nsslowcert_DestroyGlobalLocks(void);
 
+void
+pkcs11_freeNickname(char *nickname, char *space);
+
+char *
+pkcs11_copyNickname(char *nickname, char *space, int spaceLen);
+
+void
+pkcs11_freeStaticData(unsigned char *data, unsigned char *space);
+
+unsigned char *
+pkcs11_copyStaticData(unsigned char *data, int datalen, unsigned char *space,
+						int spaceLen);
+NSSLOWCERTCertificate *
+nsslowcert_CreateCert(void);
 SEC_END_PROTOS
 
  #endif /* _PCERTDB_H_ */
