@@ -80,6 +80,8 @@ private:
     RDFContainerImpl();
     virtual ~RDFContainerImpl();
 
+    nsresult Init();
+
     nsresult Renumber(PRInt32 aStartIndex, PRInt32 aIncrement);
     nsresult SetNextValue(PRInt32 aIndex);
     nsresult GetNextValue(nsIRDFResource** aResult);
@@ -433,7 +435,12 @@ RDFContainerImpl::RDFContainerImpl()
     : mDataSource(nsnull), mContainer(nsnull)
 {
     NS_INIT_REFCNT();
+}
 
+
+nsresult
+RDFContainerImpl::Init()
+{
     if (gRefCnt++ == 0) {
         nsresult rv;
 
@@ -442,16 +449,20 @@ RDFContainerImpl::RDFContainerImpl()
                                           (nsISupports**) &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-        if (NS_SUCCEEDED(rv)) {
-            gRDFService->GetResource(RDF_NAMESPACE_URI "nextVal", &kRDF_nextVal);
-        }
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(RDF_NAMESPACE_URI "nextVal", &kRDF_nextVal);
+        if (NS_FAILED(rv)) return rv;
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
                                           nsIRDFContainerUtils::GetIID(),
                                           (nsISupports**) &gRDFContainerUtils);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils service");
+        if (NS_FAILED(rv)) return rv;
     }
+
+    return NS_OK;
 }
 
 
@@ -466,8 +477,17 @@ RDFContainerImpl::~RDFContainerImpl()
     NS_IF_RELEASE(mDataSource);
 
     if (--gRefCnt == 0) {
-        nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
-        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+        if (gRDFContainerUtils) {
+            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
+            gRDFContainerUtils = nsnull;
+        }
+
+        if (gRDFService) {
+            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+            gRDFService = nsnull;
+        }
+
+        NS_IF_RELEASE(kRDF_nextVal);
     }
 }
 
@@ -479,11 +499,16 @@ NS_NewRDFContainer(nsIRDFContainer** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    RDFContainerImpl* result =
-        new RDFContainerImpl();
-
+    RDFContainerImpl* result = new RDFContainerImpl();
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = result->Init();
+    if (NS_FAILED(rv)) {
+        delete result;
+        return rv;
+    }
 
     NS_ADDREF(result);
     *aResult = result;
