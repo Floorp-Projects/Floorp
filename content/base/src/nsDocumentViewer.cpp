@@ -2107,7 +2107,7 @@ nsCOMPtr<nsIWebShell> webContainer;
     NS_RELEASE(mPrintVM);
     NS_RELEASE(mPrintSS);
     NS_RELEASE(mPrintDC);
-    NS_RELEASE(mPrintPC);
+    //NS_RELEASE(mPrintPC);
   }
 }
 
