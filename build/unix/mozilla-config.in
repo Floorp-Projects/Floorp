@@ -12,8 +12,17 @@ Options:
 	[--prefix[=DIR]]
 	[--exec-prefix[=DIR]]
 	[--version]
-	[--libs]
-	[--cflags]
+	[--defines]
+	[--libs] [libraries]
+	[--cflags] [components]
+Components:
+    *
+Libraries:
+    xpcom
+    nspr
+    js
+    jsj
+    gfx
 EOF
 	exit $1
 }
@@ -55,11 +64,24 @@ while test $# -gt 0; do
       fi
       echo_cflags=yes
       ;;
+    --defines)
+      echo_defines=yes
+      ;;
     --libs)
       echo_libs=yes
       ;;
-    *)
+    xpcom|js|nspr|gfx|jsj)
+      echo_components="$echo_components $1"
+      echo_libraries="$echo_libraries $1"
+      ;;
+    xpconnect)
+      echo_components="$echo_components $1"
+      ;;
+    "")
       usage 1 1>&2
+      ;;
+    *)
+      echo_components="$echo_components $1"
       ;;
   esac
   shift
@@ -71,10 +93,44 @@ fi
 if test "$echo_exec_prefix" = "yes"; then
 	echo $exec_prefix
 fi
-if test "$echo_cflags" = "yes"; then
-	cflags="@DEFS@"
-	echo $includes $cflags
+
+if test "$echo_defines" = "yes"; then
+    defines="@DEFS@"
+    echo $defines
 fi
+
+if test "$echo_cflags" = "yes"; then
+    cflags="@DEFS@"
+    nspr_cflags="@FULL_NSPR_CFLAGS@"
+    for n in $echo_components; do
+	component_includes="$component_includes -I@includedir@/$n"
+    done
+    echo $component_includes $includes $nspr_cflags
+fi
+
+_nspr_libs="@FULL_NSPR_LIBS@"
+_xpcom_libs="-lxpcom $_nspr_libs"
+_js_libs="-ljs"
+
 if test "$echo_libs" = "yes"; then
-	echo -L@libdir@ -lxpcom
+    for l in $echo_libraries; do
+	case "$l" in
+	gfx) 
+	    libs="-lgkgfx $_xpcom_libs"
+	    ;;
+	xpcom)
+	    libs="$_xpcom_libs"
+	    ;;
+	nspr)
+	    libs="$_nspr_libs"
+	    ;;
+	js)
+	    libs="$_js_libs"
+	    ;;
+	jsj)
+	    libs="-ljsj $_js_libs $_xpcom_libs"
+	    ;;
+        esac
+    done
+    echo -L@libdir@ $libs
 fi
