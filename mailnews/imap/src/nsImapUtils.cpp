@@ -100,10 +100,19 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
                   NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if(NS_FAILED(rv)) return rv;
 
-  rv = accountManager->FindServer(username,
-                                  hostname,
-                                  "imap",
-                                  getter_AddRefs(server));
+  char *unescapedUserName = username.ToNewCString();
+  if (unescapedUserName)
+  {
+	  nsUnescape(unescapedUserName);
+	  rv = accountManager->FindServer(unescapedUserName,
+									  hostname,
+									  "imap",
+									  getter_AddRefs(server));
+	  PR_FREEIF(unescapedUserName);
+  }
+  else
+	  rv = NS_ERROR_OUT_OF_MEMORY;
+
   if (NS_FAILED(rv)) return rv;
   
   if (server) {

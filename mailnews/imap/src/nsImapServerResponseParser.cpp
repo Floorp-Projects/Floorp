@@ -2268,7 +2268,6 @@ nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const ch
 	NS_ADDREF(returnSpec);
 	if (returnSpec)
 	{	
-		char *convertedMailboxName = nsnull;
 		const char *mailboxNameToConvert = (mailboxName) ? mailboxName : fSelectedMailboxName;
 	    if (mailboxNameToConvert)
 	    {
@@ -2286,12 +2285,6 @@ nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const ch
 			else
 				returnSpec->hierarchySeparator = '/';	// a guess?
 
-			char *convertedName = CreateUtf7ConvertedString(mailboxNameToConvert, PR_FALSE);
-			if (convertedName)
-	    	{
-	    		fServerConnection.GetCurrentUrl()->AllocateCanonicalPath(convertedName, returnSpec->hierarchySeparator, &convertedMailboxName);
-	    		PR_Free(convertedName);
-	    	}
 	    }
 
 		returnSpec->folderSelected = PR_TRUE;
@@ -2302,7 +2295,7 @@ nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const ch
 		
 		returnSpec->box_flags = kNoFlags;	// stub
 		returnSpec->onlineVerified = PR_FALSE;	// we're fabricating this.  The flags aren't verified.
-		returnSpec->allocatedPathName = convertedMailboxName;
+		returnSpec->allocatedPathName = nsCRT::strdup(mailboxNameToConvert);
 		returnSpec->connection = &fServerConnection;
 		if (returnSpec->connection)
 		{

@@ -102,10 +102,8 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
     nsCOMPtr<nsIMsgImapMailFolder> aFolder(do_QueryInterface(aImapFolder, &rv));
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString onlineName;
+	// online name is in imap utf-7 - leave it that way
     rv = aFolder->GetOnlineName(getter_Copies(onlineName));
-
-    char *convertedName = CreateUtf7ConvertedString(onlineName, PR_FALSE);
-    onlineName = convertedName;
 
     if (NS_FAILED(rv)) return rv;
 	if ((const char *)onlineName == nsnull || nsCRT::strlen((const char *) onlineName) == 0)
@@ -585,17 +583,21 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
 {
 	  nsresult rv = NS_OK;
     char *hostname = nsnull;
-    char *username = nsnull;
+    nsXPIDLCString username;
+    nsXPIDLCString escapedUsername;
     
     rv = aImapMailFolder->GetHostname(&hostname);
     if (NS_FAILED(rv)) return rv;
-    rv = aImapMailFolder->GetUsername(&username);
+    rv = aImapMailFolder->GetUsername(getter_Copies(username));
     if (NS_FAILED(rv))
     {
         PR_FREEIF(hostname);
         return rv;
     }
     
+    if (((const char*)username) && username[0])
+        *((char **)getter_Copies(escapedUsername)) = nsEscape(username, url_XAlphas);
+
     PRInt32 port = IMAP_PORT;
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = aImapMailFolder->GetServer(getter_AddRefs(server));
@@ -616,7 +618,7 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
           mailnewsUrl->RegisterListener(aUrlListener);
 
       urlSpec = "imap://";
-      urlSpec.Append(username);
+      urlSpec.Append((const char *) escapedUsername);
       urlSpec.Append('@');
       urlSpec.Append(hostname);
 		  urlSpec.Append(':');
@@ -637,7 +639,6 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
     }
 
     PR_FREEIF(hostname);
-    PR_FREEIF(username);
 	return rv;
 }
 
@@ -1629,9 +1630,11 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
                 urlSpec.Append((const char *) folderName);
                 urlSpec.Append(hierarchySeparator);
             }
-			char *escapedFolderName = nsEscape(newFolderName, url_Path);
+			char *utfNewName = CreateUtf7ConvertedString( newFolderName, PR_TRUE);
+			char *escapedFolderName = nsEscape(utfNewName, url_Path);
             urlSpec.Append(escapedFolderName);
 			nsCRT::free(escapedFolderName);
+			nsCRT::free(utfNewName);
     
             rv = uri->SetSpec((char*) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))

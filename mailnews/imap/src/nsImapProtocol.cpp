@@ -1449,14 +1449,6 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
                             &srcFolderName);
                         if (NS_SUCCEEDED(rv) && srcFolderName)
                         {
-                            char* convertedName =
-                                CreateUtf7ConvertedString(srcFolderName,
-                                                          PR_TRUE);
-                            if (convertedName)
-                            {
-                                PR_Free(srcFolderName);
-                                srcFolderName = convertedName;
-                            }
                             PRBool isInbox = 
                                 PL_strcasecmp("Inbox", srcFolderName) == 0;
                             if (curUrlFolderName.Length() > 0)
@@ -1795,20 +1787,19 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
           // convert name back from utf7
           utf_name_struct *nameStruct = (utf_name_struct *) PR_Malloc(sizeof(utf_name_struct));
-          char *convertedCanonicalName = NULL;
+          char *canonicalName = NULL;
           if (nameStruct)
           {
-            char *convertedName = CreateUtf7ConvertedString(GetServerStateParser().GetSelectedMailboxName(), PR_FALSE);
-            if (convertedName)
+            const char *selectedMailboxName = GetServerStateParser().GetSelectedMailboxName();
+            if (selectedMailboxName)
             {
-              m_runningUrl->AllocateCanonicalPath(convertedName, 
-                      kOnlineHierarchySeparatorUnknown, &convertedCanonicalName);
-              PR_Free(convertedName);
+              m_runningUrl->AllocateCanonicalPath(selectedMailboxName, 
+                      kOnlineHierarchySeparatorUnknown, &canonicalName);
             }
           }
 
           if (m_imapMessageSink)
-                      m_imapMessageSink->NotifyMessageDeleted(convertedCanonicalName, PR_FALSE, messageIdString);
+                      m_imapMessageSink->NotifyMessageDeleted(canonicalName, PR_FALSE, messageIdString);
           // notice we don't wait for this to finish...
                 }
                 else
@@ -1831,20 +1822,19 @@ void nsImapProtocol::ProcessSelectedStateURL()
           {
             // convert name back from utf7
             utf_name_struct *nameStruct = (utf_name_struct *) PR_Malloc(sizeof(utf_name_struct));
-            char *convertedCanonicalName = NULL;
+            char *canonicalName = NULL;
             if (nameStruct)
             {
-              char *convertedName = CreateUtf7ConvertedString(GetServerStateParser().GetSelectedMailboxName(), PR_FALSE);
-              if (convertedName )
+              const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
+              if (mailboxName )
               {
-                m_runningUrl->AllocateCanonicalPath(convertedName,
-                  kOnlineHierarchySeparatorUnknown, &convertedCanonicalName);
-                PR_Free(convertedName);
+                m_runningUrl->AllocateCanonicalPath(mailboxName,
+                  kOnlineHierarchySeparatorUnknown, &canonicalName);
               }
             }
 
             if (m_imapMessageSink)
-                        m_imapMessageSink->NotifyMessageDeleted(convertedCanonicalName, PR_TRUE, nsnull);
+                        m_imapMessageSink->NotifyMessageDeleted(canonicalName, PR_TRUE, nsnull);
           }
                 
         }
@@ -3302,9 +3292,6 @@ PRUint32 nsImapProtocol::GetMessageSize(nsCString &messageId,
         m_hostSessionList->GetNamespaceForMailboxForHost(GetImapServerKey(), folderFromParser,
             nsForMailbox);
 
-    char *nonUTF7ConvertedName = CreateUtf7ConvertedString(folderFromParser, PR_FALSE);
-    if (nonUTF7ConvertedName)
-      folderFromParser = nonUTF7ConvertedName;
 
     if (nsForMailbox)
             m_runningUrl->AllocateCanonicalPath(
@@ -3314,7 +3301,6 @@ PRUint32 nsImapProtocol::GetMessageSize(nsCString &messageId,
              m_runningUrl->AllocateCanonicalPath(
                 folderFromParser,kOnlineHierarchySeparatorUnknown,
                 &folderName);
-    PR_FREEIF(nonUTF7ConvertedName);
 
     if (id && folderName)
     {
@@ -3518,10 +3504,6 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
 
     aclRightsInfo->hostName = PL_strdup(GetImapHostName());
 
-    char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, PR_FALSE);
-    if (nonUTF7ConvertedName)
-      mailboxName = nonUTF7ConvertedName;
-
     if (namespaceForFolder)
             m_runningUrl->AllocateCanonicalPath(
                 mailboxName,
@@ -3532,7 +3514,6 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
                           kOnlineHierarchySeparatorUnknown, 
                           &aclRightsInfo->mailboxName);
 
-    PR_FREEIF(nonUTF7ConvertedName);
     if (userName)
       aclRightsInfo->userName = PL_strdup(userName);
     else
@@ -3599,10 +3580,6 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
     nsIMAPACLRightsInfo *aclRightsInfo = new nsIMAPACLRightsInfo();
   if (aclRightsInfo)
   {
-    char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, PR_FALSE);
-    if (nonUTF7ConvertedName)
-      mailboxName = nonUTF7ConvertedName;
-
         const char *hostName = GetImapHostName();
 
     aclRightsInfo->hostName = PL_strdup(hostName);
@@ -3615,7 +3592,6 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
                 mailboxName, kOnlineHierarchySeparatorUnknown,
                 &aclRightsInfo->mailboxName);
 
-    PR_FREEIF(nonUTF7ConvertedName);
 
     aclRightsInfo->rights = NULL;
     aclRightsInfo->userName = NULL;
@@ -4558,12 +4534,6 @@ char * nsImapProtocol::OnCreateServerSourceFolderPathString()
       nsCRT::free(onlineDelimiter);
 
   m_runningUrl->CreateServerSourceFolderPathString(&sourceMailbox);
-  if (sourceMailbox)
-  {
-    char *convertedName = CreateUtf7ConvertedString(sourceMailbox, PR_TRUE);
-    PR_Free(sourceMailbox);
-    sourceMailbox = convertedName;
-  }
 
   return sourceMailbox;
 }
@@ -4583,12 +4553,6 @@ char * nsImapProtocol::OnCreateServerDestinationFolderPathString()
       nsCRT::free(onlineDelimiter);
 
   m_runningUrl->CreateServerDestinationFolderPathString(&destinationMailbox);
-  if (destinationMailbox)
-  {
-    char *convertedName = CreateUtf7ConvertedString(destinationMailbox, PR_TRUE);
-    PR_Free(destinationMailbox);
-    destinationMailbox = convertedName;
-  }
 
   return destinationMailbox;
 }
@@ -4858,11 +4822,7 @@ PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
                                                      mailboxName, nsForMailbox);
   // NS_ASSERTION (nsForMailbox, "Oops .. null nsForMailbox\n");
 
-  char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, PR_FALSE);
   char *name;
-
-  if (nonUTF7ConvertedName)
-    mailboxName = nonUTF7ConvertedName;
 
   if (nsForMailbox)
     m_runningUrl->AllocateCanonicalPath(mailboxName,
@@ -4872,7 +4832,6 @@ PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
     m_runningUrl->AllocateCanonicalPath(mailboxName,
                                             kOnlineHierarchySeparatorUnknown, 
                                             &name);
-  PR_FREEIF(nonUTF7ConvertedName);
 
   if (!name)
     return PR_FALSE;
@@ -5117,19 +5076,17 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
 
 void nsImapProtocol::FolderDeleted(const char *mailboxName)
 {
-    char *convertedName = CreateUtf7ConvertedString(mailboxName,PR_FALSE);
     char onlineDelimiter = kOnlineHierarchySeparatorUnknown;
     char *orphanedMailboxName = nsnull;
 
-    if (convertedName)
+    if (mailboxName)
     {
-        m_runningUrl->AllocateCanonicalPath(convertedName, onlineDelimiter,
+        m_runningUrl->AllocateCanonicalPath(mailboxName, onlineDelimiter,
                                             &orphanedMailboxName);
     if (m_imapServerSink)
       m_imapServerSink->OnlineFolderDelete(orphanedMailboxName);
     }
 
-    PR_FREEIF(convertedName);
     PR_FREEIF(orphanedMailboxName);
 }
 
@@ -5148,25 +5105,17 @@ void nsImapProtocol::FolderRenamed(const char *oldName,
     (m_hierarchyNameState == kListingForInfoAndDiscovery))
 
     {
-      char *oldConvertedName = CreateUtf7ConvertedString(oldName,PR_FALSE);
-      char *newConvertedName = CreateUtf7ConvertedString(newName,PR_FALSE);
-      
-      if (oldConvertedName && newConvertedName)
-      {
       char *oldName, *newName;
-            m_runningUrl->AllocateCanonicalPath(oldConvertedName,
+            m_runningUrl->AllocateCanonicalPath(oldName,
                                                 onlineDelimiter,
                                                 &oldName);
-            m_runningUrl->AllocateCanonicalPath(newConvertedName,
+            m_runningUrl->AllocateCanonicalPath(newName,
                                                 onlineDelimiter,
                                                 &newName);
 
             m_imapServerSink->OnlineFolderRename(oldName, newName);
             PR_FREEIF (oldName);
             PR_FREEIF(newName);
-        }
-        PR_FREEIF(oldConvertedName);
-        PR_FREEIF(newConvertedName);
     }
 }
 
