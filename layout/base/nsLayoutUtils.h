@@ -199,7 +199,12 @@ public:
     }
     return pseudoContext != nsnull;
   }
-  
+
+  /**
+   * If this frame is a placeholder for a float, then return the float,
+   * otherwise return nsnull.
+   */
+  static nsIFrame* GetFloatFromPlaceholder(nsIFrame* aPossiblePlaceholder);
 };
 
 #endif // nsLayoutUtils_h__

@@ -818,7 +818,7 @@ nsBlockReflowState::CanPlaceFloat(const nsRect& aFloatRect,
 }
 
 void
-nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache* aFloatCache,
+nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
                                       PRBool*         aIsLeftFloat,
                                       nsReflowStatus& aReflowStatus)
 {
@@ -857,6 +857,9 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache* aFloatCache,
     // Get the band of available space
     GetAvailableSpace();
   }
+
+  NS_ASSERTION(floatFrame->GetParent() == mBlock,
+               "Float frame has wrong parent");
 
   // Reflow the float
   mBlock->ReflowFloat(*this, placeholder, aFloatCache, aReflowStatus);

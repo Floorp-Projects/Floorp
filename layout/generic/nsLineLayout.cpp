@@ -65,6 +65,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsTextFragment.h"
 #include "nsBidiUtils.h"
+#include "nsLayoutUtils.h"
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -1003,25 +1004,22 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   if (frameType) {
     if (nsLayoutAtoms::placeholderFrame == frameType) {
       pfd->SetFlag(PFD_ISPLACEHOLDERFRAME, PR_TRUE);
-      nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
+      nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
-        // Make sure it's floated and not absolutely positioned
-        const nsStyleDisplay* display = outOfFlowFrame->GetStyleDisplay();
-        if (!display->IsAbsolutelyPositioned()) {
-          if (eReflowReason_Incremental == reason) {
-            InitFloat((nsPlaceholderFrame*)aFrame, aReflowStatus);
-          }
-          else {
-            AddFloat((nsPlaceholderFrame*)aFrame, aReflowStatus);
-          }
-          if (outOfFlowFrame->GetType() == nsLayoutAtoms::letterFrame) {
-            SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
-            // An incomplete reflow status means we should split the
-            // float if the height is constrained (bug 145305). We
-            // never split floating first letters.
-            if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus)) 
-              aReflowStatus = NS_FRAME_COMPLETE;
-          }
+        nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, aFrame);
+        if (eReflowReason_Incremental == reason) {
+          InitFloat(placeholder, aReflowStatus);
+        }
+        else {
+          AddFloat(placeholder, aReflowStatus);
+        }
+        if (outOfFlowFrame->GetType() == nsLayoutAtoms::letterFrame) {
+          SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
+          // An incomplete reflow status means we should split the
+          // float if the height is constrained (bug 145305). We
+          // never split floating first letters.
+          if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus)) 
+            aReflowStatus = NS_FRAME_COMPLETE;
         }
       }
     }

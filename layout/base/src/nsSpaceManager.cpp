@@ -46,6 +46,7 @@
 #include "nsIPresShell.h"
 #include "nsMemory.h"
 #include "nsHTMLReflowState.h"
+#include "nsHashSets.h"
 #ifdef DEBUG
 #include "nsIFrameDebug.h"
 #endif
@@ -105,7 +106,6 @@ MOZ_DECL_CTOR_COUNTER(nsSpaceManager)
 
 nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
   : mFrame(aFrame),
-    mXMost(0),
     mLowestTop(NSCOORD_MIN),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell)
 {
@@ -199,7 +199,11 @@ void nsSpaceManager::Shutdown()
 PRBool
 nsSpaceManager::XMost(nscoord& aXMost) const
 {
-  aXMost = mXMost;
+  nscoord xMost = 0;
+  for (FrameInfo* fi = mFrameInfoMap; fi; fi = fi->mNext) {
+    xMost = PR_MAX(xMost, fi->mRect.XMost());
+  }
+  aXMost = xMost;
   return !mBandList.IsEmpty();
 }
 
@@ -813,10 +817,6 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
   nsRect  rect(aUnavailableSpace.x + mX, aUnavailableSpace.y + mY,
                aUnavailableSpace.width, aUnavailableSpace.height);
 
-  nscoord xmost = rect.XMost();
-  if (xmost > mXMost)
-    mXMost = xmost;
-
   if (rect.y > mLowestTop)
     mLowestTop = rect.y;
 
@@ -841,6 +841,30 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
   // Insert the band rect
   InsertBandRect(bandRect);
   return NS_OK;
+}
+
+nsresult
+nsSpaceManager::RemoveTrailingRegions(nsIFrame* aFrameList) {
+  nsVoidHashSet frameSet;
+
+  frameSet.Init(1);
+  for (nsIFrame* f = aFrameList; f; f = f->GetNextSibling()) {
+    frameSet.Put(f);
+  }
+
+  // Pop frame regions off as long as they're in the set of frames to
+  // remove
+  while (mFrameInfoMap && frameSet.Contains(mFrameInfoMap->mFrame)) {
+    RemoveRegion(mFrameInfoMap->mFrame);
+  }
+
+#ifdef DEBUG
+  for (FrameInfo* frameInfo = mFrameInfoMap; frameInfo;
+       frameInfo = frameInfo->mNext) {
+    NS_ASSERTION(!frameSet.Contains(frameInfo->mFrame),
+                 "Frame region deletion was requested but we couldn't delete it");
+  }
+#endif
 }
 
 nsresult
@@ -995,7 +1019,6 @@ nsSpaceManager::PushState()
 
   state->mX = mX;
   state->mY = mY;
-  state->mXMost = mXMost;
   state->mLowestTop = mLowestTop;
 
   if (mFrameInfoMap) {
@@ -1042,7 +1065,6 @@ nsSpaceManager::PopState()
 
   mX = mSavedStates->mX;
   mY = mSavedStates->mY;
-  mXMost = mSavedStates->mXMost;
   mLowestTop = mSavedStates->mLowestTop;
 
   // Now that we've restored our state, pop the topmost
