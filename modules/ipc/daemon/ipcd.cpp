@@ -413,6 +413,40 @@ ipcClient *IPC_GetClientByName(const char *name)
     return NULL;
 }
 
+PRBool
+IPC_ClientHasName(ipcClient *client, const char *name)
+{
+    return client->HasName(name);
+}
+
+PRBool
+IPC_ClientHasTarget(ipcClient *client, const nsID &target)
+{
+    return client->HasTarget(target);
+}
+
+void
+IPC_EnumerateClientNames(ipcClient *client, ipcClientNameEnumFunc func, void *closure)
+{
+    const ipcStringNode *node = client->Names();
+    while (node) {
+        if (func(closure, client, node->Value()) == PR_FALSE)
+            break;
+        node = node->mNext;
+    }
+}
+
+void
+IPC_EnumerateClientTargets(ipcClient *client, ipcClientTargetEnumFunc func, void *closure)
+{
+    const ipcIDNode *node = client->Targets();
+    while (node) {
+        if (func(closure, client, node->Value()) == PR_FALSE)
+            break;
+        node = node->mNext;
+    }
+}
+
 ipcClient *IPC_GetClients(int *count)
 {
     *count = poll_fd_count - 1;

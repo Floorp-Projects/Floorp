@@ -93,8 +93,22 @@ IPC_API const char *IPC_GetClientName(ipcClient *client);
 //
 // client lookup functions
 //
-IPC_API ipcClient *IPC_GetClientByID(int clientID);
-IPC_API ipcClient *IPC_GetClientByName(const char *clientName);
+IPC_API ipcClient *IPC_GetClientByID(int id);
+IPC_API ipcClient *IPC_GetClientByName(const char *name);
+
+//
+// functions for inspecting the names and targets defined for a particular
+// client instance.
+//
+IPC_API PRBool IPC_ClientHasName(ipcClient *client, const char *name);
+IPC_API PRBool IPC_ClientHasTarget(ipcClient *client, const nsID &target);
+
+// return PR_FALSE to end enumeration
+typedef PRBool (* ipcClientNameEnumFunc)(void *closure, ipcClient *client, const char *name);
+typedef PRBool (* ipcClientTargetEnumFunc)(void *closure, ipcClient *client, const nsID &target);
+
+IPC_API void IPC_EnumerateClientNames(ipcClient *client, ipcClientNameEnumFunc func, void *closure);
+IPC_API void IPC_EnumerateClientTargets(ipcClient *client, ipcClientTargetEnumFunc func, void *closure);
 
 //
 // return array of all clients, length equal to |count|.

@@ -68,6 +68,10 @@ public:
     void   DelTarget(const nsID &target);
     PRBool HasTarget(const nsID &target) const { return mTargets.Find(target) != NULL; }
 
+    // list iterators
+    const ipcStringNode *Names()   const { return mNames.First(); }
+    const ipcIDNode     *Targets() const { return mTargets.First(); }
+
     //
     // returns TRUE if successfully enqueued.  will return FALSE if client
     // does not have a registered message handler for this message's target.

@@ -154,9 +154,12 @@ public:
             DeleteFirst();
     }
 
-    T      *First()   { return mHead; }
-    T      *Last()    { return mTail; }
-    PRBool  IsEmpty() { return mHead == NULL; }
+    const T *First() const { return mHead; }
+    T       *First()       { return mHead; }
+    const T *Last() const  { return mTail; }
+    T       *Last()        { return mTail; }
+
+    PRBool  IsEmpty() const { return mHead == NULL; }
 
 protected:
     void AdvanceHead()
