@@ -309,7 +309,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
     if (aForce) {
       // Create a view
       nsIFrame* parent;
-      nsIView*  view;
 
       aFrame->GetParentWithView(&parent);
       NS_ASSERTION(parent, "GetParentWithView failed");
