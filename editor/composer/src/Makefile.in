@@ -56,7 +56,7 @@ REQUIRES        = xpcom \
                   mimetype \
                   imglib2 \
                   gfx2 \
-                  webBrowser_core \
+                  webbrwsr \
                   unicharutil \
                   $(NULL)
 

@@ -54,7 +54,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  imglib2 \
 		  gfx2 \
-                  webBrowser_core \
+      webbrwsr  \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -56,7 +56,7 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  xultmpl \
 		  timer \
-              webBrowser_core \
+      webbrwsr \
 		  $(NULL)
 
 CPPSRCS		= \

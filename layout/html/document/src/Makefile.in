@@ -46,7 +46,7 @@ REQUIRES	= xpcom \
 		  shistory \
 		  xpconnect \
 		  accessibility \
-		  webBrowser_core \
+      webbrwsr \
 		  $(NULL)
 
 CPPSRCS		= \
