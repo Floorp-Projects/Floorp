@@ -1087,13 +1087,10 @@ TreeOView.prototype.getParentIndex =
 function tov_getpi (index)
 {
     var row = this.childData.locateChildByVisualRow (index);
-    /*
-    ASSERT(row, "bogus row " + index);
+    //ASSERT(row, "bogus row " + index);
     var rv = row.parentRecord.calculateVisualRow();
-    dd ("getParentIndex: row " + index + " returning " + rv);
-    return rv;
-    */
-    return row.parentRecord.calculateVisualRow();
+    //dd ("getParentIndex: row " + index + " returning " + rv);
+    return (rv != null) ? rv : -1;
 }
 
 TreeOView.prototype.hasNextSibling =
