@@ -76,29 +76,36 @@ nsStdURL::nsStdURL(const char* i_Spec, nsISupports* outer)
 {
     NS_INIT_REFCNT();
 
-    // Skip leading spaces and control-characters
-    char* fwdPtr= (char*) i_Spec;
-    while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
-        fwdPtr++;
-    // Remove trailing spaces and control-characters
-    if (fwdPtr) {
-        char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
-        if (*bckPtr > '\0' && *bckPtr <= ' ') {
-            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr <= ' ')) {
-                bckPtr--;
-            }
-            *(bckPtr+1) = '\0';
-        }
-    }
-
-    /* Create the standard URLParser */
-    nsComponentManager::CreateInstance(kStdURLParserCID, 
-                                       nsnull, NS_GET_IID(nsIURLParser),
-                                       getter_AddRefs(mURLParser));
-
     NS_INIT_AGGREGATED(outer);
-    if (fwdPtr && mURLParser)
-        Parse((char*)fwdPtr);
+
+    char* eSpec = nsnull;
+    nsresult rv = DupString(&eSpec,i_Spec);
+    if (NS_SUCCEEDED(rv)){
+
+        // Skip leading spaces and control-characters
+        char* fwdPtr= (char*) eSpec;
+        while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
+            fwdPtr++;
+        // Remove trailing spaces and control-characters
+        if (fwdPtr) {
+            char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
+            if (*bckPtr > '\0' && *bckPtr <= ' ') {
+                while ((bckPtr-fwdPtr) >= 0 && (*bckPtr <= ' ')) {
+                    bckPtr--;
+                }
+                *(bckPtr+1) = '\0';
+            }
+        }
+
+        /* Create the standard URLParser */
+        nsComponentManager::CreateInstance(kStdURLParserCID, 
+                                           nsnull, NS_GET_IID(nsIURLParser),
+                                           getter_AddRefs(mURLParser));
+
+        if (fwdPtr && mURLParser)
+            Parse((char*)fwdPtr);
+    }
+    CRTFREEIF(eSpec);
 }
 
 nsStdURL::nsStdURL(const nsStdURL& otherURL)
@@ -806,8 +813,15 @@ nsStdURL::GetDirectory(char** o_Directory)
 NS_METHOD
 nsStdURL::SetSpec(const char* i_Spec)
 {
+    char* eSpec = nsnull;
+    nsresult rv = DupString(&eSpec,i_Spec);
+    if (NS_FAILED(rv)){
+        CRTFREEIF(eSpec);
+        return rv;
+    }
+
     // Skip leading spaces and control-characters
-    char* fwdPtr= (char*) i_Spec;
+    char* fwdPtr= (char*) eSpec;
     while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
         fwdPtr++;
     // Remove trailing spaces and control-characters
@@ -833,7 +847,9 @@ nsStdURL::SetSpec(const char* i_Spec)
     CRTFREEIF(mParam);
     CRTFREEIF(mQuery);
     CRTFREEIF(mRef);
-    return Parse(fwdPtr);
+    rv = Parse(fwdPtr);
+    CRTFREEIF(eSpec);
+    return rv;
 }
 
 NS_METHOD
