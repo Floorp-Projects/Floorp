@@ -111,6 +111,10 @@ xpi::
 	cp $(srcdir)/resources/content/calendarService.js ./xpi/bin/components
 	cp -r $(srcdir)/resources/locale ./xpi/resources
 	cp -r $(srcdir)/$(calplatform)/icons ./xpi
+	if [ $(calplatform) = "linux" ]; then \
+	   mkdir -p xpi/bin/init.d; \
+	   cp -a $(topsrcdir)/xpfe/bootstrap/init.d/???calendar* xpi/bin/init.d; \
+	fi
 	cp $(srcdir)/install.js ./xpi
 	cd xpi; find bin resources icons install.js \( -name CVS -o -name en-US \) -prune -o -print | xargs zip calendar.xpi
 

@@ -60,6 +60,9 @@ bin/regxpcom
 bin/regchrome
 bin/mozilla-xremote-client
 bin/xpicleanup
+bin/init.d/README
+bin/init.d/S02solaris_patchchecker.sh
+bin/moz_patch_checker.dtksh
 bin/res/cmessage.txt
 
 bin/libldap50.so
