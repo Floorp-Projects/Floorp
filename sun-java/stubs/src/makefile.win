@@ -80,11 +80,7 @@ LINCS= $(LINCS) \
 		$(NULL)
 !endif
 
-!if "$(MOZ_BITS)" != "16"
-INSTALL_DIR=$(PUBLIC)\java
-!else
-INSTALL_DIR=$(PUBLIC)\win16
-!endif
+INSTALL_DIR=$(XPDIST)\include
 
 
 #//------------------------------------------------------------------------

@@ -109,7 +109,7 @@ OBJS =					\
 #// install headers
 #//
 #//------------------------------------------------------------------------
-INSTALL_DIR=$(PUBLIC)\js
+INSTALL_DIR=$(XPDIST)\include
 INSTALL_FILE_LIST=	\
 	js.msg		\
 	jsapi.h		\

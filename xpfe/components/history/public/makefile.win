@@ -25,10 +25,3 @@ XPIDLSRCS =                   \
 
 include <$(DEPTH)\config\rules.mak>
 
-# XXX Ugh. Because of the MODULE rule, we'd normally install the
-# generated nsIGlobalHistory.h into $(PUBLIC)\history. This rule makes
-# sure it gets installed in $(PUBLIC)\xpfe\components, as well. We
-# really need to get rid of this fragmented include structure crap.
-
-export::
-    $(MAKE_INSTALL) $(XPIDL_GEN_DIR)\nsIGlobalHistory.h $(PUBLIC)\xpfe\components

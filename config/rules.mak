@@ -229,8 +229,8 @@ $(JAVA_DESTPATH)\$(PACKAGE): $(JAVA_DESTPATH)
 $(JMCSRCDIR):
     -mkdir $(JMCSRCDIR)
 
-$(XPDIST)\public\$(MODULE):
-    -mkdir $(XPDIST:/=\)\public\$(MODULE:/=\)
+$(XPDIST)\include:
+    -mkdir $(XPDIST:/=\)\include
 
 !ifdef IDL_GEN
 #//------------------------------------------------------------------------
@@ -598,11 +598,11 @@ export:: $(JMC_STUBS) $(OBJDIR) $(JMC_OBJS)
 #//
 #//------------------------------------------------------------------------
 !if "$(EXPORTS)" != "$(NULL)"
-export:: $(XPDIST)\public\$(MODULE)
-    for %f in ($(EXPORTS)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\public\$(MODULE:/=\)
+export:: $(XPDIST)\include
+    for %f in ($(EXPORTS)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\include
 
 clobber::
-    -for %g in ($(EXPORTS)) do $(RM) $(XPDIST:/=\)\public\$(MODULE:/=\)\%g
+    -for %g in ($(EXPORTS)) do $(RM) $(XPDIST:/=\)\include\%g
 clobber_all:: clobber
 !endif # EXPORTS
 
@@ -656,11 +656,11 @@ XPIDL_TYPELIBS=$(XPIDL_TYPELIBS:.\=.\_xpidlgen\)
 .idl{$(XPIDL_GEN_DIR)}.xpt:
         $(XPIDL_PROG) -m typelib $(XPIDL_INCLUDES) -o $* $<
 
-!ifndef XPILD_MODULE
-XPILD_MODULE = $(MODULE)
+!ifndef XPIDL_MODULE
+XPIDL_MODULE = $(MODULE)
 !endif
 
-TYPELIB = $(XPIDL_GEN_DIR)\$(XPILD_MODULE).xpt
+TYPELIB = $(XPIDL_GEN_DIR)\$(XPIDL_MODULE).xpt
 
 $(TYPELIB): $(XPIDL_TYPELIBS)
         @echo +++ make: Creating typelib: $(TYPELIB)
@@ -692,10 +692,10 @@ export:: $(XPDIST)\idl
         @echo.
         -for %i in ($(XPIDLSRCS:/=\)) do $(MAKE_INSTALL) %i $(XPDIST)\idl
 
-export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(XPDIST)\public\$(MODULE)
+export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(XPDIST)\include
         @echo +++ make: exporting generated XPIDL header files
         @echo.
-        -for %i in ($(XPIDL_HEADERS:/=\)) do $(MAKE_INSTALL) %i $(XPDIST)\public\$(MODULE)
+        -for %i in ($(XPIDL_HEADERS:/=\)) do $(MAKE_INSTALL) %i $(XPDIST)\include
 
 !ifndef NO_GEN_XPT
 install:: $(XPIDL_GEN_DIR) $(TYPELIB)
