@@ -211,6 +211,7 @@ MRESULT EXPENTRY nsToolkitWindowProc(HWND hWnd, ULONG msg, MPARAM mp1,
             PR_EnterMonitor(monitor);
             PR_Notify(monitor);
             PR_ExitMonitor(monitor);
+            break;
         }
         case WM_SENDMSG:
         {
@@ -221,6 +222,7 @@ MRESULT EXPENTRY nsToolkitWindowProc(HWND hWnd, ULONG msg, MPARAM mp1,
             PR_EnterMonitor( pData->pMonitor);
             PR_Notify( pData->pMonitor);
             PR_ExitMonitor( pData->pMonitor);
+            break;
         }
         default:
             return ::WinDefWindowProc(hWnd, msg, mp1, mp2);
