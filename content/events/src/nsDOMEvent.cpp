@@ -282,6 +282,7 @@ nsDOMEvent::PreventDefault()
   return NS_OK;
 }
 
+
 NS_IMETHODIMP
 nsDOMEvent::GetView(nsIDOMAbstractView** aView)
 {
@@ -939,6 +940,7 @@ nsDOMEvent::InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBoo
   NS_ENSURE_SUCCESS(SetEventType(aEventTypeArg), NS_ERROR_FAILURE);
   mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
   mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_NONE;
   return NS_OK;
 }
 
@@ -963,6 +965,7 @@ nsDOMEvent::InitKeyEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool 
   NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
   mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
   mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_NONE;
   return NS_OK;
 }
 
@@ -1003,6 +1006,28 @@ nsDOMEvent::IsDispatchStopped(PRBool* aIsDispatchStopped)
   } else {
     *aIsDispatchStopped = PR_FALSE;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::IsHandled(PRBool* aIsHandled)
+{
+  if (mEvent->internalAppFlags | NS_APP_EVENT_FLAG_HANDLED) {
+    *aIsHandled = PR_TRUE;
+  } else {
+    *aIsHandled = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::SetHandled(PRBool aHandled)
+{
+  if(aHandled) 
+    mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_HANDLED;
+  else
+	mEvent->internalAppFlags &= ~NS_APP_EVENT_FLAG_HANDLED;
+
   return NS_OK;
 }
 
