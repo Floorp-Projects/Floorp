@@ -156,7 +156,7 @@ function Startup()
       break;
     case "addGroup,group":
       document.getElementById("showaddgroup").setAttribute("hidden", "false");
-      gCB_AddGroup.checked = true;
+      gCB_AddGroup.setAttribute("checked", "true");
       setupFields();
       toggleGroup();
       sizeToFit();
@@ -334,7 +334,7 @@ function toggleGroup()
   temp = gOldURLValue;
   gOldURLValue = gFld_URL.value;
   gFld_URL.value = temp;
-  gFld_URL.disabled = gCB_AddGroup.checked;
+  gFld_URL.disabled = gCB_AddGroup.getAttribute("checked") == "true";
 
   gFld_Name.select();
   gFld_Name.focus();
@@ -344,5 +344,5 @@ function toggleGroup()
 function addingGroup()
 {
   const showAddGroup = document.getElementById("showaddgroup");
-  return showAddGroup.getAttribute("hidden") != "true" && gCB_AddGroup.checked;
+  return showAddGroup.getAttribute("hidden") != "true" && gCB_AddGroup.getAttribute("checked") == "true";
 }
