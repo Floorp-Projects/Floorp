@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: lfinger.pl,v 1.2 1998/07/28 23:28:18 leif Exp $
+# $Id: lfinger.pl,v 1.3 1998/07/28 23:28:29 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -24,7 +24,6 @@
 #    "finger" version using LDAP information (using RFC 2307 objectclass).
 #
 #############################################################################
-
 use Getopt::Std;			# To parse command line arguments.
 use Mozilla::LDAP::Connection;		# Main "OO" layer for LDAP
 use Mozilla::LDAP::Utils;		# LULU, utilities.
