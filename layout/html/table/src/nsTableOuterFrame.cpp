@@ -37,6 +37,8 @@
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 
+/* ----------- nsTableCaptionFrame ---------- */
+
 #define NS_TABLE_FRAME_CAPTION_LIST_INDEX 0
 
 // caption frame
@@ -44,6 +46,20 @@ nsTableCaptionFrame::nsTableCaptionFrame()
 {
   // shrink wrap 
   SetFlags(NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
+}
+
+nsTableCaptionFrame::~nsTableCaptionFrame()
+{
+}
+
+NS_IMETHODIMP
+nsTableOuterFrame::Destroy(nsIPresContext* aPresContext)
+{
+  if (mCaptionFrame) {
+    mCaptionFrame->Destroy(aPresContext);
+  }
+
+  return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -117,12 +133,18 @@ struct OuterTableReflowState {
   }
 };
 
-
-
 /* ----------- nsTableOuterFrame ---------- */
 
 NS_IMPL_ADDREF_INHERITED(nsTableOuterFrame, nsHTMLContainerFrame)
 NS_IMPL_RELEASE_INHERITED(nsTableOuterFrame, nsHTMLContainerFrame)
+
+nsTableOuterFrame::nsTableOuterFrame()
+{
+}
+
+nsTableOuterFrame::~nsTableOuterFrame()
+{
+}
 
 nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {

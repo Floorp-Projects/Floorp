@@ -32,10 +32,14 @@ struct nsStyleTable;
 
 class nsTableCaptionFrame : public nsBlockFrame
 {
-  public:
+public:
   // nsISupports
-  nsTableCaptionFrame();
   NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
+  friend nsresult NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+protected:
+  nsTableCaptionFrame();
+  virtual ~nsTableCaptionFrame();
 };
 
 
@@ -60,14 +64,15 @@ public:
     *
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
-  friend nsresult 
-  NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  friend nsresult NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   NS_IMETHOD AdjustZeroWidth();
 
@@ -150,6 +155,9 @@ public:
 
 protected:
 
+
+  nsTableOuterFrame();
+  virtual ~nsTableOuterFrame();
 
   /** Always returns 0, since the outer table frame has no border of its own
     * The inner table frame can answer this question in a meaningful way.
