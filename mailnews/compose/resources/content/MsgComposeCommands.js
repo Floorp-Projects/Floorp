@@ -24,6 +24,7 @@ var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var numAttachments = 0;
 var currentAttachment = null;
+var tabIntoBodyPhase = 0;
 
 var other_header = "";
 var update_compose_title_as_you_type = true;
@@ -498,8 +499,6 @@ function CloseWindow()
 		msgCompose.CloseWindow();
 }
 
-
-
 function AttachFile()
 {
 	dump("AttachFile()\n");
@@ -568,4 +567,34 @@ function RemoveLastAttachment()
 function AttachVCard()
 {
 	dump("AttachVCard()\n");
+}
+
+function ShouldITabIntoBody(phase)
+{
+	if (phase != tabIntoBodyPhase)
+	{
+		tabIntoBodyPhase = 0;
+		return;
+	}
+	
+	switch (phase)
+	{
+		case 0:
+			tabIntoBodyPhase ++;
+			setTimeout("tabIntoBodyPhase = 0;", 250);
+			break;
+	
+		case 1:
+			tabIntoBodyPhase ++;
+			break;
+	
+		case 2:
+			contentWindow.focus();
+			tabIntoBodyPhase = 0;
+			break;
+
+		default:
+			tabIntoBodyPhase = 0;
+			break;		
+	}
 }

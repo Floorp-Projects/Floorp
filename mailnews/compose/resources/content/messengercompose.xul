@@ -278,7 +278,10 @@ Rights Reserved.
 			<box align="vertical" flex="60%">
 				<box align="horizontal" flex="100%">
 					<html:div flex="20%">&fromAddr.label;</html:div>
-					<html:select id="msgIdentity" flex="80%"/>
+					<html:select id="msgIdentity" flex="80%"
+						onkeyup="if (event.which == 9) ShouldITabIntoBody(2);"
+						onfocus="ShouldITabIntoBody(1);"
+						/>
 				</box>
 				<spring style="height:0.5em"/>
 				<box align="horizontal" flex="100%">
@@ -293,7 +296,10 @@ Rights Reserved.
 				
 				<box align="horizontal" flex="100%">
 					<html:div flex="20%">&subject.label;</html:div>
-				    <html:input id="msgSubject" type="text" flex="80%" onkeyup="SetComposeWindowTitle(event.which);"/>
+				    <html:input id="msgSubject" type="text" flex="80%"
+						onkeyup="SetComposeWindowTitle(event.which);"
+						onblur="ShouldITabIntoBody(0);"
+						/>
 				</box>
 			</box>
 		</box>
