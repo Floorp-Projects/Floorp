@@ -252,8 +252,12 @@ namespace VM {
                        Register aR = NotARegister) :
             Instruction_2<Label*, Register>(aOpcode, aLabel, aR) {}
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[mOpcode] << "\tOffset " << mOp1->mOffset <<
-                ", R" << mOp2;
+            f << opcodeNames[mOpcode] << "\tOffset " << mOp1->mOffset;
+            if (mOp2 == NotARegister) {
+                f << ", R~";
+            } else {
+                f << ", R" << mOp2;
+            }
             return f;
         }
         void resolveTo (uint32 aOffset) { mOp1->mOffset = aOffset; }
