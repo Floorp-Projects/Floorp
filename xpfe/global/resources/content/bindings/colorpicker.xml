@@ -110,6 +110,8 @@
           return this.mSelectedCell ? this.mSelectedCell.getAttribute("color") : null;
         ]]></getter>
         <setter><![CDATA[
+          if (!val)
+            return null;
           val = val.toUpperCase();
           // Translate standard HTML color strings:
           if (val[0] != "#") {
@@ -169,6 +171,7 @@
             this.selectCell(cells[0]);
             this.hoverCell(this.mSelectedCell);
           }
+	  return null;
         ]]></setter>
       </property>
 
