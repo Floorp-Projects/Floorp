@@ -160,10 +160,10 @@ function InitDialog()
 	    case "center":
 	      dialog.alignTypeSelect.selectedIndex = 1;
 	      break;
-	    case "left":
+	    case "right":
 	      dialog.alignTypeSelect.selectedIndex = 3;
 	      break;
-	    case "right":
+	    case "left":
 	      dialog.alignTypeSelect.selectedIndex = 4;
 	      break;
 	    default:  // Default or "bottom"
@@ -203,6 +203,9 @@ function SetGlobalElementToCurrentDialogSettings()
   globalElement.setAttribute("alt", str);
 
   var alignment;
+  //Note that the attributes "left" and "right" are opposite
+  //  of what we use in the UI, which describes where the TEXT wraps,
+  //  not the image location (which is what the HTML describes)
   switch ( dialog.alignTypeSelect.selectedIndex )
   {
     case 0:
@@ -212,16 +215,17 @@ function SetGlobalElementToCurrentDialogSettings()
       alignment = "center";
       break;
     case 3:
-      alignment = "left";
+      alignment = "right";
       break;
     case 4:
-      alignment = "right";
+      alignment = "left";
       break;
     default:  // Default or "bottom" (2)
       alignment = "";
       break;
   }
-  
+dump("alignment ="+alignment+"\n");
+
   if ( alignment == "" )
     globalElement.removeAttribute( "align" );
   else
@@ -565,6 +569,9 @@ function ValidateData()
 	    globalElement.removeAttribute( "border" );
   
 	  // Default or setting "bottom" means don't set the attribute
+    // Note that the attributes "left" and "right" are opposite
+    //  of what we use in the UI, which describes where the TEXT wraps,
+    //  not the image location (which is what the HTML describes)
 	  var align = "";
 	  switch ( dialog.alignTypeSelect.selectedIndex )
 	  {
@@ -575,10 +582,10 @@ function ValidateData()
 	      align = "center";
 	      break;
 	    case 3:
-	      align = "left";
+	      align = "right";
 	      break;
 	    case 4:
-	      align = "right";
+	      align = "left";
 	      break;
 	  }
 	  if (align == "")
