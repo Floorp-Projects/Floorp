@@ -627,7 +627,6 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::DeleteTFoot()
 {
-{
   nsCOMPtr<nsIDOMHTMLTableSectionElement> childToDelete;
   nsresult rv = GetTFoot(getter_AddRefs(childToDelete));
   if ((NS_SUCCEEDED(rv)) && childToDelete)
@@ -638,11 +637,8 @@ nsHTMLTableElement::DeleteTFoot()
   return NS_OK;
 }
 
-}
-
 NS_IMETHODIMP
 nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
-{
 {
   *aValue = nsnull;
   nsresult rv = NS_OK;
@@ -664,7 +660,6 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
     }
   }
   return NS_OK;
-}
 }
 
 NS_IMETHODIMP
