@@ -38,6 +38,8 @@ nsresult ConvertToUnicode(const nsString& aCharset,
                                  const char* inCString, 
                                  nsString& outString);
 
+nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
+
 
 //
 // THIS IS BAD STUFF...MAKE IT GO AWAY!!!
