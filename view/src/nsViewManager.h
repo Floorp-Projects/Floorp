@@ -144,14 +144,6 @@ public:
   NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags);
-  /**
-   * Called to inform the view manager that a view has scrolled.
-   * The view manager will invalidate any widgets which may need
-   * to be rerendered.
-   * @param aView view to paint. should be root view
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
-   */
-  NS_IMETHOD  UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY);
 
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus* aStatus);
 
@@ -252,7 +244,7 @@ private:
   void AddRectToDirtyRegion(nsView* aView, const nsRect &aRect) const;
   void UpdateTransCnt(nsView *oldview, nsView *newview);
 
-  PRBool UpdateAllCoveringWidgets(nsView *aView, nsView *aTarget, nsRect &aDamagedRect, PRBool aOnlyRepaintIfUnblittable);
+  PRBool UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamagedRect, nsView* aIgnoreWidgetView);
 
   void UpdateViews(nsView *aView, PRUint32 aUpdateFlags);
 
@@ -356,6 +348,15 @@ public: // NOT in nsIViewManager, so private to the view module
 	nsView* GetKeyEventGrabber() const { return mKeyGrabber; }
 
   nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
+
+  /**
+   * Called to inform the view manager that a view has scrolled.
+   * The view manager will invalidate any widgets which may need
+   * to be rerendered.
+   * @param aView view to paint. should be root view
+   * @param aUpdateFlags see bottom of nsIViewManager.h for description
+   */
+  void UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY);
 
   PRBool CanScrollWithBitBlt(nsView* aView);
 

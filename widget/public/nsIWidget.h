@@ -212,6 +212,7 @@ struct nsWidgetInitData {
     : clipChildren(PR_FALSE), 
       clipSiblings(PR_FALSE), 
       mDropShadow(PR_FALSE),
+      mListenForResizes(PR_FALSE),
       mWindowType(eWindowType_child),
       mBorderStyle(eBorderStyle_default)
   {
@@ -219,6 +220,7 @@ struct nsWidgetInitData {
 
   // when painting exclude area occupied by child windows and sibling windows
   PRPackedBool  clipChildren, clipSiblings, mDropShadow;
+  PRPackedBool  mListenForResizes;
   nsWindowType mWindowType;
   nsBorderStyle mBorderStyle;
 };

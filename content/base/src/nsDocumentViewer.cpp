@@ -5232,8 +5232,11 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   if (NS_FAILED(rv))
     return rv;
 
+  // pass in a native widget to be the parent widget ONLY if the view hierarchy will stand alone.
+  // otherwise the view will find its own parent widget and "do the right thing" to
+  // establish a parent/child widget relationship
   rv = view->CreateWidget(kWidgetCID, nsnull,
-                          aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
+                          containerView != nsnull ? nsnull : aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
                           PR_TRUE, PR_FALSE);
   if (rv != NS_OK)
     return rv;
