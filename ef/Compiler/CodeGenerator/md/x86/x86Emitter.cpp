@@ -40,7 +40,7 @@
 #include "x86SysCallsRuntime.h"
 #include "JavaObject.h"
 
-#include "x86-win32.nad.burg.h"
+#include "x86.nad.burg.h"
 #include "ControlNodes.h"
 
 #include "x86Instruction.h"
