@@ -657,16 +657,17 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       }
 
       nsRect curRect;
-      menuPopup->GetRect(curRect);
+      menuPopup->GetBounds(curRect);
 
-      menuPopup->SetRect(mPresContext, nsRect(0,0,mLastPref.width, mLastPref.height));
+      nsBoxLayoutState state(mPresContext);
+      menuPopup->SetBounds(state, nsRect(0,0,mLastPref.width, mLastPref.height));
 
       nsIView* view = nsnull;
       menuPopup->GetView(mPresContext, &view);
       view->SetVisibility(nsViewVisibility_kHide);
       menuPopup->SyncViewWithFrame(mPresContext, popupAnchor, popupAlign, this, -1, -1);
       nsRect rect;
-      menuPopup->GetRect(rect);
+      menuPopup->GetBounds(rect);
 
       // if the height is different then reflow. It might need scrollbars force a reflow
       if (curRect.height != rect.height || mLastPref.height != rect.height)
