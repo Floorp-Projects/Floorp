@@ -74,6 +74,9 @@ nsDiskCacheRecord::nsDiskCacheRecord(nsIDBAccessor* db, nsNetDiskCache* aCache) 
   NS_INIT_REFCNT();
   NS_ASSERTION(mDiskCache, "Must have an nsNetDiskCache");
   NS_ADDREF(mDiskCache);
+#ifdef DEBUG_dp
+  printf("CACHE: nsDiskCacheRecord(): %p created\n", this);
+#endif /* DEBUG_dp */
 }
 
 // mem alloced. so caller should do free() on key. 
@@ -115,6 +118,9 @@ nsDiskCacheRecord::Init(const char* key, PRUint32 length, PRInt32 ID)
 
 nsDiskCacheRecord::~nsDiskCacheRecord()
 {
+#ifdef DEBUG_dp
+  printf("CACHE: ~nsDiskCacheRecord(%d, %s): %p destroyed\n", mRecordID, mKey, this);
+#endif /* DEBUG_dp */
   if(mKey)
     nsMemory::Free(mKey) ;
   if(mMetaData)
@@ -281,20 +287,22 @@ nsDiskCacheRecord::Delete(void)
   if(mNumChannels)
     return NS_ERROR_NOT_AVAILABLE ;
 
+  // Delete any file associated with this entry. Remember we might
+  // not created the file yet.
   PRUint32 len = 0 ;
   PRInt64 fileSize; 
   nsresult rv = mFile->GetFileSize( &fileSize) ;
-  LL_L2UI( len, fileSize );	 
-  
-  
+  if (NS_SUCCEEDED(rv))
+  {
+    mFile->Delete(PR_TRUE) ;
 
-  mFile->Delete(PR_TRUE) ;
-
-  // updata the storage size
-  mDiskCache->mStorageInUse -= len ;
+    // updata the storage size
+    LL_L2UI(len, fileSize);
+    mDiskCache->mStorageInUse -= len ;
+  }
 
   rv = mDB->Del(mRecordID, mKey, mKeyLength) ;
-  if(NS_FAILED(rv)) 
+  if (NS_FAILED(rv)) 
     return NS_ERROR_FAILURE ;
   else
     return NS_OK ;
