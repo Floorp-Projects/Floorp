@@ -400,7 +400,8 @@ public:
 
  */
 
-class nsXULElement : public nsIXULContent,
+class nsXULElement : public nsGenericElement,
+                     public nsIXULContent,
                      public nsIDOMXULElement,
                      public nsIScriptEventHandlerOwner,
                      public nsIChromeEventHandler
@@ -429,24 +430,11 @@ public:
            PRBool aIsScriptable, nsIContent** aResult);
 
     // nsISupports
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
-    // nsIContent (from nsIStyledContent)
-    nsIDocument *GetDocument() const
-    {
-        return mDocument;
-    }
+    // nsIContent
     virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                              PRBool aCompileEventHandlers);
-    PRBool IsInDoc() const
-    {
-        return !!mDocument;
-    }
-    nsIDocument *GetOwnerDoc() const
-    {
-        return mDocument ? mDocument : NodeInfo()->GetDocument();
-    }
-    virtual void SetParent(nsIContent* aParent);
     virtual PRBool IsNativeAnonymous() const;
     virtual void SetNativeAnonymous(PRBool aAnonymous);
     virtual PRUint32 GetChildCount() const;
@@ -457,9 +445,6 @@ public:
     virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                    PRBool aDeepSetDocument);
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-    virtual PRInt32 GetNameSpaceID() const;
-    virtual nsIAtom *Tag() const;
-    virtual nsINodeInfo *GetNodeInfo() const;
     virtual nsIAtom *GetIDAttributeName() const;
     virtual nsIAtom *GetClassAttributeName() const;
     virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
@@ -502,17 +487,8 @@ public:
     virtual nsIContent *GetBindingParent() const;
     virtual nsresult SetBindingParent(nsIContent* aParent);
     virtual PRBool IsContentOfType(PRUint32 aFlags) const;
-    virtual already_AddRefed<nsIURI> GetBaseURI() const;
     virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
-    virtual void* GetProperty(nsIAtom  *aPropertyName,
-                              nsresult *aStatus = nsnull) const;
-    virtual nsresult SetProperty(nsIAtom            *aPropertyName,
-                                 void               *aValue,
-                                 NSPropertyDtorFunc  aDtor);
-    virtual nsresult DeleteProperty(nsIAtom *aPropertyName);
-    virtual void* UnsetProperty(nsIAtom  *aPropertyName,
-                                nsresult *aStatus = nsnull);
 
     // nsIXMLContent
     NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
@@ -536,11 +512,11 @@ public:
     NS_IMETHOD GetLazyState(LazyState aFlag, PRBool& aValue);
     NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAString& aValue);
 
-    // nsIDOMNode (from nsIDOMElement)
-    NS_DECL_NSIDOMNODE
+    // nsIDOMNode
+    NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericElement::)
 
     // nsIDOMElement
-    NS_DECL_NSIDOMELEMENT
+    NS_FORWARD_NSIDOMELEMENT(nsGenericElement::)
 
     // nsIDOMXULElement
     NS_DECL_NSIDOMXULELEMENT
@@ -560,7 +536,7 @@ public:
 
 
 protected:
-    nsXULElement();
+    nsXULElement(nsINodeInfo* aNodeInfo);
     nsresult Init();
     virtual ~nsXULElement(void);
 
@@ -580,18 +556,9 @@ protected:
 
     nsresult AddPopupListener(nsIAtom* aName);
 
-    nsIContent* GetParent() const {
-        // Override nsIContent::GetParent to be more efficient internally,
-        // we don't use the low 2 bits of mParentPtrBits for anything.
- 
-        return NS_REINTERPRET_CAST(nsIContent *, mParentPtrBits);
-    }
-
 protected:
     // Required fields
     nsXULPrototypeElement*              mPrototype;
-    nsIDocument*                        mDocument;
-    nsAttrAndChildArray                 mAttrsAndChildren;   // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
 
     /**
@@ -599,32 +566,6 @@ protected:
      * that created us. [Weak]
      */
     nsIContent*                         mBindingParent;
-
-    /**
-     * Lazily instantiated if/when object is mutated. mAttributes are
-     * lazily copied from the prototype when changed.
-     */
-    struct Slots {
-        Slots();
-        ~Slots();
-
-        nsCOMPtr<nsINodeInfo>               mNodeInfo;           // [OWNER]
-        nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
-        nsRefPtr<nsDOMCSSDeclaration>       mDOMStyle;           // [OWNER]
-        nsRefPtr<nsDOMAttributeMap>         mAttributeMap;       // [OWNER]
-        nsRefPtr<nsChildContentList>        mChildNodes;         // [OWNER]
-        unsigned                            mLazyState : 3;
-        unsigned                            mHasProperties : 1;
-    };
-
-    friend struct Slots;
-    Slots* mSlots;
-
-    /**
-     * Ensure that we've got an mSlots object, creating a Slots object
-     * if necessary.
-     */
-    nsresult EnsureSlots();
 
     /**
      * Abandon our prototype linkage, and copy all attributes locally
@@ -662,11 +603,12 @@ protected:
     const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
 protected:
-    // Internal accessors. These shadow the 'Slots', and return
-    // appropriate default values if there are no slots defined in the
-    // delegate.
-    nsINodeInfo     *NodeInfo() const    { return mSlots ? mSlots->mNodeInfo          : mPrototype->mNodeInfo; }
-    nsIControllers  *Controllers() const { return mSlots ? mSlots->mControllers.get() : nsnull; }
+    // Internal accessor. This shadows the 'Slots', and returns
+    // appropriate value.
+    nsIControllers *Controllers() {
+      nsDOMSlots* slots = GetExistingDOMSlots();
+      return slots ? slots->mControllers : nsnull; 
+    }
 
     void UnregisterAccessKey(const nsAString& aOldValue);
 

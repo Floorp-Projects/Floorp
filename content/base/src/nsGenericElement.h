@@ -63,6 +63,7 @@ class nsDOMAttributeMap;
 class nsIURI;
 class nsVoidArray;
 class nsINodeInfo;
+class nsIControllers;
 
 typedef unsigned long PtrBits;
 
@@ -88,8 +89,11 @@ typedef unsigned long PtrBits;
 /** Whether this content has had any properties set on it */
 #define GENERIC_ELEMENT_HAS_PROPERTIES         0x00000010U
 
+/** Three bits are element type specific. */
+#define ELEMENT_TYPE_SPECIFIC_BITS_OFFSET      5
+
 /** The number of bits to shift the bit field to get at the content ID */
-#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 5
+#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 8
 
 /** This mask masks out the bits that are used for the content ID */
 #define GENERIC_ELEMENT_CONTENT_ID_MASK \
@@ -168,11 +172,18 @@ public:
    */
   nsRefPtr<nsDOMAttributeMap> mAttributeMap;
 
-  /**
-   * The nearest enclosing content node with a binding that created us.
-   * @see nsGenericElement::GetBindingParent
-   */
-  nsIContent* mBindingParent; // [Weak]
+  union {
+    /**
+    * The nearest enclosing content node with a binding that created us.
+    * @see nsGenericElement::GetBindingParent
+    */
+    nsIContent* mBindingParent;  // [Weak]
+
+    /**
+    * The controllers of the XUL Element.
+    */
+    nsIControllers* mControllers; // [OWNER]
+  };
 
   // DEPRECATED, DON'T USE THIS
   PRUint32 mContentID;

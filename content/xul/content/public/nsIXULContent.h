@@ -51,12 +51,12 @@ class nsIRDFCompositeDataSource;
 class nsIXULTemplateBuilder;
 class nsString;
 
-// {39C5ECC0-5C47-11d3-BE36-00104BDE6048}
+// {da87924c-2638-4249-8297-4cf814d52d47}
 #define NS_IXULCONTENT_IID \
-{ 0x316f8e9d, 0x8d1e, 0x433d, { 0xa2, 0xdd, 0xb5, 0xc0, 0x83, 0xb3, 0x56, 0x13 } }
+{ 0xda87924c, 0x2638, 0x4249, { 0x82, 0x97, 0x4c, 0xf8, 0x14, 0xd5, 0x2d, 0x47 } }
 
 
-class nsIXULContent : public nsIXMLContent
+class nsIXULContent : public nsISupports
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULCONTENT_IID)
