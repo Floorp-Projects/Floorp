@@ -472,32 +472,16 @@ var MessageWindowController =
 
 	isCommandEnabled: function(command)
 	{
-    var enabled = new Object();
-    var checkStatus = new Object();
 		switch ( command )
 		{
-			case "cmd_delete":
-				if (isNewsURI(gCurrentMessageUri))
-				{
-					goSetMenuValue(command, 'valueNewsMessage');
-					goSetAccessKey(command, 'valueNewsMessageAccessKey');
-				}
-				else
-				{
-					goSetMenuValue(command, 'valueMessage');
-					goSetAccessKey(command, 'valueMessageAccessKey');
-				}
-
-				if (gDBView)
-				{
-					gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
-					return enabled.value;
-				}
       case "cmd_createFilterFromPopup":
       case "cmd_createFilterFromMenu":
         var loadedFolder = GetLoadedMsgFolder();
         if (!(loadedFolder && loadedFolder.server.canHaveFilters))
           return false;
+			case "cmd_delete":
+        UpdateDeleteCommand();
+        // fall through
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":

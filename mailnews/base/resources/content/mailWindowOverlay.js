@@ -371,6 +371,33 @@ function InitMessageMark()
   document.commandDispatcher.updateCommands('create-menu-mark');
 }
 
+function UpdateDeleteCommand()
+{
+  var value = "value";
+  var uri = GetFirstSelectedMessage();
+  if (IsNewsMessage(uri))
+    value += "News";
+  else if (SelectedMessagesAreDeleted())
+    value += "IMAPDeleted";
+  if (GetNumSelectedMessages() < 2)
+    value += "Message";
+  else
+    value += "Messages";
+  goSetMenuValue("cmd_delete", value);
+  goSetAccessKey("cmd_delete", value + "AccessKey");
+}
+
+function SelectedMessagesAreDeleted()
+{
+    try {
+        const MSG_FLAG_IMAP_DELETED = 0x200000;
+        return gDBView.hdrForFirstSelectedMessage.flags & MSG_FLAG_IMAP_DELETED;
+    }
+    catch (ex) {
+        return 0;
+    }
+}
+
 function SelectedMessagesAreRead()
 {
     var isRead;

@@ -56,7 +56,7 @@ function fillThreadPaneContextMenu()
   SetupMoveMenuItem("threadPaneContext-moveMenu", numSelected, isNewsgroup, false);
   SetupSaveAsMenuItem("threadPaneContext-saveAs", numSelected, false);
   SetupPrintMenuItem("threadPaneContext-print", numSelected, false);
-  SetupDeleteMenuItem("threadPaneContext-delete", numSelected, isNewsgroup, false);
+  goUpdateCommand('cmd_delete');
   SetupAddSenderToABMenuItem("threadPaneContext-addSenderToAddressBook", numSelected, false);
   SetupAddAllToABMenuItem("threadPaneContext-addAllToAddressBook", numSelected, false);
 
@@ -142,27 +142,6 @@ function SetupPrintMenuItem(menuID, numSelected, forceHide)
 {
   ShowMenuItem(menuID, !forceHide);
   EnableMenuItem(menuID, (numSelected > 0));
-}
-
-function SetupDeleteMenuItem(menuID, numSelected, isNewsgroup, forceHide)
-{
-  var showMenuItem = !forceHide;
-
-  ShowMenuItem(menuID, showMenuItem);
-  if(showMenuItem)
-  {
-    EnableMenuItem(menuID, (numSelected > 0));
-    if(!isNewsgroup)
-    {
-      SetMenuItemLabel(menuID, gMessengerBundle.getString("delete"));
-      SetMenuItemAccessKey(menuID, gMessengerBundle.getString("deleteAccessKey"));
-    }
-    else
-    {
-      SetMenuItemLabel(menuID, gMessengerBundle.getString("cancel"));
-      SetMenuItemAccessKey(menuID, gMessengerBundle.getString("cancelAccessKey"));
-    }
-  }
 }
 
 function SetupAddSenderToABMenuItem(menuID, numSelected, forceHide)
@@ -366,7 +345,12 @@ function fillMessagePaneContextMenu()
   SetupLabelsMenuItem("messagePaneContext-labels", numSelected, (numSelected == 0 || hideMailItems));
   SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0 || hideMailItems));
   SetupPrintMenuItem("messagePaneContext-print", numSelected, (numSelected == 0 || hideMailItems));
-  SetupDeleteMenuItem("messagePaneContext-delete", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
+  if (numSelected == 0 || hideMailItems)
+    ShowMenuItem("messagePaneContext-delete", false)
+  else {
+    goUpdateCommand('cmd_delete');
+    ShowMenuItem("messagePaneContext-delete", true)
+  }
   SetupAddSenderToABMenuItem("messagePaneContext-addSenderToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
   SetupAddAllToABMenuItem("messagePaneContext-addAllToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
 

@@ -285,35 +285,10 @@ var DefaultController =
 //    dump('entering is command enabled for: ' + command + '\n');
     switch ( command )
     {
-      case "button_delete":
       case "cmd_delete":
-        var uri = GetFirstSelectedMessage();
-        if ( GetNumSelectedMessages() < 2 ) 
-        {
-          if (IsNewsMessage(uri))
-          {
-            goSetMenuValue(command, 'valueNewsMessage');
-            goSetAccessKey(command, 'valueNewsMessageAccessKey');
-          }
-          else
-          {
-            goSetMenuValue(command, 'valueMessage');
-            goSetAccessKey(command, 'valueMessageAccessKey');
-          }
-        }
-        else 
-        {
-          if (IsNewsMessage(uri)) 
-          {
-            goSetMenuValue(command, 'valueNewsMessage');
-            goSetAccessKey(command, 'valueNewsMessageAccessKey');
-          }
-          else 
-          {
-            goSetMenuValue(command, 'valueMessages');
-            goSetAccessKey(command, 'valueMessagesAccessKey');
-          }
-        }
+        UpdateDeleteCommand();
+        // fall through
+      case "button_delete":
         if (gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
         return enabled.value;

@@ -151,10 +151,16 @@ Rights Reserved.
          valueNewsgroupAccessKey="&unsubscribeNewsgroupCmd.accesskey;"
          valueMessage="&deleteMsgCmd.label;"
          valueMessageAccessKey="&deleteMsgCmd.accesskey;"
+         valueIMAPDeletedMessage="&undeleteMsgCmd.label;"
+         valueIMAPDeletedMessageAccessKey="&undeleteMsgCmd.accesskey;"
          valueNewsMessage="&cancelNewsMsgCmd.label;"
          valueNewsMessageAccessKey="&cancelNewsMsgCmd.accesskey;"
          valueMessages="&deleteMsgsCmd.label;"
-         valueMessagesAccessKey="&deleteMsgsCmd.accesskey;"/>
+         valueMessagesAccessKey="&deleteMsgsCmd.accesskey;"
+         valueIMAPDeletedMessages="&undeleteMsgsCmd.label;"
+         valueIMAPDeletedMessagesAccessKey="&undeleteMsgsCmd.accesskey;"
+         valueNewsMessages="&cancelNewsMsgsCmd.label;"
+         valueNewsMessagesAccessKey="&cancelNewsMsgsCmd.accesskey;"/>
   <command id="cmd_editDraft" oncommand="goDoCommand('cmd_editDraft')" disabled="true"/>
   <command id="cmd_selectAll"/>
   <command id="cmd_selectThread" oncommand="goDoCommand('cmd_selectThread')"/>
@@ -542,9 +548,7 @@ Rights Reserved.
         accesskey="&contextPrint.accesskey;"
         oncommand="PrintEnginePrint();"/>
     <menuitem id="threadPaneContext-delete"
-        label="&contextDelete.label;"
-        accesskey="&contextDelete.accesskey;"
-        oncommand="MsgDeleteMessage(false, false);"/>
+        command="cmd_delete"/>
   </popup>
 
     <popup id="folderPaneContext" onpopupshowing="return fillFolderPaneContextMenu();" >
@@ -822,7 +826,7 @@ Rights Reserved.
         accesskey="&contextPrint.accesskey;"
         oncommand="PrintEnginePrint();"/>
     <menuitem id="messagePaneContext-delete"
-        oncommand="MsgDeleteMessage(false, false);"/>
+        command="cmd_delete"/>
     <menuseparator id="messagePaneContext-sep-edit"/>
         <menuitem id="context-viewimage"
                   label="&viewImageCmd.label;"
