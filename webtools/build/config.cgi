@@ -36,7 +36,7 @@ $CVSROOT         = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 $ENV{PATH}       = "$ENV{PATH}:/opt/cvs-tools/bin:/usr/local/bin"; # for cvs & m4
 
 %default = (
-  'MOZ_CO_MODULE',  'SeaMonkeyEditor',
+  'MOZ_CO_MODULE',  'SeaMonkeyAll',
   'MOZ_CO_BRANCH',  'HEAD',
   'MOZ_OBJDIR',     '@TOPSRCDIR@',
   'MOZ_CVS_FLAGS',  '-q -z 3',
@@ -309,10 +309,6 @@ sub print_configure_form {
     Check out module
     </td><td>
     <input type="text" name="MOZ_CO_MODULE" value="$fillin{MOZ_CO_MODULE}">
-    </td></tr><tr><td>
-    Check out branch
-    </td><td>
-    <input type="text" name="MOZ_CO_BRANCH" value="$fillin{MOZ_CO_BRANCH}">
     </td></tr><tr><td>
     CVS flags
     </td><td>
