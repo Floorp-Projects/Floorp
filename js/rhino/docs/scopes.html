@@ -39,9 +39,13 @@ the execution environment. There should be one and only one Context associated
 with each thread that will be executing JavaScript. 
 <p>To associate the current thread with a Context, simply call the <tt>enter</tt>
  method of Context: </p>
-<pre>&nbsp;&nbsp;&nbsp; Context cx = Context.enter();</pre>
+<pre>
+    Context cx = Context.enter();
+</pre>
  Once you are done with execution, simply exit the Context: 
-<pre>&nbsp;&nbsp;&nbsp; Context.exit();</pre>
+<pre>
+    Context.exit();
+</pre>
  These calls will work properly even if there is already a Context associated 
 with the current thread. That context will be returned and an internal counter
 incremented. Only when the counter reaches zero will it be disassociated from
@@ -65,7 +69,9 @@ the scripts are responsible for coordinating any accesses to shared variables.
 </p>
 <p>A top-level scope is created by calling <tt>Context.initStandardObjects</tt>
  to create all the standard objects: </p>
-<pre>&nbsp;&nbsp;&nbsp; Scriptable scope = cx.initStandardObjects();</pre>
+<pre>
+    GlobalScope scope = cx.initStandardObjects();
+</pre>
  The easiest way to embed Rhino is just to create a new scope this way whenever 
 you need one. However, <tt>initStandardObjects</tt> is an expensive method 
 to call and it allocates a fair amount of memory. We'll see below that there
@@ -108,9 +114,8 @@ for the variable <tt>g</tt> and the function <tt>f</tt>.
 traversed looking for a 'x' property. When none is found, a new property 'x'
 is created in the top-level scope. </p>
   <h2> Sharing Scopes</h2>
- JavaScript is a language that uses delegation rather than traditional class-based 
-inheritance. This is a large topic in itself, but for our purposes it gives 
-us an easy way to share a set of read-only variables across multiple scopes. 
+ JavaScript is a language that uses delegation rather than traditional class-based inheritance. This is a large topic in itself, but for our purposes it gives us an easy way to share a set of read-only variables across multiple scopes. 
+ 
 To do this we set an object's prototype. When accessing a property of an object
 in JavaScript, the object is first searched for a property with the given
 name. If none is found, the object's prototype is searched. This continues
@@ -120,9 +125,12 @@ we wish to share. Typically this object will have been created with <tt>initStan
  and may also have additional objects specific to the embedding. Then all
 we need to do is create a new object and call its <tt>setPrototype</tt> method
 to set the prototype to the shared object, and the parent of the new scope
-to null: </p>
-  <pre>&nbsp;&nbsp;&nbsp; Scriptable newScope = cx.newObject(sharedScope);<br>&nbsp;&nbsp;&nbsp; newScope.setPrototype(sharedScope);<br>&nbsp;&nbsp;&nbsp; newScope.setParentScope(null);<br></pre>
- The call to <tt>newObject</tt> simply creates a new JavaScript object with 
+to null: 
+<pre>    Scriptable newScope = cx.newObject(sharedScope);
+    newScope.setPrototype(sharedScope);
+    newScope.setParentScope(null);
+</pre>
+The call to <tt>newObject</tt> simply creates a new JavaScript object with 
 no properties. It uses the <tt>sharedScope</tt> passed in to initialize the
 prototype with the standard <tt>Object.prototype</tt> value. 
   <p>We can now use <tt>newScope</tt> as a scope for calls to evaluate scripts. 
@@ -134,6 +142,16 @@ instance scopes can be defined and have their own variables for scripts yet
 share the definitions in the shared scope. These multiple instance scopes
 can be used concurrently. <br>
 &nbsp; </p>
+  <h2>Sealed shared scopes</h2>
+<p>The ECMAScript standard defines that scripts can add properties to all standard library objects and in many cases it is also possible to change or delete their properties as well. Such behavior may not be suitable with shared scopes since if a script by mistake adds a property to a library object from the shared scope, that object would not be garbage collected until there re active references to the shared scope potentially leading to memory leaks. In addition if a script alters some of the standard objects, the library may not work properly for other scripts. Such bugs are hard to debug and to remove a possibility for them to occur one can use seal the shared scope and all its objects.
+<p>
+A notion of a sealed object is a JavaScript extension supported by Rhino and it means that properties can not be added/deleted to the object and the existing object properties can not be changed. Any attempt to modify sealed object throws an exception. To seal all objects in the standard library pass <tt>true</tt> for the sealed argument when calling <tt>Context.initStandardObjects(boolean)</tt>:
+<pre>    GlobalScope sealedSharedScope = cx.initStandardObjects(true);</pre>  
+This seals only all standard library objects, it does not seal the shared scope itself thus after calling  <tt>initStandardObjects</tt>, <tt>sealedSharedScope</tt> cab be farther populated with application-specific objects and functions. Then after a custom initialization is done, one can seal the shared scope by calling <tt>ScriptableObject.sealObject()</tt>:
+<pre>    sealedSharedScope.sealObject();</pre>  
+
+Note that currently one needs to explicitly seal any additional properties he adds to the sealed shared scope since although after calling <tt>sealedSharedScope.sealObject();</tt> it would no be possible to set the additional properties to different values, one still would be able to alter the objects themselves.
+
   <h2> Dynamic Scopes</h2>
  There's one problem with the setup outlined above. Calls to functions in 
 JavaScript use <i>static scope</i>, which means that variables are first looked
