@@ -59,6 +59,17 @@
 #include "ipcdPrivate.h"
 #include "ipcd.h"
 
+void
+IPC_Sleep(int seconds)
+{
+    while (seconds > 0) {
+        LOG(("\rsleeping for %d seconds...", seconds));
+        PR_Sleep(PR_SecondsToInterval(1));
+        --seconds;
+    }
+    LOG(("\ndone sleeping\n"));
+}
+
 //-----------------------------------------------------------------------------
 // ipc directory and locking...
 //-----------------------------------------------------------------------------
@@ -412,6 +423,8 @@ int main(int argc, char **argv)
 
 end:
     IPC_ShutdownModuleReg();
+
+    //IPC_Sleep(5);
 
     // it is critical that we release the lock before closing the socket,
     // otherwise, a client might launch another daemon that would be unable

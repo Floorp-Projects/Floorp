@@ -62,9 +62,9 @@ ipcClient::Init()
     // every client must be able to handle IPCM messages.
     mTargets.Append(IPCM_TARGET);
 
-    // XXX cleanup
-    // see ipcCommandModule for this:
-    //IPC_NotifyClientUp(this);
+    // although it is tempting to fire off the NotifyClientUp event at this
+    // time, we must wait until the client sends us a CLIENT_HELLO event.
+    // see ipcCommandModule::OnClientHello.
 }
 
 //
@@ -141,27 +141,21 @@ ipcClient::DelTarget(const nsID &target)
 //   PR_POLL_WRITE - to wait for the client socket to become writable
 //
 int
-ipcClient::Process(PRFileDesc *fd, int poll_flags)
+ipcClient::Process(PRFileDesc *fd, int inFlags)
 {
-    // XXX check if not read OR write
-    if ((poll_flags & PR_POLL_ERR) || 
-        (poll_flags & PR_POLL_HUP) ||
-        (poll_flags & PR_POLL_EXCEPT) ||
-        (poll_flags & PR_POLL_NVAL)) {
-        //
-        // expect Finalize method to be called next.
-        //
+    if (inFlags & (PR_POLL_ERR    | PR_POLL_HUP |
+                   PR_POLL_EXCEPT | PR_POLL_NVAL)) {
         LOG(("client socket appears to have closed\n"));
         return 0;
     }
 
-    // always wait for more data
-    int ret_flags = PR_POLL_READ;
+    // expect to wait for more data
+    int outFlags = PR_POLL_READ;
 
-    if (poll_flags & PR_POLL_READ) {
+    if (inFlags & PR_POLL_READ) {
         LOG(("client socket is now readable\n"));
 
-        char buf[1024]; // XXX 4k?
+        char buf[1024]; // XXX make this larger?
         PRInt32 n;
 
         // find out how much data is available for reading...
@@ -176,8 +170,10 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
             PRUint32 nread;
             PRBool complete;
 
-            // XXX check return value
-            mInMsg.ReadFrom(ptr, PRUint32(n), &nread, &complete);
+            if (mInMsg.ReadFrom(ptr, PRUint32(n), &nread, &complete) == PR_FAILURE) {
+                LOG(("message appears to be malformed; dropping client connection\n"));
+                return 0;
+            }
 
             if (complete) {
                 IPC_DispatchMsg(this, &mInMsg);
@@ -189,7 +185,7 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
         }
     }
   
-    if (poll_flags & PR_POLL_WRITE) {
+    if (inFlags & PR_POLL_WRITE) {
         LOG(("client socket is now writable\n"));
 
         if (mOutMsgQ.First())
@@ -197,9 +193,9 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
     }
 
     if (mOutMsgQ.First())
-        ret_flags |= PR_POLL_WRITE;
+        outFlags |= PR_POLL_WRITE;
 
-    return ret_flags;
+    return outFlags;
 }
 
 //
@@ -223,9 +219,10 @@ ipcClient::WriteMsgs(PRFileDesc *fd)
 
         LOG(("wrote %d bytes\n", nw));
 
-        if (nw == bufLen)
+        if (nw == bufLen) {
             mOutMsgQ.DeleteFirst();
-        // XXX mSendOffset = 0;
+            mSendOffset = 0;
+        }
         else
             mSendOffset += nw;
     }

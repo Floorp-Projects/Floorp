@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prlog.h"
+
 #include "ipcConfig.h"
 #include "ipcLog.h"
 #include "ipcMessage.h"
@@ -48,8 +50,9 @@
 PRStatus
 IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
 {
-    // XXX assert args valid
-    //
+    PR_ASSERT(client);
+    PR_ASSERT(msg);
+
     if (msg->Target().Equals(IPCM_TARGET)) {
         IPCM_HandleMsg(client, msg);
         return PR_SUCCESS;
@@ -61,6 +64,8 @@ IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
 PRStatus
 IPC_SendMsg(ipcClient *client, ipcMessage *msg)
 {
+    PR_ASSERT(msg);
+
     if (client == NULL) {
         //
         // broadcast
@@ -81,21 +86,6 @@ IPC_SendMsg(ipcClient *client, ipcMessage *msg)
 //-----------------------------------------------------------------------------
 // IPC daemon methods
 //-----------------------------------------------------------------------------
-
-PRStatus
-IPC_DispatchMsg(ipcClient *client, const nsID &target, const void *data, PRUint32 dataLen)
-{
-    // lookup handler for this message's topic and forward message to it.
-    // XXX methods should be |const|
-    ipcModuleMethods *methods = IPC_GetModuleByTarget(target);
-    if (methods) {
-        // XXX make sure handleMsg not null
-        methods->handleMsg(client, target, data, dataLen);
-        return PR_SUCCESS;
-    }
-    LOG(("no registered module; ignoring message\n"));
-    return PR_FAILURE;
-}
 
 PRStatus
 IPC_SendMsg(ipcClient *client, const nsID &target, const void *data, PRUint32 dataLen)
@@ -128,44 +118,40 @@ IPC_GetClientByName(const char *name)
 void
 IPC_EnumClients(ipcClientEnumFunc func, void *closure)
 {
-    // XXX null check
-    // XXX check return val for STOP
-    for (int i = 0; i < ipcClientCount; ++i)
-        func(closure, &ipcClients[i], ipcClients[i].ID());
+    PR_ASSERT(func);
+    for (int i = 0; i < ipcClientCount; ++i) {
+        if (func(closure, &ipcClients[i], ipcClients[i].ID()) == PR_FALSE)
+            break;
+    }
 }
 
 PRUint32
 IPC_GetClientID(ipcClient *client)
 {
-    // XXX null check
+    PR_ASSERT(client);
     return client->ID();
-}
-
-const char *
-IPC_GetPrimaryClientName(ipcClient *client)
-{
-    // XXX null check
-    // XXX eliminate
-    return client->PrimaryName();
 }
 
 PRBool
 IPC_ClientHasName(ipcClient *client, const char *name)
 {
-    // XXX null check
+    PR_ASSERT(client);
+    PR_ASSERT(name);
     return client->HasName(name);
 }
 
 PRBool
 IPC_ClientHasTarget(ipcClient *client, const nsID &target)
 {
-    // XXX null check
+    PR_ASSERT(client);
     return client->HasTarget(target);
 }
 
 void
 IPC_EnumClientNames(ipcClient *client, ipcClientNameEnumFunc func, void *closure)
 {
+    PR_ASSERT(client);
+    PR_ASSERT(func);
     const ipcStringNode *node = client->Names();
     while (node) {
         if (func(closure, client, node->Value()) == PR_FALSE)
@@ -177,18 +163,12 @@ IPC_EnumClientNames(ipcClient *client, ipcClientNameEnumFunc func, void *closure
 void
 IPC_EnumClientTargets(ipcClient *client, ipcClientTargetEnumFunc func, void *closure)
 {
+    PR_ASSERT(client);
+    PR_ASSERT(func);
     const ipcIDNode *node = client->Targets();
     while (node) {
         if (func(closure, client, node->Value()) == PR_FALSE)
             break;
         node = node->mNext;
     }
-}
-
-// XXX remove
-ipcClient *
-IPC_GetClients(PRUint32 *count)
-{
-    *count = (PRUint32) ipcClientCount;
-    return ipcClients;
 }

@@ -107,7 +107,6 @@ InitModuleFromLib(const char *modulesDir, const char *fileName)
         IPC_GetClientByName,
         IPC_EnumClients,
         IPC_GetClientID,
-        IPC_GetPrimaryClientName,
         IPC_ClientHasName,
         IPC_ClientHasTarget,
         IPC_EnumClientNames,
@@ -150,20 +149,6 @@ InitModuleFromLib(const char *modulesDir, const char *fileName)
 // ipcModuleReg API
 //-----------------------------------------------------------------------------
 
-//
-// search for a module registered under the specified id
-//
-ipcModuleMethods *
-IPC_GetModuleByTarget(const nsID &target)
-{
-    for (int i=0; i<ipcModuleCount; ++i) {
-        ipcModuleRegEntry &entry = ipcModules[i];
-        if (entry.target.Equals(target))
-            return entry.methods;
-    }
-    return NULL;
-}
-
 void
 IPC_InitModuleReg(const char *exePath)
 {
@@ -173,8 +158,6 @@ IPC_InitModuleReg(const char *exePath)
     //
     // register plug-in modules
     //
-    static const char relModDir[] = "ipc/modules"; // XXX fix slashes
-
     char *p = PL_strrchr(exePath, IPC_PATH_SEP_CHAR);
     if (p == NULL) {
         LOG(("unexpected exe path\n"));
@@ -182,13 +165,13 @@ IPC_InitModuleReg(const char *exePath)
     }
 
     int baseLen = p - exePath;
-    int finalLen = baseLen + 1 + sizeof(relModDir);
+    int finalLen = baseLen + 1 + sizeof(IPC_MODULES_DIR);
 
     // build full path to ipc modules
     char *modulesDir = (char*) malloc(finalLen);
     memcpy(modulesDir, exePath, baseLen);
     modulesDir[baseLen] = IPC_PATH_SEP_CHAR;
-    memcpy(modulesDir + baseLen + 1, relModDir, sizeof(relModDir));
+    memcpy(modulesDir + baseLen + 1, IPC_MODULES_DIR, sizeof(IPC_MODULES_DIR));
 
     LOG(("loading libraries in %s\n", modulesDir));
     // 
@@ -244,4 +227,18 @@ IPC_NotifyClientDown(ipcClient *client)
         if (entry.methods->clientDown)
             entry.methods->clientDown(client);
     }
+}
+
+PRStatus
+IPC_DispatchMsg(ipcClient *client, const nsID &target, const void *data, PRUint32 dataLen)
+{
+    // dispatch message to every module registered under the given target.
+    for (int i=0; i<ipcModuleCount; ++i) {
+        ipcModuleRegEntry &entry = ipcModules[i];
+        if (entry.target.Equals(target)) {
+            if (entry.methods->handleMsg)
+                entry.methods->handleMsg(client, target, data, dataLen);
+        }
+    }
+    return PR_SUCCESS;
 }
