@@ -69,7 +69,8 @@
               return popupSetBox.activeChild;
             else if (menuBox)
               return menuBox.activeChild;
-            throw Components.results.NS_ERROR_FAILURE;
+            else
+              return null;
           ]]>
         </getter>
         <setter>
@@ -84,7 +85,8 @@
               return popupSetBox.activeChild = val;
             else if (menuBox)
               return menuBox.activeChild = val;
-            throw Components.results.NS_ERROR_FAILURE;
+            else
+              return null;
           ]]>
         </setter>
       </property>
