@@ -32,5 +32,9 @@ ifndef MOZ_NATIVE_PNG
 PNGDIR		= png
 endif
 
+ifdef MOZ_MNG
+DIRS		+= mng mngcom
+endif
+
 include $(topsrcdir)/config/rules.mk
 

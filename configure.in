@@ -3283,6 +3283,14 @@ MOZ_ARG_ENABLE_BOOL(svg,
   AC_DEFINE(MOZ_SVG))
 
 dnl
+dnl --enable mng
+dnl
+MOZ_ARG_ENABLE_BOOL(mng,
+[  --enable-mng            Enable MNG ],
+  MOZ_MNG=1
+  AC_DEFINE(MOZ_MNG))
+
+dnl
 dnl --enable xsl
 dnl
 MOZ_ARG_ENABLE_BOOL(xsl,
