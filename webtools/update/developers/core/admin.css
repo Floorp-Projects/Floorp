@@ -1,0 +1,152 @@
+/* MozUpdates :: Admin Stylesheet */
+
+/* Positioning */
+html, body {
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+  margin-bottom : 10px;
+}
+
+ #container {
+  position: relative;
+  min-height: 100%;
+  height: 100%;
+  voice-family: "\"}\"";
+  voice-family: inherit;
+  height: auto; 
+}
+html > body #container {
+  height: auto;
+}
+/* #footer {
+  position: absolute;
+  bottom: 0px; 
+} */
+
+/* Appearance */
+
+body {
+  font-family: Verdana, sans-serif;
+}
+
+p.skipLink {
+  display: none;
+}
+
+#header h1 {
+  background-color: rgb(217, 184, 127);
+  color: white;
+  height: 30px;
+  padding: 10px;
+  margin: 0px;
+  font-size: 1.5em;
+}
+
+#header h2 {
+  background-color: rgb(241, 215, 158);
+  color: rgb(165, 123, 70);
+  height: 20px;
+  padding: 2px 15px;
+  margin: 0px;
+  font-size: 0.75em;
+}
+
+#footer {
+  font-weight: bold;
+  border: 1px solid black;
+  background-color: rgb(255,255,192);
+  width: 90%;
+  margin: 15px;
+}
+#footer p {
+  padding: 0px;
+  margin: 2px 5px;
+}
+
+#mainContent {
+ margin-bottom: 50px;
+}
+
+/* Old Stylesheet Values */
+
+/*
+body  {
+	background-color : #FFFFFF;
+	font-family : Times New Roman;
+	color : #000000;
+    margin-left : 5px;
+    margin-right : 5px;
+    margin-top : 5px;
+}
+*/
+
+A, A:visited  {
+	color : #00129C;
+    text-decoration: none;
+}
+
+A:hover {
+	color: #FC5900; 
+}
+
+
+/* Administration Section Classes */
+table.listing {
+  width: 90%;
+/*  border-collapse: collapse;
+  margin: 5px; */
+}
+
+table.listing th {
+  text-align: left;
+/*  padding: 3px 10px; */
+  margin: 0px;
+  border-bottom:4px solid #2E64FF;
+}
+
+table.listing tr td {
+  background-color : #BFE0FB;
+/*  padding: 3px 10px; */
+  font-weight: bold;
+  margin: 1px;
+/*  border: 2px solid white; */
+}
+
+
+
+.tablehighlight {
+  background-color : #BFE0FB;
+}
+
+.hline {
+	border-bottom:4px solid #2E64FF;
+    height: 4px;
+}
+
+div.error {
+  color: #FF0000;
+  font-weight: bold;
+}
+
+div.success {
+  width: 550px;
+  font-size: 14pt;
+  font-weight: bold;
+  text-align:center;
+  margin: auto;
+}
+
+div.editbox {
+  border: solid 1px #000000;
+  width: 450px;
+  margin-left: 15px;
+  padding: 10px;
+}
+
+div.editbox h3 {
+  font-size: 14pt;
+  font-weight: bold;
+  border-bottom: solid 1px #000000;
+  padding: 0px;
+}
