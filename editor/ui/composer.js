@@ -58,4 +58,4 @@ pref("editor.singleLine.pasteNewlines",     1);
 
 pref("editor.history.url_maximum", 10);
 
-pref("editor.quotesPreformatted",            false);
+pref("editor.quotesPreformatted",            true);
