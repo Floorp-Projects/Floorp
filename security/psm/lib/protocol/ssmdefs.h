@@ -82,192 +82,140 @@ typedef struct _SSMString SSMString;
 #define SSM_SESSION_RESOURCE 0x00000002
 
 /* Message category flags */
-typedef enum 
-{
-  SSM_REQUEST_MESSAGE =    0x10000000,
-  SSM_REPLY_OK_MESSAGE =   0x20000000,
-  SSM_REPLY_ERR_MESSAGE =  0x30000000,
-  SSM_EVENT_MESSAGE =      0x40000000
-} SSMMessageCategory;
+#define SSM_REQUEST_MESSAGE     0x10000000
+#define SSM_REPLY_OK_MESSAGE    0x20000000
+#define SSM_REPLY_ERR_MESSAGE   0x30000000
+#define SSM_EVENT_MESSAGE       0x40000000
 
 /* Message types */
-typedef enum 
-{
-  SSM_DATA_CONNECTION =  0x00001000,
-  SSM_OBJECT_SIGNING  =  0x00002000,
-  SSM_RESOURCE_ACTION =  0x00003000,
-  SSM_CERT_ACTION     =  0x00004000,
-  SSM_PKCS11_ACTION   =  0x00005000,
-  SSM_CRMF_ACTION     =  0x00006000,
-  SSM_FORMSIGN_ACTION =  0x00007000,
-  SSM_LOCALIZED_TEXT  =  0x00008000,
-  SSM_HELLO_MESSAGE   =  0x00009000,
-  SSM_SECURITY_ADVISOR = 0x0000a000,
-  SSM_SEC_CFG_ACTION  =  0x0000b000,
-  SSM_KEYGEN_TAG      =  0x0000c000,
-  SSM_PREF_ACTION     =  0x0000d000,
-  SSM_MISC_ACTION     =  0x0000f000
-} SSMMessageType;
+#define SSM_DATA_CONNECTION   0x00001000
+#define SSM_OBJECT_SIGNING    0x00002000
+#define SSM_RESOURCE_ACTION   0x00003000
+#define SSM_CERT_ACTION       0x00004000
+#define SSM_PKCS11_ACTION     0x00005000
+#define SSM_CRMF_ACTION       0x00006000
+#define SSM_FORMSIGN_ACTION   0x00007000
+#define SSM_LOCALIZED_TEXT    0x00008000
+#define SSM_HELLO_MESSAGE     0x00009000
+#define SSM_SECURITY_ADVISOR  0x0000a000
+#define SSM_SEC_CFG_ACTION    0x0000b000
+#define SSM_KEYGEN_TAG        0x0000c000
+#define SSM_PREF_ACTION       0x0000d000
+#define SSM_MISC_ACTION       0x0000f000
 
 
 /* Data connection messages subtypes */ 
-typedef enum
-{
-  SSM_SSL_CONNECTION     = 0x00000100,
-  SSM_PKCS7DECODE_STREAM = 0x00000200,
-  SSM_PKCS7ENCODE_STREAM = 0x00000300,
-  SSM_HASH_STREAM        = 0x00000400,
-  SSM_TLS_CONNECTION     = 0x00000500,
-  SSM_PROXY_CONNECTION   = 0x00000600
-} SSMDataConnectionSType;
+#define SSM_SSL_CONNECTION      0x00000100
+#define SSM_PKCS7DECODE_STREAM  0x00000200
+#define SSM_PKCS7ENCODE_STREAM  0x00000300
+#define SSM_HASH_STREAM         0x00000400
+#define SSM_TLS_CONNECTION      0x00000500
+#define SSM_PROXY_CONNECTION    0x00000600
 
 /* Object signing message subtypes */
-typedef enum
-{
-  SSM_VERIFY_RAW_SIG     = 0x00000100,
-  SSM_VERIFY_DETACHED_SIG= 0x00000200,
-  SSM_CREATE_SIGNED      = 0x00000300,
-  SSM_CREATE_ENCRYPTED   = 0x00000400
-} SSMObjSignSType;
+#define SSM_VERIFY_RAW_SIG      0x00000100
+#define SSM_VERIFY_DETACHED_SIG 0x00000200
+#define SSM_CREATE_SIGNED       0x00000300
+#define SSM_CREATE_ENCRYPTED    0x00000400
 
 /* Resource access messages subtypes  */
-typedef enum
-{
-  SSM_CREATE_RESOURCE         =  0x00000100,
-  SSM_DESTROY_RESOURCE        =  0x00000200,
-  SSM_GET_ATTRIBUTE           =  0x00000300,
-  SSM_CONSERVE_RESOURCE       =  0x00000400,
-  SSM_DUPLICATE_RESOURCE      =  0x00000500,
-  SSM_SET_ATTRIBUTE           =  0x00000600,
-  SSM_TLS_STEPUP              =  0x00000700,
-  SSM_PROXY_STEPUP            =  0x00000800
-} SSMResourceAccessSType;
+#define SSM_CREATE_RESOURCE           0x00000100
+#define SSM_DESTROY_RESOURCE          0x00000200
+#define SSM_GET_ATTRIBUTE             0x00000300
+#define SSM_CONSERVE_RESOURCE         0x00000400
+#define SSM_DUPLICATE_RESOURCE        0x00000500
+#define SSM_SET_ATTRIBUTE             0x00000600
+#define SSM_TLS_STEPUP                0x00000700
+#define SSM_PROXY_STEPUP              0x00000800
 
 /* Further specification for resource access messages */
-typedef enum {
-  SSM_SSLSocket_Status  =  0x00000010
-} SSMCreateResource;
+#define SSM_SSLSocket_Status    0x00000010
 
-typedef enum {
-  SSM_NO_ATTRIBUTE      =  0x00000000,
-  SSM_NUMERIC_ATTRIBUTE =  0x00000010,
-  SSM_STRING_ATTRIBUTE  =  0x00000020,
-  SSM_RID_ATTRIBUTE     =  0x00000030
-} SSMResourceAttrType;
+#define SSM_NO_ATTRIBUTE        0x00000000
+#define SSM_NUMERIC_ATTRIBUTE   0x00000010
+#define SSM_STRING_ATTRIBUTE    0x00000020
+#define SSM_RID_ATTRIBUTE       0x00000030
 
-typedef enum {
-  SSM_PICKLE_RESOURCE           =  0x00000010,
-  SSM_UNPICKLE_RESOURCE         =  0x00000020,
-  SSM_PICKLE_SECURITY_STATUS    =  0x00000030
-} SSMResourceConsv;
+#define SSM_PICKLE_RESOURCE             0x00000010
+#define SSM_UNPICKLE_RESOURCE           0x00000020
+#define SSM_PICKLE_SECURITY_STATUS      0x00000030
 
 /* Certificate access message subtypes */
-typedef enum
-{
-  SSM_IMPORT_CERT       =  0x00000100,
-  SSM_VERIFY_CERT       =  0x00000200,
-  SSM_FIND_BY_NICKNAME  =  0x00000300,
-  SSM_FIND_BY_KEY       =  0x00000400,
-  SSM_FIND_BY_EMAILADDR =  0x00000500,
-  SSM_ADD_TO_DB         =  0x00000600,
-  SSM_DECODE_CERT       =  0x00000700,
-  SSM_MATCH_USER_CERT   =  0x00000800,
-  SSM_DESTROY_CERT      =  0x00000900,
-  SSM_DECODE_TEMP_CERT  =  0x00000a00,
-  SSM_REDIRECT_COMPARE  =  0x00000b00,
-  SSM_DECODE_CRL        =  0x00000c00,
-  SSM_EXTENSION_VALUE   =  0x00000d00,
-  SSM_HTML_INFO         =  0x00000e00
-} SSMCertAccessSType;
+#define SSM_IMPORT_CERT         0x00000100
+#define SSM_VERIFY_CERT         0x00000200
+#define SSM_FIND_BY_NICKNAME    0x00000300
+#define SSM_FIND_BY_KEY         0x00000400
+#define SSM_FIND_BY_EMAILADDR   0x00000500
+#define SSM_ADD_TO_DB           0x00000600
+#define SSM_DECODE_CERT         0x00000700
+#define SSM_MATCH_USER_CERT     0x00000800
+#define SSM_DESTROY_CERT        0x00000900
+#define SSM_DECODE_TEMP_CERT    0x00000a00
+#define SSM_REDIRECT_COMPARE    0x00000b00
+#define SSM_DECODE_CRL          0x00000c00
+#define SSM_EXTENSION_VALUE     0x00000d00
+#define SSM_HTML_INFO           0x00000e00
 
 /* message subtypes used for KEYGEN form tag */
-typedef enum
-{
+#define SSM_GET_KEY_CHOICE       0x00000100
+#define SSM_KEYGEN_START         0x00000200
+#define SSM_KEYGEN_TOKEN         0x00000300
+#define SSM_KEYGEN_PASSWORD      0x00000400
+#define SSM_KEYGEN_DONE          0x00000500
 
-  SSM_GET_KEY_CHOICE     =  0x00000100,
-  SSM_KEYGEN_START       =  0x00000200,
-  SSM_KEYGEN_TOKEN       =  0x00000300,
-  SSM_KEYGEN_PASSWORD    =  0x00000400,
-  SSM_KEYGEN_DONE        =  0x00000500
-} SSMKeyGenTagProcessType;
+#define SSM_CREATE_KEY_PAIR    0x00000100
+#define SSM_FINISH_KEY_GEN     0x00000200
+#define SSM_ADD_NEW_MODULE     0x00000300
+#define SSM_DEL_MODULE         0x00000400
+#define SSM_LOGOUT_ALL         0x00000500
+#define SSM_ENABLED_CIPHERS    0x00000600
 
-typedef enum
-{
-  SSM_CREATE_KEY_PAIR   = 0x00000100,
-  SSM_FINISH_KEY_GEN    = 0x00000200,
-  SSM_ADD_NEW_MODULE    = 0x00000300,
-  SSM_DEL_MODULE        = 0x00000400,
-  SSM_LOGOUT_ALL        = 0x00000500,
-  SSM_ENABLED_CIPHERS   = 0x00000600
-} SSMPKCS11Actions;
+#define SSM_CREATE_CRMF_REQ    0x00000100
+#define SSM_DER_ENCODE_REQ     0x00000200
+#define SSM_PROCESS_CMMF_RESP  0x00000300
+#define SSM_CHALLENGE          0x00000400
 
-typedef enum
-{
-  SSM_CREATE_CRMF_REQ   = 0x00000100,
-  SSM_DER_ENCODE_REQ    = 0x00000200,
-  SSM_PROCESS_CMMF_RESP = 0x00000300,
-  SSM_CHALLENGE         = 0x00000400
-} SSMCRMFAction;
-
-typedef enum
-{
-    SSM_SIGN_TEXT = 0x00000100
-} SSMFormSignAction;
+#define SSM_SIGN_TEXT  0x00000100
 
 /* Security Config subtypes */
-typedef enum
-{
-  SSM_ADD_CERT_TO_TEMP_DB    = 0x00000100,
-  SSM_ADD_TEMP_CERT_TO_DB    = 0x00000200,
-  SSM_DELETE_PERM_CERTS      = 0x00000300,
-  SSM_FIND_CERT_KEY          = 0x00000400,
-  SSM_GET_CERT_PROP_BY_KEY   = 0x00000500,
-  SSM_CERT_INDEX_ENUM        = 0x00000600
-} SSMSecCfgAction;
+#define SSM_ADD_CERT_TO_TEMP_DB     0x00000100
+#define SSM_ADD_TEMP_CERT_TO_DB     0x00000200
+#define SSM_DELETE_PERM_CERTS       0x00000300
+#define SSM_FIND_CERT_KEY           0x00000400
+#define SSM_GET_CERT_PROP_BY_KEY    0x00000500
+#define SSM_CERT_INDEX_ENUM         0x00000600
 
 /* subcategories for SSM_FIND_CERT_KEY and SSM_CERT_INDEX_ENUM */
-typedef enum
-{
-  SSM_FIND_KEY_BY_NICKNAME   = 0x00000010,
-  SSM_FIND_KEY_BY_EMAIL_ADDR = 0x00000020,
-  SSM_FIND_KEY_BY_DN         = 0x00000030
-} SSMSecCfgFindByType;
+#define SSM_FIND_KEY_BY_NICKNAME    0x00000010
+#define SSM_FIND_KEY_BY_EMAIL_ADDR  0x00000020
+#define SSM_FIND_KEY_BY_DN          0x00000030
 
 /* subcategories for SSM_GET_CERT_PROP_BY_KEY */
-typedef enum
-{
-  SSM_SECCFG_GET_NICKNAME     = 0x00000010,
-  SSM_SECCFG_GET_EMAIL_ADDR   = 0x00000020,
-  SSM_SECCFG_GET_DN           = 0x00000030,
-  SSM_SECCFG_GET_TRUST        = 0x00000040,
-  SSM_SECCFG_CERT_IS_PERM     = 0x00000050,
-  SSM_SECCFG_GET_NOT_BEFORE   = 0x00000060,
-  SSM_SECCFG_GET_NOT_AFTER    = 0x00000070,
-  SSM_SECCFG_GET_SERIAL_NO    = 0x00000080,
-  SSM_SECCFG_GET_ISSUER       = 0x00000090,
-  SSM_SECCFG_GET_ISSUER_KEY   = 0x000000a0,
-  SSM_SECCFG_GET_SUBJECT_NEXT = 0x000000b0,
-  SSM_SECCFG_GET_SUBJECT_PREV = 0x000000c0
-} SSMSecCfgGetCertPropType;
+#define SSM_SECCFG_GET_NICKNAME      0x00000010
+#define SSM_SECCFG_GET_EMAIL_ADDR    0x00000020
+#define SSM_SECCFG_GET_DN            0x00000030
+#define SSM_SECCFG_GET_TRUST         0x00000040
+#define SSM_SECCFG_CERT_IS_PERM      0x00000050
+#define SSM_SECCFG_GET_NOT_BEFORE    0x00000060
+#define SSM_SECCFG_GET_NOT_AFTER     0x00000070
+#define SSM_SECCFG_GET_SERIAL_NO     0x00000080
+#define SSM_SECCFG_GET_ISSUER        0x00000090
+#define SSM_SECCFG_GET_ISSUER_KEY    0x000000a0
+#define SSM_SECCFG_GET_SUBJECT_NEXT  0x000000b0
+#define SSM_SECCFG_GET_SUBJECT_PREV  0x000000c0
 
 /* Misc requests */
-typedef enum
-{
-    SSM_MISC_GET_RNG_DATA     = 0x00000100,
-    SSM_MISC_PUT_RNG_DATA     = 0x00000200
-} SSMMiscRequestType;
+#define SSM_MISC_GET_RNG_DATA      0x00000100
+#define SSM_MISC_PUT_RNG_DATA      0x00000200
 
 /* Type masks for message types */
-typedef enum 
-{
-  SSM_CATEGORY_MASK  = 0xF0000000,
-  SSM_TYPE_MASK      = 0x0000F000,
-  SSM_SUBTYPE_MASK   = 0x00000F00,
-  SSM_SPECIFIC_MASK  = 0x000000F0
-} SSMMessageMaskType;   
+#define SSM_CATEGORY_MASK   0xF0000000
+#define SSM_TYPE_MASK       0x0000F000
+#define SSM_SUBTYPE_MASK    0x00000F00
+#define SSM_SPECIFIC_MASK   0x000000F0
 
 typedef struct SSMAttributeValue {
-  SSMResourceAttrType type;
+  CMUint32 type;
   union {
     SSMResourceID rid;
     CMTItem string;
@@ -281,7 +229,7 @@ typedef enum {
 } SSMKeyGenType;
 
 typedef enum {
-  ssmUnknownPolicy=-1,ssmDomestic=0, ssmExport=1, ssmFrance=2
+  ssmUnknownPolicy= -1,ssmDomestic=0, ssmExport=1, ssmFrance=2
 } SSMPolicyType;
 
 /* These are the localized strings that PSM can feed back to 
@@ -314,24 +262,40 @@ typedef enum {
 } SSMLocalizedString;
 
 /* Event types */
-typedef enum
-{
-    SSM_UI_EVENT                  =  0x00001000,
-    SSM_TASK_COMPLETED_EVENT      =  0x00002000,
-    SSM_FILE_PATH_EVENT           =  0x00003000,
-    SSM_PROMPT_EVENT              =  0x00004000,
-    SSM_AUTH_EVENT                =  0x00007000,
-    SSM_SAVE_PREF_EVENT           =  0x00008000,
-    SSM_MISC_EVENT                =  0x0000f000
-} SSMEventType;
+#define SSM_UI_EVENT                    0x00001000
+#define SSM_TASK_COMPLETED_EVENT        0x00002000
+#define SSM_FILE_PATH_EVENT             0x00003000
+#define SSM_PROMPT_EVENT                0x00004000
+#define SSM_AUTH_EVENT                  0x00007000
+#define SSM_SAVE_PREF_EVENT             0x00008000
+#define SSM_MISC_EVENT                  0x0000f000
 
 /* Flags used in Create SSL Data request */
-typedef enum
-{
-  SSM_REQUEST_SSL_DATA_SSL =        0x00000001,
-  SSM_REQUEST_SSL_DATA_PROXY =      0x00000002,
-  SSM_REQUEST_SSL_CONNECTION_MASK = 0x00000003
-} SSMSSLConnectionRequestType;
+#define SSM_REQUEST_SSL_DATA_SSL         0x00000001
+#define SSM_REQUEST_SSL_DATA_PROXY       0x00000002
+#define SSM_REQUEST_SSL_CONNECTION_MASK  0x00000003
+
+/* Create typedefs for the various #defines */
+typedef CMUint32 SSMMessageCategory;
+typedef CMUint32 SSMMessageType;
+typedef CMUint32 SSMDataConnectionSType;
+typedef CMUint32 SSMObjSignSType;
+typedef CMUint32 SSMResourceAccessSType;
+typedef CMUint32 SSMCreateResource;
+typedef CMUint32 SSMResourceAttrType;
+typedef CMUint32 SSMResourceConsv;
+typedef CMUint32 SSMCertAccessSType;
+typedef CMUint32 SSMKeyGenTagProcessType;
+typedef CMUint32 SSMPKCS11Actions;
+typedef CMUint32 SSMCRMFAction;
+typedef CMUint32 SSMFormSignAction;
+typedef CMUint32 SSMSecCfgAction;
+typedef CMUint32 SSMSecCfgFindByType;
+typedef CMUint32 SSMSecCfgGetCertPropType;
+typedef CMUint32 SSMMiscRequestType;
+typedef CMUint32 SSMMessageMaskType;
+typedef CMUint32 SSMEventType;
+typedef CMUint32 SSMSSLConnectionRequestType;
 
 /*
  * This string is version that can be used to assemble any

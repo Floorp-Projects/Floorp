@@ -319,24 +319,12 @@ CMTStatus CMT_TransmitMessage(PCMT_CONTROL control, CMTItem * message)
     header.type = htonl(message->type);
     header.len = htonl(message->len);
 
-    /* Obscure the message header */
-    rv = SSMObscure_Send(control->obscureObj, &header, sizeof(CMTMessageHeader));
-    if (rv != 0) {
-        goto loser;
-    }
-
 	/* Send the message header */
 	sent = CMT_WriteThisMany(control, control->sock, 
                              (void *)&header, sizeof(CMTMessageHeader));
 	if (sent != sizeof(CMTMessageHeader)) {
 		goto loser;
 	}
-
-    /* Obscure the message body */
-    rv = SSMObscure_Send(control->obscureObj, message->data, message->len);
-    if (rv != 0) {
-        goto loser;
-    }
 
 	/* Send the message body */
 	sent = CMT_WriteThisMany(control, control->sock, (void *)message->data, 
@@ -366,12 +354,6 @@ CMTStatus CMT_ReceiveMessage(PCMT_CONTROL control, CMTItem * response)
         goto loser;
     }
 
-    /* Unobscure the message header */
-    rv = SSMObscure_Recv(control->obscureObj, &header, sizeof(CMTMessageHeader));
-    if (rv != 0) {
-        goto loser;
-    }
-
     response->type = ntohl(header.type);
     response->len = ntohl(header.len);
     response->data = (unsigned char *) malloc(response->len);
@@ -382,12 +364,6 @@ CMTStatus CMT_ReceiveMessage(PCMT_CONTROL control, CMTItem * response)
     read = CMT_ReadThisMany(control, control->sock, 
                             (void *)(response->data), response->len); 
     if (read != response->len) {
-        goto loser;
-    }
-
-    /* Unobscure the message body */
-    rv = SSMObscure_Recv(control->obscureObj, response->data, response->len);
-    if (rv != 0) {
         goto loser;
     }
 
