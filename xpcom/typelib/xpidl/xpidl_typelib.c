@@ -615,6 +615,7 @@ handle_iid_is:
                         char *name;
                         name = IDL_IDENT(IDL_PARAM_DCL(IDL_LIST(params).data).simple_declarator).str;
                         if (!strcmp(name, iid_is)) {
+                            /* XXX verify that this is an nsid here */
                             argnum = count;
                             break;
                         }
@@ -654,8 +655,14 @@ handle_iid_is:
 
                   ident = IDL_IDENT(type).str;
                   isID = FALSE;
+
+                  if(IDL_tree_property_get(type, "nsid"))
+                      isID = TRUE;
+
+                  /* XXX obsolete the below! */
+
                   /* check for nsID, nsCID, nsIID, nsIIDRef */
-                  if (ident[0] == 'n' && ident[1] == 's') {
+                  if (!isID && ident[0] == 'n' && ident[1] == 's') {
                       ident += 2;
                       if (ident[0] == 'C')
                           ident ++;
@@ -676,6 +683,8 @@ handle_iid_is:
                               IDL_IDENT(type).str);
 #endif
                       td->prefix.flags = TD_PNSIID | XPT_TDP_POINTER;
+                      if(IDL_tree_property_get(type, "ref"))
+                          td->prefix.flags |= XPT_TDP_REFERENCE;
                   } else {
 #ifdef DEBUG_shaver
                       fprintf(stderr, "not doing nsID for %s\n",
@@ -760,6 +769,17 @@ fill_pd_from_param(TreeState *state, XPTParamDescriptor *pd, IDL_tree tree)
             return FALSE;
         }
         flags |= XPT_PD_RETVAL;
+    }
+
+    if (IDL_tree_property_get(IDL_PARAM_DCL(tree).simple_declarator,
+                              "shared")) {
+        if (flags == XPT_PD_IN) {
+            IDL_tree_error(tree, "can't have [shared] with in%s param "
+                           "(only out)\n",
+                           flags & XPT_PD_OUT ? "out" : "");
+            return FALSE;
+        }
+        flags |= XPT_PD_SHARED;
     }
 
     /* stick param where we can see it later */
@@ -883,6 +903,74 @@ typelib_op_dcl(TreeState *state)
 static gboolean
 typelib_const_dcl(TreeState *state)
 {
+    struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(state->tree);
+    const char *name = IDL_IDENT(dcl->ident).str;
+    gboolean success;
+    gboolean is_long;
+
+    /* const -> list -> interface */
+    if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
+        IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree)))
+        != IDLN_INTERFACE) {
+        IDL_tree_warning(state->tree, IDL_WARNING1,
+                         "const decl \'%s\' not inside interface, ignored",
+                         name);
+        return TRUE;
+    }
+
+    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(dcl->const_type));
+    if(success) {
+        switch(IDL_TYPE_INTEGER(dcl->const_type).f_type) {
+        case IDL_INTEGER_TYPE_SHORT:
+            is_long = FALSE;
+            break;
+        case IDL_INTEGER_TYPE_LONG:
+            is_long = TRUE;
+            break;
+        default:
+            success = FALSE;
+        }
+    }
+
+    if(success) {
+        XPTInterfaceDescriptor *id;
+        XPTConstDescriptor *cd;
+        IDL_longlong_t value;
+        gboolean sign;
+
+        id = CURRENT(state);
+        if (!XPT_InterfaceDescriptorAddConsts(id, 1))
+            return FALSE;
+        cd = &id->const_descriptors[NEXT_CONST(state)];
+
+        cd->name = IDL_IDENT(dcl->ident).str;
+#ifdef DEBUG_shaver_const
+        fprintf(stderr, "DBG: adding const %s\n", cd->name);
+#endif
+        if (!fill_td_from_type(state, &cd->type, dcl->const_type))
+            return FALSE;
+
+        value = IDL_INTEGER(dcl->const_exp).value;
+        sign = IDL_TYPE_INTEGER(dcl->const_type).f_signed;
+        if (is_long) {
+            if(sign)
+                cd->value.i32 = value;
+            else
+                cd->value.ui32 = value;
+        } else {
+            if(sign)
+                cd->value.i16 = value;
+            else
+                cd->value.ui16 = value;
+        }
+        NEXT_CONST(state)++;
+    } else {
+        IDL_tree_warning(state->tree, IDL_WARNING1,
+            "const decl \'%s\' was not of type short or long, ignored", name);
+    }
+    return TRUE;
+
+#if 0
     XPTInterfaceDescriptor *id;
     XPTConstDescriptor *cd;
     struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(state->tree);
@@ -972,6 +1060,16 @@ typelib_const_dcl(TreeState *state)
 
     NEXT_CONST(state)++;
     return TRUE;
+#endif
+}
+
+static gboolean
+typelib_enum(TreeState *state)
+{
+    IDL_tree_warning(state->tree, IDL_WARNING1,
+                     "enums not supported, enum \'%s\' ignored",
+                     IDL_IDENT(IDL_TYPE_ENUM(state->tree).ident).str);
+    return TRUE;
 }
 
 nodeHandler *
@@ -988,6 +1086,7 @@ xpidl_typelib_dispatch(void)
       table[IDLN_OP_DCL] = typelib_op_dcl;
       table[IDLN_INTERFACE] = typelib_interface;
       table[IDLN_CONST_DCL] = typelib_const_dcl;
+      table[IDLN_TYPE_ENUM] = typelib_enum;
       initialized = TRUE;
   }
 

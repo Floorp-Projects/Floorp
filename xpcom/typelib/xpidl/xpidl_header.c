@@ -96,17 +96,28 @@ interface(TreeState *state)
     IDL_tree iface = state->tree, iter;
     char *className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
     const char *iid;
+    const char *name_space;
 
-    fprintf(state->file, "\n/* starting interface %s */\n",
+    fprintf(state->file,   "\n/* starting interface:    %s */\n",
             className);
+
 #ifndef LIBIDL_MAJOR_VERSION
     /* pre-VERSIONing libIDLs put the attributes on the interface */
+    name_space = IDL_tree_property_get(iface, "namespace");
     iid = IDL_tree_property_get(iface, "uuid");
 #else
     /* post-VERSIONing (>= 0.5.11) put the attributes on the ident */
+    name_space = IDL_tree_property_get(IDL_INTERFACE(iface).ident, "namespace");
     iid = IDL_tree_property_get(IDL_INTERFACE(iface).ident, "uuid");
 #endif
-       
+
+    if (name_space) {
+        fprintf(state->file, "/* namespace:             %s */\n",
+                name_space);
+        fprintf(state->file, "/* fully qualified name:  %s.%s */\n",
+                name_space,className);
+    }
+
     if (iid) {
         /* XXX use nsID parsing routines to validate? */
         if (strlen(iid) != 36)
@@ -232,10 +243,10 @@ xpcom_type(TreeState *state)
         break;
       case IDLN_TYPE_FLOAT:
         switch (IDL_TYPE_FLOAT(state->tree).f_type) {
-          case IDL_FLOAT_TYPE_FLOAT: 
+          case IDL_FLOAT_TYPE_FLOAT:
             fputs("float", state->file);
             break;
-          case IDL_FLOAT_TYPE_DOUBLE: 
+          case IDL_FLOAT_TYPE_DOUBLE:
             fputs("double", state->file);
             break;
           /* XXX 'long double' just ignored, or what? */
@@ -247,6 +258,11 @@ xpcom_type(TreeState *state)
       case IDLN_IDENT:
         if (UP_IS_NATIVE(state->tree)) {
             fputs(IDL_NATIVE(IDL_NODE_UP(state->tree)).user_type, state->file);
+            if (IDL_tree_property_get(state->tree, "ptr")) {
+                fputs(" *", state->file);
+            } else if (IDL_tree_property_get(state->tree, "ref")) {
+                fputs(" &", state->file);
+            }
         } else {
             fputs(IDL_IDENT(state->tree).str, state->file);
         }
@@ -305,6 +321,11 @@ attr_dcl(TreeState *state)
 static gboolean
 do_enum(TreeState *state)
 {
+    IDL_tree_warning(state->tree, IDL_WARNING1,
+                     "enums not supported, enum \'%s\' ignored",
+                     IDL_IDENT(IDL_TYPE_ENUM(state->tree).ident).str);
+    return TRUE;
+#if 0
     IDL_tree enumb = state->tree, iter;
 
     fprintf(state->file, "enum %s {\n",
@@ -319,6 +340,45 @@ do_enum(TreeState *state)
 
     fputs("};\n\n", state->file);
     return TRUE;
+#endif
+}
+
+static gboolean
+do_const_dcl(TreeState *state)
+{
+    struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(state->tree);
+    const char *name = IDL_IDENT(dcl->ident).str;
+    gboolean success;
+
+    /* const -> list -> interface */
+    if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
+        IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree)))
+        != IDLN_INTERFACE) {
+        IDL_tree_warning(state->tree, IDL_WARNING1,
+                         "const decl \'%s\' not inside interface, ignored",
+                         name);
+        return TRUE;
+    }
+
+    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(dcl->const_type));
+    if(success) {
+        switch(IDL_TYPE_INTEGER(dcl->const_type).f_type) {
+        case IDL_INTEGER_TYPE_SHORT:
+        case IDL_INTEGER_TYPE_LONG:
+            break;
+        default:
+            success = FALSE;
+        }
+    }
+
+    if(success) {
+        fprintf(state->file, "  enum { %s = %d };\n",
+                             name, (int) IDL_INTEGER(dcl->const_exp).value);
+    } else {
+        IDL_tree_warning(state->tree, IDL_WARNING1,
+            "const decl \'%s\' was not of type short or long, ignored", name);
+    }
+    return TRUE;
 }
 
 static gboolean
@@ -327,14 +387,15 @@ do_typedef(TreeState *state)
     IDL_tree type = IDL_TYPE_DCL(state->tree).type_spec,
         dcls = IDL_TYPE_DCL(state->tree).dcls,
         complex;
-    fputs("typedef ", state->file);
 
     if (IDL_NODE_TYPE(type) == IDLN_TYPE_SEQUENCE) {
-        fprintf(stderr, "SEQUENCE!\n");
+        IDL_tree_warning(state->tree, IDL_WARNING1,
+                         "sequences not supported, ignored");
     } else {
         state->tree = type;
         if (!xpcom_type(state))
             return FALSE;
+        fputs("typedef ", state->file);
         fputs(" ", state->file);
         if (IDL_NODE_TYPE(complex = IDL_LIST(dcls).data) == IDLN_TYPE_ARRAY) {
             fprintf(state->file, "%s[%ld]",
@@ -345,8 +406,8 @@ do_typedef(TreeState *state)
             fputs(" ", state->file);
             fputs(IDL_IDENT(IDL_LIST(dcls).data).str, state->file);
         }
+        fputs(";\n", state->file);
     }
-    fputs(";\n", state->file);
     return TRUE;
 }
 
@@ -363,11 +424,14 @@ xpcom_param(TreeState *state)
     IDL_tree param = state->tree;
     state->tree = IDL_PARAM_DCL(param).param_type_spec;
 
-    /* in string and in wstring are const */
+    /* in string, wstring, explicitly marked [const], and nsid are const */
     if (IDL_PARAM_DCL(param).attr == IDL_PARAM_IN &&
         (IDL_NODE_TYPE(state->tree) == IDLN_TYPE_STRING ||
-         IDL_NODE_TYPE(state->tree) == IDLN_TYPE_WIDE_STRING))
+         IDL_NODE_TYPE(state->tree) == IDLN_TYPE_WIDE_STRING ||
+         IDL_tree_property_get(IDL_OP_DCL(param).ident, "const") ||
+         IDL_tree_property_get(state->tree, "nsid"))) {
         fputs("const ", state->file);
+    }
 
     if (!xpcom_type(state))
         return FALSE;
@@ -421,7 +485,7 @@ op_dcl(TreeState *state)
         fputc(')', state->file);
     } else {
         fputs("NS_IMETHOD", state->file);
-    }    
+    }
     fprintf(state->file, " %s(", IDL_IDENT(op->ident).str);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         state->tree = IDL_LIST(iter).data;
@@ -488,6 +552,7 @@ xpidl_header_dispatch(void)
         table[IDLN_INTERFACE] = interface;
         table[IDLN_CODEFRAG] = codefrag;
         table[IDLN_TYPE_DCL] = do_typedef;
+        table[IDLN_CONST_DCL] = do_const_dcl;
     }
 
     return table;

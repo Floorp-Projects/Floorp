@@ -46,7 +46,7 @@ gboolean enable_warnings   = FALSE;
 gboolean verbose_mode      = FALSE;
 
 static char xpidl_usage_str[] =
-"Usage: %s [-m mode] [-w] [-v] [-I path] [-n] [-o basename] filename.idl\n"
+"Usage: %s [-m mode] [-w] [-v] [-I path] [-o basename] filename.idl\n"
 "       -w turn on warnings (recommended)\n"
 "       -v verbose mode (NYI)\n"
 "       -I add entry to start of include path for ``#include \"nsIThing.idl\"''\n"
