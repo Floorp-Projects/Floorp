@@ -2942,7 +2942,7 @@ PRBool
 nsDocument::IsInSelection(nsIDOMSelection* aSelection, const nsIContent* aContent) const
 {
   PRBool aYes = PR_FALSE;
-  nsCOMPtr<nsIDOMNode> node (do_QueryInterface(aContent));
+  nsCOMPtr<nsIDOMNode> node (do_QueryInterface((nsIContent *) aContent));
   aSelection->ContainsNode(node, PR_FALSE, &aYes);
   return aYes;
 }
