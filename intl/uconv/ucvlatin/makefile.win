@@ -27,6 +27,7 @@ DLLNAME = ucvlatin
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
+	nsUEscapeToUnicode.cpp		\
 	nsAsciiToUnicode.cpp		\
 	nsISO88591ToUnicode.cpp		\
 	nsISO88592ToUnicode.cpp		\
@@ -79,6 +80,7 @@ CPPSRCS =				\
 	nsUCS4LEToUnicode.cpp		\
 	nsT61ToUnicode.cpp		\
 	nsUserDefinedToUnicode.cpp		\
+	nsUnicodeToUEscape.cpp		\
 	nsUnicodeToAscii.cpp		\
 	nsUnicodeToISO88591.cpp		\
 	nsUnicodeToISO88592.cpp		\
@@ -139,6 +141,7 @@ CPPSRCS =				\
 	$(NULL)
 
 CPP_OBJS=						\
+	.\$(OBJDIR)\nsUEscapeToUnicode.obj 		\
 	.\$(OBJDIR)\nsAsciiToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88591ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88592ToUnicode.obj 		\
@@ -191,6 +194,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsVIQRToUnicode.obj			\
 	.\$(OBJDIR)\nsVNIToUnicode.obj			\
 	.\$(OBJDIR)\nsUserDefinedToUnicode.obj			\
+	.\$(OBJDIR)\nsUnicodeToUEscape.obj		\
 	.\$(OBJDIR)\nsUnicodeToAscii.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88591.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88592.obj		\
