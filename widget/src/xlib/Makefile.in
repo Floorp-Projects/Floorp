@@ -62,10 +62,6 @@ CPPSRCS		= \
 		nsKeyCode.cpp \
 		nsLabel.cpp \
 		nsLookAndFeel.cpp \
-		nsMenu.cpp \
-		nsMenuBar.cpp \
-		nsMenuItem.cpp \
-		nsPopUpMenu.cpp \
 		nsScrollBar.cpp \
 		nsSound.cpp \
 		nsTextHelper.cpp \
