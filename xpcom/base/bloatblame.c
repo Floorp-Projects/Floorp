@@ -37,7 +37,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
