@@ -103,6 +103,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGTSpanElement.idl \
 		nsIDOMSVGURIReference.idl \
 		nsIDOMSVGUseElement.idl \
+		nsIDOMSVGZoomAndPan.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
