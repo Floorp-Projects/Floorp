@@ -108,6 +108,7 @@ components/libgklayout.dylib
 components/libhtmlpars.dylib                 
 components/layout_xul.xpt               
 components/content_base.xpt
+components/layout_base.xpt              
 
 ; netwerk
 
