@@ -76,8 +76,23 @@ protected:
   nsHTMLGenericLeafContent mInner;
 };
 
+nsresult
+NS_NewHTMLHR(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsIHTMLContent* it = new nsHTMLHR(aTag);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+}
+
 nsHTMLHR::nsHTMLHR(nsIAtom* aTag)
 {
+  NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
@@ -96,12 +111,11 @@ nsHTMLHR::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLHRElementIID)) {
     nsIDOMHTMLHRElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    AddRef();
     return NS_OK;
   }
   return NS_NOINTERFACE;
 }
-
 
 nsresult
 nsHTMLHR::CloneNode(nsIDOMNode** aReturn)
@@ -247,16 +261,13 @@ nsHTMLHR::MapAttributesInto(nsIStyleContext* aContext,
   }
 }
 
-nsresult
-NS_NewHTMLHR(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_IMETHODIMP
+nsHTMLHR::HandleDOMEvent(nsIPresContext& aPresContext,
+                         nsEvent* aEvent,
+                         nsIDOMEvent** aDOMEvent,
+                         PRUint32 aFlags,
+                         nsEventStatus& aEventStatus)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsHTMLHR(aTag);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                               aFlags, aEventStatus);
 }
