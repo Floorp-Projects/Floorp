@@ -74,7 +74,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 
   }
 
   PRInt32 last = mCount - 1;
-  if ((0 < mCount) && (aFrame == mArray[last].mFrame)) { // same as last frame
+  if ((0 < mCount) && aFrame && (aFrame == mArray[last].mFrame)) { // same as last frame
     if (mArray[last].mHint < aHint) {
       mArray[last].mHint = aHint;
     }
