@@ -236,9 +236,9 @@ nsJSProtocolHandler::NewChannel(const char* verb,
         const PRUnichar* url;
         if (NS_FAILED(webShell->GetURL(&url)))
           return NS_ERROR_FAILURE;
-        nsCString urlStr(url);
+        nsString urlStr(url);
         nsCOMPtr<nsIURI> uri;
-        if (NS_FAILED(NewURI(urlStr.GetBuffer(), nsnull, getter_AddRefs(uri))))
+        if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), urlStr, nsnull)))
           return NS_ERROR_FAILURE;
         if (NS_FAILED(securityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal))))
           return NS_ERROR_FAILURE;
