@@ -480,25 +480,25 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                   PRInt32 depth  = header->bV4BitCount;
                   PRUint8 * bits = GetDIBBits((BITMAPINFO *)pGlobal);
 
-                  image->Init(width, height, depth, nsMaskRequirements_kNoMask);
+                  // BUG 44369 notes problems with the GFX image code handling
+                  // depths other than 8 or 24 bits. Ensure that's what we have
+                  // before we try to work with the image. (pinkerton)
+                  if ( depth == 24 || depth == 8 ) {
+                    image->Init(width, height, depth, nsMaskRequirements_kNoMask);
 
-                  // Now, copy the image bits from the Dib into the nsIImage's buffer
-                  PRUint8 * imageBits = image->GetBits();
-                  depth = (depth >> 3);
-                  PRUint32 size = width * height * depth;
-                  CopyMemory(imageBits, bits, size);
+                    // Now, copy the image bits from the Dib into the nsIImage's buffer
+                    PRUint8 * imageBits = image->GetBits();
+                    depth = (depth >> 3);
+                    PRUint32 size = width * height * depth;
+                    CopyMemory(imageBits, bits, size);
 
-                  // return a pointer to the nsIImage
-                  *aData = (void *)image;
-                  *aLen   = 4;
-
+                    // the data for this flavor is a ptr to the nsIImage
+                    *aData = image;
+                    *aLen = sizeof(nsIImage*);
+                    result = NS_OK;
+                  }
                   ::GlobalUnlock (hGlobal) ;
-                  result = NS_OK;
                 }
-                
-                // XXX NOTE this is temporary
-                // until the rest of the image code gets in
-                NS_ASSERTION(0, "Take this out when editor can handle images");
               } break;
 
             case CF_HDROP : 
