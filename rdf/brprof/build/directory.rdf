@@ -1,10 +1,12 @@
 <r:RDF xmlns:r="http://www.w3.org/TR/WD-rdf-syntax#"
      xmlns:d="http://purl.org/dc/elements/1.0/"  
-     xmlns="http://directory.mozilla.org/rdf">
+     xmlns="http://directory.mozilla.org/rdf#">
 
 <Topic r:about="Arts/Books">
   <catid>1</catid>
-  <narrow r:resource="http://www.amazon.com"/>
+  <narrow r:resource="http://www.amazon.com/"/>
+  <narrow r:resource="http://www.barnesandnoble.com/"/>
+  <narrow r:resource="http://www.borders.com/"/>
   <narrow r:resource="http://dir.yahoo.com/Arts/Humanities/Literature/"/>
   <narrow r:resource="http://www.cnn.com/books/"/>
 </Topic>
@@ -12,6 +14,9 @@
 <Topic r:about="Arts/Music">
    <catid>2</catid>
    <narrow r:resource="http://www.ubl.com"/>
+    <narrow r:resource="http://www.mtv.com/"/>
+    <narrow r:resource="http://www.rollingstone.com/"/>
+    <narrow r:resource="http://www.cdnow.com/"/>
    <narrow r:resource="http://dir.yahoo.com/Entertainment/Music/"/>
    <narrow r:resource="http://www.cnn.com/SHOWBIZ/Music/"/>
 </Topic>
@@ -20,7 +25,8 @@
    <catid>3</catid>
    <narrow r:resource="http://dir.yahoo.com/News_and_Media/Television/"/>
    <narrow r:resource="http://www.ultimatetv.com/"/>
-   <narrow r:resource="http://www.gist.com/"/
+    <narrow r:resource="http://tv.yahoo.com/"/>
+   <narrow r:resource="http://www.gist.com/"/"/>
    <narrow r:resource="http://www.cnn.com/SHOWBIZ/TV/"/>
 </Topic>
 
@@ -28,6 +34,9 @@
     <catid>4</catid>
     <narrow r:resource="http://dir.yahoo.com/Social_Science/Communications/Writing/"/>
     <narrow r:resource="http://www.writers-bbs.com/"/>
+    <narrow r:resource="http://www.pw.org/"/>
+    <narrow r:resource="http://www.bookwire.com/bbr/"/>
+    <narrow r:resource="http://www.authorsspeak.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Animation">
@@ -35,12 +44,17 @@
     <narrow r:resource="http://www.awn.com/"/>
     <narrow r:resource="http://www.hotwired.com/animation/"/>
     <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Animation/"/>
+    <narrow r:resource="http://www.aardman.com/"/>
+    <narrow r:resource="http://www.pixar.com/"/>
+    <narrow r:resource="http://www.3dcafe.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Anime">
     <catid>6</catid>
     <narrow r:resource="http://events.yahoo.com/Net_Events/Entertainment/Comics_and_Animation/Anime/"/>
     <narrow r:resource="http://dir.yahoo.com/Entertainment/Comics_and_Animation/Animation/Anime/"/>
+    <narrow r:resource="http://www.anime-int.com/"/>
+    <narrow r:resource="http://www.ex.org/"/>
 </Topic>
 
 <Topic r:about="Arts/Bodyart">
@@ -48,84 +62,121 @@
     <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Body_Art/"/>
     <narrow r:resource="http://www.BME.FreeQ.com/"/>
     <narrow r:resource="http://www.piercinglinks.com/"/>
+    <narrow r:resource="http://www.tattoosavage.com/"/>
+    <narrow r:resource="http://www.tattooed-planet.com/"/>
 </Topic>
 
 <Topic r:about="http://dmoz.org/Arts/Bonsai_and_Suiseki/">
     <catid>8</catid>
     <narrow r:resource="http://www.bonsaiweb.com"/>
     <narrow r:resource="http://dir.yahoo.com/Recreation/Home_and_Garden/Gardening/Bonsai/"/>
+    <narrow r:resource="http://www.bonsai-bci.com/"/>
+    <narrow r:resource="http://www.absbonsai.org/"/>
+    <narrow r:resource="http://www.stonelantern.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Comics">
     <catid>9</catid>
     <narrow r:resource="http://dir.yahoo.com/Entertainment/Comics_and_Animation/"/>
     <narrow r:resource="http://comics.com"/>
+    <narrow r:resource="http://www.unitedmedia.com/comics/"/>
+    <narrow r:resource="http://www.yeeeoww.com/lampoon/"/>
+    <narrow r:resource="http://www.comedybreak.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Dance">
     <catid>10</catid>
     <narrow r:resource="http://dir.yahoo.com/Arts/Performing_Arts/Dance/"/>
+    <narrow r:resource="http://www.dancing.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Muppets">
     <catid>11</catid>
-    <narrow r:resource="http://dir.yahoo.com/Entertainment/Movies_and_Film/Genres/Children/Muppets/"/
+    <narrow r:resource="http://dir.yahoo.com/Entertainment/Movies_and_Film/Genres/Children/Muppets/"/"/>
     <narrow r:resource="http://www.muppets.com"/>
+    <narrow r:resource="http://www.henson.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Movies">
     <catid>12</catid>
     <narrow r:resource="http://movies.yahoo.com"/>
     <narrow r:resource="http://movies.go.com/"/>
+    <narrow r:resource="http://www.hollywood.com/"/>
+    <narrow r:resource="http://www.cnn.com/SHOWBIZ/Movies/"/>
+    <narrow r:resource="http://cinemania.msn.com/"/>
+    <narrow r:resource="http://www.eonline.com/"/>
+http://www.imdb.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Poetry">
     <catid>13</catid>
     <narrow r:resource="http://dir.yahoo.com/Arts/Humanities/Literature/Poetry/"/>
     <narrow r:resource="http://www.poetry.com"/>
+    <narrow r:resource="http://www.poets.com/"/>
+    <narrow r:resource="http://www.poets.org/"/>
+    <narrow r:resource="http://www.poets.org/"/>
 </Topic>
 
 <Topic r:about="Arts/Theatre">
     <catid>14</catid>
     <narrow r:resource="http://www.playbill.com/"/>
     <narrow r:resource="http://dir.yahoo.com/Arts/Performing_Arts/Theater/"/>
+    <narrow r:resource="http://www.tonys.org/"/>
+    <narrow r:resource="http://www.escape.com/%7Etheanet/AisleSay.html"/>
 </Topic>
 
 <Topic r:about="Arts/Photography">
     <catid>15</catid>
     <narrow r:resource="http://www.ipix.com"/>
     <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Photography/"/>
+    <narrow r:resource="http://www.natureworld.com/"/>
+    <narrow r:resource="http://www.eastman.org/"/>
+    <narrow r:resource="http://www.kodak.com/"/>
+    <narrow r:resource="http://photoweb.net/"/>
 </Topic>
 
-<Topic r:about="Arts/Design">
+<Topic r:about="Arts/Design/">
     <catid>16</catid>
     <narrow r:resource="http://dir.yahoo.com/Arts/Design_Arts/"/>
+    <narrow r:resource="http://www.mediadrone.com/"/>
+     <narrow r:resource="http://www.designarchitecture.com"/>
 </Topic>
 
 <Topic r:about="Arts/Radio">
      <catid>17</catid>
-     <narrow r:resource="http://www.designarchitecture.com"/>
+    <narrow r:resource="http://www.bbc.co.uk/"/>
+    <narrow r:resource="http://www.webactive.com/"/>
+    <narrow r:resource="http://www.real.com/"/>
+    <narrow r:resource="http://www.npr.org/"/>
 </Topic>
 
 <Topic r:about="Arts/Publishing">
     <catid>18</catid>
     <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Publishing/"/>
     <narrow r:resource="http://www.gutenberg.net/"/>
+    <narrow r:resource="http://www.harcourt-ap.com/"/>
+    <narrow r:resource="http://www.awl.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Asian_Arts">
     <catid>19</catid>
     <narrow r:resource="http://dir.yahoo.com/Arts/Cultures_and_Groups/Asian/"/>
+    <narrow r:resource="http://www.asianart.com/"/>
+    <narrow r:resource="http://www.artindex.com/"/>
+    <narrow r:resource="http://www.kiku.com/electric_samurai/"/>
+    <narrow r:resource="http://www.chica.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Architecture">
    <catid>20</catid>
     <narrow r:resource="http://dir.yahoo.com/Arts/Design_Arts/Architecture/"/>
+    <narrow r:resource="http://www.greatbuildings.com/"/>
 </Topic>
 
 <Topic r:about="Arts/Comedy">
     <catid>21</catid>
     <narrow r:resource="http://dir.yahoo.com/Entertainment/Humor__Jokes__and_Fun/"/>
+    <narrow r:resource="http://www.comedy.com/"/>
 </Topic>
 
 
@@ -245,35 +296,39 @@
 
 
 <Topic r:about="Computers/Hacking">
-    <catid>201 </catid>
+    <catid>201</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Security_and_Encryption/Hacking/"/>
 </Topic>
 
 <Topic r:about="Computers/Graphics">
     <catid>202</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Graphics/"/>
 </Topic>
 
-<Topic r:about="Computers/CD_ROM">
-    <catid>203 </catid>
-</Topic>
 
 <Topic r:about="Computers/Internet">
     <catid>204</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Internet/"/>
 </Topic>
 
 <Topic r:about="Computers/Security">
     <catid>205</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Internet/World_Wide_Web/Security_and_Encryption/"/>
 </Topic>
 
 <Topic r:about="Computers/Software">
     <catid>206</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Software/Internet/"/>
 </Topic>
 
 <Topic r:about="Computers/Hardware">
     <catid>207</catid>
+    <narrow r:resource="http://shopping.yahoo.com/computers/"/>
 </Topic>
 
 <Topic r:about="Computers/Operating_Systems">
     <catid>208</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Software/Operating_Systems/"/>
 </Topic>
 
 <Topic r:about="Computers/Benchmarking">
@@ -282,18 +337,25 @@
 
 <Topic r:about="Computers/CAD">
     <catid>210</catid>
+    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Electronic_Computer_Aided_Design__ECAD_/"/>
 </Topic>
 
 <Topic r:about="Computers/Algorithms">
     <catid>211</catid>
+    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Algorithms/"/>
 </Topic>
+
+
 
 <Topic r:about="Computers/Databases">
     <catid>212</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Software/Databases/"/>
 </Topic>
 
 <Topic r:about="Computers/Data_Communications">
     <catid>213</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/"/>
+    <narrow r:resource="http://www.cisco.com/"/>
 </Topic>
 
 <Topic r:about="Computers/DSP">
@@ -302,46 +364,57 @@
 
 <Topic r:about="Computers/Emulators">
     <catid>215</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Computers/Hardware/Emulators/"/>
 </Topic>
 
 <Topic r:about="Computers/Fonts">
     <catid>216</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Design_Arts/Graphic_Design/Typography/"/>
 </Topic>
 
 <Topic r:about="Computers/Groupware">
     <catid>216</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/Software/Groupware/"/>
 </Topic>
 
 <Topic r:about="Computers/Home_Automation">
     <catid>217</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Home_and_Garden/Home_Automation/"/>
 </Topic>
 
 <Topic r:about="Computers/Human_Factors">
     <catid>218</catid>
+    <narrow r:resource="http://dir.yahoo.com/Science/Engineering/Ergonomics/"/>
 </Topic>
 
 <Topic r:about="Computers/Multimedia">
     <catid>219</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Multimedia/"/>
 </Topic>
 
 <Topic r:about="Computers/Programming">
     <catid>220</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Internet/World_Wide_Web/Programming/"/>
 </Topic>
 
 <Topic r:about="Computers/Robotics">
     <catid>221</catid>
+    <narrow r:resource="http://dir.yahoo.com/Science/Engineering/Mechanical_Engineering/Robotics/"/>
 </Topic>
 
 <Topic r:about="Computers/Systems">
     <catid>222</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Hardware/Systems/"/>
 </Topic>
 
 <Topic r:about="Computers/Desktop_Publishing">
     <catid>223</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Desktop_Publishing/"/>
 </Topic>
 
 <Topic r:about="Computers/Supercomputing">
     <catid>224</catid>
+    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Supercomputing_and_Parallel_Computing/"/>
 </Topic>
 
 <Topic r:about="Computers/Jobs">
@@ -350,30 +423,33 @@
 
 <Topic r:about="Computers/Parallel_Computing">
     <catid>226</catid>
+    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Supercomputing_and_Parallel_Computing/"/>
 </Topic>
 
 <Topic r:about="Computers/Bulletin_Board_Systems">
     <catid>227</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/BBSs/"/>
 </Topic>
 
 <Topic r:about="Computers/Consultants">
     <catid>228</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Computers/Services/Consulting/"/>
 </Topic>
 
 <Topic r:about="Computers/Vendors">
     <catid>229</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/"/>
 </Topic>
 
 <Topic r:about="Computers/Mobile_Computing">
     <catid>230</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Mobile_Computing/"/>
 </Topic>
 
-<Topic r:about="Computers/Companies">
-    <catid>231</catid>
-</Topic>
 
 <Topic r:about="Computers/Learning">
     <catid>232</catid>
+    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/"/>
 </Topic>
 
 <Topic r:about="Computers/News">
@@ -382,40 +458,44 @@
 
 <Topic r:about="Computers/Organizations">
     <catid>234</catid>
+    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Organizations/"/>
 </Topic>
 
 <Topic r:about="Computers/Intranets">
     <catid>235</catid>
+    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/Intranet/"/>
 </Topic>
 
 <Topic r:about="Computers/Artificial_Intelligence">
     <catid>236</catid>
+    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Artificial_Intelligence/"/>
 </Topic>
 
 
 
 <Topic r:about="Games/MUDs">
     <catid>301</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Computer_Games/Internet_Games/MUDs__MUSHes__MOOs__etc_/"/>
 </Topic>
 
 <Topic r:about="Games/Conventions">
     <catid>302</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Computer_Games/Conventions_and_Conferences/"/>
 </Topic>
 
 <Topic r:about="Games/Gambling">
     <catid>303</catid>
-</Topic>
-
-<Topic r:about="Games/Women-in-Gaming">
-    <catid>304</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Gambling/"/>
 </Topic>
 
 <Topic r:about="Games/Video_Games">
     <catid>305</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Video_Games/"/>
 </Topic>
 
 <Topic r:about="Games/Play_by_Mail">
     <catid>306</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Play_by_Mail_Games/"/>
 </Topic>
 
 <Topic r:about="Games/Corewar">
@@ -432,10 +512,12 @@
 
 <Topic r:about="Games/Netrek">
     <catid>310</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Computer_Games/Internet_Games/Multi_User_Games/Titles/Netrek/"/>
 </Topic>
 
 <Topic r:about="Games/Pinball">
     <catid>311</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Pinball/"/>
 </Topic>
 
 <Topic r:about="Games/Trading_Cards">
@@ -444,14 +526,17 @@
 
 <Topic r:about="Games/Puzzles">
     <catid>313</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Puzzles/"/>
 </Topic>
 
 <Topic r:about="Games/Crossword_Puzzles">
     <catid>314</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Puzzles/Crossword_Puzzles/"/>
 </Topic>
 
 <Topic r:about="Games/Webgames">
     <catid>315</catid>
+    <narrow r:resource="http://games.yahoo.com/"/>
 </Topic>
 
 <Topic r:about="Games/IRC">
@@ -1512,6 +1597,9 @@
 
 <Topic r:about="Sports/Rodeo">
     <catid>2028</catid>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Sports/Rodeo/"/>
+    <narrow r:resource="http://www.prorodeo.com/"/>
+    <narrow r:resource="http://www.npra.com/"/>
 </Topic>
 
 <Topic r:about="Sports/Rowing">
@@ -1705,7 +1793,5 @@
 <Topic r:about="Sports/Training">
     <catid>>2076</catid>
 </Topic>
-
-
 
 </r:RDF>
