@@ -38,12 +38,15 @@
 #ifndef nsplugindefs_h___
 #define nsplugindefs_h___
 
-#ifndef prtypes_h___
-#include "prtypes.h"
+#if defined(XP_OS2) || defined(__OS2__)
+#pragma pack(1)
+#define INCL_BASE
+#define INCL_PM
+#include <os2.h>
 #endif
 
-#ifdef __OS2__
-#pragma pack(1)
+#ifndef prtypes_h___
+#include "prtypes.h"
 #endif
 
 #ifdef XP_MAC
@@ -57,7 +60,7 @@
 #   include <X11/Xutil.h>
 #endif
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #   include <windef.h>
 #endif
 
@@ -297,13 +300,13 @@ struct nsPluginEvent {
     EventRecord*                event;
     nsPluginPlatformWindowRef   window;
 
-#elif defined(XP_PC)
-    uint16      event;
+#elif defined(XP_OS2)
+    uint32      event;
     uint32      wParam;
     uint32      lParam;
 
-#elif defined(XP_OS2)
-    uint32      event;
+#elif defined(XP_PC)
+    uint16      event;
     uint32      wParam;
     uint32      lParam;
 
