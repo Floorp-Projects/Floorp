@@ -21,14 +21,11 @@
  *   Ben Goodger <ben@netscape.com> (Original Author)
  */
  
-const kTxnPrefix = "urn:mozilla:vixen:transactions:"; 
- 
 function vxVFDTransactionManager() 
 {
   this.mTxnStack = new vxVFDTransactionStack();
-
-  vxVFDTransactionDS.init();
-  
+  this.mDataSource = new vxTransactionDataSource();
+ 
   // a record of transaction execution listeners that have attached
   // themselves to us.
   this.mTransactionListeners = [];
@@ -58,7 +55,7 @@ vxVFDTransactionManager.prototype =
     
     if (!this.mTxnSeq) {
       // If a Transaction Seq does not exist, create one.
-      this.mTxnSeq = this.makeSeq(vxVFDTransactionSeq);
+      this.mTxnSeq = this.makeSeq(gVxTransactionRoot);
     }
 
     if (this.mTxnStack.index < this.mTxnStack.mStack.length - 1) {
@@ -74,12 +71,11 @@ vxVFDTransactionManager.prototype =
     // append the transaction to our list
     this.mTxnStack.push(aTransaction);
 
-    // create a resource for the transaction and add to the 
-    // stack
-    var resource        = new RDFResource(kTxnPrefix + (this.mTxnStack.index-1));
-    var commandProperty = new RDFLiteral(kTxnPrefix + "command-string");
-    var commandString   = new RDFLiteral(aTransaction.commandString);
-    vxVFDTransactionDS.Assert(resource, commandProperty, commandString, true);
+    var resource = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index-1));
+    var commandLiteral = this.mDataSource.mRDFS.GetLiteral(aTransaction.commandString);
+    this.mDataSource.Assert(resource, gVxTxnCommandString, commandLiteral, true);
+    var descriptionLiteral = this.mDataSource.mRDFS.GetLiteral(aTransaction.description);
+    this.mDataSource.Assert(resource, gVxTxnDescription, descriptionLiteral, true);
     this.mTxnSeq.AppendElement(resource);
     
     for (i = 0; i < this.mTransactionListeners.length; i++) {
@@ -156,7 +152,7 @@ vxVFDTransactionManager.prototype =
     const kContainerUtilsCID = "{d4214e92-fb94-11d2-bdd8-00104bde6048}";
     const kContainerUtilsIID = "nsIRDFContainerUtils";
     var utils = nsJSComponentManager.getServiceByID(kContainerUtilsCID, kContainerUtilsIID);
-    return utils.MakeSeq(vxVFDTransactionDS, aResource);
+    return utils.MakeSeq(this.mDataSource, aResource);
   },
 
   /**
@@ -180,119 +176,6 @@ vxVFDTransactionManager.prototype =
     }
   }
 };
-
-/** 
- * Implements nsIRDFDataSource
- */
-var vxVFDTransactionDS = 
-{
-  init: function ()
-  {
-    var arc = new RDFResource("http://www.mozilla.org/projects/vixen/rdf#transaction-list");
-    this.Assert(vxVFDTransactions, arc, vxVFDTransactionSeq, true);
-  },
-
-  mResources: { },
- 
-  HasAssertion: function (aSource, aProperty, aValue, aTruthValue)
-  {
-    var res = aSource.Value;
-    if (!res) throw Components.results.NS_ERROR_FAILURE; 
-    var prop = aProperty.Value;
-    if (!prop) throw Components.results.NS_ERROR_FAILURE;
-    
-    if (this.mResources[res] && 
-        this.mResources[res][prop] &&
-        this.mResources[res][prop].EqualsNode(aValue))
-      return true;
-    return false;
-  },
-  
-  Assert: function (aSource, aProperty, aValue, aTruthVal)
-  {
-    var res = aSource.Value;
-    if (!res) throw Components.results.NS_ERROR_FAILURE; 
-    var prop = aProperty.Value;
-    if (!prop) throw Components.results.NS_ERROR_FAILURE;
-    
-    if (!(res in this.mResources))
-      this.mResources[res] = { };
-    this.mResources[res][prop] = aValue;
-  },
-  
-  Unassert: function (aSource, aProperty, aValue, aTruthVal)
-  {
-    var res = aSource.Value;
-    if (!res) throw Components.results.NS_ERROR_FAILURE;
-    var prop = aProperty.Value;
-    if (!prop) throw Components.results.NS_ERROR_FAILURE;
-    if (!aValue) throw Components.results.NS_ERROR_FAILURE;
-
-    if (!this.mResources[res][prop])
-      throw Components.results.NS_ERROR_FAILURE;
-    
-    this.mResources[res][prop] = undefined;
-  },
-  
-  GetTarget: function (aSource, aProperty, aTruthValue)
-  {
-    var res = aSource.Value;
-    if (!res) throw Components.results.NS_ERROR_FAILURE;
-    var prop = aProperty.Value;
-    if (!prop) throw Components.results.NS_ERROR_FAILURE;
-
-    if (this.mResources[res] != undefined && 
-        this.mResources[res][prop] != undefined) {
-      return this.mResources[res][prop].QueryInterface(Components.interfaces.nsIRDFNode);
-    }
-    throw Components.results.NS_ERROR_FAILURE;
-    return null;
-  },
-  
-  GetTargets: function (aSource, aProperty, aTruthValue)
-  {
-    var targets = [].concat(this.GetTarget(aSource, aProperty, aTruthValue));
-    return new ArrayEnumerator(targets);
-  },
-  
-  mObservers: [],
-  AddObserver: function (aObserver) 
-  {
-    this.mObservers[this.mObservers.length] = aObserver;
-  },
-  
-  RemoveObserver: function (aObserver)
-  {
-    for (var i = 0; i < this.mObservers.length; i++) {
-      if (this.mObservers[i] == aObserver) {
-        this.mObservers.splice(i, 1);
-        break;
-      }
-    }
-  }
-};
-
-/** 
- * The resource that wraps the transaction Seq (urn:mozilla:vixen:transactions)
- */
-var vxVFDTransactions =
-{
-  Value: "urn:mozilla:vixen:transactions"
-};
-
-/** 
- * The Transaction Seq
- */
-var vxVFDTransactionSeq = 
-{
-  Value: "http://www.mozilla.org/projects/vixen/rdf#txnList"
-};
-
-function stripRDFPrefix (aString)
-{
-  var len = "http://www.w3.org/1999/02/22-rdf-syntax-ns#".length;
-  return aString.substring(len, aString.length);
-}
 
 /** 
  * Transaction stack

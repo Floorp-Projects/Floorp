@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 
 <window id="vxHistory" orient="vertical"
-        windowtype="vixen:history"
+        windowtype="vixen:history" class="dialog"
         title="Edit History for [Form1]"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="vxHistory.startup();">
@@ -17,8 +17,9 @@
   
   <!-- transaction manager -->
   <script src="chrome://vixen/content/vfd/vxVFDTransactionManager.js"></script>
+  <script src="chrome://vixen/content/txmgr/vxTransactionDataSource.js"></script>
 
-  <tree id="historyTree" style="width: 0px; height; 0px;"
+  <tree id="historyTree" style="width: 0px; height; 0px;" class="inset"
         flex="1" multiple="true" datasources="rdf:null"
         ref="urn:mozilla:vixen:transactions">
     <treecolgroup>
@@ -36,17 +37,24 @@
                   predicate="http://www.mozilla.org/projects/vixen/rdf#command-string"
                   object="?command-string"/>
         </conditions>
+        <bindings>
+          <triple subject="?transaction"
+                  predicate="http://www.mozilla.org/projects/vixen/rdf#description"
+                  object="?description"/>
+        </bindings>
         <action>
           <treechildren>
             <treeitem uri="?transaction">
               <treerow>
-                <treecell value="?command-string"/>
+                <treecell value="?description" command="?command-string"/>
               </treerow>
             </treeitem>          
           </treechildren>
         </action>
       </rule>
     </template>
+    
+    <treechildren id="historyKids"/>
   </tree>
 
 </window>      

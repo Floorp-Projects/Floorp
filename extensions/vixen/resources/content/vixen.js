@@ -22,6 +22,7 @@
  */
  
 const kMenuHeight = 130;
+const kPaletteWidth = 130;
 const kPropertiesWidth = 170;
 const kProjectWidth = 170;
 
@@ -37,6 +38,10 @@ var vxShell =
     // Shell Startup
     // This requires several steps. Probably more, in time.
   
+    // append the controller
+    var mainWindow = document.getElementById("vixenMain");
+    mainWindow.controllers.insertControllerAt(0, CentralController);
+
     // position and initialise the application window
     vxShell.initAppWindow(); 
     
@@ -50,15 +55,15 @@ var vxShell =
     vxShell.loadPalette();
     
     // load the history window
-    // vxShell.loadHistory();
+    vxShell.loadHistory();
     
     // load a blank form (until projects come online)
-    vxShell.focusedWindow = vxShell.loadDocument(null);
+    vxShell.focusedWindow = vxShell.loadFormDesigner(null);
   
     // initialise the document focus observer
     const kObserverServiceCONTRACTID = "@mozilla.org/observer-service;1";
     const kObserverServiceIID = "nsIObserverService";
-    vxShell.mFocusObserver = nsJSComponentManager.getService(kObserverServiceCONTRACTID, kObserverServiceIID);
+    vxShell.observerService = nsJSComponentManager.getService(kObserverServiceCONTRACTID, kObserverServiceIID);
     
   },
   
@@ -83,7 +88,7 @@ var vxShell =
 
     // size the palette window
     hPalette.moveTo(0, kMenuHeight + 5);
-    hPalette.outerWidth = kPropertiesWidth;
+    hPalette.outerWidth = kPaletteWidth;
     hPalette.outerHeight = screen.availHeight - kMenuHeight - 60;
   },
   
@@ -99,22 +104,30 @@ var vxShell =
     hHistory.outerHeight = screen.availHeight - kMenuHeight - 60;
   },
   
-  loadDocument: function (aURL)
+  newDocument: function ()
   {
-    _dd("vx_LoadDocument");
+    // need to ask for document type in dialog
+    this.loadFormDesigner(null);
+  },
+  
+  loadFormDesigner: function (aURL)
+  {
+    _ddf("vx_LoadDocument", aURL);
     // open a blank form designer window
     const features = "resizable=yes,dependent,chrome,dialog=yes";
     var params = {
       documentURL: aURL
     };
+    
+    var rv = vxUtils.positionDocumentWindow("vixen:formdesigner");
     var hVFD = window.openDialog("chrome://vixen/content/vfd/vfd.xul", "", features, params);
-    hVFD.moveTo(kPropertiesWidth + 5, kMenuHeight + 5);
-    hVFD.outerWidth = screen.availWidth - kPropertiesWidth - kProjectWidth - 10;
-    hVFD.outerHeight = screen.availHeight - kMenuHeight - 20;
+    hVFD.moveTo(rv.x, rv.y);
+    hVFD.outerWidth = screen.availWidth - kPropertiesWidth - kPaletteWidth - 20;
+    hVFD.outerHeight = screen.availHeight - kMenuHeight - 40;
     return hVFD;
   },
   
-  loadDocumentWithUI: function ()
+  loadFormDesignerWithUI: function ()
   {
     const kFilePickerIID = "nsIFilePicker";
     const kFilePickerCONTRACTID = "@mozilla.org/filepicker;1";
@@ -129,7 +142,7 @@ var vxShell =
       var filePicked = filePicker.show();
       if (filePicked == FP.returnOK && filePicker.file) {
         var file = filePicker.file.QueryInterface(Components.interfaces.nsILocalFile);
-        return this.loadDocument(file.path);
+        return this.loadFormDesigner(file.path);
       }
     }
     return null;
@@ -147,7 +160,20 @@ var vxShell =
   {
     this.mFocusedWindow.vxVFD.mTxMgrShell.redoTransaction();
   },
-
+  
+  /**
+   * Save VFD
+   */
+  saveDocument: function ()
+  {
+    var vixenShell = Components.classes["@mozilla.org/vixen/shell;1"].createInstance();
+    if (vixenShell) {
+      vixenShell = vixenShell.QueryInterface(Components.interfaces.nsIVixenShell);
+      var focusedVFDDocument = this.mFocusedWindow.vxVFD.getContent(true).document;
+      var documentAsString = vixenShell.encodeDocumentToString(focusedVFDDocument);
+      _ddf("document as string", documentAsString);
+    }
+  },
 
   appAbout: function ()
   {

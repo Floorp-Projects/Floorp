@@ -40,8 +40,26 @@ var vxUtils = {
     const WM_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
     var wm = nsJSComponentManager.getService(WM_CONTRACTID, "nsIWindowMediator");
     return wm.getMostRecentWindow(aWindowType);
-  }
+  },
   
+  positionDocumentWindow: function (aWindowType)
+  {
+    var prevFD = vxUtils.getWindow(aWindowType);
+    var x = kPaletteWidth + 5;
+    var y = kMenuHeight + 5;
+    if (prevFD) {
+      x = prevFD.screenX + 10;
+      y = prevFD.screenY + 10;
+      var w = prevFD.outerWidth;
+      var h = prevFD.outerHeight;
+      if ((x + w) > (screen.availWidth - kPropertiesWidth) ||
+          (y + h) > (screen.availHeight)) {
+        x = kPaletteWidth + 5;
+        y = kMenuHeight + 5;
+      }
+    }
+    return { x: x, y: y };
+  }
 };
 
 /** 

@@ -39,9 +39,8 @@ var vxVFD =
     
     // load the document
     var content = this.getContent(false);
-    var docURL = this.mParams.documentURL;
-    const scratch = "chrome://vixen/content/vfd/scratch.xul";
-    content.setAttribute("src", docURL ? docURL : scratch);
+    var docURL = this.mParams.documentURL || "chrome://vixen/content/vfd/scratch.xul";
+    content.setAttribute("src", docURL);
     
     var windowNode = document.getElementById("vxVFD");
     windowNode.setAttribute("url", docURL);
@@ -60,16 +59,8 @@ var vxVFD =
     // vixenMain.vxShell.mFocusObserver.Notify({ }, "window_focus", ("vfd," + this.mParams.documentURL));
     vixenMain.vxShell.mFocusedWindow = window;
     
-    // XXX-HACK until we set up observers
-    var history = vxUtils.getWindow("vixen:history");
-    if (history) {
-      var doc = history.document;
-      var historyTree = doc.getElementById("historyTree");
-      if (historyTree) {
-        historyTree.database.AddDataSource(vxVFDTransactionDS);
-        historyTree.builder.rebuild();
-      }
-    }
+    if (this.mTxMgrShell) 
+      vixenMain.vxShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, "vfd-focus", null);
   },
   
   get vfdDocumentWindowNode()
