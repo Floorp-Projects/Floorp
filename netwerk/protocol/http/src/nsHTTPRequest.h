@@ -118,9 +118,9 @@ public:
     nsresult    SetUploadStream(nsIInputStream* i_UploadStream);
 
     nsresult    SetOverrideRequestSpec(const char* i_Spec);
-    nsresult    GetOverrideRequestSpec(char** o_Spec);
 
-    const char *Spec() { return (const char *) mSpec; }
+    const char *OverrideRequestSpec() { return (const char *) mRequestSpec; }
+    const char *Spec()                { return (const char *) mSpec; }
 
     // for POST or PUT data...
     nsCOMPtr<nsIInputStream>    mInputStream;

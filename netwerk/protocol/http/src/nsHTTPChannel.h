@@ -139,8 +139,6 @@ protected:
     nsresult            OpenCacheEntry();
     nsresult            GenerateCacheKey(nsAWritableCString &);
 
-    nsresult            ComputeCurrentAge(PRUint32 now, PRUint32 *);
-    nsresult            ComputeFreshnessLifetime(PRUint32 *);
     nsresult            UpdateExpirationTime();
 
     PRBool              ResponseIsCacheable();

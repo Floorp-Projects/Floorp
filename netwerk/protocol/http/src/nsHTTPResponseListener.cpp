@@ -447,6 +447,7 @@ nsHTTPServerListener::OnDataAvailable(nsIRequest *request,
     //
     if (!mResponseDataListener) {
         // XXX: What should the return code be?
+        LOG(("nsHTTPServerListener::OnDataAvailable -- returning NS_BINDING_ABORTED\n"));
         rv = NS_BINDING_ABORTED;
     }
 
@@ -698,7 +699,13 @@ nsHTTPServerListener::OnStopRequest(nsIRequest* request, nsISupports* i_pContext
             mResponse->GetStatus(&status);
 
         if (status != 304 || mChannel->HasCachedResponse()) {
-            mChannel->ResponseCompleted(mResponseDataListener, i_Status);
+            // For 304 responses, we'll call ResponseCompleted after the response
+            // has been completely read from the cache.
+            if (status != 304) {
+                LOG(("Calling ResponseCompleted [httpStatus=%d status=%x]\n", status, i_Status));
+                mChannel->ResponseCompleted(mResponseDataListener, i_Status);
+            }
+            // The channel is done with us.
             mChannel->SetHTTPServerListener(nsnull);
         }
 
@@ -807,6 +814,8 @@ nsresult nsHTTPServerListener::Abort()
 nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener, 
                                                 nsISupports *aContext) 
 {
+    LOG(("nsHTTPServerListener::FireSingleOnData [this=%x]\n", this));
+
     nsresult rv = NS_OK;
 
     if (mHeadersDone) {

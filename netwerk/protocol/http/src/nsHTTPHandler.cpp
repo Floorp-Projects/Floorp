@@ -954,7 +954,7 @@ nsHTTPHandler::Init()
     gHTTPLog = PR_NewLogModule("nsHTTPProtocol");
 #endif /* PR_LOGGING */
 
-    mSessionStartTime = PR_Now();
+    mSessionStartTime = NowInSeconds();
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, ("Creating nsHTTPHandler [this=%x].\n", 
                 this));

@@ -626,7 +626,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		nsCOMPtr<nsIChannel>	channel;
 		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))	return;
 
-		channel->SetLoadFlags(nsIRequest::FORCE_VALIDATION | nsIRequest::VALIDATE_ALWAYS);
+		channel->SetLoadFlags(nsIRequest::VALIDATE_ALWAYS);
 
 		nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
 		if (!httpChannel)	return;
@@ -3562,7 +3562,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			}
 
 			// get it just from the cache if we can (do not validate)
-			channel->SetLoadFlags(nsIRequest::VALIDATE_NEVER);
+			channel->SetLoadFlags(nsIRequest::LOAD_FROM_CACHE);
 
 			if (methodStr.EqualsIgnoreCase("post"))
 			{

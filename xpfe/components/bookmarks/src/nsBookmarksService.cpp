@@ -1987,7 +1987,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 				nsCOMPtr<nsIChannel>	channel;
 				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))
 				{
-					channel->SetLoadFlags(nsIRequest::FORCE_VALIDATION | nsIRequest::VALIDATE_ALWAYS);
+					channel->SetLoadFlags(nsIRequest::VALIDATE_ALWAYS);
 					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 					if (httpChannel)
 					{

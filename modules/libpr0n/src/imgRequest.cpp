@@ -314,13 +314,12 @@ NS_IMETHODIMP imgRequest::SetLoadGroup(nsILoadGroup *loadGroup)
 /* attribute nsLoadFlags loadFlags */
 NS_IMETHODIMP imgRequest::GetLoadFlags(nsLoadFlags *flags)
 {
-    NS_NOTYETIMPLEMENTED("imgRequest::GetLoadFlags");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *flags = LOAD_NORMAL;
+    return NS_OK;
 }
 NS_IMETHODIMP imgRequest::SetLoadFlags(nsLoadFlags flags)
 {
-    NS_NOTYETIMPLEMENTED("imgRequest::SetLoadFlags");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 /** imgIRequest methods **/

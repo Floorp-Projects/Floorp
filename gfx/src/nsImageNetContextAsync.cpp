@@ -763,7 +763,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
 
    nsLoadFlags flags=0;   
    if(IsAnimationLoop)
-       flags |= nsIRequest::VALIDATE_NEVER;
+       flags |= nsIRequest::LOAD_FROM_CACHE;
 
     rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group, sink, flags);
     if (NS_FAILED(rv)) goto error;
@@ -885,9 +885,9 @@ Need code to check freshness of necko cache.
     	image_net_context_async_log_module = PR_NewLogModule("IMAGENETCTXASYNC");
      }          
 #endif
-     if((nsIRequest::FORCE_VALIDATION & defchan_attribs)||   
+     if((nsIRequest::VALIDATE_ALWAYS & defchan_attribs)||   
         (nsIRequest::INHIBIT_PERSISTENT_CACHING & defchan_attribs)||
-        (nsIRequest::FORCE_RELOAD & defchan_attribs)) {
+        (nsIRequest::LOAD_BYPASS_CACHE & defchan_attribs)) {
      		imglib_attribs = DONT_USE_IMG_CACHE;
 #if defined( DEBUG )
 		PR_LOG(image_net_context_async_log_module, 1, ("ImageNetContextAsync: NS_NewImageNetContext: DONT_USE_IMAGE_CACHE\n"));

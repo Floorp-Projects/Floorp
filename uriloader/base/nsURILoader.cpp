@@ -363,7 +363,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
          // we must be retargeting...so set an appropriate flag on the channel
         nsLoadFlags loadFlags = 0;
         aChannel->GetLoadFlags(&loadFlags);
-        loadFlags |= nsIRequest::LOAD_RETARGETED_DOCUMENT_URI;
+        loadFlags |= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
         aChannel->SetLoadFlags(loadFlags);
       }
 

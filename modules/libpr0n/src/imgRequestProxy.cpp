@@ -180,8 +180,7 @@ NS_IMETHODIMP imgRequestProxy::GetLoadFlags(nsLoadFlags *flags)
 }
 NS_IMETHODIMP imgRequestProxy::SetLoadFlags(nsLoadFlags flags)
 {
-    NS_NOTYETIMPLEMENTED("imgRequestProxy::SetLoadFlags");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 /**  imgIRequest methods **/

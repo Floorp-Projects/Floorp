@@ -465,7 +465,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
     PRUint32 loadFlags = 0;
     request->GetLoadFlags(&loadFlags);
 
-    if (!mIsLoadingDocument && (loadFlags & nsIRequest::LOAD_DOCUMENT_URI)) {
+    if (!mIsLoadingDocument && (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
         mIsLoadingDocument = PR_TRUE;
         ClearInternalProgress(); // only clear our progress if we are starting a new load....
     }
@@ -486,7 +486,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
         //
         AddRequestInfo(request);
 
-        if ((1 == count) && (loadFlags & nsIRequest::LOAD_DOCUMENT_URI)) {
+        if ((1 == count) && (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
             // This request is associated with the entire document...
             mDocumentRequest = do_QueryInterface(request);
             mLoadGroup->SetDefaultLoadRequest(mDocumentRequest); 

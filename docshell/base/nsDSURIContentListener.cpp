@@ -98,7 +98,7 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
     PRUint32 loadType = mDocShell->ConvertDocShellLoadInfoToLoadType((nsDocShellInfoLoadType) aCommand);
     mDocShell->SetLoadType(loadType);
 
-    if(loadFlags & nsIRequest::LOAD_RETARGETED_DOCUMENT_URI)
+    if(loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
     {
         mDocShell->StopLoad();
     }
@@ -107,7 +107,7 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
     request, aContentHandler);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE; // it's okay if we don't know how to handle the content   
 
-    if(loadFlags & nsIRequest::LOAD_RETARGETED_DOCUMENT_URI)
+    if(loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
         mDocShell->SetFocus();
 
     return NS_OK;

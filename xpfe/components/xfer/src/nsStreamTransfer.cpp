@@ -176,9 +176,9 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
         rv = NS_OpenURI( getter_AddRefs( channel ), uri, nsnull );
 
         if ( NS_SUCCEEDED( rv ) && channel ) {
-            // See if VALIDATE_NEVER is called for.
+            // See if LOAD_FROM_CACHE is called for.
             if ( doNotValidate ) {
-                channel->SetLoadFlags( nsIRequest::VALIDATE_NEVER );
+                channel->SetLoadFlags( nsIRequest::LOAD_FROM_CACHE );
             }
             // Post data provided?
             if ( postData ) {

@@ -371,7 +371,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
 
     nsLoadFlags loadFlags = 0;
     mPartChannel->GetLoadFlags(&loadFlags);
-    loadFlags |= nsIRequest::LOAD_REPLACE;
+    loadFlags |= nsIChannel::LOAD_REPLACE;
     mPartChannel->SetLoadFlags(loadFlags);
 
 	nsCOMPtr<nsILoadGroup> loadGroup;

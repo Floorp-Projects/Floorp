@@ -35,7 +35,9 @@
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
-#endif /* PR_LOGGING */
+#endif
+
+#define LOG(args) PR_LOG(gHTTPLog, PR_LOG_DEBUG, args)
 
 // When deciding heuristically whether or not to validate an HTTP response with
 // the server, this constant can be used to tune how conservative the algorithm
@@ -933,6 +935,114 @@ nsresult
 nsHTTPResponse::GetExpiresValue(PRUint32 *result, PRBool *isAvail)
 {
     return ParseDateHeader(nsHTTPAtoms::Expires, result, isAvail);
+}
+
+// From section 13.2.3 of RFC2616, we compute the current age of a cached
+// response as follows:
+//
+//    currentAge = max(max(0, responseTime - dateValue), ageValue)
+//               + now - requestTime
+//
+//    where responseTime == now
+//
+// This is typically a very small number.
+//
+nsresult
+nsHTTPResponse::ComputeCurrentAge(PRUint32 now,
+                                  PRUint32 requestTime,
+                                  PRUint32 *result)
+{
+    PRUint32 dateValue;
+    PRUint32 ageValue = 0;
+    PRBool avail = PR_FALSE;
+    nsresult rv;
+
+    *result = 0;
+
+    rv = GetDateValue(&dateValue, &avail);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!avail) {
+        LOG(("nsHTTPResponse::ComputeCurrentAge [this=%x] Date response header not set!\n", this));
+        // Assume we have a very fast connection !!
+        dateValue = now;
+    }
+
+    rv = GetAgeValue(&ageValue, &avail);
+    if (NS_FAILED(rv)) return rv;
+
+    // Compute apparent age
+    if (now > dateValue)
+        *result = now - dateValue;
+
+    // Compute corrected received age
+    if (avail)
+        *result = PR_MAX(*result, ageValue);
+
+    NS_ASSERTION(now >= requestTime, "bogus request time");
+
+    // Compute current age
+    *result += (now - requestTime);
+
+    return NS_OK;
+}
+
+// From section 13.2.4 of RFC2616, we compute the freshness lifetime of a cached
+// response as follows:
+//
+//     freshnessLifetime = max_age_value
+// <or>
+//     freshnessLifetime = expires_value - date_value
+// <or>
+//     freshnessLifetime = (date_value - last_modified_value) * 0.10
+// <or>
+//     freshnessLifetime = 0
+//
+nsresult
+nsHTTPResponse::ComputeFreshnessLifetime(PRUint32 *result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+
+    nsresult rv;
+    PRBool avail = PR_FALSE;
+
+    *result = 0;
+
+    // Try HTTP/1.1 style max-age directive...
+    rv = GetMaxAge(result, &avail);
+    if (NS_FAILED(rv)) return rv;
+    if (avail)
+        return NS_OK;
+
+    PRUint32 date, date2;
+
+    rv = GetDateValue(&date, &avail);
+    if (NS_FAILED(rv)) return rv;
+    if (avail) {
+        // Try HTTP/1.0 style expires header...
+        rv = GetExpiresValue(&date2, &avail);
+        if (NS_FAILED(rv)) return rv;
+        if (avail) {
+            *result = date2 - date;
+            return NS_OK;
+        }
+
+        // Fallback on heuristic using last modified header...
+        rv = GetLastModifiedValue(&date2, &avail);
+        if (NS_FAILED(rv)) return rv;
+        if (avail) {
+            LOG(("using last-modified to determine freshness-lifetime\n"));
+            LOG(("last-modified = %u, date = %u\n", date2, date));
+            *result = (date - date2) / 10;
+            return NS_OK;
+        }
+    }
+
+    LOG(("nsHTTPResponse::ComputeFreshnessLifetime [this = %x] "
+         "Insufficient information to compute a non-zero freshness "
+         "lifetime!\n", this));
+
+    return NS_OK;
 }
 
 #endif
