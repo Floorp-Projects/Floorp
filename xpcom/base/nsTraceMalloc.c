@@ -508,11 +508,11 @@ static callsite *calltree(uint32 *bp)
                 site->siblings = parent->kids;
                 parent->kids = site;
 
-                /* Check whether we've logged for this frame and logfile yet. */
+                /* Check whether we've logged for this site and logfile yet. */
                 if (!LFD_TEST(fp->lfd, &site->lfdset)) {
                     /*
                      * Some other logfile put this site in the calltree.  We
-                     * must an event for the site, and possibly first for its
+                     * must log an event for site, and possibly first for its
                      * method and/or library.  Note the code after the while
                      * loop that tests if (!site).
                      */
@@ -1099,6 +1099,10 @@ NS_TraceMallocCloseLogFD(int fd)
 
             /* Unlink fp from logfile_list, freeing lfd for reallocation. */
             *fp->prevp = fp->next;
+            if (!fp->next) {
+                PR_ASSERT(logfile_tail == &fp->next);
+                logfile_tail = fp->prevp;
+            }
 
             /* Reset logfp if we must, then free fp. */
             if (fp == logfp)
