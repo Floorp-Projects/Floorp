@@ -31,8 +31,16 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsWeakReference.h"
+#include "nsIFocusController.h"
+#include "nsRect.h"
+#include "nsPoint.h"
+
+#define ACCESSIBLE_BUNDLE_URL "chrome://global/locale/accessible.properties"
 
 class nsIFrame;
+class nsIDocShell;
+class nsIWebShell;
+class nsIContent;
 
 class nsAccessible : public nsIAccessible
 //                     public nsIAccessibleWidgetAccess
@@ -44,36 +52,65 @@ class nsAccessible : public nsIAccessible
 
   //NS_IMETHOD AccGetWidget(nsIWidget**);
 
-	public:
-		nsAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
-		virtual ~nsAccessible();
+  public:
+    nsAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+    virtual ~nsAccessible();
 
     virtual void GetListAtomForFrame(nsIFrame* aFrame, nsIAtom*& aList) { aList = nsnull; }
 
+    // Helper Routines for Sub-Docs
+    static nsresult GetDocShellFromPS(nsIPresShell* aPresShell, nsIDocShell** aDocShell);
+    static nsresult GetDocShellObjects(nsIDocShell*     aDocShell,
+                                nsIPresShell**   aPresShell, 
+                                nsIPresContext** aPresContext, 
+                                nsIContent**     aContent);
+    static nsresult GetDocShells(nsIPresShell* aPresShell,
+                          nsIDocShell** aDocShell,
+                          nsIDocShell** aParentDocShell);
+    static nsresult GetParentPresShellAndContent(nsIPresShell*  aPresShell,
+                                          nsIPresShell** aParentPresShell,
+                                          nsIContent**   aSubShellContent);
+
+    static PRBool FindContentForWebShell(nsIPresShell* aParentPresShell,
+                                  nsIContent*   aParentContent,
+                                  nsIWebShell*  aWebShell,
+                                  nsIContent**  aFoundContent);
+    nsresult CalcOffset(nsIFrame* aFrame,
+                        nsIPresContext * aPresContext,
+                        nsRect& aRect);
+    nsresult GetAbsPosition(nsIPresShell* aPresShell, nsPoint& aPoint);
+    nsresult GetAbsoluteFramePosition(nsIPresContext* aPresContext,
+                                      nsIFrame *aFrame, 
+                                      nsRect& aAbsoluteTwipsRect, 
+                                      nsRect& aAbsolutePixelRect);
+    static nsresult GetTranslatedString(PRUnichar *aKey, nsAWritableString *aStringOut);
 protected:
   virtual nsIFrame* GetFrame();
   virtual nsIFrame* GetBoundsFrame();
+  virtual void GetBounds(nsRect& aRect);
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
-  virtual nsIAccessible* CreateNewNextAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewPreviousAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewParentAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewFirstAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewLastAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewNextAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewPreviousAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewParentAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewFirstAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewLastAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
 
-  nsCOMPtr<nsIContent> mContent;
+  // Data Members
+  nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIWeakReference> mPresShell;
   nsCOMPtr<nsIAccessible> mAccessible;
+  nsCOMPtr<nsIFocusController> mFocusController;
 };
 
 /* Special Accessible that knows how to handle hit detection for flowing text */
 class nsHTMLBlockAccessible : public nsAccessible
 {
 public:
-   nsHTMLBlockAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
+   nsHTMLBlockAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
    NS_IMETHOD AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval);
 protected:
-   virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aFrame, nsIWeakReference* aShell);
+   virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIDOMNode* aFrame, nsIWeakReference* aShell);
 };
 
 #endif  

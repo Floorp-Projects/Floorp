@@ -69,7 +69,6 @@
 #include "nsIAccessible.h"
 #include "nsINameSpaceManager.h"
 #include "nsIAccessibilityService.h"
-//#include "nsIMutableAccessible.h"
 
 #ifdef IBMBIDI
 #include "nsBidiFrames.h"
@@ -780,37 +779,7 @@ NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
        nsIAccessible* acc = nsnull;
        accService->CreateHTMLTextAccessible(NS_STATIC_CAST(nsIFrame*, this),&acc);
        *aInstancePtrResult = acc;
-
-    /*
-     nsIMutableAccessible* acc = nsnull;
-     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent); 
-
-     accService->CreateMutableAccessible(mContent,&acc);
-
-     if (node) 
-         acc->SetNameAsNodeValue();
-     else {
-          // see if it is text content
-          nsCOMPtr<nsITextContent> text = do_QueryInterface(mContent);
-          if (text) {
-            const nsTextFragment* frag = nsnull;
-            text->GetText(&frag);
-            if (frag->Is2b()) {
-              acc->SetName(frag->Get2b());
-            } else {
-              nsAutoString name;
-              name.AssignWithConversion(frag->Get1b());
-              acc->SetName(name.get());
-            }
-          }
-     }  
-    
-     acc->SetRole(NS_LITERAL_STRING("text").get());
-     acc->SetIsLeaf(PR_TRUE);
-     *aInstancePtrResult = acc;
-     */
-
-     return NS_OK;
+       return NS_OK;
     }
     return NS_ERROR_FAILURE;
 #ifdef IBMBIDI

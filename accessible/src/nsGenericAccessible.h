@@ -42,7 +42,7 @@ class nsGenericAccessible : public nsIAccessible
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLE
 
-	public:
+  public:
     nsGenericAccessible();
     virtual ~nsGenericAccessible();
 };
@@ -58,11 +58,15 @@ class nsDOMAccessible : public nsGenericAccessible
   public:
     nsDOMAccessible(nsIPresShell* aShell, nsIDOMNode* aNode);
 
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
     NS_IMETHOD AccTakeSelection(void); 
     NS_IMETHOD AccTakeFocus(void); 
     NS_IMETHOD AccRemoveSelection(void);
 
   protected:
+    NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAWritableString *aFlatString);
+    NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAWritableString *aFlatString);
     nsCOMPtr<nsIWeakReference> mPresShell;
     nsCOMPtr<nsIDOMNode> mNode;
 };
@@ -79,5 +83,24 @@ class nsLeafDOMAccessible : public nsDOMAccessible
     NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
     NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
 };
+
+
+class nsLinkableAccessible : public nsDOMAccessible
+{
+  public:
+    nsLinkableAccessible(nsIPresShell* aShell, nsIDOMNode* aNode);
+    NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+    NS_IMETHOD GetAccActionName(PRUint8 index, PRUnichar **_retval);
+    NS_IMETHOD AccDoAction(PRUint8 index);
+    NS_IMETHOD GetAccState(PRUint32 *_retval);
+
+  protected:
+    nsCOMPtr<nsIDOMNode> mDomNode;
+    PRBool IsALink();
+    PRBool mIsALinkCached;  // -1 = unknown, 0 = not a link, 1 = is a link
+    nsCOMPtr<nsIContent> mLinkContent;
+    PRBool mIsLinkVisited;
+};
+
 
 #endif  

@@ -65,6 +65,10 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPrintContext.h"
 
+// For Accessibility 
+#include "nsIAccessibilityService.h"
+#include "nsIServiceManager.h"
+
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULElement.h"
 #include "nsIBoxObject.h"
@@ -122,6 +126,9 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
 
+  // nsISupports   
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
@@ -155,6 +162,7 @@ protected:
                               nsHTMLReflowMetrics& aDesiredSize);
   virtual PRIntn GetSkipSides() const;
   PRBool mIsInline;
+  nsCOMPtr<nsIPresContext> mPresContext;
 };
 
 /*******************************************************************************
@@ -230,6 +238,33 @@ nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
   //printf("nsHTMLFrameOuterFrame destructor %X \n", this);
 }
 
+//--------------------------------------------------------------
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
+nsHTMLFrameOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+    if (accService) {
+     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
+     nsIAccessible* acc = nsnull;
+     accService->CreateHTMLIFrameAccessible(node, mPresContext, &acc);
+     NS_IF_ADDREF(acc);
+     *aInstancePtr = acc;
+     return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  } 
+
+  return nsHTMLFrameOuterFrameSuper::QueryInterface(aIID, aInstancePtr);
+}
+
 NS_IMETHODIMP
 nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
                             nsIContent*      aContent,
@@ -237,6 +272,7 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
                             nsIStyleContext* aContext,
                             nsIFrame*        aPrevInFlow)
 {
+  mPresContext = aPresContext;
   // determine if we are a <frame> or <iframe>
   if (aContent) {
     nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = do_QueryInterface(aContent);

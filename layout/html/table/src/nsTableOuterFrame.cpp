@@ -37,7 +37,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
-#include "nsIMutableAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
@@ -128,13 +127,10 @@ nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePt
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
     if (accService) {
-     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-     nsIMutableAccessible* acc = nsnull;
-     accService->CreateMutableAccessible(node,&acc);
-     acc->SetName(NS_LITERAL_STRING("Table").get()); 
-     acc->SetRole(NS_LITERAL_STRING("table").get());
-     *aInstancePtr = acc;
-     return NS_OK;
+      nsIAccessible* acc = nsnull;
+      accService->CreateHTMLTableAccessible(NS_STATIC_CAST(nsIFrame*, this), &acc);
+      *aInstancePtr = acc;
+      return NS_OK;
     }
     return NS_ERROR_FAILURE;
   } else {

@@ -29,6 +29,10 @@
 #include "nsXPIDLString.h"
 #include "nsIAccessibleEventReceiver.h"
 
+/* For documentation of the accessibility architecture, 
+ * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
+ */
+
 //#define DEBUG_LEAKS
 
 #ifdef DEBUG_LEAKS
@@ -43,22 +47,21 @@ EXTERN_C GUID CDECL CLSID_Accessible =
  * Class Accessible
  */
 
-#ifdef IS_ACCESSIBLE
-
-// accessibility only on Windows2000 and Windows98
-#ifdef OBJID_WINDOW
-
 
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
 Accessible::Accessible(nsIAccessible* aAcc, HWND aWnd)
 {
-  mAccessible = aAcc;
-  mWnd = aWnd;
-	m_cRef	        = 0;
+  mAccessible = aAcc;  // The nsIAccessible we're proxying from
+
+  mWnd = aWnd;  // The window handle, for NotifyWinEvent, or getting the accessible parent thru the window parent
+  m_cRef = 0;   // for reference counting, so we know when to delete ourselves
+
+  // mCachedIndex and mCachedChild allows fast order(N) indexing of children when moving forward through the 
+  // list 1 at a time,rather than going back to the first child each time, it can just get the next sibling
   mCachedIndex = 0;
-  mCachedChild = NULL;
+  mCachedChild = NULL;   
 
 #ifdef DEBUG_LEAKS
   printf("Accessibles=%d\n", ++gAccessibles);
@@ -84,33 +87,33 @@ Accessible::~Accessible()
 //-----------------------------------------------------
 STDMETHODIMP Accessible::QueryInterface(REFIID riid, void** ppv)
 {
-	*ppv=NULL;
+  *ppv=NULL;
 
-	if ( (IID_IUnknown == riid) || (IID_IAccessible	== riid) || (IID_IDispatch	== riid)) {
-		*ppv = this;
-		AddRef();
-		return S_OK;
-	}
+  if ( (IID_IUnknown == riid) || (IID_IAccessible == riid) || (IID_IDispatch  == riid)) {
+    *ppv = this;
+    AddRef();
+    return S_OK;
+  }
 
-	return E_NOINTERFACE;
+  return E_NOINTERFACE;
 }
 
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) Accessible::AddRef()
 {
-	return ++m_cRef;
+  return ++m_cRef;
 }
 
 
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) Accessible::Release()
 {
-	if (0 != --m_cRef)
-		return m_cRef;
+  if (0 != --m_cRef)
+    return m_cRef;
 
-	delete this;
+  delete this;
 
-	return 0;
+  return 0;
 }
 
 //-----------------------------------------------------
@@ -119,7 +122,7 @@ STDMETHODIMP_(ULONG) Accessible::Release()
 
 STDMETHODIMP Accessible::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 {
-  nsCOMPtr<nsIAccessible> parent = nsnull;
+  nsCOMPtr<nsIAccessible> parent(nsnull);
   mAccessible->GetAccParent(getter_AddRefs(parent));
 
   if (parent) {
@@ -152,7 +155,6 @@ STDMETHODIMP Accessible::get_accChildCount( long __RPC_FAR *pcountChildren)
 {
   PRInt32 count = 0;
   mAccessible->GetAccChildCount(&count);
-  //printf("Count=%d\n",count);
   *pcountChildren = count;
   return S_OK;
 }
@@ -255,56 +257,13 @@ STDMETHODIMP Accessible::get_accRole(
    if (!a)
      return S_FALSE;
 
-   nsXPIDLString idlrole;
-   nsresult rv = a->GetAccRole(getter_Copies(idlrole));
+   PRUint32 role = 0;
+   nsresult rv = a->GetAccRole(&role);
    if (NS_FAILED(rv))
-       return S_FALSE;
+     return S_FALSE;
 
-   nsAutoString role(idlrole);
-
-   if (role.EqualsIgnoreCase("text"))
-      pvarRole->lVal = ROLE_SYSTEM_TEXT;
-   else if (role.EqualsIgnoreCase("static text"))
-      pvarRole->lVal = ROLE_SYSTEM_STATICTEXT;
-   else if (role.EqualsIgnoreCase("graphic"))
-      pvarRole->lVal = ROLE_SYSTEM_GRAPHIC;
-   else if (role.EqualsIgnoreCase("table"))
-      pvarRole->lVal = ROLE_SYSTEM_TABLE;
-   else if (role.EqualsIgnoreCase("cell"))
-      pvarRole->lVal = ROLE_SYSTEM_CELL;
-   else if (role.EqualsIgnoreCase("row"))
-      pvarRole->lVal = ROLE_SYSTEM_ROW;
-   else if (role.EqualsIgnoreCase("text"))
-      pvarRole->lVal = ROLE_SYSTEM_TEXT;
-   else if (role.EqualsIgnoreCase("combo box"))
-      pvarRole->lVal = ROLE_SYSTEM_COMBOBOX;
-   else if (role.EqualsIgnoreCase("link"))
-      pvarRole->lVal = ROLE_SYSTEM_LINK;
-   else if (role.EqualsIgnoreCase("list"))
-      pvarRole->lVal = ROLE_SYSTEM_LIST;
-   else if (role.EqualsIgnoreCase("list item"))
-      pvarRole->lVal = ROLE_SYSTEM_LISTITEM;
-   else if (role.EqualsIgnoreCase("push button"))
-      pvarRole->lVal = ROLE_SYSTEM_PUSHBUTTON;
-   else if (role.EqualsIgnoreCase("radio button"))
-      pvarRole->lVal = ROLE_SYSTEM_PUSHBUTTON;
-   else if (role.EqualsIgnoreCase("indicator"))  
-      pvarRole->lVal = ROLE_SYSTEM_INDICATOR;
-   else if (role.EqualsIgnoreCase("check box"))
-     pvarRole->lVal = ROLE_SYSTEM_CHECKBUTTON;
-   else if (role.EqualsIgnoreCase("scrollbar"))
-     pvarRole->lVal = ROLE_SYSTEM_SCROLLBAR;
-   else if (role.EqualsIgnoreCase("slider"))
-      pvarRole->lVal = ROLE_SYSTEM_SLIDER;
-   else if (role.EqualsIgnoreCase("client"))
-      pvarRole->lVal = ROLE_SYSTEM_CLIENT;
-   else if (role.EqualsIgnoreCase("window"))
-      pvarRole->lVal = ROLE_SYSTEM_WINDOW;
-   else
-      pvarRole->lVal = ROLE_SYSTEM_ALERT;
-
+   pvarRole->lVal = role;
    return S_OK;
-
 }
 
 STDMETHODIMP Accessible::get_accState( 
@@ -330,10 +289,6 @@ STDMETHODIMP Accessible::get_accState(
    return S_OK;
 }
 
-PRBool Accessible::InState(const nsString& aStates, const char* aState)
-{
-  return (aStates.Find(aState) == 0);
-}
 
 STDMETHODIMP Accessible::get_accHelp( 
       /* [optional][in] */ VARIANT varChild,
@@ -360,9 +315,19 @@ STDMETHODIMP Accessible::get_accKeyboardShortcut(
 STDMETHODIMP Accessible::get_accFocus( 
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
 {
+  // Return the current nsIAccessible that has focus
   VariantInit(pvarChild);
+
+  nsCOMPtr<nsIAccessible> focusedAccessible;
+  if (NS_SUCCEEDED(mAccessible->GetAccFocused(getter_AddRefs(focusedAccessible)))) {
+    pvarChild->vt = VT_DISPATCH;
+    pvarChild->pdispVal = new Accessible(focusedAccessible, mWnd);
+    pvarChild->pdispVal->AddRef();
+    return S_OK;
+  }
+
   pvarChild->vt = VT_EMPTY;
-  return S_OK;
+  return S_FALSE;
 }
 
 STDMETHODIMP Accessible::get_accSelection( 
@@ -381,7 +346,7 @@ STDMETHODIMP Accessible::get_accDefaultAction(
   GetNSAccessibleFor(varChild,a);
   if (a) {
      nsXPIDLString name;
-     nsresult rv = a->GetAccDefaultAction(getter_Copies(name));
+     nsresult rv = a->GetAccActionName(0,getter_Copies(name));
      if (NS_FAILED(rv))
         return S_FALSE;
 
@@ -421,21 +386,25 @@ STDMETHODIMP Accessible::accLocation(
       /* [out] */ long __RPC_FAR *pcyHeight,
       /* [optional][in] */ VARIANT varChild)
 {
-  PRInt32 x,y,w,h;
-  mAccessible->AccGetBounds(&x,&y,&w,&h);
+  nsCOMPtr<nsIAccessible> a;
+  GetNSAccessibleFor(varChild,a);
 
-  POINT cpos;
-  cpos.x = x;
-  cpos.y = y;
+  if (a) {
+    PRInt32 x,y,w,h;
+    a->AccGetBounds(&x,&y,&w,&h);
 
-  ::ClientToScreen(mWnd, &cpos);
+    POINT cpos;
+    cpos.x = x;
+    cpos.y = y;
 
-  *pxLeft = cpos.x;
-  *pyTop = cpos.y;
-  *pcxWidth = w;
-  *pcyHeight = h;
+    *pxLeft = x;
+    *pyTop = y;
+    *pcxWidth = w;
+    *pcyHeight = h;
+    return S_OK;
+  }
 
-  return S_OK;
+  return S_FALSE;  
 }
 
 STDMETHODIMP Accessible::accNavigate( 
@@ -496,13 +465,8 @@ STDMETHODIMP Accessible::accHitTest(
   // convert to window coords
   nsCOMPtr<nsIAccessible> a;
 
-  POINT cpos;
-  cpos.x = xLeft;
-  cpos.y = yTop;
-
-  ::ScreenToClient(mWnd, &cpos);
-  xLeft = cpos.x;
-  yTop = cpos.y;
+  xLeft = xLeft;
+  yTop = yTop;
 
   mAccessible->AccGetAt(xLeft,yTop, getter_AddRefs(a));
 
@@ -530,10 +494,7 @@ STDMETHODIMP Accessible::accHitTest(
 STDMETHODIMP Accessible::accDoDefaultAction( 
       /* [optional][in] */ VARIANT varChild)
 {
-    if (NS_SUCCEEDED(mAccessible->AccDoDefaultAction()))
-      return S_OK;
-    else
-      return DISP_E_MEMBERNOTFOUND;
+  return NS_SUCCEEDED(mAccessible->AccDoAction(0))? NS_OK: DISP_E_MEMBERNOTFOUND;
 }
 
 STDMETHODIMP Accessible::put_accName( 
@@ -550,31 +511,35 @@ STDMETHODIMP Accessible::put_accValue(
   return S_FALSE;
 }
 
+// For IDispatch support
 STDMETHODIMP 
 Accessible::GetTypeInfoCount(UINT *p)
 {
-	*p = 0;
-	return E_NOTIMPL;
+  *p = 0;
+  return E_NOTIMPL;
 }
 
+// For IDispatch support
 STDMETHODIMP Accessible::GetTypeInfo(UINT i, LCID lcid, ITypeInfo **ppti)
 {
-	*ppti = 0;
-	return E_NOTIMPL;
+  *ppti = 0;
+  return E_NOTIMPL;
 }
 
+// For IDispatch support
 STDMETHODIMP 
 Accessible::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames,
                            UINT cNames, LCID lcid, DISPID *rgDispId)
 {
-	return E_NOTIMPL;
+  return E_NOTIMPL;
 }
 
+// For IDispatch support
 STDMETHODIMP Accessible::Invoke(DISPID dispIdMember, REFIID riid,
     LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
     VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-	return E_NOTIMPL;
+  return E_NOTIMPL;
 }
 
 //------- Helper methods ---------
@@ -642,14 +607,14 @@ RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):Accessible(aAcc,a
     mNextId = -1;
     mNextPos = 0;
 
-    nsCOMPtr<nsIAccessibleEventReceiver> r = do_QueryInterface(mAccessible);
+    nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
     if (r) 
       r->AddAccessibleEventListener(this);
 }
 
 RootAccessible::~RootAccessible()
 {
-    nsCOMPtr<nsIAccessibleEventReceiver> r = do_QueryInterface(mAccessible);
+    nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
     if (r) 
       r->RemoveAccessibleEventListener(this);
 
@@ -677,8 +642,10 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
 
 NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible)
 {
+#ifdef DEBUG
   // print focus event!!
   printf("Focus Changed!!!\n");
+#endif
 
   // get the id for the accessible
   PRInt32 id = GetIdFor(aAccessible);
@@ -701,12 +668,11 @@ PRInt32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
   mList[mNextPos].mAccessible = aAccessible;
 
   mNextId--;
-  mNextPos++;
+  if (++mNextPos >= MAX_LIST_SIZE)
+    mNextPos = 0;
   if (mListCount < MAX_LIST_SIZE)
     mListCount++;
 
   return mNextId+1;
 }
 
-#endif
-#endif

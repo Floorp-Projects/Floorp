@@ -47,7 +47,6 @@
 #include "nsCOMPtr.h"
 #include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
-#include "nsIMutableAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
@@ -1179,14 +1178,10 @@ nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
     if (accService) {
-     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-     nsIMutableAccessible* acc = nsnull;
-     accService->CreateMutableAccessible(node,&acc);
-     nsAutoString name;
-     acc->SetName(NS_LITERAL_STRING("Cell").get());
-     acc->SetRole(NS_LITERAL_STRING("cell").get());
-     *aInstancePtr = acc;
-     return NS_OK;
+      nsIAccessible* acc = nsnull;
+      accService->CreateHTMLTableCellAccessible(NS_STATIC_CAST(nsIFrame*, this), &acc);
+      *aInstancePtr = acc;
+      return NS_OK;
     }
     return NS_ERROR_FAILURE;
   } else {

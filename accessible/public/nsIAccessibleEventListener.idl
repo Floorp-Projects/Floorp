@@ -28,7 +28,14 @@
 [scriptable, uuid(BEE49E7D-9D06-49bf-8984-1694C697D74F)]
 interface nsIAccessibleEventListener : nsISupports
 {
-  const unsigned long EVENT_FOCUS = 0x8005;
+  // these are set to the values given by MSAA
+  const unsigned long EVENT_FOCUS              = 0x8005;
+  const unsigned long EVENT_STATE_CHANGE       = 0x800A;
+  const unsigned long EVENT_NAME_CHANGE        = 0x800C;
+  const unsigned long EVENT_SELECTION          = 0x8006;
+  const unsigned long EVENT_SELECTION_ADD      = 0x8007;
+  const unsigned long EVENT_SELECTION_REMOVE   = 0x8008;
+  const unsigned long EVENT_SELECTION_WITHIN   = 0x8009;
 
   void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget);
 };

@@ -40,6 +40,9 @@ public:
   nsHTMLFormControlAccessible(nsIPresShell* aShell, nsIDOMNode* aNode);
   NS_IMETHOD GetAccName(PRUnichar **_retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
+
+protected:
+  NS_IMETHODIMP AppendLabelFor(nsIContent *aLookNode, nsAReadableString *aId, nsAWritableString *aLabel);
 };
 
 class nsHTMLCheckboxAccessible : public nsHTMLFormControlAccessible
@@ -47,9 +50,10 @@ class nsHTMLCheckboxAccessible : public nsHTMLFormControlAccessible
 
 public:
   nsHTMLCheckboxAccessible(nsIPresShell* aShell, nsIDOMNode* aNode);
-  NS_IMETHOD GetAccRole(PRUnichar **_retval); 
-  NS_IMETHOD GetAccDefaultAction(PRUnichar **_retval); 
-  NS_IMETHOD AccDoDefaultAction(void); 
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, PRUnichar **_retval);
+  NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
 class nsHTMLRadioButtonAccessible : public nsHTMLFormControlAccessible
@@ -57,9 +61,10 @@ class nsHTMLRadioButtonAccessible : public nsHTMLFormControlAccessible
 
 public:
   nsHTMLRadioButtonAccessible(nsIPresShell* aShell, nsIDOMNode* aNode);
-  NS_IMETHOD GetAccRole(PRUnichar **_retval); 
-  NS_IMETHOD GetAccDefaultAction(PRUnichar **_retval); 
-  NS_IMETHOD AccDoDefaultAction(void); 
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, PRUnichar **_retval);
+  NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
 class nsHTMLButtonAccessible : public nsHTMLFormControlAccessible
@@ -67,11 +72,34 @@ class nsHTMLButtonAccessible : public nsHTMLFormControlAccessible
 
 public:
   nsHTMLButtonAccessible(nsIPresShell* aShell, nsIDOMNode* aNode);
-  NS_IMETHOD GetAccRole(PRUnichar **_retval); 
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccName(PRUnichar **_retval); 
-  NS_IMETHOD GetAccDefaultAction(PRUnichar **_retval); 
-  NS_IMETHOD AccDoDefaultAction(void); 
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, PRUnichar **_retval);
+  NS_IMETHOD AccDoAction(PRUint8 index);
+};
 
+class nsHTML4ButtonAccessible : public nsDOMAccessible
+{
+
+public:
+  nsHTML4ButtonAccessible(nsIPresShell* aShell, nsIDOMNode* aNode);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccName(PRUnichar **_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, PRUnichar **_retval);
+  NS_IMETHOD AccDoAction(PRUint8 index);
+};
+
+
+class nsHTMLTextFieldAccessible : public nsHTMLFormControlAccessible
+{
+public:
+  nsHTMLTextFieldAccessible(nsIPresShell* aShell, nsIDOMNode* aNode);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccValue(PRUnichar **_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
 };
 
 #endif  

@@ -32,7 +32,6 @@
 #include "nsCSSRendering.h"
 #include "nsIPresState.h"
 #include "nsINameSpaceManager.h"
-#include "nsIMutableAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"

@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 
+/*
 class nsSelectAccessible : public nsAccessible
 {
 public:
@@ -37,7 +38,7 @@ public:
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccName(PRUnichar **_retval);
   NS_IMETHOD GetAccValue(PRUnichar **_retval);
-  NS_IMETHOD GetAccRole(PRUnichar **_retval);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
 
   virtual ~nsSelectAccessible() {}
@@ -46,6 +47,6 @@ public:
 
   nsCOMPtr<nsIAtom> mPopupAtom;
 };
-
+*/
 
 #endif

@@ -26,44 +26,73 @@
 #include "nsAccessible.h"
 #include "nsIAccessibleEventReceiver.h"
 #include "nsIAccessibleEventListener.h"
+#include "nsIDOMFormListener.h"
 #include "nsIDOMFocusListener.h"
+#include "nsIDOMTextListener.h"
+#include "nsIDOMMutationListener.h"
+#include "nsIDocument.h"
 
 class nsRootAccessible : public nsAccessible,
                          public nsIAccessibleEventReceiver,
-                         public nsIDOMFocusListener
+                         public nsIDOMFocusListener,
+             public nsIDOMFormListener,
+             public nsIDOMTextListener,
+             public nsIDOMMutationListener
 
 {
   
   NS_DECL_ISUPPORTS_INHERITED
 
   public:
-    nsRootAccessible(nsIWeakReference* aShell, nsIFrame* aFrame = nsnull);
+    nsRootAccessible(nsIWeakReference* aShell);
     virtual ~nsRootAccessible();
 
     /* attribute wstring accName; */
     NS_IMETHOD GetAccName(PRUnichar * *aAccName);
+    NS_IMETHOD GetAccValue(PRUnichar * *aAccValue);
     NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
-    NS_IMETHOD GetAccRole(PRUnichar * *aAccRole);
+    NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
 
-    // ----- nsIAccessibleEventReceiver ------
+    // ----- nsIAccessibleEventReceiver -------------------
 
     NS_IMETHOD AddAccessibleEventListener(nsIAccessibleEventListener *aListener);
     NS_IMETHOD RemoveAccessibleEventListener(nsIAccessibleEventListener *aListener);
 
-    // ----- nsIDOMEventListener --------
+    // ----- nsIDOMEventListener --------------------------
     NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent);
     NS_IMETHOD Focus(nsIDOMEvent* aEvent);
     NS_IMETHOD Blur(nsIDOMEvent* aEvent);
 
+  // ----- nsIDOMFormListener ---------------------------
+    NS_IMETHOD Submit(nsIDOMEvent* aEvent);
+    NS_IMETHOD Reset(nsIDOMEvent* aEvent);
+    NS_IMETHOD Change(nsIDOMEvent* aEvent);
+    NS_IMETHOD Select(nsIDOMEvent* aEvent);
+    NS_IMETHOD Input(nsIDOMEvent* aEvent);
+
+  // ----- nsIDOMTextListener ---------------------------
+    NS_IMETHOD HandleText(nsIDOMEvent* aTextEvent);
+
+  // ----- nsIDOMMutationEventListener ------------------
+    NS_IMETHOD SubtreeModified(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD NodeInserted(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD NodeRemoved(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD NodeRemovedFromDocument(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD NodeInsertedIntoDocument(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD AttrModified(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD CharacterDataModified(nsIDOMEvent* aMutationEvent);
+
 protected:
+  virtual void GetBounds(nsRect& aRect);
   virtual nsIFrame* GetFrame();
-  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
 
   // not a com pointer. We don't own the listener
   // it is the callers responsibility to remove the listener
   // otherwise we will get into circular referencing problems
   nsIAccessibleEventListener* mListener;
   nsCOMPtr<nsIContent> mCurrentFocus;
+  nsCOMPtr<nsIDocument> mDocument;
 };
 
 

@@ -19,23 +19,22 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH   = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= accessibility
+MODULE    = accessibility
 XPIDL_MODULE= accessibility
 
-XPIDLSRCS	= \
-			nsIAccessibilityService.idl \
-			nsIAccessible.idl \
-			nsIMutableAccessible.idl \
-			nsIAccessibleEventReceiver.idl \
-			nsIAccessibleEventListener.idl \
-			$(NULL)
+XPIDLSRCS = \
+      nsIAccessibilityService.idl \
+      nsIAccessible.idl \
+      nsIAccessibleEventReceiver.idl \
+      nsIAccessibleEventListener.idl \
+      $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

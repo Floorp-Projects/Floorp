@@ -20,39 +20,41 @@
  * Contributor(s): 
  */
 
+/* For documentation of the accessibility architecture, 
+ * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
+ */
+
 #ifndef _Accessible_H_
 #define _Accessible_H_
 
 #include "OLEIDL.H"
 #include "OLEACC.H"
+#include "winable.h"
+#ifndef WM_GETOBJECT
+#define WM_GETOBJECT 0x03d
+#endif
 
 #include "nsCOMPtr.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleEventListener.h"
 
 #include "nsString.h"
-#define IS_ACCESSIBLE
 
 class Accessible : public IAccessible
 {
-#ifdef IS_ACCESSIBLE
+  public: // construction, destruction
+    Accessible(nsIAccessible*, HWND aWin = 0);
+    virtual ~Accessible();
 
-// accessibility only on Windows2000 and Windows98
-#ifdef OBJID_WINDOW
-
-	public: // construction, destruction
-		Accessible(nsIAccessible*, HWND aWin = 0);
-		virtual ~Accessible();
-
-	public: // IUnknown methods - see iunknown.h for documentation
-		STDMETHODIMP_(ULONG) AddRef        ();
-		STDMETHODIMP 			QueryInterface(REFIID, void**);
-		STDMETHODIMP_(ULONG) Release       ();
+  public: // IUnknown methods - see iunknown.h for documentation
+    STDMETHODIMP_(ULONG) AddRef        ();
+    STDMETHODIMP      QueryInterface(REFIID, void**);
+    STDMETHODIMP_(ULONG) Release       ();
 
     // Return the registered OLE class ID of this object's CfDataObj.
-		CLSID GetClassID() const;
+    CLSID GetClassID() const;
 
-	public: 
+  public: 
 
   virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accParent( 
       /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent);
@@ -140,8 +142,8 @@ class Accessible : public IAccessible
       /* [in] */ BSTR szValue);
 
 
- 	STDMETHODIMP GetTypeInfoCount(UINT *p);
-	STDMETHODIMP GetTypeInfo(UINT i, LCID lcid, ITypeInfo **ppti);
+  STDMETHODIMP GetTypeInfoCount(UINT *p);
+  STDMETHODIMP GetTypeInfo(UINT i, LCID lcid, ITypeInfo **ppti);
   STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames,
                                UINT cNames, LCID lcid, DISPID *rgDispId);
   STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid,
@@ -150,8 +152,8 @@ class Accessible : public IAccessible
 
 
 
-   	static ULONG g_cRef;              // the cum reference count of all instances
-		ULONG        m_cRef;              // the reference count
+    static ULONG g_cRef;              // the cum reference count of all instances
+    ULONG        m_cRef;              // the reference count
     nsCOMPtr<nsIAccessible> mAccessible;
     nsCOMPtr<nsIAccessible> mCachedChild;
     HWND mWnd;
@@ -163,8 +165,6 @@ class Accessible : public IAccessible
     PRBool InState(const nsString& aStates, const char* aState);
     STDMETHODIMP GetAttribute(const char* aName, VARIANT varChild, BSTR __RPC_FAR *aString);
 
-#endif
-#endif
 };
 
 class nsAccessibleEventMap
@@ -179,11 +179,6 @@ public:
 class RootAccessible: public Accessible,
                       public nsIAccessibleEventListener
 {
-#ifdef IS_ACCESSIBLE
-
-// accessibility only on Windows2000 and Windows98
-#ifdef OBJID_WINDOW
-
 public:
     RootAccessible(nsIAccessible*, HWND aWin = 0);
     virtual ~RootAccessible();
@@ -204,10 +199,6 @@ private:
     PRInt32 mNextId;
     PRInt32 mNextPos;
 
-#endif
-#endif
 };
+#endif
 
-
-
-#endif  
