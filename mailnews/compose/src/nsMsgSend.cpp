@@ -1869,19 +1869,8 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         //
         m_attachments[newLoc].mDeleteFile = PR_FALSE;
 
-			  // These attachments are already "snarfed"...
-#ifdef XP_MAC
-        //We need to snarf the file to figure out how to send it...
-        m_attachments[newLoc].m_done = PR_FALSE;
-			  m_attachments[newLoc].SetMimeDeliveryState(this);
-#else
-			  m_attachments[newLoc].m_done = PR_TRUE;
-			  m_attachments[newLoc].SetMimeDeliveryState(nsnull);
-#endif
-
         if (m_attachments[newLoc].mURL)
           NS_RELEASE(m_attachments[newLoc].mURL);
-
         nsMsgNewURL(&(m_attachments[newLoc].mURL), str);
 
         if (m_attachments[newLoc].mFileSpec)
@@ -1904,15 +1893,23 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           PR_FREEIF(fileExt);
         }
 
-        // If we still don't have a content type, we should really try sniff one out!
+#ifdef XP_MAC
+        //We always need to snarf the file to figure out how to send it, maybe we need to use apple double...
+        m_attachments[newLoc].m_done = PR_FALSE;
+			  m_attachments[newLoc].SetMimeDeliveryState(this);
+#else
+        //We need to snarf the file to figure out how to send it only if we don't have a content type...
         if ((!m_attachments[newLoc].m_type) || (!*m_attachments[newLoc].m_type))
         {
-          m_attachments[newLoc].AnalyzeSnarfedFile();
-          if ( (m_attachments[newLoc].m_unprintable_count > 0) || (m_attachments[newLoc].m_highbit_count > 0) )
-            m_attachments[newLoc].m_type = nsCRT::strdup(APPLICATION_OCTET_STREAM);
-          else
-            m_attachments[newLoc].m_type = nsCRT::strdup(TEXT_PLAIN);
+          m_attachments[newLoc].m_done = PR_FALSE;
+			    m_attachments[newLoc].SetMimeDeliveryState(this);
         }
+        else
+        {
+  			  m_attachments[newLoc].m_done = PR_TRUE;
+  			  m_attachments[newLoc].SetMimeDeliveryState(nsnull);
+        }
+#endif
 
         // For local files, if they are HTML docs and we don't have a charset, we should
         // sniff the file and see if we can figure it out.

@@ -127,11 +127,18 @@ nsURLFetcher::CanHandleContent(const char * aContentType,
                                 PRBool * aCanHandleContent)
 
 {
-  if (nsCRT::strcasecmp(aContentType, MESSAGE_RFC822) == 0)
-    *aDesiredContentType = nsCRT::strdup("text/html");
+  // if the content type is unknown, we should let the unknown decoder take care of it.
+  // we will be called back again with a better content type!
+  if (nsCRT::strcasecmp(aContentType, UNKNOWN_CONTENT_TYPE) == 0)
+    *aCanHandleContent = PR_FALSE;
+  else
+  {
+    if (nsCRT::strcasecmp(aContentType, MESSAGE_RFC822) == 0)
+      *aDesiredContentType = nsCRT::strdup("text/html");
 
-  // since we explicilty loaded the url, we always want to handle it!
-  *aCanHandleContent = PR_TRUE;
+    // since we explicilty loaded the url, we always want to handle it!
+    *aCanHandleContent = PR_TRUE;
+  }
   return NS_OK;
 } 
 
