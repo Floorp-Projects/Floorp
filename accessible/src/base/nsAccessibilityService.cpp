@@ -85,6 +85,8 @@
 #include "nsXULTextAccessible.h"
 #include "nsXULTreeAccessible.h"
 #include "nsIAccessible.h"
+#include "nsCaretAccessible.h"
+#include "nsIAccessibleCaret.h"
 
 // For native window support for object/embed/applet tags
 #ifdef XP_WIN
@@ -367,6 +369,21 @@ nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISuppo
   if (! *_retval) 
     return NS_ERROR_FAILURE;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccessibilityService::CreateCaretAccessible(nsIDOMNode *aNode, nsIAccessibleEventListener *aListener,
+                                              nsIAccessibleCaret **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsCaretAccessible(aNode, weakShell, aListener);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
   return NS_OK;
 }
 

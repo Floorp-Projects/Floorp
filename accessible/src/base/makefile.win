@@ -50,6 +50,7 @@ CPP_OBJS = \
   .\$(OBJDIR)\nsFormControlAccessible.obj \
   .\$(OBJDIR)\nsGenericAccessible.obj \
   .\$(OBJDIR)\nsRootAccessible.obj \
+  .\$(OBJDIR)\nsCaretAccessible.obj \
   .\$(OBJDIR)\nsSelectAccessible.obj \
   .\$(OBJDIR)\nsTextAccessible.obj \
   $(NULL)

@@ -17,26 +17,16 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
- * Original Author: Aaron Leventhal
+ * Original Author: Aaron Leventhal (aaronl@netscape.com)
  * 
- * Contributor(s): 
- * John Gaunt
  */
 
 #include "nsISupports.idl"
 #include "nsIAccessible.idl"
-#include "domstubs.idl"
-#include "nsIAccessibleCaret.idl"
-interface nsIDocument;
-
-[scriptable, uuid(8781FC88-355F-4439-881F-6504A0A1CEB6)]
-interface nsIAccessibleDocument : nsISupports
+         
+[scriptable, uuid(9124c666-6133-4be6-b3ed-dd0ec35f1e64)]
+interface nsIAccessibleCaret : nsISupports
 {
-  readonly attribute AString URL;
-  readonly attribute AString title;
-  readonly attribute AString mimeType;
-  readonly attribute AString docType;
-  AString getNameSpaceURIForID(in short nameSpaceID);
-  [noscript] nsIDocument getDocument();
-  readonly attribute nsIAccessibleCaret caretAccessible;
+  void attachNewSelectionListener(in nsIDOMNode aFocusedNode);
+  void removeSelectionListener();
 };

@@ -128,3 +128,9 @@ NS_IMETHODIMP nsXULColorPickerAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULColorPickerAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_BUTTONDROPDOWNGRID;
+  return NS_OK;
+}
+

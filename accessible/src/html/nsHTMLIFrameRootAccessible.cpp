@@ -144,6 +144,13 @@ NS_IMETHODIMP nsHTMLIFrameAccessible::GetDocument(nsIDocument **doc)
   return nsDocAccessibleMixin::GetDocument(doc);
 }
 
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetCaretAccessible(nsIAccessibleCaret **aCaretAccessible)
+{
+  // Caret only owned by top level window's document
+  *aCaretAccessible = nsnull;
+  return NS_OK;
+}
+
 //=============================//
 // nsHTMLIFrameRootAccessible  //
 //=============================//

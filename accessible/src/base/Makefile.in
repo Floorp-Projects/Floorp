@@ -55,6 +55,7 @@ CPPSRCS = \
   nsFormControlAccessible.cpp \
   nsGenericAccessible.cpp \
   nsRootAccessible.cpp \
+  nsCaretAccessible.cpp \
   nsSelectAccessible.cpp \
   nsTextAccessible.cpp \
   $(NULL)

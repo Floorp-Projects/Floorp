@@ -167,6 +167,7 @@ class nsRootAccessible : public nsAccessible,
     PRUint32 mScrollPositionChangedTicks;
     nsSupportsHashtable *mScrollablePresShells;
     nsCOMPtr<nsIWeakReference> mLastScrolledPresShell;
+    nsCOMPtr<nsIAccessibleCaret> mCaretAccessible;
 };
 
 #ifdef XP_UNIX
