@@ -230,7 +230,7 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 					strncmp(buf + X_MOZILLA_STATUS_LEN, ": ", 2) == 0 &&
 					strlen(buf) > X_MOZILLA_STATUS_LEN + 6) 
 				{
-		            uint16 flags = mailHdr->GetMozillaStatusFlags();
+		            uint16 flags = mailHdr->GetFlags();
 					if (!(flags & MSG_FLAG_EXPUNGED))
 					{
 						int i;
@@ -241,7 +241,7 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 							flags = (flags << 4) | msg_UnHex(*p);
 						}
 						flags = (flags & MSG_FLAG_QUEUED) |
-							(mailHdr->GetMozillaStatusFlags() & 
+							(mailHdr->GetFlags() & 
 							 ~MSG_FLAG_RUNTIME_ONLY);
 					}
 					else
