@@ -177,6 +177,9 @@ public:
   NS_IMETHOD GetRootFrame(nsIFrame** aRootFrame) const;
   NS_IMETHOD SetRootFrame(nsIFrame* aRootFrame);
   
+  // Get the canvas frame: searches from the Root frame down, may be null
+  NS_IMETHOD GetCanvasFrame(nsIPresContext* aPresContext, nsIFrame** aCanvasFrame) const;
+
   // Primary frame functions
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aPrimaryFrame);
   NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
@@ -405,6 +408,40 @@ FrameManager::SetRootFrame(nsIFrame* aRootFrame)
   }
 
   mRootFrame = aRootFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FrameManager::GetCanvasFrame(nsIPresContext* aPresContext, nsIFrame** aCanvasFrame) const
+{
+  NS_PRECONDITION(aCanvasFrame, "aCanvasFrame argument cannot be null");
+  NS_PRECONDITION(aPresContext, "aPresContext argument cannot be null");
+
+  *aCanvasFrame = nsnull;
+  if (mRootFrame) {
+    // walk the children of the root frame looking for a frame with type==canvas
+    // start at the root
+    nsIFrame* childFrame = mRootFrame;
+    while (childFrame) {
+      // get each sibling of the child and check them, startig at the child
+      nsIFrame *siblingFrame = childFrame;
+      while (siblingFrame) {
+        nsCOMPtr<nsIAtom>  frameType;
+        siblingFrame->GetFrameType(getter_AddRefs(frameType));
+        if (frameType.get() == nsLayoutAtoms::canvasFrame) {
+          // this is it: set the out-arg and stop looking
+          *aCanvasFrame = siblingFrame;
+          break;
+        } else {
+          siblingFrame->GetNextSibling(&siblingFrame);
+        }
+      }
+      // move on to the child's child
+      childFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    }
+
+    NS_ASSERTION(*aCanvasFrame != nsnull, "CanvasFrame could not be found and should be");
+  }
   return NS_OK;
 }
 

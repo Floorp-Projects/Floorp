@@ -78,6 +78,10 @@ public:
   NS_IMETHOD GetRootFrame(nsIFrame** aRootFrame) const = 0;
   NS_IMETHOD SetRootFrame(nsIFrame* aRootFrame) = 0;
 
+  // Get the canvas frame. The canvas frame may or may not exist, so the
+  // argument aCanvasFrame may be nsnull.
+  NS_IMETHOD GetCanvasFrame(nsIPresContext* aPresContext, nsIFrame** aCanvasFrame) const = 0;
+
   // Primary frame functions
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aPrimaryFrame) = 0;
   NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
