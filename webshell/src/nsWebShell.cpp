@@ -1303,13 +1303,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   if (!aUri)
     return NS_ERROR_NULL_POINTER;
 
-  // This should probably get saved in mHistoryService or something... 
-  // Ugh. It sucks that we have to hack webshell like this. Forgive me, Father.
-  PRInt32 shouldAdd = PR_FALSE;
-  ShouldAddToGlobalHistory(aUri, &shouldAdd);
-  if(shouldAdd)
-     AddToGlobalHistory(aUri);
-
   nsXPIDLCString urlSpec;
   nsresult rv = NS_OK;
   rv = aUri->GetSpec(getter_Copies(urlSpec));
