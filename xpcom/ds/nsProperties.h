@@ -26,6 +26,8 @@ class nsPropertiesFactory : nsIFactory
 public:
   NS_DECL_ISUPPORTS
 
+  nsPropertiesFactory() { NS_INIT_REFCNT(); }
+
   NS_IMETHOD CreateInstance(nsISupports* aOuter, REFNSIID aIID,
                             void** aResult);
   NS_IMETHOD LockFactory(PRBool aLock);
