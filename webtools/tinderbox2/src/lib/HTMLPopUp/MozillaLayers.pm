@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/05/10 22:42:07 $ 
+# $Revision: 1.13 $ 
+# $Date: 2002/05/10 22:48:33 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -322,6 +322,13 @@ sub Link {
 
 
     
+    if (!($args{'windowtxt'})) {
+        $out .= "<a $name href=\"$args{'href'}\">";
+        $out .= "$args{'linktxt'}</a>\n";
+        
+        return $out;
+    }
+
     if ($args{'windowtxt'}) {
 
       # These characters inside the popupwindow will confuse my popup
