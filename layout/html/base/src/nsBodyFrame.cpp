@@ -87,19 +87,6 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
-nscoord nsBodyFrame::GetConstrainingHeight(const nsReflowState& aReflowState) const
-{
-  // Walk up the reflow state hierarchy until we find a height that is
-  // constrained
-  const nsReflowState* state = &aReflowState;
-  while (NS_UNCONSTRAINEDSIZE == state->maxSize.height) {
-    state = state->parentReflowState;
-    NS_ASSERTION(nsnull != state, "unexpected reflow hierarchy");
-  }
-
-  return state->maxSize.height;
-}
-
 NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
                               nsReflowMetrics&     aDesiredSize,
                               const nsReflowState& aReflowState,
@@ -229,14 +216,9 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     ComputeDesiredSize(desiredRect, aReflowState.maxSize, borderPadding, aDesiredSize);
 
     // Decide how much to repaint based on the reflow type.
+    // Note: we don't have to handle the initial reflow case, because that's
+    // handled by the root content frame
     switch (aReflowState.reason) {
-    case eReflowReason_Initial:
-      // If this is the initial reflow of the child then repaint the entire
-      // visible area
-      damageArea.width = aReflowState.maxSize.width;
-      damageArea.height = GetConstrainingHeight(aReflowState);
-      break;
-
     case eReflowReason_Resize:
       // For a resize just repaint the entire frame
       damageArea.width = aDesiredSize.width;
