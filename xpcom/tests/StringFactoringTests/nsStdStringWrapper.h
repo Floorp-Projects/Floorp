@@ -46,10 +46,6 @@ class basic_nsStdStringWrapper
     protected:
       std::basic_string<CharT, TraitsT, AllocatorT> mRawString;
 
-    typedef typename basic_nsAWritableString<CharT>::FragmentRequest  FragmentRequest;
-    typedef typename basic_nsAWritableString<CharT>::ReadableFragment ReadableFragment;
-    typedef typename basic_nsAWritableString<CharT>::WritableFragment WritableFragment;
-
     typedef std::basic_string<CharT, TraitsT, AllocatorT> basic_string_t;
 
     using typename basic_string_t::traits_type;
@@ -71,8 +67,8 @@ class basic_nsStdStringWrapper
     protected:
       virtual const void* Implementation() const;
 
-      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
-      virtual CharT* GetWritableFragment( WritableFragment&, FragmentRequest, PRUint32 );
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 ) const;
+      virtual CharT* GetWritableFragment( nsWritableFragment<CharT>&, nsFragmentRequest, PRUint32 );
 
     public:
       basic_nsStdStringWrapper() { }
@@ -164,7 +160,7 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Implementation() const
 
 template <class CharT, class TraitsT, class AllocatorT>
 const CharT*
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const
+basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
     switch ( aRequest )
       {
@@ -183,7 +179,7 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetReadableFragment( Reada
 
 template <class CharT, class TraitsT, class AllocatorT>
 CharT*
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetWritableFragment( WritableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset )
+basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetWritableFragment( nsWritableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
   {
     switch ( aRequest )
       {

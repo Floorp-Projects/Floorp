@@ -2,6 +2,7 @@
 using namespace std;
 
 #include "nsString.h"
+#include "nsSharedString.h"
 #include "nsStdStringWrapper.h"
 
 // #define NS_USE_WCHAR_T
@@ -87,6 +88,7 @@ test_multifragment_iterators( const basic_nsAReadableString<CharT>& aString )
     return tests_failed;
   }
 
+#if 0
 template <class CharT>
 int
 test_deprecated_GetBufferGetUnicode( const basic_nsAReadableString<CharT>& aReadable )
@@ -143,6 +145,7 @@ test_deprecated_GetBufferGetUnicode( const basic_nsAReadableString<PRUnichar>& a
 
     return tests_failed;
   }
+#endif
 
 template <class CharT>
 int
@@ -237,7 +240,7 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
       }
 
     tests_failed += test_multifragment_iterators(aReadable);
-    tests_failed += test_deprecated_GetBufferGetUnicode(aReadable);
+    // tests_failed += test_deprecated_GetBufferGetUnicode(aReadable);
 
     return tests_failed;
   }
@@ -347,8 +350,9 @@ main()
       nsStdString s14( s7 + s8 + s9 );
       tests_failed += test_readable_hello(s14);
 
-      // nsSharedString s15( s7 + s8 + s9 );
-      // tests_failed += test_readable_hello(s15);
+      nsSharedString* s15 = new_nsSharedString( s7 + s8 + s9 );
+      tests_failed += test_readable_hello(*s15);
+      cout << "Here's a string: \""; print_string(*s15) << "\"" << endl;
 
       nsCString         s10("He");
       nsLiteralCString  s11("l");
