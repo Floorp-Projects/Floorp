@@ -411,6 +411,8 @@ char    *AFMFileName;     // file we will open
 	          break;
 	        case kStartKernPairs:
             break;
+          default:
+            break;
         }
       }
     }
