@@ -56,23 +56,37 @@
 
 #include "nsAcceptLang.h" // for nsIAcceptLang
 
+// for async loading
+#include "nsIBinaryInputStream.h"
+#include "nsIStringStream.h"
+
+// eventQ
+#include "nsIEventQueueService.h"
+
+#include "prenv.h"
+
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
 // XXX investigate need for proper locking in this module
 //static PRInt32 gLockCount = 0;
+
 NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-
-class nsStringBundle : public nsIStringBundle
+class nsStringBundle : public nsIStringBundle,
+                       public nsIStreamLoaderObserver
 {
 public:
-  nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult);
+  // init version
+  nsStringBundle();
+  nsresult Init(const char* aURLSpec);
+  nsresult InitSyncStream(const char* aURLSpec);
   virtual ~nsStringBundle();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTRINGBUNDLE
+  NS_DECL_NSISTREAMLOADEROBSERVER
 
   nsIPersistentProperties* mProps;
 
@@ -85,6 +99,12 @@ protected:
 
   nsresult GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in);
   nsresult OpenInputStream(nsString& aURLStr, nsIInputStream*& in);
+
+private:
+  nsStrBundleLoadedFunc  _callback;
+  void                  *_closure;
+  PRBool                 mLoaded;
+
 public:
   static nsresult GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& country);
 
@@ -93,38 +113,195 @@ public:
                                PRUnichar **aResult);
  };
 
-nsStringBundle::nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult)
-{  NS_INIT_REFCNT();
-
-  mProps = nsnull;
+nsresult
+nsStringBundle::InitSyncStream(const char* aURLSpec)
+{ 
 
   nsIInputStream *in = nsnull;
-  *aResult = GetInputStream(aURLSpec,aLocale, in);
+  nsresult rv = GetInputStream(aURLSpec, nsnull, in);
    
   if (!in) {
 #ifdef NS_DEBUG
-    if ( NS_OK == *aResult)
+    if ( NS_OK == rv)
       printf("OpenBlockingStream returned success value, but pointer is NULL\n");
 #endif
-    *aResult = NS_ERROR_UNEXPECTED;
-    return;
+    rv = NS_ERROR_UNEXPECTED;
+    return rv;
   }
 
-  *aResult = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
-                                                NS_GET_IID(nsIPersistentProperties), (void**) &mProps);
-  if (NS_FAILED(*aResult)) {
+  rv = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
+                                          NS_GET_IID(nsIPersistentProperties), 
+                                          (void**) &mProps);
+  if (NS_FAILED(rv)) {
 #ifdef NS_DEBUG
     printf("create nsIPersistentProperties failed\n");
 #endif
-    return;
+    return rv;
   }
-  *aResult = mProps->Load(in);
+  rv = mProps->Load(in);
   NS_RELEASE(in);
+
+  return rv;
 }
 
 nsStringBundle::~nsStringBundle()
 {
   NS_IF_RELEASE(mProps);
+}
+
+nsStringBundle::nsStringBundle()
+{  
+  NS_INIT_REFCNT();
+
+  mProps = nsnull;
+  mLoaded = PR_FALSE;
+  _callback = nsnull;
+  _closure = nsnull;
+}
+
+nsresult
+nsStringBundle::Init(const char* aURLSpec)
+{
+#if defined(DEBUG_tao)
+  printf("\n-->nsStringBundle::Init: aURLSpec=%s\n", aURLSpec);
+#endif
+
+  //
+  // use eventloop instead
+  //
+  // create an event queue for this thread.
+  nsresult rv;
+  nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIEventQueue> currentThreadQ;
+  rv = service->PushThreadEventQueue(getter_AddRefs(currentThreadQ));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aURLSpec);
+  if (NS_FAILED(rv)) return rv;
+
+  //   create and loader, then wait
+  nsCOMPtr<nsIStreamLoader> loader;
+  rv = NS_NewStreamLoader(getter_AddRefs(loader), 
+                          uri, 
+                          this /*the load observer*/);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "\n-->nsStringBundle::Init: NS_NewStreamLoader failed...\n");
+
+  // process events until we're finished.
+#ifdef DEBUG_tao
+  printf("\n-->nsStringBundle::Init: LOOP....\n\n");
+#endif
+  PLEvent *event;
+  while (!mLoaded) {
+    rv = currentThreadQ->WaitForEvent(&event);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "\n-->nsStringBundle::Init: currentThreadQ->WaitForEvent failed...\n");
+    if (NS_FAILED(rv)) return rv;
+
+    rv = currentThreadQ->HandleEvent(event);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "\n-->nsStringBundle::Init: currentThreadQ->HandleEvent failed...\n");
+    if (NS_FAILED(rv)) return rv;
+  }
+#ifdef DEBUG_tao
+  printf("\n-->nsStringBundle::Init: out of LOOP....\n");
+#endif
+  rv = service->PopThreadEventQueue(currentThreadQ);
+
+  return rv;
+}
+
+/* [noscript] void RegisterCallback (in nsStrBundleLoadedFunc callback, in voidPtr closure); */
+NS_IMETHODIMP
+nsStringBundle::RegisterCallback(nsStrBundleLoadedFunc aCallback, void * aClosure)
+{
+#if defined(DEBUG_tao)
+  printf("\n-->nsStringBundle::RegisterCallback: aCallback=%x, closure=%x\n",
+         aCallback, aClosure);
+#endif
+  _callback = aCallback;
+  _closure = aClosure;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStringBundle::OnStreamComplete(nsIStreamLoader* aLoader,
+                                 nsISupports* context,
+                                 nsresult aStatus,
+                                 PRUint32 stringLen,
+                                 const char* string)
+{
+#if defined(DEBUG_tao)
+  printf("\n --> nsStringBundle::OnStreamComplete, aStatus=%d, stringLen=%ld\n", aStatus, stringLen);
+#endif
+
+  // print a load error on bad status
+  nsXPIDLCString uriSpec;
+  if (NS_FAILED(aStatus)) {
+    if (aLoader) {
+      nsCOMPtr<nsIChannel> channel;
+      aLoader->GetChannel(getter_AddRefs(channel));
+      if (channel) {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        if (uri) {
+            uri->GetSpec(getter_Copies(uriSpec));
+#if defined(DEBUG)
+            printf("\n -->nsStringBundle::OnStreamComplete: Failed to load %s\n", 
+                   uriSpec ? (const char *) uriSpec : "");
+#endif
+        }
+      }
+    }
+    return aStatus;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsISupports> stringStreamSupports;
+  rv = NS_NewByteInputStream(getter_AddRefs(stringStreamSupports), 
+                             string, stringLen);
+  if (NS_FAILED(rv)) return rv;
+      
+  nsCOMPtr<nsIInputStream> in = do_QueryInterface(stringStreamSupports);
+  nsCOMPtr<nsIBinaryInputStream> binaryStream;
+  rv = NS_NewBinaryInputStream(getter_AddRefs(binaryStream), in);
+  if (NS_FAILED(rv)) return rv;
+  
+  aStatus = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
+                                               NS_GET_IID(nsIPersistentProperties), 
+                                               (void**) &mProps);
+  if (NS_FAILED(aStatus)) {
+#ifdef NS_DEBUG
+    printf("create nsIPersistentProperties failed\n");
+#endif
+    return aStatus;
+  }
+
+  // load the stream
+  aStatus = mProps->Load(in);
+  
+  // 
+  // notify
+  if (NS_SUCCEEDED(aStatus)) {
+    mLoaded = PR_TRUE;
+
+    // callback
+    if (_callback) {
+      _callback(this, uriSpec, _closure);
+    }
+    
+    // observer notification
+    nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (os)
+      os->Notify((nsIStringBundle *) this, 
+                 NS_STRBUNDLE_LOADED_TOPIC, nsnull);
+
+#if defined(DEBUG_tao)
+  printf("\n --> nsStringBundle::OnStreamComplete: end sending NOTIFICATIONS!!\n");
+#endif
+  }
+  return aStatus;
 }
 
 nsresult
@@ -133,6 +310,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
   if (!mProps)
     return NS_OK;
   NS_ENSURE_TRUE(mProps, NS_ERROR_UNEXPECTED);
+
   nsAutoCMonitor(this);
   nsAutoString name;
   name.AppendInt(aID, 10);
@@ -153,6 +331,7 @@ nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
 {
   if (!mProps)
     return NS_OK;
+
   NS_ENSURE_TRUE(mProps, NS_ERROR_FAILURE);
   nsresult ret = mProps->GetStringProperty(aName, aResult);
 #ifdef DEBUG_tao_
@@ -193,7 +372,8 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
 }
                                      
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsStringBundle, nsIStringBundle)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsStringBundle, 
+                              nsIStringBundle, nsIStreamLoaderObserver)
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
 NS_IMETHODIMP
@@ -218,6 +398,9 @@ nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
 NS_IMETHODIMP 
 nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 {
+  if (!mProps)
+    return NS_OK;
+
   nsAutoCMonitor(this);
   *aResult = nsnull;
   nsAutoString tmpstr;
@@ -238,6 +421,9 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 NS_IMETHODIMP
 nsStringBundle::GetEnumeration(nsIBidirectionalEnumerator** elements)
 {
+  if (!mProps)
+    return NS_OK;
+
   nsAutoCMonitor(this);
   if (!elements)
     return NS_ERROR_INVALID_POINTER;
@@ -258,6 +444,18 @@ nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
   return ret;
 }
 
+/* attribute boolean loaded; */
+NS_IMETHODIMP nsStringBundle::GetLoaded(PRBool *aLoaded)
+{
+  *aLoaded = mLoaded;
+  return NS_OK;
+}
+NS_IMETHODIMP nsStringBundle::SetLoaded(PRBool aLoaded)
+{
+  mLoaded = aLoaded;
+  return NS_OK;
+}
+
 
 nsresult
 nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in) 
@@ -269,65 +467,10 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
   /* locale binding */
   nsAutoString  strFile2;
 
-#if 1
    /* plan A: don't fallback; use aURLSpec: xxx.pro -> xxx.pro
    */
    strFile2.AssignWithConversion(aURLSpec);
    ret = OpenInputStream(strFile2, in);
-#else
-  nsAutoString   lc_lang;
-  nsAutoString   lc_country;
-
-  if (NS_OK == (ret = GetLangCountry(aLocale, lc_lang, lc_country))) {
-    
-    /* find the place to concatenate locale name 
-     */
-    PRInt32   count = 0;
-    nsAutoString strFile(aURLSpec);
-    PRInt32   mylen = strFile.Length();
-    nsAutoString fileLeft;
- 
-    /* assume the name always ends with this
-     */
-    PRInt32 dot = strFile.RFindChar('.');
-    count = strFile.Left(fileLeft, (dot>0)?dot:mylen);
-    strFile2 += fileLeft;
-
-    /* insert lang-country code
-     */
-    strFile2 += "_";
-    strFile2 += lc_lang;
-    if (lc_country.Length() > 0) {
-      strFile2 += "_";
-      strFile2 += lc_country;;
-    }
-
-    /* insert it
-     */   
-    nsAutoString fileRight;
-    if (dot > 0) {
-      count = strFile.Right(fileRight, mylen-dot);
-      strFile2 += fileRight;
-    }
-    ret = OpenInputStream(strFile2, in);
-    if ((NS_FAILED(ret) || !in) && lc_country.Length() && lc_lang.Length()) {
-      /* plan A: fallback to lang only
-       */
-      strFile2 = fileLeft;
-      strFile2 += "_";
-      strFile2 += lc_lang;
-      strFile2 += fileRight;
-      ret = OpenInputStream(strFile2, in);
-    }/* plan A */   
-  }/* locale */
-
-  if (NS_FAILED(ret) || !in) {
-    /* plan B: fallback to aURLSpec
-     */
-    strFile2 = aURLSpec;
-    ret = OpenInputStream(strFile2, in);
-  }
-#endif 
   return ret;
 }
 
@@ -424,6 +567,7 @@ class nsExtensibleStringBundle : public nsIStringBundle
 private:
   
   nsISupportsArray * mBundle;
+  PRBool             mLoaded;
 
 public:
 
@@ -444,6 +588,8 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
                                                   :mBundle(NULL)
 {
   NS_INIT_REFCNT();
+
+  mLoaded = PR_FALSE;
 
   nsresult res = NS_OK;
   nsIEnumerator * components = NULL;
@@ -502,7 +648,7 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
     res = registry->GetStringUTF8(key, "name", &name);
     if (NS_FAILED(res)) goto done1;
 
-    res = sbServ->CreateBundle(name, aLocale, &bundle);
+    res = sbServ->CreateBundle(name, nsnull, &bundle);
     if (NS_FAILED(res)) goto done1;
 
     res = mBundle->AppendElement(bundle);
@@ -537,6 +683,12 @@ done:
 nsExtensibleStringBundle::~nsExtensibleStringBundle() 
 {
   NS_IF_RELEASE(mBundle);
+}
+
+NS_IMETHODIMP
+nsExtensibleStringBundle::RegisterCallback(nsStrBundleLoadedFunc, void *)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsExtensibleStringBundle::GetStringFromID(PRInt32 aID, PRUnichar ** aResult)
@@ -619,6 +771,19 @@ nsresult nsExtensibleStringBundle::GetSimpleEnumeration(nsISimpleEnumerator ** a
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* attribute boolean loaded; */
+NS_IMETHODIMP nsExtensibleStringBundle::GetLoaded(PRBool *aLoaded)
+{
+  *aLoaded = mLoaded;
+  return NS_OK;
+}
+NS_IMETHODIMP nsExtensibleStringBundle::SetLoaded(PRBool aLoaded)
+{
+  mLoaded = aLoaded;
+  return NS_OK;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #define MAX_CACHED_BUNDLES 10
@@ -645,8 +810,7 @@ public:
   NS_DECL_NSIOBSERVER
     
 private:
-  nsresult getStringBundle(const char *aUrl, nsILocale* aLocale,
-                           nsIStringBundle** aResult);
+  nsresult getStringBundle(const char *aUrl, PRBool async, nsIStringBundle** aResult);
   nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus, 
                             PRUint32 argCount, PRUnichar** argArray,
                             PRUnichar* *result);
@@ -665,6 +829,8 @@ private:
   // reuse the same uri structure over and over
   nsCOMPtr<nsIURI>              mScratchUri;
   nsCOMPtr<nsIErrorService>     mErrorService;
+
+  const char            *mAsync; // temporary; remove after we settle w/ sync/async
 };
 
 nsStringBundleService::nsStringBundleService() :
@@ -684,6 +850,8 @@ nsStringBundleService::nsStringBundleService() :
   NS_ASSERTION(mScratchUri, "Couldn't create scratch URI");
   mErrorService = do_GetService(kErrorServiceCID);
   NS_ASSERTION(mErrorService, "Couldn't get error service");
+
+  mAsync = PR_GetEnv("STRRES_ASYNC");
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsStringBundleService,
@@ -746,18 +914,16 @@ nsStringBundleService::FlushBundles()
 
 nsresult
 nsStringBundleService::getStringBundle(const char *aURLSpec,
-                                       nsILocale* aLocale,
+                                       PRBool async,
                                        nsIStringBundle **aResult)
 {
   nsresult ret;
-
-  nsXPIDLCString newSpec;
-
   nsCStringKey completeKey(aURLSpec);
 
   bundleCacheEntry_t* cacheEntry =
     (bundleCacheEntry_t*)mBundleMap.Get(&completeKey);
   
+  PRBool addref = PR_FALSE;
   if (cacheEntry) {
     // cache hit!
     // remove it from the list, it will later be reinserted
@@ -767,7 +933,16 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
   } else {
 
     // hasn't been cached, so insert it into the hash table
-    nsStringBundle* bundle = new nsStringBundle(aURLSpec, nsnull, &ret);
+    nsStringBundle* bundle = new nsStringBundle();
+    if (async) {
+      NS_ADDREF(bundle);
+      addref = PR_TRUE;
+      ret = bundle->Init(aURLSpec);
+    }
+    else {
+      ret = bundle->InitSyncStream(aURLSpec);
+    }
+
     if (NS_FAILED(ret)) {
       delete bundle;
       return NS_ERROR_FAILURE;
@@ -787,6 +962,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
 
   // finally, return the value
   *aResult = cacheEntry->mBundle;
+  if (!addref)
   NS_ADDREF(*aResult);
 
   return NS_OK;
@@ -854,8 +1030,13 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
   }
 #endif
 
+  return getStringBundle(aURLSpec, mAsync?PR_TRUE:PR_FALSE, aResult);
+}
   
-  return getStringBundle(aURLSpec, aLocale, aResult);
+NS_IMETHODIMP
+nsStringBundleService::CreateAsyncBundle(const char* aURLSpec, nsIStringBundle** aResult)
+{
+  return getStringBundle(aURLSpec, PR_TRUE, aResult);
 }
 
 NS_IMETHODIMP
@@ -973,13 +1154,13 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
   rv = mErrorService->GetErrorStringBundle(NS_ERROR_GET_MODULE(aStatus), 
                                            getter_Copies(stringBundleURL));
   if (NS_SUCCEEDED(rv)) {
-    rv = getStringBundle(stringBundleURL, nsnull, getter_AddRefs(bundle));
+    rv = getStringBundle(stringBundleURL, mAsync?PR_TRUE:PR_FALSE, getter_AddRefs(bundle));
     if (NS_SUCCEEDED(rv)) {
       rv = FormatWithBundle(bundle, aStatus, argCount, argArray, result);
     }
   }
   if (NS_FAILED(rv)) {
-    rv = getStringBundle(GLOBAL_PROPERTIES, nsnull, getter_AddRefs(bundle));
+    rv = getStringBundle(GLOBAL_PROPERTIES, mAsync?PR_TRUE:PR_FALSE, getter_AddRefs(bundle));
     if (NS_SUCCEEDED(rv)) {
       rv = FormatWithBundle(bundle, aStatus, argCount, argArray, result);
     }
