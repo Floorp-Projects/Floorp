@@ -122,22 +122,42 @@ function editPage(url, launchWindow, delay)
     var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
     var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
     var enumerator = windowManagerInterface.getEnumerator( "composer:html" );
+    var emptyWindow;
     while ( enumerator.hasMoreElements() )
     {
-      var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
-      if ( window && window.editorShell)
+      var win = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
+      if ( win && win.editorShell)
       {
-        if (window.editorShell.checkOpenWindowForURLMatch(url, window))
+        if (win.editorShell.checkOpenWindowForURLMatch(url, window))
         {
           // We found an editor with our url
-          window.focus();
+          win.focus();
           return;
+        }
+        else if (!emptyWindow && win.PageIsEmptyAndUntouched())
+        {
+          emptyWindow = win;
         }
       }
     }
+
+    if (emptyWindow)
+    {
+      // we have an empty window we can use
+      if (emptyWindow.IsInHTMLSourceMode())
+        emptyWindow.FinishHTMLSource();
+      emptyWindow.editorShell.LoadUrl(url);
+      emptyWindow.focus();
+      emptyWindow.SetSaveAndPublishUI(url);
+      return;
+    }
+
     // Create new Composer window
     if (delay)
-      launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url, charsetArg);
+    {
+      dump("delaying\n");
+      launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url);
+    }
     else
       launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url, charsetArg);
 
