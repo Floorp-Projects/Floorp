@@ -884,7 +884,14 @@ function getXulWin()
 #   appear in those builds.
 #
 #   element - The DOM node that persists the checked state.
+
+#ifdef XP_MACOSX
+#define HELP_ALWAYS_RAISED_TOGGLE
+#endif
 #ifdef XP_WIN
+#define HELP_ALWAYS_RAISED_TOGGLE
+#endif
+#ifdef HELP_ALWAYS_RAISED_TOGGLE
 function toggleZLevel(element)
 {
   var xulwin = getXulWin();
