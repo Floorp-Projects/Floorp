@@ -29,7 +29,7 @@ tabpanels {
 }
 
 tab[busy] > .tab-icon {
-  list-style-image: url("chrome://global/skin/loading.gif");
+  list-style-image: url("chrome://communicator/skin/icons/loading.gif");
 }
 
 /* ::::: close button ::::: */
