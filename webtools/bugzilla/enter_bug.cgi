@@ -84,20 +84,20 @@ sub pickplatform {
         return $value;
     }
     if ( Param('usebrowserinfo') ) {
-	for ($ENV{'HTTP_USER_AGENT'}) {
-	    /Mozilla.*\(Windows/ && do {return "PC";};
-	    /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
-	    /Mozilla.*\(Win/ && do {return "PC";};
-	    /Mozilla.*Linux.*86/ && do {return "PC";};
-	    /Mozilla.*Linux.*alpha/ && do {return "DEC";};
-	    /Mozilla.*OSF/ && do {return "DEC";};
-	    /Mozilla.*HP-UX/ && do {return "HP";};
-	    /Mozilla.*IRIX/ && do {return "SGI";};
-	    /Mozilla.*(SunOS|Solaris)/ && do {return "Sun";};
-		}
+    for ($ENV{'HTTP_USER_AGENT'}) {
+        /Mozilla.*\(Windows/ && do {return "PC";};
+        /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
+        /Mozilla.*\(Win/ && do {return "PC";};
+        /Mozilla.*Linux.*86/ && do {return "PC";};
+        /Mozilla.*Linux.*alpha/ && do {return "DEC";};
+        /Mozilla.*OSF/ && do {return "DEC";};
+        /Mozilla.*HP-UX/ && do {return "HP";};
+        /Mozilla.*IRIX/ && do {return "SGI";};
+        /Mozilla.*(SunOS|Solaris)/ && do {return "Sun";};
+        }
     }
-	# default
-	return "Other";
+    # default
+    return "Other";
 }
 
 
@@ -106,10 +106,10 @@ sub pickversion {
     my $version = formvalue('version');
 
     if ( Param('usebrowserinfo') ) {
-	if ($version eq "") {
-	    if ($ENV{'HTTP_USER_AGENT'} =~ m@Mozilla[ /]([^ ]*)@) {
-		$version = $1;
-	    }
+    if ($version eq "") {
+        if ($ENV{'HTTP_USER_AGENT'} =~ m@Mozilla[ /]([^ ]*)@) {
+        $version = $1;
+        }
         }
     }
     
@@ -141,25 +141,25 @@ sub pickos {
         return formvalue('op_sys');
     }
     if ( Param('usebrowserinfo') ) {
-		for ($ENV{'HTTP_USER_AGENT'}) {
-			/Mozilla.*\(.*;.*; IRIX.*\)/    && do {return "IRIX";};
-			/Mozilla.*\(.*;.*; 32bit.*\)/   && do {return "Windows 95";};
-			/Mozilla.*\(.*;.*; 16bit.*\)/   && do {return "Windows 3.1";};
-			/Mozilla.*\(.*;.*; 68K.*\)/     && do {return "Mac System 8.5";};
-			/Mozilla.*\(.*;.*; PPC.*\)/     && do {return "Mac System 8.5";};
-			/Mozilla.*\(.*;.*; OSF.*\)/     && do {return "OSF/1";};
-			/Mozilla.*\(.*;.*; Linux.*\)/   && do {return "Linux";};
-			/Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
-			/Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
-			/Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
-			/Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
-			/Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
-			/Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
-			/Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
-		}
+        for ($ENV{'HTTP_USER_AGENT'}) {
+            /Mozilla.*\(.*;.*; IRIX.*\)/    && do {return "IRIX";};
+            /Mozilla.*\(.*;.*; 32bit.*\)/   && do {return "Windows 95";};
+            /Mozilla.*\(.*;.*; 16bit.*\)/   && do {return "Windows 3.1";};
+            /Mozilla.*\(.*;.*; 68K.*\)/     && do {return "Mac System 8.5";};
+            /Mozilla.*\(.*;.*; PPC.*\)/     && do {return "Mac System 8.5";};
+            /Mozilla.*\(.*;.*; OSF.*\)/     && do {return "OSF/1";};
+            /Mozilla.*\(.*;.*; Linux.*\)/   && do {return "Linux";};
+            /Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
+            /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
+            /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
+            /Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
+            /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
+            /Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
+            /Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
+        }
     }
-	# default
-	return "other";
+    # default
+    return "other";
 }
 
 
@@ -275,8 +275,8 @@ print "
 </FORM>\n";
 
 if ( Param('usebrowserinfo') ) {
-	print "Some fields initialized from your user-agent, <b>$ENV{'HTTP_USER_AGENT'}</b>.
-	       If you think it got it wrong, please tell " . Param('maintainer') . " what it should have been.";
+    print "Some fields initialized from your user-agent, <b>$ENV{'HTTP_USER_AGENT'}</b>.
+           If you think it got it wrong, please tell " . Param('maintainer') . " what it should have been.";
 }
 print "</BODY></HTML>\n";
 
