@@ -478,7 +478,7 @@ toolbar[iconsize="small"] #reload-button:active {
   -moz-image-region: rect(24px 96px 48px 72px);
 }
 toolbar[iconsize="small"] #reload-button[disabled="true"] {
-  -moz-image-region: rect(48px 96px 72px 72px);
+  -moz-image-region: rect(48px 96px 72px 72px) !important;
 }
 
 /* home button */
