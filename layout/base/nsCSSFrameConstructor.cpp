@@ -2373,7 +2373,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   // scroll frame
   nsIFrame* scrollFrame = nsnull;
   nsIFrame* gfxScrollFrame = nsnull;
-
+  nsCOMPtr<nsIStyleContext> scrollFrameStyle;
   if (isScrollable) {
 
     nsIFrame* parent = nsnull;
@@ -2389,8 +2389,10 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
        parent = viewportFrame;
     }
 
-    // XXX should probably be a scrolled content pseudo style context
-    scrollFrame->Init(*aPresContext, nsnull, parent, viewportPseudoStyle,
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::viewportScrollPseudo,
+                                               viewportPseudoStyle, PR_FALSE,
+                                               getter_AddRefs(scrollFrameStyle));
+    scrollFrame->Init(*aPresContext, nsnull, parent, scrollFrameStyle,
                       nsnull);
     
     // Inform the view manager about the root scrollable view
@@ -2401,23 +2403,25 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     NS_ASSERTION(scrollFrameView, "scroll frame has no view");
     scrollFrameView->QueryInterface(kScrollViewIID, (void**)&scrollingView);
     viewManager->SetRootScrollableView(scrollingView);
-
   }
   
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
   if (isPaginated) {
-    
     nsIFrame* pageSequenceFrame;
 
     // Create a page sequence frame
     NS_NewSimplePageSequenceFrame(&pageSequenceFrame);
-    // XXX should probably be a page sequence pseudo style context
+    nsCOMPtr<nsIStyleContext> pageSequenceStyle;
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pageSequencePseudo,
+                                               (isScrollable ? scrollFrameStyle : viewportPseudoStyle), 
+                                               PR_FALSE,
+                                               getter_AddRefs(pageSequenceStyle));
     pageSequenceFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                            viewportFrame, viewportPseudoStyle, nsnull);
+                            viewportFrame, pageSequenceStyle, nsnull);
     if (isScrollable) {
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
-                                               viewportPseudoStyle, PR_TRUE);
+                                               pageSequenceStyle, PR_TRUE);
     }
 
     // Create the first page
@@ -2430,11 +2434,10 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
     // Initialize the page and force it to have a view. This makes printing of
     // the pages easier and faster.
-    // XXX Use a PAGE style context...
     nsCOMPtr<nsIStyleContext> pagePseudoStyle;
 
     aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pagePseudo,
-                                               viewportPseudoStyle, PR_FALSE,
+                                               pageSequenceStyle, PR_FALSE,
                                                getter_AddRefs(pagePseudoStyle));
 
     pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, pagePseudoStyle,
@@ -2493,19 +2496,17 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     nsIFrame* rootFrame;
     NS_NewRootFrame(&rootFrame);
 
-    // Initialize the frame. It gets a pseudo element style context
-    // XXX When we fix it so the scroll frame uses its own pseudo style context
-    // (instead of the viewport's pseudo style context), then this needs to change
-    // and a different parent style context pointer passed in...
+    // Initialize the root frame. It gets a pseudo element style context
     nsCOMPtr<nsIStyleContext> canvasPseudoStyle;
     aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::canvasPseudo,
-                                               viewportPseudoStyle, PR_FALSE,
+                                               isScrollable ? scrollFrameStyle : viewportPseudoStyle,
+                                               PR_FALSE,
                                                getter_AddRefs(canvasPseudoStyle));
     rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
                     viewportFrame, canvasPseudoStyle, nsnull);
     if (isScrollable) {
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
-                                               viewportPseudoStyle, PR_TRUE);
+                                               canvasPseudoStyle, PR_TRUE);
     }
 
     // The eventual parent of the document element frame
