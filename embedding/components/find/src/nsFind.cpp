@@ -244,7 +244,8 @@ nsFind::SetCaseSensitive(PRBool aCaseSensitive)
 NS_IMETHODIMP
 nsFind::GetWordBreaker(nsIWordBreaker** aWordBreaker)
 {
-  NS_ADDREF(*aWordBreaker = mWordBreaker);
+  *aWordBreaker = mWordBreaker;
+  NS_IF_ADDREF(*aWordBreaker);
   return NS_OK;
 }
 
