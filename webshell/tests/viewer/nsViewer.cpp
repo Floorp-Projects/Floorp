@@ -173,6 +173,32 @@ extern int  NET_PollSockets();
 
 //----------------------------------------------------------------------
 
+static NS_DEFINE_IID(kIWebWidgetViewerIID, NS_IWEBWIDGETVIEWER_IID);
+
+static nsIPresShell*
+GetPresShell(nsIWebWidget* aWebWidget)
+{
+  nsIPresShell* shell = nsnull;
+  if (nsnull != aWebWidget) {
+    nsIContentViewer* cv = nsnull;
+    aWebWidget->GetContentViewer(cv);
+    if (nsnull != cv) {
+      nsIWebWidgetViewer* wwv = nsnull;
+      cv->QueryInterface(kIWebWidgetViewerIID, (void**) &wwv);
+      if (nsnull != wwv) {
+        nsIPresContext* cx = wwv->GetPresContext();
+        if (nsnull != cx) {
+          shell = cx->GetShell();
+          NS_RELEASE(cx);
+        }
+        NS_RELEASE(wwv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+  return shell;
+}
+
 //----------------------------------------------------------------------
 
 struct OnLinkClickEvent : public PLEvent {
@@ -602,6 +628,8 @@ DocObserver:: GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
   return NS_OK;
 }
 
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
+
 nsresult 
 DocObserver::GetScriptContext(nsIScriptContext **aContext)
 {
@@ -619,13 +647,20 @@ DocObserver::GetScriptContext(nsIScriptContext **aContext)
       return res;
     }
 
-    nsIDOMDocument *document;
-    res = mWebWidget->GetDOMDocument(&document);
-    if (NS_OK != res) {
-      return res;
+    nsIPresShell* shell = GetPresShell(mWebWidget);
+    if (nsnull != shell) {
+      nsIDocument* doc = shell->GetDocument();
+      if (nsnull != doc) {
+        nsIDOMDocument *domdoc = nsnull;
+        doc->QueryInterface(kIDOMDocumentIID, (void**) &domdoc);
+        if (nsnull != domdoc) {
+          mScriptGlobal->SetNewDocument(domdoc);
+          NS_RELEASE(domdoc);
+        }
+        NS_RELEASE(doc);
+      }
+      NS_RELEASE(shell);
     }
-    mScriptGlobal->SetNewDocument(document);
-    NS_RELEASE(document);
   }
 
   *aContext = mScriptContext;
@@ -1941,32 +1976,6 @@ nsViewer::GetPlatform(nsString& aPlatform)
   aPlatform.SetString("Win32");
   
   return NS_OK;
-}
-
-static NS_DEFINE_IID(kIWebWidgetViewerIID, NS_IWEBWIDGETVIEWER_IID);
-
-nsIPresShell*
-nsViewer::GetPresShell(nsIWebWidget* aWebWidget)
-{
-  nsIPresShell* shell = nsnull;
-  if (nsnull != aWebWidget) {
-    nsIContentViewer* cv = nsnull;
-    aWebWidget->GetContentViewer(cv);
-    if (nsnull != cv) {
-      nsIWebWidgetViewer* wwv = nsnull;
-      cv->QueryInterface(kIWebWidgetViewerIID, (void**) &wwv);
-      if (nsnull != wwv) {
-        nsIPresContext* cx = wwv->GetPresContext();
-        if (nsnull != cx) {
-          shell = cx->GetShell();
-          NS_RELEASE(cx);
-        }
-        NS_RELEASE(wwv);
-      }
-      NS_RELEASE(cv);
-    }
-  }
-  return shell;
 }
 
 void
