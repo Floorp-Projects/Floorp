@@ -42,6 +42,12 @@ using std::pair;
     typedef gc_allocator<JSValue> gc_map_allocator;
 #endif
 
+/**
+ * Basic behavior of all JS objects, mapping a name to a value.
+ * This is provided mainly to avoid having an awkward implementation
+ * of JSObject & JSArray, which must each define its own
+ * gc_allocator. This is all in flux.
+ */
 class JSMap {
     map<String, JSValue, less<String>, gc_map_allocator> properties;
 public:
@@ -106,24 +112,58 @@ private:
     }
 };
 
+class JSFunction : public JSMap, public gc_object<JSFunction> {
+	ICodeModule* mICode;
+public:
+	JSFunction(ICodeModule* iCode) : mICode(iCode) {}
+	ICodeModule* getICode() { return mICode; }
+};
+
+/**
+ * Represents the current function's invocation state.
+ */
+struct JSActivation : public gc_object<JSActivation> {
+	JSValues mRegisters;
+	JSValues mLocals;
+
+	JSActivation(ICodeModule* iCode, const JSValues& args)
+		: mRegisters(iCode->itsMaxRegister + 1), mLocals(args)
+	{
+	    // ensure that locals array is large enough.
+		uint32 localsSize = iCode->itsMaxVariable + 1;
+		if (localsSize > mLocals.size())
+			mLocals.resize(localsSize);
+	}
+
+	JSActivation(ICodeModule* iCode, JSActivation* caller, const RegisterList& list)
+		: mRegisters(iCode->itsMaxRegister + 1), mLocals(iCode->itsMaxVariable + 1)
+	{
+		// copy caller's parameter list in to locals.
+		JSValues::iterator dest = mLocals.begin();
+		const JSValues& params = caller->mRegisters;
+		for (RegisterList::const_iterator src = list.begin(), end = list.end(); src != end; ++src, ++dest) {
+			*dest = params[*src];
+		}
+	}
+};
+
 /**
  * Stores saved state from the *previous* activation, the current activation is alive
  * and well in locals of the interpreter loop.
  */
 struct JSFrame : public gc_object<JSFrame> {
-    JSFrame(InstructionIterator returnPC, InstructionIterator basePC, JSArray *registers, JSArray *variables, Register result) 
-            : itsReturnPC(returnPC), itsBasePC(basePC), itsRegisters(registers), itsVariables(variables), itsResult(result) { }
+    JSFrame(InstructionIterator returnPC, InstructionIterator basePC,
+			JSActivation* activation, Register result) 
+        :   itsReturnPC(returnPC), itsBasePC(basePC),
+            itsActivation(activation),
+		    itsResult(result)
+    {
+    }
 
     InstructionIterator itsReturnPC;
     InstructionIterator itsBasePC;
-
-    JSArray *itsRegisters;             // rather not save these BUT:
-                                       // - switch temps (and others eventually?) are live across statments
-                                       // and need to be preserved.
-                                       // - better debugging if intermediate state can be recovered (?)
-    JSArray *itsVariables;            
-    Register itsResult;                // the desired target register for the return value
-
+	JSActivation* itsActivation;        // caller's activation.
+    Register itsResult;                 // the desired target register for the return value
 };
 
 // a stack of JSFrames.
@@ -146,18 +186,25 @@ JSValue& defineGlobalProperty(const String& name, const JSValue& value)
     return (globals[name] = value);
 }
 
+// FIXME:  need to copy the ICodeModule's instruction stream.
+
+JSValue& defineFunction(const String& name, ICodeModule* iCode)
+{
+	JSValue value;
+	value.function = new JSFunction(iCode);
+	return defineGlobalProperty(name, value);
+}
+
 JSValue interpret(ICodeModule* iCode, const JSValues& args)
 {
     // stack of JSFrames.
+    // XXX is a linked list of activation's sufficient?
     JSFrameStack frames;
 
-    JSArray *locals = new JSArray(args);
-    // ensure that locals array is large enough.
-    uint32 localsSize = iCode->itsMaxVariable + 1;
-    if (localsSize > locals->length())
-        locals->resize(localsSize);
-
-    JSArray *registers = new JSArray(iCode->itsMaxRegister + 1);
+	// initial activation.
+	JSActivation* activation = new JSActivation(iCode, args);
+	JSValues* locals = &activation->mLocals;
+	JSValues* registers = &activation->mRegisters;
 
     InstructionIterator begin_pc = iCode->its_iCode->begin();
     InstructionIterator pc = begin_pc;
@@ -168,15 +215,12 @@ JSValue interpret(ICodeModule* iCode, const JSValues& args)
         case CALL:
             {
                 Call* call = static_cast<Call*>(instruction);
-                JSArray *previousRegisters = registers;
-                frames.push(new JSFrame(++pc, begin_pc, registers, locals, op1(call)));
-                ICodeModule *tgt = (*registers)[op2(call)].icm;
-                locals = new JSArray(tgt->itsMaxVariable + 1);
-                registers = new JSArray(tgt->itsMaxRegister + 1);
-                RegisterList args = op3(call);
-                for (RegisterList::iterator r = args.begin(); r != args.end(); ++r)
-                    (*locals)[r - args.begin()] = (*previousRegisters)[(*r)];
-                begin_pc = pc = tgt->its_iCode->begin();
+                frames.push(new JSFrame(++pc, begin_pc, activation, op1(call)));
+                ICodeModule* target = (*registers)[op2(call)].function->getICode();
+                activation = new JSActivation(target, activation, op3(call));
+                locals = &activation->mLocals;
+                registers = &activation->mRegisters;
+                begin_pc = pc = target->its_iCode->begin();
             }
             continue;
         case RETURN:
@@ -187,13 +231,14 @@ JSValue interpret(ICodeModule* iCode, const JSValues& args)
                     result = (*registers)[op1(ret)];
                 if (frames.empty())
                     return result;
-                JSFrame *fr = frames.top();
+                JSFrame *frame = frames.top();
                 frames.pop();
-                registers = fr->itsRegisters;
-                locals = fr->itsVariables;
-                (*registers)[fr->itsResult] = result;
-                pc = fr->itsReturnPC;
-                begin_pc = fr->itsBasePC;
+                activation = frame->itsActivation;
+                registers = &activation->mRegisters;
+                locals = &activation->mLocals;
+                (*registers)[frame->itsResult] = result;
+                pc = frame->itsReturnPC;
+                begin_pc = frame->itsBasePC;
             }
             continue;
         case MOVE_TO:
