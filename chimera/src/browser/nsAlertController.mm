@@ -163,10 +163,10 @@ enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
   if (doCheck) {
     int state = (*checkValue ? NSOnState : NSOffState);
     [promptPanelCheck setState:state];
-    [promptPanelCheck setEnabled:YES];
+    [promptPanelCheck setTransparent:NO];
   }
   else {
-    [promptPanelCheck setEnabled:NO];
+    [promptPanelCheck setTransparent:YES];
   }  
   [promptPanelCheck setTitle:checkMsg];
   [promptPanelInput setStringValue:promptText];
