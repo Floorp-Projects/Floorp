@@ -60,7 +60,7 @@ enum eHTMLTokenTypes {
   eToken_start=1,      eToken_end,     eToken_comment,         eToken_entity,
   eToken_whitespace,   eToken_newline, eToken_text,            eToken_attribute,
   eToken_script,       eToken_style,   eToken_skippedcontent,  eToken_instruction,
-  eToken_cdatasection, eToken_error,   eToken_doctypeDecl,
+  eToken_cdatasection, eToken_error,   eToken_doctypeDecl,     eToken_markupDecl,
   eToken_last //make sure this stays the last token...
 };
 
@@ -303,6 +303,25 @@ public:
     nsString          mTextValue;
 };
 
+
+/**
+ *  Declaration tokens contain raw unescaped text content (not really, but
+ *  right now we use this only for view source).
+ *  XXX Not really a HTML construct - maybe we need a separation
+ *  
+ */
+class CMarkupDeclToken : public CHTMLToken {
+public:
+                        CMarkupDeclToken();
+                        CMarkupDeclToken(const nsAReadableString& aString);
+    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual const char* GetClassName(void);
+    virtual PRInt32     GetTokenType(void);  
+    virtual const nsAReadableString& GetStringValue(void);
+
+protected:
+    nsSlidingSubstring  mTextValue;
+};
 
 
 /**

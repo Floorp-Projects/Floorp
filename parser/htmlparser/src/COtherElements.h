@@ -1735,7 +1735,7 @@ public:
     nsresult result=NS_OK;
 
     switch(aTag) {
-      case eHTMLTag_markupDecl:
+      case eHTMLTag_doctypeDecl:
         result=HandleDoctypeDecl(aNode,aTag,aContext,aSink);
         break;
 

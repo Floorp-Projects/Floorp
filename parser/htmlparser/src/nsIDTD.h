@@ -72,12 +72,6 @@ class nsIDTD : public nsISupports {
 
     static const nsIID& GetIID() { static nsIID iid = NS_IDTD_IID; return iid; }
   
-    /**
-     * Default constructor
-     * @update	gess6/24/98
-     */
-    virtual ~nsIDTD() {};
-
     virtual const nsIID&  GetMostDerivedIID(void) const =0;
 
     /**

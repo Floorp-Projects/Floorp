@@ -510,6 +510,7 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_whitespace:
     case eToken_text:
     case eToken_cdatasection:
+    case eToken_markupDecl:
       result=HandleLeafToken(aToken);
       break;
     case eToken_comment:

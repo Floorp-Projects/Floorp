@@ -265,6 +265,7 @@ protected:
     PRInt32             mEndTag;
     PRInt32             mCommentTag;
     PRInt32             mCDATATag;
+    PRInt32             mMarkupDeclaration;
     PRInt32             mDocTypeTag;
     PRInt32             mPITag;
     PRInt32             mEntityTag;
@@ -278,6 +279,7 @@ protected:
     nsAutoString        mEndTag;
     nsAutoString        mCommentTag;
     nsAutoString        mCDATATag;
+    nsAutoString        mMarkupDeclaration;
     nsAutoString        mDocTypeTag;
     nsAutoString        mPITag;
     nsAutoString        mEntityTag;

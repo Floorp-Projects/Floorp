@@ -90,8 +90,6 @@ Stopwatch vsTimer;
 #endif
 
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID); 
 static int gErrorThreshold = 10;
 
@@ -121,10 +119,10 @@ nsresult CViewSourceHTML::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
 
-  if(aIID.Equals(kISupportsIID))    {  //do IUnknown...
+  if(aIID.Equals(NS_GET_IID(nsISupports)))    {  //do IUnknown...
     *aInstancePtr = (nsIDTD*)(this);                                        
   }
-  else if(aIID.Equals(kIDTDIID)) {  //do IParser base class...
+  else if(aIID.Equals(NS_GET_IID(nsIDTD))) {  //do IParser base class...
     *aInstancePtr = (nsIDTD*)(this);                                        
   }
   else if(aIID.Equals(kClassIID)) {  //do this class...
@@ -233,7 +231,8 @@ enum {
   VIEW_SOURCE_ATTRIBUTE_NAME = 8,
   VIEW_SOURCE_ATTRIBUTE_VALUE = 9,
   VIEW_SOURCE_SUMMARY = 10,
-  VIEW_SOURCE_POPUP = 11
+  VIEW_SOURCE_POPUP = 11,
+  VIEW_SOURCE_MARKUPDECLARATION = 12
 };
 
 #ifdef VIEW_SOURCE_COLORING
@@ -249,7 +248,8 @@ static char* kElementStyles[] = {
   "color: black; font-weight:bold;",
   "color: blue; font-weight:normal;",
   "display:block; background-color:#FFFFCC; width:90%; border:solid; border-width:1pt; font-family: Sans-serif;",
-  "font-weight: normal;"
+  "font-weight: normal;",
+  "color:steelblue; font-style:italic;"
 };
 #endif
 
@@ -265,12 +265,14 @@ static char* kBeforeText[] = {
   "",
   "=",
   "",
+  "",
   ""
 };
 
 static char* kAfterText[] = {
   ">",
   ">",
+  "",
   "",
   "",
   "",
@@ -300,6 +302,7 @@ CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   mEndTag = VIEW_SOURCE_END_TAG;
   mCommentTag = VIEW_SOURCE_COMMENT;
   mCDATATag = VIEW_SOURCE_CDATA;
+  mMarkupDeclaration = VIEW_SOURCE_MARKUPDECLARATION;
   mDocTypeTag = VIEW_SOURCE_DOCTYPE;
   mPITag = VIEW_SOURCE_PI;
   mEntityTag = VIEW_SOURCE_ENTITY;
@@ -313,6 +316,7 @@ CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   mEndTag.AssignWithConversion("end");
   mCommentTag.AssignWithConversion("comment");
   mCDATATag.AssignWithConversion("cdata");
+  mMarkupDeclaration.AssignWithConversion("markupdeclaration");
   mDocTypeTag.AssignWithConversion("doctype");
   mPITag.AssignWithConversion("pi");
   mEntityTag.AssignWithConversion("entity");
@@ -458,8 +462,7 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
     nsCParserNode bodyNode(&bodyToken,0);
     mSink->OpenBody(bodyNode);
 #else
-    static const char* theHeader="<?xml version=\"1.0\"?>";
-    CCommentToken ssToken(theHeader);
+    CCommentToken ssToken(NS_LITERAL_STRING("<?xml version=\"1.0\"?>"));
     nsCParserNode ssNode(&ssToken);
     result= mSink->AddCharacterData(ssNode);
 #endif // VIEW_SOURCE_HTML
@@ -505,7 +508,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       CStartToken theToken(tag, eHTMLTag_pre);
 #else
       //now let's automatically open the root container...
-      CStartToken theToken("viewsource");
+      CStartToken theToken(NS_LITERAL_STRING("viewsource"));
 #endif // VIEW_SOURCE_HTML
       nsCParserNode theNode(&theToken,0);
      
@@ -619,7 +622,7 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
 
         GenerateSummary();
 
-        CEndToken theToken("viewsource");
+        CEndToken theToken(NS_LITERAL_STRING("viewsource"));
         nsCParserNode theNode(&theToken,0);
         mSink->CloseContainer(theNode);
 #endif // VIEW_SOURCE_HTML
@@ -863,7 +866,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
 #ifdef VIEW_SOURCE_HTML
 nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAReadableString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
 #else
-nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsAReadableString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
+nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
 #endif // VIEW_SOURCE_HTML
   static nsString       theString;
 
@@ -1119,8 +1122,18 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         nsAutoString theStr;
         theStr.Assign(NS_LITERAL_STRING("<!"));
         theStr.Append(aToken->GetStringValue());
-        theStr.Append(NS_LITERAL_STRING("]]>"));
+        theStr.Append(NS_LITERAL_STRING(">"));
         result=WriteTag(mCDATATag,theStr,0,PR_TRUE);
+      }
+      break;
+
+    case eToken_markupDecl:
+      {
+        nsAutoString theStr;
+        theStr.Assign(NS_LITERAL_STRING("<!"));
+        theStr.Append(aToken->GetStringValue());
+        theStr.Append(NS_LITERAL_STRING(">"));
+        result=WriteTag(mMarkupDeclaration,theStr,0,PR_TRUE);
       }
       break;
 

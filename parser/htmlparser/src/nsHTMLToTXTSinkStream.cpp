@@ -486,8 +486,9 @@ PRBool nsHTMLToTXTSinkStream::DoOutput()
   // and not inside a markup_declaration
   for (PRUint32 i = 0; i < mTagStackIndex; ++i)
   {
-    if (mTagStack[i] == eHTMLTag_markupDecl
-        || mTagStack[i] == eHTMLTag_comment)
+    if (mTagStack[i] == eHTMLTag_doctypeDecl
+        || mTagStack[i] == eHTMLTag_comment
+        || mTagStack[i] == eHTMLTag_markupDecl)
       return PR_FALSE;
 
     if (mTagStack[i] == eHTMLTag_body)
@@ -790,6 +791,7 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
   } else if (IsBlockLevel(type)
              && type != eHTMLTag_blockquote
              && type != eHTMLTag_script
+             && type != eHTMLTag_doctypeDecl
              && type != eHTMLTag_markupDecl)
   {
     // All other blocks get 1 vertical space after them
