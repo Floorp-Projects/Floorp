@@ -30,6 +30,7 @@
 #   Jason Eager <jce2@po.cwru.edu>
 #   Joe Hewitt <hewitt@netscape.com>
 #   Alec Flett <alecf@netscape.com>
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -94,6 +95,7 @@ var gFormHistory = null;
 var gFormFillEnabled = true;
 
 var gURLBarAutoFillPrefListener = null;
+var gAutoHideTabbarPrefListener = null;
 
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
@@ -769,15 +771,20 @@ function delayedStartup()
   var toolbox = document.getElementById("navigator-toolbox");
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
 
+  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+
   // Enable/Disable Form Fill
   gFormFillPrefListener = new FormFillPrefListener();
-  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   pbi.addObserver(gFormFillPrefListener.domain, gFormFillPrefListener, false);
   gFormFillPrefListener.toggleFormFill();
 
   // Enable/Disable URL Bar Auto Fill
   gURLBarAutoFillPrefListener = new URLBarAutoFillPrefListener();
   pbi.addObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener, false);
+
+  // Enable/Disbale auto-hide tabbar
+  gAutoHideTabbarPrefListener = new AutoHideTabbarPrefListener();
+  pbi.addObserver(gAutoHideTabbarPrefListener.domain, gAutoHideTabbarPrefListener, false);
 
   pbi.addObserver(gHomeButton.prefDomain, gHomeButton, false);
   gHomeButton.updateTooltip();
@@ -925,6 +932,7 @@ function Shutdown()
     var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
     pbi.removeObserver(gFormFillPrefListener.domain, gFormFillPrefListener);
     pbi.removeObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener);
+    pbi.removeObserver(gAutoHideTabbarPrefListener.domain, gAutoHideTabbarPrefListener);
     pbi.removeObserver(gHomeButton.prefDomain, gHomeButton);
   } catch (ex) {
   }
@@ -1078,6 +1086,38 @@ URLBarAutoFillPrefListener.prototype =
       gURLBar.setAttribute("completedefaultindex", "true");
     else
       gURLBar.removeAttribute("completedefaultindex");
+  }
+}
+
+function AutoHideTabbarPrefListener()
+{
+  this.toggleAutoHideTabbar();
+}
+
+AutoHideTabbarPrefListener.prototype =
+{
+  domain: "browser.tabs.autoHide",
+  observe: function (aSubject, aTopic, aPrefName)
+  {
+    if (aTopic != "nsPref:changed" || aPrefName != this.domain)
+      return;
+  
+    this.toggleAutoHideTabbar();
+  },
+  
+  toggleAutoHideTabbar: function ()
+  {
+    var aVisible = false;
+    try {
+      aVisible = !gPrefService.getBoolPref(this.domain);
+    }
+    catch (e) {
+    }
+
+    if (gBrowser.tabContainer.childNodes.length == 1) {
+      gBrowser.setStripVisibilityTo(aVisible);
+      gPrefService.setBoolPref("browser.tabs.forceHide", false);
+    }
   }
 }
 
