@@ -161,13 +161,9 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
     nsresult rv = NS_OK;
 
     // Get app shell service.
-    nsIAppShellService *appShell;
-    rv = nsServiceManager::GetService( kAppShellServiceCID,
-                                       nsIAppShellService::GetIID(),
-                                       (nsISupports**)&appShell );
+    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv); 
+    if (NS_FAILED(rv)) return rv;
 
-    if ( NS_SUCCEEDED( rv ) ) 
-    {
         // Open "progress" dialog.
         nsCOMPtr <nsIURI> url;
         const char *urlSpec = "resource:/res/profile/progress_undetermined.xul";
@@ -201,13 +197,7 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
                 DEBUG_PRINTF( PR_STDOUT, "Error creating progress dialog, rv=0x%X\n", (int)rv );
             }
         }
-        
-        nsServiceManager::ReleaseService( kAppShellServiceCID, appShell );
-    } 
-    else 
-    {
-        DEBUG_PRINTF( PR_STDOUT, "Unable to get app shell service, rv=0x%X\n", (int)rv );
-    }
+
     return NS_OK;
 }
 
@@ -215,22 +205,11 @@ NS_IMETHODIMP
 nsPrefMigrationProgressDialog::KillProfileProgressDialog()
 {
   nsresult rv = NS_OK;
-  nsIAppShellService *appShell;
-  
-  rv = nsServiceManager::GetService( kAppShellServiceCID,
-                                     nsIAppShellService::GetIID(),
-                                     (nsISupports**)&appShell );
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv); 
+  if (NS_FAILED(rv)) return rv;
 
-  if ( NS_SUCCEEDED( rv ) ) 
-  {
-    rv = appShell->CloseTopLevelWindow( mWindow );
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  }
-  else
-  {
-      DEBUG_PRINTF( PR_STDOUT, "Unable to get app shell service, rv=0x%X\n", (int)rv );
-  }
-  return NS_OK;
+  rv = appShell->CloseTopLevelWindow( mWindow );
+  return rv;
 }
 
 
