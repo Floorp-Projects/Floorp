@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -40,33 +40,35 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsI
     
 nsAutoConfig::nsAutoConfig()
 {
+    /* member initializers and constructor code */
     NS_INIT_REFCNT();
 }
 
 nsresult nsAutoConfig::Init()
 {
-    // member initializers and constructor code
+    /* member initializers and constructor code */
 
-    nsresult rv;
+    nsresult rv=NS_OK;
+    
     mLoaded = PR_FALSE;
     
     // Registering the object as an observer to the profile-after-change topic
+
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
-
-    rv = observerService->AddObserver(this,NS_LITERAL_STRING("profile-after-change").get());
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (NS_FAILED(rv)) return rv;
     
+    if (observerService) {
+        rv = observerService->AddObserver(this, 
+                                          NS_LITERAL_STRING("profile-after-change").get());
+        if (NS_FAILED(rv)) return rv;
+    }
     nsCOMPtr<nsIPrefService> prefs =
         do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
-    
+    if (NS_FAILED(rv)) return rv;
     rv = prefs->GetBranch(nsnull,getter_AddRefs(mPrefBranch));
-    return rv;
+    if (NS_FAILED(rv)) return rv;
+    return NS_OK;
 }
 
 nsAutoConfig::~nsAutoConfig()
@@ -75,7 +77,9 @@ nsAutoConfig::~nsAutoConfig()
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (observerService) 
-        rv = observerService->RemoveObserver(this,NS_LITERAL_STRING("profile-after-change").get());
+        rv = observerService->RemoveObserver(this, 
+                                             NS_LITERAL_STRING("profile-after-change").get());
+    
 }
 
 
@@ -95,13 +99,16 @@ nsAutoConfig::OnDataAvailable(nsIRequest* request,
 {    
     PRUint32 amt, size;
     nsresult rv;
-    char buf[1024];
+    char buf[1025];
     
     while (aLength) {
         size = PR_MIN(aLength, sizeof(buf));
         rv = aIStream->Read(buf, size, &amt);
-        if (NS_FAILED(rv))
+        if (NS_FAILED(rv)) {
+            NS_ASSERTION((NS_BASE_STREAM_WOULD_BLOCK != rv), 
+                         "The stream should never block.");
             return rv;
+        }
         mBuf.Append(buf,amt);
         aLength -= amt;
     }
@@ -113,6 +120,7 @@ NS_IMETHODIMP
 nsAutoConfig::OnStopRequest(nsIRequest* request, nsISupports* context,
                             nsresult aStatus)
 {
+    
     nsresult rv;
 
     // If the request is failed, go read the failover.jsc file
@@ -120,7 +128,7 @@ nsAutoConfig::OnStopRequest(nsIRequest* request, nsISupports* context,
         return readOfflineFile();
     }
 
-    // Checking for the http response, if failure go read the failover file.
+    //Checking for the http response, if failure go read the failover file.
     nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(request));
     if (pHTTPCon) {
         PRUint32 httpStatus;
@@ -130,33 +138,26 @@ nsAutoConfig::OnStopRequest(nsIRequest* request, nsISupports* context,
     }
     
     // Send the autoconfig.jsc to javascript engine.
-    PRBool success = PREF_EvaluateConfigScript(mBuf.get(), mBuf.Length(),
-                                               nsnull, PR_FALSE,PR_TRUE,
-                                               PR_FALSE);
+    PRBool success = PREF_EvaluateConfigScript(mBuf.get(), mBuf.Length(),nsnull,
+                                               PR_FALSE,PR_TRUE,PR_FALSE);
     if (success) {
-
-        // Write the autoconfig.jsc to failover.jsc (cached copy) 
-        rv = writeFailoverFile(); 
-
-        if (NS_FAILED(rv)) 
+        rv = writeFailoverFile(); /*  Write the autoconfig.jsc to 
+                                      failover.jsc (cached copy) */
+        if(NS_FAILED(rv)) 
             NS_WARNING("Error writing failover.jsc file");
-
         // Clean up the previous read. 
         // If there is a timer, these methods will be called again.
         mBuf.Truncate(0);
-
-        // Releasing the lock to allow the main thread to start execution
-        mLoaded = PR_TRUE;  
-
+        mLoaded = PR_TRUE;  //Releasing the deadlock
         return NS_OK;
     }
-    // there is an error in parsing of the autoconfig file.
-    NS_WARNING("Error reading autoconfig.jsc from the network, reading the offline version");
-
-    // Clean up the previous read so it will be ready for 
-    // the next updated read.
-    mBuf.Truncate(0); 
-    return readOfflineFile();
+    else {
+        NS_WARNING("Error reading autoconfig.jsc from the network, reading the offline version");
+        // Clean up the previous read so it will be ready for 
+        // the next updated read.
+        mBuf.Truncate(0); 
+        return readOfflineFile();
+    }
 }
 
 // Notify method as a TimerCallBack function 
@@ -169,34 +170,36 @@ NS_IMETHODIMP_(void) nsAutoConfig::Notify(nsITimer *timer)
    after the profile is set. It doesn't do anything but return NS_OK during the
    creation time. Second time it calls  DownloadAutoCfg().
 */
-
-NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject, 
-                                    const PRUnichar *aTopic, 
-                                    const PRUnichar *someData)
+NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
-    nsresult rv=NS_OK;
-    if (!nsCRT::strcmp(aTopic, 
-                       NS_LITERAL_STRING("profile-after-change").get())) {
-
-        // Getting the current profile name since we already have the 
-        // pointer to the object.
-        nsCOMPtr<nsIProfile> profile = do_QueryInterface(aSubject);
-        if (profile) {
-            nsXPIDLString profileName;
-            rv = profile->GetCurrentProfile(getter_Copies(profileName));
-            if (NS_FAILED(rv)) 
-                return rv; 
-            // setting the member variable to the current profile name
-            mCurrProfile = NS_ConvertUCS2toUTF8(profileName); 
+    nsresult rv = NS_OK;
+    if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()))
+        {
+            // Getting the current profile name since we already have the 
+            // pointer to the object.
+            nsCOMPtr<nsIProfile> profile = do_QueryInterface(aSubject);
+            if (profile) {
+                nsXPIDLString profileName;
+                rv = profile->GetCurrentProfile(getter_Copies(profileName));
+                if (NS_SUCCEEDED(rv)) 
+                    // setting the member variable to the current profile name
+                    mCurrProfile.AssignWithConversion(profileName); 
+                else 
+                    return rv;
+            }
+            return DownloadAutoCfg();
+        }  
+    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("app-startup").get())) 
+        {
+            // This is the object instantiation, do nothing and return NS_OK;
+            return NS_OK;
         }
-        rv = DownloadAutoCfg();
-    }  
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     nsCAutoString emailAddr;
     nsXPIDLCString urlName;
     PRBool appendMail=PR_FALSE, offline=PR_FALSE;
@@ -205,27 +208,27 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
     
     // get the value of the autoconfig url
     rv = mPrefBranch->GetCharPref("autoadmin.global_config_url",
-                                  getter_Copies(urlName));
-    if (NS_FAILED(rv) || (nsCRT::strlen(urlName) == 0))  
-        return NS_OK; // Return ok if there is no config url set.
+                                 getter_Copies(urlName));
+    if(NS_FAILED(rv) || (nsCRT::strlen(urlName) == 0))  
+        return NS_OK; /* Return ok if there is no config url set. */
 
     // Check to see if the network is online/offline 
-    nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
+    
+    nsCOMPtr<nsIIOService> ios =
+        do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
     
     rv = ios->GetOffline(&offline);
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (NS_FAILED(rv)) return rv;
     
     if (offline) {
         
         PRBool offlineFailover = PR_FALSE;
         rv = mPrefBranch->GetBoolPref("autoadmin.offline_failover", 
-                                      &offlineFailover);
+                                     &offlineFailover);
         
         // Read the failover.jsc if the network is offline and the pref says so
-        if (offlineFailover) {
+        if ( offlineFailover ) {
             return readOfflineFile();
         }
     }
@@ -236,7 +239,7 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
     
     /* Append user's identity at the end of the URL if the pref says so.
        First we are checking for the user's email address but if it is not
-       available in the case where the client is used without messenger, user's
+       available in the case where the client is used without messenger, user's 
        profile name will be used as an unique identifier
     */
     
@@ -245,11 +248,9 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
     if (NS_SUCCEEDED(rv) && appendMail) {
         rv = getEmailAddr(emailAddr);
         if (NS_SUCCEEDED(rv) && emailAddr) {
-
             /* Adding the unique identifier at the end of autoconfig URL. 
                In this case the autoconfig URL is a script and 
-               emailAddr as passed as an argument 
-            */
+               emailAddr as passed as an argument */
             cfgUrl.Append("?");
             cfgUrl.Append(emailAddr); 
         }
@@ -257,32 +258,30 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
     
     // Getting an event queue. If we start an AsyncOpen, the thread
     // needs to wait before the reading of autoconfig is done
+    
     nsCOMPtr<nsIEventQueue> currentThreadQ;
 
-    // We are having the event queue processing only for the startup
-    // It is not needed with the repeating timer.
     if (firstTime) {
         nsCOMPtr<nsIEventQueueService> service = 
             do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) 
-            return rv;
+        if (NS_FAILED(rv)) return rv;
         rv = service->GetThreadEventQueue(NS_CURRENT_THREAD,getter_AddRefs(currentThreadQ));
-        if (NS_FAILED(rv)) 
-            return rv;
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     }
+    mLoaded = PR_FALSE;
     
     // create a new url 
+    
     nsCOMPtr<nsIURI> url;
     nsCOMPtr<nsIChannel> channel;
     
     rv = NS_NewURI(getter_AddRefs(url), cfgUrl, nsnull, nsnull);
-    if (NS_FAILED(rv)) 
-        return rv;
+    if(NS_FAILED(rv)) return rv;
     
     // open a channel for the url
+    
     rv = NS_OpenURI(getter_AddRefs(channel),url, nsnull, nsnull, nsnull, nsIRequest::INHIBIT_PERSISTENT_CACHING | nsIRequest::LOAD_BYPASS_CACHE);
-    if (NS_FAILED(rv)) 
-        return rv;
+    if(NS_FAILED(rv)) return rv;
     
     rv = channel->AsyncOpen(this, nsnull); 
     if (NS_FAILED(rv)) {
@@ -290,45 +289,44 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
         return rv;
     }
     
+    
     // Set a repeating timer if the pref is set.
     // This is to be done only once.
+    
     if (firstTime) {
         firstTime = PR_FALSE;
         PRInt32 minutes = 0;
         rv = mPrefBranch->GetIntPref("autoadmin.refresh_interval", 
-                                     &minutes);
-        if (NS_SUCCEEDED(rv) && minutes > 0) {
-
+                                    &minutes);
+        if(NS_SUCCEEDED(rv) && minutes > 0) {
             // Create a new timer and pass this nsAutoConfig 
             // object as a timer callback. 
             nsCOMPtr<nsITimer> timer;
             timer = do_CreateInstance("@mozilla.org/timer;1",&rv);
-            if (NS_FAILED(rv)) 
-                return rv;
+            if (NS_FAILED(rv)) return rv;
             rv = timer->Init(this, minutes*60*1000, NS_PRIORITY_NORMAL, 
-                             NS_TYPE_REPEATING_SLACK);
-            if (NS_FAILED(rv)) 
-                return rv;
+                        NS_TYPE_REPEATING_SLACK);
+            if (NS_FAILED(rv)) return rv;
         }
+
     
-        /* process events until we're finished. AutoConfig.jsc reading needs
-           to be finished before the browser starts loading up
-           We are waiting for the mLoaded which will be set through 
-           onStopRequest or readOfflineFile methods
-           There is a possibility of deadlock so we need to make sure
-           that mLoaded will be set to true in any case (success/failure)
-        */
+    
+        // process events until we're finished. AutoConfig.jsc reading needs
+        // to be finished before the browser starts loading up
+        // We are waiting for the mLoaded which will be set through 
+        // onStopRequest or readOfflineFile methods
+        // There is a possibility of deadlock so we need to make sure
+        // that mLoaded will be set to true in any case (success/failure)
         
         PLEvent *event;
         while (!mLoaded) {
             rv = currentThreadQ->WaitForEvent(&event);
             NS_ASSERTION(NS_SUCCEEDED(rv),"-->nsAutoConfig::DownloadAutoCfg: currentThreadQ->WaitForEvent failed...");
-            if (NS_FAILED(rv)) 
-                return rv;
+            if (NS_FAILED(rv)) return rv;
             rv = currentThreadQ->HandleEvent(event);
             NS_ASSERTION(NS_SUCCEEDED(rv), "-->nsAutoConfig::DownloadAutoCfg: currentThreadQ->HandleEvent failed...");
-            if (NS_FAILED(rv)) 
-                return rv;
+            if (NS_FAILED(rv)) return rv;
+            
         }
         
     } //first_time
@@ -345,12 +343,6 @@ nsresult nsAutoConfig::readOfflineFile()
     nsresult rv;
     PRBool offline;
     
-    /* Releasing the lock to allow main thread to start 
-       execution. At this point we do not need to stall 
-       the thread since all network activities are done.
-    */
-    mLoaded = PR_TRUE; 
-
     rv = mPrefBranch->GetBoolPref("autoadmin.failover_to_cached", &failCache);
     
     if (failCache == PR_FALSE) {
@@ -359,43 +351,41 @@ nsresult nsAutoConfig::readOfflineFile()
         
         nsCOMPtr<nsIIOService> ios =
             do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) 
-            return rv;
+        if (NS_FAILED(rv)) return reportError();
         
         rv = ios->GetOffline(&offline);
-        if (NS_FAILED(rv)) 
-            return rv;
-
+        if (NS_FAILED(rv)) return reportError();
         if (!offline) {
             rv = ios->SetOffline(PR_TRUE);
-            if (NS_FAILED(rv)) 
-                return rv;
+            if (NS_FAILED(rv)) return reportError();
         }
         
         // lock the "network.online" prference so user cannot toggle back to
         // online mode.
         rv = mPrefBranch->SetBoolPref("network.online", PR_FALSE);
-        if (NS_FAILED(rv)) 
-            return rv;
+        if (NS_FAILED(rv)) return reportError();
         mPrefBranch->LockPref("network.online");
+
+        mLoaded = PR_TRUE;
         return NS_OK;
+
     }
     
-    /* faiover_to_cached is set to true so 
-       Open the file and read the content.
-       execute the javascript file
-    */
+    // failCache = true 
+    
+    // Open the file and read the content.
+    // execute the javascript file
     
     nsCOMPtr<nsIFile> failoverFile; 
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                 getter_AddRefs(failoverFile));
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (NS_FAILED(rv)) return reportError();
     
     failoverFile->Append("failover.jsc");
     rv = evaluateLocalFile(failoverFile);
     if (NS_FAILED(rv)) 
         NS_WARNING("Couldn't open failover.jsc, going back to default prefs");
+    mLoaded = PR_TRUE;
     return NS_OK;
 }
 
@@ -405,26 +395,28 @@ nsresult nsAutoConfig::evaluateLocalFile(nsIFile* file)
     nsCOMPtr<nsIInputStream> inStr;
     
     rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), file);
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (NS_FAILED(rv)) return rv;
         
     PRInt64 fileSize;
     PRUint32 fs, amt=0;
     file->GetFileSize(&fileSize);
     LL_L2UI(fs, fileSize); // Converting 64 bit structure to unsigned int
     char*  buf = (char *) PR_Malloc(fs*sizeof(char)) ;
-    if (!buf) 
+    if(!buf) 
         return NS_ERROR_OUT_OF_MEMORY;
     
     rv = inStr->Read(buf, fs, &amt);
-    if (NS_SUCCEEDED(rv)) {
-        if (!PREF_EvaluateConfigScript(buf,fs,nsnull, PR_FALSE, 
-                                       PR_TRUE, PR_FALSE))
-            rv = NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) 
+        NS_ASSERTION((NS_BASE_STREAM_WOULD_BLOCK != rv), 
+                     "The stream should never block.");
+    
+    if (!PREF_EvaluateConfigScript(buf,fs,nsnull, PR_FALSE, PR_TRUE, PR_FALSE)){
+        PR_FREEIF(buf);
+        return NS_ERROR_FAILURE;
     }
     inStr->Close();
-    PR_Free(buf);
-    return rv;
+    PR_FREEIF(buf);
+    return NS_OK;
 }
 
 nsresult nsAutoConfig::writeFailoverFile()
@@ -433,17 +425,15 @@ nsresult nsAutoConfig::writeFailoverFile()
     nsCOMPtr<nsIFile> failoverFile; 
     nsCOMPtr<nsIOutputStream> outStr;
     PRUint32 amt;
-    
+
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                 getter_AddRefs(failoverFile));
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (NS_FAILED(rv)) return rv;
     
     failoverFile->Append("failover.jsc");
     
     rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStr), failoverFile);
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (NS_FAILED(rv)) return rv;
     rv = outStr->Write(mBuf.get(),mBuf.Length(),&amt);
     outStr->Close();
     return rv;
@@ -451,7 +441,7 @@ nsresult nsAutoConfig::writeFailoverFile()
 
 nsresult nsAutoConfig::getEmailAddr(nsAWritableCString & emailAddr)
 {
-    
+
     nsresult rv;
     nsXPIDLCString prefValue;
     
@@ -472,14 +462,14 @@ nsresult nsAutoConfig::getEmailAddr(nsAWritableCString & emailAddr)
             nsDependentCString(prefValue, len) + NS_LITERAL_CSTRING(".identities");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
-        if (NS_FAILED(rv) || (len = nsCRT::strlen(prefValue)) == 0) 
-            return rv;
+
+          // should the following |strlen|s ask |== 0|?  |PRUint32| can't be |<0|
+        if (NS_FAILED(rv) || (len = nsCRT::strlen(prefValue)) < 0) return rv;
         emailAddr = NS_LITERAL_CSTRING("mail.identity.") + 
             nsDependentCString(prefValue, len) + NS_LITERAL_CSTRING(".useremail");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
-        if (NS_FAILED(rv)  || (len = nsCRT::strlen(prefValue)) == 0) 
-            return rv;
+        if (NS_FAILED(rv)  || (len = nsCRT::strlen(prefValue)) < 0) return rv;
         emailAddr = nsDependentCString(prefValue, len);
     }
     else {
@@ -491,3 +481,10 @@ nsresult nsAutoConfig::getEmailAddr(nsAWritableCString & emailAddr)
     return NS_OK;
 }
         
+ 
+nsresult nsAutoConfig::reportError()
+{
+    NS_ERROR("AutoConfig::readOfflineFile() failed");
+    mLoaded = PR_TRUE; //Releasing lock to avoid deadlock in DownloadAutoCfg()
+    return NS_ERROR_FAILURE;
+}
