@@ -146,6 +146,7 @@ nsTypeAheadFind::nsTypeAheadFind():
   mLinksOnlyManuallySet(PR_FALSE), mIsFindingText(PR_FALSE),
   mIsMenuBarActive(PR_FALSE), mIsMenuPopupActive(PR_FALSE),
   mIsFirstVisiblePreferred(PR_FALSE), mIsIMETypeAheadActive(PR_FALSE),
+  mIsBackspaceProtectOn(PR_FALSE),
   mBadKeysSinceMatch(0), mLastBadChar(0),
   mRepeatingMode(eRepeatingNone), mTimeoutLength(0)
 {
@@ -538,6 +539,15 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     return NS_ERROR_FAILURE;
   }
 
+  // ---------- Set Backspace Protection --------------------------
+  // mIsBackspaceProtectOn should be PR_TRUE only if the last key 
+  // was a backspace and this key is also a backspace. It keeps us 
+  // from accidentally hitting backspace too many times in a row, going 
+  // back in history when we really just wanted to clear the find string.
+  if (keyCode != nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
+    mIsBackspaceProtectOn = PR_FALSE;
+  }
+
   // ---------- Check the keystroke --------------------------------
   if ((isAlt && !isShift) || isCtrl || isMeta) {
     // Ignore most modified keys, but alt+shift may be used for
@@ -611,7 +621,21 @@ nsTypeAheadFind::HandleBackspace()
       mFocusedDocSelection->GetRangeAt(0, getter_AddRefs(mStartFindRange));
     }
     else {
-      return PR_FALSE;  // No find string to backspace in!
+      // No find string to backspace in!
+      if (mIsBackspaceProtectOn) {
+        // This flag should be on only if the last key was a backspace.
+        // It keeps us from accidentally hitting backspace too many times and
+        // going back in history when we really just wanted to clear 
+        // the find string.
+        nsCOMPtr<nsISound> soundInterface =
+          do_CreateInstance("@mozilla.org/sound;1");
+        if (soundInterface) {
+          soundInterface->Beep(); // beep to warn
+        }
+        mIsBackspaceProtectOn = PR_FALSE;
+        return PR_TRUE;
+      }
+      return PR_FALSE;
     }
   }
 
@@ -625,6 +649,7 @@ nsTypeAheadFind::HandleBackspace()
 
     mFocusedDocSelection->CollapseToStart();
     CancelFind();
+    mIsBackspaceProtectOn = PR_TRUE;
 
     return PR_TRUE;
   }
@@ -1822,6 +1847,7 @@ nsTypeAheadFind::CancelFind()
   mDontTryExactMatch = PR_FALSE;
   mStartFindRange = nsnull;
   mBadKeysSinceMatch = 0;
+  mIsBackspaceProtectOn = PR_FALSE;
   mLastBadChar = 0;
 
   nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(mFocusedWindow));

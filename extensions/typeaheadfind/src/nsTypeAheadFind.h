@@ -203,6 +203,7 @@ protected:
   PRPackedBool mIsMenuPopupActive;
   PRPackedBool mIsFirstVisiblePreferred;
   PRPackedBool mIsIMETypeAheadActive;
+  PRPackedBool mIsBackspaceProtectOn; // from accidentally going back in history
   PRInt32 mBadKeysSinceMatch;
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
