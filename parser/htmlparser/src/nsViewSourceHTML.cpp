@@ -780,10 +780,11 @@ PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRB
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CViewSourceHTML::OpenHead(const nsIParserNode& aNode){
+  nsresult result=NS_OK;
   if(!mHasOpenHead++) {
-    nsresult result=(mSink) ? mSink->OpenHead(aNode) : NS_OK; 
+    result=(mSink) ? mSink->OpenHead(aNode) : NS_OK; 
   }
-  return NS_OK;
+  return result;
 }
 
 /**
@@ -795,12 +796,13 @@ nsresult CViewSourceHTML::OpenHead(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CViewSourceHTML::CloseHead(const nsIParserNode& aNode){
+  nsresult result=NS_OK;
   if(mHasOpenHead) {
     if(0==--mHasOpenHead){
-      nsresult result=(mSink) ? mSink->CloseHead(aNode) : NS_OK; 
+      result=(mSink) ? mSink->CloseHead(aNode) : NS_OK; 
     }
   }
-  return NS_OK;
+  return result;
 }
 /**
  *  
