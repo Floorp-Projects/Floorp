@@ -1024,6 +1024,7 @@ void nsImapServerResponseParser::msg_fetch()
 				// all of this message's headers
 				fNextToken = GetNextToken();
 				fDownloadingHeaders = PR_TRUE;
+        BeginMessageDownload(MESSAGE_RFC822); // initialize header parser
 				bNeedEndMessageDownload = PR_FALSE;
 				if (ContinueParse())
 					msg_fetch_headers(nsnull);
