@@ -60,7 +60,12 @@ MOZ_BUILD_XPFE = @MOZ_BUILD_XPFE@
 MOZ_BUILD_NSPR = @MOZ_BUILD_NSPR@
 
 # Should the extra CFLAGS only be added in Makefile.ins that need them? 
+ifdef MOZ_DEBUG
+OS_CFLAGS	= $(filter-out -O%, @CFLAGS@) $(DSO_CFLAGS)
+else
 OS_CFLAGS	= @CFLAGS@ $(DSO_CFLAGS)
+endif
+
 OS_INCLUDES	= $(NSPR_CFLAGS) $(JPEG_CFLAGS) $(PNG_CFLAGS) $(ZLIB_CFLAGS)
 OS_LIBS		= @LDFLAGS@ @LIBS@
 AC_DEFINES	= @DEFS@
@@ -155,10 +160,6 @@ MOZ_NATIVE_MAKEDEPEND	= @SYSTEM_MAKEDEPEND@
 LIBS_PATH       = @LIBS_PATH@
 
 COMPILER_DEPEND = @COMPILER_DEPEND@
-
-ifdef MOZ_DEBUG
-OS_CFLAGS := $(filter-out -O%, $(OS_CFLAGS))
-endif
 
 # Pulled these out of configure.in,
 # so undefine them now instead of subst
