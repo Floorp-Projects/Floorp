@@ -541,9 +541,9 @@ nsHttpChannel::SetupTransaction()
     }
 
     if (mResuming) {
-        char buf[32];
-        PR_snprintf(buf, sizeof(buf), "bytes=%llu-", mStartPos);
-        mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(buf));
+        char byteRange[32];
+        PR_snprintf(byteRange, sizeof(byteRange), "bytes=%llu-", mStartPos);
+        mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(byteRange));
 
         if (!mEntityID.IsEmpty()) {
             // Also, we want an error if this resource changed in the meantime
@@ -554,9 +554,9 @@ nsHttpChannel::SetupTransaction()
             mEntityID.BeginReading(slash);
 
             if (FindCharInReadable('/', slash, end)) {
-                nsCAutoString buf;
+                nsCAutoString ifMatch;
                 mRequestHead.SetHeader(nsHttp::If_Match,
-                        NS_UnescapeURL(Substring(start, slash), 0, buf));
+                        NS_UnescapeURL(Substring(start, slash), 0, ifMatch));
 
                 ++slash; // Incrementing, so that searching for '/' won't find
                          // the same slash again
