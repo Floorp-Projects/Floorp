@@ -1166,11 +1166,6 @@ sub BuildClientDist()
     	InstallFromManifest(":mozilla:mailnews:extensions:smime:public:MANIFEST_IDL", "$distdirectory:idl:");
     }
     
-    #TRANSFORMIIX
-    if ($main::options{transformiix})
-    {
-        InstallFromManifest(":mozilla:extensions:transformiix:public:MANIFEST_IDL", "$distdirectory:idl:");
-    }
 
     #IIEXTRAS
     if ($main::options{iiextras})
