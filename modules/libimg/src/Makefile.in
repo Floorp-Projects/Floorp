@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= img
 LIBRARY_NAME	= img_s
-REQUIRES	= xpcom string layout util locale cookie necko timer jpeg
+REQUIRES	= xpcom string layout util locale cookie necko timer jpeg unicharutil
 
 CPPSRCS		= \
 		ilNetReader.cpp \
