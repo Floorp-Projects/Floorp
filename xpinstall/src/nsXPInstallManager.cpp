@@ -35,6 +35,7 @@
 #include "nsIBufferInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
+#include "nsICommonDialogs.h"
 
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
@@ -46,6 +47,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileStream.h"
 #include "nsProxyObjectManager.h"
+#include "nsIDOMWindow.h"
 
 #include "nsIAppShellComponentImpl.h"
 #include "nsIPrompt.h"
@@ -54,6 +56,9 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 
 #define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
 
@@ -132,6 +137,9 @@ NS_IMETHODIMP
 nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
 {
     nsresult rv = NS_OK;
+    nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
+    PRBool OKtoInstall = PR_FALSE;
+
     mTriggers = aTriggers;
 
     if ( !mTriggers || mTriggers->Size() == 0 )
@@ -142,53 +150,62 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
     }
 
     //-----------------------------------------------------
-    // confirm that install is OK... use stock Confirm()
-    // dialog for now, later we'll want a fancier one.
+    // Create the nsIDialogParamBlock to pass the trigger
+    // list to the dialog
     //-----------------------------------------------------
-    PRBool OKtoInstall = PR_FALSE;
+    rv = nsComponentManager::CreateInstance(kDialogParamBlockCID,
+                                            nsnull,
+                                            nsIDialogParamBlock::GetIID(),
+                                            getter_AddRefs(ioParamBlock));
 
-    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
+    
     if ( NS_SUCCEEDED( rv ) ) 
     {
-        nsCOMPtr<nsIWebShellWindow> wbwin;
-        rv = appShell->GetHiddenWindow(getter_AddRefs(wbwin));
-        if ( NS_SUCCEEDED(rv) )
+      
+      LoadDialogWithNames(ioParamBlock);
+
+      // Now do the stuff to create a window and pass the JS args to it.
+      NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
+      if ( NS_SUCCEEDED( rv ) ) 
+      {
+        nsCOMPtr<nsIDOMWindow> hiddenWindow;
+        JSContext* jsContext;
+        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs(hiddenWindow), &jsContext);
+        if (NS_SUCCEEDED(rv))
         {
-            nsCOMPtr<nsIPrompt> prompt( do_QueryInterface(wbwin, &rv) );
-            if ( NS_SUCCEEDED(rv) && prompt )
+          void* stackPtr;
+          jsval *argv = JS_PushArguments( jsContext,
+                                          &stackPtr,
+                                          "sss%ip",
+                                          "chrome://xpinstall/content/institems.xul",
+                                          "_blank",
+                                          "chrome,modal",
+                                          (const nsIID*)(&nsIDialogParamBlock::GetIID()),
+                                          (nsISupports*)ioParamBlock);
+          if (argv)
+          {
+            nsCOMPtr<nsIDOMWindow> newWindow;
+            rv = hiddenWindow->OpenDialog( jsContext,
+                                           argv,
+                                           4,
+                                           getter_AddRefs( newWindow));
+            if (NS_SUCCEEDED(rv))
             {
-                PRBool bStrBdlSuccess = PR_FALSE;
-                nsString rsrcName = "ShouldWeInstallMsg";
+              JS_PopArguments( jsContext, stackPtr);
 
-                if (mStringBundle)
-                {
-                    const PRUnichar* ucRsrcName = rsrcName.GetUnicode();
-                    PRUnichar* ucRsrcVal = nsnull;
-                    rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);
-                    if (NS_SUCCEEDED(rv) && ucRsrcVal)
-                    {
-                        prompt->Confirm( ucRsrcVal, &OKtoInstall);
-                        nsCRT::free(ucRsrcVal);
-                        bStrBdlSuccess = PR_TRUE;
-                    }
-                }
-
-                /* failover to default english strings */
-                if (!bStrBdlSuccess)
-                {
-                    char *cResName = rsrcName.ToNewCString();
-                    nsString resVal = nsInstallResources::GetDefaultVal(cResName);
-
-                    if (!resVal.IsEmpty())
-                        prompt->Confirm( resVal.GetUnicode(), &OKtoInstall );
-
-                    if (cResName)
-                        Recycle(cResName);
-                }
+              //Now get which button was pressed from the ParamBlock
+              PRInt32 buttonPressed = 0;
+              ioParamBlock->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed );
+              OKtoInstall = buttonPressed ? PR_FALSE : PR_TRUE;
             }
+          }
+          else
+          {
+            rv = NS_ERROR_FAILURE; // fix, better error code??
+          }
         }
+      }
     }
-
 
     // --- create and open the progress dialog
     if (NS_SUCCEEDED(rv) && OKtoInstall)
@@ -379,6 +396,59 @@ void nsXPInstallManager::Shutdown()
     mDlg = 0;
 
     NS_RELEASE_THIS();
+}
+
+/*-----------------------------------------------------
+** LoadDialogWithNames loads the param block for the 
+** javascript/xul dialog with the list of modules to 
+** be installed and their source locations
+**----------------------------------------------------*/
+void nsXPInstallManager::LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock)
+{
+
+    nsXPITriggerItem *triggerItem;
+    nsString moduleName, URL;
+    PRInt32 offset = 0;
+    PRUint32 i=0, paramIndex=0;
+
+    ioParamBlock->SetInt(nsICommonDialogs::eNumberButtons,2); //set the Ok and Cancel buttons
+
+    for (i=0; i < mTriggers->Size(); i++)
+    {
+        triggerItem = mTriggers->Get(i);
+    
+        //Check to see if this trigger item has a pretty name
+        if((moduleName = triggerItem->mName) != "")
+        {
+            ioParamBlock->SetString(paramIndex, moduleName.ToNewUnicode());
+            paramIndex++;
+            URL = triggerItem->mURL;
+            offset = URL.RFind("/");
+            if (offset != -1)
+            {
+                URL.Cut(offset + 1, URL.mLength - 1);
+                ioParamBlock->SetString(paramIndex, URL.ToNewUnicode());
+            }
+            paramIndex++;
+        }
+        else
+        {
+            //triggerItem does not have a pretty name so parse the url for the file name
+            //then use that as the pretty name
+            moduleName = triggerItem->mURL;
+            URL = triggerItem->mURL;
+            offset = moduleName.RFind("/");
+            if (offset != -1)
+            {
+                moduleName.Cut(0, offset + 1);
+                ioParamBlock->SetString(paramIndex, moduleName.ToNewUnicode());
+                paramIndex++;
+                URL.Cut(offset + 1, URL.mLength - 1); 
+                ioParamBlock->SetString(paramIndex, URL.ToNewUnicode());
+            }
+            paramIndex++;
+        }
+    }
 }
 
 
