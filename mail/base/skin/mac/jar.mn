@@ -33,6 +33,7 @@ classic.jar:
 +    skin/classic/messenger/junkMail.css        (junkMail.css)
 +    skin/classic/messenger/folderMenus.css     (folderMenus.css)
 +    skin/classic/messenger/subscribe.css       (subscribe.css)
+     skin/classic/messenger/virtualFolderListDialog.css (virtualFolderListDialog.css)
 +    skin/classic/messenger/searchDialog.css        (searchDialog.css)
 +    skin/classic/messenger/filterDialog.css        (filterDialog.css)
      skin/classic/messenger/icons/SearchBarLeft.png (icons/SearchBarLeft.png)
