@@ -10642,7 +10642,10 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell* aPresShell,
         CreateContinuingFrame(aPresShell, aPresContext, childFrame, newFrame, &continuingTableFrame);
         newChildFrames.AddChild(continuingTableFrame);
       } else {
-        nsIContent*           caption;
+        // XXX remove this code and the above checks. We don't want to replicate 
+        // the caption (that is what the thead is for). This code is not executed 
+        // anyway, because the caption was put in a different child list.
+        nsIContent* caption;
         nsIStyleContext*      captionStyle;
         const nsStyleDisplay* display;
 
@@ -10733,8 +10736,9 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
         rowGroupFrame->GetContent(&headerFooter);
         headerFooterFrame->Init(aPresContext, headerFooter, newFrame,
                                 rowGroupStyle, nsnull);
+        nsTableCreator tableCreator(aPresShell); 
         ProcessChildren(aPresShell, aPresContext, state, headerFooter, headerFooterFrame,
-                        PR_FALSE, childItems, PR_FALSE);
+                        PR_FALSE, childItems, PR_FALSE, &tableCreator);
         NS_ASSERTION(!state.mFloatedItems.childList, "unexpected floated element");
         NS_RELEASE(headerFooter);
         headerFooterFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
