@@ -17,7 +17,9 @@
 
 DEPTH	= ..
 
-ifeq ($(shell uname -s),Rhapsody)
+include $(DEPTH)/config/config.mk
+
+ifeq ($(OS_ARCH),Rhapsody)
 DIRS  = ybfe
 else
 DIRS  = xfe
