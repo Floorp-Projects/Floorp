@@ -60,8 +60,11 @@
 #include "selection.h"
 #include "nsProfile.h"
 #include "nsIClipboardCmd.h"
+
 #include "nsIObserServ.h"
+
 #include "nsIFile.h"
+
 
 #include "QaUtils.h"
 #include <stdio.h>
@@ -84,43 +87,60 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_CREATEFILE, OnTestsCreateFile)
 	ON_COMMAND(ID_TESTS_CREATEPROFILE, OnTestsCreateprofile)
 	ON_COMMAND(ID_TESTS_ADDWEBPROGLISTENER, OnTestsAddWebProgListener)
+
 	ON_COMMAND(ID_TESTS_ADDHISTORYLISTENER, OnTestsAddHistoryListener)
+
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD2, OnToolsTestYourMethod2)
 	ON_COMMAND(ID_VERIFYBUGS_70228, OnVerifybugs70228)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_CANCEL, OnInterfacesNsirequest)
+
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_RUNALLTESTS, OnInterfacesNsidomwindow)
+
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_INIT, OnInterfacesNsidirectoryservice)
+
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_RUNALLTESTS, OnInterfacesNsiselection)
 	ON_COMMAND(ID_VERIFYBUGS_90195, OnVerifybugs90195)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RUNALLTESTS, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETCOUNT, OnInterfacesNsishistory)
+
 	ON_COMMAND(ID_TESTS_REMOVEHISTORYLISTENER, OnTestsRemovehistorylistener)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETCANGOBACK, OnInterfacesNsiwebnav)
+
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCOPYSELECTION, OnInterfacesNsiclipboardcommands)
+
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_ADDOBSERVERS, OnInterfacesNsiobserverservice)
+
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_REGISTERPROVIDER, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_RUNALLTESTS, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_UNREGISTERPROVIDER, OnInterfacesNsidirectoryservice)
+
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETDOMDOCUMENT, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETFRAMES, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETNAME, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETPARENT, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSCROLLBARS, OnInterfacesNsidomwindow)
+
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSCROLLY, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSCSOLLX, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSELECTION, OnInterfacesNsidomwindow)
+
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLBY, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLBYLINES, OnInterfacesNsidomwindow)
+
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLBYPAGES, OnInterfacesNsidomwindow)
+
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLTO, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SIZETOCONTENT, OnInterfacesNsidomwindow)
+
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETANCHORNODE, OnInterfacesNsiselection)
+
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_ADDRANGE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_COLLAPSE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_COLLAPSETOEND, OnInterfacesNsiselection)
+
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_COLLAPSETOSTART, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_CONTAINSNODE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_DELETEFROMDOCUMENT, OnInterfacesNsiselection)
@@ -128,12 +148,16 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETANCHOROFFSET, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETFOCUSNODE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETFOCUSOFFSET, OnInterfacesNsiselection)
+
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETISCOLLAPSED, OnInterfacesNsiselection)
+
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETRANGEAT, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETRANGECOUNT, OnInterfacesNsiselection)
+
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_REMOVEALLRANGES, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_REMOVERANGE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_SELECTALLCHILDREN, OnInterfacesNsiselection)
+
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_SELECTIONLANGUAGECHANGE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_TOSTRING, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_CLONEPROFILE, OnInterfacesNsiprofile)
@@ -142,8 +166,11 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_GETCURRENTPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_GETPROFILECOUNT, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_GETPROFILELIST, OnInterfacesNsiprofile)
+
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_PROFILEEXISTS, OnInterfacesNsiprofile)
+
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RENAMEPROFILE, OnInterfacesNsiprofile)
+
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SETCURRENTPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SHUTDOWNCURRENTPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETENTRYATINDEX, OnInterfacesNsishistory)
@@ -152,6 +179,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETSHISTORYENUMERATOR, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_PURGEHISTORY, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_RUNALLTESTS, OnInterfacesNsishistory)
+
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_SETMAXLENGTH, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETISSUBFRAME, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETTITLE, OnInterfacesNsishistory)
@@ -166,6 +194,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GOTOINDEX, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_LOADURI, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_RELOAD, OnInterfacesNsiwebnav)
+
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_RUNALLTESTS, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_SETSESSIONHISTORY, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_STOP, OnInterfacesNsiwebnav)
@@ -179,28 +208,44 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SETLOADGROUP, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SUSPEND, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_RUNALLTESTS, OnInterfacesNsirequest)
+
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETTEXTZOOM, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SETTEXTZOOM, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCUTSELECTION, OnInterfacesNsiclipboardcommands)
+
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANPASTE, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_COPYLINKLOCATION, OnInterfacesNsiclipboardcommands)
+
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_COPYSELECTION, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CUTSELECTION, OnInterfacesNsiclipboardcommands)
+
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_PASTE, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTALL, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTNONE, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_ENUMERATEOBSERVERS, OnInterfacesNsiobserverservice)
+
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_NOTIFYOBSERVERS, OnInterfacesNsiobserverservice)
+
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_REMOVEOBSERVERS, OnInterfacesNsiobserverservice)
+
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_RUNALLTESTS, OnInterfacesNsiobserverservice)
+
 	ON_COMMAND(ID_INTERFACES_NSIFILE_APPENDRELATICEPATH, OnInterfacesNsifile)
+
 	ON_COMMAND(ID_INTERFACES_NSIFILE_COPYTO, OnInterfacesNsifile)
+
 	ON_COMMAND(ID_INTERFACES_NSIFILE_CREATE, OnInterfacesNsifile)
+
 	ON_COMMAND(ID_INTERFACES_NSIFILE_EXISTS, OnInterfacesNsifile)
+
 	ON_COMMAND(ID_INTERFACES_NSIFILE_INITWITHPATH, OnInterfacesNsifile)
+
 	ON_COMMAND(ID_INTERFACES_NSIFILE_MOVETO, OnInterfacesNsifile)
+
 	ON_COMMAND(ID_INTERFACES_NSIFILE_RUNALLTESTS, OnInterfacesNsifile)
+
 	//}}AFX_MSG_MAP
+
 END_MESSAGE_MAP()
 
 
@@ -367,7 +412,7 @@ void CTests::OnTestsCreateFile()
 
 	QAOutput("Start Create File test.", 2);
 
-	rv = theTestFile->InitWithPath("c:\\temp\\theFile.txt");
+	rv = theTestFile->InitWithNativePath(NS_LITERAL_CSTRING("c:\\temp\\theFile.txt"));
 	rv = theTestFile->Exists(&exists);
 
 	QAOutput("File (theFile.txt) doesn't exist. We'll create it.\r\n", 1);
@@ -514,7 +559,48 @@ void CTests::OnToolsRemoveAllGH()
 void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
+
+	PRInt32 stateValue=0;
+	short state=0;
+	PRUint32 stateIndex=0, progIndex=0, progValue=0, progMaxVal=0;
+
+	nsCOMPtr<nsIXPIDialogService> 
+		myXPIDlog(do_CreateInstance("@mozilla.org/embedui/xpinstall-dialog-service;1"));
+	if (!myXPIDlog)
+		QAOutput("XPIDlogService object not created.", 2);
+	else
+		QAOutput("XPIDlogService object is created.", 2);
+
+	nsCOMPtr<nsIXPIProgressDialog> 
+		myProgDlog(do_QueryInterface(myXPIDlog, &rv));
+	if (!myProgDlog)
+		QAOutput("XPIProgDlog object not created.", 2);
+	else
+		QAOutput("XPIProgDlog object is created.", 2);
+/*
+	NS_IMPL_THREADSAFE_ISUPPORTS1(CTests, nsIXPIProgressDialog);
+
+	rv = myProgDlog->onStateChange(stateIndex, state, stateValue);
+	RvTestResult(rv, "xpiProgDlog->onStateChange() test ", 2);
+
+	rv = myProgDlog->onProgress(progIndex, progValue, progMaxVal);
+	RvTestResult(rv, "xpiProgDlog->onProgress() test ", 2);
+*/
 }
+/*
+NS_IMETHODIMP CTests::onStateChange(PRUint32 stateIndex, short state, PRInt32 stateValue)
+{
+	QAOutput("Entered onStateChange().", 2);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP CTests::onProgress(PRUint32 progIndex, PRUint32 progValue, PRUint32 progMaxVal);
+{
+	QAOutput("Entered onProgress().", 2);
+    return NS_OK;
+}
+*/
 
 // ***********************************************************************
 void CTests::OnToolsTestYourMethod2()
@@ -613,18 +699,32 @@ void CTests::OnInterfacesNsiwebnav()
 void CTests::OnInterfacesNsiclipboardcommands() 
 {
 	CNsIClipBoardCmd  oClipCmd(qaWebBrowser) ;
+
 	oClipCmd.OnStartTests(nCommandID);
+
 }
+
 
 void CTests::OnInterfacesNsiobserverservice() 
+
 {
+
 	CnsIObserServ oObserv  ;
+
 	oObserv.OnStartTests(nCommandID);
+
+
 
 }
 
+
+
 void CTests::OnInterfacesNsifile() 
+
 {
+
 	CNsIFile oFile ;
+
 	oFile.OnStartTests(nCommandID);
+
 }
