@@ -143,6 +143,12 @@ static const char* const nonDecodableTypes [] = {
   0
 };
 
+static const char* const nonDecodableExtensions [] = {
+  "gz",
+  "zip",
+  0
+};
+
 NS_IMPL_THREADSAFE_ADDREF(nsExternalHelperAppService)
 NS_IMPL_THREADSAFE_RELEASE(nsExternalHelperAppService)
 
@@ -319,10 +325,25 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
 
 NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForType(const char *aMimeContentType, PRBool *aApplyDecoding)
 {
+  NS_PRECONDITION(aMimeContentType, "Null MIME type");
   *aApplyDecoding = PR_TRUE;
   PRUint32 index;
   for (index = 0; nonDecodableTypes[index]; ++index) {
     if (!PL_strcasecmp(aMimeContentType, nonDecodableTypes[index])) {
+      *aApplyDecoding = PR_FALSE;
+      break;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const char *aExtension, PRBool *aApplyDecoding)
+{
+  NS_PRECONDITION(aExtension, "Null Extension");
+  *aApplyDecoding = PR_TRUE;
+  PRUint32 index;
+  for(index = 0; nonDecodableExtensions[index]; ++index) {
+    if (!PL_strcasecmp(aExtension, nonDecodableExtensions[index])) {
       *aApplyDecoding = PR_FALSE;
       break;
     }
@@ -1061,11 +1082,26 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   {
     // Turn off content encoding conversions if needed
     PRBool applyConversion = PR_TRUE;
-    nsXPIDLCString MIMEType;
-    mMimeInfo->GetMIMEType( getter_Copies( MIMEType ) );
+    
     nsCOMPtr<nsIExternalHelperAppService> extHandler = do_GetService("@mozilla.org/uriloader/external-helper-app-service;1");
-    if (extHandler)
+    if (extHandler) {
+      nsXPIDLCString MIMEType;
+      mMimeInfo->GetMIMEType( getter_Copies( MIMEType ) );
       extHandler->ApplyDecodingForType(MIMEType, &applyConversion);
+      
+      if (applyConversion) {
+        // Now we double-check that it's OK to decode this extension
+        nsCOMPtr<nsIURI> channelURI;
+        aChannel->GetURI(getter_AddRefs(channelURI));
+        nsCOMPtr<nsIURL> channelURL(do_QueryInterface(channelURI));
+        nsCAutoString extension;
+        if (channelURL) {
+          channelURL->GetFileExtension(extension);
+          if (!extension.IsEmpty())
+            extHandler->ApplyDecodingForExtension(extension.get(), &applyConversion);
+        }
+      }
+    }
     
     httpChannel->SetApplyConversion( applyConversion );
   }

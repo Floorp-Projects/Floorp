@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsHttpConnection.h"
+#include "nsISimpleEnumerator.h"
 
 class nsHttpTransaction;
 class nsHttpResponseHead;
@@ -176,6 +177,30 @@ private:
     PRPackedBool                      mResponseHeadersModified;
     PRPackedBool                      mCanceled;
     PRPackedBool                      mUploadStreamHasHeaders;
+
+    class nsContentEncodings : public nsISimpleEnumerator
+    {
+    public:
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSISIMPLEENUMERATOR
+
+        nsContentEncodings(nsIHttpChannel* aChannel, const char* aEncodingHeader);
+        virtual ~nsContentEncodings();
+        
+    private:
+        nsresult PrepareForNext(void);
+        
+        // We do not own the buffer.  The channel owns it.
+        const char* mEncodingHeader;
+        const char* mCurStart;  // points to start of current header
+        const char* mCurEnd;  // points to end of current header
+        
+        // Hold a ref to our channel so that it can't go away and take the
+        // header with it.
+        nsCOMPtr<nsIHttpChannel> mChannel;
+        
+        PRPackedBool mReady;
+    };
 };
 
 #endif // nsHttpChannel_h__
