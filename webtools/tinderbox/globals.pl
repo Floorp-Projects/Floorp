@@ -197,13 +197,15 @@ sub load_buildlog {
     }
 
     for $t (@treelist) {
-        open(BUILDLOG, "<$t->{name}/build.dat" );
-        while( <BUILDLOG> ){
+      use Backwards;
+    
+      my ($bw) = Backwards->new("$t->{name}/build.dat") or die;
+
+      while( $_ = $bw->readline ) {
             chomp;
             ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname) = 
                 split( /\|/ );
-
-
+	    last if $buildtime < $mindate;
             $buildrec = {    
                         mailtime => $mailtime,
                         buildtime => $buildtime,
@@ -215,13 +217,11 @@ sub load_buildlog {
                         td => $t
                    };
             if( $mailtime > 0 
-                    && $buildtime > $mindate 
-                    && ($form{noignore} || !($t->{ignore_builds}->{$buildname} != 0)) 
+		&& ($form{noignore} || !($t->{ignore_builds}->{$buildname} != 0)) 
                 ){
-                push @{$build_list}, $buildrec;
+                unshift @{$build_list}, $buildrec;
             }
         }
-        close( BUILDLOG );
     }
 }
 
@@ -308,7 +308,6 @@ sub get_build_time_index {
     }
 
     $time_count = @{$build_time_times}-1;
-
 
     #
     # update the map so it points to the right index
