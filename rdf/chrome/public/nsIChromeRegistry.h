@@ -33,7 +33,7 @@ public:
     static const nsIID& GetIID() { static nsIID iid = NS_ICHROMEREGISTRY_IID; return iid; }
     
     NS_IMETHOD ConvertChromeURL(nsIURL* aChromeURL) = 0;
-    NS_IMETHOD EnsureRegistryDataSource() = 0;
+    NS_IMETHOD InitRegistry() = 0;
 };
 
 // for component registration

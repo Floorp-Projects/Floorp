@@ -229,7 +229,6 @@ nsNetlibService::nsNetlibService()
                                       (nsISupports **)&gChromeRegistry))) {
             gChromeRegistry = nsnull;
         }
-        else gChromeRegistry->Init(); // Load the chrome registry
     }
 }
 
@@ -397,7 +396,8 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     if ((PL_strcmp(protocol, "chrome") == 0) &&
         gChromeRegistry != nsnull) {        
 	  
-      if (NS_FAILED(result = gChromeRegistry->ConvertChromeURL(aUrl))) {
+      if (NS_FAILED(result = gChromeRegistry->InitRegistry()) ||
+		  NS_FAILED(result = gChromeRegistry->ConvertChromeURL(aUrl))) {
           NS_ERROR("Unable to convert chrome URL.");
           return result;
       }
@@ -552,7 +552,8 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
         if ((PL_strcmp(protocol, "chrome") == 0) &&
             gChromeRegistry != nsnull) {        
 	  
-          if (NS_FAILED(result = gChromeRegistry->ConvertChromeURL(aUrl))) {
+          if (NS_FAILED(result = gChromeRegistry->InitRegistry()) ||
+		      NS_FAILED(result = gChromeRegistry->ConvertChromeURL(aUrl))) {
               NS_ERROR("Unable to convert chrome URL.");
               return result;
           }
