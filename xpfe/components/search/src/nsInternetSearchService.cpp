@@ -4106,7 +4106,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		nsCAutoString iconFileURL;
 		if (NS_FAILED(rv = NS_GetURLSpecFromFile(icon, iconFileURL)))
 			return(rv);
-		iconURL = NS_ConvertUTF8toUCS2(iconFileURL);
+		AppendUTF8toUTF16(iconFileURL, iconURL);
 	}
 #ifdef XP_MAC
 	else if (file)
@@ -4115,7 +4115,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		if (NS_FAILED(rv = NS_GetURLSpecFromFile(file,fileURL)))
 			return(rv);
 		iconURL.AssignLiteral("moz-icon:");
-		iconURL.Append(NS_ConvertUTF8toUCS2(fileURL));
+		AppendUTF8toUTF16(fileURL, iconURL);
 	}
 #endif
 
@@ -5312,7 +5312,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 	aURL->GetPath(serverPath);
 	if (!serverPath.IsEmpty())
 	{
-        serverPathStr = NS_ConvertUTF8toUCS2(serverPath);
+        AppendUTF8toUTF16(serverPath, serverPathStr);
         serverPath.Truncate();
 
 		PRInt32 serverOptionsOffset = serverPathStr.FindChar(PRUnichar('?'));

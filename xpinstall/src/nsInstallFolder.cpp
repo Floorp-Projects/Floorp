@@ -729,7 +729,7 @@ nsInstallFolder::ToString(nsAutoString* outString)
     NS_ASSERTION(PR_FALSE, "Couldn't get Unicode path, using broken conversion!");
     nsCAutoString temp;
     rv = mFileSpec->GetNativePath(temp);
-    outString->Assign(NS_ConvertASCIItoUCS2(temp));
+    CopyASCIItoUTF16(temp, *outString);
   }
 
   PRBool flagIsFile = PR_FALSE;

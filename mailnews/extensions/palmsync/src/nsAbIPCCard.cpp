@@ -48,7 +48,7 @@
 extern PRLogModuleInfo *PALMSYNC;
 
 #define CONVERT_ASSIGNTO_UNICODE(d, s, convertCRLF)  d.Truncate();\
-                                        if((char*) s) AppendASCIItoUTF16((char*)s, d);\
+                                        if((char*) s) d.AppendASCII((char*)s);\
                                         if (convertCRLF) \
                                           d.ReplaceSubstring(NS_LITERAL_STRING("\x0D\x0A").get(),NS_LITERAL_STRING(" ").get());
 

@@ -1270,7 +1270,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
         {
             JSString* propValJSStr = JS_NewUCStringCopyZ(cx, NS_REINTERPRET_CAST(const jschar*, pVal.get()));
             jsval propValJSVal = STRING_TO_JSVAL(propValJSStr);
-            nsString UCKey = NS_ConvertUTF8toUCS2(pKey);
+            NS_ConvertUTF8toUTF16 UCKey(pKey);
             JS_SetUCProperty(cx, res, (jschar*)UCKey.get(), UCKey.Length(), &propValJSVal);
         }
     }
@@ -1895,7 +1895,7 @@ nsInstall::FileOpFileGetNativeVersion(nsInstallFolder& aTarget, nsString* aRetur
       rv = nsInstall::OUT_OF_MEMORY;
     else
     {
-      aReturn->Assign(NS_ConvertASCIItoUCS2(nativeVersionString));
+      aReturn->AssignASCII(nativeVersionString);
       PR_smprintf_free(nativeVersionString);
     }
 

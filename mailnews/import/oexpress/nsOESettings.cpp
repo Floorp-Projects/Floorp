@@ -328,7 +328,7 @@ nsresult OESettings::GetAccountName(HKEY hKey, char *defaultName, nsString &acct
     nsOERegUtil::FreeValueBytes( pAccName);
   }
   else
-    CopyASCIItoUTF16(defaultName, acctName);
+    acctName.AssignASCII(defaultName);
   return rv;
 }
 

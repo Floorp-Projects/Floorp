@@ -565,7 +565,7 @@ nsFileView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol,
     else {
       PRInt64 fileSize;
       curFile->GetFileSize(&fileSize);
-      aCellText = NS_ConvertUTF8toUCS2(nsPrintfCString("%lld", fileSize));
+      CopyUTF8toUTF16(nsPrintfCString("%lld", fileSize), aCellText);
     }
   }
 

@@ -518,7 +518,7 @@ nsresult AddressBookParser::ParseFile()
 
     // If a name is found then use it, otherwise use the filename as last resort.
     if (NS_FAILED(rv) || dirName.IsEmpty())
-      CopyASCIItoUTF16(leafName, dirName);
+      dirName.AssignASCII(leafName);
     parentDir->CreateDirectoryByURI(dirName, mDbUri, mMigrating);
         
     rv = ParseLDIFFile();

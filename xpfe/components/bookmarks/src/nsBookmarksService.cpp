@@ -3428,7 +3428,7 @@ nsBookmarksService::RequestCharset(nsIDocShell* aDocShell,
                 if (charsetLiteral) {
                     const PRUnichar* charset;
                     charsetLiteral->GetValueConst(&charset);
-                    aResult = NS_LossyConvertUCS2toASCII(charset);
+                    LossyCopyUTF16toASCII(charset, aResult);
                     *aCharsetSource = kCharsetFromBookmarks;
                     
                     return NS_OK;
@@ -5528,7 +5528,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                         if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&title)))
                         {
                             nameString = title;
-                            name = NS_ConvertUCS2toUTF8(nameString);
+                            AppendUTF16toUTF8(nameString, name);
                         }
                     }
                 }

@@ -285,7 +285,7 @@ nsresult OutlookSettings::GetAccountName(HKEY hKey, char *defaultName, nsString 
     nsOutlookRegUtil::FreeValueBytes( pAccName);
   }
   else
-    CopyASCIItoUTF16(defaultName, acctName);
+    acctName.AssignASCII(defaultName);
   return rv;
 }
 

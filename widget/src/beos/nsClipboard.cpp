@@ -299,7 +299,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWh
           printf("nsClipboard: not found in BMessage\n");
 #endif /* DEBUG_CLIPBOARD */
         } else {
-          nsString ucs2Str = NS_ConvertUTF8toUCS2((const char *)data, (PRUint32)size);
+          NS_ConvertUTF8toUTF16 ucs2Str((const char *)data, (PRUint32)size);
           nsCOMPtr<nsISupports> genericDataWrapper;
           nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, (void *)ucs2Str.get(), ucs2Str.Length() * 2, getter_AddRefs(genericDataWrapper));
           rv = aTransferable->SetTransferData(flavorStr, genericDataWrapper, ucs2Str.Length() * 2);

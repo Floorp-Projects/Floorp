@@ -949,7 +949,9 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
 
     // eventually we'll be supporting this in SetRowValue()
   case 1:                       // UTF8
-    aResult.Assign(NS_ConvertUTF8toUCS2((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill));
+    CopyUTF8toUTF16(Substring((const char*)yarn.mYarn_Buf,
+                              (const char*)yarn.mYarn_Buf + yarn.mYarn_Fill),
+                    aResult);
     break;
 
   default:
@@ -1773,7 +1775,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
         if (NS_FAILED(rv)) return rv;
         
         // assume the url is in UTF8
-        title = NS_ConvertUTF8toUCS2(filename);
+        AppendUTF8toUTF16(filename, title);
       }
       if (NS_FAILED(rv)) return rv;
 
@@ -3767,7 +3769,7 @@ nsGlobalHistory::GetFindUriPrefix(const searchQuery& aQuery,
     aResult.Append(term->method);
 
     aResult.Append("&text=");
-    aResult.Append(NS_ConvertUCS2toUTF8(term->text));
+    AppendUTF16toUTF8(term->text, aResult);
   }
 
   if (aQuery.groupBy == 0) return;
@@ -3903,7 +3905,9 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       PRInt32 yarnLength = yarn.mYarn_Fill;
       nsCAutoString titleStr;
       if (property_column == kToken_NameColumn) {
-        titleStr =  NS_ConvertUCS2toUTF8((const PRUnichar*)yarn.mYarn_Buf, yarnLength);
+        AppendUTF16toUTF8(Substring((const PRUnichar*)yarn.mYarn_Buf,
+                                    (const PRUnichar*)yarn.mYarn_Buf + yarnLength),
+                          titleStr);
         startPtr = titleStr.get();
         yarnLength = titleStr.Length();
       }

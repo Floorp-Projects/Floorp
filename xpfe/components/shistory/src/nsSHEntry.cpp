@@ -145,7 +145,7 @@ NS_IMETHODIMP nsSHEntry::GetTitle(PRUnichar** aTitle)
       // Default title is the URL.
       nsCAutoString spec;
       if ( NS_SUCCEEDED( mURI->GetSpec( spec ) ) ) {
-          mTitle = NS_ConvertUTF8toUCS2( spec ); 
+          AppendUTF8toUTF16(spec, mTitle);
       }
    }
 

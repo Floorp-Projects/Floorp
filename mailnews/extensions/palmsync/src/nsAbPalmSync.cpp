@@ -128,7 +128,7 @@ nsAbPalmHotSync::nsAbPalmHotSync(PRBool aIsUnicode, PRUnichar * aAbDescUnicode, 
     if(aIsUnicode)
         mAbName.Assign(aAbDescUnicode);
     else
-        CopyASCIItoUTF16(aAbDesc, mAbName);
+        mAbName.AssignASCII(aAbDesc);
     mAbName.Trim(" ");
 
     mPalmCategoryIndex = aPalmCatIndex;

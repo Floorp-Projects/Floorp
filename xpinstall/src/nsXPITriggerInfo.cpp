@@ -123,7 +123,7 @@ nsXPITriggerItem::SetPrincipal(nsIPrincipal* aPrincipal)
     if (hasCert) {
         nsXPIDLCString cName;
         aPrincipal->GetCommonName(getter_Copies(cName));
-        mCertName = NS_ConvertUTF8toUCS2(cName);
+        CopyUTF8toUTF16(cName, mCertName);
     }
 }
 
