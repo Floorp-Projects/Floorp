@@ -160,9 +160,11 @@ sub query_checkins {
     }
 
     if (0 < @::query_dirs) {
+        my @list;
         foreach my $i (@::query_dirs) {
-            $qstring .= " and dirs.dir like " . SqlQuote("$i%");
+            push(@list, "dirs.dir like " . SqlQuote("$i%"));
         }
+        $qstring .= "and (" . join(" or ", @list) . ")";
     }
 
     if (defined $::query_file && $::query_file ne '') {
