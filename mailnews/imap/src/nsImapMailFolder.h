@@ -272,6 +272,7 @@ protected:
     nsNativeFileSpec m_pathName;
 	nsIMsgDatabase* m_mailDatabase;
     PRBool m_initialized;
+    PRBool m_haveDiscoverAllFolders;
     PRBool m_haveReadNameFromDB;
 	nsParseMailMessageState *m_msgParser;
 	nsMsgKey			m_curMsgUid;
