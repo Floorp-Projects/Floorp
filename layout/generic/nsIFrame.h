@@ -517,11 +517,6 @@ public:
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const = 0;
 
   /**
-   * Gets the size of an "auto" margin.
-   */
-  NS_IMETHOD  GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const = 0;
-
-  /**
    * Does this frame have content that is considered "transparent"?
    * This is binary transparency as opposed to translucency. MMP
    */
