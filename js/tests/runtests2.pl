@@ -75,9 +75,9 @@ $SIG{INT} = 'int_handler';
 
 sub execute_tests {
     local (@test_list) = @_;
-    local $engine_command = &get_engine_command . " ";
+    local $engine_command = &get_engine_command;
     local $test, $shell_command, $line, @output;
-    local $file_param = ($opt_engine_type eq "rhino") ? " " : " -f ";
+    local $file_param = " -f ";
     local $last_suite, $last_test_dir;
     local $failure_lines;
 
@@ -131,13 +131,16 @@ sub execute_tests {
         }
         
         if (!@output) {
-            &report_failure ($test, "Test case produced no output!");
+            &report_failure ($test, "Expected exit code " .
+                             "$expected_exit, got $got_exit\n" .
+                             "Testcase terminated with signal $exit_signal\n" .
+                             "Test case produced no output!");
         } elsif ($got_exit != $expected_exit) {
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
                              "Testcase terminated with signal $exit_signal\n" .
                              "Complete testcase output was:\n" .
-                             join ("\n",@output));
+                             join ("\n",reverse(@output)));
         } elsif ($failure_lines) {
             &report_failure ($test, $failure_lines);
         }        
@@ -392,7 +395,7 @@ sub get_test_list {
         @test_list = &get_default_test_list($opt_suite_path);
     }
     
-    &dd ("$#test_list test(s) found.");
+    &dd (($#test_list + 1) . " test(s) found.");
     
     return @test_list;
     
@@ -410,7 +413,7 @@ sub get_user_test_list {
     }
 
     if ($list_file =~ /\.js$/) {
-        return $list_file;
+        return ($list_file);
     }
 
     open (TESTLIST, $list_file) || 
@@ -540,10 +543,14 @@ sub get_js_files {
 
 sub report_failure {
     local ($test, $message) = @_;
+    
+    $test =~ /[^\/]+\/[^\/]+\/[^\/]+$/;
 
-    dd ("<> Testcase $test failed with message '$message'");
-    $message =~ s/\n/<br>\n/g;
-    $html .= $message;
+    dd ("<> Testcase $test failed:\n$message");
+    #$message =~ s/\n/<br>\n/g;
+    $html .= "<dd><p class='fail_title'>".
+      "Testcase <h href='$lxrurl$test'>$test</a> failed<br>\n" .
+        "<pre>$message</pre>";
     @failed_tests[$#failed_tests + 1] = $test;
 
 }
@@ -559,20 +566,16 @@ sub dd {
 sub int_handler {
     local $resp;
 
-    $SIG{INT} = 'DEFAULT';
-
     do {
         print ("\n** User Break: [Q]uit Now, Quit and [R]eport, [C]ontinue ?");
         $resp = <STDIN>;
     } until ($resp =~ /[QqRrCc]/);
 
     if ($resp =~ /[Qq]/) {
-        print ("User Exit.");
+        print ("User Exit.  No results were generated.\n");
         exit;
     } elsif ($resp =~ /[Rr]/) {
         $user_exit = 1;
     }
-
-    $SIG{INT} = 'int_handler';
 
 }
