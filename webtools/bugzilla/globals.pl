@@ -647,7 +647,7 @@ sub CanSeeBug {
     my $query = "SELECT bugs.bug_id, reporter, assigned_to, qa_contact," .
         " reporter_accessible, cclist_accessible," .
         " cc.who IS NOT NULL," .
-        " COUNT(bug_group_map.group_id) as cntbugingroups," .
+        " COUNT(DISTINCT(bug_group_map.group_id)) as cntbugingroups," .
         " COUNT(DISTINCT(user_group_map.group_id)) as cntuseringroups" .
         " FROM bugs" .
         " LEFT JOIN cc ON bugs.bug_id = cc.bug_id" .
