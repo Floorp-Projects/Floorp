@@ -202,20 +202,20 @@ extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor)
 
 extern "C" NS_GFX_(void) NS_GetSpecial3DColors(nscolor aResult[2],
 											   nscolor aBackgroundColor,
-											   nscolor aElementColor)
+											   nscolor aBorderColor)
 {
 
   PRUint8 f0, f1;
   PRUint8 r, g, b;
-  
+
+  PRUint8 rb = NS_GET_R(aBorderColor);
+  PRUint8 gb = NS_GET_G(aBorderColor);
+  PRUint8 bb = NS_GET_B(aBorderColor);
+
   // This needs to be optimized.
-  // Calculating brightness again and again is 
+  // Calculating background brightness again and again is 
   // a waste of time!!!. Just calculate it only once.
   // .....somehow!!!
-  
-  PRUint8 rb = NS_GET_R(aElementColor);
-  PRUint8 gb = NS_GET_G(aElementColor);
-  PRUint8 bb = NS_GET_B(aElementColor);
 
   PRUint8 red = NS_GET_R(aBackgroundColor);
   PRUint8 green = NS_GET_G(aBackgroundColor);
