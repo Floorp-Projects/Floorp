@@ -3089,7 +3089,6 @@ CK_RV NSC_SetAttributeValue (CK_SESSION_HANDLE hSession,
 #define NSC_PRIVATE	0x00000010
 #define NSC_PUBLIC	0x00000020
 #define NSC_KEY		0x00000040
-#define NSC_SMIME_CERT  0x00000080
 
 /*
  * structure to collect key handles.
@@ -3378,6 +3377,7 @@ pk11_CertSetupData(pk11CertData *certData,int count)
 static void
 pk11_searchCertsAndTrust(PK11Slot *slot, SECItem *derCert, SECItem *name, 
 			SECItem *derSubject, NSSLOWCERTIssuerAndSN *issuerSN, 
+			SECItem *email,
 			unsigned long classFlags, PK11SearchResults *handles, 
 			CK_ATTRIBUTE *pTemplate, CK_LONG ulCount)
 {
@@ -3433,6 +3433,29 @@ pk11_searchCertsAndTrust(PK11Slot *slot, SECItem *derCert, SECItem *name,
 		nsslowcert_FindCertByIssuerAndSN(certHandle,issuerSN);
 
 	pk11_searchSingleCert(&certData,cert);
+    } else if (email->data != NULL) {
+	char *tmp_name = (char*)PORT_Alloc(email->len+1);
+	certDBEntrySMime *entry = NULL;
+
+	if (tmp_name == NULL) {
+	    return;
+	}
+	PORT_Memcpy(tmp_name,email->data,email->len);
+	tmp_name[email->len] = 0;
+
+	entry = nsslowcert_ReadDBSMimeEntry(certHandle,tmp_name);
+	if (entry) {
+	    int count;
+	    SECItem *subjectName = &entry->subjectName;
+
+	    count = nsslowcert_NumPermCertsForSubject(certHandle, subjectName);
+	    pk11_CertSetupData(&certData,count);
+	    nsslowcert_TraversePermCertsForSubject(certHandle, subjectName, 
+						pk11_cert_collect, &certData);
+
+	    nsslowcert_DestroyDBEntry((certDBEntry *)entry);
+	}
+	PORT_Free(tmp_name);
     } else {
 	/* we aren't filtering the certs, we are working on all, so turn
 	 * on the strict filters. */
@@ -3575,7 +3598,7 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
     };
     SECItem *copy = NULL;
     unsigned long classFlags = 
-	NSC_CERT|NSC_TRUST|NSC_PRIVATE|NSC_PUBLIC|NSC_KEY|NSC_SMIME|NSC_SMIME_CERT ;
+	NSC_CERT|NSC_TRUST|NSC_PRIVATE|NSC_PUBLIC|NSC_KEY|NSC_SMIME;
 
     /* if we aren't logged in, don't look for private or secret keys */
     if (!isLoggedIn) {
@@ -3613,7 +3636,7 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
 	    break;
 	case CKA_NETSCAPE_EMAIL:
 	    copy = &email;
-	    classFlags &= NSC_SMIME_CERT;
+	    classFlags &= NSC_SMIME|NSC_CERT;
 	    break;
 	case CKA_NETSCAPE_SMIME_TIMESTAMP:
 	    classFlags &= NSC_SMIME;
@@ -3625,7 +3648,7 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
 	    }
 	    switch (*((CK_OBJECT_CLASS *)pTemplate[i].pValue)) {
 	    case CKO_CERTIFICATE:
-		classFlags &= NSC_CERT|NSC_SMIME_CERT;
+		classFlags &= NSC_CERT;
 		break;
 	    case CKO_NETSCAPE_TRUST:
 		classFlags &= NSC_TRUST;
@@ -3748,7 +3771,7 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
     /* certs */
     if (classFlags & (NSC_CERT|NSC_TRUST)) {
 	pk11_searchCertsAndTrust(slot,&derCert,&name,&derSubject,
-				 &issuerSN,classFlags,search, 
+				 &issuerSN, &email,classFlags,search, 
 				pTemplate, ulCount);
     }
 
@@ -3767,11 +3790,6 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
     if (classFlags & NSC_SMIME) {
 	pk11_searchSMime(slot, &email, search, pTemplate, ulCount);
     }
-    /* special case - use the S/MIME entry to obtain a certificate */
-    if (classFlags & NSC_SMIME_CERT) {
-	pk11_searchSMimeForCert(slot, &email, classFlags, search, pTemplate, ulCount);
-    }
-
     return CKR_OK;
 }
 	
