@@ -537,6 +537,7 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 inline PRInt32 FindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
+#ifndef XPCOM_STANDALONE
 
   if(anOffset<0)
     anOffset=0;
@@ -578,6 +579,9 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
     }
   }
 
+#else
+  NS_ERROR("call not supported in XPCOM_STANDALONE");
+#endif
   return kNotFound;
 }
 
@@ -652,6 +656,7 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
+#ifndef XPCOM_STANDALONE
 
   if(anOffset<0)
     anOffset=(PRInt32)aDestLength-1;
@@ -692,6 +697,9 @@ inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
       }
     }
   }
+#else
+  NS_ERROR("call not supported in XPCOM_STANDALONE");
+#endif
 
   return kNotFound;
 }
@@ -739,9 +747,13 @@ PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
 PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
   PRInt32 result=0;
+#ifndef XPCOM_STANDALONE
   if(aIgnoreCase && NS_SUCCEEDED(NS_InitCaseConversion()))
     gCaseConv->CaseInsensitiveCompare((PRUnichar*)aStr1, (PRUnichar*)aStr2, aCount, &result);
   else result=nsCRT::strncmp((PRUnichar*)aStr1,(PRUnichar*)aStr2,aCount);
+#else
+  NS_ERROR("call not supported in XPCOM_STANDALONE");
+#endif
   return result;
 }
 
@@ -757,6 +769,7 @@ PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  */
 PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
+#ifndef XPCOM_STANDALONE
   PRUnichar* s1 = (PRUnichar*)aStr1;
   const char *s2 = aStr2;
   
@@ -784,6 +797,9 @@ PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
       } while (--aCount);
     }
   }
+#else
+  NS_ERROR("call not supported in XPCOM_STANDALONE");
+#endif
   return 0;
 }
 
@@ -882,6 +898,8 @@ PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){
 
       break;
     }
+#else
+    NS_ERROR("call not supported in XPCOM_STANDALONE");
 #endif
     if(aToUpper) {
       if ((ch >= 'a') && (ch <= 'z')) {
