@@ -32,6 +32,7 @@
 #include "nsCookie.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -118,17 +119,17 @@ nsresult nsCookieService::Init() {
 
 NS_IMETHODIMP
 nsCookieService::GetCookieString(nsIURI *aURL, nsString& aCookie) {
-  char *spec = NULL;
-  nsresult result = aURL->GetSpec(&spec);
-  NS_ASSERTION(result == NS_OK, "deal with this");
-  char *cookie = COOKIE_GetCookie((char *)spec);
+  nsXPIDLCString spec;
+  nsresult rv = aURL->GetSpec(getter_Copies(spec));
+  if (NS_FAILED(rv)) return rv;
+  char *cookie = COOKIE_GetCookie((char *)(const char *)spec);
   if (nsnull != cookie) {
     aCookie.SetString(cookie);
     nsCRT::free(cookie);
   } else {
+    // No Cookie isn't an error condition.
     aCookie.SetString("");
   }
-  nsCRT::free(spec);
   return NS_OK;
 }
 
