@@ -61,6 +61,10 @@
 #include "jsregexp.h"
 #include "jsscan.h"
 
+/* Unicode separators that are treated as line terminators, in addition to \n, \r */
+#define LINE_SEPARATOR  (0x2028)
+#define PARA_SEPARATOR  (0x2029)
+
 #define RESERVE_JAVA_KEYWORDS
 #define RESERVE_ECMA_KEYWORDS
 
@@ -318,16 +322,25 @@ GetChar(JSTokenStream *ts)
                                     &ts->listenerTSData, ts->listenerData);
 	        /*
 	         * Any one of \n, \r, or \r\n ends a line (longest match wins).
+                 * Also allow the Unicode line and paragraph separators.
 	         */
 	        for (nl = ts->userbuf.ptr; nl < ts->userbuf.limit; nl++) {
-		    if (*nl == '\n')
-		        break;
-		    if (*nl == '\r') {
-		        if (nl + 1 < ts->userbuf.limit && nl[1] == '\n')
-			    nl++;
-		        break;
-		    }
-	        }
+                    /*
+                    * Try to prevent value-testing on most characters by
+                    * filtering out characters that aren't 000x or 202x.
+                    */
+                    if ((*nl & 0xDFD0) == 0) {
+		        if (*nl == '\n')
+		            break;
+		        if (*nl == '\r') {
+		            if (nl + 1 < ts->userbuf.limit && nl[1] == '\n')
+			        nl++;
+		            break;
+		        }
+                        if ((*nl == LINE_SEPARATOR) || (*nl == PARA_SEPARATOR))
+		            break;
+                    }
+                }
 
 	        /*
 	         * If there was a line terminator, copy thru it into linebuf.
@@ -376,6 +389,9 @@ GetChar(JSTokenStream *ts)
 			    JS_ASSERT(ts->linebuf.base[len] == '\n');
 			    ts->linebuf.base[len-1] = '\n';
 		        }
+		    } else if ((*nl == LINE_SEPARATOR) ||
+                               (*nl == PARA_SEPARATOR)) {
+                        ts->linebuf.base[len-1] = '\n';
 		    }
 	        }
 
@@ -716,10 +732,10 @@ retry:
 	RETURN(TOK_EOF);
 
     hadUnicodeEscape = JS_FALSE;
-    if (JS_ISIDENT_START(c) 
-                || ((c == '\\') 
-                        && (c = getUnicodeEscape(ts), 
-                            hadUnicodeEscape = JS_ISIDENT_START(c)))) {
+    if (JS_ISIDENT_START(c) ||
+        ((c == '\\') &&
+            (c = getUnicodeEscape(ts), 
+            hadUnicodeEscape = JS_ISIDENT_START(c)))) {
 	INIT_TOKENBUF(&ts->tokenbuf);
         for (;;) {
 	    if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
