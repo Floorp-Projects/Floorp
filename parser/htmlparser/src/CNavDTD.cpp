@@ -45,6 +45,7 @@
 #include "prmem.h"
 
 #undef  ENABLE_RESIDUALSTYLE  
+#define RGESS_DEBUG 1
 #define RICKG_DEBUG 
 #ifdef  RICKG_DEBUG
 #include  <fstream.h>  
@@ -1604,7 +1605,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
   
-  //mLineNumber += (aToken->GetStringValueXXX()).CountChar(kNewLine);
+  mLineNumber += (aToken->GetStringValueXXX()).CountChar(kNewLine);
   nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
 
   #ifdef  RICKG_DEBUG
