@@ -20,6 +20,7 @@
   visibility: collapse;
 }
 
+/* this is unfortunate. should be display="none" */
 *[hidden="true"] {
   display: none;
 }
@@ -264,7 +265,6 @@ treeitem {
  behavior: url("chrome://global/content/treeBindings.xml#treeitem");
 } 
 
-
 treecell { 
  vertical-align: middle;
  behavior: url("chrome://global/content/treeBindings.xml#treecell");
@@ -296,6 +296,10 @@ treeitem[container="true"] > treerow > .treecell-indent {
 
 .treecell-align-right {
   behavior: url("chrome://global/content/treeBindings.xml#treecell-align-right");
+}
+
+.tree-header-image {
+  list-style-image: inherit;
 }
 
 treeitem > treechildren {
@@ -616,3 +620,13 @@ splitter.tree-splitter {
   width: 0px;
   max-width: 0px;
 }
+
+/*
+addressingwidget {
+  behavior                : url("chrome://global/content/addressingBindings.xml#addressingWidget");
+}
+
+address {
+  behavior                : url("chrome://global/content/addressingBindings.xml#address");
+}
+*/

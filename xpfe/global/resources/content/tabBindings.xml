@@ -5,9 +5,27 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="tabcontrol" extends="xul:box">
-    <content orient="vertical">
-      <children/>
-    </content>
+    <content orient="vertical" excludes="*"/>
+    <!-- pass-through interface -->
+    <interface>
+      <property name="selectedTab">
+        <setter>
+        <![CDATA[
+          var tabbox = this.getElementsByTagName("tabbox");
+          tabbox = tabbox.length ? tabbox[0] : null;
+          if (tabbox) tabbox.selectedTab = val;
+          return val;
+        ]]>
+        </setter>
+        <getter>
+        <![CDATA[
+          var tabbox = this.getElementsByTagName("tabbox");
+          tabbox = tabbox.length ? tabbox[0] : null;
+          return tabbox ? tabbox.selectedTab : null;
+        ]]>
+        </getter>
+      </property>
+    </interface>
   </binding>
 
   <binding id="tabbox" extends="xul:box">
@@ -26,6 +44,7 @@
         <setter>
         <![CDATA[
           if (!val.selected) val.selected = true;
+          var selectedIndex = 0;
           for (var i = 0; i < this.childNodes.length; i++)
             {
               if (this.childNodes[i] != val && this.childNodes[i].selected)
@@ -33,38 +52,53 @@
                   this.childNodes[i].selected = false;
                   this.childNodes[i].removeAttribute("selected");
                 }
+              else
+                selectedIndex = i;
             }
+          var tabpanel = this.parentNode.getElementsByTagName("tabpanel");
+          tabpanel = tabpanel.length ? tabpanel[0] : null;
+          if (tabpanel) tabpanel.index = selectedIndex;
           return val;
         ]]>
         </setter>
       </property>
     </interface>
+    <handlers>
+      <!-- XXX - hyatt is lazy
+      <handler name="bindinginit">
+      <![CDATA]
+        // first and last tabs need to be able to have unique styles
+        // and also need to select first tab on startup. 
+        var tabs = this.getElementsByTagName("tab");
+        if (tabs.length) {
+          if (tabs.length > 1) {
+            tabs[0].setAttribute("first-tab", "true");
+            tabs[tabs.length - 1].setAttribute("last-tab", "true");
+          }
+          else if (tabs.length == 1)
+            tabs[0].setAttribute("first-tab", "true");
+          this.selectedTab = tabs[0];
+        }
+      ]]>
+      </handler>
+      -->
+    </handlers>
   </binding>
   
   <binding id="tabpanel" extends="xul:deck">
     <interface>
-      <method name="switchTab">
-        <argument name="aTabElement"/>
-        <body>
-        <![CDATA[
-          var tabbox = this.parentNode.getElementsByTagName("tabbox");
-          tabbox = tabbox.length ? tabbox[0] : null;
-          tabbox.child
-        ]]>
-        </body>
-      </method>
+      <!-- should be defined on deck! -->
+      <property name="index"
+                onget="return this.getAttribute('index');"
+                onset="this.setAttribute('index',val); return val;"/>
     </interface>
   </binding>
 
-  <binding id="tab" extends="xul:stack">
+  <binding id="tab" extends="xul:button">
     <content>
-      <xul:box class="tab-stack-lower">
-        <xul:image class="tab-stack-lower-image" inherits="src"/>
-        <xul:text class="tab-stack-lower-text" inherits="value,accesskey,crop"/>
-      </xul:box>
-      <xul:box class="tab-stack-upper">
-        <xul:image class="tab-stack-upper-image" inherits="src"/>
-        <xul:text class="tab-stack-upper-text" inherits="value,accesskey,crop"/>
+      <xul:box class="tab-box">
+        <xul:image class="tab-image" inherits="src"/>
+        <xul:text class="tab-text" inherits="value,accesskey,crop"/>
       </xul:box>
     </content>
     <interface>
@@ -72,20 +106,30 @@
                 onget="return this.getAttribute('tabbox');"
                 onset="this.setAttribute('tabbox', val); return val;"/>
       <!-- XXX -->                
-      <property name="selected" 
-                onget="return this.getAttribute('selected');"
-                onset="this.setAttribute('selected', val); return val;"/>
+      <property name="selected">
+        <getter>
+          return this.getAttribute("selected");
+        </getter>
+        <setter>
+          this.setAttribute("selected",val);
+          if (this.previousSibling) 
+            this.previousSibling.setAttribute("beforeselected",val);
+          if (this.nextSibling)
+            this.nextSibling.setAttribute("afterselected",val);
+          return val;
+        </setter>
+      </property>
     </interface>
     <handlers>
       <handler type="command">
       <![CDATA[
-        var tabboxID = this.getAttribute("tabbox");
-        var tabbox = tabboxID != "" ? this.getElementsById(tabboxID) : this.parentNode;
+        var tabbox = this.parentNode;
+        while (tabbox.localName != "tabcontrol") {
+          if (tabbox.localName == "tabbox") break;
+          tabbox = tabbox.parentNode;
+        }
         tabbox.selectedTab = this;
         if (!this.selected) this.selected = true;
-        var tabpanel = this.parentNode.parentNode.getElementsByTagName("tabpanel");
-        tabpanel = tabpanel.length ? tabpanel[0] : null;
-        if (tabpanel) tabpanel.switchTab(this);
       ]]>
       </handler>
     </handlers>

@@ -77,8 +77,8 @@ Contributor(s):
       <xul:box orient="vertical" flex="1" class="toolbar-internal-box">
         <children/>
       </xul:box>
-      <xul:box class="collapsed-tray-holder" collapsed="true">
-        <xul:box class="collapsed-tray"/>
+      <xul:box tbattr="collapsed-tray-holder" class="collapsed-tray-holder" collapsed="true">
+        <xul:box tbattr="collapsed-tray" class="collapsed-tray"/>
         <xul:spring flex="1" class="collapsed-tray-spring"/>
       </xul:box>
     </content>
@@ -91,7 +91,6 @@ Contributor(s):
           try {
             this.createCollapsedGrippy(toolbar);
             toolbar.setAttribute("collapsed", "true");
-            // COOK ME SOME F*CKING EGGS!
             document.persist(toolbar.id, "collapsed");
           }
           catch(e) {
@@ -106,32 +105,27 @@ Contributor(s):
           var idString = aGrippyID.substring("moz_tb_collapsed_".length, aGrippyID.length);
           var toolbar = document.getElementById(idString);
           toolbar.setAttribute("collapsed", "false");
-          var collapsedTray = this.findNodeByClass("collapsed-tray");
+          var collapsedTray = this.findNodeByAttribute("tbattr", "collapsed-tray");
           var collapsedToolbar = document.getElementById("moz_tb_collapsed_" + toolbar.id);
           collapsedTray.removeChild(collapsedToolbar);
           if (!collapsedTray.hasChildNodes()) 
-            this.findNodeByClass("collapsed-tray-holder").setAttribute("collapsed", "true");
-          // COOK ME SOME F*CKING EGGS!
+            this.findNodeByAttribute("tbattr", "collapsed-tray-holder").setAttribute("collapsed", "true");
           document.persist(toolbar.id, "collapsed");
         ]]>
         </body>
       </method>
-      <method name="findNodeByClass">
-        <argument name="aClassName"/>
+      <method name="findNodeByAttribute">
+        <argument name="aAttribute"/>
+        <argument name="aValue"/>
         <body>
         <![CDATA[
           var nodes = document.getAnonymousNodes(this);
           for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].getAttribute("class") == aClassName)
+            if (nodes[i].getAttribute(aAttribute) == aValue)
               return nodes[i];
             else {
-              var subnodes = nodes[i].getElementsByAttribute("class", aClassName);
-              if (subnodes.length) {
-                for (var i = 0; i < subnodes.length; i++) {
-                  if (subnodes[i].getAttribute("class") == aClassName) 
-                    return subnodes[i];
-                }
-              }
+              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
+              return subnodes.length ? subnodes[0] : null;
             }
           }
         ]]>
@@ -143,7 +137,7 @@ Contributor(s):
         <![CDATA[
           const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           try {
-            var grippy = aToolbar.findNodeByClass("toolbar-grippy");
+            var grippy = aToolbar.findNodeByAttribute("tbattr", "toolbar-grippy");
             var boxObject = grippy.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
             var collapsedGrippy = document.createElementNS(XUL_NS, "toolbargrippy");
             if (collapsedGrippy) {
@@ -156,10 +150,10 @@ Contributor(s):
               collapsedGrippy.setAttribute("id", "moz_tb_collapsed_" + aToolbar.id);
               collapsedGrippy.collapsed = true;
               collapsedGrippy.setAttribute("tbgrippy-collapsed", "true");
-              var collapsedTrayHolder = this.findNodeByClass("collapsed-tray-holder");
+              var collapsedTrayHolder = this.findNodeByAttribute("tbattr", "collapsed-tray-holder");
               if (collapsedTrayHolder.getAttribute("collapsed") == "true");
                 collapsedTrayHolder.removeAttribute("collapsed");
-              this.findNodeByClass("collapsed-tray").appendChild(collapsedGrippy);
+              this.findNodeByAttribute("tbattr", "collapsed-tray").appendChild(collapsedGrippy);
               collapsedGrippy = document.getElementById("moz_tb_collapsed_" + aToolbar.id);
               collapsedGrippy.setAttribute("onclick", "this.grippyClicked()");
             }
@@ -201,29 +195,25 @@ Contributor(s):
   <binding id="toolbar" extends="xul:box">
     <content>
       <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
-                         onclick="this.grippyClicked();"
+                         onclick="this.grippyClicked();" tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
-      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" autostretch="never">
+      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,tborient:orient,tbautostretch:autostretch" autostretch="never">
         <children/>
       </xul:box>
     </content>
     <interface>
-      <method name="findNodeByClass">
-        <argument name="aClassName"/>
+      <method name="findNodeByAttribute">
+        <argument name="aAttribute"/>
+        <argument name="aValue"/>
         <body>
         <![CDATA[
           var nodes = document.getAnonymousNodes(this);
           for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].getAttribute("class") == aClassName)
+            if (nodes[i].getAttribute(aAttribute) == aValue)
               return nodes[i];
             else {
-              var subnodes = nodes[i].getElementsByAttribute("class", aClassName);
-              if (subnodes.length) {
-                for (var i = 0; i < subnodes.length; i++) {
-                  if (subnodes[i].getAttribute("class") == aClassName) 
-                    return subnodes[i];
-                }
-              }
+              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
+              return subnodes.length ? subnodes[0] : null;
             }
           }
         ]]>
@@ -242,22 +232,18 @@ Contributor(s):
       </xul:box>
     </content>
     <interface>
-      <method name="findNodeByClass">
-        <argument name="aClassName"/>
+      <method name="findNodeByAttribute">
+        <argument name="aAttribute"/>
+        <argument name="aValue"/>
         <body>
         <![CDATA[
           var nodes = document.getAnonymousNodes(this);
           for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].getAttribute("class") == aClassName)
+            if (nodes[i].getAttribute(aAttribute) == aValue)
               return nodes[i];
             else {
-              var subnodes = nodes[i].getElementsByAttribute("class", aClassName);
-              if (subnodes.length) {
-                for (var i = 0; i < subnodes.length; i++) {
-                  if (subnodes[i].getAttribute("class") == aClassName) 
-                    return subnodes[i];
-                }
-              }
+              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
+              return subnodes.length ? subnodes[0] : null;
             }
           }
         ]]>
