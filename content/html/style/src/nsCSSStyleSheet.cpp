@@ -57,6 +57,7 @@
 #include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
 #include "nsDOMError.h"
+#include "nsIPresShell.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsICSSParser.h"
@@ -67,6 +68,7 @@
 #include "prlog.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
+#include "nsIStyleRuleSupplier.h"
 #include "nsISizeOfHandler.h"
 #include "nsStyleUtil.h"
 #ifdef MOZ_XUL
@@ -2659,7 +2661,8 @@ struct SelectorMatchesData {
   nsIContent*       mParentContent; // if content, content->GetParent()
   nsIStyleContext*  mParentContext;
   nsISupportsArray* mResults;
-
+  nsCOMPtr<nsIStyleRuleSupplier> mStyleRuleSupplier; // used to query for the current scope
+  
   nsIAtom*          mContentTag;    // if content, then content->GetTag()
   nsIAtom*          mContentID;     // if styled content, then styledcontent->GetID()
   nsIStyledContent* mStyledContent; // if content, content->QI(nsIStyledContent)
@@ -3090,6 +3093,20 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
           else {
             result = PR_TRUE;
           }
+        }
+        else if (nsCSSAtoms::xblBoundElementPseudo == pseudoClass->mAtom) {
+          if (!data.mStyleRuleSupplier) {
+            nsCOMPtr<nsIPresShell> shell;
+            data.mPresContext->GetShell(getter_AddRefs(shell));
+            nsCOMPtr<nsIStyleSet> styleSet;
+            shell->GetStyleSet(getter_AddRefs(styleSet));
+            styleSet->GetStyleRuleSupplier(getter_AddRefs(data.mStyleRuleSupplier));
+          }
+
+          if (data.mStyleRuleSupplier)
+            data.mStyleRuleSupplier->MatchesScopedRoot(data.mContent, &result);
+          else 
+            result = PR_FALSE;
         }
         else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
           // XXX not yet implemented

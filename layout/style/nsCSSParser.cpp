@@ -1372,6 +1372,7 @@ static PRBool IsPseudoClass(const nsIAtom* aAtom)
                 (nsCSSAtoms::langPseudo == aAtom) ||
                 (nsCSSAtoms::linkPseudo == aAtom) ||
                 (nsCSSAtoms::rootPseudo == aAtom) ||
+                (nsCSSAtoms::xblBoundElementPseudo == aAtom) ||
                 (nsCSSAtoms::outOfDatePseudo == aAtom) ||
                 (nsCSSAtoms::visitedPseudo == aAtom));
 }

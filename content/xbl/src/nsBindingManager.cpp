@@ -347,6 +347,7 @@ public:
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
                        nsISupportsArrayEnumFunc aFunc, void* aData,
                        nsIContent* aContent);
+  NS_IMETHOD MatchesScopedRoot(nsIContent* aContent, PRBool* aResult);
 
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument* aDocument) { return NS_OK; }
@@ -452,6 +453,9 @@ protected:
 
   // A queue of binding attached event handlers that are awaiting execution.
   nsCOMPtr<nsISupportsArray> mAttachedQueue;
+
+  // A current scope.  Used when walking style rules.
+  nsIContent* mCurrentStyleRoot;
 };
 
 // Implementation /////////////////////////////////////////////////////////////////
@@ -463,6 +467,7 @@ NS_IMPL_ISUPPORTS3(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier, ns
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
+:mCurrentStyleRoot(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -1142,6 +1147,13 @@ nsBindingManager::InheritsStyle(nsIContent* aContent, PRBool* aResult)
 }
 
 NS_IMETHODIMP
+nsBindingManager::MatchesScopedRoot(nsIContent* aContent, PRBool* aResult)
+{
+  *aResult = (mCurrentStyleRoot == aContent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBindingManager::UseDocumentRules(nsIContent* aContent, PRBool* aResult)
 {
   if (!aContent)
@@ -1193,6 +1205,7 @@ nsBindingManager::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData,
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aCurrContent, getter_AddRefs(binding));
   if (binding) {
+    mCurrentStyleRoot = aCurrContent;
     binding->WalkRules(aFunc, aData);
   }
   if (aParent != aCurrContent) {
@@ -1227,6 +1240,9 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
     nsCOMPtr<nsIStyleRuleProcessor> inlineCSS(do_QueryInterface(inlineSheet));
     (*aFunc)((nsISupports*)(inlineCSS.get()), aData);
   }
+
+  // Null out our mCurrentStyleRoot.
+  mCurrentStyleRoot = nsnull;
   return NS_OK;
 }
 

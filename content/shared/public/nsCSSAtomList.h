@@ -70,6 +70,8 @@ CSS_ATOM(outOfDatePseudo, ":out-of-date")
 
 CSS_ATOM(rootPseudo, ":root")
 
+CSS_ATOM(xblBoundElementPseudo, ":-moz-bound-element")
+
 CSS_ATOM(selectionPseudo, ":selection")
 
 CSS_ATOM(universalSelector, "*")
