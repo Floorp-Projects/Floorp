@@ -58,7 +58,9 @@ endif
 DIST          = $(SOURCE_PREFIX)/$(PLATFORM)
 
 ifdef BUILD_DEBUG_GC
-	DEFINES += -DDEBUG_GC
+    DEFINES += -DDEBUG_GC
 endif
 
 GARBAGE += $(DEPENDENCIES) core $(wildcard core.[0-9]*)
+
+MK_LOCATION = included

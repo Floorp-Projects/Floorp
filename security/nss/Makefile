@@ -54,7 +54,9 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-
+ifeq ($(OS_TARGET),WINCE)
+DIRS	= lib	# omit cmd since wince has no command line shell
+endif
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -114,7 +116,7 @@ endif
 #
 
 USEABSPATH="YES"
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 ifeq (,$(findstring :,$(shell pwd)))
 USEABSPATH="NO"
 endif
@@ -149,7 +151,7 @@ build_dbm:
 	
 
 moz_import::
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	$(NSINSTALL) -D $(DIST)/include/nspr
 	cp $(DIST)/../include/nspr/*.h $(DIST)/include/nspr
 	cp $(DIST)/../include/* $(DIST)/include
@@ -160,7 +162,7 @@ else
 endif
 	mv $(DIST)/lib/dbm32.lib $(DIST)/lib/dbm.lib
 else
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(OS_TARGET),OS2)
 	cp -rf $(DIST)/../include $(DIST)
 	cp -rf $(DIST)/../lib $(DIST)
 	cp -f $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX) $(DIST)/lib/libdbm.$(LIB_SUFFIX)

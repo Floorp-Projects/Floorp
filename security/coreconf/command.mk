@@ -49,6 +49,7 @@ TAR           = /bin/tar
 #
 # For purify
 #
-NOMD_CFLAGS  += $(OPTIMIZER) $(NOMD_OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
-		$(XCFLAGS)
+NOMD_CFLAGS  += $(OPTIMIZER) $(NOMD_OS_CFLAGS) $(XP_DEFINE) $(DEFINES) \
+		$(INCLUDES) $(XCFLAGS)
 
+MK_COMMAND = included

@@ -149,7 +149,7 @@ TARGETS = $(NON_DIRS)
 include $(CORE_DEPTH)/coreconf/rules.mk
 
 
-ifneq ($(OS_ARCH),OS2)
+ifneq ($(OS_TARGET),OS2)
 $(OBJDIR)/%-us.o: %.c
 	@$(MAKE_OBJDIR)
 	$(CCF) -o $@ $(US_FLAGS) -c $*.c

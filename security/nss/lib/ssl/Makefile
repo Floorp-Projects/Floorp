@@ -56,11 +56,11 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include config.mk
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 CSRCS	+= win32err.c
 DEFINES += -DIN_LIBSSL
 else
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(OS_TARGET),OS2)
 CSRCS	+= os2_err.c
 else
 CSRCS	+= unix_err.c

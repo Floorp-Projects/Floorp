@@ -67,21 +67,23 @@ endif
 # des.c wants _X86_ defined for intel CPUs.  
 # coreconf does this for windows, but not for Linux, FreeBSD, etc.
 ifeq ($(CPU_ARCH),x86)
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out WIN%,$(OS_TARGET)))
 	OS_REL_CFLAGS += -D_X86_
 endif
 endif
 
-ifeq ($(OS_ARCH),OSF1)
+ifeq ($(OS_TARGET),OSF1)
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_NO_MP_WORD
     MPI_SRCS += mpvalpha.c
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-ifneq ($(OS_TARGET),WIN16)
+ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))  #omits WIN16 and WINCE
     ASFILES  = mpi_x86.asm
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
 endif
+
+ifeq ($(OS_TARGET),WINCE)
+    DEFINES += -DMP_ARGCHK=0	# no assert in WinCE
 endif
 
 ifdef XP_OS2_VACPP
@@ -89,7 +91,7 @@ ifdef XP_OS2_VACPP
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
 endif
 
-ifeq ($(OS_ARCH),IRIX)
+ifeq ($(OS_TARGET),IRIX)
 ifeq ($(USE_N32),1)
     ASFILES  = mpi_mips.s
 ifeq ($(NS_USE_GCC),1)
@@ -110,14 +112,14 @@ ifeq ($(CPU_ARCH),x86)
 endif
 endif
 
-ifeq ($(OS_ARCH),AIX)
+ifeq ($(OS_TARGET),AIX)
 DEFINES += -DMP_USE_UINT_DIGIT
 ifndef USE_64
 DEFINES += -DMP_NO_DIV_WORD -DMP_NO_ADD_WORD -DMP_NO_SUB_WORD
 endif
 endif
 
-ifeq ($(OS_ARCH), HP-UX)
+ifeq ($(OS_TARGET), HP-UX)
 MKSHLIB += +k +vshlibunsats -u FREEBL_GetVector +e FREEBL_GetVector
 ifndef FREEBL_EXTENDED_BUILD
 ifdef USE_PURE_32
@@ -227,7 +229,7 @@ rijndael_tables:
 ifdef MOZILLA_BSAFE_BUILD
 
 private_export::
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	rm -f $(DIST)/lib/bsafe$(BSAFEVER).lib
 endif
 	$(NSINSTALL) -R $(BSAFEPATH) $(DIST)/lib
@@ -279,7 +281,7 @@ endif
 
 ifdef FREEBL_EXTENDED_BUILD
 
-PURE32DIR = $(OBJDIR)/$(OS_ARCH)pure32
+PURE32DIR = $(OBJDIR)/$(OS_TARGET)pure32
 ALL_TRASH += $(PURE32DIR)
 
 FILES2LN = \

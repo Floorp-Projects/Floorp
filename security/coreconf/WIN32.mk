@@ -108,3 +108,91 @@ DEFINES += -D_WINDOWS
 AS	= ml.exe
 ASFLAGS = -Cp -Sn -Zi -coff $(INCLUDES)
 
+#
+# override the definitions of RELEASE_TREE found in tree.mk
+#
+ifndef RELEASE_TREE
+    ifdef BUILD_SHIP
+	ifdef USE_SHIPS
+	    RELEASE_TREE = $(NTBUILD_SHIP)
+	else
+	    RELEASE_TREE = //redbuild/components
+	endif
+    else
+	RELEASE_TREE = //redbuild/components
+    endif
+endif
+
+#
+# override the definitions of LIB_PREFIX and DLL_PREFIX in prefix.mk
+#
+
+ifndef LIB_PREFIX
+    LIB_PREFIX =  $(NULL)
+endif
+
+ifndef DLL_PREFIX
+    DLL_PREFIX =  $(NULL)
+endif
+
+#
+# override the definitions of various _SUFFIX symbols in suffix.mk
+#
+
+#
+# Object suffixes
+#
+ifndef OBJ_SUFFIX
+    OBJ_SUFFIX = .obj
+endif
+
+#
+# Assembler source suffixes
+#
+ifndef ASM_SUFFIX
+    ASM_SUFFIX = .asm
+endif
+
+#
+# Library suffixes
+#
+
+ifndef IMPORT_LIB_SUFFIX
+    IMPORT_LIB_SUFFIX = .$(LIB_SUFFIX)
+endif
+
+ifndef DYNAMIC_LIB_SUFFIX_FOR_LINKING
+    DYNAMIC_LIB_SUFFIX_FOR_LINKING = $(IMPORT_LIB_SUFFIX)
+endif
+
+#
+# Program suffixes
+#
+ifndef PROG_SUFFIX
+    PROG_SUFFIX = .exe
+endif
+
+#
+# When the processor is NOT 386-based on Windows NT, override the
+# value of $(CPU_TAG).  For WinNT, 95, 16, not CE.
+#
+ifneq ($(CPU_ARCH),x386)
+    CPU_TAG = _$(CPU_ARCH)
+endif
+
+#
+# override ruleset.mk, removing the "lib" prefix for library names, and
+# adding the "32" after the LIBRARY_VERSION.
+#
+ifdef LIBRARY_NAME
+    SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)32$(JDK_DEBUG_SUFFIX).dll
+    IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)32$(JDK_DEBUG_SUFFIX).lib
+endif
+
+#
+# override the TARGETS defined in ruleset.mk, adding IMPORT_LIBRARY
+#
+ifndef TARGETS
+    TARGETS = $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(PROGRAM)
+endif
+

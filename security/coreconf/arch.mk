@@ -33,6 +33,16 @@
 
 #######################################################################
 # Master "Core Components" macros for getting the OS architecture     #
+# defines these symbols:
+# 64BIT_TAG
+# OS_ARCH	(from uname -r)
+# OS_TEST	(from uname -m)
+# OS_RELEASE	(from uname -v and/or -r)
+# OS_TARGET	User defined, or set to OS_ARCH
+# CPU_ARCH  	(from unmame -m or -p, ONLY on WINNT)
+# OS_CONFIG	OS_TARGET + OS_RELEASE
+# OBJDIR_TAG
+# OBJDIR_NAME
 #######################################################################
 
 #
@@ -53,9 +63,9 @@ OS_ARCH := $(subst /,_,$(shell uname -s))
 
 OS_TEST := $(shell uname -m)
 ifeq ($(OS_TEST),i86pc)
-	OS_RELEASE := $(shell uname -r)_$(OS_TEST)
+    OS_RELEASE := $(shell uname -r)_$(OS_TEST)
 else
-	OS_RELEASE := $(shell uname -r)
+    OS_RELEASE := $(shell uname -r)
 endif
 
 #
@@ -63,7 +73,7 @@ endif
 #
 
 ifeq ($(OS_ARCH),IRIX64)
-	OS_ARCH = IRIX
+    OS_ARCH = IRIX
 endif
 
 #
@@ -71,7 +81,7 @@ endif
 #
 
 ifeq ($(OS_ARCH),BSD_386)
-	OS_ARCH = BSD_OS
+    OS_ARCH = BSD_OS
 endif
 
 #
@@ -79,23 +89,23 @@ endif
 #
 
 ifeq ($(OS_ARCH),UNIX_SV)
-	ifneq ($(findstring NCR, $(shell grep NCR /etc/bcheckrc | head -1 )),)
-		OS_ARCH = NCR
-	else
-		# Make UnixWare something human readable
-		OS_ARCH = UNIXWARE
-	endif
+    ifneq ($(findstring NCR, $(shell grep NCR /etc/bcheckrc | head -1 )),)
+	OS_ARCH = NCR
+    else
+	# Make UnixWare something human readable
+	OS_ARCH = UNIXWARE
+    endif
 
-	# Get the OS release number, not 4.2
-	OS_RELEASE := $(shell uname -v)
+    # Get the OS release number, not 4.2
+    OS_RELEASE := $(shell uname -v)
 endif
 
 ifeq ($(OS_ARCH),UNIX_System_V)
-	OS_ARCH	= NEC
+    OS_ARCH	= NEC
 endif
 
 ifeq ($(OS_ARCH),AIX)
-	OS_RELEASE := $(shell uname -v).$(shell uname -r)
+    OS_RELEASE := $(shell uname -v).$(shell uname -r)
 endif
 
 #
@@ -103,13 +113,13 @@ endif
 #
 
 ifeq ($(OS_ARCH)$(OS_RELEASE),OSF1V4.0)
-	OS_VERSION := $(shell uname -v)
-	ifeq ($(OS_VERSION),564)
-		OS_RELEASE := V4.0B
-	endif
-	ifeq ($(OS_VERSION),878)
-		OS_RELEASE := V4.0D
-	endif
+    OS_VERSION := $(shell uname -v)
+    ifeq ($(OS_VERSION),564)
+	OS_RELEASE := V4.0B
+    endif
+    ifeq ($(OS_VERSION),878)
+	OS_RELEASE := V4.0D
+    endif
 endif
 
 #
@@ -117,13 +127,13 @@ endif
 #
 
 ifeq ($(OS_ARCH),ReliantUNIX-N)
-	OS_ARCH    = ReliantUNIX
-	OS_RELEASE = 5.4
+    OS_ARCH    = ReliantUNIX
+    OS_RELEASE = 5.4
 endif
 
 ifeq ($(OS_ARCH),SINIX-N)
-	OS_ARCH    = ReliantUNIX
-	OS_RELEASE = 5.4
+    OS_ARCH    = ReliantUNIX
+    OS_RELEASE = 5.4
 endif
 
 #
@@ -131,24 +141,24 @@ endif
 #
 
 ifeq (,$(filter-out Linux FreeBSD,$(OS_ARCH)))
-OS_RELEASE	:= $(shell echo $(OS_RELEASE) | sed 's/-.*//')
+    OS_RELEASE := $(shell echo $(OS_RELEASE) | sed 's/-.*//')
 endif
 
 ifeq ($(OS_ARCH),Linux)
-	OS_RELEASE := $(basename $(OS_RELEASE))
+    OS_RELEASE := $(basename $(OS_RELEASE))
 endif
 
 #
 # For OS/2
 #
 ifeq ($(OS_ARCH),OS_2)
-	OS_ARCH = OS2
-	OS_RELEASE := $(shell uname -v)
+    OS_ARCH = OS2
+    OS_RELEASE := $(shell uname -v)
 endif
 
 ifneq (,$(findstring OpenVMS,$(OS_ARCH)))
-	OS_ARCH = OpenVMS
-	OS_RELEASE := $(shell uname -v)
+    OS_ARCH = OpenVMS
+    OS_RELEASE := $(shell uname -v)
 endif
 
 #######################################################################
@@ -177,12 +187,12 @@ endif
 # It also accomodates for MKS's and Cygwin's uname.exe.
 #
 ifeq ($(OS_ARCH),WIN95)
-	OS_ARCH   = WINNT
-	OS_TARGET = WIN95
+    OS_ARCH   = WINNT
+    OS_TARGET = WIN95
 endif
 ifeq ($(OS_ARCH),Windows_95)
-	OS_ARCH   = Windows_NT
-	OS_TARGET = WIN95
+    OS_ARCH   = Windows_NT
+    OS_TARGET = WIN95
 endif
 ifeq ($(OS_ARCH),CYGWIN_95-4.0)
 	OS_ARCH   = CYGWIN_NT-4.0
@@ -194,16 +204,17 @@ ifeq ($(OS_ARCH),CYGWIN_98-4.10)
 endif
 
 #
-# On WIN32, we also define the variable CPU_ARCH.
+# On WIN32, we also define the variable CPU_ARCH, if it isn't already.
 #
-
-ifeq ($(OS_ARCH), WINNT)
+ifndef CPU_ARCH
+    ifeq ($(OS_ARCH), WINNT)
 	CPU_ARCH := $(shell uname -p)
 	ifeq ($(CPU_ARCH),I386)
-		CPU_ARCH = x386
+	    CPU_ARCH = x386
 	endif
-else
-#
+    endif
+endif
+
 # If uname -s returns "Windows_NT", we assume that we are using
 # the uname.exe in MKS toolkit.
 #
@@ -212,48 +223,55 @@ else
 # Moreover, it doesn't have the -p option, so we need to use uname -m.
 #
 ifeq ($(OS_ARCH), Windows_NT)
-	OS_ARCH = WINNT
-	OS_MINOR_RELEASE := $(shell uname -v)
-	ifeq ($(OS_MINOR_RELEASE),00)
-		OS_MINOR_RELEASE = 0
-	endif
-	OS_RELEASE := $(OS_RELEASE).$(OS_MINOR_RELEASE)
+    OS_ARCH = WINNT
+    OS_MINOR_RELEASE := $(shell uname -v)
+    ifeq ($(OS_MINOR_RELEASE),00)
+	OS_MINOR_RELEASE = 0
+    endif
+    OS_RELEASE := $(OS_RELEASE).$(OS_MINOR_RELEASE)
+    ifndef CPU_ARCH
 	CPU_ARCH := $(shell uname -m)
 	#
 	# MKS's uname -m returns "586" on a Pentium machine.
 	#
 	ifneq (,$(findstring 86,$(CPU_ARCH)))
-		CPU_ARCH = x386
+	    CPU_ARCH = x386
 	endif
+    endif
 endif
 #
 # If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
 # the uname.exe in the Cygwin tools.
 #
 ifeq (CYGWIN_NT,$(findstring CYGWIN_NT,$(OS_ARCH)))
-	OS_RELEASE := $(patsubst CYGWIN_NT-%,%,$(OS_ARCH))
-	OS_ARCH = WINNT
+    OS_RELEASE := $(patsubst CYGWIN_NT-%,%,$(OS_ARCH))
+    OS_ARCH = WINNT
+    ifndef CPU_ARCH
 	CPU_ARCH := $(shell uname -m)
 	#
 	# Cygwin's uname -m returns "i686" on a Pentium Pro machine.
 	#
 	ifneq (,$(findstring 86,$(CPU_ARCH)))
-		CPU_ARCH = x86
+	    CPU_ARCH = x86
 	endif
-endif
+    endif
 endif
 
 ifndef OS_TARGET
-	OS_TARGET = $(OS_ARCH)
+    OS_TARGET = $(OS_ARCH)
 endif
 
 ifeq ($(OS_TARGET), WIN95)
-	OS_RELEASE = 4.0
+    OS_RELEASE = 4.0
 endif
 
 ifeq ($(OS_TARGET), WIN16)
-	OS_RELEASE =
-#	OS_RELEASE = _3.11
+    OS_RELEASE =
+#   OS_RELEASE = _3.11
+endif
+
+ifdef OS_TARGET_RELEASE
+    OS_RELEASE = $(OS_TARGET_RELEASE)
 endif
 
 #
@@ -268,25 +286,25 @@ OS_CONFIG = $(OS_TARGET)$(OS_RELEASE)
 #
 
 ifdef BUILD_OPT
-	ifeq ($(OS_TARGET),WIN16)
-		OBJDIR_TAG = _O
-	else
-		OBJDIR_TAG = $(64BIT_TAG)_OPT
-	endif
+    ifeq ($(OS_TARGET),WIN16)
+	OBJDIR_TAG = _O
+    else
+	OBJDIR_TAG = $(64BIT_TAG)_OPT
+    endif
 else
-	ifdef BUILD_IDG
-		ifeq ($(OS_TARGET),WIN16)
-			OBJDIR_TAG = _I
-		else
-			OBJDIR_TAG = $(64BIT_TAG)_IDG
-		endif
+    ifdef BUILD_IDG
+	ifeq ($(OS_TARGET),WIN16)
+	    OBJDIR_TAG = _I
 	else
-		ifeq ($(OS_TARGET),WIN16)
-			OBJDIR_TAG = _D
-		else
-			OBJDIR_TAG = $(64BIT_TAG)_DBG
-		endif
+	    OBJDIR_TAG = $(64BIT_TAG)_IDG
 	endif
+    else
+	ifeq ($(OS_TARGET),WIN16)
+	    OBJDIR_TAG = _D
+	else
+	    OBJDIR_TAG = $(64BIT_TAG)_DBG
+	endif
+    endif
 endif
 
 #
@@ -298,29 +316,18 @@ endif
 # IMPL_STRATEGY may be defined too.
 #
 
-# Name of the binary code directories
-ifeq ($(OS_ARCH), WINNT)
-	ifeq ($(CPU_ARCH),x386)
-		OBJDIR_NAME = $(OS_CONFIG)$(OBJDIR_TAG).OBJ
-	else
-		OBJDIR_NAME = $(OS_CONFIG)$(CPU_ARCH)$(OBJDIR_TAG).OBJ
-	endif
-else
-endif
+OBJDIR_NAME = $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(COMPILER_TAG)$(LIBC_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
 
-OBJDIR_NAME = $(OS_CONFIG)$(CPU_TAG)$(COMPILER_TAG)$(LIBC_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
-
-ifeq ($(OS_ARCH), WINNT)
-ifneq ($(OS_TARGET),WIN16)
+ifeq (,$(filter-out WINNT WIN95 WINCE,$(OS_TARGET))) # list omits WIN16
 ifndef BUILD_OPT
 #
 # Define USE_DEBUG_RTL if you want to use the debug runtime library
 # (RTL) in the debug build
 #
 ifdef USE_DEBUG_RTL
-	OBJDIR_NAME = $(OS_CONFIG)$(CPU_TAG)$(COMPILER_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJD
-endif
+    OBJDIR_NAME = $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(COMPILER_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJD
 endif
 endif
 endif
 
+MK_ARCH = included

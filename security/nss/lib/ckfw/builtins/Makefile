@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.9 $ $Date: 2002/02/11 05:48:27 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.10 $ $Date: 2002/02/15 22:53:42 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -41,8 +41,8 @@ EXTRA_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
 	$(NULL)
 
-# can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq ($(OS_ARCH), WINNT)
+# can't do this in manifest.mn because OS_TARGET isn't defined there.
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 EXTRA_LIBS += \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
@@ -71,7 +71,7 @@ generate:
 # This'll need some help from a build person.
 
 
-ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
+ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.1)
 DSO_LDOPTS              = -bM:SRE -bh:4 -bnoentry
 EXTRA_DSO_LDOPTS        = -lc
 MKSHLIB                 = xlC $(DSO_LDOPTS)
@@ -84,7 +84,7 @@ $(SHARED_LIBRARY): $(OBJS)
 
 endif
 
-ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.2)
+ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.2)
 LD      += -G
 endif 
 

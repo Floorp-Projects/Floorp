@@ -40,11 +40,11 @@
 #
 
 ifndef SOURCE_PREFIX
-ifndef BUILD_TREE
-SOURCE_PREFIX = $(CORE_DEPTH)/../dist
-else
-SOURCE_PREFIX = $(BUILD_TREE)/dist
-endif
+    ifndef BUILD_TREE
+	SOURCE_PREFIX = $(CORE_DEPTH)/../dist
+    else
+	SOURCE_PREFIX = $(BUILD_TREE)/dist
+    endif
 endif
 
 #
@@ -52,7 +52,7 @@ endif
 #
 
 ifndef SOURCE_XP_DIR
-SOURCE_XP_DIR        = $(SOURCE_PREFIX)
+    SOURCE_XP_DIR        = $(SOURCE_PREFIX)
 endif
 
 #
@@ -65,9 +65,9 @@ SOURCE_XPHEADERS_DIR   = $(SOURCE_XP_DIR)/public/$(MODULE)
 SOURCE_XPPRIVATE_DIR   = $(SOURCE_XP_DIR)/private/$(MODULE)
 
 ifdef BUILD_OPT
-	IMPORT_XPCLASS_DIR = $(SOURCE_CLASSES_DIR)
+    IMPORT_XPCLASS_DIR = $(SOURCE_CLASSES_DIR)
 else
-	IMPORT_XPCLASS_DIR = $(SOURCE_CLASSES_DBG_DIR)
+    IMPORT_XPCLASS_DIR = $(SOURCE_CLASSES_DBG_DIR)
 endif
 
 #
@@ -75,7 +75,7 @@ endif
 #
 
 ifndef SOURCE_MD_DIR
-SOURCE_MD_DIR        = $(SOURCE_PREFIX)/$(PLATFORM)
+    SOURCE_MD_DIR        = $(SOURCE_PREFIX)/$(PLATFORM)
 endif
 
 #
@@ -84,17 +84,17 @@ endif
 
 #This is where we install built executables and (for Windows only) DLLs.
 ifndef SOURCE_BIN_DIR
-SOURCE_BIN_DIR       = $(SOURCE_MD_DIR)/bin
+    SOURCE_BIN_DIR       = $(SOURCE_MD_DIR)/bin
 endif
 
 #This is where we install built libraries (.a, .so, .lib).
 ifndef SOURCE_LIB_DIR
-SOURCE_LIB_DIR       = $(SOURCE_MD_DIR)/lib
+    SOURCE_LIB_DIR       = $(SOURCE_MD_DIR)/lib
 endif
 
 # This is where NSPR header files are found.
 ifndef SOURCE_MDHEADERS_DIR
-SOURCE_MDHEADERS_DIR = $(SOURCE_MD_DIR)/include
+    SOURCE_MDHEADERS_DIR = $(SOURCE_MD_DIR)/include
 endif
 
 #######################################################################
@@ -108,14 +108,14 @@ endif
 #
 
 ifeq ($(POLICY), domestic)
-	SOURCE_RELEASE_PREFIX = $(SOURCE_PREFIX)/release/domestic
+    SOURCE_RELEASE_PREFIX = $(SOURCE_PREFIX)/release/domestic
 else
-	ifeq ($(POLICY), export)
-		SOURCE_RELEASE_PREFIX = $(SOURCE_PREFIX)/release/export
+    ifeq ($(POLICY), export)
+	SOURCE_RELEASE_PREFIX = $(SOURCE_PREFIX)/release/export
+    else
+	ifeq ($(POLICY), france)
+	    SOURCE_RELEASE_PREFIX = $(SOURCE_PREFIX)/release/france
 	else
-		ifeq ($(POLICY), france)
-			SOURCE_RELEASE_PREFIX = $(SOURCE_PREFIX)/release/france
-		else
 #We shouldn't have to put another directory under here, but without it the perl
 #script for releasing doesn't find the directory. It thinks it doesn't exist.
 #So we're adding this no-policy directory so that the script for releasing works
@@ -123,9 +123,9 @@ else
 #files land, only where they are placed in the local tree when building the jar
 #files. When there is no policy, the jar files will still land in
 #<dist>/<module>/<date>/<platform> like they used to.
-			SOURCE_RELEASE_PREFIX = $(SOURCE_PREFIX)/release/no-policy
-		endif
+	    SOURCE_RELEASE_PREFIX = $(SOURCE_PREFIX)/release/no-policy
 	endif
+    endif
 endif
 
 #
@@ -151,9 +151,9 @@ XPCLASS_DBG_JAR = xpclass_dbg.jar
 XPHEADER_JAR    = xpheader.jar
 
 ifdef BUILD_OPT
-	IMPORT_XPCLASS_JAR = $(XPCLASS_JAR)
+    IMPORT_XPCLASS_JAR = $(XPCLASS_JAR)
 else
-	IMPORT_XPCLASS_JAR = $(XPCLASS_DBG_JAR)
+    IMPORT_XPCLASS_JAR = $(XPCLASS_DBG_JAR)
 endif
 
 #
@@ -182,6 +182,7 @@ MDHEADER_JAR = mdheader.jar
 # Where to put the results
 
 ifneq ($(RESULTS_DIR),)
-	RESULTS_DIR = $(RELEASE_TREE)/sectools/results
+    RESULTS_DIR = $(RELEASE_TREE)/sectools/results
 endif
 
+MK_SOURCE = included

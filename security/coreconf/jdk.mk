@@ -118,7 +118,7 @@ ifeq ($(OS_ARCH), WINNT)
 endif
 
 # set [Sun Solaris] platforms
-ifeq ($(OS_ARCH), SunOS)
+ifeq ($(OS_TARGET), SunOS)
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -168,7 +168,7 @@ endif
 endif
 
 # set [Hewlett Packard HP-UX] platforms
-ifeq ($(OS_ARCH), HP-UX)
+ifeq ($(OS_TARGET), HP-UX)
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -207,7 +207,7 @@ ifeq ($(OS_ARCH), HP-UX)
 endif
 
 # set [Redhat Linux] platforms
-ifeq ($(OS_ARCH), Linux)
+ifeq ($(OS_TARGET), Linux)
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -246,7 +246,7 @@ ifeq ($(OS_ARCH), Linux)
 endif
 
 # set [IBM AIX] platforms
-ifeq ($(OS_ARCH), AIX)
+ifeq ($(OS_TARGET), AIX)
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -285,7 +285,7 @@ ifeq ($(OS_ARCH), AIX)
 endif
 
 # set [Digital UNIX] platforms
-ifeq ($(OS_ARCH), OSF1)
+ifeq ($(OS_TARGET), OSF1)
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -324,7 +324,7 @@ ifeq ($(OS_ARCH), OSF1)
 endif
 
 # set [Silicon Graphics IRIX] platforms
-ifeq ($(OS_ARCH), IRIX)
+ifeq ($(OS_TARGET), IRIX)
 	JAVA_CLASSES = $(JAVA_HOME)/lib/dev.jar:$(JAVA_HOME)/lib/rt.jar
 
 	ifeq ($(JRE_HOME),)

@@ -58,9 +58,9 @@ LDFLAGS = \
 
 # Strip out the symbols
 ifdef BUILD_OPT
-	ifneq ($(OS_ARCH),WINNT)
-		LDFLAGS += -s
-	endif
+    ifneq (,$(filter-out WIN%,$(OS_TARGET)))
+	LDFLAGS += -s
+    endif
 endif
 
 #######################################################################
@@ -68,10 +68,10 @@ endif
 #######################################################################
  
 
-ifeq ($(OS_ARCH),WINNT)
-	PACKAGE_FILES = license.txt README.TXT specification.html pk11jar.html modutil.exe
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+    PACKAGE_FILES = license.txt README.TXT specification.html pk11jar.html modutil.exe
 else
-	PACKAGE_FILES = license.doc README specification.html pk11jar.html modutil
+    PACKAGE_FILES = license.doc README specification.html pk11jar.html modutil
 endif
 
-ARCHIVE_NAME = modutil_$(OS_CONFIG)
+ARCHIVE_NAME = modutil_$(OS_TARGET)$(OS_RELEASE)

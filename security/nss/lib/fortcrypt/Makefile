@@ -37,9 +37,9 @@ include $(CORE_DEPTH)/coreconf/config.mk
 include config.mk
 
 CILIB                   = $(OBJDIR)/cilib.$(LIB_SUFFIX)
-ORIG_CILIB              = libci/$(OS_CONFIG).$(LIB_SUFFIX)
+ORIG_CILIB              = libci/$(OS_TARGET)$(OS_RELEASE).$(LIB_SUFFIX)
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_TARGET)))  # omits WIN16 WIN95
 ORIG_CILIB              = libci/tssp32.lib
 endif
 
@@ -51,7 +51,7 @@ ifeq ($(OS_TARGET), WIN95)
 ORIG_CILIB              = libci/tssp32.lib
 endif
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 STUBDLL                 = $(OBJDIR)/stub.$(DLL_SUFFIX)
 endif
 
@@ -100,14 +100,14 @@ $(CILIB):
 
 $(STUBLIB): $(OBJDIR)/maci$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	$(MAKE) $(STUBDLL)
 else
 	$(AR) $<
 endif
 	cp $@ $(CILIB)
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 $(STUBDLL): $(OBJDIR)/maci.o
 	$(LINK_DLL) -MAP $(DLLBASE) $(subst /,\\,$(OBJDIR)/maci.o $(OS_LIBS))
 
@@ -142,7 +142,7 @@ MD_FILES += $(LIBCI_JAR)
 # so I'm going to override their shared library command and build the shared
 # library the way config used to.
 #
-ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
+ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.1)
 DSO_LDOPTS              = -bM:SRE -bh:4 -bnoentry
 EXTRA_DSO_LDOPTS        = -lc
 MKSHLIB                 = svld $(DSO_LDOPTS)
@@ -154,7 +154,7 @@ $(SHARED_LIBRARY): $(OBJS)
 	chmod +x $@
 endif
 
-ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.2)
+ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.2)
 LD      += -G
 endif 
 
