@@ -1554,9 +1554,13 @@ nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   if (nsnull != src) {
     // Use the SRC attribute value to open a blocking stream
     nsIURL* url = nsnull;
-    char* spec = src->ToNewCString();
-    rv = NS_NewURL(&url, nsnull, spec);
-    delete spec;
+    nsAutoString absURL, baseURL;/* XXX */
+    nsIURL* docURL = mDocument->GetDocumentURL();
+    rv = NS_MakeAbsoluteURL(docURL, baseURL, *src, absURL);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    rv = NS_NewURL(&url, nsnull, absURL);
     delete src;
     if (NS_OK != rv) {
       return rv;
