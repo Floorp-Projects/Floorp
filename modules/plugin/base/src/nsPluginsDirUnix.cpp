@@ -61,69 +61,84 @@
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define PLUGIN_PATH 	"MOZ_PLUGIN_PATH"	
-#define MTYPE_END	'|'
-#define MTYPE_END_OLD	';'
-#define MTYPE_PART      ':'
-
 
 /* Local helper functions */
  
-static PRUint32 CalculateVariantCount(char* mimeTypes)
-{
-    PRUint32 variants = 0;
-    char* ptr = mimeTypes;
-
-    while (*ptr) {
-        if (*ptr == MTYPE_END) {
-            if (!ptr[1]) {
-                /*
-                 * This is a trailing separator, with nothing after it. We
-                 * normalize these away here by slamming a NUL in and
-                 * stopping.
-                 */
-                *ptr = 0;
-                break;
-            }
-            variants++;
-        }
-        ++ptr; 
-    }
-
-    return variants;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
-// Currently, in the MIME type info passed in by plugin, a ';' is used as the 
-// separator of two MIME types, and also the sparator of a version in one MIME 
-// type. For example: 
-// "application/x-java-applet;version1.3::java(TM) plugin;application/x-java-
-// applet...".
-// The ambiguity of ';'  causes the browser fail to parse the MIME types 
+// Ouput format from NPP_GetMIMEDescription: "...mime type[;version]:[extension]:[desecription];..."
+// The ambiguity of mime description could cause the browser fail to parse the MIME types 
 // correctly.
+// E.g. "mime type::desecription;" // correct w/o ext 
+//      "mime type:desecription;"  // wrong w/o ext 
 //
-// This method parses the MIME type input, and replaces the MIME type 
-// separators with '|' to eliminate the ambiguity of ';'. (The Windows version 
-// also uses '|' as the MIME type separator.)
-//
-// Input format: "...type[;version]:[extension]:[desecription];..."
-// Output format: "...type[;version]:[extension]:[desecription]|..."
-//
-static void SetMIMETypeSeparator(char *minfo)
+static nsresult
+ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
 {
-    char *p;
+    nsresult rv = NS_ERROR_FAILURE;
+    if (!mdesc || !*mdesc)
+       return rv;
 
-    p = minfo;
-    while (p) {
-	if ((p = PL_strchr(p, MTYPE_PART)) != 0) {
-	    p++;
-	    if ((p = PL_strchr(p, MTYPE_END_OLD)) != 0) {
-	        *p = MTYPE_END;	
-		p++;
-	    }
+    char *mdescDup = PL_strdup(mdesc); // make a dup of intput string we'll change it content
+    char anEmptyString[] = "";
+    nsAutoVoidArray tmpMimeTypeArr;
+    char delimiters[] = {':',':',';'};
+    int mimeTypeVariantCount = 0;
+    char *p = mdescDup; // make a dup of intput string we'll change it content
+    while(p) {
+        char *ptrMimeArray[] = {anEmptyString, anEmptyString, anEmptyString};
+
+        // It's easy to point out ptrMimeArray[0] to the string sounds like
+        // "Mime type is not specified, plugin will not function properly."
+        // and show this on "about:plugins" page, but we have to mark this particular
+        // mime type of given plugin as disable on "about:plugins" page,
+        // which feature is not implemented yet.
+        // So we'll ignore, without any warnings, an empty description strings, 
+        // in other words, if after parsing ptrMimeArray[0] == anEmptyString is true.
+        // It is possible do not to registry a plugin at all if it returns
+        // an empty string on GetMIMEDescription() call,
+        // e.g. plugger returns "" if pluggerrc file is not found.
+
+        char *s = p;
+        int i;
+        for (i = 0; i < (int) sizeof(delimiters) && (p = PL_strchr(s, delimiters[i])); i++) {
+            ptrMimeArray[i] = s; // save start ptr
+            *p++ = 0; // overwrite delimiter
+            s = p; // move forward
         }
+        if (i == 2)
+           ptrMimeArray[i] = s;
+        // fill out the temp array 
+        // the order is important, it should be the same in for loop below 
+	if (ptrMimeArray[0] != anEmptyString) {
+            tmpMimeTypeArr.AppendElement((void*) ptrMimeArray[0]);
+            tmpMimeTypeArr.AppendElement((void*) ptrMimeArray[1]);
+            tmpMimeTypeArr.AppendElement((void*) ptrMimeArray[2]);
+            mimeTypeVariantCount++;
+	}
     }
-}
 
+    // fill out info structure
+    if (mimeTypeVariantCount) {
+        info.fVariantCount         = mimeTypeVariantCount;
+        // we can do these 3 mallocs at ones, later on code cleanup
+        info.fMimeTypeArray        = (char **)PR_Malloc(mimeTypeVariantCount * sizeof(char *));
+        info.fMimeDescriptionArray = (char **)PR_Malloc(mimeTypeVariantCount * sizeof(char *));
+        info.fExtensionArray       = (char **)PR_Malloc(mimeTypeVariantCount * sizeof(char *));
+
+        int j,i;
+        for (j = i = 0; i < mimeTypeVariantCount; i++) {
+            // the order is important, do not change it
+	    // we can get rid of PL_strdup here, later on code cleanup
+            info.fMimeTypeArray[i]        =  PL_strdup((char*) tmpMimeTypeArr.ElementAt(j++));
+            info.fExtensionArray[i]       =  PL_strdup((char*) tmpMimeTypeArr.ElementAt(j++));
+            info.fMimeDescriptionArray[i] =  PL_strdup((char*) tmpMimeTypeArr.ElementAt(j++));
+        }
+        rv = NS_OK;
+    }
+    if (mdescDup)
+        PR_Free(mdescDup);
+    return rv;
+}
 
 #define LOCAL_PLUGIN_DLL_SUFFIX ".so"
 #if defined(HPUX11)
@@ -384,8 +399,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
     nsresult rv;
     const char* mimedescr = 0, *name = 0, *description = 0;
-    char *mdesc,*start,*nexttoc,*mtype,*exten,*descr;
-    int i,num;
 
     // No, this doesn't leak. GetGlobalServiceManager() doesn't addref
     // it's out pointer. Maybe it should.
@@ -419,6 +432,12 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     }
 
     if (plugin) {
+        plugin->GetMIMEDescription(&mimedescr);
+#ifdef NS_DEBUG
+        printf("GetMIMEDescription() returned \"%s\"\n", mimedescr);
+#endif
+	if (NS_FAILED(rv = ParsePluginMimeDescription(mimedescr, info)))
+            return rv;
         info.fFileName = PL_strdup(this->GetCString());
         plugin->GetValue(nsPluginVariable_NameString, &name);
         if (!name)
@@ -429,75 +448,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         if (!description)
             description = "";
         info.fDescription = PL_strdup(description);
-        plugin->GetMIMEDescription(&mimedescr);
-    } else {
-        info.fName = PL_strdup(this->GetCString());
-        info.fDescription = PL_strdup("");
     }
-
-#ifdef NS_DEBUG
-    printf("GetMIMEDescription() returned \"%s\"\n", mimedescr);
-#endif
-
-    // Copy MIME type input.
-    mdesc = PL_strdup(mimedescr);
-
-    // Currently in MIME type input, a ';' is used as MIME type separator
-    // and a MIME type's version separator, which makes parsing difficult.
-    // To eliminate the ambiguity, set MIME type separator to '|'.
-    SetMIMETypeSeparator(mdesc);
-
-    // Get number of MIME types.
-    num = CalculateVariantCount(mdesc) + 1;
-
-    info.fVariantCount = num;
-    info.fMimeTypeArray = (char **)PR_Malloc(num * sizeof(char *));
-    info.fMimeDescriptionArray = (char **)PR_Malloc(num * sizeof(char *));
-    info.fExtensionArray = (char **)PR_Malloc(num * sizeof(char *));
-
-    // Retrive each MIME type info.
-    // Each MIME type info stored in format, "type:extension:description"
-    // Sample: "application/x-java-applet;version=1.1::Java(tm) Plug-in;".
-    start = mdesc;
-    for(i = 0;i < num && *start;i++) {
-        if(i+1 < num) {
-            if((nexttoc = PL_strchr(start, MTYPE_END)) != 0)
-                *nexttoc++=0;
-            else
-                nexttoc=start+strlen(start);
-        } else
-            nexttoc=start+strlen(start);
-
-        mtype = start;
-        exten = PL_strchr(start, MTYPE_PART);
-        if(exten) {
-            *exten++ = 0;
-            descr = PL_strchr(exten, MTYPE_PART);
-        } else
-            descr = NULL;
-
-        if(descr)
-            *descr++=0;
-
-#ifdef DEBUG_av
-        printf("Registering plugin %d for: \"%s\",\"%s\",\"%s\"\n",
-               i, mtype,descr ? descr : "null",exten ? exten : "null");
-#endif /* DEBUG_av */
-
-        if(!*mtype && !descr && !exten) {
-            i--;
-            info.fVariantCount--;
-        } else {
-            info.fMimeTypeArray[i] = mtype ? PL_strdup(mtype) : PL_strdup("");
-            info.fMimeDescriptionArray[i] = descr ? PL_strdup(descr) :
-                                                    PL_strdup("");
-            info.fExtensionArray[i] = exten ? PL_strdup(exten) : PL_strdup("");
-        }
-        start = nexttoc;
-    }
-
-    PR_Free(mdesc);
-
     return NS_OK;
 }
 
