@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.34 2003/07/08 18:41:25 wtc%netscape.com Exp $
+ * $Id: crl.c,v 1.35 2003/08/27 01:47:57 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -1915,7 +1915,6 @@ SEC_FindCrlByName(CERTCertDBHandle *handle, SECItem *crlKey, int type)
 
 void CERT_CRLCacheRefreshIssuer(CERTCertDBHandle* dbhandle, SECItem* crlKey)
 {
-    CERTSignedCrl* acrl = NULL;
     CRLDPCache* cache = NULL;
     SECStatus rv = SECSuccess;
     PRBool writeLocked = PR_FALSE;
