@@ -271,8 +271,8 @@ endif
 
 ifdef MOZ_PHOENIX
 #xpfe/components/search depends on nsIBookmarksService.idl
-#XXXBlake this winhooks path is a temp hack; toolkit shouldn't depend on browser
-tier_50_dirs    += browser/components/bookmarks/public browser/components/winhooks/public
+#XXXBlake this shell path is a temp hack; toolkit shouldn't depend on browser
+tier_50_dirs    += browser/components/bookmarks/public browser/components/shell/public
 endif
 
 # toolkit/xre/ depends on xpinstall, so it must be in tier 50

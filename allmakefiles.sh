@@ -867,8 +867,8 @@ browser/components/security/Makefile
 browser/components/sidebar/Makefile
 browser/components/sidebar/public/Makefile
 browser/components/sidebar/src/Makefile
-browser/components/winhooks/Makefile
-browser/components/winhooks/public/Makefile
+browser/components/shell/Makefile
+browser/components/shell/public/Makefile
 "
 
 MAKEFILES_xulapp="
