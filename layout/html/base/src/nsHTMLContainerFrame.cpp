@@ -43,6 +43,7 @@
 #include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
 #include "nsIStyleSet.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
@@ -126,17 +127,16 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
 }
 
 static nsresult
-ReparentFrameViewTo(nsIFrame* aFrame,
-                    nsIView*  aNewParentView,
-                    nsIView*  aOldParentView)
+ReparentFrameViewTo(nsIFrame*       aFrame,
+                    nsIViewManager* aViewManager,
+                    nsIView*        aNewParentView,
+                    nsIView*        aOldParentView)
 {
   nsIView*  view;
 
   // Does aFrame have a view?
   aFrame->GetView(&view);
   if (view) {
-    nsIViewManager* viewManager;
-
 #ifdef NS_DEBUG
     // Verify that the current parent view is what we think it is
     nsIView*  parentView;
@@ -145,18 +145,13 @@ ReparentFrameViewTo(nsIFrame* aFrame,
     NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
 #endif
 
-    // Get the view manager
-    aNewParentView->GetViewManager(viewManager);
-    NS_ASSERTION(nsnull != viewManager, "null view manager");
-    
     // Change the parent view.
     PRInt32 zIndex;
     view->GetZIndex(zIndex);
-    viewManager->RemoveChild(aOldParentView, view);
+    aViewManager->RemoveChild(aOldParentView, view);
     
     // XXX We need to insert this view in the correct place within its z-order...
-    viewManager->InsertChild(aNewParentView, view, zIndex);
-    NS_RELEASE(viewManager);
+    aViewManager->InsertChild(aNewParentView, view, zIndex);
 
   } else {
     // Iterate the child frames, and check each child frame to see if it has
@@ -165,7 +160,7 @@ ReparentFrameViewTo(nsIFrame* aFrame,
 
     aFrame->FirstChild(nsnull, &childFrame);
     while (childFrame) {
-      ReparentFrameViewTo(childFrame, aNewParentView, aOldParentView);
+      ReparentFrameViewTo(childFrame, aViewManager, aNewParentView, aOldParentView);
       childFrame->GetNextSibling(&childFrame);
     }
   }
@@ -173,16 +168,21 @@ ReparentFrameViewTo(nsIFrame* aFrame,
   return NS_OK;
 }
 
+// Helper function that returns the nearest view to this frame. Checks
+// this frame, its parent frame, its parent frame, ...
 static nsIView*
-GetViewFor(nsIFrame* aFrame)
+GetClosestViewFor(nsIFrame* aFrame)
 {
+  NS_PRECONDITION(aFrame, "null frame pointer");
   nsIView*  view;
 
-  aFrame->GetView(&view);
-  if (!view) {
-    nsPoint offset;
-    aFrame->GetOffsetFromView(offset, &view);
-  }
+  do {
+    aFrame->GetView(&view);
+    if (view) {
+      break;
+    }
+    aFrame->GetParent(&aFrame);
+  } while (aFrame);
 
   NS_POSTCONDITION(view, "no containing view");
   return view;
@@ -198,13 +198,84 @@ nsHTMLContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
   NS_PRECONDITION(aNewParentFrame, "null new parent frame pointer");
   NS_PRECONDITION(aOldParentFrame != aNewParentFrame, "same old and new parent frame");
 
-  // First see if the old parent frame and the new parent frame are in the
-  // same view sub-hierarchy
-  nsIView*  oldParentView = GetViewFor(aOldParentFrame);
-  nsIView*  newParentView = GetViewFor(aNewParentFrame);
+  nsIView*  childView;
+  nsIView*  oldParentView;
+  nsIView*  newParentView;
+  nsIFrame* commonParent = nsnull;
+  
+  // This code is called often and we need it to be as fast as possible, so
+  // see if we can trivially detect that no work needs to be done
+  aChildFrame->GetView(&childView);
+  if (!childView) {
+    // Child frame doesn't have a view. See if it has any child frames
+    nsIFrame* firstChild;
+    aChildFrame->FirstChild(nsnull, &firstChild);
+    if (!firstChild) {
+      return NS_OK;
+    }
+  }
 
+  // See if either the old parent frame or the new parent frame have a view
+  aOldParentFrame->GetView(&oldParentView);
+  aNewParentFrame->GetView(&newParentView);
+
+  if (!oldParentView && !newParentView) {
+    // Walk up both the old parent frame and the new parent frame nodes
+    // stopping when we either find a common parent or views for one
+    // or both of the frames.
+    //
+    // This works well in the common case where we push/pull and the old parent
+    // frame and the new parent frame are part of the same flow. They will
+    // typically be the same distance (height wise) from the
+    do {
+      aOldParentFrame->GetParent(&aOldParentFrame);
+      aNewParentFrame->GetParent(&aNewParentFrame);
+      
+      // We should never walk all the way to the root frame without finding
+      // a view
+      NS_ASSERTION(aOldParentFrame && aNewParentFrame, "didn't find view");
+
+      // See if we reached a common parent
+      if (aOldParentFrame == aNewParentFrame) {
+        break;
+      }
+
+      // Get the views
+      aOldParentFrame->GetView(&oldParentView);
+      aNewParentFrame->GetView(&newParentView);
+    } while (!(oldParentView || newParentView));
+  }
+
+
+  // See if we found a common parent frame
+  if (aOldParentFrame == aNewParentFrame) {
+    // We found a common parent and there are no views between the old parent
+    // and the common parent or the new parent frame and the common parent.
+    // Because neither the old parent frame nor the new parent frame have views,
+    // then any child views don't need reparenting
+    return NS_OK;
+  }
+
+  // We found views for one or both of the parent frames before we found a
+  // common parent
+  NS_ASSERTION(oldParentView || newParentView, "internal error");
+  if (!oldParentView) {
+    oldParentView = GetClosestViewFor(aOldParentFrame);
+  }
+  if (!newParentView) {
+    newParentView = GetClosestViewFor(aNewParentFrame);
+  }
+  
+  // See if the old parent frame and the new parent frame are in the
+  // same view sub-hierarchy. If they are then we don't have to do
+  // anything
   if (oldParentView != newParentView) {
-    return ReparentFrameViewTo(aChildFrame, newParentView, oldParentView);
+    nsCOMPtr<nsIViewManager>  viewManager;
+    oldParentView->GetViewManager(*getter_AddRefs(viewManager));
+
+    // They're not so we need to reparent any child views
+    return ReparentFrameViewTo(aChildFrame, viewManager, newParentView,
+                               oldParentView);
   }
 
   return NS_OK;
