@@ -44,6 +44,7 @@
 #include "nsIPrompt.h"
 #include "nsTextFormatter.h"
 #include "nsIHTTPEventSink.h"
+#include "nsScriptSecurityManager.h"
 
 // Local Includes
 #include "nsDocShell.h"
@@ -91,6 +92,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
+static NS_DEFINE_CID(kSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
 //
 // Local function prototypes
@@ -3170,8 +3172,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       else
       {
           // iff we are dealing with a JS or a data url, we may need an inherited owner.
-          // This is either aOwner or, if aInheritOwner is true, the owner of the
-          // current document.
+          // This is either aOwner or the owner of the current document.
           nsCOMPtr<nsISupports> owner = aOwner;
           PRBool isJSOrData = PR_FALSE;
           nsCOMPtr<nsIStreamIOChannel> ioChannel(do_QueryInterface(channel));
@@ -3186,10 +3187,30 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
               nsCOMPtr<nsIDataChannel> dataChannel(do_QueryInterface(channel));
               isJSOrData = (dataChannel != nsnull);
           }
+
           if (isJSOrData)
           {
-              if (aInheritOwner && !owner)
-                  GetCurrentDocumentOwner(getter_AddRefs(owner));
+              if (!owner) // If an owner was passed in, use it
+              {
+                  // Otherwise, if the caller has allowed inheriting from the current document,
+                  // or if we're being called from chrome (which has the system principal),
+                  // then use the current document principal
+                  if (!aInheritOwner)
+                  {
+                      // See if there's system or chrome JS code running
+                      NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, kSecurityManagerCID, &rv);
+                      nsCOMPtr<nsIPrincipal> sysPrin;
+                      if (NS_SUCCEEDED(rv))
+                          rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin)); // Just to compare, not to use!
+                      nsCOMPtr<nsIPrincipal> subjectPrin;
+                      if (NS_SUCCEEDED(rv))
+                          rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
+                      if (NS_SUCCEEDED(rv) && (!subjectPrin || sysPrin.get() == subjectPrin.get()))
+                          aInheritOwner = PR_TRUE;    
+                  }
+                  if (aInheritOwner)
+                      GetCurrentDocumentOwner(getter_AddRefs(owner));
+              }
               channel->SetOwner(owner);
           }
       }
