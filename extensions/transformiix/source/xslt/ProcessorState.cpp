@@ -99,7 +99,7 @@ void txLoadedDocumentsHash::Add(Document* aDocument)
     }
 
     nsAutoString baseURI;
-    mSourceDocument->getBaseURI(baseURI);
+    aDocument->getBaseURI(baseURI);
     txLoadedDocumentEntry* entry = AddEntry(baseURI);
     if (entry) {
         entry->mDocument = aDocument;
