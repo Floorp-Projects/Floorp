@@ -80,7 +80,6 @@ function getDocumentElements()
 {
   gSearchBundle = document.getElementById("bundle_search");  
   gStatusBar = document.getElementById('statusbar-icon');
-  gSearchInput = document.getElementById('searchInput');
   gSearchCriteria =document.getElementById('searchCriteria');
   gClearButton = document.getElementById('clearButton');
 }
@@ -233,4 +232,11 @@ function disableQuickSearchClearButton()
 {
  if (gClearButton)
    gClearButton.setAttribute("disabled", true); //going out of search disable clear button
+}
+
+function searchInputFocus()
+{
+  var searchInput = GetSearchInput();
+  if (searchInput.value)
+    searchInput.select();
 }
