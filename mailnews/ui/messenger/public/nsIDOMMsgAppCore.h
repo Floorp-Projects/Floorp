@@ -18,8 +18,6 @@
 #include "nsID.h"
 #include "nsError.h"
 
-extern "C" NS_DOM
-nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype, JSObject * aParentProto);
 
 /* starting interface nsIDOMMsgAppCore */
 
