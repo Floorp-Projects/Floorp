@@ -40,9 +40,7 @@
 
   <box orient="vertical" flex="1">
     <html>&certmgr.editcert.beforename;</html>
-<!--
-    <text id="certname">
--->
+    <text id="certname"/>
     <html>&certmgr.editcert.aftername;</html>
     <separator />
     <html>&certmgr.editcert.edittrust;</html>
