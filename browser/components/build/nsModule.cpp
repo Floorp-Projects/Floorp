@@ -51,7 +51,9 @@
 #ifdef XP_WIN
 #include "nsIEProfileMigrator.h"
 #elif defined(XP_MACOSX)
+#if 0
 #include "nsSafariProfileMigrator.h"
+#endif
 #include "nsOmniWebProfileMigrator.h"
 #include "nsMacIEProfileMigrator.h"
 #endif
@@ -71,7 +73,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEProfileMigrator)
 #elif defined(XP_MACOSX)
+#if 0
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafariProfileMigrator)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOmniWebProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacIEProfileMigrator)
 #endif
@@ -107,11 +111,12 @@ static const nsModuleComponentInfo components[] =
     nsIEProfileMigratorConstructor },
 
 #elif defined(XP_MACOSX)
+#if 0
   { "Safari Profile Migrator",
     NS_SAFARIPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "safari",
     nsSafariProfileMigratorConstructor },
-
+#endif
   { "Internet Explorer (Macintosh) Profile Migrator",
     NS_MACIEPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "macie",

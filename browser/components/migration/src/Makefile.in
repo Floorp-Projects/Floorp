@@ -82,8 +82,7 @@ CPPSRCS += nsIEProfileMigrator.cpp \
 endif
             
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS += nsSafariProfileMigrator.cpp \
-           nsMacIEProfileMigrator.cpp \
+CPPSRCS += nsMacIEProfileMigrator.cpp \
            nsOmniWebProfileMigrator.cpp \
            nsCaminoProfileMigrator.cpp \
            nsICabProfileMigrator.cpp \
