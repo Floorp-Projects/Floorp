@@ -1420,7 +1420,7 @@ public class NativeDate extends ScriptableObject {
             Object argz[] = { "zzz" };
             Class clazz = Class.forName("java.text.SimpleDateFormat");
             java.lang.reflect.Constructor conztruct =
-                clazz.getDeclaredConstructor(paramz);
+                clazz.getConstructor(paramz);
             timeZoneFormatter =
                 (java.text.DateFormat) conztruct.newInstance(argz);
         } catch (Exception e) {
