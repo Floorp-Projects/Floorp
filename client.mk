@@ -45,11 +45,11 @@
 
 CWD		:= $(shell pwd)
 ifeq (mozilla, $(notdir $(CWD)))
-ROOTDIR		:= $(shell dirname $(CWD))
-TOPSRCDIR       := $(CWD)
+ROOTDIR		:= ..
+TOPSRCDIR       := .
 else
-ROOTDIR		:= $(CWD)
-TOPSRCDIR       := $(CWD)/mozilla
+ROOTDIR		:= .
+TOPSRCDIR       := mozilla
 endif
 
 AUTOCONF	:= autoconf
