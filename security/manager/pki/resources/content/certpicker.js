@@ -44,19 +44,19 @@ function onLoad()
 {
   dialogParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
 
-  var pickerTitle = dialogParams.GetString(1);
+  var pickerTitle = dialogParams.GetString(0);
   var mainwin = document.getElementById("certPicker");
   mainwin.setAttribute("title", pickerTitle);
 
-  var pickerInfo = dialogParams.GetString(2);
+  var pickerInfo = dialogParams.GetString(1);
   setText("pickerInfo", pickerInfo);
 
   var selectElement = document.getElementById("nicknames");
-  itemCount = dialogParams.GetInt(1);
+  itemCount = dialogParams.GetInt(0);
 
   for (var i=0; i < itemCount; i++) {
       var menuItemNode = document.createElement("menuitem");
-      var nick = dialogParams.GetString(i+3);
+      var nick = dialogParams.GetString(i+2);
       menuItemNode.setAttribute("value", i);
       menuItemNode.setAttribute("label", nick); // this is displayed
       selectElement.firstChild.appendChild(menuItemNode);
@@ -65,14 +65,14 @@ function onLoad()
       }
   }
 
-  dialogParams.SetInt(1,0); // set cancel return value
+  dialogParams.SetInt(0,0); // set cancel return value
   setDetails();
 }
 
 function setDetails()
 {
   var index = parseInt(document.getElementById("nicknames").value);
-  details = dialogParams.GetString(index+itemCount+3);
+  details = dialogParams.GetString(index+itemCount+2);
   document.getElementById("details").value = details;
 }
 
@@ -83,14 +83,14 @@ function onCertSelected()
 
 function doOK()
 {
-  dialogParams.SetInt(1,1);
+  dialogParams.SetInt(0,1);
   var index = parseInt(document.getElementById("nicknames").value);
-  dialogParams.SetInt(2, index);
+  dialogParams.SetInt(1, index);
   window.close();
 }
 
 function doCancel()
 {
-  dialogParams.SetInt(1,0);
+  dialogParams.SetInt(0,0);
   window.close();
 }

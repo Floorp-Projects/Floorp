@@ -750,26 +750,26 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
 
   block->SetNumberStrings(4+count*2);
 
-  rv = block->SetString(1, cn);
+  rv = block->SetString(0, cn);
   if (NS_FAILED(rv)) return rv;
 
-  rv = block->SetString(2, organization);
+  rv = block->SetString(1, organization);
   if (NS_FAILED(rv)) return rv;
 
-  rv = block->SetString(3, issuer);
+  rv = block->SetString(2, issuer);
   if (NS_FAILED(rv)) return rv;
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i+4, certNickList[i]);
+	  rv = block->SetString(i+3, certNickList[i]);
 	  if (NS_FAILED(rv)) return rv;
   }
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i+count+4, certDetailsList[i]);
+	  rv = block->SetString(i+count+3, certDetailsList[i]);
 	  if (NS_FAILED(rv)) return rv;
   }
 
-  rv = block->SetInt(1, count);
+  rv = block->SetInt(0, count);
   if (NS_FAILED(rv)) return rv;
 
   rv = nsNSSDialogHelper::openDialog(nsnull,
@@ -779,13 +779,13 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
 
   PRInt32 status;
 
-  rv = block->GetInt(1, &status);
+  rv = block->GetInt(0, &status);
   if (NS_FAILED(rv)) return rv;
 
   *canceled = (status == 0)?PR_TRUE:PR_FALSE;
   if (!*canceled) {
     // retrieve the nickname
-    rv = block->GetInt(2, selectedIndex);
+    rv = block->GetInt(1, selectedIndex);
   }
   return rv;
 }
@@ -807,23 +807,23 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *title
 
   block->SetNumberStrings(3+count*2);
 
-  rv = block->SetString(1, title);
+  rv = block->SetString(0, title);
   if (NS_FAILED(rv)) return rv;
 
-  rv = block->SetString(2, infoPrompt);
+  rv = block->SetString(1, infoPrompt);
   if (NS_FAILED(rv)) return rv;
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i+3, certNickList[i]);
+	  rv = block->SetString(i+2, certNickList[i]);
 	  if (NS_FAILED(rv)) return rv;
   }
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i+count+3, certDetailsList[i]);
+	  rv = block->SetString(i+count+2, certDetailsList[i]);
 	  if (NS_FAILED(rv)) return rv;
   }
 
-  rv = block->SetInt(1, count);
+  rv = block->SetInt(0, count);
   if (NS_FAILED(rv)) return rv;
 
   rv = nsNSSDialogHelper::openDialog(nsnull,
@@ -833,12 +833,12 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *title
 
   PRInt32 status;
 
-  rv = block->GetInt(1, &status);
+  rv = block->GetInt(0, &status);
   if (NS_FAILED(rv)) return rv;
 
   *canceled = (status == 0)?PR_TRUE:PR_FALSE;
   if (!*canceled) {
-    rv = block->GetInt(2, selectedIndex);
+    rv = block->GetInt(1, selectedIndex);
   }
   return rv;
 }
@@ -960,11 +960,11 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenL
   block->SetNumberStrings(aCount);
 
   for (i = 0; i < aCount; i++) {
-	  rv = block->SetString(i+1, aTokenList[i]);
+	  rv = block->SetString(i, aTokenList[i]);
 	  if (NS_FAILED(rv)) return rv;
   }
 
-  rv = block->SetInt(1, aCount);
+  rv = block->SetInt(0, aCount);
   if (NS_FAILED(rv)) return rv;
 
   rv = nsNSSDialogHelper::openDialog(nsnull,
@@ -974,13 +974,13 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenL
 
   PRInt32 status;
 
-  rv = block->GetInt(1, &status);
+  rv = block->GetInt(0, &status);
   if (NS_FAILED(rv)) return rv;
 
   *aCanceled = (status == 0)?PR_TRUE:PR_FALSE;
   if (!*aCanceled) {
     // retrieve the nickname
-    rv = block->GetString(1, aTokenChosen);
+    rv = block->GetString(0, aTokenChosen);
   }
   return rv;
 }
