@@ -2735,7 +2735,9 @@ nsresult nsMsgDBView::GetLongField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sor
       {
         nsXPIDLCString scoreStr;
         rv = msgHdr->GetStringProperty("score", getter_Copies(scoreStr));
-        *result = (!scoreStr.IsEmpty()) ? atoi(scoreStr.get()) : 0;
+        // unscored messages should come before messages that are scored
+        // score is 0 - 100
+        *result = scoreStr.IsEmpty() ? (0) : atoi(scoreStr.get()) + 1;
       }
       break;
     case nsMsgViewSortType::byId:
