@@ -247,11 +247,20 @@ protected:
     NS_IMETHODIMP ConsumeEntity(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);
     NS_IMETHODIMP ConsumeAttributes(PRUnichar aChar,nsScanner& aScanner,CStartToken* aToken);
 */
+    nsresult    HandleStartToken(CToken* aToken);
+    nsresult    HandleEndToken(CToken* aToken);
+    nsresult    HandleCommentToken(CToken* aToken);
+    nsresult    HandleErrorToken(CToken* aToken);
+    nsresult    HandleDocTypeDeclToken(CToken* aToken);
+    nsresult    HandleLeafToken(CToken* aToken);
+    nsresult    HandleProcessingInstructionToken(CToken* aToken);
+
     nsParser*           mParser;
     nsIContentSink*     mSink;
     nsString            mFilename;
     PRInt32             mLineNumber;
     nsHTMLTokenizer*    mTokenizer;
+    nsresult            mDTDState;
 };
 
 extern NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult);
