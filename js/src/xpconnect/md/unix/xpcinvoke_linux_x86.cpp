@@ -120,7 +120,7 @@ xpc_InvokeNativeMethod(void* that, PRUint32 index,
     "pushl %4\n\t"
     "pushl %3\n\t"
     "movl  %5, %%eax\n\t"
-    "call  *%%eax\n\t"         /* count words */
+    "call  *%%eax\n\t"       /* count words */
     "addl  $0x8, %%esp\n\t"
     "shl   $2, %%eax\n\t"    /* *= 4 */
     "subl  %%eax, %%esp\n\t" /* make room for params */
