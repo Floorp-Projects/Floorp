@@ -285,7 +285,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
     PtSetArg( &arg[arg_count++], Pt_ARG_POS, &pos, 0 );
     PtSetArg( &arg[arg_count++], Pt_ARG_DIM, &dim, 0 );
     PtSetArg( &arg[arg_count++], Pt_ARG_RESIZE_FLAGS, 0, Pt_RESIZE_XY_BITS );
-    PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, 0 /*Pt_HIGHLIGHTED*/, Pt_HIGHLIGHTED|Pt_GETS_FOCUS );
+    PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, 0 , Pt_HIGHLIGHTED|Pt_GETS_FOCUS );
     PtSetArg( &arg[arg_count++], Pt_ARG_BORDER_WIDTH, 0, 0 );
     PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_RED, 0 );
     PtSetArg( &arg[arg_count++], RDC_DRAW_FUNC, RawDrawFunc, 0 );
@@ -691,9 +691,12 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 			p.y -= pos.y;
 			Move(p.x, p.y); // the move should be in coordinates assuming the console is 0, 0
 		}
-		
+		if ( aRepaint == PR_FALSE )
+			PtStartFlux(mWidget);
 		PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
 		PtSetResources( mWidget, 1, &arg );
+		if ( aRepaint == PR_FALSE )
+			PtEndFlux(mWidget);
 		
 		/* This fixes XUL dialogs */
 #if 0
@@ -727,7 +730,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 		delete sevent.windowSize;
 	}
 	if( nNeedToShow ) Show(PR_TRUE);
-	if (aRepaint) Invalidate(PR_FALSE);
 	return NS_OK;
 }
 
@@ -797,7 +799,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   nsPaintEvent pev;
   PhRect_t   extent;
 
-#if 0	
+#if 0
   PgSetFillColor(Pg_WHITE);
   PgSetDrawMode(Pg_DRAWMODE_XOR);
   PtWidgetExtent(pWidget, &extent);
@@ -806,7 +808,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   {
 	  PgDrawRect(&extent, Pg_DRAW_FILL);
 	  PgFlush();
-	  delay(10);
+	  delay(1);
   }
   PgSetDrawMode(Pg_DRAWMODE_OPAQUE);
 #endif	
