@@ -55,6 +55,7 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIWidget.h"
+#include "nsIWindowMediator.h"
 #include "plevent.h"
 
 #include "nsIAppShell.h"
@@ -960,12 +961,17 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   if (NS_FAILED(rv)) return rv;
   
   // get the URL of the page we are editing
-  char* pageURLString = nsnull;
   if (aUrl)
   {
+    char* pageURLString = nsnull;
+    char* pageScheme = nsnull;
+
+    aUrl->GetScheme(&pageScheme);
     aUrl->GetSpec(&pageURLString);
-    // Don't save the name if we're a new blank document
-    if (0 != nsCRT::strncmp(pageURLString,"about:blank",nsCRT::strlen(pageURLString)))
+    // only save the file spec if this is a local file, and is not
+    // about:blank
+    if (nsCRT::strncmp(pageScheme, "file", 4) == 0 &&
+        nsCRT::strncmp(pageURLString,"about:blank", 11) != 0)
     {
       nsFileURL    pageURL(pageURLString);
       nsFileSpec   pageSpec(pageURL);
@@ -980,8 +986,11 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
           diskDoc->InitDiskDocument(&pageSpec);
       }
     }
+
     if (pageURLString)
       nsCRT::free(pageURLString);
+    if (pageScheme)
+      nsCRT::free(pageScheme);
   }
   // Set the editor-specific Window caption
   UpdateWindowTitle();
@@ -1089,12 +1098,14 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
 }
 
 // Utility function to open an editor window and pass a URL to it.
-static nsresult OpenWindow( const char *chrome, const PRUnichar *url ) {
+static nsresult OpenWindow( const char *chrome, const PRUnichar *url )
+{
     nsCOMPtr<nsIDOMWindow> hiddenWindow;
     JSContext *jsContext;
     nsresult rv;
     NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
-    if ( NS_SUCCEEDED( rv ) ) {
+    if (NS_SUCCEEDED(rv))
+    {
         rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
                                                     &jsContext );
         if ( NS_SUCCEEDED( rv ) ) {
@@ -1130,6 +1141,78 @@ nsEditorShell::CreateWindowWithURL(const char* urlStr)
   return rv;
 }
 
+// this will AddRef the returned window, if any.
+NS_IMETHODIMP
+nsEditorShell::FindOpenWindowForFile(const PRUnichar* inFileURL, nsIDOMWindow** outFoundWindow)
+{
+  if (!outFoundWindow) return NS_ERROR_NULL_POINTER;
+  
+  *outFoundWindow = nsnull;
+
+  // get an nsFileSpec from the URL
+  nsFileURL    fileURL(inFileURL);
+  nsFileSpec   fileSpec(fileURL);
+  
+  nsresult rv;
+  static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+  // the "navigator:composer" string is on the window tag in the XUL
+  nsAutoString windowType("composer:html");
+  rv = windowMediator->GetEnumerator(windowType.GetUnicode(), getter_AddRefs(windowEnumerator));
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool more;
+
+  // get the (main) webshell for each window in the enumerator
+  windowEnumerator->HasMoreElements(&more);
+  while (more)
+  {
+    nsCOMPtr<nsISupports> protoWindow;
+    rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
+    if (NS_SUCCEEDED(rv) && protoWindow)
+    {
+    	nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(protoWindow));
+    	// need to get to the content window
+    	if (domWindow)
+    	{
+    	  nsCOMPtr<nsIDOMWindow> contentWindow;
+    	  domWindow->GetContent(getter_AddRefs(contentWindow));
+        if (contentWindow)
+        {
+          // get the content doc
+          nsCOMPtr<nsIDOMDocument> contentDoc;          
+          contentWindow->GetDocument(getter_AddRefs(contentDoc));
+          if (contentDoc)
+          {
+            nsCOMPtr<nsIDiskDocument> diskDoc(do_QueryInterface(contentDoc));
+            if (diskDoc)
+            {
+              nsFileSpec docFileSpec;
+              if (NS_SUCCEEDED(diskDoc->GetFileSpec(docFileSpec)))
+              {
+                // is this the filespec we are looking for?
+                if (docFileSpec == fileSpec)
+                {
+                  *outFoundWindow = domWindow;
+                  NS_ADDREF(*outFoundWindow);
+                  break;
+                }
+              }
+            }
+          }
+        }
+    	}
+    }
+    
+    windowEnumerator->HasMoreElements(&more);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP    
 nsEditorShell::Open()
 {
@@ -1155,12 +1238,29 @@ nsEditorShell::Open()
       result = GetLocalFileURL(mContentWindow, filterType.GetUnicode(), &fileURLString);
       if (NS_FAILED(result) || !fileURLString || !*fileURLString)
         return result;
-
+      
+      // does the file URL correspond to any open windows?
+      nsCOMPtr<nsIDOMWindow> foundWindow;
+      result = FindOpenWindowForFile(fileURLString, getter_AddRefs(foundWindow));
+      if (NS_FAILED(result))
+      {
+        nsCRT::free(fileURLString);
+        return result;
+      }
+      
+      if (foundWindow)
+      {
+        // bring it to the front
+        foundWindow->Focus();
+        nsCRT::free(fileURLString);
+      	return NS_OK;
+      }
+      
       // Open a new editor window on the specified file.
-      result = OpenWindow( "chrome://editor/content", fileURLString );
+      result = OpenWindow("chrome://editor/content", fileURLString);
 
       // delete the string
-
+      nsCRT::free(fileURLString);
       break;
     }
     default:
