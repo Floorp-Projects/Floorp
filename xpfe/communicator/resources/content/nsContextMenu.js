@@ -129,17 +129,9 @@ nsContextMenu.prototype = {
 
         this.showItem( "context-sep-image", this.onImage );
 
-        if( isWin && this.onImage ) {
-            var wallpaperItem = document.getElementById("context-setWallpaper");
+        if( isWin && this.onImage )
             // Disable the Set As Wallpaper menu item if we're still trying to load the image
-            if (wallpaperItem) {
-              if( !("complete" in this.target) || this.target.complete ) {
-                wallpaperItem.removeAttribute("disabled");
-              } else {
-                wallpaperItem.setAttribute("disabled", "true");
-              }
-            }
-        }
+          this.setItemAttr( "context-setWallpaper", "disabled", (("complete" in this.target) && !this.target.complete) ? "true" : null );
 
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
@@ -147,14 +139,7 @@ nsContextMenu.prototype = {
         // View background image depends on whether there is one.
         this.showItem( "context-viewbgimage", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
         this.showItem( "context-sep-viewbgimage", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
-        var menuitem = document.getElementById("context-viewbgimage");
-
-        if ( menuitem ) {
-          if ( this.hasBGImage )
-            menuitem.removeAttribute("disabled");
-          else
-            menuitem.setAttribute("disabled", "true");
-        }    
+        this.setItemAttr( "context-viewbgimage", "disabled", this.hasBGImage ? null : "true");
     },
     initMiscItems : function () {
         // Use "Bookmark This Link" if on a link.
@@ -690,7 +675,6 @@ nsContextMenu.prototype = {
     isTextSelection : function() {
         var result = false;
         var selection = this.searchSelected();
-        var searchSelect = document.getElementById('context-searchselect');
 
         var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
 
@@ -704,7 +688,7 @@ nsContextMenu.prototype = {
           // format "Search for <selection>" string to show in menu
           searchSelectText = bundle.formatStringFromName("searchText",
                                                          [searchSelectText], 1);
-          searchSelect.setAttribute("label", searchSelectText);
+          this.setItemAttr("context-searchselect", "label", searchSelectText);
         } 
         return result;
     },
