@@ -484,6 +484,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
         // Have style sheet processor construct a frame for the
         // root content object
         mPresContext->ConstructFrame(root, nsnull, mRootFrame);
+        NS_RELEASE(root);
       }
     }
   }
