@@ -880,7 +880,8 @@ void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
   }
 
   // before we unload check if we are allowed to, see bug #61388
-  if (mLibrary && mCanUnloadLibrary)
+  // also, never unload an XPCOM plugin library
+  if (mLibrary && mCanUnloadLibrary && !isXPCOM)
     PR_UnloadLibrary(mLibrary);
 
   // we should zero it anyway, it is going to be unloaded by 
