@@ -169,7 +169,7 @@ pref("mailnews.reply_on_top",               0); // 0=bottom 1=top 2=select+botto
 // 0=no header, 1="<author> wrote:", 2="On <date> <author> wrote:", 3="<author> wrote On <date>:", 4=user specified
 pref("mailnews.reply_header_type",          1);
 // locale which affects date format, set empty string to use application default locale
-pref("mailnews.reply_header_locale",        "en-US");
+pref("mailnews.reply_header_locale",        "");
 pref("mailnews.reply_header_authorwrote",   "chrome://messenger/locale/messengercompose/composeMsgs.properties");
 pref("mailnews.reply_header_ondate",        "On %s");
 // separator to separate between date and author
