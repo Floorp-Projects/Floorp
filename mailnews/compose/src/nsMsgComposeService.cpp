@@ -39,6 +39,9 @@
 #include "nsEscape.h"
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
+#endif
 #include "prlog.h"
 #include "nsIPref.h"
 #include "nsIMsgHdr.h"
