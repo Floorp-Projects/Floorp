@@ -78,12 +78,9 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 // Mac can't handle PRTime as integers, must go through this hell
 inline PRBool nsXPInstallManager::TimeToUpdate(PRTime now)
 {
-    PRTime  diff;
-    LL_SUB(diff, now, mLastUpdate);
+	// XXX lets revisit this when dveditz gets back
 
-    PRInt32 interval;
-    LL_L2I(interval, diff);
-    return (interval > 250000);
+	return PR_TRUE;
 }
 
 nsXPInstallManager::nsXPInstallManager()
