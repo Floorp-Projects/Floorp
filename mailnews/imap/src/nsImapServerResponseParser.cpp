@@ -655,6 +655,8 @@ void nsImapServerResponseParser::response_data()
 				xserverinfo_data();
 			else if (!PL_strcasecmp(fNextToken, "XMAILBOXINFO"))
 				xmailboxinfo_data();
+      else if (!PL_strcasecmp(fNextToken, "XAOL-OPTION"))
+				skip_to_CRLF();
 			else 
 				SetSyntaxError(PR_TRUE);
 			break;

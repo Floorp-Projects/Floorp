@@ -110,6 +110,7 @@ public:
 	PRBool ServerHasNamespaceCapability() { return ((fCapabilityFlag & kNamespaceCapability) != 0); }
 	PRBool ServerIsNetscape3xServer() { return fServerIsNetscape3xServer; }
 	PRBool ServerHasServerInfo() {return ((fCapabilityFlag & kXServerInfoCapability) != 0); }
+	PRBool ServerIsAOLServer() {return ((fCapabilityFlag & kAOLImapCapability) != 0); }
 	void ResetCapabilityFlag() ;
 
 	const char *GetMailAccountUrl() { return fMailAccountUrl; }

@@ -428,12 +428,14 @@ nsImapProtocol::GetImapServerKey()
 void
 nsImapProtocol::SetupSinkProxy()
 {
+  nsresult res = NS_ERROR_FAILURE;
+  NS_ASSERTION(!m_imapMiscellaneousSink, "shouldn't be non-null here");
+
   if (m_runningUrl)
   {
     NS_ASSERTION(m_sinkEventQueue && m_thread, "fatal... null sink event queue or thread");
-    nsresult res;
 
-    nsCOMPtr<nsIProxyObjectManager> proxyManager(do_GetService(kProxyObjectManagerCID));
+    nsCOMPtr<nsIProxyObjectManager> proxyManager(do_GetService(kProxyObjectManagerCID, &res));
     if (proxyManager) // if we don't get one of these are as good as dead...
     {
       if (!m_imapMailFolderSink)
@@ -484,6 +486,7 @@ nsImapProtocol::SetupSinkProxy()
                                                                                       m_thread);
            m_imapMiscellaneousSink = do_QueryInterface(miscSink);
         }
+        NS_ASSERTION(NS_SUCCEEDED(res), "couldn't get proxies");
       }
       if (!m_imapServerSink)
       {
@@ -495,9 +498,13 @@ nsImapProtocol::SetupSinkProxy()
                              aImapServerSink,
                              PROXY_SYNC | PROXY_ALWAYS,
                              getter_AddRefs(m_imapServerSink));
+        NS_ASSERTION(NS_SUCCEEDED(res), "couldn't get proxies");
       }
     }
+    else
+      NS_ASSERTION(PR_FALSE, "can't get proxy service");
   }
+  NS_ASSERTION(NS_SUCCEEDED(res), "couldn't get proxies");
 }
 
 // Setup With Url is intended to set up data which is held on a PER URL basis and not
@@ -849,13 +856,13 @@ nsImapProtocol::ImapThreadMainLoop()
 {
   PRIntervalTime sleepTime = kImapSleepTime;
     // ****** please implement PR_LOG 'ing ******
-    while (ImapThreadIsRunning() && !DeathSignalReceived())
-    {
-    // if we are making our first pass through this loop and
-    // we already have a url to process then jump right in and
-    // process the current url. Don't try to wait for the monitor
-    // the first time because it may have already been signaled.
-    // But make sure we have a channel first, or ProcessCurrentUrl will fail.
+  while (ImapThreadIsRunning() && !DeathSignalReceived())
+  {
+  // if we are making our first pass through this loop and
+  // we already have a url to process then jump right in and
+  // process the current url. Don't try to wait for the monitor
+  // the first time because it may have already been signaled.
+  // But make sure we have a channel first, or ProcessCurrentUrl will fail.
     if (TestFlag(IMAP_FIRST_PASS_IN_THREAD) && m_runningUrl && m_channel)
     {
       // if we launched another url, just loop around and process it.
@@ -870,24 +877,25 @@ nsImapProtocol::ImapThreadMainLoop()
 
     PRStatus err;
 
-        err = PR_Wait(m_urlReadyToRunMonitor, sleepTime);
+    err = PR_Wait(m_urlReadyToRunMonitor, sleepTime);
 
-        PR_ExitMonitor(m_urlReadyToRunMonitor);
-        if (err == PR_FAILURE && PR_PENDING_INTERRUPT_ERROR == PR_GetError()) 
+    PR_ExitMonitor(m_urlReadyToRunMonitor);
+    if (err == PR_FAILURE && PR_PENDING_INTERRUPT_ERROR == PR_GetError()) 
     {
+      printf("error waiting for monitor\n");
       break;
     }
 
-//    m_eventQueue->ProcessPendingEvents();
-//    m_sinkEventQueue->ProcessPendingEvents();
+  //    m_eventQueue->ProcessPendingEvents();
+  //    m_sinkEventQueue->ProcessPendingEvents();
 
     if (m_nextUrlReadyToRun && m_runningUrl)
+    {
+      m_nextUrlReadyToRun = PR_FALSE;
       ProcessCurrentURL();
-
-    m_nextUrlReadyToRun = PR_FALSE;
-
     }
-    m_imapThreadIsRunning = PR_FALSE;
+  }
+  m_imapThreadIsRunning = PR_FALSE;
 }
 
 void nsImapProtocol::EstablishServerConnection()
@@ -1028,7 +1036,11 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     m_channel->AsyncRead(this /* stream observer */, nsnull);
     SetFlag(IMAP_CONNECTION_IS_OPEN);
   }
-    
+   
+  NS_ASSERTION(m_imapMiscellaneousSink, "null sink");
+  if (!m_imapMiscellaneousSink)
+    SetupSinkProxy(); // try this again. Evil, but I'm desperate.
+
   // we used to check if the current running url was 
   // Reinitialize the parser
   GetServerStateParser().InitializeState();
@@ -1037,6 +1049,11 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   // acknowledge that we are running the url now..
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
+#ifdef DEBUG_bienvenu1
+    nsXPIDLCString urlSpec;
+    mailnewsurl->GetSpec(getter_Copies(urlSpec));
+    printf("processing url %s\n", (const char *) urlSpec);
+#endif
   if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
   {
     m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_TRUE,
@@ -1121,6 +1138,8 @@ PRBool nsImapProtocol::ProcessCurrentURL()
                                                       // url.
         WaitForFEEventCompletion();
     }
+    else
+      NS_ASSERTION(PR_FALSE, "missing url or sink");
 
   // if we are set up as a channel, we should notify our channel listener that we are starting...
   // so pass in ourself as the channel and not the underlying socket or file channel the protocol
@@ -1137,6 +1156,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
       WaitForFEEventCompletion();
   }
 
+#ifdef DEBUG_bienvenu1
+    mailnewsurl->GetSpec(getter_Copies(urlSpec));
+    printf("end processing url %s\n", (const char *) urlSpec);
+#endif
   // this is so hokey...we MUST clear any local references to the url 
   // BEFORE calling ReleaseUrlState
   mailnewsurl = nsnull;
@@ -1144,11 +1167,12 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   // release the url as we are done with it...
   ReleaseUrlState();
   ResetProgressInfo();
+  m_urlInProgress = PR_FALSE;
   // now try queued urls, now that we've released this connection.
   if (m_imapServerSink && GetConnectionStatus() >= 0)
   {
     rv = m_imapServerSink->LoadNextQueuedUrl(&anotherUrlRun);
-        SetFlag(IMAP_FIRST_PASS_IN_THREAD);
+    SetFlag(IMAP_FIRST_PASS_IN_THREAD);
   }
 
   if (GetConnectionStatus() < 0)
@@ -1342,7 +1366,14 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsresult rv = NS_OK;
   if (aURL)
   {
+#ifdef DEBUG_bienvenu1
+    nsXPIDLCString urlSpec;
+    aURL->GetSpec(getter_Copies(urlSpec));
+    printf("loading url %s\n", (const char *) urlSpec);
+#endif
+    m_urlInProgress = PR_TRUE;
     rv = SetupWithUrl(aURL, aConsumer); 
+    NS_ASSERTION(NS_SUCCEEDED(rv), "error setting up imap url");
         if (NS_FAILED(rv)) return rv;
       SetupSinkProxy(); // generate proxies for all of the event sinks in the url
         m_lastActiveTime = PR_Now();
@@ -1364,6 +1395,9 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
       PR_ExitMonitor(m_urlReadyToRunMonitor);
 
     } // if we have an imap url and a transport
+    else
+      NS_ASSERTION(PR_FALSE, "missing channel or running url");
+
   } // if we received a url!
 
   return rv;
@@ -1375,30 +1409,33 @@ NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool *aIsConnectionBusy,
 	if (!aIsConnectionBusy || !isInboxConnection)
 		return NS_ERROR_NULL_POINTER;
   NS_LOCK_INSTANCE();
-    nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
   *aIsConnectionBusy = PR_FALSE;
-    *isInboxConnection = PR_FALSE;
-    if (!m_channel)
-    {
-        // ** jt -- something is really wrong kill the thread
-        TellThreadToDie(PR_FALSE);
-        rv = NS_ERROR_FAILURE;
-    }
-    else
-    {
-        if (m_runningUrl) // do we have a url? That means we're working on
-                          // it... 
-            *aIsConnectionBusy = PR_TRUE;
-        if (GetServerStateParser().GetSelectedMailboxName() && 
-            PL_strcasecmp(GetServerStateParser().GetSelectedMailboxName(),
-                          "Inbox") == 0)
-            *isInboxConnection = PR_TRUE;
-        
-    }
+  *isInboxConnection = PR_FALSE;
+  if (!m_channel)
+  {
+    // ** jt -- something is really wrong kill the thread
+    TellThreadToDie(PR_FALSE);
+    rv = NS_ERROR_FAILURE;
+  }
+  else
+  {
+    if (m_urlInProgress) // do we have a url? That means we're working on it... 
+      *aIsConnectionBusy = PR_TRUE;
+
+    if (GetServerStateParser().GetSelectedMailboxName() && 
+        PL_strcasecmp(GetServerStateParser().GetSelectedMailboxName(),
+                      "Inbox") == 0)
+      *isInboxConnection = PR_TRUE;
+      
+  }
   NS_UNLOCK_INSTANCE();
   return rv;
 }
 
+// canRunUrl means the connection is not busy, and is in the selcted state
+// for the desired folder (or authenticated).
+// has to wait means it's in the right selected state, but busy.
 NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl, 
                                            PRBool * aCanRunUrl,
                                            PRBool * hasToWait)
@@ -1409,110 +1446,115 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
   NS_LOCK_INSTANCE();
 
   *aCanRunUrl = PR_FALSE; // assume guilty until proven otherwise...
-    *hasToWait = PR_FALSE;
+  *hasToWait = PR_FALSE;
 
-    PRBool isBusy = PR_FALSE;
-    PRBool isInboxConnection = PR_FALSE;
+  PRBool isBusy = PR_FALSE;
+  PRBool isInboxConnection = PR_FALSE;
 
-    if (!m_channel)
+  if (!m_channel)
+  {
+    // *** jt -- something is really wrong; it could be the dialer gave up
+    // the connection or ip binding has been release by the operating
+    // system; tell thread to die and return error failure
+    TellThreadToDie(PR_FALSE);
+    rv =  NS_ERROR_FAILURE;
+  }
+  else
+  {
+    IsBusy(&isBusy, &isInboxConnection);
+    
+    PRBool inSelectedState = GetServerStateParser().GetIMAPstate() ==
+        nsImapServerResponseParser::kFolderSelected;
+    
+    nsCString curUrlFolderName;
+    if (inSelectedState)
     {
-        // *** jt -- something is really wrong; it could be the dialer gave up
-        // the connection or ip binding has been release by the operating
-        // system; tell thread to die and return error failure
-        TellThreadToDie(PR_FALSE);
-        rv =  NS_ERROR_FAILURE;
+        curUrlFolderName =
+            GetServerStateParser().GetSelectedMailboxName();
     }
-    else
+    else if (isBusy)
     {
-        IsBusy(&isBusy, &isInboxConnection);
-        
-        PRBool inSelectedState = GetServerStateParser().GetIMAPstate() ==
-            nsImapServerResponseParser::kFolderSelected;
-        
-        nsCString curUrlFolderName;
-        if (inSelectedState)
+        nsImapState curUrlImapState;
+        m_runningUrl->GetRequiredImapState(&curUrlImapState);
+        if (curUrlImapState == nsIImapUrl::nsImapSelectedState)
         {
-            curUrlFolderName =
-                GetServerStateParser().GetSelectedMailboxName();
+            curUrlFolderName = OnCreateServerSourceFolderPathString();
+            inSelectedState = PR_TRUE;
         }
-        else if (isBusy)
-        {
-            nsImapState curUrlImapState;
-            m_runningUrl->GetRequiredImapState(&curUrlImapState);
-            if (curUrlImapState == nsIImapUrl::nsImapSelectedState)
-            {
-                curUrlFolderName = OnCreateServerSourceFolderPathString();
-                inSelectedState = PR_TRUE;
-            }
-        }
+    }
 
-        nsImapState imapState;
-        aImapUrl->GetRequiredImapState(&imapState);
-        
-        PRBool isSelectedStateUrl = imapState ==
-            nsIImapUrl::nsImapSelectedState;
-        
+    nsImapState imapState;
+    aImapUrl->GetRequiredImapState(&imapState);
+    
+    PRBool isSelectedStateUrl = imapState ==
+        nsIImapUrl::nsImapSelectedState;
+    
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
-        nsCOMPtr<nsIMsgIncomingServer> server;
-        rv = msgUrl->GetServer(getter_AddRefs(server));
-        if (NS_SUCCEEDED(rv))
-        {
-            // compare host/user between url and connection.
-            char * urlHostName = nsnull;
-            char * urlUserName = nsnull;
-            rv = server->GetHostName(&urlHostName);
-            if (NS_FAILED(rv)) return rv;
-            rv = server->GetUsername(&urlUserName);
-            if (NS_FAILED(rv)) return rv;
-            if ((!GetImapHostName() || 
-                 PL_strcasecmp(urlHostName, GetImapHostName()) == 0) &&
-                (!GetImapUserName() || 
-                 PL_strcasecmp(urlUserName, GetImapUserName()) == 0))
-            {
-                if (isSelectedStateUrl)
-                {
-                    if (inSelectedState)
-                    {
-                        // *** jt - in selected state can only run url with
-                        // matching foldername
-                        char *srcFolderName = nsnull;
-                        rv = aImapUrl->CreateServerSourceFolderPathString(
-                            &srcFolderName);
-                        if (NS_SUCCEEDED(rv) && srcFolderName)
-                        {
-                            PRBool isInbox = 
-                                PL_strcasecmp("Inbox", srcFolderName) == 0;
-                            if (curUrlFolderName.Length() > 0)
-                            {
-                                PRBool matched = isInbox ?
-                                    PL_strcasecmp(curUrlFolderName.GetBuffer(),
-                                                  srcFolderName) == 0 : 
-                                    PL_strcmp(curUrlFolderName.GetBuffer(),
-                                              srcFolderName) == 0;
-                                if (matched)
-                                {
-                                    if (isBusy)
-                                        *hasToWait = PR_TRUE;
-                                    else
-                                        *aCanRunUrl = PR_TRUE;
-                                }
-                            }
-                        }
-                        PR_FREEIF(srcFolderName);
-                    }
-                }
-                else // *** jt - an authenticated state url can be run in either
-                    // authenticated or selected state
-                {
-                    if (!isBusy)
-                        *aCanRunUrl = PR_TRUE;
-                }
-                
-                PR_FREEIF(urlHostName);
-                PR_FREEIF(urlUserName);
-            }
-        }
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = msgUrl->GetServer(getter_AddRefs(server));
+    if (NS_SUCCEEDED(rv))
+    {
+      // compare host/user between url and connection.
+      char * urlHostName = nsnull;
+      char * urlUserName = nsnull;
+      rv = server->GetHostName(&urlHostName);
+      if (NS_FAILED(rv)) return rv;
+      rv = server->GetUsername(&urlUserName);
+      if (NS_FAILED(rv)) return rv;
+      if ((!GetImapHostName() || 
+           PL_strcasecmp(urlHostName, GetImapHostName()) == 0) &&
+          (!GetImapUserName() || 
+           PL_strcasecmp(urlUserName, GetImapUserName()) == 0))
+      {
+          if (isSelectedStateUrl)
+          {
+              if (inSelectedState)
+              {
+                  // *** jt - in selected state can only run url with
+                  // matching foldername
+                  char *folderNameForProposedUrl = nsnull;
+                  rv = aImapUrl->CreateServerSourceFolderPathString(
+                      &folderNameForProposedUrl);
+                  if (NS_SUCCEEDED(rv) && folderNameForProposedUrl)
+                  {
+                      PRBool isInbox = 
+                          PL_strcasecmp("Inbox", folderNameForProposedUrl) == 0;
+                      if (curUrlFolderName.Length() > 0)
+                      {
+                          PRBool matched = isInbox ?
+                              PL_strcasecmp(curUrlFolderName.GetBuffer(),
+                                            folderNameForProposedUrl) == 0 : 
+                              PL_strcmp(curUrlFolderName.GetBuffer(),
+                                        folderNameForProposedUrl) == 0;
+                          if (matched)
+                          {
+                            if (isBusy)
+                                *hasToWait = PR_TRUE;
+                            else
+                                *aCanRunUrl = PR_TRUE;
+                          }
+                      }
+                  }
+#ifdef DEBUG_bienvenu1
+                  printf("proposed url = %s folder for connection %s has To Wait = %s can run = %s\n",
+                    folderNameForProposedUrl, curUrlFolderName.GetBuffer(),
+                    (*hasToWait) ? "TRUE" : "FALSE", (*aCanRunUrl) ? "TRUE" : "FALSE");
+#endif
+                  PR_FREEIF(folderNameForProposedUrl);
+              }
+          }
+          else // *** jt - an authenticated state url can be run in either
+              // authenticated or selected state
+          {
+              if (!isBusy)
+                  *aCanRunUrl = PR_TRUE;
+          }
+          
+          PR_FREEIF(urlHostName);
+          PR_FREEIF(urlUserName);
+      }
     }
+  }
   NS_UNLOCK_INSTANCE();
   return rv;
 }
@@ -5182,6 +5224,12 @@ void nsImapProtocol::FindMailboxesIfNecessary()
   nsImapAction imapAction;
   nsresult rv = NS_OK;
 
+  // need to do this for every connection in order to see folders.
+#ifdef DOING_PSEUDO_MAILBOXES
+  if (GetServerStateParser().ServerIsAOLServer())
+    XAOL_Option("+READMBOX");
+#endif
+
   rv = m_runningUrl->GetImapAction(&imapAction);
   rv = m_hostSessionList->GetHaveWeEverDiscoveredFoldersForHost(GetImapServerKey(), foundMailboxesAlready);
     if (NS_SUCCEEDED(rv) && !foundMailboxesAlready &&
@@ -5209,6 +5257,7 @@ void nsImapProtocol::FindMailboxesIfNecessary()
 void nsImapProtocol::DiscoverMailboxList()
 {
   PRBool usingSubscription = PR_FALSE;
+
   SetMailboxDiscoveryStatus(eContinue);
   if (GetServerStateParser().ServerHasACLCapability())
     m_hierarchyNameState = kListingForInfoAndDiscovery;
@@ -5984,6 +6033,20 @@ void nsImapProtocol::Close()
     nsresult rv = SendData(command.GetBuffer());
     if (NS_SUCCEEDED(rv))
         ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::XAOL_Option(const char *option)
+{
+    IncrementCommandTagNumber();
+    
+  nsCString command(GetServerCommandTag());
+  command.Append(" XAOL-OPTION ");
+  command.Append(option);
+  command.Append(CRLF);
+            
+  nsresult rv = SendData(command.GetBuffer());
+  if (NS_SUCCEEDED(rv))
+      ParseIMAPandCheckForNewMail();
 }
 
 void nsImapProtocol::Check()

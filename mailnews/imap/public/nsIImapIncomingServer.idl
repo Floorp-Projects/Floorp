@@ -63,6 +63,7 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean fetchByChunks;
   attribute boolean mimePartsOnDemand;
   attribute boolean isAOLServer;       
+  attribute boolean aOLMailboxView;
   void GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
                                            in nsIImapUrl aImapUrl,
                                            in nsISupports aConsumer);

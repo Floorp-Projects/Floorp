@@ -758,6 +758,8 @@ NS_IMETHODIMP nsImapMailFolder::GetHierarchyDelimiter(PRUnichar *aHierarchyDelim
 
 NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
 {
+  ReadDBFolderInfo(PR_FALSE);
+
   m_boxFlags = aBoxFlags;
   PRUint32 newFlags = mFlags;
 
@@ -771,10 +773,11 @@ NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
         newFlags |= MSG_FOLDER_FLAG_TRASH;
     else
         newFlags &= ~MSG_FOLDER_FLAG_TRASH;
-    if (m_boxFlags & kImapSent)
-        newFlags |= MSG_FOLDER_FLAG_SENTMAIL;
-    else
-        newFlags &= ~MSG_FOLDER_FLAG_SENTMAIL;
+    // imap code doesn't seem to be setting this flag, so we shouldn't be either :-(
+//    if (m_boxFlags & kImapSent)
+//        newFlags |= MSG_FOLDER_FLAG_SENTMAIL;
+//    else
+//        newFlags &= ~MSG_FOLDER_FLAG_SENTMAIL;
     if (m_boxFlags & kNoselect)
         newFlags |= MSG_FOLDER_FLAG_IMAP_NOSELECT;
     else
@@ -1161,6 +1164,8 @@ NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement
   rv = element->GetStringProperty("onlineName", getter_Copies(onlineName));
   if (NS_SUCCEEDED(rv) && (const char *) onlineName && nsCRT::strlen((const char *) onlineName))
     m_onlineFolderName.Assign(onlineName);
+  if (!nsCRT::strcasecmp((const char *) onlineName, "Sent"))
+    printf("loading folder cache elem for %s flags = %lx", (const char *) onlineName, mFlags);
   return rv;
 }
 
@@ -1415,6 +1420,8 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
             rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
                                                 1, &numFolders,
                                                 getter_AddRefs(trashFolder));
+      NS_ASSERTION(NS_SUCCEEDED(rv) && trashFolder != 0, "couldn't find trash");
+
 			// if we can't find the trash, we'll just have to do an imap delete and pretend this is the trash
 			if (NS_FAILED(rv) || !trashFolder)
 				deleteImmediatelyNoTrash = PR_TRUE;
@@ -3074,82 +3081,89 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
       mailUrl->GetMsgWindow(getter_AddRefs(aWindow));
     if (session)
       session->IsFolderOpenInWindow(this, &folderOpen);
+#ifdef DEBUG_bienvenu1
+    nsXPIDLCString urlSpec;
+    aUrl->GetSpec(getter_Copies(urlSpec));
+   printf("stop running url %s\n", (const char *) urlSpec);
+#endif
 
-        if (imapUrl)
+   if (imapUrl)
+    {
+        nsImapAction imapAction = nsIImapUrl::nsImapTest;
+        imapUrl->GetImapAction(&imapAction);
+        switch(imapAction)
         {
-            nsImapAction imapAction = nsIImapUrl::nsImapTest;
-            imapUrl->GetImapAction(&imapAction);
-            switch(imapAction)
+        case nsIImapUrl::nsImapDeleteMsg:
+        case nsIImapUrl::nsImapOnlineMove:
+        case nsIImapUrl::nsImapOnlineCopy:
+          if (m_copyState)
+          {
+            if (NS_SUCCEEDED(aExitCode))
             {
-            case nsIImapUrl::nsImapDeleteMsg:
-            case nsIImapUrl::nsImapOnlineMove:
-            case nsIImapUrl::nsImapOnlineCopy:
-                if (m_copyState)
+              if (folderOpen)
+                UpdateFolder(aWindow);
+              else
+                UpdatePendingCounts(PR_TRUE, PR_FALSE);
+              if (m_copyState->m_isMove)
+              {
+                nsCOMPtr<nsIMsgFolder> srcFolder;
+                srcFolder =
+                    do_QueryInterface(m_copyState->m_srcSupport,
+                                      &rv);
+                nsCOMPtr<nsIMsgDatabase> srcDB;
+                if (NS_SUCCEEDED(rv))
+                    rv = srcFolder->GetMsgDatabase(aWindow,
+                        getter_AddRefs(srcDB));
+                if (NS_SUCCEEDED(rv) && srcDB)
                 {
-                    if (NS_SUCCEEDED(aExitCode))
-                    {
-            if (folderOpen)
-              UpdateFolder(aWindow);
-            else
-              UpdatePendingCounts(PR_TRUE, PR_FALSE);
-                        if (m_copyState->m_isMove)
-                        {
-                            nsCOMPtr<nsIMsgFolder> srcFolder;
-                            srcFolder =
-                                do_QueryInterface(m_copyState->m_srcSupport,
-                                                  &rv);
-                            nsCOMPtr<nsIMsgDatabase> srcDB;
-                            if (NS_SUCCEEDED(rv))
-                                rv = srcFolder->GetMsgDatabase(aWindow,
-                                    getter_AddRefs(srcDB));
-                            if (NS_SUCCEEDED(rv) && srcDB)
-                            {
-                                nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
-                                nsMsgKeyArray srcKeyArray;
-                                msgTxn =
-                                    do_QueryInterface(m_copyState->m_undoMsgTxn); 
-                                if (msgTxn)
-                                    msgTxn->GetSrcKeyArray(srcKeyArray);
-                                srcDB->DeleteMessages(&srcKeyArray, nsnull);
-                NotifyDeleteOrMoveMessagesCompleted(srcFolder);
-                            }
-                        }
-                        if (m_transactionManager)
-                            m_transactionManager->Do(m_copyState->m_undoMsgTxn);
-                    }
-                    ClearCopyState(aExitCode);
+                    nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
+                    nsMsgKeyArray srcKeyArray;
+                    msgTxn =
+                        do_QueryInterface(m_copyState->m_undoMsgTxn); 
+                    if (msgTxn)
+                        msgTxn->GetSrcKeyArray(srcKeyArray);
+                    srcDB->DeleteMessages(&srcKeyArray, nsnull);
+                    NotifyDeleteOrMoveMessagesCompleted(srcFolder);
                 }
-                break;
-            case nsIImapUrl::nsImapAddMsgFlags:
-              // this isn't really right - we'd like to know we were 
-              // deleting a message to start with, but it probably
-              // won't do any harm.
-                NotifyDeleteOrMoveMessagesCompleted(this);
-
-              break;
-            case nsIImapUrl::nsImapAppendMsgFromFile:
-            case nsIImapUrl::nsImapAppendDraftFromFile:
-                if (m_copyState)
-                {
-          if (folderOpen)
-            UpdateFolder(aWindow);
-          else
-            UpdatePendingCounts(PR_TRUE, PR_FALSE);
-                    m_copyState->m_curIndex++;
-                    if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
-                    {
-                        if (m_transactionManager && m_copyState->m_undoMsgTxn)
-                            m_transactionManager->Do(m_copyState->m_undoMsgTxn);
-                        ClearCopyState(aExitCode);
-                    }
-                }
-                break;
-            case nsIImapUrl::nsImapRenameFolder:
-                break;
-            default:
-                break;
+              }
+              if (m_transactionManager)
+                m_transactionManager->Do(m_copyState->m_undoMsgTxn);
             }
+            ClearCopyState(aExitCode);
+          }
+          break;
+        case nsIImapUrl::nsImapAddMsgFlags:
+          // this isn't really right - we'd like to know we were 
+          // deleting a message to start with, but it probably
+          // won't do any harm.
+            NotifyDeleteOrMoveMessagesCompleted(this);
+
+          break;
+        case nsIImapUrl::nsImapAppendMsgFromFile:
+        case nsIImapUrl::nsImapAppendDraftFromFile:
+            if (m_copyState)
+            {
+              if (folderOpen)
+                UpdateFolder(aWindow);
+              else
+                UpdatePendingCounts(PR_TRUE, PR_FALSE);
+              m_copyState->m_curIndex++;
+              if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
+              {
+                  if (m_transactionManager && m_copyState->m_undoMsgTxn)
+                      m_transactionManager->Do(m_copyState->m_undoMsgTxn);
+                  ClearCopyState(aExitCode);
+              }
+              else
+                NS_ASSERTION(PR_FALSE, "not clearing copy state");
+            }
+            break;
+        case nsIImapUrl::nsImapRenameFolder:
+            break;
+        default:
+            break;
         }
+    }
     // give base class a chance to send folder loaded notification...
     rv = nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
     // query it for a mailnews interface for now....
@@ -3785,6 +3799,11 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
             NS_GET_IID(nsImapMoveCopyMsgTxn), 
             getter_AddRefs(m_copyState->m_undoMsgTxn) );
     }
+    else 
+    {
+      NS_ASSERTION(PR_FALSE, "online copy failed");
+      ClearCopyState(rv);
+    }
 
 done:
     return rv;
@@ -3943,9 +3962,10 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
                                 PRBool selectedState,
                                 nsIMsgCopyServiceListener* listener)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
+    nsresult rv = NS_OK;
 
-    if (!srcSupport || !messages) return rv;
+    if (!srcSupport || !messages) return NS_ERROR_NULL_POINTER;
+//    NS_ASSERTION(!m_copyState, "move/copy already in progress");
     if (m_copyState) return NS_ERROR_FAILURE;
 
     nsImapMailCopyState* copyState = new nsImapMailCopyState();

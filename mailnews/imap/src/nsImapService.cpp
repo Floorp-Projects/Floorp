@@ -181,14 +181,14 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 
 		if (NS_SUCCEEDED(rv))
 		{
-            nsXPIDLCString folderName;
-            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+      nsXPIDLCString folderName;
+      GetFolderName(aImapMailFolder, getter_Copies(folderName));
 			urlSpec.Append("/select>");
 			urlSpec.Append(hierarchySeparator);
-            urlSpec.Append((const char *) folderName);
-		    rv = mailNewsUrl->SetSpec((char *) urlSpec.GetBuffer());
-            if (NS_SUCCEEDED(rv))
-                rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
+      urlSpec.Append((const char *) folderName);
+      rv = mailNewsUrl->SetSpec((char *) urlSpec.GetBuffer());
+      if (NS_SUCCEEDED(rv))
+          rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                  imapUrl,
                                                  nsnull,
                                                  aURL);
@@ -1618,7 +1618,7 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         GetFolderName(aDstFolder, getter_Copies(folderName));
         urlSpec.Append((const char *) folderName);
 
-		rv = uri->SetSpec((char *) urlSpec.GetBuffer());
+    		rv = uri->SetSpec((char *) urlSpec.GetBuffer());
         if (NS_SUCCEEDED(rv))
             rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                              nsnull, aURL);

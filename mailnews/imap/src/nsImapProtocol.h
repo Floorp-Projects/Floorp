@@ -250,6 +250,7 @@ public:
 	void XServerInfo();
 	void Netscape();
 	void XMailboxInfo(const char *mailboxName);
+  void XAOL_Option(const char *option);
 	void MailboxData();
 	void GetMyRightsForFolder(const char *mailboxName);
 	void AutoSubscribeToMailboxIfNecessary(const char *mailboxName);
@@ -287,8 +288,8 @@ public:
                           const char* msgIdString);
 
 private:
-	// the following flag is used to determine when a url is currently being run. It is cleared on calls
-	// to ::StopBinding and it is set whenever we call Load on a url
+	// the following flag is used to determine when a url is currently being run. It is cleared when we 
+	// finish processng a url and it is set whenever we call Load on a url
 	PRBool			m_urlInProgress;	
 	PRBool			m_socketIsOpen;
 	PRBool			m_gotFEEventCompletion;

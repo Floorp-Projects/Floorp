@@ -124,7 +124,7 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
     if (NS_FAILED(rv)) return rv;
 
 	hostSession->AddHostToList(aKey);
-  nsMsgImapDeleteModel deleteModel;
+  nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash; // default to trash
   GetDeleteModel(&deleteModel);
   hostSession->SetDeleteIsMoveToTrashForHost(aKey, deleteModel == nsMsgImapDeleteModels::MoveToTrash); 
   hostSession->SetShowDeletedMessagesForHost(aKey, deleteModel == nsMsgImapDeleteModels::IMAPDelete);
@@ -224,6 +224,9 @@ NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, FetchByChunks,
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, MimePartsOnDemand,
                        "mime_parts_on_demand");
 
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, AOLMailboxView,
+                       "aol_mailbox_view");
+
 NS_IMETHODIMP
 nsImapIncomingServer::GetIsAOLServer(PRBool *aBool)
 {
@@ -249,41 +252,43 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
                                                   nsIImapUrl* aImapUrl,
                                                   nsISupports* aConsumer)
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr <nsIImapProtocol> aProtocol;
-    
-    rv = CreateImapConnection(aClientEventQueue, aImapUrl, getter_AddRefs(aProtocol));
-    if (NS_FAILED(rv)) return rv;
+  nsresult rv = NS_OK;
+  nsCOMPtr <nsIImapProtocol> aProtocol;
+  
+  rv = CreateImapConnection(aClientEventQueue, aImapUrl, getter_AddRefs(aProtocol));
+  if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(aImapUrl, &rv);
-    if (aProtocol)
+  if (aProtocol)
+  {
+    rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
+    // *** jt - in case of the time out situation or the connection gets
+    // terminated by some unforseen problems let's give it a second chance
+    // to run the url
+    if (NS_FAILED(rv))
     {
+      NS_ASSERTION(PR_FALSE, "shouldn't get an error loading url");
         rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
-        // *** jt - in case of the time out situation or the connection gets
-        // terminated by some unforseen problems let's give it a second chance
-        // to run the url
-        if (NS_FAILED(rv))
-        {
-            rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
-        }
-        else
-        {
-            // *** jt - alert user that error has occurred
-        }   
     }
     else
-    {   // unable to get an imap connection to run the url; add to the url
-        // queue
-        PR_CEnterMonitor(this);
-		nsCOMPtr <nsISupports> supports(do_QueryInterface(aImapUrl));
-		if (supports)
-			m_urlQueue->AppendElement(supports);
-        m_urlConsumers.AppendElement((void*)aConsumer);
-        NS_IF_ADDREF(aConsumer);
-        PR_CExitMonitor(this);
-    }
+    {
+        // *** jt - alert user that error has occurred
+    }   
+  }
+  else
+  {   // unable to get an imap connection to run the url; add to the url
+      // queue
+    PR_CEnterMonitor(this);
+	  nsCOMPtr <nsISupports> supports(do_QueryInterface(aImapUrl));
+//    printf("queueing imap url \n");
+	  if (supports)
+		  m_urlQueue->AppendElement(supports);
+    m_urlConsumers.AppendElement((void*)aConsumer);
+    NS_IF_ADDREF(aConsumer);
+    PR_CExitMonitor(this);
+  }
 
-    return rv;
+  return rv;
 }
 
 // checks to see if there are any queued urls on this incoming server,
@@ -291,49 +296,53 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
 NS_IMETHODIMP
 nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 {
-    PRUint32 cnt = 0;
-    nsresult rv = NS_OK;
+  PRUint32 cnt = 0;
+  nsresult rv = NS_OK;
 	PRBool urlRun = PR_FALSE;
 
-    PR_CEnterMonitor(this);
-    m_urlQueue->Count(&cnt);
-    if (cnt > 0)
+  PR_CEnterMonitor(this);
+  m_urlQueue->Count(&cnt);
+
+//  printf("loading next url, cnt = %ld\n", cnt);
+
+  if (cnt > 0)
+  {
+    nsCOMPtr<nsISupports>
+        aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
+    nsCOMPtr<nsIImapUrl>
+        aImapUrl(do_QueryInterface(aSupport, &rv));
+
+    if (aImapUrl)
     {
-        nsCOMPtr<nsISupports>
-            aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
-        nsCOMPtr<nsIImapUrl>
-            aImapUrl(do_QueryInterface(aSupport, &rv));
+      nsISupports *aConsumer =
+          (nsISupports*)m_urlConsumers.ElementAt(0);
 
-        if (aImapUrl)
-        {
-            nsISupports *aConsumer =
-                (nsISupports*)m_urlConsumers.ElementAt(0);
+      NS_IF_ADDREF(aConsumer);
+      
+      nsCOMPtr <nsIImapProtocol>  protocolInstance ;
+      rv = CreateImapConnection(nsnull, aImapUrl,
+                                         getter_AddRefs(protocolInstance));
+      if (NS_SUCCEEDED(rv) && protocolInstance)
+      {
+		    nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
+		    if (NS_SUCCEEDED(rv) && url)
+		    {
+			    rv = protocolInstance->LoadUrl(url, aConsumer);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "failed running queued url");
+			    urlRun = PR_TRUE;
+		    }
+        m_urlQueue->RemoveElementAt(0);
+        m_urlConsumers.RemoveElementAt(0);
+      }
 
-            NS_IF_ADDREF(aConsumer);
-            
-            nsCOMPtr <nsIImapProtocol>  protocolInstance ;
-            rv = CreateImapConnection(nsnull, aImapUrl,
-                                               getter_AddRefs(protocolInstance));
-            if (NS_SUCCEEDED(rv) && protocolInstance)
-            {
-				nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
-				if (NS_SUCCEEDED(rv) && url)
-				{
-					rv = protocolInstance->LoadUrl(url, aConsumer);
-					urlRun = PR_TRUE;
-				}
-                m_urlQueue->RemoveElementAt(0);
-                m_urlConsumers.RemoveElementAt(0);
-            }
-
-            NS_IF_RELEASE(aConsumer);
-        }
+      NS_IF_RELEASE(aConsumer);
     }
+  }
 	if (aResult)
 		*aResult = urlRun;
 
-    PR_CExitMonitor(this);
-    return rv;
+  PR_CExitMonitor(this);
+  return rv;
 }
 
 
@@ -397,65 +406,72 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
                                            nsIImapProtocol ** aImapConnection)
 {
 	nsresult rv = NS_OK;
-	PRBool canRunUrl = PR_FALSE;
-    PRBool hasToWait = PR_FALSE;
+	PRBool canRunUrlImmediately = PR_FALSE;
+  PRBool canRunButBusy = PR_FALSE;
 	nsCOMPtr<nsIImapProtocol> connection;
-    nsCOMPtr<nsIImapProtocol> freeConnection;
-    PRBool isBusy = PR_FALSE;
-    PRBool isInboxConnection = PR_FALSE;
+  nsCOMPtr<nsIImapProtocol> freeConnection;
+  PRBool isBusy = PR_FALSE;
+  PRBool isInboxConnection = PR_FALSE;
 	nsXPIDLCString redirectorType;
 
-    PR_CEnterMonitor(this);
+  PR_CEnterMonitor(this);
 
 	GetRedirectorType(getter_Copies(redirectorType));
 	PRBool redirectLogon = ((const char *) redirectorType && nsCRT::strlen((const char *) redirectorType) > 0);
 
-    PRInt32 maxConnections = 5; // default to be five
-    rv = GetMaximumConnectionsNumber(&maxConnections);
-    if (NS_FAILED(rv) || maxConnections == 0)
-    {
-        maxConnections = 5;
-        rv = SetMaximumConnectionsNumber(maxConnections);
-    }
-    else if (maxConnections < 2)
-    {   // forced to use at least 2
-        maxConnections = 2;
-        rv = SetMaximumConnectionsNumber(maxConnections);
-    }
+  PRInt32 maxConnections = 5; // default to be five
+  rv = GetMaximumConnectionsNumber(&maxConnections);
+  if (NS_FAILED(rv) || maxConnections == 0)
+  {
+      maxConnections = 5;
+      rv = SetMaximumConnectionsNumber(maxConnections);
+  }
+  else if (maxConnections < 2)
+  {   // forced to use at least 2
+      maxConnections = 2;
+      rv = SetMaximumConnectionsNumber(maxConnections);
+  }
 
-    *aImapConnection = nsnull;
+  *aImapConnection = nsnull;
 	// iterate through the connection cache for a connection that can handle this url.
 	PRUint32 cnt;
-    nsCOMPtr<nsISupports> aSupport;
+  nsCOMPtr<nsISupports> aSupport;
 
-    rv = m_connectionCache->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt && !canRunUrl && !hasToWait; i++) 
+  rv = m_connectionCache->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  // loop until we find a connection that can run the url, or doesn't have to wait?
+  for (PRUint32 i = 0; i < cnt && !canRunUrlImmediately && !canRunButBusy; i++) 
 	{
-        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
-        connection = do_QueryInterface(aSupport);
+    aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+    connection = do_QueryInterface(aSupport);
 		if (connection)
-			rv = connection->CanHandleUrl(aImapUrl, &canRunUrl, &hasToWait);
-        if (NS_FAILED(rv)) 
-        {
-            connection = null_nsCOMPtr();
-            continue;
-        }
-        if (!freeConnection && !canRunUrl && !hasToWait && connection)
-        {
-            rv = connection->IsBusy(&isBusy, &isInboxConnection);
-            if (NS_FAILED(rv)) continue;
-            if (!isBusy && !isInboxConnection)
-                freeConnection = connection;
-        }
-	}
-    
-    if (ConnectionTimeOut(connection))
+			rv = connection->CanHandleUrl(aImapUrl, &canRunUrlImmediately, &canRunButBusy);
+    if (NS_FAILED(rv)) 
+    {
         connection = null_nsCOMPtr();
-    if (ConnectionTimeOut(freeConnection))
-        freeConnection = null_nsCOMPtr();
+        continue;
+    }
+    // if we haven't found a free connection, and this connection
+    // is wrong, but it's not busy.
+    if (!freeConnection && !canRunUrlImmediately && !canRunButBusy && connection)
+    {
+        rv = connection->IsBusy(&isBusy, &isInboxConnection);
+        if (NS_FAILED(rv)) 
+          continue;
+        if (!isBusy && !isInboxConnection)
+            freeConnection = connection;
+    }
+    // don't leave this loop with connection set if we can't use it!
+    if (!canRunButBusy && !canRunUrlImmediately)
+      connection = null_nsCOMPtr();
+  }
+  
+  if (ConnectionTimeOut(connection))
+      connection = null_nsCOMPtr();
+  if (ConnectionTimeOut(freeConnection))
+      freeConnection = null_nsCOMPtr();
 
-	if (redirectLogon && (!connection || !canRunUrl))
+	if (redirectLogon && (!connection || !canRunUrlImmediately))
 	{
 		// here's where we'd start the asynchronous process of requesting a connection to the 
 		// AOL Imap server and getting back an ip address, port #, and cookie.
@@ -470,34 +486,34 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 				rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
 
 			RequestOverrideInfo(aMsgWindow);
-			hasToWait = PR_TRUE;
+			canRunButBusy = PR_TRUE;
 		}
 	}
 	// if we got here and we have a connection, then we should return it!
-	if (canRunUrl && connection)
+	if (canRunUrlImmediately && connection)
 	{
 		*aImapConnection = connection;
 		NS_IF_ADDREF(*aImapConnection);
 	}
-    else if (hasToWait)
-    {
-        // do nothing; return NS_OK; for queuing
-    }
+  else if (canRunButBusy)
+  {
+      // do nothing; return NS_OK; for queuing
+  }
 	else if (cnt < ((PRUint32)maxConnections) && aEventQueue)
 	{	
 		rv = CreateProtocolInstance(aEventQueue, aImapConnection);
 	}
-    else if (freeConnection)
-    {
-        *aImapConnection = freeConnection;
-        NS_IF_ADDREF(*aImapConnection);
-    }
-    else // cannot get anyone to handle the url queue it
-    {
-        // queue the url
-    }
+  else if (freeConnection)
+  {
+    *aImapConnection = freeConnection;
+    NS_IF_ADDREF(*aImapConnection);
+  }
+  else // cannot get anyone to handle the url queue it
+  {
+      // queue the url
+  }
 
-    PR_CExitMonitor(this);
+  PR_CExitMonitor(this);
 	return rv;
 }
 
@@ -1439,7 +1455,7 @@ NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl,
 {
 	nsresult rv = NS_OK;
 	PRBool canRunUrl = PR_FALSE;
-  PRBool hasToWait = PR_FALSE;
+  PRBool canRunButBusy = PR_FALSE;
 	nsCOMPtr<nsIImapProtocol> connection;
 
   PR_CEnterMonitor(this);
@@ -1451,7 +1467,7 @@ NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl,
 
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
-  for (PRUint32 i = 0; i < cnt && !canRunUrl && !hasToWait; i++) 
+  for (PRUint32 i = 0; i < cnt && !canRunUrl && !canRunButBusy; i++) 
   {	
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
     connection = do_QueryInterface(aSupport);
