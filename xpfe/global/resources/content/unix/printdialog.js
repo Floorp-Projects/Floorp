@@ -108,8 +108,8 @@ function loadDialog()
   var print_paper_size = 0;
   var print_margin_top = 500;
   var print_margin_left = 500;
-  var print_margin_bottom = 0;
-  var print_margin_right = 0;
+  var print_margin_bottom = 500;
+  var print_margin_right = 500;
   var print_command = default_command;
   var print_file = default_file;
 
