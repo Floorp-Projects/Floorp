@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.49 2003/06/30 21:11:00 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.50 2003/07/02 18:58:37 jake%bugzilla.org Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -937,15 +937,22 @@ man 5 crontab
 
     <section id="bzldap">
       <title>LDAP Authentication</title>
-      <para>
-        <warning>
-          <para>This information on using the LDAP
-            authentication options with Bugzilla is old, and the authors do
-            not know of anyone who has tested it. Approach with caution.
+
+      <note>
+        <para>LDAP authentication has been rewritten for the 2.18 release of
+        Bugzilla. It no longer requires the Mozilla::LDAP module and now uses
+        Net::LDAP instead. This rewrite was part of a larger landing that
+        allowed for additional authentication schemes to be easily added
+        (<ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=180642">bug
+        180642</ulink>).
+        </para>
+        <![%bz-devel;[
+          <para>This patch originally landed in 21-Mar-2003 and was included
+          in the 2.17.4 development release.
           </para>
-        </warning>
-      </para>
-      
+        ]]>
+      </note>
+
       <para>
       The existing authentication
       scheme for Bugzilla uses email addresses as the primary user ID, and a
@@ -964,58 +971,98 @@ man 5 crontab
       email address, not LDAP username. You still assign bugs by email
       address, query on users by email address, etc.
       </para>
-      
-      <para>Using LDAP for Bugzilla authentication requires the 
-      Mozilla::LDAP (aka PerLDAP) Perl module. The
-      Mozilla::LDAP module in turn requires Netscape's Directory SDK for C.
-      After you have installed the SDK, then install the PerLDAP module.
-      Mozilla::LDAP and the Directory SDK for C are both 
-      <ulink url="http://www.mozilla.org/directory/">available for
-      download</ulink> from mozilla.org. 
-      </para>
-      
-      <para>
-      Set the Param 'useLDAP' to "On" **only** if you will be using an LDAP
-      directory for
-      authentication. Be very careful when setting up this parameter; if you
-      set LDAP authentication, but do not have a valid LDAP directory set up,
-      you will not be able to log back in to Bugzilla once you log out. (If
-      this happens, you can get back in by manually editing the data/params
-      file, and setting useLDAP back to 0.)
-      </para>
-      
-      <para>If using LDAP, you must set the
-      three additional parameters: Set LDAPserver to the name (and optionally
-      port) of your LDAP server. If no port is specified, it defaults to the
-      default port of 389. (e.g "ldap.mycompany.com" or
-      "ldap.mycompany.com:1234") Set LDAPBaseDN to the base DN for searching
-      for users in your LDAP directory. (e.g. "ou=People,o=MyCompany") uids
-      must be unique under the DN specified here. Set LDAPmailattribute to
-      the name of the attribute in your LDAP directory which contains the
-      primary email address. On most directory servers available, this is
-      "mail", but you may need to change this.
-      </para>      
 
-      <para>You can also try using <ulink url="http://www.openldap.org/">
-      OpenLDAP</ulink> with Bugzilla, using any of a number of administration
-      tools.  You should apply the patch attached to 
-      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=158630">bug 158630</ulink>
-      , then set the following object classes for your users:
+      <caution>
+        <para>Because the Bugzilla account is not created until the first time
+        a user logs in, a user who has not yet logged is unknown to Bugzilla.
+        This means they cannot be used as an assignee or QA contact (default or
+        otherwise), added to any cc list, or any other such operation. One
+        possible workaround is the <filename>bugzilla_ldapsync.rb</filename>
+        script in the
+        <glossterm linkend="gloss-contrib"><filename class="directory">contrib</filename></glossterm> directory. Another possible solution is fixing
+        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=201069">bug
+        201069</ulink>.
+        </para>
+      </caution>
+      
+      <para>Parameters required to use LDAP Authentication:</para>
 
-      <orderedlist>
-      <listitem><para>objectClass: person</para></listitem>
-      <listitem><para>objectClass: organizationalPerson</para></listitem>
-      <listitem><para>objectClass: inetOrgPerson</para></listitem>
-      <listitem><para>objectClass: top</para></listitem>
-      <listitem><para>objectClass: posixAccount</para></listitem>
-      <listitem><para>objectClass: shadowAccount</para></listitem>
-      </orderedlist>
+      <variablelist>
+        <varlistentry id="param-loginmethod">
+          <term>loginmethod</term>
+          <listitem>
+            <para>This parameter should be set to <quote>LDAP</quote>
+            <emphasis>only</emphasis> if you will be using an LDAP directory
+            for authentication. If you set this param to <quote>LDAP</quote> but
+            fail to set up the other parameters listed below you will not be
+            able to log back in to Bugzilla one you log out. If this happens
+            to you, you will need to manually edit
+            <filename>data/params</filename> and set loginmethod to
+            <quote>DB</quote>.
+            </para>
+          </listitem>
+        </varlistentry>
 
-      Please note that this patch <emphasis>has not</emphasis> yet been
-      accepted by the Bugzilla team, and so you may need to do some
-      manual tweaking.  That said, it looks like Net::LDAP is probably
-      the way to go in the future.
-      </para>
+        <varlistentry id="param-LDAPserver">
+          <term>LDAPserver</term>
+          <listitem>
+            <para>This parameter should be set to the name (and optionally the
+            port) of your LDAP server. If no port is specified, it assumes
+            the default LDAP port of 389.
+            </para>
+            <para>Ex. <quote>ldap.company.com</quote>
+             or <quote>ldap.company.com:3268</quote>
+            </para>
+           </listitem>
+         </varlistentry>
+
+         <varlistentry id="param-LDAPbinddn">
+           <term>LDAPbinddn [Optional]</term>
+           <listitem>
+             <para>Some LDAP servers will not allow an anonymous bind to search
+             the directory. If this is the case with your configuration you
+             should set the LDAPbinddn parameter to the user account Bugzilla
+             should use instead of the anonymous bind.
+             </para>
+             <para>Ex. <quote>cn=default,cn=user:password</quote></para>
+           </listitem>
+         </varlistentry>
+
+         <varlistentry id="param-LDAPBaseDN">
+           <term>LDAPBaseDN</term>
+           <listitem>
+             <para>The LDAPBaseDN parameter should be set to the location in
+             your LDAP tree that you would like to search for e-mail addresses.
+             Your uids should be unique under the DN specified here.
+             </para>
+             <para>Ex. <quote>ou=People,o=Company</quote></para>
+           </listitem>
+         </varlistentry>
+
+         <varlistentry id="param-LDAPuidattribute">
+           <term>LDAPuidattribute</term>
+           <listitem>
+             <para>The LDAPuidattribute parameter should be set to the attribute
+             which contains the unique UID of your users. The value retrieved
+             from this attribute will be used when attempting to bind as the
+             user to confirm their password.
+             </para>
+             <para>Ex. <quote>uid</quote></para>
+           </listitem>
+         </varlistentry>
+
+         <varlistentry id="param-LDAPmailattribute">
+           <term>LDAPmailattribute</term>
+           <listitem>
+             <para>The LDAPmailattribute parameter should be the name of the
+             attribute which contains the e-mail address your users will enter
+             into the Bugzilla login boxes.
+             </para>
+             <para>Ex. <quote>mail</quote></para>
+           </listitem>
+          </varlistentry>
+      </variablelist>
+
     </section>
     
     <section id="content-type"

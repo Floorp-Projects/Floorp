@@ -170,6 +170,26 @@
         particular task.</para>
       </glossdef>
     </glossentry>
+
+    <glossentry id="gloss-contrib">
+      <glossterm><filename class="directory">contrib</filename></glossterm>
+
+      <glossdef>
+        <para>The <filename class="directory">contrib</filename> directory is
+        a location to put scripts that have been contributed to Bugzilla but
+        are not a part of the official distribution. These scripts are written
+        by third parties and may be in languages other than perl. For those
+        that are in perl, there may be additional modules or other requirements
+        than those of the offical distribution.
+        <note>
+          <para>Scripts in the <filename class="directory">contrib</filename>
+          directory are not offically supported by the Bugzilla team and may
+          break in between versions.
+          </para>
+        </note>
+        </para>
+      </glossdef>
+    </glossentry>
   </glossdiv>
 
   <glossdiv id="gloss-d">
