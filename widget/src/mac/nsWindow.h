@@ -42,7 +42,6 @@ struct nsPluginPort;
 // nsWindow
 //
 //-------------------------------------------------------------------------
-//	Generic object
 
 class nsWindow : public nsBaseWidget, public nsDeleteObserved
 {
@@ -83,7 +82,7 @@ public:
     virtual nsIWidget*    	GetParent(void);
 
     NS_IMETHOD              Show(PRBool aState);
-    NS_IMETHOD 				IsVisible(PRBool & aState);
+    NS_IMETHOD 							IsVisible(PRBool & aState);
 
     NS_IMETHOD            	Move(PRUint32 aX, PRUint32 aY);
     NS_IMETHOD            	Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
@@ -96,7 +95,7 @@ public:
     virtual nsIFontMetrics* GetFont(void);
     NS_IMETHOD            	SetFont(const nsFont &aFont);
     NS_IMETHOD            	Invalidate(PRBool aIsSynchronous);
-    NS_IMETHOD				Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
+    NS_IMETHOD							Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
 
     virtual void*           GetNativeData(PRUint32 aDataType);
     NS_IMETHOD            	SetColorMap(nsColorMap *aColorMap);
@@ -107,88 +106,87 @@ public:
     NS_IMETHOD            	EndResizingChildren(void);
 
     static  PRBool          ConvertStatus(nsEventStatus aStatus);
-    NS_IMETHOD          	DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+    NS_IMETHOD          		DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
     virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
-    virtual void         	StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
-    virtual void         	EndDraw();
+    virtual void         		StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
+    virtual void         		EndDraw();
     virtual PRBool          OnPaint(nsPaintEvent &event);
-		NS_IMETHOD				Update();
-		virtual void			UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
+		NS_IMETHOD							Update();
+		virtual void						UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
     
-    virtual void  ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
-	virtual void  LocalToWindowCoordinate(nsPoint& aPoint);
-	virtual void  LocalToWindowCoordinate(nscoord& aX, nscoord& aY);
-    virtual void  LocalToWindowCoordinate(nsRect& aRect);
-    
-    virtual void  ConvertToLocalCoordinates(nscoord &aX, nscoord &aY);
-	virtual void  WindowToLocalCoordinate(nsPoint& aPoint);
-	virtual void  WindowToLocalCoordinate(nscoord& aX, nscoord& aY);
-    virtual void  WindowToLocalCoordinate(nsRect& aRect);
+    virtual void  					ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
+		void										LocalToWindowCoordinate(nsPoint& aPoint)						{ConvertToDeviceCoordinates(aPoint.x, aPoint.y);}
+		void										LocalToWindowCoordinate(nscoord& aX, nscoord& aY)		{ConvertToDeviceCoordinates(aX, aY);}
+    void										LocalToWindowCoordinate(nsRect& aRect)							{ConvertToDeviceCoordinates(aRect.x, aRect.y);}
 
-    NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar);
-    virtual nsIMenuBar* GetMenuBar();
-    NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-    NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+    NS_IMETHOD 							SetMenuBar(nsIMenuBar * aMenuBar);
+    virtual nsIMenuBar* 		GetMenuBar();
+    NS_IMETHOD 							GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
+    NS_IMETHOD 							SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     
-    NS_IMETHOD       SetCursor(nsCursor aCursor);
+    NS_IMETHOD  						SetCursor(nsCursor aCursor);
   
     // Mac specific methods
-    void nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
-    void DoPaintWidgets(RgnHandle	aTheRegion,nsIRenderingContext	*aRC);
-    PRBool RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
+    void 								nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
+    PRBool 							RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
+		virtual void				CalcWindowRegions();
 
-		void StringToStr255(const nsString& aText, Str255& aStr255);
-		void Str255ToString(const Str255& aStr255, nsString& aText);
+		virtual PRBool 			PointInWidget(Point aThePoint);
+		virtual nsWindow*		FindWidgetHit(Point aThePoint);
 
-		virtual PRBool PointInWidget(Point aThePoint);
-		virtual nsWindow* FindWidgetHit(Point aThePoint);
-
-    char gInstanceClassName[256];
-
-  virtual PRBool		DispatchWindowEvent(nsGUIEvent& event);
-  virtual nsresult		HandleUpdateEvent();
+ 	 	virtual PRBool			DispatchWindowEvent(nsGUIEvent& event);
+  	virtual nsresult		HandleUpdateEvent();
 
 protected:
 
-	PRBool				ReportDestroyEvent();
-	PRBool				ReportMoveEvent();
-	PRBool				ReportSizeEvent();
+	PRBool					ReportDestroyEvent();
+	PRBool					ReportMoveEvent();
+	PRBool					ReportSizeEvent();
 
   NS_IMETHOD			CalcOffset(PRInt32 &aX,PRInt32 &aY);
 
 
 protected:
+	char		gInstanceClassName[256];
+
 	nsIWidget*				mParent;
+	PRBool						mResizingChildren;
+	PRBool						mSaveVisible;
 	PRBool     	 			mVisible;
 	PRBool     	 			mEnabled;
-	PRInt32					mPreferredWidth;
-	PRInt32					mPreferredHeight;
-	nsIFontMetrics*			mFontMetrics;
+	PRInt32						mPreferredWidth;
+	PRInt32						mPreferredHeight;
+	nsIFontMetrics*		mFontMetrics;
 	nsIMenuBar* 			mMenuBar;
-	RgnHandle				mWindowRegion;				// the region defining this window
-	WindowPtr				mWindowPtr;
-	PRBool					mDestroyCalled;
-	PRBool					mDestructorCalled;
 
-	PRBool					mDrawing;
+	RgnHandle					mWindowRegion;
+	RgnHandle					mVisRegion;
+	WindowPtr					mWindowPtr;
+
+	PRBool						mDestroyCalled;
+	PRBool						mDestructorCalled;
+
+	PRBool									mDrawing;
 	nsIRenderingContext*  	mTempRenderingContext;
-  	PRBool					mTempRenderingContextMadeHere;
+  PRBool									mTempRenderingContextMadeHere;
   	
-  	nsPluginPort*			mPluginPort;
+  nsPluginPort*			mPluginPort;
 };
 
-// =============================================================================
-class ChildWindow : public nsWindow {
+//-------------------------------------------------------------------------
+//
+// nsChildWindow
+//
+//-------------------------------------------------------------------------
 
-public:
-	NS_IMETHOD_(nsrefcnt) AddRef();
-	NS_IMETHOD_(nsrefcnt) Release();
+// Some XP Widgets (like the nsImageButton) include this header file
+// and expect to find in it the definition of a "ChildWindow".
 
-	ChildWindow();
-	virtual ~ChildWindow() {};
+#include "nsChildWindow.h"
 
-};
+#define ChildWindow 	nsChildWindow
+
 
 
 #endif // Window_h__
