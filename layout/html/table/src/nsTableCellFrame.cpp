@@ -248,10 +248,12 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
   if ((0 != offset.x) || (0 != offset.y)) {
     aRenderingContext.Translate(offset.x, offset.y);
   }
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+  // Bug 6674 is fixed by uncommenting the following if statement, but sample 4 resizing 
+  // of the collapsed table rows then paints incorrectly
+  //if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
     aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
                                 nsClipCombine_kIntersect, clipState);
-  }
+  //}
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   aRenderingContext.PopState(clipState);
   
