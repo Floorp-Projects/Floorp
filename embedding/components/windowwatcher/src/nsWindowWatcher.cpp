@@ -672,7 +672,12 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     }
   }
 
-  newDocShellItem->SetName(nameSpecified ? name.get() : nsnull);
+  /* allow an extant window to keep its name (important for cases like
+     _self where the given name is different (and invalid)). also _blank
+     is not a window name. */
+  if (windowIsNew)
+    newDocShellItem->SetName(nameSpecified && !name.EqualsIgnoreCase("_blank") ?
+                             name.get() : nsnull);
 
   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
 
