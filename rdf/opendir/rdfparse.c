@@ -20,6 +20,7 @@
 #include "rdf-int.h"
 #include <stdio.h>
 
+
 char* error_string = NULL;
 int lineNumber = 0;
 
