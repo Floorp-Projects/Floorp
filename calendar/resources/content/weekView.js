@@ -49,6 +49,11 @@
 * 
 */
 
+/*** benw 19/12/2002 ***/
+/** these globals are kinda ugly, but i want to be able to use them in a few places! ***/
+var LowestStartHour = 0;
+var HighestEndHour = 0;
+/*** end benw 19/12/2002 ***/
 
 
 // Make WeekView inherit from CalendarView
@@ -151,7 +156,74 @@ WeekView.prototype.refreshEvents = function( )
    //expand the day's content box by setting allday to false..
    
    document.getElementById( "week-view-content-box" ).removeAttribute( "allday" );
+   
+//loop through the days to get the minimum and maximum start times
+   for ( dayIndex = 1; dayIndex <= 7; ++dayIndex )
+   {
+	   // get the events for the day and loop through them
+      var dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
+      
+      var dayEventList = new Array();
+      
+      dayEventList = this.calendarWindow.eventSource.getEventsForDay( dayToGet );
+	   
+	   //refresh the array and the current spot.
+	   LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
+	   HighestEndHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
+	   for ( var i = 0; i < dayEventList.length; i++ ) 
+	   {
+	      dayEventList[i].OtherSpotArray = new Array('0');
+	      dayEventList[i].CurrentSpot = 0;
+	      dayEventList[i].NumberOfSameTimeEvents = 0;
+	      if( dayEventList[i].event.allDay != true )
+	      {
+	         var ThisLowestStartHour = new Date( dayEventList[i].displayDate.getTime() );
+	         if( ThisLowestStartHour.getHours() < LowestStartHour ) 
+	            LowestStartHour = ThisLowestStartHour.getHours();
+	         
+	         var EndDate = new Date( dayEventList[i].event.end.getTime() );
+	         if( EndDate.getHours() > HighestEndHour )
+	            HighestEndHour = EndDate.getHours();
+	      }
+	   }
+	}
+	
+	//now hide those that aren't applicable
+   for( i = 0; i < 24; i++ )
+	{
+		//document.getElementById( "week-view-hour-"+i ).removeAttribute( "collapsed" );
+		document.getElementById( "week-tree-hour-"+i ).removeAttribute( "collapsed" );
+	}
 
+	//alert( "LowestStartHour is "+LowestStartHour );
+	//alert( "HighestEndHour is "+HighestEndHour );
+	for( i = 0; i < LowestStartHour; i++ )
+	{
+		//document.getElementById( "week-view-hour-"+i ).setAttribute( "collapsed", "true" );
+		document.getElementById( "week-tree-hour-"+i ).setAttribute( "collapsed", "true" );
+	}
+	
+	for( i = ( HighestEndHour + 1 ); i < 24; i++ )
+	{
+		//document.getElementById( "week-view-hour-"+i ).setAttribute( "collapsed", "true" );
+		document.getElementById( "week-tree-hour-"+i ).setAttribute( "collapsed", "true" );
+	}
+	
+	for ( dayIndex = 0; dayIndex <= 6; ++dayIndex )
+	{
+		for( i = 0; i < LowestStartHour; i++ )
+		{
+			//document.getElementById( "week-view-hour-"+i ).setAttribute( "collapsed", "true" );
+			document.getElementById( "week-tree-day-"+dayIndex+"-item-"+i ).setAttribute( "collapsed", "true" );
+		}
+		
+		for( i = ( HighestEndHour + 1 ); i < 24; i++ )
+		{
+			//document.getElementById( "week-view-hour-"+i ).setAttribute( "collapsed", "true" );
+			document.getElementById( "week-tree-day-"+dayIndex+"-item-"+i ).setAttribute( "collapsed", "true" );
+		}
+	}
+	
    //START FOR LOOP FOR DAYS---> 
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex )
    {
@@ -352,14 +424,15 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    eventBox.calendarEventDisplay = calendarEventDisplay;
    
    var totalWeekWidth = parseFloat(document.defaultView.getComputedStyle(document.getElementById("week-view-content-holder"), "").getPropertyValue("width")) + 1;
-   var boxLeftOffset = Math.ceil(parseFloat(document.defaultView.getComputedStyle(document.getElementById("week-tree-hour-0"), "").getPropertyValue("width")));
+   var boxLeftOffset = Math.ceil(parseFloat(document.defaultView.getComputedStyle(document.getElementById("week-tree-hour-"+LowestStartHour), "").getPropertyValue("width")));
+   //alert("boxLeftOffset: "+boxLeftOffset);
    var boxWidth = (totalWeekWidth - boxLeftOffset)/ kDaysInWeek;
    var Height = ( hourDuration * kWeekViewHourHeight ) + 1;
    var Width = Math.floor( boxWidth / calendarEventDisplay.NumberOfSameTimeEvents ) + 1;
    eventBox.setAttribute( "height", Height );
    eventBox.setAttribute( "width", Width );
       
-   var top = eval( ( startHour*kWeekViewHourHeight ) + ( ( startMinutes/60 ) * kWeekViewHourHeight ) - kWeekViewHourHeightDifference );
+   var top = eval( ( (startHour - LowestStartHour)*kWeekViewHourHeight ) + ( ( startMinutes/60 ) * kWeekViewHourHeight ) - kWeekViewHourHeightDifference );
    eventBox.setAttribute( "top", top );
    
    var left = eval( boxLeftOffset + ( boxWidth * ( dayIndex - 1 ) ) + ( ( calendarEventDisplay.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) ) ) ;
@@ -452,11 +525,8 @@ WeekView.prototype.switchTo = function( )
 WeekView.prototype.refreshDisplay = function( )
 {
    
-   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   var defaultWeekStart = categoriesStringBundle.GetStringFromName("defaultWeekStart" );
-      
    // Set the from-to title string, based on the selected date
-   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
+   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", 0 );
    
    var viewDay = this.calendarWindow.getSelectedDate().getDay();
    var viewDayOfMonth = this.calendarWindow.getSelectedDate().getDate();
