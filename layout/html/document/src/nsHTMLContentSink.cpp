@@ -2005,7 +2005,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   NS_RELEASE(sco);
 
   if (rel.EqualsIgnoreCase("stylesheet")) {
-    if (type.EqualsIgnoreCase("text/css")) {
+    if ((0 == type.Length()) || type.EqualsIgnoreCase("text/css")) {
       nsIURL* url = nsnull;
       nsIUnicharInputStream* uin = nsnull;
       nsAutoString absURL;
