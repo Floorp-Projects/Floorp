@@ -46,6 +46,8 @@
 #include "Xm/Form.h"
 #include "nsIEnumerator.h"
 
+#include "nsXtManageWidget.h"
+
 #define DBG 0
 
 Widget gFirstTopLevelWindow = 0; //XXX: REMOVE Kludge should not be needed.
@@ -56,6 +58,7 @@ NS_IMPL_ADDREF(nsWindow)
 NS_IMPL_RELEASE(nsWindow)
 
 extern XtAppContext gAppContext;
+
 
 //-------------------------------------------------------------------------
 //
@@ -728,13 +731,15 @@ NS_METHOD nsWindow::SetFocus(void)
 // Get this component dimension
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetBounds(const nsRect &aRect)
+NS_METHOD nsWindow::SetBounds(const nsRect &aRect)
 {
   mBounds.x      = aRect.x;
   mBounds.y      = aRect.y;
   mBounds.width  = aRect.width;
   mBounds.height = aRect.height;
   //Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_TRUE);
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -794,10 +799,10 @@ nscolor nsWindow::GetBackgroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
-  mBackground = aColor ;
-  PRUint32 pixel;
-  mContext->ConvertPixel(aColor, pixel);
-  XtVaSetValues(mWidget, XtNbackground, pixel, nsnull);
+//   mBackground = aColor ;
+//   PRUint32 pixel;
+//   mContext->ConvertPixel(aColor, pixel);
+//   XtVaSetValues(mWidget, XtNbackground, pixel, nsnull);
   return NS_OK;
 }
 
@@ -1255,6 +1260,65 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
   return(PR_FALSE);
 }
 
+//////////////////////////////////////////////////////////////////
+//
+// Turning TRACE_EVENTS on will cause printfs for all
+// mouse events that are dispatched.
+//
+// These are extra noisy, and thus have their own switch:
+//
+// NS_MOUSE_MOVE
+// NS_PAINT
+// NS_MOUSE_ENTER, NS_MOUSE_EXIT
+//
+//////////////////////////////////////////////////////////////////
+
+#undef TRACE_EVENTS
+#undef TRACE_EVENTS_MOTION
+#undef TRACE_EVENTS_PAINT
+#undef TRACE_EVENTS_CROSSING
+
+#ifdef DEBUG
+void
+nsWindow::DebugPrintEvent(nsGUIEvent &   aEvent,
+                          Widget         aWidget)
+{
+#ifndef TRACE_EVENTS_MOTION
+  if (aEvent.message == NS_MOUSE_MOVE)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_PAINT
+  if (aEvent.message == NS_PAINT)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_CROSSING
+  if (aEvent.message == NS_MOUSE_ENTER || aEvent.message == NS_MOUSE_EXIT)
+  {
+    return;
+  }
+#endif
+
+  static int sPrintCount=0;
+
+  printf("%4d %-26s(this=%-8p , widget=%-8p",
+         sPrintCount++,
+         (const char *) nsAutoCString(GuiEventToString(aEvent)),
+         this,
+         (void *) aWidget);
+  
+  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
+
+  printf("\n");
+}
+#endif // DEBUG
+//////////////////////////////////////////////////////////////////
+
 //-------------------------------------------------------------------------
 //
 // Invokes callback and  ProcessEvent method on Event Listener object
@@ -1263,6 +1327,10 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(*event,mWidget);
+#endif
+
   NS_ADDREF(event->widget);
 
   aStatus = nsEventStatus_eIgnore;
