@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.7 $
+ *  Version: $Revision: 1.8 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.7 2000/05/25 20:10:47 mj%digicool.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.8 2000/07/17 11:36:12 mj%digicool.com Exp $
  */
 
 /*
@@ -131,17 +131,17 @@ nsXmlRpcClient.prototype = {
                 throw Components.Exception('Connection timed out');
         }
         
-        this._reponseStatus = channel.ResponseStatus;
-        this._responseString = channel.ResponseString;
+        this._reponseStatus = channel.responseStatus;
+        this._responseString = channel.responseString;
 
         // Check for a 200 response.
-        if (channel.ResponseStatus != 200) {
+        if (channel.responseStatus != 200) {
             this._status = Components.results.NS_ERROR_FAILURE;
             this._errorMsg = 'Server returned unexpected status ' +
-                channel.ResponseStatus;
+                channel.responseStatus;
             this._inProgress = false;
             throw Components.Exception('Server returned unexpected status ' +
-                        channel.ResponseStatus);
+                        channel.responseStatus);
         }
 
         // check content type
@@ -321,20 +321,20 @@ nsXmlRpcClient.prototype = {
             // Store request status and message.
             channel = channel
                 .QueryInterface(Components.interfaces.nsIHTTPChannel);
-            this._reponseStatus = channel.ResponseStatus;
-            this._responseString = channel.ResponseString;
+            this._reponseStatus = channel.responseStatus;
+            this._responseString = channel.responseString;
 
             // Check for a 200 response.
-            if (channel.ResponseStatus != 200) {
+            if (channel.responseStatus != 200) {
                 this._status = Components.results.NS_ERROR_FAILURE;
                 this._errorMsg = 'Server returned unexpected status ' +
-                    channel.ResponseStatus;
+                    channel.responseStatus;
                 this._inProgress = false;
                 try {
                     ctxt.listener.onError(this, ctxt.context,
                         Components.results.NS_ERROR_FAILURE,
                         'Server returned unexpected status ' +
-                            channel.ResponseStatus);
+                            channel.responseStatus);
                 } catch (ex) {}
                 return;
             }
@@ -843,7 +843,7 @@ Value.prototype = {
                 val = val.replace(/&#([0-9]+);/g, entityTrans);
                 val = val.replace(/&#(x[0-9a-fA-F]+);/g, entityTrans);
                 val = val.replace(/&lt;/g, '<');
-                val = val.replace(/&gt;/g, '<');
+                val = val.replace(/&gt;/g, '>');
                 val = val.replace(/&amp;/g, '&');
                 this._value.data = val;
                 break;
