@@ -31,6 +31,14 @@
 #include "icalredr.h"
 #include "prmon.h"
 #include "jutility.h"
+
+CLASS_EXPORT_CAPI nsCapiBufferStruct
+{
+public:
+    char * m_pBuf;
+    size_t m_pBufSize;
+};
+
 /**
  *  nsCapiCallbackReader is a subclass of ICalReader.  It implements
  *  the ICalReader interface to work with CAPI callback method
@@ -112,13 +120,16 @@ public:
      */
     void AddChunk(UnicodeString * u);
 
+    /** buffer to contain current line, assumed to be less than 1024 bytes */
+    char m_pBuffer[1024];
+    void AddBuffer(nsCapiBufferStruct * cBuf);
     /*-----------------------------
     ** UTILITIES
     **---------------------------*/
 
     void mark() { m_Mark = m_Pos; m_ChunkMark = m_ChunkIndex;}
 
-    void reset() { m_Pos = m_Mark; m_ChunkIndex = m_ChunkMark;}
+    void reset() { m_Pos = m_Mark; m_ChunkIndex = m_ChunkMark; m_Mark = -1; m_ChunkMark = -1; }
 
     /**
      * Read next character from file.

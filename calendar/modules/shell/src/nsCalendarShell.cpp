@@ -138,7 +138,13 @@ int RcvData(void * pData,
       /*
        * XXX: may want to ensure that pBuf is 0 terminated.
        */
-      pCapiCallbackReader->AddChunk(new UnicodeString(pBuf));
+      //pCapiCallbackReader->AddChunk(new UnicodeString(pBuf));
+        char * pBufCopy = new char[strlen(pBuf)];
+        strncpy(pBufCopy, pBuf, (size_t) strlen(pBuf));
+      nsCapiBufferStruct * capiBuffer = new nsCapiBufferStruct();
+      capiBuffer->m_pBuf = pBufCopy;
+      capiBuffer->m_pBufSize = iSize;
+      pCapiCallbackReader->AddBuffer(capiBuffer);
       *piTransferred = iSize;
     }
 
@@ -482,7 +488,7 @@ nsresult nsCalendarShell::Logon()
    * XXX: we need to make this more general...
    */
   if (nsCurlParser::eCAPI == theURL.GetProtocol())
-    psHandle = ":/S=User1/G=Test/";
+    psHandle = ":/S=Sun/G=John/";
 
 
   s = m_SessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(

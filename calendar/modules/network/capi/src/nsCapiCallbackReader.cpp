@@ -15,28 +15,17 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights 
  * Reserved. 
  */
-
-/* 
- * capiredr.cpp
- * John Sun
- * 4/16/98 3:42:19 PM
- */
-
 #include "nsCapiCallbackReader.h"
 #include "nspr.h"
-//#include "xp_mcom.h"
 
 const t_int32 nsCapiCallbackReader::m_MAXBUFFERSIZE = 1024;
 const t_int32 nsCapiCallbackReader::m_NOMORECHUNKS = 404;
 //---------------------------------------------------------------------
-
 nsCapiCallbackReader::nsCapiCallbackReader()
 {
     PR_ASSERT(FALSE);
 }
-
 //---------------------------------------------------------------------
-
 void
 nsCapiCallbackReader::AddChunk(UnicodeString * u)
 {
@@ -46,6 +35,18 @@ nsCapiCallbackReader::AddChunk(UnicodeString * u)
     if (m_Chunks != 0)
     {
         m_Chunks->Add(u);
+    }
+}
+
+void
+nsCapiCallbackReader::AddBuffer(nsCapiBufferStruct * cBuf)
+{
+    if (m_Chunks == 0)
+        m_Chunks = new JulianPtrArray();
+    PR_ASSERT(m_Chunks != 0);
+    if (m_Chunks != 0)
+    {
+        m_Chunks->Add(cBuf);
     }
 }
 
@@ -61,8 +62,8 @@ nsCapiCallbackReader::nsCapiCallbackReader(PRMonitor * monitor,
     m_Chunks = 0;
     m_Init = TRUE;
     m_Pos = 0;
-    m_Mark = 0;
-    m_ChunkMark = 0;
+    m_Mark = -1;
+    m_ChunkMark = -1;
     m_Encoding = encoding;
 }
 
@@ -95,6 +96,7 @@ nsCapiCallbackReader::~nsCapiCallbackReader()
 
 t_int8 nsCapiCallbackReader::read(ErrorCode & status)
 {
+#if 0
     t_int32 i = 0;
     
     while (TRUE)
@@ -104,7 +106,6 @@ t_int8 nsCapiCallbackReader::read(ErrorCode & status)
         {
             status = m_NOMORECHUNKS; // no more chunks, should block
             return -1;
-            // block?
         }
         else
         {
@@ -267,15 +268,57 @@ t_int8 nsCapiCallbackReader::read(ErrorCode & status)
             {
                 // delete front string from list, try reading from next chunk
                 m_Pos = 0;
+                t_int32 j = m_ChunkIndex;
                 m_ChunkIndex++;
 
-                //delete ((UnicodeString *) m_Chunks->GetAt(i));
-                //m_Chunks->RemoveAt(i);
+                if (-1 == m_Mark)
+                {
+                    for (i =  m_ChunkIndex - 1; i >=0 ; i--)
+                    {
+                        delete ((UnicodeString *) m_Chunks->GetAt(i));
+                        m_Chunks->RemoveAt(i);
+                        m_ChunkIndex--;
+                    }                
+                }
             }
         }
     }
     status = 1;
     return -1;
+#else 
+
+    t_int32 i = 0;
+    status = ZERO_ERROR;
+    
+    while (TRUE)
+    {
+        if (m_Chunks == 0 || m_Chunks->GetSize() == 0 || 
+            m_ChunkIndex >= m_Chunks->GetSize())
+        {
+            status = m_NOMORECHUNKS; // no more chunks, should block
+            return -1;
+        }
+        else
+        {
+            // read from linked list of UnicodeString's
+            // delete front string when finished reading from it
+        
+            nsCapiBufferStruct * cbBuf = (nsCapiBufferStruct *) m_Chunks->GetAt(m_ChunkIndex);
+            char * buf = cbBuf->m_pBuf;
+            if ((size_t) m_Pos < cbBuf->m_pBufSize)
+            {                
+                return buf[m_Pos++];
+            }
+            else
+            {
+                m_ChunkIndex++;
+                m_Pos = 0;
+            }
+        }
+    }
+    status = 1;
+    return -1;
+#endif
 }
 
 //---------------------------------------------------------------------
@@ -312,18 +355,14 @@ nsCapiCallbackReader::createLine(t_int32 oldPos, t_int32 oldChunkIndex,
         return aLine;
     }
 }
-
 //---------------------------------------------------------------------
-
 UnicodeString & 
 nsCapiCallbackReader::readFullLine(UnicodeString & aLine, ErrorCode & status, t_int32 iTemp)
 {
     status = ZERO_ERROR;
     t_int32 i;
 
-#if 1
     PR_EnterMonitor(m_Monitor);
-#endif
 
     t_int32 oldpos = m_Pos;
     t_int32 oldChunkIndex = m_ChunkIndex;
@@ -369,26 +408,21 @@ nsCapiCallbackReader::readFullLine(UnicodeString & aLine, ErrorCode & status, t_
       }
     }
     
-#if 1
     PR_ExitMonitor(m_Monitor);
-#endif
 
     return aLine;
 }
-
 //---------------------------------------------------------------------
-
 UnicodeString & 
 nsCapiCallbackReader::readLine(UnicodeString & aLine, ErrorCode & status)
 {
+#if 0
     status = ZERO_ERROR;
     t_int8 c = 0;
     t_int32 oldPos = m_Pos;
     t_int32 oldChunkIndex = m_ChunkIndex;
 
     aLine = "";
-
-    //PR_EnterMonitor(m_Monitor);
 
     c = read(status);
     while (!(FAILURE(status)))
@@ -409,7 +443,6 @@ nsCapiCallbackReader::readLine(UnicodeString & aLine, ErrorCode & status)
             c = read(status);
             if (FAILURE(status))
             {
-                // block(), reset()?
                 break;
             }
             else if (c == '\n')
@@ -422,21 +455,58 @@ nsCapiCallbackReader::readLine(UnicodeString & aLine, ErrorCode & status)
                 break;
             }
         }
-#if 1
         aLine += c;
-        //if (FALSE) TRACE("aLine = %s: -%c,%d-\r\n", aLine.toCString(""), c, c);
-#endif
         c = read(status);
 
     }
-#if 0
-    createLine(oldPos, oldChunkIndex, m_Pos, m_ChunkIndex, aLine);
+    return aLine;
+#else
+
+    aLine = "";
+
+    if (m_Chunks == 0 || m_Chunks->GetSize() == 0 || 
+            m_ChunkIndex >= m_Chunks->GetSize())
+    {
+        status = m_NOMORECHUNKS; // no more chunks, should block
+        return aLine;
+    }    
+    else
+    {
+        nsCapiBufferStruct * cbBuf = (nsCapiBufferStruct *) m_Chunks->GetAt(m_ChunkIndex);
+        char * currentBuf = cbBuf->m_pBuf;
+        char * line = 0;
+        PRInt32 i;
+        t_bool bFoundNewLine = FALSE;
+        for (i = m_Pos; 0 != currentBuf[i] && ((size_t) i < cbBuf->m_pBufSize); i++)
+        {
+            if ('\n' == currentBuf[i])
+            {
+                currentBuf[i] = 0;
+                bFoundNewLine = TRUE;
+                break;
+            }
+        }
+        if (!bFoundNewLine)
+        {
+            // todo: mark this chunk needs to be saved
+            if (m_ChunkIndex < m_Chunks->GetSize() - 1)
+            {
+                m_ChunkIndex++;
+                m_Pos = 0;
+            }
+            //else
+            //{
+             //   status = m_NOMORECHUNKS;
+            //}
+            return aLine;
+        }
+        line = currentBuf + m_Pos;
+        m_Pos = i + 1;
+        aLine = line;
+        return aLine;
+    }
 #endif
 
-    //if (FALSE) TRACE("\treadLine returned %s\r\n", aLine.toCString(""));
-    return aLine;
-
 }
-
 //---------------------------------------------------------------------
 

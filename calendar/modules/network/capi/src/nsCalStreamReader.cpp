@@ -107,8 +107,6 @@ void nsCalStreamReader::ParseCalendars(ICalReader * reader,
 
         while(TRUE)
         {
-            //PR_EnterMonitor((PRMonitor *) cr->getMonitor());
-            //reader->readFullLine(strLine, status);
             cr->readFullLine(strLine, status);
             ICalProperty::Trim(strLine);
 
