@@ -296,6 +296,13 @@ nsCheckboxControlFrame::Reset()
   }
 }  
 
+
+//
+// XXX: The following paint code is TEMPORARY. It is being used to get printing working
+// under windows. Later it may be used to GFX-render the controls to the display. 
+// Expect this code to repackaged and moved to a new location in the future.
+//
+
 void
 nsCheckboxControlFrame::PaintFixedSizeCheckMark(nsIRenderingContext& aRenderingContext,
                          float aPixelsToTwips)
