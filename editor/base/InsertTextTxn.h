@@ -35,12 +35,19 @@ class nsIDOMCharacterData;
 class InsertTextTxn : public EditTxn
 {
 public:
-
+	
   InsertTextTxn(nsEditor *aEditor,
                 nsIDOMCharacterData *aElement,
                 PRUint32 aOffset,
                 const nsString& aStringToInsert);
 
+private:
+	
+	// default ctor so that nsCOMPtr is happy
+	InsertTextTxn() : EditTxn(nsnull) {}
+
+public:
+	
   virtual nsresult Do(void);
 
   virtual nsresult Undo(void);
