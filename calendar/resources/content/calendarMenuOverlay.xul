@@ -103,9 +103,6 @@
          <menuitem id="calendar-new-todo-menu" key="new_event_key"    label="New To Do Item" observes="new_todo_command"/>
          <menuitem id="unifinder-modify-menu"   key="modify_event_key" label="&event.edit.event;" observes="modify_command"/>
          <menuseparator/>
-         <menuitem id="calendar-import-menu" key="import_key" label="&calendar.import.label;" accesskey="&calendar.import.accesskey;" observes="import_command"/>
-         <menuitem id="calendar-export-menu" key="export_key" label="&calendar.export.label;" accesskey="&calendar.export.accesskey;" observes="export_command"/>
-         <menuseparator/>
          <menuitem id="calendar-mail-event" observes="send_event_command" label="&event.mail.event;"/>
       </menupopup>
    </menu>
@@ -139,7 +136,13 @@
       </menupopup>
    </menu>
    
-   <menu id="tasksMenu"/>
+   <menu id="tasksMenu">
+      <menupopup id="taskPopup">
+         <menuitem id="calendar-import-menu" key="import_key" label="&calendar.import.label;" accesskey="&calendar.import.accesskey;" observes="import_command"/>
+         <menuitem id="calendar-export-menu" key="export_key" label="&calendar.export.label;" accesskey="&calendar.export.accesskey;" observes="export_command"/>
+         <menuseparator/>
+      </menupopup>
+   </menu>
    
    <menu id="windowMenu"/>
   
