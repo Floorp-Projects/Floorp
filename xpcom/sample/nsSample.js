@@ -31,11 +31,6 @@ mySample.prototype = {
     },
     poke: function (aValue) { this.val = aValue; },
 
-    /*
-     * Note that until bug 14460 is resolved, you need to name the method
-     * QueryInterface, not queryInterface as you might expect given the
-     * interCaps naming convention used in most XPIDL.
-     */
     QueryInterface: function (iid) {
         if (!iid.equals(Components.interfaces.nsISample) &&
             !iid.equals(Components.interfaces.nsISupports)) {
