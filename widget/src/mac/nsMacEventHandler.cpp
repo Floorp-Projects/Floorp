@@ -756,6 +756,16 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& a
     aKeyEvent.keyCode = ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
     aKeyEvent.charCode = 0;
   }
+  
+  //
+  // obscure cursor if appropriate
+  //
+  if ( message == NS_KEY_PRESS 
+  && !aKeyEvent.isMeta 
+  && aKeyEvent.keyCode != NS_VK_PAGE_UP && aKeyEvent.keyCode != NS_VK_PAGE_DOWN
+  // also consider:  function keys and sole modifier keys
+  )
+    ::ObscureCursor();
 }
 
 
