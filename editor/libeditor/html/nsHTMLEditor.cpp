@@ -1844,10 +1844,6 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   // Time to change the document
   nsAutoEditBatch beginBatching(this);
 
-  // Try to replace body contents first
-  res = SelectAll();
-  if (NS_FAILED(res)) return res;
-
   nsReadingIterator<PRUnichar> endtotal;
   aSourceString.EndReading(endtotal);
 
@@ -1875,6 +1871,9 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
       // so we assume that there is no head
       res = ReplaceHeadContentsWithHTML(head);
   }
+  if (NS_FAILED(res)) return res;
+
+  res = SelectAll();
   if (NS_FAILED(res)) return res;
 
   if (!foundbody) {
