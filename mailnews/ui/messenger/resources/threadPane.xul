@@ -9,7 +9,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
-<tree rdf:datasources="rdf:mailnews" id="threadTree" onclick="return parent.parent.LoadMessage(event.target.parentNode)">
+<tree rdf:datasources="rdf:mailnews" id="threadTree" onclick="return parent.parent.LoadMessage(event.target.parentNode)" rdf:containment="http://home.netscape.com/NC-rdf#MessageChild">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
@@ -22,7 +22,7 @@
   </treehead>
   
 
-  <treebody id="mailbox://Inbox" rdf:containment="http://home.netscape.com/NC-rdf#MessageChild">
+  <treebody id="mailbox://Inbox">
     <treeitem  open="true">
     </treeitem>
   </treebody>

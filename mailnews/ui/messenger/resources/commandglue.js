@@ -44,7 +44,7 @@ function ChangeFolder(folderNode)
 {
 	var uri = folderNode.getAttribute('id');
 	dump(uri);
-	var tree = frames[0].frame[1].document.getElementById('threadTree');
+	var tree = frames[0].frames[1].document.getElementById('threadTree');
 	tree.childNodes[4].setAttribute('id', uri);
 }
 
