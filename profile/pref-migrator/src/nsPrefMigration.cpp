@@ -2066,32 +2066,23 @@ nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsIFileSpec *path
   these are the prefs we know we need to convert to utf8.
   we'll also be converting:
 
+  Please make sure that any pref that contains native characters
+  in it's value is not included in this list as we do not want to 
+  convert them into UTF-8 format. Prefs are being get and set in a 
+  unicode format (FileXPref) now and there is no need for 
+  conversion of those prefs. 
+
  "ldap_2.server.*.description"
  "intl.font*.fixed_font"
  "intl.font*.prop_font"
  */
 
 static const char *prefsToConvert[] = {
-      "browser.cache.directory",
       "custtoolbar.personal_toolbar_folder",
-      "editor.image_editor",
-      "editor.html_editor",
       "editor.author",
-      "helpers.private_mailcap_file",
-      "helpers.private_mime_types_file",
       "li.server.ldap.userbase",
-      "mail.default_drafts",
-      "mail.default_fcc",
-      "mail.default_templates",
-      "mail.directory",
       "mail.identity.organization",
       "mail.identity.username",
-      "mail.imap.root_dir",
-      "mail.signature_file",
-      "news.default_fcc",
-      "news.directory",
-      "premigration.mail.directory",
-      "premigration.news.directory",
       nsnull
 };
 

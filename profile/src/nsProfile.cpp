@@ -781,10 +781,8 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **p
     rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(aProfileDir));
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString profileLocation;
     PRBool validDesc;
-    profileLocation.AssignWithConversion(aProfile->profileLocation);
-    rv = aProfileDir->SetPersistentDescriptor(profileLocation.GetBuffer());
+    rv = aProfileDir->InitWithUnicodePath((aProfile->profileLocation).GetUnicode());
     validDesc = NS_SUCCEEDED(rv);
                            
     // Set this to be a current profile only if it is a 5.0 profile
@@ -846,15 +844,11 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **p
             // Get persistent string for profile directory            
             nsCOMPtr<nsILocalFile> tmpLocalFile(do_QueryInterface(newProfileDir, &rv));
             if (NS_FAILED(rv)) return rv;           
-            nsXPIDLCString profileDirString;
-            rv = tmpLocalFile->GetPersistentDescriptor(getter_Copies(profileDirString));
+            nsXPIDLString profileDirString;
+            rv = tmpLocalFile->GetUnicodePath(getter_Copies(profileDirString));
             if (NS_FAILED(rv)) return rv;
             
-            // Update profile struct entries with new value.
-            nsAutoString profileLoc; 
-            profileLoc.AssignWithConversion(profileDirString);
-            
-            aProfile->profileLocation = profileLoc;
+            aProfile->profileLocation = profileDirString;
             gProfileDataAccess->SetValue(aProfile);
 
             // Return new file spec. 
@@ -972,18 +966,16 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const PRUnichar *profileName, nsIFile *pr
     
     nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(profileDir));
     NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);                
-    nsXPIDLCString profileDirString;
-    rv = localFile->GetPersistentDescriptor(getter_Copies(profileDirString));
+    nsXPIDLString profileDirString;
+    rv = localFile->GetUnicodePath(getter_Copies(profileDirString));    
     if (NS_FAILED(rv)) return rv;
 
     ProfileStruct* aProfile = new ProfileStruct();
     NS_ENSURE_TRUE(aProfile, NS_ERROR_OUT_OF_MEMORY);
 
-    nsAutoString profileLocation; profileLocation.AssignWithConversion(profileDirString);
-
 
     aProfile->profileName     = profileName;
-    aProfile->profileLocation = profileLocation;
+    aProfile->profileLocation = profileDirString;
     aProfile->isMigrated.AssignWithConversion(REGISTRY_YES_STRING);
 
 
@@ -1413,10 +1405,9 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
     PL_strcpy(oldRegFile, systemDir.GetNativePathCString());
     PL_strcat(oldRegFile, OLD_REGISTRY_FILE_NAME);
 #else /* XP_MAC */
-    nsSpecialSystemDirectory regLocation(nsSpecialSystemDirectory::Mac_SystemDirectory);
+    nsSpecialSystemDirectory regLocation(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
     
     // Append the name of the old registry to the path obtained.
-    regLocation += "Preferences";
     regLocation += OLD_REGISTRY_FILE_NAME;
     
     PL_strcpy(oldRegFile, regLocation.GetNativePathCString());
