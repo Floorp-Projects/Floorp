@@ -14,9 +14,10 @@ quotations get wrapped:
 > Oh, what a mind is here o'erthrown.
 > 
 >> /(The next line does not end with a *br* tag.)./
->> Oh, what a rogue and peasant slave am I.
+>> Oh, what a rogue and peasant slave am I. 
+> 
 > /(Neither does the next line:)/
-> The observed of all observers, quite, quite down!
+> The observed of all observers, quite, quite down! 
 
 Now we're outside all blockquotes.
 
