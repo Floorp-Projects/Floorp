@@ -1008,17 +1008,20 @@ static PRBool pt_solaris_sendfile_cont(pt_Continuation *op, PRInt16 revents)
     ssize_t count;
 
     count = SOLARIS_SENDFILEV(op->arg1.osfd, vec, op->arg3.amount, &xferred);
-    PR_ASSERT(count <= op->nbytes_to_send);
+    PR_ASSERT((count == -1) || (count == xferred));
+    PR_ASSERT(xferred <= op->nbytes_to_send);
     op->syserrno = errno;
 
-    if (count != -1) {
-        op->result.code += count;
-    } else if (op->syserrno != EWOULDBLOCK && op->syserrno != EAGAIN) {
-        op->result.code = -1;
-    } else {
-        return PR_FALSE;
+    if (count == -1) {
+        if (op->syserrno != EWOULDBLOCK && op->syserrno != EAGAIN) {
+            op->result.code = -1;
+            return PR_TRUE;
+        }
+        count = xferred;
     }
-    if (count != -1 && count < op->nbytes_to_send) {
+    
+    op->result.code += count;
+    if (count < op->nbytes_to_send) {
         op->nbytes_to_send -= count;
 
         while (count >= vec->sfv_len) {
@@ -2252,10 +2255,9 @@ static PRInt32 pt_SolarisSendFile(PRFileDesc *sd, PRSendFileData *sfd,
 
     if (count == -1) {
         syserrno = errno;
-        if (syserrno == EINTR) {
+        if (syserrno == EINTR
+                || syserrno == EAGAIN || syserrno == EWOULDBLOCK) {
             count = xferred;
-        } else if (syserrno == EAGAIN || syserrno == EWOULDBLOCK) {
-            count = 0;
         }
     }
 
