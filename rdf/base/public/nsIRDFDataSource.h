@@ -190,10 +190,6 @@ public:
 
     /**
      * Returns the set of all commands defined for a given source.
-     *
-     * @return NS_OK unless a catastrophic error occurs. If the method
-     * returns NS_OK, you may assume that labels points to a valid (but
-     * possible empty) nsIRDFCursor object.
      */
     NS_IMETHOD GetAllCommands(nsIRDFResource* source,
                               nsIEnumerator/*<nsIRDFResource>*/** commands) = 0;
@@ -202,7 +198,7 @@ public:
      * Returns whether a given command is enabled for a set of sources. 
      *
      * @return NS_OK if command is enabled for all sources 
-     * @return NS_COMFALSE if command is not enabled for any source 
+     * @return NS_COMFALSE if command is not enabled for some source 
      */
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
