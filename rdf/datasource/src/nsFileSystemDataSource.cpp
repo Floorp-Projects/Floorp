@@ -1155,13 +1155,13 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 		PRInt32			aOffset;
 		while ((aOffset = leaf.FindChar(' ')) >= 0)
 		{
-			leaf.Cut(aOffset, 1);
-			leaf.InsertWithConversion("%20", aOffset);
+			leaf.Cut((PRUint32)aOffset, 1);
+			leaf.InsertWithConversion("%20", (PRUint32)aOffset);
 		}
 		while ((aOffset = leaf.FindChar('/')) >= 0)
 		{
-			leaf.Cut(aOffset, 1);
-			leaf.InsertWithConversion("%2F", aOffset);
+			leaf.Cut((PRUint32)aOffset, 1);
+			leaf.InsertWithConversion("%2F", (PRUint32)aOffset);
 		}
 
 		// append the encoded name
