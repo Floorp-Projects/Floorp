@@ -22,5 +22,6 @@
 
 
 nsStr.h
+nsStrShared.h
 nsString.h
 nsString2.h

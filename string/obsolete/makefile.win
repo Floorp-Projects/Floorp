@@ -30,6 +30,7 @@ REQUIRES	= unicharutil \
 
 EXPORTS =                               \
         nsStr.h                         \
+	nsStrShared.h			\
         nsString.h                      \
         nsString2.h                     \
         $(NULL)                        

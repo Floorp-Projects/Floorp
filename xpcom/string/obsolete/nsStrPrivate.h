@@ -41,6 +41,7 @@
 #define __nsStrPrivate_h
 
 #include "nscore.h"
+#include "nsStrShared.h"
 
 struct nsStr;
 enum eCharSize;
