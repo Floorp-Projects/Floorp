@@ -86,7 +86,8 @@ public:
   /* Stream stuff: */
   gint StartStream(const char *base_url, 
                    const char *action,
-                   nsISupports * ctxt);
+                   nsISupports * ctxt,
+                   const char *content_type);
   
   gint WriteStream(const char *data, 
                    gint offset,
@@ -111,10 +112,10 @@ protected:
 
   /* Stream stuff: */
   GtkMozillaInputStream *mStream;
-//  nsIURI *mStreamURL;
 
-  nsIChannel * mChannel;
-  nsISupports * mContext;
+  nsIChannel *mChannel;
+  nsILoadGroup *mLoadGroup;
+  nsISupports *mContext;
 
   nsIStreamListener *mListener;
 };

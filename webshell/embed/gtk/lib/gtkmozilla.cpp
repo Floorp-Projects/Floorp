@@ -21,17 +21,11 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIPref.h"
+#include "nsIThread.h"
 
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
-#endif // NECKO
-//#include "nsXPComCIID.h"
 
-static NS_DEFINE_IID(kIEventQueueServiceIID,NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kEventQueueServiceCID,NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kEventQueueServiceCID,NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 extern "C" void NS_SetupRegistry();
@@ -178,8 +172,8 @@ gtk_mozilla_get_type (void)
       sizeof (GtkMozillaClass),
       (GtkClassInitFunc) gtk_mozilla_class_init,
       (GtkObjectInitFunc) gtk_mozilla_init,
-      (GtkArgSetFunc) NULL,
-      (GtkArgGetFunc) NULL,
+      0,
+      0
     };
     mozilla_type = gtk_type_unique (GTK_TYPE_LAYOUT, &mozilla_info);
 
@@ -194,7 +188,7 @@ gtk_mozilla_get_type (void)
     // Create the Event Queue for the UI thread...
 
     nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                               kIEventQueueServiceIID,
+                                               NS_GET_IID(nsIEventQueueService),
                                                (nsISupports **)&aEventQService);
     
     if (!NS_SUCCEEDED(rv)) {
@@ -223,7 +217,7 @@ gtk_mozilla_get_type (void)
     // Prefs
     rv = nsComponentManager::CreateInstance(kPrefCID, 
                                             NULL, 
-                                            kIPrefIID,
+                                            NS_GET_IID(nsIPref),
                                             (void **) & sPrefs);
     if (NS_OK != rv) 
     {
@@ -231,6 +225,7 @@ gtk_mozilla_get_type (void)
 
       return rv;
     }
+    
 
     printf("prefs created ok.\n");
     
@@ -241,6 +236,8 @@ gtk_mozilla_get_type (void)
                   GDK_INPUT_READ,
                   event_processor_callback,
                   EQueue);
+
+    nsIThread::SetMainThread();
 
   }
 
@@ -389,7 +386,7 @@ gtk_mozilla_stream_start(GtkMozilla *moz,
   class GtkMozillaContainer *moz_container;
   
   moz_container = (class GtkMozillaContainer *)moz->mozilla_container;
-//  return moz_container->StartStream(base_url, action, content_type);
+  return moz_container->StartStream(base_url, action, NULL, content_type);
 }
 
 gint

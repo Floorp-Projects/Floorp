@@ -94,7 +94,7 @@ static void stream_clicked(GtkWidget *button,
   size = sizeof(buf);
   i = 0;
   while (size>0) {
-    c = gtk_mozilla_stream_write(moz, &buf[i], 0, size );
+    c = gtk_mozilla_stream_write(moz, &buf[i], 0, size-1);
     size -= c;
     i += c;
   }
