@@ -127,6 +127,62 @@ extern PRInt32 _PR_x86_64_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _MD_ATOMIC_SET                _PR_x86_64_AtomicSet
 #endif
 
+#if defined(__alpha)
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+#define _MD_ATOMIC_ADD(ptr, i) ({               \
+    unsigned long __atomic_tmp, __atomic_ret;   \
+    __asm__ __volatile__(                       \
+    "1: ldl_l   %[ret], %[val]          \n"     \
+    "   addl    %[ret], %[inc], %[tmp]  \n"     \
+    "   addl    %[ret], %[inc], %[ret]  \n"     \
+    "   stl_c   %[tmp], %[val]          \n"     \
+    "   beq     %[tmp], 2f              \n"     \
+    ".subsection 2                      \n"     \
+    "2: br      1b                      \n"     \
+    ".previous"                                 \
+    : [ret] "=&r" (__atomic_ret),               \
+      [tmp] "=&r" (__atomic_tmp),               \
+      [val] "=m" (*ptr)                         \
+    : [inc] "Ir" (i), "m" (*ptr));              \
+    __atomic_ret;                               \
+})
+#define _MD_ATOMIC_INCREMENT(ptr) _MD_ATOMIC_ADD(ptr, 1)
+#define _MD_ATOMIC_DECREMENT(ptr) ({            \
+    unsigned long __atomic_tmp, __atomic_ret;   \
+    __asm__ __volatile__(                       \
+    "1: ldl_l   %[ret], %[val]          \n"     \
+    "   subl    %[ret], 1, %[tmp]       \n"     \
+    "   subl    %[ret], 1, %[ret]       \n"     \
+    "   stl_c   %[tmp], %[val]          \n"     \
+    "   beq     %[tmp], 2f              \n"     \
+    ".subsection 2                      \n"     \
+    "2: br      1b                      \n"     \
+    ".previous"                                 \
+    : [ret] "=&r" (__atomic_ret),               \
+      [tmp] "=&r" (__atomic_tmp),               \
+      [val] "=m" (*ptr)                         \
+    : "m" (*ptr));                              \
+    __atomic_ret;                               \
+})
+#define _MD_ATOMIC_SET(ptr, n) ({               \
+    unsigned long __atomic_tmp, __atomic_ret;   \
+    __asm__ __volatile__(                       \
+    "1: ldl_l   %[ret], %[val]          \n"     \
+    "   mov     %[newval], %[tmp]       \n"     \
+    "   stl_c   %[tmp], %[val]          \n"     \
+    "   beq     %[tmp], 2f              \n"     \
+    ".subsection 2                      \n"     \
+    "2: br      1b                      \n"     \
+    ".previous"                                 \
+    : [ret] "=&r" (__atomic_ret),               \
+      [tmp] "=&r"(__atomic_tmp),                \
+      [val] "=m" (*ptr)                         \
+    : [newval] "Ir" (n), "m" (*ptr));           \
+    __atomic_ret;                               \
+})
+#endif
+
 #define USE_SETJMP
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _PR_POLL_AVAILABLE
