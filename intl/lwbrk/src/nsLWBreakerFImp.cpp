@@ -40,9 +40,9 @@
 
 #include "nsLWBRKDll.h"
 
-#include "pratom.h"
 #include "nsJISx4501LineBreaker.h"
 #include "nsSampleWordBreaker.h"
+
 nsLWBreakerFImp::nsLWBreakerFImp()
 {
 }
@@ -50,41 +50,9 @@ nsLWBreakerFImp::~nsLWBreakerFImp()
 {
 }
 
-NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
-NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-
-NS_IMPL_ADDREF  (  nsLWBreakerFImp )
-NS_IMPL_RELEASE (  nsLWBreakerFImp )
-
-nsresult
-nsLWBreakerFImp::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  
-  if( NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aInstancePtr = NULL;
-
-  if( aIID.Equals ( kILineBreakerFactoryIID )) {
-    *aInstancePtr = (void*) ((nsILineBreakerFactory*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if( aIID.Equals ( kIWordBreakerFactoryIID )) {
-    *aInstancePtr = (void*) ((nsIWordBreakerFactory*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if( aIID.Equals ( kISupportsIID )) {
-    *aInstancePtr = (void*) (this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS2(nsLWBreakerFImp,
+                   nsILineBreakerFactory,
+                   nsIWordBreakerFactory)
 
 static const PRUnichar gJaNoBegin[] =
 {
@@ -118,55 +86,59 @@ static const PRUnichar gCnNoEnd[] =
 {
   0xfffd // to be changed
 };
+
 nsresult
 nsLWBreakerFImp::GetBreaker(const nsAString& aParam, nsILineBreaker** oResult)
 {
-  if( NULL == oResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  nsJISx4051LineBreaker *result;
   if( aParam.Equals(NS_LITERAL_STRING("ja")) ) 
   {
-     *oResult = new nsJISx4051LineBreaker (
+     result = new nsJISx4051LineBreaker (
            gJaNoBegin, sizeof(gJaNoBegin)/sizeof(PRUnichar), 
            gJaNoEnd, sizeof(gJaNoEnd)/sizeof(PRUnichar));
   } 
   else if(aParam.Equals(NS_LITERAL_STRING("ko"))) 
   {
-     *oResult = new nsJISx4051LineBreaker (
+     result = new nsJISx4051LineBreaker (
            gKoNoBegin, sizeof(gKoNoBegin)/sizeof(PRUnichar), 
            gKoNoEnd, sizeof(gKoNoEnd)/sizeof(PRUnichar));
   } 
   else if(aParam.Equals(NS_LITERAL_STRING("tw"))) 
   {
-     *oResult = new nsJISx4051LineBreaker (
+     result = new nsJISx4051LineBreaker (
            gTwNoBegin, sizeof(gTwNoBegin)/sizeof(PRUnichar), 
            gTwNoEnd, sizeof(gTwNoEnd)/sizeof(PRUnichar));
   } 
   else if(aParam.Equals(NS_LITERAL_STRING("cn"))) 
   {
-     *oResult = new nsJISx4051LineBreaker (
+     result = new nsJISx4051LineBreaker (
            gCnNoBegin, sizeof(gCnNoBegin)/sizeof(PRUnichar), 
            gCnNoEnd, sizeof(gCnNoEnd)/sizeof(PRUnichar));
   } 
   else 
   {
-     *oResult = new nsJISx4051LineBreaker (nsnull, 0, nsnull, 0);
+     result = new nsJISx4051LineBreaker (nsnull, 0, nsnull, 0);
   }
 
-  if (*oResult == NULL) return NS_ERROR_OUT_OF_MEMORY;
-  (*oResult)->AddRef();
+  if (!result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(result);
+  *oResult = result;
+
   return NS_OK;
 }
 
 nsresult
 nsLWBreakerFImp::GetBreaker(const nsAString& aParam, nsIWordBreaker** oResult)
 {
-  if( NULL == oResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *oResult = new nsSampleWordBreaker ();
-  if (*oResult == NULL) return NS_ERROR_OUT_OF_MEMORY;
-  (*oResult)->AddRef();
+  nsSampleWordBreaker *result = new nsSampleWordBreaker ();
+  if (!result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(result);
+  *oResult = result;
+
   return NS_OK;
 }
 
