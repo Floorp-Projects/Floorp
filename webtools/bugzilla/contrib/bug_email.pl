@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.8 2000/09/06 06:01:10 dave%intrec.com Exp $
+# $Id: bug_email.pl,v 1.9 2001/05/25 12:48:47 jake%acutex.net Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -837,19 +837,11 @@ if (! CheckPermissions("CreateBugs", $SenderShort ) ) {
 }
 
 # Set QA
-SendSQL("select initialqacontact from components where program=" .
-	SqlQuote($Control{'product'}) .
-	" and value=" . SqlQuote($Control{'component'}));
-my $qacontact = FetchOneColumn();
-if (defined $qacontact && $qacontact !~ /^\s*$/) {
-    #$Control{'qa_contact'} = DBNameToIdAndCheck($qacontact, 1);
-    $Control{'qa_contact'} = DBname_to_id($qacontact);
-
-    if ( ! $Control{'qa_contact'} ) {
-	BugMailError( 0,  "Could not resolve qa_contact !\n" );
-    }
-    
-    #push(@bug_fields, "qa_contact");
+if (Param("useqacontact")) {
+    SendSQL("select initialqacontact from components where program=" .
+            SqlQuote($Control{'product'}) .
+            " and value=" . SqlQuote($Control{'component'}));
+    $Control{'qacontact'} = FetchOneColumn();
 }
 
 # Set Assigned - assigned_to depends on the product, cause initialowner 
@@ -936,20 +928,17 @@ $Control{'component'} = $Component;
 
 #
 # Check assigned_to
-# if no assigned_to was given, generate it from the product-DB
-my $forceAssignedOK = 0;
-if ( (! defined($Control{'assigned_to'}) ) 
-     || $Control{'assigned_to'} =~ /^\s*$/ ) {
+# If a value was given in the e-mail, convert it to an ID,
+# otherwise, retrieve it from the database.
+if ( defined($Control{'assigned_to'}) 
+     && $Control{'assigned_to'} !~ /^\s*$/ ) {
+    $Control{'assigned_to'} = DBname_to_id($Control{'assigned_to'});
+} else {
     SendSQL("select initialowner from components where program=" .
             SqlQuote($Control{'product'}) .
             " and value=" . SqlQuote($Control{'component'}));
     $Control{'assigned_to'} = FetchOneColumn();
-    $forceAssignedOK = 1;
 }
-
-
-# Recode Names
-$Control{'assigned_to'} = DBname_to_id($Control{'assigned_to'}, $forceAssignedOK);
 
 if ( $Control{'assigned_to'} == 0 ) {
     my $Text = "Could not resolve key \@assigned_to !\n" .
