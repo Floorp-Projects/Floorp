@@ -53,8 +53,8 @@ if (!param()) {
     if ($ENV{"HTTPS"} ne "ON") {
         my $fixedurl = $ENV{"SERVER_URL"} . $ENV{"SCRIPT_NAME"};
         $fixedurl =~ s/^http:/https:/;
-        print b("<font color=red>If possible, please use the secure version " .
-                "of this form, by " . a({href=>$fixedurl}, "clicking here") .
+        print b("<font color=red>If possible, please use the " .
+                a({href=>$fixedurl}, "secure version of this form") .
                 ".</font>");
     }
     print h2("Login, please.");
@@ -70,9 +70,10 @@ if (!param()) {
                                      -size=>20))));
     print submit(-name=>"Log in");
     print hr();
-    print p("If you think you should be able to use this system, but you
-haven't been issued a login, please send mail to " .
-            a({href=>"mailto:terry"}, "terry") . ".");
+    print p("If you do not yet have a mozilla.org account, or you have one " .
+            "but have forgotten your password, please fill in your e-mail " .
+            "address above, and click <nobr>here: " .
+            submit({name=>"mailMePassword"}, "Email me a password") . "</nobr>");
     exit;
 }
 
