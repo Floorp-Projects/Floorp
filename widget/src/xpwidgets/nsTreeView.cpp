@@ -319,7 +319,11 @@ void nsTreeView::HandleMouseUp(nsGUIEvent* aEvent)
 		  {
 			  // The user clicked on content (a text or icon). Select it.
 			  nsHierarchicalDataItem* pItem = mDataModel->GetNthItem(row);
-			  //pDataModel->SetSelection(pItem);
+			  mDataModel->SetSelection(pItem);
+			  mDataModel->SetSelectedColumnIndex(column);
+
+			  // TODO: REMOVE THIS!
+			  Invalidate(PR_FALSE);
 		  }
 		  else
 		  {
@@ -339,7 +343,7 @@ void nsTreeView::DetermineHitLocation(const nsPoint& point,
 	while (pItem && yPosition < mTreeRect.y + mTreeRect.height)
 	{
 		// Retrieve our cached rectangle data for the item.
-		nsRect rowRect, triggerRect;
+		nsRect rowRect, triggerRect, contentRect;
 		pItem->GetTreeItemRectangle(rowRect);
 		pItem->GetTriggerRectangle(triggerRect);
 		
@@ -364,10 +368,15 @@ void nsTreeView::DetermineHitLocation(const nsPoint& point,
 						column = m;
 						
 						// Now we need to determine what the user clicked on.
-						
+						pItem->GetContentRectangle(contentRect, m);
+
 						if (triggerRect.Contains(point.x, point.y))
 						{
 							location = eTriggerHit;
+						}
+						else if (contentRect.Contains(point.x, point.y))
+						{
+							location = eContentHit;
 						}
 						else
 						{
@@ -745,6 +754,8 @@ void nsTreeView::PaintTreeRows(nsIRenderingContext* drawCtx,
 		return;
 			
 	int yPosition = rect.y;
+	mTreeRect = rect;
+	
 	PRUint32 n = mDataModel->GetFirstVisibleItemIndex();
 	nsTreeItem* pItem = (nsTreeItem*)mDataModel->GetNthItem(n);
 
@@ -853,6 +864,7 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 			pItem->GetTextForColumn(pColumn, nodeText);
 
 			int textStart = currentPosition + 2;
+			int iconStart = currentPosition + 2;
 			if (n == 0)
 			{
 				// This is the image column.
@@ -863,7 +875,7 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 				int triggerStart = 4;
 
 				int triggerWidth = (pTriggerImage && showTrigger ? pTriggerImage->GetWidth() : 0);
-				int iconStart = triggerStart + triggerWidth + 
+				iconStart = triggerStart + triggerWidth + 
 								cIconMargin + pixelIndent;
 				if (!leftJustifyTrigger)
 				{	
@@ -911,6 +923,24 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 				// TODO: Handle Rollover BACKGROUND color. Could be applied to text, to cell, or to line.
 			}
 			else drawCtx->SetColor(styleInfo.foregroundColor);
+			
+			if (pItem->IsSelected()) // Supercedes rollover color.
+			{
+				PRInt32 columnIndex = mDataModel->GetSelectedColumnIndex();
+				if (columnIndex != -1 && (PRUint32(columnIndex) == n))
+				{
+					drawCtx->SetColor(styleInfo.selectionBGColor);
+					drawCtx->FillRect(nsRect(resultRect.x, resultRect.y+2, resultRect.width, resultRect.height-5));
+					drawCtx->SetColor(styleInfo.selectionFGColor);
+				}
+			}
+			
+			// Set the content rectangle for hit testing
+			nsRect contentRect(resultRect);
+			int growth = textStart - iconStart;
+			contentRect.width += growth;
+			contentRect.x -= growth;
+			pItem->SetContentRectangle(contentRect, n);
 
 			// Now draw the column data for real.
 			DrawCroppedString(drawCtx, nodeText, textRect);

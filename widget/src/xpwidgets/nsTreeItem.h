@@ -52,6 +52,8 @@ public:
 	virtual void SetTreeItemRectangle(const nsRect& rect) = 0;
 	virtual void GetTriggerRectangle(nsRect& rect) const = 0;
 	virtual void SetTriggerRectangle(const nsRect& rect) = 0;
+	virtual void GetContentRectangle(nsRect& rect, PRUint32 n) const = 0;
+	virtual void SetContentRectangle(const nsRect& rect, PRUint32 n) = 0;
 };
 
 #endif /* nsTreeItem_h___ */

@@ -31,11 +31,21 @@ public:
 
 	virtual PRBool IsExpandedDelegate() const;
 	virtual void ToggleOpenStateDelegate();
+	virtual PRUint32 GetChildCountDelegate() const;
+
+	virtual PRBool IsSelectedDelegate() const;
 
 	virtual PRUint32 GetIndentationLevelDelegate() const;
 	virtual void SetIndentationLevelDelegate(PRUint32 n);
 
 	nsIContent* GetContentNode() const { return mContentNode; };
+
+	virtual void FinishToggle(); // Completes the toggle initiated by ToggleOpenState()
+	virtual void FinishSelectionChange(); // Completes a selection change for this item.
+
+protected:	
+	virtual nsHierarchicalDataItem* GetDataItem() { return nsnull; };
+	virtual nsIContent* GetNthChildContentNode(PRUint32 n) const;
 
 protected:
 	nsHierarchicalDataModel* mDataModel;

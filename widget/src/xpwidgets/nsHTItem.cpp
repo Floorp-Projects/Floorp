@@ -18,8 +18,11 @@
 
 #include "nspr.h"
 #include "nsString.h"
+#include "nsHierarchicalDataItem.h"
+#include "nsHTDataModel.h"
 #include "nsHTItem.h"
 #include "nsIContent.h"
+#include "nsVoidArray.h"
 
 nsHTItem::nsHTItem(nsIContent* pContent, nsHierarchicalDataModel* pDataModel)
 {
@@ -53,7 +56,90 @@ void nsHTItem::ToggleOpenStateDelegate()
 	else attrValue = "true";
 
 	// Set it and wait for the callback.
-	mContentNode->SetAttribute("open", attrValue, PR_TRUE); 
+	mContentNode->SetAttribute("open", attrValue, PR_TRUE);
+
+	// TODO: Remove this and put it in the callback instead.
+	FinishToggle();
+}
+
+void nsHTItem::FinishToggle()
+{
+	nsHTDataModel* pDataModel = NS_STATIC_CAST(nsHTDataModel*, mDataModel->GetImplData());
+	nsVoidArray* pArray = pDataModel->GetVisibilityArray();
+
+	nsHierarchicalDataItem* self = GetDataItem();
+	PRInt32 index = pArray->IndexOf((void*)self) + 1;
+	
+	PRUint32 childCount = self->GetChildCount(); 
+
+	if (IsExpandedDelegate())
+	{
+		// We just opened the node. Add the children to our visibility array.
+		for (PRUint32 i = 0; i < childCount; i++)
+		{
+			nsIContent* child = GetNthChildContentNode(i);
+			nsHierarchicalDataItem* pDataItem = pDataModel->CreateDataItemWithContentNode(child);
+			pDataItem->SetIndentationLevel(mIndentationLevel + 1);
+			pArray->InsertElementAt((void*)pDataItem, index);
+			index++;
+
+			NS_IF_RELEASE(child);
+		}
+	}
+	else
+	{
+		// We just closed the node. Remove the children from our visibility array.
+		for (PRUint32 i = 0; i < childCount; i++)
+		{
+			nsHierarchicalDataItem* pItem = (nsHierarchicalDataItem*)((*pArray)[index]);
+			pArray->RemoveElementAt(index);
+			delete pItem;
+		}
+	}
+}
+
+PRUint32 nsHTItem::GetChildCountDelegate() const
+{
+	PRInt32 childCount;
+	mContentNode->ChildCount(childCount);
+
+	return childCount;
+}
+
+nsIContent* nsHTItem::GetNthChildContentNode(PRUint32 n) const
+{
+	nsIContent* childNode;
+	mContentNode->ChildAt(n, childNode);
+	
+	return childNode;
+}
+
+PRBool nsHTItem::IsSelectedDelegate() const
+{
+	nsString attrValue;
+	nsresult result = mContentNode->GetAttribute("selected", attrValue);
+    attrValue.ToLowerCase();
+	return (result == NS_CONTENT_ATTR_NO_VALUE ||
+	        (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));	
+}
+
+void nsHTItem::FinishSelectionChange()
+{
+	nsHTDataModel* pDataModel = NS_STATIC_CAST(nsHTDataModel*, mDataModel->GetImplData());
+	nsVoidArray* pArray = pDataModel->GetSelectionArray();
+
+	nsHierarchicalDataItem* self = GetDataItem();
+	PRInt32 index = pArray->IndexOf((void*)self);
+	
+	if (IsSelectedDelegate() && index == -1)
+	{
+		// The item is not in the array and needs to be added.
+		pArray->AppendElement(self);
+	}
+	else if (!IsSelectedDelegate() && index != -1)
+	{
+		pArray->RemoveElementAt(index);
+	}
 }
 
 PRUint32 nsHTItem::GetIndentationLevelDelegate() const

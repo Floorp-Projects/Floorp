@@ -123,6 +123,10 @@ public:
 	virtual void GetControlStripStyle(nsIDeviceContext* pContext, 
 									  nsBasicStyleInfo& styleInfo) const = 0;
 
+	// Selection
+	virtual PRInt32 GetSelectedColumnIndex() const = 0;
+	virtual void SetSelectedColumnIndex(PRInt32 n) = 0;
+
 	// Text for the title bar
 	virtual void GetTitleBarText(nsString& text) const = 0;
 };

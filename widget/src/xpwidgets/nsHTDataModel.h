@@ -56,6 +56,17 @@ public:
 
 	virtual void SetDataModelListenerDelegate(nsDataModelWidget* pListener);
 
+	// Selection APIs
+	virtual void SetSelectionDelegate(nsHierarchicalDataItem* pDataItem);
+		// Sets the selection to be only the node passed in. All other nodes are deselected
+		// prior to the selection of the new node.
+	virtual void ToggleSelectionDelegate(nsHierarchicalDataItem* pDataItem);
+		// Toggles the selection on the item specified without affecting other selected nodes.
+	virtual void RangedSelectionDelegate(PRUint32 n, PRUint32 count);
+		// Selects the number of items specified by count, starting from position n.
+	virtual void ClearSelectionDelegate();
+		// Deselects all items.
+
 public:
 	virtual nsHierarchicalDataItem* CreateDataItemWithContentNode(nsIContent* pContent) = 0;
 
@@ -64,6 +75,10 @@ public:
 
 	void ImageLoaded(nsHierarchicalDataItem* pItem);
 	nsIImageGroup* GetImageGroup() const { NS_ADDREF(mImageGroup); return mImageGroup; }
+
+public:
+	nsVoidArray* GetVisibilityArray() { return &mVisibleItemArray; };
+	nsVoidArray* GetSelectionArray() { return &mSelectedItemArray; };
 
 protected:
 	void AddNodesToArray(nsIContent* pContent, PRUint32 indentLevel); 
@@ -81,7 +96,8 @@ protected:
 	nsIContent* mContentRoot;
 	
 	nsHierarchicalDataItem* mRootNode;
-	nsVoidArray mVisibleItemArray;
+	nsVoidArray mVisibleItemArray;  // A flat view of the hierarchy, i.e., a list of all currently exposed items.
+	nsVoidArray mSelectedItemArray;  // A list of all nodes in the hierarchy that are currently selected.
 };
 
 #endif /* nsToolbar_h___ */

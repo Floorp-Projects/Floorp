@@ -40,16 +40,19 @@ NS_IMPL_RELEASE(nsHTTreeDataModel)
 nsHTTreeDataModel::nsHTTreeDataModel() : nsTreeDataModel(), nsHTDataModel()
 {
 	NS_INIT_REFCNT();
+	SetImplData((void*)(nsHTDataModel*)this);
 
 	// Image Request Inits
 	mTitleBGRequest = nsnull;
 	mControlStripBGRequest = nsnull;
 	mColumnHeaderBGRequest = nsnull;
 
+	mSelectedColumnIndex = -1;
+
 	// Hard-coded values.
 	mVisibleColumnCount = 3;
 
-  mSingleControlStripItem = new nsHTControlStripItem();
+    mSingleControlStripItem = new nsHTControlStripItem();
 }
 
 //--------------------------------------------------------------------
