@@ -5356,11 +5356,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   if (aTag !=  nsHTMLAtoms::input &&
       aTag !=  nsHTMLAtoms::textarea &&
       aTag !=  nsHTMLAtoms::combobox &&
-      aTag !=  nsXULAtoms::slider &&
       aTag !=  nsXULAtoms::splitter &&
-      aTag !=  nsXULAtoms::scrollbar &&
-      aTag !=  nsXULAtoms::menu &&
-      aTag !=  nsXULAtoms::menuitem
+      aTag !=  nsXULAtoms::scrollbar
      ) {
      return NS_OK;
 
@@ -8447,35 +8444,39 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
   // If we have a null parent, then this must be the document element
   // being inserted
   if (nsnull == aContainer) {
-    NS_PRECONDITION(nsnull == mInitialContainingBlock, "initial containing block already created");
-    nsIContent* docElement = mDocument->GetRootContent();
+    nsCOMPtr<nsIContent> docElement( dont_AddRef( mDocument->GetRootContent() ) );
 
-    // Get the style context of the containing block frame
-    nsCOMPtr<nsIStyleContext> containerStyle;
-    mDocElementContainingBlock->GetStyleContext(getter_AddRefs(containerStyle));
+    if (aChild == docElement.get()) {
+      NS_PRECONDITION(nsnull == mInitialContainingBlock, "initial containing block already created");
+
+      // Get the style context of the containing block frame
+      nsCOMPtr<nsIStyleContext> containerStyle;
+      mDocElementContainingBlock->GetStyleContext(getter_AddRefs(containerStyle));
     
-    // Create frames for the document element and its child elements
-    nsIFrame*               docElementFrame;
-    nsFrameConstructorState state(aPresContext, mFixedContainingBlock, nsnull, nsnull, aFrameState);
-    ConstructDocElementFrame(shell, aPresContext, 
-                             state,
-                             docElement, 
-                             mDocElementContainingBlock,
-                             containerStyle, 
-                             docElementFrame);
-    NS_IF_RELEASE(docElement);
+      // Create frames for the document element and its child elements
+      nsIFrame*               docElementFrame;
+      nsFrameConstructorState state(aPresContext, mFixedContainingBlock, nsnull, nsnull, aFrameState);
+      ConstructDocElementFrame(shell, aPresContext, 
+                               state,
+                               docElement, 
+                               mDocElementContainingBlock,
+                               containerStyle, 
+                               docElementFrame);
     
-    // Set the initial child list for the parent
-    mDocElementContainingBlock->SetInitialChildList(aPresContext, 
-                                                    nsnull, 
-                                                    docElementFrame);
+      // Set the initial child list for the parent
+      mDocElementContainingBlock->SetInitialChildList(aPresContext, 
+                                                      nsnull, 
+                                                      docElementFrame);
     
-    // Tell the fixed containing block about its 'fixed' frames
-    if (state.mFixedItems.childList) {
-      mFixedContainingBlock->SetInitialChildList(aPresContext, 
-                                                 nsLayoutAtoms::fixedList,
-                                                 state.mFixedItems.childList);
+      // Tell the fixed containing block about its 'fixed' frames
+      if (state.mFixedItems.childList) {
+        mFixedContainingBlock->SetInitialChildList(aPresContext, 
+                                                   nsLayoutAtoms::fixedList,
+                                                   state.mFixedItems.childList);
+      }
     }
+    // otherwise this is not a child of the root element, and we
+    // won't let it have a frame.
 
   } else {
     // Find the frame that precedes the insertion point.
