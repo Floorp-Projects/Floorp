@@ -587,14 +587,14 @@ nsComputedDOMStyle::GetDisplay(nsIFrame *aFrame,
 {
   nsISupports *tmp = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
 
-  nsRect rect;
-  GetAbsoluteFrameRect(aFrame, rect);
-
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue(tmp, mT2P);
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleDisplay* display;
-  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+  const nsStyleDisplay* display = nsnull;
+
+  if (aFrame)
+    aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
   if (display) {
     switch (display->mDisplay) {
@@ -1184,6 +1184,10 @@ nsComputedDOMStyle::GetAbsoluteFrameRect(nsIFrame *aFrame, nsRect& aRect)
   aRect.x = aRect.y = 0;
   aRect.Empty();
  
+  if (!aFrame) {
+    return NS_OK;
+  }
+
   // Flush all pending notifications so that our frames are uptodate
   mPresShell->FlushPendingNotifications();
 
