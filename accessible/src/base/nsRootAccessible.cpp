@@ -100,12 +100,12 @@ nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull
 {
   mListener = nsnull;
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  NS_ASSERTION(shell,"Shell is gone!!! What are we doing here?");
+  if (shell) {
+    shell->GetDocument(getter_AddRefs(mDocument));
+    mDOMNode = do_QueryInterface(mDocument);
 
-  shell->GetDocument(getter_AddRefs(mDocument));
-  mDOMNode = do_QueryInterface(mDocument);
-
-  nsLayoutAtoms::AddRefAtoms();
+    nsLayoutAtoms::AddRefAtoms();
+  }
 }
 
 //-----------------------------------------------------
@@ -127,8 +127,6 @@ NS_IMETHODIMP nsRootAccessible::GetAccName(nsAWritableString& aAccName)
 nsIFrame* nsRootAccessible::GetFrame()
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  if (!shell)
-    return nsnull;
 
   nsIFrame* root = nsnull;
   if (shell) 
@@ -267,8 +265,6 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
   }
 
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
-  NS_ASSERTION(shell,"Shell is gone!!! What are we doing here?");
-
   if (presShell) {
     nsCOMPtr<nsIPresContext> context; 
     presShell->GetPresContext(getter_AddRefs(context));
@@ -485,8 +481,8 @@ nsDocAccessibleMixin::nsDocAccessibleMixin(nsIDocument *aDoc):mDocument(aDoc)
 nsDocAccessibleMixin::nsDocAccessibleMixin(nsIWeakReference *aPresShell)
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aPresShell));
-  NS_ASSERTION(shell,"Shell is gone!!! What are we doing here?");
-  shell->GetDocument(getter_AddRefs(mDocument));
+  if (shell)
+    shell->GetDocument(getter_AddRefs(mDocument));
 }
 
 nsDocAccessibleMixin::~nsDocAccessibleMixin()
