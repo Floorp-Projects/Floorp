@@ -37,7 +37,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nscore.h"
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsISmtpService.h"
@@ -80,7 +80,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID); 
 static NS_DEFINE_IID(kIMsgCompFieldsIID, NS_IMSGCOMPFIELDS_IID); 
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
@@ -387,13 +386,6 @@ int main(int argc, char *argv[])
     exit(rv);
   }
 
-
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv) || !mailSession) 
-  {
-    printf("Failure on Mail Session Init!\n");
-    return rv;
-  }  
 
   printf("Creating temp mail file...\n");
   mailFile = nsMsgCreateTempFileSpec("mailTest.eml");

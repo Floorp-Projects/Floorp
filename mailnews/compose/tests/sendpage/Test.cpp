@@ -31,7 +31,7 @@
 #include "nsMsgCompCID.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
 #include "nsIFileLocator.h"
 #include "nsIMsgSendListener.h"
@@ -68,7 +68,6 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -357,13 +356,6 @@ main(int argc, char *argv[])
     exit(rv);
   }
 
-
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv) || !mailSession) 
-  {
-    printf("Failure on Mail Session Init!\n");
-    return rv;
-  }  
 
   rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, nsCOMTypeInfo<nsIMsgSend>::GetIID(), (void **) &pMsgSend); 
   if (NS_SUCCEEDED(rv) && pMsgSend) 
