@@ -303,7 +303,7 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
 	PRInt32 startSlashPos = oldPath.FindChar('/');
 	PRInt32 endSlashPos = (startSlashPos >= 0) 
 		? oldPath.FindChar('/', startSlashPos + 1) - 1 : oldPath.Length() - 1;
-	if (endSlashPos == -1)
+	if (endSlashPos < 0)
 		endSlashPos = oldPath.Length();
     // trick to make sure we only add the path to the first n-1 folders
     PRBool haveFirst=PR_FALSE;
@@ -327,10 +327,10 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
 
 	  endSlashPos = (startSlashPos >= 0) 
 			? oldPath.FindChar('/', startSlashPos + 1)  - 1: oldPath.Length() - 1;
-	  if (endSlashPos == -1)
+	  if (endSlashPos < 0)
 			endSlashPos = oldPath.Length();
 
-      if (startSlashPos == endSlashPos)
+      if (startSlashPos >= endSlashPos)
 		  break;
     }
 
