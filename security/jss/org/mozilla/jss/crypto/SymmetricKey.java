@@ -65,4 +65,29 @@ public interface SymmetricKey  {
             return name;
         }
     }
+
+    /**
+     * In PKCS #11, each key can be marked with the operations it will
+     * be used to perform. Some tokens require that a key be marked for
+     * an operation before the key can be used to perform that operation;
+     * other tokens don't care.
+     *
+     * <p>When you unwrap a symmetric key, you must specify which one of these
+     * operations it will be used to perform.
+     */
+    public final static class Usage {
+        private Usage() { }
+        private Usage(int val) { this.val = val;}
+        private int val;
+
+        public int getVal() { return val; }
+
+        // these enums must match the JSS_symkeyUsage list in Algorithm.c
+        public static final Usage ENCRYPT = new Usage(0);
+        public static final Usage DECRYPT = new Usage(1);
+        public static final Usage WRAP = new Usage(2);
+        public static final Usage UNWRAP = new Usage(3);
+        public static final Usage SIGN = new Usage(4);
+        public static final Usage VERIFY = new Usage(5);
+    }
 }
