@@ -292,7 +292,7 @@ NS_IMETHODIMP
     return rv;
 
   rv = parser->ParseFromString(nsString(*kEmptySOAPDocStr[aVersion]).get(),
-                               "text/xml", getter_AddRefs(mMessage));
+                               NS_LITERAL_CSTRING("text/xml"), getter_AddRefs(mMessage));
   if (NS_FAILED(rv))
     return rv;
 
