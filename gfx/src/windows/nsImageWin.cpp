@@ -162,11 +162,14 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
     if (NULL != srcdc)
     {
-      SelectObject(srcdc, mHBitmap);
+      HBITMAP oldbits = ::SelectObject(srcdc, mHBitmap);
  
       if (!::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
                         aSWidth, aSHeight, SRCCOPY))
         error = ::GetLastError();
+
+      if (nsnull != oldbits)
+        ::SelectObject(srcdc, oldbits);
     }
 
     NS_RELEASE(dx);
@@ -203,13 +206,16 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
     if (NULL != srcdc)
     {
-      SelectObject(srcdc, mHBitmap);
+      HBITMAP oldbits = ::SelectObject(srcdc, mHBitmap);
       //if((aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight))
       //BitBlt(the_hdc,aX,aY,aWidth,aHeight,mOptimizeDC,0,0,SRCCOPY);
     
       if (!::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
                         mBHead->biWidth, mBHead->biHeight, SRCCOPY))
         error = ::GetLastError();
+
+      if (nsnull != oldbits)
+        ::SelectObject(srcdc, oldbits);
     }
 
     NS_RELEASE(dx);
