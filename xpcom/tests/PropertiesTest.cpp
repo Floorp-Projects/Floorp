@@ -31,15 +31,31 @@
 
 #define TEST_URL "resource:/res/test.properties"
 
+#ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define RAPTORBASE_DLL "raptorbase.dll"
 #define XPCOM_DLL "xpcom32.dll"
-
+#else
+#ifdef XP_MAC
+#define NETLIB_DLL "NETLIB_DLL"
+#define RAPTORBASE_DLL "base.shlb"
+#define XPCOM_DLL "XPCOM_DLL"
+#else
+#define NETLIB_DLL "libnetlib.so"
+#define RAPTORBASE_DLL "libraptorbase.so"
+#define XPCOM_DLL "libxpcom32.so"
+#endif
+#endif
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kIPropertiesIID, NS_IPROPERTIES_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+
+
+#ifdef XP_MAC  // have not build this on PC and UNIX yet so make it #ifdef XP_MAC
+extern "C" void NS_SetupRegistry();
+#endif
 
 int
 main(int argc, char *argv[])
@@ -48,6 +64,10 @@ main(int argc, char *argv[])
     PR_FALSE);
   nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL,
     PR_FALSE, PR_FALSE);
+#ifdef XP_MAC    // have not build this on PC and UNIX yet so make it #ifdef XP_MAC
+  NS_SetupRegistry(); 
+#endif
+  
   nsresult ret;
   nsIEventQueueService* pEventQueueService = nsnull;
   ret = nsServiceManager::GetService(kEventQueueServiceCID,
