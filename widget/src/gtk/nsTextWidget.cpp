@@ -64,8 +64,8 @@ NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
 
   gtk_widget_set_name(mWidget, "nsTextWidget");
   gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "key_press_event",
-                     GTK_SIGNAL_FUNC(handle_key_press_event),
+                     "key_release_event",
+                     GTK_SIGNAL_FUNC(handle_key_release_event),
                      this);
   SetPassword(mIsPassword);
   SetReadOnly(mIsReadOnly, oldIsReadOnly);
