@@ -373,6 +373,10 @@ nsToolboxFrame::ReflowGrippies(nsIPresContext&          aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
 {
+  // get the rect we can place the grippies in. This is inside our borders and debug rect.
+  nsRect innerRect(0,0,0,0);
+  GetInnerRect(innerRect);
+
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
@@ -396,10 +400,10 @@ nsToolboxFrame::ReflowGrippies(nsIPresContext&          aPresContext,
     childFrame->GetRect(grippyRect);
 
     if ( isHorz ) {
-      grippyRect.y = 0;
+      grippyRect.y = innerRect.y;
       grippyRect.height = grippyWidth;
     } else {
-      grippyRect.x = 0;
+      grippyRect.x = innerRect.x;
       grippyRect.width = grippyWidth;
     }
 

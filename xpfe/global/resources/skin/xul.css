@@ -92,8 +92,9 @@ spring {
 
 toolbox { 
       background-color:darkgray;
-		display: block;
+      display: block;
 }
+
 
 :toolbox-normal {
 	background-color: #666699;
@@ -815,22 +816,53 @@ tabcontrol {
 
 /* all the debug stuff is here */
 
-box[debug] box {
-  border: 1px solid blue;
+
+/* always debug 
+
+*:-moz-horizontal-box-debug {
+  border: 2px solid blue;
+  border-top-width: 10px;
+  padding: 1px;
+  color: white;
 }
 
-box[debug][align="vertical"] {
-   border: 1px solid red;
+*:-moz-vertical-box-debug {
+  border: 2px solid red;
+  border-left-width: 10px;
+  padding: 1px;
+  color: white;
+}
+*/
+
+
+/* Conditional debug */
+
+*[debug="true"]:-moz-horizontal-box-debug {
+  border: 2px solid blue;
+  border-top-width: 10px;
+  color: white;
 }
 
-box[debug][align="horizontal"] {
-   border: 1px solid blue;
+*[debug="true"]:-moz-vertical-box-debug {
+  border: 2px solid blue;
+  border-top-width: 10px;
+  color: white;
 }
 
-box[debug] box[align="vertical"] {
-   border: 1px solid red;
+*[debug="true"] *:-moz-horizontal-box-debug {
+  border: 2px solid red;
+  border-left-width: 10px;
+  color: white;
 }
 
+*[debug="true"] *:-moz-vertical-box-debug {
+  border: 2px solid red;
+  border-left-width: 10px;
+  color: white;
+}
+
+
+/*
 box[debug] spring {
    background-color: green;
 }
@@ -921,6 +953,7 @@ box[debug] progressmeter {
         border: 1px yellow;
         color : #9999CC;         
 }
+*/
 
 thumb {
    background-color: rgb(206, 207, 206);
