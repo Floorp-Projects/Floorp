@@ -29,6 +29,10 @@
 #include "nsLayoutAtoms.h"
 #include "nsPlaceholderFrame.h"
 
+#include "nsIDocument.h"
+#include "nsIHTMLDocument.h"
+#include "nsIContent.h"
+
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
 #undef   REALLY_NOISY_HORIZONTAL_ALIGN
@@ -38,7 +42,7 @@
 #undef   REALLY_NOISY_REFLOW
 #undef  NOISY_PUSHING
 #undef   REALLY_NOISY_PUSHING
-#define DEBUG_ADD_TEXT
+#undef DEBUG_ADD_TEXT
 #undef  NOISY_MAX_ELEMENT_SIZE
 #undef   REALLY_NOISY_MAX_ELEMENT_SIZE
 #undef  NOISY_CAN_PLACE_FRAME
@@ -131,6 +135,7 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   mTextRuns = nsnull;
   mTextRunP = &mTextRuns;
   mNewTextRun = nsnull;
+  mKnowStrictMode = PR_FALSE;
 }
 
 nsLineLayout::nsLineLayout(nsIPresContext& aPresContext)
@@ -170,6 +175,37 @@ nsLineLayout::~nsLineLayout()
     }
     pfd = nextFrame;
   }
+}
+
+PRBool
+nsLineLayout::InStrictMode()
+{
+  if (!mKnowStrictMode) {
+    mKnowStrictMode = PR_TRUE;
+    mInStrictMode = PR_TRUE;
+
+    // Dig up the compatabilty mode out of the underlying document, if
+    // we can find it.
+    if (mBlockReflowState->frame) {
+      nsCOMPtr<nsIContent> content;
+      mBlockReflowState->frame->GetContent(getter_AddRefs(content));
+      if (content) {
+        nsCOMPtr<nsIDocument> doc;
+        content->GetDocument(*getter_AddRefs(doc));
+        if (doc) {
+          nsCOMPtr<nsIHTMLDocument> hdoc(do_QueryInterface(doc));
+          if (hdoc) {
+            nsDTDMode mode;
+            hdoc->GetDTDMode(mode);
+            if (eDTDMode_NoQuirks != mode) {
+              mInStrictMode = PR_FALSE;
+            }
+          }
+        }
+      }
+    }
+  }
+  return mInStrictMode;
 }
 
 void
@@ -472,7 +508,8 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
 void
 nsLineLayout::EndSpan(nsIFrame* aFrame,
                       nsSize& aSizeResult,
-                      nsSize* aMaxElementSize)
+                      nsSize* aMaxElementSize,
+                      PRBool* aHaveAtLeastOneNonEmptyTextFrame)
 {
   NS_ASSERTION(mSpanDepth > 0, "end-span without begin-span");
 #ifdef NOISY_REFLOW
@@ -485,11 +522,13 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
   nscoord maxHeight = 0;
   nscoord maxElementWidth = 0;
   nscoord maxElementHeight = 0;
+  PRBool haveAtLeastOneNonEmptyTextFrame = PR_FALSE;
   if (nsnull != psd->mLastFrame) {
     width = psd->mX - psd->mLeftEdge;
     PerFrameData* pfd = psd->mFirstFrame;
     while (nsnull != pfd) {
       if (pfd->mBounds.height > maxHeight) maxHeight = pfd->mBounds.height;
+      if (pfd->mIsNonEmptyTextFrame) haveAtLeastOneNonEmptyTextFrame = PR_TRUE;
 
       // Compute max-element-size if necessary
       if (aMaxElementSize) {
@@ -520,6 +559,9 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
       aMaxElementSize->width = maxElementWidth;
       aMaxElementSize->height = maxElementHeight;
     }
+  }
+  if (aHaveAtLeastOneNonEmptyTextFrame) {
+    *aHaveAtLeastOneNonEmptyTextFrame = haveAtLeastOneNonEmptyTextFrame;
   }
 
   mSpanDepth--;
@@ -849,6 +891,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // the floater.
   nsIAtom* frameType;
   aFrame->GetFrameType(&frameType);
+  pfd->mIsNonEmptyTextFrame = 0;
   if (frameType) {
     if (frameType == nsLayoutAtoms::placeholderFrame) {
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
@@ -873,6 +916,12 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
             NS_RELEASE(oofft);
           }
         }
+      }
+    }
+    else if (frameType == nsLayoutAtoms::textFrame) {
+      // Note non-empty text-frames for inline frame compatability hackery
+      if (metrics.width) {
+        pfd->mIsNonEmptyTextFrame = PR_TRUE;
       }
     }
     NS_RELEASE(frameType);
