@@ -74,9 +74,9 @@ class nsHTMLEditUtils;
 // ==================================================================
 NS_IMPL_ISUPPORTS1(DocumentResizeEventListener, nsIDOMEventListener)
 
-DocumentResizeEventListener::DocumentResizeEventListener(nsIHTMLEditor * aEditor) :
- mEditor(aEditor)
+DocumentResizeEventListener::DocumentResizeEventListener(nsIHTMLEditor * aEditor) 
 {
+  mEditor = do_GetWeakReference(aEditor);
 }
 
 DocumentResizeEventListener::~DocumentResizeEventListener()
@@ -86,8 +86,10 @@ DocumentResizeEventListener::~DocumentResizeEventListener()
 NS_IMETHODIMP
 DocumentResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 {
-  nsCOMPtr<nsIHTMLObjectResizer> objectResizer = do_QueryInterface(mEditor);
-  return objectResizer->RefreshResizers();
+  nsCOMPtr<nsIHTMLObjectResizer> objectResizer = do_QueryReferent(mEditor);
+  if (objectResizer)
+    return objectResizer->RefreshResizers();
+  return NS_OK;
 }
 
 // ==================================================================
@@ -96,9 +98,9 @@ DocumentResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 
 NS_IMPL_ISUPPORTS1(ResizerSelectionListener, nsISelectionListener)
 
-ResizerSelectionListener::ResizerSelectionListener(nsIHTMLEditor * aEditor) :
- mEditor(aEditor)
+ResizerSelectionListener::ResizerSelectionListener(nsIHTMLEditor * aEditor)
 {
+  mEditor = do_GetWeakReference(aEditor);
 }
 
 ResizerSelectionListener::~ResizerSelectionListener()
@@ -110,10 +112,13 @@ ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection 
 {
   if ((aReason & (nsISelectionListener::MOUSEDOWN_REASON |
                   nsISelectionListener::KEYPRESS_REASON |
-                  nsISelectionListener::SELECTALL_REASON)) && aSelection) {
+                  nsISelectionListener::SELECTALL_REASON)) && aSelection) 
+  {
     // the selection changed and we need to check if we have to
     // hide and/or redisplay resizing handles
-    mEditor->CheckSelectionStateForAnonymousButtons(aSelection);
+    nsCOMPtr<nsIHTMLEditor> editor = do_QueryReferent(mEditor);
+    if (editor)
+      editor->CheckSelectionStateForAnonymousButtons(aSelection);
   }
 
   return NS_OK;
@@ -125,9 +130,9 @@ ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection 
 
 NS_IMPL_ISUPPORTS2(ResizerMouseMotionListener, nsIDOMEventListener, nsIDOMMouseMotionListener)
 
-ResizerMouseMotionListener::ResizerMouseMotionListener(nsIHTMLEditor * aEditor):
- mEditor(aEditor)
+ResizerMouseMotionListener::ResizerMouseMotionListener(nsIHTMLEditor * aEditor)
 {
+  mEditor = do_GetWeakReference(aEditor);
 }
 
 ResizerMouseMotionListener::~ResizerMouseMotionListener() 
@@ -145,7 +150,7 @@ ResizerMouseMotionListener::MouseMove(nsIDOMEvent* aMouseEvent)
   }
 
   // Don't do anything special if not an HTML object resizer editor
-  nsCOMPtr<nsIHTMLObjectResizer> objectResizer = do_QueryInterface(mEditor);
+  nsCOMPtr<nsIHTMLObjectResizer> objectResizer = do_QueryReferent(mEditor);
   if (objectResizer)
   {
     // check if we have to redisplay a resizing shadow
