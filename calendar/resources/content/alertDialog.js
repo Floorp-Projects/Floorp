@@ -35,87 +35,274 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-var gCalendarEvent = null;
+var gAllEvents = new Array();
+var CreateAlarmBox = true;
+var gDateFormatter = new DateFormater();  // used to format dates and times
+var kungFooDeathGripOnEventBoxes = new Array();
 
 function onLoad()
 {
-   gCalendarEvent = window.arguments[0];
+   var args = window.arguments[0];
    
-   createAlarmText( gCalendarEvent );
+   if( args.calendarEvent )
+   {
+      onAlarmCall( args.calendarEvent );
+   }
    
-   doSetOKCancel( onOkButton, 0 );
+   if( "pendingEvents" in window )
+   {
+        //dump( "\n GETTING PENDING ___________________" );
+        for( var i in window.pendingEvents )
+        {
+           gAllEvents[ gAllEvents.length ] = window.pendingEvents[i]; 
+
+           //createAlarmBox( window.pendingEvents[ i ] );
+        }
+        buildEventBoxes();
+   }
    
-   window.resizeTo( 455, 150 );
+   setupOkCancelButtons( onOkButton, 0 );
 }
 
-function createAlarmText( )
+function buildEventBoxes()
 {
-   var Text = "You have an event titled "+gCalendarEvent.title;
-   var TextBox = document.getElementById( "event-message-box" );
-   var HtmlInBox = document.createElement( "description" );
-   var TextInBox = document.createTextNode( Text );
-   HtmlInBox.appendChild( TextInBox );
-   TextBox.appendChild( HtmlInBox );
+   //remove all the old event boxes.
+   var EventContainer = document.getElementById( "event-container-rows" );
+   var NumberOfChildElements = EventContainer.childNodes.length;
+   for( i = 0; i < NumberOfChildElements; i++ )   
+   {
+      EventContainer.removeChild( EventContainer.lastChild );
+   }
+   
+   //start at length - 10 or 0 if that is < 0
 
-   var Text = " at "+gCalendarEvent.start;
-   var TextBox = document.getElementById( "event-message-time-box" );
-   var HtmlInBox = document.createElement( "description" );
-   var TextInBox = document.createTextNode( Text );
-   HtmlInBox.appendChild( TextInBox );
-   TextBox.appendChild( HtmlInBox );
+   var Start = gAllEvents.length - 10;
+   if( Start < 0 )
+      Start = 0;
+
+   //build all event boxes again.
+   for( var i = Start; i < gAllEvents.length; i++ )
+   {
+      createAlarmBox( gAllEvents[i] );   
+   }
+   
+   //reset the text
+   if( gAllEvents.length > 10 )
+   {
+      var TooManyDesc = document.getElementById( "too-many-alarms-description" );
+      TooManyDesc.removeAttribute( "collapsed" );         
+      TooManyDesc.setAttribute( "value", "You have "+ (gAllEvents.length )+" total alarms. We've shown you the last 10. Click Acknowledge All to clear them all." );
+   }
+   else
+   {
+      var TooManyDesc = document.getElementById( "too-many-alarms-description" );
+      TooManyDesc.setAttribute( "collapsed", "true" );
+   }
+}
+
+function onAlarmCall( Event )
+{
+   var AddToArray = true;
+   //check and make sure that the event is not already in the array
+   for( i = 0; i < gAllEvents.length; i++ )
+   {
+      if( gAllEvents[i].id == Event.id )
+         AddToArray = false;   
+   }
+   if( AddToArray )
+      gAllEvents[ gAllEvents.length ] = Event;
+
+   buildEventBoxes();
+}
+
+function createAlarmBox( Event )
+{
+   var OuterBox = document.getElementsByAttribute( "name", "sample-row" )[0].cloneNode( true );
+   OuterBox.removeAttribute( "name" );
+   OuterBox.setAttribute( "id", Event.id );
+   OuterBox.setAttribute( "eventbox", "true" );
+   OuterBox.removeAttribute( "collapsed" );
+
+   OuterBox.getElementsByAttribute( "name", "AcknowledgeButton" )[0].event = Event;
+   
+   OuterBox.getElementsByAttribute( "name", "AcknowledgeButton" )[0].setAttribute( "onclick", "acknowledgeAlarm( this.event );removeAlarmBox( this.event );" ); 
+   
+   kungFooDeathGripOnEventBoxes.push( OuterBox.getElementsByAttribute( "name", "AcknowledgeButton" )[0] );
+   
+   OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0].event = Event;
+   
+   OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0].setAttribute( "onclick", "snoozeAlarm( this.event );removeAlarmBox( this.event );" ); 
+   
+   kungFooDeathGripOnEventBoxes.push( OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0] );
+   
+   /*
+   ** The first part of the box, the title and description
+   */
+   var EventTitle = document.createTextNode( Event.title );
+   OuterBox.getElementsByAttribute( "name", "Title" )[0].appendChild( EventTitle );
+   
+   var EventDescription = document.createTextNode( Event.description );
+   OuterBox.getElementsByAttribute( "name", "Description" )[0].appendChild( EventDescription );
+
+   var startDate = new Date( Event.start.getTime() );
+
+   var EventStartDate = document.createTextNode( getFormatedDate( startDate ) );
+   OuterBox.getElementsByAttribute( "name", "StartDate" )[0].appendChild( EventStartDate );
+
+   var EventStartTime = document.createTextNode( getFormatedTime( startDate ) );
+   OuterBox.getElementsByAttribute( "name", "StartTime" )[0].appendChild( EventStartTime );
+
+   /*
+   ** 3rd part of the row: the number of times that alarm went off (sometimes hidden)
+   */
+   OuterBox.getElementsByAttribute( "name", "NumberOfTimes" )[0].setAttribute( "id", "description-"+Event.id );
+   
+   //document.getElementById( "event-container-rows" ).insertBefore( OuterBox, document.getElementById( "event-container-rows" ).childNodes[1] );
+   document.getElementById( "event-container-rows" ).appendChild( OuterBox );
+}
+
+function removeAlarmBox( Event )
+{
+   
+   //get the box for the event
+   var EventAlarmBox = document.getElementById( Event.id );
+   
+   if( EventAlarmBox )
+   {
+      //remove the box from the body
+      EventAlarmBox.parentNode.removeChild( EventAlarmBox );
+   }
+   
+   //if there's no more events left, close the dialog
+   EventAlarmBoxes = document.getElementsByAttribute( "eventbox", "true" );
+      
+   if( EventAlarmBoxes.length > 0 )
+   {
+      //there are still boxes left.
+      return( false );
+   }
+   else
+   {
+      //close the dialog
+      closeDialog();
+      //return( true );
+   }
+}
+
+function getArrayId( Event )
+{
+   for( i = 0; i < gAllEvents.length; i++ )
+   {
+      if( gAllEvents[i].id == Event.id )
+         return( i );
+   }
+   
+   return( false );
+
 }
 
 function onOkButton( )
 {
-   //var RemindCheckbox = document.getElementById( "remind-again-checkbox" );
+   //this would acknowledge all the alarms
+   for( i = 0; i < gAllEvents.length; i++ )
+   {
+      gAllEvents[i].lastAlarmAck = new Date();
 
-   //if ( RemindCheckbox.getAttribute( "checked" ) == "true" ) 
-   //{
-   //   snoozeAlarm();
-   //}
-   //else
-   //{
-      return( acknowledgeAlarm() );
-   //}
+      var calendarEventService = pendialog.getService( "org.penzilla.calendar" );
    
-}
+      gICalLib = calendarEventService.getICalLib();
 
-function acknowledgeAlarm( )
-{
-   gCalendarEvent.alarmWentOff = true;
+      gICalLib.modifyEvent( gAllEvents[i] );
+   }
 
-   gCalendarEvent.snoozeTime = false;
-            
-   //opener.gEventSource.modifyEvent( gCalendarEvent );
-
-   //self.gCalendarEventDataSource.respondAcknowledgeAlarm( gCalendarEvent );
-   
    return( true );
 }
 
-/*  Currently not supported. */
-/*
-function snoozeAlarm( )
+function onCancelButton()
 {
-   gCalendarEvent.alarmWentOff = true;
-
-   var nowMS = new Date().getTime();
-
-   var minutesToSnooze = document.getElementById( "dialog-alarm-minutes" ).getAttribute( "value" );
-   
-   var snoozeTime = nowMS + ( 1000 * minutesToSnooze * 60 );
-   
-   snoozeTime = parseInt( snoozeTime );
-
-   gCalendarEvent.snoozeTime = snoozeTime;
-   
-   gCalendarEvent.setUpAlarmTimer( this );
-
-   //opener.gEventSource.modifyEvent( gCalendarEvent );
-
-   self.gCalendarEventDataSource.respondAcknowledgeAlarm( gCalendarEvent );
-
+   //just close the dialog
    return( true );
+
 }
+
+function acknowledgeAlarm( Event )
+{
+   Event.lastAlarmAck = new Date();
+
+   var calendarEventService = pendialog.getService( "org.penzilla.calendar" );
+   
+   gICalLib = calendarEventService.getICalLib();
+
+   gICalLib.modifyEvent( Event );
+
+   var Id = getArrayId( Event )
+
+   gAllEvents.splice( Id, 1 );
+
+   buildEventBoxes();
+}
+
+function snoozeAlarm( Event )
+{
+   var OuterBox = document.getElementById( Event.id );
+   
+   var SnoozeInteger = OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value;
+
+   SnoozeInteger = parseInt( SnoozeInteger );
+
+   var SnoozeUnits = document.getElementsByAttribute( "name", "alarm-length-units" )[0].value;
+
+   var Now = new Date();
+
+   Now = Now.getTime();
+
+   var TimeToNextAlarm;
+   
+   switch (SnoozeUnits )
+   {
+      case "minutes":
+         TimeToNextAlarm = 1000 * 60 * SnoozeInteger;
+         break;
+
+      case "hours":
+         TimeToNextAlarm = 1000 * 60 * 60 * SnoozeInteger;
+         break;
+
+      case "days":
+         TimeToNextAlarm = 1000 * 60 * 60 * 24 * SnoozeInteger;
+         break;
+   }
+   
+   var MSOfNextAlarm = Now + TimeToNextAlarm; //10 seconds.
+   
+   var DateObjOfNextAlarm = new Date( MSOfNextAlarm );
+   
+   Event.setSnoozeTime( DateObjOfNextAlarm );
+   
+   var calendarEventService = pendialog.getService( "org.penzilla.calendar" );
+   
+   gICalLib = calendarEventService.getICalLib();
+
+   gICalLib.modifyEvent( Event );
+
+   buildEventBoxes();
+}
+
+function getFormatedDate( date )
+{
+   var monthDayString = gDateFormatter.getFormatedDate( date );
+   
+   return  monthDayString + ", " + date.getFullYear();
+}
+
+
+/**
+*   Take a Date object and return a displayable time string i.e.: 12:30 PM
 */
+
+function getFormatedTime( date )
+{
+   var timeString = gDateFormatter.getFormatedTime( date );
+   
+   return timeString;
+}
