@@ -103,6 +103,7 @@ NativeEventThread getNativeEventThread()
 
 public void setBounds(Rectangle newBounds)
 {
+    ParameterCheck.nonNull(newBounds);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
@@ -114,6 +115,8 @@ public void setBounds(Rectangle newBounds)
 
 public void createWindow(int nativeWindow, Rectangle bounds)
 {
+    ParameterCheck.greaterThan(nativeWindow, 0);
+    ParameterCheck.nonNull(bounds);
     myFactory.throwExceptionIfNotInitialized();
 
     synchronized(myBrowserControl) {
@@ -242,7 +245,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.5 2000/07/07 18:49:08 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.6 2000/07/22 02:48:26 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

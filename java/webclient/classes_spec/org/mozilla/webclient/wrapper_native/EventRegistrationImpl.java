@@ -111,6 +111,7 @@ public void delete()
 
 public void addDocumentLoadListener(DocumentLoadListener listener)
 {
+    ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != nativeEventThread);
@@ -123,6 +124,7 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
 
 public void removeDocumentLoadListener(DocumentLoadListener listener)
 {
+    ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
@@ -134,6 +136,7 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
 
 public void addMouseListener(MouseListener listener)
 {
+    ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != nativeEventThread);
@@ -154,6 +157,7 @@ public void addMouseListener(MouseListener listener)
 
 public void removeMouseListener(MouseListener listener)
 {
+    ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
@@ -175,7 +179,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.6 2000/07/22 02:14:57 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.7 2000/07/22 02:48:25 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

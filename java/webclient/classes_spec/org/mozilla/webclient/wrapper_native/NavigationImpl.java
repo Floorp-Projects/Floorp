@@ -75,6 +75,7 @@ public NavigationImpl(WrapperFactory yourFactory,
 
 public void loadURL(String absoluteURL)
 {
+    ParameterCheck.nonNull(absoluteURL);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
@@ -85,6 +86,7 @@ public void loadURL(String absoluteURL)
 
 public void refresh(long loadFlags)
 {
+    ParameterCheck.noLessThan(loadFlags, 0);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
@@ -125,7 +127,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.2 2000/03/09 23:22:52 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.3 2000/07/22 02:48:26 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

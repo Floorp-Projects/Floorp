@@ -180,6 +180,7 @@ public HistoryEntry [] getHistory()
             
 public HistoryEntry getHistoryEntry(int historyIndex)
 {
+    ParameterCheck.noLessThan(historyIndex, 0);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     HistoryEntry result = null;
@@ -207,6 +208,7 @@ public int getCurrentHistoryIndex()
 
 public void setCurrentHistoryIndex(int historyIndex)
 {
+    ParameterCheck.noLessThan(historyIndex, 0);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
@@ -229,6 +231,7 @@ public int getHistoryLength()
 
 public String getURLForIndex(int historyIndex)
 {
+    ParameterCheck.noLessThan(historyIndex, 0);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     String result = null;
@@ -280,7 +283,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("HistoryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.3 2000/05/23 21:06:11 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.4 2000/07/22 02:48:25 edburns%acm.org Exp $");
     
 }
 

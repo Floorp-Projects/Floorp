@@ -100,6 +100,7 @@ public void copyCurrentSelectionToSystemClipboard()
             
 public void findInPage(String stringToFind, boolean forward, boolean matchCase)
 {
+    ParameterCheck.nonNull(stringToFind);
     myFactory.throwExceptionIfNotInitialized();
 
     synchronized(myBrowserControl) {
@@ -260,7 +261,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.7 2000/06/30 00:01:35 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.8 2000/07/22 02:48:25 edburns%acm.org Exp $");
     
 }
 

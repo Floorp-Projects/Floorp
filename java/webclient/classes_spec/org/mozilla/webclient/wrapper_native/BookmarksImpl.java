@@ -110,6 +110,7 @@ public void delete()
 public void addBookmark(BookmarkEntry mayBeNullParent, 
                         BookmarkEntry bookmark)
 {
+    ParameterCheck.nonNull(bookmark);
     myFactory.throwExceptionIfNotInitialized();
     
     if  (!(bookmark instanceof BookmarkEntryImpl)) {
@@ -160,6 +161,7 @@ public TreeModel getBookmarks() throws IllegalStateException
             
 public void removeBookmark(BookmarkEntry bookmark)
 {
+    ParameterCheck.nonNull(bookmark);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
@@ -183,6 +185,7 @@ public BookmarkEntry newBookmarkEntry(String url)
 
 public BookmarkEntry newBookmarkFolder(String name)
 {
+    ParameterCheck.nonNull(name);
     BookmarkEntry result = null;
     getBookmarks();
     int newNode;
@@ -222,7 +225,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("BookmarksImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.4 2000/05/23 21:06:11 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.5 2000/07/22 02:48:25 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

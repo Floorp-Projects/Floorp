@@ -137,6 +137,7 @@ void delete()
 
 static void appInitialize(String verifiedBinDirAbsolutePath) throws Exception 
 {
+    ParameterCheck.nonNull(verifiedBinDirAbsolutePath);
     if (null == wrapperFactory) {
         wrapperFactory = createWrapperFactory();
     }
@@ -283,7 +284,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.2 2000/03/13 18:41:46 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.3 2000/07/22 02:48:23 edburns%acm.org Exp $");
     
 }
 
