@@ -32,6 +32,8 @@ class nsIPSMComponent;
 class nsKeygenFormProcessor : public nsIFormProcessor { 
 public: 
   nsKeygenFormProcessor(); 
+  virtual ~nsKeygenFormProcessor();
+
   NS_IMETHOD ProcessValue(nsIDOMHTMLElement *aElement, 
                           const nsString& aName, 
                           nsString& aValue); 
