@@ -797,6 +797,14 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
 
+  // For now, ignore the following
+  // annotations
+  // include
+  // import
+  // redefine
+  // notation
+  // identity-constraint elements
+
   while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
                                             getter_AddRefs(tagName))) &&
          childElement) {
@@ -847,15 +855,12 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
       if (NS_SUCCEEDED(rv)) {
         rv = schemaInst->AddModelGroup(modelGroup);
       }
-    }
-    // For now, ignore the following
-    // annotations
-    // include
-    // import
-    // redefine
-    // notation
-    // identity-constraint elements
-    if (NS_FAILED(rv)) {
+    } else if (tagName != nsSchemaAtoms::sAnnotation_atom &&
+               tagName != nsSchemaAtoms::sInclude_atom &&
+               tagName != nsSchemaAtoms::sImport_atom &&
+               tagName != nsSchemaAtoms::sRedefine_atom &&
+               tagName != nsSchemaAtoms::sNotation_atom) {
+      // if it is none of these, unexpected element.
       nsAutoString elementName;
       nsresult rc = aElement->GetTagName(elementName);
       NS_ENSURE_SUCCESS(rc, rc);
@@ -865,6 +870,14 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
       errorMsg.Append(elementName);
       errorMsg.AppendLiteral("\" in <schema .../>");
 
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (NS_FAILED(rv)) {
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure processing schema");
       NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
 
       return rv;
