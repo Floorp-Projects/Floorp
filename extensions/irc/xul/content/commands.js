@@ -42,6 +42,7 @@ function addCommands(commandObject)
     add ("client", "onInputClient");
     add ("commands", "onInputCommands");
     add ("ctcp", "onInputCTCP");
+    add ("css", "onInputCSS");
     add ("delete", "onInputDelete");
     add ("deop", "onInputDeop");
     add ("desc", "onInputDesc");
@@ -68,6 +69,7 @@ function addCommands(commandObject)
     add ("notify", "onInputNotify");
     add ("op", "onInputOp");
     add ("part", "onInputLeave");
+    add ("ping", "onInputPing");
     add ("query", "onInputQuery"); 
     add ("quit", "onInputExit");
     add ("quote", "onInputQuote");
@@ -77,8 +79,9 @@ function addCommands(commandObject)
     add ("statusbar", "onInputStatusbar");
     add ("testdisplay", "onInputTestDisplay");
     add ("topic", "onInputTopic");
-    add ("toolbar", "onInputToolbar");
+    add ("tabstrip", "onInputTabstrip");
     add ("unstalk", "onInputUnstalk");
+    add ("version", "onInputVersion");
     add ("voice", "onInputVoice");
     add ("who", "onInputSimpleCommand");
     add ("whois", "onInputWhoIs");
