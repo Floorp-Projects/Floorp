@@ -44,7 +44,7 @@
 #include "nsIDOMEventListener.h"
 
 /*
- * Mouse up/down/move event listener
+ * Document load related event listener
  *
  */
 #define NS_IDOMLOADLISTENER_IID \
