@@ -94,6 +94,7 @@
 #define NS_APP_HISTORY_50_FILE                  "UHist"
 #define NS_APP_USER_PANELS_50_FILE              "UPnls"
 #define NS_APP_USER_MIMETYPES_50_FILE           "UMimTyp"
+#define NS_APP_CACHE_PARENT_DIR                 "cachePDir"
 
 #define NS_APP_BOOKMARKS_50_FILE                "BMarks"
 
