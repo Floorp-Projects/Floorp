@@ -5572,6 +5572,19 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager)
 
     PRBool bAddIt = PR_TRUE;
 
+    // Find the same plugin in our cache and mark it as 'unwanted' so this plugin will
+    // just be added to the list without being detected as new.
+    // Note: Our XPCOM plugin probably shouldn't be in this list. If it is, it has been
+    // cached twice in the registry:
+    //  a) ApplicationComponentRegistry: probably by the installer or regxpcom
+    //  b) ApplicationRegistry: by us in |nsPluginHostImpl::CachePluginsInfo|
+    nsPluginTag *cachedTag = RemoveCachedPluginsInfo(filename.get());
+    if (cachedTag) {
+      cachedTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
+      cachedTag->mNext = mCachedPlugins;
+      mCachedPlugins = cachedTag;
+    }
+
     // skip it if we already have it
     if (HaveSamePlugin(tag))
       bAddIt = PR_FALSE;
