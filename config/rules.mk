@@ -154,14 +154,14 @@ MKSHLIB			= $(MKCSHLIB)
 endif
 endif
 
-SHARED_LIBRARY		:= $(LIBRARY:.$(LIB_SUFFIX)=$(DLL_SUFFIX))
+SHARED_LIBRARY		:= $(DLL_PREFIX)$(LIBRARY_NAME)$(DLL_SUFFIX)
 
 ifeq ($(OS_ARCH),OS2)
 DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 endif
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.$(LIB_SUFFIX))
+IMPORT_LIBRARY		:= $(LIB_PREFIX)$(LIBRARY_NAME).$(IMPORT_LIB_SUFFIX)
 endif
 
 endif # MKSHLIB
@@ -785,7 +785,8 @@ distclean:: $(SUBMAKEFILES)
 	-rm -f $(ALL_TRASH)  \
 	Makefile .HSancillary \
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) $(wildcard host_*.o) \
-	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX))
+	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX)) \
+	$(wildcard *.$(IMPORT_LIB_SUFFIX))
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	-rm -f $(PROGRAM:.exe=.map)
 endif
@@ -1738,6 +1739,7 @@ showbuild:
 	@echo "BIN_SUFFIX         = $(BIN_SUFFIX)"
 	@echo "LIB_SUFFIX         = $(LIB_SUFFIX)"
 	@echo "DLL_SUFFIX         = $(DLL_SUFFIX)"
+	@echo "IMPORT_LIB_SUFFIX  = $(IMPORT_LIB_SUFFIX)"
 	@echo "INSTALL            = $(INSTALL)"
 
 showhost:
