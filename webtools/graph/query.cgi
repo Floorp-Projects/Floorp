@@ -141,6 +141,7 @@ sub show_graph {
   print "<br>\n";
 
   # Other machines
+  print "<font size=\"-1\">";
   print "<li>\n";
   print "<a href=\"query.cgi?tbox=&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\">Other machines running the $TESTNAME test</a>";
   print "</li>\n";
@@ -148,8 +149,7 @@ sub show_graph {
   print "<li>\n";
   print "<a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\">Other tests that $TBOX is running</a>";
   print "</li>\n";
-
-
+  print "</font>";
   
 
   print "</body>\n";
