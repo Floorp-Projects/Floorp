@@ -63,7 +63,9 @@ public:
   NS_IMETHOD GetAccessKey(nsString &aText);
   NS_IMETHOD SetAccessKey(const nsString &aText);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
-
+  NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
+  NS_IMETHOD IsHelpMenu(PRBool* aIsHelp);
+  
   NS_IMETHOD AddItem(nsISupports * aItem);
 
   NS_IMETHOD AddSeparator();

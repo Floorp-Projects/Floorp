@@ -363,6 +363,7 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mOriginalMacMBarHandle = nsnull;
   mMacMBarHandle = nsnull;
   
+  mOriginalMacMBarHandle = ::GetMenuBar();
   Handle tmp = ::GetMenuBar();
   ::SetMenuBar(tmp);
   this->SetNativeData((void*)tmp);
@@ -386,6 +387,9 @@ nsMenuBar::~nsMenuBar()
     nsISupports* menu = (nsISupports*)mMenuVoidArray[mNumMenus];
     NS_IF_RELEASE( menu );
   }
+  ::SetMenuBar(mOriginalMacMBarHandle);
+  ::DisposeHandle(mMacMBarHandle);
+  ::DisposeHandle(mOriginalMacMBarHandle);
 }
 
 //-------------------------------------------------------------------------
@@ -447,7 +451,10 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   aMenu->GetNativeData(&menuHandle);
   
   mNumMenus++;
-  ::InsertMenu(menuHandle, 0);
+  PRBool helpMenu;
+  aMenu->IsHelpMenu(&helpMenu);
+  if(!helpMenu)
+    ::InsertMenu(menuHandle, 0);
   
   return NS_OK;
 }
@@ -503,6 +510,7 @@ NS_METHOD nsMenuBar::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::SetNativeData(void* aData)
 {
+  if(mMacMBarHandle) ::DisposeHandle(mMacMBarHandle);
   mMacMBarHandle = (Handle) aData;
   return NS_OK;
 }

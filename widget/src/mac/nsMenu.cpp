@@ -123,6 +123,7 @@ nsMenu::nsMenu() : nsIMenu()
   mMacMenuID = 0;
   mMacMenuHandle = nsnull;
   mIsHelpMenu    = PR_FALSE;
+  mIsEnabled     = PR_TRUE;
   mListener      = nsnull;
   mConstructed   = nsnull;
   
@@ -869,6 +870,8 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 */
 NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
 {
+  mIsEnabled = aIsEnabled;
+  
   if(aIsEnabled)
     ::EnableItem(mMacMenuHandle, 0);
   else
@@ -877,6 +880,29 @@ NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+/**
+* Get enabled state
+*
+*/
+NS_METHOD nsMenu::GetEnabled(PRBool* aIsEnabled)
+{
+  *aIsEnabled = mIsEnabled;
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+/**
+* Query if this is the help menu
+*
+*/
+NS_METHOD nsMenu::IsHelpMenu(PRBool* aIsHelpMenu)
+{
+  *aIsHelpMenu = mIsHelpMenu;
+
+  return NS_OK;
+}
 
 //-------------------------------------------------------------------------
 /**
@@ -1113,11 +1139,13 @@ void nsMenu::LoadMenuItem(
   static const char* NS_STRING_TRUE = "true";
   nsString disabled;
   nsString checked;
+  nsString type;
   nsString menuitemName;
   nsString menuitemCmd;
 
   menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
   menuitemElement->GetAttribute(nsAutoString("checked"), checked);
+  menuitemElement->GetAttribute(nsAutoString("type"), type);
   menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
@@ -1219,6 +1247,11 @@ void nsMenu::LoadMenuItem(
       pnsMenuItem->SetChecked(PR_TRUE);
     else
       pnsMenuItem->SetChecked(PR_FALSE);
+      
+    if(type == "checkbox")
+      pnsMenuItem->SetCheckboxType(PR_TRUE);
+    else
+      pnsMenuItem->SetCheckboxType(PR_FALSE);
       
 	nsISupports * supports = nsnull;
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);

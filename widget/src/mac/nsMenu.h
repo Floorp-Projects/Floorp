@@ -84,6 +84,8 @@ public:
   NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
+  NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
+  NS_IMETHOD IsHelpMenu(PRBool* aIsEnabled);
   
   // 
   NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
@@ -166,6 +168,7 @@ protected:
   nsIMenuListener *    mListener;
   UnicodeToTextRunInfo mUnicodeTextRunConverter;
   PRBool               mIsHelpMenu;
+  PRBool               mIsEnabled;
 
 void LoadMenuItem(
   nsIMenu *    pParentMenu,

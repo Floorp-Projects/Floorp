@@ -87,6 +87,18 @@ class nsIMenu : public nsISupports {
 	NS_IMETHOD SetEnabled(PRBool aIsEnabled) = 0;
 
 	/**
+    * Get the Menu enabled state
+    *
+    */
+	NS_IMETHOD GetEnabled(PRBool* aIsEnabled) = 0;
+	
+	/**
+    * Query if this is the help menu. Mostly for MacOS voodoo.
+    *
+    */
+	NS_IMETHOD IsHelpMenu(PRBool* aIsHelpMenu) = 0;
+	
+	/**
     * Adds a Menu Item
     *
     */

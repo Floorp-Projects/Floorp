@@ -208,6 +208,26 @@ NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
 }
 
 //-------------------------------------------------------------------------
+/**
+* Get enabled state
+*
+*/
+NS_METHOD nsMenu::GetEnabled(PRBool* aIsEnabled)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+/**
+* Query if this is the help menu
+*
+*/
+NS_METHOD nsMenu::IsHelpMenu(PRBool* aIsHelpMenu)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddItem(nsISupports * aItem)
 
 {
