@@ -125,7 +125,6 @@ DOMNodeViewer.prototype =
       if (aObject != this.mDOMView.rootNode) {
         this.mDOMView.rootNode = aObject;
         this.mAttrTree.treeBoxObject.selection.select(-1);
-        this.mAttrTree.treeBoxObject.invalidate();
       }
     } else {
       deck.setAttribute("selectedIndex", 1);
