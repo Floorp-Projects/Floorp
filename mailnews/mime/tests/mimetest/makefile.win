@@ -29,6 +29,8 @@ PROGRAM=        .\$(OBJDIR)\$(EXENAME).exe
 
 OBJS=           .\$(OBJDIR)\mimetest.obj
 
+LINCS=-I..\..\src
+
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\uconv.lib           \
