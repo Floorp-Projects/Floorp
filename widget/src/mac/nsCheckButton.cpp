@@ -17,7 +17,9 @@
  */
 
 #include "nsCheckButton.h"
-
+#if TARGET_CARBON
+#include <ControlDefinitions.h>
+#endif
 
 NS_IMPL_ADDREF(nsCheckButton);
 NS_IMPL_RELEASE(nsCheckButton);
