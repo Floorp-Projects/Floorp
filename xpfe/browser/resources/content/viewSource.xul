@@ -4,7 +4,13 @@
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://navigator/locale/viewSource.dtd" >
+<!DOCTYPE window [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  %brandDTD;
+  <!ENTITY % viewSourceDTD SYSTEM "chrome://navigator/locale/viewSource.dtd" >
+  %viewSourceDTD;
+]>            
+
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	onload="onLoadViewSource();"
