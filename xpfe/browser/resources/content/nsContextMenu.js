@@ -269,14 +269,6 @@ nsContextMenu.prototype = {
     openFrame : function () {
         openNewWindowWith( this.target.ownerDocument.location.href );
     },
-    // Open new "view source" window with the frame's URL.
-    viewFrameSource : function () {
-        window.openDialog( "chrome://navigator/content/",
-                           "_blank",
-                           "chrome,menubar,status,dialog=no", 
-                           this.target.ownerDocument.location.href,
-                           "view-source" );
-    },
     viewInfo : function () {
         dump( "nsContextMenu.viewInfo not implemented yet\n" );
     },
