@@ -1,0 +1,18 @@
+var err = initInstall("$ProductName$ Help", "help", "$Version$"); 
+logComment("initInstall: " + err);
+
+addFile("$ProductName$ Help",
+        "bin/chrome/help.jar", // jar source folder 
+        getFolder("Chrome"),        // target folder
+        "");                        // target subdir 
+
+var jarFolder = getFolder("Chrome", "help.jar");
+registerChrome(PACKAGE | DELAYED_CHROME, jarFolder, "content/help/");
+registerChrome(SKIN    | DELAYED_CHROME, jarFolder, "skin/help/");
+registerChrome(LOCALE  | DELAYED_CHROME, jarFolder, "locale/en-US/help/");
+
+err = getLastError();
+if (err==SUCCESS)
+    performInstall(); 
+else
+    cancelInstall(err);
