@@ -20,7 +20,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
 #include "nsIServiceManager.h"
-#include "nsRDFBaseCID.h"
+#include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "prio.h"

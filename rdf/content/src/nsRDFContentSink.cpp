@@ -50,7 +50,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
-#include "nsRDFBaseCID.h"
+#include "nsRDFCID.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsRDFContentSink.h"
