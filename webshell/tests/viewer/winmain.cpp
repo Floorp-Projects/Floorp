@@ -317,15 +317,20 @@ RunViewer(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow, ns
  
   // Process messages
   MSG msg;
-  while (GetMessage(&msg, NULL, 0, 0)) {
-    if (!JSConsole::sAccelTable ||
+  BOOL bContinue = TRUE;
+
+  while (bContinue) {
+    if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+      if (!JSConsole::sAccelTable ||
         !gConsole ||
         !gConsole->GetMainWindow() ||
         !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        NET_PollSockets();
+      }
+      bContinue = (msg.message != WM_QUIT);
     }
+    NET_PollSockets();
   }
 
   aViewer->CleanupViewer(dl);
