@@ -11,6 +11,8 @@ use Time::localtime;
 use Cwd;
 use File::Copy;
 use File::Path;
+use Fcntl qw(:DEFAULT :flock);
+use IO::File;
 
 my $objdir = getcwd;
 
@@ -44,10 +46,12 @@ if ($verbose) {
         . "\n";
 }
 
-sub zipErrorCheck($)
+sub zipErrorCheck($$$)
 {
-    my ($err) = @_;
+    my ($err,$lockfile,$lockhandle) = @_;
     return if ($err == 0 || $err == 12);
+    unlink($lockfile);
+    flock($lockhandle, LOCK_UN);
     die ("Error invoking zip: $err");
 }
 
@@ -62,10 +66,17 @@ sub JarIt
     my $oldDir = cwd();
     chdir("$destPath/$jarfile");
     #print "cd $destPath/$jarfile\n";
+    
+    my $lockfile = "../$jarfile.lck";
+    my $lockhandle = new IO::File;
+    open($lockhandle,">$lockfile") || 
+	die("WARNING: Could not create lockfile for $lockfile. Exiting.\n");
+    flock($lockhandle, LOCK_EX);
 
     if (!($args eq "")) {
 	my $cwd = getcwd;
 	my $err = 0; 
+
         #print "zip -u ../$jarfile.jar $args\n";
 
 	# Handle posix cmdline limits (4096)
@@ -80,13 +91,13 @@ sub JarIt
 	    #print "Length of subargs: " . length($subargs) . "\n";
 	    system("zip -u ../$jarfile.jar $subargs") == 0 or
 		$err = $? >> 8;
-	    zipErrorCheck($err);
+	    zipErrorCheck($err,$lockfile,$lockhandle);
 	}
 	#print "Length of args: " . length($args) . "\n";
         #print "zip -u ../$jarfile.jar $args\n";
         system("zip -u ../$jarfile.jar $args") == 0 or
 	    $err = $? >> 8;
-	zipErrorCheck($err);
+	zipErrorCheck($err,$lockfile,$lockhandle);
     }
 
     if (!($overrides eq "")) {
@@ -104,13 +115,15 @@ sub JarIt
 	    #print "Length of subargs: " . length($subargs) . "\n";
 	    system("zip ../$jarfile.jar $subargs") == 0 or
 		$err = $? >> 8;
-	    zipErrorCheck($err);
+	    zipErrorCheck($err,$lockfile,$lockhandle);
 	}
         #print "zip ../$jarfile.jar $overrides\n";
         system("zip ../$jarfile.jar $overrides\n") == 0 or 
 	    $err = $? >> 8;
-	zipErrorCheck($err);
+	zipErrorCheck($err,$lockfile,$lockhandle);
     }
+    unlink("$lockfile");
+    flock($lockhandle, LOCK_UN);
 
     chdir($oldDir);
     #print "cd $oldDir\n";
