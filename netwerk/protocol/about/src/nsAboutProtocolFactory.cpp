@@ -64,7 +64,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     "About Protocol Handler",
                                     NS_NETWORK_PROTOCOL_PROGID_PREFIX "about",
                                     aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;;
+    if (NS_FAILED(rv)) return rv;
 
     return rv;
 }
