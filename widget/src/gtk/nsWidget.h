@@ -236,6 +236,15 @@ protected:
 private:
     static nsILookAndFeel *sLookAndFeel;
     static PRUint32 sWidgetCount;
+
+  //
+  // Keep track of the last widget being "dragged"
+  //
+  static nsWidget * sButtonMotionTarget;
+  static gint sButtonMotionRootX;
+  static gint sButtonMotionRootY;
+  static gint sButtonMotionWidgetX;
+  static gint sButtonMotionWidgetY;;
 };
 
 #endif /* nsWidget_h__ */
