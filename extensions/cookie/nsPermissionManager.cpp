@@ -935,6 +935,7 @@ nsPermissionManager::Write()
   // All went ok. Maybe except for problems in Write(), but the stream detects
   // that for us
   nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(bufferedOutputStream);
+  NS_ASSERTION(safeStream, "expected a safe output stream!");
   if (safeStream) {
     rv = safeStream->Finish();
     if (NS_FAILED(rv)) {

@@ -45,7 +45,6 @@
 #include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
-#include "nsISafeOutputStream.h"
 #include "nsIObserverService.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
@@ -530,6 +529,7 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
   // tell the safe output stream to overwrite the real prefs file
   // (it'll abort if there were any errors during writing)
   nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(outStream);
+  NS_ASSERTION(safeStream, "expected a safe output stream!");
   if (safeStream) {
     rv = safeStream->Finish();
     if (NS_FAILED(rv)) {
