@@ -58,12 +58,12 @@ NS_IMPL_ISUPPORTS(nsScriptNameSpaceManager, kIScriptNameSpaceManagerIID);
 
 NS_IMETHODIMP 
 nsScriptNameSpaceManager::RegisterGlobalName(const nsString& aName, 
-					     const nsIID& aCID,
-					     PRBool aIsConstructor)
+                                             const nsIID& aCID,
+                                             PRBool aIsConstructor)
 {
   if (nsnull == mGlobalNames) {
     mGlobalNames = PL_NewHashTable(4, PL_HashString, PL_CompareStrings,
-				   PL_CompareValues, nsnull, nsnull);
+                                   PL_CompareValues, nsnull, nsnull);
   }
   
   char* name = aName.ToNewCString();
@@ -86,8 +86,8 @@ nsScriptNameSpaceManager::UnregisterGlobalName(const nsString& aName)
     char* name = aName.ToNewCString();
     PLHashNumber hn = PL_HashString(name);
     PLHashEntry** hep = PL_HashTableRawLookup(mGlobalNames,
-					      hn,
-					      name);
+                                              hn,
+                                              name);
     PLHashEntry* entry = *hep;
 
     if (nsnull != entry) {  
@@ -107,8 +107,8 @@ nsScriptNameSpaceManager::UnregisterGlobalName(const nsString& aName)
 
 NS_IMETHODIMP 
 nsScriptNameSpaceManager::LookupName(const nsString& aName, 
-				     PRBool aIsConstructor,
-				     nsIID& aCID)
+                                     PRBool aIsConstructor,
+                                     nsIID& aCID)
 {
   if (nsnull != mGlobalNames) {
     char* name = aName.ToNewCString();

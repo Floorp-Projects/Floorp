@@ -44,6 +44,7 @@ nsInsertHTMLTxn::~nsInsertHTMLTxn()
 
 NS_IMETHODIMP nsInsertHTMLTxn::Do(void)
 {
+#if 0
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(res) && selection)
@@ -70,6 +71,9 @@ NS_IMETHODIMP nsInsertHTMLTxn::Do(void)
   }
 
   return res;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP nsInsertHTMLTxn::Undo(void)

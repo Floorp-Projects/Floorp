@@ -28,6 +28,7 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 EXPORTS =				\
 	nsIHTMLContent.h		\
 	nsILineIterator.h		\
+	nsHTMLParts.h			\
 	$(NULL)
 
 CPPSRCS=				\

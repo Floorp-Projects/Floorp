@@ -84,7 +84,8 @@ public:
   NS_IMETHOD    ToString(nsString& aReturn);
 
   // nsIDOMNSRange interface
-  NS_IMETHOD    InsertFragment(const nsString& aFragment);
+  NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, 
+                                         nsIDOMDocumentFragment** aReturn);
   NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn);
 
 /*BEGIN nsIScriptObjectOwner interface implementations*/

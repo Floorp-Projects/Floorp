@@ -1201,10 +1201,10 @@ RangeToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
 
 //
-// Native method InsertFragment
+// Native method CreateContextualFragment
 //
 PR_STATIC_CALLBACK(JSBool)
-NSRangeInsertFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+NSRangeCreateContextualFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMRange *privateThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
   nsIDOMNSRange *nativeThis = nsnull;
@@ -1214,6 +1214,7 @@ NSRangeInsertFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
 
   JSBool rBool = JS_FALSE;
+  nsIDOMDocumentFragment* nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -1222,7 +1223,7 @@ NSRangeInsertFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nsrange.insertfragment", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nsrange.createcontextualfragment", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1242,14 +1243,14 @@ NSRangeInsertFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->InsertFragment(b0)) {
+    if (NS_OK != nativeThis->CreateContextualFragment(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    *rval = JSVAL_VOID;
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
-    JS_ReportError(cx, "Function insertFragment requires 1 parameters");
+    JS_ReportError(cx, "Function createContextualFragment requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -1370,7 +1371,7 @@ static JSFunctionSpec RangeMethods[] =
   {"surroundContents",          RangeSurroundContents,     1},
   {"clone",          RangeClone,     0},
   {"toString",          RangeToString,     0},
-  {"insertFragment",          NSRangeInsertFragment,     1},
+  {"createContextualFragment",          NSRangeCreateContextualFragment,     1},
   {"isValidFragment",          NSRangeIsValidFragment,     1},
   {0}
 };

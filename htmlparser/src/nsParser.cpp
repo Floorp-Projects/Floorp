@@ -809,8 +809,26 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
  *  @param   
  *  @return  
  */
-nsresult nsParser::ParseFragment(nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
-  PRBool result=PR_FALSE;
+nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
+
+  nsresult result=NS_OK;
+  nsAutoString  theContext;
+  PRUint32 theCount=aStack.GetSize();
+  PRUint32 theIndex=0;
+  while(theIndex++<theCount){
+    theContext.Append("<");
+    theContext.Append(aStack.TagAt(theCount-theIndex));
+    theContext.Append(">");
+  }
+  theContext.Append("<endnote>");       //XXXHack! I'll make this better later.
+  nsAutoString theBuffer(theContext);
+  theBuffer.Append(aSourceBuffer);
+  
+  if(theBuffer.Length()){
+    //now it's time to try to build the model from this fragment
+    result=Parse(theBuffer,(void*)&theBuffer,aContentType,PR_FALSE,PR_TRUE);
+  }
+
   return result;
 }
 
