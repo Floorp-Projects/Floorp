@@ -81,7 +81,7 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
 
   if (posixLocale!=nsnull) {
     if (strcmp(posixLocale,"C")==0 || strcmp(posixLocale,"POSIX")==0) {
-      *locale = "en";
+      *locale = "en-US";
       return NS_OK;
     }
     if (!ParseLocaleString(posixLocale,lang_code,country_code,region_code,'_')) {
