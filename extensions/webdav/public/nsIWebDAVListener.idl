@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Mike Shaver <shaver@off.net> (original author)
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -68,9 +69,10 @@ interface nsIWebDAVOperationListener : nsISupports
 
     void onOperationComplete(in unsigned long statusCode,
                              in nsIWebDAVResource resource,
-                             in unsigned long operation);
+                             in unsigned long operation,
+                             in nsISupports closure);
 
-    void onOperationDetail(in unsigned long statusCode,
-                           in nsIURL resource, in unsigned long operation,
-                           in nsISupports detail);
+    void onOperationDetail(in unsigned long statusCode, in nsIURL resource,
+                           in unsigned long operation, in nsISupports detail,
+                           in nsISupports closure);
 };

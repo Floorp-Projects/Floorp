@@ -63,17 +63,20 @@ extern PRLogModuleInfo *gDAVLog;
 nsresult
 NS_WD_NewOperationStreamListener(nsIWebDAVResource *resource,
                                  nsIWebDAVOperationListener *listener,
+                                 nsISupports *closure,
                                  PRUint32 operation,
                                  nsIStreamListener **streamListener);
 
 nsIStreamListener *
 NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
                                 nsIWebDAVOperationListener *listener,
+                                nsISupports *closure,
                                 PRBool isPropname);
 
 nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
                                      nsIWebDAVOperationListener *listener,
+                                     nsISupports *closure,
                                      nsIOutputStream *outstream,
                                      nsIRequestObserver **observer);
 

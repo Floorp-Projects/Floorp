@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Mike Shaver <shaver@off.net> (original author)
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,61 +49,103 @@ interface nsIInputStream;
 [scriptable,uuid(173ef52e-2a2f-45ca-8f9f-abc7429163c2)]
 interface nsIWebDAVService : nsISupports
 {
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void lockResources(in PRUint32 count,
                        [array, size_is(count)]
                        in nsIWebDAVResource resources,
-                       in nsIWebDAVOperationListener listener);
+                       in nsIWebDAVOperationListener listener,
+                       in nsISupports closure);
 
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void unlockResources(in PRUint32 count,
                          [array, size_is(count)]
                          in nsIWebDAVResource resources,
-                         in nsIWebDAVOperationListener listener);
-
+                         in nsIWebDAVOperationListener listener,
+                         in nsISupports closure);
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void getResourcePropertyNames(in nsIWebDAVResource resource,
                                   in boolean withDepth,
-                                  in nsIWebDAVOperationListener listener);
-
+                                  in nsIWebDAVOperationListener listener,
+                                  in nsISupports closure);
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void getResourceProperties(in nsIWebDAVResource resource,
                                in PRUint32 propCount,
                                [array, size_is(propCount)]
                                in string properties, /* XXX wstring? */
                                in boolean withDepth,
-                               in nsIWebDAVOperationListener listener);
-
+                               in nsIWebDAVOperationListener listener,
+                               in nsISupports closure);
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void getResourceOptions(in nsIWebDAVResource resource,
-                            in nsIWebDAVOperationListener listener);
+                            in nsIWebDAVOperationListener listener,
+                            in nsISupports closure);
 
+    /**
+     * XXX need to add a closure param
+     */
     void get(in nsIWebDAVResource resource, in nsIStreamListener listener);
 
-    /*
+    /**
      * GET the resource and stick it in the provided OutputStream.
      * Your output stream must be buffered, or we will fail miserably.
      * I would check that for you and provide a buffered wrapper automatically,
      * but there is no way to check if one is needed!
+     *
+     * @param closure   caller-private data returned via listener
      */
     void getToOutputStream(in nsIWebDAVResource resource,
                            in nsIOutputStream stream,
-                           in nsIWebDAVOperationListener listener);
+                           in nsIWebDAVOperationListener listener, 
+                           in nsISupports closure);
 
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void put(in nsIWebDAVResource resource, in ACString contentType,
-             in nsIInputStream data, in nsIWebDAVOperationListener listener);
+             in nsIInputStream data, in nsIWebDAVOperationListener listener,
+             in nsISupports closure);
 
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void remove(in nsIWebDAVResource resource,
-                in nsIWebDAVOperationListener listener);
+                in nsIWebDAVOperationListener listener,
+                in nsISupports closure);
 
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void moveTo(in nsIWebDAVResource resource,
                 in ACString destination,
                 in boolean overwrite,
-                in nsIWebDAVOperationListener listener);
+                in nsIWebDAVOperationListener listener,
+                in nsISupports closure);
 
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void copyTo(in nsIWebDAVResource resource,
                 in ACString destination,
                 in boolean recursive,
                 in boolean overwrite,
-                in nsIWebDAVOperationListener listener);
-
+                in nsIWebDAVOperationListener listener,
+                in nsISupports closure);
+    /**
+     * @param closure   caller-private data returned via listener
+     */
     void makeCollection(in nsIWebDAVResource resource,
-                        in nsIWebDAVOperationListener listener);
+                        in nsIWebDAVOperationListener listener, 
+                        in nsISupports closure);
 };
 
 [scriptable,uuid(96c8d65a-fa17-408c-8008-1aa2b95952d4)]

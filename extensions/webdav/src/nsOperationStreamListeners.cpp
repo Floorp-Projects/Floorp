@@ -74,9 +74,10 @@ public:
 
     OperationStreamListener(nsIWebDAVResource *resource,
                             nsIWebDAVOperationListener *listener,
+                            nsISupports *closure,
                             nsIOutputStream *outstream,
                             PRUint32 mode) :
-        mResource(resource), mListener(listener), 
+        mResource(resource), mListener(listener), mClosure(closure), 
         mOutputStream(outstream), mOperation(mode) { }
 
     virtual ~OperationStreamListener() { }
@@ -84,7 +85,8 @@ public:
 protected:
     virtual nsresult SignalCompletion(PRUint32 status)
     {    
-        mListener->OnOperationComplete(status, mResource, mOperation);
+        mListener->OnOperationComplete(status, mResource, mOperation,
+                                       mClosure);
         if (mOutputStream)
             return mOutputStream->Flush();
         return NS_OK;
@@ -101,6 +103,7 @@ protected:
 
     nsCOMPtr<nsIWebDAVResource>          mResource;
     nsCOMPtr<nsIWebDAVOperationListener> mListener;
+    nsCOMPtr<nsISupports>                mClosure;
     nsCOMPtr<nsIOutputStream>            mOutputStream;
     PRUint32                             mOperation;
     nsCString                            mBody;
@@ -119,6 +122,7 @@ NS_IMETHODIMP
 OperationStreamListener::OnStartRequest(nsIRequest *aRequest,
                                         nsISupports *aContext)
 {
+    LOG(("OperationStreamListener::OnStartRequest() entered"));
     mBody.Truncate();
     return NS_OK;
 }
@@ -130,6 +134,8 @@ OperationStreamListener::OnStopRequest(nsIRequest *aRequest,
 {
     PRUint32 status, rv;
     nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aContext);
+
+    LOG(("OperationStreamListener::OnStopRequest() entered"));
 
     rv = channel ? channel->GetResponseStatus(&status) : NS_ERROR_UNEXPECTED;
 
@@ -188,6 +194,7 @@ OperationStreamListener::OnDataAvailable(nsIRequest *aRequest,
                                          nsIInputStream *aInputStream,
                                          PRUint32 offset, PRUint32 count)
 {
+    LOG(("OperationStreamListener::OnDataAvailable() entered"));
     PRUint32 result;
     nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aContext);
     if (!channel)
@@ -216,7 +223,8 @@ OperationStreamListener::SignalDetail(PRUint32 statusCode,
         NS_SUCCEEDED(resourceURL->Clone(getter_AddRefs(detailURI))) &&
         (detailURL = do_QueryInterface(detailURI)) &&
         NS_SUCCEEDED(detailURI->SetSpec(resource))) {
-        mListener->OnOperationDetail(statusCode, detailURL, mOperation, detail);
+        mListener->OnOperationDetail(statusCode, detailURL, mOperation, detail,
+                                     mClosure);
     }
 }
 
@@ -268,8 +276,9 @@ public:
 
     PropfindStreamListener(nsIWebDAVResource *resource,
                            nsIWebDAVOperationListener *listener,
+                           nsISupports *closure,
                            PRBool isPropname) :
-        OperationStreamListener(resource, listener, nsnull,
+        OperationStreamListener(resource, listener, closure, nsnull,
                                 isPropname ?
                                 (PRUint32)nsIWebDAVOperationListener::GET_PROPERTY_NAMES :
                                 (PRUint32)nsIWebDAVOperationListener::GET_PROPERTIES) { }
@@ -419,19 +428,21 @@ PropfindStreamListener::ProcessResponse(nsIDOMElement *responseElt)
 nsIStreamListener *
 NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
                                 nsIWebDAVOperationListener *listener,
+                                nsISupports *closure,
                                 PRBool isPropname)
 {
-    return new PropfindStreamListener(resource, listener, isPropname);
+    return new PropfindStreamListener(resource, listener, closure, isPropname);
 }
 
 nsresult
 NS_WD_NewOperationStreamListener(nsIWebDAVResource *resource,
                                  nsIWebDAVOperationListener *listener,
+                                 nsISupports *closure,
                                  PRUint32 operation,
                                  nsIStreamListener **streamListener)
 {
     nsCOMPtr<nsIRequestObserver> osl = 
-        new OperationStreamListener(resource, listener, nsnull,
+        new OperationStreamListener(resource, listener, closure, nsnull,
                                     operation);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -441,11 +452,12 @@ NS_WD_NewOperationStreamListener(nsIWebDAVResource *resource,
 nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
                                      nsIWebDAVOperationListener *listener,
+                                     nsISupports *closure,
                                      nsIOutputStream *outstream,
                                      nsIRequestObserver **observer)
 {
     nsCOMPtr<nsIRequestObserver> osl = 
-        new OperationStreamListener(resource, listener, outstream,
+        new OperationStreamListener(resource, listener, closure, outstream,
                                     nsIWebDAVOperationListener::GET);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
