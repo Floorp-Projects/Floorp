@@ -2978,7 +2978,13 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   nsPluginsDir pluginsDir;
 
   if (pluginsDir.Valid())
-    ScanPluginsDirectory(pluginsDir, compManager, isLayoutPath ? path : nsnull);
+  {
+    nsCOMPtr<nsIFile> lpath = nsnull;
+    if(isLayoutPath)
+      lpath = path;
+
+    ScanPluginsDirectory(pluginsDir, compManager, lpath);
+  }
 
 #ifdef XP_MAC
   // try to scan old-spelled plugins dir ("Plug-ins") for Mac
@@ -2986,11 +2992,17 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   nsPluginsDir pluginsDirMacOld(PLUGINS_DIR_LOCATION_MAC_OLD);
 	
   if (pluginsDirMacOld.Valid())
+  {
+    nsCOMPtr<nsIFile> lpath = nsnull;
+    if(isLayoutPath)
+      lpath = path;
+
     ScanPluginsDirectory(pluginsDirMacOld, 
                          compManager, 
-                         isLayoutPath ? path : nsnull, 
+                         lpath, 
                          PR_FALSE, // don't check for specific plugins
                          PR_TRUE); // check for dups
+  }
 #endif // XP_MAC
 
 #else //  XP_WIN go for new plugin finding logic on Windows
@@ -3005,7 +3017,13 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   nsPluginsDir pluginsDirMoz(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
 
   if (pluginsDirMoz.Valid())
-    ScanPluginsDirectory(pluginsDirMoz, compManager, isLayoutPath ? path : nsnull);
+  {
+    nsCOMPtr<nsIFile> lpath = nsnull;
+    if(isLayoutPath)
+      lpath = path;
+
+    ScanPluginsDirectory(pluginsDirMoz, compManager, lpath);
+  }
 
   // now check the 4.x plugins dir and add new files
   // Specifying the last two params as PR_TRUE we make sure that:
@@ -3015,12 +3033,17 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   //      unwanted plugins as per temporary decision described in bug #23856
  	nsPluginsDir pluginsDir4x(PLUGINS_DIR_LOCATION_4DOTX);
 	if (pluginsDir4x.Valid())
+  {
+    nsCOMPtr<nsIFile> lpath = nsnull;
+    if(isLayoutPath)
+      lpath = path;
+
     ScanPluginsDirectory(pluginsDir4x, 
                          compManager, 
-                         isLayoutPath ? path : nsnull, 
+                         lpath, 
                          PR_TRUE,  // check for specific plugins
                          PR_TRUE); // check for dups
-
+  }
 #endif // !XP_WIN
 
   mPluginsLoaded = PR_TRUE;
