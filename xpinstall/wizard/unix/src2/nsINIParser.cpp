@@ -28,7 +28,7 @@
 nsINIParser::nsINIParser(char *aFilename)
 {
     FILE    *fd = NULL;
-    fpos_t  eofpos = (fpos_t) NULL;
+    long    eofpos = 0;
     int     rd = 0;
 
     mFileBuf = NULL;
@@ -51,7 +51,8 @@ nsINIParser::nsINIParser(char *aFilename)
     /* get file size */
     if (fseek(fd, 0, SEEK_END) != 0)
         goto bail;
-    if (fgetpos(fd, &eofpos) != 0)
+    eofpos = ftell(fd);
+    if (eofpos == 0)
         goto bail;
 
     /* malloc an internal buf the size of the file */
