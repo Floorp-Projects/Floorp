@@ -7,76 +7,92 @@
 <?xul-overlay href="chrome://global/content/taskbarOverlay.xul"?>
 
 <overlay id="tasksOverlay"
-		 xmlns:html="http://www.w3.org/TR/REC-html40"
-		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      xmlns:html="http://www.w3.org/TR/REC-html40"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript" src="chrome://global/content/tasksOverlay.js"/>
+      <html:script language="JavaScript" src="chrome://global/content/tasksOverlay.js"/>
 
-    <broadcasterset id="broadcasterset"/>
+      <broadcasterset id="broadcasterset"/>
  
-	<!-- Tasks Menu -->
-	<menu id="tasksMenu" value="&tasksMenu.label;"  datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+      <!-- Tasks Menu -->
+      <menu id="tasksMenu" value="&tasksMenu.label;"  datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
         <template>
-        <rule>
-		    <menupopup>
+          <rule>
+            <menupopup>
               <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="ShowWindowFromResource(event.target)"/>
-			</menupopup>
+            </menupopup>
           </rule>
         </template>
 
-       <menupopup id="taskPopup">
-		<menuitem value="&navigatorCmd.label;" oncommand="toNavigator()"/>
-		<menuitem value="&messengerCmd.label;" oncommand="toMessengerWindow()"/>
-		<menuitem value="&editorCmd.label;"    oncommand="toEditor();" />
-		<menuseparator/>
-		<menuitem value="&addressBookCmd.label;" oncommand="toAddressBook()"/>
-		<menuitem value="&newsgroupsCmd.label;" disabled="true" oncommand="toNewsgroups()"/>
-		<menuseparator/>
+        <menupopup id="taskPopup">
+          <menuitem value="&navigatorCmd.label;" oncommand="toNavigator()"/>
+          <menuitem value="&messengerCmd.label;" oncommand="toMessengerWindow()"/>
+          <menuitem value="&editorCmd.label;"    oncommand="toEditor();" />
+          <menuseparator/>
 
-		<menu value="&walletMenu.label;">
-      <menupopup  id="personalManagers" oncreate="CheckForWallet()"> 
-        <menu value="&walletPasswordManager.label;">
-          <menupopup>
-            <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="WalletDialog('signon');"/> 
-            <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletAction('password');"/>
-          </menupopup>
-        </menu>
-        <menuitem value="&walletDisplayCookiesCmd.label;" oncommand="WalletDialog('cookie');"/> 
-        <menu value="&autoFill.label;" id="wallet">
-          <menupopup>
-            <menuitem value="&walletSafeFillCmd.label;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
-            <menuitem value="&walletQuickFillCmd.label;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
-            <menuitem value="&walletRequestToCaptureCmd.label;" id="walletCapture" oncommand="WalletAction('capture');"/> 
-            <menuitem id="walleteditor" value="&walletContentsCmd.label;" oncommand="WalletDialog('wallet');"/> 
-          </menupopup>
-        </menu>
-        <menuitem value="&walletSamplesCmd.label;" id="walletSamples" oncommand="WalletDialog('samples');"/> 
-      </menupopup> 
-    </menu> 
+          <menuitem value="&addressBookCmd.label;" oncommand="toAddressBook()"/>
+          <menuitem value="&newsgroupsCmd.label;" disabled="true" oncommand="toNewsgroups()"/>
+          <menuseparator/>
 
-     <menuseparator/>
-		<menu value="&toolsMenu.label;">
-		  <menupopup id="toolsPopup">
-			<menuitem value="&historyCmd.label;" oncommand="toHistory()"/>
-			<menuitem value="&importUtilCmd.label;" oncommand="toImport()"/>
-			<menuitem value="&javaConsoleCmd.label;" oncommand="toJavaConsole()"/>
-		  </menupopup>
-		</menu>
-		<menuseparator/>
-	  </menupopup>
-	</menu>
+          <menu value="&walletMenu.label;">
+            <menupopup  id="personalManagers" oncreate="CheckForWallet()"> 
+              <menu value="&walletPasswordManager.label;">
+                <menupopup>
+                  <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="WalletDialog('signon');"/> 
+                  <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletAction('password');"/>
+                </menupopup>
+              </menu>
+              <menu value="&walletCookieManager.label;">
+                <menupopup>
+                  <menuitem value="&walletDisplayCookiesCmd.label;" oncommand="WalletDialog('cookie');"/> 
+                  <menuitem value="&walletAllowCookiesCmd.label;" oncommand="WalletAction('cookieAllow');"/> 
+                  <menuitem value="&walletBlockCookiesCmd.label;" oncommand="WalletAction('cookieBlock');"/> 
+                </menupopup>
+              </menu>
+              <menu value="&walletImageManager.label;">
+                <menupopup>
+                  <menuitem value="&walletDisplayImagesCmd.label;" oncommand="WalletDialog('image');"/> 
+                  <menuitem value="&walletAllowImagesCmd.label;" oncommand="WalletAction('imageAllow');"/> 
+                  <menuitem value="&walletBlockImagesCmd.label;" oncommand="WalletAction('imageBlock');"/> 
+                </menupopup>
+              </menu>
+              <menu value="&walletFormManager.label;" id="wallet">
+                <menupopup>
+                  <menuitem id="walleteditor" value="&walletContentsCmd.label;" oncommand="WalletDialog('wallet');"/> 
+                  <menuitem value="&walletSafeFillCmd.label;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
+                  <menuitem value="&walletQuickFillCmd.label;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
+                  <menuitem value="&walletRequestToCaptureCmd.label;" id="walletCapture" oncommand="WalletAction('capture');"/> 
+                  <menuitem value="&walletInterviewCmd.label;" id="walletInterview" oncommand="WalletDialog('interview');"/> 
+                  <menuitem value="&walletSamplesCmd.label;" id="walletSamples" oncommand="WalletDialog('samples');"/> 
+                </menupopup>
+              </menu>
+            </menupopup> 
+          </menu> 
+          <menuseparator/>
 
-  <toolbar id="taskbar" chromeclass="status" persist="collapsed">
-    <box id="taskButtons" align="horizontal">
-  	  <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-nav" value="" onclick="toNavigator();"/>
-  	 	<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
-  	 	<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-comp" value="" onclick="toEditor();" />
-        <!-- toolbarseparator align="horizontal" class="line"/ -->
-  	 	<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
-    </box>
-	 	<box id="taskbarMenuBox" align="horizontal">
-		  <!-- taskbarOverlay.xul inserts here. -->
-    </box>
-	</toolbar>
-	
-</overlay>		
+          <menu value="&toolsMenu.label;">
+            <menupopup id="toolsPopup">
+              <menuitem value="&historyCmd.label;" oncommand="toHistory()"/>
+              <menuitem value="&importUtilCmd.label;" oncommand="toImport()"/>
+              <menuitem value="&javaConsoleCmd.label;" oncommand="toJavaConsole()"/>
+            </menupopup>
+          </menu>
+          <menuseparator/>
+
+        </menupopup>
+      </menu>
+
+      <toolbar id="taskbar" chromeclass="status" persist="collapsed">
+        <box id="taskButtons" align="horizontal">
+          <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-nav" value="" onclick="toNavigator();"/>
+          <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
+          <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-comp" value="" onclick="toEditor();" />
+          <!-- toolbarseparator align="horizontal" class="line"/ -->
+          <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
+        </box>
+        <box id="taskbarMenuBox" align="horizontal">
+          <!-- taskbarOverlay.xul inserts here. -->
+        </box>
+      </toolbar>
+
+</overlay>
