@@ -30,7 +30,7 @@
 NS_BEGIN_EXTERN_C
 
 nsresult
-NS_NewMsgAppCore(nsIDOMMsgAppCore **);
+NS_NewMsgAppCore(const nsIID &aIID, void **);
 
 NS_END_EXTERN_C
 

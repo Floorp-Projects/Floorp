@@ -448,17 +448,15 @@ nsMsgAppCore::GetNewMail()
                               
 extern "C"
 nsresult
-NS_NewMsgAppCore(nsIDOMMsgAppCore **aResult)
+NS_NewMsgAppCore(const nsIID &aIID, void **aResult)
 {
   if (!aResult) return NS_ERROR_NULL_POINTER;
 
   nsMsgAppCore *appcore = new nsMsgAppCore();
-  if (appcore) {
-    return appcore->QueryInterface(nsIDOMMsgAppCore::GetIID(),
-                                   (void **)aResult);
-
-  }
-  return NS_ERROR_NOT_INITIALIZED;
+  if (appcore)
+    return appcore->QueryInterface(aIID, (void **)aResult);
+  else
+	return NS_ERROR_NOT_INITIALIZED;
 }
 
 
