@@ -2510,23 +2510,39 @@ si_RestoreOldSignonDataFromBrowser
   si_unlock_signon_list();
 }
 
+/* The following comments apply to the three prompt routines that follow
+ *
+ * If a password was successfully obtain (either from the single-signon
+ * database or from a dialog with the user), we return NS_OK for the
+ * function value and PR_TRUE for the boolean argument "pressedOK".
+ *
+ * If the user presses cancel from the dialog, we return NS_OK for the
+ * function value and PR_FALSE for the boolean argument "pressedOK".
+ *
+ * If a password is not collected for any other reason, we return the
+ * failure code for the function value and the boolean argument
+ * "pressedOK" is undefined.
+ */
+
 PUBLIC nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *urlname, nsIPrompt* dialog, PRBool *returnValue, PRBool strip) {
+     const char *urlname, nsIPrompt* dialog, PRBool *pressedOK, PRBool strip) {
 
   nsresult res;
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    return dialog->PromptUsernameAndPassword(text, user, pwd, returnValue);
+    return dialog->PromptUsernameAndPassword(text, user, pwd, pressedOK);
   }
 
   /* convert to a uri so we can parse out the hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
   res = uri->SetSpec(urlname);
-  if (NS_FAILED(res)) return res;
+  if (NS_FAILED(res)) {
+    return res;
+  }
 
   /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
 
@@ -2539,7 +2555,9 @@ SINGSIGN_PromptUsernameAndPassword
     }
   } else {
     res = MangleUrl(urlname, getter_Copies(host));
-    if (NS_FAILED(res)) return res;
+    if (NS_FAILED(res)) {
+      return res;
+    }
   }
 
   /* prefill with previous username/password if any */
@@ -2555,21 +2573,22 @@ SINGSIGN_PromptUsernameAndPassword
     /* user pressed Cancel */
     PR_FREEIF(*user);
     PR_FREEIF(*pwd);
-    *returnValue = PR_FALSE;
-    return res;
+    *pressedOK = PR_FALSE;
+    return NS_OK;
   }
   if (checked) {
     si_RememberSignonDataFromBrowser ((const char*)host, nsAutoString(*user), nsAutoString(*pwd));
   }
 
   /* cleanup and return */
+  *pressedOK = PR_TRUE;
   return NS_OK;
 }
 
 PUBLIC nsresult
 SINGSIGN_PromptPassword
     (const PRUnichar *text, PRUnichar **pwd, const char *urlname,
-    nsIPrompt* dialog, PRBool *returnValue, PRBool strip) 
+    nsIPrompt* dialog, PRBool *pressedOK, PRBool strip) 
 {
 
   nsresult res;
@@ -2577,14 +2596,16 @@ SINGSIGN_PromptPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    return dialog->PromptPassword(text, nsnull /* window title */, pwd, returnValue);
+    return dialog->PromptPassword(text, nsnull /* window title */, pwd, pressedOK);
   }
 
   /* convert to a uri so we can parse out the username and hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
   res = uri->SetSpec(urlname);
-  if (NS_FAILED(res)) return res;
+  if (NS_FAILED(res)) {
+    return res;
+  }
 
   /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
 
@@ -2597,7 +2618,9 @@ SINGSIGN_PromptPassword
     }
   } else {
     res = MangleUrl(urlname, getter_Copies(host));
-    if (NS_FAILED(res)) return res;
+    if (NS_FAILED(res)) {
+      return res;
+    }
   }
 
   /* extract username from uri -- note: prehost is <username>:<password> */
@@ -2622,7 +2645,7 @@ SINGSIGN_PromptPassword
   /* return if a password was found */
   if (password.Length() != 0) {
     *pwd = password.ToNewUnicode();
-    *returnValue = PR_TRUE;
+    *pressedOK = PR_TRUE;
     return NS_OK;
   }
 
@@ -2633,35 +2656,38 @@ SINGSIGN_PromptPassword
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*pwd);
-    *returnValue = PR_FALSE;
-    return res;
+    *pressedOK = PR_FALSE;
+    return NS_OK;
   }
   if (checked) {
     si_RememberSignonDataFromBrowser ((const char *)host, username, nsAutoString(*pwd));
   }
 
   /* cleanup and return */
+  *pressedOK = PR_TRUE;
   return NS_OK;
 }
 
 PUBLIC nsresult
 SINGSIGN_Prompt
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-    const char *urlname, nsIPrompt* dialog, PRBool *returnValue, PRBool strip) 
+    const char *urlname, nsIPrompt* dialog, PRBool *pressedOK, PRBool strip) 
 {
   nsresult res;
   nsAutoString data, emptyUsername("");
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    return dialog->Prompt(text, nsnull /* window title */, resultText, returnValue);
+    return dialog->Prompt(text, nsnull /* window title */, resultText, pressedOK);
   }
 
   /* convert to a uri so we can parse out the hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
   res = uri->SetSpec(urlname);
-  if (NS_FAILED(res)) return res;
+  if (NS_FAILED(res)) {
+    return res;
+  }
 
   /* get host part of the uri */
   nsXPIDLCString host;
@@ -2672,7 +2698,9 @@ SINGSIGN_Prompt
     }
   } else {
     res = MangleUrl(urlname, getter_Copies(host));
-    if (NS_FAILED(res)) return res;
+    if (NS_FAILED(res)) {
+      return res;
+    }
   }
 
   /* get previous data used with this hostname */
@@ -2681,7 +2709,7 @@ SINGSIGN_Prompt
   /* return if data was found */
   if (data.Length() != 0) {
     *resultText = data.ToNewUnicode();
-    *returnValue = PR_TRUE;
+    *pressedOK = PR_TRUE;
     return NS_OK;
   }
 
@@ -2692,14 +2720,15 @@ SINGSIGN_Prompt
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*resultText);
-    *returnValue = PR_FALSE;
-    return res;
+    *pressedOK = PR_FALSE;
+    return NS_OK;
   }
   if (checked) {
     si_RememberSignonDataFromBrowser ((const char *)host, emptyUsername, nsAutoString(*resultText));
   }
 
   /* cleanup and return */
+  *pressedOK = PR_TRUE;
   return NS_OK;
 }
 
