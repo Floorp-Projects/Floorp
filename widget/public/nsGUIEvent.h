@@ -127,6 +127,16 @@ struct nsTooltipEvent : public nsGUIEvent {
 };
 
 /**
+ * MenuItem event
+ */
+
+struct nsMenuEvent : public nsGUIEvent {
+                /// Index of the selected menu item
+    PRUint32        menuItem;           
+};
+
+
+/**
  * GUI MESSAGES
  */
  //@{
@@ -160,6 +170,8 @@ struct nsTooltipEvent : public nsGUIEvent {
 #define NS_SHOW_TOOLTIP                 (NS_WINDOW_START + 36)
 // Tooltip should be hidden
 #define NS_HIDE_TOOLTIP                 (NS_WINDOW_START + 37)
+// Menu item selected
+#define NS_MENU_SELECTED                (NS_WINDOW_START + 38)
 
 
 #define NS_MOUSE_MESSAGE_START          300

@@ -42,7 +42,10 @@ class nsAppShell : public nsIAppShell, public nsObject
   
     virtual void            Create();
     virtual nsresult        Run(); 
+    virtual void            SetDispatchListener(nsDispatchListener* aDispatchListener);
     virtual void            Exit();
+  private:
+    nsDispatchListener*     mDispatchListener;
 };
 
 #endif // nsAppShell_h__
