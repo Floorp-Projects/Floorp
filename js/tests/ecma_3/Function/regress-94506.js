@@ -34,7 +34,7 @@ var actual = '';
 var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
-var TYPE_OBJECT = (new Object).toString();
+var TYPE_OBJECT = typeof new Object();
 var arguments = 5555;
 
 
@@ -87,13 +87,13 @@ addThis();
 
 
 status = 'Section 3 of test';
-actual = F3().toString();
+actual = typeof F3();
 expect = TYPE_OBJECT;
 addThis();
 
 
 status = 'Section 4 of test';
-actual = F4().toString();
+actual = typeof F4();
 expect = TYPE_OBJECT;
 addThis();
 
