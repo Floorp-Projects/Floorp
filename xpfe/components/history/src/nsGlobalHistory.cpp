@@ -312,7 +312,8 @@ nsGlobalHistory::~nsGlobalHistory()
   }
 
 #if defined(MOZ_BRPROF)
-  nsServiceManager::ReleaseService(kBrowsingProfileCID, mBrowsingProfile);
+  if (mBrowsingProfile)
+    nsServiceManager::ReleaseService(kBrowsingProfileCID, mBrowsingProfile);
 #endif
 
   if (--gRefCnt == 0) {
