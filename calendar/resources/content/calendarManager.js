@@ -351,7 +351,7 @@ calendarManager.prototype.nextCalendar = function calMan_getNextCalendar()
     for (var count = 0; count < seq.length; count++ ) {
         subject = seq[count].getSubject();
         subject = subject.replace(/^.*calendar(\d+)$/, "$1");
-        if (subject > max) max = subject;
+        if (Number(subject) > max) max = Number(subject);
     }
 
     return ++max;
