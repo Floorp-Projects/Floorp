@@ -121,6 +121,7 @@ BOOL CWizardUI::OnSetActive()
 	CPropSheet* pSheet = (CPropSheet*) GetParent();
 	ASSERT_VALID(pSheet);
 
+	// !!! Use an OnEnter for this instead !!!
 	if (CurrentNode->localVars->functionality == "BuildInstallers")
 	{
 		pSheet->GetDlgItem(ID_WIZNEXT)->SetWindowText("Build &Installers");
@@ -536,7 +537,7 @@ BOOL CWizardUI::SortList(WIDGET *curWidget)
 	return TRUE;
 }
 
-BOOL CWizardUI::NewConfig(WIDGET *curWidget) 
+BOOL CWizardUI::NewConfig(WIDGET *curWidget, CString globalsName) 
 {
 	// This doesn't really belong here...
 	CNewConfigDialog newDlg;
@@ -547,11 +548,17 @@ BOOL CWizardUI::NewConfig(WIDGET *curWidget)
 	_mkdir(newDir);
 					
 	WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+	if (!tmpWidget)
+		return FALSE;
+
 	CString tmpFunction = tmpWidget->action.function;
 	CString params = CString(tmpWidget->action.parameters);
 	theApp.GenerateList(tmpFunction, tmpWidget, params);	
 					
 	((CComboBox*)tmpWidget->control)->SelectString(0, configField);
+
+	theApp.SetGlobal(globalsName, configField);
+
 	return TRUE;
 }
 
@@ -569,7 +576,7 @@ BOOL CWizardUI::BrowseFile(WIDGET *curWidget)
 	{	
 		fullFileName = fileDlg.GetPathName();
 		WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
-		if (tmpWidget)
+		if (tmpWidget && (CEdit*)tmpWidget->control)
 			((CEdit*)tmpWidget->control)->SetWindowText(fullFileName);
 	}
 	return TRUE;
@@ -685,35 +692,6 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			if (curWidget->action.function == "command")
 				theApp.interpret(curWidget->action.parameters, curWidget);
-			else if (curWidget->action.function == "NewConfig") {
-				CNewConfigDialog newDlg;
-				newDlg.DoModal();
-				CString configField = newDlg.GetConfigName();
-				CString newDir = CString(customizationPath); 
-				newDir += configField;
-				_mkdir(newDir);
-					
-				/**
-				char srcCache[250];
-				char destCache[250];
-				strcpy(srcCache, Path);
-				strcat(srcCache, "cck.che");
-				strcpy(destCache, newDir);
-				strcat(destCache, "\\cck.che");
-				CopyFile(srcCache, destCache, FALSE);
-				**/
-
-				WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
-				CString tmpFunction = tmpWidget->action.function;
-				CString params = CString(tmpWidget->action.parameters);
-				theApp.GenerateList(tmpFunction, tmpWidget, params);	
-					
-				((CComboBox*)tmpWidget->control)->SelectString(0, configField);
-
-
-				// remembering the widget name for subsequent .che file operations
-				//customizationWidgetName = tmpWidget->name;
-			}
 		}
 		else 
 			Progress();
