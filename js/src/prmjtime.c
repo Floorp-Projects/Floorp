@@ -44,6 +44,7 @@
 #include <string.h>
 #include <time.h>
 #include "jstypes.h"
+#include "jsutil.h"
 
 #include "jsprf.h"
 #include "prmjtime.h"
