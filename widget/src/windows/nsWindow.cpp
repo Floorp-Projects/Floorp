@@ -1457,7 +1457,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               nsWindow* control = (nsWindow*)::GetWindowLong((HWND)lParam, GWL_USERDATA);
 		          if (control) {
                 HDC hDC = (HDC)wParam;
-                ::SetBkColor (hDC, mBackground);
+                //::SetBkColor (hDC, mBackground);
                 ::SetTextColor(hDC, mForeground);
 		            *aRetValue = (LPARAM)control->OnControlColor();
 		          }
