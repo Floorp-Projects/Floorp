@@ -52,8 +52,8 @@ sub _pickWithMemoryFile($)
 		 open( SESSIONFILE, $sessionStorage ))
 	{
 	# Read in the path if available
-	  $cvsfile = <SESSIONFILE>;
-	  chomp $cvsfile;
+		$cvsfile = <SESSIONFILE>;
+		chomp $cvsfile;
 		close SESSIONFILE;
 		if ( ! -e $cvsfile )
 		{
@@ -110,11 +110,11 @@ sub BuildIDLProject($$)
 	{
 		my($datafolder_path) = $project_path;
 		$datafolder_path =~ s/\.mcp$/ Data:/;		# generate name of the project's data folder.
-		print STDERR "Deleting IDL data folder:  $datafolder_path\n";
+		print STDERR "Deleting IDL data folder:	 $datafolder_path\n";
 		EmptyTree($datafolder_path);
 	}
 
-	BuildOneProject($project_path, 	"headers", "", 0, 0, 0);
+	BuildOneProject($project_path,	"headers", "", 0, 0, 0);
 	BuildOneProject($project_path,	$module_name.".xpt", "", 1, 0, 1);
 }
 
@@ -198,23 +198,25 @@ sub Checkout()
 	ActivateApplication('Mcvs');
 
 	#//
-	#//	Checkout commands
+	#// Checkout commands
 	#//
 	if ($main::pull{all})
 	{
-		$session->checkout("SeaMonkeyEditor")						|| die "checkout failure";
-  
-  		#// Check out the MRJ OJI plugin. Needs to be added to the "SeaMonkeyEditor" module.
-  		$session->checkout("mozilla/plugin/oji/MRJ")				|| die "checkout failure";
-	} elsif ($main::pull{runtime}) {
+		$session->checkout("SeaMonkeyAll")							|| die "checkout failure";
+	
+		#// Check out the MRJ OJI plugin. Needs to be added to the "SeaMonkeyAll" module.
+		$session->checkout("mozilla/plugin/oji/MRJ")				|| die "checkout failure";
+	}
+	elsif ($main::pull{runtime})
+	{
 		$session->checkout("mozilla/build")							|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/InterfaceLib")	        || die "checkout failure";
+		$session->checkout("mozilla/lib/mac/InterfaceLib")			|| die "checkout failure";
 		$session->checkout("mozilla/config")						|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/NSStdLib")				|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/NSRuntime")				|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/MoreFiles")				|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/MacMemoryAllocator")	|| die "checkout failure";
-		$session->checkout("mozilla/nsprpub")						|| die "checkout failure";  
+		$session->checkout("mozilla/nsprpub")						|| die "checkout failure";	
 	}
 }
 
@@ -259,10 +261,327 @@ sub EmptyTree($)
 				die;
 			}
 		}
-    }
-    closedir(DIR);
+	}
+	closedir(DIR);
 }
 
+#//--------------------------------------------------------------------------------------------------
+#// Make resource aliases for one directory
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildFolderResourceAliases($$)
+{
+	my($src_dir, $dest_dir) = @_;
+	
+	unless ($src_dir =~ m/^$main::BUILD_ROOT.+/) { return; }
+	
+	# get a list of all the resource files
+	opendir(SRCDIR, $src_dir) || die("can't open $src_dir");
+	my(@resource_files) = readdir(SRCDIR);
+	closedir(SRCDIR);
+	
+	# make aliases for each one into the dest directory
+	print("Placing aliases to all files from $src_dir in $dest_dir\n");
+	for ( @resource_files )
+	{
+		next if $_ eq "CVS";
+		#print("	Doing $_\n");
+		if (-l $src_dir.$_)
+		{
+			print("		$_ is an alias\n");
+			next;
+		}
+		my($file_name) = $src_dir . $_; 
+		MakeAlias($file_name, $dest_dir);
+	}
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Make resource aliases
+#//--------------------------------------------------------------------------------------------------
+
+sub MakeResourceAliases()
+{
+	unless( $main::build{resources} ) { return; }
+	_assertRightDirectory();
+
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	print("--- Starting Resource copying ----\n");
+
+	#//
+	#// Most resources should all go into the chrome dir eventually
+	#//
+	my($chrome_dir) = "$dist_dir" . "Chrome:";
+	my($resource_dir) = "$dist_dir" . "res:";
+	my($samples_dir) = "$resource_dir" . "samples:";
+
+	#//
+	#// Make aliases of resource files
+	#//
+	_MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
+	_MakeAlias(":mozilla:layout:html:document:src:html.css",							"$resource_dir");
+	_MakeAlias(":mozilla:layout:html:document:src:arrow.gif",							"$resource_dir");	
+	_MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",			"$resource_dir");
+	_MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
+	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
+
+	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST",						"$resource_dir");
+	my($entitytab_dir) = "$resource_dir" . "entityTables";
+	_InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",						"$entitytab_dir");
+
+	my($html_dir) = "$resource_dir" . "html:";
+	_InstallResources(":mozilla:layout:html:base:src:MANIFEST_RES",						"$html_dir");
+
+	my($throbber_dir) = "$resource_dir" . "throbber:";
+	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:throbber:",				"$throbber_dir");
+	
+	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:samples:",				"$samples_dir");
+	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:resources:",				"$samples_dir");
+	
+	my($rdf_dir) = "$resource_dir" . "rdf:";
+	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
+
+	my($domds_dir) = "$samples_dir" . "rdf:";
+	_InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",					"$domds_dir");
+
+	my($xpinstall_ch_dir) = "$chrome_dir" . "xpinstall";
+	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_ch_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:xpinstall:res:content:MANIFEST",						"$xpinstall_ch_dir:content:default:", 0);
+	_InstallResources(":mozilla:xpinstall:res:skin:MANIFEST",							"$xpinstall_ch_dir:skin:default:", 0);
+	
+	my($profile_chrome_dir) = "$chrome_dir" . "Profile";
+	_InstallResources(":mozilla:profile:resources:content:MANIFEST",							"$profile_chrome_dir:content:default", 0);
+	_InstallResources(":mozilla:profile:resources:skin:MANIFEST",							"$profile_chrome_dir:skin:default", 0);
+	_InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",				"$profile_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:profile:pref-migrator:resources:content:MANIFEST","$profile_chrome_dir:content:default", 0);
+	_InstallResources(":mozilla:profile:pref-migrator:resources:locale:en-US:MANIFEST","$profile_chrome_dir:locale:en-US:", 0);
+
+	# need to duplicate this line if more files in default profile folder
+	my($defaults_dir) = "$dist_dir" . "Defaults:";
+	mkdir($defaults_dir, 0);
+
+	# Default _profile_ directory stuff
+	my($default_profile_dir) = "$defaults_dir"."Profile:";
+	mkdir($default_profile_dir, 0);
+
+	_copy(":mozilla:profile:defaults:bookmarks.html",									"$default_profile_dir"."bookmarks.html");
+	_copy(":mozilla:profile:defaults:panels.rdf",									"$default_profile_dir"."panels.rdf");
+
+	# Default _pref_ directory stuff
+	my($default_pref_dir) = "$defaults_dir"."Pref:";
+	mkdir($default_pref_dir, 0);
+	_InstallResources(":mozilla:xpinstall:public:MANIFEST_PREFS",						"$default_pref_dir", 0);
+	_InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",					"$default_pref_dir", 0);
+	_InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",						"$default_pref_dir", 0);
+	_InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",						"$default_pref_dir", 0);
+
+	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
+	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";
+	_InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",				"$navigator_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",					"$navigator_chrome_dir:skin:default");
+	_InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",		"$navigator_chrome_dir:locale:en-US:", 0);
+
+	 my($global_chrome_dir) = "$chrome_dir" . "Global";
+	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",			"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",		"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",				"$global_chrome_dir:skin:default");
+	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",		"$chrome_dir");
+	_InstallResources(":mozilla:xpfe:global:resources:locale:MANIFEST",				"$global_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:xpfe:global:resources:locale:mac:MANIFEST",			"$global_chrome_dir:locale:en-US:", 0);
+
+	_InstallResources(":mozilla:docshell:base:MANIFEST",							"$global_chrome_dir:locale:en-US:", 0);
+
+	_InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
+
+	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:",						"$samples_dir");
+	_MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:",							"$samples_dir");
+	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
+
+	my($toolbar_dir) = "$resource_dir" . "toolbar:";
+	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
+	_MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
+		
+	# if ($main::build{editor})
+	{
+		my($editor_chrome_dir) = "$chrome_dir" . "Editor";
+
+		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",			"$editor_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",				"$editor_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:locale:en-US:MANIFEST",	"$editor_chrome_dir:locale:en-US:", 0);
+
+		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",					"$editor_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",		"$editor_chrome_dir:locale:en-US:", 0);
+	}
+
+	# if ($main::build{mailnews})
+	{
+		my($mailnews_dir) = "$resource_dir" . "Mailnews";
+		my($messenger_chrome_dir) = "$chrome_dir" . "Messenger";
+		my($messengercomposer_chrome_dir) = "$chrome_dir" . "MessengerCompose";
+		my($addressbook_chrome_dir) = "$chrome_dir" . "Addressbook";
+		
+		_InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",			 "$messenger_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",				 "$messenger_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:mailnews:base:resources:locale:en-US:MANIFEST",		 "$messenger_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",	 "$messenger_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:base:prefs:resources:locale:en-US:MANIFEST", "$messenger_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",		 "$messenger_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",	 "$messenger_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:base:search:resources:locale:en-US:MANIFEST",		"$messenger_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",				 "$messenger_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:mailnews:mime:resources:content:MANIFEST",				"$messenger_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",	 "$messenger_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:mailnews:mime:emitters:resources:content:MANIFEST",		"$messenger_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",			 "$messenger_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:mailnews:local:resources:locale:en-US:MANIFEST",	 "$messenger_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",				 "$messenger_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:mailnews:news:resources:content:MANIFEST",			 "$messenger_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:news:resources:locale:en-US:MANIFEST",		 "$messenger_chrome_dir:locale:en-US:", 0);
+
+		_InstallResources(":mozilla:mailnews:imap:resources:locale:en-US:MANIFEST",		 "$messenger_chrome_dir:locale:en-US:", 0);
+
+		_InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",					 "$messenger_chrome_dir:locale:en-US:", 0); 
+		_InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",		"$mailnews_dir:messenger:", 0); 
+
+		_InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",		 "$messengercomposer_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",			 "$messengercomposer_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:mailnews:compose:resources:locale:en-US:MANIFEST",	 "$messengercomposer_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",	 "$messengercomposer_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:compose:prefs:resources:locale:en-US:MANIFEST",	"$messengercomposer_chrome_dir:locale:en-US:", 0);
+
+		_InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",		 "$addressbook_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",			 "$addressbook_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",	 "$addressbook_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_chrome_dir:locale:en-US:", 0);
+	}
+	
+	# copy the chrome registry. We want an actual copy so that changes for custom UI's
+	# don't accidentally get checked into the tree. (pinkerton, bug#5296).
+	_copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
+		
+	# Install XPFE component resources
+	_InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",					"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:components:find:resources:locale:MANIFEST",			"$global_chrome_dir:locale");
+	{
+		my($bookmarks_dir) = "$chrome_dir"."Bookmarks";
+		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-content",	"$bookmarks_dir:content:default");
+		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-skin",		"$bookmarks_dir:skin:default");
+		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:MANIFEST",	"$bookmarks_dir:locale");
+	}
+	{
+		my($directory_dir) = "$chrome_dir"."Directory";
+		_InstallResources(":mozilla:xpfe:components:directory:MANIFEST-content",			"$directory_dir:content:default");
+		_InstallResources(":mozilla:xpfe:components:directory:MANIFEST-skin",				"$directory_dir:skin:default");
+		_InstallResources(":mozilla:xpfe:components:directory:locale:MANIFEST",				"$directory_dir:locale");
+	}
+	{
+		my($regviewer_dir) = "$chrome_dir"."RegViewer";
+		_InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-content",			"$regviewer_dir:content:default");
+		_InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-skin",				"$regviewer_dir:skin:default");
+		_InstallResources(":mozilla:xpfe:components:regviewer:locale:MANIFEST",				"$regviewer_dir:locale");
+	}
+	{
+		my($history_dir) = "$chrome_dir"."History";
+		_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",	"$history_dir:content:default");
+		_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-skin",		"$history_dir:skin:default");
+		_InstallResources(":mozilla:xpfe:components:history:resources:locale:MANIFEST",		"$history_dir:locale");
+	}
+	{
+		my($related_dir) = "$chrome_dir"."Related";
+		_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-content",	"$related_dir:content:default");
+		_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-skin",		"$related_dir:skin:default");
+		_InstallResources(":mozilla:xpfe:components:related:resources:locale:MANIFEST",		"$related_dir:locale");
+	}
+	{
+		my($search_dir) = "$chrome_dir"."Search";
+		_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-content",		"$search_dir:content:default");
+		_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-skin",		"$search_dir:skin:default");
+		_InstallResources(":mozilla:xpfe:components:search:resources:locale:MANIFEST",		"$search_dir:locale");
+
+		my($searchdatasets_dir) = "$resource_dir" . "rdf:datasets:";
+		_InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",				"$searchdatasets_dir");
+	}
+	{
+		my($sidebar_chrome_dir) = "$chrome_dir" . "Sidebar";
+		_InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",	"$sidebar_chrome_dir:content:default");
+		_InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-skin",		"$sidebar_chrome_dir:skin:default");
+		_InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:MANIFEST",		"$sidebar_chrome_dir:locale");
+		_InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",					"${dist_dir}Components");
+	}
+
+	_InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",					"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:components:ucth:resources:locale:MANIFEST",			"$global_chrome_dir:locale");
+	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",					"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:components:xfer:resources:locale:MANIFEST",			"$global_chrome_dir:locale");
+	
+	{
+		 my($wallet_chrome_dir) = "$chrome_dir" . "Wallet";
+		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST",						"$wallet_chrome_dir:content:default:", 0);
+
+		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_PROPERTIES",			"$wallet_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:extensions:wallet:src:MANIFEST_PROPERTIES",				"$wallet_chrome_dir:locale:en-US:", 0);
+	
+		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
+	}
+
+	{
+		my($pref_chrome_dir) = "$chrome_dir" . "Pref";
+		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST", 		"$pref_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",			"$pref_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",	"$pref_chrome_dir:locale:en-US:", 0);
+	}
+
+	# QA Menu
+	_InstallResources(":mozilla:intl:strres:tests:MANIFEST",			"$resource_dir");
+
+	print("--- Resource copying complete ----\n");
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Make library aliases
+#//--------------------------------------------------------------------------------------------------
+
+sub MakeLibAliases()
+{
+	my($dist_dir) = _getDistDirectory();
+
+	local(*F);
+	my($filepath, $appath, $psi) = (':mozilla:build:mac:idepath.txt');
+	if (open(F, $filepath)) {
+		$appath = <F>;
+		close(F);
+
+		#// WasteLib
+		my($wastelibpath) = $appath;
+		$wastelibpath =~ s/[^:]*$/MacOS Support:WASTE 1.3 Distribution:WASTELib/;
+		MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:");
+
+		#// ProfilerLib
+		if ($main::PROFILE)
+		{
+			my($profilerlibpath) = $appath;
+			$profilerlibpath =~ s/[^:]*$/MacOS Support:Libraries:Profiler Common:ProfilerLib/;
+			MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:");
+		}
+	}
+	else {
+		print STDERR "Can't find $filepath\n";
+	}
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// Build the runtime 'dist' directories
@@ -274,6 +593,8 @@ sub BuildRuntimeDist()
 	_assertRightDirectory();
 	
 	my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
+
+	print("--- Starting Runtime Dist export ----\n");
 
 	#MAC_COMMON
 	_InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
@@ -289,13 +610,13 @@ sub BuildRuntimeDist()
 	_InstallFromManifest(":mozilla:config:mac:MANIFEST_config",						"$distdirectory:config:");
 	
 	#NSPR	
-    _InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",					"$distdirectory:nspr:");		
-    _InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:");		
-    _InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",						"$distdirectory:nspr:");		
-    _InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:");		
-    _InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:");
+	_InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",					"$distdirectory:nspr:");		
+	_InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:");		
+	_InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",						"$distdirectory:nspr:");		
+	_InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:");		
+	_InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:");
 
-	print("--- Runtime Dist export complete ----\n")
+	print("--- Runtime Dist export complete ----\n");
 }
 
 
@@ -311,6 +632,8 @@ sub BuildClientDist()
 	my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
 	my $dist_dir = _getDistDirectory(); # the subdirectory with the libs and executable.
 
+	 print("--- Starting Client Dist export ----\n");
+
 	_InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
 #	_InstallFromManifest(":mozilla:lib:mac:Instrumentation:MANIFEST",				"$distdirectory:mac:inst:");
 
@@ -323,10 +646,10 @@ sub BuildClientDist()
 
 	#INTL
 	#CHARDET
-	_InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST",				"$distdirectory:chardet");
+	_InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST",					"$distdirectory:chardet");
 
 	#UCONV
-	_InstallFromManifest(":mozilla:intl:uconv:idl:MANIFEST_IDL",						"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:intl:uconv:idl:MANIFEST_IDL",					"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:intl:uconv:public:MANIFEST",						"$distdirectory:uconv:");
 	_InstallFromManifest(":mozilla:intl:uconv:ucvlatin:MANIFEST",					"$distdirectory:uconv:");
 	_InstallFromManifest(":mozilla:intl:uconv:ucvja:MANIFEST",						"$distdirectory:uconv:");
@@ -345,8 +668,8 @@ sub BuildClientDist()
 #	_InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
 	#LOCALE
-	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",						"$distdirectory:locale:");
-	_InstallFromManifest(":mozilla:intl:locale:idl:MANIFEST_IDL",			"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",					"$distdirectory:locale:");
+	_InstallFromManifest(":mozilla:intl:locale:idl:MANIFEST_IDL",					"$distdirectory:idl:");
 
 	#LWBRK
 	_InstallFromManifest(":mozilla:intl:lwbrk:public:MANIFEST",						"$distdirectory:lwbrk:");
@@ -355,25 +678,25 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:intl:strres:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
 	#JPEG
-    _InstallFromManifest(":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:");
+	_InstallFromManifest(":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:");
 
 	#LIBREG
-    _InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",					"$distdirectory:libreg:");
+	_InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",				"$distdirectory:libreg:");
 
 	#XPCOM
-	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",						"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",							"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",							"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:xpcom:threads:MANIFEST_IDL",							"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST_IDL",							"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST_COMPONENTS", "${dist_dir}Components:");
+	_InstallFromManifest(":mozilla:xpcom:threads:MANIFEST_IDL",						"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST_IDL",					"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST_COMPONENTS", 			"${dist_dir}Components:");
 
-	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST",								"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST",							"$distdirectory:xpcom:");
 	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST",						"$distdirectory:xpcom:");
 	_InstallFromManifest(":mozilla:xpcom:ds:MANIFEST",								"$distdirectory:xpcom:");
 	_InstallFromManifest(":mozilla:xpcom:io:MANIFEST",								"$distdirectory:xpcom:");
 	_InstallFromManifest(":mozilla:xpcom:threads:MANIFEST",							"$distdirectory:xpcom:");
-	_InstallFromManifest(":mozilla:xpcom:proxy:public:MANIFEST",						"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:proxy:public:MANIFEST",					"$distdirectory:xpcom:");
 
 	_InstallFromManifest(":mozilla:xpcom:reflect:xptinfo:public:MANIFEST",			"$distdirectory:xpcom:");
 	_InstallFromManifest(":mozilla:xpcom:reflect:xptcall:public:MANIFEST",			"$distdirectory:xpcom:");
@@ -381,24 +704,24 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",				"$distdirectory:xpcom:");
 	
 	#ZLIB
-    _InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
+	_InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
 
-    #LIBJAR
-    _InstallFromManifest(":mozilla:modules:libjar:MANIFEST",                         "$distdirectory:libjar:");
-    _InstallFromManifest(":mozilla:modules:libjar:MANIFEST_IDL",						"$distdirectory:idl:");
+	#LIBJAR
+	_InstallFromManifest(":mozilla:modules:libjar:MANIFEST",						"$distdirectory:libjar:");
+	_InstallFromManifest(":mozilla:modules:libjar:MANIFEST_IDL",					"$distdirectory:idl:");
 
 	#LIBUTIL
-    _InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",					"$distdirectory:libutil:");
+	_InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",				"$distdirectory:libutil:");
 
 	#SUN_JAVA
-    _InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",					"$distdirectory:sun-java:");
-    _InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",					"$distdirectory:sun-java:");
+	_InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",				"$distdirectory:sun-java:");
+	_InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",					"$distdirectory:sun-java:");
 
 	#JS
-    _InstallFromManifest(":mozilla:js:src:MANIFEST",									"$distdirectory:js:");
+	_InstallFromManifest(":mozilla:js:src:MANIFEST",								"$distdirectory:js:");
 
 	#LIVECONNECT
-	_InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",						"$distdirectory:liveconnect:");
+	_InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",					"$distdirectory:liveconnect:");
 	
 	#XPCONNECT	
 	_InstallFromManifest(":mozilla:js:src:xpconnect:idl:MANIFEST",					"$distdirectory:idl:");
@@ -406,118 +729,88 @@ sub BuildClientDist()
 
 	#CAPS
 	_InstallFromManifest(":mozilla:caps:include:MANIFEST",							"$distdirectory:caps:");
-	_InstallFromManifest(":mozilla:caps:idl:MANIFEST",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:caps:idl:MANIFEST",								"$distdirectory:idl:");
 
 	#LIBPREF
-    _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",					"$distdirectory:libpref:");
-    _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST_IDL",				"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",				"$distdirectory:libpref:");
+	_InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
 	#PROFILE
-    _InstallFromManifest(":mozilla:profile:public:MANIFEST_IDL",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:profile:public:MANIFEST_IDL",					"$distdirectory:idl:");
 
 	#PREF_MIGRATOR
-    _InstallFromManifest(":mozilla:profile:pref-migrator:public:MANIFEST",				"$distdirectory:profile:");
+	_InstallFromManifest(":mozilla:profile:pref-migrator:public:MANIFEST",			"$distdirectory:profile:");
 
 	#LIBIMAGE
-    _InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",						"$distdirectory:libimg:");
-    _InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",						"$distdirectory:libimg:");
-    _InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",					"$distdirectory:libimg:");
-    _InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",				"$distdirectory:libimg:");
+	_InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",					"$distdirectory:libimg:");
+	_InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",					"$distdirectory:libimg:");
+	_InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",					"$distdirectory:libimg:");
+	_InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",				"$distdirectory:libimg:");
 
 	#PLUGIN
-    _InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:");
-    _InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",					"$distdirectory:plugin:");
-    _InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",					"$distdirectory:plugin:");
-    _InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:");
-    _InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",					"$distdirectory:oji:");
-    
-    #DB
-    _InstallFromManifest(":mozilla:db:mdb:public:MANIFEST",							"$distdirectory:db:");
-    _InstallFromManifest(":mozilla:db:mork:build:MANIFEST",							"$distdirectory:db:");
+	_InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:");
+	_InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",					"$distdirectory:plugin:");
+	_InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",					"$distdirectory:plugin:");
+	_InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:");
+	_InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",					"$distdirectory:oji:");
+	
+	#DB
+	_InstallFromManifest(":mozilla:db:mdb:public:MANIFEST",							"$distdirectory:db:");
+	_InstallFromManifest(":mozilla:db:mork:build:MANIFEST",							"$distdirectory:db:");
 
 	#DBM
-    _InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
-    
-    #URILOADER
-    _InstallFromManifest(":mozilla:uriloader:base:MANIFEST_IDL",				"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
 	
-	if ( $main::NECKO )
-	{
+	#URILOADER
+	_InstallFromManifest(":mozilla:uriloader:base:MANIFEST_IDL",					"$distdirectory:idl:");
+	
 	#NETWERK
-		_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST",					"$distdirectory:netwerk:");
-   		_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
-   		_InstallFromManifest(":mozilla:netwerk:socket:base:MANIFEST_IDL",				"$distdirectory:idl:");
-   		_InstallFromManifest(":mozilla:netwerk:protocol:about:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   		_InstallFromManifest(":mozilla:netwerk:protocol:data:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   		_InstallFromManifest(":mozilla:netwerk:protocol:file:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   		_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   		_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST",			"$distdirectory:netwerk:");
-   		_InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   		_InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",		"$distdirectory:idl:");
-		_InstallFromManifest(":mozilla:netwerk:cache:public:MANIFEST",					"$distdirectory:idl:");
-		
-	} else {
-	#NETWORK
-	    _InstallFromManifest(":mozilla:network:public:MANIFEST",						"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:cache:MANIFEST",							"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:client:MANIFEST",						"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:cnvts:MANIFEST",							"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:cstream:MANIFEST",						"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:main:MANIFEST",							"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:mimetype:MANIFEST",						"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:util:MANIFEST",							"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:about:MANIFEST",				"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:certld:MANIFEST",				"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:dataurl:MANIFEST",				"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:file:MANIFEST",					"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:ftp:MANIFEST",					"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:gopher:MANIFEST",				"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:http:MANIFEST",					"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:js:MANIFEST",					"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:mailbox:MANIFEST",				"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:marimba:MANIFEST",				"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:nntp:MANIFEST",					"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:pop3:MANIFEST",					"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:remote:MANIFEST",				"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:smtp:MANIFEST",					"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:protocol:sockstub:MANIFEST",				"$distdirectory:network:");
-	    _InstallFromManifest(":mozilla:network:module:MANIFEST",						"$distdirectory:network:module");
-	}
-
+	_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST",					"$distdirectory:netwerk:");
+	_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:netwerk:socket:base:MANIFEST_IDL",				"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:netwerk:protocol:about:public:MANIFEST_IDL",		"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:netwerk:protocol:data:public:MANIFEST_IDL",		"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:netwerk:protocol:file:public:MANIFEST_IDL",		"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST_IDL",		"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST",			"$distdirectory:netwerk:");
+	_InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",		"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",		"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:netwerk:cache:public:MANIFEST",					"$distdirectory:idl:");
+	
 	#EXTENSIONS
-    _InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",						"$distdirectory:cookie:");
-    _InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
+	_InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",						"$distdirectory:cookie:");
+	_InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
 
 	#WEBSHELL
-    _InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
-    _InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",  		"$distdirectory:webshell:");
+	_InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
+	_InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",			"$distdirectory:webshell:");
 
 	#LAYOUT
-    _InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
-    _InstallFromManifest(":mozilla:layout:base:public:MANIFEST",					"$distdirectory:layout:");
-    _InstallFromManifest(":mozilla:layout:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:base:public:MANIFEST",					"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:layout:html:content:public:MANIFEST",			"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",				"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:html:document:public:MANIFEST",			"$distdirectory:layout:");
-    _InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",				"$distdirectory:layout:");
-    _InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",					"$distdirectory:layout:");
-    _InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",					"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",				"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",					"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",					"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",				"$distdirectory:layout:");
-    _InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",				"$distdirectory:layout:");
-    _InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",				"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",			"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",				"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",				"$distdirectory:layout:");
-  _InstallFromManifest(":mozilla:layout:xbl:public:Manifest",				"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:xbl:public:Manifest",						"$distdirectory:layout:");
 
 	#GFX
-    _InstallFromManifest(":mozilla:gfx:public:MANIFEST",							"$distdirectory:gfx:");
-    _InstallFromManifest(":mozilla:gfx:idl:MANIFEST_IDL",						    "$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:gfx:public:MANIFEST",							"$distdirectory:gfx:");
+	_InstallFromManifest(":mozilla:gfx:idl:MANIFEST_IDL",							"$distdirectory:idl:");
 
 	#VIEW
-    _InstallFromManifest(":mozilla:view:public:MANIFEST",							"$distdirectory:view:");
+	_InstallFromManifest(":mozilla:view:public:MANIFEST",							"$distdirectory:view:");
 
 	#DOM
 	_InstallFromManifest(":mozilla:dom:public:MANIFEST",							"$distdirectory:dom:");
@@ -540,48 +833,48 @@ sub BuildClientDist()
 
 	#EXPAT
 	_InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",						"$distdirectory:expat:");
-    
-    #DOCSHELL
+	
+	#DOCSHELL
 	_InstallFromManifest(":mozilla:docshell:base:MANIFEST_IDL",						"$distdirectory:idl:");
 
 	#WIDGET
-    _InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
-    _InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
-    _InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",						"$distdirectory:widget:");
-    _InstallFromManifest(":mozilla:widget:timer:public:MANIFEST",					"$distdirectory:widget:");
+	_InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
+	_InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",						"$distdirectory:widget:");
+	_InstallFromManifest(":mozilla:widget:timer:public:MANIFEST",					"$distdirectory:widget:");
 
-    #RDF
-    _InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
-    _InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
-    _InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
-    _InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",					"$distdirectory:rdf:");
-    _InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
-    _InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
-    _InstallFromManifest(":mozilla:rdf:tests:domds:MANIFEST",						"$distdirectory:idl:");
-    
-    #BRPROF
+	#RDF
+	_InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
+	_InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
+	_InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",					"$distdirectory:rdf:");
+	_InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
+	_InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
+	_InstallFromManifest(":mozilla:rdf:tests:domds:MANIFEST",						"$distdirectory:idl:");
+	
+	#BRPROF
 	_InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
-    
-    #CHROME
-	_InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:idl:");
-    
+	
+	#CHROME
+	_InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",						"$distdirectory:idl:");
+	
 	#EDITOR
-	_InstallFromManifest(":mozilla:editor:idl:MANIFEST",								"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:editor:txmgr:idl:MANIFEST",					"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:editor:idl:MANIFEST",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:editor:txmgr:idl:MANIFEST",						"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
 	_InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",					"$distdirectory:editor:txmgr");
 	_InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",					"$distdirectory:editor:txtsvc");
-  
-    #SILENTDL
-    #_InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
+	
+	#SILENTDL
+	#_InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
 
-    #XPINSTALL (the one and only!)
-    _InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                       "$distdirectory:xpinstall:");
+	#XPINSTALL (the one and only!)
+	_InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",						"$distdirectory:xpinstall:");
 
-	#FULL CIRCLE    
+	#FULL CIRCLE	
 	if ($main::MOZ_FULLCIRCLE)
 	{
-		_InstallFromManifest(":ns:fullsoft:public:MANIFEST",							"$distdirectory");
+		_InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory");
 	
 		if ($main::DEBUG)
 		{
@@ -596,20 +889,18 @@ sub BuildClientDist()
 
 
 	# XPFE COMPONENTS
-   _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
-   _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",				"$distdirectory:idl:");
+	 _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",				"$distdirectory:xpfe:components");
+	 _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
-   my $dir = '';
-   for $dir (qw(bookmarks find history prefwindow related sample search
-                shistory sidebar ucth xfer)) {
-     _InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",
-                          "$distdirectory:idl:");
-   }
+	 my $dir = '';
+	 for $dir (qw(bookmarks find history prefwindow related sample search shistory sidebar ucth xfer)) {
+	 _InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",		"$distdirectory:idl:");
+	 }
 
-   # directory
-   _InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",			"$distdirectory:idl:");
-   # regviewer
-   _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",			"$distdirectory:idl:");
+	 # directory
+	 _InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",		"$distdirectory:idl:");
+	 # regviewer
+	 _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",		"$distdirectory:idl:");
 
 	# XPAPPS
 	_InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
@@ -618,39 +909,39 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:xpfe:browser:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
 	# MAILNEWS
-   _InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:public:MANIFEST_IDL",						"$distdirectory:idl:");
-   _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
-   _InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST",				"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST_IDL",			"$distdirectory:idl:");
-   _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST_IDL",				"$distdirectory:idl:");
-   _InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",						"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:imap:build:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:imap:src:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST_IDL",				"$distdirectory:idl:");
-   _InstallFromManifest(":mozilla:mailnews:mime:src:MANIFEST",						"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:mime:build:MANIFEST",						"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:mime:emitters:src:MANIFEST",				"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",						"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST_IDL",				"$distdirectory:idl:");
-   _InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",					"$distdirectory:mailnews:");
-   
-   print("--- Client Dist export complete ----\n")
+	 _InstallFromManifest(":mozilla:mailnews:public:MANIFEST",						"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:public:MANIFEST_IDL",					"$distdirectory:idl:");
+	 _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
+	 _InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST",			"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST_IDL",		"$distdirectory:idl:");
+	 _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",				"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST_IDL",			"$distdirectory:idl:");
+	 _InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",				"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",				"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",				"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:imap:build:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:imap:src:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST_IDL",				"$distdirectory:idl:");
+	 _InstallFromManifest(":mozilla:mailnews:mime:src:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:mime:build:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:mime:emitters:src:MANIFEST",			"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",					"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST_IDL",			"$distdirectory:idl:");
+	 _InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",				"$distdirectory:mailnews:");
+	 _InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",				"$distdirectory:mailnews:");
+	 
+	 print("--- Client Dist export complete ----\n");
 }
 
 
@@ -698,7 +989,7 @@ sub BuildDist()
 	BuildRuntimeDist();
 	BuildClientDist();
 	
-	print("--- Dist export complete ----\n")
+	print("--- Dist export complete ----\n");
 }
 
 
@@ -712,12 +1003,14 @@ sub BuildStubs()
 	unless( $main::build{stubs} ) { return; }
 	_assertRightDirectory();
 
+	print("--- Starting Stubs projects ----\n");
+
 	#//
 	#// Clean projects
 	#//
-	_BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
+	_BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",				"Stubs");
 
-	print("--- Stubs projects complete ----\n")
+	print("--- Stubs projects complete ----\n");
 }
 
 
@@ -791,6 +1084,8 @@ sub BuildIDLProjects()
 	unless( $main::build{idl} ) { return; }
 	_assertRightDirectory();
 
+	print("--- Starting IDL projects ----\n");
+
 	if ( $main::build{xpidl} )
 	{
 		#// see if the xpidl compiler/linker has been rebuilt by comparing modification dates.
@@ -810,46 +1105,44 @@ sub BuildIDLProjects()
 		}
 	}
 	
-	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"xpcom");
+	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",							"xpcom");
 
-	if ( $main::NECKO )
-	{
-		BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","netwerk");
+	# necko
+	BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","netwerk");
 
-		# protocols
-		BuildIDLProject(":mozilla:netwerk:protocol:about:macbuild:aboutIDL.mcp","about");
-		BuildIDLProject(":mozilla:netwerk:protocol:data:macbuild:dataIDL.mcp","data");
-		BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","file");
-		BuildIDLProject(":mozilla:netwerk:protocol:ftp:macbuild:ftpIDL.mcp","ftp");
-		BuildIDLProject(":mozilla:netwerk:protocol:http:macbuild:httpIDL.mcp","http");
-		BuildIDLProject(":mozilla:netwerk:protocol:jar:macbuild:jarIDL.mcp","jar");
-		BuildIDLProject(":mozilla:netwerk:protocol:res:macbuild:resIDL.mcp","res");
-		
-		# mime service
-		# Just a placeholder as mime.xpt is currently part of the netwerkIDL.mcp build
-
-		# cache
-		BuildIDLProject(":mozilla:netwerk:cache:macbuild:nkcacheIDL.mcp","nkcache");
-		
-		# stream conversion.
-		BuildIDLProject(":mozilla:netwerk:streamconv:macbuild:streamconvIDL.mcp","streamconv");
-	}
+	# protocols
+	BuildIDLProject(":mozilla:netwerk:protocol:about:macbuild:aboutIDL.mcp","about");
+	BuildIDLProject(":mozilla:netwerk:protocol:data:macbuild:dataIDL.mcp","data");
+	BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","file");
+	BuildIDLProject(":mozilla:netwerk:protocol:ftp:macbuild:ftpIDL.mcp","ftp");
+	BuildIDLProject(":mozilla:netwerk:protocol:http:macbuild:httpIDL.mcp","http");
+	BuildIDLProject(":mozilla:netwerk:protocol:jar:macbuild:jarIDL.mcp","jar");
+	BuildIDLProject(":mozilla:netwerk:protocol:res:macbuild:resIDL.mcp","res");
 	
-	BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp", 				"uriloader");
+	# mime service
+	# Just a placeholder as mime.xpt is currently part of the netwerkIDL.mcp build
+
+	# cache
+	BuildIDLProject(":mozilla:netwerk:cache:macbuild:nkcacheIDL.mcp","nkcache");
+	
+	# stream conversion.
+	BuildIDLProject(":mozilla:netwerk:streamconv:macbuild:streamconvIDL.mcp","streamconv");
+	
+	BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",					"uriloader");
 
 	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
 	BuildIDLProject(":mozilla:modules:libutil:macbuild:libutilIDL.mcp",				"libutil");
 	BuildIDLProject(":mozilla:modules:libjar:macbuild:libjarIDL.mcp",				"libjar");
 	BuildIDLProject(":mozilla:modules:oji:macbuild:ojiIDL.mcp",						"oji");
-	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");
-	BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp", 							"dom");
+	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp",						"xpconnect");
+	BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp",								"dom");
 
-	BuildIDLProject(":mozilla:dom:src:jsurl:macbuild:JSUrlDL.mcp", 					"jsurl");
+	BuildIDLProject(":mozilla:dom:src:jsurl:macbuild:JSUrlDL.mcp",					"jsurl");
 	
-	BuildIDLProject(":mozilla:gfx:macbuild:gfxIDL.mcp", 							"gfx");
-	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
-	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
-	BuildIDLProject(":mozilla:editor:txmgr:macbuild:txmgrIDL.mcp", 						"txmgr");
+	BuildIDLProject(":mozilla:gfx:macbuild:gfxIDL.mcp",								"gfx");
+	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp",						"widget");
+	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp",						"editor");
+	BuildIDLProject(":mozilla:editor:txmgr:macbuild:txmgrIDL.mcp",						"txmgr");
 	BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.mcp", "profileservices");
 	BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.mcp",	"prefm");
 		
@@ -858,12 +1151,12 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
 	BuildIDLProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSourceIDL.mcp",		"domds");
 
-    BuildIDLProject(":mozilla:rdf:chrome:build:chromeIDL.mcp",                      "chrome");
-    	
-    BuildIDLProject(":mozilla:docshell:macbuild:docshellIDL.mcp",                   "docshell");
+	BuildIDLProject(":mozilla:rdf:chrome:build:chromeIDL.mcp",						"chrome");
+		
+	BuildIDLProject(":mozilla:docshell:macbuild:docshellIDL.mcp",					"docshell");
 
 	BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
-	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp",	"bookmarks");
+	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp", "bookmarks");
 	BuildIDLProject(":mozilla:xpfe:components:directory:DirectoryIDL.mcp",			"directory");
 	BuildIDLProject(":mozilla:xpfe:components:regviewer:RegViewerIDL.mcp",			"regviewer");
 	BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
@@ -877,7 +1170,7 @@ sub BuildIDLProjects()
 	
 	BuildIDLProject(":mozilla:xpfe:browser:macbuild:mozBrowserIDL.mcp",				"mozBrowser");
 	
-	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
+	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",					"xpinstall");
 
 	BuildIDLProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews");
 	BuildIDLProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose");
@@ -895,7 +1188,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:intl:unicharutil:macbuild:unicharutilIDL.mcp",					"unicharutil");
 	BuildIDLProject(":mozilla:intl:uconv:macbuild:uconvIDL.mcp",					"uconv");
 
-	print("--- IDL projects complete ----\n")
+	print("--- IDL projects complete ----\n");
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -906,6 +1199,8 @@ sub BuildRuntimeProjects()
 {
 	unless( $main::build{runtime} ) { return; }
 	_assertRightDirectory();
+
+	print("--- Starting Runtime projects ----\n");
 
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
@@ -980,7 +1275,7 @@ sub BuildRuntimeProjects()
 
 	BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",						"NSPR20$D.shlb", "NSPR20.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
-	print("--- Runtime projects complete ----\n")
+	print("--- Runtime projects complete ----\n");
 }
 
 
@@ -996,110 +1291,63 @@ sub BuildCommonProjects()
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 
-	#//
-	#// Stub libraries
-	#//
-
-	#_BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 	
+	print("--- Starting Common projects ----\n");
+
 	#//
 	#// Shared libraries
 	#//
 
-	BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",							"JPEG$D.o", "", 0, 0, 0);
-
 	BuildOneProject(":mozilla:modules:libreg:macbuild:libreg.mcp",				"libreg$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-
 	BuildOneProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",						"xpcom$D.shlb", "xpcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
-		
-	BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",						"JavaScript$D.shlb", "JavaScript.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	
+	BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",						"JavaScript$D.shlb", "JavaScript.toc", 1, $main::ALIAS_SYM_FILES, 0);	
 	BuildOneProject(":mozilla:js:macbuild:JSLoader.mcp",						"JSLoader$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:js:macbuild:LiveConnect.mcp",						"LiveConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
-	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.shlb", "zlib.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	
-	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.Lib", "", 0, 0, 0);
-	
-    BuildOneProject(":mozilla:modules:libjar:macbuild:libjar.mcp",              "libjar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-
-    BuildOneProject(":mozilla:modules:libjar:macbuild:libjar.mcp",              "libjar$D.Lib", "", 0, 0, 0);
+	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.shlb", "zlib.toc", 1, $main::ALIAS_SYM_FILES, 0);	
+	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.Lib", "", 0, 0, 0);	
+	BuildOneProject(":mozilla:modules:libjar:macbuild:libjar.mcp",				"libjar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:modules:libjar:macbuild:libjar.mcp",				"libjar$D.Lib", "", 0, 0, 0);
 
 	BuildOneProject(":mozilla:modules:oji:macbuild:oji.mcp",					"oji$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-
-	BuildOneProject(":mozilla:caps:macbuild:Caps.mcp",						 	"Caps$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-
+	BuildOneProject(":mozilla:caps:macbuild:Caps.mcp",							"Caps$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",			"libpref$D.shlb", "libpref.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:js:macbuild:XPConnect.mcp",						"XPConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:modules:libutil:macbuild:libutil.mcp",			"libutil$D.shlb", "libutil.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
-	ReconcileProject(":mozilla:modules:libimg:macbuild:png.mcp", 				":mozilla:modules:libimg:macbuild:png.toc");
-	_BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",					"png$D.o");
+	BuildOneProject(":mozilla:db:mork:macbuild:mork.mcp",						"Mork$D.shlb", "Mork.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:dbm:macbuild:DBM.mcp",							"DBM$D.o", "", 0, 0, 0);
+	
+#// XXX moved this TEMPORARILY to layout while we sort out a dependency
+#	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
+	print("--- Common projects complete ----\n");
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Build imglib projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildImglibProjects()
+{
+	unless( $main::build{imglib} ) { return; }
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+
+	print("--- Starting Imglib projects ----\n");
+
+	BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",							"JPEG$D.o", "", 0, 0, 0);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:png.mcp",					"png$D.o", "", 0, 0, 0);
 	BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",				"libimg$D.shlb", "libimg.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	BuildOneProject(":mozilla:modules:libimg:macbuild:gifdecoder.mcp",			"gifdecoder$D.shlb", "gifdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",			"pngdecoder$D.shlb", "pngdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",			"jpgdecoder$D.shlb", "jpgdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:dbm:macbuild:DBM.mcp",							"DBM$D.o", "", 0, 0, 0);
+	print("--- Imglib projects complete ----\n");
+} # imglib
 
-	if ( $main::NECKO )
-	{
-		BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Network$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-
-		# utils library
-		BuildOneProject(":mozilla:netwerk:util:macbuild:netwerkUtil.mcp",			"NetworkModular$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-
-        # cache
-		BuildOneProject(":mozilla:netwerk:cache:macbuild:nkcache.mcp",				"nkcache$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-        
-		# protocols
-		BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:data:macbuild:data.mcp",			"data$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:jar:macbuild:jar.mcp",			"jar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:res:macbuild:res.mcp",			"res$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",	            "JSUrl$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-
-		# mime service
-		BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mimetype$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		
-		# stream conversion
-		BuildOneProject(":mozilla:netwerk:streamconv:macbuild:streamconv.mcp",		"streamconv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:streamconv:macbuild:multiMixedConv.mcp",	"multiMixedConv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	}
-	else
-	{
-		BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	}
 	
-	BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.mcp",						"uriLoader$D.shlb", "uriloader.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	
-	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp",	"prefm$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-
-	BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",    		"Cookie$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",			"Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",	"WalletViewers$D.shlb", "walletviewer.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	
-	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"BrowsingProfile$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    
-	BuildOneProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSource.mcp",		"DOMDataSource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    
-    BuildOneProject(":mozilla:db:mork:macbuild:mork.mcp",						"Mork$D.shlb", "Mork.toc", 1, $main::ALIAS_SYM_FILES, 1);
-#// XXX moved this TEMPORARILY to layout while we sort out a dependency
-#	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
-	print("--- Common projects complete ----\n")
-}
-
 #//--------------------------------------------------------------------------------------------------
 #// Build international projects
 #//--------------------------------------------------------------------------------------------------
@@ -1111,359 +1359,102 @@ sub BuildInternationalProjects()
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 
+	print("--- Starting International projects ----\n");
+
 	BuildOneProject(":mozilla:intl:chardet:macbuild:chardet.mcp",				"chardet$D.shlb", "chardet.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",					"uconv$D.shlb", "uconv.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvlatin.mcp",				"ucvlatin$D.shlb", "uconvlatin.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvja.mcp",					"ucvja$D.shlb", "ucvja.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw.mcp",					"ucvtw$D.shlb", "ucvtw.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw2.mcp",					"ucvtw2$D.shlb", "ucvtw2.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvcn.mcp",					"ucvcn$D.shlb", "ucvcn.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvko.mcp",					"ucvko$D.shlb", "ucvko.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvibm.mcp",					"ucvibm$D.shlb", "ucvibm.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:unicharutil:macbuild:unicharutil.mcp",		"unicharutil$D.shlb", "unicharutil.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:locale:macbuild:locale.mcp",					"nslocale$D.shlb", "nslocale.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:lwbrk:macbuild:lwbrk.mcp",					"lwbrk$D.shlb", "lwbrk.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:strres:macbuild:strres.mcp",					"strres$D.shlb", "strres.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 #	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvja2.mcp",					"ucvja2$D.shlb", "ucvja2.toc", 1, $main::ALIAS_SYM_FILES, 1);
-				
-	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw.mcp",					"ucvtw$D.shlb", "ucvtw.toc", 1, $main::ALIAS_SYM_FILES, 1);
-				
-	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw2.mcp",					"ucvtw2$D.shlb", "ucvtw2.toc", 1, $main::ALIAS_SYM_FILES, 1);
-				
-	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvcn.mcp",					"ucvcn$D.shlb", "ucvcn.toc", 1, $main::ALIAS_SYM_FILES, 1);
-				
-	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvko.mcp",					"ucvko$D.shlb", "ucvko.toc", 1, $main::ALIAS_SYM_FILES, 1);
-				
 #	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvvt.mcp",					"ucvvt$D.shlb", "ucvvt.toc", 1, $main::ALIAS_SYM_FILES, 1);
-				
-	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvibm.mcp",					"ucvibm$D.shlb", "ucvibm.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 #	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvth.mcp",					"ucvth$D.shlb", "ucvth.toc", 1, $main::ALIAS_SYM_FILES, 1);
-				
-	BuildOneProject(":mozilla:intl:unicharutil:macbuild:unicharutil.mcp",		"unicharutil$D.shlb", "unicharutil.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:intl:locale:macbuild:locale.mcp",					"nslocale$D.shlb", "nslocale.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	
-	BuildOneProject(":mozilla:intl:lwbrk:macbuild:lwbrk.mcp",					"lwbrk$D.shlb", "lwbrk.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	
-    BuildOneProject(":mozilla:intl:strres:macbuild:strres.mcp",					"strres$D.shlb", "strres.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
-	print("--- International projects complete ----\n")
+	print("--- International projects complete ----\n");
 } # intl
-	
+
 
 #//--------------------------------------------------------------------------------------------------
-#// Make resource aliases for one directory
+#// Build Necko projects
 #//--------------------------------------------------------------------------------------------------
 
-sub BuildFolderResourceAliases($$)
+sub BuildNeckoProjects()
 {
-	my($src_dir, $dest_dir) = @_;
-	
-	unless ($src_dir =~ m/^$main::BUILD_ROOT.+/) { return; }
-	
-	# get a list of all the resource files
-	opendir(SRCDIR, $src_dir) || die("can't open $src_dir");
-	my(@resource_files) = readdir(SRCDIR);
-	closedir(SRCDIR);
-	
-	# make aliases for each one into the dest directory
-	print("Placing aliases to all files from $src_dir in $dest_dir\n");
-	for ( @resource_files )
-	{
-		next if $_ eq "CVS";
-		#print("    Doing $_\n");
-		if (-l $src_dir.$_)
-		{
-			print("   $_ is an alias\n");
-			next;
-		}
-		my($file_name) = $src_dir . $_;	
-		MakeAlias($file_name, $dest_dir);
-	}
-}
-
-
-#//--------------------------------------------------------------------------------------------------
-#// Make resource aliases
-#//--------------------------------------------------------------------------------------------------
-
-sub MakeResourceAliases()
-{
-	unless( $main::build{resources} ) { return; }
-	_assertRightDirectory();
-
+	unless( $main::build{necko} ) { return; }
 
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
-	my($dist_dir) = _getDistDirectory();
 
+	print("--- Starting Necko projects ----\n");
 
-	#//
-	#// Most resources should all go into the chrome dir eventually
-	#//
-	my($chrome_dir) = "$dist_dir" . "Chrome:";
-	my($resource_dir) = "$dist_dir" . "res:";
-	my($samples_dir) = "$resource_dir" . "samples:";
+	BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Network$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
-	#//
-	#// Make aliases of resource files
-	#//
-	_MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
-	_MakeAlias(":mozilla:layout:html:document:src:html.css",							"$resource_dir");
-	_MakeAlias(":mozilla:layout:html:document:src:arrow.gif",							"$resource_dir");	
-	_MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",			"$resource_dir");
-	_MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
-	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
+	# utils library
+	BuildOneProject(":mozilla:netwerk:util:macbuild:netwerkUtil.mcp",			"NetworkModular$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
-	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST",						"$resource_dir");
-	my($entitytab_dir) = "$resource_dir" . "entityTables";
-	_InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",						"$entitytab_dir");
-
-	my($html_dir) = "$resource_dir" . "html:";
-    _InstallResources(":mozilla:layout:html:base:src:MANIFEST_RES",						"$html_dir");
-
-	my($throbber_dir) = "$resource_dir" . "throbber:";
-	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:throbber:",				"$throbber_dir");
+	# cache
+	BuildOneProject(":mozilla:netwerk:cache:macbuild:nkcache.mcp",				"nkcache$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	
-	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:samples:",				"$samples_dir");
-	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:resources:",				"$samples_dir");
+	# protocols
+	BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:protocol:data:macbuild:data.mcp",			"data$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:protocol:jar:macbuild:jar.mcp",			"jar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:protocol:res:macbuild:res.mcp",			"res$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp", "resource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",				"JSUrl$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+
+	# mime service
+	BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mimetype$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	
-	my($rdf_dir) = "$resource_dir" . "rdf:";
-	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
+	# stream conversion
+	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:streamconv.mcp",		"streamconv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:multiMixedConv.mcp",	"multiMixedConv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
-	my($domds_dir) = "$samples_dir" . "rdf:";
-	_InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",					"$domds_dir");
+	print("--- Necko projects complete ----\n");
+} # necko
 
-	my($xpinstall_ch_dir) = "$chrome_dir" . "xpinstall";
-	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_ch_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:xpinstall:res:content:MANIFEST",						"$xpinstall_ch_dir:content:default:", 0);
-	_InstallResources(":mozilla:xpinstall:res:skin:MANIFEST",	 						"$xpinstall_ch_dir:skin:default:", 0);
-	
-	my($profile_chrome_dir) = "$chrome_dir" . "Profile";
-	_InstallResources(":mozilla:profile:resources:content:MANIFEST",							"$profile_chrome_dir:content:default", 0);
-	_InstallResources(":mozilla:profile:resources:skin:MANIFEST",							"$profile_chrome_dir:skin:default", 0);
-	_InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",				"$profile_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:profile:pref-migrator:resources:content:MANIFEST","$profile_chrome_dir:content:default", 0);
-	_InstallResources(":mozilla:profile:pref-migrator:resources:locale:en-US:MANIFEST","$profile_chrome_dir:locale:en-US:", 0);
-
-	# need to duplicate this line if more files in default profile folder
-	my($defaults_dir) = "$dist_dir" . "Defaults:";
-	mkdir($defaults_dir, 0);
-
-	# Default _profile_ directory stuff
-	my($default_profile_dir) = "$defaults_dir"."Profile:";
-	mkdir($default_profile_dir, 0);
-
-	_copy(":mozilla:profile:defaults:bookmarks.html", 									"$default_profile_dir"."bookmarks.html");
-	_copy(":mozilla:profile:defaults:panels.rdf", 									"$default_profile_dir"."panels.rdf");
-
-	# Default _pref_ directory stuff
-	my($default_pref_dir) = "$defaults_dir"."Pref:";
-	mkdir($default_pref_dir, 0);
-	_InstallResources(":mozilla:xpinstall:public:MANIFEST_PREFS",				   		"$default_pref_dir", 0);
-	_InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",					"$default_pref_dir", 0);
-	_InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",						"$default_pref_dir", 0);
-	_InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",						"$default_pref_dir", 0);
-
-	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
-	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";
-    _InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",             "$navigator_chrome_dir:content:default");
-    _InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",                "$navigator_chrome_dir:skin:default");
-	_InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",		"$navigator_chrome_dir:locale:en-US:", 0);
-
-	 my($global_chrome_dir) = "$chrome_dir" . "Global";
-    _InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",			"$global_chrome_dir:content:default");
-    _InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",		"$global_chrome_dir:content:default");
-    _InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",               "$global_chrome_dir:skin:default");
-	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",        "$chrome_dir");
-	_InstallResources(":mozilla:xpfe:global:resources:locale:MANIFEST",				"$global_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:xpfe:global:resources:locale:mac:MANIFEST",			"$global_chrome_dir:locale:en-US:", 0);
-
-	_InstallResources(":mozilla:docshell:base:MANIFEST",							"$global_chrome_dir:locale:en-US:", 0);
-
-	
-
-
-	_InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
-
-	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:", 						"$samples_dir");
-	_MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:", 							"$samples_dir");
-	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
-
-	my($toolbar_dir) = "$resource_dir" . "toolbar:";
-	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
-	_MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
-		
-	if ($main::build{editor})
-	{
-		my($editor_chrome_dir) = "$chrome_dir" . "Editor";
-
-		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",			"$editor_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",				"$editor_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:editor:ui:composer:locale:en-US:MANIFEST",	"$editor_chrome_dir:locale:en-US:", 0);
-
-		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",				    "$editor_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",		"$editor_chrome_dir:locale:en-US:", 0);
-	}
-
-	# if ($main::build{mailnews})
-	{
-        my($mailnews_dir) = "$resource_dir" . "Mailnews";
-        my($messenger_chrome_dir) = "$chrome_dir" . "Messenger";
-        my($messengercomposer_chrome_dir) = "$chrome_dir" . "MessengerCompose";
-        my($addressbook_chrome_dir) = "$chrome_dir" . "Addressbook";
-        
-        _InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",           "$messenger_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
-        _InstallResources(":mozilla:mailnews:base:resources:locale:en-US:MANIFEST",      "$messenger_chrome_dir:locale:en-US:", 0);
-        _InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",     "$messenger_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:base:prefs:resources:locale:en-US:MANIFEST", "$messenger_chrome_dir:locale:en-US:", 0);
-        _InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",        "$messenger_chrome_dir:skin:default:", 0);
-        _InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",    "$messenger_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:base:search:resources:locale:en-US:MANIFEST",      "$messenger_chrome_dir:locale:en-US:", 0);
-        _InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
-        _InstallResources(":mozilla:mailnews:mime:resources:content:MANIFEST",              "$messenger_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",     "$messenger_chrome_dir:skin:default:", 0);
-        _InstallResources(":mozilla:mailnews:mime:emitters:resources:content:MANIFEST",     "$messenger_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",             "$messenger_chrome_dir:skin:default:", 0);
-        _InstallResources(":mozilla:mailnews:local:resources:locale:en-US:MANIFEST",     "$messenger_chrome_dir:locale:en-US:", 0);
-        _InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
-	_InstallResources(":mozilla:mailnews:news:resources:content:MANIFEST",    		 "$messenger_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:news:resources:locale:en-US:MANIFEST",      "$messenger_chrome_dir:locale:en-US:", 0);
-
-        _InstallResources(":mozilla:mailnews:imap:resources:locale:en-US:MANIFEST",      "$messenger_chrome_dir:locale:en-US:", 0);
-
-        _InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",                   "$messenger_chrome_dir:locale:en-US:", 0); 
-	_InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);	
-
-        _InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",        "$messengercomposer_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",           "$messengercomposer_chrome_dir:skin:default:", 0);
-        _InstallResources(":mozilla:mailnews:compose:resources:locale:en-US:MANIFEST",   "$messengercomposer_chrome_dir:locale:en-US:", 0);
-        _InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",  "$messengercomposer_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:compose:prefs:resources:locale:en-US:MANIFEST",  "$messengercomposer_chrome_dir:locale:en-US:", 0);
-
-        _InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",       "$addressbook_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",          "$addressbook_chrome_dir:skin:default:", 0);
-        _InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",  "$addressbook_chrome_dir:locale:en-US:", 0);
-        _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
-        _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_chrome_dir:locale:en-US:", 0);
-    }
-	
-	# copy the chrome registry. We want an actual copy so that changes for custom UI's
-	# don't accidentally get checked into the tree. (pinkerton, bug#5296).
-	_copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
-		
-	# Install XPFE component resources
-	_InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",			"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:components:find:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
-        {
-          my($bookmarks_dir) = "$chrome_dir"."Bookmarks";
-	  _InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-content",			"$bookmarks_dir:content:default");
-	  _InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-skin",			"$bookmarks_dir:skin:default");
-	  _InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:MANIFEST",			"$bookmarks_dir:locale");
-        }
-        {
-          my($directory_dir) = "$chrome_dir"."Directory";
-	  _InstallResources(":mozilla:xpfe:components:directory:MANIFEST-content",				"$directory_dir:content:default");
-	  _InstallResources(":mozilla:xpfe:components:directory:MANIFEST-skin",					"$directory_dir:skin:default");
-	  _InstallResources(":mozilla:xpfe:components:directory:locale:MANIFEST",				"$directory_dir:locale");
-        }
-        {
-          my($regviewer_dir) = "$chrome_dir"."RegViewer";
-	  _InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-content",				"$regviewer_dir:content:default");
-	  _InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-skin",					"$regviewer_dir:skin:default");
-	  _InstallResources(":mozilla:xpfe:components:regviewer:locale:MANIFEST",				"$regviewer_dir:locale");
-        }
-        {
-          my($history_dir) = "$chrome_dir"."History";
-	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",		"$history_dir:content:default");
-	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-skin",			"$history_dir:skin:default");
-	  _InstallResources(":mozilla:xpfe:components:history:resources:locale:MANIFEST",		"$history_dir:locale");
-        }
-        {
-          my($related_dir) = "$chrome_dir"."Related";
-	  _InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-content",			"$related_dir:content:default");
-	  _InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-skin",			"$related_dir:skin:default");
-	  _InstallResources(":mozilla:xpfe:components:related:resources:locale:MANIFEST",			"$related_dir:locale");
-        }
-        {
-          my($search_dir) = "$chrome_dir"."Search";
-	  _InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-content",		"$search_dir:content:default");
-	  _InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-skin",			"$search_dir:skin:default");
-	  _InstallResources(":mozilla:xpfe:components:search:resources:locale:MANIFEST",		"$search_dir:locale");
-
-          my($searchdatasets_dir) = "$resource_dir" . "rdf:datasets:";
-          _InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",			"$searchdatasets_dir");
-        }
-        {
-          my($sidebar_chrome_dir) = "$chrome_dir" . "Sidebar";
-          _InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",		"$sidebar_chrome_dir:content:default");
-          _InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-skin",		"$sidebar_chrome_dir:skin:default");
-          _InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:MANIFEST",		"$sidebar_chrome_dir:locale");
-          _InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",
-                            "${dist_dir}Components");
-        }
-	_InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:components:ucth:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
-	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",			"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:components:xfer:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
-	# the WALLET
-	 my($wallet_chrome_dir) = "$chrome_dir" . "Wallet";
-	_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",			"$wallet_chrome_dir:content:default:", 0);
-	_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",			"$wallet_chrome_dir:content:default:", 0);
-	_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST",			"$wallet_chrome_dir:content:default:", 0);
-	_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
-
-	_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_PROPERTIES",		"$wallet_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST_PROPERTIES",			"$wallet_chrome_dir:locale:en-US:", 0);
-
-	_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
-	_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
-
-	{
-		my($pref_chrome_dir) = "$chrome_dir" . "Pref";
-		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",	"$pref_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",		"$pref_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",		"$pref_chrome_dir:locale:en-US:", 0);
-	}
-
-	# QA Menu
-	_InstallResources(":mozilla:intl:strres:tests:MANIFEST",			"$resource_dir");
-
-	print("--- Resource copying complete ----\n")
-}
 
 #//--------------------------------------------------------------------------------------------------
-#// Make library aliases
+#// Build Browser utils projects
 #//--------------------------------------------------------------------------------------------------
 
-sub MakeLibAliases()
+sub BuildBrowserUtilsProjects()
 {
-	my($dist_dir) = _getDistDirectory();
+	unless( $main::build{browserutils} ) { return; }
 
-	local(*F);
-	my($filepath, $appath, $psi) = (':mozilla:build:mac:idepath.txt');
-	if (open(F, $filepath)) {
-		$appath = <F>;
-		close(F);
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
 
-		#// WasteLib
-		my($wastelibpath) = $appath;
-		$wastelibpath =~ s/[^:]*$/MacOS Support:WASTE 1.3 Distribution:WASTELib/;
-		MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:");
+	print("--- Starting Browser utils projects ----\n");
 
-		#// ProfilerLib
-		if ($main::PROFILE)
-		{
-			my($profilerlibpath) = $appath;
-			$profilerlibpath =~ s/[^:]*$/MacOS Support:Libraries:Profiler Common:ProfilerLib/;
-			MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:");
-		}
-	}
-	else {
-		print STDERR "Can't find $filepath\n";
-	}
-}
+	BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.mcp",				"uriLoader$D.shlb", "uriloader.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	
+	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp", "prefm$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",			"Cookie$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",			"Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",	"WalletViewers$D.shlb", "walletviewer.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	
+	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"BrowsingProfile$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",						"ChomeRegistry$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	
+	BuildOneProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSource.mcp",		"DOMDataSource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+
+	print("--- Browser utils projects complete ----\n");
+} # browserutils
 
 
 #//--------------------------------------------------------------------------------------------------
@@ -1479,41 +1470,31 @@ sub BuildLayoutProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 	
+	print("--- Starting Layout projects ---\n");
 
 	#//
 	#// Build Layout projects
 	#//
 
-	_BuildProject(":mozilla:expat:macbuild:expat.mcp",						"expat$D.o");
-
+	BuildOneProject(":mozilla:expat:macbuild:expat.mcp",						"expat$D.o", "", 0, 0, 0);
 	BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",				"htmlparser$D.shlb", "htmlparser.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",							"gfx$D.shlb", "gfx.toc", 1, $main::ALIAS_SYM_FILES, 0);
-
 	BuildOneProject(":mozilla:dom:macbuild:dom.mcp",							"dom$D.shlb", "dom.toc", 1, $main::ALIAS_SYM_FILES, 0);
-
 	BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",				"plugin$D.shlb", "plugin.toc", 1, $main::ALIAS_SYM_FILES, 0);
-
 	BuildOneProject(":mozilla:layout:macbuild:layout.mcp",						"layout$D.shlb", "layout.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	
 	BuildOneProject(":mozilla:view:macbuild:view.mcp",							"view$D.shlb", "view.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	
 	BuildOneProject(":mozilla:widget:macbuild:widget.mcp",						"widget$D.shlb", "widget.toc", 1, $main::ALIAS_SYM_FILES, 0);
-
 	BuildOneProject(":mozilla:webshell:macbuild:webshell.mcp",					"webshell$D.shlb", "webshell.toc", 1, $main::ALIAS_SYM_FILES, 0);
-
 	BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",				"RaptorShell$D.shlb", "RaptorShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	#// XXX this is here because of a very TEMPORARY dependency
 	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"RDFLibrary$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    
-    BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    
-    BuildOneProject(":mozilla:xpinstall:macbuild:xpistub.mcp",                  "xpistub$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-    
-    BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.mcp",           "Mozilla Installer$D", "", 0, 0, 0);
 
-	print("--- Layout projects complete ---\n")
+	BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",				"xpinstall$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:xpinstall:macbuild:xpistub.mcp",					"xpistub$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.mcp",			"Mozilla Installer$D", "", 0, 0, 0);
+
+	print("--- Layout projects complete ---\n");
 }
 
 
@@ -1530,13 +1511,13 @@ sub BuildEditorProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
+	print("--- Starting Editor projects ----\n");
+
 	BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.mcp",					"EditorTxmgr$D.shlb", "txmgr.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:editor:txtsvc:macbuild:txtsvc.mcp",				"TextServices$D.shlb", "txtsvc.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:editor:macbuild:editor.mcp",						"EditorCore$D.shlb", "EditorCore.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	print("--- Editor projects complete ----\n")
+	print("--- Editor projects complete ----\n");
 }
 
 
@@ -1553,11 +1534,11 @@ sub BuildViewerProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
+	print("--- Starting Viewer projects ----\n");
+
 	BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",			"viewer$D", "viewer.toc", 0, 0, 0);
 
-#	BuildOneProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",					"xpfeviewer$D.shlb", "xpfeviewer.toc", 0, 0, 0);
-
-	print("--- Viewer projects complete ----\n")
+	print("--- Viewer projects complete ----\n");
 }
 
 
@@ -1574,8 +1555,10 @@ sub BuildXPAppProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
+	print("--- Starting XPApp projects ----\n");
+
 	# Components
-	BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp",	"FindComponent$D.shlb", "FindComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp", "FindComponent$D.shlb", "FindComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:ucth:macbuild:ucth.mcp",	"ucth$D.shlb", "ucth.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:xfer:macbuild:xfer.mcp",	"xfer$D.shlb", "xfer.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:bookmarks:macbuild:Bookmarks.mcp", "Bookmarks$D.shlb", "BookmarksComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1589,15 +1572,11 @@ sub BuildXPAppProjects()
 	
 	# Applications
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
-
 	BuildOneProject(":mozilla:xpfe:AppCores:macbuild:AppCores.mcp",				"AppCores$D.shlb", "AppCores.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	
 	BuildOneProject(":mozilla:xpfe:browser:macbuild:mozBrowser.mcp",			"mozBrowser$D.shlb", "mozBrowser.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	print("--- XPApp projects complete ----\n")
-
+	print("--- XPApp projects complete ----\n");
 }
-
 
 
 #//--------------------------------------------------------------------------------------------------
@@ -1613,38 +1592,31 @@ sub BuildMailNewsProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
+	print("--- Starting MailNews projects ----\n");
+
 	BuildOneProject(":mozilla:mailnews:base:util:macbuild:msgUtil.mcp",					"MsgUtil$D.lib", "MsgUtil.toc", 0, 0, 0);
-
 	BuildOneProject(":mozilla:mailnews:base:macbuild:msgCore.mcp",						"mailnews$D.shlb", "mailnews.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:mailnews:compose:macbuild:msgCompose.mcp",				"MsgCompose$D.shlb", "MsgCompose.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:mailnews:db:macbuild:msgDB.mcp",							"MsgDB$D.shlb", "MsgDB.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",					"MsgLocal$D.shlb", "MsgLocal.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:mailnews:imap:macbuild:msgimap.mcp",						"MsgImap$D.shlb", "MsgImap.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:mailnews:news:macbuild:msgnews.mcp",						"MsgNews$D.shlb", "MsgNews.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbook.mcp",				"MsgAddrbook$D.shlb", "MsgAddrbook.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",							"Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:mailnews:mime:emitters:macbuild:mimeEmitter.mcp",			"mimeEmitter$D.shlb", "mimeEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
 	BuildOneProject(":mozilla:mailnews:mime:cthandlers:vcard:macbuild:vcard.mcp",		"vcard$D.shlb", "vcard.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp",	"smime$D.shlb", "smime.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:mime:cthandlers:signstub:macbuild:signed.mcp",	"signed$D.shlb", "signed.toc", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:mailnews:mime:cthandlers:calendar:macbuild:calendar.mcp", "calendar$D.shlb", "calendar.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp",		"smime$D.shlb", "smime.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
-	BuildOneProject(":mozilla:mailnews:mime:cthandlers:signstub:macbuild:signed.mcp",		"signed$D.shlb", "signed.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
-#	BuildOneProject(":mozilla:mailnews:mime:cthandlers:calendar:macbuild:calendar.mcp",	"calendar$D.shlb", "calendar.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
-	print("--- MailNews projects complete ----\n")
+	print("--- MailNews projects complete ----\n");
 }
 
-sub BuildAppRunner()
+#//--------------------------------------------------------------------------------------------------
+#// Build Mozilla
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildMozilla()
 {
 	unless( $main::build{apprunner} ) { return; }
 
@@ -1658,7 +1630,6 @@ sub BuildAppRunner()
 	if (!($main::DEBUG)) {
 		BuildOneProject(":mozilla:xpcom:tools:registry:macbuild:RegXPCOM.mcp", "RegXPCOM", "regxpcom.toc", 0, 0, 1);
 	}
-	
 	
 	# copy command line documents into the Apprunner folder and set correctly the signature
 	my($dist_dir) = _getDistDirectory();
@@ -1707,6 +1678,7 @@ sub BuildAppRunner()
 
 }
 
+
 #//--------------------------------------------------------------------------------------------------
 #// Build everything
 #//--------------------------------------------------------------------------------------------------
@@ -1716,18 +1688,21 @@ sub BuildProjects()
 	MakeResourceAliases();
 	MakeLibAliases();
 
- 	# activate CodeWarrior
+	# activate CodeWarrior
 	ActivateApplication('CWIE');
 
 	BuildIDLProjects();
 	BuildStubs();
 	BuildRuntimeProjects();
 	BuildCommonProjects();
+	BuildImglibProjects();
+	BuildNeckoProjects();
+	BuildBrowserUtilsProjects();	
 	BuildInternationalProjects();
 	BuildLayoutProjects();
 	BuildEditorProjects();
 	BuildViewerProjects();
 	BuildXPAppProjects();
 	BuildMailNewsProjects();
-	BuildAppRunner();
+	BuildMozilla();
 }

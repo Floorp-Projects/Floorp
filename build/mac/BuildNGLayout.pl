@@ -57,6 +57,9 @@ $build{resources} 		= 0;
 $build{stubs} 			= 0;
 $build{runtime}			= 0;
 $build{common} 			= 0;
+$build{imglib} 			= 0;
+$build{necko} 			= 0;
+$build{browserutils} 	= 0;
 $build{intl} 			= 0;
 $build{nglayout} 		= 0;
 $build{editor} 			= 0;
@@ -109,19 +112,24 @@ if ($build{all})
 if ($build{most})
 {
 ### Just uncomment/comment to get the ones you want (if "most" is selected).
-#	$build{dist}		= 1;
-#	$build{dist_runtime}= 1;
-#	$build{resources}	= 1;
-#   $build{stubs}		= 1;
-#   $build{runtime}		= 1;
-#	$build{common}		= 1; # Requires intl
-#   $build{intl}		= 1; 
-#	$build{nglayout}	= 1;
-#	$build{editor}		= 1;
-#	$build{viewer}		= 1;
-#	$build{xpapp}		= 1;
-#	$build{mailnews}	= 1;
-	$build{apprunner}	= 1;
+#	$build{dist} 			= 0;
+#	$build{dist_runtime}	= 0;	# Implied by $build{dist}
+#	$build{resources} 		= 0;
+#	$build{xpidl}			= 0;
+#	$build{idl}             = 0;
+#	$build{stubs} 			= 0;
+#	$build{runtime}			= 1;
+#	$build{common} 			= 1;
+#	$build{imglib} 			= 1;
+#	$build{necko} 			= 1;
+#	$build{browserutils} 	= 1;
+#	$build{intl} 			= 1;
+#	$build{nglayout} 		= 1;
+#	$build{editor} 			= 1;
+#	$build{viewer} 			= 1;
+#	$build{xpapp} 			= 1;
+#	$build{mailnews} 		= 1;
+#	$build{apprunner} 		= 1;
 }
 
 # do the work
