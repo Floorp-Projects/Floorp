@@ -84,10 +84,11 @@ BOOL CPropSheet::OnInitDialog()
 	width = rect.Width();
 	rect.left = tabrect.left; rect.right = tabrect.left + width;
 	CString FeedbackChoice = GetGlobal("FeedbackChoice");
+	CString FeedbackButtonName = GetGlobal("FeedbackButtonName");
 	if (FeedbackChoice.Compare("Yes") == 0)
 	{
 	//Create new "Add" button and set standard font
-	m_ButtonCopy.Create("Feedback",
+	m_ButtonCopy.Create(FeedbackButtonName,
 			BS_PUSHBUTTON|WS_CHILD|WS_VISIBLE|WS_TABSTOP,
 			rect, this, IDC_FEEDBACK_BUTTON);
 	m_ButtonCopy.SetFont(GetFont());
