@@ -255,3 +255,49 @@ BYTE * GetValueBytes( HKEY hKey, const char *pValueName)
 
 	return( pBytes);
 }
+
+NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
+{
+  // look up the protocol scheme in the windows registry....if we find a match then we have a handler for it...
+  *aHandlerExists = PR_FALSE;
+  if (aProtocolScheme && *aProtocolScheme)
+  {
+     HKEY hKey;
+     LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, aProtocolScheme, 0, KEY_QUERY_VALUE, &hKey);
+     if (err == ERROR_SUCCESS)
+     {
+       *aHandlerExists = PR_TRUE;
+       // close the key
+       ::RegCloseKey(hKey);
+     }
+  }
+
+  return NS_OK;
+}
+
+// this implementation was pretty much copied verbatime from Tony Robinson's code in nsExternalProtocolWin.cpp
+
+NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
+{
+	nsresult rv = NS_OK;
+
+	// 1. Find the default app for this protocol
+	// 2. Set up the command line
+	// 3. Launch the app.
+
+	// For now, we'll just cheat essentially, check for the command line
+	// then just call ShellExecute()!
+
+  if (aURL)
+  {
+    // extract the url spec from the url
+    nsXPIDLCString urlSpec;
+    aURL->GetSpec(getter_Copies(urlSpec));
+
+		LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) urlSpec, NULL, NULL, SW_SHOWNORMAL);
+		if (r < 32) 
+			rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
