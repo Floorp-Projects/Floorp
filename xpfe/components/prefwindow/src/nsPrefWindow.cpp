@@ -788,7 +788,14 @@ NS_IMETHODIMP nsPrefWindow::ChangePanel(const PRUnichar* aURL)
 // Start loading of a new prefs panel.
 //----------------------------------------------------------------------------------------
 {
-    NS_ASSERTION(mPanelFrame, "panel window is null");
+  // Skip assertion here to avoid JS error from loading pref-appearance.xul
+  // in preftree.xul.  (http://bugzilla.mozilla.org/show_bu.cgi?id=14663)
+  // Looks like some initialization of this class isn't happening on the preftree.xul
+  // side, but ? the prefs seem to not care; opting to avoid JS error as the lesser
+  // of two evils right now.  r=matt.
+  //
+  // NS_ASSERTION(mPanelFrame, "nsPrefWindow::ChangePanel(), panel window is null");
+
     if (!mPanelFrame)
         return NS_OK;
 
