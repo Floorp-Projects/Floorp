@@ -150,11 +150,11 @@ public:
         //PR_Sleep(100);
         return NS_OK;
     }
-    
+
     MyListener(PRUint32 stopCount = 1) : mTotal(0), mStopCount(stopCount) {
         NS_INIT_REFCNT();
     }
-    
+
     nsresult Init(const char* origFile) {
         nsresult rv;
         nsCOMPtr<nsILocalFile> file;
@@ -354,29 +354,34 @@ main(int argc, char* argv[])
         return -1;
     }
     char* fileName = argv[1];
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        nsCOMPtr<nsIEventQueueService> eventQService =
+                 do_GetService(kEventQueueServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIEventQueueService> eventQService = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+        rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+        if (NS_FAILED(rv)) return rv;
 
-    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-    if (NS_FAILED(rv)) return rv;
+        rv = TestAsyncRead(fileName, 0, -1);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
 
-    rv = TestAsyncRead(fileName, 0, -1);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
+        rv = TestAsyncWrite(fileName, 0, -1);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncWrite failed");
 
-    rv = TestAsyncWrite(fileName, 0, -1);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncWrite failed");
+        rv = TestAsyncRead(fileName, 10, 100);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
 
-    rv = TestAsyncRead(fileName, 10, 100);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
-
-    NS_RELEASE(gEventQ);
+        NS_RELEASE(gEventQ);
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return NS_OK;
 }

@@ -91,11 +91,11 @@ public:
     RandomStream(PRUint32 aSeed) {
         mStartSeed = mState = aSeed;
     }
-    
+
     PRUint32 GetStartSeed() {
         return mStartSeed;
     }
-    
+
     PRUint32 Next() {
         mState = 1103515245 * mState + 12345;
         return mState;
@@ -125,7 +125,7 @@ public:
     }
 
 protected:
-    
+
     PRUint32 mState;
     PRUint32 mStartSeed;
 };
@@ -136,11 +136,11 @@ public:
     CounterStream(PRUint32 aSeed) {
         mStartSeed = mState = aSeed;
     }
-    
+
     PRUint32 GetStartSeed() {
         return mStartSeed;
     }
-    
+
     PRUint32 Next() {
         mState += 1;
         mState &= 0xff;
@@ -171,7 +171,7 @@ public:
     }
 
 protected:
-    
+
     PRUint32 mState;
     PRUint32 mStartSeed;
 };
@@ -233,7 +233,7 @@ public:
                              nsresult aStatus) {
         PRIntervalTime endTime;
         PRIntervalTime duration;
-        
+
         endTime = PR_IntervalNow();
         duration = (endTime - mStartTime);
 
@@ -299,11 +299,11 @@ TestReadStream(nsINetDataCacheRecord *record, nsITestDataStream *testDataStream,
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     NS_ASSERTION(actualContentLength == expectedStreamLength,
                  "nsINetDataCacheRecord::GetContentLength() busted ?");
-    
+
     nsReader *reader = new nsReader;
     rv = reader->Init(testDataStream, expectedStreamLength);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
-    
+
     rv = channel->AsyncOpen(0, reader);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     reader->Release();
@@ -434,7 +434,7 @@ TestRead(nsINetDataCache *cache)
         rv = cache->Contains(cacheKey, sizeof cacheKey, &inCache);
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         NS_ASSERTION(inCache, "nsINetDataCache::Contains error");
-        
+
         rv = cache->GetCachedNetData(cacheKey, sizeof cacheKey, getter_AddRefs(record));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
@@ -549,7 +549,7 @@ TestOffsetWrites(nsINetDataCache *cache)
         nsCOMPtr<nsITransport> trans(do_QueryInterface(channel));
         rv = trans->OpenOutputStream(startingOffset, -1, 0, getter_AddRefs(outStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), "OpenOutputStream failed");
-        
+
         counterStream = new CounterStream(startingOffset);
         counterStream->Read(buf, sizeof buf);
 
@@ -563,7 +563,7 @@ TestOffsetWrites(nsINetDataCache *cache)
         NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't close channel");
         delete counterStream;
     }
-    
+
     delete randomStream;
 
     counterStream = new CounterStream(0);
@@ -593,7 +593,7 @@ FillCache(nsINetDataCache *cache)
     PRUint32 totalBytesWritten = 0;
 
     PRIntervalTime startTime = PR_IntervalNow();
-    
+
     for (testNum = 0; testNum < NUM_CACHE_ENTRIES; testNum++) {
         randomStream = new RandomStream(testNum);
         randomStream->Read(cacheKey, sizeof cacheKey);
@@ -602,7 +602,7 @@ FillCache(nsINetDataCache *cache)
         rv = cache->Contains(cacheKey, sizeof cacheKey, &inCache);
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         NS_ASSERTION(!inCache, "nsINetDataCache::Contains error");
-        
+
         rv = cache->GetCachedNetData(cacheKey, sizeof cacheKey, getter_AddRefs(record));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't access record via opaque cache key");
 
@@ -632,7 +632,7 @@ FillCache(nsINetDataCache *cache)
         nsCOMPtr<nsITransport> trans(do_QueryInterface(channel));
         rv = trans->OpenOutputStream(0, -1, 0, getter_AddRefs(outStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
-        
+
         PRUint32 beforeOccupancy;
         rv = cache->GetStorageInUse(&beforeOccupancy);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get cache occupancy");
@@ -647,7 +647,7 @@ FillCache(nsINetDataCache *cache)
             rv = outStream->Write(buf, amount, &numWritten);
             NS_ASSERTION(NS_SUCCEEDED(rv), " ");
             NS_ASSERTION(numWritten == (PRUint32)amount, "Write() bug?");
-            
+
             remaining -= amount;
         }
         outStream->Close();
@@ -659,7 +659,7 @@ FillCache(nsINetDataCache *cache)
         PRUint32 streamLengthInKB = streamLength >> 10;
         NS_ASSERTION((afterOccupancy - beforeOccupancy) >= streamLengthInKB,
                      "nsINetDataCache::GetStorageInUse() is busted");
-        
+
 
         // *Now* there should be an entry in the cache
         rv = cache->Contains(cacheKey, sizeof cacheKey, &inCache);
@@ -687,21 +687,21 @@ PRBool initPref ()
     nsCOMPtr<nsIPref> prefPtr(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv))
         return false;
-               
+
     nsCOMPtr<nsIFileSpec> fileSpec;
     rv = NS_NewFileSpec (getter_AddRefs(fileSpec));
     if (NS_FAILED(rv))
         return false;
-                            
+
     nsCString defaultPrefFile(PR_GetEnv ("MOZILLA_FIVE_HOME"));
     if (defaultPrefFile.Length())
         defaultPrefFile += "/";
     else
         defaultPrefFile = "./";
     defaultPrefFile += "default_prefs.js";
-                                                 
+
     fileSpec->SetUnixStyleFilePath (defaultPrefFile.get());
-                                                    
+
     PRBool exists = false;
     fileSpec->Exists(&exists);
     if (exists)
@@ -721,87 +721,88 @@ main(int argc, char* argv[])
       printf(" %s -m to test memcache\n", argv[0]) ;
       return -1 ;
     }
+    {
+        nsCOMPtr<nsINetDataCache> cache;
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsINetDataCache> cache;
+        if (PL_strcasecmp(argv[1], "-m") == 0) {
+            rv = nsComponentManager::CreateInstance(kMemCacheCID, nsnull,
+                                                    NS_GET_IID(nsINetDataCache),
+                                                    getter_AddRefs(cache));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create memory cache factory");
+        } else if (PL_strcasecmp(argv[1], "-f") == 0) {
+            // initialize pref
+            initPref() ;
 
+            rv = nsComponentManager::CreateInstance(kDiskCacheCID, nsnull,
+                                                    NS_GET_IID(nsINetDataCache),
+                                                    getter_AddRefs(cache));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create disk cache factory") ;
+        } else {
+            printf("  %s -f to test filecache\n", argv[0]) ;
+            printf(" %s -m to test memcache\n", argv[0]) ;
+            return -1 ;
+        }
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        InitQueue();
 
-    if (PL_strcasecmp(argv[1], "-m") == 0) {
-        rv = nsComponentManager::CreateInstance(kMemCacheCID, nsnull,
-                                            NS_GET_IID(nsINetDataCache),
-                                            getter_AddRefs(cache));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create memory cache factory");
-    } else if (PL_strcasecmp(argv[1], "-f") == 0) {
-        // initialize pref
-        initPref() ;
+        PRUnichar* description;
+        rv = cache->GetDescription(&description);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get cache description");
+        nsCAutoString descStr; descStr.AssignWithConversion(description);
+        printf("Testing: %s\n", descStr.get());
 
-        rv = nsComponentManager::CreateInstance(kDiskCacheCID, nsnull,
-                                            NS_GET_IID(nsINetDataCache),
-                                             getter_AddRefs(cache));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create disk cache factory") ;
+        rv = cache->RemoveAll();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't clear cache");
 
-    } else {
-      printf("  %s -f to test filecache\n", argv[0]) ;
-      printf(" %s -m to test memcache\n", argv[0]) ;
-      return -1 ;
-    }
+        PRUint32 startOccupancy;
+        rv = cache->GetStorageInUse(&startOccupancy);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get cache occupancy");
 
-    InitQueue();
+        PRUint32 numEntries = (PRUint32)-1;
+        rv = cache->GetNumEntries(&numEntries);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get number of cache entries");
+        NS_ASSERTION(numEntries == 0, "Couldn't clear cache");
 
-    PRUnichar* description;
-    rv = cache->GetDescription(&description);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get cache description");
-    nsCAutoString descStr; descStr.AssignWithConversion(description);
-    printf("Testing: %s\n", descStr.get());
+        rv = FillCache(cache);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't fill cache with random test data");
 
-    rv = cache->RemoveAll();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't clear cache");
+        rv = TestRead(cache);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't read random test data from cache");
 
-    PRUint32 startOccupancy;
-    rv = cache->GetStorageInUse(&startOccupancy);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get cache occupancy");
+        rv = TestRecordID(cache);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't index records using record ID");
 
-    PRUint32 numEntries = (PRUint32)-1;
-    rv = cache->GetNumEntries(&numEntries);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get number of cache entries");
-    NS_ASSERTION(numEntries == 0, "Couldn't clear cache");
+        rv = TestEnumeration(cache);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't successfully enumerate records");
 
-    rv = FillCache(cache);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't fill cache with random test data");
+        rv = TestTruncation(cache);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't successfully truncate records");
 
-    rv = TestRead(cache);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't read random test data from cache");
+        rv = TestOffsetWrites(cache);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't successfully write to records using non-zero offsets");
 
-    rv = TestRecordID(cache);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't index records using record ID");
+        rv = cache->RemoveAll();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't clear cache");
+        rv = cache->GetNumEntries(&numEntries);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get number of cache entries");
+        NS_ASSERTION(numEntries == 0, "Couldn't clear cache");
 
-    rv = TestEnumeration(cache);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't successfully enumerate records");
+        PRUint32 endOccupancy;
+        rv = cache->GetStorageInUse(&endOccupancy);
 
-    rv = TestTruncation(cache);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't successfully truncate records");
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get cache occupancy");
 
-    rv = TestOffsetWrites(cache);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't successfully write to records using non-zero offsets");
-
-    rv = cache->RemoveAll();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't clear cache");
-    rv = cache->GetNumEntries(&numEntries);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get number of cache entries");
-    NS_ASSERTION(numEntries == 0, "Couldn't clear cache");
-
-    PRUint32 endOccupancy;
-    rv = cache->GetStorageInUse(&endOccupancy);
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get cache occupancy");
-
-    NS_ASSERTION(startOccupancy == endOccupancy, "Cache occupancy not correctly computed ?");
-
+        NS_ASSERTION(startOccupancy == endOccupancy, "Cache occupancy not correctly computed ?");
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -115,46 +115,48 @@ nsresult TestFactory::CreateInstance(nsISupports *aDelegate,
 int main(int argc, char **argv) {
   nsresult rv;
 
+  {
+    nsCOMPtr<nsIServiceManager> servMan;
+    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    if (NS_FAILED(rv)) return -1;
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    if (registrar)
+      registrar->RegisterFactory(kTestFactoryCID,
+                                 nsnull,
+                                 nsnull,
+                                 new TestFactory());
 
-  nsCOMPtr<nsIServiceManager> servMan;
-  rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-  if (NS_FAILED(rv)) return -1;
-  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    ITestClass *t = NULL;
+    nsComponentManager::CreateInstance(kTestFactoryCID,
+                                       NULL,
+                                       NS_GET_IID(ITestClass),
+                                       (void **) &t);
 
-  registrar->RegisterFactory(kTestFactoryCID, 
-                             nsnull, 
-                             nsnull,
-                             new TestFactory());
+    if (t != NULL) {
+      t->Test();
+      t->Release();
+    } else {
+      cout << "CreateInstance failed\n";
+    }
 
+    t = NULL;
 
-  ITestClass *t = NULL;
-  nsComponentManager::CreateInstance(kTestFactoryCID,
-                               NULL,
-                               NS_GET_IID(ITestClass),
-                               (void **) &t);
+    nsComponentManager::CreateInstance(kTestLoadedFactoryCID,
+                                       NULL,
+                                       NS_GET_IID(ITestClass),
+                                       (void **) &t);
 
-  if (t != NULL) {
-    t->Test();
-    t->Release();
-  } else {
-    cout << "CreateInstance failed\n";
-  }
-
-  t = NULL;
-
-  nsComponentManager::CreateInstance(kTestLoadedFactoryCID,
-                               NULL,
-                               NS_GET_IID(ITestClass),
-                               (void **) &t);
-
-  if (t != NULL) {
-    t->Test();
-    t->Release();
-  } else {
-    cout << "Dynamic CreateInstance failed\n";
-  }
-
+    if (t != NULL) {
+      t->Test();
+      t->Release();
+    } else {
+      cout << "Dynamic CreateInstance failed\n";
+    }
+  } // this scopes the nsCOMPtrs
+  // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+  rv = NS_ShutdownXPCOM(nsnull);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
   return 0;
 }
 

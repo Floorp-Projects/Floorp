@@ -80,7 +80,7 @@ public:
     NS_DECL_ISUPPORTS
 
     ConsumerContext() { NS_INIT_REFCNT();}
-    
+
     NS_IMETHOD Equals(void *aPtr, PRBool *_retval) {
         *_retval = PR_TRUE;
         if (aPtr != this) *_retval = PR_FALSE;
@@ -298,7 +298,7 @@ int main(int argc, char *argv[]) {
 
 nsresult StartLoad(const char *aURISpec) {
     nsresult rv = NS_OK;
-    
+
     // create a context
     ConsumerContext *context = new ConsumerContext;
     nsCOMPtr<nsISupports> contextSup = do_QueryInterface(context, &rv);
@@ -309,7 +309,7 @@ nsresult StartLoad(const char *aURISpec) {
     rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
                                       getter_AddRefs(serv));
     if (NS_FAILED(rv)) return rv;
-    
+
     // create a uri
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), aURISpec);

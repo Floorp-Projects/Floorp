@@ -146,7 +146,7 @@ Copy(nsIInputStream* inStr, nsIOutputStream* outStr,
         rv = inStr->Read(buf, bufSize, &count);
         if (NS_FAILED(rv)) return rv;
         if (count == 0) break;
-            
+
         PRUint32 writeCount;
         rv = outStr->Write(buf, count, &writeCount);
         if (NS_FAILED(rv)) return rv;
@@ -175,10 +175,10 @@ public:
         nsCOMPtr<nsIInputStream> fileIn;
         rv = NS_NewLocalFileInputStream(getter_AddRefs(fileIn), mInPath);
         if (NS_FAILED(rv)) return rv;
-        
+
         rv = NS_NewBufferedInputStream(getter_AddRefs(inStr), fileIn, 65535);
         if (NS_FAILED(rv)) return rv;
-        
+
         // Open the output stream:
         nsCOMPtr<nsIOutputStream> fileOut;
         rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOut),
@@ -286,7 +286,7 @@ public:
         // Copy from one to the other
         rv = Copy(inStr, outStr, mBuffer, mBufferSize, &copyCount);
         if (NS_FAILED(rv)) return rv;
-        
+
         endTime = PR_IntervalNow();
         gTimeSampler.AddTime(endTime - startTime);
 
@@ -353,7 +353,7 @@ Test(CreateFun create, PRUint32 count,
 {
     nsresult rv;
     PRUint32 i;
-    
+
     nsCAutoString inDir;
     nsCAutoString outDir;
     (void)inDirSpec->GetNativePath(inDir);
@@ -363,7 +363,7 @@ Test(CreateFun create, PRUint32 count,
     gTimeSampler.Reset();
     nsTimeSampler testTime;
     testTime.StartTime();
-    
+
     nsISupportsArray* threads;
     rv = NS_NewISupportsArray(&threads);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewISupportsArray failed");
@@ -453,60 +453,64 @@ main(int argc, char* argv[])
     char* inDir = argv[1];
     char* outDir = argv[2];
 
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        nsCOMPtr<nsILocalFile> inDirFile;
+        rv = NS_NewNativeLocalFile(nsDependentCString(inDir), PR_FALSE, getter_AddRefs(inDirFile));
+        if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsILocalFile> inDirFile;
-    rv = NS_NewNativeLocalFile(nsDependentCString(inDir), PR_FALSE, getter_AddRefs(inDirFile));
-    if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsILocalFile> outDirFile;
+        rv = NS_NewNativeLocalFile(nsDependentCString(outDir), PR_FALSE, getter_AddRefs(outDirFile));
+        if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsILocalFile> outDirFile;
-    rv = NS_NewNativeLocalFile(nsDependentCString(outDir), PR_FALSE, getter_AddRefs(outDirFile));
-    if (NS_FAILED(rv)) return rv;
-
-    CreateFun create = FileChannelWorker::Create;
-    Test(create, 1, inDirFile, outDirFile, 16 * 1024);
+        CreateFun create = FileChannelWorker::Create;
+        Test(create, 1, inDirFile, outDirFile, 16 * 1024);
 #if 1
-    printf("FileChannelWorker *****************************\n");
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        printf("FileChannelWorker *****************************\n");
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
 #endif
-    create = FileSpecWorker::Create;
-    printf("FileSpecWorker ********************************\n");
+        create = FileSpecWorker::Create;
+        printf("FileSpecWorker ********************************\n");
 #if 1
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
 #endif
 #if 1
-    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
-    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
 #endif
-
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }
 

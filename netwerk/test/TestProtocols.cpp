@@ -39,7 +39,7 @@
     The TestProtocols tests the basic protocols architecture and can 
     be used to test individual protocols as well. If this grows too
     big then we should split it to individual protocols. 
-    
+
     -Gagan Saksena 04/29/99
 */
 
@@ -258,7 +258,7 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
 
     NS_RELEASE(visitor);
   }
-  
+
   nsCOMPtr<nsIResumableChannel> resChannel = do_QueryInterface(request);
   if (resChannel) {
       printf("Resumable entity identification:\n");
@@ -555,7 +555,7 @@ nsresult LoadURLsFromFile(char *aFileName)
         printf("\t%s\n", fileBuffer.get());
         StartLoadingURL(fileBuffer.get());
     }
-    
+
     PR_Close(fd);
     return NS_OK;
 }
@@ -590,64 +590,66 @@ main(int argc, char* argv[])
     rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    
-    // Create the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> eventQService = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    {
+        // Create the Event Queue for this thread...
+        nsCOMPtr<nsIEventQueueService> eventQService =
+                 do_GetService(kEventQueueServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+        eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
-    int i;
-    printf("\nTrying to load:\n");
-    for (i=1; i<argc; i++) {
-        // Turn on verbose printing...
-        if (PL_strcasecmp(argv[i], "-verbose") == 0) {
-            gVerbose = PR_TRUE;
-            continue;
-        } 
+        int i;
+        printf("\nTrying to load:\n");
+        for (i=1; i<argc; i++) {
+            // Turn on verbose printing...
+            if (PL_strcasecmp(argv[i], "-verbose") == 0) {
+                gVerbose = PR_TRUE;
+                continue;
+            }
 
-        // Turn on netlib tracing...
-        if (PL_strcasecmp(argv[i], "-file") == 0) {
-            LoadURLsFromFile(argv[++i]);
-            continue;
-        } 
-        
-        if (PL_strcasecmp(argv[i], "-console") == 0) {
-            gAskUserForInput = PR_TRUE;
-            continue;
-        } 
+            // Turn on netlib tracing...
+            if (PL_strcasecmp(argv[i], "-file") == 0) {
+                LoadURLsFromFile(argv[++i]);
+                continue;
+            }
 
-        if (PL_strcasecmp(argv[i], "-resume") == 0) {
-            gResume = PR_TRUE;
-            gStartAt = atoi(argv[++i]);
-            continue;
+            if (PL_strcasecmp(argv[i], "-console") == 0) {
+                gAskUserForInput = PR_TRUE;
+                continue;
+            }
+
+            if (PL_strcasecmp(argv[i], "-resume") == 0) {
+                gResume = PR_TRUE;
+                gStartAt = atoi(argv[++i]);
+                continue;
+            }
+
+            printf("\t%s\n", argv[i]);
+            rv = StartLoadingURL(argv[i]);
         }
-           
-        printf("\t%s\n", argv[i]);
-        rv = StartLoadingURL(argv[i]);
-    }
-  // Enter the message pump to allow the URL load to proceed.
-    while ( gKeepRunning ) {
+      // Enter the message pump to allow the URL load to proceed.
+        while ( gKeepRunning ) {
 #ifdef WIN32
-        MSG msg;
+            MSG msg;
 
-        if (GetMessage(&msg, NULL, 0, 0)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        } else {
-            gKeepRunning = 0;
-    }
+            if (GetMessage(&msg, NULL, 0, 0)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            } else {
+                gKeepRunning = 0;
+            }
 #else
 #ifdef XP_MAC
-    /* Mac stuff is missing here! */
+            /* Mac stuff is missing here! */
 #else
-    PLEvent *gEvent;
-    rv = gEventQ->WaitForEvent(&gEvent);
-    rv = gEventQ->HandleEvent(gEvent);
+            PLEvent *gEvent;
+            rv = gEventQ->WaitForEvent(&gEvent);
+            rv = gEventQ->HandleEvent(gEvent);
 #endif /* XP_UNIX */
 #endif /* !WIN32 */
-    }
+        }
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     NS_ShutdownXPCOM(nsnull);
     return rv;
 }

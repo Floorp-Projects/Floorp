@@ -244,7 +244,7 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
 {
     if (!i_BaseURI)
         return NS_ERROR_FAILURE;
-    
+
     // build up the base URL
     nsCOMPtr<nsIURI> baseURL;
     nsresult status = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
@@ -268,7 +268,7 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
 
     cout << "Analyzing " << temp.get() << endl;
     cout << "With      " << relativePortion << endl;
-    
+
     cout << "Got       " << newURL.get() << endl;
     if (expectedResult) {
         cout << "Expect    " << expectedResult << endl;
@@ -420,69 +420,74 @@ int main(int argc, char **argv)
         printusage();
         return NS_OK;
     }
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        // end of all messages from register components...
+        cout << "------------------" << endl << endl;
 
-    // end of all messages from register components...
-    cout << "------------------" << endl << endl; 
-
-    PRInt32 urlFactory = URL_FACTORY_DEFAULT;
-    PRBool bMakeAbs= PR_FALSE;
-    char* relativePath = 0;
-    char* url = 0;
-    for (int i=1; i<argc; i++) {
-        if (PL_strcasecmp(argv[i], "-std") == 0) 
-        {
-            urlFactory = URL_FACTORY_STDURL;
-            if (i+1 >= argc)
+        PRInt32 urlFactory = URL_FACTORY_DEFAULT;
+        PRBool bMakeAbs= PR_FALSE;
+        char* relativePath = 0;
+        char* url = 0;
+        for (int i=1; i<argc; i++) {
+            if (PL_strcasecmp(argv[i], "-std") == 0)
             {
-                printusage();
-                return NS_OK;
+                urlFactory = URL_FACTORY_STDURL;
+                if (i+1 >= argc)
+                {
+                    printusage();
+                    return NS_OK;
+                }
             }
-        }
-        else if (PL_strcasecmp(argv[i], "-abs") == 0)
-        {
-            if (!gFileIO) 
+            else if (PL_strcasecmp(argv[i], "-abs") == 0)
             {
-                relativePath = argv[i+1]; 
+                if (!gFileIO)
+                {
+                    relativePath = argv[i+1];
+                    i++;
+                }
+                bMakeAbs = PR_TRUE;
+            }
+            else if (PL_strcasecmp(argv[i], "-file") == 0)
+            {
+                if (i+1 >= argc)
+                {
+                    printusage();
+                    return NS_OK;
+                }
+                gFileIO = argv[i+1];
                 i++;
             }
-            bMakeAbs = PR_TRUE;
-        }
-        else if (PL_strcasecmp(argv[i], "-file") == 0)
-        {
-            if (i+1 >= argc)
+            else
             {
-                printusage();
-                return NS_OK;
+                url = argv[i];
             }
-            gFileIO = argv[i+1];
-            i++;
+        }
+        PRTime startTime = PR_Now();
+        if (bMakeAbs)
+        {
+            rv = (url && relativePath)
+               ? doMakeAbsTest(url, relativePath)
+               : doMakeAbsTest();
         }
         else
         {
-            url = argv[i];
+            rv = gFileIO ? testURL(0, urlFactory) : testURL(url, urlFactory);
         }
-    }
-    PRTime startTime = PR_Now();
-    if (bMakeAbs)
-    {
-        rv = (url && relativePath) ?  doMakeAbsTest(url, relativePath) : 
-            doMakeAbsTest();
-    }
-    else
-    {
-        rv = gFileIO ? testURL(0, urlFactory) : testURL(url, urlFactory);
-    }
-    if (gFileIO)
-    {
-        PRTime endTime = PR_Now();
-        printf("Elapsed time: %d micros.\n", (PRInt32) 
-            (endTime - startTime));
-    }
+        if (gFileIO)
+        {
+            PRTime endTime = PR_Now();
+            printf("Elapsed time: %d micros.\n", (PRInt32)
+                (endTime - startTime));
+        }
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
     return rv;
 }

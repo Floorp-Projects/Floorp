@@ -151,69 +151,71 @@ main(int argc, char* argv[])
 
 //port = portString.ToInteger(&rv);
   port = 13;
+  {
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    if (registrar)
+      registrar->AutoRegister(nsnull);
 
-  nsCOMPtr<nsIServiceManager> servMan;
-  NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-  registrar->AutoRegister(nsnull);
+    // Create the Event Queue for this thread...
+    nsCOMPtr<nsIEventQueueService> eventQService =
+             do_GetService(kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-  // Create the Event Queue for this thread...
-  nsCOMPtr<nsIEventQueueService> eventQService = 
-           do_GetService(kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIEventQueue> eventQ;
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
+    if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIEventQueue> eventQ;
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
-  if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISocketTransportService> sts =
+             do_GetService(kSocketTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsISocketTransportService> sts = 
-           do_GetService(kSocketTransportServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+    nsITransport* transport;
 
-  nsITransport* transport;
+    rv = sts->CreateTransport(hostName, port, nsnull, 0, 0, &transport);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIRequest> request;
+      transport->AsyncRead(nsnull, new InputTestConsumer, 0, -1, 0, getter_AddRefs(request));
 
-  rv = sts->CreateTransport(hostName, port, nsnull, 0, 0, &transport);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIRequest> request;
-    transport->AsyncRead(nsnull, new InputTestConsumer, 0, -1, 0, getter_AddRefs(request));
-
-    NS_RELEASE(transport);
-  }
-
-  // Enter the message pump to allow the URL load to proceed.
-  while ( gKeepRunning ) {
-
-#ifdef WIN32
-    MSG msg;
-
-    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
+      NS_RELEASE(transport);
     }
+
+    // Enter the message pump to allow the URL load to proceed.
+    while ( gKeepRunning ) {
+#ifdef WIN32
+      MSG msg;
+
+      if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
 #else
 #ifdef XP_MAC
-    /* Mac stuff is missing here! */
-
+      /* Mac stuff is missing here! */
 #else
 #ifdef XP_OS2
-    QMSG qmsg;
+      QMSG qmsg;
 
-    if (WinGetMsg(0, &qmsg, 0, 0, 0))
-      WinDispatchMsg(0, &qmsg);
-    else
-      gKeepRunning = FALSE;
+      if (WinGetMsg(0, &qmsg, 0, 0, 0))
+        WinDispatchMsg(0, &qmsg);
+      else
+        gKeepRunning = FALSE;
 #else
-    PLEvent *gEvent;
-    rv = eventQ->GetEvent(&gEvent);
-    rv = eventQ->HandleEvent(gEvent);
+      PLEvent *gEvent;
+      rv = eventQ->GetEvent(&gEvent);
+      rv = eventQ->HandleEvent(gEvent);
 #endif
 #endif
 #endif
-  }
+    }
 
-  sts->Shutdown();
-
+    sts->Shutdown();
+  } // this scopes the nsCOMPtrs
+  // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+  rv = NS_ShutdownXPCOM(nsnull);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
   return 0;
 }
 

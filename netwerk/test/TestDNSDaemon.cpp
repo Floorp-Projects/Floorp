@@ -213,7 +213,7 @@ main(int argc, char* argv[])
   while(notDone) {
     int status = 0;
     fd_set fdset;
-    
+
     FD_ZERO(&fdset);
     FD_SET(fileno(stdin), &fdset);
     if (socket_fd > 0)
