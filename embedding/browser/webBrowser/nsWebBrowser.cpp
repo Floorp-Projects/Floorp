@@ -693,26 +693,6 @@ NS_IMETHODIMP nsWebBrowser::SetTitle(const PRUnichar* title)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowser::GetZoom(float* zoom)
-{
-   NS_ENSURE_ARG_POINTER(zoom);
-
-   //XXX First Check
-	/**
-	* Set/Get the document scale factor
-	*/
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsWebBrowser::SetZoom(float zoom)
-{
-   //XXX First Check
-	/**
-	* Set/Get the document scale factor
-	*/
-   return NS_ERROR_FAILURE;
-}
-
 //*****************************************************************************
 // nsWebBrowser::nsIScrollable
 //*****************************************************************************
