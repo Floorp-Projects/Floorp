@@ -219,6 +219,16 @@ PRBool nsRegionWin :: ForEachRect(nsRectInRegionFunc *func, void *closure)
   return PR_FALSE;
 }
 
+NS_IMETHODIMP nsRegionWin :: GetRects(nsRegionRectSet **aRects)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRegionWin :: FreeRects(nsRegionRectSet *aRects)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRegionWin :: GetNativeRegion(void *&aRegion) const
 {
   aRegion = (void *)mRegion;

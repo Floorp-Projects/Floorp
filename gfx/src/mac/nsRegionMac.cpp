@@ -271,6 +271,16 @@ PRBool nsRegionMac :: ForEachRect(nsRectInRegionFunc *func, void *closure)
   return PR_FALSE;
 }
 
+NS_IMETHODIMP nsRegionMac :: GetRects(nsRegionRectSet **aRects)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRegionMac :: FreeRects(nsRegionRectSet *aRects)
+{
+  return NS_OK;
+}
+
 //---------------------------------------------------------------------
 
 

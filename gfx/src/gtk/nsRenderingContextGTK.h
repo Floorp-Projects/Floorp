@@ -61,6 +61,7 @@ public:
   NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext);
 
   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
+  NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
   NS_IMETHOD GetHints(PRUint32& aResult);
 
   NS_IMETHOD PushState(void);

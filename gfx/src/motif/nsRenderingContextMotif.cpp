@@ -246,6 +246,13 @@ nsRenderingContextMotif :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurfa
 }
 
 NS_IMETHODIMP
+nsRenderingContextMotif :: GetDrawingSurface(nsDrawingSurface *aSurface)
+{
+  *aSurface = mRenderingSurface;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsRenderingContextMotif::GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;
