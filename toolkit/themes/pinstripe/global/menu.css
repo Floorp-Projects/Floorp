@@ -47,20 +47,16 @@
 
 menu,
 menuitem {
-  -moz-appearance: none !important;
+  -moz-appearance: menuitem !important;
   -moz-box-align: center;
-  color: #000000;
+  color: MenuText;
   font: menu;
-  list-style-image: none;
-  -moz-image-region: auto;
 }
 
 menu[disabled="true"], menuitem[disabled="true"],
 menu[_moz-menuactive="true"][disabled="true"],
 menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
-  background-color: transparent !important;
-  /* background-image: none !important; */
 }
 
 /* ..... internal content .... */
@@ -134,9 +130,7 @@ menupopup > menu[_moz-menuactive="true"],
 menupopup > menuitem[_moz-menuactive="true"],
 popup > menu[_moz-menuactive="true"],
 popup > menuitem[_moz-menuactive="true"] {
-  /* background: url("chrome://global/skin/icons/menuselected.png") #FFFFFF repeat !important; */
-  background-color: #3063b0;
-  color:  #FFF;
+  color: -moz-mac-menutextselect;
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */

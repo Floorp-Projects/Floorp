@@ -48,6 +48,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
+#include "nsIAtom.h"
 #include "nsIEventStateManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsPresContext.h"
@@ -100,6 +101,8 @@ nsNativeThemeMac::nsNativeThemeMac()
     sListboxBGTransparent = PR_TRUE;
     sTextfieldDisabledBGColorID = nsILookAndFeel::eColor__moz_field;
   }
+
+  mMenuActiveAtom = do_GetAtom("_moz-menuactive");
 }
 
 nsNativeThemeMac::~nsNativeThemeMac()
@@ -284,6 +287,31 @@ nsNativeThemeMac::DrawTab ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool i
   ::DrawThemeTab(&inBoxRect, style, direction, nsnull, 0L);
 }
 
+void
+nsNativeThemeMac::DrawMenu ( const Rect& inBoxRect, PRBool inIsDisabled )
+{
+  ::EraseRect(&inBoxRect);
+  ThemeMenuType menuType = inIsDisabled ? kThemeMenuTypeInactive : kThemeMenuTypePopUp;
+  ::DrawThemeMenuBackground(&inBoxRect, menuType);
+}
+
+void
+nsNativeThemeMac::DrawMenuItem ( const Rect& inBoxRect, ThemeMenuItemType itemType, PRBool inIsDisabled,
+                                   PRBool inHover)
+{
+  ThemeMenuState menuItemState;
+  if (inIsDisabled)
+    menuItemState = kThemeMenuDisabled;
+  else if (inHover)
+    menuItemState = kThemeMenuSelected;
+  else
+    menuItemState = kThemeMenuActive;
+
+  // XXXmano: pass the right menu rect!
+  ::DrawThemeMenuItem(&inBoxRect, &inBoxRect, inBoxRect.top,
+                      inBoxRect.bottom, menuItemState, itemType, NULL, 0);
+}
+
 NS_IMETHODIMP
 nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                         PRUint8 aWidgetType, const nsRect& aRect, const nsRect& aClipRect)
@@ -329,10 +357,16 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       ::EraseRect(&macRect);
       ::SetThemeBackground(kThemeBrushWhite, 24, true);
       break;
-      
+
     case NS_THEME_MENUPOPUP:
       ::SetThemeBackground(kThemeBrushDialogBackgroundActive, 24, true);
-      ::EraseRect(&macRect);
+      DrawMenu(macRect, IsDisabled(aFrame));
+      ::SetThemeBackground(kThemeBrushWhite, 24, true);
+      break;
+
+    case NS_THEME_MENUITEM:
+      ::SetThemeBackground(kThemeBrushDialogBackgroundActive, 24, true);
+      DrawMenuItem(macRect, kThemeMenuItemPlain, IsDisabled(aFrame), CheckBooleanAttr(aFrame, mMenuActiveAtom));
       ::SetThemeBackground(kThemeBrushWhite, 24, true);
       break;
 
@@ -724,7 +758,7 @@ nsNativeThemeMac::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = PR_FALSE;
     if (aAttribute == mDisabledAtom || aAttribute == mCheckedAtom ||
-        aAttribute == mSelectedAtom)
+        aAttribute == mSelectedAtom || aAttribute == mMenuActiveAtom)
       *aShouldRepaint = PR_TRUE;
   }
 
@@ -758,7 +792,8 @@ nsNativeThemeMac::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFr
   switch ( aWidgetType ) {
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
-      //    case NS_THEME_MENUPOPUP:     // no support for painting menu backgrounds
+    case NS_THEME_MENUPOPUP:
+    case NS_THEME_MENUITEM:
     case NS_THEME_TOOLTIP:
     
     case NS_THEME_CHECKBOX:
@@ -808,7 +843,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFr
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
       retVal = PR_TRUE;
       break;
-  
+
     case NS_THEME_LISTBOX:
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
