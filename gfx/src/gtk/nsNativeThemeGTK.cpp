@@ -241,7 +241,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       // menus which are children of a menu bar are only marked as prelight
       // if they are open, not on normal hover.
 
-      if (aWidgetType == NS_THEME_MENUITEM) {
+      if (aWidgetType == NS_THEME_MENUITEM ||
+          aWidgetType == NS_THEME_CHECKMENUITEM ||
+          aWidgetType == NS_THEME_RADIOMENUITEM) {
         PRBool isTopLevel = PR_FALSE;
         nsIMenuFrame *menuFrame;
         CallQueryInterface(aFrame, &menuFrame);
@@ -262,6 +264,21 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         }
 
         aState->active = FALSE;
+        
+        if (aWidgetType == NS_THEME_CHECKMENUITEM ||
+            aWidgetType == NS_THEME_RADIOMENUITEM) {
+          if (aFrame) {
+            nsAutoString attr;
+            nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, mCheckedAtom, attr);
+            if (res == NS_CONTENT_ATTR_NO_VALUE ||
+               (res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()))
+              *aWidgetFlags = FALSE;
+            else
+              *aWidgetFlags = attr.EqualsIgnoreCase("true");
+          } else {
+            *aWidgetFlags = FALSE;
+          }
+        }
       }
     }
   }
@@ -373,6 +390,12 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_MENUITEM:
     aGtkWidgetType = MOZ_GTK_MENUITEM;
+    break;
+  case NS_THEME_CHECKMENUITEM:
+    aGtkWidgetType = MOZ_GTK_CHECKMENUITEM;
+    break;
+  case NS_THEME_RADIOMENUITEM:
+    aGtkWidgetType = MOZ_GTK_RADIOMENUITEM;
     break;
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
@@ -742,6 +765,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_MENUBAR:
   case NS_THEME_MENUPOPUP:
   case NS_THEME_MENUITEM:
+  case NS_THEME_CHECKMENUITEM:
+  case NS_THEME_RADIOMENUITEM:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
   case NS_THEME_DROPDOWN:

@@ -221,6 +221,11 @@ menulist > menupopup > menuitem[_moz-menuactive="true"] {
  
 /* ::::: checkbox menuitem ::::: */
 
+#ifdef MOZ_WIDGET_GTK2
+menuitem[type="checkbox"] {
+  -moz-appearance: checkmenuitem !important;
+}
+#else
 menuitem[checked="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check.gif");
   -moz-image-region: auto;
@@ -235,9 +240,15 @@ menuitem[checked="true"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-hover.gif");
   -moz-image-region: auto;
 }
+#endif
 
 /* ::::: radio menuitem ::::: */
 
+#ifdef MOZ_WIDGET_GTK2
+menuitem[type="radio"] {
+  -moz-appearance: radiomenuitem !important;
+}
+#else
 menuitem[checked="true"][type="radio"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
   -moz-image-region: auto;
@@ -252,6 +263,7 @@ menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-hover.gif");
   -moz-image-region: auto;
 }
+#endif
 
 /* ::::: menuseparator ::::: */
 

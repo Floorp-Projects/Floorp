@@ -155,36 +155,14 @@ menulist > menupopup > menu > .menu-iconic-left {
 
 /* ::::: checkbox menuitem ::::: */
 
-menuitem[checked="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-disabled.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-hover.gif");
-  -moz-image-region: auto;
+menuitem[type="checkbox"] {
+  -moz-appearance: checkmenuitem !important;
 }
 
 /* ::::: radio menuitem ::::: */
 
-menuitem[checked="true"][type="radio"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][type="radio"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-disabled.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-hover.gif");
-  -moz-image-region: auto;
+menuitem[type="radio"] {
+  -moz-appearance: radiomenuitem !important;
 }
 
 /* ::::: menuseparator ::::: */

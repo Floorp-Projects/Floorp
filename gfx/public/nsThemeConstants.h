@@ -203,3 +203,5 @@
 #define NS_THEME_MENUPOPUP                                 211
 // <menu> and <menuitem> appearances
 #define NS_THEME_MENUITEM                                  212
+#define NS_THEME_CHECKMENUITEM                             213
+#define NS_THEME_RADIOMENUITEM                             214
