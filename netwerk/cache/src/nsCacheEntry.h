@@ -201,8 +201,15 @@ public:
     nsCacheEntry *GetEntry( const nsCString * key);
     nsresult      AddEntry( nsCacheEntry *entry);
     void          RemoveEntry( nsCacheEntry *entry);
+    
     // XXX enumerate entries?
-
+    class Visitor {
+    public:
+        virtual PRBool VisitEntry( nsCacheEntry *entry) = 0;
+    };
+    
+    void          VisitEntries( Visitor *visitor);
+    
 private:
 
     // PLDHashTable operation callbacks
@@ -227,7 +234,12 @@ private:
                                            PLDHashEntryHdr * hdr,
                                            PRUint32          number,
                                            void *            arg);
-
+    static
+    PLDHashOperator       VisitEntry(PLDHashTable *         table,
+                                     PLDHashEntryHdr *      hdr,
+                                     PRUint32               number,
+                                     void *                 arg);
+                                     
     // member variables
     static PLDHashTableOps ops;
     PLDHashTable           table;

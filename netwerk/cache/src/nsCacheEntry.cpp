@@ -389,6 +389,24 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
 }
 
 
+void
+nsCacheEntryHashTable::VisitEntries( nsCacheEntryHashTable::Visitor *visitor)
+{
+    PL_DHashTableEnumerate(&table, VisitEntry, visitor);
+}
+
+
+PLDHashOperator
+nsCacheEntryHashTable::VisitEntry(PLDHashTable *table,
+                                  PLDHashEntryHdr *hashEntry,
+                                  PRUint32 number,
+                                  void *arg)
+{
+    nsCacheEntry *cacheEntry = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
+    nsCacheEntryHashTable::Visitor *visitor = (nsCacheEntryHashTable::Visitor*) arg;
+    return (visitor->VisitEntry(cacheEntry) ? PL_DHASH_NEXT : PL_DHASH_STOP);
+}
+
 /**
  *  hash table operation callback functions
  */
