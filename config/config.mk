@@ -425,7 +425,7 @@ MOZ_META_COMPONENTS_crypto_comps = pipboot pippki pipnss
 # Build using PIC by default
 # Do not use PIC if not building a shared lib (see exceptions below)
 #
-ifdef LIBRARY_NAME
+ifeq (,$(PROGRAM)$(SIMPLE_PROGRAMS)$(HOST_PROGRAM)$(HOST_SIMPLE_PROGRAMS))
 ifneq (,$(BUILD_SHARED_LIBS)$(FORCE_SHARED_LIB)$(FORCE_USE_PIC))
 _ENABLE_PIC=1
 endif
