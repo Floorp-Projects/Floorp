@@ -130,6 +130,7 @@ public class TreeTable extends JComponent implements Scrollable,
     fTreeTable = this;
 
     setLayout(null);
+    setFont(new Font("Helvetica", Font.PLAIN, 12));
     add(fCellRendererPane);
 
     fColumnModel = new ColumnModelImp();
