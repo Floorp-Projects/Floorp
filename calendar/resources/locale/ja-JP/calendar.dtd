@@ -255,25 +255,25 @@
 
 <!ENTITY calendar.choosedate.button.label       "日付を選択" >
 
-<!ENTITY calendar.cut.button.tooltip            "Cut" >
-<!ENTITY calendar.copy.button.tooltip           "Copy" >
-<!ENTITY calendar.paste.button.tooltip          "Paste" >
-<!ENTITY calendar.print.button.tooltip          "Print Calendar" >
+<!ENTITY calendar.cut.button.tooltip            "切り取り" >
+<!ENTITY calendar.copy.button.tooltip           "コピー" >
+<!ENTITY calendar.paste.button.tooltip          "貼り付け" >
+<!ENTITY calendar.print.button.tooltip          "カレンダー印刷" >
 
-<!ENTITY calendar.cut.button.label              "Cut" >
-<!ENTITY calendar.copy.button.label             "Copy" >
-<!ENTITY calendar.paste.button.label            "Paste" >
-<!ENTITY calendar.print.button.label            "Print" >
+<!ENTITY calendar.cut.button.label              "切り取り" >
+<!ENTITY calendar.copy.button.label             "コピー" >
+<!ENTITY calendar.paste.button.label            "貼り付け" >
+<!ENTITY calendar.print.button.label            "印刷" >
 
-<!ENTITY calendar.import.button.tooltip            "Import: Import events from a local file." >
-<!ENTITY calendar.export.button.tooltip            "Export: Export events to a local file." >
-<!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
-<!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
+<!ENTITY calendar.import.button.tooltip            "インポート: ローカルファイルからイベントをインポートします。" >
+<!ENTITY calendar.export.button.tooltip            "エクスポート: ローカルファイルにイベントをエクスポートします。" >
+<!ENTITY calendar.subscribe.button.tooltip         "購読: リモートマシン上のカレンダーファイルを購読します。" >
+<!ENTITY calendar.publish.button.tooltip            "公開: リモートマシンにイベントを公開します。" >
 
-<!ENTITY calendar.import.button.label              "Import" >
-<!ENTITY calendar.export.button.label              "Export" >
-<!ENTITY calendar.subscribe.button.label           "Subscribe" >
-<!ENTITY calendar.publish.button.label             "Publish" >
+<!ENTITY calendar.import.button.label              "インポート" >
+<!ENTITY calendar.export.button.label              "エクスポート" >
+<!ENTITY calendar.subscribe.button.label           "購読" >
+<!ENTITY calendar.publish.button.label             "公開" >
 
 <!ENTITY calendar.dayview.button.label          "デー" >
 <!ENTITY calendar.weekview.button.label         "ウィーク" >

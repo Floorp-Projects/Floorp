@@ -151,7 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Taakstatus">
 <!ENTITY newtodo.duetime.warning    "Uw starttijd valt na uw vervaltijd.">
 <!ENTITY newtodo.duedate.warning    "Uw startdatum valt na uw vervaldatum.">
-<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
+<!ENTITY newtodo.repeatstart.warning "Startdatum vereist voor herhaling.">
 
 <!ENTITY calendar.confirm.deleteevent "Weet u zeker dat u de volgende gebeurtenis wilt verwijderen: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Weet u zeker dat u de volgende naamloze gebeurtenis wilt verwijderen?" >
@@ -252,25 +252,25 @@
 
 <!ENTITY calendar.choosedate.button.label       "Kies datum" >
 
-<!ENTITY calendar.cut.button.tooltip            "Cut" >
-<!ENTITY calendar.copy.button.tooltip           "Copy" >
-<!ENTITY calendar.paste.button.tooltip          "Paste" >
-<!ENTITY calendar.print.button.tooltip          "Print Calendar" >
+<!ENTITY calendar.cut.button.tooltip            "Knippen" >
+<!ENTITY calendar.copy.button.tooltip           "Kopi&#xEB;ren" >
+<!ENTITY calendar.paste.button.tooltip          "Plakken" >
+<!ENTITY calendar.print.button.tooltip          "Kalender afdrukken" >
 
-<!ENTITY calendar.cut.button.label              "Cut" >
-<!ENTITY calendar.copy.button.label             "Copy" >
-<!ENTITY calendar.paste.button.label            "Paste" >
-<!ENTITY calendar.print.button.label            "Print" >
+<!ENTITY calendar.cut.button.label              "Knippen" >
+<!ENTITY calendar.copy.button.label             "Kopi&#xEB;ren" >
+<!ENTITY calendar.paste.button.label            "Plakken" >
+<!ENTITY calendar.print.button.label            "Afdrukken" >
 
-<!ENTITY calendar.import.button.tooltip            "Import: Import events from a local file." >
-<!ENTITY calendar.export.button.tooltip            "Export: Export events to a local file." >
-<!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
-<!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
+<!ENTITY calendar.import.button.tooltip            "Importeren: Importeer gebeurtenissen uit een lokaal bestand." >
+<!ENTITY calendar.export.button.tooltip            "Exporteren: Exporteer gebeurtenissen naar een lokaal bestand." >
+<!ENTITY calendar.subscribe.button.tooltip         "Aanmelden: Aanmelden bij een kalenderbestand op een machine op afstand." >
+<!ENTITY calendar.publish.button.tooltip            "Publiceren: Publiceer gebeurtenissen naar een machine op afstand." >
 
-<!ENTITY calendar.import.button.label              "Import" >
-<!ENTITY calendar.export.button.label              "Export" >
-<!ENTITY calendar.subscribe.button.label           "Subscribe" >
-<!ENTITY calendar.publish.button.label             "Publish" >
+<!ENTITY calendar.import.button.label              "Importeren" >
+<!ENTITY calendar.export.button.label              "Exporteren" >
+<!ENTITY calendar.subscribe.button.label           "Aanmelden" >
+<!ENTITY calendar.publish.button.label             "Publiceren" >
 
 <!ENTITY calendar.dayview.button.label          "Dagoverzicht" >
 <!ENTITY calendar.weekview.button.label         "Weekoverzicht" >
