@@ -33,74 +33,58 @@ frameset {
 
 p {
   display: block;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 address {
   display: block;
   font-style: italic;
-  margin-bottom: 0;
-  margin-top: 0;
 }
 blockquote {
   display: block;
-  margin-left: 40px;
-  margin-right: 40px;
-  margin-top: auto;
-  margin-bottom: auto;
+  margin: 1em 40px;
 }
 center {
   display: block;
   text-align: center;
-  margin-bottom: 0;
-  margin-top: 0;
 }
 div {
   display: block;
-  margin-bottom: 0;
-  margin-top: 0;
 }
 h1 {
   display: block;
   font-size: xx-large;
   font-weight: bold;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 h2 {
   display: block;
   font-size: x-large;
   font-weight: bold;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 h3 {
   display: block;
   font-size: large;
   font-weight: bold;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 h4 {
   display: block;
   font-size: medium;
   font-weight: bold;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 h5 {
   display: block;
   font-size: small;
   font-weight: bold;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 h6 {
   display: block;
   font-size: x-small;
   font-weight: bold;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 layer {
   display: block;
@@ -111,20 +95,17 @@ listing {
   font-family: monospace;
   font-size: medium;
   white-space: pre;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 plaintext, xmp, pre {
   display: block;
   font-family: monospace;
   white-space: pre;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 multicol {
   display: block;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 
 /* tables */
@@ -316,20 +297,14 @@ fieldset {
 
 ul, menu, dir {
   display: block;
-  margin-right: 0;
-  margin-bottom: auto;
-  margin-top: auto;
   list-style-type: disc;
-  margin-left: 40px;
+  margin: 1em 0 1em 40px;
 }
 
 ol {
   display: block;
-  margin-right: 0;
-  margin-bottom: auto;
-  margin-top: auto;
   list-style-type: decimal;
-  margin-left: 40px;
+  margin: 1em 0 1em 40px;
 }
 
 li {
@@ -381,8 +356,7 @@ dir ol dir,  dir ul dir,  dir menu dir,  dir dir dir
 
 dl {
   display: block;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: 1em 0;
 }
 dt {
   display: block;
@@ -399,9 +373,6 @@ embed {
 }
 hr {
   display: block;
-  margin-top: 0;
-  margin-bottom: 0;
-  text-align: center;
   border: 1px -moz-bg-inset;
 }
 br {
@@ -651,20 +622,20 @@ button[pseudoclass~="focus"]:-moz-focus-inner {
 
 :-moz-file-text {
   border: 2px inset rgb(192, 192, 192);
-  margin-right:10px; 
+  margin-right: 10px; 
   background-color: white;
   color: black;
 }
 
 input[type=text] {
   border: 2px inset rgb(192, 192, 192);
-  margin-right:10px; 
+  margin-right: 10px; 
   background-color: white;
   color: black;
 }
 input[type=password] {
   border: 2px inset rgb(192, 192, 192);
-  margin-right:10px; 
+  margin-right: 10px; 
   background-color: white;
   color:black;
 }
@@ -824,6 +795,7 @@ sourcetext {
 /* XXX Temporary until @page is supported... */
 :-moz-page {
   background: none;
+  display: block;
 }
 
 :root {
