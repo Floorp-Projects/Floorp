@@ -20,6 +20,15 @@
 #include "nsScreen.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIWebShell.h"
+#include "nsIDeviceContext.h"
+#include "nsIPresContext.h"
+#include "nsCOMPtr.h"
+#include "nsIDocumentViewer.h"
+#include "nsIDocumentLoader.h"
+
+static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
+static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDOMScreenIID, NS_IDOMSCREEN_IID);
@@ -28,14 +37,16 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 //
 //  Screen class implementation 
 //
-ScreenImpl::ScreenImpl()
+ScreenImpl::ScreenImpl( nsIWebShell* aWebShell): mWebShell( aWebShell )
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
+  NS_IF_ADDREF( mWebShell );
 }
 
 ScreenImpl::~ScreenImpl()
 {
+	NS_IF_RELEASE( mWebShell );
 }
 
 NS_IMPL_ADDREF(ScreenImpl)
@@ -92,56 +103,99 @@ ScreenImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 NS_IMETHODIMP
 ScreenImpl::GetWidth(PRInt32* aWidth)
 {
-  //XXX not implmented
+	nsIDeviceContext* context = GetDeviceContext();
+	if ( context )
+	{
+		PRInt32 height;
+		context->GetDeviceSurfaceDimensions( *aWidth, height  );
+		float devUnits;
+		context->GetDevUnitsToAppUnits(devUnits);
+		*aWidth = NSToIntRound(float( *aWidth) / devUnits );
+		NS_RELEASE( context );
+		return NS_OK;
+	}
+
   *aWidth = -1;
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetHeight(PRInt32* aHeight)
 {
-  //XXX not implmented
+	nsIDeviceContext* context = GetDeviceContext();
+	if ( context )
+	{
+		PRInt32 width;
+		context->GetDeviceSurfaceDimensions( width, *aHeight  );
+		float devUnits;
+		context->GetDevUnitsToAppUnits(devUnits);
+		*aHeight = NSToIntRound(float( *aHeight) / devUnits );
+		NS_RELEASE( context );
+		return NS_OK;
+	}
+	
   *aHeight = -1;
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetPixelDepth(PRInt32* aPixelDepth)
 {
+	nsIDeviceContext* context = GetDeviceContext();
+	if ( context )
+	{
+		PRUint32 depth;
+		context->GetDepth( depth  );
+		*aPixelDepth = depth;
+		NS_RELEASE( context );
+		return NS_OK;
+	}
   //XXX not implmented
   *aPixelDepth = -1;
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetColorDepth(PRInt32* aColorDepth)
 {
-  //XXX not implmented
+	nsIDeviceContext* context = GetDeviceContext();
+	if ( context )
+	{
+		PRUint32 depth;
+		context->GetDepth( depth  );
+		*aColorDepth = depth;
+		NS_RELEASE( context );
+		return NS_OK;
+	}
+  
   *aColorDepth = -1;
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailWidth(PRInt32* aAvailWidth)
 {
-  //XXX not implmented
-  *aAvailWidth = -1;
-  return NS_OK;
+	//XXX not implmented
+  // Really should subtract out chrome
+ return GetWidth( aAvailWidth); 
+
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailHeight(PRInt32* aAvailHeight)
 {
-  //XXX not implmented
-  *aAvailHeight = -1;
-  return NS_OK;
+	//XXX not implmented
+   // Really should subtract out chrome
+ return GetHeight(aAvailHeight);
+
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailLeft(PRInt32* aAvailLeft)
 {
-  //XXX not implmented
-  *aAvailLeft = -1;
+ 	//XXX not implmented
+   // have to factor in chrome  someday
+  *aAvailLeft = 0;
   return NS_OK;
 }
 
@@ -149,8 +203,30 @@ NS_IMETHODIMP
 ScreenImpl::GetAvailTop(PRInt32* aAvailTop)
 {
   //XXX not implmented
-  *aAvailTop = -1;
+  // have to factor in chrome  someday
+  *aAvailTop = 0;
   return NS_OK;
+}
+
+nsIDeviceContext* ScreenImpl::GetDeviceContext()
+{
+	nsCOMPtr<nsIDocumentViewer> docViewer;
+	nsCOMPtr<nsIContentViewer> contentViewer;
+	nsIPresContext* presContext = nsnull;
+	nsIDeviceContext* context = nsnull;
+  
+	if( mWebShell &&  NS_SUCCEEDED( mWebShell->GetContentViewer( getter_AddRefs(contentViewer) )) )
+	{
+		if ( NS_SUCCEEDED( contentViewer->QueryInterface(kIDocumentViewerIID, getter_AddRefs(docViewer) ) ) )
+		{   
+				if (NS_SUCCEEDED( docViewer->GetPresContext( presContext ) ) )
+			  {  
+			  	presContext->GetDeviceContext( &context );
+			 	}
+			 	NS_IF_RELEASE( presContext );	
+		 }
+	}
+  return context;
 }
 
 
