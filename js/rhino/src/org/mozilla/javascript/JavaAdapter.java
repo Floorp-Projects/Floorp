@@ -169,8 +169,14 @@ public class JavaAdapter extends ScriptableObject {
             for (int j = 0; j < methods.length; j++) {
             	Method method = methods[j];
                 int mods = method.getModifiers();
-                if (Modifier.isStatic(mods) || Modifier.isFinal(mods))
+                if (Modifier.isStatic(mods) || Modifier.isFinal(mods) ||
+                    jsObj == null || 
+                    ScriptableObject.getProperty(jsObj, method.getName()) == 
+                        Scriptable.NOT_FOUND)
+                {
+                    // See bug 19734 for the rationale for the getProperty test
                     continue;
+                }
                 // make sure to generate only one instance of a particular 
                 // method/signature.
                 String methodName = method.getName();
