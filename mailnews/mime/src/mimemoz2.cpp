@@ -689,6 +689,10 @@ mime_file_type (const char *filename, void *stream_closure)
 
 int ConvertUsingEncoderAndDecoder(const char *stringToUse, PRInt32 inLength, nsIUnicodeEncoder *encoder, nsIUnicodeDecoder *decoder, char **pConvertedString)
 {
+  // buffer size 144 =
+  // 72 (default line len for compose) 
+  // times 2 (converted byte len might be larger)
+  const int klocalbufsize = 144;
   // do the conversion
   PRUnichar *unichars;
   PRInt32 unicharLength;
@@ -697,9 +701,17 @@ int ConvertUsingEncoderAndDecoder(const char *stringToUse, PRInt32 inLength, nsI
   char *dstPtr;
   nsresult rv;
 
-  rv = decoder->GetMaxLength(stringToUse, srcLen, &unicharLength);
-  // allocate temporary buffer to hold unicode string
-  unichars = new PRUnichar[unicharLength];
+  // use this local buffer if possible
+  PRUnichar localbuf[klocalbufsize+1];
+  if (inLength > klocalbufsize) {
+    rv = decoder->GetMaxLength(stringToUse, srcLen, &unicharLength);
+    // allocate temporary buffer to hold unicode string
+    unichars = new PRUnichar[unicharLength];
+  }
+  else {
+    unichars = localbuf;
+    unicharLength = klocalbufsize+1;
+  }
   if (unichars == nsnull) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -732,7 +744,8 @@ int ConvertUsingEncoderAndDecoder(const char *stringToUse, PRInt32 inLength, nsI
         }
       }
     }
-    delete [] unichars;
+    if (inLength > klocalbufsize)
+      delete [] unichars;
   }
 
   return NS_SUCCEEDED(rv) ? 0 : -1;
