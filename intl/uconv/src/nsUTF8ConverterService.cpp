@@ -76,8 +76,11 @@ ToUTF8(const nsACString &aString, const char *aCharset, nsACString &aResult)
   NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
 
   rv = unicodeDecoder->Convert(inStr.get(), &srcLen, ustr, &dstLen);
-  if (NS_SUCCEEDED(rv))
-    CopyUTF16toUTF8(Substring(ustr, ustr + dstLen), aResult);
+  if (NS_SUCCEEDED(rv)){
+    // Tru64 Cxx doesn't like |nsAutoPtr<PRUnichar>| as the 1st arg. of 
+    // Substring().
+    CopyUTF16toUTF8(Substring(NS_STATIC_CAST(PRUnichar *, ustr), ustr + dstLen), aResult);
+  }
   return rv;
 }
 
@@ -87,8 +90,6 @@ nsUTF8ConverterService::ConvertStringToUTF8(const nsACString &aString,
                                             PRBool aSkipCheck, 
                                             nsACString &aUTF8String)
 {
-  aUTF8String.Truncate();
-
   // return if ASCII only or valid UTF-8 providing that the ASCII/UTF-8
   // check is requested. It may not be asked for if a caller suspects
   // that the input is in non-ASCII 7bit charset (ISO-2022-xx, HZ) or 
@@ -97,6 +98,8 @@ nsUTF8ConverterService::ConvertStringToUTF8(const nsACString &aString,
     aUTF8String = aString;
     return NS_OK;
   }
+
+  aUTF8String.Truncate();
 
   nsresult rv = ToUTF8(aString, aCharset, aUTF8String);
 
@@ -117,8 +120,6 @@ nsUTF8ConverterService::ConvertURISpecToUTF8(const nsACString &aSpec,
                                              const char *aCharset, 
                                              nsACString &aUTF8Spec)
 {
-  aUTF8Spec.Truncate();
-
   // assume UTF-8 if the spec contains unescaped non-ASCII characters.
   // No valid spec in Mozilla would break this assumption.
   if (!IsASCII(aSpec)) {
@@ -126,10 +127,18 @@ nsUTF8ConverterService::ConvertURISpecToUTF8(const nsACString &aSpec,
     return NS_OK;
   }
 
-  nsCAutoString unescapedSpec; 
-  NS_UnescapeURL(PromiseFlatCString(aSpec).get(), aSpec.Length(), 
-                 esc_OnlyNonASCII, unescapedSpec);
+  aUTF8Spec.Truncate();
 
+  nsCAutoString unescapedSpec; 
+  // NS_UnescapeURL does not fill up unescapedSpec unless there's at least 
+  // one character to unescape.
+  PRBool written = NS_UnescapeURL(PromiseFlatCString(aSpec).get(), aSpec.Length(), 
+                                  esc_OnlyNonASCII, unescapedSpec);
+
+  if (!written) {
+    aUTF8Spec = aSpec;
+    return NS_OK;
+  }
   // return if ASCII only or escaped UTF-8
   if (IsASCII(unescapedSpec) || IsUTF8(unescapedSpec)) {
     aUTF8Spec = unescapedSpec;
