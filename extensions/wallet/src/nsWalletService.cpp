@@ -250,7 +250,13 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                                   PRInt32 progressStateFlags, 
                                   nsresult aStatus)
 {
-     nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
+
+    // If the load failed, do not try to prefill...
+    if (NS_FAILED(aStatus)) {
+       return NS_OK;
+    }
+
     if (progressStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
         if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
 
