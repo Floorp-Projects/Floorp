@@ -277,7 +277,7 @@ void _PR_LogCleanup(void)
 
     while (lm != NULL) {
         PRLogModuleInfo *next = lm->next;
-        PR_Free((/*const*/ char *)lm->name);
+        free((/*const*/ char *)lm->name);
         PR_Free(lm);
         lm = next;
     }
