@@ -38,16 +38,16 @@
 // JNI...yada, yada, yada
 #include <jni.h>
 // JNI Headers
-#include "../BookmarksImpl.h"
-#include "../CurrentPageImpl.h"
-#include "../HistoryImpl.h"
-#include "../ISupportsPeer.h"
-#include "../NavigationImpl.h"
-#include "../RDFEnumeration.h"
-#include "../RDFTreeNode.h"
-#include "../WindowControlImpl.h"
-#include "../WrapperFactoryImpl.h"
-#include "../NativeEventThread.h"
+#include "BookmarksImpl.h"
+#include "CurrentPageImpl.h"
+#include "HistoryImpl.h"
+#include "ISupportsPeer.h"
+#include "NavigationImpl.h"
+#include "RDFEnumeration.h"
+#include "RDFTreeNode.h"
+#include "WindowControlImpl.h"
+#include "WrapperFactoryImpl.h"
+#include "NativeEventThread.h"
 
 // allow code in webclientstub.so to load us
 #include "NativeLoaderStub.h"

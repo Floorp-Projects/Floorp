@@ -47,4 +47,4 @@ EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt
 endif
 endif
 
-INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris -I.. $(INCLUDES)
+INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris -I.. -I../../src_share $(INCLUDES)
