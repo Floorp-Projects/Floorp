@@ -83,6 +83,9 @@ static void ReplaceMess(char* io_Path)
 
             // forward the fwd_prt past the ../
             fwdPtr += 2;
+            // special case if we have reached the end to preserve the last /
+            if (*fwdPtr == '.' && *(fwdPtr+1) == '\0')
+                urlPtr +=1;
         }
         else
         {
@@ -105,6 +108,8 @@ static void ReplaceMess(char* io_Path)
     if ((urlPtr > (io_Path+1)) && (*(urlPtr-1) == '.') && (*(urlPtr-2) == '/'))
         *(urlPtr-1) = '\0';
 }
+
+
 
 //----------------------------------------
 
@@ -883,16 +888,92 @@ nsStdURL::SetRelativePath(const char* i_Relative)
 NS_IMETHODIMP
 nsStdURL::Resolve(const char *relativePath, char **result) 
 {
-    // XXX Judson: optimize this
     nsresult rv;
-    nsCOMPtr<nsIURI> uri;
-    rv = Clone(getter_AddRefs(uri));
-    if (NS_FAILED(rv)) return rv;
 
-    rv = uri->SetRelativePath(relativePath);
-    if (NS_FAILED(rv)) return rv;
+    if (!relativePath) return NS_ERROR_NULL_POINTER;
 
-    return uri->GetSpec(result);
+    // Make sure that if there is a : its before other delimiters
+    // If not then its an absolute case
+    static const char delimiters[] = "/;?#:";
+    char* brk = PL_strpbrk(relativePath, delimiters);
+    if (brk && (*brk == ':')) // This is an absolute case
+    {
+        rv = DupString(result, relativePath);
+        ReplaceMess(*result);
+        return rv;
+    }
+
+    nsCAutoString finalSpec; // guaranteed to be singlebyte.
+
+    if (mScheme)
+    {
+        finalSpec = mScheme;
+        finalSpec += "://";
+    }
+    if (mPreHost)
+    {
+        finalSpec += mPreHost;
+        finalSpec += '@';
+    }
+    if (mHost)
+    {
+        finalSpec += mHost;
+        if (-1 != mPort)
+        {
+            char* portBuffer = PR_smprintf(":%d", mPort);
+            if (!portBuffer)
+                return NS_ERROR_OUT_OF_MEMORY;
+            finalSpec += portBuffer;
+            PR_smprintf_free(portBuffer);
+            portBuffer = 0;
+        }
+    }
+
+    switch (*relativePath) 
+    {
+        case '/':
+            finalSpec += (char*)relativePath;
+            break;
+        case ';': 
+            finalSpec += mDirectory;
+            finalSpec += mFileName;
+            finalSpec += (char*)relativePath;
+            break;
+        case '?': 
+            finalSpec += mDirectory;
+            finalSpec += mFileName;
+            if (mParam)
+            {
+                finalSpec += ';';
+                finalSpec += mParam;
+            }
+            finalSpec += (char*)relativePath;
+            break;
+        case '#':
+            finalSpec += mDirectory;
+            finalSpec += mFileName;
+            if (mParam)
+            {
+                finalSpec += ';';
+                finalSpec += mParam;
+            }
+            if (mQuery)
+            {
+                finalSpec += '?';
+                finalSpec += mQuery;
+            }
+            finalSpec += (char*)relativePath;
+            break;
+        default:
+            finalSpec += mDirectory;
+            finalSpec += (char*)relativePath;
+    }
+    *result = finalSpec.ToNewCString();
+    if (*result) {
+        ReplaceMess(*result);
+        return NS_OK;
+    } else
+        return NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult
