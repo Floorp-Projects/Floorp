@@ -57,7 +57,7 @@
 #include "nsIWebShell.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsISupportsArray.h"
 #include "nsIFrame.h"

@@ -421,10 +421,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   aElement->GetLocalName(tagLocalName);
   aElement->GetNamespaceURI(tagNamespaceURI);
 
-  PRInt32 namespaceID, elementNamespaceID;
-  content->GetNameSpaceID(elementNamespaceID);
-  if (elementNamespaceID == kNameSpaceID_HTML)
-    ToLowerCase(tagLocalName); // XXX We shouldn't need this hack
+  PRInt32 namespaceID;
     
   PRInt32 index, count;
   nsAutoString nameStr, prefixStr, uriStr, valueStr;
@@ -440,26 +437,15 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
                            *getter_AddRefs(attrName),
                            *getter_AddRefs(attrPrefix));
     
-    if (namespaceID == kNameSpaceID_XMLNS ||
-      elementNamespaceID == kNameSpaceID_HTML /*XXX Hack*/) {
+    if (namespaceID == kNameSpaceID_XMLNS) {
       PRBool hasPrefix = attrPrefix ? PR_TRUE : PR_FALSE;
       content->GetAttr(namespaceID, attrName, uriStr);
 
-      attrName->ToString(nameStr);
-      // XXX We shouldn't need this hack
-      if (elementNamespaceID == kNameSpaceID_HTML) {
-        if (Substring(nameStr, 0, 6).Equals(NS_LITERAL_STRING("xmlns:"))) {
-          nameStr.Cut(0,6);
-          hasPrefix = PR_TRUE;
-        } else if (!nameStr.Equals(kXMLNS)) {
-          continue;
-        }
-      }
-
-      if (!hasPrefix) {
+      if (!attrPrefix) {
         // Default NS attribute does not have prefix (and the name is "xmlns")
         PushNameSpaceDecl(nsString(), uriStr, aElement);
       } else {
+        attrName->ToString(nameStr);
         PushNameSpaceDecl(nameStr, uriStr, aElement);
       }
     }
@@ -470,8 +456,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   addNSAttr = ConfirmPrefix(tagPrefix, tagNamespaceURI);
   // Serialize the qualified name of the element
   AppendToString(NS_LITERAL_STRING("<"), aStr);
-  if (!tagPrefix.IsEmpty() &&
-    !(elementNamespaceID == kNameSpaceID_HTML && tagPrefix.Equals(kXMLNS) /*XXX Hack*/)) {
+  if (!tagPrefix.IsEmpty()) {
     AppendToString(tagPrefix, aStr);
     AppendToString(NS_LITERAL_STRING(":"), aStr);
   }
@@ -515,8 +500,6 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     content->GetAttr(namespaceID, attrName, valueStr);
     attrName->ToString(nameStr);
     
-    if (elementNamespaceID == kNameSpaceID_HTML && nameStr.Equals(NS_LITERAL_STRING("xmlns:xmlns")))
-      nameStr.Assign(kXMLNS); // XXX Shouldn't need this hack, breaks case where there really is xmlns:xmlns
     SerializeAttr(prefixStr, nameStr, valueStr, aStr, PR_TRUE);
     
     if (addNSAttr) {
@@ -559,16 +542,10 @@ nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   aElement->GetLocalName(tagLocalName);
   aElement->GetNamespaceURI(tagNamespaceURI);
 
-  PRInt32 namespaceID;
-  content->GetNameSpaceID(namespaceID);
-  if (namespaceID == kNameSpaceID_HTML)
-    ToLowerCase(tagLocalName); // XXX We shouldn't need this hack
-
   ConfirmPrefix(tagPrefix, tagNamespaceURI);
 
   AppendToString(NS_LITERAL_STRING("</"), aStr);
-  if (!tagPrefix.IsEmpty() &&
-    !(namespaceID == kNameSpaceID_HTML && tagPrefix.Equals(kXMLNS) /*XXX Hack*/)) {
+  if (!tagPrefix.IsEmpty()) {
     AppendToString(tagPrefix, aStr);
     AppendToString(NS_LITERAL_STRING(":"), aStr);
   }

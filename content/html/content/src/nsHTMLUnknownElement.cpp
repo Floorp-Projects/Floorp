@@ -50,7 +50,7 @@
 #include "nsIDocument.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsIDOMMutationEvent.h"
 
 class nsHTMLUnknownElement : public nsGenericHTMLContainerElement,
@@ -167,27 +167,6 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
   return sheet;
 }
 
-static nsresult
-EnsureWritableAttributes(nsIHTMLContent* aContent,
-                         nsIHTMLAttributes*& aAttributes, PRBool aCreate)
-{
-  nsresult  result = NS_OK;
-
-  if (!aAttributes) {
-    if (PR_TRUE == aCreate) {
-      result = NS_NewHTMLAttributes(&aAttributes);
-    }
-  }
-
-  return result;
-}
-
-static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
-{
-//  aAttributes->ReleaseContentRef();
-  NS_RELEASE(aAttributes);
-}
-
 
 NS_IMETHODIMP
 nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
@@ -276,24 +255,13 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
     GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION, impact);
 
     nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
-    if (sheet) { // set attr via style sheet
-      result = sheet->SetAttributeFor(aAttribute, aValue, 
-                                      (NS_STYLE_HINT_CONTENT < impact), 
-                                      this, mAttributes);
+    if (!mAttributes) {
+      result = NS_NewHTMLAttributes(&mAttributes);
+      NS_ENSURE_SUCCESS(result, result);
     }
-    else { // manage this ourselves and re-sync when we connect to doc
-      result = EnsureWritableAttributes(this, mAttributes, PR_TRUE);
-
-      if (mAttributes) {
-        PRInt32   count;
-        result = mAttributes->SetAttributeFor(aAttribute, aValue, 
-                                              (NS_STYLE_HINT_CONTENT < impact),
-                                              this, nsnull, count);
-        if (0 == count) {
-          ReleaseAttributes(mAttributes);
-        }
-      }
-    }
+    result = mAttributes->SetAttributeFor(aAttribute, aValue, 
+                                          (NS_STYLE_HINT_CONTENT < impact),
+                                          this, sheet);
   }
 
   if (aNotify && (mDocument)) {

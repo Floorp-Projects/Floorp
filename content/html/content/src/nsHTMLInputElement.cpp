@@ -59,7 +59,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIFormSubmission.h"

@@ -1762,12 +1762,6 @@ nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
       nameSpaceID = kNameSpaceID_None;
       nameAtom = dont_AddRef(NS_NewAtom(key));
       nameSpacePrefix = nsnull;
-    } else if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
-      // Ooh, what a nice little hack we have here :-)
-      nsAutoString name;
-      nameAtom->ToString(name);
-      nameAtom = dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("xmlns:") + name));
-      nameSpaceID = kNameSpaceID_HTML;  // XXX this is wrong, but necessary until HTML can store other namespaces for attrs
     }
 
     nsCOMPtr<nsINodeInfo> ni;

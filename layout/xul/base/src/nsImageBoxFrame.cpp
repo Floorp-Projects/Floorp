@@ -64,7 +64,7 @@
 #include "nsIImage.h"
 #include "nsIWidget.h"
 #include "nsHTMLAtoms.h"
-#include "nsIHTMLAttributes.h"
+#include "nsIHTMLContent.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStyleContext.h"

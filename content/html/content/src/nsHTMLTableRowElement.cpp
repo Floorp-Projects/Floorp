@@ -42,7 +42,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsDOMError.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "GenericElementCollection.h"
 #include "nsHTMLAtoms.h"

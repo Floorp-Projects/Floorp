@@ -40,7 +40,6 @@
 #include "nsCRT.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLAttributes.h"
 #include "nsITextContent.h"
 #include "nsString.h"
 #include "nsIDocument.h"

@@ -38,7 +38,7 @@
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
