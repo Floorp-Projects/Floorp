@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webbrwsr \
 		  appshell \
+		  appcomps \
 		  caps \
 		  uriloader \
 		  $(NULL)
@@ -94,7 +95,7 @@ FORCE_STATIC_LIB = 1
 LOCAL_INCLUDES	= \
 	-I$(srcdir) \
 	-I$(srcdir)/.. \
-	-I$(srcdir)/../../appshell/src/ \
+	-I$(srcdir)/../../components/startup/src \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

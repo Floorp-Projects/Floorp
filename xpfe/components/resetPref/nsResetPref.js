@@ -73,7 +73,7 @@ nsResetPref.prototype = {
             // startup from nsAppRunner.cpp.
 
             // We get the command line service and from that the -resetPref argument.
-            var cmdLine  = Components.classes[ "@mozilla.org/appshell/commandLineService;1" ]
+            var cmdLine  = Components.classes[ "@mozilla.org/app-startup/commandLineService;1" ]
                              .getService( Components.interfaces.nsICmdLineService );
             var prefList = cmdLine.getCmdLineValue( "-resetPref" ).split( "," );
 

@@ -46,7 +46,6 @@
 #include "nsIAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsICmdLineService.h"
 #include "nsGtkEventHandler.h"
 #include <stdlib.h>
 #include <gdk/gdkx.h>
@@ -126,7 +125,6 @@ static unsigned long getNextRequest (void *aClosure) {
 //
 //-------------------------------------------------------------------------
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
 
 //-------------------------------------------------------------------------
@@ -205,22 +203,6 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
     return NS_OK;
 
   sInitialized = PR_TRUE;
-
-  int argc = bac ? *bac : 0;
-  char **argv = bav;
-
-  nsresult rv;
-
-  nsCOMPtr<nsICmdLineService> cmdLineArgs = do_GetService(kCmdLineServiceCID);
-  if (cmdLineArgs) {
-    rv = cmdLineArgs->GetArgc(&argc);
-    if(NS_FAILED(rv))
-      argc = bac ? *bac : 0;
-
-    rv = cmdLineArgs->GetArgv(&argv);
-    if(NS_FAILED(rv))
-      argv = bav;
-  }
 
   return NS_OK;
 }

@@ -265,9 +265,9 @@ function onStart()
 
       if (fatalError)
       {
-        var appShellService = Components.classes["@mozilla.org/appshell/appShellService;1"]
-                              .getService(Components.interfaces.nsIAppShellService);
-        appShellService.quit(Components.interfaces.nsIAppShellService.eForceQuit);
+        var appStartup = Components.classes["@mozilla.org/seamonkey/app-startup;1"]
+                                   .getService(Components.interfaces.nsIAppStartup);
+        appStartup.quit(Components.interfaces.nsIAppStartup.eForceQuit);
       }
 
       return false;

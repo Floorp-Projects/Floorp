@@ -36,6 +36,7 @@ MODULE_NAME = nsToolkitCompsModule
 REQUIRES = 	\
 		xpcom \
 		string \
+		widget \
 		layout \
 		dom \
 		mork \
@@ -44,6 +45,7 @@ REQUIRES = 	\
 		intl \
 		docshell \
 		autocomplete \
+		appcomps \
 		downloads \
 		mimetype \
 		webbrowserpersist \
@@ -54,6 +56,8 @@ REQUIRES = 	\
 		windowwatcher \
 		uriloader \
 		xpinstall \
+		xulapp \
+		embed_base \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -70,6 +74,7 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../history/src \
 	-I$(srcdir)/../satchel/src \
 	-I$(srcdir)/../passwordmgr/base \
+	-I$(srcdir)/../startup/src \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -77,6 +82,11 @@ LOCAL_INCLUDES += -I$(srcdir)/../alerts/src
 endif
 
 SHARED_LIBRARY_LIBS = \
+	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifdef MOZ_PHOENIX
+SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
@@ -89,6 +99,7 @@ SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 
 EXTRA_DSO_LIBS = gkgfx
+endif # MOZ_PHOENIX
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
@@ -97,5 +108,10 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NULL)
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
 
 include $(topsrcdir)/config/rules.mk

@@ -105,7 +105,8 @@ nsSystemPref::Init(void)
 
     if (!gSysPrefLog) {
         gSysPrefLog = PR_NewLogModule("Syspref");
-        PR_ASSERT(gSysPrefLog);
+        if (!gSysPrefLog)
+            return NS_ERROR_OUT_OF_MEMORY;
     }
 
     nsCOMPtr<nsIObserverService> observerService = 

@@ -1,0 +1,207 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ * Seth Spitzer <sspitzer@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+
+%{C++
+
+#define COMMAND_LINE_ARGUMENT_HANDLERS "command-line-argument-handlers"
+#define PREF_STARTUP_PREFIX "general.startup."
+
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
+#include "nsICategoryManager.h"
+#include "nsIFile.h"
+#include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
+#include "nsIServiceManager.h"
+
+struct nsModuleComponentInfo;   // forward declaration
+
+#define CMDLINEHANDLER_REGISTERPROC_DECLS \
+static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType, const nsModuleComponentInfo *info);  \
+static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const nsModuleComponentInfo *info);
+
+#define CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
+NS_IMETHODIMP macro_class::GetDefaultArgs(PRUnichar **aDefaultArgs) \
+{ \
+    if (!aDefaultArgs) return NS_ERROR_FAILURE; \
+    *aDefaultArgs = ToNewUnicode(nsDependentCString(macro_default_args)); \
+    return NS_OK; \
+}
+
+#define CMDLINEHANDLER_GETCHROMEURL_IMPL(macro_class,macro_chrome_url)\
+NS_IMETHODIMP macro_class::GetChromeUrlForTask(char **aChromeUrlForTask) \
+{ \
+    if (!aChromeUrlForTask) return NS_ERROR_FAILURE; \
+    *aChromeUrlForTask = PL_strdup(macro_chrome_url); \
+    return NS_OK; \
+}
+
+#define CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_handles_args, macro_open_window_with_args)\
+NS_IMETHODIMP macro_class::GetCommandLineArgument(char **aCommandLineArgument) \
+{ \
+    if (!aCommandLineArgument) return NS_ERROR_FAILURE; \
+    *aCommandLineArgument = PL_strdup(macro_cmd_line_arg); \
+    return NS_OK; \
+} \
+NS_IMETHODIMP macro_class::GetPrefNameForStartup(char **aPrefNameForStartup) \
+{ \
+    if (!aPrefNameForStartup) return NS_ERROR_FAILURE; \
+    *aPrefNameForStartup = PL_strdup(macro_pref_name); \
+    return NS_OK; \
+} \
+NS_IMETHODIMP macro_class::GetHelpText(char **aHelpText) \
+{ \
+    if (!aHelpText) return NS_ERROR_FAILURE; \
+    *aHelpText = PL_strdup(macro_help_text); \
+    return NS_OK; \
+} \
+NS_IMETHODIMP macro_class::GetHandlesArgs(PRBool *aHandlesArgs) \
+{ \
+    if (!aHandlesArgs) return NS_ERROR_FAILURE; \
+    *aHandlesArgs = macro_handles_args; \
+    return NS_OK; \
+} \
+NS_IMETHODIMP macro_class::GetOpenWindowWithArgs(PRBool *aOpenWindowWithArgs) \
+{ \
+    if (!aOpenWindowWithArgs) return NS_ERROR_FAILURE; \
+    *aOpenWindowWithArgs = macro_open_window_with_args; \
+    return NS_OK; \
+}
+
+#define CMDLINEHANDLER_REGISTERPROC_IMPL(macro_class, \
+                                         macro_pretty_name, \
+                                         macro_contractid) \
+NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType, const nsModuleComponentInfo *info) \
+{ \
+    nsresult rv; \
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv); \
+    if (NS_FAILED(rv)) return rv; \
+    nsXPIDLCString prevEntry; \
+    rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_pretty_name, macro_contractid, PR_TRUE, PR_TRUE, getter_Copies(prevEntry)); \
+	return NS_OK; \
+} \
+NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const nsModuleComponentInfo *info) \
+{ \
+    nsresult rv; \
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv); \
+    if (NS_FAILED(rv)) return rv; \
+    rv = catman->DeleteCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_contractid, PR_TRUE); \
+    return NS_OK; \
+}
+
+// basic definition
+#define CMDLINEHANDLER1_IMPL(macro_class, \
+                             macro_cmd_line_arg, \
+                             macro_pref_name, \
+                             macro_help_text, \
+                             macro_handles_args, \
+                             macro_default_args, \
+                             macro_open_window_with_args)\
+CMDLINEHANDLER_OTHERS_IMPL(macro_class, macro_cmd_line_arg,macro_pref_name,\
+                           macro_help_text, macro_handles_args, \
+                           macro_open_window_with_args)
+
+// provides everything above, plus GetChromeUrl and regproc stuff
+#define CMDLINEHANDLER2_IMPL(macro_class, \
+                             macro_cmd_line_arg, \
+                             macro_pref_name, \
+                             macro_chrome_url, \
+                             macro_help_text, \
+                             macro_contractid, \
+                             macro_pretty_name, \
+                             macro_handles_args, \
+                             macro_open_window_with_args) \
+CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,\
+                           macro_help_text, macro_handles_args, \
+                           macro_open_window_with_args) \
+CMDLINEHANDLER_REGISTERPROC_IMPL(macro_class, macro_pretty_name, \
+                                 macro_contractid) \
+CMDLINEHANDLER_GETCHROMEURL_IMPL(macro_class,macro_chrome_url)
+
+// deprecated: includes everything above, plus getdefaultargs
+#define CMDLINEHANDLER_IMPL(macro_class, \
+                            macro_cmd_line_arg,\
+                            macro_pref_name, \
+                            macro_chrome_url,\
+                            macro_help_text, \
+                            macro_contractid, \
+                            macro_pretty_name, \
+                            macro_handles_args, \
+                            macro_default_args, \
+                            macro_open_window_with_args) \
+CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args) \
+CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name, \
+                     macro_chrome_url,macro_help_text, macro_contractid, \
+                     macro_pretty_name, macro_handles_args, \
+                     macro_open_window_with_args)
+
+//Creates a version without the GetChromeUrlForTaskFunction
+#define CMDLINEHANDLER3_IMPL(macro_class, \
+                             macro_cmd_line_arg, \
+                             macro_pref_name, \
+                             macro_help_text, \
+                             macro_contractid, \
+                             macro_pretty_name, \
+                             macro_handles_args, \
+                             macro_default_args, \
+                             macro_open_window_with_args)\
+CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
+CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,\
+                           macro_help_text, macro_handles_args, \
+                           macro_open_window_with_args) \
+CMDLINEHANDLER_REGISTERPROC_IMPL(macro_class, macro_pretty_name, \
+                                    macro_contractid)
+
+%}
+
+[scriptable, uuid(54e1a910-c064-4756-b1d3-82c6b2e0be24)]
+interface nsICmdLineHandler : nsISupports
+{
+    readonly attribute string commandLineArgument;
+    readonly attribute string prefNameForStartup;
+    readonly attribute string chromeUrlForTask;
+    readonly attribute string helpText;
+
+    readonly attribute boolean handlesArgs;
+    readonly attribute wstring defaultArgs;
+    readonly attribute boolean openWindowWithArgs;
+};
+

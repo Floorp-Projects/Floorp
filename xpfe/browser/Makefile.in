@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= browser
 
-DIRS		= src samples resources
+DIRS		= public src samples resources
 
 include $(topsrcdir)/config/rules.mk
 

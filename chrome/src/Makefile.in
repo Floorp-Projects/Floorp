@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  js \
 		  appshell \
+		  appcomps \
 		  caps \
 		  pref \
 		  docshell \

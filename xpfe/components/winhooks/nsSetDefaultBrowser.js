@@ -87,7 +87,7 @@ nsSetDefaultBrowser.prototype = {
       winHooks.settings = settings;
 
       // Now, get the cmd line service.
-      var cmdLineService = Components.classes[ "@mozilla.org/appshell/commandLineService;1" ]
+      var cmdLineService = Components.classes[ "@mozilla.org/app-startup/commandLineService;1" ]
                               .getService( Components.interfaces.nsICmdLineService );
 
       // See if "-setDefaultBrowser" was specified.  The value will be "1" if

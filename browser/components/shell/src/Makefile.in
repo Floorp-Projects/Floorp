@@ -35,6 +35,7 @@ REQUIRES	= \
 		  windowwatcher \
 		  intl \
 		  appshell \
+		  appcomps \
 		  necko \
 		  layout \
 		  content \

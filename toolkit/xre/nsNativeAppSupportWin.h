@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Seth Spitzer <sspitzer@netscape.com>
+ *   Bill Law    <law@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,28 +35,32 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+/* This file has *public* stuff needed for the Win32 implementation of
+ * the nsINativeAppSupport interface.  It has to be broken out into a
+ * separate file in order to ensure that the generated .h file can be
+ * used in a Win32 .rc file.  See /mozilla/xpfe/bootstrap/splash.rc.
+ *
+ * This file, and the generated .h, are only needed on Win32 platforms.
+ */
 
-#ifndef nsEditorService_h___
-#define nsEditorService_h___
+// Constants identifying Win32 "native" resources.
 
-#include "nsICmdLineHandler.h"
+#ifdef MOZ_PHOENIX
 
-class nsEditorService : public nsICmdLineHandler
-{
-public:
+// Splash screen dialog ID.
+#define IDD_SPLASH  100
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICMDLINEHANDLER
-  
-  nsEditorService();
-  virtual ~nsEditorService();
+// Splash screen bitmap ID.
+#define IDB_SPLASH  101
 
-  CMDLINEHANDLER_REGISTERPROC_DECLS
-};
+// DDE application name
+#define ID_DDE_APPLICATION_NAME 102
 
-#define NS_EDITORSERVICE_CID \
-{/* {91ea5158-1dd2-11b2-939c-cfe895090b1b}*/ \
-0x91ea5158, 0x1dd2, 0x11b2, \
-{ 0x93, 0x9c, 0xcf, 0xe8, 0x95, 0x09, 0x0b, 0x1b} } 
+#define IDI_APPICON 0
+#define IDI_DOCUMENT 1
 
-#endif /* nsEditorService_h___ */
+#endif
+
+// String that goes in the WinXP Start Menu.
+#define IDS_STARTMENU_APPNAME 103

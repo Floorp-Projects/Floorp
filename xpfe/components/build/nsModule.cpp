@@ -53,6 +53,9 @@
 #include "nsDocShellCID.h"
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
+#include "nsAppStartup.h"
+#include "nsCommandLineService.h"
+#include "nsUserInfo.h"
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsLDAPAutoCompleteSession.h"
 #endif
@@ -68,6 +71,7 @@
 #include "nsBrowserStatusFilter.h"
 #include "nsBrowserInstance.h"
 #include "nsCURILoader.h"
+#include "nsXPFEComponentsCID.h"
 
 // {9491C382-E3C4-11D2-BDBE-0050040A9B44}
 #define NS_GLOBALHISTORY_CID \
@@ -91,6 +95,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartup)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 #if defined(MOZ_LDAP_XPCOM)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #endif
@@ -169,6 +176,21 @@ static const nsModuleComponentInfo components[] = {
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
       nsGlobalHistoryConstructor },
+    { "App Startup Service",
+      NS_SEAMONKEY_APPSTARTUP_CID,
+      NS_APPSTARTUP_CONTRACTID,
+      nsAppStartupConstructor
+    },
+    { "CommandLine Service",
+      NS_COMMANDLINESERVICE_CID,
+      NS_COMMANDLINESERVICE_CONTRACTID,
+      nsCmdLineServiceConstructor
+    },
+    { "User Info Service",
+      NS_USERINFO_CID,
+      NS_USERINFO_CONTRACTID,
+      nsUserInfoConstructor
+    },
 #if defined(MOZ_LDAP_XPCOM)
     { "LDAP Autocomplete Session", NS_LDAPAUTOCOMPLETESESSION_CID,
 	  "@mozilla.org/autocompleteSession;1?type=ldap",

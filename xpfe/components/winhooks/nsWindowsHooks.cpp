@@ -386,8 +386,8 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
         PRBool installing = PR_FALSE;
         if ( !settings->mShowDialog ) {
             // Get command line service.
-            nsCID cmdLineCID = NS_COMMANDLINE_SERVICE_CID;
-            nsCOMPtr<nsICmdLineService> cmdLineArgs( do_GetService( cmdLineCID, &rv ) );
+            nsCOMPtr<nsICmdLineService> cmdLineArgs
+              (do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv));
             if ( NS_SUCCEEDED( rv ) && cmdLineArgs ) {
                 // See if "-installer" was specified.
                 nsXPIDLCString installer;

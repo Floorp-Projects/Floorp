@@ -1,0 +1,127 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, copied from
+ * xpfe/appshell/public/nsIAppShellService.idl
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsICmdLineService;
+interface nsINativeAppSupport;
+
+[scriptable, uuid(413e5d30-1b92-416a-acca-1c8ee4f66d08)]
+interface nsIAppStartup : nsISupports
+{
+    /**
+     * Required initialization routine.
+     * @param aCmdLineService
+     *        This is stored and passed to appshell components as they are
+     *        initialized.
+     * @param aNativeAppSupportOrSplashScreen
+     *        This is an object that can be QI'd to either an
+     *        nsINativeAppSupport or nsISplashScreen; this object will be
+     *        used to implement HideSplashScreen.
+     */
+    void initialize(in nsICmdLineService aCmdLineService,
+                    in nsISupports nativeAppSupportOrSplashScreen);
+    
+
+    /**
+     * Create the hidden window. Only bootstrap code (nsAppRunner.cpp) should call
+     * this method.
+     */
+    void createHiddenWindow();
+
+    /**
+     * Starts up the profile manager with the given arguments
+     * @param aCmdLineService the arguments given to the program
+     * @param canInteract If FALSE and UI is needed, will fail
+     */
+    void doProfileStartup(in nsICmdLineService aCmdLineService, in boolean canInteract);
+
+    /**
+     * Getter for "native app support."
+     */
+    readonly attribute nsINativeAppSupport nativeAppSupport;
+
+    /**
+     * Runs an application event loop: normally the main event pump which
+     * defines the lifetime of the application.
+     */
+    void run();
+
+    /**
+     * During application startup (and at other times!) we may temporarily
+     * encounter a situation where all application windows will be closed
+     * but we don't want to take this as a signal to quit the app. Bracket
+     * the code where the last window could close with these.
+     * (And at application startup, on platforms that don't normally quit
+     * when the last window has closed, call Enter once, but not Exit)
+     */
+    void enterLastWindowClosingSurvivalArea();
+    void exitLastWindowClosingSurvivalArea();
+
+    const PRUint32 eConsiderQuit = 1; // attempt to quit if all windows are closed
+    const PRUint32 eAttemptQuit = 2;  // try to close all windows, then quit if successful
+    const PRUint32 eForceQuit = 3;    // quit, damnit
+
+    /**
+     * Exit the event loop, shut down the app
+     */
+    void quit(in PRUint32 aFerocity);
+
+    /**
+     * Remove the splash screen (if visible).  This need be called
+     * only once per application session.
+     */
+    void hideSplashScreen();
+  
+    /**
+     * Creates the initial state of the application by launching tasks
+     * specfied by "general.startup.*" prefs.
+     * @param aWindowWidth	the width to make the initial window(s) opened
+     * @param aWindowHeight	the height to make the initial window(s) opened
+     * @note SIZE_TO_CONTENT may be used for width or height.
+     * @return TRUE if a window was opened
+     */
+    boolean createStartupState(in long aWindowWidth, in long aWindowHeight);
+  
+    /**
+     * Ensures that at least one window exists after creating the startup state.
+     * If one has not been made, this will create a browser window.
+     * @param aCmdLineService  the command line from which startup args can be read.
+     */
+    void ensure1Window(in nsICmdLineService aCmdLineService);
+};

@@ -52,6 +52,7 @@ ifdef MOZ_SUNBIRD
 DIRS = autocomplete console filepicker help printing passwordmgr
 else
 DIRS = 		\
+	startup \
 	autocomplete \
 	console \
 	filepicker \

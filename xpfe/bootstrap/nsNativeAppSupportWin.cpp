@@ -58,7 +58,7 @@
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
-#include "nsIAppShellService.h"
+#include "nsIAppStartup.h"
 #include "nsIProfileInternal.h"
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
@@ -69,6 +69,9 @@
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
+#include "nsXPFEComponentsCID.h"
+
+struct JSContext;
 
 #ifdef XPCOM_GLUE
 #include "nsStringSupport.h"
@@ -949,14 +952,15 @@ struct MessageWindow {
              if ( NS_SUCCEEDED( rv ) )
                  winHooksService->StartupRemoveOption("-turbo");
 
-             nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv );
+             nsCOMPtr<nsIAppStartup> appStartup
+                 (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
              if ( NS_SUCCEEDED( rv ) ) {
                  nsCOMPtr<nsINativeAppSupport> native;
-                 rv = appShell->GetNativeAppSupport( getter_AddRefs( native ) );
+                 rv = appStartup->GetNativeAppSupport( getter_AddRefs( native ) );
                  if ( NS_SUCCEEDED( rv ) )
                      native->SetIsServerMode( PR_FALSE );
                  if ( !win )
-                     appShell->Quit(nsIAppShellService::eAttemptQuit);
+                     appStartup->Quit(nsIAppStartup::eAttemptQuit);
              }
              break;
          }
@@ -1749,11 +1753,11 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
     if (NS_FAILED(rv)) return;
 
-    nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+    nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return;
 
     nsCOMPtr<nsINativeAppSupport> nativeApp;
-    rv = appShell->GetNativeAppSupport(getter_AddRefs( nativeApp ));
+    rv = appStartup->GetNativeAppSupport(getter_AddRefs( nativeApp ));
     if (NS_FAILED(rv)) return;
 
     // first see if there is a url
@@ -1798,17 +1802,17 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     rv = args->GetCmdLineValue( "-kill", getter_Copies(arg));
     if ( NS_SUCCEEDED(rv) && (const char*)arg ) {
       // Turn off server mode.
-      nsCOMPtr<nsIAppShellService> appShell =
-        do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
+      nsCOMPtr<nsIAppStartup> appStartup
+        (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
       if (NS_FAILED(rv)) return;
 
       nsCOMPtr<nsINativeAppSupport> native;
-      rv = appShell->GetNativeAppSupport( getter_AddRefs( native ));
+      rv = appStartup->GetNativeAppSupport( getter_AddRefs( native ));
       if (NS_SUCCEEDED(rv)) {
         native->SetIsServerMode( PR_FALSE );
 
         // close app if there are no more top-level windows.
-        appShell->Quit(nsIAppShellService::eConsiderQuit);
+        appStartup->Quit(nsIAppStartup::eConsiderQuit);
       }
 
       return;
@@ -2021,15 +2025,13 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
         }
     }
 
-    // OK, now create nsICmdLineService object from argc/argv.
-    static NS_DEFINE_CID( kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID );
-
     nsCOMPtr<nsIComponentManager> compMgr;
     NS_GetComponentManager(getter_AddRefs(compMgr));
-    rv = compMgr->CreateInstance( kCmdLineServiceCID,
-                                  0,
-                                  NS_GET_IID( nsICmdLineService ),
-                                  (void**)aResult );
+    
+    rv = compMgr->CreateInstanceByContractID(
+                    NS_COMMANDLINESERVICE_CONTRACTID,
+                    nsnull, NS_GET_IID(nsICmdLineService),
+                    (void**) aResult);
 
     if ( NS_FAILED( rv ) || NS_FAILED( ( rv = (*aResult)->Initialize( argc, argv ) ) ) ) {
 #if MOZ_DEBUG_DDE
@@ -2097,7 +2099,7 @@ printf( "Setting ddexec subkey entries\n" );
 
   nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+  nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   // If we have a profile, everything is fine -
@@ -2123,7 +2125,7 @@ printf( "Setting ddexec subkey entries\n" );
       canInteract = PR_FALSE;
     }
   }
-  rv = appShell->DoProfileStartup(args, canInteract);
+  rv = appStartup->DoProfileStartup(args, canInteract);
 
   mForceProfileStartup = PR_FALSE;
 
@@ -2605,10 +2607,10 @@ nsNativeAppSupportWin::OnLastWindowClosing() {
                  profileCount > 1 ) {
                 // Turn off turbo mode and quit the application.
                 SetIsServerMode( PR_FALSE );
-                nsCOMPtr<nsIAppShellService> appShell =
-                    do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
+                nsCOMPtr<nsIAppStartup> appStartup
+                    (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
                 if ( NS_SUCCEEDED( rv ) ) {
-                    appShell->Quit(nsIAppShellService::eAttemptQuit);
+                    appStartup->Quit(nsIAppStartup::eAttemptQuit);
                 }
                 return NS_OK;
             }
@@ -2637,8 +2639,8 @@ nsNativeAppSupportWin::OnLastWindowClosing() {
         }
     }
 
-    nsCOMPtr<nsIAppShellService> appShell =
-        do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
+    nsCOMPtr<nsIAppStartup> appStartup
+        (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
     if ( NS_SUCCEEDED( rv ) ) {
         // Instead of staying alive, launch a new instance of the application and then
         // terminate for real.  We take steps to ensure that the new instance will run
@@ -2680,7 +2682,7 @@ nsNativeAppSupportWin::OnLastWindowClosing() {
 
         // Turn off turbo mode and quit the application.
         SetIsServerMode( PR_FALSE );
-        appShell->Quit(nsIAppShellService::eAttemptQuit);
+        appStartup->Quit(nsIAppStartup::eAttemptQuit);
 
         // Done.  This app will now commence shutdown.
     }

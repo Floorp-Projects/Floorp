@@ -52,10 +52,8 @@
 #include "nsCommandLineServiceMac.h"
 #include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
-#include "nsAppShellCIDs.h"
-#include "nsIAppShellService.h"
-
-static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
+#include "nsIAppStartup.h"
+#include "nsXPFEComponentsCID.h"
 
 /*----------------------------------------------------------------------------
 	AEApplicationClass 
@@ -329,11 +327,11 @@ void AEApplicationClass::HandleReOpen(AEDesc *token, const AppleEvent *appleEven
   nsresult rv = NS_OK;
   nsCOMPtr<nsINativeAppSupport> nas;
   
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID, &rv));
-  NS_WARN_IF_FALSE(rv==NS_OK, "Failed to get AppShellService");
-  if(NS_FAILED(rv)) ThrowIfOSErr(errAEEventNotHandled);
+  nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+  NS_WARN_IF_FALSE(appStartup, "Failed to get appstartup service");
+  if(!appStartup) ThrowIfOSErr(errAEEventNotHandled);
   
-  rv = appShell->GetNativeAppSupport(getter_AddRefs(nas));
+  rv = appStartup->GetNativeAppSupport(getter_AddRefs(nas));
   NS_WARN_IF_FALSE(rv==NS_OK, "Failed to get NativeAppSupport");  
   if(NS_FAILED(rv)) ThrowIfOSErr(errAEEventNotHandled);
     

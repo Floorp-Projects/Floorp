@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  prefmigr \
 		  appshell \
+		  appcomps \
 		  chrome \
 		  uconv \
 		  windowwatcher \

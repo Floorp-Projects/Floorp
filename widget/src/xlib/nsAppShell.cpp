@@ -58,7 +58,6 @@
 #include "nsIWidget.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "nsICmdLineService.h"
 #include "nsIDragService.h"
 #include "nsIDragSessionXlib.h"
 #include "nsITimer.h"
@@ -68,7 +67,6 @@
 #define CHAR_BUF_SIZE 80
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 /* nsAppShell static members */
@@ -177,17 +175,6 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
     int      argc = bac ? *bac : 0;
     char   **argv = bav;
     nsresult rv;
-
-    nsCOMPtr<nsICmdLineService> cmdLineArgs = do_GetService(kCmdLineServiceCID);
-    if (cmdLineArgs) {
-      rv = cmdLineArgs->GetArgc(&argc);
-      if(NS_FAILED(rv))
-        argc = bac ? *bac : 0;
-
-      rv = cmdLineArgs->GetArgv(&argv);
-      if(NS_FAILED(rv))
-        argv = bav;
-    }
 
     char        *displayName    = nsnull;
     Bool         synchronize    = False;

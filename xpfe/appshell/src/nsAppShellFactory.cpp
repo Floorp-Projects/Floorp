@@ -34,44 +34,30 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 #include "nscore.h"
 #include "nsIComponentManager.h"
-#include "nsAppShellCIDs.h"
-#include "nsICmdLineService.h"
 #include "nsIWindowMediator.h"
 #include "nsAbout.h"
 #include "nsIGenericFactory.h"
 
-
 #include "nsIAppShellService.h"
-#include "nsCommandLineService.h"  
 #include "nsAppShellService.h"
 #include "nsWindowMediator.h"
 #include "nsChromeTreeOwner.h"
+#include "nsAppShellCID.h"
 
-#include "nsUserInfo.h"
-
-/* extern the factory entry points for each component... */
-nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 
 static const nsModuleComponentInfo gAppShellModuleInfo[] =
 {
   { "AppShell Service",
-    NS_APPSHELL_SERVICE_CID,
-    "@mozilla.org/appshell/appShellService;1",
+    NS_APPSHELLSERVICE_CID,
+    NS_APPSHELLSERVICE_CONTRACTID,
     nsAppShellServiceConstructor,
-  },
-  { "CommandLine Service",
-    NS_COMMANDLINE_SERVICE_CID,
-    "@mozilla.org/appshell/commandLineService;1",
-    nsCmdLineServiceConstructor,
   },
   { "Window Mediator",
     NS_WINDOWMEDIATOR_CID,
@@ -82,12 +68,7 @@ static const nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_ABOUT_CID,
     NS_ABOUT_MODULE_CONTRACTID_PREFIX,
     nsAbout::Create,
-  },
-  { "User Info Service",
-    NS_USERINFO_CID,
-    NS_USERINFO_CONTRACTID,
-    nsUserInfoConstructor,
-  },
+  }
 };
 
 PR_STATIC_CALLBACK(nsresult)

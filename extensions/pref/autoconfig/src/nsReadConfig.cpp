@@ -43,7 +43,7 @@
 #endif
 #include "nsReadConfig.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIAppShellService.h"
+#include "nsIAppStartup.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIAutoConfig.h"
 #include "nsIComponentManager.h"
@@ -54,6 +54,7 @@
 #include "nsIPromptService.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
+#include "nsXPFEComponentsCID.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 #include "prmem.h"
@@ -141,10 +142,10 @@ NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, c
         if (NS_FAILED(rv)) {
             DisplayError();
 
-            nsCOMPtr<nsIAppShellService> appShellService =
-                do_GetService("@mozilla.org/appshell/appShellService;1");
-            if (appShellService)
-                appShellService->Quit(nsIAppShellService::eAttemptQuit);
+            nsCOMPtr<nsIAppStartup> appStartup =
+                do_GetService(NS_APPSTARTUP_CONTRACTID);
+            if (appStartup)
+                appStartup->Quit(nsIAppStartup::eAttemptQuit);
         }
     }
     return rv;

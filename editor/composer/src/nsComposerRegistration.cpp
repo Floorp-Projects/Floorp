@@ -42,11 +42,12 @@
 #include "nsEditingSession.h"       // for the CID
 #include "nsComposerController.h"   // for the CID
 #include "nsEditorSpellCheck.h"     // for the CID
-#include "nsEditorService.h"
 #include "nsComposeTxtSrvFilter.h"
 #include "nsIController.h"
 #include "nsIControllerContext.h"
 #include "nsIControllerCommandTable.h"
+
+#include "nsIServiceManagerUtils.h"
 
 #define NS_HTMLEDITOR_COMMANDTABLE_CID \
 { 0x7a727843, 0x6ae1, 0x11d7, { 0xa5eb, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 } }
@@ -66,7 +67,6 @@ static NS_DEFINE_CID(kHTMLEditorDocStateCommandTableCID, NS_HTMLEDITOR_DOCSTATE_
 //
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditingSession)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorSpellCheck)
 
 // There are no macros that enable us to have 2 constructors 
@@ -236,22 +236,9 @@ static const nsModuleComponentInfo components[] = {
     { "Editing Session", NS_EDITINGSESSION_CID,
       "@mozilla.org/editor/editingsession;1", nsEditingSessionConstructor, },
 
-    { "Editor Service", NS_EDITORSERVICE_CID,
-      "@mozilla.org/editor/editorservice;1", nsEditorServiceConstructor,},
-
     { "Editor Spell Checker", NS_EDITORSPELLCHECK_CID,
       "@mozilla.org/editor/editorspellchecker;1",
       nsEditorSpellCheckConstructor,},
-
-    { "Editor Startup Handler", NS_EDITORSERVICE_CID,
-      "@mozilla.org/commandlinehandler/general-startup;1?type=editor",
-      nsEditorServiceConstructor,
-      nsEditorService::RegisterProc,
-      nsEditorService::UnregisterProc, },
-
-    { "Edit Startup Handler", NS_EDITORSERVICE_CID,
-      "@mozilla.org/commandlinehandler/general-startup;1?type=edit",
-      nsEditorServiceConstructor, },
 
     { "TxtSrv Filter", NS_COMPOSERTXTSRVFILTER_CID,
       COMPOSER_TXTSRVFILTER_CONTRACTID,

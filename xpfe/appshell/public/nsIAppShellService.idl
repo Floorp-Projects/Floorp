@@ -39,9 +39,8 @@
 
 interface nsIXULWindow;
 interface nsIURI;
-interface nsICmdLineService;
-interface nsINativeAppSupport;
 interface nsIDOMWindowInternal;
+interface nsIAppShell;
 
 [ptr] native JSContext(JSContext);
 
@@ -49,49 +48,9 @@ interface nsIDOMWindowInternal;
 struct JSContext;
 %}
 
-[scriptable, uuid(E5E5AF70-8A38-11D2-9938-0080C7CB1080)]
+[scriptable, uuid(70c04d53-150f-450b-9106-387487a3c031)]
 interface nsIAppShellService : nsISupports
 {
-
-  const PRUint32 eConsiderQuit = 1; // attempt to quit if all windows are closed
-  const PRUint32 eAttemptQuit = 2;  // try to close all windows, then quit if successful
-  const PRUint32 eForceQuit = 3;    // quit, damnit
-
-  /**
-   * Required initialization routine.
-   * @param aCmdLineService is stored and passed to appshell components as
-   *                        they are initialized.
-   * @param aNativeAppSupportOrSplashScreen is an object that can be
-   *                        QI'd to either an nsINativeAppSupport or
-   *                        nsISplashScreen; this object will be used to
-   *                        implement HideSplashScreen.
-   */
-  void initialize(in nsICmdLineService aCmdLineService,
-                  in nsISupports nativeAppSupportOrSplashScreen);
-
-  /**
-   * Starts up the profile manager with the given arguments
-   * @param aCmdLineService the arguments given to the program
-   * @param canInteract If FALSE and UI is needed, will fail
-   */
-  void doProfileStartup(in nsICmdLineService aCmdLineService, in boolean canInteract);
-
-  /**
-   * Getter for "native app support."
-   */
-  readonly attribute nsINativeAppSupport nativeAppSupport;
-
-  /**
-   * Runs an application event loop: normally the main event pump which
-   * defines the lifetime of the application.
-   */
-  void run();
-
-  /**
-   * Exit the event loop, shut down the app
-   */
-  void quit(in PRUint32 aFerocity);
-
   /**
    * Create a window.
    * @param aParent the parent window.  Can be null.
@@ -110,6 +69,8 @@ interface nsIAppShellService : nsISupports
    *                      tag in the XUL.  Set to NS_SIZETOCONTENT to force
    *                      the window to wrap to its contents.
    * @param aInitialHeight like aInitialWidth, but subtly different.
+   * @param aAppShell a widget "appshell" (event processor) to associate
+   *        with the new window
    * @param aResult the newly created window is returned here.
    */
   const long SIZE_TO_CONTENT = -1;
@@ -119,7 +80,8 @@ interface nsIAppShellService : nsISupports
                                     in boolean aLoadDefaultPage,
                                     in PRUint32 aChromeMask,
                                     in long aInitialWidth,
-                                    in long aInitialHeight);
+                                    in long aInitialHeight,
+                                    in nsIAppShell aAppShell);
 
   /**
    * Close a window.
@@ -128,7 +90,9 @@ interface nsIAppShellService : nsISupports
   void closeTopLevelWindow(in nsIXULWindow aWindow);
 
   [noscript]
-  void createHiddenWindow();
+  void createHiddenWindow(in nsIAppShell aAppShell);
+
+  void destroyHiddenWindow();
 
   /**
    * Return the (singleton) application hidden window, automatically created
@@ -146,7 +110,6 @@ interface nsIAppShellService : nsISupports
    */
   readonly attribute nsIDOMWindowInternal hiddenDOMWindow;
 
-
   /**
    * Return the (singleton) application hidden window as an nsIDOMWindowInternal,
    * and, the corresponding JavaScript context pointer.  This is useful
@@ -162,7 +125,9 @@ interface nsIAppShellService : nsISupports
    * Add a window to the application's registry of windows.  These windows
    * are generally shown in the Windows taskbar, and the application
    * knows it can't quit until it's out of registered windows.
-   * @param aWindow yes
+   * @param aWindow the window to register
+   * @note When this method is successful, it fires the global notification
+   *       "xul-window-registered"
    */
   void registerTopLevelWindow(in nsIXULWindow aWindow);
 
@@ -183,39 +148,4 @@ interface nsIAppShellService : nsISupports
    *               false if aWindow is becoming nonmodal (or being closed)
    */
   void topLevelWindowIsModal(in nsIXULWindow aWindow, in boolean aModal);
-
-  /**
-   * Remove the splash screen (if visible).  This need be called
-   * only once per application session.
-   */
-  void hideSplashScreen();
-  
-  /**
-   * During application startup (and at other times!) we may temporarily
-   * encounter a situation where all application windows will be closed
-   * but we don't want to take this as a signal to quit the app. Bracket
-   * the code where the last window could close with these.
-   * (And at application startup, on platforms that don't normally quit
-   * when the last window has closed, call Enter once, but not Exit)
-   */
-  void enterLastWindowClosingSurvivalArea();
-  void exitLastWindowClosingSurvivalArea();
-  
-  /**
-   * Creates the initial state of the application by launching tasks
-   * specfied by "general.startup.*" prefs.
-   * @param aWindowWidth	the width to make the initial window(s) opened
-   * @param aWindowHeight	the height to make the initial window(s) opened
-   * @note SIZE_TO_CONTENT may be used for width or height.
-   * @return TRUE if a window was opened
-   */
-  boolean createStartupState(in long aWindowWidth, in long aWindowHeight);
-  
-  /**
-   * Ensures that at least one window exists after creating the startup state.
-   * If one has not been made, this will create a browser window.
-   * @param aCmdLineService  the command line from which startup args can be read.
-   */
-  void ensure1Window(in nsICmdLineService aCmdLineService);
 };
-

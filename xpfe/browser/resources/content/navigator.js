@@ -1921,10 +1921,10 @@ function applyTheme(themeName)
  pref.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
  
  // shut down quicklaunch so the next launch will have the new skin
- var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
- appShell = appShell.QueryInterface(Components.interfaces.nsIAppShellService);
+ var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+   .getService(Components.interfaces.nsIAppStartup);
  try {
-   appShell.nativeAppSupport.isServerMode = false;
+   appStartup.nativeAppSupport.isServerMode = false;
  }
  catch(ex) {
  }
