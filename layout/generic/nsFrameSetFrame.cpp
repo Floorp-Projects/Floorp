@@ -288,6 +288,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
 void nsHTMLFramesetFrame::Scale(nscoord  aDesired, 
                                 PRInt32  aNumIndicies, 
                                 PRInt32* aIndicies, 
+                                PRInt32  aNumItems,
                                 PRInt32* aItems)
 {
   PRInt32 actual = 0;
@@ -309,12 +310,12 @@ void nsHTMLFramesetFrame::Scale(nscoord  aDesired,
 
   if ((aNumIndicies > 0) && (aDesired != actual)) {
     PRInt32 unit = (aDesired > actual) ? 1 : -1;
-    i = 0;
-    while (aDesired != actual) {
+    for (i=0; (i < aNumIndicies) && (aDesired != actual); i++) {
       j = aIndicies[i];
-      aItems[j] += unit;
-      actual += unit;
-      i++;
+      if (j < aNumItems) {
+        aItems[j] += unit;
+        actual += unit;
+      }
     }
   }
 }
@@ -369,7 +370,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext,
 
   // scale the fixed sizes if they total too much (or too little and there aren't any percent or relative)
   if ((fixedTotal > aSize) || ((fixedTotal < aSize) && (0 == numPercent) && (0 == numRelative))) { 
-    Scale(aSize, numFixed, fixed, aValues);
+    Scale(aSize, numFixed, fixed, aNumSpecs, aValues);
     delete [] fixed; delete [] percent; delete [] relative;
     return;
   }
@@ -385,7 +386,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext,
 
   // scale the percent sizes if they total too much (or too little and there aren't any relative)
   if ((percentTotal > percentMax) || ((percentTotal < percentMax) && (0 == numRelative))) { 
-    Scale(percentMax, numPercent, percent, aValues);
+    Scale(percentMax, numPercent, percent, aNumSpecs, aValues);
     delete [] fixed; delete [] percent; delete [] relative;
     return;
   }
@@ -401,7 +402,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext,
 
   // scale the relative sizes if they take up too much or too little
   if (relativeTotal != relativeMax) { 
-    Scale(relativeMax, numRelative, relative, aValues);
+    Scale(relativeMax, numRelative, relative, aNumSpecs, aValues);
   }
   
   delete [] fixed; delete [] percent; delete [] relative;
