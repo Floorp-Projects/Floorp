@@ -1112,6 +1112,7 @@ NS_IMETHODIMP nsLocalFile::InitWithNativePath(const nsACString& filePath)
   }
   SetBaseRef(pathAsCFURL);
   ::CFRelease(pathAsCFURL);
+  ::CFRelease(pathAsCFString);
   return NS_OK;
 }
 
