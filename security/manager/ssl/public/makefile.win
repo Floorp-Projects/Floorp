@@ -57,7 +57,6 @@ XPIDLSRCS= \
     .\nsICMSSecureMessage.idl \
     .\nsICMS.idl \
     .\nsIUserCertPicker.idl \
-    .\nsICipherInfo.idl \
     $(NULL)
 
 

@@ -29,31 +29,11 @@
 
 <window id="pref-ciphers" title="&cipher.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  style="width: 50em; height: 20em;"
   onload="onLoad();">
 
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript"><![CDATA[
     var prefs = null;
-    var prefStrings = new Array();
-    var ciphers = new Array();
-    var checkboxes = new Array();
-    var listbox = null;
-    
-    var info_encryption;
-    var info_authAlg;
-    var info_keyAlg;
-    var info_keySize;
-    var info_macAlg;
-    var info_fips;
-    var info_exportable;
 
-    function createCell(label) {
-      var cell = document.createElement("listcell");
-      cell.setAttribute("label", label);
-      return cell;
-    }
-    
     function onLoad() {
       doSetOKCancel(doOK, doCancel);
 
@@ -62,101 +42,21 @@
 
       prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
 
-      const nsCipherInfoService = "@mozilla.org/security/cipherinfo;1";
-      const nsICipherInfoService = Components.interfaces.nsICipherInfoService;
-      const nsICipherInfo = Components.interfaces.nsICipherInfo;
+      // Enumerate each checkbox on this page and set value
+      var prefElements = document.getElementsByAttribute("prefstring", "*");
+      for (var i = 0; i < prefElements.length; i++) {
+        var element = prefElements[i];
+        var prefString = element.getAttribute("prefstring");
+        var prefValue = false;
 
-      var cipher_info_service = Components.classes[nsCipherInfoService].getService(nsICipherInfoService);
-      var cipher_list = cipher_info_service.listCiphers();
-
-      listbox = document.getElementById("cipherlist");
-
-      info_encryption = document.getElementById("encryption");
-      info_authAlg = document.getElementById("authAlg");
-      info_keyAlg = document.getElementById("keyAlg");
-      info_keySize = document.getElementById("keySize");
-      info_macAlg = document.getElementById("macAlg");
-      info_fips = document.getElementById("fips");
-      info_exportable = document.getElementById("exportable");
-
-      var cipher;
-      var i = 0;
-      
-      while (cipher_list.hasMoreElements()) {
-        cipher = cipher_list.getNext().QueryInterface(nsICipherInfo);
-
-        ciphers[i] = cipher;
-
-        var prefString = cipher.prefString;
-        prefStrings[i] = prefString;
-
-        var prefValue = null;
         try {
           prefValue = prefs.GetBoolPref(prefString);
         } catch(e) { /* Put debug output here */ }
-        
-        var listitem  = document.createElement("listitem");
-        listitem.setAttribute("allowevents", "true");
 
-        var checkbox = document.createElement("checkbox");
-        checkbox.setAttribute("checked", prefValue);
+        element.setAttribute("checked", prefValue);
         // disable xul element if the pref is locked.
         if (prefs.PrefIsLocked(prefString)) {
-          checkbox.disabled=true;
-        }
-        
-        checkboxes[i] = checkbox;
-        
-        var checkcell = document.createElement("listcell");
-        checkcell.appendChild(checkbox);
-        listitem.appendChild(checkcell);
-        
-        listitem.appendChild(createCell(cipher.isSSL2 ? "SSL2" : "SSL3/TLS"));
-        
-        listitem.appendChild(createCell(cipher.longName));
-        
-        listbox.appendChild(listitem);
-        
-        if (!i) {
-          listbox.selectedIndex = 0;
-        }
-
-        ++i;
-      }
-    }
-
-    function onSelect(event) {
-      if (listbox.selectedItems.length <= 0) {
-        info_encryption.setAttribute("value", "");
-        info_authAlg.setAttribute("value", "");
-        info_keyAlg.setAttribute("value", "");
-        info_keySize.setAttribute("value", "");
-        info_macAlg.setAttribute("value", "");
-        info_fips.removeAttribute("collapsed");
-        info_exportable.removeAttribute("collapsed");
-      }
-      else {
-        var selected = listbox.selectedIndex;
-        var cipher = ciphers[selected];
-      
-        info_encryption.setAttribute("value", cipher.symCipherName);
-        info_authAlg.setAttribute("value", cipher.authAlgorithmName);
-        info_keyAlg.setAttribute("value", cipher.keaTypeName);
-        info_keySize.setAttribute("value", cipher.effectiveKeyBits);
-        info_macAlg.setAttribute("value", cipher.macAlgorithmName);
-        
-        if (cipher.isFIPS) {
-          info_fips.removeAttribute("collapsed");
-        }
-        else {
-          info_fips.setAttribute("collapsed", "true");
-        }
-        
-        if (cipher.isExportable) {
-          info_exportable.removeAttribute("collapsed");
-        }
-        else {
-          info_exportable.setAttribute("collapsed", "true");
+          element.disabled=true;
         }
       }
     }
@@ -165,10 +65,12 @@
      // Save the prefs
      try {
       // Enumerate each checkbox on this page and save the value
-      for (var i = 0; i < checkboxes.length; i++) {
-        var element = checkboxes[i];
-        var prefString = prefStrings[i];
+      var prefElements = document.getElementsByAttribute("prefstring", "*");
+      for (var i = 0; i < prefElements.length; i++) {
+        var element = prefElements[i];
+        var prefString = element.getAttribute("prefstring");
         var prefValue = element.getAttribute("checked");
+
         
         if (typeof(prefValue) == "string") prefValue = (prefValue == "true");
 
@@ -184,68 +86,57 @@
     function doCancel() {
       window.close();
     }
-    
-    function doHelpButton() {
-      openHelp('cipher_help');
-    }
   ]]></script>
 
-  <vbox style="overflow: hidden;">
+  <vbox style="overflow: hidden;" flex="1">
 
-    <listbox id="cipherlist" style="height: 15em; width: 40em;" 
-             flex="1" onselect="onSelect(event);">
-      <listcols>
-        <listcol flex="1"/>
-        <splitter class="tree-splitter"/>
-        <listcol flex="3"/>
-        <splitter class="tree-splitter"/>
-        <listcol flex="10"/>
-      </listcols>
-      <listhead>
-        <listheader label="&cipher.enable;"/>
-        <listheader label="&cipher.version;"/>
-        <listheader label="&cipher.name;"/>
-      </listhead>
-    </listbox>
-    <grid style="margin: 1em;">
-      <columns>
-        <column/>
-        <column/>
-      </columns>
-      <rows>
-        <row>
-          <label value="&cipher.encryption;"/>
-          <label id="encryption"/>
-        </row>
-        <row>
-          <label value="&cipher.authAlg;"/>
-          <label id="authAlg"/>
-        </row>
-        <row>
-          <label value="&cipher.keyAlg;"/>
-          <label id="keyAlg"/>
-        </row>
-        <row>
-          <label value="&cipher.keySize;"/>
-          <label id="keySize"/>
-        </row>
-        <row>
-          <label value="&cipher.macAlg;"/>
-          <label id="macAlg"/>
-        </row>
-        <row>
-          <label value="&cipher.other;"/>
-          <label id="fips" value="&cipher.fips;" collapsed="true"/>
-        </row>
-        <row>
-          <label value=""/>
-          <label id="exportable" value="&cipher.exportable;" collapsed="true"/>
-        </row>
-      </rows>
-    </grid>
-    
+  <groupbox align="start">
+    <caption label="&cipher.ssl2.label;"/>
+
+    <checkbox label="&cipher.ssl2.rc4_128;"
+              prefstring="security.ssl2.rc4_128"/>
+    <checkbox label="&cipher.ssl2.rc2_128;"
+              prefstring="security.ssl2.rc2_128"/>
+    <checkbox label="&cipher.ssl2.des_ede3_192;"
+              prefstring="security.ssl2.des_ede3_192"/>
+    <checkbox label="&cipher.ssl2.des_64;"
+              prefstring="security.ssl2.des_64"/>
+    <checkbox label="&cipher.ssl2.rc4_40;"
+              prefstring="security.ssl2.rc4_40"/>
+    <checkbox label="&cipher.ssl2.rc2_40;"
+              prefstring="security.ssl2.rc2_40"/>
+
+  </groupbox>
+
+  <groupbox align="start">
+    <caption label="&cipher.ssl3.label;"/>
+
+    <checkbox label="&cipher.ssl3.rsa_rc4_128_md5;"
+              prefstring="security.ssl3.rsa_rc4_128_md5"/>
+    <checkbox label="&cipher.ssl3.rsa_fips_des_ede3_sha;"
+              prefstring="security.ssl3.rsa_fips_des_ede3_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_des_ede3_sha;"
+              prefstring="security.ssl3.rsa_des_ede3_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_fips_des_sha;"
+              prefstring="security.ssl3.rsa_fips_des_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_des_sha;"
+              prefstring="security.ssl3.rsa_des_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_1024_rc4_56_sha;"
+              prefstring="security.ssl3.rsa_1024_rc4_56_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_1024_des_cbc_sha;"
+              prefstring="security.ssl3.rsa_1024_des_cbc_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_rc4_40_md5;"
+              prefstring="security.ssl3.rsa_rc4_40_md5"/>
+    <checkbox label="&cipher.ssl3.rsa_rc2_40_md5;"
+              prefstring="security.ssl3.rsa_rc2_40_md5"/>
+    <checkbox label="&cipher.ssl3.rsa_null_md5;"
+              prefstring="security.ssl3.rsa_null_md5"/>
+  </groupbox>
+
+  <separator/>
+
   <keyset id="dialogKeys"/>
-  <hbox id="okCancelHelpButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
   </vbox>
 

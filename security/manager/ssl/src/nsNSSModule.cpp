@@ -46,7 +46,6 @@
 #include "nsCertPicker.h"
 #include "nsCURILoader.h"
 #include "nsICategoryManager.h"
-#include "nsCipherInfo.h"
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
@@ -156,7 +155,6 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSEncoder)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSMessage)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsHash)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertPicker)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCipherInfoService)
 
 static NS_METHOD RegisterPSMContentListeners(
                       nsIComponentManager *aCompMgr,
@@ -342,13 +340,6 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/uriloader/psm-external-content-listener;1",
     PSMContentListenerConstructor,
     RegisterPSMContentListeners
-  },
-  
-  {
-    "PSM Cipher Info",
-    NS_CIPHERINFOSERVICE_CID,
-    NS_CIPHERINFOSERVICE_CONTRACTID,
-    nsCipherInfoServiceConstructor
   }
 };
 
