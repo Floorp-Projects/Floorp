@@ -389,22 +389,6 @@ basic_nsAReadableString<CharT>::Equals( const basic_nsAReadableString<CharT>& rh
 template <class CharT>
 inline
 PRBool
-basic_nsAReadableString<CharT>::Equals( const CharT* rhs ) const
-  {
-    return Compare(basic_nsLiteralString<CharT>(rhs)) == 0;
-  }
-
-template <class CharT>
-inline
-PRBool
-basic_nsAReadableString<CharT>::Equals( const CharT* rhs, PRUint32 rhs_length ) const
-  {
-    return Compare(basic_nsLiteralString<CharT>(rhs, rhs_length)) == 0;
-  }
-
-template <class CharT>
-inline
-PRBool
 operator==( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>& rhs )
   {
     return lhs.operator->() == rhs.operator->();
@@ -573,21 +557,6 @@ basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& r
     return ::Compare(*this, rhs);
   }
 
-template <class CharT>
-inline
-int
-basic_nsAReadableString<CharT>::Compare( const CharT* rhs ) const
-  {
-    return ::Compare(*this, basic_nsLiteralString<CharT>(rhs));
-  }
-
-template <class CharT>
-inline
-int
-basic_nsAReadableString<CharT>::Compare( const CharT* rhs, PRUint32 rhs_length ) const
-  {
-    return ::Compare(*this, basic_nsLiteralString<CharT>(rhs, rhs_length));
-  }
 
 
 
@@ -678,6 +647,39 @@ basic_nsLiteralString<CharT>::Length() const
   }
 
 
+// XXX Note that these are located here because some compilers are
+// sensitive to the ordering of declarations with regard to templates.
+template <class CharT>
+inline
+PRBool
+basic_nsAReadableString<CharT>::Equals( const CharT* rhs ) const
+  {
+    return Compare(basic_nsLiteralString<CharT>(rhs)) == 0;
+  }
+
+template <class CharT>
+inline
+PRBool
+basic_nsAReadableString<CharT>::Equals( const CharT* rhs, PRUint32 rhs_length ) const
+  {
+    return Compare(basic_nsLiteralString<CharT>(rhs, rhs_length)) == 0;
+  }
+
+template <class CharT>
+inline
+int
+basic_nsAReadableString<CharT>::Compare( const CharT* rhs ) const
+  {
+    return ::Compare(*this, basic_nsLiteralString<CharT>(rhs));
+  }
+
+template <class CharT>
+inline
+int
+basic_nsAReadableString<CharT>::Compare( const CharT* rhs, PRUint32 rhs_length ) const
+  {
+    return ::Compare(*this, basic_nsLiteralString<CharT>(rhs, rhs_length));
+  }
 
 
 
@@ -984,7 +986,7 @@ copy_string( InputIterator first, InputIterator last, OutputIterator result )
 
         NS_ASSERTION(lengthToCopy, "|copy_string| will never terminate");
 
-        nsCharTraits<InputIterator::value_type>::copy(result.operator->(), first.operator->(), lengthToCopy);
+        nsCharTraits<typename InputIterator::value_type>::copy(result.operator->(), first.operator->(), lengthToCopy);
 
         first += PRInt32(lengthToCopy);
         result += PRInt32(lengthToCopy);
@@ -1026,7 +1028,7 @@ copy_string_backward( InputIterator first, InputIterator last, OutputIterator re
 
         NS_ASSERTION(lengthToCopy, "|copy_string_backward| will never terminate");
 
-        nsCharTraits<InputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+        nsCharTraits<typename InputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
 
         last -= PRInt32(lengthToCopy);
         result -= PRInt32(lengthToCopy);
