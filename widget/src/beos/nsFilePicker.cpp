@@ -170,9 +170,9 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 				BPath *path = (BPath *)list->ItemAt(i);
 
 				if (path->InitCheck() == B_OK) {
-					mFile.SetLength(0);
+					mFile.Truncate();
 					// Single and Multiple are exclusive now, though, maybe there is sense
-					// to assign also firts list element to mFile even in openMultiple case ?
+					// to assign also first list element to mFile even in openMultiple case ?
 					if (mMode == modeOpenMultiple) {
 						nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
 						NS_ENSURE_SUCCESS(rv,rv);
@@ -181,7 +181,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 						rv = mFiles->AppendElement(file);
 						NS_ENSURE_SUCCESS(rv,rv);
 					} else {
-						if (i == 0) mFile.Append(path->Path());
+						if (i == 0) mFile.Assign(path->Path());
 					}
 				} else {
 					printf("path.init failed \n");
@@ -197,8 +197,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 		BPath path(&ref);
 		if (path.InitCheck() == B_OK) {
 			path.Append(savefilename.String(), true);
-			mFile.SetLength(0);
-			mFile.Append(path.Path());
+			mFile.Assign(path.Path());
 		}
 	}
 	else {
@@ -358,8 +357,7 @@ NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
 			view->UnlockLooper();
 		}
 	}
-	mTitle.SetLength(0);
-	mTitle.Append(aTitle);
+	mTitle.Assign(aTitle);
 	mMode = aMode;
 	return NS_OK;
 }
