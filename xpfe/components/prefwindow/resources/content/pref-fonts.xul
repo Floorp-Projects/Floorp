@@ -144,9 +144,9 @@
     
     <box autostretch="never" class="indent">
       <text class="label" value="&default.type.label;"/>
-      <radiogroup id="defaultFont" preftype="string" prefstring="font.default">
-        <radio group="defaultFont" data="serif" value="&useDefaultFontSerif.label;" accesskey="&useDefaultFontSerif.accesskey;"/>
-        <radio group="defaultFont" data="sans-serif" value="&useDefaultFontSansSerif.label;" accesskey="&useDefaultFontSansSerif.accesskey;"/>
+      <radiogroup id="defaultFont" preftype="int" prefstring="font.default">
+        <radio group="defaultFont" data="1" value="&useDefaultFontSerif.label;" accesskey="&useDefaultFontSerif.accesskey;"/>
+        <radio group="defaultFont" data="0" value="&useDefaultFontSansSerif.label;" accesskey="&useDefaultFontSansSerif.accesskey;"/>
       </radiogroup>
     </box>
 

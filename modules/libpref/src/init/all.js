@@ -289,7 +289,7 @@ pref("intl.charsetmenu.browser.cache.size", 5);
 pref("intl.charset.detector",                "chrome://navigator/locale/navigator.properties");
 pref("intl.charset.default",                "chrome://navigator/locale/navigator.properties");
 
-pref("font.default", "serif");
+pref("font.default", 1);  // 0=Sans-Serif, 1=Serif
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
 
