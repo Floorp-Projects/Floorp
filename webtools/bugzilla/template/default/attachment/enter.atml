@@ -1,0 +1,108 @@
+[%# Define strings that will serve as the title and header of this page %]
+[% title = BLOCK %]Create New Attachment for Bug #[% bugid %][% END %]
+[% h1 = BLOCK %]Create New Attachment for <a href="show_bug.cgi?id=[% bugid %]">Bug #[% bugid %]</a>[% END %]
+[% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
+
+[% INCLUDE global/header 
+  title = title
+  h1 = h1
+  h2 = h2
+  style = "
+    th { text-align: right; vertical-align: baseline; white-space: nowrap; }
+    td { text-align: left; vertical-align: baseline; padding-bottom: 5px; }
+  "
+%]
+
+<form name="entryform" method="post" action="attachment.cgi" enctype="multipart/form-data">
+  <input type="hidden" name="bugid" value="[% bugid %]">
+  <input type="hidden" name="action" value="insert">
+   
+  <table>
+    <tr>
+      <th>File:</th>
+      <td>
+        <em>Enter the path to the file on your computer.</em><br>
+        <input type="file" name="data" size="50">
+      </td>
+    </tr>
+    <tr>
+      <th>Description:</th>
+      <td>
+        <em>Describe the attachment briefly.</em><br>
+        <input type="text" name="description" size="60" maxlength="200">
+      </td>
+    </tr>
+    <tr>
+      <th></th>
+      <td>
+      </td>
+    </tr>
+    <tr>
+      <th>Content Type:</th>
+      <td>
+        <em>If the attachment is a patch, check the box below.</em><br>
+        <input type="checkbox" name="ispatch" value="1" onchange="setContentTypeDisabledState();"> patch<br><br>
+
+        <em>Otherwise, choose a method for determining the content type.</em><br>
+        <input type="radio" name="contenttypemethod" value="autodetect"> 
+          auto-detect<br>
+        <input type="radio" name="contenttypemethod" value="list"> 
+          select from list: <select name="contenttypeselection" onchange="this.form.contenttypemethod[1].checked = true;">
+            [% PROCESS attachment/contenttypes %]
+          </select><br>
+        <input type="radio" name="contenttypemethod" value="manual">
+          enter manually: <input type="text" name="contenttypeentry" size="30" maxlength="200" onchange="if (this.value) this.form.contenttypemethod[2].checked = true;">
+      </td>
+    </tr>
+    <tr>
+      <th>Obsoletes:</th>
+      <td>
+        <em>(optional) Check each existing attachment made obsolete by your new attachment.</em><br>
+        [% IF attachments.size %]
+          [% FOREACH attachment = attachments %]
+            <input type="checkbox" name="obsolete" value="[% attachment.id %]">
+            <a href="attachment.cgi?id=[% attachment.id %]&action=edit">[% attachment.id %]: [% attachment.description FILTER html %]</a><br>
+          [% END %]
+        [% ELSE %]
+            [no attachments can be made obsolete]
+        [% END %]
+      </td>
+    </tr>
+    <tr>
+      <th>Comment:</th>
+      <td>
+        <em>(optional) Add a comment about this attachment to the bug.</em><br>
+        <textarea wrap="soft" name="comment" rows="6" cols="80"></textarea>
+      </td>
+    </tr>
+    <tr>
+      <th>&nbsp;</th>
+      <td><input type="submit" value="Submit"></td>
+    </tr>
+  </table>
+
+</form>
+
+<script language="JavaScript" type="text/javascript">
+  <!--
+  function setContentTypeDisabledState() 
+  {
+    var entryform = document.entryform;
+
+    var isdisabled = false;
+    if (entryform.ispatch.checked) 
+      isdisabled = true;
+
+    for (var i=0 ; i<entryform.contenttypemethod.length ; i++)
+      entryform.contenttypemethod[i].disabled = isdisabled;
+
+    entryform.contenttypeselection.disabled = isdisabled;
+    entryform.contenttypeentry.disabled = isdisabled;
+  }
+  //-->
+</script>
+
+[% INCLUDE global/footer %]
+
+
+

@@ -24,9 +24,9 @@
     <tr>
       <td valign="top">
         [% IF a.isobsolete %]
-          <strike>[% a.description %]</strike>
+          <strike>[% a.description FILTER html %]</strike>
         [% ELSE %]
-          [% a.description %]
+          [% a.description FILTER html %]
         [% END %]
       </td>
 
@@ -34,7 +34,7 @@
         [% IF a.ispatch %]
           <i>patch</i>
         [% ELSE %]
-          [% a.mimetype %]
+          [% a.contenttype FILTER html %]
         [% END %]
       </td>
 

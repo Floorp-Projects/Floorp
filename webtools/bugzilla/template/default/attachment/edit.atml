@@ -19,6 +19,7 @@
 <form method="post" action="attachment.cgi" onsubmit="normalizeComments();">
   <input type="hidden" name="id" value="[% attachid %]">
   <input type="hidden" name="action" value="update">
+  <input type="hidden" name="contenttypemethod" value="manual">
 
   <table width="100%">
 
@@ -29,7 +30,7 @@
           <textarea rows="3" cols="25" name="description" wrap="soft">[% description %]</textarea><br>
 
         <b>MIME Type:</b><br>
-          <input type="text" size="20" name="mimetype" value="[% mimetype %]"><br>
+          <input type="text" size="20" name="contenttypeentry" value="[% contenttype %]"><br>
 
         <b>Flags:</b><br>
           <input type="checkbox" name="ispatch" value="1"[% " checked" IF ispatch %]>patch
@@ -100,8 +101,8 @@
       // If this is a plaintext document, remove cruft that Mozilla adds
       // because it treats it as an HTML document with a big PRE section.
       // http://bugzilla.mozilla.org/show_bug.cgi?id=86012
-      var mimeType = '[% mimetype %]';
-      if ( mimeType == 'text/plain' )
+      var contentType = '[% contenttype %]';
+      if ( contentType == 'text/plain' )
         {
           theContent = theContent.replace( /^<html><head\/><body><pre>/ , "" );
           theContent = theContent.replace( /<\/pre><\/body><\/html>$/ , "" );

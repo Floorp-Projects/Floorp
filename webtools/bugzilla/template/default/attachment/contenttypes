@@ -1,0 +1,6 @@
+          <option value="text/plain">plain text (text/plain)</option>
+          <option value="text/html">HTML source (text/html)</option>
+          <option value="image/gif">GIF image (image/gif)</option>
+          <option value="image/jpeg">JPEG image (image/jpeg)</option>
+          <option value="image/png">PNG image (image/png)</option>
+          <option value="application/octet-stream">binary file (application/octet-stream)</option>

@@ -12,9 +12,9 @@
     <tr>
       <td valign="top">
         [% IF attachment.isobsolete %]
-          <strike><a href="attachment.cgi?id=[% attachment.attachid %]&action=view">[% attachment.description %]</a></strike>
+          <strike><a href="attachment.cgi?id=[% attachment.attachid %]&action=view">[% attachment.description FILTER html %]</a></strike>
         [% ELSE %]
-          <a href="attachment.cgi?id=[% attachment.attachid %]&action=view">[% attachment.description %]</a> 
+          <a href="attachment.cgi?id=[% attachment.attachid %]&action=view">[% attachment.description FILTER html %]</a> 
         [% END %]
       </td>
 
@@ -22,7 +22,7 @@
         [% IF attachment.ispatch %]
           <i>patch</i>
         [% ELSE %]
-          [% attachment.mimetype %]
+          [% attachment.contenttype %]
         [% END %]
       </td>
 
@@ -48,7 +48,7 @@
 
   <tr>
     <td colspan="4">
-      <a href="createattachment.cgi?id=[% bugid %]">Create a new attachment</a> (proposed patch, testcase, etc.)
+      <a href="attachment.cgi?bugid=[% bugid %]&action=enter">Create a New Attachment</a> (proposed patch, testcase, etc.)
     </td>
     <td colspan="1">
       <a href="attachment.cgi?bugid=[% bugid %]&action=viewall">View All</a>
