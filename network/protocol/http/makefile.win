@@ -70,6 +70,7 @@ LINCS= \
     -I$(XPDIST)\public\util	\
     -I$(XPDIST)\public\java	\
     -I$(XPDIST)\public\pref	\
+    -I$(XPDIST)\public\htmldlgs \
     -I$(XPDIST)\public\js	\
     -I$(XPDIST)\public\security	\
     -I$(XPDIST)\public\netcache	\
