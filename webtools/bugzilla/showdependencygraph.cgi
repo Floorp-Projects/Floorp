@@ -50,7 +50,7 @@ sub AddLink {
 
 $::FORM{'rankdir'} = "LR" if !defined $::FORM{'rankdir'};
 
-if (!defined($::FORM{'id'})) {
+if (!defined($::FORM{'id'}) && !defined($::FORM{'doall'})) {
     DisplayError("No bug numbers given.");
     exit;
 }    
@@ -69,12 +69,6 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
 
 my %baselist;
 
-foreach my $i (split('[\s,]+', $::FORM{'id'})) {
-    $i = trim($i);
-    ValidateBugID($i);
-    $baselist{$i} = 1;
-}
-
 if ($::FORM{'doall'}) {
     SendSQL("SELECT blocked, dependson FROM dependencies");
 
@@ -83,6 +77,12 @@ if ($::FORM{'doall'}) {
         AddLink($blocked, $dependson);
     }
 } else {
+    foreach my $i (split('[\s,]+', $::FORM{'id'})) {
+        $i = trim($i);
+        ValidateBugID($i);
+        $baselist{$i} = 1;
+    }
+
     my @stack = keys(%baselist);
     foreach my $id (@stack) {
         SendSQL("SELECT blocked, dependson 
@@ -101,10 +101,10 @@ if ($::FORM{'doall'}) {
             AddLink($blocked, $dependson);
         }
     }
-}
 
-foreach my $k (keys(%baselist)) {
-    $seen{$k} = 1;
+    foreach my $k (keys(%baselist)) {
+        $seen{$k} = 1;
+    }
 }
 
 foreach my $k (keys(%seen)) {
