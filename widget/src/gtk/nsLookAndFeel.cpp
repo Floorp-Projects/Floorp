@@ -203,7 +203,9 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   case eColor__moz_field:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
     break;
-
+  case eColor__moz_dragtargetzone:
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
+    break; 
   default:
     /* default color is BLACK */
     aColor = 0;
