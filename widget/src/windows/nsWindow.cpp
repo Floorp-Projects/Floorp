@@ -3078,7 +3078,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   PRUint32 extraFlags = (noDefault ? NS_EVENT_FLAG_NO_DEFAULT : 0);
 
   MSG msg;
-  BOOL gotMsg = ::PeekMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
+  BOOL gotMsg = nsToolkit::mPeekMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
   // Enter and backspace are always handled here to avoid for example the
   // confusion between ctrl-enter and ctrl-J.
   // Ctrl+[Add, Subtract, Equals] are always handled here to make text zoom shortcuts work
@@ -3093,12 +3093,12 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   {
     // Remove a possible WM_CHAR or WM_SYSCHAR from the message queue
     if (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
-      ::GetMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST);
+      nsToolkit::mGetMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST);
     } else if (virtualKeyCode == NS_VK_BACK) {
       MSG imeStartCompositionMsg, imeCompositionMsg;
-      if (::PeekMessage(&imeStartCompositionMsg, mWnd, WM_IME_STARTCOMPOSITION, WM_IME_STARTCOMPOSITION, PM_NOREMOVE | PM_NOYIELD)
-       && ::PeekMessage(&imeCompositionMsg, mWnd, WM_IME_COMPOSITION, WM_IME_COMPOSITION, PM_NOREMOVE | PM_NOYIELD)
-       && ::PeekMessage(&msg, mWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE | PM_NOYIELD)
+      if (nsToolkit::mPeekMessage(&imeStartCompositionMsg, mWnd, WM_IME_STARTCOMPOSITION, WM_IME_STARTCOMPOSITION, PM_NOREMOVE | PM_NOYIELD)
+       && nsToolkit::mPeekMessage(&imeCompositionMsg, mWnd, WM_IME_COMPOSITION, WM_IME_COMPOSITION, PM_NOREMOVE | PM_NOYIELD)
+       && nsToolkit::mPeekMessage(&msg, mWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE | PM_NOYIELD)
        && imeStartCompositionMsg.wParam == 0x0 && imeStartCompositionMsg.lParam == 0x0
        && imeCompositionMsg.wParam == 0x0 && imeCompositionMsg.lParam == 0x1BF
        && msg.wParam == NS_VK_BACK && msg.lParam == 0x1
@@ -3121,14 +3121,14 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
         // http://bugzilla.mozilla.gr.jp/show_bug.cgi?id=2885 (written in Japanese)
         // http://bugzilla.mozilla.org/show_bug.cgi?id=194559 (written in English)
 
-        ::GetMessage(&msg, mWnd, WM_CHAR, WM_CHAR);
+        nsToolkit::mGetMessage(&msg, mWnd, WM_CHAR, WM_CHAR);
       }
     }
   }
   else if (gotMsg &&
            (msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
     // If prevent default set for keydown, do same for keypress
-    ::GetMessage(&msg, mWnd, msg.message, msg.message);
+    nsToolkit::mGetMessage(&msg, mWnd, msg.message, msg.message);
     return (msg.message == WM_DEADCHAR) ? PR_FALSE : OnChar(msg.wParam, extraFlags);
   }
 
@@ -4670,7 +4670,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 // it will wind it's way back to us, triggering the destWnd case above.
                 // either way, when the call returns, we are all done with the message,
                 mIsInMouseWheelProcessing = PR_TRUE;
-                if (0==SendMessage(destWnd, msg, wParam, lParam)) {
+                if (0 == nsToolkit::mSendMessage(destWnd, msg, wParam, lParam)) {
                   result = PR_TRUE; // consumed - don't call DefWndProc
                 }
                 destWnd = nsnull;
