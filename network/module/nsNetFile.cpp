@@ -30,7 +30,7 @@ PL_CompareFileAssoc(const void *v1, const void *v2)
 }
 
 nsNetFile::nsNetFile() {
-
+  NS_INIT_REFCNT();
 #ifdef XP_PC
     mDirDel = '\\';
 #elif XP_MAC
