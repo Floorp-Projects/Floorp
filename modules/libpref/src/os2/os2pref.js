@@ -38,104 +38,76 @@
 pref("ui.key.menuAccessKeyFocuses", true);
 pref("browser.display.screen_resolution", 0); // System setting
 
+/* Fonts only needs lists if we have a default that might not be available. */
+/* Tms Rmn, Helv and Courier are ALWAYS available on OS/2 */
+
 pref("font.name.serif.ar", "Tms Rmn");
-pref("font.name-list.serif.ar", "Tms Rmn, Times New Roman MT 30");
 pref("font.name.sans-serif.ar", "Helv");
-pref("font.name-list.sans-serif.ar", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.ar", "Courier");
-pref("font.name.fantasy.ar", "Symbol Set");
 
 pref("font.name.serif.el", "Tms Rmn");
-pref("font.name-list.serif.el", "Tms Rmn, Times New Roman MT 30");
 pref("font.name.sans-serif.el", "Helv");
-pref("font.name-list.sans-serif.el", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.el", "Courier");
-pref("font.name.fantasy.el", "Symbol Set");
 
 pref("font.name.serif.he", "Tms Rmn");
-pref("font.name-list.serif.he", "Tms Rmn, Times New Roman MT 30");
 pref("font.name.sans-serif.he", "Helv");
-pref("font.name-list.sans-serif.he", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.he", "Courier");
-pref("font.name.fantasy.he", "Symbol Set");
 
-pref("font.name.serif.ja", "Tms Rmn");
-pref("font.name-list.serif.ja", "Tms Rmn, Times New Roman MT 30");
+pref("font.name.serif.ja", "Times New Roman WT J");
+pref("font.name-list.serif.ja", "Times New Roman WT J, Times New Roman MT 30, Tms Rmn");
 pref("font.name.sans-serif.ja", "Helv");
-pref("font.name-list.sans-serif.ja", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.ja", "Courier");
-pref("font.name.fantasy.ja", "Symbol Set");
 
-pref("font.name.serif.ko", "Tms Rmn");
-pref("font.name-list.serif.ko", "Tms Rmn, Times New Roman MT 30");
+pref("font.name.serif.ko", "Times New Roman WT K");
+pref("font.name-list.serif.ko", "Times New Roman WT K, Times New Roman MT 30, Tms Rmn");
 pref("font.name.sans-serif.ko", "Helv");
-pref("font.name-list.sans-serif.ko", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.ko", "Courier");
-pref("font.name.fantasy.ko", "Symbol Set");
 
 pref("font.name.serif.th", "Tms Rmn");
-pref("font.name-list.serif.th", "Tms Rmn, Times New Roman MT 30");
 pref("font.name.sans-serif.th", "Helv");
-pref("font.name-list.sans-serif.th", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.th", "Courier");
-pref("font.name.fantasy.th", "Symbol Set");
 
 pref("font.name.serif.tr", "Tms Rmn");
-pref("font.name-list.serif.tr", "Tms Rmn, Times New Roman MT 30");
 pref("font.name.sans-serif.tr", "Helv");
-pref("font.name-list.sans-serif.tr", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.tr", "Courier");
-pref("font.name.fantasy.tr", "Symbol Set");
 
 pref("font.name.serif.x-baltic", "Tms Rmn");
-pref("font.name-list.serif.x-baltic", "Tms Rmn, Times New Roman MT 30");
 pref("font.name.sans-serif.x-baltic", "Helv");
-pref("font.name-list.sans-serif.x-baltic", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.x-baltic", "Courier");
-pref("font.name.fantasy.x-baltic", "Symbol Set");
 
 pref("font.name.serif.x-central-euro", "Tms Rmn");
-pref("font.name-list.serif.x-central-euro", "Tms Rmn, Times New Roman MT 30");
-pref("font.name.sans-serif.x-central-euro", "Helv");
-pref("font.name-list.sans-serif.x-central-euro", "Helv, Times New Roman MT 30");
+pref("font.name.sans-serif.x-central-euro", "Tms Rmn");
 pref("font.name.monospace.x-central-euro", "Courier");
-pref("font.name.fantasy.x-central-euro", "Symbol Set");
 
 pref("font.name.serif.x-cyrillic", "Tms Rmn");
-pref("font.name-list.serif.x-cyrillic", "Tms Rmn, Times New Roman MT 30");
-pref("font.name.sans-serif.x-cyrillic", "Helv");
-pref("font.name-list.sans-serif.x-cyrillic", "Helv, Times New Roman MT 30");
+pref("font.name.sans-serif.x-cyrillic", "Tms Rmn");
 pref("font.name.monospace.x-cyrillic", "Courier");
-pref("font.name.fantasy.x-cyrillic", "Symbol Set");
 
+/* The unicode fonts must ALWAYS have a list with one valid font */
 pref("font.name.serif.x-unicode", "Times New Roman MT 30");
 pref("font.name-list.serif.x-unicode", "Times New Roman MT 30, Tms Rmn");
 pref("font.name.sans-serif.x-unicode", "Times New Roman MT 30");
 pref("font.name-list.sans-serif.x-unicode", "Times New Roman MT 30, Helv");
-pref("font.name.monospace.x-unicode", "Courier");
+pref("font.name.monospace.x-unicode", "Times New Roman MT 30");
+pref("font.name-list.monospace.x-unicode", "Times New Roman MT 30, Courier");
+pref("font.name.fantasy.x-unicode", "Times New Roman MT 30");
+pref("font.name-list.fantasy.x-unicode", "Times New Roman MT 30, Helv");
+pref("font.name.cursive.x-unicode", "Times New Roman MT 30");
+pref("font.name-list.cursive.x-unicode", "Times New Roman MT 30, Helv");
 
 pref("font.name.serif.x-western", "Tms Rmn");
-pref("font.name-list.serif.x-western", "Tms Rmn, Times New Roman");
 pref("font.name.sans-serif.x-western", "Helv");
-pref("font.name-list.sans-serif.x-western", "Helv, Helvetica, Arial");
 pref("font.name.monospace.x-western", "Courier");
-pref("font.name-list.monospace.x-western", "Courier, Courier New");
-pref("font.name.fantasy.x-western", "Symbol Set");
-pref("font.name-list.fantasy.x-western", "Symbol Set, Wingdings");
 
-pref("font.name.serif.zh-CN", "Tms Rmn");
-pref("font.name-list.serif.zh_CN", "Tms Rmn, Times New Roman MT 30");
+pref("font.name.serif.zh-CN", "Times New Roman WT SC");
+pref("font.name-list.serif.zh_CN", "Times New Roman WT SC, Times New Roman MT 30, Tms Rmn");
 pref("font.name.sans-serif.zh-CN", "Helv");
-pref("font.name-list.sans-serif.zh-CN", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.zh-CN", "Courier");
-pref("font.name.fantasy.zh-CN", "Symbol Set");
 
-pref("font.name.serif.zh-TW", "Tms Rmn");
-pref("font.name-list.serif.zh-TW", "Tms Rmn, Times New Roman MT 30");
+pref("font.name.serif.zh-TW", "Times New Roman WT TC");
+pref("font.name-list.serif.zh-TW", "Times New Roman WT TC, Times New Roman MT 30, Tms Rmn");
 pref("font.name.sans-serif.zh-TW", "Helv");
-pref("font.name-list.sans-serif.zh-TW", "Helv, Times New Roman MT 30");
 pref("font.name.monospace.zh-TW", "Courier");
-pref("font.name.fantasy.zh-TW", "Symbol Set");
 
 pref("font.default", "serif");
 pref("font.size.variable.ar", 16);

@@ -1613,6 +1613,9 @@ nsFontMetricsOS2::ResolveForwards(HPS                  aPS,
       if(( *currChar > 0x00FF ) && (*currChar != 0x20AC))
       { 
         fh = GetUnicodeFont(aPS);
+        NS_ASSERTION(fh, "GetUnicodeFont failed");
+        if (!fh)
+           fh = FindGlobalFont(aPS);
         fontSwitch.mFont = fh;
         while( ++currChar < lastChar )
         {
@@ -1704,6 +1707,9 @@ nsFontMetricsOS2::ResolveBackwards(HPS                  aPS,
       if(( *currChar > 0x00FF ) && (*currChar != 0x20AC))
       { 
         fh = GetUnicodeFont(aPS);
+        NS_ASSERTION(fh, "GetUnicodeFont failed");
+        if (!fh)
+           fh = FindGlobalFont(aPS);
         fontSwitch.mFont = fh;
         while( --currChar > lastChar )
         {
@@ -2012,17 +2018,14 @@ nsFontOS2*
 nsFontMetricsOS2::FindGlobalFont( HPS aPS )
 {
   nsFontOS2* fh = nsnull;
-  int count = gGlobalFonts->Count();
-  int limit = count + gCachedIndex;
-  for( int i = gCachedIndex; i < limit; i++)
-  {
-    nsGlobalFont* font = (nsGlobalFont*)gGlobalFonts->ElementAt(i%count);
-    fh = LoadFont( aPS, &font->name );
-    if( fh )
-      return fh;
-  }
-
-  return nsnull;
+  nsAutoString fontname;
+  if (!IsDBCS())
+    fontname = NS_LITERAL_STRING("Helv");
+  else
+    fontname = NS_LITERAL_STRING("Helv Combined");
+  fh = LoadFont( aPS, &fontname );
+  NS_ASSERTION(fh, "Couldn't load default font - BAD things are happening");
+  return fh;
 }
 
 
