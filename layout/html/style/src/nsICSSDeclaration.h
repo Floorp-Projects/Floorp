@@ -112,10 +112,9 @@ public:
   void  SetNoneValue(void);
   void  SetNormalValue(void);
 
+  // debugging methods
   void  AppendToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
   void  ToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
-  void  AppendToCSSString(nsString& aBuffer, PRInt32 aPropID = -1) const;
-  void  ToCSSString(nsString& aBuffer, PRInt32 aPropID = -1) const;
 
 protected:
   nsCSSUnit mUnit;
@@ -326,6 +325,8 @@ public:
   virtual nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue) = 0;
 
   virtual nsresult GetImportantValues(nsICSSDeclaration*& aResult) = 0;
+
+  virtual nsresult ToString(nsString& aString) = 0;
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };

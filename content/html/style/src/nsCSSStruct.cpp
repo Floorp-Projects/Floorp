@@ -744,6 +744,8 @@ public:
 
   nsresult GetImportantValues(nsICSSDeclaration*& aResult);
   
+  virtual nsresult ToString(nsString& aString);
+
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
 private:
@@ -2161,6 +2163,157 @@ nsresult CSSDeclarationImpl::GetImportantValues(nsICSSDeclaration*& aResult)
   return NS_OK;
 }
 
+// XXX shouldn't this get moved to color code?
+static const char* RGBToCSSString(nscolor aColor)
+{
+  const char* result = nsnull;
+
+  PRInt32 r = NS_GET_R(aColor);
+  PRInt32 g = NS_GET_G(aColor);
+  PRInt32 b = NS_GET_B(aColor);
+
+  PRInt32         index = 0;
+  PRInt32         count = sizeof(css_rgb_table)/sizeof(CSSColorEntry);
+  CSSColorEntry*  entry = nsnull;
+  
+  for (index = 0; index < count; index++)
+  {
+    entry = &css_rgb_table[index];
+    if (entry->r == r)
+    {
+      if (entry->g == g && entry->b == b)
+      {
+        result = entry->name;
+        break;
+      }
+    }
+    else if (entry->r > r)
+    {
+      break;
+    }
+  }
+  return result;
+}
+
+
+void ValueToString(const nsCSSValue& aValue, PRInt32 aPropID, nsString& aBuffer)
+{
+  nsCSSUnit unit = aValue.GetUnit();
+
+  if (eCSSUnit_Null == unit) {
+    return;
+  }
+
+  if (eCSSUnit_String == unit) {
+    nsAutoString  buffer;
+    aValue.GetStringValue(buffer);
+    aBuffer.Append(buffer);
+  }
+  else if (eCSSUnit_Integer == unit) {
+    aBuffer.Append(aValue.GetIntValue(), 10);
+  }
+  else if (eCSSUnit_Enumerated == unit) {
+    const char* name = nsCSSProps::LookupProperty(aPropID, aValue.GetIntValue());
+    if (name != nsnull) {
+      aBuffer.Append(name);
+    }
+  }
+  else if (eCSSUnit_Color == unit){
+    nscolor color = aValue.GetColorValue();
+    const char* name = RGBToCSSString(color);
+
+    if (name != nsnull)
+      aBuffer.Append(name);
+    else
+    {
+      aBuffer.Append("rgb(");
+      aBuffer.Append(NS_GET_R(color), 10);
+      aBuffer.Append(",");
+      aBuffer.Append(NS_GET_G(color), 10);
+      aBuffer.Append(",");
+      aBuffer.Append(NS_GET_B(color), 10);
+      aBuffer.Append(')');
+    }
+  }
+  else if (eCSSUnit_Percent == unit) {
+    aBuffer.Append(aValue.GetFloatValue() * 100.0f);
+  }
+  else if (eCSSUnit_Percent < unit) {  // length unit
+    aBuffer.Append(aValue.GetFloatValue());
+  }
+
+  switch (unit) {
+    case eCSSUnit_Null:       break;
+    case eCSSUnit_Auto:       aBuffer.Append("auto"); break;
+    case eCSSUnit_Inherit:    aBuffer.Append("inherit"); break;
+    case eCSSUnit_None:       aBuffer.Append("none"); break;
+    case eCSSUnit_Normal:     aBuffer.Append("normal"); break;
+    case eCSSUnit_String:     break;
+    case eCSSUnit_Integer:    break;
+    case eCSSUnit_Enumerated: break;
+    case eCSSUnit_Color:      break;
+    case eCSSUnit_Percent:    aBuffer.Append("%");    break;
+    case eCSSUnit_Number:     break;
+    case eCSSUnit_Inch:       aBuffer.Append("in");   break;
+    case eCSSUnit_Foot:       aBuffer.Append("ft");   break;
+    case eCSSUnit_Mile:       aBuffer.Append("mi");   break;
+    case eCSSUnit_Millimeter: aBuffer.Append("mm");   break;
+    case eCSSUnit_Centimeter: aBuffer.Append("cm");   break;
+    case eCSSUnit_Meter:      aBuffer.Append("m");    break;
+    case eCSSUnit_Kilometer:  aBuffer.Append("km");   break;
+    case eCSSUnit_Point:      aBuffer.Append("pt");   break;
+    case eCSSUnit_Pica:       aBuffer.Append("pc");   break;
+    case eCSSUnit_Didot:      aBuffer.Append("dt");   break;
+    case eCSSUnit_Cicero:     aBuffer.Append("cc");   break;
+    case eCSSUnit_EM:         aBuffer.Append("em");   break;
+    case eCSSUnit_EN:         aBuffer.Append("en");   break;
+    case eCSSUnit_XHeight:    aBuffer.Append("ex");   break;
+    case eCSSUnit_CapHeight:  aBuffer.Append("cap");  break;
+    case eCSSUnit_Pixel:      aBuffer.Append("px");   break;
+  }
+}
+
+nsresult CSSDeclarationImpl::ToString(nsString& aString)
+{
+  if (nsnull != mOrder) {
+    PRInt32 count = mOrder->Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      PRInt32 property = (PRInt32)mOrder->ElementAt(index);
+      if (0 <= property) {
+        nsCSSValue  value;
+        PRBool  important = PR_FALSE;
+        // check for important value
+        if (nsnull != mImportant) {
+          mImportant->GetValue(property, value);
+          if (eCSSUnit_Null != value.GetUnit()) {
+            important = PR_TRUE;
+          }
+          else {
+            GetValue(property, value);
+          }
+        }
+        else {
+          GetValue(property, value);
+        }
+        aString.Append(nsCSSProps::kNameTable[property].name);
+        aString.Append(": ");
+        ValueToString(value, property, aString);
+        if (PR_TRUE == important) {
+          aString.Append(" ! important");
+        }
+        aString.Append("; ");
+      }
+      else {  // is comment
+        aString.Append("/* ");
+        nsString* comment = (nsString*)mComments->ElementAt((-1) - property);
+        aString.Append(*comment);
+        aString.Append(" */ ");
+      }
+    }
+  }
+  return NS_OK;
+}
 
 void CSSDeclarationImpl::List(FILE* out, PRInt32 aIndent) const
 {
@@ -2215,129 +2368,6 @@ NS_HTML nsresult
 }
 
 
-
-const char* RGBToCSSString(PRInt32 r, PRInt32 g, PRInt32 b)
-{
-  const char* result = nsnull;
-
-  PRInt32         index = 0;
-  PRInt32         count = sizeof(css_rgb_table)/sizeof(CSSColorEntry);
-  CSSColorEntry*  entry = nsnull;
-  
-  for (index = 0; index < count; index++)
-  {
-    entry = &css_rgb_table[index];
-    if (entry->r == r)
-    {
-      if (entry->g == g && entry->b == b)
-      {
-        result = entry->name;
-        break;
-      }
-    }
-    else if (entry->r > r)
-    {
-      break;
-    }
-  }
-  return result;
-}
-
-
-
-void nsCSSValue::AppendToCSSString(nsString& aBuffer, PRInt32 aPropID) const
-{
-  if (eCSSUnit_Null == mUnit) {
-    return;
-  }
-
-  if (eCSSUnit_String == mUnit) {
-    if (nsnull != mValue.mString) {
-      aBuffer.Append(*(mValue.mString));
-    }
-    else {
-      aBuffer.Append("null str");
-    }
-  }
-  else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
-    if (mUnit == eCSSUnit_Enumerated)
-    {
-      const char* name = nsCSSProps::LookupProperty(aPropID,mValue.mInt);
-      if (name != nsnull)
-      {
-        aBuffer.Append(name);
-        return;
-      }
-    }    
-    aBuffer.Append(mValue.mInt, 10);
-    aBuffer.Append("[0x");
-    aBuffer.Append(mValue.mInt, 16);
-    aBuffer.Append(']');
-  }
-  else if (eCSSUnit_Color == mUnit){
-    PRInt32 r = NS_GET_R(mValue.mColor);
-    PRInt32 g = NS_GET_G(mValue.mColor);
-    PRInt32 b = NS_GET_B(mValue.mColor);
-
-    const char* name = RGBToCSSString(r,g,b);
-
-    if (name != nsnull)
-      aBuffer.Append(name);
-    else
-    {
-      aBuffer.Append("rgb(");
-      aBuffer.Append(NS_GET_R(mValue.mColor), 10);
-      aBuffer.Append(",");
-      aBuffer.Append(NS_GET_G(mValue.mColor), 10);
-      aBuffer.Append(",");
-      aBuffer.Append(NS_GET_B(mValue.mColor), 10);
-      aBuffer.Append(')');
-    }
-    return;
-  }
-  else if (eCSSUnit_Percent == mUnit) {
-    aBuffer.Append(mValue.mFloat * 100.0f);
-  }
-  else if (eCSSUnit_Percent < mUnit) {
-    aBuffer.Append(mValue.mFloat);
-  }
-
-  switch (mUnit) {
-    case eCSSUnit_Null:       break;
-    case eCSSUnit_Auto:       aBuffer.Append("auto"); break;
-    case eCSSUnit_Inherit:    aBuffer.Append("inherit"); break;
-    case eCSSUnit_None:       aBuffer.Append("none"); break;
-    case eCSSUnit_String:     break;
-    case eCSSUnit_Integer:    aBuffer.Append("int");  break;
-    case eCSSUnit_Enumerated: aBuffer.Append("enum"); break;
-    case eCSSUnit_Color:      aBuffer.Append("rbga"); break;
-    case eCSSUnit_Percent:    aBuffer.Append("%");    break;
-    case eCSSUnit_Number:     aBuffer.Append("#");    break;
-    case eCSSUnit_Inch:       aBuffer.Append("in");   break;
-    case eCSSUnit_Foot:       aBuffer.Append("ft");   break;
-    case eCSSUnit_Mile:       aBuffer.Append("mi");   break;
-    case eCSSUnit_Millimeter: aBuffer.Append("mm");   break;
-    case eCSSUnit_Centimeter: aBuffer.Append("cm");   break;
-    case eCSSUnit_Meter:      aBuffer.Append("m");    break;
-    case eCSSUnit_Kilometer:  aBuffer.Append("km");   break;
-    case eCSSUnit_Point:      aBuffer.Append("pt");   break;
-    case eCSSUnit_Pica:       aBuffer.Append("pc");   break;
-    case eCSSUnit_Didot:      aBuffer.Append("dt");   break;
-    case eCSSUnit_Cicero:     aBuffer.Append("cc");   break;
-    case eCSSUnit_EM:         aBuffer.Append("em");   break;
-    case eCSSUnit_EN:         aBuffer.Append("en");   break;
-    case eCSSUnit_XHeight:    aBuffer.Append("ex");   break;
-    case eCSSUnit_CapHeight:  aBuffer.Append("cap");  break;
-    case eCSSUnit_Pixel:      aBuffer.Append("px");   break;
-  }
-  aBuffer.Append(' ');
-}
-
-void nsCSSValue::ToCSSString(nsString& aBuffer, PRInt32 aPropID) const
-{
-  aBuffer.Truncate();
-  AppendToCSSString(aBuffer, aPropID);
-}
 
 
 /*
