@@ -976,3 +976,17 @@ XFE_URLBar::handleFrameTitleChanged(String title)
 	}
 }
 //////////////////////////////////////////////////////////////////////////
+void
+XFE_URLBar::clearText()
+{
+    XP_ASSERT(m_urlComboBox);
+	
+    Widget text_field;
+
+    XtVaGetValues(m_urlComboBox,XmNtextField,&text_field,NULL);
+	
+    XP_ASSERT(text_field);
+
+	fe_SetTextField(text_field,"");
+}
+//////////////////////////////////////////////////////////////////////////

@@ -65,6 +65,8 @@ public:
 	// Quickfile menu spec
 	static MenuSpec quickfile_menu_spec[];
 
+	void clearText();
+
 protected:
 
 	virtual void		update() {}
