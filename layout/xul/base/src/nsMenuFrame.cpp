@@ -1477,6 +1477,8 @@ nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
         if (!frame) {
           MarkAsGenerated();
           frame = mPopupFrames.FirstChild();
+          // No child - just return
+          if (!frame) return NS_OK;
         }
       
         nsIBox* ibox = nsnull;
