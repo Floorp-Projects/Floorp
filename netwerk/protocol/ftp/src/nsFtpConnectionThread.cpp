@@ -828,7 +828,7 @@ nsFtpConnectionThread::S_user() {
             message.AssignWithConversion("Enter username and password for "); //TODO localize it!
             message.AppendWithConversion(host);
 
-            nsAutoString realm = NS_ConvertToString(host);                   // XXX i18n 
+            nsAutoString realm(NS_ConvertToString(host));                   // XXX i18n 
             rv = proxyprompter->PromptUsernameAndPassword(nsnull,
                                                           message.GetUnicode(),
                                                           realm.GetUnicode(), nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
