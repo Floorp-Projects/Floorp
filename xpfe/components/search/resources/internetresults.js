@@ -1,6 +1,7 @@
 
 function onLoadInternetResults()
 {
+/*
 	var isupports = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
 	if (!isupports)    return(false);
 	var internetSearchService = isupports.QueryInterface(Components.interfaces.nsIInternetSearchService);
@@ -8,6 +9,7 @@ function onLoadInternetResults()
 	internetSearchService.ClearResultSearchSites();
 
 	dump("Cleared result search sites.\n");
+*/
 
 	return(true);
 }
