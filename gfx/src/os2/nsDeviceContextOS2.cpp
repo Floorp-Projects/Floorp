@@ -156,7 +156,16 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
 
   CommonInit( mPrintDC);
 
-  SetDPI(0);
+  long dpi;
+  GFX (::DevQueryCaps(mPrintDC, CAPS_VERTICAL_FONT_RES, 1, &dpi), FALSE);
+
+  int pt2t = 72;
+
+  // make p2t a nice round number - this prevents rounding problems
+//  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(dpi)));
+//  mTwipsToPixels = 1.0f / mPixelsToTwips;
+  mTwipsToPixels = ((float)dpi) / (float)NSIntPointsToTwips(72);
+  mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   GetTwipsToDevUnits( newscale);
 
@@ -610,8 +619,8 @@ nsDeviceContextOS2::SetDPI(PRInt32 aPrefDPI)
   GFX (::DevQueryCaps(hdc, CAPS_HORIZONTAL_FONT_RES, 1, &OSVal), FALSE);
   ::WinReleasePS(ps);
 
-  if ((aPrefDPI == 0) || (mPrintDC)) {
-    // If the pref is 0 or we are printing force use of OS value
+  if (aPrefDPI == 0) {
+    // If the pref is 0 use of OS value
     mDpi = OSVal;
   } else if (aPrefDPI > 0) {
     // If there's a valid pref value for the logical resolution,
@@ -625,8 +634,10 @@ nsDeviceContextOS2::SetDPI(PRInt32 aPrefDPI)
   int pt2t = 72;
 
   // make p2t a nice round number - this prevents rounding problems
-  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(mDpi)));
-  mTwipsToPixels = 1.0f / mPixelsToTwips;
+//  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(mDpi)));
+//  mTwipsToPixels = 1.0f / mPixelsToTwips;
+  mTwipsToPixels = ((float)mDpi) / (float)NSIntPointsToTwips(72);
+  mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   // XXX need to reflow all documents
   return NS_OK;
