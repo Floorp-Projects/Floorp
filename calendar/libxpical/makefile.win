@@ -46,7 +46,7 @@ REQUIRES        = xpcom \
                   libicalss \
                   libicalvcal \
 		  timer \
-		  necko \	
+		  necko \
                   $(NULL)
 include <$(DEPTH)/config/config.mak>
 
