@@ -296,8 +296,8 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
               NS_RELEASE(stateManager);
             }
             NS_RELEASE(handler);
+            aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
-          aEventStatus = nsEventStatus_eConsumeNoDefault; 
         }
         break;
 
