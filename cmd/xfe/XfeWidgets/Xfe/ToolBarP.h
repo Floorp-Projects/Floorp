@@ -94,6 +94,10 @@ typedef struct _XfeToolBarPart
     Widget				selected_button;		/* Selected button ?	*/
     Modifiers			selection_modifiers;	/* Selection modifiers	*/
 
+	/* Indicator resources */
+    int					indicator_position;		/* Indicator Position	*/
+
+	/* Geometry resources */
 	Boolean				child_use_pref_width;	/* Child use pref width	*/
 	Boolean				child_use_pref_height;	/* Child use pref height*/
 
@@ -113,6 +117,7 @@ typedef struct _XfeToolBarPart
 	Dimension			total_children_height;	/* Total children height*/
 	Cardinal			num_managed;			/* Num managed widgets	*/
 	Cardinal			num_components;			/* Num components		*/
+	Widget				indicator;				/* Indicator			*/
 
 } XfeToolBarPart;
 
