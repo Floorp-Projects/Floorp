@@ -318,3 +318,4 @@ nsTitledBoxFrame::Reflow(nsIPresContext*          aPresContext,
 
   return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
+
