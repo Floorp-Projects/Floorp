@@ -23,23 +23,28 @@
 #include "nsISupports.idl"
 #include "nsIURL.idl"
 #include "nsIEnumerator.idl"
+#include "nsISupportsArray.idl"
 
 [scriptable, uuid(D8C7D8A1-E84C-11d2-BF87-00105A1B0627)]
 interface nsIChromeRegistry : nsISupports
 {
 	void convertChromeURL(in nsIURI aChromeURL);
 	nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
-	
+		
 	void reloadChrome();
 	void refreshSkins();
 
-	void applyTheme(in wstring themeFileName);
+	void applyTheme(in wstring themeName);
 	
-	void setSkin(in wstring skinFileName, in wstring packageName);
-	void setLocale(in wstring localeFileName, in wstring packageName);
+	void setSkin(in wstring skinName, in wstring packageName);
+	void setLocale(in wstring localeName, in wstring packageName);
 
-	void setDefaultSkin(in wstring skinFileName, in wstring packageName);
-	void setDefaultLocale(in wstring localeFileName, in wstring packageName);
+	void setDefaultSkin(in wstring skinName, in wstring packageName);
+	void setDefaultLocale(in wstring localeName, in wstring packageName);
+
+	readonly attribute nsISupportsArray skins;
+	readonly attribute nsISupportsArray packages;
+	readonly attribute nsISupportsArray locales;
 };
 
 
