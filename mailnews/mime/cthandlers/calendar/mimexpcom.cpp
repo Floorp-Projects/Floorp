@@ -22,6 +22,8 @@
 #include "nsIComponentManager.h" 
 #include "nsMimeObjectClassAccess.h"
 #include "nsCOMPtr.h"
+#include "nsMsgMimeCID.h"
+
 static NS_DEFINE_CID(kMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID); 
 
 /*
