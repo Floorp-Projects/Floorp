@@ -4210,7 +4210,7 @@ nsHTMLEditRules::DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aS
 
 
 nsresult 
-nsHTMLEditRules::ConvertWhitespace(const nsString & inString, const nsString & outString)
+nsHTMLEditRules::ConvertWhitespace(const nsString & inString, nsString & outString)
 {
   PRUint32 j,len = inString.Length();
   switch (len)

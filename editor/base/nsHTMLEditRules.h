@@ -168,7 +168,7 @@ protected:
   nsresult DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aStart, PRInt32 aEnd);
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
 
-  nsresult ConvertWhitespace(const nsString & inString, const nsString & outString);
+  nsresult ConvertWhitespace(const nsString & inString, nsString & outString);
 
 // removed from use:
 #if 0
