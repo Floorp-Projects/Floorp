@@ -32,6 +32,7 @@ DIRS=$(DIRS) nsinstall \
              setup     \
              setuprsc  \
              ren8dot3  \
-             ds32
+             ds32      \
+             GetShortPathName
 
 include <$(DEPTH)\config\rules.mak>
