@@ -40,13 +40,13 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 nsresult
 NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame*& aResult,
-                PRBool aIsTopLevel)
+                PRUint32 aFlags)
 {
   nsBodyFrame* it = new nsBodyFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->SetIsTopLevel(aIsTopLevel);
+  it->SetFlags(aFlags);
   aResult = it;
   return NS_OK;
 }
@@ -91,7 +91,7 @@ NS_IMETHODIMP
 nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   // Create a block frame and set its style context
-  nsresult rv = NS_NewBlockFrame(mContent, this, mFirstChild, !mIsTopLevel);
+  nsresult rv = NS_NewBlockFrame(mContent, this, mFirstChild, mFlags);
   if (NS_OK != rv) {
     return rv;
   }
@@ -332,8 +332,8 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  // Now force a repaint of the damage area
-  if (mIsTopLevel && !damageArea.IsEmpty()) {
+  // If this is really The Body, we force a repaint of the damage area
+  if ((NS_BODY_THE_BODY & mFlags) && !damageArea.IsEmpty()) {
     Invalidate(damageArea);
   }
   
@@ -383,10 +383,11 @@ AddToPadding(nsIPresContext* aPresContext,
   }
 }
 
+// XXX ick. pfuii. gotta go!
 NS_METHOD 
 nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 {
-  if (!mIsTopLevel) {
+  if (0 == (NS_BODY_THE_BODY & mFlags)) {
     return NS_OK;
   }
 
@@ -466,6 +467,7 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   }
   return NS_OK;
 }
+
 /////////////////////////////////////////////////////////////////////////////
 // Helper functions
 
@@ -478,7 +480,7 @@ nsBodyFrame::GetColumnAvailSpace(nsIPresContext& aPresContext,
 
   // If we are being used as a top-level frame then make adjustments
   // for border/padding and a vertical scrollbar
-  if (mIsTopLevel) {
+  if (NS_BODY_THE_BODY & mFlags) {
     // If our width is constrained then subtract for the border/padding
     if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
       result.width -= aBorderPadding.left +
@@ -534,16 +536,19 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
     width = styleSize.width + aBorderPadding.left + aBorderPadding.right;
   }
   else {
-    if (mIsTopLevel && (NS_UNCONSTRAINEDSIZE != aMaxSize.width)) {
+    if ((0 == (NS_BODY_SHRINK_WRAP & mFlags)) &&
+        (NS_UNCONSTRAINEDSIZE != aMaxSize.width)) {
       // Make sure we're at least as wide as our available width
       width = PR_MAX(aMetrics.width, aMaxSize.width);
     }
   }
   if (NS_SIZE_HAS_HEIGHT & ss) {
-    height = styleSize.width + aBorderPadding.top + aBorderPadding.bottom;
+    height = styleSize.height + aBorderPadding.top + aBorderPadding.bottom;
   }
   else {
-    height += aBorderPadding.top + aBorderPadding.bottom;
+    // aBorderPadding.top is already reflected in the
+    // aDesiredRect.YMost() value.
+    height += aBorderPadding.bottom;
   }
 
   aMetrics.width = width;
