@@ -174,23 +174,28 @@ sub have_vers {
 }
 
 # Check versions of dependencies.  0 for version = any version acceptible
+my %modules = (
+    "DBI"          => "1.13",
+    "Data::Dumper" => "0",
+    "DBD::mysql"   => "1.2209",
+    "Date::Parse"  => "0",
+    "AppConfig"    => "1.52",
+    "Template"     => "2.07",
+    "Text::Wrap"   => "2001.0131",
+    "File::Spec"   => "0.82"
+);
 
-my @missing = ();
-unless (have_vers("DBI","1.13"))          { push @missing,"DBI" }
-unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
-unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
-unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
-unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
-unless (have_vers("Template","2.07"))     { push @missing,"Template" }
-unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
-unless (have_vers("File::Spec", "0.82"))  { push @missing,"File::Spec" }
+my %missing = ();
+foreach my $module (keys %modules) {
+    unless (have_vers($module, $modules{$module})) { $missing{$module} = $modules{$module} }
+}
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
 # original ones and set them back afterwards -- justdave@syndicomm.com
 my $saved_die_handler = $::SIG{__DIE__};
 my $saved_warn_handler = $::SIG{__WARN__};
-unless (have_vers("CGI::Carp",0))    { push @missing,"CGI::Carp" }
+unless (have_vers("CGI::Carp",0))    { $missing{'CGI::Carp'} = 0 }
 $::SIG{__DIE__} = $saved_die_handler;
 $::SIG{__WARN__} = $saved_warn_handler;
 
@@ -214,13 +219,16 @@ if (!$xmlparser) {
     "running (as root)\n\n",
     "   perl -MCPAN -e'install \"XML::Parser\"'\n\n";
 }
-if (@missing > 0) {
+if (%missing) {
     print "\n\n";
     print "Bugzilla requires some Perl modules which are either missing from your\n",
     "system, or the version on your system is too old.\n",
     "They can be installed by running (as root) the following:\n";
-    foreach my $module (@missing) {
+    foreach my $module (keys %missing) {
         print "   perl -MCPAN -e 'install \"$module\"'\n";
+        if ($missing{$module} > 0) {
+            print "   Minimum version required: $missing{$module}\n";
+        }
     }
     print "\n";
     exit;
