@@ -157,9 +157,6 @@ bin\components\xmlextras.xpt
 ; Base Package Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Javascript:
-bin\components\jsurl.xpt
-
 ; xpconnect
 bin\components\xpconnect.xpt
 

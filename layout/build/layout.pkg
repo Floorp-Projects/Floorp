@@ -26,7 +26,6 @@ dist/bin/components/@SHARED_LIBRARY@
 !xpt dist/bin/components/dom_xbl.xpt
 !xpt dist/bin/components/dom_xul.xpt
 !xpt dist/bin/components/dom_xpath.xpt
-!xpt dist/bin/components/jsurl.xpt
 #if MOZ_XUL
 !xpt dist/bin/components/xultmpl.xpt
 !xpt dist/bin/components/layout_xul_tree.xpt

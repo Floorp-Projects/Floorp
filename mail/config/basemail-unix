@@ -280,7 +280,6 @@ components/dom_loadsave.xpt
 
 ; "javascript:" URLs
 components/libjsd.so
-components/jsurl.xpt
 
 ; editor / composer for HTML compose
 components/libeditor.so                   

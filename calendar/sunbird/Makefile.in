@@ -212,7 +212,6 @@ endif
 	cp $(topsrcdir)/dist/bin/components/dom_xpath.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/dom_xul.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/dom.xpt ./$(MOZ_APP_NAME)/components
-	cp $(topsrcdir)/dist/bin/components/jsurl.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/widget.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/content_base.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/content_html.xpt ./$(MOZ_APP_NAME)/components
