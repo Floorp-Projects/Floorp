@@ -621,13 +621,20 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
   const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
   nsFrameState kidState = aFrame->GetStateBits();
   
+  PRBool isBlockLevel =
+    display->IsBlockLevel() || (kidState & NS_FRAME_OUT_OF_FLOW);
+  
   if (!viewHasTransparentContent) {
-    // If we're showing the view but the frame is hidden, then the view is transparent
     const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
-    if ((nsViewVisibility_kShow == aView->GetVisibility()
-         && NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible)
-        || (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflowX
-            && (kidState & NS_FRAME_OUTSIDE_CHILDREN) != 0)) {
+    if (// If we're showing the view but the frame is hidden, then the
+        // view is transparent
+        (nsViewVisibility_kShow == aView->GetVisibility() &&
+         NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) ||
+        // If we have overflowing kids and overflow is visible or doesn't apply
+        // (overflow only applies to things that are block-level), then the
+        // view has transparent content.
+        ((NS_STYLE_OVERFLOW_VISIBLE == display->mOverflowX || !isBlockLevel) &&
+         (kidState & NS_FRAME_OUTSIDE_CHILDREN))) {
       viewHasTransparentContent = PR_TRUE;
     }
   }
@@ -645,7 +652,6 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
   //   Note that out-of-flow frames like floated or absolutely positioned frames
   //   are block-level, but we can't rely on the 'display' value being set correctly
   //   in the style context...
-  PRBool isBlockLevel = display->IsBlockLevel() || (kidState & NS_FRAME_OUT_OF_FLOW);
   PRBool hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
   PRBool hasOverflowClip = isBlockLevel && (display->mOverflowX == NS_STYLE_OVERFLOW_CLIP);
   if (hasClip || hasOverflowClip) {
