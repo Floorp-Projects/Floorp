@@ -34,6 +34,7 @@ nsIDOMDocumentView.h
 nsIDOMElement.h
 nsIDOMEntity.h
 nsIDOMEntityReference.h
+nsIDOMLinkStyle.h
 nsIDOMMediaList.h
 nsIDOMNotation.h
 nsIDOMNSDocument.h
