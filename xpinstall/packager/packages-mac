@@ -45,9 +45,9 @@ viewer:Essential Files:libimg.shlb
 viewer:Essential Files:libutil.shlb 
 viewer:Essential Files:plugin.shlb 
 viewer:Essential Files:RaptorShell.shlb 
-viewer:Essential Files:webshell.shlb 
 viewer:Essential Files:widget.shlb 
 
+viewer:Components:docshell.shlb 
 viewer:Components:AppShell.shlb 
 viewer:Components:appshell.xpt 
 viewer:Components:bookmarks.shlb 
