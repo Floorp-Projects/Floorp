@@ -410,6 +410,7 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:xpfe:global:resources:content:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpinstall:res:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:embedding:components:webbrowserpersist:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:embedding:components:ui:jar.mn", $chrome_dir, \%jars);
 
     if ($main::options{psm}) {
