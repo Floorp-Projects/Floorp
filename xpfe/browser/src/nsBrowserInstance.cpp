@@ -113,7 +113,7 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kCGlobalHistoryCID,       NS_GLOBALHISTORY_CID);
-static NS_DEFINE_IID(kCSessionHistoryCID,       NS_SESSION_HISTORY_CID);
+static NS_DEFINE_IID(kCSessionHistoryCID,       NS_SESSIONHISTORY_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
@@ -127,7 +127,7 @@ static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
-static NS_DEFINE_IID(kISessionHistoryIID,       NS_ISESSION_HISTORY_IID);
+static NS_DEFINE_IID(kISessionHistoryIID,       NS_ISESSIONHISTORY_IID);
 static NS_DEFINE_IID(kIWebShellIID,              NS_IWEB_SHELL_IID);
 
 #ifdef DEBUG                                                           
@@ -252,6 +252,7 @@ nsBrowserAppCore::Init()
                                            (void **)&mSHistory );
 
   if ( NS_SUCCEEDED( rv ) ) {
+	  printf("Successfully created instance of session history\n");
       // Add this object of observer of various events.
       BeginObserving();
   }
@@ -282,6 +283,21 @@ NS_IMETHODIMP
 nsBrowserAppCore::Back()
 {
   GoBack(mContentAreaWebShell);
+	return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserAppCore::GetSessionHistory(nsISessionHistory ** aResult)
+{
+	if (!aResult)
+		return NS_ERROR_NULL_POINTER;
+
+	if (mSHistory) {
+	   NS_ADDREF(mSHistory);
+	   *aResult = mSHistory;
+	}
+	else
+		return NS_ERROR_NO_INTERFACE;
 	return NS_OK;
 }
 
@@ -343,7 +359,6 @@ nsresult ProfileDirectory(nsFileSpec& dirSpec) {
 NS_IMETHODIMP
 nsBrowserAppCore::GotoHistoryIndex(PRInt32 aIndex)
 {
-    printf("In nsBrowserAppCOre::gotoHistoryIndex\n");
     Goto(aIndex, mContentAreaWebShell, PR_FALSE);
 	return NS_OK;
 
@@ -352,6 +367,11 @@ nsBrowserAppCore::GotoHistoryIndex(PRInt32 aIndex)
 NS_IMETHODIMP
 nsBrowserAppCore::BackButtonPopup()
 {
+	if (!mSHistory)  {
+		printf("nsBrowserAppCore::BackButtonPopup Couldn't get a handle to SessionHistory\n");
+		return NS_ERROR_FAILURE;
+	}
+
  // Get handle to the "backbuttonpopup" element
   nsCOMPtr<nsIDOMElement>   backPopupElement;
   nsresult rv = FindNamedXULElement(mWebShell, "backbuttonpopup", &backPopupElement);
@@ -386,30 +406,28 @@ nsBrowserAppCore::BackButtonPopup()
   else {
 	 if (APP_DEBUG) printf("nsBrowserAppCore::BackButtonPopup Menu has no children\n");
   }             
-      /* Now build the popup list */
-  if (!mSHistory) {
-	  printf("nsBrowserAppCore::BackButtonPopup mSHistory is null\n");
-     return NS_ERROR_FAILURE;
-  }
 
   PRInt32 indix=0, i=0;
-  //Get current index in Session History
-  mSHistory->getCurrentIndex(indix);
+  //Get current index in Session History. We have already verified 
+  // if mSHistory is null
+  mSHistory->GetCurrentIndex(&indix);
 
   //Decide on the # of items in the popup list 
   if (indix > SHISTORY_POPUP_LIST)
      i  = indix-SHISTORY_POPUP_LIST;
 
   for (PRInt32 j=indix-1;j>=i;j--) {
-      const PRUnichar * url=nsnull, *title=nsnull;
-
-      mSHistory->GetURLForIndex(j, &url);
-      nsAutoString  histURL(url);
-      mSHistory->GetTitleForIndex(j, &title);
-      nsAutoString  histTitle(title);
-      rv = CreateMenuItem(menu, j, url);
-	  if (!NS_SUCCEEDED(rv)) 
+      PRUnichar * url=nsnull, *title=nsnull;
+	  
+        mSHistory->GetURLForIndex(j, &url);
+        nsAutoString  histURL(url);
+        mSHistory->GetTitleForIndex(j, &title);
+        nsAutoString  histTitle(title);
+        rv = CreateMenuItem(menu, j, url);
+	    if (!NS_SUCCEEDED(rv)) 
 		  printf("nsBrowserAppCore:;BackButtonpopup ERROR while creating menu item\n");
+		Recycle(title);
+		Recycle(url);
      } 
 
   return NS_OK;
@@ -502,6 +520,11 @@ NS_IMETHODIMP
 nsBrowserAppCore::ForwardButtonPopup()
 {
 
+	if (!mSHistory)  {
+		printf("nsBrowserAppCore::ForwardButtonPopup Couldn't get a handle to SessionHistory\n");
+		return NS_ERROR_FAILURE;
+	}
+
   if (APP_DEBUG) printf("In BrowserAppCore::Forwardbuttonpopup\n");
 
  // Get handle to the "forwardbuttonpopup" element
@@ -543,17 +566,12 @@ nsBrowserAppCore::ForwardButtonPopup()
   else {
 	  if (APP_DEBUG) printf("nsBrowserAppCore::ForwardButtonPopup Menu has no children\n");
   }	 
-             
-      /* Now build the popup list */
-  if (!mSHistory) {
-	  printf("nsBrowserAppCore::ForwardButtonPopup mSHistory is null\n");
-     return NS_ERROR_FAILURE;
-  }
+
   PRInt32 indix=0, i=0, length=0;
   //Get current index in Session History
-  mSHistory->getCurrentIndex(indix);
+  mSHistory->GetCurrentIndex(&indix);
  //Get total length of Session History
-  mSHistory->getHistoryLength(length);
+  mSHistory->GetHistoryLength(&length);
 
   //Decide on the # of items in the popup list 
   if ((length-indix) > SHISTORY_POPUP_LIST)
@@ -562,7 +580,7 @@ nsBrowserAppCore::ForwardButtonPopup()
 	 i = length;
 
   for (PRInt32 j=indix+1;j<i;j++) {
-      const PRUnichar * url=nsnull, *title=nsnull;
+      PRUnichar * url=nsnull, *title=nsnull;
 
       mSHistory->GetURLForIndex(j, &url);
       nsAutoString  histURL(url);
@@ -571,6 +589,8 @@ nsBrowserAppCore::ForwardButtonPopup()
       rv = CreateMenuItem(menu, j, url);
 	  if (!NS_SUCCEEDED(rv)) 
 		  printf("nsBrowserAppCore::ForwardbuttonPopup, Error while creating history menu items\n");
+	  Recycle(title);
+	  Recycle(url);
   } 
 	 return NS_OK;
 
@@ -580,6 +600,11 @@ nsBrowserAppCore::ForwardButtonPopup()
 NS_IMETHODIMP
 nsBrowserAppCore::UpdateGoMenu()
 {
+
+    if (!mSHistory)  {
+		printf("nsBrowserAppCore::UpdateGoMenu Couldn't get a handle to SessionHistory\n");
+		return NS_ERROR_FAILURE;
+	}
 
   // Get handle to the "main-menubar" element
   nsCOMPtr<nsIDOMElement>   mainMenubarElement;
@@ -674,23 +699,17 @@ nsBrowserAppCore::UpdateGoMenu()
   if (!NS_SUCCEEDED(rv)) {
 	  printf("nsBrowserAppCore::UpdateGoMenu Error while clearing old history list\n");
   }
-
-  /* Now build the history list */
-  if (!mSHistory) {
-     printf("nsBrowserAppCore::updateGoMenu mSHistory is null\n");
-     return NS_ERROR_FAILURE;
-  }
   
   PRInt32 length=0,i=0;
   //Get total length of the  Session History
-  mSHistory->getHistoryLength(length);
+  mSHistory->GetHistoryLength(&length);
 
   //Decide on the # of items in the popup list 
   if (length > SHISTORY_POPUP_LIST)
      i  = length-SHISTORY_POPUP_LIST;
 
   for (PRInt32 j=length-1;j>=i;j--) {
-      const PRUnichar * url=nsnull, *title=nsnull;
+      PRUnichar * url=nsnull, *title=nsnull;
 
       mSHistory->GetURLForIndex(j, &url);
       nsAutoString  histURL(url);
@@ -701,6 +720,8 @@ nsBrowserAppCore::UpdateGoMenu()
 	  if (!NS_SUCCEEDED(rv)) {
         printf("nsBrowserAppCore::UpdateGoMenu Error while creating history mene item\n");
 	  }
+	  Recycle(title);
+	  Recycle(url);
      }
   return NS_OK;
 
@@ -985,7 +1006,7 @@ nsBrowserAppCore::LoadInitialPage(void)
   // Examine content URL.
   if ( mContentAreaWebShell ) {
       const PRUnichar *url = 0;
-      rv = mContentAreaWebShell->GetURL( 0, &url );
+      rv = mContentAreaWebShell->GetURL(&url );
 	  /* Check whether url is valid. Otherwise we compare 0x00 with 
 	   * "about:blank" and there by return from here with out 
 	   * loading the command line url or default home page.
@@ -1103,7 +1124,8 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     mContentAreaWebShell = webShell;
     // NS_ADDREF(mContentAreaWebShell); WE DO NOT OWN THIS
     webShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
-    webShell->SetSessionHistory((nsISessionHistory *)this);
+	if (mSHistory)
+       webShell->SetSessionHistory(mSHistory);
 
     // Cache the Document Loader for the content area webshell.  This is a 
     // weak reference that is *not* reference counted...
@@ -1314,16 +1336,15 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
   PRBool result=PR_TRUE;
   // Check with sessionHistory if you can go forward
-  canForward(result);
+  CanForward(&result);
   setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
 
 
     // Check with sessionHistory if you can go back
-  canBack(result);
+  CanBack(&result);
   setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
 
 
-  
 #ifdef NECKO
   nsCRT::free(url);
 #endif
@@ -1407,7 +1428,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
 
   /* Inform Session History about the status of the page load */
   if (mSHistory) {
-    mSHistory->UpdateStatus(webshell, aStatus); 
+    mSHistory->UpdateStatus(webshell, (PRInt32) aStatus); 
   }
   if (mIsLoadingHistory) {
       if (mSHistory)
@@ -1471,17 +1492,6 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
 #endif
 
   setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
-  PRBool result=PR_TRUE;
-#if 0
-  // Check with sessionHistory if you can go forward
-  canForward(result);
-  setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
-
-
-    // Check with sessionHistory if you can go back
-  canBack(result);
-  setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
-#endif /* 0 */
 
     //Disable the Stop button
   setAttribute( mWebShell, "canStop", "disabled", "true" );
@@ -1665,7 +1675,8 @@ nsBrowserAppCore::GoBack(nsIWebShell * aPrev)
   }
   mIsLoadingHistory = PR_TRUE;
   if (mSHistory) {
-    mSHistory->GoBack(aPrev);
+	  //mSHistory checks for null pointers
+    return mSHistory->GoBack(aPrev);
   }
   return NS_OK;
 }
@@ -1680,7 +1691,8 @@ nsBrowserAppCore::GoForward(nsIWebShell * aPrev)
   }
   mIsLoadingHistory = PR_TRUE;
   if (mSHistory) {
-    mSHistory->GoForward(aPrev);
+	  //mSHistory checks for null pointers
+    return mSHistory->GoForward(aPrev);
   }
   return NS_OK;
 }
@@ -1698,17 +1710,21 @@ nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
 	   mSHistory->ClearLoadingFlags();
   }
   mIsLoadingHistory = PR_TRUE;
-  if (mSHistory)
-	mSHistory->Reload(aPrev, aType);
+  if (mSHistory) {
+	  //mSHistory checks for null pointers
+	return mSHistory->Reload(aPrev, aType);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::add(nsIWebShell * aWebShell)
+nsBrowserAppCore::Add(nsIWebShell * aWebShell)
 {
    nsresult rv;
-   if (mSHistory) 
-     rv = mSHistory->add(aWebShell);
+   if (mSHistory)  {
+	   //mSHistory checks for null pointers
+     rv = mSHistory->Add(aWebShell);
+   }
    return rv;
 }
 
@@ -1716,8 +1732,10 @@ NS_IMETHODIMP
 nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev, PRBool aIsReloading)
 {
    nsresult rv;
-   if (mSHistory) 
+   if (mSHistory) {
+	   //mSHistory checks for null pointers
      rv = mSHistory->Goto(aGotoIndex, aPrev, PR_FALSE);
+   }
    return rv;
 }
 
@@ -1731,80 +1749,76 @@ nsBrowserInstance::ClearLoadingFlags()
 NS_IMETHODIMP
 nsBrowserAppCore::SetLoadingFlag(PRBool aFlag)
 {
+  if (mSHistory)
+	mSHistory->SetLoadingFlag(aFlag);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::UpdateStatus(nsIWebShell * aWebShell, nsresult aStatus) {
+nsBrowserInstance::UpdateStatus(nsIWebShell * aWebShell, PRInt32 aStatus) {
+	if (mSHistory) {
+		//mSHistory checks for null pointers
+		mSHistory->UpdateStatus(aWebShell, aStatus);
+	}
 	return NS_OK;
 }
 
+/* Error checks on the arguments for all the following
+ * methods done in nsSessionHistory.cpp
+ */
+
 NS_IMETHODIMP
-nsBrowserAppCore::GetLoadingFlag(PRBool &aFlag)
+nsBrowserAppCore::GetLoadingFlag(PRBool *aFlag)
 {
+
+  if (mSHistory)
+	mSHistory->GetLoadingFlag(aFlag);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBrowserAppCore::SetLoadingHistoryEntry(nsHistoryEntry *  aHistoryEntry)
-{
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
-nsBrowserAppCore::canForward(PRBool & aResult)
+nsBrowserAppCore::CanForward(PRBool * aResult)
 {
-   PRBool result;
 
    if (mSHistory) {
-     mSHistory->canForward(result);
-     aResult = result;
+     mSHistory->CanForward(aResult);
    }
    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::canBack(PRBool & aResult)
+nsBrowserAppCore::CanBack(PRBool * aResult)
 {
-   PRBool result;
-
-   if (mSHistory) {
-     mSHistory->canBack(result);
-     aResult = result;
-   }
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::getHistoryLength(PRInt32 & aResult)
-{
-   PRInt32 result;
-   if (mSHistory)
-     mSHistory->getHistoryLength(result);
-   
-   aResult = result;
-   return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsBrowserAppCore::getCurrentIndex(PRInt32 & aResult)
-{
-   PRInt32 result;
 
    if (mSHistory)
-     mSHistory->getCurrentIndex(result);
-   
-   aResult = result;
+     mSHistory->CanBack(aResult);
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::GetHistoryLength(PRInt32 * aResult)
+{
+
+   if (mSHistory)
+     mSHistory->GetHistoryLength(aResult);
+   return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::GetCurrentIndex(PRInt32 * aResult)
+{
+
+   if (mSHistory)
+     mSHistory->GetCurrentIndex(aResult);
    return NS_OK;
 
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::GetURLForIndex(PRInt32 aIndex, const PRUnichar** aURL)
+nsBrowserAppCore::GetURLForIndex(PRInt32 aIndex,  PRUnichar** aURL)
 {
-
    if (mSHistory)
      return  mSHistory->GetURLForIndex(aIndex, aURL);
    return NS_OK;
@@ -1819,7 +1833,7 @@ nsBrowserAppCore::SetURLForIndex(PRInt32 aIndex, const PRUnichar* aURL)
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::GetTitleForIndex(PRInt32 aIndex, const PRUnichar** aTitle)
+nsBrowserAppCore::GetTitleForIndex(PRInt32 aIndex,  PRUnichar** aTitle)
 {
 
    if (mSHistory)
@@ -1851,14 +1865,6 @@ nsBrowserAppCore::SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState)
       mSHistory->SetHistoryObjectForIndex(aIndex, aState);
    return NS_OK;
 }
-
-/*
-NS_IMETHODIMP
-cloneHistory(nsISessionHistory * aSessionHistory) {
-  return NS_OK;
-
-}
-*/
 
 
 NS_IMETHODIMP    

@@ -93,52 +93,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     // nsIObserver
     NS_DECL_NSIOBSERVER
-
-	// nsISessionHistory methods 
-    NS_IMETHOD GoForward(nsIWebShell * aPrev);
-
-    NS_IMETHOD GoBack(nsIWebShell * aPrev);
-#ifdef NECKO
-	NS_IMETHOD Reload(nsIWebShell * aPrev, nsLoadFlags aType);
-#else
-	NS_IMETHOD Reload(nsIWebShell * aPrev, nsURLReloadType aType);
-#endif  /* NECKO */
-
-    NS_IMETHOD canForward(PRBool &aResult);
-
-    NS_IMETHOD canBack(PRBool &aResult);
-
-    NS_IMETHOD add(nsIWebShell * aWebShell);
-
-    NS_IMETHOD Goto(PRInt32 aHistoryIndex, nsIWebShell * aPrev, PRBool aIsReloading);
-
-    NS_IMETHOD getHistoryLength(PRInt32 & aResult);
-
-    NS_IMETHOD getCurrentIndex(PRInt32 & aResult);
-
-  //  NS_IMETHOD cloneHistory(nsISessionHistory * aSessionHistory);
-
-    NS_IMETHOD SetLoadingFlag(PRBool aFlag);
-
-    NS_IMETHOD GetLoadingFlag(PRBool &aFlag);
-
-    NS_IMETHOD SetLoadingHistoryEntry(nsHistoryEntry * aHistoryEntry);
-
-    NS_IMETHOD GetURLForIndex(PRInt32 aIndex, const PRUnichar ** aURL);
-
-    NS_IMETHOD SetURLForIndex(PRInt32 aIndex, const PRUnichar * aURL);
-
-	NS_IMETHOD GetTitleForIndex(PRInt32 aIndex, const PRUnichar ** aTitle);
-
-    NS_IMETHOD SetTitleForIndex(PRInt32 aIndex, const PRUnichar * aTitle);
-
-	NS_IMETHOD GetHistoryObjectForIndex(PRInt32 aIndex,  nsISupports ** aState);
-
-    NS_IMETHOD SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState);
-
-    NS_IMETHOD ClearLoadingFlags();
-
-    NS_IMETHOD UpdateStatus(nsIWebShell * aWebShell, nsresult aStatus);
+    // nsISessionHistory
+    NS_DECL_NSISESSIONHISTORY
 
   protected:
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);

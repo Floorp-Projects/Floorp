@@ -10,4 +10,3 @@ nsFileLocations.h
 nsIXULWindowCallbacks.h
 nsIDOMXPConnectFactory.h
 nsINetSupportDialogService.h
-nsISessionHistory.h

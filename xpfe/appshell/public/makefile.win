@@ -26,8 +26,9 @@ XPIDLSRCS =                        \
         .\nsIAppShellService.idl   \
        	.\nsIWindowMediator.idl	   \
        	.\nsICommonDialogs.idl  \
-		.\nsIDialogParamBlock.idl \
-	.\nsICmdLineService.idl	\
+		    .\nsIDialogParamBlock.idl \
+	      .\nsICmdLineService.idl	\
+        .\nsISessionHistory.idl \
         $(NULL)
 
 EXPORTS =                         \
@@ -37,8 +38,7 @@ EXPORTS =                         \
         nsIXULWindowCallbacks.h   \
         nsIDOMXPConnectFactory.h  \
         nsFileLocations.h         \
-        nsINetSupportDialogService.h	\
-        nsISessionHistory.h \
+        nsINetSupportDialogService.h \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

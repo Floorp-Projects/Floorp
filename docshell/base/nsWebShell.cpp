@@ -103,7 +103,6 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 
 #define WEB_TRACE_CALLS        0x1
 #define WEB_TRACE_HISTORY      0x2
-#define OLD_HISTORY 1
 
 #define WEB_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
@@ -544,7 +543,7 @@ static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID,      NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIClipboardCommandsIID,  NS_ICLIPBOARDCOMMANDS_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kISessionHistoryIID,  NS_ISESSION_HISTORY_IID);
+static NS_DEFINE_IID(kISessionHistoryIID,     NS_ISESSIONHISTORY_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID,    NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
 // XXX not sure
@@ -662,6 +661,7 @@ nsWebShell::~nsWebShell()
   ++mRefCnt; // following releases can cause this destructor to be called
              // recursively if the refcount is allowed to remain 0
 
+  NS_IF_RELEASE(mSHist);
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mThreadEventQueue);
   NS_IF_RELEASE(mContentViewer);
@@ -1618,14 +1618,14 @@ nsWebShell::ChildAt(PRInt32 aIndex, nsIWebShell*& aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShell::GetName(const PRUnichar** aName)
-{
-  // XXX This is wrong unless the parameter is marked "shared".
-  // It should otherwise be copied and freed by the caller.
-  *aName = mName.GetUnicode();
-  return NS_OK;
-}
+NS_IMETHODIMP 
+nsWebShell::GetName(const PRUnichar** aName) 
+{ 
+  // XXX This is wrong unless the parameter is marked "shared". 
+  // It should otherwise be copied and freed by the caller. 
+  *aName = mName.GetUnicode(); 
+  return NS_OK; 
+} 
 
 NS_IMETHODIMP
 nsWebShell::SetName(const PRUnichar* aName)
@@ -1637,8 +1637,8 @@ nsWebShell::SetName(const PRUnichar* aName)
 NS_IMETHODIMP
 nsWebShell::GetURL(const PRUnichar** aURL)
 {
-  // XXX This is wrong unless the parameter is marked "shared".
-  // It should otherwise be copied and freed by the caller.
+ // XXX This is wrong unless the parameter is marked "shared". 
+ // It should otherwise be copied and freed by the caller. 
   *aURL = mURL.GetUnicode();
   return NS_OK;
 }
@@ -1986,7 +1986,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   // and see if it's an element within the current document
   // We don't have a reload loadtype yet in necko. So, check for just history
   // loadtype
-  if ((aType == LOAD_HISTORY || aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
+  if ((aType == nsISessionHistory::LOAD_HISTORY || aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
       (nsnull == aPostDataStream))
   {
     nsCOMPtr<nsIDocumentViewer> docViewer;
@@ -2030,7 +2030,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
             // to load a new document...
             //
           }
-          else if (aType == LOAD_HISTORY)
+          else if (aType == nsISessionHistory::LOAD_HISTORY)
           {
             // Go to the top of the current document
             nsCOMPtr<nsIViewManager> viewMgr;
@@ -2287,7 +2287,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    // Get the history object for the previous page.
    if (NS_SUCCEEDED(rv) && shist) {
         PRInt32 indix=0;
-        shist->getCurrentIndex(indix);
+        shist->GetCurrentIndex(&indix);
         // Save it in session history
         shist->SetHistoryObjectForIndex(indix, historyState);
    }
@@ -2310,7 +2310,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   /* Add the page to session history */
   if (aModifyHistory && shist)  {
         PRInt32  ret;
-        ret = shist->add(this);
+        ret = shist->Add(this);
   }
 
   /* If  we are going "Back" from a non-frame page to a frame page,
@@ -2399,12 +2399,8 @@ nsWebShell::StopAfterURLAvailable()
   return NS_OK;
 }
 
-/* The generic session History code here is now obsolete.
- * Use nsISessionHistory instead
- */
 NS_IMETHODIMP nsWebShell::Reload(nsLoadFlags aType)
 {
-#ifdef OLD_HISTORY
   nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
   if (nsnull != s) {
     // XXX What about the post data?
@@ -2417,11 +2413,7 @@ NS_IMETHODIMP nsWebShell::Reload(nsLoadFlags aType)
   }
 
   return NS_ERROR_FAILURE;
-#else
-  if (mSHist)
-     return mSHist->Reload(this, aType);
-  return NS_OK;
-#endif
+
 }
 
 //----------------------------------------
@@ -2431,62 +2423,30 @@ NS_IMETHODIMP nsWebShell::Reload(nsLoadFlags aType)
 NS_IMETHODIMP
 nsWebShell::Back(void)
 {
-#ifdef OLD_HISTORY
   return GoTo(mHistoryIndex - 1);
-#else
-  if (mSHist)
-    return mSHist->GoBack(this);
-  return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP
 nsWebShell::CanBack(void)
 {
-#ifdef OLD_HISTORY
   return (mHistoryIndex  > mHistory.Count() - 1 ? NS_OK : NS_COMFALSE);
-#else
-  if (mSHist) {
-    PRBool result=PR_TRUE;
-    mSHist->canBack(result);
-    return  (result ? NS_OK : NS_COMFALSE);
-  }
-  return NS_OK;
-#endif
-
 }
 
 NS_IMETHODIMP
 nsWebShell::Forward(void)
 {
-#ifdef OLD_HISTORY
   return GoTo(mHistoryIndex + 1);
-#else
-  if (mSHist)
-    return mSHist->GoForward(this);
-  return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP
 nsWebShell::CanForward(void)
 {
-#ifdef OLD_HISTORY
   return (mHistoryIndex  < mHistory.Count() - 1 ? NS_OK : NS_COMFALSE);
-#else
-  if (mSHist) {
-    PRBool result=PR_TRUE;
-    mSHist->canForward(result);
-    return  (result ? NS_OK : NS_COMFALSE);
-  }
-  return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP
 nsWebShell::GoTo(PRInt32 aHistoryIndex)
 {
-#ifdef OLD_HISTORY
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
   if ((aHistoryIndex >= 0) &&
       (aHistoryIndex < mHistory.Count())) {
@@ -2513,42 +2473,25 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     rv = DoLoadURL(uri,       // URL string
                    "view",        // Command
                    nsnull,        // Post Data
-                   LOAD_HISTORY,  // the reload type
+				   nsISessionHistory::LOAD_HISTORY,  // the reload type
                    0,            // load attributes
                    nsnull);      // referrer
   }
   return rv;
-#else
-   if (mSHist)
-     return mSHist->Goto(aHistoryIndex, this, PR_FALSE);
-   return NS_OK;
-
-
-#endif
 
 }
 
 NS_IMETHODIMP
 nsWebShell::GetHistoryLength(PRInt32& aResult)
 {
-#ifdef OLD_HISTORY
   aResult = mHistory.Count();
-#else
-  if (mSHist)
-    return mSHist->getHistoryLength(aResult);
-#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::GetHistoryIndex(PRInt32& aResult)
 {
-#ifdef OLD_HISTORY
   aResult = mHistoryIndex;
-#else
-  if (mSHist)
-    return mSHist->getCurrentIndex(aResult);
-#endif
   return NS_OK;
 }
 
@@ -2556,7 +2499,7 @@ NS_IMETHODIMP
 nsWebShell::GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult)
 {
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
-#ifdef OLD_HISTORY
+
   // XXX Ownership rules for the string passed back from this
   // method are not XPCOM compliant. If they were correct, 
   // the caller would deallocate the string.
@@ -2568,18 +2511,13 @@ nsWebShell::GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult)
     }
     rv = NS_OK;
   }
-#else
-  if (mSHist)
-     return mSHist->GetURLForIndex(aHistoryIndex, aURLResult);
-
-#endif
   return rv;
 }
 
 void
 nsWebShell::ShowHistory()
 {
-#if defined(OLD_HISTORY) && defined(NS_DEBUG)
+#if defined(NS_DEBUG)
   if (WEB_LOG_TEST(gLogModule, WEB_TRACE_HISTORY)) {
     PRInt32 i, n = mHistory.Count();
     for (i = 0; i < n; i++) {
@@ -3746,39 +3684,32 @@ nsWebShell::CancelRefreshURITimers(void)
 nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
 {
 
-  const PRUnichar * url=nsnull, * title=nsnull;
+  const PRUnichar * title=nsnull;
   PRInt32     curIndex=0;
   nsresult rv;
-  nsString * historyURL=nsnull, * newURL=nsnull;
+  nsAutoString newURL;
 
   /* Get current history index and url for it */
-  rv = mSHist->getCurrentIndex(curIndex);
-  if (NS_SUCCEEDED(rv) && curIndex >= 0) {
-    mSHist->GetURLForIndex(curIndex, &url);
-    historyURL = (nsString *)  new nsString(url);
-  }
+  rv = mSHist->GetCurrentIndex(&curIndex);
 
   /* Get the url that netlib passed us */
   char* spec;
   aURL->GetSpec(&spec);
-  newURL = (nsString*) new nsString(spec);
+  newURL = (spec);
   nsCRT::free(spec);
 
-  if (newURL && historyURL && newURL->Last() == '/' && !historyURL->Equals(*newURL)) {
-  }
-
+  //Get the title from webshell
   rv = GetTitle(&title);
 
+  //Set it in session history
   if (NS_SUCCEEDED(rv) && title) {
     nsString titleStr(title);
     mSHist->SetTitleForIndex(curIndex, title);
     // Replace the top most history entry with the new url
-    mSHist->SetURLForIndex(curIndex, newURL->GetUnicode());
+    mSHist->SetURLForIndex(curIndex, newURL.GetUnicode());
   }
 
-  if (newURL) delete newURL;
-  if (historyURL) delete historyURL;
-  
+
   return NS_OK;
 }
 

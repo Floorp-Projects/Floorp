@@ -32,7 +32,6 @@ EXPORTS		= \
 		nsFileLocations.h \
 		nsIDOMXPConnectFactory.h \
 		nsINetSupportDialogService.h \
-		nsISessionHistory.h \
 		$(NULL)
 
 XPIDLSRCS	= \
@@ -42,6 +41,7 @@ XPIDLSRCS	= \
 		nsICommonDialogs.idl \
 		nsIDialogParamBlock.idl \
 		nsICmdLineService.idl \
+    nsISessionHistory.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
