@@ -42,7 +42,10 @@
 
 class EmbedProgress;
 class EmbedWindow;
+class EmbedEventListener;
 class NativeWrapperFactory;
+class nsPIDOMWindow;
+
 
 /**
  * <p>Native analog to BrowserControl.  Hosts per-window things.  Maps
@@ -77,6 +80,22 @@ public:
 
     jobject     QueryInterfaceJava(WEBCLIENT_INTERFACES interface);
 
+    // This is an upcall that will come from the progress listener
+    // whenever there is a content state change.  We need this so we can
+    // attach event listeners.
+    void        ContentStateChange    (void);
+
+private:
+
+    void GetListener (void);
+
+    void AttachListeners(void);
+    void DetachListeners(void);
+
+    // this will get the PIDOMWindow for this widget
+    nsresult        GetPIDOMWindow   (nsPIDOMWindow **aPIWin);
+
+public:
 
     //
     // Relationship ivars
@@ -91,10 +110,15 @@ public:
     nsCOMPtr<nsIWebNavigation>     mNavigation;
     nsCOMPtr<nsISHistory>          mSessionHistory;
 
+    // our event receiver
+    nsCOMPtr<nsIDOMEventReceiver>  mEventReceiver;
+
     EmbedWindow *                  mWindow;
     nsCOMPtr<nsISupports>          mWindowGuard;
     EmbedProgress *                mProgress;
     nsCOMPtr<nsISupports>          mProgressGuard;
+    EmbedEventListener            *mEventListener;
+    nsCOMPtr<nsISupports>          mEventListenerGuard;
     ShareInitContext               mShareContext;
 
     // chrome mask
@@ -105,6 +129,8 @@ public:
     PRBool                         mChromeLoaded;
     // has someone called Destroy() on us?
     PRBool                         mIsDestroyed;
+    // is the chrome listener attached yet?
+    PRBool                         mListenersAttached;
 
     jobject                        mJavaBrowserControl;
 

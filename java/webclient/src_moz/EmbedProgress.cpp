@@ -99,6 +99,8 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 			     PRUint32        aStateFlags,
 			     nsresult        aStatus)
 {
+    // hook up listeners for this request.
+    mOwner->ContentStateChange();
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     nsXPIDLCString uriString;
     RequestToURIString(aRequest, getter_Copies(uriString));

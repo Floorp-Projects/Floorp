@@ -34,9 +34,16 @@
 #include "EmbedWindow.h"
 #include "WindowCreator.h"
 #include "EmbedProgress.h"
+#include "EmbedEventListener.h"
 #include "NativeBrowserControl.h"
 #include "ns_util.h"
 
+// all of the crap that we need for event listeners
+// and when chrome windows finish loading
+#include <nsIDOMWindow.h>
+#include <nsPIDOMWindow.h>
+#include <nsIDOMWindowInternal.h>
+#include <nsIChromeEventHandler.h>
 
 NativeBrowserControl::NativeBrowserControl(void)
 {
@@ -49,6 +56,7 @@ NativeBrowserControl::NativeBrowserControl(void)
     mIsChrome         = PR_FALSE;
     mChromeLoaded     = PR_FALSE;
     mIsDestroyed      = PR_FALSE;
+    mListenersAttached = PR_FALSE;
 }
 
 NativeBrowserControl::~NativeBrowserControl()
@@ -85,7 +93,14 @@ NativeBrowserControl::Init(NativeWrapperFactory *yourWrapperFactory)
                                     mProgress);
     mProgress->Init(this);
 
-
+    // Create our key listener object and initialize it.  It is assumed
+    // that this will be destroyed before we go out of scope.
+    mEventListener = new EmbedEventListener();
+    mEventListenerGuard =
+        NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(nsIDOMKeyListener *,
+                                                     mEventListener));
+    mEventListener->Init(this);
+    
     nsCOMPtr<nsIWebBrowser> webBrowser;
     mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
     
@@ -211,6 +226,11 @@ NativeBrowserControl::Destroy(void)
     // Get the nsIWebBrowser object for our embedded window.
     nsCOMPtr<nsIWebBrowser> webBrowser;
     mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+    // detach our event listeners and release the event receiver
+    DetachListeners();
+    if (mEventReceiver)
+        mEventReceiver = nsnull;
     
     // destroy our child window
     mWindow->ReleaseChildren();
@@ -263,4 +283,143 @@ jobject NativeBrowserControl::QueryInterfaceJava(WEBCLIENT_INTERFACES interface)
     ::util_DeleteStringUTF(env, interfaceJStr);
     
     return result;
+}
+
+void
+NativeBrowserControl::ContentStateChange(void)
+{
+    // we don't attach listeners to chrome
+    if (mListenersAttached && !mIsChrome) {
+        return;
+    }
+    
+    GetListener();
+    
+    if (!mEventReceiver) {
+        return;
+    }
+    
+    AttachListeners();
+    
 }    
+
+void 
+NativeBrowserControl::GetListener()
+{
+    if (mEventReceiver) {
+        return;
+    }
+    
+    nsCOMPtr<nsPIDOMWindow> piWin;
+    GetPIDOMWindow(getter_AddRefs(piWin));
+    
+    if (!piWin) {
+        return;
+    }
+    
+    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+    piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+    
+    mEventReceiver = do_QueryInterface(chromeHandler);
+    
+}
+
+void 
+NativeBrowserControl::AttachListeners()
+{
+    if (!mEventReceiver || mListenersAttached) {
+        return;
+    }
+    
+    nsIDOMEventListener *eventListener =
+        NS_STATIC_CAST(nsIDOMEventListener *,
+                       NS_STATIC_CAST(nsIDOMKeyListener *, mEventListener));
+    
+    // add the key listener
+    nsresult rv;
+    rv = mEventReceiver->AddEventListenerByIID(eventListener,
+                                               NS_GET_IID(nsIDOMKeyListener));
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to add key listener\n");
+        return;
+    }
+    
+    rv = mEventReceiver->AddEventListenerByIID(eventListener,
+                                               NS_GET_IID(nsIDOMMouseListener));
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to add mouse listener\n");
+        return;
+    }
+    
+    // ok, all set.
+    mListenersAttached = PR_TRUE;
+}
+
+void 
+NativeBrowserControl::DetachListeners()
+{
+    if (!mListenersAttached || !mEventReceiver) {
+        return;
+    }
+    
+    nsIDOMEventListener *eventListener =
+        NS_STATIC_CAST(nsIDOMEventListener *,
+                       NS_STATIC_CAST(nsIDOMKeyListener *, mEventListener));
+    
+    nsresult rv;
+    rv = mEventReceiver->RemoveEventListenerByIID(eventListener,
+                                                  NS_GET_IID(nsIDOMKeyListener));
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to remove key listener\n");
+        return;
+    }
+    
+    rv =
+        mEventReceiver->RemoveEventListenerByIID(eventListener,
+                                                 NS_GET_IID(nsIDOMMouseListener));
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to remove mouse listener\n");
+        return;
+    }
+    
+    mListenersAttached = PR_FALSE;
+    
+}
+
+nsresult
+NativeBrowserControl::GetPIDOMWindow(nsPIDOMWindow **aPIWin)
+{
+    *aPIWin = nsnull;
+    
+    // get the web browser
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    
+    // get the content DOM window for that web browser
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (!domWindow) {
+        return NS_ERROR_FAILURE;
+    }
+    
+    // get the private DOM window
+    nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
+    // and the root window for that DOM window
+    nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+    domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+    
+    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
+    
+    *aPIWin = piWin.get();
+    
+    if (*aPIWin) {
+        NS_ADDREF(*aPIWin);
+        return NS_OK;
+    }
+    
+    return NS_ERROR_FAILURE;
+    
+}
+
+
