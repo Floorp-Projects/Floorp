@@ -87,21 +87,24 @@ public class Interpreter {
             itsData.itsFunctionType = f.getFunctionType();
             generateFunctionICode(cx, scope, f);
             return createFunction(cx, scope, itsData, false);
+        } else {
+            generateScriptICode(cx, scope, (ScriptOrFnNode)tree);
+            return new InterpretedScript(cx, itsData);
         }
-        generateScriptICode(cx, scope, tree);
-        return new InterpretedScript(cx, itsData);
     }
 
-    private void generateScriptICode(Context cx, Scriptable scope, Node tree) {
-        itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
+    private void
+    generateScriptICode(Context cx, Scriptable scope, ScriptOrFnNode tree)
+    {
+        itsSourceFile = tree.getSourceName();
         itsData.itsSourceFile = itsSourceFile;
-        debugSource = (String) tree.getProp(Node.DEBUGSOURCE_PROP);
+        debugSource = tree.getOriginalSource();
 
         generateNestedFunctions(cx, scope, tree);
 
         generateRegExpLiterals(cx, scope, tree);
 
-        itsVariableTable = (VariableTable)tree.getProp(Node.VARS_PROP);
+        itsVariableTable = tree.getVariableTable();
         generateICodeFromTree(tree);
         if (Context.printICode) dumpICode(itsData);
 
@@ -116,7 +119,7 @@ public class Interpreter {
         // check if function has own source, which is the case
         // with Function(...)
         String savedSource = debugSource;
-        debugSource = (String)theFunction.getProp(Node.DEBUGSOURCE_PROP);
+        debugSource = theFunction.getOriginalSource();
         if (debugSource == null) {
             debugSource = savedSource;
         }
@@ -130,9 +133,8 @@ public class Interpreter {
         generateICodeFromTree(theFunction.getLastChild());
 
         itsData.itsName = theFunction.getFunctionName();
-        itsData.itsSourceFile = (String) theFunction.getProp(
-                                    Node.SOURCENAME_PROP);
-        itsData.itsSource = (String)theFunction.getProp(Node.SOURCE_PROP);
+        itsData.itsSourceFile = theFunction.getSourceName();
+        itsData.itsSource = theFunction.getEncodedSource();
         if (Context.printICode) dumpICode(itsData);
 
         if (cx.debugger != null) {
@@ -167,25 +169,20 @@ public class Interpreter {
 
     private void generateRegExpLiterals(Context cx,
                                         Scriptable scope,
-                                        Node tree)
+                                        ScriptOrFnNode tree)
     {
-        ObjArray regexps = (ObjArray)tree.getProp(Node.REGEXP_PROP);
-        if (regexps == null) return;
+        int N = tree.getRegexpCount();
+        if (N == 0) return;
 
         RegExpProxy rep = cx.getRegExpProxy();
         if (rep == null) {
             throw cx.reportRuntimeError0("msg.no.regexp");
         }
-        int N = regexps.size();
         Object[] array = new Object[N];
         for (int i = 0; i != N; i++) {
-            Node regexp = (Node) regexps.get(i);
-            Node left = regexp.getFirstChild();
-            Node right = regexp.getLastChild();
-            String source = left.getString();
-            String global = (left != right) ? right.getString() : null;
-            array[i] = rep.newRegExp(cx, scope, source, global, false);
-            regexp.putIntProp(Node.REGEXP_PROP, i);
+            String string = tree.getRegexpString(i);
+            String flags = tree.getRegexpFlags(i);
+            array[i] = rep.newRegExp(cx, scope, string, flags, false);
         }
         itsData.itsRegExpLiterals = array;
     }
@@ -996,8 +993,7 @@ public class Interpreter {
                 break;
 
             case TokenStream.REGEXP : {
-                Node regexp = (Node) node.getProp(Node.REGEXP_PROP);
-                int index = regexp.getExistingIntProp(Node.REGEXP_PROP);
+                int index = node.getExistingIntProp(Node.REGEXP_PROP);
                 iCodeTop = addByte(TokenStream.REGEXP, iCodeTop);
                 iCodeTop = addIndex(index, iCodeTop);
                 itsStackDepth++;

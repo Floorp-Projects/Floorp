@@ -56,15 +56,15 @@ public class IRFactory {
     createScript(Object body, VariableTable vars, String sourceName,
                  int baseLineno, int endLineno, String source)
     {
-        Node result = Node.newString(TokenStream.SCRIPT, sourceName);
+        ScriptOrFnNode result = new ScriptOrFnNode(TokenStream.SCRIPT);
+        result.variableTable = vars;
+        result.encodedSource = source;
+        result.sourceName = sourceName;
+        result.baseLineno = baseLineno;
+        result.endLineno = endLineno;
+
         Node children = ((Node) body).getFirstChild();
         if (children != null) { result.addChildrenToBack(children); }
-        result.putProp(Node.VARS_PROP, vars);
-        result.putProp(Node.SOURCENAME_PROP, sourceName);
-        result.putIntProp(Node.BASE_LINENO_PROP, baseLineno);
-        result.putIntProp(Node.END_LINENO_PROP, endLineno);
-        if (source != null)
-            result.putProp(Node.SOURCE_PROP, source);
         return result;
     }
 
@@ -212,14 +212,13 @@ public class IRFactory {
             name = "";
         }
         FunctionNode f = compiler.createFunctionNode(this, name);
-        f.itsVariableTable = vars;
+        f.variableTable = vars;
+        f.encodedSource = source;
+        f.sourceName = sourceName;
+        f.baseLineno = baseLineno;
+        f.endLineno = endLineno;
         f.setFunctionType(functionType);
         f.addChildToBack((Node)statements);
-        f.putProp(Node.SOURCENAME_PROP, sourceName);
-        f.putIntProp(Node.BASE_LINENO_PROP, baseLineno);
-        f.putIntProp(Node.END_LINENO_PROP, endLineno);
-        if (source != null)
-            f.putProp(Node.SOURCE_PROP, source);
         Node result = Node.newString(TokenStream.FUNCTION, name);
         result.putProp(Node.FUNCTION_PROP, f);
         return result;

@@ -277,19 +277,16 @@ public class Node implements Cloneable {
         LOCAL_PROP        =  7,
         CODEOFFSET_PROP   =  8,
         FIXUPS_PROP       =  9,
-        VARS_PROP         = 10,
-        USES_PROP         = 11,
-        REGEXP_PROP       = 12,
-        CASES_PROP        = 13,
-        DEFAULT_PROP      = 14,
-        CASEARRAY_PROP    = 15,
-        SOURCENAME_PROP   = 16,
-        SOURCE_PROP       = 17,
-        TYPE_PROP         = 18,
-        SPECIAL_PROP_PROP = 19,
-        LABEL_PROP        = 20,
-        FINALLY_PROP      = 21,
-        LOCALCOUNT_PROP   = 22,
+        USES_PROP         = 10,
+        REGEXP_PROP       = 11,
+        CASES_PROP        = 12,
+        DEFAULT_PROP      = 13,
+        CASEARRAY_PROP    = 14,
+        TYPE_PROP         = 15,
+        SPECIAL_PROP_PROP = 16,
+        LABEL_PROP        = 17,
+        FINALLY_PROP      = 18,
+        LOCALCOUNT_PROP   = 19,
     /*
         the following properties are defined and manipulated by the
         optimizer -
@@ -304,16 +301,13 @@ public class Node implements Cloneable {
                           matches.
     */
 
-        TARGETBLOCK_PROP  = 23,
-        VARIABLE_PROP     = 24,
-        LASTUSE_PROP      = 25,
-        ISNUMBER_PROP     = 26,
-        DIRECTCALL_PROP   = 27,
+        TARGETBLOCK_PROP  = 20,
+        VARIABLE_PROP     = 21,
+        LASTUSE_PROP      = 22,
+        ISNUMBER_PROP     = 23,
+        DIRECTCALL_PROP   = 24,
 
-        BASE_LINENO_PROP  = 28,
-        END_LINENO_PROP   = 29,
-        SPECIALCALL_PROP  = 30,
-        DEBUGSOURCE_PROP  = 31;
+        SPECIALCALL_PROP  = 25;
 
     public static final int    // this value of the ISNUMBER_PROP specifies
         BOTH = 0,               // which of the children are Number types
@@ -334,14 +328,11 @@ public class Node implements Cloneable {
                 case LOCAL_PROP:         return "local";
                 case CODEOFFSET_PROP:    return "codeoffset";
                 case FIXUPS_PROP:        return "fixups";
-                case VARS_PROP:          return "vars";
                 case USES_PROP:          return "uses";
                 case REGEXP_PROP:        return "regexp";
                 case CASES_PROP:         return "cases";
                 case DEFAULT_PROP:       return "default";
                 case CASEARRAY_PROP:     return "casearray";
-                case SOURCENAME_PROP:    return "sourcename";
-                case SOURCE_PROP:        return "source";
                 case TYPE_PROP:          return "type";
                 case SPECIAL_PROP_PROP:  return "special_prop";
                 case LABEL_PROP:         return "label";
@@ -354,10 +345,7 @@ public class Node implements Cloneable {
                 case ISNUMBER_PROP:      return "isnumber";
                 case DIRECTCALL_PROP:    return "directcall";
 
-                case BASE_LINENO_PROP:   return "base_lineno";
-                case END_LINENO_PROP:    return "end_lineno";
                 case SPECIALCALL_PROP:   return "specialcall";
-                case DEBUGSOURCE_PROP:   return "debugsource";
 
                 default: Context.codeBug();
             }
@@ -458,22 +446,29 @@ public class Node implements Cloneable {
             if (this instanceof StringNode) {
                 sb.append(' ');
                 sb.append(getString());
-            } else {
-                switch (type) {
-                    case TokenStream.TARGET:
-                        sb.append(' ');
-                        sb.append(hashCode());
-                        break;
-                    case TokenStream.NUMBER:
-                        sb.append(' ');
-                        sb.append(getDouble());
-                        break;
-                    case TokenStream.FUNCTION:
-                        FunctionNode fn = (FunctionNode)this;
-                        sb.append(' ');
-                        sb.append(fn.getFunctionName());
-                        break;
+            } else if (this instanceof ScriptOrFnNode) {
+                ScriptOrFnNode sof = (ScriptOrFnNode)this;
+                if (this instanceof FunctionNode) {
+                    FunctionNode fn = (FunctionNode)this;
+                    sb.append(' ');
+                    sb.append(fn.getFunctionName());
                 }
+                sb.append(" [source name: ");
+                sb.append(sof.getSourceName());
+                sb.append("] [encoded source length: ");
+                String encodedSource = sof.getEncodedSource();
+                sb.append(encodedSource != null ? encodedSource.length() : 0);
+                sb.append("] [base line: ");
+                sb.append(sof.getBaseLineno());
+                sb.append("] [end line: ");
+                sb.append(sof.getEndLineno());
+                sb.append(']');
+            } else if (type == TokenStream.TARGET) {
+                sb.append(' ');
+                sb.append(hashCode());
+            } else if (type == TokenStream.NUMBER) {
+                sb.append(' ');
+                sb.append(getDouble());
             }
             if (intDatum != -1) {
                 sb.append(' ');
@@ -491,9 +486,6 @@ public class Node implements Cloneable {
                 switch (key) {
                     case FIXUPS_PROP : // can't add this as it recurses
                         sb.append("fixups property");
-                        break;
-                    case SOURCE_PROP : // can't add this as it has unprintables
-                        sb.append("source property");
                         break;
                     case TARGETBLOCK_PROP : // can't add this as it recurses
                         sb.append("target block property");

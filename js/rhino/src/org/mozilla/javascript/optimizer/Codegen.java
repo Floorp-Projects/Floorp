@@ -397,8 +397,9 @@ public class Codegen extends Interpreter {
 
         itsSourceFile = null;
         // default is to generate debug info
-        if (!cx.isGeneratingDebugChanged() || cx.isGeneratingDebug())
-            itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
+        if (!cx.isGeneratingDebugChanged() || cx.isGeneratingDebug()) {
+            itsSourceFile = ((ScriptOrFnNode)tree).getSourceName();
+        }
         version = cx.getLanguageVersion();
         optLevel = cx.getOptimizationLevel();
         inFunction = tree.getType() == TokenStream.FUNCTION;
@@ -496,7 +497,7 @@ public class Codegen extends Interpreter {
             // better be a script
             if (tree.getType() != TokenStream.SCRIPT)
                 badTree();
-            vars = (VariableTable) tree.getProp(Node.VARS_PROP);
+            vars = ((ScriptOrFnNode)tree).getVariableTable();
             boolean isPrimary = nameHelper.getTargetExtends() == null &&
                                 nameHelper.getTargetImplements() == null;
             this.name = getScriptClassName(null, isPrimary);
@@ -513,7 +514,7 @@ public class Codegen extends Interpreter {
                             "[Ljava/lang/Object;)Ljava/lang/Object;",
                            1, false, true);
             generatePrologue(cx, tree, false, -1);
-            int linenum = tree.getIntProp(Node.END_LINENO_PROP, -1);
+            int linenum = ((ScriptOrFnNode)tree).getEndLineno();
             if (linenum != -1)
               classFile.addLineNumberEntry((short)linenum);
             tree.addChildToBack(new Node(TokenStream.RETURN));
@@ -1116,12 +1117,7 @@ public class Codegen extends Interpreter {
     {
         trivialInit = true;
         boolean inCtor = false;
-        VariableTable vars;
-        if (tree instanceof OptFunctionNode)
-            vars = ((OptFunctionNode)tree).getVariableTable();
-        else
-            vars = (VariableTable) tree.getProp(Node.VARS_PROP);
-
+        VariableTable vars = ((ScriptOrFnNode)tree).getVariableTable();
         if (methodName.equals("<init>")) {
             inCtor = true;
             setNonTrivialInit(methodName);
@@ -1192,10 +1188,10 @@ public class Codegen extends Interpreter {
         }
 
         // precompile all regexp literals
-        ObjArray regexps = (ObjArray) tree.getProp(Node.REGEXP_PROP);
-        if (regexps != null) {
+        int regexpCount = ((ScriptOrFnNode)tree).getRegexpCount();
+        if (regexpCount != 0) {
             setNonTrivialInit(methodName);
-            generateRegExpLiterals(regexps, inCtor);
+            generateRegExpLiterals((ScriptOrFnNode)tree, inCtor);
         }
 
         if (tree instanceof OptFunctionNode) {
@@ -1229,7 +1225,7 @@ public class Codegen extends Interpreter {
         // Change Parser if changing ordering.
 
         if (cx.isGeneratingSource()) {
-            String source = (String) tree.getProp(Node.SOURCE_PROP);
+            String source = ((ScriptOrFnNode)tree).getEncodedSource();
             if (source != null && source.length() < 65536) {
                 short flags = ClassFileWriter.ACC_PUBLIC
                             | ClassFileWriter.ACC_STATIC;
@@ -1274,12 +1270,10 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void generateRegExpLiterals(ObjArray regexps, boolean inCtor) {
-        for (int i=0; i < regexps.size(); i++) {
-            Node regexp = (Node) regexps.get(i);
-            StringBuffer sb = new StringBuffer("_re");
-            sb.append(i);
-            String fieldName = sb.toString();
+    private void generateRegExpLiterals(ScriptOrFnNode tree, boolean inCtor) {
+        int regexpCount = tree.getRegexpCount();
+        for (int i=0; i < regexpCount; i++) {
+            String fieldName = getRegexpFieldName(i);
             short flags = ClassFileWriter.ACC_PRIVATE;
             if (inCtor)
                 flags |= ClassFileWriter.ACC_FINAL;
@@ -1293,13 +1287,12 @@ public class Codegen extends Interpreter {
 
             aload(contextLocal);    // load 'context'
             aload(variableObjectLocal);    // load 'scope'
-            Node left = regexp.getFirstChild();
-            push(left.getString());
-            Node right = regexp.getLastChild();
-            if (left == right) {
+            push(tree.getRegexpString(i));
+            String regexpFlags = tree.getRegexpFlags(i);
+            if (regexpFlags == null) {
                 addByteCode(ByteCode.ACONST_NULL);
             } else {
-                push(right.getString());
+                push(regexpFlags);
             }
             push(0);
 
@@ -1309,12 +1302,14 @@ public class Codegen extends Interpreter {
                                   "Lorg/mozilla/javascript/Scriptable;" +
                                   "Ljava/lang/String;Ljava/lang/String;Z)",
                                   "V");
-
-            regexp.putProp(Node.REGEXP_PROP, fieldName);
             classFile.add(ByteCode.PUTFIELD,
                             classFile.fullyQualifiedForm(this.name),
                             fieldName, "Lorg/mozilla/javascript/regexp/NativeRegExp;");
         }
+    }
+
+    private static String getRegexpFieldName(int i) {
+        return "_re" + i;
     }
 
     /**
@@ -3170,8 +3165,8 @@ public class Codegen extends Interpreter {
     }
 
     private void visitObject(Node node) {
-        Node regexp = (Node) node.getProp(Node.REGEXP_PROP);
-        String fieldName = (String)(regexp.getProp(Node.REGEXP_PROP));
+        int i = node.getExistingIntProp(Node.REGEXP_PROP);
+        String fieldName = getRegexpFieldName(i);
         aload(funObjLocal);
         classFile.add(ByteCode.GETFIELD,
                         classFile.fullyQualifiedForm(this.name),

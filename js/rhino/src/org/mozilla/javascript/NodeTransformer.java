@@ -396,15 +396,14 @@ public class NodeTransformer {
 
               case TokenStream.REGEXP:
               {
-                ObjArray regexps = (ObjArray) tree.getProp(Node.REGEXP_PROP);
-                if (regexps == null) {
-                    regexps = new ObjArray();
-                    tree.putProp(Node.REGEXP_PROP, regexps);
-                }
-                regexps.add(node);
+                Node left = node.getFirstChild();
+                Node right = node.getLastChild();
+                String string = left.getString();
+                String flags = (left != right) ? right.getString() : null;
+                int index = ((ScriptOrFnNode)tree).addRegexp(string, flags);
                 Node n = new Node(TokenStream.REGEXP);
                 iter.replaceCurrent(n);
-                n.putProp(Node.REGEXP_PROP, node);
+                n.putIntProp(Node.REGEXP_PROP, index);
                 break;
               }
 
@@ -613,18 +612,14 @@ public class NodeTransformer {
     }
 
     protected VariableTable getVariableTable(Node tree) {
-        if (inFunction) {
-            return ((FunctionNode)tree).getVariableTable();
-        } else {
-            return (VariableTable)(tree.getProp(Node.VARS_PROP));
-        }
+        return ((ScriptOrFnNode)tree).getVariableTable();
     }
 
     private void
     reportError(String messageId, Object[] messageArgs, Node stmt, Node tree)
     {
         int lineno = stmt.getLineno();
-        String sourceName = (String)tree.getProp(Node.SOURCENAME_PROP);
+        String sourceName = ((ScriptOrFnNode)tree).getSourceName();
         irFactory.ts.reportSyntaxError(true, messageId, messageArgs,
                                        sourceName, lineno, null, 0);
     }

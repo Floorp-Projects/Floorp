@@ -2021,7 +2021,7 @@ public class Context {
 
         if (debugger != null) {
             if (sourceString == null) Context.codeBug();
-            tree.putProp(Node.DEBUGSOURCE_PROP, sourceString);
+            ((ScriptOrFnNode)tree).originalSource = sourceString;
         }
 
         Object result = compiler.compile(this, scope, tree,

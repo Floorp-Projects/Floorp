@@ -38,7 +38,7 @@ package org.mozilla.javascript;
 
 import java.util.*;
 
-public class FunctionNode extends Node {
+public class FunctionNode extends ScriptOrFnNode {
 
     public FunctionNode(String name) {
         super(TokenStream.FUNCTION);
@@ -47,10 +47,6 @@ public class FunctionNode extends Node {
 
     public String getFunctionName() {
         return functionName;
-    }
-
-    public VariableTable getVariableTable() {
-        return itsVariableTable;
     }
 
     protected void markVariableTableReady() { }
@@ -99,10 +95,9 @@ public class FunctionNode extends Node {
     }
 
     public int getParameterCount() {
-        return itsVariableTable.getParameterCount();
+        return getVariableTable().getParameterCount();
     }
 
-    protected VariableTable itsVariableTable;
     protected boolean itsNeedsActivation;
     protected boolean itsCheckThis;
     protected int itsFunctionType;
