@@ -21,8 +21,6 @@ DEPTH=..\..\..\..
 MAKE_OBJ_TYPE = DLL
 MODULE=messenger
 EXPORTS = \
-	nsMsgAppCore.h		\
-	nsJSMsgAppCore.h	\
 	$(NULL)
 
 DLLNAME=messenger
@@ -32,9 +30,6 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 OBJS = \
-    .\$(OBJDIR)\nsMessengerFactory.obj	\
-    .\$(OBJDIR)\nsJSMsgAppCore.obj       \
-    .\$(OBJDIR)\nsMsgAppCore.obj         \
     $(NULL)
 
 LCFLAGS = \
