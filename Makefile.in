@@ -285,13 +285,6 @@ ifdef MOZ_XPINSTALL
 tier_50_dirs     +=  xpinstall
 endif
 
-# mozapps installer needs to be built after xpinstall
-ifdef MOZ_XUL_APP
-ifdef MOZ_INSTALLER
-tier_50_dirs     +=  toolkit/mozapps/installer
-endif
-endif
-
 #
 # tier 9x - application features
 #
@@ -337,6 +330,9 @@ tier_99_dirs	+= composer
 endif
 
 ifdef MOZ_XUL_APP
+ifdef MOZ_INSTALLER
+tier_99_dirs     +=  toolkit/mozapps/installer
+endif
 else
 ifneq (,$(MOZ_XPFE_COMPONENTS)$(MOZ_XUL))
 tier_99_dirs	+= xpfe/bootstrap
