@@ -36,6 +36,8 @@
 #include "nsIWebShell.h"
 #include "nsIBox.h"
 
+#undef NOISY_SECOND_REFLOW
+
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
@@ -391,22 +393,30 @@ nsScrollFrame::CalculateScrollAreaSize(nsIPresContext&          aPresContext,
       aScrollAreaSize->width -= aSBWidth;
     }
   } else {
-    // Predict whether we'll need a vertical scrollbar
-    if (eReflowReason_Initial == aReflowState.reason) {
-      // If it's the initial reflow, then just assume we'll need the scrollbar
-      *aRoomForVerticalScrollbar = PR_TRUE;
+    if (NS_UNCONSTRAINEDSIZE == aScrollAreaSize->height) {
+      // We'll never need a vertical scroller when we have an
+      // unbounded amount of height to reflow into
+    }
+    else {
+      // Predict whether we'll need a vertical scrollbar
+      if (eReflowReason_Initial == aReflowState.reason) {
+        // If it's the initial reflow, then just assume we'll need the
+        // scrollbar
+        *aRoomForVerticalScrollbar = PR_TRUE;
 
-    } else {
-      // Just assume the current scenario.
-      // Note: an important but subtle point is that for incremental reflow
-      // we must give the frame being reflowed the same amount of available
-      // width; otherwise, it's not only just an incremental reflow but also
-      nsIScrollableView* scrollingView;
-      nsIView*           view;
-      GetView(&view);
-      if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
-        PRBool  unused;
-        scrollingView->GetScrollbarVisibility(aRoomForVerticalScrollbar, &unused);
+      } else {
+        // Just assume the current scenario.  Note: an important but
+        // subtle point is that for incremental reflow we must give
+        // the frame being reflowed the same amount of available
+        // width; otherwise, it's not only just an incremental reflow
+        // but also
+        nsIScrollableView* scrollingView;
+        nsIView*           view;
+        GetView(&view);
+        if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+          PRBool  unused;
+          scrollingView->GetScrollbarVisibility(aRoomForVerticalScrollbar, &unused);
+        }
       }
     }
 
@@ -608,6 +618,13 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   // If we're 'auto' scrolling and not shrink-wrapping our height, then see
   // whether we correctly predicted whether a vertical scrollbar is needed
+#ifdef NOISY_SECOND_REFLOW
+  ListTag(stdout);
+  printf(": childTotalSize=%d,%d scrollArea=%d,%d computedHeight=%d\n",
+         kidDesiredSize.width, kidDesiredSize.height,
+         scrollAreaSize.width, scrollAreaSize.height,
+         aReflowState.mComputedHeight);
+#endif
   if ((aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) &&
       (NS_AUTOHEIGHT != aReflowState.mComputedHeight)) {
 
@@ -623,6 +640,11 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
         kidReflowState.mComputedWidth += sbWidth;
         scrollAreaSize.width += sbWidth;
         mustReflow = PR_TRUE;
+#ifdef NOISY_SECOND_REFLOW
+        ListTag(stdout);
+        printf(": kid-height=%d < scrollArea-height=%d\n",
+               kidDesiredSize.height, scrollAreaSize.height);
+#endif
       }
     } else {
       if (kidDesiredSize.height > scrollAreaSize.height) {
@@ -632,6 +654,11 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
         kidReflowState.mComputedWidth -= sbWidth;
         scrollAreaSize.width -= sbWidth;
         mustReflow = PR_TRUE;
+#ifdef NOISY_SECOND_REFLOW
+        ListTag(stdout);
+        printf(": kid-height=%d > scrollArea-height=%d\n",
+               kidDesiredSize.height, scrollAreaSize.height);
+#endif
       }
     }
 
@@ -680,9 +707,9 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.width += sbWidth;
   }
   
-  // For the height if we're shrink wrapping then use whatever is smaller between
-  // the available height and the child's desired size; otherwise, use the scroll
-  // area size
+  // For the height if we're shrink wrapping then use whatever is
+  // smaller between the available height and the child's desired
+  // size; otherwise, use the scroll area size
   if (NS_AUTOHEIGHT == aReflowState.mComputedHeight) {
     aDesiredSize.height = PR_MIN(aReflowState.availableHeight, kidDesiredSize.height);
   } else {
