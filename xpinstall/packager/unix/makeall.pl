@@ -75,7 +75,6 @@ MakeXpiFile("langenus");
 MakeXpiFile("regus");
 MakeXpiFile("venkman");
 MakeXpiFile("inspector");
-MakeXpiFile("typeaheadfind");
 
 # Make the config.ini file
 MakeConfigFile();

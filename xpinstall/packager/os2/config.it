@@ -163,11 +163,10 @@ C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
 C9=Component DOM Inspector
-C10=Component Type Ahead Find
-C11=Component Uninstaller
+C10=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-;C12=Component QFA
+;C11=Component QFA
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -190,11 +189,10 @@ C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
 C9=Component DOM Inspector
-C10=Component Type Ahead Find
-C11=Component Uninstaller
+C10=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-;C12=Component QFA
+;C11=Component QFA
 
 
 
@@ -497,17 +495,6 @@ $InstallSize$:inspector
 $InstallSizeArchive$:inspector.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Chrome\inspector.jar
-
-[Component Type Ahead Find]
-Description Short=Type Ahead Find
-;*** LOCALIZE ME BABY ***
-Description Long=Type Ahead Find
-Archive=typeaheadfind.xpi
-$InstallSize$:typeaheadfind
-$InstallSizeSystem$
-$InstallSizeArchive$:inspector.xpi
-Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Chrome\typeaheadfind.jar
 
 [Component US English Profile Defaults]
 Description Short=US English profile defaults
