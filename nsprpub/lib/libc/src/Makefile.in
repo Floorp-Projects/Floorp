@@ -161,10 +161,6 @@ ifeq ($(OS_ARCH),HP-UX)
 else
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(dist_bindir)
 endif
-ifeq ($(OS_ARCH), OpenVMS)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(dist_libdir)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(dist_bindir)
-endif
 endif
 ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/lib
