@@ -74,7 +74,8 @@ public:
 #endif
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout);
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                          nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
                           nsReflowMetrics&     aDesiredSize,
                           const nsReflowState& aReflowState);
@@ -88,6 +89,8 @@ protected:
   virtual ~nsCSSInlineFrame();
 
   virtual PRIntn GetSkipSides() const;
+
+  nsresult InitialReflow(nsCSSInlineReflowState& aState);
 
   nsresult FrameAppendedReflow(nsCSSInlineReflowState& aState);
 
@@ -107,13 +110,15 @@ protected:
   nsIFrame* PullOneChild(nsCSSInlineFrame* aNextInFlow,
                          nsIFrame*         aLastChild);
 
-  nsresult CreateNewFrames(nsCSSLineLayout& aState);
+  nsresult CreateNewFrames(nsIPresContext* aPresContext);
 
   nsresult MaybeCreateNextInFlow(nsCSSInlineReflowState& aState,
                                  nsIFrame*               aFrame);
 
   void PushKids(nsCSSInlineReflowState& aState,
                 nsIFrame* aPrevChild, nsIFrame* aPushedChild);
+
+  void DrainOverflowLists();
 
   friend nsresult NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
                                        nsIContent* aContent,
