@@ -1284,21 +1284,15 @@ nsGlobalHistory::IsVisited(nsIURI* aURI, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::GetLastPageVisited(char **_retval)
+nsGlobalHistory::GetLastPageVisited(nsACString& _retval)
 { 
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
 
-  NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_STATE(mMetaRow);
 
-
-  nsCAutoString lastPageVisited;
-  mdb_err err = GetRowValue(mMetaRow, kToken_LastPageVisited, lastPageVisited);
+  mdb_err err = GetRowValue(mMetaRow, kToken_LastPageVisited, _retval);
   NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
   
-  *_retval = ToNewCString(lastPageVisited);
-  NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
-
   return NS_OK;
 }
 
