@@ -47,6 +47,8 @@
         title="&viewLog.title;"
         windowtype="mailnews:filterlog"
         buttons="accept"
+        buttonlabelaccept="&closeLog.label;"
+        buttonaccesskeyaccept="&closeLog.accesskey;"
         ondialogaccept="window.close()"
         persist="screenX screenY width height">
 

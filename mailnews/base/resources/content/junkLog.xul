@@ -10,6 +10,8 @@
         title="&junkLog.title;"
         windowtype="mailnews:junklog"
         buttons="accept"
+        buttonlabelaccept="&closeLog.label;"
+        buttonaccesskeyaccept="&closeLog.accesskey;"
         ondialogaccept="window.close()"
         persist="screenX screenY width height">
 
