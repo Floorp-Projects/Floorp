@@ -2950,315 +2950,6 @@ PRIntervalTime _PR_UNIX_TicksPerSecond()
     return 1000;  /* this needs some work :) */
 }
 
-/*
- * _PR_UnixSendFile
- *
- *    Send file sfd->fd across socket sd. If header/trailer are specified
- *    they are sent before and after the file, respectively.
- *
- *    PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
- *    
- *    return number of bytes sent or -1 on error
- *
- */
-#define SENDFILE_MMAP_CHUNK    (256 * 1024)
-
-PR_IMPLEMENT(PRInt32) _PR_UnixSendFile(PRFileDesc *sd,
-PRSendFileData *sfd,
-PRTransmitFileFlags flags, PRIntervalTime timeout)
-{
-    PRInt32 rv, count = 0;
-    PRInt32 len, file_bytes, index = 0;
-    struct stat statbuf;
-    struct PRIOVec iov[3];
-    void *addr;
-	PRUint32 file_mmap_offset, pagesize;
-	PRUint32 addr_offset, mmap_len;
-
-    /* Get file size */
-    if (fstat(sfd->fd->secret->md.osfd, &statbuf) == -1) {
-        _PR_MD_MAP_FSTAT_ERROR(_MD_ERRNO());
-        count = -1;
-        goto done;
-    }
-    if (sfd->file_nbytes && (statbuf.st_size <
-							(sfd->file_offset + sfd->file_nbytes))) {
-		/*
-		 * there are fewer bytes in file to send than specified
-		 */
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-		count = -1;
-		goto done;
-	}
-	if (sfd->file_nbytes)
-		file_bytes = sfd->file_nbytes;
-	else
-		file_bytes = statbuf.st_size - sfd->file_offset;
-
-	pagesize = PR_GetPageSize();
-	/*
-	 * If the file is large, mmap and send the file in chunks so as
-	 * to not consume too much virtual address space
-	 */
-	if ((sfd->file_offset == 0) ||
-			((sfd->file_offset & (pagesize - 1)) == 0)) {
-		/*
-		 * case 1: page-aligned file offset
-		 */
-		mmap_len = file_bytes < SENDFILE_MMAP_CHUNK ? file_bytes :
-			SENDFILE_MMAP_CHUNK;
-		
-		len = mmap_len;
-		file_mmap_offset = sfd->file_offset;
-		addr_offset = 0;
-	} else {
-		/*
-		 * case 2: non page-aligned file offset
-		 */
-		/* find previous page boundary */
-		file_mmap_offset = (sfd->file_offset & ~(pagesize - 1));
-
-		/* number of initial bytes to skip in mmap'd segment */
-		addr_offset = sfd->file_offset - file_mmap_offset;
-		PR_ASSERT(addr_offset > 0);
-		mmap_len = (file_bytes + addr_offset) < SENDFILE_MMAP_CHUNK ?
-						(file_bytes + addr_offset) : SENDFILE_MMAP_CHUNK;
-		len = mmap_len - addr_offset;
-	}
-	/*
-	 * Map in (part of) file. Take care of zero-length files.
-	 */
-	if (len) {
-#ifdef OSF1
-		/*
-		 * Use MAP_SHARED to work around a bug in OSF1 that results in
-		 * corrupted data in the memory-mapped region
-		 */
-		addr = mmap((caddr_t) 0, mmap_len, PROT_READ, MAP_SHARED,
-			sfd->fd->secret->md.osfd, file_mmap_offset);
-#else
-		addr = mmap((caddr_t) 0, mmap_len, PROT_READ, MAP_PRIVATE,
-			sfd->fd->secret->md.osfd, file_mmap_offset);
-#endif
-
-		if (addr == (void*)-1) {
-			_PR_MD_MAP_MMAP_ERROR(_MD_ERRNO());
-			count = -1;
-			goto done;
-		}
-	}
-	/*
-	 * send headers, first, followed by the file
-	 */
-	if (sfd->hlen) {
-		iov[index].iov_base = (char *) sfd->header;
-		iov[index].iov_len = sfd->hlen;
-		index++;
-	}
-	if (len) {
-		iov[index].iov_base = (char*)addr + addr_offset;
-		iov[index].iov_len = len;
-		index++;
-	}
-	if ((file_bytes == len) && (sfd->tlen)) {
-		/*
-		 * all file data is mapped in; send the trailer too
-		 */
-		iov[index].iov_base = (char *) sfd->trailer;
-		iov[index].iov_len = sfd->tlen;
-		index++;
-	}
-	rv = PR_Writev(sd, iov, index, timeout);
-	if (len)
-		munmap(addr,mmap_len);
-	if (rv >= 0) {
-		PR_ASSERT((len == file_bytes) || (rv == sfd->hlen + len));
-		PR_ASSERT((len != file_bytes) ||
-								(rv == sfd->hlen + len + sfd->tlen));
-		file_bytes -= len;
-		count += rv;
-		if (0 == file_bytes)	/* header, file and trailer are sent */
-			goto done;
-	} else {
-		count = -1;
-		goto done;
-	}
-    /*
-     * send remaining bytes of the file, if any
-     */
-    len = file_bytes < SENDFILE_MMAP_CHUNK ? file_bytes :
-        SENDFILE_MMAP_CHUNK;
-    while (len > 0) {
-        /*
-         * Map in (part of) file
-         */
-        file_mmap_offset = sfd->file_offset + count - sfd->hlen;
-        PR_ASSERT((file_mmap_offset % pagesize) == 0);
-#ifdef OSF1
-		/*
-		 * Use MAP_SHARED to work around a bug in OSF1 that results in
-		 * corrupted data in the memory-mapped region
-		 */
-        addr = mmap((caddr_t) 0, len, PROT_READ, MAP_SHARED,
-                sfd->fd->secret->md.osfd, file_mmap_offset);
-#else
-        addr = mmap((caddr_t) 0, len, PROT_READ, MAP_PRIVATE,
-                sfd->fd->secret->md.osfd, file_mmap_offset);
-#endif
-
-        if (addr == (void*)-1) {
-            _PR_MD_MAP_MMAP_ERROR(_MD_ERRNO());
-            count = -1;
-            goto done;
-        }
-        rv =  PR_Send(sd, addr, len, 0, timeout);
-        munmap(addr,len);
-        if (rv >= 0) {
-            PR_ASSERT(rv == len);
-            file_bytes -= rv;
-            count += rv;
-            len = file_bytes < SENDFILE_MMAP_CHUNK ?
-                file_bytes : SENDFILE_MMAP_CHUNK;
-        } else {
-            count = -1;
-            goto done;
-        }
-    }
-    PR_ASSERT(0 == file_bytes);
-	if (sfd->tlen) {
-		rv =  PR_Send(sd, sfd->trailer, sfd->tlen, 0, timeout);
-		if (rv >= 0) {
-			PR_ASSERT(rv == sfd->tlen);
-			count += rv;
-		} else
-			count = -1;
-	}		
-done:
-    if ((count >= 0) && (flags & PR_TRANSMITFILE_CLOSE_SOCKET))
-        PR_Close(sd);
-    return count;
-}
-
-#if defined(HPUX11) && !defined(_PR_PTHREADS)
-
-/*
- * _PR_HPUXTransmitFile
- *
- *    Send file fd across socket sd. If headers is non-NULL, 'hlen'
- *    bytes of headers is sent before sending the file.
- *
- *    PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
- *    
- *    return number of bytes sent or -1 on error
- *
- *      This implementation takes advantage of the sendfile() system
- *      call available in HP-UX B.11.00.
- *
- * Known problem: sendfile() does not work with NSPR's malloc()
- * functions.  The reason is unknown.  So if you want to use
- * _PR_HPUXTransmitFile(), you must not override the native malloc()
- * functions.
- */
-
-PRInt32
-_PR_HPUXTransmitFile(PRFileDesc *sd, PRFileDesc *fd, 
-    const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
-    PRIntervalTime timeout)
-{
-    struct stat statbuf;
-    PRInt32 nbytes_to_send;
-    off_t offset;
-    struct iovec hdtrl[2];  /* optional header and trailer buffers */
-    int send_flags;
-    PRInt32 count;
-    PRInt32 rv, err;
-    PRThread *me = _PR_MD_CURRENT_THREAD();
-
-    /* Get file size */
-    if (fstat(fd->secret->md.osfd, &statbuf) == -1) {
-        _PR_MD_MAP_FSTAT_ERROR(errno);
-        return -1;
-    }
-    nbytes_to_send = hlen + statbuf.st_size;
-    offset = 0;
-
-    hdtrl[0].iov_base = (void *) headers;  /* cast away the 'const' */
-    hdtrl[0].iov_len = hlen;
-    hdtrl[1].iov_base = NULL;
-    hdtrl[1].iov_base = 0;
-    /*
-     * SF_DISCONNECT seems to disconnect the socket even if sendfile()
-     * only does a partial send on a nonblocking socket.  This
-     * would prevent the subsequent sendfile() calls on that socket
-     * from working.  So we don't use the SD_DISCONNECT flag.
-     */
-    send_flags = 0;
-    rv = 0;
-
-    while (1) {
-        count = sendfile(sd->secret->md.osfd, fd->secret->md.osfd,
-                offset, 0, hdtrl, send_flags);
-        PR_ASSERT(count <= nbytes_to_send);
-        if (count == -1) {
-            err = errno;
-            if (err == EINTR) {
-                if (_PR_PENDING_INTERRUPT(me)) {
-                    me->flags &= ~_PR_INTERRUPT;
-                    PR_SetError( PR_PENDING_INTERRUPT_ERROR, 0);
-                    return -1;
-                }
-                continue;  /* retry */
-            }
-        if (err != EAGAIN && err != EWOULDBLOCK) {
-                _MD_hpux_map_sendfile_error(err);
-                return -1;
-            }
-            count = 0;
-        }
-        rv += count;
-
-        if (count < nbytes_to_send) {
-            /*
-             * Optimization: if bytes sent is less than requested, call
-             * select before returning. This is because it is likely that
-             * the next sendfile() call will return EWOULDBLOCK.
-             */
-            if (!_PR_IS_NATIVE_THREAD(me)) {
-				if ((rv = local_io_wait(sd->secret->md.osfd,
-									_PR_UNIX_POLL_WRITE, timeout)) < 0)
-                    return -1;
-            } else {
-                if (socket_io_wait(sd->secret->md.osfd, WRITE_FD, timeout)< 0) {
-                    return -1;
-                }
-            }
-
-            if (hdtrl[0].iov_len == 0) {
-                PR_ASSERT(hdtrl[0].iov_base == NULL);
-                offset += count;
-            } else if (count < hdtrl[0].iov_len) {
-                PR_ASSERT(offset == 0);
-                hdtrl[0].iov_base = (char *) hdtrl[0].iov_base + count;
-                hdtrl[0].iov_len -= count;
-            } else {
-                offset = count - hdtrl[0].iov_len;
-                hdtrl[0].iov_base = NULL;
-                hdtrl[0].iov_len = 0;
-            }
-            nbytes_to_send -= count;
-        } else {
-            break;  /* done */
-        }
-    }
-
-    if (flags & PR_TRANSMITFILE_CLOSE_SOCKET) {
-        PR_Close(sd);
-    }
-    return rv;
-}
-
-#endif /* HPUX11 && !_PR_PTHREADS */
-
 #if !defined(_PR_PTHREADS)
 /*
  * Wait for I/O on multiple descriptors.
@@ -3746,34 +3437,44 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
     LL_L2UI(sz, size);
     if (sz) {
         if (PR_GetOpenFileInfo(fmap->fd, &info) == PR_FAILURE) {
-        return PR_FAILURE;
+            return PR_FAILURE;
         }
         if (sz > info.size) {
             /*
              * Need to extend the file
              */
             if (fmap->prot != PR_PROT_READWRITE) {
-            PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, 0);
-            return PR_FAILURE;
+                PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, 0);
+                return PR_FAILURE;
             }
             if (PR_Seek(fmap->fd, sz - 1, PR_SEEK_SET) == -1) {
-            return PR_FAILURE;
+                return PR_FAILURE;
             }
             if (PR_Write(fmap->fd, "", 1) != 1) {
-            return PR_FAILURE;
+                return PR_FAILURE;
             }
-    }
+        }
     }
     if (fmap->prot == PR_PROT_READONLY) {
-    fmap->md.prot = PROT_READ;
-    fmap->md.flags = MAP_PRIVATE;
+        fmap->md.prot = PROT_READ;
+#ifdef OSF1V4_MAP_PRIVATE_BUG
+        /*
+         * Use MAP_SHARED to work around a bug in OSF1 V4.0D
+         * (QAR 70220 in the OSF_QAR database) that results in
+         * corrupted data in the memory-mapped region.  This
+         * bug is fixed in V5.0.
+         */
+        fmap->md.flags = MAP_SHARED;
+#else
+        fmap->md.flags = MAP_PRIVATE;
+#endif
     } else if (fmap->prot == PR_PROT_READWRITE) {
-    fmap->md.prot = PROT_READ | PROT_WRITE;
-    fmap->md.flags = MAP_SHARED;
+        fmap->md.prot = PROT_READ | PROT_WRITE;
+        fmap->md.flags = MAP_SHARED;
     } else {
-    PR_ASSERT(fmap->prot == PR_PROT_WRITECOPY);
-    fmap->md.prot = PROT_READ | PROT_WRITE;
-    fmap->md.flags = MAP_PRIVATE;
+        PR_ASSERT(fmap->prot == PR_PROT_WRITECOPY);
+        fmap->md.prot = PROT_READ | PROT_WRITE;
+        fmap->md.flags = MAP_PRIVATE;
     }
     return PR_SUCCESS;
 }

@@ -1110,9 +1110,6 @@ extern PRInt32 _PR_MD_ACCEPT_READ(PRFileDesc *sd, PRInt32 *newSock,
                                 PRNetAddr **raddr, void *buf, PRInt32 amount,
                                 PRIntervalTime timeout);
 #define _PR_MD_ACCEPT_READ _MD_ACCEPT_READ
-extern PRInt32 _PR_EmulateAcceptRead(PRFileDesc *sd, PRFileDesc **nd,
-              PRNetAddr **raddr, void *buf, PRInt32 amount,
-              PRIntervalTime timeout);
 
 #ifdef WIN32
 extern PRInt32 _PR_MD_FAST_ACCEPT(PRFileDesc *fd, PRNetAddr *addr, 
@@ -1135,8 +1132,6 @@ extern PRInt32 _PR_MD_SENDFILE(
     PRFileDesc *sock, PRSendFileData *sfd, 
 	PRInt32 flags, PRIntervalTime timeout);
 #define _PR_MD_SENDFILE _MD_SENDFILE
-extern PRInt32 _PR_EmulateSendFile(PRFileDesc *sd, PRSendFileData *sfd,
-			  PRTransmitFileFlags flags, PRIntervalTime timeout);
 
 extern PRStatus _PR_MD_GETSOCKNAME(
     PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen);

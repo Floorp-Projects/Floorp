@@ -214,11 +214,6 @@ extern PRIntervalTime _PR_HPUX_LW_GetInterval(void);
 
 #ifdef HPUX11
 extern void _MD_hpux_map_sendfile_error(int err);
-#if !defined(_PR_PTHREADS)
-extern PRInt32 _PR_HPUXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
-        const void *headers, PRInt32 hlen,
-        PRTransmitFileFlags flags, PRIntervalTime timeout);
-#endif /* !_PR_PTHREADS */
 #endif /* HPUX11 */
 
 #endif /* nspr_xhppa_defs_h___ */

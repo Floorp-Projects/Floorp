@@ -265,4 +265,343 @@ PR_IMPLEMENT(PRInt32) PR_SendFile(
 {
 	return((sd->methods->sendfile)(sd,sfd,flags,timeout));
 }
+
+PR_IMPLEMENT(PRInt32) PR_EmulateAcceptRead(
+    PRFileDesc *sd, PRFileDesc **nd, PRNetAddr **raddr,
+    void *buf, PRInt32 amount, PRIntervalTime timeout)
+{
+    PRInt32 rv = -1;
+    PRNetAddr remote;
+    PRFileDesc *accepted = NULL;
+
+    /*
+    ** The timeout does not apply to the accept portion of the
+    ** operation - it waits indefinitely.
+    */
+    accepted = PR_Accept(sd, &remote, PR_INTERVAL_NO_TIMEOUT);
+    if (NULL == accepted) return rv;
+
+    rv = PR_Recv(accepted, buf, amount, 0, timeout);
+    if (rv >= 0)
+    {
+        /* copy the new info out where caller can see it */
+        enum { AMASK = 7 };  /* mask for alignment of PRNetAddr */
+        PRPtrdiff aligned = (PRPtrdiff)buf + amount + AMASK;
+        *raddr = (PRNetAddr*)(aligned & ~AMASK);
+        memcpy(*raddr, &remote, PR_NETADDR_SIZE(&remote));
+        *nd = accepted;
+        return rv;
+    }
+
+    PR_Close(accepted);
+    return rv;
+}
+
+/*
+ * PR_EmulateSendFile
+ *
+ *    Send file sfd->fd across socket sd. If header/trailer are specified
+ *    they are sent before and after the file, respectively.
+ *
+ *    PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
+ *    
+ *    return number of bytes sent or -1 on error
+ *
+ */
+
+#if defined(XP_UNIX) || defined(WIN32)
+
+/*
+ * An implementation based on memory-mapped files
+ */
+
+#define SENDFILE_MMAP_CHUNK	(256 * 1024)
+
+PR_IMPLEMENT(PRInt32) PR_EmulateSendFile(
+    PRFileDesc *sd, PRSendFileData *sfd,
+    PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+    PRInt32 rv, count = 0;
+    PRInt32 len, file_bytes, index = 0;
+    PRFileInfo info;
+    PRIOVec iov[3];
+    PRFileMap *mapHandle = NULL;
+    void *addr;
+    PRUint32 file_mmap_offset, pagesize;
+    PRUint32 addr_offset, mmap_len;
+
+    /* Get file size */
+    if (PR_SUCCESS != PR_GetOpenFileInfo(sfd->fd, &info)) {
+        count = -1;
+        goto done;
+    }
+    if (sfd->file_nbytes &&
+            (info.size < (sfd->file_offset + sfd->file_nbytes))) {
+        /*
+         * there are fewer bytes in file to send than specified
+         */
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        count = -1;
+        goto done;
+    }
+    if (sfd->file_nbytes)
+        file_bytes = sfd->file_nbytes;
+    else
+        file_bytes = info.size - sfd->file_offset;
+
+    pagesize = PR_GetPageSize();
+    /*
+     * If the file is large, mmap and send the file in chunks so as
+     * to not consume too much virtual address space
+     */
+    if (!sfd->file_offset || !(sfd->file_offset & (pagesize - 1))) {
+        /*
+         * case 1: page-aligned file offset
+         */
+        mmap_len = PR_MIN(file_bytes, SENDFILE_MMAP_CHUNK);
+        len = mmap_len;
+        file_mmap_offset = sfd->file_offset;
+        addr_offset = 0;
+    } else {
+        /*
+         * case 2: non page-aligned file offset
+         */
+        /* find previous page boundary */
+        file_mmap_offset = (sfd->file_offset & ~(pagesize - 1));
+
+        /* number of initial bytes to skip in mmap'd segment */
+        addr_offset = sfd->file_offset - file_mmap_offset;
+        PR_ASSERT(addr_offset > 0);
+        mmap_len = PR_MIN(file_bytes + addr_offset, SENDFILE_MMAP_CHUNK);
+        len = mmap_len - addr_offset;
+    }
+    /*
+     * Map in (part of) file. Take care of zero-length files.
+     */
+    if (len) {
+        mapHandle = PR_CreateFileMap(sfd->fd, 0, PR_PROT_READONLY);
+        if (!mapHandle) {
+            count = -1;
+            goto done;
+        }
+        addr = PR_MemMap(mapHandle, file_mmap_offset, mmap_len);
+        if (!addr) {
+            count = -1;
+            goto done;
+        }
+    }
+    /*
+     * send headers first, followed by the file
+     */
+    if (sfd->hlen) {
+        iov[index].iov_base = (char *) sfd->header;
+        iov[index].iov_len = sfd->hlen;
+        index++;
+    }
+    if (len) {
+        iov[index].iov_base = (char*)addr + addr_offset;
+        iov[index].iov_len = len;
+        index++;
+    }
+    if ((file_bytes == len) && (sfd->tlen)) {
+        /*
+         * all file data is mapped in; send the trailer too
+         */
+        iov[index].iov_base = (char *) sfd->trailer;
+        iov[index].iov_len = sfd->tlen;
+        index++;
+    }
+    rv = PR_Writev(sd, iov, index, timeout);
+    if (len)
+        PR_MemUnmap(addr, mmap_len);
+    if (rv < 0) {
+        count = -1;
+        goto done;
+    }
+
+    PR_ASSERT(rv == sfd->hlen + len + ((len == file_bytes) ? sfd->tlen : 0));
+
+    file_bytes -= len;
+    count += rv;
+    if (!file_bytes)    /* header, file and trailer are sent */
+        goto done;
+
+    /*
+     * send remaining bytes of the file, if any
+     */
+    len = PR_MIN(file_bytes, SENDFILE_MMAP_CHUNK);
+    while (len > 0) {
+        /*
+         * Map in (part of) file
+         */
+        file_mmap_offset = sfd->file_offset + count - sfd->hlen;
+        PR_ASSERT((file_mmap_offset % pagesize) == 0);
+
+        addr = PR_MemMap(mapHandle, file_mmap_offset, len);
+        if (!addr) {
+            count = -1;
+            goto done;
+        }
+        rv = PR_Send(sd, addr, len, 0, timeout);
+        PR_MemUnmap(addr, len);
+        if (rv < 0) {
+            count = -1;
+            goto done;
+        }
+
+        PR_ASSERT(rv == len);
+        file_bytes -= rv;
+        count += rv;
+        len = PR_MIN(file_bytes, SENDFILE_MMAP_CHUNK);
+    }
+    PR_ASSERT(0 == file_bytes);
+    if (sfd->tlen) {
+        rv = PR_Send(sd, sfd->trailer, sfd->tlen, 0, timeout);
+        if (rv >= 0) {
+            PR_ASSERT(rv == sfd->tlen);
+            count += rv;
+        } else
+            count = -1;
+    }
+done:
+    if (mapHandle)
+        PR_CloseFileMap(mapHandle);
+    if ((count >= 0) && (flags & PR_TRANSMITFILE_CLOSE_SOCKET))
+        PR_Close(sd);
+    return count;
+}
+
+#else
+
+PR_IMPLEMENT(PRInt32) PR_EmulateSendFile(
+    PRFileDesc *sd, PRSendFileData *sfd,
+    PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+    PRInt32 rv, count = 0;
+    PRInt32 rlen;
+    const void * buffer;
+    PRInt32 buflen;
+    PRInt32 sendbytes, readbytes;
+    char *buf;
+
+#define _SENDFILE_BUFSIZE   (16 * 1024)
+
+    buf = (char*)PR_MALLOC(_SENDFILE_BUFSIZE);
+    if (buf == NULL) {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return -1;
+    }
+
+    /*
+     * send header first
+     */
+    buflen = sfd->hlen;
+    buffer = sfd->header;
+    while (buflen) {
+        rv = PR_Send(sd, buffer, buflen, 0, timeout);
+        if (rv < 0) {
+            /* PR_Send() has invoked PR_SetError(). */
+            rv = -1;
+            goto done;
+        } else {
+            count += rv;
+            buffer = (const void*) ((const char*)buffer + rv);
+            buflen -= rv;
+        }
+    }
+
+    /*
+     * send file next
+     */
+    if (PR_Seek(sfd->fd, sfd->file_offset, PR_SEEK_SET) < 0) {
+        rv = -1;
+        goto done;
+    }
+    sendbytes = sfd->file_nbytes;
+    if (sendbytes == 0) {
+        /* send entire file */
+        while ((rlen = PR_Read(sfd->fd, buf, _SENDFILE_BUFSIZE)) > 0) {
+            while (rlen) {
+                char *bufptr = buf;
+
+                rv =  PR_Send(sd, bufptr, rlen, 0, timeout);
+                if (rv < 0) {
+                    /* PR_Send() has invoked PR_SetError(). */
+                    rv = -1;
+                    goto done;
+                } else {
+                    count += rv;
+                    bufptr = ((char*)bufptr + rv);
+                    rlen -= rv;
+                }
+            }
+        }
+        if (rlen < 0) {
+            /* PR_Read() has invoked PR_SetError(). */
+            rv = -1;
+            goto done;
+        }
+    } else {
+        readbytes = PR_MIN(sendbytes, _SENDFILE_BUFSIZE);
+        while (readbytes && ((rlen = PR_Read(sfd->fd, buf, readbytes)) > 0)) {
+            while (rlen) {
+                char *bufptr = buf;
+
+                rv =  PR_Send(sd, bufptr, rlen, 0, timeout);
+                if (rv < 0) {
+                    /* PR_Send() has invoked PR_SetError(). */
+                    rv = -1;
+                    goto done;
+                } else {
+                    count += rv;
+                    sendbytes -= rv;
+                    bufptr = ((char*)bufptr + rv);
+                    rlen -= rv;
+                }
+            }
+            readbytes = PR_MIN(sendbytes, _SENDFILE_BUFSIZE);
+        }
+        if (rlen < 0) {
+            /* PR_Read() has invoked PR_SetError(). */
+            rv = -1;
+            goto done;
+        } else if (sendbytes != 0) {
+            /*
+             * there are fewer bytes in file to send than specified
+             */
+            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+            rv = -1;
+            goto done;
+        }
+    }
+
+    /*
+     * send trailer last
+     */
+    buflen = sfd->tlen;
+    buffer = sfd->trailer;
+    while (buflen) {
+        rv =  PR_Send(sd, buffer, buflen, 0, timeout);
+        if (rv < 0) {
+            /* PR_Send() has invoked PR_SetError(). */
+            rv = -1;
+            goto done;
+        } else {
+            count += rv;
+            buffer = (const void*) ((const char*)buffer + rv);
+            buflen -= rv;
+        }
+    }
+    rv = count;
+
+done:
+    if (buf)
+        PR_DELETE(buf);
+    if ((rv >= 0) && (flags & PR_TRANSMITFILE_CLOSE_SOCKET))
+        PR_Close(sd);
+    return rv;
+}
+
+#endif
+
 /* priometh.c */

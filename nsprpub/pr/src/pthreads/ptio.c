@@ -1835,7 +1835,7 @@ static PRInt32 pt_AIXDispatchSendFile(PRFileDesc *sd, PRSendFileData *sfd,
     if (pt_aix_sendfile_fptr) {
         return pt_AIXSendFile(sd, sfd, flags, timeout);
     } else {
-        return _PR_UnixSendFile(sd, sfd, flags, timeout);
+        return PR_EmulateSendFile(sd, sfd, flags, timeout);
     }
 }
 #endif /* !HAVE_SEND_FILE */
@@ -2083,15 +2083,15 @@ static PRInt32 pt_SendFile(
 	 * NSPR_AIX_SEND_FILE_USE_DISABLED to 1.
 	 */
 	if (_pr_aix_send_file_use_disabled)
-		return(_PR_UnixSendFile(sd, sfd, flags, timeout));
+		return(PR_EmulateSendFile(sd, sfd, flags, timeout));
 	else
     	return(pt_AIXSendFile(sd, sfd, flags, timeout));
 #else
-	return(_PR_UnixSendFile(sd, sfd, flags, timeout));
+	return(PR_EmulateSendFile(sd, sfd, flags, timeout));
     /* return(pt_AIXDispatchSendFile(sd, sfd, flags, timeout));*/
 #endif /* HAVE_SEND_FILE */
 #else
-	return(_PR_UnixSendFile(sd, sfd, flags, timeout));
+	return(PR_EmulateSendFile(sd, sfd, flags, timeout));
 #endif
 }
 
@@ -2112,17 +2112,11 @@ static PRInt32 pt_TransmitFile(
 	return(pt_SendFile(sd, &sfd, flags, timeout));
 }  /* pt_TransmitFile */
 
-/*
- * XXX: When IPv6 is running, we need to see if this code works
- * with a PRNetAddr structure that supports both IPv4 and IPv6.
- */
 static PRInt32 pt_AcceptRead(
     PRFileDesc *sd, PRFileDesc **nd, PRNetAddr **raddr,
     void *buf, PRInt32 amount, PRIntervalTime timeout)
 {
     PRInt32 rv = -1;
-    PRNetAddr remote;
-    PRFileDesc *accepted = NULL;
 
     if (pt_TestAbort()) return rv;
     /* The socket must be in blocking mode. */
@@ -2132,26 +2126,7 @@ static PRInt32 pt_AcceptRead(
         return rv;
     }
 
-    /*
-    ** The timeout does not apply to the accept portion of the
-    ** operation - it waits indefinitely.
-    */
-    accepted = PR_Accept(sd, &remote, PR_INTERVAL_NO_TIMEOUT);
-    if (NULL == accepted) return rv;
-
-    rv = PR_Recv(accepted, buf, amount, 0, timeout);
-    if (rv >= 0)
-    {
-        /* copy the new info out where caller can see it */
-        enum { AMASK = 7 };  /* mask for alignment of PRNetAddr */
-        PRPtrdiff aligned = (PRPtrdiff)buf + amount + AMASK;
-        *raddr = (PRNetAddr*)(aligned & ~AMASK);
-        memcpy(*raddr, &remote, PR_NETADDR_SIZE(&remote));
-        *nd = accepted;
-        return rv;
-    }
-
-    PR_Close(accepted);
+    rv = PR_EmulateAcceptRead(sd, nd, raddr, buf, amount, timeout);
     return rv;
 }  /* pt_AcceptRead */
 
