@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.48 2003/06/28 17:13:45 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.49 2003/06/30 21:11:00 jake%bugzilla.org Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -1036,24 +1036,21 @@ man 5 crontab
       installation has a good backup before making changes, and I recommend
       you understand what the script is doing before executing it.</para>
 
-      <para>
-        <programlisting>
-bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; charset=ISO-8859-1/i" *.cgi *.pl
-        </programlisting>
+      <para>Telling Bugzilla to output a charset as part of the HTTP header is
+      much easier in version 2.18 and higher<![%bz-devel;[ (including any cvs
+      pull after 4-May-2003 and development release after 2.17.5)]]>. Simply
+      locatate the following line in <filename>Bugzilla/CGI.pm</filename>:
+      <programlisting>
+    # Make sure that we don't send any charset headers
+    $self->charset('');
+      </programlisting>
+      and change it to:
+      <programlisting>
+    # Send all data using the ISO-8859-1 charset
+    $self->charset('ISO-8859-1');
+      </programlisting>
       </para>
 
-      <para>All this one-liner command does is search for all instances of 
-      <quote>Content-type: text/html</quote>
-
-      and replaces it with 
-      <quote>Content-Type: text/html; charset=ISO-8859-1</quote>
-
-      . This specification prevents possible Javascript attacks on the
-      browser, and is suggested for all English-speaking sites. For
-      non-English-speaking Bugzilla sites, I suggest changing 
-      <quote>ISO-8859-1</quote>, above, to 
-      <quote>UTF-8</quote>.</para>
-      
       <note>
         <para>Using &lt;meta&gt; tags to set the charset is not
         recommended, as there's a bug in Netscape 4.x which causes pages
