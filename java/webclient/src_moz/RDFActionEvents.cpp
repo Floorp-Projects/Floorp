@@ -116,7 +116,7 @@ wsNewRDFNodeEvent::handleEvent ()
     // PENDING(edburns): does this leak? 
     PRUnichar *uriUni = ToNewUnicode(uri);
     
-    rv = gRDF->GetUnicodeResource(uriUni, getter_AddRefs(newNode));
+    rv = gRDF->GetUnicodeResource(nsDependentString(uriUni), getter_AddRefs(newNode));
     nsCRT::free(uriUni);
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't create new nsIRDFResource.");

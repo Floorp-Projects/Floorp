@@ -39,7 +39,7 @@
 #include "prprf.h" // for PR_snprintf
 #include "nsReadableUtils.h" 
 #include "nsXPIDLString.h" 
-#include "nsFileSpec.h" // for nsAutoCString
+#include "nsCRT.h"
 
 #include "dom_util.h"
 
@@ -56,7 +56,8 @@ CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
     m_pOwner(pOwner), mJNIEnv(env), mInitContext(yourInitContext), 
     mDocTarget(nsnull), mMouseTarget(nsnull), mPrompt(nsnull),
     mDomEventTarget(nsnull), inverseDepth(-1), 
-    properties(nsnull), currentDOMEvent(nsnull)
+    properties(nsnull), currentDOMEvent(nsnull),
+    mBlurSuppressionLevel(0)
 {
   	NS_INIT_ISUPPORTS();
     // initialize the string constants (including properties keys)
@@ -1163,6 +1164,28 @@ NS_IMETHODIMP
 CBrowserContainer::SetTitle(const PRUnichar * aTitle)
 {
 	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CBrowserContainer::SetBlurSuppression(PRBool aBlurSuppression)
+{
+        if (aBlurSuppression)
+           ++mBlurSuppressionLevel;
+        else
+        {
+           NS_ASSERTION(mBlurSuppressionLevel > 0, "blur over-allowed");
+           if (mBlurSuppressionLevel > 0)
+              --mBlurSuppressionLevel;
+        }
+        return NS_OK;
+}
+
+NS_IMETHODIMP
+CBrowserContainer::GetBlurSuppression(PRBool *aBlurSuppression)
+{
+        NS_ENSURE_ARG_POINTER(aBlurSuppression);
+        *aBlurSuppression = (mBlurSuppressionLevel > 0);
+        return NS_OK;
 }
 
 

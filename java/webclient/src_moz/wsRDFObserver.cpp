@@ -99,12 +99,12 @@ NS_IMETHODIMP wsRDFObserver::OnMove(nsIRDFDataSource *aDataSource,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP wsRDFObserver::BeginUpdateBatch(nsIRDFDataSource *aDataSource)
+NS_IMETHODIMP wsRDFObserver::OnBeginUpdateBatch(nsIRDFDataSource *aDataSource)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP wsRDFObserver::EndUpdateBatch(nsIRDFDataSource *aDataSource)
+NS_IMETHODIMP wsRDFObserver::OnEndUpdateBatch(nsIRDFDataSource *aDataSource)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -89,6 +89,7 @@ protected:
   jobject mMouseTarget;
   jobject mPrompt;
   nsCOMPtr<nsIDOMEventTarget> mDomEventTarget;
+  PRInt32 mBlurSuppressionLevel;
   static PRInt32 mInstanceCount;
 
 //
@@ -96,25 +97,19 @@ protected:
 //
     
 /**
-
  * 0 is the leaf depth.  That's why we call it the inverse depth.
-
  */
 
     PRInt32 inverseDepth;
 
 /**
-
  * The properties table, created during a mouseEvent handler
-
  */
 
     jobject properties;
 
 /**
-
  * the nsIDOMEvent in the current event
-
  */
 
     nsCOMPtr<nsIDOMEvent> currentDOMEvent;
@@ -157,33 +152,29 @@ public:
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
                           const PRUnichar* aURL);
   
-  
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
                         const PRUnichar* aURL,
                         nsresult aStatus);
 
 protected:
-//
-// Local methods
-//
-jobject JNICALL getPropertiesFromEvent(nsIDOMEvent *aMouseEvent);
+  //
+  // Local methods
+  //
+  jobject JNICALL getPropertiesFromEvent(nsIDOMEvent *aMouseEvent);
 
-void JNICALL addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent);
+  void JNICALL addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent);
 
-/**
-
+  /**
  * Called from our nsIWebProgressListener.OnStateChanged()
-
  */ 
 
-nsresult JNICALL doStartDocumentLoad(const PRUnichar *documentName);
-nsresult JNICALL doEndDocumentLoad(nsIWebProgress *aWebProgress);
-nsresult JNICALL doStartURLLoad(const PRUnichar *documentName);
-nsresult JNICALL doEndURLLoad(const PRUnichar *documentName);
+  nsresult JNICALL doStartDocumentLoad(const PRUnichar *documentName);
+  nsresult JNICALL doEndDocumentLoad(nsIWebProgress *aWebProgress);
+  nsresult JNICALL doStartURLLoad(const PRUnichar *documentName);
+  nsresult JNICALL doEndURLLoad(const PRUnichar *documentName);
 
-static  nsresult JNICALL takeActionOnNode(nsCOMPtr<nsIDOMNode> curNode, 
+  static  nsresult JNICALL takeActionOnNode(nsCOMPtr<nsIDOMNode> curNode,
                                           void *yourObject);
-
 };
 
 #endif

@@ -23,6 +23,7 @@
 #include "rdf_util.h"
 
 #include "ns_globals.h" // for prLogModuleInfo and gComponentManager
+#include "nsString.h"
 
 #include "nsIServiceManager.h"
 
@@ -108,7 +109,7 @@ nsresult rdf_InitRDFUtils()
     // init the properties
     // find the nsIRDFResource for the bookmarks
     if (nsnull == kNC_BookmarksRoot) {
-        rv = gRDF->GetResource(BOOKMARKS_URI, 
+        rv = gRDF->GetResource(nsDependentCString(BOOKMARKS_URI),
                                getter_AddRefs(kNC_BookmarksRoot));
         if (NS_FAILED(rv)) {
             return rv;
@@ -116,7 +117,7 @@ nsresult rdf_InitRDFUtils()
     }
 
     if (nsnull == kNC_Name) {
-        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#Name", 
+        rv = gRDF->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#Name"),
                                getter_AddRefs(kNC_Name));
         if (NS_FAILED(rv)) {
             return rv;
@@ -124,21 +125,21 @@ nsresult rdf_InitRDFUtils()
     }
 
     if (nsnull == kNC_URL) {
-        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#URL", 
+        rv = gRDF->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#URL"),
                                getter_AddRefs(kNC_URL));
         if (NS_FAILED(rv)) {
             return rv;
         }
     }
     if (nsnull == kNC_parent) {
-        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#parent", 
+        rv = gRDF->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#parent"),
                                getter_AddRefs(kNC_parent));
         if (NS_FAILED(rv)) {
             return rv;
         }
     }
     if (nsnull == kNC_Folder) {
-      rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#Folder", 
+      rv = gRDF->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#Folder"),
                             getter_AddRefs(kNC_Folder));
       if (NS_FAILED(rv)) {
 	return rv;
@@ -146,21 +147,21 @@ nsresult rdf_InitRDFUtils()
     }
   
     if (nsnull == kRDF_type) {
-      rv = gRDF->GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns", 
+      rv = gRDF->GetResource(NS_LITERAL_CSTRING("http://www.w3.org/1999/02/22-rdf-syntax-ns"),
 			     getter_AddRefs(kRDF_type));
       if (NS_FAILED(rv)) {
 	return rv;
       }
     }     
     if (nsnull == kNewFolderCommand) {
-        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#command?cmd=newfolder", 
+        rv = gRDF->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#command?cmd=newfolder"),
                                getter_AddRefs(kNewFolderCommand));
         if (NS_FAILED(rv)) {
             return rv;
         }
     }
     if (nsnull == kNewBookmarkCommand) {
-        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#command?cmd=newbookmark", 
+        rv = gRDF->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#command?cmd=newbookmark"),
                                getter_AddRefs(kNewBookmarkCommand));
         if (NS_FAILED(rv)) {
             return rv;
