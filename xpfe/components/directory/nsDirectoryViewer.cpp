@@ -115,6 +115,8 @@ protected:
   static nsIRDFService* gRDF;
   static nsIRDFResource* kHTTPIndex_Comment;
   static nsIRDFResource* kHTTPIndex_Filename;
+  static nsIRDFResource* kHTTPIndex_Loading;
+  static nsIRDFLiteral*  kTrueLiteral;
 
   static nsresult ParseLiteral(const nsString& aValue, nsIRDFNode** aResult);
   static nsresult ParseDate(const nsString& aValue, nsIRDFNode** aResult);
@@ -171,6 +173,8 @@ nsrefcnt nsHTTPIndexParser::gRefCnt = 0;
 nsIRDFService* nsHTTPIndexParser::gRDF;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Comment;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Filename;
+nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Loading;
+nsIRDFLiteral*  nsHTTPIndexParser::kTrueLiteral;
 
 nsHTTPIndexParser::Field
 nsHTTPIndexParser::gFieldTable[] = {
@@ -218,6 +222,12 @@ nsHTTPIndexParser::Init()
     rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Filename", &kHTTPIndex_Filename);
     if (NS_FAILED(rv)) return rv;
 
+    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Loading",  &kHTTPIndex_Loading);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = gRDF->GetLiteral(nsAutoString("true").GetUnicode(), &kTrueLiteral);
+    if (NS_FAILED(rv)) return rv;
+
     for (Field* field = gFieldTable; field->mName; ++field) {
       nsCAutoString str;
       str += HTTPINDEX_NAMESPACE_URI;
@@ -235,6 +245,8 @@ nsHTTPIndexParser::~nsHTTPIndexParser()
   if (--gRefCnt == 0) {
     NS_IF_RELEASE(kHTTPIndex_Comment);
     NS_IF_RELEASE(kHTTPIndex_Filename);
+    NS_IF_RELEASE(kHTTPIndex_Loading);
+    NS_IF_RELEASE(kTrueLiteral);
 
     for (Field* field = gFieldTable; field->mName; ++field) {
       NS_IF_RELEASE(field->mProperty);
@@ -372,6 +384,10 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
   rv = rdfc->MakeSeq(mDataSource, mDirectory, getter_AddRefs(mDirectoryContainer));
   if (NS_FAILED(rv)) return rv;
 
+  // Mark the directory as "loading"
+  rv = mDataSource->Assert(mDirectory, kHTTPIndex_Loading, kTrueLiteral, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
   return NS_OK;
 }
 
@@ -399,6 +415,10 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
   if (NS_FAILED(rv)) return rv;
 
   rv = mDataSource->Assert(mDirectory, kHTTPIndex_Comment, comment, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  // Remove the 'loading' annotation.
+  rv = mDataSource->Unassert(mDirectory, kHTTPIndex_Loading, kTrueLiteral);
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
