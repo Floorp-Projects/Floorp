@@ -44,6 +44,10 @@
  * associated with URLs.
  */
 
+%{C++
+#undef GetPort  // XXX Windows!
+%}
+
 [scriptable, uuid(07a22cc0-0ce5-11d3-9331-00104ba0fd40)]
 interface nsIURI : nsISupports
 {
