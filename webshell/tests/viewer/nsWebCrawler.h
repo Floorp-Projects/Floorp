@@ -24,11 +24,12 @@
 
 #include "nsCOMPtr.h"
 #include "nsBrowserWindow.h"
-#include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgressListener.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIAtom.h"
+#include "nsWeakReference.h"
+
 
 class nsIContent;
 class nsIDocument;
@@ -38,7 +39,8 @@ class nsIPresShell;
 class nsViewerApp;
 class AtomHashTable;
 
-class nsWebCrawler : public nsIDocumentLoaderObserver {
+class nsWebCrawler : public nsIWebProgressListener,
+                     public nsSupportsWeakReference {
 public:
   // Make a new web-crawler for the given viewer. Note: the web
   // crawler does not addref the viewer.
@@ -48,7 +50,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDocumentLoaderObserver
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
   // Add a url to load
   void AddURL(const nsString& aURL);
@@ -148,7 +150,6 @@ protected:
 
   void PerformRegressionTest(const nsString& aOutputName);
 
-  nsCOMPtr<nsIDocumentLoader> mDocLoader;
   nsBrowserWindow* mBrowser;
   nsViewerApp* mViewer;
   nsCOMPtr<nsITimer> mTimer;
@@ -171,7 +172,7 @@ protected:
   PRInt32 mMaxPages;
 
   nsString mCurrentURL;
-  nsIURI*      mLastURL;
+  nsCOMPtr<nsIURI>  mLastURL;
   nsIWebShell* mLastWebShell;
 
   PRTime mStartLoad;

@@ -37,7 +37,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
@@ -68,7 +67,6 @@ class nsWebCrawler;
  * Abstract base class for our test app's browser windows
  */
 class nsBrowserWindow : public nsIBaseWindow,
-                        public nsIDocumentLoaderObserver,
                         public nsIProgressEventSink,
                         public nsIWebShellContainer,
                         public nsIPrompt
@@ -112,9 +110,6 @@ public:
   NS_IMETHOD ShowMenuBar(PRBool aShow);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
   NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
-
-  // nsIDocumentLoaderObserver
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
   // nsIProgressEventSink
   NS_DECL_NSIPROGRESSEVENTSINK

@@ -70,7 +70,6 @@
 #include "nsIDocument.h"
 #include "nsILayoutDebugger.h"
 #include "nsThrobber.h"
-#include "nsIDocumentLoader.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
@@ -200,8 +199,6 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kILayoutDebuggerIID, NS_ILAYOUT_DEBUGGER_IID);
 static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
-
 #define FILE_PROTOCOL "file://"
 
 #ifdef USE_LOCAL_WIDGETS
@@ -242,18 +239,9 @@ NS_IMETHODIMP nsBrowserWindow::Destroy()
 {
   RemoveBrowser(this);
 
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  if(webShell) {
-    //XXXTAB Should do this on the docShell
-    nsCOMPtr<nsIDocumentLoader> docLoader;
-    webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-    if(docLoader)
-       docLoader->RemoveObserver(this);
-    nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-    docShellWin->Destroy();
-    mDocShell = nsnull;
-    // NS_RELEASE(mDocShell);
-  }
+  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+  docShellWin->Destroy();
+  mDocShell = nsnull;
 
   nsrefcnt refCnt;
 
@@ -1364,11 +1352,6 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
 
   *aInstancePtrResult = NULL;
 
-  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
-    *aInstancePtrResult = (void*) ((nsIDocumentLoaderObserver*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   if (aIID.Equals(kIWebShellContainerIID)) {
     *aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
     NS_ADDREF_THIS();
@@ -1435,14 +1418,8 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   webBrowserWin->Create();
   mDocShell = do_GetInterface(mWebBrowser);
   mDocShell->SetAllowPlugins(aAllowPlugins);
-  nsCOMPtr<nsIDocumentLoader> docLoader;
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
   webShell->SetContainer((nsIWebShellContainer*) this);
-
-  webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-  if (docLoader) {
-    docLoader->AddObserver(this);
-  }
   webBrowserWin->SetVisibility(PR_TRUE);
 
   if (nsIWebBrowserChrome::CHROME_MENUBAR & aChromeMask) {
@@ -1519,13 +1496,8 @@ nsnull, r.x, r.y, r.width, r.height);
   webBrowserWin->Create();
   mDocShell = do_GetInterface(mWebBrowser);
   mDocShell->SetAllowPlugins(aAllowPlugins);
-  nsCOMPtr<nsIDocumentLoader> docLoader;
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
   webShell->SetContainer((nsIWebShellContainer*) this);
-  webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-  if (docLoader) {
-    docLoader->AddObserver(this);
-  }
   webBrowserWin->SetVisibility(PR_TRUE);
   if (nsIWebBrowserChrome::CHROME_MENUBAR & aChromeMask) {
     rv = CreateMenuBar(r.width);
@@ -2111,55 +2083,6 @@ nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTak
 
 
 //----------------------------------------
-
-// document loader observer implementation
-NS_IMETHODIMP
-nsBrowserWindow::OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                     nsIURI* aURL, 
-                                     const char* aCommand)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
-                                   nsIRequest* request,
-                                   nsresult aStatus)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::OnStartURLLoad(nsIDocumentLoader* loader,
-                                nsIRequest* request)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                   nsIRequest* request,
-                                   PRUint32 aProgress, 
-                                   PRUint32 aProgressMax)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::OnStatusURLLoad(nsIDocumentLoader* loader,
-                                 nsIRequest* request,
-                                 nsString& aMsg)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::OnEndURLLoad(nsIDocumentLoader* loader,
-                              nsIRequest* request,
-                              nsresult aStatus)
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsBrowserWindow::OnProgress(nsIRequest* request, nsISupports *ctxt,
