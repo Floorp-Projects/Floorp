@@ -88,6 +88,13 @@
 #define REGISTRY_DIRECTORY_STRING           "directory"
 #define REGISTRY_NEED_MIGRATION_STRING      "NeedMigration"
 
+#define REGISTRY_VERSION_STRING				"Version"
+#define REGISTRY_VERSION_1_0				"1.0"		
+
+#define MAX_PERSISTENT_DATA_SIZE 1000
+#define ISHEX(c) ( ((c) >= '0' && (c) <= '9') || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F') )
+#define NUM_HEX_BYTES	8
+
 // this used to be cpwPreg.xul, that no longer exists.  we need to fix this.
 #define PROFILE_PREG_URL "chrome://profile/content/createProfileWizard.xul"
 
@@ -183,6 +190,16 @@ NS_IMETHODIMP nsProfile::Startup(const char *filename)
     // Add the root Profiles node in the registry
     nsRegistryKey key;
     rv = m_reg->AddSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+
+    nsXPIDLCString versionKey;
+    rv = m_reg->GetString(key, REGISTRY_VERSION_STRING, getter_Copies(versionKey));
+
+    if (versionKey == nsnull)
+    {
+		FixRegEntries();
+    }
+
+    rv = m_reg->SetString(key, REGISTRY_VERSION_STRING, REGISTRY_VERSION_1_0);
     return rv;
 }
 
@@ -2289,5 +2306,135 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 		printf("ProfileManager : Cloned CurrentProfile to new Profile ->%s<-\n", newProfile);
 #endif
 
+	return rv;
+}
+
+nsresult nsProfile::FixRegEntries() 
+{
+	nsresult rv = NS_OK;
+
+    // Enumerate all subkeys (immediately) under the given node.
+    nsCOMPtr<nsIEnumerator> enumKeys;
+    nsRegistryKey key;
+
+    // Get the Reg key to Profile subtree
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    if (NS_FAILED(rv)) 
+		return NS_ERROR_FAILURE;
+
+	// Get an Enumerator
+    rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
+    if (NS_FAILED(rv)) 
+		return NS_ERROR_FAILURE;
+
+	// Get the first enum key
+	rv = enumKeys->First();
+    if (NS_FAILED(rv)) 
+		return NS_ERROR_FAILURE;
+
+	
+	// Enumerate subkeys till done.
+    while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
+    {
+		nsCOMPtr<nsISupports> base;
+
+		// Get the Current item of the enum key
+        rv = enumKeys->CurrentItem(getter_AddRefs(base));
+		if (NS_FAILED(rv)) 
+			return NS_ERROR_FAILURE;
+		
+		// Get specific interface.
+        nsCOMPtr <nsIRegistryNode> node;
+        nsIID nodeIID = NS_IREGISTRYNODE_IID;
+
+        rv = base->QueryInterface( nodeIID, getter_AddRefs(node));
+		if (NS_FAILED(rv)) 
+			return NS_ERROR_FAILURE;
+		
+		// Get node name.
+        nsXPIDLCString profile;
+        nsXPIDLCString isMigrated;
+		nsXPIDLCString dirName;
+                                        
+        rv = node->GetName(getter_Copies(profile));
+		if (NS_FAILED(rv) || (profile == nsnull)) 
+			return NS_ERROR_FAILURE;
+                                            
+		nsRegistryKey profKey;								
+                   
+		// Open the subtree for a specific profile
+        rv = m_reg->GetSubtree(key, profile, &profKey);
+		if (NS_FAILED(rv)) 
+			return NS_ERROR_FAILURE;
+                                          
+		// Obtain migration status
+        rv = m_reg->GetString(profKey, REGISTRY_MIGRATED_STRING, getter_Copies(isMigrated));
+		if (NS_FAILED(rv) || (isMigrated == nsnull)) 
+			return NS_ERROR_FAILURE;
+                                                            
+        if (PL_strcmp(isMigrated, REGISTRY_YES_STRING) == 0)
+        {
+			nsSimpleCharString decodedDirName;
+			PRBool haveHexBytes = PR_TRUE;
+
+			// Obtain the directory entry of the profile
+			rv = m_reg->GetString(profKey, REGISTRY_DIRECTORY_STRING, getter_Copies(dirName));
+			if (NS_FAILED(rv)) 
+				return NS_ERROR_FAILURE;
+
+			// Decode the directory name to return the ordinary string
+			nsInputStringStream stream(dirName);
+			nsPersistentFileDescriptor descriptor;
+			
+			char bigBuffer[MAX_PERSISTENT_DATA_SIZE + 1];
+			// The first 8 bytes of the data should be a hex version of the data size to follow.
+			PRInt32 bytesRead = NUM_HEX_BYTES;
+			bytesRead = stream.read(bigBuffer, bytesRead);
+			if (bytesRead != NUM_HEX_BYTES)
+				haveHexBytes = PR_FALSE;
+
+			if (haveHexBytes)
+			{
+				bigBuffer[NUM_HEX_BYTES] = '\0';
+
+				for (int i = 0; i < NUM_HEX_BYTES; i++)
+				{
+					if (!(ISHEX(bigBuffer[i])))
+					{
+						haveHexBytes = PR_FALSE;
+						break;
+					}
+				}
+			}
+
+			if (haveHexBytes)
+			{
+				//stream(dirName);
+				PR_sscanf(bigBuffer, "%x", (PRUint32*)&bytesRead);
+				if (bytesRead > MAX_PERSISTENT_DATA_SIZE)
+				{
+					// Try to tolerate encoded values with no length header
+					bytesRead = NUM_HEX_BYTES + stream.read(bigBuffer + NUM_HEX_BYTES, MAX_PERSISTENT_DATA_SIZE - NUM_HEX_BYTES);
+				}
+				else
+				{
+					// Now we know how many bytes to read, do it.
+					bytesRead = stream.read(bigBuffer, bytesRead);
+				}
+				// Make sure we are null terminated
+				bigBuffer[bytesRead]='\0';
+				descriptor.SetData(bigBuffer, bytesRead);				
+				descriptor.GetData(decodedDirName);
+
+				// Set back the simple, decoded directory entry
+				rv = m_reg->SetString(profKey, REGISTRY_DIRECTORY_STRING, decodedDirName);
+				if (NS_FAILED(rv)) 
+					return NS_ERROR_FAILURE;
+			}
+		}
+        rv = enumKeys->Next();
+		if (NS_FAILED(rv)) 
+				return NS_ERROR_FAILURE;
+	}
 	return rv;
 }
