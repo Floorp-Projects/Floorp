@@ -2955,7 +2955,9 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   pStr = fields->GetOtherRandomHeaders();
   if (pStr)
     mCompFields->SetOtherRandomHeaders((char *) pStr);
-
+ 
+  AddDefaultCustomHeaders();
+                                                            
   pStr = fields->GetPriority();
   if (pStr)
     mCompFields->SetPriority((char *) pStr);
@@ -2993,6 +2995,65 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   
   return rv;
 }
+
+// Add default headers to outgoing messages see Bug #61520
+// mail.identity.<id#>.headers pref is a comma separated value of pref names
+// containging headers to add headers are stored in
+// mail.identity.<id#>.header.<header name> grab all the headers, mime encode
+// them and add them to the other custom headers.
+nsresult
+nsMsgComposeAndSend::AddDefaultCustomHeaders() {
+  nsXPIDLCString headersList;
+  // get names of prefs containing headers to add
+  nsresult rv = mUserIdentity->GetCharAttribute("headers",
+                                                getter_Copies(headersList));
+  if (NS_SUCCEEDED(rv) && !headersList.IsEmpty()) {
+    PRInt32 start = 0;
+    PRInt32 end = 0;
+    PRInt32 len = 0;
+    // preserve any custom headers that have been added through the UI
+    nsCAutoString newHeaderVal(mCompFields->GetOtherRandomHeaders());
+    
+    while (end != -1) {
+      end = headersList.FindChar(',', start);
+      if (end == -1) {
+        len = headersList.Length() - start;
+      } else {
+        len = end - start;
+      }
+      // grab the name of the current header pref
+      nsCAutoString headerName(NS_LITERAL_CSTRING("header.") +
+                               Substring(headersList, start, len));
+      start = end + 1;
+      
+      nsXPIDLCString headerVal;
+      rv = mUserIdentity->GetCharAttribute(headerName.get(),
+                                           getter_Copies(headerVal));
+      if (NS_SUCCEEDED(rv)) {
+        PRInt32 colonIdx = headerVal.FindChar(':') + 1;
+        if (colonIdx != 0) { // check that the header is *most likely* valid.
+          char * convHeader =
+            nsMsgI18NEncodeMimePartIIStr(headerVal.get() + colonIdx,
+                                         PR_FALSE,
+                                         mCompFields->GetCharacterSet(),
+                                         colonIdx,
+                                         PR_TRUE);
+          if (convHeader) {
+            newHeaderVal.Append(Substring(headerVal, 0, colonIdx));
+            newHeaderVal.Append(convHeader);
+            // we must terminate the header with CRLF here
+            // as nsMsgCompUtils.cpp just calls PUSH_STRING
+            newHeaderVal.Append("\r\n");
+            PR_Free(convHeader);
+          }
+        }
+      }
+    }
+    mCompFields->SetOtherRandomHeaders(newHeaderVal.get());
+  }
+  return rv;
+}
+
 
 nsresult
 nsMsgComposeAndSend::SnarfAndCopyBody(const char  *attachment1_body,

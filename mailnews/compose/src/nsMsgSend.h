@@ -409,6 +409,9 @@ private:
   // generates a message id for our message, if necessary
   void GenerateMessageId( );
 
+  // add default custom headers to the message
+  nsresult AddDefaultCustomHeaders();
+  
   nsCOMPtr<nsIMsgSendReport>  mSendReport;
   nsCString                   mSmtpPassword;            // store the smtp Password use during a send
 };
