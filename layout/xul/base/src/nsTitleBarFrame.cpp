@@ -121,8 +121,7 @@ nsTitleBarFrame::HandleEvent(nsIPresContext* aPresContext,
 			 // we're tracking.
 			 mTrackingMouseMove = PR_TRUE;
 			 
-			 // start capture.		 
-			 aEvent->widget->CaptureMouse(PR_TRUE);
+			 // start capture.		
 			 CaptureMouseEvents(aPresContext,PR_TRUE);
 
 
@@ -144,7 +143,6 @@ nsTitleBarFrame::HandleEvent(nsIPresContext* aPresContext,
 				 mTrackingMouseMove = PR_FALSE;
 				 
 				 // end capture
-				 aEvent->widget->CaptureMouse(PR_FALSE);				 
 				 CaptureMouseEvents(aPresContext,PR_FALSE);
 
 				 *aEventStatus = nsEventStatus_eConsumeNoDefault;
