@@ -27,6 +27,7 @@
 #include "nsIViewManager.h"
 #include "nsBodyFrame.h"
 #include "nsHTMLFrame.h"
+#include "nsCSSLayout.h"
 
 #include "nsBodyFrame.h"
 
@@ -344,7 +345,7 @@ nsScrollInnerFrame::Reflow(nsIPresContext*      aPresContext,
                                                kIViewIID, 
                                                (void **)&view);
     if ((NS_OK != rv) || (NS_OK != view->Init(viewManager, 
-                                              mRect, 
+                                              mRect,
                                               parentView))) {
       NS_RELEASE(parentView);
       NS_RELEASE(viewManager);
@@ -361,30 +362,45 @@ nsScrollInnerFrame::Reflow(nsIPresContext*      aPresContext,
   if (nsnull == view) {
     return NS_OK;
   }
+  NS_RELEASE(view);
 
   if (nsnull == mFirstChild) {
     mFirstChild = new nsScrollBodyFrame(mContent, this);
     mChildCount = 1;
   }
 
-  // Allow the frame to be as wide as our max width, and as high
-  // as it wants to be.
-  nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
-  nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
+  // Allow the child frame to be as wide as our max width (minus a
+  // scroll bar width), and as high as it wants to be.
+  nsSize        maxSize;
+  nsIDeviceContext* dc = aPresContext->GetDeviceContext();
+  maxSize.width = aReflowState.maxSize.width -
+    NS_TO_INT_ROUND(dc->GetScrollBarWidth());
+  NS_RELEASE(dc);
+  maxSize.height = NS_UNCONSTRAINEDSIZE;
   
-  // Get the child's desired size. Our child's desired height is our
-  // desired size
+  // Reflow the child
+  nsReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
+  nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
   mFirstChild->WillReflow(*aPresContext);
-  aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize,
+  aStatus = ReflowChild(mFirstChild, aPresContext, kidMetrics,
                         kidReflowState);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
   // Place and size the child
-  nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  nsRect  rect(0, 0, kidMetrics.width, kidMetrics.height);
   mFirstChild->SetRect(rect);
   mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 
-  NS_RELEASE(view);
+  // Determine our size. Our width is our maxWidth and our height is
+  // either our child's height or our maxHeight if our maxHeight is
+  // constrained.
+  aDesiredSize.width = aReflowState.maxSize.width;
+  if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.height) {
+    aDesiredSize.height  = kidMetrics.height;
+  }
+  else {
+    aDesiredSize.height  = aReflowState.maxSize.height;
+  }
 
   NS_FRAME_TRACE_MSG(
     ("exit nsScrollInnerFrame::Reflow: status=%d width=%d height=%d",
@@ -410,7 +426,7 @@ nsScrollInnerFrame::ListTag(FILE* out) const
 
 //----------------------------------------------------------------------
 
-class nsScrollOuterFrame : public nsContainerFrame {
+class nsScrollOuterFrame : public nsHTMLContainerFrame {
 public:
   nsScrollOuterFrame(nsIContent* aContent, nsIFrame* aParent);
 
@@ -422,13 +438,15 @@ public:
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:
+  virtual PRIntn GetSkipSides() const;
 };
 
 nsScrollOuterFrame::nsScrollOuterFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsContainerFrame(aContent, aParent)
+  : nsHTMLContainerFrame(aContent, aParent)
 {
 }
 
+//XXX incremental reflow pass through
 NS_IMETHODIMP
 nsScrollOuterFrame::Reflow(nsIPresContext*      aPresContext,
                            nsReflowMetrics&     aDesiredSize,
@@ -449,14 +467,28 @@ nsScrollOuterFrame::Reflow(nsIPresContext*      aPresContext,
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord lr = borderPadding.left + borderPadding.right;
+  nscoord tb = borderPadding.top + borderPadding.bottom;
 
-  // Allow the frame to be as wide as our max width, and as high
-  // as it wants to be.
-  nsSize        maxSize(aReflowState.maxSize.width - lr, NS_UNCONSTRAINEDSIZE);
-  nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
+  // Get style size and determine how much area is available for the
+  // child (the scroll inner frame) to layout into.
+  nsSize maxSize, styleSize;
+  PRIntn sf = nsCSSLayout::GetStyleSize(aPresContext, aReflowState,
+                                        styleSize);
+  if (NS_SIZE_HAS_WIDTH & sf) {
+    maxSize.width = styleSize.width - lr;
+  }
+  else {
+    maxSize.width = aReflowState.maxSize.width;
+  }
+  if (NS_SIZE_HAS_HEIGHT & sf) {
+    maxSize.height = styleSize.height - tb;
+  }
+  else {
+    maxSize.height = NS_UNCONSTRAINEDSIZE;
+  }
   
-  // Get the child's desired size. Our child's desired height is
-  // approximately our desired size
+  // Reflow the child and get its desired size
+  nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
   mFirstChild->WillReflow(*aPresContext);
   aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize,
                         kidReflowState);
@@ -468,15 +500,26 @@ nsScrollOuterFrame::Reflow(nsIPresContext*      aPresContext,
   mFirstChild->SetRect(rect);
   mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 
-  aDesiredSize.width += lr;
-  aDesiredSize.height += borderPadding.top + borderPadding.bottom;
+  // The scroll outer frame either shrink wraps around it's single
+  // child OR uses the style width/height.
+  if (NS_SIZE_HAS_WIDTH & sf) {
+    aDesiredSize.width = styleSize.width;
+  }
+  else {
+    aDesiredSize.width += lr;
+  }
+  if (NS_SIZE_HAS_HEIGHT & sf) {
+    aDesiredSize.height = styleSize.height;
+  }
+  else {
+    aDesiredSize.height += tb;
+  }
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
   NS_FRAME_TRACE_MSG(
     ("exit nsScrollOuterFrame::Reflow: status=%d width=%d height=%d",
      aStatus, aDesiredSize.width, aDesiredSize.height));
-
   return NS_OK;
 }
 
@@ -494,6 +537,12 @@ nsScrollOuterFrame::ListTag(FILE* out) const
   GetContentIndex(contentIndex);
   fprintf(out, ">(%d)@%p", contentIndex, this);
   return NS_OK;
+}
+
+PRIntn
+nsScrollOuterFrame::GetSkipSides() const
+{
+  return 0;
 }
 
 //----------------------------------------------------------------------
