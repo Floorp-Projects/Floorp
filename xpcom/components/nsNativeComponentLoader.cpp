@@ -705,7 +705,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         return NS_ERROR_NULL_POINTER;
 
     /* this should be a pref or registry entry, or something */
-    const char *ValidDllExtensions[] = {
+    static const char *ValidDllExtensions[] = {
         ".dll",     /* Windows */
         ".so",      /* Unix */
         ".shlb",    /* Mac ? */
