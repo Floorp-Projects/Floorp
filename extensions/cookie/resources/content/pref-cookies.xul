@@ -88,12 +88,7 @@
   </script>
 
   <hbox class="box-smallheader" id="cookieHeader" title="&lHeader;"/>
-
-  <groupbox>
-    <caption label="&cookiePolicy.label;"/>
-
     <description>&cookieDetails;</description>
-
     <radiogroup id="networkCookieBehaviour"
                 prefstring="network.cookie.cookieBehavior">
       <radio value="2" label="&disableCookies.label;"
@@ -110,9 +105,7 @@
       <radio value="0" label="&accAllCookiesRadio.label;"
              accesskey="&accAllCookiesRadio.accesskey;" oncommand="setDisables();"/>
     </radiogroup>
-
     <separator/>
-
     <vbox align="start">
       <checkbox id="networkWarnAboutCookies" label="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
                 prefstring="network.cookie.warnAboutCookies"/>
@@ -130,21 +123,17 @@
             <textbox id="lifetimeDays" pref="true" size="4"
                      preftype="int" prefstring="network.cookie.lifetime.days"/>
             <description>&days.label;</description>
-          </hbox>
-        </radiogroup>
+            </hbox>
+         </radiogroup>
       </hbox>
-
-    </vbox>
-
-    <separator/>
-
-    <hbox pack="end">
-      <button label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"
-              id="viewCookieButton"
-              prefstring="pref.advanced.cookies.disable_button.view_cookies"/>
-      <button label="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"
-              id="moreInformation"
-              prefstring="pref.advanced.cookies.disable_button.more_info"/>
-    </hbox>
-  </groupbox>
+   </vbox>
+   <separator/>
+   <hbox pack="end">
+     <button label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"
+		     id="viewCookieButton"
+		     prefstring="pref.advanced.cookies.disable_button.view_cookies"/>
+     <button label="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"
+             id="moreInformation"
+             prefstring="pref.advanced.cookies.disable_button.more_info"/>
+   </hbox>
 </page>
