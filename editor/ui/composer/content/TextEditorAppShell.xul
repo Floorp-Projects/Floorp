@@ -111,9 +111,9 @@
       <button id="openButton"/>
       <button id="saveButton"/>
       <toolbarseparator/>
-      <titledbutton id="printButton"/>
-      <titledbutton id="findButton"/>
-      <titledbutton id="spellingButton"/>
+      <button id="printButton"/>
+      <button id="findButton"/>
+      <button id="spellingButton"/>
 
       <spring flex="100%"/>
     </toolbar>    
