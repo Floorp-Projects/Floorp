@@ -192,6 +192,8 @@ nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& 
       return result;
     }
     aWrapProp = eHTMLTextWrap_Unknown;
+  } else {
+    aWrapProp = eHTMLTextWrap_Off;
   }
   return result;
 }
@@ -221,7 +223,8 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
   maxCharWidth = NSToCoordRound(maxCharWidth * t2p);
 
   char char1, char2;
-  nsCompatibility mode = GetRepChars(aPresContext, char1, char2);
+  GetRepChars(aPresContext, char1, char2);
+
   nscoord char1Width, char2Width;
   aRendContext->GetWidth(char1, char1Width);
   aRendContext->GetWidth(char2, char2Width);
@@ -271,7 +274,7 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
     aFrame->GetFormContent(content);
     // then if not word wrapping
     nsHTMLTextWrap wrapProp;
-    nsresult result = nsFormControlHelper::GetWrapPropertyEnum(content, wrapProp);
+    nsFormControlHelper::GetWrapPropertyEnum(content, wrapProp);
     if (wrapProp == eHTMLTextWrap_Off) {
       height += scrollbarHeight;
     }
