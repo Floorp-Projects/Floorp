@@ -287,8 +287,7 @@ rdf_MakeAbsoluteURI(nsIURI* aURL, nsString& aURI)
     if (NS_FAILED(rv)) return rv;
 
     char *absUrlStr = nsnull;
-    const char *urlSpec = aURI.GetBuffer();
-    rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+    rv = service->MakeAbsolute(nsCAutoString(aURI), baseUri, &absUrlStr);
     NS_RELEASE(baseUri);
     result = absUrlStr;
     delete [] absUrlStr;
