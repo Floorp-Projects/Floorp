@@ -917,7 +917,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           nsIFrame* focusFrame = nsnull;
 
           // Special case for tree frames - they handle their own scrolling
-          nsITreeFrame* treeFrame;
+          nsITreeFrame* treeFrame = nsnull;
           nsIFrame* curFrame = aTargetFrame;
 
           while (curFrame) {
