@@ -33,7 +33,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.8 2002/10/23 20:50:51 nelsonb%netscape.com Exp $
+ * $Id: certi.h,v 1.9 2002/12/19 00:26:25 wtc%netscape.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -187,6 +187,27 @@ SECStatus ShutdownCRLCache(void);
 ** This function is intended to be internal to NSS.
 */
 extern char * cert_GetCertificateEmailAddresses(CERTCertificate *cert);
+
+/*
+ * These functions are used to map subjectKeyID extension values to certs.
+ */
+SECStatus
+cert_CreateSubjectKeyIDHashTable(void);
+
+SECStatus
+cert_AddSubjectKeyIDMapping(SECItem *subjKeyID, CERTCertificate *cert);
+
+/*
+ * Call this function to remove an entry from the mapping table.
+ */
+SECStatus
+cert_RemoveSubjectKeyIDMapping(SECItem *subjKeyID);
+
+SECStatus
+cert_DestroySubjectKeyIDHashTable(void);
+
+SECItem*
+cert_FindDERCertBySubjectKeyID(SECItem *subjKeyID);
 
 #endif /* _CERTI_H_ */
 

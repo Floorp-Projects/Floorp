@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.58 2002/12/17 01:39:38 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.59 2002/12/19 00:26:29 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -41,7 +41,6 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "cert.h"
-#include "certdb.h"
 #include "key.h"
 #include "ssl.h"
 #include "sslproto.h"
@@ -53,6 +52,7 @@
 
 #include "pki3hack.h"
 #include "certi.h"
+#include "secmodi.h"
 
 /*
  * On Windows nss3.dll needs to export the symbol 'mktemp' to be
@@ -477,7 +477,7 @@ loser:
 	}
 #endif
 	pk11sdr_Init();
-	CERT_CreateSubjKeyIDHashTable();
+	cert_CreateSubjectKeyIDHashTable();
 	SECMOD_InitCallOnce();
 	nss_IsInitted = PR_TRUE;
     }
@@ -548,7 +548,7 @@ NSS_Shutdown(void)
     ShutdownCRLCache();
     SECOID_Shutdown();
     STAN_Shutdown();
-    CERT_DestroySubjKeyIDHashTable();
+    cert_DestroySubjectKeyIDHashTable();
     SECMOD_CleanupCallOnce();
     rv = SECMOD_Shutdown();
     pk11sdr_Shutdown();

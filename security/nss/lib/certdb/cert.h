@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.31 2002/12/17 01:39:36 wtc%netscape.com Exp $
+ * $Id: cert.h,v 1.32 2002/12/19 00:26:23 wtc%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -479,7 +479,7 @@ extern CERTCertificate *
 CERT_FindCertByIssuerAndSN (CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndSN);
 
 extern CERTCertificate *
-CERT_FindCertBySubjKeyID (CERTCertDBHandle *handle, SECItem *subjKeyID);
+CERT_FindCertBySubjectKeyID (CERTCertDBHandle *handle, SECItem *subjKeyID);
 
 /*
 ** Find a certificate in the database by a nickname
@@ -572,9 +572,9 @@ extern SECStatus CERT_VerifySignedData(CERTSignedData *sd,
 ** verify the signature of a signed data object with the given DER publickey
 */
 extern SECStatus
-CERT_VerifySignedDataWithPubKeyInfo(CERTSignedData *sd,
-                                    CERTSubjectPublicKeyInfo *pubKeyInfo,
-                                    void *wincx);
+CERT_VerifySignedDataWithPublicKeyInfo(CERTSignedData *sd,
+                                       CERTSubjectPublicKeyInfo *pubKeyInfo,
+                                       void *wincx);
 
 /*
 ** verify the signature of a signed data object with a SECKEYPublicKey.

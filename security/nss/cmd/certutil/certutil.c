@@ -243,9 +243,8 @@ GetCertRequest(PRFileDesc *inFile, PRBool ascii)
    } while (0);
 
    if (!rv) {
-   	rv = CERT_VerifySignedDataWithPubKeyInfo(&signedData, 
-					         &certReq->subjectPublicKeyInfo,
-					         NULL /* wincx */);
+   	rv = CERT_VerifySignedDataWithPublicKeyInfo(&signedData, 
+		&certReq->subjectPublicKeyInfo, NULL /* wincx */);
    }
 
    if (rv) {

@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.48 2002/12/17 01:39:36 wtc%netscape.com Exp $
+ * $Id: certdb.c,v 1.49 2002/12/19 00:26:23 wtc%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2773,7 +2773,7 @@ static PLHashAllocOps cert_AllocOps = {
 };
 
 SECStatus
-CERT_CreateSubjKeyIDHashTable(void)
+cert_CreateSubjectKeyIDHashTable(void)
 {
     gSubjKeyIDHash = PL_NewHashTable(0, SECITEM_Hash, SECITEM_HashCompare,
                                     SECITEM_HashCompare,
@@ -2794,7 +2794,7 @@ CERT_CreateSubjKeyIDHashTable(void)
 }
 
 SECStatus
-CERT_AddSubjKeyIDMapping(SECItem *subjKeyID, CERTCertificate *cert)
+cert_AddSubjectKeyIDMapping(SECItem *subjKeyID, CERTCertificate *cert)
 {
     SECItem *newKeyID, *oldVal, *newVal;
     SECStatus rv = SECFailure;
@@ -2835,7 +2835,7 @@ done:
 }
 
 SECStatus
-CERT_RemoveSubjKeyIDMapping(SECItem *subjKeyID)
+cert_RemoveSubjectKeyIDMapping(SECItem *subjKeyID)
 {
     SECStatus rv;
     if (!gSubjKeyIDLock)
@@ -2849,7 +2849,7 @@ CERT_RemoveSubjKeyIDMapping(SECItem *subjKeyID)
 }
 
 SECStatus
-CERT_DestroySubjKeyIDHashTable(void)
+cert_DestroySubjectKeyIDHashTable(void)
 {
     if (gSubjKeyIDHash) {
         PR_Lock(gSubjKeyIDLock);
@@ -2863,7 +2863,7 @@ CERT_DestroySubjKeyIDHashTable(void)
 }
 
 SECItem*
-CERT_FindDERCertBySubjKeyID(SECItem *subjKeyID)
+cert_FindDERCertBySubjectKeyID(SECItem *subjKeyID)
 {
     SECItem   *val;
  
@@ -2880,12 +2880,12 @@ CERT_FindDERCertBySubjKeyID(SECItem *subjKeyID)
 }
 
 CERTCertificate*
-CERT_FindCertBySubjKeyID(CERTCertDBHandle *handle, SECItem *subjKeyID)
+CERT_FindCertBySubjectKeyID(CERTCertDBHandle *handle, SECItem *subjKeyID)
 {
     CERTCertificate *cert = NULL;
     SECItem *derCert;
 
-    derCert = CERT_FindDERCertBySubjKeyID(subjKeyID);
+    derCert = cert_FindDERCertBySubjectKeyID(subjKeyID);
     if (derCert) {
         cert = CERT_FindCertByDERCert(handle, derCert);
         SECITEM_FreeItem(derCert, PR_TRUE);

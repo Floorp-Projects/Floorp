@@ -43,6 +43,7 @@
 #include "pkcs11.h"
 #include "pk11func.h"
 #include "cert.h"
+#include "certi.h"
 #include "secitem.h"
 #include "key.h"
 #include "hasht.h"
@@ -2154,7 +2155,7 @@ pk11_FindCertObjectByRecipientNew(PK11SlotInfo *slot, NSSCMSRecipient **recipien
     for (i=0; (ri = recipientlist[i]) != NULL; i++) {
 	CERTCertificate *cert = NULL;
 	if (ri->kind == RLSubjKeyID) {
-	    SECItem *derCert = CERT_FindDERCertBySubjKeyID(ri->id.subjectKeyID);
+	    SECItem *derCert = cert_FindDERCertBySubjectKeyID(ri->id.subjectKeyID);
 	    if (derCert) {
 		cert = PK11_FindCertFromDERCertItem(slot, derCert, pwarg);
 		SECITEM_FreeItem(derCert, PR_TRUE);
@@ -2359,7 +2360,7 @@ pk11_keyIDHash_populate(void *wincx)
 	if (CERT_FindSubjectKeyIDExtension(node->cert, 
 	                                   &subjKeyID) == SECSuccess && 
 	    subjKeyID.data != NULL) {
-	    CERT_AddSubjKeyIDMapping(&subjKeyID, node->cert);
+	    cert_AddSubjectKeyIDMapping(&subjKeyID, node->cert);
 	    SECITEM_FreeItem(&subjKeyID, PR_FALSE);
 	}
     }

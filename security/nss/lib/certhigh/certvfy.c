@@ -122,9 +122,9 @@ CERT_VerifySignedDataWithPublicKey(CERTSignedData *sd,
  * verify the signature of a signed data object with the given DER publickey
  */
 SECStatus
-CERT_VerifySignedDataWithPubKeyInfo(CERTSignedData *sd, 
-                                    CERTSubjectPublicKeyInfo *pubKeyInfo,
-		                    void *wincx)
+CERT_VerifySignedDataWithPublicKeyInfo(CERTSignedData *sd, 
+                                       CERTSubjectPublicKeyInfo *pubKeyInfo,
+		                       void *wincx)
 {
     SECKEYPublicKey *pubKey;
     SECStatus        rv		= SECFailure;
