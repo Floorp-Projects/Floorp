@@ -214,6 +214,7 @@ static void print_attr_value(CK_ATTRIBUTE_PTR attr)
     case CKA_MODIFIABLE:
 	if (attr->ulValueLen > 0 && attr->pValue) {
 	    CK_BBOOL tf = *((CK_BBOOL *)attr->pValue);
+	    len = sizeof(valstr);
 	    PR_snprintf(valstr, len, "%s", tf ? "CK_TRUE" : "CK_FALSE");
 	    PR_LOG(modlog, 4, ("    %s = %s [%d]", 
 	           atype, valstr, attr->ulValueLen));
