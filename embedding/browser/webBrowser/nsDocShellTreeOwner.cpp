@@ -32,6 +32,7 @@
 #include "nsIGenericFactory.h"
 #include "nsStyleCoord.h"
 #include "nsHTMLReflowState.h"
+#include "nsXPIDLString.h"
 
 // Interfaces needed to be included
 #include "nsIContextMenuListener.h"
@@ -828,6 +829,65 @@ nsDocShellTreeOwner :: RemoveChromeListeners ( )
 #endif
 
 
+///////////////////////////////////////////////////////////////////////////////
+// DefaultTooltipTextProvider
+
+class DefaultTooltipTextProvider : public nsITooltipTextProvider
+{
+public:
+    DefaultTooltipTextProvider();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSITOOLTIPTEXTPROVIDER
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(DefaultTooltipTextProvider, nsITooltipTextProvider)
+
+DefaultTooltipTextProvider::DefaultTooltipTextProvider()
+{
+    NS_INIT_REFCNT();
+}
+
+/* void getNodeText (in nsIDOMNode aNode, out wstring aText); */
+NS_IMETHODIMP DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+  NS_ENSURE_ARG_POINTER(aText);
+
+  nsString outText;
+
+  PRBool found = PR_FALSE;
+  nsCOMPtr<nsIDOMNode> current ( aNode );
+  while ( !found && current ) {
+    nsCOMPtr<nsIDOMElement> currElement ( do_QueryInterface(current) );
+    if ( currElement ) {
+      // first try the normal title attribute...
+      currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
+      if ( outText.Length() )
+        found = PR_TRUE;
+      else {
+        // ...ok, that didn't work, try it in the XLink namespace
+        currElement->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"), NS_LITERAL_STRING("title"), outText);
+        if ( outText.Length() )
+          found = PR_TRUE;
+      }
+    }
+    
+    // not found here, walk up to the parent and keep trying
+    if ( !found ) {
+      nsCOMPtr<nsIDOMNode> temp ( current );
+      temp->GetParentNode(getter_AddRefs(current));
+    }
+  } // while not found
+
+  *_retval = found;
+  *aText = (found) ? outText.ToNewUnicode() : nsnull;
+
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 NS_IMPL_ADDREF(ChromeTooltipListener)
 NS_IMPL_RELEASE(ChromeTooltipListener)
 
@@ -843,12 +903,19 @@ NS_INTERFACE_MAP_END
 //
 // ChromeTooltipListener ctor
 //
+
 ChromeTooltipListener :: ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) 
   : mWebBrowser(inBrowser), mWebBrowserChrome(inChrome),
      mTooltipListenerInstalled(PR_FALSE),
      mShowingTooltip(PR_FALSE), mMouseClientX(0), mMouseClientY(0)
 {
   NS_INIT_REFCNT();
+
+  mTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID);
+  if (!mTooltipTextProvider) {
+    nsISupports *pProvider = (nsISupports *) new DefaultTooltipTextProvider;
+    mTooltipTextProvider = do_QueryInterface(pProvider);
+  }
 } // ctor
 
 
@@ -1171,45 +1238,6 @@ ChromeTooltipListener :: HideTooltip ( )
 
 
 //
-// FindTitleText
-//
-// Determine if there is a TITLE attribute. Checks both the XLINK namespace, and no
-// namespace. Returns |PR_TRUE| if there is, and sets the text in |outText|.
-//
-PRBool
-ChromeTooltipListener :: FindTitleText ( nsIDOMNode* inNode, nsAWritableString & outText )
-{
-  PRBool found = PR_FALSE;
-
-  nsCOMPtr<nsIDOMNode> current ( inNode );
-  while ( !found && current ) {
-    nsCOMPtr<nsIDOMElement> currElement ( do_QueryInterface(current) );
-    if ( currElement ) {
-      // first try the normal title attribute...
-      currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
-      if ( outText.Length() )
-        found = PR_TRUE;
-      else {
-        // ...ok, that didn't work, try it in the XLink namespace
-        currElement->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"), NS_LITERAL_STRING("title"), outText);
-        if ( outText.Length() )
-          found = PR_TRUE;
-      }
-    }
-    
-    // not found here, walk up to the parent and keep trying
-    if ( !found ) {
-      nsCOMPtr<nsIDOMNode> temp ( current );
-      temp->GetParentNode(getter_AddRefs(current));
-    }
-  } // while not found
-
-  return found;
-  
-} // FindTitleText
-
-
-//
 // sTooltipCallback
 //
 // A timer callback, fired when the mouse has hovered inside of a frame for the 
@@ -1226,11 +1254,22 @@ ChromeTooltipListener :: sTooltipCallback (nsITimer *aTimer, void *aChromeToolti
 {
   ChromeTooltipListener* self = NS_STATIC_CAST(ChromeTooltipListener*, aChromeTooltipListener);
   if ( self && self->mPossibleTooltipNode ) {
-    // if there is a TITLE tag, show the tip and fire off a timer to auto-hide it
-    nsAutoString tooltipText;
-    if ( self->FindTitleText(self->mPossibleTooltipNode, tooltipText) ) {
-      self->CreateAutoHideTimer ( );  
-      self->ShowTooltip ( self->mMouseClientX, self->mMouseClientY, tooltipText );
+
+    // if there is text associated with the node, show the tip and fire
+    // off a timer to auto-hide it.
+
+    nsXPIDLString tooltipText;
+    if (self->mTooltipTextProvider) {
+      PRBool textFound = PR_FALSE;
+
+      self->mTooltipTextProvider->GetNodeText(
+          self->mPossibleTooltipNode, getter_Copies(tooltipText), &textFound);
+      
+      if (textFound) {
+        nsString tipText(tooltipText);
+        self->CreateAutoHideTimer ( );  
+        self->ShowTooltip (self->mMouseClientX, self->mMouseClientY, tipText);
+      }
     }
     
     // release tooltip target if there is one, NO MATTER WHAT

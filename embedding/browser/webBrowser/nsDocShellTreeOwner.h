@@ -45,6 +45,7 @@
 #include "nsITimer.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
+#include "nsITooltipListener.h"
 
 #include "nsCommandHandler.h"
 
@@ -189,12 +190,9 @@ private:
   NS_IMETHOD ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAReadableString & inTipText ) ;
   NS_IMETHOD HideTooltip ( ) ;
 
-    // Determine if there is a TITLE attribute. Returns |PR_TRUE| if there is,
-    // and sets the text in |outText|.
-  PRBool FindTitleText ( nsIDOMNode* inNode, nsAWritableString & outText ) ;
-
   nsWebBrowser* mWebBrowser;
   nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
+  nsCOMPtr<nsITooltipTextProvider> mTooltipTextProvider;
   
     // This must be a strong ref in order to make sure we can hide the tooltip
     // if the window goes away while we're displaying one. If we don't hold
