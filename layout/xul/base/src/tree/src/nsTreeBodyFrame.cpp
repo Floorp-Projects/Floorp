@@ -304,7 +304,7 @@ nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mOutlinerBoxObject(nsnull), mImageCache(nsnull),
  mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
  mFocused(PR_FALSE), mColumnsDirty(PR_TRUE), mDropAllowed(PR_FALSE), mHasFixedRowCount(PR_FALSE),
- mVerticalOverflow(PR_FALSE), mDropRow(-1), mDropOrient(-1), mOpenTimer(nsnull)
+ mVerticalOverflow(PR_FALSE), mImageGuard(PR_FALSE), mDropRow(-1), mDropOrient(-1), mOpenTimer(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -779,6 +779,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRow(PRInt32 aIndex)
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateCell(PRInt32 aIndex, const PRUnichar *aColID)
 {
   if (aIndex < mTopRowIndex || aIndex > mTopRowIndex + mPageCount + 1)
+    return NS_OK;
+
+  if (mImageGuard)
     return NS_OK;
 
   nscoord currX = mInnerBox.x;
@@ -1659,7 +1662,12 @@ nsOutlinerBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID,
 
       nsresult rv;
       nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
+      mImageGuard = PR_TRUE;
       il->LoadImage(srcURI, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(imageRequest));
+      mImageGuard = PR_FALSE;
+
+      // In a case it was already cached.
+      imageRequest->GetImage(aResult);
 
       if (!mImageCache) {
         mImageCache = new nsSupportsHashtable(64);
