@@ -88,7 +88,7 @@ Collector::allocateObject(size_type n, ObjectOwner* owner)
         mObjectSpace.mAllocPtr += size;
         ObjectHeader* header = (ObjectHeader*) ptr;
         header->mOwner = owner;
-        return (pointer) std::memset(header + 1, 0, n);
+        return (pointer) STD::memset(header + 1, 0, n);
     }
     // need to run a garbage collection to recover more space, or double space size?
     return 0;
@@ -145,54 +145,80 @@ void* Collector::copy(void* object, Collector::size_type size)
     ObjectHeader* newHeader = (ObjectHeader*) mObjectSpace.mAllocPtr;
     newHeader->mOwner = owner;
     void* newObject = (newHeader + 1);
-    if (size) {
-        std::memcpy(newObject, object, size);
-    } else {
-        size = owner->copy(newObject, object);
-    }
+    if (size == 0) size = owner->size(object);
+    STD::memcpy(newObject, object, size);
     mObjectSpace.mAllocPtr += align(size + sizeof(ObjectHeader));
     oldHeader->mForwardingPointer = pointer(newObject) + kIsForwardingPointer;
     return newObject;
 }
 
+void* Collector::arrayCopy(void* array)
+{
+    size_t* header = (size_t*) (reinterpret_cast<char*>(array) - ARRAY_HEADER_SIZE);
+    void* newArray = reinterpret_cast<char*>(copy(header, ARRAY_HEADER_SIZE + (header[0] * header[1]))) + ARRAY_HEADER_SIZE;
+    return newArray;
+}
+
 #if DEBUG
 
 struct ConsCell {
-    float64 car;
+    float32 car;
     ConsCell* cdr;
 
-private:
-    typedef Collector::size_type size_type;
+    ConsCell() : car(0.0), cdr(NULL) {}
+    ~ConsCell() {}
 
-    class Owner : public Collector::ObjectOwner {
-    public:
-        /**
-         * Scans through the object, and copies all references.
-         */
-        virtual size_type scan(Collector* collector, void* object)
-        {
-            ConsCell* cell = (ConsCell*) object;
-            cell->cdr = (ConsCell*) collector->copy(cell->cdr, sizeof(ConsCell));
-            return sizeof(ConsCell);
-        }
-        
-        /**
-         * Performs a bitwise copy of the old object into the new object.
-         */
-        virtual size_type copy(void* newObject, void* oldObject)
-        {
-            ConsCell* newCell = (ConsCell*) newObject;
-            ConsCell* oldCell = (ConsCell*) oldObject;
-            newCell->car = oldCell->car;
-            newCell->cdr = oldCell->cdr;
-            return sizeof(ConsCell);
-        }
-    };
+private:
+    typedef Collector::InstanceOwner<ConsCell> ConsCellOwner;
+    friend class ConsCellOwner;
+    typedef Collector::ArrayOwner<ConsCell> ConsCellArrayOwner;
+    friend class ConsCellArrayOwner;
+
+    /**
+    * Scans through the object, and copies all references.
+    */
+    Collector::size_type scan(Collector* collector)
+    {
+        this->cdr = (ConsCell*) collector->copy(this->cdr, sizeof(ConsCell));
+        return sizeof(ConsCell);
+    }
 
 public:
-    void* operator new(std::size_t n, Collector& gc)
+    void* operator new(size_t n, Collector& gc)
     {
-        static Owner owner;
+        static ConsCellOwner owner;
+        return gc.allocateObject(n, &owner);
+    }
+    
+    void* operator new[] (size_t n, Collector& gc)
+    {
+        static ConsCellArrayOwner owner;
+        return gc.allocateObject(n, &owner);
+    }
+};
+
+struct ConsCellArray {
+    ConsCell* cells;
+    
+    ConsCellArray(size_t count, Collector& gc) : cells(new (gc) ConsCell[count]) {}
+
+private:
+    typedef Collector::InstanceOwner<ConsCellArray> ConsCellArrayOwner;
+    friend class ConsCellArrayOwner;
+
+    /**
+    * Scans through the object, and copies all references.
+    */
+    Collector::size_type scan(Collector* collector)
+    {
+        this->cells = (ConsCell*) collector->arrayCopy(this->cells);
+        return sizeof(ConsCellArray);
+    }
+
+public:
+    void* operator new(size_t n, Collector& gc)
+    {
+        static ConsCellArrayOwner owner;
         return gc.allocateObject(n, &owner);
     }
 };
@@ -204,12 +230,12 @@ void testCollector()
     ConsCell* head = 0;
     gc.addRoot((Collector::pointer*)&head);
     
-    const uint32 kCellCount = 100;
+    const size_t kCellCount = 10;
     
     ConsCell* cell;
     ConsCell** link = &head;
     
-    uint32 i;
+    size_t i;
     for (i = 0; i < kCellCount; ++i) {
         *link = cell = new (gc) ConsCell;
         ASSERT(cell);
@@ -228,13 +254,36 @@ void testCollector()
     for (i = 0; i < kCellCount; i++) {
         cell = *link;
         ASSERT(cell);
-        ASSERT(cell->car == (float64)i);
+        ASSERT(cell->car == (float32)i);
         ASSERT(cell->cdr);
         link = &cell->cdr;
     }
     
     // make sure list is still circularly linked.
     ASSERT(*link == head);
+    gc.removeRoot((Collector::pointer*)&head);
+
+#if 0    
+    // create an array of ConsCells.
+    ConsCellArray* array = 0;
+    gc.addRoot((Collector::pointer*)&array);
+    
+    array = new (gc) ConsCellArray(kCellCount, gc);
+    for (i = 0; i < kCellCount; i++) {
+        cell = &array->cells[i];
+        cell->car = i;
+    }
+
+    // run a garbage collection.
+    gc.collect();
+
+    for (i = 0; i < kCellCount; i++) {
+        cell = &array->cells[i];
+        ASSERT(cell);
+        ASSERT(cell->car == (float32)i);
+        ASSERT(cell->cdr == NULL);
+    }
+#endif
 }
 
 #endif // DEBUG

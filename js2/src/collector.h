@@ -96,15 +96,13 @@ namespace JavaScript
             virtual size_type scan(Collector* collector, void* object) = 0;
 
             /**
-             * Performs a bitwise copy of oldObject into newObject.
-             * This is only called when Collector::copy() is passed
-             * 0 as its size parameter.
+             * Returns the physical size of the object.
              */
-            virtual size_type copy(void* newObject, void* oldObject) = 0;
+            virtual size_type size(void* object) = 0;
         };
         
         template<class T>
-        class Owner : public ObjectOwner {
+        class InstanceOwner : public ObjectOwner {
         public:
             virtual size_type scan(Collector* collector, void* object)
             {
@@ -112,15 +110,50 @@ namespace JavaScript
                 return t->scan(collector);
             }
             
-            virtual size_type copy(void* newObject, void* oldObject)
+            virtual size_type size(void* /* object */) { return sizeof(T); }
+        };
+
+#if __MWERKS__        
+#if __POWERPC__ && __MWERKS__>=0x2400
+    	enum { ARRAY_HEADER_SIZE = 16 };
+#else
+    	enum { ARRAY_HEADER_SIZE = 2 * sizeof(size_t) };
+#endif
+        enum { ARRAY_HEADER_COUNT = 1 };
+#elif __GNUC__
+    	enum { ARRAY_HEADER_SIZE = 4 };
+        enum { ARRAY_HEADER_COUNT = 0 };
+#else
+        #warning "define me for your compiler."
+    	enum { ARRAY_HEADER_SIZE = 4 };
+        enum { ARRAY_HEADER_COUNT = 0 };
+#endif
+
+        template<class T>
+        class ArrayOwner : public ObjectOwner {
+        public:
+            virtual size_type scan(Collector* collector, void* object)
             {
-                memcpy(newObject, oldObject, sizeof(T));
-                return sizeof(T);
+                // need code to determine how many elements.
+                size_t* header = reinterpret_cast<size_t*>(object);
+                T* t = reinterpret_cast<T*>(reinterpret_cast<char*>(object) + ARRAY_HEADER_SIZE);
+                size_type n = header[1];
+                for (size_type i = 0; i < n; ++i)
+                    t[i].scan(collector);
+                return ARRAY_HEADER_SIZE + (n * sizeof(T));
+            }
+            
+            virtual size_type size(void* object)
+            {
+                size_t* header = reinterpret_cast<size_t*>(object);
+                return ARRAY_HEADER_SIZE + (header[1] * sizeof(T));
             }
         };
         
  /* private: */
         void* copy(void* object, size_type size = 0);
+        
+        void* arrayCopy(void* array);
         
     private:
         template <typename T> struct Space {
