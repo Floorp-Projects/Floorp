@@ -86,7 +86,7 @@ SECStatus SSM_SSLMakeBadServerCertDialog(int error,
 SECStatus SSM_SSLVerifyServerCert(CERTCertDBHandle* handle,
                                   CERTCertificate* cert, PRBool checkSig, 
                                   SSMSSLDataConnection* conn);
-PRStatus SSMSSLDataConnection_TLSStepUp(SSMSSLDataConnection* conn);
+static PRStatus SSMSSLDataConnection_TLSStepUp(SSMSSLDataConnection* conn);
 /* callback functions */
 SECStatus SSM_SSLAuthCertificate(void* arg, PRFileDesc* socket,
                                  PRBool checkSig, PRBool isServer);
@@ -107,7 +107,7 @@ SSMStatus SSMSSLDataConnection_Create(void* arg,
                                      SSMResource** res)
 {
     SSMStatus rv = PR_SUCCESS;
-    SSMSSLDataConnection* conn;
+    SSMSSLDataConnection* conn=NULL;
 
 	/* check arguments */
 	if (arg == NULL || res == NULL) {
@@ -301,7 +301,7 @@ void SSMSSLDataConnection_Invariant(SSMSSLDataConnection* conn)
 SSMStatus SSMSSLDataConnection_GetAttrIDs(SSMResource* res,
 										 SSMAttributeID** ids, PRIntn* count)
 {
-    SSMStatus rv;
+    SSMStatus rv=SSM_SUCCESS;
 
 	if (res == NULL || ids == NULL || count == NULL) {
 		goto loser;
@@ -320,8 +320,8 @@ SSMStatus SSMSSLDataConnection_GetAttrIDs(SSMResource* res,
     (*ids)[*count++] = SSM_FID_SSLDATA_DISCARD_SOCKET_STATUS;
     goto done;
 loser:
-    if (rv == PR_SUCCESS) {
-		rv = PR_FAILURE;
+    if (rv == SSM_SUCCESS) {
+		rv = SSM_FAILURE;
 	}
 done:
     return rv;
@@ -958,6 +958,7 @@ loser:
     return PR_FAILURE;
 }
 
+
 /* thread function */
 /* SSL connection is serviced by the data service thread that works on
  * the client data socket and the SSL socket.
@@ -968,6 +969,164 @@ loser:
 #define SSL_PDS 3
 #define READSSL_CHUNKSIZE 16384
 
+/* Helper functions for thread */
+SSMStatus
+SSM_SSLThreadReadFromClient(SSMSSLDataConnection* conn, PRIntn *nSockets,
+			    PRIntn oBufSize, char *outbound, PRPollDesc *pds)
+{
+  PRIntn read = 0;
+  PRIntn sent = 0;
+  SSMStatus rv = SSM_SUCCESS;
+
+  SSM_DEBUG("Attempting to read %ld bytes from client "
+	    "socket.\n", oBufSize);
+  read = PR_Recv(SSMDATACONNECTION(conn)->m_clientSocket,
+		 outbound, oBufSize, 0,
+		 PR_INTERVAL_NO_TIMEOUT);
+  
+  if (read <= 0) {
+    if (read < 0) {
+      /* Got an error */
+      rv = SSMSSLDataConnection_UpdateErrorCode(conn);
+      SSM_DEBUG("Error receiving data over client "
+		"socket, status == %ld\n", (long)rv);
+    }
+    else {
+      /* We got an EOF */
+      SSM_DEBUG("Got EOF at client socket.\n");
+      rv = PR_SUCCESS;
+    }
+    
+    if (conn->socketSSL != NULL) {
+      SSM_DEBUG("Shutting down the target socket.\n");
+      PR_Shutdown(conn->socketSSL, PR_SHUTDOWN_SEND);
+    }
+    
+    /* remove the socket from the array */
+    pds->fd = NULL;
+    (*nSockets)--;
+  }
+  else {
+    SSM_DEBUG("data: <%s>\n" "Send the data to the "
+	      "target.\n", outbound);
+    sent = PR_Send(conn->socketSSL, outbound, read, 0,
+		   PR_INTERVAL_NO_TIMEOUT);
+    if (sent != read) {
+      SSM_DEBUG("Couldn't send all data to the target socket (sent: %d read: %d)\n",
+		sent, read);
+      rv = SSMSSLDataConnection_UpdateErrorCode(conn);
+      
+      if (SSMDATACONNECTION(conn)->m_clientSocket != 
+	  NULL) {
+	SSM_DEBUG("Shutting down the client socket.\n");
+	PR_Shutdown(SSMDATACONNECTION(conn)->m_clientSocket, 
+		    PR_SHUTDOWN_SEND);
+      }
+      
+      /* remove the socket from the array */
+      pds->fd = NULL;
+      (*nSockets)--;
+    }
+  }
+  return rv;
+}
+
+SSMStatus
+SSM_SSLThreadReadFromServer(SSMSSLDataConnection* conn, PRIntn *nSockets,
+			    char *inbound, PRIntn bufsize,
+			    PRPollDesc* pds)
+{
+  PRIntn read = 0;
+  PRIntn sent = 0;
+  SSMStatus rv=SSM_SUCCESS;
+
+  SSM_DEBUG("Reading data from target socket.\n");
+  read = PR_Recv(conn->socketSSL, inbound, bufsize,
+		 0, PR_TicksPerSecond()*120);
+  
+  if (read <= 0) {
+    if (read < 0) {
+      /* Got error */
+      rv = SSMSSLDataConnection_UpdateErrorCode(conn);
+      SSM_DEBUG("Error receiving data from target "
+		"socket, status = %ld\n", rv);
+    }
+    else {
+      /* We got an EOF */
+      SSM_DEBUG("Got EOF at target socket.\n");
+      rv = SSM_SUCCESS;
+    }
+    
+    if (SSMDATACONNECTION(conn)->m_clientSocket != NULL) {
+      SSM_DEBUG("Shutting down the client socket.\n");
+      PR_Shutdown(SSMDATACONNECTION(conn)->m_clientSocket, 
+		  PR_SHUTDOWN_SEND);
+    }
+    
+    /* remove the socket from the array */
+    pds->fd = NULL;
+    (*nSockets)--;
+  }
+  else {
+    /* Got data, write it to the client socket */
+    SSM_DEBUG("Writing to client socket.\n");
+#if 0
+    SSM_DumpBuffer(inbound, read);
+#endif
+    sent = PR_Send(SSMDATACONNECTION(conn)->m_clientSocket,
+		   inbound, read, 0, 
+		   PR_INTERVAL_NO_TIMEOUT);
+    if (sent != read) {
+      rv = SSMSSLDataConnection_UpdateErrorCode(conn);
+      
+      if (conn->socketSSL != NULL) {
+	SSM_DEBUG("Shutting down the target socket.\n");
+	PR_Shutdown(conn->socketSSL, PR_SHUTDOWN_SEND);
+      }
+      
+      /* remove the socket from the array */
+      pds->fd = NULL;
+      (*nSockets)--;
+    }
+    SSM_DEBUG("Wrote %ld bytes.\n", sent);
+  }
+  return rv;
+}
+
+SSMStatus
+SSM_SSLThreadMakeConnectionSSL(SSMSSLDataConnection* conn,
+			       PRIntn *nSockets,
+			       PRPollDesc* pds)			       
+{
+  /* We've been told to enable TLS on this connection.
+     Clear the event, step up, and reconfigure sockets. */
+  
+  PRFileDesc *stepUpFD = conn->stepUpFD;
+  SSMStatus rv = SSM_SUCCESS;
+  
+  /* Make sure the control connection has settled */
+  SSM_LockResource(SSMRESOURCE(conn));
+  if ((pds->out_flags & PR_POLL_READ) != 0)
+    /* it's readable, so it should return immediately */
+    PR_WaitForPollableEvent(stepUpFD);
+  
+  /* Step up to encryption. */
+  rv = SSMSSLDataConnection_TLSStepUp(conn);
+  conn->m_error = rv; /* tell the control connection */
+  
+  /* Remove the step-up fd */
+  conn->stepUpFD = NULL;
+  pds->fd = NULL;
+  (*nSockets)--;
+  PR_DestroyPollableEvent(stepUpFD);
+  
+  /* Notify ourselves to wake up the control connection */
+  SSM_NotifyResource(SSMRESOURCE(conn));
+  SSM_UnlockResource(SSMRESOURCE(conn));
+  return rv;
+}
+
+
 void SSM_SSLDataServiceThread(void* arg)
 {
     SSMStatus rv = PR_SUCCESS;
@@ -976,8 +1135,6 @@ void SSM_SSLDataServiceThread(void* arg)
     PRIntn nSockets = 0;
     PRInt32 nReady;
     int i;
-    PRIntn read = 0;
-    PRIntn sent = 0;
     char *outbound = NULL;
     char *inbound = NULL;
     PRIntn oBufSize;
@@ -1059,7 +1216,7 @@ void SSM_SSLDataServiceThread(void* arg)
          */
         if (pds[1].fd == NULL) {
             /* don't block in polling */
-            nReady = PR_Poll(pds, SSL_PDS, PR_INTERVAL_NO_WAIT);
+            nReady = PR_Poll(pds, SSL_PDS, PR_TicksPerSecond()*600);
             if (nReady <= 0) {
                 /* either error or the client socket is blocked.  Bail. */
                 rv = SSMSSLDataConnection_UpdateErrorCode(conn);
@@ -1104,7 +1261,7 @@ void SSM_SSLDataServiceThread(void* arg)
 #if 0
         }
 #endif
-        if (nReady < 0) {
+        if (nReady <= 0) {
             rv = SSMSSLDataConnection_UpdateErrorCode(conn);
             goto loser;
         }
@@ -1120,136 +1277,27 @@ void SSM_SSLDataServiceThread(void* arg)
             if (pds[i].out_flags & (PR_POLL_READ | PR_POLL_EXCEPT)) {
                 if (pds[i].fd == SSMDATACONNECTION(conn)->m_clientSocket) {
                     /* got data at the client socket */
-                    SSM_DEBUG("Attempting to read %ld bytes from client "
-                              "socket.\n", oBufSize);
-                    read = PR_Recv(SSMDATACONNECTION(conn)->m_clientSocket,
-                                   outbound, oBufSize, 0,
-                                   PR_INTERVAL_NO_TIMEOUT);
-                    
-                    if (read <= 0) {
-                        if (read < 0) {
-                            /* Got an error */
-                            rv = SSMSSLDataConnection_UpdateErrorCode(conn);
-                            SSM_DEBUG("Error receiving data over client "
-                                      "socket, status == %ld\n", (long)rv);
-                        }
-                        else {
-                            /* We got an EOF */
-                            SSM_DEBUG("Got EOF at client socket.\n");
-                            rv = PR_SUCCESS;
-                        }
-
-                        if (conn->socketSSL != NULL) {
-                            SSM_DEBUG("Shutting down the target socket.\n");
-                            PR_Shutdown(conn->socketSSL, PR_SHUTDOWN_SEND);
-                        }
-
-                        /* remove the socket from the array */
-                        pds[i].fd = NULL;
-                        nSockets--;
-                    }
-                    else {
-                        SSM_DEBUG("data: <%s>\n" "Send the data to the "
-                                  "target.\n", outbound);
-                        sent = PR_Send(conn->socketSSL, outbound, read, 0,
-                                       PR_INTERVAL_NO_TIMEOUT);
-                        if (sent != read) {
-                        	SSM_DEBUG("Couldn't send all data to the target socket (sent: %d read: %d)\n",
-                        		sent, read);
-                            rv = SSMSSLDataConnection_UpdateErrorCode(conn);
-                            
-                            if (SSMDATACONNECTION(conn)->m_clientSocket != 
-				NULL) {
-                                SSM_DEBUG("Shutting down the client socket.\n");
-                                PR_Shutdown(SSMDATACONNECTION(conn)->m_clientSocket, 
-					    PR_SHUTDOWN_SEND);
-                            }
-
-                            /* remove the socket from the array */
-                            pds[i].fd = NULL;
-                            nSockets--;
-                        }
-                    }
+		    rv = SSM_SSLThreadReadFromClient(conn, &nSockets,
+						     oBufSize, outbound,
+						     &pds[i]);
+		    SSM_DEBUG("Just finished reading from client with rv=%d\n",
+			      rv);
                 }
                 else if (pds[i].fd == conn->socketSSL) {
                     /* got data at the SSL socket */
-                    SSM_DEBUG("Reading data from target socket.\n");
-                    read = PR_Recv(conn->socketSSL, inbound, READSSL_CHUNKSIZE,
-                                   0, PR_INTERVAL_NO_TIMEOUT);
-
-                    if (read <= 0) {
-                        if (read < 0) {
-                            /* Got error */
-                            rv = SSMSSLDataConnection_UpdateErrorCode(conn);
-                            SSM_DEBUG("Error receiving data from target "
-                                      "socket, status = %ld\n", rv);
-                        }
-                        else {
-                            /* We got an EOF */
-                            SSM_DEBUG("Got EOF at target socket.\n");
-                            rv = PR_SUCCESS;
-                        }
-
-                        if (SSMDATACONNECTION(conn)->m_clientSocket != NULL) {
-			    SSM_DEBUG("Shutting down the client socket.\n");
-                            PR_Shutdown(SSMDATACONNECTION(conn)->m_clientSocket, 
-                                        PR_SHUTDOWN_SEND);
-                        }
-
-                        /* remove the socket from the array */
-                        pds[i].fd = NULL;
-                        nSockets--;
-                    }
-                    else {
-                        /* Got data, write it to the client socket */
-                        SSM_DEBUG("Writing to client socket.\n");
-#if 0
-                        SSM_DumpBuffer(inbound, read);
-#endif
-                        sent = PR_Send(SSMDATACONNECTION(conn)->m_clientSocket,
-                                       inbound, read, 0, 
-                                       PR_INTERVAL_NO_TIMEOUT);
-                        if (sent != read) {
-                            rv = SSMSSLDataConnection_UpdateErrorCode(conn);
-
-                            if (conn->socketSSL != NULL) {
-			        SSM_DEBUG("Shutting down the target socket.\n");
-                                PR_Shutdown(conn->socketSSL, PR_SHUTDOWN_SEND);
-                            }
-
-                            /* remove the socket from the array */
-                            pds[i].fd = NULL;
-                            nSockets--;
-                        }
-                        SSM_DEBUG("Wrote %ld bytes.\n", sent);
-                    }
+		    rv = SSM_SSLThreadReadFromServer(conn, &nSockets,
+						     inbound, 
+						     READSSL_CHUNKSIZE,
+						     &pds[i]);
+		    SSM_DEBUG("Just finished reading from server with rv=%d\n",
+			      rv);
                 }
                 else if (pds[i].fd == conn->stepUpFD)
                 {
-                    /* We've been told to enable TLS on this connection.
-                       Clear the event, step up, and reconfigure sockets. */
-
-                    PRFileDesc *stepUpFD = conn->stepUpFD;
-
-                    /* Make sure the control connection has settled */
-                    SSM_LockResource(SSMRESOURCE(conn));
-                    if ((pds[i].out_flags & PR_POLL_READ) != 0)
-                        /* it's readable, so it should return immediately */
-                        PR_WaitForPollableEvent(stepUpFD);
-
-                    /* Step up to encryption. */
-                    rv = SSMSSLDataConnection_TLSStepUp(conn);
-                    conn->m_error = rv; /* tell the control connection */
-
-                    /* Remove the step-up fd */
-                    conn->stepUpFD = NULL;
-                    pds[i].fd = NULL;
-                    nSockets--;
-                    PR_DestroyPollableEvent(stepUpFD);
-
-                    /* Notify ourselves to wake up the control connection */
-                    SSM_NotifyResource(SSMRESOURCE(conn));
-                    SSM_UnlockResource(SSMRESOURCE(conn));
+		    rv = SSM_SSLThreadMakeConnectionSSL(conn, &nSockets,
+							&pds[i]);
+		    SSM_DEBUG("Just finished steeping up connection with rv=%d\n",
+			      rv);
                 }
             }
         }    /* end of for loop */
