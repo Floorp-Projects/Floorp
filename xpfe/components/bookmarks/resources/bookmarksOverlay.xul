@@ -51,7 +51,6 @@
       <command id="cmd_setpersonaltoolbarfolder"  oncommand="goDoCommand('cmd_setpersonaltoolbarfolder');"/>
       <command id="cmd_setnewsearchfolder"        oncommand="goDoCommand('cmd_setnewsearchfolder');"/>
       <command id="cmd_properties"                oncommand="goDoCommand('cmd_properties');"/>
-      <command id="cmd_bm_copylink"               oncommand="goDoCommand('cmd_bm_copylink');"/>
       <command id="cmd_rename"                    oncommand="goDoCommand('cmd_rename');"/>
       <command id="cmd_openfolderinnewwindow"     oncommand="goDoCommand('cmd_openfolderinnewwindow');"/>
       <command id="cmd_import"                    oncommand="goDoCommand('cmd_import');"/>
