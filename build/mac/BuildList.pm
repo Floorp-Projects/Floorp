@@ -4,7 +4,7 @@ package			BuildList;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildMozilla DistMozilla SetBuildNumber SetAgentString);
+@EXPORT			= qw(BuildMozilla DistMozilla SetBuildNumber SetAgentString SetTimeBomb);
 
 =head1 NAME
 
@@ -361,10 +361,6 @@ sub DistMozilla()
 
 sub SetAgentString
 {
-	use Cwd;
-	
-	$cwd = cwd();
-	print $cwd;
 	
 	open (BDATE, ":mozilla:config:build_number") || die "could not open buildnumber";
 	   
@@ -393,6 +389,13 @@ sub SetAgentString
 	
 	unlink (":mozilla:cmd:macfe:restext:custom.r");
 	rename (":mozilla:cmd:macfe:restext:agent.r", ":mozilla:cmd:macfe:restext:custom.r");
+}
+
+sub SetTimeBomb
+{
+
+  system("perl :mozilla:config:mac-set-timebomb.pl");
+	
 }
 
 1;
