@@ -488,7 +488,7 @@ nsMsgNewsFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgNewsFolder::GetDatabase()
 {
-	if (mDatabase == nsnull)
+	if (!mDatabase)
 	{
 		nsNativeFileSpec path;
 		nsresult rv = GetPath(path);
@@ -513,11 +513,8 @@ nsresult nsMsgNewsFolder::GetDatabase()
 			NS_RELEASE(newsDBFactory);
 		}
 
-		if(mDatabase)
-		{
-
+		if(mDatabase) {
 			mDatabase->AddListener(this);
-
       UpdateSummaryTotals();
 		}
 	}
@@ -1064,28 +1061,45 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
   return NS_OK;
 }
 
+/* this is news, so remember that DeleteMessage is really CANCEL */
 NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages)
 {
-#if 0
-	nsresult rv = GetDatabase();
-	if(NS_SUCCEEDED(rv))
-	{
-		nsIMsgDBHdr *msgDBHdr = nsnull;
-		//We know from our factory that news message resources are going to be
-  	//nsNewsMessages.
-	  nsNewsMessage *newsMessage = NS_STATIC_CAST(nsNewsMessage*, message);
+  nsresult rv = NS_OK;
+  
+  if (!messages) {
+    // nothing to CANCEL
+    return NS_ERROR_NULL_POINTER;
+  }
 
-		rv = newsMessage->GetMsgDBHdr(&msgDBHdr);
-		if(NS_SUCCEEDED(rv))
-		{
-			rv =mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
-			NS_IF_RELEASE(msgDBHdr);
-		}
-	}
-	return rv;
-#endif  
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && nntpService) {
+    rv = nntpService->CancelMessages(messages, nsnull);
+  }
+
+  // if we were able to CANCEL those messages, remove the from the database
+  if (NS_SUCCEEDED(rv)) {
+    if (mDatabase) {
+      PRUint32 count = 0;
+      PRUint32 i;
+      for (i = 0; i < count; i++) {
+        nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
+        nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
+        if (message) {
+          nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
+          nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
+          
+          if(NS_SUCCEEDED(rv)) {
+            rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+            if(NS_SUCCEEDED(rv)) {
+              rv = mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
@@ -1116,7 +1130,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 #ifdef DEBUG_NEWS
     printf("Getting new news articles....\n");
 #endif
-    rv = nntpService->GetNewNews(nsnull, nntpServer, mURI, nsnull);
+    rv = nntpService->GetNewNews(nntpServer, mURI, nsnull, nsnull);
   }
   return rv;
 

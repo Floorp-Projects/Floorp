@@ -50,10 +50,13 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgNewsCID.h"
 
+#include "nsIMessage.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -67,7 +70,9 @@ nsNntpService::nsNntpService()
 }
 
 nsNntpService::~nsNntpService()
-{}
+{
+  // do nothing
+}
 
 NS_IMPL_THREADSAFE_ADDREF(nsNntpService);
 NS_IMPL_THREADSAFE_RELEASE(nsNntpService);
@@ -118,8 +123,8 @@ NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileS
 nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
   nsresult rv = NS_OK;
-
-  if (aMessageURI == nsnull) {
+  
+  if (!aMessageURI) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -457,7 +462,7 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsISupports * aConsumer, nsIUrlLi
 	return rv;
 }
 
-nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomingServer *nntpServer, const char *uri, nsIURL **_retval)
+NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIURL **_retval)
 {
   if (!uri) {
 	return NS_ERROR_NULL_POINTER;
@@ -488,7 +493,7 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomin
   }
 #endif
   
-#ifdef DEBUG_NEWS
+#ifdef DEBUG_sspitzer
   if (nntpHostName) {
     printf("get news from news://%s\n", nntpHostName);
   }
@@ -502,4 +507,52 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomin
   
   NS_UNLOCK_INSTANCE();
   return rv;
+}
+
+NS_IMETHODIMP nsNntpService::CancelMessages(nsISupportsArray *messages, nsIUrlListener * aUrlListener)
+{
+  nsresult rv = NS_OK;
+  PRUint32 count = 0;
+  
+  if (!messages) {
+    // nothing to cancel.
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  rv = messages->Count(&count);
+  if (NS_FAILED(rv)) {
+#ifdef DEBUG_sspitzer
+    printf("Count failed\n");
+#endif
+    return rv;
+  }
+  
+  nsString2 messageIds("", eOneByte);
+  PRUint32 i;
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
+    nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
+    if (message) {
+      nsMsgKey key;
+      rv = message->GetMessageKey(&key);
+      if (NS_SUCCEEDED(rv)) {
+        if (messageIds.Length() > 0)
+          messageIds.Append(',');
+        messageIds.Append((PRInt32)key);
+      }
+    }
+  }
+  
+#ifdef DEBUG_sspitzer
+  printf("attempt to cancel the following IDs: %s\n", messageIds.GetBuffer());
+#endif
+
+  if (0) {
+    // the CANCEL succeeded.
+    return NS_OK;
+  }
+  else {
+    // the CANCEL failed.
+    return NS_ERROR_FAILURE;
+  }
 }

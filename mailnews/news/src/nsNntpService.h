@@ -37,9 +37,9 @@ public:
 
   NS_IMETHOD RunNewsUrl (nsString& urlString, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURL **_retval);
 
-  NS_IMETHOD GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomingServer *nntpServer, const char *uri, nsIURL **_retval);
+  NS_IMETHOD GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIURL **_retval);
 
-  
+  NS_IMETHOD CancelMessages(nsISupportsArray *messages, nsIUrlListener * aUrlListener);
 
   ////////////////////////////////////////////////////////////////////////////////////////
   // we suppport the nsIMsgMessageService Interface 

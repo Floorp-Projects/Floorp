@@ -22,6 +22,7 @@
 
 interface nsIURL;
 interface nsIStreamListener;  
+interface nsISupportsArray;
 
 [ref] native nsFilePath(nsFilePath);
 [ref] native nsString(nsString); 
@@ -38,8 +39,8 @@ interface nsINntpService : nsISupports {
 
   nsIURL RunNewsUrl (in nsString urlString, in nsISupports aConsumer, in nsIUrlListener aUrlListener);
 
-  nsIURL GetNewNews (in nsIUrlListener aUrlListener, in nsINntpIncomingServer nntpServer, in string uri);
+  nsIURL GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener);
 
+  void CancelMessages (in nsISupportsArray messages, in nsIUrlListener aUrlListener);
 };
-
 

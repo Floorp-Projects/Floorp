@@ -11,6 +11,7 @@
 #include "nsIUrlListener.h" /* interface nsIUrlListener */
 class nsIURL; /* forward decl */
 class nsIStreamListener; /* forward decl */
+class nsISupportsArray; /* forward decl */
 #include "nsFileSpec.h"
 #include "nsString.h"
 
@@ -33,8 +34,11 @@ class nsINntpService : public nsISupports {
   /* nsIURL RunNewsUrl (in nsString urlString, in nsISupports aConsumer, in nsIUrlListener aUrlListener); */
   NS_IMETHOD RunNewsUrl(nsString & urlString, nsISupports *aConsumer, nsIUrlListener *aUrlListener, nsIURL **_retval) = 0;
 
-  /* nsIURL GetNewNews (in nsIUrlListener aUrlListener, in nsINntpIncomingServer nntpServer, in string uri); */
-  NS_IMETHOD GetNewNews(nsIUrlListener *aUrlListener, nsINntpIncomingServer *nntpServer, const char *uri, nsIURL **_retval) = 0;
+  /* nsIURL GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener); */
+  NS_IMETHOD GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener *aUrlListener, nsIURL **_retval) = 0;
+
+  /* void CancelMessages (in nsISupportsArray messages, in nsIUrlListener aUrlListener); */
+  NS_IMETHOD CancelMessages(nsISupportsArray *messages, nsIUrlListener *aUrlListener) = 0;
 };
 
 #endif /* __gen_nsINntpService_h__ */
