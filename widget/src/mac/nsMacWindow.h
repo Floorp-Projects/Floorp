@@ -23,6 +23,7 @@
 #define MacWindow_h__
 
 #include <memory>	// for auto_ptr
+#include <Controls.h>
 
 using std::auto_ptr;
 
@@ -122,6 +123,8 @@ protected:
 	nsIWidget                      *mOffsetParent;
 	PRBool                          mAcceptsActivation;
 	PRBool                          mIsActive;
+	
+	ControlHandle      mPhantomScrollbar;  // a native scrollbar for the scrollwheel
 };
 
 #endif // MacWindow_h__

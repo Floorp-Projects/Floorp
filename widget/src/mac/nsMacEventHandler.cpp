@@ -58,6 +58,52 @@ PRBool	nsMacEventHandler::sMouseInWidgetHit = PR_FALSE;
 
 nsMacEventDispatchHandler	gEventDispatchHandler;
 
+static pascal void ScrollActionProc (ControlHandle ctrl, ControlPartCode part) ;
+
+//
+// ScrollActionProc
+//
+// Called from ::TrackControl(), this senses which part of the phantom
+// scrollbar the click from the wheelMouse driver was in and sends
+// the correct NS_MOUSE_SCROLL event into Gecko
+//
+static pascal void ScrollActionProc(ControlHandle ctrl, ControlPartCode partCode)
+{
+	switch (partCode)
+	{
+		case kControlUpButtonPart:
+		case kControlDownButtonPart:
+		case kControlPageUpPart:
+		case kControlPageDownPart:
+		  if ( gEventDispatchHandler.GetActive() ) {
+        nsMouseScrollEvent scrollEvent;
+        scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
+        if ( partCode == kControlPageUpPart || partCode == kControlPageDownPart )
+          scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+        
+        scrollEvent.delta = 
+          (partCode == kControlUpButtonPart || partCode == kControlPageUpPart) ? -1 : 1;
+        
+        scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+        scrollEvent.isShift   = PR_FALSE;
+        scrollEvent.isControl = PR_FALSE;
+        scrollEvent.isMeta    = PR_FALSE;
+        scrollEvent.isAlt     = PR_FALSE;
+      	scrollEvent.message 		= NS_MOUSE_SCROLL;
+      	scrollEvent.point.x			= 100;
+      	scrollEvent.point.y			= 100;
+      	scrollEvent.time				= PR_IntervalNow();
+      	scrollEvent.widget			= gEventDispatchHandler.GetActive();
+      	scrollEvent.nativeMsg		= nsnull;
+
+        // dispatch scroll event
+        nsEventStatus rv;
+        scrollEvent.widget->DispatchEvent(&scrollEvent, rv);
+      }
+      break;
+  }
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -91,8 +137,9 @@ nsMacEventDispatchHandler::~nsMacEventDispatchHandler()
 	{
 	  mWidgetPointed->RemoveDeleteObserver(this);
 	  mWidgetPointed = nsnull;
-	}
+	}	
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -318,6 +365,7 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	mIMEIsComposing = PR_FALSE;
 	mIMECompositionStr=nsnull;
 
+  mControlActionProc = NewControlActionProc(ScrollActionProc);
 }
 
 
@@ -328,6 +376,10 @@ nsMacEventHandler::~nsMacEventHandler()
 	if(nsnull != mIMECompositionStr) {
 		nsAutoString::Recycle(mIMECompositionStr);
 		mIMECompositionStr = nsnull;
+	}
+	if ( mControlActionProc ) {
+	  DisposeControlActionUPP(mControlActionProc); 
+	  mControlActionProc = nsnull;
 	}
 }
 
@@ -1203,7 +1255,20 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 		  // don't allow clicks that rolled up a popup through to the content area.
       if ( ignoreClickInContent )
         break;
-        
+
+      // Check if the mousedown is in our window's phantom scrollbar. If so, track
+      // the movement of the mouse. The scrolling code is in the action proc.
+      Point local = aOSEvent.where;
+      ::GlobalToLocal ( &local );
+      ControlHandle scrollbar;
+      ControlPartCode partCode = ::FindControl(local, whichWindow, &scrollbar);
+      if ( partCode >= kControlUpButtonPart && partCode <= kControlPageDownPart &&
+            scrollbar &&
+            GetControlReference(scrollbar) == 'mozz' ) {
+    	  ::TrackControl(scrollbar, local, mControlActionProc);
+        break;
+      }
+
 			nsMouseEvent mouseEvent;
 			PRUint32 mouseButton = NS_MOUSE_LEFT_BUTTON_DOWN;
 			if ( aOSEvent.modifiers & controlKey )
@@ -1212,7 +1277,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			nsCOMPtr<nsIWidget> kungFuDeathGrip ( mouseEvent.widget );            // ensure widget doesn't go away
 			nsWindow* widgetHit = NS_STATIC_CAST(nsWindow*, mouseEvent.widget);   //   while we're processing event
 			if (widgetHit)
-			{
+			{        
 				// set the activation and focus on the widget hit, if it accepts it
 				{
 					nsMouseEvent mouseActivateEvent;
