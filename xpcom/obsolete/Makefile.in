@@ -107,5 +107,8 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, shell32 ole32)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, imagehlp)
 endif
+ifdef GNU_CXX
+DSO_LDOPTS += -Wl,--export-all-symbols
+endif
 endif # WINNT
 
