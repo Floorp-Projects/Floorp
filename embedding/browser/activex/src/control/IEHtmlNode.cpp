@@ -52,16 +52,15 @@ PRIntn PR_CALLBACK HashComparator(const void *v1, const void *v2)
 {
     if (v1 == v2)
     {
-        return 0;
+        return 1;
     }
-    return (v1 > v2) ? 1 : 0;
+    return 0;
 }
 
 
-CIEHtmlNode::CIEHtmlNode()
+CIEHtmlNode::CIEHtmlNode() :
+    mParent(NULL)
 {
-    m_pIDOMNode = nsnull;
-    m_pIDispParent = NULL;
 }
 
 CIEHtmlNode::~CIEHtmlNode()
@@ -70,9 +69,9 @@ CIEHtmlNode::~CIEHtmlNode()
 }
 
 
-HRESULT CIEHtmlNode::SetParentNode(IDispatch *pIDispParent)
+HRESULT CIEHtmlNode::SetParent(CIEHtmlNode *pParent)
 {
-    m_pIDispParent = pIDispParent;
+    mParent = pParent;
     return S_OK;
 }
 
@@ -89,96 +88,37 @@ HRESULT CIEHtmlNode::FindFromDOMNode(nsIDOMNode *pIDOMNode, CIEHtmlNode **pHtmlN
         return E_FAIL;
     }
 
-    nsISupports *pISupports = nsnull;
-    pIDOMNode->QueryInterface(NS_GET_IID(nsISupports), (void **) &pISupports);
-    NG_ASSERT(pISupports);
-    *pHtmlNode = (CIEHtmlNode *) PL_HashTableLookup(g_NodeLookupTable, pISupports);
-    NS_RELEASE(pISupports);
+    nsCOMPtr<nsISupports> nodeAsSupports = do_QueryInterface(pIDOMNode);
+    *pHtmlNode = (CIEHtmlNode *) PL_HashTableLookup(g_NodeLookupTable, nodeAsSupports);
 
     return S_OK;
 }
-
-
-
 
 HRESULT CIEHtmlNode::SetDOMNode(nsIDOMNode *pIDOMNode)
 {
     if (pIDOMNode)
     {
-        NS_IF_RELEASE(m_pIDOMNode);
-        m_pIDOMNode = pIDOMNode;
-        NS_ADDREF(m_pIDOMNode);
-
         if (g_NodeLookupTable == NULL)
         {
             g_NodeLookupTable = PL_NewHashTable(123, HashFunction, HashComparator, NULL, NULL, NULL);
         }
 
-        nsISupports *pISupports = nsnull;
-        m_pIDOMNode->QueryInterface(NS_GET_IID(nsISupports), (void **) &pISupports);
-        PL_HashTableAdd(g_NodeLookupTable, m_pIDOMNode, this);
-        NS_RELEASE(pISupports);
+        mDOMNode = pIDOMNode;
+        nsCOMPtr<nsISupports> nodeAsSupports= do_QueryInterface(mDOMNode);
+        PL_HashTableAdd(g_NodeLookupTable, nodeAsSupports, this);
     }
-    else if (m_pIDOMNode)
+    else if (mDOMNode)
     {
         // Remove the entry from the hashtable
-        nsISupports *pISupports = nsnull;
-        m_pIDOMNode->QueryInterface(NS_GET_IID(nsISupports), (void **) &pISupports);
-        PL_HashTableRemove(g_NodeLookupTable, pISupports);
-        NS_RELEASE(pISupports);
-     
+        nsCOMPtr<nsISupports> nodeAsSupports = do_QueryInterface(mDOMNode);
+        PL_HashTableRemove(g_NodeLookupTable, nodeAsSupports);
+        mDOMNode = nsnull;
+
         if (g_NodeLookupTable->nentries == 0)
         {
             PL_HashTableDestroy(g_NodeLookupTable);
             g_NodeLookupTable = NULL;
         }
-
-        NS_RELEASE(m_pIDOMNode);
     }
     return S_OK;
-}
-
-HRESULT CIEHtmlNode::GetDOMNode(nsIDOMNode **pIDOMNode)
-{
-    if (pIDOMNode == NULL)
-    {
-        return E_INVALIDARG;
-    }
-
-    *pIDOMNode = nsnull;
-    if (m_pIDOMNode)
-    {
-        NS_ADDREF(m_pIDOMNode);
-        *pIDOMNode = m_pIDOMNode;
-    }
-
-    return S_OK;
-}
-
-HRESULT CIEHtmlNode::GetDOMElement(nsIDOMElement **pIDOMElement)
-{
-    if (pIDOMElement == NULL)
-    {
-        return E_INVALIDARG;
-    }
-
-    if (m_pIDOMNode == nsnull)
-    {
-        return E_NOINTERFACE;
-    }
-
-    *pIDOMElement = nsnull;
-    m_pIDOMNode->QueryInterface(NS_GET_IID(nsIDOMElement), (void **) pIDOMElement);
-    return (*pIDOMElement) ? S_OK : E_NOINTERFACE;
-}
-
-HRESULT CIEHtmlNode::GetIDispatch(IDispatch **pDispatch)
-{
-    if (pDispatch == NULL)
-    {
-        return E_INVALIDARG;
-    }
-    
-    *pDispatch = NULL;
-    return E_NOINTERFACE;
 }

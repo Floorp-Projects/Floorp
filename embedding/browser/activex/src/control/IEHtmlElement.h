@@ -42,11 +42,13 @@
 #include "IEHtmlNode.h"
 #include "IEHtmlElementCollection.h"
 
-class CIEHtmlElement :    public CIEHtmlNode,
-                        public IDispatchImpl<IHTMLElement, &IID_IHTMLElement, &LIBID_MSHTML>
+class CIEHtmlElement :
+    public CIEHtmlNode,
+    public IDispatchImpl<IHTMLElement, &IID_IHTMLElement, &LIBID_MSHTML>
 {
 public:
     CIEHtmlElement();
+
 protected:
     virtual ~CIEHtmlElement();
 
@@ -57,7 +59,6 @@ BEGIN_COM_MAP(CIEHtmlElement)
     COM_INTERFACE_ENTRY_IID(IID_IHTMLElement, IHTMLElement)
 END_COM_MAP()
 
-    virtual HRESULT GetIDispatch(IDispatch **pDispatch);
     virtual HRESULT GetChildren(CIEHtmlElementCollectionInstance **ppCollection);
 
     // Implementation of IHTMLElement

@@ -39,25 +39,21 @@
 #ifndef IEHTMLNODE_H
 #define IEHTMLNODE_H
 
-class CIEHtmlNode :    public CComObjectRootEx<CComSingleThreadModel>
+
+class CIEHtmlNode :
+    public CComObjectRootEx<CComMultiThreadModel>
 {
 protected:
-    nsIDOMNode *m_pIDOMNode;
-    IDispatch  *m_pIDispParent;
-
-public:
     CIEHtmlNode();
-protected:
     virtual ~CIEHtmlNode();
 
 public:
+    CIEHtmlNode *mParent;
+    nsCOMPtr<nsIDOMNode> mDOMNode;
+
     static HRESULT FindFromDOMNode(nsIDOMNode *pIDOMNode, CIEHtmlNode **pHtmlNode);
-    
+    virtual HRESULT SetParent(CIEHtmlNode *mParent);
     virtual HRESULT SetDOMNode(nsIDOMNode *pIDOMNode);
-    virtual HRESULT GetDOMNode(nsIDOMNode **pIDOMNode);
-    virtual HRESULT GetDOMElement(nsIDOMElement **pIDOMElement);
-    virtual HRESULT SetParentNode(IDispatch *pIDispParent);
-    virtual HRESULT GetIDispatch(IDispatch **pDispatch);
 };
 
 typedef CComObject<CIEHtmlNode> CIEHtmlNodeInstance;

@@ -52,17 +52,6 @@ CIEHtmlElement::~CIEHtmlElement()
 {
 }
 
-
-HRESULT CIEHtmlElement::GetIDispatch(IDispatch **pDispatch)
-{
-    if (pDispatch == NULL)
-    {
-        return E_INVALIDARG;
-    }
-    return QueryInterface(IID_IDispatch, (void **) pDispatch);
-}
-
-
 HRESULT CIEHtmlElement::GetChildren(CIEHtmlElementCollectionInstance **ppCollection)
 {
     // Validate parameters
@@ -96,9 +85,15 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::setAttribute(BSTR strAttributeName, VA
         return E_INVALIDARG;
     }
 
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mDOMNode);
+    if (!element)
+    {
+        return E_UNEXPECTED;
+    }
+
     // Get the name from the BSTR
     USES_CONVERSION;
-    nsString szName(OLE2W(strAttributeName));
+    nsAutoString name(OLE2W(strAttributeName));
 
     // Get the value from the variant
     CComVariant vValue;
@@ -106,16 +101,10 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::setAttribute(BSTR strAttributeName, VA
     {
         return E_INVALIDARG;
     }
-    nsString szValue(OLE2W(vValue.bstrVal));
-
-    nsCOMPtr<nsIDOMElement> element;
-    if (FAILED(GetDOMElement(getter_AddRefs(element))))
-    {
-        return E_UNEXPECTED;
-    }
 
     // Set the attribute
-    element->SetAttribute(szName, szValue);
+    nsAutoString value(OLE2W(vValue.bstrVal));
+    element->SetAttribute(name, value);
 
     return S_OK;
 }
@@ -134,26 +123,25 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::getAttribute(BSTR strAttributeName, LO
 
     // Get the name from the BSTR
     USES_CONVERSION;
-    nsString szName(OLE2W(strAttributeName));
+    nsAutoString name(OLE2W(strAttributeName));
 
-    nsCOMPtr<nsIDOMElement> element;
-    if (FAILED(GetDOMElement(getter_AddRefs(element))))
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mDOMNode);
+    if (!element)
     {
         return E_UNEXPECTED;
     }
 
     BOOL bCaseSensitive = (lFlags == VARIANT_TRUE) ? TRUE : FALSE;
 
-    nsString szValue;
 
     // Get the attribute
-    nsresult nr = element->GetAttribute(szName, szValue);
-
-    if (nr == NS_OK)
+    nsAutoString value;
+    nsresult rv = element->GetAttribute(name, value);
+    if (NS_SUCCEEDED(rv))
     {
         USES_CONVERSION;
         AttributeValue->vt = VT_BSTR;
-        AttributeValue->bstrVal = SysAllocString(W2COLE(szValue.get()));
+        AttributeValue->bstrVal = SysAllocString(W2COLE(value.get()));
         return S_OK;
     }
     else
@@ -171,8 +159,8 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::removeAttribute(BSTR strAttributeName,
         return E_INVALIDARG;
     }
 
-    nsCOMPtr<nsIDOMElement> element;
-    if (FAILED(GetDOMElement(getter_AddRefs(element))))
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mDOMNode);
+    if (!element)
     {
         return E_UNEXPECTED;
     }
@@ -181,10 +169,10 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::removeAttribute(BSTR strAttributeName,
 
     // Get the name from the BSTR
     USES_CONVERSION;
-    nsString szName(OLE2W(strAttributeName));
+    nsAutoString name(OLE2W(strAttributeName));
 
     // Remove the attribute
-    nsresult nr = element->RemoveAttribute(szName);
+    nsresult nr = element->RemoveAttribute(name);
     BOOL bRemoved = (nr == NS_OK) ? TRUE : FALSE;
 
     if (pfSuccess)
@@ -246,17 +234,17 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_tagName(BSTR __RPC_FAR *p)
         return E_INVALIDARG;
     }
 
-    nsCOMPtr<nsIDOMElement> element;
-    if (FAILED(GetDOMElement(getter_AddRefs(element))))
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mDOMNode);
+    if (!element)
     {
         return E_UNEXPECTED;
     }
 
-    nsString szTagName;
-    element->GetTagName(szTagName);
+    nsAutoString tagName;
+    element->GetTagName(tagName);
 
     USES_CONVERSION;
-    *p = SysAllocString(W2COLE(szTagName.get()));
+    *p = SysAllocString(W2COLE(tagName.get()));
     return S_OK;
 }
 
@@ -268,9 +256,10 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_parentElement(IHTMLElement __RPC_F
     }
 
     *p = NULL;
-    if (m_pIDispParent)
+    if (mParent)
     {
-        m_pIDispParent->QueryInterface(IID_IHTMLElement, (void **) p);
+        IDispatch *pDisp = reinterpret_cast<IDispatch *>(mParent);
+        pDisp->QueryInterface(IID_IHTMLElement, (void **) p);
     }
 
     return S_OK;
@@ -458,13 +447,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_lang(BSTR __RPC_FAR *p)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetLeft(long __RPC_FAR *p)
 {
-    nsCOMPtr<nsIDOMNode> domNode;
-    if (FAILED(GetDOMNode(getter_AddRefs(domNode))))
-    {
-        return E_UNEXPECTED;
-    }
-
-    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(mDOMNode);
     if (!nodeAsHTMLElement)
     {
         return E_NOINTERFACE;
@@ -478,13 +461,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetLeft(long __RPC_FAR *p)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetTop(long __RPC_FAR *p)
 {
-    nsCOMPtr<nsIDOMNode> domNode;
-    if (FAILED(GetDOMNode(getter_AddRefs(domNode))))
-    {
-        return E_UNEXPECTED;
-    }
-
-    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(mDOMNode);
     if (!nodeAsHTMLElement)
     {
         return E_NOINTERFACE;
@@ -498,13 +475,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetTop(long __RPC_FAR *p)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetWidth(long __RPC_FAR *p)
 {
-    nsCOMPtr<nsIDOMNode> domNode;
-    if (FAILED(GetDOMNode(getter_AddRefs(domNode))))
-    {
-        return E_UNEXPECTED;
-    }
-
-    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(mDOMNode);
     if (!nodeAsHTMLElement)
     {
         return E_NOINTERFACE;
@@ -518,13 +489,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetWidth(long __RPC_FAR *p)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetHeight(long __RPC_FAR *p)
 {
-    nsCOMPtr<nsIDOMNode> domNode;
-    if (FAILED(GetDOMNode(getter_AddRefs(domNode))))
-    {
-        return E_UNEXPECTED;
-    }
-
-    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIDOMNSHTMLElement> nodeAsHTMLElement = do_QueryInterface(mDOMNode);
     if (!nodeAsHTMLElement)
     {
         return E_NOINTERFACE;
@@ -548,24 +513,33 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::put_innerHTML(BSTR v)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_innerHTML(BSTR __RPC_FAR *p)
 {
-    nsCOMPtr<nsIDOMElement> element;
-    if (FAILED(GetDOMElement(getter_AddRefs(element))))
+    nsCOMPtr<nsIDOMNSHTMLElement> elementHTML = do_QueryInterface(mDOMNode);
+    if (!elementHTML)
     {
-            return E_UNEXPECTED;
+        return E_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIDOMNSHTMLElement> elementHTML = do_QueryInterface(element);
-    nsAutoString szTagName;
-    elementHTML->GetInnerHTML(szTagName);
+    nsAutoString innerHTML;
+    elementHTML->GetInnerHTML(innerHTML);
 
     USES_CONVERSION;
-    *p = SysAllocString(W2COLE(szTagName.get()));
+    *p = SysAllocString(W2COLE(innerHTML.get()));
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::put_innerText(BSTR v)
 {
-    return E_NOTIMPL;
+    nsCOMPtr<nsIDOMNSHTMLElement> elementHTML = do_QueryInterface(mDOMNode);
+    if (!elementHTML)
+    {
+        return E_UNEXPECTED;
+    }
+
+    USES_CONVERSION;
+    nsAutoString innerHTML(OLE2W(v));
+    elementHTML->SetInnerHTML(innerHTML);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_innerText(BSTR __RPC_FAR *p)
