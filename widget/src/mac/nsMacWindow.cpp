@@ -31,7 +31,10 @@
 #endif
 
 
-const short kWindowTitleBarHeight = 20;
+const short kWindowTitleBarHeight = 22;
+const short kWindowMarginWidth = 6;
+const short kDialogTitleBarHeight = 26;
+const short kDialogMarginWidth = 6;
 
 NS_IMPL_ADDREF(nsMacWindow);
 NS_IMPL_RELEASE(nsMacWindow);
@@ -42,7 +45,9 @@ NS_IMPL_RELEASE(nsMacWindow);
 //
 //-------------------------------------------------------------------------
 nsMacWindow::nsMacWindow() : nsWindow()
-	, mWindowMadeHere(PR_FALSE), mMacEventHandler(new nsMacEventHandler(this))
+	, mWindowMadeHere(PR_FALSE)
+	, mIsDialog(PR_FALSE)
+	,	mMacEventHandler(new nsMacEventHandler(this))
 {
 	NS_INIT_REFCNT();
 	strcpy(gInstanceClassName, "nsMacWindow");
@@ -106,11 +111,26 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	// build the main native window
 	if (aNativeParent == nsnull)
 	{
-		Rect wRect;
+			Rect			wRect;
+			short			wDefProcID;
+			Boolean		goAwayFlag;
+
 		nsRectToMacRect(aRect, wRect);
-		wRect.top += ::LMGetMBarHeight() + kWindowTitleBarHeight;
-		wRect.bottom += ::LMGetMBarHeight() + kWindowTitleBarHeight;
-		mWindowPtr = ::NewCWindow(nil, &wRect, "\p-", false, 0, (GrafPort*)-1, true, (long)nsnull);
+
+		if (mIsDialog)
+		{
+			wDefProcID = movableDBoxProc;
+			goAwayFlag = false;
+			::OffsetRect(&wRect, kDialogMarginWidth, kDialogTitleBarHeight + ::LMGetMBarHeight());
+		}
+		else
+		{
+			wDefProcID = 0;
+			goAwayFlag = true;
+			::OffsetRect(&wRect, kWindowMarginWidth, kWindowTitleBarHeight + ::LMGetMBarHeight());
+		}
+
+		mWindowPtr = ::NewCWindow(nil, &wRect, "\p-", false, wDefProcID, (GrafPort*)-1, goAwayFlag, (long)nsnull);
 		mWindowMadeHere = PR_TRUE;
 	}
 	else
@@ -169,7 +189,10 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   // necessary activate/deactivate events. Calling ::ShowHide() is
   // not adequate (pinkerton).
   if ( bState )
+  {
     ::ShowWindow(mWindowPtr);
+    ::SelectWindow(mWindowPtr);
+  }
   else
     ::HideWindow(mWindowPtr);
 
