@@ -21,16 +21,17 @@
  */
 
 #include "nsISupports.idl"
-
-// XXX Until this gets scriptable
-[ptr] native nsIOutputStreamPtr(nsIOutputStream);
-%{C++
-class nsIOutputStream;
-%}
+#include "nsIOutputStream.idl"
 
 [uuid(4DA56F10-99FE-11d2-8EBB-00805F29F370)]
 interface nsIRDFXMLSource : nsISupports
 {
-    void Serialize(in nsIOutputStreamPtr aStream);
+    /**
+     * Serialize the contents of the datasource to aStream.
+     * @param aStream the output stream the will recieve the
+     *   RDF/XML. Currently, the output stream need only
+     *   implement the |write()| method.
+     */
+    void Serialize(in nsIOutputStream aStream);
 };
 

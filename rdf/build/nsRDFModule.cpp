@@ -39,6 +39,8 @@
 #include "rdf.h"
 #include "nsIServiceManager.h"
 #include "nsILocalStore.h"
+#include "nsRDFXMLParser.h"
+#include "nsRDFXMLSerializer.h"
 
 //----------------------------------------------------------------------
 
@@ -144,6 +146,18 @@ static nsModuleComponentInfo components[] =
       NS_RDFSERVICE_CID,
       NS_RDF_CONTRACTID "/rdf-service;1",
       CreateNewRDFService 
+    },
+
+    { "RDF/XML Parser",
+      NS_RDFXMLPARSER_CID,
+      NS_RDF_CONTRACTID "/xml-parser;1",
+      nsRDFXMLParser::Create
+    },
+
+    { "RDF/XML Serializer",
+      NS_RDFXMLSERIALIZER_CID,
+      NS_RDF_CONTRACTID "/xml-serializer;1",
+      nsRDFXMLSerializer::Create
     },
 
     // XXX move this to XPFE at some point.

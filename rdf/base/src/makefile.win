@@ -31,12 +31,15 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsContainerEnumerator.obj     \
         .\$(OBJDIR)\nsDefaultResourceFactory.obj  \
         .\$(OBJDIR)\nsInMemoryDataSource.obj      \
+        .\$(OBJDIR)\nsNameSpaceMap.obj            \
         .\$(OBJDIR)\nsRDFContentSink.obj          \
         .\$(OBJDIR)\nsRDFContainer.obj            \
         .\$(OBJDIR)\nsRDFContainerUtils.obj       \
         .\$(OBJDIR)\nsRDFParserUtils.obj          \
         .\$(OBJDIR)\nsRDFService.obj              \
         .\$(OBJDIR)\nsRDFXMLDataSource.obj        \
+        .\$(OBJDIR)\nsRDFXMLParser.obj            \
+        .\$(OBJDIR)\nsRDFXMLSerializer.obj        \
         .\$(OBJDIR)\rdfutil.obj                   \
 	$(NULL)
 

@@ -41,6 +41,8 @@ XPIDLSRCS	= \
 		nsIRDFRemoteDataSource.idl \
 		nsIRDFResource.idl \
 		nsIRDFService.idl \
+		nsIRDFXMLParser.idl \
+		nsIRDFXMLSerializer.idl \
 		nsIRDFXMLSink.idl \
 		nsIRDFXMLSource.idl \
 		$(NULL)
