@@ -33,8 +33,8 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.17 $
-# $Date: 2003/08/17 00:48:54 $
+# $Revision: 1.18 $
+# $Date: 2003/12/23 12:51:50 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -91,7 +91,18 @@ Global Options:
 
   --buildcf FILENAME     Provide a config file instead of the default: '$BUILDCF'.
   --mailer MAILER        Specify a different binary to use as the mailing 
-                             program.  The default is: '$MAILER'.
+                             program.  The default is: '$MAILER'. 
+
+    			In some installations instead of running mail
+    			one might prefere to run the build processor
+    			directly or use the HTTPPost to send the mail
+    			without using a mailer.
+
+		        $MAILER = '/export/home/tinderbox2/bin/processmail_builds';
+
+			$MAILER = 'HTTPPost http://localhost/cgi-bin/cgiwrap/tbox/processmail_builds.cgi';
+
+
   --version              Print the version number (same as cvs revision).
   --help                 view this help screen
 
@@ -211,6 +222,7 @@ sub set_static_vars {
   # $MAILER = '/bin/true';
   # $MAILER = 'cat > /tmp/mail.out';
   # $MAILER = '/export/home/tinderbox2/bin/processmail_builds';
+  # $MAILER = 'HTTPPost http://localhost/cgi-bin/cgiwrap/tbox/processmail_builds.cgi';
 
   # Usually we send mail to the tinderbox webserver but it is possible
   # to deliver mail directly if the build is running on the same
@@ -424,6 +436,7 @@ sub set_server_args {
 
   $MAIL_FROM = UserDef::mail_from(%args);
   $MAIL_TO = UserDef::mail_to(%args);
+  $MAILER =  UserDef::mailer(%args) || $MAILER;
 
   check_builds();
 
