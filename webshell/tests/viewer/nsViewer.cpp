@@ -63,7 +63,10 @@
 #include "nsIDeviceContext.h"
 #include "nsINetService.h"
 #include "nsINetContainerApplication.h"
+#include "nsIButton.h"
+#include "nsITextWidget.h"
 
+// Class ID's
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
@@ -73,7 +76,7 @@ static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
-static NS_DEFINE_IID(kCButtonIID, NS_BUTTON_CID);
+static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
 static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
 static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
 static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
@@ -92,7 +95,33 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kCWebWidgetCID, NS_WEBWIDGET_CID);
 static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 
+// IID's
+static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
+static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
+
+#define VIEWER_UI
+#undef INSET_WEBWIDGET
+
+#ifdef VIEWER_UI
+#define BUTTON_WIDTH 100
+#define BUTTON_HEIGHT 30
+#else
+#define BUTTON_WIDTH 0
+#define BUTTON_HEIGHT 0
+#endif
+
+#ifdef INSET_WEBWIDGET
+#define WEBWIDGET_LEFT_INSET 5
+#define WEBWIDGET_RIGHT_INSET 5
+#define WEBWIDGET_TOP_INSET 5
+#define WEBWIDGET_BOTTOM_INSET 5
+#else
+#define WEBWIDGET_LEFT_INSET 0
+#define WEBWIDGET_RIGHT_INSET 0
+#define WEBWIDGET_TOP_INSET 0
+#define WEBWIDGET_BOTTOM_INSET 0
+#endif
 
 #define SAMPLES_BASE_URL "resource:/res/samples"
 #define DEFAULT_DOC "/test0.html"
@@ -447,7 +476,7 @@ DocObserver::Embed(nsIDocumentWidget* aDocViewer,
 
   nsRect bounds;
   mWindowWidget->GetBounds(bounds);
-  nsRect rr(0, 0, bounds.width, bounds.height);
+  nsRect rr(0, BUTTON_HEIGHT, bounds.width, bounds.height - BUTTON_HEIGHT);
 
   aDocViewer->QueryInterface(kIWebWidgetIID, (void**)&mWebWidget);
 
@@ -583,6 +612,29 @@ static DocObserver* NewObserver(nsIWidget* aWindow, nsIWebWidget* ww)
 
 //----------------------------------------------------------------------
 
+void
+nsViewer::Layout(WindowData* aWindowData, int aWidth, int aHeight)
+{
+  if (aWindowData->observer) {
+    nsRect rr(0, BUTTON_HEIGHT,
+              aWidth,
+              aHeight - BUTTON_HEIGHT);
+
+    // position location bar (it's stretchy)
+    if (mLocation) {
+      mLocation->Resize(2*BUTTON_WIDTH, 0, rr.width - 2*BUTTON_WIDTH,
+                        BUTTON_HEIGHT, PR_TRUE);
+    }
+
+    // inset the web widget
+    rr.x += WEBWIDGET_LEFT_INSET;
+    rr.y += WEBWIDGET_TOP_INSET;
+    rr.width -= WEBWIDGET_LEFT_INSET + WEBWIDGET_RIGHT_INSET;
+    rr.height -= WEBWIDGET_TOP_INSET + WEBWIDGET_BOTTOM_INSET;
+    aWindowData->observer->mWebWidget->SetBounds(rr);
+  }
+}
+
 nsEventStatus PR_CALLBACK HandleEventApp(nsGUIEvent *aEvent)
 { 
     nsEventStatus result = nsEventStatus_eIgnore;
@@ -591,9 +643,9 @@ nsEventStatus PR_CALLBACK HandleEventApp(nsGUIEvent *aEvent)
         {
           struct WindowData *wd = gTheViewer->FindWindowData(aEvent->widget);
           nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;  
-          if (wd->observer) {
-            nsRect rr(0, 0, sizeEvent->windowSize->width, sizeEvent->windowSize->height);
-            wd->observer->mWebWidget->SetBounds(rr);
+          if (wd->mViewer) {
+            wd->mViewer->Layout(wd, sizeEvent->windowSize->width,
+                                sizeEvent->windowSize->height);
           }
         }
         return nsEventStatus_eConsumeNoDefault;
@@ -1155,6 +1207,57 @@ void nsViewer::CleanupViewer(nsDocLoader* aDl)
   NS_ShutdownINetService();
 }
 
+nsEventStatus PR_CALLBACK HandleBackEvent(nsGUIEvent *aEvent)
+{
+  switch(aEvent->message) {
+  case NS_MOUSE_LEFT_BUTTON_UP:
+    gTheViewer->Back();
+    break;
+  }
+  return nsEventStatus_eIgnore;
+}
+
+void
+nsViewer::Back()
+{
+  printf("back\n");
+}
+
+nsEventStatus PR_CALLBACK HandleForwardEvent(nsGUIEvent *aEvent)
+{
+  switch(aEvent->message) {
+  case NS_MOUSE_LEFT_BUTTON_UP:
+    gTheViewer->Forward();
+    break;
+  }
+  return nsEventStatus_eIgnore;
+}
+
+void
+nsViewer::Forward()
+{
+  printf("forward\n");
+}
+
+nsEventStatus PR_CALLBACK HandleLocationEvent(nsGUIEvent *aEvent)
+{
+  switch (aEvent->message) {
+  case NS_KEY_UP:
+    if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
+      nsAutoString text;
+      gTheViewer->mLocation->GetText(text, 1000);
+      gTheViewer->GoTo(text);
+    }
+    break;
+  }
+
+  return nsEventStatus_eIgnore;
+}
+
+void
+nsViewer::GoTo(const nsString& aURL)
+{
+}
 
 nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **argv)
 {
@@ -1169,7 +1272,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   NSRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCHScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCButtonIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1212,12 +1315,51 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
     // Attach a menu to the top level window
   AddMenu(wd->windowWidget, PR_FALSE);
 
+  nsRect bounds;
+  wd->windowWidget->GetBounds(bounds);
+
+#ifdef VIEWER_UI
+    // Add the back button
+  nsIButton* back;
+  nsRect rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
+  NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID,
+                               (LPVOID*)&back);
+  back->Create(wd->windowWidget, rect, HandleBackEvent, NULL);
+  back->SetLabel("Back");
+  back->Show(PR_TRUE);
+  NS_RELEASE(back);
+
+    // Add the forward button
+  nsIButton* forward;
+  rect.SetRect(BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
+  NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID,
+                               (LPVOID*)&forward);
+  forward->Create(wd->windowWidget, rect, HandleForwardEvent, NULL);
+  forward->SetLabel("Forward");
+  forward->Show(PR_TRUE);
+  NS_RELEASE(forward);
+
+    // Add a location box
+  rect.SetRect(2*BUTTON_WIDTH, 0,
+               bounds.width - 2*BUTTON_WIDTH, BUTTON_HEIGHT);
+  NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID,
+                               (LPVOID*)&mLocation);
+  mLocation->Create(wd->windowWidget, rect, HandleLocationEvent, NULL);
+  mLocation->SetText("");
+  mLocation->Show(PR_TRUE);
+  mLocation->SetForegroundColor(NS_RGB(0, 0, 0));
+  mLocation->SetBackgroundColor(NS_RGB(255, 255, 255));
+  wd->windowWidget->SetBackgroundColor(NS_RGB(255, 0, 0));
+#endif
+  wd->mViewer = this;
+
     // Now embed the web widget in it
   nsIWebWidget* ww;
   nsresult rv = NS_NewWebWidget(&ww);
-  nsRect bounds;
-  wd->windowWidget->GetBounds(bounds);
-  nsRect rr(0, 0, bounds.width, bounds.height);
+  nsRect rr(WEBWIDGET_LEFT_INSET, BUTTON_HEIGHT+WEBWIDGET_TOP_INSET,
+            bounds.width - WEBWIDGET_LEFT_INSET - WEBWIDGET_RIGHT_INSET,
+            bounds.height - BUTTON_HEIGHT - WEBWIDGET_TOP_INSET -
+            WEBWIDGET_BOTTOM_INSET);
   rv = ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
 ///  ww->Show();
   wd->observer = NewObserver(wd->windowWidget, ww);

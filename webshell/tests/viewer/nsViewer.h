@@ -28,6 +28,8 @@
 #include "nsString.h"
 #include "nsINetContainerApplication.h"
 
+class nsITextWidget;
+
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
@@ -110,7 +112,7 @@ public:
                             nsIPostData* aPostDat = 0);
 
   nsIWebWidget* mWebWidget;
-  nsIWidget *mWindowWidget;
+  nsIWidget* mWindowWidget;
 
 protected:
   virtual ~DocObserver();
@@ -124,7 +126,8 @@ protected:
 struct WindowData {
 ///  nsIWebWidget* ww;
   DocObserver* observer;
-  nsIWidget *windowWidget;
+  nsIWidget* windowWidget;
+  nsViewer* mViewer;
 
   WindowData() {
 ///    ww = nsnull;
@@ -137,6 +140,10 @@ struct WindowData {
 
 class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   public:
+    nsViewer() {
+      mLocation = nsnull;
+    }
+
     // nsISupports
     NS_DECL_ISUPPORTS
 
@@ -177,6 +184,14 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
     NS_IMETHOD    GetAppName(nsString& aAppName);
     NS_IMETHOD    GetLanguage(nsString& aLanguage);
     NS_IMETHOD    GetPlatform(nsString& aPlatform);
+
+
+  void Layout(WindowData* aWindowData, int aWidth, int aHeight);
+  void Back();
+  void Forward();
+  void GoTo(const nsString& aURL);
+
+  nsITextWidget* mLocation;
 };
 
   // Set the single viewer.
