@@ -1460,8 +1460,12 @@ struct PRCondVar {
     pthread_cond_t cv;          /* underlying pthreads condition */
     PRInt32 notify_pending;     /* CV has destroy pending notification */
 #elif defined(_PR_BTHREADS)
-    sem_id	isem;		/* Semaphore used to lock threadQ */
-    int32	benaphoreCount; /* Number of people in lock */
+    sem_id    sem;              /* the underlying lock */
+    sem_id    handshakeSem;     /* the lock for 'notify'-threads waiting for confirmation */
+    sem_id    signalSem;        /* the lock for threads waiting for someone to notify */
+    volatile int32    nw;       /* the number waiting */
+    volatile int32    ns;       /* the number signalling */
+    long signalBenCount;        /* the number waiting on the underlying sem */
 #else /* not pthreads or Be threads */
     PRCList condQ;              /* Condition variable wait Q */
     _MDLock ilock;              /* Internal Lock to protect condQ */
