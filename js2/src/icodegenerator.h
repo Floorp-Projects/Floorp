@@ -130,7 +130,7 @@ namespace ICG {
         
         ICodeModule *complete();
 
-        Register allocateVariable(StringAtom &name) 
+        Register allocateVariable(StringAtom& /*name*/) 
         { Register result = getRegister(); registerBase = topRegister; return result; }
         
         Formatter& print(Formatter& f);
