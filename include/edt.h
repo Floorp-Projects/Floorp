@@ -1479,6 +1479,7 @@ void EDT_SetEmbeddedEditorData(MWContext *pContext, void *pData);
 #ifdef MOZ_ENDER_MIME
 XP_Bool EDT_URLOnSafeList(void *id, const char *url_str);
 int32 EDT_AddURLToSafeList(void *id, const char *url_str);
+int32 EDT_AddTmpFileURLToSafeList(void *id, const char *url_str, const char *path);
 int32 EDT_RemoveURLFromSafeList(void *id, const char *url_str);
 int32 EDT_RemoveIDFromSafeList(void *id);
 int32 EDT_DestroySafeList();
