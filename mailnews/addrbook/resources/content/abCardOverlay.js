@@ -42,6 +42,13 @@ function OnLoadNewCard()
 			editCard.selectedAB = window.arguments[0].selectedAB;
 		else
 			editCard.selectedAB = "abdirectory://abook.mab";
+
+    // we may have been given properties to pre-initialize the window with....
+    // we'll fill these in here...
+    if (window.arguments[0].primaryEmail)
+      editCard.card.primaryEmail = window.arguments[0].primaryEmail;
+    if (window.arguments[0].displayName)
+      editCard.card.displayName = window.arguments[0].displayName;
 	}
 
 	// set popup with address book names
