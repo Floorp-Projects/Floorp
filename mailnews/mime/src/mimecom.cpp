@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 #include "mimei.h"
-#include "modmime.h"
 #include "mimeobj.h"	/*  MimeObject (abstract)							*/
 #include "mimecont.h"	/*   |--- MimeContainer (abstract)					*/
 #include "mimemult.h"	/*   |     |--- MimeMultipart (abstract)			*/

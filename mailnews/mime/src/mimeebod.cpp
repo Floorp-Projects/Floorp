@@ -30,7 +30,6 @@
 #include "nsFileSpec.h"
 #include "nsEscape.h"
 #include "msgCore.h"
-#include "nsMimeTransition.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
 

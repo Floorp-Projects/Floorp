@@ -808,7 +808,7 @@ void nsMsgDatabase::UnixToNative(char*& ioPath)
 
 NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
-	NS_ASSERTION(FALSE, "must override");
+	NS_ASSERTION(PR_FALSE, "must override");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1408,7 +1408,7 @@ nsMsgDatabase::UndoDelete(nsIMsgDBHdr *msgHdr)
 {
     if (msgHdr)
     {
-        SetHdrFlag(msgHdr, FALSE, MSG_FLAG_EXPUNGED);
+        SetHdrFlag(msgHdr, PR_FALSE, MSG_FLAG_EXPUNGED);
         // ** do we need to update folder info regarding the message size
     }
     return NS_OK;
@@ -3051,7 +3051,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 		{
 			thread->GetThreadKey(&threadId);
 			newHdr->SetThreadId(threadId);
-			result = AddToThread(newHdr, thread, replyToHdr, TRUE);
+			result = AddToThread(newHdr, thread, replyToHdr, PR_TRUE);
 			break;
 		}
 	}
@@ -3071,7 +3071,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 			//TRACE("threading based on subject %s\n", (const char *) msgHdr->m_subject);
 			// if we move this and do subject threading after, ref threading, 
 			// don't thread within children, since we know it won't work. But for now, pass TRUE.
-			result = AddToThread(newHdr, thread, nsnull, TRUE);     
+			result = AddToThread(newHdr, thread, nsnull, PR_TRUE);     
 		}
 	}
 #endif // SUBJ_THREADING
@@ -3080,11 +3080,11 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	{
 		// couldn't find any parent articles - msgHdr is top-level thread, for now
 		result = AddNewThread(newHdr);
-		newThread = TRUE;
+		newThread = PR_TRUE;
 	}
 	else
 	{
-		newThread = FALSE;
+		newThread = PR_FALSE;
 	}
 	return result;
 }

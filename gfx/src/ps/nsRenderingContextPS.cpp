@@ -411,7 +411,7 @@ PRInt32     cliptype;
     mPSObj->closepath();
     mPSObj->clip();
   }else{
-    NS_ASSERTION(FALSE, "illegal clip combination");
+    NS_ASSERTION(PR_FALSE, "illegal clip combination");
   }
 
 #if defined(XP_PC) && !defined(XP_OS2)
@@ -1070,7 +1070,7 @@ PRInt32       y = aY;
 	y += ascent;
 
 	mTMatrix->TransformCoord(&x, &y);
-  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, (const nscoord*) (aSpacing ? dx0 : NULL), FALSE);
+  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, (const nscoord*) (aSpacing ? dx0 : NULL), PR_FALSE);
 
   if ((nsnull != aSpacing) && (dx0 != dxMem)) {
     delete [] dx0;

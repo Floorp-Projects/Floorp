@@ -3000,7 +3000,7 @@ nsImapService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     if (!localFile) {
         rv = NS_GetSpecialDirectory(NS_APP_IMAP_MAIL_50_DIR, getter_AddRefs(localFile));
         if (NS_FAILED(rv)) return rv;
-        havePref = FALSE;
+        havePref = PR_FALSE;
     }
         
     PRBool exists;

@@ -635,7 +635,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 
 		if (NS_SUCCEEDED(rv = channel->AsyncRead(search, engineContext)))
 		{
-			search->busySchedule = TRUE;
+			search->busySchedule = PR_TRUE;
 
 #ifdef	DEBUG_SEARCH_UPDATES
 			printf("    InternetSearchDataSource::FireTimer - Pinging '%s'\n", (char *)updateURL);

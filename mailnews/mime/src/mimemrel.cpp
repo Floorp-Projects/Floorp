@@ -117,7 +117,6 @@
 #include "prlog.h"
 #include "plstr.h"
 #include "mimemoz2.h"
-#include "nsMimeTransition.h"
 #include "nsString.h"
 #include "nsIURL.h"
 #include "nsCRT.h"

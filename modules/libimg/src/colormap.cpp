@@ -23,7 +23,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  colormap.c
  *             
- *   $Id: colormap.cpp,v 3.3 1999/11/06 03:31:26 dmose%mozilla.org Exp $
+ *   $Id: colormap.cpp,v 3.4 2001/01/10 06:12:10 jgmyers%netscape.com Exp $
  */
 
 
@@ -51,8 +51,8 @@ il_reset_palette(il_container *ic)
     }
 
     ic->colormap_serial_num = -1;
-    ic->dont_use_custom_palette = FALSE;
-    ic->rendered_with_custom_palette = FALSE;
+    ic->dont_use_custom_palette = PR_FALSE;
+    ic->rendered_with_custom_palette = PR_FALSE;
     
     return ret;
    

@@ -66,7 +66,6 @@ CPPSRCS		= \
 		mimecom.cpp \
 		mimemoz2.cpp \
 		comi18n.cpp \
-		nsMimeTransition.cpp \
 		nsMsgHeaderParser.cpp \
 		nsStreamConverter.cpp \
 		mimedrft.cpp \
@@ -90,7 +89,6 @@ EXPORTS		= \
 		mimemult.h \
 		mimemsig.h \
 		mimehdrs.h \
-		modmime.h \
 		mimepbuf.h \
 		modlmime.h \
 		comi18n.h \

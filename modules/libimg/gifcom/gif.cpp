@@ -568,7 +568,7 @@ il_gif_init_transparency(il_container *ic, int index)
     if (!src_trans_pixel) {
         src_trans_pixel = PR_NEWZAP(IL_IRGB);
         if (!src_trans_pixel)
-            return FALSE;
+            return PR_FALSE;
         ic->src_header->transparent_pixel = src_trans_pixel;
 
         /* Initialize the destination image's transparent pixel. */
@@ -588,7 +588,7 @@ il_gif_init_transparency(il_container *ic, int index)
        from frame to frame in an animated gif. */
     src_trans_pixel->index = index;
 
-    return TRUE;
+    return PR_TRUE;
 }
 
 
@@ -680,7 +680,7 @@ process_buffered_gif_input_data(gif_struct* gs)
     /* test, stop loopers if error */
     if( state == gif_error){
             ic->loop_count = 0;
-            gs->destroy_pending =TRUE;
+            gs->destroy_pending = PR_TRUE;
             ic->state = IC_ABORT_PENDING;
     }
     if (gs->destroy_pending &&
@@ -1151,13 +1151,13 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                 ILTRACE(2,("il:gif: transparent pixel %d", gs->tpixel));
                 if (!il_gif_init_transparency(ic, gs->tpixel))
                     return MK_OUT_OF_MEMORY;
-                gs->is_transparent = TRUE;
+                gs->is_transparent = PR_TRUE;
             }
             else
             {
                 ILTRACE(2,("il:gif: ignoring gfx control extension"));
             }
-            gs->control_extension = TRUE;
+            gs->control_extension = PR_TRUE;
             gs->disposal_method = (gdispose)(((*q) >> 2) & 0x7);
             gs->delay_time = GETINT16(q + 1) * 10;
             GETN(1,gif_consume_block);
@@ -1367,10 +1367,10 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
             if ( *(q+8) & 0x40 )
             {
                 ILTRACE(2,("il:gif: interlaced"));
-                gs->interlaced = TRUE;
+                gs->interlaced = PR_TRUE;
                 gs->ipass = 1;
             } else {
-                gs->interlaced = FALSE;
+                gs->interlaced = PR_FALSE;
                 gs->ipass = 0;
             }
             
@@ -1417,7 +1417,7 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                 if(ic->imgdcb)
                    ic->imgdcb->ImgDCBResetPalette();
 
-                gs->is_local_colormap_defined = TRUE;
+                gs->is_local_colormap_defined = PR_TRUE;
                 GETN(gs->local_colormap_size * 3, gif_image_colormap);
             }
             else
@@ -1427,7 +1427,7 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                   if(ic->imgdcb)
                     ic->imgdcb->ImgDCBResetPalette();
 
-                gs->is_local_colormap_defined = FALSE;
+                gs->is_local_colormap_defined = PR_FALSE;
                 GETN(1, gif_lzw_start);
             }
         }
@@ -1503,8 +1503,8 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                 gs->images_decoded++;                
 
                 /* Clear state from this image */
-                gs->control_extension = FALSE;
-                gs->is_transparent = FALSE;
+                gs->control_extension = PR_FALSE;
+                gs->is_transparent = PR_FALSE;
 
                 if(ic->animate_request == eImageAnimation_None){
                     /* This is not really an error, but a mechanism
@@ -1637,11 +1637,11 @@ il_gif_complete(il_container *ic)
            so don't actually free any of the data structures. */
         if (gs->delay_timeout) {
             /* We will free the data structures when image display completes. */
-            gs->destroy_pending = TRUE;
+            gs->destroy_pending = PR_TRUE;
             return;
         } else if (gs->requested_buffer_fullness) {
             /* We will free the data structures when image display completes. */
-            gs->destroy_pending = TRUE;
+            gs->destroy_pending = PR_TRUE;
             process_buffered_gif_input_data(gs);
             return;
         }

@@ -25,7 +25,6 @@
 #include "mimebuf.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "nsMimeTransition.h"
 #include "mozITXTToHTMLConv.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"

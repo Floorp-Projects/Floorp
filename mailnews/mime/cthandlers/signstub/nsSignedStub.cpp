@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include "nsSignedStub.h"
+#include "prlog.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "mimexpcom.h"
@@ -119,7 +120,7 @@ MimeInlineTextSIGNEDStub_parse_line(char *line, PRInt32 length, MimeObject *obj)
 
   if (!obj->options->write_html_p) 
   {
-    return COM_MimeObject_write(obj, line, length, TRUE);
+    return COM_MimeObject_write(obj, line, length, PR_TRUE);
   }
   
   return 0;
@@ -149,7 +150,7 @@ MimeInlineTextSIGNEDStub_parse_eof (MimeObject *obj, PRBool abort_p)
   if (status < 0) 
     return status;
   
-  status = COM_MimeObject_write(obj, html, PL_strlen(html), TRUE);
+  status = COM_MimeObject_write(obj, html, PL_strlen(html), PR_TRUE);
   PR_FREEIF(html);
   if (status < 0) 
     return status;

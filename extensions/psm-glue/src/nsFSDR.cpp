@@ -650,7 +650,7 @@ Wallet_SetKey(PRBool isNewkey) {
         Recycle(message1);
         Recycle(message2);
         gKeyCancel = PR_TRUE;
-        return FALSE; /* user does not want to try again */
+        return PR_FALSE; /* user does not want to try again */
       }    
     }
     PR_FREEIF(mismatch);
@@ -686,7 +686,7 @@ Wallet_SetKey(PRBool isNewkey) {
             Recycle(message1);
             Recycle(message2);
             gKeyCancel = PR_TRUE;
-            return FALSE; /* user does not want to try again */
+            return PR_FALSE; /* user does not want to try again */
           }    
         }
       } else {

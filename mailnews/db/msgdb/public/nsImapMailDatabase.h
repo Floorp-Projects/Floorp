@@ -37,7 +37,7 @@ public:
 
   NS_IMETHOD    StartBatch();
   NS_IMETHOD    EndBatch();
-	NS_IMETHOD    SetSummaryValid(PRBool valid = TRUE);
+	NS_IMETHOD    SetSummaryValid(PRBool valid = PR_TRUE);
   NS_IMETHOD    DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
 	
 protected:

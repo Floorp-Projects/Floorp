@@ -24,7 +24,6 @@
 #include "mimemapl.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "nsMimeTransition.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
 #include "nsMimeTypes.h"

@@ -43,7 +43,6 @@ EXPORTS =								\
 		mimemult.h						\
 		mimemsig.h						\
 		mimehdrs.h						\
-		modmime.h						\
 		mimepbuf.h						\
 		modlmime.h						\
 		comi18n.h						\
@@ -106,9 +105,6 @@ OBJS=											\
 		.\$(OBJDIR)\nsMimeHeaders.obj		\
 # XP-COM BRIDGES
 		.\$(OBJDIR)\comi18n.obj				\
-# EXTERNAL (OLD) DEPENDENCIES - SHOULD EVENTUALLY BE REMOVED 
-# WHEN NEW WORLD FUNCTIONS ARE FOUND 
-		.\$(OBJDIR)\nsMimeTransition.obj	\
 		$(NULL)
 
 

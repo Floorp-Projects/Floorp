@@ -22,7 +22,6 @@
 
 #include "msgCore.h"
 #include "mimemult.h"
-#include "modmime.h"
 #include "mimemoz2.h"
 
 #include "prmem.h"

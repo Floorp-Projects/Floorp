@@ -38,7 +38,7 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.16 2000/07/10 07:13:27 cls%seawood.org Exp $
+   $Id: color.cpp,v 3.17 2001/01/10 06:12:10 jgmyers%netscape.com Exp $
 */
 
 
@@ -664,7 +664,7 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
     if (private_data->r8torgbn &&
         private_data->g8torgbn &&
         private_data->b8torgbn)
-        return TRUE;
+        return PR_TRUE;
 
     red_bits = rgb->red_bits;
     red_shift = rgb->red_shift;
@@ -686,7 +686,7 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
               private_data->g8torgbn &&
               private_data->b8torgbn)) {
             ILTRACE(0,("il: MEM il_init_rgb_tables"));
-            return FALSE;
+            return PR_FALSE;
         }
 
         /* XXXM12N These could be optimized. */
@@ -722,7 +722,7 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
               private_data->g8torgbn &&
               private_data->b8torgbn)) {
             ILTRACE(0,("il: MEM il_init_rgb_tables"));
-            return FALSE;
+            return PR_FALSE;
         }
 
 /* Compensate for Win95's sometimes-weird color quantization. */
@@ -768,7 +768,7 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
               private_data->g8torgbn &&
               private_data->b8torgbn)) {
             ILTRACE(0,("il: MEM il_init_rgb_tables"));
-            return FALSE;
+            return PR_FALSE;
         }
 
         tmp_map = (PRUint32*)private_data->r8torgbn;
@@ -793,7 +793,7 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
         PR_ASSERT(0);
     }
 
-    return TRUE;
+    return PR_TRUE;
 }
 
 

@@ -31,7 +31,6 @@
 #endif
 
 #include "nsCOMPtr.h"
-#include "modmime.h"
 #include "mimeobj.h"	/*  MimeObject (abstract)							*/
 #include "mimecont.h"	/*   |--- MimeContainer (abstract)					*/
 #include "mimemult.h"	/*   |     |--- MimeMultipart (abstract)			*/
@@ -44,11 +43,6 @@
 #include "mimesun.h"	/*   |     |     |--- MimeSunAttachment				*/
 #include "mimemsig.h"	/*   |     |     |--- MimeMultipartSigned (abstract)*/
 
-#ifdef MOZ_SECURITY
-#include HG01921
-#include HG01944
-#include HG01999
-#endif /* MOZ_SECURITY */
 
 #include "mimemsg.h"	/*   |     |--- MimeMessage							*/
 #include "mimeunty.h"	/*   |     |--- MimeUntypedText						*/
@@ -65,6 +59,7 @@
 #include "mimeiimg.h"	/*   |     |--- MimeInlineImage						*/
 #include "mimeeobj.h"	/*   |     |--- MimeExternalObject					*/
 #include "mimeebod.h"	/*   |--- MimeExternalBody							*/
+#include "prlog.h"
 #include "prmem.h"
 #include "prenv.h"
 #include "plstr.h"
@@ -80,6 +75,8 @@
 #include "nsVoidArray.h"
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
+
+#define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 

@@ -107,15 +107,15 @@ static PRBool needsQuotedPrintable (const char *s)
     const unsigned char *p = (const unsigned char *)s;
 
 	if (PL_strstr (s, MSG_LINEBREAK))
-		return TRUE;
+		return PR_TRUE;
 
 	while (*p) {
 		if (*p & 0x80)
-			return TRUE;
+			return PR_TRUE;
 		p++;
 	}
 
-	return FALSE;
+	return PR_FALSE;
 }
 
 VObject* newVObject_(const char *id)
@@ -623,7 +623,7 @@ void printVObjectToFile(nsFileSpec *fname, VObject *o)
     fp->close();
   }
 #else
-  PR_ASSERT(FALSE);
+  PR_ASSERT(PR_FALSE);
 #endif
 }
 
@@ -639,7 +639,7 @@ void printVObjectsToFile(nsFileSpec *fname,VObject *list)
     fp->close();
   }
 #else
-  PR_ASSERT(FALSE);
+  PR_ASSERT(PR_FALSE);
 #endif
 }
 
@@ -1173,9 +1173,9 @@ static void writeQPString(OFile *fp, const char *s)
     const unsigned char *p = (const unsigned char *)s;
 	int current_column = 0;
 	static const char hexdigits[] = "0123456789ABCDEF";
-	PRBool white = FALSE;
-	PRBool contWhite = FALSE;
-	PRBool mb_p = FALSE;
+	PRBool white = PR_FALSE;
+	PRBool contWhite = PR_FALSE;
+	PRBool mb_p = PR_FALSE;
 
 	if (needsQuotedPrintable (s)) 
 	{
@@ -1205,13 +1205,13 @@ static void writeQPString(OFile *fp, const char *s)
 					appendcOFile(fp,'=');
 					appendcOFile(fp,'\n');
 					appendcOFile(fp,'\t');
-					contWhite = FALSE;
+					contWhite = PR_FALSE;
 				}
 
 				/* If its CRLF, swallow two chars instead of one. */
 				if (*p == CR && *(p+1) == LF)
 					p++;
-				white = FALSE;
+				white = PR_FALSE;
 				current_column = 0;
 			}
 			else
@@ -1222,8 +1222,8 @@ static void writeQPString(OFile *fp, const char *s)
 				{
 					appendcOFile(fp,*p);
 					current_column++;
-					white = FALSE;
-					contWhite = FALSE;
+					white = PR_FALSE;
+					contWhite = PR_FALSE;
 				}
 				else if (*p == ' ' || *p == '\t')		/* whitespace */
 				{
@@ -1233,14 +1233,14 @@ static void writeQPString(OFile *fp, const char *s)
 						appendcOFile(fp,hexdigits[*p >> 4]);
 						appendcOFile(fp,hexdigits[*p & 0xF]);
 						current_column += 3;
-						contWhite = FALSE;
+						contWhite = PR_FALSE;
 					}
 					else
 					{
 						appendcOFile(fp,*p);
 						current_column++;
 					}
-					white = TRUE;
+					white = PR_TRUE;
 				}
 				else										/* print as =FF */
 				{
@@ -1248,8 +1248,8 @@ static void writeQPString(OFile *fp, const char *s)
 					appendcOFile(fp,hexdigits[*p >> 4]);
 					appendcOFile(fp,hexdigits[*p & 0xF]);
 					current_column += 3;
-					white = FALSE;
-					contWhite = FALSE;
+					white = PR_FALSE;
+					contWhite = PR_FALSE;
 				}
 
 				PR_ASSERT(current_column <= 76); /* Hard limit required by spec */
@@ -1261,10 +1261,10 @@ static void writeQPString(OFile *fp, const char *s)
 					appendcOFile(fp,'\t');
 					current_column = 0;
 					if (white)
-						contWhite = TRUE;
+						contWhite = PR_TRUE;
 					else 
-						contWhite = FALSE;
-					white = FALSE;
+						contWhite = PR_FALSE;
+					white = PR_FALSE;
 				}
 			}	
 			p++;
@@ -1470,7 +1470,7 @@ void writeVObjectToFile(nsFileSpec *fname, VObject *o)
     fp->close();
   }
 #else
-  PR_ASSERT(FALSE);
+  PR_ASSERT(PR_FALSE);
 #endif
 }
 
@@ -1486,7 +1486,7 @@ void writeVObjectsToFile(nsFileSpec *fname, VObject *list)
 	fp->close();
 	}
 #else
-	PR_ASSERT(FALSE);
+	PR_ASSERT(PR_FALSE);
 #endif
 }
 

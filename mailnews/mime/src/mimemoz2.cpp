@@ -43,7 +43,6 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsFileSpec.h"
-#include "nsMimeTransition.h"
 #include "comi18n.h"
 #include "nsIStringBundle.h"
 #include "nsString.h"

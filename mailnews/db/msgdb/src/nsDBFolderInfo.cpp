@@ -122,7 +122,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 	m_totalPendingMessages =0;
 	m_unreadPendingMessages = 0;
 
-	m_mdbTokensInitialized = FALSE;
+	m_mdbTokensInitialized = PR_FALSE;
 
 	// Initialize a default charset to a pref default.
 	nsresult rv;
@@ -610,12 +610,12 @@ nsDBFolderInfo::GetCharacterSet2(nsString *result, PRBool *usedDefault)
 {
 	nsresult rv = GetProperty(kCharacterSetColumnName, result);
 	
-	*usedDefault = FALSE;
+	*usedDefault = PR_FALSE;
 
 	if (NS_SUCCEEDED(rv) && result->IsEmpty())
 	{
 		result->Assign(gDefaultCharacterSet.GetUnicode());
-		*usedDefault = TRUE;
+		*usedDefault = PR_TRUE;
 	}
 
 	return rv;
