@@ -56,7 +56,7 @@ function Startup()
       var name = GetSelectionAsText();
       // Get 40 characters of the selected text and don't add "...",
       //  replace whitespace with "_" and strip non-word characters
-      name = PrepareStringForURL(TruncateStringAtWordEnd(name, 40, false));
+      name = ConvertToCDATAString(TruncateStringAtWordEnd(name, 40, false));
       //Be sure the name is unique to the document
       if (AnchorNameExists(name))
         name += "_"
@@ -90,7 +90,7 @@ function ChangeName()
     // Replace spaces with "_" and strip other non-URL characters
     // Note: we could use ConvertAndEscape, but then we'd
     //  have to UnEscapeAndConvert beforehand - too messy!
-    nameInput.value = PrepareStringForURL(nameInput.value.replace(/\s+/g, "_"));
+    nameInput.value = ConvertToCDATAString(nameInput.value);
   }
 }
 
@@ -120,7 +120,7 @@ function ValidateData()
     // Replace spaces with "_" and strip other characters
     // Note: we could use ConvertAndEscape, but then we'd
     //  have to UnConverAndEscape beforehand - too messy!
-    name = PrepareStringForURL(name);
+    name = ConvertToCDATAString(name);
 
     if (originalName != name && AnchorNameExists(name))
     {

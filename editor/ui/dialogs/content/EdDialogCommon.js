@@ -218,10 +218,11 @@ function ReplaceWhitespace(string, charReplace) {
   return string.replace(/(^\s+)|(\s+$)/g,'').replace(/\s+/g,charReplace)
 }
 
-// Replace whitespace with "_" and allow only "word" characters (a-z,A-Z,0-9 and _)
-function PrepareStringForURL(string)
+// Replace whitespace with "_" and allow only HTML CDATA 
+//   characters: "a"-"z","A"-"Z","0"-"9", "_", ":", "-", and "."
+function ConvertToCDATAString(string)
 {
-  return ReplaceWhitespace(string,"_").replace(/\W+/g,'');
+  return ReplaceWhitespace(string,"_").replace(/[^a-zA-Z0-9_\.\-\:]+/g,'');
 }
 
 // this function takes an elementID and a flag
