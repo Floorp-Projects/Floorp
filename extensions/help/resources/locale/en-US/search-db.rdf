@@ -525,6 +525,26 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="contact_names"
+         nc:name="contact names"
+	 nc:link="chrome://help/locale/icq_help.html#contact_namesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="contacts"
+         nc:name="contacts"
+	 nc:link="chrome://help/locale/icq_help.html#contactsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="controlling_access"
          nc:name="controlling access"
 	 nc:link="chrome://help/locale/im_help.html#controlling_accessSDX"/>
@@ -1055,9 +1075,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="html"
-         nc:name="html"
-	 nc:link="chrome://help/locale/nav_help.html#htmlSDX"/>
+       <rdf:Description ID="HTML"
+         nc:name="HTML"
+	 nc:link="chrome://help/locale/mail_help.html#HTMLSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1065,9 +1085,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="HTML"
-         nc:name="HTML"
-	 nc:link="chrome://help/locale/mail_help.html#HTMLSDX"/>
+       <rdf:Description ID="html"
+         nc:name="html"
+	 nc:link="chrome://help/locale/nav_help.html#htmlSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1385,9 +1405,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="javascript"
-         nc:name="javascript"
-	 nc:link="chrome://help/locale/composer_help.html#javascriptSDX"/>
+       <rdf:Description ID="JavaScript"
+         nc:name="JavaScript"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#JavaScriptSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1395,9 +1415,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="JavaScript"
-         nc:name="JavaScript"
-	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#JavaScriptSDX"/>
+       <rdf:Description ID="javascript"
+         nc:name="javascript"
+	 nc:link="chrome://help/locale/composer_help.html#javascriptSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
