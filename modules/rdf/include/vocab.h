@@ -90,9 +90,13 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_AutoOpen;
   RDF_Resource RDF_resultType;
   RDF_Resource RDF_HTMLType;
-  RDF_Resource RDF_Command;
   RDF_Resource RDF_URLShortcut;
   RDF_Resource RDF_Cookies;
+
+  /* Commands */
+  
+  RDF_Resource RDF_Command;
+  RDF_Resource RDF_Command_Launch;
 
   /* NavCenter appearance styles */
 
@@ -115,7 +119,6 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource titleBarFGColor;
   RDF_Resource titleBarBGColor;
   RDF_Resource titleBarBGURL;
-
   RDF_Resource dividerColor;
   RDF_Resource showDivider;
   RDF_Resource selectedColumnHeaderFGColor;

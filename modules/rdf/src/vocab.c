@@ -127,7 +127,7 @@ createNavCenterVocab () {
   gNavCenter->RDF_HTMLURL = newResource("htmlURL", RDF_HTML_URL_STR);
   gNavCenter->RDF_HTMLHeight = newResource("htmlHeight", RDF_HTML_HEIGHT_STR);
   gNavCenter->RDF_LocalFiles = RDF_GetResource(gCoreDB, "NC:LocalFiles", true);
-  gNavCenter->RDF_Appletalk = createContainer("NC:Appletalk");
+  gNavCenter->RDF_Appletalk = createContainer("at:");
   setResourceType(gNavCenter->RDF_Appletalk, ATALKVIRTUAL_RT);
   gNavCenter->RDF_Mail = RDF_GetResource(gCoreDB, "NC:Mail", true);
   gNavCenter->RDF_Guide = RDF_GetResource(gCoreDB, "NC:Guide", true);
@@ -146,10 +146,14 @@ createNavCenterVocab () {
   gNavCenter->RDF_AutoOpen = RDF_GetResource(gCoreDB, "autoOpen", true);
   gNavCenter->RDF_resultType = RDF_GetResource (gCoreDB, "resultType", true);
   gNavCenter->RDF_HTMLType = RDF_GetResource (gCoreDB, "HTMLPage", true);
-  gNavCenter->RDF_Command = RDF_GetResource (gCoreDB, "Command", true);
   gNavCenter->RDF_URLShortcut = RDF_GetResource(gCoreDB, "URLShortcut", true);
   gNavCenter->RDF_Cookies = createContainer("NC:Cookies");
+
+  /* Commands */
   
+  gNavCenter->RDF_Command = RDF_GetResource (gCoreDB, "Command", true);
+  gNavCenter->RDF_Command_Launch = RDF_GetResource(gCoreDB, "Command:Launch", true);
+
   /* NavCenter appearance styles */
 
   gNavCenter->treeFGColor = newResource("treeFGColor", RDF_FOREGROUND_COLOR_STR);

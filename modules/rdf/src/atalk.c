@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -21,6 +21,8 @@
    For more information on this file, contact rjc or guha 
    For more information on RDF, look at the RDF section of www.mozilla.org
 */
+
+/* docs at 'http://developer.apple.com/technotes/tn/tn1111.html' */
 
 #include "atalk.h"
 
@@ -98,13 +100,13 @@ processZones(char *zones, uint16 numZones)
 
 			virtualURL[0] = '\0';
 			if (p != NULL)	XP_STRCAT(virtualURL, "virtual");
-			XP_STRCAT(virtualURL, "zone://");
+			XP_STRCAT(virtualURL, "at://");
 			XP_STRCAT(virtualURL, escapedURL);
 			XP_FREE(escapedURL);
 
 			if ((r = RDF_GetResource(NULL, virtualURL, PR_TRUE)) != NULL)
 			{
-				if (startsWith("zone://", virtualURL))
+				if (startsWith("at://", virtualURL))
 				{
 					setResourceType(r, ATALK_RT);
 				}
@@ -157,10 +159,11 @@ checkServerLookup (MPPParamBlock *nbp)
 					escapedURL = NET_Escape(url, URL_XALPHAS);  /* URL_PATH */
 					if (escapedURL != NULL)
 					{
-						strcpy(afpUrl, "afp://");
+						strcpy(afpUrl, "afp:/at/");
 						strcat(afpUrl, escapedURL);
-						strcat(afpUrl, ":AFPServer@");
-						strcat(afpUrl, ((char *)nbp->NBP.userData) + strlen("zone://"));
+						/* strcat(afpUrl, ":AFPServer@"); */
+						strcat(afpUrl, ":");
+						strcat(afpUrl, ((char *)nbp->NBP.userData) + strlen("at://"));
 
 						if ((parent = RDF_GetResource(NULL, (char *)(nbp->NBP.userData), PR_TRUE)) != NULL)
 						{
@@ -198,12 +201,12 @@ getServers(RDF_Resource parent)
 	OSErr			err = noErr;
 	char			*buffer, *parentID, *zone, url[128];
 
-	if (!startsWith("zone://", resourceID(parent)))	return;
+	if (!startsWith("at://", resourceID(parent)))	return;
 
 	nbp = (MPPParamBlock *)getMem(sizeof(MPPParamBlock));
 	entity = (EntityName *)getMem(sizeof(EntityName));
 	buffer = getMem(10240);
-	zone = unescapeURL(resourceID(parent)+strlen("zone://"));
+	zone = unescapeURL(resourceID(parent)+strlen("at://"));
 	parentID = copyString(resourceID(parent));
 
 	if ((nbp != NULL) && (entity != NULL) && (buffer != NULL) && (zone != NULL) && (parentID != NULL))
@@ -243,55 +246,53 @@ setAtalkResourceName(RDF_Resource u)
 
 	if (u == NULL)	return;
 
-	if ((resourceType(u) == ATALK_RT) || (resourceType(u) == ATALKVIRTUAL_RT))
+	if (u == gNavCenter->RDF_Appletalk)
 	{
-		if (u == gNavCenter->RDF_Appletalk)
+		val = copyString(XP_GetString(RDF_APPLETALK_TOP_NAME));
+	}
+	else if (startsWith("virtualat://", resourceID(u)))
+	{
+		if ((url = unescapeURL(resourceID(u) + strlen("virtualat://"))) != NULL)
 		{
-			val = copyString(XP_GetString(RDF_APPLETALK_TOP_NAME));
-		}
-		else if (startsWith("virtualzone://", resourceID(u)))
-		{
-			if ((url = unescapeURL(resourceID(u) + strlen("virtualzone://"))) != NULL)
+			if ((val = XP_STRRCHR(url, ' ')) != NULL)
 			{
-				if ((val = XP_STRRCHR(url, ' ')) != NULL)
-				{
-					val = copyString(((char *)val) + 1);
-				}
-				else
-				{
-					val = copyString(url);
-				}
-				freeMem(url);
+				val = copyString(((char *)val) + 1);
 			}
-		}
-		else if (startsWith("zone://", resourceID(u)))
-		{
-			if ((url = unescapeURL(resourceID(u) + strlen("zone://"))) != NULL)
+			else
 			{
-				if ((val = XP_STRRCHR(url, ' ')) != NULL)
-				{
-					val = copyString(((char *)val) + 1);
-				}
-				else
-				{
-					val = copyString(url);
-				}
-				freeMem(url);
-			}
-		}
-		else if (startsWith("afp://", resourceID(u)))
-		{
-			if ((url = unescapeURL(resourceID(u) + strlen("afp://"))) != NULL)
-			{
-				if ((val = XP_STRRCHR(url, ':')) != NULL)
-				{
-					*(char *)val = '\0';
-				}
 				val = copyString(url);
-				freeMem(url);
 			}
+			freeMem(url);
 		}
 	}
+	else if (startsWith("at://", resourceID(u)))
+	{
+		if ((url = unescapeURL(resourceID(u) + strlen("at://"))) != NULL)
+		{
+			if ((val = XP_STRRCHR(url, ' ')) != NULL)
+			{
+				val = copyString(((char *)val) + 1);
+			}
+			else
+			{
+				val = copyString(url);
+			}
+			freeMem(url);
+		}
+	}
+	else if (startsWith("afp:/at/", resourceID(u)))
+	{
+		if ((url = unescapeURL(resourceID(u) + strlen("afp:/at/"))) != NULL)
+		{
+			if ((val = XP_STRRCHR(url, ':')) != NULL)
+			{
+				*(char *)val = '\0';
+			}
+			val = copyString(url);
+			freeMem(url);
+		}
+	}
+
 	if (val != NULL)
 	{
 		remoteStoreAdd(gRDFDB, u, gCoreVocab->RDF_name,
@@ -306,7 +307,7 @@ AtalkPossible(RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
 {
 	char		*id;
 
-	if (((resourceType(u) == ATALK_RT) || (resourceType(u) == ATALKVIRTUAL_RT)) &&
+	if (((startsWith("at://", resourceID(u))) || (startsWith("virtualat://", resourceID(u)))) &&
 		(s == gCoreVocab->RDF_parent) && (containerp(u)))
 	{
 		id = resourceID(u);
@@ -319,7 +320,329 @@ AtalkPossible(RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
 RDF_Error
 AtalkDestroy (RDFT r)
 {
-	/* XXX to do - kill of any outstanding NBP lookups */
+	/* XXX to do - kill off any outstanding NBP lookups */
+}
+
+
+
+PRBool
+AtalkAssert (RDFT mcf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType type, PRBool tv)
+{
+	AFPVolMountInfo		afpInfo;
+	AFPXVolMountInfo	afpXInfo;
+	Bool			response;
+	OSErr			err;
+	ParamBlockRec		pBlock;
+	PRBool			retVal = false, useTCP = false;
+	char			*url = NULL, *at, *colon, *slash, *msg = NULL;
+	char			*volume = NULL, *volPassword = NULL;
+	char			*server = NULL, *zone = NULL;
+	char			*user = NULL, *password = NULL;
+	short			len, pBlockSize = 0;
+	long			result;
+	char			errorMsg[256], errorNum[64];
+	PRHostEnt		hpbuf;
+	char			dbbuf[PR_NETDB_BUF_SIZE];
+
+	if (s == gNavCenter->RDF_Command)
+	{
+		if ((startsWith("afp:/", resourceID(u))) && (v == gNavCenter->RDF_Command_Launch))
+		{
+			/* indicate that we handle mounting of AFP URLs */
+
+			retVal = true;
+
+			/* parse AFP urls:  afp:/protocol/[id[:password]]@server[:zone]  */
+
+			if (startsWith("afp:/at/", resourceID(u)))
+			{
+				url = unescapeURL(resourceID(u) + strlen("afp:/at/"));
+			}
+			else if (startsWith("afp:/tcp/", resourceID(u)))
+			{
+				/* if AFP URL indicates TCP, AppleShare Client 3.7 or later is needed */
+				url = unescapeURL(resourceID(u) + strlen("afp:/tcp/"));
+				if ((err = Gestalt(kAppleShareVerGestalt, &result)))	return(retVal);
+				if ((result & 0x0000FFFF) < kAppleShareVer_3_7)
+				{
+					/* XXX localization */
+					FE_Alert(NULL, "Please install AppleShare Client version 3.7 or later.");
+					return(retVal);
+				}
+				useTCP = true;
+			}
+			if (url == NULL)	return(retVal);
+
+			server = url;
+			if ((at = XP_STRCHR(url, '@')) != NULL)
+			{
+				user = server;
+				*at = '\0';
+				server = ++at;
+			}
+			else
+			{
+				if ((slash = XP_STRCHR(server, '/')) != NULL)
+				{
+					*slash = '\0';
+					volume = ++slash;
+					if ((colon = XP_STRCHR(volume, ':')) != NULL)
+					{
+						*colon = '\0';
+						/* no support for folder/file references at end of AFP URLs */
+					}
+				}
+			}
+			if ((colon = XP_STRRCHR(server, ':')) != NULL)
+			{
+				*colon = '\0';
+				zone = ++colon;
+			}
+			if (user != NULL)
+			{
+				if ((colon = XP_STRCHR(user, ':')) != NULL)
+				{
+					*colon = '\0';
+					password = ++colon;
+				}
+			}		
+			if (user != NULL)	user = copyString(user);
+			if (password != NULL)	password = copyString(password);
+			if (volume != NULL)	volume = copyString(volume);
+			if (server != NULL)	server = copyString(server);
+			if (zone != NULL)	zone = copyString(zone);
+			freeMem(url);
+
+			if (user == NULL || password == NULL)
+			{
+				if (server != NULL && zone != NULL)
+				{
+					msg = getMem(strlen(server) + strlen("\'\' @ ") + strlen(zone));
+					if (msg != NULL)
+					{
+						sprintf(msg, "\'%s\' @ %s", server, zone);
+					}
+				}
+				else if (server != NULL)
+				{
+					msg = getMem(strlen(server) + strlen("\'\':"));
+					if (msg != NULL)
+					{
+						sprintf(msg, "\'%s\':", server);
+					}
+				}
+				response = FE_PromptUsernameAndPassword(((MWContext *)gRDFMWContext()),
+						(msg) ? msg : server, &user, &password);
+				/* hmmm... don't free 'msg' as FE_PromptUsernameAndPassword does ??? */
+				if (response == false)
+				{
+					return(retVal);
+				}
+			}
+
+			if (useTCP == true)
+			{
+				XP_BZERO((void *)&afpXInfo, sizeof(afpXInfo));
+				afpXInfo.length = sizeof(afpXInfo);
+				afpXInfo.media = AppleShareMediaType;
+				afpXInfo.flags = (volMountInteractMask | volMountExtendedFlagsMask);
+				afpXInfo.nbpInterval = 10;
+				afpXInfo.nbpCount = 10;
+				afpXInfo.uamType = ((password != NULL) && (*password != '\0')) ? 
+						kEncryptPassword : kNoUserAuthentication;
+
+				len = (zone != NULL) ? strlen(zone) : 0;
+				afpXInfo.zoneNameOffset = BASE_AFPX_OFFSET;
+				afpXInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpXInfo.AFPData[pBlockSize], (zone) ? zone : "", len);
+				pBlockSize += len;     
+
+				len = (server != NULL) ? strlen(server) : 0;
+				afpXInfo.serverNameOffset = BASE_AFPX_OFFSET + pBlockSize;
+				afpXInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpXInfo.AFPData[pBlockSize], (server) ? server : "", len);
+				pBlockSize += len;                   
+
+				len = (volume != NULL) ? strlen(volume) : 0;
+				afpXInfo.volNameOffset = BASE_AFPX_OFFSET + pBlockSize;
+				afpXInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpXInfo.AFPData[pBlockSize], (volume) ? volume : "", len);
+				pBlockSize += len;
+
+				len = (user != NULL) ? strlen(user) : 0;
+				afpXInfo.userNameOffset = BASE_AFPX_OFFSET + pBlockSize;
+				afpXInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpXInfo.AFPData[pBlockSize], (user) ? user : "", len);
+				pBlockSize += len;
+
+				len = (password != NULL) ? strlen(password) : 0;
+				afpXInfo.userPasswordOffset = BASE_AFPX_OFFSET + pBlockSize;
+				afpXInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpXInfo.AFPData[pBlockSize], (password) ? password : "", len);
+				pBlockSize += len;
+
+				len = (volPassword != NULL) ? strlen(volPassword) : 0;
+				afpXInfo.volPasswordOffset = BASE_AFPX_OFFSET + pBlockSize;
+				afpXInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpXInfo.AFPData[pBlockSize], (volPassword) ? volPassword : "", len);
+				pBlockSize += len;
+
+				afpXInfo.extendedFlags = kAFPExtendedFlagsAlternateAddressMask;
+
+				afpXInfo.uamNameOffset = BASE_AFPX_OFFSET + pBlockSize;
+				afpXInfo.AFPData[pBlockSize++] = 0;			/* No UAM support */
+
+				afpXInfo.alternateAddressOffset = BASE_AFPX_OFFSET + pBlockSize;
+				afpXInfo.AFPData[pBlockSize++] = AFPX_PROT_VERSION;
+
+			        if (PR_GetHostByName(server, dbbuf, sizeof(dbbuf), &hpbuf) == PR_SUCCESS)
+			        {
+					afpXInfo.AFPData[pBlockSize++] = 0x01;	/* # of tags */
+
+					/* XXX testing only!  Hard-coded IP address */
+
+					afpXInfo.AFPData[pBlockSize++] = 0x08;	/* tag #1 length */
+					afpXInfo.AFPData[pBlockSize++] = 0x02;	/* tag ID: IP address & port */
+
+					afpXInfo.AFPData[pBlockSize++] = 0xD0;	/* address */
+					afpXInfo.AFPData[pBlockSize++] = 0x0C;
+					afpXInfo.AFPData[pBlockSize++] = 0x26;
+					afpXInfo.AFPData[pBlockSize++] = 0x5C;
+
+					afpXInfo.AFPData[pBlockSize++] = 0x02;	/* port */
+					afpXInfo.AFPData[pBlockSize++] = 0x24;
+			        }
+
+				pBlock.ioParam.ioCompletion = NULL;
+				pBlock.ioParam.ioBuffer = (Ptr)&afpXInfo;
+			}
+			else
+			{
+				XP_BZERO((void *)&afpInfo, sizeof(afpInfo));
+				afpInfo.length = sizeof(afpInfo);
+				afpInfo.media = AppleShareMediaType;
+				afpInfo.flags = volMountInteractMask;
+				afpInfo.nbpInterval = 10;
+				afpInfo.nbpCount = 10;
+				afpInfo.uamType = ((password != NULL) && (*password != '\0')) ? 
+						kEncryptPassword : kNoUserAuthentication;
+
+
+				len = (zone != NULL) ? strlen(zone) : 0;
+				afpInfo.zoneNameOffset = BASE_AFP_OFFSET;
+				afpInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpInfo.AFPData[pBlockSize], (zone) ? zone : "", len);
+				pBlockSize += len;     
+
+				len = (server != NULL) ? strlen(server) : 0;
+				afpInfo.serverNameOffset = BASE_AFP_OFFSET + pBlockSize;
+				afpInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpInfo.AFPData[pBlockSize], (server) ? server : "", len);
+				pBlockSize += len;                   
+
+				len = (volume != NULL) ? strlen(volume) : 0;
+				afpInfo.volNameOffset = BASE_AFP_OFFSET + pBlockSize;
+				afpInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpInfo.AFPData[pBlockSize], (volume) ? volume : "", len);
+				pBlockSize += len;
+
+				len = (user != NULL) ? strlen(user) : 0;
+				afpInfo.userNameOffset = BASE_AFP_OFFSET + pBlockSize;
+				afpInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpInfo.AFPData[pBlockSize], (user) ? user : "", len);
+				pBlockSize += len;
+
+				len = (password != NULL) ? strlen(password) : 0;
+				afpInfo.userPasswordOffset = BASE_AFP_OFFSET + pBlockSize;
+				afpInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpInfo.AFPData[pBlockSize], (password) ? password : "", len);
+				pBlockSize += len;
+
+				len = (volPassword != NULL) ? strlen(volPassword) : 0;
+				afpInfo.volPasswordOffset = BASE_AFP_OFFSET + pBlockSize;
+				afpInfo.AFPData[pBlockSize++] = len;
+				strncpy(&afpInfo.AFPData[pBlockSize], (volPassword) ? volPassword : "", len);
+				pBlockSize += len;
+
+				pBlock.ioParam.ioCompletion = NULL;
+				pBlock.ioParam.ioBuffer = (Ptr)&afpInfo;
+			}
+
+			err = PBVolumeMount (&pBlock);
+
+			if (err == userCanceledErr)
+			{
+				return(retVal);
+			}
+			if (err != noErr)
+			{
+				/* XXX localization */
+
+				errorMsg[0] = '\0';
+				switch(err)
+				{
+					case	afpUserNotAuth:
+					case	afpParmErr:
+					sprintf(errorMsg, "User authentication failed.");
+					break;
+
+					case	afpPwdExpiredErr:
+					sprintf(errorMsg, "Password expired.");
+					break;
+
+					case	afpAlreadyMounted:
+					sprintf(errorMsg, "Volume already mounted.");
+					break;
+
+					case	afpCantMountMoreSrvre:
+					sprintf(errorMsg, "Maximum number of volumes has been mounted.");
+					break;
+
+					case	afpNoServer:
+					sprintf(errorMsg, "Server is not responding.");
+					break;
+
+					case	afpSameNodeErr:
+					sprintf(errorMsg, "Failed to log on to a server running on this machine.");
+					break;
+				}
+				sprintf(errorNum, "\rError %d", err);
+				strcat (errorMsg, errorNum);
+				FE_Alert(NULL, errorMsg);
+			}
+
+			if (user != NULL)		freeMem(user);
+			if (password != NULL)		freeMem(password);
+			if (server != NULL)		freeMem(server);
+			if (zone != NULL)		freeMem(zone);
+			if (volume != NULL)		freeMem(volume);
+			if (volPassword != NULL)	freeMem(volPassword);
+		}
+	}
+	else
+	{
+		retVal = remoteStoreHasAssertion (mcf, u, s, v, type, tv);
+	}
+	return(retVal);
+}
+
+
+
+PRBool
+AtalkHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType type, PRBool tv)
+{
+	PRBool		retVal = false;
+
+	if (s == gNavCenter->RDF_Command)
+	{
+		if ((startsWith("afp:/", resourceID(u))) && (v == gNavCenter->RDF_Command_Launch))
+		{
+			/* mount AFP volume specified by 'u' */
+
+			retVal = true;
+		}
+	}
+	return(retVal);
 }
 
 
@@ -335,9 +658,9 @@ MakeAtalkStore (char* url)
 	{
 		if ((ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct))) != NULL)
 		{
-			ntr->assert = NULL;
+			ntr->assert = AtalkAssert;
 			ntr->unassert = NULL;
-			ntr->hasAssertion = remoteStoreHasAssertion;
+			ntr->hasAssertion = AtalkHasAssertion;
 			ntr->getSlotValue = remoteStoreGetSlotValue;
 			ntr->getSlotValues = remoteStoreGetSlotValues;
 			ntr->nextValue = remoteStoreNextValue;

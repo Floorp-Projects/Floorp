@@ -3470,12 +3470,14 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 						menuCmd = HT_CMD_NEW_FOLDER;
 					}
 					/* for the moment, only allow direct addition of http URLs */
+/*
 					if (!startsWith("http://", url))
 					{
 						XP_FREE(url);
 						url = NULL;
 						break;
 					}
+*/
 					gAutoEditNewNode = true;
 				}
 				else
@@ -5989,7 +5991,7 @@ HT_ToggleSelection(HT_Resource node)
 PR_PUBLIC_API(PRBool)
 HT_Launch(HT_Resource node, MWContext *context)
 {
-	char		*filename =  resourceID(node->node);
+	PRBool		retVal = PR_FALSE;
 
 	XP_ASSERT(node != NULL);
 
@@ -5997,10 +5999,19 @@ HT_Launch(HT_Resource node, MWContext *context)
 	{
 		if ( (!HT_IsContainer(node)) && (!HT_IsSeparator(node)) )
 		{
-			/* XXX to do: determine if data source wants to handle launch */
+			if (RDF_HasAssertion(node->view->pane->db, node->node,
+				gNavCenter->RDF_Command, gNavCenter->RDF_Command_Launch,
+				RDF_RESOURCE_TYPE, 1))
+			{
+				retVal = PR_TRUE;
+
+				RDF_Assert(node->view->pane->db, node->node,
+					gNavCenter->RDF_Command, gNavCenter->RDF_Command_Launch,
+					RDF_RESOURCE_TYPE);
+			}
 		}
 	}
-	return(PR_FALSE);
+	return(retVal);
 }
 
 

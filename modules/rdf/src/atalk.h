@@ -22,6 +22,7 @@
 #ifdef	XP_MAC
 
 #include <Appletalk.h>
+#include <Gestalt.h>
 #include "rdf.h"
 #include "rdf-int.h"
 #include "mcf.h"
@@ -32,6 +33,12 @@
 /* atalk.c data structures and defines */
 
 extern	int	RDF_APPLETALK_TOP_NAME;
+
+#define	kAppleShareVerGestalt		'afps'
+#define	kAppleShareVer_3_7		0x00000006
+#define	AFPX_PROT_VERSION		0
+#define	BASE_AFPX_OFFSET		30
+#define	BASE_AFP_OFFSET			24
 
 
 /* atalk.c function prototypes */
@@ -45,6 +52,8 @@ void		getServers(RDF_Resource parent);
 void		setAtalkResourceName(RDF_Resource u);
 void		AtalkPossible(RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep);
 RDF_Error	AtalkDestroy (RDFT r);
+PRBool		AtalkHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType type, PRBool tv);
+PRBool		AtalkAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType type, PRBool tv);
 RDFT		MakeAtalkStore (char* url);
 
 XP_END_PROTOS

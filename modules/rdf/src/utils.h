@@ -67,6 +67,8 @@ uint8		resourceType (RDF_Resource r);
 void		setResourceType (RDF_Resource r, uint8 val);
 char *		resourceID(RDF_Resource r);
 char *		makeResourceName (RDF_Resource node);
+void		AddCookieResource(char* name, char* path, char* host, char* expires);
+void		RDF_ReadCookies(char * filename);
 
 XP_END_PROTOS
 

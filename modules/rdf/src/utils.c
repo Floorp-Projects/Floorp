@@ -513,11 +513,17 @@ RDFUtil_SetDefaultSelectedView(RDF_Resource container)
   RDFUtil_SetFirstInstance(gNavCenter->RDF_DefaultSelectedView, container);
 }
 
+
+
 /* I am putting the cookies stuff here for now */
 
 RDFT gCookieStore = 0;
 
-void  AddCookieResource(char* name, char* path, char* host, char* expires) {
+
+
+void
+AddCookieResource(char* name, char* path, char* host, char* expires)
+{
   char* url = getMem(strlen(name) + strlen(host));
   RDF_Resource ru;
   sprintf(url, "%s [%s]", host, name);
@@ -604,6 +610,7 @@ RDF_ReadCookies(char * filename)
     XP_FileClose(fp);
 
 }
+
 
 
 RDFT
