@@ -56,10 +56,19 @@ nsHTMLValue::nsHTMLValue(float aValue)
   mValue.mFloat = aValue;
 }
 
-nsHTMLValue::nsHTMLValue(const nsString& aValue)
-  : mUnit(eHTMLUnit_String)
+nsHTMLValue::nsHTMLValue(const nsString& aValue, nsHTMLUnit aUnit)
+  : mUnit(aUnit)
 {
-  mValue.mString = aValue.ToNewString();
+  NS_ASSERTION((eHTMLUnit_String == aUnit) ||
+               (eHTMLUnit_ColorName == aUnit), "not a string value");
+  if ((eHTMLUnit_String == aUnit) ||
+      (eHTMLUnit_ColorName == aUnit)) {
+    mValue.mString = aValue.ToNewString();
+  }
+  else {
+    mUnit = eHTMLUnit_Null;
+    mValue.mInt = 0;
+  }
 }
 
 nsHTMLValue::nsHTMLValue(nsISupports* aValue)
@@ -78,7 +87,7 @@ nsHTMLValue::nsHTMLValue(nscolor aValue)
 nsHTMLValue::nsHTMLValue(const nsHTMLValue& aCopy)
   : mUnit(aCopy.mUnit)
 {
-  if (eHTMLUnit_String == mUnit) {
+  if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != aCopy.mValue.mString) {
       mValue.mString = aCopy.mValue.mString->ToNewString();
     }
@@ -110,7 +119,7 @@ nsHTMLValue& nsHTMLValue::operator=(const nsHTMLValue& aCopy)
 {
   Reset();
   mUnit = aCopy.mUnit;
-  if (eHTMLUnit_String == mUnit) {
+  if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != aCopy.mValue.mString) {
       mValue.mString = aCopy.mValue.mString->ToNewString();
     }
@@ -134,7 +143,7 @@ nsHTMLValue& nsHTMLValue::operator=(const nsHTMLValue& aCopy)
 PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
 {
   if (mUnit == aOther.mUnit) {
-    if (eHTMLUnit_String == mUnit) {
+    if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
       if (nsnull == mValue.mString) {
         if (nsnull == aOther.mValue.mString) {
           return PR_TRUE;
@@ -163,7 +172,8 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
 PRUint32 nsHTMLValue::HashValue(void) const
 {
   return PRUint32(mUnit) ^ 
-         (((eHTMLUnit_String == mUnit) && (nsnull != mValue.mString)) ? 
+         ((((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) && 
+           (nsnull != mValue.mString)) ? 
           nsCRT::HashValue(mValue.mString->GetUnicode()) : 
           mValue.mInt);
 }
@@ -171,7 +181,7 @@ PRUint32 nsHTMLValue::HashValue(void) const
 
 void nsHTMLValue::Reset(void)
 {
-  if (eHTMLUnit_String == mUnit) {
+  if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != mValue.mString) {
       delete mValue.mString;
     }
@@ -212,11 +222,13 @@ void nsHTMLValue::SetPercentValue(float aValue)
   mValue.mFloat = aValue;
 }
 
-void nsHTMLValue::SetStringValue(const nsString& aValue)
+void nsHTMLValue::SetStringValue(const nsString& aValue, nsHTMLUnit aUnit)
 {
   Reset();
-  mUnit = eHTMLUnit_String;
-  mValue.mString = aValue.ToNewString();
+  if ((eHTMLUnit_String == aUnit) || (eHTMLUnit_ColorName == aUnit)) {
+    mUnit = aUnit;
+    mValue.mString = aValue.ToNewString();
+  }
 }
 
 void nsHTMLValue::SetISupportsValue(nsISupports* aValue)
@@ -248,7 +260,7 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
 
   if (eHTMLUnit_Empty == mUnit) {
   }
-  else if (eHTMLUnit_String == mUnit) {
+  else if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != mValue.mString) {
       aBuffer.Append('"');
       aBuffer.Append(*(mValue.mString));
@@ -287,6 +299,7 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
     case eHTMLUnit_Null:       break;
     case eHTMLUnit_Empty:      break;
     case eHTMLUnit_String:     break;
+    case eHTMLUnit_ColorName:  break;
     case eHTMLUnit_ISupports:  aBuffer.Append("ptr");  break;
     case eHTMLUnit_Integer:    break;
     case eHTMLUnit_Enumerated: aBuffer.Append("enum"); break;
