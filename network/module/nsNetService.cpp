@@ -1029,7 +1029,7 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 
     if (nsnull == nsUnixMozillaHomePath)
     {
-      nsUnixMozillaHomePath = getenv(MOZILLA_HOME);
+      nsUnixMozillaHomePath = PR_GetEnv(MOZILLA_HOME);
     }
 
 	resourceBase = XP_STRDUP(nsUnixMozillaHomePath);
