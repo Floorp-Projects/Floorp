@@ -51,6 +51,9 @@
 #include "signtextres.h"
 #include "advisor.h"
 #include "ssl.h"
+#include "protocolshr.h"
+#include "msgthread.h"
+#include "pk11func.h"
 
 #define SSL_SC_RSA              0x00000001L
 #define SSL_SC_MD2              0x00000010L
@@ -127,6 +130,47 @@ loser:
     return rv;
 }
 
+/* Thread functions for SDR_ENCRYPT */
+static SSMStatus
+sdrencrypt(SSMControlConnection *ctrl, SECItem *msg)
+{
+  SSMStatus rv = SSM_SUCCESS;
+  CMTStatus crv;
+  PK11SlotInfo *slot = PK11_GetInternalKeySlot();
+
+  /* Make sure user has initialized database password */
+  if (PK11_NeedUserInit(slot)) {
+    rv = SSM_SetUserPassword(slot, &ctrl->super.super);
+    if (rv != SSM_SUCCESS) { rv = SSM_ERR_NEED_USER_INIT_DB; goto loser; }
+  }
+
+  if (PK11_Authenticate(PK11_GetInternalKeySlot(), PR_TRUE, ctrl) != SECSuccess) {
+    rv = SSM_ERR_BAD_DB_PASSWORD;
+    goto loser;
+  }
+
+  if (CMT_DoEncryptionRequest(msg) != CMTSuccess) { rv = SSM_FAILURE; goto loser; }
+
+loser:
+  return rv;
+}
+
+static SSMStatus
+sdrdecrypt(SSMControlConnection *ctrl, SECItem *msg)
+{
+  SSMStatus rv = PR_SUCCESS;
+
+  if (PK11_Authenticate(PK11_GetInternalKeySlot(), PR_TRUE, ctrl) != SECSuccess) {
+    rv = SSM_ERR_BAD_DB_PASSWORD;
+    goto loser;
+  }
+
+  if (CMT_DoDecryptionRequest(msg) != CMTSuccess) { rv = PR_FAILURE; goto loser; }
+
+loser:
+  return rv;
+}
+
 
 SSMStatus 
 SSMControlConnection_ProcessMiscRequest(SSMControlConnection * ctrl, 
@@ -164,6 +208,26 @@ SSMControlConnection_ProcessMiscRequest(SSMControlConnection * ctrl,
         if (msg->data == NULL || msg->len == 0) 
             goto loser;
         msg->type = (SECItemType) (SSM_REPLY_OK_MESSAGE | SSM_MISC_ACTION | SSM_MISC_GET_RNG_DATA);
+        goto done;
+
+    case SSM_MISC_SDR_ENCRYPT:
+/*
+        PK11_Authenticate(PK11_GetInternalKeySlot(), PR_TRUE, ctrl);
+
+        if (CMT_DoEncryptionRequest(msg) != CMTSuccess) goto loser;
+*/
+	rv = SSM_ProcessMsgOnThread(sdrencrypt, ctrl, msg);
+	if (rv != PR_SUCCESS) goto loser;
+
+        rv = SSM_ERR_DEFER_RESPONSE;
+        goto done;
+
+    case SSM_MISC_SDR_DECRYPT:
+	rv = SSM_ProcessMsgOnThread(sdrdecrypt, ctrl, msg);
+        if (rv != PR_SUCCESS) goto loser;
+
+        rv = SSM_ERR_DEFER_RESPONSE;
+
         goto done;
 
     case SSM_MISC_PUT_RNG_DATA:

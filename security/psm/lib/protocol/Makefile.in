@@ -47,6 +47,7 @@ EXPORTS = \
 	protocolf.h \
 	protocolport.h \
 	protocolnspr20.h \
+	protocolshr.h \
 	ssmdefs.h \
 	rsrcids.h \
 	messages.h \
@@ -57,6 +58,7 @@ EXPORTS = \
 
 CSRCS  = newproto.c \
 	 templates.c \
+	 protocolshr.c \
 	 obscure.c \
 	 obspriv.c \
 	 $(NULL)

@@ -40,30 +40,22 @@
 #include "cmtcmn.h"
 #include "cmtutils.h"
 #include "messages.h"
+#include "protocolshr.h"
 #include "rsrcids.h"
 #include <string.h>
 
-/* Encrypt request */
-typedef struct EncryptRequestMessage
+#undef PROCESS_LOCALLY
+
+/* Encryption result - contains the key id and the resulting data */
+/* An empty key id indicates that NO encryption was performed */
+typedef struct EncryptionResult
 {
-  CMTItem keyid;  /* May have length 0 for default */
+  CMTItem keyid;
   CMTItem data;
-} EncryptRequestMessage;
-
-static CMTMessageTemplate EncryptRequestTemplate[] =
-{
-  { CMT_DT_ITEM, offsetof(EncryptRequestMessage, keyid) },
-  { CMT_DT_ITEM, offsetof(EncryptRequestMessage, data) },
-  { CMT_DT_END }
-};
-
-/* Encrypt reply message - SingleItemMessage */
-/* Decrypt request message - SingleItemMessage */
-/* Decrypt reply message - SingleItemMessage */
+} EncryptionResult;
 
 /* Constants for testing */
 static const char *kPrefix = "Encrypted:";
-static const char *kFailure = "Failure:";
 
 static CMTItem
 CMT_CopyDataToItem(const unsigned char *data, CMUint32 len)
@@ -77,104 +69,19 @@ CMT_CopyDataToItem(const unsigned char *data, CMUint32 len)
   return item;
 }
 
-/* encryption request */
-static CMTStatus
-tmp_DoEncryptionRequest(CMTItem *message)
-{
-  CMTStatus rv = CMTSuccess;
-  EncryptRequestMessage request;
-  SingleItemMessage reply;
-  CMUint32 pLen = strlen(kPrefix);
-
-  /* Initialize */
-  request.keyid.data = 0;
-  request.data.data = 0;
-
-  /* Decode incoming message */
-  rv = CMT_DecodeMessage(EncryptRequestTemplate, &request, message);
-  if (rv != CMTSuccess) goto loser;  /* Protocol error */
-
-  /* Free incoming message */
-  free(message->data);
-  message->data = NULL;
-
-  /* "Encrypt" by prefixing the data */
-  reply.item.len = request.data.len + pLen;
-  reply.item.data = calloc(reply.item.len, 1);
-  if (!reply.item.data) {
-	rv = CMTFailure;
-	goto loser;
-  }
-
-  if (pLen) memcpy(reply.item.data, kPrefix, pLen);
-  memcpy(&reply.item.data[pLen], request.data.data, request.data.len);
-  
-  /* Generate response */
-  message->type = SSM_SDR_ENCRYPT_REPLY;
-  rv = CMT_EncodeMessage(SingleItemMessageTemplate, message, &reply);
-  if (rv != CMTSuccess) goto loser;  /* Unknown error */
-
-loser:
-  if (request.keyid.data) free(request.keyid.data);
-  if (request.data.data) free(request.data.data);
-
-  return rv;
-}
-
-/* decryption request */
-static CMTStatus
-tmp_DoDecryptionRequest(CMTItem *message)
-{
-  CMTStatus rv = CMTSuccess;
-  SingleItemMessage request;
-  SingleItemMessage reply;
-  CMUint32 pLen = strlen(kPrefix);
-
-  /* Initialize */
-  request.item.data = 0;
-  reply.item.data = 0;
-
-  /* Decode the message */
-  rv = CMT_DecodeMessage(SingleItemMessageTemplate, &request, message);
-  if (rv != CMTSuccess) goto loser;
-
-  /* Free incoming message */
-  free(message->data);
-  message->data = NULL;
-
-  /* "Decrypt" the message by removing the key */
-  if (pLen && memcmp(request.item.data, kPrefix, pLen) != 0) {
-    rv = CMTFailure;  /* Invalid format */
-    goto loser;
-  }
-
-  reply.item.len = request.item.len - pLen;
-  reply.item.data = calloc(reply.item.len, 1);
-  if (!reply.item.data) { rv = CMTFailure;  goto loser; }
-
-  memcpy(reply.item.data, &request.item.data[pLen], reply.item.len);
-
-  /* Create reply message */
-  message->type = SSM_SDR_DECRYPT_REPLY;
-  rv = CMT_EncodeMessage(SingleItemMessageTemplate, message, &reply);
-  if (rv != CMTSuccess) goto loser;
-
-loser:
-  if (request.item.data) free(request.item.data);
-  if (reply.item.data) free(reply.item.data);
-
-  return rv;
-}
-
 static CMTStatus
 tmp_SendMessage(PCMT_CONTROL control, CMTItem *message)
 {
+#ifndef PROCESS_LOCALLY
+  return CMT_SendMessage(control, message);
+#else
   if (message->type == SSM_SDR_ENCRYPT_REQUEST) 
-    return tmp_DoEncryptionRequest(message);
+    return CMT_DoEncryptionRequest(message);
   else if (message->type == SSM_SDR_DECRYPT_REQUEST)
-    return tmp_DoDecryptionRequest(message);
+    return CMT_DoDecryptionRequest(message);
 
   return CMTFailure;
+#endif
 }
 /* End test code */
 
@@ -183,6 +90,7 @@ CMT_SDREncrypt(PCMT_CONTROL control, const unsigned char *key, CMUint32 keyLen,
                const unsigned char *data, CMUint32 dataLen,
                unsigned char **result, CMUint32 *resultLen)
 {
+  CMTStatus rv = CMTSuccess;
   CMTItem message;
   EncryptRequestMessage request;
   SingleItemMessage reply;
@@ -191,8 +99,14 @@ CMT_SDREncrypt(PCMT_CONTROL control, const unsigned char *key, CMUint32 keyLen,
   request.keyid = CMT_CopyDataToItem(key, keyLen);
   request.data = CMT_CopyDataToItem(data, dataLen);
 
+  reply.item.data = 0;
+  reply.item.len = 0;
+  message.data = 0;
+  message.len = 0;
+
   /* Encode */
-  if (CMT_EncodeMessage(EncryptRequestTemplate, &message, &request) != CMTSuccess) {
+  rv = CMT_EncodeMessage(EncryptRequestTemplate, &message, &request);
+  if (rv != CMTSuccess) {
     goto loser;
   }
 
@@ -200,11 +114,13 @@ CMT_SDREncrypt(PCMT_CONTROL control, const unsigned char *key, CMUint32 keyLen,
 
   /* Send */
   /* if (CMT_SendMessage(control, &message) != CMTSuccess) goto loser; */
-  if (tmp_SendMessage(control, &message) != CMTSuccess) goto loser;
+  rv = tmp_SendMessage(control, &message);
+  if (rv != CMTSuccess) goto loser;
 
-  if (message.type != SSM_SDR_ENCRYPT_REPLY) goto loser;
+  if (message.type != SSM_SDR_ENCRYPT_REPLY) { rv = CMTFailure; goto loser; }
 
-  if (CMT_DecodeMessage(SingleItemMessageTemplate, &reply, &message) != CMTSuccess)
+  rv = CMT_DecodeMessage(SingleItemMessageTemplate, &reply, &message);
+  if (rv != CMTSuccess)
     goto loser;
 
   *result = reply.item.data;
@@ -218,22 +134,28 @@ loser:
   if (request.data.data) free(request.data.data);
   if (reply.item.data) free(reply.item.data);
 
-  return CMTSuccess; /* need return value */
+  return rv; /* need return value */
 }
 
 CMTStatus
 CMT_SDRDecrypt(PCMT_CONTROL control, const unsigned char *data, CMUint32 dataLen,
                unsigned char **result, CMUint32 *resultLen)
 {
+  CMTStatus rv;
   CMTItem message;
   SingleItemMessage request;
   SingleItemMessage reply;
 
   /* Fill in the request */
   request.item = CMT_CopyDataToItem(data, dataLen);
+  reply.item.data = 0;
+  reply.item.len = 0;
+  message.data = 0;
+  message.len = 0;
 
   /* Encode */
-  if (CMT_EncodeMessage(SingleItemMessageTemplate, &message, &request) != CMTSuccess) {
+  rv = CMT_EncodeMessage(SingleItemMessageTemplate, &message, &request);
+  if (rv != CMTSuccess) {
     goto loser;
   }
 
@@ -241,11 +163,13 @@ CMT_SDRDecrypt(PCMT_CONTROL control, const unsigned char *data, CMUint32 dataLen
 
   /* Send */
   /* if (CMT_SendMessage(control, &message) != CMTSuccess) goto loser; */
-  if (tmp_SendMessage(control, &message) != CMTSuccess) goto loser;
+  rv = tmp_SendMessage(control, &message);
+  if (rv != CMTSuccess) goto loser;
 
-  if (message.type != SSM_SDR_DECRYPT_REPLY) goto loser;
+  if (message.type != SSM_SDR_DECRYPT_REPLY) { rv = CMTFailure; goto loser; }
 
-  if (CMT_DecodeMessage(SingleItemMessageTemplate, &reply, &message) != CMTSuccess)
+  rv = CMT_DecodeMessage(SingleItemMessageTemplate, &reply, &message);
+  if (rv != CMTSuccess)
     goto loser;
 
   *result = reply.item.data;
@@ -258,6 +182,5 @@ loser:
   if (request.item.data) free(request.item.data);
   if (reply.item.data) free(reply.item.data);
 
-  return CMTSuccess; /* need return value */
+  return rv; /* need return value */
 }
-
