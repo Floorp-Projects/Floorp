@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.13 $ $Date: 2002/04/25 19:33:47 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.14 $ $Date: 2002/04/26 12:59:06 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -687,11 +687,11 @@ create_object_array
 	*doObjects = PR_FALSE;
 	*status = PR_FAILURE;
 	*numObjects = 0;
-    } else if (numObjects > 0) {
+    } else if (*numObjects > 0) {
 	rvOandA = nss_ZNEWARRAY(NULL, 
 	                        nssCryptokiObjectAndAttributes *, 
 	                        *numObjects + 1);
-	status = rvOandA ? PR_SUCCESS : PR_FALSE;
+	*status = rvOandA ? PR_SUCCESS : PR_FALSE;
     }
     return rvOandA;
 }
