@@ -161,7 +161,9 @@ PRBool
 nsCID_Destroy(nsHashKey *aKey, void *aData, void* closure)
 {
     nsCID* entry = NS_STATIC_CAST(nsCID*, aData);
-    delete entry;
+    // nasty hack. We "know" that kNoCID was entered into the hash table.
+    if (entry != &kNoCID)
+	    delete entry;
     return PR_TRUE;
 }
 
@@ -1276,7 +1278,7 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
             // Didn't find it. Put a special CID in the cache so we
             // don't need to hit the registry on subsequent requests
             // for the same ProgID.
-            mProgIDs->Put(&key, (void*) &kNoCID);
+            mProgIDs->Put(&key, (void *)&kNoCID);
         }
     }
 #endif /* USE_REGISTRY */
@@ -2031,7 +2033,7 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
 
 #ifdef	XP_MAC
 	// rjc - on Mac, check the file's type code (skip checking the creator code)
-	const nsFileSpec	fs;
+	nsFileSpec	fs;
 	if (NS_FAILED(rv = component->GetFileSpec(&fs)))
 			return(rv);
 
