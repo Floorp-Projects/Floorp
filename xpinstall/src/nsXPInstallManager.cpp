@@ -52,6 +52,9 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+#define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
 
 nsXPInstallManager::nsXPInstallManager()
   : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), mFinalizing(PR_FALSE)
@@ -61,6 +64,20 @@ nsXPInstallManager::nsXPInstallManager()
     // we need to own ourself because we have a longer
     // lifetime than the scriptlet that created us.
     NS_ADDREF_THIS();
+
+    // get the resourced xpinstall string bundle
+    mStringBundle = nsnull;
+    nsIStringBundleService *service;
+    nsresult rv = nsServiceManager::GetService( kStringBundleServiceCID, 
+                                       nsIStringBundleService::GetIID(),
+                                       (nsISupports**) &service );
+    if (NS_SUCCEEDED(rv) && service)
+    {
+        nsILocale* locale = nsnull;
+        rv = service->CreateBundle( XPINSTALL_BUNDLE_URL, locale,
+                                    getter_AddRefs(mStringBundle) );
+        nsServiceManager::ReleaseService( kStringBundleServiceCID, service );
+    }
 }
 
 
@@ -131,11 +148,17 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
         if ( NS_SUCCEEDED(rv) )
         {
             nsCOMPtr<nsIPrompt> prompt( do_QueryInterface(wbwin, &rv) );
-            if ( NS_SUCCEEDED(rv) && prompt )
+            if ( NS_SUCCEEDED(rv) && prompt && mStringBundle )
             {
-                nsString msg("Attempting to download and install software. "
-                             "Do you feel lucky, punk?");
-                prompt->Confirm( msg.GetUnicode(), &OKtoInstall);
+                nsString rsrcName = "ShouldWeInstallMsg";
+                const PRUnichar* ucRsrcName = rsrcName.GetUnicode();
+                PRUnichar* ucRsrcVal = nsnull;
+                rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);
+                if (NS_SUCCEEDED(rv) && ucRsrcVal)
+                {
+                    prompt->Confirm( ucRsrcVal, &OKtoInstall);
+                    nsCRT::free(ucRsrcVal);
+                }
             }
         }
     }
@@ -427,7 +450,18 @@ nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, 
     if (!mFinalizing)
     {
         mFinalizing = PR_TRUE;
-        mProxy->SetActionText( nsString("Finishing install... please wait").GetUnicode() );
+        if (mStringBundle)
+        {
+            nsString rsrcName = "FinishingInstallMsg";
+            const PRUnichar* ucRsrcName = rsrcName.GetUnicode();
+            PRUnichar* ucRsrcVal = nsnull;
+            nsresult rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);
+            if (NS_SUCCEEDED(rv) && ucRsrcVal)
+            {
+                mProxy->SetActionText( ucRsrcVal );
+                nsCRT::free(ucRsrcVal);
+            }
+        }
     }
     return mProxy->SetProgress( itemNum, totNum );
 }
