@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.8 $
-# $Date: 2001/07/27 20:38:50 $
+# $Revision: 1.9 $
+# $Date: 2001/09/06 18:15:53 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -66,11 +66,12 @@ sub usage {
 Global Options:
 (These options apply to all builds)
 
+  --daemonize		Run program in the background.
   --once                 Do not loop repeadly.
   --noreport             Do not mail status reorts to the tinderbox server.
   --test                 Print the build commands, do not run the build 
 			     commands or mail logs.
-  --build BUILDNAME      The name of the build type to run
+  --build BUILDTYPE      The name of the build type to run
   --buildcf FILENAME     Provide a config file instead of the default: '$BUILDCF'.
   --mailer MAILER        Specify a different binary to use as the mailing 
                              program.  The default is: '$MAILER'.
@@ -122,7 +123,9 @@ Different sequences of build instructions have different 'build
 names'.  How you name your builds depends on the type of build testing
 you are performing.  You may have architecture build names:
 (Macintosh, Solaris, NT,) or project/subsystem specific build names
-(Sendmail, SeaMonkey, Apache).
+(Sendmail, SeaMonkey, Apache) or functionality specific build names
+(Construct, Lint_Test, Functionality_Test, Coverage_Test,
+Performance_Test) or some combination of the above.
 
 What make this a bit compilcated is that several different parameters
 (clobber/dep, the branch name to checkout from version control,
@@ -135,8 +138,9 @@ defines the builds.
 
 It is assumed that each line in the build script can be safely
 executed in its own shell and that if any command fails it will exit
-with a non zero exit code.  Failed builds are started again from the
-beginning during the next build cycle.
+with a non zero exit code.  This is similar to the behahvior of
+make. Failed builds are started again from the beginning during the
+next build cycle.
 
 The build script can be examined by running this program with the
 '--test' argument.  This will ensure that no commands are actually run
@@ -148,9 +152,9 @@ discribing how to display this information.  Tinderbox maintains two
 variables for this purpose.  The tinderbox tree name picks which web
 page the information will be displayed on.  The tinderbox build name
 is the name used for the column that the data will be displayed in.
-Typically there is one deamon running continually for each column. It
-may be clearer to have different build names display on the tinderbox
-columns then are used by this build script.
+Typically there is one deamon running continually for each column of
+each page. It may be clearer to have different build names display on
+the tinderbox columns then are used by this build script.
 
 Users should provide functions which prepare the tinderbox tree and
 build name based on both the command line arguments and the
@@ -159,12 +163,10 @@ meaningful and informative for your local environment.
 
 EXAMPLES
 
-	build_shellscript	--buildcf ./generic.sample.buildcf  \
-				--build construct --once 	    \
-					--                          \
-				--tree seamonkey --depend
-
-
+build_shellscript --buildcf $dir/mozilla.unix.buildcf \
+		--build seamonkey --test \
+			-- \
+		--tree treename
 
 EOF
   ;
@@ -180,7 +182,7 @@ sub set_static_vars {
   # This functions sets all the static variables which are often
   # configuration parameters.  Since it only sets variables to static
   # quantites it can not fail at run time. Some of these variables are
-  # adjusted by parse_args() but asside from that none of these
+  # adjusted by parse_args() but aside from that none of these
   # variables are ever written to. All global variables are defined here
   # so we have a list of them and a comment of what they are for.
   
@@ -209,7 +211,12 @@ sub set_static_vars {
 
   $MINIMUM_BUILD_SECONDS = 8*60;
 
-  # The maximum amount of time between tinderbox reports
+  # The maximum amount of time between tinderbox reports.  These can
+  # be as frequent as you like but more frequent will chew up your
+  # disk space, network bandwith and processor time.  People do not
+  # need to know exactly where tinderbox is in a build, it only makes
+  # sense to make this about the same size as the tinderbox referesh
+  # rate.
 
   $REPORT_TINDERBOX_EVERY_SECONDS = 5*60;
 
@@ -231,6 +238,11 @@ sub set_static_vars {
   # and it dos not hurt to do it here.
 
   delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV', 'LD_PRELOAD'};
+
+  # sudo deletes these variables as well
+
+  delete @ENV{'KRB_CONF', 'KRB5_CONFIG'};
+  delete @ENV{'LOCALDOMAIN', 'RES_OPTIONS', 'HOSTALIASES'};
 
   # the version number of this tinderbox release.
 
@@ -282,9 +294,7 @@ sub fatal_error {
     print LOG "[$LOCALTIME] $_";
   }
   print LOG "\n";
-
-  # propagate the error so we can catch it in an eval
-  die("@error\n");
+  die("\n");
 }
 
 
@@ -299,6 +309,32 @@ sub log_warning {
 }
 
 
+# daemonize a process taken from "Advanced Programming in the UNIX
+# Environment" by W. Richard Stevens.
+
+
+sub daemonize {
+
+    my $pid = fork();
+
+    defined($pid) ||
+        die("Could not fork. $!\n");
+
+    # parent stops.
+    ($pid == 0) ||
+        exit 0;
+
+    # child continues
+    chdir("/") || 
+        die("Could not change to directory '/'. $!\n");
+
+    setsid;
+    umask 0;
+
+    print "$PROGRAM pid: $$\n";
+
+    return ;
+}
 
 sub parse_args {
 
@@ -312,13 +348,14 @@ sub parse_args {
 		       "mailer" => \$MAILER,
 		       "buildcf" => \$BUILDCF,
 		       "once" => \$BUILD_ONCE,
+                       "daemonize" => \$DAEMONIZE,
 		      );
     
     Getopt::Long::config('require_order', 'auto_abbrev', 'ignore_case');
 
     if( !GetOptions (\%option_linkage,
 		     "version", "help", 
-		     "build=s", "test!", "once",
+		     "build=s", "test!", "once", "daemonize",
 		     "mail-each-phase", "noreport!", "mailer=s", "buildcf=s",
 		    ) ) {
 
@@ -341,7 +378,6 @@ sub parse_args {
 
     (@CMD_LOG) =();
 
-
     return 1;  
 } # parse_args
 
@@ -349,7 +385,7 @@ sub parse_args {
 sub set_server_args {
 
   %args = (
-	   buildname => $BUILD_NAME,
+	   buildtype => $BUILD_NAME,
 	   hostname => $HOSTNAME,
 	   program =>   $PROGRAM, 
 	   os =>	$OS,
@@ -359,9 +395,13 @@ sub set_server_args {
   # need to load UserDef from buildcf
 
   UserDef::build_environment(%args);
+  # how to build
   $BUILDS = UserDef::build_scripts(%args);
+  # which tinderbox web page gets the results
   $SERVER_TREE_NAME = UserDef::tree_name(%args);
+  # which column on the page this build gets displayed in
   $SERVER_BUILD_NAME = UserDef::build_name(%args);
+  # what regexp the server should use to parse the build log we generate
   $SERVER_ERROR_PARSER = UserDef::error_parser_name(%args);
   
 
@@ -592,7 +632,6 @@ sub system3 {
 				    );
   
   # this check should be redundant but better safe then sorry
-  
   ($child_pid) || 
       die ("Open3() did not start: '@{$cmd}'. $!\n");
   
@@ -686,16 +725,23 @@ sub safe_run_shell_commands {
   my ($phase) = @_;
 
     # catch problems within run_shell_commands and send them to the
-    # tinderbox server.  This catches problems with chdir or system3.
+    # tinderbox server.  This catches problems with the perl commands
+    # chdir or system which would otherwise die.
 
+    my $error_status;
     eval {
-        $error_status = run_shell_commands($phase);
+        # propagate the error so we can catch it in an eval
+
+           local $SIG{'PIPE'}    = sub { die "@_\n"; };
+           local $SIG{'__DIE__'} = sub { die "@_\n"; };
+
+           $error_status = run_shell_commands($phase);
     };
 
-    if ($@) {
+    if ( ($@) || (!($error_status)) ) {
         push @CMD_LOG, $@;
         push @CMD_LOG, "\n";
-        return $phase->{'error_status'};
+        $error_status = $phase->{'error_status'};
     }
 
   return $error_status;
@@ -715,7 +761,7 @@ sub run_shell_commands {
   
   ($TEST) ||
     chdir($dir) || 
-      die("Could not chdir to $dir): $!\n");
+      die("Could not chdir to $dir: $!\n");
 
   push @CMD_LOG, ("\n>--- Starting Phase: $phase_name  ".
 		  "(in dir: $dir) ---<\n\n");
@@ -803,10 +849,19 @@ sub slow_build_speed {
 
   require $BUILDCF;
 
-  set_server_args();
+  ($DAEMONIZE) &&
+      daemonize();    
+
 
   do { # foreach build
-    
+
+    # We need to rerun the user code each iteration so that they can
+    # set file names with embeded dates.  This allows each build to
+    # be saved in a separate tar file like:
+    # binaries.20010814.13:42:16.tar.gz
+
+    set_server_args();
+
     (@CMD_LOG) =();
 
     $START_TIME = time();
@@ -821,7 +876,7 @@ sub slow_build_speed {
 	mail_tinderbox_cmdlog('building');
       
       $status = safe_run_shell_commands($phase);
-      
+
       ($status ne 'success') && 
 	last;
 
