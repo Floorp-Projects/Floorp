@@ -639,7 +639,7 @@ chrome::
 
 install:: chrome
 
-!ifdef JAR_PACKAGING
+!ifndef MOZ_DISABLE_JAR_PACKAGING
 
 !if exist($(JAR_MANIFEST))
 chrome:: 
@@ -651,7 +651,7 @@ chrome::
     -for %t in ($(CHROME_TYPE)) do echo %t,install,url,jar:resource:/chrome/$(CHROME_DIR:\=/).jar!/ >>$(DIST)\bin\chrome\installed-chrome.txt
 !endif
 
-!else # !JAR_PACKAGING
+!else # MOZ_DISABLE_JAR_PACKAGING
 
 ################################################################################
 # Generate chrome building rules.
@@ -798,7 +798,7 @@ chrome::
 
 !endif # chrome
 
-!endif # !JAR_PACKAGING
+!endif # MOZ_DISABLE_JAR_PACKAGING
 
 ################################################################################
 
