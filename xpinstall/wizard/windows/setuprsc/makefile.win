@@ -32,17 +32,13 @@ USE_NON_MT_LIBS=1
 MODULE      = setuprsc
 RESFILE     = $(MODULE).res
 DLL         = $(OBJDIR)\$(MODULE).dll
+EXPORTS     = setuprsc.h
 
 OBJS=                             \
     .\$(OBJDIR)\setuprsc.obj      \
     $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-docopy:
-    $(MAKE_INSTALL) setuprsc.h $(DIST)\include
-
-export:: docopy
 
 install:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\install

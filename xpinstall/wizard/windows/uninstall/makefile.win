@@ -28,6 +28,7 @@ USE_NON_MT_LIBS = 1
 MODULE          = uninstall
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
 RESFILE         = $(MODULE).res
+EXPORTS         = logkeys.h
 
 OBJS =                          \
     .\$(OBJDIR)\uninstall.obj   \
@@ -44,11 +45,6 @@ WIN_LIBS=                       \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-docopy:
-    $(MAKE_INSTALL) logkeys.h $(DIST)\include
-
-export:: docopy
 
 install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
