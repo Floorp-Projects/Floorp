@@ -98,6 +98,7 @@ nsresult StringUnicharInputStream::Close()
   mPos = mLen;
   if (nsnull != mString) {
     delete mString;
+    mString = 0;
   }
   return NS_OK;
 }
