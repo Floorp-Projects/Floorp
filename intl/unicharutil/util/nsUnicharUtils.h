@@ -34,6 +34,7 @@ class nsCaseInsensitiveStringComparator
   {
     public:
       virtual int operator()( const PRUnichar*, const PRUnichar*, PRUint32 aLength ) const;
+      virtual int operator()( PRUnichar, PRUnichar ) const;
   };
 
 #endif

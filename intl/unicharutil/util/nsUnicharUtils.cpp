@@ -83,34 +83,12 @@ ToUpperCase( nsAString& aString )
     copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
   }
 
-
-class CaseInsensitivePRUnicharComparator
-  {
-    public:
-      PRBool operator()( PRUnichar lhs, PRUnichar rhs ) const {
-          NS_InitCaseConversion();
-          
-          PRUnichar lhsUpper; PRUnichar rhsUpper;
-          gCaseConv->ToUpper(lhs, &lhsUpper);
-          gCaseConv->ToUpper(rhs, &rhsUpper);
-          return lhsUpper = rhsUpper;
-      }
-  };
-
 PRBool
 CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
-  {
-      nsAutoString lowerPattern(aPattern);
-      ToLowerCase(lowerPattern);
+{
+    return FindInReadable(aPattern, aStart, aEnd, nsCaseInsensitiveStringComparator());
+}
 
-      nsAutoString lowerString;
-      CopyUnicodeTo(aSearchStart, aSearchEnd, lowerString);
-
-      nsAString::const_iterator match_start, match_end;
-      return FindInReadable(lowerPattern,
-                            lowerString.BeginReading(match_start),
-                            lowerString.EndReading(match_end));
-  }
 
 int
 nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
@@ -119,6 +97,18 @@ nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUni
       PRInt32 result;
       gCaseConv->CaseCompare(lhs, rhs, aLength, &result);
       return result;
+  }
+
+PRBool
+nsCaseInsensitiveStringComparator::operator()( PRUnichar lhs, PRUnichar rhs ) const
+  {
+      if (lhs == rhs) return PR_TRUE;
+      NS_InitCaseConversion();
+
+      gCaseConv->ToUpper(lhs, &lhs);
+      gCaseConv->ToUpper(rhs, &rhs);
+
+      return lhs == rhs;
   }
 
 #endif
