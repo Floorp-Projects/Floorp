@@ -161,6 +161,9 @@ nsInstallTrigger::HandleContent(const char * aContentType,
                 }
             }
         }
+    } else {
+        // The content-type was not application/x-xpinstall
+        return NS_ERROR_WONT_HANDLE_CONTENT;
     }
 
     return NS_ERROR_FAILURE;
