@@ -40,11 +40,18 @@
 #include "npapi.h"
 #endif
 
+#ifdef XP_MACOSX
+#undef DARWIN
+#include <CoreFoundation/CoreFoundation.h>
+#else
+#include <Gestalt.h>
 #include <Icons.h>
 #include <Resources.h>
 #include <Processes.h>
 #include <Script.h>
 #include <TextUtils.h>
+#include <CFPreferences.h>
+#endif
 
 #include <string.h>
 #include <ctype.h>
@@ -65,6 +72,9 @@ public:
 
 	static NPError		Initialize();
 	static void			Shutdown();
+	
+	// no ctor because CPlugin is allocated and constructed by hand.
+	// ideally, this should use placement |new|.
 	
 			void		Constructor(NPP instance, NPMIMEType type, uint16 mode, int16 argc, char* argn[], char* argv[]);
 			void		Destructor();
@@ -101,8 +111,9 @@ private:
 	static	char*		sDefaultPage;
 	static  char*		sRefreshText;
 	static	char*		sJavaScriptPage;
-	static	FSSpec		sDataFileSpec;
-	
+	static	FSSpec		sDataFileSpec;      // only used for Mac OS 9
+	static	Boolean		sRunningOnOSX;
+
 			NPP			fInstance;
 			NPWindow*	fWindow;
 			uint16		fMode;
@@ -131,6 +142,7 @@ char*		CPlugin::sDefaultPage		= NULL;
 char*		CPlugin::sRefreshText		= NULL;
 char*		CPlugin::sJavaScriptPage	= NULL;
 FSSpec		CPlugin::sDataFileSpec;
+Boolean		CPlugin::sRunningOnOSX		= false;
 
 extern short 		gResFile;
 
@@ -154,9 +166,10 @@ const short rJavaScriptPageURL = 132;
 // 'STR#'
 const short rTypeListStrings = 129;
 
-static char szPluginFinderCommandBeginning[] = PLUGINFINDER_COMMAND_BEGINNING;
-static char szPluginFinderCommandEnd[] = PLUGINFINDER_COMMAND_END;
+static const char szPluginFinderCommandBeginning[] = PLUGINFINDER_COMMAND_BEGINNING;
+static const char szPluginFinderCommandEnd[] = PLUGINFINDER_COMMAND_END;
 
+//#ifndef XP_MACOSX
 
 //------------------------------------------------------------------------------------
 // strcasecomp: Why don't the MW C libraries have this??
@@ -170,17 +183,19 @@ int strcasecmp (const char* one, const char *two)
 	const char *pB;
 
 	for(pA=one, pB=two; *pA && *pB; pA++, pB++) 
-	  {
-	    int tmp = XP_TO_LOWER(*pA) - XP_TO_LOWER(*pB);
-	    if (tmp) 
+	{
+		int tmp = XP_TO_LOWER(*pA) - XP_TO_LOWER(*pB);
+		if (tmp) 
 			return tmp;
-	  }
+	}
 	if (*pA) 
 		return 1;	
 	if (*pB) 
 		return -1;
 	return 0;	
 }
+
+//#endif // XP_MACOSX
 
 
 //------------------------------------------------------------------------------------
@@ -337,8 +352,8 @@ NPP_StreamAsFile(NPP /*instance*/, NPStream */*stream*/, const char* /*fname*/)
 void NP_LOADDS
 NPP_Print(NPP instance, NPPrint* printInfo)
 {
-    if (printInfo == NULL)
-        return;
+	if (printInfo == NULL)
+		return;
 
 	if (instance != NULL)
 	{
@@ -388,6 +403,7 @@ jref NPP_GetJavaClass(void)
 	return NULL;
 }
 
+#pragma mark -
 
 //------------------------------------------------------------------------------------
 // CPlugin::Initialize:
@@ -395,10 +411,13 @@ jref NPP_GetJavaClass(void)
 NPError CPlugin::Initialize()
 {
 	Handle	string;
-	SInt16	wResFile;
 	short	saveResFile = CurResFile();
 
 	UseResFile(gResFile);
+
+	long	systemVersion;
+	OSErr	err = ::Gestalt(gestaltSystemVersion, &systemVersion);
+	sRunningOnOSX = (err == noErr) && (systemVersion >= 0x00001000);
 
 	// Get Resources
 	CPlugin::sIconHandle = GetCIcon(rBrokenPluginIcon);
@@ -490,11 +509,13 @@ NPError CPlugin::Initialize()
 	ReleaseResource(string);
 
 	UseResFile(saveResFile);
-	
+
+	if (!sRunningOnOSX) // We'll make some CFPreferences the first time we have to on OS X
 	{
 		ProcessSerialNumber psn;
 		ProcessInfoRec 	info;
 		FSSpec	fsTheApp;
+		SInt16	wResFile;
 		OSErr	wErr;
 		
 		psn.highLongOfPSN = 0;
@@ -505,8 +526,7 @@ NPError CPlugin::Initialize()
 		info.processAppSpec = &fsTheApp;
 		wErr = ::GetProcessInformation(&psn, &info);
 		if (wErr == noErr) {
-			wErr = FSMakeFSSpec(fsTheApp.vRefNum, fsTheApp.parID, "\p:Plug-ins:Default Plug-in Data",
-								 &sDataFileSpec);
+			wErr = FSMakeFSSpec(fsTheApp.vRefNum, fsTheApp.parID, "\p:Plug-ins:Default Plug-in Data", &sDataFileSpec);
 			if (wErr == fnfErr) {
 				FSpCreateResFile(&sDataFileSpec, 'MOSS', 'BINA', smSystemScript);
 				wResFile = FSpOpenResFile(&CPlugin::sDataFileSpec, fsRdWrPerm);
@@ -521,6 +541,7 @@ NPError CPlugin::Initialize()
 			}
 		}
 	}
+
 	return NPERR_NO_ERROR;
 }
 
@@ -721,8 +742,8 @@ void CPlugin::Draw(HiliteState hilite)
 #if !TARGET_API_MAC_CARBON
 	FillRect(&drawRect, &(gQDPtr->white));
 #else
-    Pattern qdWhite;
-    FillRect(&drawRect, GetQDGlobalsWhite(&qdWhite));
+	Pattern qdWhite;
+	FillRect(&drawRect, GetQDGlobalsWhite(&qdWhite));
 #endif
 
 	if (hilite == kHilited) {
@@ -769,7 +790,8 @@ void  CPlugin::MouseDown()
 	{
 		Draw(kHilited);
 		Boolean inside = true;
-
+  
+		// evil CPU-hogging loop on Mac OS X!
 		while (StillDown())
 		{
 			Point localMouse;
@@ -811,11 +833,11 @@ Boolean CPlugin::FocusDraw()
 	{
 		GetPort(&fSavePort);
 		SetPort((GrafPtr) ourPort);
-        Rect portRect;
+		Rect portRect;
 #if !TARGET_API_MAC_CARBON
-        portRect = ourPort->portRect;
+		portRect = ourPort->portRect;
 #else
-        GetPortBounds(ourPort, &portRect);
+		GetPortBounds(ourPort, &portRect);
 #endif
 		fSavePortTop = portRect.top;
 		fSavePortLeft = portRect.left;
@@ -957,51 +979,106 @@ char *CPlugin::MakeDefaultURL(void)
 //------------------------------------------------------------------------------------
 void CPlugin::AddMimeTypeToList(StringPtr cTypeString)
 {
-	Handle	hTypeList;
-	SInt32	dwCount;
-	SInt32	index;
-	Str255	oldType;
-	SInt16	wResFile;
-	Boolean	failedToFind = true;
+	if (sRunningOnOSX)
+	{
+		CFStringRef		pluginKey	= CFSTR("DefaultPluginSeenTypes"); // don't release this
+		CFStringRef		mimeType	= ::CFStringCreateWithPascalString(kCFAllocatorDefault, cTypeString, kCFStringEncodingASCII);
+		CFArrayRef		prefsList	= (CFArrayRef)::CFPreferencesCopyAppValue(pluginKey, kCFPreferencesCurrentApplication);
+		Boolean			foundType	= false;
 
-	wResFile = FSpOpenResFile(&CPlugin::sDataFileSpec, fsRdWrPerm);
-	if (wResFile != -1) {
-		hTypeList = Get1Resource('STR#', rTypeListStrings);
-		if (hTypeList != NULL) {
-			dwCount = **((short **)hTypeList);
+		if (prefsList == NULL)
+		{
+			CFStringRef stringArray[1];
+			stringArray[0] = mimeType;
 			
-			// First make sure it's not already in the list.
-			for (index = 1; index <= dwCount; index++) {
-				GetIndString(oldType, rTypeListStrings, index);
-
-				// if the mimetype already exists in our list, or the plugin is NOT hidden,
-				// don't bring up the dialog box
-				if (EqualString(cTypeString, oldType, true, true) && !fHiddenPlugin) {
-					failedToFind = false;
-					break;							// Found a match, so bail out!
-				}
+			prefsList = ::CFArrayCreate(kCFAllocatorDefault, (const void **)stringArray, 1, &kCFTypeArrayCallBacks);
+			if (prefsList)
+			{
+				::CFPreferencesSetAppValue(pluginKey, prefsList, kCFPreferencesCurrentApplication);
+				::CFRelease(prefsList);
 			}
-			if (failedToFind) {
-				// Grow the string list handle
-				Size itsSize = GetHandleSize(hTypeList);
-				Size typeSize = cTypeString[0] + 1;
-				SetHandleSize(hTypeList, itsSize + typeSize);
-			
-				// Increment the count of strings in the list
-				(**((short**)hTypeList)) = (short)(++dwCount);	
-
-				// Copy the data from our string into the handle
-				long dwCount = Munger(hTypeList, itsSize, NULL, typeSize, cTypeString, typeSize);
-
-				// Mark the resource as changed so it will be written out
-				if (dwCount > 0) {
-					ChangedResource(hTypeList);
-					UpdateResFile(wResFile);
-				}
-			}
-			ReleaseResource(hTypeList);
 		}
-		FSClose(wResFile);
+		else
+		{
+			if (::CFGetTypeID(prefsList) == ::CFArrayGetTypeID())
+			{
+				// first make sure it's not in the list
+				CFIndex count = ::CFArrayGetCount(prefsList);
+				for (CFIndex i = 0; i < count; i ++)
+				{
+					CFStringRef item = (CFStringRef)::CFArrayGetValueAtIndex(prefsList, i); // does not retain
+					if (item &&
+						(::CFGetTypeID(item) == ::CFStringGetTypeID()) &&
+						(::CFStringCompareWithOptions(item, mimeType,
+								CFRangeMake(0, ::CFStringGetLength(item)), kCFCompareCaseInsensitive) == kCFCompareEqualTo))
+					{
+						foundType = true;
+						break;
+					}
+				}
+				
+				if (!foundType && !fHiddenPlugin)
+				{
+					CFMutableArrayRef typesArray = ::CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, (CFArrayRef)prefsList);
+					if (typesArray)
+					{
+						::CFArrayAppendValue(typesArray, mimeType);
+						::CFPreferencesSetAppValue(pluginKey, typesArray, kCFPreferencesCurrentApplication);
+					}
+				}
+			}
+			::CFRelease(prefsList);
+		}
+		::CFRelease(mimeType);
+	}
+	else
+	{
+		Handle	hTypeList;
+		SInt32	dwCount;
+		SInt32	index;
+		Str255	oldType;
+		SInt16	wResFile;
+		Boolean failedToFind = true;
+
+		wResFile = FSpOpenResFile(&CPlugin::sDataFileSpec, fsRdWrPerm);
+		if (wResFile != -1) {
+			hTypeList = Get1Resource('STR#', rTypeListStrings);
+			if (hTypeList != NULL) {
+				dwCount = **((short **)hTypeList);
+				
+				// First make sure it's not already in the list.
+				for (index = 1; index <= dwCount; index++) {
+					GetIndString(oldType, rTypeListStrings, index);
+
+					// if the mimetype already exists in our list, or the plugin is NOT hidden,
+					// don't bring up the dialog box
+					if (EqualString(cTypeString, oldType, true, true) && !fHiddenPlugin) {
+						failedToFind = false;
+						break;							// Found a match, so bail out!
+					}
+				}
+				if (failedToFind) {
+					// Grow the string list handle
+					Size itsSize = GetHandleSize(hTypeList);
+					Size typeSize = cTypeString[0] + 1;
+					SetHandleSize(hTypeList, itsSize + typeSize);
+				
+					// Increment the count of strings in the list
+					(**((short**)hTypeList)) = (short)(++dwCount);	
+
+					// Copy the data from our string into the handle
+					long dwCount = Munger(hTypeList, itsSize, NULL, typeSize, cTypeString, typeSize);
+
+					// Mark the resource as changed so it will be written out
+					if (dwCount > 0) {
+						ChangedResource(hTypeList);
+						UpdateResFile(wResFile);
+					}
+				}
+				ReleaseResource(hTypeList);
+			}
+			FSClose(wResFile);
+		}
 	}
 }
 
@@ -1023,41 +1100,72 @@ void CPlugin::AddMimeTypeToList(StringPtr cTypeString)
 //------------------------------------------------------------------------------------
 Boolean CPlugin::CheckMimeTypes()
 {
-	Handle	hTypeList;
-	SInt32	index;
-	Str255	oldType;
-	Str255	ourType;
-	SInt16	wResFile;
-	Boolean	failedToFind = true;
+	Boolean failedToFind = true;
 
-	wResFile = FSpOpenResFile(&CPlugin::sDataFileSpec, fsRdPerm);
-	if (wResFile != -1) {
-		hTypeList = Get1Resource('STR#', rTypeListStrings);
-		if (hTypeList != NULL) {
-			// Convert the mime-type C string to a Pascal string.
-			index = strlen(fType);
-			if (index > 255) {		// don't blow out the Str255
-				index = 255;
-			}
-			BlockMoveData(fType, &ourType[1], index);
-			ourType[0] = index;
-
-			short count = **((short **)hTypeList);
-			
-			// Iterate through all the strings in the list.
-			for (index = 1; index <= count; index++) {
-				GetIndString(oldType, rTypeListStrings, index);
-
-				// if the mimetype already exists in our list, or the plugin is NOT hidden,
-				// don't bring up the dialog box
-				if (EqualString(ourType, oldType, true, true) && !fHiddenPlugin) {
-					failedToFind = false;
-					break;							// Found a match, so bail out!
+	if (sRunningOnOSX)
+	{
+		CFStringRef		pluginKey = CFSTR("DefaultPluginSeenTypes"); // don't release this
+		CFStringRef		mimeType  = ::CFStringCreateWithCString(kCFAllocatorDefault, fType, kCFStringEncodingASCII);
+		CFArrayRef		prefsList = (CFArrayRef)::CFPreferencesCopyAppValue(pluginKey, kCFPreferencesCurrentApplication);
+		if (prefsList)
+		{
+			if (::CFGetTypeID(prefsList) == ::CFArrayGetTypeID())
+			{
+				CFIndex count = ::CFArrayGetCount(prefsList);
+				for (CFIndex i = 0; i < count; i ++)
+				{
+					CFStringRef item = (CFStringRef)::CFArrayGetValueAtIndex(prefsList, i); // does not retain
+					if (item &&
+						(::CFGetTypeID(item) == ::CFStringGetTypeID()) &&
+						(::CFStringCompareWithOptions(item, mimeType,
+								CFRangeMake(0, ::CFStringGetLength(item)), kCFCompareCaseInsensitive) == kCFCompareEqualTo))
+					{
+						failedToFind = false;
+						break;
+					}
 				}
 			}
-			ReleaseResource(hTypeList);
+			::CFRelease(prefsList);
 		}
-		FSClose(wResFile);
+		::CFRelease(mimeType);
+	}
+	else
+	{
+		Handle	hTypeList;
+		SInt32	index;
+		Str255	oldType;
+		Str255	ourType;
+		SInt16	wResFile;
+
+		wResFile = FSpOpenResFile(&CPlugin::sDataFileSpec, fsRdPerm);
+		if (wResFile != -1) {
+			hTypeList = Get1Resource('STR#', rTypeListStrings);
+			if (hTypeList != NULL) {
+				// Convert the mime-type C string to a Pascal string.
+				index = strlen(fType);
+				if (index > 255) {		// don't blow out the Str255
+					index = 255;
+				}
+				BlockMoveData(fType, &ourType[1], index);
+				ourType[0] = index;
+
+				short count = **((short **)hTypeList);
+				
+				// Iterate through all the strings in the list.
+				for (index = 1; index <= count; index++) {
+					GetIndString(oldType, rTypeListStrings, index);
+
+					// if the mimetype already exists in our list, or the plugin is NOT hidden,
+					// don't bring up the dialog box
+					if (EqualString(ourType, oldType, true, true) && !fHiddenPlugin) {
+						failedToFind = false;
+						break;							// Found a match, so bail out!
+					}
+				}
+				ReleaseResource(hTypeList);
+			}
+			FSClose(wResFile);
+		}
 	}
 	return(failedToFind);
 }
@@ -1087,7 +1195,7 @@ void CPlugin::AskAndLoadURL()
 #if !TARGET_API_MAC_CARBON
 		SetCursor(&(gQDPtr->arrow));
 #else
-        Cursor qdArrow;
+		Cursor qdArrow;
 		SetCursor(GetQDGlobalsArrow(&qdArrow));
 #endif
 
