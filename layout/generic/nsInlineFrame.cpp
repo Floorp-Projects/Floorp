@@ -208,7 +208,9 @@ PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
                                                PRInt32         aChildIndex)
 {
 #ifdef NS_DEBUG
-  VerifyLastIsComplete();
+  if (GetVerifyTreeEnable()) {
+    VerifyLastIsComplete();
+  }
 #endif
   NS_PRECONDITION(nsnull != aChildFrame, "no children");
 
@@ -311,15 +313,17 @@ PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
   // Update the child count member data
   mChildCount = childCount;
 #ifdef NS_DEBUG
-  NS_POSTCONDITION(LengthOf(mFirstChild) == mChildCount, "bad child count");
+  if (GetVerifyTreeEnable()) {
+    NS_POSTCONDITION(LengthOf(mFirstChild) == mChildCount, "bad child count");
 
-  nsIFrame* lastChild;
-  PRInt32   lastIndexInParent;
+    nsIFrame* lastChild;
+    PRInt32   lastIndexInParent;
 
-  LastChild(lastChild);
-  lastChild->GetContentIndex(lastIndexInParent);
-  NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
-  VerifyLastIsComplete();
+    LastChild(lastChild);
+    lastChild->GetContentIndex(lastIndexInParent);
+    NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
+    VerifyLastIsComplete();
+  }
 #endif
   return result;
 }
@@ -336,7 +340,9 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
                                      nsInlineState&  aState)
 {
 #ifdef NS_DEBUG
-  VerifyLastIsComplete();
+  if (GetVerifyTreeEnable()) {
+    VerifyLastIsComplete();
+  }
 #endif
   nsInlineFrame* nextInFlow = (nsInlineFrame*)mNextInFlow;
   nsSize         kidMaxElementSize;
@@ -506,16 +512,21 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
     } else {
       // Yes, we successfully pulled up all the child frames which means all
       // the next-in-flows must be empty. Do a sanity check
-      while (nsnull != nextInFlow) {
-        NS_ASSERTION(nsnull == nextInFlow->mFirstChild, "non-empty next-in-flow");
-        nextInFlow = (nsInlineFrame*)nextInFlow->mNextInFlow;
+      if (GetVerifyTreeEnable()) {
+        while (nsnull != nextInFlow) {
+          NS_ASSERTION(nsnull == nextInFlow->mFirstChild,
+                       "non-empty next-in-flow");
+          nextInFlow = (nsInlineFrame*)nextInFlow->mNextInFlow;
+        }
       }
 #endif
     }
   }
 
 #ifdef NS_DEBUG
-  VerifyLastIsComplete();
+  if (GetVerifyTreeEnable()) {
+    VerifyLastIsComplete();
+  }
 #endif
   return result;
 }
@@ -532,7 +543,9 @@ nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContex
                                                      nsInlineState&  aState)
 {
 #ifdef NS_DEBUG
-  VerifyLastIsComplete();
+  if (GetVerifyTreeEnable()) {
+    VerifyLastIsComplete();
+  }
 #endif
   nsIFrame*      kidPrevInFlow = nsnull;
   nsReflowStatus result = NS_FRAME_NOT_COMPLETE;
@@ -679,11 +692,11 @@ done:;
   NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
   SetLastContentOffset(prevKidFrame);
 #ifdef NS_DEBUG
-  PRInt32 len = LengthOf(mFirstChild);
-  NS_ASSERTION(len == mChildCount, "bad child count");
-#endif
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
+  if (GetVerifyTreeEnable()) {
+    PRInt32 len = LengthOf(mFirstChild);
+    NS_ASSERTION(len == mChildCount, "bad child count");
+    VerifyLastIsComplete();
+  }
 #endif
   return result;
 }
@@ -708,9 +721,13 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                       nsSize*          aMaxElementSize,
                                       nsReflowStatus&  aStatus)
 {
+  NS_FRAME_TRACE_REFLOW_IN("nsInlineFrame::ResizeReflow"); 
 #ifdef NS_DEBUG
-  PreReflowCheck();
+  if (GetVerifyTreeEnable()) {
+    PreReflowCheck();
+  }
 #endif
+
 //XXX not now  NS_PRECONDITION((aMaxSize.width > 0) && (aMaxSize.height > 0), "unexpected max size");
 
   PRBool        reflowMappedOK = PR_TRUE;
@@ -784,8 +801,11 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
 #endif
 
 #ifdef NS_DEBUG
-  PostReflowCheck(aStatus);
+  if (GetVerifyTreeEnable()) {
+    PostReflowCheck(aStatus);
+  }
 #endif
+  NS_FRAME_TRACE_REFLOW_OUT("nsInlineFrame::ResizeReflow", aStatus); 
   return NS_OK;
 }
 
@@ -968,6 +988,8 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                            nsReflowCommand& aReflowCommand,
                                            nsReflowStatus&  aStatus)
 {
+  NS_FRAME_TRACE_REFLOW_IN("nsInlineFrame::IncrementalReflow");
+
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // Get the style molecule
@@ -1100,6 +1122,8 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   
     ComputeFinalSize(aPresContext, state, aDesiredSize);
   }
+
+  NS_FRAME_TRACE_REFLOW_OUT("nsInlineFrame::IncrementalReflow", aStatus);
   return NS_OK;
 }
 
