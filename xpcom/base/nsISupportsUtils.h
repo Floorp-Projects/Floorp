@@ -277,6 +277,13 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   NS_IMPL_QUERY_BODY(_i2)                                                \
   NS_IMPL_QUERY_TAIL(_i1)
 
+#define NS_IMPL_QUERY_INTERFACE3(_class, _i1, _i2, _i3)                  \
+  NS_IMPL_QUERY_HEAD(_class)                                             \
+  NS_IMPL_QUERY_BODY(_i1)                                                \
+  NS_IMPL_QUERY_BODY(_i2)                                                \
+  NS_IMPL_QUERY_BODY(_i3)                                                \
+  NS_IMPL_QUERY_TAIL(_i1)
+
 
 
 	/*
@@ -335,6 +342,11 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   NS_IMPL_ADDREF(_class)                       \
   NS_IMPL_RELEASE(_class)                      \
   NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)
+
+#define NS_IMPL_ISUPPORTS3(_class, _i1, _i2, _i3)   \
+  NS_IMPL_ADDREF(_class)                            \
+  NS_IMPL_RELEASE(_class)                           \
+  NS_IMPL_QUERY_INTERFACE3(_class, _i1, _i2, _i3)
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -145,37 +145,7 @@ nsHashtableEnumerator::ReleaseElements()
     
 }
 
-NS_IMPL_ADDREF(nsHashtableEnumerator);
-NS_IMPL_RELEASE(nsHashtableEnumerator);
-
-NS_IMETHODIMP
-nsHashtableEnumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if ( !aInstancePtr )
-        return NS_ERROR_NULL_POINTER;
-
-    if ( aIID.Equals(nsCOMTypeInfo<nsIBidirectionalEnumerator>::GetIID()) )
-        *aInstancePtr = NS_STATIC_CAST(nsIBidirectionalEnumerator*, this);
-    else if ( aIID.Equals(nsCOMTypeInfo<nsIEnumerator>::GetIID()) )
-        *aInstancePtr = NS_STATIC_CAST(nsIEnumerator*, this);
-    else if ( aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) )
-        *aInstancePtr = NS_STATIC_CAST(nsISupports*,
-                                       NS_STATIC_CAST(nsISupports*, this));
-    else
-        *aInstancePtr = nsnull;
-
-    nsresult status;
-    if ( !*aInstancePtr )
-        status = NS_NOINTERFACE;
-    else
-    {
-        NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*, *aInstancePtr));
-        status = NS_OK;
-    }
-
-    return status;
-    
-}
+NS_IMPL_ISUPPORTS2(nsHashtableEnumerator, nsIBidirectionalEnumerator, nsIEnumerator)
 
 nsHashtableEnumerator::~nsHashtableEnumerator() 
 {

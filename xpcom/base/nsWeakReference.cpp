@@ -80,25 +80,29 @@ nsWeakReference::Release()
 NS_IMETHODIMP
 nsWeakReference::QueryInterface( const nsIID& aIID, void** aInstancePtr )
   {
+  	NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!");
+
     if ( !aInstancePtr )
       return NS_ERROR_NULL_POINTER;
 
+		nsISupports* foundInterface;
     if ( aIID.Equals(nsCOMTypeInfo<nsIWeakReference>::GetIID()) )
-      *aInstancePtr = NS_STATIC_CAST(nsIWeakReference*, this);
+      foundInterface = NS_STATIC_CAST(nsIWeakReference*, this);
     else if ( aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) )
-      *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
+      foundInterface = NS_STATIC_CAST(nsISupports*, this);
     else
-      *aInstancePtr = 0;
+      foundInterface = 0;
 
     nsresult status;
-    if ( !*aInstancePtr )
+    if ( !foundInterface )
       status = NS_NOINTERFACE;
     else
       {
-        NS_ADDREF( NS_REINTERPRET_CAST(nsISupports*, *aInstancePtr) );
+        NS_ADDREF(foundInterface);
         status = NS_OK;
       }
 
+		*aInstancePtr = foundInterface;
     return status;
   }
 

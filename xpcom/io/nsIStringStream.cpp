@@ -316,47 +316,17 @@ class StringImpl
         
 }; // class StringImpl
 
-#define SAY_I_IMPLEMENT(classname)               \
-  if (aIID.Equals(classname::GetIID()))          \
-  {                                              \
-      *aInstancePtr = (void*)((classname*)this); \
-      NS_ADDREF_THIS();                          \
-      return NS_OK;                              \
-  }
-
 NS_IMPL_RELEASE(BasicStringImpl)
 NS_IMPL_ADDREF(BasicStringImpl)
 
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP BasicStringImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-//----------------------------------------------------------------------------------------
-{
-  if (!aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  *aInstancePtr = nsnull;
-
-  SAY_I_IMPLEMENT(nsIRandomAccessStore)
-  SAY_I_IMPLEMENT(nsIOutputStream)
-  SAY_I_IMPLEMENT(nsIInputStream)
-  // Note that we derive from two copies of nsIBaseStream (and hence
-  // of nsISupports), one through
-  // nsIOutputStream, the other through nsIInputStream.  Resolve this
-  // by giving them a specific one
-  if (aIID.Equals(((nsIBaseStream*)(nsIOutputStream*)this)->GetIID()))
-  {
-      *aInstancePtr = (void*)((nsIBaseStream*)(nsIOutputStream*)this);
-      NS_ADDREF_THIS();
-      return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-  {
-      *aInstancePtr = (void*)((nsISupports*)(nsIOutputStream*)this);
-      NS_ADDREF_THIS();
-      return NS_OK;
-  }
-  return NS_NOINTERFACE;
-} // StringImpl::QueryInterface
+NS_IMPL_QUERY_HEAD(BasicStringImpl)
+  NS_IMPL_QUERY_BODY(nsIRandomAccessStore)
+  NS_IMPL_QUERY_BODY(nsIOutputStream)
+  NS_IMPL_QUERY_BODY(nsIInputStream)
+  if ( aIID.Equals(NS_GET_IID(nsIBaseStream)) )
+    foundInterface = NS_STATIC_CAST(nsIBaseStream*, NS_STATIC_CAST(nsIOutputStream*, this));
+  else
+NS_IMPL_QUERY_TAIL(nsIOutputStream)
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP BasicStringImpl::Seek(PRSeekWhence whence, PRInt32 offset)

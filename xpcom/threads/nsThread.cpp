@@ -119,7 +119,7 @@ nsThread::Exit(void* arg)
     NS_RELEASE(self);
 }
 
-NS_IMPL_ISUPPORTS(nsThread, nsIThread::GetIID());
+NS_IMPL_ISUPPORTS1(nsThread, nsIThread)
 
 NS_IMETHODIMP
 nsThread::Join()
@@ -367,7 +367,7 @@ nsThreadPool::~nsThreadPool()
     }
 }
 
-NS_IMPL_ISUPPORTS(nsThreadPool, nsIThreadPool::GetIID());
+NS_IMPL_ISUPPORTS1(nsThreadPool, nsIThreadPool)
 
 NS_IMETHODIMP
 nsThreadPool::DispatchRequest(nsIRunnable* runnable)
@@ -540,7 +540,7 @@ nsThreadPoolRunnable::~nsThreadPoolRunnable()
     NS_RELEASE(mPool);
 }
 
-NS_IMPL_ISUPPORTS(nsThreadPoolRunnable, nsIRunnable::GetIID());
+NS_IMPL_ISUPPORTS1(nsThreadPoolRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 nsThreadPoolRunnable::Run()

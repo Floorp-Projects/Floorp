@@ -349,27 +349,14 @@ static char *PR_strdup( const char *in ) {
     return result;
 }
 
-/*----------------------------------- IIDs -------------------------------------
-| Static IID values for each imterface implemented here; required by the       |
-| NS_IMPL_ISUPPORTS macro.                                                     |
-------------------------------------------------------------------------------*/
-static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIRegistryIID,      NS_IREGISTRY_IID);
-static NS_DEFINE_IID(kIRegistryNodeIID,  NS_IREGISTRYNODE_IID);
-static NS_DEFINE_IID(kIRegistryValueIID, NS_IREGISTRYVALUE_IID);
-
-static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
-
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
 /*------------------------ nsISupports Implementation --------------------------
 | This code generates the implementation of the nsISupports member functions   |
 | for each class implemented in this file.                                     |
 ------------------------------------------------------------------------------*/
-NS_IMPL_ISUPPORTS( nsRegistry,             kIRegistryIID      );
-NS_IMPL_ISUPPORTS( nsRegSubtreeEnumerator, kIEnumeratorIID    );
-NS_IMPL_ISUPPORTS( nsRegistryNode,         kIRegistryNodeIID  );
-NS_IMPL_ISUPPORTS( nsRegistryValue,        kIRegistryValueIID );
+NS_IMPL_ISUPPORTS1( nsRegistry,             nsIRegistry      )
+NS_IMPL_ISUPPORTS1( nsRegSubtreeEnumerator, nsIEnumerator    )
+NS_IMPL_ISUPPORTS1( nsRegistryNode,         nsIRegistryNode  )
+NS_IMPL_ISUPPORTS1( nsRegistryValue,        nsIRegistryValue )
 
 /*-------------------------- nsRegistry::nsRegistry ----------------------------
 | Vanilla nsRegistry constructor.  The first time called, it does              |
@@ -1415,7 +1402,7 @@ nsRegistryFactory::nsRegistryFactory() {
     NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsRegistryFactory, kIFactoryIID);
+NS_IMPL_ISUPPORTS1(nsRegistryFactory, nsIFactory)
 
 NS_IMETHODIMP
 nsRegistryFactory::CreateInstance(nsISupports *aOuter,

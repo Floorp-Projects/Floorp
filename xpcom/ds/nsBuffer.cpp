@@ -73,7 +73,7 @@ nsBuffer::~nsBuffer()
     NS_IF_RELEASE(mAllocator);
 }
 
-NS_IMPL_ISUPPORTS(nsBuffer, nsIBuffer::GetIID());
+NS_IMPL_ISUPPORTS1(nsBuffer, nsIBuffer)
 
 NS_METHOD
 nsBuffer::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

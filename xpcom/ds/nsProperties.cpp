@@ -215,22 +215,7 @@ nsPersistentProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
     return rv;
 }
 
-NS_IMPL_ADDREF(nsPersistentProperties)
-NS_IMPL_RELEASE(nsPersistentProperties)
-
-NS_IMETHODIMP
-nsPersistentProperties::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    NS_ASSERTION(aInstancePtr != nsnull, "null ptr");
-    if (aIID.Equals(nsIPersistentProperties::GetIID()) ||
-        aIID.Equals(nsIProperties::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aInstancePtr = NS_STATIC_CAST(nsIPersistentProperties*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS2(nsPersistentProperties, nsIPersistentProperties, nsIProperties)
 
 NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
@@ -520,21 +505,7 @@ nsPropertyElement::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-NS_IMPL_ADDREF(nsPropertyElement)
-NS_IMPL_RELEASE(nsPropertyElement)
-
-NS_IMETHODIMP
-nsPropertyElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    NS_ASSERTION(aInstancePtr != nsnull, "null ptr");
-    if (aIID.Equals(nsIPropertyElement::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aInstancePtr = NS_STATIC_CAST(nsIPropertyElement*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS1(nsPropertyElement, nsIPropertyElement)
 
 NS_IMETHODIMP
 nsPropertyElement::GetKey(nsString** aReturnKey)

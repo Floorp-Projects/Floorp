@@ -26,15 +26,14 @@
 
 #define NS_AUTOLOCK(__monitor) nsAutoLock __lock(__monitor)
 
-static NS_DEFINE_IID(kIObserverListIID, NS_IOBSERVERLIST_IID);
-static NS_DEFINE_IID(kObserverListCID, NS_OBSERVERLIST_CID);
+static NS_DEFINE_CID(kObserverListCID, NS_OBSERVERLIST_CID);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsObserverList Implementation
 
 
-NS_IMPL_ISUPPORTS(nsObserverList, kIObserverListIID);
+NS_IMPL_ISUPPORTS1(nsObserverList, nsIObserverList)
 
 NS_COM nsresult NS_NewObserverList(nsIObserverList** anObserverList)
 {
@@ -49,7 +48,7 @@ NS_COM nsresult NS_NewObserverList(nsIObserverList** anObserverList)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return it->QueryInterface(kIObserverListIID, (void **) anObserverList);
+    return it->QueryInterface(NS_GET_IID(nsIObserverList), (void **) anObserverList);
 }
 
 nsObserverList::nsObserverList()

@@ -126,12 +126,10 @@ public :
    NS_DECL_ISUPPORTS
 };
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 
 static nsICaseConversion * gCaseConv = NULL; 
 
-static NS_DEFINE_IID(kIShutdownListenerIID, NS_ISHUTDOWNLISTENER_IID);
-NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown, kIShutdownListenerIID);
+NS_IMPL_ISUPPORTS1(HandleCaseConversionShutdown, nsIShutdownListener)
 
 nsresult
 HandleCaseConversionShutdown::OnShutdown(const nsCID& cid,
@@ -156,7 +154,7 @@ static void StartUpCaseConversion()
       gListener = new HandleCaseConversionShutdown();
       gListener->AddRef();
     }
-    err = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
+    err = nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),
                                         (nsISupports**) &gCaseConv, gListener);
 }
 static void CheckCaseConversion()

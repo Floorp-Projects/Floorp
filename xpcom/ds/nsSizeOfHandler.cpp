@@ -18,8 +18,6 @@
 #include "nsISizeOfHandler.h"
 #include "plhash.h"
 
-static NS_DEFINE_IID(kISizeOfHandlerIID, NS_ISIZEOF_HANDLER_IID);
-
 class nsSizeOfHandler : public nsISizeOfHandler {
 public:
   nsSizeOfHandler();
@@ -67,7 +65,7 @@ nsSizeOfHandler::~nsSizeOfHandler()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsSizeOfHandler, kISizeOfHandlerIID)
+NS_IMPL_ISUPPORTS1(nsSizeOfHandler, nsISizeOfHandler)
 
 NS_IMETHODIMP
 nsSizeOfHandler::Add(size_t aSize)
@@ -117,5 +115,5 @@ NS_NewSizeOfHandler(nsISizeOfHandler** aInstancePtrResult)
   if (it == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kISizeOfHandlerIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsISizeOfHandler), (void **) aInstancePtrResult);
 }

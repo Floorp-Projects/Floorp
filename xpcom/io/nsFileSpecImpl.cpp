@@ -23,8 +23,7 @@
 
 #include "prmem.h"
 
-//static NS_DEFINE_IID(kIFileSpecIID, NS_IFILESPEC_IID);
-NS_IMPL_ISUPPORTS(nsFileSpecImpl, nsIFileSpec::GetIID())
+NS_IMPL_ISUPPORTS1(nsFileSpecImpl, nsIFileSpec)
 
 #ifdef NS_DEBUG
 #define TEST_OUT_PTR(p) \
@@ -641,7 +640,7 @@ NS_IMETHODIMP nsFileSpecImpl::endline()
 	return s.error();
 }
 
-NS_IMPL_ISUPPORTS(nsDirectoryIteratorImpl, nsIDirectoryIterator::GetIID())
+NS_IMPL_ISUPPORTS1(nsDirectoryIteratorImpl, nsIDirectoryIterator)
 
 //----------------------------------------------------------------------------------------
 nsDirectoryIteratorImpl::nsDirectoryIteratorImpl()

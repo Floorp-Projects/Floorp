@@ -38,7 +38,7 @@ ArenaImpl::Init(PRUint32 aBlockSize)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(ArenaImpl, nsIArena::GetIID())
+NS_IMPL_ISUPPORTS1(ArenaImpl, nsIArena)
 
 ArenaImpl::~ArenaImpl()
 {

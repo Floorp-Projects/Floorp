@@ -97,24 +97,7 @@ nsBufferInputStream::~nsBufferInputStream()
     NS_RELEASE(mBuffer);
 }
 
-NS_IMPL_ADDREF(nsBufferInputStream);
-NS_IMPL_RELEASE(nsBufferInputStream);
-
-NS_IMETHODIMP
-nsBufferInputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (aInstancePtr == nsnull)
-        return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(nsIBufferInputStream::GetIID()) ||
-        aIID.Equals(nsIInputStream::GetIID()) ||
-        aIID.Equals(nsIBaseStream::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aInstancePtr = this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS3(nsBufferInputStream, nsIBufferInputStream, nsIInputStream, nsIBaseStream)
 
 NS_IMETHODIMP
 nsBufferInputStream::Close(void)
@@ -300,24 +283,7 @@ nsBufferOutputStream::~nsBufferOutputStream()
     NS_RELEASE(mBuffer);
 }
 
-NS_IMPL_ADDREF(nsBufferOutputStream);
-NS_IMPL_RELEASE(nsBufferOutputStream);
-
-NS_IMETHODIMP
-nsBufferOutputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (aInstancePtr == nsnull)
-        return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(nsIBufferOutputStream::GetIID()) ||
-        aIID.Equals(nsIOutputStream::GetIID()) ||
-        aIID.Equals(nsIBaseStream::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aInstancePtr = this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS3(nsBufferOutputStream, nsIBufferOutputStream, nsIOutputStream, nsIBaseStream)
 
 NS_IMETHODIMP
 nsBufferOutputStream::Close(void)

@@ -32,24 +32,7 @@ nsSupportsArrayEnumerator::~nsSupportsArrayEnumerator()
   NS_RELEASE(mArray);
 }
 
-NS_IMPL_ADDREF(nsSupportsArrayEnumerator);
-NS_IMPL_RELEASE(nsSupportsArrayEnumerator);
-
-NS_IMETHODIMP
-nsSupportsArrayEnumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER; 
-
-  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID()) || 
-      aIID.Equals(nsIEnumerator::GetIID()) || 
-      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-    *aInstancePtr = (void*) this; 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  return NS_NOINTERFACE; 
-}
+NS_IMPL_ISUPPORTS2(nsSupportsArrayEnumerator, nsIBidirectionalEnumerator, nsIEnumerator)
 
 NS_IMETHODIMP
 nsSupportsArrayEnumerator::First()

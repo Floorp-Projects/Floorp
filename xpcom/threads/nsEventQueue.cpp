@@ -49,7 +49,7 @@ nsEventQueueImpl::InitFromPLQueue(PLEventQueue* aQueue)
 }
 
 /* nsISupports interface implementation... */
-NS_IMPL_ISUPPORTS(nsEventQueueImpl,kIEventQueueIID);
+NS_IMPL_ISUPPORTS1(nsEventQueueImpl,nsIEventQueue)
 
 /* nsIEventQueue interface implementation... */
 

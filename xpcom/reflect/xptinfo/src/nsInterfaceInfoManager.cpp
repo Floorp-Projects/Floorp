@@ -55,8 +55,7 @@
 #endif
 
 
-static NS_DEFINE_IID(kIIIManagerIID, NS_IINTERFACEINFO_MANAGER_IID);
-NS_IMPL_ISUPPORTS(nsInterfaceInfoManager, kIIIManagerIID);
+NS_IMPL_ISUPPORTS1(nsInterfaceInfoManager, nsIInterfaceInfoManager)
 
 // static
 nsInterfaceInfoManager*
@@ -90,8 +89,7 @@ nsInterfaceInfoManager::GetAllocator(nsInterfaceInfoManager* iim /*= NULL*/)
     return al;
 }
 
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
+static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 nsInterfaceInfoManager::nsInterfaceInfoManager()
     : typelibRecords(NULL), allocator(NULL), ctor_succeeded(PR_FALSE)
@@ -100,7 +98,7 @@ nsInterfaceInfoManager::nsInterfaceInfoManager()
     NS_ADDREF_THIS();
 
     nsServiceManager::GetService(kAllocatorCID,
-                                 kIAllocatorIID,
+                                 NS_GET_IID(nsIAllocator),
                                  (nsISupports **)&this->allocator);
 
     PR_ASSERT(this->allocator != NULL);

@@ -25,8 +25,7 @@
 #include "nsObserver.h"
 #include "nsString.h"
 
-static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
-static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
+static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsObserver Implementation
@@ -36,7 +35,7 @@ NS_IMPL_AGGREGATED(nsObserver)
 
 NS_COM nsresult NS_NewObserver(nsIObserver** anObserver, nsISupports* outer)
 {
-    return nsObserver::Create(outer, kIObserverIID, (void**)anObserver);
+    return nsObserver::Create(outer, NS_GET_IID(nsIObserver), (void**)anObserver);
 }
 
 NS_METHOD

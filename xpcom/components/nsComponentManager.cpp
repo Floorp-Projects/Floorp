@@ -252,7 +252,7 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
 
 }
 
-NS_IMPL_ISUPPORTS(nsComponentManagerImpl, nsIComponentManager::GetIID());
+NS_IMPL_ISUPPORTS1(nsComponentManagerImpl, nsIComponentManager)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
@@ -273,8 +273,7 @@ nsComponentManagerImpl::PlatformInit(void)
         rv = NS_RegistryGetFactory(&registryFactory);
         if (NS_SUCCEEDED(rv))
         {
-            NS_DEFINE_IID(kRegistryIID, NS_IREGISTRY_IID);
-            rv = registryFactory->CreateInstance(NULL, kRegistryIID,(void **)&mRegistry);
+            rv = registryFactory->CreateInstance(NULL, NS_GET_IID(nsIRegistry),(void **)&mRegistry);
             if (NS_FAILED(rv)) return rv;
             NS_RELEASE(registryFactory);
         }
@@ -1518,8 +1517,7 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
 
     // Convert the persistent descriptor into a nsIFileSpec
     nsCOMPtr<nsIFileSpec>libSpec;
-    NS_DEFINE_IID(kFileSpecIID, NS_IFILESPEC_IID);
-    rv = CreateInstance(NS_FILESPEC_PROGID, NULL, kFileSpecIID, getter_AddRefs(libSpec));
+    rv = CreateInstance(NS_FILESPEC_PROGID, NULL, NS_GET_IID(nsIFileSpec), getter_AddRefs(libSpec));
     if (NS_FAILED(rv)) return rv;
     rv = libSpec->SetPersistentDescriptorString((char *)aLibraryPersistentDescriptor);
     if (NS_FAILED(rv)) return rv;
@@ -1747,8 +1745,7 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
 
     // Convert the persistent descriptor into a nsIFileSpec
     nsCOMPtr<nsIFileSpec>libSpec;
-    NS_DEFINE_IID(kFileSpecIID, NS_IFILESPEC_IID);
-    rv = CreateInstance(NS_FILESPEC_PROGID, NULL, kFileSpecIID, getter_AddRefs(libSpec));
+    rv = CreateInstance(NS_FILESPEC_PROGID, NULL, NS_GET_IID(nsIFileSpec), getter_AddRefs(libSpec));
     if (NS_FAILED(rv)) return rv;
     rv = libSpec->SetPersistentDescriptorString((char *)aLibrary);
     if (NS_FAILED(rv)) return rv;
@@ -1986,9 +1983,8 @@ nsComponentManagerImpl::SyncComponentsInDir(RegistrationTime when, nsIFileSpec *
     }
 
     // Create a directory iterator
-    NS_DEFINE_IID(kDirectoryIteratorIID, NS_IDIRECTORYITERATOR_IID);
     nsCOMPtr<nsIDirectoryIterator>dirIterator;
-    rv = CreateInstance(NS_DIRECTORYITERATOR_PROGID, NULL, kDirectoryIteratorIID, getter_AddRefs(dirIterator));
+    rv = CreateInstance(NS_DIRECTORYITERATOR_PROGID, NULL, NS_GET_IID(nsIDirectoryIterator), getter_AddRefs(dirIterator));
     if (NS_FAILED(rv)) return rv;
     rv = dirIterator->Init(dirSpec, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
