@@ -27,6 +27,8 @@
 #include "nsString.h"
 #include "nsIFormatConverter.h"
 #include "nsITransferable.h"
+#include "nsCOMPtr.h"
+#include "nsISupportsPrimitives.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
@@ -131,17 +133,22 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
   dObj->SetTransferable(aTransferable);
 
   // Get the transferable list of data flavors
-  nsVoidArray * dfList;
-  aTransferable->FlavorsTransferableCanExport(&dfList);
+  nsCOMPtr<nsISupportsArray> dfList;
+  aTransferable->FlavorsTransferableCanExport(getter_AddRefs(dfList));
 
   // Walk through flavors that contain data and register them
   // into the DataObj as supported flavors
   PRUint32 i;
-  PRUint32 cnt = dfList->Count();
+  PRUint32 cnt;
+  dfList->Count(&cnt);
   for (i=0;i<cnt;i++) {
-    nsString * df = (nsString *)dfList->ElementAt(i);
-    if (nsnull != df) {
-      UINT format = GetFormat(*df);
+    nsCOMPtr<nsISupports> genericFlavor;
+    dfList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    if ( currentFlavor ) {
+      char* flavorStr;
+      currentFlavor->toString(&flavorStr);
+      UINT format = GetFormat(flavorStr);
 
       // check here to see if we can the data back from global member
       // XXX need IStream support, or file support
@@ -150,11 +157,11 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
 
       // Now tell the native IDataObject about both the DataFlavor and 
       // the native data format
-      dObj->AddDataFlavor(df, &fe);
+      dObj->AddDataFlavor(flavorStr, &fe);
+      
+      delete [] flavorStr;
     }
   }
-  // Delete the data flavors list
-  delete dfList;
 
   return NS_OK;
 }
@@ -508,24 +515,31 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
                                             nsIWidget       * aWindow,
                                             nsITransferable * aTransferable)
 {
+  // make sure we have a good transferable
+  if ( !aTransferable )
+    return NS_ERROR_INVALID_ARG;
+
   nsresult res = NS_ERROR_FAILURE;
 
-  // make sure we have a good transferable
-  if (nsnull == aTransferable) {
-    return res;
-  }
-
-  // Get the transferable list of data flavors
-  nsVoidArray * dfList;
-  aTransferable->GetTransferDataFlavors(&dfList);
+  // get flavor list that includes all flavors that can be written (including ones 
+  // obtained through conversion)
+  nsCOMPtr<nsISupportsArray> flavorList;
+  res = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
+  if ( NS_FAILED(res) )
+    return NS_ERROR_FAILURE;
 
   // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
   PRUint32 i;
-  PRUint32 cnt = dfList->Count();
+  PRUint32 cnt;
+  flavorList->Count(&cnt);
   for (i=0;i<cnt;i++) {
-    nsString * df = (nsString *)dfList->ElementAt(i);
-    if (nsnull != df) {
-      UINT format = GetFormat(*df);
+    nsCOMPtr<nsISupports> genericFlavor;
+    flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    if ( currentFlavor ) {
+      char* flavorStr;
+      currentFlavor->toString(&flavorStr);
+      UINT format = GetFormat(flavorStr);
 
       void   * data;
       PRUint32 dataLen;
@@ -533,19 +547,24 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       if (nsnull != aDataObject) {
         res = GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen);
         if (NS_OK == res) {
-          aTransferable->SetTransferData(df, data, dataLen);
+          nsCOMPtr<nsISupports> genericDataWrapper;
+          CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+          aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
           break;
         }
       } else if (nsnull != aWindow) {
         res = GetNativeDataOffClipboard(aWindow, format, &data, &dataLen);
         if (NS_OK == res) {
-          aTransferable->SetTransferData(df, data, dataLen);
+          nsCOMPtr<nsISupports> genericDataWrapper;
+          CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+          aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
           break;
         }
-      } 
+      }
+      
+      delete [] flavorStr;
     }
   }
-  delete dfList;
   return res;
 
 }
@@ -615,24 +634,34 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
   ::OpenClipboard(nativeWin);
   ::EmptyClipboard();
 
-  // Get the transferable list of data flavors
-  nsVoidArray * dfList;
-  mTransferable->GetTransferDataFlavors(&dfList);
+  // get flavor list that includes all flavors that can be written (including ones 
+  // obtained through conversion)
+  nsCOMPtr<nsISupportsArray> flavorList;
+  nsresult errCode = mTransferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
+  if ( NS_FAILED(errCode) )
+    return NS_ERROR_FAILURE;
 
   // Walk through flavors and see which flavor is on the native clipboard,
   PRUint32 i;
-  PRUint32 cnt = dfList->Count();
+  PRUint32 cnt;
+  flavorList->Count(&cnt);
   for (i=0;i<cnt;i++) {
-    nsString * df = (nsString *)dfList->ElementAt(i);
-    if (nsnull != df) {
-      UINT format = GetFormat(*df);
+    nsCOMPtr<nsISupports> genericFlavor;
+    flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    if ( currentFlavor ) {
+      char* flavorStr;
+      currentFlavor->toString(&flavorStr);
+      UINT format = GetFormat(flavorStr);
 
       void   * data;
-      PRUint32 dataLen;
+      PRUint32 dataLen = 0;
 
       // Get the data as a bunch-o-bytes from the clipboard
       // this call hands back new memory with the contents copied into it
-      mTransferable->GetTransferData(df, &data, &dataLen);
+      nsCOMPtr<nsISupports> genericDataWrapper;
+      mTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &dataLen);
+      CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataLen );
 
       // now place it on the Clipboard
       if (nsnull != data) {
@@ -641,9 +670,10 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 
       // Now, delete the memory that was created by the transferable
       delete [] data;
+      delete [] flavorStr;
     }
   }
-  delete dfList;
+
   ::CloseClipboard();
 
   return NS_OK;

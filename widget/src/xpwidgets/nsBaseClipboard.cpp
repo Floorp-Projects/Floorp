@@ -23,11 +23,9 @@
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
-#include "nsWidgetsCID.h"
+#include "nsCOMPtr.h"
+#include "nsISupportsPrimitives.h"
 
-// interface definitions
-//static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
-static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
 
 NS_IMPL_ADDREF(nsBaseClipboard)
 NS_IMPL_RELEASE(nsBaseClipboard)
@@ -159,3 +157,58 @@ NS_IMETHODIMP nsBaseClipboard::ForceDataToClipboard()
 {
   return NS_OK;
 }
+
+
+//еее skanky hack until i can correctly re-create primitives from native data. i know this code sucks,
+//еее please forgive me.
+void
+nsBaseClipboard :: CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive )
+{
+  if ( !aPrimitive )
+    return;
+
+  if ( strcmp(aFlavor,kTextMime) == 0 ) {
+    nsCOMPtr<nsISupportsString> primitive;
+    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+                                                      NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
+    if ( primitive ) {
+      primitive->SetData ( (char*)aDataBuff );
+      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
+      *aPrimitive = genericPrimitive;
+      NS_ADDREF(*aPrimitive);
+    }
+  }
+  else {
+    nsCOMPtr<nsISupportsWString> primitive;
+    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+                                                      NS_GET_IID(nsISupportsWString), getter_AddRefs(primitive));
+    if ( primitive ) {
+      primitive->SetData ( (unsigned short*)aDataBuff );
+      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
+      *aPrimitive = genericPrimitive;
+      NS_ADDREF(*aPrimitive);
+    }  
+  }
+
+} // CreatePrimitiveForData
+
+
+void
+nsBaseClipboard :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, void** aDataBuff, PRUint32 aDataLen )
+{
+  if ( !aDataBuff )
+    return;
+
+  if ( strcmp(aFlavor,kTextMime) == 0 ) {
+    nsCOMPtr<nsISupportsString> plainText ( do_QueryInterface(aPrimitive) );
+    if ( plainText )
+      plainText->GetData ( (char**)aDataBuff );
+  }
+  else {
+    nsCOMPtr<nsISupportsWString> doubleByteText ( do_QueryInterface(aPrimitive) );
+    if ( doubleByteText )
+      doubleByteText->GetData ( (unsigned short**)aDataBuff );
+  }
+
+}
+

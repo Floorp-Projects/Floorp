@@ -36,38 +36,31 @@ class nsVoidArray;
 
 class nsTransferable : public nsITransferable
 {
-
 public:
+
   nsTransferable();
   virtual ~nsTransferable();
 
-  //nsISupports
+    // nsISupports
   NS_DECL_ISUPPORTS
   
-
-  //nsITransferable
-  NS_IMETHOD FlavorsTransferableCanExport ( nsVoidArray** outFlavorList ) ;
-  NS_IMETHOD GetTransferDataFlavors(nsVoidArray ** aDataFlavorList);
-
-   // Transferable still owns |aData|. Do not delete it.
-  NS_IMETHOD GetTransferData(nsString * aFlavor, void ** aData, PRUint32 * aDataLen);
-  NS_IMETHOD GetAnyTransferData(nsString * aFlavor, void ** aData, PRUint32 * aDataLen);
-  NS_IMETHOD_(PRBool) IsLargeDataSet();
-
-  NS_IMETHOD FlavorsTransferableCanImport ( nsVoidArray** outFlavorList ) ;
-
-  // Transferable consumes |aData|. Do not delete it.
-  NS_IMETHOD SetTransferData(nsString * aFlavor, void * aData, PRUint32 aDataLen);
-
-  NS_IMETHOD AddDataFlavor(nsString * aDataFlavor);
-  NS_IMETHOD RemoveDataFlavor(nsString * aDataFlavor);
-
+    // nsITransferable
+  NS_IMETHOD FlavorsTransferableCanExport(nsISupportsArray **_retval) ;
+  NS_IMETHOD GetTransferData(const char *aFlavor, nsISupports **aData, PRUint32 *aDataLen);
+  NS_IMETHOD GetAnyTransferData(char **aFlavor, nsISupports **aData, PRUint32 *aDataLen);
+  NS_IMETHOD IsLargeDataSet(PRBool *_retval);
+  NS_IMETHOD FlavorsTransferableCanImport(nsISupportsArray **_retval) ;
+  NS_IMETHOD SetTransferData(const char *aFlavor, nsISupports *aData, PRUint32 aDataLen);
+  NS_IMETHOD AddDataFlavor(const char *aDataFlavor) ;
+  NS_IMETHOD RemoveDataFlavor(const char *aDataFlavor) ;
+  NS_IMETHOD GetConverter(nsIFormatConverter * *aConverter);
   NS_IMETHOD SetConverter(nsIFormatConverter * aConverter);
-  NS_IMETHOD GetConverter(nsIFormatConverter ** aConverter);
-
 
 protected:
 
+    // get flavors w/out converter
+  NS_IMETHOD GetTransferDataFlavors(nsISupportsArray** aDataFlavorList);
+ 
   nsVoidArray * mDataArray;
   nsCOMPtr<nsIFormatConverter> mFormatConv;
 

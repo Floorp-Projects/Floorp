@@ -23,6 +23,7 @@
 #include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
 #include "nsITransferable.h"   // kTextMime
+#include "nsISupportsPrimitives.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
@@ -274,24 +275,29 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   if (have_selection == 0)
     return NS_ERROR_FAILURE;
 
+  // get flavor list that includes all flavors that can be written (including ones 
+  // obtained through conversion)
+  nsCOMPtr<nsISupportsArray> flavorList;
+  nsresult errCode = mTransferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
+  if ( NS_FAILED(errCode) )
+    return NS_ERROR_FAILURE;
 
-  nsString *df;
-  int i = 0;
-  nsVoidArray *dfList;
-  // find out what types this data can be
-  mTransferable->FlavorsTransferableCanExport(&dfList);
-
-  int cnt = dfList->Count();
-
-  for (i=0;i<cnt;i++)
+  PRUint32 cnt;
+  flavorList->Count(&cnt);
+  for ( PRUint32 i=0; i<cnt; ++i )
   {
-    df = (nsString *)dfList->ElementAt(i);
-    if (nsnull != df) {
-      gint format = GetFormat(*df);
+    nsCOMPtr<nsISupports> genericFlavor;
+    flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    if ( currentFlavor ) {
+      char* flavorStr;
+      currentFlavor->toString(&flavorStr);
+      gint format = GetFormat(flavorStr);
 
       // add these types as selection targets
       RegisterFormat(format);
-
+      
+      delete [] flavorStr;
     }
   }
 
@@ -529,8 +535,6 @@ PRBool nsClipboard::DoConvert(gint format)
 NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 {
-  nsString *df;
-  int i = 0;
 
 #ifdef DEBUG_CLIPBOARD
   printf("nsClipboard::GetNativeClipboardData()\n");
@@ -542,23 +546,33 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
     return NS_ERROR_FAILURE;
   }
 
-  // Get the transferable list of data flavors
-  nsVoidArray *dfList;
-  aTransferable->FlavorsTransferableCanImport(&dfList);
+  // get flavor list that includes all acceptable flavors (including ones obtained through
+  // conversion)
+  nsCOMPtr<nsISupportsArray> flavorList;
+  nsresult errCode = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
+  if ( NS_FAILED(errCode) )
+    return NS_ERROR_FAILURE;
 
   // Walk through flavors and see which flavor matches the one being pasted:
-  int cnt = dfList->Count();
+  PRUint32 cnt;
+  flavorList->Count(&cnt);
+  char* foundFlavor = nsnull;
+  for ( int i = 0; i < cnt; ++i ) {
+    nsCOMPtr<nsISupports> genericFlavor;
+    flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    if ( currentFlavor ) {
+      char* flavorStr;
+      currentFlavor->toString ( &flavorStr );
+      gint format = GetFormat(flavorStr);
 
-  for (i=0;i<cnt;i++) {
-    df = (nsString *)dfList->ElementAt(i);
-    if (nsnull != df) {
-      gint format = GetFormat(*df);
-
-      if (DoConvert(format))
+      if (DoConvert(format)) {
+        foundFlavor = flavorStr;
         break;
+      }
+      delete [] flavorStr;
     }
   }
-
 
 #ifdef DEBUG_CLIPBOARD
   printf("  Got the callback: '%s', %d\n",
@@ -573,18 +587,23 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   // We just have to copy it to the transferable.
   // 
 
-  
-  nsString *name = new nsString((const char*)gdk_atom_name(mSelectionData.type));
-  
+#if 0  
+// pinkerton - we have the flavor already from above, so we don't need
+// to re-derrive it.
+  nsString *name = new nsString((const char*)gdk_atom_name(mSelectionData.type));  
   int format = GetFormat(*name);
-
   df->SetString((const char*)gdk_atom_name(sSelTypes[format]));
-  aTransferable->SetTransferData(df,
-                                 mSelectionData.data,
+#endif
+
+  nsCOMPtr<nsISupports> genericDataWrapper;
+  CreatePrimitiveForData ( foundFlavor, mSelectionData.data, mSelectionData.length, getter_AddRefs(genericDataWrapper) );
+  aTransferable->SetTransferData(foundFlavor,
+                                 genericDataWrapper,
                                  mSelectionData.length);
 
-  delete name;
-
+//delete name;
+  delete [] foundFlavor;
+  
   // transferable is now copying the data, so we can free it.
   //  g_free(mSelectionData.data);
   mSelectionData.data = nsnull;
@@ -748,7 +767,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   g_print("  aInfo == %d -", aInfo);
 #endif
 
-  nsString dataFlavor;
+  char* dataFlavor;
 
   // switch aInfo (atom) to our enum
   int type = TARGET_NONE;
@@ -799,10 +818,11 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 #endif
 
   // Get data out of transferable.
-  rv = cb->mTransferable->GetTransferData(&dataFlavor,
-                                          &clipboardData,
+  nsCOMPtr<nsISupports> genericDataWrapper;
+  rv = cb->mTransferable->GetTransferData(dataFlavor, 
+                                          getter_AddRefs(genericDataWrapper),
                                           &dataLength);
-
+  CreateDataFromPrimitive ( dataFlavor, genericDataWrapper, &clipboardData, dataLength );
   if (NS_SUCCEEDED(rv) && clipboardData && dataLength > 0) {
     size_t size = 1;
     // find the number of bytes in the data for the below thing
@@ -813,6 +833,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
                            aInfo, size*8,
                            (unsigned char *)clipboardData,
                            dataLength);
+    delete [] clipboardData;
   }
   else
     printf("Transferable didn't support the data flavor\n");

@@ -24,29 +24,28 @@
 
 class nsXIFFormatConverter : public nsIFormatConverter
 {
-
 public:
+
   nsXIFFormatConverter();
   virtual ~nsXIFFormatConverter();
 
-  //nsISupports
+    // nsISupports
   NS_DECL_ISUPPORTS
   
-  //nsIXIFConverter
-  NS_IMETHOD GetInputDataFlavors(nsVoidArray ** aDataFlavorList);
-  NS_IMETHOD GetOutputDataFlavors(nsVoidArray ** aDataFlavorList);
-
-  NS_IMETHOD CanConvert(nsString * aFromDataFlavor, nsString * aToDataFlavor);
-  NS_IMETHOD Convert(nsString * aFromDataFlavor, void * aFromData, PRUint32 aDataLen,
-                     nsString * aToDataFlavor,   void ** aToData, PRUint32 * aDataToLen);
+    // nsIXIFConverter
+  NS_IMETHOD GetInputDataFlavors(nsISupportsArray **_retval) ;
+  NS_IMETHOD GetOutputDataFlavors(nsISupportsArray **_retval) ;
+  NS_IMETHOD CanConvert(const char *aFromDataFlavor, const char *aToDataFlavor, PRBool *_retval) ;
+  NS_IMETHOD Convert(const char *aFromDataFlavor, nsISupports *aFromData, PRUint32 aDataLen, 
+                      const char *aToDataFlavor, nsISupports **aToData, PRUint32 *aDataToLen) ;
 
 protected:
 
+  nsresult AddFlavorToList ( nsISupportsArray* inList, const char* inFlavor ) ;
+  
   NS_IMETHOD ConvertFromXIFToHTML(const nsString & aFromStr, nsString & aToStr);
   NS_IMETHOD ConvertFromXIFToText(const nsString & aFromStr, nsString & aToStr);
   NS_IMETHOD ConvertFromXIFToAOLMail(const nsString & aFromStr, nsString & aToStr);
-
-  //nsVoidArray * mDFList;
 
 };
 

@@ -23,7 +23,6 @@ REQUIRES=xpcom gfxwin raptor dom js network netlib
 DEFINES =-D_IMPL_NS_WIDGET
 
 CPPSRCS = \
-	nsFileListTransferable.cpp      \
     nsBaseDragService.cpp      \
     nsBaseWidget.cpp      \
 	nsFileSpecWithUIImpl.cpp         \
@@ -35,7 +34,6 @@ CPPSRCS = \
 MODULE=raptor 
 
 OBJS= \
-	.\$(OBJDIR)\nsFileListTransferable.obj  \
 	.\$(OBJDIR)\nsBaseDragService.obj  \
 	.\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsFileSpecWithUIImpl.obj  \

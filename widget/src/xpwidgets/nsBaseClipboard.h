@@ -54,6 +54,9 @@ protected:
   NS_IMETHOD SetNativeClipboardData() = 0;
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable) = 0;
 
+  static void CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive );
+  static void CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, void** aDataBuff, PRUint32 aDataLen );
+
   PRBool              mIgnoreEmptyNotification;
   nsIClipboardOwner * mClipboardOwner;
   nsITransferable   * mTransferable;

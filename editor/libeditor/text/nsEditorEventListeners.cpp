@@ -50,6 +50,7 @@
 #include "nsIFormatConverter.h"
 #include "nsIContentIterator.h"
 #include "nsIContent.h"
+#include "nsISupportsPrimitives.h"
 #include "nsLayoutCID.h"
 
 // Drag & Drop, Clipboard Support
@@ -1296,20 +1297,16 @@ nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
-  nsIDragService* dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
-                                             (nsISupports **)&dragService);
-  if (NS_OK == rv) {
+  nsresult rv;
+  NS_WITH_SERVICE ( nsIDragService, dragService, kCDragServiceCID, &rv );
+  if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
-
-    nsAutoString textFlavor(kTextMime);
-    if (dragSession && 
-        (NS_OK == dragSession->IsDataFlavorSupported(&textFlavor))) {
-      dragSession->SetCanDrop(PR_TRUE);
+    if ( dragSession ) {
+      PRBool flavorSupported = PR_FALSE;
+      dragSession->IsDataFlavorSupported(kTextMime, &flavorSupported);
+      if ( flavorSupported ) 
+        dragSession->SetCanDrop(PR_TRUE);
     }
-    
-    nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
 
   return NS_OK;
@@ -1319,18 +1316,16 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
 {
-  nsIDragService* dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                           nsIDragService::GetIID(),
-                                           (nsISupports **)&dragService);
-  if (NS_OK == rv) {
+  nsresult rv;
+  NS_WITH_SERVICE ( nsIDragService, dragService, kCDragServiceCID, &rv );
+  if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
-    nsAutoString textFlavor(kTextMime);
-    if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(&textFlavor)) {
-      dragSession->SetCanDrop(PR_TRUE);
+    if ( dragSession ) {
+      PRBool flavorSupported = PR_FALSE;
+      dragSession->IsDataFlavorSupported(kTextMime, &flavorSupported);
+      if ( flavorSupported )
+        dragSession->SetCanDrop(PR_TRUE);
     } 
-    
-    nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
 
   return NS_OK;
@@ -1348,9 +1343,6 @@ nsTextEditorDragListener::DragExit(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  // String for doing paste
-  nsString stuffToPaste;
-
   // Create drag service for getting state of drag
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
@@ -1370,8 +1362,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
         // Add the text Flavor to the transferable, 
         // because that is the only type of data we are
         // looking for at the moment.
-        nsAutoString textMime (kTextMime);
-        trans->AddDataFlavor(&textMime);
+        trans->AddDataFlavor(kTextMime);
         //trans->AddDataFlavor(mImageDataFlavor);
 
         // Fill the transferable with data for each drag item in succession
@@ -1386,17 +1377,19 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
  
               // Get the string data out of the transferable
               // Note: the transferable owns the pointer to the data
-              char *str = 0;
+              nsCOMPtr<nsISupports> genericDataObj;
               PRUint32 len;
-              trans->GetAnyTransferData(&textMime, (void **)&str, &len);
-
+              char* whichFlavor;
+              trans->GetAnyTransferData(&whichFlavor, getter_AddRefs(genericDataObj), &len);
+              nsCOMPtr<nsISupportsString> textDataObj( do_QueryInterface(genericDataObj) );
               // If the string was not empty then paste it in
-              if (str)
+              if ( textDataObj )
               {
+                char* text = nsnull;
+                textDataObj->toString(&text);
                 nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-                stuffToPaste.SetString(str, len);
-                if (htmlEditor)
-                  htmlEditor->InsertText(stuffToPaste);
+                if ( htmlEditor && text )
+                  htmlEditor->InsertText(text);
                 dragSession->SetCanDrop(PR_TRUE);
               }
 

@@ -32,6 +32,7 @@
 #include "nsIDOMElement.h"
 #include "nsXULAtoms.h"
 #include "nsIEventStateManager.h"
+#include "nsISupportsPrimitives.h"
 
 #include "nsISupportsArray.h"
 #include "nsIViewManager.h"
@@ -153,20 +154,17 @@ nsToolbarDragListener::DragGesture(nsIDOMEvent* aDragEvent)
       if (isLegalChild) {
 
         // Start Drag
-        nsIDragService* dragService; 
-        rv = nsServiceManager::GetService(kCDragServiceCID, 
-                                          nsIDragService::GetIID(), 
-                                          (nsISupports **)&dragService); 
-        if (NS_OK == rv) { 
+        NS_WITH_SERVICE ( nsIDragService, dragService, kCDragServiceCID, &rv );
+        if ( NS_SUCCEEDED(rv) ) { 
           // XXX NOTE!
           // Here you need to create a special transferable
           // for handling RDF nodes (instead of this text transferable)
           nsCOMPtr<nsITransferable> trans; 
           rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
                                                     nsITransferable::GetIID(), getter_AddRefs(trans)); 
-          if (NS_OK == rv && trans) {
-            nsString ddFlavor;
-            nsString dragText;
+          if ( trans ) {
+            const char* ddFlavor;
+            nsAutoString dragText;
             if (onChild) {
               ddFlavor = TOOLBARITEM_MIME;
               dragText = "toolbar item";
@@ -174,22 +172,35 @@ nsToolbarDragListener::DragGesture(nsIDOMEvent* aDragEvent)
               ddFlavor = TOOLBAR_MIME;
               dragText = "toolbar";
             }
-            trans->AddDataFlavor(&ddFlavor);
-            PRUint32 len = dragText.Length(); 
-            trans->SetTransferData(&ddFlavor, dragText.ToNewCString(), len);   // transferable consumes the data
+            trans->AddDataFlavor(ddFlavor);
+            PRUint32 len = dragText.Length() * 2;   // len of unicode
+            nsCOMPtr<nsISupportsWString> dataObj;   // hack note: has to be wstring because not plain text flavor
+            rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+                                                     NS_GET_IID(nsISupportsWString), getter_AddRefs(dataObj)); 
+            if ( dataObj ) {
+              PRUnichar* data = dragText.ToNewUnicode();
+              dataObj->SetData ( data );
+              // QI the data object an |nsISupports| so that when the transferable holds
+              // onto it, it will addref the correct interface.
+              nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataObj) );
+              trans->SetTransferData(ddFlavor, genericDataObj, len);
 
-            nsCOMPtr<nsISupportsArray> items;
-            NS_NewISupportsArray(getter_AddRefs(items));
-            if ( items ) {
-              items->AppendElement(trans);
-              dragService->InvokeDragSession(items, nsnull, nsIDragService::DRAGDROP_ACTION_COPY | nsIDragService::DRAGDROP_ACTION_MOVE);
+              nsCOMPtr<nsISupportsArray> items;
+              NS_NewISupportsArray(getter_AddRefs(items));
+              if ( items ) {
+                // QI the transferable to an |nsISupports| so that when the array holds
+                // onto it, it will addref the correct interface.
+                nsCOMPtr<nsISupports> genericTrans ( do_QueryInterface(trans) );
+                items->AppendElement(genericTrans);
+                dragService->InvokeDragSession(items, nsnull, nsIDragService::DRAGDROP_ACTION_COPY | nsIDragService::DRAGDROP_ACTION_MOVE);
+              }
+              delete [] data;
             }
           } 
-          nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
         } 
-      } else { // when it is isn't a legal child then don't consume
+      } else // when it is isn't a legal child then don't consume
         return NS_OK; // don't consume event
-      }
+
       rv = NS_ERROR_BASE; // consumes the event
     }
   return rv; 
@@ -202,22 +213,25 @@ nsToolbarDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
   mCurrentDropLoc = -1;
 
-  nsIDragService* dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
-                                             (nsISupports **)&dragService);
-  if (NS_OK == rv) {
+  nsresult rv;
+  NS_WITH_SERVICE ( nsIDragService, dragService, kCDragServiceCID, &rv );
+  if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
 
-    nsAutoString toolbarItemFlavor(TOOLBARITEM_MIME);
-    if (dragSession && (NS_OK == dragSession->IsDataFlavorSupported(&toolbarItemFlavor))) {
-      dragSession->SetCanDrop(PR_TRUE);
-    } else {
-      rv = NS_ERROR_BASE; // don't consume event
+    if ( dragSession ) {
+      PRBool flavorSupported = PR_FALSE;
+      dragSession->IsDataFlavorSupported ( TOOLBARITEM_MIME, &flavorSupported );
+      if ( flavorSupported ) {
+        dragSession->SetCanDrop(PR_TRUE);
+        rv = NS_ERROR_BASE;   // consume event
+      }
+      else
+        rv = NS_OK;  // don't consume event
     }
-    
-    nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
+  else 
+    rv = NS_OK;
+
   return rv;
 }
 
@@ -350,33 +364,36 @@ nsToolbarDragListener::DragOver(nsIDOMEvent* aDragEvent)
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                            nsIDragService::GetIID(),
                                            (nsISupports **)&dragService);
-  if (NS_OK == rv) {
+  if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
-    nsAutoString toolbarItemFlavor(TOOLBARITEM_MIME);
-    if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(&toolbarItemFlavor)) {
-      dragSession->SetCanDrop(PR_TRUE);
+    if ( dragSession ) {
+      PRBool flavorSupported = PR_FALSE;
+      dragSession->IsDataFlavorSupported(TOOLBARITEM_MIME, &flavorSupported);
+      if ( flavorSupported ) {
+        dragSession->SetCanDrop(PR_TRUE);
 
-      // Check to see if the mouse is over an item
-      nscoord xLoc;
-      PRBool isLegalChild;
-      IsOnToolbarItem(aDragEvent, xLoc, isLegalChild);
+        // Check to see if the mouse is over an item
+        nscoord xLoc;
+        PRBool isLegalChild;
+        IsOnToolbarItem(aDragEvent, xLoc, isLegalChild);
 
-      if (xLoc != mCurrentDropLoc) {
-        mToolbar->SetDropfeedbackLocation(xLoc);
+        if (xLoc != mCurrentDropLoc) {
+          mToolbar->SetDropfeedbackLocation(xLoc);
 
-        // force the toolbar frame to redraw
-        ForceDrawFrame(mToolbar);
+          // force the toolbar frame to redraw
+          ForceDrawFrame(mToolbar);
 
-        // cache the current drop location
-        mCurrentDropLoc = xLoc;
+          // cache the current drop location
+          mCurrentDropLoc = xLoc;
 
-        rv = NS_ERROR_BASE; // means I am consuming the event
-      }
-    }    
+          rv = NS_ERROR_BASE; // means I am consuming the event
+        }
+      } 
+    } 
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
-  } else {
+  } 
+  else
     rv = NS_OK; // don't consume event
-  }
 
   // NS_OK means event is NOT consumed
   return rv; 
@@ -388,23 +405,22 @@ nsresult
 nsToolbarDragListener::DragExit(nsIDOMEvent* aDragEvent)
 {
   // now tell the drag session whether we can drop here
-  nsIDragService* dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                           nsIDragService::GetIID(),
-                                           (nsISupports **)&dragService);
-  if (NS_OK == rv) {
+  nsresult rv;
+  NS_WITH_SERVICE ( nsIDragService, dragService, kCDragServiceCID, &rv );
+  if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
-    nsAutoString toolbarItemFlavor(TOOLBARITEM_MIME);
-    if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(&toolbarItemFlavor)) {
-      mToolbar->SetDropfeedbackLocation(-1); // clears drawing of marker
-      ForceDrawFrame(mToolbar);
-      rv = NS_ERROR_BASE; // consume event
-    }
-    
-    nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
-  } else {
-    rv = NS_OK; // don't consume event
+    if ( dragSession ) {
+      PRBool flavorSupported = PR_FALSE;
+      dragSession->IsDataFlavorSupported(TOOLBARITEM_MIME, &flavorSupported);
+      if ( flavorSupported ) {
+        mToolbar->SetDropfeedbackLocation(-1); // clears drawing of marker
+        ForceDrawFrame(mToolbar);
+        rv = NS_ERROR_BASE; // consume event
+      }
+    }    
   }
+  else
+    rv = NS_OK; // don't consume event
 
   return rv;
 }
@@ -422,9 +438,6 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   // that will be translated into some RDF form
   ForceDrawFrame(mToolbar);
 
-  // String for doing paste
-  nsString stuffToPaste;
-
   // Create drag service for getting state of drag
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
@@ -441,13 +454,10 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
                                               nsITransferable::GetIID(), 
                                               (void**) getter_AddRefs(trans));
       if ( NS_SUCCEEDED(rv) && trans ) {
-        // Add the text Flavor to the transferable, 
-        // because that is the only type of data we are
-        // looking for at the moment.
-        nsAutoString toolbarItemMime (TOOLBARITEM_MIME);
-        trans->AddDataFlavor(&toolbarItemMime);
-        //trans->AddDataFlavor(mImageDataFlavor);
-
+        // Add the toolbar item flavor to the transferable, 
+        // because that is the only type of data we are looking for at the moment.
+        trans->AddDataFlavor(TOOLBARITEM_MIME);
+ 
         // Fill the transferable with data for each drag item in succession
         PRUint32 numItems = 0; 
         if (NS_SUCCEEDED(dragSession->GetNumDropItems(&numItems))) { 
@@ -458,26 +468,28 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
           for (i=0;i<numItems;++i) {
             if (NS_SUCCEEDED(dragSession->GetData(trans, i))) { 
  
-              // Get the string data out of the transferable
-              // Note: the transferable owns the pointer to the data
-              char *str = 0;
+              // Get the string data out of the transferable. This obviously needs to be rewritten ;)
               PRUint32 len;
-              trans->GetAnyTransferData(&toolbarItemMime, (void **)&str, &len);
-
-              // If the string was not empty then paste it in
-              if (str) {
-                char buf[256];
-                strncpy(buf, str, len);
-                buf[len] = 0;
-                printf("Dropped: %s\n", buf);
-                stuffToPaste.SetString(str, len);
-                //mEditor->InsertText(stuffToPaste);
-                dragSession->SetCanDrop(PR_TRUE);
+              char* toolbarItemMime;
+              nsCOMPtr<nsISupports> genericDataObj;
+              trans->GetAnyTransferData(&toolbarItemMime, getter_AddRefs(genericDataObj), &len);
+              if ( genericDataObj ) {
+                nsCOMPtr<nsISupportsWString> dataObj ( do_QueryInterface(genericDataObj) );
+                if ( dataObj ) {               
+                  // If the string was not empty then paste it in
+                  PRUnichar* buf;
+                  dataObj->toString(&buf);
+                  if ( buf ) {
+                    nsAutoString converter(buf);
+                    char* lame = converter.ToNewCString();
+                    printf("Dropped Data: %s\n", lame);
+                    //XXX do real stuff here
+                    dragSession->SetCanDrop(PR_TRUE);
+                    delete [] lame;
+                  }
+                  delete [] buf;
+                }
               }
-
-              // XXX This is where image support might go
-              //void * data;
-              //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
             }
           } // foreach drag item
 

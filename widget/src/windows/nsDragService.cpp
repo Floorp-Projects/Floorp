@@ -31,9 +31,6 @@
 #include "OLEIDL.H"
 
 
-static NS_DEFINE_IID(kIDragServiceIID, NS_IDRAGSERVICE_IID);
-static NS_DEFINE_IID(kIDragSessionIID, NS_IDRAGSESSION_IID);
-
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
 
@@ -62,12 +59,14 @@ nsDragService::~nsDragService()
   NS_IF_RELEASE(mDataObject);
 }
 
+
 /**
  * @param aIID The name of the class implementing the method
  * @param _classiiddef The name of the #define symbol that defines the IID
  * for the class (e.g. NS_ISUPPORTS_IID)
  * 
-*/ 
+*/
+// clean me up! ;)
 nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
 
@@ -80,13 +79,13 @@ nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  if (aIID.Equals(kIDragServiceIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDragService))) {
     *aInstancePtr = (void*) ((nsIDragService*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(kIDragSessionIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDragSession))) {
     *aInstancePtr = (void*) ((nsIDragSession*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -113,12 +112,14 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransf
   IDataObject * dataObj = nsnull;
   PRUint32 i;
   for (i=0;i<cnt;i++) {
-    nsISupports * supports = anArrayTransferables->ElementAt(i);
+    nsCOMPtr<nsISupports> supports;
+    anArrayTransferables->GetElementAt(i, getter_AddRefs(supports));
     nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
-    NS_RELEASE(supports);
-    nsClipboard::CreateNativeDataObject(trans, &dataObj);
-    dataObjCollection->AddDataObject(dataObj);
-    NS_IF_RELEASE(dataObj);
+    if ( trans ) {
+      nsClipboard::CreateNativeDataObject(trans, &dataObj);
+      dataObjCollection->AddDataObject(dataObj);
+      NS_IF_RELEASE(dataObj);
+    }
   }
 
   StartInvokingDragSession((IDataObject *)dataObjCollection, aActionType);
@@ -229,11 +230,10 @@ NS_IMETHODIMP nsDragService::SetIDataObject (IDataObject * aDataObj)
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::IsDataFlavorSupported(nsString * aDataFlavor)
+NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
-  if (nsnull == aDataFlavor || nsnull == mDataObject) {
+  if ( !aDataFlavor || !mDataObject || !_retval )
     return NS_ERROR_FAILURE;
-  }
 
   // First check to see if the mDataObject is is Collection of IDataObjects
   UINT format = nsClipboard::GetFormat(MULTI_MIME);
@@ -243,7 +243,7 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(nsString * aDataFlavor)
   if (S_OK != mDataObject->QueryGetData(&fe)) {
     // Ok, so we have a single object
     // now check to see if has the correct data type
-    format = nsClipboard::GetFormat(*aDataFlavor);
+    format = nsClipboard::GetFormat(aDataFlavor);
     SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
 
     if (S_OK == mDataObject->QueryGetData(&fe)) {
@@ -254,7 +254,7 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(nsString * aDataFlavor)
   }
 
   // Set it up for the data flavor
-  format = nsClipboard::GetFormat(*aDataFlavor);
+  format = nsClipboard::GetFormat(aDataFlavor);
   SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
 
   // Ok, now see if any one of the IDataObjects in the collection
@@ -275,10 +275,10 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(nsString * aDataFlavor)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession ** aSession)
 {
-  if (nsnull == aSession) {
+  if ( !aSession )
     return NS_ERROR_FAILURE;
-  }
+
   *aSession = (nsIDragSession *)this;
-  NS_ADDREF(this);
+  NS_ADDREF(*aSession);
   return NS_OK;
 }
