@@ -1295,6 +1295,34 @@ nsXULDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 }
 
 NS_IMETHODIMP
+nsXULDocument::BeginUpdate()
+{
+    // XXX Never called. Does this matter?
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
+        nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
+        observer->BeginUpdate(this);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::EndUpdate()
+{
+    // XXX Never called. Does this matter?
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
+        nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
+        observer->EndUpdate(this);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULDocument::BeginLoad()
 {
     // XXX Never called. Does this matter?

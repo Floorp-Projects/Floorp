@@ -286,7 +286,8 @@ public:
 
   //XXX These three create a dependency between content and frames 
   static nsresult GetPrimaryFrame(nsIHTMLContent* aContent,
-                                  nsIFormControlFrame *&aFormControlFrame);
+                                  nsIFormControlFrame *&aFormControlFrame,
+                                  PRBool aFlushNotifications=PR_TRUE);
   static nsresult GetPrimaryPresState(nsIHTMLContent* aContent,
                                           nsIStatefulFrame::StateType aStateType,
                                           nsIPresState** aPresState);

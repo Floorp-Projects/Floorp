@@ -720,7 +720,7 @@ nsHTMLSelectElement::DoneAddingContent(PRBool aIsDone)
 {
   mIsDoneAddingContent = aIsDone;
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame);
+  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame,PR_FALSE);
   if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
     nsISelectControlFrame* selectFrame = nsnull;
     result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);

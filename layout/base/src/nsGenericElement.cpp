@@ -1868,6 +1868,11 @@ nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (nsnull == mAttributes) {
     mAttributes = new nsVoidArray();
   }
+  
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->BeginUpdate();
+  }
+  
   if (nsnull != mAttributes) {
     nsGenericAttribute* attr;
     PRInt32 index;
@@ -1890,8 +1895,11 @@ nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
   }
 
-  if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-    mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
+  if (aNotify && (nsnull != mDocument)) {
+    if (NS_SUCCEEDED(rv)) {
+      mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
+    }
+    mDocument->EndUpdate();
   }
 
   return rv;
@@ -1957,6 +1965,9 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
       nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
       if (((kNameSpaceID_Unknown == aNameSpaceID) || (attr->mNameSpaceID == aNameSpaceID)) && 
           (attr->mName == aName)) {
+        if (aNotify && (nsnull != mDocument)) {
+          mDocument->BeginUpdate();
+        }
         mAttributes->RemoveElementAt(index);
         delete attr;
         found = PR_TRUE;
@@ -1966,6 +1977,7 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     if (NS_SUCCEEDED(rv) && found && aNotify && (nsnull != mDocument)) {
       mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
+      mDocument->EndUpdate();
     }
   }
 
@@ -2117,18 +2129,24 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
                                          PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
+  nsIDocument* doc = mDocument;
+  if (aNotify && (nsnull != doc)) {
+    doc->BeginUpdate();
+  }
   PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
     nsRange::OwnerChildInserted(mContent, aIndex);
-    nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
       if (aNotify) {
         doc->ContentInserted(mContent, aKid, aIndex);
       }
     }
+  }
+  if (aNotify && (nsnull != doc)) {
+    doc->EndUpdate();
   }
   return NS_OK;
 }
@@ -2139,13 +2157,16 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
                                           PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
+  nsIDocument* doc = mDocument;
+  if (aNotify && (nsnull != mDocument)) {
+    doc->BeginUpdate();
+  }
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   nsRange::OwnerChildReplaced(mContent, aIndex, oldKid);
   PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
-    nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
       if (aNotify) {
@@ -2156,6 +2177,9 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }
+  if (aNotify && (nsnull != mDocument)) {
+    doc->EndUpdate();
+  }
   return NS_OK;
 }
 
@@ -2163,18 +2187,24 @@ nsresult
 nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   NS_PRECONDITION((nsnull != aKid) && (aKid != mContent), "null ptr");
+  nsIDocument* doc = mDocument;
+  if (aNotify && (nsnull != doc)) {
+    doc->BeginUpdate();
+  }
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
     // ranges don't need adjustment since new child is at end of list
-    nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
       if (aNotify) {
         doc->ContentAppended(mContent, mChildren.Count() - 1);
       }
     }
+  }
+  if (aNotify && (nsnull != doc)) {
+    doc->EndUpdate();
   }
   return NS_OK;
 }
@@ -2185,6 +2215,9 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
+    if (aNotify && (nsnull != doc)) {
+      doc->BeginUpdate();
+    }
     nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
     mChildren.RemoveElementAt(aIndex);
     if (aNotify) {
@@ -2195,6 +2228,9 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     oldKid->SetDocument(nsnull, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
+    if (aNotify && (nsnull != doc)) {
+      doc->EndUpdate();
+    }
   }
 
   return NS_OK;

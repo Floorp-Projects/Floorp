@@ -240,6 +240,8 @@ public:
 
   // Observation hooks used by content nodes to propagate
   // notifications to document observers.
+  NS_IMETHOD BeginUpdate() = 0;
+  NS_IMETHOD EndUpdate() = 0;
   NS_IMETHOD BeginLoad() = 0;
   NS_IMETHOD EndLoad() = 0;
   NS_IMETHOD ContentChanged(nsIContent* aContent,

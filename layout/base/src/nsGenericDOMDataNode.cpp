@@ -1004,11 +1004,15 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
   if (nsnull == aBuffer) {
     return NS_ERROR_NULL_POINTER;
   }
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->BeginUpdate();
+  }
   mText.SetTo(aBuffer, aLength);
 
   // Trigger a reflow
   if (aNotify && (nsnull != mDocument)) {
     mDocument->ContentChanged(mContent, nsnull);
+    mDocument->EndUpdate();
   }
   return NS_OK;
 }
@@ -1025,11 +1029,15 @@ nsGenericDOMDataNode::SetText(const char* aBuffer,
   if (nsnull == aBuffer) {
     return NS_ERROR_NULL_POINTER;
   }
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->BeginUpdate();
+  }
   mText.SetTo(aBuffer, aLength);
 
   // Trigger a reflow
   if (aNotify && (nsnull != mDocument)) {
     mDocument->ContentChanged(mContent, nsnull);
+    mDocument->EndUpdate();
   }
   return NS_OK;
 }

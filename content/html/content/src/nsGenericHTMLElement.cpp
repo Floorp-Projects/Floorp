@@ -217,11 +217,15 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsString& aDecl)
 
     if (NS_SUCCEEDED(result)) {
       PRInt32 hint;
+      if (doc) {
+        doc->BeginUpdate();
+      }
       result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl, &hint);
-      if (NS_SUCCEEDED(result)) {
-        if (doc) {
+      if (doc) {
+        if (NS_SUCCEEDED(result)) {
           doc->AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::style, hint);
         }
+        doc->EndUpdate();
       }
       if (cssLoader) {
         cssLoader->RecycleParser(cssParser);
@@ -700,6 +704,10 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
       NS_RELEASE(htmlContent);
       return result;
     }
+
+    if (aNotify && (nsnull != mDocument)) {
+      mDocument->BeginUpdate();
+    }
     // set as string value to avoid another string copy
     PRBool  impact = NS_STYLE_HINT_NONE;
     htmlContent->GetMappedAttributeImpact(aAttribute, impact);
@@ -729,6 +737,7 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
 
   if (aNotify && (nsnull != mDocument)) {
     mDocument->AttributeChanged(mContent, aNameSpaceID, aAttribute, NS_STYLE_HINT_UNKNOWN);
+    mDocument->EndUpdate();
   }
 
   return result;
@@ -771,15 +780,18 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
   PRBool  impact = NS_STYLE_HINT_NONE;
   htmlContent->GetMappedAttributeImpact(aAttribute, impact);
   if (nsnull != mDocument) {  // set attr via style sheet
-    if (aNotify && (nsHTMLAtoms::style == aAttribute)) {
-      nsHTMLValue oldValue;
-      PRInt32 oldImpact = NS_STYLE_HINT_NONE;
-      if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute, oldValue)) {
-        oldImpact = GetStyleImpactFrom(oldValue);
-      }
-      impact = GetStyleImpactFrom(aValue);
-      if (impact < oldImpact) {
-        impact = oldImpact;
+    if (aNotify) {
+      mDocument->BeginUpdate();
+      if (nsHTMLAtoms::style == aAttribute) {
+        nsHTMLValue oldValue;
+        PRInt32 oldImpact = NS_STYLE_HINT_NONE;
+        if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute, oldValue)) {
+          oldImpact = GetStyleImpactFrom(oldValue);
+        }
+        impact = GetStyleImpactFrom(aValue);
+        if (impact < oldImpact) {
+          impact = oldImpact;
+        }
       }
     }
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
@@ -791,6 +803,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     }
     if (aNotify) {
       mDocument->AttributeChanged(mContent, kNameSpaceID_None, aAttribute, impact);
+      mDocument->EndUpdate();
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
@@ -833,13 +846,16 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
   }
   if (nsnull != mDocument) {  // set attr via style sheet
     PRInt32 impact = NS_STYLE_HINT_UNKNOWN;
-    if (aNotify && (nsHTMLAtoms::style == aAttribute)) {
-      nsHTMLValue oldValue;
-      if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute, oldValue)) {
-        impact = GetStyleImpactFrom(oldValue);
-      }
-      else {
-        impact = NS_STYLE_HINT_NONE;
+    if (aNotify) {
+      mDocument->BeginUpdate();
+      if (nsHTMLAtoms::style == aAttribute) {
+        nsHTMLValue oldValue;
+        if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute, oldValue)) {
+          impact = GetStyleImpactFrom(oldValue);
+        }
+        else {
+          impact = NS_STYLE_HINT_NONE;
+        }
       }
     }
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
@@ -849,6 +865,7 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
     }
     if (aNotify) {
       mDocument->AttributeChanged(mContent, aNameSpaceID, aAttribute, impact);
+      mDocument->EndUpdate();
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
@@ -1585,16 +1602,19 @@ nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
 // XXX This creates a dependency between content and frames
 nsresult 
 nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
-                                      nsIFormControlFrame *&aFormControlFrame)
+                                      nsIFormControlFrame *&aFormControlFrame,
+                                      PRBool aFlushNotifications)
 {
   nsIDocument* doc = nsnull;
   nsresult res = NS_NOINTERFACE;
    // Get the document
   if (NS_OK == aContent->GetDocument(doc)) {
     if (nsnull != doc) {
-      // Cause a flushing of notifications, so we get
-      // up-to-date presentation information
-      doc->FlushPendingNotifications();
+      if (aFlushNotifications) {
+        // Cause a flushing of notifications, so we get
+        // up-to-date presentation information
+        doc->FlushPendingNotifications();
+      }
 
        // Get presentation shell 0
       nsIPresShell* presShell = doc->GetShellAt(0);
@@ -1618,24 +1638,32 @@ nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
                                           nsIStatefulFrame::StateType aStateType,
                                           nsIPresState** aPresState)
 {
+  nsresult result = NS_OK;
+
    // Get the document
   nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(*getter_AddRefs(doc));
+  result = aContent->GetDocument(*getter_AddRefs(doc));
   if (doc) {
      // Get presentation shell 0
     nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
     if (presShell) {
       nsCOMPtr<nsILayoutHistoryState> history;
-      presShell->GetHistoryState(getter_AddRefs(history));
+      result = presShell->GetHistoryState(getter_AddRefs(history));
       if (history) {
         PRUint32 ID;
         aContent->GetContentID(&ID);
-        history->GetState(ID, aPresState, aStateType);
+        result = history->GetState(ID, aPresState, aStateType);
+        if (!*aPresState) {
+          result = NS_NewPresState(aPresState);
+          if (NS_SUCCEEDED(result)) {
+            result = history->AddState(ID, *aPresState, aStateType);
+          }
+        }
       }
     }
   }
  
-  return NS_OK;
+  return result;
 }         
 
 // XXX This creates a dependency between content and frames
@@ -2941,18 +2969,24 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
                                              PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
+  nsIDocument* doc = mDocument;
+  if (aNotify && (nsnull != doc)) {
+    doc->BeginUpdate();
+  }
   PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
     nsRange::OwnerChildInserted(mContent, aIndex);
-    nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
       if (aNotify) {
         doc->ContentInserted(mContent, aKid, aIndex);
       }
     }
+  }
+  if (aNotify && (nsnull != doc)) {
+    doc->EndUpdate();
   }
   return NS_OK;
 }
@@ -2964,12 +2998,15 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
+  nsIDocument* doc = mDocument;
+  if (aNotify && (nsnull != doc)) {
+    doc->BeginUpdate();
+  }
   nsRange::OwnerChildReplaced(mContent, aIndex, oldKid);
   PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
-    nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
       if (aNotify) {
@@ -2980,6 +3017,9 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }
+  if (aNotify && (nsnull != doc)) {
+    doc->EndUpdate();
+  }
   return NS_OK;
 }
 
@@ -2987,12 +3027,15 @@ nsresult
 nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   NS_PRECONDITION((nsnull != aKid) && (aKid != mContent), "null ptr");
+  nsIDocument* doc = mDocument;
+  if (aNotify && (nsnull != doc)) {
+    doc->BeginUpdate();
+  }
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
     // ranges don't need adjustment since new child is at end of list
-    nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
       if (aNotify) {
@@ -3000,15 +3043,21 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
       }
     }
   }
+  if (aNotify && (nsnull != doc)) {
+    doc->EndUpdate();
+  }
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 {
+  nsIDocument* doc = mDocument;
+  if (aNotify && (nsnull != doc)) {
+    doc->BeginUpdate();
+  }
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
-    nsIDocument* doc = mDocument;
     nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
     mChildren.RemoveElementAt(aIndex);
     if (aNotify) {
@@ -3019,6 +3068,9 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     oldKid->SetDocument(nsnull, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
+  }
+  if (aNotify && (nsnull != doc)) {
+    doc->EndUpdate();
   }
 
   return NS_OK;
