@@ -82,13 +82,14 @@ public:
   NS_IMETHOD       CompileEventHandler(void *aTarget,
                                        nsIAtom *aName,
                                        const nsString& aBody,
+                                       PRBool aShared,
                                        void** aHandler);
   NS_IMETHOD       CallEventHandler(void *aTarget, void *aHandler, 
                                     PRUint32 argc, void *argv, 
                                     PRBool *aBoolResult);
   NS_IMETHOD       BindCompiledEventHandler(void *aTarget,
-					    nsIAtom *aName,
-					    void *aHandler);
+                                            nsIAtom *aName,
+                                            void *aHandler);
 
   NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion);
   NS_IMETHOD_(nsIScriptGlobalObject*)    GetGlobalObject();
@@ -97,7 +98,7 @@ public:
   NS_IMETHOD     InitContext(nsIScriptGlobalObject *aGlobalObject);
   NS_IMETHOD     IsContextInitialized();
   NS_IMETHOD     AddNamedReference(void *aSlot, void *aScriptObject,
-				   const char *aName);
+                                   const char *aName);
   NS_IMETHOD     RemoveReference(void *aSlot, void *aScriptObject);
   NS_IMETHOD     GC();
   NS_IMETHOD GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr);

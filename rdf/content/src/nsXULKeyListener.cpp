@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 #include "nsCOMPtr.h"
@@ -213,28 +213,28 @@ public:
 
     // nsIXULKeyListener
     NS_IMETHOD Init(
-      nsIDOMElement  * aElement, 
+      nsIDOMElement  * aElement,
       nsIDOMDocument * aDocument);
 
     // nsIDOMKeyListener
-    
+
     /**
      * Processes a key pressed event
-     * @param aKeyEvent @see nsIDOMEvent.h 
+     * @param aKeyEvent @see nsIDOMEvent.h
      * @returns whether the event was consumed or ignored. @see nsresult
      */
     virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
 
     /**
      * Processes a key release event
-     * @param aKeyEvent @see nsIDOMEvent.h 
+     * @param aKeyEvent @see nsIDOMEvent.h
      * @returns whether the event was consumed or ignored. @see nsresult
      */
     virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
 
     /**
      * Processes a key typed event
-     * @param aKeyEvent @see nsIDOMEvent.h 
+     * @param aKeyEvent @see nsIDOMEvent.h
      * @returns whether the event was consumed or ignored. @see nsresult
      *
      */
@@ -247,11 +247,11 @@ protected:
     class nsIURIKey : public nsHashKey {
     protected:
         nsCOMPtr<nsIURI> mKey;
-  
+
     public:
         nsIURIKey(nsIURI* key) : mKey(key) {}
         ~nsIURIKey(void) {}
-  
+
         PRUint32 HashValue(void) const {
             nsXPIDLCString spec;
             mKey->GetSpec(getter_Copies(spec));
@@ -276,26 +276,26 @@ private:
 
     NS_IMETHOD GetKeyBindingDocument(nsCAutoString& aURLStr, nsIDOMXULDocument** aResult);
     NS_IMETHOD LoadKeyBindingDocument(nsIURI* aURI, nsIDOMXULDocument** aResult);
-    NS_IMETHOD LocateAndExecuteKeyBinding(nsIDOMKeyEvent* aKeyEvent, eEventType aEventType, 
+    NS_IMETHOD LocateAndExecuteKeyBinding(nsIDOMKeyEvent* aKeyEvent, eEventType aEventType,
                                 nsIDOMXULDocument* aDocument, PRBool& aHandled);
-    NS_IMETHOD HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsIDOMKeyEvent* aEvent, eEventType aEventType, 
+    NS_IMETHOD HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsIDOMKeyEvent* aEvent, eEventType aEventType,
                                       nsIDOMXULDocument* aDocument, PRBool& aHandledFlag);
-  
+
     nsIDOMElement* element; // Weak reference. The element will go away first.
     nsIDOMXULDocument* mDOMDocument; // Weak reference.
 
     static PRUint32 gRefCnt;
     static nsSupportsHashtable* mKeyBindingTable;
-    
+
     // The "xul key" modifier can be any of the known modifiers:
     enum {
         xulKeyNone, xulKeyShift, xulKeyControl, xulKeyAlt, xulKeyMeta
     } mXULKeyModifier;
-}; 
+};
 
 PRUint32 nsXULKeyListenerImpl::gRefCnt = 0;
 nsSupportsHashtable* nsXULKeyListenerImpl::mKeyBindingTable = nsnull;
-    
+
 class nsProxyStream : public nsIInputStream
 {
 private:
@@ -354,7 +354,7 @@ NS_IMPL_ISUPPORTS(nsProxyStream, nsIInputStream::GetIID());
 
 nsXULKeyListenerImpl::nsXULKeyListenerImpl(void)
 {
-	NS_INIT_REFCNT();	
+  NS_INIT_REFCNT();
   gRefCnt++;
   if (gRefCnt == 1) {
     mKeyBindingTable = new nsSupportsHashtable();
@@ -417,7 +417,7 @@ nsXULKeyListenerImpl::Init(
   mXULKeyModifier = xulKeyMeta;
 #elif XP_PC
   mXULKeyModifier = xulKeyControl;
-#else 
+#else
   mXULKeyModifier = xulKeyAlt;
 #endif
   return NS_OK;
@@ -428,7 +428,7 @@ nsXULKeyListenerImpl::Init(
 
 /**
  * Processes a key down event
- * @param aKeyEvent @see nsIDOMEvent.h 
+ * @param aKeyEvent @see nsIDOMEvent.h
  * @returns whether the event was consumed or ignored. @see nsresult
  */
 nsresult nsXULKeyListenerImpl::KeyDown(nsIDOMEvent* aKeyEvent)
@@ -439,7 +439,7 @@ nsresult nsXULKeyListenerImpl::KeyDown(nsIDOMEvent* aKeyEvent)
 ////////////////////////////////////////////////////////////////
 /**
  * Processes a key release event
- * @param aKeyEvent @see nsIDOMEvent.h 
+ * @param aKeyEvent @see nsIDOMEvent.h
  * @returns whether the event was consumed or ignored. @see nsresult
  */
 nsresult nsXULKeyListenerImpl::KeyUp(nsIDOMEvent* aKeyEvent)
@@ -450,11 +450,11 @@ nsresult nsXULKeyListenerImpl::KeyUp(nsIDOMEvent* aKeyEvent)
 ////////////////////////////////////////////////////////////////
 /**
  * Processes a key typed event
- * @param aKeyEvent @see nsIDOMEvent.h 
+ * @param aKeyEvent @see nsIDOMEvent.h
  * @returns whether the event was consumed or ignored. @see nsresult
  *
  */
- //  // Get the main document 
+ //  // Get the main document
  //  // find the keyset
  // iterate over key(s) looking for appropriate handler
 nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
@@ -464,32 +464,32 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventType)
 {
-	static PRBool executingKeyBind = PR_FALSE;
-	nsresult ret = NS_OK;
-	
-	if(executingKeyBind)
-		return NS_OK;
-	else 
-		executingKeyBind = PR_TRUE;
+  static PRBool executingKeyBind = PR_FALSE;
+  nsresult ret = NS_OK;
 
-	if(!aKeyEvent) {
-		executingKeyBind = PR_FALSE;
-		return ret;
-	}
+  if (executingKeyBind)
+    return NS_OK;
 
-	if(!mDOMDocument) {
-		executingKeyBind = PR_FALSE;
-		return ret;
-	}
-  
-	// Get DOMEvent target
-	nsCOMPtr<nsIDOMNode> target = nsnull;
-	aKeyEvent->GetTarget(getter_AddRefs(target));
+  executingKeyBind = PR_TRUE;
+
+  if (!aKeyEvent) {
+    executingKeyBind = PR_FALSE;
+    return ret;
+  }
+
+  if (!mDOMDocument) {
+    executingKeyBind = PR_FALSE;
+    return ret;
+  }
+
+  // Get DOMEvent target
+  nsCOMPtr<nsIDOMNode> target = nsnull;
+  aKeyEvent->GetTarget(getter_AddRefs(target));
 
   nsCOMPtr<nsPIDOMWindow> piWindow;
 
-	nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-	// Find a keyset node
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  // Find a keyset node
   // Get the current focused object from the command dispatcher
   nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
   mDOMDocument->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
@@ -505,7 +505,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
     // See if it's a textarea or input field.
     // XXX Check to see if the "key-bindings" CSS property points us to a file.
     // Hopefully we can get Pierre to add this. ;)
-    
+
     nsAutoString tagName;
     focusedElement->GetTagName(tagName);
     if (tagName.EqualsIgnoreCase("input")) {
@@ -522,21 +522,21 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
       platformKeyFile = "chrome://global/content/platformTextAreaBindings.xul";
     }
   }
-   
+
   nsCOMPtr<nsIDOMXULDocument> document;
   GetKeyBindingDocument(platformKeyFile, getter_AddRefs(document));
-  
+
   // Locate the key node and execute the JS on a match.
   PRBool handled = PR_FALSE;
   if (document) // Local focused ELEMENT handling stage.
     LocateAndExecuteKeyBinding(keyEvent, aEventType, document, handled);
-	
+
   if (!handled) {
     GetKeyBindingDocument(keyFile, getter_AddRefs(document));
     if (document) // Local focused ELEMENT handling stage.
-    LocateAndExecuteKeyBinding(keyEvent, aEventType, document, handled);
+      LocateAndExecuteKeyBinding(keyEvent, aEventType, document, handled);
   }
-  
+
   nsCAutoString browserFile = "chrome://global/content/browserBindings.xul";
   nsCAutoString editorFile = "chrome://global/content/editorBindings.xul";
   nsCAutoString browserPlatformFile = "chrome://global/content/platformBrowserBindings.xul";
@@ -565,29 +565,23 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 
         nsCOMPtr<nsIContentViewer> cv;
         webShell->GetContentViewer(getter_AddRefs(cv));
-        if (nsnull != cv) 
-        {
+        if (nsnull != cv) {
           nsCOMPtr<nsIDocumentViewer> docv;
           cv->QueryInterface(nsIDocumentViewer::GetIID(), getter_AddRefs(docv));
-          if (nsnull != docv) 
-          {
+          if (nsnull != docv) {
             nsCOMPtr<nsIPresContext> cx;
             docv->GetPresContext(*getter_AddRefs(cx));
-	          if (nsnull != cx) 
-            {
-	            result = cx->GetShell(getter_AddRefs(presShell));
-	          }
+            if (nsnull != cx) {
+              result = cx->GetShell(getter_AddRefs(presShell));
+            }
           }
         }
 
-
         PRBool editorHasBindings = PR_FALSE;
         nsCOMPtr<nsIDOMXULDocument> platformDoc;
-        if (presShell)
-        {
+        if (presShell) {
           PRBool isEditor;
-          if (NS_SUCCEEDED(presShell->GetDisplayNonTextSelection(&isEditor)) && isEditor)
-          {
+          if (NS_SUCCEEDED(presShell->GetDisplayNonTextSelection(&isEditor)) && isEditor) {
             editorHasBindings = PR_TRUE;
             GetKeyBindingDocument(editorPlatformFile, getter_AddRefs(platformDoc));
             GetKeyBindingDocument(editorFile, getter_AddRefs(document));
@@ -613,18 +607,18 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
     }
   }
 
-  executingKeyBind = PR_FALSE;
-	return ret;
+executingKeyBind = PR_FALSE;
+  return ret;
 }
 
 PRBool nsXULKeyListenerImpl::IsMatchingKeyCode(const PRUint32 theChar, const nsString &keyName)
 {
   PRBool ret = PR_FALSE;
-  
+
   //printf("theChar = %d \n", theChar);
   //printf("keyName = %s \n", keyName.ToNewCString());
   //printf("\n");
-  
+
   switch ( theChar ) {
     case VK_CANCEL:
       if(keyName == "VK_CANCEL")
@@ -1075,20 +1069,20 @@ PRBool nsXULKeyListenerImpl::IsMatchingKeyCode(const PRUint32 theChar, const nsS
         ret = PR_TRUE;
         break;
   }
-  
+
   return ret;
 }
 
 PRBool nsXULKeyListenerImpl::IsMatchingCharCode(const nsString &theChar, const nsString &keyName)
 {
   PRBool ret = PR_FALSE;
-  
+
   //printf("theChar = %s \n", theChar.ToNewCString());
   //printf("keyName = %s \n", keyName.ToNewCString());
   //printf("\n");
   if(theChar == keyName)
     ret = PR_TRUE;
-  
+
   return ret;
 }
 
@@ -1106,7 +1100,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::GetKeyBindingDocument(nsCAutoString& aURLStr
     // We've got a file.  Check our key binding file cache.
     nsIURIKey key(uri);
     document = dont_AddRef(NS_STATIC_CAST(nsIDOMXULDocument*, mKeyBindingTable->Get(&key)));
-    
+
     if (!document) {
       LoadKeyBindingDocument(uri, getter_AddRefs(document));
       if (document) {
@@ -1162,7 +1156,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
   xulDoc->SetMasterPrototype(proto);
   xulDoc->SetCurrentPrototype(proto);
 
-  
+
   rv = proto->SetURI(aURI);
   if (NS_FAILED(rv)) return rv;
 
@@ -1217,7 +1211,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
   nsProxyStream* proxy = new nsProxyStream();
   if (! proxy)
     return NS_ERROR_FAILURE;
-    
+
   listener->OnStartRequest(channel, nsnull);
   while (PR_TRUE) {
     char buf[1024];
@@ -1241,7 +1235,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
   // don't leak proxy!
   proxy->Close();
   delete proxy;
-  
+
   // The document is parsed. We now have a prototype document.
   // Everything worked, so we can just hand this back now.
   *aResult = doc;
@@ -1256,41 +1250,41 @@ nsXULKeyListenerImpl::LocateAndExecuteKeyBinding(nsIDOMKeyEvent* aEvent, eEventT
   aHandledFlag = PR_FALSE;
 
   // locate the window element which holds the top level key bindings
-	nsCOMPtr<nsIDOMElement> rootElement;
-	aDocument->GetDocumentElement(getter_AddRefs(rootElement));
-	if (!rootElement)
+  nsCOMPtr<nsIDOMElement> rootElement;
+  aDocument->GetDocumentElement(getter_AddRefs(rootElement));
+  if (!rootElement)
     return NS_OK;
-	
-	//nsAutoString rootName;
-	//rootElement->GetNodeName(rootName);
-	//printf("Root Node [%s] \n", rootName.ToNewCString()); // this leaks
-	
-	nsCOMPtr<nsIDOMNode> currNode;
-	rootElement->GetFirstChild(getter_AddRefs(currNode));
-  
+
+  //nsAutoString rootName;
+  //rootElement->GetNodeName(rootName);
+  //printf("Root Node [%s] \n", rootName.ToNewCString()); // this leaks
+
+  nsCOMPtr<nsIDOMNode> currNode;
+  rootElement->GetFirstChild(getter_AddRefs(currNode));
+
   while (currNode) {
-		nsAutoString currNodeType;
-		nsCOMPtr<nsIDOMElement> currElement(do_QueryInterface(currNode));
+    nsAutoString currNodeType;
+    nsCOMPtr<nsIDOMElement> currElement(do_QueryInterface(currNode));
     if (currElement) {
-		  currElement->GetNodeName(currNodeType);
+      currElement->GetNodeName(currNodeType);
       if (currNodeType.Equals("keyset"))
         return HandleEventUsingKeyset(currElement, aEvent, aEventType, aDocument, aHandledFlag);
     }
-    
-    nsCOMPtr<nsIDOMNode> prevNode(currNode);  
-    prevNode->GetNextSibling(getter_AddRefs(currNode)); 
+
+    nsCOMPtr<nsIDOMNode> prevNode(currNode);
+    prevNode->GetNextSibling(getter_AddRefs(currNode));
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsIDOMKeyEvent* aKeyEvent, eEventType aEventType, 
+nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsIDOMKeyEvent* aKeyEvent, eEventType aEventType,
                                          nsIDOMXULDocument* aDocument, PRBool& aHandledFlag)
 {
 
   nsAutoString trueString = "true";
-	nsAutoString falseString = "false";
+  nsAutoString falseString = "false";
 
 #undef DEBUG_XUL_KEYS
 #ifdef DEBUG_XUL_KEYS
@@ -1314,110 +1308,110 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
   }
 #endif /* DEBUG_XUL_KEYS */
 
-	// Given the DOM node and Key Event
-	// Walk the node's children looking for 'key' types
+  // Given the DOM node and Key Event
+  // Walk the node's children looking for 'key' types
 
   // XXX Use the key-equivalent CSS3 property to obtain the
   // appropriate modifier for this keyset.
   // TODO. For now it's hardcoded.
 
-	// If the node isn't tagged disabled
-	// Compares the received key code to found 'key' types
-	// Executes command if found
-	// Marks event as consumed
- 
+  // If the node isn't tagged disabled
+  // Compares the received key code to found 'key' types
+  // Executes command if found
+  // Marks event as consumed
+
   nsCOMPtr<nsIDOMNode> keyNode;
   aKeysetElement->GetFirstChild(getter_AddRefs(keyNode));
   while (keyNode) {
-		nsCOMPtr<nsIDOMElement> keyElement(do_QueryInterface(keyNode));
+    nsCOMPtr<nsIDOMElement> keyElement(do_QueryInterface(keyNode));
     if (!keyElement)
       continue;
 
-		nsAutoString property;
-		keyElement->GetNodeName(property);
-		//printf("keyNodeType [%s] \n", keyNodeType.ToNewCString()); // this leaks
+    nsAutoString property;
+    keyElement->GetNodeName(property);
+    //printf("keyNodeType [%s] \n", keyNodeType.ToNewCString()); // this leaks
 
     if (property.Equals("key")) {
-			//printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
-			do {	
-				property = falseString;	
-		    keyElement->GetAttribute(nsAutoString("disabled"), property);
-				if (property == trueString) {
-					break;
-				}
-				
-				nsAutoString keyName; // This should be phased out for keycode and charcode
-				keyElement->GetAttribute(nsAutoString("key"), keyName);
-		    //printf("Found key [%s] \n", keyName.ToNewCString()); // this leaks
-		          
-				PRUint32 theChar;
-				nsAutoString code; // either keycode or charcode
-				PRBool   gotCharCode = PR_FALSE;
-				PRBool   gotKeyCode  = PR_FALSE;
-				keyElement->GetAttribute(nsAutoString("charcode"), code);
-				if(code.IsEmpty()) {
-					keyElement->GetAttribute(nsAutoString("keycode"), code);
+      //printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
+      do {
+        property = falseString;
+        keyElement->GetAttribute(nsAutoString("disabled"), property);
+        if (property == trueString) {
+          break;
+        }
+
+        nsAutoString keyName; // This should be phased out for keycode and charcode
+        keyElement->GetAttribute(nsAutoString("key"), keyName);
+        //printf("Found key [%s] \n", keyName.ToNewCString()); // this leaks
+
+        PRUint32 theChar;
+        nsAutoString code; // either keycode or charcode
+        PRBool   gotCharCode = PR_FALSE;
+        PRBool   gotKeyCode  = PR_FALSE;
+        keyElement->GetAttribute(nsAutoString("charcode"), code);
+        if(code.IsEmpty()) {
+          keyElement->GetAttribute(nsAutoString("keycode"), code);
           if(code.IsEmpty()) {
             // HACK for temporary compatibility
             if(aEventType == eKeyPress)
               aKeyEvent->GetCharCode(&theChar);
             else
               aKeyEvent->GetKeyCode(&theChar);
-              
+
           } else {
             // We want a keycode
             aKeyEvent->GetKeyCode(&theChar);
             gotKeyCode = PR_TRUE;
           }
-				} else {
-					// We want a charcode
-					aKeyEvent->GetCharCode(&theChar);
-					gotCharCode = PR_TRUE;
-				}		
-					
-			  char tempChar[2];
-			  tempChar[0] = theChar;
-			  tempChar[1] = 0;
-			  nsAutoString tempChar2 = tempChar;
-			  //printf("compare key [%s] \n", tempChar2.ToNewCString()); // this leaks
-			  // NOTE - convert theChar and keyName to upper
-			  keyName.ToUpperCase();
-			  tempChar2.ToUpperCase();
-	   
-			  PRBool isMatching;
-			  if(gotCharCode){ 
-		        isMatching = IsMatchingCharCode(tempChar2, code);
-			  } else if(gotKeyCode){
-			    isMatching = IsMatchingKeyCode(theChar, code);
-			  }
-			  
-			  // HACK for backward compatibility
-			  if(!gotCharCode && ! gotKeyCode){
-			    isMatching = IsMatchingCharCode(tempChar2, keyName);
-			  }
-			  
-			  if (!isMatching) {
-			    break;
-			  } 
+        } else {
+          // We want a charcode
+          aKeyEvent->GetCharCode(&theChar);
+          gotCharCode = PR_TRUE;
+        }
+
+        char tempChar[2];
+        tempChar[0] = theChar;
+        tempChar[1] = 0;
+        nsAutoString tempChar2 = tempChar;
+        //printf("compare key [%s] \n", tempChar2.ToNewCString()); // this leaks
+        // NOTE - convert theChar and keyName to upper
+        keyName.ToUpperCase();
+        tempChar2.ToUpperCase();
+
+        PRBool isMatching;
+        if(gotCharCode){
+            isMatching = IsMatchingCharCode(tempChar2, code);
+        } else if(gotKeyCode){
+          isMatching = IsMatchingKeyCode(theChar, code);
+        }
+
+        // HACK for backward compatibility
+        if(!gotCharCode && ! gotKeyCode){
+          isMatching = IsMatchingCharCode(tempChar2, keyName);
+        }
+
+        if (!isMatching) {
+          break;
+        }
 
         // This is gross -- we're doing string compares
         // every time we loop over this list!
 
-				// Modifiers in XUL files are tri-state --
+        // Modifiers in XUL files are tri-state --
         //   true, false, and unspecified.
         // If a modifier is unspecified, we don't check
         // the status of that modifier (always match).
 
-			  // Get the attribute for the "xulkey" modifier.
+        // Get the attribute for the "xulkey" modifier.
         nsAutoString xproperty = "";
         keyElement->GetAttribute(nsAutoString("xulkey"),
                                  xproperty);
 
         // Is the modifier key set in the event?
-				PRBool isModKey = PR_FALSE;
+        PRBool isModKey = PR_FALSE;
 
                   // Check whether the shift key fails to match:
-				aKeyEvent->GetShiftKey(&isModKey);
+        aKeyEvent->GetShiftKey(&isModKey);
         property = "";
         keyElement->GetAttribute(nsAutoString("shift"), property);
         if ((property == trueString && !isModKey)
@@ -1430,10 +1424,10 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
             break;
 
         // and the control key:
-				aKeyEvent->GetCtrlKey(&isModKey);
-			      property = "";
-				keyElement->GetAttribute(nsAutoString("control"), property);
-				if ((property == trueString && !isModKey)
+        aKeyEvent->GetCtrlKey(&isModKey);
+            property = "";
+        keyElement->GetAttribute(nsAutoString("control"), property);
+        if ((property == trueString && !isModKey)
           || (property == falseString && isModKey))
           break;
         // and if xul is control:
@@ -1443,10 +1437,10 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
             break;
 
         // and the alt key
-				aKeyEvent->GetAltKey(&isModKey);
-			  property = "";
-				keyElement->GetAttribute(nsAutoString("alt"), property);
-				if ((property == trueString && !isModKey)
+        aKeyEvent->GetAltKey(&isModKey);
+        property = "";
+        keyElement->GetAttribute(nsAutoString("alt"), property);
+        if ((property == trueString && !isModKey)
           || (property == falseString && isModKey))
           break;
         // and if xul is alt:
@@ -1456,10 +1450,10 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
           break;
 
         // and the meta key
-				aKeyEvent->GetMetaKey(&isModKey);
-			  property = "";
-				keyElement->GetAttribute(nsAutoString("meta"), property);
-				if ((property == trueString && !isModKey)
+        aKeyEvent->GetMetaKey(&isModKey);
+        property = "";
+        keyElement->GetAttribute(nsAutoString("meta"), property);
+        if ((property == trueString && !isModKey)
           || (property == falseString && isModKey))
           break;
         // and if xul is meta:
@@ -1478,33 +1472,33 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
           return NS_OK;
         }
 
-				// Modifier tests passed so execute onclick command
-				nsAutoString cmdToExecute;
-				nsAutoString oncommand;
-				switch(aEventType) {
-					case eKeyPress:
-						keyElement->GetAttribute(nsAutoString("onkeypress"), cmdToExecute);
+        // Modifier tests passed so execute onclick command
+        nsAutoString cmdToExecute;
+        nsAutoString oncommand;
+        switch(aEventType) {
+          case eKeyPress:
+            keyElement->GetAttribute(nsAutoString("onkeypress"), cmdToExecute);
 #if defined(DEBUG_saari)
-						printf("onkeypress = %s\n",
+            printf("onkeypress = %s\n",
                                cmdToExecute.ToNewCString());
 #endif
 
-						keyElement->GetAttribute(nsAutoString("oncommand"), oncommand);
+            keyElement->GetAttribute(nsAutoString("oncommand"), oncommand);
 #if defined(DEBUG_saari)
-						printf("oncommand = %s\n", oncommand.ToNewCString());
+            printf("oncommand = %s\n", oncommand.ToNewCString());
 #endif
-					break;
-					case eKeyDown:
-						keyElement->GetAttribute(nsAutoString("onkeydown"), cmdToExecute);
-					break;
-					case eKeyUp:
-						keyElement->GetAttribute(nsAutoString("onkeyup"), cmdToExecute);
-					break;
-				}   
-				
-				// This code executes in every presentation context in which this
-				// document is appearing.
-				nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
+          break;
+          case eKeyDown:
+            keyElement->GetAttribute(nsAutoString("onkeydown"), cmdToExecute);
+          break;
+          case eKeyUp:
+            keyElement->GetAttribute(nsAutoString("onkeyup"), cmdToExecute);
+          break;
+        }
+
+        // This code executes in every presentation context in which this
+        // document is appearing.
+        nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
         nsCOMPtr<nsIContent> content = do_QueryInterface(keyElement);
         if (aDocument != mDOMDocument) {
           nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(keyElement);
@@ -1529,19 +1523,19 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 
             nsCOMPtr<nsIScriptGlobalObject> masterGlobalObject;
             nsCOMPtr<nsIDocument> masterDoc = do_QueryInterface(mDOMDocument);
-            masterDoc->GetScriptGlobalObject(getter_AddRefs(masterGlobalObject)); 
+            masterDoc->GetScriptGlobalObject(getter_AddRefs(masterGlobalObject));
             nsCOMPtr<nsIScriptContext> masterContext;
             masterGlobalObject->GetContext(getter_AddRefs(masterContext));
-           
+
             if (!handler) {
               // It hasn't been compiled before.
               nsCOMPtr<nsIScriptGlobalObject> globalObject;
-              document->GetScriptGlobalObject(getter_AddRefs(globalObject)); 
+              document->GetScriptGlobalObject(getter_AddRefs(globalObject));
               if (!globalObject) {
                 NS_NewScriptGlobalObject(getter_AddRefs(globalObject));
                 document->SetScriptGlobalObject(globalObject);
               }
-              
+
               nsCOMPtr<nsIScriptContext> context;
               globalObject->GetContext(getter_AddRefs(context));
               if (!context) {
@@ -1558,7 +1552,8 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
               nsAutoString value;
               keyContent->GetAttribute(kNameSpaceID_None, eventName, value);
               if (value != "") {
-                context->CompileEventHandler(scriptObject, eventName, value, &handler);
+                context->CompileEventHandler(scriptObject, eventName, value,
+                                             PR_TRUE, &handler);
               }
 
               if (handler)
@@ -1567,7 +1562,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 
             if (handler) {
               nsCOMPtr<nsIDOMElement> rootElement;
-	            mDOMDocument->GetDocumentElement(getter_AddRefs(rootElement));
+              mDOMDocument->GetDocumentElement(getter_AddRefs(rootElement));
               nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(rootElement);
               void* scriptObject;
               owner->GetScriptObject(masterContext, &scriptObject);
@@ -1627,11 +1622,11 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
           return ret;
         } // end for (PRInt32 i = 0; i < count; i++)
       } while (PR_FALSE); // do { ...
-	  } // end if (keyNodeType.Equals("key"))
-  
-    nsCOMPtr<nsIDOMNode> oldkeyNode(keyNode);  
+    } // end if (keyNodeType.Equals("key"))
+
+    nsCOMPtr<nsIDOMNode> oldkeyNode(keyNode);
     oldkeyNode->GetNextSibling(getter_AddRefs(keyNode));
-	} // end while(keynode)
+  } // end while(keynode)
 
   return NS_OK;
 }
@@ -1640,11 +1635,11 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 nsresult
 NS_NewXULKeyListener(nsIXULKeyListener** aListener)
 {
-    nsXULKeyListenerImpl * listener = new nsXULKeyListenerImpl();
-    if (!listener)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    NS_ADDREF(listener);
-    *aListener = listener;
-    return NS_OK;
+  nsXULKeyListenerImpl * listener = new nsXULKeyListenerImpl();
+  if (!listener)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(listener);
+  *aListener = listener;
+  return NS_OK;
 }
