@@ -34,6 +34,7 @@ interface nsIImapServerSink : nsISupports {
 
 	void SetCapability(in unsigned long capability);
 
+	void GetImapStringByID(in long aMsgId, out wstring aString);
 	void FEAlert(in wstring aString);
 	void FEAlertFromServer(in string aString);
 	void CommitNamespaces();

@@ -147,7 +147,7 @@ protected:
 	nsCOMPtr <nsIImapServerSink> m_imapServerSink;
 
     // online message copy support; i don't have a better solution yet
-    nsISupports* m_copyState;   // ** not refcount'd
+    nsCOMPtr <nsISupports> m_copyState;   // now, refcounted.
     nsIFileSpec* m_fileSpec;
 };
 

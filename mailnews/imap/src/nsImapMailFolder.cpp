@@ -2798,7 +2798,18 @@ NS_IMETHODIMP
 nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
                                  PRUint32 aMsgId, const char *extraInfo)
 {
-	PRUnichar *progressMsg = IMAPGetStringByID(aMsgId);
+	PRUnichar *progressMsg = nsnull;
+
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	nsresult rv = GetServer(getter_AddRefs(server));
+	if (NS_SUCCEEDED(rv) && server)
+	{
+		nsCOMPtr<nsIImapServerSink> serverSink = do_QueryInterface(server);
+		if (serverSink)
+			serverSink->GetImapStringByID(aMsgId, &progressMsg);
+	}
+	if (!progressMsg)
+		progressMsg = IMAPGetStringByID(aMsgId);
 
 	if (aProtocol && progressMsg)
 	{

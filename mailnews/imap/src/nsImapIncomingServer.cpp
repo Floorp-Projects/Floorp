@@ -46,6 +46,7 @@
 #include "nsRDFCID.h"
 #include "nsINetSupportDialogService.h"
 #include "nsEnumeratorUtils.h"
+#include "nsIStringBundle.h"
 
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
@@ -89,6 +90,7 @@ private:
     PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
     nsCOMPtr<nsISupportsArray> m_connectionCache;
     nsCOMPtr<nsISupportsArray> m_urlQueue;
+	nsCOMPtr<nsIStringBundle>	m_stringBundle;
     nsVoidArray					m_urlConsumers;
 	PRUint32					m_capability;
 	nsCString					m_manageMailAccountUrl;
@@ -1155,7 +1157,8 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString)
 		if (whereRealMessage)
 			whereRealMessage++;
 
-		PRUnichar *serverSaidPrefix = IMAPGetStringByID(IMAP_SERVER_SAID);
+		PRUnichar *serverSaidPrefix = nsnull;
+		GetImapStringByID(IMAP_SERVER_SAID, &serverSaidPrefix);
 		if (serverSaidPrefix)
 		{
 			nsAutoString message(serverSaidPrefix);
@@ -1168,6 +1171,56 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString)
 
     return rv;
 }
+
+/* This is the next generation string retrieval call */
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+#define IMAP_MSGS_URL       "resource:/chrome/messenger/locale/en-US/imapMsgs_en-US.properties"
+
+NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar **aString)
+{
+	nsAutoString	resultString = "???";
+	nsresult res = NS_OK;
+
+	if (!m_stringBundle)
+	{
+		char*       propertyURL = NULL;
+
+		propertyURL = IMAP_MSGS_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
+
+			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
+		}
+	}
+	if (m_stringBundle)
+	{
+		PRUnichar *ptrv = nsnull;
+		res = m_stringBundle->GetStringFromID(aMsgId, &ptrv);
+
+		if (NS_FAILED(res)) 
+		{
+			resultString = "[StringID";
+			resultString.Append(aMsgId, 10);
+			resultString += "?]";
+			*aString = resultString.ToNewUnicode();
+		}
+		else
+		{
+			*aString = ptrv;
+		}
+	}
+	else
+	{
+		res = NS_OK;
+		*aString = resultString.ToNewUnicode();
+	}
+	return res;
+}
+
 
 nsresult nsImapIncomingServer::GetUnverifiedFolders(nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders)
 {

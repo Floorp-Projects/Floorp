@@ -41,7 +41,6 @@ IMAPGetStringByID(PRInt32 stringID)
 	NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
 	if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 	{
-		nsCOMPtr<nsIURI>	url;
 		nsILocale   *locale = nsnull;
 
 		nsIStringBundle* sBundle = nsnull;

@@ -3696,9 +3696,11 @@ nsImapProtocol::AlertUserEventUsingId(PRUint32 aMessageId)
 {
     if (m_imapServerSink)
 	{
-		PRUnichar *progressString = IMAPGetStringByID(aMessageId);
+		PRUnichar *progressString = nsnull;
+		m_imapServerSink->GetImapStringByID(aMessageId, &progressString);
 
         m_imapServerSink->FEAlert(progressString);
+		PR_FREEIF(progressString);
 	}
 }
 
@@ -3732,7 +3734,8 @@ nsImapProtocol::ShowProgress()
 	if (m_progressStringId)
 	{
 		PRUnichar *progressString = NULL;
-		progressString = IMAPGetStringByID(m_progressStringId);
+		if (m_imapServerSink)
+			m_imapServerSink->GetImapStringByID(m_progressStringId, &progressString);
 		if (progressString)
 		{
 			// lossy if localized string has non-8-bit chars, but we're 
@@ -3782,7 +3785,7 @@ void
 nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 percent)
 {
 
-	int64 nowMS;
+	PRInt64 nowMS;
 	if (percent == m_lastPercent)
 		return;	// hasn't changed, right? So just return. Do we need to clear this anywhere?
 
