@@ -1951,7 +1951,6 @@ wallet_StepForwardOrBack
     nsAutoString siblingName;
     result = elementNode->GetNodeName(siblingName);
     nsCAutoString siblingCName; siblingCName.AssignWithConversion(siblingName);
-//    if (siblingName.EqualsIgnoreCase(NS_LITERAL_STRING("#text")) {
     if (siblingCName.EqualsIgnoreCase("#text")) {
       nsAutoString siblingValue;
       result = elementNode->GetNodeValue(siblingValue);
@@ -1959,7 +1958,6 @@ wallet_StepForwardOrBack
     }
 
     /* if we've reached a SCRIPT node, don't fetch its siblings */
-//    if (siblingName.EqualsIgnoreCase(NS_LITERAL_STRING("SCRIPT")) {
     if (siblingCName.EqualsIgnoreCase("SCRIPT")) {
       return;
     }
@@ -2509,6 +2507,31 @@ Wallet_ReleaseAllLists() {
     helpMac = 0;
 }
 
+//#define WALLET_CHECK_FOOTPRINT
+#ifdef WALLET_CHECK_FOOTPRINT
+PRInt32
+wallet_Size(nsVoidArray * list) {
+  PRInt32 size = 0;
+  wallet_MapElement * mapElementPtr;
+  PRInt32 count = LIST_COUNT(list);
+  for (PRInt32 i=0; i<count; i++) {
+    mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
+    size += sizeof(wallet_MapElement*);
+    size += sizeof(wallet_MapElement);
+    size += 2*(mapElementPtr->item1).Length();
+    size += 2*(mapElementPtr->item2).Length();
+    wallet_Sublist * sublistPtr;
+    PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
+    for (PRInt32 i2=0; i2<count2; i2++) {
+      sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(i2));
+      size += sizeof(wallet_Sublist);
+      size += 2*(sublistPtr->item).Length();
+    }
+  }
+  return size;
+}
+#endif
+
 /*
  * initialization for wallet session (done only once)
  */
@@ -2545,6 +2568,35 @@ wallet_Initialize(PRBool unlockDatabase=PR_TRUE) {
     wallet_ReadFromFile(schemaStringsFileName, wallet_SchemaStrings_list, PR_FALSE, BY_LENGTH);
     wallet_ReadFromFile(positionalSchemaFileName, wallet_PositionalSchema_list, PR_FALSE);
     wallet_ReadFromFile(stateSchemaFileName, wallet_StateSchema_list, PR_FALSE);
+
+#ifdef WALLET_CHECK_FOOTPRINT
+    PRInt32 totalSize = 0;
+    PRInt32 size;
+    size = wallet_Size(wallet_FieldToSchema_list);
+    totalSize += size;
+    printf("FieldToSchema: %d\n", size);
+    size = wallet_Size(wallet_VcardToSchema_list);
+    totalSize += size;
+    printf("VcardToSchema: %d\n", size);
+    size = wallet_Size(wallet_SchemaConcat_list);
+    totalSize += size;
+    printf("SchemaConcat: %d\n", size);
+    size = wallet_Size(wallet_SchemaStrings_list);
+    totalSize += size;
+    printf("SchemaStrings: %d\n", size);
+    size = wallet_Size(wallet_PositionalSchema_list);
+    totalSize += size;
+    printf("PositionalSchema: %d\n", size);
+    size = wallet_Size(wallet_StateSchema_list);
+    totalSize += size;
+    printf("StateSchema: %d\n", size);
+#ifdef AutoCapture
+    size = wallet_Size(wallet_DistinguishedSchema_list);
+    totalSize += size;
+    printf("DistinguishedSchema: %d\n", size);
+#endif
+    printf("Total size: %d\n", totalSize);
+#endif
 
     /* Note that we sort the SchemaString list by length instead of alphabetically.  To see
      * why that's necessary, consider the following example:
