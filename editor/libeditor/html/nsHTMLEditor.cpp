@@ -122,6 +122,7 @@
 #include "nsITransferable.h"
 #include "nsIDragService.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIContentFilter.h"
 
 // Transactionas
 #include "nsStyleSheetTxns.h"
@@ -1738,7 +1739,7 @@ nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelect
 }
 
 
-// This is mostly like InsertHTMLWithCharset, 
+// This is mostly like InsertHTMLWithCharsetAndContext, 
 //  but we can't use that because it is selection-based and 
 //  the rules code won't let us edit under the <head> node
 NS_IMETHODIMP

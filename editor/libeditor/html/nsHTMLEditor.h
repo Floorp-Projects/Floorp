@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
+ *   Kathleen Brade <brade@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -77,6 +78,7 @@ class nsIDOMNSRange;
 class nsIDocumentEncoder;
 class nsIClipboard;
 class TypeInState;
+class nsIContentFilter;
 
 /**
  * The HTML editor implementation.<br>
@@ -176,8 +178,14 @@ public:
 
   NS_IMETHOD PasteNoFormatting(PRInt32 aSelectionType);
   NS_IMETHOD InsertHTML(const nsAString &aInputString);
-  NS_IMETHOD InsertHTMLWithCharset(const nsAString& aInputString,
-                                   const nsAString& aCharset);
+  NS_IMETHOD InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
+                                             const nsAString & aCharset,
+                                             const nsAString & aContextStr,
+                                             const nsAString & aInfoStr,
+                                             const nsAString & aFlavor,
+                                             nsIDOMNode *aDestinationNode,
+                                             PRInt32 aDestinationOffset,
+                                             PRBool aDeleteSelection);
 
   NS_IMETHOD LoadHTML(const nsAString &aInputString);
   NS_IMETHOD LoadHTMLWithCharset(const nsAString& aInputString,
@@ -222,6 +230,8 @@ public:
 
   NS_IMETHOD SetIsCSSEnabled(PRBool aIsCSSPrefChecked);
   NS_IMETHOD GetIsCSSEnabled(PRBool *aIsCSSEnabled);
+  NS_IMETHOD AddInsertionListener(nsIContentFilter *aFilter);
+  NS_IMETHOD RemoveInsertionListener(nsIContentFilter *aFilter);
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
@@ -664,20 +674,24 @@ protected:
   NS_IMETHOD PrepareHTMLTransferable(nsITransferable **transferable, PRBool havePrivFlavor);
   NS_IMETHOD InsertFromTransferable(nsITransferable *transferable, 
                                     const nsAString & aContextStr,
-                                    const nsAString & aInfoStr);
+                                    const nsAString & aInfoStr,
+                                    nsIDOMNode *aDestinationNode,
+                                    PRInt32 aDestinationOffset,
+                                    PRBool aDoDeleteSelection);
   PRBool HavePrivateHTMLFlavor( nsIClipboard *clipboard );
   nsresult   ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnichar **aCfcontext);
-  nsresult   InsertHTMLWithContext(const nsAString & aInputString, 
-                                   const nsAString & aContextStr, 
-                                   const nsAString & aInfoStr);
-  nsresult   InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
-                                             const nsAString & aCharset,
-                                             const nsAString & aContextStr,
-                                             const nsAString & aInfoStr);
+  nsresult   DoContentFilterCallback(const nsAString &aFlavor,
+                                     nsIDOMNode **aFragmentAsNode,      
+                                     nsIDOMNode **aFragStartNode,
+                                     PRInt32 *aFragStartOffset,
+                                     nsIDOMNode **aFragEndNode,
+                                     PRInt32 *aFragEndOffset,
+                                     nsIDOMNode **aTargetNode,       
+                                     PRInt32 *aTargetOffset,   
+                                     PRBool *aDoContinue);
   PRBool     IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nsnull);
   nsresult   StripFormattingNodes(nsIDOMNode *aNode, PRBool aOnlyList = PR_FALSE);
-  nsresult   CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
-                                        const nsAString & aInputString,
+  nsresult   CreateDOMFragmentFromPaste(const nsAString & aInputString,
                                         const nsAString & aContextStr,
                                         const nsAString & aInfoStr,
                                         nsCOMPtr<nsIDOMNode> *outFragNode,
@@ -688,8 +702,10 @@ protected:
                            nsCOMPtr<nsIDOMNode> *outNode);
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
                                       nsCOMArray<nsIDOMNode>& outNodeList,
-                                      PRInt32 aRangeStartHint,
-                                      PRInt32 aRangeEndHint);
+                                      nsIDOMNode *aStartNode,
+                                      PRInt32 aStartOffset,
+                                      nsIDOMNode *aEndNode,
+                                      PRInt32 aEndOffset);
   nsresult CreateTagStack(nsVoidArray &aTagStack, nsIDOMNode *aNode);
   void     FreeTagStackStrings(nsVoidArray &tagStack);
   nsresult GetListAndTableParents( PRBool aEnd, 
@@ -806,6 +822,8 @@ protected:
 
 // Data members
 protected:
+
+  nsCOMArray<nsIContentFilter> mContentFilters;
 
   TypeInState*         mTypeInState;
 
