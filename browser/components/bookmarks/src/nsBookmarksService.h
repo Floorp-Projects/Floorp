@@ -88,7 +88,7 @@ protected:
     PRUint32      htmlSize;
     PRInt32       mUpdateBatchNest;
     nsXPIDLString mPersonalToolbarName;
-    nsXPIDLString mHTMLPanelsName;
+    nsXPIDLString mWebPanelsName;
     nsXPIDLString mBookmarksRootName;
     PRBool        mBookmarksAvailable;
     PRBool        mDirty;
@@ -182,7 +182,7 @@ protected:
     nsresult getLocaleString(const char *key, nsString &str);
 
     nsresult LoadBookmarks();
-    nsresult initDatasource();
+    nsresult InitDataSource();
 
     // nsIStreamObserver methods:
     NS_DECL_NSIREQUESTOBSERVER

@@ -108,7 +108,7 @@ nsIRDFResource      *kNC_Icon;
 nsIRDFResource      *kNC_NewBookmarkFolder;
 nsIRDFResource      *kNC_NewSearchFolder;
 nsIRDFResource      *kNC_PersonalToolbarFolder;
-nsIRDFResource      *kNC_HTMLPanelsFolder;
+nsIRDFResource      *kNC_WebPanelsFolder;
 nsIRDFResource      *kNC_ShortcutURL;
 nsIRDFResource      *kNC_URL;
 nsIRDFResource      *kRDF_type;
@@ -133,7 +133,7 @@ nsIRDFResource      *kNC_BookmarkCommand_DeleteBookmarkFolder;
 nsIRDFResource      *kNC_BookmarkCommand_DeleteBookmarkSeparator;
 nsIRDFResource      *kNC_BookmarkCommand_SetNewBookmarkFolder = nsnull;
 nsIRDFResource      *kNC_BookmarkCommand_SetPersonalToolbarFolder;
-nsIRDFResource      *kNC_BookmarkCommand_SetHTMLPanelsFolder;
+nsIRDFResource      *kNC_BookmarkCommand_SetWebPanelsFolder;
 nsIRDFResource      *kNC_BookmarkCommand_SetNewSearchFolder;
 nsIRDFResource      *kNC_BookmarkCommand_Import;
 nsIRDFResource      *kNC_BookmarkCommand_Export;
@@ -165,7 +165,7 @@ static const char kURINC_IEFavoritesRoot[]            = "NC:IEFavoritesRoot";
 static const char kURINC_SystemBookmarksStaticRoot[]  = "NC:SystemBookmarksStaticRoot"; 
 static const char kURINC_NewBookmarkFolder[]          = "NC:NewBookmarkFolder"; 
 static const char kURINC_PersonalToolbarFolder[]      = "NC:PersonalToolbarFolder";
-static const char kURINC_HTMLPanelsFolder[]           = "NC:HTMLPanelsFolder"; 
+static const char kURINC_WebPanelsFolder[]            = "NC:WebPanelsFolder"; 
 static const char kURINC_NewSearchFolder[]            = "NC:NewSearchFolder"; 
 static const char kBookmarkCommand[]                  = "http://home.netscape.com/NC-rdf#command?";
 
@@ -219,8 +219,8 @@ bm_AddRefGlobals()
                           &kNC_NewBookmarkFolder);
         gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_PersonalToolbarFolder),
                           &kNC_PersonalToolbarFolder);
-        gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_HTMLPanelsFolder),
-                          &kNC_HTMLPanelsFolder);
+        gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_WebPanelsFolder),
+                          &kNC_WebPanelsFolder);
         gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_NewSearchFolder),
                           &kNC_NewSearchFolder);
 
@@ -297,8 +297,8 @@ bm_AddRefGlobals()
                           &kNC_BookmarkCommand_SetNewBookmarkFolder);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=setpersonaltoolbarfolder"),
                           &kNC_BookmarkCommand_SetPersonalToolbarFolder);
-        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=sethtmlpanelsfolder"),
-                          &kNC_BookmarkCommand_SetHTMLPanelsFolder);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=setwebpanelsfolder"),
+                          &kNC_BookmarkCommand_SetWebPanelsFolder);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=setnewsearchfolder"),
                           &kNC_BookmarkCommand_SetNewSearchFolder);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=import"),
@@ -352,7 +352,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_NewBookmarkFolder);
         NS_IF_RELEASE(kNC_NewSearchFolder);
         NS_IF_RELEASE(kNC_PersonalToolbarFolder);
-        NS_IF_RELEASE(kNC_HTMLPanelsFolder);
+        NS_IF_RELEASE(kNC_WebPanelsFolder);
         NS_IF_RELEASE(kNC_ShortcutURL);
         NS_IF_RELEASE(kNC_URL);
         NS_IF_RELEASE(kRDF_type);
@@ -377,7 +377,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_BookmarkCommand_DeleteBookmarkSeparator);
         NS_IF_RELEASE(kNC_BookmarkCommand_SetNewBookmarkFolder);
         NS_IF_RELEASE(kNC_BookmarkCommand_SetPersonalToolbarFolder);
-        NS_IF_RELEASE(kNC_BookmarkCommand_SetHTMLPanelsFolder);
+        NS_IF_RELEASE(kNC_BookmarkCommand_SetWebPanelsFolder);
         NS_IF_RELEASE(kNC_BookmarkCommand_SetNewSearchFolder);
         NS_IF_RELEASE(kNC_BookmarkCommand_Import);
         NS_IF_RELEASE(kNC_BookmarkCommand_Export);
@@ -458,7 +458,7 @@ private:
     nsCString                   mIEFavoritesRoot;
     PRBool                      mFoundIEFavoritesRoot;
     PRBool                      mFoundPersonalToolbarFolder;
-    PRBool                      mFoundHTMLPanelsFolder;
+    PRBool                      mFoundWebPanelsFolder;
     PRBool                      mIsImportOperation;
     char*                       mContents;
     PRUint32                    mContentsLen;
@@ -538,9 +538,9 @@ public:
         *foundPersonalToolbarFolder = mFoundPersonalToolbarFolder;
         return NS_OK;
     }
-    nsresult ParserFoundHTMLPanelsFolder(PRBool *foundHTMLPanelsFolder)
+    nsresult ParserFoundWebPanelsFolder(PRBool *foundWebPanelsFolder)
     {
-        *foundHTMLPanelsFolder = mFoundHTMLPanelsFolder;
+        *foundWebPanelsFolder = mFoundWebPanelsFolder;
         return NS_OK;
     }
 };
@@ -577,7 +577,7 @@ static const char kOpenMeta[]      = "<META ";
 static const char kNewBookmarkFolderEquals[]      = "NEW_BOOKMARK_FOLDER=\"";
 static const char kNewSearchFolderEquals[]        = "NEW_SEARCH_FOLDER=\"";
 static const char kPersonalToolbarFolderEquals[]  = "PERSONAL_TOOLBAR_FOLDER=\"";
-static const char kHTMLPanelsFolderEquals[]       = "HTML_PANELS_FOLDER=\"";
+static const char kWebPanelsFolderEquals[]       = "WEB_PANELS_FOLDER=\"";
 
 static const char kNameEquals[]            = "NAME=\"";
 static const char kHREFEquals[]            = "HREF=\"";
@@ -607,7 +607,7 @@ BookmarkParser::Init(nsIFile *aFile, nsIRDFDataSource *aDataSource,
     mDataSource = aDataSource;
     mFoundIEFavoritesRoot = PR_FALSE;
     mFoundPersonalToolbarFolder = PR_FALSE;
-    mFoundHTMLPanelsFolder = PR_FALSE;
+    mFoundWebPanelsFolder = PR_FALSE;
     mIsImportOperation = aIsImportOperation;
 
     nsresult rv;
@@ -1112,7 +1112,7 @@ BookmarkParser::gBookmarkHeaderFieldTable[] =
   { kNewBookmarkFolderEquals,     kURINC_NewBookmarkFolder,              nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kNewSearchFolderEquals,       kURINC_NewSearchFolder,                nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kPersonalToolbarFolderEquals, kURINC_PersonalToolbarFolder,          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
-  { kHTMLPanelsFolderEquals,      kURINC_HTMLPanelsFolder,               nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+  { kWebPanelsFolderEquals,       kURINC_WebPanelsFolder,                nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   // Note: end of table
   { nsnull,                       nsnull,                                nsnull,  nsnull,                         nsnull },
 };
@@ -1224,9 +1224,9 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
     {
         mFoundPersonalToolbarFolder = PR_TRUE;
     }
-    else if (bookmark.get() == kNC_HTMLPanelsFolder)
+    else if (bookmark.get() == kNC_WebPanelsFolder)
     {
-        mFoundHTMLPanelsFolder = PR_TRUE;
+        mFoundWebPanelsFolder = PR_TRUE;
     }
 
     if (bookmark)
@@ -1276,10 +1276,10 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
                       rv = setFolderHint(bookmark, kNC_PersonalToolbarFolder);
                       mFoundPersonalToolbarFolder = PR_TRUE;
                 }
-                else if (field->mProperty == kNC_HTMLPanelsFolder)
+                else if (field->mProperty == kNC_WebPanelsFolder)
                 {
-                      rv = setFolderHint(bookmark, kNC_HTMLPanelsFolder);
-                      mFoundHTMLPanelsFolder = PR_TRUE;
+                      rv = setFolderHint(bookmark, kNC_WebPanelsFolder);
+                      mFoundWebPanelsFolder = PR_TRUE;
                 }
                 else if (field->mProperty)
                 {
@@ -1706,16 +1706,16 @@ nsBookmarksService::Init()
             }
         }
 
-        // determine the name of the HTML panels folder.
+        // determine the name of the web panels folder.
         // get it from the string bundle, then hard-coded default
-        if (mHTMLPanelsName.IsEmpty())
+        if (mWebPanelsName.IsEmpty())
         {
             // rjc note: always try to get the string bundle (see above) before trying this
-            rv = mBundle->GetStringFromName(NS_LITERAL_STRING("html_panels").get(), 
-                                            getter_Copies(mHTMLPanelsName));
-            if (NS_FAILED(rv) || mHTMLPanelsName.IsEmpty()) {
+            rv = mBundle->GetStringFromName(NS_LITERAL_STRING("web_panels").get(), 
+                                            getter_Copies(mWebPanelsName));
+            if (NS_FAILED(rv) || mWebPanelsName.IsEmpty()) {
               // no preference, so fallback to a well-known name
-              mHTMLPanelsName.Assign(NS_LITERAL_STRING("Web Panels"));
+              mWebPanelsName.Assign(NS_LITERAL_STRING("Web Panels"));
             }
         }
     }
@@ -1763,7 +1763,7 @@ nsBookmarksService::Init()
 #endif
     }
 
-    rv = initDatasource();
+    rv = InitDataSource();
     if (NS_FAILED(rv))
         return rv;
 
@@ -3511,8 +3511,8 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
             getLocaleString("SetNewBookmarkFolder", name);
         else if (aSource == kNC_BookmarkCommand_SetPersonalToolbarFolder)
             getLocaleString("SetPersonalToolbarFolder", name);
-        else if (aSource == kNC_BookmarkCommand_SetHTMLPanelsFolder)
-            getLocaleString("SetHTMLPanelsFolder", name);
+        else if (aSource == kNC_BookmarkCommand_SetWebPanelsFolder)
+            getLocaleString("SetWebPanelsFolder", name);
         else if (aSource == kNC_BookmarkCommand_SetNewSearchFolder)
             getLocaleString("SetNewSearchFolder", name);
         else if (aSource == kNC_BookmarkCommand_Import)
@@ -3896,17 +3896,17 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
     }
     if (isBookmarkFolder)
     {
-        nsCOMPtr<nsIRDFResource>    newBookmarkFolder, personalToolbarFolder, htmlPanelsFolder, newSearchFolder;
+        nsCOMPtr<nsIRDFResource>    newBookmarkFolder, personalToolbarFolder, webPanelsFolder, newSearchFolder;
         getFolderViaHint(kNC_NewBookmarkFolder, PR_FALSE, getter_AddRefs(newBookmarkFolder));
         getFolderViaHint(kNC_PersonalToolbarFolder, PR_FALSE, getter_AddRefs(personalToolbarFolder));
-        getFolderViaHint(kNC_HTMLPanelsFolder, PR_FALSE, getter_AddRefs(htmlPanelsFolder));
+        getFolderViaHint(kNC_WebPanelsFolder, PR_FALSE, getter_AddRefs(webPanelsFolder));
         getFolderViaHint(kNC_NewSearchFolder, PR_FALSE, getter_AddRefs(newSearchFolder));
 
         cmdArray->AppendElement(kNC_BookmarkSeparator);
         if (source != newBookmarkFolder.get())      cmdArray->AppendElement(kNC_BookmarkCommand_SetNewBookmarkFolder);
         if (source != newSearchFolder.get())        cmdArray->AppendElement(kNC_BookmarkCommand_SetNewSearchFolder);
         if (source != personalToolbarFolder.get())  cmdArray->AppendElement(kNC_BookmarkCommand_SetPersonalToolbarFolder);
-        if (source != htmlPanelsFolder.get())  cmdArray->AppendElement(kNC_BookmarkCommand_SetHTMLPanelsFolder);
+        if (source != webPanelsFolder.get())  cmdArray->AppendElement(kNC_BookmarkCommand_SetWebPanelsFolder);
     }
 
     // always append a separator last (due to aggregation of commands from multiple datasources)
@@ -4156,7 +4156,7 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
 
     // if not setting a new Personal Toolbar Folder, just assert new type, and then done
 
-    if (objType != kNC_PersonalToolbarFolder && objType != kNC_HTMLPanelsFolder)
+    if (objType != kNC_PersonalToolbarFolder)
     {
         if (NS_SUCCEEDED(rv = mInner->Assert(newSource, kNC_FolderType, objType, PR_TRUE)))
         { }
@@ -4189,29 +4189,6 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
       if (NS_FAILED(rv = mInner->Assert(kNC_PersonalToolbarFolder, kNC_FolderType, objType, PR_TRUE)))
           return rv;
     }
-    else if (objType == kNC_HTMLPanelsFolder) {
-      nsCOMPtr<nsIRDFResource>    newAnonURL;
-      if (NS_FAILED(rv = gRDF->GetAnonymousResource(getter_AddRefs(newAnonURL))))
-          return rv;
-      // Note: use our Change() method, not mInner->Change(), due to Bookmarks magical #URL handling
-      rv = Change(kNC_HTMLPanelsFolder, kNC_URL, kNC_HTMLPanelsFolder, newAnonURL);
-
-
-      // change newSource's URL to be kURINC_PersonalToolbarFolder
-      const char  *newSourceURI = nsnull;
-      if (NS_FAILED(rv = newSource->GetValueConst( &newSourceURI )))  return rv;
-      nsCOMPtr<nsIRDFLiteral>     newSourceLiteral;
-      if (NS_FAILED(rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2(newSourceURI).get(),
-              getter_AddRefs(newSourceLiteral)))) return rv;
-
-      // Note: use our Change() method, not mInner->Change(), due to Bookmarks magical #URL handling
-      if (NS_FAILED(rv = Change(newSource, kNC_URL, newSourceLiteral, kNC_HTMLPanelsFolder)))
-          return rv;
-
-      if (NS_FAILED(rv = mInner->Assert(kNC_HTMLPanelsFolder, kNC_FolderType, objType, PR_TRUE)))
-          return rv;
-    }
-
 
     mDirty = PR_TRUE;
     Flush();
@@ -4264,9 +4241,9 @@ nsBookmarksService::getFolderViaHint(nsIRDFResource *objType, PRBool fallbackFla
         {
             *folder = kNC_PersonalToolbarFolder;
         }
-        else if (objType == kNC_HTMLPanelsFolder)
+        else if (objType == kNC_WebPanelsFolder)
         {
-            *folder = kNC_HTMLPanelsFolder;
+            *folder = kNC_WebPanelsFolder;
         }
     }
 
@@ -4424,9 +4401,9 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
             if (NS_FAILED(rv))  return rv;
             break;
         }
-        else if (aCommand == kNC_BookmarkCommand_SetHTMLPanelsFolder)
+        else if (aCommand == kNC_BookmarkCommand_SetWebPanelsFolder)
         {
-            rv = setFolderHint(src, kNC_HTMLPanelsFolder);
+            rv = setFolderHint(src, kNC_WebPanelsFolder);
             if (NS_FAILED(rv))  return rv;
             break;
         }
@@ -4617,7 +4594,7 @@ nsBookmarksService::ReadBookmarks(PRBool *didLoadBookmarks)
 }
 
 nsresult
-nsBookmarksService::initDatasource()
+nsBookmarksService::InitDataSource()
 {
     // the profile manager might call Readbookmarks() in certain circumstances
     // so we need to forget about any previous bookmarks
@@ -4658,9 +4635,9 @@ nsBookmarksService::initDatasource()
 nsresult
 nsBookmarksService::LoadBookmarks()
 {
-    nsresult    rv;
+    nsresult rv;
 
-    rv = initDatasource();
+    rv = InitDataSource();
     if (NS_FAILED(rv)) return NS_OK;
 
     nsCOMPtr<nsIFile> bookmarksFile;
@@ -4775,35 +4752,38 @@ nsBookmarksService::LoadBookmarks()
         }
 
         PRBool foundPanelsFolder = PR_FALSE;
-        parser.ParserFoundHTMLPanelsFolder(&foundPanelsFolder);
-        // try to ensure that we end up with an HTML panels folder
-        if ((foundPanelsFolder == PR_FALSE) && (!mHTMLPanelsName.IsEmpty()))
+        parser.ParserFoundWebPanelsFolder(&foundPanelsFolder);
+        // try to ensure that we end up with an web panels folder
+        if ((foundPanelsFolder == PR_FALSE) && (!mWebPanelsName.IsEmpty()))
         {
-            nsCOMPtr<nsIRDFLiteral>   panelNameLiteral;
-            gRDF->GetLiteral(mHTMLPanelsName.get(), getter_AddRefs(panelNameLiteral));
+            nsCOMPtr<nsIRDFLiteral> panelNameLiteral;
+            gRDF->GetLiteral(mWebPanelsName.get(), getter_AddRefs(panelNameLiteral));
             nsCOMPtr<nsIRDFContainer> rootContainer(do_CreateInstance(kRDFContainerCID, &rv));
             if (NS_FAILED(rv)) return rv;
             rv = rootContainer->Init(this, kNC_BookmarksRoot);
             if (NS_FAILED(rv)) return rv;
-               
-            nsCOMPtr<nsIRDFResource> webPanels;
-            gRDF->GetResource(NS_LITERAL_CSTRING("NC:WebPanels"), getter_AddRefs(webPanels));
 
-            nsCOMPtr<nsIRDFResource>    newAnonURL;
-            gRDF->GetAnonymousResource(getter_AddRefs(newAnonURL));
-            mInner->Assert(webPanels, kNC_URL, newAnonURL, PR_TRUE);
-
-            rv = mInner->Assert(webPanels, kRDF_type, kNC_Folder, PR_TRUE);
+            rv = gRDFC->MakeSeq(mInner, kNC_WebPanelsFolder, nsnull);
             if (NS_FAILED(rv)) return rv;
 
-            rv = mInner->Assert(webPanels, kNC_Name, panelNameLiteral, PR_TRUE);
+            rv = mInner->Assert(kNC_WebPanelsFolder, kRDF_type, kNC_Folder, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
 
-            rv = rootContainer->AppendElement(webPanels);
+            rv = mInner->Assert(kNC_WebPanelsFolder, kNC_Name, panelNameLiteral, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
 
-            setFolderHint(webPanels, kNC_HTMLPanelsFolder);
+            rv = mInner->Assert(kNC_WebPanelsFolder, kNC_FolderType, kNC_WebPanelsFolder, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = rootContainer->AppendElement(kNC_WebPanelsFolder);
+            if (NS_FAILED(rv)) return rv;
+
+            //setFolderHint(kNC_WebPanelsFolder, kNC_WebPanelsFolder);
+
+            mDirty = PR_TRUE;
+            Flush();
         }
+
     
       // Sets the default bookmarks root name.
       nsCOMPtr<nsIRDFLiteral> brNameLiteral;
@@ -5169,11 +5149,11 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
                     }
-                    if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_HTMLPanelsFolder,
+                    if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_WebPanelsFolder,
                                                                PR_TRUE, &hasType)) && (hasType == PR_TRUE))
                     {
                         rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
-                        rv |= strm->Write(kHTMLPanelsFolderEquals, sizeof(kHTMLPanelsFolderEquals)-1, &dummy);
+                        rv |= strm->Write(kWebPanelsFolderEquals, sizeof(kWebPanelsFolderEquals)-1, &dummy);
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
                     }
