@@ -61,7 +61,7 @@ my $db_pass = "";
 
 do 'localconfig';
 
-use Mysql;
+use DBI;
 
 use Date::Format;               # For time2str().
 use Date::Parse;               # For str2time().
@@ -85,7 +85,7 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-	$::db = Mysql->Connect($db_host, $name, $db_user, $db_pass)
+	$::db = DBI->connect("DBI:mysql:host=$db_host;database=$name", $db_user, $db_pass)
             || die "Can't connect to database server.";
     }
 }
@@ -130,7 +130,8 @@ sub SendSQL {
         $str =~ s/^LOCK TABLES/LOCK TABLES shadowlog WRITE, /i;
     }
     SqlLog($str);
-    $::currentquery = $::db->query($str)
+    $::currentquery = $::db->prepare($str);
+    $::currentquery->execute
 	|| die "$str: " . $::db->errmsg;
     SqlLog("Done");
     if (!$dontshadow && $iswrite && Param("shadowdb")) {
@@ -152,7 +153,7 @@ sub MoreSQLData {
     if (defined @::fetchahead) {
 	return 1;
     }
-    if (@::fetchahead = $::currentquery->fetchrow()) {
+    if (@::fetchahead = $::currentquery->fetchrow_array) {
 	return 1;
     }
     return 0;
@@ -164,7 +165,7 @@ sub FetchSQLData {
 	undef @::fetchahead;
 	return @result;
     }
-    return $::currentquery->fetchrow();
+    return $::currentquery->fetchrow_array;
 }
 
 
