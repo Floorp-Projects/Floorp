@@ -67,6 +67,7 @@ interface nsIPref : nsISupports {
   void StartUp();
   void ReadUserPrefs();
   void ReadUserPrefsFrom(in nsIFileSpec spec);
+  void ResetUserPrefs();
   void ResetPrefs();
   void ShutDown();
 

@@ -1586,8 +1586,8 @@ nsresult nsProfile::LoadNewProfilePrefs()
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
-
-    prefs->ResetPrefs();
+    
+    prefs->ResetUserPrefs();
     prefs->ReadUserPrefs();
 
     return NS_OK;
