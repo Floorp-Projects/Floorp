@@ -34,6 +34,7 @@ require			Exporter;
 use Mac::Types;
 use Mac::Events;
 use Mac::Processes;
+use File::Copy;
 
 @ISA				= qw(Exporter);
 @EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication);
@@ -404,7 +405,7 @@ sub InstallResources($;$;$)
 				
 				if ($copy_files)
 					{
-						print "Implement this if you need it";
+						copy("$source_dir:$file", "$dest_dir:$file");
 					}
 				else
 					{
