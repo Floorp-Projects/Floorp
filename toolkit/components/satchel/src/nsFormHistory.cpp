@@ -645,7 +645,7 @@ nsresult
 nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
                                   const nsAString &aInputValue,
                                   nsIAutoCompleteMdbResult *aPrevResult,
-                                  nsIAutoCompleteMdbResult **aResult)
+                                  nsIAutoCompleteResult **aResult)
 {
   nsresult rv = OpenDatabase(); // lazily ensure that the database is open
   NS_ENSURE_SUCCESS(rv, rv);

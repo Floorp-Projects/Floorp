@@ -274,14 +274,14 @@ var PrivacyPanel = {
 
 function viewCookies() 
 {
-  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
+  window.openDialog("chrome://browser/content/cookieviewer/CookieViewer.xul","_blank",
                     "chrome,resizable=yes", "cookieManager");
 }
 
 function viewSignons() 
 {
-  window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","_blank",
-                    "chrome,resizable=yes", "S");
+    window.openDialog("chrome://passwordmgr/content/passwordManager.xul","_blank",
+                      "chrome,resizable=yes", "8");
 }
 
 function updateBroadcaster(aDisable)

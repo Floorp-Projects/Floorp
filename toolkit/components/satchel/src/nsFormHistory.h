@@ -68,7 +68,7 @@ public:
   static void ReleaseInstance(void);
 
   nsresult AutoCompleteSearch(const nsAString &aInputName, const nsAString &aInputValue,
-                              nsIAutoCompleteMdbResult *aPrevResult, nsIAutoCompleteMdbResult **aNewResult);
+                              nsIAutoCompleteMdbResult *aPrevResult, nsIAutoCompleteResult **aNewResult);
 
   static mdb_column kToken_ValueColumn;
   static mdb_column kToken_NameColumn;

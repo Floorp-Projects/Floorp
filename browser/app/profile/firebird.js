@@ -637,6 +637,7 @@ pref("browser.xul.error_pages.enabled", false);
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
+pref("signon.SignonFileName", "signons.txt");
 
 pref("network.protocol-handler.external.mailto", true); // for mail
 pref("network.protocol-handler.external.news" , true); // for news 
