@@ -142,7 +142,7 @@ install:: $(TARGETS)
 	$(INSTALL) samples/Anieyes.gif $(DIST)/bin/res/samples
 	$(INSTALL) samples/gear1.gif $(DIST)/bin/res/samples
 	$(INSTALL) samples/rock_gra.gif $(DIST)/bin/res/samples
-	$(INSTALL) samples/bg.jpg $(DIST)\bin\res\samples
+	$(INSTALL) samples/bg.jpg $(DIST)/bin/res/samples
 
 clobber::
 	rm -f $(DIST)/bin/viewer.exe
