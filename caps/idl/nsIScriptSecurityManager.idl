@@ -86,7 +86,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     const unsigned long ALLOW_CHROME = 1 << 1;
 
     // Don't allow javascript: (and data:) URLs to load
-    const unsigned long DISALLOW_JAVASCRIPT = 1 << 2;
+    const unsigned long DISALLOW_SCRIPT_OR_DATA = 1 << 2;
 
     /**
      * Check that content from "from" can load "uri".

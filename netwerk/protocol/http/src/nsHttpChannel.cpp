@@ -1778,7 +1778,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     if (securityManager) {
         rv = securityManager->CheckLoadURI(mURI, newURI,
                                            nsIScriptSecurityManager::DISALLOW_FROM_MAIL |
-                                           nsIScriptSecurityManager::DISALLOW_JAVASCRIPT);
+                                           nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA);
         if (NS_FAILED(rv)) return rv;
     }
 
