@@ -1124,54 +1124,6 @@ var BookmarksUtils = {
   },
 
   /////////////////////////////////////////////////////////////////////////////
-  // Returns the container of a given bookmark
-  getParentsOfBookmark: function(aChild)
-  {
-    var arcsIn = BMDS.ArcLabelsIn(aChild);
-    var containerArc;
-    var parents = [];
-    while (arcsIn.hasMoreElements()) {
-      containerArc = arcsIn.getNext();
-      if (RDFCU.IsOrdinalProperty(containerArc)) {
-        var sources = BMDS.GetSources(containerArc, aChild, true);
-        while (sources.hasMoreElements())
-          parents.push(sources.getNext().QueryInterface(kRDFRSCIID));
-      }
-    }
-    return parents;
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Returns the container chain of a given container
-  getParentChain: function(aFolder)
-  {
-    const rRoot = RDF.GetResource("NC:BookmarksRoot");
-    var   chain = [aFolder];
-    var   folder = aFolder;
-    while (true) {
-      var arcsIn = BMDS.ArcLabelsIn(folder);
-      var containerArc;
-      var parent;
-      while (arcsIn.hasMoreElements()) {
-        containerArc = arcsIn.getNext();
-        if (RDFCU.IsOrdinalProperty(containerArc)) {
-          parent = BMDS.GetSources(containerArc, folder, true).getNext()
-                       .QueryInterface(kRDFRSCIID);
-          break;
-        }
-      }
-      if (!parent)
-        return [];
-      if (parent.EqualsNode(rRoot))
-        return chain.reverse();
-      chain.push(parent);
-      folder = parent;
-    }
-    return null; // to avoid a stupid js warning
-  },
-
-
-  /////////////////////////////////////////////////////////////////////////////
   // Returns the container of a given container
   getParentOfContainer: function(aChild)
   {
