@@ -67,7 +67,7 @@ nsresult
 nsComponentManager::GetClassObject(const nsCID &aClass, const nsIID &aIID,
                                    void **aResult)
 {
-    // XXX still in use by nsComponentManagerUtils.h
+    NS_NOTREACHED("nsComponentManager::GetClassObject is deprecated");
 
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
@@ -80,7 +80,7 @@ nsComponentManager::GetClassObjectByContractID(const char *aContractID,
                                                const nsIID &aIID,
                                                void **aResult)
 {
-    // XXX still in use by nsComponentManagerUtils.h
+    NS_NOTREACHED("nsComponentManager::GetClassObjectByContractID is deprecated");
 
     nsCOMPtr<nsIComponentManager> cm;
     nsresult rv = NS_GetComponentManager(getter_AddRefs(cm));
@@ -119,7 +119,7 @@ nsComponentManager::CreateInstance(const nsCID &aClass,
                                    const nsIID &aIID,
                                    void **aResult)
 {
-    // XXX still in use by nsComponentManagerUtils.h
+    NS_NOTREACHED("nsComponentManager::CreateInstance is deprecated");
 
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
@@ -133,7 +133,7 @@ nsComponentManager::CreateInstance(const char *aContractID,
                                    const nsIID &aIID,
                                    void **aResult)
 {
-    // XXX still in use by nsComponentManagerUtils.h
+    NS_NOTREACHED("nsComponentManager::CreateInstance is deprecated");
 
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);

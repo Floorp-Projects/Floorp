@@ -220,7 +220,6 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 // for the dialog
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
 
@@ -5029,7 +5028,8 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
   // Read cached plugins info
   ReadPluginInfo();
 
-  nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
+  nsCOMPtr<nsIComponentManager> compManager;
+  NS_GetComponentManager(getter_AddRefs(compManager));
   if (compManager)
     LoadXPCOMPlugins(compManager);
 
@@ -6508,7 +6508,8 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
   if (NS_FAILED(pluginFile.GetPluginInfo(info)))
     return rv;
 
-  nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
+  nsCOMPtr<nsIComponentManager> compManager;
+  NS_GetComponentManager(getter_AddRefs(compManager));
 
   // finally, create our "plugin tag" and add it to the list
   if (info.fMimeTypeArray) {

@@ -65,6 +65,21 @@ class nsFactoryEntry;
 class nsDll;
 class nsIServiceManager;
 
+#define NS_COMPONENTMANAGER_CID                      \
+{ /* 91775d60-d5dc-11d2-92fb-00e09805570f */         \
+    0x91775d60,                                      \
+    0xd5dc,                                          \
+    0x11d2,                                          \
+    {0x92, 0xfb, 0x00, 0xe0, 0x98, 0x05, 0x57, 0x0f} \
+}
+
+/* keys for registry use */
+extern const char xpcomKeyName[];
+extern const char xpcomComponentsKeyName[];
+extern const char lastModValueName[];
+extern const char fileSizeValueName[];
+extern const char nativeComponentType[];
+extern const char staticComponentType[];
 
 // Predefined loader types. Do not change the numbers.
 // NATIVE should be 0 as it is being used as the first array index.

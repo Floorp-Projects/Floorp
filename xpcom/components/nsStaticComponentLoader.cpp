@@ -42,6 +42,8 @@
 #include NEW_H
 #include <stdio.h>
 
+extern const char staticComponentType[];
+
 struct StaticModuleInfo : public PLDHashEntryHdr {
     nsStaticModuleInfo  info;
     nsCOMPtr<nsIModule> module;

@@ -47,6 +47,7 @@
     {0xa1, 0xf5, 0xc8, 0x24, 0xef, 0xa4, 0x23, 0x1b} }
 
 struct nsModuleComponentInfo;
+class nsIFile;
 
 class nsContentHTTPStartup : public nsIObserver
 {

@@ -88,9 +88,10 @@ RegisterComponents()
   nsIGenericFactory* fact;
 
   // Register the factory for all supporting interfaces. 
-  nsCOMPtr<nsIComponentManager> compMgr = do_GetService(kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIComponentRegistrar> registrar(do_QueryInterface(compMgr));
+  nsCOMPtr<nsIComponentRegistrar> registrar;
+  rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
+  if (NS_FAILED(rv))
+    return rv;
 
   // Register nsQABrowserView
   rv = NS_NewGenericFactory(&fact, gQAEmbeddingModuleViewInfo);

@@ -187,10 +187,10 @@ void XXXNeverCalled()
     NS_CopyUnicodeToNative(str1, str2);
     {
       nsID id;
-      nsComponentManager::CreateInstance(id, nsnull, id, nsnull);
-      nsComponentManager::CreateInstance("", nsnull, id, nsnull);
-      nsComponentManager::GetClassObject(id, id, nsnull);
-      nsComponentManager::GetClassObjectByContractID("", id, nsnull);
+      CallCreateInstance(id, nsnull, id, nsnull);
+      CallCreateInstance("", nsnull, id, nsnull);
+      CallGetClassObject(id, id, nsnull);
+      CallGetClassObjectByContractID("", id, nsnull);
 
       nsServiceManager::GetGlobalServiceManager(nsnull);
     }

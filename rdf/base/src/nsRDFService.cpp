@@ -72,6 +72,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIServiceManager.h"
+#include "nsIFactory.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsWeakReference.h"

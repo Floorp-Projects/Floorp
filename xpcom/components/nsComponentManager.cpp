@@ -2769,7 +2769,6 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
 
     // Normalize proid and classname
     const char *contractID = (aContractID && *aContractID) ? aContractID : nsnull;
-    const char *className = (aClassName && *aClassName) ? aClassName : nsnull;
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING))
     {

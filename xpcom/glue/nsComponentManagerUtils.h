@@ -38,26 +38,35 @@
 #ifndef nsComponentManagerUtils_h__
 #define nsComponentManagerUtils_h__
 
-/*
- * Do not include this file directly.  Instead,
- * |#include "nsIComponentManager.h"|.
- */
+#ifndef nscore_h__
+#include "nscore.h"
+#endif
 
 #ifndef nsCOMPtr_h__
 #include "nsCOMPtr.h"
 #endif
 
-#ifndef nsComponentManagerObsolete_h___
-#include "nsComponentManagerObsolete.h"
-#endif
+class nsIFactory;
 
-#define NS_COMPONENTMANAGER_CID                      \
-{ /* 91775d60-d5dc-11d2-92fb-00e09805570f */         \
-    0x91775d60,                                      \
-    0xd5dc,                                          \
-    0x11d2,                                          \
-    {0x92, 0xfb, 0x00, 0xe0, 0x98, 0x05, 0x57, 0x0f} \
-}
+
+NS_COM_GLUE nsresult
+CallCreateInstance
+  (const nsCID &aClass, nsISupports *aDelegate, const nsIID &aIID,
+   void **aResult);
+
+NS_COM_GLUE nsresult
+CallCreateInstance
+  (const char *aContractID, nsISupports *aDelegate, const nsIID &aIID,
+   void **aResult);
+
+NS_COM_GLUE nsresult
+CallGetClassObject
+  (const nsCID &aClass, const nsIID &aIID, void **aResult);
+
+NS_COM_GLUE nsresult
+CallGetClassObject
+  (const char *aContractID, const nsIID &aIID, void **aResult);
+
 
 class NS_COM nsCreateInstanceByCID : public nsCOMPtr_helper
 {
@@ -223,9 +232,9 @@ CallCreateInstance( const nsCID &aClass,
 {
     NS_PRECONDITION(aDestination, "null parameter");
     
-    return nsComponentManager::CreateInstance(aClass, aDelegate,
-                                              NS_GET_IID(DestinationType),
-                                              NS_REINTERPRET_CAST(void**, aDestination));
+    return CallCreateInstance(aClass, aDelegate,
+                              NS_GET_IID(DestinationType),
+                              NS_REINTERPRET_CAST(void**, aDestination));
 }
 
 template <class DestinationType>
@@ -236,9 +245,9 @@ CallCreateInstance( const nsCID &aClass,
 {
     NS_PRECONDITION(aDestination, "null parameter");
     
-    return nsComponentManager::CreateInstance(aClass, nsnull,
-                                              NS_GET_IID(DestinationType),
-                                              NS_REINTERPRET_CAST(void**, aDestination));
+    return CallCreateInstance(aClass, nsnull,
+                              NS_GET_IID(DestinationType),
+                              NS_REINTERPRET_CAST(void**, aDestination));
 }
 
 template <class DestinationType>
@@ -251,10 +260,10 @@ CallCreateInstance( const char *aContractID,
     NS_PRECONDITION(aContractID, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
     
-    return nsComponentManager::CreateInstance(aContractID, 
-                                              aDelegate,
-                                              NS_GET_IID(DestinationType),
-                                              NS_REINTERPRET_CAST(void**, aDestination));
+    return CallCreateInstance(aContractID, 
+                              aDelegate,
+                              NS_GET_IID(DestinationType),
+                              NS_REINTERPRET_CAST(void**, aDestination));
 }
 
 template <class DestinationType>
@@ -266,9 +275,9 @@ CallCreateInstance( const char *aContractID,
     NS_PRECONDITION(aContractID, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
     
-    return nsComponentManager::CreateInstance(aContractID, nsnull,
-                                              NS_GET_IID(DestinationType),
-                                              NS_REINTERPRET_CAST(void**, aDestination));
+    return CallCreateInstance(aContractID, nsnull,
+                              NS_GET_IID(DestinationType),
+                              NS_REINTERPRET_CAST(void**, aDestination));
 }
 
 template <class DestinationType>
@@ -308,7 +317,7 @@ CallGetClassObject( const nsCID &aClass,
 {
     NS_PRECONDITION(aDestination, "null parameter");
     
-    return nsComponentManager::GetClassObject(aClass,
+    return CallGetClassObject(aClass,
         NS_GET_IID(DestinationType), NS_REINTERPRET_CAST(void**, aDestination));
 }
 
@@ -320,18 +329,8 @@ CallGetClassObject( const char* aContractID,
 {
     NS_PRECONDITION(aDestination, "null parameter");
     
-    return nsComponentManager::GetClassObjectByContractID(aContractID,
+    return CallGetClassObject(aContractID,
         NS_GET_IID(DestinationType), NS_REINTERPRET_CAST(void**, aDestination));
 }
 
-/* keys for registry use */
-extern const char xpcomKeyName[];
-extern const char xpcomComponentsKeyName[];
-extern const char lastModValueName[];
-extern const char fileSizeValueName[];
-extern const char nativeComponentType[];
-extern const char staticComponentType[];
-
 #endif /* nsComponentManagerUtils_h__ */
-
-
