@@ -396,41 +396,10 @@ jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
 {
     JSJavaThreadState *jsj_env;
     char *err_msg;
-    JSContext *cx;
 
     /* Get the per-thread state corresponding to the current Java thread */
     jsj_env = jsj_MapJavaThreadToJSJavaThreadState(jEnv, &err_msg);
     JS_ASSERT(jsj_env);
-    if (!jsj_env)
-	return;
-
-    /* Get the JSContext that we're supposed to use for this Java thread */
-    cx = jsj_env->cx;
-    if (!cx) {
-        /* We called spontaneously into JS from Java, rather than from JS into
-           Java and back into JS.  Invoke a callback to obtain/create a
-           JSContext for us to use. */
-        if (JSJ_callbacks->map_jsj_thread_to_js_context) {
-#ifdef OJI
-            cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env,
-                                                             NULL /* FIXME: What should this argument be ? */
-                                                             jEnv, &err_msg);
-#else
-            cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env,
-                                                             jEnv, &err_msg);
-#endif
-	    JS_ASSERT(cx);
-            if (!cx)
-                return;
-        } else {
-            err_msg = JS_smprintf("Unable to find/create JavaScript execution "
-                                  "context for JNI thread 0x%08x", jEnv);
-	    jsj_LogError(err_msg);
-	    free(err_msg);
-            return;
-        }
-        jsj_env->cx = cx;
-    }
 
     if (java_class_reflections) {
         JSJ_HashTableEnumerateEntries(java_class_reflections,
@@ -501,22 +470,19 @@ reflect_java_methods_and_fields(JSContext *cx,
 
     success = JS_TRUE;  /* optimism */
 
-#ifdef JSJ_THREADSAFE
+#ifdef JSJ_THREAD_SAFE
     PR_EnterMonitor(java_reflect_monitor);
 #endif
 
-    /* See if we raced with another thread to reflect members of this class.
-       If the status is REFLECT_COMPLETE, another thread beat us to it.  If
-       the status is REFLECT_IN_PROGRESS, we've recursively called this
-       function within a single thread.  Either way, we're done. */
+    /* See if we raced with another thread to reflect members of this class */
     if (reflect_statics_only) {
-        if (class_descriptor->static_members_reflected != REFLECT_NO)
+        if (class_descriptor->static_members_reflected)
             goto done;
-        class_descriptor->static_members_reflected = REFLECT_IN_PROGRESS;
+        class_descriptor->static_members_reflected = JS_TRUE;
     } else {
-        if (class_descriptor->instance_members_reflected != REFLECT_NO)
+        if (class_descriptor->instance_members_reflected)
             goto done;
-        class_descriptor->instance_members_reflected = REFLECT_IN_PROGRESS;
+        class_descriptor->instance_members_reflected = JS_TRUE;
     }
     
     if (!jsj_ReflectJavaMethods(cx, jEnv, class_descriptor, reflect_statics_only))
@@ -530,18 +496,16 @@ reflect_java_methods_and_fields(JSContext *cx,
             class_descriptor->num_static_members++;
             member_descriptor = member_descriptor->next;
         }
-        class_descriptor->static_members_reflected = REFLECT_COMPLETE;
     } else {
         member_descriptor = class_descriptor->instance_members;
         while (member_descriptor) {
             class_descriptor->num_instance_members++;
             member_descriptor = member_descriptor->next;
         }
-        class_descriptor->instance_members_reflected = REFLECT_COMPLETE;
     }
 
 done:
-#ifdef JSJ_THREADSAFE
+#ifdef JSJ_THREAD_SAFE
     PR_ExitMonitor(java_reflect_monitor);
 #endif
     return success;
@@ -556,7 +520,7 @@ jsj_GetClassStaticMembers(JSContext *cx,
                           JNIEnv *jEnv,
                           JavaClassDescriptor *class_descriptor)
 {
-    if (class_descriptor->static_members_reflected != REFLECT_COMPLETE)
+    if (!class_descriptor->static_members_reflected)
         reflect_java_methods_and_fields(cx, jEnv, class_descriptor, JS_TRUE);
     return class_descriptor->static_members;
 }
@@ -566,7 +530,7 @@ jsj_GetClassInstanceMembers(JSContext *cx,
                             JNIEnv *jEnv,
                             JavaClassDescriptor *class_descriptor)
 {
-    if (class_descriptor->instance_members_reflected != REFLECT_COMPLETE)
+    if (!class_descriptor->instance_members_reflected)
         reflect_java_methods_and_fields(cx, jEnv, class_descriptor, JS_FALSE);
     return class_descriptor->instance_members;
 }
@@ -651,7 +615,7 @@ JavaMemberDescriptor *
 jsj_LookupJavaClassConstructors(JSContext *cx, JNIEnv *jEnv,
                                 JavaClassDescriptor *class_descriptor)
 {
-    if (class_descriptor->static_members_reflected != REFLECT_COMPLETE)
+    if (!class_descriptor->static_members_reflected)
         reflect_java_methods_and_fields(cx, jEnv, class_descriptor, JS_TRUE);
     return class_descriptor->constructors;
 }
