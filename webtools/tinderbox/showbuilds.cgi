@@ -596,7 +596,7 @@ sub print_javascript {
       margin: -5em 0 0 -5em;
       }
     .who#popup{
-      height: 9em;
+      height: 8em;
       width: 16em;
       }
     .note#popup {
