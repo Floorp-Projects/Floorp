@@ -659,7 +659,7 @@ sub quietly_check_login() {
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
-    if ($addr !~ /$match/) {
+    if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
         print "Content-type: text/html\n\n";
 
         # For security, escape HTML special characters.
@@ -669,8 +669,11 @@ sub CheckEmailSyntax {
         print "The e-mail address you entered\n";
         print "(<b>$addr</b>) didn't match our minimal\n";
         print "syntax checking for a legal email address.\n";
-        print Param('emailregexpdesc');
-        print "<p>Please click <b>back</b> and try again.\n";
+        print Param('emailregexpdesc') . "\n";
+        print "It must also not contain any of these special characters: " .
+              "<tt>\\ ( ) &amp; &lt; &gt; , ; : \" [ ]</tt> " .
+              "or any whitespace.\n";
+        print "<p>Please click <b>Back</b> and try again.\n";
         PutFooter();
         exit;
     }

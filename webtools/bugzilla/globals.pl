@@ -695,6 +695,7 @@ sub DBname_to_id {
 
 sub DBNameToIdAndCheck {
     my ($name, $forceok) = (@_);
+    $name = html_quote($name);
     my $result = DBname_to_id($name);
     if ($result > 0) {
         return $result;

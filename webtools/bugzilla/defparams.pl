@@ -529,14 +529,14 @@ DefParam("expectbigqueries",
          0);
 
 DefParam("emailregexp",
-         'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@, ]*$</tt>, which means "local usernames, no @ allowed.',
+         'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@]*$</tt>, which means "local usernames, no @ allowed.',
          "t",
-         q:^[^@, ]*@[^@, ]*\\.[^@, ]*$:);
+         q:^[^@]*@[^@]*\\.[^@]*$:);
 
 DefParam("emailregexpdesc",
          "This describes in english words what kinds of legal addresses are allowed by the <tt>emailregexp</tt> param.",
          "l",
-         "A legal address must contain exactly one '\@', and at least one '.' after the \@, and may not contain any commas or spaces.");
+         "A legal address must contain exactly one '\@', and at least one '.' after the \@.");
 
 DefParam("emailsuffix",
          "This is a string to append to any email addresses when actually sending mail to that address.  It is useful if you have changed the <tt>emailregexp</tt> param to only allow local usernames, but you want the mail to be delivered to username\@my.local.hostname.",
