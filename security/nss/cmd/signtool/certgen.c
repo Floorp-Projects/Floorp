@@ -425,7 +425,7 @@ sign_cert(CERTCertificate *cert, SECKEYPrivateKey *privk)
   SECItem *result2;
 
   void *dummy;
-  SECOidTag alg;
+  SECOidTag alg = SEC_OID_UNKNOWN;
 
   switch (privk->keyType) 
     {
@@ -439,6 +439,7 @@ sign_cert(CERTCertificate *cert, SECKEYPrivateKey *privk)
 	default:
 		FatalError("Unknown key type");
     }
+  PORT_Assert(alg != SEC_OID_UNKNOWN);
 
   rv = SECOID_SetAlgorithmID (cert->arena, &cert->signature, alg, 0);
 

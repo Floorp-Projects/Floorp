@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.42 2003/01/09 18:15:10 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.43 2003/01/17 02:49:10 wtc%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3486,7 +3486,6 @@ UpdateV7DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
 	case certDBEntryTypeSubject:
 	case certDBEntryTypeContentVersion:
 	case certDBEntryTypeNickname:
-	/*default: */
 	    break;
 
 	case certDBEntryTypeCert:
@@ -3546,6 +3545,8 @@ UpdateV7DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
 						 &smimeEntry.optionsDate);
 	    PORT_FreeArena(smimeEntry.common.arena, PR_FALSE);
 	    smimeEntry.common.arena = NULL;
+	    break;
+	default:
 	    break;
 	}
     } while ( (* updatedb->seq)(updatedb, &key, &data, R_NEXT) == 0 );

@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.38 2002/12/13 01:25:45 nelsonb%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.39 2003/01/17 02:48:55 wtc%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -227,7 +227,6 @@ decode(FILE *out, SECItem *output, SECItem *input,
     if (decodeOptions->contentFile) {
 	/* detached content: grab content file */
 	SECU_FileToItem(&sitem, decodeOptions->contentFile);
-	item = &sitem;
     }
 
     dcx = NSS_CMSDecoder_Start(NULL, 
@@ -273,7 +272,7 @@ decode(FILE *out, SECItem *output, SECItem *input,
 		    goto loser;
 		}
 		digestalgs = NSS_CMSSignedData_GetDigestAlgs(sigd);
-		if (DigestFile (poolp, &digests, item, digestalgs) 
+		if (DigestFile (poolp, &digests, &sitem, digestalgs) 
 		      != SECSuccess) {
 		    SECU_PrintError(progName, 
 		                    "problem computing message digest");
@@ -365,8 +364,8 @@ decode(FILE *out, SECItem *output, SECItem *input,
     }
 
     if (!decodeOptions->suppressContent) {
-	if (!decodeOptions->contentFile) 
-	    item = NSS_CMSMessage_GetContent(cmsg);
+	item = decodeOptions->contentFile ? &sitem :
+	    NSS_CMSMessage_GetContent(cmsg);
 	SECITEM_CopyItem(NULL, output, item);
     }
 
@@ -733,9 +732,6 @@ get_enc_params(struct encryptOptionsStr *encryptOptions)
     SECStatus rv = SECFailure;
     NSSCMSMessage *env_cmsg;
     NSSCMSContentInfo *cinfo;
-    PK11SymKey *bulkkey = NULL;
-    SECOidTag bulkalgtag;
-    int keysize;
     int i, nlevels;
     /*
      * construct an enveloped data message to obtain bulk keys
@@ -768,21 +764,16 @@ get_enc_params(struct encryptOptionsStr *encryptOptions)
 	    /*
 	     * get the symmetric key
 	     */
-	    bulkalgtag = NSS_CMSContentInfo_GetContentEncAlgTag(cinfo);
-	    keysize = NSS_CMSContentInfo_GetBulkKeySize(cinfo);
-	    bulkkey = NSS_CMSContentInfo_GetBulkKey(cinfo);
+	    encryptOptions->bulkalgtag = NSS_CMSContentInfo_GetContentEncAlgTag(cinfo);
+	    encryptOptions->keysize = NSS_CMSContentInfo_GetBulkKeySize(cinfo);
+	    encryptOptions->bulkkey = NSS_CMSContentInfo_GetBulkKey(cinfo);
+	    rv = SECSuccess;
 	    break;
 	}
     }
     if (i == nlevels) {
 	fprintf(stderr, "%s: could not retrieve enveloped data.", progName);
-	goto loser;
     }
-    encryptOptions->bulkalgtag = bulkalgtag;
-    encryptOptions->bulkkey = bulkkey;
-    encryptOptions->keysize = keysize;
-    rv = SECSuccess;
-loser:
     if (env_cmsg)
 	NSS_CMSMessage_Destroy(env_cmsg);
     return rv;
