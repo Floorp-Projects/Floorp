@@ -362,7 +362,7 @@ nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, ns
     aIID = kIDOMMenuListenerIID; 
     *aFlags = NS_EVENT_BITS_MENU_DESTROY;
   }
-  else if (aType == "action") {
+  else if (aType == "command") {
     aIID = kIDOMMenuListenerIID; 
     *aFlags = NS_EVENT_BITS_MENU_ACTION;
   }

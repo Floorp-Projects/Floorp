@@ -31,6 +31,8 @@ class nsIPresContext;
  **/
 class nsIFocusableContent : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IFOCUSABLECONTENT_IID; return iid; }
+
   /**
     * Give focus to the content
     * @param aPresContext the PesContext

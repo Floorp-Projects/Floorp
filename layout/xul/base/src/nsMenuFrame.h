@@ -140,7 +140,7 @@ protected:
   // Examines the key node and builds the accelerator.
   void BuildAcceleratorText(nsString& aAccelString);
 
-  // Called to execute our "onaction" handler.
+  // Called to execute our command handler.
   void Execute();
 
   // Called as a hook just before the menu gets opened.
