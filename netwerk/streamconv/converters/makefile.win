@@ -30,6 +30,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 EXPORTS =                           \
         nsMultiMixedConv.h                   \
         nsFTPDirListingConv.h           \
+	nsHTTPChunkConv.h		\
         $(NULL)
 
 LLIBS= $(LLIBS) \
@@ -55,6 +56,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsFTPDirListingConv.obj       \
         .\$(OBJDIR)\nsConvFactories.obj           \
         .\$(OBJDIR)\mozTXTToHTMLConv.obj \
+	.\$(OBJDIR)\nsHTTPChunkConv.obj  \
         .\$(OBJDIR)\nsUnknownDecoder.obj \
         $(NULL)
 

@@ -25,6 +25,7 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "nsIChannel.h"
+#include "nsISocketTransport.h"
 #include "nsCOMPtr.h"
 #include "nsIStringStream.h"
 #include "nsIStreamListener.h"
@@ -78,6 +79,8 @@ nsHTTPChunkConv::AsyncConvertData (
     // hook ourself up with the receiving listener. 
     mListener = aListener;
     NS_ADDREF (mListener);
+
+    mAsyncConvContext = aCtxt;
 	
     return NS_OK; 
 } 
@@ -175,24 +178,35 @@ nsHTTPChunkConv::OnDataAvailable (
 					// send data upstream
 
 					{
-						nsIInputStream * convertedStream = nsnull; 
-						nsCString convertedString (mChunkBuffer);
-						nsISupports	* convertedStreamSup = nsnull;
+                        if (mChunkBufferLength > 0)
+                        {
+						    nsIInputStream * convertedStream = nsnull; 
+						    nsCString convertedString (mChunkBuffer);
+						    nsISupports	* convertedStreamSup = nsnull;
 
-						rv = NS_NewStringInputStream (&convertedStreamSup, convertedString);
-						if (NS_FAILED (rv)) 
-							return rv;
+						    rv = NS_NewStringInputStream (&convertedStreamSup, convertedString);
+						    if (NS_FAILED (rv)) 
+							    return rv;
 
-						rv = convertedStreamSup -> QueryInterface (NS_GET_IID(nsIInputStream), (void**)&convertedStream);
-						NS_RELEASE (convertedStreamSup);
+						    rv = convertedStreamSup -> QueryInterface (NS_GET_IID(nsIInputStream), (void**)&convertedStream);
+						    NS_RELEASE (convertedStreamSup);
  
-						if (NS_FAILED (rv)) 
-							return rv;
+						    if (NS_FAILED (rv)) 
+							    return rv;
 
-						rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, mChunkBufferLength);
+						    rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, mChunkBufferLength);
 
-						if (NS_FAILED (rv))
-							return rv;
+						    if (NS_FAILED (rv))
+							    return rv;
+                        }
+                        else
+                        {
+                            nsresult rv;
+                            nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (mAsyncConvContext, &rv);
+
+                            if (NS_SUCCEEDED (rv))
+    							trans -> SetBytesExpected (0);
+                        }
 
 						mState = CHUNK_STATE_INIT;
 				    
@@ -231,8 +245,13 @@ nsHTTPChunkConv::OnDataAvailable (
 					streamLen--;
 					if (mState == CHUNK_STATE_LF)
 					{
-						mChunkBuffer = (char * )nsAllocator::Alloc (mChunkBufferLength + 1);
-						mState = CHUNK_STATE_DATA;
+                        if (mChunkBufferLength > 0)
+                        {
+						    mChunkBuffer = (char * )nsAllocator::Alloc (mChunkBufferLength + 1);
+						    mState = CHUNK_STATE_DATA;
+                        }
+                        else
+    						mState = CHUNK_STATE_CR_FINAL;
 					}
 					else
 						mState = CHUNK_STATE_FINAL;
@@ -266,15 +285,14 @@ nsHTTPChunkConv::OnDataAvailable (
 				case CHUNK_STATE_DATA:
 					if (mChunkBufferLength - mChunkBufferPos <= streamLen)
 					{
-						// entire chunk
-						rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], mChunkBufferLength - mChunkBufferPos, &rl);
-						if (NS_FAILED (rv))
-							return rv;
+    				    // entire chunk
+					    rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], mChunkBufferLength - mChunkBufferPos, &rl);
+					    if (NS_FAILED (rv))
+						    return rv;
 
-						mChunkBufferPos += rl;
-						mChunkBuffer[mChunkBufferPos++] = 0;
-						streamLen -= rl;
-
+    					mChunkBufferPos += rl;
+       					mChunkBuffer[mChunkBufferPos++] = 0;
+	    				streamLen -= rl;
 						mState = CHUNK_STATE_CR_FINAL;
 					}
 					else

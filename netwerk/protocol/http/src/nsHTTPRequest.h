@@ -91,8 +91,8 @@ public:
     */
     nsresult            Clone(const nsHTTPRequest* *o_Copy) const;
                         
-    nsresult            SetHTTPVersion(HTTPVersion i_Version);
-    nsresult            GetHTTPVersion(HTTPVersion* o_Version);
+    nsresult            SetHTTPVersion (PRUint32   i_Version);
+    nsresult            GetHTTPVersion (PRUint32 * o_Version);
 
     nsresult            SetMethod(HTTPMethod i_Method);
     HTTPMethod          GetMethod(void) const;
@@ -142,7 +142,7 @@ protected:
 
     HTTPMethod                  mMethod;
     nsCOMPtr<nsIURL>            mURI;
-    HTTPVersion                 mVersion;
+    PRUint32					mVersion;
     nsCOMPtr<nsIChannel>        mTransport;
     nsHTTPChannel*              mConnection;
 

@@ -26,4 +26,10 @@
 interface nsISocketTransport : nsISupports 
 {
 	attribute boolean reuseConnection;
+
+	/**
+	 * Is used to tell the channel to stop reading data after a certain point;
+	 * needed by HTTP/1.1
+	 */
+	attribute long bytesExpected;
 };

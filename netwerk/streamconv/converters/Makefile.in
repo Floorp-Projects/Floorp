@@ -38,6 +38,7 @@ CPPSRCS		= \
 		nsConvFactories.cpp \
 		mozTXTToHTMLConv.cpp \
 		nsUnknownDecoder.cpp \
+		nsHTTPChunkConv.cpp \
 		$(NULL)
 
 EXPORTS		= \

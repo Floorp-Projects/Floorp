@@ -114,6 +114,8 @@ protected:
 
     nsCOMPtr<nsIInputStream>    mDataStream;
     PRUint32                    mBytesReceived; 
+	PRBool                      mChunkConverterPushed;
+    PRInt32                     mBodyBytesReceived;
 };
 
 

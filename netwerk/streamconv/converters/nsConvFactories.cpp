@@ -26,12 +26,14 @@
 
 #include "nsFTPDirListingConv.h"
 #include "nsMultiMixedConv.h"
+#include "nsHTTPChunkConv.h"
 #include "mozTXTToHTMLConv.h"
 #include "nsUnknownDecoder.h"
 
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
-nsresult NS_NewMultiMixedConv(nsMultiMixedConv** result);
-nsresult MOZ_NewTXTToHTMLConv(mozTXTToHTMLConv** result);
+nsresult NS_NewMultiMixedConv (nsMultiMixedConv** result);
+nsresult MOZ_NewTXTToHTMLConv (mozTXTToHTMLConv** result);
+nsresult NS_NewHTTPChunkConv  (nsHTTPChunkConv ** result);
 
 
 static NS_IMETHODIMP                 
@@ -94,6 +96,30 @@ CreateNewTXTToHTMLConvFactory(nsISupports* aOuter, REFNSIID aIID, void **aResult
     }   
     mozTXTToHTMLConv* inst = nsnull;
     nsresult rv = MOZ_NewTXTToHTMLConv(&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;              
+}
+
+static NS_IMETHODIMP                 
+CreateNewHTTPChunkConvFactory (nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+    nsHTTPChunkConv* inst = nsnull;
+    nsresult rv = NS_NewHTTPChunkConv (&inst);
     if (NS_FAILED(rv)) {                                             
         *aResult = nsnull;                                           
         return rv;                                                   
@@ -172,6 +198,19 @@ static nsModuleComponentInfo components[] =
       NS_ISTREAMCONVERTER_KEY "?from=application/x-unknown-content-type?to=*/*",
       CreateNewUnknownDecoderFactory
     },
+
+    { "HttpChunkConverter", 
+      NS_HTTPCHUNKCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=chunked?to=unchunked",
+      CreateNewHTTPChunkConvFactory
+    },
+
+    { "HttpChunkConverter", 
+      NS_HTTPCHUNKCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=unchunked?to=chunked",
+      CreateNewHTTPChunkConvFactory
+    },
+
 };
 
 NS_IMPL_NSGETMODULE("nsConvModule", components);
