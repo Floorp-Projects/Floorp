@@ -75,8 +75,7 @@ nsIRDFService* gRDFService;
 
 NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
-nsDownloadManager::nsDownloadManager() : mCurrDownloadItems(nsnull),
-                                         mMustUpdateUI(PR_FALSE)
+nsDownloadManager::nsDownloadManager() : mCurrDownloadItems(nsnull) 
 {
   NS_INIT_ISUPPORTS();
   NS_INIT_REFCNT();
@@ -140,8 +139,27 @@ nsresult
 nsDownloadManager::NotifyDownloadEnded(const char* aKey)
 {
   nsCStringKey key(aKey);
-  if (mCurrDownloadItems->Exists(&key))
+  if (mCurrDownloadItems->Exists(&key)) {
+    DownloadItem* item = NS_STATIC_CAST(DownloadItem*, mCurrDownloadItems->Get(&key));
+    PRInt32 percentComplete;
+    nsCOMPtr<nsIRDFResource> res;
+    nsCOMPtr<nsIRDFNode> oldTarget;
+    gRDFService->GetResource(aKey, getter_AddRefs(res));
+    item->GetPercentComplete(&percentComplete);
+    nsresult rv = GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFInt> percent;
+    rv = gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(percent));
+    if (NS_FAILED(rv)) return rv;
+
+    if (oldTarget)
+      rv = Change(res, gNC_ProgressPercent, oldTarget, percent);
+    else
+      rv = Assert(res, gNC_ProgressPercent, percent, PR_TRUE);
+
     mCurrDownloadItems->Remove(&key);
+  }
 
   return NS_OK;
 }
@@ -191,6 +209,65 @@ nsDownloadManager::GetDownloadsContainer(nsIRDFContainer** aResult)
   *aResult = ctr;
   NS_IF_ADDREF(*aResult);
 
+  return rv;
+}
+
+nsresult
+nsDownloadManager::AssertProgressInfo()
+{
+  // get the downloads container
+  nsCOMPtr<nsIRDFContainer> downloads;
+  nsresult rv = GetDownloadsContainer(getter_AddRefs(downloads));
+  if (NS_FAILED(rv)) return rv;
+
+  // get the container's elements (nsIRDFResource's)
+  nsCOMPtr<nsISimpleEnumerator> items;
+  rv = downloads->GetElements(getter_AddRefs(items));
+  if (NS_FAILED(rv)) return rv;
+
+  if (!mCurrDownloadItems)
+    mCurrDownloadItems = new nsHashtable();
+
+  nsCOMPtr<nsISupports> supports;
+  nsCOMPtr<nsIRDFResource> res;
+  nsCOMPtr<nsIRDFInt> percent;
+  nsCOMPtr<nsIDownloadProgressListener> listener;
+  nsCOMPtr<nsIRDFNode> oldTarget;
+  char* id;
+  PRInt32 percentComplete;
+
+  // enumerate the resources, use their ids to retrieve the corresponding
+  // nsIDownloadItems from the hashtable (if they don't exist, the download isn't
+  // a current transfer), get the items' progress information,
+  // and assert it into the graph so we can show it in the UI
+
+  PRBool moreElements;
+  items->HasMoreElements(&moreElements);
+  for( ; moreElements; items->HasMoreElements(&moreElements)) {
+    items->GetNext(getter_AddRefs(supports));
+    res = do_QueryInterface(supports);
+    res->GetValue(&id);
+    nsCStringKey key(id);
+    if (mCurrDownloadItems->Exists(&key)) {
+      nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
+      if (!item) continue; // must be a finished download; don't need to update ui
+
+      // update percentage
+      item->GetPercentComplete(&percentComplete);
+      rv = GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
+      if (NS_FAILED(rv)) continue;
+
+      rv = gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(percent));
+      if (NS_FAILED(rv)) continue;
+
+      if (oldTarget)
+        rv = Change(res, gNC_ProgressPercent, oldTarget, percent);
+      else
+        rv = Assert(res, gNC_ProgressPercent, percent, PR_TRUE);
+
+      if (NS_FAILED(rv)) continue;
+    }
+  }
   return rv;
 }
 
@@ -315,7 +392,6 @@ nsDownloadManager::CancelDownload(const char* aKey)
   nsCStringKey key(aKey);
   if (mCurrDownloadItems->Exists(&key)) {
     nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
-    mCurrDownloadItems->Remove(&key);
 
     // if a persist was provided, we can do the cancel ourselves.
     nsCOMPtr<nsIWebBrowserPersist> persist;
@@ -330,39 +406,44 @@ nsDownloadManager::CancelDownload(const char* aKey)
     item->GetObserver(getter_AddRefs(observer));
     if (observer)
       return observer->Observe(item, "oncancel", nsnull);
+    mCurrDownloadItems->Remove(&key);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDownloadManager::Open(nsIDOMWindowInternal* aOwnerWindow)
+nsDownloadManager::Open(nsIDOMWindow* aParent)
 {
+
+  // first assert new progress info so the ui is correctly updated
+  AssertProgressInfo();
+  
   // if we ever have the capability to display the UI of third party dl managers,
   // we'll open their UI here instead.
   nsCOMPtr<nsIDOMWindow> newWindow;
-  nsresult rv = aOwnerWindow->OpenDialog(NS_LITERAL_STRING(DOWNLOAD_MANAGER_URL), 
-                                           NS_LITERAL_STRING("_blank"),
-                                           NS_LITERAL_STRING("chrome,titlebar,dependent,centerscreen"),
-                                           nsnull, getter_AddRefs(newWindow));
+  nsCOMPtr<nsIDOMWindowInternal> internalWin = do_QueryInterface(aParent);
+  nsresult rv = internalWin->OpenDialog(NS_LITERAL_STRING(DOWNLOAD_MANAGER_URL), 
+                                        NS_LITERAL_STRING("_blank"),
+                                        NS_LITERAL_STRING("chrome,titlebar,dependent,centerscreen"),
+                                        nsnull, getter_AddRefs(newWindow));
 
   if (NS_FAILED(rv)) return rv;
 
-  // whether or not mDocument is null is not a sufficient flag,
-  // because we may be using a third party download manager that
+  // XXX whether or not mDocument is null is not a sufficient flag,
+  // because in the future we may support using a third party download manager that
   // doesn't use our architecture
-  mMustUpdateUI = PR_TRUE;
 
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(newWindow);
   if (!target) return NS_ERROR_FAILURE;
   
   rv = target->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
   if (NS_FAILED(rv)) return rv;
-  
+ 
   return target->AddEventListener(NS_LITERAL_STRING("unload"), this, PR_FALSE);
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OpenProgressDialogFor(const char* aKey, nsIDOMWindowInternal* aOwnerWindow)
+nsDownloadManager::OpenProgressDialogFor(const char* aKey, nsIDOMWindow* aParent)
 {
   nsresult rv;
   nsCStringKey key(aKey);
@@ -370,6 +451,7 @@ nsDownloadManager::OpenProgressDialogFor(const char* aKey, nsIDOMWindowInternal*
     return NS_ERROR_FAILURE;
     
   DownloadItem* item = NS_STATIC_CAST(DownloadItem*, mCurrDownloadItems->Get(&key));
+  if (!item) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIProgressDialog> dialog(do_CreateInstance("@mozilla.org/progressdialog;1", &rv));
   if (NS_FAILED(rv)) return rv;
@@ -377,14 +459,13 @@ nsDownloadManager::OpenProgressDialogFor(const char* aKey, nsIDOMWindowInternal*
   nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(dialog);
   item->SetDialogListener(listener);
   
-  return dialog->Open(aOwnerWindow, nsnull);
+  return dialog->Open(aParent, nsnull);
 }
 
 NS_IMETHODIMP
 nsDownloadManager::OnClose()
 {
   mDocument = nsnull;
-  mMustUpdateUI = PR_FALSE;
   return NS_OK;
 }
 
@@ -407,7 +488,6 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
   mDocument = do_QueryInterface(targetNode);
-
   // get the downloads container
   nsCOMPtr<nsIRDFContainer> downloads;
   rv = GetDownloadsContainer(getter_AddRefs(downloads));
@@ -422,17 +502,9 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
     mCurrDownloadItems = new nsHashtable();
 
   nsCOMPtr<nsISupports> supports;
-  nsCOMPtr<nsIRDFResource> res;
-  nsCOMPtr<nsIRDFInt> percent;
   nsCOMPtr<nsIDownloadProgressListener> listener;
-  nsCOMPtr<nsIRDFNode> oldTarget;
+  nsCOMPtr<nsIRDFResource> res;
   char* id;
-  PRInt32 percentComplete;
-
-  // enumerate the resources, use their ids to retrieve the corresponding
-  // nsIDownloadItems from the hashtable (if they don't exist, the download isn't
-  // a current transfer), get the items' progress information,
-  // and assert it into the graph so we can show it in the UI
 
   PRBool moreElements;
   items->HasMoreElements(&moreElements);
@@ -442,35 +514,16 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
     res->GetValue(&id);
     nsCStringKey key(id);
     if (mCurrDownloadItems->Exists(&key)) {
-      nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
-      if (!item) continue; // must be a finished download; don't need to update ui
-
-      // update percentage
-      item->GetPercentComplete(&percentComplete);
-      rv = GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
-      if (NS_FAILED(rv)) continue;
-
-      rv = gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(percent));
-      if (NS_FAILED(rv)) continue;
-
-      if (oldTarget)
-        rv = Change(res, gNC_ProgressPercent, oldTarget, percent);
-      else
-        rv = Assert(res, gNC_ProgressPercent, percent, PR_TRUE);
-
-      if (NS_FAILED(rv)) continue;
- 
-      DownloadItem* downloadItem = NS_STATIC_CAST(DownloadItem*, item);
+      DownloadItem* downloadItem = NS_STATIC_CAST(DownloadItem*, mCurrDownloadItems->Get(&key));
       if (!downloadItem) continue;
 
       downloadItem->GetInternalListener(getter_AddRefs(listener));
       if (listener) {
         listener->SetDocument(mDocument);
-        listener->SetDownloadItem(item);
+        listener->SetDownloadItem(NS_STATIC_CAST(nsIDownloadItem*, downloadItem));
       }
     }
   }
-
   return NS_OK;
 }
 
@@ -874,7 +927,7 @@ NS_IMETHODIMP
 DownloadItem::GetTarget(nsILocalFile** aTarget)
 {
   *aTarget = mTarget;
-  NS_ADDREF(*aTarget);
+  NS_IF_ADDREF(*aTarget);
   return NS_OK;
 }
 
@@ -889,7 +942,7 @@ NS_IMETHODIMP
 DownloadItem::GetSource(nsIURI** aSource)
 {
   *aSource = mSource;
-  NS_ADDREF(*aSource);
+  NS_IF_ADDREF(*aSource);
   return NS_OK;
 }
 
@@ -925,7 +978,7 @@ NS_IMETHODIMP
 DownloadItem::GetListener(nsIWebProgressListener** aListener)
 {
   *aListener = mListener;
-  NS_ADDREF(*aListener);
+  NS_IF_ADDREF(*aListener);
   return NS_OK;
 }
 
@@ -940,7 +993,7 @@ nsresult
 DownloadItem::GetInternalListener(nsIDownloadProgressListener** aInternalListener)
 {
   *aInternalListener = mInternalListener;
-  NS_ADDREF(*aInternalListener);
+  NS_IF_ADDREF(*aInternalListener);
   return NS_OK;
 }
 
@@ -955,7 +1008,7 @@ NS_IMETHODIMP
 DownloadItem::GetPersist(nsIWebBrowserPersist** aPersist)
 {
   *aPersist = mPersist;
-  NS_ADDREF(*aPersist);
+  NS_IF_ADDREF(*aPersist);
   return NS_OK;
 }
 
@@ -970,6 +1023,6 @@ NS_IMETHODIMP
 DownloadItem::GetObserver(nsIObserver** aObserver)
 {
   *aObserver = mObserver;
-  NS_ADDREF(*aObserver);
+  NS_IF_ADDREF(*aObserver);
   return NS_OK;
 }
