@@ -193,6 +193,11 @@ NS_IMETHODIMP nsHTMLEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSe
   return nsTextEditor::SelectPrevious(aIncrement, aExtendSelection);
 }
 
+NS_IMETHODIMP nsHTMLEditor::SelectAll()
+{
+  return nsTextEditor::SelectAll();
+}
+
 NS_IMETHODIMP nsHTMLEditor::ScrollUp(nsIAtom *aIncrement)
 {
   return nsTextEditor::ScrollUp(aIncrement);

@@ -68,6 +68,7 @@ public:
   NS_IMETHOD MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
   NS_IMETHOD SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0; 
   NS_IMETHOD SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD SelectAll()=0;
   NS_IMETHOD ScrollUp(nsIAtom *aIncrement)=0;
   NS_IMETHOD ScrollDown(nsIAtom *aIncrement)=0;
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
