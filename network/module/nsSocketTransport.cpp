@@ -382,7 +382,20 @@ nsresult nsSocketTransport::CloseCurrentConnection()
 		rv = NS_NewINetService(&pNetService, NULL);
 		if (pNetService)
 		{
-			rv = pNetService->InterruptStream(m_url);
+            // hmmm...if the underlying transport was a file socket,
+            // then we appear to be interrupting the stream twice:
+            // once by mkfile when it is done reading in the file
+            // and a second time when the protocol closes the transport.
+            // (which is how we get here). So if we are a file
+            // transport, we aren't going to interrupt the stream
+            // because it already has been interrupted. I'd like
+            // to find a cleaner way to do this (such as allowing
+            // you to safely interrupt the stream again) but I'm
+            // not sure how to do that yet. This hack is less
+            // risky...
+
+            if (!m_isFileConnection)
+                rv = pNetService->InterruptStream(m_url);
 			NS_RELEASE(pNetService);
 		}
 		
