@@ -35,63 +35,95 @@ EXPORT_DIRS	= $(BUILD_MODULE_DEP_DIRS)
 
 else
 
-DIRS		= config build
+#
+# And now for something completely different...
+# Divide the default build into tiers. 
+# Tiers must be defined on module boundaries 
+#
+default: 
+	$(MAKE) nspr
+	$(MAKE) tier_0
+	$(MAKE) tier_1
+	$(MAKE) tier_9
 
+# Make sure that the existing rulesets work
+DIRS = $(NSPRPUB_DIR) $(tier_0_dirs) $(tier_1_dirs) $(tier_9_dirs)
+
+#
+# tier 0 - base build config dirs
+# 
+tier_0_dirs = \
+	config \
+	build \
+	include \
+	$(NULL)
+
+#
+# tier 1 - base libraries
+# 
+tier_1_dirs = js
+
+# MacOSX needs to build lib for MoreFiles before xpcom
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+tier_1_dirs += lib/mac/MoreFiles
+endif
+
+# intl should not be in here - it's just temporary until
+# xpconnect's dependency on intl is repaired - see bug 106130
+tier_9_dirs += \
+	modules/libreg \
+	string \
+	xpcom \
+	intl \
+	$(NULL)
+
+ifndef MOZ_NATIVE_ZLIB
+tier_9_dirs	+= modules/zlib
+endif
+
+# Linux and Solaris installer needs standalone libjar, hence standalone zlib
+ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
+tier_9_dirs	+= modules/zlib/standalone
+endif
+
+tier_9_dirs	+= \
+	modules/libjar \
+	$(NULL)
+
+#
+# tier 9 - mozilla application
+#
 ifdef MOZ_JAVA_SUPPLEMENT
-DIRS += 			\
+tier_9_dirs += 			\
   java/util			\
   java/webclient		\
   $(NULL)
 endif
 
-# boehm needs to be built before XPCOM
-ifdef GC_LEAK_DETECTOR
-DIRS += gc/boehm
+ifndef MOZ_NATIVE_JPEG
+tier_9_dirs	+= jpeg
 endif
 
-DIRS	+= $(NSPRPUB_DIR)
-
-# MacOSX needs to build lib for MoreFiles before xpcom
-ifeq ($(OS_ARCH),Darwin)
-DIRS           += lib/mac/MoreFiles
-endif
-
-# intl should not be in here - it's just temporary until
-# xpconnect's dependency on intl is repaired - see bug 106130
-DIRS		+= dbm modules/libreg js string xpcom intl js/src/xpconnect
+tier_9_dirs	+= dbm js/src/xpconnect
 
 ifdef MOZ_OJI
-DIRS		+= js/src/liveconnect
+tier_9_dirs	+= js/src/liveconnect
 endif
 
 ifdef MOZ_JSDEBUGGER
-DIRS		+= js/jsd
-endif
-
-ifndef MOZ_NATIVE_ZLIB
-DIRS		+= modules/zlib
-endif
-
-ifndef MOZ_NATIVE_JPEG
-DIRS		+= jpeg
+tier_9_dirs	+= js/jsd
 endif
 
 ifdef MOZ_ENABLE_XLIB
-DIRS           += gfx/src/xlibrgb widget/src/xlibxtbin
+tier_9_dirs	+= gfx/src/xlibrgb widget/src/xlibxtbin
 endif
 
 ifdef MOZ_ENABLE_GTK
-DIRS           += widget/src/gtksuperwin widget/src/gtkxtbin
+tier_9_dirs	+= widget/src/gtksuperwin widget/src/gtkxtbin
 endif
 
-# Linux and Solaris installer needs standalone libjar, hence standalone zlib
-ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
-DIRS		+= modules/zlib/standalone
-endif
-
-DIRS		+= \
+tier_9_dirs	+= \
 		widget/timer \
-		include \
 		modules/libutil \
 		netwerk \
 		modules/mpfilelocprovider \
@@ -99,7 +131,6 @@ DIRS		+= \
 		modules/libpref \
 		modules/libimg \
 		modules/oji \
-		modules/libjar \
 		caps \
 		rdf \
 		expat \
@@ -124,57 +155,55 @@ DIRS		+= \
 		$(NULL)
 
 ifdef ACCESSIBILITY
-DIRS    += accessible
+tier_9_dirs    += accessible
 endif
 
 # This must preceed xpfe
 ifdef MOZ_JPROF
-DIRS        += tools/jprof
+tier_9_dirs        += tools/jprof
 endif
 
-DIRS		+= xpfe
-
-DIRS		+= xpinstall
+tier_9_dirs	+= xpfe xpinstall
 
 ifdef MOZ_PSM
-DIRS		+= security/manager
+tier_9_dirs	+= security/manager
 endif
 
 ifdef MOZ_LDAP_XPCOM
-DIRS	+=	directory/c-sdk/ldap directory/xpcom
+tier_9_dirs	+= directory/c-sdk/ldap directory/xpcom
 endif
 
 ifdef MOZ_EXTENSIONS
-DIRS		+= extensions
+tier_9_dirs	+= extensions
 endif
 
 ifdef MOZ_MAIL_NEWS
-DIRS		+= mailnews
-endif
-
-ifdef MOZ_LEAKY
-DIRS        += tools/leaky
-endif
-
-ifdef ENABLE_TESTS
-DIRS		+= xpcom/tests
-endif
-
-ifdef NS_TRACE_MALLOC
-DIRS		+= tools/trace-malloc
-endif
-
-DIRS	+= l10n
-
-ifneq (,$(MOZ_STATIC_COMPONENTS)$(MOZ_META_COMPONENTS))
-DIRS   += modules/staticmod
+tier_9_dirs	+= mailnews
 endif
 
 ifdef MOZ_CALENDAR
-DIRS	+= calendar
+tier_9_dirs	+= calendar
 endif
 
-DIRS	+= xpfe/bootstrap
+ifdef MOZ_LEAKY
+tier_9_dirs        += tools/leaky
+endif
+
+ifdef ENABLE_TESTS
+tier_9_dirs	+= xpcom/tests
+endif
+
+ifdef NS_TRACE_MALLOC
+tier_9_dirs	+= tools/trace-malloc
+endif
+
+tier_9_dirs	+= l10n
+
+ifneq (,$(MOZ_STATIC_COMPONENTS)$(MOZ_META_COMPONENTS))
+tier_9_dirs   += modules/staticmod
+endif
+
+tier_9_dirs	+= xpfe/bootstrap
 
 endif # BUILD_MODULES == all
 
@@ -192,6 +221,30 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
 
 include $(topsrcdir)/config/rules.mk
 
+tier_%: 
+	@echo "$@: $($@_dirs)"
+	@$(EXIT_ON_ERROR) \
+	for d in $($@_dirs); do $(UPDATE_TITLE) \
+		$(MAKE) -C $$d export; \
+	done ; \
+	$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include ;\
+	for d in $($@_dirs); do $(UPDATE_TITLE) \
+		$(MAKE) -C $$d install; \
+	done
+#
+# Individual modules
+#
+boehm:
+ifdef GC_LEAK_DETECTOR
+	$(MAKE) -C gc/boehm
+endif
+
+nspr: boehm
+ifdef NSPRPUB_DIR
+	$(MAKE) -C $(NSPRPUB_DIR)
+endif
+
+# For modules.mk standalone build
 export::
 	+$(LOOP_OVER_EXPORT_DIRS)
 
@@ -201,4 +254,5 @@ export::
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	rm -f unallmakefiles $(DIST_GARBAGE)
+
 
