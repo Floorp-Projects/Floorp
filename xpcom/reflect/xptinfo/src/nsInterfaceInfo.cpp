@@ -379,10 +379,17 @@ nsInterfaceInfo::GetLengthIsArgNumberForParam(uint16 methodIndex,
 void
 nsInterfaceInfo::print(FILE *fd)
 {
+    if (this == NULL) {
+        fprintf(fd, "No record!!\n");
+        return;
+    }
+
+    const char *name_space = this->mInterfaceRecord->name_space;
+
     fprintf(fd, "iid: %s name: %s name_space: %s\n",
             this->mInterfaceRecord->iid.ToString(),
             this->mInterfaceRecord->name,
-            this->mInterfaceRecord->name_space);
+            (name_space) ? name_space : "(none)");
     if (mParent != NULL) {
         fprintf(fd, "parent:\n\t");
         this->mParent->print(fd);

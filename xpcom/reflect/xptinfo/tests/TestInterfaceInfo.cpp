@@ -82,7 +82,13 @@ int main (int argc, char **argv) {
 #ifdef DEBUG
     ((nsInterfaceInfo *)info5)->print(stderr);
 #endif
-    
+
+    // XXX: nsIServiceManager is no more; what do we test with?
+    if (info5 == NULL) {
+        fprintf(stderr, "\nNo nsIServiceManager; cannot continue.\n");
+        return 1;
+    }
+
     uint16 methodcount;
     info5->GetMethodCount(&methodcount);
     const nsXPTMethodInfo *mi;

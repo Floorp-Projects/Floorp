@@ -27,6 +27,8 @@
 #include "nsIInterfaceInfoManager.h"
 #include "nsHashtable.h"
 
+#include "nsCOMPtr.h"
+
 #include "xpt_struct.h"
 #include "nsInterfaceInfo.h"
 
@@ -70,7 +72,7 @@ private:
     // mapping between IIDs and records.
     nsHashtable *IIDTable;
 
-    nsIAllocator *allocator;
+    nsCOMPtr<nsIAllocator> allocator;
     PRBool ctor_succeeded;
 };
 
