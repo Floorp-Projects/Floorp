@@ -726,7 +726,7 @@ PK11_HandlePasswordCheck(PK11SlotInfo *slot,void *wincx)
     /* timeouts are handled by isLoggedIn */
     if (!PK11_IsLoggedIn(slot,wincx)) {
 	NeedAuth = PR_TRUE;
-    } else if (slot->askpw == -1) {
+    } else if (askpw == -1) {
 	if (!PK11_Global.inTransaction	||
 			 (PK11_Global.transaction != slot->authTransact)) {
     	    PK11_EnterSlotMonitor(slot);
