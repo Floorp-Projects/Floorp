@@ -517,13 +517,9 @@ PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
     if (NS_FAILED(rv))
       return PR_FALSE;
 
-    nsXPIDLCString cType;
-    rv = mimeService->GetTypeFromExtension(NS_ConvertUCS2toUTF8(ext).get(), getter_Copies(cType));
+    rv = mimeService->GetTypeFromExtension(NS_ConvertUCS2toUTF8(ext), type);
     if (NS_FAILED(rv))
       return PR_FALSE;
-
-    type.Assign(cType);
-
   }
   
   nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
@@ -562,18 +558,15 @@ PRBool nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
     nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return PR_FALSE;
     
-    nsXPIDLCString contentType;
-    rv = mimeService->GetTypeFromURI(uri, getter_Copies(contentType));
-    if (NS_FAILED(rv) || contentType.IsEmpty())
+    rv = mimeService->GetTypeFromURI(uri, typeStr);
+    if (NS_FAILED(rv))
       return PR_FALSE;
-    
-    typeStr = contentType;
   } else {
     CopyUTF16toUTF8(type, typeStr);
   }
     
   nsXPIDLCString value;
-  rv = catman->GetCategoryEntry("Gecko-Content-Viewers",typeStr.get(), getter_Copies(value));
+  rv = catman->GetCategoryEntry("Gecko-Content-Viewers", typeStr.get(), getter_Copies(value));
 
   // If we have a content viewer entry in the catagory manager for this mime type
   // and it's not the full-page plugin one, return PR_TRUE to act like an IFRAME.

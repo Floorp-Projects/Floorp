@@ -42,8 +42,8 @@ public:
   virtual ~nsOSHelperAppService();
 
   // method overrides for mime.types and mime.info look up steps
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMimeType,
-                                                  const char *aFileExt,
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMimeType,
+                                                  const nsACString& aFileExt,
                                                   PRBool     *aFound);
 
   // override nsIExternalProtocolService methods
@@ -51,8 +51,8 @@ public:
   NS_IMETHOD LoadUrl(nsIURI * aURL);
 
 protected:
-  already_AddRefed<nsMIMEInfoOS2> GetFromType(const char *aMimeType);
-  already_AddRefed<nsMIMEInfoOS2> GetFromExtension(const char *aFileExt);
+  already_AddRefed<nsMIMEInfoOS2> GetFromType(const nsCString& aMimeType);
+  already_AddRefed<nsMIMEInfoOS2> GetFromExtension(const nsCString& aFileExt);
 
 private:
   // Helper methods which have to access static members

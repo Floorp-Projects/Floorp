@@ -105,7 +105,6 @@
 #include "nsIFrame.h"
 #include "nsIXBLService.h"
 #include "nsCExternalHandlerService.h"
-#include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
 #include "nsIFastLoadService.h"
 #include "nsIObjectInputStream.h"

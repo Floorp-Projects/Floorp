@@ -489,12 +489,8 @@ nsJARChannel::GetContentType(nsACString &result)
         }
         if (ext) {
             nsIMIMEService *mimeServ = gJarHandler->MimeService();
-            if (mimeServ) {
-                nsXPIDLCString mimeType;
-                nsresult rv = mimeServ->GetTypeFromExtension(ext, getter_Copies(mimeType));
-                if (NS_SUCCEEDED(rv))
-                    mContentType = mimeType;
-            }
+            if (mimeServ)
+                mimeServ->GetTypeFromExtension(nsDependentCString(ext), mContentType);
         }
         if (mContentType.IsEmpty())
             mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);

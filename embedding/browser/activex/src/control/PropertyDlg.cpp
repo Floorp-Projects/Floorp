@@ -110,12 +110,10 @@ LRESULT CPPageDlg::OnInitDialog(UINT uMsg, WPARAM wParam,  LPARAM lParam, BOOL& 
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
         nsCAutoString contentType;
         contentType.AssignWithConversion(mType);
-        mimeService->GetFromTypeAndExtension(contentType.get(), nsnull, getter_AddRefs(mimeInfo));
+        mimeService->GetFromTypeAndExtension(contentType, EmptyCString(), getter_AddRefs(mimeInfo));
         if (mimeInfo)
         {
-            nsXPIDLString description;
-            mimeInfo->GetDescription(getter_Copies(description));
-            desc = description;
+            mimeInfo->GetDescription(desc);
         }
     }
 

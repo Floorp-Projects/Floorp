@@ -281,7 +281,7 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
         if (!mimeService)
             return rv;
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
-        rv = mimeService->GetFromTypeAndExtension(mContentType.get(), nsnull, getter_AddRefs(mimeInfo));
+        rv = mimeService->GetFromTypeAndExtension(mContentType, EmptyCString(), getter_AddRefs(mimeInfo));
         if (!mimeInfo)
           return rv;
 

@@ -36,7 +36,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURL.h"
-#include "nsIMIMEService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIIDNService.h"
 #include "nsIStreamListenerTee.h"

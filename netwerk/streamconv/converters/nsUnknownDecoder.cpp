@@ -480,8 +480,8 @@ PRBool nsUnknownDecoder::SniffURI(nsIRequest* aRequest)
       nsCOMPtr<nsIURI> uri;
       nsresult result = channel->GetURI(getter_AddRefs(uri));
       if (NS_SUCCEEDED(result) && uri) {
-        nsXPIDLCString type;
-        result = mimeService->GetTypeFromURI(uri, getter_Copies(type));
+        nsCAutoString type;
+        result = mimeService->GetTypeFromURI(uri, type);
         if (NS_SUCCEEDED(result)) {
           mContentType = type;
           return PR_TRUE;

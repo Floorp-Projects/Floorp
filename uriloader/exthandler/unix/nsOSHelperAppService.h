@@ -41,8 +41,8 @@ public:
   virtual ~nsOSHelperAppService();
 
   // method overrides for mime.types and mime.info look up steps
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMimeType,
-                                                  const char *aFileExt,
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMimeType,
+                                                  const nsACString& aFileExt,
                                                   PRBool     *aFound);
 
   // override nsIExternalProtocolService methods
@@ -56,8 +56,8 @@ public:
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
   
 protected:
-  already_AddRefed<nsMIMEInfoBase> GetFromType(const char *aMimeType);
-  already_AddRefed<nsMIMEInfoBase> GetFromExtension(const char *aFileExt);
+  already_AddRefed<nsMIMEInfoBase> GetFromType(const nsCString& aMimeType);
+  already_AddRefed<nsMIMEInfoBase> GetFromExtension(const nsCString& aFileExt);
 
   virtual void FixFilePermissions(nsILocalFile* aFile);
 private:

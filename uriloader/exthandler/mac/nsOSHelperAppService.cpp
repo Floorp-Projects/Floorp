@@ -176,7 +176,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAp
 // method overrides --> use internet config information for mime type lookup.
 ///////////////////////////
 
-NS_IMETHODIMP nsOSHelperAppService::GetFromTypeAndExtension(const char * aType, const char * aFileExt, nsIMIMEInfo ** aMIMEInfo)
+NS_IMETHODIMP nsOSHelperAppService::GetFromTypeAndExtension(const nsACString& aType, const nsACString& aFileExt, nsIMIMEInfo ** aMIMEInfo)
 {
   // first, ask our base class....
   nsresult rv = nsExternalHelperAppService::GetFromTypeAndExtension(aType, aFileExt, aMIMEInfo);
@@ -188,30 +188,33 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromTypeAndExtension(const char * aType, 
 }
 
 already_AddRefed<nsIMIMEInfo>
-nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
-                                        const char * aFileExt,
+nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
+                                        const nsACString& aFileExt,
                                         PRBool * aFound)
 {
   nsIMIMEInfo* mimeInfo = nsnull;
   *aFound = PR_TRUE;
 
+  const nsCString& flatType = PromiseFlatCString(aMIMEType);
+  const nsCString& flatExt = PromiseFlatCString(aFileExt);
+
   // ask the internet config service to look it up for us...
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
   PR_LOG(mLog, PR_LOG_DEBUG, ("Mac: HelperAppService lookup for type '%s' ext '%s' (IC: 0x%p)\n",
-                              aMIMEType, aFileExt, icService.get()));
+                              flatType.get(), flatExt.get(), icService.get()));
   if (icService)
   {
     nsCOMPtr<nsIMIMEInfo> miByType, miByExt;
-    if (aMIMEType && *aMIMEType)
-      icService->FillInMIMEInfo(aMIMEType, aFileExt, getter_AddRefs(miByType));
+    if (!aMIMEType.IsEmpty())
+      icService->FillInMIMEInfo(flatType.get(), flatExt.get(), getter_AddRefs(miByType));
 
     PRBool hasDefault = PR_FALSE;
     if (miByType)
       miByType->GetHasDefaultHandler(&hasDefault);
 
-    if (aFileExt && *aFileExt && (!hasDefault || !miByType)) {
-      icService->GetMIMEInfoFromExtension(aFileExt, getter_AddRefs(miByExt));
-      if (miByExt && aMIMEType)
+    if (!aFileExt.IsEmpty() && (!hasDefault || !miByType)) {
+      icService->GetMIMEInfoFromExtension(flatExt.get(), getter_AddRefs(miByExt));
+      if (miByExt && !aMIMEType.IsEmpty())
         miByExt->SetMIMEType(aMIMEType);
     }
     PR_LOG(mLog, PR_LOG_DEBUG, ("OS gave us: By Type: 0x%p By Ext: 0x%p type has default: %s\n",
@@ -251,9 +254,9 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
       return nsnull;
     NS_ADDREF(mimeInfo);
 
-    if (aMIMEType && *aMIMEType)
+    if (!aMIMEType.IsEmpty())
       mimeInfo->SetMIMEType(aMIMEType);
-    if (aFileExt && *aFileExt)
+    if (!aFileExt.IsEmpty())
       mimeInfo->AppendExtension(aFileExt);
   }
   

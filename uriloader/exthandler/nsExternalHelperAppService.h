@@ -108,7 +108,7 @@ public:
    * @param aWindowContext Window context, as passed to DoContent
    */
   nsExternalAppHandler * CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo,
-                                                  const char * aFileExtension,
+                                                  const nsCSubstring& aFileExtension,
                                                   const nsAString& aFileName,
                                                   PRBool aIsAttachment,
                                                   nsISupports * aWindowContext);
@@ -119,7 +119,7 @@ public:
    * over ride information is contained in a in memory data source.
    * @param aMIMEInfo The mime info to fill with the information
    */
-  nsresult GetMIMEInfoForMimeTypeFromDS(const char * aContentType,
+  nsresult GetMIMEInfoForMimeTypeFromDS(const nsACString& aContentType,
                                         nsIMIMEInfo * aMIMEInfo);
   
   /**
@@ -128,7 +128,7 @@ public:
    * information is contained in a in memory data source.
    * @param aMIMEInfo The mime info to fill with the information
    */
-  nsresult GetMIMEInfoForExtensionFromDS(const char * aFileExtension,
+  nsresult GetMIMEInfoForExtensionFromDS(const nsACString& aFileExtension,
                                          nsIMIMEInfo * aMIMEInfo);
 
   /**
@@ -145,8 +145,8 @@ public:
    *         returning one is an out-of-memory error.
    *         If null, the value of aFound is unspecified.
    */
-  virtual already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char * aMIMEType,
-                                                          const char * aFileExt,
+  virtual already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType,
+                                                          const nsACString& aFileExt,
                                                           PRBool     * aFound) = 0;
 
   /**
@@ -179,9 +179,9 @@ protected:
    */
   nsCOMPtr<nsIRDFDataSource> mOverRideDataSource;
 
-	nsCOMPtr<nsIRDFResource> kNC_Description;
-	nsCOMPtr<nsIRDFResource> kNC_Value;
-	nsCOMPtr<nsIRDFResource> kNC_FileExtensions;
+  nsCOMPtr<nsIRDFResource> kNC_Description;
+  nsCOMPtr<nsIRDFResource> kNC_Value;
+  nsCOMPtr<nsIRDFResource> kNC_FileExtensions;
   nsCOMPtr<nsIRDFResource> kNC_Path;
   nsCOMPtr<nsIRDFResource> kNC_UseSystemDefault;
   nsCOMPtr<nsIRDFResource> kNC_SaveToDisk;
@@ -198,7 +198,7 @@ protected:
    * Helper routines for digesting the data source and filling in a mime info
    * object for a given content type inside that data source.
    */
-  nsresult FillTopLevelProperties(const char * aContentType,
+  nsresult FillTopLevelProperties(const nsCSubstring& aContentType,
                                   nsIRDFResource * aContentTypeNodeResource, 
                                   nsIRDFService * aRDFService,
                                   nsIMIMEInfo * aMIMEInfo);
@@ -227,14 +227,14 @@ protected:
    * @param aContentType The type to search for.
    * @param aMIMEInfo    [inout] The mime info, if found
    */
-  nsresult GetMIMEInfoForMimeTypeFromExtras(const char * aContentType,
+  nsresult GetMIMEInfoForMimeTypeFromExtras(const nsACString& aContentType,
                                             nsIMIMEInfo * aMIMEInfo);
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
    * with a specific extension.
    * @see GetMIMEInfoForMimeTypeFromExtras
    */
-  nsresult GetMIMEInfoForExtensionFromExtras(const char * aExtension,
+  nsresult GetMIMEInfoForExtensionFromExtras(const nsACString& aExtension,
                                              nsIMIMEInfo * aMIMEInfo);
 
   /**
@@ -296,7 +296,7 @@ public:
   nsExternalAppHandler();
   ~nsExternalAppHandler();
 
-  nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension,
+  nsresult Init(nsIMIMEInfo * aMIMEInfo, const nsCSubstring& aFileExtension,
                 nsISupports * aWindowContext,
                 const nsAString& aFilename,
                 PRBool aIsAttachment);

@@ -313,8 +313,8 @@ BOOL CChooseActionDlg::OnInitDialog()
         // Retrieve and set the Mime type of the content we're downloading
         // in the content type field of the dialog box
         //
-        nsXPIDLCString mimeType;
-        nsresult rv = mimeInfo->GetMIMEType(getter_Copies(mimeType));
+        nsCAutoString mimeType;
+        nsresult rv = mimeInfo->GetMIMEType(mimeType);
         if(NS_SUCCEEDED(rv)) 
         {
             CStatic *pMimeType = (CStatic *)GetDlgItem(IDC_CONTENT_TYPE);
@@ -358,8 +358,8 @@ void CChooseActionDlg::InitWithPreferredAction(nsIMIMEInfo* aMimeInfo)
 
     // See if we can get the appname
     //
-    nsXPIDLString appDesc;
-    nsresult rv = aMimeInfo->GetApplicationDescription(getter_Copies(appDesc));
+    nsAutoString appDesc;
+    nsresult rv = aMimeInfo->GetApplicationDescription(appDesc);
     if(NS_SUCCEEDED(rv)) 
     {
         USES_CONVERSION;

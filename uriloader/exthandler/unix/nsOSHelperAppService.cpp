@@ -1347,12 +1347,12 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
 }
 
 already_AddRefed<nsMIMEInfoBase>
-nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
-  // if the extension is null, return immediately
-  if (!aFileExt || !*aFileExt)
+nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
+  // if the extension is empty, return immediately
+  if (aFileExt.IsEmpty())
     return nsnull;
   
-  LOG(("Here we do an extension lookup for '%s'\n", aFileExt));
+  LOG(("Here we do an extension lookup for '%s'\n", aFileExt.get()));
 
   nsAutoString majorType, minorType,
                mime_types_description, mailcap_description,
@@ -1368,7 +1368,7 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
     
 #ifdef MOZ_WIDGET_GTK2
     LOG(("Looking in GNOME registry\n"));
-    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromExtension(aFileExt).get();
+    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromExtension(aFileExt.get()).get();
     if (gnomeInfo) {
       LOG(("Got MIMEInfo from GNOME registry\n"));
       return gnomeInfo;
@@ -1416,9 +1416,9 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   mailcap_description.Trim(" \t\"");
   mozillaFlags.Trim(" \t");
   if (!mime_types_description.IsEmpty()) {
-    mimeInfo->SetDescription(mime_types_description.get());
+    mimeInfo->SetDescription(mime_types_description);
   } else {
-    mimeInfo->SetDescription(mailcap_description.get());
+    mimeInfo->SetDescription(mailcap_description);
   }
 
   if (NS_SUCCEEDED(rv) && handler.IsEmpty()) {
@@ -1432,7 +1432,7 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
     if (NS_SUCCEEDED(rv)) {
       mimeInfo->SetDefaultApplication(handlerFile);
       mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-      mimeInfo->SetDefaultDescription(handler.get());
+      mimeInfo->SetDefaultDescription(handler);
     }
   }
 
@@ -1444,12 +1444,12 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
 }
 
 already_AddRefed<nsMIMEInfoBase>
-nsOSHelperAppService::GetFromType(const char *aMIMEType) {
-  // if the type is null, return immediately
-  if (!aMIMEType || !*aMIMEType)
+nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
+  // if the type is empty, return immediately
+  if (aMIMEType.IsEmpty())
     return nsnull;
   
-  LOG(("Here we do a mimetype lookup for '%s'\n", aMIMEType));
+  LOG(("Here we do a mimetype lookup for '%s'\n", aMIMEType.get()));
 
   // extract the major and minor types
   NS_ConvertASCIItoUTF16 mimeType(aMIMEType);
@@ -1494,7 +1494,7 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
     
 #ifdef MOZ_WIDGET_GTK2
     LOG(("Looking in GNOME registry\n"));
-    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType).get();
+    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType.get()).get();
     if (gnomeInfo) {
       LOG(("Got MIMEInfo from GNOME registry\n"));
       return gnomeInfo;
@@ -1546,16 +1546,16 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
     return nsnull;
   }
   
-  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(aMIMEType);
+  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(aMIMEType.get());
   if (!mimeInfo)
     return nsnull;
   NS_ADDREF(mimeInfo);
 
-  mimeInfo->SetFileExtensions(NS_ConvertUCS2toUTF8(extensions).get());
+  mimeInfo->SetFileExtensions(NS_ConvertUCS2toUTF8(extensions));
   if (! mime_types_description.IsEmpty()) {
-    mimeInfo->SetDescription(mime_types_description.get());
+    mimeInfo->SetDescription(mime_types_description);
   } else {
-    mimeInfo->SetDescription(mailcap_description.get());
+    mimeInfo->SetDescription(mailcap_description);
   }
 
   rv = NS_ERROR_NOT_AVAILABLE;
@@ -1567,7 +1567,7 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
   if (NS_SUCCEEDED(rv)) {
     mimeInfo->SetDefaultApplication(handlerFile);
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-    mimeInfo->SetDefaultDescription(handler.get());
+    mimeInfo->SetDefaultDescription(handler);
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
@@ -1577,23 +1577,23 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
 
 
 already_AddRefed<nsIMIMEInfo>
-nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
-                                        const char *aFileExt,
+nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
+                                        const nsACString& aFileExt,
                                         PRBool     *aFound) {
   *aFound = PR_TRUE;
-  nsMIMEInfoBase* retval = GetFromType(aType).get();
+  nsMIMEInfoBase* retval = GetFromType(PromiseFlatCString(aType)).get();
   PRBool hasDefault = PR_FALSE;
   if (retval)
     retval->GetHasDefaultHandler(&hasDefault);
   if (!retval || !hasDefault) {
-    nsRefPtr<nsMIMEInfoBase> miByExt = GetFromExtension(aFileExt);
+    nsRefPtr<nsMIMEInfoBase> miByExt = GetFromExtension(PromiseFlatCString(aFileExt));
     // If we had no extension match, but a type match, use that
     if (!miByExt && retval)
       return retval;
     // If we had an extension match but no type match, set the mimetype and use
     // it
     if (!retval && miByExt) {
-      if (aType)
+      if (!aType.IsEmpty())
         miByExt->SetMIMEType(aType);
       miByExt.swap(retval);
 
@@ -1602,12 +1602,10 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
     // If we got nothing, make a new mimeinfo
     if (!retval) {
       *aFound = PR_FALSE;
-      retval = new nsMIMEInfoImpl();
+      retval = new nsMIMEInfoImpl(PromiseFlatCString(aType).get());
       if (retval) {
         NS_ADDREF(retval);
-        if (aType && *aType)
-          retval->SetMIMEType(aType);
-        if (aFileExt && *aFileExt)
+        if (!aFileExt.IsEmpty())
           retval->AppendExtension(aFileExt);
       }
       
@@ -1616,6 +1614,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
 
     // Copy the attributes of retval onto miByExt, to return it
     retval->CopyBasicDataTo(miByExt);
+
     miByExt.swap(retval);
   }
   return retval;

@@ -263,20 +263,18 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
   if (!handlerApp)
     return nsnull;
 
-  nsRefPtr<nsMIMEInfoImpl> mimeInfo = new nsMIMEInfoImpl();
+  nsRefPtr<nsMIMEInfoImpl> mimeInfo = new nsMIMEInfoImpl(aMIMEType);
   NS_ENSURE_TRUE(mimeInfo, nsnull);
-
-  mimeInfo->SetMIMEType(aMIMEType);
 
   // Get the list of extensions and append then to the mimeInfo.
   GList *extensions = _gnome_vfs_mime_get_extensions_list(aMIMEType);
   for (GList *extension = extensions; extension; extension = extension->next)
-    mimeInfo->AppendExtension((const char *) extension->data);
+    mimeInfo->AppendExtension(nsDependentCString((const char *) extension->data));
 
   _gnome_vfs_mime_extensions_list_free(extensions);
 
   const char *description = _gnome_vfs_mime_get_description(aMIMEType);
-  mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(description).get());
+  mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(description));
 
   // Convert UTF-8 registry value to filesystem encoding, which
   // g_find_program_in_path() uses.
@@ -303,7 +301,7 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
                         getter_AddRefs(appFile));
   if (appFile) {
     mimeInfo->SetDefaultApplication(appFile);
-    mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUCS2(handlerApp->name).get());
+    mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUCS2(handlerApp->name));
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
   }
 

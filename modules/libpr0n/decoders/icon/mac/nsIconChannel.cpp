@@ -332,8 +332,8 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
     if (mimeService && (!contentType.IsEmpty() || !fileExtension.IsEmpty()))
     {
-      mimeService->GetFromTypeAndExtension(contentType.get(),
-                                           fileExtension.get(),
+      mimeService->GetFromTypeAndExtension(contentType,
+                                           fileExtension,
                                            getter_AddRefs(mimeInfo));
     }
 

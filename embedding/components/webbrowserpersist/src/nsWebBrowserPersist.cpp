@@ -1287,8 +1287,8 @@ nsWebBrowserPersist::GetExtensionForContentType(const PRUnichar *aContentType, P
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
     nsCAutoString contentType;
     contentType.AssignWithConversion(aContentType);
-    nsXPIDLCString ext;
-    rv = mMIMEService->GetPrimaryExtension(contentType.get(), nsnull, getter_Copies(ext));
+    nsCAutoString ext;
+    rv = mMIMEService->GetPrimaryExtension(contentType, EmptyCString(), ext);
     if (NS_SUCCEEDED(rv))
     {
         *aExt = ToNewUnicode(ext);
@@ -2053,10 +2053,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
     {
         nsCOMPtr<nsIURI> uri;
         aChannel->GetOriginalURI(getter_AddRefs(uri));
-        nsXPIDLCString mimeType;
-        rv = mMIMEService->GetTypeFromURI(uri, getter_Copies(mimeType));
-        if (NS_SUCCEEDED(rv))
-            contentType = mimeType;
+        mMIMEService->GetTypeFromURI(uri, contentType);
     }
 
     // Append the extension onto the file
@@ -2064,7 +2061,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
     {
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
         mMIMEService->GetFromTypeAndExtension(
-            contentType.get(), nsnull, getter_AddRefs(mimeInfo));
+            contentType, EmptyCString(), getter_AddRefs(mimeInfo));
 
         nsCOMPtr<nsILocalFile> localFile;
         GetLocalFileFromURI(aURI, getter_AddRefs(localFile));
@@ -2082,11 +2079,11 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
             PRInt32 ext = newFileName.RFind(".");
             if (ext != -1)
             {
-                mimeInfo->ExtensionExists(newFileName.get() + ext + 1, &hasExtension);
+                mimeInfo->ExtensionExists(Substring(newFileName, ext + 1), &hasExtension);
             }
 
             // Append the mime file extension
-            nsXPIDLCString fileExt;
+            nsCAutoString fileExt;
             if (!hasExtension)
             {
                 // Test if previous extension is acceptable
@@ -2102,7 +2099,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
                 // can't use old extension so use primary extension
                 if (!useOldExt)
                 {
-                    mimeInfo->GetPrimaryExtension(getter_Copies(fileExt));
+                    mimeInfo->GetPrimaryExtension(fileExt);
                 } 
 
                 if (!fileExt.IsEmpty())

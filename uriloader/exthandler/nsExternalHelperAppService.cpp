@@ -303,6 +303,7 @@ struct nsDefaultMimeTypeEntry {
 
 /**
  * Default extension->mimetype mappings. These are not overridable.
+ * If you add types here, make sure they are lowercase, or you'll regret it.
  */
 static nsDefaultMimeTypeEntry defaultMimeEntries [] = 
 {
@@ -347,6 +348,7 @@ struct nsExtraMimeTypeEntry {
  * file extensions.  These entries also ensure that we provide a good descriptive name
  * when we encounter files with these content types and/or extensions.  These can be
  * overridden by user helper app prefs.
+ * If you add types here, make sure they are lowercase, or you'll regret it.
  */
 static nsExtraMimeTypeEntry extraMimeEntries [] =
 {
@@ -486,7 +488,7 @@ nsresult nsExternalHelperAppService::InitDataSource()
   return rv;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType,
+NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
                                                     nsISupports *aWindowContext,
                                                     nsIStreamListener ** aStreamListener)
@@ -549,16 +551,16 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   }
 
   LOG(("HelperAppService::DoContent: mime '%s', extension '%s'\n",
-       aMimeContentType, fileExtension.get()));
+       PromiseFlatCString(aMimeContentType).get(), fileExtension.get()));
 
   // Try to find a mime object by looking at the mime type/extension
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  if (!nsCRT::strcasecmp(aMimeContentType, APPLICATION_GUESS_FROM_EXT)) {
-    nsXPIDLCString mimeType;
+  if (aMimeContentType.Equals(APPLICATION_GUESS_FROM_EXT, nsCaseInsensitiveCStringComparator())) {
+    nsCAutoString mimeType;
     if (!fileExtension.IsEmpty()) {
-      GetFromTypeAndExtension(nsnull, fileExtension.get(), getter_AddRefs(mimeInfo));
+      GetFromTypeAndExtension(EmptyCString(), fileExtension, getter_AddRefs(mimeInfo));
       if (mimeInfo) {
-        mimeInfo->GetMIMEType(getter_Copies(mimeType));
+        mimeInfo->GetMIMEType(mimeType);
 
         LOG(("OS-Provided mime type '%s' for extension '%s'\n", 
              mimeType.get(), fileExtension.get()));
@@ -567,12 +569,12 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
 
     if (fileExtension.IsEmpty() || mimeType.IsEmpty()) {
       // Extension lookup gave us no useful match
-      GetFromTypeAndExtension(APPLICATION_OCTET_STREAM, fileExtension.get(),
+      GetFromTypeAndExtension(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM), fileExtension,
                               getter_AddRefs(mimeInfo));
     }
   } 
   else {
-    GetFromTypeAndExtension(aMimeContentType, fileExtension.get(),
+    GetFromTypeAndExtension(aMimeContentType, fileExtension,
                             getter_AddRefs(mimeInfo));
   } 
   LOG(("Type/Ext lookup found 0x%p\n", mimeInfo.get()));
@@ -584,12 +586,12 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   *aStreamListener = nsnull;
   // We want the mimeInfo's primary extension to pass it to
   // CreateNewExternalHandler
-  nsXPIDLCString buf;
-  mimeInfo->GetPrimaryExtension(getter_Copies(buf));
+  nsCAutoString buf;
+  mimeInfo->GetPrimaryExtension(buf);
 
   // this code is incomplete and just here to get things started..
   nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo,
-                                                            buf.get(),
+                                                            buf,
                                                             fileName,
                                                             isAttachment,
                                                             aWindowContext);
@@ -600,15 +602,15 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const char *aExtension, const char* aEncodingType, PRBool *aApplyDecoding)
+NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const nsACString& aExtension,
+                                                                    const nsACString& aEncodingType,
+                                                                    PRBool *aApplyDecoding)
 {
-  NS_PRECONDITION(aExtension, "Null extension");
-  NS_PRECONDITION(aEncodingType, "Null encoding type");
   *aApplyDecoding = PR_TRUE;
   PRUint32 i;
   for(i = 0; i < NS_ARRAY_LENGTH(nonDecodableExtensions); ++i) {
-    if (!PL_strcasecmp(aExtension, nonDecodableExtensions[i].mFileExtension) &&
-        !PL_strcasecmp(aEncodingType, nonDecodableExtensions[i].mMimeType)) {
+    if (aExtension.Equals(nonDecodableExtensions[i].mFileExtension, nsCaseInsensitiveCStringComparator()) &&
+        aEncodingType.Equals(nonDecodableExtensions[i].mMimeType, nsCaseInsensitiveCStringComparator())) {
       *aApplyDecoding = PR_FALSE;
       break;
     }
@@ -617,7 +619,7 @@ NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const char *
 }
 
 nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, 
-                                                                            const char * aTempFileExtension,
+                                                                            const nsCSubstring& aTempFileExtension,
                                                                             const nsAString& aFileName,
                                                                             PRBool aIsAttachment,
                                                                             nsISupports * aWindowContext)
@@ -633,7 +635,7 @@ nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIM
   return handler;
 }
 
-nsresult nsExternalHelperAppService::FillTopLevelProperties(const char * aContentType, nsIRDFResource * aContentTypeNodeResource, 
+nsresult nsExternalHelperAppService::FillTopLevelProperties(const nsCSubstring& aContentType, nsIRDFResource * aContentTypeNodeResource, 
                                                             nsIRDFService * aRDFService, nsIMIMEInfo * aMIMEInfo)
 {
   nsresult rv = NS_OK;
@@ -650,7 +652,7 @@ nsresult nsExternalHelperAppService::FillTopLevelProperties(const char * aConten
   // set the pretty name description, if nonempty
   FillLiteralValueFromTarget(aContentTypeNodeResource,kNC_Description, &stringValue);
   if (stringValue && *stringValue)
-    aMIMEInfo->SetDescription(stringValue);
+    aMIMEInfo->SetDescription(nsDependentString(stringValue));
 
   // now iterate over all the file type extensions...
   nsCOMPtr<nsISimpleEnumerator> fileExtensions;
@@ -674,7 +676,7 @@ nsresult nsExternalHelperAppService::FillTopLevelProperties(const char * aConten
         literal->GetValueConst(&stringValue);
         fileExtension.AssignWithConversion(stringValue);
         if (!fileExtension.IsEmpty())
-          aMIMEInfo->AppendExtension(fileExtension.get());
+          aMIMEInfo->AppendExtension(fileExtension);
       }
   
       fileExtensions->HasMoreElements(&hasMoreElements);
@@ -764,13 +766,13 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   aRDFService->GetResource(externalAppNodeName, getter_AddRefs(externalAppNodeResource));
 
   // Clear out any possibly set preferred application, to match the datasource
-  aMIMEInfo->SetApplicationDescription(nsnull);
+  aMIMEInfo->SetApplicationDescription(EmptyString());
   aMIMEInfo->SetPreferredApplicationHandler(nsnull);
   if (externalAppNodeResource)
   {
     FillLiteralValueFromTarget(externalAppNodeResource, kNC_PrettyName, &stringValue);
     if (stringValue)
-      aMIMEInfo->SetApplicationDescription(stringValue);
+      aMIMEInfo->SetApplicationDescription(nsDependentString(stringValue));
  
     FillLiteralValueFromTarget(externalAppNodeResource, kNC_Path, &stringValue);
     if (stringValue && stringValue[0])
@@ -821,7 +823,7 @@ PRBool nsExternalHelperAppService::MIMETypeIsInDataSource(const char * aContentT
   return PR_FALSE;
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * aContentType, nsIMIMEInfo * aMIMEInfo)
+nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo)
 {
   NS_ENSURE_ARG_POINTER(aMIMEInfo);
   nsresult rv = InitDataSource();
@@ -860,7 +862,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
   if (NS_SUCCEEDED(rv) && exists)
   {
      // fill the mimeinfo in based on the values from the data source
-     rv = FillTopLevelProperties(contentType.get(), contentTypeNodeResource, rdf, aMIMEInfo);
+     rv = FillTopLevelProperties(contentType, contentTypeNodeResource, rdf, aMIMEInfo);
      NS_ENSURE_SUCCESS(rv, rv);
      rv = FillContentHandlerProperties(contentType.get(), contentTypeNodeResource, rdf, aMIMEInfo);
 
@@ -873,7 +875,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
   return rv;
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * aFileExtension, nsIMIMEInfo * aMIMEInfo)
+nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const nsACString& aFileExtension, nsIMIMEInfo * aMIMEInfo)
 {
   NS_ENSURE_ARG_POINTER(aMIMEInfo);
 
@@ -909,7 +911,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * 
     if (NS_SUCCEEDED(rv))
     {
       // fill the mimeinfo based on the values from the data source
-      rv = FillTopLevelProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, aMIMEInfo);
+      rv = FillTopLevelProperties(contentTypeStr, contentTypeNodeResource, rdf, aMIMEInfo);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = FillContentHandlerProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, aMIMEInfo);
     }
@@ -918,7 +920,6 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * 
     rv = NS_ERROR_NOT_AVAILABLE;
   return rv;
 }
-
 
 nsresult nsExternalHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAppPath,
                                                          nsIFile ** aFile)
@@ -1261,8 +1262,8 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   }
 
   // now append our extension.
-  nsXPIDLCString ext;
-  mMimeInfo->GetPrimaryExtension(getter_Copies(ext));
+  nsCAutoString ext;
+  mMimeInfo->GetPrimaryExtension(ext);
   if (!ext.IsEmpty()) {
     if (ext.First() != '.')
       saltedTempLeafName.Append(PRUnichar('.'));
@@ -1346,8 +1347,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   }
 
   // Extract mime type for later use below.
-  nsXPIDLCString MIMEType;
-  mMimeInfo->GetMIMEType( getter_Copies( MIMEType ) );
+  nsCAutoString MIMEType;
+  mMimeInfo->GetMIMEType(MIMEType);
 
   // retarget all load notifications to our docloader instead of the original window's docloader...
   RetargetLoadNotifications(request);
@@ -1377,8 +1378,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
             if (NS_SUCCEEDED(rv) && !encType.IsEmpty())
             {
               NS_ASSERTION(sSrv, "Where did the service go?");
-              sSrv->ApplyDecodingForExtension(extension.get(),
-                                              encType.get(),
+              sSrv->ApplyDecodingForExtension(extension,
+                                              encType,
                                               &applyConversion);
             }
           }
@@ -1766,7 +1767,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
 }
 
 nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo,
-                                    const char * aTempFileExtension,
+                                    const nsCSubstring& aTempFileExtension,
                                     nsISupports * aWindowContext,
                                     const nsAString& aSuggestedFilename,
                                     PRBool aIsAttachment)
@@ -1776,7 +1777,7 @@ nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo,
   mHandlingAttachment = aIsAttachment;
 
   // make sure the extention includes the '.'
-  if (aTempFileExtension && *aTempFileExtension != '.')
+  if (!aTempFileExtension.IsEmpty() && aTempFileExtension.First() != '.')
     mTempFileExtension = PRUnichar('.');
   mTempFileExtension.AppendWithConversion(aTempFileExtension);
 
@@ -1807,9 +1808,9 @@ NS_IMETHODIMP nsExternalAppHandler::GetSource(nsIURI ** aSourceURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::GetSuggestedFileName(PRUnichar ** aSuggestedFileName)
+NS_IMETHODIMP nsExternalAppHandler::GetSuggestedFileName(nsAString& aSuggestedFileName)
 {
-  *aSuggestedFileName = ToNewUnicode(mSuggestedFileName);
+  aSuggestedFileName = mSuggestedFileName;
   return NS_OK;
 }
 
@@ -2216,12 +2217,13 @@ PRBool nsExternalAppHandler::GetNeverAskFlagFromPref(const char * prefName, cons
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // nsIMIMEService methods
-NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aMIMEType, const char *aFileExt, nsIMIMEInfo **_retval) 
+NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACString& aMIMEType, const nsACString& aFileExt, nsIMIMEInfo **_retval) 
 {
-  NS_PRECONDITION((aMIMEType && *aMIMEType) ||
-                  (aFileExt && *aFileExt), 
+  NS_PRECONDITION(!aMIMEType.IsEmpty() ||
+                  !aFileExt.IsEmpty(), 
                   "Give me something to work with");
-  LOG(("Getting mimeinfo from type '%s' ext '%s'\n", aMIMEType, aFileExt));
+  LOG(("Getting mimeinfo from type '%s' ext '%s'\n",
+        PromiseFlatCString(aMIMEType).get(), PromiseFlatCString(aFileExt).get()));
 
   *_retval = nsnull;
 
@@ -2235,7 +2237,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
 
   // (2) Now, let's see if we can find something in our datasource
   nsresult rv = NS_ERROR_FAILURE;
-  if (aMIMEType && *aMIMEType) {
+  if (!aMIMEType.IsEmpty()) {
     // This will not overwrite the OS information that interests us
     // (i.e. default application, default app. description)
     rv = GetMIMEInfoForMimeTypeFromDS(aMIMEType, *_retval);
@@ -2246,11 +2248,11 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
 
   if (!found || NS_FAILED(rv)) {
     // No type match, try extension match
-    if (aFileExt && *aFileExt) {
+    if (!aFileExt.IsEmpty()) {
       rv = GetMIMEInfoForExtensionFromDS(aFileExt, *_retval);
       LOG(("Data source: Via ext: retval 0x%08x\n", rv));
       found = found || NS_SUCCEEDED(rv);
-      if (NS_SUCCEEDED(rv) && aMIMEType && *aMIMEType)
+      if (NS_SUCCEEDED(rv) && !aMIMEType.IsEmpty())
         (*_retval)->SetMIMEType(aMIMEType);
     }
   }
@@ -2258,7 +2260,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
   // (3) No match yet. Ask extras.
   if (!found) {
     rv = NS_ERROR_FAILURE;
-    if (aMIMEType && *aMIMEType) {
+    if (!aMIMEType.IsEmpty()) {
 #ifdef XP_WIN
       /* XXX Gross hack to wallpaper over the most common Win32
        * extension issues caused by the fix for bug 116938.  See bug
@@ -2267,15 +2269,15 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
        * right; any info we get from extras on this type is pretty much
        * useless....
        */
-      if (PL_strcasecmp(aMIMEType, APPLICATION_OCTET_STREAM) != 0)
+      if (!aMIMEType.Equals(APPLICATION_OCTET_STREAM, nsCaseInsensitiveCStringComparator()))
 #endif
         rv = GetMIMEInfoForMimeTypeFromExtras(aMIMEType, *_retval);
       LOG(("Searched extras (by type), rv 0x%08X\n", rv));
     }
     // If that didn't work out, try file extension from extras
-    if (NS_FAILED(rv) && aFileExt && *aFileExt) {
+    if (NS_FAILED(rv) && !aFileExt.IsEmpty()) {
       rv = GetMIMEInfoForExtensionFromExtras(aFileExt, *_retval);
-      if (NS_SUCCEEDED(rv) && aMIMEType && *aMIMEType)
+      if (NS_SUCCEEDED(rv) && !aMIMEType.IsEmpty())
         (*_retval)->SetMIMEType(aMIMEType);
       LOG(("Searched extras (by ext), rv 0x%08X\n", rv));
     }
@@ -2283,22 +2285,22 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
 
   // Finally, check if we got a file extension and if yes, if it is an
   // extension on the mimeinfo, in which case we want it to be the primary one
-  if (aFileExt && *aFileExt) {
+  if (!aFileExt.IsEmpty()) {
     PRBool matches = PR_FALSE;
     (*_retval)->ExtensionExists(aFileExt, &matches);
-    LOG(("Extension '%s' matches mime info: %i\n", aFileExt, matches));
+    LOG(("Extension '%s' matches mime info: %i\n", PromiseFlatCString(aFileExt).get(), matches));
     if (matches)
       (*_retval)->SetPrimaryExtension(aFileExt);
   }
 
   // Verify we have a type.
-  nsXPIDLCString type;
-  (*_retval)->GetMIMEType(getter_Copies(type));
+  nsCAutoString type;
+  (*_retval)->GetMIMEType(type);
 
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {
-    nsXPIDLCString ext;
-    (*_retval)->GetPrimaryExtension(getter_Copies(ext));
+    nsCAutoString ext;
+    (*_retval)->GetPrimaryExtension(ext);
     LOG(("MIME Info Summary: Type '%s', Primary Ext '%s'\n", type.get(), ext.get()));
   }
 #endif
@@ -2312,28 +2314,29 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
 
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFileExt, char **aContentType) 
+NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt, nsACString& aContentType) 
 {
   nsresult rv = NS_OK;
   // First of all, check our default entries
   for (size_t i = 0; i < NS_ARRAY_LENGTH(defaultMimeEntries); i++)
   {
-    if (nsCRT::strcasecmp(defaultMimeEntries[i].mFileExtension, aFileExt) == 0) {
-      *aContentType = nsCRT::strdup(defaultMimeEntries[i].mMimeType);
+    if (aFileExt.Equals(defaultMimeEntries[i].mFileExtension, nsCaseInsensitiveCStringComparator())) {
+      aContentType = defaultMimeEntries[i].mMimeType;
       return rv;
     }
   }
 
+  const nsCString& flatExt = PromiseFlatCString(aFileExt);
   nsCOMPtr<nsIMIMEInfo> info;
-  rv = GetFromTypeAndExtension(nsnull, aFileExt, getter_AddRefs(info));
+  rv = GetFromTypeAndExtension(EmptyCString(), aFileExt, getter_AddRefs(info));
   if (NS_FAILED(rv)) {
     // Try the plugins
     const char* mimeType;
     nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(kPluginManagerCID, &rv));
     if (NS_SUCCEEDED(rv)) {
-      if (pluginHost->IsPluginEnabledForExtension(aFileExt, mimeType) == NS_OK)
+      if (pluginHost->IsPluginEnabledForExtension(flatExt.get(), mimeType) == NS_OK)
       {
-        *aContentType = nsCRT::strdup(mimeType);
+        aContentType = mimeType;
         rv = NS_OK;
         return rv;
       }
@@ -2349,18 +2352,21 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFile
   else {
     // Let's see if an extension added something
     nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
-    if (catMan)
-      rv = catMan->GetCategoryEntry("ext-to-type-mapping", aFileExt, aContentType);
-    else
+    if (catMan) {
+      nsXPIDLCString type;
+      rv = catMan->GetCategoryEntry("ext-to-type-mapping", flatExt.get(), getter_Copies(type));
+      aContentType = type;
+    }
+    else {
       rv = NS_ERROR_NOT_AVAILABLE;
-
+    }
   }
   return rv;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::GetPrimaryExtension(const char* aMIMEType, const char* aFileExt, char** _retval)
+NS_IMETHODIMP nsExternalHelperAppService::GetPrimaryExtension(const nsACString& aMIMEType, const nsACString& aFileExt, nsACString& _retval)
 {
-  NS_ENSURE_ARG_POINTER(aMIMEType);
+  NS_ENSURE_ARG(!aMIMEType.IsEmpty());
 
   nsCOMPtr<nsIMIMEInfo> mi;
   nsresult rv = GetFromTypeAndExtension(aMIMEType, aFileExt, getter_AddRefs(mi));
@@ -2370,11 +2376,10 @@ NS_IMETHODIMP nsExternalHelperAppService::GetPrimaryExtension(const char* aMIMET
   return mi->GetPrimaryExtension(_retval);
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aContentType) 
+NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, nsACString& aContentType) 
 {
-  NS_PRECONDITION(aContentType, "Null out param!");
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
-  *aContentType = nsnull;
+  aContentType.Truncate();
 
   // First look for a file to use.  If we have one, we just use that.
   nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(aURI);
@@ -2399,7 +2404,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
     if (ext.IsEmpty()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-    return GetTypeFromExtension(ext.get(), aContentType);
+    return GetTypeFromExtension(ext, aContentType);
   }
     
   // no url, let's give the raw spec a shot
@@ -2416,16 +2421,14 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
       // extension.... Dat dere would be just data.
       specLength - extLoc < 20) 
   {
-    return GetTypeFromExtension(PromiseFlatCString(
-             Substring(specStr, extLoc + 1, specStr.Length() - extLoc - 1)
-           ).get(), aContentType);
+    return GetTypeFromExtension(Substring(specStr, extLoc + 1), aContentType);
   }
 
   // We found no information; say so.
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char **aContentType )
+NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACString& aContentType)
 {
   nsresult rv;
   nsCOMPtr<nsIMIMEInfo> info;
@@ -2449,7 +2452,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char 
     }
   }
   
-  nsCAutoString fileExt( ext );       
+  nsDependentCString fileExt( ext );       
   // Handle the mac case
 #if defined(XP_MAC) || defined (XP_MACOSX)
   nsCOMPtr<nsILocalFileMac> macFile;
@@ -2471,15 +2474,14 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char 
   // Windows, unix and mac when no type match occured.   
   if (fileExt.IsEmpty())
 	  return NS_ERROR_FAILURE;    
-  return GetTypeFromExtension( fileExt.get(), aContentType );
+  return GetTypeFromExtension( fileExt, aContentType );
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const char * aContentType, nsIMIMEInfo * aMIMEInfo )
+nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo )
 {
   NS_ENSURE_ARG( aMIMEInfo );
 
-  NS_ENSURE_ARG_POINTER( aContentType );
-  NS_ENSURE_ARG( *aContentType );
+  NS_ENSURE_ARG( !aContentType.IsEmpty() );
 
   // Look for default entry with matching mime type.
   nsCAutoString MIMEType(aContentType);
@@ -2490,28 +2492,25 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const char
       if ( MIMEType.Equals(extraMimeEntries[index].mMimeType) )
       {
           // This is the one. Set attributes appropriately.
-          aMIMEInfo->SetFileExtensions(extraMimeEntries[index].mFileExtensions);
-          aMIMEInfo->SetDescription(NS_ConvertASCIItoUCS2(extraMimeEntries[index].mDescription).get());
+          aMIMEInfo->SetFileExtensions(nsDependentCString(extraMimeEntries[index].mFileExtensions));
+          aMIMEInfo->SetDescription(NS_ConvertASCIItoUCS2(extraMimeEntries[index].mDescription));
           aMIMEInfo->SetMacType(extraMimeEntries[index].mMactype);
           aMIMEInfo->SetMacCreator(extraMimeEntries[index].mMacCreator);
 
           return NS_OK;
-
       }
   }
 
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const char* aExtension, nsIMIMEInfo * aMIMEInfo )
+nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const nsACString& aExtension, nsIMIMEInfo * aMIMEInfo )
 {
   NS_ENSURE_ARG( aMIMEInfo );
 
-  NS_ASSERTION(aExtension, "Null aExtension parameter!");
-  NS_ASSERTION(*aExtension, "Empty aExtension parameter!");
+  NS_ASSERTION(!aExtension.IsEmpty(), "Empty aExtension parameter!");
 
   // Look for default entry with matching extension.
-  nsDependentCString extension(aExtension);
   nsDependentCString::const_iterator start, end, iter;
   PRInt32 numEntries = NS_ARRAY_LENGTH(extraMimeEntries);
   for (PRInt32 index = 0; index < numEntries; index++)
@@ -2523,13 +2522,13 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const cha
       while (start != end)
       {
           FindCharInReadable(',', iter, end);
-          if (Substring(start, iter).Equals(extension,
+          if (Substring(start, iter).Equals(aExtension,
                                             nsCaseInsensitiveCStringComparator()))
           {
               // Set attributes appropriately.
-              aMIMEInfo->SetMIMEType(extraMimeEntries[index].mMimeType);
-              aMIMEInfo->SetFileExtensions(extraMimeEntries[index].mFileExtensions);
-              aMIMEInfo->SetDescription(NS_ConvertASCIItoUCS2(extraMimeEntries[index].mDescription).get());
+              aMIMEInfo->SetMIMEType(nsDependentCString(extraMimeEntries[index].mMimeType));
+              aMIMEInfo->SetFileExtensions(nsDependentCString(extraMimeEntries[index].mFileExtensions));
+              aMIMEInfo->SetDescription(NS_ConvertASCIItoUCS2(extraMimeEntries[index].mDescription));
               aMIMEInfo->SetMacType(extraMimeEntries[index].mMactype);
               aMIMEInfo->SetMacCreator(extraMimeEntries[index].mMacCreator);
 

@@ -61,28 +61,28 @@
  *
  * @see nsIMIMEInfo
  */
-[scriptable, uuid(6C424C90-2FE7-11d3-A164-0050041CAF44)]
+[scriptable, uuid(5b3675a1-02db-4f8f-a560-b34736635f47)]
 interface nsIMIMEService : nsISupports {
     /**
      * Retrieves an nsIMIMEInfo using both the extension
      * and the type of a file. The type is given preference
      * during the lookup. One of aMIMEType and aFileExt
-     * can be null. At least one of aMIMEType and aFileExt
-     * must be non-null and nonempty.
+     * can be an empty string. At least one of aMIMEType and aFileExt
+     * must be nonempty.
      */
-    nsIMIMEInfo getFromTypeAndExtension(in string aMIMEType, in string aFileExt);
+    nsIMIMEInfo getFromTypeAndExtension(in ACString aMIMEType, in ACString aFileExt);
 
     /**
-     * Retrieves a string representation of the MIME type
+     * Retrieves a ACString representation of the MIME type
      * associated with this file extension.
      *
      * @param  A file extension (excluding the dot ('.')).
      * @return The MIME type, if any.
      */
-    string getTypeFromExtension(in string aFileExt);
+    ACString getTypeFromExtension(in ACString aFileExt);
 
     /**
-     * Retrieves a string representation of the MIME type
+     * Retrieves a ACString representation of the MIME type
      * associated with this URI. The association is purely
      * file extension to MIME type based. No attempt to determine
      * the type via server headers or byte scanning is made.
@@ -90,17 +90,17 @@ interface nsIMIMEService : nsISupports {
      * @param  The URI the user wants MIME info on.
      * @return The MIME type, if any.
      */
-    string getTypeFromURI(in nsIURI aURI);
+    ACString getTypeFromURI(in nsIURI aURI);
     
     //
-    string getTypeFromFile(in nsIFile aFile);
+    ACString getTypeFromFile(in nsIFile aFile);
 
     /**
      * Given a Type/Extension combination, returns the default extension
      * for this type. This may be identical to the passed-in extension.
      *
-     * @param aMIMEType The Type to get information on. Must not be null.
-     * @param aFileExt  File Extension. Can be null.
+     * @param aMIMEType The Type to get information on. Must not be empty.
+     * @param aFileExt  File Extension. Can be empty.
      */
-    string getPrimaryExtension(in string aMIMEType, in string aFileExt);
+    ACString getPrimaryExtension(in ACString aMIMEType, in ACString aFileExt);
 };
