@@ -259,6 +259,19 @@ class nsIParser : public nsISupports {
     
     NS_IMETHOD Terminate(void) = 0;
 
+    /**
+     * This method gets called when you want to parse a fragment of HTML or XML
+     * surrounded by the context |aTagStack|. It requires that the parser have
+     * been given a fragment content sink.
+     *
+     * @param aSourceBuffer The XML or HTML that hasn't been parsed yet.
+     * @param aKey The key used by the parser.
+     * @param aTagStack The context of the source buffer.
+     * @param aXMLMode Whether this is XML or HTML
+     * @param aContentType The content-type of this document.
+     * @param aMode The DTDMode that the parser should parse this fragment in.
+     * @return Success or failure.
+     */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              void* aKey,
                              nsVoidArray& aTagStack,

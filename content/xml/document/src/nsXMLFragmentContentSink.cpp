@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Blake Kaplan <mrbkap@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -87,6 +88,8 @@ public:
   // nsIFragmentContentSink
   NS_IMETHOD GetFragment(nsIDOMDocumentFragment** aFragment);
   NS_IMETHOD SetTargetDocument(nsIDocument* aDocument);
+  NS_IMETHOD WillBuildContent();
+  NS_IMETHOD DidBuildContent();
 
 protected:
   virtual PRBool SetDocElement(PRInt32 aNameSpaceID, 
@@ -114,7 +117,6 @@ protected:
 
   // if FALSE, take content inside endnote tag
   PRPackedBool          mAllContent;
-  nsCOMPtr<nsIContent>  mEndnote;
 };
 
 static nsresult
@@ -171,29 +173,20 @@ nsXMLFragmentContentSink::WillBuildModel(void)
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRoot = do_QueryInterface(frag);
-  PushContent(mRoot); // preload content stack because we know all content goes in the fragment
+  
+  if (mAllContent) {
+    // Preload content stack because we know all content goes in the fragment
+    PushContent(mRoot);
+  }
+
   return rv;
 }
 
 NS_IMETHODIMP 
 nsXMLFragmentContentSink::DidBuildModel()
 {
-  PopContent();  // remove mRoot pushed above
-  
-  if (!mAllContent && !mParseError) {
-    NS_ASSERTION(mEndnote, "<endnote> missing in fragment string.");
-    if (mEndnote) {
-      NS_ASSERTION(mRoot->GetChildCount() == 1, "contents have too many children!");
-      // move guts
-      for (PRUint32 child = mEndnote->GetChildCount(); child > 0; child--) {
-        nsCOMPtr<nsIContent> firstchild = mEndnote->GetChildAt(0);
-        mEndnote->RemoveChildAt( 0, PR_FALSE );
-        mRoot->AppendChildTo( firstchild, PR_FALSE, PR_FALSE );
-      }
-      // delete outer content
-      mRoot->RemoveChildAt( 0, PR_FALSE );
-    }
-    // else just leave the content in the fragment.  or should we fail?
+  if (mAllContent) {
+    PopContent();  // remove mRoot pushed above
   }
 
   nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
@@ -237,11 +230,17 @@ nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsC
   nsresult rv = nsXMLContentSink::CreateElement(aAtts, aAttsCount,
                                 aNodeInfo, aLineNumber,
                                 aResult, aAppendContent);
-  *aAppendContent = PR_TRUE;  // make sure scripts added immediately, not on close.
 
-  if (NS_SUCCEEDED(rv) && aNodeInfo->Equals(nsHTMLAtoms::endnote))
-    mEndnote = *aResult;
-  
+  // Make sure that scripts are added immediately, not on close.
+  *aAppendContent = PR_TRUE;
+
+  // However, when we aren't grabbing all of the content we, never open a doc
+  // element, we run into trouble on the first element, so we don't append,
+  // and simply push this onto the content stack.
+  if (!mAllContent && mContentStack.Count() == 0) {
+    *aAppendContent = PR_FALSE;
+  }
+
   return rv;
 }
 
@@ -387,3 +386,28 @@ nsXMLFragmentContentSink::SetTargetDocument(nsIDocument* aTargetDocument)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXMLFragmentContentSink::WillBuildContent()
+{
+  // If we're taking all of the content, then we've already pushed mRoot
+  // onto the content stack, otherwise, start here.
+  if (!mAllContent) {
+    PushContent(mRoot);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLFragmentContentSink::DidBuildContent()
+{
+  // If we're taking all of the content, then this is handled in DidBuildModel
+  if (!mAllContent) {
+    // Note: we need to FlushText() here because if we don't, we might not get
+    // an end element to do it for us, so make sure.
+    FlushText();
+    PopContent();
+  }
+
+  return NS_OK;
+}

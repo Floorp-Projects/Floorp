@@ -65,6 +65,7 @@
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIFragmentContentSink.h"
 
 #ifdef MOZ_VIEW_SOURCE
 #include "nsViewSourceHTML.h" 
@@ -1804,25 +1805,40 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
                         nsDTDMode aMode)
 {
   nsresult result = NS_OK;
-  nsAutoString  theContext, endContext;
+  nsAutoString  theContext;
   PRUint32 theCount = aTagStack.Count();
   PRUint32 theIndex = 0;
-  
+
+  // Disable observers for fragments
+  mFlags &= ~NS_PARSER_FLAG_OBSERVERS_ENABLED;
+
   for (theIndex = 0; theIndex < theCount; theIndex++) {
     theContext.AppendLiteral("<");
     theContext.Append((PRUnichar*)aTagStack.ElementAt(theCount - theIndex - 1));
     theContext.AppendLiteral(">");
   }
-  
-  // Note duplication: nsHTMLAtoms::endnote == an atom in nsHTMLTags
-  theContext.AppendLiteral("<");
-  theContext.Append(nsHTMLTags::GetStringValue(eHTMLTag_endnote));
-  theContext.AppendLiteral(">");
 
-  if (aXMLMode) {
-    endContext.AppendLiteral("</");
-    endContext.Append(nsHTMLTags::GetStringValue(eHTMLTag_endnote));
-    endContext.AppendLiteral(">");
+  // First, parse the context to build up the DTD's tag stack. Note that we
+  // pass PR_FALSE for the aLastCall parameter.
+  result = Parse(theContext, (void*)&theContext, aMimeType, 
+                 PR_FALSE, PR_FALSE, aMode);
+  if (NS_FAILED(result)) {
+    mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
+    return result;
+  }
+
+  nsCOMPtr<nsIFragmentContentSink> fragSink = do_QueryInterface(mSink);
+  NS_ASSERTION(fragSink, "ParseFragment requires a fragment content sink");
+
+  fragSink->WillBuildContent();
+  // Now, parse the actual content. Note that this is the last call for HTML
+  // content, but for XML, we will want to build and parse the end tags.
+  result = Parse(aSourceBuffer, (void*)&theContext, aMimeType,
+                 PR_FALSE, !aXMLMode, aMode);
+  fragSink->DidBuildContent();
+
+  if (aXMLMode && NS_SUCCEEDED(result)) {
+    nsAutoString endContext;
 
     for (theIndex = 0; theIndex < theCount; theIndex++) {
       endContext.AppendLiteral("</");
@@ -1834,12 +1850,11 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
         endContext.Append( Substring(thisTag,0,endOfTag) );
       endContext.AppendLiteral(">");
     }
+
+    result = Parse(endContext, (void*)&theContext, aMimeType,
+                   PR_FALSE, PR_TRUE, aMode);
   }
     
-  //now it's time to try to build the model from this fragment
-
-  mFlags &= ~NS_PARSER_FLAG_OBSERVERS_ENABLED; //disable observers for fragments
-  result = Parse(theContext + aSourceBuffer + endContext,(void*)&theContext,aMimeType,PR_FALSE,PR_TRUE, aMode);
   mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED; //now reenable.
 
   return result;

@@ -43,8 +43,8 @@ class nsIDOMDocumentFragment;
 class nsIDocument;
 
 #define NS_I_FRAGMENT_CONTENT_SINK_IID \
- { 0x2b23c1fb, 0xb83c, 0x436b, \
- { 0xb7, 0x2a, 0x9c, 0xbe, 0xf1, 0xe9, 0x9b, 0x20 } };
+ { 0xe9ea6afb, 0x92f3, 0x4270, \
+ { 0xb2, 0x67, 0xd2, 0xe3, 0x8d, 0x0e, 0x95, 0x45 } }
 
 class nsIFragmentContentSink : public nsISupports {
 public:
@@ -66,11 +66,25 @@ public:
    * (should not be null)
    */
   NS_IMETHOD SetTargetDocument(nsIDocument* aDocument) = 0;
+
+  /**
+   * This method is used to indicate to the sink that we're done building
+   * the context and should start paying attention to the incoming content
+   */
+  NS_IMETHOD WillBuildContent() = 0;
+
+  /**
+   * This method is used to indicate to the sink that we're done building
+   * The real content. This is useful if you want to parse additional context
+   * (such as an end context).
+   */
+  NS_IMETHOD DidBuildContent() = 0;
 };
 
 /**
- * Base version takes string nested in context, context ends with <endnote>.
- * 2 version just loads whole string.
+ * Base version takes string nested in context, content surrounded by
+ * WillBuildContent()/DidBuildContent() calls. The 2nd version just loads
+ * the whole string.
  */
 
 #define NS_HTMLFRAGMENTSINK_CONTRACTID "@mozilla.org/layout/htmlfragmentsink;1"

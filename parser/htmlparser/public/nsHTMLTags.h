@@ -63,7 +63,7 @@ enum nsHTMLTag {
 #undef HTML_TAG
 #undef HTML_OTHER
 
-// Currently there are 108 HTML tags. eHTMLTag_text = 110.
+// Currently there are 107 HTML tags. eHTMLTag_text = 109.
 #define NS_HTML_TAG_MAX PRInt32(eHTMLTag_text - 1)
 
 class nsHTMLTags {
