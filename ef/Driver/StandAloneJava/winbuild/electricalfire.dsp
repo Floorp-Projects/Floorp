@@ -768,10 +768,10 @@ InputName=x86
 
 BuildCmds= \
 	$(NSTOOLS)\perl5\perl ..\..\..\tools\nad\nad.pl  $(InputPath)\
-                                                                                 ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
-                                                                                                        genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
-                                                                                                          genfiles\$(InputName).nad.burg.h | Burg\Release\burg -I >\
-                                                                                                      genfiles\$(InputName).nad.burg.cpp
+                                                                                  ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
+                                                                                                         genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
+                                                                                                           genfiles\$(InputName).nad.burg.h | Burg\Release\burg -I >\
+                                                                                                       genfiles\$(InputName).nad.burg.cpp
 
 "genfiles\$(InputName).nad.burg.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -794,10 +794,10 @@ InputName=x86
 
 BuildCmds= \
 	$(MOZ_TOOLS)\perl5\perl ..\..\..\tools\nad\nad.pl  $(InputPath)\
-                                                                                 ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
-                                                                                                        genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
-                                                                                                          genfiles\$(InputName).nad.burg.h | Burg\Debug\burg -I >\
-                                                                                                      genfiles\$(InputName).nad.burg.cpp
+                                                                                  ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
+                                                                                                         genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
+                                                                                                           genfiles\$(InputName).nad.burg.h | Burg\Debug\burg -I >\
+                                                                                                       genfiles\$(InputName).nad.burg.cpp
 
 "genfiles\$(InputName).nad.burg.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -847,6 +847,10 @@ SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Formatter.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86GenStub.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Instruction.cpp
 # End Source File
 # Begin Source File
@@ -867,8 +871,7 @@ SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86StdCall.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Win32_Support.cpp
-# SUBTRACT CPP /O<none>
+SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Stub.cpp
 # End Source File
 # End Group
 # Begin Group "generic"
@@ -1083,8 +1086,8 @@ InputName=PrimitiveOperations
 
 BuildCmds= \
 	$(MOZ_TOOLS)\perl5\perl -I"..\..\..\Tools\PrimitiveOperations"\
-                                                  ..\..\..\Tools\PrimitiveOperations\MakePrimOp.pl $(InputPath)\
-                                                  genfiles\$(InputName).h genfiles\$(InputName).cpp
+                                                   ..\..\..\Tools\PrimitiveOperations\MakePrimOp.pl $(InputPath)\
+                                                   genfiles\$(InputName).h genfiles\$(InputName).cpp
 
 "genfiles\$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
