@@ -674,10 +674,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
         Recycle(forceCharsetFromWebShell);
 				//TODO: we should define appropriate constant for force charset
 				charsetSource = kCharsetFromPreviousLoading;  
-          } else if ((dcInfo != NULL) && (override)) {
+          } else if ((dcInfo.get() != NULL) && (override)) {
             nsCOMPtr<nsIAtom> csAtom;
             dcInfo->GetForcedCharset(getter_AddRefs(csAtom));
-            if (csAtom != NULL) {
+            if (csAtom.get() != NULL) {
               csAtom->ToString(charset);
               charsetSource = kCharsetFromPreviousLoading;  
             }
