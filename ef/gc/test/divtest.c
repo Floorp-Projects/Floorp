@@ -40,7 +40,7 @@
 #define SIZE       1024
 int divTable[SIZE];
 
-void
+int
 main(void)
 {
     int i, j;

@@ -45,7 +45,7 @@ foo(unsigned int size)
            size, bin, bucket);
 }
 
-void
+int
 main()
 {
     int i;
