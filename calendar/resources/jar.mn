@@ -18,7 +18,7 @@ calendar.jar:
     content/calendar/contents.rdf (content/contents.rdf)
     content/calendar/dateUtils.js (content/dateUtils.js)
     content/calendar/penBindings.xml (content/penBindings.xml)
-    content/calendar/datepicker/datepicker-overlay.xul (content/datepicker-overlay.xul)
+    content/calendar/datepicker/datepicker-overlay.xul (content/datepicker/datepicker-overlay.xul)
     content/calendar/datepicker/datepicker.js (content/datepicker/datepicker.js)
     content/calendar/timepicker/timepicker-overlay.xul (content/timepicker/timepicker-overlay.xul)
     content/calendar/timepicker/timepicker.js (content/timepicker/timepicker.js)
