@@ -64,7 +64,8 @@
 
 #include <Resources.h>
 
-nsIServiceManager* theServiceManager = NULL;
+static nsIServiceManager* theServiceManager = NULL;
+static nsIServiceManagerObsolete* theServiceManagerObsolete = NULL;
 
 extern nsIServiceManager* theServiceManager;	// needs to be in badaptor.cpp.
 extern nsIPluginManager* thePluginManager;		// now in badaptor.cpp.
@@ -80,7 +81,9 @@ short thePluginRefnum = -1;
 
 static NS_DEFINE_IID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
+#ifdef MRJPLUGIN_4X	
 static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
+#endif
 static NS_DEFINE_IID(kJVMManagerCID, NS_JVMMANAGER_CID);
 
 static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
@@ -88,20 +91,44 @@ static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININST
 const char* MRJPlugin::PLUGIN_VERSION = "eerieQuarkDoll.v.b1";
 
 
+nsresult MRJPlugin::GetService(const nsCID& aCID, const nsIID& aIID, void* *aService)
+{
+    if (theServiceManager)
+        return theServiceManager->GetService(aCID, aIID, aService);
+    if (theServiceManagerObsolete)
+        return theServiceManagerObsolete->GetService(aCID, aIID, (nsISupports **)aService);
+    return NS_ERROR_FAILURE;
+}
+
+nsresult MRJPlugin::GetService(const char* aContractID, const nsIID& aIID, void* *aService)
+{
+    if (theServiceManager)
+        return theServiceManager->GetServiceByContractID(aContractID, aIID, aService);
+    if (theServiceManagerObsolete)
+        return theServiceManagerObsolete->GetService(aContractID, aIID, (nsISupports **)aService);
+    return NS_ERROR_FAILURE;
+}
+
 #pragma export on
 
 nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const char *aClassName, const char *aContractID, nsIFactory **aFactory)
 {
 	nsresult result = NS_OK;
 
-	if (theServiceManager == NULL) {
-		if (serviceManager->QueryInterface(NS_GET_IID(nsIServiceManager), (void **)&theServiceManager) != NS_OK)
-			return NS_ERROR_FAILURE;
+    if (theServiceManager == NULL && theServiceManagerObsolete == NULL) {
+        if (NS_FAILED(serviceManager->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&theServiceManager)))
+            if (NS_FAILED(serviceManager->QueryInterface(NS_GET_IID(nsIServiceManagerObsolete), (void**)&theServiceManagerObsolete)))
+                return NS_ERROR_FAILURE;
 
 		// Our global operator new wants to use nsIMalloc to do all of its allocation.
 		// This should be available from the Service Manager.
-		if (theServiceManager->GetService(kMemoryCID, NS_GET_IID(nsIMemory), (void**)&theMemoryAllocator) != NS_OK)
+#ifdef MRJPLUGIN_4X	
+		if (MRJPlugin::GetService(kMemoryCID, NS_GET_IID(nsIMemory), (void**)&theMemoryAllocator) != NS_OK)
 			return NS_ERROR_FAILURE;
+#else
+        if (NS_FAILED(MRJPlugin::GetService("@mozilla.org/xpcom/memory-service;1", NS_GET_IID(nsIMemory), (void **)&theMemoryAllocator)))
+			return NS_ERROR_FAILURE;
+#endif
 	}
 
 	if (aClass.Equals(kPluginCID)) {
@@ -268,7 +295,7 @@ NS_METHOD MRJPlugin::Initialize()
 
 	// try to get a plugin manager.
 	if (thePluginManager == NULL) {
-		result = theServiceManager->GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager), (void**)&thePluginManager);
+		result = MRJPlugin::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager), (void**)&thePluginManager);
 		if (result != NS_OK || thePluginManager == NULL)
 			return NS_ERROR_FAILURE;
 	}
@@ -280,7 +307,7 @@ NS_METHOD MRJPlugin::Initialize()
 	}
 
 	// try to get a JVM manager. we have to be able to run without one.
-	if (theServiceManager->GetService(kJVMManagerCID, NS_GET_IID(nsIJVMManager), (void**)&mManager) != NS_OK)
+	if (MRJPlugin::GetService(kJVMManagerCID, NS_GET_IID(nsIJVMManager), (void**)&mManager) != NS_OK)
 		mManager = NULL;
 	
 	// try to get a Thread manager.
@@ -312,6 +339,7 @@ NS_METHOD MRJPlugin::Shutdown()
 
     // release our reference to the service manager.
     NS_IF_RELEASE(theServiceManager);
+    NS_IF_RELEASE(theServiceManagerObsolete);
     
     return NS_OK;
 }
@@ -764,6 +792,7 @@ NS_METHOD MRJPluginInstance::SetWindow(nsPluginWindow* pluginWindow)
 NS_METHOD MRJPluginInstance::HandleEvent(nsPluginEvent* pluginEvent, PRBool* eventHandled)
 {
 	*eventHandled = PR_TRUE;
+	Boolean isUpdate;
 
 	if (pluginEvent != NULL) {
 		EventRecord* event = pluginEvent->event;
@@ -776,7 +805,8 @@ NS_METHOD MRJPluginInstance::HandleEvent(nsPluginEvent* pluginEvent, PRBool* eve
 		}
 #else
 		// Check for coordinate/clipping changes.
-		inspectInstance();
+		isUpdate = (event->what == updateEvt);
+		inspectInstance(isUpdate);
 #endif
 	
 		if (event->what == nullEvent) {
@@ -904,8 +934,8 @@ MRJSession* MRJPluginInstance::getSession()
 	return mSession;
 }
 
-void MRJPluginInstance::inspectInstance()
+void MRJPluginInstance::inspectInstance(Boolean isUpdateEvt)
 {
-    if (mContext != NULL && mContext->inspectWindow() && mWindowlessPeer != NULL)
+    if (mContext != NULL && mContext->inspectWindow() && !isUpdateEvt && mWindowlessPeer != NULL)
         mWindowlessPeer->ForceRedraw();
 }

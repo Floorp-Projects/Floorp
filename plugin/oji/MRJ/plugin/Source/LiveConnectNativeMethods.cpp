@@ -63,7 +63,6 @@
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */
 
 extern nsIPluginManager* thePluginManager;
-extern nsIServiceManager* theServiceManager;    // needs to be in badaptor.cpp.
 
 static MRJPlugin* theJVMPlugin = NULL;
 static nsILiveconnect* theLiveConnectManager = NULL;
@@ -84,8 +83,7 @@ static NS_DEFINE_IID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static nsresult getGlobalComponentManager(nsIComponentManagerObsolete* *result)
 {
-    return theServiceManager->GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManagerObsolete),
-                                         (void**)result);
+    return MRJPlugin::GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManagerObsolete), (void**)result);
 }
 
 nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
@@ -94,7 +92,7 @@ nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
 
     getGlobalComponentManager(&theComponentManager);
 
-    nsresult result = theServiceManager->GetService(kLiveConnectCID, NS_GET_IID(nsILiveconnect),
+    nsresult result = MRJPlugin::GetService(kLiveConnectCID, NS_GET_IID(nsILiveconnect),
                                                     (void**)&theLiveConnectManager);
     if (result != NS_OK)
         return result;
@@ -343,7 +341,7 @@ void MessageRunnable::execute(JNIEnv* env)
     // because a spontaneous Java thread called us, we have to switch to the JavaScript thread
     // to handle this request.
     nsIThreadManager* threadManager = NULL;
-    if (theServiceManager->GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIThreadManager), (void **)&threadManager) == NS_OK) {
+    if (MRJPlugin::GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIThreadManager), (void **)&threadManager) == NS_OK) {
         threadManager->PostEvent(mThreadID, this, PR_FALSE);
         NS_RELEASE(threadManager);
     }
@@ -352,7 +350,7 @@ void MessageRunnable::execute(JNIEnv* env)
 NS_IMETHODIMP MessageRunnable::Run()
 {
     nsIJVMManager* javaManager = NULL;
-    if (theServiceManager->GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIJVMManager), (void **)&javaManager) == NS_OK) {
+    if (MRJPlugin::GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIJVMManager), (void **)&javaManager) == NS_OK) {
         JNIEnv* proxyEnv = NULL;
         if (javaManager->GetProxyJNI(&proxyEnv) == NS_OK && proxyEnv != NULL)
             mMessage->execute(proxyEnv);
