@@ -518,6 +518,8 @@
 
       <field name="mFavIconURL">null</field>
 
+      <field name="mDestroyed">false</field>
+
       <constructor>
         <![CDATA[
           try {
@@ -567,6 +569,10 @@
       <method name="destroy">
         <body>
           <![CDATA[
+          if (this.mDestroyed)
+            return;
+          this.mDestroyed = true;
+
           if (!this.hasAttribute("disablehistory")) {
             var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
             os.removeObserver(this, "browser:purge-session-history", false);
