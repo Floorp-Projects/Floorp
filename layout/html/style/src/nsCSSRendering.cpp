@@ -2202,12 +2202,12 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
     if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
       nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
+      nsIFrame* scrolledFrame = nsnull;
       
       // get the nsIScrollableFrame interface from the scrollframe
       if (scrollFrame) {
         nsCOMPtr<nsIScrollableFrame> scrollableFrame ( do_QueryInterface(scrollFrame) );
         if ( scrollableFrame ) {
-          nsIFrame* scrolledFrame = nsnull;
 
           scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
           if (scrolledFrame) {
@@ -2220,6 +2220,19 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
           // get the current scroll position for determining the anchor point of the image
           scrollableFrame->GetScrollPosition(aPresContext, scroll_x, scroll_y);
         }
+      } 
+      if (!scrolledFrame) {
+        // The viewport isn't scrollable, so use the root frame's view
+        nsIPresShell*  presShell;
+        nsIFrame*      rootFrame;
+
+        aPresContext->GetShell(&presShell);
+        presShell->GetRootFrame(&rootFrame);
+        NS_RELEASE(presShell);
+        rootFrame->GetView(aPresContext, (nsIView**)&viewportView);
+
+	    NS_ASSERTION(viewportView, "no viewport view");
+	    viewportView->GetDimensions(&viewportArea.width, &viewportArea.height);
       }
     }
 
