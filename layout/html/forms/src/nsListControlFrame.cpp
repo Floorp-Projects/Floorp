@@ -1626,23 +1626,26 @@ NS_IMETHODIMP
 nsListControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
 {
   PRBool multiple;
-  GetMultiple(&multiple);
-
-  if (PR_TRUE == multiple) {
-    SetContentSelected(aIndex, aValue);
-  } else {
+  nsresult rv = GetMultiple(&multiple);
+  if (NS_SUCCEEDED(rv)) {
     if (aValue) {
-      SetContentSelected(mSelectedIndex, PR_FALSE);
-      SetContentSelected(aIndex, PR_TRUE);
-      mSelectedIndex = aIndex;
+      ToggleSelected(aIndex); // sets mSelectedIndex
     } else {
-      SetContentSelected(aIndex, PR_FALSE);
-      if (mSelectedIndex == aIndex) {
-        mSelectedIndex = -1;
+      SetContentSelected(aIndex, aValue);
+      if (!multiple) {
+        // Get the new selIndex from the DOM (may have changed)
+        PRInt32 selectedIndex;
+        GetSelectedIndexFromDOM(&selectedIndex);
+        if (mSelectedIndex != selectedIndex) {
+          ToggleSelected(selectedIndex); // sets mSelectedIndex
+        }
       }
     }
+    if (nsnull != mComboboxFrame) {
+      rv = mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, aIndex); // don't dispatch event
+    }
   }
-  return NS_OK;
+  return rv;
 }
 
 //---------------------------------------------------------
