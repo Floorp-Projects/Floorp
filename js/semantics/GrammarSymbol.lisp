@@ -413,6 +413,13 @@
   (allocate-grammar-parametrization (make-hash-table :test #'eq)))
 
 
+; Return true if the two grammar-parametrizations are the same.
+(defun grammar-parametrization-= (grammar-parametrization1 grammar-parametrization2)
+  (hash-table-= (grammar-parametrization-argument-attributes grammar-parametrization1)
+                (grammar-parametrization-argument-attributes grammar-parametrization2)
+                :test #'equal))
+
+
 ; Declare that nonterminal arguments with the given name can hold any of the
 ; given nonterminal attributes given.  At least one attribute must be provided.
 (defun grammar-parametrization-declare-argument (grammar-parametrization argument attributes)
