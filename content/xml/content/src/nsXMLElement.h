@@ -74,9 +74,13 @@ public:
   NS_IMETHOD GetID(nsIAtom** aResult) const;
 
   // nsIContent
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo *aNodeInfo, const nsAString& aValue,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,

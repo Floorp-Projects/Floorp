@@ -674,14 +674,8 @@ nsGenericDOMDataNode::GetExistingAttrNameFromQName(const nsAString& aStr) const
 
 nsresult
 nsGenericDOMDataNode::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
-                              const nsAString& aValue, PRBool aNotify)
-{
-  return NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::SetAttr(nsINodeInfo *aNodeInfo,
-                              const nsAString& aValue, PRBool aNotify)
+                              nsIAtom* aPrefix, const nsAString& aValue,
+                              PRBool aNotify)
 {
   return NS_OK;
 }
@@ -697,17 +691,6 @@ nsresult
 nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
                               nsAString& aResult) const
 {
-  aResult.Truncate();
-
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-nsresult
-nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
-                              nsIAtom** aPrefix,
-                              nsAString& aResult) const
-{
-  *aPrefix = nsnull;
   aResult.Truncate();
 
   return NS_CONTENT_ATTR_NOT_THERE;

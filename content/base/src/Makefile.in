@@ -63,6 +63,8 @@ REQUIRES	= xpcom \
 EXPORTS		= nsStyleSet.h
 
 CPPSRCS		= \
+		nsAttrAndChildArray.cpp \
+		nsAttrValue.cpp \
 		nsContentSink.cpp \
 		nsPrintEngine.cpp \
 		nsPrintData.cpp \

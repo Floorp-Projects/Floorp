@@ -151,7 +151,8 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
 
   nsresult result = NS_OK;
   if (mContent) {
-    result = mContent->SetAttr(mNodeInfo, aValue, PR_TRUE);
+    result = mContent->SetAttr(mNodeInfo->NamespaceID(), mNodeInfo->NameAtom(),
+                               mNodeInfo->GetPrefixAtom(), aValue, PR_TRUE);
   }
   mValue=aValue;
 
@@ -432,7 +433,8 @@ nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
       mContent->UnsetAttr(nameSpaceID, name, PR_TRUE);
 
-      mContent->SetAttr(newNodeInfo, tmpValue, PR_TRUE);
+      mContent->SetAttr(newNodeInfo->NamespaceID(), newNodeInfo->NameAtom(),
+                        newNodeInfo->GetPrefixAtom(), tmpValue, PR_TRUE);
     }
   }
 

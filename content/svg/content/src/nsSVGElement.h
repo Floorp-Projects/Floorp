@@ -76,15 +76,16 @@ public:
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
   virtual nsIAtom *GetIDAttributeName() const;
-  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsAString& aResult) const;
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom** aPrefix, nsAString& aResult) const;
   virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                              PRBool aNotify);
@@ -98,17 +99,19 @@ public:
   
   // Child list modification hooks
   virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return mChildren.InsertElementAt(aKid, aIndex);
+    return mChildren.InsertObjectAt(aKid, aIndex);
   }
   virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return mChildren.ReplaceElementAt(aKid, aIndex);
+    return mChildren.ReplaceObjectAt(aKid, aIndex);
   }
   virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
-    return mChildren.AppendElement(aKid);
+    return mChildren.AppendObject(aKid);
   }
   virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
-    return mChildren.RemoveElementAt(aIndex);
+    return mChildren.RemoveObjectAt(aIndex);
   }
+
+  virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
   // NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
 //   NS_IMETHOD RangeRemove(nsIDOMRange& aRange);
@@ -157,7 +160,7 @@ protected:
 
   nsresult CopyNode(nsSVGElement* dest, PRBool deep);
   
-  nsVoidArray                  mChildren;   
+  nsCOMArray<nsIContent>       mChildren;
   nsSVGAttributes*             mAttributes;
   nsCOMPtr<nsISVGStyleValue>   mStyle;
 };

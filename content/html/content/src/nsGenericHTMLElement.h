@@ -178,15 +178,16 @@ public:
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
   virtual void GetNameSpaceID(PRInt32* aID) const;
-  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
+                           const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsAString& aResult) const;
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom** aPrefix, nsAString& aResult) const;
   virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              PRBool aNotify);
@@ -691,7 +692,7 @@ public:
    * @param aNotify whether to notify the document of the attribute change
    */
   nsresult SetFormControlAttribute(nsIForm* aForm, PRInt32 aNameSpaceID,
-                                   nsIAtom* aName,
+                                   nsIAtom* aName, nsIAtom* aPrefix,
                                    const nsAString& aValue,
                                    PRBool aNotify);
 
@@ -769,6 +770,8 @@ protected:
    * @return whether the name is an event handler name
    */
   PRBool IsEventName(nsIAtom* aName);
+
+  virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 };
 
 
@@ -895,20 +898,25 @@ public:
 
   // Child list modification hooks
   virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return mChildren.InsertElementAt(aKid, aIndex);
+    return NS_SUCCEEDED(mAttrsAndChildren.InsertChildAt(aKid, aIndex));
   }
   virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return mChildren.ReplaceElementAt(aKid, aIndex);
+    mAttrsAndChildren.ReplaceChildAt(aKid, aIndex);
+    return PR_TRUE;
   }
   virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
-    return mChildren.AppendElement(aKid);
+    return NS_SUCCEEDED(mAttrsAndChildren.AppendChild(aKid));
   }
   virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
-    return mChildren.RemoveElementAt(aIndex);
+    mAttrsAndChildren.RemoveChildAt(aIndex);
+    return PR_TRUE;
   }
 
-  /** The list of children */
-  nsSmallVoidArray mChildren;
+  /**
+   * Array containing all attributes and children for this element
+   */
+  nsAttrAndChildArray mAttrsAndChildren;
+
 protected:
   /**
    * ReplaceContentsWithText will take the aText string and make sure
@@ -959,10 +967,13 @@ public:
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
 
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
 
   NS_IMETHOD SetAttribute(const nsAString& aName,
@@ -1004,10 +1015,13 @@ public:
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
 
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual void DoneCreatingElement();
 

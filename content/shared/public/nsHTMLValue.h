@@ -97,6 +97,21 @@ public:
     CopyUnicodeTo(aStr, 0, StrPtr(aBuf), len);
   }
   /**
+   * Construct from an AString
+   * @param aBuf the buffer to copy to
+   * @param aStr the string to construct from
+   */
+  static void CopyToExistingBuffer(PRUnichar*& aBuf, PRUnichar* aOldBuf,
+                                   const nsAString& aStr) {
+    NS_ASSERTION(aOldBuf, "Cannot work on null buffer!");
+    PRUint32 len = aStr.Length();
+    aBuf = NS_STATIC_CAST(PRUnichar*,
+                          nsMemory::Realloc(aOldBuf, sizeof(PRUint32) +
+                                                     len * sizeof(PRUnichar)));
+    *(NS_REINTERPRET_CAST(PRUint32*, aBuf)) = len;
+    CopyUnicodeTo(aStr, 0, StrPtr(aBuf), len);
+  }
+  /**
    * Construct from another nsCheapStringBuffer
    * @param aBuf the buffer to put into
    * @param aSrc the buffer to construct from

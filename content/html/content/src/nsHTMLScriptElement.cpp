@@ -340,8 +340,14 @@ public:
   NS_IMETHOD GetLineNumber(PRUint32* aLineNumber);
 
   // nsIContent
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
@@ -438,11 +444,11 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 nsresult
 nsHTMLScriptElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                             const nsAString& aValue, PRBool aNotify)
+                             nsIAtom* aPrefix, const nsAString& aValue,
+                             PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID,
-                                                       aName,
-                                                       aValue,
+  nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
+                                                       aPrefix, aValue,
                                                        aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -675,7 +681,8 @@ nsHTMLScriptElement::MaybeProcessScript()
 
   // But we'll only set mIsEvaluated if we did really load or evaluate
   // something
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::src) || mChildren.Count()) {
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::src) ||
+      mAttrsAndChildren.ChildCount()) {
     mIsEvaluated = PR_TRUE;
   }
 }

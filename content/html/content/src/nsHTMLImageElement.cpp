@@ -134,9 +134,13 @@ public:
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
 
   // XXXbz What about UnsetAttr?  We don't seem to unload images when
@@ -596,7 +600,8 @@ nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
 nsresult
 nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                            const nsAString& aValue, PRBool aNotify)
+                            nsIAtom* aPrefix, const nsAString& aValue,
+                            PRBool aNotify)
 {
   // If we plan to call ImageURIChanged, we want to do it first so that the
   // image load kicks off _before_ the reflow triggered by the SetAttr.  But if
@@ -608,15 +613,8 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     ImageURIChanged(aValue);
   }
     
-  return nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName,
+  return nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                            aValue, aNotify);
-}
-
-nsresult
-nsHTMLImageElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                            PRBool aNotify)
-{
-  return nsGenericHTMLLeafElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
 void

@@ -858,7 +858,7 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
 
             nsAutoString value;
             broadcaster->GetAttr(nameSpaceID, name, value);
-            listener->SetAttr(nameSpaceID, name, value, PR_FALSE);
+            listener->SetAttr(nameSpaceID, name, prefix, value, PR_FALSE);
 
 #if 0
             // XXX we don't fire the |onbroadcast| handler during
@@ -3526,7 +3526,9 @@ nsXULDocument::AddAttributes(nsXULPrototypeElement* aPrototype,
         nsAutoString  valueStr;
         protoattr->mValue.GetValue( valueStr );
 
-        rv = aElement->SetAttr(protoattr->mNodeInfo,
+        rv = aElement->SetAttr(protoattr->mNodeInfo->NamespaceID(),
+                               protoattr->mNodeInfo->NameAtom(),
+                               protoattr->mNodeInfo->GetPrefixAtom(),
                                valueStr,
                                PR_FALSE);
         if (NS_FAILED(rv)) return rv;
@@ -3820,16 +3822,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             return NS_OK;
         }
 
-        nsINodeInfo *contentNi = aTargetNode->GetNodeInfo();
-        nsCOMPtr<nsINodeInfo> ni;
-
-        if (contentNi) {
-            contentNi->NodeInfoManager()->GetNodeInfo(attr, prefix,
-                                                      nameSpaceID,
-                                                      getter_AddRefs(ni));
-        }
-
-        rv = aTargetNode->SetAttr(ni, value, PR_FALSE);
+        rv = aTargetNode->SetAttr(nameSpaceID, attr, prefix, value, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }
 

@@ -181,9 +181,13 @@ public:
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
   virtual void SetFocus(nsIPresContext* aContext);
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
@@ -434,7 +438,7 @@ nsHTMLLabelElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
 }
 
 nsresult
-nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                             const nsAString& aValue, PRBool aNotify)
 {
   if (aName == nsHTMLAtoms::accesskey && kNameSpaceID_None == aNameSpaceID) {
@@ -442,7 +446,8 @@ nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   nsresult rv =
-      nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aValue, aNotify);
+      nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                    aNotify);
 
   if (aName == nsHTMLAtoms::accesskey && kNameSpaceID_None == aNameSpaceID &&
       !aValue.IsEmpty()) {
@@ -450,13 +455,6 @@ nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   return rv;
-}
-
-nsresult
-nsHTMLLabelElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                            PRBool aNotify)
-{
-  return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
 nsresult

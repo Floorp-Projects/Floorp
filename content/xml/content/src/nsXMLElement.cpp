@@ -145,23 +145,11 @@ NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
 
 
 nsresult
-nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                      const nsAString& aValue,
-                      PRBool aNotify)
+nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
+                      const nsAString& aValue, PRBool aNotify)
 {
-  return nsGenericContainerElement::SetAttr(aNameSpaceID, aName, aValue,
-                                            aNotify);
-}
+  if (aNameSpaceID == kNameSpaceID_XLink && aName == nsHTMLAtoms::type) { 
 
-nsresult
-nsXMLElement::SetAttr(nsINodeInfo *aNodeInfo,
-                      const nsAString& aValue,
-                      PRBool aNotify)
-{
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
-
-  if (aNodeInfo->Equals(nsHTMLAtoms::type, kNameSpaceID_XLink)) { 
-    
     // NOTE: This really is a link according to the XLink spec,
     //       we do not need to check other attributes. If there
     //       is no href attribute, then this link is simply
@@ -171,7 +159,8 @@ nsXMLElement::SetAttr(nsINodeInfo *aNodeInfo,
     // We will check for actuate="onLoad" in MaybeTriggerAutoLink
   }
 
-  return nsGenericContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
+  return nsGenericContainerElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                            aValue, aNotify);
 }
 
 static nsresult

@@ -128,13 +128,17 @@ public:
 
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
   
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAString& aValue,
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify) {  return NS_OK; }
   virtual nsresult SetAttr(nsINodeInfo *aNodeInfo, const nsAString& aValue,
                            PRBool aNotify) {  return NS_OK; }
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
   virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom** aPrefix, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
   virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const {
     return PR_FALSE;
   }

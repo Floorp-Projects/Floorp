@@ -71,9 +71,13 @@ public:
 
   // These override the SetAttr methods in nsGenericHTMLElement (need
   // both here to silence compiler warnings).
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
 
   // nsIFramesetElement
@@ -212,6 +216,7 @@ NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Rows, rows)
 nsresult
 nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
+                               nsIAtom* aPrefix,
                                const nsAString& aValue,
                                PRBool aNotify)
 {
@@ -250,21 +255,12 @@ nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
     }
   }
   
-  rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aAttribute, aValue,
-                                              aNotify);
+  rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aAttribute,
+                                              aPrefix, aValue, aNotify);
   mCurrentRowColHint = NS_STYLE_HINT_REFLOW;
   
   return rv;
 }
-
-nsresult
-nsHTMLFrameSetElement::SetAttr(nsINodeInfo* aNodeInfo,
-                               const nsAString& aValue,
-                               PRBool aNotify)
-{
-  return nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
-}
-
 
 NS_IMETHODIMP
 nsHTMLFrameSetElement::GetRowSpec(PRInt32 *aNumValues,

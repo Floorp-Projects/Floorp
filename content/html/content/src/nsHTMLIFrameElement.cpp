@@ -101,11 +101,18 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify)
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify)
   {
     nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
-                                                         aValue, aNotify);
+                                                         aPrefix, aValue,
+                                                         aNotify);
 
     if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
         aName == nsHTMLAtoms::src) {
@@ -113,12 +120,6 @@ public:
     }
 
     return rv;
-  }
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                           PRBool aNotify)
-  {
-    // This will end up calling our other SetAttr method
-    return nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
   }
 
   NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;

@@ -92,9 +92,13 @@ public:
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsString& aRel,
                               const nsString& aRev,
                               const nsAString& aEventName);
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
@@ -292,40 +296,18 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 
 nsresult
 nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify)
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify)
 {
   if (aName == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
     SetLinkState(eLinkState_Unknown);
   }
 
-  nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName, aValue,
-                                                  aNotify);
+  nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                                  aValue, aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
-
-  return rv;
-}
-
-nsresult
-nsHTMLLinkElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                           PRBool aNotify)
-{
-  nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNodeInfo, aValue, aNotify);
-
-  // nsGenericHTMLLeafElement::SetAttr(nsINodeInfo* aNodeInfo,
-  //                                   const nsAString& aValue,
-  //                                   PRBool aNotify)
-  //
-  // calls
-  //
-  // nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID,
-  //                            nsIAtom* aName,
-  //                            const nsAString& aValue,
-  //                            PRBool aNotify)
-  //
-  // which ends up calling UpdateStyleSheet so we don't call UpdateStyleSheet
-  // here ourselves.
 
   return rv;
 }
