@@ -47,6 +47,16 @@ class SubString {
         length = str.length();
     }
 
+    public SubString(char[] source, int start, int len)
+    {
+    // there must be a better way of doing this??
+        index = 0;
+        length = len;
+        charArray = new char[len];
+        for (int j = 0; j < len; j++)
+            charArray[j] = source[start + j];
+    }
+
     public String toString() {
         return charArray == null
                ? ""

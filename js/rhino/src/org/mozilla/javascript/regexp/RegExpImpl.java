@@ -166,7 +166,7 @@ public class RegExpImpl implements RegExpProxy {
             }
         data.regexp = re;
 
-        data.global = (re.getFlags() & NativeRegExp.GLOB) != 0;
+        data.global = (re.getFlags() & NativeRegExp.JSREG_GLOB) != 0;
         int[] indexp = { 0 };
         Object result = null;
         if (data.mode == GlobData.GLOB_SEARCH) {
