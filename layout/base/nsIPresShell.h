@@ -180,6 +180,8 @@ public:
 
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
 
+  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame) = 0;
+
   NS_IMETHOD ProcessReflowCommands() = 0;
 
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
