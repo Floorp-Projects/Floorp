@@ -121,10 +121,4 @@
   <bookmarks-tree id="folder-tree" flex="1" type="folders" collapsed="true"
                   seltype="single" persist="height" rows="6"
                   onselect="selectTreeFolder();"/>
- 
-  <script type="application/x-javascript"><![CDATA[
-    if (!window.arguments[5])
-      document.getElementById("addgroup").setAttribute("hidden", "true");
-  ]]></script>
-
 </dialog>

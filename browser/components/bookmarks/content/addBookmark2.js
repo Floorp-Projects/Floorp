@@ -50,39 +50,38 @@
  * 
  * Parameters: 
  *   Apart from the standard openDialog parameters, this dialog can 
- *   be passed additional information, which gets mapped to the 
- *   window.arguments array:
+ *   be passed additional information, which is contained in the 
+ *   wArg object:
  * 
- *   XXXben - it would be cleaner just to take this dialog take an
- *            object so items don't need to be passed in a particular
- *            order.
- * 
- *   window.arguments[0]: Bookmark Name. The value to be prefilled
+ *   wArg.name          : Bookmark Name. The value to be prefilled
  *                        into the "Name: " field (if visible).
- *   window.arguments[1]: Bookmark URL: The location of the bookmark.
+ *   wArg.description   : Bookmark description. The value to be added
+ *                      : to the boomarks description field.
+ *   wArg.url           : Bookmark URL: The location of the bookmark.
  *                        The value to be filled in the "Location: "
  *                        field (if visible).
- *   window.arguments[2]: Bookmark Folder. The RDF Resource URI of the
+ *   wArg.folderURI     : Bookmark Folder. The RDF Resource URI of the
  *                        folder that this bookmark should be created in.
- *   window.arguments[3]: Bookmark Charset. The charset that should be
+ *   wArg.charset       : Bookmark Charset. The charset that should be
  *                        used when adding a bookmark to the specified
  *                        URL. (Usually the charset of the current 
- *                        document when launching this window). 
- *   window.arguments[4]: The mode of operation. See notes for details.
- *   window.arguments[5]: If the mode is "addGroup", this is an array
- *                        of objects with name, URL and charset
+ *                        document when launching this window).
+ *   wArg.bAddGroup     : True if adding a group of tabs, false
+ *                        otherwise.
+ *   wArg.objGroup[]    : If adding a group of tabs, this is an array
+ *                        of wArg objects with name, URL and charset
  *                        properties, one for each group member.
- *   window.arguments[6]: If the bookmark should become a web panel.
- *   window.arguments[7]: A suggested keyword for the bookmark. If this
+ *   wArg.bWebPanel     : If the bookmark should become a web panel.
+ *   wArg.keyword       : A suggested keyword for the bookmark. If this
  *                        argument is supplied, the keyword row is made
  *                        visible.
- *   window.arguments[8]: Whether or not a keyword is required to add
+ *   wArg.bNeedKeyword  : Whether or not a keyword is required to add
  *                        the bookmark.
- *   window.arguments[9]: PostData to be saved with this bookmark, 
+ *   wArg.postData      : PostData to be saved with this bookmark, 
  *                        in the format a string of name=value pairs
  *                        separated by CRLFs.
- *   window.arguments[10]: feed URL for Livemarks (turns bookmark
- *                         into Livemark)
+ *   wArg.feedURL       : feed URL for Livemarks (turns bookmark
+ *                        into Livemark)
  */
 
 var gSelectedFolder;
@@ -97,6 +96,7 @@ var gKeywordRequired;
 var gSuggestedKeyword;
 var gRequiredFields = [];
 var gPostData;
+var gArg = window.arguments[0];
 
 # on windows, sizeToContent is buggy (see bug 227951), we''ll use resizeTo
 # instead and cache the bookmarks tree view size.
@@ -114,11 +114,11 @@ function Startup()
   gExpander = document.getElementById("expander");
   gMenulist = document.getElementById("select-menu");
   gBookmarksTree = document.getElementById("folder-tree");
-  gName.value = window.arguments[0];
+  gName.value = gArg.name;
   gName.select();
   gName.focus();
-  gSuggestedKeyword = window.arguments[7];
-  gKeywordRequired = window.arguments[8];
+  gSuggestedKeyword = gArg.keyword;
+  gKeywordRequired = gArg.bNeedKeyword;
   if (!gSuggestedKeyword && !gKeywordRequired) {
     gKeywordRow.hidden = true;
   } else {
@@ -127,11 +127,13 @@ function Startup()
     if (gKeywordRequired)
       gRequiredFields.push(gKeyword);
   }
+  if (!gArg.bAddGroup)
+    gGroup.setAttribute("hidden", "true");
   sizeToContent();
   onFieldInput();
   gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptextdown"));
-  gPostData = window.arguments[9];
+  gPostData = gArg.postData;
 
 # read the persisted attribute. If it is not present, set a default height.
   WSucks = parseInt(gBookmarksTree.getAttribute("height"));
@@ -170,28 +172,28 @@ function onOK()
   RDFC.Init(BMDS, gSelectedFolder);
 
   var url, rSource;
-  var livemarkFeed = window.arguments[10];
+  var livemarkFeed = gArg.feedURL;
   if (gGroup && gGroup.checked) {
     rSource = BMDS.createFolder(gName.value);
-    const groups = window.arguments[5];
+    const groups = gArg.objGroup;
     for (var i = 0; i < groups.length; ++i) {
       url = getNormalizedURL(groups[i].url);
-      BMDS.createBookmarkInContainer(groups[i].name, url, gKeyword.value, null,
+      BMDS.createBookmarkInContainer(groups[i].name, url, gKeyword.value, groups[i].description,
                                      groups[i].charset, gPostData, rSource, -1);
     }
   } else if (livemarkFeed != null) {
-    url = getNormalizedURL(window.arguments[1]);
+    url = getNormalizedURL(gArg.url);
     rSource = BMDS.createLivemark(gName.value, url, livemarkFeed, null);
   } else {
-    url = getNormalizedURL(window.arguments[1]);
-    rSource = BMDS.createBookmark(gName.value, url, gKeyword.value, null, window.arguments[3], gPostData);
+    url = getNormalizedURL(gArg.url);
+    rSource = BMDS.createBookmark(gName.value, url, gKeyword.value, gArg.description, gArg.charset, gPostData);
   }
 
   var selection = BookmarksUtils.getSelectionFromResource(rSource);
   var target    = BookmarksUtils.getTargetFromFolder(gSelectedFolder);
   BookmarksUtils.insertAndCheckSelection("newbookmark", selection, target);
   
-  if (window.arguments[6] && rSource) {
+  if (gArg.bWebPanel && rSource) {
     // Assert that we're a web panel.
     BMDS.Assert(rSource, RDF.GetResource(NC_NS+"WebPanel"),
                 RDF.GetLiteral("true"), true);
