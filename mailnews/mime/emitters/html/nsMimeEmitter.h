@@ -40,7 +40,8 @@ public:
     NS_IMETHOD    SetOutputStream(nsINetOStream *outStream);
 
     // Header handling routines.
-    NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID);
+    NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
+                              const char *outCharset);
     NS_IMETHOD    AddHeaderField(const char *field, const char *value);
     NS_IMETHOD    EndHeader();
 
@@ -50,7 +51,7 @@ public:
     NS_IMETHOD    EndAttachment();
 
     // Body handling routines
-    NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID);
+    NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset);
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
     NS_IMETHOD    EndBody();
 

@@ -55,7 +55,8 @@ static const nsIID& GetIID() { static nsIID iid = NS_IMIME_EMITTER_IID; return i
     NS_IMETHOD    SetOutputStream(nsINetOStream *outStream) = 0;
 
     // Header handling routines.
-    NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID) = 0;
+    NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
+                              const char *outCharset) = 0;
     NS_IMETHOD    AddHeaderField(const char *field, const char *value) = 0;
     NS_IMETHOD    EndHeader() = 0;
 
@@ -65,7 +66,7 @@ static const nsIID& GetIID() { static nsIID iid = NS_IMIME_EMITTER_IID; return i
     NS_IMETHOD    EndAttachment() = 0;
 
     // Body handling routines
-    NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID) = 0;
+    NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset) = 0;
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten) = 0;
     NS_IMETHOD    EndBody() = 0;
 

@@ -151,7 +151,8 @@ nsMimeEmitter::Complete()
 
 // Header handling routines.
 nsresult
-nsMimeEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID)
+nsMimeEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
+                           const char *outCharset)
 {
 #ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
@@ -213,7 +214,7 @@ nsMimeEmitter::EndAttachment()
 
 // Attachment handling routines
 nsresult
-nsMimeEmitter::StartBody(PRBool bodyOnly, const char *msgID)
+nsMimeEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset)
 {
 #ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;

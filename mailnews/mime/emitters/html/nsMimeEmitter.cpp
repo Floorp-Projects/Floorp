@@ -139,7 +139,8 @@ nsMimeEmitter::Complete()
 
 // Header handling routines.
 nsresult
-nsMimeEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID)
+nsMimeEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
+                           const char *outCharset)
 {
 #ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
@@ -149,8 +150,12 @@ nsMimeEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char 
 
   if (mDocHeader)
   {
-    if (!headerOnly)
-      UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">");
+    if ( (!headerOnly) && (outCharset) && (*outCharset) )
+    {
+      UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
+      UtilityWrite(outCharset);
+      UtilityWrite("\">");
+    }
     UtilityWrite("<BLOCKQUOTE><table BORDER=0>");
   }  
   else
@@ -282,6 +287,10 @@ nsMimeEmitter::AddAttachmentField(const char *field, const char *value)
   mReallyOutput = PR_TRUE;
 #endif
 
+  // Don't let bad things happen
+  if ( (!value) || (!*value) )
+    return NS_OK;
+
   char  *newValue = nsEscapeHTML(value);
   PRBool  linkIt = (!PL_strcmp(HEADER_X_MOZILLA_PART_URL, field));
 
@@ -348,14 +357,18 @@ nsMimeEmitter::EndAttachment()
 
 // Attachment handling routines
 nsresult
-nsMimeEmitter::StartBody(PRBool bodyOnly, const char *msgID)
+nsMimeEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset)
 {
 #ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
-  if (bodyOnly)
-    UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">");
+  if ((bodyOnly) && (outCharset) && (*outCharset))
+  {
+    UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
+    UtilityWrite(outCharset);
+    UtilityWrite("\">");
+  }
 
   return NS_OK;
 }
