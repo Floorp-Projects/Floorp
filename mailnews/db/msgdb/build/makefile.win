@@ -24,6 +24,7 @@ MODULE          = msgdb
 LIBRARY_NAME    = msgdb
 META_COMPONENT  = mail
 MODULE_NAME  = nsMsgDBModule
+REQUIRES	= xpcom string mailnews locale mork mime msgbase msgbaseutil necko
 
 ################################################################################
 ## exports

@@ -22,6 +22,7 @@ MODULE          = mime
 LIBRARY_NAME    = mime
 META_COMPONENT  = mail
 MODULE_NAME  = mime_services
+REQUIRES	= xpcom string necko msgbase pref necko uconv
 
 EXPORTS=								\
 			nsMsgMimeCID.h				\

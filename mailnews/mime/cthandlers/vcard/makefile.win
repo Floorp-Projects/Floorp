@@ -44,6 +44,7 @@ MODULE          = vcard
 LIBRARY_NAME    = vcard
 META_COMPONENT  = mail
 MODULE_NAME  = nsVCardModule
+REQUIRES	= xpcom string mime msgbase msgbaseutil uconv necko intl pref mailnews msgdb
 
 # EXPORTS =
 # Put any necessary exported headers here!!!               	

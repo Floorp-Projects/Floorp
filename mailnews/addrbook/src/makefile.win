@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..
 MODULE= addrbook
+REQUIRES	= xpcom string rdf rdfutil appshell dom layout widget mork docshell pref necko locale webshell uconv msgbase msgbaseutil mime msgcompose appcomps
 
 include <$(DEPTH)\config\config.mak>
 

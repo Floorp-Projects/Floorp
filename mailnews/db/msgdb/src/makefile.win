@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..\..
 MODULE= msgdb
+REQUIRES	= xpcom string mailnews mork msgbase msgbaseutil locale mime necko pref msgimap
 
 include <$(DEPTH)\config\config.mak>
 

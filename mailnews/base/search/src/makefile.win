@@ -21,11 +21,11 @@
 
 DEPTH=..\..\..\..
 
-
+MODULE=msgsearch
+REQUIRES	= xpcom string mailnews msgdb msgbaseutil necko mime msgimap rdf msglocal intl pref timer msgnews txmgr
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=msgsearch_s
-MODULE=msgsearch
 
 DEFINES=-D_IMPL_NS_HTML
 

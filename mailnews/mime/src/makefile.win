@@ -20,6 +20,7 @@
 
 DEPTH=..\..\..
 MODULE= mime
+REQUIRES	= xpcom string msgbase msgbaseutil pref js necko uconv msgcompose editor dom intl msgimap exthandler mailnews msgdb chardet caps mimetype uriloader xpconnect
 
 include <$(DEPTH)\config\config.mak>
 

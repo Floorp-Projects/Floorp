@@ -25,7 +25,6 @@ DIRS=\
     public  \
     src     \
     build   \
-    resources \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
