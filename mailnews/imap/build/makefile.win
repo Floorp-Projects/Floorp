@@ -44,6 +44,7 @@ LLIBS=\
     $(LIBNSPR)						\
     $(DIST)\lib\plc3.lib			\
     $(DIST)\lib\raptorbase.lib		\
+    $(DIST)\lib\rdfutil_s.lib		\
 	$(NULL)
 
 MISCDEP=$(LLIBS)
@@ -56,6 +57,8 @@ LINCS=									\
 		-I$(PUBLIC)\raptor				\
 		-I$(PUBLIC)\netlib				\
 		-I$(PUBLIC)\pref				\
+		-I$(PUBLIC)\rdf					\
+		-I$(PUBLIC)\rdfutil				\
 		-I$(PUBLIC)\js					\
         $(NULL)
 
