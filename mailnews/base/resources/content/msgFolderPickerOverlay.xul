@@ -22,11 +22,11 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgFolderPickerOverlay.dtd">
 
 <overlay id="msgFolderPicker"
-                 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns:nc="http://home.netscape.com/NC-rdf#"
                  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript" src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
+<script language="JavaScript" src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
+<script language="JavaScript" src="chrome://messenger/content/mailCommands.js"/>
 
 	<menu class="push" value="&newfolderclickhere.label;" uri="" id="msgNewFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
 		ref="msgaccounts:/">
