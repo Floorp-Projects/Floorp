@@ -48,7 +48,7 @@ enum nsXPBaseWindowType {
                   ///creates a dialog
                 eXPBaseWindowType_dialog,
                   ///creates a modal dialog
-                eXPBaseWindowType_modalDialog,
+                eXPBaseWindowType_modalDialog
               }; 
 
 
