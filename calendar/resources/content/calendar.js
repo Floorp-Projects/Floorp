@@ -1658,11 +1658,15 @@ function CalendarToolboxCustomizeDone(aToolboxChanged)
 //
 
 // returns the TZID of the timezone pref
-gDefaultTimezone = null;
+gDefaultTimezone = -1;
 function calendarDefaultTimezone() {
-    if (gDefaultTimezone == null) {
+    if (gDefaultTimezone == -1) {
         var prefobj = prefService.getBranch("calendar.");
-        gDefaultTimezone = getCharPref(prefobj, "local-time-zone", "/softwarestudio.org/Olson_20010626_2/America/Los_Angeles");
+        try {
+            gDefaultTimezone = prefobj.getCharPref("timezone.local");
+        } catch (e) {
+            gDefaultTimezone = null;
+        }
     }
 
     return gDefaultTimezone;
