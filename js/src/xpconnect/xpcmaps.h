@@ -49,6 +49,10 @@ public:
         JS_HashTableRemove(mHashtable, xpcc->GetJSContext());
     }
 
+    inline uint32 Count() {return mHashtable->nentries;}
+    inline intN Enumerate(JSHashEnumerator f, void *arg)
+        {return JS_HashTableEnumerateEntries(mHashtable, f, arg);}
+
     ~JSContext2XPCContextMap();
 private:
     JSContext2XPCContextMap();    // no implementation
@@ -81,6 +85,10 @@ public:
         NS_PRECONDITION(Wrapper,"bad param");
         JS_HashTableRemove(mHashtable, Wrapper->GetJSObject());
     }
+
+    inline uint32 Count() {return mHashtable->nentries;}
+    inline intN Enumerate(JSHashEnumerator f, void *arg)
+        {return JS_HashTableEnumerateEntries(mHashtable, f, arg);}
 
     ~JSObject2WrappedJSMap();
 private:
@@ -115,6 +123,10 @@ public:
         JS_HashTableRemove(mHashtable, Wrapper->GetNative());
     }
 
+    inline uint32 Count() {return mHashtable->nentries;}
+    inline intN Enumerate(JSHashEnumerator f, void *arg)
+        {return JS_HashTableEnumerateEntries(mHashtable, f, arg);}
+
     ~Native2WrappedNativeMap();
 private:
     Native2WrappedNativeMap();    // no implementation
@@ -147,6 +159,10 @@ public:
         JS_HashTableRemove(mHashtable, &Class->GetIID());
     }
 
+    inline uint32 Count() {return mHashtable->nentries;}
+    inline intN Enumerate(JSHashEnumerator f, void *arg)
+        {return JS_HashTableEnumerateEntries(mHashtable, f, arg);}
+
     ~IID2WrappedJSClassMap();
 private:
     IID2WrappedJSClassMap();    // no implementation
@@ -178,6 +194,10 @@ public:
         NS_PRECONDITION(Class,"bad param");
         JS_HashTableRemove(mHashtable, &Class->GetIID());
     }
+
+    inline uint32 Count() {return mHashtable->nentries;}
+    inline intN Enumerate(JSHashEnumerator f, void *arg)
+        {return JS_HashTableEnumerateEntries(mHashtable, f, arg);}
 
     ~IID2WrappedNativeClassMap();
 private:

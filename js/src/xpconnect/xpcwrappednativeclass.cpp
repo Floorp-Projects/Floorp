@@ -20,6 +20,11 @@
 
 #include "xpcprivate.h"
 
+/***************************************************************************/
+XPCNativeMemberDescriptor::XPCNativeMemberDescriptor()
+    : invokeFuncObj(NULL), id(0), index(0), index2(0), flags(0) {}
+/***************************************************************************/
+
 const char* XPC_VAL_STR = "value";
 
 extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
@@ -1194,4 +1199,80 @@ nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(JSContext* cx,
 }
 
 /***************************************************************************/
+
+NS_IMETHODIMP
+nsXPCWrappedNativeClass::DebugDump(int depth)
+{
+#ifdef DEBUG
+    depth-- ;
+    XPC_LOG_ALWAYS(("nsXPCWrappedNativeClass @ %x with mRefCnt = %d", this, mRefCnt));
+    XPC_LOG_INDENT();
+        XPC_LOG_ALWAYS(("interface name is %s", GetInterfaceName()));
+        char * iid = mIID.ToString();
+        XPC_LOG_ALWAYS(("IID number is %s", iid));
+        free(iid);
+        XPC_LOG_ALWAYS(("InterfaceInfo @ %x", mInfo));
+        if(depth)
+        {
+            uint16 i;
+            nsIInterfaceInfo* parent;
+            XPC_LOG_INDENT();
+            mInfo->GetParent(&parent);
+            XPC_LOG_ALWAYS(("parent @ %x", parent));
+            mInfo->GetMethodCount(&i);
+            XPC_LOG_ALWAYS(("MethodCount = %d", i));
+            mInfo->GetConstantCount(&i);
+            XPC_LOG_ALWAYS(("ConstantCount = %d", i));
+            XPC_LOG_OUTDENT();
+        }
+        XPC_LOG_ALWAYS(("mXPCContext @ %x", mXPCContext));
+        XPC_LOG_ALWAYS(("JSContext @ %x", GetJSContext()));
+        XPC_LOG_ALWAYS(("mDescriptors @ %x count = %d", mDescriptors, mMemberCount));
+        if(depth && mDescriptors)
+        {
+            depth--;
+            XPC_LOG_INDENT();
+            for(int i = 0; i < mMemberCount; i++)
+            {
+                const XPCNativeMemberDescriptor& desc = mDescriptors[i];
+                XPC_LOG_ALWAYS(("Descriptor @ %x", &desc));
+                if(depth)
+                {
+                    depth--;
+                    XPC_LOG_INDENT();
+                    XPC_LOG_ALWAYS(("category: %s %s %s %s", \
+                        desc.IsConstant() ? "Constant" : "", \
+                        desc.IsMethod()   ? "Method" : "", \
+                        desc.IsWritableAttribute() ? "WritableAttribute" : "", \
+                        desc.IsReadOnlyAttribute() ? "ReadOnlyAttribute" : ""));
+                    XPC_LOG_ALWAYS(("id is %x", desc.id));
+                    if(depth)
+                    {
+                        XPC_LOG_INDENT();
+                        jsval idval;
+                        const char *name;
+                        if (JS_IdToValue(GetJSContext(), desc.id, &idval) && 
+                            JSVAL_IS_STRING(idval) &&
+                           (name = JS_GetStringBytes(
+                                    JSVAL_TO_STRING(idval))) != NULL)
+                        {
+                            XPC_LOG_ALWAYS(("property name is %s", name));
+                        }
+                        XPC_LOG_OUTDENT();
+                    }
+                    XPC_LOG_ALWAYS(("index is %d", desc.index));
+                    XPC_LOG_ALWAYS(("index2 is %d", desc.index2));
+                    XPC_LOG_ALWAYS(("invokeFuncObj @ %x", desc.invokeFuncObj));
+                    XPC_LOG_OUTDENT();
+                    depth++;
+                }
+
+            }
+            XPC_LOG_OUTDENT();
+            depth++;
+        }
+    XPC_LOG_OUTDENT();
+#endif        
+    return NS_OK;
+}        
 

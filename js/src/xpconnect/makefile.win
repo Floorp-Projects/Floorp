@@ -33,6 +33,7 @@ DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API -DJS_THREADSAFE -DDEBUG
 OBJS=					\
 	.\$(OBJDIR)\xpt_cpp.obj	\
 	.\$(OBJDIR)\nsXPConnect.obj	\
+	.\$(OBJDIR)\xpclog.obj	\
 	.\$(OBJDIR)\xpcarbitrary.obj	\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcconvert.obj	\
@@ -51,6 +52,7 @@ EXPORTS =					\
     nsIInterfaceInfo.h \
     nsIInterfaceInfoManager.h \
     nsIXPConnect.h     \
+    xpclog.h     \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\raptor -I$(PUBLIC)\libxpt

@@ -280,6 +280,38 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext* aJSContext,
     return NS_OK;
 }
 
+#ifdef DEBUG
+ContextMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
+{
+    ((XPCContext*)he->value)->DebugDump(*(int*)arg);
+    return HT_ENUMERATE_NEXT;
+}        
+#endif        
+
+NS_IMETHODIMP
+nsXPConnect::DebugDump(int depth)
+{
+#ifdef DEBUG
+    depth-- ;
+    XPC_LOG_ALWAYS(("nsXPConnect @ %x with mRefCnt = %d", this, mRefCnt));
+    XPC_LOG_INDENT();
+        XPC_LOG_ALWAYS(("mAllocator @ %x", mAllocator));
+        XPC_LOG_ALWAYS(("mArbitraryScriptable @ %x", mArbitraryScriptable));
+        XPC_LOG_ALWAYS(("mInterfaceInfoManager @ %x", mInterfaceInfoManager));
+        XPC_LOG_ALWAYS(("mContextMap @ %x with %d context(s)", \
+                         mContextMap, mContextMap ? mContextMap->Count() : 0));
+        // iterate contexts...
+        if(depth && mContextMap && mContextMap->Count())
+        {
+            XPC_LOG_INDENT();
+            mContextMap->Enumerate(ContextMapDumpEnumerator, &depth);
+            XPC_LOG_OUTDENT();
+        }
+    XPC_LOG_OUTDENT();
+#endif        
+    return NS_OK;
+}        
+
 XPC_PUBLIC_API(nsIXPConnect*)
 XPC_GetXPConnect()
 {
@@ -288,3 +320,29 @@ XPC_GetXPConnect()
 //    p->Stub5();
     return nsXPConnect::GetXPConnect();
 }
+
+#ifdef DEBUG
+XPC_PUBLIC_API(void)
+XPC_Dump(nsISupports* p, int depth)
+{
+    if(!p || !depth)
+        return;
+
+    nsIXPConnect* xpc;
+    nsIXPCWrappedNativeClass* wnc;
+
+    if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnect::IID(),(void**)&xpc)))
+    {
+        XPC_LOG_ALWAYS(("Dumping a nsIXPConnect..."));
+        xpc->DebugDump(depth);
+        NS_RELEASE(xpc);
+    }
+    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedNativeClass::IID(),(void**)&wnc)))
+    {
+        XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedNativeClass..."));
+        wnc->DebugDump(depth);
+        NS_RELEASE(xpc);
+    }
+}        
+#endif        
+

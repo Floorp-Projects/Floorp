@@ -7,6 +7,7 @@
 #include "nsIServiceManager.h"
 #include "jsapi.h"
 #include <stdio.h>
+#include "xpclog.h"
 
 
 // XXX this should not be necessary, but the nsIAllocator service is not being 
@@ -568,6 +569,9 @@ int main()
             for(char** p = txt; *p; p++)
                 JS_EvaluateScript(cx, glob, *p, strlen(*p), "builtin", 1, &rval);
 
+            // dump to log test...
+            XPC_DUMP(xpc, 50);
+
             if(JS_GetProperty(cx, glob, "bar", &v) && JSVAL_IS_OBJECT(v))
             {
                 JSObject* bar = JSVAL_TO_OBJECT(v);
@@ -591,6 +595,9 @@ int main()
                     printf("call to methods->GetJSObject() returned: %s\n", 
                             test_js_obj == JSVAL_TO_OBJECT(v) ?
                             "expected result" : "WRONG RESULT" );
+
+                    // dump to log test...
+                    XPC_DUMP(xpc, 1);
 
                     NS_RELEASE(methods);
                     NS_RELEASE(wrapper);
@@ -650,4 +657,6 @@ DumpSymbol(JSHashEntry *he, int i, void *arg)
 JS_BEGIN_EXTERN_C
 void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
 void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
+void Dobj(nsISupports* p, int depth) {if(p)XPC_DUMP(p,depth);}
+void Dxpc(int depth) {Dobj(XPC_GetXPConnect(), depth);}
 JS_END_EXTERN_C
