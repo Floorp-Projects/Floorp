@@ -268,6 +268,39 @@ Declare_PtrStack(ED_TextFormat,int32)                   // TXP_PtrStack_ED_TextF
 Declare_PtrStack(CEditCommandGroup,CEditCommandGroup*)  // TXP_PtrStack_CEditCommandGroup
 Declare_PtrStack(CParseState,CParseState*)              // TXP_PtrStack_CParseState
 
+
+/* Gives us quick access to first cell in each column or row 
+ *  with location and index data
+*/
+struct _EDT_CellLayoutData {
+    int32                 X;                 /* X value of cell */
+    int32                 Y;                 /* Y value of cell */
+    int32                 iColumn;           /* Geometric column index */
+    int32                 iRow;              /* Geometric row index */
+    int32                 iCellsInColumn;    /* Total number of cells in each column */
+    int32                 iCellsInRow;       /*  and row */
+    LO_Element            *pLoCell;          /* Layout element pointer */
+    CEditTableCellElement *pEdCell;          /* Corresponding edit element object */
+};
+
+typedef struct _EDT_TableRowData EDT_TableRowData;
+
+/* iTableMode param for CEditTableElement::SetSizeMode() */
+#define ED_MODE_TABLE_PERCENT     0x0001   /* Convert table to use % of parent width */
+#define ED_MODE_TABLE_PIXELS      0x0002   /* Convert table to use absolute pixels */
+#define ED_MODE_CELL_PERCENT      0x0004   /* Convert all cells to use % of parent width */
+#define ED_MODE_CELL_PIXELS       0x0008   /* Convert all cells to use absolute pixels */
+#define ED_MODE_USE_TABLE_WIDTH   0x0010   /* Set WIDTH param for table */
+#define ED_MODE_NO_TABLE_WIDTH    0x0020   /* Remove WIDTH param for table (allows cell resizing) */
+#define ED_MODE_USE_TABLE_HEIGHT  0x0040   /* Set HEIGHT param for table */
+#define ED_MODE_NO_TABLE_HEIGHT   0x0080   /* Remove HEIGHT param for table (allows cell resizing) */
+#define ED_MODE_USE_CELL_WIDTH    0x0100   /* Set WIDTH param for all cells (allows column resizing) */
+#define ED_MODE_NO_CELL_WIDTH     0x0200   /* Remove WIDTH param for all cells (allows table resizing)*/
+#define ED_MODE_USE_CELL_HEIGHT   0x0400   /* Set HEIGHT param for all cells (allows row resizing) */
+#define ED_MODE_NO_CELL_HEIGHT    0x0800   /* Remove HEIGHT param for all cells (allows table resizing)*/
+#define ED_MODE_USE_COLS          0x1000   /* Set COLS param for table (use only 1st row for column widths) */
+#define ED_MODE_NO_COLS           0x2000   /* Remove COLS param for table (all cell widths used) */
+
 #ifdef DEBUG
     #define DEBUG_EDIT_LAYOUT
 #endif
@@ -875,12 +908,17 @@ public:
     CEditTableCellElement* GetPreviousCellInColumn(CEditTableCellElement *pCell);
     CEditTableCellElement* GetLastCellInColumn(CEditTableCellElement *pCell);
 
+    // Find first cell in column or row exactly at the specified col or row index grid
+    CEditTableCellElement *GetFirstCellAtColumnIndex(int32 iIndex);
+    CEditTableCellElement *GetFirstCellAtRowIndex(int32 iIndex);
+
     CEditCaptionElement* GetCaption();
     void SetCaption(CEditCaptionElement*);
     void DeleteCaption();
 
     void SetData( EDT_TableData *pData );
     EDT_TableData* GetData();
+    int32 GetCellPadding();
     EDT_TableData* ParseParams( PA_Tag *pTag, int16 csid );
     static EDT_TableData* NewData();
     static void FreeData( EDT_TableData *pData );
@@ -906,7 +944,11 @@ public:
     void GetParentSize(MWContext *pContext, int32 *pWidth, int32 *pHeight = NULL, LO_TableStruct *pLoTable = NULL);
 
     // See edttypes.h for dConvert table and all rows and cells to Percent mode or not
-    void SetTableMode(MWContext *pContext, int iTableMode);
+    // Current bWidthPercent, bHeightPercent, bWidthDefined, and bHeightDefined are saved...
+    void SetSizeMode(MWContext *pContext, int iTableMode);
+    // ... to be restored by this after relayout after table, col, or row resizing
+    void RestoreSizeMode(MWContext *pContext);
+
     int32 GetInterCellSpace() {return m_iInterCellSpace; }
     int32 GetWidth() {return m_iWidthPixels; }
     int32 GetHeight() {return m_iHeightPixels; }
@@ -935,6 +977,9 @@ public:
 
     // Get number of columns between given values    
     intn GetColumnsSpanned(int32 iStartX, int32 iEndX);
+
+    // Test if any cell in the first row has COLSPAN > 1
+    XP_Bool FirstRowHasColSpan();
 
     // Also figure these out during FixupTableData
     // Used to tell when we are in first row or column of table
@@ -965,6 +1010,15 @@ private:
 
     int32   m_iFirstColumnX;
     int32   m_iFirstRowY;
+
+    // Save last value of m_bWidthPercent, m_bWidthDefined,
+    //  bHeightPercent, and bHeightDefined here
+    //   during table, col, and row resizing.
+    // Call RestoreTableSizeMode to reset back to these values
+    XP_Bool m_bSaveWidthPercent;       
+    XP_Bool m_bSaveHeightPercent;
+    XP_Bool m_bSaveWidthDefined;       
+    XP_Bool m_bSaveHeightDefined;
 
     // Total number in table
     // Columns are tricky - max number of possible columns,
@@ -1179,6 +1233,42 @@ public:
     //   to those saved during SwitchLinkage
     void RestoreLinkage();
 
+    // Save current percent and "defined" values -- do this before resizing, which may need
+    //  to change the mode for better control of resizing
+    // Since this is always called when we know the cell's data,
+    //  supply the bWidthDefined and bHeightDefined values
+    //  (percent mode params are held in class member variables)
+    void SaveSizeMode(XP_Bool bWidthDefined, XP_Bool bHeightDefined);
+    
+    // Restore saved width and height percent modes,
+    //   readjust m_bWidth an m_bHeight, and call SetData to set tag data
+    void RestoreSizeMode(int32 iParentWidth, int32 iParentHeight);
+
+    // Calculate the Percent iWidth or iHeight from the 
+    //  iWidthPixels and iHeightPixels in pData...
+    void CalcPercentWidth(EDT_TableCellData *pData);
+    void CalcPercentHeight(EDT_TableCellData *pData);
+
+    // ...vice versa
+    void CalcPixelWidth(EDT_TableCellData *pData);
+    void CalcPixelHeight(EDT_TableCellData *pData);
+
+    void SetWidth(XP_Bool bWidthDefined, XP_Bool bWidthPercent, int32 iWidthPixels);
+    void SetHeight(XP_Bool bHeightDefined, XP_Bool bHeightPercent, int32 iHeightPixels);
+
+    // Next two are used when dragging the right border
+    // Set all cells in a column to the width supplied
+    void SetColumnWidthRight(CEditTableElement *pTable, LO_Element *pLoCell, EDT_TableCellData *pData);
+    // Set all cells in a row to the width params supplied in pData
+    void SetRowHeightBottom(CEditTableElement *pTable, LO_Element *pLoCell, EDT_TableCellData *pData);
+
+    // Next two are use when resizing inside table cell property dialog
+    // Supplying bWidthDefined or bHeightDefined allows clearing this for entire col or row
+    // Set all cells in a column to the width supplied
+    void SetColumnWidthLeft(CEditTableElement *pTable, CEditTableCellElement *pEdCell, EDT_TableCellData *pData);
+    // Set all cells in a row to the width supplied
+    void SetRowHeightTop(CEditTableElement *pTable, CEditTableCellElement *pEdCell, EDT_TableCellData *pData);
+
 private:
     ED_Color m_backgroundColor;
     char* m_pBackgroundImage;
@@ -1209,6 +1299,15 @@ private:
     int32   m_iWidth;       
     int32   m_iHeight;       
 
+    // Save last value of m_bWidthPercent, m_bWidthDefined,
+    //  bHeightPercent, and bHeightDefined here
+    //   during table, col, and row resizing.
+    // Call RestoreTableSizeMode to reset back to these values
+    XP_Bool m_bSaveWidthPercent;       
+    XP_Bool m_bSaveHeightPercent;
+    XP_Bool m_bSaveWidthDefined;       
+    XP_Bool m_bSaveHeightDefined;
+
     // This is used to temporarily switch cell to 
     //  a table created for copying contents
     // These are used by SwitchLinkage() and RestoreLinkage()
@@ -1216,7 +1315,6 @@ private:
     CEditElement *m_pSaveNext;
 
 public:
-
     intn m_iBackgroundSaveIndex;
 };
 
@@ -2807,6 +2905,7 @@ private:
     XP_Bool        m_bWidthPercent;
     XP_Bool        m_bHeightPercent;
     XP_Bool        m_bPercentOriginal;
+    XP_Bool        m_bFirstTime;
     int            m_iWidthMsgID;
 };
 
@@ -2998,7 +3097,14 @@ public:
 
 	void Reflow( CEditElement *pStartElement, int iOffset,
             CEditElement *pEndElement = 0, intn relayoutFlags = 0 );
-            
+
+    // Call these instead of Relayout( pTable )
+    //  when we want to relayout entire table because we are changing
+    //  either the table size or cell size(s)
+    // bChangeWidth and bChangeHeight tell us which dimension is changing
+    void ResizeTable(CEditTableElement *pTable, XP_Bool bChangeWidth = FALSE, XP_Bool bChangeHeight = FALSE);
+    void ResizeTableCell(CEditTableElement *pTable, XP_Bool bChangeWidth = FALSE, XP_Bool bChangeHeight = FALSE);
+
     // Relayout current selected table (or parent of selected cells)
     void RelayoutSelectedTable();
 
@@ -3575,10 +3681,6 @@ public:
     //  or moving mouse over cell to extend selection.
     //  If TRUE, returns ED_HIT_SEL_ALL_CELLS instead of ED_HIT_SEL_TABLE
     ED_HitType GetTableHitRegion(int32 xVal, int32 yVal, LO_Element **ppElement, XP_Bool bModifierKeyPressed = FALSE);
-
-    // Get the corresponding CEditTableElement if LoElementType == LO_TABLE,
-    //   or CEditTableCellElement if LoElementType = LO_CELL
-    CEditElement* GetTableElementFromLO_Element(LO_Element *pLoElement, int16 LoElementType);
 
     // Tells us where to insert or replace cell (cell we are over is in *ppElement)
     ED_DropType GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth, int32 *pHeight, LO_Element **ppElement);
@@ -4304,6 +4406,10 @@ public:
 // Find the current context's URL in the cached history data and update the
 //   corresponding Title. Used by CEditBuffer::SetPageData()
 void edt_UpdateEditHistoryTitle(MWContext * pMWContext, char * pTitle);
+
+// Get the corresponding CEditTableElement if LoElementType == LO_TABLE,
+//   or CEditTableCellElement if LoElementType = LO_CELL
+CEditElement* edt_GetTableElementFromLO_Element(LO_Element *pLoElement, int16 LoElementType);
 
 #endif  // _EDITOR_H
 #endif  // EDITOR

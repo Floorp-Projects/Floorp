@@ -1599,4 +1599,20 @@ int32 lo_GetNumberOfCellsInTable(LO_TableStruct *pTable );
 */
 int32 lo_CalcTableWidthForPercentMode(LO_Element *pCellElement);
 
+/* The LO_CellStruct.width does not include border, cell padding etc and is complicated
+ * by Column Span as well. Calculate the value to use for <TD WIDTH> param that 
+ * would result in current pCellElement->lo_cell.width during the next layout
+*/ 
+int32 lo_GetCellTagWidth(LO_Element *pCellElement);
+
+/* Similar calculation for height. Unfortunately, there are differences from width.
+ * e.g., the cell border must be subtracted from width, but not height! (a bug???)
+*/
+int32 lo_GetCellTagHeight(LO_Element *pCellElement);
+
+/* Helpers to access the lo_TableCell members now accessible through the LO_CellStruct */
+int32 lo_GetRowSpan(LO_Element *pCellElement);
+int32 lo_GetColSpan(LO_Element *pCellElement);
+int32 lo_GetCellPadding(LO_Element *pCellElement);
+
 #endif /* _Layout_h_ */

@@ -2302,35 +2302,15 @@ void EDT_SetTableData( MWContext *pContext, EDT_TableData *pData )
 {
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
 
-    // jhp: We have to do this here, outside of the command.
-    //CLM: Experimental kludge: allow changing row/columns by
-    //      deleting old table and inserting a new one
-    CEditInsertPoint ip;
-    pEditBuffer->GetInsertPoint(ip);
-    CEditTableElement* pTable = ip.m_pElement->GetTableIgnoreSubdoc();
-    if ( pTable )
+    // Even though this is checked in SetTableData,
+    //  doing it here preserves the UNDO buffer in case
+    //  we are called and we're not inside a table
+    if( pEditBuffer->IsInsertPointInTable() )
     {
         pEditBuffer->BeginBatchChanges(kSetTableDataCommandID);
-        EDT_TableData* pOldData = pTable->GetData();
-        if ( pOldData && (pOldData->iRows != pData->iRows ||
-                          pOldData->iColumns != pData->iColumns) )
-        {
-            pEditBuffer->SetTableData(pData);
-
-//    		pEditBuffer->AdoptAndDo(new CDeleteTableCommand(pEditBuffer));
-            // Get rid of extra carriage return before old table.
-            EDT_DeletePreviousChar(pContext);
-            EDT_InsertTable(pContext, pData);
-        } else {
-            pEditBuffer->SetTableData(pData);
-
+        pEditBuffer->SetTableData(pData);
 //            CSetTableDataCommand* pCommand = new CSetTableDataCommand(pEditBuffer, pData);
 //            pEditBuffer->AdoptAndDo(pCommand);
-        }
-        if( pOldData )
-        {
-            CEditTableElement::FreeData(pOldData);
-        }
         pEditBuffer->EndBatchChanges();
     }
 }
@@ -2451,7 +2431,9 @@ void EDT_FreeTableRowData(  EDT_TableRowData *pData ) {
 
 void EDT_InsertTableRows( MWContext *pContext, EDT_TableRowData *pData, XP_Bool bAfterCurrentRow, intn number){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
+    pEditBuffer->BeginBatchChanges(kInsertTableRowCommandID);
     pEditBuffer->InsertTableRows( pData, bAfterCurrentRow, number );
+    pEditBuffer->EndBatchChanges();
 }
 
 void EDT_DeleteTableRows( MWContext *pContext, intn number){
@@ -2509,7 +2491,9 @@ void EDT_DeleteTableCells( MWContext *pContext, intn number){
 
 void EDT_InsertTableColumns( MWContext *pContext, EDT_TableCellData *pData, XP_Bool bAfterCurrentColumn, intn number){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
+    pEditBuffer->BeginBatchChanges(kInsertTableColumnCommandID);
     pEditBuffer->InsertTableColumns( pData, bAfterCurrentColumn, number );
+    pEditBuffer->EndBatchChanges();
 }
 
 void EDT_DeleteTableColumns( MWContext *pContext, intn number){

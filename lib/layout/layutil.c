@@ -3190,8 +3190,6 @@ LO_Element* lo_GetFirstCellInColumnOrRow(MWContext *pContext, LO_Element *pEleme
 	LO_Element *pLastCellInTable = NULL;
 	LO_Element *tptr = NULL;
     int32 closest = 0;
-    lo_DocState *state;
-
 
     if( pElement->type == LO_TABLE )
     {
@@ -3466,6 +3464,74 @@ XP_Bool LO_IsEmptyCell(LO_CellStruct *cell)
         }
     }
     return TRUE;
+}
+
+/* The LO_CellStruct.width does not include border, cell padding etc and is complicated
+ * by Column Span as well. Calculate the value to use for <TD WIDTH> param that 
+ * would result in current pCellElement->lo_cell.width during the next layout
+*/ 
+int32 lo_GetCellTagWidth(LO_Element *pCellElement)
+{
+    /*XP_ASSERT(pCellElement->type == LO_CELL);*/
+    
+    int32 iColSpan = lo_GetColSpan(pCellElement);
+    int32 iPadding = iColSpan * 2 * (pCellElement->lo_cell.border_width + 
+                                     lo_GetCellPadding(pCellElement));
+    
+    /* Cells spanning across a border include the inter-cell space as well */
+    if( iColSpan > 1 )
+        iPadding += (iColSpan - 1) * pCellElement->lo_cell.inter_cell_space;
+
+    return pCellElement->lo_cell.width - iPadding;
+}
+
+/* Similar calculation for height. Unfortunately, there are differences from width.
+ * e.g., the cell border must be subtracted from width, but not height! (a bug???)
+*/
+int32 lo_GetCellTagHeight(LO_Element *pCellElement)
+{
+    /*XP_ASSERT(pCellElement->type == LO_CELL);*/
+
+    int32 iRowSpan = lo_GetRowSpan(pCellElement);
+    int32 iPadding = iRowSpan * 2 * lo_GetCellPadding(pCellElement);
+    
+    if( iRowSpan > 1 )
+        iPadding += (iRowSpan - 1) * pCellElement->lo_cell.inter_cell_space;
+
+    return pCellElement->lo_cell.height - iPadding;
+}
+
+/* Helpers to access the lo_TableCell members now accessible through the LO_CellStruct */
+int32 lo_GetRowSpan(LO_Element *pCellElement)
+{
+    XP_ASSERT(pCellElement->type == LO_CELL);
+    
+    if( pCellElement && pCellElement->lo_any.type == LO_CELL &&
+        pCellElement->lo_cell.table_cell )
+    {
+        return ((lo_TableCell*)pCellElement->lo_cell.table_cell)->rowspan;
+    }
+    /* Should never fail, but since default value is 1,
+       this will tell caller we failed */
+    return 0;
+}
+
+int32 lo_GetColSpan(LO_Element *pCellElement)
+{
+    XP_ASSERT(pCellElement->type == LO_CELL);
+    if( pCellElement && pCellElement->lo_any.type == LO_CELL &&
+        pCellElement->lo_cell.table_cell )
+    {
+        return ((lo_TableCell*)pCellElement->lo_cell.table_cell)->colspan;
+    }
+    return 0;
+}
+
+/* TODO: CHANGE THIS TO GET LEFT, TOP, RIGHT, OR BOTTOM SEPARATELY? */
+int32 lo_GetCellPadding(LO_Element *pCellElement)
+{
+    XP_ASSERT(pCellElement->type == LO_CELL);
+    return ((lo_TableRec*)pCellElement->lo_cell.table)->inner_top_pad;
 }
 
 LO_Element * lo_GetLastElementInList( LO_Element *eleList )
