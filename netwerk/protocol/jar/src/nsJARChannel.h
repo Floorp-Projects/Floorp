@@ -69,7 +69,7 @@ public:
                   const char* command, 
                   nsIURI* uri,
                   nsILoadGroup* aLoadGroup, 
-                  nsICapabilities* notificationCallbacks,
+                  nsIInterfaceRequestor* notificationCallbacks,
                   nsLoadFlags loadAttributes,
                   nsIURI* originalURI);
 
@@ -80,7 +80,7 @@ protected:
 	char*                               mCommand;
 	nsCOMPtr<nsIJARURI>                 mURI;
 	nsCOMPtr<nsILoadGroup>              mLoadGroup;
-	nsCOMPtr<nsICapabilities>           mCallbacks;
+	nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 	nsCOMPtr<nsIURI>                    mOriginalURI;
     nsLoadFlags                         mLoadAttributes;
     nsCOMPtr<nsISupports>               mOwner;

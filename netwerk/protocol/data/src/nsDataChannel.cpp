@@ -28,7 +28,7 @@
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "plbase64.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIPipe.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
@@ -56,7 +56,7 @@ nsresult
 nsDataChannel::Init(const char* verb, 
                     nsIURI* uri, 
                     nsILoadGroup* aLoadGroup,
-                    nsICapabilities* notificationCallbacks, 
+                    nsIInterfaceRequestor* notificationCallbacks, 
                     nsLoadFlags loadAttributes,
                     nsIURI* originalURI)
 {
@@ -404,7 +404,7 @@ nsDataChannel::SetOwner(nsISupports* aOwner)
 }
 
 NS_IMETHODIMP
-nsDataChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+nsDataChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
     *aNotificationCallbacks = mCallbacks.get();
     NS_IF_ADDREF(*aNotificationCallbacks);
@@ -412,7 +412,7 @@ nsDataChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks
 }
 
 NS_IMETHODIMP
-nsDataChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+nsDataChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
     return NS_OK;

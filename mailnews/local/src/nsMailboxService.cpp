@@ -299,7 +299,7 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
 NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, 
                                            nsIURI *aURI, 
                                            nsILoadGroup* aLoadGroup,
-                                           nsICapabilities* notificationCallbacks,
+                                           nsIInterfaceRequestor* notificationCallbacks,
                                            nsLoadFlags loadAttributes,
                                            nsIURI* originalURI,
                                            nsIChannel **_retval)

@@ -358,13 +358,13 @@ NS_IMETHODIMP nsMsgProtocol::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsMsgProtocol::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+nsMsgProtocol::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMsgProtocol::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+nsMsgProtocol::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
 	return NS_OK;       // don't fail when trying to set this
 }

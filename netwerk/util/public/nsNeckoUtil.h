@@ -28,7 +28,7 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIChannel.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
@@ -53,19 +53,19 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull);
 extern nsresult
 NS_OpenURI(nsIChannel* *result, nsIURI* uri, 
            nsILoadGroup *aGroup = nsnull,
-           nsICapabilities *notificationCallbacks = nsnull,
+           nsIInterfaceRequestor *notificationCallbacks = nsnull,
            nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL);
 
 extern nsresult
 NS_OpenURI(nsIInputStream* *result, nsIURI* uri,
            nsILoadGroup *aGroup = nsnull,
-           nsICapabilities *notificationCallbacks = nsnull, 
+           nsIInterfaceRequestor *notificationCallbacks = nsnull, 
            nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL);
 
 extern nsresult
 NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri, 
            nsILoadGroup *aGroup = nsnull,
-           nsICapabilities *notificationCallbacks = nsnull, 
+           nsIInterfaceRequestor *notificationCallbacks = nsnull, 
            nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL);
 
 extern nsresult
@@ -88,7 +88,7 @@ NS_NewInputStreamChannel(nsIURI* uri,
                          PRInt32 contentLength,
                          nsIInputStream *inStr, 
                          nsILoadGroup *aGroup,
-                         nsICapabilities* notificationCallbacks,
+                         nsIInterfaceRequestor* notificationCallbacks,
                          nsLoadFlags loadAttributes,
                          nsIURI* originalURI,
                          nsIChannel **result)

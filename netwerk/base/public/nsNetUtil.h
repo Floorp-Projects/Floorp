@@ -28,7 +28,7 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsString.h"
 
 #include "nsIIOService.h"
@@ -67,7 +67,7 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull)
 
 inline nsresult
 NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
-           nsICapabilities *capabilities = nsnull)
+           nsIInterfaceRequestor *capabilities = nsnull)
 {
     nsresult rv;
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);

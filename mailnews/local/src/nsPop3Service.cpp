@@ -262,7 +262,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 NS_IMETHODIMP nsPop3Service::NewChannel(const char *verb, 
                                         nsIURI *aURI, 
                                         nsILoadGroup* aLoadGroup,
-                                        nsICapabilities* notificationCallbacks,
+                                        nsIInterfaceRequestor* notificationCallbacks,
                                         nsLoadFlags loadAttributes,
                                         nsIURI* originalURI,
                                         nsIChannel **_retval)

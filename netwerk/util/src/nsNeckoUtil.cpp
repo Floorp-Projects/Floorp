@@ -59,7 +59,7 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 NECKO_EXPORT(nsresult)
 NS_OpenURI(nsIChannel* *result, nsIURI* uri,
            nsILoadGroup *aGroup,
-           nsICapabilities *notificationCallbacks, 
+           nsIInterfaceRequestor *notificationCallbacks, 
            nsLoadFlags loadAttributes)
 {
     nsresult rv;
@@ -78,7 +78,7 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri,
 NECKO_EXPORT(nsresult)
 NS_OpenURI(nsIInputStream* *result, nsIURI* uri, 
            nsILoadGroup *aGroup,
-           nsICapabilities *notificationCallbacks, 
+           nsIInterfaceRequestor *notificationCallbacks, 
            nsLoadFlags loadAttributes)
 {
     nsresult rv;
@@ -99,7 +99,7 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri,
 NECKO_EXPORT(nsresult)
 NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri, 
            nsILoadGroup *aGroup,
-           nsICapabilities *notificationCallbacks, 
+           nsIInterfaceRequestor *notificationCallbacks, 
            nsLoadFlags loadAttributes)
 {
     nsresult rv;

@@ -27,7 +27,7 @@ interface nsIURI;
 interface nsILoadGroup;
 interface nsIStreamObserver;
 interface nsIUnicharStreamLoader;
-interface nsICapabilities;
+interface nsIInterfaceRequestor;
 
 [scriptable, uuid(c75e57d0-8e5a-11d3-93ad-00104ba0fd40)]
 interface nsIUnicharStreamLoaderObserver : nsISupports
@@ -43,7 +43,7 @@ interface nsIUnicharStreamLoader : nsISupports
     void init(in nsIURI uri,
               in nsIUnicharStreamLoaderObserver completionObserver,
               in nsILoadGroup loadGroup,
-              in nsICapabilities notificationCallbacks,
+              in nsIInterfaceRequestor notificationCallbacks,
               in nsLoadFlags loadAttributes);
 
     /**
@@ -69,7 +69,7 @@ NS_NewUnicharStreamLoader(nsIUnicharStreamLoader* *result,
                           nsIURI* uri,
                           nsIUnicharStreamLoaderObserver* observer,
                           nsILoadGroup* loadGroup = nsnull,
-                          nsICapabilities* notificationCallbacks = nsnull,
+                          nsIInterfaceRequestor* notificationCallbacks = nsnull,
                           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL)
 {
     nsresult rv;

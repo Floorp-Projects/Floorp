@@ -38,7 +38,7 @@
 #include "nsIDNSListener.h"
 #include "nsIPipe.h"
 #include "nsIProgressEventSink.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 
 #define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (2*1024)
 #define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (8*1024)
@@ -108,7 +108,7 @@ enum nsSocketReadWriteInfo {
 
 // Forward declarations...
 class nsSocketTransportService;
-class nsICapabilities;
+class nsIInterfaceRequestor;
 
 class nsSocketTransport : public nsIChannel, 
                           public nsIDNSListener,
@@ -193,7 +193,7 @@ protected:
   PRBool                            mCloseConnectionOnceDone;
   nsSocketState                     mCurrentState;
   nsCOMPtr<nsIRequest>              mDNSRequest;
-  nsCOMPtr<nsICapabilities>         mCallbacks;
+  nsCOMPtr<nsIInterfaceRequestor>   mCallbacks;
   nsCOMPtr<nsIProgressEventSink>    mEventSink;
   char*                             mHostName;
   PRIntervalTime                    mLastActiveTime;

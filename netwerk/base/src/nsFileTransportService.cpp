@@ -26,7 +26,6 @@
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsICapabilities.h"
 #include "nsIProgressEventSink.h"
 #include "nsIThreadPool.h"
 #include "nsISupportsArray.h"

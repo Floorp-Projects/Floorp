@@ -942,7 +942,7 @@ NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, 
                                         nsIURI *aURI, 
                                         nsILoadGroup* aLoadGroup,
-                                        nsICapabilities* notificationCallbacks,
+                                        nsIInterfaceRequestor* notificationCallbacks,
                                         nsLoadFlags loadAttributes,
                                         nsIURI* originalURI,
                                         nsIChannel **_retval)

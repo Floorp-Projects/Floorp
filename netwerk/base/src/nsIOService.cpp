@@ -228,7 +228,7 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
 NS_IMETHODIMP
 nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
                                nsILoadGroup *aGroup,
-                               nsICapabilities* notificationCallbacks,
+                               nsIInterfaceRequestor* notificationCallbacks,
                                nsLoadFlags loadAttributes,
                                nsIURI* originalURI,
                                nsIChannel **result)
@@ -252,7 +252,7 @@ NS_IMETHODIMP
 nsIOService::NewChannel(const char* verb, const char *aSpec,
                         nsIURI *aBaseURI,
                         nsILoadGroup *aGroup,
-                        nsICapabilities* notificationCallbacks,
+                        nsIInterfaceRequestor* notificationCallbacks,
                         nsLoadFlags loadAttributes,
                         nsIURI* originalURI,
                         nsIChannel **result)
@@ -386,7 +386,7 @@ nsIOService::NewInputStreamChannel(nsIURI* uri,
                                    PRInt32 contentLength,
                                    nsIInputStream *inStr, 
                                    nsILoadGroup *aGroup,
-                                   nsICapabilities* notificationCallbacks,
+                                   nsIInterfaceRequestor* notificationCallbacks,
                                    nsLoadFlags loadAttributes,
                                    nsIURI* originalURI,
                                    nsIChannel **result)

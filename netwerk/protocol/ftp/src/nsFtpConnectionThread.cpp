@@ -1835,7 +1835,7 @@ nsFtpConnectionThread::Init(nsIURI* aUrl,
                             nsIProtocolHandler* aHandler,
                             nsIChannel* aChannel,
                             nsISupports* aContext,
-                            nsICapabilities* notificationCallbacks) {
+                            nsIInterfaceRequestor* notificationCallbacks) {
     nsresult rv;
 
     NS_ASSERTION(aChannel, "FTP: thread needs a channel");

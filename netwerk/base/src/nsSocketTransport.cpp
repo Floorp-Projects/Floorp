@@ -34,7 +34,7 @@
 #include "nsISocketProvider.h"
 #include "nsISocketProviderService.h"
 #include "nsStdURL.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsProxyObjectManager.h"
 #include "nsXPIDLString.h"
 
@@ -1818,7 +1818,7 @@ nsSocketTransport::SetOwner(nsISupports * aOwner)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+nsSocketTransport::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
   *aNotificationCallbacks = mCallbacks.get();
   NS_IF_ADDREF(*aNotificationCallbacks);
@@ -1826,15 +1826,15 @@ nsSocketTransport::GetNotificationCallbacks(nsICapabilities* *aNotificationCallb
 }
 
 NS_IMETHODIMP
-nsSocketTransport::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
 
   // Get a nsIProgressEventSink so that we can fire status/progress on it-
   if (mCallbacks) {
     nsCOMPtr<nsIProgressEventSink> sink;
-    nsresult rv = mCallbacks->QueryCapability(NS_GET_IID(nsIProgressEventSink),
-                                              getter_AddRefs(sink));
+    nsresult rv = mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
+                                           getter_AddRefs(sink));
     if (NS_SUCCEEDED(rv)) {
       // Now generate a proxied event sink-
       NS_WITH_SERVICE(nsIProxyObjectManager, 

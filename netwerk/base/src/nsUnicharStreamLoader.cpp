@@ -43,7 +43,7 @@ NS_IMETHODIMP
 nsUnicharStreamLoader::Init(nsIURI* aURL,
                             nsIUnicharStreamLoaderObserver* observer, 
                             nsILoadGroup* aGroup,
-                            nsICapabilities* notificationCallbacks,
+                            nsIInterfaceRequestor* notificationCallbacks,
                             nsLoadFlags loadAttributes)
 {
   nsresult rv = NS_OK;

@@ -241,7 +241,7 @@ NS_IMETHODIMP nsSmtpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 NS_IMETHODIMP nsSmtpService::NewChannel(const char *verb, 
                                         nsIURI *aURI, 
                                         nsILoadGroup* aLoadGroup,
-                                        nsICapabilities* notificationCallbacks,
+                                        nsIInterfaceRequestor* notificationCallbacks,
                                         nsLoadFlags loadAttributes,
                                         nsIURI* originalURI,
                                         nsIChannel **_retval)

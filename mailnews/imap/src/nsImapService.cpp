@@ -2199,7 +2199,7 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 NS_IMETHODIMP nsImapService::NewChannel(const char *verb, 
                                         nsIURI *aURI, 
                                         nsILoadGroup* aLoadGroup,
-                                        nsICapabilities* notificationCallbacks,
+                                        nsIInterfaceRequestor* notificationCallbacks,
                                         nsLoadFlags loadAttributes,
                                         nsIURI* originalURI,
                                         nsIChannel **_retval)

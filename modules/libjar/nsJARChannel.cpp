@@ -126,7 +126,7 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler,
                    const char* command, 
                    nsIURI* uri,
                    nsILoadGroup* aLoadGroup, 
-                   nsICapabilities* notificationCallbacks,
+                   nsIInterfaceRequestor* notificationCallbacks,
                    nsLoadFlags loadAttributes,
                    nsIURI* originalURI)
 {
@@ -438,7 +438,7 @@ nsJARChannel::SetOwner(nsISupports* aOwner)
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+nsJARChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
     *aNotificationCallbacks = mCallbacks.get();
     NS_IF_ADDREF(*aNotificationCallbacks);
@@ -446,7 +446,7 @@ nsJARChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
 }
 
 NS_IMETHODIMP
-nsJARChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+nsJARChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
     return NS_OK;

@@ -29,7 +29,7 @@
 #include "nsCRT.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
 
 class nsInputStreamChannel : public nsIInputStreamChannel, 
@@ -50,16 +50,16 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-    nsCOMPtr<nsICapabilities>   mCallbacks;
-    nsCOMPtr<nsIURI>            mOriginalURI;
-    nsCOMPtr<nsIURI>            mURI;
-    char*                       mContentType;
-    PRInt32                     mContentLength;
-    nsCOMPtr<nsIInputStream>    mInputStream;
-    nsCOMPtr<nsILoadGroup>      mLoadGroup;
-    nsCOMPtr<nsISupports>       mOwner;
-    nsCOMPtr<nsIChannel>        mFileTransport;
-    nsCOMPtr<nsIStreamListener> mRealListener;
+    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
+    nsCOMPtr<nsIURI>                    mOriginalURI;
+    nsCOMPtr<nsIURI>                    mURI;
+    char*                               mContentType;
+    PRInt32                             mContentLength;
+    nsCOMPtr<nsIInputStream>            mInputStream;
+    nsCOMPtr<nsILoadGroup>              mLoadGroup;
+    nsCOMPtr<nsISupports>               mOwner;
+    nsCOMPtr<nsIChannel>                mFileTransport;
+    nsCOMPtr<nsIStreamListener>         mRealListener;
 };
 
 #endif // nsInputStreamChannel_h__

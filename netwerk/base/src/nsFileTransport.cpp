@@ -23,7 +23,7 @@
 #include "nsFileTransport.h"
 #include "nsFileTransportService.h"
 #include "nscore.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
 #include "nsIIOService.h"
@@ -1099,7 +1099,7 @@ nsFileTransport::SetLoadGroup(nsILoadGroup* aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsFileTransport::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+nsFileTransport::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
     *aNotificationCallbacks = mCallbacks.get();
     NS_IF_ADDREF(*aNotificationCallbacks);
@@ -1107,15 +1107,15 @@ nsFileTransport::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbac
 }
 
 NS_IMETHODIMP
-nsFileTransport::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+nsFileTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
 
     // Get a nsIProgressEventSink so that we can fire status/progress on it-
     if (mCallbacks) {
         nsCOMPtr<nsISupports> sink;
-        nsresult rv = mCallbacks->QueryCapability(NS_GET_IID(nsIProgressEventSink),
-                                                  getter_AddRefs(sink));
+        nsresult rv = mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
+                                               getter_AddRefs(sink));
         if (NS_FAILED(rv)) return NS_OK;        // don't need a progress event sink
 
         // Now generate a proxied event sink

@@ -6429,13 +6429,13 @@ NS_IMETHODIMP nsImapMockChannel::SetCancelled(PRBool cancelled)
 }
 
 NS_IMETHODIMP
-nsImapMockChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+nsImapMockChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsImapMockChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
 	return NS_OK;       // don't fail when trying to set this
 }

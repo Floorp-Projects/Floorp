@@ -1140,7 +1140,7 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL,
   nsresult rv = NS_OK;
 
   // XXXbe this knows that m_Container implements nsIWebShell
-  nsCOMPtr<nsICapabilities> capabilities = do_QueryInterface(m_Container);
+  nsCOMPtr<nsIInterfaceRequestor> capabilities = do_QueryInterface(m_Container);
   nsCOMPtr<nsIChannel> channel;
   rv = NS_OpenURI(getter_AddRefs(channel), aURL, aLoadGroup, capabilities);
   if (NS_FAILED(rv)) return rv;

@@ -32,7 +32,7 @@
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 
 #include "nsCOMPtr.h"
 
@@ -54,21 +54,21 @@ public:
     nsresult Init(const char* verb, 
                   nsIURI* uri, 
                   nsILoadGroup* aLoadGroup,
-                  nsICapabilities* notificationCallbacks, 
+                  nsIInterfaceRequestor* notificationCallbacks, 
                   nsLoadFlags loadAttributes,
                   nsIURI* originalURI);
     nsresult ParseData();
 
 protected:
-    nsCOMPtr<nsICapabilities>   mCallbacks;
-    nsCOMPtr<nsIURI>            mOriginalURI;
-    nsCOMPtr<nsIURI>            mUrl;
-    nsCOMPtr<nsIInputStream>    mDataStream;
-    PRUint32                    mLoadAttributes;
-    nsCOMPtr<nsILoadGroup>      mLoadGroup;
-    nsCString                   mContentType;
-    PRInt32                     mContentLength;
-    nsCOMPtr<nsISupports>       mOwner;
+    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
+    nsCOMPtr<nsIURI>                    mOriginalURI;
+    nsCOMPtr<nsIURI>                    mUrl;
+    nsCOMPtr<nsIInputStream>            mDataStream;
+    PRUint32                            mLoadAttributes;
+    nsCOMPtr<nsILoadGroup>              mLoadGroup;
+    nsCString                           mContentType;
+    PRInt32                             mContentLength;
+    nsCOMPtr<nsISupports>               mOwner; 
 
 };
 

@@ -65,7 +65,7 @@ nsInputStreamChannel::Init(nsIURI* uri,
                            PRInt32 contentLength, 
                            nsIInputStream* in,
                            nsILoadGroup *aGroup,
-                           nsICapabilities* notificationCallbacks,
+                           nsIInterfaceRequestor* notificationCallbacks,
                            nsLoadFlags loadAttributes,
                            nsIURI* originalURI)
 {
@@ -304,7 +304,7 @@ nsInputStreamChannel::SetOwner(nsISupports* aOwner)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+nsInputStreamChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
   *aNotificationCallbacks = mCallbacks.get();
   NS_IF_ADDREF(*aNotificationCallbacks);
@@ -312,7 +312,7 @@ nsInputStreamChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCa
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+nsInputStreamChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
   return NS_OK;

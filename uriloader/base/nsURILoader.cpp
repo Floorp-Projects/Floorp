@@ -28,7 +28,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 
 #include "nsIStreamConverterService.h"
@@ -44,7 +44,7 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 // mscott - i ripped this event sink getter class off of the one in the old
 // webshell doc loader...
 
-class nsUriLoaderCapabilities : public nsICapabilities {
+class nsUriLoaderCapabilities : public nsIInterfaceRequestor {
 public:
   NS_DECL_ISUPPORTS
 
@@ -55,7 +55,7 @@ public:
 
   virtual ~nsUriLoaderCapabilities() {};
 
-  NS_IMETHOD QueryCapability(const nsIID& anIID, void** aSink) {
+  NS_IMETHOD GetInterface(const nsIID& anIID, void** aSink) {
     if (mProgressEventSink) {
         return mProgressEventSink->QueryInterface(anIID, aSink);
     }
@@ -65,7 +65,7 @@ private:
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
 };
 
-NS_IMPL_ISUPPORTS1(nsUriLoaderCapabilities, nsICapabilities);
+NS_IMPL_ISUPPORTS1(nsUriLoaderCapabilities, nsIInterfaceRequestor);
 
 /* 
  * The nsDocumentOpenInfo contains the state required when a single document
@@ -145,7 +145,7 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
 
   // turn the arguments we received into something we can pass into NewChannelFromURI:
   // that means turning the progress event sink into an event sink getter...
-  nsCOMPtr<nsICapabilities> notificationCallbacks = new nsUriLoaderCapabilities(aProgressEventSink);
+  nsCOMPtr<nsIInterfaceRequestor> notificationCallbacks = new nsUriLoaderCapabilities(aProgressEventSink);
   // and get the load group out of the open context
   nsCOMPtr<nsILoadGroup> aLoadGroup = do_QueryInterface(aOpenContext);
   if (!aLoadGroup)

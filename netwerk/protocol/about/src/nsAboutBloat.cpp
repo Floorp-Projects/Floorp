@@ -45,7 +45,7 @@ NS_IMETHODIMP
 nsAboutBloat::NewChannel(const char *verb,
                          nsIURI *aURI,
                          nsILoadGroup* aLoadGroup,
-                         nsICapabilities* notificationCallbacks,
+                         nsIInterfaceRequestor* notificationCallbacks,
                          nsLoadFlags loadAttributes,
                          nsIURI* originalURI,
                          nsIChannel **result)

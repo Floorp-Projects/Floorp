@@ -25,7 +25,7 @@
 
 interface nsIProtocolHandler;
 interface nsIURI;
-interface nsICapabilities;
+interface nsIInterfaceRequestor;
 interface nsIStreamObserver;
 interface nsIStreamListener;
 interface nsIEventQueue;
@@ -67,7 +67,7 @@ interface nsIIOService : nsISupports
     nsIChannel newChannelFromURI(in string verb,
                                  in nsIURI aURI,
                                  in nsILoadGroup aLoadGroup,
-                                 in nsICapabilities notificationCallbacks,
+                                 in nsIInterfaceRequestor notificationCallbacks,
                                  in nsLoadFlags loadAttributes,
                                  in nsIURI originalURI);
 
@@ -79,7 +79,7 @@ interface nsIIOService : nsISupports
                           in string aSpec,
                           in nsIURI aBaseURI,
                           in nsILoadGroup aLoadGroup,
-                          in nsICapabilities notificationCallbacks,
+                          in nsIInterfaceRequestor notificationCallbacks,
                           in nsLoadFlags loadAttributes,
                           in nsIURI originalURI);
 
@@ -158,7 +158,7 @@ interface nsIIOService : nsISupports
                                      in long contentLength,
                                      in nsIInputStream inStr,
                                      in nsILoadGroup aLoadGroup,
-                                     in nsICapabilities notificationCallbacks,
+                                     in nsIInterfaceRequestor notificationCallbacks,
                                      in nsLoadFlags loadAttributes,
                                      in nsIURI originalURI);
 

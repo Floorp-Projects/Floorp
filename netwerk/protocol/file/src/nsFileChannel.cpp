@@ -22,7 +22,7 @@
 
 #include "nsFileChannel.h"
 #include "nscore.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
 #include "nsIStreamListener.h"
@@ -66,7 +66,7 @@ nsFileChannel::Init(nsIFileProtocolHandler* handler,
                     const char* command,
                     nsIURI* uri,
                     nsILoadGroup* aLoadGroup,
-                    nsICapabilities* notificationCallbacks,
+                    nsIInterfaceRequestor* notificationCallbacks,
                     nsLoadFlags loadAttributes,
                     nsIURI* originalURI)
 {
@@ -416,7 +416,7 @@ nsFileChannel::SetOwner(nsISupports* aOwner)
 }
 
 NS_IMETHODIMP
-nsFileChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+nsFileChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
   *aNotificationCallbacks = mCallbacks.get();
   NS_IF_ADDREF(*aNotificationCallbacks);
@@ -424,7 +424,7 @@ nsFileChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks
 }
 
 NS_IMETHODIMP
-nsFileChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+nsFileChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
   return NS_OK;

@@ -36,9 +36,9 @@
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIFileSystem.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 
-class nsICapabilities;
+class nsIInterfaceRequestor;
 
 class nsFileTransport : public nsIChannel, 
                         public nsIRunnable,
@@ -90,7 +90,7 @@ public:
     };
 
 protected:
-    nsCOMPtr<nsICapabilities>           mCallbacks;
+    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     nsCOMPtr<nsIProgressEventSink>      mProgress;
     nsFileSpec                          mSpec;      // eliminate?
     nsCOMPtr<nsIFileSystem>             mFileObject;
