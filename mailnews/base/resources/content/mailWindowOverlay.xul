@@ -645,9 +645,13 @@ Rights Reserved.
         label="&folderContextGetMessages.label;"
         accesskey="&folderContextGetMessages.accesskey;"
         oncommand="MsgGetMessage();"/>
-    <menuitem id="folderPaneContext-markAllRead"
+    <menuitem id="folderPaneContext-markNewsgroupAllRead"
         label="&folderContextMarkNewsgroupRead.label;"
         accesskey="&folderContextMarkNewsgroupRead.accesskey;"
+        oncommand="MsgMarkAllRead();"/>
+    <menuitem id="folderPaneContext-markMailFolderAllRead"
+        label="&folderContextMarkMailFolderRead.label;"
+        accesskey="&folderContextMarkMailFolderRead.accesskey;"
         oncommand="MsgMarkAllRead();"/>
     <menuitem id="folderPaneContext-new"
         label="&folderContextNew.label;"

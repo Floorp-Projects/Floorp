@@ -307,10 +307,13 @@ function fillFolderPaneContextMenu()
 
   ShowMenuItem("folderPaneContext-newsUnsubscribe", (numSelected <= 1) && canSubscribeToFolder && isNewsgroup);
   EnableMenuItem("folderPaneContext-newsUnsubscribe", true);
-  ShowMenuItem("folderPaneContext-markAllRead", (numSelected <= 1) && isNewsgroup);
-  EnableMenuItem("folderPaneContext-markAllRead", true);
+  ShowMenuItem("folderPaneContext-markNewsgroupAllRead", (numSelected <= 1) && isNewsgroup);
+  EnableMenuItem("folderPaneContext-markNewsgroupAllRead", true);
 
 // End of News folder context menu =======================================
+  
+  ShowMenuItem("folderPaneContext-markMailFolderAllRead", (numSelected <= 1) && ! isNewsgroup);
+  EnableMenuItem("folderPaneContext-markMailFolderAllRead", true);
 
   ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
   EnableMenuItem("folderPaneContext-searchMessages", IsCanSearchMessagesEnabled());
