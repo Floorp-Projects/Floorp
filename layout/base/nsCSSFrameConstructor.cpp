@@ -11428,7 +11428,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
   nsCOMPtr<nsIContent>       content;
   nsCOMPtr<nsIStyleContext>  styleContext;
   nsIFrame*                  newFrame = nsnull;
-  nsresult                   rv;
+  nsresult                   rv = NS_OK;
 
   // Use the frame type to determine what type of frame to create
   aFrame->GetFrameType(getter_AddRefs(frameType));
