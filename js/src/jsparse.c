@@ -719,16 +719,30 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
     pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
 
+#if JS_HAS_LEXICAL_CLOSURE
     /*
-     * If we collected flags that indicate nested functions or with statements
-     * while compiling our body, flag the function as heavyweight (requiring
-     * a call object per invocation).  Therefore, update tc->flags to reflect
-     * the fact that the outer context contains this function, and may also be
-     * heavy if it is a function body.
+     * If we collected flags that indicate nested heavyweight functions, or
+     * this function contains heavyweight-making statements (references to
+     * __parent__ or __proto__; use of with, eval, import, or export; and
+     * assignment to arguments), flag the function as heavyweight (requiring
+     * a call object per invocation).
      */
-    if (funtc.flags & TCF_FUN_HEAVYWEIGHT)
+    if (funtc.flags & TCF_FUN_HEAVYWEIGHT) {
         fun->flags |= JSFUN_HEAVYWEIGHT;
-    tc->flags |= TCF_FUN_HEAVYWEIGHT;
+        tc->flags |= TCF_FUN_HEAVYWEIGHT;
+    } else {
+        /*
+         * If this function is a named statement function not at top-level
+         * (i.e. a JSOP_CLOSURE), or if it refers to unqualified names that
+         * are not local args or vars (TCF_FUN_USES_NONLOCALS), then our
+         * enclosing function, if any, must be heavyweight.
+         */
+        if ((!lambda && funAtom && tc->topStmt) ||
+            (funtc.flags & TCF_FUN_USES_NONLOCALS)) {
+            tc->flags |= TCF_FUN_HEAVYWEIGHT;
+        }
+    }
+#endif
 
     /*
      * Record names for function statements in tc->decls so we know when to
@@ -744,7 +758,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                              ? JSREPORT_WARNING|JSREPORT_STRICT
                                              : JSREPORT_ERROR,
                                              JSMSG_REDECLARED_VAR,
-                                             (prevop == JSOP_DEFFUN)
+                                             (prevop == JSOP_DEFFUN ||
+                                              prevop == JSOP_CLOSURE)
                                              ? js_function_str
                                              : (prevop == JSOP_DEFCONST)
                                              ? js_const_str
@@ -752,18 +767,57 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                              ATOM_BYTES(funAtom))) {
                 return NULL;
             }
-            if (prevop == JSOP_DEFVAR)
-                tc->flags |= TCF_FUN_VS_VAR;
+            if (tc->topStmt && prevop == JSOP_DEFVAR)
+                tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
         } else {
             ale = js_IndexAtom(cx, funAtom, &tc->decls);
             if (!ale)
                 return NULL;
         }
-        ALE_SET_JSOP(ale, JSOP_DEFFUN);
+        ALE_SET_JSOP(ale, tc->topStmt ? JSOP_CLOSURE : JSOP_DEFFUN);
+
+#if JS_HAS_LEXICAL_CLOSURE
+        /*
+         * A function nested at top level inside another's body needs only a
+         * local variable to bind its name to its value, and not an activation
+         * object property (it might also need the activation property, if the
+         * outer function contains with statements, e.g., but the stack slot
+         * wins when jsemit.c's LookupArgOrVar can optimize a JSOP_NAME into a
+         * JSOP_GETVAR bytecode).
+         */
+        if (!tc->topStmt && (tc->flags & TCF_IN_FUNCTION)) {
+            JSStackFrame *fp;
+            JSObject *varobj;
+
+            /*
+             * Define a property on the outer function so that LookupArgOrVar
+             * can properly optimize accesses.
+             *
+             * XXX Here and in Variables, we use the function object's scope,
+             * XXX arguably polluting it, when we could use a compiler-private
+             * XXX scope structure.  Tradition!
+             */
+            fp = cx->fp;
+            varobj = fp->varobj;
+            JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
+            JS_ASSERT(fp->fun == (JSFunction *) JS_GetPrivate(cx, varobj));
+            if (!js_DefineProperty(cx, varobj, (jsid)funAtom,
+                                   OBJECT_TO_JSVAL(fun->object),
+                                   js_GetLocalVariable, js_SetLocalVariable,
+                                   JSPROP_ENUMERATE,
+                                   (JSProperty **)&sprop)) {
+                return NULL;
+            }
+
+            /* Allocate a slot for this property. */
+            sprop->id = INT_TO_JSVAL(fp->fun->nvars++);
+            OBJ_DROP_PROPERTY(cx, varobj, (JSProperty *)sprop);
+        }
+#endif
     }
 
 #if JS_HAS_LEXICAL_CLOSURE
-    if (lambda || !fun->atom) {
+    if (lambda || !funAtom) {
         /*
          * ECMA ed. 3 standard: function expression, possibly anonymous (even
          * if at top-level, an unnamed function is an expression statement, not
@@ -1871,7 +1925,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                              ? JSREPORT_WARNING|JSREPORT_STRICT
                                              : JSREPORT_ERROR,
                                              JSMSG_REDECLARED_VAR,
-                                             (prevop == JSOP_DEFFUN)
+                                             (prevop == JSOP_DEFFUN ||
+                                              prevop == JSOP_CLOSURE)
                                              ? js_function_str
                                              : (prevop == JSOP_DEFCONST)
                                              ? js_const_str
@@ -1879,8 +1934,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                              ATOM_BYTES(atom))) {
                 return NULL;
             }
-            if (pn->pn_op == JSOP_DEFVAR && prevop == JSOP_DEFFUN)
-                tc->flags |= TCF_FUN_VS_VAR;
+            if (pn->pn_op == JSOP_DEFVAR && prevop == JSOP_CLOSURE)
+                tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
         } else {
             ale = js_IndexAtom(cx, atom, &tc->decls);
             if (!ale)

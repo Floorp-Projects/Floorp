@@ -991,6 +991,24 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	if (!script)
 	    continue;
 
+        if (JSVAL_IS_FUNCTION(cx, argv[i])) {
+            JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
+            if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
+                uint8 flags = fun->flags;
+                fputs("flags:", stderr);
+
+#define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
+
+                SHOW_FLAG(SETTER);
+                SHOW_FLAG(GETTER);
+                SHOW_FLAG(BOUND_METHOD);
+                SHOW_FLAG(HEAVYWEIGHT);
+                
+#undef SHOW_FLAG
+                putchar('\n');
+            }
+        }
+
 	js_Disassemble(cx, script, lines, stdout);
 	SrcNotes(cx, script);
 	TryNotes(cx, script);
@@ -999,7 +1017,8 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval)
 {
 #define LINE_BUF_LEN 512
     uintN i, len, line1, line2, bupline;
@@ -1386,6 +1405,21 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+Intern(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    if (!JS_InternUCStringN(cx, JS_GetStringChars(str),
+                                JS_GetStringLength(str))) {
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1413,6 +1447,7 @@ static JSFunctionSpec shell_functions[] = {
 #endif
     {"build",           BuildDate,      0},
     {"clear",           Clear,          0},
+    {"intern",          Intern,         1},
     {0}
 };
 
