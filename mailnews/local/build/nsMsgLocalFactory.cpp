@@ -126,12 +126,11 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 		inst = new nsMailboxService();
 	}
   else if (mClassID.Equals(kMailNewsDatasourceCID)) {
-    inst = new nsMSGFolderDataSource();
+    inst = NS_STATIC_CAST(nsIRDFMSGFolderDataSource*, new nsMSGFolderDataSource());
   }
   else if (mClassID.Equals(kMailNewsResourceCID)) {
     inst = NS_STATIC_CAST(nsIMsgLocalMailFolder*, new nsMsgLocalMailFolder());
   }
-
   if (inst == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
