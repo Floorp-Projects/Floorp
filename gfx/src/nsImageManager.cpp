@@ -133,7 +133,7 @@ ImageManagerImpl::FlushCache(PRUint8 img_catagory)
 NS_IMETHODIMP
 ImageManagerImpl::FlushMemory(PRUint32 reason, size_t requestedAmount)
 {
-  IL_FlushCache();
+  IL_FlushCache(1);   // flush everything
   return NS_OK;
 }
 
