@@ -5,7 +5,6 @@
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
-
 <?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?> 
 
 <!--
