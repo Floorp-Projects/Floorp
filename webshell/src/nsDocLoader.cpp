@@ -1620,7 +1620,6 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
      * Initiate the network request...
      */
     rv = Bind(url, aListener, aPostDataStream);
-    NS_IF_RELEASE(aPostDataStream);
     NS_RELEASE(url);
 
     return rv;
