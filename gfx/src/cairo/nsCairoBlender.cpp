@@ -73,21 +73,16 @@ nsCairoBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
     cairo_t *cairo = cairo_create();
     cairo_set_target_surface(cairo, dst_surf);
 
-    cairo_pattern_t *src_pat = cairo_pattern_create_for_surface (src_surf);
-
-    cairo_matrix_t *mat = cairo_matrix_create();
-    cairo_matrix_translate (mat, aDX - aSX, aDY - aSY);
-    cairo_pattern_set_matrix (src_pat, mat);
-
-    cairo_set_pattern (cairo, src_pat);
-    cairo_set_alpha (cairo, (double) aSrcOpacity);
-
     cairo_rectangle (cairo, aDX, aDY, aWidth, aHeight);
-    cairo_fill (cairo);
+    cairo_clip (cairo);
 
-    cairo_matrix_destroy (mat);
-    cairo_pattern_destroy (src_pat);
-    cairo_destroy(cairo);
+    PRUint32 srcWidth, srcHeight;
+    aSrc->GetDimensions(&srcWidth, &srcHeight);
+
+    cairo_translate (cairo, double(aDX - aSX), double(aDY - aSY));
+    cairo_show_surface (cairo, src_surf, srcWidth, srcHeight);
+
+    cairo_destroy (cairo);
 
     return NS_OK;
 }

@@ -71,6 +71,9 @@ public:
     // create a fast drawing surface for a native widget
     nsresult Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget);
 
+    // create a fast drawing surface for a native widget
+    nsresult Init (nsCairoDeviceContext *aDC, nsNativeWidget aWidget);
+
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
@@ -88,6 +91,7 @@ public:
     /* utility functions */
     cairo_surface_t *GetCairoSurface(void) { return mSurface; }
     PRInt32 GetDepth() { /* XXX */ return 24; }
+    nsNativeWidget GetNativeWidget(void) { return mNativeWidget; }
 
 #ifdef MOZ_ENABLE_XFT
     XftDraw *GetXftDraw(void);
@@ -98,6 +102,7 @@ public:
 private:
     cairo_surface_t *mSurface, *mImageSurface;
     nsCairoDeviceContext *mDC;
+    nsNativeWidget mNativeWidget;
 
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     Display *mXDisplay;
@@ -107,8 +112,8 @@ private:
 #endif
 
 #ifdef MOZ_ENABLE_XFT
-  XftDraw             *mXftDraw;
-  nsCOMPtr<nsIRegion>  mLastXftClip;
+    XftDraw             *mXftDraw;
+    nsCOMPtr<nsIRegion>  mLastXftClip;
 #endif
 
     PRUint32 mLockFlags;
