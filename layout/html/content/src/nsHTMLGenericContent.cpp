@@ -831,7 +831,7 @@ nsHTMLGenericContent::GetId(nsString& aId)
 nsresult
 nsHTMLGenericContent::SetId(const nsString& aId)
 {
-  SetAttribute(nsHTMLAtoms::id, aId, PR_TRUE);
+  SetAttr(nsHTMLAtoms::id, aId, eSetAttrNotify_Restart);
   return NS_OK;
 }
 
@@ -845,7 +845,7 @@ nsHTMLGenericContent::GetTitle(nsString& aTitle)
 nsresult
 nsHTMLGenericContent::SetTitle(const nsString& aTitle)
 {
-  SetAttribute(nsHTMLAtoms::title, aTitle, PR_TRUE);
+  SetAttr(nsHTMLAtoms::title, aTitle, eSetAttrNotify_None);
   return NS_OK;
 }
 
@@ -859,7 +859,7 @@ nsHTMLGenericContent::GetLang(nsString& aLang)
 nsresult
 nsHTMLGenericContent::SetLang(const nsString& aLang)
 {
-  SetAttribute(nsHTMLAtoms::lang, aLang, PR_TRUE);
+  SetAttr(nsHTMLAtoms::lang, aLang, eSetAttrNotify_Reflow);
   return NS_OK;
 }
 
@@ -873,7 +873,7 @@ nsHTMLGenericContent::GetDir(nsString& aDir)
 nsresult
 nsHTMLGenericContent::SetDir(const nsString& aDir)
 {
-  SetAttribute(nsHTMLAtoms::dir, aDir, PR_TRUE);
+  SetAttr(nsHTMLAtoms::dir, aDir, eSetAttrNotify_Reflow);
   return NS_OK;
 }
 
@@ -887,7 +887,7 @@ nsHTMLGenericContent::GetClassName(nsString& aClassName)
 nsresult
 nsHTMLGenericContent::SetClassName(const nsString& aClassName)
 {
-  SetAttribute(nsHTMLAtoms::kClass, aClassName, PR_TRUE);
+  SetAttr(nsHTMLAtoms::kClass, aClassName, eSetAttrNotify_Restart);
   return NS_OK;
 }
 
@@ -1110,6 +1110,24 @@ nsHTMLGenericContent::SetAttribute(nsIAtom* aAttribute,
     rv = mAttributes->SetAttribute(aAttribute, aValue, na);
   }
   return rv;
+}
+
+nsresult
+nsHTMLGenericContent::SetAttr(nsIAtom* aAttribute,
+                              const nsString& aValue,
+                              nsSetAttrNotify aNotify)
+{
+  // XXX cheesy code for now
+  return SetAttribute(aAttribute, aValue, PR_TRUE);
+}
+
+nsresult
+nsHTMLGenericContent::SetAttr(nsIAtom* aAttribute,
+                              const nsHTMLValue& aValue,
+                              nsSetAttrNotify aNotify)
+{
+  // XXX cheesy code for now
+  return SetAttribute(aAttribute, aValue, PR_TRUE);
 }
 
 nsresult
@@ -1477,6 +1495,8 @@ nsHTMLGenericContent::ToHTMLString(nsString& aBuf) const
 
 // XXX this is REALLY temporary code
 
+extern nsresult NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                              nsIFrame*& aNewFrame);
 extern nsresult NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                               nsIFrame*& aNewFrame);
 
@@ -1492,6 +1512,9 @@ nsHTMLGenericContent::CreateFrame(nsIPresContext*  aPresContext,
   // Handle specific frame types
   if (mTag == nsHTMLAtoms::hr) {
     rv = NS_NewHRFrame(mContent, aParentFrame, frame);
+  }
+  else if (mTag == nsHTMLAtoms::br) {
+    rv = NS_NewBRFrame(mContent, aParentFrame, frame);
   }
   if (NS_OK != rv) {
     return rv;
