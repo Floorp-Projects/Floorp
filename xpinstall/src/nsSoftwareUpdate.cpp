@@ -382,6 +382,9 @@ nsSoftwareUpdate::SetProgramDirectory(nsIFileSpec *aDir)
     else if ( !aDir )
         return NS_ERROR_NULL_POINTER;
 
+    // only allow once, it would be a mess if we've already started installing
+    mStubLockout = PR_TRUE;
+
     // fix GetFolder return path
     mProgramDir = aDir;
     mProgramDir->AddRef();
