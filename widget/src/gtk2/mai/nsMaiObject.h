@@ -144,6 +144,7 @@ public:
      */
     virtual gchar *GetName(void);
     virtual gchar *GetDescription(void);
+    virtual PRUint32 GetRole(void);
     virtual MaiObject *GetParent(void) = 0;
     virtual gint GetChildCount(void);
     virtual MaiObject *RefChild(gint aChildIndex);

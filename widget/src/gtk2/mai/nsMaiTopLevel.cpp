@@ -143,6 +143,20 @@ MaiTopLevel::Create(nsIAccessible *aAcc)
     return maiTopLevel;
 }
 
+PRUint32
+MaiTopLevel::GetRole(void)
+{
+    //the cross-platform Accessible object returns "ROLE_PANE"
+    //for "ATK_ROLE_FRAME"
+    PRUint32 tmpRole, atkRole = ATK_ROLE_FRAME;
+    if (mAccessible && mAccessible->GetAccRole(&tmpRole) == NS_OK &&
+        tmpRole != nsIAccessible::ROLE_PANE) {
+        atkRole = tmpRole;
+    }
+
+    return atkRole;
+}
+
 //////////////////////////////////////////////////////////////////////
 // See the comments in
 // MaiWidget::CreateAndCache(nsIAccessible *aAcc);
