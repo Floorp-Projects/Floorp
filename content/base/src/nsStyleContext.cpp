@@ -860,15 +860,22 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   // SVG
   IndentBy(out,aIndent);
   const nsStyleSVG* svg = GetStyleSVG();
-  fprintf(out, "<svg data=\"%d %ld %f %d %d %d %d %ld %s %f %d %d %f %f %f %d %d\" />\n",
-          (int)svg->mFill.mType,
-          (long)svg->mFill.mColor,
+  fprintf(out, "<svg data=\"%d ",(int)svg->mFill.mType);
+  if (svg->mFill.mType == eStyleSVGPaintType_Server)
+    fprintf(out, "%s ", URICString(svg->mFill.mPaint.mPaintServer).get());
+  else
+    fprintf(out, "%ld ", (long)svg->mFill.mPaint.mColor);
+  fprintf(out, "%f %d %d %d %d ",
           svg->mFillOpacity,
           (int)svg->mFillRule,
           (int)svg->mPointerEvents,
           (int)svg->mShapeRendering,
-          (int)svg->mStroke.mType,
-          (long)svg->mStroke.mColor,
+          (int)svg->mStroke.mType);
+  if (svg->mStroke.mType == eStyleSVGPaintType_Server)
+    fprintf(out, "%s ", URICString(svg->mStroke.mPaint.mPaintServer).get());
+  else
+    fprintf(out, "%ld ", (long)svg->mStroke.mPaint.mColor);
+  fprintf(out, "%s %f %d %d %f %f %f %d %d\" />\n",
           NS_ConvertUCS2toUTF8(svg->mStrokeDasharray).get(),
           svg->mStrokeDashoffset,
           (int)svg->mStrokeLinecap,

@@ -71,6 +71,7 @@ CPPSRCS = \
 	nsSVGStroke.cpp \
 	nsSVGLibartGlyphGeometryDefault.cpp \
 	nsSVGLibartGlyphMetricsDefault.cpp \
+	nsSVGLibartGradient.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

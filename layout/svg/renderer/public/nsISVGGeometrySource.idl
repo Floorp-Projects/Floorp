@@ -40,12 +40,15 @@
 
 %{C++
 #include "nsColor.h"
+#include "nsIURI.h"
 %}
 
 native nscolor(nscolor);
 
 interface nsIDOMSVGMatrix;
 interface nsPresContext;
+interface nsIURI;
+interface nsISVGGradient;
 
 /**
  * \addtogroup rendering_backend_interfaces Rendering Backend Interfaces
@@ -183,9 +186,10 @@ interface nsISVGGeometrySource : nsISupports
    * @name Paint type constants for stroke and fill paint
    * @{
    */
-  const unsigned short PAINT_TYPE_NONE        = 0;
-  const unsigned short PAINT_TYPE_SOLID_COLOR = 1;
-  const unsigned short PAINT_TYPE_SERVER      = 2; 
+  /* these values must be kept in sync with content/shared/public/nsStyleStruct.h */
+  const unsigned short PAINT_TYPE_NONE          = 0;
+  const unsigned short PAINT_TYPE_SOLID_COLOR   = 1;
+  const unsigned short PAINT_TYPE_SERVER        = 2; 
   /** @} */
   
   /**
@@ -194,10 +198,13 @@ interface nsISVGGeometrySource : nsISupports
    */
   /* **** stroke paint XXX needs consolidation ********************* */  
   readonly attribute unsigned short strokePaintType; 
-  const unsigned long UPDATEMASK_STROKE_PAINT_TYPE = 0x00000800;
+  const unsigned long UPDATEMASK_STROKE_PAINT_TYPE   = 0x00000800;
 
   [noscript] readonly attribute nscolor strokePaint; 
-  const unsigned long UPDATEMASK_STROKE_PAINT      = 0x00001000;
+  const unsigned long UPDATEMASK_STROKE_PAINT        = 0x00001000;
+
+  // convenience function to get a gradient from a PaintServer
+  [noscript] void GetStrokeGradient(out nsISVGGradient aGrad);
   /** @} */
 
   /**
@@ -206,10 +213,13 @@ interface nsISVGGeometrySource : nsISupports
    */
   /* **** fill paint XXX needs consolidation *********************** */
   readonly attribute unsigned short fillPaintType; 
-  const unsigned long UPDATEMASK_FILL_PAINT_TYPE   = 0x00002000;
+  const unsigned long UPDATEMASK_FILL_PAINT_TYPE     = 0x00004000;
 
   [noscript] readonly attribute nscolor fillPaint; 
-  const unsigned long UPDATEMASK_FILL_PAINT        = 0x00004000;  
+  const unsigned long UPDATEMASK_FILL_PAINT          = 0x00008000;  
+
+  // convenience function to get a gradient from a PaintServer
+  [noscript] void GetFillGradient(out nsISVGGradient aGrad);
   /** @} */
 };
 

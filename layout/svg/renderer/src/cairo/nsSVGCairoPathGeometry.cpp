@@ -54,6 +54,10 @@
 #include <cairo.h>
 #include "nsSVGCairoRegion.h"
 
+#include "nsISVGGradient.h"
+#include "nsSVGCairoGradient.h"
+
+
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
  * @{
@@ -261,15 +265,15 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
   GeneratePath(ctx);
 
-  PRUint16 type;
+  PRUint16 strokeType, fillType;
 
   PRBool bStroking = PR_FALSE;
-  mSource->GetStrokePaintType(&type);
-  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+  mSource->GetStrokePaintType(&strokeType);
+  if (strokeType != nsISVGGeometrySource::PAINT_TYPE_NONE)
     bStroking = PR_TRUE;
 
-  mSource->GetFillPaintType(&type);
-  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+  mSource->GetFillPaintType(&fillType);
+  if (fillType != nsISVGGeometrySource::PAINT_TYPE_NONE) {
     if (bStroking)
       cairo_save(ctx);
 
@@ -284,7 +288,20 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
                         NS_GET_B(rgb)/255.0);
     cairo_set_alpha(ctx, double(opacity));
 
-    cairo_fill(ctx);
+    if (fillType == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+      cairo_fill(ctx);
+    } else {
+#ifdef DEBUG_tor
+      fprintf(stderr, "CAIRO FILL GRADIENT ************************\n");
+#endif
+      nsCOMPtr<nsISVGGradient> aGrad;
+      mSource->GetFillGradient(getter_AddRefs(aGrad));
+
+      cairo_pattern_t *gradient = CairoGradient(ctx, aGrad);
+      cairo_set_pattern(ctx, gradient);
+      cairo_fill(ctx);
+      cairo_pattern_destroy(gradient);
+    }
 
     if (bStroking)
       cairo_restore(ctx);
@@ -301,7 +318,20 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
                         NS_GET_B(rgb)/255.0);
     cairo_set_alpha(ctx, double(opacity));
 
-    cairo_stroke(ctx);
+    if (strokeType == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+      cairo_stroke(ctx);
+    } else {
+#ifdef DEBUG_tor
+      fprintf(stderr, "CAIRO STROKE GRADIENT ************************\n");
+#endif
+      nsCOMPtr<nsISVGGradient> aGrad;
+      mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+
+      cairo_pattern_t *gradient = CairoGradient(ctx, aGrad);
+      cairo_set_pattern(ctx, gradient);
+      cairo_stroke(ctx);
+      cairo_pattern_destroy(gradient);
+    }
   }
 
   cairo_restore(ctx);

@@ -56,6 +56,8 @@
 #include "nsIDeviceContext.h"
 #include "nsIComponentManager.h"
 
+#include "nsSVGLibartGradient.h"
+
 /**
  * \addtogroup libart_renderer Libart Rendering Engine
  * @{
@@ -167,7 +169,8 @@ nsSVGLibartGlyphGeometryFT::Render(nsISVGRendererCanvas *canvas)
   {
     PRUint16 filltype;
     mSource->GetFillPaintType(&filltype);
-    if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+    if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR || 
+        filltype == nsISVGGeometrySource::PAINT_TYPE_SERVER)
       hasFill = PR_TRUE;
   }
 
@@ -175,7 +178,8 @@ nsSVGLibartGlyphGeometryFT::Render(nsISVGRendererCanvas *canvas)
   {
     PRUint16 stroketype;
     mSource->GetStrokePaintType(&stroketype);
-    if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+    if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR || 
+        stroketype == nsISVGGeometrySource::PAINT_TYPE_SERVER)
       hasStroke = PR_TRUE;
   }
 
@@ -249,11 +253,26 @@ nsSVGLibartGlyphGeometryFT::PaintFill(nsISVGLibartCanvas* canvas,
   float opacity;
   mSource->GetFillOpacity(&opacity);
 
+  // Define the variables we want to fill only once and use in the loop
   ArtColor fill_color;
-  {
+  PRUint16 type;
+  nsCOMPtr<nsISVGGradient> aGrad;
+  nsCOMPtr<nsISVGLibartRegion> aLibartRegion;
+
+  // Get the fill type
+  mSource->GetFillPaintType(&type);
+  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
     nscolor rgb;
     mSource->GetFillPaint(&rgb);
     canvas->GetArtColor(rgb, fill_color);
+  } else if (type == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+    // Handle gradients
+    mSource->GetFillGradient(getter_AddRefs(aGrad));
+
+    // Now, get the appropriate gradient fill
+    nsCOMPtr<nsISVGRendererRegion> region;
+    GetCoveredRegion(getter_AddRefs(region));
+    aLibartRegion = do_QueryInterface(region);
   }
   
   PRUint32 glyph_count = metrics->GetGlyphCount();
@@ -276,7 +295,13 @@ nsSVGLibartGlyphGeometryFT::PaintFill(nsISVGLibartCanvas* canvas,
                                             bitmap->left+bitmap->bitmap.width,
                                             -bitmap->top+bitmap->bitmap.rows);
       if (render) {
-        art_render_image_solid(render, fill_color);
+        if(type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+          art_render_image_solid(render, fill_color);
+        else if (type == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+          nsCOMPtr<nsIDOMSVGMatrix> ctm;
+          mSource->GetCanvasTM(getter_AddRefs(ctm));
+          LibartGradient(render, ctm, aGrad, aLibartRegion);
+        }
         art_render_mask_solid(render, (int)(0x10000*opacity));
         
         art_render_mask(render,

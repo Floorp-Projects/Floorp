@@ -37,6 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
+#include "nsIDOMSVGDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDocument.h"
 #include "nsISVGRenderer.h"
 #include "nsISVGRendererRegion.h"
 #include "nsISVGValueUtils.h"
@@ -44,7 +47,10 @@
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGTransformList.h"
 #include "nsISVGContainerFrame.h"
+#include "nsSVGGradientFrame.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
+#include "nsSVGAtoms.h"
 #include "nsCRT.h"
 #include "prdtoa.h"
 
@@ -427,8 +433,20 @@ nsSVGPathGeometryFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokePaint(nscolor *aStrokePaint)
 {
-  *aStrokePaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mColor;
+  *aStrokePaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mPaint.mColor;
   return NS_OK;
+}
+
+/* [noscript] void GetStrokeGradient(nsISVGGradient **aGrad); */
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
+{
+  nsIURI *aServer;
+  aServer = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mPaint.mPaintServer;
+  if (aServer == nsnull)
+    return NS_ERROR_FAILURE;
+  // Now have the URI.  Get the gradient 
+  return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
 }
 
 /* readonly attribute unsigned short fillPaintType; */
@@ -443,8 +461,20 @@ nsSVGPathGeometryFrame::GetFillPaintType(PRUint16 *aFillPaintType)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFillPaint(nscolor *aFillPaint)
 {
-  *aFillPaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mColor;
+  *aFillPaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mPaint.mColor;
   return NS_OK;
+}
+
+/* [noscript] void GetFillGradient(nsISVGGradient **aGrad); */
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
+{
+  nsIURI *aServer;
+  aServer = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mPaint.mPaintServer;
+  if (aServer == nsnull)
+    return NS_ERROR_FAILURE;
+  // Now have the URI.  Get the gradient 
+  return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
 }
 
 //----------------------------------------------------------------------

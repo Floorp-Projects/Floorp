@@ -1203,7 +1203,20 @@ enum nsStyleSVGPaintType {
 struct nsStyleSVGPaint
 {
   nsStyleSVGPaintType mType;
-  nscolor mColor;
+  union {
+    nscolor mColor;
+    nsIURI *mPaintServer;
+  } mPaint;
+
+  // empty constructor to keep Sun compiler happy
+  nsStyleSVGPaint() {}
+  ~nsStyleSVGPaint(); 
+  nsStyleSVGPaint& operator=(const nsStyleSVGPaint& aOther);
+  PRBool operator==(const nsStyleSVGPaint& aOther) const; 
+
+  PRBool operator!=(const nsStyleSVGPaint& aOther) const {
+    return !(*this == aOther);
+  }
 };
 
 struct nsStyleSVG : public nsStyleStruct {
@@ -1231,6 +1244,8 @@ struct nsStyleSVG : public nsStyleStruct {
   PRUint8          mFillRule;         // [inherited] see nsStyleConsts.h
   PRUint8          mPointerEvents;    // [inherited] see nsStyleConsts.h
   PRUint8          mShapeRendering;   // [inherited] see nsStyleConsts.h
+  nsStyleSVGPaint  mStopColor;        // [inherited]
+  float            mStopOpacity;      // [inherited]
   nsStyleSVGPaint  mStroke;           // [inherited]
   nsString         mStrokeDasharray;  // [inherited] XXX we want a parsed value here
   float            mStrokeDashoffset; // [inherited]

@@ -422,6 +422,14 @@ nsSVGElement::sFontSpecificationMap[] = {
   { nsnull }
 };
 
+// PresentationAttributes-GradientStop
+/* static */ const nsGenericElement::MappedAttributeEntry
+nsSVGElement::sGradientStopMap[] = {
+  { &nsSVGAtoms::stop_color },
+  { &nsSVGAtoms::stop_opacity },
+  { nsnull }
+};
+
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 

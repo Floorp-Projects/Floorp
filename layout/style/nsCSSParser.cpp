@@ -4260,7 +4260,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
                         nsCSSProps::kDominantBaselineKTable);
   case eCSSProperty_fill:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE | VARIANT_URL,
                         nsnull);
   case eCSSProperty_fill_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN,
@@ -4274,8 +4274,14 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_shape_rendering:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
                         nsCSSProps::kShapeRenderingKTable);
-  case eCSSProperty_stroke:
+  case eCSSProperty_stop_color:
     return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE,
+                        nsnull);
+  case eCSSProperty_stop_opacity:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HN,
+                        nsnull);
+  case eCSSProperty_stroke:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE | VARIANT_URL,
                         nsnull);
   case eCSSProperty_stroke_dasharray:
     return ParseVariant(aErrorCode, aValue, VARIANT_HOS,

@@ -54,6 +54,7 @@ using namespace Gdiplus;
 #include "nsSVGGDIPlusPathBuilder.h"
 #include "nsISVGPathGeometrySource.h"
 #include "nsISVGRendererPathBuilder.h"
+#include "nsSVGGDIPlusGradient.h"
 #include "nsMemory.h"
 
 /**
@@ -365,6 +366,12 @@ nsSVGGDIPlusPathGeometry::RenderPath(GraphicsPath *path, nscolor color, float op
 //----------------------------------------------------------------------
 // nsISVGRendererPathGeometry methods:
 
+static void gradCBPath(Graphics *gfx, Brush *brush, void *cbStruct)
+{
+  GraphicsPath *path = (GraphicsPath *)cbStruct;
+  gfx->FillPath(brush, path);
+}
+
 /** Implements void render(in nsISVGRendererCanvas canvas); */
 NS_IMETHODIMP
 nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
@@ -394,18 +401,46 @@ nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
   
   // paint fill:
   mSource->GetFillPaintType(&type);
-  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR && GetFill()) {
-    mSource->GetFillPaint(&color);
-    mSource->GetFillOpacity(&opacity);
-    RenderPath(GetFill(), color, opacity, gdiplusCanvas);
+  if (type != nsISVGGeometrySource::PAINT_TYPE_NONE && GetFill()) {
+    if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+      mSource->GetFillPaint(&color);
+      mSource->GetFillOpacity(&opacity);
+      RenderPath(GetFill(), color, opacity, gdiplusCanvas);
+    } else {
+      nsCOMPtr<nsISVGGradient> aGrad;
+      mSource->GetFillGradient(getter_AddRefs(aGrad));
+
+      nsCOMPtr<nsISVGRendererRegion> region;
+      GetCoveredRegion(getter_AddRefs(region));
+      nsCOMPtr<nsISVGGDIPlusRegion> aRegion = do_QueryInterface(region);
+      nsCOMPtr<nsIDOMSVGMatrix> ctm;
+      mSource->GetCanvasTM(getter_AddRefs(ctm));
+
+      GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
+                      gradCBPath, GetFill());
+    }
   }
 
   // paint stroke:
   mSource->GetStrokePaintType(&type);
-  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR && GetStroke()) {
-    mSource->GetStrokePaint(&color);
-    mSource->GetStrokeOpacity(&opacity);
-    RenderPath(GetStroke(), color, opacity, gdiplusCanvas);
+  if (type != nsISVGGeometrySource::PAINT_TYPE_NONE && GetStroke()) {
+    if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+      mSource->GetStrokePaint(&color);
+      mSource->GetStrokeOpacity(&opacity);
+      RenderPath(GetStroke(), color, opacity, gdiplusCanvas);
+    } else {
+      nsCOMPtr<nsISVGGradient> aGrad;
+      mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+
+      nsCOMPtr<nsISVGRendererRegion> region;
+      GetCoveredRegion(getter_AddRefs(region));
+      nsCOMPtr<nsISVGGDIPlusRegion> aRegion = do_QueryInterface(region);
+      nsCOMPtr<nsIDOMSVGMatrix> ctm;
+      mSource->GetCanvasTM(getter_AddRefs(ctm));
+
+      GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
+                      gradCBPath, GetStroke());
+    }
   }
   
   return NS_OK;

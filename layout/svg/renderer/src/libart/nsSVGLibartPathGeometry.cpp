@@ -44,13 +44,16 @@
 #include "nsSVGLibartRegion.h"
 #include "nsISVGRendererRegion.h"
 #include "nsSVGLibartBPathBuilder.h"
+#include "nsSVGLibartGradient.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGPathGeometrySource.h"
+#include "nsISVGGradient.h"
 #include "nsSVGFill.h"
 #include "nsSVGStroke.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "prdtoa.h"
+#include "nsString.h"
 
 // comment from art_vpath_path.c: The Adobe PostScript reference
 // manual defines flatness as the maximum deviation between any
@@ -92,6 +95,7 @@ protected:
   ArtVpath *GetPath();
   ArtSVP *GetFill();
   ArtSVP *GetStroke();
+  ArtSVP *GetGradient();
   
   private:
   nsCOMPtr<nsISVGPathGeometrySource> mSource;
@@ -196,7 +200,7 @@ nsSVGLibartPathGeometry::GetPath()
     ctm->GetF(&val);
     matrix[5] = val;
   }
-  
+
   if ( bpath &&
        ( matrix[0] != 1.0 || matrix[2] != 0.0 || matrix[4] != 0.0 ||
          matrix[1] != 0.0 || matrix[3] != 1.0 || matrix[5] != 0.0 ))
@@ -248,6 +252,7 @@ nsSVGLibartPathGeometry::Render(nsISVGRendererCanvas *canvas)
   
   // paint fill:
   mSource->GetFillPaintType(&type);
+
   if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR && GetFill()) {
     nscolor rgb;
     mSource->GetFillPaint(&rgb);
@@ -260,9 +265,36 @@ nsSVGLibartPathGeometry::Render(nsISVGRendererCanvas *canvas)
     ArtRender* render = libartCanvas->NewRender();
     NS_ASSERTION(render, "could not create render");
 
+#ifdef DEBUG_scooter
+    printf("nsSVGLibartPathGeometry::Render - opacity=%f\n",opacity);
+#endif
+
     art_render_mask_solid(render, (int)(0x10000 * opacity));
     art_render_svp(render, GetFill());
     art_render_image_solid(render, col);
+    libartCanvas->InvokeRender(render);
+  } else if (type == nsISVGGeometrySource::PAINT_TYPE_SERVER && GetFill() ) {
+    // Handle gradients
+    nsCOMPtr<nsISVGGradient> aGrad;
+    mSource->GetFillGradient(getter_AddRefs(aGrad));
+    float opacity;
+    mSource->GetFillOpacity(&opacity);
+    
+    ArtRender* render = libartCanvas->NewRender();
+    NS_ASSERTION(render, "could not create render");
+
+    art_render_mask_solid(render, (int)(0x10000 * opacity));
+    art_render_svp(render, GetFill());
+
+    // Now, get the appropriate gradient fill
+    nsCOMPtr<nsISVGRendererRegion> region;
+    GetCoveredRegion(getter_AddRefs(region));
+    nsCOMPtr<nsISVGLibartRegion> aLibartRegion = do_QueryInterface(region);
+    nsCOMPtr<nsIDOMSVGMatrix> ctm;
+    mSource->GetCanvasTM(getter_AddRefs(ctm));
+    LibartGradient(render, ctm, aGrad, aLibartRegion);
+
+    // And draw it
     libartCanvas->InvokeRender(render);
   }
 
@@ -283,6 +315,29 @@ nsSVGLibartPathGeometry::Render(nsISVGRendererCanvas *canvas)
     art_render_mask_solid(render, (int)(0x10000 * opacity));
     art_render_svp(render, GetStroke());
     art_render_image_solid(render, col);
+    libartCanvas->InvokeRender(render);
+  } else if (type == nsISVGGeometrySource::PAINT_TYPE_SERVER && GetStroke()) {
+    // Handle gradients
+    nsCOMPtr<nsISVGGradient> aGrad;
+    mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+    float opacity;
+    mSource->GetStrokeOpacity(&opacity);
+    
+    ArtRender* render = libartCanvas->NewRender();
+    NS_ASSERTION(render, "could not create render");
+
+    art_render_mask_solid(render, (int)(0x10000 * opacity));
+    art_render_svp(render, GetStroke());
+
+    // Now, get the appropriate gradient fill
+    nsCOMPtr<nsISVGRendererRegion> region;
+    GetCoveredRegion(getter_AddRefs(region));
+    nsCOMPtr<nsISVGLibartRegion> aLibartRegion = do_QueryInterface(region);
+    nsCOMPtr<nsIDOMSVGMatrix> ctm;
+    mSource->GetCanvasTM(getter_AddRefs(ctm));
+    LibartGradient(render, ctm, aGrad, aLibartRegion);
+
+    // And draw it
     libartCanvas->InvokeRender(render);
   }
   

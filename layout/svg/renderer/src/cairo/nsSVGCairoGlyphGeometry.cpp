@@ -54,6 +54,9 @@
 #include "nsMemory.h"
 #include <cairo.h>
 
+#include "nsISVGGradient.h"
+#include "nsSVGCairoGradient.h"
+
 /**
  * \addtogroup cairo_renderer cairo Rendering Engine
  * @{
@@ -179,20 +182,16 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
   cairo_move_to(ctx, x, y);
 
   PRBool hasFill = PR_FALSE;
-  {
-    PRUint16 filltype;
-    mSource->GetFillPaintType(&filltype);
-    if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
-      hasFill = PR_TRUE;
-  }
+  PRUint16 filltype;
+  mSource->GetFillPaintType(&filltype);
+  if (filltype != nsISVGGeometrySource::PAINT_TYPE_NONE)
+    hasFill = PR_TRUE;
 
   PRBool hasStroke = PR_FALSE;
-  {
-    PRUint16 stroketype;
-    mSource->GetStrokePaintType(&stroketype);
-    if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
-      hasStroke = PR_TRUE;
-  }
+  PRUint16 stroketype;
+  mSource->GetStrokePaintType(&stroketype);
+  if (stroketype != nsISVGGeometrySource::PAINT_TYPE_NONE)
+    hasStroke = PR_TRUE;
 
   if (!hasFill && !hasStroke) return NS_OK; // nothing to paint
 
@@ -212,7 +211,23 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       
       nsAutoString text;
       mSource->GetCharacterData(text);
-      cairo_show_text(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+
+      if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+        cairo_show_text(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+      } else {
+        nsCOMPtr<nsISVGGradient> aGrad;
+        mSource->GetFillGradient(getter_AddRefs(aGrad));
+
+        cairo_text_extents_t extents;
+        cairo_text_extents(ctx,
+                           (unsigned char*)NS_ConvertUCS2toUTF8(text).get(),
+                           &extents);
+        
+        cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, &extents);
+        cairo_set_pattern(ctx, gradient);
+        cairo_show_text(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+        cairo_pattern_destroy(gradient);
+      }
   }
 
   if (hasStroke) {
@@ -278,7 +293,18 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     nsAutoString text;
     mSource->GetCharacterData(text);
     cairo_text_path(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
-    cairo_stroke(ctx);
+
+    if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+      cairo_stroke(ctx);
+    } else {
+      nsCOMPtr<nsISVGGradient> aGrad;
+      mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+      
+      cairo_pattern_t *gradient = CairoGradient(ctx, aGrad);
+      cairo_set_pattern(ctx, gradient);
+      cairo_stroke(ctx);
+      cairo_pattern_destroy(gradient);
+    }
   }
 
   cairo_restore(ctx);
