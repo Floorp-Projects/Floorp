@@ -40,6 +40,7 @@
 
 
 #include "nsAppRunner.h"
+#include "nsBuildID.h"
 
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
@@ -1723,47 +1724,90 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   return ShowProfileManager(profileSvc, aNative);
 }
 
-#define FILE_COMPATIBILITY_INFO NS_LITERAL_STRING("compatibility.ini")
+#define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
 
 static void GetVersion(nsIFile* aProfileDir, char* aVersion, int aVersionLength)
 {
-  nsCOMPtr<nsIFile> compatibilityFile;
-  aProfileDir->Clone(getter_AddRefs(compatibilityFile));
-  compatibilityFile->Append(FILE_COMPATIBILITY_INFO);
+  aVersion[0] = '\0';
+
+  nsCOMPtr<nsIFile> file;
+  aProfileDir->Clone(getter_AddRefs(file));
+  if (!file)
+    return;
+  file->AppendNative(FILE_COMPATIBILITY_INFO);
 
   nsINIParser parser;
-  nsCOMPtr<nsILocalFile> lf(do_QueryInterface(compatibilityFile));
-  parser.Init(lf);
+  nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
+  nsresult rv = parser.Init(localFile);
+  if (NS_FAILED(rv))
+    return;
 
-  parser.GetString("Compatibility", "Build ID", aVersion, aVersionLength);
+  parser.GetString("Compatibility", "LastVersion", aVersion, aVersionLength);
+}
+
+static void BuildVersion(nsCString &aBuf)
+{
+  aBuf.Assign(gAppData->appVersion);
+  aBuf.Append('_');
+  aBuf.Append(gAppData->appBuildID);
+  aBuf.Append('/');
+  aBuf.AppendLiteral(GRE_BUILD_ID);
+}
+
+static void WriteVersion(nsIFile* aProfileDir, const nsCSubstring &version)
+{
+  nsCOMPtr<nsIFile> file;
+  aProfileDir->Clone(getter_AddRefs(file));
+  if (!file)
+    return;
+  file->AppendNative(FILE_COMPATIBILITY_INFO);
+
+  nsCOMPtr<nsILocalFile> lf = do_QueryInterface(file);
+
+  PRFileDesc *fd = nsnull;
+  lf->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd);
+  if (!fd) {
+    NS_ERROR("could not create output stream");
+    return;
+  }
+
+  nsCAutoString buf;
+  buf.AssignLiteral("[Compatibility]\r\nLastVersion=");
+  buf.Append(version);
+  buf.AppendLiteral(NS_LINEBREAK);
+
+  PR_Write(fd, buf.get(), buf.Length());
+  PR_Close(fd);
 }
 
 static PRBool ComponentsListChanged(nsIFile* aProfileDir)
 {
-  nsCOMPtr<nsIFile> compatibilityFile;
-  aProfileDir->Clone(getter_AddRefs(compatibilityFile));
-  compatibilityFile->Append(FILE_COMPATIBILITY_INFO);
+  nsCOMPtr<nsIFile> file;
+  aProfileDir->Clone(getter_AddRefs(file));
+  if (!file)
+    return PR_TRUE;
+  file->AppendNative(NS_LITERAL_CSTRING(".autoreg"));
 
-  nsINIParser parser;
-  nsCOMPtr<nsILocalFile> lf(do_QueryInterface(compatibilityFile));
-  parser.Init(lf);
-
-  char parserBuf[MAXPATHLEN];
-  nsresult rv = parser.GetString("Compatibility", "Components List Changed", parserBuf, MAXPATHLEN);
-  return NS_SUCCEEDED(rv) && !strcmp(parserBuf, "1");
+  PRBool exists = PR_FALSE;
+  file->Exists(&exists);
+  return exists;
 }
 
 static void RemoveComponentRegistries(nsIFile* aProfileDir)
 {
-  nsCOMPtr<nsIFile> compregFile;
-  aProfileDir->Clone(getter_AddRefs(compregFile));
-  compregFile->Append(NS_LITERAL_STRING("compreg.dat"));
-  compregFile->Remove(PR_FALSE);
+  nsCOMPtr<nsIFile> file;
+  aProfileDir->Clone(getter_AddRefs(file));
+  if (!file)
+    return;
 
-  nsCOMPtr<nsIFile> xptiFile;
-  aProfileDir->Clone(getter_AddRefs(xptiFile));
-  xptiFile->Append(NS_LITERAL_STRING("xpti.dat"));
-  xptiFile->Remove(PR_FALSE);
+  file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
+  file->Remove(PR_FALSE);
+
+  file->SetNativeLeafName(NS_LITERAL_CSTRING("xpti.dat"));
+  file->Remove(PR_FALSE);
+
+  file->SetNativeLeafName(NS_LITERAL_CSTRING(".autoreg"));
+  file->Remove(PR_FALSE);
 }
 
 const nsXREAppData* gAppData = nsnull;
@@ -2007,50 +2051,47 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   PRBool upgraded = PR_FALSE;
   PRBool componentsListChanged = PR_FALSE;
 
-  if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {
-    // Check for version compatibility with the last version of the app this 
-    // profile was started with.
-    char version[MAXPATHLEN];
-    GetVersion(lf, version, MAXPATHLEN);
+  // Check for version compatibility with the last version of the app this 
+  // profile was started with.  The format of the version stamp is defined
+  // by the BuildVersion function.
+  char lastVersion[MAXPATHLEN];
+  GetVersion(lf, lastVersion, MAXPATHLEN);
 
-    // Extensions are deemed compatible for all builds in the "x.x.x+" 
-    // period in between milestones for developer convenience (even though
-    // ongoing code changes might actually make that a poor assumption. 
-    // The size and expertise of the nightly build testing community is 
-    // expected to be sufficient to deal with this issue. 
-    //
-    // Every time a profile is loaded by a build with a different build id, 
-    // it updates the compatibility.ini file saying what build last wrote
-    // the compreg.dat. On subsequent launches if the build id matches, 
-    // there is no need for re-registration. If the user loads the same
-    // profile in different builds the component registry must be
-    // re-generated to prevent mysterious component loading failures.
-    // 
-    if (!strcmp(version, aAppData->appBuildID)) {
-      componentsListChanged = ComponentsListChanged(lf);
-      if (componentsListChanged) {
-        // Remove compreg.dat and xpti.dat, forcing component re-registration,
-        // with the new list of additional components directories specified
-        // in "components.ini" which we have just discovered changed since the
-        // last time the application was run. 
-        RemoveComponentRegistries(lf);
-      }
-      // Nothing need be done for the normal startup case.
-    }
-    else {
-      // Remove compreg.dat and xpti.dat, forcing component re-registration
-      // with the default set of components (this disables any potentially
-      // troublesome incompatible XPCOM components). 
+  // Build the version stamp for the running application.
+  nsCAutoString version;
+  BuildVersion(version);
+
+  // Every time a profile is loaded by a build with a different version,
+  // it updates the compatibility.ini file saying what version last wrote
+  // the compreg.dat.  On subsequent launches if the version matches, 
+  // there is no need for re-registration.  If the user loads the same
+  // profile in different builds the component registry must be
+  // re-generated to prevent mysterious component loading failures.
+  // 
+  if (version.Equals(lastVersion)) {
+    componentsListChanged = ComponentsListChanged(lf);
+    if (componentsListChanged) {
+      // Remove compreg.dat and xpti.dat, forcing component re-registration,
+      // with the new list of additional components directories specified
+      // in "components.ini" which we have just discovered changed since the
+      // last time the application was run. 
       RemoveComponentRegistries(lf);
-
-      // Tell the Extension Manager it should check for incompatible 
-      // Extensions and re-write the Components manifest ("components.ini")
-      // with a list of XPCOM components for compatible extensions
-      upgraded = PR_TRUE;
-
-      // The Extension Manager will write the Compatibility manifest with
-      // the current app version. 
     }
+    // Nothing need be done for the normal startup case.
+  }
+  else {
+    // Remove compreg.dat and xpti.dat, forcing component re-registration
+    // with the default set of components (this disables any potentially
+    // troublesome incompatible XPCOM components). 
+    RemoveComponentRegistries(lf);
+
+    // Tell the Extension Manager it should check for incompatible 
+    // Extensions and re-write the Components manifest ("components.ini")
+    // with a list of XPCOM components for compatible extensions
+    upgraded = PR_TRUE;
+
+    // Write out version
+    WriteVersion(lf, version);
   }
 
   PRBool needsRestart = PR_FALSE;

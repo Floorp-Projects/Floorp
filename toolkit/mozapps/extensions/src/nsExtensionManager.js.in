@@ -69,7 +69,7 @@ const FILE_EXTENSIONS                 = "Extensions.rdf";
 const FILE_UNINSTALL_LOG              = "Uninstall";
 const FILE_DEFAULTS                   = "defaults.ini";
 const FILE_COMPONENT_MANIFEST         = "components.ini";
-const FILE_COMPAT_MANIFEST            = "compatibility.ini";
+const FILE_AUTOREG                    = ".autoreg";
 const FILE_INSTALL_MANIFEST           = "install.rdf";
 const FILE_CHROME_MANIFEST            = "contents.rdf";
 const FILE_WASINSAFEMODE              = "Safe Mode";
@@ -1947,7 +1947,7 @@ nsExtensionManager.prototype = {
       // If no additional restart is required, it implies that there are
       // no new components that need registering so we can inform the app
       // not to do any extra startup checking next time round.    
-      this._writeCompatibilityManifest(needsRestart);
+      this._setComponentsListChanged(needsRestart);
     }
     catch (e) {
       dump("*** nsExtensionManager::_finishOperations - failure, catching exception so finalize window can close " + e +"\n");
@@ -2170,33 +2170,23 @@ nsExtensionManager.prototype = {
     this._writeProfileFile(manifest, this._getComponentsDir, aIsProfile);
 
     // Now refresh the compatibility manifest.
-    this._writeCompatibilityManifest(true);
+    this._setComponentsListChanged(true);
   },
   
-  _writeCompatibilityManifest: function nsExtensionManager__writeCompatibilityManifest (aComponentListUpdated)
+  _setComponentsListChanged: function nsExtensionManager__setComponentsListChanged (aComponentListUpdated)
   {
-    var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                        .createInstance(Components.interfaces.nsIFileOutputStream);
-    const MODE_WRONLY   = 0x02;
-    const MODE_CREATE   = 0x08;
-    const MODE_TRUNCATE = 0x20;
+    // This code assumes that we are the only one responsible for creating this
+    // file.  That's OK for now, but in the future we may need to replace this
+    // with code that manages a reference count or something jazzy like that.
 
-    // The compat file only lives in the Profile dir because we make the 
-    // assumption that you can never have extensions prior to profile
-    // startup.
-    var compat = getFile(KEY_PROFILEDIR, [FILE_COMPAT_MANIFEST]);
-    fos.init(compat, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0644, 0);
-
-    var currAppBuildID = gApp.appBuildID;
-
-    var val = aComponentListUpdated ? 1 : 0;
-    var lines = ["[Compatibility]\r\n",
-                 "Build ID=" + currAppBuildID + "\r\n",
-                 "Components List Changed=" + val + "\r\n"];
-    for (var i = 0; i < lines.length; ++i)
-      fos.write(lines[i], lines[i].length);
-
-    fos.close();
+    var autoregFile = getFile(KEY_PROFILEDIR, [FILE_AUTOREG]);
+    try {
+      if (aComponentListUpdated)
+        autoregFile.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0600);
+      else
+        autoregFile.remove(false);
+    }
+    catch (e) {}
   },
   
   _writeDefaults: function nsExtensionManager__writeDefaults (aIsProfile)
