@@ -1639,6 +1639,8 @@ IL_StreamCreated(il_container *ic,
     if (ic->state == IC_ABORT_PENDING)
         return PR_FALSE;
     
+    if(ic->type != NULL)
+        nsCRT::free(ic->type);  //can be !NULL in animated gifs.
     ic->type = nsCRT::strdup(type); //mime string
     ic->content_length = url->GetContentLength();
     char* addr = url->GetAddress();
