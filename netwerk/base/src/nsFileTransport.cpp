@@ -414,7 +414,7 @@ nsFileTransport::OpenInputStream(PRUint32 aTransferOffset,
                                  nsIInputStream **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    NS_ASSERTION(aTransferCount == ULONG_MAX, "need to wrap input stream in one that truncates");
+    NS_ASSERTION(aTransferCount == PRUint32(-1), "need to wrap input stream in one that truncates");
     
     nsresult rv = mStreamIO->GetInputStream(aResult);
     if (NS_SUCCEEDED(rv) && aTransferOffset) {
@@ -434,7 +434,7 @@ nsFileTransport::OpenOutputStream(PRUint32 aTransferOffset,
                                   nsIOutputStream **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    NS_ASSERTION(aTransferCount == ULONG_MAX, "need to wrap output stream in one that truncates");
+    NS_ASSERTION(aTransferCount == PRUint32(-1), "need to wrap output stream in one that truncates");
     
     nsresult rv = mStreamIO->GetOutputStream(aResult);
     if (NS_SUCCEEDED(rv) && aTransferOffset) {

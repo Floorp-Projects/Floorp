@@ -156,7 +156,7 @@ DataRequestForwarder::DelayedOnStartRequest(nsIRequest *request, nsISupports *ct
             NS_ASSERTION(0, "Could not create cache transport.");
             return rv;
         }
-        rv = transport->OpenOutputStream(0, (PRUint32) ULONG_MAX, 0, getter_AddRefs(mCacheOutputStream));
+        rv = transport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(mCacheOutputStream));
         
         if (NS_FAILED(rv)) {
             NS_ASSERTION(0, "Could not create cache output stream.");
@@ -1521,13 +1521,13 @@ nsFtpState::S_list() {
             NS_ASSERTION(0, "Could not create cache transport.");
             return rv;
         }
-        rv = transport->AsyncRead(forwarder, nsnull, 0, ULONG_MAX, 0, getter_AddRefs(mDPipeRequest));
+        rv = transport->AsyncRead(forwarder, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mDPipeRequest));
         return rv;
     }
 
     (void) forwarder->SetCacheEntryDescriptor(mCacheEntry);
 #endif
-    rv = mDPipe->AsyncRead(forwarder, nsnull, 0, ULONG_MAX, 0, getter_AddRefs(mDPipeRequest));
+    rv = mDPipe->AsyncRead(forwarder, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mDPipeRequest));
     NS_RELEASE(forwarder); // let the transport worry about this objects lifespan
     return rv;
 }
@@ -1560,7 +1560,7 @@ nsFtpState::S_retr() {
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->Init failed (rv=%x)\n", this, rv));
         return rv;
     }
-    rv = mDPipe->AsyncRead(forwarder, nsnull, 0, ULONG_MAX, 0, getter_AddRefs(mDPipeRequest));    
+    rv = mDPipe->AsyncRead(forwarder, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mDPipeRequest));    
     NS_RELEASE(forwarder); // let the transport worry about this objects lifespan
     
     return rv;
@@ -2293,7 +2293,7 @@ nsFtpState::CreateTransport(const char * host, PRInt32 port, PRUint32 bufferSegm
         }
     }
     
-    return sts->CreateTransport(host, port, nsnull, ULONG_MAX,
+    return sts->CreateTransport(host, port, nsnull, PRUint32(-1),
                                 bufferSegmentSize,
                                 bufferMaxSize,
                                 o_pTrans);

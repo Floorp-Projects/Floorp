@@ -75,7 +75,7 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
     nsresult rv;
 
     // Init: (block size, maximum length)
-    rv = NS_NewStorageStream(256, ULONG_MAX, getter_AddRefs(storageStream));
+    rv = NS_NewStorageStream(256, PRUint32(-1), getter_AddRefs(storageStream));
     if (NS_FAILED(rv)) return rv;
 
     rv = storageStream->GetOutputStream(0, getter_AddRefs(outputStream));
