@@ -36,6 +36,7 @@
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
+#include "nsMimeTypes.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -134,12 +135,18 @@ nsURLFetcher::OnStartRequest(nsIChannel *aChannel, nsISupports *ctxt)
   {
     char    *contentType = nsnull;
     if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
-      mContentType = PL_strdup(contentType);
-  }
+    {
+      if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE))
+      {
+        mContentType = contentType;
 
 #ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::OnStartRequest() for Content-Type: %s\n", mContentType);
 #endif
+      }
+    }
+  }
+
   return NS_OK;
 }
 
