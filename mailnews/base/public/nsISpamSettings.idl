@@ -1,0 +1,26 @@
+#include "nsISupports.idl"
+
+interface nsIOutputStream;
+
+[scriptable, uuid(24ca5ee5-4b0b-4d7b-b53c-13fa2279ccf0)]
+interface nsISpamSettings: nsISupports {
+  // 0 for nothing, 100 for highest
+  attribute long level; 
+
+  attribute boolean moveOnSpam;
+  attribute string actionTargetFolder;
+
+  attribute boolean purge;
+  attribute boolean purgeInterval;
+
+  attribute boolean useWhiteList;
+  attribute string  whiteListAbURI;
+  
+  // for logging
+  attribute boolean loggingEnabled;
+  attribute nsIOutputStream logStream;
+  readonly attribute string logURL;
+  void clearLog();
+  void ensureLogFile();
+  void flushLogIfNecessary();
+};
