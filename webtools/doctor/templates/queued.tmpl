@@ -19,43 +19,26 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   # %]
 
-[% DEFAULT 
-  message = "An unknown error occurred."
-  title = "Error"
-%]
-
 <html>
 
   <head>
-    <title>Doctor - [% title %]</title>
+    <title>Doctor - changes submitted for review - [% (file_url ? file_url : file) FILTER html %]</title>
   </head>
 
-  <body>
-    <h1>Doctor - [% title %]</h1>
-    
-    <p>
-      Doctor couldn't process your request because of the following problem:
-    </p>
-    
-    <p><big><b>[% message %]</b></big></p>
-    
-      <p>
-        The problem occurred when Doctor tried to execute the CVS command:
-      </p>
+  <body bgcolor="white" color="black">
 
-      <p>
-        <em>[% cvs_command FILTER html %]</em>
-      </p>
-      
-      <p>
-        CVS returned the error code <em>[% cvs_error_code %]</em> and the message:
-      </p>
+    <big><b>Doctor - changes submitted for review - <em>
+      [% IF file_url %]
+        <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
+      [% ELSE %]
+        [% file FILTER html %]
+      [% END %]
+    </em></b></big>
 
-      <pre>[% cvs_error_message FILTER html %]</pre>
-    
     <p>
-      Please go back and try again.
+      Your changes have been submitted for review.
     </p>
+
   </body>
 
 </html>

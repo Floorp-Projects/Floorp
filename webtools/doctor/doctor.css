@@ -1,0 +1,46 @@
+#panels { width: 98%; height: 84%; }
+
+.panel {
+  border: 2px inset black;
+  position: absolute;
+  width: 98%;
+  height: 84%;
+  visibility: hidden;
+  overflow: scroll;
+}
+
+#editPanel { overflow: visible; }
+#modifiedPanel { padding: 8px; }
+#savePanel { overflow: visible; border: 0px; }
+
+#content { width: 100%; height: 100%; }
+
+/*
+ * Tab styles
+ */
+
+/* Hide the "Edit" tab unless the page can be edited in WYSIWYG mode. */
+button.tab#editTab { display: none; }
+button.tab.wysiwyg#editTab { display: inline; }
+
+button.tab {
+  background-color: #fofofo;
+  color: #000000;
+  border: 1px solid #000000;
+  border-bottom-width: 0px;
+  padding: 2px 1em 2px 1em;
+  text-decoration: none;
+}
+
+button.tab[disabled] {
+  color: #c0c0c0;
+}
+
+button.tab:hover {
+  background-color: #d0d0d0;
+}
+
+button.tab.active, button.tab[disabled].active, button.tab:hover.active {
+  background-color: #b0b0b0;
+  color: #000000;
+}

@@ -41,8 +41,10 @@ my $request = new CGI;
 # http://groups.google.com/groups?selm=yr0e8.12924%24ZC3.1033373%40newsread2.prod.itd.earthlink.net
 use IO::Capture;
 
-# Include the Perl library for creating and deleting directory hierarchies.
+# Include the Perl library for creating and deleting directory hierarchies
+# and the one for creating temporary files and directories.
 use File::Path;
+use File::Temp qw/ tempfile tempdir /;
 
 # Use the Template Toolkit (http://www.template-toolkit.org/) to generate
 # the user interface using templates in the "template/" subdirectory.
@@ -117,6 +119,11 @@ my $CONFIG = {
   WEB_BASE_URI_PATTERN  => $WEB_BASE_URI_PATTERN  ,
   WEB_BASE_PATH         => $WEB_BASE_PATH         ,
   ADMIN_EMAIL           => $ADMIN_EMAIL           ,
+  DB_HOST               => $config->get('DB_HOST') ,
+  DB_PORT               => $config->get('DB_PORT') ,
+  DB_NAME               => $config->get('DB_NAME') ,
+  DB_USERNAME           => $config->get('DB_USERNAME') ,
+  DB_PASSWORD           => $config->get('DB_PASSWORD') ,
 };
 
 $vars->{'CONFIG'} = $CONFIG;
@@ -140,11 +147,17 @@ my $HOME = cwd;
 my $action = 
   lc($request->param('action')) || ($request->param('file') ? "edit" : "choose");
 
-if    ($action eq "choose") {   choose()   }
-elsif ($action eq "edit")   {   edit()     }
-elsif ($action eq "review") {   review()   }
-elsif ($action eq "commit") {   commit()   }
-elsif ($action eq "create") {   create()   }
+if    ($action eq "choose")       { choose()      }
+elsif ($action eq "edit")         { edit()        }
+elsif ($action eq "review")       { review()      }
+elsif ($action eq "commit")       { commit()      }
+elsif ($action eq "create")       { create()      }
+elsif ($action eq "download")     { download()    }
+elsif ($action eq "display")      { display()     }
+elsif ($action eq "diff")         { diff()        }
+elsif ($action eq "queue")        { queue()       }
+elsif ($action eq "list")         { list()        }
+elsif ($action eq "regurgitate")  { regurgitate() }
 else
 {
   ThrowCodeError("couldn't recognize the value of the action parameter", "Unknown Action");
@@ -165,26 +178,130 @@ sub choose
 
 sub edit
 {
-  ValidateFile();
- 
-  $vars->{'file'} = $request->param('file');
+  if ($request->param('patch_id')) {
+    # Get the patch and metadata from the database.
+    my $id = ValidateID($request->param('patch_id'));
+    my $dbh = ConnectToDatabase();
+    my $get_patch_sth =
+      $dbh->prepare("SELECT file, version, patch FROM patch WHERE id = ?");
+    $get_patch_sth->execute($id);
+    my ($file, $oldversion, $patch) = $get_patch_sth->fetchrow_array();
+    $get_patch_sth->finish();
+    $dbh->disconnect();
+
+    # Check out the file from the repository.
+    CreateTempDir();
+    my $newversion = CheckOutFile($file);
+    
+    ValidateVersions($oldversion, $newversion);
+
+    # Apply the patch.
+    open(PATCH, "|/usr/bin/patch $file 2>&1 > /dev/null");
+    print PATCH $patch;
+    close(PATCH);
+
+    # Get the file with the patch applied.
+    open(NEWFILE, "< $file");
+    undef $/;
+    my $content = <NEWFILE>;
+    close(NEWFILE);
   
-  if ($request->param('content'))
-  {
-    ValidateContent();
-    $vars->{'content'} = $request->param('content');
-    $vars->{'version'} = $request->param('version');
-    $vars->{'line_endings'} = $request->param('line_endings');
-  }
-  else
-  {
-    ($vars->{'content'}, $vars->{'version'}, $vars->{'line_endings'}) 
-      = RetrieveFile($request->param('file'));
-  }
+    # Delete the temporary directory into which we checked out the file.
+    DeleteTempDir();
   
+    my $line_endings = "unix";
+    if ($content =~ /\r\n/s) { $line_endings = "windows" }
+    elsif ($content =~ /\r[^\n]/s) { $line_endings = "mac" }
+
+    $vars->{'content'} = $content;
+    $vars->{'version'} = $newversion;
+    $vars->{'line_endings'} = $line_endings;
+    $vars->{'patch_id'} = $id;
+    $vars->{'file'} = $file;
+  }
+  else {
+    ValidateFile();
+   
+    $vars->{'file'} = $request->param('file');
+    
+    if ($request->param('content'))
+    {
+      ValidateContent();
+      $vars->{'content'} = $request->param('content');
+      $vars->{'version'} = $request->param('version');
+      $vars->{'line_endings'} = $request->param('line_endings');
+    }
+    else
+    {
+      ($vars->{'content'}, $vars->{'version'}, $vars->{'line_endings'}) 
+        = RetrieveFile($request->param('file'));
+    }
+  }
+
   print $request->header;
   $template->process("edit.tmpl", $vars)
     || ThrowCodeError($template->error(), "Template Processing Failed");
+}
+
+sub download
+{
+  ValidateFile();
+ 
+  my $file = $request->param('file');
+  
+  # Separate the name of the file from its path.
+  $file =~ /^(.*)\/([^\/]+)$/;
+  my $path = $1;
+  my $filename = $2;
+
+  my ($content) = RetrieveFile($file);
+  my $filesize = length($content);
+    
+  print $request->header(-type=>"text/plain; name=\"$filename\"",
+                         -content_disposition=> "attachment; filename=\"$filename\"",
+                         -content_length => $filesize);
+  print $content;
+}
+
+sub display
+{
+  ValidateFile();
+ 
+  my $file = $request->param('file');
+  
+  # Separate the name of the file from its path.
+  $file =~ /^(.*)\/([^\/]+)$/;
+  my $path = $1;
+  my $filename = $2;
+
+  my ($content) = RetrieveFile($file);
+  my $filesize = length($content);
+    
+  print $request->header(-type=>"text/html; name=\"$filename\"",
+                         -content_disposition=> "inline; filename=\"$filename\"",
+                         -content_length => $filesize);
+  print $content;
+}
+
+sub regurgitate
+{
+  ValidateFile();
+ 
+  my $content = GetUploadedContent() || $request->param('content');
+
+  my $file = $request->param('file');
+  
+  # Separate the name of the file from its path.
+  $file =~ /^(.*)\/([^\/]+)$/;
+  my $path = $1;
+  my $filename = $2;
+
+  my $filesize = length($content);
+    
+  print $request->header(-type=>"text/html; name=\"$filename\"",
+                         -content_disposition=> "inline; filename=\"$filename\"",
+                         -content_length => $filesize);
+  print $content;
 }
 
 sub review
@@ -229,10 +346,13 @@ sub review
   $vars->{'content'} = $request->param('content');
   $vars->{'version'} = $request->param('version');
   $vars->{'line_endings'} = $request->param('line_endings');
-  
-  print $request->header;
-  $template->process("review.tmpl", $vars)
-    || ThrowCodeError("Template Process Failed", $template->error());
+
+  my $raw = $request->param('raw');
+  my $ctype = $raw ? "text/plain" : "text/html";
+  print $request->header(-type=>$ctype);
+  $raw ? print $vars->{diff}
+       : $template->process("review.tmpl", $vars)
+           || ThrowCodeError("Template Process Failed", $template->error());
 }
 
 sub commit 
@@ -247,6 +367,10 @@ sub commit
   ValidateUsername();
   ValidatePassword();
   ValidateComment();
+  my $patch_id;
+  if ($request->param('patch_id')) {
+    $patch_id = ValidateID($request->param('patch_id'));
+  }
   
   # Create and change to a temporary sub-directory into which 
   # we will check out the file being committed.
@@ -279,11 +403,114 @@ sub commit
   # Delete the temporary directory into which we checked out the file.
   DeleteTempDir();
   
+  # Delete the patch from the patches queue.
+  if ($patch_id) {
+    my $dbh = ConnectToDatabase();
+    $dbh->do("DELETE FROM patch WHERE id = $patch_id");
+    $dbh->disconnect;
+  }
+  
   $vars->{'file'} = $file;
   
   print $request->header;
   $template->process("committed.tmpl", $vars)
     || ThrowCodeError($template->error(), "Template Processing Failed");
+}
+
+sub queue
+{
+  # Queue the file for review.
+  # Checks out the file via cvs, applies the changes, generates a diff,
+  # and then saves the diff with meta-data to a file for retrieval
+  # by people with CVS access.
+  
+  ValidateFile();
+  ValidateContent();
+  # XXX validate the version as well?
+  # XXX validate the user's email address
+  
+  # Create and change to a temporary sub-directory into which we will check out
+  # the file being committed.
+  CreateTempDir();
+  
+  # Check out the file from the repository.
+  my $file = $request->param('file');
+  my $comment = $request->param('queue_comment');
+  my $oldversion = $request->param('version');
+  my $newversion = CheckOutFile($file);
+  
+  # Throw an error if the version of the file that was edited
+  # does not match the version in the repository.  In the future
+  # we should try to merge the user's changes if possible.
+  if ($oldversion && $newversion && $oldversion != $newversion) 
+  {
+    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
+      but version <em>$newversion</em> is in the repository.  Reload the edit 
+      page and make your changes again (and bother the authors of this script 
+      to implement change merging
+      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
+  }
+  
+  # Replace the checked out file with the edited version, and generate a patch
+  # that patches the checked out file to make it look like the edited version.
+  ReplaceFile($file);
+  my $patch = DiffFile($file);
+  
+  # Delete the temporary directory into which we checked out the file.
+  DeleteTempDir();
+
+  my $dbh = ConnectToDatabase();
+  my $insert_patch_sth =
+    $dbh->prepare("INSERT INTO patch (id, submitter, submitted, file, version,
+                                      patch, comment)
+                   VALUES (?, ?, NOW(), ?, ?, ?, ?)");
+
+  $dbh->do("START TRANSACTION");
+  my ($patch_id) = $dbh->selectrow_array("SELECT MAX(id) FROM patch");
+  $patch_id = ($patch_id || 0) + 1;
+  $insert_patch_sth->execute($patch_id, $request->param('email'), $file,
+                             $oldversion, $patch, $comment);
+  $dbh->commit;
+  $dbh->disconnect;
+
+  print $request->header;
+  $template->process("queued.tmpl", $vars)
+    || ThrowCodeError($template->error(), "Template Processing Failed");
+}
+
+sub list
+{
+  my $dbh = ConnectToDatabase();
+  my $get_patches_sth =
+    $dbh->prepare("SELECT id, submitter, submitted, file, version, comment FROM patch");
+  $get_patches_sth->execute();
+  my ($patch, @patches);
+  while ( $patch = $get_patches_sth->fetchrow_hashref ) {
+    push(@patches, $patch);
+  }
+  $vars->{patches} = \@patches;
+
+  $dbh->disconnect;
+
+  print $request->header;
+  $template->process("list.tmpl", $vars)
+    || ThrowCodeError($template->error(), "Template Processing Failed");
+}
+
+sub ConnectToDatabase
+{
+  use DBI;
+  
+  # Establish a database connection.
+  my $dsn = "DBI:mysql:host=$CONFIG->{DB_HOST};database=$CONFIG->{DB_NAME};port=$CONFIG->{DB_PORT}";
+  my $dbh = DBI->connect($dsn,
+                         $CONFIG->{DB_USERNAME},
+                         $CONFIG->{DB_PASSWORD},
+                         { RaiseError => 1,
+                           PrintError => 0,
+                           ShowErrorStatement => 1,
+                           AutoCommit => 0 } );
+  return $dbh;
 }
 
 sub create
@@ -469,6 +696,33 @@ sub ValidateContent
 
   $request->param('content', $content);
 }
+
+sub ValidateID()
+{
+  my ($id) = @_;
+  $id =~ m/(\d+)/;
+  $id = $1;
+  $id || ThrowCodeError("$id is not a valid patch ID");
+  return $id;
+}
+
+sub ValidateVersions()
+{
+  my ($oldversion, $newversion) = @_;
+
+  # Throw an error if the version of the file that was edited does not match
+  # the version in the repository.  In the future we should try to merge
+  # the user's changes if possible.
+  if ($oldversion && $newversion && $oldversion != $newversion) 
+  {
+    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
+      but version <em>$newversion</em> is in the repository.  Reload the edit 
+      page and make your changes again (and bother the authors of this script 
+      to implement change merging
+      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
+  }
+}
+
 
 ################################################################################
 # CVS Glue
@@ -734,7 +988,7 @@ sub ReplaceFile
   
   my ($file) = @_;
   
-  my $content = $request->param('content');
+  my $content = GetUploadedContent() || $request->param('content');
   my $line_endings = $request->param('line_endings');
 
   # Replace the Windows-style line endings in which browsers send content
@@ -748,6 +1002,19 @@ sub ReplaceFile
                        for writing: $!");
   print DOC $content;
   close(DOC);
+}
+
+sub GetUploadedContent
+{
+  my $fh = $request->upload('content_file');
+
+  # enable 'slurp' mode
+  local $/;
+
+  if ($fh) {
+    my $content = <$fh>;
+    return $content;
+  }
 }
 
 sub CreateTempDir

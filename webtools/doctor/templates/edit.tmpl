@@ -20,15 +20,37 @@
   # %]
 
 [% is_new = (version == "new" ? 1 : 0) %]
+[% wysiwyg = content.match("<\?doctor enable_wysiwyg_mode \?>") %]
 
 <html>
 
   <head>
     <title>Doctor - [% is_new ? "create" : "edit" %] [% (file_url ? file_url : file) FILTER html %]</title>
+    [% IF wysiwyg %]
+      <script type="text/javascript">
+         _editor_url = "/htmlarea/";
+         _editor_lang = "en";
+         wysiwyg = true;
+      </script>
+      <script type="text/javascript" src="htmlarea/htmlarea.js"></script>
+      <script type="text/javascript">
+          HTMLArea.loadPlugin("FullPage");
+      </script>
+    [% ELSE %]
+      <script type="text/javascript">
+        wysiwyg = false;
+      </script>
+    [% END %]
+    <script type="text/javascript" src="doctor.js"></script>
+    <link rel="stylesheet" href="doctor.css" type="text/css"></link>
   </head>
 
-  <body bgcolor="white" color="black">
+  <body bgcolor="white" color="black" onload="onLoad();">
 
+    <span style="float: right;">
+      <a href="doctor.cgi?action=list">Review Queue</a>
+    </span>
+    
     <big><b>Doctor - [% is_new ? "create" : "edit" %] <em>
       [% IF file_url %]
         <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
@@ -37,25 +59,62 @@
       [% END %]
     </em></b></big>
 
-    <br><br>
-
-  <form method="post" action="doctor.cgi">
-
-    <input type="hidden" name="action" value="[% is_new ? "create" : "review" %]">
-    <input type="hidden" name="file" value="[% file FILTER html %]">
-    <input type="hidden" name="version" value="[% version %]">
-    <input type="hidden" name="line_endings" value="[% line_endings %]">
-
-    <textarea name="content" style="width: 100%; height: 85%" rows="16" cols="100">[% content FILTER html %]</textarea><br>
+  <form id="form" method="post" action="doctor.cgi" enctype="multipart/form-data">
 
     [% IF is_new %]
       Username: <input type="text" name="username" size="10">
       Password: <input type="password" name="password" size="10">
       Check-in Comment: <input type="text" name="comment" size="50">
-      <input type="submit" value="Create">
+      <button type="submit" name="action" value="create">Create</button>
     [% ELSE %]
-      <input type="submit" value="Review Changes">
+      Edit using the form below or
+      <a href="doctor.cgi?file=[% file | uri | html %]&amp;action=download">download the page</a>,
+      edit it locally, then upload it: <input id="content_file" type="file" name="content_file">
     [% END %]
+    <br>
+    <input id="file"          type="hidden" name="file"         value="[% file FILTER html %]">
+    <input id="version"       type="hidden" name="version"      value="[% version %]">
+    <input id="line_endings"  type="hidden" name="line_endings" value="[% line_endings %]">
+    [% IF patch_id %]
+      <input id="patch_id"    type="hidden" name="patch_id"     value="[% patch_id %]">
+    [% END %]
+
+    [% IF !is_new %]
+      <button id="editTab"      class="tab [% "wysiwyg" IF wysiwyg %]"
+                                            type="button" onclick="switchToMode('edit');"     disabled="disabled">Edit</button>
+      <button id="hackTab"      class="tab" type="button" onclick="switchToMode('hack');"     disabled="disabled">Edit Source</button>
+      <button id="originalTab"  class="tab" type="button" onclick="switchToMode('original');" disabled="disabled">View Original</button>
+      <button id="modifiedTab"  class="tab" type="button" onclick="switchToMode('modified');" disabled="disabled">View Edited</button>
+      <button id="diffTab"      class="tab" type="button" onclick="switchToMode('diff');"     disabled="disabled">Show Diff</button>
+      <button id="saveTab"      class="tab" type="button" onclick="switchToMode('save');"     disabled="disabled">Save Changes</button>
+      <br>
+    [% END %]
+    
+    <div id="panels">
+      <div      id="editPanel"      class="panel">
+        <textarea id="content" name="content" rows="16" cols="100">[% content FILTER html %]</textarea><br>
+      </div>
+      <iframe   id="originalPanel"  class="panel" src="doctor.cgi?file=[% file | uri | html %]&amp;action=display"></iframe>
+      <div      id="modifiedPanel"  class="panel"></div>
+      <iframe   id="diffPanel"      class="panel" name="diffPanel"></iframe>
+      <div      id="savePanel"      class="panel">
+        <p>
+          Username: <input type="text" name="username" size="20">
+          Password: <input type="password" name="password" size="20"><br>
+          Change Comment:<br><textarea rows="5" cols="80" name="comment"></textarea><br>
+          <button type="submit" name="action" value="commit">Commit Changes</button>
+        </p>
+        <p>
+          Don't have commit privileges?
+        </p>
+        <p>
+          Email Address: <input type="text" name="email" size="30"><br>
+          Change Comment:<br><textarea rows="5" cols="80" name="queue_comment"></textarea><br>
+          <button type="submit" name="action" value="queue">Submit Changes for Review</button>
+        </p>
+      </div>
+    </div>
+    
   </form>
 
   </body>

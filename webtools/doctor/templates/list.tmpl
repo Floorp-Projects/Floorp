@@ -19,43 +19,41 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   # %]
 
-[% DEFAULT 
-  message = "An unknown error occurred."
-  title = "Error"
-%]
-
 <html>
 
   <head>
-    <title>Doctor - [% title %]</title>
+    <title>Doctor - changes submitted for review</title>
+    <style>
+      th { text-align: left; }
+    </style>
   </head>
 
-  <body>
-    <h1>Doctor - [% title %]</h1>
-    
-    <p>
-      Doctor couldn't process your request because of the following problem:
-    </p>
-    
-    <p><big><b>[% message %]</b></big></p>
-    
-      <p>
-        The problem occurred when Doctor tried to execute the CVS command:
-      </p>
+  <body bgcolor="white" color="black">
 
-      <p>
-        <em>[% cvs_command FILTER html %]</em>
-      </p>
-      
-      <p>
-        CVS returned the error code <em>[% cvs_error_code %]</em> and the message:
-      </p>
+    <big><b>Doctor - changes submitted for review</b></big>
 
-      <pre>[% cvs_error_message FILTER html %]</pre>
-    
-    <p>
-      Please go back and try again.
-    </p>
+  <table>
+      <tr>
+        <th>ID</th>
+        <th>Submitter</th>
+        <th>Submitted</th>
+        <th>File</th>
+        <th>Version</th>
+        <th>Comment</th>
+      </tr>
+    [% FOREACH patch = patches %]
+      <tr>
+        <td>[% patch.id %]</td>
+        <td>[% patch.submitter | html %]</td>
+        <td>[% patch.submitted | html %]</td>
+        <td>[% patch.file | html %]</td>
+        <td>[% patch.version | html %]</td>
+        <td>[% patch.comment | html %]</td>
+        <td><a href="doctor.cgi?action=edit&amp;patch_id=[% patch.id %]">Review</a></td>
+      </tr>
+    [% END %]
+  </table>
+
   </body>
 
 </html>
