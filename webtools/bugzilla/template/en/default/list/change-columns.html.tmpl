@@ -23,29 +23,51 @@
   title = "Change Columns"
 %]
 
-Check which columns you wish to appear on the list, and then click
-on submit.  (Cookies are required.)
 <p>
-<form action="colchange.cgi">
-<input type="hidden" name="rememberedquery" value="[% buffer %]">
-[% FOREACH column = masterlist %]
-  <input type="checkbox" id="[% column %]" name="column_[% column %]" [% "CHECKED" IF lsearch(collist, column) != -1 %]>
-  <label for="[% column %]">[% desc.${column} %]</label><br>
-[% END %]
-</p><p>
-<input id="nosplitheader" type="radio" name="splitheader" value="0" [% "CHECKED" IF ! splitheader %]>
-<label for="nosplitheader">Normal headers (prettier)</label><br>
-<input id="splitheader" type="radio" name="splitheader" value="1" [% "CHECKED" IF splitheader %]>
-<label for="splitheader">Stagger headers (often makes list more compact)</label>
-</p><p>
-<input type="submit" value="Submit">
-</form>
-<form action="colchange.cgi">
-<input type="hidden" name="rememberedquery" value="[% buffer %]">
-<input type="hidden" name="resetit" value="1">
-<input type="submit" value="Reset to Bugzilla default">
-</form>
+  Select the columns you wish to appear in your buglists. Note that
+  this feature requires cookies to work.
 </p>
+
+[% FOREACH column = masterlist %]
+  [% desc.${column} = column %]
+[% END %]
+[% desc.summary = "Summary (first 60 characters)" %]
+[% desc.summaryfull = "Full Summary" %]
+
+<form action="colchange.cgi">
+  <input type="hidden" name="rememberedquery" value="[% buffer %]">
+  [% FOREACH column = masterlist %]
+    <input type="checkbox" id="[% column %]" name="column_[% column %]" 
+      [% "checked='checked'" IF lsearch(collist, column) != -1 %]>
+    <label for="[% column %]">[% desc.${column} %]</label>
+    <br>
+  [% END %]
+  
+  <p>
+    <input id="nosplitheader" type="radio" name="splitheader" value="0" 
+      [% "checked='checked'" IF NOT splitheader %]>
+    <label for="nosplitheader">
+      Normal headers (prettier)
+    </label>
+    <br>
+    
+    <input id="splitheader" type="radio" name="splitheader" value="1" 
+      [% "checked='checked'" IF splitheader %]>
+    <label for="splitheader">
+      Stagger headers (often makes list more compact)
+    </label>
+  </p>
+  
+  <p>
+    <input type="submit" value="Change Columns">
+  </p>
+</form>
+
+<form action="colchange.cgi">
+  <input type="hidden" name="rememberedquery" value="[% buffer %]">
+  <input type="hidden" name="resetit" value="1">
+  <input type="submit" value="Reset to Bugzilla default">
+</form>
 
 [% PROCESS global/footer.html.tmpl %]
 

@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
@@ -37,13 +38,10 @@ require "CGI.pl";
 ConnectToDatabase();
 quietly_check_login();
 
-print "Content-type: text/html\n";
+GetVersionTable();
 
 # The master list not only says what fields are possible, but what order
 # they get displayed in.
-
-GetVersionTable();
-
 my @masterlist = ("opendate", "changeddate", "severity", "priority",
                   "platform", "owner", "reporter", "status", "resolution",
                   "product", "component", "version", "os", "votes");
@@ -61,10 +59,9 @@ if (@::legal_keywords) {
     push(@masterlist, "keywords");
 }
 
-
 push(@masterlist, ("summary", "summaryfull"));
 
-$vars->{masterlist} = \@masterlist;
+$vars->{'masterlist'} = \@masterlist;
 
 my @collist;
 if (defined $::FORM{'rememberedquery'}) {
@@ -84,14 +81,15 @@ if (defined $::FORM{'rememberedquery'}) {
     my $list = join(" ", @collist);
     my $urlbase = Param("urlbase");
     my $cookiepath = Param("cookiepath");
+    
     print "Set-Cookie: COLUMNLIST=$list ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     print "Set-Cookie: SPLITHEADER=$::FORM{'splitheader'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
-    print "\n";
-    print "<meta http-equiv=\"Refresh\" content=\"1; URL=$urlbase"."buglist.cgi?$::FORM{'rememberedquery'}\">\n";
-    print "<title>What a hack.</title>\n";
-    PutHeader ("Change columns");
-    print "Resubmitting your query with new columns...\n";
+    print "Content-type: text/html\n\n";
+    $vars->{'message'} = "Resubmitting your query with new columns...";
+    $vars->{'title'} = "Change columns";
+    $template->process("global/message.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -101,26 +99,12 @@ if (defined $::COOKIE{'COLUMNLIST'}) {
     @collist = @::default_column_list;
 }
 
-$vars->{collist} = \@collist;
+$vars->{'collist'} = \@collist;
+$vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
 
-$vars->{splitheader} = 0;
-if ($::COOKIE{'SPLITHEADER'}) {
-    $vars->{splitheader} = 1;
-}
-
-my %desc = ();
-foreach my $i (@masterlist) {
-    $desc{$i} = $i;
-}
-
-$desc{'summary'} = "Summary (first 60 characters)";
-$desc{'summaryfull'} = "Full Summary";
-
-$vars->{desc} = \%desc;
-$vars->{buffer} = $::buffer;
+$vars->{'buffer'} = $::buffer;
 
 # Generate and return the UI (HTML page) from the appropriate template.
 print "Content-type: text/html\n\n";
 $template->process("list/change-columns.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
-
