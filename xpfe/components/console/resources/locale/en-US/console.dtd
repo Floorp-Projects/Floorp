@@ -20,13 +20,24 @@ Contributor(s): ______________________________________. -->
 
 <!ENTITY console.title "JavaScript Console">
 
-<!ENTITY url.label     "Source File:">
-<!ENTITY line.label    "Line:">
-<!ENTITY col.label     "Column:">
-<!ENTITY error.label   "Error:">
+<!ENTITY errFile.label   "Source File:">
+<!ENTITY errLine.label   "Line:">
+<!ENTITY errColumn.label "Column:">
 
-<!ENTITY all.label      "All Messages">
-<!ENTITY errors.label   "Errors">
-<!ENTITY warnings.label "Warnings">
-<!ENTITY clear.label "Clear">
+<!ENTITY all.label       "All">
+<!ENTITY errors.label    "Errors">
+<!ENTITY warnings.label  "Warnings">
+<!ENTITY messages.label  "Messages">
+<!ENTITY clear.label     "Clear">
+<!ENTITY evaluate.label  "Evaluate">
+
+<!ENTITY sortFirst.label "First > Last Sort Order">
+<!ENTITY sortFirst.accesskey "f">
+<!ENTITY sortLast.label  "Last > First Sort Order">
+<!ENTITY sortLast.accesskey  "l">
+
+<!ENTITY toolbarsCmd.label "Toolbars">
+<!ENTITY toolbarsCmd.accesskey "t">
+<!ENTITY toolbarMode.label "Mode">
+<!ENTITY toolbarEval.label "JavaScript Entry">
 
