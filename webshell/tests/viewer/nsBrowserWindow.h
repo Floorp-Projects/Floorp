@@ -112,6 +112,7 @@ public:
   virtual nsEventStatus DispatchMenuItem(PRInt32 aID) = 0;
 
   void DoFileOpen();
+  void DoCopy();
 
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);
@@ -126,6 +127,7 @@ public:
   void ShowFrameSize();
   void ShowStyleSize();
   void DoDebugSave();
+  void DoToggleSelection();
   void DoDebugRobot();
   void DoSiteWalker();
   void DoJSConsole();

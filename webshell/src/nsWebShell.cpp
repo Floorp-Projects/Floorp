@@ -32,6 +32,9 @@
 #include "nsGfxCIID.h"
 #include "plevent.h"
 
+#include "prlog.h"
+
+
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
 
