@@ -92,6 +92,17 @@ PRTime ConvertToPrtime ( icaltimetype indate );
 extern "C" {
 extern icalarray *builtin_timezones;
 extern char *gDefaultTzidPrefix;
+struct _icaltimezone {//from icaltimezone.h
+    char                *tzid;
+    char                *location;
+    char                *tznames;
+    double              latitude;
+    double              longitude;
+    icalcomponent       *component;
+    icaltimezone        *builtin_timezone;
+    int                 end_year;
+    icalarray           *changes;
+  };
 }
 
 oeIICalContainer *gContainer=nsnull;
@@ -137,7 +148,7 @@ END:VTIMEZONE\n";
     if( builtin_timezones )
         return;
 
-    builtin_timezones = icalarray_new ( 44, 32); //HARDCODED sizeof(icaltimezone)=44
+    builtin_timezones = icalarray_new ( sizeof(icaltimezone), 32);
 
     icalcomponent *vcalendar = icalparser_parse_string(timezonecalstr);
     icalcomponent *vtimezone;
