@@ -21,6 +21,9 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsIFolderListener.h"
 #include "nsMsgRDFDataSource.h"
+#include "nsILocale.h"
+#include "nsIDateTimeFormat.h"
+#include "nsCOMPtr.h"
 
 /**
  * The mail message source.
@@ -34,6 +37,8 @@ private:
   
 	nsIRDFService* mRDFService;
 	nsIMsgHeaderParser *mHeaderParser;
+	nsCOMPtr<nsILocale> mApplicationLocale;
+	nsCOMPtr<nsIDateTimeFormat> mDateTimeFormat;
   
 public:
   

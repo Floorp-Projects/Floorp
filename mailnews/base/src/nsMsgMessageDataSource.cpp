@@ -28,17 +28,23 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgMailSession.h"
+#include "nsILocaleFactory.h"
+#include "nsLocaleCID.h"
+#include "nsDateTimeFormatCID.h"
 
 
-static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kMsgHeaderParserCID,			NS_MSGHEADERPARSER_CID); 
-static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
-
+static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
+static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kLocaleFactoryCID,			NS_LOCALEFACTORY_CID);
+static NS_DEFINE_CID(kDateTimeFormatCID,		NS_DATETIMEFORMAT_CID);
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
+//There's no GetIID for this.
+static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 nsIRDFResource* nsMsgMessageDataSource::kNC_Subject;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Sender;
@@ -67,6 +73,18 @@ nsMsgMessageDataSource::nsMsgMessageDataSource():
                                           nsIMsgHeaderParser::GetIID(), 
                                           (void **) &mHeaderParser);
 
+	nsILocaleFactory *localeFactory; 
+	rv = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
+
+	if(NS_SUCCEEDED(rv) && localeFactory)
+	{
+		rv = localeFactory->GetApplicationLocale(getter_AddRefs(mApplicationLocale));
+		NS_IF_RELEASE(localeFactory);
+	}
+
+	rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
+		kIDateTimeFormatIID, getter_AddRefs(mDateTimeFormat));				
+		
 	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		mailSession->AddFolderListener(this);
@@ -551,10 +569,17 @@ nsMsgMessageDataSource::createMessageDateNode(nsIMessage *message,
   PRInt32 error;
   time_t aTime = date.ToInteger(&error, 16);
   struct tm* tmTime = localtime(&aTime);
-  char dateBuf[100];
-  strftime(dateBuf, 100, "%m/%d/%Y %I:%M %p", tmTime);
-  date = dateBuf;
-  rv = createNode(date, target);
+  nsString dateString;
+  if(mDateTimeFormat)
+	  rv = mDateTimeFormat->FormatTMTime(mApplicationLocale, kDateFormatShort, kTimeFormatNoSeconds, 
+		                tmTime, dateString); 
+  else
+  {
+	  dateString ="";
+	  rv = NS_OK;
+  }
+  if(NS_SUCCEEDED(rv))
+	  rv = createNode(dateString, target);
   return rv;
 }
 
