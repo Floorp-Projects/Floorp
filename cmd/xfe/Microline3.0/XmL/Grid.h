@@ -121,6 +121,23 @@ void XmLGridSetVisibleColumnCount(Widget w, int num_visible);
 void XmLGridHideRightColumn(Widget w);
 void XmLGridUnhideRightColumn(Widget w);
 
+int XmLGridGetRowCount(Widget w);
+int XmLGridGetColumnCount(Widget w);
+
+/* extern */ void 
+XmLGridXYToCellTracking(Widget			widget, 
+						int				x, /* input only args. */
+						int				y, /* input only args. */
+						Boolean *		m_inGrid, /* input/output args. */
+						int *			m_lastRow, /* input/output args. */
+						int *			m_lastCol, /* input/output args. */
+						unsigned char * m_lastRowtype,/* input/output args. */
+						unsigned char * m_lastColtype,/* input/output args. */
+						int *			outRow, /* output only args. */
+						int *			outCol, /* output only args. */
+						Boolean *		enter, /* output only args. */
+						Boolean *		leave); /* output only args. */
+
 #ifdef XmL_CPP
 }
 #endif

@@ -59,6 +59,7 @@ CSRCS			= \
 				$(UNUSED_CSRCS) \
 				Folder.c \
 				Grid.c \
+				GridUtil.c \
 				Tree.c \
 				XmL.c \
 				$(NULL)

@@ -3973,81 +3973,6 @@ fe_tooltips_stage_two_timeout(XtPointer closure, XtIntervalId *id)
 static void
 tip_dummy_demo_cb(Widget widget, XtPointer c, XtPointer d) {}
 
-
-static void getGridColsRows(Widget w, int* rows, int* cols)
-{
-	int c_rows, c_cols, h_rows, h_cols, f_rows, f_cols;
-	XP_ASSERT(w);
-
-	XtVaGetValues(w,
-				  XmNrows, &c_rows,
-				  XmNcolumns, &c_cols,
-				  0);
-	*rows = c_rows;
-	*cols = c_cols;
-}
-
-static void gridXY2CellTracking(Widget widget, 
-								int x, int y, /* input only args. */
-								XP_Bool *m_inGrid, /* input/output args. */
-								int *m_lastRow, int *m_lastCol, 
-								unsigned char *m_lastRowtype, 
-								unsigned char *m_lastColtype,
-								int *outRow, int *outCol, /* output only args. */
-								Boolean *enter, 
-								Boolean *leave) /* output only args. */
-{
-	int m_totalLines = 0, 
-		m_numcolumns = 0;
-	int row = 0, 
-		column = 0;
-	unsigned char rowtype = XmCONTENT, 
-		          coltype = XmCONTENT;
-
-	if (0 > XmLGridXYToRowColumn(widget, x, y,
-								 &rowtype, &row, &coltype, &column)) {
-		/* In grid; but, not in any cells
-		 */
-		/* treat it as a leave
-		 */
-		*enter = FALSE;
-		*leave = TRUE;		
-		return;
-	}/* if */
-					
-	getGridColsRows(widget, &m_totalLines, &m_numcolumns);
-	if ((row < m_totalLines) &&
-		(column < m_numcolumns) &&
-		((*m_lastRow != row)||
-		 (*m_lastCol != column) ||
-		 (*m_lastRowtype != rowtype)||
-		 (*m_lastColtype != coltype))) {
-
-		*outRow = (rowtype == XmHEADING)?-1:row;
-		*outCol = column;
-		
-		if (*m_inGrid == False) {
-			*m_inGrid = True;
-			
-			/* enter a cell
-			 */
-			*enter = TRUE;
-			*leave = FALSE;
-			
-		}/* if */
-		else {
-			/* Cruising among cells
-			 */
-			*enter = TRUE;
-			*leave = TRUE;
-		}/* else */
-		*m_lastRow = row;
-		*m_lastCol = column;
-		*m_lastRowtype = rowtype ;
-		*m_lastColtype  = coltype ;
-	}/* row /col in grid */				
-}/* gridXY2CellTracking() */
-
 typedef struct {
 	MWContext *context;
 #if DO_NOT_PASS_LAYER_N_EVENT
@@ -4381,7 +4306,7 @@ fe_tooltips_event_handler(Widget widget, XtPointer closure, XEvent* event,
 	int column;
 	static int m_lastRow = -2;
 	static int m_lastCol = -2;
-	static XP_Bool m_inGrid = False;
+	static Boolean m_inGrid = False;
 	static unsigned char  m_lastRowtype = XmALL_TYPES;
 	static unsigned char  m_lastColtype = XmALL_TYPES;
 
@@ -4431,7 +4356,7 @@ fe_tooltips_event_handler(Widget widget, XtPointer closure, XEvent* event,
 			
 			if(!(event->xmotion.state & Button1Mask)) {
 				if (isGridWidget) {
-					gridXY2CellTracking(widget, 
+					XmLGridXYToCellTracking(widget, 
 								x, y, /* input only args. */
 								&m_inGrid, /* input/output args. */
 								&m_lastRow, &m_lastCol, 
@@ -4457,7 +4382,7 @@ fe_tooltips_event_handler(Widget widget, XtPointer closure, XEvent* event,
 		enter = TRUE;
 		leave = FALSE;
 		if (isGridWidget) {
-			gridXY2CellTracking(widget, 
+			XmLGridXYToCellTracking(widget, 
 								x, y, /* input only args. */
 								&m_inGrid, /* input/output args. */
 								&m_lastRow, &m_lastCol, 
