@@ -36,8 +36,6 @@ CPPSRCS		= \
 EXPORTS         = \
                   nsUCVJA2CID.h \
 		  $(NULL)
-                
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 CFLAGS		+= -DUSE_NSREG -D__STDC__
 
