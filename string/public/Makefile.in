@@ -50,6 +50,7 @@ EXPORTS		=				\
 		nsPromiseFlatString.h			\
 		nsPromiseSubstring.h			\
 		nsReadableUtils.h			\
+		nsSharableString.h			\
 		nsSharedBufferList.h			\
 		nsSlidingString.h			\
 		nsStringFragment.h			\
