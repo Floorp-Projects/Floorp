@@ -2782,7 +2782,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
   if (eCompatibility_NavQuirks == quirkMode) {
     if (((GETSCDATA(Display).mDisplay == NS_STYLE_DISPLAY_TABLE) || 
          (GETSCDATA(Display).mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)) &&
-         (nsnull == mPseudoTag)) {
+        (nsnull == mPseudoTag)) {
 
       StyleContextImpl* holdParent = mParent;
       mParent = nsnull; // cut off all inheritance. this really blows
