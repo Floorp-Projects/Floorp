@@ -176,16 +176,26 @@ function setPassword()
           // This makes no sense that we arrive here, 
           // we reached a case that should have been prevented by checkPasswords.
         } else {
-          token.changePassword(oldpw, pw1.value);
           if (pw1.value == "") {
-            alert(bundle.GetStringFromName("pw_erased_ok")
-                  + " "
-                  + bundle.GetStringFromName("pw_empty_warning"));
-          } else {
-            alert(bundle.GetStringFromName("pw_change_ok")); 
+            var secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
+            if (secmoddb.isFIPSEnabled) {
+              // empty passwords are not allowed in FIPS mode
+              alert(bundle.GetStringFromName("pw_change2empty_in_fips_mode"));
+              passok = 0;
+            }
+          }
+          if (passok) {
+            token.changePassword(oldpw, pw1.value);
+            if (pw1.value == "") {
+              alert(bundle.GetStringFromName("pw_erased_ok")
+                    + " "
+                    + bundle.GetStringFromName("pw_empty_warning"));
+            } else {
+              alert(bundle.GetStringFromName("pw_change_ok")); 
+            }
+            success = true;
           }
         }
-        success = true;
       } else {
         oldpwbox.focus();
         oldpwbox.setAttribute("value", "");
