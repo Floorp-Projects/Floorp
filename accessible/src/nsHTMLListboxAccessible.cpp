@@ -25,9 +25,13 @@
 #include "nsHTMLListboxAccessible.h"
 
 #include "nsCOMPtr.h"
+#include "nsIAccessibilityService.h"
+#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMHTMLOptionElement.h"
 #include "nsIFrame.h"
+#include "nsIServiceManager.h"
 #include "nsLayoutAtoms.h"
 
 /** ----- nsHTMLListboxAccessible ----- */
@@ -42,7 +46,7 @@ nsHTMLListboxAccessible::nsHTMLListboxAccessible(nsIDOMNode* aDOMNode,
 }
 
 /** Inherit the ISupports impl from nsAccessible */
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLListboxAccessible, nsAccessible)
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLListboxAccessible, nsAccessible, nsIAccessibleSelectable)
 
 /** 
   * Tell our caller we are a list ( there isn't a listbox value )
@@ -91,11 +95,58 @@ NS_IMETHODIMP nsHTMLListboxAccessible::GetAccChildCount(PRInt32 *_retval)
   *     of select options and then iterate through that pulling out the selected
   *     items and creating IAccessible objects for them. Put the IAccessibles in
   *     the nsISupportsArray and return them.
+  * retval will be nsnull if:
+  *    - there are no options in the select
+  *    - there are options but none are selected
+  *    - the DOMNode is not a nsIDOMHTMLSelectElement ( shouldn't happen )
   */
 NS_IMETHODIMP nsHTMLListboxAccessible::GetSelectedChildren(nsISupportsArray **_retval)
 {
+  nsCOMPtr<nsIDOMHTMLSelectElement> select(do_QueryInterface(mDOMNode));
+  if(select) {
+    nsCOMPtr<nsIDOMHTMLCollection> options;
+    // get all the options in the select
+    select->GetOptions(getter_AddRefs(options));
+    if (options) {
+      // set up variables we need to get the selected options and to get their nsIAccessile objects
+      PRUint32 length;
+      options->GetLength(&length);
+      nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+      nsCOMPtr<nsISupportsArray> selectedAccessibles;
+      NS_NewISupportsArray(getter_AddRefs(selectedAccessibles));
+      if (!selectedAccessibles || !accService)
+        return NS_ERROR_FAILURE;
+      // find the selected options and get the accessible objects;
+      PRBool isSelected = PR_FALSE;
+      nsCOMPtr<nsIPresContext> context;
+      GetPresContext(context);
+      for (PRUint32 i = 0 ; i < length ; i++) {
+        nsCOMPtr<nsIDOMNode> tempNode;
+        options->Item(i,getter_AddRefs(tempNode));
+        if (tempNode) {
+          nsCOMPtr<nsIDOMHTMLOptionElement> tempOption(do_QueryInterface(tempNode));
+          if (tempOption)
+            tempOption->GetSelected(&isSelected);
+          if (isSelected) {
+            nsCOMPtr<nsIAccessible> tempAccess;
+            accService->CreateHTMLSelectOptionAccessible(tempOption, this, context, getter_AddRefs(tempAccess));
+            if ( tempAccess )
+              selectedAccessibles->AppendElement(tempAccess);
+            isSelected = PR_FALSE;
+          }
+        }
+      }
+      selectedAccessibles->Count(&length); // reusing length
+      if ( length != 0 ) { // length of nsISupportsArray containing selected options
+        *_retval = selectedAccessibles;
+        NS_IF_ADDREF(*_retval);
+        return NS_OK;
+      }
+    }
+  }
+  // no options, not a select or none of the options are selected
   *_retval = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 /**
