@@ -556,6 +556,9 @@ nsFormFillController::AddFocusListener(nsIDOMWindow *aWindow)
 void
 nsFormFillController::RemoveFocusListener(nsIDOMWindow *aWindow)
 {
+  if (!aWindow)
+    return;
+
   StopControllingInput();
   
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
