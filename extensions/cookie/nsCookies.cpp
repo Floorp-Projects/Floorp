@@ -634,8 +634,15 @@ COOKIE_GetCookie(char * address, nsIIOService* ioService) {
   result = ioService->ExtractUrlPart(address, nsIIOService::url_Host |
                                      nsIIOService::url_Port, &start, &end, 
                                      &host);
+  if (NS_FAILED(result) || !host) {
+    return nsnull;
+  }
   result = ioService->ExtractUrlPart(address, nsIIOService::url_Path, 
                                      &start, &end, &path);
+  if (NS_FAILED(result) || !path) {
+    return nsnull;
+  }
+
   for (PRInt32 i = 0; i <cookie_list->Count(); i++) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
     NS_ASSERTION(cookie_s, "corrupt cookie list");
@@ -767,9 +774,15 @@ cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
   rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Host |
                                  nsIIOService::url_Port, &start, &end, 
                                  &curHost);
+  if (NS_FAILED(rv) || !curHost) {
+    return PR_FALSE;
+  }
   rv = ioService->ExtractUrlPart(firstURL, nsIIOService::url_Host |
                                  nsIIOService::url_Port, &start, &end, 
                                  &firstHost);
+  if (NS_FAILED(rv) || !firstHost) {
+    return PR_FALSE;
+  }
   char * curHostColon = 0;
   char * firstHostColon = 0;
 
@@ -929,8 +942,14 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
   rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Host | 
                                  nsIIOService::url_Port, &start, &end, 
                                  &cur_host);
+  if (NS_FAILED(rv) || !cur_host) {
+    return;
+  }
   rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Path, 
                                  &start, &end, &cur_path);
+  if (NS_FAILED(rv) || !cur_path) {
+    return;
+  }
   char *semi_colon, *ptr, *equal;
   PRBool isSecure=PR_FALSE, isDomain=PR_FALSE;
   PRBool bCookieAdded;
