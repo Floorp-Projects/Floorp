@@ -3,6 +3,10 @@
 <!--LOCALIZATION NOTE : FILE The Appearance prefs dialog.  -->
 <!ENTITY window.title "Appearance">
 <!ENTITY lHeader "Appearance">
+<!--LOCALIZATION NOTE (onStartLegend.label): Don't translate "&brandShortName;".
+    Place &brandShortName; in the phrase where the name of the application should
+	 appear
+-->
 <!ENTITY onStartLegend.label "When &brandShortName; starts up, open">
 <!ENTITY appear "Appearance">
 <!--LOCALIZATION NOTE (navCheck.label): DONT_TRANSLATE -->
