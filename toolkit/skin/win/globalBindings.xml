@@ -6,7 +6,7 @@
    xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="radio"
-           extends="chrome://global/content/bindings/radio.xml#radio">
+           extends="chrome://global/content/widgets/radio.xml#radio">
     <content>
       <xul:hbox class="radio-check-box1" xbl:inherits="selected,checked,disabled">
         <xul:hbox class="radio-check-box2" flex="1">

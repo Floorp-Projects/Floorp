@@ -11,7 +11,7 @@
     </resources>
   </binding>
   
-  <binding id="dialog" extends="chrome://global/content/bindings/dialog.xml#dialog-base">
+  <binding id="dialog" extends="chrome://global/content/widgets/dialog.xml#dialog-base">
     <content>
       <xul:vbox class="box-inherit dialog-content-box" flex="1">
         <children/>
@@ -344,7 +344,7 @@
 
   </binding>
 
-  <binding id="dialogheader" extends="chrome://global/content/bindings/dialog.xml#dialog-base">
+  <binding id="dialogheader" extends="chrome://global/content/widgets/dialog.xml#dialog-base">
     <content>
       <xul:label class="dialogheader-title" xbl:inherits="value=title"/>
       <xul:spacer flex="1"/>

@@ -7,7 +7,7 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="autocomplete"
-           extends="chrome://global/content/bindings/textbox.xml#textbox">
+           extends="chrome://global/content/widgets/textbox.xml#textbox">
     <resources>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
@@ -382,7 +382,7 @@
     </handlers>
   </binding> 
 
-  <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+  <binding id="autocomplete-result-popup" extends="chrome://global/content/widgets/popup.xml#popup">
     <resources>
       <stylesheet src="chrome://global/skin/tree.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
@@ -613,7 +613,7 @@
     </handlers>
   </binding>
 
-  <binding id="autocomplete-tree" extends="chrome://global/content/bindings/tree.xml#tree">
+  <binding id="autocomplete-tree" extends="chrome://global/content/widgets/tree.xml#tree">
     <content>
       <children includes="treecols"/>
       <xul:treerows class="autocomplete-treerows tree-rows" xbl:inherits="hidescrollbar" flex="1">
