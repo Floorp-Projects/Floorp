@@ -264,7 +264,7 @@ if (!$editall) {
 #
 my $user    = trim($::FORM{user}   || '');
 my $action  = trim($::FORM{action} || '');
-my $localtrailer = "<A HREF=\"editusers.cgi\">edit</A> more users";
+my $localtrailer = '<a href="editusers.cgi?">edit more users</a>';
 my $candelete = Param('allowuserdeletion');
 
 
@@ -368,7 +368,7 @@ if ($action eq 'list') {
         my $span = $candelete ? 3 : 2;
         print qq{
 <TD VALIGN="top" COLSPAN=$span ALIGN="right">
-    <A HREF=\"editusers.cgi?action=add\">Add a new user</A>
+    <A HREF=\"editusers.cgi?action=add\">add a new user</A>
 </TD>
 };
         print "</TR>";
@@ -508,7 +508,7 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    PutHeader("Delete user");
+    PutHeader("Delete user $user");
     if (!$candelete) {
         print "Sorry, deleting users isn't allowed.";
         PutTrailer();
@@ -679,7 +679,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit') {
-    PutHeader("Edit user");
+    PutHeader("Edit user $user");
     CheckUser($user);
 
     # get data of user
@@ -715,6 +715,13 @@ if ($action eq 'edit') {
        <BR>";
 
     print "</FORM>";
+    if ($candelete) {
+        print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
+        print "<INPUT TYPE=SUBMIT VALUE=\"Delete User\">\n";
+        print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"del\">\n";
+        print "<INPUT TYPE=HIDDEN NAME=\"user\" VALUE=\"$user\">\n";
+        print "</FORM>";
+    }
 
     my $x = $localtrailer;
     $x =~ s/more/other/;
@@ -727,14 +734,15 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Updated user");
-
     my $userold               = trim($::FORM{userold}              || '');
     my $realname              = trim($::FORM{realname}             || '');
     my $realnameold           = trim($::FORM{realnameold}          || '');
     my $password              = $::FORM{password}                  || '';
     my $disabledtext          = trim($::FORM{disabledtext}         || '');
     my $disabledtextold       = trim($::FORM{disabledtextold}      || '');
+    my @localtrailers         = ($localtrailer);
+    $localtrailer = qq|<a href="editusers.cgi?action=edit&user=XXX">edit user again</a>|;
+    PutHeader("Updating user $userold" . ($realnameold && " ($realnameold)"));
 
     CheckUser($userold);
     SendSQL("SELECT userid FROM profiles
@@ -822,7 +830,7 @@ if ($action eq 'update') {
         SendSQL("UPDATE profiles
                  SET realname=" . SqlQuote($realname) . "
                  WHERE login_name=" . SqlQuote($userold));
-        print "Updated real name.<BR>\n";
+        print 'Updated real name to <q>' . html_quote($realname) . "</q>.<BR>\n";
     }
     if ($editall && $disabledtext ne $disabledtextold) {
         SendSQL("UPDATE profiles
@@ -838,11 +846,17 @@ if ($action eq 'update') {
     if ($editall && $user ne $userold) {
         unless ($user) {
             print "Sorry, I can't delete the user's name.";
-            PutTrailer($localtrailer);
+            $userold = value_quote($userold);
+            $localtrailer =~ s/XXX/$userold/;
+            push @localtrailers, $localtrailer;
+            PutTrailer(@localtrailers);
             exit;
         }
         if (TestUser($user)) {
             print "Sorry, user name '$user' is already in use.";
+            $userold = value_quote($userold);
+            $localtrailer =~ s/XXX/$userold/;
+            push @localtrailers, $localtrailer;
             PutTrailer($localtrailer);
             exit;
         }
@@ -851,12 +865,16 @@ if ($action eq 'update') {
                  SET login_name=" . SqlQuote($user) . "
                  WHERE login_name=" . SqlQuote($userold));
 
-        print "Updated user's name.<BR>\n";
+        print q|Updated user's name to <a href="mailto:| .
+              value_quote($user) . '">' . html_quote($user) . "</a>.<BR>\n";
     }
     my $changeduser = new Bugzilla::User($thisuserid);
     $changeduser->derive_groups();
 
-    PutTrailer($localtrailer);
+    $user = value_quote($user);
+    $localtrailer =~ s/XXX/$user/;
+    push @localtrailers, $localtrailer;
+    PutTrailer(@localtrailers);
     exit;
 }
 
