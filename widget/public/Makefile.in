@@ -75,7 +75,6 @@ EXPORTS = \
 	nsIFontSizeIterator.h \
 	nsIFontRetrieverService.h \
 	nsIContextMenu.h \
-	nsIXlibWindowService.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
