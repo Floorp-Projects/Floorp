@@ -377,6 +377,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mLastPoint.y   = 0;
     mWidth = mHeight = 0;
     mClientData = NULL;
+    mContext = NULL;
 }
 
 
