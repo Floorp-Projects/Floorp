@@ -3751,14 +3751,17 @@ nsDefaultEngine.prototype =
 }
 
 var gWebPanelURI;
-function openWebPanel(aURI)
+function openWebPanel(aTitle, aURI)
 {
     // Ensure that the web panels sidebar is open.
     toggleSidebar('viewWebPanelsSidebar', true);
     
+    // Set the title of the panel.
+    document.getElementById("sidebar-title").value = aTitle;
+    
     // Tell the Web Panels sidebar to load the bookmark.
     var sidebar = document.getElementById("sidebar");
-    if (sidebar.contentDocument && sidebar.contentDocument.getElementById('webpanels-browser')) {
+    if (sidebar.contentDocument && sidebar.contentDocument.getElementById('web-panels-browser')) {
         sidebar.contentWindow.loadWebPanel(aURI);
         if (gWebPanelURI) {
             gWebPanelURI = "";
@@ -3776,7 +3779,7 @@ function openWebPanel(aURI)
 function asyncOpenWebPanel(event)
 {
     var sidebar = document.getElementById("sidebar");
-    if (gWebPanelURI && sidebar.contentDocument && sidebar.contentDocument.getElementById('webpanels-browser'))
+    if (gWebPanelURI && sidebar.contentDocument && sidebar.contentDocument.getElementById('web-panels-browser'))
         sidebar.contentWindow.loadWebPanel(gWebPanelURI);
     gWebPanelURI = "";
     sidebar.removeEventListener("load", asyncOpenWebPanel, true);

@@ -537,9 +537,9 @@ var BookmarksCommand = {
   },
 
   // requires utilityOverlay.js if opening in new window for getTopWin()
-  openWebPanel: function(aURI, aDS)
+  openWebPanel: function(aResource, aDS)
   {
-    var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS);
+    var url = BookmarksUtils.getProperty(aResource, NC_NS+"URL", aDS);
     // Ignore "NC:" and empty urls.
     if (url == "")
       return;
@@ -548,7 +548,7 @@ var BookmarksCommand = {
       openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
       return;
     }
-    w.openWebPanel(url);
+    w.openWebPanel(BookmarksUtils.getProperty(aResource,  NC_NS+"Name"), url);
   },
   
   // requires utilityOverlay.js if opening in new window for getTopWin()
