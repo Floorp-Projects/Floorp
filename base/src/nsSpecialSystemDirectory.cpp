@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -27,12 +27,85 @@
 
 #ifdef XP_MAC
 #include <Folders.h>
+#include <Files.h>
+#include <Memory.h>
+#include <Processes.h>
 #elif defined(XP_PC)
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
+#elif defined(XP_UNIX)
+#include <unistd.h>
 #endif
 
+#include "plstr.h"
+
+static void
+GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
+{
+#ifdef XP_PC
+    char buf[MAX_PATH];
+    if ( ::GetModuleFileName(0, buf, sizeof(buf)) ) {
+        // chop of the executable name by finding the rightmost backslash
+        char* lastSlash = PL_strrchr(buf, '\\');
+        if (lastSlash)
+            *(lastSlash + 1) = '\0';
+
+        aFileSpec = buf;
+        return;
+    }
+
+#elif defined(XP_MAC)
+    // get info for the the current process to determine the directory
+    // its located in
+    OSErr err;
+    ProcessSerialNumber psn;
+    if (!(err = GetCurrentProcess(&psn))) {
+        ProcessInfoRec pInfo;
+        FSSpec         tempSpec;
+
+        // initialize ProcessInfoRec before calling
+        // GetProcessInformation() or die horribly.
+        pInfo.processName = nil;
+        pInfo.processAppSpec = &tempSpec;
+        pInfo.processInfoLength = sizeof(ProcessInfoRec);
+
+        if (!(err = GetProcessInformation(&psn, &pInfo))) {
+            FSSpec appFSSpec = *(pInfo.processAppSpec);
+            Handle pathH;
+
+            long theDirID = appFSSpec.parID;
+
+            Str255 name;
+            CInfoPBRec catInfo;
+            catInfo.dirInfo.ioCompletion = NULL;
+            catInfo.dirInfo.ioNamePtr = (StringPtr)&name;
+            catInfo.dirInfo.ioVRefNum = appFSSpec.vRefNum;
+            catInfo.dirInfo.ioDrDirID = theDirID;
+            catInfo.dirInfo.ioFDirIndex = -1; // -1 = query dir in ioDrDirID
+
+            if (!(err = PBGetCatInfoSync(&catInfo))) {
+                aFileSpec = nsFileSpec(appFSSpec.vRefNum,
+                                       catInfo.dirInfo.ioDrParID,
+                                       name);
+                return;
+            }
+        }
+    }
+
+#elif defined(XP_UNIX)
+
+    // XXX This is wrong, but I don't know a better way to do it.
+    char buf[PATH_MAX];
+    if (getcwd(buf, sizeof(buf))) {
+        aFileSpec = buf;
+        return;
+    }
+
+#endif
+
+    NS_ERROR("unable to get current process directory");
+}
 
 //nsSpecialSystemDirectory::nsSpecialSystemDirectory()
 //:    nsFileSpec(nsnull)
@@ -102,7 +175,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         break;
 
         case OS_CurrentProcessDirectory:
-            NS_NOTYETIMPLEMENTED("Please do so");
+            GetCurrentProcessDirectory(*this);
             break;
 
 #ifdef XP_MAC
