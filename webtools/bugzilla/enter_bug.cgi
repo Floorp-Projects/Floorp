@@ -200,7 +200,7 @@ sub pickos {
             /Mozilla.*\(.*;.*; 32bit.*\)/   && do {return "Windows 95";};
             /Mozilla.*\(.*;.*; 16bit.*\)/   && do {return "Windows 3.1";};
             /Mozilla.*\(.*;.*; 68K.*\)/     && do {return "Mac System 8.5";};
-            /Mozilla.*\(.*;.*; PPC.*\)/     && do {return "Mac System 8.5";};
+            /Mozilla.*\(.*;.*; PPC.*\)/     && do {return "Mac System 8.5 or later";};
             /Mozilla.*\(.*;.*; OSF.*\)/     && do {return "OSF/1";};
             /Mozilla.*\(.*;.*; Linux.*\)/   && do {return "Linux";};
             /Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
@@ -208,7 +208,7 @@ sub pickos {
             /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
             /Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
             /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
-            /Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
+            /Mozilla.*\(.*Win95.*\)/        && do {return "Windows 95";};
             /Mozilla.*\(Win98.*\)/          && do {return "Windows 98";};
             /Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
             /Mozilla.*Windows NT 5.*\)/     && do {return "Windows 2000";};
