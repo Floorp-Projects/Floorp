@@ -1,0 +1,70 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Chris Saari <saari@netscape.com>
+ */
+
+interface nsIDOMWindow;
+interface nsIDOMElement;
+
+#include "nsISupports.idl"
+
+/**
+ * nsIWebBrowserFocus
+ * Interface that embedders use for controlling and interacting
+ * with the browser focus management. The embedded browser can be focused by
+ * clicking in it or tabbing into it. If the browser is currently focused and
+ * embedding application's top level window is disabled, deactivate() must
+ * be called, and activate() called again when the top level window is
+ * reactivated for the browser's focus memory to work correctly.
+ */
+
+[scriptable, uuid(9c5d3c58-1dd1-11b2-a1c9-f3699284657a)]
+interface nsIWebBrowserFocus : nsISupports
+{
+  // MANDATORY
+  // activate() is a mandatory call that must be made to the browser
+  // when the embedding applications window is activated *and* the 
+  // browser area was the last thing in focus. If you fail
+  // to make this call mozilla focus memory will not work correctly.
+  void activate();
+
+  // MANDATORY
+  // decactivate() is a mandatory call that must be made to the browser
+  // when the embedding applications window is deactivated *and* the
+  // browser area was the last thing in focus. If you fail
+  // to make this call mozilla focus memory will not work correctly.
+  void deactivate();
+
+  // Give the first element focus within mozilla
+  // (ie. TAB was pressed and focus should enter mozilla)
+  void setFocusAtFirstElement();
+
+  // Give the last element focus within mozilla
+  // (ie. ALT-TAB was pressed and focus should enter mozilla)
+  void setFocusAtLastElement();
+  
+  // The currently focused nsDOMWindow when the browser is active
+  // or the last focused nsDOMWindow when the broser is inactive.
+  attribute nsIDOMWindow focusedWindow;
+  
+  // The currently focused nsDOMElement when the browser is active
+  // or the last focused nsDOMElement when the broser is inactive.
+  attribute nsIDOMElement focusedElement;
+};
