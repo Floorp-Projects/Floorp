@@ -31,6 +31,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
       </handler>
 
       <handler event="keypress" key=" " command="cmd_scrollPageDown" />
+      <handler event="keypress" key=" " modifiers="shift" command="cmd_scrollPageUp" />
       <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_scrollPageUp" />
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown" />
 
