@@ -42,18 +42,10 @@ use Getopt::Mixed "nextOption";
 my $os_type = &get_os_type;
 my $unixish = (($os_type ne "WIN") && ($os_type ne "MAC"));
 my $path_sep = ($os_type eq "MAC") ? ":" : "/";
+my $redirect_command = ($os_type ne "MAC") ? " 2>&1" : "";
 
 # command line option defaults
 my $opt_suite_path;
-
-if ($os_type eq "MAC") {
-    $opt_suite_path = `directory`;
-    $opt_suite_path =~ s/[\n\r]//g;
-    $opt_suite_path .= ":";
-} else {
-    $opt_suite_path = "./";
-}
-
 my $opt_trace = 0;
 my $opt_classpath = "";
 my $opt_rhino_interp = 0;
@@ -75,11 +67,19 @@ my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
   "h help>h i j=s javapath>j k confail>k l=s list>l L=s neglist>L " .
   "p=s testpath>p s=s shellpath>s t trace>t u=s lxrurl>u x noexitmunge>x";
 
+if ($os_type eq "MAC") {
+    $opt_suite_path = `directory`;
+    $opt_suite_path =~ s/[\n\r]//g;
+    $opt_suite_path .= ":";
+} else {
+    $opt_suite_path = "./";
+}
+
 &parse_args;
 
 my $user_exit = 0;
 my ($engine_command, $html, $failures_reported, $tests_completed,
-    $redirect_command, $exec_time_string); 
+    $exec_time_string); 
 my @failed_tests;
 my @test_list = &get_test_list;
 
