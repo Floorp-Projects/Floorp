@@ -5,8 +5,8 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.16 $ 
-# $Date: 2003/08/17 02:13:16 $ 
+# $Revision: 1.17 $ 
+# $Date: 2004/07/10 14:47:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
@@ -147,6 +147,7 @@ sub line_type {
             ($line =~ /\b[Aa]ssertion\b/)	||		# test error
             ($line =~ /\b[Aa]borted\b/)		||		# cvs error
             ($line =~ /\b[Ff]ailed\b/)		||		# java nmake
+            ($line =~ /BUILD FAILED/)		||		# ant
 
             ($line =~ /Unknown host /)		||		# cvs error
             ($line =~ /\: cannot find module/)	||		# cvs error
