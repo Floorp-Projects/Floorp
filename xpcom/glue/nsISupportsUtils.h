@@ -245,7 +245,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
 
 #define NS_IMPL_QUERY_TAIL                                               \
   if ( aIID.Equals(NS_GET_IID(nsISupports)) )                            \
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);                  \
+    *aInstancePtr = NS_REINTERPRET_CAST(nsISupports*, this);             \
   else                                                                   \
     *aInstancePtr = 0;                                                   \
   nsresult status;                                                       \
