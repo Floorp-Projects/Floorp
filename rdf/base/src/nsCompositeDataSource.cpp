@@ -103,7 +103,7 @@ public:
                             PRBool tv);
 
 protected:
-	nsCOMPtr<nsISupportsArray>	mObservers;
+	nsVoidArray mObservers;
 
 	PRBool      mAllowNegativeAssertions;
 	PRBool      mCoalesceDuplicateArcs;
@@ -1057,15 +1057,10 @@ CompositeDataSourceImpl::AddObserver(nsIRDFObserver* aObserver)
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
-    if (!mObservers) {
-        nsresult rv;
-        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-        if (NS_FAILED(rv)) return rv;
-    }
-
     // XXX ensure uniqueness?
+    if (mObservers.AppendElement(aObserver))
+        NS_ADDREF(aObserver);
 
-    mObservers->AppendElement(aObserver);
     return NS_OK;
 }
 
@@ -1076,10 +1071,9 @@ CompositeDataSourceImpl::RemoveObserver(nsIRDFObserver* aObserver)
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
-    if (!mObservers)
-        return NS_OK;
+    if (mObservers.RemoveElement(aObserver))
+        NS_RELEASE(aObserver);
 
-    mObservers->RemoveElement(aObserver);
     return NS_OK;
 }
 
@@ -1437,17 +1431,10 @@ CompositeDataSourceImpl::OnAssert(nsIRDFResource* aSource,
 			return(NS_OK);
 	}
 
-    if (mObservers) {
-        PRUint32 count;
-        rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
-            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnAssert(aSource, aProperty, aTarget);
-            NS_RELEASE(obs);
-            // XXX ignore return value?
-        }
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
+        obs->OnAssert(aSource, aProperty, aTarget);
+        // XXX ignore return value?
     }
     return NS_OK;
 }
@@ -1476,17 +1463,10 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFResource* aSource,
 			return NS_OK;
 	}
 
-    if (mObservers) {
-        PRUint32 count;
-        rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
-            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnUnassert(aSource, aProperty, aTarget);
-            NS_RELEASE(obs);
-            // XXX ignore return value?
-        }
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
+        obs->OnUnassert(aSource, aProperty, aTarget);
+        // XXX ignore return value?
     }
     return NS_OK;
 }
@@ -1504,17 +1484,10 @@ CompositeDataSourceImpl::OnChange(nsIRDFResource* aSource,
     // XXX Because of aggregation, this could actually mutate into a
     // variety of OnAssert or OnChange notifications, which we'll
     // ignore for now :-/.
-    if (mObservers) {
-        PRUint32 count;
-        nsresult rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
-            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
-            NS_RELEASE(obs);
-            // XXX ignore return value?
-        }
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
+        obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+        // XXX ignore return value?
     }
     return NS_OK;
 }
@@ -1532,17 +1505,10 @@ CompositeDataSourceImpl::OnMove(nsIRDFResource* aOldSource,
     // XXX Because of aggregation, this could actually mutate into a
     // variety of OnAssert or OnMove notifications, which we'll
     // ignore for now :-/.
-    if (mObservers) {
-        PRUint32 count;
-        nsresult rv = mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
-            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
-            NS_RELEASE(obs);
-            // XXX ignore return value?
-        }
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
+        obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+        // XXX ignore return value?
     }
     return NS_OK;
 }
