@@ -52,6 +52,8 @@
 #include "nsCOMPtr.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsITimelineService.h"
+#include "nsIHttpChannel.h"
+#include "nsHTMLAtoms.h"
 
 #ifdef INCLUDE_XUL
 #include "nsIXULPrototypeCache.h"
@@ -315,18 +317,20 @@ public:
   // @charset support
   nsString      mCharset;        // the charset we are using
 
-  NS_IMETHOD GetCharset(/*out*/nsString &aCharsetDest) const; // PUBLIC
-  NS_IMETHOD SetCharset(/*in*/ const nsString &aCharsetSrc);  // PUBLIC
-    // public methods for clients to set the charset if they know it
-    //  NOTE: the SetCharset method will always get the preferred charset from the charset passed in
-    //        unless it is the emptystring, which causes the default charset to be set
+  NS_IMETHOD GetCharset(/*out*/nsAString &aCharsetDest) const; // PUBLIC
+  NS_IMETHOD SetCharset(/*in*/ const nsAString &aCharsetSrc);  // PUBLIC
+    // public method for clients to set the charset if they know it
+    // NOTE: the SetCharset method will always get the preferred
+    // charset from the charset passed in unless it is the
+    // emptystring, which causes the default charset (that of the
+    // document, falling back to ISO-8869-1) to be set
 
-  nsresult SetCharset(/*in*/ const nsString &aHTTPHeader, /*in*/ const nsString &aStyleSheetData);
+  nsresult SetCharset(/*in*/ const char* aStyleSheetData,
+                      /*in*/ PRUint32 aDataLength);
     // sets the charset based upon the data passed in
-    //  - if HTTPHeader is not empty and it has a charset, use that
-    //  - otherwise, if the StyleSheetData is not empty and it has '@charset' as the first substring,
-    //    then use that
-    //  - othersise set the default charset
+    // - if the StyleSheetData is not empty and it has '@charset'
+    //   as the first substring, then use that
+    // - otherwise return an error
 
   // stop loading all sheets
   NS_IMETHOD Stop(void);
@@ -451,7 +455,7 @@ CSSLoaderImpl::CSSLoaderImpl(void)
   mCaseSensitive = PR_FALSE;
   mNavQuirkMode = PR_FALSE;
   mParsers = nsnull;
-  SetCharset(nsAutoString());
+  SetCharset(NS_LITERAL_STRING(""));
 }
 
 static PRBool PR_CALLBACK ReleaseSheet(nsHashKey* aKey, void* aData, void* aClosure)
@@ -612,24 +616,64 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
 
 NS_IMETHODIMP
 SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
-                                nsISupports* context,
+                                nsISupports* aContext,
                                 nsresult aStatus,
-                                PRUint32 stringLen,
-                                const char* string)
+                                PRUint32 aStringLen,
+                                const char* aString)
 {
   NS_TIMELINE_OUTDENT();
   NS_TIMELINE_MARK_LOADER("SheetLoadData::OnStreamComplete(%s)", aLoader);
   nsresult result = NS_OK;
   nsString *strUnicodeBuffer = nsnull;
 
-  if (string && stringLen>0) {
+  if (aString && aStringLen>0) {
 
-    // First determine the charset (if one is indicated) and set the data member.
-    // XXX use the HTTP header data too
-    nsString strStyleDataUndecoded;
-    nsString strHTTPHeaderData;
-    strStyleDataUndecoded.AssignWithConversion(string,stringLen);
-    (void)mLoader->SetCharset(strHTTPHeaderData, strStyleDataUndecoded); // bug 66190: ignore errors
+    /*
+     * First determine the charset (if one is indicated)
+     * 1)  Check HTTP charset
+     * 2)  Check @charset rules
+     * 3)  Check "charset" attribute of the <LINK> or <?xml-stylesheet?>
+     *
+     * If all these fail to give us a charset, fall back on our
+     * default (document charset or ISO-8859-1 if we have no document
+     * charset)
+     */
+    nsAutoString strHTTPCharset;
+    nsCOMPtr<nsIRequest> request;
+    aLoader->GetRequest(getter_AddRefs(request));
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
+    if (httpChannel) {
+      nsXPIDLCString httpCharset;
+      httpChannel->GetCharset(getter_Copies(httpCharset));
+      CopyASCIItoUCS2(httpCharset, strHTTPCharset);
+    }
+    result = NS_ERROR_NOT_AVAILABLE;
+    if (! strHTTPCharset.IsEmpty()) {
+      result = mLoader->SetCharset(strHTTPCharset);
+    }
+    if (NS_FAILED(result)) {
+      //  We have no charset or the HTTP charset is not recognized.
+      //  Try @charset rules
+      result = mLoader->SetCharset(aString, aStringLen);
+    }
+    if (NS_FAILED(result)) {
+      // Now try the charset on the <link> or processing instruction
+      // that loaded us
+      nsCOMPtr<nsIStyleSheetLinkingElement>
+                    element(do_QueryInterface(mOwningElement));
+      if (element) {
+        nsAutoString linkCharset;
+        element->GetCharset(linkCharset);
+        if (! linkCharset.IsEmpty()) {
+          result = mLoader->SetCharset(linkCharset);
+        }
+      }
+    }
+    if (NS_FAILED(result)) {
+      // no useful data on charset.  Just set to empty string, and let
+      // SetCharset pick a sane default
+      mLoader->SetCharset(NS_LITERAL_STRING(""));
+    }      
     {
       // now get the decoder
       nsCOMPtr<nsICharsetConverterManager> ccm = 
@@ -641,7 +685,7 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
         ccm->GetUnicodeDecoder(&charset,&decoder);
         if (decoder) {
           PRInt32 unicodeLength=0;
-          if (NS_SUCCEEDED(decoder->GetMaxLength(string,stringLen,&unicodeLength))) {
+          if (NS_SUCCEEDED(decoder->GetMaxLength(aString,aStringLen,&unicodeLength))) {
             PRUnichar *unicodeString = nsnull;
             strUnicodeBuffer = new nsString;
             if (nsnull == strUnicodeBuffer) {
@@ -650,7 +694,7 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
               // make space for the decoding
               strUnicodeBuffer->SetCapacity(unicodeLength);
               unicodeString = (PRUnichar *) strUnicodeBuffer->get();
-              result = decoder->Convert(string, (PRInt32 *) &stringLen, unicodeString, &unicodeLength);
+              result = decoder->Convert(aString, (PRInt32 *) &aStringLen, unicodeString, &unicodeLength);
               if (NS_SUCCEEDED(result)) {
                 strUnicodeBuffer->SetLength(unicodeLength);
               } else {
@@ -1595,7 +1639,7 @@ nsresult NS_NewCSSLoader(nsICSSLoader** aLoader)
 
 
 
-NS_IMETHODIMP CSSLoaderImpl::GetCharset(/*out*/nsString &aCharsetDest) const
+NS_IMETHODIMP CSSLoaderImpl::GetCharset(/*out*/nsAString &aCharsetDest) const
 {
   NS_ASSERTION(mCharset.Length() > 0, "CSSLoader charset should be set in ctor" );
   nsresult rv = NS_OK;
@@ -1603,19 +1647,18 @@ NS_IMETHODIMP CSSLoaderImpl::GetCharset(/*out*/nsString &aCharsetDest) const
   return rv;
 }
 
-NS_IMETHODIMP CSSLoaderImpl::SetCharset(/*in*/ const nsString &aCharsetSrc)
-  // public methods for clients to set the charset if they know it
-  //  NOTE: the SetCharset method will always get the preferred charset from the charset passed in
-  //        unless it is the emptystring, which causes the default charset to be set
+NS_IMETHODIMP CSSLoaderImpl::SetCharset(/*in*/ const nsAString &aCharsetSrc)
+    // public method for clients to set the charset if they know it
+    // NOTE: the SetCharset method will always get the preferred
+    // charset from the charset passed in unless it is the
+    // emptystring, which causes the default charset (that of the
+    // document, falling back to ISO-8869-1) to be set
 {
-  nsresult rv = NS_OK;
-  if (aCharsetSrc.Length() == 0) {
-    mCharset.AssignWithConversion("ISO-8859-1");
-  } else {
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  if (! aCharsetSrc.IsEmpty()) {
     nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
     NS_ASSERTION(calias, "cannot find charset alias");
-    nsAutoString charsetName(aCharsetSrc);
-    if( NS_SUCCEEDED(rv) && (nsnull != calias))
+    if (calias)
     {
       PRBool same = PR_FALSE;
       rv = calias->Equals(aCharsetSrc, mCharset, &same);
@@ -1623,48 +1666,40 @@ NS_IMETHODIMP CSSLoaderImpl::SetCharset(/*in*/ const nsString &aCharsetSrc)
       {
         return NS_OK; // no difference, don't change it
       }
-      // different, need to change it
-      rv = calias->GetPreferred(aCharsetSrc, charsetName);
-      if(NS_FAILED(rv))
-      {
-         // failed - unknown alias , fallback to ISO-8859-1
-        charsetName.AssignWithConversion("ISO-8859-1");
-      }
-      mCharset = charsetName;
+      rv = calias->GetPreferred(aCharsetSrc, mCharset);
     }
+  } else if (mDocument) {
+    // GetDocumentCharacterSet returns a charset which already has
+    // alias resolution done
+    rv = mDocument->GetDocumentCharacterSet(mCharset);
+  }
+  if (mCharset.IsEmpty()) {
+      mCharset = NS_LITERAL_STRING("ISO-8859-1");
+      rv = NS_ERROR_NOT_AVAILABLE;
   }
 
   return rv;
 }
 
-nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader, 
-                                   /*in*/ const nsString &aStyleSheetData)
-  // sets the charset based upon the data passed in
-  //  - if HTTPHeader is not empty and it has a charset, use that
-  //  - otherwise, if the StyleSheetData is not empty and it has '@charset' as the first substring,
-  //    then use that
-  //  - othersise set the default charset
+nsresult CSSLoaderImpl::SetCharset(/*in*/ const char* aStyleSheetData,
+                                   /*in*/ PRUint32 aDataLength)
+    // sets the charset based upon the data passed in
+    // - if the StyleSheetData is not empty and it has '@charset'
+    //   as the first substring, then use that
+    // - otherwise return an error
 {
-  nsresult rv = NS_OK;
-  nsString str;
-  PRBool setCharset = PR_FALSE;
-
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  nsString strStyleDataUndecoded;
+  strStyleDataUndecoded.AssignWithConversion(aStyleSheetData, aDataLength);
   PRInt32 charsetOffset;
-  if (aHTTPHeader.Length() > 0) {
-    // check if it has the charset= parameter
-    static const char charsetStr[] = "charset=";
-    if ((charsetOffset = aHTTPHeader.Find(charsetStr,PR_TRUE)) > 0) {
-      aHTTPHeader.Right(str, aHTTPHeader.Length() -
-                             (charsetOffset + sizeof(charsetStr)-1));
-      setCharset = PR_TRUE;
-    }
-  } else if (aStyleSheetData.Length() > 0) {
+  if (strStyleDataUndecoded.Length() > 0) {
+    nsString str;
     static const char atCharsetStr[] = "@charset";
-    if ((charsetOffset = aStyleSheetData.Find(atCharsetStr)) > -1) {
+    if ((charsetOffset = strStyleDataUndecoded.Find(atCharsetStr)) > -1) {
       nsString strValue;
       // skip past the ident
-      aStyleSheetData.Right(str, aStyleSheetData.Length() -
-                                 (sizeof(atCharsetStr)-1));
+      strStyleDataUndecoded.Right(str, strStyleDataUndecoded.Length() -
+                                  (sizeof(atCharsetStr)-1));
       // strip any whitespace
       str.StripWhitespace();
       // truncate everything past the delimiter (semicolon)
@@ -1676,13 +1711,10 @@ nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader,
       strValue.Trim("\"\'");
 
       // that's the charset!
-      str = strValue;
-
-      setCharset = PR_TRUE;
+      if (!strValue.IsEmpty()) {
+        rv = SetCharset(strValue);
+      }
     }
-  }
-  if (PR_TRUE == setCharset) {
-    rv = SetCharset(str);
   }
   return rv;
 }
