@@ -1589,7 +1589,7 @@ use Template;
 $::template ||= Template->new(
   {
     # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/custom:template/default" ,
+    INCLUDE_PATH => "template/custom:template/default:template/en/custom:template/en/default" ,
 
     # Remove white-space before template directives (PRE_CHOMP) and at the
     # beginning and end of templates and template blocks (TRIM) for better 
