@@ -46,7 +46,7 @@ interface nsIImapServerSink : nsISupports {
 	void fEAlertFromServer(in string aString, in nsIMsgWindow aMsgWindow);
 	void commitNamespaces();
 	void promptForPassword(out string aString, in nsIMsgWindow aMsgWindow);
-	void setUserAuthenticated(in boolean authenticated);
+	attribute boolean userAuthenticated;
 	void setMailServerUrls(in string manageMailAccount, in string manageLists, in string manageFilters);
 	
 	/* this is a bogus method on this interface but i need it until misc. sink is scriptable.. */

@@ -71,6 +71,7 @@ public:
     NS_IMETHOD GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer);
     NS_IMETHOD GetFilterScope(nsMsgSearchScopeValue *filterScope);
     NS_IMETHOD GetSearchScope(nsMsgSearchScopeValue *searchScope);
+  NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
     nsresult ResetFoldersToUnverified(nsIFolder *parentFolder);
@@ -101,21 +102,22 @@ private:
   nsCOMPtr<nsISupportsArray> m_connectionCache;
   nsCOMPtr<nsISupportsArray> m_urlQueue;
 	nsCOMPtr<nsIStringBundle>	m_stringBundle;
-  nsVoidArray					m_urlConsumers;
-	PRUint32					m_capability;
-	nsCString					m_manageMailAccountUrl;
+  nsVoidArray       m_urlConsumers;
+  PRUint32          m_capability;
+  nsCString         m_manageMailAccountUrl;
   PRBool            m_readPFCName;
+  PRBool            m_userAuthenticated;
   nsCString         m_pfcName;
-	PRBool						m_waitingForConnectionInfo;
-	PRInt32						m_redirectedLogonRetries;
-	nsCOMPtr<nsIMsgLogonRedirector> m_logonRedirector;
-	
-	// subscribe dialog stuff
-	PRBool	mDoingSubscribeDialog;
-	PRBool	mDoingLsub;
-	nsresult AddFolderToSubscribeDialog(const char *parentUri, const char *uri,const char *folderName);
+  PRBool						m_waitingForConnectionInfo;
+  PRInt32						m_redirectedLogonRetries;
+  nsCOMPtr<nsIMsgLogonRedirector> m_logonRedirector;
+  
+  // subscribe dialog stuff
+  PRBool	mDoingSubscribeDialog;
+  PRBool	mDoingLsub;
+  nsresult AddFolderToSubscribeDialog(const char *parentUri, const char *uri,const char *folderName);
 
-	nsCOMPtr <nsISubscribableServer> mInner;
+  nsCOMPtr <nsISubscribableServer> mInner;
     nsresult EnsureInner();
     nsresult ClearInner();
 };

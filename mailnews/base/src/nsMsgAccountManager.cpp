@@ -918,12 +918,16 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
       if (folder)
       {
          nsXPIDLCString passwd;
+         PRBool serverRequiresPasswordForAuthentication = PR_TRUE;
          PRBool isImap = (type ? PL_strcmp(type, "imap") == 0 :
                           PR_FALSE);
          if (isImap)
+         {
+           server->GetServerRequiresPasswordForBiff(&serverRequiresPasswordForAuthentication);
            server->GetPassword(getter_Copies(passwd));
-         if (!isImap || (isImap && passwd && 
-                        nsCRT::strlen((const char*) passwd)))
+         }
+         if (!isImap || (isImap && (!serverRequiresPasswordForAuthentication || (passwd && 
+                        nsCRT::strlen((const char*) passwd)))))
          {
            nsCOMPtr<nsIUrlListener> urlListener;
            NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
@@ -979,7 +983,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                {
                  accountManager->GetCleanupInboxInProgress(&inProgress);
                  PR_CEnterMonitor(folder);
-                 PR_CWait(folder, 1000UL);
+                 PR_CWait(folder, PR_MicrosecondsToInterval(1000UL));
                  PR_CExitMonitor(folder);
                  if (eventQueue)
                    eventQueue->ProcessPendingEvents();
@@ -992,7 +996,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                {
                  accountManager->GetEmptyTrashInProgress(&inProgress);
                  PR_CEnterMonitor(folder);
-                 PR_CWait(folder, 1000UL);
+                 PR_CWait(folder, PR_MicrosecondsToInterval(1000UL));
                  PR_CExitMonitor(folder);
                  if (eventQueue)
                    eventQueue->ProcessPendingEvents();

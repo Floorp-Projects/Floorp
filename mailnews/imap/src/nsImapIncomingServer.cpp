@@ -96,16 +96,17 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsImapIncomingServer::nsImapIncomingServer()
 {    
-    NS_INIT_REFCNT();
-    nsresult rv;
-	rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
-    rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));
-	m_capability = kCapabilityUndefined;
-	m_waitingForConnectionInfo = PR_FALSE;
-	m_redirectedLogonRetries = 0;
-	mDoingSubscribeDialog = PR_FALSE;
-	mDoingLsub = PR_FALSE;
-	m_canHaveFilters = PR_TRUE;
+  NS_INIT_REFCNT();
+  nsresult rv;
+  rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
+  rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));
+  m_capability = kCapabilityUndefined;
+  m_waitingForConnectionInfo = PR_FALSE;
+  m_redirectedLogonRetries = 0;
+  mDoingSubscribeDialog = PR_FALSE;
+  mDoingLsub = PR_FALSE;
+  m_canHaveFilters = PR_TRUE;
+  m_userAuthenticated = PR_FALSE;
   m_readPFCName = PR_FALSE;
 }
 
@@ -2143,6 +2144,15 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 	return rv;
 }
 
+NS_IMETHODIMP nsImapIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  // if the user has already been authenticated, we've got the password
+  *_retval = !m_userAuthenticated;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
                                                       nsIMsgWindow * aMsgWindow)
 {
@@ -2283,10 +2293,7 @@ void MSG_IMAPFolderInfoMail::ResetNamespaceReferences()
 
 #endif  //FINISHED_PORTED_NAMESPACE_STUFF
 
-NS_IMETHODIMP  nsImapIncomingServer::SetUserAuthenticated(PRBool authenticated)
-{
-	return NS_OK;
-}
+NS_IMPL_GETSET(nsImapIncomingServer, UserAuthenticated, PRBool, m_userAuthenticated);
 
 /* void SetMailServerUrls (in string manageMailAccount, in string manageLists, in string manageFilters); */
 NS_IMETHODIMP  nsImapIncomingServer::SetMailServerUrls(const char *manageMailAccount, const char *manageLists, const char *manageFilters)
