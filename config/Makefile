@@ -32,7 +32,7 @@ PLSRCS		= nfspwd.pl revdepth.pl
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
 
 # Generate the build number on the fly.
-ifdef BUILD_OFFICIAL
+ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
 TARGETS		+= $(DEPTH)/build/build_number
 endif
 
