@@ -219,22 +219,17 @@ typedef struct PTDebug
     PRUintn cvars_notified, delayed_cv_deletes;
 } PTDebug;
 
-NSPR_API(void) PT_GetStats(PTDebug* here);
-NSPR_API(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
-
 #else
 
 typedef PRUintn PTDebug;
-#define PT_GetStats(_p)
-#define PT_FPrintStats(_fd, _msg)
 
 #endif /* defined(DEBUG) */
 
+NSPR_API(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
+
 #else /* defined(_PR_PTHREADS) */
 
-typedef PRUintn PTDebug;
-#define PT_GetStats(_p)
-#define PT_FPrintStats(_fd, _msg)
+NSPR_API(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
 
 /*
 ** This section is contains those parts needed to implement NSPR on

@@ -371,6 +371,7 @@ NSPR_4.0 {
 NSPRprivate {
 	global:
 		GetExecutionEnvironment;
+		PT_FPrintStats;
 		SetExecutionEnvironment;
 	local: *;
 };
