@@ -73,7 +73,11 @@
     // if mailnews is installed then we will have networkImageDisableImagesInMailNews checkbox
     var networkImageDisableImagesInMailNews = document.getElementById("networkImageDisableImagesInMailNews");
     if (networkImageDisableImagesInMailNews)
-      networkImageDisableImagesInMailNews.disabled = (imageBehavior.value == 2); 
+    {
+      var prefString = networkImageDisableImagesInMailNews.getAttribute("prefstring");
+      networkImageDisableImagesInMailNews.disabled = (imageBehavior.value == 2)
+         || parent.hPrefWindow.getPrefIsLocked(prefString);
+    }
   }
 
   ]]>
