@@ -45,6 +45,7 @@ EXPORTS =                          \
         nsIUnicharBuffer.h         \
         nsInt64.h                  \
         nsQuickSort.h              \
+        nsCharTraits.h             \
         nsAReadableString.h        \
         nsAWritableString.h        \
         nsSharedString.h           \
