@@ -51,6 +51,33 @@ public:
   nsSafariProfileMigrator();
   virtual ~nsSafariProfileMigrator();
 
+  typedef enum { STRING, INT, BOOL } PrefType;
+
+  typedef nsresult(*prefConverter)(void*, nsIPrefBranch*);
+
+  typedef struct {
+    CFStringRef   keyName;
+    PrefType      type;
+    char*         targetPrefName;
+    prefConverter prefSetterFunc;
+    PRBool        prefHasValue;
+    union {
+      PRInt32     intValue;
+      PRBool      boolValue;
+      char*       stringValue;
+    };
+  } PREFTRANSFORM;
+  
+  static nsresult SetBool(void* aTransform, nsIPrefBranch* aBranch);
+  static nsresult SetBoolInverted(void* aTransform, nsIPrefBranch* aBranch);
+  static nsresult SetString(void* aTransform, nsIPrefBranch* aBranch);
+  static nsresult SetInt(void* aTransform, nsIPrefBranch* aBranch);
+  static nsresult SetDownloadFolder(void* aTransform, nsIPrefBranch* aBranch);
+  static nsresult SetDownloadHandlers(void* aTransform, nsIPrefBranch* aBranch);
+  static nsresult SetDownloadRetention(void* aTransform, nsIPrefBranch* aBranch);
+  static nsresult SetGoogleBar(void* aTransform, nsIPrefBranch* aBranch);
+  static void CleanResource(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource);
+
 protected:
   nsresult CopyPreferences(PRBool aReplace);
   nsresult CopyCookies(PRBool aReplace);
