@@ -83,6 +83,8 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
 
+#define NS_SUCCESS_IGNORE_NOTIFICATION 0x00000666
+
 class DataRequestForwarder : public nsIFTPChannel, 
                              public nsIStreamListener,
                              public nsIInterfaceRequestor,
@@ -302,9 +304,6 @@ DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     if (!mListener)
         return NS_ERROR_NOT_INITIALIZED;
 
-    if (mUploading)
-        return mListener->OnStartRequest(this, ctxt);     
-
     return NS_OK;
 }
 
@@ -313,7 +312,7 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStopRequest [status=%x, mRetrying=%d]\n", this, statusCode, mRetrying)); 
 
-    if (mRetrying)
+    if (mRetrying || statusCode == NS_SUCCESS_IGNORE_NOTIFICATION)
         return NS_OK;
 
     // If there were no calls to ODA, then the onstart won't have been
@@ -333,9 +332,6 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
         if (sTrans)
             sTrans->SetReuseConnection(PR_FALSE);
     }
-
-    if (mUploading)
-        request->Cancel(NS_OK);
 
     if (!mListener)
         return NS_ERROR_NOT_INITIALIZED;
@@ -382,6 +378,14 @@ DataRequestForwarder::OnProgress(nsIRequest *request, nsISupports* aContext,
                                   PRUint32 aProgress, PRUint32 aProgressMax) {
     if (!mEventSink)
         return NS_OK;
+
+    // we want to delay firing the onStartRequest until we know that there is data
+    if (!mDelayedOnStartFired) { 
+        mDelayedOnStartFired = PR_TRUE;
+        nsresult rv = DelayedOnStartRequest(request, aContext);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "DelayedOnStartRequest failed");
+    }
+    
     PRUint32 count = mUploading ? aProgress : mBytesTransfered;
     PRUint32 max   = mUploading ? aProgressMax : 0;
     return mEventSink->OnProgress(this, nsnull, count, max);
@@ -1578,12 +1582,27 @@ nsFtpState::R_rest() {
 nsresult
 nsFtpState::S_stor() {
     NS_ASSERTION(mWriteStream, "we're trying to upload without any data");
+
     if (!mWriteStream)
         return NS_ERROR_FAILURE;
 
-    nsCAutoString storStr(mPath.get());
-    if (storStr.IsEmpty() || storStr.First() != '/')
-        storStr.Insert(mPwd,0);
+    NS_ASSERTION(mAction == PUT, "Wrong state to be here");
+    
+    nsCAutoString storStr;
+    nsresult rv;
+    nsCOMPtr<nsIURL> aURL(do_QueryInterface(mURL, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aURL->GetFilePath(storStr);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(!storStr.IsEmpty(), "What does it mean to store a empty path");
+        
+    if (storStr.First() == '/')
+    {
+        // kill the first slash since we want to be relative to CWD.
+        storStr.Cut(0,1);
+    }
+    NS_UnescapeURL(storStr);
     storStr.Insert("STOR ",0);
     storStr.Append(CRLF);
 
@@ -1602,10 +1621,18 @@ nsFtpState::R_stor() {
         PRUint32 len;
         mWriteStream->Available(&len);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) writing on Data Transport\n", this));
+        
+        // Close the read pipe since we are going to be writing data.
+        if (mDPipeRequest)
+            mDPipeRequest->Cancel(NS_SUCCESS_IGNORE_NOTIFICATION);
+    
         nsresult rv = NS_AsyncWriteFromStream(getter_AddRefs(mDPipeRequest), 
                                               mDPipe, 
-                                              mWriteStream, 0, len,
-                                              0, mDRequestForwarder);
+                                              mWriteStream, 
+                                              0, 
+                                              len,
+                                              0, 
+                                              mDRequestForwarder);
         if (NS_FAILED(rv)) return FTP_ERROR;
         return FTP_READ_BUF;
     }
