@@ -578,8 +578,8 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
       <qandaentry>
 	<question id="faq-email-whine">
 	  <para>
-	    I want whineatnews.pl to whine at something different to only new
-	    bugs. How do I do it?
+	    I want whineatnews.pl to whine at something other than new and
+	    reopened bugs. How do I do it?
 	  </para>
 	</question>
 	<answer>
