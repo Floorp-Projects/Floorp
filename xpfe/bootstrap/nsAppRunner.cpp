@@ -428,6 +428,28 @@ int main(int argc, char* argv[])
           urlstr = "chrome://messenger/content/";
       }
     }
+    if (nsnull == urlstr)
+    {
+      rv = cmdLineArgs->GetCmdLineValue("-msgcompose", &cmdResult);
+      if (NS_SUCCEEDED(rv))
+      {
+        if (cmdResult && (strcmp("1",cmdResult)==0))
+        {
+          urlstr = "chrome://messengercompose/content/";
+          useArgs = PR_TRUE;
+          withArgs = "chrome://editor/content/EditorInitPage.html";
+       }
+     }
+    }
+    if (nsnull == urlstr)
+    {
+      rv = cmdLineArgs->GetCmdLineValue("-addressbook", &cmdResult);
+      if (NS_SUCCEEDED(rv))
+      {
+        if (cmdResult && (strcmp("1",cmdResult)==0))
+          urlstr = "chrome://addressbook/content/";
+      }
+    }
     if (nsnull == urlstr) { 
       rv = cmdLineArgs->GetCmdLineValue("-chrome", &cmdResult); 
       if (NS_SUCCEEDED(rv) && cmdResult) { 
@@ -522,55 +544,24 @@ int main(int argc, char* argv[])
     goto done;			// don't use goto in C++!
   }
 
-  /* ********************************************************************* */
-  /* This is a temporary hack to get mail working with autoregistration
-   * This won't succeed unless messenger was found
-   * through autoregistration, and will go away when the service manager
-     * is accessable from JavaScript
-     */
-  /* Comments/questions to alecf@netscape.com */
+
+  // Support the "-pref" command-line option, which just puts up the pref window, so that
+  // apprunner becomes a "control panel". The "OK" and "Cancel" buttons will quit
+  // the application.
+  rv = cmdLineArgs->GetCmdLineValue("-pref", &cmdResult);
+  if (NS_SUCCEEDED(rv) && cmdResult && (strcmp("1",cmdResult) == 0))
   {
-	/*MESSENGER*/
-    nsCOMPtr<nsIAppShellComponent> messenger;
-    //const char *messengerProgID = "component://netscape/messenger";
-    nsresult result;
-
-    /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
-#define NS_MESSENGERBOOTSTRAP_CID                 \
-    { /* 4a85a5d0-cddd-11d2-b7f6-00805f05ffa5 */      \
-      0x4a85a5d0, 0xcddd, 0x11d2,                     \
-      {0xb7, 0xf6, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
-
-    NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGERBOOTSTRAP_CID);
-    
-    result = nsComponentManager::CreateInstance(kCMessengerBootstrapCID,
-                                                nsnull,
-                                                nsIAppShellComponent::GetIID(),
-                                                getter_AddRefs(messenger));
-    if (NS_SUCCEEDED(result)) 
-      result = messenger->Initialize(appShell, cmdLineArgs);
- 
-	/*COMPOSER*/
-    nsCOMPtr<nsIAppShellComponent> composer;
-      //const char *composerProgID = "component://netscape/composer";
-
-    /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
-#define NS_COMPOSERBOOTSTRAP_CID                 \
-	{ /* 82041531-D73E-11d2-82A9-00805F2A0107 */      \
-		0x82041531, 0xd73e, 0x11d2,                     \
-		{0x82, 0xa9, 0x0, 0x80, 0x5f, 0x2a, 0x1, 0x7}}
-
-    NS_DEFINE_CID(kCComposerBootstrapCID, NS_COMPOSERBOOTSTRAP_CID);
-    
-    result = nsComponentManager::CreateInstance(kCComposerBootstrapCID,
-                                                nsnull,
-                                                nsIAppShellComponent::GetIID(),
-                                                getter_AddRefs(composer));
-    if (NS_SUCCEEDED(result)) 
-		result = composer->Initialize(appShell, cmdLineArgs);
+    nsIPrefWindow* prefWindow;
+    rv = nsComponentManager::CreateInstance(
+	  NS_PREFWINDOW_PROGID,
+      nsnull,
+      nsIPrefWindow::GetIID(),
+      (void **)&prefWindow);
+	if (NS_SUCCEEDED(rv))
+	  prefWindow->showWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
+	NS_IF_RELEASE(prefWindow);
+	goto done;
   }
-  /* End of mailhack */
-  /* ********************************************************************* */
 
   // Kick off appcores
   rv = nsServiceManager::GetService(kAppCoresManagerCID,
