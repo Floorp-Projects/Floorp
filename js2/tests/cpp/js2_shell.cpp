@@ -109,8 +109,8 @@ static void genCode(World &world, Context &cx, StmtNode *p)
         p = p->next;
     }
     icg.returnStmt(ret);
-    stdOut << '\n';
-    stdOut << icg;
+//    stdOut << '\n';
+//    stdOut << icg;
     JSValue result = cx.interpret(icg.complete(), JSValues());
     stdOut << "result = " << result << "\n";
 }
@@ -290,11 +290,39 @@ static float64 testFactorial(World &world, float64 n)
         
     return result.f64;
 }
+
+char * tests[] = {
+    "function fact(n) { if (n > 1) return n * fact(n-1); else return 1; } print(fact(6), \" should be 720\"); return;" ,
+    "a = { f1: 1, f2: 2}; print(a.f2++, \" should be 2\"); print(a.f2 <<= 1, \" should be 6\"); return;"
+};
+
+void testCompile()
+{
+    JSScope glob;
+    Context cx(world, &glob);
+    StringAtom& printName = world.identifiers[widenCString("print")];
+    glob.defineNativeFunction(printName, print);
+
+    for (int i = 0; i < sizeof(tests) / sizeof(char *); i++) {
+        String testScript = widenCString(tests[i]);
+        Arena a;
+        Parser p(world, a, testScript, widenCString("testCompile"));
+        StmtNode *parsedStatements = p.parseProgram();
     
+        ICodeGenerator icg(&world);
+        icg.isScript();
+        while (parsedStatements) {
+            icg.genStmt(parsedStatements);
+            parsedStatements = parsedStatements->next;
+        }
+        cx.interpret(icg.complete(), JSValues());
+    }
+}
 
 
 } /* namespace Shell */
 } /* namespace JavaScript */
+
 
 
 int main(int argc, char **argv)
@@ -306,6 +334,7 @@ int main(int argc, char **argv)
     using namespace Shell;
   #if 0
     assert(testFactorial(world, 5) == 120);
+    testCompile();
   #endif
     readEvalPrint(stdin, world);
     return 0;
