@@ -256,8 +256,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
         popupChild->GetView(aState.GetPresContext(), &view);
         nsCOMPtr<nsIViewManager> viewManager;
         view->GetViewManager(*getter_AddRefs(viewManager));
-        nsRect r(0, 0, bounds.width, bounds.height);
-        viewManager->ResizeView(view, r);
+        viewManager->ResizeView(view, bounds.width, bounds.height);
         viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
       }
     }
@@ -511,8 +510,7 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
           nsCOMPtr<nsIViewManager> viewManager;
           view->GetViewManager(*getter_AddRefs(viewManager));
           viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-          nsRect r(0, 0, 0, 0);
-          viewManager->ResizeView(view, r);
+          viewManager->ResizeView(view, 0, 0);
         }
       }
     }

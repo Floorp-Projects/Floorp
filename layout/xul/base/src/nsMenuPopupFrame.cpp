@@ -187,22 +187,26 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   nsIView* ourView;
   GetView(aPresContext, &ourView);
 
+  nsIFrame* parent;
+  GetParentWithView(aPresContext, &parent);
+  nsIView* parentView;
+  parent->GetView(aPresContext, &parentView);
+
   nsCOMPtr<nsIViewManager> viewManager;
-  ourView->GetViewManager(*getter_AddRefs(viewManager));
+  parentView->GetViewManager(*getter_AddRefs(viewManager));
 
   // Remove the view from its old position.
-  viewManager->RemoveChild(ourView);
+  viewManager->RemoveChild(parentView, ourView);
 
   // Reinsert ourselves as the root view with a maximum z-index.
   nsIView* rootView;
   viewManager->GetRootView(rootView);
-  viewManager->SetViewZIndex(ourView, PR_FALSE, kMaxZ);
-  viewManager->InsertChild(rootView, ourView, nsnull, PR_TRUE);
+  viewManager->InsertChild(rootView, ourView, kMaxZ);
 
   // XXX Hack. The menu's view should float above all other views,
   // so we use the nsIView::SetFloating() to tell the view manager
   // about that constraint.
-  viewManager->SetViewFloating(ourView, PR_TRUE);
+  ourView->SetFloating(PR_TRUE);
 
   // XXX Hack. Change our transparency to be non-transparent
   // until the bug related to update of transparency on show/hide
@@ -211,11 +215,12 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
 
   // Create a widget for ourselves.
   nsWidgetInitData widgetData;
+  ourView->SetZIndex(kMaxZ);
   widgetData.mWindowType = eWindowType_popup;
   widgetData.mBorderStyle = eBorderStyle_default;
 
   // XXX make sure we are hidden (shouldn't this be done automatically?)
-  viewManager->SetViewVisibility(ourView, nsViewVisibility_kHide);
+  ourView->SetVisibility(nsViewVisibility_kHide);
 #if defined(XP_MAC) || defined(XP_MACOSX)
   printf("XP Popups: This is a nag to indicate that an inconsistent hack is being done on the Mac for popups.\n");
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);

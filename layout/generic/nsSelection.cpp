@@ -7189,8 +7189,7 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
     if (NS_FAILED(result))
       return result;
 
-    result = clipView->GetBounds(clipRect);
-    clipRect.x = clipRect.y = 0;
+    result = clipView->GetDimensions(&clipRect.width, &clipRect.height);
 
     if (NS_FAILED(result))
       return result;
@@ -7250,9 +7249,9 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
   const nsIView*  clipView;
   nsRect          visibleRect;
 
-  aScrollableView->GetClipView(&clipView);
-  clipView->GetBounds(visibleRect);
   aScrollableView->GetScrollPosition(visibleRect.x, visibleRect.y);
+  aScrollableView->GetClipView(&clipView);
+  clipView->GetDimensions(&visibleRect.width, &visibleRect.height);
 
   // The actual scroll offsets
   nscoord scrollOffsetX = visibleRect.x;

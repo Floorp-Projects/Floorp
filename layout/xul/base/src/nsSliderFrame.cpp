@@ -133,9 +133,7 @@ nsSliderFrame::Init(nsIPresContext*  aPresContext,
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
   GetView(aPresContext, &view);
-  nsCOMPtr<nsIViewManager> vm;
-  view->GetViewManager(*getter_AddRefs(vm));
-  vm->SetViewContentTransparency(view, PR_TRUE);
+  view->SetContentTransparency(PR_TRUE);
   // XXX Hack
   mPresContext = aPresContext;
   return rv;

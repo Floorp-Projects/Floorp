@@ -47,6 +47,7 @@
 #include "nsIScrollableView.h"
 #include "nsIFrame.h"
 #include "nsILookAndFeel.h"
+#include "nsIClipView.h"
 #include "nsISupportsArray.h"
 #include "nsIScrollPositionListener.h"
 #include "nsIRegion.h"
@@ -426,7 +427,7 @@ NS_IMETHODIMP nsScrollPortView::SetScrolledView(nsIView *aScrolledView)
   if (count == 1)
   {
     nsView* child = GetFirstChild();
-    mViewManager->RemoveChild(child);
+     mViewManager->RemoveChild(this, child);
   }
 
   return mViewManager->InsertChild(this, aScrolledView, 0);
@@ -504,8 +505,9 @@ NS_IMETHODIMP nsScrollPortView::ScrollByWhole(PRBool aTop)
 
   if (!aTop) {
     nsSize scrolledSize;
-    nsView* scrolledView = GetScrolledView();
-    scrolledView->GetDimensions(&scrolledSize.width, &scrolledSize.height);
+    nsIView* scrolledView = nsnull;
+    GetScrolledView(scrolledView);
+	scrolledView->GetDimensions(&scrolledSize.width, &scrolledSize.height);
     newPos = scrolledSize.height;
   }
 
@@ -526,7 +528,7 @@ PRBool nsScrollPortView::CannotBitBlt(nsView* aScrolledView)
 
   return ((trans || opacity) && !(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)) ||
          (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
-         (scrolledViewFlags & NS_VIEW_FLAG_DONT_BITBLT);
+         (scrolledViewFlags & NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
 }
 
 

@@ -2615,7 +2615,9 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
         // If the frame has a fixed background attachment, then indicate that the
         // view's contents should be repainted and not bitblt'd
         if (fixedBackgroundAttachment) {
-          viewManager->SetViewBitBltEnabled(view, PR_FALSE);
+          PRUint32  viewFlags;
+          view->GetViewFlags(&viewFlags);
+          view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
         }
         
         // Insert the view into the view hierarchy. If the parent view is a
@@ -2624,9 +2626,11 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
         if (NS_SUCCEEDED(parentView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
           scrollingView->SetScrolledView(view);
         } else {
-          viewManager->SetViewZIndex(view, autoZIndex, zIndex);
-          // XXX put view last in document order until we can do better
-          viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
+          viewManager->InsertChild(parentView, view, zIndex);
+
+          if (autoZIndex) {
+            viewManager->SetViewAutoZIndex(view, PR_TRUE);
+          }
         }
 
         // See if the view should be hidden
@@ -2679,7 +2683,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
           }
 
         } else {
-          viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+          view->SetVisibility(nsViewVisibility_kHide);
         }
 
         viewManager->SetViewOpacity(view, vis->mOpacity);

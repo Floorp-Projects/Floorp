@@ -519,13 +519,8 @@ nsFormControlFrame::DidReflow(nsIPresContext* aPresContext,
       nsViewVisibility oldVis;
       // only change if different.
       view->GetVisibility(oldVis);
-      if (newVis != oldVis) {
-        nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
-        if (vm) {
-          vm->SetViewVisibility(view, newVis);
-        }
-      }
+      if (newVis != oldVis) 
+        view->SetVisibility(newVis);
     }
   }
   

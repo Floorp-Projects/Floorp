@@ -281,7 +281,7 @@ void nsXPBaseWindow::ForceRefresh()
       nsIView* root;
       vm->GetRootView(root);
       if (nsnull != root) {
-        vm->UpdateView(root, NS_VMREFRESH_IMMEDIATE);
+        vm->UpdateView(root, NS_VMREFRESH_IMMEDIATE | NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
       }
     }
     NS_RELEASE(shell);

@@ -38,6 +38,13 @@
 #ifndef nsIClipView_h___
 #define nsIClipView_h___
 
+#include "nsISupports.h"
+
+// IID for the nsIClipView interface
+#define NS_ICLIPVIEW_IID    \
+{ 0x4cc36160, 0xd282, 0x11d2, \
+{ 0x90, 0x67, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 } }
+
 /**
  * this is here so that we can query a view to see if it
  * exists for clipping.
@@ -82,5 +89,10 @@
  *             But a bugger when he's pissed
  *
  */
+class nsIClipView : public nsISupports
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICLIPVIEW_IID)
+};
 
 #endif

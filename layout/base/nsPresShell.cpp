@@ -4147,9 +4147,9 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
       const nsIView*  clipView;
       nsRect          visibleRect;
 
-      scrollingView->GetClipView(&clipView);
-      clipView->GetBounds(visibleRect); // get width and height
       scrollingView->GetScrollPosition(visibleRect.x, visibleRect.y);
+      scrollingView->GetClipView(&clipView);
+      clipView->GetDimensions(&visibleRect.width, &visibleRect.height);
 
       // The actual scroll offsets
       nscoord scrollOffsetX = visibleRect.x;

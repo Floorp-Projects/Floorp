@@ -726,9 +726,7 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
     viewMan->AllowDoubleBuffering(doubleBuffer);
 #endif
 
-    // XXX Put this last in document order
-    // XXX Should we be setting the z-index here?
-    viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
+    viewMan->InsertChild(parView, view, 0);
 
     if(aViewOnly != PR_TRUE) {
 
@@ -767,11 +765,9 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
 
     nsIView* parentWithView;
     nsPoint origin;
-    nsRect r(0, 0, mRect.width, mRect.height);
-
-    viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
+    view->SetVisibility(nsViewVisibility_kShow);
     GetOffsetFromView(aPresContext, origin, &parentWithView);
-    viewMan->ResizeView(view, r);
+    viewMan->ResizeView(view, mRect.width, mRect.height);
     viewMan->MoveViewTo(view, origin.x, origin.y);
   }
 
@@ -1511,11 +1507,7 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
     nsIView* view = nsnull;
     GetView(aPresContext, &view);
     if (nsnull != view) {
-      nsCOMPtr<nsIViewManager> vm;
-      view->GetViewManager(*getter_AddRefs(vm));
-      if (vm) {
-        vm->SetViewVisibility(view, nsViewVisibility_kShow);
-      }
+      view->SetVisibility(nsViewVisibility_kShow);
     }
 
     if (nsnull != mInstanceOwner) {
@@ -3619,12 +3611,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           view->GetWidget(mWidget);
           PRBool fTransparent;
           mInstance->GetValue(nsPluginInstanceVariable_TransparentBool, (void *)&fTransparent);
-          
-          nsCOMPtr<nsIViewManager> vm;
-          view->GetViewManager(*getter_AddRefs(vm));
-          if (vm) {
-            vm->SetViewContentTransparency(view, fTransparent);
-          }
+          view->SetContentTransparency(fTransparent);
         }
 
         if (PR_TRUE == windowless)

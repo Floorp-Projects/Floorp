@@ -3119,12 +3119,7 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell,
                     scrollableView->GetScrolledView(view);
                 }
 
-                nsRect r;
-                result = view->GetBounds(r);
-                if (NS_SUCCEEDED(result)) {
-                    size.height = r.height;
-                    size.width = r.width;
-                }
+                result = view->GetDimensions(&size.width, &size.height);
             }
             // If we don't have a view, use the frame size
             else {
