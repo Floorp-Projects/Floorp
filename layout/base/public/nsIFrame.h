@@ -591,7 +591,7 @@ public:
    * Accessor functions for geometric parent
    */
   nsresult GetParent(nsIFrame** aParent) const { *aParent = mParent; return NS_OK; }
-  nsresult SetParent(const nsIFrame* aParent) { mParent = (nsIFrame*)aParent; return NS_OK; }
+  NS_IMETHOD SetParent(const nsIFrame* aParent) { mParent = (nsIFrame*)aParent; return NS_OK; }
 
   /**
    * Bounding rect of the frame. The values are in twips, and the origin is
