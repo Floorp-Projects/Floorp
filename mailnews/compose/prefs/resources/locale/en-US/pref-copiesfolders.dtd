@@ -23,7 +23,7 @@ Rights Reserved.
 <!ENTITY sendMsg.label "When sending a mail message, automatically">
 <!ENTITY place.label "Place a copy in FOLDER">
 <!ENTITY bccEmail.label "BCC: EMAIL">
-<!ENTITY bccOther.label "BCC Other Address:">
+<!ENTITY bccOther.label "BCC Other address:">
 <!ENTITY senNews.label "When sending a newsgroup message, automatically">
 <!ENTITY storage.label "Storage for Drafts and Templates">
 <!ENTITY keepDraft.label "Keep Draft in FOLDER">
