@@ -220,6 +220,7 @@ sub DistMozilla()
 		InstallFromManifest(":mozilla:network:cstream:MANIFEST",					":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:main:MANIFEST",							":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:mimetype:MANIFEST",							":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:util:MANIFEST",							":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:about:MANIFEST",		":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:certld:MANIFEST",	":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:dataurl:MANIFEST",	":mozilla:dist:network:");
