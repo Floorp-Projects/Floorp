@@ -159,7 +159,7 @@ public:
                      const nsAReadableString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLLeafFormElement::SetAttr(aNameSpaceID, aName,
                                                         aValue, aNotify);
-    if (aName == nsHTMLAtoms::value && !mValueChanged) {
+    if (aName == nsHTMLAtoms::value && !mValueChanged && mParent) {
       Reset();
     }
     return rv;
