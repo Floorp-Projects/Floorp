@@ -81,6 +81,8 @@ public:
   NS_IMETHOD SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0; 
   NS_IMETHOD SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
   NS_IMETHOD SelectAll()=0;
+  NS_IMETHOD BeginningOfDocument()=0;
+  NS_IMETHOD EndOfDocument()=0;
   NS_IMETHOD ScrollUp(nsIAtom *aIncrement)=0;
   NS_IMETHOD ScrollDown(nsIAtom *aIncrement)=0;
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
@@ -172,7 +174,7 @@ public:
   // This should replace InsertLink and InsertImage once it is working
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
-  NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)=0;
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)=0;
   NS_IMETHOD SelectElement(nsIDOMElement* aElement)=0;
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement)=0;

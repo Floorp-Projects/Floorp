@@ -511,15 +511,12 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       // Hardcoded Insert Arbitrary HTML
         else if (PR_TRUE==altKey)
         {
-          printf("Trying to insert HTML\n");
           aProcessed=PR_TRUE;
           nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(mEditor));
           if (htmlEditor)
           {
-            nsString nsstr ("<b>This is bold <em>and emphasized</em></b>");
-            nsresult res = htmlEditor->InsertHTML(nsstr);
-            if (!NS_SUCCEEDED(res))
-              printf("nsTextEditor::InsertHTML(string) failed\n");
+            nsString nsstr ("This is <b>bold <em>and emphasized</em></b> text");
+            htmlEditor->InsertHTML(nsstr);
           }
         }
         break;

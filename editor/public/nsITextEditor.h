@@ -249,6 +249,12 @@ public:
   /** select the entire contents of the document */
   NS_IMETHOD SelectAll()=0;
 
+  /** sets the document selection to the beginning of the document */
+  NS_IMETHOD BeginningOfDocument()=0;
+
+  /** sets the document selection to the end of the document */
+  NS_IMETHOD EndOfDocument()=0;
+
   /** Respond to the menu 'Save' command; this may put up save UI if the document
     * hasn't been saved yet.
    */

@@ -1179,6 +1179,16 @@ NS_IMETHODIMP nsTextEditor::SelectAll()
   return nsEditor::SelectAll();
 }
 
+NS_IMETHODIMP nsTextEditor::BeginningOfDocument()
+{
+  return nsEditor::BeginningOfDocument();
+}
+
+NS_IMETHODIMP nsTextEditor::EndOfDocument()
+{
+  return nsEditor::EndOfDocument();
+}
+
 NS_IMETHODIMP nsTextEditor::ScrollUp(nsIAtom *aIncrement)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

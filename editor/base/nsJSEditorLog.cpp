@@ -315,6 +315,28 @@ nsJSEditorLog::SelectAll()
 }
 
 NS_IMETHODIMP
+nsJSEditorLog::BeginningOfDocument()
+{
+  if (mLocked)
+    return NS_OK;
+
+  printf("appCore.BeginningOfDocument();\n");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSEditorLog::EndOfDocument()
+{
+  if (mLocked)
+    return NS_OK;
+
+  printf("appCore.EndOfDocument();\n");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJSEditorLog::ScrollUp(nsIAtom *aIncrement)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

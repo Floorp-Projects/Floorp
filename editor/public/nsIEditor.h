@@ -334,6 +334,12 @@ public:
   /** sets the document selection to the entire contents of the document */
   NS_IMETHOD SelectAll()=0;
 
+  /** sets the document selection to the beginning of the document */
+  NS_IMETHOD BeginningOfDocument()=0;
+
+  /** sets the document selection to the end of the document */
+  NS_IMETHOD EndOfDocument()=0;
+
   /** cut the currently selected text, putting it into the OS clipboard
     * What if no text is selected?
     * What about mixed selections?
