@@ -43,27 +43,6 @@ PRLock *_pr_dnsLock = NULL;
 #define UNLOCK_DNS() PR_Unlock(_pr_dnsLock)
 #endif  /* defined(_PR_NO_PREEMPT) */
 
-#if defined(XP_UNIX)
-#include <signal.h>
-
-/*
-** Unix's, as a rule, have a bug in their select code: if a timer
-** interrupt occurs and you have SA_RESTART set on your signal, select
-** forgets how much time has elapsed and restarts the system call from
-** the beginning. This can cause a call to select to *never* time out.
-**
-** Because we aren't certain that select is wrapped properly in this code
-** we disable the clock while a dns operation is occuring. This sucks and
-** can be tossed when implement our own dns code that calls our own
-** PR_Poll.
-*/
-
-static sigset_t timer_set;
-#define DISABLECLOCK(_set)    sigprocmask(SIG_BLOCK, &timer_set, _set)
-#define ENABLECLOCK(_set)    sigprocmask(SIG_SETMASK, _set, 0)
-
-#endif /* XP_UNIX */
-
 /*
  * Some platforms have the reentrant getprotobyname_r() and
  * getprotobynumber_r().  However, they come in two flavors.
@@ -154,8 +133,6 @@ void _PR_InitNet(void)
 	 */
 	 (void)setnetconfig();
 #endif
-	sigemptyset(&timer_set);
-	sigaddset(&timer_set, SIGALRM);
 #endif
 #if !defined(_PR_NO_PREEMPT)
 	_pr_dnsLock = PR_NewLock();
@@ -347,15 +324,9 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
 {
 	struct hostent *h;
 	PRStatus rv = PR_FAILURE;
-#ifdef XP_UNIX
-	sigset_t oldset;
-#endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-#ifdef XP_UNIX
-	DISABLECLOCK(&oldset);
-#endif
 	LOCK_DNS();
 
 #ifdef XP_OS2_VACPP
@@ -376,9 +347,6 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
 		    PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
 	}
 	UNLOCK_DNS();
-#ifdef XP_UNIX
-	ENABLECLOCK(&oldset);
-#endif
 	return rv;
 }
 
@@ -399,9 +367,6 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 {
 	struct hostent *h = 0;
 	PRStatus rv = PR_FAILURE;
-#ifdef XP_UNIX
-	sigset_t oldset;
-#endif
 #if defined(_PR_HAVE_GETIPNODEBYNAME)
 	PRUint16 md_af = af;
 	int error_num;
@@ -420,9 +385,6 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
         return PR_FAILURE;
     }
 
-#ifdef XP_UNIX
-	DISABLECLOCK(&oldset);
-#endif
 	LOCK_DNS();
 
 #if defined(_PR_HAVE_GETIPNODEBYNAME)
@@ -536,9 +498,6 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 	}
 
 	UNLOCK_DNS();
-#ifdef XP_UNIX
-	ENABLECLOCK(&oldset);
-#endif
 	return rv;
 }
 
@@ -551,18 +510,12 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 	PRUint32 tmp_ip;
 	int addrlen;
 	PRInt32 af;
-#ifdef XP_UNIX
-	sigset_t oldset;
-#endif
 #if defined(_PR_HAVE_GETIPNODEBYADDR)
 	int error_num;
 #endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-#ifdef XP_UNIX
-	DISABLECLOCK(&oldset);
-#endif
 	LOCK_DNS();
 	if (hostaddr->raw.family == PR_AF_INET6)
 	{
@@ -662,9 +615,6 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 #endif
 	}
 	UNLOCK_DNS();
-#ifdef XP_UNIX
-	ENABLECLOCK(&oldset);
-#endif
 	return rv;
 }
 
