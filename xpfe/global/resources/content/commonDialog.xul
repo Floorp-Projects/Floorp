@@ -1,56 +1,74 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/commonDialog.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://global/locale/commonDialog.dtd">
 
- <window
+<window
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+  style="max-width: 400px;"
 	align="vertical"
 	onload="commonDialogOnLoad()"
 	class="dialog"> 
     
-    <html:script language="JavaScript" src="chrome://global/content/commonDialog.js" />
+  <html:script language="JavaScript" src="chrome://global/content/commonDialog.js" />
     
-	<keyset id="keyset"/>
+  <keyset id="keyset"/>
 
-    <box align="horizontal" flex="100%" style="width: 36em;">
-		<html:div style="width: 40px; margin: 5px;">
-			<html:img id="info.icon" src="chrome://global/skin/message-icon.gif" width="32" height="32" border="0"/>
-		</html:div>
-
-		<box align="vertical" flex="100%">
-				<html:div id="info.header" style="margin-left:2em; margin-right:2em; margin-top:5px; font-size: 110%; font-weight: bold;">
-					&header.label;
-				</html:div>
-				<html:div id="info.txt" style="margin-left:2em; margin-right:2em; margin-top:5px;" flex="100%">
-					
-				</html:div>
+  <box id="wrapper" style="min-width: 260px;">
+  	<box class="icon" align="vertical">
+      <box>
+        <spring flex="1"/>
+        <html:div>
+          <titledbutton id="icon" class="message-icon plain"/>
+        </html:div>
+        <spring flex="1"/>
+      </box>
+      <spring flex="1"/>
+    </box>
+		<box align="vertical" id="content" flex="100%">
+      <html:div id="info.header">&header.label;</html:div>
+      <html:div id="info.txt"/>
+      <html:table id="editFields" cellpadding="0" cellspacing="0" style="width: 100%;">
+        <html:tr id="loginEditField">
+          <html:td id="login.text">
+            <html:label for="dialog.loginname">&editfield0.label;</html:label>
+          </html:td>
+          <html:td style="width: 100%">
+      	    <html:input accesskey="u" tabindex="0" type="text" id="dialog.loginname" flex="100%" style="width: 100%;"/>
+          </html:td>
+        </html:tr>
+        <html:tr id="password1EditField">
+          <html:td id="password1.text">
+            <html:label for="dialog.password1">&editfield2.label;</html:label>
+          </html:td>
+          <html:td>
+      	    <html:input accesskey="p" tabindex="1" type="password" id="dialog.password1" style="width: 100%"/>
+          </html:td>
+        </html:tr>
+        <html:tr id="password2EditField">
+          <html:td id="password2.text">
+            <html:label for="dialog.password2">&editfield2.label;</html:label>
+          </html:td>
+          <html:td>
+      	    <html:input accesskey="p" tabindex="1" type="password" id="dialog.password2" style="width: 100%"/>
+          </html:td>
+        </html:tr>
+        <html:tr id="checkboxLabel">
+          <html:td/>
+          <html:td>
+            <html:label for="checkbox" onclick="onCheckboxClick();">
+              <html:input type="checkbox" id="checkbox" />
+              &checkbox.label;
+            </html:label>		
+          </html:td>
+        </html:tr>
+      </html:table>
+        
 		</box>
 	</box>
-
-	<box id="editFields" align="vertical" >
-		<box align="horizontal" id="loginEditField"  >
-			<html:div style="min-width: 6em;" id="login.text">&editfield0.label;</html:div>
-			<html:input accesskey="u" tabindex="0" type="text" id="dialog.loginname" flex="100%"/>
-		</box>
-
-		<box align="horizontal"  id ="password1EditField">
-			<html:div style="min-width: 6em;" id="password1.text">&editfield1.label;</html:div>
-			<html:input accesskey="p" tabindex="1" type="password" id="dialog.password1" flex="100%"/>
-		</box>
-
-		<box align="horizontal"  id ="password2EditField">
-			<html:div style="min-width: 6em;" id="password2.text">&editfield2.label;</html:div>
-			<html:input accesskey="p" tabindex="1" type="password" id="dialog.password2" flex="100%"/>
-		</box>
-	</box>
-
-
-	<html:label id="checkboxLabel"  onclick="onCheckboxClick()" >
-  		 <html:input type="checkbox" id="checkbox" />
-  		 &checkbox.label;
-    </html:label>		
+  <html:div class="separator" align="horizontal"/>
 	<box id="okCancelButtons"/>
 </window>
