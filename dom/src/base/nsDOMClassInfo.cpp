@@ -913,6 +913,7 @@ jsval nsDOMClassInfo::sOnreset_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnchange_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnselect_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnload_id          = JSVAL_VOID;
+jsval nsDOMClassInfo::sOnbeforeunload_id  = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnunload_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnabort_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnerror_id         = JSVAL_VOID;
@@ -1017,6 +1018,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOnchange_id,        cx, "onchange");
   SET_JSVAL_TO_STRING(sOnselect_id,        cx, "onselect");
   SET_JSVAL_TO_STRING(sOnload_id,          cx, "onload");
+  SET_JSVAL_TO_STRING(sOnbeforeunload_id,  cx, "onbeforeunload");
   SET_JSVAL_TO_STRING(sOnunload_id,        cx, "onunload");
   SET_JSVAL_TO_STRING(sOnabort_id,         cx, "onabort");
   SET_JSVAL_TO_STRING(sOnerror_id,         cx, "onerror");
@@ -2901,6 +2903,7 @@ nsDOMClassInfo::ShutDown()
   sOnchange_id        = JSVAL_VOID;
   sOnselect_id        = JSVAL_VOID;
   sOnload_id          = JSVAL_VOID;
+  sOnbeforeunload_id  = JSVAL_VOID;
   sOnunload_id        = JSVAL_VOID;
   sOnabort_id         = JSVAL_VOID;
   sOnerror_id         = JSVAL_VOID;
@@ -4580,15 +4583,16 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
   case 'a' :
     return id == sOnabort_id;
   case 'b' :
-    return id == sOnblur_id;
+    return (id == sOnbeforeunload_id ||
+            id == sOnblur_id);
   case 'e' :
     return id == sOnerror_id;
   case 'f' :
     return id == sOnfocus_id;
   case 'c' :
-    return ((id == sOnchange_id)    ||
-            (id == sOnclick_id)     ||
-            (id == sOncontextmenu_id));
+    return (id == sOnchange_id       ||
+            id == sOnclick_id        ||
+            id == sOncontextmenu_id);
   case 'd' :
     return id == sOndblclick_id;
   case 'l' :
@@ -4596,24 +4600,24 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
   case 'p' :
     return id == sOnpaint_id;
   case 'k' :
-    return ((id == sOnkeydown_id)   ||
-            (id == sOnkeypress_id)  ||
-            (id == sOnkeyup_id));
+    return (id == sOnkeydown_id      ||
+            id == sOnkeypress_id     ||
+            id == sOnkeyup_id);
   case 'u' :
     return id == sOnunload_id;
   case 'm' :
-    return ((id == sOnmousemove_id) ||
-            (id == sOnmouseout_id)  ||
-            (id == sOnmouseover_id) ||
-            (id == sOnmouseup_id)   ||
-            (id == sOnmousedown_id));
+    return (id == sOnmousemove_id    ||
+            id == sOnmouseout_id     ||
+            id == sOnmouseover_id    ||
+            id == sOnmouseup_id      ||
+            id == sOnmousedown_id);
   case 'r' :
-    return ((id == sOnreset_id)     ||
-            (id == sOnresize_id));
+    return (id == sOnreset_id        ||
+            id == sOnresize_id);
   case 's' :
-    return ((id == sOnscroll_id)    ||
-            (id == sOnselect_id)    ||
-            (id == sOnsubmit_id));
+    return (id == sOnscroll_id       ||
+            id == sOnselect_id       ||
+            id == sOnsubmit_id);
   }
 
   return PR_FALSE;
