@@ -209,7 +209,7 @@ PUBLIC const char *INTL_PlatformIdToISOCode(unsigned short platformIdNum, char *
 PUBLIC char *INTL_GetLanguageCountry(INTL_LanguageCountry_Selector selector)
 {
 /* return constants until FE implemented */
-#if 0
+#if defined(XP_WIN)
 	return FE_GetLanguageCountry(selector);
 #else
 	switch (selector)
@@ -233,3 +233,153 @@ PUBLIC char *INTL_GetLanguageCountry(INTL_LanguageCountry_Selector selector)
 	}
 #endif
 }
+
+/* FE implementations, for now put them here for potability. */
+#if defined(XP_WIN)
+/* Definitions of states to check if API supports ISO code. */
+typedef enum 
+{
+	kAPI_ISONAME_NotInitialzied,
+	kAPI_ISONAME_Supported,
+	kAPI_ISONAME_NotSupported
+} STATE_API_Support_ISONAME;
+
+static STATE_API_Support_ISONAME bAPI_Support_ISONAME = kAPI_ISONAME_NotInitialzied;
+static BOOL API_Support_ISONAME()
+{
+	char locale_string[128];
+
+	return GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SISO639LANGNAME, 
+						locale_string, sizeof(locale_string)) != 0;
+}
+
+/* Variables and callbacks for construct a string of all installed locales. */
+static char *locale_buf = NULL;
+static int locale_num =0;
+BOOL CALLBACK EnumLocalesProc0(LPTSTR lpLocaleString)
+{
+ 	char locale_string[128];
+	char *endptr;
+	LCID lcid = (LCID) strtol(lpLocaleString, &endptr, 16);	/* the argument is in hex string */
+
+	if (GetLocaleInfo(lcid, LOCALE_SENGLANGUAGE, locale_string, sizeof(locale_string)))
+		locale_num++;
+	
+	return TRUE;
+}
+BOOL CALLBACK EnumLocalesProc(LPTSTR lpLocaleString)
+{
+ 	char locale_string[128];
+	char *endptr;
+	LCID lcid = (LCID) strtol(lpLocaleString, &endptr, 16);	/* the argument is in hex string */
+
+	if (bAPI_Support_ISONAME == kAPI_ISONAME_Supported)
+	{
+		if (GetLocaleInfo(lcid, LOCALE_SISO639LANGNAME, locale_string, sizeof(locale_string)))
+		{
+			XP_STRCAT(locale_buf, locale_string);
+ 			XP_STRCAT(locale_buf, "-"); 
+			if (GetLocaleInfo(lcid, LOCALE_SISO3166CTRYNAME, locale_string, sizeof(locale_string)))
+			{
+				XP_STRCAT(locale_buf, locale_string); 
+				XP_STRCAT(locale_buf, ",");
+			}
+		}
+	}
+	else
+	{
+		const char *iso_code = INTL_PlatformIdToISOCode((unsigned short) LANGIDFROMLCID(lcid), NULL, TRUE);
+		if (iso_code && iso_code[0])
+		{
+			XP_STRCAT(locale_buf, iso_code);
+			XP_STRCAT(locale_buf, ",");
+		}
+	}
+	
+	return TRUE;
+}
+
+static const char *GetAllLocales(void)
+{
+	int len;
+	
+	/* It it possible to re-use the buffer if NT4 or earlier since locales cannot be added 
+	 * while the Navigator is running. 
+	 */
+	XP_FREEIF(locale_buf);
+	locale_num = 0;
+
+	/* get length and allocate a buffer */
+	(void) EnumSystemLocales(EnumLocalesProc0, LCID_INSTALLED);
+	locale_buf = (char *) XP_ALLOC(locale_num * 6 + 1);
+	if (locale_buf == NULL)
+		return "";
+	locale_buf[0] = '\0';
+	/* copy locale info to the buffer */
+	(void) EnumSystemLocales(EnumLocalesProc, LCID_INSTALLED);
+	/* trim the last comma */
+	len = XP_STRLEN(locale_buf);
+	if (len >= 1)
+		locale_buf[len-1] = '\0';
+
+	return (const char *) locale_buf;
+}
+
+char *FE_GetLanguageCountry(INTL_LanguageCountry_Selector selector)
+{
+ 	char *name = NULL;
+ 	char locale_string[128];
+	LCID lcid = GetUserDefaultLCID();
+
+	/* check if the API supports the ISO code output */
+	if (bAPI_Support_ISONAME == kAPI_ISONAME_NotInitialzied)
+		bAPI_Support_ISONAME = API_Support_ISONAME() ? kAPI_ISONAME_Supported : kAPI_ISONAME_NotSupported;
+
+	switch (selector)
+	{
+	case INTL_LanguageSel:
+	case INTL_LanguageCollateSel:
+	case INTL_LanguageMonetarySel:
+	case INTL_LanguageNumericSel:
+	case INTL_LanguageTimeSel:
+		if (bAPI_Support_ISONAME == kAPI_ISONAME_Supported)
+		{
+			if (GetLocaleInfo(lcid, LOCALE_SISO639LANGNAME, locale_string, sizeof(locale_string)) > 0)
+				name = XP_STRDUP(locale_string);
+		}
+		else
+		{
+			name = (char *) INTL_PlatformIdToISOCode((unsigned short) LANGIDFROMLCID(lcid), NULL, TRUE);
+			XP_ASSERT(name && XP_STRLEN(name)==5);
+			name = XP_STRDUP(XP_STRNCPY_SAFE(locale_string, name, 3));	/* copy language */
+		}
+		break;
+	case INTL_CountrySel:
+	case INTL_CountryCollateSel:
+	case INTL_CountryMonetarySel:
+	case INTL_CountryNumericSel:
+	case INTL_CountryTimeSel:
+		if (bAPI_Support_ISONAME == kAPI_ISONAME_Supported)
+		{
+			if (GetLocaleInfo(lcid, LOCALE_SISO3166CTRYNAME, locale_string, sizeof(locale_string)) > 0)
+				name = XP_STRDUP(locale_string);
+		}
+		else
+		{
+			name = (char *) INTL_PlatformIdToISOCode((unsigned short) LANGIDFROMLCID(lcid), NULL, FALSE);
+			XP_ASSERT(name && XP_STRLEN(name)==5);
+			name = XP_STRDUP(XP_STRNCPY_SAFE(locale_string, &name[3], 3));	/* copy country */
+		}
+		break;
+	case INTL_ALL_LocalesSel:
+		name = XP_STRDUP(GetAllLocales());
+		break;
+	default:
+		name = XP_STRDUP("");
+		break;
+	}
+
+	
+	return name;
+}
+#endif /* XP_WIN */
