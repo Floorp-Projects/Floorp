@@ -38,7 +38,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.17 2004/07/13 05:52:24 nelsonb%netscape.com Exp $
+ * $Id: secasn1e.c,v 1.18 2004/07/13 06:02:54 nelsonb%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -219,9 +219,7 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 
     if( encode_kind & SEC_ASN1_CHOICE ) {
       under_kind = SEC_ASN1_CHOICE;
-    } else
-
-    if ((encode_kind & (SEC_ASN1_POINTER | SEC_ASN1_INLINE)) || 
+    } else if ((encode_kind & (SEC_ASN1_POINTER | SEC_ASN1_INLINE)) || 
         (!universal && !isExplicit)) {
 	const SEC_ASN1Template *subt;
 	void *src;
@@ -231,12 +229,6 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 	sec_asn1e_scrub_state (state);
 
 	if (encode_kind & SEC_ASN1_POINTER) {
-	    /*
-	     * XXX This used to PORT_Assert (encode_kind == SEC_ASN1_POINTER);
-	     * but that was too restrictive.  This needs to be fixed,
-	     * probably copying what the decoder now checks for, and
-	     * adding a big comment here to explain what the checks mean.
-	     */
 	    src = *(void **)state->src;
 	    state->place = afterPointer;
 	    if (src == NULL) {
@@ -278,7 +270,7 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 	subt = SEC_ASN1GetSubtemplate (state->theTemplate, state->src, PR_TRUE);
 	state = sec_asn1e_push_state (state->top, subt, src, PR_FALSE);
 	if (state == NULL)
-	    return NULL;
+	    return state;
 
 	if (universal) {
 	    /*
@@ -295,14 +287,16 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 	 * that is based on the subtemplate (the underlying type), but
 	 * now we will sort of alias it to give it some of our properties
 	 * (tag, optional status, etc.).
+	 *
+	 * NB: ALL the following flags in the subtemplate are disallowed
+	 *     and/or ignored: ECPLICIT, OPTIONAL, INNER< INLINE< POINTER.
 	 */
 
 	under_kind = state->theTemplate->kind;
-	if (under_kind & SEC_ASN1_MAY_STREAM) {
-	    if (!disallowStreaming)
-	      may_stream = PR_TRUE;
-	    under_kind &= ~SEC_ASN1_MAY_STREAM;
+	if ((under_kind & SEC_ASN1_MAY_STREAM) && !disallowStreaming) {
+	    may_stream = PR_TRUE;
 	}
+	under_kind &= ~(SEC_ASN1_MAY_STREAM | SEC_ASN1_DYNAMIC);
     } else {
 	under_kind = encode_kind;
     }
@@ -314,10 +308,13 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
      * XXX is this the right set of bits to test here? (i.e. need to add
      * or remove any?)
      */
-    PORT_Assert ((under_kind & (SEC_ASN1_EXPLICIT | SEC_ASN1_OPTIONAL
-				| SEC_ASN1_SKIP | SEC_ASN1_INNER
-				| SEC_ASN1_DYNAMIC | SEC_ASN1_MAY_STREAM
-				| SEC_ASN1_INLINE | SEC_ASN1_POINTER)) == 0);
+#define UNEXPECTED_FLAGS \
+ (SEC_ASN1_EXPLICIT | SEC_ASN1_OPTIONAL | SEC_ASN1_SKIP | SEC_ASN1_INNER | \
+  SEC_ASN1_DYNAMIC | SEC_ASN1_MAY_STREAM | SEC_ASN1_INLINE | SEC_ASN1_POINTER)
+
+    PORT_Assert ((under_kind & UNEXPECTED_FLAGS) == 0);
+    under_kind &= ~UNEXPECTED_FLAGS;
+#undef UNEXPECTED_FLAGS
 
     if (encode_kind & SEC_ASN1_ANY) {
 	PORT_Assert (encode_kind == under_kind);
@@ -542,21 +539,9 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
     }
 
     if ((encode_kind & (SEC_ASN1_POINTER | SEC_ASN1_INLINE)) || !universal) {
-
 	/* XXX any bits we want to disallow (PORT_Assert against) here? */
-
 	theTemplate = SEC_ASN1GetSubtemplate (theTemplate, src, PR_TRUE);
-
 	if (encode_kind & SEC_ASN1_POINTER) {
-	    /*
-	     * XXX This used to PORT_Assert (encode_kind == SEC_ASN1_POINTER);
-	     * but that was too restrictive.  This needs to be fixed,
-	     * probably copying what the decoder now checks for, and
-	     * adding a big comment here to explain what the checks mean.
-	     * Alternatively, the check here could be omitted altogether
-	     * just letting sec_asn1e_init_state_based_on_template
-	     * do it, since that routine can do better error handling, too.
-	     */
 	    src = *(void **)src;
 	    if (src == NULL) {
 		if (optional)
@@ -572,12 +557,12 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
 	src = (char *)src + theTemplate->offset;
 
-	if (isExplicit) {
-	    len = sec_asn1e_contents_length (theTemplate, src, PR_FALSE,
-                                             noheaderp);
-	    if (len == 0 && optional) {
-		*noheaderp = PR_TRUE;
-	    } else if (*noheaderp) {
+	/* recurse to find the length of the subtemplate */
+	len = sec_asn1e_contents_length (theTemplate, src, PR_FALSE, noheaderp);
+	if (len == 0 && optional) {
+	    *noheaderp = PR_TRUE;
+	} else if (isExplicit) {
+	    if (*noheaderp) {
 		/* Okay, *we* do not want to add in a header, but our caller still does. */
 		*noheaderp = PR_FALSE;
 	    } else {
@@ -588,16 +573,10 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 		 */
 		len += 1 + SEC_ASN1LengthLength (len);
 	    }
-	    return len;
 	}
-
-	underlying_kind = theTemplate->kind;
-	underlying_kind &= ~SEC_ASN1_MAY_STREAM;
-
-	/* XXX Should we recurse here? */
-    } else {
-	underlying_kind = encode_kind;
+	return len;
     }
+    underlying_kind = encode_kind;
 
     /* This is only used in decoding; it plays no part in encoding.  */
     if (underlying_kind & SEC_ASN1_SAVE) {
@@ -607,11 +586,14 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	return 0;
     }
 
+#define UNEXPECTED_FLAGS \
+ (SEC_ASN1_EXPLICIT | SEC_ASN1_OPTIONAL | SEC_ASN1_INLINE | SEC_ASN1_POINTER |\
+  SEC_ASN1_DYNAMIC | SEC_ASN1_MAY_STREAM | SEC_ASN1_SAVE | SEC_ASN1_SKIP)
+
     /* Having any of these bits is not expected here...  */
-    PORT_Assert ((underlying_kind & (SEC_ASN1_EXPLICIT | SEC_ASN1_OPTIONAL
-				     | SEC_ASN1_INLINE | SEC_ASN1_POINTER
-				     | SEC_ASN1_DYNAMIC | SEC_ASN1_MAY_STREAM
-				     | SEC_ASN1_SAVE | SEC_ASN1_SKIP)) == 0);
+    PORT_Assert ((underlying_kind & UNEXPECTED_FLAGS) == 0);
+    underlying_kind &= ~UNEXPECTED_FLAGS;
+#undef UNEXPECTED_FLAGS
 
     if( underlying_kind & SEC_ASN1_CHOICE ) {
       void *src2;
@@ -625,9 +607,8 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
       src2 = (void *)((char *)src - theTemplate->offset + theTemplate[indx].offset);
       len = sec_asn1e_contents_length(&theTemplate[indx], src2, PR_FALSE,
                                       noheaderp);
-    } else
-
-    switch (underlying_kind) {
+    } else {
+      switch (underlying_kind) {
       case SEC_ASN1_SEQUENCE_OF:
       case SEC_ASN1_SET_OF:
 	{
@@ -724,6 +705,7 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	if (may_stream && len == 0 && !disallowStreaming)
 	    len = 1;	/* if we're streaming, we may have a secitem w/len 0 as placeholder */
 	break;
+      }
     }
 
     if ((len == 0 && optional) || underlying_kind == SEC_ASN1_ANY)
