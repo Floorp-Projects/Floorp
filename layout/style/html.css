@@ -445,7 +445,7 @@ iframe {
 }
 
 noframes {
-  display: block;
+  display: none;
 }
 
 
