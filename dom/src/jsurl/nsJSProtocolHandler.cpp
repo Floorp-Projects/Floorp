@@ -298,11 +298,11 @@ public:
 
         // If mURI is just "javascript:", we bring up the JavaScript console
         // and return NS_ERROR_DOM_RETVAL_UNDEFINED.
-        nsXPIDLCString spec;
-        rv = mURI->GetSpec(getter_Copies(spec));
+        nsXPIDLCString script;
+        rv = mURI->GetPath(getter_Copies(script));
         if (NS_FAILED(rv)) return rv;
 
-        if (PL_strcasecmp(spec, "javascript:") == 0) {
+        if (*((const char*)script) == '\0') {
             rv = evalProxy->BringUpConsole();
             if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
             return NS_ERROR_DOM_RETVAL_UNDEFINED;
