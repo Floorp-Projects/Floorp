@@ -2419,21 +2419,12 @@ JSHashNumber
 js_HashString(const JSString *str)
 {
     JSHashNumber h;
-    size_t n, m;
     const jschar *s;
+    size_t n;
 
     h = 0;
-    n = str->length;
-    s = str->chars;
-    if (n < 16) {
-        /* Hash every char in a short string. */
-        for (; n; s++, n--)
-            h = (h >> 28) ^ (h << 4) ^ *s;
-    } else {
-        /* Sample a la java.lang.String.hash(). */
-        for (m = n / 8; n >= m; s += m, n -= m)
-            h = (h >> 28) ^ (h << 4) ^ *s;
-    }
+    for (s = str->chars, n = str->length; n; s++, n--)
+        h = (h >> (JS_HASH_BITS - 4)) ^ (h << 4) ^ *s;
     return h;
 }
 
