@@ -80,7 +80,7 @@ nsHelperAppDialog.prototype = {
          this.mDialog = ww.openWindow( null, // no parent
                                        "chrome://global/content/nsHelperAppDlg.xul",
                                        null,
-                                       "chrome,titlebar",
+                                       "chrome,titlebar,dialog=yes",
                                        null );
          // Hook this object to the dialog.
          this.mDialog.dialog = this;
@@ -152,7 +152,7 @@ nsHelperAppDialog.prototype = {
          ww.openWindow( null, // no parent
                         "chrome://global/content/helperAppDldProgress.xul",
                         null,
-                        "chrome,titlebar,minimizable",
+                        "chrome,titlebar,minimizable,dialog=yes",
                         aLauncher );
     },
     
@@ -160,6 +160,17 @@ nsHelperAppDialog.prototype = {
 
     // initDialog:  Fill various dialog fields with initial content.
     initDialog : function() {
+         // Check if file is executable (in which case, we will go straight to
+         // "save to disk").
+         var ignore1 = new Object;
+         var ignore2 = new Object;
+         var tmpFile = this.mLauncher.getDownloadInfo( ignore1, ignore2 );
+         if ( tmpFile.isExecutable() ) {
+             this.mLauncher.saveToDisk( null, false );
+             this.mDialog.close();
+             return;
+         }
+
          // Put product brand short name in prompt.
          var prompt = this.dialogElement( "prompt" );
          var modified = this.replaceInsert( prompt.firstChild.nodeValue, 1, this.getString( "brandShortName" ) );
@@ -233,6 +244,7 @@ nsHelperAppDialog.prototype = {
         }
         modified = this.replaceInsert( modified, 2, this.mLauncher.MIMEInfo.MIMEType );
         modified = this.replaceInsert( modified, 3, this.mSourcePath );
+        intro.firstChild.nodeValue = "";
         intro.firstChild.nodeValue = modified;
     },
 

@@ -1605,14 +1605,34 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     else
         GetPath(&path);
 
-    const char* leaf = (const char*) _mbsrchr((const unsigned char*) path, '\\');
-
-    // XXX On Windows NT / 2000, it should use "PATHEXT" environment value
-    if ( (strstr(leaf, ".bat") != nsnull) ||
-         (strstr(leaf, ".exe") != nsnull) ) {
-        *_retval = PR_TRUE;
-    } else {
-        *_retval = PR_FALSE;
+    // Get extension.
+    char* ext = ::strrchr( path, '.' );
+    if ( ext ) {
+        // Convert extension to lower case.
+        for( char *p = ext; *p; p++ ) {
+            if ( ::isupper( *p ) ) {
+                *p = ::tolower( *p );
+            }
+        }
+        // Search for any of the set of executable extensions.
+        const char * const executableExts[] = { ".exe",
+                                                ".bat",
+                                                ".com",
+                                                ".pif",
+                                                ".cmd",
+                                                ".js",
+                                                ".vbs",
+                                                ".lnk",
+                                                ".reg",
+                                                ".wsf",
+                                                0 };
+        for ( int i = 0; executableExts[i]; i++ ) {
+            if ( ::strcmp( executableExts[i], ext ) == 0 ) {
+                // Found a match.  Set result and quit.
+                *_retval = PR_TRUE;
+                break;
+            }
+        }
     }
     
     nsMemory::Free(path);

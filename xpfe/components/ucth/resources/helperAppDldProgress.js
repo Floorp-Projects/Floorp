@@ -414,7 +414,10 @@ function setupPostProgressUI()
   var openButton = document.getElementById('open');
 
   openFolderButton.removeAttribute("disabled");
-  openButton.removeAttribute("disabled");
+  if ( !targetFile.isExecutable() )
+  {
+    openButton.removeAttribute("disabled");
+  }
 
   dialog.pause.setAttribute("disabled", true);
 }
