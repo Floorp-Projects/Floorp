@@ -457,9 +457,9 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSObject *obj,
     JSObject* target = JSVAL_IS_PRIMITIVE(*vp) ? obj : JSVAL_TO_OBJECT(*vp);
 
     // Do the same-origin check -- this sets a JS exception if the check fails.
-    // Pass the target object's class name, as we have no class-info for it.
+    // Pass the parent object's class name, as we have no class-info for it.
     nsresult rv =
-        ssm->CheckPropertyAccess(cx, target, JS_GetClass(cx, target)->name, id,
+        ssm->CheckPropertyAccess(cx, target, JS_GetClass(cx, obj)->name, id,
                                  nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
     if (NS_FAILED(rv))
