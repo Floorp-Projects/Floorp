@@ -103,8 +103,8 @@ LAYOUT_ATOM(blockFrame, "BlockFrame")
 LAYOUT_ATOM(boxFrame, "BoxFrame")
 LAYOUT_ATOM(brFrame, "BRFrame")
 LAYOUT_ATOM(bulletFrame, "BulletFrame")
-LAYOUT_ATOM(comboBoxFrame, "ComboBoxFrame");
-LAYOUT_ATOM(fieldSetFrame, "FieldSetFrame");
+LAYOUT_ATOM(comboBoxFrame, "ComboBoxFrame")
+LAYOUT_ATOM(fieldSetFrame, "FieldSetFrame")
 LAYOUT_ATOM(fileControlFrame, "FileControlFrame")
 LAYOUT_ATOM(formControlFrame, "FormControlFrame")
 LAYOUT_ATOM(gfxButtonControlFrame, "gfxButtonControlFrame")
