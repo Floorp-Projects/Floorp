@@ -199,7 +199,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             {
                 nsID* iid = *((nsID**)s);
                 if(!iid)
-                    return JS_FALSE;
+                {
+                    *d = JSVAL_NULL;
+                    break;
+                }
                 JSObject* obj;
                 if(!(obj = xpc_NewIIDObject(cx, *iid)))
                     return JS_FALSE;
@@ -216,7 +219,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             {
                 char* p = *((char**)s);
                 if(!p)
-                    return JS_FALSE;
+                {
+                    *d = JSVAL_NULL;
+                    break;
+                }
                 JSString* str;
                 if(!(str = JS_NewStringCopyZ(cx, p)))
                     return JS_FALSE;
@@ -228,7 +234,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             {
                 jschar* p = *((jschar**)s);
                 if(!p)
-                    return JS_FALSE;
+                {
+                    *d = JSVAL_NULL;
+                    break;
+                }
                 JSString* str;
                 if(!(str = JS_NewUCStringCopyZ(cx, p)))
                     return JS_FALSE;
@@ -445,6 +454,13 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
             JSObject* obj;
             const nsID* pid=NULL;
+
+            if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
+            {
+                *((const nsID**)d) = NULL;
+                return JS_TRUE;
+            }
+
             if(!JSVAL_IS_OBJECT(s) ||
                (!(obj = JSVAL_TO_OBJECT(s))) ||
                (!(pid = xpc_JSObjectToID(cx, obj))))
@@ -464,6 +480,12 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         {
             char* bytes=NULL;
             JSString* str;
+
+            if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
+            {
+                *((char**)d) = NULL;
+                return JS_TRUE;
+            }
 
             if(!(str = JS_ValueToString(cx, s))||
                !(bytes = JS_GetStringBytes(str)))
@@ -489,6 +511,12 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         {
             jschar* chars=NULL;
             JSString* str;
+
+            if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
+            {
+                *((jschar**)d) = NULL;
+                return JS_TRUE;
+            }
 
             if(!(str = JS_ValueToString(cx, s))||
                !(chars = JS_GetStringChars(str)))
