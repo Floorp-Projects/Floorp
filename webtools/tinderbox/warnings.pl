@@ -28,7 +28,11 @@ require 'globals.pl';
 
 $cvsroot = '/cvsroot/mozilla';
 $lxr_data_root = '/export2/lxr-data';
-@ignore = ( 'long long', '__cmsg_data' );
+@ignore = ( 
+  'long long',
+  '__cmsg_data',
+  'location of the previous definition',
+);
 $ignore_pat = "(?:".join('|',@ignore).")";
 
 print STDERR "Building hash of file names...";
@@ -82,7 +86,7 @@ sub build_file_hash {
       $dir =~ s|/$||;
       $bases{$base} = $dir;
     } else {
-      $bases{$base} = '<multiple>';
+      $bases{$base} = '[multiple]';
     }
   }
   return %bases;
@@ -133,12 +137,15 @@ sub gcc_parser {
     ($filename, $line, undef, $warning_text) = split /:\s*/;
     $filename =~ s/.*\///;
     
+    # Special case for Makefiles
+    $filename =~ s/Makefile$/Makefile.in/;
+
     my $dir;
-    if (-e "$cvsroot/$tree/$builddir/$filename") {
+    if (-e "$cvsroot/$tree/$builddir/$filename,v") {
       $dir = $build_dir;
     } else {
       unless(defined($dir = $file_hash_ref->{$filename})) {
-        $dir = '<no_match>';
+        $dir = '[no_match]';
       }
     }
     my $file = "$dir/$filename";
@@ -177,9 +184,6 @@ sub build_blame {
   require 'cvsblame.pl';
 
   while (($file, $lines_hash) = each %warnings) {
-
-    # Special case for Makefiles
-    $file =~ s/Makefile$/Makefile.in/;
 
     my $rcs_filename = "$cvsroot/$file,v";
 
