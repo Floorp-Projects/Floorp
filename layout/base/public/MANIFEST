@@ -30,7 +30,6 @@ nsISpaceManager.h
 nsIStatefulFrame.h
 nsIStyleContext.h
 nsIStyleSet.h
-nslayout.h
 nsStyleChangeList.h
 nsStyleConsts.h
 nsIStyleFrameConstruction.h
