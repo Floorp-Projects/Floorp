@@ -343,7 +343,7 @@ nsP3PPreferences::GetBoolPref( nsCString aCategory,
   PRBool    bRecipient;
 
 #ifdef DEBUG_P3P
-  printf("P3P:  P3PPreferences:  GetBoolPref(%s, %s, %s)\n", (char *) aCategory, (char *) aPurpose, (char *) aRecipient);
+  printf("P3P:  P3PPreferences:  GetBoolPref(%s, %s, %s)\n", (const char *) aCategory, (const char *) aPurpose, (const char *) aRecipient);
 #endif
 
   pPrefName = P3P_PREF;
@@ -356,7 +356,7 @@ nsP3PPreferences::GetBoolPref( nsCString aCategory,
   if (NS_SUCCEEDED( rv )) {
 #ifdef DEBUG_P3P
     printf("P3P:  P3PPreferences:  Setting for %s is %s.\n",
-           (char *) pPrefName, (*aResult) ? "true" : "false");
+           (const char *) pPrefName, (*aResult) ? "true" : "false");
 #endif
     if (aRecipient.Equals("ours")) {
       bRecipient = PR_TRUE;
@@ -369,7 +369,7 @@ nsP3PPreferences::GetBoolPref( nsCString aCategory,
 #ifdef DEBUG_P3P
       if (NS_SUCCEEDED( rv )) {
         printf("P3P:  P3PPreferences:  Setting for %s is %s.\n",
-               (char *) pPrefName, (*aResult) ? "true" : "false");
+               (const char *) pPrefName, (*aResult) ? "true" : "false");
       }
 #endif
     }
@@ -380,7 +380,7 @@ nsP3PPreferences::GetBoolPref( nsCString aCategory,
   }
 
   if (NS_FAILED(rv)) {
-    PR_LOG( gP3PLogModule, PR_LOG_NOTICE, ("P3PPreferenceService:  GetBoolPref(%s, %s, %s) failed with return value %X.\n", (char *) aCategory, (char *) aPurpose, (char *) aRecipient, rv) );
+    PR_LOG( gP3PLogModule, PR_LOG_NOTICE, ("P3PPreferenceService:  GetBoolPref(%s, %s, %s) failed with return value %X.\n", (const char *) aCategory, (const char *) aPurpose, (const char *) aRecipient, rv) );
 #ifdef DEBUG_P3P
     printf("P3P:  P3PPreferences:  GetBoolPref() failed with return value %x.\n", rv);
 #endif
@@ -388,7 +388,7 @@ nsP3PPreferences::GetBoolPref( nsCString aCategory,
 #ifdef DEBUG_P3P
   else {
     printf("P3P:  P3PPreferences:  Setting for %s, %s, %s is %s.\n",
-           (char *) aCategory, (char *) aPurpose, (char *) aRecipient, (*aResult) ? "true" : "false");
+           (const char *) aCategory, (const char *) aPurpose, (const char *) aRecipient, (*aResult) ? "true" : "false");
   }
 #endif
 

@@ -75,10 +75,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT( nsP3PService, Init );
 // Function:  Regsiter the P3P Service to start on the first HTTP request.
 //
 NS_METHOD
-nsP3PService::CategoryRegister( nsIComponentManager  *aComponentManager,
-                                nsIFile              *aPath,
-                                const char           *aRegistryLocation,
-                                const char           *aComponentType ) {
+nsP3PService::CategoryRegister( nsIComponentManager          *aComponentManager,
+                                nsIFile                      *aPath,
+                                const char                   *aRegistryLocation,
+                                const char                   *aComponentType,
+                                const nsModuleComponentInfo  *aInfo ) {
 
   nsresult                      rv;
 
@@ -118,9 +119,10 @@ nsP3PService::CategoryRegister( nsIComponentManager  *aComponentManager,
 // Function:  Unregsiter the P3P Service to start on the first HTTP request.
 //
 NS_METHOD
-nsP3PService::CategoryUnregister( nsIComponentManager  *aComponentManager,
-                                  nsIFile              *aPath,
-                                  const char           *aRegistryLocation ) {
+nsP3PService::CategoryUnregister( nsIComponentManager          *aComponentManager,
+                                  nsIFile                      *aPath,
+                                  const char                   *aRegistryLocation,
+                                  const nsModuleComponentInfo  *aInfo ) {
 
   nsresult                      rv;
 
@@ -1803,21 +1805,8 @@ nsP3PService::GetURIComponents( nsIURI    *aURI,
       rv = aURI->GetPort(&iPort );
 
       if (NS_SUCCEEDED( rv ) && (iPort >= 0) && (iPort != 80)) {
-        char *csPortBuffer = nsnull;
-
-        csPortBuffer = PR_smprintf( ":%d", iPort );
-
-        if (csPortBuffer) {
-          aURIHostPort.AppendWithConversion( csPortBuffer );
-          PR_smprintf_free( csPortBuffer );
-        }
-        else {
-          PR_LOG( gP3PLogModule,
-                  PR_LOG_ERROR,
-                  ("P3PService:  GetURIComponents, PR_smprintf failed.\n") );
-
-          rv = NS_ERROR_OUT_OF_MEMORY;
-        }
+        aURIHostPort.AppendWithConversion( ":" );
+        aURIHostPort.AppendInt( iPort );
       }
       else if (NS_FAILED( rv )) {
         PR_LOG( gP3PLogModule,
@@ -2860,7 +2849,7 @@ nsP3PService::DeleteCookie( nsIURI    *aURI,
 
   rv = mCookieService->SetCookieString( aURI,
                                         nsnull,
-                                        sWork );
+                                        csCookie );
 
   return rv;
 }

@@ -36,6 +36,7 @@
 #include <nsCOMPtr.h>
 #include <nsISupports.h>
 #include <nsIComponentManager.h>
+#include <nsIGenericFactory.h>
 
 #include <nsICategoryManager.h>
 
@@ -83,14 +84,16 @@ public:
   NS_METHOD             Init( );
 
   static
-  NS_METHOD             CategoryRegister( nsIComponentManager  *aComponentManager,
-                                          nsIFile              *aPath,
-                                          const char           *aRegistryLocation,
-                                          const char           *aComponentType );
+  NS_METHOD             CategoryRegister( nsIComponentManager          *aComponentManager,
+                                          nsIFile                      *aPath,
+                                          const char                   *aRegistryLocation,
+                                          const char                   *aComponentType,
+                                          const nsModuleComponentInfo  *aInfo );
   static
-  NS_METHOD             CategoryUnregister( nsIComponentManager  *aComponentManager,
-                                            nsIFile              *aPath,
-                                            const char           *aRegistryLocation );
+  NS_METHOD             CategoryUnregister( nsIComponentManager          *aComponentManager,
+                                            nsIFile                      *aPath,
+                                            const char                   *aRegistryLocation,
+                                            const nsModuleComponentInfo  *aInfo );
 
 protected:
   NS_METHOD             GetDocShellTreeItemMain( nsIDocShellTreeItem  *aDocShellTreeItem,
