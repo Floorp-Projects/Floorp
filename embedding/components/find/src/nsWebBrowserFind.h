@@ -101,6 +101,7 @@ protected:
     
     nsWeakPtr       mCurrentSearchFrame;    // who knows if windows can go away during our lifetime, hence weak
     nsWeakPtr       mRootSearchFrame;       // who knows if windows can go away during our lifetime, hence weak
+    nsWeakPtr       mLastFocusedWindow;     // who knows if windows can go away during our lifetime, hence weak
     
     nsCOMPtr<nsIFindAndReplace> mTSFind;
 };

@@ -436,6 +436,11 @@ nsresult nsWebBrowserFind::OnFind(nsIDOMWindow *aFoundWindow)
 {
     SetCurrentSearchFrame(aFoundWindow);
 
+    // We don't want a selection to appear in two frames simultaneously
+    nsCOMPtr<nsIDOMWindow> lastFocusedWindow = do_QueryReferent(mLastFocusedWindow);
+    if (lastFocusedWindow && lastFocusedWindow != aFoundWindow)
+        ClearFrameSelection(lastFocusedWindow);
+
     // focus the frame we found in
     nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(aFoundWindow);
     nsCOMPtr<nsIFocusController> focusController;
@@ -445,6 +450,7 @@ nsresult nsWebBrowserFind::OnFind(nsIDOMWindow *aFoundWindow)
     {
         nsCOMPtr<nsIDOMWindowInternal> windowInt = do_QueryInterface(aFoundWindow);
         focusController->SetFocusedWindow(windowInt);
+        mLastFocusedWindow = getter_AddRefs(NS_GetWeakReference(aFoundWindow));
     }
 
     return NS_OK;
