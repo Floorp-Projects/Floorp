@@ -107,10 +107,6 @@ table {
   line-height: normal;
 }
 
-/* Quirk: make sure backgrounds are inherited in tables */
-td, th, tr {
-  background: inherit;
-}
 
 /* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
 

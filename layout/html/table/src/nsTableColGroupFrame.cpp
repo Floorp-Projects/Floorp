@@ -410,21 +410,9 @@ nsTableColGroupFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
-    if (eCompatibility_Standard == mode) {
-      const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-      if (vis->IsVisibleOrCollapsed()) {
-        const nsStyleBorder* border =
-          (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-        nsRect rect(0, 0, mRect.width, mRect.height);
-        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *border, 0, 0, PR_TRUE);
-      }
-    }
-  }
+
+  // Standards mode background painting removed.  See bug 4510
+
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
