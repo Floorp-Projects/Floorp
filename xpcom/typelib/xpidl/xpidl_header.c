@@ -108,9 +108,10 @@ interface(TreeState *state)
 
     if (iid) {
         /* XXX use nsID parsing routines to validate? */
-        if (strlen(iid) != 36)
-            /* XXX report error */
+        if (strlen(iid) != 36) {
+            IDL_tree_error(state->tree, "IID %s is the wrong length\n", iid);
             return FALSE;
+        }
         fprintf(state->file, "\n/* {%s} */\n#define ", iid);
         if (!write_classname_iid_define(state->file, className))
             return FALSE;
