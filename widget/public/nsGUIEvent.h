@@ -61,8 +61,6 @@ struct nsEvent {
 struct nsGUIEvent : public nsEvent {
                 /// Originator of the event
   nsIWidget*  widget;           
-                /// nsISupports of widget XXX remove the one above and rename this
-  nsISupports* widgetSupports; 
                 /// Internal platform specific message.
   void*     nativeMsg;        
 };
