@@ -164,7 +164,8 @@ LRESULT CWizardUI::OnWizardBack()
 
 		UpdateGlobals();
 		DestroyCurrentScreenWidgets();
-		theApp.GoToPrevNode();
+		while (!theApp.GoToPrevNode())
+			; /* do nothing */
 
 		prevLock.Unlock();
 	}
@@ -206,7 +207,8 @@ LRESULT CWizardUI::OnWizardNext()
 
 		UpdateGlobals();
 		DestroyCurrentScreenWidgets();
-		theApp.GoToNextNode();
+		while (!theApp.GoToNextNode())
+			; /* do nothing */
 	
 		nextLock.Unlock();
 	}
@@ -1191,9 +1193,12 @@ void CWizardUI::UpdateGlobals()
 		if (widgetType == "ComboBox")
 		{
 			int selectedIndex = ((CComboBox*)curWidget->control)->GetCurSel();
-			char tmpStr[MIN_SIZE];
-			((CComboBox*)curWidget->control)->GetLBText(selectedIndex, tmpStr);
-			curWidget->value = tmpStr;
+			if (selectedIndex != -1)
+			{
+				char tmpStr[MIN_SIZE];
+				((CComboBox*)curWidget->control)->GetLBText(selectedIndex, tmpStr);
+				curWidget->value = tmpStr;
+			}
 		}
 	}
 }

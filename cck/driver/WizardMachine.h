@@ -27,6 +27,7 @@
 #include "WizardMachineDlg.h"
 #include "WizardTypes.h"
 
+
 //NODE WizardTree;
 void CreateRshell();
 //extern WIDGET GlobalWidgetArray[1000];
@@ -53,8 +54,8 @@ public:
 	void ExecuteAction(char action);
 	CString replaceVars(char *str);
 	BOOL interpret(CString cmd);
-	void GoToNextNode();
-	void GoToPrevNode();
+	BOOL GoToNextNode();
+	BOOL GoToPrevNode();
 	void ExitApp();
 	BOOL CheckForPreBuiltPath();
 	FILE* OpenAFile(CString outputFile, CString mode);
