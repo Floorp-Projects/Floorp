@@ -96,11 +96,11 @@ NSGetFactory(nsISupports* serviceMgr,
   else if (aClass.Equals(kCmdLineServiceCID)) {
     rv = NS_NewCmdLineServiceFactory(aFactory);
   }
-#if 0
   else if (aClass.Equals(kXPConnectFactoryCID)) {
     rv = NS_NewXPConnectFactoryFactory(aFactory);
   }
 
+#if 0
   else if (aClass.Equals(kProtocolHelperCID)) {
     rv = NS_NewDefaultProtocolHelperFactory(aFactory);
   }
