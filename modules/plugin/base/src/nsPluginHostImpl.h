@@ -393,7 +393,7 @@ private:
    * character after the last header. It will then create a new buffer 
    * with the existing headers, a correct "\r\n\r\n", then the post data.  
    * If no "\r\n" is found, the data does not contain headers, and a simple 
-   * "\r\n\r\n" is prepended to the buffer.
+   * "\r\n\r\n" is prepended to the buffer. See bug 60228 for more info.
    * @param inPostData, the post data from NewPluginURLStream
    * @param the length of inPostData
    * @param outPostData the buffer which must be freed with delete [].
