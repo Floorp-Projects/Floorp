@@ -916,24 +916,33 @@ sub ThrowUserError {
 # This should only be called if a template->process() fails.
 # The Content-Type will already have been printed.
 sub ThrowTemplateError {
-    my ($error) = html_quote((@_));
-    my $maintainer = Param('maintainer');
+    ($vars->{'error'}) = (@_);
+    $vars->{'title'} = "Template Error";
     
-    print <<END;
-    <tt>
-      <p>
-        Bugzilla has suffered an internal error. Please save this page and send
-        it to $maintainer with details of what you were doing at the time this
-        message appeared.
-      </p>
-      <script> <!--
-        document.write("<p>URL: " + document.location + "</p>");
-      // -->
-      </script>
-      <p>Template->process() failed: $error</p>
-    </tt>
+    # Try a template first; but if this one fails too, fall back
+    # on plain old print statements.
+    if (!$template->process("global/code-error.html.tmpl", $vars)) {
+        my $maintainer = Param('maintainer');
+        my $error = html_quote($vars->{'error'});
+        my $error2 = html_quote($template->error());
+        print <<END;
+        <tt>
+          <p>
+            Bugzilla has suffered an internal error. Please save this page and 
+            send it to $maintainer with details of what you were doing at the 
+            time this message appeared.
+          </p>
+          <script> <!--
+            document.write("<p>URL: " + document.location + "</p>");
+          // -->
+          </script>
+          <p>Template->process() failed twice.<br>
+          First error: $error<br>
+          Second error: $error2</p>
+        </tt>
 END
-
+    }
+    
     exit;  
 }
 
