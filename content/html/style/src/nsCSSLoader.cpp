@@ -1373,25 +1373,16 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   }
 
   //-- Make sure this page is allowed to load this URL
-  // If we are doing view-source, no need to check...
-  PRBool isForViewSource = PR_FALSE;
-  if (aParserToUnblock) {
-    nsAutoString command;
-    aParserToUnblock->GetCommand(command);
-    isForViewSource = command.Equals(NS_LITERAL_STRING("view-source"));
-  }
-  if (!isForViewSource) {
-    nsresult rv;
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsIURI* docURI;
-    rv = mDocument->GetBaseURL(docURI);
-    if (NS_FAILED(rv) || !docURI) return NS_ERROR_FAILURE;
-    rv = secMan->CheckLoadURI(docURI, aURL, nsIScriptSecurityManager::ALLOW_CHROME);
-    NS_IF_RELEASE(docURI);
-    if (NS_FAILED(rv)) return rv;
-  }
+  nsresult rv;
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsIURI* docURI;
+  rv = mDocument->GetBaseURL(docURI);
+  if (NS_FAILED(rv) || !docURI) return NS_ERROR_FAILURE;
+  rv = secMan->CheckLoadURI(docURI, aURL, nsIScriptSecurityManager::ALLOW_CHROME);
+  NS_IF_RELEASE(docURI);
+  if (NS_FAILED(rv)) return rv;
 
   // XXX need to add code to cancel any pending sheets for element
   nsresult result = NS_ERROR_NULL_POINTER;
