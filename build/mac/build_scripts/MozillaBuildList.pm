@@ -517,6 +517,9 @@ sub ProcessJarManifests()
     if ($main::options{smime} && $main::options{psm}) {
     	CreateJarFromManifest(":mozilla:mailnews:extensions:smime:jar.mn", $chrome_dir, \%jars);
     }
+    if ($main::options{mdn}) {
+    	CreateJarFromManifest(":mozilla:mailnews:extensions:mdn:jar.mn", $chrome_dir, \%jars);
+    }
     CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
@@ -2253,6 +2256,9 @@ sub BuildMailNewsProjects()
     	InstallResources(":mozilla:mailnews:extensions:smime:src:MANIFEST",				 "${dist_dir}Components");
     } else {
         BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.xml",   "smime$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+    if ($main::options{mdn}) {
+    	InstallResources(":mozilla:mailnews:extensions:mdn:src:MANIFEST",
     }
     EndBuildModule("mailnews");
 }
