@@ -443,8 +443,14 @@ AC_ARG_ENABLE(profile,
 AC_ARG_ENABLE(mailnews,
 [  --enable-mailnews       enable Mail & News (broken)],
 	[if test "$enableval" = "yes"; then
-	    MOZ_DARK=1
+        MOZ_MAIL_NEWS=1
 	fi] )
+
+AC_ARG_ENABLE(ldap,
+[  --enable-ldap           enable LDAP directory access],
+    [if test "$enableval" = "yes"; then
+        MOZ_LDAP=1
+    fi] )
 
 AC_ARG_ENABLE(editor,
 [  --enable-editor         enable editor],
@@ -515,7 +521,8 @@ AC_SUBST(MOZ_OJI)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
 AC_SUBST(MOZILLA_GPROF)
-AC_SUBST(MOZ_DARK)
+AC_SUBST(MOZ_MAIL_NEWS)
+AC_SUBST(MOZ_LDAP)
 AC_SUBST(MOZ_EDITOR)
 AC_SUBST(UNIX_SKIP_ASSERTS)
 AC_SUBST(NO_UNIX_ASYNC_DNS)
@@ -1138,21 +1145,15 @@ network/module/tests/Makefile
 network/protocol/Makefile
 network/protocol/about/Makefile
 network/protocol/callback/Makefile
-network/protocol/certld/Makefile
 network/protocol/dataurl/Makefile
 network/protocol/file/Makefile
 network/protocol/ftp/Makefile
 network/protocol/gopher/Makefile
 network/protocol/http/Makefile
-network/protocol/imap4/Makefile
 network/protocol/js/Makefile
 network/protocol/ldap/Makefile
-network/protocol/mailbox/Makefile
 network/protocol/marimba/Makefile
-network/protocol/nntp/Makefile
-network/protocol/pop3/Makefile
 network/protocol/remote/Makefile
-network/protocol/smtp/Makefile
 network/util/Makefile
 rdf/Makefile
 rdf/include/Makefile
@@ -1209,10 +1210,34 @@ editor/txmgr/public/Makefile
 editor/txmgr/src/Makefile
 editor/txmgr/tests/Makefile"
 
+MAILNEWS_MAKEFILES="
+network/protocol/certld/Makefile
+network/protocol/imap4/Makefile
+network/protocol/mailbox/Makefile
+network/protocol/nntp/Makefile
+network/protocol/pop3/Makefile
+network/protocol/smtp/Makefile
+mailnews/Makefile
+mailnews/base/Makefile
+mailnews/base/public/Makefile
+mailnews/base/src/Makefile
+mailnews/base/build/Makefile
+mailnews/base/tests/Makefile
+mailnews/news/Makefile
+mailnews/news/public/Makefile
+mailnews/news/src/Makefile
+mailnews/news/tests/Makefile
+mailnews/public/Makefile
+"
+
 MAKEFILES="$NG_MAKEFILES"
 
 if test -n "$MOZ_EDITOR"; then
     MAKEFILES="$MAKEFILES $EDITOR_MAKEFILES"
+fi
+
+if test -n "$MOZ_MAIL_NEWS"; then
+    MAKEFILES="$MAKEFILES $MAILNEWS_MAKEFILES"
 fi
 
 AC_OUTPUT($MAKEFILES)
