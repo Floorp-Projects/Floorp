@@ -458,13 +458,15 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 /*     XfeCaptionPart *		np = _XfeCaptionPart(nw); */
 /*     XfeCaptionPart *		op = _XfeCaptionPart(ow); */
 
+	/* Common pixel/pixmap/sensitive resources */
+	_XfeManagerPropagateSetValues(ow,nw,True);
+
 	/* shadow_thickness */
 	if (_XfemShadowThickness(nw) != _XfemShadowThickness(ow))
 	{
 		_XfemConfigFlags(nw) |= XfeConfigLE;
 	}
 	
-
     return _XfeManagerChainSetValues(ow,rw,nw,xfeCaptionWidgetClass);
 }
 /*----------------------------------------------------------------------*/
