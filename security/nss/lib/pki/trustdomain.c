@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.28 $ $Date: 2002/01/23 20:35:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.29 $ $Date: 2002/01/24 00:34:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -54,6 +54,10 @@ static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.28 $
 #ifndef CKHELPER_H
 #include "ckhelper.h"
 #endif /* CKHELPER_H */
+
+#ifdef NSS_3_4_CODE
+#include "cert.h"
+#endif
 
 extern const NSSError NSS_ERROR_NOT_FOUND;
 
@@ -884,6 +888,18 @@ static PRStatus traverse_callback(NSSCertificate *c, void *arg)
     }
     return nssrv;
 }
+
+#ifdef NSS_3_4_CODE
+static void cert_destructor_with_cache(void *el)
+{
+    NSSCertificate *c = (NSSCertificate *)el;
+    CERTCertificate *cert = STAN_GetCERTCertificate(c);
+    /* It's already been obtained as a CERTCertificate, so it must
+     * be destroyed as one
+     */
+    CERT_DestroyCertificate(cert);
+}
+#endif
  
 NSS_IMPLEMENT PRStatus *
 NSSTrustDomain_TraverseCertificates
@@ -918,7 +934,11 @@ NSSTrustDomain_TraverseCertificates
 	nssrv = nssToken_TraverseCertificates(token, NULL, &search);
     }
     nssListIterator_Finish(td->tokens);
+#ifdef NSS_3_4_CODE
+    nssList_Clear(certList, cert_destructor_with_cache);
+#else
     nssList_Clear(certList, cert_destructor);
+#endif
     nssList_Destroy(certList);
     return NULL;
 }

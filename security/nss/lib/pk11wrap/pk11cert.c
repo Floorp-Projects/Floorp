@@ -111,7 +111,11 @@ static PRStatus convert_and_cache_cert(NSSCertificate *c, void *arg)
 static void cert_destructor(void *el)
 {
     NSSCertificate *c = (NSSCertificate *)el;
-    NSSCertificate_Destroy(c);
+    CERTCertificate *cert = STAN_GetCERTCertificate(c);
+    /* It's already been obtained as a CERTCertificate, so it must
+     * be destroyed as one
+     */
+    CERT_DestroyCertificate(cert);
 }
 
 void
@@ -1584,6 +1588,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     cert->dbhandle = STAN_GetDefaultTrustDomain();
     if (cert->slot == NULL) {
 	cert->slot = PK11_ReferenceSlot(slot);
+	cert->ownSlot = PR_TRUE;
 	if (cert->nssCertificate) {
 	    nssCryptokiInstance *instance;
 	    NSSCertificate *c = cert->nssCertificate;
@@ -2235,7 +2240,7 @@ PK11_FindObjectForCert(CERTCertificate *cert, void *wincx, PK11SlotInfo **pSlot)
 	if (cert->slot == NULL) {
 	    cert->slot = PK11_ReferenceSlot(*pSlot);
 	    cert->pkcs11ID = certHandle;
-	    cert->ownSlot = PR_FALSE;
+	    cert->ownSlot = PR_TRUE;
 	}
     }
 
