@@ -469,7 +469,7 @@ nsGfxScrollFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   PropagateDebug(aState);
 
-    nsIFrame* frame = nsnull;
+  nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
   const nsStyleDisplay* styleDisplay = nsnull;
@@ -528,28 +528,60 @@ nsGfxScrollFrame::Reflow(nsIPresContext*   aPresContext,
                      nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsGfxScrollFrame", aReflowState.reason);
-  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
-  /*
-  // max sure the max element size reflects
-  // our min width
+  // if there is a max element request then set it to -1 so we can see if it gets set
   if (aDesiredSize.maxElementSize)
   {
-    // get the ara frame is the scrollarea
-    nsIBox* child = nsnull;
-    mInner->mScrollAreaBox->GetChildBox(&child);
-    nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
-    nsSize minSize(0,0);
-    child->GetMinSize(state, minSize);
-    AddMargin(child, minSize);
-    AddBorderAndPadding(mInner->mScrollAreaBox, minSize);
-    AddInset(mInner->mScrollAreaBox, minSize);
-    AddBorderAndPadding(minSize);
-    AddInset(minSize);
-    aDesiredSize.maxElementSize->width += minSize.width;
+    aDesiredSize.maxElementSize->width = -1;
+    aDesiredSize.maxElementSize->height = -1;
   }
-  */
 
+  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  // if it was set then cache it. Otherwise set it.
+  if (aDesiredSize.maxElementSize)
+  {
+    nsSize* size = aDesiredSize.maxElementSize;
+
+    // if not set then use the cached size. If set then set it.
+    if (size->width == -1)
+      size->width = mInner->mMaxElementSize.width;
+    else 
+      mInner->mMaxElementSize.width = size->width;
+  
+    if (size->height == -1)
+      size->height = mInner->mMaxElementSize.height;
+    else 
+      mInner->mMaxElementSize.height = size->height;
+ 
+    // make sure we add in our scrollbar.
+    nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
+
+    const nsStyleDisplay* styleDisplay = nsnull;
+
+    nsIFrame* frame = nsnull;
+    GetFrame(&frame);
+    frame->GetStyleData(eStyleStruct_Display,
+                      (const nsStyleStruct*&)styleDisplay);
+
+    if (mInner->mHasVerticalScrollbar || 
+      styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
+      styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
+      nsSize vSize(0,0);
+      mInner->mVScrollbarBox->GetMinSize(state, vSize);
+      AddMargin(mInner->mVScrollbarBox, vSize);
+      size->width += vSize.width;
+  
+      nsMargin border;
+      GetBorderAndPadding(border);
+      nsMargin inset;
+      GetInset(inset);
+      border += inset;
+     
+      size->width += border.left + border.right + inset.left + inset.right;
+    }
+  }
+  
   return rv;
 }
 
