@@ -184,7 +184,7 @@ nsTableColGroupFrame::SetInitialChildList(nsPresContext* aPresContext,
 
   if (!aChildList) {
     nsIFrame* firstChild;
-    tableFrame->CreateAnonymousColFrames(*aPresContext, *this, GetSpan(), eColAnonymousColGroup, 
+    tableFrame->CreateAnonymousColFrames(*aPresContext, this, GetSpan(), eColAnonymousColGroup, 
                                          PR_FALSE, nsnull, &firstChild);
     if (firstChild) {
       SetInitialChildList(aPresContext, aListName, firstChild);
