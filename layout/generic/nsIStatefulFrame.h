@@ -13,8 +13,10 @@ class nsIStatefulFrame : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTATEFULFRAME_IID)
 
-  NS_IMETHOD SaveState(nsILayoutHistoryState* aState) = 0;
-  NS_IMETHOD RestoreState(nsILayoutHistoryState* aState) = 0;
+  NS_IMETHOD GetStateType(PRInt32* aStateType) = 0;
+  NS_IMETHOD SaveState(nsISupports** aState) = 0;
+  NS_IMETHOD RestoreState(nsISupports* aState) = 0;
+
 };
 
 #endif /* _nsIStatefulFrame_h */
