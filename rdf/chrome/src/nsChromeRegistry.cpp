@@ -48,8 +48,6 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, chrome);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, skin);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, content);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, locale);
-DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, platform);
-DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, behavior);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, base);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, main);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, archive);
@@ -147,9 +145,7 @@ public:
     static nsIRDFResource* kCHROME_chrome;
     static nsIRDFResource* kCHROME_skin;
     static nsIRDFResource* kCHROME_content;
-    static nsIRDFResource* kCHROME_platform;
     static nsIRDFResource* kCHROME_locale;
-    static nsIRDFResource* kCHROME_behavior;
     static nsIRDFResource* kCHROME_base;
     static nsIRDFResource* kCHROME_main;
     static nsIRDFResource* kCHROME_archive;
@@ -170,8 +166,6 @@ nsIRDFResource* nsChromeRegistry::kCHROME_chrome = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_skin = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_content = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_locale = nsnull;
-nsIRDFResource* nsChromeRegistry::kCHROME_behavior = nsnull;
-nsIRDFResource* nsChromeRegistry::kCHROME_platform = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_base = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_main = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_archive = nsnull;
@@ -200,9 +194,7 @@ nsChromeRegistry::~nsChromeRegistry()
         NS_IF_RELEASE(kCHROME_chrome);
         NS_IF_RELEASE(kCHROME_skin);
         NS_IF_RELEASE(kCHROME_content);
-        NS_IF_RELEASE(kCHROME_platform);
         NS_IF_RELEASE(kCHROME_locale);
-        NS_IF_RELEASE(kCHROME_behavior);
         NS_IF_RELEASE(kCHROME_base);
         NS_IF_RELEASE(kCHROME_main);
         NS_IF_RELEASE(kCHROME_archive);
@@ -556,15 +548,7 @@ nsChromeRegistry::InitRegistry()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_platform);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
-
-        rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_locale);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
-
-        rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_behavior);
+        rv = gRDFService->GetResource(kURICHROME_locale, &kCHROME_locale);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
 
