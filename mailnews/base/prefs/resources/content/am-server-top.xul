@@ -4,8 +4,8 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-server-top.dtd" >
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
+<page xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       orient="vertical">
 
-</window>
+</page>

@@ -25,11 +25,10 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-login.dtd" >
-<window id="loginpage" 
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
-        class="color-dialog"
-        onload="parent.wizardManager.onPageLoad('login');">
+<page id="loginpage" 
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="parent.wizardManager.onPageLoad('login');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/aw-login.js"/>
@@ -66,4 +65,4 @@ Rights Reserved.
 -->
   </vbox>
   
-</window>
+</page>

@@ -27,12 +27,11 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications.dtd" >
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-applications.xul');">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      orient="vertical"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-applications.xul');">
 
   <stringbundle id="bundle_prefApplications"
                 src="chrome://communicator/locale/pref/pref-applications.properties"/>
@@ -130,4 +129,4 @@
       <button label="&resetButton.label;" oncommand="clearRememberedSettings();"/>
     </hbox>
   </groupbox>
-</window>
+</page>

@@ -6,11 +6,11 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-main.dtd" >
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-     flex="1" class="color-dialog" 
-     onload="parent.onPanelLoaded('am-main.xul');"
-     orient="vertical">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      flex="1"
+      onload="parent.onPanelLoaded('am-main.xul');"
+      orient="vertical">
 
     <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
     <script type="application/x-javascript" src="chrome://messenger/content/am-main.js"/>
@@ -101,4 +101,4 @@
 
     </groupbox>
 
-</window>
+</page>

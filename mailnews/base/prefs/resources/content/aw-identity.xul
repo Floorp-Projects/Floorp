@@ -25,11 +25,10 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-identity.dtd" >
-<window id="identitypage" 
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
-        class="color-dialog"
-        onload="parent.wizardManager.onPageLoad('identity');">
+<page id="identitypage" 
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="parent.wizardManager.onPageLoad('identity');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/aw-identity.js"/> 
@@ -68,4 +67,4 @@ Rights Reserved.
     </grid>
   </vbox>
   
-</window>
+</page>

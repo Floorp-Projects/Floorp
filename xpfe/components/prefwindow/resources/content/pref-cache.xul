@@ -24,11 +24,10 @@
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-cache.dtd" >
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-cache.xul');">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-cache.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -100,5 +99,5 @@
 
   </groupbox>
 
-</window>
+</page>
 

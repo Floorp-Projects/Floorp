@@ -24,11 +24,10 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-done.dtd" >
-<window id="done" 
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
-        class="color-dialog"
-        onload="parent.wizardManager.onPageLoad('done');">
+<page id="done" 
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="parent.wizardManager.onPageLoad('done');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script src="chrome://messenger/content/aw-done.js"/>
@@ -89,4 +88,4 @@ Rights Reserved.
     -->
   </vbox>
   
-</window>
+</page>

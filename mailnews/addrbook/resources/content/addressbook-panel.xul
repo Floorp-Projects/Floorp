@@ -27,11 +27,11 @@
 
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsTreeOverlay.dtd" >
-<window id="addressbook-panel"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="InitCommonJS(); abPanelStartup();"
-        xmlns:nc="http://home.netscape.com/NC-rdf#"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<page id="addressbook-panel"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="InitCommonJS(); abPanelStartup();"
+      xmlns:nc="http://home.netscape.com/NC-rdf#"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
@@ -90,4 +90,4 @@
       </treehead>
     </tree>
   </vbox>
-</window>
+</page>

@@ -31,11 +31,10 @@ Contributors:
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-addressing.dtd" >
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        class="color-dialog"
-        onload="onLoad();"
-        orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      onload="onLoad();"
+      orient="vertical">
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-addressing.js"/>
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
@@ -65,4 +64,4 @@ Contributors:
     </radiogroup>
       
   </vbox>
-</window>
+</page>

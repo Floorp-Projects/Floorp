@@ -25,7 +25,7 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/pref-publish.dtd" >
-<window xmlns:html="http://www.w3.org/1999/xhtml"
+<page xmlns:html="http://www.w3.org/1999/xhtml"
     		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&window.title;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-publish' ); else parent.queuedTag = 'pref-publish';">
@@ -77,4 +77,4 @@
   </html:tr>
 </html:table>
 </html:div>
-</window>
+</page>

@@ -25,13 +25,12 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-directory.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        class="color-dialog"
-        style="-moz-user-focus: ignore;"
-        title="&window.title;" orient="vertical"
-        onload="onInitEditDirectories();">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      style="-moz-user-focus: ignore;"
+      title="&window.title;" orient="vertical"
+      onload="onInitEditDirectories();">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
 
@@ -51,4 +50,4 @@ Rights Reserved.
       </vbox>
     </hbox>
     <hbox id="okCancelButtonsRight"/>
-</window>
+</page>

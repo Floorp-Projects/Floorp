@@ -27,7 +27,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-identity-advanced.dtd">
 
-<window class="dialog"
+<page
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&identityAdvanced.label;"
   orient="vertical"
@@ -64,4 +64,4 @@
           
   <hbox id="okCancelButtonsRight"/>
 
-</window>
+</page>

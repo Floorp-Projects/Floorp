@@ -8,11 +8,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-viewing_messages.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        onload="parent.initPanel('chrome://messenger/content/pref-viewing_messages.xul');"
-        orient="vertical">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/pref-viewing_messages.xul');"
+      orient="vertical">
   <popupset id="aTooltipSet"/>
 
   <script type="application/x-javascript">
@@ -125,4 +124,4 @@
               prefattribute="checked"/>
   </groupbox>
     
-</window>
+</page>

@@ -7,10 +7,10 @@
 
 <?xml-stylesheet href="chrome://inspector/skin/"?>
 
-<window id="winJSObject" class="color-dialog" 
-        orient="vertical"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<page id="winJSObject"
+      orient="vertical"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/jsObject/jsObject.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
@@ -50,4 +50,4 @@
     <treechildren id="trchJSObject" flex="1"/>
   </tree>
 
-</window>
+</page>

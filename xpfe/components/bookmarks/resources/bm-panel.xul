@@ -34,7 +34,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
 
-<window id="bookmarksPanel" orient="vertical"
+<page id="bookmarksPanel" orient="vertical"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup();">
@@ -150,4 +150,4 @@
                   onclick="gBookmarksShell.treeOpen(event);"/>
   </tree>
 
-</window>
+</page>

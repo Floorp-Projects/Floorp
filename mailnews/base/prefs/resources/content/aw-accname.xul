@@ -26,11 +26,10 @@ Rights Reserved.
 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accname.dtd" >
-<window id="accnamepage" 
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.wizardManager.onPageLoad('accname');">
+<page id="accnamepage" 
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="parent.wizardManager.onPageLoad('accname');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/aw-accname.js"/>
@@ -49,4 +48,4 @@ Rights Reserved.
     </hbox>
   </vbox>
     
-</window>
+</page>

@@ -4,11 +4,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-receipts.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        onload="parent.initPanel('chrome://messenger/content/pref-receipts.xul');"
-        orient="vertical">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/pref-receipts.xul');"
+      orient="vertical">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -24,4 +23,4 @@
 
   <hbox class="box-smallheader" title="&pane.title;"/>
 
-</window>
+</page>

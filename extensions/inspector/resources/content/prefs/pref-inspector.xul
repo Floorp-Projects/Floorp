@@ -5,8 +5,8 @@
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<window id="winPref" orient="vertical"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<page id="winPref" orient="vertical"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://inspector/content/extensions/wsm-colorpicker.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/prefs/pref-sidebar.js"/>
@@ -101,4 +101,4 @@
                 pref="true" preftype="bool" prefstring="inspector.hooks.navigator" prefattribute="checked"/>
     </vbox>
   </vbox>
-</window>
+</page>

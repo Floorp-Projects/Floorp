@@ -34,11 +34,10 @@
 %prefWinhooksDTD;
 ]>
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');"
-        orient="vertical">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');">
 
     <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
     
@@ -145,5 +144,5 @@
     </hbox>
     <spacer flex="1"/>
     
-</window>
+</page>
 

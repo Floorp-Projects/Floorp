@@ -6,9 +6,8 @@
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-copies.dtd" >
-<window xmlns:html="http://www.w3.org/1999/xhtml"
+<page xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      class="color-dialog"
       onload="parent.onPanelLoaded('am-copies.xul');"
       orient="vertical">
 
@@ -175,4 +174,4 @@
     </hbox>
   </groupbox>
 
-</window>
+</page>

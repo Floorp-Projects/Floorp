@@ -8,10 +8,10 @@
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/domNode/domNode.css"?>
 
-<window id="winNodeDefault" class="color-dialog" 
-        orient="vertical" style="padding: 10px"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<page id="winNodeDefault"
+      orient="vertical" style="padding: 10px"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <!--============================= SCRIPTS ============================= -->
 
@@ -112,4 +112,4 @@
       <textbox id="txbTextNodeValue" multiline="true" readonly="true" flex="1"/>
     </vbox>
   </deck>
-</window>
+</page>

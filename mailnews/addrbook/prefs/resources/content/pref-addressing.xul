@@ -4,11 +4,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-addressing.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="onLoad();"
-        class="color-dialog"
-        orient="vertical">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="onLoad();"
+      orient="vertical">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript">
@@ -94,4 +93,4 @@
      </hbox>
      -->
    </groupbox>
-</window>
+</page>

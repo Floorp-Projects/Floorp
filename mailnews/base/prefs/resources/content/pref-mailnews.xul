@@ -27,11 +27,10 @@ Contributor(s):
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-mailnews.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        onload="Init();"
-        orient="vertical">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="Init();"
+      orient="vertical">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -106,4 +105,4 @@ Contributor(s):
           </hbox>              
         </groupbox>
   
-</window>
+</page>

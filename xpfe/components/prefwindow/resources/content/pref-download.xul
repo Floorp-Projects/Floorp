@@ -26,11 +26,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-download.dtd" >
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        orient="vertical"
-        onload="if( parent.handle ) parent.handle.onpageload( 'pref-download' ); else parent.queuedTag = 'pref-download';">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="if( parent.handle ) parent.handle.onpageload( 'pref-download' ); else parent.queuedTag = 'pref-download';">
 
   <script type="application/x-javascript">
   // startup function called by the prefs architecture.
@@ -140,5 +139,5 @@
     <spacer style="height: 30px;"/>
   </html:fieldset>
 
-</window>
+</page>
 

@@ -6,8 +6,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-imap-advanced.dtd" >
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-      class="dialog"
+<page xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       style="padding: 10px"
       title="&imapAdvanced.label;"
@@ -73,4 +72,4 @@
 
 <hbox id="okCancelButtonsRight"/>
 
-</window>
+</page>

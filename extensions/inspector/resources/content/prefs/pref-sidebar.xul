@@ -5,8 +5,8 @@
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<window id="winPrefSidebar" orient="vertical"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<page id="winPrefSidebar" orient="vertical"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
@@ -23,4 +23,4 @@
       <button label="Install" onclick="gSidebarPrefs.installSidebar()"/>
     </vbox>
   </hbox>
-</window>
+</page>

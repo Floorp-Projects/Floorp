@@ -25,10 +25,9 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accounttype.dtd" >
-<window id="accounttype" 
+<page id="accounttype" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:nc="http://home.netscape.com/NC-rdf#"
-    class="color-dialog"
     onload="dump('** acctype onload\n'); parent.wizardManager.onPageLoad('accounttype');"
     orient="vertical"
     onunload="onUnload();">
@@ -69,4 +68,4 @@ Rights Reserved.
     </radiogroup>
   </vbox>
 
-</window>
+</page>

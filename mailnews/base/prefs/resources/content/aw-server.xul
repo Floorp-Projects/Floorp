@@ -25,11 +25,10 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >
-<window id="serverpage" 
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
-        class="color-dialog"
-        onload="parent.wizardManager.onPageLoad('server');">
+<page id="serverpage" 
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="parent.wizardManager.onPageLoad('server');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/aw-server.js"/>
@@ -76,6 +75,6 @@ Rights Reserved.
     </groupbox>
   </vbox>
   
-</window>
+</page>
 
 

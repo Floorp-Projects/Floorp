@@ -31,11 +31,10 @@ Contributors:
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-server-top.dtd" >
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        class="color-dialog"
-        onload="parent.onPanelLoaded('am-server.xul');"
-        orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      onload="parent.onPanelLoaded('am-server.xul');"
+      orient="vertical">
 
   <script type="application/x-javascript" src="chrome://messenger/content/am-server.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
@@ -232,4 +231,4 @@ Contributors:
             pref="true" preftype="string" prefattribute="value"
             prefstring="mail.server.%serverkey%.directory"/>
     </vbox>
-</window>
+</page>

@@ -29,11 +29,10 @@ Contributors:
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-offline.dtd">
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        class="color-dialog"
-        onload="parent.onPanelLoaded('am-offline.xul');"
-        orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      onload="parent.onPanelLoaded('am-offline.xul');"
+      orient="vertical">
  
     <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/> 
 
@@ -123,4 +122,4 @@ Contributors:
     </vbox>
     </groupbox>
    
-</window>
+</page>
