@@ -64,15 +64,6 @@ h3 { color: #009; font-size: 10pt; margin-bottom: 0px; margin-top: 35px; }
 	margin-left: 25px;
 }
 
-table {
-	background-color: #eeeeee;    /* really light grey */
-}
-
-td {
-	border: 1px solid #999999;    /* grey */
-	vertical-align: top;
-}
-
 .headingCell {
 	background-color: #99ccff;    /* light aqua */
 	font-weight: bold;
