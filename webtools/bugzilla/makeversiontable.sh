@@ -42,6 +42,7 @@ insert into versions (value, program) values ("1998-06-03", "Mozilla");
 insert into versions (value, program) values ("1998-07-28", "Mozilla");
 insert into versions (value, program) values ("1.0", "Bugzilla");
 insert into versions (value, program) values ("other", "Bugzilla");
+insert into versions (value, program) values ("other", "NGLayout");
 
 select * from versions;
 
