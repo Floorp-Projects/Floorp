@@ -140,6 +140,13 @@ public:
   static nsIAtom* h4;
   static nsIAtom* h5;
   static nsIAtom* h6;
+  static nsIAtom* headerContentBase;
+  static nsIAtom* headerContentLanguage;
+  static nsIAtom* headerContentScriptType;
+  static nsIAtom* headerContentStyleType;
+  static nsIAtom* headerContentType;
+  static nsIAtom* headerDefaultStyle;
+  static nsIAtom* headerWindowTarget;
   static nsIAtom* headers;
   static nsIAtom* height;
   static nsIAtom* hidden;
