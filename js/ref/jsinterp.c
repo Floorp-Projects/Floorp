@@ -1923,9 +1923,8 @@ js_Interpret(JSContext *cx, jsval *result)
 	    if (!ok) {
 		cx->newborn[GCX_OBJECT] = NULL;
 #if JS_HAS_EXCEPTIONS
-		if (cx->throwing) {
+		if (cx->throwing)
 		    goto do_throw;
-		}
 #endif
 		goto out;
 	    }
@@ -2631,14 +2630,17 @@ js_Interpret(JSContext *cx, jsval *result)
 
 	  case JSOP_GOSUB:
 	    len = GET_JUMP_OFFSET(pc);
-	    PUSH(INT_TO_JSVAL(pc - script->code));
+	    PR_ASSERT(js_CodeSpec[JSOP_GOSUB].length == 3);
+	    i = pc - script->code + 3;
+	    PUSH(INT_TO_JSVAL(i));
 	    CHECK_BRANCH(len);
 	    break;
 
 	  case JSOP_RETSUB:
 	    rval = POP();
 	    PR_ASSERT(JSVAL_IS_INT(rval));
-	    pc = script->code + JSVAL_TO_INT(rval) + 3 /* JSR */;
+	    i = JSVAL_TO_INT(rval);
+	    pc = script->code + i;
 	    len = 0;
 	    CHECK_BRANCH(-1);
 	    break;

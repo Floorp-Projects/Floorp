@@ -917,6 +917,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		todo = Sprint(&ss->sprinter, "");
 		break;
 
+#if JS_HAS_EXCEPTIONS
 	      case JSOP_GOSUB:
 	      case JSOP_RETSUB:
 	      case JSOP_SETSP:
@@ -928,6 +929,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		if (sn && SN_TYPE(sn) == SRC_HIDDEN)
 		    todo = -2;
 		break;
+#endif /* JS_HAS_EXCEPTIONS */
 
 	      case JSOP_POP:
 	      case JSOP_POPV:
@@ -1009,6 +1011,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		todo = -2;
 		break;
 
+#if JS_HAS_EXCEPTIONS
 	      case JSOP_THROW:
 		sn = js_GetSrcNote(jp->script, pc);
 		todo = -2;
@@ -1017,6 +1020,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		rval = POP_STR();
 		js_printf(jp, "\t%s %s;\n", cs->name, rval);
 		break;
+#endif /* JS_HAS_EXCEPTIONS */
 
 	      case JSOP_GOTO:
 		sn = js_GetSrcNote(jp->script, pc);
