@@ -1542,7 +1542,7 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     */
     // since the embedded webshell is not in the webshell hierarchy, RemoveFocus has no effect
     // that's why we find the widget attached to this and set focus on it explicitly
-    mWebShell->RemoveFocus();
+    //mWebShell->RemoveFocus();
   }
 }
 /* --------------------- Ender methods ---------------------- */
