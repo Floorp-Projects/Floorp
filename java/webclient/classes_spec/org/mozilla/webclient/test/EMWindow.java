@@ -57,7 +57,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.31 2001/05/24 21:13:45 ashuk%eng.sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.32 2001/05/29 18:34:21 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -273,7 +273,7 @@ private UniversalDialog           uniDialog = null;
             System.out.println("Can't create BrowserControl: " + 
                                e.getMessage());
         }
-        Assert.assert(null != browserCanvas);
+        Assert.assert_it(null != browserCanvas);
 		browserCanvas.setSize(defaultWidth, defaultHeight);
 	
 		// Add the control panel and the browserCanvas

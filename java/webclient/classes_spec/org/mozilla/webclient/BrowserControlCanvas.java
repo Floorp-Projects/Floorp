@@ -52,7 +52,7 @@ import java.awt.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.2 2001/05/25 23:09:45 ashuk%eng.sun.com Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.3 2001/05/29 18:34:17 ashuk%eng.sun.com Exp $
 
  * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
 
@@ -146,7 +146,7 @@ public void addNotify ()
 
 	try {
 		Rectangle r = new Rectangle(getBoundsRelativeToWindow());
-        Assert.assert(null != webShell);
+        Assert.assert_it(null != webShell);
 
         WindowControl wc = (WindowControl)
             webShell.queryInterface(BrowserControl.WINDOW_CONTROL_NAME);

@@ -102,7 +102,7 @@ public RandomHTMLInputStream(int yourNumReads)
     ParameterCheck.greaterThan(yourNumReads, 1);
 
     random = new Random();
-    Assert.assert(null != random);
+    Assert.assert_it(null != random);
 
     isClosed = false;
     firstRead = true;

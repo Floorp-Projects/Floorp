@@ -152,7 +152,7 @@ public String toString()
 
 public Enumeration children() 
 {
-    Assert.assert(-1 != nativeRDFNode);
+    Assert.assert_it(-1 != nativeRDFNode);
     Enumeration enum = null;
 
     enum = new RDFEnumeration(nativeWebShell, this);
@@ -167,7 +167,7 @@ public boolean getAllowsChildren()
  
 public TreeNode getChildAt(int childIndex)
 {
-    Assert.assert(-1 != nativeRDFNode);
+    Assert.assert_it(-1 != nativeRDFNode);
     TreeNode result = null;
     int childNode;
 
@@ -183,7 +183,7 @@ public TreeNode getChildAt(int childIndex)
  
 public int getChildCount()
 {
-    Assert.assert(-1 != nativeRDFNode);
+    Assert.assert_it(-1 != nativeRDFNode);
     int result = -1;
 
     result = nativeGetChildCount(nativeWebShell, nativeRDFNode);
@@ -193,7 +193,7 @@ public int getChildCount()
 
 public int getIndex(TreeNode node)
 {
-    Assert.assert(-1 != nativeRDFNode);
+    Assert.assert_it(-1 != nativeRDFNode);
     int result = -1;
     if (node instanceof RDFTreeNode) {
       result = nativeGetIndex(nativeWebShell, nativeRDFNode, 
@@ -205,13 +205,13 @@ public int getIndex(TreeNode node)
 
 public TreeNode getParent() 
 {
-    Assert.assert(-1 != nativeRDFNode);
+    Assert.assert_it(-1 != nativeRDFNode);
     return parent;
 }
 
 public boolean isLeaf()
 {
-    Assert.assert(-1 != nativeRDFNode);
+    Assert.assert_it(-1 != nativeRDFNode);
 
     return nativeIsLeaf(nativeWebShell, nativeRDFNode);
 }
@@ -231,12 +231,12 @@ public void insert(MutableTreeNode child, int index)
     if (!(child instanceof RDFTreeNode)) {
         throw new IllegalArgumentException("Can't insert non-RDFTreeNode children");
     }
-    Assert.assert(-1 != nativeRDFNode);
+    Assert.assert_it(-1 != nativeRDFNode);
     RDFTreeNode childNode = (RDFTreeNode) child;
     
     if (childNode.isFolder()) {
-        Assert.assert(-1 == childNode.getNativeRDFNode());
-        Assert.assert(null != childNode.getProperties());
+        Assert.assert_it(-1 == childNode.getNativeRDFNode());
+        Assert.assert_it(null != childNode.getProperties());
         int childNativeRDFNode;
         
         // hook up the child to its native peer
@@ -247,7 +247,7 @@ public void insert(MutableTreeNode child, int index)
         childNode.setNativeRDFNode(childNativeRDFNode);
     }
     else {
-        Assert.assert(-1 != childNode.getNativeRDFNode());
+        Assert.assert_it(-1 != childNode.getNativeRDFNode());
         int childNativeRDFNode = childNode.getNativeRDFNode();
         
         // hook up the child to its native peer
@@ -345,7 +345,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("RDFTreeNode");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: RDFTreeNode.java,v 1.4 2001/05/11 22:38:16 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: RDFTreeNode.java,v 1.5 2001/05/29 18:36:11 ashuk%eng.sun.com Exp $");
 
 }
 

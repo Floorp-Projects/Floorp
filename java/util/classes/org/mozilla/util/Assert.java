@@ -34,7 +34,7 @@ package org.mozilla.util;
  *
  *  Typical usage:
  *  <BLOCKQUOTE><TT>
- *	Assert.assert(Assert.enabled && mytest(), "my test failed");
+ *	Assert.assert_it(Assert.enabled && mytest(), "my test failed");
  *  </TT></BLOCKQUOTE><P>
  *
  *  Such usage prevents <TT>mytest()</TT> from being executed if assertions
@@ -45,19 +45,19 @@ package org.mozilla.util;
  *  If you know that the condition being tested is fast, you may omit the
  *  <I>enabled</I> flag:
  *  <BLOCKQUOTE><TT>
- *	Assert.assert(myValue != null);
+ *	Assert.assert_it(myValue != null);
  *  </TT></BLOCKQUOTE><P>
  *
  *  Note that even in this second usage, if assertions are disabled,
- *  the <B>assert()</B> method will do nothing.<P>
+ *  the <B>assert_it()</B> method will do nothing.<P>
  *
  *  Another usage that is more efficient but bulkier:
  *  <BLOCKQUOTE><TT>
- *	if (Assert.enabled && Assert.assert(mytest(), "my test failed"));
+ *	if (Assert.enabled && Assert.assert_it(mytest(), "my test failed"));
  *  </TT></BLOCKQUOTE><P>
  *
  *  Such usage prevents not only <TT>mytest()</TT> from being executed if
- *  assertions are disabled but also the assert method itself, and some
+ *  assertions are disabled but also the assert_it method itself, and some
  *  compilers can remove the entire statement if assertions are disabled.<P>
  *
  *  <B>Assert</B> is intended for general condition and invariant testing;
@@ -102,7 +102,7 @@ static public void setEnabled(boolean newEnabled) {
  * @exception	AssertionFailureException	if <I>test</I> is false
  * @return	true
  */
-static public boolean assert (boolean test, String message) {
+static public boolean assert_it (boolean test, String message) {
     if (enabled && !test) {
 	throw new AssertionFailureException (message);
     }
@@ -117,7 +117,7 @@ static public boolean assert (boolean test, String message) {
  * @exception	AssertionFailureException	if <I>test</I> is false
  * @return	true
  */
-static public boolean assert (boolean test) {
+static public boolean assert_it (boolean test) {
     if (enabled && !test) {
 	throw new AssertionFailureException ();
     }

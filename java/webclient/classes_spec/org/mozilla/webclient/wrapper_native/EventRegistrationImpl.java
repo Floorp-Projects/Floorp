@@ -119,8 +119,8 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
-    Assert.assert(null != nativeEventThread);
+    Assert.assert_it(-1 != nativeWebShell);
+    Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
     WCEventListenerWrapper listenerWrapper = 
@@ -139,8 +139,8 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
-    Assert.assert(null != nativeEventThread);
+    Assert.assert_it(-1 != nativeWebShell);
+    Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
    
     WCEventListenerWrapper listenerWrapper = 
@@ -159,8 +159,8 @@ public void addMouseListener(MouseListener listener)
 {
     ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
-    Assert.assert(null != nativeEventThread);
+    Assert.assert_it(-1 != nativeWebShell);
+    Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
     // We have to wrap the user provided java.awt.event.MouseListener
@@ -192,8 +192,8 @@ public void removeMouseListener(MouseListener listener)
 {
     ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
-    Assert.assert(null != nativeEventThread);
+    Assert.assert_it(-1 != nativeWebShell);
+    Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
     WCMouseListenerImpl mouseListenerWrapper = 
@@ -228,17 +228,17 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.9 2000/08/09 21:47:37 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.10 2001/05/29 18:36:07 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
 	org.mozilla.webclient.BrowserControl control = 
 	    org.mozilla.webclient.BrowserControlFactory.newBrowserControl();
-        Assert.assert(control != null);
+        Assert.assert_it(control != null);
 	
 	EventRegistration wc = (EventRegistration)
 	    control.queryInterface(org.mozilla.webclient.BrowserControl.WINDOW_CONTROL_NAME);
-	Assert.assert(wc != null);
+	Assert.assert_it(wc != null);
     }
     catch (Exception e) {
 	System.out.println("got exception: " + e.getMessage());

@@ -95,7 +95,7 @@ public void setParms(String titleMsg,
 
 public void actionPerformed(ActionEvent ae) 
 {
-    Assert.assert(null != buttons);
+    Assert.assert_it(null != buttons);
     int i = 0;
     for (i = 0; i < buttons.length; i++) {
 	if (ae.getSource() == buttons[i]) {

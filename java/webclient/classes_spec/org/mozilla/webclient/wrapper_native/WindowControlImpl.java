@@ -74,7 +74,7 @@ public WindowControlImpl(WrapperFactory yourFactory,
 
 public void delete()
 {
-    Assert.assert(null != eventThread, "eventThread shouldn't be null at delete time");
+    Assert.assert_it(null != eventThread, "eventThread shouldn't be null at delete time");
     eventThread.delete();
     eventThread = null;
     nativeWebShell = -1;
@@ -107,7 +107,7 @@ public void setBounds(Rectangle newBounds)
 {
     ParameterCheck.nonNull(newBounds);
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     
     synchronized(myBrowserControl) {
         nativeSetBounds(nativeWebShell, newBounds.x, newBounds.y,
@@ -244,17 +244,17 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.8 2000/09/14 22:00:20 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.9 2001/05/29 18:36:13 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
 	org.mozilla.webclient.BrowserControl control = 
 	    org.mozilla.webclient.BrowserControlFactory.newBrowserControl();
-        Assert.assert(control != null);
+        Assert.assert_it(control != null);
 	
 	WindowControl wc = (WindowControl)
 	    control.queryInterface(org.mozilla.webclient.BrowserControl.WINDOW_CONTROL_NAME);
-	Assert.assert(wc != null);
+	Assert.assert_it(wc != null);
     }
     catch (Exception e) {
 	System.out.println("got exception: " + e.getMessage());

@@ -143,7 +143,7 @@ public void addBookmark(BookmarkEntry mayBeNullParent,
 public TreeModel getBookmarks() throws IllegalStateException
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
 
     if (null == bookmarksTree) {
         int nativeBookmarks;
@@ -166,7 +166,7 @@ public void removeBookmark(BookmarkEntry bookmark)
 {
     ParameterCheck.nonNull(bookmark);
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     
     throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::getPageInfo has not yet been implemented.\n");
 }
@@ -242,17 +242,17 @@ public static void main(String [] args)
 
     Log.setApplicationName("BookmarksImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.8 2001/04/02 21:13:56 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.9 2001/05/29 18:36:04 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
 	org.mozilla.webclient.BrowserControl control = 
 	    org.mozilla.webclient.BrowserControlFactory.newBrowserControl();
-        Assert.assert(control != null);
+        Assert.assert_it(control != null);
 	
 	Bookmarks wc = (Bookmarks)
 	    control.queryInterface(org.mozilla.webclient.BrowserControl.WINDOW_CONTROL_NAME);
-	Assert.assert(wc != null);
+	Assert.assert_it(wc != null);
     }
     catch (Exception e) {
 	System.out.println("got exception: " + e.getMessage());

@@ -96,7 +96,7 @@ public BrowserControlImpl(BrowserControlCanvas yourCanvas)
 
 void delete()
 {
-    Assert.assert(null != myCanvas);
+    Assert.assert_it(null != myCanvas);
     
     // Make sure we're not showing.
     if (myCanvas.isShowing()) {
@@ -124,7 +124,7 @@ void delete()
         currentPage = null;
     }
 
-    Assert.assert(null != windowControl);
+    Assert.assert_it(null != windowControl);
     ((ImplObject)windowControl).delete();
     windowControl = null;
 
@@ -148,7 +148,7 @@ static void appInitialize(String verifiedBinDirAbsolutePath) throws Exception
 
 static void appTerminate() throws Exception
 {
-    Assert.assert(null != wrapperFactory);
+    Assert.assert_it(null != wrapperFactory);
 
     if (null != bookmarks) {
         ((ImplObject)bookmarks).delete();
@@ -223,7 +223,7 @@ public Object queryInterface(String interfaceName) throws ClassNotFoundException
 {
     ParameterCheck.nonNull(interfaceName);
     
-    Assert.assert(null != wrapperFactory);
+    Assert.assert_it(null != wrapperFactory);
     wrapperFactory.throwExceptionIfNotInitialized();
 
     // At some point, it has to come down to hard coded string names,
@@ -245,7 +245,7 @@ public Object queryInterface(String interfaceName) throws ClassNotFoundException
         return history;
     }
     if (BROWSER_CONTROL_CANVAS_NAME.equals(interfaceName)) {
-        Assert.assert(null != myCanvas);
+        Assert.assert_it(null != myCanvas);
         return myCanvas;
     }
     if (CURRENT_PAGE_NAME.equals(interfaceName)) {
@@ -308,7 +308,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.5 2001/05/24 21:13:30 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.6 2001/05/29 18:34:19 ashuk%eng.sun.com Exp $");
     
 }
 

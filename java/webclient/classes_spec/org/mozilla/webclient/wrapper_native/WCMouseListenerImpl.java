@@ -209,27 +209,27 @@ public void eventDispatched(WebclientEvent event)
 
 public void mouseClicked(MouseEvent e)
 {
-    Assert.assert(false, "This method should not be called.");
+    Assert.assert_it(false, "This method should not be called.");
 }
 
 public void mouseEntered(MouseEvent e)
 {
-    Assert.assert(false, "This method should not be called.");
+    Assert.assert_it(false, "This method should not be called.");
 }
 
 public void mouseExited(MouseEvent e)
 {
-    Assert.assert(false, "This method should not be called.");
+    Assert.assert_it(false, "This method should not be called.");
 }
 
 public void mousePressed(MouseEvent e)
 {
-    Assert.assert(false, "This method should not be called.");
+    Assert.assert_it(false, "This method should not be called.");
 }
 
 public void mouseReleased(MouseEvent e)
 {
-    Assert.assert(false, "This method should not be called.");
+    Assert.assert_it(false, "This method should not be called.");
 }
 
 } // end of class WCMouseListenerImpl

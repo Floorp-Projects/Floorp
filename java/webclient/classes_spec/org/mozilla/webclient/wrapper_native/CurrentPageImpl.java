@@ -91,7 +91,7 @@ public CurrentPageImpl(WrapperFactory yourFactory,
 public void copyCurrentSelectionToSystemClipboard()
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
 
     synchronized(myBrowserControl) {
         nativeCopyCurrentSelectionToSystemClipboard(nativeWebShell);
@@ -268,7 +268,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.17 2001/05/10 16:57:00 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.18 2001/05/29 18:36:06 ashuk%eng.sun.com Exp $");
     
 }
 

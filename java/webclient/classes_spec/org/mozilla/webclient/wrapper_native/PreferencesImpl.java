@@ -164,17 +164,17 @@ public static void main(String [] args)
 
     Log.setApplicationName("PreferencesImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: PreferencesImpl.java,v 1.2 2001/04/02 21:13:59 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: PreferencesImpl.java,v 1.3 2001/05/29 18:36:10 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
 	org.mozilla.webclient.BrowserControl control = 
 	    org.mozilla.webclient.BrowserControlFactory.newBrowserControl();
-        Assert.assert(control != null);
+        Assert.assert_it(control != null);
 	
 	Preferences wc = (Preferences)
 	    control.queryInterface(org.mozilla.webclient.BrowserControl.WINDOW_CONTROL_NAME);
-	Assert.assert(wc != null);
+	Assert.assert_it(wc != null);
     }
     catch (Exception e) {
 	System.out.println("got exception: " + e.getMessage());

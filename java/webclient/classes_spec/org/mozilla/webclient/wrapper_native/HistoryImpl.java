@@ -77,7 +77,7 @@ public HistoryImpl(WrapperFactory yourFactory,
 public void back()
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
 
     synchronized(myBrowserControl) {
         nativeBack(nativeWebShell);
@@ -87,7 +87,7 @@ public void back()
 public boolean canBack()
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     boolean result = false;
 
     synchronized(myBrowserControl) {
@@ -99,7 +99,7 @@ public boolean canBack()
 public HistoryEntry [] getBackList()
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     HistoryEntry [] result = null;
     
     /* synchronized(myBrowserControl) {
@@ -114,7 +114,7 @@ public HistoryEntry [] getBackList()
 public void clearHistory()
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     
     /* synchronized(myBrowserControl) {
         nativeClearHistory(nativeWebShell);
@@ -129,7 +129,7 @@ public void clearHistory()
 public void forward()
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
 
     synchronized(myBrowserControl) {
         nativeForward(nativeWebShell);
@@ -139,7 +139,7 @@ public void forward()
 public boolean canForward()
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     boolean result = false;
 
     synchronized(myBrowserControl) {
@@ -152,7 +152,7 @@ public HistoryEntry [] getForwardList()
 {
     HistoryEntry [] result = null;
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     
     /* synchronized(myBrowserControl) {
         result = nativeGetForwardList(nativeWebShell);
@@ -167,7 +167,7 @@ public HistoryEntry [] getHistory()
 {
     HistoryEntry [] result = null;
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     
     /* synchronized(myBrowserControl) {
         result = nativeGetHistory(nativeWebShell);
@@ -182,7 +182,7 @@ public HistoryEntry getHistoryEntry(int historyIndex)
 {
     ParameterCheck.noLessThan(historyIndex, 0);
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     HistoryEntry result = null;
     
     /* synchronized(myBrowserControl) {
@@ -197,7 +197,7 @@ public HistoryEntry getHistoryEntry(int historyIndex)
 public int getCurrentHistoryIndex()
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     int result = -1;
 
     synchronized(myBrowserControl) {
@@ -210,7 +210,7 @@ public void setCurrentHistoryIndex(int historyIndex)
 {
     ParameterCheck.noLessThan(historyIndex, 0);
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     
     synchronized(myBrowserControl) {
 	nativeSetCurrentHistoryIndex(nativeWebShell, historyIndex);
@@ -220,7 +220,7 @@ public void setCurrentHistoryIndex(int historyIndex)
 public int getHistoryLength()
 {
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     int result = -1;
 
     synchronized(myBrowserControl) {
@@ -233,7 +233,7 @@ public String getURLForIndex(int historyIndex)
 {
     ParameterCheck.noLessThan(historyIndex, 0);
     myFactory.throwExceptionIfNotInitialized();
-    Assert.assert(-1 != nativeWebShell);
+    Assert.assert_it(-1 != nativeWebShell);
     String result = null;
     
     synchronized(myBrowserControl) {
@@ -283,7 +283,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("HistoryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.4 2000/07/22 02:48:25 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.5 2001/05/29 18:36:07 ashuk%eng.sun.com Exp $");
     
 }
 

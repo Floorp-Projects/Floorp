@@ -112,13 +112,13 @@ protected void finalize() throws Throwable
 
 public boolean hasMoreElements()
 {
-    Assert.assert(-1 != nativeRDFNode);
+    Assert.assert_it(-1 != nativeRDFNode);
     return nativeHasMoreElements(nativeWebShell, nativeRDFNode);
 }
 
 public Object nextElement()
 {
-    Assert.assert(null != parent);
+    Assert.assert_it(null != parent);
     Object result = null;
     int nextNativeRDFNode;
 
@@ -160,7 +160,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("RDFEnumeration");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: RDFEnumeration.java,v 1.2 2000/11/03 03:16:50 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: RDFEnumeration.java,v 1.3 2001/05/29 18:36:11 ashuk%eng.sun.com Exp $");
 
 }
 

@@ -200,8 +200,8 @@ public void delete()
 public void run() 
 {
     //   this.setPriority(Thread.MIN_PRIORITY);
-    Assert.assert(-1 != nativeWebShell);
-    Assert.assert(null != windowControl);
+    Assert.assert_it(-1 != nativeWebShell);
+    Assert.assert_it(null != windowControl);
 
     nativeInitialize(nativeWebShell);
 
@@ -327,8 +327,8 @@ private void doRemoveListeners()
 
 void addListener(WCEventListenerWrapper newListener)
 {
-    Assert.assert(-1 != nativeWebShell);
-    Assert.assert(null != windowControl);
+    Assert.assert_it(-1 != nativeWebShell);
+    Assert.assert_it(null != windowControl);
 
     synchronized (this) {
         if (null == listenersToAdd) {
@@ -350,8 +350,8 @@ void addListener(WCEventListenerWrapper newListener)
 
 void removeListener(WCEventListenerWrapper newListener)
 {
-    Assert.assert(-1 != nativeWebShell);
-    Assert.assert(null != windowControl);
+    Assert.assert_it(-1 != nativeWebShell);
+    Assert.assert_it(null != windowControl);
 
     synchronized (this) {
         if (null == listenersToRemove) {
@@ -388,8 +388,8 @@ void nativeEventOccurred(WebclientEventListener target,
     ParameterCheck.nonNull(target);
     ParameterCheck.nonNull(targetClassName);
 
-    Assert.assert(-1 != nativeWebShell);
-    Assert.assert(null != windowControl);
+    Assert.assert_it(-1 != nativeWebShell);
+    Assert.assert_it(null != windowControl);
     
     WebclientEvent event = null;
     
@@ -397,7 +397,7 @@ void nativeEventOccurred(WebclientEventListener target,
         event = new DocumentLoadEvent(this, eventType, eventData);
     }
     else if (MouseListener.class.getName().equals(targetClassName)) {
-        Assert.assert(target instanceof WCMouseListenerImpl);
+        Assert.assert_it(target instanceof WCMouseListenerImpl);
         
         // We create a plain vanilla WebclientEvent, which the
         // WCMouseListenerImpl target knows how to deal with.
