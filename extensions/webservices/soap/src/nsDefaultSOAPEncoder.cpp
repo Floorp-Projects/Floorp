@@ -54,6 +54,7 @@ NS_NAMED_LITERAL_STRING(kSOAPArrayTypeAttribute, "arrayType");
 NS_NAMED_LITERAL_STRING(kAnyTypeSchemaType, "anyType");
 NS_NAMED_LITERAL_STRING(kAnySimpleTypeSchemaType, "anySimpleType");
 NS_NAMED_LITERAL_STRING(kArraySOAPType, "Array");
+NS_NAMED_LITERAL_STRING(kStructSOAPType, "Struct");
 
 NS_NAMED_LITERAL_STRING(kStringSchemaType, "string");
 NS_NAMED_LITERAL_STRING(kBooleanSchemaType, "boolean");
@@ -479,8 +480,59 @@ NS_IMETHODIMP
       return rc;
     }
   }
+
 //  Implement complex types with property bags here.
-  return NS_ERROR_NOT_IMPLEMENTED;
+//  Look at the types as we do it later.
+
+  nsIID* iid;
+  nsCOMPtr<nsISupports> ptr;
+  nsresult rc = aSource->GetAsInterface(&iid, getter_AddRefs(ptr));
+  if (NS_FAILED(rc))
+    return rc;
+  if (iid->Equals(NS_GET_IID(nsIPropertyBag))) {  //  Only do explicit property bags for now.
+    if (aName.IsEmpty()) {
+      rc = EncodeSimpleValue(kEmpty,
+			     *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+			     kStructSOAPType, aDestination,
+			     aReturnValue);
+    }
+    else {
+      rc = EncodeSimpleValue(kEmpty,
+			   aNamespaceURI, aName, aDestination,
+			   aReturnValue);
+    }
+    if (NS_FAILED(rc))
+      return rc;
+    nsCOMPtr<nsISimpleEnumerator> e;
+    ((nsIPropertyBag*)ptr.get())->GetEnumerator(getter_AddRefs(e));
+    PRBool more;
+    rc = e->HasMoreElements(&more);
+    if (NS_FAILED(rc))
+      return rc;
+    while (more) {
+      nsCOMPtr<nsIProperty> p;
+      rc = e->GetNext(getter_AddRefs(p));
+      if (NS_FAILED(rc))
+        return rc;
+      nsAutoString name;
+      rc = p->GetName(name);
+      if (NS_FAILED(rc))
+        return rc;
+      nsCOMPtr<nsIVariant>value;
+      rc = p->GetValue(getter_AddRefs(value));
+      if (NS_FAILED(rc))
+        return rc;
+      nsCOMPtr<nsIDOMElement>result;
+      rc = aEncoding->Encode(value,kEmpty,name,nsnull,aAttachments,*aReturnValue,getter_AddRefs(result));
+      if (NS_FAILED(rc))
+        return rc;
+      rc = e->HasMoreElements(&more);
+      if (NS_FAILED(rc))
+        return rc;
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 //  AnySimpleType
