@@ -1282,8 +1282,6 @@ NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aFolder
 	PRBool canRunUrl = PR_FALSE;
     PRBool hasToWait = PR_FALSE;
 	nsCOMPtr<nsIImapProtocol> connection;
-    PRBool isBusy = PR_FALSE;
-    PRBool isInboxConnection = PR_FALSE;
 
     PR_CEnterMonitor(this);
 
