@@ -85,13 +85,17 @@ nsUnknownContentTypeDialog.prototype = {
       this.mLauncher = aLauncher;
       this.mContext  = aContext;
       // Display the dialog using the Window Watcher interface.
+      
+      var ir = aContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+      var dwi = ir.getInterface(Components.interfaces.nsIDOMWindowInternal);
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                 .getService(Components.interfaces.nsIWindowWatcher);
-      this.mDialog = ww.openWindow(null, // no parent
+      this.mDialog = ww.openWindow(dwi,
                                    "chrome://mozapps/content/downloads/unknownContentType.xul",
                                    null,
-                                   "chrome,centerscreen,titlebar,dialog=yes",
-                                   null);
+                                   "chrome,centerscreen,titlebar,dialog=yes,dependent",
+                                    null);
+
       // Hook this object to the dialog.
       this.mDialog.dialog = this;
       
@@ -385,7 +389,10 @@ nsUnknownContentTypeDialog.prototype = {
 
       if (type == "application/octet-stream") {
 #endif
-      if (this.mLauncher.MIMEInfo.MIMEType == "application/octet-stream") {
+      var mimeType = this.mLauncher.MIMEInfo.MIMEType;
+      if (mimeType == "application/octet-stream" || 
+          mimeType == "application/x-msdownload" ||
+          this.mLauncher.targetFile.isExecutable()) {
         rememberChoice.checked = false;
         rememberChoice.disabled = true;
       }
@@ -394,12 +401,11 @@ nsUnknownContentTypeDialog.prototype = {
       }
       this.toggleRememberChoice(rememberChoice);
 
-
       // XXXben - menulist won't init properly, hack. 
       var openHandler = this.dialogElement("openHandler");
       openHandler.parentNode.removeChild(openHandler);
-      var openParent = this.dialogElement("open").parentNode;
-      openParent.appendChild(openHandler);
+      var openHandlerBox = this.dialogElement("openHandlerBox");
+      openHandlerBox.appendChild(openHandler);
 
       this.mDialog.setTimeout("dialog.postShowCallback()", 0);
     },
@@ -498,6 +504,12 @@ nsUnknownContentTypeDialog.prototype = {
         var defaultApp = this.dialogElement("strings").getFormattedString("defaultApp", [desc]);
         this.dialogElement("defaultHandler").label = defaultApp;
       }
+      else {
+        this.dialogElement("modeDeck").setAttribute("selectedIndex", "1");
+        // Hide the default handler item too, in case the user picks a 
+        // custom handler at a later date which triggers the menulist to show.
+        this.dialogElement("defaultHandler").hidden = true;
+      }
     },
 
     // getPath:
@@ -517,8 +529,10 @@ nsUnknownContentTypeDialog.prototype = {
       // from the browser at the moment because of security concerns. 
       var openWithDefaultOK = this.openWithDefaultOK();
       var mimeType = this.mLauncher.MIMEInfo.MIMEType;
-      if ((mimeType == "application/octet-stream" ||
-           mimeType == "application/x-msdownload") && !openWithDefaultOK) {
+      if (this.mLauncher.targetFile.isExecutable() || (
+          (mimeType == "application/octet-stream" ||
+           mimeType == "application/x-msdownload") && 
+           !openWithDefaultOK)) {
         this.dialogElement("open").disabled = true;
         var openHandler = this.dialogElement("openHandler");
         openHandler.disabled = true;
@@ -604,8 +618,11 @@ nsUnknownContentTypeDialog.prototype = {
     },
     
     openHandlerCommand: function () {
-      if (this.dialogElement("openHandler").selectedItem.id == "choose")
+      var openHandler = this.dialogElement("openHandler");
+      if (openHandler.selectedItem.id == "choose")
         this.chooseApp();
+      else
+        openHandler.setAttribute("lastSelectedItemID", openHandler.selectedItem.id);
     },
 
     updateOKButton: function() {
@@ -793,6 +810,10 @@ nsUnknownContentTypeDialog.prototype = {
       fp.appendFilters(nsIFilePicker.filterApps);
 
       if (fp.show() == nsIFilePicker.returnOK && fp.file) {
+        // Show the "handler" menulist since we have a (user-specified) 
+        // application now.
+        this.dialogElement("modeDeck").setAttribute("selectedIndex", "0");
+        
         // Remember the file they chose to run.
         this.chosenApp = fp.file;
         // Update dialog.
@@ -801,8 +822,16 @@ nsUnknownContentTypeDialog.prototype = {
         otherHandler.setAttribute("path", this.getPath(this.chosenApp));
         otherHandler.label = this.chosenApp.leafName;
         this.dialogElement("openHandler").selectedIndex = 1;
+        this.dialogElement("openHandler").setAttribute("lastSelectedItemID", "otherHandler");
         
         this.dialogElement("mode").selectedItem = this.dialogElement("open");
+      }
+      else {
+        var openHandler = this.dialogElement("openHandler");
+        var lastSelectedID = openHandler.getAttribute("lastSelectedItemID");
+        if (!lastSelectedID)
+          lastSelectedID = "defaultHandler";
+        openHandler.selectedItem = this.dialogElement(lastSelectedID);
       }
     },
 
