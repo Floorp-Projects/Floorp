@@ -390,13 +390,13 @@ NS_IMETHODIMP nsDocShellTreeOwner::OnProgressChange(nsIChannel* aChannel,
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::OnChildProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress)
+   PRInt32 aCurChildProgress, PRInt32 aMaxChildProgress)
 {
    if(!mOwnerProgressListener)
       return NS_OK;
 
    return mOwnerProgressListener->OnChildProgressChange(aChannel, 
-         aCurSelfProgress, aMaxSelfProgress);
+         aCurChildProgress, aMaxChildProgress);
 } 
 
 NS_IMETHODIMP nsDocShellTreeOwner::OnStatusChange(nsIChannel* aChannel,
