@@ -52,7 +52,6 @@
 #include "nsIBlender.h"
 #include "nsIEventQueue.h"
 #include "nsView.h"
-#include "nsIEventProcessor.h"
 
 class nsIRegion;
 class nsIEvent;
@@ -334,11 +333,6 @@ private:
 
   nsresult ProcessWidgetChanges(nsView* aView);
 
-  /**
-	 * Installs event processor
-	 */
-  NS_IMETHOD SetEventProcessor(nsIEventProcessor* aEventProcessor) { mEventProcessor = aEventProcessor; return NS_OK; }
-
   // Utilities used to size the offscreen drawing surface
 
   /**
@@ -419,8 +413,6 @@ protected:
   PRBool            mPendingInvalidateEvent;
   nsCOMPtr<nsIEventQueue>  mEventQueue;
   void PostInvalidateEvent();
-
-  nsCOMPtr<nsIEventProcessor> mEventProcessor;
 
 #ifdef NS_VM_PERF_METRICS
   MOZ_TIMER_DECLARE(mWatch) //  Measures compositing+paint time for current document

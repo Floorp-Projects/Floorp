@@ -139,7 +139,6 @@ static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // Print Preview
 #include "nsIPrintPreviewContext.h"
-#include "nsIEventProcessor.h"
 #include "imgIContainer.h" // image animation mode constants
 
 // Print Progress
@@ -410,8 +409,7 @@ private:
 class DocumentViewerImpl : public nsIDocumentViewer,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
-                           public nsIMarkupDocumentViewer,
-                           public nsIEventProcessor
+                           public nsIMarkupDocumentViewer
 {
   friend class nsDocViewerSelectionListener;
   friend class nsPagePrintTimer;
@@ -446,9 +444,6 @@ public:
 
   // nsIMarkupDocumentViewer
   NS_DECL_NSIMARKUPDOCUMENTVIEWER
-
-  // nsIEventProcessor
-  NS_DECL_NSIEVENTPROCESSOR
 
   typedef void (*CallChildFunc)(nsIMarkupDocumentViewer* aViewer,
                                 void* aClosure);
@@ -546,7 +541,6 @@ private:
   void SetPrintPO(PrintObject* aPO, PRBool aPrint);
 
 #ifdef NS_PRINT_PREVIEW
-  nsresult RemoveEventProcessorFromVMs(PrintObject* aPO);
   nsresult ShowDocList(PrintObject* aPO, PRBool aShow);
   void InstallNewPresentation();
   void ReturnToGalleyPresentation();
@@ -944,13 +938,12 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   PrepareToStartLoad();
 }
 
-NS_IMPL_ISUPPORTS6(DocumentViewerImpl,
+NS_IMPL_ISUPPORTS5(DocumentViewerImpl,
                    nsIContentViewer,
                    nsIDocumentViewer,
                    nsIMarkupDocumentViewer,
                    nsIContentViewerFile,
-                   nsIContentViewerEdit,
-                   nsIEventProcessor)
+                   nsIContentViewerEdit)
 
 DocumentViewerImpl::~DocumentViewerImpl()
 {
@@ -1366,7 +1359,6 @@ DocumentViewerImpl::Destroy()
 
 #ifdef NS_PRINT_PREVIEW
   if (mPrtPreview) {
-    RemoveEventProcessorFromVMs(mPrtPreview->mPrintObject);
     delete mPrtPreview;
     mPrtPreview = nsnull;
   }
@@ -4569,36 +4561,12 @@ DocumentViewerImpl::IsThereARangeSelection(nsIDOMWindowInternal * aDOMWin)
 
 #ifdef NS_PRINT_PREVIEW
 //-------------------------------------------------------
-// Recursively walks the PrintObject tree and removed the DocViewer
-// as an event processor
-nsresult 
-DocumentViewerImpl::RemoveEventProcessorFromVMs(PrintObject* aPO)
-{
-  NS_ASSERTION(aPO, "Pointer is null!");
-
-  if (aPO->mViewManager != nsnull) {
-    aPO->mViewManager->SetEventProcessor(nsnull);
-  }
-  PRInt32 cnt = aPO->mKids.Count();
-  for (PRInt32 i=0;i<cnt;i++) {
-    if (NS_FAILED(RemoveEventProcessorFromVMs((PrintObject *)aPO->mKids[i]))) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-  return NS_OK;
-}
-
-//-------------------------------------------------------
 // Recursively walks the PrintObject tree and installs the DocViewer
 // as an event processor and it shows the window
 nsresult 
 DocumentViewerImpl::ShowDocList(PrintObject* aPO, PRBool aShow)
 {
   NS_ASSERTION(aPO, "Pointer is null!");
-
-  if (aPO->mViewManager != nsnull) {
-    aPO->mViewManager->SetEventProcessor(this);
-  }
 
   PRBool donePrinting;
   DoPrint(aPO, PR_FALSE, donePrinting);
@@ -6495,51 +6463,6 @@ DocumentViewerImpl::FindFocusedDOMWindowInternal()
     }
   }
   return domWin;
-}
-
-/*=============== nsIEventProcessor for PrintPreview ======================*/
-// This is the method that gets plugged into the ViewManager 
-// so we can decide what events get discard.
-NS_IMETHODIMP 
-DocumentViewerImpl::ProcessEvent(nsGUIEvent *aEvent, PRBool aIsInContentArea, nsEventStatus *aStatus) const
-{
-
-  // short circut for mouse moves
-  if (aEvent->message == NS_MOUSE_MOVE) {
-    return NS_OK;
-  }
-
-  // check to see if it is a mouse event in the content area
-  // and discard it if it is
-  if (NS_IS_MOUSE_EVENT(aEvent)) {
-    if (aIsInContentArea) {
-      *aStatus = nsEventStatus_eConsumeNoDefault;
-      return NS_ERROR_FAILURE;
-    }
-  } else if (aEvent->message != NS_PAINT && // these are the events we let thru
-             aEvent->message != NS_DESTROY && 
-             aEvent->message != NS_SIZE && 
-             aEvent->message != NS_SCROLL_EVENT && 
-             aEvent->message != NS_SCROLLBAR_POS && 
-             aEvent->message != NS_SCROLLBAR_PAGE_NEXT && 
-             aEvent->message != NS_SCROLLBAR_PAGE_PREV && 
-             aEvent->message != NS_SCROLLBAR_LINE_NEXT && 
-             aEvent->message != NS_SCROLLBAR_LINE_PREV && 
-             aEvent->message != NS_MOUSE_SCROLL && 
-             aEvent->message != NS_SCROLLPORT_UNDERFLOW && 
-             aEvent->message != NS_SCROLLPORT_OVERFLOW && 
-             aEvent->message != NS_SCROLLPORT_OVERFLOWCHANGED &&
-             aEvent->message != NS_ACTIVATE &&
-             aEvent->message != NS_SETZLEVEL
-             ) {
-#ifdef DEBUG_rods
-    //printf("Discarding %d\n", aEvent->message);
-#endif
-    *aStatus = nsEventStatus_eConsumeNoDefault;
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
 }
 
 /*=============== Timer Related Code ======================*/

@@ -48,7 +48,6 @@ class nsIWidget;
 class nsICompositeListener;
 struct nsRect;
 class nsIDeviceContext;
-class nsIEventProcessor;
 class nsIViewObserver;
 class nsIRegion;
 
@@ -528,13 +527,6 @@ public:
 	 */
   NS_IMETHOD IsRectVisible(nsIView *aView, const nsRect &aRect, PRBool aMustBeFullyVisible, PRBool *aIsVisible)=0;
 
-  /**
-	 * Installs an event process that indicates whether the event should be disacrded or not
-   * (see nsIEventProcessor.h)
-   * @param aEventProcessor The event process to be installed and addref'ed, 
-   * pass in nsnull to clear it
-	 */
-  NS_IMETHOD SetEventProcessor(nsIEventProcessor* aEventProcessor)=0;
 };
 
 //update view now?
