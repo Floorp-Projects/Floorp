@@ -1496,7 +1496,6 @@ function ToggleInlineAttachment(target)
     var viewAttachmentInline = !pref.getBoolPref("mail.inline_attachments");
     pref.setBoolPref("mail.inline_attachments", viewAttachmentInline)
     target.setAttribute("checked", viewAttachmentInline ? "true" : "false");
-    
     MsgReload();
 }
 
@@ -2012,15 +2011,22 @@ function HandleJunkStatusChanged(folder)
     // (since the message pane is blank)
     if (messageURI && (GetNumSelectedMessages() == 1))
     {
-      // we may be forcing junk mail to be rendered with sanitized html. In that scenario, we want to 
-      // reload the message if the status has just changed to not junk. 
       var msgHdr = messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI);
-      SetUpJunkBar(msgHdr);
 
       if (msgHdr)
       {
+        // HandleJunkStatusChanged is a folder wide event and does not necessarily mean
+        // that the junk status on our currently selected message has changed.
+        // We have no way of determining if the junk status of our current message has really changed
+        // the only thing we can do is cheat by asking if the junkbar visibility had to change as a result of this notification
+
+        var changedJunkStatus = SetUpJunkBar(msgHdr);
+
+        // we may be forcing junk mail to be rendered with sanitized html. In that scenario, we want to 
+        // reload the message if the status has just changed to not junk. 
+
         var sanitizeJunkMail = gPrefBranch.getBoolPref("mailnews.display.sanitizeJunkMail");
-        if (sanitizeJunkMail) // only bother doing this if we are modifying the html for junk mail....
+        if (changedJunkStatus && sanitizeJunkMail) // only bother doing this if we are modifying the html for junk mail....
         {
           // we used to only reload the message if we were toggling the message to NOT JUNK from junk
           // but it can be useful to see the HTML in the message get converted to sanitized form when a message
@@ -2034,6 +2040,7 @@ function HandleJunkStatusChanged(folder)
   }
 }
 
+// returns true if we actually changed the visiblity of the junk bar otherwise false
 function SetUpJunkBar(aMsgHdr)
 {
   // XXX todo
@@ -2050,12 +2057,17 @@ function SetUpJunkBar(aMsgHdr)
   }
   
   var junkBar = document.getElementById("junkBar");
+  var isAlreadyCollapsed = junkBar.getAttribute("collapsed") == "true";
+
   if (isJunk)
     junkBar.removeAttribute("collapsed");
   else
     junkBar.setAttribute("collapsed","true");
  
   goUpdateCommand('button_junk');
+
+  // simulate XOR
+  return (isJunk && isAlreadyCollapsed) || (!isJunk && !junkBar);
 }
 
 function MarkCurrentMessageAsRead()
