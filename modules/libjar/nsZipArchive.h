@@ -21,6 +21,7 @@
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
  *     Samir Gehani <sgehani@netscape.com>
+ *     Mitch Stoltz <mstoltz@netscape.com>
  */
 
 #ifndef nsZipArchive_h_
@@ -96,6 +97,40 @@ public:
    * @return  status code
    */
   PRInt32 OpenArchive( const char * aArchiveName );
+ 
+  /** 
+   * ReadInit
+   * 
+   * Prepare to read from an item in the archive. Must be called
+   * before any calls to Read or Available
+   *
+   * @param   aFilename name of item in file
+   * @return  status code
+   */
+  PRInt32 ReadInit( const char* aFilename );
+
+  /** 
+   * Read 
+   * 
+   * Read from the item specified to ReadInit. ReadInit must be 
+   * called first.
+   *
+   * @param  buf buffer to write data into.
+   * @param  count number of bytes to read
+   * @param  actual (out) number of bytes read
+   * @return  status code
+   */
+  PRInt32 Read(char* buf, PRUint32 count, PRUint32* actual );
+
+ /**
+   * Available
+   *
+   * Returns the number of bytes left to be read from the
+   * item specified to ReadInit. ReadInit must be called first,
+   * otherwise Available returns zero.
+   * @return the number of bytes still to be read
+   */
+   PRUint32 Available();
 
   /**
    * ExtractFile 
@@ -133,17 +168,29 @@ private:
   
   PRFileDesc    *mFd;
   nsZipItem*    mFiles[ZIP_TABSIZE];
-
+  PRUint32      mCurPos;  // Used by ReadInit,Read, and Available
+  nsZipItem*    mCurItem;
+  char*         mInflatedFileBuffer; // Filled by InflateItem, read by ReadInflatedItem
+ 
   //--- private methods ---
   
   nsZipArchive& operator=(const nsZipArchive& rhs); // prevent assignments
   nsZipArchive(const nsZipArchive& rhs);            // prevent copies
 
   PRInt32           BuildFileList();
-  PRInt32           CopyItemToDisk( const nsZipItem* aItem, const char* aOutname );
   const nsZipItem*  GetFileItem( const char * aFilename );
   PRUint32          HashName( const char* aName );
-  PRInt32           InflateItemToDisk( const nsZipItem* aItem, const char* aOutname );
+
+  PRInt32           ReadInitImpl(const char* aFilename, nsZipItem** aItem);
+  PRInt32           ReadItem( const nsZipItem* aItem, char* buf, 
+                              PRUint32* aCurPos,PRUint32 count, PRUint32* actual );
+  PRInt32           CopyItemToDisk( const nsZipItem* aItem, const char* aOutname );
+  PRInt32           InflateItem( const nsZipItem* aItem, 
+                                 const char* aOutname,
+                                 char* buf);
+  PRInt32           ReadInflatedItem( nsZipItem* aItem, 
+                                      char* inflatedBuf, char* outbuf, 
+                                      PRUint32* aCurPos, PRUint32 count, PRUint32* actual);
 };
 
 

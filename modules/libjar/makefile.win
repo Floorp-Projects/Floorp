@@ -44,6 +44,7 @@ EXPORTS=zipfile.h
 OBJS=.\$(OBJDIR)\nsZipArchive.obj \
      .\$(OBJDIR)\nsJAR.obj \
      .\$(OBJDIR)\nsJARFactory.obj \
+     .\$(OBJDIR)\nsJARInputStream.obj \
      .\$(OBJDIR)\nsWildCard.obj	\
 
 LINCS=                         \

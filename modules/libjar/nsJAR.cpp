@@ -21,6 +21,7 @@
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
  *     Samir Gehani <sgehani@netscape.com>
+ *     Mitch Stoltz <mstoltz@netsape.com>
  */
 #include <string.h>
 
@@ -37,6 +38,7 @@
 
 #include "nsIZip.h"
 #include "nsJAR.h"
+#include "nsJARInputStream.h"
 
 /* XPCOM includes */
 //#include "nsIComponentManager.h"
@@ -58,6 +60,8 @@ static NS_DEFINE_IID(kJAR_CID,  NS_JAR_CID);
 
 static NS_DEFINE_IID(kIZip_IID, NS_IZIP_IID);
 static NS_DEFINE_IID(kZip_CID,  NS_ZIP_CID);
+static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
+static NS_DEFINE_CID(kJARInputStreamCID, NS_JARINPUTSTREAM_CID);
 
 /*---------------------------------------------
  *  nsJAR::QueryInterface implementation
@@ -108,11 +112,13 @@ NS_IMPL_RELEASE(nsJAR)
 nsJAR::nsJAR()
 {
     NS_INIT_REFCNT();
+    mInputStream = nsnull;
 }
 
 
 nsJAR::~nsJAR()
 {
+  NS_IF_RELEASE(mInputStream);
 }
 
 
@@ -149,7 +155,26 @@ nsJAR::Find(const char *aPattern, nsISimpleEnumerator **_retval)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsJAR::GetInputStream(const char *aFilename, nsIInputStream **_retval)
+{
+  nsresult rv;
+  nsJARInputStream* is = nsnull;
+  rv = nsJARInputStream::Create(nsnull, kIInputStreamIID, (void**)&is);
+  if (!is) return NS_ERROR_FAILURE;
 
+  rv = is->Init(&zip, aFilename);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  NS_IF_RELEASE(mInputStream);
+  mInputStream = (nsIInputStream*)is;
+  NS_ADDREF(mInputStream); // because this holds a reference to the InputStream
+
+  *_retval = mInputStream;
+  NS_ADDREF(*_retval); // for the reference passed to the caller
+  return NS_OK;
+}
+ 
 
 
 //----------------------------------------------
