@@ -195,7 +195,6 @@ protected:
 
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   nsresult SendFocusBlur(nsPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus);
-  PRBool CheckDisabled(nsIContent* aContent);
   void EnsureDocument(nsIPresShell* aPresShell);
   void EnsureDocument(nsPresContext* aPresContext);
   void FlushPendingEvents(nsPresContext* aPresContext);

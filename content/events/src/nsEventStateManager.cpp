@@ -2304,24 +2304,6 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
   return NS_OK;
 }
 
-PRBool
-nsEventStateManager::CheckDisabled(nsIContent* aContent)
-{
-  nsIAtom *tag = aContent->Tag();
-
-  if (((tag == nsHTMLAtoms::input    ||
-        tag == nsHTMLAtoms::select   ||
-        tag == nsHTMLAtoms::textarea ||
-        tag == nsHTMLAtoms::button) &&
-       (aContent->IsContentOfType(nsIContent::eHTML))) ||
-      (tag == nsHTMLAtoms::button &&
-       aContent->IsContentOfType(nsIContent::eXUL))) {
-    return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled);
-  }
-
-  return PR_FALSE;
-}
-
 void
 nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIFrame* aTargetFrame,
@@ -2335,22 +2317,12 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
     cursor = mLockCursor;
   }
   //If not locked, look for correct cursor
-  else {
-    nsIContent* targetContent = nsnull;
-    if (mCurrentTarget) {
-      targetContent = mCurrentTarget->GetContent();
-    }
-
-    //If not disabled, check for the right cursor.
-    if (!targetContent || !CheckDisabled(targetContent)) {
-      if (aTargetFrame) {
-        nsIFrame::Cursor framecursor;
-        if (NS_FAILED(aTargetFrame->GetCursor(aEvent->point, framecursor)))
-          return;  // don't update the cursor if we failed to get it from the frame see bug 118877
-        cursor = framecursor.mCursor;
-        container = framecursor.mContainer;
-      }
-    }
+  else if (aTargetFrame) {
+      nsIFrame::Cursor framecursor;
+      if (NS_FAILED(aTargetFrame->GetCursor(aEvent->point, framecursor)))
+        return;  // don't update the cursor if we failed to get it from the frame see bug 118877
+      cursor = framecursor.mCursor;
+      container = framecursor.mContainer;
   }
 
   // Check whether or not to show the busy cursor

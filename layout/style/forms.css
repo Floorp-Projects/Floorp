@@ -258,7 +258,7 @@ select[disabled] {
   -moz-user-focus: ignore;
   color: GrayText;
   background-color: ThreeDFace;
-  cursor: default;
+  cursor: inherit;
 }
 
 option[disabled],
@@ -291,7 +291,7 @@ input[type="image"] {
 }
 
 input[type="image"][disabled] {
-  cursor: default;
+  cursor: inherit;
 }
 
 input[type="image"]:focus {
@@ -376,6 +376,7 @@ input[type="checkbox"][disabled]:hover:active {
   /* same as above, but !important */
   color: GrayText ! important;
   background-color: ThreeDFace ! important;
+  cursor: inherit; 
 }
 
 input[type="checkbox"]:focus,
@@ -472,6 +473,7 @@ input[type="submit"][disabled] {
   padding: 1px 7px 1px 7px;
   border: 1px outset ButtonShadow;
   color: GrayText;
+  cursor: inherit; 
 }
 
  /*

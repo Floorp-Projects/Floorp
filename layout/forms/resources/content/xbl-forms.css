@@ -248,7 +248,7 @@ optgroup[disabled],
 select[disabled],
 select[disabled]::-moz-display-comboboxcontrol-frame {
   color: GrayText;
-  cursor: default;
+  cursor: inherit; 
 }
 
 /* hidden inputs */
@@ -270,7 +270,7 @@ input[type="image"] {
 }
 
 input[type="image"][disabled] {
-  cursor: default;
+  cursor: inherit;
 }
 
 input[type="image"]:focus {
