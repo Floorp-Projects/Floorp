@@ -203,3 +203,13 @@ titledbutton[class=push][pseudoclass~="focus"]:-moz-focus-inner {
    margin: 0px;
    border : 1px dotted black;
 }
+
+tristatecheckbox {
+   display:inline;
+   border: 1px solid black;
+}
+
+tristatecheckbox[pseudoclass~="hover"] {
+   background: blue;
+   border: 2px dashed red;
+}
