@@ -737,7 +737,7 @@
       <menuitem label="&fontVarWidth.label;"      value=""/>
       <menuitem label="&fontFixedWidth.label;"    value="tt"/>
       <menuseparator/>
-      <menuitem label="&fontHelveticaFont.label;" value="Helvetica, foo, sans-serif"/>
+      <menuitem label="&fontHelveticaFont.label;" value="Helvetica, Arial, sans-serif"/>
       <menuitem label="&fontTimes.label;"         value="Times New Roman, Times, serif"/>
       <menuitem label="&fontCourier.label;"       value="Courier New, Courier, monospace"/>
     </menupopup>
