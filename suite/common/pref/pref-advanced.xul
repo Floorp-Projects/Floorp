@@ -18,7 +18,11 @@
 <!ENTITY accpOrgCookiesRadio.label "Accept only cookies that get sent back to the originating server">
 <!ENTITY disCookRadio.label "Disable cookies">
 <!ENTITY warnCookCheck.label "Warn me before accepting a cookie">
+<!ENTITY remSignCheck.label "Automatically prefill usernames and passwords">
+<!ENTITY capFormsCheck.label "Enable prefilling of forms">
+
 ]
+
 
 > 
 
@@ -73,6 +77,20 @@
 				</html:td>
 			</html:tr>
 			
+
+			<html:tr>
+				<html:td>
+					<html:input type="checkbox" id="pref:0:bool:signon.rememberSignons" />
+					&remSignCheck.label;
+			</html:td>
+			</html:tr>
+			<html:tr>
+				<html:td>
+					<html:input type="checkbox" checked="true" id="pref:0:bool:wallet.captureForms" />
+					&capFormsCheck.label;
+				</html:td>
+			</html:tr>
+
 		</html:table>
 	
 	    &cookies;
@@ -101,6 +119,9 @@
 					&warnCookCheck.label;
 				</html:td>
 				</html:tr>
+
+
+
 		</html:table>
 	
 
