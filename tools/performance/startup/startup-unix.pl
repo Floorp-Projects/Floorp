@@ -28,19 +28,23 @@ use Cwd;
 
 sub PrintUsage {
   die <<END_USAGE
-  usage: startup-unix.pl <exe>
+  usage: startup-unix.pl <exe> [<args>]
+  e.g
+      startup-unix.pl ../../../dist/bin/mozilla
+      startup-unix.pl ../../../dist/bin/mozilla -P \"Default User\"
 END_USAGE
 }
 
 {
-  PrintUsage() if $#ARGV != 0;
-
+  PrintUsage() unless $#ARGV >= 0;
   # Build up command string.
   my $cwd = Cwd::getcwd();
+
+  my $cmd = join(' ', map {/\s/ ? qq("$_") : $_} @ARGV);
   my $time = Time::PossiblyHiRes::getTime();
-  my $cmd = "@ARGV[0] \"file:$cwd/startup-test.html?begin=" . $time . "\"";	
+  $cmd .= qq( -url "file:$cwd/startup-test.html?begin=$time");
   print "cmd = $cmd\n";
-  
+
   # Run the command.
   exec $cmd;
 }
