@@ -100,6 +100,7 @@ include $(topsrcdir)/config/rules.mk
 DEFINES		+= -D_IMPL_NS_HTML
 
 LOCAL_INCLUDES	= \
+    -I$(srcdir) \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../html/style/src \
 		-I$(srcdir)/../../../html/base/src \
