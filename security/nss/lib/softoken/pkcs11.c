@@ -2095,7 +2095,7 @@ pk11_getDefTokName(CK_SLOT_ID slotID)
     case PRIVATE_KEY_SLOT_ID:
 	return "NSS Certificate DB              ";
     case FIPS_SLOT_ID:
-        return "NSS FIPS-140-1 Cerificate DB    ";
+        return "NSS FIPS-140-1 Certificate DB   ";
     default:
 	break;
     }
