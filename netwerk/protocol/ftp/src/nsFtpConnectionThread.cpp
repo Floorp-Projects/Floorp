@@ -60,8 +60,9 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
 
-
-NS_IMPL_ISUPPORTS3(nsFtpConnectionThread, nsIRunnable, nsIRequest, nsIStreamObserver);
+NS_IMPL_THREADSAFE_ADDREF(nsFtpConnectionThread);
+NS_IMPL_THREADSAFE_RELEASE(nsFtpConnectionThread); 
+NS_IMPL_QUERY_INTERFACE3(nsFtpConnectionThread, nsIRunnable, nsIRequest, nsIStreamObserver);
 
 nsFtpConnectionThread::nsFtpConnectionThread() {
     NS_INIT_REFCNT();
@@ -1676,22 +1677,10 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
     if(NS_FAILED(rv)) return rv;
 
-    // This proxied channel is used to set channel related
-    // state on the *real* channel back in the main thread.
-    rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
-                                              NS_GET_IID(nsPIFTPChannel), 
-                                              aChannel,
-                                              PROXY_SYNC | PROXY_ALWAYS,
-                                              getter_AddRefs(mFTPChannel));
+    mFTPChannel = do_QueryInterface(aChannel, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // get a proxied ptr to the FTP protocol handler service so we can control
-    // the connection cache from here.
-    rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
-                                              NS_GET_IID(nsIConnectionCache), 
-                                              aHandler,
-                                              PROXY_SYNC | PROXY_ALWAYS,
-                                              getter_AddRefs(mConnCache));
+    mConnCache = do_QueryInterface(aHandler, &rv);
     return rv;
 }
 

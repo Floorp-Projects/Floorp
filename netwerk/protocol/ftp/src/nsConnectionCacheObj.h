@@ -23,6 +23,7 @@
 #ifndef __nsconnectioncacheobj__h____
 #define __nsconnectioncacheobj__h____
 
+#include "nsCOMPtr.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -40,27 +41,16 @@ public:
                    nsIOutputStream *aOutputStream)
     { 
         mSocketTransport = aChannel;
-        NS_ADDREF(mSocketTransport);
-
         mInputStream = aInputStream;
-        NS_ADDREF(mInputStream);
-
         mOutputStream = aOutputStream;
-        NS_ADDREF(mOutputStream);
-
         mServerType = 0;
         mList = PR_FALSE;
     };
-    ~nsConnectionCacheObj()
-    {
-        NS_RELEASE(mSocketTransport);
-        NS_RELEASE(mInputStream);
-        NS_RELEASE(mOutputStream);
-    };
+    ~nsConnectionCacheObj() {;};
 
-    nsIChannel      *mSocketTransport;      // the connection
-    nsIInputStream  *mInputStream;          // to read from server
-    nsIOutputStream *mOutputStream;         // to write to server
+    nsCOMPtr<nsIChannel>       mSocketTransport;      // the connection
+    nsCOMPtr<nsIInputStream>   mInputStream;          // to read from server
+    nsCOMPtr<nsIOutputStream>  mOutputStream;         // to write to server
     PRUint32         mServerType;           // what kind of server is it.
     nsCAutoString    mCwd;                  // what dir are we in
     PRBool           mList;                 // are we sending LIST or NLST

@@ -55,21 +55,25 @@ nsFTPChannel::nsFTPChannel() {
     mContentLength = -1;
     mConnThread = nsnull;
     mAsyncOpen = PR_FALSE;
+    mLock = nsnull;
 }
 
 nsFTPChannel::~nsFTPChannel() {
     NS_ASSERTION(!mConnThread, "FTP: connection thread ref still exists");
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFTPChannel() called"));
+    if (mLock) PR_DestroyLock(mLock);
 }
 
-NS_IMPL_ISUPPORTS7(nsFTPChannel,
-                   nsPIFTPChannel, 
-                   nsIChannel, 
-                   nsIRequest, 
-                   nsIInterfaceRequestor, 
-                   nsIProgressEventSink,
-                   nsIStreamListener,
-                   nsIStreamObserver);
+NS_IMPL_THREADSAFE_ADDREF(nsFTPChannel);
+NS_IMPL_THREADSAFE_RELEASE(nsFTPChannel);
+NS_IMPL_QUERY_INTERFACE7(nsFTPChannel,
+                         nsPIFTPChannel, 
+                         nsIChannel, 
+                         nsIRequest, 
+                         nsIInterfaceRequestor, 
+                         nsIProgressEventSink,
+                         nsIStreamListener,
+                         nsIStreamObserver);
 
 nsresult
 nsFTPChannel::Init(const char* verb, 
@@ -114,6 +118,9 @@ nsFTPChannel::Init(const char* verb,
     mBufferSegmentSize = bufferSegmentSize;
     mBufferMaxSize = bufferMaxSize;
 
+    NS_ASSERTION(!mLock, "Init should only be called once on a channel");
+    mLock = PR_NewLock();
+    if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
     return rv;
 }
 
@@ -154,8 +161,6 @@ nsFTPChannel::IsPending(PRBool *result) {
 
 NS_IMETHODIMP
 nsFTPChannel::Cancel(void) {
-    nsresult rv = NS_OK;
-    
     if (mProxyChannel)
         return mProxyChannel->Cancel();
 
@@ -468,6 +473,7 @@ nsFTPChannel::GetContentType(char* *aContentType) {
 
     if (!aContentType) return NS_ERROR_NULL_POINTER;
 
+    nsAutoLock lock(mLock);
     *aContentType = nsnull;
     if (mContentType.IsEmpty()) {
         NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
@@ -493,14 +499,15 @@ nsFTPChannel::GetContentType(char* *aContentType) {
 NS_IMETHODIMP
 nsFTPChannel::SetContentType(const char *aContentType)
 {
+    nsAutoLock lock(mLock);
     mContentType = aContentType;
-
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFTPChannel::GetContentLength(PRInt32 *aContentLength)
 {
+    nsAutoLock lock(mLock);
     *aContentLength = mContentLength;
     return NS_OK;
 }
@@ -560,21 +567,19 @@ nsFTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
 
 NS_IMETHODIMP
 nsFTPChannel::SetContentLength(PRInt32 aLength) {
+    nsAutoLock lock(mLock);
     mContentLength = aLength;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFTPChannel::Stopped(nsresult aStatus, const PRUnichar *aMsg) {
-    nsresult rv = NS_OK;
+    nsAutoLock lock(mLock);
     // the underlying connection thread has gone away.
     mConnected = PR_FALSE;
-    NS_ASSERTION(mConnThread, "lost the connection thread");
+    NS_ASSERTION(mConnThread, "lost the connection thread before Stopped");
     NS_RELEASE(mConnThread);
-    if (mLoadGroup)
-        rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
-
-    return rv;
+    return NS_OK;
 }
 
 // nsIInterfaceRequestor method
@@ -620,12 +625,12 @@ NS_IMETHODIMP
 nsFTPChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
                                       nsresult aStatus, const PRUnichar* aMsg) {
     nsresult rv = NS_OK;
-    if (mProxyChannel) {
-        if (mLoadGroup) {
-            rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);        
-            if (NS_FAILED(rv)) return rv;
-        }
+
+    if (mLoadGroup) {
+        rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
+        if (NS_FAILED(rv)) return rv;
     }
+    
     if (mObserver) {
         rv = mObserver->OnStopRequest(this, aContext, aStatus, aMsg);
         if (NS_FAILED(rv)) return rv;

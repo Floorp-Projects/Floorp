@@ -61,13 +61,16 @@ static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpProtocolHandler() called"));
+    if (mLock) PR_DestroyLock(mLock);
 }
 
-NS_IMPL_ISUPPORTS4(nsFtpProtocolHandler, 
-                   nsIProtocolHandler, 
-                   nsIConnectionCache, 
-                   nsIObserver,
-                   nsIProxy)
+NS_IMPL_THREADSAFE_ADDREF(nsFtpProtocolHandler);
+NS_IMPL_THREADSAFE_RELEASE(nsFtpProtocolHandler);
+NS_IMPL_QUERY_INTERFACE4(nsFtpProtocolHandler, 
+                         nsIProtocolHandler, 
+                         nsIConnectionCache, 
+                         nsIObserver,
+                         nsIProxy);
 
 nsresult
 nsFtpProtocolHandler::Init() {
@@ -93,6 +96,10 @@ nsFtpProtocolHandler::Init() {
         nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         obsServ->AddObserver(this, topic.GetUnicode());
     }
+
+    mLock = PR_NewLock();
+    if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
+
     return rv;
 }
 
@@ -241,6 +248,7 @@ NS_IMETHODIMP
 nsFtpProtocolHandler::RemoveConn(const char *aKey, nsConnectionCacheObj* *_retval) {
     NS_ASSERTION(_retval, "null pointer");
     nsStringKey key(aKey);
+    nsAutoLock lock(mLock);
     *_retval = (nsConnectionCacheObj*)mRootConnectionList->Remove(&key);
     return NS_OK;
 }
@@ -249,6 +257,7 @@ NS_IMETHODIMP
 nsFtpProtocolHandler::InsertConn(const char *aKey, nsConnectionCacheObj *aConn) {
     NS_ASSERTION(aConn, "null pointer");
     nsStringKey key(aKey);
+    nsAutoLock lock(mLock);
     mRootConnectionList->Put(&key, aConn);
     return NS_OK;
 }
