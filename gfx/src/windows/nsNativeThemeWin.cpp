@@ -89,11 +89,10 @@
 #define PP_CHUNKVERT       4
 
 // Tab constants
-#define TABP_TAB_SELAFTER    2
-#define TABP_TAB_SELBEFORE   3
 #define TABP_TAB             4
 #define TABP_TAB_SELECTED    5
-#define TABP_TAB_PANE        9
+#define TABP_PANELS          9
+#define TABP_PANEL           10
 
 // Tooltip constants
 #define TTP_STANDARD         1
@@ -220,7 +219,8 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
     case NS_THEME_TAB:
     case NS_THEME_TAB_LEFT_EDGE:
     case NS_THEME_TAB_RIGHT_EDGE:
-    case NS_THEME_TAB_PANEL: {
+    case NS_THEME_TAB_PANEL:
+    case NS_THEME_TAB_PANELS: {
       if (!mTabTheme)
         mTabTheme = openTheme(NULL, L"Tab");
       return mTabTheme;
@@ -519,6 +519,16 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       aState = TS_NORMAL;
       return NS_OK;
     }
+    case NS_THEME_TAB_PANELS: {
+      aPart = TABP_PANELS;
+      aState = TS_NORMAL;
+      return NS_OK;
+    }
+    case NS_THEME_TAB_PANEL: {
+      aPart = TABP_PANEL;
+      aState = TS_NORMAL;
+      return NS_OK;
+    }
     case NS_THEME_TAB:
     case NS_THEME_TAB_LEFT_EDGE:
     case NS_THEME_TAB_RIGHT_EDGE: {
@@ -655,7 +665,7 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 
   if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
       aWidgetType == NS_THEME_STATUSBAR || 
-      aWidgetType == NS_THEME_RESIZER)
+      aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TAB_PANEL)
     return NS_OK; // Don't worry about it.
 
   HANDLE theme = GetTheme(aWidgetType);
@@ -707,7 +717,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
 
   if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
-      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL)
+      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
+      aWidgetType == NS_THEME_TAB_PANELS || aWidgetType == NS_THEME_TAB_PANEL)
     return NS_OK; // Don't worry about it.
 
   HANDLE theme = GetTheme(aWidgetType);
@@ -753,7 +764,9 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
       aWidgetType == NS_THEME_PROGRESSBAR ||
       aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL ||
-      aWidgetType == NS_THEME_TOOLTIP) {
+      aWidgetType == NS_THEME_TOOLTIP ||
+      aWidgetType == NS_THEME_TAB_PANELS ||
+      aWidgetType == NS_THEME_TAB_PANEL) {
     *aShouldRepaint = PR_FALSE;
     return NS_OK;
   }

@@ -7,6 +7,10 @@
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
 }
 
+tabpanels {
+  -moz-appearance: none;
+}
+
 .tabbrowser-tabs {
   padding-top: 1px;
 }
