@@ -511,6 +511,18 @@ public:
                               PRBool aDocumentDefaultType,
                               nsIContent **aResult);
 
+  virtual NS_HIDDEN_(void*) GetProperty(nsIAtom  *aPropertyName,
+                                        nsresult *aStatus = nsnull) const;
+
+  virtual NS_HIDDEN_(nsresult) SetProperty(nsIAtom            *aPropertyName,
+                                           void               *aValue,
+                                           NSPropertyDtorFunc  aDtor = nsnull);
+
+  virtual NS_HIDDEN_(nsresult) DeleteProperty(nsIAtom *aPropertyName);
+
+  virtual NS_HIDDEN_(void*) UnsetProperty(nsIAtom  *aPropertyName,
+                                          nsresult *aStatus = nsnull);
+
 protected:
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
