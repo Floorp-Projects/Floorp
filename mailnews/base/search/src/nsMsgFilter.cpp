@@ -423,7 +423,8 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
         nsCOMPtr <nsIMsgFolder> destIMsgFolder;
         nsCOMPtr <nsIMsgFolder> localMailRootMsgFolder = do_QueryInterface(localMailRoot);
         localMailRoot->GetURI(getter_Copies(localRootURI));
-        nsCString destFolderUri = localRootURI;
+        nsCString destFolderUri;
+	destFolderUri.Assign( localRootURI);
         // need to remove ".sbd" from moveValue, and perhaps escape it.
         moveValue.ReplaceSubstring(".sbd/", "/");
         destFolderUri.Append('/');

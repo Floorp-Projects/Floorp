@@ -1258,7 +1258,10 @@ NS_IMPL_ISUPPORTS1(nsMsgSearchScopeTerm, nsIMsgSearchScopeTerm)
 NS_IMETHODIMP
 nsMsgSearchScopeTerm::GetFileStream(nsIInputStream** aResult)
 {
-  *aResult = (m_fileStream) ? m_fileStream->GetIStream() : nsnull;
+  if (m_fileStream)
+  	*aResult =m_fileStream->GetIStream();
+	else
+	*aResult = nsnull;
     NS_IF_ADDREF(*aResult);
     return NS_OK;
 }
