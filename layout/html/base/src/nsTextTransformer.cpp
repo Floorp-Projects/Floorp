@@ -699,6 +699,7 @@ nsTextTransformer::LanguageSpecificTransform(PRUnichar* aText, PRInt32 aLen,
     for (PRInt32 i = 0; i < aLen; i++) {
       if (aText[i] == 0x5C) { // BACKSLASH
         aText[i] = 0xA5; // YEN SIGN
+        SetHasMultibyte(PR_TRUE);        
         *aWasTransformed = PR_TRUE;
       }
 #if 0
@@ -708,6 +709,7 @@ nsTextTransformer::LanguageSpecificTransform(PRUnichar* aText, PRInt32 aLen,
        */
       else if (aText[i] == 0x7E) { // TILDE
         aText[i] = 0x203E; // OVERLINE
+        SetHasMultibyte(PR_TRUE);        
         *aWasTransformed = PR_TRUE;
       }
 #endif
@@ -718,6 +720,7 @@ nsTextTransformer::LanguageSpecificTransform(PRUnichar* aText, PRInt32 aLen,
     for (PRInt32 i = 0; i < aLen; i++) {
       if (aText[i] == 0x5C) { // BACKSLASH
         aText[i] = 0x20A9; // WON SIGN
+        SetHasMultibyte(PR_TRUE);        
         *aWasTransformed = PR_TRUE;
       }
     }
