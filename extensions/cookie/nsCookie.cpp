@@ -312,7 +312,7 @@ PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
     return NS_ERROR_FAILURE;
   }
   nsresult res = spec->GetFileSpec(&dirSpec);
-  delete spec;
+  NS_RELEASE(spec);
   return res;
 }
 
