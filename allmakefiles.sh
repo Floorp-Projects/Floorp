@@ -335,9 +335,6 @@ netwerk/streamconv/src/Makefile
 netwerk/streamconv/test/Makefile
 netwerk/test/Makefile
 netwerk/testserver/Makefile
-netwerk/util/Makefile
-netwerk/util/public/Makefile
-netwerk/util/src/Makefile
 #network/Makefile
 #network/cache/Makefile
 #network/cache/nu/Makefile
