@@ -42,7 +42,7 @@
 #include "nsDebug.h"
 
 
-#define PLUGIN_REGISTRY_VERSION_MINOR 6
+#define PLUGIN_REGISTRY_VERSION_MINOR 7
 #define PLUGIN_REGISTRY_VERSION_MAJOR 0
 #ifdef XP_WIN
 #define PLUGIN_REGISTRY_FIELD_DELIMITER '|'
@@ -51,6 +51,8 @@
 #endif
 
 #define PLUGIN_REGISTRY_MAX_MIMETYPES_PER_PLUGIN 4
+
+#define PLUGIN_REGISTRY_END_OF_LINE_MARKER '$'
 
 class nsManifestLineReader
 {
@@ -77,16 +79,26 @@ public:
         mCur = mNext;
         mLength = 0;
         
+        char *lastDelimiter = 0;
         while(mNext < mLimit)
         {
             if(IsEOL(*mNext))
             {
-                *mNext = '\0';
+                if(lastDelimiter)
+                {
+                    if(lastDelimiter && *(mNext - 1) != PLUGIN_REGISTRY_END_OF_LINE_MARKER)
+                        return PR_FALSE;
+                    *lastDelimiter = '\0';
+                } else
+                    *mNext = '\0';
+
                 for(++mNext; mNext < mLimit; ++mNext)
                     if(!IsEOL(*mNext))
                         break;
                 return PR_TRUE;
             }
+            if(*mNext == PLUGIN_REGISTRY_FIELD_DELIMITER)
+                lastDelimiter = mNext;
             ++mNext;
             ++mLength;
         }

@@ -5314,37 +5314,46 @@ nsPluginHostImpl::WritePluginInfo()
   PR_fprintf(fd, "\n[PLUGINS]");
 
   nsPluginTag *taglist[] = {mPlugins, mCachedPlugins};
-  for (int i=0; i<sizeof(taglist)/sizeof(nsPluginTag *); i++) {
+  for (int i=0; i<(int)(sizeof(taglist)/sizeof(nsPluginTag *)); i++) {
     for (nsPluginTag *tag = taglist[i]; tag; tag=tag->mNext) {
       // from mCachedPlugins list write down only unwanted plugins
       if ((taglist[i] == mCachedPlugins) && !(tag->mFlags & NS_PLUGIN_FLAG_UNWANTED))
         continue;
       // store each plugin info into the registry
       //filename|fullpath|lastModifiedTimeStamp|canUnload|tag->mFlags
-      PR_fprintf(fd, "\n%s%c%s%c%lld%c%d%c%lu\n",
+      PR_fprintf(fd, "\n%s%c%s%c%lld%c%d%c%lu%c%c\n",
         (tag->mFileName ? tag->mFileName : ""),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         (tag->mFullPath ? tag->mFullPath : ""),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         tag->mLastModifiedTime,PLUGIN_REGISTRY_FIELD_DELIMITER,
         tag->mCanUnloadLibrary,PLUGIN_REGISTRY_FIELD_DELIMITER,
-        tag->mFlags);
+        tag->mFlags,PLUGIN_REGISTRY_FIELD_DELIMITER,
+        PLUGIN_REGISTRY_END_OF_LINE_MARKER);
       
       //description\n  --\  on separate line, so there is no need to parse it
       //name\n         --/  and check for delimiters
       //mtypecount
-      PR_fprintf(fd, "%s\n%s\n%d\n", 
-        tag->mDescription,
-        tag->mName,
+      PR_fprintf(fd, "%s%c%c\n%s%c%c\n%d\n", 
+        (tag->mDescription ? tag->mDescription : ""),
+        PLUGIN_REGISTRY_FIELD_DELIMITER,
+        PLUGIN_REGISTRY_END_OF_LINE_MARKER,
+        (tag->mName ? tag->mName : ""),
+        PLUGIN_REGISTRY_FIELD_DELIMITER,
+        PLUGIN_REGISTRY_END_OF_LINE_MARKER,
         tag->mVariants);
       
       // Add in each mimetype this plugin supports
       for (int i=0; i<tag->mVariants; i++) {
-        PR_fprintf(fd, "%d%c%s%c%s%c%s\n",
+        PR_fprintf(fd, "%d%c%s%c%s%c%s%c%c\n",
           i,PLUGIN_REGISTRY_FIELD_DELIMITER,
-          tag->mMimeTypeArray[i],PLUGIN_REGISTRY_FIELD_DELIMITER,
-          tag->mMimeDescriptionArray[i],PLUGIN_REGISTRY_FIELD_DELIMITER,
-          tag->mExtensionsArray[i]);
+          (tag->mMimeTypeArray && tag->mMimeTypeArray[i] ? tag->mMimeTypeArray[i] : ""),
+          PLUGIN_REGISTRY_FIELD_DELIMITER,
+          (tag->mMimeDescriptionArray && tag->mMimeDescriptionArray[i] ? tag->mMimeDescriptionArray[i] : ""),
+          PLUGIN_REGISTRY_FIELD_DELIMITER,
+          (tag->mExtensionsArray && tag->mExtensionsArray[i] ? tag->mExtensionsArray[i] : ""),
+          PLUGIN_REGISTRY_FIELD_DELIMITER,
+          PLUGIN_REGISTRY_END_OF_LINE_MARKER);
       }
     }
   }
@@ -5466,12 +5475,12 @@ nsPluginHostImpl::ReadPluginInfo()
     if (!reader.NextLine())
       return rv;
     char *description = reader.LinePtr();
-    
+
     //name is whole line and can contain any chars
     if (!reader.NextLine())
       return rv;
     char *name = reader.LinePtr();
-    
+
     //mimetypecount
     if (!reader.NextLine())
       return rv;    
