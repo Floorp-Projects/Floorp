@@ -43,7 +43,6 @@ CPPSRCS=			\
  nsImageMap.cpp			\
  nsInlineFrame.cpp		\
  nsLeafFrame.cpp		\
- nsLineLayout.cpp		\
  nsListItemFrame.cpp		\
  nsPageFrame.cpp		\
  nsPlaceholderFrame.cpp		\
@@ -76,7 +75,6 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsInlineFrame.obj		\
  .\$(OBJDIR)\nsLeafFrame.obj		\
  .\$(OBJDIR)\nsListItemFrame.obj	\
- .\$(OBJDIR)\nsLineLayout.obj		\
  .\$(OBJDIR)\nsPageFrame.obj		\
  .\$(OBJDIR)\nsPlaceholderFrame.obj	\
  .\$(OBJDIR)\nsRootPart.obj		\
