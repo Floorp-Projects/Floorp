@@ -2491,6 +2491,7 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
     if (frame) {
       if (!frame->GetStyleVisibility()->IsVisible()) {
         aPO->mDontPrint = PR_TRUE;
+        aPO->mInvisible = PR_TRUE;
         return NS_OK;
       }
     }
@@ -3024,11 +3025,13 @@ nsPrintEngine::PrintDocContent(nsPrintObject* aPO, nsresult& aStatus)
     }
   }
 
-  for (PRInt32 i=0;i<aPO->mKids.Count();i++) {
-    nsPrintObject* po = (nsPrintObject*)aPO->mKids[i];
-    PRBool printed = PrintDocContent(po, aStatus);
-    if (printed || NS_FAILED(aStatus)) {
-      return PR_TRUE;
+  if (!aPO->mInvisible) {
+    for (PRInt32 i=0;i<aPO->mKids.Count();i++) {
+      nsPrintObject* po = (nsPrintObject*)aPO->mKids[i];
+      PRBool printed = PrintDocContent(po, aStatus);
+      if (printed || NS_FAILED(aStatus)) {
+        return PR_TRUE;
+      }
     }
   }
   return PR_FALSE;
@@ -3087,6 +3090,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
   nsIView*        poRootView    = aPO->mRootView;
 
   NS_ASSERTION(webShell, "The WebShell can't be NULL!");
+  NS_ASSERTION(poPresContext, "PrintObject has not been reflowed");
 
   if (mPrt->mPrintProgressParams) {
     SetDocAndURLIntoProgress(aPO, mPrt->mPrintProgressParams);
@@ -4399,10 +4403,12 @@ nsPrintEngine::ShowDocListInternal(nsPrintObject* aPO, PRBool aShow)
     }
   }
 
-  PRInt32 cnt = aPO->mKids.Count();
-  for (PRInt32 i=0;i<cnt;i++) {
-    if (NS_FAILED(ShowDocListInternal((nsPrintObject *)aPO->mKids[i], aShow))) {
-      return NS_ERROR_FAILURE;
+  if (!aPO->mInvisible) {
+    PRInt32 cnt = aPO->mKids.Count();
+    for (PRInt32 i=0;i<cnt;i++) {
+      if (NS_FAILED(ShowDocListInternal((nsPrintObject *)aPO->mKids[i], aShow))) {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 
