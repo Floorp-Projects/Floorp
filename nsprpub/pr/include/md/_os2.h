@@ -47,6 +47,33 @@
 
 #include <errno.h>
 
+#define USE_RAMSEM
+
+#ifdef USE_RAMSEM
+#pragma pack(4)
+
+#pragma pack(2)
+typedef struct _RAMSEM
+{
+   ULONG   ulTIDPID;
+   ULONG   hevSem;
+   ULONG   cLocks;
+   USHORT  cWaiting;
+   USHORT  cPosts;
+} RAMSEM, *PRAMSEM;
+
+typedef struct _CRITICAL_SECTION
+{
+    ULONG ulReserved[4]; /* Same size as RAMSEM */
+} CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
+#pragma pack(4)
+
+VOID    APIENTRY DeleteCriticalSection(PCRITICAL_SECTION);
+VOID    APIENTRY EnterCriticalSection(PCRITICAL_SECTION);
+VOID    APIENTRY InitializeCriticalSection(PCRITICAL_SECTION);
+VOID    APIENTRY LeaveCriticalSection(PCRITICAL_SECTION);
+#endif
+
 #ifdef XP_OS2_EMX
 /*
  * EMX-specific tweaks:
@@ -162,7 +189,11 @@ struct _MDNotified {
 };
 
 struct _MDLock {
-    HMTX mutex;          /* this is recursive on NT */
+#ifdef USE_RAMSEM
+    CRITICAL_SECTION mutex;            /* this is recursive on NT */
+#else
+    HMTX mutex;                        /* this is recursive on NT */
+#endif
 
     /*
      * When notifying cvars, there is no point in actually
