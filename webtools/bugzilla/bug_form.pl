@@ -207,8 +207,6 @@ if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
 }
 
 print "
-<HEAD><TITLE>Bug $id -- " . html_quote($bug{'short_desc'}) .
-    "</TITLE></HEAD><BODY>
 <FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">
 <INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"$bug{'delta_ts'}\">
 <INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
@@ -323,7 +321,7 @@ while (MoreSQLData()) {
     print qq{<td><a href="$link">$date</a></td><td colspan=4>$desc</td></tr><tr><td></td>};
     $knownattachments{$attachid} = 1;
 }
-print "<td colspan=6><a href=createattachment.cgi?id=$id>Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
+print "<td colspan=6><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
 
 
 sub EmitDependList {
@@ -458,7 +456,7 @@ print "
  <A HREF=\"long_list.cgi?buglist=$id\">Format For Printing</A>
 </B></FONT><BR>
 </FORM>
-<table><tr><td align=left><B>Description:</B></td><td width=100%>&nbsp;</td>
+<table><tr><td align=left><B>Description:</B></td><td width=\"100%\">&nbsp;</td>
 <td align=right>Opened:&nbsp;$bug{'creation_ts'}</td></tr></table>
 <HR>
 <PRE>
@@ -472,9 +470,6 @@ print "
 # long_list.cgi line:
 #  <A HREF=\"edit_desc.cgi?id=$id\">Edit Long Description</A>
 
-
 navigation_header();
-
-print "</BODY>\n";
 
 1;

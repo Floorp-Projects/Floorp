@@ -25,11 +25,13 @@ use strict;
 require "CGI.pl";
 use Date::Parse;
 
-my $serverpush = 1;
+my $serverpush = 0;
 
-if ($ENV{'HTTP_USER_AGENT'} =~ /MSIE/) {
-    # Internet explorer doesn't seem to understand server push.  What fun.
-    $serverpush = 0;
+if ($ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/ ) {
+   # Search for real Netscape 3 and up.  http://www.browsercaps.org used as source of
+   # browsers compatbile with server-push.  It's a Netscape hack, incompatbile
+   # with MSIE and Lynx (at least).
+   $serverpush = 1;
 }
 
 if ($serverpush) {
@@ -121,11 +123,10 @@ Content-type: text/html
 
 <HTML>
 <TITLE>OK, default is set.</TITLE>
-OK, you now have a new default query.
+OK, you now have a new default query.  You may also bookmark the result of any
+individual query.
 
-<P>
-
-<A HREF=query.cgi>Go back to the query page, using the new default.</A>
+<P><A HREF=query.cgi>Go back to the query page, using the new default.</A>
 ";
         exit;
     };
@@ -821,7 +822,7 @@ if ($count > 0) {
 &nbsp;&nbsp;&nbsp;<A HREF=\"colchange.cgi?$::buffer\">Change columns</A>
 </FORM>";
     if (!$dotweak && $count > 1) {
-        print "<A HREF=\"buglist.cgi?$fields&tweak=1\">Make changes to several of these bugs at once.</A>\n";
+        print "<A HREF=\"buglist.cgi?$fields&tweak=1\">Change several bugs at once</A>\n";
     }
 }
 if ($serverpush) {

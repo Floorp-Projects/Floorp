@@ -437,7 +437,7 @@ changed.
 <tr>
 <TH ALIGN=LEFT VALIGN=BOTTOM>Program:</th>
 <TH ALIGN=LEFT VALIGN=BOTTOM>Version:</th>
-<TH ALIGN=LEFT VALIGN=BOTTOM><A HREF=describecomponents.cgi>Component:<a></th>
+<TH ALIGN=LEFT VALIGN=BOTTOM><A HREF=describecomponents.cgi>Component:</a></th>
 ";
 
 if (Param("usetargetmilestone")) {
@@ -509,7 +509,6 @@ print "
 </table>
 
 <table border=0>
-<tr>
 ";
 
 StringSearch("Summary", "short_desc");
@@ -560,7 +559,6 @@ print "
 <INPUT TYPE=\"reset\" VALUE=\"Reset back to the default query\">
 <INPUT TYPE=hidden name=form_name VALUE=query>
 <BR>Give me a <A HREF=\"help.html\">clue</A> about how to use this form.
-</CENTER>
 </FORM>
 
 ";

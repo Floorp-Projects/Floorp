@@ -52,3 +52,6 @@ print "<HR>\n";
 
 $! = 0;
 do "bug_form.pl" || die "Error doing bug_form.pl: $!";
+print "</BODY>";
+print "</HTML>\n";
+
