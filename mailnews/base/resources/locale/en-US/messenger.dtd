@@ -437,6 +437,7 @@ Rights Reserved.
 <!ENTITY menuBar.tooltip "Menu Bar">
 <!ENTITY mailToolbar.tooltip "Mail Toolbar">
 <!ENTITY advancedButton.tooltip "Search Messages...">
+<!ENTITY clearButton.tooltip "Clear the search criteria and show all messages">
 <!ENTITY getMsgButton.tooltip "Get new messages">
 <!ENTITY newMsgButton.tooltip "Create a new message">
 <!ENTITY replyButton.tooltip "Reply to the message">
@@ -533,3 +534,5 @@ Rights Reserved.
 <!ENTITY SearchSubjectOrSender.label "Subject or Sender contains:">
 <!ENTITY SearchNameOrEmail.label "Name or Email contains:">
 <!ENTITY advancedButton.label "Advanced...">
+<!ENTITY clearButton.label "Clear">
+<!ENTITY clearButton.accesskey "C">

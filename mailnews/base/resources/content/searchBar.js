@@ -33,6 +33,7 @@ var gStatusBar = null;
 var gSearchInProgress = false;
 var gSearchCriteria = null;
 var gSearchInput = null;
+var gClearButton = null;
 
 // nsIMsgSearchNotify object
 var gSearchNotificationListener =
@@ -81,6 +82,7 @@ function getDocumentElements()
   gStatusBar = document.getElementById('statusbar-icon');
   gSearchInput = document.getElementById('searchInput');
   gSearchCriteria =document.getElementById('searchCriteria');
+  gClearButton = document.getElementById('clearButton');
 }
 
 function addListeners()
@@ -115,16 +117,21 @@ function onEnterInSearchBar()
      }
      removeListeners();
    }
+
    if (gSearchInput.value == "") 
    {
      var searchView = gDBView.isSearchView;
      if (searchView)
      {
        statusFeedback.showStatusString("");
+       disableQuickSearchClearButton();
        gDBView.reloadFolderAfterQuickSearch(); // that should have initialized gDBView
      }
      return;
    }
+   else
+     gClearButton.setAttribute("disabled", false); //coming into search enable clear button
+
 
    ClearThreadPaneSelection();
    ClearMessagePane();
@@ -215,3 +222,15 @@ function onSearchInput(event)
   }
 }
 
+function onClearSearch()
+{
+  if (gSearchInput) 
+    gSearchInput.value ="";  //on input does not get fired for some reason
+  onSearchInput(null);
+}  
+
+function disableQuickSearchClearButton()
+{
+ if (gClearButton)
+   gClearButton.setAttribute("disabled", true); //going out of search disable clear button
+}
