@@ -38,6 +38,7 @@
 CC = gcc
 CCC = g++
 CFLAGS +=  -Wall -Wno-format
+OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -D_BSD_SOURCE -DPOSIX_SOURCE
 
 RANLIB = echo
 MKSHLIB = $(LD) -shared $(XMKSHLIBOPTS)
@@ -48,10 +49,10 @@ MKSHLIB = $(LD) -shared $(XMKSHLIBOPTS)
 CPU_ARCH = $(shell uname -m)
 ifeq (86,$(findstring 86,$(CPU_ARCH)))
 CPU_ARCH = x86
+OS_CFLAGS+= -DX86_LINUX
 endif
 GFX_ARCH = x
 
-OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -D_BSD_SOURCE -DPOSIX_SOURCE
 OS_LIBS = -lm -lc
 
 ASFLAGS += -x assembler-with-cpp

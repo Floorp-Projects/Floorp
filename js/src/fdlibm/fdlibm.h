@@ -44,10 +44,13 @@
  * ====================================================
  */
 
-
 /* Modified defines start here.. */
 #ifdef _WIN32
 #define huge myhuge
+#define __LITTLE_ENDIAN
+#endif
+
+#ifdef X86_LINUX
 #define __LITTLE_ENDIAN
 #endif
 
