@@ -161,6 +161,8 @@ nsresult nsWidget::UpdateICSpot()
    compEvent.compositionMessage = NS_COMPOSITION_QUERY;
    static gint oldx =0;
    static gint oldy =0;
+   static gint oldw =0;
+   static gint oldh =0;
    compEvent.theReply.mCursorPosition.x=-1;
    compEvent.theReply.mCursorPosition.y=-1;
    this->OnComposition(compEvent);
@@ -168,6 +170,21 @@ nsresult nsWidget::UpdateICSpot()
    if((compEvent.theReply.mCursorPosition.x < 0) &&
       (compEvent.theReply.mCursorPosition.y < 0))
      return NS_ERROR_FAILURE;
+
+   // In over-the-spot style, pre-edit can not be drawn properly when
+   // IMESetFocusWidget() is called at height=1 and width=1
+   // After resizing, we need to call SetPreeditArea() again
+   if((oldw != mBounds.width) || (oldh != mBounds.height)) {
+     GdkWindow *gdkWindow = (GdkWindow*)this->GetNativeData(NS_NATIVE_WINDOW);
+     if (mXIC && gdkWindow) {
+       mXIC->SetPreeditArea(0, 0,
+          (int)((GdkWindowPrivate*)gdkWindow)->width,
+          (int)((GdkWindowPrivate*)gdkWindow)->height);
+     }
+     oldw = mBounds.width;
+     oldh = mBounds.height;
+   }
+
    if((compEvent.theReply.mCursorPosition.x != oldx)||
       (compEvent.theReply.mCursorPosition.y != oldy))
    {
@@ -177,8 +194,8 @@ nsresult nsWidget::UpdateICSpot()
                 compEvent.theReply.mCursorPosition.height;
        SetXICBaseFontSize( compEvent.theReply.mCursorPosition.height - 1);
        SetXICSpotLocation(spot);
-       oldx = spot.x;
-       oldy = spot.y;
+       oldx = compEvent.theReply.mCursorPosition.x;
+       oldy = compEvent.theReply.mCursorPosition.y;
    } 
    return NS_OK;
 }
@@ -2512,11 +2529,11 @@ nsWidget::GetXIC()
     gInputStyle = nsIMEGtkIC::GetInputStyle();
   }
   if (gPreeditFontset == nsnull) {
-    gPreeditFontset = gdk_fontset_load("-*-*-*-*-*-*-16-*-*-*-*-*-*-*");
+    gPreeditFontset = gdk_fontset_load("-*-*-*-r-*-*-16-*-*-*-*-*-*-*");
     mXICFontSize = 16;          // default
   }
   if (gStatusFontset == nsnull) {
-    gStatusFontset = gdk_fontset_load("-*-*-*-*-*-*-16-*-*-*-*-*-*-*");
+    gStatusFontset = gdk_fontset_load("-*-*-*-r-*-*-16-*-*-*-*-*-*-*");
   }
   IMEGetShellWidget();
   if (!gInputStyle || !gPreeditFontset || !gStatusFontset || !mIMEShellWidget) {
@@ -2612,7 +2629,7 @@ nsWidget::SetXICBaseFontSize(int height)
       gdk_font_unref(gPreeditFontset);
     }
     char xlfdbase[128];
-    sprintf(xlfdbase, "-*-*-*-*-*-*-%d-*-*-*-*-*-*-*", height);
+    sprintf(xlfdbase, "-*-*-*-r-*-*-%d-*-*-*-*-*-*-*", height);
     gPreeditFontset = gdk_fontset_load(xlfdbase);
     if (gPreeditFontset) {
       mXIC->SetPreeditFont(gPreeditFontset);
