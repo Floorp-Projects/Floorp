@@ -221,7 +221,7 @@ struct _EDT_DragTableData {
     LO_Element  *pDragOverCell;      /* Cell being dragged over */
     int32        iRows;              /* Number of rows being dragged */
     int32        iColumns;           /* Number of columns being dragged (counts COLSPAN) */
-    int32       *pCellsPerRow;       /* Array of number of actual cells in each row (size = iRows)  
+    int32       *pCellsPerRow;       /* Array of number of actual cells in each row (size = iRows) */
                                      /*   (this doesn't count COLSPAN effects) */
     int32        X;                  /* Location to place highlighting or make caret */
     int32        Y;                  /*  to show where to drop cells */
