@@ -1293,22 +1293,21 @@ function canonizeUrl(aTriggeringEvent)
   var url = gURLBar.value;
 
   // Prevent suffix when already exists www , http , /
-  if (url.match(/^(www|http)|\/\s*$/i))
-    return;
-
-  if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
-      aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
-      aTriggeringEvent.shiftKey)
-    // Tack http://www. and .org on.
-    url = "http://www." + url + ".org/";
-  else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
-      aTriggeringEvent.ctrlKey)
-    // Tack www. and .com on.
-    url = "http://www." + url + ".com/";
-  else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
-      aTriggeringEvent.shiftKey)
-    // Tack www. and .org on.
-    url = "http://www." + url + ".net/";
+  if (!/^(www|http)|\/\s*$/i.test(url)) {
+    if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
+        aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
+        aTriggeringEvent.shiftKey)
+      // Tack http://www. and .org on.
+      url = "http://www." + url + ".org/";
+    else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
+        aTriggeringEvent.ctrlKey)
+      // Tack www. and .com on.
+      url = "http://www." + url + ".com/";
+    else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
+        aTriggeringEvent.shiftKey)
+      // Tack www. and .org on.
+      url = "http://www." + url + ".net/";
+  }
 
   gURLBar.value = getShortcutOrURI(url);
 }
