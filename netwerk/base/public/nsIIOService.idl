@@ -137,9 +137,10 @@ interface nsIIOService : nsISupports
      * Returns a new load group. Load groups can be used to manage collections
      * of channels so that they can be reloaded or canceled en mass. Note that
      * their use is not required by other parts of the system, they are primarily
-     * a convenience for the caller. 
+     * a convenience for the caller. The outer parameter can be used for aggregation.
      */
-    nsILoadGroup NewLoadGroup(in nsILoadGroup parent);
+    nsILoadGroup NewLoadGroup(in nsILoadGroup parent, 
+                              in nsISupports outer);
 
     /**
      * Returns a simple channel implementation that uses the given input
