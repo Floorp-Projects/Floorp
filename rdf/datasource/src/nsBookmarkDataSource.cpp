@@ -1066,7 +1066,7 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 	parser.Init(&strm, NS_STATIC_CAST(nsIRDFDataSource *, this));
 
 #ifdef	XP_MAC
-	parse.SetIEFavoritesRoot(kURINC_IEFavoritesRoot);
+	parser.SetIEFavoritesRoot(kURINC_IEFavoritesRoot);
 #endif
 
 #ifdef	XP_WIN
