@@ -132,6 +132,7 @@ public:
     return 0 != (LINE_IS_DIRTY & mState);
   }
 
+#ifdef XXX_need_line_outside_children
   void SetOutsideChildren() {
     mState |= LINE_OUTSIDE_CHILDREN;
   }
@@ -143,6 +144,7 @@ public:
   PRBool OutsideChildren() const {
     return 0 != (LINE_OUTSIDE_CHILDREN & mState);
   }
+#endif
 
   PRUint16 GetState() const { return mState; }
 
