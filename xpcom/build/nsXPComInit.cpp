@@ -57,6 +57,10 @@
 #include "nsLeakDetector.h"
 #endif
 
+// Include files that dont reside under xpcom
+// Our goal was to make this zero. But... :-(
+#include "nsICaseConversion.h"
+
 // base
 static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
 // ds
@@ -153,9 +157,11 @@ RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const cha
     return rv;
 }
 
+// Globals in xpcom
+
 nsIServiceManager* nsServiceManager::mGlobalServiceManager = NULL;
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
-static nsFileSpec registryDirName;
+nsICaseConversion *gCaseConv = NULL;
 
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                              nsFileSpec *registryFile, nsFileSpec *componentDir)
@@ -502,6 +508,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     NS_IF_RELEASE(servMgr);
     NS_RELEASE2(nsServiceManager::mGlobalServiceManager, cnt);
     NS_ASSERTION(cnt == 0, "Service Manager being held past XPCOM shutdown.");
+
+    // Release the global case converter
+    NS_IF_RELEASE(gCaseConv);
 
 #if defined(DEBUG_shaver) || defined(DEBUG_dp)
     /* shaver needs to fix this and turn this on for the world */
