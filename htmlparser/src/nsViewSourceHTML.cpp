@@ -26,7 +26,7 @@
  * 
  *         
  */
-
+ 
 
 #ifdef RAPTOR_PERF_METRICS
 #  define START_TIMER()                    \
@@ -781,8 +781,10 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,CToken* aToken,PRInt3
       (*gDumpFile) << cstr;
 #endif
   
+  nsString& theStr=aToken->GetStringValueXXX();
+  theStr.StripChar(kCR);
 
-  theContext.mITextToken.SetIndirectString(aToken->GetStringValueXXX());  //now emit the tag name...
+  theContext.mITextToken.SetIndirectString(theStr);  //now emit the tag name...
   STOP_TIMER();
   mSink->AddLeaf(theContext.mITextNode);
   START_TIMER();
@@ -919,8 +921,6 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_doctypeDecl:
       {
-        nsString& theString=aToken->GetStringValueXXX();
-        theString.StripChar(kCR);
         result=WriteTag(mDocTypeTag,aToken,0,PR_TRUE);
       }
       break;
