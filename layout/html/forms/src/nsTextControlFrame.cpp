@@ -2260,11 +2260,14 @@ nsTextControlFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsTextControlFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 {
-  nsSize size;
-  nsresult rv = GetPrefSize(aState, size);
-  aAscent = size.height;
+  // First calculate the ascent of the text inside
+  nsresult rv = nsStackFrame::GetAscent(aState, aAscent);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  // Now adjust the ascent for our borders and padding
+  aAscent += aState.GetReflowState()->mComputedBorderPadding.top;
   
-  return rv;
+  return NS_OK;
 }
 
 //IMPLEMENTING NS_IFORMCONTROLFRAME
