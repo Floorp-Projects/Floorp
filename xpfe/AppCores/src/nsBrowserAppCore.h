@@ -29,6 +29,7 @@
 #include "nsINetSupport.h"
 #include "nsIStreamObserver.h"
 #include "nsIDocumentLoaderObserver.h"
+#include "nsIObserver.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -48,7 +49,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
                          public nsIDOMBrowserAppCore,
                          public nsINetSupport,
                          //     public nsIStreamObserver,
-                         public nsIDocumentLoaderObserver
+                         public nsIDocumentLoaderObserver,
+                         public nsIObserver
 {
   public:
 
@@ -118,11 +120,16 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                        nsString &aPassword);  
 
+    // nsIObserver
+    NS_DECL_IOBSERVER
+
   protected:
     NS_IMETHOD DoDialog();
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     void SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
-    void       InitializeSearch(nsIFindComponent*);
+    void InitializeSearch(nsIFindComponent*);
+    void BeginObserving();
+    void EndObserving();
 
     nsIScriptContext   *mToolbarScriptContext;
     nsIScriptContext   *mContentScriptContext;

@@ -74,6 +74,8 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentLoader.h"
+#include "nsIObserverService.h"
+#include "prprf.h"
 //#include "nsIDOMHTMLInputElement.h"
 //#include "nsIDOMHTMLImageElement.h"
 
@@ -2301,21 +2303,69 @@ NS_IMETHODIMP nsWebShellWindow::GetTitle(const PRUnichar** aResult)
    // no, we didn't store the title for you. why so nosy?
    return NS_ERROR_FAILURE;
 }
+
+// This should rightfully be somebody's PROGID?
+// Will switch when the "app shell browser component" arrives.
+static const char *prefix = "component://netscape/appshell/component/browser/window";
+
+nsresult
+nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someData ) {
+    nsresult rv = NS_OK;
+    // Get observer service.
+    nsIObserverService *svc = 0;
+    rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
+                                       nsIObserverService::GetIID(),
+                                       (nsISupports**)&svc );
+    if ( NS_SUCCEEDED( rv ) && svc ) {
+        // Notify observers as instructed; the subject is "this" web shell window.
+        nsString topic = prefix;
+        topic += ";";
+        topic += aTopic;
+        rv = svc->Notify( (nsIWebShellWindow*)this, topic.GetUnicode(), someData.GetUnicode() );
+        // Release the service.
+        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
+    } else {
+    }
+    return rv;
+}
  
 NS_IMETHODIMP nsWebShellWindow::SetStatus(const PRUnichar* aStatus)
 {
-   // yup. got it.
-   return NS_OK;
+    nsresult rv = NS_OK;
+    // Store status text.
+    mStatus = aStatus;
+    // Broadcast status text change to interested parties.
+    rv = NotifyObservers( "status", aStatus );
+    return rv;
 }
  
 NS_IMETHODIMP nsWebShellWindow::GetStatus(const PRUnichar** aResult)
 {
-   // didn't store the status string, either.
-   return NS_ERROR_FAILURE;
+    nsresult rv = NS_OK;
+    if ( aResult ) {
+        // Semantics are ill-defined: How to allocate?  Who frees it?
+        *aResult = mStatus.ToNewUnicode();
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
 }
  
 NS_IMETHODIMP nsWebShellWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
 {
-   // oh yeah. we're on it.
-	 return NS_OK;
+    nsresult rv = NS_OK;        
+
+    // Encode progress report in topic (there is no GetProgress for observers
+    // to query it).
+    char topic[32];
+    PR_snprintf( topic,
+                 sizeof topic,
+                 "%ld %ld",
+                 (long)aProgress,
+                 (long)aProgressMax );
+
+    // Broadcast progress info to interested parties.
+    rv = NotifyObservers( "progress", topic );
+
+    return rv;
 }

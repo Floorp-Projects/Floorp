@@ -92,7 +92,6 @@ NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
 // Stuff to implement find/findnext
 #include "nsIFindComponent.h"
 
-
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 
@@ -151,6 +150,8 @@ nsBrowserAppCore::nsBrowserAppCore()
 
 nsBrowserAppCore::~nsBrowserAppCore()
 {
+  EndObserving();
+
   NS_IF_RELEASE(mToolbarWindow);
   NS_IF_RELEASE(mToolbarScriptContext);
   NS_IF_RELEASE(mContentWindow);
@@ -194,6 +195,11 @@ nsBrowserAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   }
   if (aIID.Equals(kIStreamObserverIID)) {
     *aInstancePtr = (void*) ((nsIStreamObserver*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals( nsIObserver::GetIID())) {
+    *aInstancePtr = (void*) ((nsIObserver*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -269,6 +275,8 @@ nsBrowserAppCore::Init(const nsString& aId)
   // Get the Global history service  
   nsServiceManager::GetService(kCGlobalHistoryCID, kIGlobalHistoryIID,
 					(nsISupports **)&mGHistory);
+
+  BeginObserving();
 
   return rv;
 
@@ -1390,5 +1398,86 @@ FindNamedXULElement(nsIWebShell * aShell,
     } else {
        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
     }
+    return rv;
+}
+
+static const char *prefix = "component://netscape/appshell/component/browser/window";
+
+void
+nsBrowserAppCore::BeginObserving() {
+    // Get observer service.
+    nsIObserverService *svc = 0;
+    nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
+                                                nsIObserverService::GetIID(),
+                                                (nsISupports**)&svc );
+    if ( NS_SUCCEEDED( rv ) && svc ) {
+        // Add/Remove object as observer of web shell window topics.
+        nsString topic1 = prefix;
+        topic1 += ";status";
+        nsString topic2 = prefix;
+        topic2 += ";progress";
+        rv = svc->AddObserver( this, topic1.GetUnicode() );
+        rv = svc->AddObserver( this, topic2.GetUnicode() );
+        // Release the service.
+        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
+    }
+
+    return;
+}
+
+void
+nsBrowserAppCore::EndObserving() {
+    // Get observer service.
+    nsIObserverService *svc = 0;
+    nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
+                                                nsIObserverService::GetIID(),
+                                                (nsISupports**)&svc );
+    if ( NS_SUCCEEDED( rv ) && svc ) {
+        // Add/Remove object as observer of web shell window topics.
+        nsString topic1 = prefix;
+        topic1 += ";status";
+        nsString topic2 = prefix;
+        topic2 += ";progress";
+        rv = svc->RemoveObserver( this, topic1.GetUnicode() );
+        rv = svc->RemoveObserver( this, topic2.GetUnicode() );
+        // Release the service.
+        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
+    }
+
+    return;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::Observe( nsISupports *aSubject,
+                           const PRUnichar *aTopic,
+                           const PRUnichar *someData ) {
+    nsresult rv = NS_OK;
+
+    // We only are interested if aSubject is our web shell window.
+    if ( aSubject && mWebShellWin ) {
+        nsIWebShellWindow *window = 0;
+        rv = aSubject->QueryInterface( nsIWebShellWindow::GetIID(), (void**)&window );
+        if ( NS_SUCCEEDED( rv ) && window ) {
+            nsString topic1 = prefix;
+            topic1 += ";status";
+            nsString topic2 = prefix;
+            topic2 += ";progress";
+            // Compare to our window.
+            if ( window == mWebShellWin ) {
+                // Get topic substring.
+                if ( topic1 == aTopic ) {
+                    // Update status text.
+                    rv = setAttribute( mWebShell, "Browser:Status", "value", someData );
+                } else if ( topic2 == aTopic ) {
+                    // We don't process this, yet.
+                }
+            } else {
+                // Not for this app core.
+            }
+            // Release the window.
+            window->Release();
+        }
+    }
+
     return rv;
 }
