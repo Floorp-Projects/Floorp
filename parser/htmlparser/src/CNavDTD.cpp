@@ -476,10 +476,12 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
           // NS_ERROR_HTMLPARSER_INTERRUPTED.
           // If the parser has mPrevContext then it may be processing
           // Script so we should not allow it to be interrupted.
-        
+          // We also need to make sure that an interruption does not override
+          // a request to block the parser.
           if ((mParser->CanInterrupt()) && 
             (nsnull == mParser->PeekContext()->mPrevContext) && 
-            (eHTMLTag_unknown==mSkipTarget)) {     
+            (eHTMLTag_unknown==mSkipTarget) &&
+            NS_SUCCEEDED(result)) {
             result = NS_ERROR_HTMLPARSER_INTERRUPTED;
             break;
           }
@@ -837,15 +839,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         case eHTMLTag_doctypeDecl:
         case eHTMLTag_instruction:
           break;
-        case eHTMLTag_comment:
-        case eHTMLTag_newline:
-        case eHTMLTag_whitespace:
-        case eHTMLTag_userdefined:
-          if (mMisplacedContent.GetSize() == 0) {
-            // simply pass these through to token handler without further ado...
-            // fix for bugs 17017,18308,23765,24275,69331
-            break;  
-          }
+
         default:
           if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
             if(!(mFlags & (NS_DTD_FLAG_HAD_BODY |
@@ -853,13 +847,25 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                            NS_DTD_FLAG_ALTERNATE_CONTENT))) {
 
               //For bug examples from this code, see bugs: 18928, 20989.
-
               //At this point we know the body/frameset aren't open. 
               //If the child belongs in the head, then handle it (which may open the head);
               //otherwise, push it onto the misplaced stack.
 
-              PRBool theExclusive=PR_FALSE;
-              PRBool theChildBelongsInHead=gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag,theExclusive);
+              PRBool isExclusive=PR_FALSE;
+              PRBool theChildBelongsInHead=gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag,isExclusive);
+              if(theChildBelongsInHead && !isExclusive) {
+                if (mMisplacedContent.GetSize() == 0) {
+                  // This tag can either be in the body or the head. Since
+                  // there is no indication that the body should be open,
+                  // put this token in the head.
+                  break;
+                }
+
+                // Otherwise, we have received some indication that the body is
+                // "open", so push this token onto the misplaced content stack.
+                theChildBelongsInHead = PR_FALSE;
+              }
+
               if(!theChildBelongsInHead) {
 
                 //If you're here then we found a child of the body that was out of place.
@@ -1363,18 +1369,21 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
       result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
     }
     
-    //this code is here to make sure the head is closed before we deal 
-    //with any tags that don't belong in the head.
-    if (NS_SUCCEEDED(result) && (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD && 
-                                 eHTMLTag_newline != aTag &&
-                                 eHTMLTag_whitespace != aTag &&
-                                 eHTMLTag_userdefined != aTag)) {
-      PRBool theExclusive = PR_FALSE;
-      if (!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag, theExclusive)) {      
-        result = CloseHead();
-      }
+    // This code is here to make sure the head is closed before we deal 
+    // with any tags that don't belong in the head. If the tag is not exclusive
+    // then we do not have enough information, and we have to trust the logic
+    // in HandleToken() to not hand us non-exclusive tokens  
+    PRBool isExclusive = PR_FALSE;
+    PRBool isChildOfHead = 
+      gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag, isExclusive);
+
+    if (NS_SUCCEEDED(result) && ((mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD) &&
+                                  isExclusive &&
+                                  !isChildOfHead)) {
+      result = CloseHead();
     }
   }
+
   return result;
 }
 
@@ -1596,8 +1605,8 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         }
       }
 
-      PRBool theExclusive=PR_FALSE;
-      theHeadIsParent=nsHTMLElement::IsChildOfHead(theChildTag,theExclusive);
+      PRBool isExclusive=PR_FALSE;
+      theHeadIsParent=nsHTMLElement::IsChildOfHead(theChildTag,isExclusive);
       
       switch(theChildTag) { 
         case eHTMLTag_area:
@@ -1625,7 +1634,10 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_script:
-          theHeadIsParent = !(mFlags & NS_DTD_FLAG_HAS_OPEN_BODY);
+          // Script isn't really exclusively in the head. However, we treat it
+          // as such to make sure that we don't pull scripts outside the head
+          // into the body.
+          isExclusive = !(mFlags & NS_DTD_FLAG_HAD_BODY);
           mFlags |= NS_DTD_FLAG_HAS_OPEN_SCRIPT;
 
         default:
@@ -1633,14 +1645,14 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       }//switch
 
       if(!isTokenHandled) {
-        if(theHeadIsParent || ((mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)  && 
-                               (eHTMLTag_newline == theChildTag    || 
-                                eHTMLTag_whitespace == theChildTag ||
-                                eHTMLTag_userdefined == theChildTag))) {
-            result = AddHeadLeaf(theNode);
+        if(theHeadIsParent &&
+            (isExclusive || (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD))) {
+          // These tokens prefer to be in the head.
+          result = AddHeadLeaf(theNode);
         }
-        else 
+        else {
           result = HandleDefaultStartToken(aToken,theChildTag,theNode); 
+        }
       }
 
       //now do any post processing necessary on the tag...

@@ -58,8 +58,8 @@
 static const int kNone= 0x0;
 
 static const int kHTMLContent   = 0x0001; //  HEAD, (FRAMESET | BODY)
-static const int kHeadContent   = 0x0002; //  TITLE, ISINDEX, BASE
-static const int kHeadMisc      = 0x0004; //  SCRIPT, STYLE, META,  LINK, OBJECT
+static const int kHeadContent   = 0x0002; //  Elements that *must* be in the head.
+static const int kHeadMisc      = 0x0004; //  Elements that *can* be in the head.
 
 static const int kSpecial       = 0x0008; //  A,    IMG,  APPLET, OBJECT, FONT, BASEFONT, BR, SCRIPT, 
                                           //  MAP,  Q,    SUB,    SUP,    SPAN, BDO,      IFRAME
