@@ -2514,7 +2514,11 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       name.Assign(JS_GetStringChars(mJSStrName));
       nameSpecified = PR_TRUE;
 
-      NS_ENSURE_SUCCESS(CheckWindowName(cx, name), NS_ERROR_FAILURE);
+      // Check for an illegal name e.g. frame3.1
+      // This prints a warning message and returns NS_ERROR_FAILURE.
+      // Don't use NS_ENSURE_SUCCESS - go ahead and open up the window
+      // even if the name contains an illegal character.  See bug 32898.
+      CheckWindowName(cx, name);
       } 
 
    options = nsnull;
@@ -2915,6 +2919,7 @@ NS_IMETHODIMP GlobalWindowImpl::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aDo
   return res;
 }
 
+// Print out a warning message and return NS_ERROR_FAILURE for illegal window names.
 NS_IMETHODIMP GlobalWindowImpl::CheckWindowName(JSContext* cx, nsString& aName)
 {
    PRUint32 strIndex;
@@ -2926,10 +2931,13 @@ NS_IMETHODIMP GlobalWindowImpl::CheckWindowName(JSContext* cx, nsString& aName)
       if(!nsCRT::IsAsciiAlpha(mChar) && !nsCRT::IsAsciiDigit(mChar) && 
          mChar != '_')
          {
-         char* cp = aName.ToNewCString();
-         JS_ReportError(cx, 
-            "illegal character '%c' ('\\%o') in window name %s", mChar, mChar,
-            cp);
+         // Don't use js_ReportError as this will cause the application
+         // to shut down (JS_ASSERT calls abort())  See bug 32898
+         nsAutoString warn;
+         warn.AssignWithConversion("Illegal character in window name ");
+         warn.Append(aName);
+         char* cp = warn.ToNewCString();
+         NS_WARNING(cp);
          nsCRT::free(cp);
          return NS_ERROR_FAILURE;
          }
