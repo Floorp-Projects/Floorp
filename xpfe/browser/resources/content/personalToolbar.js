@@ -191,7 +191,7 @@ BookmarksToolbar.prototype = {
     onEditFolderName: function (aParams, aTopic)
     {
       // Because the toolbar has no concept of selection, this function
-      // is much simpler than the one in bookmarksTree.js. However it may
+      // is much simpler than the one in bookmarks.xml. However it may
       // become more complex if pink ever lets me put context menus on menus ;) 
       var name = aParams[3];
       var dummyButton = aParams[2];

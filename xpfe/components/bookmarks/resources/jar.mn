@@ -26,7 +26,6 @@ comm.jar:
 	content/communicator/bookmarks/bookmarks.js
 	content/communicator/bookmarks/bookmarks.css
 	content/communicator/bookmarks/bookmarks.xml
-	content/communicator/bookmarks/bookmarksTree.js
 	content/communicator/bookmarks/bookmarksOverlay.xul
 	content/communicator/bookmarks/bookmarksOverlay.js
 	content/communicator/bookmarks/bm-panel.xul
