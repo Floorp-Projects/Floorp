@@ -1506,6 +1506,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
         mURI->GetHost(getter_Copies(urlCString));
         
         rv = proxyprompter->PromptUsernameAndPassword(urlCString, 
+                PR_TRUE,
                 NULL, 
                 message.GetUnicode(), 
                 &user, 

@@ -232,7 +232,7 @@ NS_IMETHODIMP nsCommonDialogs::UniversalDialog
 
 	/* perform the dialog */
 
-	rv = DoDialog(inParent, block, kPromptURL);
+	rv = DoDialog( inParent, block, kPromptURL);
 
 	/* get back output parameters */
 
