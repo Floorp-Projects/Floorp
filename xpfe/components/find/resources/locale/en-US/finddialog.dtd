@@ -1,6 +1,7 @@
 <!-- extracted from finddialog.xul -->
 
 <!ENTITY findDialog.title "Find in This Page">
+<!ENTITY findDialogFrame.title "Find in This Frame">
 <!ENTITY findField.label "Find text:">
 <!ENTITY caseSensitiveCheckbox.label "Match upper/lower case">
 <!ENTITY wrapCheckbox.label "Wrap around">
