@@ -21,6 +21,7 @@
 
 #include <windows.h>
 
+#include "plhash.h"
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
 #include "nsString.h"
@@ -45,11 +46,19 @@ typedef struct nsFontWin
   PRUint8* map;
 } nsFontWin;
 
+typedef struct nsGlobalFont
+{
+  nsString*     name;
+  LOGFONT       logFont;
+  PRUint8*      map;
+  PRUint8       skip;
+} nsGlobalFont;
+
 class nsFontMetricsWin : public nsIFontMetrics
 {
 public:
   nsFontMetricsWin();
-  ~nsFontMetricsWin();
+  virtual ~nsFontMetricsWin();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -72,12 +81,14 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
-  nsFontWin*  FindGlobalFont(HDC aDC, PRUnichar aChar);
-  nsFontWin*  FindLocalFont(HDC aDC, PRUnichar aChar);
-  nsFontWin*  FindFont(HDC aDC, PRUnichar aChar);
-  nsFontWin*  LoadFont(HDC aDC, nsString* aName);
+  virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
+  nsFontWin*         FindFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
 
-  nsFontWin           *mLoadedFonts;
+  int SameAsPreviousMap(int aIndex);
+
+  nsFontWin           **mLoadedFonts;
   PRUint16            mLoadedFontsAlloc;
   PRUint16            mLoadedFontsCount;
 
@@ -85,6 +96,9 @@ public:
   PRUint16            mFontsAlloc;
   PRUint16            mFontsCount;
   PRUint16            mFontsIndex;
+
+  static nsGlobalFont* gGlobalFonts;
+  static int gGlobalFontsCount;
 
 protected:
   void FillLogFont(LOGFONT* aLogFont);
@@ -107,6 +121,50 @@ protected:
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
   HFONT               mFontHandle;
+
+  static PLHashTable* InitializeFamilyNames(void);
+  static PLHashTable* gFamilyNames;
+
+  static nsGlobalFont* InitializeGlobalFonts(HDC aDC);
+
+  static PRUint8* GetCMAP(HDC aDC);
 };
 
-#endif
+
+// The following is a workaround for a Japanse Windows 95 problem.
+
+typedef struct nsFontWinA nsFontWinA;
+
+// must start with same fields as nsFontWin
+struct nsFontSubset
+{
+  int Load(nsFontWinA* aFont);
+
+  HFONT    mFont;
+  PRUint8* mMap;
+  BYTE     mCharSet;
+  PRUint16 mCodePage;
+};
+
+struct nsFontWinA
+{
+  int GetSubsets(HDC aDC);
+
+  LOGFONT       mLogFont;
+  HFONT         mFont;
+  PRUint8*      mMap;
+  nsFontSubset* mSubsets;
+  PRUint16      mSubsetsCount;
+};
+
+class nsFontMetricsWinA : public nsFontMetricsWin
+{
+public:
+  virtual ~nsFontMetricsWinA();
+
+  virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
+};
+
+#endif /* nsFontMetricsWin_h__ */

@@ -162,6 +162,9 @@ public:
   // nsIRenderingContextWin
   NS_IMETHOD CreateDrawingSurface(HDC aDC, nsDrawingSurface &aSurface);
 
+protected:
+  void SetupFontAndColor(void);
+
 private:
   ~nsRenderingContextWin();
 
@@ -172,7 +175,6 @@ private:
   HPEN SetupSolidPen(void);
   HPEN SetupDashedPen(void);
   HPEN SetupDottedPen(void);
-  void SetupFontAndColor(void);
   void PushClipState(void);
 
 protected:
@@ -216,6 +218,20 @@ protected:
 #endif
 
   void* mScriptObject;
+};
+
+
+// The following is a workaround for a Japanese Windows 95 problem.
+
+class nsRenderingContextWinA : public nsRenderingContextWin
+{
+public:
+  NS_IMETHOD GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                      nscoord& aWidth, PRInt32 *aFontID);
+  NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        PRInt32 aFontID,
+                        const nscoord* aSpacing);
 };
 
 #endif /* nsRenderingContextWin_h___ */
