@@ -356,7 +356,9 @@ function BeginDragThreadPane(event)
 
     var threadTree = GetThreadTree();
     var selectedMessages = GetSelectedMessages();
-
+    if (!selectedMessages)
+      return false;
+ 
     //A message can be dragged from one window and dropped on another window
     //therefore setNextMessageAfterDelete() here 
     //no major disadvantage even if it is a copy operation
