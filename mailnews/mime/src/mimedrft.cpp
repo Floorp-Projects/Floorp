@@ -122,31 +122,6 @@ nsMsgCreateTempFileSpec(char *tFileName)
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 
-// 
-// This struct is the state we use for loading drafts and templates...
-//
-struct mime_draft_data 
-{
-  char                *url_name;           // original url name */
-  nsMimeOutputType    format_out;          // intended output format; should be FO_OPEN_DRAFT */
-  nsMIMESession       *stream;             // not used for now 
-  MimeObject          *obj;                // The root 
-  MimeDisplayOptions  *options;            // data for communicating with libmime
-  MimeHeaders         *headers;            // Copy of outer most mime header 
-  PRInt32             attachments_count;   // how many attachments we have 
-  nsMsgAttachedFile   *attachments;        // attachments 
-  nsMsgAttachedFile   *messageBody;        // message body 
-  nsMsgAttachedFile   *curAttachment;		   // temp 
-
-  nsIFileSpec         *tmpFileSpec;
-  nsOutputFileStream  *tmpFileStream;      // output file handle 
-
-  MimeDecoderData     *decoder_data;
-  char                *mailcharset;        // get it from CHARSET of Content-Type 
-  PRBool              forwardInline;
-  nsCOMPtr<nsIMsgIdentity>      identity;
-};
-
 typedef enum {
 	nsMsg_RETURN_RECEIPT_BOOL_HEADER_MASK = 0,
 	nsMsg_ENCRYPTED_BOOL_HEADER_MASK,

@@ -24,9 +24,9 @@
 
 #include "msgCore.h"
 
-#ifndef kMIME_ENCODED_WORD_SIZE
-#define kMIME_ENCODED_WORD_SIZE 75
-#endif 
+//#ifndef kMIME_ENCODED_WORD_SIZE
+//#define kMIME_ENCODED_WORD_SIZE 75
+//#endif 
 
 #ifndef kMAX_CSNAME
 #define kMAX_CSNAME 64

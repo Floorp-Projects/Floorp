@@ -32,6 +32,8 @@ extern "C" {
 #include "nsIMimeEmitter.h"
 #include "nsIURI.h"
 #include "mozITXTToHTMLConv.h"
+#include "nsIMsgSend.h"
+#include "nsIMimeConverter.h"
 
 // SHERRY - Need to get these out of here eventually
 
@@ -117,6 +119,31 @@ struct mime_stream_data {           /* This struct is the state we pass around
 
   nsIMimeEmitter      *output_emitter;  /* Output emitter engine for libmime */
   PRBool              firstCheck;   /* Is this the first look at the stream data */
+};
+
+// 
+// This struct is the state we use for loading drafts and templates...
+//
+struct mime_draft_data 
+{
+  char                *url_name;           // original url name */
+  nsMimeOutputType    format_out;          // intended output format; should be FO_OPEN_DRAFT */
+  nsMIMESession       *stream;             // not used for now 
+  MimeObject          *obj;                // The root 
+  MimeDisplayOptions  *options;            // data for communicating with libmime
+  MimeHeaders         *headers;            // Copy of outer most mime header 
+  PRInt32             attachments_count;   // how many attachments we have 
+  nsMsgAttachedFile   *attachments;        // attachments 
+  nsMsgAttachedFile   *messageBody;        // message body 
+  nsMsgAttachedFile   *curAttachment;		   // temp 
+
+  nsIFileSpec         *tmpFileSpec;
+  nsOutputFileStream  *tmpFileStream;      // output file handle 
+
+  MimeDecoderData     *decoder_data;
+  char                *mailcharset;        // get it from CHARSET of Content-Type 
+  PRBool              forwardInline;
+  nsCOMPtr<nsIMsgIdentity>      identity;
 };
 
 ////////////////////////////////////////////////////////////////

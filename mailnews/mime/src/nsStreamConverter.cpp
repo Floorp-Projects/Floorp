@@ -60,7 +60,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 // Bridge routines for new stream converter XP-COM interface 
 ////////////////////////////////////////////////////////////////
 
-// RICHIE - should live in the mimedrft.h header file!
 extern "C" void  *
 mime_bridge_create_draft_stream(nsIMimeEmitter      *newEmitter,
                                 nsStreamConverter   *newPluginObj2,
@@ -100,6 +99,7 @@ bridge_set_output_type(void *bridgeStream, nsMimeOutputType aType)
 
   if (session)
   {
+    // BAD ASSUMPTION!!!! NEED TO CHECK aType
     struct mime_stream_data *msd = (struct mime_stream_data *)session->data_object;
     if (msd)
       msd->format_out = aType;     // output format type
@@ -107,61 +107,91 @@ bridge_set_output_type(void *bridgeStream, nsMimeOutputType aType)
 }
 
 nsresult
-bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
+bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
 {
   nsMIMESession *session = (nsMIMESession *)bridgeStream;
 
   if (session)
   {
-    struct mime_stream_data *msd = (struct mime_stream_data *)session->data_object;
-    if (msd)
+    if (session->data_object)
     {
-      // set the default charset to be the folder charset if we have one associated with
-      // this url...
-      nsCOMPtr<nsIMsgI18NUrl> i18nUrl (do_QueryInterface(aURI));
-      if (i18nUrl)
+      char    **override_charset = nsnull;
+      char    **default_charset = nsnull;
+      char    **url_name = nsnull;
+
+      if  ( (aOutputType == nsMimeOutput::nsMimeMessageDraftOrTemplate) ||
+            (aOutputType == nsMimeOutput::nsMimeMessageEditorTemplate) )
       {
-        nsXPIDLString uniCharset;
-        i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
-        nsAutoString charset(uniCharset);
-        if (!charset.IsEmpty() && msd->options)
-          msd->options->default_charset = charset.ToNewCString();
+        struct mime_draft_data *mdd = (struct mime_draft_data *)session->data_object;
+        if (mdd->options)
+        {
+          default_charset = &(mdd->options->default_charset);
+          override_charset = &(mdd->options->override_charset);
+          url_name = &(mdd->url_name);
+        }
+      }
+      else
+      {
+        struct mime_stream_data *msd = (struct mime_stream_data *)session->data_object;
 
-        // check to see if we have a charset override...and if we do, set that field appropriately too...
-        nsresult rv = i18nUrl->GetCharsetOverRide(getter_Copies(uniCharset));
-        charset = uniCharset;
-        if (NS_SUCCEEDED(rv) && !charset.IsEmpty() && msd->options)
-          msd->options->override_charset = charset.ToNewCString();
+        if (msd->options)
+        {
+          default_charset = &(msd->options->default_charset);
+          override_charset = &(msd->options->override_charset);
+          url_name = &(msd->url_name);
+        }
+      }
 
-        // if the pref says always override and no manual override then set the folder charset to override
-        // in future, the override flag to be per folder instead of a global pref
-        if (charset.IsEmpty()) {
-          nsCOMPtr <nsIPref> prefs = do_GetService(kPrefCID, &rv);
-          if (NS_SUCCEEDED(rv) && prefs) 
-          {
-            PRBool  force_override;
-            rv = prefs->GetBoolPref("mailnews.force_charset_override", &force_override);
-            if (NS_SUCCEEDED(rv) && force_override) 
+      if ( (default_charset) && (override_charset) && (url_name) )
+      {
+        // 
+        // set the default charset to be the folder charset if we have one associated with
+        // this url...
+        nsCOMPtr<nsIMsgI18NUrl> i18nUrl (do_QueryInterface(aURI));
+        if (i18nUrl)
+        {
+          nsXPIDLString uniCharset;
+          i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
+          nsAutoString charset(uniCharset);
+          if (!charset.IsEmpty())
+            *default_charset = charset.ToNewCString();
+
+          // check to see if we have a charset override...and if we do, set that field appropriately too...
+          nsresult rv = i18nUrl->GetCharsetOverRide(getter_Copies(uniCharset));
+          charset = uniCharset;
+          if (NS_SUCCEEDED(rv) && !charset.IsEmpty() ) 
+            *override_charset = charset.ToNewCString();
+
+          // if the pref says always override and no manual override then set the folder charset to override
+          // in future, the override flag to be per folder instead of a global pref
+          if (charset.IsEmpty()) {
+            nsCOMPtr <nsIPref> prefs = do_GetService(kPrefCID, &rv);
+            if (NS_SUCCEEDED(rv) && prefs) 
             {
-              i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
-              charset.Assign(uniCharset);
-              if (!charset.IsEmpty() && msd->options)
-                msd->options->override_charset = charset.ToNewCString();
+              PRBool  force_override;
+              rv = prefs->GetBoolPref("mailnews.force_charset_override", &force_override);
+              if (NS_SUCCEEDED(rv) && force_override) 
+              {
+                i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
+                charset.Assign(uniCharset);
+                if (!charset.IsEmpty())
+                  *override_charset = charset.ToNewCString();
+              }
             }
           }
         }
-      }
-      char *urlString;
-      if (NS_SUCCEEDED(aURI->GetSpec(&urlString)))
-      {
-        if ((urlString) && (*urlString))
+        char *urlString;
+        if (NS_SUCCEEDED(aURI->GetSpec(&urlString)))
         {
-          PR_FREEIF(msd->url_name);
-          msd->url_name = nsCRT::strdup(urlString);
-          if (!(msd->url_name))
-            return NS_ERROR_OUT_OF_MEMORY;
+          if ((urlString) && (*urlString))
+          {
+            PR_FREEIF(*url_name);
+            *url_name = nsCRT::strdup(urlString);
+            if (!(*url_name))
+              return NS_ERROR_OUT_OF_MEMORY;
 
-          PR_FREEIF(urlString);
+            PR_FREEIF(urlString);
+          }
         }
       }
     }
@@ -173,41 +203,64 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
 static int
 mime_headers_callback ( void *closure, MimeHeaders *headers )
 {
+  // We get away with this because this doesn't get called on draft operations.
   struct mime_stream_data *msd = (struct mime_stream_data *)closure;
 
   PR_ASSERT ( msd && headers );
-  
   if ( !msd || ! headers ) 
     return 0;
 
   PR_ASSERT ( msd->headers == NULL );
   msd->headers = MimeHeaders_copy ( headers );
-
   return 0;
 }
 
 nsresult          
-bridge_set_mime_stream_converter_listener(void *bridgeStream, nsIMimeStreamConverterListener* listener)
+bridge_set_mime_stream_converter_listener(void *bridgeStream, nsIMimeStreamConverterListener* listener,
+                                          nsMimeOutputType aOutputType)
 {
   nsMIMESession *session = (nsMIMESession *)bridgeStream;
 
-  if (session)
+  if ( (session) && (session->data_object) )
   {
-    struct mime_stream_data *msd = (struct mime_stream_data *)session->data_object;
-    if (msd)
+    if  ( (aOutputType == nsMimeOutput::nsMimeMessageDraftOrTemplate) ||
+          (aOutputType == nsMimeOutput::nsMimeMessageEditorTemplate) )
     {
-      if (listener)
+      struct mime_draft_data *mdd = (struct mime_draft_data *)session->data_object;
+      if (mdd->options)
       {
-        msd->options->caller_need_root_headers = PR_TRUE;
-        msd->options->decompose_headers_info_fn = mime_headers_callback;
+        if (listener)
+        {
+          mdd->options->caller_need_root_headers = PR_TRUE;
+          mdd->options->decompose_headers_info_fn = mime_headers_callback;
+        }
+        else
+        {
+          mdd->options->caller_need_root_headers = PR_FALSE;
+          mdd->options->decompose_headers_info_fn = nsnull;
+        }
       }
-      else
+    }
+    else
+    {
+      struct mime_stream_data *msd = (struct mime_stream_data *)session->data_object;
+      
+      if (msd->options)
       {
-        msd->options->caller_need_root_headers = PR_FALSE;
-        msd->options->decompose_headers_info_fn = nsnull;
+        if (listener)
+        {
+          msd->options->caller_need_root_headers = PR_TRUE;
+          msd->options->decompose_headers_info_fn = mime_headers_callback;
+        }
+        else
+        {
+          msd->options->caller_need_root_headers = PR_FALSE;
+          msd->options->decompose_headers_info_fn = nsnull;
+        }
       }
     }
   }
+
   return NS_OK;
 }
 
@@ -611,8 +664,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 
       //Do we need to setup an Mime Stream Converter Listener?
       if (mMimeStreamConverterListener)
-        bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, mMimeStreamConverterListener);
-      return rv;
+        bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, mMimeStreamConverterListener, mOutputType);
       
       PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
       PRBool enable_emoticons = PR_TRUE;
@@ -632,6 +684,8 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
         	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
         }
       }      
+
+      return rv;
     }
   }
 }
@@ -687,7 +741,7 @@ nsStreamConverter::SetStreamURI(nsIURI *aURI)
 {
   mURI = aURI;
   if (mBridgeStream)
-    return bridge_new_new_uri((nsMIMESession *)mBridgeStream, aURI);
+    return bridge_new_new_uri((nsMIMESession *)mBridgeStream, aURI, mOutputType);
   else
     return NS_OK;
 }
@@ -696,7 +750,7 @@ nsresult
 nsStreamConverter::SetMimeHeadersListener(nsIMimeStreamConverterListener *listener)
 {
    mMimeStreamConverterListener = listener;
-   bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, listener);
+   bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, listener, mOutputType);
    return NS_OK;
 }
 
@@ -777,7 +831,7 @@ char *output = "\
       mEmitter->Write(outBuf, nsCRT::strlen(outBuf), &written);
     mTotalRead += written;
 
-    // RICHIE - will this stop the stream???? Not sure.    
+    // rhp: will this stop the stream???? Not sure.    
     return NS_ERROR_FAILURE;
   }
 
@@ -862,8 +916,24 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
     
     if (mMimeStreamConverterListener)
     {
-      struct mime_stream_data *msd = (struct mime_stream_data *)tSession->data_object;
-      if (msd)
+
+      MimeHeaders    **workHeaders = nsnull;
+
+      if  ( (mOutputType == nsMimeOutput::nsMimeMessageDraftOrTemplate) ||
+            (mOutputType == nsMimeOutput::nsMimeMessageEditorTemplate) )
+      {
+        struct mime_draft_data *mdd = (struct mime_draft_data *)tSession->data_object;
+        if (mdd)
+          workHeaders = &(mdd->headers);
+      }
+      else
+      {
+        struct mime_stream_data *msd = (struct mime_stream_data *)tSession->data_object;
+        if (msd)
+          workHeaders = &(msd->headers);
+      }
+
+      if (workHeaders)
       {
         static NS_DEFINE_CID(kCIMimeHeadersCID, NS_IMIMEHEADERS_CID);
         nsresult rv;
@@ -875,8 +945,8 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
         
         if (NS_SUCCEEDED(rv))
         {
-          if (msd->headers)
-            mimeHeaders->Initialize(msd->headers->all_headers);
+          if (*workHeaders)
+            mimeHeaders->Initialize((*workHeaders)->all_headers);
           mMimeStreamConverterListener->OnHeadersReady(mimeHeaders);
         }
         else
