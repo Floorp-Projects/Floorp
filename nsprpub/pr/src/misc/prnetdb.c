@@ -2085,6 +2085,15 @@ PR_IMPLEMENT(PRAddrInfo *) PR_GetAddrInfoByName(const char  *hostname,
         hints.ai_flags = AI_CANONNAME;
         hints.ai_family = AF_UNSPEC;
 
+        /*
+         * it is important to select a socket type in the hints, otherwise we
+         * will get back repetitive entries: one for each socket type.  since
+         * we do not expose ai_socktype through our API, it is okay to do this
+         * here.  the application may still choose to create a socket of some
+         * other type.
+         */
+        hints.ai_socktype = SOCK_STREAM;
+
         rv = GETADDRINFO(hostname, NULL, &hints, &res);
         if (rv == 0)
             return (PRAddrInfo *) res;
