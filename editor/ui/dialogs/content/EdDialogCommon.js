@@ -314,7 +314,7 @@ function SetClassEnabledByID( elementID, doEnable )
   }
   else
   {
-    dump( "not changing element "+elementlID+"\n" );
+    dump( "not changing element "+elementID+"\n" );
   }
 }
 
