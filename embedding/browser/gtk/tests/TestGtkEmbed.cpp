@@ -26,6 +26,7 @@
 // mozilla specific headers
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
+#include "prenv.h"
 
 typedef struct _TestGtkBrowser {
   GtkWidget  *topLevelWindow;
@@ -153,6 +154,18 @@ main(int argc, char **argv)
 {
   gtk_set_locale();
   gtk_init(&argc, &argv);
+
+  char *home_path;
+  char *full_path;
+  home_path = PR_GetEnv("HOME");
+  if (!home_path) {
+    fprintf(stderr, "Failed to get HOME\n");
+    exit(1);
+  }
+  
+  full_path = g_strdup_printf("%s/%s", home_path, ".TestGtkEmbed");
+  
+  gtk_moz_embed_set_profile_path(full_path, "TestGtkEmbed");
 
   TestGtkBrowser *browser = new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
 
@@ -775,11 +788,11 @@ void
 new_window_cb (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask, TestGtkBrowser *browser)
 {
   g_print("new_window_cb\n");
-  g_print("embed is %p chromemask is %d\n", embed, chromemask);
+  g_print("embed is %p chromemask is %d\n", (void *)embed, chromemask);
   TestGtkBrowser *newBrowser = new_gtk_browser(chromemask);
   gtk_widget_set_usize(newBrowser->mozEmbed, 400, 400);
   *newEmbed = GTK_MOZ_EMBED(newBrowser->mozEmbed);
-  g_print("new browser is %p\n", *newEmbed);
+  g_print("new browser is %p\n", (void *)*newEmbed);
 }
 
 void

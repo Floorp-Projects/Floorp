@@ -49,6 +49,12 @@
 #include "nsIDOMDocument.h"
 #include "nsIAppShellService.h"
 #include "nsIXULWindow.h"
+#include "nsIPref.h"
+#include "nsILocalFile.h"
+#include "nsIFile.h"
+#include "nsMPFileLocProvider.h"
+#include "prio.h"
+#include "prprf.h"
 
 // freakin X headers
 #ifdef Success
@@ -68,6 +74,7 @@
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // forward declaration for our class
 class GtkMozEmbedPrivate;
@@ -741,11 +748,13 @@ static guint moz_embed_signals[LAST_SIGNAL] = { 0 };
 static GdkWindow *offscreen_window = 0;
 
 static char *component_path = 0;
+static char *profile_dir = 0;
+static char *profile_name = 0;
 static gint  num_widgets = 0;
-nsCOMPtr <nsIAppShell>  gAppShell;
-nsCOMPtr <nsIXULWindow> gHiddenWindow = 0;
 
-
+nsIAppShell                 *gAppShell = 0;
+nsIXULWindow                *gHiddenWindow = 0;
+nsIPref                     *gPrefs = 0;
 
 /* class and instance initialization */
 
@@ -783,6 +792,9 @@ gtk_moz_embed_startup_xpcom(void);
 
 static void
 gtk_moz_embed_shutdown_xpcom(void);
+
+static nsresult
+gtk_moz_embed_startup_profile(void);
 
 void
 gtk_moz_embed_create_offscreen_window(void);
@@ -1081,6 +1093,24 @@ gtk_moz_embed_set_comp_path    (char *aPath)
     g_free(component_path);
   if (aPath) 
     component_path = g_strdup(aPath);
+}
+
+void
+gtk_moz_embed_set_profile_path (char *aDir, char *aName)
+{
+  // free the old one if we have to
+  if (profile_dir) {
+    g_free(profile_dir);
+    profile_dir = nsnull;
+  }
+  if (profile_name) {
+    g_free(profile_name);
+    profile_name = nsnull;
+  }
+  if (aDir)
+    profile_dir = g_strdup(aDir);
+  if (aName)
+    profile_name = g_strdup(aName);
 }
 
 void
@@ -1556,17 +1586,28 @@ gtk_moz_embed_startup_xpcom(void)
   if (NS_FAILED(rv))
     return FALSE;
 
+  gtk_moz_embed_startup_profile();
+  
+  // does it exist?
+
   // Start up the appshell service.  We need this for chrome windows.
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
-  appShell->Initialize(nsnull, nsnull);
+  nsCOMPtr<nsIAppShellService> appShellService;
+  appShellService = do_GetService(kAppShellServiceCID);
+  appShellService->Initialize(nsnull, nsnull);
   // create a hidden window so that the appshell service doesn't try
   // and Quit on us when a dialog goes away.
-  appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, PR_FALSE,
-				 0, 1, 1, getter_AddRefs(gHiddenWindow));
+  nsCOMPtr<nsIXULWindow> hiddenWindow;
+  appShellService->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, PR_FALSE,
+					0, 1, 1, getter_AddRefs(hiddenWindow));
+  gHiddenWindow = hiddenWindow.get();
+  NS_ADDREF(gHiddenWindow);
 
   // spin up an appshell
-  gAppShell = do_CreateInstance(kAppShellCID);
-  NS_ENSURE_TRUE(gAppShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIAppShell> appShell;
+  appShell = do_CreateInstance(kAppShellCID);
+  NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
+  gAppShell = appShell.get();
+  NS_ADDREF(gAppShell);
 
   gAppShell->Create(0, nsnull);
   gAppShell->Spinup();
@@ -1577,19 +1618,77 @@ gtk_moz_embed_startup_xpcom(void)
 void
 gtk_moz_embed_shutdown_xpcom(void)
 {
+  if (gPrefs) {
+    gPrefs->ShutDown();
+    NS_RELEASE(gPrefs);
+    gPrefs = 0;
+  }
+  
   if (gAppShell)
   {
     // Shutdown the appshell service after deleting the hidden window
+    NS_RELEASE(gHiddenWindow);
     gHiddenWindow = 0;
     nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
     appShell->Shutdown();
     appShell = 0;
     // spin down the appshell
     gAppShell->Spindown();
+    NS_RELEASE(gAppShell);
     gAppShell = 0;
     // shut down XPCOM
     NS_TermEmbedding();
   }
+}
+
+nsresult
+gtk_moz_embed_startup_profile(void)
+{
+  // initialize profiles
+  if (profile_dir && profile_name) {
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> profileDir;
+    PRBool exists = PR_FALSE;
+    PRBool isDir = PR_FALSE;
+    profileDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+    rv = profileDir->InitWithPath(profile_dir);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+    profileDir->Exists(&exists);
+    profileDir->IsDirectory(&isDir);
+    // if it exists and it isn't a directory then give up now.
+    if (!exists) {
+      rv = profileDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+      if NS_FAILED(rv) {
+	PR_fprintf(PR_STDERR, "Warning: Failed to create profile directory\n");
+	return NS_ERROR_FAILURE;
+      }
+    }
+    else if (exists && !isDir) {
+      PR_fprintf(PR_STDERR, "Warning: the profile directory specified \"%s\" exists but is not a directory.\n", profile_dir);
+      return NS_ERROR_FAILURE;
+    }
+    // actually create the loc provider and initialize prefs.
+    nsMPFileLocProvider *locProvider;
+    // Set up the loc provider.  This has a really strange ownership
+    // model.  When I initialize it it will register itself with the
+    // directory service.  The directory service becomes the owning
+    // reference.  So, when that service is shut down this object will
+    // be destroyed.  It's not leaking here.
+    locProvider = new nsMPFileLocProvider;
+    rv = locProvider->Initialize(profileDir, profile_name);
+
+    // get prefs
+    nsCOMPtr<nsIPref> prefs;
+    prefs = do_GetService(kPrefCID);
+    if (!prefs)
+      return NS_ERROR_FAILURE;
+    gPrefs = prefs.get();
+    NS_ADDREF(gPrefs);
+    gPrefs->ResetPrefs();
+    gPrefs->ReadUserPrefs();
+  }
+  return NS_OK;
 }
 
 void
