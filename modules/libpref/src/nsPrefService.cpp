@@ -59,6 +59,8 @@ class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
 
+#include "nsITimelineService.h"
+
 // Definitions
 #define PREFS_HEADER_LINE_1 "# Mozilla User Preferences"
 #define PREFS_HEADER_LINE_2	"// This is a generated file!"
@@ -438,6 +440,12 @@ static nsresult openPrefFileSpec(nsIFileSpec* aFilespec, PRBool aIsErrorFatal, P
 {
   nsresult rv;
   char* readBuf;
+
+#if MOZ_TIMELINE
+  nsXPIDLCString str;
+  aFilespec->GetNativePath(getter_Copies(str));
+  NS_TIMELINE_MARK_FUNCTION1("load pref file", str.get());
+#endif
 
   // TODO: Validate this entire function, I seriously doubt it does what it is 
   //       supposed to. Note for instance that gErrorOpeningUserPrefs will only
