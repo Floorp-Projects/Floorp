@@ -53,7 +53,10 @@
 #include "nsNetUtil.h"
 
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIObserver.h"
 #include "nsReadableUtils.h"
 
 // XXX This is here because nsCachedStyleData is accessed outside of
@@ -79,8 +82,6 @@ nsCachedStyleData::gInfo[] = {
 
   { 0, 0, 0 }
 };
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define POSITIVE_SCALE_FACTOR 1.10 /* 10% */
 #define NEGATIVE_SCALE_FACTOR .90  /* 10% */
@@ -123,42 +124,73 @@ float nsStyleUtil::GetScalingFactor(PRInt32 aScaler)
 
 
 //------------------------------------------------------------------------------
-//
+// Font Algorithm Code
 //------------------------------------------------------------------------------
 
 static PRBool gNavAlgorithmPref = PR_FALSE;
 
-static int PR_CALLBACK NavAlgorithmPrefChangedCallback(const char * name, void * closure)
+class nsFontAlgorithmPrefObserver : public nsIObserver
 {
-	nsresult rv;
-	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-	if (NS_SUCCEEDED(rv) && prefs) {
-		prefs->GetBoolPref(name, &gNavAlgorithmPref);
-	}
-	return 0;
+public:
+  nsFontAlgorithmPrefObserver();
+  virtual ~nsFontAlgorithmPrefObserver();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(nsFontAlgorithmPrefObserver, nsIObserver)
+
+nsFontAlgorithmPrefObserver::nsFontAlgorithmPrefObserver()
+{
+  NS_INIT_ISUPPORTS();
 }
 
+nsFontAlgorithmPrefObserver::~nsFontAlgorithmPrefObserver()
+{
+}
 
-//------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
+NS_IMETHODIMP
+nsFontAlgorithmPrefObserver::Observe(nsISupports *aSubject,
+                                     const char *aTopic,
+                                     const PRUnichar *aData)
+{
+  NS_ASSERTION(nsDependentString(aData) ==
+                 NS_LITERAL_STRING("font.size.nav4algorithm"),
+               "This is the wrong pref!");
+  NS_ASSERTION(!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
+               "This observer only handles pref change topics");
+
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_QueryInterface(aSubject));
+  NS_ASSERTION(prefBranch, "Cannot get a pref branch");
+  prefBranch->GetBoolPref("font.size.nav4algorithm", &gNavAlgorithmPref);
+
+  return NS_OK;
+}
 
 static PRBool UseNewFontAlgorithm()
 {
-	static PRBool once = PR_TRUE;
+  static PRBool gotAlgorithm = PR_FALSE;
+  if (gotAlgorithm) {
+    gotAlgorithm = PR_TRUE;
 
-	if (once)
-	{
-		once = PR_FALSE;
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
+      prefBranch->GetBoolPref("font.size.nav4algorithm", &gNavAlgorithmPref);
+      nsCOMPtr<nsIObserver> observer = new nsFontAlgorithmPrefObserver();
+      if (observer) {
+        nsCOMPtr<nsIPrefBranchInternal> pbi(do_QueryInterface(prefBranch));
+        if (pbi) {
+          pbi->AddObserver("font.size.nav4algorithm", observer, PR_FALSE);
+        }
+      }
+    }
+  }
 
-		nsresult rv;
-		nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-		if (NS_SUCCEEDED(rv) && prefs) {
-			prefs->GetBoolPref("font.size.nav4algorithm", &gNavAlgorithmPref);
-			prefs->RegisterCallback("font.size.nav4algorithm", NavAlgorithmPrefChangedCallback, NULL);
-		}
-	}
-	return (gNavAlgorithmPref ? PR_FALSE : PR_TRUE);
+  // The pref is true if we should use the old (nav4) algorithm.
+  // Since our return is whether we should use the new algorithm,
+  // take the inverse of our cached pref value.
+  return !gNavAlgorithmPref;
 }
 
 

@@ -138,8 +138,6 @@
 static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
 // XXX todo: add in missing out-of-memory checks
 
-#include "nsIPref.h" // Used by the temp pref, should be removed!
- 
 //----------------------------------------------------------------------
 
 #ifdef GATHER_ELEMENT_USEAGE_STATISTICS

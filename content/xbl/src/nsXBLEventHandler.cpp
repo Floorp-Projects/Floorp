@@ -63,7 +63,6 @@
 #include "nsXBLBinding.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsXPIDLString.h"

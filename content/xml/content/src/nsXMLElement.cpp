@@ -60,14 +60,13 @@
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsIPresContext.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
 #include "nsIXBLBinding.h"
 #include "nsIBindingManager.h"
-
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
@@ -401,21 +400,6 @@ static inline nsresult SpecialAutoLoadReturn(nsresult aRv, nsLinkVerb aVerb)
   return aRv;
 }
 
-inline PRBool BlockNewWindow(nsIPref *aPref)
-{
-  PRBool blockNewWindow = PR_FALSE;
-  nsCOMPtr<nsIPref> prefs;
-  if (aPref) {
-    prefs = dont_QueryInterface(aPref);
-  } else {
-    prefs = do_GetService(kPrefServiceCID);
-  }
-  if (prefs) {
-    prefs->GetBoolPref("browser.block.target_new_window", &blockNewWindow);
-  }
-  return blockNewWindow;
-}
-
 NS_IMETHODIMP
 nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
 {
@@ -462,14 +446,23 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
 
         // XXX Should probably do this using atoms 
         if (value.Equals(NS_LITERAL_STRING("new"))) {
-          nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-          PRBool disableNewDuringLoad = PR_FALSE;
-          if (prefs) {
-            prefs->GetBoolPref("dom.disable_open_during_load", &disableNewDuringLoad);
-            if (disableNewDuringLoad)
+          nsCOMPtr<nsIPrefBranch> prefBranch =
+            do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+          PRBool boolPref = PR_FALSE;
+          if (prefBranch) {
+            prefBranch->GetBoolPref("dom.disable_open_during_load", &boolPref);
+            if (boolPref) {
+              // disabling open during load
+
               return NS_OK;
+            }
+
+            prefBranch->GetBoolPref("browser.block.target_new_window",
+                                    &boolPref);
           }
-          if (!BlockNewWindow(prefs)) {
+          if (!boolPref) {
+            // not blocking new windows
             verb = eLinkVerb_New;
           }
         } else if (value.Equals(NS_LITERAL_STRING("replace"))) {
@@ -567,7 +560,15 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
           // XXX Should probably do this using atoms 
           if (show.Equals(NS_LITERAL_STRING("new"))) {
-            if (!BlockNewWindow(nsnull)) {
+            nsCOMPtr<nsIPrefBranch> prefBranch =
+              do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+            PRBool blockNewWindow = PR_FALSE;
+            if (prefBranch) {
+              prefBranch->GetBoolPref("browser.block.target_new_window",
+                                      &blockNewWindow);
+            }
+            if (!blockNewWindow) {
               verb = eLinkVerb_New;
             }
           } else if (show.Equals(NS_LITERAL_STRING("replace"))) {

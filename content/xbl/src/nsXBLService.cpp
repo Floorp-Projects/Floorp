@@ -82,7 +82,8 @@
 
 #include "nsIXBLPrototypeHandler.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
@@ -495,17 +496,13 @@ nsXBLService::nsXBLService(void)
   gRefCnt++;
   if (gRefCnt == 1) {
     // Find out if the XUL cache is on or off
-    nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv))
-      prefs->GetBoolPref(kDisableChromeCachePref, &gDisableChromeCache);
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch)
+      prefBranch->GetBoolPref(kDisableChromeCachePref, &gDisableChromeCache);
 
     gClassTable = new nsHashtable();
 
-    rv = CallGetService("@mozilla.org/xul/xul-prototype-cache;1", &gXULCache);
-    if (NS_FAILED(rv)) {
-      return;
-    }
+    CallGetService("@mozilla.org/xul/xul-prototype-cache;1", &gXULCache);
   }
 }
 

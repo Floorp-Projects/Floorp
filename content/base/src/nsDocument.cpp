@@ -146,7 +146,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsHTMLAtoms.h"
 
 #include "nsIHttpChannel.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "nsScriptEventManager.h"
 
@@ -840,11 +841,11 @@ nsDocument::StartDocumentLoad(const char* aCommand,
     }
   }
   if (!have_contentLanguage) {
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-    if(pref) {
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
       nsXPIDLCString prefLanguage;
-      if (NS_SUCCEEDED(pref->GetCharPref("intl.accept_languages",
-                                         getter_Copies(prefLanguage)))) {
+      if (NS_SUCCEEDED(prefBranch->GetCharPref("intl.accept_languages",
+                                               getter_Copies(prefLanguage)))) {
         mContentLanguage.AssignWithConversion(prefLanguage);
         have_contentLanguage = PR_TRUE;
       }
