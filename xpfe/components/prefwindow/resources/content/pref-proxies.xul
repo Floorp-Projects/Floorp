@@ -32,7 +32,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP", "networkProxyHTTP_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
+    _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP", "networkProxyHTTP_Port", "networkProxySSL", "networkProxySSL_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
   ]]>
   </script>
         
@@ -75,6 +75,16 @@
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&HTTPport.accesskey;" for="networkProxyHTTP_Port"/>
               <textfield id="networkProxyHTTP_Port" pref="true" preftype="int" prefstring="network.proxy.http_port"
+                         prefattribute="value" size="5"/>
+            </box>
+          </row>
+          <row>
+            <text class="label" value="&ssl.label;" accesskey="&ssl.accesskey;" for="networkProxySSL"/>
+            <box autostretch="never">
+              <textfield id="networkProxySSL" pref="true" preftype="string" prefstring="network.proxy.ssl"
+                         prefattribute="value" flex="1"/>
+              <text class="label" value="&port.label;" accesskey="&SSLport.accesskey;" for="networkProxySSL_Port"/>
+              <textfield id="networkProxySSL_Port" pref="true" preftype="int" prefstring="network.proxy.ssl_port"
                          prefattribute="value" size="5"/>
             </box>
           </row>
