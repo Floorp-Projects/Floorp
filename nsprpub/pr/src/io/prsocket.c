@@ -462,7 +462,6 @@ PRIntervalTime timeout)
 static PRStatus PR_CALLBACK SocketBind(PRFileDesc *fd, const PRNetAddr *addr)
 {
 	PRInt32 result;
-	int one = 1;
 
 	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
 

@@ -988,10 +988,11 @@ PR_IMPLEMENT(PRStatus) PR_DestroyNetAddr(PRNetAddr *addr)
 
 PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
 {
-    PRIntn rv;
     PRStatus status = PR_SUCCESS;
 
 #if defined(_PR_INET6)
+    PRIntn rv;
+
     rv = inet_pton(AF_INET6, string, &addr->ipv6.ip);
     if (1 == rv)
     {

@@ -1301,7 +1301,7 @@ void _PR_InitIO()
     PRIntn index;
     char *num_io_queues;
 
-    if (num_io_queues = getenv("NSPR_NUM_IO_QUEUES"))
+    if (NULL != (num_io_queues = getenv("NSPR_NUM_IO_QUEUES")))
     {
         _pt_tq_count = atoi(num_io_queues);
     }
@@ -1829,7 +1829,6 @@ failed:
 static PRStatus pt_Bind(PRFileDesc *fd, const PRNetAddr *addr)
 {
     PRIntn rv;
-    PRInt32 one = 1;
     pt_SockLen addr_len;
 #ifdef _PR_HAVE_SOCKADDR_LEN
     PRNetAddr addrCopy;
