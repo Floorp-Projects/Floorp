@@ -58,342 +58,357 @@ static void initConsole(StringPtr consoleName,
 namespace JavaScript {
 namespace Shell {
     
-    using namespace ICG;
-    using namespace JSTypes;
-    
-    // Interactively read a line from the input stream in and put it into
-    // s Return false if reached the end of input before reading anything.
-    static bool promptLine(LineReader &inReader, string &s,
-                           const char *prompt)
-    {
-        if (prompt) {
-            stdOut << prompt;
+using namespace ICG;
+using namespace JSTypes;
+using namespace Interpreter;
+
+// Interactively read a line from the input stream in and put it into
+// s. Return false if reached the end of input before reading anything.
+static bool promptLine(LineReader &inReader, string &s,
+                       const char *prompt)
+{
+    if (prompt) {
+        stdOut << prompt;
 #ifdef XP_MAC_MPW
-            // Print a CR after the prompt because MPW grabs the entire
-            // line when entering an interactive command.
-            stdOut << '\n';
+        // Print a CR after the prompt because MPW grabs the entire
+        // line when entering an interactive command.
+        stdOut << '\n';
 #endif
-        }
-        return inReader.readLine(s) != 0;
     }
-    
-    
-    const bool showTokens = true;
-    
-    static void readEvalPrint(FILE *in, World &world)
-    {
-        String buffer;
-        string line;
-        String sourceLocation = widenCString("console");
-        LineReader inReader(in);
-            
-        while (promptLine(inReader, line, buffer.empty() ? "js> " : 0)) {
-            appendChars(buffer, line.data(), line.size());
-            try {
-                Arena a;
-                Parser p(world, a, buffer, sourceLocation);
-                    
-                if (showTokens) {
-                    Lexer &l = p.lexer;
-                    while (true) {
-                        const Token &t = l.get(true);
-                        if (t.hasKind(Token::end))
-                            break;
-                        stdOut << ' ';
-                        t.print(stdOut, true);
-                    }
-                } else {
-                    /*ExprNode *parseTree = */ p.parsePostfixExpression();
+    return inReader.readLine(s) != 0;
+}
+
+
+const bool showTokens = true;
+
+static void readEvalPrint(FILE *in, World &world)
+{
+    String buffer;
+    string line;
+    String sourceLocation = widenCString("console");
+    LineReader inReader(in);
+        
+    while (promptLine(inReader, line, buffer.empty() ? "js> " : 0)) {
+        appendChars(buffer, line.data(), line.size());
+        try {
+            Arena a;
+            Parser p(world, a, buffer, sourceLocation);
+                
+            if (showTokens) {
+                Lexer &l = p.lexer;
+                while (true) {
+                    const Token &t = l.get(true);
+                    if (t.hasKind(Token::end))
+                        break;
+                    stdOut << ' ';
+                    t.print(stdOut, true);
                 }
+            } else {
+                /*ExprNode *parseTree = */ p.parsePostfixExpression();
+            }
+            clear(buffer);
+            stdOut << '\n';
+        } catch (Exception &e) {
+            /* If we got a syntax error on the end of input,
+             * then wait for a continuation
+             * of input rather than printing the error message. */
+            if (!(e.hasKind(Exception::syntaxError) &&
+                  e.lineNum && e.pos == buffer.size() &&
+                  e.sourceFile == sourceLocation)) {
+                stdOut << '\n' << e.fullMessage();
                 clear(buffer);
-                stdOut << '\n';
-            } catch (Exception &e) {
-                /* If we got a syntax error on the end of input,
-                 * then wait for a continuation
-                 * of input rather than printing the error message. */
-                if (!(e.hasKind(Exception::syntaxError) &&
-                      e.lineNum && e.pos == buffer.size() &&
-                      e.sourceFile == sourceLocation)) {
-                    stdOut << '\n' << e.fullMessage();
-                    clear(buffer);
-                }
             }
         }
-        stdOut << '\n';
     }
-                
-    static void testICG(World &world)
-    {
-        //
-        // testing ICG 
-        //
-        uint32 pos = 0;
-        ICodeGenerator icg;
-        
-        // var i,j;
-        // i is bound to var #0, j to var #1
-        Register r_i = icg.allocateVariable(world.identifiers[widenCString("i")]);
-        Register r_j = icg.allocateVariable(world.identifiers[widenCString("j")]);
-
-        //  i = j + 2;
-        icg.beginStatement(pos);
-        Register r1 = icg.loadImmediate(2.0);
-        icg.move(r_i, icg.op(ADD, r1, r_j));
-        
-        // j = a.b
-        icg.beginStatement(pos);
-        r1 = icg.loadName(world.identifiers[widenCString("a")]);
-        r1 = icg.getProperty(r1, world.identifiers[widenCString("b")]);
-        icg.move(r_j, r1);
+    stdOut << '\n';
+}
+            
+static void testICG(World &world)
+{
+    //
+    // testing ICG 
+    //
+    uint32 pos = 0;
+    ICodeGenerator icg;
     
-        // label1 : while (i) { while (i) { i = i + j; break label1; } }
-        icg.beginLabelStatement(pos, world.identifiers[widenCString("label1")]);            
+    // var i,j;
+    // i is bound to var #0, j to var #1
+    Register r_i = icg.allocateVariable(world.identifiers[widenCString("i")]);
+    Register r_j = icg.allocateVariable(world.identifiers[widenCString("j")]);
+
+    //  i = j + 2;
+    icg.beginStatement(pos);
+    Register r1 = icg.loadImmediate(2.0);
+    icg.move(r_i, icg.op(ADD, r1, r_j));
+    
+    // j = a.b
+    icg.beginStatement(pos);
+    r1 = icg.loadName(world.identifiers[widenCString("a")]);
+    r1 = icg.getProperty(r1, world.identifiers[widenCString("b")]);
+    icg.move(r_j, r1);
+
+    // label1 : while (i) { while (i) { i = i + j; break label1; } }
+    icg.beginLabelStatement(pos, world.identifiers[widenCString("label1")]);            
+    icg.beginWhileStatement(pos);
+    icg.endWhileExpression(r_i);        
+
         icg.beginWhileStatement(pos);
         icg.endWhileExpression(r_i);        
-
-            icg.beginWhileStatement(pos);
-            icg.endWhileExpression(r_i);        
-            icg.move(r_i, icg.op(ADD, r_i, r_j));
-            icg.breakStatement(pos, world.identifiers[widenCString("label1")]);
-            icg.endWhileStatement();
-
+        icg.move(r_i, icg.op(ADD, r_i, r_j));
+        icg.breakStatement(pos, world.identifiers[widenCString("label1")]);
         icg.endWhileStatement();
-        icg.endLabelStatement();
 
-        // if (i) if (j) i = 3; else j = 4;
-        icg.beginIfStatement(pos, r_i);
-        icg.beginIfStatement(pos, r_j);
-        icg.move(r_i, icg.loadImmediate(3));
-        icg.beginElseStatement(true);
-        icg.move(r_j, icg.loadImmediate(4));
-        icg.endIfStatement();
-        icg.beginElseStatement(false);
-        icg.endIfStatement();
+    icg.endWhileStatement();
+    icg.endLabelStatement();
+
+    // if (i) if (j) i = 3; else j = 4;
+    icg.beginIfStatement(pos, r_i);
+    icg.beginIfStatement(pos, r_j);
+    icg.move(r_i, icg.loadImmediate(3));
+    icg.beginElseStatement(true);
+    icg.move(r_j, icg.loadImmediate(4));
+    icg.endIfStatement();
+    icg.beginElseStatement(false);
+    icg.endIfStatement();
+    
+
+    // switch (i) { case 3: case 4: j = 4; break; case 5: j = 5; break; default : j = 6; }
+    icg.beginSwitchStatement(pos, r_i);
+    // case 3, note empty case statement (?necessary???)
+    icg.endCaseCondition(icg.loadImmediate(3));
+    icg.beginCaseStatement(pos);
+    icg.endCaseStatement();
+    // case 4
+    icg.endCaseCondition(icg.loadImmediate(4));
+    icg.beginCaseStatement(pos);
+    icg.beginStatement(pos);
+    icg.move(r_j, icg.loadImmediate(4));
+    icg.breakStatement(pos);
+    icg.endCaseStatement();
+    // case 5
+    icg.endCaseCondition(icg.loadImmediate(5));
+    icg.beginCaseStatement(pos);
+    icg.beginStatement(pos);
+    icg.move(r_j, icg.loadImmediate(5));
+    icg.breakStatement(pos);
+    icg.endCaseStatement();
+    // default
+    icg.beginDefaultStatement(pos);
+    icg.beginStatement(pos);
+    icg.move(r_j, icg.loadImmediate(6));
+    icg.endDefaultStatement();
+    icg.endSwitchStatement();
+    
+    // for ( ; i; i = i + 1 ) j = 99;
+    icg.beginForStatement(pos);
+    icg.forCondition(r_i);
+    icg.move(r_i, icg.op(ADD, r_i, icg.loadImmediate(1)));
+    icg.forIncrement();
+    icg.move(r_j, icg.loadImmediate(99));
+    icg.endForStatement();
         
-
-        // switch (i) { case 3: case 4: j = 4; break; case 5: j = 5; break; default : j = 6; }
-        icg.beginSwitchStatement(pos, r_i);
-        // case 3, note empty case statement (?necessary???)
-        icg.endCaseCondition(icg.loadImmediate(3));
-        icg.beginCaseStatement(pos);
-        icg.endCaseStatement();
-        // case 4
-        icg.endCaseCondition(icg.loadImmediate(4));
-        icg.beginCaseStatement(pos);
-        icg.beginStatement(pos);
-        icg.move(r_j, icg.loadImmediate(4));
-        icg.breakStatement(pos);
-        icg.endCaseStatement();
-        // case 5
-        icg.endCaseCondition(icg.loadImmediate(5));
-        icg.beginCaseStatement(pos);
-        icg.beginStatement(pos);
-        icg.move(r_j, icg.loadImmediate(5));
-        icg.breakStatement(pos);
-        icg.endCaseStatement();
-        // default
-        icg.beginDefaultStatement(pos);
-        icg.beginStatement(pos);
-        icg.move(r_j, icg.loadImmediate(6));
-        icg.endDefaultStatement();
-        icg.endSwitchStatement();
+    ICodeModule *icm = icg.complete();
         
-        // for ( ; i; i = i + 1 ) j = 99;
-        icg.beginForStatement(pos);
-        icg.forCondition(r_i);
-        icg.move(r_i, icg.op(ADD, r_i, icg.loadImmediate(1)));
-        icg.forIncrement();
-        icg.move(r_j, icg.loadImmediate(99));
-        icg.endForStatement();
-            
-        ICodeModule *icm = icg.complete();
-            
-        stdOut << icg;
-            
-        delete icm;
-    }
+    stdOut << icg;
+        
+    delete icm;
+}
 
-    static float64 testFunctionCall(World &world, float64 n)
+static float64 testFunctionCall(World &world, float64 n)
+{
+    JSObject glob;
+    Context cx(world, &glob);
+    uint32 position = 0;
+    //StringAtom& global = world.identifiers[widenCString("global")];
+    StringAtom& sum = world.identifiers[widenCString("sum")];
+        
+    ICodeGenerator fun;
+    // function sum(n) { if (n > 1) return 1 + sum(n - 1); else return 1; }
+    // n is bound to var #0.
+    Register r_n =
+        fun.allocateVariable(world.identifiers[widenCString("n")]);
+    fun.beginStatement(position);
+    Register r1 = fun.op(COMPARE_GT, r_n, fun.loadImmediate(1.0));
+    fun.beginIfStatement(position, r1);
+    fun.beginStatement(position);
+    r1 = fun.op(SUBTRACT, r_n, fun.loadImmediate(1.0));
+    RegisterList args(1);
+    args[0] = r1;
+    r1 = fun.call(fun.loadName(sum), args);
+    fun.returnStatement(fun.op(ADD, fun.loadImmediate(1.0), r1));
+    fun.beginElseStatement(true);
+    fun.beginStatement(position);
+    fun.returnStatement(fun.loadImmediate(1.0));
+    fun.endIfStatement();
+        
+    ICodeModule *funCode = fun.complete();
+    stdOut << fun;
+        
+    // now a script : 
+    // return sum(n);
+    ICodeGenerator script;
+    script.beginStatement(position);
+    r1 = script.loadName(sum);
+    RegisterList args_2(1);
+    args_2[0] = script.loadImmediate(n);
+    script.returnStatement(script.call(r1, args_2));
+        
+    stdOut << script;
+        
+    // preset the global property "sum" to contain the above function
+    glob.defineFunction(sum, funCode);
+        
+    JSValue result = cx.interpret(script.complete(), JSValues());
+    stdOut << "sum(" << n << ") = " << result.f64 << "\n";
+        
+    return result.f64;    
+}
+
+static float64 testFactorial(World &world, float64 n)
+{
+    JSObject glob;
+    Context cx(world, &glob);
+    // generate code for factorial, and interpret it.
+    uint32 position = 0;
+    ICodeGenerator icg;
+        
+    // fact(n) {
+    // var result = 1;
+    Register r_n = icg.allocateVariable(world.identifiers[widenCString("n")]);
+    Register r_result = icg.allocateVariable(world.identifiers[widenCString("result")]);
+
+    icg.beginStatement(position);
+    icg.move(r_result, icg.loadImmediate(1.0));
+        
+    // while (n > 1) {
+    //   result = result * n;
+    //   n = n - 1;
+    // }
     {
-        JSObject glob;
-        Context cx(world, &glob);
-        uint32 position = 0;
-        //StringAtom& global = world.identifiers[widenCString("global")];
-        StringAtom& sum = world.identifiers[widenCString("sum")];
-            
-        ICodeGenerator fun;
-        // function sum(n) { if (n > 1) return 1 + sum(n - 1); else return 1; }
-        // n is bound to var #0.
-        Register r_n =
-            fun.allocateVariable(world.identifiers[widenCString("n")]);
-        fun.beginStatement(position);
-        Register r1 = fun.op(COMPARE_GT, r_n, fun.loadImmediate(1.0));
-        fun.beginIfStatement(position, r1);
-        fun.beginStatement(position);
-        r1 = fun.op(SUBTRACT, r_n, fun.loadImmediate(1.0));
-        RegisterList args(1);
-        args[0] = r1;
-        r1 = fun.call(fun.loadName(sum), args);
-        fun.returnStatement(fun.op(ADD, fun.loadImmediate(1.0), r1));
-        fun.beginElseStatement(true);
-        fun.beginStatement(position);
-        fun.returnStatement(fun.loadImmediate(1.0));
-        fun.endIfStatement();
-            
-        ICodeModule *funCode = fun.complete();
-        stdOut << fun;
-            
-        // now a script : 
-        // return sum(n);
-        ICodeGenerator script;
-        script.beginStatement(position);
-        r1 = script.loadName(sum);
-        RegisterList args_2(1);
-        args_2[0] = script.loadImmediate(n);
-        script.returnStatement(script.call(r1, args_2));
-            
-        stdOut << script;
-            
-        // preset the global property "sum" to contain the above function
-        glob.defineFunction(sum, funCode);
-            
-        JSValue result = cx.interpret(script.complete(), JSValues());
-        stdOut << "sum(" << n << ") = " << result.f64 << "\n";
-            
-        return result.f64;    
-    }
-        
-    static float64 testFactorial(World &world, float64 n)
-    {
-        JSObject glob;
-        Context cx(world, &glob);
-        // generate code for factorial, and interpret it.
-        uint32 position = 0;
-        ICodeGenerator icg;
-            
-        // fact(n) {
-        // var result = 1;
-        Register r_n = icg.allocateVariable(world.identifiers[widenCString("n")]);
-        Register r_result = icg.allocateVariable(world.identifiers[widenCString("result")]);
-
+        icg.beginWhileStatement(position);
+        Register r1 = icg.loadImmediate(1.0);
+        Register r2 = icg.op(COMPARE_GT, r_n, r1);
+        icg.endWhileExpression(r2);
+        r2 = icg.op(MULTIPLY, r_result, r_n);
+        icg.move(r_result, r2);
         icg.beginStatement(position);
-        icg.move(r_result, icg.loadImmediate(1.0));
-            
-        // while (n > 1) {
-        //   result = result * n;
-        //   n = n - 1;
-        // }
+        r1 = icg.loadImmediate(1.0); 
+        r2 = icg.op(SUBTRACT, r_n, r1);
+        icg.move(r_n, r2);
+        icg.endWhileStatement();
+    }
+        
+    // return result;
+    icg.returnStatement(r_result);
+    ICodeModule *icm = icg.complete();
+    stdOut << icg;
+        
+    // preset the global property "fact" to contain the above function
+    StringAtom& fact = world.identifiers[widenCString("fact")];
+    glob.defineFunction(fact, icm);
+        
+    // now a script : 
+    // return fact(n);
+    ICodeGenerator script;
+    script.beginStatement(position);
+    RegisterList args(1);
+    args[0] = script.loadImmediate(n);
+    script.returnStatement(script.call(script.loadName(fact), args));
+    stdOut << script;
+    
+    // install a listener so we can trace execution of factorial.
+    class Tracer : public Context::Listener {
+        typedef InstructionStream::difference_type InstructionOffset;
+        void listen(Context* /*context*/, InstructionIterator pc,
+                    JSValues* /*registers*/, ICodeModule* iCode)
         {
-            icg.beginWhileStatement(position);
-            Register r1 = icg.loadImmediate(1.0);
-            Register r2 = icg.op(COMPARE_GT, r_n, r1);
-            icg.endWhileExpression(r2);
-            r2 = icg.op(MULTIPLY, r_result, r_n);
-            icg.move(r_result, r2);
-            icg.beginStatement(position);
-            r1 = icg.loadImmediate(1.0); 
-            r2 = icg.op(SUBTRACT, r_n, r1);
-            icg.move(r_n, r2);
-            icg.endWhileStatement();
+            InstructionOffset offset = (pc - iCode->its_iCode->begin());
+            printFormat(stdOut, "%04X: ", offset);
+            stdOut << **pc << '\n';
         }
-            
-        // return result;
-        icg.returnStatement(r_result);
-        ICodeModule *icm = icg.complete();
-        stdOut << icg;
-            
-        // preset the global property "fact" to contain the above function
-        StringAtom& fact = world.identifiers[widenCString("fact")];
-        glob.defineFunction(fact, icm);
-            
-        // now a script : 
-        // return fact(n);
-        ICodeGenerator script;
-        script.beginStatement(position);
-        RegisterList args(1);
-        args[0] = script.loadImmediate(n);
-        script.returnStatement(script.call(script.loadName(fact), args));
-        stdOut << script;
-            
-        // test the iCode interpreter.
-        JSValue result = cx.interpret(script.complete(), JSValues());
-        stdOut << "fact(" << n << ") = " << result.f64 << "\n";
-            
-        delete icm;
-            
-        return result.f64;
-    }
+    };
+    Tracer t;
+    cx.addListener(&t);
+    
+    // test the iCode interpreter.
+    JSValue result = cx.interpret(script.complete(), JSValues());
+    stdOut << "fact(" << n << ") = " << result.f64 << "\n";
+    
+    delete icm;
         
-    static float64 testObjects(World &world, int32 n)
-    {
-        JSObject glob;
-        Context cx(world, &glob);
-        // create some objects, put some properties, and retrieve them.
-        uint32 position = 0;
-        ICodeGenerator initCG;
-            
-        // var global = new Object();
-        StringAtom& global = world.identifiers[widenCString("global")];
-        initCG.beginStatement(position);
-        initCG.saveName(global, initCG.newObject());
-            
-        // global.counter = 0;
-        StringAtom& counter = world.identifiers[widenCString("counter")];
-        initCG.beginStatement(position);
-        initCG.setProperty(initCG.loadName(global), counter, initCG.loadImmediate(0.0));
-            
-        // var array = new Array();
-        StringAtom& array = world.identifiers[widenCString("array")];
-        initCG.beginStatement(position);
-        initCG.saveName(array, initCG.newArray());
-        initCG.returnStatement();
-            
-        ICodeModule* initCode = initCG.complete();
-            
-        stdOut << initCG;
+    return result.f64;
+}
+    
+static float64 testObjects(World &world, int32 n)
+{
+    JSObject glob;
+    Context cx(world, &glob);
+    // create some objects, put some properties, and retrieve them.
+    uint32 position = 0;
+    ICodeGenerator initCG;
+    
+    // var global = new Object();
+    StringAtom& global = world.identifiers[widenCString("global")];
+    initCG.beginStatement(position);
+    initCG.saveName(global, initCG.newObject());
         
-        // function increment()
-        // {
-        //   var i = global.counter;
-        //   array[i] = i;
-        //   return ++global.counter;
-        // }
-        ICodeGenerator incrCG;
-            
-        incrCG.beginStatement(position);
-        Register robject = incrCG.loadName(global);
-        Register roldvalue = incrCG.getProperty(robject, counter);
-        Register rarray = incrCG.loadName(array);
-        incrCG.setElement(rarray, roldvalue, roldvalue);
-        Register rvalue = incrCG.op(ADD, roldvalue, incrCG.loadImmediate(1.0));
-        incrCG.setProperty(robject, counter, rvalue);
-        incrCG.returnStatement(rvalue);
-            
-        ICodeModule* incrCode = incrCG.complete();
-            
-        stdOut << incrCG;
-            
-        // run initialization code.
-        JSValues args;
-        cx.interpret(initCode, args);
-            
-        // call the increment function some number of times.
-        JSValue result;
-        while (n-- > 0)
-            result = cx.interpret(incrCode, args);
-            
-        stdOut << "result = " << result.f64 << "\n";
-            
-        delete initCode;
-        delete incrCode;
-            
-        return result.f64;
-    }
+    // global.counter = 0;
+    StringAtom& counter = world.identifiers[widenCString("counter")];
+    initCG.beginStatement(position);
+    initCG.setProperty(initCG.loadName(global), counter, initCG.loadImmediate(0.0));
+        
+    // var array = new Array();
+    StringAtom& array = world.identifiers[widenCString("array")];
+    initCG.beginStatement(position);
+    initCG.saveName(array, initCG.newArray());
+    initCG.returnStatement();
+        
+    ICodeModule* initCode = initCG.complete();
+        
+    stdOut << initCG;
+    
+    // function increment()
+    // {
+    //   var i = global.counter;
+    //   array[i] = i;
+    //   return ++global.counter;
+    // }
+    ICodeGenerator incrCG;
+        
+    incrCG.beginStatement(position);
+    Register robject = incrCG.loadName(global);
+    Register roldvalue = incrCG.getProperty(robject, counter);
+    Register rarray = incrCG.loadName(array);
+    incrCG.setElement(rarray, roldvalue, roldvalue);
+    Register rvalue = incrCG.op(ADD, roldvalue, incrCG.loadImmediate(1.0));
+    incrCG.setProperty(robject, counter, rvalue);
+    incrCG.returnStatement(rvalue);
+        
+    ICodeModule* incrCode = incrCG.complete();
+        
+    stdOut << incrCG;
+        
+    // run initialization code.
+    JSValues args;
+    cx.interpret(initCode, args);
+        
+    // call the increment function some number of times.
+    JSValue result;
+    while (n-- > 0)
+        result = cx.interpret(incrCode, args);
+        
+    stdOut << "result = " << result.f64 << "\n";
+        
+    delete initCode;
+    delete incrCode;
+        
+    return result.f64;
+}
 
 } /* namespace Shell */
 } /* namespace JavaScript */
 
-    
+
 int main(int argc, char **argv)
 {
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
