@@ -27,16 +27,17 @@ nsDrawingSurfaceQT::nsDrawingSurfaceQT()
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::nsDrawingSurfaceQT\n"));
     NS_INIT_REFCNT();
 
-    mPixmap = nsnull;
-    mGC = nsnull;
-    mDepth = 0;
-    mWidth = mHeight = 0;
-    mFlags = 0;
-
-    mLockWidth = mLockHeight = 0;
-    mLockFlags = 0;
-    mLocked = PR_FALSE;
-    mCleanup = PR_TRUE;
+    mPaintDevice = nsnull;
+    mGC          = nsnull;
+    mDepth       = 0;
+    mWidth       = 0;
+    mHeight      = 0;
+    mFlags       = 0;
+    mLockWidth   = 0;
+    mLockHeight  = 0;
+    mLockFlags   = 0;
+    mLocked      = PR_FALSE;
+    mCleanup     = PR_TRUE;
 
     // I have no idea how to compute these values.
 /*
@@ -58,7 +59,7 @@ nsDrawingSurfaceQT::nsDrawingSurfaceQT()
 nsDrawingSurfaceQT::~nsDrawingSurfaceQT()
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::~nsDrawingSurfaceQT\n"));
-    if (mPixmap)
+    if (mPaintDevice)
     {
         // Should I really be destroying this? It's possible that this pixmap
         // wasn't created by this class.
@@ -70,7 +71,7 @@ nsDrawingSurfaceQT::~nsDrawingSurfaceQT()
         PR_LOG(QtGfxLM, 
                PR_LOG_DEBUG, 
                ("nsDrawingSurfaceQT::~nsDrawingSurfaceQT: calling QPainter::end for %p\n",
-                mPixmap));
+                mPaintDevice));
         mGC->end();
     }
 }
@@ -143,7 +144,7 @@ NS_IMETHODIMP nsDrawingSurfaceQT::Lock(PRInt32   aX,
     // For now, we will lock the drawing surface when it is initialized. This
     // will probably need to be improved.
 
-    //mGC->begin(mPixmap);
+    //mGC->begin(mPaintDevice);
 
     return NS_OK;
 }
@@ -159,17 +160,19 @@ NS_IMETHODIMP nsDrawingSurfaceQT::Unlock(void)
 
     if (!(mFlags & NS_LOCK_SURFACE_READ_ONLY))
     {
+#if 0
         mGC->drawPixmap(0, 
                         0, 
-                        *mPixmap, 
+                        *mPaintDevice, 
                         mLockY, 
                         mLockY, 
                         mLockWidth, 
                         mLockHeight);
+#endif
     }
 
-    delete mPixmap;
-    mPixmap = nsnull;
+    delete mPaintDevice;
+    mPaintDevice = nsnull;
 
     mLocked = PR_FALSE;
 
@@ -208,15 +211,16 @@ NS_IMETHODIMP nsDrawingSurfaceQT::GetPixelFormat(nsPixelFormat *aFormat)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsDrawingSurfaceQT::Init(QPixmap * aPixmap, QPainter *aGC)
+NS_IMETHODIMP nsDrawingSurfaceQT::Init(QPaintDevice * aPaintDevice, 
+                                       QPainter *aGC)
 {
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
            ("nsDrawingSurfaceQT::Init: pixmap=%p, painter=%p\n",
-            aPixmap,
+            aPaintDevice,
             aGC));
     mGC          = aGC;
-    mPixmap      = aPixmap;
+    mPaintDevice = aPaintDevice;
     mIsOffscreen = PR_FALSE;
 
     return CommonInit();
@@ -248,7 +252,7 @@ NS_IMETHODIMP nsDrawingSurfaceQT::Init(QPainter *aGC,
             mWidth, 
             mHeight, 
             mDepth));
-    mPixmap = new QPixmap(mWidth, mHeight, mDepth);
+    mPaintDevice = new QPixmap(mWidth, mHeight, mDepth);
 
     return CommonInit();
 }
@@ -258,19 +262,19 @@ NS_IMETHODIMP nsDrawingSurfaceQT::CommonInit()
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::CommonInit\n"));
 
-    if (mGC->begin(mPixmap))
+    if (mGC->begin(mPaintDevice))
     {
         PR_LOG(QtGfxLM, 
                PR_LOG_DEBUG, 
                ("nsDrawingSurfaceQT::CommonInit: QPainter::begin succeeded for %p\n",
-                mPixmap));
+                mPaintDevice));
     }
     else
     {
         PR_LOG(QtGfxLM, 
                PR_LOG_DEBUG, 
                ("nsDrawingSurfaceQT::CommonInit: QPainter::begin failed for %p\n",
-                mPixmap));
+                mPaintDevice));
         mCleanup = PR_FALSE;
     }
 
@@ -283,8 +287,8 @@ QPainter * nsDrawingSurfaceQT::GetGC()
     return mGC;
 }
 
-QPixmap * nsDrawingSurfaceQT::GetPixmap()
+QPaintDevice * nsDrawingSurfaceQT::GetPaintDevice()
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::GetPixmap\n"));
-    return mPixmap;
+    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::GetPaintDevice\n"));
+    return mPaintDevice;
 }
