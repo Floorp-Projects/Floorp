@@ -339,6 +339,10 @@ sub DistMozilla()
 		#BASE
 		InstallFromManifest(":mozilla:base:public:MANIFEST",							":mozilla:dist:base:");
 		InstallFromManifest(":mozilla:base:src:MANIFEST",								":mozilla:dist:base:");
+
+		#WIDGET
+		InstallFromManifest(":mozilla:widget:public:MANIFEST",							":mozilla:dist:widget:");
+		InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",						":mozilla:dist:widget:");
 	}
 
 1;
