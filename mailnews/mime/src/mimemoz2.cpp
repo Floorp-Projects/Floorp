@@ -294,6 +294,10 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
   nsXPIDLCString part;
   PRBool isIMAPPart;
 
+  /* be sure the object has not be marked as Not to be an attachment */
+  if (object->dontShowAsAttachment)
+    return NS_OK;
+
   part.Adopt(mime_part_address(object));
   if (part.IsEmpty()) 
     return NS_ERROR_OUT_OF_MEMORY;
@@ -524,8 +528,7 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
       return ProcessBodyAsAttachment(obj, data);
   }
 
-  (void) MimeObjectChildIsMessageBody(obj, &isAlternativeOrRelated);
-  if (isAlternativeOrRelated)
+  if (mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeMultipartAlternativeClass))
     return 0;
   
   isAnInlineMessage = mime_typep(obj, (MimeObjectClass *) &mimeMessageClass);

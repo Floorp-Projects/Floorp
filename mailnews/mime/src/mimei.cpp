@@ -254,7 +254,7 @@ mime_new (MimeObjectClass *clazz, MimeHeaders *hdrs,
   memset(object, 0, size);
   object->clazz = clazz;
   object->headers = hdrs;
-  object->showAttachmentIcon = PR_FALSE; /* initialize ricardob's new member. */
+  object->dontShowAsAttachment = PR_FALSE;
 
   if (override_content_type && *override_content_type)
 	object->content_type = nsCRT::strdup(override_content_type);

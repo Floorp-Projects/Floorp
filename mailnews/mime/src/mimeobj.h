@@ -191,7 +191,9 @@ struct MimeObject {
   PRBool closed_p;			/* Whether it's done being written to. */
   PRBool parsed_p;			/* Whether the parser has been shut down. */
   PRBool output_p;			/* Whether it should be written. */
-  PRBool showAttachmentIcon;
+  PRBool dontShowAsAttachment; /* Force an object to not be shown as attachment,
+                                  but when is false, it doesn't mean it will be
+                                  shown as attachment */
 
   /* Read-buffer and write-buffer (on input, `parse_buffer' uses ibuffer to
 	 compose calls to `parse_line'; on output, `obuffer' is used in various

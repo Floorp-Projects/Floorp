@@ -139,6 +139,23 @@ MimeDefClass(MimeMultipartRelated, MimeMultipartRelatedClass,
        mimeMultipartRelatedClass, &MIME_SUPERCLASS);
 
 
+class MimeHashValue
+{
+public:
+  MimeHashValue(MimeObject *obj, char *url) {
+    m_obj = obj;
+    m_url = nsCRT::strdup(url);
+  }
+  virtual ~MimeHashValue() {
+    if (m_url)
+      PR_Free((void *)m_url);
+  }
+
+  MimeObject  *m_obj;
+  char        *m_url;
+};
+
+
 /* Stupid utility function.  Really ought to be part of the standard string
    package if you ask me...*/
 
@@ -194,7 +211,8 @@ mime_multipart_related_nukehash(PLHashEntry *table,
     PR_Free((char*) table->key);
 
   if (table->value)
-    PR_Free((char*) table->value);
+    delete (MimeHashValue *)table->value;
+
   return HT_ENUMERATE_NEXT;   /* XP_Maphash will continue traversing the hash */
 }
 
@@ -435,6 +453,15 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
   {
     /* This is a child part.  Just remember the mapping between the URL
        it represents and the part-URL to get it back. */
+
+    /* but first before acceptig it as a valid related part, make sure we
+       are able to display it inline as an embedded object. Else just ignore
+       it, that will prevent any bad surprise. */
+    MimeObjectClass *clazz = mime_find_class (child->content_type, child->headers, child->options, PR_FALSE);
+    PRBool canDisplay = (clazz
+          ? clazz->displayable_inline_p(clazz, child->headers)
+          : PR_FALSE);
+    if (canDisplay) {
     char* location = MimeHeaders_get(child->headers, HEADER_CONTENT_LOCATION,
                      PR_FALSE, PR_FALSE);
     if (!location) {
@@ -500,7 +527,8 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
                (This happens primarily on Windows and Unix.) */
             if (PL_strchr(part, ' ') || PL_strchr(part, '>') || PL_strchr(part, '%'))
               temp = escape_for_mrel_subst(part);
-            PL_HashTableAdd(relobj->hash, absolute, temp);
+              MimeHashValue * value = new MimeHashValue(child, temp);
+              PL_HashTableAdd(relobj->hash, absolute, value);
 
             /* rhp - If this part ALSO has a Content-ID we need to put that into
                      the hash table and this is what this code does
@@ -526,17 +554,19 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
                 PR_Free(tmp);
                 if (tloc)
                 {
-                  PL_HashTableAdd(relobj->hash, tloc, nsCRT::strdup(temp));
+                    MimeHashValue * value = new MimeHashValue(child, temp);
+                    PL_HashTableAdd(relobj->hash, tloc, value);
                 }
               }
             }
             /*  rhp - End of putting more stuff into the hash table */
 
-            /* The value string that is added to the hashtable will be deleted
-               by the hashtable at destruction time. So if we created an
-               escaped string for the hashtable, we have to delete the
-               part URL that was given to us. */
-            if (temp != part) PR_Free(part);
+              /* it's possible that temp pointer is the same than the part pointer,
+                 therefore be carefull to not freeing twice the same pointer */
+              if (temp && temp != part)
+                PR_Free(temp);
+              PR_Free(part);
+            }
           }
         }
       }
@@ -810,10 +840,12 @@ flush_tag(MimeMultipartRelated* relobj)
 
         /* See if we have a mailbox part URL
            corresponding to this cid. */
-        part_url = NULL;
+        part_url = nsnull;
+        MimeHashValue * value = nsnull;
         if (absolute)
         {
-          part_url = (char *)PL_HashTableLookup(relobj->hash, buf);
+          value = (MimeHashValue *)PL_HashTableLookup(relobj->hash, buf);
+          part_url = value ? value->m_url : nsnull;
           PR_FREEIF(absolute);
         }
         
@@ -823,6 +855,10 @@ flush_tag(MimeMultipartRelated* relobj)
           status = real_write(relobj, part_url, strlen(part_url));
           if (status < 0) return status;
           buf = ptr2; /* skip over the cid: URL we substituted */
+
+          /* don't show that object as attachment */
+          if (value->m_obj)
+            value->m_obj->dontShowAsAttachment = PR_TRUE;
         }
         
         /* Restore the character that we nulled. */
@@ -841,11 +877,12 @@ flush_tag(MimeMultipartRelated* relobj)
 
         /* See if we have a mailbox part URL
            corresponding to this cid. */
+        MimeHashValue * value;
         if (absolute)
-          realout = (char *)PL_HashTableLookup(relobj->hash, absolute);
+          value = (MimeHashValue *)PL_HashTableLookup(relobj->hash, absolute);
         else
-          realout = (char *)PL_HashTableLookup(relobj->hash, buf);
-
+          value = (MimeHashValue *)PL_HashTableLookup(relobj->hash, buf);
+        realout = value ? value->m_url : nsnull;
 
         *ptr2 = holder;
         PR_FREEIF(absolute);
@@ -855,6 +892,10 @@ flush_tag(MimeMultipartRelated* relobj)
           status = real_write(relobj, realout, strlen(realout));
           if (status < 0) return status;
           buf = ptr2; /* skip over the cid: URL we substituted */
+
+          /* don't show that object as attachment */
+          if (value->m_obj)
+            value->m_obj->dontShowAsAttachment = PR_TRUE;
         }
       }
       /* rhp - if we get here, we should still check against the hash table! */
@@ -964,6 +1005,8 @@ MimeMultipartRelated_parse_eof (MimeObject *obj, PRBool abort_p)
     mime_free(body);
     goto FAIL;
   }
+
+  body->dontShowAsAttachment = body->clazz->displayable_inline_p(body->clazz, body->headers);
 
 #ifdef MIME_DRAFTS
   if ( obj->options && 
