@@ -5944,7 +5944,7 @@ if test "${enable_md+set}" = set; then
   enableval="$enable_md"
   if test "$enableval" = "yes"; then
       COMPILER_DEPEND=1
-       DEPEND_CFLAGS='-Wp,-MMD,.deps/$(*F).pp' 
+       DEPEND_CFLAGS='-Wp,-MMD,$(*D)/.deps/$(*F).pp' 
 
   elif test "$enableval" = "no"; then
     :
