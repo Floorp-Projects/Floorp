@@ -24,6 +24,7 @@
  */
 
 #include "nscore.h"
+#include "nsXPIDLString.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsInstall.h" // for error codes
@@ -165,19 +166,20 @@ PRInt32 ScheduleFileForDeletion(nsIFile *filename)
         if ( err == REGERR_OK )
         {
             char    valname[20];
-            char*   fnamestr = nsnull;
 
             err = NR_RegGetUniqueName( reg, valname, sizeof(valname) );
             if ( err == REGERR_OK )
             {
-                nsresult rv;
-                rv = GetPersistentStringFromSpec( filename, &fnamestr );
-                if ( NS_SUCCEEDED(rv) && fnamestr )
+                nsXPIDLCString nameowner;
+                nsresult rv = GetPersistentStringFromSpec(
+                                filename,getter_Copies(nameowner));
+                if ( NS_SUCCEEDED(rv) && nameowner )
                 {
+                    const char *fnamestr = nameowner;
                     err = NR_RegSetEntry( reg, newkey, valname, 
                                           REGTYPE_ENTRY_BYTES, 
                                           (void*)fnamestr, 
-                                          strlen(fnamestr)+1);
+                                          strlen(fnamestr)+sizeof('\0'));
 
                     if ( err == REGERR_OK )
                          result = nsInstall::REBOOT_NEEDED;
@@ -313,10 +315,7 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile )
             if ( err == REGERR_OK ) 
             {
                 char     valname[20];
-                char*    fsrc = nsnull;
-                char*    fdest = nsnull;
                 REGERR   err2;
-                nsresult rv, rv2;
 
                 err = NR_RegGetUniqueName( reg, valname, sizeof(valname) );
                 if ( err == REGERR_OK )
@@ -324,34 +323,34 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile )
                     err = NR_RegAddKey( reg, listkey, valname, &filekey );
                     if ( REGERR_OK == err )
                     {
-                        rv = GetPersistentStringFromSpec(replacementFile, &fsrc);
-                        rv2 = GetPersistentStringFromSpec(doomedFile, &fdest);
+                        nsXPIDLCString srcowner;
+                        nsXPIDLCString destowner;
+                        nsresult rv = GetPersistentStringFromSpec(
+                                replacementFile, getter_Copies(srcowner));
+                        nsresult rv2 = GetPersistentStringFromSpec(
+                                doomedFile, getter_Copies(destowner));
                         if ( NS_SUCCEEDED(rv) && NS_SUCCEEDED(rv2) )
                         {
 
+                            const char *fsrc  = srcowner;
+                            const char *fdest = destowner;
                             err = NR_RegSetEntry( reg, filekey, 
                                                   REG_REPLACE_SRCFILE,
                                                   REGTYPE_ENTRY_BYTES, 
                                                   (void*)fsrc, 
-                                                  strlen(fsrc));
+                                                  strlen(fsrc)+sizeof('\0'));
 
                             err2 = NR_RegSetEntry(reg, filekey,
                                                   REG_REPLACE_DESTFILE,
                                                   REGTYPE_ENTRY_BYTES,
                                                   (void*)fdest,
-                                                  strlen(fdest));
+                                                  strlen(fdest)+sizeof('\0'));
 
                             if ( err == REGERR_OK && err2 == REGERR_OK )
                                 result = nsInstall::REBOOT_NEEDED;
                             else
                                 NR_RegDeleteKey( reg, listkey, valname );
                         }
-
-                        if (NS_SUCCEEDED(rv))
-                            nsCRT::free(fsrc);
-
-                        if (NS_SUCCEEDED(rv2))
-                            nsCRT::free(fdest);
                     }
                 }
             }
@@ -460,9 +459,6 @@ void ReplaceScheduledFiles( HREG reg )
         nsCOMPtr<nsILocalFile>       dest;
         nsresult                rv1, rv2;
 
-        memset(srcFile, 0, sizeof(srcFile));
-        memset(doomedFile, 0, sizeof(doomedFile));
-        
         uint32 bufsize;
         REGENUM state = 0;
         while (REGERR_OK == NR_RegEnumSubkeys( reg, key, &state, 
