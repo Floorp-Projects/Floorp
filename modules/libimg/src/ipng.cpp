@@ -237,7 +237,7 @@ il_png_complete(il_container *ic)
 		ipng_ptr->delay_time = MINIMUM_DELAY_TIME ;
 	if (ipng_ptr->delay_time){
 			ipng_ptr->delay_timeout =
-			FE_SetTimeout(png_delay_time_callback, ipng_ptr, ipng_ptr->delay_time);
+			IL_SetTimeout(png_delay_time_callback, ipng_ptr, ipng_ptr->delay_time);
 
 			/* Essentially, tell the decoder state machine to wait
 			forever.  The delay_time callback routine will wake up the

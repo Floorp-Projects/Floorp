@@ -1065,7 +1065,7 @@ il_image_abort(il_container *ic)
 
     /* Clear any pending timeouts */
     if (ic->row_output_timeout) {
-        FE_ClearTimeout(ic->row_output_timeout);
+        IL_ClearTimeout(ic->row_output_timeout);
         ic->row_output_timeout = NULL;
     }
 }
@@ -1382,7 +1382,7 @@ il_image_complete(il_container *ic)
     
     /* Clear any pending timeouts */
     if (ic->row_output_timeout) {
-        FE_ClearTimeout(ic->row_output_timeout);
+        IL_ClearTimeout(ic->row_output_timeout);
         ic->row_output_timeout = NULL;
     }
 
