@@ -28,6 +28,7 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIStringBundle.h"
+#include "nsICharsetDetector.h"
 #include "nsILocaleService.h"
 #include "nsUConvDll.h"
 #include "nsObjectArray.h"
@@ -84,7 +85,7 @@ private:
   nsresult GetConverterList(nsObjectArray * aArray, nsString *** aResult, 
       PRInt32 * aCount);
 
-  nsresult LoadExtensibleBundle(const char* aRegistryKey, 
+  nsresult LoadExtensibleBundle(const char * aRegistryKey, 
       nsIStringBundle ** aResult);
 
   static nsresult RegisterConverterTitles(nsIRegistry * aRegistry, 
@@ -98,6 +99,8 @@ private:
 
   nsresult GetBundleValue(nsIStringBundle * aBundle, nsString * aName, 
       nsString * aProp, nsIAtom ** aResult);
+
+  nsresult GetRegistryEnumeration(char * aRegistryKey, nsStringArray * aArray);
 
 public:
 
@@ -116,6 +119,7 @@ public:
 
   NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount);
   NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount);
+  NS_IMETHOD GetCharsetDetectorList(nsStringArray * aArray);
 
   NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
       nsString ** aResult);
@@ -439,6 +443,82 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
   return res;
 }
 
+nsresult nsCharsetConverterManager::GetRegistryEnumeration(
+                                    char * aRegistryKey, 
+                                    nsStringArray * aArray)
+{
+  nsresult res = NS_OK;
+  nsIEnumerator * components = NULL;
+  nsIRegistry * registry = NULL;
+  nsRegistryKey key;
+  PRBool regOpen = PR_FALSE;
+
+  // get the registry
+  res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
+    NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
+  if (NS_FAILED(res)) goto done;
+
+  // open registry if necessary
+  registry->IsOpen(&regOpen);
+  if (!regOpen) {
+    res = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    if (NS_FAILED(res)) goto done;
+  }
+
+  // get subtree
+  res = registry->GetSubtree(nsIRegistry::Common, aRegistryKey, &key);
+  if (NS_FAILED(res)) goto done;
+
+  // enumerate subtrees
+  res = registry->EnumerateSubtrees(key, &components);
+  if (NS_FAILED(res)) goto done;
+  res = components->First();
+  if (NS_FAILED(res)) goto done;
+
+  while (NS_OK != components->IsDone()) {
+    nsISupports * base = NULL;
+    nsIRegistryNode * node = NULL;
+    char * name = NULL;
+    nsString * s = NULL;
+
+    res = components->CurrentItem(&base);
+    if (NS_FAILED(res)) goto done1;
+
+    res = base->QueryInterface(kRegistryNodeIID, (void**)&node);
+    if (NS_FAILED(res)) goto done1;
+
+    res = node->GetName(&name);
+    if (NS_FAILED(res)) goto done1;
+
+    s = new nsString("charsetDetector.");
+    if (s == NULL) {
+      res = NS_ERROR_OUT_OF_MEMORY;
+      goto done1;
+    }
+    s->Append(name);
+    aArray->AppendString(*s);
+
+done1:
+    NS_IF_RELEASE(base);
+    NS_IF_RELEASE(node);
+
+    if (name != NULL) nsCRT::free(name);
+    if (s != NULL) delete s;
+
+    res = components->Next();
+    if (NS_FAILED(res)) break; // this is NOT supposed to fail!
+  }
+
+  // finish and clean up
+done:
+  if (registry != NULL) {
+    nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
+  }
+
+  NS_IF_RELEASE(components);
+  return res;
+}
+
 //----------------------------------------------------------------------------
 // Interface nsICharsetConverterManager [implementation]
 
@@ -494,6 +574,12 @@ NS_IMETHODIMP nsCharsetConverterManager::GetEncoderList(nsString *** aResult,
                                                         PRInt32 * aCount)
 {
   return GetConverterList(&mEncoderArray, aResult, aCount);
+}
+
+NS_IMETHODIMP nsCharsetConverterManager::GetCharsetDetectorList(
+                                         nsStringArray * aArray)
+{
+  return GetRegistryEnumeration(NS_CHARSET_DETECTOR_REG_BASE, aArray);
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData(nsString * aCharset, 
