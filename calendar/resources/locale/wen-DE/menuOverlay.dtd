@@ -109,6 +109,9 @@
 <!ENTITY goTodayCmd.label               "Dźi k dźensnišemu" >
 <!ENTITY goTodayCmd.accesskey           "d" >
 
+<!ENTITY goDateCmd.label                "Dźi k datumje">
+<!ENTITY goDateCmd.accesskey            "t">
+
 <!ENTITY goPreviousCmd.label            "Předchadny" >
 <!ENTITY goPreviousCmd.accesskey        "c" >
 

@@ -109,6 +109,9 @@
 <!ENTITY goTodayCmd.label               "Pojdi na današnji dan">
 <!ENTITY goTodayCmd.accesskey           "š">
 
+<!ENTITY goDateCmd.label                "Pojdi na datum">
+<!ENTITY goDateCmd.accesskey            "d">
+
 <!ENTITY goPreviousCmd.label            "Prejšnji">
 <!ENTITY goPreviousCmd.accesskey        "r">
 

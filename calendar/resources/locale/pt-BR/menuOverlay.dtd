@@ -110,6 +110,9 @@
 <!ENTITY goTodayCmd.label               "Ir Para Hoje">
 <!ENTITY goTodayCmd.accesskey           "t">
 
+<!ENTITY goDateCmd.label                "Ir Para Data">
+<!ENTITY goDateCmd.accesskey            "D">
+
 <!ENTITY goPreviousCmd.label            "Anterior">
 <!ENTITY goPreviousCmd.accesskey        "p">
 

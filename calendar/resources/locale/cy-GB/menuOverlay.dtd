@@ -109,6 +109,9 @@
 <!ENTITY goTodayCmd.label               "Mynd i Heddiw">
 <!ENTITY goTodayCmd.accesskey           "H">
 
+<!ENTITY goDateCmd.label                "Mynd i Ddyddiad">
+<!ENTITY goDateCmd.accesskey            "D">
+
 <!ENTITY goPreviousCmd.label            "Cynt">
 <!ENTITY goPreviousCmd.accesskey        "C">
 

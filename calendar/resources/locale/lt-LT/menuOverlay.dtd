@@ -109,6 +109,9 @@
 <!ENTITY goTodayCmd.label               "Į šią dieną">
 <!ENTITY goTodayCmd.accesskey           "š">
 
+<!ENTITY goDateCmd.label                "Eiti į (data)">
+<!ENTITY goDateCmd.accesskey            "D">
+
 <!ENTITY goPreviousCmd.label            "Atgal">
 <!ENTITY goPreviousCmd.accesskey        "A">
 

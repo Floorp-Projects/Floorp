@@ -109,6 +109,9 @@
 <!ENTITY goTodayCmd.label               "Prejsť na dnešný deň">
 <!ENTITY goTodayCmd.accesskey           "d">
 
+<!ENTITY goDateCmd.label                "Prejsť na dátum">
+<!ENTITY goDateCmd.accesskey            "t">
+
 <!ENTITY goPreviousCmd.label            "Predchádzajúci">
 <!ENTITY goPreviousCmd.accesskey        "p">
 

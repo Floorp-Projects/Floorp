@@ -111,6 +111,9 @@
 <!ENTITY goTodayCmd.label               "Ugrás a mai napra">
 <!ENTITY goTodayCmd.accesskey           "m">
 
+<!ENTITY goDateCmd.label                "Ugrás adott napra">
+<!ENTITY goDateCmd.accesskey            "d">
+
 <!ENTITY goPreviousCmd.label            "Előző">
 <!ENTITY goPreviousCmd.accesskey        "E">
 

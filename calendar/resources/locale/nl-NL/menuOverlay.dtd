@@ -109,6 +109,9 @@
 <!ENTITY goTodayCmd.label               "Vandaag">
 <!ENTITY goTodayCmd.accesskey           "V">
 
+<!ENTITY goDateCmd.label                "Ga naar datum">
+<!ENTITY goDateCmd.accesskey            "D">
+
 <!ENTITY goPreviousCmd.label            "Vorige">
 <!ENTITY goPreviousCmd.accesskey        "O">
 

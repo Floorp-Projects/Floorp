@@ -112,6 +112,9 @@
 <!ENTITY goTodayCmd.label               "今日へ移動">
 <!ENTITY goTodayCmd.accesskey           "T">
 
+<!ENTITY goDateCmd.label                "日付に移動">
+<!ENTITY goDateCmd.accesskey            "D">
+
 <!ENTITY goPreviousCmd.label            "前へ">
 <!ENTITY goPreviousCmd.accesskey        "P">
 
