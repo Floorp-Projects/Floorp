@@ -158,12 +158,8 @@ EXTRA_LIBS		= $(TK_LIBS)
 XLIB_LIBS		= unix/xlib/libviewer_xlib_s.a $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
 GTK_LIBS		= unix/gtk/libviewer_gtk_s.a -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
 
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-XP_DIST_DEP_LIBS    := $(patsubst -l%,$(DIST)/lib/%.lib,$(XP_DIST_LIBS))
-else
 XP_DIST_DEP_LIBS	:= $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
 XP_DIST_DEP_LIBS	:= $(wildcard $(addprefix $(DIST)/,$(patsubst -l%,bin/$(LIB_PREFIX)%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s)))*)
-endif
 
 EXTRA_DEPS		= \
 			$(XP_DIST_DEP_LIBS) \

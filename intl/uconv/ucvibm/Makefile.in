@@ -17,18 +17,8 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-# IBM Corporation
+#  IBM Corp.
 #
-# This Original Code has been modified by IBM Corporation.
-# Modifications made by IBM described herein are
-# Copyright (c) International Business Machines
-# Corporation, 1999
-#
-# Modifications to Mozilla code or documentation
-# identified per MPL Section 3.3
-#
-# Date         Modified by     Description of modification
-# 12/09/1999   IBM Corp.       Support for IBM codepages - 850,852,855,857,862,864
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -67,11 +57,7 @@ EXPORTS		= nsUCvIBMCID.h
 LOCAL_INCLUDES = -I$(srcdir)/../util
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OS_LIBS += libuls.lib
-else
 OS_LIBS += -llibuni
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk

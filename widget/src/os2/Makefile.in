@@ -70,11 +70,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OS_LIBS += libuls.lib libconv.lib unikbd.lib
-else
 OS_LIBS += -llibuni -luconv -lunikbd
-endif
 
 ifdef ENABLE_TESTS
 HAS_EXTRAEXPORTS = 1
