@@ -560,15 +560,6 @@ function RemoveLastAttachment()
 	i = selectNode.options.length;
 	if (i > 0) {
 		selectNode.remove(i - 1);
-		/* bug in the DOM? when I remove the last element, the text
-		   remains.  so for now, when I remove the last element, I add
-		   back a blank element, then remove it, so that it looks
-                   correct.  bug logged #11010 */
-		if (i == 1) {
-			var opt = new Option(" ", " ");
-			selectNode.add(opt, null); 
-			selectNode.remove(0);
-		}
 	}
 }
 
