@@ -317,6 +317,8 @@ protected:
   static nsresult GlobalResolve(nsISupports *aNative, JSContext *cx,
                                 JSObject *obj, JSString *str, PRUint32 flags,
                                 PRBool *did_resolve);
+  static nsresult DefineInterfaceProperty(JSContext *cx, JSObject *obj,
+                                          JSString *str);
 
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
