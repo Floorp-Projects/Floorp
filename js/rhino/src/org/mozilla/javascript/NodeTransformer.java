@@ -65,7 +65,6 @@ public class NodeTransformer
     {
         loops = new ObjArray();
         loopEnds = new ObjArray();
-        inFunction = (tree.getType() == Token.FUNCTION);
         // to save against upchecks if no finally blocks are used.
         hasFinally = false;
         transformCompilationUnit_r(tree, tree);
@@ -256,38 +255,46 @@ public class NodeTransformer
                 break;
               }
 
-              case Token.DELPROP:
+              case Token.NAME:
               case Token.SETNAME:
+              case Token.DELPROP:
               {
-                if (!inFunction || inWithStatement())
+                // Turn name to var for faster access if possible
+                if (tree.getType() != Token.FUNCTION
+                    || ((FunctionNode)tree).requiresActivation())
+                {
                     break;
-                Node bind = node.getFirstChild();
-                if (bind == null || bind.getType() != Token.BINDNAME)
-                    break;
-                String name = bind.getString();
+                }
+                Node nameSource;
+                if (type == Token.NAME) {
+                    nameSource = node;
+                } else {
+                    nameSource = node.getFirstChild();
+                    if (nameSource.getType() != Token.BINDNAME) {
+                        if (type == Token.DELPROP) {
+                            break;
+                        }
+                        throw Kit.codeBug();
+                    }
+                }
+                String name = nameSource.getString();
                 if (tree.hasParamOrVar(name)) {
-                    if (type == Token.SETNAME) {
+                    if (type == Token.NAME) {
+                        node.setType(Token.GETVAR);
+                    } else if (type == Token.SETNAME) {
                         node.setType(Token.SETVAR);
-                        bind.setType(Token.STRING);
-                    } else {
+                        nameSource.setType(Token.STRING);
+                    } else if (type == Token.DELPROP) {
                         // Local variables are by definition permanent
                         Node n = new Node(Token.FALSE);
                         node = replaceCurrent(parent, previous, node, n);
+                    } else {
+                        throw Kit.codeBug();
                     }
                 }
                 break;
               }
 
-              case Token.NAME:
-              {
-                if (!inFunction || inWithStatement())
-                    break;
-                String name = node.getString();
-                if (tree.hasParamOrVar(name)) {
-                    node.setType(Token.GETVAR);
-                }
-                break;
-              }
             }
 
             transformCompilationUnit_r(tree, node);
@@ -298,15 +305,6 @@ public class NodeTransformer
     }
 
     protected void visitCall(Node node, ScriptOrFnNode tree) {
-    }
-
-    protected boolean inWithStatement() {
-        for (int i=loops.size()-1; i >= 0; i--) {
-            Node n = (Node) loops.get(i);
-            if (n.getType() == Token.WITH)
-                return true;
-        }
-        return false;
     }
 
     private static Node addBeforeCurrent(Node parent, Node previous,
@@ -340,7 +338,6 @@ public class NodeTransformer
 
     private ObjArray loops;
     private ObjArray loopEnds;
-    private boolean inFunction;
     private boolean hasFinally;
 }
 
