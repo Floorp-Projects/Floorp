@@ -28,6 +28,7 @@
 #include <signal.h>
 
 static char             *sXPInstallEngine;
+static nsRunApp         *sRunAppList = NULL;
 
 static GtkWidget        *sMsg0Label;
 static GtkWidget        *sMajorLabel;
@@ -115,6 +116,13 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     XI_GTK_UPDATE_UI();
 
     WorkDammitWork((void*) NULL);
+    
+    // run all specified applications after installation
+    if (sRunAppList)
+    {
+        RunApps();
+        FreeRunAppList();
+    }
 
     gCtx->bMoving = TRUE;
     return;
@@ -126,6 +134,10 @@ nsInstallDlg::Parse(nsINIParser *aParser)
     int err = OK;
     int bufsize = 0;
     char *showDlg = NULL;
+    char secName[64];
+    int i;
+    char *app = NULL, *args = NULL;
+    nsRunApp *newRunApp = NULL;
     
     /* compulsory keys*/
     XI_ERR_BAIL(aParser->GetStringAlloc(DLG_START_INSTALL, 
@@ -153,12 +165,110 @@ nsInstallDlg::Parse(nsINIParser *aParser)
     XI_ERR_BAIL(aParser->GetStringAlloc(DLG_START_INSTALL, TITLE, 
                 &mTitle, &bufsize));
     if (bufsize == 0)
-            XI_IF_FREE(mTitle); 
+        XI_IF_FREE(mTitle); 
+
+    for (i = 0; err == OK; i++)
+    {
+        /* construct RunAppX section name */
+        sprintf(secName, RUNAPPd, i);
+        err = aParser->GetStringAlloc(secName, TARGET, &app, &bufsize);
+        if (err == OK && bufsize > 0)
+        {
+            /* "args" is optional: this may return E_NO_KEY which we ignore */
+            err = aParser->GetStringAlloc(secName, ARGS, &args, &bufsize);
+            newRunApp = new nsRunApp(app, args);
+            if (!newRunApp)
+                return E_MEM;
+            err = AppendRunApp(newRunApp);
+        }
+    }
+    err = OK; /* reset error since RunAppX sections are optional
+                 and we could have gotten a parse error (E_NO_SEC) */
 
     return err;
 
 BAIL:
     return err;
+}
+
+int 
+nsInstallDlg::AppendRunApp(nsRunApp *aNewRunApp)
+{
+    int err = OK;
+    nsRunApp *currRunApp = NULL;
+
+    /* param check */
+    if (!aNewRunApp)
+        return E_PARAM;
+
+    /* special case: list is empty */
+    if (!sRunAppList)
+    {
+        sRunAppList = aNewRunApp;
+        return OK;
+    }
+
+    /* list has at least one element */
+    currRunApp = sRunAppList;
+    while (currRunApp)
+    {
+        if (!currRunApp->GetNext())
+        {
+            currRunApp->SetNext(aNewRunApp);
+            break;
+        }
+    }
+    return err;
+}
+
+void
+nsInstallDlg::FreeRunAppList()
+{
+    nsRunApp *currRunApp = NULL, *nextRunApp = NULL;
+
+    currRunApp = sRunAppList;
+    while (currRunApp)
+    {
+        nextRunApp = currRunApp->GetNext();
+        delete currRunApp;
+        currRunApp = nextRunApp;
+    }
+}
+
+void
+nsInstallDlg::RunApps()
+{
+    nsRunApp *currRunApp = sRunAppList;
+    char *argv[3], *dest;
+    char apppath[MAXPATHLEN];
+    extern char **environ; /* globally available to all processes */
+    int pid;
+
+    while (currRunApp)
+    {
+        /* run application with supplied args */
+        if ((pid = fork()) == 0)
+        {
+            /* child */
+
+            dest = gCtx->opt->mDestination;
+            if (*(dest + strlen(dest)) == '/') /* trailing slash */
+                sprintf(apppath, "%s%s", dest, currRunApp->GetApp());
+            else                               /* no trailing slash */
+                sprintf(apppath, "%s/%s", dest, currRunApp->GetApp());
+
+            argv[0] = apppath;
+            argv[1] = currRunApp->GetArgs();
+            argv[2] = NULL; /* null-terminate arg vector */
+            execve(apppath, argv, environ);
+
+            /* shouldn't reach this but in case execve fails we will */
+            exit(0);
+        }
+        /* parent continues running to finish installation */
+
+        currRunApp = currRunApp->GetNext();
+    }
 }
 
 int

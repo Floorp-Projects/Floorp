@@ -91,6 +91,10 @@
 #define INVISIBLE_ATTR      "INVISIBLE"
 #define LAUNCHAPP_ATTR      "LAUNCHAPP"
 
+#define RUNAPPd             "RunApp%d"
+#define TARGET              "Target"
+#define ARGS                "Arguments"
+
 #define DLG_START_INSTALL   "Dialog Start Install"
 #define XPINSTALL_ENGINE    "XPInstall Engine"
 
