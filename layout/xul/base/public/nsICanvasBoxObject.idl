@@ -43,3 +43,9 @@ interface nsICanvasBoxObject : nsISupports
   nsISupports getContext(in string aContext);
 };
 
+[scriptable, uuid(1d6f084b-cb1d-4068-a20f-df11f7955017)]
+interface nsICanvasFrame : nsISupports
+{
+  nsISupports getContext(in string aContext);
+};
+

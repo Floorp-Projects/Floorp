@@ -51,7 +51,7 @@ public:
     nsCanvasBoxObject();
     virtual ~nsCanvasBoxObject();
 
-    nsICanvasBoxObject* GetFrameBoxObject();
+    nsICanvasFrame* GetCanvasFrame();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS_INHERITED
@@ -81,13 +81,13 @@ nsCanvasBoxObject::~nsCanvasBoxObject()
 {
 }
 
-inline nsICanvasBoxObject *
-nsCanvasBoxObject::GetFrameBoxObject()
+inline nsICanvasFrame *
+nsCanvasBoxObject::GetCanvasFrame()
 {
     nsIFrame *frame = GetFrame();
-    nsICanvasBoxObject *frameCanvasBoxObject = nsnull;
-    CallQueryInterface(frame, &frameCanvasBoxObject);
-    return frameCanvasBoxObject;
+    nsICanvasFrame *canvasFrame = nsnull;
+    CallQueryInterface(frame, &canvasFrame);
+    return canvasFrame;
 }
 
 // nsPIBoxObject
@@ -113,9 +113,9 @@ nsCanvasBoxObject::InvalidatePresentationStuff()
 NS_IMETHODIMP
 nsCanvasBoxObject::GetContext(const char *aContext, nsISupports **aResult)
 {
-    nsICanvasBoxObject *canvas = GetFrameBoxObject();
+    nsICanvasFrame *canvas = GetCanvasFrame();
     if (canvas)
-        return GetFrameBoxObject()->GetContext(aContext, aResult);
+        return canvas->GetContext(aContext, aResult);
     return NS_ERROR_FAILURE;
 }
 

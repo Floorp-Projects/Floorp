@@ -43,6 +43,7 @@
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
+#include "nsIBoxObject.h"
 
 #define NS_ICANVASRENDERINGCONTEXT_IID \
 { 0x753a56cb, 0xf8ca, 0x4deb, { 0xb8, 0x75, 0xf2, 0x80, 0xeb, 0x91, 0x2c, 0x56 } }
