@@ -436,6 +436,15 @@ nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUni
     return mProxy->SetActionText(aMsg);
 }
 
+// nsIEventSinkGetter method
+NS_IMETHODIMP 
+nsXPInstallManager::GetEventSink(const char *command, const nsIID & eventSinkIID, nsISupports **_retval)
+{
+    if (nsCRT::strcmp(command, "load") == 0)  // what is the correct verb?
+        return QueryInterface(eventSinkIID, (void**)_retval);
+
+    return NS_ERROR_FAILURE;
+}
 
 // IXPINotifier methods
 
@@ -516,8 +525,6 @@ nsXPInstallManager::LogComment(const PRUnichar* comment)
 {
     return NS_OK;
 }
-
-
 
 // nsIXULWindowCallbacks
 
