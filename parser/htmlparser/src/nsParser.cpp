@@ -1281,17 +1281,22 @@ void nsParser::PushContext(CParserContext& aContext) {
  * @update	gess7/22/98
  * @return  prev. context
  */
-CParserContext* nsParser::PopContext() {
-  CParserContext* oldContext=mParserContext;
-  if(oldContext) {
-    mParserContext=oldContext->mPrevContext;
-    // If the old context was blocked, propagate the blocked state
-    // back to the new one. Also, propagate the stream listener state
-    // but don't override onStop state to guarantee the call to DidBuildModel().
+CParserContext* nsParser::PopContext() 
+{
+  CParserContext* oldContext = mParserContext;
+  if (oldContext) {
+    mParserContext = oldContext->mPrevContext;
     if (mParserContext) {
-      if(mParserContext->mStreamListenerState!=eOnStop) {
+      // If the old context was blocked, propagate the blocked state
+      // back to the new one. Also, propagate the stream listener state
+      // but don't override onStop state to guarantee the call to DidBuildModel().
+      if (mParserContext->mStreamListenerState != eOnStop) {
         mParserContext->mStreamListenerState = oldContext->mStreamListenerState;
       }
+      // Preserve tokenizer state so that information is not lost
+      // between document.write. This fixes bug 99467
+      if (mParserContext->mTokenizer)
+        mParserContext->mTokenizer->CopyState(oldContext->mTokenizer);
     }
   }
   return oldContext;

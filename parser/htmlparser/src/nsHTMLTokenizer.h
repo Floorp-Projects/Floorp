@@ -73,9 +73,9 @@ public:
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSITOKENIZER
-  nsHTMLTokenizer(PRInt32 aParseMode=eDTDMode_quirks,
-                  eParserDocType aDocType=eHTML3_Quirks,
-                  eParserCommands aCommand=eViewNormal);
+  nsHTMLTokenizer(PRInt32 aParseMode = eDTDMode_quirks,
+                  eParserDocType aDocType = eHTML3_Quirks,
+                  eParserCommands aCommand = eViewNormal);
   virtual ~nsHTMLTokenizer();
 
 protected:
@@ -92,24 +92,23 @@ protected:
   virtual nsresult ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
 
-          nsresult ScanDocStructure(PRBool aIsFinalChunk);
+  nsresult ScanDocStructure(PRBool aIsFinalChunk);
 
-  virtual void     RecordTrailingContent(CStartToken* aStartToken, nsScanner& aScanner, nsReadingIterator<PRUnichar> aOrigin);
+  virtual void PreserveToken(CStartToken* aStartToken, nsScanner& aScanner, nsReadingIterator<PRUnichar> aOrigin);
 
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,nsTokenAllocator* aTokenAllocator);
 
   nsDeque            mTokenDeque;
-  PRInt32            mFlags;
-  PRPackedBool       mRecordTrailingContent;
   PRPackedBool       mIsFinalChunk;
   nsTokenAllocator*  mTokenAllocator;
   PRInt32            mTokenScanPos;
+  PRUint32           mFlags;
+  eHTMLTags          mPreserveTarget; // Tag whose content is preserved
 };
 
-extern nsresult NS_NewHTMLTokenizer(  nsITokenizer** aInstancePtrResult,
-                                                  PRInt32 aMode,
-                                                  eParserDocType aDocType,
-                                                  eParserCommands aCommand);
+extern nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,
+                                    PRInt32 aMode,eParserDocType aDocType,
+                                    eParserCommands aCommand);
 
 #endif
 

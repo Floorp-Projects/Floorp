@@ -172,6 +172,10 @@ CParserContext::GetTokenizer(PRInt32 aType, nsITokenizer*& aTokenizer) {
   if(!mTokenizer) {
     if (aType == NS_IPARSER_FLAG_HTML || mParserCommand == eViewSource) {
       result = NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,mParserCommand);
+      // Propagate tokenizer state so that information is preserved
+      // between document.write. This fixes bug 99467
+      if (mTokenizer && mPrevContext)
+        mTokenizer->CopyState(mPrevContext->mTokenizer);
     }
     else if (aType == NS_IPARSER_FLAG_XML)
     {
