@@ -1593,7 +1593,7 @@ nsMsgIncomingServer::GetFilterScope(nsMsgSearchScopeValue *filterScope)
 {
    NS_ENSURE_ARG_POINTER(filterScope);
 
-   *filterScope = nsMsgSearchScope::offlineMail;
+   *filterScope = nsMsgSearchScope::offlineMailFilter;
    return NS_OK;
 }
 

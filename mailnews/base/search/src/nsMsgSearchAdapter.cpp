@@ -1018,82 +1018,89 @@ NS_IMPL_ISUPPORTS1(nsMsgSearchValidityManager, nsIMsgSearchValidityManager)
 // user actually searches that scope.
 //-----------------------------------------------------------------------------
 
-nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValidityTable **ppOutTable)
+NS_IMETHODIMP nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValidityTable **ppOutTable)
 {
-	NS_ENSURE_ARG(ppOutTable);
-    
-	nsresult err = NS_OK;
-    *ppOutTable = nsnull;
+  NS_ENSURE_ARG_POINTER(ppOutTable);
   
-  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &err);
+  nsresult rv = NS_OK;
+  *ppOutTable = nsnull;
+  
+  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &rv);
   nsXPIDLCString customHeaders;
-  if (NS_SUCCEEDED(err) && pref)
+  if (NS_SUCCEEDED(rv) && pref)
     pref->GetCharPref(PREF_CUSTOM_HEADERS, getter_Copies(customHeaders));
-
-	switch (whichTable)
-	{
-	case nsMsgSearchScope::offlineMail:
+  
+  switch (whichTable)
+  {
+  case nsMsgSearchScope::offlineMail:
     if (!m_offlineMailTable)
-      err = InitOfflineMailTable ();
+      rv = InitOfflineMailTable ();
     if (m_offlineMailTable)
-      err = SetOtherHeadersInTable(m_offlineMailTable, customHeaders.get());
-		*ppOutTable = m_offlineMailTable;
-		break;
-	case nsMsgSearchScope::onlineMail:
-		if (!m_onlineMailTable)
-      err = InitOnlineMailTable ();
+      rv = SetOtherHeadersInTable(m_offlineMailTable, customHeaders.get());
+    *ppOutTable = m_offlineMailTable;
+    break;
+  case nsMsgSearchScope::offlineMailFilter:
+    if (!m_offlineMailFilterTable)
+      rv = InitOfflineMailFilterTable ();
+    if (m_offlineMailFilterTable)
+      rv = SetOtherHeadersInTable(m_offlineMailFilterTable, customHeaders.get());
+    *ppOutTable = m_offlineMailFilterTable;
+    break;
+  case nsMsgSearchScope::onlineMail:
+    if (!m_onlineMailTable)
+      rv = InitOnlineMailTable ();
     if (m_onlineMailTable)
-      err = SetOtherHeadersInTable(m_onlineMailTable, customHeaders.get());
-		*ppOutTable = m_onlineMailTable;
-		break;
-	case nsMsgSearchScope::onlineMailFilter:
-		if (!m_onlineMailFilterTable)
-			err = InitOnlineMailFilterTable ();
+      rv = SetOtherHeadersInTable(m_onlineMailTable, customHeaders.get());
+    *ppOutTable = m_onlineMailTable;
+    break;
+  case nsMsgSearchScope::onlineMailFilter:
+    if (!m_onlineMailFilterTable)
+      rv = InitOnlineMailFilterTable ();
     if (m_onlineMailFilterTable)
-      err = SetOtherHeadersInTable(m_onlineMailFilterTable, customHeaders.get());
-		*ppOutTable = m_onlineMailFilterTable;
-		break;
-	case nsMsgSearchScope::news:
-		if (!m_newsTable)
-			err = InitNewsTable();
-		*ppOutTable = m_newsTable;
-		break;
+      rv = SetOtherHeadersInTable(m_onlineMailFilterTable, customHeaders.get());
+    *ppOutTable = m_onlineMailFilterTable;
+    break;
+  case nsMsgSearchScope::news:
+    if (!m_newsTable)
+      rv = InitNewsTable();
+    *ppOutTable = m_newsTable;
+    break;
   case nsMsgSearchScope::newsFilter:
-		if (!m_newsFilterTable)
-			err = InitNewsFilterTable();
-		*ppOutTable = m_newsFilterTable;
-		break;
-	case nsMsgSearchScope::localNews:
-		if (!m_localNewsTable)
-			err = InitLocalNewsTable();
+    if (!m_newsFilterTable)
+      rv = InitNewsFilterTable();
+    *ppOutTable = m_newsFilterTable;
+    break;
+  case nsMsgSearchScope::localNews:
+    if (!m_localNewsTable)
+      rv = InitLocalNewsTable();
     if (m_localNewsTable)
-      err = SetOtherHeadersInTable(m_localNewsTable, customHeaders.get());
-		*ppOutTable = m_localNewsTable;
-		break;
+      rv = SetOtherHeadersInTable(m_localNewsTable, customHeaders.get());
+    *ppOutTable = m_localNewsTable;
+    break;
 #ifdef DOING_EXNEWSSEARCH
-	case nsMsgSearchScope::newsEx:
-		if (!m_newsExTable)
-			err = InitNewsExTable ();
-		*ppOutTable = m_newsExTable;
-		break;
+  case nsMsgSearchScope::newsEx:
+    if (!m_newsExTable)
+      rv = InitNewsExTable ();
+    *ppOutTable = m_newsExTable;
+    break;
 #endif
-	case nsMsgSearchScope::LDAP:
-		if (!m_ldapTable)
-			err = InitLdapTable ();
-		*ppOutTable = m_ldapTable;
-		break;
+  case nsMsgSearchScope::LDAP:
+    if (!m_ldapTable)
+      rv = InitLdapTable ();
+    *ppOutTable = m_ldapTable;
+    break;
   case nsMsgSearchScope::LocalAB:
-		if (!m_localABTable)
-			err = InitLocalABTable ();
-		*ppOutTable = m_localABTable;
-		break;
-	default:                 
-		NS_ASSERTION(PR_FALSE, "invalid table type");
-		err = NS_MSG_ERROR_INVALID_SEARCH_TERM;
-	}
-
-    NS_IF_ADDREF(*ppOutTable);
-	return err;
+    if (!m_localABTable)
+      rv = InitLocalABTable ();
+    *ppOutTable = m_localABTable;
+    break;
+  default:                 
+    NS_ASSERTION(PR_FALSE, "invalid table type");
+    rv = NS_MSG_ERROR_INVALID_SEARCH_TERM;
+  }
+  
+  NS_IF_ADDREF(*ppOutTable);
+  return rv;
 }
 
 
@@ -1101,12 +1108,12 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 nsresult
 nsMsgSearchValidityManager::NewTable(nsIMsgSearchValidityTable **aTable)
 {
-	NS_ENSURE_ARG (aTable);
-	*aTable = new nsMsgSearchValidityTable;
-	if (nsnull == *aTable)
-		return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(*aTable);
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(aTable);
+  *aTable = new nsMsgSearchValidityTable;
+  if (!*aTable)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aTable);
+  return NS_OK;
 }
 
 nsresult 

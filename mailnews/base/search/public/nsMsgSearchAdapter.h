@@ -204,6 +204,7 @@ protected:
   // object makes cleanup of these tables (at shutdown-time) automagic.
 
   nsCOMPtr<nsIMsgSearchValidityTable> m_offlineMailTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_offlineMailFilterTable;
   nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailTable;
   nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailFilterTable;
 
@@ -219,6 +220,7 @@ protected:
   nsresult NewTable (nsIMsgSearchValidityTable **);
 
   nsresult InitOfflineMailTable();
+  nsresult InitOfflineMailFilterTable();
   nsresult InitOnlineMailTable();
   nsresult InitOnlineMailFilterTable();
   nsresult InitNewsTable();

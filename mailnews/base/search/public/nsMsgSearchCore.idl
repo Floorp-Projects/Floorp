@@ -49,16 +49,17 @@ interface nsIMsgDBHdr;
 [scriptable, uuid(5fe70a74-304e-11d3-9be1-00a0c900d445)]
 
 interface nsMsgSearchScope {
-    const nsMsgSearchScopeValue offlineMail = 0;
-    const nsMsgSearchScopeValue onlineMail = 1;
-    const nsMsgSearchScopeValue onlineMailFilter = 2;
-    const nsMsgSearchScopeValue localNews = 3;
-    const nsMsgSearchScopeValue news = 4;
-    const nsMsgSearchScopeValue newsEx = 5;
-    const nsMsgSearchScopeValue LDAP = 6;
-	const nsMsgSearchScopeValue LocalAB = 7;
-    const nsMsgSearchScopeValue allSearchableGroups = 8;
-	const nsMsgSearchScopeValue newsFilter = 9;
+  const nsMsgSearchScopeValue offlineMail = 0;
+  const nsMsgSearchScopeValue offlineMailFilter = 1;
+  const nsMsgSearchScopeValue onlineMail = 2;
+  const nsMsgSearchScopeValue onlineMailFilter = 3;
+  const nsMsgSearchScopeValue localNews = 4;
+  const nsMsgSearchScopeValue news = 5;
+  const nsMsgSearchScopeValue newsEx = 6;
+  const nsMsgSearchScopeValue LDAP = 7;
+  const nsMsgSearchScopeValue LocalAB = 8;
+  const nsMsgSearchScopeValue allSearchableGroups = 9;
+  const nsMsgSearchScopeValue newsFilter = 10;
 };
 
 typedef long nsMsgSearchAttribValue;
