@@ -1664,10 +1664,37 @@ var BookmarkEditMenuTxnListener =
   }
 }
 
+#ifdef DEBUG
 function dumpOBJ (aObj) 
 {
-  for (var i in aObj)
-    dump("*** aObj[" + i + "] = " + aObj[i] + "\n");
+  if (!aObj)
+    dump("*** null object\n");
+  for (var i in aObj) {
+    dump("*** aObj[" + i + "] = ");
+    try {
+      dump(aObj[i] + "\n");
+    } catch (e) { 
+      dump("*** not available\n")
+    }
+  }
+}
+
+function dumpDOM (aElement, aIndent)
+{
+  if (!aElement)
+    return;
+  if (!aIndent)
+    aIndent = 0;
+  for (var i=0; i<aIndent*2; ++i)
+    dump("-");
+  dump("-> ");
+  dump(aElement.localName+ " ("+aElement.id+")\n");
+  var element = aElement.firstChild;
+  while (element) {
+    dumpDOM(element,++aIndent);
+    --aIndent;
+    element = element.nextSibling;
+  }
 }
 
 function dumpRDF (aDS, aRDFNode)
@@ -1728,3 +1755,4 @@ function dumpTXN(aTxn)
     }
   }
 }
+#endif
