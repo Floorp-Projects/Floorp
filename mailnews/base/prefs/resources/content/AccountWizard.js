@@ -218,7 +218,13 @@ function FinishAccount() {
     var accountData= gCurrentAccountData;
     
     if (!accountData)
+    {
         accountData = new Object;
+
+        // Time to set the smtpRequiresUsername attribute
+        if (!serverIsNntp(pageData))
+            SetSmtpRequiresUsernameAttribute(accountData);
+    }
     
     PageDataToAccountData(pageData, accountData);
 
@@ -451,17 +457,25 @@ function finishAccount(account, accountData) {
     // don't try to create an smtp server if we already have one.
     if (!destIdentity.smtpServerKey)
     {
-      var smtpServer = smtpService.defaultServer;
+        var smtpServer;
         
-      if (accountData.smtpCreateNewServer)
-          smtpServer = smtpService.createSmtpServer();
+        /**
+         * Create a new smtp server if needed. If smtpCreateNewServer pref
+         * is set then createSmtpServer routine() will create one. Otherwise,
+         * default server is returned which is also set to create a new smtp server
+         * (via GetDefaultServer()) if no default server is found.
+         */
+        if (accountData.smtpCreateNewServer)
+            smtpServer = smtpService.createSmtpServer();
+        else
+            smtpServer = smtpService.defaultServer;
 
-      dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
-      copyObjectToInterface(smtpServer, accountData.smtp);
+        dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
+        copyObjectToInterface(smtpServer, accountData.smtp);
 
-      // some identities have 'preferred' 
-      if (accountData.smtpUsePreferredServer && destIdentity)
-          destIdentity.smtpServerKey = smtpServer.key;
+        // some identities have 'preferred' 
+        if (accountData.smtpUsePreferredServer && destIdentity)
+            destIdentity.smtpServerKey = smtpServer.key;
      }
 
      if (this.FinishAccountHook != undefined) {
@@ -877,5 +891,15 @@ function EnableCheckMailAtStartUpIfNeeded(newAccount)
     if (!(gDefaultAccount && gDefaultAccount.incomingServer.canBeDefaultServer)) { 
         accountm.defaultAccount = newAccount;
         newAccount.incomingServer.loginAtStartUp = true;
+    }
+}
+
+function SetSmtpRequiresUsernameAttribute(accountData) 
+{
+    // If this is the default server, time to set the smtp user name
+    // Set the generic attribute for requiring user name for smtp to true.
+    // ISPs can override the pref via rdf files.
+    if (!(gDefaultAccount && gDefaultAccount.incomingServer.canBeDefaultServer)) { 
+        accountData.smtpRequiresUsername = true;
     }
 }

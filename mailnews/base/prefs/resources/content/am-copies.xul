@@ -38,7 +38,7 @@
 
   <hbox class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   
-  <groupbox orient="vertical">
+  <groupbox orient="vertical" class="small-margin">
     <label value="&sendingPrefix.label;"/>
 
     <hbox autostretch="never">
@@ -60,6 +60,7 @@
                    oncommand="setPickersState('msgFccAccountPicker', 'msgFccFolderPicker', event)" 
                    observes="broadcaster_doFcc"/>
   	    <menulist id="msgFccAccountPicker"
+                      class="small-margin"
 	              oncommand="noteSelectionChange('fcc_selectAccount')" 
 	              flex="1" observes="broadcaster_doFcc"/>
           </row> 
@@ -69,13 +70,13 @@
                    oncommand="setPickersState('msgFccFolderPicker', 'msgFccAccountPicker', event)" 
                    observes="broadcaster_doFcc"/>
   	    <menulist id="msgFccFolderPicker" 
+                      class="small-margin"
 	              oncommand="noteSelectionChange('fcc_selectFolder')" 
 		      flex="1" observes="broadcaster_doFcc"/>
           </row>
         </rows>
       </grid>
     </radiogroup>
-    <separator/>  
 
     <hbox autostretch="never">
       <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"
@@ -94,7 +95,7 @@
 
   </groupbox>
   
-  <groupbox orient="vertical">
+  <groupbox orient="vertical" class="small-margin">
     <label value="&specialFoldersTitle.label;"/>
 
     <hbox autostretch="never">
@@ -113,6 +114,7 @@
                    oncommand="setPickersState('msgDraftsAccountPicker', 'msgDraftsFolderPicker', event)"
                    value="0" label="&draftsFolderOn.label;"/>
  	    <menulist id="msgDraftsAccountPicker" 
+                      class="small-margin"
 	              oncommand="noteSelectionChange('draft_selectAccount')"
                       flex="1"/>
           </row> 
@@ -121,13 +123,13 @@
                    oncommand="setPickersState('msgDraftsFolderPicker', 'msgDraftsAccountPicker', event)"
                    value="1" label="&otherFolder.label;"/>
   	    <menulist id="msgDraftsFolderPicker"
+                      class="small-margin"
                       oncommand="noteSelectionChange('draft_selectFolder')" 
                       flex="1"/>
           </row>
         </rows>
       </grid>
     </radiogroup>
-    <separator/>
     <hbox autostretch="never">
       <text class="label" value="&keepTempltes.label;"/>
     </hbox>
@@ -144,6 +146,7 @@
                    oncommand="setPickersState('msgStationeryAccountPicker', 'msgStationeryFolderPicker', event)"
                    value="0" label="&templatesFolderOn.label;"/>
   	    <menulist id="msgStationeryAccountPicker"
+                      class="small-margin"
                       oncommand="noteSelectionChange('tmpl_selectAccount')" 
                       flex="1"/>
           </row> 
@@ -152,13 +155,13 @@
                    oncommand="setPickersState('msgStationeryFolderPicker', 'msgStationeryAccountPicker', event)"
                   value="1" label="&otherFolder.label;"/>
             <menulist id="msgStationeryFolderPicker"
+                      class="small-margin"
                       oncommand="noteSelectionChange('tmpl_selectFolder')" 
                       flex="1"/>
           </row>
         </rows>
       </grid>
     </radiogroup>
-      <separator class="thin"/>
     <hbox autostretch="never">
       <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" label="&saveMessageDlg.label;"
                 pref="true" preftype="bool" prefattribute="value"
