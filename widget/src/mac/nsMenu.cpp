@@ -539,7 +539,61 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 		}
 		else if (menuItemID == 1)
 		{
-		  /* handle about app here */
+			/* handle about app here */
+			nsresult rv = NS_ERROR_FAILURE;
+		 
+		    // Go find the about menu item
+		    nsCOMPtr<nsIDOMDocument> domDoc; 
+		    if (!mDOMNode) {
+		      	NS_ERROR("nsMenu mDOMNode is null.");
+		      	return nsEventStatus_eConsumeNoDefault;
+		  	}
+		    mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
+		    
+		    if (!domDoc) {
+		      	NS_ERROR("No owner document for nsMenu DOM node.");
+		      	return nsEventStatus_eConsumeNoDefault;
+		  	}
+		    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(domDoc);
+		    if (!xulDoc) {
+		      	NS_ERROR("nsIDOMDocument to nsIDOMXULDocument QI failed.");
+		      	return nsEventStatus_eConsumeNoDefault;
+		  	}
+		    
+		    // "releaseName" is the current node id for the About Mozilla/Netscape
+		    // menu node.
+		    nsCOMPtr<nsIDOMElement> domElement;
+		    xulDoc->GetElementById("releaseName", getter_AddRefs(domElement));
+		    if (!domElement) {
+		      	NS_ERROR("GetElementById failed.");
+		      	return nsEventStatus_eConsumeNoDefault;
+		  	}
+		    
+		    // Now get the pres context so we can execute the command
+		  	nsCOMPtr<nsIPresContext> presContext;
+		  	MenuHelpers::WebShellToPresContext ( mWebShell, getter_AddRefs(presContext) );
+
+		  	nsEventStatus status = nsEventStatus_eIgnore;
+		  	nsMouseEvent event;
+		  	event.eventStructType = NS_MOUSE_EVENT;
+		  	event.message = NS_MENU_ACTION;
+
+		  	nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+		  	if(!element) {
+		      	NS_ERROR("Unable to QI dom element.");
+		      	return nsEventStatus_eConsumeNoDefault; 
+		  	}
+		  
+		  	nsCOMPtr<nsIContent> contentNode;
+		  	contentNode = do_QueryInterface(domElement);
+		  	if (!contentNode) {
+		      	NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+		      	return nsEventStatus_eConsumeNoDefault;
+		  	}
+
+		  	rv = contentNode->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+		  	return nsEventStatus_eConsumeNoDefault;
 		}
 	}
 	else
