@@ -237,7 +237,8 @@ PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
   // ALT keys in gdk give the upper case character in string,
   // but we want the lower case char in char code
   // unless shift was also pressed.
-  if ((aGEK->state & GDK_MOD1_MASK) && !(aGEK->state & GDK_SHIFT_MASK)
+  if (((aGEK->state & GDK_CONTROL_MASK) || (aGEK->state & GDK_MOD1_MASK))
+      && !(aGEK->state & GDK_SHIFT_MASK)
       && isupper(aGEK->string[0]))
     return tolower(aGEK->string[0]);
 
