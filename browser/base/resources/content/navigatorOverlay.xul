@@ -473,9 +473,9 @@
    <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
     <menupopup id="taskPopup" onpopupshowing="javaItemEnabling();">
       <menuitem id="downloadmgr" label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
+      <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" key="key_history" command="cmd_history"/>
       <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
       <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
-      <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" key="key_history" command="cmd_history"/>
     </menupopup>
   </menu>
   <menu label="&helpMenu.label;"
