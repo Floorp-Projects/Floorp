@@ -345,6 +345,11 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
       theFileSpec = fileSpec;
       status = nsFileDlgResults_OK;
     }
+    LPMALLOC pMalloc;
+    if (SHGetMalloc(&pMalloc) == NOERROR) {
+        pMalloc->Free((void*)list);
+        pMalloc->Release();
+    }
   }
 
   if (nsnull != title)
