@@ -576,7 +576,7 @@ typedef enum
 #define TRANS_PROPERTY_TRANS      0
 #define TRANS_PROPERTY_OPACITY    1
 
-static evenodd = 0;
+static PRInt32 evenodd = 0;
 
 void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
