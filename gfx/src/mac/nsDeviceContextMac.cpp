@@ -30,7 +30,7 @@
 #include <FixMath.h>
 
 
-const PRUint32		nsDeviceContextMac::kPixelsPerInch = 72;
+const PRUint32		nsDeviceContextMac::kPixelsPerInch = 96;
 
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
@@ -72,8 +72,8 @@ double				pix_inch;
   thegd = ::GetMainDevice();
 	thepix = (**thegd).gdPMap;					// dereferenced handle: don't move memory below!
 	mDepth = (**thepix).pixelSize;
-	pix_inch = Fix2X((**thepix).hRes);
-	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(kPixelsPerInch);
+  pix_inch = kPixelsPerInch;		//Fix2X((**thepix).hRes);
+	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
 	mPixelsToTwips = 1.0f/mTwipsToPixels;
 	
   return DeviceContextImpl::Init(aNativeWidget);
@@ -148,8 +148,8 @@ NS_IMETHODIMP nsDeviceContextMac :: SupportsNativeWidgets(PRBool &aSupportsWidge
 NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   // XXX Should we push this to widget library
-  aWidth = 320.0;
-  aHeight = 320.0;
+  aWidth = 16 * mDevUnitsToAppUnits;
+  aHeight = 16 * mDevUnitsToAppUnits;
   return NS_OK;
 }
 
@@ -202,10 +202,10 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
     // Size
     //---------
     case eSystemAttr_Size_ScrollbarHeight : 
-        aInfo->mSize = 21;
+        aInfo->mSize = 16;	//21;
         break;
     case eSystemAttr_Size_ScrollbarWidth : 
-        aInfo->mSize = 21;
+        aInfo->mSize = 16;	//21;
         break;
     case eSystemAttr_Size_WindowTitleHeight:
         aInfo->mSize = 0;
@@ -345,7 +345,7 @@ THPrint	thePrintRecord;			// handle to print record
 	((nsDeviceContextMac*)aContext)->Init(curPort);
 
 	((nsDeviceContextMac*)aContext)->mPageRect = (**thePrintRecord).prInfo.rPage;	
-	((nsDeviceContextMac*)aContext)->mTwipsToPixels = pix_Inch/(float)NSIntPointsToTwips(kPixelsPerInch);
+	((nsDeviceContextMac*)aContext)->mTwipsToPixels = pix_Inch/(float)NSIntPointsToTwips(72);
 	((nsDeviceContextMac*)aContext)->mPixelsToTwips = 1.0f/mTwipsToPixels;
   ((nsDeviceContextMac*)aContext)->mAppUnitsToDevUnits = mTwipsToPixels;
   ((nsDeviceContextMac*)aContext)->mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;

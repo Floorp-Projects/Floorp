@@ -28,7 +28,7 @@
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 
-#define DONT_USE_FONTS_SMALLER_THAN_9		1		// 1 = 9 pt minimum, 0 = use any font size
+#define DONT_USE_FONTS_SMALLER_THAN_9		0		// 1 = 9 pt minimum, 0 = use any font size
 
 class nsFontMetricsMac : public nsIFontMetrics
 {
