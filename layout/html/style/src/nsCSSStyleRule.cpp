@@ -116,15 +116,18 @@ PRBool nsAtomList::Equals(const nsAtomList* aOther) const
 nsAttrSelector::nsAttrSelector(const nsString& aAttr)
   : mAttr(nsnull),
     mFunction(NS_ATTR_FUNC_SET),
+    mCaseSensative(1),
     mValue(),
     mNext(nsnull)
 {
   mAttr = NS_NewAtom(aAttr);
 }
 
-nsAttrSelector::nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue)
+nsAttrSelector::nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue,
+                               PRBool aCaseSensative)
   : mAttr(nsnull),
     mFunction(aFunction),
+    mCaseSensative(aCaseSensative),
     mValue(aValue),
     mNext(nsnull)
 {
@@ -134,6 +137,7 @@ nsAttrSelector::nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const n
 nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
   : mAttr(aCopy.mAttr),
     mFunction(aCopy.mFunction),
+    mCaseSensative(aCopy.mCaseSensative),
     mValue(aCopy.mValue),
     mNext(nsnull)
 {
@@ -155,6 +159,7 @@ PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
   if (nsnull != aOther) {
     if ((mAttr == aOther->mAttr) && 
         (mFunction == aOther->mFunction) && 
+        (mCaseSensative == aOther->mCaseSensative) &&
         mValue.Equals(aOther->mValue)) {
       if (nsnull != mNext) {
         return mNext->Equals(aOther->mNext);
@@ -340,14 +345,15 @@ void nsCSSSelector::AddAttribute(const nsString& aAttr)
   }
 }
 
-void nsCSSSelector::AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue)
+void nsCSSSelector::AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue,
+                                 PRBool aCaseSensative)
 {
   if (0 < aAttr.Length()) {
     nsAttrSelector** list = &mAttrList;
     while (nsnull != *list) {
       list = &((*list)->mNext);
     }
-    *list = new nsAttrSelector(aAttr, aFunc, aValue);
+    *list = new nsAttrSelector(aAttr, aFunc, aValue, aCaseSensative);
   }
 }
 
@@ -413,7 +419,7 @@ public:
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
 
   // Strength is an out-of-band weighting, useful for mapping CSS ! important
-  NS_IMETHOD GetStrength(PRInt32& aStrength);
+  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
@@ -467,7 +473,7 @@ CSSImportantRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 
 // Strength is an out-of-band weighting, useful for mapping CSS ! important
 NS_IMETHODIMP
-CSSImportantRule::GetStrength(PRInt32& aStrength)
+CSSImportantRule::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 1;
   return NS_OK;
@@ -596,7 +602,7 @@ public:
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
   NS_IMETHOD HashValue(PRUint32& aValue) const;
   // Strength is an out-of-band weighting, useful for mapping CSS ! important
-  NS_IMETHOD GetStrength(PRInt32& aStrength);
+  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
   virtual nsCSSSelector* FirstSelector(void);
   virtual void AddSelector(const nsCSSSelector& aSelector);
@@ -854,7 +860,7 @@ CSSStyleRuleImpl::HashValue(PRUint32& aValue) const
 
 // Strength is an out-of-band weighting, useful for mapping CSS ! important
 NS_IMETHODIMP
-CSSStyleRuleImpl::GetStrength(PRInt32& aStrength)
+CSSStyleRuleImpl::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 0;
   return NS_OK;
@@ -1990,6 +1996,7 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
       fputs(attr->mValue, out);
     }
     fputs("]", out);
+    attr = attr->mNext;
   }
   if (0 != aSelector->mOperator) {
     buffer = aSelector->mOperator;
