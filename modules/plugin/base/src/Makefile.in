@@ -57,7 +57,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  $(NULL)
 # for xlib port
-REQUIRES	+= xlibrgb
+REQUIRES	+= xlibxtbin xlibrgb
 
 CPPSRCS		= \
 		ns4xPlugin.cpp \
@@ -104,6 +104,17 @@ CXXFLAGS        += $(MOZ_GTK_CFLAGS)
 CFLAGS          += $(MOZ_GTK_CFLAGS)
 EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin $(XLDFLAGS) -lXt $(MOZ_GTK_LDFLAGS)
 endif		#MOZ_ENABLE_GTK
+
+ifdef MOZ_ENABLE_XLIB
+EXTRA_DSO_LDOPTS += -lxlibxtbin -lxlibrgb -L/usr/X11R6/lib -lXt
+ifndef MOZ_MONOLITHIC_TOOLKIT
+CXXFLAGS        += $(MOZ_XLIB_CFLAGS)
+CFLAGS          += $(MOZ_XLIB_CFLAGS)
+else
+CXXFLAGS        += $(TK_CFLAGS)
+CFLAGS          += $(TK_CFLAGS)
+endif		#MOZ_MONOLITHIC_TOOLKIT
+endif		#MOZ_ENABLE_XLIB
 
 ifdef MOZ_ENABLE_QT
 EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)

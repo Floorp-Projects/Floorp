@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Tim Copperfield <timecop@network.email.ne.jp>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -39,6 +41,7 @@
 #include "prmem.h"
 #include "nscore.h"
 
+
 #include "ns4xPluginInstance.h"
 #include "ns4xPluginStreamListener.h"
 #include "nsPluginHostImpl.h"
@@ -50,6 +53,9 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include "gtkxtbin.h"
+#elif defined(MOZ_WIDGET_XLIB)
+#include "xlibxtbin.h"
+#include "xlibrgb.h"
 #endif
 
 
@@ -667,6 +673,10 @@ ns4xPluginInstance :: ~ns4xPluginInstance(void)
 #if defined(MOZ_WIDGET_GTK)
   if (mXtBin)
     gtk_widget_destroy(mXtBin);
+#elif defined(MOZ_WIDGET_XLIB)
+  if (mXlibXtBin) {
+    delete mXlibXtBin;
+  }
 #endif
 
   // clean the stream list if any
@@ -693,6 +703,8 @@ NS_IMETHODIMP ns4xPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 
 #ifdef MOZ_WIDGET_GTK
   mXtBin = nsnull;
+#elif defined(MOZ_WIDGET_XLIB)
+  mXlibXtBin = nsnull;
 #endif
   return InitializePlugin(peer);
 }
@@ -711,6 +723,21 @@ NS_IMETHODIMP ns4xPluginInstance::Start(void)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("ns4xPluginInstance::Start this=%p\n",this));
 
+#ifdef MOZ_WIDGET_XLIB
+  if (mXlibXtBin == nsnull)
+    mXlibXtBin = new xtbin();
+
+  if (mXlibXtBin == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!mXlibXtBin->xtbin_initialized())
+    mXlibXtBin->xtbin_init();
+
+#ifdef NS_DEBUG
+  printf("Made new XtBin: %p, %d\n", mXlibXtBin, mXlibXtBin->xtbin_initialized());
+#endif
+#endif
+
   if(mStarted)
     return NS_OK;
   else
@@ -725,9 +752,12 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 
   NPError error;
 
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK)
   if (mXtBin)
     gtk_widget_destroy(mXtBin);
+#elif defined(MOZ_WIDGET_XLIB)
+  if (mXlibXtBin)
+    mXlibXtBin->xtbin_destroy();
 #endif
 
   if(!mStarted)
@@ -755,6 +785,7 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
   ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &fNPP, error));
 
   mStarted = PR_FALSE;
+
   if(error != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
   else
@@ -834,7 +865,7 @@ NS_IMETHODIMP ns4xPluginInstance::Destroy(void)
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 {
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_XLIB)
   NPSetWindowCallbackStruct *ws;
 #endif
 
@@ -922,7 +953,72 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   // And now point the NPWindow structures window 
   // to the actual X window
   window->window = (nsPluginPort *)GTK_XTBIN(mXtBin)->xtwindow;
-#endif // MOZ_WIDGET_GTK
+  
+  
+#elif defined(MOZ_WIDGET_XLIB)
+
+
+  // Allocate and fill out the ws_info data
+  if (!window->ws_info) {
+#ifdef NS_DEBUG
+    printf("About to create new ws_info...\n");
+#endif
+
+    // allocate a new NPSetWindowCallbackStruct structure at ws_info
+    window->ws_info = (NPSetWindowCallbackStruct *)PR_MALLOC(sizeof(NPSetWindowCallbackStruct));
+
+    if (!window->ws_info)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    ws = (NPSetWindowCallbackStruct *)window->ws_info;
+
+#if 1
+     /* See comment above in GTK+ port ... */
+     if (mXlibXtBin) {
+       delete mXlibXtBin;
+       mXlibXtBin = nsnull;
+     }
+#endif
+
+      if (!mXlibXtBin) {
+        mXlibXtBin = new xtbin();
+        // Check to see if creating mXlibXtBin failed for some reason.
+        // if it did, we can't go any further.
+        if (!mXlibXtBin)
+          return NS_ERROR_FAILURE;
+      } 
+      
+    if (window->window) {
+#ifdef NS_DEBUG
+      printf("About to create new xtbin of %i X %i from %08x...\n",
+             window->width, window->height, window->window);
+#endif
+
+      mXlibXtBin->xtbin_new((Window)window->window);
+      mXlibXtBin->xtbin_resize(0, 0, window->width, window->height);
+#ifdef NS_DEBUG
+      printf("About to show xtbin(%p)...\n", mXlibXtBin); fflush(NULL);
+#endif
+      mXlibXtBin->xtbin_realize();
+    }
+    
+    /* Set window attributes */
+    XlibRgbHandle *xlibRgbHandle = xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE);
+    Display *xdisplay = xxlib_rgb_get_display(xlibRgbHandle);
+
+    /* Fill in window info structure */
+    ws->type     = 0;
+    ws->depth    = xxlib_rgb_get_depth(xlibRgbHandle);
+    ws->display  = xdisplay;
+    ws->visual   = xxlib_rgb_get_visual(xlibRgbHandle);
+    ws->colormap = xxlib_rgb_get_cmap(xlibRgbHandle);
+    XFlush(ws->display);
+  } // !window->ws_info
+
+  // And now point the NPWindow structures window 
+  // to the actual X window
+  window->window = (nsPluginPort *)mXlibXtBin->xtbin_xtwindow();
+#endif // MOZ_WIDGET
 
   if (fCallbacks->setwindow) {
     // XXX Turns out that NPPluginWindow and NPWindow are structurally

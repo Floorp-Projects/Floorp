@@ -1,4 +1,5 @@
 /* widget -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  * XlibXtBin Implementation
  * Peter Hartshorn
  * Based on GtkXtBin by Rusty Lynch - 02/27/2000
@@ -33,19 +34,20 @@
 #include <X11/StringDefs.h>
 
 xtbin::xtbin() {
-  initialized = 0;
-  xtwindow = 0;
+  initialized = False;
+  xtwindow    = None;
 }
 
 xtbin::~xtbin() {
 }
 
 void xtbin::xtbin_init() {
-  initialized = 1;
-  xtdisplay = xxlib_rgb_get_display(xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE));
+  mXlibRgbHandle = xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE);
+  xtdisplay = xxlib_rgb_get_display(mXlibRgbHandle);
   if (!xtdisplay)
     abort();
   app_context = XtDisplayToApplicationContext(xtdisplay);
+  initialized = True;
 }
 
 void xtbin::xtbin_realize() {
@@ -57,7 +59,8 @@ void xtbin::xtbin_realize() {
   unsigned long mask;
 
   attr.bit_gravity = NorthWestGravity;
-  attr.event_mask =     ButtonMotionMask |
+  attr.event_mask = 
+    ButtonMotionMask |
     ButtonPressMask |
     ButtonReleaseMask |
     EnterWindowMask |
@@ -70,13 +73,27 @@ void xtbin::xtbin_realize() {
     VisibilityChangeMask |
     FocusChangeMask;
 
-  mask = CWBitGravity | CWEventMask;
+  attr.colormap         = xxlib_rgb_get_cmap(mXlibRgbHandle);
+  attr.background_pixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, 0xFFC0C0C0);
+  attr.border_pixel     = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, 0xFF646464);
+
+#ifdef DEBUG  
+  printf("attr.background_pixel = %lx, attr.border_pixel = %lx, parent_window = %x\n", 
+         (long)attr.background_pixel,
+         (long)attr.border_pixel, (int)parent_window);
+#endif /* DEBUG */
+  
+  mask = CWBitGravity | CWEventMask | CWBorderPixel | CWBackPixel;
+
+  if (attr.colormap)
+    mask |= CWColormap;
 
   window = XCreateWindow(xtdisplay, parent_window,
-                         x, y, width, height, 0, CopyFromParent,
-                         CopyFromParent, CopyFromParent,
+                         x, y, width, height, 0, 
+                         xxlib_rgb_get_depth(mXlibRgbHandle),
+                         InputOutput, xxlib_rgb_get_visual(mXlibRgbHandle),
                          mask, &attr);
-
+  XSetWindowBackgroundPixmap(xtdisplay, window, None);
   XSelectInput(xtdisplay, window, ExposureMask);
 
   XMapWindow(xtdisplay, window);
@@ -90,14 +107,14 @@ void xtbin::xtbin_realize() {
 
   n = 0;
   XtSetArg(args[n], XtNheight, height); n++;
-  XtSetArg(args[n], XtNwidth, width); n++;
+  XtSetArg(args[n], XtNwidth,  width);  n++;
   XtSetValues(top_widget, args, n);
 
   embeded = XtVaCreateWidget("form", compositeWidgetClass, top_widget, NULL);
 
   n = 0;
   XtSetArg(args[n], XtNheight, height); n++;
-  XtSetArg(args[n], XtNwidth, width); n++;
+  XtSetArg(args[n], XtNwidth,  width);  n++;
   XtSetValues(embeded, args, n);
 
   oldwindow = top_widget->core.window;
@@ -109,22 +126,36 @@ void xtbin::xtbin_realize() {
   XtRealizeWidget(top_widget);
   XtManageChild(embeded);
 
+  /* Now fill out the xtbin info */
   xtwindow = XtWindow(embeded);
 
+  /* Suppress background refresh flashing */
+  XSetWindowBackgroundPixmap(xtdisplay, XtWindow(top_widget), None);
+  XSetWindowBackgroundPixmap(xtdisplay, XtWindow(embeded),    None);
+
+  /* Listen to all Xt events */
   XSelectInput(xtdisplay, XtWindow(top_widget), 0x0fffff);
-  XSelectInput(xtdisplay, XtWindow(embeded), 0x0fffff);
+  XSelectInput(xtdisplay, XtWindow(embeded),    0x0fffff);
 
-  XFlush(xtdisplay);
-
+  sync();
 }
 
 void xtbin::xtbin_new(Window aParent) {
   parent_window = aParent;
 }
 
+void xtbin::sync() {
+  /* is this really all ? */
+  XSync(xtdisplay, False);
+}
+
 void xtbin::xtbin_destroy() {
-  XtDestroyWidget(xtwidget);
-  initialized = 0;
+  sync();
+  XtUnregisterDrawable(xtdisplay, xtwindow);
+  sync();
+  xtwidget->core.window = oldwindow;
+  XtUnrealizeWidget(xtwidget);
+  initialized = False;
 }
 
 void xtbin::xtbin_resize(int aX, int aY, int aWidth, int aHeight) {
@@ -137,3 +168,4 @@ void xtbin::xtbin_resize(int aX, int aY, int aWidth, int aHeight) {
 int xtbin::xtbin_initialized() {
   return initialized;
 }
+
