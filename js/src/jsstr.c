@@ -2494,22 +2494,26 @@ js_FinalizeString(JSContext *cx, JSString *str)
 void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str)
 {
-    jschar *chars;
+    JSBool valid;
     size_t length;
     JSHashNumber hash;
     JSHashEntry *he, **hep;
 
     JS_RUNTIME_UNMETER(rt, liveStrings);
     if (JSSTRING_IS_DEPENDENT(str)) {
+        /* If JSSTRFLAG_DEPENDENT is set, this string must be valid. */
+        JS_ASSERT(JSSTRDEP_BASE(str));
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
-        chars = JSSTRDEP_CHARS(str);
+        valid = JS_TRUE;
         length = JSSTRDEP_LENGTH(str);
     } else {
-        chars = str->chars;
+        /* A stillborn string has null chars, so is not valid. */
+        valid = (str->chars != NULL);
         length = str->length;
-        free(chars);
+        if (valid)
+            free(str->chars);
     }
-    if (chars) {
+    if (valid) {
         str->chars = NULL;
         if (deflated_string_cache) {
             hash = js_hash_string_pointer(str);
