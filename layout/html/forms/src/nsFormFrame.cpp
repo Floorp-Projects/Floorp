@@ -334,10 +334,33 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aF
   }
 }
 
+// a solo text control can be a submitter (if return is hit)
+void nsFormFrame::UpdateSubmitter(nsIFormControlFrame * aFrame) {
+  PRInt32 type;
+  aFrame->GetType(&type);
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+    // Only set if this is the first text input found.  Otherwise, set to null.
+    if (!mTextSubmitterSet) {
+      mTextSubmitter = aFrame;
+      mTextSubmitterSet = PR_TRUE;
+    } else mTextSubmitter = nsnull;
+  }
+}
+
 void nsFormFrame::RemoveFormControlFrame(nsIFormControlFrame& aFrame)
 {
   // Remove form control from array
   mFormControls.RemoveElement(&aFrame);
+
+  // Bug 45540: If this is mTextSubmitter, reset the value by walking mFormControls.
+  if (mTextSubmitter == &aFrame) {
+    mTextSubmitterSet = PR_FALSE;
+    for (PRInt32 i=0; i<mFormControls.Count(); i++) {
+      UpdateSubmitter((nsIFormControlFrame *)mFormControls.ElementAt(i));
+      if (mTextSubmitterSet)
+        break;
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -494,20 +517,12 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
   // determine which radio buttons belong to which radio groups, unnamed radio buttons
   // don't go into any group since they can't be submitted. Determine which controls
   // are capable of form submission.
-  PRInt32 type;
-  aFrame.GetType(&type);
 
-  // a solo text control can be a submitter (if return is hit)
-  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-    // Only set if this is the first text input found.  Otherwise, set to null.
-    if (!mTextSubmitterSet) {
-      mTextSubmitter = &aFrame;
-      mTextSubmitterSet = PR_TRUE;
-    } else mTextSubmitter = nsnull;
-    return;
-  }
+  UpdateSubmitter(&aFrame);
 
   // radio group processing
+  PRInt32 type;
+  aFrame.GetType(&type);
   if (NS_FORM_INPUT_RADIO == type) { 
     nsGfxRadioControlFrame* radioFrame = (nsGfxRadioControlFrame*)&aFrame;
     // gets the name of the radio group and the group
