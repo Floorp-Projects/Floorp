@@ -284,6 +284,7 @@ done:
     CERT_SetDBContentVersion(CERT_DB_CONTENT_VERSION, handle);
     return(rv);
 #else
+    certdb_InitDBLock();
     CERT_SetDBContentVersion(0, handle);
     return(SECSuccess);
 #endif
