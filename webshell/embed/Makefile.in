@@ -22,14 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-##
-## This does not work, cause GtkMozilla does not use the mozilla build
-## system.
-##
-## ifdef MOZ_ENABLE_GTK_MOZILLA
-## DIRS		+= gtk
-## endif
-
+ifdef MOZ_ENABLE_GTK_MOZILLA
 all:: export libs install
 export::
 libs::
@@ -40,5 +33,13 @@ install::
 
 clobber::
 	@cd gtk ; $(MAKE) clean ; cd ..
+else
+all::
+export::
+libs::
+depend::
+install::
+clobber::
+endif
 
 include $(topsrcdir)/config/rules.mk
