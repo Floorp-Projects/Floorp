@@ -185,6 +185,7 @@ protected:
     static nsINameSpaceManager* gNameSpaceManager;
 
     static nsIAtom* kContainerAtom;
+    static nsIAtom* kIsContainerAtom;
     static nsIAtom* kXULContentsGeneratedAtom;
     static nsIAtom* kItemContentsGeneratedAtom;
     static nsIAtom* kNaturalOrderPosAtom;

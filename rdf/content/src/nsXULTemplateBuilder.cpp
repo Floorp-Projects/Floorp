@@ -101,6 +101,7 @@ nsrefcnt		RDFGenericBuilderImpl::gRefCnt = 0;
 nsIXULSortService*	RDFGenericBuilderImpl::XULSortService = nsnull;
 
 nsIAtom* RDFGenericBuilderImpl::kContainerAtom;
+nsIAtom* RDFGenericBuilderImpl::kIsContainerAtom;
 nsIAtom* RDFGenericBuilderImpl::kXULContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kItemContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kIdAtom;
@@ -147,6 +148,7 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
 
     if (gRefCnt == 0) {
         kContainerAtom             = NS_NewAtom("container");
+	kIsContainerAtom           = NS_NewAtom("iscontainer");
 	kXULContentsGeneratedAtom  = NS_NewAtom("xulcontentsgenerated");
         kItemContentsGeneratedAtom = NS_NewAtom("itemcontentsgenerated");
         kTreeContentsGeneratedAtom = NS_NewAtom("treecontentsgenerated");
@@ -233,6 +235,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
     --gRefCnt;
     if (gRefCnt == 0) {
         NS_RELEASE(kContainerAtom);
+        NS_RELEASE(kIsContainerAtom);
 	NS_RELEASE(kXULContentsGeneratedAtom);
         NS_RELEASE(kItemContentsGeneratedAtom);
 
@@ -691,28 +694,11 @@ RDFGenericBuilderImpl::SetAllAttributesOnElement(nsIContent *aNode, nsIRDFResour
 				break;
 			if (rv == NS_RDF_NO_VALUE)
 				continue;
-
-			nsCOMPtr<nsIRDFResource>	resource;
-			nsCOMPtr<nsIRDFLiteral>		literal;
-			nsAutoString			s;
-			if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, getter_AddRefs(resource))))
+			nsAutoString		s;
+			if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetTextForNode(value, s)))
 			{
-				nsXPIDLCString uri;
-				resource->GetValue( getter_Copies(uri) );
-				s = uri;
+				aNode->SetAttribute(nameSpaceID, tag, s, PR_FALSE);
 			}
-			else if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, getter_AddRefs(literal))))
-			{
-				nsXPIDLString p;
-				literal->GetValue( getter_Copies(p) );
-				s = p;
-			}
-			else
-			{
-				NS_ERROR("not a resource or a literal");
-				return NS_ERROR_UNEXPECTED;
-			}
-			aNode->SetAttribute(nameSpaceID, tag, s, PR_FALSE);
 		}
 	}
 	if (markAsContainer == PR_TRUE)
@@ -755,6 +741,17 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aR
 			break;
 		}
 
+#ifdef	DEBUG
+		nsAutoString		nsName;
+		attribAtom->ToString(nsName);
+		char *debugName = nsName.ToNewCString();
+		if (debugName)
+		{
+			delete [] debugName;
+			debugName = nsnull;
+		}
+#endif
+
 		// Note: some attributes must be skipped on XUL template rule subtree
 
 		// never compare against rdf:container attribute
@@ -785,7 +782,7 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aR
 		else if ((attribAtom.get() == kTreeContentsGeneratedAtom) && (attribNameSpaceID == kNameSpaceID_None))
 			continue;
 
-		else if ((attribNameSpaceID == kNameSpaceID_XUL) && (attribAtom.get() == kContainerAtom))
+		else if ((attribNameSpaceID == kNameSpaceID_None) && (attribAtom.get() == kIsContainerAtom))
 		{
 			// check and see if aNode is a container
 			PRBool	containerFlag = IsContainer(aRule, aNode);
@@ -855,6 +852,15 @@ RDFGenericBuilderImpl::FindTemplateForResource(nsIRDFResource *aNode, nsIContent
 			continue;
 		if (tag.get() != kTreeTemplateAtom)
 			continue;
+
+/*
+		// check for debugging
+		nsAutoString		debugValue;
+		if (NS_SUCCEEDED(rv = aTemplate->GetAttribute(kNameSpaceID_None, kDebugAtom, debugValue)))
+		{
+			debugValue = "true";
+		}
+*/
 
 		// found a template; check against any (optional) rules
 		PRInt32		numRuleChildren, numRulesFound = 0;
@@ -927,7 +933,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 		{
 			nsAutoString	idValue;
 			if (NS_SUCCEEDED(rv = aTemplateKid->GetAttribute(kNameSpaceID_None,
-	                              kURIAtom, idValue)))
+	                              kURIAtom, idValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 			{
 				if (idValue.EqualsIgnoreCase("..."))
 				{
@@ -1140,11 +1146,22 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 				// Note: add into tree, but only sort if its a containment element!
 				if ((nsnull != XULSortService) && (isContainmentElement == PR_TRUE))
 				{
-					XULSortService->InsertContainerNode(treeChildren, treeGrandchild);
+					if (NS_FAILED(rv = XULSortService->InsertContainerNode(treeChildren, treeGrandchild)))
+					{
+						treeChildren->AppendChildTo(treeGrandchild, PR_TRUE);
+					}
 				}
 				else
 				{
 					treeChildren->AppendChildTo(treeGrandchild, PR_TRUE);
+				}
+
+				// If item says its "open", then recurve now and build up its children
+				nsAutoString	openState;
+				if (NS_SUCCEEDED(rv = treeGrandchild->GetAttribute(kNameSpaceID_None, kOpenAtom, openState))
+					 && (rv == NS_CONTENT_ATTR_HAS_VALUE) && (openState.EqualsIgnoreCase("true")))
+				{
+					OpenWidgetItem(treeGrandchild);
 				}
 			}
 		}
