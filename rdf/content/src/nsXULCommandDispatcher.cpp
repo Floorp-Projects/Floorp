@@ -333,6 +333,7 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
   
+#ifdef DEBUG_hyatt
   printf("%d : Focus occurred on: ", this);
   nsCOMPtr<nsIDOMElement> domDebugElement = do_QueryInterface(t);
   if (domDebugElement) {
@@ -347,6 +348,7 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
     else printf("Window with a XUL doc (happens twice)");
   }
   printf("\n");
+#endif /* DEBUG_hyatt */
 
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(t);
   if (domElement && (domElement != mCurrentElement)) {
@@ -386,6 +388,7 @@ nsXULCommandDispatcher::Blur(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
 
+#ifdef DEBUG_hyatt
   printf("%d : Blur occurred on: ", this);
   nsCOMPtr<nsIDOMElement> domDebugElement = do_QueryInterface(t);
   if (domDebugElement) {
@@ -400,6 +403,7 @@ nsXULCommandDispatcher::Blur(nsIDOMEvent* aEvent)
     else printf("Window with a XUL doc (happens twice)");
   }
   printf("\n");
+#endif /* DEBUG_hyatt */
 
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(t);
   if (domElement) {
