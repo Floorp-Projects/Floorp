@@ -45,14 +45,14 @@ from xpcom import components, Exception, _xpcom
 import os
 import threading # for locks.
 
-NS_RDONLY        = components.interfaces.nsIFileChannel.NS_RDONLY
-NS_WRONLY        = components.interfaces.nsIFileChannel.NS_WRONLY
-NS_RDWR          = components.interfaces.nsIFileChannel.NS_RDWR
-NS_CREATE_FILE   = components.interfaces.nsIFileChannel.NS_CREATE_FILE
-NS_APPEND        = components.interfaces.nsIFileChannel.NS_APPEND
-NS_TRUNCATE      = components.interfaces.nsIFileChannel.NS_TRUNCATE
-NS_SYNC          = components.interfaces.nsIFileChannel.NS_SYNC
-NS_EXCL          = components.interfaces.nsIFileChannel.NS_EXCL
+NS_RDONLY        = 0x01
+NS_WRONLY        = 0x02
+NS_RDWR          = 0x04
+NS_CREATE_FILE   = 0x08
+NS_APPEND        = 0x10
+NS_TRUNCATE      = 0x20
+NS_SYNC          = 0x40
+NS_EXCL          = 0x80
 
 # A helper function that may come in useful
 def LocalFileToURL(localFileName):
@@ -62,13 +62,10 @@ def LocalFileToURL(localFileName):
           .createInstance(components.interfaces.nsILocalFile)
     localFile.initWithPath(localFileName)
 
-    # Use the IO Service to create the interface
-    # Or not - I don't know - I give up.
+    # Use the IO Service to create the interface, then QI for a FileURL
     io_service = components.classes["@mozilla.org/network/io-service;1"] \
                     .getService(components.interfaces.nsIIOService)
     url = io_service.newFileURI(localFile).queryInterface(components.interfaces.nsIFileURL)
-#    url = components.classes["@mozilla.org/network/standard-url;1"] \
-#          .createInstance(components.interfaces.nsIFileURL)
     # Setting the "file" attribute causes initialization...
     url.file = localFile
     return url
@@ -144,9 +141,7 @@ class URIFile(_File):
         if hasattr(url, "queryInterface"):
             url_ob = url
         else:
-            url_ob = components.classes["@mozilla.org/network/standard-url;1"] \
-                  .createInstance(components.interfaces.nsIURL)
-            url_ob.spec = url
+            url_ob = io_service.newURI(url, None, None)
         # Mozilla asserts and starts saying "NULL POINTER" if this is wrong!
         if not url_ob.scheme:
             raise ValueError, ("The URI '%s' is invalid (no scheme)" 
@@ -168,8 +163,8 @@ class LocalFile(_File):
         self.close()
         file = components.classes['@mozilla.org/file/local;1'].createInstance("nsILocalFile")
         file.initWithPath(name)
-        self.fileIO = components.classes['@mozilla.org/network/file-io;1'].createInstance("nsIFileIO")
         if mode in ["w","a"]:
+            self.fileIO = components.classes["@mozilla.org/network/file-output-stream;1"].createInstance("nsIFileOutputStream")
             if mode== "w":
                 if file.exists():
                     file.remove(0)
@@ -178,24 +173,23 @@ class LocalFile(_File):
                 moz_mode = NS_APPEND
             else:
                 assert 0, "Can't happen!"
-            self.fileIO.init(file, moz_mode, -1)
-            self.outputStream = self.fileIO.outputStream
-
+            self.fileIO.init(file, moz_mode, -1,0)
+            self.outputStream = self.fileIO
         elif mode == "r":
-            self.fileIO.init(file, NS_RDONLY, -1)
-            self.inputStream = self.fileIO.inputStream
+            self.fileIO = components.classes["@mozilla.org/network/file-input-stream;1"].createInstance("nsIFileInputStream")
+            self.fileIO.init(file, NS_RDONLY, -1,0)
+            self.inputStream = components.classes["@mozilla.org/scriptableinputstream;1"].createInstance("nsIScriptableInputStream")
+            self.inputStream.init(self.fileIO)
         else:
             raise ValueError, "Unknown mode"
 
     def close(self):
         if self.fileIO is not None:
-            self.fileIO.close(0)
+            self.fileIO.close()
             self.fileIO = None
         _File.close(self)
 
     def read(self, n = -1):
-        if n == -1:
-            n = self.fileIO.contentLength
         return _File.read(self, n)
 
 
