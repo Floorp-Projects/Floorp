@@ -28,15 +28,20 @@
 
 #include <Xm/Label.h>
 
-#define DBG 0
+NS_IMPL_ADDREF(nsLabel)
+NS_IMPL_RELEASE(nsLabel)
+
 //-------------------------------------------------------------------------
 //
 // nsLabel constructor
 //
 //-------------------------------------------------------------------------
-nsLabel::nsLabel(nsISupports *aOuter) : nsWindow(aOuter)
+nsLabel::nsLabel() : nsWindow(), nsILabel()
 {
+  NS_INIT_REFCNT();
+  mAlignment = eAlign_Left;
 }
+
 
 void nsLabel::Create(nsIWidget *aParent,
                       const nsRect &aRect,
@@ -49,8 +54,6 @@ void nsLabel::Create(nsIWidget *aParent,
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else if (aAppShell) {
@@ -59,8 +62,6 @@ void nsLabel::Create(nsIWidget *aParent,
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   unsigned char alignment = GetNativeAlignment();
 
@@ -75,8 +76,6 @@ void nsLabel::Create(nsIWidget *aParent,
 		                    XmNy, aRect.y, 
                                     XmNalignment, alignment,
                                     nsnull);
-
-  if (DBG) fprintf(stderr, "Label 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
@@ -112,7 +111,7 @@ void nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
 // Set alignment
 //
 //-------------------------------------------------------------------------
-void nsLabel::SetAlignment(nsLabelAlignment aAlignment)
+NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 {
   mAlignment = aAlignment;
 }
@@ -132,21 +131,24 @@ nsLabel::~nsLabel()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsLabel::QueryObject(REFNSIID aIID, void** aInstancePtr)
+nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kILabelIID,    NS_ILABEL_IID);
+  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
-  if (aIID.Equals(kILabelIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
+  static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
+  if (result == NS_NOINTERFACE && aIID.Equals(kILabelIID)) {
+      *aInstancePtr = (void*) ((nsILabel*)this);
+      AddRef();
+      result = NS_OK;
   }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
+
+  return result;
 }
+
 
 //-------------------------------------------------------------------------
 //
-// return window styles
+// 
 //
 //-------------------------------------------------------------------------
 unsigned char nsLabel::GetNativeAlignment()
@@ -166,7 +168,7 @@ unsigned char nsLabel::GetNativeAlignment()
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsLabel::SetLabel(const nsString& aText)
+NS_METHOD nsLabel::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   XmString str;
@@ -182,7 +184,7 @@ void nsLabel::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsLabel::GetLabel(nsString& aBuffer)
+NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
 {
   XmString str;
   XtVaGetValues(mWidget, XmNlabelString, &str, nsnull);
@@ -202,6 +204,11 @@ void nsLabel::GetLabel(nsString& aBuffer)
 // paint message. Don't send the paint out
 //
 //-------------------------------------------------------------------------
+PRBool nsLabel::OnMove(PRInt32, PRInt32)
+{
+  return PR_FALSE;
+}
+
 PRBool nsLabel::OnPaint(nsPaintEvent &aEvent)
 {
   //printf("** nsLabel::OnPaint **\n");
@@ -212,32 +219,5 @@ PRBool nsLabel::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
-
-#define GET_OUTER() ((nsLabel*) ((char*)this - nsLabel::GetOuterOffset()))
-
-void nsLabel::AggLabel::GetLabel(nsString& aBuffer)
-{
-  GET_OUTER()->GetLabel(aBuffer);
-}
-
-void nsLabel::AggLabel::SetLabel(const nsString& aText)
-{
-  GET_OUTER()->SetLabel(aText);
-}
-
-void nsLabel::AggLabel::SetAlignment(nsLabelAlignment aAlignment)
-{
-  GET_OUTER()->SetAlignment(aAlignment);
-}
-
-//void nsLabel::AggLabel::PreCreateWidget(nsWidgetInitData *aInitData)
-//{
-  //GET_OUTER()->PreCreateWidget(aInitData);
-//}
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsLabel, AggLabel);
 
 

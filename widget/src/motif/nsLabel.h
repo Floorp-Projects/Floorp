@@ -26,15 +26,26 @@
 /**
  * Native Motif Label wrapper
  */
-
-class nsLabel :  public nsWindow
+class nsLabel :  public nsWindow,
+                 public nsILabel
 {
 
 public:
-  nsLabel(nsISupports *aOuter);
+
+  nsLabel();
   virtual ~nsLabel();
 
-  NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  // nsILabel part
+  NS_IMETHOD SetLabel(const nsString &aText);
+  NS_IMETHOD GetLabel(nsString &aBuffer);
+  NS_IMETHOD SetAlignment(nsLabelAlignment aAlignment);
+
+  virtual void   PreCreateWidget(nsWidgetInitData *aInitData);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -51,47 +62,13 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-
-    // nsILabel part
-  virtual void SetAlignment(nsLabelAlignment aAlignment);
-  virtual void   SetLabel(const nsString& aText);
-  virtual void   GetLabel(nsString& aBuffer);
-  virtual PRBool OnPaint(nsPaintEvent & aEvent);
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
+  virtual PRBool OnPaint(nsPaintEvent &aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
-
-  virtual void PreCreateWidget(nsWidgetInitData *aInitData);
 
 protected:
   unsigned char nsLabel::GetNativeAlignment();
   nsLabelAlignment mAlignment;
-
-private:
-
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsLabel,mAggWidget);
-  }
-
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsILabel interface to nsLabel w/o using multiple
-  // inheritance.
-  class AggLabel : public nsILabel {
-  public:
-    AggLabel();
-    virtual ~AggLabel();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsILabel
-    virtual void SetLabel(const nsString &aText);
-    virtual void GetLabel(nsString &aBuffer);
-    virtual void SetAlignment(nsLabelAlignment aAlignment);
-
-  };
-  AggLabel mAggWidget;
-  friend class AggLabel;
-
 
 };
 
