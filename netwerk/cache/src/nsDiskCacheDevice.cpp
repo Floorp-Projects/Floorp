@@ -580,7 +580,7 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
         break;
     }
 
-    rv = gFileTransportService->CreateTransport(file, ioFlags, PR_IRUSR | PR_IWUSR, result);
+    rv = gFileTransportService->CreateTransport(file, ioFlags, PR_IRUSR | PR_IWUSR, PR_FALSE, result);
     return rv;
 }
 

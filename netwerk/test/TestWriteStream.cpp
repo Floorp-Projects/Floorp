@@ -133,7 +133,7 @@ TestSyncWrite(char* filename, PRUint32 startPosition, PRInt32 length)
     if (NS_FAILED(rv)) return rv ;
 
     nsCOMPtr<nsITransport> transport;
-    rv = fts->CreateTransport(fs, PR_RDWR | PR_CREATE_FILE, 0664,
+    rv = fts->CreateTransport(fs, PR_RDWR | PR_CREATE_FILE, 0664, PR_TRUE,
                               getter_AddRefs(transport)) ;
     if (NS_FAILED(rv)) return rv ;
  
