@@ -100,6 +100,7 @@ public:
   virtual void Reset() {};
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
+  void ScrollIntoView(nsIPresContext* aPresContext);
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                     nsFont&         aFont);
 
@@ -274,6 +275,18 @@ nsImageControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     nsRect rect(0, 0, mRect.width, mRect.height);
     Invalidate(rect, PR_TRUE);
   }*/
+}
+
+void
+nsImageControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+{
+  if (aPresContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    presShell->ScrollFrameIntoView(this,
+                   NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+
+  }
 }
 
 void

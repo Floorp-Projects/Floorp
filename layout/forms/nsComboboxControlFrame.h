@@ -100,6 +100,7 @@ public:
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   void       SetFocus(PRBool aOn, PRBool aRepaint);
+  void       ScrollIntoView(nsIPresContext* aPresContext);
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight);

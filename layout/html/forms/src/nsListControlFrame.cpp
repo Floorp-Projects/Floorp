@@ -1463,6 +1463,19 @@ nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   // XXX:TODO Make set focus work
 }
 
+//---------------------------------------------------------
+void 
+nsListControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+{
+  if (aPresContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    presShell->ScrollFrameIntoView(this,
+                   NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+
+  }
+}
+
 
 //---------------------------------------------------------
 NS_IMETHODIMP 

@@ -134,7 +134,7 @@ public:
                                 nscoord& aWidth, nscoord& aHeight);
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-  
+  virtual void ScrollIntoView(nsIPresContext* aPresContext);
   virtual void Reset();
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
 
