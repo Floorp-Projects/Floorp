@@ -477,7 +477,7 @@ protected:
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
   nsRect  mBounds;
 
-#ifdef NS_DEBUG
+#ifdef DETECT_WEBSHELL_LEAKS
 private:
   // We're counting the number of |nsWebShells| to help find leaks
   static unsigned long gNumberOfWebShells;
@@ -487,15 +487,15 @@ public:
 #endif
 };
 
-#ifdef NS_DEBUG
+#ifdef DETECT_WEBSHELL_LEAKS
 unsigned long nsWebShell::gNumberOfWebShells = 0;
 
 extern "C" NS_WEB
 unsigned long
 NS_TotalWebShellsInExistence()
-  {
-    return nsWebShell::TotalWebShellsInExistence();
-  }
+{
+  return nsWebShell::TotalWebShellsInExistence();
+}
 #endif
 
 //----------------------------------------------------------------------
@@ -599,7 +599,7 @@ nsresult nsWebShell::DestroyPluginHost(void)
 // Note: operator new zeros our memory
 nsWebShell::nsWebShell()
 {
-#ifdef NS_DEBUG
+#ifdef DETECT_WEBSHELL_LEAKS
   // We're counting the number of |nsWebShells| to help find leaks
   ++gNumberOfWebShells;
 #endif
@@ -685,7 +685,7 @@ nsWebShell::~nsWebShell()
 
   DestroyPluginHost();
 
-#ifdef NS_DEBUG
+#ifdef DETECT_WEBSHELL_LEAKS
   // We're counting the number of |nsWebShells| to help find leaks
   --gNumberOfWebShells;
 #endif
