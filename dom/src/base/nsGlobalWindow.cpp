@@ -193,8 +193,6 @@ GlobalWindowImpl::~GlobalWindowImpl()
 {
   if (!--gRefCnt) {
     NS_IF_RELEASE(gEntropyCollector);
-
-    NS_IF_RELEASE(sXPConnect);
   }
 
   mDocument = nsnull;           // Forces Release
@@ -277,6 +275,19 @@ NS_IMETHODIMP GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
   }
 
   mContext = aContext;
+
+  if (mContext) {
+    nsCOMPtr<nsIDOMWindow> parent;
+    GetParent(getter_AddRefs(parent));
+
+    if (parent && parent != NS_STATIC_CAST(nsIDOMWindow *, this)) {
+      // This window is a [i]frame, don't bother GC'ing when the
+      // frame's context is destroyed since a GC will happen when the
+      // frameset or host document is destroyed anyway.
+
+      mContext->SetGCOnDestruction(PR_FALSE);
+    }
+  }
 
   return NS_OK;
 }

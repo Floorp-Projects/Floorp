@@ -326,6 +326,11 @@ public:
    */
   NS_IMETHOD GetProcessingScriptTag(PRBool * aResult) =0;
   NS_IMETHOD SetProcessingScriptTag(PRBool  aResult) =0;
+
+  /**
+   * Tell the context whether or not to GC when destroyed.
+   */
+  NS_IMETHOD SetGCOnDestruction(PRBool aGCOnDestruction) = 0;
 };
 
 #endif // nsIScriptContext_h__
