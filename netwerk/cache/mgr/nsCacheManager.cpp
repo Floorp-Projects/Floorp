@@ -31,7 +31,9 @@
 #include "nsHashtable.h"
 #include "nsIComponentManager.h"
 #include "nsINetDataDiskCache.h"
-
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+//#define FILE_CACHE_IS_READY
 // Limit the number of entries in the cache to conserve memory space
 // in the nsReplacementPolicy code
 #define MAX_MEM_CACHE_ENTRIES    800
@@ -40,6 +42,9 @@
 // Cache capacities in MB, overridable via APIs
 #define DEFAULT_MEMORY_CACHE_CAPACITY  1024
 #define DEFAULT_DISK_CACHE_CAPACITY   10000
+const char* CACHE_MEM_CAPACITY = "browser.cache.memory_cache_size";
+const char* CACHE_DISK_CAPACITY = "browser.cache.disk_cache_size";
+
 
 #define CACHE_HIGH_WATER_MARK(capacity) ((PRUint32)(0.98 * (capacity)))
 #define CACHE_LOW_WATER_MARK(capacity)  ((PRUint32)(0.97 * (capacity)))
@@ -64,6 +69,50 @@ nsCacheManager::~nsCacheManager()
     delete mActiveCacheRecords;
     delete mMemSpaceManager;
     delete mDiskSpaceManager;
+}
+
+
+static int diskCacheSizeChanged(const char *pref, void *closure)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	PRInt32 capacity = DEFAULT_DISK_CACHE_CAPACITY;
+	if ( NS_SUCCEEDED (rv ) )
+	{
+		rv = prefs->GetIntPref(CACHE_DISK_CAPACITY, &capacity   );
+	}
+	return ( (nsCacheManager*)closure )->SetDiskCacheCapacity( capacity );	
+}
+
+static int memCacheSizeChanged(const char *pref, void *closure)
+{
+	nsresult rv;
+	PRInt32 capacity = DEFAULT_MEMORY_CACHE_CAPACITY ;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_SUCCEEDED (rv ) )
+	{
+		rv = prefs->GetIntPref(CACHE_MEM_CAPACITY, &capacity   );
+	}
+	return ( (nsCacheManager*)closure )->SetMemCacheCapacity( capacity );	
+}
+
+nsresult nsCacheManager::InitPrefs()
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_FAILED (rv ) )
+		return rv; 
+	rv = prefs->RegisterCallback( CACHE_DISK_CAPACITY, diskCacheSizeChanged, this); 
+	if ( NS_FAILED( rv ) )
+		return rv;
+	
+	rv = prefs->RegisterCallback( CACHE_MEM_CAPACITY, memCacheSizeChanged, this); 
+	if ( NS_FAILED( rv ) )
+		return rv;
+	// Init the prefs 
+	diskCacheSizeChanged( CACHE_DISK_CAPACITY, this );	
+  memCacheSizeChanged( CACHE_MEM_CAPACITY, this );
+	return rv;
 }
 
 nsresult
@@ -100,7 +149,7 @@ nsCacheManager::Init()
     rv = nsComponentManager::CreateInstance(NS_NETWORK_FILE_CACHE_PROGID,
                                             nsnull,
                                             NS_GET_IID(nsINetDataCache),
-                                            getter_AddRefs(mFileCache));
+                                            getter_AddRefs(mDiskCache));
     if (NS_FAILED(rv)) {
         NS_WARNING("No disk cache present");
     }
@@ -110,9 +159,9 @@ nsCacheManager::Init()
     mCacheSearchChain = mMemCache;
     if (mFlatCache) {
         mMemCache->SetNextCache(mFlatCache);
-        mFlatCache->SetNextCache(mFileCache);
+        mFlatCache->SetNextCache(mDiskCache);
     } else {
-        mMemCache->SetNextCache(mFileCache);
+        mMemCache->SetNextCache(mDiskCache);
     }
 
     // TODO - Load any extension caches here
@@ -132,8 +181,8 @@ nsCacheManager::Init()
         return NS_ERROR_OUT_OF_MEMORY;
     rv = mDiskSpaceManager->Init(MAX_DISK_CACHE_ENTRIES);
     if (NS_FAILED(rv)) return rv;
-    if (mFileCache) {
-        rv = mDiskSpaceManager->AddCache(mFileCache);
+    if (mDiskCache) {
+        rv = mDiskSpaceManager->AddCache(mDiskCache);
         if (NS_FAILED(rv)) return rv;
     }
     if (mFlatCache) {
@@ -144,6 +193,34 @@ nsCacheManager::Init()
     return NS_OK;
 }
 
+nsresult nsCacheManager::GetCacheAndReplacementPolicy( PRUint32 aFlags, nsINetDataCache*& cache, nsReplacementPolicy *&spaceManager )
+{
+	PRBool diskCacheEnabled = PR_FALSE;
+	if ( mDiskCache.get() )
+		mDiskCache->GetEnabled( &diskCacheEnabled );
+		
+  if (aFlags & CACHE_AS_FILE) {
+      if ( diskCacheEnabled )
+     	 cache = mDiskCache;
+     	else
+     		cache = NULL;
+      spaceManager = mDiskSpaceManager;
+
+      // Ensure that cache is initialized
+      if (mDiskCacheCapacity == (PRUint32)-1)
+          return NS_ERROR_NOT_AVAILABLE;
+
+  } else if ((aFlags & BYPASS_PERSISTENT_CACHE) ||
+             ( !mDiskCache && !mFlatCache) || !mDiskCacheCapacity  || !diskCacheEnabled) {
+      cache = mMemCache;
+      spaceManager = mMemSpaceManager;
+  } else {
+      cache = mFlatCache ? mFlatCache : mDiskCache;
+      spaceManager = mDiskSpaceManager;
+  }
+	return NS_OK;
+}
+ 
 NS_IMETHODIMP
 nsCacheManager::GetCachedNetData(const char *aUriSpec, const char *aSecondaryKey,
                                  PRUint32 aSecondaryKeyLength,
@@ -153,24 +230,10 @@ nsCacheManager::GetCachedNetData(const char *aUriSpec, const char *aSecondaryKey
     nsresult rv;
     nsINetDataCache *cache;
     nsReplacementPolicy *spaceManager;
-
-    if (aFlags & CACHE_AS_FILE) {
-        cache = mFileCache;
-        spaceManager = mDiskSpaceManager;
-
-        // Ensure that cache is initialized
-        if (mDiskCacheCapacity == (PRUint32)-1)
-            return NS_ERROR_NOT_AVAILABLE;
-
-    } else if ((aFlags & BYPASS_PERSISTENT_CACHE) ||
-               (!mFileCache && !mFlatCache) || !mDiskCacheCapacity) {
-        cache = mMemCache;
-        spaceManager = mMemSpaceManager;
-    } else {
-        cache = mFlatCache ? mFlatCache : mFileCache;
-        spaceManager = mDiskSpaceManager;
-    }
-
+	
+		rv = GetCacheAndReplacementPolicy( aFlags, cache, spaceManager );
+		if ( NS_FAILED ( rv ) )
+			return rv;
     // Construct the cache key by appending the secondary key to the URI spec
     nsCAutoString cacheKey(aUriSpec);
 
@@ -220,6 +283,7 @@ nsCacheManager::NoteDormant(nsCachedNetData* aEntry)
     nsStringKey hashTableKey(nsCString(key, keyLength));
     deletedEntry = (nsCachedNetData*)gCacheManager->mActiveCacheRecords->Remove(&hashTableKey);
 //  NS_ASSERTION(deletedEntry == aEntry, "Hash table inconsistency");
+	  nsAllocator::Free( key );
     return NS_OK;
 }
 
@@ -232,18 +296,9 @@ nsCacheManager::Contains(const char *aUriSpec, const char *aSecondaryKey,
     nsReplacementPolicy *spaceManager;
     nsCachedNetData *cachedData;
 
-    if (aFlags & CACHE_AS_FILE) {
-        cache = mFileCache;
-        spaceManager = mDiskSpaceManager;
-    } else if ((aFlags & BYPASS_PERSISTENT_CACHE) ||
-               (!mFileCache && !mFlatCache) || !mDiskCacheCapacity) {
-        cache = mMemCache;
-        spaceManager = mMemSpaceManager;
-    } else {
-        cache = mFlatCache ? mFlatCache : mFileCache;
-        spaceManager = mDiskSpaceManager;
-    }
-
+ 		nsresult rv = GetCacheAndReplacementPolicy( aFlags, cache, spaceManager );
+		if ( NS_FAILED ( rv ) )
+			return rv;
     // Construct the cache key by appending the secondary key to the URI spec
     nsCAutoString cacheKey(aUriSpec);
 
@@ -382,6 +437,38 @@ nsCacheManager::RemoveAll(void)
     return result;
 }
 
+NS_IMETHODIMP
+nsCacheManager::Clear( PRUint32 aCacheToClear )
+{
+	nsresult rv = NS_OK;
+	if ( aCacheToClear & ALL_CACHES )
+	{
+		return RemoveAll();
+	}
+	
+	if ( ( aCacheToClear & MEM_CACHE) && mMemCache.get() )
+	{
+		rv = mMemCache->RemoveAll();
+		if( NS_FAILED ( rv ) )
+			return rv;	
+	}
+	
+		if ( (aCacheToClear & FILE_CACHE) && mDiskCache.get() )
+	{
+		rv = mDiskCache->RemoveAll();
+		if( NS_FAILED ( rv ) )
+			return rv;	
+	}
+	
+	if ( ( aCacheToClear & FLAT_CACHE) && mFlatCache.get() )
+	{
+		rv = mFlatCache->RemoveAll();
+		if( NS_FAILED ( rv ) )
+			return rv;	
+	}
+	return rv;
+}
+
 nsresult
 nsCacheManager::LimitMemCacheSize()
 {
@@ -468,30 +555,4 @@ nsCacheManager::GetDiskCacheCapacity(PRUint32* aCapacity)
     NS_ENSURE_ARG_POINTER(aCapacity);
     *aCapacity = mDiskCacheCapacity;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCacheManager::SetDiskCacheFolder(nsIFileSpec* aFolder)
-{
-    NS_ENSURE_ARG(aFolder);
-
-    if (!mFileCache)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    nsCOMPtr<nsINetDataDiskCache> fileCache;
-    fileCache = do_QueryInterface(mFileCache);
-    return fileCache->SetDiskCacheFolder(aFolder);
-}
-
-NS_IMETHODIMP
-nsCacheManager::GetDiskCacheFolder(nsIFileSpec* *aFolder)
-{
-    NS_ENSURE_ARG(aFolder);
-
-    if (!mFileCache)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    nsCOMPtr<nsINetDataDiskCache> fileCache;
-    fileCache = do_QueryInterface(mFileCache);
-    return fileCache->GetDiskCacheFolder(aFolder);
 }

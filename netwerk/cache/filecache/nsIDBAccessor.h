@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -24,7 +25,7 @@
 #define _NS_IDBACCESSOR_H_
 
 #include "nsISupports.h"
-#include "nsIFileSpec.h"
+#include "nsIFile.h"
 
 // nsIDBAccessorIID {6AADD4D0-7785-11d3-87FE-000629D01344}
 #define NS_IDBACCESSOR_IID \
@@ -41,7 +42,7 @@ class nsIDBAccessor : public nsISupports
   public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDBACCESSOR_IID)
 
-  NS_IMETHOD Init(nsIFileSpec* DBFile) = 0 ;
+  NS_IMETHOD Init(nsIFile* DBFile) = 0 ;
   NS_IMETHOD Shutdown(void) = 0 ;
 
   NS_IMETHOD Put(PRInt32 aID, void* anEntry, PRUint32 aLength) = 0 ;
@@ -53,6 +54,11 @@ class nsIDBAccessor : public nsISupports
   NS_IMETHOD GetID(const char* key, PRUint32 length, PRInt32* aID) = 0 ;
 
   NS_IMETHOD EnumEntry(void* *anEntry, PRUint32* aLength, PRBool bReset) = 0 ;
+  
+  NS_IMETHOD GetDBFilesize(PRUint64* aSize) = 0 ;
+    
+  NS_IMETHOD GetSizeEntry(void** anEntry, PRUint32 *aLength) = 0 ;
+  NS_IMETHOD SetSizeEntry(void* anEntry, PRUint32 aLength) = 0 ;
 
 } ;
 

@@ -23,7 +23,7 @@
 #include "nsrootidl.idl"
 #include "nsISupports.idl"
 
-interface nsIFileSpec;
+
 interface nsIURI;
 interface nsIObserver;
 interface nsIChannel;

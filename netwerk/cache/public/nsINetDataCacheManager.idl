@@ -27,7 +27,6 @@ interface nsICachedNetData;
 interface nsINetDataCache;
 interface nsINetDataDiskCache;
 interface nsIURI;
-interface nsIFileSpec;
 
 /**
  * The network-response cache manager is partly responsible for the caching of
@@ -72,6 +71,13 @@ interface nsINetDataCacheManager : nsISupports
      */
     const unsigned long CACHE_AS_FILE             = 1 << 2;
 
+	/**
+		These enum's are used for the ClearCache calls. 
+	*/
+	const unsigned long ALL_CACHES = 1;
+	const unsigned long MEM_CACHE = 1<<1;
+	const unsigned long FILE_CACHE = 1<<2;
+	const unsigned long FLAT_CACHE = 1<<3;
     /**
      * Fetch the cache entry record for the given URI.  If one does not exist,
      * create a new, empty record.  The normal search order for caches is:
@@ -132,6 +138,11 @@ interface nsINetDataCacheManager : nsISupports
      * database files will be deleted.
      */
     void RemoveAll();
+    
+    /**
+      *	Clears the specified cache
+      */
+    void Clear( in PRUint32 aCacheToClear );
 
     /**
      * The disk cache is made up of the file cache (for stream-as-file
@@ -150,11 +161,6 @@ interface nsINetDataCacheManager : nsISupports
      * accomodate the requested capacity.
      */
     attribute PRUint32 memCacheCapacity;
-
-	/**
-	 * This attribute must be set before attempting to store into the disk cache.
-	 */
-    attribute nsIFileSpec diskCacheFolder;
 };
 
 %{ C++

@@ -23,7 +23,7 @@
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
 
-interface nsIFileSpec;
+interface nsIFile;
 interface nsIChannel;
 interface nsINetDataCache;
 
@@ -121,5 +121,5 @@ interface nsINetDataCacheRecord : nsISupports
      * from each URI in an individual file, so it is acceptable for an
      * implementation of this method to signal NS_NOT_IMPLEMENTED.
      */
-    readonly attribute nsIFileSpec filename;
+    readonly attribute nsIFile file;
 };
