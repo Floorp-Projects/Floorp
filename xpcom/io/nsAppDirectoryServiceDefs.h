@@ -44,6 +44,11 @@
 // Defines property names for directories available from standard nsIDirectoryServiceProviders.
 // These keys are not guaranteed to exist because the nsIDirectoryServiceProviders which
 // provide them are optional.
+//
+// Keys whose definition ends in "DIR" or "FILE" return a single nsIFile (or subclass).
+// Keys whose definition ends in "LIST" return an nsISimpleEnumerator which enumerates a
+// list of file objects.
+//
 // System and XPCOM level properties are defined in nsDirectoryServiceDefs.h.
 //
 //========================================================================================
@@ -68,8 +73,10 @@
 
 #define NS_APP_RES_DIR                          "ARes"
 #define NS_APP_CHROME_DIR                       "AChrom"
-#define NS_APP_PLUGINS_DIR                      "APlugns"
+#define NS_APP_PLUGINS_DIR                      "APlugns"       // Deprecated - use NS_APP_PLUGINS_DIR_LIST
 #define NS_APP_SEARCH_DIR                       "SrchPlugns"
+
+#define NS_APP_PLUGINS_DIR_LIST                 "APluginsDL"
 
 // --------------------------------------------------------------------------------------
 // Files and directories which exist on a per-profile basis

@@ -31,13 +31,14 @@ class nsIFile;
 // class nsAppFileLocationProvider
 //*****************************************************************************   
 
-class nsAppFileLocationProvider : public nsIDirectoryServiceProvider
+class nsAppFileLocationProvider : public nsIDirectoryServiceProvider2
 {
 public:
                         nsAppFileLocationProvider();
 
    NS_DECL_ISUPPORTS
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+   NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
 protected:
    virtual              ~nsAppFileLocationProvider();

@@ -29,6 +29,7 @@
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsISimpleEnumerator.h"
 
 #if defined(XP_MAC) /* || defined(XP_MACOSX) REMIND HACKING FOR MACOS X!!! */
 #include <Folders.h>
@@ -109,7 +110,7 @@ nsAppFileLocationProvider::~nsAppFileLocationProvider()
 // nsAppFileLocationProvider::nsISupports
 //*****************************************************************************
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsAppFileLocationProvider, nsIDirectoryServiceProvider)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsAppFileLocationProvider, nsIDirectoryServiceProvider, nsIDirectoryServiceProvider2)
 
 //*****************************************************************************
 // nsAppFileLocationProvider::nsIDirectoryServiceProvider
@@ -121,6 +122,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
     nsCOMPtr<nsILocalFile>  localFile;
     nsresult rv = NS_ERROR_FAILURE;
 
+    NS_ENSURE_ARG(prop);
     *_retval = nsnull;
     *persistant = PR_TRUE;
     
@@ -346,3 +348,84 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
    return rv;
 }
 
+//*****************************************************************************
+// nsAppFileLocationProvider::nsIDirectoryServiceProvider2
+//*****************************************************************************
+
+class nsAppDirectoryEnumerator : public nsISimpleEnumerator
+{
+  public:
+    NS_DECL_ISUPPORTS
+
+    /**
+     * aKeyList is a list of properties which are provided by aProvider
+     * They do not need to be publicly defined keys.
+     */
+    nsAppDirectoryEnumerator(nsIDirectoryServiceProvider *aProvider,
+                             const char* aKeyList[],
+                             PRInt32 aNumKeys) :
+        mProvider(aProvider),
+        mKeyList(aKeyList),
+        mCurrentIndex(0), mMaxIndex(aNumKeys)
+    {
+        NS_INIT_REFCNT();
+    }
+
+    NS_IMETHOD HasMoreElements(PRBool *result) 
+    {
+        *result = (mCurrentIndex < mMaxIndex) &&
+                  (mKeyList && mKeyList[mCurrentIndex]);
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetNext(nsISupports **result) 
+    {
+        NS_ENSURE_ARG_POINTER(result);
+        *result = nsnull;
+
+        PRBool hasMore;
+        HasMoreElements(&hasMore);
+        if (!hasMore)
+            return NS_ERROR_FAILURE;
+
+        PRBool dontCare;
+        nsCOMPtr<nsIFile> newFile;
+        nsresult rv = mProvider->GetFile(mKeyList[mCurrentIndex++], &dontCare, getter_AddRefs(newFile));
+        if (NS_FAILED(rv))
+            return rv;
+
+        *result = newFile;
+        NS_ADDREF(*result);
+
+        return *result ? NS_OK : NS_ERROR_FAILURE;
+    }
+
+    ~nsAppDirectoryEnumerator() // I don't expect to be subclassed
+    {
+    }
+
+  protected:
+    nsIDirectoryServiceProvider *mProvider;
+    const char** mKeyList;
+    PRInt32      mCurrentIndex, mMaxIndex;
+};
+
+NS_IMPL_ISUPPORTS1(nsAppDirectoryEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval = nsnull;
+    nsresult rv = NS_ERROR_FAILURE;
+    
+    if (!nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR_LIST))
+    {
+        static const char* keys[] = { NS_APP_PLUGINS_DIR };
+
+        *_retval = new nsAppDirectoryEnumerator(this, keys, sizeof(keys) / sizeof(keys[0]));
+        NS_IF_ADDREF(*_retval);
+        rv = *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
+    }
+    return rv;
+}
