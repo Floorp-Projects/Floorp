@@ -25,6 +25,7 @@
 
 #if defined(XP_MAC)
 #include <Menus.h>
+#include <TextUtils.h>
 #endif
 
 static NS_DEFINE_IID(kMenuBarIID, NS_IMENUBAR_IID);
@@ -49,14 +50,13 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 {
   NS_INIT_REFCNT();
   mNumMenus = 0;
-  mMenu     = nsnull;
+  //mMenuVoidArray;
   mParent   = nsnull;
   mIsMenuBarAdded = PR_FALSE;
   
   mOriginalMacMBarHandle = nsnull;
   mOriginalMacMBarHandle = ::GetMenuBar();
   
-  mMacMBarHandle = mOriginalMacMBarHandle;
   ::ClearMenuBar();
 }
 
@@ -106,12 +106,13 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
 
   // XXX add to internal data structure
-  mMenu = aMenu;
+  mMenuVoidArray.AppendElement( aMenu );
   
   MenuHandle menuHandle = nsnull;
-  aMenu->GetNativeData(&menuHandle);
+  aMenu->GetNativeData(menuHandle);
   
-  ::InsertMenu(menuHandle, 0);
+  ::InsertMenu(menuHandle, mNumMenus);
+  mNumMenus++;
   return NS_OK;
 }
 
@@ -152,3 +153,9 @@ NS_METHOD nsMenuBar::GetNativeData(void *& aData)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::Paint()
+{
+  ::DrawMenuBar();
+  return NS_OK;
+}

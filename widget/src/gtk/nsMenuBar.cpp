@@ -156,3 +156,8 @@ NS_METHOD nsMenuBar::GetNativeData(void *& aData)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::Paint()
+{
+  return NS_OK;
+}

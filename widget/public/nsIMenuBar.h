@@ -90,6 +90,12 @@ class nsIMenuBar : public nsISupports {
     *
     */
     NS_IMETHOD  GetNativeData(void*& aData) = 0;
+
+   /**
+    * Draw the menubar
+    *
+    */
+    NS_IMETHOD  Paint() = 0;
 };
 
 #endif
