@@ -22,6 +22,7 @@
 #include "nsIBlender.h"
 #include "nsPoint.h"
 #include "nsRect.h"
+#include "nsIImage.h"
 
 //----------------------------------------------------------------------
 
@@ -54,7 +55,83 @@ public:
   PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
 
 private:
+  /**
+   * Create a DIB header and bits for a bitmap
+   * @param aBHead  information header for the DIB
+   * @param aBits   a handle to the 8 bit pointer for the data bits
+   * @param aWidth  width of the bitmap to create
+   * @param aHeight Height of the bitmap to create
+   * @param aDepth  Bits per pixel of the bitmap to create
+   */
   nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth);
+
+  /**
+   * Delete the DIB header and bits created from BuildDIB
+   * @param aBHead  information header for the DIB
+   * @param aBits   a handle to the 8 bit pointer for the data bits
+   */
+  void DeleteDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits);
+
+  /** 
+   * Blend two 24 bit image arrays using an 8 bit alpha mask
+   * @param aNumlines  Number of lines to blend
+   * @param aNumberBytes Number of bytes per line to blend
+   * @param aSImage Pointer to beginning of the source bytes
+   * @param aDImage Pointer to beginning of the destination bytes
+   * @param aMImage Pointer to beginning of the mask bytes
+   * @param aSLSpan number of bytes per line for the source bytes
+   * @param aDLSpan number of bytes per line for the destination bytes
+   * @param aMLSpan number of bytes per line for the Mask bytes
+   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   */
+  void Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
+
+  /** 
+   * Blend two 24 bit image arrays using a passed in blend value
+   * @param aNumlines  Number of lines to blend
+   * @param aNumberBytes Number of bytes per line to blend
+   * @param aSImage Pointer to beginning of the source bytes
+   * @param aDImage Pointer to beginning of the destination bytes
+   * @param aMImage Pointer to beginning of the mask bytes
+   * @param aSLSpan number of bytes per line for the source bytes
+   * @param aDLSpan number of bytes per line for the destination bytes
+   * @param aMLSpan number of bytes per line for the Mask bytes
+   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   */
+  void Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality);
+
+
+    /** 
+   * Blend two 8 bit image arrays using an 8 bit alpha mask
+   * @param aNumlines  Number of lines to blend
+   * @param aNumberBytes Number of bytes per line to blend
+   * @param aSImage Pointer to beginning of the source bytes
+   * @param aDImage Pointer to beginning of the destination bytes
+   * @param aMImage Pointer to beginning of the mask bytes
+   * @param aSLSpan number of bytes per line for the source bytes
+   * @param aDLSpan number of bytes per line for the destination bytes
+   * @param aMLSpan number of bytes per line for the Mask bytes
+   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   */
+  void Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
+
+  /** 
+   * Blend two 8 bit image arrays using a passed in blend value
+   * @param aNumlines  Number of lines to blend
+   * @param aNumberBytes Number of bytes per line to blend
+   * @param aSImage Pointer to beginning of the source bytes
+   * @param aDImage Pointer to beginning of the destination bytes
+   * @param aMImage Pointer to beginning of the mask bytes
+   * @param aSLSpan number of bytes per line for the source bytes
+   * @param aDLSpan number of bytes per line for the destination bytes
+   * @param aMLSpan number of bytes per line for the Mask bytes
+   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   */
+  void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+                PRInt32 aSLSpan,PRInt32 aDLSpan,nsColorMap *aColorMap,nsBlendQuality aBlendQuality);
 
 };
 

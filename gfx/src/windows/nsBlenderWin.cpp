@@ -58,10 +58,11 @@ HDC                 srcdc,dstdc;
 HBITMAP             srcbits,dstbits,tb1,tb2;
 BITMAP              srcinfo,dstinfo;
 nsPoint             srcloc,maskloc;
-PRInt32             dlinespan,slinespan,mlinespan,numbytes,numlines;
+PRInt32             dlinespan,slinespan,mlinespan,numbytes,numlines,level;
 PRUint8             *s1,*d1,*m1,*srcbytes,*dstbytes;
 LPBITMAPINFOHEADER  srcbinfo,dstbinfo;
-
+PRUint8             *mask=NULL;
+nsColorMap          *colormap;
 
   // we have to extract the bitmaps from the nsDrawingSurface, which in this case is a hdc
   srcdc = (HDC)aSrc;
@@ -75,7 +76,11 @@ LPBITMAPINFOHEADER  srcbinfo,dstbinfo;
   numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
   // put into a DIB
   BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
-  numbytes = ::GetDIBits(srcdc,srcbytes,1,srcinfo.bmHeight,srcbits,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
+
+  if(srcinfo.bmBitsPixel != 24)
+    numbytes = ::GetDIBits(srcdc,srcbits,1,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_PAL_COLORS);
+  else
+    numbytes = ::GetDIBits(srcdc,srcbits,1,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
 
   // get the HBITMAP, and then grab the information about the destination bitmap
   tb2 = CreateCompatibleBitmap(aSrc,3,3);
@@ -83,19 +88,60 @@ LPBITMAPINFOHEADER  srcbinfo,dstbinfo;
   ::GetObject(dstbits,sizeof(BITMAP),&dstinfo);
   // put into a DIB
   BuildDIB(&dstbinfo,&dstbytes,dstinfo.bmWidth,dstinfo.bmHeight,dstinfo.bmBitsPixel);
-  numbytes = ::GetDIBits(dstdc,dstbytes,1,dstinfo.bmHeight,dstbits,(LPBITMAPINFO)dstbinfo,DIB_RGB_COLORS);
+  numbytes = ::GetDIBits(dstdc,dstbits,1,dstinfo.bmHeight,dstbytes,(LPBITMAPINFO)dstbinfo,DIB_RGB_COLORS);
 
   // calculate the metrics, no mask right now
+  srcloc.x = aSX;
+  srcloc.y = aSY;
+  srcinfo.bmBits = srcbytes;
+  dstinfo.bmBits = dstbytes;
   if(CalcAlphaMetrics(&srcinfo,&dstinfo,&srcloc,NULL,&maskloc,&numlines,&numbytes,
                 &s1,&d1,&m1,&slinespan,&dlinespan,&mlinespan))
     {
     // now do the blend
-    
+    if ((srcinfo.bmBitsPixel==24) && (dstinfo.bmBitsPixel==24))
+      {
+      if(mask)
+        {
+        numbytes/=3;    // since the mask is only 8 bits, this routine wants number of pixels
+        this->Do24BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual);
+        }
+      else
+        {
+          level = (PRInt32)(aSrcOpacity*100);
+        this->Do24Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual);
+        }
+      }
+    else
+      if ((srcinfo.bmBitsPixel==8) && (dstinfo.bmBitsPixel==8))
+        {
+        if(mask)
+          {
+          this->Do8BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual);
+          }
+        else
+          {
+          level = (PRInt32)(aSrcOpacity*100);
+          this->Do8Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,colormap,nsHighQual);
+          }
+        }
 
     }
 
+  // put the new bits in
+  ::DeleteObject(dstbits);
+  dstbits = ::CreateDIBitmap(dstdc, dstbinfo, CBM_INIT, dstbytes, (LPBITMAPINFO)dstbinfo, DIB_RGB_COLORS);
+
+
   ::SelectObject(srcdc,srcbits);
   ::SelectObject(dstdc,dstbits);
+
+  ::DeleteObject(tb1);
+  ::DeleteObject(tb2);
+
+  // get rid of the DIB's
+  DeleteDIB(&srcbinfo,&srcbytes);
+  DeleteDIB(&dstbinfo,&dstbytes);
 }
 
 //------------------------------------------------------------
@@ -182,7 +228,6 @@ PRInt32 spanbytes;
   return(spanbytes);
 }
 
-
 //-----------------------------------------------------------
 
 nsresult 
@@ -190,7 +235,6 @@ nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt
 {
 PRInt32   numpalletcolors,imagesize,spanbytes;
 PRUint8   *colortable;
-
 
 	switch (aDepth) 
     {
@@ -220,10 +264,8 @@ PRUint8   *colortable;
 	  (*aBHead)->biClrUsed = numpalletcolors;
 	  (*aBHead)->biClrImportant = numpalletcolors;
 
-    spanbytes = ((*aBHead)->biWidth * (*aBHead)->biBitCount) >> 5;
-	  if (((PRUint32)(*aBHead)->biWidth * (*aBHead)->biBitCount) & 0x1F) 
-		  spanbytes++;
-    spanbytes <<= 2;
+    spanbytes = CalcBytesSpan(aWidth,aDepth);
+
     imagesize = spanbytes * (*aBHead)->biHeight;    // no compression
 
     // set the color table in the info header
@@ -236,3 +278,573 @@ PRUint8   *colortable;
 
   return NS_OK;
 }
+
+//------------------------------------------------------------
+
+void
+nsBlenderWin::DeleteDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits)
+{
+
+  delete[] *aBHead;
+  aBHead = 0;
+  delete[] *aBits;
+  aBits = 0;
+
+}
+
+//------------------------------------------------------------
+
+// This routine can not be fast enough
+void
+nsBlenderWin::Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality)
+{
+PRUint8   *d1,*d2,*s1,*s2,*m1,*m2;
+PRInt32   x,y;
+PRUint32  val1,val2;
+PRUint32  temp1,numlines,xinc,yinc;
+PRInt32   sspan,dspan,mspan;
+
+  sspan = aSLSpan;
+  dspan = aDLSpan;
+  mspan = aMLSpan;
+
+  // now go thru the image and blend (remember, its bottom upwards)
+  s1 = aSImage;
+  d1 = aDImage;
+  m1 = aMImage;
+
+  numlines = aNumlines;  
+  xinc = 1;
+  yinc = 1;
+
+  for (y = 0; y < aNumlines; y++)
+    {
+    s2 = s1;
+    d2 = d1;
+    m2 = m1;
+
+    for(x=0;x<aNumbytes;x++)
+      {
+      val1 = (*m2);
+      val2 = 255-val1;
+
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (unsigned char)temp1;
+      d2++;
+      s2++;
+  
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (unsigned char)temp1;
+      d2++;
+      s2++;
+
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (unsigned char)temp1;
+      d2++;
+      s2++;
+      m2++;
+      }
+    s1 += sspan;
+    d1 += dspan;
+    m1 += mspan;
+    }
+}
+
+//------------------------------------------------------------
+
+// This routine can not be fast enough
+void
+nsBlenderWin::Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality)
+{
+PRUint8   *d1,*d2,*s1,*s2;
+PRUint32  val1,val2;
+PRInt32   x,y,temp1,numlines,xinc,yinc;
+
+
+  aBlendVal = (aBlendVal*255)/100;
+  val2 = aBlendVal;
+  val1 = 255-val2;
+
+  // now go thru the image and blend (remember, its bottom upwards)
+  s1 = aSImage;
+  d1 = aDImage;
+
+
+  numlines = aNumlines;  
+  xinc = 1;
+  yinc = 1;
+
+  for(y = 0; y < aNumlines; y++)
+    {
+    s2 = s1;
+    d2 = d1;
+
+    for(x = 0; x < aNumbytes; x++)
+      {
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (unsigned char)temp1; 
+
+      d2++;
+      s2++;
+      }
+
+    s1 += aSLSpan;
+    d1 += aDLSpan;
+    }
+}
+
+//------------------------------------------------------------
+
+// This routine can not be fast enough
+void
+nsBlenderWin::Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality)
+{
+PRUint8   *d1,*d2,*s1,*s2,*m1,*m2;
+PRInt32   x,y;
+PRUint32  val1,val2,temp1,numlines,xinc,yinc;
+PRInt32   sspan,dspan,mspan;
+
+  sspan = aSLSpan;
+  dspan = aDLSpan;
+  mspan = aMLSpan;
+
+  // now go thru the image and blend (remember, its bottom upwards)
+  s1 = aSImage;
+  d1 = aDImage;
+  m1 = aMImage;
+
+  numlines = aNumlines;  
+  xinc = 1;
+  yinc = 1;
+
+  for (y = 0; y < aNumlines; y++)
+    {
+    s2 = s1;
+    d2 = d1;
+    m2 = m1;
+
+    for(x=0;x<aNumbytes;x++)
+      {
+      val1 = (*m2);
+      val2 = 255-val1;
+
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (unsigned char)temp1;
+      d2++;
+      s2++;
+      m2++;
+      }
+    s1 += sspan;
+    d1 += dspan;
+    m1 += mspan;
+    }
+}
+
+//------------------------------------------------------------
+
+extern void inv_colormap(PRInt16 colors,PRUint8 *aCMap,PRInt16 bits,PRUint32 *dist_buf,PRUint8 *aRGBMap );
+
+// This routine can not be fast enough
+void
+nsBlenderWin::Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsColorMap *aColorMap,nsBlendQuality aBlendQuality)
+{
+PRUint32   r,g,b,r1,g1,b1,i;
+PRUint8   *d1,*d2,*s1,*s2;
+PRInt32   x,y,val1,val2,numlines,xinc,yinc;;
+PRUint8   *mapptr,*invermap;
+PRUint32  *distbuffer;
+PRUint32  quantlevel,tnum,num,shiftnum;
+
+  aBlendVal = (aBlendVal*255)/100;
+  val2 = aBlendVal;
+  val1 = 255-val2;
+
+  // calculate the inverse map
+  mapptr = aColorMap->Index;       
+  quantlevel = aBlendQuality+2;
+  shiftnum = (8-quantlevel)+8;
+  tnum = 2;
+  for(i=1;i<quantlevel;i++)
+    tnum = 2*tnum;
+
+  num = tnum;
+  for(i=1;i<3;i++)
+    num = num*tnum;
+
+  distbuffer = new PRUint32[num];
+  invermap  = new PRUint8[num*3];
+  inv_colormap(256,mapptr,quantlevel,distbuffer,invermap );
+
+  // now go thru the image and blend (remember, its bottom upwards)
+  s1 = aSImage;
+  d1 = aDImage;
+
+  numlines = aNumlines;  
+  xinc = 1;
+  yinc = 1;
+
+  for(y = 0; y < aNumlines; y++)
+    {
+    s2 = s1;
+    d2 = d1;
+
+    for(x = 0; x < aNumbytes; x++)
+      {
+      i = (*d2);
+      r = aColorMap->Index[(3 * i) + 2];
+      g = aColorMap->Index[(3 * i) + 1];
+      b = aColorMap->Index[(3 * i)];
+
+      i =(*s2);
+      r1 = aColorMap->Index[(3 * i) + 2];
+      g1 = aColorMap->Index[(3 * i) + 1];
+      b1 = aColorMap->Index[(3 * i)];
+
+      r = ((r*val1)+(r1*val2))>>shiftnum;
+      if(r>tnum)
+        r = tnum;
+
+      g = ((g*val1)+(g1*val2))>>shiftnum;
+      if(g>tnum)
+        g = tnum;
+
+      b = ((b*val1)+(b1*val2))>>shiftnum;
+      if(b>tnum)
+        b = tnum;
+
+      r = (r<<(2*quantlevel))+(g<<quantlevel)+b;
+      (*d2) = invermap[r];
+      d2++;
+      s2++;
+      }
+
+    s1 += aSLSpan;
+    d1 += aDLSpan;
+    }
+
+  delete[] distbuffer;
+  delete[] invermap;
+}
+
+//------------------------------------------------------------
+
+static PRInt32   bcenter, gcenter, rcenter;
+static PRUint32  gdist, rdist, cdist;
+static PRInt32   cbinc, cginc, crinc;
+static PRUint32  *gdp, *rdp, *cdp;
+static PRUint8   *grgbp, *rrgbp, *crgbp;
+static PRInt32   gstride,   rstride;
+static PRInt32   x, xsqr, colormax;
+static PRInt32   cindex;
+
+
+static void maxfill(PRUint32 *buffer,PRInt32 side );
+static PRInt32 redloop( void );
+static PRInt32 greenloop( PRInt32 );
+static PRInt32 blueloop( PRInt32 );
+
+//------------------------------------------------------------
+
+void
+inv_colormap(PRInt16 colors,PRUint8 *aCMap,PRInt16 aBits,PRUint32 *dist_buf,PRUint8 *aRGBMap )
+{
+PRInt32         nbits = 8 - aBits;
+PRUint32        r,g,b;
+
+  colormax = 1 << aBits;
+  x = 1 << nbits;
+  xsqr = 1 << (2 * nbits);
+
+  // Compute "strides" for accessing the arrays. */
+  gstride = colormax;
+  rstride = colormax * colormax;
+
+  maxfill( dist_buf, colormax );
+
+  for (cindex = 0;cindex < colors;cindex++ )
+    {
+    r = aCMap[(3 * cindex) + 2];
+    g = aCMap[(3 * cindex) + 1];
+    b = aCMap[(3 * cindex)];
+
+	  rcenter = r >> nbits;
+	  gcenter = g >> nbits;
+	  bcenter = b >> nbits;
+
+	  rdist = r - (rcenter * x + x/2);
+	  gdist = g - (gcenter * x + x/2);
+	  cdist = b - (bcenter * x + x/2);
+	  cdist = rdist*rdist + gdist*gdist + cdist*cdist;
+
+	  crinc = 2 * ((rcenter + 1) * xsqr - (r * x));
+	  cginc = 2 * ((gcenter + 1) * xsqr - (g * x));
+	  cbinc = 2 * ((bcenter + 1) * xsqr - (b * x));
+
+	  // Array starting points.
+	  cdp = dist_buf + rcenter * rstride + gcenter * gstride + bcenter;
+	  crgbp = aRGBMap + rcenter * rstride + gcenter * gstride + bcenter;
+
+	  (void)redloop();
+    }
+}
+
+//------------------------------------------------------------
+
+// redloop -- loop up and down from red center.
+static PRInt32
+redloop()
+{
+PRInt32        detect,r,first;
+PRInt32        txsqr = xsqr + xsqr;
+static PRInt32 rxx;
+
+  detect = 0;
+
+  rdist = cdist;
+  rxx = crinc;
+  rdp = cdp;
+  rrgbp = crgbp;
+  first = 1;
+  for (r=rcenter;r<colormax;r++,rdp+=rstride,rrgbp+=rstride,rdist+=rxx,rxx+=txsqr,first=0)
+    {
+    if ( greenloop( first ) )
+      detect = 1;
+    else 
+      if ( detect )
+        break;
+    }
+   
+  rxx=crinc-txsqr;
+  rdist = cdist-rxx;
+  rdp=cdp-rstride;
+  rrgbp=crgbp-rstride;
+  first=1;
+  for (r=rcenter-1;r>=0;r--,rdp-=rstride,rrgbp-=rstride,rxx-=txsqr,rdist-=rxx,first=0)
+    {
+    if ( greenloop( first ) )
+      detect = 1;
+    else 
+      if ( detect )
+        break;
+    }
+    
+  return detect;
+}
+
+//------------------------------------------------------------
+
+// greenloop -- loop up and down from green center.
+static PRInt32
+greenloop(PRInt32 aRestart)
+{
+PRInt32          detect,g,first;
+PRInt32          txsqr = xsqr + xsqr;
+static  PRInt32  here, min, max;
+static  PRInt32  ginc, gxx, gcdist;	
+static  PRUint32  *gcdp;
+static  PRUint8   *gcrgbp;	
+
+  if(aRestart)
+    {
+    here = gcenter;
+    min = 0;
+    max = colormax - 1;
+    ginc = cginc;
+    }
+
+  detect = 0;
+
+
+  gcdp=rdp;
+  gdp=rdp;
+  gcrgbp=rrgbp;
+  grgbp=rrgbp;
+  gcdist=rdist;
+  gdist=rdist;
+
+  // loop up. 
+  for(g=here,gxx=ginc,first=1;g<=max;
+      g++,gdp+=gstride,gcdp+=gstride,grgbp+=gstride,gcrgbp+=gstride,
+      gdist+=gxx,gcdist+=gxx,gxx+=txsqr,first=0)
+    {
+    if(blueloop(first))
+      {
+      if (!detect)
+        {
+        if (g>here)
+          {
+	        here = g;
+	        rdp = gcdp;
+	        rrgbp = gcrgbp;
+	        rdist = gcdist;
+	        ginc = gxx;
+          }
+        detect=1;
+        }
+      }
+	  else 
+      if (detect)
+        {
+        break;
+        }
+    }
+    
+  // loop down
+  gcdist = rdist-gxx;
+  gdist = gcdist;
+  gdp=rdp-gstride;
+  gcdp=gdp;
+  grgbp=rrgbp-gstride;
+  gcrgbp = grgbp;
+
+  for (g=here-1,gxx=ginc-txsqr,
+      first=1;g>=min;g--,gdp-=gstride,gcdp-=gstride,grgbp-=gstride,gcrgbp-=gstride,
+      gxx-=txsqr,gdist-=gxx,gcdist-=gxx,first=0)
+    {
+    if (blueloop(first))
+      {
+      if (!detect)
+        {
+        here = g;
+        rdp = gcdp;
+        rrgbp = gcrgbp;
+        rdist = gcdist;
+        ginc = gxx;
+        detect = 1;
+        }
+      }
+    else 
+      if ( detect )
+        {
+        break;
+        }
+    }
+  return detect;
+}
+
+//------------------------------------------------------------
+
+static PRInt32
+blueloop(PRInt32 aRestart )
+{
+PRInt32  detect,b,i=cindex;
+register  PRUint32  *dp;
+register  PRUint8   *rgbp;
+register  PRInt32   bxx;
+PRUint32            bdist;
+register  PRInt32   txsqr = xsqr + xsqr;
+register  PRInt32   lim;
+static    PRInt32   here, min, max;
+static    PRInt32   binc;
+
+  if (aRestart)
+    {
+    here = bcenter;
+    min = 0;
+    max = colormax - 1;
+    binc = cbinc;
+    }
+
+  detect = 0;
+  bdist = gdist;
+
+// Basic loop, finds first applicable cell.
+  for (b=here,bxx=binc,dp=gdp,rgbp=grgbp,lim=max;b<=lim;
+      b++,dp++,rgbp++,bdist+=bxx,bxx+=txsqr)
+    {
+    if(*dp>bdist)
+      {
+      if(b>here)
+        {
+        here = b;
+        gdp = dp;
+        grgbp = rgbp;
+        gdist = bdist;
+        binc = bxx;
+        }
+      detect = 1;
+      break;
+      }
+    }
+
+// Second loop fills in a run of closer cells.
+for (;b<=lim;b++,dp++,rgbp++,bdist+=bxx,bxx+=txsqr)
+  {
+  if (*dp>bdist)
+    {
+    *dp = bdist;
+    *rgbp = i;
+    }
+  else
+    {
+    break;
+    }
+  }
+
+// Basic loop down, do initializations here
+lim = min;
+b = here - 1;
+bxx = binc - txsqr;
+bdist = gdist - bxx;
+dp = gdp - 1;
+rgbp = grgbp - 1;
+
+// The 'find' loop is executed only if we didn't already find something.
+if (!detect)
+  for (;b>=lim;b--,dp--,rgbp--,bxx-=txsqr,bdist-=bxx)
+    {
+    if (*dp>bdist)
+      {
+      here = b;
+      gdp = dp;
+      grgbp = rgbp;
+      gdist = bdist;
+      binc = bxx;
+      detect = 1;
+      break;
+      }
+    }
+
+// Update loop.
+for (;b>=lim;b--,dp--,rgbp--,bxx-=txsqr,bdist-=bxx)
+  {
+  if (*dp>bdist)
+    {
+    *dp = bdist;
+    *rgbp = i;
+    }
+  else
+    {
+    break;
+    }
+  }
+
+// If we saw something, update the edge trackers.
+return detect;
+}
+
+//------------------------------------------------------------
+
+static void
+maxfill(PRUint32 *buffer,PRInt32 side )
+{
+register PRInt32 maxv = ~0L;
+register PRInt32 i;
+register PRUint32 *bp;
+
+for (i=side*side*side,bp=buffer;i>0;i--,bp++)
+  *bp = maxv;
+}
+
+//------------------------------------------------------------
+
