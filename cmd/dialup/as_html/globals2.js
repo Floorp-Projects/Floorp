@@ -242,7 +242,21 @@ function configureNewAccount()
 	navigator.preference( "network.hosts.smtp_server", findVariable( "SMTP_HOST" ) );
 	navigator.preference( "network.hosts.nntp_server", findVariable( "NNTP_HOST" ) );
 
-	var mailID=""
+	var leaveMailOnServer = GetNameValuePair( theFile, "Mode Selection", "Leave_On_Server" );
+
+	debug( "Leave_mail flag is set to " + leaveMailOnServer );
+
+	if (leaveMailOnServer != "")
+	{
+		leaveMailOnServer = leaveMailOnServer.toLowerCase();
+
+		if ( leaveMailOnServer == "true" )
+			navigator.preference( "mail.leave_on_server", true );
+		else if ( leaveMailOnServer == "false" )
+			navigator.preference( "mail.leave_on_server", false );
+	}
+
+	var mailID="";
 	var mailAccount = findVariable( "IMAP_HOST" );
 	if ( mailAccount == "" )
 		mailAccount = findVariable( "POP_SERVER" );
