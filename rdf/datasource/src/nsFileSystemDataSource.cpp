@@ -1601,18 +1601,19 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 
 #ifdef  XP_BEOS
     // under BEOS, try and get the "META:title" attribute (if its a file)
-    if (strncmp(uri, netPositiveDir, strlen(netPositiveDir)) == 0)
+    if (strstr(uri, netPositiveDir) != 0)
     {
         PRBool value;
         if ((NS_SUCCEEDED(aFileLocal->IsFile(&value) && value)) ||
             (NS_SUCCEEDED(aFileLocal->IsDirectory(&value) && value)))
         {
-            nsXPIDLCString nativeURI;
+            nsXPIDLCString nativePath;
+            aFileLocal->GetNativePath(nativePath);
 
             rv = NS_ERROR_FAILURE;
-            if (nativeURI)
+            if (nativePath) 
             {
-                BFile   bf(nativeURI, B_READ_ONLY);
+                BFile   bf(nativePath.get(), B_READ_ONLY);
                 if (bf.InitCheck() == B_OK)
                 {
                     char        beNameAttr[4096];
@@ -1749,7 +1750,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, PRBool *isFavorite, nsIRDFL
 
     nsresult        rv;
     const char      *uri;
-
+	
     rv = source->GetValueConst(&uri);
     if (NS_FAILED(rv))
         return(rv);
@@ -1774,7 +1775,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, PRBool *isFavorite, nsIRDFL
     // under BEOS, try and get the "META:url" attribute
     if (netPositiveDir)
     {
-        if (url.Find(netPositiveDir) == 0)
+        if (strstr(uri, netPositiveDir) != 0)
         {
             if (isFavorite) *isFavorite = PR_TRUE;
             rv = getNetPositiveURL(source, url, aResult);
@@ -1806,17 +1807,17 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
     nsCOMPtr<nsIFile> f;
     NS_GetFileFromURLSpec(NS_ConvertUCS2toUTF8(aFileURL), getter_AddRefs(f)); 
 
-    nsCOMPtr<nsIURI> furi;
-    NS_NewFileURI(getter_AddRefs(furi), f); 
 
-    nsXPIDLCString nativeURI;
+
+    nsXPIDLCString nativePath;
+    f->GetNativePath(nativePath);
 
     PRBool value;
     if (NS_SUCCEEDED(f->IsFile(&value) && value))
     {
-        if (nativeURI)
+        if (nativePath)
         {
-            BFile   bf(nativeURI, B_READ_ONLY);
+            BFile   bf(nativePath.get(), B_READ_ONLY);
             if (bf.InitCheck() == B_OK)
             {
                 char        beURLattr[4096];
