@@ -1846,7 +1846,7 @@ nsresult
 nsMsgCompose::BuildBodyMessageAndSignature()
 {
   PRUnichar   *bod = nsnull;
-  nsresult	  rv;
+  nsresult	  rv = NS_OK;
 
   // 
   // This should never happen...if it does, just bail out...
@@ -1891,10 +1891,15 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   	ProcessSignature(m_identity, &tSignature);
   if (m_editor)
   {
-  	if (bod)
-    	rv = ConvertAndLoadComposeWindow(m_editor, nsAutoString(""), nsString(bod), tSignature, PR_FALSE, m_composeHTML);
-    else
-    	rv = ConvertAndLoadComposeWindow(m_editor, nsAutoString(""), nsAutoString(""), tSignature, PR_FALSE, m_composeHTML);
+    nsAutoString empty("");
+    if (bod) {
+      nsAutoString bodStr(bod);
+      rv = ConvertAndLoadComposeWindow(m_editor, empty, bodStr, empty,
+                                       PR_FALSE, m_composeHTML);
+    } else {
+      rv = ConvertAndLoadComposeWindow(m_editor, empty, empty, tSignature,
+                                       PR_FALSE, m_composeHTML);
+    }
   }
 
   PR_FREEIF(bod);
