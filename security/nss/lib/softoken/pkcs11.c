@@ -1147,7 +1147,7 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
 	if (privKey == NULL) return CKR_HOST_MEMORY;
 	label = pk11_getString(object,CKA_LABEL);
 
-	crv = pk11_Attribute2SecItem(NULL,&pubKey,object,CKA_NETSCAPE_DB);
+	crv = pk11_Attribute2SSecItem(NULL,&pubKey,object,CKA_NETSCAPE_DB);
 	if (crv != CKR_OK) {
 	    if (label) PORT_Free(label);
 	    nsslowkey_DestroyPrivateKey(privKey);
