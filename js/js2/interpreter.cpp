@@ -643,14 +643,28 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             // call the constructor, if any.
                             ICodeModule* ctor = thisClass->getConstructor();
                             if (ctor) {
+                                TypedRegister voidRegister(NotARegister, &None_Type);
                                 mLinkage = new Linkage(mLinkage, ++mPC,
-                                                       mActivation, TypedRegister(NotARegister, &None_Type));
+                                                       mActivation, voidRegister);
                                 JSValues args(1);
                                 args[0] = thisInstance;
                                 mActivation = new Activation(ctor, args);
                                 registers = &mActivation->mRegisters;
                                 mPC = ctor->its_iCode->begin();
                                 endPC = ctor->its_iCode->end();
+
+                                // see if there are superclasses to initialize before.
+                                thisClass = thisClass->getSuperClass();
+                                while (thisClass) {
+                                    ctor = thisClass->getConstructor();
+                                    mLinkage = new Linkage(mLinkage, mPC,
+                                                           mActivation, voidRegister);
+                                    mActivation = new Activation(ctor, args);
+                                    registers = &mActivation->mRegisters;
+                                    mPC = ctor->its_iCode->begin();
+                                    endPC = ctor->its_iCode->end();
+                                    thisClass = thisClass->getSuperClass();
+                                }
                                 continue;
                             }
                         }
