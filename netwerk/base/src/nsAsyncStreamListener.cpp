@@ -207,13 +207,8 @@ nsOnStartRequestEvent::HandleEvent()
   nsresult status;
   nsresult rv = mChannel->GetStatus(&status);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
- 
-  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
-      rv = receiver->OnStartRequest(mChannel, mContext);
-  }
-  else {
-	  NS_WARNING("not calling OnStartRequest");
-  }
+  rv = receiver->OnStartRequest(mChannel, mContext);
+
   return rv;
 }
 
