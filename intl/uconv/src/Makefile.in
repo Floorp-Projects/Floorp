@@ -45,7 +45,7 @@ CPPSRCS		= \
 		nsUConvDll.cpp \
 		nsURLProperties.cpp \
 		nsMappingCache.cpp \
-    	nsCharsetMenu.cpp \
+		nsCharsetMenu.cpp \
 		$(NULL)
 
 EXPORT_RESOURCE	= \
@@ -59,8 +59,8 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS		+= -DUSE_NSREG
 
-# Reserved name __STDC__ cannot be defined as a macro name on AIX.
-ifneq ($(OS_ARCH),AIX)
+# Reserved name __STDC__ cannot be defined as a macro name on AIX or OpenVMS.
+ifeq (,$(filter AIX OpenVMS,$(OS_ARCH)))
 CFLAGS		+= -D__STDC__
 endif
 
