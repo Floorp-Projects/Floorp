@@ -99,13 +99,13 @@ get_applocale(void)
 	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
 										(nsIFactory**)&localeFactory);
 	NS_ASSERTION(localeFactory!=NULL,"nsLocaleTest: factory_create_interface failed.");
-	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_create_interface failed");
 
 	//
 	// test GetApplicationLocale
 	//
 	result = localeFactory->GetApplicationLocale(&locale);
-	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
+	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
 	NS_ASSERTION(locale!=NULL,"nsLocaleTest: factory_get_locale failed");
 
 	//
@@ -118,7 +118,7 @@ get_applocale(void)
 
 	result = locale->GetCategory(catagory->GetUnicode(),&lc_name_unichar);
 	value->SetString(lc_name_unichar);
-	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
+	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
 	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
 
 	locale->Release();
