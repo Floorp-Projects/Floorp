@@ -217,25 +217,37 @@ function ShowUpdateFromResource( node )
 /** 
  * WALLET submenu
  */
+function HideWallet() {
+  var element;
+  element = document.getElementById("wallet");
+  element.setAttribute("style","display: none;" );
+  element.setAttribute("disabled","true" );
+  element = document.getElementById("walleteditor");
+  element.setAttribute("style","display: none;" );
+  element.setAttribute("disabled","true" );
+  element = document.getElementById("walletSamples");
+  element.setAttribute("style","display: none;" );
+  element.setAttribute("disabled","true" );
+}
 
 function CheckForWallet()
 {
+  // remove wallet functions if not in browser
+  try {
+    if (!appCore) {
+      HideWallet();
+    }
+  } catch(e) {
+    HideWallet();
+  }
+
   // remove wallet functions (unless overruled by the "wallet.enabled" pref)
   try {
     if (!this.pref.GetBoolPref("wallet.enabled")) {
-      var element;
-      element = document.getElementById("wallet");
-      element.setAttribute("style","display: none;" );
-      element.setAttribute("disabled","true" );
-      element = document.getElementById("walleteditor");
-      element.setAttribute("style","display: none;" );
-      element.setAttribute("disabled","true" );
-      element = document.getElementById("walletSamples");
-      element.setAttribute("style","display: none;" );
-      element.setAttribute("disabled","true" );
+      HideWallet();
     }
   } catch(e) {
-    dump("wallet.enabled pref is missing from all.js");
+    dump("wallet.enabled pref is missing from all.js\n");
   }
 }
 
