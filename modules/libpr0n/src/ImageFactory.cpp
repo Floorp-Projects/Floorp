@@ -61,7 +61,7 @@ PR_STATIC_CALLBACK(nsresult)
 imgCache_Initialize(nsIModule* aSelf)
 {
   imgCache::Init();
-  return PR_TRUE;
+  return NS_OK;
 }
 
 PR_STATIC_CALLBACK(void)
