@@ -61,7 +61,6 @@ LIBS = \
 	-limg \
 	-lgfx$(MOZ_TOOLKIT)	\
 	-lraptorgfx	\
-	-lgfxps		\
 	-lmozutil \
 	$(DIST)/lib/libmsgnews_s.a	\
 	-lmsgbaseutil \

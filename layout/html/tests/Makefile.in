@@ -58,7 +58,6 @@ LIBS = \
 	-ljsdom \
 	-lraptorgfx \
 	-lgfx$(MOZ_TOOLKIT) \
-	-lgfxps \
 	-lxpcom \
 	-lxp \
 	-lraptorhtmlpars \

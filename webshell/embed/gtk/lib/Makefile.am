@@ -40,7 +40,6 @@ GECKO_LIBS =                  \
         $(TOOLKIT_WIDGET_LIB) \
         -lraptorgfx           \
         $(TOOLKIT_GFX_LIB)    \
-        -lgfxps  \
         -lraptorhtmlpars      \
         -lexpat \
         -lxmltok \

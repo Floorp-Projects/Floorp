@@ -102,7 +102,7 @@ BASE_LIBS =          -lpref               $(ZLIB_LIBS)         -lreg            
 TOOLKIT_WIDGET_LIB = -lwidgetgtk
 TOOLKIT_GFX_LIB = -lgfxgtk
 
-GECKO_LIBS =          -lraptorwebwidget             $(TOOLKIT_WIDGET_LIB)         -lraptorgfx                   $(TOOLKIT_GFX_LIB)            -lgfxps          -lraptorhtmlpars              -lexpat         -lxmltok         -ljsdom                       $(NULL)
+GECKO_LIBS =          -lraptorwebwidget             $(TOOLKIT_WIDGET_LIB)         -lraptorgfx                   $(TOOLKIT_GFX_LIB)          -lraptorhtmlpars              -lexpat         -lxmltok         -ljsdom                       $(NULL)
 
 
 JPEG_LIBS = -ljpeg

@@ -40,7 +40,6 @@ CPPSRCS = \
 
 LIBS := \
 	-lraptorgfx \
-	-lgfxps \
 	-lnetlib \
 	-lremoturl \
 	-lnetcnvts \
@@ -67,7 +66,6 @@ LIBS := \
 	-lgfx$(MOZ_TOOLKIT)    \
 	$(TK_LIBS) \
 	-lraptorgfx \
-	-lgfxps \
 	-lxp \
 	-lraptorhtmlpars \
 	-lexpat \

@@ -42,7 +42,6 @@ LIBS = \
 	$(TOOLKIT_WIDGET_LIB)\
 	-lraptorgfx	\
 	$(TOOLKIT_GFX_LIB)\
-	-lgfxps         \
 	-lreg		\
 	-labouturl	\
 	-lhttpurl	\

@@ -60,7 +60,6 @@ LIBS =	\
 		-limg \
 		-lgfx$(MOZ_TOOLKIT)        \
 		-lraptorgfx     \
-		-lgfxps         \
 		-lmozutil \
 		-lmsgbaseutil \
 		$(JPEG_LIBS) \

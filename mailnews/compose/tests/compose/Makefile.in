@@ -59,7 +59,6 @@ LIBS = \
         $(NSPR_LIBS) \
         -lgfx$(MOZ_TOOLKIT)     \
         -lraptorgfx     \
-        -lgfxps         \
         -limg           \
         -lmozutil       \
         $(TK_LIBS) \
