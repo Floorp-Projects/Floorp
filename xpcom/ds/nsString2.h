@@ -861,7 +861,7 @@ public:
   nsSubsumeStr(nsStr& aString);
   nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
-  Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
+  int Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 };
 
 

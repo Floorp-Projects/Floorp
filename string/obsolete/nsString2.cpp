@@ -2530,9 +2530,10 @@ nsSubsumeStr::nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength)
   mOwnsBuffer=assumeOwnership;
 }
 
-nsSubsumeStr::Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) {
+int nsSubsumeStr::Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) {
   mUStr=aString;
   mCharSize=eTwoByte;
   mCapacity=mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength;
   mOwnsBuffer=assumeOwnership;
+  return 0;
 }
