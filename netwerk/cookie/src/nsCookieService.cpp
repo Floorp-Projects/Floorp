@@ -558,9 +558,7 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
         --cookiePathLen;
       }
 
-      // the cookie linked list is in order of path length; longest to shortest.
-      // if the nsIURI path is shorter than the cookie path, then we know the path
-      // isn't on the cookie path.
+      // if the nsIURI path is shorter than the cookie path, don't send it back
       if (!StringBeginsWith(pathFromURI, Substring(cookie->Path(), 0, cookiePathLen))) {
         continue;
       }
