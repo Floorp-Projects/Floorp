@@ -65,7 +65,7 @@ interface nsPICommandUpdater : nsISupports
    * changed. It may have changed from enabled to disabled,
    * or vice versa, or become toggled etc.
    */
-	void		commandStatusChanged(in DOMString aCommandName);
+	void		commandStatusChanged(in string aCommandName);
 	
 };
 

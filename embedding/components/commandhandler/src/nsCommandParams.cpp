@@ -85,7 +85,7 @@ nsCommandParams::Init()
 #endif
 
 /* short getValueType (in string name); */
-NS_IMETHODIMP nsCommandParams::GetValueType(const nsAString & name, PRInt16 *_retval)
+NS_IMETHODIMP nsCommandParams::GetValueType(const char * name, PRInt16 *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = eNoType;
@@ -100,7 +100,7 @@ NS_IMETHODIMP nsCommandParams::GetValueType(const nsAString & name, PRInt16 *_re
 }
 
 /* boolean getBooleanValue (in AString name); */
-NS_IMETHODIMP nsCommandParams::GetBooleanValue(const nsAString & name, PRBool *_retval)
+NS_IMETHODIMP nsCommandParams::GetBooleanValue(const char * name, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -116,7 +116,7 @@ NS_IMETHODIMP nsCommandParams::GetBooleanValue(const nsAString & name, PRBool *_
 }
 
 /* long getLongValue (in AString name); */
-NS_IMETHODIMP nsCommandParams::GetLongValue(const nsAString & name, PRInt32 *_retval)
+NS_IMETHODIMP nsCommandParams::GetLongValue(const char * name, PRInt32 *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -132,7 +132,7 @@ NS_IMETHODIMP nsCommandParams::GetLongValue(const nsAString & name, PRInt32 *_re
 }
 
 /* double getDoubleValue (in AString name); */
-NS_IMETHODIMP nsCommandParams::GetDoubleValue(const nsAString & name, double *_retval)
+NS_IMETHODIMP nsCommandParams::GetDoubleValue(const char * name, double *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0.0;
@@ -148,7 +148,7 @@ NS_IMETHODIMP nsCommandParams::GetDoubleValue(const nsAString & name, double *_r
 }
 
 /* AString getStringValue (in AString name); */
-NS_IMETHODIMP nsCommandParams::GetStringValue(const nsAString & name, nsAString & _retval)
+NS_IMETHODIMP nsCommandParams::GetStringValue(const char *name, nsAString & _retval)
 {
   _retval.Truncate();
   HashEntry*  foundEntry = GetNamedEntry(name);
@@ -162,8 +162,22 @@ NS_IMETHODIMP nsCommandParams::GetStringValue(const nsAString & name, nsAString 
   return NS_ERROR_FAILURE;
 }
 
+/* AString getStringValue (in AString name); */
+NS_IMETHODIMP nsCommandParams::GetCStringValue(const char * name, char **_retval)
+{
+  HashEntry*  foundEntry = GetNamedEntry(name);
+  if (foundEntry && foundEntry->mEntryType == eStringType)
+  {
+    NS_ASSERTION(foundEntry->mCString, "Null string");
+    *_retval= nsCRT::strdup((*foundEntry->mCString).get());
+    return NS_OK;
+  }
+  
+  return NS_ERROR_FAILURE;
+}
+
 /* nsISupports getISupportsValue (in AString name); */
-NS_IMETHODIMP nsCommandParams::GetISupportsValue(const nsAString & name, nsISupports **_retval)
+NS_IMETHODIMP nsCommandParams::GetISupportsValue(const char * name, nsISupports **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
@@ -183,7 +197,7 @@ NS_IMETHODIMP nsCommandParams::GetISupportsValue(const nsAString & name, nsISupp
 #endif
 
 /* void setBooleanValue (in AString name, in boolean value); */
-NS_IMETHODIMP nsCommandParams::SetBooleanValue(const nsAString & name, PRBool value)
+NS_IMETHODIMP nsCommandParams::SetBooleanValue(const char * name, PRBool value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eBooleanType, foundEntry);
@@ -195,7 +209,7 @@ NS_IMETHODIMP nsCommandParams::SetBooleanValue(const nsAString & name, PRBool va
 }
 
 /* void setLongValue (in AString name, in long value); */
-NS_IMETHODIMP nsCommandParams::SetLongValue(const nsAString & name, PRInt32 value)
+NS_IMETHODIMP nsCommandParams::SetLongValue(const char * name, PRInt32 value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eLongType, foundEntry);
@@ -206,7 +220,7 @@ NS_IMETHODIMP nsCommandParams::SetLongValue(const nsAString & name, PRInt32 valu
 }
 
 /* void setDoubleValue (in AString name, in double value); */
-NS_IMETHODIMP nsCommandParams::SetDoubleValue(const nsAString & name, double value)
+NS_IMETHODIMP nsCommandParams::SetDoubleValue(const char * name, double value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eDoubleType, foundEntry);
@@ -217,7 +231,7 @@ NS_IMETHODIMP nsCommandParams::SetDoubleValue(const nsAString & name, double val
 }
 
 /* void setStringValue (in AString name, in AString value); */
-NS_IMETHODIMP nsCommandParams::SetStringValue(const nsAString & name, const nsAString & value)
+NS_IMETHODIMP nsCommandParams::SetStringValue(const char * name, const nsAString & value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eWStringType, foundEntry);
@@ -227,8 +241,19 @@ NS_IMETHODIMP nsCommandParams::SetStringValue(const nsAString & name, const nsAS
   return NS_OK;
 }
 
+/* void setCStringValue (in string name, in string value); */
+NS_IMETHODIMP nsCommandParams::SetCStringValue(const char * name, const char * value)
+{
+  HashEntry*  foundEntry;
+  GetOrMakeEntry(name, eStringType, foundEntry);
+  if (!foundEntry)
+    return NS_ERROR_OUT_OF_MEMORY;
+  foundEntry->mCString = new nsCString(value);
+  return NS_OK;
+}
+
 /* void setISupportsValue (in AString name, in nsISupports value); */
-NS_IMETHODIMP nsCommandParams::SetISupportsValue(const nsAString & name, nsISupports *value)
+NS_IMETHODIMP nsCommandParams::SetISupportsValue(const char * name, nsISupports *value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eISupportsType, foundEntry);
@@ -240,12 +265,11 @@ NS_IMETHODIMP nsCommandParams::SetISupportsValue(const nsAString & name, nsISupp
 
 /* void removeValue (in AString name); */
 NS_IMETHODIMP
-nsCommandParams::RemoveValue(const nsAString & name)
+nsCommandParams::RemoveValue(const char * name)
 {
-  nsPromiseFlatString flatName = PromiseFlatString(name);
   // PL_DHASH_REMOVE doesn't tell us if the entry was really removed, so we return
   // NS_OK unconditionally.
-  (void)PL_DHashTableOperate(&mValuesHash, (void *)flatName.get(), PL_DHASH_REMOVE);
+  (void)PL_DHashTableOperate(&mValuesHash, (void *)name, PL_DHASH_REMOVE);
 
   // inval the number of entries
   mNumEntries = eNumEntriesUnknown;
@@ -257,10 +281,9 @@ nsCommandParams::RemoveValue(const nsAString & name)
 #endif
 
 nsCommandParams::HashEntry*
-nsCommandParams::GetNamedEntry(const nsAString& name)
+nsCommandParams::GetNamedEntry(const char * name)
 {
-  nsPromiseFlatString flatName = PromiseFlatString(name);
-  HashEntry *foundEntry = (HashEntry *)PL_DHashTableOperate(&mValuesHash, (void *)flatName.get(), PL_DHASH_LOOKUP);
+  HashEntry *foundEntry = (HashEntry *)PL_DHashTableOperate(&mValuesHash, (void *)name, PL_DHASH_LOOKUP);
 
   if (PL_DHASH_ENTRY_IS_BUSY(foundEntry))
     return foundEntry;
@@ -281,7 +304,7 @@ nsCommandParams::GetIndexedEntry(PRInt32 index)
     if (!PL_DHASH_ENTRY_IS_LIVE(entry))
       continue;
 
-    if (entryCount == index)
+    if ((PRInt32)entryCount == index)
       return entry;
     
     entryCount ++;
@@ -308,11 +331,10 @@ nsCommandParams::GetNumEntries()
 }
 
 nsresult
-nsCommandParams::GetOrMakeEntry(const nsAString& name, PRUint8 entryType, HashEntry*& outEntry)
+nsCommandParams::GetOrMakeEntry(const char * name, PRUint8 entryType, HashEntry*& outEntry)
 {
-  nsPromiseFlatString flatName = PromiseFlatString(name);
 
-  HashEntry *foundEntry = (HashEntry *)PL_DHashTableOperate(&mValuesHash, (void *)flatName.get(), PL_DHASH_LOOKUP);
+  HashEntry *foundEntry = (HashEntry *)PL_DHashTableOperate(&mValuesHash, (void *)name, PL_DHASH_LOOKUP);
   if (PL_DHASH_ENTRY_IS_BUSY(foundEntry))   // reuse existing entry  
   {
     foundEntry->Reset(entryType);
@@ -321,7 +343,7 @@ nsCommandParams::GetOrMakeEntry(const nsAString& name, PRUint8 entryType, HashEn
     return NS_OK;
   }
 
-  foundEntry = (HashEntry *)PL_DHashTableOperate(&mValuesHash, (void *)flatName.get(), PL_DHASH_ADD);
+  foundEntry = (HashEntry *)PL_DHashTableOperate(&mValuesHash, (void *)name, PL_DHASH_ADD);
   if (!foundEntry) return NS_ERROR_OUT_OF_MEMORY;
   
   // placement new that sucker. Our ctor does not clobber keyHash, which is important.
@@ -344,14 +366,14 @@ nsCommandParams::HashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 PLDHashNumber
 nsCommandParams::HashKey(PLDHashTable *table, const void *key)
 {
-  return nsCRT::HashCode((const PRUnichar*)key);
+  return nsCRT::HashCode((const char *)key);
 }
 
 PRBool
 nsCommandParams::HashMatchEntry(PLDHashTable *table,
                                 const PLDHashEntryHdr *entry, const void *key)
 {
-  const PRUnichar*   keyString = (const PRUnichar*)key;
+  const char*   keyString = (const char*)key;
   const HashEntry*   thisEntry = NS_STATIC_CAST(const HashEntry*, entry);
   
   return thisEntry->mEntryName.Equals(keyString);
@@ -403,13 +425,13 @@ nsCommandParams::First()
 
 /* AString getNext (); */
 NS_IMETHODIMP
-nsCommandParams::GetNext(nsAString & _retval)
+nsCommandParams::GetNext(char **_retval)
 {
   HashEntry*    thisEntry = GetIndexedEntry(mCurEntry);
   if (!thisEntry)
     return NS_ERROR_FAILURE;
   
-  _retval.Assign(thisEntry->mEntryName);
+  *_retval = nsCRT::strdup(thisEntry->mEntryName.get());
   mCurEntry++;
   return NS_OK;
 }

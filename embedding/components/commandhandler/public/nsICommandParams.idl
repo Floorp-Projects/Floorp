@@ -54,17 +54,18 @@ interface nsICommandParams : nsISupports
    */
   const short eNoType                     = 0;      /* Only used for sanity checking */
   const short eBooleanType                = 1;
-  const short eLongType                		= 2;
+  const short eLongType                   = 2;
   const short eDoubleType                 = 3;
   const short eWStringType                = 4;
   const short eISupportsType              = 5;
+  const short eStringType                 = 6;
 
   /*
    * getValueType
    * 
    * Get the type of a specified parameter
    */
-  short       getValueType(in AString name);
+  short       getValueType(in string name);
 
   /*
    * get_Value
@@ -78,11 +79,12 @@ interface nsICommandParams : nsISupports
    * for it to contain nsICommandParams, but not *this*
    * one (i.e. self-containing is not allowed).
    */
-  boolean     getBooleanValue(in AString name);
-  long        getLongValue(in AString name);
-  double      getDoubleValue(in AString name);
-  AString     getStringValue(in AString name);
-  nsISupports getISupportsValue(in AString name);
+  boolean     getBooleanValue(in string name);
+  long        getLongValue(in string name);
+  double      getDoubleValue(in string name);
+  AString     getStringValue(in string name);
+  string      getCStringValue(in string name);
+  nsISupports getISupportsValue(in string name);
   
   /*
    * set_Value
@@ -95,18 +97,19 @@ interface nsICommandParams : nsISupports
    * for it to contain nsICommandParams, but not *this*
    * one (i.e. self-containing is not allowed).
    */
-  void        setBooleanValue(in AString name, in boolean value);
-  void        setLongValue(in AString name, in long value);
-  void        setDoubleValue(in AString name, in double value);
-  void        setStringValue(in AString name, in AString value);
-  void        setISupportsValue(in AString name, in nsISupports value);
+  void        setBooleanValue(in string name, in boolean value);
+  void        setLongValue(in string name, in long value);
+  void        setDoubleValue(in string name, in double value);
+  void        setStringValue(in string name, in AString value);
+  void        setCStringValue(in string name, in string value);
+  void        setISupportsValue(in string name, in nsISupports value);
   
   /*
    * removeValue
    * 
    * Remove the specified parameter from the list.
    */
-  void        removeValue(in AString name);
+  void        removeValue(in string name);
   
   /*
    * Enumeration methods
@@ -118,7 +121,14 @@ interface nsICommandParams : nsISupports
    */
   boolean     hasMoreElements();
   void        first();
-  AString     getNext();
+
+  /**
+   * GetNext()
+   * 
+   * @return string pointer that will be allocated and is up 
+   *         to the caller to free
+   */
+  string      getNext();
 
 };
 

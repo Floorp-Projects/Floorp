@@ -59,7 +59,7 @@ interface nsIDOMXULCommandDispatcher : nsISupports
 
   void                      updateCommands(in DOMString eventName);
 
-  nsIController             getControllerForCommand(in DOMString command);
+  nsIController             getControllerForCommand(in string command);
   nsIControllers            getControllers();
 
   void advanceFocus();

@@ -420,7 +420,7 @@ nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::GetControllerForCommand(const nsAString& aCommand, nsIController** _retval)
+nsXULCommandDispatcher::GetControllerForCommand(const char *aCommand, nsIController** _retval)
 {
   EnsureFocusController();
   return mFocusController->GetControllerForCommand(aCommand, _retval);

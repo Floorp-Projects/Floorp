@@ -5985,7 +5985,7 @@ nsDOMWindowController::GetSelectionController(nsISelectionController **aSelCon)
 
 
 NS_IMETHODIMP
-nsDOMWindowController::IsCommandEnabled(const nsAString& aCommand,
+nsDOMWindowController::IsCommandEnabled(const char* aCommand,
                                         PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -5998,33 +5998,31 @@ nsDOMWindowController::IsCommandEnabled(const nsAString& aCommand,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(editInterface, NS_ERROR_NOT_INITIALIZED);
 
-  nsCAutoString commandName;
-  commandName.AssignWithConversion(aCommand);
 	
-  if (commandName.Equals(sCopyString)) {
+  if (!nsCRT::strcmp(sCopyString,aCommand)) {
     rv = editInterface->GetCopyable(aResult);
   }
-  else if (commandName.Equals(sCutString)) {
+  else if (!nsCRT::strcmp(sCutString,aCommand)) {
     rv = editInterface->GetCutable(aResult);
   }
-  else if (commandName.Equals(sPasteString)) {
+  else if (!nsCRT::strcmp(sPasteString,aCommand)) {
     rv = editInterface->GetPasteable(aResult);
   }
-  else if (commandName.Equals(sSelectAllString)) {
+  else if (!nsCRT::strcmp(sSelectAllString,aCommand)) {
     *aResult = PR_TRUE;
     rv = NS_OK;
   }
-  else if (commandName.Equals(sSelectNoneString)) {
+  else if (!nsCRT::strcmp(sSelectNoneString,aCommand)) {
     *aResult = PR_TRUE;
     rv = NS_OK;
   }
-  else if (commandName.Equals(sCopyLinkString)) {
+  else if (!nsCRT::strcmp(sCopyLinkString,aCommand)) {
     rv = editInterface->GetInLink(aResult);
   }
-  else if (commandName.Equals(sCopyImageLocationString)) {
+  else if (!nsCRT::strcmp(sCopyImageLocationString,aCommand)) {
     rv = editInterface->GetInImage(aResult);
   }
-  else if (commandName.Equals(sCopyImageContentsString)) {
+  else if (!nsCRT::strcmp(sCopyImageContentsString,aCommand)) {
     rv = editInterface->GetInImage(aResult);
   }
 
@@ -6032,48 +6030,45 @@ nsDOMWindowController::IsCommandEnabled(const nsAString& aCommand,
 }
 
 NS_IMETHODIMP
-nsDOMWindowController::SupportsCommand(const nsAString& aCommand,
+nsDOMWindowController::SupportsCommand(const char * aCommand,
                                        PRBool *outSupported)
 {
   NS_ENSURE_ARG_POINTER(outSupported);
 
   *outSupported = PR_FALSE;
 
-  nsCAutoString commandName;
-  commandName.AssignWithConversion(aCommand);
-
-  if (commandName.Equals(sCopyString) ||
-      commandName.Equals(sSelectAllString) ||
-      commandName.Equals(sSelectNoneString) ||
-      commandName.Equals(sCutString) ||
-      commandName.Equals(sPasteString) ||
-      commandName.Equals(sScrollTopString) ||
-      commandName.Equals(sScrollBottomString) ||
-      commandName.Equals(sCopyLinkString) ||
-      commandName.Equals(sCopyImageLocationString) ||
-      commandName.Equals(sCopyImageContentsString) ||
-      commandName.Equals(sScrollPageUpString) ||
-      commandName.Equals(sScrollPageDownString) ||
-      commandName.Equals(sScrollLineUpString) ||
-      commandName.Equals(sScrollLineDownString) ||
-      commandName.Equals(sScrollLeftString) ||
-      commandName.Equals(sScrollRightString) ||
-      commandName.Equals(sSelectCharPreviousString) ||
-      commandName.Equals(sSelectCharNextString) ||
-      commandName.Equals(sWordPreviousString) ||
-      commandName.Equals(sWordNextString) ||
-      commandName.Equals(sSelectWordPreviousString) ||
-      commandName.Equals(sSelectWordNextString) ||
-      commandName.Equals(sBeginLineString) ||
-      commandName.Equals(sEndLineString) ||
-      commandName.Equals(sSelectBeginLineString) ||
-      commandName.Equals(sSelectEndLineString) ||
-      commandName.Equals(sSelectLinePreviousString) ||
-      commandName.Equals(sSelectLineNextString) ||
-      commandName.Equals(sSelectPagePreviousString) ||
-      commandName.Equals(sSelectPageNextString) ||
-      commandName.Equals(sSelectMoveTopString) ||
-      commandName.Equals(sSelectMoveBottomString)
+  if (!nsCRT::strcmp(aCommand,sCopyString) ||
+      !nsCRT::strcmp(aCommand,sSelectAllString) ||
+      !nsCRT::strcmp(aCommand,sSelectNoneString) ||
+      !nsCRT::strcmp(aCommand,sCutString) ||
+      !nsCRT::strcmp(aCommand,sPasteString) ||
+      !nsCRT::strcmp(aCommand,sScrollTopString) ||
+      !nsCRT::strcmp(aCommand,sScrollBottomString) ||
+      !nsCRT::strcmp(aCommand,sCopyLinkString) ||
+      !nsCRT::strcmp(aCommand,sCopyImageLocationString) ||
+      !nsCRT::strcmp(aCommand,sCopyImageContentsString) ||
+      !nsCRT::strcmp(aCommand,sScrollPageUpString) ||
+      !nsCRT::strcmp(aCommand,sScrollPageDownString) ||
+      !nsCRT::strcmp(aCommand,sScrollLineUpString) ||
+      !nsCRT::strcmp(aCommand,sScrollLineDownString) ||
+      !nsCRT::strcmp(aCommand,sScrollLeftString) ||
+      !nsCRT::strcmp(aCommand,sScrollRightString) ||
+      !nsCRT::strcmp(aCommand,sSelectCharPreviousString) ||
+      !nsCRT::strcmp(aCommand,sSelectCharNextString) ||
+      !nsCRT::strcmp(aCommand,sWordPreviousString) ||
+      !nsCRT::strcmp(aCommand,sWordNextString) ||
+      !nsCRT::strcmp(aCommand,sSelectWordPreviousString) ||
+      !nsCRT::strcmp(aCommand,sSelectWordNextString) ||
+      !nsCRT::strcmp(aCommand,sBeginLineString) ||
+      !nsCRT::strcmp(aCommand,sEndLineString) ||
+      !nsCRT::strcmp(aCommand,sSelectBeginLineString) ||
+      !nsCRT::strcmp(aCommand,sSelectEndLineString) ||
+      !nsCRT::strcmp(aCommand,sSelectLinePreviousString) ||
+      !nsCRT::strcmp(aCommand,sSelectLineNextString) ||
+      !nsCRT::strcmp(aCommand,sSelectPagePreviousString) ||
+      !nsCRT::strcmp(aCommand,sSelectPageNextString) ||
+      !nsCRT::strcmp(aCommand,sSelectMoveTopString) ||
+      !nsCRT::strcmp(aCommand,sSelectMoveBottomString)
       )
     *outSupported = PR_TRUE;
 
@@ -6081,45 +6076,43 @@ nsDOMWindowController::SupportsCommand(const nsAString& aCommand,
 }
 
 NS_IMETHODIMP
-nsDOMWindowController::DoCommand(const nsAString & aCommand)
+nsDOMWindowController::DoCommand(const char *aCommand)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  nsCAutoString commandName;
-  commandName.AssignWithConversion(aCommand);
 
-  if (commandName.Equals(sCopyString) ||
-      commandName.Equals(sSelectAllString) ||
-      commandName.Equals(sSelectNoneString) ||
-      commandName.Equals(sCutString) ||
-      commandName.Equals(sPasteString) ||
-      commandName.Equals(sCopyLinkString) ||
-      commandName.Equals(sCopyImageLocationString) ||
-      commandName.Equals(sCopyImageContentsString)) {
-    rv = DoCommandWithEditInterface(commandName);
+  if (!nsCRT::strcmp(aCommand,sCopyString) ||
+      !nsCRT::strcmp(aCommand,sSelectAllString) ||
+      !nsCRT::strcmp(aCommand,sSelectNoneString) ||
+      !nsCRT::strcmp(aCommand,sCutString) ||
+      !nsCRT::strcmp(aCommand,sPasteString) ||
+      !nsCRT::strcmp(aCommand,sCopyLinkString) ||
+      !nsCRT::strcmp(aCommand,sCopyImageLocationString) ||
+      !nsCRT::strcmp(aCommand,sCopyImageContentsString)) {
+    rv = DoCommandWithEditInterface(aCommand);
   }
-  else if (commandName.Equals(sScrollTopString) ||
-           commandName.Equals(sScrollBottomString) ||
-           commandName.Equals(sScrollPageUpString) ||
-           commandName.Equals(sScrollPageDownString) ||
-           commandName.Equals(sScrollLineUpString) ||
-           commandName.Equals(sScrollLineDownString) ||
-           commandName.Equals(sScrollLeftString) ||
-           commandName.Equals(sScrollRightString) ||
-           commandName.Equals(sSelectCharPreviousString) ||
-           commandName.Equals(sSelectCharNextString) ||
-           commandName.Equals(sWordPreviousString) ||
-           commandName.Equals(sWordNextString) ||
-           commandName.Equals(sSelectWordPreviousString) ||
-           commandName.Equals(sSelectWordNextString) ||
-           commandName.Equals(sBeginLineString) ||
-           commandName.Equals(sEndLineString) ||
-           commandName.Equals(sSelectBeginLineString) ||
-           commandName.Equals(sSelectEndLineString) ||
-           commandName.Equals(sSelectLinePreviousString) ||
-           commandName.Equals(sSelectLineNextString) ||
-           commandName.Equals(sSelectMoveTopString) ||
-           commandName.Equals(sSelectMoveBottomString)) {
-    rv = DoCommandWithSelectionController(commandName);
+  else if (!nsCRT::strcmp(aCommand,sScrollTopString) ||
+           !nsCRT::strcmp(aCommand,sScrollBottomString) ||
+           !nsCRT::strcmp(aCommand,sScrollPageUpString) ||
+           !nsCRT::strcmp(aCommand,sScrollPageDownString) ||
+           !nsCRT::strcmp(aCommand,sScrollLineUpString) ||
+           !nsCRT::strcmp(aCommand,sScrollLineDownString) ||
+           !nsCRT::strcmp(aCommand,sScrollLeftString) ||
+           !nsCRT::strcmp(aCommand,sScrollRightString) ||
+           !nsCRT::strcmp(aCommand,sSelectCharPreviousString) ||
+           !nsCRT::strcmp(aCommand,sSelectCharNextString) ||
+           !nsCRT::strcmp(aCommand,sWordPreviousString) ||
+           !nsCRT::strcmp(aCommand,sWordNextString) ||
+           !nsCRT::strcmp(aCommand,sSelectWordPreviousString) ||
+           !nsCRT::strcmp(aCommand,sSelectWordNextString) ||
+           !nsCRT::strcmp(aCommand,sBeginLineString) ||
+           !nsCRT::strcmp(aCommand,sEndLineString) ||
+           !nsCRT::strcmp(aCommand,sSelectBeginLineString) ||
+           !nsCRT::strcmp(aCommand,sSelectEndLineString) ||
+           !nsCRT::strcmp(aCommand,sSelectLinePreviousString) ||
+           !nsCRT::strcmp(aCommand,sSelectLineNextString) ||
+           !nsCRT::strcmp(aCommand,sSelectMoveTopString) ||
+           !nsCRT::strcmp(aCommand,sSelectMoveBottomString)) {
+    rv = DoCommandWithSelectionController(aCommand);
     // If the user moves the caret in browse with caret mode
     // Focus whatever they move onto, if it's focusable
     if (mBrowseWithCaret) {
@@ -6135,7 +6128,7 @@ nsDOMWindowController::DoCommand(const nsAString & aCommand)
 }
 
 nsresult
-nsDOMWindowController::DoCommandWithEditInterface(const nsCString& aCommandName)
+nsDOMWindowController::DoCommandWithEditInterface(const char *aCommandName)
 {
   // get edit interface...
   nsCOMPtr<nsIContentViewerEdit> editInterface;
@@ -6146,21 +6139,21 @@ nsDOMWindowController::DoCommandWithEditInterface(const nsCString& aCommandName)
 
   rv = NS_ERROR_FAILURE;
 
-  if (aCommandName.Equals(sCopyString))
+  if (!nsCRT::strcmp(aCommandName,sCopyString))
     rv = editInterface->CopySelection();
-  else if (aCommandName.Equals(sSelectAllString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectAllString))
     rv = editInterface->SelectAll();
-  else if (aCommandName.Equals(sSelectNoneString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectNoneString))
     rv = editInterface->ClearSelection();
-  else if (aCommandName.Equals(sCutString))
+  else if (!nsCRT::strcmp(aCommandName,sCutString))
     rv = editInterface->CutSelection();
-  else if (aCommandName.Equals(sPasteString))
+  else if (!nsCRT::strcmp(aCommandName,sPasteString))
     rv = editInterface->Paste();
-  else if (aCommandName.Equals(sCopyLinkString))
+  else if (!nsCRT::strcmp(aCommandName,sCopyLinkString))
     rv = editInterface->CopyLinkLocation();
-  else if (aCommandName.Equals(sCopyImageLocationString))
+  else if (!nsCRT::strcmp(aCommandName,sCopyImageLocationString))
     rv = editInterface->CopyImageLocation();
-  else if (aCommandName.Equals(sCopyImageContentsString))
+  else if (!nsCRT::strcmp(aCommandName,sCopyImageContentsString))
     rv = editInterface->CopyImageContents();
 
   return rv;
@@ -6168,7 +6161,7 @@ nsDOMWindowController::DoCommandWithEditInterface(const nsCString& aCommandName)
 }
 
 nsresult
-nsDOMWindowController::DoCommandWithSelectionController(const nsCString& aCommandName) {
+nsDOMWindowController::DoCommandWithSelectionController(const char *aCommandName) {
 
   // get selection controller...
   nsCOMPtr<nsISelectionController> selCont;
@@ -6179,51 +6172,51 @@ nsDOMWindowController::DoCommandWithSelectionController(const nsCString& aComman
 
   rv = NS_ERROR_FAILURE;
 
-  if (aCommandName.Equals(sScrollTopString))
+  if (!nsCRT::strcmp(aCommandName,sScrollTopString))
     rv = (mBrowseWithCaret? selCont->CompleteMove(PR_FALSE, PR_FALSE): selCont->CompleteScroll(PR_FALSE));
-  else if (aCommandName.Equals(sScrollBottomString))
+  else if (!nsCRT::strcmp(aCommandName,sScrollBottomString))
     rv = (mBrowseWithCaret? selCont->CompleteMove(PR_TRUE, PR_FALSE): selCont->CompleteScroll(PR_TRUE));
-  else if (aCommandName.Equals(sScrollPageUpString))
+  else if (!nsCRT::strcmp(aCommandName,sScrollPageUpString))
     rv = (mBrowseWithCaret? selCont->PageMove(PR_FALSE, PR_FALSE): selCont->ScrollPage(PR_FALSE));
-  else if (aCommandName.Equals(sScrollPageDownString))
+  else if (!nsCRT::strcmp(aCommandName,sScrollPageDownString))
     rv = (mBrowseWithCaret? selCont->PageMove(PR_TRUE, PR_FALSE): selCont->ScrollPage(PR_TRUE));
-  else if (aCommandName.Equals(sScrollLineUpString))
+  else if (!nsCRT::strcmp(aCommandName,sScrollLineUpString))
     rv = (mBrowseWithCaret? selCont->LineMove(PR_FALSE, PR_FALSE): selCont->ScrollLine(PR_FALSE));
-  else if (aCommandName.Equals(sScrollLineDownString))
+  else if (!nsCRT::strcmp(aCommandName,sScrollLineDownString))
     rv = (mBrowseWithCaret? selCont->LineMove(PR_TRUE, PR_FALSE): selCont->ScrollLine(PR_TRUE));
-  else if (aCommandName.Equals(sScrollLeftString))
+  else if (!nsCRT::strcmp(aCommandName,sScrollLeftString))
     rv = (mBrowseWithCaret? selCont->CharacterMove(PR_FALSE, PR_FALSE): selCont->ScrollHorizontal(PR_TRUE));
-  else if (aCommandName.Equals(sScrollRightString))
+  else if (!nsCRT::strcmp(aCommandName,sScrollRightString))
     rv = (mBrowseWithCaret? selCont->CharacterMove(PR_TRUE, PR_FALSE): selCont->ScrollHorizontal(PR_FALSE));
   // These commands are so the browser can use editor navigation key bindings -
   // Helps with accessibility - aaronl@chorus.net
-  else if (aCommandName.Equals(sSelectCharPreviousString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectCharPreviousString))
     rv = selCont->CharacterMove(PR_FALSE, PR_TRUE);
-  else if (aCommandName.Equals(sSelectCharNextString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectCharNextString))
     rv = selCont->CharacterMove(PR_TRUE, PR_TRUE);
-  else if (aCommandName.Equals(sWordPreviousString))
+  else if (!nsCRT::strcmp(aCommandName,sWordPreviousString))
     rv = selCont->WordMove(PR_FALSE, PR_FALSE);
-  else if (aCommandName.Equals(sWordNextString))
+  else if (!nsCRT::strcmp(aCommandName,sWordNextString))
     rv = selCont->WordMove(PR_TRUE, PR_FALSE);
-  else if (aCommandName.Equals(sSelectWordPreviousString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectWordPreviousString))
     rv = selCont->WordMove(PR_FALSE, PR_TRUE);
-  else if (aCommandName.Equals(sSelectWordNextString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectWordNextString))
     rv = selCont->WordMove(PR_TRUE, PR_TRUE);
-  else if (aCommandName.Equals(sBeginLineString))
+  else if (!nsCRT::strcmp(aCommandName,sBeginLineString))
     rv = selCont->IntraLineMove(PR_FALSE, PR_FALSE);
-  else if (aCommandName.Equals(sEndLineString))
+  else if (!nsCRT::strcmp(aCommandName,sEndLineString))
     rv = selCont->IntraLineMove(PR_TRUE, PR_FALSE);
-  else if (aCommandName.Equals(sSelectBeginLineString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectBeginLineString))
     rv = selCont->IntraLineMove(PR_FALSE, PR_TRUE);
-  else if (aCommandName.Equals(sSelectEndLineString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectEndLineString))
     rv = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
-  else if (aCommandName.Equals(sSelectLinePreviousString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectLinePreviousString))
     rv = selCont->LineMove(PR_FALSE, PR_TRUE);
-  else if (aCommandName.Equals(sSelectLineNextString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectLineNextString))
     rv = selCont->LineMove(PR_TRUE, PR_TRUE);
-  else if (aCommandName.Equals(sSelectMoveTopString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectMoveTopString))
     rv = selCont->CompleteMove(PR_FALSE, PR_TRUE);
-  else if (aCommandName.Equals(sSelectMoveBottomString))
+  else if (!nsCRT::strcmp(aCommandName,sSelectMoveBottomString))
     rv = selCont->CompleteMove(PR_TRUE, PR_TRUE);
 
   return rv;
@@ -6231,7 +6224,7 @@ nsDOMWindowController::DoCommandWithSelectionController(const nsCString& aComman
 }
 
 NS_IMETHODIMP
-nsDOMWindowController::OnEvent(const nsAString & aEventName)
+nsDOMWindowController::OnEvent(const char * aEventName)
 {
   return NS_OK;
 }

@@ -64,7 +64,7 @@ interface nsICommandManager : nsISupports
    * multiple times.
    */
   void        addCommandObserver(in nsIObserver aCommandObserver,
-                                 in DOMString aCommandToObserve);
+                                 in string aCommandToObserve);
 
   /*
    * Stop an observer from observering the specified command. If the observer
@@ -74,19 +74,19 @@ interface nsICommandManager : nsISupports
    * from all commands.
    */
   void        removeCommandObserver(in nsIObserver aCommandObserver,
-                                    in DOMString aCommandObserved);
+                                    in string aCommandObserved);
 
   /*
    * Ask the command manager if the specified command is supported.
    *
    */
-  boolean     isCommandSupported(in DOMString aCommandName);
+  boolean     isCommandSupported(in string aCommandName);
 
   /*
    * Ask the command manager if the specified command is currently.
    * enabled.
    */
-  boolean     isCommandEnabled(in DOMString aCommandName);
+  boolean     isCommandEnabled(in string aCommandName);
   
   /*
    * Get the state of the specified commands.
@@ -97,10 +97,11 @@ interface nsICommandManager : nsISupports
    * and, in return will be set to indicate whether the command is enabled
    * (equivalent to calling isCommandEnabled).
    *
+   * aCommandName is te name of the command that needs the state
    * On output: aCommandParams: values set by the caller filled in with
    * state from the command.
    */
-  void        getCommandState(in nsICommandParams aCommandParams);
+  void        getCommandState(in string aCommandName, in nsICommandParams aCommandParams);
     
   /*
    * Execute the specified command.
@@ -109,7 +110,7 @@ interface nsICommandManager : nsISupports
    * may be null for parameter-less commands.
    *
    */
-  void        doCommand(in nsICommandParams aCommandParams);
+  void        doCommand(in string aCommandName, in nsICommandParams aCommandParams);
 
 };
 

@@ -64,8 +64,8 @@ public:
   NS_DECL_ISUPPORTS
     
   // nsIControllerCommand. Declared longhand so we can make them pure virtual
-  NS_IMETHOD IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval) = 0;
-  NS_IMETHOD DoCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon) = 0;
+  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *_retval) = 0;
+  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandRefCon) = 0;
 
 protected:
 
@@ -256,7 +256,7 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
-  NS_IMETHOD IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval);
+  NS_IMETHOD IsCommandEnabled(const char *aCommandName, nsISupports *aCommandRefCon, PRBool *_retval);
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 

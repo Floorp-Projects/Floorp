@@ -38,45 +38,45 @@
 //------------------------------------------------------------
 //              Editor Command/Parameter Names
 //------------------------------------------------------------
-#define BOLD_COMMAND            NS_LITERAL_STRING("cmd_bold")
-#define ITALIC_COMMAND          NS_LITERAL_STRING("cmd_italic")
-#define UNDERLINE_COMMAND       NS_LITERAL_STRING("cmd_underline")
-#define INDENT_COMMAND          NS_LITERAL_STRING("cmd_indent")
-#define OUTDENT_COMMAND         NS_LITERAL_STRING("cmd_outdent")
-#define FONTCOLOR_COMMAND       NS_LITERAL_STRING("cmd_fontColor")
-#define BACKGROUNDCOLOR_COMMAND NS_LITERAL_STRING("cmd_backgroundColor")
-#define COMMAND_NAME            NS_LITERAL_STRING("cmd_name")
-#define INCREASEFONT_COMMAND    NS_LITERAL_STRING("cmd_increaseFont")
-#define DECREASEFONT_COMMAND    NS_LITERAL_STRING("cmd_decreaseFont")
-#define FONTFACE_COMMAND        NS_LITERAL_STRING("cmd_fontFace")
-#define ALIGN_COMMAND           NS_LITERAL_STRING("cmd_align")
-#define UNDO_COMMAND            NS_LITERAL_STRING("cmd_undo")
-#define REDO_COMMAND            NS_LITERAL_STRING("cmd_redo")
+#define BOLD_COMMAND            "cmd_bold"
+#define ITALIC_COMMAND          "cmd_italic"
+#define UNDERLINE_COMMAND       "cmd_underline"
+#define INDENT_COMMAND          "cmd_indent"
+#define OUTDENT_COMMAND         "cmd_outdent"
+#define FONTCOLOR_COMMAND       "cmd_fontColor"
+#define BACKGROUNDCOLOR_COMMAND "cmd_backgroundColor"
+#define COMMAND_NAME            "cmd_name"
+#define INCREASEFONT_COMMAND    "cmd_increaseFont"
+#define DECREASEFONT_COMMAND    "cmd_decreaseFont"
+#define FONTFACE_COMMAND        "cmd_fontFace"
+#define ALIGN_COMMAND           "cmd_align"
+#define UNDO_COMMAND            "cmd_undo"
+#define REDO_COMMAND            "cmd_redo"
 
 
 //states
-#define STATE_ALL           NS_LITERAL_STRING("state_all")
-#define STATE_MIXED         NS_LITERAL_STRING("state_mixed")
-#define STATE_ATTRIBUTE     NS_LITERAL_STRING("state_attribute")
-#define STATE_ENABLED       NS_LITERAL_STRING("state_enabled")
+#define STATE_ALL           "state_all"
+#define STATE_MIXED         "state_mixed"
+#define STATE_ATTRIBUTE     "state_attribute"
+#define STATE_ENABLED       "state_enabled"
 
 //colors
-#define COLOR_RED       NS_LITERAL_STRING("#FF0000")
-#define COLOR_BLACK     NS_LITERAL_STRING("#000000")
+#define COLOR_RED       "#FF0000"
+#define COLOR_BLACK     "#000000"
 
 //fonts
-#define FONT_ARIAL			NS_LITERAL_STRING("Helvetica, Arial, sans-serif")
-#define FONT_TIMES			NS_LITERAL_STRING("Times New Roman, Times, serif")
-#define FONT_COURIER		NS_LITERAL_STRING("Courier New, Courier, monospace")
+#define FONT_ARIAL			"Helvetica, Arial, sans-serif"
+#define FONT_TIMES			"Times New Roman, Times, serif"
+#define FONT_COURIER		"Courier New, Courier, monospace"
 
 //align
-#define ALIGN_LEFT      NS_LITERAL_STRING("left")
-#define ALIGN_RIGHT     NS_LITERAL_STRING("right")
-#define ALIGN_CENTER    NS_LITERAL_STRING("center")
+#define ALIGN_LEFT      "left"
+#define ALIGN_RIGHT     "right"
+#define ALIGN_CENTER    "center"
 
 
 //value
-#define STATE_EMPTY		NS_LITERAL_STRING("")
+#define STATE_EMPTY		""
 
 IMPLEMENT_DYNAMIC(CEditorFrame, CBrowserFrame)
 
@@ -112,10 +112,10 @@ BEGIN_MESSAGE_MAP(CEditorFrame, CBrowserFrame)
 	ON_COMMAND(ID_ALIGNCENTER, OnAligncenter)
 	ON_UPDATE_COMMAND_UI(ID_ALIGNCENTER, OnUpdateAligncenter)
 	ON_COMMAND(ID_INSERTLINK, OnInsertlink)
-	ON_COMMAND(ID_EDIT_UNDO, OnEditUndo)
-	ON_COMMAND(ID_EDIT_REDO, OnEditRedo)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
+	ON_COMMAND(ID_EDITOR_UNDO, OnEditUndo)
+	ON_COMMAND(ID_EDITOR_REDO, OnEditRedo)
+	ON_UPDATE_COMMAND_UI(ID_EDITOR_REDO, OnUpdateEditRedo)
+	ON_UPDATE_COMMAND_UI(ID_EDITOR_UNDO, OnUpdateEditUndo)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -175,7 +175,7 @@ void CEditorFrame::OnUpdateUnderline(CCmdUI* pCmdUI)
 
 //Called to make a nsICommandParams with the 1 value pair of command name
 NS_METHOD
-CEditorFrame::MakeCommandParams(const nsAString &aCommand,nsICommandParams **aParams)
+CEditorFrame::MakeCommandParams(const char *aCommand,nsICommandParams **aParams)
 {
     nsresult rv;
     nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
@@ -183,7 +183,6 @@ CEditorFrame::MakeCommandParams(const nsAString &aCommand,nsICommandParams **aPa
 		return rv;
 	if (!params)
 		return NS_ERROR_FAILURE;
-    rv = params->SetStringValue(COMMAND_NAME, aCommand);
 	*aParams = params;
 	NS_ADDREF(*aParams);
 	return rv;
@@ -195,31 +194,23 @@ CEditorFrame::MakeCommandParams(const nsAString &aCommand,nsICommandParams **aPa
 // are clicked
 //
 NS_METHOD
-CEditorFrame::ExecuteStyleCommand(const nsAString &aCommand)
+CEditorFrame::ExecuteStyleCommand(const char *aCommand)
 {
-	nsCOMPtr<nsICommandParams> params;
-	nsresult rv = MakeCommandParams(aCommand,getter_AddRefs(params));
-	if (NS_FAILED(rv))
-		return rv;
-	if (!params)
-		return NS_ERROR_FAILURE;
-    params->SetBooleanValue(STATE_ALL, true);
-
-    return DoCommand(params);
+  return DoCommand(aCommand,0);
 }
 
 // Called in response to the UPDATE_COMMAND_UI messages for 
 // style related toolbar buttons(bold, italic etc.)
 // to update their current state
 //
-void CEditorFrame::UpdateStyleToolBarBtn(const nsAString &aCommand, CCmdUI* pCmdUI)
+void CEditorFrame::UpdateStyleToolBarBtn(const char *aCommand, CCmdUI* pCmdUI)
 {
 	nsCOMPtr<nsICommandParams> params;
     nsresult rv;
 	rv = MakeCommandParams(aCommand,getter_AddRefs(params));
 	if (NS_FAILED(rv) || !params)
 		return;
-    rv = GetCommandState(params);
+    rv = GetCommandState(aCommand,params);
     if (NS_SUCCEEDED(rv))
     {
         // Does our current selection span mixed styles?
@@ -258,80 +249,39 @@ CEditorFrame::MakeEditable()
     if (!domWindow)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject = do_QueryInterface(domWindow);
-    if (!scriptGlobalObject)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDocShell> docShell;
-    rv  = scriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
-    if (NS_FAILED(rv))
-        return rv;
-    if (!docShell)
-        return NS_ERROR_FAILURE;
-  
-    nsCOMPtr<nsIEditingSession> editingSession = do_GetInterface(docShell);
+    nsCOMPtr<nsIEditingSession> editingSession = do_GetInterface(m_wndBrowserView.mWebBrowser);
     if (!editingSession)
         return NS_ERROR_FAILURE;
   
     rv= editingSession->MakeWindowEditable(domWindow, PR_TRUE);
-    // this can fail for the root (if it's a frameset), but we still want
-    // to make children editable
   
-    nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
-    docShell->GetDocShellEnumerator( nsIDocShellTreeItem::typeContent,
-                                    nsIDocShell::ENUMERATE_FORWARDS,
-                                    getter_AddRefs(docShellEnumerator));  
-    if (docShellEnumerator)
-    {
-        PRBool hasMore;
-        while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMore)) && hasMore)
-        {
-            nsCOMPtr<nsISupports> curSupports;
-            rv = docShellEnumerator->GetNext(getter_AddRefs(curSupports));
-            if (NS_FAILED(rv)) break;
 
-            nsCOMPtr<nsIDocShell> curShell = do_QueryInterface(curSupports, &rv);
-            if (NS_FAILED(rv)) break;
-
-            nsCOMPtr<nsIDOMWindow> childWindow = do_GetInterface(curShell,&rv);
-            if (childWindow)
-                editingSession->MakeWindowEditable(childWindow, PR_FALSE);
-        }
-    }
-
-    return NS_OK;  
+    return rv;  
 }
 
 NS_METHOD
-CEditorFrame::DoCommand(nsICommandParams *aCommandParams)
+CEditorFrame::DoCommand(const char *aCommand, nsICommandParams *aCommandParams)
 {
-    return mCommandManager ? mCommandManager->DoCommand(aCommandParams) : NS_ERROR_FAILURE;
+    return mCommandManager ? mCommandManager->DoCommand(aCommand, aCommandParams) : NS_ERROR_FAILURE;
 }
 
 NS_METHOD
-CEditorFrame::IsCommandEnabled(const nsAString &aCommand, PRBool *retval)
+CEditorFrame::IsCommandEnabled(const char *aCommand, PRBool *retval)
 {
     return mCommandManager ? mCommandManager->IsCommandEnabled(aCommand, retval) : NS_ERROR_FAILURE;
 }
 
 
 NS_METHOD
-CEditorFrame::GetCommandState(nsICommandParams *aCommandParams)
+CEditorFrame::GetCommandState(const char *aCommand, nsICommandParams *aCommandParams)
 {
-    return mCommandManager ? mCommandManager->GetCommandState(aCommandParams) : NS_ERROR_FAILURE;
+    return mCommandManager ? mCommandManager->GetCommandState(aCommand,aCommandParams) : NS_ERROR_FAILURE;
 }
 
 NS_METHOD
-CEditorFrame::ExecuteNoParam(const nsAString &aCommand)
+CEditorFrame::ExecuteNoParam(const char *aCommand)
 {
-    nsresult rv;
-	nsCOMPtr<nsICommandParams> params;
-	rv = MakeCommandParams(aCommand,getter_AddRefs(params));
-	if (NS_FAILED(rv))
-		return rv;
-	if (!params)
-		return NS_ERROR_FAILURE;
-    return DoCommand(params);
+    return DoCommand(aCommand,0);
 }
 
 void CEditorFrame::OnIndent() 
@@ -359,21 +309,21 @@ void CEditorFrame::OnUpdateOutdent(CCmdUI* pCmdUI)
 }
 
 NS_METHOD
-CEditorFrame::ExecuteAttribParam(const nsAString &aCommand, const nsAString &aAttribute)
+CEditorFrame::ExecuteAttribParam(const char *aCommand, const char *aAttribute)
 {
-    nsresult rv;
-	nsCOMPtr<nsICommandParams> params;
-	rv = MakeCommandParams(aCommand,getter_AddRefs(params));
-	if (NS_FAILED(rv))
-		return rv;
-	if (!params)
-		return NS_ERROR_FAILURE;
-    params->SetStringValue(STATE_ATTRIBUTE, aAttribute);
-    return DoCommand(params);
+  nsresult rv;
+  nsCOMPtr<nsICommandParams> params;
+  rv = MakeCommandParams(aCommand,getter_AddRefs(params));
+  if (NS_FAILED(rv))
+   return rv;
+  if (!params)
+    return NS_ERROR_FAILURE;
+  params->SetCStringValue(STATE_ATTRIBUTE, aAttribute);
+  return DoCommand(aCommand,params);
 }
 
 NS_METHOD
-CEditorFrame::GetAttributeParamValue(const nsAString &aCommand, nsString &aValue)
+CEditorFrame::GetAttributeParamValue(const char *aCommand, nsCString &aValue)
 {
   nsresult rv;
   nsCOMPtr<nsICommandParams> params;
@@ -382,10 +332,13 @@ CEditorFrame::GetAttributeParamValue(const nsAString &aCommand, nsString &aValue
     return rv;
   if (!params)
     return NS_ERROR_FAILURE;
-  rv = GetCommandState(params);
+  rv = GetCommandState(aCommand, params);
   if (NS_SUCCEEDED(rv))
   {
-    return params->GetStringValue(STATE_ATTRIBUTE,aValue);
+    char *tchar;
+    rv = params->GetCStringValue(STATE_ATTRIBUTE,&tchar);
+    aValue.Adopt(tchar);
+    return rv;
   }
   return rv;
 }
@@ -481,12 +434,12 @@ void CEditorFrame::OnAlignleft()
 void CEditorFrame::OnUpdateAlignleft(CCmdUI* pCmdUI) 
 {
 	// TODO: Add your command update UI handler code here
-  nsString tValue;
+  nsCAutoString tValue;
 
   nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
   if (NS_SUCCEEDED(rv))
   {
-    if (tValue == ALIGN_LEFT)
+    if (tValue.Equals(ALIGN_LEFT))
       pCmdUI->SetCheck(1);
     else
       pCmdUI->SetCheck(0);
@@ -504,11 +457,11 @@ void CEditorFrame::OnUpdateAlignright(CCmdUI* pCmdUI)
 {
 	// TODO: Add your command update UI handler code here
 	// TODO: Add your command update UI handler code here
-  nsString tValue;
+  nsCAutoString tValue;
   nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
   if (NS_SUCCEEDED(rv))
   {
-    if (tValue == ALIGN_RIGHT)
+    if (tValue.Equals(ALIGN_RIGHT))
       pCmdUI->SetCheck(1);
     else
       pCmdUI->SetCheck(0);
@@ -526,11 +479,11 @@ void CEditorFrame::OnUpdateAligncenter(CCmdUI* pCmdUI)
 {
  	// TODO: Add your command update UI handler code here
 	// TODO: Add your command update UI handler code here
-  nsString tValue;
+  nsCAutoString tValue;
   nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
   if (NS_SUCCEEDED(rv))
   {
-    if (tValue == ALIGN_CENTER)
+    if (tValue.Equals(ALIGN_CENTER))
       pCmdUI->SetCheck(1);
     else
       pCmdUI->SetCheck(0);
@@ -565,7 +518,7 @@ void CEditorFrame::OnUpdateEditRedo(CCmdUI* pCmdUI)
     return;
   if (!params)
     return;
-  rv = GetCommandState(params);
+  rv = GetCommandState(REDO_COMMAND, params);
   if (NS_SUCCEEDED(rv))
   {
     PRBool tValue;
@@ -589,7 +542,7 @@ void CEditorFrame::OnUpdateEditUndo(CCmdUI* pCmdUI)
     return;
   if (!params)
     return;
-  rv = GetCommandState(params);
+  rv = GetCommandState(UNDO_COMMAND, params);
   if (NS_SUCCEEDED(rv))
   {
     PRBool tValue;

@@ -271,9 +271,9 @@ nsComposerCommandsUpdater::CallUpdateCommands(const nsAString& aCommand)
   nsCOMPtr<nsPICommandUpdater>	commandUpdater = do_QueryInterface(commandManager);
   if (!commandUpdater) return NS_ERROR_FAILURE;
   
-  commandUpdater->CommandStatusChanged(NS_LITERAL_STRING("cmd_bold"));
-  commandUpdater->CommandStatusChanged(NS_LITERAL_STRING("cmd_italic"));
-  commandUpdater->CommandStatusChanged(NS_LITERAL_STRING("cmd_underline"));
+  commandUpdater->CommandStatusChanged("cmd_bold");
+  commandUpdater->CommandStatusChanged("cmd_italic");
+  commandUpdater->CommandStatusChanged("cmd_underline");
   
   return NS_OK;  
 }

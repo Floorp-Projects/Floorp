@@ -59,7 +59,7 @@ public:
   NS_IMETHOD GetPopupNode(nsIDOMNode** aNode)=0;
   NS_IMETHOD SetPopupNode(nsIDOMNode* aNode)=0;
 
-  NS_IMETHOD GetControllerForCommand(const nsAString& aCommand, nsIController** aResult)=0;
+  NS_IMETHOD GetControllerForCommand(const char * aCommand, nsIController** aResult)=0;
   NS_IMETHOD GetControllers(nsIControllers** aResult)=0;
 
   NS_IMETHOD MoveFocus(PRBool aForward, nsIDOMElement* aElt)=0;
