@@ -70,3 +70,17 @@ button.down[disabled="true"], button.down[disabled="true"]:hover:active
 {
 	list-style-image	  : url("chrome://global/skin/scroll-down-disabled.gif");
 }
+
+/**
+ * File icons (32x32 and 16x16)
+ **/
+.file-icon-large
+  {
+    list-style-image      : url("chrome://communicator/skin/content-large.gif");
+  }
+
+.file-icon-small  
+  {
+    list-style-image      : url("chrome://communicator/skin/content-small.gif");
+  }  
+

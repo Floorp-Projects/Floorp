@@ -46,6 +46,8 @@ EXPORT_RESOURCE = \
 		$(srcdir)/search.gif \
 		$(srcdir)/search-active.gif \
 		$(srcdir)/search-hover.gif \
+		$(srcdir)/content-large.gif \
+		$(srcdir)/content-small.gif \
 		$(NULL)
 
 DIRS = bookmarks directory profile regviewer related search sidebar win xpinstall

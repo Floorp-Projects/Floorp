@@ -45,6 +45,8 @@ install::
 	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) search-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) search-active.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) content-large.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) content-small.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 
 clobber::
 	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\*.*
