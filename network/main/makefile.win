@@ -31,74 +31,74 @@ include <$(DEPTH)\config\config.mak>
 # Make sure we have MOZILLA_CLIENT defined so we get the
 #   proper JS includes
 #
-LCFLAGS		= $(LCFLAGS) -DMOZILLA_CLIENT
+LCFLAGS     = $(LCFLAGS) -DMOZILLA_CLIENT
 !ifdef MODULAR_NETLIB
-#LCFLAGS		= $(LCFLAGS) -DNO_NETWORK_POLLING
+#LCFLAGS        = $(LCFLAGS) -DNO_NETWORK_POLLING
 !endif
 
 !ifdef BUILD_DEBUG_GC
-LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
+LCFLAGS     = $(LCFLAGS) -DDEBUG_GC
 !endif
 LLIBS=  \
-	$(NULL)
+    $(NULL)
 MISCDEP=$(LLIBS)
 OBJS=   \
 !ifdef MOZ_MAIL_NEWS
-	.\$(OBJDIR)\mkabook.obj		\
+    .\$(OBJDIR)\mkabook.obj     \
 !endif
-	.\$(OBJDIR)\jsautocf.obj	\
-	.\$(OBJDIR)\jscookie.obj	\
-	.\$(OBJDIR)\mkautocf.obj	\
-	.\$(OBJDIR)\mkconect.obj	\
-	.\$(OBJDIR)\mkfsort.obj		\
-	.\$(OBJDIR)\mkhelp.obj		\
-	.\$(OBJDIR)\mkinit.obj		\
-	.\$(OBJDIR)\mkmessag.obj	\
-	.\$(OBJDIR)\mkpadpac.obj	\
-	.\$(OBJDIR)\mkparse.obj		\
-	.\$(OBJDIR)\mkselect.obj	\
-	.\$(OBJDIR)\mksockrw.obj	\
-	.\$(OBJDIR)\mksort.obj		\
-	.\$(OBJDIR)\mkstream.obj	\
-	.\$(OBJDIR)\mktrace.obj		\
-	.\$(OBJDIR)\mkutils.obj		\
-	.\$(OBJDIR)\prefetch.obj	\
-	.\$(OBJDIR)\mkgeturl.obj	\
-	.\$(OBJDIR)\win-dns.obj		\
-	.\$(OBJDIR)\singsign.obj	\
-	$(NULL)
+    .\$(OBJDIR)\jsautocf.obj    \
+    .\$(OBJDIR)\jscookie.obj    \
+    .\$(OBJDIR)\mkautocf.obj    \
+    .\$(OBJDIR)\mkconect.obj    \
+    .\$(OBJDIR)\mkfsort.obj     \
+    .\$(OBJDIR)\mkhelp.obj      \
+    .\$(OBJDIR)\mkinit.obj      \
+    .\$(OBJDIR)\mkmessag.obj    \
+    .\$(OBJDIR)\mkpadpac.obj    \
+    .\$(OBJDIR)\mkparse.obj     \
+    .\$(OBJDIR)\mkselect.obj    \
+    .\$(OBJDIR)\mksockrw.obj    \
+    .\$(OBJDIR)\mksort.obj      \
+    .\$(OBJDIR)\mkstream.obj    \
+    .\$(OBJDIR)\mktrace.obj     \
+    .\$(OBJDIR)\mkutils.obj     \
+    .\$(OBJDIR)\prefetch.obj    \
+    .\$(OBJDIR)\mkgeturl.obj    \
+    .\$(OBJDIR)\win-dns.obj     \
+    .\$(OBJDIR)\singsign.obj    \
+    $(NULL)
 
 
-CSRCS =	\
-	jsautocf.c	\
-	jscookie.c	\
-	mkabook.cpp	\
-	mkalert.c	\
-	mkautocf.c	\
-	mkconect.c	\
-	mkformat.c	\
-	mkfsort.c	\
-	mkgeturl.c	\
-	singsign.c	\
-	mkhelp.c	\
-	mkinit.c	\
-	mkmessag.c	\
-	mkpadpac.c	\
-	mkparse.c	\
-	mkselect.c	\
-	mksockrw.c	\
-	mksort.c	\
+CSRCS = \
+    jsautocf.c  \
+    jscookie.c  \
+    mkabook.cpp \
+    mkalert.c   \
+    mkautocf.c  \
+    mkconect.c  \
+    mkformat.c  \
+    mkfsort.c   \
+    mkgeturl.c  \
+    singsign.c  \
+    mkhelp.c    \
+    mkinit.c    \
+    mkmessag.c  \
+    mkpadpac.c  \
+    mkparse.c   \
+    mkselect.c  \
+    mksockrw.c  \
+    mksort.c    \
 !ifndef MODULAR_NETLIB
-	mkstream.c	\
+    mkstream.c  \
 !endif
-	mktrace.c	\
-	mkutils.c	\
-	prefetch.c	\
-	$(NULL)
+    mktrace.c   \
+    mkutils.c   \
+    prefetch.c  \
+    $(NULL)
 
 CPPSRCS = \
-	win-dns.cpp	\
-	$(NULL)
+    win-dns.cpp \
+    $(NULL)
 
 MODULE=network 
 
@@ -112,63 +112,64 @@ REQUIRES= foo parse jtools java zlib nspr dbm util network js security mimetype 
 REQUIRES= foo parse jtools java zlib nspr dbm util network js security mimetype ldap imap4url ldapurl net progress 
 !endif
 EXPORTS= mkstream.h \
-	 net_xp_file.h \
+     net_xp_file.h \
      mkprefs.h \
-	 mkparse.h \
-	 mkfsort.h \
-	 mksort.h \
-	 mkgeturl.h \
-	 mkselect.h \
-	 mktcp.h \
-	 netutils.h \
-	 netstream.h \
-	 mkpadpac.h \
-	 mkautocf.h \
-	 mkutils.h \
-	 mktrace.h \
+     mkparse.h \
+     mkfsort.h \
+     mksort.h \
+     mkgeturl.h \
+     mkselect.h \
+     mktcp.h \
+     netutils.h \
+     netstream.h \
+     mkpadpac.h \
+     mkautocf.h \
+     mkutils.h \
+     mktrace.h \
 #ifdef MOZ_MAIL_NEWS
-	 mkldap.h \
+     mkldap.h \
 #endif /* MOZ_MAIL_NEWS */
-	 mkhelp.h \
+     mkhelp.h \
 
 C_OBJS = \
-	$(NULL)
+    $(NULL)
 
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
-LINCS=-I$(PUBLIC)\jtools	\
-    -I$(PUBLIC)\zlib 		\
-    -I$(PUBLIC)\nspr2 		\
-    -I$(PUBLIC)\dbm 		\
-    -I$(PUBLIC)\util		\
-    -I$(PUBLIC)\js 		\
-    -I$(PUBLIC)\parse 		\
-    -I$(PUBLIC)\lay 		\
-    -I$(PUBLIC)\style 		\
-    -I$(PUBLIC)\pref 		\
-    -I$(PUBLIC)\htmldlgs	\
-    -I$(PUBLIC)\java		\
-    -I$(PUBLIC)\libfont		\
-    -I$(PUBLIC)\netcache	\
-    -I$(PUBLIC)\netcnvts	\
-    -I$(PUBLIC)\httpurl		\
-    -I$(PUBLIC)\cnetinit	\
-    -I$(PUBLIC)\mimetype	\
-    -I$(PUBLIC)\network		\
+LINCS=-I$(PUBLIC)\jtools    \
+    -I$(PUBLIC)\zlib        \
+    -I$(PUBLIC)\nspr2       \
+    -I$(PUBLIC)\dbm         \
+    -I$(PUBLIC)\util        \
+    -I$(PUBLIC)\js      \
+    -I$(PUBLIC)\parse       \
+    -I$(PUBLIC)\lay         \
+    -I$(PUBLIC)\style       \
+    -I$(PUBLIC)\pref        \
+    -I$(PUBLIC)\htmldlgs    \
+    -I$(PUBLIC)\java        \
+    -I$(PUBLIC)\libfont     \
+    -I$(PUBLIC)\netcache    \
+    -I$(PUBLIC)\netcnvts    \
+    -I$(PUBLIC)\httpurl     \
+    -I$(PUBLIC)\sockstub    \
+    -I$(PUBLIC)\cnetinit    \
+    -I$(PUBLIC)\mimetype    \
+    -I$(PUBLIC)\network     \
 !ifdef NU_CACHE
-    -I$(PUBLIC)\cache		\
+    -I$(PUBLIC)\cache       \
 !endif
-    -I$(PUBLIC)\ldap		\
-    -I$(PUBLIC)\net		\
-    -I$(PUBLIC)\progress	\
-    -I$(PUBLIC)\ldapurl		\
-    -I$(PUBLIC)\imap4url	\
+    -I$(PUBLIC)\ldap        \
+    -I$(PUBLIC)\net     \
+    -I$(PUBLIC)\progress    \
+    -I$(PUBLIC)\ldapurl     \
+    -I$(PUBLIC)\imap4url    \
     -I$(PUBLIC)\security        \
     -I$(PUBLIC)\nntpurl         \
     -I$(PUBLIC)\certurl         \
     -I$(PUBLIC)\pop3url         \
-    -I$(PUBLIC)\mailbxurl	\
+    -I$(PUBLIC)\mailbxurl   \
     -I$(PUBLIC)\xpcom
 #!endif
 
@@ -179,5 +180,5 @@ libs:: $(LIBRARY)
 
 
 symbols::
-	@echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
-	@echo "LIBRARY          is $(LIBRARY)"
+    @echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
+    @echo "LIBRARY          is $(LIBRARY)"
