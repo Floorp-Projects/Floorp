@@ -43,6 +43,7 @@ LINCS= \
     -I$(XPDIST)\public\pref 	\
 	-I$(XPDIST)\public\raptor   \
 	-I$(XPDIST)\public\appcores \
+	-I$(XPDIST)\public\xpfe\components \
 	-I$(XPDIST)\public\rdf \
 	-I$(XPDIST)\public\wallet \
     $(NULL)
