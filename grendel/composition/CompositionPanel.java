@@ -534,7 +534,10 @@ public class CompositionPanel extends GeneralPanel {
             }
 
             try {
-              mSession.getTransport("smtp").send(msg);       // send the message.
+              Properties props = mSession.getProperties();
+              props.put("mail.host", prefs.getString("mail.identity-" + ident + ".smtphost", "localhost"));
+              Session newSession = Session.getInstance(props,null);
+              newSession.getTransport("smtp").send(msg);       // send the message.
             } catch (MessagingException exc) {
               exc.printStackTrace();
             }
