@@ -107,6 +107,18 @@ NS_LAYOUT PRBool nsIFrameDebug::GetShowFrameBorders()
   return gShowFrameBorders;
 }
 
+static PRBool gShowEventTargetFrameBorder = PR_FALSE;
+
+NS_LAYOUT void nsIFrameDebug::ShowEventTargetFrameBorder(PRBool aEnable)
+{
+  gShowEventTargetFrameBorder = aEnable;
+}
+
+NS_LAYOUT PRBool nsIFrameDebug::GetShowEventTargetFrameBorder()
+{
+  return gShowEventTargetFrameBorder;
+}
+
 /**
  * Note: the log module is created during library initialization which
  * means that you cannot perform logging before then.

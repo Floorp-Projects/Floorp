@@ -477,6 +477,10 @@ protected:
   nsIFrame* mCurrentEventFrame;
   nsIContent* mCurrentEventContent;
   nsVoidArray mCurrentEventFrameStack;
+#ifdef NS_DEBUG
+  nsRect mCurrentTargetRect;
+  nsIView* mCurrentTargetView;
+#endif
   
   nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
@@ -618,6 +622,9 @@ PresShell::PresShell()
   mCurrentEventContent = nsnull;
   mCurrentEventFrame = nsnull;
   EnableScrolling();
+#ifdef NS_DEBUG
+  mCurrentTargetView = nsnull;
+#endif
   mPendingReflowEvent = PR_FALSE;  
   mDocumentIsLoading = PR_TRUE;
   mBatchReflows = PR_FALSE;
@@ -2734,6 +2741,11 @@ PresShell::Paint(nsIView              *aView,
       aRenderingContext.SetColor(NS_RGB(0,0,255));
       aRenderingContext.DrawRect(0, 0, r.width, r.height);
     }
+    // Draw a border around the current event target
+    if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) && (aView == mCurrentTargetView)) {
+      aRenderingContext.SetColor(NS_RGB(128,0,128));
+      aRenderingContext.DrawRect(mCurrentTargetRect.x, mCurrentTargetRect.y, mCurrentTargetRect.width, mCurrentTargetRect.height);
+    }
 #endif
   }
 
@@ -2856,6 +2868,32 @@ PresShell::HandleEvent(nsIView         *aView,
       NS_RELEASE(manager);
       NS_IF_RELEASE(focusContent);
     }
+#ifdef NS_DEBUG
+    if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) && (GetCurrentEventFrame())) {
+      nsIView *oldView = mCurrentTargetView;
+      nsPoint offset(0,0);
+      nsRect oldTargetRect(mCurrentTargetRect);
+      mCurrentEventFrame->GetRect(mCurrentTargetRect);
+      mCurrentEventFrame->GetView(mPresContext, &mCurrentTargetView);
+      if ( ! mCurrentTargetView ) {
+        mCurrentEventFrame->GetOffsetFromView(mPresContext, offset, &mCurrentTargetView);
+      }
+      if (mCurrentTargetView) {
+        mCurrentTargetRect.x = offset.x;
+        mCurrentTargetRect.y = offset.y;
+        // use aView or mCurrentTargetView??
+        if ( (mCurrentTargetRect != oldTargetRect) || (mCurrentTargetView != oldView)) {
+          nsIViewManager *vm;
+          if ((NS_OK == GetViewManager(&vm)) && vm) {
+            vm->UpdateView(mCurrentTargetView,mCurrentTargetRect,0);
+            if (oldView)
+              vm->UpdateView(oldView,oldTargetRect,0);
+            NS_IF_RELEASE(vm);
+          }
+        }
+      }
+    }
+#endif
     PopCurrentEventFrame();
   }
   else {

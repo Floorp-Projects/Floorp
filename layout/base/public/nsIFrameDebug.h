@@ -115,6 +115,10 @@ public:
   static NS_LAYOUT void ShowFrameBorders(PRBool aEnable);
   static NS_LAYOUT PRBool GetShowFrameBorders();
 
+  // Show frame border of event target
+  static NS_LAYOUT void ShowEventTargetFrameBorder(PRBool aEnable);
+  static NS_LAYOUT PRBool GetShowEventTargetFrameBorder();
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

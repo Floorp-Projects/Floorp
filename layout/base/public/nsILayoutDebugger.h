@@ -41,6 +41,10 @@ public:
 
   NS_IMETHOD GetShowFrameBorders(PRBool* aResult) = 0;
 
+  NS_IMETHOD SetShowEventTargetFrameBorder(PRBool aEnable) = 0;
+
+  NS_IMETHOD GetShowEventTargetFrameBorder(PRBool* aResult) = 0;
+
   NS_IMETHOD GetContentSize(nsIDocument* aDocument,
                             PRInt32* aSizeInBytesResult) = 0;
 
