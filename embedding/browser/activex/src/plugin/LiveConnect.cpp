@@ -63,7 +63,7 @@
 void liveconnect_shutdown()
 {
     JRIEnv* env = NPN_GetJavaEnv();
-	if (env) {
+    if (env) {
         unuse_MozAxPlugin(env);
         unuse_netscape_plugin_Plugin(env);
         unuse_java_lang_Error(env);
@@ -75,7 +75,7 @@ void liveconnect_shutdown()
 //        unuse_java_lang_Float(env);
 //        unuse_java_lang_Double(env);
         unuse_java_lang_Character(env);
-	}
+    }
 }
 
 jref liveconnect_getjavaclass()
@@ -96,7 +96,7 @@ jref liveconnect_getjavaclass()
 //        use_java_lang_Float(env);
 //        use_java_lang_Double(env);
         use_java_lang_Character(env);
-	    return myClass;
+        return myClass;
     }
     return NULL;
 }
@@ -128,8 +128,8 @@ _GetIDispatchFromJRI(JRIEnv *env, struct MozAxPlugin* self, IDispatch **pdisp)
     HRESULT hr = pData->pControlSite->GetControlUnknown(&unk);
     if (unk.GetInterfacePtr() == NULL)
     {
-		return E_FAIL; 
-	}
+        return E_FAIL; 
+    }
 
     IDispatchPtr disp = unk;
     if (disp.GetInterfacePtr() == NULL)
@@ -182,7 +182,15 @@ _VariantToJRIObject(JRIEnv *env, VARIANT *v, java_lang_Object **o)
         *o = reinterpret_cast<java_lang_Object *>(j);
         return S_OK;
     }
-/*    else if (v->vt == VT_R8)
+/*  else if (v->vt == VT_R4)
+    {
+        jfloat value = v->fltVal;
+        java_lang_Float *j = java_lang_Float_new(env,
+            class_java_lang_Float(env), value);
+        *o = reinterpret_cast<java_lang_Object *>(j);
+        return S_OK;
+    }
+    else if (v->vt == VT_R8)
     {
         jdouble value = v->dblVal;
         java_lang_Double *j = java_lang_Double_new(env,
@@ -232,7 +240,7 @@ _JRIObjectToVariant(JRIEnv *env, java_lang_Object *o, VARIANT *v)
         v->vt = VT_I4;
         v->lVal = value;
     }
-/*    else if (JRI_IsInstanceOf(env, o, class_java_lang_Double(env)))
+/*  else if (JRI_IsInstanceOf(env, o, class_java_lang_Double(env)))
     {
         jdouble  value = java_lang_Double_doubleValue(env, reinterpret_cast<java_lang_Double *>(o));
         v->vt = VT_R8;
@@ -267,10 +275,10 @@ _JRIObjectToVariant(JRIEnv *env, java_lang_Object *o, VARIANT *v)
 struct java_lang_Object *
 _InvokeFromJRI(JRIEnv *env, struct MozAxPlugin* self, struct java_lang_String *func, int nargs, java_lang_Object *args[])
 {
-	HRESULT hr;
+    HRESULT hr;
     DISPID dispid = 0;
     
-	// call the requested function
+    // call the requested function
     const char* funcName = JRI_GetStringUTFChars(env, func);
 
     IDispatchPtr disp;
@@ -294,7 +302,7 @@ _InvokeFromJRI(JRIEnv *env, struct MozAxPlugin* self, struct java_lang_String *f
 
     USES_CONVERSION;
     OLECHAR FAR* szMember = A2OLE(funcName);
-	hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
     if (FAILED(hr))
     { 
         char error[128];
@@ -327,19 +335,13 @@ _InvokeFromJRI(JRIEnv *env, struct MozAxPlugin* self, struct java_lang_String *f
     java_lang_Object *oResult = NULL;
     _VariantToJRIObject(env, &vResult, &oResult);
 
-	return reinterpret_cast<java_lang_Object *>(oResult);
+    return reinterpret_cast<java_lang_Object *>(oResult);
 }
 
 /*******************************************************************************
  * Native Methods: 
  * These are the native methods which we are implementing.
  ******************************************************************************/
-
-extern "C" JRI_PUBLIC_API(void)
-native_MozAxPlugin_x(JRIEnv* env, struct MozAxPlugin* self, jint a)
-{
-    ::MessageBox(NULL, "x() called", "Result", MB_OK);
-}
 
 /*** private native xinvoke (Ljava/lang/String;)Ljava/lang/Object; ***/
 extern "C" JRI_PUBLIC_API(struct java_lang_Object *)
@@ -454,7 +456,7 @@ native_MozAxPlugin_xgetProperty(JRIEnv* env, struct MozAxPlugin* self, struct ja
     java_lang_Object *oResult = NULL;
     _VariantToJRIObject(env, &vResult, &oResult);
 
-	return oResult;
+    return oResult;
 }
 
 /*** private native xsetProperty2 (Ljava/lang/String;Ljava/lang/Object;)V ***/
