@@ -47,8 +47,13 @@ function onLoad() {
         smtpService =
             Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);;
 
-    wizardContents["smtp.hostname"] = smtpService.defaultServer.hostname;
-    dump("initialized with " + wizardContents["smtp.hostname"] + "\n");
+    try {
+	wizardContents["smtp.hostname"] = smtpService.defaultServer.hostname;
+	dump("initialized with " + wizardContents["smtp.hostname"] + "\n");
+    }
+    catch (ex) {
+	dump("failed to get the smtp hostname\n");
+    }
     init();
 }
 
