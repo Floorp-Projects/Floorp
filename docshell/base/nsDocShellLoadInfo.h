@@ -54,23 +54,24 @@
 class nsDocShellLoadInfo : public nsIDocShellLoadInfo
 {
 public:
-   nsDocShellLoadInfo();
+  nsDocShellLoadInfo();
 
-   NS_DECL_ISUPPORTS
-   NS_DECL_NSIDOCSHELLLOADINFO
-
-protected:
-   virtual ~nsDocShellLoadInfo();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOCSHELLLOADINFO
 
 protected:
-   nsCOMPtr<nsIURI>                 mReferrer;
-   nsCOMPtr<nsISupports>            mOwner;
-   PRBool                           mInheritOwner;
-   nsDocShellInfoLoadType           mLoadType;
-   nsCOMPtr<nsISHEntry>             mSHEntry;
-   nsString                         mTarget;
-   nsCOMPtr<nsIInputStream>         mPostDataStream;
-   nsCOMPtr<nsIInputStream>         mHeadersStream;
+  virtual ~nsDocShellLoadInfo();
+
+protected:
+  nsCOMPtr<nsIURI>                 mReferrer;
+  nsCOMPtr<nsISupports>            mOwner;
+  PRPackedBool                     mInheritOwner;
+  PRPackedBool                     mSendReferrer;
+  nsDocShellInfoLoadType           mLoadType;
+  nsCOMPtr<nsISHEntry>             mSHEntry;
+  nsString                         mTarget;
+  nsCOMPtr<nsIInputStream>         mPostDataStream;
+  nsCOMPtr<nsIInputStream>         mHeadersStream;
 };
 
 #endif /* nsDocShellLoadInfo_h__ */

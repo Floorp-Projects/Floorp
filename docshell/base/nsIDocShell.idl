@@ -114,6 +114,10 @@ interface nsIDocShell : nsISupports
                             in ACString aContentCharset,
                             in nsIDocShellLoadInfo aLoadInfo);
 
+  const long INTERNAL_LOAD_FLAGS_NONE               = 0x0;
+  const long INTERNAL_LOAD_FLAGS_INHERIT_OWNER      = 0x1;
+  const long INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER = 0x2;
+
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except
    * that its parameter list is broken out instead of being packaged inside
@@ -138,7 +142,7 @@ interface nsIDocShell : nsISupports
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aReferrer,
                               in nsISupports aOwner,
-                              in boolean aInheritOwner,
+                              in PRUint32 aFlags,
                               in wstring aWindowTarget,
                               in string aTypeHint,
                               in nsIInputStream aPostDataStream,

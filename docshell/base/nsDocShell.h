@@ -259,6 +259,7 @@ protected:
     void GetCurrentDocumentOwner(nsISupports ** aOwner);
     virtual nsresult DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrer,
+                               PRBool aSendReferrer,
                                nsISupports * aOwner,
                                const char * aTypeHint,
                                nsIInputStream * aPostData,
