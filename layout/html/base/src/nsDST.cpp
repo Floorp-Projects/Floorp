@@ -247,6 +247,31 @@ nsDST::Clear()
   mRoot = 0;
 }
 
+// Enumerate all the nodes in the tree
+void
+nsDST::Enumerate(nsDSTNodeFunctor& aFunctor) const
+{
+  EnumTree(mRoot, aFunctor);
+}
+
+void
+nsDST::EnumTree(LeafNode* aNode, nsDSTNodeFunctor& aFunctor) const
+{
+keepLooping:
+  if (!aNode) {
+    return;
+  }
+
+  // Call the function-like object
+  aFunctor(aNode->Key(), aNode->mValue);
+
+  if (!aNode->IsLeaf()) {
+    EnumTree(((TwoNode*)aNode)->mLeft, aFunctor);
+    aNode = ((TwoNode*)aNode)->mRight;
+    goto keepLooping;    
+  }
+}
+
 // Called by Remove() to destroy a node. Explicitly calls the destructor
 // and then asks the memory arena to free the memory
 inline void

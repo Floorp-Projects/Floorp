@@ -27,6 +27,14 @@
 #endif
 
 /**
+ * Function-like object used when enumerating the nodes of the DST
+ */  
+class nsDSTNodeFunctor {
+public:
+  virtual void operator() (void* aKey, void* aValue) = 0;  // call operator
+};
+
+/**
  * Digital search tree for doing a radix-search of pointer-based keys
  */
 class nsDST {
@@ -42,8 +50,9 @@ public:
 
   void* Search(void* aKey) const;
   void* Insert(void* aKey, void* aValue);  // returns the previous value (or 0)
-  void* Remove(void* aKey);
+  void* Remove(void* aKey);                // returns the current value (or 0)
   void  Clear();
+  void  Enumerate(nsDSTNodeFunctor& aFunctor) const;
 
 #ifdef NS_DEBUG
   void  Dump(FILE*) const;
@@ -83,6 +92,7 @@ private:
   void        DestroyNode(TwoNode* aTwoNode);
   LeafNode*   ConvertToLeafNode(TwoNode** aTwoNode);
   TwoNode*    ConvertToTwoNode(LeafNode** aLeafNode);
+  void        EnumTree(LeafNode* aNode, nsDSTNodeFunctor& aFunctor) const;
 
 #ifdef NS_DEBUG
   // Diagnostic functions
