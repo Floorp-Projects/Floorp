@@ -42,7 +42,27 @@ extern HINSTANCE g_hinst;
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 
+//-------------------------------------------------------------------------
+//
+// Deferred Window positioning
+//
+//-------------------------------------------------------------------------
 
+void nsWindow::BeginResizingChildren(void)
+{
+  if (NULL == mDeferredPositioner)
+    mDeferredPositioner = ::BeginDeferWindowPos(1);
+//printf("begin defer on %x, parent %x\n", mWnd, ::GetParent(mWnd));
+}
+
+void nsWindow::EndResizingChildren(void)
+{
+  if (NULL != mDeferredPositioner) {
+//printf("end defer on %x, parent %x\n", mWnd, ::GetParent(mWnd));
+    ::EndDeferWindowPos(mDeferredPositioner);
+    mDeferredPositioner = NULL;
+  }
+}
 
 // DoCreateTooltip - creates a tooltip control and adds some tools  
 //     to it. 
@@ -313,6 +333,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mIsAltDown     = PR_FALSE;
     mIsDestroying = PR_FALSE;
     mTooltip       = NULL;
+    mDeferredPositioner = NULL;
 }
 
 
@@ -556,6 +577,11 @@ void nsWindow::Destroy()
         return;
     }
 
+    //if we were in the middle deferred window positioning
+    if (mDeferredPositioner) {
+      VERIFY(::EndDeferWindowPos(mDeferredPositioner));
+    }
+
     // destroy the nsWindow 
     if (mWnd) {
         // destroy the nsWindow
@@ -585,7 +611,7 @@ nsIWidget* nsWindow::GetParent(void)
     if (mWnd) {
         HWND parent = ::GetParent(mWnd);
         if (parent) {
-            nsIWidget* widget = (nsIWidget*)::GetWindowLong(mWnd, GWL_USERDATA);
+            widget = (nsIWidget*)((nsWindow *)::GetWindowLong(mWnd, GWL_USERDATA));
             widget->AddRef();
         }
     }
@@ -674,8 +700,23 @@ void nsWindow::Show(PRBool bState)
 void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
     if (mWnd) {
-        VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0, 
-                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
+        nsIWidget *par = GetParent();
+        HDWP      deferrer = NULL;
+
+        if (nsnull != par) {
+          deferrer = ((nsWindow *)par)->mDeferredPositioner;
+          NS_RELEASE(par);
+        }
+
+        if (NULL != deferrer) {
+//printf("move: deferring\n");
+            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, aX, aY, 0, 0,
+                                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
+        }
+        else {
+            VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0, 
+                                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
+        }
     }
 }
 
@@ -687,8 +728,23 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
 {
     if (mWnd) {
-        VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, aHeight, 
-                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE));
+        nsIWidget *par = GetParent();
+        HDWP      deferrer = NULL;
+
+        if (nsnull != par) {
+          deferrer = ((nsWindow *)par)->mDeferredPositioner;
+          NS_RELEASE(par);
+        }
+
+        if (NULL != deferrer) {
+//printf("resize: deferring\n");
+            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, 0, 0, aWidth, aHeight, 
+                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE));
+        }
+        else {
+            VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, aHeight, 
+                                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE));
+        }
     }
 }
 
@@ -701,8 +757,23 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
 void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight)
 {
     if (mWnd) {
-        VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, aHeight, 
-                                SWP_NOZORDER | SWP_NOACTIVATE));
+        nsIWidget *par = GetParent();
+        HDWP      deferrer = NULL;
+
+        if (nsnull != par) {
+          deferrer = ((nsWindow *)par)->mDeferredPositioner;
+          NS_RELEASE(par);
+        }
+
+        if (NULL != deferrer) {
+//printf("resize: deferring\n");
+            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, aX, aY, aWidth, aHeight, 
+                                    SWP_NOZORDER | SWP_NOACTIVATE));
+        }
+        else {
+            VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, aHeight, 
+                                  SWP_NOZORDER | SWP_NOACTIVATE));
+        }
     }
 }
 

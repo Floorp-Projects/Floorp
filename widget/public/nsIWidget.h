@@ -433,6 +433,23 @@ class nsIWidget : public nsISupports {
 
     virtual void ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) = 0;
 
+    /**
+     * When adjustments are to made to a whole set of child widgets, call this
+     * before resizing/positioning the child windows to minimize repaints. Must
+     * be followed by EndResizingChildren() after child windows have been
+     * adjusted.
+     *
+     */
+
+    virtual void BeginResizingChildren(void) = 0;
+
+    /**
+     * Call this when finished adjusting child windows. Must be preceded by
+     * BeginResizingChildren().
+     *
+     */
+
+    virtual void EndResizingChildren(void) = 0;
 };
 
 #endif // nsIWidget_h__
