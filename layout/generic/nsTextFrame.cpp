@@ -1935,11 +1935,14 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
     nsIFrame *nextInFlow;
     nextInFlow = GetNextInFlow();
     if (nextInFlow)
+    {
       return nextInFlow->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
-    else
+    }
+    else if (contentOffset != mContentLength) //that condition was only for when there is a choice
       return NS_ERROR_FAILURE;
   }
-  else if (inContentOffset < mContentOffset) //could happen with floaters!
+
+  if (inContentOffset < mContentOffset) //could happen with floaters!
   {
     result = GetPrevInFlow(outChildFrame);
     if (NS_SUCCEEDED(result))
