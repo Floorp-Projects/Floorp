@@ -39,6 +39,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMScreen.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
@@ -675,86 +676,129 @@ void nsXULWindow::OnChromeLoaded()
 NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition, 
    PRBool aSize)
 {
-   nsCOMPtr<nsIDOMElement> docShellElement;
-   GetWindowDOMElement(getter_AddRefs(docShellElement));
-   NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
+  nsresult rv;
+  
+  nsCOMPtr<nsIDOMElement> windowElement;
+  GetWindowDOMElement(getter_AddRefs(windowElement));
+  NS_ASSERTION(windowElement, "no xul:window");
+  if (!windowElement)
+    return NS_ERROR_FAILURE;
 
-   PRInt32 curX = 0;
-   PRInt32 curY = 0;
-   PRInt32 curCX = 0;
-   PRInt32 curCY = 0;
+  PRInt32 currX = 0;
+  PRInt32 currY = 0;
+  PRInt32 currWidth = 0;
+  PRInt32 currHeight = 0;
 
-   GetPositionAndSize(&curX, &curY, &curCX, &curCY);
+  GetPositionAndSize(&currX, &currY, &currWidth, &currHeight);
 
-   PRInt32 errorCode;
-   PRInt32 temp;
+  PRInt32 errorCode;
+  PRInt32 temp;
 
-   if(aPosition)
-      {
-      PRInt32 specX = curX;
-      PRInt32 specY = curY;
-      nsAutoString sizeString;
+  // Obtain the position and sizing information from the <xul:window> element.
+  PRInt32 specX = currX;
+  PRInt32 specY = currY;
+  PRInt32 specWidth = currWidth;
+  PRInt32 specHeight = currHeight;
+  nsAutoString sizeString;
 
-      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("screenX"), sizeString)))
-         {
-         temp = sizeString.ToInteger(&errorCode);
-         if(NS_SUCCEEDED(errorCode) && temp > 0)
-            specX = temp;
-         }
-      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("screenY"), sizeString)))
-         {
-         temp = sizeString.ToInteger(&errorCode);
-         if(NS_SUCCEEDED(errorCode) && temp > 0)
-            specY = temp;
-         }
+  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenX"), sizeString);
+  if (NS_SUCCEEDED(rv)) {
+    temp = sizeString.ToInteger(&errorCode);
+    if (NS_SUCCEEDED(errorCode) && temp > 0)
+      specX = temp;
+  }
 
-      mWindow->ConstrainPosition(&specX, &specY);
-      if((specX != curX) || (specY != curY))
-         SetPosition(specX, specY);
+  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenY"), sizeString);
+  if (NS_SUCCEEDED(rv)) {
+    temp = sizeString.ToInteger(&errorCode);
+    if (NS_SUCCEEDED(errorCode) && temp > 0)
+      specY = temp;
+  }
+    
+  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("width"), sizeString);
+  if (NS_SUCCEEDED(rv)) {
+    temp = sizeString.ToInteger(&errorCode);
+    if (NS_SUCCEEDED(errorCode) && temp > 0) {
+      specWidth = temp;
+      mIntrinsicallySized = PR_FALSE;
+    }
+  }
+  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("height"), sizeString);
+  if (NS_SUCCEEDED(rv)) {
+    temp = sizeString.ToInteger(&errorCode);
+    if (NS_SUCCEEDED(errorCode) && temp > 0) {
+      specHeight = temp;
+      mIntrinsicallySized = PR_FALSE;
+    }
+  }
+
+  // Now look for any other windows of this type, and if they exist, offset
+  // from them.
+  nsCOMPtr<nsIWindowMediator> wm(do_GetService("@mozilla.org/rdf/datasource;1?name=window-mediator", &rv));
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoString windowType;
+    rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("windowtype"), windowType);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIDOMWindowInternal> domWindow;
+      PRUnichar* wtype = windowType.ToNewUnicode();
+      wm->GetMostRecentWindow(wtype, getter_AddRefs(domWindow));
+      nsMemory::Free(wtype);
+      if (domWindow) {
+        // Get the screen dimensions
+        PRInt32 screenLeft;
+        PRInt32 screenTop;
+        PRInt32 screenWidth;
+        PRInt32 screenHeight;
+        PRInt32 screenRight;
+        PRInt32 screenBottom;
+        nsCOMPtr<nsIDOMScreen> screen;
+        domWindow->GetScreen(getter_AddRefs(screen));
+        screen->GetAvailLeft(&screenLeft);
+        screen->GetAvailTop(&screenTop);
+        screen->GetAvailWidth(&screenWidth);
+        screen->GetAvailHeight(&screenHeight);
+        screenRight = screenLeft + screenWidth;
+        screenBottom = screenTop + screenHeight;
+
+        // Adjust the location for the offset.
+        const PRInt32 kOffset = 22; // XXX traditionally different for mac.
+        specX += kOffset;
+        specY += kOffset;
+
+        // Sanity check. 
+        if ((specX + specWidth) > screenRight)
+          specX = 0;
+        if ((specY + specHeight) > screenHeight)
+          specY = 0;
       }
+    }
+  }
 
-   if(aSize)
-      {
-      PRInt32 specCX = curCX;
-      PRInt32 specCY = curCY;
-      nsAutoString sizeString;
+  // Now set position and size.
+  if (aSize) {
+    if (specWidth != currWidth || specHeight != currHeight)
+      SetSize(specWidth, specHeight, PR_FALSE);
+  }
 
-      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("width"), sizeString)))
-         {
-         temp = sizeString.ToInteger(&errorCode);
-         if(NS_SUCCEEDED(errorCode) && temp > 0)
-            {
-            specCX = temp;
-            mIntrinsicallySized = PR_FALSE;
-            }
-         }
-      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("height"), sizeString)))
-         {
-         temp = sizeString.ToInteger(&errorCode);
-         if(NS_SUCCEEDED(errorCode) && temp > 0)
-            {
-            specCY = temp;
-            mIntrinsicallySized = PR_FALSE;
-            }
-         }
+  if (aPosition) {
+    mWindow->ConstrainPosition(&specX, &specY);
+    if (specX != currX || specY != currY)
+      SetPosition(specX, specY);
 
-      if((specCX != curCX) || (specCY != curCY))
-         SetSize(specCX, specCY, PR_FALSE);
+    rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("sizemode"), sizeString);
+    if (NS_SUCCEEDED(rv)) {
+      mSizeMode = nsSizeMode_Normal;
+      /* ignore request to minimize, to not confuse novices
+      if (sizeString.Equals(SIZEMODE_MINIMIZED))
+        mSizeMode = nsSizeMode_Minimized;
+      */
+      if (sizeString.Equals(SIZEMODE_MAXIMIZED))
+        mSizeMode = nsSizeMode_Maximized;
+      // defer telling the widget until we're visible
+    }
+  }
 
-      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("sizemode"), sizeString)))
-         {
-         mSizeMode = nsSizeMode_Normal;
-         /* ignore request to minimize, to not confuse novices
-         if (sizeString.Equals(SIZEMODE_MINIMIZED))
-            mSizeMode = nsSizeMode_Minimized;
-         */
-         if (sizeString.Equals(SIZEMODE_MAXIMIZED))
-            mSizeMode = nsSizeMode_Maximized;
-         // defer telling the widget until we're visible
-         }
-      }
-
-   return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
