@@ -1344,14 +1344,14 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
   if (mEditor && PR_TRUE==IsInitialized()) 
   {
     nsAutoString currentValue;
-    nsString format ("text/plain");
+    nsAutoString format ("text/plain");
     nsresult result = mEditor->OutputToString(currentValue, format, 0);
     if (PR_TRUE==IsSingleLineTextControl()) {
       RemoveNewlines(currentValue); 
     }
     else {
       // \r is an illegal character in the dom, so get rid of them:
-      RemoveReturns(currentValue);
+      nsFormControlHelper::PlatformToDOMLineBreaks(currentValue);
     }
     if (PR_FALSE==currentValue.Equals(aValue))  // this is necessary to avoid infinite recursion
     {
@@ -3161,20 +3161,12 @@ nsresult nsGfxTextControlFrame::UpdateTextControlCommands(const nsString& aComma
   return domWindow->UpdateCommands(aCommand);
 }
 
-
 void nsGfxTextControlFrame::RemoveNewlines(nsString &aString)
 {
-  // strip CR/LF
+  // strip CR/LF and null
   static const char badChars[] = {10, 13, 0};
   aString.StripChars(badChars);
 }
-
-void nsGfxTextControlFrame::RemoveReturns(nsString &aString)
-{
-  // strip just CR
-  aString.StripChar('\r');
-}
-
 
 NS_IMETHODIMP
 nsGfxTextControlFrame::GetAdditionalChildListName(PRInt32 aIndex,

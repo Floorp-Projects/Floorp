@@ -109,6 +109,15 @@ void nsFormControlHelper::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame 
   
 }
 
+void nsFormControlHelper::PlatformToDOMLineBreaks(nsString &aString)
+{
+  // Windows linebreaks: Map CRLF to LF:
+  aString.ReplaceSubstring("\r\n", "\n");
+
+  // Mac linebreaks: Map any remaining CR to LF:
+  aString.ReplaceSubstring("\r", "\n");
+}
+
 PRBool nsFormControlHelper::GetBool(const nsString& aValue)
 {
   if (aValue.Equals(NS_STRING_TRUE))
