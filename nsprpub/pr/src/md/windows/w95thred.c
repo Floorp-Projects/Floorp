@@ -38,13 +38,15 @@
 extern void _PR_Win32InitTimeZone(void);  /* defined in ntmisc.c */
 
 /* --- globals ------------------------------------------------ */
-BOOL _pr_use_static_tls = TRUE;
+#ifdef _PR_USE_STATIC_TLS
 __declspec(thread) struct PRThread  *_pr_thread_last_run;
 __declspec(thread) struct PRThread  *_pr_currentThread;
 __declspec(thread) struct _PRCPU    *_pr_currentCPU;
+#else
 DWORD _pr_currentThreadIndex;
 DWORD _pr_lastThreadIndex;
 DWORD _pr_currentCPUIndex;
+#endif
 int                           _pr_intsOff = 0; 
 _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
 
@@ -53,11 +55,11 @@ _PR_MD_EARLY_INIT()
 {
     _PR_Win32InitTimeZone();
 
-    if (!_pr_use_static_tls) {
-        _pr_currentThreadIndex = TlsAlloc();
-        _pr_lastThreadIndex = TlsAlloc();
-        _pr_currentCPUIndex = TlsAlloc();
-    }
+#ifndef _PR_USE_STATIC_TLS
+    _pr_currentThreadIndex = TlsAlloc();
+    _pr_lastThreadIndex = TlsAlloc();
+    _pr_currentCPUIndex = TlsAlloc();
+#endif
 }
 
 void _PR_MD_CLEANUP_BEFORE_EXIT(void)
@@ -66,11 +68,11 @@ void _PR_MD_CLEANUP_BEFORE_EXIT(void)
 
     WSACleanup();
 
-    if (!_pr_use_static_tls) {
-        TlsFree(_pr_currentThreadIndex);
-        TlsFree(_pr_lastThreadIndex);
-        TlsFree(_pr_currentCPUIndex);
-    }
+#ifndef _PR_USE_STATIC_TLS
+    TlsFree(_pr_currentThreadIndex);
+    TlsFree(_pr_lastThreadIndex);
+    TlsFree(_pr_currentCPUIndex);
+#endif
 }
 
 PRStatus

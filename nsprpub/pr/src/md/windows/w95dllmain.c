@@ -36,19 +36,11 @@
  * The DLL entry point (DllMain) for NSPR.
  *
  * This is used to detach threads that were automatically attached by
- * nspr and to find out whether the NSPR DLL is statically or
- * dynamically loaded.  When dynamically loaded, we cannot use static
- * thread-local storage.  However, static TLS is faster than the
- * TlsXXX() functions.  So we want to use static TLS whenever we can.
- * A global variable _pr_use_static_tls is set in DllMain() during
- * process attachment to indicate whether it is safe to use static
- * TLS or not.
+ * nspr.
  */
 
 #include <windows.h>
 #include <primpl.h>
-
-extern BOOL _pr_use_static_tls;  /* defined in w95thred.c */
 
 BOOL WINAPI DllMain(
     HINSTANCE hinstDLL,
@@ -59,15 +51,6 @@ PRThread *me;
 
     switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
-            /*
-             * If lpvReserved is NULL, we are dynamically loaded
-             * and therefore can't use static thread-local storage.
-             */
-            if (lpvReserved == NULL) {
-                _pr_use_static_tls = FALSE;
-            } else {
-                _pr_use_static_tls = TRUE;
-            }
             break;
         case DLL_THREAD_ATTACH:
             break;
