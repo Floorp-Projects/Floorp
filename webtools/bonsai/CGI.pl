@@ -150,7 +150,7 @@ sub PutsTrailer {
 
      if ($maintainer) {
           $email = "<br>" . ConstructMailTo($maintainer, "Bonsai Comments");
-          $email .= "with comments/questions about this page.\n";
+          $email .= " with comments/questions about this page.\n";
      }
 
      print "
