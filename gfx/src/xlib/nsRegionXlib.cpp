@@ -89,7 +89,7 @@ nsRegionXlib::Intersect(const nsIRegion &aRegion)
 {
   nsRegionXlib * pRegion = (nsRegionXlib *)&aRegion;
   
-  Region nRegion;
+  Region nRegion = XCreateRegion();
   ::XIntersectRegion(mRegion, pRegion->mRegion, nRegion);
   ::XDestroyRegion(mRegion);
   mRegion = nRegion;
@@ -100,7 +100,7 @@ nsRegionXlib::Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
   
-  Region nRegion;
+  Region nRegion = XCreateRegion();
 
   ::XIntersectRegion(mRegion, tRegion, nRegion);
   ::XDestroyRegion(tRegion);
@@ -113,7 +113,7 @@ nsRegionXlib::Union(const nsIRegion &aRegion)
 {
    nsRegionXlib * pRegion = (nsRegionXlib *)&aRegion;
  
-   Region nRegion;
+   Region nRegion = XCreateRegion();
    ::XUnionRegion(mRegion, pRegion->mRegion, nRegion);
    ::XDestroyRegion(mRegion);
    mRegion = nRegion;
@@ -124,7 +124,7 @@ nsRegionXlib::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
  
-  Region nRegion;
+  Region nRegion = XCreateRegion();
   ::XUnionRegion(mRegion, tRegion, nRegion);
   ::XDestroyRegion(mRegion);
   ::XDestroyRegion(tRegion);
@@ -136,7 +136,7 @@ nsRegionXlib::Subtract(const nsIRegion &aRegion)
 {
   nsRegionXlib * pRegion = (nsRegionXlib *)&aRegion;
   
-  Region nRegion;
+  Region nRegion = XCreateRegion();
   ::XSubtractRegion(mRegion, pRegion->mRegion, nRegion);
   ::XDestroyRegion(mRegion);
   mRegion = nRegion;
@@ -147,7 +147,7 @@ nsRegionXlib::Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
   
-  Region nRegion;
+  Region nRegion = XCreateRegion();
   ::XSubtractRegion(mRegion, tRegion, nRegion);
   ::XDestroyRegion(mRegion);
   ::XDestroyRegion(tRegion);
@@ -301,10 +301,8 @@ nsRegionXlib::CreateRectRegion(PRInt32 aX,
   r.width = aWidth;
   r.height = aHeight;
   
-  Region rRegion;
-  ::XUnionRectWithRegion(&r, tRegion, rRegion);
-  ::XDestroyRegion(tRegion);
+  ::XUnionRectWithRegion(&r, tRegion, tRegion);
 
-  return (rRegion);
+  return (tRegion);
 } 
 
