@@ -79,6 +79,11 @@ var nsSearchResultsController =
             if (GetNumSelectedMessages() != 1)
               enabled = false;
             break;
+          case "button_delete":
+            // this assumes that advanced searches don't cross accounts
+            if (GetNumSelectedMessages() <= 0 || isNewsURI(gSearchView.getURIForViewIndex(0)))
+              enabled = false;
+            break;
           default:
             if (GetNumSelectedMessages() <= 0)
               enabled = false;
