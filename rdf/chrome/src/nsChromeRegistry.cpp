@@ -478,12 +478,10 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFD
   overlayFile += "overlays.rdf";
 
   nsStringKey skey(overlayFile);
-  void *data = mDataSourceTable->Get(&skey);
-  if (data)
+  nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, mDataSourceTable->Get(&skey)));
+  if (supports)
   {
-    nsCOMPtr<nsIRDFDataSource> dataSource;
-    nsISupports *supports = NS_STATIC_CAST(nsISupports*, data);
-    dataSource = do_QueryInterface(supports, &rv);
+    nsCOMPtr<nsIRDFDataSource> dataSource = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv))
     {
       *aResult = dataSource;
@@ -600,13 +598,10 @@ nsChromeRegistry::InitializeDataSource(nsString &aPackage,
     {
       // current.rdf and overlays.rdf are loaded in pairs and so if one is loaded, the other should be too.
       nsStringKey skey(chromeFile);
-      void *data = mDataSourceTable->Get(&skey);
-      if (data)
+      nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, mDataSourceTable->Get(&skey)));
+      if (supports)
       {
-        nsCOMPtr<nsIRDFDataSource> dataSource;
-        nsISupports *supports = NS_STATIC_CAST(nsISupports*, data);
-        
-        dataSource = do_QueryInterface(supports);
+        nsCOMPtr<nsIRDFDataSource> dataSource = do_QueryInterface(supports);
         if (dataSource)
         {
           *aResult = dataSource;
