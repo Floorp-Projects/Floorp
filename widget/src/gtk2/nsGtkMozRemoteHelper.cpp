@@ -27,6 +27,7 @@
 #include <nsIServiceManager.h>
 #include <prprf.h>
 #include <prenv.h>
+#include <nsCRT.h>
 #include "nsGtkMozRemoteHelper.h"
 
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
