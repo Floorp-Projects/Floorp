@@ -131,5 +131,5 @@ include $(topsrcdir)/config/rules.mk
 DEFINES     += -D_IMPL_NS_GFX
 
 install:: icon_0.gif icon_1.gif
-    $(INSTALL) -m 555 $^ $(DIST)/bin/res/gfx
+	$(INSTALL) -m 555 $^ $(DIST)/bin/res/gfx
 
