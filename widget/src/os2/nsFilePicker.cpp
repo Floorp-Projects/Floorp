@@ -600,8 +600,6 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
    switch ( msg ) {
       case WM_INITDLG:
          {
-         SWP swpDlgOrig;
-         SWP swpDlgNew;
          SWP swpFileST;
          SWP swpDirST;
          SWP swpDirLB;
@@ -617,6 +615,16 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          HWND hwndDriveCB;
          HWND hwndOK;
          HWND hwndCancel;
+         HENUM henum;
+         HWND hwndNext;
+         ULONG ulCurY, ulCurX;
+         LONG lScreenX, lScreenY, lDlgFrameX, lDlgFrameY, lTitleBarY;
+
+         lScreenX = WinQuerySysValue(HWND_DESKTOP, SV_CXSCREEN);
+         lScreenY = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN);
+         lDlgFrameX = WinQuerySysValue(HWND_DESKTOP, SV_CXDLGFRAME);
+         lDlgFrameY = WinQuerySysValue(HWND_DESKTOP, SV_CYDLGFRAME);
+         lTitleBarY = WinQuerySysValue(HWND_DESKTOP, SV_CYTITLEBAR);
 
          hwndFileST = WinWindowFromID(hwndDlg, DID_FILENAME_TXT);
          hwndDirST = WinWindowFromID(hwndDlg, DID_DIRECTORY_TXT);
@@ -626,68 +634,117 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          hwndOK = WinWindowFromID(hwndDlg, DID_OK);
          hwndCancel = WinWindowFromID(hwndDlg, DID_CANCEL);
          
+#define SPACING 10
          // Reposition drives combobox
+         ulCurY = SPACING;
+         ulCurX = SPACING + lDlgFrameX;
          WinQueryWindowPos(hwndOK, &swpOK);
+         WinSetWindowPos(hwndOK, 0, ulCurX, ulCurY, 0, 0, SWP_MOVE);
+         ulCurY += swpOK.cy + SPACING;
          WinQueryWindowPos(hwndCancel, &swpCancel);
+         WinSetWindowPos(hwndCancel, 0, ulCurX+swpOK.cx+10, SPACING, 0, 0, SWP_MOVE);
+         WinQueryWindowPos(hwndDirLB, &swpDirLB);
+         WinSetWindowPos(hwndDirLB, 0, ulCurX, ulCurY, swpDirLB.cx, swpDirLB.cy, SWP_MOVE | SWP_SIZE);
+         ulCurY += swpDirLB.cy + SPACING;
+         WinQueryWindowPos(hwndDirST, &swpDirST);
+         WinSetWindowPos(hwndDirST, 0, ulCurX, ulCurY, swpDirST.cx, swpDirST.cy, SWP_MOVE | SWP_SIZE);
+         ulCurY += swpDirST.cy + SPACING;
          WinQueryWindowPos(hwndDriveCB, &swpDriveCB);
          WinQueryWindowPos(WinWindowFromID(hwndDriveCB, CBID_EDIT), &swpDriveCBEF);
-         WinSetWindowPos(hwndDriveCB, 0, swpDriveCB.x,
-                                         swpOK.y+swpOK.cy+swpDriveCBEF.cy-swpDriveCB.cy+20,
-                                         swpCancel.x+swpCancel.cx-swpOK.x, swpDriveCB.cy, SWP_MOVE | SWP_SIZE);
-
-         // Reposition drives text
-         WinQueryWindowPos(hwndDriveCB, &swpDriveCB);
+         WinSetWindowPos(hwndDriveCB, 0, ulCurX, ulCurY-(swpDriveCB.cy-swpDriveCBEF.cy)+5,
+                                         swpDirLB.cx,
+                                         swpDriveCB.cy,
+                                         SWP_SIZE | SWP_MOVE);
+         ulCurY += swpDriveCBEF.cy + SPACING;
          WinQueryWindowPos(hwndDriveST, &swpDriveST);
-         WinSetWindowPos(hwndDriveST, 0, swpDriveST.x, swpDriveCB.y+swpDriveCB.cy+5,
-                                         swpDriveST.cx*2, swpDriveST.cy, SWP_MOVE | SWP_SIZE);
-
-         // Reposition directories listbox 
-         WinQueryWindowPos(hwndDriveST, &swpDriveST);
-         WinQueryWindowPos(hwndDirLB, &swpDirLB);
-         WinSetWindowPos(hwndDirLB, 0, swpDirLB.x, swpDriveST.y+swpDriveST.cy+10,
-                                       swpDirLB.cx*2, swpDirLB.cy, SWP_MOVE | SWP_SIZE);
-
-         // Reposition file text
-         WinQueryWindowPos(hwndDirLB, &swpDirLB);
+         WinSetWindowPos(hwndDriveST, 0, ulCurX, ulCurY, swpDriveST.cx, swpDriveST.cy, SWP_MOVE | SWP_SIZE);
+         ulCurY += swpDriveST.cy + SPACING;
          WinQueryWindowPos(hwndFileST, &swpFileST);
-         WinSetWindowPos(hwndFileST, 0, swpFileST.x, swpDirLB.y+swpDirLB.cy+5,
-                                        swpFileST.cx*2, swpFileST.cy, SWP_MOVE | SWP_SIZE);
-
-         // Begin repositioning dialog
-         WinQueryWindowPos(hwndDlg, &swpDlgOrig);
-         swpDlgNew = swpDlgOrig;
-         swpDlgNew.cy -= swpFileST.y;
-
-         // Reposition directory text
-         WinQueryWindowPos(hwndFileST, &swpFileST);
-         WinQueryWindowPos(hwndDirST, &swpDirST);
-         WinSetWindowPos(hwndDirST, 0, swpDirST.x, swpFileST.y+swpFileST.cy+5,
-                                       swpDirST.cx*2, swpDirST.cy, SWP_MOVE | SWP_SIZE);
-
-         // Size main dialog
-         swpDlgNew.cy += (swpFileST.y+swpFileST.cy+5);
-         swpDlgNew.cx = (swpDirLB.x*2)+swpDirLB.cx;
-         swpDlgNew.x += (swpDlgOrig.cx-swpDlgNew.cx)/2;
-         swpDlgNew.y += (swpDlgOrig.cy-swpDlgNew.cy)/2;
-         WinSetWindowPos(hwndDlg, 0, swpDlgNew.x, swpDlgNew.y,
-                                     swpDlgNew.cx, swpDlgNew.cy,
-                                     SWP_SIZE | SWP_MOVE);
+         WinSetWindowPos(hwndFileST, 0, ulCurX, ulCurY, swpFileST.cx, swpFileST.cy, SWP_MOVE | SWP_SIZE);
+         ulCurY += swpFileST.cy + SPACING;
 
          // Hide unused stuff
-         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILES_LB), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILES_TXT), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILTER_CB), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILTER_TXT), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg, DID_FILENAME_ED), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg, 0x503D), FALSE);
+         henum = WinBeginEnumWindows(hwndDlg);
+         while ((hwndNext = WinGetNextWindow(henum)) != NULLHANDLE)
+         {
+           USHORT usID = WinQueryWindowUShort(hwndNext, QWS_ID);
+           if (usID != DID_FILENAME_TXT &&
+               usID != DID_DIRECTORY_TXT &&
+               usID != DID_DIRECTORY_LB &&
+               usID != DID_DRIVE_TXT &&
+               usID != DID_DRIVE_CB &&
+               usID != DID_OK &&
+               usID != DID_CANCEL &&
+               usID != FID_TITLEBAR &&
+               usID != FID_SYSMENU &&
+               usID != FID_MINMAX) 
+           {
+             WinShowWindow(hwndNext, FALSE);
+           }
+         }
+
+         WinSetWindowPos(hwndDlg,
+                         HWND_TOP,
+                         (lScreenX/2)-((swpDirLB.cx+2*SPACING+2*lDlgFrameX)/2),
+                         (lScreenY/2)-((ulCurY+2*lDlgFrameY+lTitleBarY)/2),
+                         swpDirLB.cx+2*SPACING+2*lDlgFrameX,
+                         ulCurY+2*lDlgFrameY+lTitleBarY,
+                         SWP_MOVE | SWP_SIZE);
          }
          break;
       case WM_CONTROL:
          {
          PFILEDLG pfiledlg;
-
          pfiledlg = (PFILEDLG)WinQueryWindowPtr(hwndDlg, QWL_USER);
-         WinSetWindowText(WinWindowFromID(hwndDlg,DID_FILENAME_TXT), pfiledlg->szFullFile);
+
+         HPS           hps;
+         SWP           swp;
+         HWND          hwndST;
+         RECTL         rectlString = {0,0,1000,1000};
+         char          *ptr = NULL;
+         int           iHalfLen;
+         int           iLength;
+         CHAR          szString[CCHMAXPATH];
+
+         hwndST = WinWindowFromID(hwndDlg, DID_FILENAME_TXT);
+       
+         strcpy(szString, pfiledlg->szFullFile);
+         iLength = strlen(pfiledlg->szFullFile);
+         /* If we are not just a drive */
+         if (iLength > 3) {
+           if (szString[iLength-1] == '\\') {
+             szString[iLength-1] = '\0';
+             iLength--;
+           }
+         }
+       
+         hps = WinGetPS(hwndST);
+         WinQueryWindowPos(hwndST, &swp);
+       
+         WinDrawText(hps, iLength, szString,
+                          &rectlString, 0, 0, 
+                          DT_BOTTOM | DT_QUERYEXTENT | DT_TEXTATTRS);
+         while(rectlString.xRight > swp.cx)
+         {
+           iHalfLen = iLength / 2;
+           if(iHalfLen == 2)
+             break;
+       
+           ptr = szString + iHalfLen;
+           memmove(ptr - 1, ptr, strlen(ptr) + 1);
+           szString[iHalfLen - 2] = '.';
+           szString[iHalfLen - 1] = '.';
+           szString[iHalfLen]     = '.';
+           iLength = strlen(szString);
+           rectlString.xLeft = rectlString.yBottom = 0;
+           rectlString.xRight = rectlString.yTop = 1000;
+           WinDrawText(hps, iLength, szString,
+                       &rectlString, 0, 0, 
+                       DT_BOTTOM | DT_QUERYEXTENT | DT_TEXTATTRS);
+         }
+       
+         WinReleasePS(hps);
+         WinSetWindowText(hwndST, szString);
          }
          break;
    }      
