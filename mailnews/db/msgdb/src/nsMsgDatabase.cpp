@@ -211,7 +211,7 @@ int nsMsgDatabase::FindInCache(nsMsgDatabase* pMessageDB)
 PRBool nsMsgDatabase::MatchDbName(nsFilePath &dbName)	// returns PR_TRUE if they match
 {
 	// ### we need equality operators for nsFileSpec...
-	return strcmp(dbName, m_dbName); 
+	return !strcmp(dbName, m_dbName); 
 }
 
 //----------------------------------------------------------------------
@@ -275,12 +275,9 @@ nsrefcnt nsMsgDatabase::AddRef(void)
 nsrefcnt nsMsgDatabase::Release(void)
 {
 	NS_PRECONDITION(0 != mRefCnt, "dup release");
-	if (--mRefCnt == 0) 
-	{
-		delete this;
-		return 0;
-	}
-	return mRefCnt;
+	PRInt32 saveRefCnt = mRefCnt;
+	Close(FALSE);
+	return saveRefCnt - 1;
 }
 
 extern nsIMdbFactory *NS_NewIMdbFactory();
