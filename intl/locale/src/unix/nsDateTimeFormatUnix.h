@@ -65,8 +65,7 @@ public:
                                   nsString& stringOut); 
 
 
-  nsDateTimeFormatUnix() {NS_INIT_ISUPPORTS();
-                          mLocale.Truncate();mAppLocale.Truncate();}
+  nsDateTimeFormatUnix() {mLocale.Truncate();mAppLocale.Truncate();}
 
   virtual ~nsDateTimeFormatUnix() {}
 

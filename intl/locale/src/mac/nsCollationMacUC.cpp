@@ -52,7 +52,6 @@ nsCollationMacUC::nsCollationMacUC()
   : mInit(PR_FALSE)
   , mHasCollator(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS(); 
 }
 
 nsCollationMacUC::~nsCollationMacUC() 

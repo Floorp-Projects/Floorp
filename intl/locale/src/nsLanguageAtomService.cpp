@@ -66,7 +66,6 @@ NS_IMPL_ISUPPORTS1(nsLanguageAtom, nsILanguageAtom)
 
 nsLanguageAtom::nsLanguageAtom()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsLanguageAtom::~nsLanguageAtom()
@@ -115,7 +114,6 @@ NS_IMPL_ISUPPORTS1(nsLanguageAtomService, nsILanguageAtomService)
 
 nsLanguageAtomService::nsLanguageAtomService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsLanguageAtomService::~nsLanguageAtomService()

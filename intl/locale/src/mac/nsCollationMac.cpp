@@ -128,7 +128,6 @@ NS_IMPL_ISUPPORTS1(nsCollationMac, nsICollation);
 
 nsCollationMac::nsCollationMac() 
 {
-  NS_INIT_ISUPPORTS(); 
   mCollation = NULL;
 }
 

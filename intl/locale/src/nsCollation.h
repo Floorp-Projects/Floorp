@@ -40,7 +40,7 @@ public:
 
   NS_IMETHOD CreateCollation(nsILocale* locale, nsICollation** instancePtr);
 
-  nsCollationFactory() {NS_INIT_ISUPPORTS();};
+  nsCollationFactory() {};
 };
 
 
