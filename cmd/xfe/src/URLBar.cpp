@@ -183,11 +183,13 @@ XFE_URLBar::XFE_URLBar(XFE_Frame *		parent_frame,
 	
 	XP_ASSERT( XfeIsAlive(m_urlComboBox) );
 
-	// Create the logo
-	// Create the logo
-	m_logo = new XFE_Logo(m_parentFrame,m_widget,LOGO_NAME);
-
-	m_logo->setSize(XFE_ANIMATION_SMALL);
+	// Create the logo if needed
+	if (XfeChildIsEnabled(m_widget,LOGO_NAME,"Logo",True))
+	{
+		m_logo = new XFE_Logo(m_parentFrame,m_widget,LOGO_NAME);
+		
+		m_logo->setSize(XFE_ANIMATION_SMALL);
+    }
 
 	// Show the url text
 	XtManageChild(m_urlComboBox);

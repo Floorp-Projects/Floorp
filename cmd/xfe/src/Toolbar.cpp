@@ -355,14 +355,17 @@ XFE_Toolbar::updateAppearance()
 
 	XtVaSetValues(m_toolBar,XmNbuttonLayout,button_layout,NULL);
 
-	if (button_layout == XmBUTTON_LABEL_ON_BOTTOM)
-	{
+    if (m_logo != NULL)
+    {
+      if (button_layout == XmBUTTON_LABEL_ON_BOTTOM)
+      {
 		m_logo->setSize(XFE_ANIMATION_LARGE);
-	}
-	else
-	{
+      }
+      else
+      {
 		m_logo->setSize(XFE_ANIMATION_SMALL);
-	}
+      }
+    }
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -504,16 +507,18 @@ XFE_Toolbar::createMain(Widget parent)
 								XmNusePreferredWidth,	False,
 								NULL);
 
-	// Create the logo
-	m_logo = new XFE_Logo(m_parentFrame,m_widget,LOGO_NAME);
+	// Create and configure the logo if needed
+	if (XfeChildIsEnabled(m_widget,LOGO_NAME,"Logo",True))
+	{
+		m_logo = new XFE_Logo(m_parentFrame,m_widget,LOGO_NAME);
 
-	m_logo->show();
+		m_logo->show();
+
+		configureLogo();
+	}
 
     // Update the appearance for the first time
     updateAppearance();
-
-	// Configure the logo for the first time
-	configureLogo();
 
 	installDestroyHandler();
 }

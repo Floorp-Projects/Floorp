@@ -74,13 +74,16 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
                    XmNusePreferredHeight,        True,
                    NULL);
 
-	// Create the logo
-	m_logo = new XFE_Logo(frame,m_widget,LOGO_NAME);
 
-	m_logo->setSize(XFE_ANIMATION_SMALL);
-
-	// Attach and configure the logo
-	configureLogo();
+	// Create and configure the logo if needed
+	if (XfeChildIsEnabled(m_widget,LOGO_NAME,"Logo",True))
+	{
+		m_logo = new XFE_Logo(frame,m_widget,LOGO_NAME);
+		
+		m_logo->setSize(XFE_ANIMATION_SMALL);
+		
+		configureLogo();
+	}
 
 	// Make sure the toolbar is not highlighted first
 	setRaised(False);

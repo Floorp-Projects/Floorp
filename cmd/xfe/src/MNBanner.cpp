@@ -95,11 +95,16 @@ XFE_MNBanner::XFE_MNBanner(XFE_Frame *parent_frame,
   addDragWidget(m_subtitlelabel);
   addDragWidget(m_infolabel);
 
-  // Create the logo
-  m_logo = new XFE_Logo(m_parentFrame,tool_item,"logo");
+  // Create and configure the logo if needed
+  if (XfeChildIsEnabled(m_widget,LOGO_NAME,"Logo",True))
+  {
+	  m_logo = new XFE_Logo(m_parentFrame,tool_item,"logo");
+	  
+	  // It will always be small for this component
+	  m_logo->setSize(XFE_ANIMATION_SMALL);
 
-  // It will always be small for this component
-  m_logo->setSize(XFE_ANIMATION_SMALL);
+      configureLogo();
+  }
 										
   setBaseWidget(tool_item);
 
