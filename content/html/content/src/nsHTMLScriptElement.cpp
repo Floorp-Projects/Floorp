@@ -75,7 +75,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIScriptEventHandler interface...
-  NS_DECL_NSISCRIPTEVENTHANDLER;
+  NS_DECL_NSISCRIPTEVENTHANDLER
 
   // Helper method called by nsHTMLScriptElement
   nsresult ParseEventString(const nsAString &aValue);
