@@ -661,9 +661,6 @@ PRBool CSSParserImpl::SkipAtRule(PRInt32& aErrorCode)
   return PR_TRUE;
 }
 
-// XXX @media type {, types } '{' rules '}'
-// XXX @font-face
-// XXX @page { :left | :right } '{' declarations '}'
 PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
 {
   if ((mSection <= eCSSSection_Charset) && 
@@ -712,10 +709,6 @@ PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
 
 PRBool CSSParserImpl::ParseCharsetRule(PRInt32& aErrorCode)
 {
-  if (!GetToken(aErrorCode, PR_TRUE)) {
-    return PR_FALSE;
-  }
-
   // XXX not yet implemented
   return PR_FALSE;
 }
@@ -1005,20 +998,12 @@ PRBool CSSParserImpl::ProcessNameSpace(PRInt32& aErrorCode, const nsString& aPre
 
 PRBool CSSParserImpl::ParseFontFaceRule(PRInt32& aErrorCode)
 {
-  if (!GetToken(aErrorCode, PR_TRUE)) {
-    return PR_FALSE;
-  }
-
   // XXX not yet implemented
   return PR_FALSE;
 }
 
 PRBool CSSParserImpl::ParsePageRule(PRInt32& aErrorCode)
 {
-  if (!GetToken(aErrorCode, PR_TRUE)) {
-    return PR_FALSE;
-  }
-
   // XXX not yet implemented
   return PR_FALSE;
 }
@@ -1545,8 +1530,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
   for (;;) {
     if (eCSSToken_ID == mToken.mType) {   // #id
       if ((0 == (dataMask & SEL_MASK_ID)) &&  // only one ID
-          (0 < mToken.mIdent.Length()) && 
-          (nsString::IsAlpha(mToken.mIdent.CharAt(0)))) { // verify is legal ID
+          (0 < mToken.mIdent.Length())) { // verify is legal ID
         mToken.AppendToString(aSource);
         dataMask |= SEL_MASK_ID;
         aSelector.SetID(mToken.mIdent);
