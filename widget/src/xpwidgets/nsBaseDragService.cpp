@@ -30,6 +30,8 @@
 
 NS_IMPL_ADDREF(nsBaseDragService)
 NS_IMPL_RELEASE(nsBaseDragService)
+NS_IMPL_QUERY_INTERFACE2(nsBaseDragService, nsIDragService, nsIDragSession)
+
 
 //-------------------------------------------------------------------------
 //
@@ -56,32 +58,6 @@ nsBaseDragService::~nsBaseDragService()
 {
 }
 
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsBaseDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult rv = NS_NOINTERFACE;
-
-  if ( aIID.Equals(nsCOMTypeInfo<nsIDragService>::GetIID()) ) {
-    *aInstancePtr = NS_STATIC_CAST(nsIDragService*,this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(nsCOMTypeInfo<nsIDragSession>::GetIID())) {
-    *aInstancePtr = NS_STATIC_CAST(nsIDragSession*,this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return rv;
-}
 
 //---------------------------------------------------------
 NS_IMETHODIMP nsBaseDragService::SetCanDrop (PRBool aCanDrop) 

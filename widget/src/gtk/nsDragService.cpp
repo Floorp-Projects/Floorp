@@ -28,9 +28,6 @@ static NS_DEFINE_CID(kCDragServiceCID,   NS_DRAGSERVICE_CID);
 // The class statics:
 GtkWidget* nsDragService::sWidget = 0;
 
-NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
-
 //-------------------------------------------------------------------------
 // static variables
 //-------------------------------------------------------------------------
@@ -55,29 +52,6 @@ nsDragService::~nsDragService()
 {
 }
 
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsresult rv = NS_NOINTERFACE;
-
-  if (aIID.Equals(nsIDragService::GetIID())) {
-    *aInstancePtr = (void*) ((nsIDragService*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return rv;
-}
 
 //---------------------------------------------------------
 NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType)

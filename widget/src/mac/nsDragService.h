@@ -44,9 +44,9 @@ public:
   nsDragService();
   virtual ~nsDragService();
 
-  //nsISupports
+  //nsISupports - can't use inherited because of nsIDragSessionMac
   NS_DECL_ISUPPORTS_INHERITED
-
+  
   //nsIDragService
   NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType);
 

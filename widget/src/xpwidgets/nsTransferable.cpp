@@ -44,8 +44,7 @@ Notes to self:
 
 NS_IMPL_ADDREF(nsTransferable)
 NS_IMPL_RELEASE(nsTransferable)
-// NS_IMPL_QUERY_INTERFACE1(nsITransferable)
-NS_IMPL_QUERY_INTERFACE(nsTransferable, NS_GET_IID(nsITransferable))
+NS_IMPL_QUERY_INTERFACE1(nsTransferable, nsITransferable)
 
 
 // million bytes

@@ -40,9 +40,6 @@
 // The class statics:
 GtkWidget* nsClipboard::sWidget = 0;
 
-NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
-NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
-
 
 #if defined(DEBUG_akkana) || defined(DEBUG_mcafee) || defined(DEBUG_pavlov)
 #define DEBUG_CLIPBOARD
@@ -152,29 +149,6 @@ nsClipboard::~nsClipboard()
     gtk_widget_destroy(sWidget);
     sWidget = nsnull;
   }
-}
-
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsresult rv = NS_NOINTERFACE;
-
-  if (aIID.Equals(nsIClipboard::GetIID())) {
-    *aInstancePtr = (void*) ((nsIClipboard*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return rv;
 }
 
 

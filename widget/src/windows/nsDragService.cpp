@@ -31,9 +31,6 @@
 #include "OLEIDL.H"
 
 
-NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
-
 //-------------------------------------------------------------------------
 //
 // DragService constructor
@@ -59,40 +56,6 @@ nsDragService::~nsDragService()
   NS_IF_RELEASE(mDataObject);
 }
 
-
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/
-// clean me up! ;)
-nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsresult rv = nsBaseDragService::QueryInterface(aIID, aInstancePtr);
-  if (NS_OK == rv) {
-    return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIDragService))) {
-    *aInstancePtr = (void*) ((nsIDragService*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIDragSession))) {
-    *aInstancePtr = (void*) ((nsIDragSession*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return rv;
-}
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType)
@@ -236,6 +199,7 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
     return NS_ERROR_FAILURE;
 
   // First check to see if the mDataObject is is Collection of IDataObjects
+  *_retval = PR_FALSE;
   UINT format = nsClipboard::GetFormat(MULTI_MIME);
   FORMATETC fe;
   SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
@@ -246,11 +210,8 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
     format = nsClipboard::GetFormat(aDataFlavor);
     SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
 
-    if (S_OK == mDataObject->QueryGetData(&fe)) {
-      return NS_OK;
-    } else {
-      return NS_ERROR_FAILURE;
-    }
+    if (S_OK == mDataObject->QueryGetData(&fe))
+      *_retval = PR_TRUE;;
   }
 
   // Set it up for the data flavor
@@ -264,12 +225,11 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
   PRUint32 cnt = dataObjCol->GetNumDataObjects();
   for (i=0;i<cnt;i++) {
     IDataObject * dataObj = dataObjCol->GetDataObjectAt(i);
-    if (S_OK == dataObj->QueryGetData(&fe)) {
-      return NS_OK;
-    }
+    if (S_OK == dataObj->QueryGetData(&fe))
+      *_retval = PR_TRUE;
   }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

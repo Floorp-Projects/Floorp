@@ -33,10 +33,6 @@ class nsDragService : public nsBaseDragService
 public:
   nsDragService();
   virtual ~nsDragService();
-
-  //nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-  
   
   //nsIDragService
   NS_IMETHOD StartDragSession (nsITransferable * aTransferable, 

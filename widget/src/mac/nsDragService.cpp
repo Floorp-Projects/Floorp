@@ -39,6 +39,11 @@
 
 DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
 
+// we need our own stuff for MacOS because of nsIDragSessionMac.
+NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
+NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
+NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, nsIDragSessionMac)
+
 
 //
 // DragService constructor
@@ -55,17 +60,6 @@ nsDragService::nsDragService()
 nsDragService::~nsDragService()
 {
 }
-
-
-//
-// AddRef
-// Release
-// QueryInterface
-//
-// handle the QI for nsIDragSessionMac and farm off anything else to the parent
-// class.
-//
-NS_IMPL_ISUPPORTS_INHERITED(nsDragService,nsBaseDragService,nsIDragSessionMac);
 
 
 //
