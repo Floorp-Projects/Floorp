@@ -841,7 +841,7 @@ sub BuildClientDist()
         InstallFromManifest(":mozilla:directory:c-sdk:ldap:include:MANIFEST",      		"$distdirectory:directory:");
         InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST",       		"$distdirectory:directory:");
         InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST_IDL",   		"$distdirectory:idl:");
-        InstallFromManifest(":mozilla:xpfe:component:autocomplete:public:MANIFEST_IDL",	"$distdirectory:idl:");
+        InstallFromManifest(":mozilla:xpfe:components:autocomplete:public:MANIFEST_IDL",	"$distdirectory:idl:");
     }
 
     #XMLEXTRAS
