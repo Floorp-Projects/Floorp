@@ -1,4 +1,4 @@
-#! /bin/csh -f
+#! /bin/sh
 
 #
 # Create links to install tinderbox stuff.
