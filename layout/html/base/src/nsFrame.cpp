@@ -369,7 +369,7 @@ nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 
   //XXX Why is this done in nsFrame instead of some frame class
   // that actually loads images?
-  aPresContext.StopLoadImage(this);
+  aPresContext.StopAllLoadImagesFor(this);
 
   //Set to prevent event dispatch during destruct
   if (nsnull != mView) {
