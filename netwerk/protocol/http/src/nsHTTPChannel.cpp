@@ -1530,9 +1530,9 @@ nsresult nsHTTPChannel::ResponseCompleted (nsIStreamListener *aListener,
     // First:
     //
     // Call the consumer OnStopRequest(...) to end the request...
-    if (mResponseDataListener)
+    if (aListener)
     {
-        rv = mResponseDataListener -> OnStopRequest (this, mResponseContext, aStatus, aMsg);
+        rv = aListener -> OnStopRequest (this, mResponseContext, aStatus, aMsg);
 
         if (NS_FAILED (rv))
         {
