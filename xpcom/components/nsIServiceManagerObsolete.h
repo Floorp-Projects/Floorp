@@ -132,47 +132,6 @@ public:
 
 };
 
-
-class nsServiceManagerObsolete : public nsIServiceManagerObsolete {
-public:
-    nsServiceManagerObsolete();
-    virtual ~nsServiceManagerObsolete();
-
-    NS_DECL_ISUPPORTS
-    
-    NS_IMETHOD
-    RegisterService(const nsCID& aClass, nsISupports* aService);
-
-    NS_IMETHOD
-    UnregisterService(const nsCID& aClass);
-
-    NS_IMETHOD
-    GetService(const nsCID& aClass, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener = nsnull);
-
-    NS_IMETHOD
-    ReleaseService(const nsCID& aClass, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = nsnull);
-
-    NS_IMETHOD
-    RegisterService(const char* aContractID, nsISupports* aService);
-
-    NS_IMETHOD
-    UnregisterService(const char* aContractID);
-
-    NS_IMETHOD
-    GetService(const char* aContractID, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener = nsnull);
-
-    NS_IMETHOD
-    ReleaseService(const char* aContractID, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = nsnull);
-
-};
-
-
 // Interface to Global Services
 class NS_COM nsServiceManager {
 public:

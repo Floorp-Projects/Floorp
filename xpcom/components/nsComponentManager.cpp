@@ -602,11 +602,12 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsComponentManagerImpl, 
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsComponentManagerImpl, 
                               nsIComponentManager, 
                               nsIServiceManager,
                               nsISupportsWeakReference, 
-                              nsIInterfaceRequestor)
+                              nsIInterfaceRequestor,
+                              nsIServiceManagerObsolete)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
@@ -1678,7 +1679,7 @@ nsComponentManagerImpl::UnregisterService(const nsCID& aClass)
 }
 
 NS_IMETHODIMP
-nsComponentManagerImpl::RegisterServiceByContractID(const char* aContractID, nsISupports* aService)
+nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aService)
 {
     nsAutoMonitor mon(mMon);
 
@@ -1792,7 +1793,7 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
 
 
 NS_IMETHODIMP
-nsComponentManagerImpl::UnregisterServiceByContractID(const char* aContractID)
+nsComponentManagerImpl::UnregisterService(const char* aContractID)
 {
     nsresult rv = NS_OK;
     nsAutoMonitor mon(mMon);
@@ -1880,6 +1881,38 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     return rv;
 }
 
+NS_IMETHODIMP 
+nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
+                                     nsISupports* *result,
+                                     nsIShutdownListener* shutdownListener)
+{
+    return GetService(aClass, aIID, (void**)result);
+};
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::GetService(const char* aContractID, const nsIID& aIID,
+                                     nsISupports* *result,
+                                     nsIShutdownListener* shutdownListener )
+{
+    return GetServiceByContractID(aContractID, aIID, (void**)result);
+};
+
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
+                                         nsIShutdownListener* shutdownListener )
+{
+    NS_IF_RELEASE(service);
+    return NS_OK;
+};
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::ReleaseService(const char* aContractID, nsISupports* service,
+                                         nsIShutdownListener* shutdownListener )
+{
+    NS_IF_RELEASE(service);
+    return NS_OK;
+};
 
 /*
  * I want an efficient way to allocate a buffer to the right size
