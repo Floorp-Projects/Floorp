@@ -1088,7 +1088,7 @@ function BrowserSearchInternet()
         // Get a search URL and guess that the front page of the site has a search form.
         var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
                                  .getService(Components.interfaces.nsIInternetSearchService);
-        searchURL = searchDS.GetInternetSearchURL(searchEngineURI, "ABC", 0, 0, {value:0});
+        var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, "ABC", 0, 0, {value:0});
         if (searchURL) {
           searchRoot = searchURL.match(/[a-z]+:\/\/[a-z.-]+/);
           if (searchRoot) {
