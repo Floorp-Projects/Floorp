@@ -6,7 +6,7 @@
    <x name="x">x</x>
    <y name="y">y</y>
    <z name="z">z</z>
-   <names>
+   <names xmlns:abc="foo">
      <abc:test-name/>
    </names>
 </document>
