@@ -43,6 +43,8 @@
 #include <signal.h>
 #endif
 
+#include <float.h>
+
 /* --- globals ------------------------------------------------ */
 _NSPR_TLS*        pThreadLocalStorage = 0;
 _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
@@ -88,6 +90,87 @@ _pr_SetThreadMDHandle(PRThread *thread)
    thread->md.handle = ptib->tib_ptib2->tib2_ultid;
 }
 
+/* On OS/2, some system function calls seem to change the FPU control word,
+ * such that we crash with a floating underflow exception.  The FIX_FPU() call
+ * in jsnum.c does not always work, as sometimes FIX_FPU() is called BEFORE the
+ * OS/2 system call that horks the FPU control word.  So, we set an exception
+ * handler that covers any floating point exceptions and resets the FPU CW to
+ * the required value.
+ */
+static ULONG
+_System OS2_FloatExcpHandler(PEXCEPTIONREPORTRECORD p1,
+                             PEXCEPTIONREGISTRATIONRECORD p2,
+                             PCONTEXTRECORD p3,
+                             PVOID pv)
+{
+#ifdef DEBUG_pedemonte
+    printf("Entering exception handler; ExceptionNum = %x\n", p1->ExceptionNum);
+    switch(p1->ExceptionNum) {
+        case XCPT_FLOAT_DENORMAL_OPERAND:
+            printf("got XCPT_FLOAT_DENORMAL_OPERAND\n");
+            break;
+        case XCPT_FLOAT_DIVIDE_BY_ZERO:
+            printf("got XCPT_FLOAT_DIVIDE_BY_ZERO\n");
+            break;
+        case XCPT_FLOAT_INEXACT_RESULT:
+            printf("got XCPT_FLOAT_INEXACT_RESULT\n");
+            break;
+        case XCPT_FLOAT_INVALID_OPERATION:
+            printf("got XCPT_FLOAT_INVALID_OPERATION\n");
+            break;
+        case XCPT_FLOAT_OVERFLOW:
+            printf("got XCPT_FLOAT_OVERFLOW\n");
+            break;
+        case XCPT_FLOAT_STACK_CHECK:
+            printf("got XCPT_FLOAT_STACK_CHECK\n");
+            break;
+        case XCPT_FLOAT_UNDERFLOW:
+            printf("got XCPT_FLOAT_UNDERFLOW\n");
+            break;
+    }
+#endif
+
+    switch(p1->ExceptionNum) {
+        case XCPT_FLOAT_DENORMAL_OPERAND:
+        case XCPT_FLOAT_DIVIDE_BY_ZERO:
+        case XCPT_FLOAT_INEXACT_RESULT:
+        case XCPT_FLOAT_INVALID_OPERATION:
+        case XCPT_FLOAT_OVERFLOW:
+        case XCPT_FLOAT_STACK_CHECK:
+        case XCPT_FLOAT_UNDERFLOW:
+        {
+            unsigned cw = p3->ctx_env[0];
+            if ((cw & MCW_EM) != MCW_EM) {
+                /* Mask out all floating point exceptions */
+                p3->ctx_env[0] |= MCW_EM;
+                /* Following two lines set precision to 53 bit mantissa.  See jsnum.c */
+                p3->ctx_env[0] &= ~MCW_PC;
+                p3->ctx_env[0] |= PC_53;
+                return XCPT_CONTINUE_EXECUTION;
+            }
+        }
+    }
+    return XCPT_CONTINUE_SEARCH;
+}
+
+PR_IMPLEMENT(void)
+PR_OS2_SetFloatExcpHandler(EXCEPTIONREGISTRATIONRECORD* excpreg)
+{
+    /* setup the exception handler for the thread */
+    APIRET rv;
+    excpreg->ExceptionHandler = OS2_FloatExcpHandler;
+    excpreg->prev_structure = NULL;
+    rv = DosSetExceptionHandler(excpreg);
+    PR_ASSERT(rv == NO_ERROR);
+}
+
+PR_IMPLEMENT(void)
+PR_OS2_UnsetFloatExcpHandler(EXCEPTIONREGISTRATIONRECORD* excpreg)
+{
+    /* unset exception handler */
+    APIRET rv = DosUnsetExceptionHandler(excpreg);
+    PR_ASSERT(rv == NO_ERROR);
+}
 
 PRStatus
 _PR_MD_INIT_THREAD(PRThread *thread)
@@ -103,6 +186,29 @@ _PR_MD_INIT_THREAD(PRThread *thread)
    return (rv == NO_ERROR) ? PR_SUCCESS : PR_FAILURE;
 }
 
+typedef struct param_store
+{
+    void (*start)(void *);
+    PRThread* thread;
+} PARAMSTORE;
+
+/* This is a small intermediate function that sets/unsets the exception
+   handler before calling the initial thread function */
+static void
+ExcpStartFunc(void* arg)
+{
+    EXCEPTIONREGISTRATIONRECORD excpreg;
+    PARAMSTORE params, *pParams = arg;
+
+    PR_OS2_SetFloatExcpHandler(&excpreg);
+
+    params = *pParams;
+    PR_Free(pParams);
+    params.start(params.thread);
+
+    PR_OS2_UnsetFloatExcpHandler(&excpreg);
+}
+
 PRStatus
 _PR_MD_CREATE_THREAD(PRThread *thread, 
                   void (*start)(void *), 
@@ -111,10 +217,13 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
                   PRThreadState state, 
                   PRUint32 stackSize)
 {
-    thread->md.handle = thread->id = (TID) _beginthread(start,
+    PARAMSTORE* params = PR_Malloc(sizeof(PARAMSTORE));
+    params->start = start;
+    params->thread = thread;
+    thread->md.handle = thread->id = (TID) _beginthread(ExcpStartFunc,
                                                         NULL, 
                                                         thread->stack->stackSize,
-                                                        thread);
+                                                        params);
     if(thread->md.handle == -1) {
         return PR_FAILURE;
     }

@@ -8,4 +8,9 @@
     PR_GetCurrentThread
     PR_AttachThread
     PR_DetachThread
+    ;
+    ; Exception handler functions that are used by nsAppRunner.cpp
+    ;
+    _PR_OS2_SetFloatExcpHandler
+    _PR_OS2_UnsetFloatExcpHandler
 
