@@ -24,13 +24,19 @@
 
 #include "nsFormControlFrame.h"
 #include "nsIStatefulFrame.h"
+#include "nsICheckboxControlFrame.h"
 
+
+#define NS_GFX_CHECKBOX_CONTROL_FRAME_FACE_CONTEXT_INDEX   0 // for additional style contexts
+#define NS_GFX_CHECKBOX_CONTROL_FRAME_LAST_CONTEXT_INDEX   0
 
 class nsGfxCheckboxControlFrame : public nsFormControlFrame,
-                                  public nsIStatefulFrame
+                                  public nsIStatefulFrame,
+                                  public nsICheckboxControlFrame
 {
 public:
   nsGfxCheckboxControlFrame();
+  virtual ~nsGfxCheckboxControlFrame();
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
@@ -57,7 +63,15 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
+   //nsIRadioControlFrame methods
+  NS_IMETHOD SetCheckboxFaceStyleContext(nsIStyleContext *aCheckboxFaceStyleContext);
+
   void InitializeControl(nsIPresContext* aPresContext);
+
+  NS_IMETHOD GetAdditionalStyleContext(PRInt32 aIndex, 
+                                       nsIStyleContext** aStyleContext) const;
+  NS_IMETHOD SetAdditionalStyleContext(PRInt32 aIndex, 
+                                       nsIStyleContext* aStyleContext);
 
     // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
@@ -121,6 +135,7 @@ protected:
 
     //GFX-rendered state variables
   CheckState mChecked;
+  nsIStyleContext* mCheckButtonFaceStyle;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
