@@ -36,7 +36,8 @@ class nsIStyleSheet : public nsISupports {
 public:
   virtual nsIURL* GetURL(void) = 0;
 
-  // populate void array with nsIStyleRule*
+  // populate supports array with nsIStyleRule*
+  // rules are ordered, those with higher precedence come last
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
                                 nsIFrame* aParentFrame,

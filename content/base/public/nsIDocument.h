@@ -125,6 +125,7 @@ public:
 
   /**
    * Get the style sheets owned by this document.
+   * Style sheets are ordered, most significant first.
    */
   virtual PRInt32 GetNumberOfStyleSheets() = 0;
   virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex) = 0;
