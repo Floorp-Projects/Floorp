@@ -809,7 +809,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 		{
 			if ((n_str.GetBuffer())[0])
 			{
-				if (n_str.Equals(stringToMatch, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
+				if (n_str.EqualsWithConversion(stringToMatch, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
 			}
 			else if (n_header[0] == '\0') // Special case for "is <the empty string>"
@@ -821,7 +821,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 		{
 			if ((n_str.GetBuffer())[0])
 			{
-				if (!n_str.Equals(stringToMatch, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
+				if (!n_str.EqualsWithConversion(stringToMatch, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
 			}
 			else if (n_header[0] != '\0') // Special case for "isn't <the empty string>"
