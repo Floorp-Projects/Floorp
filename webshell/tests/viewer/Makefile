@@ -160,7 +160,7 @@ ifeq ($(OS_ARCH),Linux)
 	TOOLKIT_LDFLAGS     = -lXm -lXp -lXt -lXext -lX11 -lSM -lICE
 	EXTRA_PRE_LDFLAGS   = -rdynamic
 	EXTRA_POST_LDFLAGS  =
-	POST_LINK_COMMAND   =
+	POST_LINK_COMMAND   = true
 endif
 
 ifeq ($(OS_ARCH),IRIX)
@@ -168,7 +168,7 @@ ifeq ($(OS_ARCH),IRIX)
 	TOOLKIT_LDFLAGS     = -lXm -lXt -lX11
 	EXTRA_PRE_LDFLAGS   = -woff 84,85
 	EXTRA_POST_LDFLAGS  =
-	POST_LINK_COMMAND   =
+	POST_LINK_COMMAND   = true
 endif
 
 ifeq ($(OS_ARCH),SunOS)
@@ -176,7 +176,7 @@ ifeq ($(OS_ARCH),SunOS)
 	TOOLKIT_LDFLAGS     = -lXm -lXt -lXext -lX11
 	EXTRA_PRE_LDFLAGS   =
 	EXTRA_POST_LDFLAGS  =
-	POST_LINK_COMMAND   =
+	POST_LINK_COMMAND   = true
 endif
 
 ifeq ($(OS_ARCH),HP-UX)
