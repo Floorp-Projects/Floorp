@@ -511,30 +511,41 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
   ensure_entry_widget();
   style = gEntryWidget->style;
 
+  /*
+   * gtk+ is able to draw over top of the entry when it gains focus,
+   * so the non-focused text border is implicitly already drawn when
+   * the entry is drawn in a focused state.
+   *
+   * Gecko doesn't quite work this way, so always draw the non-focused
+   * shadow, then draw the shadow again, inset, if we're focused.
+   */
+
+  TSOffsetStyleGCs(style, x, y);
+  gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
+                   gEntryWidget, "entry", x, y, width, height);
+  
+
   if (state->focused) {
       x += 1;
       y += 1;
       width -= 2;
       height -= 2;
-  }
-  
-  TSOffsetStyleGCs(style, x, y);
-  gtk_paint_shadow (style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
-                    gEntryWidget, "entry", x, y, width, height);
-  
-  if (state->focused) {
-    TSOffsetStyleGCs(style, rect->x, rect->y);
-    gtk_paint_focus (style, drawable,  cliprect, gEntryWidget, "entry",
-                     rect->x, rect->y, rect->width - 1, rect->height - 1);
+      TSOffsetStyleGCs(style, x, y);
+      gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
+                       cliprect, gEntryWidget, "entry", x, y, width, height);
+
+      TSOffsetStyleGCs(style, rect->x, rect->y);
+      gtk_paint_focus(style, drawable,  cliprect, gEntryWidget, "entry",
+                      rect->x, rect->y, rect->width - 1, rect->height - 1);
   }
 
   x = style->klass->xthickness;
   y = style->klass->ythickness;
 
   TSOffsetStyleGCs(style, rect->x + x, rect->y + y);
-  gtk_paint_flat_box (style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
-                      cliprect, gEntryWidget, "entry_bg",  rect->x + x,
-                      rect->y + y, rect->width - 2*x, rect->height - 2*y);
+  gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
+                     cliprect, gEntryWidget, "entry_bg",  rect->x + x,
+                     rect->y + y, rect->width - 2*x, rect->height - 2*y);
 
   return MOZ_GTK_SUCCESS;
 }
