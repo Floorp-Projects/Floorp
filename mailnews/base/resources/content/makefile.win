@@ -45,6 +45,8 @@ install::
 	$(MAKE_INSTALL)	renameFolderNameDialog.xul $(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL)	messengerdnd.js $(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL)	mailContextMenus.js $(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL)	msgPrintEngine.js $(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL)	msgPrintEngine.xul $(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\messenger.xul
@@ -68,5 +70,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\renameFolderNameDialog.xul
 	rm -f $(DIST)\chrome\messenger\content\default\messengerdnd.js
 	rm -f $(DIST)\chrome\messenger\content\default\mailContextMenus.js
+	rm -f $(DIST)\chrome\messenger\content\default\msgPrintEngine.js
+	rm -f $(DIST)\chrome\messenger\content\default\msgPrintEngine.xul
 
 

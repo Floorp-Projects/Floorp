@@ -229,6 +229,8 @@ protected:
     // into the folder and message key equivalents
     nsresult DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder,  char ** msgKey);
 
+    PRBool                mPrintingOperation;  // Flag for printing operations
+
 };
 
 #endif /* nsImapService_h___ */

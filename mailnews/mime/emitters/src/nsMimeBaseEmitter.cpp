@@ -655,11 +655,13 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 nsresult
 nsMimeBaseEmitter::WriteHeaderFieldHTMLPrefix()
 {
-  // This mess is for Save As operations...
-  if (  ( (mFormat == nsMimeOutput::nsMimeMessageSaveAs) && (!mFirstHeaders) ) ||   // RICHIE: Goes away when we have the 
-        ( (mFormat == nsMimeOutput::nsMimeMessageQuoting) && (!mFirstHeaders) ) ||  // HTML-TEXT stream converter interface
-        ( (mFormat != nsMimeOutput::nsMimeMessageSaveAs) && (mFormat != nsMimeOutput::nsMimeMessageQuoting) )
+  if ( 
+      ( (mFormat == nsMimeOutput::nsMimeMessageSaveAs) && (mFirstHeaders) ) ||
+      ( (mFormat == nsMimeOutput::nsMimeMessagePrintOutput) && (mFirstHeaders) )
      )
+     /* DO NOTHING */ ;   // rhp: Do nothing...leaving the conditional like this so its 
+                          //      easier to see the logic of what is going on. 
+  else
     mHTMLHeaders.Append("<BR><HR WIDTH=\"90%\" SIZE=4><BR>");
 
   mFirstHeaders = PR_FALSE;

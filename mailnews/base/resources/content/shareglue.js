@@ -48,15 +48,6 @@ function MessengerSetDefaultCharacterSet(aCharset)
     MsgReload();
 }
 
-function Print() {
-	dump("Print()\n");
-	try {
-		messenger.DoPrint();
-	}
-	catch (ex) {
-		dump("failed to print\n");
-	}
-}
 function PrintPreview() {
 	dump("PrintPreview()\n");
 	try {
@@ -64,5 +55,15 @@ function PrintPreview() {
 	}
 	catch (ex) {
 		dump("failed to print preview\n");
+	}
+}
+
+function Print() {
+	dump("Print()\n");
+	try {
+		messenger.DoPrint();
+	}
+	catch (ex) {
+		dump("failed to print\n");
 	}
 }

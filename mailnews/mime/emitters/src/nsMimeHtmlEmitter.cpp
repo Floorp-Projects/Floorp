@@ -81,7 +81,7 @@ PRBool nsMimeHtmlDisplayEmitter::BroadCastHeadersAndAttachments()
 nsresult 
 nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPrefix()
 {
-  if (!BroadCastHeadersAndAttachments())
+  if (!BroadCastHeadersAndAttachments() || nsMimeOutput::nsMimeMessagePrintOutput)
     return nsMimeBaseEmitter::WriteHeaderFieldHTMLPrefix();
   else
     return NS_OK;
@@ -90,7 +90,7 @@ nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPrefix()
 nsresult
 nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 {
-  if (!BroadCastHeadersAndAttachments())
+  if (!BroadCastHeadersAndAttachments() || nsMimeOutput::nsMimeMessagePrintOutput)
     return nsMimeBaseEmitter::WriteHeaderFieldHTML(field, value);
   else
     return NS_OK;
@@ -99,7 +99,7 @@ nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTML(const char *field, const char *va
 nsresult
 nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPostfix()
 {
-  if (!BroadCastHeadersAndAttachments())
+  if (!BroadCastHeadersAndAttachments() || nsMimeOutput::nsMimeMessagePrintOutput)
     return nsMimeBaseEmitter::WriteHeaderFieldHTMLPostfix();
   else
     return NS_OK;
@@ -147,12 +147,23 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
     UtilityWriteCRLF("<BODY>");
   }
 
-  // if we aren't broadcasting headers...just do whatever
+  // if we aren't broadcasting headers OR printing...just do whatever
   // our base class does...
-  if (!BroadCastHeadersAndAttachments() || !mDocHeader)
+  if (mFormat == nsMimeOutput::nsMimeMessagePrintOutput)
   {
-     return nsMimeBaseEmitter::WriteHTMLHeaders();
+    return nsMimeBaseEmitter::WriteHTMLHeaders();
   }
+  else if (!BroadCastHeadersAndAttachments() || !mDocHeader)
+  {
+    // This needs to be here to correct the output format if we are
+    // not going to broadcast headers to the XUL document.
+    if (mFormat == nsMimeOutput::nsMimeMessageBodyDisplay)
+      mFormat = nsMimeOutput::nsMimeMessagePrintOutput;
+
+    return nsMimeBaseEmitter::WriteHTMLHeaders();
+  }
+  else
+    mFirstHeaders = PR_FALSE;
  
   // try to get a header sink if there is one....
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 

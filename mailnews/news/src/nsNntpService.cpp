@@ -71,6 +71,7 @@ static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 nsNntpService::nsNntpService()
 {
     NS_INIT_REFCNT();
+    mPrintingOperation = PR_FALSE;
 }
 
 nsNntpService::~nsNntpService()
@@ -161,7 +162,7 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
   nsCAutoString uri(aMessageURI);
   nsCAutoString newsgroupName;
   nsMsgKey key = nsMsgKey_None;
-    
+ 
   if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0)
 	rv = ConvertNewsMessageURI2NewsURI(aMessageURI, uri, newsgroupName, &key);
   else
@@ -169,6 +170,11 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
 
   // now create a url with this uri spec
   nsCOMPtr<nsIURI> myuri;
+
+  // rhp: If we are displaying this message for the purposes of printing, append
+  // the magic operand.
+  if (mPrintingOperation)
+    uri.Append("?header=print");
 
   rv = ConstructNntpUrl(uri, newsgroupName, key, aUrlListener, getter_AddRefs(myuri));
   if (NS_SUCCEEDED(rv))
@@ -1144,6 +1150,19 @@ nsNntpService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
 	// they'll point to the ones on "Local Folders"
 	*aDefaultCopiesAndFoldersPrefsToServer = PR_FALSE;
     return NS_OK;
+}
+
+//
+// rhp: Right now, this is the same as simple DisplayMessage, but it will change
+// to support print rendering.
+//
+nsresult nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+                                                  nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener, nsIURI ** aURL)
+{
+  mPrintingOperation = PR_TRUE;
+  nsresult rv = DisplayMessage(aMessageURI, aDisplayConsumer, aMsgWindow, aUrlListener, aURL);
+  mPrintingOperation = PR_FALSE;
+  return rv;
 }
 
 CMDLINEHANDLER_IMPL(nsNntpService,"-news","general.startup.news","chrome://messenger/content/","Start with news window.",NS_NNTPSERVICE_PROGID,"News Cmd Line Handler", PR_FALSE,"", PR_TRUE)

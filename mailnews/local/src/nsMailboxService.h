@@ -49,10 +49,15 @@ public:
     NS_DECL_NSIPROTOCOLHANDLER
 
 protected:
+  PRBool        mPrintingOperation; 
+
 	// helper functions used by the service
 	nsresult PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsIUrlListener * aUrlListener,
 							   nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl);
-	
+
+	nsresult nsMailboxService::PreparePrintUrl(const char * aSrcMsgMailboxURI, nsIUrlListener * aUrlListener,
+											                       nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl);
+
 	nsresult RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDisplayConsumer = nsnull);
 
   nsresult FetchMessage(const char* aMessageURI,

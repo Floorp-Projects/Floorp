@@ -74,6 +74,8 @@
 
 #include "nsMsgServiceProvider.h"
 
+#include "nsMsgPrintEngine.h"
+
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -132,6 +134,9 @@ static NS_DEFINE_CID(kMsgViewNavigationServiceCID, NS_MSGVIEWNAVIGATIONSERVICE_C
 //MsgServiceProviderService
 static NS_DEFINE_CID(kMsgServiceProviderServiceCID, NS_MSGSERVICEPROVIDERSERVICE_CID);
 
+// Print Engine
+static NS_DEFINE_CID(kMsgPrintEngineCID, NS_MSG_PRINTENGINE_CID);
+
 // private factory declarations for each component we know how to produce
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerBootstrap)
@@ -156,6 +161,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessageView,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgWindow,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgViewNavigationService,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgServiceProviderService, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgPrintEngine, Init)
 // Module implementation for the sample library
 class nsMsgBaseModule : public nsIModule
 {
@@ -196,6 +202,7 @@ protected:
     nsCOMPtr<nsIGenericFactory> mMsgWindowFactory;
     nsCOMPtr<nsIGenericFactory> mMsgViewNavigationServiceFactory;
     nsCOMPtr<nsIGenericFactory> mMsgServiceProviderServiceFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgPrintEngineFactory;
 };
 
 nsMsgBaseModule::nsMsgBaseModule()
@@ -408,6 +415,13 @@ NS_IMETHODIMP nsMsgBaseModule::GetClassObject(nsIComponentManager *aCompMgr,
             rv = NS_NewGenericFactory(getter_AddRefs(mMsgServiceProviderServiceFactory), &nsMsgServiceProviderServiceConstructor);
         fact = mMsgServiceProviderServiceFactory;
     }
+    else if (aClass.Equals(kMsgPrintEngineCID))
+    {
+        if (!mMsgPrintEngineFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgPrintEngineFactory), &nsMsgPrintEngineConstructor);
+        fact = mMsgPrintEngineFactory;
+    }
+
     
     if (fact)
         rv = fact->QueryInterface(aIID, r_classObj);
@@ -469,6 +483,8 @@ static Components gComponents[] = {
       NS_MSGWINDOW_PROGID},
     { "Mail/News Message Navigation Service", &kMsgViewNavigationServiceCID,
       NS_MSGVIEWNAVIGATIONSERVICE_PROGID},
+    { "Mail/News Print Engine", &kMsgPrintEngineCID,
+      NS_MSGPRINTENGINE_PROGID},
     { "Mail/News Service Provider Service", &kMsgServiceProviderServiceCID,
       NS_MSGSERVICEPROVIDERSERVICE_PROGID}
 

@@ -41,3 +41,5 @@ msgFolderPickerOverlay.xul
 msgFolderPickerOverlay.js
 messengerdnd.js
 mailContextMenus.js
+msgPrintEngine.js
+msgPrintEngine.xul

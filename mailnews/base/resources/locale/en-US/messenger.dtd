@@ -296,3 +296,6 @@ Rights Reserved.
 <!-- Message Header View Popup -->
 <!ENTITY AddToAddressBook.label "Add Address To Address Book">
 <!ENTITY SendMailTo.label "Send Mail To">
+
+<!-- Print Engine -->
+<!ENTITY printEngine.title "Printing...">

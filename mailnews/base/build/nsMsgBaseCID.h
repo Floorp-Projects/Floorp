@@ -285,6 +285,19 @@
 #define NS_MSGVIEWNAVIGATIONSERVICE_CID \
 { 0x60d34fb4, 0xd031, 0x11d3, \
   { 0x8b, 0x2e, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
+
+//
+// Print Engine...
+//
+#define NS_MSGPRINTENGINE_PROGID \
+  "component://netscape/messenger/msgPrintEngine"
+
+#define NS_MSG_PRINTENGINE_CID                  \
+  { /* 91FD6B19-E0BC-11d3-8F97-000064657374 */  \
+    0x91fd6b19, 0xe0bc, 0x11d3,			\
+  { 0x8f, 0x97, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } };
+
+
 #endif // nsMessageBaseCID_h__
 
 //

@@ -99,4 +99,17 @@ interface nsIMsgMessageService : nsISupports {
     /////////////////////////////////////////////////////////////////////
     
 	void GetUrlForUri(in string aMessageURI, out nsIURI aURL);
+
+     /////////////////////////////////////////////////////////////////////
+     //  DisplayMessageForPrinting: When you want a message displayed in a
+     //  format that is suitable for printing....
+     //  aMessageURI is a uri representing the message to display.
+     //  aDisplayConsumer is (for now) a nsIWebshell which we'll use to load 
+     // the message into. 
+     ///////////////////////////////////////////////////////////////////
+
+	void DisplayMessageForPrinting(in string aMessageURI, in nsISupports aDisplayConsumer, 
+						in nsIMsgWindow aMsgWindow,
+						in nsIUrlListener aUrlListener, 
+						out nsIURI aURL);
 };

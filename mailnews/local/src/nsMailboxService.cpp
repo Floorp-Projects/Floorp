@@ -43,6 +43,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsMailboxService::nsMailboxService()
 {
+    mPrintingOperation = PR_FALSE;
     NS_INIT_REFCNT();
 }
 
@@ -96,8 +97,7 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
     nsMailboxAction mailboxAction = nsIMailboxUrl::ActionMoveMessage;
     if (!moveMessage)
         mailboxAction = nsIMailboxUrl::ActionCopyMessage;
-  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, nsnull, aUrlListener, mailboxAction, 
-                      aURL);
+  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, nsnull, aUrlListener, mailboxAction, aURL);
 }
 
 nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
@@ -121,7 +121,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
   nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 
-	rv = PrepareMessageUrl(aMessageURI, aUrlListener, mailboxAction, getter_AddRefs(mailboxurl));
+  rv = PrepareMessageUrl(aMessageURI, aUrlListener, mailboxAction, getter_AddRefs(mailboxurl));
 
 	if (NS_SUCCEEDED(rv))
 	{
@@ -253,7 +253,12 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 		{
 			// set up the url spec and initialize the url with it.
 			nsFilePath filePath(folderPath); // convert to file url representation...
-			urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
+
+      if (mPrintingOperation)
+        urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", (const char *) filePath, msgKey);
+      else
+  			urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
+
 			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
 			url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);
@@ -347,3 +352,15 @@ NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb,
 	return rv;
 }
 
+nsresult nsMailboxService::DisplayMessageForPrinting(const char* aMessageURI,
+                                                      nsISupports * aDisplayConsumer,
+                                                      nsIMsgWindow * aMsgWindow,
+										                                  nsIUrlListener * aUrlListener,
+                                                      nsIURI ** aURL)
+{
+  mPrintingOperation = PR_TRUE;
+  nsresult rv = FetchMessage(aMessageURI, aDisplayConsumer, aMsgWindow,aUrlListener, 
+                      nsIMailboxUrl::ActionDisplayMessage, aURL);
+  mPrintingOperation = PR_FALSE;
+  return rv;
+}

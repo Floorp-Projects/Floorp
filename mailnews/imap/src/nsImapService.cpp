@@ -74,6 +74,7 @@ NS_IMPL_QUERY_INTERFACE4(nsImapService,
 nsImapService::nsImapService()
 {
     NS_INIT_REFCNT();
+    mPrintingOperation = PR_FALSE;
 }
 
 nsImapService::~nsImapService()
@@ -299,6 +300,22 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
 	return rv;
 }
 
+//
+// rhp: Right now, this is the same as simple DisplayMessage, but it will change
+// to support print rendering.
+//
+NS_IMETHODIMP nsImapService::DisplayMessageForPrinting(const char* aMessageURI,
+                                                        nsISupports * aDisplayConsumer,  
+                                                        nsIMsgWindow * aMsgWindow,
+                                                        nsIUrlListener * aUrlListener,
+                                                        nsIURI ** aURL) 
+{
+  mPrintingOperation = PR_TRUE;
+  nsresult rv = DisplayMessage(aMessageURI, aDisplayConsumer, aMsgWindow, aUrlListener, aURL);
+  mPrintingOperation = PR_FALSE;
+  return rv;
+}
+
 NS_IMETHODIMP
 nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
                            aMailboxCopy, PRBool moveMessage,
@@ -509,6 +526,12 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 	  urlSpec.Append(">");
 	  urlSpec.Append(messageIdentifierList);
 
+
+    // rhp: If we are displaying this message for the purpose of printing, we
+    // need to append the header=print option.
+    //
+    if (mPrintingOperation)
+      urlSpec.Append("?header=print");
 
 		  // mscott - this cast to a char * is okay...there's a bug in the XPIDL
 		  // compiler that is preventing in string parameters from showing up as

@@ -74,6 +74,7 @@ XPIDLSRCS	= \
 		nsIMessengerMigrator.idl	\
 		nsIMsgStringService.idl		\
 		nsIMsgViewNavigationService.idl \
+		nsIMsgPrintEngine.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

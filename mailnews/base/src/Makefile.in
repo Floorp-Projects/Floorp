@@ -56,6 +56,7 @@ CPPSRCS		= \
 		nsMessengerMigrator.cpp \
 		nsMsgViewNavigationService.cpp \
 		nsMsgServiceProvider.cpp	\
+		nsMsgPrintEngine.cpp	\
 		$(NULL)
 
 EXPORTS		= \
@@ -82,6 +83,7 @@ EXPORTS		= \
 		nsMessengerMigrator.h \
 		nsMsgViewNavigationService.h \
 		nsMsgServiceProvider.h \
+		nsMsgPrintEngine.h \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

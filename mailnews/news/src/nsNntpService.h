@@ -73,6 +73,8 @@ protected:
   // a convience routine to run news urls
   nsresult RunNewsUrl (nsIURI * aUrl, nsIMsgWindow *aMsgWindow, nsISupports * aConsumer);
   static PRBool findNewsServerWithGroup(nsISupports *aElement, void *data);
+
+  PRBool            mPrintingOperation; // Flag for printing operations
 };
 
 #endif /* nsNntpService_h___ */
