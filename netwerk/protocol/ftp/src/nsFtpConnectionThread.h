@@ -164,6 +164,7 @@ private:
     // END: STATE METHODS
     ///////////////////////////////////
 
+    nsresult StopProcessing();
     void SetSystInternals(void);
     FTP_STATE FindActionState(void);
     FTP_STATE FindGetState(void);

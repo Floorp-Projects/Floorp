@@ -20,6 +20,7 @@
 #include "nsIBufferInputStream.h"
 #include "nscore.h"
 #include "nsIChannel.h"
+#include "nsIStringStream.h"
 
 nsFtpStreamListenerEvent::nsFtpStreamListenerEvent(nsIStreamListener* listener,
                                                    nsIChannel* channel,
@@ -117,10 +118,8 @@ nsFtpOnDataAvailableEvent::~nsFtpOnDataAvailableEvent()
 }
 
 nsresult
-nsFtpOnDataAvailableEvent::Init(nsIInputStream* aIStream, 
-                                PRUint32 aSourceOffset, PRUint32 aLength, char *aBuffer)
+nsFtpOnDataAvailableEvent::Init(nsIInputStream* aIStream, PRUint32 aSourceOffset, PRUint32 aLength)
 {
-    mUnderlyingBuffer = aBuffer;
     mLength = aLength;
     mSourceOffset = aSourceOffset;
     mIStream = aIStream;
@@ -134,8 +133,54 @@ nsFtpOnDataAvailableEvent::HandleEvent()
   nsresult rv;
   nsIStreamListener* receiver = (nsIStreamListener*)mListener;
   rv = receiver->OnDataAvailable(mChannel, mContext, mIStream, mSourceOffset, mLength);
-  if (mUnderlyingBuffer)
-      nsAllocator::Free(mUnderlyingBuffer);
+  return rv;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// ListOnDataAvailable
+//
+////////////////////////////////////////////////////////////////////////////////
+
+nsFtpListOnDataAvailableEvent::~nsFtpListOnDataAvailableEvent()
+{
+    NS_RELEASE(mIStream);
+    if (mBuffer)
+        nsAllocator::Free(mBuffer);
+}
+
+nsresult
+nsFtpListOnDataAvailableEvent::Init(PRUint32 aSourceOffset, PRUint32 aLength, char *aBuffer)
+{
+    nsresult rv;
+    mBuffer = nsCRT::strdup(aBuffer);
+    if (!mBuffer)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsISupports *stringStrmSup = nsnull;
+    rv = NS_NewCharInputStream(&stringStrmSup, mBuffer); // char streams keep ref to buffer
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    rv = stringStrmSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&mIStream);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    NS_RELEASE(stringStrmSup);
+
+    mLength = aLength;
+    mSourceOffset = aSourceOffset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpListOnDataAvailableEvent::HandleEvent()
+{
+  nsresult rv;
+  nsIStreamListener* receiver = (nsIStreamListener*)mListener;
+  rv = receiver->OnDataAvailable(mChannel, mContext, mIStream, mSourceOffset, mLength);
   return rv;
 }
 /*

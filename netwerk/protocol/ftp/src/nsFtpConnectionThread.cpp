@@ -176,11 +176,11 @@ nsFtpConnectionThread::Process() {
                 PRUint32 read;
                 rv = mCInStream->Read(buffer, NS_FTP_BUFFER_READ_SIZE, &read);
                 if (NS_FAILED(rv)) {
-                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - Read() FAILED\n", mUrl));
+                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - Read() FAILED with rv = %d\n", mUrl, rv));
                     return rv;
                 }
                 buffer[read] = '\0';
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - read \"%s\" (%d bytes)\n", mUrl, buffer, read));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - read \"%s\" (%d bytes)", mUrl, buffer, read));
 
                 // get the response code out.
                 if (!mContinueRead) {
@@ -238,62 +238,16 @@ nsFtpConnectionThread::Process() {
 
             case FTP_ERROR:
                 {
-                // We have error'd out. Stop binding and pass the error back to the user.
-                PRUnichar* errorMsg = nsnull;
                 PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - ERROR\n", mUrl));
-                nsFtpOnStopRequestEvent* event =
-                    new nsFtpOnStopRequestEvent(mListener, mChannel, mContext);
-                if (!event)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                rv = MapResultCodeToString(rv, &errorMsg);
-                if (NS_FAILED(rv)) {
-                    delete event;
-                    return rv;
-                }
-
-                rv = event->Init(rv, errorMsg);
-                if (NS_FAILED(rv)) {
-                    delete event;
-                    return rv;
-                }
-
-                rv = event->Fire(mEventQueue);
-                if (NS_FAILED(rv)) {
-                    delete event;
-                    return rv;
-                }
-
-                // we're done reading and writing, close the streams.
-                mCOutStream->Close();
-                mCInStream->Close();
-
-                // after notifying the user of the error, stop processing.
-                mKeepRunning = PR_FALSE;
+                rv = StopProcessing();
                 break;
                 }
                 // END: FTP_ERROR
 
             case FTP_COMPLETE:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - COMPLETE\n",mUrl));
-                nsFtpOnStopRequestEvent* event =
-                    new nsFtpOnStopRequestEvent(mListener, mChannel, mContext);
-                if (event == nsnull)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                rv = event->Fire(mEventQueue);
-                if (NS_FAILED(rv)) {
-                    delete event;
-                    return rv;
-                }
-                
-                // we're done reading and writing, close the streams.
-                mCOutStream->Close();
-                mCInStream->Close();
-
-                // fall out of the while loop
-                mKeepRunning = PR_FALSE;
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - COMPLETE\n", mUrl));
+                rv = StopProcessing();
                 break;
                 }
                 // END: FTP_COMPLETE
@@ -1224,52 +1178,23 @@ nsFtpConnectionThread::R_list() {
     nsresult rv;
     PRBool sentStart = PR_FALSE;
     PRUint32 dataLeft, bufSize, read;
-    char *listBuf = nsnull; // the buffer receiving the listing
- 
-    rv = mDInStream->Available(&dataLeft);
-    if (NS_FAILED(rv)) {
+    char *listBuf = (char*)nsAllocator::Alloc(NS_FTP_BUFFER_READ_SIZE + 1); // the buffer receiving the listing
+    if (!listBuf) return FTP_ERROR;
+
+    rv = mDInStream->Read(listBuf, NS_FTP_BUFFER_READ_SIZE, &read);
+    if (NS_FAILED(rv) || read < 1) {
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read failed w/ rv = %d and read = %d\n", mUrl, rv, read));
+        nsAllocator::Free(listBuf);
         return FTP_ERROR;
     }
 
-    // sometimes we can call Available() before the data has arrived
-    if (dataLeft == 0) {
-        bufSize = NS_FTP_BUFFER_READ_SIZE;
-    } else {
-        bufSize = PR_MIN(dataLeft, NS_FTP_BUFFER_READ_SIZE);
-    }
+    // this is ascii data coming in. terminate this sucker.
+    listBuf[read] = '\0';
 
-    if (bufSize > 0) {
-        listBuf = (char*)nsAllocator::Alloc(bufSize + 1);    
-        if (!listBuf) {
-            return FTP_ERROR;
-        }
-
-        // this is ascii data coming in. terminate this sucker.
-        listBuf[bufSize] = '\0';
-
-        rv = mDInStream->Read(listBuf, bufSize, &read);
-        if (NS_FAILED(rv) || read < 1) {
-            nsAllocator::Free(listBuf);
-            return FTP_ERROR;
-        }
-    } else {
-        return FTP_ERROR;
-    }
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read %d bytes:\n%s\n", mUrl, read, listBuf));  
 
     do {
         // tell the user about the data.
-
-        nsIInputStream *stringStream = nsnull;
-        nsISupports *stringStrmSup = nsnull;
-        rv = NS_NewCharInputStream(&stringStrmSup, listBuf); // char streams keep ref to buffer
-        if (NS_FAILED(rv)) {
-            return FTP_ERROR;
-        }
-
-        rv = stringStrmSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&stringStream);
-        if (NS_FAILED(rv)) {
-            return FTP_ERROR;
-        }
 
         nsFTPContext *dataCtxt = new nsFTPContext();
         if (!dataCtxt) 
@@ -1284,8 +1209,10 @@ nsFtpConnectionThread::R_list() {
         if (!sentStart) {
             sentStart = PR_TRUE;
             NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
-            if (NS_FAILED(rv)) 
+            if (NS_FAILED(rv)) {
+                nsAllocator::Free(listBuf);
                 return FTP_ERROR;
+            }
 
             nsString fromStr("text/ftp-dir-");
             SetDirMIMEType(fromStr);
@@ -1318,18 +1245,14 @@ nsFtpConnectionThread::R_list() {
         } // END sentStart
 
         // send data off
-        nsFtpOnDataAvailableEvent* availEvent =
-            new nsFtpOnDataAvailableEvent(converterListener, mChannel, ctxtSup);
+        nsFtpListOnDataAvailableEvent* availEvent =
+            new nsFtpListOnDataAvailableEvent(converterListener, mChannel, ctxtSup);
         if (!availEvent) 
             return FTP_ERROR;
 
-        PRUint32 streamLen;
-        rv = stringStream->Available(&streamLen);
-        if (NS_FAILED(rv)) 
-            return FTP_ERROR;
-        rv = availEvent->Init(stringStream, 0, streamLen, listBuf); // pass the buffer ptr in so it 
-                                                                    // can be deleted later.
-        NS_RELEASE(stringStream);
+        rv = availEvent->Init(0, PL_strlen(listBuf), listBuf); 
+        nsAllocator::Free(listBuf); // we've passed the data on, we can delete our mem for it.
+
         if (NS_FAILED(rv)) {
             delete availEvent;
             return FTP_ERROR;
@@ -1359,12 +1282,15 @@ nsFtpConnectionThread::R_list() {
             // get more data
             rv = mDInStream->Read(listBuf, bufSize, &read);
             if (NS_FAILED(rv)) {
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() read failed with rv = %d\n", mUrl, rv));
                 nsAllocator::Free(listBuf);
                 return FTP_ERROR;
             }
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read %d bytes:\n%s\n", mUrl, read, listBuf));
         } else {
-            // fall out
+            // fall out. we're done.
             rv = NS_ERROR_FAILURE;
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() leaving.\n", mUrl));
         }
 
     } while (NS_SUCCEEDED(rv) && read > 0); // end do: stmt
@@ -1763,7 +1689,10 @@ nsFtpConnectionThread::Run() {
     char greetBuf[NS_FTP_BUFFER_READ_SIZE];
     PRUint32 read;
     rv = mCInStream->Read(greetBuf, NS_FTP_BUFFER_READ_SIZE, &read);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x nsFTPConnTrd::Run() greeting read failed with rv = %d\n", mUrl, rv));
+        return rv;
+    }
 
     if (read > 0) {
         // we got something.
@@ -1847,6 +1776,41 @@ nsFtpConnectionThread::SetUsePasv(PRBool aUsePasv) {
     return NS_OK;
 }
 
+nsresult
+nsFtpConnectionThread::StopProcessing() {
+    PRUnichar* errorMsg = nsnull;
+    nsresult rv = NS_OK; // XXX this is obviously broken.
+    nsFtpOnStopRequestEvent* event = new nsFtpOnStopRequestEvent(mListener, mChannel, mContext);
+    if (!event) return NS_ERROR_OUT_OF_MEMORY;
+
+    /*rv = MapResultCodeToString(rv, &errorMsg);
+    if (NS_FAILED(rv)) {
+        delete event;
+        return rv;
+    }*/
+
+    rv = event->Init(rv, errorMsg);
+    if (NS_FAILED(rv)) {
+        delete event;
+        return rv;
+    }
+
+    rv = event->Fire(mEventQueue);
+    if (NS_FAILED(rv)) {
+        delete event;
+        return rv;
+    }
+
+    // we're done reading and writing, close the streams.
+    rv = mCOutStream->Close();
+    if (NS_FAILED(rv)) return rv;
+    rv = mCInStream->Close();
+    if (NS_FAILED(rv)) return rv;
+
+    // after notifying the listener (the FTP channel) of the error, stop processing.
+    mKeepRunning = PR_FALSE;
+    return NS_OK;
+}
 
 // Here's where we do all the string whacking/parsing magic to determine
 // what type of server it is we're dealing with.
