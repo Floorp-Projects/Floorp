@@ -132,6 +132,7 @@ CPPSRCS		= \
 		  PrefsLang.cpp \
 		  PrefsProxiesView.cpp \
 		  RDFBase.cpp \
+		  RDFUtils.cpp \
 		  RDFChromeTreeView.cpp \
 		  RDFImage.cpp \
 		  RDFMenuToolbarBase.cpp \
