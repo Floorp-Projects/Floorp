@@ -434,6 +434,16 @@ nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
     return rv;
 }
 
+#if defined(DEBUG) && !defined(XP_BEOS)
+#define SHOULD_IMPLEMENT_BREAKAFTERLOAD
+#endif
+
+// These are used by BreakAfterLoad, below.
+#ifdef SHOULD_IMPLEMENT_BREAKAFTERLOAD
+static nsCString *sBreakList[16];
+static int sBreakListCount = 0;
+#endif
+
 nsresult nsDll::Shutdown(void)
 {
     // Release the module object if we got one
@@ -443,23 +453,28 @@ nsresult nsDll::Shutdown(void)
         NS_RELEASE2(m_moduleObject, refcnt);
         NS_ASSERTION(refcnt == 0, "Dll moduleObject refcount non zero");
     }
+#ifdef SHOULD_IMPLEMENT_BREAKAFTERLOAD
+    for (int i = 0; i < sBreakListCount; i++)
+    {
+        delete sBreakList[i];
+        sBreakList[i] = nsnull;
+    }
+    sBreakListCount = 0;
+#endif
     return NS_OK;
 
 }
 
 void nsDll::BreakAfterLoad(const char *nsprPath)
 {
-#ifndef XP_BEOS
-#ifdef DEBUG
+#ifdef SHOULD_IMPLEMENT_BREAKAFTERLOAD
     static PRBool firstTime = PR_TRUE;
-    static nsCString breakList[16];
-    static int count = 0;
 
     // return if invalid input
     if (!nsprPath || !*nsprPath) return;
 
     // return if nothing to break on
-    if (!firstTime && count == 0) return;
+    if (!firstTime && sBreakListCount == 0) return;
 
     if (firstTime)
     {
@@ -472,19 +487,20 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
         do
         {
             ofset = envList.FindChar(':', PR_TRUE, start);
-            envList.Mid(breakList[count], start, ofset);
-            count++;
+            sBreakList[sBreakListCount] = new nsCString();
+            envList.Mid(*(sBreakList[sBreakListCount]), start, ofset);
+            sBreakListCount++;
             start = ofset + 1;
         }
-        while (ofset != -1 && 16 > count); // avoiding vc6.0 compiler issue. count < thinks it is starting a template
+        while (ofset != -1 && 16 > sBreakListCount); // avoiding vc6.0 compiler issue. count < thinks it is starting a template
     }
 
     // Find the dllname part of the string
     nsCString currentPath(nsprPath);
     PRInt32 lastSep = currentPath.RFindCharInSet(":\\/");
 
-    for (int i=0; i<count; i++)
-        if (currentPath.Find(breakList[i], PR_TRUE, lastSep) > 0)
+    for (int i=0; i<sBreakListCount; i++)
+        if (currentPath.Find(*(sBreakList[i]), PR_TRUE, lastSep) > 0)
         {
             // Loading a dll that we want to break on
             // Put your breakpoint here
@@ -496,7 +512,6 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
             lib$signal(SS$_DEBUG);
 #endif
         }
-#endif /* DEBUG */
-#endif /* !XP_BEOS */
+#endif /* SHOULD_IMPLEMENT_BREAKAFTERLOAD */
     return;
 }
