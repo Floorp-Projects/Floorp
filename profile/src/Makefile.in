@@ -62,7 +62,6 @@ REQUIRES	= xpcom \
 		  appshell \
 		  appcomps \
 		  chrome \
-		  uconv \
 		  windowwatcher \
 		  profdirserviceprovider \
 		  $(NULL)

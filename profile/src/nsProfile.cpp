@@ -54,6 +54,7 @@
 #include "nsXPIDLString.h"
 #include "nsEscape.h"
 #include "nsIURL.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "prprf.h"
 
@@ -737,19 +738,8 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
         if (cmdResult) {
             foundProfileCommandArg = PR_TRUE;
             nsAutoString currProfileName; 
-            if (nsCRT::IsAscii(cmdResult))  {
-                currProfileName.AssignWithConversion(cmdResult);
-            }
-            else {
-                // get a platform charset
-                nsCAutoString charSet;
-                rv = GetPlatformCharset(charSet);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
-
-                // convert the profile name to Unicode
-                rv = ConvertStringToUnicode(charSet, cmdResult, currProfileName);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
-            }
+            rv = NS_CopyNativeToUnicode(cmdResult, currProfileName); 
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
  
 #ifdef DEBUG_profile
             printf("ProfileName : %s\n", (const char*)cmdResult);
@@ -806,24 +796,16 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             foundProfileCommandArg = PR_TRUE;
             nsAutoString currProfileName; 
  
-            if (nsCRT::IsAscii(cmdResult))  {
-                currProfileName.AssignWithConversion(strtok(cmdResult.BeginWriting(), " "));
-            }
-            else {
-                // get a platform charset
-                nsCAutoString charSet;
-                rv = GetPlatformCharset(charSet);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
+            char *tmpStr;
+            rv = NS_CopyNativeToUnicode(
+                 nsDependentCString(nsCRT::strtok(cmdResult.BeginWriting(), " ", &tmpStr)),
+                                    currProfileName);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
 
-                // convert the profile name to Unicode
-                nsCAutoString profileName(strtok(cmdResult.BeginWriting(), " "));
-                rv = ConvertStringToUnicode(charSet, profileName.get(), currProfileName);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
-            }
-            nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
-        
-            if (!currProfileDirString.IsEmpty()) {
-                rv = NS_NewLocalFile(currProfileDirString, PR_TRUE, getter_AddRefs(currProfileDir));
+            char *currProfileDirString = nsCRT::strtok(tmpStr, " ", &tmpStr); 
+            if (currProfileDirString && *currProfileDirString) {
+                rv = NS_NewNativeLocalFile(nsDependentCString(currProfileDirString), 
+                     PR_TRUE, getter_AddRefs(currProfileDir));
                 NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
             }
             else {
@@ -1678,8 +1660,9 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
         do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
 
-        nsCAutoString uiLocale; uiLocale.AssignWithConversion(aUILocale);
-        nsCAutoString contentLocale; contentLocale.AssignWithConversion(aContentLocale);
+        nsCAutoString uiLocale, contentLocale;
+        LossyCopyUTF16toASCII(aUILocale, uiLocale);
+        LossyCopyUTF16toASCII(aContentLocale, contentLocale);
 
         // When aUILocale == null or aContentLocale == null, set those
         // from default values which are from default or from command
@@ -1696,7 +1679,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
         // is done in nsAppRunner.cpp::InstallGlobalLocale()
 
         nsCOMPtr<nsIChromeRegistrySea> packageRegistry = do_QueryInterface(chromeRegistry);
-        if ((!aUILocale || !aUILocale[0]) && packageRegistry) {
+        if (uiLocale.IsEmpty() && packageRegistry) {
             nsCAutoString currentUILocaleName;
             rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"),
                                                     currentUILocaleName);
@@ -1705,7 +1688,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
             }
         }
 
-        if (!aContentLocale || !aContentLocale[0]) {
+        if (contentLocale.IsEmpty()) {
             nsCAutoString currentContentLocaleName;
             rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global-region"),
                                                     currentContentLocaleName);
