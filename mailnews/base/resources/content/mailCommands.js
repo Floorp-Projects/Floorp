@@ -447,6 +447,25 @@ function MarkAllMessagesRead(compositeDataSource, folder)
 	DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#MarkAllMessagesRead", folderResourceArray, null);
 }
 
+function DownloadFlaggedMessages(compositeDataSource, folder)
+{
+
+	var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+	var folderResourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+	folderResourceArray.AppendElement(folderResource);
+
+	DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#DownloadFlaggedMessages", folderResourceArray, null);
+}
+
+function DownloadSelectedMessages(compositeDataSource, messages, markFlagged)
+{
+
+	var messageResourceArray = ConvertMessagesToResourceArray(messages, null);
+	var command = "http://home.netscape.com/NC-rdf#DownloadSelectedMessages";
+
+	DoRDFCommand(compositeDataSource, command, messageResourceArray, null);
+}
+
 function MarkThreadAsRead(compositeDataSource, message)
 {
 

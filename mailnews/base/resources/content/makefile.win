@@ -75,6 +75,8 @@ CHROME_CONTENT = \
 	.\mailMessengerComposeOverlay.xul \
 	.\mailOverlay.xul \
 	.\mailWidgets.xml \
+  .\imapFolderProps.xul \
+  .\folderProps.js \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

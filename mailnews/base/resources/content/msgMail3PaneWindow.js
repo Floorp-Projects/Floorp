@@ -852,13 +852,14 @@ function ClearMessageSelection()
 function GetCompositeDataSource(command)
 {
 	if(command == "GetNewMessages" || command == "DeleteMessages" || command == "Copy"  || 
-	   command == "Move" ||  command == "NewFolder" ||  command == "MarkAllMessagesRead")
+	   command == "Move" ||  command == "NewFolder" ||  command == "MarkAllMessagesRead" || 
+     command == "DownloadFlagged")
 	{
         return GetFolderDatasource();
 	}
 	else if(command == "MarkMessageRead" || 
 			command == "MarkMessageFlagged" || command == "MarkThreadAsRead" ||
-			command == "MessageProperty")
+			command == "DownloadSelected" || command == "MessageProperty")
 	{
 		var threadTree = GetThreadTree();
 		return threadTree.database;

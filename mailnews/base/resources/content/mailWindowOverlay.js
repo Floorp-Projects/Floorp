@@ -604,6 +604,23 @@ function MsgMarkAllRead()
         MarkAllMessagesRead(compositeDataSource, folder);
 }
 
+function MsgDownloadFlagged()
+{
+    var compositeDataSource = GetCompositeDataSource("DownloadFlagged");
+    var folder = GetLoadedMsgFolder();
+
+    if(folder)
+        DownloadFlaggedMessages(compositeDataSource, folder);
+}
+
+function MsgDownloadSelected()
+{
+    var selectedMessages = GetSelectedMessages();
+    var compositeDataSource = GetCompositeDataSource("DownloadSelected");
+
+    DownloadSelectedMessages(compositeDataSource, selectedMessages);
+}
+
 function MsgMarkThreadAsRead()
 {
     

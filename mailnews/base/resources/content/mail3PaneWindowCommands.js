@@ -216,6 +216,8 @@ var DefaultController =
 			case "cmd_emptyTrash":
 			case "cmd_compactFolder":
 			case "cmd_sortByThread":
+      case "cmd_downloadFlagged":
+      case "cmd_downloadSelected":
 				return true;
 			default:
 				return false;
@@ -265,12 +267,14 @@ var DefaultController =
 			case "cmd_previousMsg":
 			case "cmd_previousUnreadMsg":
 				return MailAreaHasFocus() && IsViewNavigationItemEnabled();
+      case "cmd_downloadSelected":
 			case "cmd_markAsRead":
 				if(!MailAreaHasFocus())
 					return false;
 				else
 					return(GetNumSelectedMessages() > 0);
 			case "cmd_markAllRead":
+      case "cmd_downloadFlagged":
 				return(MailAreaHasFocus() && IsFolderSelected());
 			case "cmd_find":
 			case "cmd_findAgain":
@@ -436,6 +440,12 @@ var DefaultController =
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
 				return;
+      case "cmd_downloadFlagged":
+        MsgDownloadFlagged();
+        return;
+      case "cmd_downloadSelected":
+        MsgDownloadSelected();
+        return;
 			case "cmd_emptyTrash":
 				MsgEmptyTrash();
 				return;
@@ -563,6 +573,8 @@ function ThreadTreeUpdate_Mail(command)
 	goUpdateCommand('cmd_markAsRead');
 	goUpdateCommand('cmd_markThreadAsRead');
 	goUpdateCommand('cmd_markAsFlagged');
+  goUpdateCommand('cmd_downloadSelected');
+  goUpdateCommand('cmd_downloadFlagged');
 	goUpdateCommand('cmd_file');
 }
 

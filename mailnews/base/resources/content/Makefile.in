@@ -58,6 +58,8 @@ CHROME_CONTENT = \
 		subscribe.js \
 		subscribe.xul \
 		sidebar-messenger.rdf \
+    imapFolderProps.xul \
+    folderProps.js \
 		newFolderNameDialog.xul \
 		newFolderNameDialog.js \
 		msgViewNavigation.js \

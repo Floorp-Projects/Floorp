@@ -234,6 +234,26 @@ function MsgCompactFolder()
 	}
 }
 
+function MsgFolderProperties() 
+{
+	var preselectedURI = GetSelectedFolderURI();
+	var folderTree = GetFolderTree();
+
+	var name = GetFolderNameFromUri(preselectedURI, folderTree);
+
+	dump("preselectedURI = " + preselectedURI + "\n");
+	var windowTitle = Bundle.GetStringFromName("folderProperties");
+	var dialog = window.openDialog(
+                    "chrome://messenger/content/imapFolderProps.xul",
+                    "",
+                    "chrome,titlebar,modal",
+	            {preselectedURI:preselectedURI, title:windowTitle,
+                    okCallback:FolderProperties, name:name});
+}
+
+function FolderProperties(name, uri)
+{
+}
 
 function MsgToggleMessagePane()
 {

@@ -109,6 +109,10 @@ Rights Reserved.
 	<broadcaster id="cmd_file" disabled="true"/>
 	<broadcaster id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
 	<broadcaster id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
+	<broadcaster id="cmd_workOffline" oncommand="goDoCommand('cmd_workOffline')" disabled="true"/>
+	<broadcaster id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
+	<broadcaster id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
+	<broadcaster id="cmd_downloadSelected" oncommand="goDoCommand('cmd_downloadSelected')" disabled="true"/>
 
 </broadcasterset>
 
@@ -372,6 +376,10 @@ Rights Reserved.
 			  value="&folderContextSearchMessages.label;"
 			  accesskey="&folderContextSearchMessages.accesskey;"
 			  oncommand="MsgSearchMessages();"/>
+		<menuitem id="folderPaneContext-properties"
+			  value="&folderContextProperties.label;"
+			  accesskey="&folderContextProperties.accesskey;"
+			  oncommand="MsgFolderProperties();"/>
 	</popup>
 
 	<popup id="messagePaneContext"   
@@ -653,6 +661,23 @@ Rights Reserved.
 			<menuitem id="menu_compactFolder" value="&compactFolder.label;" accesskey="&compactFolder.accesskey;" observes="cmd_compactFolder"/>
 			<menuseparator id="trashMenuSeparator"/>
 			<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
+			<menuseparator/>
+			<menu value="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
+				<menupopup>
+          <menuitem value="&workOfflineCmd.label;"
+           accesskey="&workOfflineCmd.accesskey;"
+           observes="cmd_workOffline"/>
+          <menuitem value="&synchronizeOfflineCmd.label;" 
+           accesskey="&synchronizeOfflineCmd.accesskey;"
+           observes="cmd_synchronizeOffline"/>
+					<menuitem value="&downloadFlaggedCmd.label;"
+					 accesskey="&downloadFlaggedCmd.accesskey;"
+					 observes="cmd_downloadFlagged"/>
+					<menuitem value="&downloadSelectedCmd.label;"
+					 accesskey="&downloadSelectedCmd.accesskey;"
+					 observes="cmd_downloadSelected"/>
+				</menupopup>
+			</menu>
 			<menuseparator/>
 			<menuitem id="printMenuItem" key="key_print" value="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print"/>
 			<menuseparator/>

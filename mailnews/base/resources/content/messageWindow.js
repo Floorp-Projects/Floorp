@@ -377,6 +377,7 @@ var MessageWindowController =
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
 			case "cmd_file":
+      case "cmd_downloadFlagged":
 				return true;
 			default:
 				return false;
@@ -505,6 +506,12 @@ var MessageWindowController =
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
 				return;
+      case "cmd_downloadFlagged":
+        MsgDownloadFlagged();
+        return;
+      case "cmd_downloadSelected":
+        MsgDownloadSelected();
+        return;
 		}
 	},
 	
@@ -543,6 +550,8 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_markThreadAsRead');
 	goUpdateCommand('cmd_markAllRead');
 	goUpdateCommand('cmd_markAsFlagged');
+  goUpdateCommand('cmd_downloadFlagged');
+  goUpdateCommand('cmd_downloadSelected');
 	goUpdateCommand('cmd_file');
 
 }
