@@ -166,27 +166,27 @@
 
       <treecolgroup>
        <treecol
-        rdf:resource="http://home.netscape.com/NC-irc#op"
+        resource="http://home.netscape.com/NC-irc#op"
         width="15"/>
       <treecol
-       rdf:resource="http://home.netscape.com/NC-irc#voice"
+       resource="http://home.netscape.com/NC-irc#voice"
        width="15"/>
       <treecol flex="1"
-        rdf:resource="http://home.netscape.com/NC-irc#nick"/>
+        resource="http://home.netscape.com/NC-irc#nick"/>
       </treecolgroup>
 
       <treehead>
         <treerow>
           <treecell id="usercol-op"
-            rdf:resource="http://home.netscape.com/NC-irc#op"
+            resource="http://home.netscape.com/NC-irc#op"
             class="treecell-header sortDirectionIndicator" value="O"
             onclick="return onSortCol('usercol-op');"/>
           <treecell id="usercol-voice"
-            rdf:resource="http://home.netscape.com/NC-irc#voice"
+            resource="http://home.netscape.com/NC-irc#voice"
             class="treecell-header sortDirectionIndicator" value="V"
             onclick="return onSortCol('usercol-voice');"/>
           <treecell id="usercol-nick"
-            rdf:resource="http://home.netscape.com/NC-irc#nick"
+            resource="http://home.netscape.com/NC-irc#nick"
             class="treecell-header sortDirectionIndicator" value="Nick"
             onclick="return onSortCol('usercol-nick');"/>
         </treerow>

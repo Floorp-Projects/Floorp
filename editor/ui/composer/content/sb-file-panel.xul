@@ -62,7 +62,7 @@
   </template>
 
   <treecolgroup>
-   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
   </treecolgroup>
 </tree>
 
