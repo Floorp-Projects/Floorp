@@ -492,16 +492,11 @@ public:
 
 };
 
-// for HashTable usage, since we're only distinguishing between id's at that level:
-inline bool operator==(const LocalBindingEntry &s1, const LocalBindingEntry &s2) {return s1.name == s2.name;}
-inline bool operator!=(const LocalBindingEntry &s1, const LocalBindingEntry &s2) {return s1.name != s2.name;}
-
-
 
 // A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list
 // will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
-typedef HashTable<LocalBindingEntry *, String> LocalBindingMap;
-typedef TableIterator<LocalBindingEntry *, String> LocalBindingIterator;
+typedef HashTable<LocalBindingEntry *, const String> LocalBindingMap;
+typedef TableIterator<LocalBindingEntry *, const String> LocalBindingIterator;
 
 typedef std::multimap<String, InstanceBinding *> InstanceBindingMap;
 typedef InstanceBindingMap::iterator InstanceBindingIterator;
@@ -1285,6 +1280,10 @@ public:
     inline char narrow(char16 ch) { return char(ch); }
 
 }; // namespace MetaData
+
+inline bool operator==(MetaData::LocalBindingEntry *s1, const String &s2) { return s1->name == s2;}
+inline bool operator!=(MetaData::LocalBindingEntry *s1, const String &s2) { return s1->name != s2;}
+
 }; // namespace Javascript
 
 #endif

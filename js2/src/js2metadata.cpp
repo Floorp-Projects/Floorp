@@ -4402,6 +4402,7 @@ deleteClassProperty:
             new_b->xplicit = m->xplicit;
             new_e->localBindingList.push_back(NamespaceLocalBinding(ns.first, new_b));
         }
+        return new_e;
     }
 
 
@@ -4907,8 +4908,6 @@ deleteClassProperty:
             released += nextPond->moveUnmarkedToFreeList();
         return released;
     }
-
-
 
 }; // namespace MetaData
 }; // namespace Javascript

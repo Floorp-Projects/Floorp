@@ -1011,10 +1011,11 @@ namespace MetaData {
     {
         if (obj->kind == ClassKind) {
             JS2Class *c = checked_cast<JS2Class *>(obj);
-            nameList = new const String *[c->localReadBindings.size()];
+            nameList = new const String *[c->localBindings.size()];
             length = 0;
-            for (LocalBindingIterator sbi = c->localReadBindings.begin(), end = c->localReadBindings.end(); (sbi != end); sbi++) {
-                nameList[length++] = &sbi->first;
+            for (LocalBindingIterator bi = c->localBindings.begin(), bend = c->localBindings.end(); (bi != bend); bi++) {
+                LocalBindingEntry *lbe = *bi;
+                nameList[length++] = &lbe->name;
             }
         }
         else {

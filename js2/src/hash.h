@@ -245,7 +245,6 @@ namespace JavaScript {
         HashTable(uint32 nEntriesDefault = 0, const H &hasher = H()): GenericHashTable(nEntriesDefault), hasher(hasher) {}
         ~HashTable();
 
-        template<class Value> Data &insert(Reference &r, Key key, Value value);
         Data &insert(Reference &r, Key key);
         Data &insert(Key key);
         Data &insert(Data data);
@@ -265,9 +264,25 @@ namespace JavaScript {
 
 #ifndef _WIN32
         template<class Value> Data &insert(Key key, Value value);
+        template<class Value> Data &insert(Reference &r, Key key, Value value);
 #else
         // Microsoft VC6 bug: VC6 doesn't allow this to be defined outside the
         // class
+        template<class Value>
+        inline Data &insert(Reference &r, Key key, Value value)
+        {
+            ASSERT(r.ht == this && !r.entry);
+            Entry *e = new Entry(r.keyHash, key, value);
+            *r.backpointer = e;
+            ++nEntries;
+            maybeGrow();
+#ifdef DEBUG
+            --r.ht->nReferences;
+            r.ht = 0;
+#endif
+            return e->data;
+        }
+
         template<class Value> Data &insert(Key key, Value value) {
             Reference r(*this, key);
             if (r)
@@ -275,6 +290,8 @@ namespace JavaScript {
             else
                 return insert(r, key, value);
         }
+
+
 #endif
     };
 
