@@ -17,6 +17,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Dawn Endico <endico@mozilla.org>
 
 
 # This file defines all the parameters that we have a GUI to edit within
@@ -274,6 +275,12 @@ DefParam("nummilestones",
           appear?",
          "t",
          10,
+         \&check_numeric);
+
+DefParam("curmilestone",
+         "If using Target Milestone, Which milestone are we working toward right now?",
+         "t",
+         1,
          \&check_numeric);
 
 DefParam("useqacontact",

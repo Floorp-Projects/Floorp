@@ -19,10 +19,11 @@
 #
 # Contributor(s): Harrison Page <harrison@netscape.com>,
 # Terry Weissman <terry@mozilla.org>,
-# Bryce Nesbitt <bryce@nextbus.COM>
-#	Added -All- report, change "nobanner" to "banner" (it is strange to have a
-#	list with 2 positive and 1 negative choice), default links on, add show
-#	sql comment.
+# Dawn Endico <endico@mozilla.org>
+# Bryce Nesbitt <bryce@nextbus.COM>,
+#    Added -All- report, change "nobanner" to "banner" (it is strange to have a
+#    list with 2 positive and 1 negative choice), default links on, add show
+#    sql comment.
 
 use diagnostics;
 use strict;
@@ -36,6 +37,7 @@ use vars @::legal_product;
 my $dir = "data/mining";
 my $week = 60 * 60 * 24 * 7;
 my @status = qw (NEW ASSIGNED REOPENED);
+my %bugsperperson;
 
 # while this looks odd/redundant, it allows us to name
 # functions differently than the value passed in
@@ -43,6 +45,7 @@ my @status = qw (NEW ASSIGNED REOPENED);
 my %reports = 
 	( 
 	"most_doomed" => \&most_doomed,
+	"most_doomed_for_milestone" => \&most_doomed_for_milestone,
 	"show_chart" => \&show_chart,
 	);
 
@@ -130,6 +133,7 @@ $product_popup
 <td align=center>
 <select name="output">
 <option value="most_doomed">Bug Counts
+<option value="most_doomed_for_milestone">Most Doomed
 $charts
 </select>
 <tr>
@@ -504,5 +508,119 @@ FIN
 	
 	exit;
 	}
+
+
+sub most_doomed_for_milestone
+	{
+	my $when = localtime (time);
+        my $ms = "M" . Param("curmilestone");
+        my $quip = "Summary";
+
+	print "<center>\n<h1>";
+        if( $::FORM{'product'} ne "-All-" ) {
+            print "Most Doomed for $ms ($::FORM{'product'})";
+        } else {
+            print "Most Doomed for $ms";
+            }
+        print "</h1>\n$when<p>\n";
+
+	#########################
+	# start painting report #
+	#########################
+
+	if ($::FORM{'quip'})
+                {
+                if (open (COMMENTS, "<data/comments"))
+                        {
+                        my @cdata;
+                        while (<COMMENTS>)
+                                {
+                                push @cdata, $_;
+                                }
+                        close COMMENTS;
+                        $quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";                        }
+                }
+
+
+        # Build up $query string
+	my $query;
+	$query = "select distinct assigned_to from bugs where target_milestone=\"$ms\"";
+	if( $::FORM{'product'} ne "-All-" ) {
+		$query .= "and    bugs.product='$::FORM{'product'}'";
+	}
+	$query .= <<FIN;
+and 	 
+	( 
+	bugs.bug_status = 'NEW' or 
+	bugs.bug_status = 'ASSIGNED' or 
+	bugs.bug_status = 'REOPENED'
+	)
+FIN
+# End build up $query string
+
+        SendSQL ($query);
+        my @people = ();
+        while (my ($person) = FetchSQLData())
+            {
+            push @people, $person;
+            }
+
+        #############################
+        # suck contents of database # 
+        #############################
+        my $person = "";
+        my $bugtotal = 0;
+        foreach $person (@people)
+                {
+                SendSQL ("select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\";");
+	        my $bugcount = FetchSQLData();
+                $bugsperperson{$person} = $bugcount;
+                $bugtotal += $bugcount;
+                }
+
+#       sort people by the number of bugs they have assigned to this milestone
+        sub bybugs {
+                $bugsperperson{$a} <=> $bugsperperson{$b}
+                }
+        @people = sort bybugs @people;
+        my $totalpeople = @people;
+                
+        print "<TABLE>\n";
+        print "<TR><TD COLSPAN=2>\n";
+        print "$totalpeople engineers have $bugtotal $ms bugs and features.\n";
+        print "</TD></TR>\n";
+
+        while (@people)
+                {
+                $person = pop @people;
+                print "<TR><TD>\n";
+                SendSQL("select login_name from profiles where userid=$person;");
+                my $login_name= FetchSQLData();
+                print("<A HREF=\"buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&target_milestone=M9&assigned_to=$login_name\">\n");
+                print("$bugsperperson{$person}  bugs and features");
+                print("</A>");
+                print(" for \n");
+                print("<A HREF=\"mailto:$login_name\">");
+                print("$login_name");
+                print("</A>\n");
+                print("</TD><TD>\n");
+
+                $person = pop @people;
+                if ($person) {
+                    SendSQL("select login_name from profiles where userid=$person;");
+                    my $login_name= FetchSQLData();
+                    print("<A HREF=\"buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&target_milestone=M9&assigned_to=$login_name\">\n");
+                    print("$bugsperperson{$person}  bugs and features");
+                    print("</A>");
+                    print(" for \n");
+                    print("<A HREF=\"mailto:$login_name\">");
+                    print("$login_name");
+                    print("</A>\n");
+                    print("</TD></TR>\n\n");
+                    }
+                }
+        print "</TABLE>\n";
+
+        }
 
 
