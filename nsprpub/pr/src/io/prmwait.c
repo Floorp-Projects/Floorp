@@ -58,19 +58,8 @@ typedef struct TimerEvent {
 struct {
     PRLock *ml;
     PRCondVar *new_timer;
-    PRCondVar *cancel_timer;  /* The cancel_timer condition variable is
-                               * used to cancel a timer (i.e., remove a
-                               * timer event from the timer queue). At
-                               * startup I'm borrowing this condition
-                               * variable for a different purpose (to
-                               * tell the primordial thread that the
-                               * timer manager thread has started) so
-                               * that I don't need to create a new
-                               * condition variable just for this one
-                               * time use.
-                               */
+    PRCondVar *cancel_timer;
     PRThread *manager_thread;
-    PRBool manager_started;
     PRCList timer_queue;
 } tm_vars;
 
@@ -88,11 +77,6 @@ static void TimerManager(void *arg)
     TimerEvent *timer;
 
     PR_Lock(tm_vars.ml);
-    /* tell the primordial thread that we have started */
-    tm_vars.manager_started = PR_TRUE;
-    if (!_native_threads_only) {
-        PR_NotifyCondVar(tm_vars.cancel_timer);
-    }
     while (1)
     {
         if (PR_CLIST_IS_EMPTY(&tm_vars.timer_queue))
@@ -215,16 +199,6 @@ static PRStatus TimerInit(void)
     if (NULL == tm_vars.manager_thread)
     {
         goto failed;
-    }
-    /*
-     * Need to wait until the timer manager thread starts
-     * if the timer manager thread is a local thread.
-     */
-    if (!_native_threads_only) {
-        PR_Lock(tm_vars.ml);
-        while (!tm_vars.manager_started)
-            PR_WaitCondVar(tm_vars.cancel_timer, PR_INTERVAL_NO_TIMEOUT);
-        PR_Unlock(tm_vars.ml);
     }
     return PR_SUCCESS;
 

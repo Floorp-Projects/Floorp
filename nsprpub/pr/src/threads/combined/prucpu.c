@@ -59,7 +59,8 @@ static PRUintn _pr_cpuID;
 
 static void PR_CALLBACK _PR_CPU_Idle(void *);
 
-static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue);
+static _PRCPU *_PR_CreateCPU(void);
+static PRStatus _PR_StartCPU(_PRCPU *cpu, PRThread *thread);
 
 #if !defined(_PR_LOCAL_THREADS_ONLY)
 static void _PR_RunCPU(void *arg);
@@ -85,8 +86,9 @@ void  _PR_InitCPUs()
 #endif
 
     /* Now start the first CPU. */
-    _pr_primordialCPU = _PR_CreateCPU(me, PR_TRUE);
+    _pr_primordialCPU = _PR_CreateCPU();
     _pr_numCPU = 1;
+    _PR_StartCPU(_pr_primordialCPU, me);
 
     _PR_MD_SET_CURRENT_CPU(_pr_primordialCPU);
 
@@ -97,15 +99,16 @@ void  _PR_InitCPUs()
 
 #else /* Combined MxN model */
 
+    _pr_primordialCPU = _PR_CreateCPU();
+    _pr_numCPU = 1;
     _PR_CreateThread(PR_SYSTEM_THREAD,
                      _PR_RunCPU,
-                     me,
+                     _pr_primordialCPU,
                      PR_PRIORITY_NORMAL,
                      PR_GLOBAL_THREAD,
                      PR_UNJOINABLE_THREAD,
                      0,
                      _PR_IDLE_THREAD);
-    _PR_MD_WAIT(me, PR_INTERVAL_NO_TIMEOUT);
 
 #endif /* _PR_LOCAL_THREADS_ONLY */
 
@@ -137,70 +140,95 @@ static _PRCPUQueue *_PR_CreateCPUQueue(void)
 
 /*
  * Create a new CPU.
+ *
+ * This function initializes enough of the _PRCPU structure so
+ * that it can be accessed safely by a global thread or another
+ * CPU.  This function does not create the native thread that
+ * will run the CPU nor does it initialize the parts of _PRCPU
+ * that must be initialized by that native thread.
+ *
+ * The reason we cannot simply have the native thread create
+ * and fully initialize a new CPU is that we need to be able to
+ * create a usable _pr_primordialCPU in _PR_InitCPUs without
+ * assuming that the primordial CPU thread we created can run
+ * during NSPR initialization.  For example, on Windows while
+ * new threads can be created by DllMain, they won't be able
+ * to run during DLL initialization.  If NSPR is initialized
+ * by DllMain, the primordial CPU thread won't run until DLL
+ * initialization is finished.
  */
-static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue)
+static _PRCPU *_PR_CreateCPU(void)
 {
     _PRCPU *cpu;
 
-    /*
-    ** Create a new cpu. The assumption this code makes is that the
-    ** underlying operating system creates a stack to go with the new
-    ** native thread. That stack will be used by the cpu when pausing.
-    */
     cpu = PR_NEWZAP(_PRCPU);
     if (cpu) {
-        cpu->last_clock = PR_IntervalNow();
-
-        if (needQueue == PR_TRUE)
-            cpu->queue = _PR_CreateCPUQueue();
-        else 
-            cpu->queue = _PR_MD_CURRENT_CPU()->queue;
-   
+        cpu->queue = _PR_CreateCPUQueue();
         if (!cpu->queue) {
             PR_DELETE(cpu);
             return NULL;
         }
-
-        /* Before we create any threads on this CPU we have to
-         * set the current CPU 
-         */
-        _PR_MD_SET_CURRENT_CPU(cpu);
-        _PR_MD_INIT_RUNNING_CPU(cpu);
-        thread->cpu = cpu;
-
-		if (!_native_threads_only) {
-			
-			cpu->idle_thread = _PR_CreateThread(PR_SYSTEM_THREAD,
-											   _PR_CPU_Idle,
-											   (void *)cpu,
-											   PR_PRIORITY_NORMAL,
-											   PR_LOCAL_THREAD,
-											   PR_UNJOINABLE_THREAD,
-											   0,
-											   _PR_IDLE_THREAD);
-
-			if (!cpu->idle_thread) {
-				/* didn't clean up CPU queue XXXMB */
-				PR_DELETE(cpu);
-				return NULL;
-			} 
-			cpu->idle_thread->cpu = cpu;
-
-			cpu->idle_thread->no_sched = 0;
-		}
-
-        cpu->thread = thread;
-
-        if (_pr_cpu_affinity_mask)
-            PR_SetThreadAffinityMask(thread, _pr_cpu_affinity_mask);
-
-	    /* Created a new CPU */
-	_PR_CPU_LIST_LOCK();
-        cpu->id = _pr_cpuID++;
-        PR_APPEND_LINK(&cpu->links, &_PR_CPUQ());
-	_PR_CPU_LIST_UNLOCK();
-   }
+    }
     return cpu;
+}
+
+/*
+ * Start a new CPU.
+ *
+ * 'cpu' is a _PRCPU structure created by _PR_CreateCPU().
+ * 'thread' is the native thread that will run the CPU.
+ *
+ * If this function fails, 'cpu' is destroyed.
+ */
+static PRStatus _PR_StartCPU(_PRCPU *cpu, PRThread *thread)
+{
+    /*
+    ** Start a new cpu. The assumption this code makes is that the
+    ** underlying operating system creates a stack to go with the new
+    ** native thread. That stack will be used by the cpu when pausing.
+    */
+
+    cpu->last_clock = PR_IntervalNow();
+
+    /* Before we create any threads on this CPU we have to
+     * set the current CPU 
+     */
+    _PR_MD_SET_CURRENT_CPU(cpu);
+    _PR_MD_INIT_RUNNING_CPU(cpu);
+    thread->cpu = cpu;
+
+    if (!_native_threads_only) {
+        cpu->idle_thread = _PR_CreateThread(PR_SYSTEM_THREAD,
+                                            _PR_CPU_Idle,
+                                            (void *)cpu,
+                                            PR_PRIORITY_NORMAL,
+                                            PR_LOCAL_THREAD,
+                                            PR_UNJOINABLE_THREAD,
+                                            0,
+                                            _PR_IDLE_THREAD);
+
+        if (!cpu->idle_thread) {
+            /* didn't clean up CPU queue XXXMB */
+            PR_DELETE(cpu);
+            return PR_FAILURE;
+        } 
+        PR_ASSERT(cpu->idle_thread->cpu == cpu);
+
+        cpu->idle_thread->no_sched = 0;
+    }
+
+    cpu->thread = thread;
+
+    if (_pr_cpu_affinity_mask)
+        PR_SetThreadAffinityMask(thread, _pr_cpu_affinity_mask);
+
+    /* Created and started a new CPU */
+    _PR_CPU_LIST_LOCK();
+    cpu->id = _pr_cpuID++;
+    PR_APPEND_LINK(&cpu->links, &_PR_CPUQ());
+    _PR_CPU_LIST_UNLOCK();
+
+    return PR_SUCCESS;
 }
 
 #if !defined(_PR_GLOBAL_THREADS_ONLY) && !defined(_PR_LOCAL_THREADS_ONLY)
@@ -209,17 +237,16 @@ static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue)
 */
 static void _PR_RunCPU(void *arg)
 {
-    _PRCPU *cpu;
+    _PRCPU *cpu = (_PRCPU *)arg;
     PRThread *me = _PR_MD_CURRENT_THREAD();
-    PRThread *waiter = (PRThread *) arg;
 
     PR_ASSERT(NULL != me);
 
     /*
-     * _PR_CreateCPU calls _PR_CreateThread to create the
+     * _PR_StartCPU calls _PR_CreateThread to create the
      * idle thread.  Because _PR_CreateThread calls PR_Lock,
      * the current thread has to remain a global thread
-     * during the _PR_CreateCPU call so that it can wait for
+     * during the _PR_StartCPU call so that it can wait for
      * the lock if the lock is held by another thread.  If
      * we clear the _PR_GLOBAL_SCOPE flag in
      * _PR_MD_CREATE_PRIMORDIAL_THREAD, the current thread
@@ -227,7 +254,7 @@ static void _PR_RunCPU(void *arg)
      * waiting for the lock because the CPU is not fully
      * constructed yet.
      *
-     * After the CPU is created, it is safe to mark the
+     * After the CPU is started, it is safe to mark the
      * current thread as a local thread.
      */
 
@@ -236,7 +263,7 @@ static void _PR_RunCPU(void *arg)
 #endif
 
     me->no_sched = 1;
-    cpu = _PR_CreateCPU(me, PR_TRUE);
+    _PR_StartCPU(cpu, me);
 
 #ifdef HAVE_CUSTOM_USER_THREADS
     me->flags &= (~_PR_GLOBAL_SCOPE);
@@ -245,12 +272,6 @@ static void _PR_RunCPU(void *arg)
     _PR_MD_SET_CURRENT_CPU(cpu);
     _PR_MD_SET_CURRENT_THREAD(cpu->thread);
     me->cpu = cpu;
-
-    if (waiter) {
-        _pr_primordialCPU = cpu;
-        _pr_numCPU = 1;
-        _PR_MD_WAKEUP_WAITER(waiter);
-    }
 
     while(1) {
         PRInt32 is;
@@ -344,7 +365,8 @@ PR_IMPLEMENT(void) PR_SetConcurrency(PRUintn numCPUs)
 #else /* combined, MxN thread model */
 
     PRUintn newCPU;
-    PRThread *cpu;
+    _PRCPU *cpu;
+    PRThread *thr;
 
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
@@ -360,9 +382,10 @@ PR_IMPLEMENT(void) PR_SetConcurrency(PRUintn numCPUs)
     _PR_CPU_LIST_UNLOCK();
 
     for (; newCPU; newCPU--) {
-        cpu = _PR_CreateThread(PR_SYSTEM_THREAD,
+        cpu = _PR_CreateCPU();
+        thr = _PR_CreateThread(PR_SYSTEM_THREAD,
                               _PR_RunCPU,
-                              NULL,
+                              cpu,
                               PR_PRIORITY_NORMAL,
                               PR_GLOBAL_THREAD,
                               PR_UNJOINABLE_THREAD,
