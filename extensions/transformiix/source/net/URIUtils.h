@@ -31,7 +31,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.h,v 1.4 2000/04/12 22:31:17 nisheeth%netscape.com Exp $
+ * $Id: URIUtils.h,v 1.5 2000/05/25 22:52:27 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "TxString.h"
@@ -43,7 +43,6 @@
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
-#include "MozillaString.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 
@@ -53,7 +52,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/04/12 22:31:17 $
+ * @version $Revision: 1.5 $ $Date: 2000/05/25 22:52:27 $
  *
 **/
 

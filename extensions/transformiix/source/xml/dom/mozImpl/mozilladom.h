@@ -51,7 +51,7 @@
 #include <stdlib.h> 
 #endif 
 
-#include "MozillaString.h" 
+#include "TxString.h" 
 #include "baseutils.h" 
 #include "HashTable.h" 
  
@@ -81,7 +81,7 @@ typedef 0 NULL;
 #endif 
  
  
-typedef MozillaString DOMString; 
+typedef String DOMString; 
 typedef UNICODE_CHAR DOM_CHAR; 
  
 class NodeList; 

@@ -118,6 +118,11 @@
 #include "baseutils.h"
 #include <iostream.h>
 
+#ifdef MOZILLA
+#include "nsString.h"
+//typedef unsigned long SPECIAL_CHAR;
+#endif
+
 typedef unsigned short UNICODE_CHAR;
 
 #ifndef NULL
@@ -138,6 +143,9 @@ class String : public MITREObject
     String(const char* source);   //Create a string from the characters
     String(const UNICODE_CHAR* source);
     String(const UNICODE_CHAR* source, Int32 length);
+#ifdef MOZILLA
+    String(nsString* theNSString);
+#endif
 
     ~String();                    //Destroy the string, and free memory
 
@@ -248,6 +256,11 @@ class String : public MITREObject
 
     virtual void reverse();               //Reverse the string
 
+#ifdef MOZILLA
+    virtual nsString& getNSString();
+    virtual const nsString& getConstNSString() const;
+#endif
+
   protected:
     //Convert an Int into a String
     //TK 12/09/1999 - Make this function available to Derrived classes
@@ -257,9 +270,13 @@ class String : public MITREObject
     Int32 UnicodeLength(const UNICODE_CHAR* data);
 
   private:
+#ifdef MOZILLA
+    nsString* ptrNSString;
+#else
     Int32     strLength;
     Int32     bufferLength;
     UNICODE_CHAR* strBuffer;
+#endif
 
     //String copies itself to the destination
     void copyString(UNICODE_CHAR* dest);
@@ -267,8 +284,6 @@ class String : public MITREObject
     //Compare the two string representations for equality
     MBool isEqual(const UNICODE_CHAR* data, const UNICODE_CHAR* search,
                    Int32 length) const;
-
-
 };
 
 ostream& operator<<(ostream& output, const String& source);
