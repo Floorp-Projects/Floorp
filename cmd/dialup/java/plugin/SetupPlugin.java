@@ -105,7 +105,29 @@ public class SetupPlugin extends Plugin
 		
 		return contents;
 	}
-					
+	
+	final public void SetCacheState( String filePath, boolean writeThrough )
+	{
+		if ( privilegeCheck() == false )
+			return;
+
+		try
+		{
+			File                file = new File( filePath );
+			IniFileData         iniFile = (IniFileData)iniFileCache.get( file );
+
+			if ( iniFile == null )
+				return;
+		
+			iniFile.setCacheState( writeThrough );
+		}
+        catch ( Throwable e )
+        {
+            //Trace.TRACE( "caught an exception: " + e.getMessage() );
+            return;
+        }
+	}
+							
     final public String GetNameValuePair( String filePath, String sectionName, String valueName )
     {
     /*  if ( privilegeCheck() == true )

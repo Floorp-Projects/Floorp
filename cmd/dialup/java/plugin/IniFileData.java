@@ -30,6 +30,7 @@ public class IniFileData
    	File					me = null;
     boolean					dirty = false;
     boolean					writable = true;
+    boolean					alwaysDirty = false;
     
     public static final String		SECTION_PREFIX = "[";
 	public static final String		SECTION_POSTFIX = "]";
@@ -122,6 +123,11 @@ public class IniFileData
 		super.finalize();
 	}
 	
+	public void setCacheState( boolean writeThrough )
+	{
+		alwaysDirty = writeThrough;
+	}
+	
 	public void flush() throws Exception
 	{
 		Trace.TRACE( "flushing " + me.getName() );
@@ -170,11 +176,22 @@ public class IniFileData
 			//Trace.TRACE( "		setting value..." );
 			nvSet.setValue( name, value );
 			dirty = true;
+			if ( alwaysDirty )
+			try
+			{
+				flush();
+			}
+			catch ( Throwable e )
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 	
 	public boolean isDirty()
 	{
+		if ( alwaysDirty )	
+			return true;
 		return dirty;
 	}
 	
