@@ -266,6 +266,10 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   switch (aReflowState.reason) {
     case eReflowReason_Initial:
       ReResolveStyleContext(&aPresContext, mStyleContext);
+      break;
+
+    default:
+      break;
   }
 
   // Until I can handle incremental reflow correctly (or at all), I need to at
@@ -490,6 +494,9 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
       
     case NS_MOUSE_EXIT:
       OnMouseExit ( );
+      break;
+
+    default:
       break;
 
   } // case of which event
