@@ -1342,6 +1342,8 @@ Wallet_GetMasterPassword(PRUnichar ** password)
 PUBLIC PRUnichar
 Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   nsresult rv = NS_OK;
+  PRUint8 keyByte = 0;
+
   if (!gKeyedStreamGenerator)
   {
     // Get a keyed stream generator
@@ -1362,7 +1364,6 @@ Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   }
 
   // Get the byte using the keyed stream generator
-  PRUint8 keyByte = 0;
   rv = gKeyedStreamGenerator->GetByte(writeCount, &keyByte);
   if (NS_FAILED(rv)) goto backup;
   return (PRUnichar)keyByte;
