@@ -166,8 +166,8 @@ sub get_patch {
     my $req = new HTTP::Request(GET => $this->{CONFIG}{url} . "/get_patch.pl?patch_id=$patch_id");
     my $res = $this->{UA}->request($req);
     if ($res->is_success) {
-      if (! -d "fixes") {
-        mkdir("fixes");
+      if (! -d "tbox_patches") {
+        mkdir("tbox_patches");
       }
       if (!open OUTFILE, ">tbox_patches/$patch_id.patch") {
         $this->print_log("ERROR: unable to create patchfile: $!\n");
@@ -311,6 +311,7 @@ sub build_start {
   if ($success) {
     $this->{LAST_STATUS_SEND} = time;
     print "\nCONTENT: " . $res->content() . "\n";
+    $this->{BUILD_VARS}{fields} = {};
     return $this->parse_content($res->content_ref(), 1);
   }
   return 0;
@@ -327,6 +328,7 @@ sub build_status {
     $this->{LAST_STATUS_SEND} = time;
     print "build_status success\n";
     print "\nCONTENT: " . $res->content() . "\n";
+    $this->{BUILD_VARS}{fields} = {};
     return $this->parse_content($res->content_ref(), 0);
   }
   return 0;
@@ -353,13 +355,13 @@ sub print_log {
 sub start_section {
   my $this = shift;
   my ($section) = @_;
-  $this->print_log("---> TINDERBOX $section\n");
+  $this->print_log("---> TINDERBOX $section " . time2str(time) . "\n");
 }
 
 sub end_section {
   my $this = shift;
   my ($section) = @_;
-  $this->print_log("<--- TINDERBOX FINISHED $section\n");
+  $this->print_log("<--- TINDERBOX FINISHED $section " . time2str(time) . "\n");
 }
 
 sub eat_command {
@@ -798,10 +800,34 @@ sub get_config {
 
 sub finish_build {
   my ($client, $config, $persistent_vars, $build_vars) = @_;
+  $ENV{MOZILLA_OFFICIAL} = undef;
   delete $ENV{MOZILLA_OFFICIAL};
+  $ENV{BUILD_OFFICIAL} = undef;
   delete $ENV{BUILD_OFFICIAL};
+  $ENV{MOZ_CO_FLAGS} = undef;
+  delete $ENV{MOZ_CO_FLAGS};
+  $ENV{MOZ_CO_DATE} = undef;
   delete $ENV{MOZ_CO_DATE};
+  $ENV{MOZ_OBJDIR} = undef;
   delete $ENV{MOZ_OBJDIR};
+}
+
+sub get_cvs_branch {
+  my ($client) = @_;
+  if (open ENTRIES, "CVS/Entries") {
+    while (<ENTRIES>) {
+      next if /^D/;
+      chomp;
+      my @line = split /\//;
+      if ($line[1] eq "client.mk") {
+        close ENTRIES;
+        return substr($line[5], 1);
+      }
+    }
+    close ENTRIES;
+  }
+  $client->print_log("Warning: could not open CVS/Entries or find client.mk in it");
+  return undef;
 }
 
 sub do_action {
@@ -817,43 +843,34 @@ sub do_action {
   #
   $build_vars->{SHOULD_BUILD} = 0;
 
-  my $co_params = "";
-  if ($config->{cvs_co_date} && $config->{cvs_co_date} ne "off") {
-    $co_params .= " -D '$config->{cvs_co_date}'";
-  }
-  if ($config->{branch}) {
-    $co_params .= " -r $config->{branch}";
-  }
   #
-  # Checkout client.mk if necessary
+  # Checkout client.mk if we've never done this before
   #
   my $please_checkout = 0;
   if (! -f "mozilla/client.mk") {
+    my $co_params = " -PA";
+    if ($config->{cvs_co_date} && $config->{cvs_co_date} ne "off") {
+      $co_params .= " -D '$config->{cvs_co_date}'";
+    }
+    if ($config->{branch}) {
+      $co_params .= " -r $config->{branch}";
+    }
+
     $client->do_command("cvs -d$config->{cvsroot} co$co_params mozilla/client.mk", $init_tree_status, undef, $max_cvs_idle_time);
     $please_checkout = 1;
-  }
-  if (-f "mozilla/client.mk") {
-    #
-    # If this is a branch, and client.mk is not the right entry type,
-    # *update* client.mk (make sure branch is correct)
-    #
-    if (open ENTRIES, "mozilla/CVS/Entries") {
-      while (<ENTRIES>) {
-        next if /^D/;
-        chomp;
-        my @line = split /\//;
-        if ($line[1] eq "client.mk" && substr($line[5], 1) ne $config->{branch}) {
-          $client->do_command("rm -rf mozilla/*");
-          $client->do_command("cvs -d$config->{cvsroot} co$co_params mozilla/client.mk");
-          $please_checkout = 1;
-          last;
-        }
-      }
-      close ENTRIES;
+
+    if (! -f "mozilla/client.mk") {
+      $client->print_log("Could not check out mozilla/client.mk!");
+      return 200;
     }
-    chdir("mozilla");
-  } else {
-    die "Must be just above the mozilla/ directory!";
+  }
+
+  #
+  # Change to mozilla directory
+  #
+  if (!chdir("mozilla")) {
+    $client->print_log("Could not cd mozilla!");
+    return 200;
   }
 
   #
@@ -871,8 +888,8 @@ sub do_action {
       open MOZCONFIG, ">.mozconfig";
       print MOZCONFIG $build_vars->{MOZCONFIG};
       close MOZCONFIG;
-      $mozconfig = $_;
-      $client->print_log("(Will clobber this cycle)");
+      $mozconfig = $build_vars->{MOZCONFIG};
+      $client->print_log("(Will clobber this cycle)\n");
       $client->end_section("CREATING MOZCONFIG");
       $please_clobber = 1;
     }
@@ -887,15 +904,18 @@ sub do_action {
 $mozconfig
 == End .mozconfig
 EOM
-  $client->start_section("PRINTING BUILD INFO");
+  $client->end_section("PRINTING BUILD INFO");
 
   #
   # Remove patches
   #
-  my @old_patches;
   foreach my $patch (glob("tbox_patches/*.patch")) {
     $client->do_command("patch -Nt -Rp0 < $patch", $init_tree_status);
-    if ($patch =~ /^tbox_patches\/(.+)\.patch$/) {
+    $client->do_command("mv $patch $patch.removed");
+  }
+  my @old_patches;
+  foreach my $patch (glob("tbox_patches/*.patch.removed")) {
+    if ($patch =~ /^tbox_patches\/(.+)\.patch\.removed$/) {
       push @old_patches, $1;
     }
   }
@@ -949,7 +969,7 @@ EOM
       ($config->{cvs_co_date} ne "off" &&
       !($config->{cvs_co_date} &&
         $config->{cvs_co_date} eq $persistent_vars->{LAST_CVS_CO_DATE}))) {
-    if ($config->{cvs_co_date}) {
+    if ($config->{cvs_co_date} && $config->{cvs_co_date} ne "off") {
       # XXX $::ENV?
       $ENV{MOZ_CO_DATE} = $config->{cvs_co_date};
     }
@@ -968,12 +988,15 @@ EOM
     # - this is the first time this program has been called
     # - 24 hours have passed since the last checkout was done
     # - we were given a "checkout" command or this is the first checkout
-    # - there is a cvs_co_date
+    # - the cvs_co_date changed
+    # - the branch changed
     #
     # All other times we do fast-update.
     #
     if ($config->{cvs_co_date} || $please_checkout ||
-        (time - $persistent_vars->{LAST_CHECKOUT}) >= (24*60*60)) {
+        (time - $persistent_vars->{LAST_CHECKOUT}) >= (24*60*60) ||
+        get_cvs_branch($client) ne $config->{branch}) {
+      $ENV{MOZ_CO_FLAGS} = "-PA";
       $err = $client->do_command("make -f client.mk checkout", $init_tree_status+1, $parsing_code, $max_cvs_idle_time);
       $persistent_vars->{LAST_CHECKOUT} = time;
     } else {
@@ -983,37 +1006,12 @@ EOM
       $persistent_vars->{LAST_CHECKOUT} = 0;
     }
 
+    if ($build_vars->{SHOULD_BUILD}) {
+      $client->print_log("Found updated scripts during checkout!  Will build.\n");
+    }
     $persistent_vars->{LAST_CVS_CO_DATE} = $config->{cvs_co_date};
   }
 
-  #
-  # Apply patches
-  #
-  if (!$err && @{$build_vars->{PATCHES}}) {
-    #
-    # If the set of patches is different, we need to rebuild
-    #
-    if (join(' ', sort @old_patches) ne join(' ', sort @{$build_vars->{PATCHES}})) {
-      $build_vars->{SHOULD_BUILD} = 1;
-    }
-    $client->start_section("APPLYING PATCHES");
-    foreach my $patch_id (@{$build_vars->{PATCHES}}) {
-      my $patch = $client->get_patch($patch_id);
-      $client->print_log("PATCH: $patch\n");
-      if (! $patch) {
-        $err = 200;
-      } else {
-        my $local_err = $client->do_command("patch --dry-run -Nt -p0 < $patch", $init_tree_status+2);
-        if (!$local_err) {
-          $local_err = $client->do_command("patch -Nt -p0 < $patch", $init_tree_status);
-        }
-        if ($local_err) {
-          unlink($patch);
-        }
-      }
-    }
-    $client->end_section("APPLYING PATCHES");
-  }
 
   #
   # Clobber
@@ -1033,6 +1031,37 @@ EOM
   #
   if ($client->eat_command("build")) {
     $build_vars->{SHOULD_BUILD} = 1;
+  }
+
+  #
+  # Apply patches
+  #
+  my @patches_applied;
+  $build_vars->{fields}{patch} = [];
+  if (!$err && (join(' ', sort @old_patches) ne join(' ', sort @{$build_vars->{PATCHES}}) || $build_vars->{SHOULD_BUILD})) {
+    $build_vars->{SHOULD_BUILD} = 1;
+    $client->start_section("APPLYING PATCHES");
+    # Remove old patches
+    system("rm -f tbox_patches/*.patch.removed");
+    # Apply new patches
+    foreach my $patch_id (@{$build_vars->{PATCHES}}) {
+      my $patch = $client->get_patch($patch_id);
+      $client->print_log("PATCH: $patch\n");
+      if (! $patch) {
+        $err = 200;
+      } else {
+        my $local_err = $client->do_command("patch --dry-run -Nt -p0 < $patch", $init_tree_status+2);
+        if (!$local_err) {
+          $local_err = $client->do_command("patch -Nt -p0 < $patch", $init_tree_status);
+        }
+        if ($local_err) {
+          unlink($patch);
+        } else {
+          push @{$build_vars->{fields}{patch}}, $patch_id;
+        }
+      }
+    }
+    $client->end_section("APPLYING PATCHES");
   }
 
   return $err;
