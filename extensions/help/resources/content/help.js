@@ -541,24 +541,24 @@ function doFindOnDatasource(resultsDS, sourceDS, resource, level) {
 
 function doFindOnSeq(resultsDS, sourceDS, resource, level) {
   // load up an RDFContainer so we can access the contents of the current rdf:seq.    
-    RDFContainer.Init(sourceDS, resource);
-    var targets = RDFContainer.GetElements();
-    while (targets.hasMoreElements()) {
+  RDFContainer.Init(sourceDS, resource);
+  var targets = RDFContainer.GetElements();
+  while (targets.hasMoreElements()) {
     var target = targets.getNext();
     var link = sourceDS.GetTarget(target, NC_LINK, true);
-        var name = sourceDS.GetTarget(target, NC_NAME, true);
-        name = name.QueryInterface(Components.interfaces.nsIRDFLiteral);
+    var name = sourceDS.GetTarget(target, NC_NAME, true);
+    name = name.QueryInterface(Components.interfaces.nsIRDFLiteral);
     if (link && isMatch(name.Value)) {
-          // we have found a search entry - add it to the results datasource.
+      // we have found a search entry - add it to the results datasource.
       var urn = RDF.GetAnonymousResource();
       resultsDS.Assert(urn, NC_NAME, name, true);
       resultsDS.Assert(urn, NC_LINK, link, true);
       resultsDS.Assert(RDF_ROOT, NC_CHILD, urn, true);
-  		emptySearch = false; 	
+      emptySearch = false; 	
     }
     // process any nested rdf:seq elements.
-    doFindOnDatasource(resultsDS, sourceDS, target, level+1);       
-    }  
+    doFindOnDatasource(resultsDS, sourceDS, target, level+1);
+  }
 }
 
 function assertSearchEmpty(resultsDS) {
