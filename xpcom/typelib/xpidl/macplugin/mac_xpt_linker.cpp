@@ -1,8 +1,26 @@
 /*
- *  Sample Linker.c	- public interface to Sample Linker
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- *  Copyright © 1993 metrowerks inc.  All rights reserved.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+	mac_xpt_linker.cpp
+	
+	CodeWarrior plugin linker, links together multiple .xpt files.
+	
+	by Patrick C. Beard.
  */
 
 /* standard headers */
@@ -49,10 +67,9 @@ CWPluginContext gPluginContext;
 static CWFileSpec gOutputDirectory;
 
 /*
- *	main	-	main entry-point for Drop-In Sample linker
+ *	xpt_linker	-	main entry-point for linker plugin
  *
  */
-
 pascal short xpt_linker(CWPluginContext context)
 {
 	long request;
@@ -97,8 +114,6 @@ pascal short xpt_linker(CWPluginContext context)
 	/* return result code */
 	return result;
 }
-
-struct SamplePref {};
 
 static char* full_path_to(const FSSpec& file)
 {
@@ -185,7 +200,7 @@ static CWResult	Link(CWPluginContext context)
 	CWResult	err;
 	long		filecount;
 
-	/* load the relevant prefs */
+	// load the relevant prefs.
 	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
 	err = GetSettings(context, settings);
 	if (err != cwNoErr)
@@ -232,9 +247,16 @@ static CWResult	Link(CWPluginContext context)
 #endif
 
 	for (index = 0; (err == cwNoErr) && (index < filecount); index++) {
-		CWProjectFileInfo	fileInfo;
-		
-		/* first, get info about the file */
+		// use the newer way to get this?
+		CWFileSpec outputFile;
+		err = CWGetStoredObjectFileSpec(context, index, &outputFile);
+		if (err == cwNoErr) {
+			argv[argc++] = p2c_strdup(outputFile.name);
+			continue;
+		}
+
+		// first, get info about the file.
+		CWProjectFileInfo fileInfo;
 		err = CWGetFileInfo(context, index, false, &fileInfo);
 		if (err != cwNoErr)
 			continue;
@@ -250,7 +272,7 @@ static CWResult	Link(CWPluginContext context)
 		xptFile.name[len++] = 'x';
 		xptFile.name[len++] = 'p';
 		xptFile.name[len++] = 't';
-
+		
 #ifdef USING_FULL_PATHS
 		// construct a full path to the .xpt file.
 		char* xptFilePath = new char[outputPrefixLen + xptFile.name[0] + 1];
@@ -311,25 +333,37 @@ static CWResult	Disassemble(CWPluginContext context)
 {
 	CWResult err = noErr;
 
+	// cache the project's output directory.
+	err = CWGetOutputFileDirectory(gPluginContext, &gOutputDirectory);
+	if (!CWSUCCESS(err))
+		return (err);
+
 	long fileNum;
 	err = CWGetMainFileNumber(context, &fileNum);
 	if (!CWSUCCESS(err))
 		return (err);
 
+#if 0
+	// construct the output file's name from its input file.
 	CWProjectFileInfo fileInfo;
 	err = CWGetFileInfo(context, fileNum, false, &fileInfo);
 	if (!CWSUCCESS(err))
 		return (err);
 
 	CWFileSpec sourceFile = fileInfo.filespec;
-	char* sourceName = p2c_strdup(sourceFile.name);
-	char* dot = strrchr(sourceName, '.');
+	char* outputName = p2c_strdup(sourceFile.name);
+	char* dot = strrchr(outputName, '.');
 	if (dot != NULL)
 		strcpy(dot + 1, "xpt");
-
-	err = CWGetOutputFileDirectory(gPluginContext, &gOutputDirectory);
+#else
+	// get the output file's location from the stored object data.
+	CWFileSpec outputFile;
+	err = CWGetStoredObjectFileSpec(context, fileNum, &outputFile);
 	if (!CWSUCCESS(err))
 		return (err);
+	
+	char* outputName = p2c_strdup(outputFile.name);
+#endif
 
 	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
 	GetSettings(context, settings);
@@ -338,7 +372,7 @@ static CWResult	Disassemble(CWPluginContext context)
 	int argc = 1;
 	char* argv[] = { "xpt_dump", NULL, NULL, NULL };
 	if (settings.verbose) argv[argc++] = "-v";
-	argv[argc++] = sourceName;
+	argv[argc++] = outputName;
 	
 	try {
 		xptdump_main(argc, argv);
@@ -347,7 +381,7 @@ static CWResult	Disassemble(CWPluginContext context)
 		err = cwErrRequestFailed;
 	}
 
-	delete[] sourceName;
+	delete[] outputName;
 
 	if (err == noErr) {
 		// display the disassembly in its own fresh text window.
