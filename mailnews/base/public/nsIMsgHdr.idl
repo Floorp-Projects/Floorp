@@ -71,6 +71,8 @@ interface nsIMsgHdr : nsISupports
   readonly attribute unsigned long messageOffset;
   readonly attribute unsigned long statusOffset;
   readonly attribute string charSet;
+
+  void MarkRead(in boolean markRead);
   
 };
 
