@@ -55,21 +55,3 @@ function showPage(event) {
 
   deck.setAttribute("value", i-1);
 }
-
-
-// I copied this from commandglue.js. bad!
-// -alecf
-function ToggleTwisty(treeItem)
-{
-
-	var openState = treeItem.getAttribute('open');
-	if(openState == 'true')
-	{
-		treeItem.removeAttribute('open');
-	}
-	else
-	{
-		treeItem.setAttribute('open', 'true');
-	}
-}
-
