@@ -31,15 +31,15 @@
      weightx="1" fill="horizontal" gridwidth="remainder"
      insets="[0,5,5,5]"/>
 
-    <label title="$mailDirectoryLabel"
+    <label title="$signatureLabel"
      weightx="1" fill="horizontal" gridwidth="remainder"
      insets="[5,5,0,5]"/>
 
-    <input type="text" ID="mailDirectoryField" value="mailDirectoryField"
+    <input type="text" ID="signatureField" value="signatureField"
      weightx="1" fill="horizontal" gridwidth="relative" columns="10"
      insets="[0,5,5,5]"/>
 
-    <input type="button" ID="chooseButton" command="chooseButton"
+    <input type="button" ID="signatureButton" command="signatureButton"
      title="$chooseLabel"
      weightx="1" fill="horizontal" gridwidth="remainder"
      insets="[0,0,5,5]"/>
