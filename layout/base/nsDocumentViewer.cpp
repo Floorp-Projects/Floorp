@@ -2062,7 +2062,7 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImageLocation()
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
   nsAutoString locationText;
-  rv = mPresShell->GetLinkLocation(node, locationText);
+  rv = mPresShell->GetImageLocation(node, locationText);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
