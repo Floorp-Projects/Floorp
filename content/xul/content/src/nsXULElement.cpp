@@ -5008,7 +5008,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     if (NS_FAILED(rv)) return rv;
 
     char* data;
-    rv = aStream->ReadBytes(&data, size);
+    rv = aStream->ReadBytes(size, &data);
     if (NS_SUCCEEDED(rv)) {
         JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                             aContext->GetNativeContext());
