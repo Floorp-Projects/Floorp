@@ -216,7 +216,7 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
             delete icm;
         }
     } catch (Exception &e) {
-        throw new JSException(e.fullMessage());
+        throw new JSException(&e.fullMessage());
     }
     return result;
 }
@@ -742,15 +742,17 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         const char16 *c = argName->data();
                                         const char16 *end;
                                         double d = stringToDouble(c, c + argName->size(), end);
+                                        uint32 index = -1;
 
                                         if ((d != d) || (d < 0) || (d != (int)d)) { // a non-numeric or negative value                                             
                                             if (icm->itsParameters->mRestParameter == ParameterList::HasRestParameterBeforeBar)
                                                 throw new JSException("Non-numeric or negative argument name for positional rest parameter");
                                         }
                                         else {  // shift the index value down by the number of positional parameters
-                                            StringFormatter s;
-                                            s << ((int)d - icm->itsParameters->mPositionalCount);
-                                            argName = &mWorld.identifiers[s];
+                                            index = (int)d - icm->itsParameters->mPositionalCount;
+//                                            StringFormatter s;
+//                                            s << ((int)d - icm->itsParameters->mPositionalCount);
+//                                            argName = &mWorld.identifiers[s];
                                         }
                                         
                                         TypedRegister argument = (*args)[i].first;   // this is the argument whose name didn't match
@@ -759,13 +761,20 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                             // allocate the rest argument and then subvert the register being used for the
                                             // argument under consideration to hold the newly created rest argument.
                                             restArg = new JSArray();
-                                            restArg->setProperty(*argName, (*registers)[argument.first]);   // put it into the rest argument
+                                            if (index == -1)
+                                                restArg->setProperty(*argName, (*registers)[argument.first]);
+                                            else
+                                                (*restArg)[index] = (*registers)[argument.first];
                                             (*registers)[argument.first] = restArg;
                                             // The callArgs for the rest parameter position gets loaded from that slot 
                                             (*callArgs)[pCount] = Argument(TypedRegister(argument.first, &Array_Type), NULL);
                                         }
-                                        else
-                                            restArg->setProperty(*argName, (*registers)[argument.first]);
+                                        else {
+                                            if (index == -1)
+                                                restArg->setProperty(*argName, (*registers)[argument.first]);
+                                            else
+                                                (*restArg)[index] = (*registers)[argument.first];
+                                        }
                                     }
                                     // else just throw it away 
                                 }
