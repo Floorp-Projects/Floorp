@@ -474,9 +474,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Table);
   DO_STRUCT_DIFFERENCE(Background);
   DO_STRUCT_DIFFERENCE(UIReset);
-#ifdef MOZ_SVG
-  DO_STRUCT_DIFFERENCE(SVG);
-#endif
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
   DO_STRUCT_DIFFERENCE(Quotes);
@@ -504,6 +501,9 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // The following structs cause (as their maximal difference) a
   // re-render to occur.  VISUAL Structs: Color
   DO_STRUCT_DIFFERENCE(Color);
+#ifdef MOZ_SVG
+  DO_STRUCT_DIFFERENCE(SVG);
+#endif
 
 #undef DO_STRUCT_DIFFERENCE
 
@@ -853,19 +853,13 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   else
     fprintf(out, "%ld ", (long)svg->mFill.mPaint.mColor);
 
-  fprintf(out, "%d ", (int)svg->mStopColor.mType);
-  if (svg->mStopColor.mType == eStyleSVGPaintType_Server)
-    fprintf(out, "%s ", URICString(svg->mStopColor.mPaint.mPaintServer).get());
-  else
-    fprintf(out, "%ld ", (long)svg->mStopColor.mPaint.mColor);
-
   fprintf(out, "%d ", (int)svg->mStroke.mType);
   if (svg->mStroke.mType == eStyleSVGPaintType_Server)
     fprintf(out, "%s ", URICString(svg->mStroke.mPaint.mPaintServer).get());
   else
     fprintf(out, "%ld ", (long)svg->mStroke.mPaint.mColor);
 
-  fprintf(out, "%s %s ",
+  fprintf(out, "%s %s %s ",
           URICString(svg->mMarkerEnd).get(),
           URICString(svg->mMarkerMid).get(),
           URICString(svg->mMarkerStart).get());
@@ -876,9 +870,8 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
             svg->mStrokeDasharray[i],
             (i == svg->mStrokeDasharrayLength) ? ' ' : ',');
 
-  fprintf(out, "%f %f %f %f %f %f %d %d %d %d %d %d %d %d %d\" />\n",
+  fprintf(out, "%f %f %f %f %f %d %d %d %d %d %d %d %d %d\" />\n",
           svg->mFillOpacity,
-          svg->mStopOpacity,
           svg->mStrokeDashoffset,
           svg->mStrokeMiterlimit,
           svg->mStrokeOpacity,
@@ -896,8 +889,17 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   // SVGReset
   IndentBy(out,aIndent);
   const nsStyleSVGReset* svgReset = GetStyleSVGReset();
-  fprintf(out, "<svgreset data=\"%s %d\" />\n",
+
+  fprintf(out, "<svgreset data=\"%d ", (int)svgReset->mStopColor.mType);
+  if (svgReset->mStopColor.mType == eStyleSVGPaintType_Server)
+    fprintf(out, "%s ",
+            URICString(svgReset->mStopColor.mPaint.mPaintServer).get());
+  else
+    fprintf(out, "%ld ", (long)svgReset->mStopColor.mPaint.mColor);
+
+  fprintf(out, "%s %f %d\" />\n",
           URICString(svgReset->mClipPath).get(),
+          svgReset->mStopOpacity,
           (int)svgReset->mDominantBaseline);
 #endif
   //#insert new style structs here#

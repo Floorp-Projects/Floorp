@@ -4614,9 +4614,6 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
     NS_IF_ADDREF(aResult.mPaint.mPaintServer);
   } else if (SetColor(aValue, parentPaint.mPaint.mColor, aPresContext, aContext, aResult.mPaint.mColor, aInherited)) {
     aResult.mType = eStyleSVGPaintType_Color;
-  } else {
-    // XXX Check for "currentColor"
-    // XXX Set it to the default color
   }
 }
 
@@ -4629,34 +4626,10 @@ SetSVGOpacity(const nsCSSValue& aValue, float parentOpacity, float& opacity, PRB
   }
   else if (aValue.GetUnit() == eCSSUnit_Number) {
     opacity = aValue.GetFloatValue();
+    opacity = PR_MAX(opacity, 0.0f);
+    opacity = PR_MIN(opacity, 1.0f);
   }
 }
-
-static void
-SetSVGLength(const nsCSSValue& aValue, float parentLength, float& length,
-             nsStyleContext* aContext, nsPresContext* aPresContext, PRBool& aInherited)
-{
-  nsStyleCoord coord;
-  PRBool dummy;
-  if (SetCoord(aValue, coord, coord,
-               SETCOORD_LP | SETCOORD_FACTOR,
-               aContext, aPresContext, dummy)) {
-    if (coord.GetUnit() == eStyleUnit_Factor) { // user units
-      length = (float) coord.GetFactorValue();
-    }
-    else {
-      length = (float) coord.GetCoordValue();
-      float twipsPerPix = aPresContext->ScaledPixelsToTwips();
-      if (twipsPerPix == 0.0f)
-        twipsPerPix = 1e-20f;
-      length /= twipsPerPix;
-    }
-  }
-  else if (aValue.GetUnit() == eCSSUnit_Inherit) {
-    length = parentLength;
-    aInherited = PR_TRUE;
-  }
-}  
 
 const nsStyleStruct* 
 nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
@@ -4752,17 +4725,12 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     svg->mMarkerStart = parentSVG->mMarkerStart;
   }
 
-  // stop-color: 
-  SetSVGPaint(SVGData.mStopColor, parentSVG->mStopColor, mPresContext, aContext, svg->mStopColor, inherited);
-
-  // stop-opacity:
-  SetSVGOpacity(SVGData.mStopOpacity, parentSVG->mStopOpacity, svg->mStopOpacity, inherited);
-
   // pointer-events: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mPointerEvents.GetUnit()) {
     svg->mPointerEvents = SVGData.mPointerEvents.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == SVGData.mPointerEvents.GetUnit()) {
+  } else if (eCSSUnit_None == SVGData.mMarkerMid.GetUnit()) {
+    svg->mPointerEvents = NS_STYLE_POINTER_EVENTS_NONE;
+  } else if (eCSSUnit_Inherit == SVGData.mPointerEvents.GetUnit()) {
     inherited = PR_TRUE;
     svg->mPointerEvents = parentSVG->mPointerEvents;
   }
@@ -4791,7 +4759,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
         inherited = PR_TRUE;
         svg->mStrokeDasharrayLength = parentSVG->mStrokeDasharrayLength;
         if (svg->mStrokeDasharrayLength) {
-          svg->mStrokeDasharray = new float[svg->mStrokeDasharrayLength];
+          svg->mStrokeDasharray = new nsStyleCoord[svg->mStrokeDasharrayLength];
           if (svg->mStrokeDasharray)
             memcpy(svg->mStrokeDasharray,
                    parentSVG->mStrokeDasharray,
@@ -4810,20 +4778,22 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
         // count number of values
         nsCSSValueList *value = SVGData.mStrokeDasharray;
         while (nsnull != value) {
-          svg->mStrokeDasharrayLength++;
+          ++svg->mStrokeDasharrayLength;
           value = value->mNext;
         }
         
         NS_ASSERTION(svg->mStrokeDasharrayLength != 0, "no dasharray items");
         
-        svg->mStrokeDasharray = new float[svg->mStrokeDasharrayLength];
+        svg->mStrokeDasharray = new nsStyleCoord[svg->mStrokeDasharrayLength];
 
         if (svg->mStrokeDasharray) {
           value = SVGData.mStrokeDasharray;
           PRUint32 i = 0;
           while (nsnull != value) {
-            SetSVGLength(value->mValue, 0, svg->mStrokeDasharray[i++],
-                         aContext, mPresContext, inherited);
+            SetCoord(value->mValue,
+                     svg->mStrokeDasharray[i++], nsnull,
+                     SETCOORD_LP | SETCOORD_FACTOR,
+                     aContext, mPresContext, inherited);
             value = value->mNext;
           }
         } else
@@ -4833,9 +4803,11 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   }
 
   // stroke-dashoffset: <dashoffset>, inherit
-  SetSVGLength(SVGData.mStrokeDashoffset, parentSVG->mStrokeDashoffset,
-               svg->mStrokeDashoffset, aContext, mPresContext, inherited);
-  
+  SetCoord(SVGData.mStrokeDashoffset,
+           svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
+           SETCOORD_LPH | SETCOORD_FACTOR,
+           aContext, mPresContext, inherited);
+
   // stroke-linecap: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mStrokeLinecap.GetUnit()) {
     svg->mStrokeLinecap = SVGData.mStrokeLinecap.GetIntValue();
@@ -4856,10 +4828,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
 
   // stroke-miterlimit: <miterlimit>, inherit
   if (eCSSUnit_Number == SVGData.mStrokeMiterlimit.GetUnit()) {
-    float value = SVGData.mStrokeMiterlimit.GetFloatValue();
-    if (value >= 1.0f) { // XXX this check should probably be in nsCSSParser
-      svg->mStrokeMiterlimit = value;
-    }
+    svg->mStrokeMiterlimit = SVGData.mStrokeMiterlimit.GetFloatValue();
   }
   else if (eCSSUnit_Inherit == SVGData.mStrokeMiterlimit.GetUnit()) {
     svg->mStrokeMiterlimit = parentSVG->mStrokeMiterlimit;
@@ -4870,8 +4839,10 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   SetSVGOpacity(SVGData.mStrokeOpacity, parentSVG->mStrokeOpacity, svg->mStrokeOpacity, inherited);  
 
   // stroke-width:
-  SetSVGLength(SVGData.mStrokeWidth, parentSVG->mStrokeWidth,
-               svg->mStrokeWidth, aContext, mPresContext, inherited);
+  SetCoord(SVGData.mStrokeWidth,
+           svg->mStrokeWidth, parentSVG->mStrokeWidth,
+           SETCOORD_LPH | SETCOORD_FACTOR,
+           aContext, mPresContext, inherited);
 
   // text-anchor: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mTextAnchor.GetUnit()) {
@@ -4925,7 +4896,7 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
   nsStyleContext* parentContext = aContext->GetParent();
 
   const nsRuleDataSVG& SVGData = NS_STATIC_CAST(const nsRuleDataSVG&, aData);
-  nsStyleSVGReset* svgReset = nsnull;
+  nsStyleSVGReset* svgReset;
 
   if (aStartStruct)
     // We only need to compute the delta between this computed data and our
@@ -4947,6 +4918,10 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
 
   PRBool inherited = aInherited;
 
+  // stop-color: 
+  SetSVGPaint(SVGData.mStopColor, parentSVGReset->mStopColor,
+              mPresContext, aContext, svgReset->mStopColor, inherited);
+
   // clip-path: url, none, inherit
   if (eCSSUnit_URL == SVGData.mClipPath.GetUnit()) {
     svgReset->mClipPath = SVGData.mClipPath.GetURLValue();
@@ -4956,6 +4931,10 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     svgReset->mClipPath = parentSVGReset->mClipPath;
   }
+
+  // stop-opacity:
+  SetSVGOpacity(SVGData.mStopOpacity, parentSVGReset->mStopOpacity,
+                svgReset->mStopOpacity, inherited);
 
   // dominant-baseline: enum, auto, inherit
   if (eCSSUnit_Enumerated == SVGData.mDominantBaseline.GetUnit()) {

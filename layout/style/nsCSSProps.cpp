@@ -992,7 +992,6 @@ const PRInt32 nsCSSProps::kPointerEventsKTable[] = {
   eCSSKeyword_fill, NS_STYLE_POINTER_EVENTS_FILL,
   eCSSKeyword_stroke, NS_STYLE_POINTER_EVENTS_STROKE,
   eCSSKeyword_all, NS_STYLE_POINTER_EVENTS_ALL,
-  eCSSKeyword_none, NS_STYLE_POINTER_EVENTS_NONE,
   eCSSKeyword_UNKNOWN, -1
 };
 
@@ -1143,10 +1142,8 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     #define CSS_PROP_BORDER(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Border,
     #define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Outline,
     #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_XUL,
-    #ifdef MOZ_SVG
     #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVG,
     #define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVGReset,
-    #endif /* defined(MOZ_SVG) */
     #define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Column,
     // This shouldn't matter, but we need something to go here.
     #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, kwtable_) nsStyleStructID(-1),
@@ -1173,10 +1170,8 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     #undef CSS_PROP_BORDER
     #undef CSS_PROP_OUTLINE
     #undef CSS_PROP_XUL
-    #ifdef MOZ_SVG
     #undef CSS_PROP_SVG
     #undef CSS_PROP_SVGRESET
-    #endif /* undefd(MOZ_SVG) */
     #undef CSS_PROP_COLUMN
     #undef CSS_PROP_BACKENDONLY
 };

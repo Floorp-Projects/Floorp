@@ -1245,19 +1245,18 @@ struct nsStyleSVG : public nsStyleStruct {
 #endif
 
   nsStyleSVGPaint  mFill;             // [inherited]
-  nsStyleSVGPaint  mStopColor;        // [inherited]
   nsStyleSVGPaint  mStroke;           // [inherited]
   nsCOMPtr<nsIURI> mMarkerEnd;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerMid;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerStart;      // [inherited]
-  float           *mStrokeDasharray;  // [inherited]
+  nsStyleCoord    *mStrokeDasharray;  // [inherited]
+
+  nsStyleCoord     mStrokeDashoffset; // [inherited]
+  nsStyleCoord     mStrokeWidth;      // [inherited]
 
   float            mFillOpacity;      // [inherited]
-  float            mStopOpacity;      // [inherited]
-  float            mStrokeDashoffset; // [inherited]
   float            mStrokeMiterlimit; // [inherited]
   float            mStrokeOpacity;    // [inherited]
-  float            mStrokeWidth;      // [inherited] in pixels
 
   PRUint32         mStrokeDasharrayLength;
   PRUint8          mClipRule;         // [inherited]
@@ -1290,7 +1289,9 @@ struct nsStyleSVGReset : public nsStyleStruct {
   static nsChangeHint MaxDifference();
 #endif
 
+  nsStyleSVGPaint  mStopColor;        // [reset]
   nsCOMPtr<nsIURI> mClipPath;         // [reset]
+  float            mStopOpacity;      // [reset]
   PRUint8          mDominantBaseline; // [reset] see nsStyleConsts.h
 };
 #endif

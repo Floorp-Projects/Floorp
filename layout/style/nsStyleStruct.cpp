@@ -820,18 +820,16 @@ nsStyleSVG::nsStyleSVG()
 {
     mFill.mType              = eStyleSVGPaintType_Color;
     mFill.mPaint.mColor      = NS_RGB(0,0,0);
-    mStopColor.mType         = eStyleSVGPaintType_Color;
-    mStopColor.mPaint.mColor = NS_RGB(0,0,0);
     mStroke.mType            = eStyleSVGPaintType_None;
     mStroke.mPaint.mColor    = NS_RGB(0,0,0);
     mStrokeDasharray         = nsnull;
 
+    mStrokeDashoffset.SetFactorValue(0.0f);
+    mStrokeWidth.SetFactorValue(1.0f);
+
     mFillOpacity             = 1.0f;
-    mStopOpacity             = 1.0f;
-    mStrokeDashoffset        = 0.0f;
     mStrokeMiterlimit        = 4.0f;
     mStrokeOpacity           = 1.0f;
-    mStrokeWidth             = 1.0f;
 
     mStrokeDasharrayLength   = 0;
     mClipRule                = NS_STYLE_FILL_RULE_NONZERO;
@@ -854,7 +852,6 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   //memcpy((nsStyleSVG*)this, &aSource, sizeof(nsStyleSVG));
 
   mFill = aSource.mFill;
-  mStopColor = aSource.mStopColor;
   mStroke = aSource.mStroke;
 
   mMarkerEnd = aSource.mMarkerEnd;
@@ -863,23 +860,23 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 
   mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
   if (aSource.mStrokeDasharray) {
-    mStrokeDasharray = new float[mStrokeDasharrayLength];
+    mStrokeDasharray = new nsStyleCoord[mStrokeDasharrayLength];
     if (mStrokeDasharray)
       memcpy(mStrokeDasharray,
              aSource.mStrokeDasharray,
-             mStrokeDasharrayLength * sizeof(float));
+             mStrokeDasharrayLength * sizeof(nsStyleCoord));
     else
       mStrokeDasharrayLength = 0;
   } else {
     mStrokeDasharray = nsnull;
   }
 
-  mFillOpacity = aSource.mFillOpacity;
-  mStopOpacity = aSource.mStopOpacity;
   mStrokeDashoffset = aSource.mStrokeDashoffset;
+  mStrokeWidth = aSource.mStrokeWidth;
+
+  mFillOpacity = aSource.mFillOpacity;
   mStrokeMiterlimit = aSource.mStrokeMiterlimit;
   mStrokeOpacity = aSource.mStrokeOpacity;
-  mStrokeWidth = aSource.mStrokeWidth;
 
   mClipRule = aSource.mClipRule;
   mFillRule = aSource.mFillRule;
@@ -894,18 +891,18 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 {
   if ( mFill                  != aOther.mFill                  ||
-       mStopColor             != aOther.mStopColor             ||
+
        mStroke                != aOther.mStroke                ||
        !EqualURIs(mMarkerEnd, aOther.mMarkerEnd)               ||
        !EqualURIs(mMarkerMid, aOther.mMarkerMid)               ||
        !EqualURIs(mMarkerStart, aOther.mMarkerStart)           ||
 
-       mFillOpacity           != aOther.mFillOpacity           ||
-       mStopOpacity           != aOther.mStopOpacity           ||
        mStrokeDashoffset      != aOther.mStrokeDashoffset      ||
+       mStrokeWidth           != aOther.mStrokeWidth           ||
+
+       mFillOpacity           != aOther.mFillOpacity           ||
        mStrokeMiterlimit      != aOther.mStrokeMiterlimit      ||
        mStrokeOpacity         != aOther.mStrokeOpacity         ||
-       mStrokeWidth           != aOther.mStrokeWidth           ||
 
        mClipRule              != aOther.mClipRule              ||
        mFillRule              != aOther.mFillRule              ||
@@ -918,6 +915,7 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mTextRendering         != aOther.mTextRendering)
     return NS_STYLE_HINT_VISUAL;
 
+  // length of stroke dasharrays are the same (tested above) - check entries
   for (PRUint32 i=0; i<mStrokeDasharrayLength; i++)
     if (mStrokeDasharray[i] != aOther.mStrokeDasharray[i])
       return NS_STYLE_HINT_VISUAL;
@@ -938,8 +936,11 @@ nsChangeHint nsStyleSVG::MaxDifference()
 //
 nsStyleSVGReset::nsStyleSVGReset() 
 {
-    mClipPath         = nsnull;
-    mDominantBaseline = NS_STYLE_DOMINANT_BASELINE_AUTO;
+    mStopColor.mType         = eStyleSVGPaintType_Color;
+    mStopColor.mPaint.mColor = NS_RGB(0,0,0);
+    mClipPath                = nsnull;
+    mStopOpacity             = 1.0f;
+    mDominantBaseline        = NS_STYLE_DOMINANT_BASELINE_AUTO;
 }
 
 nsStyleSVGReset::~nsStyleSVGReset() 
@@ -948,13 +949,17 @@ nsStyleSVGReset::~nsStyleSVGReset()
 
 nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
 {
+  mStopColor = aSource.mStopColor;
   mClipPath = aSource.mClipPath;
+  mStopOpacity = aSource.mStopOpacity;
   mDominantBaseline = aSource.mDominantBaseline;
 }
 
 nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) const
 {
-  if (!EqualURIs(mClipPath, aOther.mClipPath)       ||
+  if (mStopColor             != aOther.mStopColor   ||
+      !EqualURIs(mClipPath, aOther.mClipPath)       ||
+      mStopOpacity           != aOther.mStopOpacity ||
       mDominantBaseline != aOther.mDominantBaseline)
     return NS_STYLE_HINT_VISUAL;
   
@@ -992,9 +997,10 @@ PRBool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
 {
   if (mType != aOther.mType)
     return PR_FALSE;
-  if (mType == eStyleSVGPaintType_Server) {
+  if (mType == eStyleSVGPaintType_Server)
     return EqualURIs(mPaint.mPaintServer, aOther.mPaint.mPaintServer);
-  }
+  if (mType == eStyleSVGPaintType_None)
+    return PR_TRUE;
   return mPaint.mColor == aOther.mPaint.mColor;
 }
 

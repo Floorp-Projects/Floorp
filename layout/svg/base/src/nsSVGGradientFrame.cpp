@@ -388,7 +388,7 @@ nsSVGGradientFrame::GetStopColorType(PRInt32 aIndex, PRUint16 *aStopColorType)
     return NS_ERROR_FAILURE;
   }
 
-  *aStopColorType = stopFrame->GetStyleSVG()->mStopColor.mType;
+  *aStopColorType = stopFrame->GetStyleSVGReset()->mStopColor.mType;
   return NS_OK;
 }
 
@@ -408,7 +408,7 @@ nsSVGGradientFrame::GetStopColor(PRInt32 aIndex, nscolor *aStopColor)
     *aStopColor = 0;
     return NS_ERROR_FAILURE;
   }
-  *aStopColor = stopFrame->GetStyleSVG()->mStopColor.mPaint.mColor;
+  *aStopColor = stopFrame->GetStyleSVGReset()->mStopColor.mPaint.mColor;
   return NS_OK;
 }
 
@@ -428,7 +428,7 @@ nsSVGGradientFrame::GetStopOpacity(PRInt32 aIndex, float *aStopOpacity)
     return NS_ERROR_FAILURE;
   }
 
-  *aStopOpacity = stopFrame->GetStyleSVG()->mStopOpacity;
+  *aStopOpacity = stopFrame->GetStyleSVGReset()->mStopOpacity;
   return NS_OK;
 }
 
