@@ -112,14 +112,14 @@ var nsDragAndDrop = {
     { 
       if (!this.mDragSession) 
         this.mDragSession = this.mDragService.getCurrentSession();
-      if (dragSession)
+      if (this.mDragSession)
         {
           var flavourList = aDragDropObserver.getSupportedFlavours();
           for (var flavour in flavourList)
             {
-              if (dragSession.isDataFlavorSupported(flavour))
+              if (this.mDragSession.isDataFlavorSupported(flavour))
                 {
-                  dragSession.canDrop = true;
+                  this.mDragSession.canDrop = true;
                   if (aDragDropObserver.onDragOver)
                     aDragDropObserver.onDragOver(aEvent, flavour, this.mDragSession);
                   aEvent.preventBubble();
