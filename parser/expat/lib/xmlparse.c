@@ -889,7 +889,7 @@ int XML_SetParamEntityParsing(XML_Parser parser,
 int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 {
   if (blocked) {
-    // First unblock parser
+    /* First unblock parser */
     return 0;
   }
 
