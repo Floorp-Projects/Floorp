@@ -361,6 +361,9 @@ PRIVATE Bool fill_return_values(PACF_Type   type,
     *ret_socks_addr = 0;
     *ret_socks_port = 0;
 
+	if(!node)
+		return FALSE;
+
     if (type == PACF_TYPE_PROXY) {
 	*ret_proxy_addr = node->addr;
     }
@@ -639,7 +642,7 @@ pacf_get_proxy_addr(MWContext *context, char *list, char **ret_proxy_addr,
     if (smallest &&
 	(retry_now ||
 	 now - smallest > PACF_MIN_RETRY_AFTER ||
-	 (!sm_ptr->retrying &&
+	 (sm_ptr && !sm_ptr->retrying &&
 	  now - smallest > PACF_MIN_RETRY_ASK &&
 	  confirm2(context,
 		   (!socks_cnt && proxy_cnt==1 ? XP_GetString(XP_PROXY_UNAVAILABLE_TRY_AGAIN) :
@@ -898,6 +901,8 @@ NET_ProxyAutoConfig(int fmt, void *data_obj, URL_Struct *URL_s,
 	 * The Navigator didn't start this config retrieve
 	 * intentionally.  Discarding the config.
 	 */
+	if(!URL_s)
+		return NULL;
 	alert2(w, XP_GetString(XP_CONFIG_BLAST_WARNING), URL_s->address);
 	return NULL;
     }
@@ -982,22 +987,21 @@ static void pacf_restart_queued(URL_Struct *URL_s, int status,
 	  }
 
 	pacf_loading = FALSE;
-    }
-    else {
-	/* Call this only if everything succeeded -- otherwise
-	   the netlib has already freed the URL_s, and there isn't
-	   a clean fix, so for now we'll just forget the URL load
-	   if proxy config load went foul.
-	 */
-	NET_GetURL(queued_state->URL_s,
-		   queued_state->output_format,
-		   queued_state->window_id,
-		   queued_state->exit_routine);
-
-    }
-
-    XP_FREE(queued_state);
-    queued_state = NULL;
+    } else {
+		/* Call this only if everything succeeded -- otherwise
+		   the netlib has already freed the URL_s, and there isn't
+		   a clean fix, so for now we'll just forget the URL load
+		   if proxy config load went foul.
+		 */
+		if(queued_state) {
+			NET_GetURL(queued_state->URL_s,
+				   queued_state->output_format,
+				   queued_state->window_id,
+				   queued_state->exit_routine);
+		}
+	}
+	XP_FREEIF(queued_state);
+	queued_state = NULL;
 }
 
 #endif /* MOCHA */
@@ -1038,13 +1042,19 @@ MODULE_PRIVATE int NET_LoadProxyConfig(char *autoconf_url,
     StrAllocCopy(pacf_url, autoconf_url);
     my_url_s = NET_CreateURLStruct(autoconf_url, NET_SUPER_RELOAD);
 
-    if (exit_routine) {
+    
+	if (exit_routine) {
 
 	queued_state = XP_NEW_ZAP(PACF_QueuedState);
+	if(!queued_state)
+		return -1;
 	queued_state->URL_s = URL_s;
 	queued_state->output_format = output_format;
 	queued_state->window_id = window_id;
 	queued_state->exit_routine = exit_routine;
+
+	if(!my_url_s)
+		return -1;
 
 	my_url_s->pre_exit_fn = pacf_restart_queued;
     }
@@ -1079,11 +1089,17 @@ MODULE_PRIVATE char *pacf_find_proxies_for_url(MWContext *context,
     char *p, *q, *r;
     int i, len = 0;
     char *safe_url = NULL;
-    char *orig_url = URL_s->address;
-    char *method = mkMethodString(URL_s->method);
+    char *orig_url = NULL;
+    char *method = NULL;
     char *bad_url = NULL;
     char *result = NULL;
     JSBool ok;
+
+	if(!URL_s)
+		return NULL;
+
+	orig_url=URL_s->address;
+	method=mkMethodString(URL_s->method);
 
     /* If proxy failover is not allowed, and we weren't
      * able to autoload the proxy, return a string that
