@@ -97,7 +97,7 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
                 return NULL;
         }
 
-        PRUnichar *data = (PRUnichar *) buf->Data();
+        PRUnichar *data = NS_REINTERPRET_CAST(PRUnichar *, buf->Data());
 
         str = JS_NewExternalString(cx, data, length, sDOMStringFinalizerIndex);
         if (str)
