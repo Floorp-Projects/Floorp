@@ -152,10 +152,10 @@ protected:
 
   /** the value to set the property to for undo */
   nsString mUndoValue;
-  /** true if the style attribute was present and not empty before DoTransaction */
-  PRBool   mUndoAttributeWasSet;
   /** the value to set the property to for redo */
   nsString mRedoValue;
+  /** true if the style attribute was present and not empty before DoTransaction */
+  PRBool   mUndoAttributeWasSet;
   /** true if the style attribute is present and not empty after DoTransaction */
   PRBool   mRedoAttributeWasSet;
 

@@ -39,16 +39,12 @@
 
 #include "ChangeCSSInlineStyleTxn.h"
 #include "nsIDOMElement.h"
-#include "nsEditor.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMElementCSSInlineStyle.h"
-#include "nsIContent.h"
-#include "nsEditProperty.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
-#include "nsIHTMLObjectResizer.h"
 
 #define kNullCh (PRUnichar('\0'))
 
@@ -169,8 +165,8 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::Init(nsIEditor      *aEditor,
   mRemoveProperty = aRemoveProperty;
   mUndoAttributeWasSet = PR_FALSE;
   mRedoAttributeWasSet = PR_FALSE;
-  mUndoValue.SetLength(0);
-  mRedoValue.SetLength(0);
+  mUndoValue.Truncate();
+  mRedoValue.Truncate();
   return NS_OK;
 }
 
@@ -179,24 +175,18 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
   NS_ASSERTION(mEditor && mElement, "bad state");
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsresult result = NS_OK;
-
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
   nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(mElement);
   if (!inlineStyles) return NS_ERROR_NULL_POINTER;
-  result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
+
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+  nsresult result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
   if (NS_FAILED(result)) return result;
   if (!cssDecl) return NS_ERROR_NULL_POINTER;
 
   nsAutoString propertyNameString;
   mProperty->ToString(propertyNameString);
 
-  // does this property accept more than 1 value ?
-  // we need to know that because of bug 62682
-  PRBool multiple = AcceptsMoreThanOneValue(mProperty);
-  
-  nsAutoString styleAttr(NS_LITERAL_STRING("style"));
-
+  NS_NAMED_LITERAL_STRING(styleAttr, "style");
   result = mElement->HasAttribute(styleAttr, &mUndoAttributeWasSet);
   if (NS_FAILED(result)) return result;
 
@@ -205,6 +195,10 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
   if (NS_FAILED(result)) return result;     
   mUndoValue.Assign(values);
 
+  // does this property accept more than 1 value ?
+  // we need to know that because of bug 62682
+  PRBool multiple = AcceptsMoreThanOneValue(mProperty);
+  
   if (mRemoveProperty) {
     nsAutoString returnString;
     if (multiple) {
@@ -272,15 +266,15 @@ nsresult ChangeCSSInlineStyleTxn::SetStyle(PRBool aAttributeWasSet,
   NS_ASSERTION(mEditor && mElement, "bad state");
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsresult result = NS_OK;
+  nsresult result;
   if (aAttributeWasSet) {
     // the style attribute was set and not empty, let's recreate the declaration
     nsAutoString propertyNameString;
     mProperty->ToString(propertyNameString);
 
-    nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
     nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(mElement);
     if (!inlineStyles) return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
     result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
     if (NS_FAILED(result)) return result;
     if (!cssDecl) return NS_ERROR_NULL_POINTER;
@@ -316,8 +310,8 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::RedoTransaction(void)
 
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
-  if (nsnull!=aDidMerge)
-    *aDidMerge=PR_FALSE;
+  if (aDidMerge)
+    *aDidMerge = PR_FALSE;
   return NS_OK;
 }
 
@@ -339,11 +333,8 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::GetTxnDescription(nsAString& aString)
 PRBool
 ChangeCSSInlineStyleTxn::AcceptsMoreThanOneValue(nsIAtom *aCSSProperty)
 {
-  PRBool res = PR_FALSE;
   nsIAtom * textDecorationAtom = NS_NewAtom("text-decoration");
-  if (textDecorationAtom == aCSSProperty) {
-    res = PR_TRUE;
-  }
+  PRBool res = (textDecorationAtom == aCSSProperty);
   NS_IF_RELEASE(textDecorationAtom);
   return res;
 }
