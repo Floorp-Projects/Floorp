@@ -20,16 +20,15 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.4 1998/10/01 00:23:05 norris%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.5 1999/04/22 22:39:55 pnunn%netscape.com Exp $
  */
 
 
 #include "if.h"
 #include "il_strm.h"            /* For OPAQUE_CONTEXT. */
-
-#ifdef STANDALONE_IMAGE_LIB
+#include "nsIImgDecoder.h"
+#include "nsImgDCallbk.h"
 #include "ilISystemServices.h"
-#endif /* STANDALONE_IMAGE_LIB */
 
 /* for XP_GetString() */
 #include "xpgetstr.h"
@@ -65,9 +64,7 @@ static int il_cache_trace = FALSE; /* XXXM12N Clean up/eliminate */
 #endif
 
 PRLogModuleInfo *il_log_module = NULL;
-#ifdef STANDALONE_IMAGE_LIB
 ilISystemServices *il_ss = NULL;
-#endif /* STANDALONE_IMAGE_LIB */
 
 /* simple list, in use order */
 struct il_cache_struct {
@@ -79,6 +76,58 @@ struct il_cache_struct {
 };
 
 struct il_cache_struct il_cache;
+/*---------------------------------------------*/
+/*-------------------------------*/    
+NS_IMETHODIMP
+ImgDCallbk::QueryInterface(const nsIID& aIID, void** aInstPtr)
+{
+  if (NULL == aInstPtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (aIID.Equals(kImgDCallbkIID) ||
+      aIID.Equals(kISupportsIID)) {
+          *aInstPtr = (void*) this;
+    NS_INIT_REFCNT();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}                                      
+
+NS_IMETHODIMP
+ImgDCallbk::CreateInstance(const nsCID &aClass,
+			     il_container *ic,
+                             const nsIID &aIID,
+                             void **ppv)
+{
+   ImgDCallbk *imgdcb = NULL;
+   *ppv  = NULL;
+ 
+   if (&aClass && !aIID.Equals(kISupportsIID))
+       return NS_NOINTERFACE;
+
+   imgdcb = new ImgDCallbk(ic);
+   /* make sure interface = nsISupports, ImgDCallbk */
+   nsresult res = imgdcb->QueryInterface(aIID,(void**)ppv);
+
+    if (NS_FAILED(res)) {
+    *ppv = NULL;
+    delete imgdcb;
+  }
+  return res;
+}
+NS_IMETHODIMP ImgDCallbk::AddRef()
+{
+  NS_INIT_REFCNT();
+  return NS_OK;
+}
+
+NS_IMETHODIMP ImgDCallbk::Release()
+{
+  return NS_OK;
+}   
+   
+/*-------------------------*/
 
 /* Add an image container to a context's container list. */
 static PRBool
@@ -427,11 +476,8 @@ il_get_container(IL_GroupContext *img_cx,
 {
     uint32 urlhash, hash;
     il_container *ic;
-#ifndef STANDALONE_IMAGE_LIB
-    JMCException *exc = NULL;
-#else
-	void *exc = NULL;
-#endif
+    
+    int result;
 
     urlhash = hash = il_hash(image_url);
 
@@ -507,7 +553,7 @@ il_get_container(IL_GroupContext *img_cx,
         /* Allocate the destination image structure.  A destination mask
            structure will be allocated later if the image is determined to
            be transparent and no background_color has been provided. */
-		if (!(ic->image = PR_NEWZAP(IL_Pixmap))) {
+	if (!(ic->image = PR_NEWZAP(IL_Pixmap))) {
             IL_ReleaseColorSpace(ic->src_header->color_space);
             PR_FREEIF(ic->src_header);
             PR_FREEIF(ic);
@@ -557,27 +603,33 @@ il_get_container(IL_GroupContext *img_cx,
            interface and increment its reference count.  The reference count
            is decremented when the container is destroyed. */
         ic->img_cb = img_cx->img_cb;
-#ifdef STANDALONE_IMAGE_LIB
         NS_ADDREF(ic->img_cb);
-#else
-        IMGCBIF_addRef(ic->img_cb, &exc);
 
-        if (exc) {
-            JMC_DELETE_EXCEPTION(&exc); /* XXXM12N Should really return
-                                           exception */
+        /* callbacks for the  image decoders */
+        ImgDCallbk* imgdcb;
 
-            PR_FREEIF(ic->background_color);
-            PR_FREEIF(ic->image);
-            IL_ReleaseColorSpace(ic->src_header->color_space);
-            IL_ReleaseColorSpace(ic->image->header.color_space);
-            PR_FREEIF(ic->src_header);
-            PR_FREEIF(ic);
-            return NULL;
-        }
-#endif /* STANDALONE_IMAGE_LIB */
+        imgdcb = new ImgDCallbk(ic);
+        imgdcb->AddRef();
+        nsresult res = imgdcb->QueryInterface(kImgDCallbkIID, (void**)&imgdcb);
+
+        if (NS_FAILED(res)) {
+	  if(imgdcb)
+             *imgdcb = NULL;
+          delete imgdcb; 
+	  return NULL;
+	}
+/*
+        result = ImgDCallbk::CreateInstance( kImgDCallbkCID, ic, kImgDCallbkIID,
+                                             (void **)&imgdcb);
+        if(NS_FAILED(result))
+          return  NULL;
+*/
+
+        imgdcb->SetContainer(ic);
+        ic->imgdcb = imgdcb;           
     }
     
-	il_addtocache(ic);
+    il_addtocache(ic);
     ic->is_in_use = TRUE;
     
     return ic;
@@ -608,12 +660,6 @@ il_scour_container(il_container *ic)
 void
 il_delete_container(il_container *ic)
 {
-#ifndef STANDALONE_IMAGE_LIB
-    JMCException *exc = NULL;
-#else
-	void *exc = NULL;
-#endif
-
     PR_ASSERT(ic);
     if (ic) {
         ILTRACE(2,("il: delete ic=0x%08x", ic));
@@ -644,15 +690,7 @@ il_delete_container(il_container *ic)
         il_destroy_pixmap(ic->img_cb, ic->image);
         if (ic->mask)
             il_destroy_pixmap(ic->img_cb, ic->mask);
-#ifdef STANDALONE_IMAGE_LIB
         NS_RELEASE(ic->img_cb);
-#else
-        IMGCBIF_release(ic->img_cb, &exc);
-        if (exc) {
-            JMC_DELETE_EXCEPTION(&exc); /* XXXM12N Should really return
-                                           exception */
-        }
-#endif /* STANDALONE_IMAGE_LIB */
 
         FREE_IF_NOT_NULL(ic->comment);
         FREE_IF_NOT_NULL(ic->url_address);
@@ -1305,7 +1343,7 @@ il_delete_all_clients(il_container *ic)
     }
 }
 
-
+#if 1
 /* One-time image library initialization.
    = Initialize internal state
    = Scan image plug-in directory
@@ -1328,7 +1366,7 @@ IL_Init()
     /* XXXM12N - finish me. */
     return TRUE;
 }
-
+#endif
 
 /* Used when exiting the client, this code frees all imagelib data structures.
    This is done for two reasons:
