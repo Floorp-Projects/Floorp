@@ -252,7 +252,7 @@ public class File extends ScriptableObject {
         // in a Scriptable object so that it can be manipulated by
         // JavaScript.
         Scriptable parent = ScriptableObject.getTopLevelScope(this);
-        return Context.toObject(reader, parent);
+        return Context.javaToJS(reader, parent);
     }
 
     /**
@@ -265,7 +265,7 @@ public class File extends ScriptableObject {
         if (writer == null)
             return null;
         Scriptable parent = ScriptableObject.getTopLevelScope(this);
-        return Context.toObject(writer, parent);
+        return Context.javaToJS(writer, parent);
     }
 
     /**

@@ -210,9 +210,8 @@ hi</font></pre>
 <p>The next example is <a href="http://lxr.mozilla.org/mozilla/source/js/rhino/examples/RunScript2.java">RunScript2</a>.
 This is the same as RunScript, but with the addition of two extra lines
 of code:
-<dir><tt><font color="#006600">Scriptable jsArgs = Context.toObject(System.out,
-scope);</font></tt>
-<br><tt><font color="#006600">scope.put("out", scope, jsArgs);</font></tt></dir>
+<dir><tt><font color="#006600">Object wrappedOut = Context.javaToJS(System.out, scope);</font></tt>
+<br><tt><font color="#006600">ScriptableObject.putProperty(scope, "out", wrappedOut);</font></tt></dir>
 These lines add a global variable <tt>out</tt> that is a JavaScript reflection
 of the <tt>System.out</tt> variable:
 <dir><tt><font color="#663366">$ java RunScript2 'out.println(42)'</font></tt>

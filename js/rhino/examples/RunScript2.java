@@ -41,7 +41,6 @@ import org.mozilla.javascript.*;
  */
 public class RunScript2 {
     public static void main(String args[])
-        throws JavaScriptException
     {
         Context cx = Context.enter();
         try {
@@ -49,8 +48,8 @@ public class RunScript2 {
 
             // Add a global variable "out" that is a JavaScript reflection
             // of System.out
-            Scriptable jsArgs = Context.toObject(System.out, scope);
-            scope.put("out", scope, jsArgs);
+            Object jsOut = Context.javaToJS(System.out, scope);
+            ScriptableObject.putProperty(scope, "out", jsOut);
 
             String s = "";
             for (int i=0; i < args.length; i++) {

@@ -44,7 +44,6 @@ import org.mozilla.javascript.*;
  */
 public class RunScript3 {
     public static void main(String args[])
-        throws JavaScriptException
     {
         Context cx = Context.enter();
         try {
