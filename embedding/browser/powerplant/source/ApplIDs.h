@@ -54,6 +54,7 @@ enum {
 // nsIPrompt
 enum {
     dlog_Alert = 1282,
+    dlog_AlertCheck = 1289,
     dlog_Confirm = 1283,
     dlog_ConfirmCheck = 1284,
     dlog_Prompt = 1285,
