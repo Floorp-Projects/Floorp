@@ -25,6 +25,7 @@
 #include "nsICacheService.h"
 #include "nsIFileTransportService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsISupportsArray.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
@@ -197,6 +198,34 @@ nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+class PlaceHolder : public nsISupports {
+public:
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+    NS_IMETHOD_(nsrefcnt) AddRef(void) { return 1; }
+    NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
+};
+NS_IMPL_QUERY_INTERFACE0(PlaceHolder)
+static PlaceHolder gPlaceHolder;
+
+static nsresult
+getTransportArray(nsCacheEntry * entry, nsCOMPtr<nsISupportsArray>& array)
+{
+    nsCOMPtr<nsISupports> data;
+    nsresult rv = entry->GetData(getter_AddRefs(data));
+    if (NS_SUCCEEDED(rv) && data) {
+        array = do_QueryInterface(data, &rv);
+    } else {
+        rv = NS_NewISupportsArray(getter_AddRefs(array));
+        if (NS_SUCCEEDED(rv) && array) {
+            entry->SetData(array.get());
+            array->AppendElement(&gPlaceHolder);
+            array->AppendElement(&gPlaceHolder);
+            array->AppendElement(&gPlaceHolder);
+        }
+    }
+    return rv;
+}
+
 nsresult
 nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
                                         nsCacheAccessMode mode, 
@@ -205,27 +234,45 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(result);
 
-    nsCOMPtr<nsISupports> data;
-    nsresult rv = entry->GetData(getter_AddRefs(data));
-    if (NS_SUCCEEDED(rv) && data) {
-        rv = CallQueryInterface(data, result);
-    } else {
+    // Could keep an array of the 3 distinct access modes cached.
+    nsCOMPtr<nsISupportsArray> array;
+    nsresult rv = getTransportArray(entry, array);
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRUint32 transportIndex = (mode - 1);
+    rv = array->QueryElementAt(transportIndex, NS_GET_IID(nsITransport), (void**)result);
+    if (NS_FAILED(rv)) {
         NS_WITH_SERVICE(nsIFileTransportService, service, kFileTransportServiceCID, &rv);
         if (NS_SUCCEEDED(rv)) {
-            // XXX generate the name of the cache entry from the hash code of its key, modulo the number
+            // XXX generate the name of the cache entry from the hash code of its key,
+            // modulo the number of files we're willing to keep cached.
             nsCOMPtr<nsIFile> entryFile;
             rv = getFileForEntry(entry, getter_AddRefs(entryFile));
             if (NS_SUCCEEDED(rv)) {
+                PRInt32 ioFlags;
+                switch (mode) {
+                case nsICache::ACCESS_READ:
+                    ioFlags = PR_RDONLY;
+                    break;
+                case nsICache::ACCESS_WRITE:
+                    ioFlags = PR_WRONLY | PR_CREATE_FILE;
+                    break;
+                case nsICache::ACCESS_READ_WRITE:
+                    ioFlags = PR_RDWR | PR_CREATE_FILE;
+                    break;
+                }
                 nsCOMPtr<nsITransport> transport;
-                rv = service->CreateTransport(entryFile, PR_RDWR | PR_CREATE_FILE, PR_IRUSR | PR_IWUSR,
+                rv = service->CreateTransport(entryFile, ioFlags, PR_IRUSR | PR_IWUSR,
                                               getter_AddRefs(transport));
                 if (NS_SUCCEEDED(rv)) {
-                    entry->SetData(transport.get());
+                    array->SetElementAt(transportIndex, transport.get());
                     NS_ADDREF(*result = transport);
                 }
             }
         }
     }
+    
     return rv;
 }
 
