@@ -121,7 +121,10 @@ public class JavaAdapter extends ScriptableObject {
         ClassSignature sig = new ClassSignature(superClass, interfaces, obj);
         Class adapterClass = (Class) generatedClasses.get(sig);
         if (adapterClass == null) {
-            String adapterName = "adapter" + serial++;
+            String adapterName;
+            synchronized (generatedClasses) {
+                adapterName = "adapter" + serial++;
+            }
             adapterClass = createAdapterClass(cx, obj, adapterName, 
                                               superClass, interfaces, 
                                               null, null);
@@ -132,6 +135,44 @@ public class JavaAdapter extends ScriptableObject {
         Object[] ctorArgs = { obj };
         Object adapter = adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
         return getAdapterSelf(adapterClass, adapter);
+    }
+
+    // Needed by NativeJavaObject de-serializer
+    
+    public static Object createAdapterClass(Class superClass, 
+                                            Class[] interfaces, 
+                                            Scriptable obj, Scriptable self)
+	  throws ClassNotFoundException
+    {
+        ClassSignature sig = new ClassSignature(superClass, interfaces, obj);
+        Class adapterClass = (Class) generatedClasses.get(sig);
+        if (adapterClass == null) {
+            String adapterName;
+            synchronized (generatedClasses) {
+                adapterName = "adapter" + serial++;
+            }
+            try {
+                adapterClass = createAdapterClass(Context.enter(), obj, 
+                                                  adapterName, superClass, 
+                                                  interfaces, null, null);
+                generatedClasses.put(sig, adapterClass);
+            } finally {
+                Context.exit();
+            }
+        }
+
+        try {    
+            Class[] ctorParms = { Scriptable.class, Scriptable.class };
+            Object[] ctorArgs = { obj, self };
+
+            return adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
+        } catch(InstantiationException e) {
+        } catch(IllegalAccessException e) {
+        } catch(InvocationTargetException e) {
+        } catch(NoSuchMethodException e) {
+        }
+
+        throw new ClassNotFoundException("adapter");
     }
 
     public static Class createAdapterClass(Context cx, Scriptable jsObj,
@@ -158,6 +199,7 @@ public class JavaAdapter extends ScriptableObject {
         
         String superName = superClass.getName().replace('.', '/');
         generateCtor(cfw, adapterName, superName);
+        generateSerialCtor(cfw, adapterName, superName);
         if (scriptClassName != null)
             generateEmptyCtor(cfw, adapterName, superName, scriptClassName);
         
@@ -379,7 +421,34 @@ public class JavaAdapter extends ScriptableObject {
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)20, null); // TODO: magic number "20"
     }
+    
+    private static void generateSerialCtor(ClassFileWriter cfw, String adapterName, 
+                                     String superName) 
+    {
+        cfw.startMethod("<init>", 
+                        "(Lorg/mozilla/javascript/Scriptable;Lorg/mozilla/javascript/Scriptable;)V",
+                        ClassFileWriter.ACC_PUBLIC);
+        
+        // Invoke base class constructor
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.INVOKESPECIAL, superName, "<init>", "()", "V");
+        
+        // Save parameter in instance variable "delegee"
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.ALOAD_1);  // first arg
+        cfw.add(ByteCode.PUTFIELD, adapterName, "delegee", 
+                "Lorg/mozilla/javascript/Scriptable;");
 
+        // save self
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.ALOAD_2);  // second arg
+        cfw.add(ByteCode.PUTFIELD, adapterName, "self", 
+                "Lorg/mozilla/javascript/Scriptable;");
+
+        cfw.add(ByteCode.RETURN);
+        cfw.stopMethod((short)20, null); // TODO: magic number "20"
+    }
+    
     private static void generateEmptyCtor(ClassFileWriter cfw, String adapterName, 
                                           String superName, String scriptClassName) 
     {

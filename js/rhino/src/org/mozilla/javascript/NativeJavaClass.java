@@ -23,6 +23,7 @@
  * Frank Mitchell
  * Mike Shaver
  * Kurt Westerfeld
+ * Kemal Bayram
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -40,6 +41,7 @@ package org.mozilla.javascript;
 
 import java.lang.reflect.*;
 import java.util.Hashtable;
+import java.io.*;
 
 /**
  * This class reflects Java classes into the JavaScript environment, mainly
@@ -272,4 +274,18 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
     // beard: need a scope for finding top-level prototypes.
     private Scriptable parent;
+    
+    public void writeExternal(ObjectOutput out) throws IOException {    
+        super.writeExternal(out);
+        out.writeObject(parent);
+    }
+    
+    public void readExternal(ObjectInput in) 
+        throws IOException, ClassNotFoundException 
+    {
+        super.readExternal(in);
+        parent = (Scriptable)in.readObject();
+        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, 
+                                                            true);
+    }    
 }

@@ -23,6 +23,7 @@
  * Igor Bukanov
  * Frank Mitchell
  * Mike Shaver
+ * Kemal Bayram
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -38,6 +39,7 @@
 
 package org.mozilla.javascript;
 
+import java.io.*;
 import java.lang.reflect.*;
 import java.util.Hashtable;
 import java.util.Enumeration;
@@ -53,7 +55,10 @@ import java.util.Enumeration;
  * @see NativeJavaClass
  */
 
-public class NativeJavaObject implements Scriptable, Wrapper {
+public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
+
+    public NativeJavaObject() {
+    }
 
     public NativeJavaObject(Scriptable scope, Object javaObject, 
                             JavaMembers members) 
@@ -68,6 +73,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     {
         this.parent = scope;
         this.javaObject = javaObject;
+        this.staticType = staticType;
         Class dynamicType = javaObject != null ? javaObject.getClass()
             : staticType;
         members = JavaMembers.lookupClass(scope, dynamicType, staticType);
@@ -918,9 +924,82 @@ public class NativeJavaObject implements Scriptable, Wrapper {
 
     protected Object javaObject;
     protected JavaMembers members;
+    protected Class staticType;
     private Hashtable fieldAndMethods;
     static Class jsObjectClass;
     static Constructor jsObjectCtor;
     static Method jsObjectGetScriptable;
+    
+    public void writeExternal(ObjectOutput out) 
+        throws IOException
+    {
+        out.writeObject(prototype);
+        out.writeObject(parent);
+        out.writeObject(staticType != null ? staticType.getClass().getName() 
+                                           : null);
+
+        if (javaObject != null) {
+            Class joClass = javaObject.getClass();
+            if (joClass.getName().startsWith("adapter")) {
+
+                out.writeBoolean(true);
+                out.writeObject(joClass.getSuperclass().getName());
+
+                Class[] interfaces = joClass.getInterfaces();
+                String[] interfaceNames = new String[interfaces.length];
+
+                for (int i=0; i < interfaces.length; i++)
+                    interfaceNames[i] = interfaces[i].getName();
+                  
+                out.writeObject(interfaceNames);
+
+                try {
+                    out.writeObject(joClass.getField("delegee").get(javaObject));
+                    out.writeObject(joClass.getField("self").get(javaObject));
+                } catch (IllegalAccessException e) {
+                } catch (NoSuchFieldException e) {
+                }
+
+            } else {
+                out.writeBoolean(false);
+                out.writeObject(javaObject);
+            }
+        } else {
+            out.writeBoolean(false);
+            out.writeObject(null);
+        }
+    }
+    
+    public void readExternal(ObjectInput in) 
+        throws IOException, ClassNotFoundException
+    {
+        prototype = (Scriptable)in.readObject();
+        parent = (Scriptable)in.readObject();
+
+        String className = (String)in.readObject();
+        staticType = className != null ? Class.forName(className) : null;
+
+        if (in.readBoolean()) {
+            Class superclass = Class.forName((String)in.readObject());
+
+            String[] interfaceNames = (String[])in.readObject();
+            Class[] interfaces = new Class[interfaceNames.length];
+                    
+            for (int i=0; i < interfaceNames.length; i++)
+                interfaces[i] = Class.forName(interfaceNames[i]);
+                
+            javaObject = JavaAdapter.createAdapterClass(superclass, interfaces, 
+                (Scriptable)in.readObject(), (Scriptable)in.readObject());
+        } else {
+            javaObject = in.readObject();
+        }
+
+        Class dynamicType = javaObject != null ? javaObject.getClass() 
+                                               : staticType;
+        members = JavaMembers.lookupClass(parent, dynamicType, staticType);
+        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, 
+                                                            false);
+    }
+   
 }
 

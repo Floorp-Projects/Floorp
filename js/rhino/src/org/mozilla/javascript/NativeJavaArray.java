@@ -22,6 +22,7 @@
  * Norris Boyd
  * Frank Mitchell
  * Mike Shaver
+ * Kemal Bayram
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -38,6 +39,7 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.Array;
+import java.io.*;
 
 /**
  * This class reflects Java arrays into the JavaScript environment.
@@ -152,4 +154,26 @@ public class NativeJavaArray extends NativeJavaObject {
     int length;
     Class cls;
     Scriptable prototype;
+    
+    public void writeExternal(ObjectOutput out) 
+        throws IOException 
+    {
+        super.writeExternal(out);
+
+        out.writeObject(array);
+        out.writeInt(length);
+        out.writeObject(cls.getName());
+        out.writeObject(prototype);
+    }
+    
+    public void readExternal(ObjectInput in) 
+        throws IOException, ClassNotFoundException 
+    {
+        super.readExternal(in);
+
+        array = in.readObject();
+        length = in.readInt();
+        cls = Class.forName((String)in.readObject());
+        prototype = (Scriptable)in.readObject();
+    }    
 }
