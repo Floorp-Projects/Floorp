@@ -2372,9 +2372,9 @@ nsStandardURL::Init(PRUint32 urlType,
                 mOriginCharset.Truncate();
             }
         }
-    }
-    else if (!IsUTFCharset(charset)) {
-        mOriginCharset = charset;
+        else if (!IsUTFCharset(charset)) {
+            mOriginCharset = charset;
+        }
     }
 
     if (baseURI) {
