@@ -113,12 +113,7 @@ int  ap_decode_file_infor(appledouble_decode_object* p_ap_decode_obj);
 int  ap_decode_process_header(appledouble_decode_object* p_ap_decode_obj, PRBool firstime);
 int  ap_decode_process_data(  appledouble_decode_object* p_ap_decode_obj, PRBool firstime);
 
-#ifdef XP_MAC
-OSErr my_FSSpecFromPathname(char* src_filename, FSSpec* fspec);
-char* my_PathnameFromFSSpec(FSSpec* fspec);
-
-#endif
- XP_END_PROTOS
+XP_END_PROTOS
  
 #ifdef XP_MAC
 #if PRAGMA_ALIGN_SUPPORTED

@@ -43,17 +43,6 @@
 
 #pragma cplusplus on
 
-OSErr my_FSSpecFromPathname(char* src_filename, FSSpec* fspec)
-{
-	/* don't resolve aliases... */
-	return CFileMgr::FSSpecFromLocalUnixPath(src_filename, fspec, false);
-}
-
-char* my_PathnameFromFSSpec(FSSpec* fspec)
-{
-	return CFileMgr::GetURLFromFileSpec(*fspec);
-}
-
 //
 // Returns true if the resource fork should be sent!
 //
@@ -169,9 +158,11 @@ int ap_encode_init( appledouble_encode_object *p_ap_encode_obj,
 {
 	FSSpec	fspec;
 	
-	if (my_FSSpecFromPathname(fname, &fspec) != noErr )
+  nsFileSpec  mySpec(fname);
+	if (!mySpec.Exists())
 		return -1;
-	
+
+  fspec = mySpec.GetFSSpec();
   nsCRT::memset(p_ap_encode_obj, 0, sizeof(appledouble_encode_object));
 	
 	/*
@@ -185,6 +176,7 @@ int ap_encode_init( appledouble_encode_object *p_ap_encode_obj,
 	p_ap_encode_obj->boundary = nsCRT::strdup(separator);
 	return noErr;
 }
+
 /*
 **	ap_encode_next
 **	--------------

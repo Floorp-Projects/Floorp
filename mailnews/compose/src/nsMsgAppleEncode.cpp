@@ -461,43 +461,16 @@ int ap_encode_data(
 			OSErr 	err;
 			FSSpec	file_spec;
 			char*	path;
-			Bool	do_magic = true;
-			
-			/* 	First attempt to get the file's mime type via FE_FileType.
-				If that fails, we'll do a "magic_look"
-			*/
-			
-			err = FSMakeFSSpec(p_ap_encode_obj->vRefNum, p_ap_encode_obj->dirId, name, &file_spec);
-			if (err == noErr)
-			{
-				path = my_PathnameFromFSSpec(&file_spec);
-				if (path != NULL)
-				{
-					char* ignore;
-					FE_FileType(path, &do_magic, &magic_type, &ignore);
-					
-					/* 
-					   if we ended up with the default type, dispose of it
-					   so we can do a magic_look
-					*/
-					 
-					if (do_magic && magic_type)
-						PR_FREEIF(magic_type);
-				}
-			}
-		
-			if (do_magic)
-			{
-				/*
-				**	do a smart check for the file type.
-				*/
-				in_count = 256;
-				retval 	 = FSRead(fileId, &in_count, rd_buff);
-				magic_type = magic_look(rd_buff, in_count);
-				
-				/* don't forget to rewind the index to start point. */ 
-				SetFPos(fileId, fsFromStart, 0L);
-			}
+      
+      /*
+      **	do a smart check for the file type.
+      */
+      in_count = 256;
+      retval 	 = FSRead(fileId, &in_count, rd_buff);
+      magic_type = magic_look(rd_buff, in_count);
+      
+      /* don't forget to rewind the index to start point. */ 
+      SetFPos(fileId, fsFromStart, 0L);
 		}
 		else
 		{

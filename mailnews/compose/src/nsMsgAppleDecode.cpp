@@ -947,9 +947,8 @@ int ap_decode_process_data(
 			fspec.name[0] = nsCRT::strlen(p_ap_decode_obj->fname);
 			PL_strcpy((char*)fspec.name+1, p_ap_decode_obj->fname);
 			
-			filename = my_PathnameFromFSSpec(&fspec);
+      nsFileSpec    tFileSpec(fspec, PR_TRUE);
 
-      nsFileSpec    tFileSpec(filename+7);
 			if (p_ap_decode_obj->is_binary)
 				p_ap_decode_obj->fileStream = new nsIOFileStream(tFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
 			else

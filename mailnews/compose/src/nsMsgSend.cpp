@@ -84,10 +84,6 @@ static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 #include "errors.h"
 #include "m_cvstrm.h"
 
-XP_BEGIN_PROTOS
-extern OSErr my_FSSpecFromPathname(char* src_filename, FSSpec* fspec);
-XP_END_PROTOS
-
 static char* NET_GetLocalFileFromURL(char *url)
 {
 	char * finalPath;
