@@ -76,10 +76,21 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #define BARBER_POLE    'u'
 #define UPDATE_DLG(x)  (((x) - mLastUpdate) > 250000)
 
+// Mac can't handle PRTime as integers, must go through this hell
+inline PRBool nsXPInstallManager::TimeToUpdate(PRTime now)
+{
+    PRTime  diff;
+    LL_SUB(diff, now, mLastUpdate);
+
+    PRInt32 interval;
+    LL_L2I(interval, diff);
+    return (interval > 250000);
+}
+
 nsXPInstallManager::nsXPInstallManager()
   : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), 
     mFinalizing(PR_FALSE), mCancelled(PR_FALSE), mChromeType(0),
-    mSelectChrome(PR_TRUE), mContentLength(0), mLastUpdate(0)
+    mSelectChrome(PR_TRUE), mContentLength(0), mLastUpdate(LL_ZERO)
 {
     NS_INIT_ISUPPORTS();
 
@@ -799,7 +810,7 @@ nsXPInstallManager::OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 
     nsresult rv = NS_OK;
     
     PRTime now = PR_Now();
-    if (!mCancelled && UPDATE_DLG(now))
+    if (!mCancelled && TimeToUpdate(now))
     {
         if (mContentLength < 1) {
             NS_ASSERTION(channel, "should have a channel");
@@ -817,7 +828,7 @@ NS_IMETHODIMP
 nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUnichar *aMsg)
 {
     PRTime now = PR_Now();
-    if (!mCancelled && UPDATE_DLG(now))
+    if (!mCancelled && TimeToUpdate(now))
     {
 	mLastUpdate = now;
         return mDlg->SetActionText(aMsg);
@@ -870,7 +881,7 @@ NS_IMETHODIMP
 nsXPInstallManager::ItemScheduled(const PRUnichar *message)
 {
     PRTime now = PR_Now();
-    if (UPDATE_DLG(now))
+    if (TimeToUpdate(now))
     {
         mLastUpdate = now;
         return mDlg->SetActionText( nsString(message).GetUnicode() );
@@ -902,7 +913,7 @@ nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, 
     }
 
     PRTime now = PR_Now();
-    if (UPDATE_DLG(now))
+    if (TimeToUpdate(now))
     {
         mLastUpdate = now;
 	rv = mDlg->SetProgress( itemNum, totNum, PROGRESS_BAR );
