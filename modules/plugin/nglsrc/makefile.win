@@ -74,9 +74,12 @@ OURLIBS = \
  $(DIST)\lib\dbm32.lib \
  $(LIBNSPR)  
 
+INCS = $(INCS) \
+  -I$(PUBLIC)\dom
+
 LLIBS = \
   $(OURLIBS) \
-  version.lib \
+  version.lib
 
 include <$(DEPTH)\config\rules.mak>
 
