@@ -3,12 +3,12 @@
 
   <RDF:Bag about="NC:SoftwareUpdateRoot">
     <RDF:li>
-       <RDF:Bag about="NC:SoftwarePackages" NC:title="NSCP Updates" NC:url="http://home.netscape.com">
+       <RDF:Bag about="NC:SoftwarePackages" NC:title="Test Updates" NC:url="http://www.mozilla.org/binaries.html">
 
             <RDF:li>
-                <RDF:Description ID="AimUpdate344">
+                <RDF:Description ID="Update344">
                  <NC:version>3.4.1.12</NC:version>
-                 <NC:registryKey>/AOL/AIM/</NC:registryKey>
+                 <NC:registryKey>/AOL/</NC:registryKey>
                </RDF:Description>
             </RDF:li>
     
