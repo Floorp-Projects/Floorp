@@ -29,12 +29,12 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
 #include "nsAccessible.h"
 #include "nsIFrame.h"
 #include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsISelectionController.h"
-#include "nsIDOMXULCheckboxElement.h"
 
 nsHTMLFormControlAccessible::nsHTMLFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsLeafAccessible(aNode, aShell)
@@ -117,29 +117,25 @@ NS_IMETHODIMP nsHTMLFormControlAccessible::GetAccName(nsAWritableString& _retval
 NS_IMETHODIMP nsHTMLFormControlAccessible::GetAccState(PRUint32 *_retval)
 {
   // can be
-  // focusable, focused, protected, unavailable
-  nsCOMPtr<nsIDOMHTMLInputElement> htmlFormElement(do_QueryInterface(mDOMNode));
+  // focusable, focused, checked, protected, unavailable
+  nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
 
   nsAccessible::GetAccState(_retval);
+  *_retval |= STATE_FOCUSABLE;
+
+  PRBool checked = PR_FALSE;
+  element->GetChecked(&checked);
+  if (checked) *_retval |= STATE_CHECKED;
 
   PRBool disabled = PR_FALSE;
-  if (htmlFormElement) {
-    htmlFormElement->GetDisabled(&disabled);
-    nsAutoString typeString;
-    htmlFormElement->GetType(typeString);
-    if (typeString.EqualsIgnoreCase("password"))
-      *_retval |= STATE_PROTECTED;
-    }
-  else {
-    nsCOMPtr<nsIDOMXULControlElement> xulFormElement(do_QueryInterface(mDOMNode));
-    if (xulFormElement)
-      xulFormElement->GetDisabled(&disabled);
-  }
-
+  element->GetDisabled(&disabled);
   if (disabled)
     *_retval |= STATE_UNAVAILABLE;
-  else 
-    *_retval |= STATE_FOCUSABLE;
+
+  nsAutoString typeString;
+  element->GetType(typeString);
+  if (typeString.EqualsIgnoreCase("password"))
+    *_retval |= STATE_PROTECTED;
 
   return NS_OK;
 }
@@ -168,12 +164,15 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccNumActions(PRUint8 *_retval)
 /* wstring getAccActionName (in PRUint8 index); */
 NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
 {
-  if (index == 0) {    // 0 is the magic value for default action
+  if (index == 0) {
     // check or uncheck
-    PRUint32 state;
-    GetAccState(&state);
+    nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
 
-    if (state & STATE_CHECKED)
+    PRBool checked = PR_FALSE;
+    if (element) 
+      element->GetChecked(&checked);
+
+    if (checked)
       _retval = NS_LITERAL_STRING("uncheck");
     else
       _retval = NS_LITERAL_STRING("check");
@@ -187,43 +186,15 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccActionName(PRUint8 index, nsAWrita
 NS_IMETHODIMP nsHTMLCheckboxAccessible::AccDoAction(PRUint8 index)
 {
   if (index == 0) {   // 0 is the magic value for default action
-    nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
+    nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
     PRBool checked = PR_FALSE;
-    if (htmlCheckboxElement) {
-      htmlCheckboxElement->GetChecked(&checked);
-      htmlCheckboxElement->SetChecked(!checked);
-    }
-    else {
-      nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
-      if (xulCheckboxElement) {
-        xulCheckboxElement->GetChecked(&checked);
-        xulCheckboxElement->SetChecked(!checked);
-      }
-    }
+    element->GetChecked(&checked);
+    element->SetChecked(checked ? PR_FALSE : PR_TRUE);
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccState(PRUint32 *_retval)
-{
-  nsHTMLFormControlAccessible::GetAccState(_retval);
-  PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
-
-  nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
-  if (htmlCheckboxElement) 
-    htmlCheckboxElement->GetChecked(&checked);
-  else {
-    nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
-    if (xulCheckboxElement)
-      xulCheckboxElement->GetChecked(&checked);
-  }
-
-  if (checked) 
-    *_retval |= STATE_CHECKED;
-  
-  return NS_OK;
-}
 
 //------ Radio button -------
 
@@ -265,28 +236,6 @@ NS_IMETHODIMP nsHTMLRadioButtonAccessible::AccDoAction(PRUint8 index)
 NS_IMETHODIMP nsHTMLRadioButtonAccessible::GetAccRole(PRUint32 *_retval)
 {
   *_retval = ROLE_RADIOBUTTON;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsHTMLRadioButtonAccessible::GetAccState(PRUint32 *_retval)
-{
-  nsHTMLFormControlAccessible::GetAccState(_retval);
-  PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
-
-  nsCOMPtr<nsIDOMHTMLInputElement> htmlRadioElement(do_QueryInterface(mDOMNode));
-  if (htmlRadioElement) 
-    htmlRadioElement->GetChecked(&checked);
-
-  /*  ----- Need to add this code soon
-
-  nsCOMPtr<nsIDOMXULRadioElement> xulRadioElement(do_QueryInteface(mDOMNode));
-  if (xulRadioElement)
-    xulRadioElement->GetChecked(&checked);
-  */
-
-  if (checked) 
-    *_retval |= STATE_CHECKED;
 
   return NS_OK;
 }
@@ -438,11 +387,6 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccRole(PRUint32 *_retval)
 /* wstring getAccValue (); */
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccValue(nsAWritableString& _retval)
 {
-  PRUint32 state;
-  GetAccState(&state);
-  if (state & STATE_PROTECTED)    // Don't return password text!
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mDOMNode));
   if (textArea) {
     textArea->GetValue(_retval);

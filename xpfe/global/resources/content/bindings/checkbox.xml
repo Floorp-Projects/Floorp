@@ -21,15 +21,7 @@
       </xul:hbox>
     </content>
     
-    <implementation implements="nsIDOMXULCheckboxElement, nsIAccessibleProvider">
-      <property name="accessible">
-        <getter>
-          <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULCheckboxAccessible(this): null);
-          ]]>
-        </getter>
-      </property>
+    <implementation>
       <!-- public implementation -->
       <property name="checked"    onset="if (val) this.setAttribute('checked', 'true');
                                          else this.removeAttribute('checked');

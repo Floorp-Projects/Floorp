@@ -623,49 +623,6 @@ NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState)
     }
   }
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (content) {
-    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-    if (shell) {
-      nsIFrame *frame = nsnull;
-      shell->GetPrimaryFrameFor(content, &frame);
-      if (frame) {
-        /*
-        PRBool isVisible = PR_FALSE, isFinishedLooking = PR_FALSE;
-        nsCOMPtr<nsIPresContext> presContext;
-        shell->GetPresContext(getter_AddRefs(presContext));
-        nsRect twipsRect, pixelsRect;
-        GetAbsoluteFramePosition(presContext, frame, twipsRect, pixelsRect);
-        
-
-        //frame->IsVisibleForPainting(presContext, presContext, PR_TRUE, &isVisible); // 3rd param = bool to check css visibility
-        //frame->CheckVisibility(presContext, 0,1, PR_TRUE, &isFinishedLooking, &isVisible);
-        if (twipsRect.y < 0)
-          *aAccState |= STATE_OFFSCREEN;
-        */
-        nsSize frameSize;
-        frame->GetSize(frameSize);
-        if (frameSize.width == 0)
-          *aAccState |= STATE_INVISIBLE;
-
-      }
-    }
-  }
-
-
-    /**
-   *  called to see if the children of the frame are visible from indexstart to index end.
-   *  this does not change any state. returns PR_TRUE only if the indexes are valid and any of
-   *  the children are visible.  for textframes this index is the character index.
-   *  if aStart = aEnd result will be PR_FALSE
-   *  @param aStart start index of first child from 0-N (number of children)
-   *  @param aEnd   end index of last child from 0-N
-   *  @param aRecurse should this frame talk to siblings to get to the contents other children?
-   *  @param aFinished did this frame have the aEndIndex? or is there more work to do
-   *  @param _retval  return value true or false. false = range is not rendered.
-   */
-  //NS_IMETHOD CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)=0;
-
   return rv;
 }
 

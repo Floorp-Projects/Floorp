@@ -34,9 +34,6 @@ XPIDLSRCS =					\
 	nsIDOMXULDocument.idl			\
 	nsIDOMXULElement.idl			\
 	nsIDOMXULTreeElement.idl		\
-	nsIDOMXULCheckboxElement.idl		\
-	nsIDOMXULControlElement.idl		\
-	nsIDOMXULLabeledControlElement.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
