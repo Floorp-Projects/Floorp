@@ -74,6 +74,7 @@ XPIDLSRCS	= \
 		nsISimpleStreamListener.idl \
 		nsIStreamTransportService.idl \
 		nsIStreamLoader.idl \
+		nsISyncStreamListener.idl \
 		nsIUnicharStreamLoader.idl \
 		nsIStandardURL.idl \
 		nsIURLParser.idl \

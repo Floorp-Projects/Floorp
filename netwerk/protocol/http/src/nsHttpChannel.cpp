@@ -2709,8 +2709,7 @@ nsHttpChannel::SetContentLength(PRInt32 value)
 NS_IMETHODIMP
 nsHttpChannel::Open(nsIInputStream **_retval)
 {
-    NS_NOTYETIMPLEMENTED("nsHttpChannel::Open");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ImplementChannelOpen(this, _retval);
 }
 
 NS_IMETHODIMP

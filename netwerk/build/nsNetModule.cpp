@@ -98,6 +98,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsInputStreamChannel)
 #include "nsDownloader.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloader)
 
+#include "nsSyncStreamListener.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSyncStreamListener, Init)
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsStreamConverterService.h"
@@ -620,6 +623,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_DOWNLOADER_CID,
       NS_DOWNLOADER_CONTRACTID,
       nsDownloaderConstructor },
+    { NS_SYNCSTREAMLISTENER_CLASSNAME,
+      NS_SYNCSTREAMLISTENER_CID,
+      NS_SYNCSTREAMLISTENER_CONTRACTID,
+      nsSyncStreamListenerConstructor },
     { NS_REQUESTOBSERVERPROXY_CLASSNAME,
       NS_REQUESTOBSERVERPROXY_CID,
       NS_REQUESTOBSERVERPROXY_CONTRACTID,
