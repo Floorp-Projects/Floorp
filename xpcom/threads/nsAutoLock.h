@@ -37,7 +37,6 @@
 
 
 /*
-
   A stack-based lock object that makes using PRLock a bit more
   convenient. It acquires the monitor when constructed, and releases
   it when it goes out of scope.
@@ -83,6 +82,25 @@
         }
     };
 
+    A similar stack-based locking object is available for PRMonitor.  The 
+    major difference is that the PRMonitor must be created and destroyed 
+    via the static methods on nsAutoMonitor.
+
+    For example:
+    Foo::Foo() {
+      mMon =  nsAutoMonitor::NewMonitor("FooMonitor");
+    }
+    nsresult Foo::MyMethod(...) {
+       nsAutoMonitor mon(mMon);
+       ...
+       // go ahead and do deeply nested returns...
+                    return NS_ERROR_FAILURE;
+       ...
+       // or call Wait or Notify...
+       mon.Wait();
+       ...
+       // cleanup is automatic
+    }
  */
 
 #ifndef nsAutoLock_h__
@@ -92,6 +110,11 @@
 #include "prlock.h"
 #include "prlog.h"
 
+/**
+ * nsAutoLockBase
+ * This is the base class for the stack-based locking objects.
+ * Clients of derived classes need not play with this superclass.
+ **/
 class NS_COM nsAutoLockBase {
 protected:
     nsAutoLockBase() {}
@@ -110,10 +133,10 @@ protected:
 #endif
 };
 
-// If you ever decide that you need to add a non-inline method to this
-// class, be sure to change the class declaration to "class NS_COM
-// nsAutoLock".
-
+/** 
+ * nsAutoLock
+ * Stack-based locking object for PRLock.
+ **/
 class NS_COM nsAutoLock : public nsAutoLockBase {
 private:
     PRLock* mLock;
@@ -139,6 +162,14 @@ private:
     static void operator delete(void* /*memory*/) {}
 
 public:
+    /**
+     * Constructor
+     * The constructor aquires the given lock.  The destructor
+     * releases the lock.
+     * 
+     * @param aLock A valid PRLock* returned from the NSPR's 
+     * PR_NewLock() function.
+     **/
     nsAutoLock(PRLock* aLock)
         : nsAutoLockBase(aLock, eAutoLock),
           mLock(aLock),
@@ -149,48 +180,62 @@ public:
         // to re-enter the lock.
         PR_Lock(mLock);
     }
-
+    
     ~nsAutoLock(void) {
         if (mLocked)
             PR_Unlock(mLock);
     }
 
+    /** 
+     * lock
+     * Client may call this to reaquire the given lock. Take special
+     * note that attempting to aquire a locked lock will hang or crash.
+     **/  
     void lock() {
         PR_ASSERT(!mLocked);
         PR_Lock(mLock);
         mLocked = PR_TRUE;
     }
 
-    void unlock() {
+
+    /** 
+     * unlock
+     * Client may call this to release the given lock. Take special
+     * note unlocking an unlocked lock has undefined results.
+     **/ 
+     void unlock() {
         PR_ASSERT(mLocked);
         PR_Unlock(mLock);
         mLocked = PR_FALSE;
     }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Same sort of shit here. Imagine if you will:
-//
-//    nsresult MyClass::MyMethod(...) {
-//       nsAutoMonitor mon(this);   // or some random object as a monitor
-//       ...
-//       // go ahead and do deeply nested returns...
-//                    return NS_ERROR_FAILURE;
-//       ...
-//       // or call Wait or Notify...
-//       mon.Wait();
-//       ...
-//       // cleanup is automatic
-//    }
-
 #include "prcmon.h"
 #include "nsError.h"
 
 class NS_COM nsAutoMonitor : public nsAutoLockBase {
 public:
+
+    /**
+     * NewMonitor
+     * Allocates a new PRMonitor for use with nsAutoMonitor.
+     * @param name A (unique /be?) name which can reference this monitor
+     * @returns nsnull if failure
+     *          A valid PRMonitor* is successful while must be destroyed
+     *          by nsAutoMonitor::DestroyMonitor()
+     **/
     static PRMonitor* NewMonitor(const char* name);
     static void       DestroyMonitor(PRMonitor* mon);
 
+    
+    /**
+     * Constructor
+     * The constructor locks the given monitor.  During destruction
+     * the monitor will be unlocked.
+     * 
+     * @param mon A valid PRMonitor* returned from 
+     *        nsAutoMonitor::NewMonitor().
+     **/
     nsAutoMonitor(PRMonitor* mon)
         : nsAutoLockBase((void*)mon, eAutoMonitor),
           mMonitor(mon), mLockCount(0)
@@ -213,19 +258,42 @@ public:
         }
     }
 
+    /** 
+     * Enter
+     * Client may call this to reenter the given monitor.
+     * @see prmon.h 
+     **/  
     void Enter();
+
+    /** 
+     * Exit
+     * Client may call this to exit the given monitor.
+     * @see prmon.h 
+     **/      
     void Exit();
 
+    /** 
+     * Wait
+     * @see prmon.h 
+     **/      
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
         return PR_Wait(mMonitor, interval) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
     }
 
+    /** 
+     * Notify
+     * @see prmon.h 
+     **/      
     nsresult Notify() {
         return PR_Notify(mMonitor) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
     }
 
+    /** 
+     * NotifyAll
+     * @see prmon.h 
+     **/      
     nsresult NotifyAll() {
         return PR_NotifyAll(mMonitor) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
@@ -327,3 +395,4 @@ private:
 };
 
 #endif // nsAutoLock_h__
+
