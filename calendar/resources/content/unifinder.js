@@ -444,7 +444,7 @@ function unifinderShowEventsWithAlarmsOnly()
 }
 
 
-function unifinderShowFutureEventsOnly( event )
+function unifinderDoFilterEvents( event )
 {
    var Today = new Date();
    //do this to allow all day events to show up all day long

@@ -199,16 +199,8 @@ calendarManager.prototype.getAllCalendars = function()
    thisCalendar.path = profileFile.path;
    var active;
 
-   try {
-      active = this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "server0.active" );
-   }
-   catch( e )
-   {
-      this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server0.active", true );
+   active = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "server0.active", true );
 
-      active = this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "server0.active" );
-   }
-   
    thisCalendar.active = active;
    thisCalendar.remote = false;
    this.calendars[ this.calendars.length ] = thisCalendar;
@@ -216,6 +208,8 @@ calendarManager.prototype.getAllCalendars = function()
    //go through the prefs file, calendars are stored in there.
    var NumberOfCalendars = this.CalendarWindow.calendarPreferences.arrayOfPrefs.numberofservers;
 
+   var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", false );
+   
    //don't count the default server, so this starts at 1
    for( var i = 1; i < NumberOfCalendars; i++ )
    {
@@ -223,13 +217,13 @@ calendarManager.prototype.getAllCalendars = function()
 
       try { 
       
-         thisCalendar.name = this.CalendarWindow.calendarPreferences.calendarPref.getCharPref( "server"+i+".name" );
-         thisCalendar.path = this.CalendarWindow.calendarPreferences.calendarPref.getCharPref( "server"+i+".path" );
-         thisCalendar.active = this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "server"+i+".active" );
-         thisCalendar.remote = this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "server"+i+".remote" );
-         thisCalendar.remotePath = this.CalendarWindow.calendarPreferences.calendarPref.getCharPref( "server"+i+".remotePath" );
+         thisCalendar.name = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".name", "" );
+         thisCalendar.path = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".path", "" );
+         thisCalendar.active = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".active", false );
+         thisCalendar.remote = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".remote", false );
+         thisCalendar.remotePath = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".remotePath", "" );
          
-         if( this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "servers.reloadonlaunch" ) == true 
+         if( RefreshServers == true 
             && thisCalendar.remote == true )
             this.retrieveAndSaveRemoteCalendar( thisCalendar );
          

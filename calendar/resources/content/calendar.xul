@@ -363,7 +363,7 @@
                   <box align="center">
                      <checkbox label="&calendar.unifinder.withalarms.label;" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
                      <menulist id="event-filter-menulist" persist="selectedItem">
-                         <menupopup id="event-filter-menupopup" oncommand="unifinderShowFutureEventsOnly( event );">
+                         <menupopup id="event-filter-menupopup" oncommand="unifinderDoFilterEvents( event );">
                              <menuitem id="event-filter-all" label="All Events" value="all" persist="selected"/>
                              <menuitem id="event-filter-today" label="Today's Events" value="today" persist="selected"/>
                              <menuitem id="event-filter-week" label="Events This Week" value="week" persist="selected"/>
