@@ -2173,7 +2173,22 @@ nsLocalFile::IsHidden(PRBool *_retval)
     rv = UpdateCachedCatInfo(PR_FALSE);
     if (NS_FAILED(rv)) return rv;
     
-    *_retval = (mCachedCatInfo.hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible) != 0;     
+    *_retval = (mCachedCatInfo.hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible) != 0;
+
+    if (sRunningOSX)
+    {
+        // on Mac OS X, also follow Unix "convention" where files
+        // beginning with a period are considered to be hidden
+        nsXPIDLCString name;
+        if (NS_SUCCEEDED(rv = GetLeafName(getter_Copies(name))))
+        {
+            if (name.CharAt(0) == '.')
+            {
+                *_retval = PR_TRUE;
+            }
+        }
+    }
+
     return NS_OK;
 }
 
