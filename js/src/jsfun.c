@@ -75,6 +75,63 @@ enum {
 
 #if JS_HAS_ARGS_OBJECT
 
+JSBool
+js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp)
+{
+    JSObject *argsobj;
+
+    if (TEST_BIT(CALL_ARGUMENTS, fp->overrides)) {
+        JS_ASSERT(fp->callobj);
+        return OBJ_GET_PROPERTY(cx, fp->callobj,
+                                (jsid) cx->runtime->atomState.argumentsAtom,
+                                vp);
+    }
+    argsobj = js_GetArgsObject(cx, fp);
+    if (!argsobj)
+        return JS_FALSE;
+    *vp = OBJECT_TO_JSVAL(argsobj);
+    return JS_TRUE;
+}
+
+JSBool
+js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
+                   JSObject **objp, jsval *vp)
+{
+    jsval val;
+    JSObject *obj;
+    uintN slot;
+
+    if (TEST_BIT(CALL_ARGUMENTS, fp->overrides)) {
+        JS_ASSERT(fp->callobj);
+        if (!OBJ_GET_PROPERTY(cx, fp->callobj,
+                              (jsid) cx->runtime->atomState.argumentsAtom,
+                              &val)) {
+            return JS_FALSE;
+        }
+        if (JSVAL_IS_PRIMITIVE(val)) {
+            obj = js_ValueToNonNullObject(cx, val);
+            if (!obj)
+                return JS_FALSE;
+        } else {
+            obj = JSVAL_TO_OBJECT(val);
+        }
+        *objp = obj;
+        return OBJ_GET_PROPERTY(cx, obj, id, vp);
+    }
+
+    *objp = NULL;
+    *vp = JSVAL_VOID;
+    if (JSVAL_IS_INT(id)) {
+        slot = (uintN) JSVAL_TO_INT(id);
+        if (slot < fp->argc)
+            *vp = fp->argv[slot];
+    } else {
+        if (id == (jsid) cx->runtime->atomState.lengthAtom)
+            *vp = INT_TO_JSVAL((jsint) fp->argc);
+    }
+    return JS_TRUE;
+}
+
 JSObject *
 js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
 {
@@ -293,7 +350,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent)
     }
     fp->callobj = callobj;
 
-    /* Make callobj be the scope chain and the variable object. */
+    /* Make callobj be the scope chain and the variables object. */
     fp->scopeChain = callobj;
     fp->varobj = callobj;
     return callobj;
@@ -652,15 +709,8 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             return JS_FALSE;
         }
         if (fp) {
-            if (TEST_BIT(slot, fp->overrides)) {
-                if (!JS_GetProperty(cx, fp->callobj, js_arguments_str, vp))
-                    return JS_FALSE;
-            } else {
-                JSObject *argsobj = js_GetArgsObject(cx, fp);
-                if (!argsobj)
-                    return JS_FALSE;
-                *vp = OBJECT_TO_JSVAL(argsobj);
-            }
+            if (!js_GetArgsValue(cx, fp, vp))
+                return JS_FALSE;
         } else {
             *vp = JSVAL_NULL;
         }
@@ -1460,7 +1510,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     if (JS_HAS_STRICT_OPTION(cx)) {
                         JS_ASSERT(SPROP_GETTER(sprop, obj) == js_GetArgument);
                         OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-                        if (!js_ReportCompileErrorNumber(cx, ts,
+                        if (!js_ReportCompileErrorNumber(cx, ts, NULL,
                                                          JSREPORT_WARNING |
                                                          JSREPORT_STRICT,
                                                          JSMSG_DUPLICATE_FORMAL,

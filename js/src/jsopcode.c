@@ -1717,6 +1717,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 }
 		break;
 
+              case JSOP_ARGSUB:
+                i = (jsint) GET_ATOM_INDEX(pc);
+                todo = Sprint(&ss->sprinter, "%s[%d]",
+                              js_arguments_str, (int) i);
+                break;
+
+              case JSOP_ARGCNT:
+                todo = Sprint(&ss->sprinter, "%s.%s",
+                              js_arguments_str, js_length_str);
+                break;
+
 	      case JSOP_GETARG:
 		atom = GetSlotAtom(jp, js_GetArgument, GET_ARGNO(pc));
 		LOCAL_ASSERT(atom);
