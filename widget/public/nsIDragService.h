@@ -54,15 +54,6 @@ class nsIDragService : public nsISupports {
     NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType) = 0;
 
   /**
-    * Starts a modal drag session with a single transferable
-    *
-    * @param  aTransferable the transferable to be dragged
-    * @param  aRegion - a region containing rectangles for cursor feedback, 
-    *            in window coordinates.
-    */
-    NS_IMETHOD InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType) = 0;
-
-  /**
     * Returns the current Drag Session  
     *
     * @param  aSession the current drag session
@@ -70,19 +61,25 @@ class nsIDragService : public nsISupports {
     NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession) = 0;
 
   /**
-    * Tells the Drag Service to start a drag sessiojn, this is called when
+    * Tells the Drag Service to start a drag session. This is called when
     * an external drag occurs
     *
     */
     NS_IMETHOD StartDragSession () = 0;
 
   /**
-    * Tells the Drag Service to end a drag sessiojn, this is called when
+    * Tells the Drag Service to end a drag session. This is called when
     * an external drag occurs
     *
     */
     NS_IMETHOD EndDragSession () = 0;
 
+  /**
+    * 
+    *
+    */
+    // NS_IMETHOD HasDragStarted ( nsIDOMEvent* inInitialMouseDown, nsIDOMEvent* inMostRecentMouseEvent,
+    //                                PRBool* outHasStarted ) ;
 };
 
 #endif
