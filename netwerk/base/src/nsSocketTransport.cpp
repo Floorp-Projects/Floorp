@@ -1795,6 +1795,7 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
     switch (iCode) /* these are currently just nsSocketState 
                       (as in nsSocketTransport.h) */
     {
+        case eSocketState_Created: 
         case eSocketState_WaitDNS:
             {
                 static nsAutoString mesg("Resolving host ");
@@ -1827,7 +1828,6 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
                 rv = NS_OK;
             }
             break;
-        case eSocketState_Created: 
         case eSocketState_Closed:
         case eSocketState_Done:
         case eSocketState_Timeout:
