@@ -30,7 +30,8 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  dump("EditoreditorShell found for dialog\n");
+
+  doSetOKCancel(onOK, null);
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -73,5 +74,5 @@ function onOK()
   if (insertNew) {
     editorShell.InsertElement(element, false);
   }
-  window.close();
+ return true; // do close the window
 }
