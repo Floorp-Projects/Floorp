@@ -335,8 +335,8 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
   else if (!nsCRT::strcmp(aTopic,"nsWebBrowserFind_FindAgain")) {
     // A find next command wants to be executed.
     // We might want to handle it. If we do, return true in didExecute.
-    nsCOMPtr<nsISupportsPRBool> didExecute(do_QueryInterface(aSubject));
-    return FindNext(NS_LITERAL_STRING("up").Equals(aData), didExecute);
+    nsCOMPtr<nsISupportsInterfacePointer> callerWindowSupports(do_QueryInterface(aSubject));
+    return FindNext(NS_LITERAL_STRING("up").Equals(aData), callerWindowSupports);
   }
   else {
     return NS_OK;
@@ -1476,40 +1476,35 @@ nsTypeAheadFind::NotifySelectionChanged(nsIDOMDocument *aDoc,
 // ---------------- nsITypeAheadFind --------------------
 
 NS_IMETHODIMP
-nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsPRBool *aDidExecute)
+nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsInterfacePointer *aCallerWindowSupports)
 {
-  NS_ENSURE_TRUE(aDidExecute, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aCallerWindowSupports, NS_ERROR_FAILURE);
 
-  aDidExecute->SetData(PR_FALSE);
+  // aCallerWindowSupports holds an nsISupports to the window the 
+  // find next command was fired in
+  // We clear out the window pointer when handling the find command ourselves.
+
   if (!mIsFindAllowedInWindow || mFindNextBuffer.IsEmpty() || !mFocusedWindow) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(mFocusedWindow));
-  NS_ENSURE_TRUE(privateWindow, NS_ERROR_FAILURE);
+  // Compare the top level content pres shell of typeaheadfind
+  // with the top level content prs shell window where find next is happening
+  // If they're different, exit so that webbrowswerfind can handle FindNext()
 
-  nsCOMPtr<nsIFocusController> focusController;
-  privateWindow->GetRootFocusController(getter_AddRefs(focusController));
-  NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresShell> typeAheadPresShell, callerPresShell;
+  GetTopContentPresShell(mFocusedWindow, getter_AddRefs(typeAheadPresShell));
+  NS_ENSURE_TRUE(typeAheadPresShell, NS_OK);
 
-  nsCOMPtr<nsIDOMWindowInternal> callerWinInternal;
-  focusController->GetFocusedWindow(getter_AddRefs(callerWinInternal));
-  nsCOMPtr<nsIDOMWindow> callerWin(do_QueryInterface(callerWinInternal));
+  nsCOMPtr<nsISupports> callerWindowSupports;
+  aCallerWindowSupports->GetData(getter_AddRefs(callerWindowSupports));
+  nsCOMPtr<nsIDOMWindow> callerWin(do_QueryInterface(callerWindowSupports));
   NS_ENSURE_TRUE(callerWin, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> typeAheadPresShell(do_QueryReferent(mFocusedWeakShell));
-  NS_ENSURE_TRUE(typeAheadPresShell, NS_ERROR_FAILURE);
+  GetTopContentPresShell(callerWin, getter_AddRefs(callerPresShell));
+  NS_ENSURE_TRUE(callerPresShell, NS_OK);
 
-  nsCOMPtr<nsIDOMDocument> callerDomDoc;
-  callerWin->GetDocument(getter_AddRefs(callerDomDoc));
-  nsCOMPtr<nsIDocument> callerDoc(do_QueryInterface(callerDomDoc));
-  NS_ENSURE_TRUE(callerDoc, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIPresShell> callerPresShell;
-  callerDoc->GetShellAt(0, getter_AddRefs(callerPresShell));
-  NS_ENSURE_TRUE(callerPresShell, NS_ERROR_FAILURE);
-
-  if (callerWin != mFocusedWindow || callerPresShell != typeAheadPresShell) {
+  if (callerPresShell != typeAheadPresShell) {
     // This means typeaheadfind is active in a different window or doc
     // So it's not appropriate to find next for the current window
     mFindNextBuffer.Truncate();
@@ -1538,7 +1533,8 @@ nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsPRBool *aDidExecute)
    * so do the find next operation now
    */
 
-  aDidExecute->SetData(PR_TRUE);
+  // Clear out window data, to indicate we handled the findnext
+  aCallerWindowSupports->SetData(nsnull); 
 
   if (mBadKeysSinceMatch > 0) {
     // We know it will fail, so just return
@@ -1756,6 +1752,27 @@ nsTypeAheadFind::CancelFind()
 
 
 // ------- Helper Methods ---------------
+
+void 
+nsTypeAheadFind::GetTopContentPresShell(nsIDOMWindow *aWindow, nsIPresShell **aPresShell)
+{
+  *aPresShell = nsnull;
+  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(aWindow));
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(ifreq));
+  nsCOMPtr<nsIDocShellTreeItem> topContentTreeItem, treeItem(do_QueryInterface(webNav));
+
+  if (!treeItem)
+    return;
+
+  treeItem->GetSameTypeRootTreeItem(getter_AddRefs(topContentTreeItem));
+  nsCOMPtr<nsIDocShell> topContentDocShell(do_QueryInterface(topContentTreeItem));
+
+  if (!topContentDocShell)
+    return;
+
+  topContentDocShell->GetPresShell(aPresShell);
+}
+
 
 nsresult
 nsTypeAheadFind::GetWebBrowserFind(nsIWebBrowserFind **aWebBrowserFind)

@@ -130,6 +130,7 @@ protected:
   nsresult HandleChar(PRUnichar aChar);
   PRBool HandleBackspace();
   void SaveFind();
+  void GetTopContentPresShell(nsIDOMWindow *aWindow, nsIPresShell **aPresShell);
   nsresult GetWebBrowserFind(nsIWebBrowserFind **aWebBrowserFind);
   void StartTimeout();
   nsresult Init();

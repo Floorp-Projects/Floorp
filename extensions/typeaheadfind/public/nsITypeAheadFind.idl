@@ -71,6 +71,6 @@ interface nsITypeAheadFind : nsISupports
   // Find next recurrence if typeaheadfind was the last used find, 
   // as opposed to regular find. Returns false in nsISupportsPRBool if we
   // don't handle the request.
-  void findNext(in boolean aReverse, in nsISupportsPRBool aDidFind);
+  void findNext(in boolean aReverse, in nsISupportsInterfacePointer aCallerWindowSupports);
 };
 

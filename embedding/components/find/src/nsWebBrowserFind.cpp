@@ -103,16 +103,23 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     // Otherwise, nsWebBrowserFind needs to perform the find again command itself
     // this is used by nsTypeAheadFind, which controls find again when it was
     // the last executed find in the current window.
-    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
-    if (observerService) {
-        nsCOMPtr<nsISupportsPRBool> didExecute = 
-          do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerSvc =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (observerSvc) {
+        nsCOMPtr<nsISupportsInterfacePointer> windowSupportsData = 
+          do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
-        didExecute->SetData(PR_FALSE);
-        NS_NAMED_LITERAL_STRING(downString, "down");
-        NS_NAMED_LITERAL_STRING(upString, "up");
-        observerService->NotifyObservers(didExecute, "nsWebBrowserFind_FindAgain", mFindBackwards? upString.get(): downString.get());
-        didExecute->GetData(outDidFind);
+        nsCOMPtr<nsISupports> searchWindowSupports =
+          do_QueryInterface(searchFrame);
+        windowSupportsData->SetData(searchWindowSupports);
+        NS_NAMED_LITERAL_STRING(dnStr, "down");
+        NS_NAMED_LITERAL_STRING(upStr, "up");
+        observerSvc->NotifyObservers(windowSupportsData, 
+                                     "nsWebBrowserFind_FindAgain", 
+                                     mFindBackwards? upStr.get(): dnStr.get());
+        windowSupportsData->GetData(getter_AddRefs(searchWindowSupports));
+        // findnext performed if search window data cleared out
+        *outDidFind = searchWindowSupports == nsnull;
         if (*outDidFind)
             return NS_OK;
     }
