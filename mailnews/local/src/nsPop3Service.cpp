@@ -85,8 +85,6 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 {
 	NS_LOCK_INSTANCE();
 	nsresult rv = NS_OK;
-    char * userName = nsnull;
-    char * popPassword = nsnull;
 	char * popHost = nsnull;
 	nsCOMPtr<nsIURL> url;
 
