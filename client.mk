@@ -154,7 +154,7 @@ endif
 
 # MOZ_CVS_FLAGS - Basic CVS flags
 ifeq "$(origin MOZ_CVS_FLAGS)" "undefined"
-  CVS_FLAGS := $(CVS_FLAGS) -q -z 3
+  CVS_FLAGS := $(CVS_FLAGS) -q -z 3 
 else
   CVS_FLAGS := $(MOZ_CVS_FLAGS)
 endif
