@@ -677,7 +677,7 @@ gc_object_class_name(void* thing)
     static char depbuf[32];
 
     switch (*flagp & GCF_TYPEMASK) {
-      case GCX_OBJECT:
+      case GCX_OBJECT: {
         JSObject  *obj = (JSObject *)thing;
         JSClass   *clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
         className = clasp->name;
@@ -696,14 +696,17 @@ gc_object_class_name(void* thing)
         }
 #endif
         break;
+      }
 
-      case GCX_MUTABLE_STRING:
+      case GCX_MUTABLE_STRING: {
+        JSString *str = (JSString *)thing;
         if (JSSTRING_IS_DEPENDENT(str)) {
-            PR_snprintf(depbuf, sizeof depbuf, "start:%u, length:%u",
+            JS_snprintf(depbuf, sizeof depbuf, "start:%u, length:%u",
                         JSSTRDEP_START(str), JSSTRDEP_LENGTH(str));
             className = depbuf;
         }
         break;
+      }
 
       default:
         JS_ASSERT(0);
@@ -853,7 +856,7 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
                     jsval nval;
 
                     slot = vp - obj->slots;
-                    for (sprop = scope->props; ; sprop = sprop->next) {
+                    for (sprop = scope->lastProp; ; sprop = sprop->parent) {
                         if (!sprop) {
                             switch (slot) {
                               case JSSLOT_PROTO:
