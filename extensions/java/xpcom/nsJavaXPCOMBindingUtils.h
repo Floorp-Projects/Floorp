@@ -113,7 +113,9 @@ extern JavaToXPTCStubMap* gJavaToXPTCStubMap;
 // The Java garbage collector runs in a separate thread.  Since it calls the
 // finalizeProxy() function in nsJavaWrapper.cpp, we need to make sure that
 // all the structures touched by finalizeProxy() are multithread aware.
-extern PRMonitor* gJavaXPCOMMonitor;
+extern PRLock* gJavaXPCOMLock;
+
+extern PRBool gJavaXPCOMInitialized;
 
 /**
  * Initialize global structures used by Javaconnect.
