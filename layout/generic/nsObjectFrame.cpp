@@ -305,11 +305,12 @@ private:
   nsresult EnsureCachedAttrParamArrays();
 };
 
+static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect);
+
   // Mac specific code to fix up port position and clip during paint
 #ifdef XP_MAC
   // get the absolute widget position and clip
   static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY, nsRect& aClipRect); 
-  static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect);
   // convert relative coordinates to absolute
   static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsIPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&aContainerWidget);
 #endif // XP_MAC
@@ -3334,45 +3335,59 @@ nsPluginInstanceOwner::Destroy()
 
 void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 {
+  if(!mInstance)
+    return;
+ 
 #ifdef XP_MAC
-  if (mInstance != NULL) {
-
-    nsPluginPort* pluginPort = GetPluginPort();
+  nsPluginPort* pluginPort = GetPluginPort();
 
 #ifdef DO_DIRTY_INTERSECT   // aDirtyRect isn't always correct, see bug 56128
-    nsPoint rel(aDirtyRect.x, aDirtyRect.y);
-    nsPoint abs(0,0);
-    nsCOMPtr<nsIWidget> containerWidget;
-  
-    // Convert dirty rect relative coordinates to absolute and also get the containerWidget
-    ConvertRelativeToWindowAbsolute(mOwner, mContext, rel, abs, *getter_AddRefs(containerWidget));
+  nsPoint rel(aDirtyRect.x, aDirtyRect.y);
+  nsPoint abs(0,0);
+  nsCOMPtr<nsIWidget> containerWidget;
 
-    nsRect absDirtyRect = nsRect(abs.x, abs.y, aDirtyRect.width, aDirtyRect.height);
+  // Convert dirty rect relative coordinates to absolute and also get the containerWidget
+  ConvertRelativeToWindowAbsolute(mOwner, mContext, rel, abs, *getter_AddRefs(containerWidget));
 
-    // Convert to absolute pixel values for the dirty rect
-    nsRect absDirtyRectInPixels;
-    ConvertTwipsToPixels(*mContext, absDirtyRect, absDirtyRectInPixels);
+  nsRect absDirtyRect = nsRect(abs.x, abs.y, aDirtyRect.width, aDirtyRect.height);
+
+  // Convert to absolute pixel values for the dirty rect
+  nsRect absDirtyRectInPixels;
+  ConvertTwipsToPixels(*mContext, absDirtyRect, absDirtyRectInPixels);
 #endif
-    FixUpPluginWindow();
+  FixUpPluginWindow();
 
-    EventRecord updateEvent;
-    ::OSEventAvail(0, &updateEvent);
-    updateEvent.what = updateEvt;
-    updateEvent.message = UInt32(pluginPort->port);
+  EventRecord updateEvent;
+  ::OSEventAvail(0, &updateEvent);
+  updateEvent.what = updateEvt;
+  updateEvent.message = UInt32(pluginPort->port);
 
-    nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
-    PRBool eventHandled = PR_FALSE;
-    mInstance->HandleEvent(&pluginEvent, &eventHandled);
-    }
+  nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+  PRBool eventHandled = PR_FALSE;
+  mInstance->HandleEvent(&pluginEvent, &eventHandled);
 #endif
 
 #ifdef XP_WIN
-    nsPluginEvent pluginEvent;
+  nsPluginWindow * window;
+  GetWindow(window);
+  nsRect relDirtyRect = nsRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  nsRect relDirtyRectInPixels;
+  ConvertTwipsToPixels(*mContext, relDirtyRect, relDirtyRectInPixels);
+
+  // we got dirty rectangle in relative window coordinates, but we
+  // need it in absolute units and in the (left, top, right, bottom) form
+  RECT drc;
+  drc.left   = relDirtyRectInPixels.x + window->x;
+  drc.top    = relDirtyRectInPixels.y + window->y;
+  drc.right  = drc.left + relDirtyRectInPixels.width;
+  drc.bottom = drc.top + relDirtyRectInPixels.height;
+
+  nsPluginEvent pluginEvent;
   pluginEvent.event = 0x000F; //!!! This is bad, but is it better to include <windows.h> for WM_PAINT only?
   pluginEvent.wParam = (uint32)ndc;
-  pluginEvent.lParam = nsnull;
-    PRBool eventHandled = PR_FALSE;
-    mInstance->HandleEvent(&pluginEvent, &eventHandled);
+  pluginEvent.lParam = (uint32)&drc;
+  PRBool eventHandled = PR_FALSE;
+  mInstance->HandleEvent(&pluginEvent, &eventHandled);
 #endif
 }
 
@@ -3598,6 +3613,16 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
   NS_IF_ADDREF(mPluginHost);
 }
 
+// convert frame coordinates from twips to pixels
+static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect)
+{
+  float t2p;
+  aPresContext.GetTwipsToPixels(&t2p);
+  aPixelRect.x = NSTwipsToIntPixels(aTwipsRect.x, t2p);
+  aPixelRect.y = NSTwipsToIntPixels(aTwipsRect.y, t2p);
+  aPixelRect.width = NSTwipsToIntPixels(aTwipsRect.width, t2p);
+  aPixelRect.height = NSTwipsToIntPixels(aTwipsRect.height, t2p);
+}
 
   // Mac specific code to fix up the port location and clipping region
 #ifdef XP_MAC
@@ -3647,7 +3672,6 @@ static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbs
   //printf("Widget clip X %d Y %d rect %d %d %d %d\n", aAbsX, aAbsY,  aClipRect.x,  aClipRect.y, aClipRect.width,  aClipRect.height ); 
   //printf("--------------\n"); 
 } 
-
 
 #ifdef DO_DIRTY_INTERSECT
 // Convert from a frame relative coordinate to a coordinate relative to its
@@ -3702,18 +3726,6 @@ aContainerWidget)
 
   // Add relative coordinate to the absolute coordinate that has been calculated
   aAbs += aRel;
-}
-
-// Convert from a frame relative coordinate to a coordinate relative to its
-// containing window
-static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect)
-{
-  float t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
-  aPixelRect.x = NSTwipsToIntPixels(aTwipsRect.x, t2p);
-  aPixelRect.y = NSTwipsToIntPixels(aTwipsRect.y, t2p);
-  aPixelRect.width = NSTwipsToIntPixels(aTwipsRect.width, t2p);
-  aPixelRect.height = NSTwipsToIntPixels(aTwipsRect.height, t2p);
 }
 #endif // DO_DIRTY_INTERSECT
 
