@@ -21,199 +21,36 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "nsIFactory.h"
-#include "nsISupports.h"
-#include "msgCore.h"
-#include "nsCOMPtr.h"
-#include "pratom.h"
+
+#include "nsIGenericFactory.h"
 
 /* Include all of the interfaces our factory can generate components for */
-#include "nsIMimeContentTypeHandler.h"
 #include "nsMimeContentTypeHandler.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kMimeContentTypeHandlerCID, NS_CALENDAR_CONTENT_TYPE_HANDLER_CID);
-
-////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// Define the contructor function for the CID
 //
-////////////////////////////////////////////////////////////
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
+// What this does is defines a function nsMimeContentTypeHandlerConstructor
+// which we will specific in the nsModuleComponentInfo table. This function will
+// be used by the generic factory to create an instance.
+//
+// NOTE: This creates an instance by using the default constructor
+//
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeContentTypeHandler)
 
-class nsCalendarFactory : public nsIFactory
-{   
-public:
-	// nsISupports methods
-	NS_DECL_ISUPPORTS 
-
-  nsCalendarFactory(const nsCID &aClass,
-               const char* aClassName,
-               const char* aContractID,
-               nsISupports*);
-
-  // nsIFactory methods   
-  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
-  NS_IMETHOD LockFactory(PRBool aLock);   
-
-protected:
-  virtual ~nsCalendarFactory();   
-
-  nsCID mClassID;
-  char* mClassName;
-  char* mContractID;
-  nsIServiceManager* mServiceManager;
-};   
-
-nsCalendarFactory::nsCalendarFactory(const nsCID &aClass,
-                           const char* aClassName,
-                           const char* aContractID,
-                           nsISupports *compMgrSupports)
-  : mClassID(aClass),
-    mClassName(nsCRT::strdup(aClassName)),
-    mContractID(nsCRT::strdup(aContractID))
+////////////////////////////////////////////////////////////////////////
+// Define a table of CIDs implemented by this module along with other
+// information like the function to create an instance, contractid, and
+// class name.
+//
+static nsModuleComponentInfo components[] =
 {
-	NS_INIT_REFCNT();
+  { "MIME Calendar Handler", NS_CALENDAR_CONTENT_TYPE_HANDLER_CID, "@mozilla.org/mimecth;1?type=text/calendar",
+    nsMimeContentTypeHandlerConstructor, }
+};
 
-  // store a copy of the 
-  compMgrSupports->QueryInterface(NS_GET_IID(nsIServiceManager),
-                                  (void **)&mServiceManager);
-}   
-
-nsCalendarFactory::~nsCalendarFactory()   
-{
-  NS_IF_RELEASE(mServiceManager);
-  PL_strfree(mClassName);
-  PL_strfree(mContractID);
-}   
-
-nsresult
-nsCalendarFactory::QueryInterface(const nsIID &aIID, void **aResult)   
-{   
-  if (aResult == NULL)  
-    return NS_ERROR_NULL_POINTER;  
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(NS_GET_IID(nsISupports)))    
-    *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(NS_GET_IID(nsIFactory)))   
-    *aResult = (void *)(nsIFactory*)this;   
-
-  if (*aResult == NULL)
-    return NS_NOINTERFACE;
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsCalendarFactory)
-NS_IMPL_RELEASE(nsCalendarFactory)
-
-nsresult
-nsCalendarFactory::CreateInstance(nsISupports *aOuter,
-                             const nsIID &aIID,
-                             void **aResult)  
-{  
-	nsresult res = NS_OK;
-
-	if (aResult == NULL)  
-		return NS_ERROR_NULL_POINTER;  
-
-	*aResult = NULL;  
-  
-	nsCOMPtr <nsIMimeContentTypeHandler> inst;
-
-	// ClassID check happens here
-	// Whenever you add a new class that supports an interface, plug it in here!!!
-	
-	// do they want a mime emitter interface ?
-	if (mClassID.Equals(kMimeContentTypeHandlerCID)) 
-	{
-		res = NS_NewMimeContentTypeHandler(getter_AddRefs(inst));
-		if (NS_FAILED(res))  // was there a problem creating the object ?
-		  return res;   
-	}
-
-	// End of checking the interface ID code....
-	if (inst) 
-	{
-		// so we now have the class that supports the desired interface...we need to turn around and
-		// query for our desired interface.....
-		res = inst->QueryInterface(aIID, aResult);
-	}
-	else
-		res = NS_ERROR_OUT_OF_MEMORY;
-
-  return res;  
-}  
-
-nsresult
-nsCalendarFactory::LockFactory(PRBool aLock)  
-{  
-	if (aLock)
-		PR_AtomicIncrement(&g_LockCount); 
-	else
-		PR_AtomicDecrement(&g_LockCount);
-
-	return NS_OK;
-}  
-
-////////////////////////////////////////////////////////////////////////////////
-
-// return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aContractID,
-                                           nsIFactory **aFactory)
-{
-	if (nsnull == aFactory)
-		return NS_ERROR_NULL_POINTER;
-
-  *aFactory = new nsCalendarFactory(aClass, aClassName, aContractID, aServMgr);
-  if (aFactory)
-    return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory),
-                                       (void**)aFactory);
-  else
-    return NS_ERROR_OUT_OF_MEMORY;
-}
-
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
-{
-	return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char* path)
-{
-  nsresult rv = NS_OK;
-
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kMimeContentTypeHandlerCID,
-                                       "MIME Calendar Handler",
-                                       "@mozilla.org/mimecth;1?type=text/calendar",
-                                       path, PR_TRUE, PR_TRUE);
-  return rv;
-}
-
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char* path)
-{
-  nsresult rv;
-
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->UnregisterComponent(kMimeContentTypeHandlerCID, path);
-
-  return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////////
+// Implement the NSGetModule() exported function for your module
+// and the entire implementation of the module object.
+//
+NS_IMPL_NSGETMODULE(nsCalendarModule, components)
