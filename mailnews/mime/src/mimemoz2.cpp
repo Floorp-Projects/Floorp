@@ -242,10 +242,9 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
   // name.
   if (aAttach->real_type && !nsCRT::strcasecmp(aAttach->real_type, MESSAGE_RFC822))
   {
-    if (aHdrs->munged_subject)
-    {
+    NS_ASSERTION(aHdrs, "How comes the object's headers is null!");
+    if (aHdrs && aHdrs->munged_subject)
       aAttach->real_name = PR_smprintf("%s.eml", aHdrs->munged_subject);
-    }
     else
       NS_MsgSACopy(&(aAttach->real_name), "ForwardedMessage.eml");
     return;
@@ -533,12 +532,13 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
 
   cobj = (MimeContainer*) obj;
   n = CountTotalMimeAttachments(cobj);
+  if (n <= 0) 
+    return n;
+
   //in case of an inline message (as body), we need an extra slot for the message itself
   //that we will fill later...
   if (isAnInlineMessage)
     n ++;
-  if (n <= 0) 
-    return n;
 
   *data = (nsMsgAttachmentData *)PR_Malloc( (n + 1) * sizeof(nsMsgAttachmentData));
   if (!*data) 
