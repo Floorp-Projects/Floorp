@@ -60,14 +60,15 @@ public:
 
   virtual nsresult SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
 
-  virtual void PushState();
-  virtual void PopState();
+  virtual void PushState(void);
+  virtual void PopState(void);
 
   virtual PRBool IsVisibleRect(const nsRect& aRect);
 
-  virtual void SetClipRect(const nsRect& aRect, PRBool aIntersect);
+  virtual void SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
   virtual PRBool GetClipRect(nsRect &aRect);
-  virtual void SetClipRegion(const nsIRegion& aRegion, PRBool aIntersect);
+  virtual void SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
+  virtual void GetClipRegion(nsIRegion **aRegion);
 
   virtual void SetColor(nscolor aColor);
   virtual nscolor GetColor() const;
@@ -129,6 +130,7 @@ private:
   HBRUSH SetupSolidBrush(void);
   HPEN SetupSolidPen(void);
   void SetupFont(void);
+  void PushClipState(void);
 
 protected:
   nscolor					  mCurrentColor;
@@ -142,6 +144,7 @@ protected:
   nsIDeviceContext  *mContext;
   float             mP2T;
   HDC               mMainDC;
+  HRGN              mClipRegion;
   //default objects
   HBRUSH            mOrigSolidBrush;
   HBRUSH            mBlackBrush;

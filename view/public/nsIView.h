@@ -123,8 +123,12 @@ public:
    * @param rc rendering context to paint into
    * @param rect damage area
    * @param aPaintFlags see nsIView.h for flag definitions
+   * @param aBackstop if we will need to do back to front
+   *        painting, this is the view that, once rendered
+   *        ends the back to front pass.
    */
-  virtual void Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPaintFlags) = 0;
+  virtual void Paint(nsIRenderingContext& rc, const nsRect& rect,
+                     PRUint32 aPaintFlags, nsIView *aBackstop = nsnull) = 0;
 
   /**
    * Called to indicate that the specified region of the view
@@ -367,10 +371,15 @@ public:
 //visibility state is set to inherit
 #define NS_VIEW_FLAG_PARENT_HIDDEN  0x0001
 
+//when painting, if we have determined that we need to do a combination
+//of front to back and back to front painting, this flag will be set
+//while in the back to front pass
+#define NS_VIEW_FLAG_BACK_TO_FRONT  0x0002
+
 //during event propagation, see if parent views can handle the event
-#define NS_VIEW_FLAG_CHECK_PARENT   0x0002
+#define NS_VIEW_FLAG_CHECK_PARENT   0x0004
 
 //during event propagation, see if child views can handle the event
-#define NS_VIEW_FLAG_CHECK_CHILDREN 0x0004
+#define NS_VIEW_FLAG_CHECK_CHILDREN 0x0008
 
 #endif

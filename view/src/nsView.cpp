@@ -365,41 +365,28 @@ nsIWidget * nsView :: GetWidget()
   return mWindow;
 }
 
-void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPaintFlags)
+void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
+                     PRUint32 aPaintFlags, nsIView *aBackstop)
 {
+  nsIView *pRoot = mViewManager->GetRootView();
+
   rc.PushState();
 
   if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
   {
-    rc.Translate(mBounds.x, mBounds.y);
-
     nsRect  crect;
 
-    crect.x = mClip.mLeft;
-    crect.y = mClip.mTop;
+    crect.x = mClip.mLeft + mBounds.x;
+    crect.y = mClip.mTop + mBounds.y;
     crect.width = mClip.mRight - mClip.mLeft;
     crect.height = mClip.mBottom - mClip.mTop;
 
-    rc.SetClipRect(crect, PR_TRUE);
+    rc.SetClipRect(crect, nsClipCombine_kIntersect);
   }
-  else
-  {
-    nsIView *pRoot = mViewManager->GetRootView();
+  else if (this != pRoot)
+    rc.SetClipRect(mBounds, nsClipCombine_kIntersect);
 
-    if (this != pRoot)
-      rc.SetClipRect(mBounds, PR_TRUE);
-
-    NS_RELEASE(pRoot);
-
-    rc.Translate(mBounds.x, mBounds.y);
-  }
-
-  if (nsnull != mFrame)
-  {
-    nsIPresContext  *cx = mViewManager->GetPresContext();
-    mFrame->Paint(*cx, rc, rect);
-    NS_RELEASE(cx);
-  }
+  rc.Translate(mBounds.x, mBounds.y);
 
   //XXX maybe we should set this before we set the clip? MMP
 
@@ -432,7 +419,39 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPain
     }
   }
 
+  if ((mVis == nsViewVisibility_kShow) && (nsnull != mFrame))
+  {
+    nsIPresContext  *cx = mViewManager->GetPresContext();
+    rc.PushState();
+    mFrame->Paint(*cx, rc, rect);
+    rc.PopState();
+    NS_RELEASE(cx);
+  }
+
   rc.PopState();
+
+  //now we need to exclude this view from the rest of the
+  //paint process. only do this if this view is actually
+  //visible and if there is no widget (like a scrollbar) here.
+
+  if ((mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
+  {
+    if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
+    {
+      nsRect  crect;
+
+      crect.x = mClip.mLeft + mBounds.x;
+      crect.y = mClip.mTop + mBounds.y;
+      crect.width = mClip.mRight - mClip.mLeft;
+      crect.height = mClip.mBottom - mClip.mTop;
+
+      rc.SetClipRect(crect, nsClipCombine_kSubtract);
+    }
+    else if (this != pRoot)
+      rc.SetClipRect(mBounds, nsClipCombine_kSubtract);
+  }
+
+  NS_RELEASE(pRoot);
 }
 
 void nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags)
@@ -854,7 +873,7 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
   fprintf(out, "%p win=%p ", this, mWindow);
   out << mBounds;
-  fputs("<\n", out);
+  fprintf(out, " z=%d vis=%d opc=%1.3f <\n", mZindex, mVis, mOpacity);
   nsIView* kid = mFirstChild;
   while (nsnull != kid) {
     kid->List(out, aIndent + 1);

@@ -300,7 +300,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   }
 
   if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
-    localcx->SetClipRect(*rect, PR_FALSE);
+    localcx->SetClipRect(*rect, nsClipCombine_kReplace);
 
   GetWindowOffsets(&xoff, &yoff);
 
@@ -311,9 +311,11 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
     trect.MoveBy(xoff, yoff);
   else
-    localcx->SetClipRect(trect, PR_FALSE);
+    localcx->SetClipRect(trect, nsClipCombine_kReplace);
 
+  localcx->PushState();
   aView->Paint(*localcx, trect, 0);
+  localcx->PopState();
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);

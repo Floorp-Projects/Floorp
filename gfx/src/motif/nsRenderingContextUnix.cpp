@@ -93,11 +93,11 @@ nsIDeviceContext * nsRenderingContextUnix :: GetDeviceContext(void)
   return mContext;
 }
 
-void nsRenderingContextUnix :: PushState()
+void nsRenderingContextUnix :: PushState(void)
 {
 }
 
-void nsRenderingContextUnix :: PopState()
+void nsRenderingContextUnix :: PopState(void)
 {
 }
 
@@ -106,16 +106,42 @@ PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
   return PR_TRUE;
 }
 
-void nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, PRBool aIntersect)
+void nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
+  nsRect  trect = aRect;
+
+	mTMatrix->TransformCoord(&trect.x, &trect.y,
+                           &trect.width, &trect.height);
+
+  //how we combine the new rect with the previous?
+
+  if (aCombine == nsClipCombine_kIntersect)
+  {
+  }
+  else if (aCombine == nsClipCombine_kUnion)
+  {
+  }
+  else if (aCombine == nsClipCombine_kSubtract)
+  {
+  }
+  else if (aCombine == nsClipCombine_kReplace)
+  {
+  }
+  else
+    NS_ASSERTION(FALSE, "illegal clip combination");
 }
 
 PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
 {
-  return PR_TRUE;
+  return PR_FALSE;
 }
 
-void nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, PRBool aIntersect)
+void nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
+{
+  //XXX wow, needs to do something.
+}
+
+void nsRenderingContextUnix :: GetClipRegion(nsIRegion **aRegion)
 {
   //XXX wow, needs to do something.
 }
