@@ -53,6 +53,11 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsEnumeratorUtils.h"
 
+#include "nsIURL.h"
+#include "nsNetUtil.h"
+#include "nsIChannel.h"
+#include "nsIFile.h"
+
 #ifdef	XP_WIN
 #include "nsIUnicodeDecoder.h"
 #include "nsIPlatformCharset.h"
@@ -179,10 +184,9 @@ public:
     static PRBool isFileURI(nsIRDFResource* aResource);
 
     static nsresult GetVolumeList(nsISimpleEnumerator **aResult);
-    static nsresult GetFolderList(nsIRDFResource *source, PRBool allowHidden, nsISimpleEnumerator **aResult);
+    static nsresult GetFolderList(nsIRDFResource *source, PRBool allowHidden, PRBool onlyFirst, nsISimpleEnumerator **aResult);
     static nsresult GetName(nsIRDFResource *source, nsIRDFLiteral** aResult);
     static nsresult GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
-    static PRBool   isVisible(const nsNativeFileSpec& file);
 
 #ifdef	XP_WIN
     static PRBool   isValidFolder(nsIRDFResource *source);
@@ -502,14 +506,15 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		{
 			// Oh this is evil. Somebody kill me now.
 			nsCOMPtr<nsISimpleEnumerator> children;
-			rv = GetFolderList(source, PR_FALSE, getter_AddRefs(children));
+			rv = GetFolderList(source, PR_FALSE, PR_TRUE, getter_AddRefs(children));
 			if (NS_FAILED(rv)) return rv;
 
 			PRBool hasMore;
 			rv = children->HasMoreElements(&hasMore);
 			if (NS_FAILED(rv)) return rv;
 
-			if (hasMore) {
+			if (hasMore)
+			{
 				nsCOMPtr<nsISupports> isupports;
 				rv = children->GetNext(getter_AddRefs(isupports));
 				if (NS_FAILED(rv)) return rv;
@@ -574,7 +579,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 	{
 		if (property == kNC_Child)
 		{
-			return GetFolderList(source, PR_FALSE, targets);
+			return GetFolderList(source, PR_FALSE, PR_FALSE, targets);
 		}
 		else if (property == kNC_Name)
 		{
@@ -606,18 +611,18 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (property == kRDF_type)
 		{
-			nsXPIDLCString uri;
-			rv = kNC_FileSystemObject->GetValue( getter_Copies(uri) );
+			const	char	*uri = nsnull;
+			rv = kNC_FileSystemObject->GetValueConst( &uri );
 			if (NS_FAILED(rv)) return rv;
 
-			nsAutoString	url; url.AssignWithConversion(uri);
-			nsIRDFLiteral	*literal;
+			nsAutoString	url;
+			url.AssignWithConversion(uri);
 
-			rv = gRDFService->GetLiteral(url.GetUnicode(), &literal);
+			nsCOMPtr<nsIRDFLiteral>	literal;
+			rv = gRDFService->GetLiteral(url.GetUnicode(), getter_AddRefs(literal));
 			if (NS_FAILED(rv)) return rv;
 
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(literal);
-			NS_RELEASE(literal);
 
 			if (! result)
 				return NS_ERROR_OUT_OF_MEMORY;
@@ -628,12 +633,12 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (property == kNC_pulse)
 		{
-			nsIRDFLiteral	*pulseLiteral;
-			rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), &pulseLiteral);
+			nsCOMPtr<nsIRDFLiteral>	pulseLiteral;
+			rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(),
+				getter_AddRefs(pulseLiteral));
 			if (NS_FAILED(rv)) return rv;
 
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
-			NS_RELEASE(pulseLiteral);
 
 			if (! result)
 				return NS_ERROR_OUT_OF_MEMORY;
@@ -782,17 +787,37 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 	}
 	else if (isFileURI(source))
 	{
+		const	char	*uri = nsnull;
+		rv = source->GetValueConst( &uri );
+		if (NS_FAILED(rv)) return rv;
+
+		nsCOMPtr<nsIURI>	fileURI;
+		if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(fileURI), uri)))
+			return(rv);
+		if (!fileURI)	return(NS_ERROR_UNEXPECTED);
+
+		nsCOMPtr<nsIChannel>	channel;
+		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), fileURI, nsnull, nsnull)))
+			return(rv);
+		if (!channel)	return(NS_ERROR_UNEXPECTED);
+
+		nsCOMPtr<nsIFileChannel>	fileChannel = do_QueryInterface(channel);
+		if (!fileChannel)	return(NS_ERROR_UNEXPECTED);
+
+		nsCOMPtr<nsIFile>	aDir;
+		if (NS_FAILED(rv = fileChannel->GetFile(getter_AddRefs(aDir))))
+			return(rv);
+
+		PRBool			isDirFlag = PR_FALSE;
+		if (NS_FAILED(rv = aDir->IsDirectory(&isDirFlag)))
+			return(rv);
+
 		nsCOMPtr<nsISupportsArray> array;
 		rv = NS_NewISupportsArray(getter_AddRefs(array));
 		if (NS_FAILED(rv)) return rv;
 
-		nsXPIDLCString uri;
-		rv = source->GetValue( getter_Copies(uri) );
-		if (NS_FAILED(rv)) return rv;
-
-		nsFileURL	fileURL(uri);
-		nsFileSpec	fileSpec(fileURL);
-		if (fileSpec.IsDirectory()) {
+		if (isDirFlag == PR_TRUE)
+		{
 #ifdef	XP_WIN
 			if (isValidFolder(source) == PR_TRUE)
 			{
@@ -995,15 +1020,6 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 
 
 
-PRBool
-FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
-{
-	PRBool isVisible = (!file.IsHidden());
-	return(isVisible);
-}
-
-
-
 #ifdef	XP_WIN
 PRBool
 FileSystemDataSource::isValidFolder(nsIRDFResource *source)
@@ -1023,7 +1039,7 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 		isValid = PR_FALSE;
 
 		nsCOMPtr<nsISimpleEnumerator>	folderEnum;
-		if (NS_SUCCEEDED(rv = GetFolderList(source, PR_TRUE, getter_AddRefs(folderEnum))))
+		if (NS_SUCCEEDED(rv = GetFolderList(source, PR_TRUE, PR_FALSE, getter_AddRefs(folderEnum))))
 		{
 			PRBool		hasAny = PR_FALSE, hasMore;
 			while (NS_SUCCEEDED(folderEnum->HasMoreElements(&hasMore)) &&
@@ -1064,36 +1080,109 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 
 
 nsresult
-FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden, nsISimpleEnumerator** aResult)
+FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
+				PRBool onlyFirst, nsISimpleEnumerator** aResult)
 {
 	nsresult	rv;
 	nsCOMPtr<nsISupportsArray> nameArray;
 	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
 	if (NS_FAILED(rv)) return rv;
 
-	const char		*uri;
-	rv = source->GetValueConst(&uri);
+	const char		*parentURI = nsnull;
+	rv = source->GetValueConst(&parentURI);
 	if (NS_FAILED(rv)) return(rv);
+	if (!parentURI)	return(NS_ERROR_UNEXPECTED);
 
-	nsFileURL 		parentDir(uri);
-	nsNativeFileSpec 	nativeDir(parentDir);
-	for (nsDirectoryIterator i(nativeDir, PR_FALSE); i.Exists(); i++)
+	nsCOMPtr<nsIURI>	fileURI;
+	if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(fileURI), parentURI)))
+		return(rv);
+	if (!fileURI)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIChannel>	channel;
+	if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), fileURI, nsnull, nsnull)))
+		return(rv);
+	if (!channel)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIFileChannel>	fileChannel = do_QueryInterface(channel);
+	if (!fileChannel)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIFile>	aDir;
+	if (NS_FAILED(rv = fileChannel->GetFile(getter_AddRefs(aDir))))
+		return(rv);
+
+	nsCOMPtr<nsISimpleEnumerator>	dirContents;
+	if (NS_FAILED(rv = aDir->GetDirectoryEntries(getter_AddRefs(dirContents))))
+		return(rv);
+	if (!dirContents)	return(NS_ERROR_UNEXPECTED);
+
+	PRBool			hasMore;
+	while(NS_SUCCEEDED(rv = dirContents->HasMoreElements(&hasMore)) &&
+		(hasMore == PR_TRUE))
 	{
-		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
+		nsCOMPtr<nsISupports>	isupports;
+		if (NS_FAILED(rv = dirContents->GetNext(getter_AddRefs(isupports))))
+			break;
+
+		nsCOMPtr<nsIFile>	aFile = do_QueryInterface(isupports);
+		if (!aFile)	break;
 
 		if (allowHidden == PR_FALSE)
 		{
-			if (!isVisible(nativeSpec))	continue;
+			PRBool			hiddenFlag = PR_FALSE;
+			if (NS_FAILED(rv = aFile->IsHidden(&hiddenFlag)))
+				break;
+			if (hiddenFlag == PR_TRUE)	continue;
 		}
 
-		nsFileURL		fileURL(nativeSpec);
-		const char		*childURL = fileURL.GetAsString();
-		if (childURL != nsnull)
+		PRUnichar		*leafUni = nsnull;
+		if (NS_FAILED(rv = aFile->GetUnicodeLeafName(&leafUni)))
+			break;
+		if (!leafUni)	break;
+
+		nsAutoString		fullURI;
+		fullURI.AssignWithConversion(parentURI);
+		if (fullURI.Last() != PRUnichar('/'))
 		{
-			nsCOMPtr<nsIRDFResource> file;
-			gRDFService->GetResource(childURL, getter_AddRefs(file));
-			nameArray->AppendElement(file);
+			fullURI.Append(PRUnichar('/'));
 		}
+
+		nsAutoString		leaf(leafUni);
+		Recycle(leafUni);
+		leafUni = nsnull;
+
+		// we need to escape this leaf name;
+		// for now, let's just hack it and encode spaces and slashes
+		PRInt32			aOffset;
+		while ((aOffset = leaf.FindChar(' ')) >= 0)
+		{
+			leaf.Cut(aOffset, 1);
+			leaf.InsertWithConversion("%20", aOffset);
+		}
+		while ((aOffset = leaf.FindChar('/')) >= 0)
+		{
+			leaf.Cut(aOffset, 1);
+			leaf.InsertWithConversion("%2F", aOffset);
+		}
+
+		// append the encoded name
+		fullURI.Append(leaf);
+
+		PRBool			dirFlag = PR_FALSE;
+		if (NS_FAILED(rv = aFile->IsDirectory(&dirFlag)))
+			break;
+		if (dirFlag == PR_TRUE)
+		{
+			// XXX hmmm, causes problems getting name,
+			// so comment it out for the short term
+//			fullURI.Append(PRUnichar('/'));
+		}
+
+		nsCOMPtr<nsIRDFResource>	fileRes;
+		gRDFService->GetUnicodeResource(fullURI.GetUnicode(), getter_AddRefs(fileRes));
+
+		nameArray->AppendElement(fileRes);
+
+		if (onlyFirst == PR_TRUE)	break;
 	}
 
 	nsISimpleEnumerator* result = new nsArrayEnumerator(nameArray);
@@ -1112,14 +1201,38 @@ nsresult
 FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 {
 	nsresult		rv;
-	const char		*uri;
+	const char		*uri = nsnull;
+
 	rv = source->GetValueConst(&uri);
 	if (NS_FAILED(rv)) return(rv);
+	if (!uri)	return(NS_ERROR_UNEXPECTED);
 
-	nsFileURL		url(uri);
-	nsNativeFileSpec	native(url);
-	nsAutoString		name;
-	native.GetLeafName(name);
+	nsCOMPtr<nsIURI>	fileURI;
+	if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(fileURI), uri)))
+		return(rv);
+	if (!fileURI)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIChannel>	channel;
+	if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), fileURI, nsnull, nsnull)))
+		return(rv);
+	if (!channel)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIFileChannel>	fileChannel = do_QueryInterface(channel);
+	if (!fileChannel)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIFile>	aFile;
+	if (NS_FAILED(rv = fileChannel->GetFile(getter_AddRefs(aFile))))
+		return(rv);
+	if (!aFile)		return(NS_ERROR_UNEXPECTED);
+
+	PRUnichar		*nameUni = nsnull;
+	if (NS_FAILED(rv = aFile->GetUnicodeLeafName(&nameUni)))
+		return(rv);
+	if (!nameUni)		return(NS_ERROR_UNEXPECTED);
+
+	nsAutoString		name(nameUni);
+	Recycle(nameUni);
+	nameUni = nsnull;
 
 #ifdef	XP_WIN
 
@@ -1140,6 +1253,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 #endif
 
 #ifdef	XP_BEOS
+#if 0 	// XXX fix me
 	// under BEOS, try and get the "META:title" attribute (if its a file)
 	nsAutoString		theURI; theURI.AssignWithConversion(uri);
 	if (theURI.Find(netPositiveDir) == 0)
@@ -1167,10 +1281,9 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 		}
 	}
 #endif
+#endif
 
-	nsIRDFLiteral *literal;
-	gRDFService->GetLiteral(name.GetUnicode(), &literal);
-	*aResult = literal;
+	gRDFService->GetLiteral(name.GetUnicode(), aResult);
 
 	return NS_OK;
 }
@@ -1254,9 +1367,8 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	const char		*uri;
 	rv = source->GetValueConst(&uri);
 	if (NS_FAILED(rv)) return(rv);
-	nsAutoString		url; url.AssignWithConversion(uri);
-
-	nsIRDFLiteral		*literal = nsnull;
+	nsAutoString		url;
+	url.AssignWithConversion(uri);
 
 #ifdef	XP_WIN
 	// under Windows, if its an IE favorite, munge the URL
@@ -1264,8 +1376,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	{
 		if (url.Find(ieFavoritesDir) == 0)
 		{
-			rv = getIEFavoriteURL(source, url, &literal);
-			*aResult = literal;
+			rv = getIEFavoriteURL(source, url, aResult);
 			return(rv);
 		}
 	}
@@ -1277,8 +1388,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	{
 		if (url.Find(netPositiveDir) == 0)
 		{
-			rv = getNetPositiveURL(source, url, &literal);
-			*aResult = literal;
+			rv = getNetPositiveURL(source, url, aResult);
 			return(rv);
 		}
 	}
@@ -1287,9 +1397,9 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	// if we fall through to here, its not any type of bookmark
 	// stored in the platform native file system, so just set the URL
 
-	gRDFService->GetLiteral(url.GetUnicode(), &literal);
-	*aResult = literal;
-	return NS_OK;
+	gRDFService->GetLiteral(url.GetUnicode(), aResult);
+
+	return(NS_OK);
 }
 
 
@@ -1332,4 +1442,3 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
 }
 
 #endif
-
