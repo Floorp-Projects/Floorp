@@ -293,6 +293,7 @@ private:
   nsIPresContext    *mContext;
   nsCOMPtr<nsITimer> mPluginTimer;
   nsIPluginHost     *mPluginHost;
+  PRPackedBool       mContentFocused;
   
   nsresult DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent);
   nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent);
@@ -1921,6 +1922,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mDocumentBase = nsnull;
   mTagText = nsnull;
   mPluginHost = nsnull;
+  mContentFocused = PR_FALSE;
 }
 
 nsPluginInstanceOwner::~nsPluginInstanceOwner()
@@ -2958,16 +2960,19 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
 		break;
 	}
 }
+
 #endif
 
 /*=============== nsIFocusListener ======================*/
 nsresult nsPluginInstanceOwner::Focus(nsIDOMEvent * aFocusEvent)
 {
+  mContentFocused = PR_TRUE;
   return DispatchFocusToPlugin(aFocusEvent);
 }
 
 nsresult nsPluginInstanceOwner::Blur(nsIDOMEvent * aFocusEvent)
 {
+  mContentFocused = PR_FALSE;
   return DispatchFocusToPlugin(aFocusEvent);
 }
 
@@ -3181,11 +3186,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 #ifdef XP_MAC
     if (mWidget != NULL) {  // check for null mWidget
         EventRecord* event = (EventRecord*)anEvent.nativeMsg;
-        if ((event == NULL) || (event->what == nullEvent) || 
-           (anEvent.message == NS_FOCUS_EVENT_START)      || 
-           (anEvent.message == NS_BLUR_CONTENT)           || 
-           (anEvent.message == NS_MOUSE_MOVE)             ||
-           (anEvent.message == NS_MOUSE_ENTER))
+        if ((event == NULL) || (event->what == nullEvent)  || 
+            (anEvent.message == NS_FOCUS_EVENT_START)      || 
+            (anEvent.message == NS_BLUR_CONTENT)           || 
+            (anEvent.message == NS_MOUSE_MOVE)             ||
+            (anEvent.message == NS_MOUSE_ENTER))
         {
             EventRecord macEvent;
             GUItoMacEvent(anEvent, macEvent);
@@ -3195,7 +3200,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
         PRBool eventHandled = PR_FALSE;
         mInstance->HandleEvent(&pluginEvent, &eventHandled);
-        if (eventHandled && anEvent.message != NS_MOUSE_LEFT_BUTTON_DOWN)
+        if (eventHandled && !(anEvent.message == NS_MOUSE_LEFT_BUTTON_DOWN && !mContentFocused))
             rv = nsEventStatus_eConsumeNoDefault;
     }
 #endif
