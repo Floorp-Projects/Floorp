@@ -26,6 +26,7 @@ use MANIFESTO;
 @ISA        = qw(Exporter);
 @EXPORT     = qw(ConfigureBuildSystem Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects BuildOneProject);
 
+
 # NGLayoutBuildList builds the nglayout project
 # it is configured by setting the following variables in the caller:
 # Usage:
@@ -2150,19 +2151,31 @@ sub BuildSecurityProjects()
 
 	 # make properties files for PSM User Interface
     my($src_dir) = ":mozilla:security:psm:ui:";
-    my($dest_dir) = $dist_dir."UI:";
-    mkdir($dest_dir, 0);
 
     opendir(DIR,$src_dir) || die "can't open directory $src_dir\n";
     my(@prop_files) = grep { /\.properties.in$/ } readdir(DIR);
     closedir DIR;
-
+	my($psm_data_dir) = $dist_dir."psmdata:";
+    mkdir($psm_data_dir, 0);
+    my($dest_dir) = $psm_data_dir."UI:";
+    mkdir($dest_dir, 0);
 	my($file);
     foreach $file (@prop_files) {
         $file =~ /(.+\.properties)\.in$/;
         &makeprops($src_dir.$file, $dest_dir.$1);
     }
-   
+    
+    
+    my($doc_dir) = $psm_data_dir."doc:";
+    mkdir($doc_dir, 0);
+    opendir(DOC_DIR,":mozilla:security:psm:doc") || die ("Unable to open PSM doc directory");
+    my(@doc_files);
+    @doc_files = readdir(DOC_DIR);
+    closedir(DOC_DIR);
+    foreach $file (@doc_files) {
+    	_copy(":mozilla:security:psm:doc:".$file, $doc_dir.$file);
+    } 
+	
     print("--- Security projects complete ----\n");
 } # Security
 
