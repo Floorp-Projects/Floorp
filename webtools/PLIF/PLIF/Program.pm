@@ -156,7 +156,11 @@ sub output {
         #   which returns a reference which will be treated just as a
         #   normal output service. In particular, this means that any
         #   method could be called. So most output hooks should use
-        #   methodMissing much like PLIF::Output::Generic.
+        #   methodMissing much like PLIF::Output::Generic. (Don't
+        #   forget to implement a strict propertyImpliedAccessAllowed
+        #   method -- see the PLIF::Output module for an example. If
+        #   you don't, then outputs with zero or just one arguments
+        #   will be treated as properties, not methods.)
         # * passthrough hooks should then call the original method
         #   again on the argument of the getOutputHook method (which
         #   is the next object). Override hooks (like the XML RPC one)
