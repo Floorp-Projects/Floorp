@@ -711,6 +711,12 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
     if (rowCount < 0)
       rowCount = 0;
 
+    // Our page size is the # of rows instantiated.
+    PRInt32 pageRowCount;
+    GetRowCount(pageRowCount);
+
+    rowCount -= (pageRowCount-2);
+
     char ch[100];
     sprintf(ch,"%d", rowCount);
     
@@ -840,8 +846,6 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
     return mTopFrame;
   }
 
-  
-
   // We don't have a top frame instantiated. Let's
   // try to make one.
 
@@ -863,19 +867,20 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
 
     mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nsnull, startContent,
                                                &mTopFrame, isAppend, PR_FALSE);
+    
+    // XXX Can be optimized if we detect that we're appending a row.
+    // Also the act of appending or inserting a row group is harmless.
+
     nsTableFrame* tableFrame;
     nsTableFrame::GetTableFrame(this, tableFrame);
-    //tableFrame->InvalidateCellMap();
-    tableFrame->InvalidateColumnCache();
+    nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+    treeFrame->WillNeedDirtyReflow();
 
     //printf("Created a frame\n");
     mBottomFrame = mTopFrame;
     const nsStyleDisplay *rowDisplay;
     mTopFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
-    if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay) {
-      ((nsTableRowFrame *)mTopFrame)->InitChildren();
-    }
-    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay && mContentChain) {
+    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay && mContentChain) {
       // We have just instantiated a row group, and we have a content chain. This
       // means we need to potentially pass a sub-content chain to the instantiated
       // frame, so that it can also sync up with its children.
@@ -883,7 +888,7 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
     }
 
     SetContentChain(nsnull);
-    return mTopFrame;
+    //return mTopFrame;
   }
   
   return nsnull;
@@ -937,17 +942,15 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
         }
         mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, prevFrame, nextContent,
                                                    aResult, isAppend, PR_FALSE);
+
+        // XXX Can be optimized if we detect that we're appending a row to the end of the tree.
+        // Also the act of appending or inserting a row group is harmless.
+
         nsTableFrame* tableFrame;
         nsTableFrame::GetTableFrame(this, tableFrame);
-        //tableFrame->InvalidateCellMap();
-        tableFrame->InvalidateColumnCache();
-
-        //printf("Created a frame\n");
-        const nsStyleDisplay *rowDisplay;
-        (*aResult)->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
-        if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay) {
-          ((nsTableRowFrame *)(*aResult))->InitChildren();
-        }
+        nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+        treeFrame->WillNeedDirtyReflow();
+        *aResult = nsnull;
       }
     }
 

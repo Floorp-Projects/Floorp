@@ -31,6 +31,10 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsTreeTwistyListener.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsIReflowCommand.h"
+#include "nsHTMLParts.h"
 
 //
 // NS_NewTreeFrame
@@ -311,6 +315,41 @@ nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
        aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   aDesiredSize.ascent = aDesiredSize.height;
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTreeFrame::DidReflow(nsIPresContext&   aPresContext,
+                        nsDidReflowStatus aStatus)
+{
+  nsresult rv = nsTableFrame::DidReflow(aPresContext, aStatus);
+  if (mNeedsDirtyReflow) {
+    mNeedsDirtyReflow = PR_FALSE;
+    InvalidateCellMap();
+    InvalidateColumnCache();
+    InvalidateFirstPassCache();
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext.GetShell(getter_AddRefs(shell));
+    nsFrameState      frameState;
+    nsIFrame*         tableParentFrame;
+    nsIReflowCommand* reflowCmd;
+   
+    // Mark the table frame as dirty
+    GetFrameState(&frameState);
+    frameState |= NS_FRAME_IS_DIRTY;
+    SetFrameState(frameState);
+
+    // Target the reflow comamnd at its parent frame
+    GetParent(&tableParentFrame);
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, tableParentFrame,
+                               nsIReflowCommand::ReflowDirty);
+    if (NS_SUCCEEDED(rv)) {
+      // Add the reflow command
+      rv = shell->AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
+  }
 
   return rv;
 }
