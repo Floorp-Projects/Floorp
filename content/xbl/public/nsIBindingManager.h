@@ -83,18 +83,54 @@ public:
 
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
-  // For a given element with an insertion point child, returns a flat list of all the real children.
+  /**
+   * Return a list of all explicit children, including any children
+   * that may have been inserted via XBL insertion points.
+   */
   NS_IMETHOD GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult) = 0;
+
+  /**
+   * Set the insertion point children for the specified element.
+   */
   NS_IMETHOD SetContentListFor(nsIContent* aContent, nsISupportsArray* aList)=0;
+
+  /**
+   * Determine whether or not the explicit child list has been altered
+   * by XBL insertion points.
+   */
   NS_IMETHOD HasContentListFor(nsIContent* aContent, PRBool* aResult) = 0;
 
+  /**
+   * For a given element, retrieve the anonymous child content.
+   */
   NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult) = 0;
+
+  /**
+   * Set the anonymous child content for the specified element.
+   */
   NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList) = 0;
 
-  // Encapsulates logic for handling both of above
+  /**
+   * Retrieves the anonymous list of children if the element has one;
+   * otherwise, retrieves the list of explicit children. N.B. that if
+   * the explicit child list has not been altered by XBL insertion
+   * points, then aResult will be null.
+   */
   NS_IMETHOD GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult) = 0;
 
+  /**
+   * Given a parent element and a child content, determine where the
+   * child content should be inserted in the parent element's
+   * anonymous content tree. Specifically, aChild should be inserted
+   * beneath aResult at the index specified by aIndex.
+   */
   NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex) = 0;
+
+  /**
+   * Return the unfiltered insertion point for the specified parent
+   * element. If other filtered insertion points exist,
+   * aMultipleInsertionPoints will be set to true.
+   */
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
                                      PRBool* aMultipleInsertionPoints) = 0;
 

@@ -27,19 +27,15 @@ REQUIRES	= xpcom string dom widget timer locale view necko webshell pref docshel
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-EXPORTS =			\
-        nsIHTMLStyleSheet.h     \
-        nsICSSFrameConstructor.h     \
+EXPORTS =                               \
+        nsIHTMLStyleSheet.h             \
+        nsICSSFrameConstructor.h        \
 	$(NULL)
 
-CPPSRCS=				\
-  nsCSSFrameConstructor.cpp   \
-	nsCSSRendering.cpp 		\
-	$(NULL)
-
-CPP_OBJS =					\
-  .\$(OBJDIR)\nsCSSFrameConstructor.obj  \
-	.\$(OBJDIR)\nsCSSRendering.obj 		\
+CPP_OBJS =					        \
+        .\$(OBJDIR)\nsCSSFrameConstructor.obj           \
+	.\$(OBJDIR)\nsCSSRendering.obj 		        \
+        .\$(OBJDIR)\nsFrameContentIterator.obj          \
 	$(NULL)
 
 LINCS= \

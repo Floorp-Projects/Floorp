@@ -198,6 +198,12 @@ public:
                                  nsIFrame**       aFrame,
                                  nsFindFrameHint* aHint);
 
+  // Get the XBL insertion point for a child
+  NS_IMETHOD GetInsertionPoint(nsIPresShell* aPresShell,
+                               nsIFrame*     aParentFrame,
+                               nsIContent*   aChildContent,
+                               nsIFrame**    aInsertionPoint);
+
   // APIs for registering objects that can supply additional
   // rules during processing.
   NS_IMETHOD SetStyleRuleSupplier(nsIStyleRuleSupplier* aSupplier);
@@ -1289,6 +1295,16 @@ StyleSetImpl::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
 {
   return mFrameConstructor->FindPrimaryFrameFor(aPresContext, aFrameManager,
                                                 aContent, aFrame, aHint);
+}
+
+NS_IMETHODIMP
+StyleSetImpl::GetInsertionPoint(nsIPresShell* aPresShell,
+                                nsIFrame*     aParentFrame,
+                                nsIContent*   aChildContent,
+                                nsIFrame**    aInsertionPoint)
+{
+  return mFrameConstructor->GetInsertionPoint(aPresShell, aParentFrame,
+                                              aChildContent, aInsertionPoint);
 }
 
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)

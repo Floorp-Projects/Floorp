@@ -1099,12 +1099,12 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
 static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* aChild,
                               nsIFrame** aResult)
 {
-  nsCOMPtr<nsIFrameManager> frameManager;
-  aShell->GetFrameManager(getter_AddRefs(frameManager));
+  nsCOMPtr<nsIStyleSet> styleSet;
+  aShell->GetStyleSet(getter_AddRefs(styleSet));
   nsCOMPtr<nsIContent> child;
   if (aChild)
     aChild->GetContent(getter_AddRefs(child));
-  frameManager->GetInsertionPoint(aShell, aFrame, child, aResult);
+  styleSet->GetInsertionPoint(aShell, aFrame, child, aResult);
 }
 
 NS_IMETHODIMP
