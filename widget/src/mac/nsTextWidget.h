@@ -19,73 +19,59 @@
 #ifndef nsTextWidget_h__
 #define nsTextWidget_h__
 
-#include "nsWindow.h"
-#include "nsTextHelper.h"
+#include "nsMacControl.h"
 #include "nsITextWidget.h"
+#include <LPeriodical.h>
 
-typedef struct _PasswordData {
-  nsString mPassword;
-  Boolean  mIgnore;
-} PasswordData;
-
-/**
- * Native Mac single line edit control wrapper. 
- */
-
-class nsTextWidget : public nsWindow, public nsITextWidget
+class nsTextWidget : public nsMacControl, public nsITextWidget, public LPeriodical
 {
+private:
+	typedef nsMacControl Inherited;
 
 public:
   nsTextWidget();
   virtual ~nsTextWidget();
-
-  NS_IMETHOD Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
 
 	// nsISupports
 	NS_IMETHOD_(nsrefcnt) AddRef();
 	NS_IMETHOD_(nsrefcnt) Release();
 	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  NS_IMETHOD 			Create(nsIWidget *aParent,
+				              const nsRect &aRect,
+				              EVENT_CALLBACK aHandleEventFunction,
+				              nsIDeviceContext *aContext = nsnull,
+				              nsIAppShell *aAppShell = nsnull,
+				              nsIToolkit *aToolkit = nsnull,
+				              nsWidgetInitData *aInitData = nsnull);
+
+  // nsWindow Interface
+  virtual PRBool	DispatchMouseEvent(nsMouseEvent &aEvent);
+  virtual PRBool	DispatchWindowEvent(nsGUIEvent& aEvent);
+
 	// nsITextWidget interface
-  NS_IMETHOD        SelectAll();
+  NS_IMETHOD        SetPassword(PRBool aIsPassword);
+  NS_IMETHOD        SetReadOnly(PRBool aNewReadOnlyFlag, PRBool& aOldReadOnlyFlag);
+
   NS_IMETHOD        SetMaxTextLength(PRUint32 aChars);
   NS_IMETHOD        GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize);
   NS_IMETHOD        SetText(const nsString &aText, PRUint32& aActualSize);
   NS_IMETHOD        InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize);
   NS_IMETHOD        RemoveText();
-  NS_IMETHOD        SetPassword(PRBool aIsPassword);
-  NS_IMETHOD        SetReadOnly(PRBool aNewReadOnlyFlag, PRBool& aOldReadOnlyFlag);
+
+  NS_IMETHOD        SelectAll();
   NS_IMETHOD        SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
   NS_IMETHOD        GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
   NS_IMETHOD        SetCaretPosition(PRUint32 aPosition);
   NS_IMETHOD        GetCaretPosition(PRUint32& aPosition);
-  NS_IMETHOD        Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
-  NS_IMETHOD        Resize(PRUint32 aX, PRUint32 aY,PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
 
-
-  virtual PRBool  OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool  OnResize(nsSizeEvent &aEvent);
-
-  // nsTextHelper Interface
-  virtual PRBool    AutoErase();
-  virtual PRBool 		DispatchMouseEvent(nsMouseEvent &aEvent);
-  virtual PRBool 		DispatchWindowEvent(nsGUIEvent& event);
-
-  void							PrimitiveKeyDown(PRInt16	aKey,PRInt16 aModifiers);
+	// LPeriodical interface
+	virtual	void	SpendTime(const EventRecord& inMacEvent);
 
 protected:
-    PRBool        mIsPasswordCallBacksInstalled;
-
-private:
-  PRBool 			mMakeReadOnly;
-  PRBool 			mMakePassword;
-  WEReference	mTE_Data;
+	PRBool		mIsPassword;
+	PRBool		mIsReadOnly;
+	TEHandle	mTE;
 };
 
 #endif // nsTextWidget_h__
