@@ -55,7 +55,6 @@ Rights Reserved.
   <script src="chrome://messenger/content/commandglue.js"/>
   <script src="chrome://messenger/content/SearchDialog.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/messengerdnd.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <commands id="commands">
     <commandset id="mailSearchItems"
