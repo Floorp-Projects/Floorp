@@ -22,7 +22,6 @@
  */
 
 #define NS_IMPL_IDS
-#include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
 #include "nsIServiceManager.h"
@@ -231,32 +230,57 @@ nsresult nsCollation::NormalizeString(nsString& stringInOut)
 
 nsresult nsCollation::UnicodeToChar(const nsString& src, char** dst, const nsString& aCharset)
 {
-  nsICharsetConverterManager * ccm = nsnull;
-  nsresult res;
+  NS_ENSURE_ARG_POINTER(dst);
 
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                     NS_GET_IID(nsICharsetConverterManager), 
-                                     (nsISupports**)&ccm);
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsIUnicodeEncoder* encoder = nsnull;
-    res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
-    if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
-      const PRUnichar *unichars = src.GetUnicode();
-      PRInt32 unicharLength = src.Length();
-      PRInt32 dstLength;
-      res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
-      *dst = (char *) PR_Malloc(dstLength + 1);
-      if (*dst != nsnull) {
-        res = encoder->Convert(unichars, &unicharLength, *dst, &dstLength);
-        (*dst)[dstLength] = '\0';
+  nsresult res = NS_OK;
+
+  if (!mCharsetConverterManager)
+    mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+
+  if (NS_SUCCEEDED(res)) {
+    nsCOMPtr <nsIAtom>  charsetAtom;
+    res = mCharsetConverterManager->GetCharsetAtom(aCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+    if (NS_SUCCEEDED(res)) {
+      if (charsetAtom != mEncoderCharsetAtom) {
+        mEncoderCharsetAtom = charsetAtom;
+        res = mCharsetConverterManager->GetUnicodeEncoder(mEncoderCharsetAtom, getter_AddRefs(mEncoder));
       }
-      else {
-        res = NS_ERROR_OUT_OF_MEMORY;
-      }
-      NS_IF_RELEASE(encoder);
-    }    
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+      if (NS_SUCCEEDED(res)) {
+        const PRUnichar *unichars = src.GetUnicode();
+        PRInt32 unicharLength = src.Length();
+        PRInt32 dstLength;
+        res = mEncoder->GetMaxLength(unichars, unicharLength, &dstLength);
+        if (NS_SUCCEEDED(res)) {
+          PRInt32 bufLength = dstLength + 1 + 32; // extra 32 bytes for Finish() call
+          *dst = (char *) PR_Malloc(bufLength);
+          if (*dst) {
+            **dst = '\0';
+            res = mEncoder->Convert(unichars, &unicharLength, *dst, &dstLength);
+
+            if (NS_SUCCEEDED(res) || (NS_ERROR_UENC_NOMAPPING == res)) {
+              // Finishes the conversion. The converter has the possibility to write some 
+              // extra data and flush its final state.
+              PRInt32 finishLength = bufLength - dstLength; // remaining unused buffer length
+              if (finishLength > 0) {
+                res = mEncoder->Finish((*dst + dstLength), &finishLength);
+                if (NS_SUCCEEDED(res)) {
+                  (*dst)[dstLength + finishLength] = '\0';
+                }
+              }
+            }
+            if (!NS_SUCCEEDED(res)) {
+              PR_Free(*dst);
+              *dst = nsnull;
+            }
+          }
+          else {
+            res = NS_ERROR_OUT_OF_MEMORY;
+          }
+        }
+      }    
+    }
   }
+
   return res;
 }
 
