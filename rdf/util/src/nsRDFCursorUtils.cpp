@@ -22,7 +22,7 @@
 
 nsRDFArrayCursor::nsRDFArrayCursor(nsIRDFDataSource* aDataSource,
                                    nsISupportsArray* valueArray)
-    : mDataSource(aDataSource), nsSupportsArrayEnumerator(valueArray)
+    : nsSupportsArrayEnumerator(valueArray), mDataSource(aDataSource)
 {
     NS_IF_ADDREF(mDataSource);
 }
