@@ -635,7 +635,7 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
         GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
         // posting to insecure webpage from a secure webpage.
-        if (!secure  && mIsSecureDocument)
+        if (!secure  && mIsSecureDocument && !mIsDocumentBroken)
         {
             GetBundleString(NS_ConvertASCIItoUCS2("PostToInsecure"), message);
         }
