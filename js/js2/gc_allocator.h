@@ -146,6 +146,18 @@ namespace JavaScript {
 
 		static void collect() { GC_gcollect(); }
 	};
+
+    /**
+     * Generic base class for objects allocated using a gc_allocator.
+     */
+    template <typename T> class gc_object {
+    public:
+        void* operator new(size_t) { return alloc.allocate(1, 0); }
+        void operator delete(void* /* ptr */) {}
+    private:
+        static gc_allocator<T> alloc;
+    };
+    template <typename T> gc_allocator<T> gc_object<T>::alloc;
 }
 
 #endif /* gc_allocator_h */
