@@ -665,7 +665,15 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec*
         gProfileDataAccess->SetCurrentProfile(profileName);
                                   
         nsFileSpec tmpFileSpec(*profileDir);
-        if (!tmpFileSpec.Exists()) 
+        
+        PRBool inTrash = PR_FALSE;
+        
+#ifdef XP_MAC
+        nsSpecialSystemDirectory trashFolder(nsSpecialSystemDirectory::Mac_TrashDirectory);
+        inTrash = tmpFileSpec.IsChildOf(trashFolder);
+#endif  
+        
+        if (inTrash || !tmpFileSpec.Exists()) 
         {
             // Get profile defaults folder..
             NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
@@ -684,8 +692,58 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec*
             nsFileSpec defaultsDirSpec;
             profDefaultsDir->GetFileSpec(&defaultsDirSpec);
 
-            // Need a separate hack for Mac. For now app folder is the fall back on Mac.
+#ifndef XP_MAC
             nsFilePath(tmpFileSpec.GetNativePathCString(), PR_TRUE);
+#else
+            // Build new profile folder. Update Registry entries.
+            // Return new folder.
+            
+            // Get the default location for user profiles
+            nsCOMPtr <nsIFileSpec> defaultRoot;
+            rv = locator->GetFileLocation(
+                             nsSpecialFileSpec::App_DefaultUserProfileRoot50, 
+                             getter_AddRefs(defaultRoot));
+        
+            if (NS_FAILED(rv) || !defaultRoot)
+                return NS_ERROR_FAILURE;
+
+            defaultRoot->GetFileSpec(&tmpFileSpec);
+            if (!tmpFileSpec.Exists())
+                tmpFileSpec.CreateDirectory();
+
+            // append profile name
+            tmpFileSpec += profileName;
+
+            // Create New Directory. PersistentDescriptor needs an existing object.
+            if (!tmpFileSpec.Exists())
+                tmpFileSpec.CreateDirectory();
+
+            // Get persistent string for profile directory            
+            nsXPIDLCString profileDirString;
+            nsCOMPtr<nsIFileSpec>dirSpec;
+            rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(dirSpec));
+            if (NS_SUCCEEDED(rv)) {
+                rv = dirSpec->GetPersistentDescriptorString(getter_Copies(profileDirString));
+            }
+            if (NS_FAILED(rv)) return rv;
+            
+            // Update profile struct entries with new value.
+            nsAutoString profileLoc; 
+            profileLoc.AssignWithConversion(profileDirString);
+            
+            aProfile->profileLocation = profileLoc;
+            gProfileDataAccess->SetValue(aProfile);
+
+            // Return new file spec. 
+            nsCOMPtr<nsIFileSpec>newSpec;
+            rv = NS_NewFileSpec(getter_AddRefs(newSpec));
+            if (NS_FAILED(rv)) return rv;
+            rv = newSpec->SetPersistentDescriptorString(profileDirString);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = newSpec->GetFileSpec(profileDir);
+            if (NS_FAILED(rv)) return rv;
+#endif
                                         
             // Copy contents from defaults folder.
             if (defaultsDirSpec.Exists())
