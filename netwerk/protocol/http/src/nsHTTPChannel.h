@@ -127,6 +127,7 @@ public:
     nsHTTPResponseListener*             mHTTPServerListener;
     nsCOMPtr<nsISupports>               mResponseContext;
     nsHTTPResponse*                     mCachedResponse;
+    nsCOMPtr<nsIProgressEventSink>      mProgressEventSink;
 
 protected:
     // for PUT/POST cases...
@@ -136,11 +137,10 @@ protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mReferrer;
+    nsCOMPtr<nsIHTTPEventSink>          mEventSink;
     PRBool                              mConnected; 
     HTTPState                           mState;
-    nsCOMPtr<nsIHTTPEventSink>          mEventSink;
     nsCOMPtr<nsIPrompt>                 mPrompter;
-    nsCOMPtr<nsIProgressEventSink>      mProgressEventSink;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 
     nsCOMPtr<nsIStreamListener>         mResponseDataListener;

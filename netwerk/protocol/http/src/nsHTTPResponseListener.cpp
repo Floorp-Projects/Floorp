@@ -168,7 +168,7 @@ nsHTTPCacheListener::OnDataAvailable(nsIChannel *aChannel,
                                      PRUint32 aSourceOffset,
                                      PRUint32 aCount)
 {
-    nsresult channelStatus = NS_OK;
+    nsresult channelStatus = NS_OK, rv = NS_OK;
     
     if (mChannel)
         mChannel -> GetStatus (&channelStatus);
@@ -176,11 +176,20 @@ nsHTTPCacheListener::OnDataAvailable(nsIChannel *aChannel,
     if (NS_FAILED (channelStatus))  // Canceled http channel
          return NS_OK;
 
-    return mResponseDataListener -> OnDataAvailable(mChannel, 
+    rv = mResponseDataListener -> OnDataAvailable(mChannel, 
                                                 aContext,
                                                 aStream,
                                                 aSourceOffset,
                                                 aCount);
+    if (NS_FAILED(rv)) return rv;
+
+    // Report progress
+    if (mChannel->mProgressEventSink) {
+        rv = mChannel->mProgressEventSink->OnProgress(mChannel,
+                       mChannel->mResponseContext,
+                       aSourceOffset, aCount);
+        if (NS_FAILED(rv)) return rv;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,7 +235,6 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandle
                       mDataReceived (PR_FALSE),
                       mPipelinedRequest (request)
 {
-    nsHTTPRequest * req = nsnull;    
     mChannel -> mHTTPServerListener = this;
 
     NS_NewISupportsPRBool (getter_AddRefs (mChunkHeaderEOF));
@@ -481,6 +489,14 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
                 mBodyBytesReceived += i_Length;
 
+                // Report progress
+                if (mChannel->mProgressEventSink) {
+                    rv = mChannel->mProgressEventSink->OnProgress(mChannel,
+                                   mChannel->mResponseContext,
+                                   mBodyBytesReceived, cl);
+                    if (NS_FAILED(rv)) return rv;
+                }
+
                 PRBool eof = PR_FALSE;
                 if (mChunkHeaderEOF)
                     mChunkHeaderEOF -> GetData (&eof);
@@ -534,8 +550,6 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 NS_IMETHODIMP
 nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pContext)
 {
-    nsresult channelStatus = NS_OK;
-    
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPServerListener::OnStartRequest [this=%x].\n", this));
 
@@ -596,7 +610,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
 
         if (mPipelinedRequest)
         {
-            nsresult rv = mPipelinedRequest -> RestartRequest ();
+            rv = mPipelinedRequest -> RestartRequest ();
             if (NS_SUCCEEDED (rv))
                 return rv;
         }
