@@ -189,7 +189,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
     mOuter = aOuter;
   else
     mOuter = &mInner;
-  mRefCnt = 0; 
+  mRefCnt = 1; // FIXTHIS 
 
   mGC = nsnull ;
   mShown = PR_FALSE;

@@ -209,8 +209,12 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     nsresult res = inst->QueryObject(aIID, aResult);
 
     if (res != NS_OK) {
-         delete inst;         
+        delete inst;         
     }
+    else {
+      NS_RELEASE(inst);
+    }
+        
     return res;
 }  
 
