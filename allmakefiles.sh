@@ -625,6 +625,15 @@ xpfe/global/resources/content/Makefile
 xpfe/global/resources/content/unix/Makefile
 xpfe/global/resources/locale/Makefile
 xpfe/global/resources/locale/unix/Makefile
+#
+# End of XPFE Makefiles
+#
+embedding/Makefile
+embedding/browser/Makefile
+embedding/browser/build/Makefile
+embedding/browser/webBrowser/Makefile
+embedding/browser/setup/Makefile
+
 
 # xpfe/browser/public/Makefile
 END_NGMAKEFILES
