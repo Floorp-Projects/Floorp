@@ -60,7 +60,7 @@ public:
                                   nsString& aRetValue,
                                   PRBool* aIsUndefined);
   NS_IMETHOD       EvaluateString(const nsString& aScript,
-                                  void *aObj,
+                                  void *aScopeObject,
                                   nsIPrincipal *principal,
                                   const char *aURL,
                                   PRUint32 aLineNo,
@@ -69,7 +69,7 @@ public:
                                   PRBool* aIsUndefined);
   NS_IMETHOD       CompileScript(const PRUnichar* aText,
                                  PRInt32 aTextLength,
-                                 void *aScopeObj,
+                                 void *aScopeObject,
                                  nsIPrincipal *principal,
                                  const char *aURL,
                                  PRUint32 aLineNo,
@@ -79,16 +79,17 @@ public:
                                  void *aScopeObject,
                                  nsString* aRetValue,
                                  PRBool* aIsUndefined);
-  NS_IMETHOD       CompileEventHandler(void *aObj,
+  NS_IMETHOD       CompileEventHandler(void *aTarget,
                                        nsIAtom *aName,
                                        const nsString& aBody,
-                                       void** aFunObj);
-  NS_IMETHOD       CallFunctionObject(void *aObj, void *aFunObj, 
-                                      PRUint32 argc, void *argv, 
-                                      PRBool *aBoolResult);
-  NS_IMETHOD BindCompiledEventHandler(void *aObj,
-                                      nsIAtom *aName,
-                                      void *aFunObj);
+                                       void** aHandler);
+  NS_IMETHOD       CallEventHandler(void *aTarget, void *aHandler, 
+                                    PRUint32 argc, void *argv, 
+                                    PRBool *aBoolResult);
+  NS_IMETHOD       BindCompiledEventHandler(void *aTarget,
+					    nsIAtom *aName,
+					    void *aHandler);
+
   NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion);
   NS_IMETHOD_(nsIScriptGlobalObject*)    GetGlobalObject();
   NS_IMETHOD_(void*)                     GetNativeContext();
@@ -96,7 +97,7 @@ public:
   NS_IMETHOD     InitContext(nsIScriptGlobalObject *aGlobalObject);
   NS_IMETHOD     IsContextInitialized();
   NS_IMETHOD     AddNamedReference(void *aSlot, void *aScriptObject,
-                                         const char *aName);
+				   const char *aName);
   NS_IMETHOD     RemoveReference(void *aSlot, void *aScriptObject);
   NS_IMETHOD     GC();
   NS_IMETHOD GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr);

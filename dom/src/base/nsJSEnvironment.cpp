@@ -198,7 +198,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
 
 NS_IMETHODIMP
 nsJSContext::EvaluateString(const nsString& aScript,
-                            void *jsObj,
+                            void *aScopeObject,
                             nsIPrincipal *aPrincipal,
                             const char *aURL,
                             PRUint32 aLineNo,
@@ -207,8 +207,8 @@ nsJSContext::EvaluateString(const nsString& aScript,
                             PRBool* aIsUndefined)
 {
   nsresult rv;
-  if (!jsObj)
-    jsObj = JS_GetGlobalObject(mContext);
+  if (!aScopeObject)
+    aScopeObject = JS_GetGlobalObject(mContext);
 
   // Safety first: get an object representing the script's principals, i.e.,
   // the entities who signed this script, or the fully-qualified-domain-name
@@ -275,7 +275,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
       mRef = nsnull;
       mTerminationFunc = nsnull;
       ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
-                                              (JSObject *)jsObj,
+                                              (JSObject *)aScopeObject,
                                               jsprin,
                                               (jschar*)aScript.GetUnicode(),
                                               aScript.Length(),
@@ -470,8 +470,8 @@ AtomToEventHandlerName(nsIAtom *aName, char *charName, PRUint32 charNameSize)
 }
 
 NS_IMETHODIMP
-nsJSContext::CompileEventHandler(void *aObj, nsIAtom *aName, const nsString& aBody,
-                                 void** aFunObj)
+nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName, const nsString& aBody,
+                                 void** aHandler)
 {
   JSPrincipals *jsprin = nsnull;
 
@@ -490,26 +490,27 @@ nsJSContext::CompileEventHandler(void *aObj, nsIAtom *aName, const nsString& aBo
   char charName[64];
   AtomToEventHandlerName(aName, charName, sizeof charName);
 
-  JSFunction* fun = JS_CompileUCFunctionForPrincipals(mContext,
-                                                      (JSObject*)aObj, jsprin,
-                                                      charName, 1, gEventArgv,
-                                                      (jschar*)aBody.GetUnicode(),
-                                                      aBody.Length(),
-                                                      //XXXbe filename, lineno:
-                                                      nsnull, 0);
+  JSFunction* fun =
+      JS_CompileUCFunctionForPrincipals(mContext,
+                                        (JSObject*)aTarget, jsprin,
+                                        charName, 1, gEventArgv,
+                                        (jschar*)aBody.GetUnicode(),
+                                        aBody.Length(),
+                                        //XXXbe filename, lineno:
+                                        nsnull, 0);
 
   if (jsprin)
     JSPRINCIPALS_DROP(mContext, jsprin);
   if (!fun)
     return NS_ERROR_FAILURE;
-  if (aFunObj)
-    *aFunObj = (void*) JS_GetFunctionObject(fun);
+  if (aHandler)
+    *aHandler = (void*) JS_GetFunctionObject(fun);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJSContext::CallFunctionObject(void *aObj, void *aFunObj, PRUint32 argc,
-                                void *argv, PRBool *aBoolResult)
+nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
+                              void *argv, PRBool *aBoolResult)
 {
   // This one's a lot easier than EvaluateString because we don't have to
   // hassle with principals: they're already compiled into the JS function.
@@ -519,7 +520,7 @@ nsJSContext::CallFunctionObject(void *aObj, void *aFunObj, PRUint32 argc,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  jsval funval = OBJECT_TO_JSVAL(aFunObj);
+  jsval funval = OBJECT_TO_JSVAL(aHandler);
   JSFunction* fun = JS_ValueToFunction(mContext, funval);
 
   PRBool ok;
@@ -542,7 +543,7 @@ nsJSContext::CallFunctionObject(void *aObj, void *aFunObj, PRUint32 argc,
 
   jsval val;
   if (ok) {
-    ok = JS_CallFunctionValue(mContext, (JSObject *)aObj, funval,
+    ok = JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
                               argc, (jsval *)argv, &val);
   }
   *aBoolResult = ok
@@ -558,16 +559,16 @@ nsJSContext::CallFunctionObject(void *aObj, void *aFunObj, PRUint32 argc,
 }
 
 NS_IMETHODIMP
-nsJSContext::BindCompiledEventHandler(void *aObj, nsIAtom *aName, void *aFunObj)
+nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName, void *aHandler)
 {
   char charName[64];
   AtomToEventHandlerName(aName, charName, sizeof charName);
 
-  JSObject *funobj = (JSObject*) aFunObj;
-  JSObject *target = (JSObject*) aObj;
+  JSObject *funobj = (JSObject*) aHandler;
+  JSObject *target = (JSObject*) aTarget;
 
   // Make sure the handler function is parented by its event target object
-  if (JS_GetParent(mContext, funobj) != target) {
+  if (funobj && JS_GetParent(mContext, funobj) != target) {
     funobj = JS_CloneFunctionObject(mContext, funobj, target);
     if (!funobj)
       return NS_ERROR_OUT_OF_MEMORY;
