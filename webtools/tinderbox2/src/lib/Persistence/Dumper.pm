@@ -13,8 +13,8 @@
 #	was spend in 32878 calls to Data::Dumper::_dump()
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/24 14:54:32 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/09 19:10:45 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence/Dumper.pm,v $ 
 # $Name:  $ 
@@ -86,6 +86,8 @@ sub save_structure {
 
 sub load_structure {
   my ($data_file,) = @_;
+
+  $data_file = main::extract_filename_chars($data_file);
 
   (-r $data_file) || (-R $data_file) ||
     die("data file: $data_file is not readable\n");
