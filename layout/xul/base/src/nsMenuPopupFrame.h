@@ -140,6 +140,19 @@ protected:
                                             PRInt32 inClientX, PRInt32 inClientY, 
                                             PRInt32* outAdjX, PRInt32* outAdjY ) ;
 
+  void AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioYPos, const nsRect & inParentRect,
+                                        const nsString& aPopupAnchor, const nsString& aPopupAlign,
+                                        PRBool* outFlushWithTopBottom ) ;
+
+  PRBool IsMoreRoomOnOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt32 inScreenViewLocX, PRInt32 inScreenViewLocY,
+                                           const nsRect & inScreenParentFrameRect, PRInt32 inScreenTopTwips, PRInt32 inScreenLeftTwips,
+                                           PRInt32 inScreenBottomTwips, PRInt32 inScreenRightTwips ) ;
+
+  void MovePopupToOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt32* ioXPos, PRInt32* ioYPos, 
+                                           PRInt32* ioScreenViewLocX, PRInt32* ioScreenViewLocY,
+                                           const nsRect & inScreenParentFrameRect, PRInt32 inScreenTopTwips, PRInt32 inScreenLeftTwips,
+                                           PRInt32 inScreenBottomTwips, PRInt32 inScreenRightTwips ) ;
+
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
   // XXX Hack

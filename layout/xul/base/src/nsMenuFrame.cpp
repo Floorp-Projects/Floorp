@@ -767,12 +767,13 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
       nsRect rect;
       popupChild->GetRect(rect);
       nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
-                       rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW, aStatus);
+                                  rect.x, rect.y, NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS, aStatus);
 
       // Set the child's width and height to its desired size
       // Note: don't position or size the view now, we'll do that in the
       // DidReflow() function
-      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW);
+      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, 
+                           NS_FRAME_NO_SIZE_VIEW |NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS);
   }
 
   if (constrainMenuWidth) {
@@ -796,12 +797,14 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
       nsRect rect;
       popupChild->GetRect(rect);
       nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
-                       rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW, aStatus);
+                                  rect.x, rect.y, 
+                                  NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS, aStatus);
 
       // Set the child's width and height to its desired size
       // Note: don't position or size the view now, we'll do that in the
       // DidReflow() function
-      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW);
+      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, 
+                        NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS);
     }
   }
  
