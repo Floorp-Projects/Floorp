@@ -7,7 +7,7 @@ menupopup, popup
     border-top            : thin solid black;
     border-right          : 3px ridge black;
     border-bottom         : 3px ridge black;
-    -moz-user-focus			  : ignore;
+    -moz-user-focus       : ignore;
   }
 
 /** Tooltips (tooltip <popup> element is deprecated.  USE <tooltip> instead!)
@@ -20,14 +20,14 @@ menupopup, popup
     color                 : InfoText;
     font                  : message-box;
     padding               : 2px 3px 2px 3px;
-    margin				  : 0px;
+    margin                : 0px;
   }
 
 .tooltip > .popup-internal-box,
 tooltip > .popup-internal-box
   {
-  	border: none;
-  	padding: 0px;
+    border: none;
+    padding: 0px;
   }
   
 /* rules for popups associated with menulists */
@@ -35,11 +35,28 @@ tooltip > .popup-internal-box
   menulist > menupopup,
   .menulist-menupopup 
     {
-      border-left           : thin solid white;
-      border-top            : thin solid white;
-      border-right          : 3px ridge black;
-      border-bottom         : 3px ridge black;
-      background-color	    : #DDDDDD;
-      min-width				: 0px;
+      border-left         : thin solid black;
+      border-top          : thin solid black;
+      border-right        : thin solid black;
+      border-bottom       : thin solid black;
+      background-color    : #DDDDDD;
+      min-width           : 0px;
     }
-  
+
+menulist > menupopup > .popup-internal-box,
+.menulist-menupopup > .popup-internal-box
+   {
+    border-left           : thin solid white;
+    border-top            : thin solid white;
+    border-bottom         : 2px ridge black;
+    border-right          : 2px ridge black
+   }
+
+popup > .popup-internal-box,
+menupopup > .popup-internal-box
+   {
+    border-left          : thin solid white;
+    border-top           : thin solid white;
+    border-bottom        : none;
+    border-right         : none;
+   }
