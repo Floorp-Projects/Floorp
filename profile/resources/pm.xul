@@ -132,8 +132,8 @@ setTimeout("loadElements()", 0);
 <popup id="renamePopup">
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="200" height="50">
 <input type="text" id="NewName" size="20" />
-<titledbutton value="Ok" id="Ok" onclick="opener.RenameProfile(NewName.value);window.close();" />
-<titledbutton value="Cancel" id="Cancel" onclick="window.close();" />
+<titledbutton value="Ok" class="push" onclick="opener.RenameProfile(NewName.value);window.close();" />
+<titledbutton value="Cancel" class="push" onclick="window.close();" />
 </window>
 </popup>
 
@@ -174,8 +174,8 @@ bookmarks, and stored messages in your personal profile.
   </treebody>
 </tree>
 
-<titledbutton value="New" onclick="CreateProfile();" />
-<titledbutton value="Rename" popup="renamePopup" />
+<titledbutton value="New" class="push" onclick="CreateProfile();" />
+<titledbutton value="Rename" class="push" popup="renamePopup" />
 <html:button onclick="DeleteProfile();">Delete</html:button>
 <html:button onclick="ExitManager();">Exit</html:button>
 
