@@ -1285,7 +1285,13 @@ public class Interpreter {
                                 pc += 2;
                             }
                             break;
-                        case TokenStream.CLOSURE :
+                        case TokenStream.CLOSURE : {
+                                int i = getShort(iCode, pc + 1);
+                                InterpretedFunction f = theData.itsNestedFunctions[i];
+                                out.println(tname + " " + f);
+                                pc += 2;
+                            }
+                            break;
                         case TokenStream.NEW :
                         case TokenStream.CALL : {
                                 int count = getShort(iCode, pc + 2);
@@ -1442,6 +1448,9 @@ public class Interpreter {
                 return 1 + 2;
 
             case TokenStream.CLOSURE :
+                // index of closure master copy
+                return 1 + 2;
+
             case TokenStream.NEW :
             case TokenStream.CALL :
                 // name string index
