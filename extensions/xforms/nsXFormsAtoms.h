@@ -54,6 +54,7 @@ class nsXFormsAtoms
   static NS_HIDDEN_(nsIAtom *) constraint;
   static NS_HIDDEN_(nsIAtom *) p3ptype;
   static NS_HIDDEN_(nsIAtom *) modelListProperty;
+  static NS_HIDDEN_(nsIAtom *) uploadFileProperty;
   static NS_HIDDEN_(nsIAtom *) ref;
   static NS_HIDDEN_(nsIAtom *) nodeset;
   static NS_HIDDEN_(nsIAtom *) model;

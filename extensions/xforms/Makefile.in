@@ -117,6 +117,7 @@ CPPSRCS		= \
 		nsXFormsToggleElement.cpp \
 		nsXFormsCaseElement.cpp \
 		nsXFormsSwitchElement.cpp \
+		nsXFormsUploadElement.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)

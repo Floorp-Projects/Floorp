@@ -50,6 +50,7 @@ NS_HIDDEN_(nsresult) NS_NewXFormsTextAreaElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsGroupElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsOutputElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsRepeatElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsUploadElement(nsIXTFElement **aElement);
 
 /// @todo Having \<repeatitem\> in the factory means that the item can be used
 /// by a user in a document. Not optimal, as it is not a legal XForms tag, but
@@ -139,6 +140,8 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsCaseElement(aElement);
   if (aTagName.EqualsLiteral("switch"))
     return NS_NewXFormsSwitchElement(aElement);
+  if (aTagName.EqualsLiteral("upload"))
+    return NS_NewXFormsUploadElement(aElement);
 
   *aElement = nsnull;
   return NS_ERROR_FAILURE;

@@ -46,6 +46,7 @@
 #include <stdlib.h>
 
 #include "nsXFormsSubmissionElement.h"
+#include "nsXFormsAtoms.h"
 #include "nsIInstanceElementPrivate.h"
 #include "nsIXTFGenericElementWrapper.h"
 #include "nsIDOMDocument.h"
@@ -72,6 +73,7 @@
 #include "nsIMIMEInputStream.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
+#include "nsIContent.h"
 #include "nsIFileURL.h"
 #include "nsIMIMEService.h"
 #include "nsIUploadChannel.h"
@@ -222,8 +224,8 @@ HasToken(const nsString &aTokenList, const nsString &aToken)
 // for multipart/related submission.
 struct SubmissionAttachment
 {
-  nsString  uri;
-  nsCString cid;
+  nsCOMPtr<nsIFile> file;
+  nsCString         cid;
 };
 
 // an array of SubmissionAttachment objects
@@ -236,12 +238,12 @@ public:
     for (PRUint32 i=0; i<Count(); ++i)
       delete (SubmissionAttachment *) ElementAt(i);
   }
-  nsresult Append(const nsString &uri, const nsCString &cid)
+  nsresult Append(nsIFile *file, const nsCString &cid)
   {
     SubmissionAttachment *a = new SubmissionAttachment;
     if (!a)
       return NS_ERROR_OUT_OF_MEMORY;
-    a->uri = uri;
+    a->file = file;
     a->cid = cid;
     AppendElement(a);
     return NS_OK;
@@ -810,15 +812,15 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
           NS_SUCCEEDED(GetElementEncodingType(destChild, &encType)) &&
           encType == ELEMENT_ENCTYPE_URI)
       {
-        // ok, looks like we have a URI to process
-        sourceChild->GetFirstChild(getter_AddRefs(node));
-        NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
+        // ok, looks like we have a local file to upload
 
-        node->GetNodeType(&type);
-        NS_ENSURE_TRUE(type == nsIDOMNode::TEXT_NODE, NS_ERROR_UNEXPECTED);
+        nsCOMPtr<nsIContent> content = do_QueryInterface(sourceChild);
+        NS_ENSURE_STATE(content);
 
-        nsString value;
-        node->GetNodeValue(value);
+        nsILocalFile *file =
+            NS_STATIC_CAST(nsILocalFile *,
+                           content->GetProperty(nsXFormsAtoms::uploadFileProperty));
+        // NOTE: this value may be null if a file hasn't been selected.
 
         nsCString cid;
         MakeMultipartContentID(cid);
@@ -834,7 +836,7 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
         destChild->AppendChild(text, getter_AddRefs(node));
         dest->AppendChild(destChild, getter_AddRefs(node));
 
-        attachments->Append(value, cid);
+        attachments->Append(file, cid);
       }
       else
       {
@@ -1020,15 +1022,22 @@ nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
   {
     SubmissionAttachment *a = attachments.Item(i);
 
-    nsCOMPtr<nsIFile> file;
     nsCOMPtr<nsIInputStream> fileStream;
-    rv = CreateFileStream(a->uri,
-                          getter_AddRefs(file),
-                          getter_AddRefs(fileStream));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCAutoString type;
-    GetMimeTypeFromFile(file, type);
+    
+    // If the file upload control did not set a file to upload, then
+    // we'll upload as if the file selected is empty.
+    if (a->file)
+    {
+      NS_NewLocalFileInputStream(getter_AddRefs(fileStream), a->file);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      GetMimeTypeFromFile(a->file, type);
+    }
+    else
+    {
+      type.AssignLiteral("application/octet-stream");
+    }
 
     postDataChunk += NS_LITERAL_CSTRING("\r\n--") + boundary
                   +  NS_LITERAL_CSTRING("\r\nContent-Type: ") + type
@@ -1038,7 +1047,8 @@ nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
     rv = AppendPostDataChunk(postDataChunk, multiStream);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    multiStream->AppendStream(fileStream);
+    if (fileStream)
+      multiStream->AppendStream(fileStream);
   }
 
   // final boundary
@@ -1157,20 +1167,31 @@ nsXFormsSubmissionElement::AppendMultipartFormData(nsIDOMNode *data,
     nsCOMPtr<nsIInputStream> fileStream;
     if (encType == ELEMENT_ENCTYPE_URI)
     {
-      // 'value' contains an absolute URI reference
-      nsCOMPtr<nsIFile> file;
-      rv = CreateFileStream(value, getter_AddRefs(file), getter_AddRefs(fileStream));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIContent> content = do_QueryInterface(data);
+      NS_ENSURE_STATE(content);
+
+      nsILocalFile *file =
+          NS_STATIC_CAST(nsILocalFile *,
+                         content->GetProperty(nsXFormsAtoms::uploadFileProperty));
 
       nsAutoString leafName;
-      file->GetLeafName(leafName);
+      if (file)
+      {
+        NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
+
+        file->GetLeafName(leafName);
+
+        // use mime service to get content-type
+        GetMimeTypeFromFile(file, contentType);
+      }
+      else
+      {
+        contentType.AssignLiteral("application/octet-stream");
+      }
 
       postDataChunk += NS_LITERAL_CSTRING("; filename=\"")
                     +  NS_ConvertUTF16toUTF8(leafName)
                     +  NS_LITERAL_CSTRING("\"");
-
-      // use mime service to get content-type
-      GetMimeTypeFromFile(file, contentType);
     }
     else if (encType == ELEMENT_ENCTYPE_STRING)
     {
@@ -1182,13 +1203,15 @@ nsXFormsSubmissionElement::AppendMultipartFormData(nsIDOMNode *data,
     }
 
     postDataChunk += NS_LITERAL_CSTRING("\r\nContent-Type: ")
-                  +  contentType + NS_LITERAL_CSTRING("\r\n");
+                  +  contentType
+                  +  NS_LITERAL_CSTRING("\r\n\r\n");
 
     if (encType == ELEMENT_ENCTYPE_URI)
     {
       AppendPostDataChunk(postDataChunk, multiStream);
 
-      multiStream->AppendStream(fileStream);
+      if (fileStream)
+        multiStream->AppendStream(fileStream);
 
       postDataChunk += NS_LITERAL_CSTRING("\r\n");
     }
