@@ -286,9 +286,7 @@ PK11_FreeSymKey(PK11SymKey *symKey)
 PK11SymKey *
 PK11_ReferenceSymKey(PK11SymKey *symKey)
 {
-    PK11_USE_THREADS(PZ_Lock(symKey->refLock);)
-    symKey->refCount++;
-    PK11_USE_THREADS(PZ_Unlock(symKey->refLock);)
+    PR_AtomicIncrement(&symKey->refCount);
     return symKey;
 }
 
