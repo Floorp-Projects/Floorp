@@ -362,6 +362,7 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
       NS_RELEASE(doc);
       URLName = (char*)PR_Malloc(PL_strlen(docURL->GetSpec())+1);
       PL_strcpy(URLName, docURL->GetSpec());
+      NS_RELEASE(docURL);
     }
 
     /* invoke single-signon to get previously-used value of text */
