@@ -813,9 +813,11 @@
 ;;;   :command       expression code generation function ((world grammar-info-var . form-arg-list) -> void) if this identifier
 ;;;                  is a command like 'deftype or 'define
 ;;;   :statement     expression code generation function ((world type-env rest last id . form-arg-list) -> codes, live, annotated-stmts)
-;;;                  if this identifier is a statement like 'if or 'catch;
-;;;                     codes is a list of generated statements, live is true if the statement can fall through, and
-;;;                     annotated-stmts is a list of generated annotated statements
+;;;                  if this identifier is a statement like 'if or 'catch.
+;;;                     codes is a list of generated statements.
+;;;                     live is :dead if the statement cannot complete or a list of the symbols of :uninitialized variables that are initialized
+;;;                       if the statement can complete.
+;;;                     annotated-stmts is a list of generated annotated statements.
 ;;;   :special-form  expression code generation function ((world type-env id . form-arg-list) -> code, type, annotated-expr)
 ;;;                  if this identifier is a special form like 'tag or 'in
 ;;;   :condition     boolean condition code generation function ((world type-env id . form-arg-list) -> code, annotated-expr, true-type-env, false-type-env)
@@ -2152,7 +2154,7 @@
   type      ;That variable's type
   mode)     ;:const if the variable is read-only;
 ;           ;:var if it's writable;
-;           ;:uninitialized if it's writable but not initialized;
+;           ;:uninitialized if it's writable but not initialized unless the name also appears in the type-env's live list;
 ;           ;:function if it's bound by flet;
 ;           ;:reserved if it's bound by reserve;
 ;           ;:unused if it's defined but shouldn't be used
@@ -2169,16 +2171,25 @@
   type                    ;Type of the action function's value
   general-grammar-symbol) ;The general-grammar-symbol corresponding to the index-th instance of symbol in the production's rhs
 
+(defstruct (type-env (:constructor make-type-env (bindings live)))
+  (bindings nil :type list)   ;List of bindings
+  (live nil :type list))      ;List of symbols of :uninitialized variables that have been initialized
 
-(defconstant *null-type-env* nil)
+
+(defparameter *null-type-env* (make-type-env nil nil))
 (defconstant *type-env-flags* '(:return :return-block-name :lhs-symbol))
 
 
 ; If symbol is a local variable, return its binding; if not, return nil.
 ; symbol must already be world-interned.
-(declaim (inline type-env-get-local))
 (defun type-env-get-local (type-env symbol)
-  (assoc symbol type-env :test #'eq))
+  (assoc symbol (type-env-bindings type-env) :test #'eq))
+
+
+; name must be the name of an :uninitialized variable in this type-env.  Return true if this variable
+; has been initialized.
+(defun type-env-initialized (type-env name)
+  (member name (type-env-live type-env) :test #'eq))
 
 
 ; If the currently generated function is an action for a rule with at least index
@@ -2186,7 +2197,7 @@
 ; a legal action for that symbol, return the type-env-action; otherwise, return nil.
 ; action must already be world-interned.
 (defun type-env-get-action (type-env action symbol index)
-  (assoc (list* action symbol index) type-env :test #'equal))
+  (assoc (list* action symbol index) (type-env-bindings type-env) :test #'equal))
 
 
 ; Nondestructively append the binding to the front of the type-env and return the new type-env.
@@ -2202,7 +2213,9 @@
         (error "Local variable ~A:~A shadows an existing local variable ~A:~A"
                name (print-type-to-string type)
                (type-env-local-name binding) (print-type-to-string (type-env-local-type binding))))))
-  (cons (make-type-env-local name type mode) type-env))
+  (make-type-env
+   (cons (make-type-env-local name type mode) (type-env-bindings type-env))
+   (type-env-live type-env)))
 
 
 ; Define the reserved name as a :const binding.
@@ -2219,17 +2232,26 @@
     (type-env-add-binding type-env name type (type-env-local-mode binding) t)))
 
 
+; Mark name as an initialized variable.  It should have been declared as :uninitialized.
+(defun type-env-initialize-var (type-env name)
+  (if (type-env-initialized type-env name)
+    type-env
+    (make-type-env
+     (type-env-bindings type-env)
+     (cons name (type-env-live type-env)))))
+
+
 ; Nondestructively shadow all writable bindings in the type-env by unused bindings and return the new type-env.
 ; Also create new bindings for the function's return type and return block name.
 (defun type-env-init-function (type-env return-type)
-  (dolist (binding type-env)
+  (dolist (binding (type-env-bindings type-env))
     (let ((name (first binding)))
-      (when (and (symbolp name) (not (keywordp name)) (eq (type-env-local-mode binding) :var))
+      (when (and (symbolp name) (not (keywordp name)) (member (type-env-local-mode binding) '(:var :uninitialized)))
         (let* ((first-binding (type-env-get-local type-env name))
                (first-mode (type-env-local-mode first-binding)))
           (assert-true first-mode)
           (unless (eq first-mode :unused)
-            (push (make-type-env-local (type-env-local-name first-binding) (type-env-local-type first-binding) :unused) type-env))))))
+            (push (make-type-env-local (type-env-local-name first-binding) (type-env-local-type first-binding) :unused) (type-env-bindings type-env)))))))
   (set-type-env-flag
    (set-type-env-flag type-env :return return-type)
    :return-block-name
@@ -2238,7 +2260,7 @@
 
 ; Either reuse or generate a name for return-from statements exiting this function.
 (defun gen-type-env-return-block-name (type-env)
-  (let ((return-block-binding (assert-non-null (assoc :return-block-name type-env))))
+  (let ((return-block-binding (assert-non-null (assoc :return-block-name (type-env-bindings type-env)))))
     (or (cdr return-block-binding)
         (setf (cdr return-block-binding) (gensym "RETURN")))))
 
@@ -2246,19 +2268,40 @@
 ; Return an environment obtained from the type-env by adding a binding of flag to value.
 (defun set-type-env-flag (type-env flag value)
   (assert-true (member flag *type-env-flags*))
-  (acons flag value type-env))
+  (make-type-env
+   (acons flag value (type-env-bindings type-env))
+   (type-env-live type-env)))
 
 
 ; Return the value bound to the given flag.
 (defun get-type-env-flag (type-env flag)
   (assert-true (member flag *type-env-flags*))
-  (cdr (assoc flag type-env)))
+  (cdr (assoc flag (type-env-bindings type-env))))
 
 
 ; Ensure that sub-type-env is derived from base-type-env.
 (defun ensure-narrowed-type-env (base-type-env sub-type-env)
-  (unless (tailp base-type-env sub-type-env)
+  (unless (and (tailp (type-env-bindings base-type-env) (type-env-bindings sub-type-env))
+               (equal (type-env-live base-type-env) (type-env-live sub-type-env)))
     (error "The type environment ~S isn't narrower than ~S" sub-type-env base-type-env)))
+
+
+; live1 and live2 are either :dead or lists of :unintialized variables that have been initialized.
+; Return :dead of both live1 and live2 are dead or a list of initialized variables that would be valid
+; on a merge point between code paths resulting in live1 and live2.
+(defun merge-live-lists (live1 live2)
+  (cond
+   ((eq live1 :dead) live2)
+   ((eq live2 :dead) live1)
+   (t (intersection live1 live2 :test #'eq))))
+
+
+; If live is :dead, return nil; otherwise, return type-env with live substituted for type-env's old live list.
+(defun substitute-live (type-env live)
+  (cond
+   ((eq live :dead) nil)
+   ((equal live (type-env-live type-env)) type-env)
+   (t (make-type-env (type-env-bindings type-env) live))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -2554,11 +2597,17 @@
               (values (type-env-local-name symbol-binding)
                       (type-env-local-type symbol-binding)
                       (list 'expr-annotation:local symbol)))
+             (:uninitialized
+              (if (type-env-initialized type-env symbol)
+                (values (type-env-local-name symbol-binding)
+                        (type-env-local-type symbol-binding)
+                        (list 'expr-annotation:local symbol))
+                (error "Uninitialized variable ~A referenced" symbol)))
              (:function
                (values (list 'function (type-env-local-name symbol-binding))
                        (type-env-local-type symbol-binding)
                        (list 'expr-annotation:local symbol)))
-             ((:uninitialized :reserved :unused) (error "Unused variable ~A referenced" symbol)))
+             ((:reserved :unused) (error "Unused variable ~A referenced" symbol)))
            (let ((primitive (symbol-primitive symbol)))
              (if primitive
                (values (primitive-value-code primitive) (primitive-type primitive) (list 'expr-annotation:primitive symbol))
@@ -3006,9 +3055,10 @@
 
 
 (defun finish-function-code (world type-env result-type body-statements)
-  (multiple-value-bind (body-codes body-live body-annotated-stmts) (scan-statements world type-env body-statements t t)
-    (when (and body-live (not (or (type= result-type (world-void-type world))
-                                  (type= result-type (world-bottom-type world)))))
+  (multiple-value-bind (body-codes body-live body-annotated-stmts) (scan-statements world type-env body-statements t)
+    (assert-true (or (listp body-live) (eq body-live :dead)))
+    (when (and (listp body-live) (not (or (type= result-type (world-void-type world))
+                                          (type= result-type (world-bottom-type world)))))
       (error "Execution falls off the end of a function with result type ~A" (print-type-to-string result-type)))
     (let ((return-block-name (get-type-env-flag type-env :return-block-name)))
       (values
@@ -3716,17 +3766,16 @@
 
 
 ; Generate a list of lisp expressions that will execute the given statements.
-; type-env is the type environment.
+; type-env is the type environment or nil if these statements are not reachable.
 ; last is true if these statements' lisp return value becomes the return value of the function if the function falls through.
-; live is true if these statements are reachable.
 ;
 ; Return three values:
 ;   A list of codes (a list of lisp expressions)
-;   Non-nil if the statement can fall through
+;   :dead if the statement cannot complete or a list of the symbols of :uninitialized variables that are initialized if the statement can complete.
 ;   A list of annotated statements
-(defun scan-statements (world type-env statements last live)
+(defun scan-statements (world type-env statements last)
   (if statements
-    (if live
+    (if type-env
       (let* ((statement (first statements))
              (rest-statements (rest statements))
              (symbol (statement? world statement)))
@@ -3734,12 +3783,15 @@
           (apply (get symbol :statement) world type-env rest-statements last symbol (rest statement))
           (multiple-value-bind (statement-code live statement-annotated-expr)
                                (scan-void-value world type-env statement)
-            (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last live)
+            (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                                 (scan-statements world (and live type-env) rest-statements last)
               (values (cons statement-code rest-codes)
                       rest-live
                       (cons (list (world-intern world 'exec) statement-annotated-expr) rest-annotated-stmts))))))
       (error "Unreachable statements: ~S" statements))
-    (values nil live nil)))
+    (values nil
+            (if type-env (type-env-live type-env) :dead)
+            nil)))
 
 
 ; Compute the initial type-env to use for the given general-production's action code.
@@ -3768,11 +3820,12 @@
                        general-grammar-symbol)))
                 (grammar-symbol-signature grammar grammar-symbol)))))
       (let ((env (set-type-env-flag 
-                  (mapcan #'general-symbol-action-env (general-production-rhs general-production))
+                  (make-type-env (mapcan #'general-symbol-action-env (general-production-rhs general-production)) nil)
                   :lhs-symbol (general-grammar-symbol-symbol lhs-general-nonterminal))))
         (when include-lhs
           (setq index-override 0)
-          (setq env (nconc (general-symbol-action-env lhs-general-nonterminal) env)))
+          (setq env (make-type-env (nconc (general-symbol-action-env lhs-general-nonterminal) (type-env-bindings env))
+                                   (type-env-live env))))
         env))))
 
 
@@ -3810,7 +3863,7 @@
   (let* ((lhs (production-lhs production))
          (n-action-args (n-action-args grammar production))
          (initial-env (general-production-action-env grammar production nil))
-         (args (mapcar #'cadr (cdr initial-env))))
+         (args (mapcar #'cadr (cdr (type-env-bindings initial-env)))))
     (assert-true (= (length args) n-action-args))
     (let* ((result-vars nil)
            (code-bindings
@@ -3827,12 +3880,14 @@
                        (when *trace-variables*
                          (format *trace-output* "~&~@<~S[~S] := ~2I~_~:W~:>~%" action-symbol (production-name production) code))
                        (push result-var result-vars)
-                       (push (make-type-env-action
-                              (list* action-symbol (general-grammar-symbol-symbol lhs) 0)
-                              result-var
-                              type
-                              lhs)
-                             initial-env)
+                       (setq initial-env
+                             (make-type-env (cons (make-type-env-action
+                                                   (list* action-symbol (general-grammar-symbol-symbol lhs) 0)
+                                                   result-var
+                                                   type
+                                                   lhs)
+                                                  (type-env-bindings initial-env))
+                                            (type-env-live initial-env)))
                        (list result-var code)))))
              (production-actions production)))
            (filtered-args (mapcar #'(lambda (arg)
@@ -3876,12 +3931,39 @@
 ;;; STATEMENTS
 
 
+; (// . <styled-text>)
+; Used to insert comment statements.
+(defun scan-// (world type-env rest-statements last special-form &rest text)
+  (unless text
+    (error "// should have non-empty text"))
+  (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last)
+    (values rest-codes
+            rest-live
+            (cons (cons special-form text) rest-annotated-stmts))))
+
+
+; (assert <condition-expr> . <styled-text>)
+; Used to declare conditions that are known to be true if the semantics function correctly.  Don't use this to
+; verify user input.
+; <styled-text> can contain the entry (:assertion) to depict <condition-expr>.
+(defun scan-assert (world type-env rest-statements last special-form condition-expr &rest text)
+  (unless text
+    (error "assert should have non-empty text"))
+  (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
+                       (scan-condition world type-env condition-expr)
+    (declare (ignore false-type-env))
+    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world true-type-env rest-statements last)
+      (values (cons (list 'assert condition-code) rest-codes)
+              rest-live
+              (cons (list* special-form condition-annotated-expr text) rest-annotated-stmts)))))
+
+
 ; (exec <expr>)
 (defun scan-exec (world type-env rest-statements last special-form expr)
   (multiple-value-bind (statement-code statement-type statement-annotated-expr)
                        (scan-value world type-env expr)
     (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                         (scan-statements world type-env rest-statements last (not (eq (type-kind statement-type) :bottom)))
+                         (scan-statements world (and (not (eq (type-kind statement-type) :bottom)) type-env) rest-statements last)
       (values (cons statement-code rest-codes)
               rest-live
               (cons (list special-form statement-annotated-expr) rest-annotated-stmts)))))
@@ -3896,7 +3978,7 @@
     (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world placeholder-type-env value-expr type)
       (let ((local-type-env (type-env-add-binding type-env symbol type (find-keyword special-form))))
         (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                             (scan-statements world local-type-env rest-statements last t)
+                             (scan-statements world local-type-env rest-statements last)
           (values
            (list `(let ((,symbol ,value-code))
                     ,@rest-codes))
@@ -3912,7 +3994,9 @@
            (type (scan-type world type-expr)))
       (let ((local-type-env (type-env-add-binding type-env symbol type :uninitialized)))
         (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                             (scan-statements world local-type-env rest-statements last t)
+                             (scan-statements world local-type-env rest-statements last)
+          (unless (eq rest-live :dead)
+            (setq rest-live (remove symbol rest-live :test #'eq)))
           (values
            (list `(let (,symbol) ,@rest-codes))
            rest-live
@@ -3926,7 +4010,7 @@
   (let* ((symbol (scan-name world name))
          (local-type-env (type-env-add-binding type-env symbol (world-void-type world) :reserved)))
     (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                         (scan-statements world local-type-env rest-statements last t)
+                         (scan-statements world local-type-env rest-statements last)
       (values
        (list `(let (,symbol) ,@rest-codes))
        rest-live
@@ -3943,7 +4027,7 @@
                          (scan-function-or-lambda world placeholder-type-env (rest name-and-arg-binding-exprs) result-type-expr body-statements)
       (let ((local-type-env (type-env-add-binding type-env symbol type :function)))
         (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                             (scan-statements world local-type-env rest-statements last t)
+                             (scan-statements world local-type-env rest-statements last)
           (values
            (list `(flet ((,symbol ,@args-and-body-codes))
                     ,@rest-codes))
@@ -3962,7 +4046,7 @@
         (:var (setq type (type-env-local-type symbol-binding)))
         (:uninitialized
          (setq type (type-env-local-type symbol-binding))
-         (setq type-env (type-env-add-binding type-env symbol type :var t)))
+         (setq type-env (type-env-initialize-var type-env symbol)))
         (t (error "Local variable ~A not writable" name)))
       (progn
         (setq type (symbol-type symbol))
@@ -3972,7 +4056,7 @@
           (error "Global variable ~A not writable" name))))
     (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr type)
       (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                           (scan-statements world type-env rest-statements last t)
+                           (scan-statements world type-env rest-statements last)
         (values
          (cons (if symbol-binding
                  (list 'setq (type-env-local-name symbol-binding) value-code)
@@ -4007,7 +4091,7 @@
             (error "Type coercions in &= are not implemented yet")))
         (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr destination-type)
           (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                               (scan-statements world type-env rest-statements last t)
+                               (scan-statements world type-env rest-statements last)
             (values
              (cons
               (if (endp (cdr position-alist))
@@ -4038,7 +4122,7 @@
       (assert-true (symbolp action-value))
       (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr (writable-cell-element-type action-type))
         (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                             (scan-statements world type-env rest-statements last t)
+                             (scan-statements world type-env rest-statements last)
           (values
            (if (or (symbolp value-code) (numberp value-code))
              (list* `(when (car ,action-value)
@@ -4068,14 +4152,14 @@
         (scan-typed-value world type-env value-expr type)))
      ((not (type= type (world-void-type world)))
       (error "Return statement needs a value")))
-    (scan-statements world type-env rest-statements last nil)
+    (scan-statements world nil rest-statements last)
     (values
      (list (if last
              value-code
              (list* 'return-from
                     (gen-type-env-return-block-name type-env)
                     (and value-code (list value-code)))))
-     nil
+     :dead
      (list (list special-form value-annotated-expr)))))
 
 
@@ -4084,11 +4168,11 @@
 (defun scan-rwhen (world type-env rest-statements last special-form condition-expr &rest true-statements)
   (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
                        (scan-condition world type-env condition-expr)
-    (multiple-value-bind (true-codes true-live true-annotated-stmts) (scan-statements world true-type-env true-statements last t)
-      (when true-live
+    (multiple-value-bind (true-codes true-live true-annotated-stmts) (scan-statements world true-type-env true-statements last)
+      (unless (eq true-live :dead)
         (error "rwhen statements ~S must not fall through" true-statements))
       (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                           (scan-statements world false-type-env rest-statements last t)
+                           (scan-statements world false-type-env rest-statements last)
         (values (list (list 'if condition-code (gen-progn true-codes) (gen-progn rest-codes)))
                 rest-live
                 (cons (list special-form (cons condition-annotated-expr true-annotated-stmts)) rest-annotated-stmts))))))
@@ -4134,7 +4218,7 @@
         (nested-last (and last (null rest-statements)))
         (case-codes nil)
         (annotated-cases nil)
-        (any-live nil)
+        (joint-live :dead)
         (found-default-case nil))
     (dolist (case cases)
       (unless (consp case)
@@ -4150,16 +4234,15 @@
             (if (cdr cases)
               (setq found-default-case t)
               (error "Cond statement consisting only of an else case: ~S" cases)))
-          (multiple-value-bind (codes live annotated-stmts) (scan-statements world true-type-env (rest case) nested-last t)
+          (multiple-value-bind (codes live annotated-stmts) (scan-statements world true-type-env (rest case) nested-last)
             (push (cons condition-code codes) case-codes)
             (push (cons condition-annotated-expr annotated-stmts) annotated-cases)
-            (when live
-              (setq any-live t)))
+            (setq joint-live (merge-live-lists joint-live live)))
           (setq local-type-env false-type-env))))
     (unless found-default-case
-      (setq any-live t))
+      (setq joint-live (merge-live-lists joint-live (type-env-live type-env))))
     (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                         (scan-statements world type-env rest-statements last any-live)
+                         (scan-statements world (substitute-live type-env joint-live) rest-statements last)
       (values (cons (gen-cond-code (nreverse case-codes)) rest-codes)
               rest-live
               (cons (cons special-form (nreverse annotated-cases)) rest-annotated-stmts)))))
@@ -4167,14 +4250,14 @@
 
 ; (while <condition-expr> . <statements>)
 (defun scan-while (world type-env rest-statements last special-form condition-expr &rest loop-statements)
-  (multiple-value-bind (condition-code condition-annotated-expr)
-                       (scan-typed-value world type-env condition-expr (world-boolean-type world))
-    (multiple-value-bind (loop-codes loop-live loop-annotated-stmts) (scan-statements world type-env loop-statements nil t)
-      (unless loop-live
+  (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
+                       (scan-condition world type-env condition-expr)
+    (multiple-value-bind (loop-codes loop-live loop-annotated-stmts) (scan-statements world true-type-env loop-statements nil)
+      (unless (listp loop-live)
         (warn "While loop can execute at most once: ~S ~S" condition-expr loop-statements))
       (let ((infinite (and (constantp condition-code) (symbolp condition-code) condition-code)))
         (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                             (scan-statements world type-env rest-statements last (not infinite))
+                             (scan-statements world (and (not infinite) false-type-env) rest-statements last)
           (values
            (cons (if infinite
                    (cons 'loop loop-codes)
@@ -4186,18 +4269,6 @@
            (cons (list* special-form condition-annotated-expr loop-annotated-stmts) rest-annotated-stmts)))))))
 
 
-; (assert <condition-expr>)
-; Used to declare conditions that are known to be true if the semantics function correctly.  Don't use this to
-; verify user input.
-(defun scan-assert (world type-env rest-statements last special-form condition-expr)
-  (multiple-value-bind (condition-code condition-annotated-expr)
-                       (scan-typed-value world type-env condition-expr (world-boolean-type world))
-    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last t)
-      (values (cons (list 'assert condition-code) rest-codes)
-              rest-live
-              (cons (list special-form condition-annotated-expr) rest-annotated-stmts)))))
-
-
 (defconstant *semantic-exception-type-name* 'semantic-exception)
 
 ; (throw <value-expr>)
@@ -4205,16 +4276,16 @@
 (defun scan-throw (world type-env rest-statements last special-form value-expr)
   (multiple-value-bind (value-code value-annotated-expr)
                        (scan-typed-value world type-env value-expr (scan-type world *semantic-exception-type-name*))
-    (scan-statements world type-env rest-statements last nil)
+    (scan-statements world type-env rest-statements last)
     (values
      (list (list 'throw :semantic-exception value-code))
-     nil
+     :dead
      (list (list special-form value-annotated-expr)))))
 
 
 ; (catch <body-statements> (<var> [:unused]) . <handler-statements>)
 (defun scan-catch (world type-env rest-statements last special-form body-statements arg-binding-expr &rest handler-statements)
-  (multiple-value-bind (body-codes body-live body-annotated-stmts) (scan-statements world type-env body-statements nil t)
+  (multiple-value-bind (body-codes body-live body-annotated-stmts) (scan-statements world type-env body-statements nil)
     (unless (and (consp arg-binding-expr)
                  (member (cdr arg-binding-expr) '(nil (:unused)) :test #'equal))
       (error "Bad catch binding ~S" arg-binding-expr))
@@ -4222,12 +4293,12 @@
            (arg-symbol (scan-name world (first arg-binding-expr)))
            (arg-type (scan-type world *semantic-exception-type-name*))
            (type-env (type-env-add-binding type-env arg-symbol arg-type :const)))
-      (multiple-value-bind (handler-codes handler-live handler-annotated-stmts) (scan-statements world type-env handler-statements nested-last t)
+      (multiple-value-bind (handler-codes handler-live handler-annotated-stmts) (scan-statements world type-env handler-statements nested-last)
         (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                             (scan-statements world type-env rest-statements last (or body-live handler-live))
+                             (scan-statements world (and (or (listp body-live) (listp handler-live)) type-env) rest-statements last)
           (let ((code
                  `(block nil
-                    (let ((,arg-symbol (catch :semantic-exception ,@body-codes ,@(when body-live '((return))))))
+                    (let ((,arg-symbol (catch :semantic-exception ,@body-codes ,@(when (listp body-live) '((return))))))
                       ,@(and (eq (second arg-binding-expr) :unused) `((declare (ignore ,arg-symbol))))
                       ,@handler-codes))))
             (values (cons code rest-codes)
@@ -4273,7 +4344,7 @@
                        (when (type= remaining-type (world-bottom-type world))
                          (error "Otherwise case not reached"))
                        (multiple-value-bind (statements-codes statements-live statements-annotated-stmts)
-                                            (scan-statements world type-env statements nested-last t)
+                                            (scan-statements world type-env statements nested-last)
                          (values (list (cons t statements-codes))
                                  statements-live
                                  (list (list* key type-expr statements-annotated-stmts)))))
@@ -4284,25 +4355,25 @@
                            (ecase key
                              (:select
                               (multiple-value-bind (statements-codes statements-live statements-annotated-stmts)
-                                                   (scan-statements world type-env statements nested-last t)
+                                                   (scan-statements world type-env statements nested-last)
                                 (values (cons (cons condition-code statements-codes) remaining-code)
-                                        (or statements-live remaining-live)
+                                        (merge-live-lists statements-live remaining-live)
                                         (cons (list* key type-expr statements-annotated-stmts) remaining-annotated-stmts))))
                              (:narrow
                                (unless (equal var value-code)
                                  (error "const and var cases can only be used when dispatching on a variable"))
                                (multiple-value-bind (statements-codes statements-live statements-annotated-stmts)
-                                                    (scan-statements world (type-env-narrow-binding type-env var type) statements nested-last t)
+                                                    (scan-statements world (type-env-narrow-binding type-env var type) statements nested-last)
                                  (values (cons (cons condition-code statements-codes) remaining-code)
-                                         (or statements-live remaining-live)
+                                         (merge-live-lists statements-live remaining-live)
                                          (cons (list* key type-expr statements-annotated-stmts) remaining-annotated-stmts)))))))))))
                (if (type= remaining-type (world-bottom-type world))
-                 (values '((t (case-error))) nil nil)
+                 (values '((t (case-error))) :dead nil)
                  (error "Type ~A not considered in case" remaining-type)))))
           
           (multiple-value-bind (cases-code cases-live cases-annotated-stmts) (process-remaining-cases cases value-type)
             (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
-                                 (scan-statements world type-env rest-statements last cases-live)
+                                 (scan-statements world (substitute-live type-env cases-live) rest-statements last)
               (values
                (cons (if (equal var value-code)
                        (cons 'cond cases-code)
@@ -4507,6 +4578,8 @@
      (terminal-action scan-terminal-action depict-terminal-action))
     
     (:statement
+     (// scan-// depict-//)
+     (assert scan-assert depict-assert)
      (exec scan-exec depict-exec)
      (const scan-const depict-var)
      (var scan-var depict-var)
@@ -4521,7 +4594,6 @@
      (if scan-if-stmt depict-cond)
      (cond scan-cond depict-cond)
      (while scan-while depict-while)
-     (assert scan-assert depict-assert)
      (throw scan-throw depict-throw)
      (catch scan-catch depict-catch)
      (case scan-case depict-case))

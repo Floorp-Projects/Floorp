@@ -483,11 +483,10 @@
     (%heading (2 :semantics) "Slots")
     
     (define (find-slot (o object) (id slot-id)) slot
-      (rwhen (not-in o instance :narrow-false)
-        (bottom))
+      (assert (in o instance :narrow-true) (:local o) " must be an " (:type instance) ";")
       (const matching-slots (list-set slot)
         (map (& slots o) s s (= (& id s) id slot-id)))
-      (assert (= (length matching-slots) 1))
+      (assert (= (length matching-slots) 1) "Note that exactly one slot should match: " (:assertion) ";")
       (return (elt-of matching-slots)))
     
     
@@ -501,7 +500,7 @@
     
     
     (define (read-qualified-property (ol obj-optional-limit) (qn qualified-name) (indexable-only boolean)) object
-      (var d member-data-opt null) ;***** Unnecessary initialization
+      (var d member-data-opt)
       (reserve p)
       (case ol
         (:narrow (union undefined null boolean float64 string namespace attribute method-closure fixed-instance)
@@ -543,7 +542,7 @@
     
     
     (define (write-qualified-property (ol obj-optional-limit) (qn qualified-name) (indexable-only boolean) (new-value object)) void
-      (var d member-data-opt null) ;***** Unnecessary initialization
+      (var d member-data-opt)
       (case ol
         (:select (union undefined null boolean float64 string namespace attribute method-closure)
           (throw property-not-found-error))
@@ -567,6 +566,9 @@
         (:narrow limited-instance
           (<- d (most-specific-member (& super (& limit ol)) false qn (list-set-of member-access write read-write) indexable-only))))
       (const o object (get-object ol))
+      (assert (not-in d method :narrow-true)
+              (:local d) " cannot be a " (:type method) " at this point because all " (:type method)
+              " properties are read-only;")
       (case d
         (:select (tag null) (throw property-not-found-error))
         (:narrow global-slot
@@ -577,7 +579,6 @@
           (rwhen (not (relaxed-has-type new-value (& type d)))
             (throw type-error))
           (&= value (find-slot o d) new-value))
-        (:narrow method (bottom))
         (:narrow accessor
           (rwhen (not (relaxed-has-type new-value (& type d)))
             (throw type-error))
@@ -798,7 +799,7 @@
            (throw syntax-error)))
         ((eval e)
          (const q class-opt (& enclosing-class e))
-         (rwhen (in q null :narrow-false) (bottom))
+         (assert (not-in q null :narrow-true) (:local q) " cannot be " (:tag null) " here because that would not have passed validation;")
          (return (& private-namespace q)))))
     
     (rule :simple-qualified-identifier ((validate (-> (validation-env) void)) (name (-> (dynamic-env) partial-name)) (eval (-> (dynamic-env) obj-or-ref)))

@@ -52,7 +52,6 @@
     begin end nothing
     if then elsif else
     while do
-    invariant
     return
     throw try catch
     case of))
@@ -965,6 +964,31 @@
         (depict-semicolon markup-stream semicolon)))))
 
 
+; (// . <styled-text>)
+(defun depict-// (markup-stream world semicolon last-paragraph-style &rest text)
+  (declare (ignore world semicolon))
+  (depict-division-style (markup-stream :wrap)
+    (depict-text-paragraph markup-stream last-paragraph-style text)))
+
+
+(defvar *assertion-depictor*)
+
+; (assert <condition-expr> . <styled-text>)
+; <styled-text> can contain the entry (:assertion) to depict <condition-expr>.
+(defun depict-assert (markup-stream world semicolon last-paragraph-style condition-annotated-expr &rest text)
+  (declare (ignore semicolon))
+  (let ((*assertion-depictor* #'(lambda (markup-stream) (depict-expression markup-stream world condition-annotated-expr %expr%))))
+    (depict-division-style (markup-stream :wrap)
+      (depict-text-paragraph markup-stream last-paragraph-style text))))
+
+; (:assertion)
+(defun depict-assertion (markup-stream)
+  (depict-char-style (markup-stream :nowrap)
+    (funcall *assertion-depictor* markup-stream)))
+
+(setf (styled-text-depictor :assertion) #'depict-assertion)
+
+
 ; (exec <expr>)
 (defun depict-exec (markup-stream world semicolon last-paragraph-style annotated-expr)
   (depict-paragraph (markup-stream last-paragraph-style)
@@ -974,16 +998,17 @@
 
 ; (const <name> <type> <value>)
 ; (var <name> <type> <value>)
-(defun depict-var (markup-stream world semicolon last-paragraph-style name type-expr value-annotated-expr)
+(defun depict-var (markup-stream world semicolon last-paragraph-style name type-expr &optional value-annotated-expr)
   (depict-paragraph (markup-stream last-paragraph-style)
     (depict-local-variable markup-stream name)
     (depict markup-stream ": ")
     (depict-type-expr markup-stream world type-expr)
-    (depict markup-stream " " :assign-10)
-    (depict-logical-block (markup-stream 6)
-      (depict-break markup-stream 1)
-      (depict-expression markup-stream world value-annotated-expr %expr%)
-      (depict-semicolon markup-stream semicolon))))
+    (when value-annotated-expr
+      (depict markup-stream " " :assign-10)
+      (depict-logical-block (markup-stream 6)
+        (depict-break markup-stream 1)
+        (depict-expression markup-stream world value-annotated-expr %expr%)))
+    (depict-semicolon markup-stream semicolon)))
 
 
 ; (function (<name> (<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <result-type> . <statements>)
@@ -1080,15 +1105,6 @@
     (depict-paragraph (markup-stream last-paragraph-style)
       (depict-semantic-keyword markup-stream 'end :after)
       (depict-semantic-keyword markup-stream 'while nil)
-      (depict-semicolon markup-stream semicolon))))
-
-
-; (assert <condition-expr>)
-(defun depict-assert (markup-stream world semicolon last-paragraph-style condition-annotated-expr)
-  (depict-paragraph (markup-stream last-paragraph-style)
-    (depict-logical-block (markup-stream 4)
-      (depict-semantic-keyword markup-stream 'invariant :after)
-      (depict-expression markup-stream world condition-annotated-expr %expr%)
       (depict-semicolon markup-stream semicolon))))
 
 
@@ -1222,6 +1238,21 @@
 ;;; DEPICTING COMMANDS
 
 
+; Bind *styled-text-world* and *styled-text-grammar-parametrization* around the execution of body.
+; These variables must be bound for depict-styled-text to be able to depict some constructs.
+(defmacro depict-text-environment (world depict-env &body body)
+  `(bind-text-environment ,world ,depict-env #'(lambda () ,@body)))
+
+(defun bind-text-environment (world depict-env f)
+  (let ((grammar-info (depict-env-grammar-info depict-env))
+        (*styled-text-world* world))
+    (if grammar-info
+      (let ((*styled-text-grammar-parametrization* (grammar-info-grammar grammar-info)))
+        (funcall f))
+      (funcall f))))
+
+
+
 (defmacro depict-semantics ((markup-stream depict-env &optional (paragraph-style :algorithm-stmt)) &body body)
   `(when (depict-mode ,markup-stream ,depict-env :semantics)
      (depict-division-style (,markup-stream :nowrap)
@@ -1244,14 +1275,9 @@
       (depict-commands markup-stream world depict-env commands))))
 
 
-(defun depict-text-paragraph (markup-stream world depict-env paragraph-style text)
+(defun depict-text-paragraph (markup-stream paragraph-style text)
   (depict-paragraph (markup-stream paragraph-style)
-    (let ((grammar-info (depict-env-grammar-info depict-env))
-          (*styled-text-world* world))
-      (if grammar-info
-        (let ((*styled-text-grammar-parametrization* (grammar-info-grammar grammar-info)))
-          (depict-styled-text markup-stream text))
-        (depict-styled-text markup-stream text)))))
+    (depict-styled-text markup-stream text)))
 
 
 ; (%heading <level> . <styled-text>)
@@ -1271,7 +1297,8 @@
     (let* ((heading-level (+ level (depict-env-heading-offset depict-env)))
            (heading-style (svref #(:heading1 :heading2 :heading3 :heading4 :heading5 :heading6) (1- heading-level))))
       (when (quiet-depict-mode depict-env mode)
-        (depict-text-paragraph markup-stream world depict-env heading-style text)))))
+        (depict-text-environment world depict-env
+          (depict-text-paragraph markup-stream heading-style text))))))
 
 
 ; (%text <mode> . <styled-text>)
@@ -1282,7 +1309,8 @@
 ;   nil         This is a general comment
 (defun depict-%text (markup-stream world depict-env mode &rest text)
   (when (depict-mode markup-stream depict-env (if (eq mode :comment) :semantics mode))
-    (depict-text-paragraph markup-stream world depict-env (if (eq mode :comment) :semantic-comment :body-text) text)))
+    (depict-text-environment world depict-env
+      (depict-text-paragraph markup-stream (if (eq mode :comment) :semantic-comment :body-text) text))))
 
 
 ; (grammar-argument <argument> <attribute> <attribute> ... <attribute>)
@@ -1392,24 +1420,25 @@
          (mutable (tag-mutable tag))
          (keyword (if mutable 'record 'tuple)))
     (depict-algorithm (markup-stream depict-env)
-      (depict-paragraph (markup-stream :statement)
-        (depict-semantic-keyword markup-stream keyword :after)
-        (depict-type-name markup-stream name :definition))
-      (depict-division-style (markup-stream :level)
-        (mapl #'(lambda (fields)
-                  (let ((field (car fields)))
-                    (depict-paragraph (markup-stream :statement)
-                      (depict-logical-block (markup-stream 4)
-                        (depict-label-name markup-stream type (first field) nil)
-                        (depict markup-stream ": ")
-                        (depict-type-expr markup-stream world (second field) %%type%%)
-                        (when (cdr fields)
-                          (depict markup-stream ","))))))
-              fields))
-      (depict-paragraph (markup-stream :statement-last)
-        (depict-semantic-keyword markup-stream 'end :after)
-        (depict-semantic-keyword markup-stream keyword nil)
-        (depict markup-stream ";")))))
+      (depict-text-environment world depict-env
+        (depict-paragraph (markup-stream :statement)
+          (depict-semantic-keyword markup-stream keyword :after)
+          (depict-type-name markup-stream name :definition))
+        (depict-division-style (markup-stream :level)
+          (mapl #'(lambda (fields)
+                    (let ((field (car fields)))
+                      (depict-paragraph (markup-stream :statement)
+                        (depict-logical-block (markup-stream 4)
+                          (depict-label-name markup-stream type (first field) nil)
+                          (depict markup-stream ": ")
+                          (depict-type-expr markup-stream world (second field) %%type%%)
+                          (when (cdr fields)
+                            (depict markup-stream ","))))))
+                fields))
+        (depict-paragraph (markup-stream :statement-last)
+          (depict-semantic-keyword markup-stream 'end :after)
+          (depict-semantic-keyword markup-stream keyword nil)
+          (depict markup-stream ";"))))))
 
 
 ; (deftype <name> <type>)
@@ -1454,19 +1483,20 @@
 
 ; (define <name> <type> <value>)
 (defun depict-define (markup-stream world depict-env name type-expr value-expr)
-  (let ((value-annotated-expr (nth-value 2 (scan-value world *null-type-env* value-expr))))
-    (if (eq (car value-annotated-expr) 'expr-annotation:begin)
-      (depict-algorithm (markup-stream depict-env)
-        (depict-paragraph (markup-stream :statement)
+  (depict-text-environment world depict-env
+    (let ((value-annotated-expr (nth-value 2 (scan-value world *null-type-env* value-expr))))
+      (if (eq (car value-annotated-expr) 'expr-annotation:begin)
+        (depict-algorithm (markup-stream depict-env)
+          (depict-paragraph (markup-stream :statement)
+            (depict-logical-block (markup-stream 0)
+              (depict-global-variable markup-stream name :definition)
+              (depict-colon-and-type markup-stream world type-expr)))
+          (depict-begin markup-stream world value-annotated-expr :statement-last))
+        (depict-semantics (markup-stream depict-env)
           (depict-logical-block (markup-stream 0)
             (depict-global-variable markup-stream name :definition)
-            (depict-colon-and-type markup-stream world type-expr)))
-        (depict-begin markup-stream world value-annotated-expr :statement-last))
-      (depict-semantics (markup-stream depict-env)
-        (depict-logical-block (markup-stream 0)
-          (depict-global-variable markup-stream name :definition)
-          (depict-colon-and-type markup-stream world type-expr)
-          (depict-equals-and-value markup-stream world value-annotated-expr "="))))))
+            (depict-colon-and-type markup-stream world type-expr)
+            (depict-equals-and-value markup-stream world value-annotated-expr "=")))))))
 
 
 ; (defvar <name> <type> <value>)
@@ -1475,10 +1505,11 @@
     (if (eq (car value-annotated-expr) 'expr-annotation:begin)
       (error "defvar shouldn't use begin")
       (depict-semantics (markup-stream depict-env)
-        (depict-logical-block (markup-stream 0)
-          (depict-global-variable markup-stream name :definition)
-          (depict-colon-and-type markup-stream world type-expr)
-          (depict-equals-and-value markup-stream world value-annotated-expr :assign-10))))))
+        (depict-text-environment world depict-env
+          (depict-logical-block (markup-stream 0)
+            (depict-global-variable markup-stream name :definition)
+            (depict-colon-and-type markup-stream world type-expr)
+            (depict-equals-and-value markup-stream world value-annotated-expr :assign-10)))))))
 
 
 ; (defun <name> (-> (<type1> ... <typen>) <result-type>) (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
@@ -1487,12 +1518,13 @@
   (let* ((value-annotated-expr (nth-value 2 (scan-value world *null-type-env* value-expr)))
          (body-annotated-stmts (lambda-body-annotated-stmts value-annotated-expr)))
     (depict-algorithm (markup-stream depict-env)
-      (depict-statement-block-using (markup-stream :statement-last)
-        (depict-paragraph (markup-stream :statement)
-          (depict-semantic-keyword markup-stream 'proc :after)
-          (depict-global-variable markup-stream name :definition)
-          (depict-lambda-signature markup-stream world type-expr value-annotated-expr t))
-        (depict-function-body markup-stream world t :statement-last body-annotated-stmts)))))
+      (depict-text-environment world depict-env
+        (depict-statement-block-using (markup-stream :statement-last)
+          (depict-paragraph (markup-stream :statement)
+            (depict-semantic-keyword markup-stream 'proc :after)
+            (depict-global-variable markup-stream name :definition)
+            (depict-lambda-signature markup-stream world type-expr value-annotated-expr t))
+          (depict-function-body markup-stream world t :statement-last body-annotated-stmts))))))
 
 
 
@@ -1527,12 +1559,13 @@
       (setf (depict-env-seen-grammar-arguments depict-env) nil))))
 
 
-(defmacro depict-delayed-action ((markup-stream depict-env action-name) &body depictor)
+(defmacro depict-delayed-action ((markup-stream world depict-env action-name) &body depictor)
   (let ((saved-division-style (gensym "SAVED-DIVISION-STYLE")))
     `(let ((,saved-division-style (save-division-style ,markup-stream)))
        (push (cons ,action-name
                    #'(lambda (,markup-stream ,depict-env)
-                       (with-saved-division-style (,markup-stream ,saved-division-style t) ,@depictor)))
+                       (depict-text-environment ,world ,depict-env
+                         (with-saved-division-style (,markup-stream ,saved-division-style t) ,@depictor))))
              (depict-env-pending-actions-reverse ,depict-env)))))
 
 
@@ -1565,11 +1598,11 @@
     (unless (and (general-nonterminal? general-grammar-symbol) (hidden-nonterminal? general-grammar-symbol))
       (ecase mode
         (:hide)
-        (:singleton (depict-delayed-action (markup-stream depict-env action-name)
+        (:singleton (depict-delayed-action (markup-stream world depict-env action-name)
                       (depict-algorithm (markup-stream depict-env)
                         (depict-commands markup-stream world depict-env commands))))
         ((:action :actfun)
-         (depict-delayed-action (markup-stream depict-env action-name)
+         (depict-delayed-action (markup-stream world depict-env action-name)
            (depict-algorithm (markup-stream depict-env)
              (depict-paragraph (markup-stream :statement)
                (if (eq mode :actfun)
@@ -1595,7 +1628,7 @@
                  (depict-semantic-keyword markup-stream 'proc nil)
                  (depict markup-stream ";"))))))
         (:writable
-         (depict-delayed-action (markup-stream depict-env action-name)
+         (depict-delayed-action (markup-stream world depict-env action-name)
            (depict-semantics (markup-stream depict-env)
              (depict-declare-action-contents markup-stream world action-name general-grammar-symbol type-expr)
              (depict markup-stream ";"))))))))
@@ -1604,7 +1637,7 @@
 ; Declare and define the lexer-action on the charclass given by nonterminal.
 (defun depict-charclass-action (markup-stream world depict-env action-name lexer-action nonterminal)
   (unless (default-action? action-name)
-    (depict-delayed-action (markup-stream depict-env action-name)
+    (depict-delayed-action (markup-stream world depict-env action-name)
       (depict-semantics (markup-stream depict-env)
         (depict-logical-block (markup-stream 4)
           (depict-declare-action-contents markup-stream world action-name nonterminal (lexer-action-type-expr lexer-action))
@@ -1652,50 +1685,51 @@
            (general-production (grammar-general-production grammar production-name))
            (lhs (general-production-lhs general-production)))
       (unless (hidden-nonterminal? lhs)
-        (let* ((initial-env (general-production-action-env grammar general-production t))
-               (type (scan-type world type-expr))
-               (value-annotated-expr (nth-value 1 (scan-typed-value-or-begin world initial-env value-expr type)))
-               (action-grammar-symbols (annotated-expr-grammar-symbols value-annotated-expr))
-               (mode-style (cdr (assert-non-null (assoc mode '((:singleton . nil) (:first . :level-wide) (:middle . :level-wide) (:last . :level)))))))
-          (depict-division-style (markup-stream mode-style)
-            (if destructured
-              (let* ((body-annotated-stmts (lambda-body-annotated-stmts value-annotated-expr))
-                     (semicolon (not (eq mode :last)))
-                     (last-paragraph-style (if semicolon :statement-last :statement)))
-                (depict-statement-block-using (markup-stream last-paragraph-style)
-                  (if (eq mode :singleton)
+        (depict-text-environment world depict-env
+          (let* ((initial-env (general-production-action-env grammar general-production t))
+                 (type (scan-type world type-expr))
+                 (value-annotated-expr (nth-value 1 (scan-typed-value-or-begin world initial-env value-expr type)))
+                 (action-grammar-symbols (annotated-expr-grammar-symbols value-annotated-expr))
+                 (mode-style (cdr (assert-non-null (assoc mode '((:singleton . nil) (:first . :level-wide) (:middle . :level-wide) (:last . :level)))))))
+            (depict-division-style (markup-stream mode-style)
+              (if destructured
+                (let* ((body-annotated-stmts (lambda-body-annotated-stmts value-annotated-expr))
+                       (semicolon (not (eq mode :last)))
+                       (last-paragraph-style (if semicolon :statement-last :statement)))
+                  (depict-statement-block-using (markup-stream last-paragraph-style)
+                    (if (eq mode :singleton)
+                      (progn
+                        (depict-paragraph (markup-stream :statement)
+                          (depict-logical-block (markup-stream 0)
+                            (depict-semantic-keyword markup-stream 'proc :after)
+                            (depict-action-signature markup-stream action-name general-production action-grammar-symbols)
+                            (depict-break markup-stream 1)
+                            (depict-lambda-signature markup-stream world type-expr value-annotated-expr t)))
+                        (depict-function-body markup-stream world semicolon last-paragraph-style body-annotated-stmts))
+                      (progn
+                        (depict-paragraph (markup-stream :statement)
+                          (depict markup-stream :action-begin)
+                          (depict-general-production markup-stream general-production :reference action-grammar-symbols)
+                          (depict markup-stream :action-end)
+                          (depict-semantic-keyword markup-stream 'do :before))
+                        (depict-statements markup-stream world semicolon last-paragraph-style body-annotated-stmts)))))
+                
+                (let ((last-paragraph-style (if (member mode '(:singleton :last)) :statement-last :statement)))
+                  (if (eq (car value-annotated-expr) 'expr-annotation:begin)
                     (progn
                       (depict-paragraph (markup-stream :statement)
                         (depict-logical-block (markup-stream 0)
-                          (depict-semantic-keyword markup-stream 'proc :after)
                           (depict-action-signature markup-stream action-name general-production action-grammar-symbols)
-                          (depict-break markup-stream 1)
-                          (depict-lambda-signature markup-stream world type-expr value-annotated-expr t)))
-                      (depict-function-body markup-stream world semicolon last-paragraph-style body-annotated-stmts))
-                    (progn
-                      (depict-paragraph (markup-stream :statement)
-                        (depict markup-stream :action-begin)
-                        (depict-general-production markup-stream general-production :reference action-grammar-symbols)
-                        (depict markup-stream :action-end)
-                        (depict-semantic-keyword markup-stream 'do :before))
-                      (depict-statements markup-stream world semicolon last-paragraph-style body-annotated-stmts)))))
-              
-              (let ((last-paragraph-style (if (member mode '(:singleton :last)) :statement-last :statement)))
-                (if (eq (car value-annotated-expr) 'expr-annotation:begin)
-                  (progn
-                    (depict-paragraph (markup-stream :statement)
+                          (when (eq mode :singleton)
+                            (depict-colon-and-type markup-stream world type-expr))))
+                      (depict-begin markup-stream world value-annotated-expr last-paragraph-style))
+                    
+                    (depict-paragraph (markup-stream last-paragraph-style)
                       (depict-logical-block (markup-stream 0)
                         (depict-action-signature markup-stream action-name general-production action-grammar-symbols)
                         (when (eq mode :singleton)
-                          (depict-colon-and-type markup-stream world type-expr))))
-                    (depict-begin markup-stream world value-annotated-expr last-paragraph-style))
-                  
-                  (depict-paragraph (markup-stream last-paragraph-style)
-                    (depict-logical-block (markup-stream 0)
-                      (depict-action-signature markup-stream action-name general-production action-grammar-symbols)
-                      (when (eq mode :singleton)
-                        (depict-colon-and-type markup-stream world type-expr))
-                      (depict-equals-and-value markup-stream world value-annotated-expr "="))))))))))))
+                          (depict-colon-and-type markup-stream world type-expr))
+                        (depict-equals-and-value markup-stream world value-annotated-expr "=")))))))))))))
 
 
 ; (terminal-action <action-name> <terminal> <lisp-function>)
