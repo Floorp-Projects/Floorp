@@ -366,16 +366,16 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
 
     nsPage* addr = NULL;
     nsPageCount size = maxPages;
-    int zero_fd;
+    mZero_fd == NULL;
 
-    zero_fd = open("/dev/zero", O_RDWR);
+    mZero_fd = open("/dev/zero", O_RDWR);
 
     while (addr == NULL) {
         /* let the system place the heap */
         addr = (nsPage*)mmap(0, size << NS_PAGEMGR_PAGE_BITS,
                              PROT_READ | PROT_WRITE,
                              MAP_PRIVATE,
-                             zero_fd, 0);
+                             mZero_fd, 0);
         if (addr == (nsPage*)MAP_FAILED) {
             addr = NULL;
             size--;
@@ -433,6 +433,7 @@ nsPageMgr::FinalizePages()
 
 #else
     munmap((caddr_t)mMemoryBase, mPageCount << NS_PAGEMGR_PAGE_BITS);
+    close(mZero_fd);
 #endif
 }
 

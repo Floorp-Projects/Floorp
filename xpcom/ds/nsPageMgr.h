@@ -191,6 +191,11 @@ class nsPageMgr : public nsIPageManager, public nsIAllocator {
 #if defined(XP_BEOS)
 	area_id				mAid;
 #endif
+
+#if (! defined(VMS)) && (! defined(XP_BEOS)) && (! defined(XP_MAC)) && (! defined(XP_PC))
+    int mZero_fd;
+#endif
+
 };
 
 /******************************************************************************/
