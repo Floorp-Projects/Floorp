@@ -1208,7 +1208,7 @@ PRBool nsXULWindow::ConstrainToZLevel(
 
   if (NS_SUCCEEDED(mediator->CalculateZPosition(us, position, aReqBelow,
                                &newPosition, aActualBelow, &altered))) {
-    if (altered) {
+    if (altered || aImmediate) {
       if (newPosition == nsIWindowMediator::zLevelTop)
         *aPlacement = nsWindowZTop;
       else if (newPosition == nsIWindowMediator::zLevelBottom)
