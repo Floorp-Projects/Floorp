@@ -77,6 +77,8 @@
 #include "nsXULAttributeValue.h"
 #include "nsIXBLService.h"
 
+#include "nsGenericElement.h" // for nsCheapVoidArray
+
 class nsISizeOfHandler;
 
 class nsIDocument;
@@ -525,7 +527,7 @@ protected:
     nsXULPrototypeElement*              mPrototype;
     nsIDocument*                        mDocument;           // [WEAK]
     nsIContent*                         mParent;             // [WEAK]
-    nsVoidArray                         mChildren;           // [OWNER]
+    nsCheapVoidArray                    mChildren;           // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
 #ifdef DEBUG
     PRBool                              mIsScriptObjectRooted;

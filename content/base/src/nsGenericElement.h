@@ -99,6 +99,8 @@ public:
   PRBool RemoveElementAt(PRInt32 aIndex);
   void Compact();
 
+  void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
+
 private:
   typedef unsigned long PtrBits;
 
