@@ -1501,7 +1501,8 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
 	    if ( 0 == strcmp( ctrls[i]->ldctl_oid,
 		LDAP_X_CONTROL_PWPOLICY_RESPONSE )) {
 		unsigned long tag1=0, tag2=0, tag3=0;
-		int warnvalue=0, grclogins=-1, secsleft=-1, errvalue=-1;
+		long warnvalue=0;
+		int grclogins=-1, secsleft=-1, errvalue=-1;
 		static int err2str_size = sizeof(pwpolicy_err2str)/sizeof(pwpolicy_err2str[0]);
 
 		if ( ( ber = ber_init(&(ctrls[i]->ldctl_value)) ) == NULL ) {
@@ -1523,10 +1524,10 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
 			}
 			switch (tag2) {
 			case LDAP_TAG_PWP_SECSLEFT:
-				secsleft = warnvalue;
+				secsleft = (int)warnvalue;
 				break;
 			case LDAP_TAG_PWP_GRCLOGINS:
-				grclogins = warnvalue;
+				grclogins = (int)warnvalue;
 				break;
 			default:
 				/* error */
