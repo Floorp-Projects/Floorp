@@ -113,16 +113,7 @@ function setOfflineUI(offline)
 var goPrefWindow = 0;
 
 function getBrowserURL() {
-
-  try {
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    var url = prefs.getCharPref("browser.chromeURL");
-    if (url)
-      return url;
-  } catch(e) {
-  }
-  return "chrome://browser/content/navigator.xul";
+  return "chrome://browser/content/browser.xul";
 }
 
 function goPageSetup(printSettings)
