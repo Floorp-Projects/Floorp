@@ -17,12 +17,15 @@
 
 DEPTH		= ../..
 
+ifndef MODULAR_NETLIB
+
 MODULE		= cnetinit
 LIBRARY_NAME	= cnetinit
 
 CSRCS		= \
 	cnetinit.c	\
 	$(NULL)
+endif
 
 EXPORTS= cnetinit.h
 
