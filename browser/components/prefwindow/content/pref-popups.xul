@@ -45,10 +45,8 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="popupsPanel"
-      onload="init()"
+      onload="init(); loadPermissions();"
       headertitle="&title;">
-
-<script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
           
 <script type="application/x-javascript">
 <![CDATA[
@@ -69,7 +67,7 @@
     setButtons();
   }
 
-  /*** =================== PERMISSIONS CODE =================== ***/
+/*** =================== PERMISSIONS CODE =================== ***/
 
 var permissionsTreeView = {
   rowCount : 0,
@@ -104,22 +102,19 @@ function Permission(number, host, rawHost, type, capability) {
   this.capability = capability;
 }
 
+var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
+permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+  
 function loadPermissions() {
   // load permissions into a table
+  if (!permissionsTree)
+    permissionsTree = document.getElementById("permissionsTree");
+
   var enumerator = permissionmanager.enumerator;
   var count = 0;
   var contentStr;
-  var canStr, cannotStr;
-  if (dialogType == cookieType) {
-    canStr="can";
-    cannotStr="cannot";
-  } else if (dialogType == imageType) {
-    canStr="canImages";
-    cannotStr="cannotImages";
-  } else {
-    canStr="canPopups";
-    cannotStr="cannotPopups";
-  }
+  var dialogType = 2; // Popups
+ 
   while (enumerator.hasMoreElements()) {
     var nextPermission = enumerator.getNext();
     nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
@@ -129,22 +124,20 @@ function loadPermissions() {
         new Permission(count++, host,
                        (host.charAt(0)==".") ? host.substring(1,host.length) : host,
                        nextPermission.type,
-                       cookieBundle.getString(nextPermission.capability?canStr:cannotStr));
+                       "");
     }
   }
   permissionsTreeView.rowCount = permissions.length;
 
   // sort and display the table
   permissionsTree.treeBoxObject.view = permissionsTreeView;
-  PermissionColumnSort('rawHost');
-
-  // disable "remove all" button if there are no cookies/images
+  
+  // disable "remove all" button if there are no popups
   if (permissions.length == 0) {
     document.getElementById("removeAllPermissions").setAttribute("disabled","true");
   } else {
     document.getElementById("removeAllPermissions").removeAttribute("disabled");
   }
-
 }
 
 function PermissionSelected() {
@@ -193,8 +186,6 @@ function HandlePermissionKeyPress(e) {
 ]]>
 </script>
 
-<script src="chrome://communicator/content/wallet/CookieViewer.js"/>
-  
 <groupbox id="popupsArea" flex="1">
   <caption label="&popupBlocking.label;"/>
 
