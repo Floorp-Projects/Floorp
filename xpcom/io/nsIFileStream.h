@@ -25,18 +25,18 @@
 class nsFileSpec;
 
 /* a6cf90e8-15b3-11d2-932e-00805f8add32 */
-#define NS_IFILE_IID \
+#define NS_IOPENFILE_IID \
 { 0xa6cf90e8, 0x15b3, 0x11d2, \
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
 //========================================================================================
-class nsIFile
+class nsIOpenFile
 // Represents a file, and supports Open.
 //========================================================================================
 : public nsISupports
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IFILE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IOPENFILE_IID; return iid; }
 	NS_IMETHOD                         Open(
                                            const nsFileSpec& inFile,
                                            int nsprMode,
@@ -46,7 +46,7 @@ public:
                                            // are automatically opened on construction.
     NS_IMETHOD                         GetIsOpen(PRBool* outOpen) = 0;
 
-}; // class nsIFile
+}; // class nsIOpenFile
 
 /* a6cf90e8-15b3-11d2-932e-00805f8add32 */
 #define NS_IRANDOMACCESS_IID \
