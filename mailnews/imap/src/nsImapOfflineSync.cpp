@@ -107,8 +107,12 @@ nsImapOfflineSync::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
   // NS_BINDING_ABORTED is used for the user pressing stop, which
   // should cause us to abort the offline process. Other errors
   // should allow us to continue.
-  if (exitCode != NS_BINDING_ABORTED)
+  if (NS_SUCCEEDED(exitCode))
     rv = ProcessNextOperation();
+  // else if it's a non-stop error, and we're doing multiple folders,
+  // go to the next folder.
+  else if (exitCode != NS_BINDING_ABORTED && !m_singleFolderToUpdate)
+    rv = AdvanceToNextFolder();
   else if (m_listener)  // notify main observer.
     m_listener->OnStopRunningUrl(url, exitCode);
 
