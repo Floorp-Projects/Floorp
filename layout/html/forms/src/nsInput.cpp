@@ -355,7 +355,8 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, nsString& aValue) const
     return eContentAttr_HasValue;
   }
   else {
-    aValue = "";
+    //aValue = "";  // XXX string class was crashing on this line
+    aValue.SetLength(0);
     return eContentAttr_NoValue;
   }
 }
