@@ -738,6 +738,10 @@ EOF
     xx:WINNT:* | xx:WIN95:*)
 	echo i586-pc-msvc
 	exit 0 ;;
+# MKS Toolkit
+    [34567]86:Windows_NT:*)
+	echo i386-pc-mksnt
+	exit 0 ;;
 ###  End MozillaHack
     i*:PW*:*)
 	echo ${UNAME_MACHINE}-pc-pw32

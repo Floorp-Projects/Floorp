@@ -101,6 +101,9 @@ case "$target" in
 *-msvc*)
     _WIN32_MSVC=1
     ;;
+*-mksnt*)
+    _WIN32_MSVC=1
+    ;;
 esac
 
 if test -n "$_WIN32_MSVC"; then
@@ -537,7 +540,7 @@ elif test "$OS_ARCH" = "Windows_NT"; then
 # Moreover, it doesn't have the -p option, so we need to use uname -m.
 #
     OS_ARCH=WINNT
-#    OS_MINOR_RELEASE=`uname -v`
+    OS_MINOR_RELEASE=`uname -v`
     if test "$OS_MINOR_RELEASE" = "00"; then
         OS_MINOR_RELEASE=0
     fi
@@ -602,7 +605,7 @@ dnl ========================================================
 dnl Override of system specific host options
 dnl ========================================================
 case "$host" in
-*-mingw*|*-cygwin*|*-msvc*)
+*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
     ;;
 *-beos*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE"
@@ -1083,7 +1086,7 @@ case "$target" in
     esac    
     ;;
 
-*-mingw*|*-cygwin*|*-msvc*)
+*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
     AC_DEFINE(XP_PC)
     AC_DEFINE(WIN32)
     PR_MD_ARCH_DIR=windows
@@ -2063,7 +2066,7 @@ case "$target" in
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     ;;
-*-mingw*|*-cygwin*|*-uwin*|*-msvc*)
+*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
     dnl win32 does not use pthreads
     USE_PTHREADS=
     _PTHREAD_LDFLAGS=
