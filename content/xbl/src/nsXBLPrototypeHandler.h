@@ -51,9 +51,10 @@ class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
 
-#define NS_HANDLER_TYPE_XBL_JS      0
-#define NS_HANDLER_TYPE_XBL_COMMAND 1
-#define NS_HANDLER_TYPE_XUL         2
+#define NS_HANDLER_TYPE_XBL_JS          (1 << 0)
+#define NS_HANDLER_TYPE_XBL_COMMAND     (1 << 1)
+#define NS_HANDLER_TYPE_XUL             (1 << 2)
+#define NS_HANDLER_TYPE_PREVENTDEFAULT  (1 << 7)
 
 #define NS_PHASE_BUBBLING           0
 #define NS_PHASE_TARGET             1
@@ -67,7 +68,7 @@ public:
                         const PRUnichar* aAction, const PRUnichar* aCommand,
                         const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
                         const PRUnichar* aModifiers, const PRUnichar* aButton,
-                        const PRUnichar* aClickCount); 
+                        const PRUnichar* aClickCount, const PRUnichar* aPreventDefault);
 
   // This constructor is used only by XUL key handlers (e.g., <key>)
   nsXBLPrototypeHandler(nsIContent* aKeyElement);
@@ -110,7 +111,7 @@ protected:
                           const PRUnichar* aAction=nsnull, const PRUnichar* aCommand=nsnull,
                           const PRUnichar* aKeyCode=nsnull, const PRUnichar* aCharCode=nsnull,
                           const PRUnichar* aModifiers=nsnull, const PRUnichar* aButton=nsnull,
-                          const PRUnichar* aClickCount=nsnull);
+                          const PRUnichar* aClickCount=nsnull, const PRUnichar* aPreventDefault=nsnull);
 
   void GetEventType(nsAString& type);
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
@@ -143,7 +144,8 @@ protected:
                              // in order to be matched.
   PRUint8 mType;             // The type of the handler.  The handler is either a XUL key
                              // handler, an XBL "command" event, or a normal XBL event with
-                             // accompanying JavaScript.
+                             // accompanying JavaScript.  The high bit is used to indicate
+                             // whether this handler should prevent the default action.
   PRUint8 mMisc;             // Miscellaneous extra information.  For key events,
                              // stores whether or not we're a key code or char code.
                              // For mouse events, stores the clickCount.
@@ -163,7 +165,8 @@ NS_NewXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
                           const PRUnichar* aAction, const PRUnichar* aCommand,
                           const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
                           const PRUnichar* aModifiers, const PRUnichar* aButton,
-                          const PRUnichar* aClickCount, nsIXBLPrototypeHandler** aResult);
+                          const PRUnichar* aClickCount, const PRUnichar* aPreventDefault,
+                          nsIXBLPrototypeHandler** aResult);
 
 extern nsresult
 NS_NewXULKeyHandler(nsIContent* aHandlerElement, nsIXBLPrototypeHandler** aResult);

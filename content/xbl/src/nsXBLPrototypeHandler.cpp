@@ -97,10 +97,10 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent, const PRUn
                                              const PRUnichar* aAction, const PRUnichar* aCommand,
                                              const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
                                              const PRUnichar* aModifiers, const PRUnichar* aButton,
-                                             const PRUnichar* aClickCount)
+                                             const PRUnichar* aClickCount, const PRUnichar* aPreventDefault)
 {
   NS_INIT_REFCNT();
-  gRefCnt++;
+  ++gRefCnt;
   if (gRefCnt == 1)
     // Get the primary accelerator key.
     InitAccessKeys();
@@ -108,14 +108,14 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent, const PRUn
   mHandlerText = nsnull;
 
   ConstructPrototype(nsnull, aEvent, aPhase, aAction, aCommand, aKeyCode, aCharCode, aModifiers,
-                     aButton, aClickCount);
+                     aButton, aClickCount, aPreventDefault);
 }
 
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
 {
   NS_INIT_REFCNT();
   
-  gRefCnt++;
+  ++gRefCnt;
   if (gRefCnt == 1)
     // Get the primary accelerator key.
     InitAccessKeys();
@@ -126,8 +126,8 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
 
 nsXBLPrototypeHandler::~nsXBLPrototypeHandler()
 {
-  gRefCnt--;
-  if (mType != NS_HANDLER_TYPE_XUL && mHandlerText)
+  --gRefCnt;
+  if (!(mType & NS_HANDLER_TYPE_XUL) && mHandlerText)
     nsMemory::Free(mHandlerText);
 }
 
@@ -136,7 +136,7 @@ NS_IMPL_ISUPPORTS1(nsXBLPrototypeHandler, nsIXBLPrototypeHandler)
 NS_IMETHODIMP
 nsXBLPrototypeHandler::GetHandlerElement(nsIContent** aResult)
 {
-  if (mType == NS_HANDLER_TYPE_XUL) {
+  if (mType & NS_HANDLER_TYPE_XUL) {
     *aResult = mHandlerElement;
     NS_IF_ADDREF(*aResult);
   }
@@ -207,11 +207,21 @@ NS_IMETHODIMP
 nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
                                       nsIDOMEvent* aEvent)
 {
+  nsresult rv = NS_ERROR_FAILURE;
+
+  // Prevent default action?
+  if (mType & NS_HANDLER_TYPE_PREVENTDEFAULT) {
+    aEvent->PreventDefault();
+    // If we prevent default, then it's okay for
+    // mHandlerElement and mHandlerText to be null
+    rv = NS_OK;
+  }
+
   if (!mHandlerElement) // This works for both types of handlers.  In both cases, the union's var should be defined.
-    return NS_ERROR_FAILURE;
+    return rv;
 
   // See if our event receiver is a content node (and not us).
-  PRBool isXULKey = (mType == NS_HANDLER_TYPE_XUL);
+  PRBool isXULKey = (mType & NS_HANDLER_TYPE_XUL);
 
   //XUL handlers shouldn't be triggered by non-trusted events.
   if (isXULKey) {
@@ -231,7 +241,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
 
   // This is a special-case optimization to make command handling fast.
   // It isn't really a part of XBL, but it helps speed things up.
-  if (mType == NS_HANDLER_TYPE_XBL_COMMAND && !isReceiverCommandElement) {
+  if ((mType & NS_HANDLER_TYPE_XBL_COMMAND) && !isReceiverCommandElement) {
     // See if preventDefault has been set.  If so, don't execute.
     PRBool preventDefault;
     nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent(do_QueryInterface(aEvent));
@@ -401,7 +411,6 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     JSObject *global = boundGlobal->GetGlobalJSObject();
     JSContext *cx = (JSContext *)boundContext->GetNativeContext();
 
-    nsresult rv;
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
 
     // root
@@ -781,7 +790,7 @@ PRInt32 nsXBLPrototypeHandler::GetMatchingKeyCode(const nsAString& aKeyName)
 
   PRUint32 keyNameLength = keyName.Length();
   const char* keyNameStr = keyName.get();
-  for (int i = 0; i < (sizeof(gKeyCodes) / sizeof(gKeyCodes[0])); ++i)
+  for (PRUint16 i = 0; i < (sizeof(gKeyCodes) / sizeof(gKeyCodes[0])); ++i)
     if (keyNameLength == gKeyCodes[i].strlength &&
         !nsCRT::strcmp(gKeyCodes[i].str, keyNameStr))
       return gKeyCodes[i].keycode;
@@ -813,7 +822,7 @@ nsXBLPrototypeHandler::GetEventType(nsAString& aEvent)
 {
   mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::event, aEvent);
   
-  if (aEvent.IsEmpty() && mType == NS_HANDLER_TYPE_XUL)
+  if (aEvent.IsEmpty() && (mType & NS_HANDLER_TYPE_XUL))
     // If no type is specified for a XUL <key> element, let's assume that we're "keypress".
     aEvent = NS_LITERAL_STRING("keypress");
 }
@@ -824,14 +833,16 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
                                           const PRUnichar* aAction, const PRUnichar* aCommand,
                                           const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
                                           const PRUnichar* aModifiers, const PRUnichar* aButton,
-                                          const PRUnichar* aClickCount)
+                                          const PRUnichar* aClickCount, const PRUnichar* aPreventDefault)
 {
+  mType = 0;
+
   if (aKeyElement) {
-    mType = NS_HANDLER_TYPE_XUL;
+    mType |= NS_HANDLER_TYPE_XUL;
     mHandlerElement = aKeyElement;
   }
   else {
-    mType = aCommand ? NS_HANDLER_TYPE_XBL_COMMAND : NS_HANDLER_TYPE_XBL_JS;
+    mType |= aCommand ? NS_HANDLER_TYPE_XBL_COMMAND : NS_HANDLER_TYPE_XBL_JS;
     mHandlerText = nsnull;
   }
 
@@ -847,14 +858,12 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 
   nsAutoString event(aEvent);
   if (event.IsEmpty()) {
-    if (mType == NS_HANDLER_TYPE_XUL)
+    if (mType & NS_HANDLER_TYPE_XUL)
       GetEventType(event);
     if (event.IsEmpty())
       return;
   }
 
-  if (event.IsEmpty())
-    return;
   mEventName = getter_AddRefs(NS_NewAtom(event));
 
   if (aPhase) {
@@ -875,7 +884,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 
   // Modifiers are supported by both types of handlers (XUL and XBL).  
   nsAutoString modifiers(aModifiers);
-  if (mType == NS_HANDLER_TYPE_XUL)
+  if (mType & NS_HANDLER_TYPE_XUL)
     mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::modifiers, modifiers);
   
   if (!modifiers.IsEmpty()) {
@@ -904,7 +913,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 
   nsAutoString key(aCharCode);
   if (key.IsEmpty()) {
-    if (mType == NS_HANDLER_TYPE_XUL) {
+    if (mType & NS_HANDLER_TYPE_XUL) {
       mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::key, key);
       if (key.IsEmpty()) 
         mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::charcode, key);
@@ -923,13 +932,16 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   }
   else {
     key.Assign(aKeyCode);
-    if (mType == NS_HANDLER_TYPE_XUL)
+    if (mType & NS_HANDLER_TYPE_XUL)
       mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::keycode, key);
     
     if (!key.IsEmpty())
       mDetail = GetMatchingKeyCode(key);
   }
 
+  nsAutoString preventDefault(aPreventDefault);
+  if (preventDefault.Equals(NS_LITERAL_STRING("true")))
+    mType |= NS_HANDLER_TYPE_PREVENTDEFAULT;
 }
 
 PRBool
@@ -988,11 +1000,12 @@ NS_NewXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
                           const PRUnichar* aAction, const PRUnichar* aCommand,
                           const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
                           const PRUnichar* aModifiers, const PRUnichar* aButton,
-                          const PRUnichar* aClickCount, 
+                          const PRUnichar* aClickCount, const PRUnichar* aPreventDefault,
                           nsIXBLPrototypeHandler** aResult)
 {
   *aResult = new nsXBLPrototypeHandler(aEvent, aPhase, aAction, aCommand, aKeyCode,
-                                       aCharCode, aModifiers, aButton, aClickCount);
+                                       aCharCode, aModifiers, aButton, aClickCount,
+                                       aPreventDefault);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

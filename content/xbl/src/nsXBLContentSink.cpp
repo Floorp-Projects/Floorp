@@ -341,7 +341,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
       if (aTagName == nsXBLAtoms::constructor) {
         mSecondaryState = eXBL_InConstructor;
         nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
+        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull, nsnull,
                                   nsnull, nsnull, nsnull, nsnull, nsnull,
                                   getter_AddRefs(newHandler));
         newHandler->SetEventName(nsXBLAtoms::constructor);
@@ -350,7 +350,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
       else if (aTagName == nsXBLAtoms::destructor) {
         mSecondaryState = eXBL_InDestructor;
         nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
+        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull, nsnull,
                                   nsnull, nsnull, nsnull, nsnull, nsnull,
                                   getter_AddRefs(newHandler));
         newHandler->SetEventName(nsXBLAtoms::destructor);
@@ -405,15 +405,16 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts)
 {
   nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
 
-  const PRUnichar* event      = nsnull;
-  const PRUnichar* modifiers  = nsnull;
-  const PRUnichar* button     = nsnull;
-  const PRUnichar* clickcount = nsnull;
-  const PRUnichar* keycode    = nsnull;
-  const PRUnichar* charcode   = nsnull;
-  const PRUnichar* phase      = nsnull;
-  const PRUnichar* command    = nsnull;
-  const PRUnichar* action     = nsnull;
+  const PRUnichar* event          = nsnull;
+  const PRUnichar* modifiers      = nsnull;
+  const PRUnichar* button         = nsnull;
+  const PRUnichar* clickcount     = nsnull;
+  const PRUnichar* keycode        = nsnull;
+  const PRUnichar* charcode       = nsnull;
+  const PRUnichar* phase          = nsnull;
+  const PRUnichar* command        = nsnull;
+  const PRUnichar* action         = nsnull;
+  const PRUnichar* preventdefault = nsnull;
 
   for (; *aAtts; aAtts += 2) {
     // Get upper-cased key
@@ -444,6 +445,8 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts)
       command = aAtts[1];
     else if (nameAtom == nsXBLAtoms::action)
       action = aAtts[1];
+    else if (nameAtom == nsXBLAtoms::preventdefault)
+      preventdefault = aAtts[1];
     else {
        // Nope, it's some irrelevant attribute. Ignore it and move on.
      }
@@ -459,7 +462,8 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts)
   nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
   NS_NewXBLPrototypeHandler(event, phase, action, command, 
                             keycode, charcode, modifiers, button,
-                            clickcount, getter_AddRefs(newHandler));
+                            clickcount, preventdefault,
+                            getter_AddRefs(newHandler));
   if (newHandler) {
     // Add this handler to our chain of handlers.
     if (mHandler)

@@ -90,7 +90,7 @@ NS_NewXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
                           const PRUnichar* aAction, const PRUnichar* aCommand,
                           const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
                           const PRUnichar* aModifiers, const PRUnichar* aButton,
-                          const PRUnichar* aClickCount,
+                          const PRUnichar* aClickCount, const PRUnichar* aPreventDefault,
                           nsIXBLPrototypeHandler** aResult);
 
 extern nsresult
