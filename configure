@@ -2627,11 +2627,11 @@ alpha*-*-osf*)
     ;;
 
 *-hpux*)
+    DLL_SUFFIX="sl"
     if test ! "$GNU_CC"; then
 	DSO_CFLAGS="+Z"
     fi
-    DLL_SUFFIX="sl"
-    DSO_LDOPTS='-b -E -L$(DIST)/bin $(LDFLAGS)'
+    DSO_LDOPTS='-b -E -L$(DIST)/bin'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
     ;;
 
