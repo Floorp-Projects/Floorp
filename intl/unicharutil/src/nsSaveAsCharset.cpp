@@ -256,7 +256,9 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
           inStringLength > pos1 && IS_LOW_SURROGATE(inString[pos1])) {
         unMappedChar = SURROGATE_TO_UCS4(inString[pos1-1], inString[pos1]);
         pos1++;
-      };
+      } else {
+        unMappedChar = inString[pos1-1];
+      }
 
       rv = mEncoder->GetMaxLength(inString+pos1, inStringLength-pos1, &dstLength);
       if (NS_FAILED(rv)) 
