@@ -39,6 +39,7 @@ class nsIMsgStatusFeedback;
 
 class nsImapService : public nsIImapService,
                       public nsIMsgMessageService,
+                      public nsIMsgMessageFetchPartService,
                       public nsIProtocolHandler,
                       public nsIMsgProtocolInfo
 {
@@ -63,7 +64,9 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIProtocolHandler interface 
 	////////////////////////////////////////////////////////////////////////////////////////
-    NS_DECL_NSIPROTOCOLHANDLER
+  NS_DECL_NSIPROTOCOLHANDLER
+
+  NS_DECL_NSIMSGMESSAGEFETCHPARTSERVICE
 
 protected:
     PRUnichar GetHierarchyDelimiter(nsIMsgFolder* aMsgFolder);

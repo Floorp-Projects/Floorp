@@ -40,6 +40,7 @@
 #include "nsMsgUtils.h"
 #include "nsIStreamConverterService.h"
 #include "nsNetUtil.h"
+#include "nsIDocShellLoadInfo.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID,
                      NS_STREAMCONVERTERSERVICE_CID);
@@ -129,7 +130,11 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
   nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 
-  rv = PrepareMessageUrl(aMessageURI, aUrlListener, mailboxAction, getter_AddRefs(mailboxurl), aMsgWindow);
+  nsMailboxAction actionToUse = mailboxAction;
+  if (mailboxAction == nsIMailboxUrl::ActionOpenAttachment)
+    actionToUse = nsIMailboxUrl::ActionDisplayMessage;
+
+  rv = PrepareMessageUrl(aMessageURI, aUrlListener, actionToUse , getter_AddRefs(mailboxurl), aMsgWindow);
 
 	if (NS_SUCCEEDED(rv))
 	{
@@ -141,9 +146,20 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
 
 		// instead of running the mailbox url like we used to, let's try to run the url in the docshell...
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
-    // if we were given a webshell, run the url in the docshell..otherwise just run it normally.
+    // if we were given a docShell, run the url in the docshell..otherwise just run it normally.
     if (NS_SUCCEEDED(rv) && docShell)
-	  rv = docShell->LoadURI(url, nsnull);
+    {
+      nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+      // DIRTY LITTLE HACK --> if we are opening an attachment we want the docshell to
+      // treat this load as if it were a user click event. Then the dispatching stuff will be much
+      // happier.
+      if (mailboxAction == nsIMailboxUrl::ActionOpenAttachment)
+      {
+        docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+        loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
+      }
+	    rv = docShell->LoadURI(url, loadInfo);
+    }
     else
       rv = RunMailboxUrl(url, aDisplayConsumer); 
 	}
@@ -167,10 +183,24 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
                       nsIMailboxUrl::ActionDisplayMessage, aCharsetOveride, aURL);
 }
 
-/* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
-NS_IMETHODIMP nsMailboxService::OpenAttachment(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
+NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType, const char *aUrl, 
+                                            const char *aMessageUri, 
+                                            nsISupports *aDisplayConsumer, 
+                                            nsIMsgWindow *aMsgWindow, 
+                                            nsIUrlListener *aUrlListener)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsCAutoString partMsgUrl = aMessageUri;
+  
+  // try to extract the specific part number out from the url string
+  partMsgUrl += "?";
+  const char *part = PL_strstr(aUrl, "part=");
+  partMsgUrl += part;
+  partMsgUrl += "&type=";
+  partMsgUrl += aContentType;
+  return FetchMessage(partMsgUrl, aDisplayConsumer,
+                      aMsgWindow,aUrlListener,
+                      nsIMailboxUrl::ActionOpenAttachment, nsnull, nsnull);
+
 }
 
 
@@ -190,14 +220,15 @@ nsMailboxService::SaveMessageToDisk(const char *aMessageURI,
 
 	if (NS_SUCCEEDED(rv))
 	{
-        nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(mailboxurl);
-        if (msgUrl)
-        {
-		    msgUrl->SetMessageFile(aFile);
-            msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
-            msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
-        }
-		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
+    nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(mailboxurl);
+    if (msgUrl)
+    {
+		msgUrl->SetMessageFile(aFile);
+        msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
+        msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
+    }
+		
+    nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
 		rv = RunMailboxUrl(url);
 	}
 
@@ -216,15 +247,6 @@ NS_IMETHODIMP nsMailboxService::GetUrlForUri(const char *aMessageURI, nsIURI **a
     rv = mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
   return rv;
 }
-
-/* readonly attribute canFetchMimeParts; */
-NS_IMETHODIMP nsMailboxService::GetCanFetchMimeParts(PRBool *canFetchMimeParts)
-{
-  if (!canFetchMimeParts) return NS_ERROR_NULL_POINTER;
-  *canFetchMimeParts = PR_FALSE;
-  return NS_OK;
-}
-
 
 nsresult nsMailboxService::DisplayMessageNumber(const char *url,
                                                 PRUint32 aMessageNumber,

@@ -212,21 +212,16 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
   return rv;
 }
 
-/* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
-NS_IMETHODIMP nsNntpService::OpenAttachment(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
+
+NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType, const char *aUrl, 
+                                            const char *aMessageUri, 
+                                            nsISupports *aDisplayConsumer, 
+                                            nsIMsgWindow *aMsgWindow, 
+                                            nsIUrlListener *aUrlListener)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  // news doesn't know anything about opening attachments....
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-
-/* readonly attribute canFetchMimeParts; */
-NS_IMETHODIMP nsNntpService::GetCanFetchMimeParts(PRBool *canFetchMimeParts)
-{
-  if (!canFetchMimeParts) return NS_ERROR_NULL_POINTER;
-  *canFetchMimeParts = PR_FALSE;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsNntpService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL, nsIMsgWindow *aMsgWindow) 
 {

@@ -38,6 +38,7 @@
 #include "nsIImapMockChannel.h"
 #include "nsImapUtils.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellLoadInfo.h"
 #include "nsIRDFService.h"
 #include "nsIEventQueueService.h"
 #include "nsXPIDLString.h"
@@ -72,11 +73,12 @@ static PRBool gMIMEOnDemand = PR_FALSE;
 
 NS_IMPL_THREADSAFE_ADDREF(nsImapService);
 NS_IMPL_THREADSAFE_RELEASE(nsImapService);
-NS_IMPL_QUERY_INTERFACE4(nsImapService,
+NS_IMPL_QUERY_INTERFACE5(nsImapService,
                          nsIImapService,
                          nsIMsgMessageService,
                          nsIProtocolHandler,
-                         nsIMsgProtocolInfo)
+                         nsIMsgProtocolInfo,
+                         nsIMsgMessageFetchPartService)
 
 nsImapService::nsImapService()
 {
@@ -290,16 +292,75 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
   return rv;
 }
 
-/* readonly attribute canFetchMimeParts; */
-NS_IMETHODIMP nsImapService::GetCanFetchMimeParts(PRBool *canFetchMimeParts)
+NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType, const char *aUrl, 
+                                            const char *aMessageUri, 
+                                            nsISupports *aDisplayConsumer, 
+                                            nsIMsgWindow *aMsgWindow, 
+                                            nsIUrlListener *aUrlListener)
 {
-  if (!canFetchMimeParts) return NS_ERROR_NULL_POINTER;
-  *canFetchMimeParts = PR_TRUE;
-  return NS_OK;
+  nsresult rv = NS_OK;
+  // okay this is a little tricky....we may have to fetch the mime part
+  // or it may already be downloaded for us....the only way i can tell to 
+  // distinguish the two events is to search for ?section or ?part
+
+  nsCAutoString uri = aMessageUri;
+  nsCAutoString urlString = aUrl;
+  urlString.ReplaceSubstring("/;section", "?section");
+
+  // more stuff i don't understand
+  PRInt32 sectionPos = urlString.Find("?section");
+  // if we have a section field then we must be dealing with a mime part we need to fetchf
+  if (sectionPos > 0)
+  {
+    nsCAutoString mimePart;
+
+    urlString.Right(mimePart, urlString.Length() - sectionPos); 
+    uri.Append(mimePart);
+    uri += "&type=";
+    uri += aContentType;
+  }
+  else
+  {
+    // try to extract the specific part number out from the url string
+    uri += "?";
+    const char *part = PL_strstr(aUrl, "part=");
+    uri += part;
+    uri += "&type=";
+    uri += aContentType;
+  }
+  
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsXPIDLCString msgKey;
+  nsXPIDLCString uriMimePart;
+	nsCAutoString	folderURI;
+	nsMsgKey key;
+
+  rv = DecomposeImapURI(uri, getter_AddRefs(folder), getter_Copies(msgKey));
+	rv = nsParseImapMessageURI(uri, folderURI, &key, getter_Copies(uriMimePart));
+	if (NS_SUCCEEDED(rv))
+	{
+    nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
+		if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIImapUrl> imapUrl;
+      nsCAutoString urlSpec;
+      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
+      rv = CreateStartOfImapUrl(uri, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
+      if (NS_FAILED(rv)) 
+        return rv;
+      if (uriMimePart)
+      {
+        rv =  FetchMimePart(imapUrl, nsIImapUrl::nsImapOpenMimePart, folder, imapMessageSink,
+                        nsnull, aDisplayConsumer, msgKey, uriMimePart);
+      }
+    } // if we got a message sink
+  } // if we parsed the message uri
+
+  return rv;
 }
 
 /* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
-NS_IMETHODIMP nsImapService::OpenAttachment(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
+NS_IMETHODIMP nsImapService::FetchMimePart(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
 {
 	nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgFolder> folder;
@@ -425,15 +486,18 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
-    NS_ASSERTION (aImapUrl && aImapMailFolder &&  aImapMessage,"Oops ... null pointer");
-    if (!aImapUrl || !aImapMailFolder || !aImapMessage)
-        return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION (aImapUrl && aImapMailFolder &&  aImapMessage,"Oops ... null pointer");
+  if (!aImapUrl || !aImapMailFolder || !aImapMessage)
+      return NS_ERROR_NULL_POINTER;
 
-    nsCAutoString urlSpec;
-    rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
+  nsCAutoString urlSpec;
+  rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
+  nsImapAction actionToUse = aImapAction;
+  if (actionToUse == nsImapUrl::nsImapOpenMimePart)
+    actionToUse = nsIImapUrl::nsImapMsgFetch;
 
-    rv = aImapUrl->SetImapMessageSink(aImapMessage);
-    if (NS_SUCCEEDED(rv))
+  rv = aImapUrl->SetImapMessageSink(aImapMessage);
+  if (NS_SUCCEEDED(rv))
 	{
       nsXPIDLCString currentSpec;
       nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
@@ -466,7 +530,7 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
 		  // const char *. hopefully they will fix it soon.
 		  rv = url->SetSpec((char *) urlSpec.GetBuffer());
 
-	    rv = aImapUrl->SetImapAction(aImapAction /* nsIImapUrl::nsImapMsgFetch */);
+	    rv = aImapUrl->SetImapAction(actionToUse /* nsIImapUrl::nsImapMsgFetch */);
 	   if (aImapMailFolder && aDisplayConsumer)
 	   {
 			nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
@@ -486,7 +550,19 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
 
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
       if (NS_SUCCEEDED(rv) && docShell)
-         rv = docShell->LoadURI(url, nsnull);
+      {
+        nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+        // DIRTY LITTLE HACK --> if we are opening an attachment we want the docshell to
+        // treat this load as if it were a user click event. Then the dispatching stuff will be much
+        // happier.
+        if (aImapAction == nsImapUrl::nsImapOpenMimePart)
+        {
+          docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+          loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
+        }
+        
+        rv = docShell->LoadURI(url, loadInfo);
+      }
       else
       {
         nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
@@ -814,7 +890,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 		  // const char *. hopefully they will fix it soon.
 		  rv = url->SetSpec((char *) urlSpec.GetBuffer());
 
-	    rv = aImapUrl->SetImapAction(aImapAction /* nsIImapUrl::nsImapMsgFetch */);
+	    rv = aImapUrl->SetImapAction(aImapAction);
 	   if (aImapMailFolder && aDisplayConsumer)
 	   {
 			nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
@@ -834,7 +910,9 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
       if (NS_SUCCEEDED(rv) && docShell)
-         rv = docShell->LoadURI(url, nsnull);
+      {      
+        rv = docShell->LoadURI(url, nsnull);
+      }
       else
       {
         nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
