@@ -413,7 +413,7 @@ void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, const char *location)
             PRUint32 flags;
             pValue->attribute = nsMsgSearchAttrib::Subject;
             pHeaders->GetFlags(&flags);
-            char *reString = (flags & MSG_FLAG_HAS_RE) ? "Re:" : "";
+            char *reString = (flags & MSG_FLAG_HAS_RE) ? (char *)"Re:" : (char *)"";
             pHeaders->GetSubject(getter_Copies(subject));
             pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) subject); // hack. invoke cast operator by force
             newResult->AddValue (pValue);
