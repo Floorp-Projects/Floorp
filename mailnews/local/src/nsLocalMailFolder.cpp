@@ -44,6 +44,33 @@ static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
+nsresult nsParseLocalMessageURI(const char* uri, nsString& folderURI, nsMsgKey *key)
+{
+	if(!key)
+		return NS_ERROR_NULL_POINTER;
+
+	nsAutoString uriStr = uri;
+	PRInt32 keySeparator = uriStr.Find('#');
+	if(keySeparator != -1)
+	{
+		nsAutoString folderPath;
+		uriStr.Left(folderPath, keySeparator);
+		PRInt32 msfExtPos = folderPath.Find(".msf");
+		if(msfExtPos != -1)
+			folderPath.Left(folderURI, msfExtPos);
+		else
+			folderURI = folderPath;
+
+		nsAutoString keyStr;
+		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
+		PRInt32 errorCode;
+		*key = keyStr.ToInteger(&errorCode);
+
+		return errorCode;
+	}
+	return NS_ERROR_FAILURE;
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,6 +79,30 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE), mMailDatabase(nsnull)
 {
+		//XXXX This is a hack for the moment.  I'm assuming the only listener is our rdf:mailnews datasource.
+		//In reality anyone should be able to listen to folder changes. 
+
+		nsIRDFService* rdfService = nsnull;
+		nsIRDFDataSource* datasource = nsnull;
+
+		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+												nsIRDFService::GetIID(),
+												(nsISupports**) &rdfService);
+		if(NS_SUCCEEDED(rv))
+		{
+			if(NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:mailnews", &datasource)))
+			{
+				nsIFolderListener *folderListener;
+				if(NS_SUCCEEDED(datasource->QueryInterface(nsIFolderListener::GetIID(), (void**)&folderListener)))
+				{
+					AddFolderListener(folderListener);
+					NS_RELEASE(folderListener);
+				}
+				NS_RELEASE(datasource);
+			}
+			nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+		}
+
 //  NS_INIT_REFCNT(); done by superclass
 }
 
@@ -265,6 +316,8 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 
 	if(mMailDatabase)
 	{
+		//if(strcmp(path.GetLeafName(), "test3") != 0)
+		//	return mMailDatabase->EnumerateMessages(result);
 
 		mMailDatabase->AddListener(this);
 
@@ -448,7 +501,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::Rename(char *newName)
+NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const char *newName)
 {
 #ifdef HAVE_PORT
   // change the leaf name (stored separately)
@@ -885,6 +938,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
+{
+	if(mMailDatabase)
+		return(mMailDatabase->DeleteHeader(message, nsnull, PR_TRUE, PR_TRUE));
+
+	return NS_OK;
+}
+
+
 NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
                          nsIDBChangeListener * aInstigator)
 {
@@ -894,6 +956,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFla
 NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
+	nsIMessage *pMessage;
+	mMailDatabase->GetMsgHdrForKey(aKeyChanged, &pMessage);
+	nsString author, subject;
+	nsISupports *msgSupports;
+	if(NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+	{
+		for(int i = 0; i < mListeners->Count(); i++)
+		{
+			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+			listener->OnItemRemoved(this, msgSupports);
+			NS_RELEASE(listener);
+		}
+	}
+	NS_RELEASE(msgSupports);
+
 	return NS_OK;
 }
 
@@ -906,32 +983,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlag
 	nsISupports *msgSupports;
 	if(NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
 	{
-	
-		//XXXX This is a hack for the moment.  I'm assuming the only listener is our rdf:mailnews datasource.
-		//In reality anyone should be able to listen to folder changes. 
-		nsIRDFService* rdfService = nsnull;
-		nsIRDFDataSource* datasource = nsnull;
-
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-												nsIRDFService::GetIID(),
-												(nsISupports**) &rdfService);
-		if(NS_SUCCEEDED(rv))
+		for(int i = 0; i < mListeners->Count(); i++)
 		{
-			if(NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:mailnews", &datasource)))
-			{
-				nsIFolderListener *folderListener;
-				if(NS_SUCCEEDED(datasource->QueryInterface(nsIFolderListener::GetIID(), (void**)&folderListener)))
-				{
-					folderListener->OnItemAdded(this, msgSupports);
-					NS_RELEASE(folderListener);
-				}
-				NS_RELEASE(datasource);
-			}
-			nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+			listener->OnItemAdded(this, msgSupports);
+			NS_RELEASE(listener);
 		}
-		NS_RELEASE(msgSupports);
-
 	}
+	NS_RELEASE(msgSupports);
 
 	return NS_OK;
 }
@@ -940,3 +999,4 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer * 
 {
 	return NS_OK;
 }
+

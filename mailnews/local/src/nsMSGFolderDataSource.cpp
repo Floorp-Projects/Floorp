@@ -42,6 +42,9 @@
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgBaseCID.h"
 #include "nsCOMPtr.h"
+//This is a temporary dependency.  I need this for parsemessageURI.  In the future
+//we should have the nsIMessage have the ability to get the folder from it.
+#include "nsLocalMailFolder.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
@@ -369,7 +372,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     {
       nsAutoString date;
       rv = message->GetProperty("date", date);
-      createNode(date, target);
+	  createNode(date, target);
     }
     return rv;
   }
@@ -711,7 +714,11 @@ nsMSGFolderDataSource::DoCommand(nsISupportsArray* aSources,
     else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
 
       if (peq(aCommand, kNC_Delete)) {
-        // XXX delete message
+				nsIMsgFolder *folder;
+				if(rv = NS_SUCCEEDED(GetFolderFromMessage(message, &folder)))
+				{
+					rv = folder->DeleteMessage(message);
+				}
       }
       else if (peq(aCommand, kNC_Reply)) {
         // XXX reply to message
@@ -752,12 +759,57 @@ NS_IMETHODIMP nsMSGFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISup
 
 NS_IMETHODIMP nsMSGFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsISupports *item)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+	nsIMessage *message;
+	nsIRDFResource *parentResource;
+
+	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)&parentResource)))
+	{
+		//If we are adding a message
+		if(NS_SUCCEEDED(item->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
+		{
+			nsIRDFNode *itemNode;
+			if(NS_SUCCEEDED(item->QueryInterface(nsIRDFNode::GetIID(), (void**)&itemNode)))
+			{
+				//Notify folders that a message was deleted.
+				NotifyObservers(parentResource, kNC_MessageChild, itemNode, PR_FALSE);
+				NS_RELEASE(itemNode);
+			}
+			NS_RELEASE(message);
+		}
+		NS_RELEASE(parentResource);
+	}
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsMSGFolderDataSource::OnItemPropertyChanged(nsISupports *item, char *property, char *value)
+NS_IMETHODIMP nsMSGFolderDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,const char *value)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult nsMSGFolderDataSource::GetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder)
+{
+	nsresult rv;
+
+	const char *uri;
+	nsIRDFResource *resource;
+	if(NS_SUCCEEDED( rv = message->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
+	{
+		resource->GetValue(&uri);
+		nsString folderURIStr;
+		nsMsgKey key;
+		nsParseLocalMessageURI(uri, folderURIStr, &key);
+		char *folderURI = folderURIStr.ToNewCString();
+
+		nsIRDFResource *folderResource;
+		gRDFService->GetResource(folderURI, &folderResource);
+		delete[] folderURI;
+
+		rv = NS_SUCCEEDED(folderResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)folder));
+
+		NS_RELEASE(resource);
+		NS_RELEASE(folderResource);
+	}
+	return rv;
+
+}
 

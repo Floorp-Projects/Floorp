@@ -109,7 +109,7 @@ public:
 
   NS_IMETHOD OnItemRemoved(nsIFolder *parentFolder, nsISupports *item);
 
-  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, char *property, char *value);
+  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property, const char *value);
 
   // caching frequently used resources
 protected:
@@ -117,6 +117,8 @@ protected:
 	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
 														nsIRDFNode *object, PRBool assert);
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
+	nsresult  GetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder);
+
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;

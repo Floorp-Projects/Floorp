@@ -74,7 +74,7 @@ public:
 
 	NS_IMETHOD RemoveSubFolder (nsIMsgFolder *which);
 	NS_IMETHOD Delete ();
-	NS_IMETHOD Rename (char *newName);
+	NS_IMETHOD Rename (const char *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
   NS_IMETHOD GetChildNamed(nsString& name, nsISupports ** aChild);
@@ -101,7 +101,9 @@ public:
 	NS_IMETHOD RememberPassword(char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
 
-    virtual nsresult GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db);
+  virtual nsresult GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db);
+
+ 	NS_IMETHOD DeleteMessage(nsIMessage *message);
 
 	// nsIMsgMailFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
@@ -129,5 +131,8 @@ protected:
 	nsISupportsArray *mMessages;
 	nsMailDatabase* mMailDatabase;
 };
+
+extern nsresult
+nsParseLocalMessageURI(const char* uri, nsString& folderURI, nsMsgKey *key);
 
 #endif // nsMsgLocalMailFolder_h__
