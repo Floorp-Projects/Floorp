@@ -1,0 +1,97 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Netscape security libraries.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nssckbi.h"
+#include <winver.h>
+
+#define MY_LIBNAME "nssckbi"
+#define MY_FILEDESCRIPTION "NSS Builtin Trusted Root CAs"
+
+#ifdef _DEBUG
+#define MY_DEBUG_STR " (debug)"
+#define MY_FILEFLAGS_1 VS_FF_DEBUG
+#else
+#define MY_DEBUG_STR ""
+#define MY_FILEFLAGS_1 0x0L
+#endif
+#if NSS_BETA
+#define MY_FILEFLAGS_2 MY_FILEFLAGS_1|VS_FF_PRERELEASE
+#else
+#define MY_FILEFLAGS_2 MY_FILEFLAGS_1
+#endif
+
+#ifdef WINNT
+#define MY_FILEOS VOS_NT_WINDOWS32
+#else
+#define MY_FILEOS VOS__WINDOWS32
+#endif
+
+#define MY_INTERNAL_NAME MY_LIBNAME
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version-information resource
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION NSS_BUILTINS_LIBRARY_VERSION_MAJOR,NSS_BUILTINS_LIBRARY_VERSION_MINOR,0,0
+ PRODUCTVERSION NSS_BUILTINS_LIBRARY_VERSION_MAJOR,NSS_BUILTINS_LIBRARY_VERSION_MINOR,0,0
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+ FILEFLAGS MY_FILEFLAGS_2
+ FILEOS MY_FILEOS
+ FILETYPE VFT_DLL
+ FILESUBTYPE 0x0L // not used
+
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0" // Lang=US English, CharSet=Unicode
+        BEGIN
+            VALUE "CompanyName", "Netscape Communications Corporation\0"
+            VALUE "FileDescription", MY_FILEDESCRIPTION MY_DEBUG_STR "\0"
+            VALUE "FileVersion", NSS_BUILTINS_LIBRARY_VERSION "\0"
+            VALUE "InternalName", MY_INTERNAL_NAME "\0"
+            VALUE "LegalCopyright", "Copyright \251 1994-2001 Netscape Communications Corporation\0"
+            VALUE "OriginalFilename", MY_INTERNAL_NAME ".dll\0"
+            VALUE "ProductName", "Network Security Services\0"
+            VALUE "ProductVersion", NSS_BUILTINS_LIBRARY_VERSION "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
