@@ -1251,61 +1251,35 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 void
 nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTopDelta )
 {	
-	// these come in backwards to how we're used to thinking about them.
-	inLeftDelta *= -1;
-	inTopDelta *= -1;
-	
 	// Get Frame in local coords from clip rect (there might be a border around view)
 	StRegionFromPool clipRgn;
-	if ( !clipRgn )
-	  return;
+	if ( !clipRgn ) return;
 	::GetClip(clipRgn);
-#if TARGET_CARBON
+	::SectRgn(clipRgn, mVisRegion, clipRgn);
+
 	Rect frame;
 	::GetRegionBounds(clipRgn, &frame);
-#else
-	Rect frame = (**clipRgn).rgnBBox;
-#endif
-	StRegionFromPool totalView;
-	if ( !totalView )
-	  return;
-	::RectRgn(totalView, &frame);
+
+	StRegionFromPool totalVisRgn;
+	if ( !totalVisRgn ) return;
+	::RectRgn(totalVisRgn, &frame);
 	
+		// compute the source and destination of copybits
 	Rect source = inRectToScroll;
-	
-#if 0
-	// <pcb> what is this supposed to be doing?
-	if ( inTopDelta > 0 )
-		source.top += inTopDelta;
-	else if ( inTopDelta < 0 )
-		source.bottom -= inTopDelta;
-	if ( inLeftDelta > 0 )
-		source.left += inLeftDelta;
-	else if ( inLeftDelta < 0 )
-		source.right -= inLeftDelta;	
-#endif
-	
-	// compute the destination of copybits (post-scroll)
+	SectRect(&source, &frame, &source);
+
 	Rect dest = source;
-	if ( inTopDelta ) {
-		dest.top -= inTopDelta;
-		dest.bottom -= inTopDelta;
-	}
-	if ( inLeftDelta ) {
-		dest.left -= inLeftDelta;
-		dest.right -= inLeftDelta;
-	}
-	
+	::OffsetRect(&dest, inLeftDelta, inTopDelta);
+
 	// compute the area that is to be updated by subtracting the dest from the visible area
-	StRegionFromPool updateRgn;
-	if ( !updateRgn )
-	  return;
-	::RectRgn(updateRgn, &frame);
 	StRegionFromPool destRgn;
-	if ( !destRgn )
-	  return;
+	if ( !destRgn ) return;
 	::RectRgn(destRgn, &dest);		
-	::DiffRgn ( updateRgn, destRgn, updateRgn );
+
+	StRegionFromPool updateRgn;
+	if ( !updateRgn ) return;
+	::RectRgn(updateRgn, &frame);
+	::DiffRgn (updateRgn, destRgn, updateRgn);
 		
 	if(::EmptyRgn(mWindowPtr->visRgn))		
 	{
@@ -1321,19 +1295,17 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 	{
 		// compute the non-visable region
 		StRegionFromPool nonVisableRgn;
-		if ( !nonVisableRgn )
-		  return;
-		::DiffRgn ( totalView, mWindowPtr->visRgn, nonVisableRgn );
+		if ( !nonVisableRgn ) return;
+		::DiffRgn ( totalVisRgn, mWindowPtr->visRgn, nonVisableRgn );
 		
 		// compute the extra area that may need to be updated
 		// scoll the non-visable region to determine what needs updating
-		::OffsetRgn ( nonVisableRgn, -inLeftDelta, -inTopDelta );
+		::OffsetRgn ( nonVisableRgn, inLeftDelta, inTopDelta );
 		
 		// calculate a mask region to not copy the non-visble portions of the window from the port
 		StRegionFromPool copyMaskRgn;
-		if ( !copyMaskRgn )
-		  return;
-		::DiffRgn(totalView, nonVisableRgn, copyMaskRgn);
+		if ( !copyMaskRgn ) return;
+		::DiffRgn(totalVisRgn, nonVisableRgn, copyMaskRgn);
 		
 		// use copybits to simulate a ScrollRect()
 		RGBColor black = { 0, 0, 0 };
@@ -1359,10 +1331,7 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 #else
 	::InvalRgn(updateRgn);
 #endif
-
-  // NOTE: regions are cleaned up for us automagically by dtor's.
-  
-} // ScrollBits
+}
 
 
 //-------------------------------------------------------------------------
@@ -1395,8 +1364,10 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 	Rect macRect;
 	nsRectToMacRect(scrollRect, macRect);
 
+
 	StartDraw();
 
+#if 1
 		// Clip to the windowRegion instead of the visRegion (note: the visRegion
 		// is equal to the windowRegion minus the children). The result is that
 		// ScrollRect() scrolls the visible bits of this widget as well as its children.
@@ -1404,7 +1375,11 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 		// Scroll the bits now. We've rolled our own because ::ScrollRect looks ugly
 		ScrollBits(macRect,aDx,aDy);
-
+#else
+		StRegionFromPool updateRgn;
+		::ScrollRect(&macRect, aDx, aDy, updateRgn);
+		::InvalRgn(updateRgn);
+#endif
 	EndDraw();
 
 scrollChildren:
