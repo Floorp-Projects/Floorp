@@ -2391,6 +2391,8 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 
 	if (queryEncodingStr.Length() > 0)
 	{
+ 		// remember query charset string
+ 		mQueryEncodingStr = queryEncodingStr;
 		// convert from escaped-UTF_8, to unicode, and then to
 		// the charset indicated by the dataset in question
 
@@ -2584,6 +2586,29 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		}
 		if (searchText.Length() > 0)
 		{
+ 			// apply charset conversion to the search text
+ 			if (!mQueryEncodingStr.IsEmpty())
+ 			{
+ 				nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_PROGID, &rv);
+ 				if (NS_SUCCEEDED(rv))
+ 				{
+ 					nsCAutoString	escapedSearchText;
+ 					escapedSearchText.AssignWithConversion(searchText);
+ 					nsCAutoString	aCharset;
+ 					aCharset.AssignWithConversion(mQueryEncodingStr);
+ 					PRUnichar	*uni = nsnull;
+ 					if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert(aCharset, escapedSearchText, &uni)) && (uni))
+ 					{
+ 						char	*convertedSearchText = nsnull;
+ 						if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape("UTF-8", uni, &convertedSearchText)))
+ 						{
+ 							searchText.AssignWithConversion(convertedSearchText);
+ 							Recycle(convertedSearchText);
+ 						}
+						Recycle(uni);
+ 					}
+ 				}
+ 			}
 			// remember the text of the last search
 			RememberLastSearchText(searchText.GetUnicode());
 
