@@ -175,6 +175,10 @@ inline nscolor nsCSSValue::GetColorValue(void) const
 #define NS_CSS_TEXT_SID   \
 {0xfe13ce94, 0xb48a, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
 
+// SID for the nsCSSDisplay struct {fe13ce95-b48a-11d1-9ca5-0060088f9ff7}
+#define NS_CSS_DISPLAY_SID   \
+{0xfe13ce95, 0xb48a, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
+
 // SID for the nsCSSMargin struct {fe6019d4-b48a-11d1-9ca5-0060088f9ff7}
 #define NS_CSS_MARGIN_SID   \
 {0xfe6019d4, 0xb48a, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
@@ -214,6 +218,8 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValue mBackPositionX;
   nsCSSValue mBackPositionY;
   nsCSSValue mBackFilter;
+  nsCSSValue mCursor;
+  nsCSSValue mCursorImage;
 };
 
 struct nsCSSText : public nsCSSStruct  {
@@ -225,10 +231,20 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mDecoration;
   nsCSSValue mVertAlign;
   nsCSSValue mTransform;
-  nsCSSValue mHorzAlign;
+  nsCSSValue mTextAlign;
   nsCSSValue mIndent;
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
+};
+
+struct nsCSSDisplay : public nsCSSStruct  {
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue mDirection;
+  nsCSSValue mDisplay;
+  nsCSSValue mFloat;
+  nsCSSValue mClear;
 };
 
 struct nsCSSRect {
@@ -268,9 +284,6 @@ struct nsCSSPosition : public nsCSSStruct  {
   nsCSSValue  mOverflow;
   nsCSSValue  mZIndex;
   nsCSSValue  mVisibility;
-  nsCSSValue  mFloat;
-  nsCSSValue  mClear;
-  nsCSSValue  mDisplay;
   nsCSSValue  mFilter;
 };
 
