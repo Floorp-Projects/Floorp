@@ -115,6 +115,7 @@
 #include "rdf.h"
 #include "rdfutil.h"
 #include "nsIFrame.h"
+#include "nsISelectElement.h"
 
 //----------------------------------------------------------------------
 //
@@ -4737,6 +4738,15 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
                 return NS_ERROR_UNEXPECTED;
 
             htmlformctrl->SetForm(docform);
+
+            // check to see if the form element is a select
+            // if it is, then tell it all the content is there, 
+            // even though the option haven't been added yet.
+            nsresult srv;
+            nsCOMPtr<nsISelectElement> select = do_QueryInterface(element, &srv);
+            if (NS_SUCCEEDED(srv)) {
+              srv = select->DoneAddingContent();
+            }        
         }
     }
     else {
