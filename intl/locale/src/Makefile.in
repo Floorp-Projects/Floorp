@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= locale
 LIBRARY_NAME	= nslocale_s
 REQUIRES	= xpcom \
+		  gfx \
 		  string \
 		  uconv \
 		  unicharutil \
