@@ -345,24 +345,16 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresCo
             webShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set   
             webShell->GetMarginHeight(&frameMarginHeight); 
             if ((frameMarginWidth >= 0) && (0 > bodyMarginWidth)) { // set in <frame> & not in <body> 
-              if (eCompatibility_NavQuirks == mode) { // allow 0 margins
-                if ((0 > bodyMarginHeight) && (0 > frameMarginHeight)) { // another nav quirk 
+              if (eCompatibility_NavQuirks == mode) {
+                if ((0 > bodyMarginHeight) && (0 > frameMarginHeight)) { // nav quirk 
                   frameMarginHeight = 0;
-                }
-              } else { // margins are at least 1 pixel
-                if (0 == frameMarginWidth) {
-                  frameMarginWidth = pixel;
                 }
               }
             }
             if ((frameMarginHeight >= 0) && (0 > bodyMarginHeight)) { // set in <frame> & not in <body> 
-              if (eCompatibility_NavQuirks == mode) { // allow 0 margins
-                if ((0 > bodyMarginWidth) && (0 > frameMarginWidth)) { // another nav quirk 
+              if (eCompatibility_NavQuirks == mode) {
+                if ((0 > bodyMarginWidth) && (0 > frameMarginWidth)) { // nav quirk
                   frameMarginWidth = 0;
-                }
-              } else { // margins are at least 1 pixel
-                if (0 == frameMarginHeight) {
-                  frameMarginHeight = pixel;
                 }
               }
             }
