@@ -1,0 +1,15 @@
+
+[object, uuid(E628ED10-9452-11d2-B7EA-00805F05FFA5)]
+interface nsINetNewsgroup {
+  
+  attribute string prettyName;
+  
+  attribute string password;
+  attribute string username;
+
+  attribute boolean needsExtraInfo;
+  
+  
+};
+
+
