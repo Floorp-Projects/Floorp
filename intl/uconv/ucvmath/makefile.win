@@ -27,6 +27,9 @@ DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 MODULE=uconv
 LIBRARY_NAME=ucvmath
 MODULE_NAME=nsUCvMathModule
+REQUIRES         =	xpcom \
+                    string \
+                    $(NULL)
 
 CPPSRCS =				\
 	nsUnicodeToTeXCMRttf.cpp 	\

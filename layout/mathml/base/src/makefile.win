@@ -24,6 +24,19 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layoutmathmlbase_s 
 MODULE=layout 
+REQUIRES    = xpcom \
+              content \
+			  widget \
+			  string \
+			  gfx \
+			  locale \
+			  webshell \
+			  necko \
+			  dom \
+			  view \
+			  docshell \
+			  webbrowser_core \
+              $(NULL)
 
 DEFINES= -DWIN32_LEAN_AND_MEAN
 
