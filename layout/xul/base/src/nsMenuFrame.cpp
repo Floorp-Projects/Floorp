@@ -581,7 +581,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
           while (curr) {
             nsCOMPtr<nsIContent> child;
             curr->GetContent(getter_AddRefs(child));
-            if (selectedContent == child.get()) {
+            if (selectedContent == child) {
               nsCOMPtr<nsIMenuFrame> menuframe(do_QueryInterface(curr));
               if (menuframe)
                 menuPopup->SetCurrentMenuItem(menuframe);
