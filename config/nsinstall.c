@@ -247,7 +247,12 @@ main(int argc, char **argv)
 
     if (!cwd) {
 #ifndef NEEDS_GETCWD
+#ifndef GETCWD_CANT_MALLOC
 	cwd = getcwd(0, PATH_MAX);
+#else
+	cwd = malloc(PATH_MAX + 1);
+	cwd = getcwd(cwd, PATH_MAX);
+#endif
 #else
 	cwd = malloc(PATH_MAX + 1);
 	cwd = getwd(cwd);
@@ -256,7 +261,12 @@ main(int argc, char **argv)
 
     xchdir(todir);
 #ifndef NEEDS_GETCWD
+#ifndef GETCWD_CANT_MALLOC
     todir = getcwd(0, PATH_MAX);
+#else
+    todir = malloc(PATH_MAX + 1);
+    todir = getcwd(todir, PATH_MAX);
+#endif
 #else
     todir = malloc(PATH_MAX + 1);
     todir = getwd(todir);
