@@ -25,6 +25,7 @@
 
 #include "nsCOMPtr.h"
 
+#include "nsIPlaintextEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsITableEditor.h"
 #include "nsIEditorMailSupport.h"
@@ -49,14 +50,13 @@ class nsIDOMEventReceiver;
  * Use to edit HTML document represented as a DOM tree. 
  */
 class nsHTMLEditor : public nsEditor,
+                     public nsIPlaintextEditor,
                      public nsIHTMLEditor,
                      public nsIEditorMailSupport,
                      public nsITableEditor,
                      public nsIEditorStyleSheets,
                      public nsICSSLoaderObserver
-                    
 {
-
   typedef enum {eNoOp, eReplaceParent=1, eInsertParent=2} BlockTransformationType;
 
 public:
@@ -87,16 +87,10 @@ public:
            nsHTMLEditor();
   virtual  ~nsHTMLEditor();
 
+  /* ------------ nsIPlaintextEditor methods -------------- */
+  NS_DECL_NSIPLAINTEXTEDITOR
+
   /* ------------ nsIHTMLEditor methods -------------- */
-
-  NS_IMETHOD EditorKeyPress(nsIDOMKeyEvent* aKeyEvent);
-  NS_IMETHOD TypedText(const nsString& aString, PRInt32 aAction);
-
-  NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);
-  NS_IMETHOD GetDocumentLength(PRInt32 *aCount);
-  NS_IMETHOD SetMaxTextLength(PRInt32 aMaxTextLength);
-  NS_IMETHOD GetMaxTextLength(PRInt32& aMaxTextLength);
-
   NS_IMETHOD SetInlineProperty(nsIAtom *aProperty, 
                              const nsString *aAttribute,
                              const nsString *aValue);
@@ -116,19 +110,15 @@ public:
   NS_IMETHOD IncreaseFontSize();
   NS_IMETHOD DecreaseFontSize();
 
-  NS_IMETHOD InsertBreak();
-  NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD InsertHTML(const nsString &aInputString);
   NS_IMETHOD InsertHTMLWithCharset(const nsString& aInputString,
                                    const nsString& aCharset);
   NS_IMETHOD RebuildDocumentFromSource(const nsString& aSourceString);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   
-  NS_IMETHOD DeleteSelection(EDirection aAction);
   NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode);
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetCaretToDocumentStart();
 
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
 
@@ -175,8 +165,6 @@ public:
 
   /* ------------ nsIEditorMailSupport methods -------------- */
 
-  NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn);
-  NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn);
   NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText, nsIDOMNode **aNodeInserted);
   NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation,
@@ -250,6 +238,10 @@ public:
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
   
+  NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);
+
+  NS_IMETHOD DeleteSelection(EDirection aAction);
+
   NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
 
   /** we override this here to install event listeners */
@@ -307,6 +299,7 @@ public:
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
 
   /* ------------ Utility Routines, not part of public API -------------- */
+  NS_IMETHOD TypedText(const PRUnichar* aString, PRInt32 aAction);
   nsresult InsertNodeAtPoint(nsIDOMNode *aNode, 
                                 nsIDOMNode *aParent, 
                                 PRInt32 aOffset, 
@@ -608,8 +601,10 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mDragListenerP;
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
   PRBool 	mIsComposing;
-  PRInt32 mMaxTextLength;
   
+  // Used by nsIPlaintextEditor but not html editors -- factor me!
+  PRInt32 mMaxTextLength;
+
   nsCOMPtr<nsIAtom> mBoldAtom;
   nsCOMPtr<nsIAtom> mItalicAtom;
   nsCOMPtr<nsIAtom> mUnderlineAtom;

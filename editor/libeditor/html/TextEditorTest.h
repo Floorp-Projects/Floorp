@@ -27,7 +27,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
+#include "nsIPlaintextEditor.h"
 
 class TextEditorTest
 {
@@ -48,7 +48,7 @@ protected:
 
   nsresult TestTextProperties();
 
-  nsCOMPtr<nsIHTMLEditor> mTextEditor;
+  nsCOMPtr<nsIPlaintextEditor> mTextEditor;
   nsCOMPtr<nsIEditor> mEditor;
 };
 

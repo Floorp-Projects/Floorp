@@ -23,6 +23,7 @@
 #include <stdio.h>
 
 #include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
 #include "TextEditorTest.h"
 #include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
@@ -70,15 +71,13 @@ nsresult TextEditorTest::RunUnitTest(PRInt32 *outNumTests, PRInt32 *outNumTestsF
   // shouldn't we just bail on error here?
   
   // insert some simple text
-  nsString docContent; docContent.AssignWithConversion("1234567890abcdefghij1234567890");
-  result = mTextEditor->InsertText(docContent);
+  result = mTextEditor->InsertText(NS_LITERAL_STRING("1234567890abcdefghij1234567890"));
   TEST_RESULT(result);
   (*outNumTests)++;
   (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);
   
   // insert some more text
-  nsString docContent2; docContent2.AssignWithConversion("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere");
-  result = mTextEditor->InsertText(docContent2);
+  result = mTextEditor->InsertText(NS_LITERAL_STRING("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere"));
   TEST_RESULT(result);
   (*outNumTests)++;
   (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);
@@ -122,13 +121,13 @@ nsresult TextEditorTest::TestInsertBreak()
   selection->Collapse(anchor, 0);
   // insert one break
   printf("inserting a break\n");
-  result = mTextEditor->InsertBreak();
+  result = mTextEditor->InsertLineBreak();
   TEST_RESULT(result);
   mEditor->DebugDumpContent();
 
   // insert a second break adjacent to the first
   printf("inserting a second break\n");
-  result = mTextEditor->InsertBreak();
+  result = mTextEditor->InsertLineBreak();
   TEST_RESULT(result);
   mEditor->DebugDumpContent();
     
@@ -166,17 +165,23 @@ nsresult TextEditorTest::TestTextProperties()
   textData->GetLength(&length);
   selection->Collapse(textNode, 0);
   selection->Extend(textNode, length);
+
+  nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(mTextEditor));
+  if (!htmlEditor)
+    return NS_ERROR_FAILURE;
+
   PRBool any = PR_FALSE;
   PRBool all = PR_FALSE;
   PRBool first=PR_FALSE;
-  result = mTextEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
+
+  result = htmlEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
   TEST_RESULT(result);
   NS_ASSERTION(PR_FALSE==first, "first should be false");
   NS_ASSERTION(PR_FALSE==any, "any should be false");
   NS_ASSERTION(PR_FALSE==all, "all should be false");
-  result = mTextEditor->SetInlineProperty(nsIEditProperty::b, nsnull, nsnull);
+  result = htmlEditor->SetInlineProperty(nsIEditProperty::b, nsnull, nsnull);
   TEST_RESULT(result);
-  result = mTextEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
+  result = htmlEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
   TEST_RESULT(result);
   NS_ASSERTION(PR_TRUE==first, "first should be true");
   NS_ASSERTION(PR_TRUE==any, "any should be true");
@@ -185,9 +190,9 @@ nsresult TextEditorTest::TestTextProperties()
 
   // remove the bold we just set
   printf("set the whole first text node to not bold\n");
-  result = mTextEditor->RemoveInlineProperty(nsIEditProperty::b, nsnull);
+  result = htmlEditor->RemoveInlineProperty(nsIEditProperty::b, nsnull);
   TEST_RESULT(result);
-  result = mTextEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
+  result = htmlEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
   TEST_RESULT(result);
   NS_ASSERTION(PR_FALSE==first, "first should be false");
   NS_ASSERTION(PR_FALSE==any, "any should be false");
@@ -198,23 +203,23 @@ nsresult TextEditorTest::TestTextProperties()
   printf("set the first text node (1, length-1) to bold and italic, and (2, length-1) to underline.\n");
   selection->Collapse(textNode, 1);
   selection->Extend(textNode, length-1);
-  result = mTextEditor->SetInlineProperty(nsIEditProperty::b, nsnull, nsnull);
+  result = htmlEditor->SetInlineProperty(nsIEditProperty::b, nsnull, nsnull);
   TEST_RESULT(result);
-  result = mTextEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
+  result = htmlEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
   TEST_RESULT(result);
   NS_ASSERTION(PR_TRUE==first, "first should be true");
   NS_ASSERTION(PR_TRUE==any, "any should be true");
   NS_ASSERTION(PR_TRUE==all, "all should be true");
   mEditor->DebugDumpContent();
   // make all that same text italic
-  result = mTextEditor->SetInlineProperty(nsIEditProperty::i, nsnull, nsnull);
+  result = htmlEditor->SetInlineProperty(nsIEditProperty::i, nsnull, nsnull);
   TEST_RESULT(result);
-  result = mTextEditor->GetInlineProperty(nsIEditProperty::i, nsnull, nsnull, first, any, all);
+  result = htmlEditor->GetInlineProperty(nsIEditProperty::i, nsnull, nsnull, first, any, all);
   TEST_RESULT(result);
   NS_ASSERTION(PR_TRUE==first, "first should be true");
   NS_ASSERTION(PR_TRUE==any, "any should be true");
   NS_ASSERTION(PR_TRUE==all, "all should be true");
-  result = mTextEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
+  result = htmlEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
   TEST_RESULT(result);
   NS_ASSERTION(PR_TRUE==first, "first should be true");
   NS_ASSERTION(PR_TRUE==any, "any should be true");
@@ -235,9 +240,9 @@ nsresult TextEditorTest::TestTextProperties()
   NS_ASSERTION(length==915, "wrong text node");
   selection->Collapse(textNode, 1);
   selection->Extend(textNode, length-2);
-  result = mTextEditor->SetInlineProperty(nsIEditProperty::u, nsnull, nsnull);
+  result = htmlEditor->SetInlineProperty(nsIEditProperty::u, nsnull, nsnull);
   TEST_RESULT(result);
-  result = mTextEditor->GetInlineProperty(nsIEditProperty::u, nsnull, nsnull, first, any, all);
+  result = htmlEditor->GetInlineProperty(nsIEditProperty::u, nsnull, nsnull, first, any, all);
   TEST_RESULT(result);
   NS_ASSERTION(PR_TRUE==first, "first should be true");
   NS_ASSERTION(PR_TRUE==any, "any should be true");

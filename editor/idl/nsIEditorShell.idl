@@ -189,10 +189,8 @@ interface nsIEditorShell : nsISupports
   /* Charset Menu */
   wstring GetDocumentCharacterSet();
   void SetDocumentCharacterSet(in wstring characterSet);
-  
+
   /* Structure change */
-       /* TypedText actionToTake param is an enum - values in nsIHTMLEditor.h */
-  void TypedText(in wstring textToInsert, in PRInt32 actionToTake);
   void InsertText(in wstring textToInsert);
   /* Insert HTML source at current location (replace current selection) */
   void InsertSource(in wstring textToInsert);

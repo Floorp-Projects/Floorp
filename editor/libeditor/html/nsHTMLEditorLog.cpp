@@ -160,28 +160,7 @@ nsHTMLEditorLog::DeleteSelection(nsIEditor::EDirection aAction)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::TypedText(const nsString& aStringToInsert, PRInt32 aAction)
-{
-  nsAutoHTMLEditorLogLock logLock(this);
-
-  if (!mLocked && mFileSpec)
-  {
-    PrintSelection();
-
-    Write("window.editorShell.TypedText(\"");
-    PrintUnicode(aStringToInsert);
-    Write("\", ");
-    WriteInt("%d", aAction);
-    Write(");\n");
-
-    Flush();
-  }
-
-  return nsHTMLEditor::TypedText(aStringToInsert, aAction);
-}
-
-NS_IMETHODIMP
-nsHTMLEditorLog::InsertText(const nsString& aStringToInsert)
+nsHTMLEditorLog::InsertText(const PRUnichar* aStringToInsert)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -190,7 +169,8 @@ nsHTMLEditorLog::InsertText(const nsString& aStringToInsert)
     PrintSelection();
 
     Write("window.editorShell.InsertText(\"");
-    PrintUnicode(aStringToInsert);
+    nsAutoString str(aStringToInsert);
+    PrintUnicode(str);
     Write("\");\n");
 
     Flush();
@@ -200,7 +180,7 @@ nsHTMLEditorLog::InsertText(const nsString& aStringToInsert)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertBreak()
+nsHTMLEditorLog::InsertLineBreak()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -211,7 +191,7 @@ nsHTMLEditorLog::InsertBreak()
     Flush();
   }
 
-  return nsHTMLEditor::InsertBreak();
+  return nsHTMLEditor::InsertLineBreak();
 }
 
 NS_IMETHODIMP

@@ -28,7 +28,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsISelection.h"
-#include "nsIHTMLEditor.h"
+#include "nsIPlaintextEditor.h"
 #include "nsTextServicesDocument.h"
 
 #include "nsIDOMElement.h"
@@ -2072,9 +2072,9 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     return result;
   }
 
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor, &result);
-  if (htmlEditor)
-    result = htmlEditor->InsertText(*aText);
+  nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor, &result));
+  if (textEditor)
+    result = textEditor->InsertText(aText->GetUnicode());
 
   if (NS_FAILED(result))
   {

@@ -28,6 +28,7 @@ MODULE=editor
 XPIDL_MODULE=editor
 
 XPIDLSRCS = .\nsIEditorShell.idl \
+						.\nsIPlaintextEditor.idl  \
 						.\nsIEditorSpellCheck.idl  \
 						.\nsIDocumentStateListener.idl \
 						.\nsIEditorService.idl \

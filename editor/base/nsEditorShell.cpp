@@ -23,6 +23,7 @@
 #include <stdio.h>
 
 #include "nsEditorShell.h"
+#include "nsIPlaintextEditor.h"
 #include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewerFile.h"
@@ -627,7 +628,9 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
     //mContentWindow->Focus();
     // Collapse the selection to the begining of the document
     // (this also turns on the caret)
-    mEditor->SetCaretToDocumentStart();
+    nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
+    if (textEditor)
+      textEditor->CollapseSelectionToStart();
   }
 
   // show the caret, if our window is focussed already
@@ -1601,7 +1604,7 @@ nsEditorShell::UnregisterDocumentStateListener(nsIDocumentStateListener *docList
     nsCOMPtr<nsISupports> iSupports = do_QueryInterface(docListener, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    PRBool removed = mDocStateListeners->RemoveElement(iSupports);
+    mDocStateListeners->RemoveElement(iSupports);
   }
     
   // if we have an editor already, remove it from there too
@@ -2652,7 +2655,10 @@ nsEditorShell::Rewrap(PRBool aRespectNewlines)
     rv = SelectAll();
     if (NS_FAILED(rv)) return rv;
 
-    return mEditor->InsertText(wrapped);
+    nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
+    if (!textEditor)
+      return NS_NOINTERFACE;
+    return textEditor->InsertText(wrapped.GetUnicode());
   }
   else                // rewrap only the selection
   {
@@ -2670,7 +2676,10 @@ nsEditorShell::Rewrap(PRBool aRespectNewlines)
                        wrapped);
     if (NS_FAILED(rv)) return rv;
 
-    return mEditor->InsertText(wrapped);
+    nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
+    if (!textEditor)
+      return NS_NOINTERFACE;
+    return textEditor->InsertText(wrapped.GetUnicode());
   }
   return NS_OK;
 }
@@ -2716,7 +2725,10 @@ nsEditorShell::StripCites()
     rv = SelectAll();
     if (NS_FAILED(rv)) return rv;
 
-    return mEditor->InsertText(stripped);
+    nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
+    if (!textEditor)
+      return NS_NOINTERFACE;
+    return textEditor->InsertText(stripped.GetUnicode());
   }
   else                // rewrap only the selection
   {
@@ -2732,7 +2744,10 @@ nsEditorShell::StripCites()
     rv = citer->StripCites(current, stripped);
     if (NS_FAILED(rv)) return rv;
 
-    return mEditor->InsertText(stripped);
+    nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
+    if (!textEditor)
+      return NS_NOINTERFACE;
+    return textEditor->InsertText(stripped.GetUnicode());
   }
   return NS_OK;
 }
@@ -2787,48 +2802,19 @@ nsEditorShell::DeleteSelection(PRInt32 action)
   return err;
 }
 
-/* This routine should only be called when playing back a log */
-NS_IMETHODIMP
-nsEditorShell::TypedText(const PRUnichar *aTextToInsert, PRInt32 aAction)
-{
-  nsresult  err = NS_NOINTERFACE;
-  
-  nsAutoString textToInsert(aTextToInsert);
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-        if (htmlEditor)
-          err = htmlEditor->TypedText(textToInsert, aAction);
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
-
-
 NS_IMETHODIMP
 nsEditorShell::InsertText(const PRUnichar *textToInsert)
 {
   nsresult  err = NS_NOINTERFACE;
   
-  nsAutoString aTextToInsert(textToInsert);
-  
   switch (mEditorType)
   {
     case ePlainTextEditorType:
     case eHTMLTextEditorType:
       {
-        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-        if (htmlEditor)
-          err = htmlEditor->InsertText(aTextToInsert);
+        nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
+        if (textEditor)
+          err = textEditor->InsertText(textToInsert);
       }
       break;
 
@@ -2919,12 +2905,11 @@ nsEditorShell::RebuildDocumentFromSource(const PRUnichar *aSource)
 NS_IMETHODIMP
 nsEditorShell::InsertBreak()
 {
-  nsresult  err = NS_NOINTERFACE;
-  
-  if (mEditor)
-    err = mEditor->InsertBreak();
-  
-  return err;
+  nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
+  if (!textEditor)
+    return NS_NOINTERFACE;
+
+  return textEditor->InsertLineBreak();
 }
 
 // Both Find and FindNext call through here.
@@ -3290,11 +3275,11 @@ nsEditorShell::GetWrapColumn(PRInt32* aWrapColumn)
   {
     case ePlainTextEditorType:
       {
-        nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
-        if (mailEditor)
+        nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
         {
           PRInt32 wc;
-          err = mailEditor->GetBodyWrapWidth(&wc);
+          err = textEditor->GetBodyWrapWidth(&wc);
           if (NS_SUCCEEDED(err))
             *aWrapColumn = (PRInt32)wc;
         }
@@ -3320,9 +3305,9 @@ nsEditorShell::SetWrapColumn(PRInt32 aWrapColumn)
     {
         case ePlainTextEditorType:
         {
-          nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
-          if (mailEditor)
-            err = mailEditor->SetBodyWrapWidth(mWrapColumn);
+          nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
+          if (textEditor)
+            err = textEditor->SetBodyWrapWidth(mWrapColumn);
         }
         break;
         default:
@@ -3455,9 +3440,9 @@ nsEditorShell::GetDocumentEditable(PRBool *aDocumentEditable)
 NS_IMETHODIMP
 nsEditorShell::GetDocumentLength(PRInt32 *aDocumentLength)
 {
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(mEditor);
-  if (editor)
-    return editor->GetDocumentLength(aDocumentLength);
+  nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
+  if (textEditor)
+    return textEditor->GetTextLength(aDocumentLength);
 
   return NS_NOINTERFACE;
 }

@@ -45,14 +45,11 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
 
-#include "nsIFrameSelection.h"  // For TABLESELECTION_ defines
 #include "nsIIndependentSelection.h" //domselections answer to frameselection
-
 
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
-#include "nsIStyleSet.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
 
@@ -362,6 +359,11 @@ NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
  
   *aInstancePtr = nsnull;
   
+  if (aIID.Equals(NS_GET_IID(nsIPlaintextEditor))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIPlaintextEditor*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(NS_GET_IID(nsIHTMLEditor))) {
     *aInstancePtr = NS_STATIC_CAST(nsIHTMLEditor*, this);
     NS_ADDREF_THIS();
@@ -699,7 +701,7 @@ PRBool nsHTMLEditor::IsModifiable()
 #pragma mark -
 #endif
 
-NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
+NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
 {
   PRUint32 keyCode, character;
   PRBool   isShift, ctrlKey, altKey, metaKey;
@@ -754,21 +756,21 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
     else if (keyCode == nsIDOMKeyEvent::DOM_VK_RETURN
              || keyCode == nsIDOMKeyEvent::DOM_VK_ENTER)
     {
-      nsAutoString empty;
+      nsString empty;
       if (isShift && !(mFlags&eEditorPlaintextBit))
       {
-        return TypedText(empty, eTypedBR);  // only inserts a br node
+        return TypedText(empty.GetUnicode(), eTypedBR);  // only inserts a br node
       }
       else 
       {
-        return TypedText(empty, eTypedBreak);  // uses rules to figure out what to insert
+        return TypedText(empty.GetUnicode(), eTypedBreak);  // uses rules to figure out what to insert
       }
     }
     else if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE)
     {
       // pass escape keypresses through as empty strings: needed forime support
-      nsAutoString empty;
-      return TypedText(empty, eTypedText);
+      nsString empty;
+      return TypedText(empty.GetUnicode(), eTypedText);
     }
     
     // if we got here we either fell out of the tab case or have a normal character.
@@ -776,7 +778,7 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
     if (character && !altKey && !ctrlKey && !isShift && !metaKey)
     {
       nsAutoString key(character);
-      return TypedText(key, eTypedText);
+      return TypedText(key.GetUnicode(), eTypedText);
     }
   }
   return NS_ERROR_FAILURE;
@@ -788,7 +790,8 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
    to TypedText() to determine what action to take, but without passing
    an event.
    */
-NS_IMETHODIMP nsHTMLEditor::TypedText(const nsString& aString, PRInt32 aAction)
+NS_IMETHODIMP nsHTMLEditor::TypedText(const PRUnichar* aString,
+                                      PRInt32 aAction)
 {
   nsAutoPlaceHolderBatch batch(this, gTypingTxnName);
 
@@ -805,7 +808,7 @@ NS_IMETHODIMP nsHTMLEditor::TypedText(const nsString& aString, PRInt32 aAction)
       }
     case eTypedBreak:
       {
-        return InsertBreak();  // uses rules to figure out what to insert
+        return InsertLineBreak();  // uses rules to figure out what to insert
       } 
   } 
   return NS_ERROR_FAILURE; 
@@ -2118,17 +2121,17 @@ nsresult nsHTMLEditor::GetTextSelectionOffsets(nsISelection *aSelection,
                                      aOutStartOffset, aOutEndOffset);
 }
 
-// this is a complete ripoff from nsTextEditor::GetTextSelectionOffsetsForRange
-// the two should use common code, or even just be one method
-nsresult nsHTMLEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
-                                                   PRInt32 aInStartOffset,
-                                                   nsIDOMNode *aInEndNode,
-                                                   PRInt32 aInEndOffset,
-                                                   nsIDOMNode *aInCommonParentNode,
-                                                   PRInt32 &aOutStartOffset, 
-                                                   PRInt32 &aOutEndOffset)
+nsresult
+nsHTMLEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
+                                          PRInt32 aInStartOffset,
+                                          nsIDOMNode *aInEndNode,
+                                          PRInt32 aInEndOffset,
+                                          nsIDOMNode *aInCommonParentNode,
+                                          PRInt32 &aOutStartOffset, 
+                                          PRInt32 &aOutEndOffset)
 {
-  if(!aInStartNode || !aInEndNode || !aInCommonParentNode) { return NS_ERROR_NULL_POINTER; }
+  if(!aInStartNode || !aInEndNode || !aInCommonParentNode)
+    return NS_ERROR_NULL_POINTER;
 
   nsresult result;
   // initialize out params
@@ -2250,7 +2253,7 @@ nsHTMLEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver)
 } 
   
 NS_IMETHODIMP 
-nsHTMLEditor::SetCaretToDocumentStart()
+nsHTMLEditor::CollapseSelectionToStart()
 {
   nsCOMPtr<nsIDOMElement> bodyElement;
   nsresult res = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
@@ -2381,7 +2384,7 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
   return result;
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
+NS_IMETHODIMP nsHTMLEditor::InsertText(const PRUnichar* aStringToInsert)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -2402,8 +2405,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
   nsAutoString resultString;
+  // XXX can we trust instring to outlive ruleInfo,
+  // XXX and ruleInfo not to refer to instring in its dtor?
+  nsAutoString instring(aStringToInsert);
   nsTextRulesInfo ruleInfo(theAction);
-  ruleInfo.inString = &aStringToInsert;
+  ruleInfo.inString = &instring;
   ruleInfo.outString = &resultString;
   ruleInfo.maxLength = mMaxTextLength;
 
@@ -3144,7 +3150,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsString& aSourceString)
   return CloneAttributes(bodyElement, child);
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertBreak()
+NS_IMETHODIMP nsHTMLEditor::InsertLineBreak()
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -4005,7 +4011,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
         nsCOMPtr<nsIDOMNode> parent = node;
         nsCOMPtr<nsIDOMNode> topChild = node;
         nsCOMPtr<nsIDOMNode> tmp;
-        nsAutoString bq; bq.AssignWithConversion("blockquote");
+        nsAutoString bq(NS_LITERAL_STRING("blockquote"));
         while ( !CanContainTag(parent, bq))
         {
           parent->GetParentNode(getter_AddRefs(tmp));
@@ -4028,8 +4034,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
         // put a space in it so layout will draw the list item
         res = selection->Collapse(newBQ,0);
         if (NS_FAILED(res)) return res;
-        nsAutoString theText; theText.AssignWithConversion(" ");
-        res = InsertText(theText);
+        res = InsertText(NS_LITERAL_STRING(" "));
         if (NS_FAILED(res)) return res;
         // reposition selection to before the space character
         res = GetStartNodeAndOffset(selection, &node, &offset);
@@ -4625,54 +4630,6 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const n
   return res;
 }
 
-/*
-NS_IMETHODIMP nsHTMLEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection) 
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::ScrollUp(nsIAtom *aIncrement)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::ScrollDown(nsIAtom *aIncrement)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::ScrollIntoView(PRBool aScrollToBegin)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-*/
-
-
 NS_IMETHODIMP
 nsHTMLEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
 {
@@ -4685,9 +4642,8 @@ nsHTMLEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
   return mRules->DocumentIsEmpty(aDocumentIsEmpty);
 }
 
-
 NS_IMETHODIMP
-nsHTMLEditor::GetDocumentLength(PRInt32 *aCount)                                              
+nsHTMLEditor::GetTextLength(PRInt32 *aCount)
 {
   if (!aCount) { return NS_ERROR_NULL_POINTER; }
   nsresult result;
@@ -4737,15 +4693,19 @@ nsHTMLEditor::GetDocumentLength(PRInt32 *aCount)
   return result;
 }
 
-NS_IMETHODIMP nsHTMLEditor::SetMaxTextLength(PRInt32 aMaxTextLength)
+NS_IMETHODIMP
+nsHTMLEditor::SetMaxTextLength(PRInt32 aMaxTextLength)
 {
   mMaxTextLength = aMaxTextLength;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLEditor::GetMaxTextLength(PRInt32& aMaxTextLength)
+NS_IMETHODIMP
+nsHTMLEditor::GetMaxTextLength(PRInt32* aMaxTextLength)
 {
-  aMaxTextLength = mMaxTextLength;
+  if (!aMaxTextLength)
+    return NS_ERROR_INVALID_POINTER;
+  *aMaxTextLength = mMaxTextLength;
   return NS_OK;
 }
 
@@ -5325,7 +5285,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         nsAutoEditBatch beginBatching(this);
         // pasting does not inherit local inline styles
         RemoveAllInlineProperties();
-        rv = InsertText(stuffToPaste);
+        rv = InsertText(stuffToPaste.GetUnicode());
         if (text)
           nsMemory::Free(text);
       }
@@ -6078,7 +6038,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
         selection->Collapse(preNode, 0);
       }
 
-      rv = InsertText(quotedStuff);
+      rv = InsertText(quotedStuff.GetUnicode());
 
       if (aNodeInserted && NS_SUCCEEDED(rv))
       {
@@ -6151,7 +6111,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
         res = InsertHTMLWithCharset(aQuotedText, aCharset);
 
       else
-        res = InsertText(aQuotedText);  // XXX ignore charset
+        res = InsertText(aQuotedText.GetUnicode());  // XXX ignore charset
 
       if (aNodeInserted)
       {
@@ -6604,7 +6564,7 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
   mIMETextRangeList = aTextRangeList;
   nsAutoPlaceHolderBatch batch(this, gIMETxnName);
 
-  result = InsertText(aCompositionString);
+  result = InsertText(aCompositionString.GetUnicode());
 
   mIMEBufferLength = aCompositionString.Length();
 
@@ -7164,9 +7124,11 @@ nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parent
     }
     // Here's where the new node was inserted
   }
+#ifdef DEBUG
   else {
-    printf("InsertBreak into an empty document is not yet supported\n");
+    printf("InsertLineBreak into an empty document is not yet supported\n");
   }
+#endif
   return result;
 }
 
