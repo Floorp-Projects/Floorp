@@ -142,10 +142,14 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 
 NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
 {
+  // this keeps the cursor flashing
+  gint x, y, w, h, d;
+  gdk_window_get_geometry(mSurface->GetDrawable(), &x, &y, &w, &h, &d);
+
   if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) )
   {
     mClipRegion->Init();
-    mClipRegion->SetTo(0,0,0,0);
+    mClipRegion->SetTo(0,0,w,h);
   } else {
     // we're going to crash shortly after if we hit this, but we will return NS_ERROR_FAILURE anyways.
     return NS_ERROR_FAILURE;
