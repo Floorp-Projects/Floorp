@@ -69,6 +69,7 @@
 [%###########################################################################%]
 
 [% BLOCK display_tree %]
+[% tree.$bug_id.seen = 1 %]
 <ul>
   [% FOREACH dep_id = tree.$bug_id.dependencies %]
     [% dep = tree.$dep_id %]
@@ -86,7 +87,6 @@
       [% INCLUDE display_tree bug_id=dep_id 
            IF dep.dependencies.size > 0 && !dep.seen %]
     </li>
-    [% dep.seen = 1 %]
   [% END %]
 </ul>
 [% END %]
