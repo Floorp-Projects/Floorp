@@ -473,9 +473,9 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
 
 void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
 {
-  NS_ASSERTION(mUnicodeEncoder != nsnull,"The unicode encoder needs to be initialized");
   if (mUnicodeEncoder == nsnull)
   {
+    NS_WARNING("The unicode encoder needs to be initialized");
     char* str = aSrc.ToNewCString();
     EnsureBufferSize(aSrc.Length()+1);
     strcpy(mBuffer, str);
