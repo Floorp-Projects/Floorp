@@ -37,7 +37,7 @@ NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
 {
   if (nsnull!=aEditor && nsnull!=aElement)
   {
-    mEditor = do_QueryInterface(aEditor);
+    mEditor = aEditor;
     mElement = do_QueryInterface(aElement);
     mAttribute = aAttribute;
     mValue = aValue;

@@ -43,7 +43,7 @@ NS_IMETHODIMP CreateElementTxn::Init(nsIEditor      *aEditor,
   NS_ASSERTION(aEditor&&aParent, "null args");
   if (aEditor && aParent)
   {
-    mEditor = do_QueryInterface(aEditor);
+    mEditor = aEditor;
     mTag = aTag;
     mParent = do_QueryInterface(aParent);
     mOffsetInParent = aOffsetInParent;

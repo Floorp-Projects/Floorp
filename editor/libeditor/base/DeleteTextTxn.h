@@ -68,7 +68,7 @@ public:
 protected:
 
   /** the provider of basic editing operations */
-  nsCOMPtr<nsIEditor> mEditor;
+  nsIEditor* mEditor;
 
   /** the text element to operate upon */
   nsCOMPtr<nsIDOMCharacterData> mElement;

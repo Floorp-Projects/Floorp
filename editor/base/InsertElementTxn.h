@@ -74,7 +74,7 @@ protected:
   nsCOMPtr<nsIDOMNode> mParent;
 
   /** the editor for this transaction */
-  nsCOMPtr<nsIEditor> mEditor;
+  nsIEditor*           mEditor;
 
   /** the index in mParent for the new node */
   PRInt32 mOffset;

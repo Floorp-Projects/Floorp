@@ -81,7 +81,7 @@ protected:
 protected:
   
   /** p1 in the range */
-  nsCOMPtr<nsIDOMRange> mRange;
+  nsCOMPtr<nsIDOMRange> mRange;			// is this really an owning ptr?
 
   /** p1 in the range */
   nsCOMPtr<nsIDOMNode> mStartParent;
@@ -99,7 +99,7 @@ protected:
   PRInt32 mEndOffset;
 
   /** the editor for this transaction */
-  nsCOMPtr<nsIEditor> mEditor;
+  nsIEditor* mEditor;
 
   friend class TransactionFactory;
 

@@ -51,7 +51,7 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
 {
   if (aEditor && aRange)
   {
-    mEditor = do_QueryInterface(aEditor);
+    mEditor = aEditor;
     mRange  = do_QueryInterface(aRange);
     
     nsresult result = aRange->GetStartParent(getter_AddRefs(mStartParent));

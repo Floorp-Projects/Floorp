@@ -36,6 +36,7 @@
 class ChangeAttributeTxn : public EditTxn
 {
 public:
+
   virtual ~ChangeAttributeTxn();
 
   /** Initialize the transaction.
@@ -73,7 +74,7 @@ public:
 protected:
 
   /** the editor that created this transaction */
-  nsCOMPtr<nsIEditor> mEditor;
+  nsIEditor*  mEditor;
   
   /** the element to operate upon */
   nsCOMPtr<nsIDOMElement> mElement;
