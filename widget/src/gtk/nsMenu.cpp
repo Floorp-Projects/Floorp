@@ -99,8 +99,6 @@ nsMenu::nsMenu() : nsIMenu()
 //-------------------------------------------------------------------------
 nsMenu::~nsMenu()
 {
-  NS_IF_RELEASE(mMenuBarParent);
-  NS_IF_RELEASE(mMenuParent);
   NS_IF_RELEASE(mListener);
 }
 
@@ -117,8 +115,6 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
     if(menubar)
     {
       mMenuBarParent = menubar;
-      //NS_ADDREF(mMenuBarParent);
-      //NS_RELEASE(menubar);
     }
     else
     {
@@ -127,8 +123,6 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
       if(menu)
       {
         mMenuParent = menu;
-        //NS_ADDREF(mMenuParent);
-        //NS_RELEASE(menu);
       }
     }
   }
@@ -184,7 +178,7 @@ NS_METHOD nsMenu::AddItem(nsISupports * aItem)
     aItem->QueryInterface(kIMenuItemIID, (void**) &menuitem);
     if(menuitem)
     {
-      AddMenuItem(menuitem);
+      AddMenuItem(menuitem); // nsMenu now owns this
       NS_RELEASE(menuitem);
     }
     else
@@ -193,7 +187,7 @@ NS_METHOD nsMenu::AddItem(nsISupports * aItem)
       aItem->QueryInterface(kIMenuIID, (void**) &menu);
       if(menu)
       {
-        AddMenu(menu);
+        AddMenu(menu); // nsMenu now owns this
         NS_RELEASE(menu);
       }
     }
@@ -243,54 +237,40 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
     AddItem(supports); // Parent should now own menu item
     NS_RELEASE(supports);
           
-    //NS_RELEASE(pnsMenuItem);
+    void * menuitem = nsnull;
+    pnsMenuItem->GetNativeData(menuitem);
+  
+    voidData = NULL;
+    aMenu->GetNativeData(&voidData);
+    newmenu = GTK_WIDGET(voidData);
+
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem), newmenu);
+  
+    NS_RELEASE(pnsMenuItem);
   } 
-  //item = gtk_menu_item_new_with_label (labelStr);
-  //gtk_widget_show(item);
-  //gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), item);
 
   delete[] labelStr;
 
-  void * menuitem = nsnull;
-  pnsMenuItem->GetNativeData(menuitem);
-  
-  voidData = NULL;
-  aMenu->GetNativeData(&voidData);
-  newmenu = GTK_WIDGET(voidData);
-
-  gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem), newmenu);
-
-  // XXX add aMenuItem to internal data structor list
-  //NS_IF_ADDREF(aMenu);
-  //mMenuItemVoidArray.AppendElement(aMenu);
-  //mNumMenuItems++;
-  
-  NS_RELEASE(pnsMenuItem);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
-  //GtkWidget *widget;
-  //widget = gtk_menu_item_new ();
-  //gtk_widget_show(widget);
-  //gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
-  
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(
     kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
-    // This is gross and I'll make it go away ASAP -cps
     nsString tmp = "separator";
-    pnsMenuItem->Create(this, tmp, PR_TRUE);                 
+    pnsMenuItem->Create(this, tmp, PR_TRUE);  
+                   
     nsISupports * supports = nsnull;
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
     AddItem(supports); // Parent should now own menu item
-    NS_RELEASE(supports);
+    NS_RELEASE(supports); 
           
-    //NS_RELEASE(pnsMenuItem);
+    NS_RELEASE(pnsMenuItem);
   } 
   
   return NS_OK;
@@ -498,9 +478,7 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 */
 NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
 {
-  //NS_IF_RELEASE(mDOMNode);
   mDOMNode = aMenuNode;
-  //NS_IF_ADDREF(mDOMNode);
   return NS_OK;
 }
 
@@ -511,9 +489,7 @@ NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
 */
 NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
 {
-  //NS_IF_RELEASE(mDOMElement);
   mDOMElement = aMenuElement;
-  //NS_IF_ADDREF(mDOMElement);
   return NS_OK;
 }
     
@@ -524,9 +500,7 @@ NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
 */
 NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 {
-  //NS_IF_RELEASE(mWebShell);
   mWebShell = aWebShell;
-  //NS_IF_ADDREF(mWebShell);
   return NS_OK;
 }
 
@@ -551,11 +525,11 @@ void nsMenu::LoadMenuItem(
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
-    pnsMenuItem->Create(pParentMenu, menuitemName, PR_FALSE);                 
+    pnsMenuItem->Create(pParentMenu, menuitemName, PR_FALSE);
+                     
     nsISupports * supports = nsnull;
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
     pParentMenu->AddItem(supports); // Parent should now own menu item
-
     NS_RELEASE(supports);
             
     if(disabled == NS_STRING_TRUE ) {
@@ -611,11 +585,10 @@ void nsMenu::LoadSubMenu(
 
     // Set nsMenu Name
     pnsMenu->SetLabel(menuName); 
-    // Make nsMenu a child of parent nsMenu
-    //pParentMenu->AddMenu(pnsMenu);
+
     supports = nsnull;
     pnsMenu->QueryInterface(kISupportsIID, (void**) &supports);
-	pParentMenu->AddItem(supports);
+	pParentMenu->AddItem(supports); // parent takes ownership
 	NS_RELEASE(supports);
 
 	NS_ASSERTION(mWebShell, "get debugger");
