@@ -65,46 +65,27 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
   }
 }
 
-function output_current_editor_to_stream()
+function output_current_editor_to_channel(aChannel)
 {
-  var streamwrapper = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
-  if (!streamwrapper)
-  {
-    dump("streamwrapper could not be created\n");
-    return null;
-  }
-  
   var formatType = 'text/' + editorShell.editorType;
   var flags = 256; // nsIDocumentEncoder::OutputEncodeEntities
   var charset = editorShell.GetDocumentCharacterSet();
-  editorShell.editor.OutputToStream(streamwrapper, formatType, charset, flags); 
-  if (!streamwrapper)
-    return null;
-  var inputstream = streamwrapper.QueryInterface(Components.interfaces.nsIInputStream);
-  dump("input stream is: " + inputstream + "\n");
-  var outputstream = streamwrapper.QueryInterface(Components.interfaces.nsIOutputStream);
-  dump("output stream is: " + outputstream + "\n");
-  return streamwrapper;
+  editorShell.editor.OutputToStream(aChannel, formatType, charset, flags); 
+ //   protocolChannel.uploadStream = contentsStream;
 }
 
 function post_current_editor_contents_to_server(newLocation, fileName, login, password)
 {
   try
   {
-    var contentsStream = output_current_editor_to_stream();
-    if (!contentsStream)
-    {
-      dump("failed to get a stream\n");
-      return;
-    }
-
     var protocolChannel = get_destination_channel(newLocation, fileName, login, password);
     if (!protocolChannel)
     {
       dump("failed to get a destination channel\n");
       return;
     }
-    protocolChannel.uploadStream = contentsStream;
+
+    output_current_editor_to_channel(protocolChannel);
     protocolChannel.asyncOpen(gPublishingListener, null);
     dump("done\n");
   }
