@@ -80,6 +80,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
+#include "nsIScriptSecurityManager.h"
 
 #include "nsIChromeEventHandler.h"
 #include "nsIFocusController.h"
@@ -3765,6 +3766,29 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
   if (aEvent) {
     nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aTarget));
     privEvt->SetTarget(eventTarget);
+
+    //Key and mouse events have additional security to prevent event spoofing
+    nsEvent * internalEvent;
+    privEvt->GetInternalNSEvent(&internalEvent);
+    if (internalEvent && (internalEvent->eventStructType == NS_KEY_EVENT ||
+        internalEvent->eventStructType == NS_MOUSE_EVENT)) {
+      //Check security state to determine if dispatcher is trusted
+      nsCOMPtr<nsIScriptSecurityManager>
+      securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+      NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+
+      PRBool enabled;
+      nsresult res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+      if (NS_SUCCEEDED(res) && enabled) {
+        privEvt->SetTrusted(PR_TRUE);
+      }
+      else {
+        privEvt->SetTrusted(PR_FALSE);
+      } 
+    }
+    else {
+      privEvt->SetTrusted(PR_TRUE);
+    }
 
     nsEvent* innerEvent;
     privEvt->GetInternalNSEvent(&innerEvent);
