@@ -296,7 +296,7 @@ main(int argc, char* argv[])
 
   PRTime endTime; 
  endTime = PR_Now();
-  printf("Elapsed time: %ld\n", (PRInt32)(endTime/1000UL-gElapsedTime/1000UL));
+  printf("Elapsed time: %d\n", (PRInt32)(endTime/1000UL-gElapsedTime/1000UL));
 
   sts->Shutdown();
 

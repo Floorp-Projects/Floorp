@@ -62,9 +62,8 @@ class TestConnection;
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 
-static PRTime gElapsedTime;
+//static PRTime gElapsedTime;
 static int gKeepRunning = 1;
-static nsIEventQueue* gEventQ = nsnull;
 
 #define NUM_TEST_THREADS 5
 
@@ -673,7 +672,7 @@ main(int argc, char* argv[])
   PRTime endTime;
   endTime = PR_Now();
 
-//  printf("Elapsed time: %ld\n", (PRInt32)(endTime/1000UL - gElapsedTime/1000UL));
+//  printf("Elapsed time: %d\n", (PRInt32)(endTime/1000UL - gElapsedTime/1000UL));
 
   return 0;
 }
