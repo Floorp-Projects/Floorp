@@ -2126,7 +2126,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 			printf("load this url to display the message: %s\n", article_path_url);
 #endif
 
-			m_displayConsumer->LoadURL(nsAutoString(article_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+			m_displayConsumer->LoadURL(nsAutoString(article_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReloadBypassCache, 0);
 			
 			PR_FREEIF(article_path_url);
 		}

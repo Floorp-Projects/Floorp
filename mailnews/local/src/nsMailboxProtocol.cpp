@@ -170,7 +170,7 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 		nsFileURL  fileURL(filePath);
 		char * message_path_url = PL_strdup(fileURL.GetAsString());
 
-		rv = m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+		rv = m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReloadBypassCache, 0);
 
 		PR_FREEIF(message_path_url);
 

@@ -2074,7 +2074,7 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
 			nsFileURL  fileURL(filePath);
 			char * message_path_url = PL_strdup(fileURL.GetAsString());
 
-			res = webShell->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+			res = webShell->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReloadBypassCache, 0);
 
 			PR_FREEIF(message_path_url);
 		}
