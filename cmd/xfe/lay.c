@@ -2076,7 +2076,16 @@ XFE_SetDocTitle (MWContext *context, char *title)
       History_entry *he = SHIST_GetCurrent (&context->hist);
       char *url = (he && he->address ? he->address : 0);
 
-      SHIST_SetTitleOfCurrentDoc (&context->hist, title);
+      char *utf8_title = NULL;
+      utf8_title = (NULL == title) ? NULL : INTL_ConvertLineWithoutAutoDetect(
+                              INTL_GetCSIWinCSID(c),
+                              CS_UTF8, 
+                              title, 
+                              XP_STRLEN(title));
+
+      SHIST_SetTitleOfCurrentDoc (&context->hist, utf8_title);
+
+      XP_FREEIF(utf8_title);
 
       fe_UpdateDocInfoDialog (context);
 
