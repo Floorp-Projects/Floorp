@@ -3272,7 +3272,8 @@ nsFontMetricsWin::RealizeFont()
     mStrikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * dev2app);
     mUnderlineSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app));
     if (gDoingLineheightFixup)
-      mUnderlineOffset = NSToCoordRound(PR_MIN(oMetrics.otmsUnderscorePosition, oMetrics.otmDescent) * dev2app);
+      mUnderlineOffset = NSToCoordRound(PR_MIN(oMetrics.otmsUnderscorePosition*dev2app, 
+                                               oMetrics.otmDescent*dev2app + mUnderlineSize));
     else
       mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
 
