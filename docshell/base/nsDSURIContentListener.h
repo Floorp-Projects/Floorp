@@ -43,12 +43,9 @@ protected:
 
    void DocShell(nsDocShell* aDocShell);
    nsDocShell* DocShell();
-   void GetPresContext(nsIPresContext** aPresContext);
-   void SetPresContext(nsIPresContext* aPresContext);
 
 protected:
    nsDocShell*                      mDocShell;
-   nsCOMPtr<nsIPresContext>         mPresContext;
 
    nsIURIContentListener*           mParentContentListener;  // Weak Reference
 };
