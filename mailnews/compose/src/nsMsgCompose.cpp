@@ -534,7 +534,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
     nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(m_editor));
     if (!aBuf.IsEmpty() && mailEditor)
     {
-      if (!mCiteReference.IsEmpty())
+      if (aHTMLEditor && !mCiteReference.IsEmpty())
         mailEditor->InsertAsCitedQuotation(aBuf,
                                            mCiteReference,
                                            PR_TRUE,
@@ -2281,8 +2281,6 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
   if (aEditor)
     aEditor->EnableUndo(PR_TRUE);
 
-  aEditor->BeginTransaction();
-
   if (!mMsgBody.IsEmpty())
   {
     if (!mCitePrefix.IsEmpty())
@@ -2292,15 +2290,19 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
     }
 
     nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(aEditor));
-    nsAutoString empty;
-    mailEditor->InsertAsCitedQuotation(mMsgBody,
-                                         empty,
-                                         PR_TRUE,
-                                         NS_LITERAL_STRING("UTF-8"),
-                                         getter_AddRefs(nodeInserted));
+    if (mailEditor)
+    {
+      if (aHTMLEditor)
+        mailEditor->InsertAsCitedQuotation(mMsgBody,
+                                           NS_LITERAL_STRING(""),
+                                           PR_TRUE,
+                                           NS_LITERAL_STRING("UTF-8"),
+                                           getter_AddRefs(nodeInserted));
+      else
+        mailEditor->InsertAsQuotation(mMsgBody, getter_AddRefs(nodeInserted));
+    }
+      
   }
-
-  aEditor->EndTransaction();
 
   if (aEditor)
   {

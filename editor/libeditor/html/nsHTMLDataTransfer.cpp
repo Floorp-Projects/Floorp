@@ -1810,6 +1810,13 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
                                      const nsAString & aCharset,
                                      nsIDOMNode **aNodeInserted)
 {
+  // Don't let anyone insert html into a "plaintext" editor:
+  if (mFlags & eEditorPlaintextMask)
+  {
+    NS_ASSERTION(!aInsertHTML, "InsertAsCitedQuotation: trying to insert html into plaintext editor");
+    return InsertAsPlaintextQuotation(aQuotedText, PR_TRUE, aNodeInserted);
+  }
+
   nsCOMPtr<nsIDOMNode> newNode;
   nsresult res = NS_OK;
 
