@@ -28,6 +28,7 @@ CHROME_L10N_DIR = global\locale
 
 CHROME_L10N = \
 	.\console.dtd \
+	.\console.properties \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
