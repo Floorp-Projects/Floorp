@@ -40,7 +40,7 @@
 #include "nsILocaleService.h"
 #include "nsLocale.h"
 #include "nsLocaleCID.h"
-#include "nsIComponentManager.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prprf.h"
