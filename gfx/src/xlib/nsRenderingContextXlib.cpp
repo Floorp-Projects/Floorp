@@ -1353,7 +1353,7 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
             ((nsDrawingSurfaceXlib *)aSrcSurf)->GetGC(),
             srcX, srcY,
             drect.width, drect.height,
-            drect.x, drect.height);
+            drect.x, drect.y);
 
   return NS_OK;
 }
