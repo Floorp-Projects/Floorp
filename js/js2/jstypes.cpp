@@ -184,7 +184,7 @@ void JSFunction::initFunctionObject(JSScope *g)
 
 JSString* JSBoolean::BooleanString = new JSString("Boolean");
 
-JSValue boolean_constructor(Context *cx, const JSValues& argv)
+static JSValue boolean_constructor(Context *cx, const JSValues& argv)
 {
     // argv[0] will be NULL
     if (argv.size() > 1)
@@ -193,7 +193,7 @@ JSValue boolean_constructor(Context *cx, const JSValues& argv)
         return JSValue(new JSBoolean(false));
 }
 
-JSValue boolean_toString(Context *cx, const JSValues& argv)
+static JSValue boolean_toString(Context *cx, const JSValues& argv)
 {
     if (argv.size() > 0) {
         JSValue theThis = argv[0];
@@ -210,7 +210,7 @@ JSValue boolean_toString(Context *cx, const JSValues& argv)
     return kUndefinedValue;
 }
 
-JSValue boolean_valueOf(Context *cx, const JSValues& argv)
+static JSValue boolean_valueOf(Context *cx, const JSValues& argv)
 {
     return kUndefinedValue;
 }
@@ -241,13 +241,13 @@ void JSBoolean::initBooleanObject(JSScope *g)
 
 /********** Date Object Stuff **************************/
 
-JSValue date_constructor(Context *cx, const JSValues& argv)
+static JSValue date_constructor(Context *cx, const JSValues& argv)
 {
     // return JSValue(new JSDate());
     return JSValue(new JSObject());
 }
 
-JSValue date_invokor(Context *cx, const JSValues& argv)
+static JSValue date_invokor(Context *cx, const JSValues& argv)
 {
     return JSValue(new JSString("now"));
 }
