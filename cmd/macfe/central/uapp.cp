@@ -37,8 +37,6 @@
 //#include "shist.h"
 
 //#include <QAP_Assist.h>
-#include <LGARadioButton.h>
-#include <LGACheckbox.h>
 
 	// macfe
 #include "earlmgr.h"
@@ -1336,12 +1334,12 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
 						};
 
             			StDialogHandler	handler(eAskMeDialog, nil);
-						LWindow			*dialog = handler.GetDialog();
-						LGARadioButton	*onRButton =
-							(LGARadioButton *)dialog->FindPaneByID(eWorkOnline);
+						LWindow* dialog = handler.GetDialog();
+						LControl* onRButton = dynamic_cast<LControl*>(
+														dialog->FindPaneByID(eWorkOnline));
 						XP_ASSERT(onRButton);
-						LGARadioButton	*offRButton =
-							(LGARadioButton *)dialog->FindPaneByID(eWorkOffline);
+						LControl	*offRButton = dynamic_cast<LControl*>(
+														dialog->FindPaneByID(eWorkOffline));
 						XP_ASSERT(offRButton);
 						if (onlineLastTime)
 						{
@@ -1351,8 +1349,8 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
 						{
 							offRButton->SetValue(true);
 						}
-						LGACheckbox *setPrefBox =
-							(LGACheckbox *)dialog->FindPaneByID(eSetPref);
+						LControl *setPrefBox = dynamic_cast<LControl*>(
+													dialog->FindPaneByID(eSetPref));
 						XP_ASSERT(setPrefBox);
 						if (locked)
 						{

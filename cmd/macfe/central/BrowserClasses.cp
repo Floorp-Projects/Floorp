@@ -54,6 +54,13 @@
 	#include <LAMPushButtonImp.h>
 	#include <LBevelButton.h>
 	#include <LCmdBevelButton.h>
+	#include <LCheckbox.h>
+	#include <LRadioButton.h>
+	#include <LTextGroupBox.h>
+	#include <LEditText.h>
+	#include <LAMEditTextImp.h>
+	#include <LPopupButton.h>
+	#include <LAMPopupButtonImp.h>
 	
 // еее Things that will go away after appearance conversion complete
 	#include "CProgressBar.h"
@@ -239,7 +246,17 @@ void RegisterAllBrowserClasses(void)
 //	RegisterClassID_(LAMControlImp, LBevelButton::imp_class_ID);
 	RegisterClass_(LCmdBevelButton);
 	RegisterClassID_(LAMControlImp, LCmdBevelButton::imp_class_ID);
-
+	RegisterClass_(LCheckBox);
+	RegisterClassID_(LAMControlImp, LCheckBox::imp_class_ID);
+	RegisterClass_(LRadioButton);
+	RegisterClassID_(LAMControlImp, LRadioButton::imp_class_ID);
+	RegisterClass_(LTextGroupBox);
+	RegisterClassID_(LAMControlImp, LTextGroupBox::imp_class_ID);
+	RegisterClass_(LPopupButton);
+	RegisterClassID_(LAMPopupButtonImp, LPopupButton::imp_class_ID);
+//	RegisterClass_(LEditText);
+//	RegisterClassID_(LAMEditTextImp, LEditText::imp_class_ID);
+	
 	// еее Things that will go away after appearance port complete
 	RegisterClass_(CProgressBar);
 	RegisterClass_(CPatternBevelView);

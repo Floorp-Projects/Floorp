@@ -28,9 +28,11 @@
 
 #include "xp_mcom.h"
 
-#include <LGACheckbox.h>
-#include <LGARadioButton.h>
+#include <LCheckbox.h>
+#include <LRadioButton.h>
+//#include <LPopupButton.h>
 #include <LGAPopup.h>
+
 
 // Note.	We can do java-style 'inline' virtual functions here, because these classes
 //			all have file scope.  If you ever move these declarations to a header, you
@@ -40,12 +42,12 @@
 //======================================
 class CPrefCheckbox
 //======================================
-:	public LGACheckbox
+:	public LCheckBox
 ,	public MPreference<LControl,XP_Bool>
 {
 public:
 	CPrefCheckbox(LStream* inStream)
-		:	LGACheckbox(inStream)
+		:	LCheckBox(inStream)
 		,	MPreference<LControl,XP_Bool>(this, inStream)
 		{
 		}
@@ -55,10 +57,10 @@ public:
 				// checkbox always writes its pane value ^ its ordinal.
 			 	// Thus: if mOrdinal == 1, the checkbox reverses the sense of the pref.
 		}
-	enum { class_ID = 'Pchk' };
+	enum { class_ID = 'PCHK' };
 	virtual void FinishCreateSelf()
 		{
-			LGACheckbox::FinishCreateSelf();
+			LCheckBox::FinishCreateSelf();
 			MPreferenceBase::FinishCreate();
 		}
 }; // class CPrefCheckbox
@@ -67,14 +69,14 @@ public:
 //======================================
 class CBoolPrefRadio
 // Actually, because of the writing-out policy, only the zero-ordinal radio button
-// needs to be a CBoolPrefRadio.  The other one can be just a LGARadioButton.
+// needs to be a CBoolPrefRadio.  The other one can be just a LRadioButton.
 //======================================
-:	public LGARadioButton
+:	public LRadioButton
 ,	public MPreference<LControl,XP_Bool>
 {
 public:
 	CBoolPrefRadio(LStream* inStream)
-		:	LGARadioButton(inStream)
+		:	LRadioButton(inStream)
 		,	MPreference<LControl,XP_Bool>(this, inStream)
 		{
 		}
@@ -85,10 +87,10 @@ public:
 			if (mOrdinal == 0)
 				WriteSelf();
 		}
-	enum { class_ID = 'Brad' };
+	enum { class_ID = 'BRAD' };
 	virtual void FinishCreateSelf()
 		{
-			LGARadioButton::FinishCreateSelf();
+			LRadioButton::FinishCreateSelf();
 			MPreferenceBase::FinishCreate();
 		}
 }; // class CBoolPrefRadio
@@ -97,12 +99,12 @@ public:
 //======================================
 class CIntPrefRadio
 //======================================
-:	public LGARadioButton
+:	public LRadioButton
 ,	public MPreference<LControl,int32>
 {
 public:
 	CIntPrefRadio(LStream* inStream)
-		:	LGARadioButton(inStream)
+		:	LRadioButton(inStream)
 		,	MPreference<LControl,int32>(this, inStream)
 		{
 		}
@@ -113,10 +115,10 @@ public:
 			if (mPaneSelf->GetValue() != 0)
 				WriteSelf();
 		}
-	enum { class_ID = 'Irad' };
+	enum { class_ID = 'IRAD' };
 	virtual void FinishCreateSelf()
 		{
-			LGARadioButton::FinishCreateSelf();
+			LRadioButton::FinishCreateSelf();
 			MPreferenceBase::FinishCreate();
 		}
 }; // class CIntPrefRadio
@@ -252,7 +254,7 @@ public:
 			// A textedit field always writes its value out.
 			WriteSelf();
 		}
-	enum { class_ID = 'Pedt' };
+	enum { class_ID = 'PEDT' };
 	virtual void FinishCreateSelf()
 		{
 			CValidEditField::FinishCreateSelf();
@@ -272,7 +274,7 @@ class CIntPrefTextEdit
 ,	public MPreference<LTextEdit,int32>
 {
 public:
-	enum { class_ID = 'Iedt' };
+	enum { class_ID = 'IEDT' };
 	CIntPrefTextEdit(LStream* inStream)
 		:	CValidEditField(inStream)
 		,	MPreference<LTextEdit,int32>((LTextEdit*)this, inStream)

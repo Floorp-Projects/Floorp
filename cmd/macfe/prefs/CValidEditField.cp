@@ -21,7 +21,7 @@
 //-----------------------------------
 CValidEditField::CValidEditField( LStream* s )
 //-----------------------------------
-:	LGAEditField( s )
+:	LEditField( s )
 ,	mValidationFunc( nil )
 {
 }
