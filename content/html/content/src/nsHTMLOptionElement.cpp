@@ -140,15 +140,10 @@ nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     mRefCnt++;
     return NS_OK;
   }
-  else if (aIID.Equals(kIFormControlIID)) {
-    *aInstancePtr = (void*)(nsIFormControl*) this;
-    mRefCnt++;
-    return NS_OK;
-  }
   return NS_NOINTERFACE;
 }
 
-// the option has a ref (not ref counted) to the form, but not vice versa. The form can get to the
+// the option has a ref to the form, but not vice versa. The form can get to the
 // options via the select.
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLOptionElement::Release()
@@ -176,15 +171,16 @@ nsHTMLOptionElement::CloneNode(nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
+  nsresult result = NS_OK;
   *aForm = nsnull;
   if (nsnull != mForm) {
     nsIDOMHTMLFormElement* formElem = nsnull;
-    nsresult result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
     if (NS_OK == result) {
       *aForm = formElem;
     }
   }
-  return NS_OK;
+  return result;
 }
 
 NS_IMETHODIMP

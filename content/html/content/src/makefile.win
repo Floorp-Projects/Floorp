@@ -40,6 +40,7 @@ CPPSRCS=				\
 	nsHTMLDirectoryElement.cpp	\
 	nsHTMLDivElement.cpp		\
 	nsHTMLEmbedElement.cpp		\
+	nsHTMLFieldSetElement.cpp		\
 	nsHTMLFontElement.cpp		\
 	nsHTMLFormElement.cpp		\
 	nsHTMLFrameElement.cpp		\
@@ -107,6 +108,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLDirectoryElement.obj		\
 	.\$(OBJDIR)\nsHTMLDivElement.obj		\
 	.\$(OBJDIR)\nsHTMLEmbedElement.obj		\
+	.\$(OBJDIR)\nsHTMLFieldSetElement.obj		\
 	.\$(OBJDIR)\nsHTMLFontElement.obj		\
 	.\$(OBJDIR)\nsHTMLFormElement.obj		\
 	.\$(OBJDIR)\nsHTMLFrameElement.obj		\

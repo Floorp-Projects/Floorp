@@ -253,15 +253,16 @@ nsHTMLSelectElement::Remove(PRInt32 aIndex)
 NS_IMETHODIMP
 nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
+  nsresult result = NS_OK;
   *aForm = nsnull;
   if (nsnull != mForm) {
     nsIDOMHTMLFormElement* formElem = nsnull;
-    nsresult result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
     if (NS_OK == result) {
       *aForm = formElem;
     }
   }
-  return NS_OK;
+  return result;
 }
 
 // An important assumption is that if aForm is null, the previous mForm will not be released

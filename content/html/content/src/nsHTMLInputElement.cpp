@@ -151,7 +151,7 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
   mType = NS_FORM_INPUT_TEXT; // default value
   mForm = nsnull;
   mWidget = nsnull;
-nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
+  //nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
@@ -162,7 +162,7 @@ nsHTMLInputElement::~nsHTMLInputElement()
     mForm->RemoveElement(this, PR_FALSE); 
     NS_RELEASE(mForm);
   }
-nsTraceRefcnt::Destroy((nsIFormControl*)this, __FILE__, __LINE__);
+  //nsTraceRefcnt::Destroy((nsIFormControl*)this, __FILE__, __LINE__);
 }
 
 // nsISupports
@@ -170,7 +170,7 @@ nsTraceRefcnt::Destroy((nsIFormControl*)this, __FILE__, __LINE__);
 NS_IMETHODIMP_(nsrefcnt) 
 nsHTMLInputElement::AddRef(void)
 {
-nsTraceRefcnt::AddRef((nsIFormControl*)this, mRefCnt+1, __FILE__, __LINE__);
+  //nsTraceRefcnt::AddRef((nsIFormControl*)this, mRefCnt+1, __FILE__, __LINE__);
   PRInt32 refCnt = mRefCnt;  // debugging 
   return ++mRefCnt; 
 }
@@ -196,7 +196,7 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLInputElement::Release()
 {
-nsTraceRefcnt::Release((nsIFormControl*)this, mRefCnt-1, __FILE__, __LINE__);
+  //nsTraceRefcnt::Release((nsIFormControl*)this, mRefCnt-1, __FILE__, __LINE__);
   --mRefCnt;
 	if (mRefCnt <= 0) {
     delete this;                                       
@@ -226,15 +226,16 @@ nsHTMLInputElement::CloneNode(nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
+  nsresult result = NS_OK;
   *aForm = nsnull;
   if (nsnull != mForm) {
     nsIDOMHTMLFormElement* formElem = nsnull;
-    nsresult result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
     if (NS_OK == result) {
       *aForm = formElem;
     }
   }
-  return NS_OK;
+  return result;
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, DefaultValue, defaultvalue, eSetAttrNotify_None)
