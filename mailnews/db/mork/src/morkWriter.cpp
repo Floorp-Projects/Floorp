@@ -1054,8 +1054,10 @@ morkWriter::WriteTokenToTokenMetaCell(morkEnv* ev,
     p = buf;
     mork_size valSize = ev->TokenAsHex(p, inValue);
     p += valSize;
+    *p++ = ':';
+    *p++ = 'c';
     *p++ = ')';
-    mWriter_LineSize += stream->Write(ev, buf, valSize + 1);
+    mWriter_LineSize += stream->Write(ev, buf, valSize + 3);
   }
   else
   {
