@@ -19,11 +19,14 @@
 #ifndef _jsfile_h__
 #define _jsfile_h__
 
-extern JSObject*
+JS_EXTERN_API(JSObject*)
 js_InitFileClass(JSContext *cx, JSObject* obj);
 
-extern JSObject*
-NewFileObject(JSContext *cx, char *bytes);
+JS_EXTERN_API(JSObject*)
+js_NewFileObject(JSContext *cx, char *bytes);
+
+JS_EXTERN_API(JSObject*)
+js_NewFileObjectFromFILE(JSContext *cx, FILE *nativehandle, char *filename, JSBool open);
 
 #endif /* _jsfile_h__ */
 
