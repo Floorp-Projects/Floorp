@@ -1349,34 +1349,45 @@ PUBLIC PRUnichar
 Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   nsresult rv = NS_OK;
   PRUint8 keyByte = 0;
-
+#ifndef DEBUG_dp
+goto backup_noassert;
+#endif
   if (!gKeyedStreamGenerator)
   {
     // Get a keyed stream generator
     // XXX how do we get to the NS_BASIC_STREAM_GENERATOR progid/CID here
     gKeyedStreamGenerator = do_CreateInstance("component://netscape/keyed-stream-generator/basic", &rv);
-    if (NS_FAILED(rv)) goto backup;
+    if (NS_FAILED(rv)) {
+      goto backup;
+    }
     // XXX need to checkup signature
   }
   if (gNeedsSetup)
   {
     // Call setup on the keyed stream generator
     nsCOMPtr<nsIWalletService> walletService = do_GetService(NS_WALLETSERVICE_PROGID, &rv);
-    if (NS_FAILED(rv)) goto backup;
+    if (NS_FAILED(rv)) {
+      goto backup;
+    }
     nsCOMPtr<nsIPasswordSink> passwordSink = do_QueryInterface(walletService, &rv);
-    if (NS_FAILED(rv)) goto backup;
+    if (NS_FAILED(rv)) {
+      goto backup;
+    }
     rv = gKeyedStreamGenerator->Setup(saveCount, passwordSink);
     gNeedsSetup = PR_FALSE;
   }
 
   // Get the byte using the keyed stream generator
   rv = gKeyedStreamGenerator->GetByte(writeCount, &keyByte);
-  if (NS_FAILED(rv)) goto backup;
+  if (NS_FAILED(rv)) {
+    goto backup;
+  }
   return (PRUnichar)keyByte;
 
 backup:
   // Fallback to doing old access
   NS_ASSERTION(0, "Bad! Using backup stream generator. Email dp@netscape.com");
+backup_noassert:
   return key.CharAt((PRInt32)(writeCount % key.Length()));
 }
 
@@ -1401,6 +1412,7 @@ Wallet_KeyTimedOut() {
   time_t curTime = time(NULL);
   if (Wallet_IsKeySet() && (curTime >= keyExpiresTime)) {
     Wallet_InitKeySet(PR_FALSE);
+    gNeedsSetup = PR_TRUE;
     SI_RemoveAllSignonData();
     return PR_TRUE;
   }
@@ -1951,9 +1963,9 @@ wallet_ReadFromFile
   /* open input stream */
   nsFileSpec dirSpec;
   nsresult rv;
-  if (localFile) {
-    rv = Wallet_ProfileDirectory(dirSpec);
-  } else {
+  rv = Wallet_ProfileDirectory(dirSpec);
+  if (NS_FAILED(rv) && localFile) {
+    /* if we failed to download the file, see if an initial version of it exists */
     rv = Wallet_ResourceDirectory(dirSpec);
   }
   if (NS_FAILED(rv)) {
@@ -2063,9 +2075,14 @@ wallet_ReadFromURLFieldToSchemaFile
 
   /* open input stream */
   nsFileSpec dirSpec;
-  nsresult rv = Wallet_ResourceDirectory(dirSpec);
+  nsresult rv;
+  rv = Wallet_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
-    return;
+    /* if we failed to download the file, see if an initial version of it exists */
+    rv = Wallet_ResourceDirectory(dirSpec);
+    if (NS_FAILED(rv)) {
+      return;
+    }
   }
   nsInputFileStream strm(dirSpec + filename);
   if (!strm.is_open()) {
@@ -2523,7 +2540,7 @@ wallet_FetchFromNetCenter() {
     return;
   }
   nsFileSpec dirSpec;
-  rv = Wallet_ResourceDirectory(dirSpec);
+  rv = Wallet_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
     return;
   }
