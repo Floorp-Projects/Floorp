@@ -62,3 +62,9 @@ IPC_SendMsg(ipcMessage *msg)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+nsresult
+IPC_DoCallback(ipcCallbackFunc func, void *arg)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
