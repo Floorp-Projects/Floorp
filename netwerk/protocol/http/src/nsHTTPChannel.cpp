@@ -82,15 +82,15 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
                              PRUint32 bufferSegmentSize,
                              PRUint32 bufferMaxSize): 
     mResponse(nsnull),
-    mRawResponseListener(nsnull),
     mHandler(dont_QueryInterface(i_Handler)),
+    mRawResponseListener(nsnull),
     mLoadAttributes(LOAD_NORMAL),
-    mLoadGroup(nsnull),
+    mResponseContext(nsnull),
     mOriginalURI(dont_QueryInterface(originalURI ? originalURI : i_URL)),
     mURI(dont_QueryInterface(i_URL)),
     mConnected(PR_FALSE),
     mState(HS_IDLE),
-    mResponseContext(nsnull),
+    mLoadGroup(nsnull),
     mCachedResponse(nsnull),
     mCachedContentIsAvailable(PR_FALSE),
     mCachedContentIsValid(PR_FALSE),
@@ -957,7 +957,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener, nsIStreamList
     if (header) {
         PRInt32 offset;
 
-        nsCAutoString cacheControlHeader = header;
+        nsCAutoString cacheControlHeader = (const char*)header;
         offset = cacheControlHeader.Find("no-store", PR_TRUE);
         if (offset != kNotFound)
             return NS_OK;
@@ -970,7 +970,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener, nsIStreamList
     if (header) {
         PRInt32 offset;
 
-        nsCAutoString pragmaHeader = header;
+        nsCAutoString pragmaHeader = (const char*)header;
         offset = pragmaHeader.Find("no-cache", PR_TRUE);
         if (offset != kNotFound)
             return NS_OK;
