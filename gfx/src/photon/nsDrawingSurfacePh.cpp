@@ -301,7 +301,10 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
     dim.w ++;
 #endif
 
-printf ("nsDrawingSurfacePh::Init create drawing surface: area=<%d,%d,%d,%d> %p\n",area.pos.x,area.pos.y,area.size.w,area.size.h,image);
+  printf ("nsDrawingSurfacePh::Init create drawing surface: area=<%d,%d,%d,%d> %p\n",area.pos.x,area.pos.y,area.size.w,area.size.h,image);
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init create drawing surface: area=<%d,%d,%d,%d> %p\n",
+    area.pos.x,area.pos.y,area.size.w,area.size.h,image));
 
   PhPoint_t           translation = { 0, 0 };
   PmMemoryContext_t   *mc;
@@ -347,7 +350,7 @@ printf ("nsDrawingSurfacePh::Init create drawing surface: area=<%d,%d,%d,%d> %p\
 	return NS_ERROR_FAILURE;
   }
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init  Finished calling PmMemStart\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init  Finished calling PmMemStart oldDC=<%p> new mc=<%p>\n", oldDC, mc));
 	    
   return NS_OK;
 }
@@ -366,18 +369,18 @@ NS_IMETHODIMP nsDrawingSurfacePh :: ReleaseGC( void )
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select mIsOffscreen=<%d>\n", mIsOffscreen));
-
   PhGC_t *gc = PgGetGC();
 
   if (mholdGC==nsnull)
     mholdGC = mGC;
 
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select mIsOffscreen=<%d> mGC=<%p> gc=<%p> mholdGC=<%p>\n", mIsOffscreen, mGC, gc, mholdGC));
 
   if (gc == mGC)
   {
     //printf ("don't set gc\n");
-    return NS_OK;	// kirk - this was a 0, I think its the same?
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select gc == mGC\n"));
+    return NS_OK;
   }
   else
   {
@@ -393,6 +396,8 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 		return NS_ERROR_FAILURE;
 	  }
 
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select  PmMemFlush\n"));
+
       oldDC=PmMemStart( (PmMemoryContext_t *) mGC);
       if (oldDC == NULL)
 	  {
@@ -402,8 +407,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 		return NS_ERROR_FAILURE;
 	  }
 
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select  Finished calling PmMemStart\n"));
-
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select  Finished calling PmMemStart oldDC=<%p> new mc=<%p>\n", oldDC, mGC));
     }
     else
     {
@@ -417,7 +421,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 
 void nsDrawingSurfacePh::Stop(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Stop mIsOffscreen=<%d>\n", mIsOffscreen));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Stop mIsOffscreen=<%d> mGC=<%p>\n", mIsOffscreen, mGC));
   PgFlush();
 
   if (mIsOffscreen)
