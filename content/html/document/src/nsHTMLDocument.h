@@ -184,7 +184,7 @@ protected:
   static PRBool MatchNameAttribute(nsIContent* aContent, nsString* aData);
   static PRBool MatchFormControls(nsIContent* aContent, nsString* aData);
 
-  nsresult GetSourceDocumentURL(JSContext* cx, nsIURI** sourceURL);
+  static nsresult GetSourceDocumentURL(JSContext* cx, nsIURI** sourceURL);
 
   PRBool GetBodyContent();
   NS_IMETHOD GetBodyElement(nsIDOMHTMLBodyElement** aBody);
