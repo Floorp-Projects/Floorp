@@ -50,6 +50,9 @@
 #include "nsFileWidget.h"
 #include "nsComboBox.h"
 #include "nsLabel.h"
+#include "nsClipboard.h"
+#include "nsTransferable.h"
+#include "nsXIFFormatConverter.h"
 
 #include "nsPhWidgetLog.h"
 
@@ -75,10 +78,21 @@ static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
 static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
+static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
+static NS_DEFINE_IID(kCMenuButton,    NS_MENUBUTTON_CID);
+
+// Drag & Drop, Clipboard
+static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
+static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
+static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
+//static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
+//static NS_DEFINE_IID(kCFileListTransferable, NS_FILELISTTRANSFERABLE_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
+
 
 class nsWidgetFactory : public nsIFactory
 {   
@@ -248,6 +262,18 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance\n"));
     else if (mClassID.Equals(kCLabel)) {
       PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLabel\n" ));
       inst = (nsISupports*)(nsILabel *)new nsLabel();
+    }
+    else if (mClassID.Equals(kCClipboard)) {
+    printf( "Creating nsClipboard instance.\n" );
+        inst = (nsISupports*)(nsBaseClipboard *)new nsClipboard();
+    }
+    else if (mClassID.Equals(kCXIFFormatConverter)) {
+    printf( "Creating nsXIFFormatConverter instance.\n" );
+        inst = (nsISupports*)new nsXIFFormatConverter();
+    }
+    else if (mClassID.Equals(kCTransferable)) {
+    printf( "Creating nsTransferable instance.\n" );
+        inst = (nsISupports*)new nsTransferable();
     }
 												
     if (inst == NULL) {  
