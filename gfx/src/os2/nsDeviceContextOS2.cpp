@@ -807,16 +807,16 @@ NS_IMETHODIMP nsDeviceContextOS2 :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   NS_ADDREF(aDevice);
   
   int numCopies = 0;
-  int toPrinter = 0;
+  int printerDest = 0;
   char *file = nsnull;
 
   ((nsDeviceContextSpecOS2 *)aDevice)->GetPRTQUEUE(pq);
   ((nsDeviceContextSpecOS2 *)aDevice)->GetCopies(numCopies);
-  ((nsDeviceContextSpecOS2 *)aDevice)->GetToPrinter(toPrinter);
-  if (!toPrinter) 
+  ((nsDeviceContextSpecOS2 *)aDevice)->GetDestination(printerDest);
+  if (!printerDest) 
      ((nsDeviceContextSpecOS2 *)aDevice)->GetPath(&file);
 
-  HDC dc = PrnOpenDC(pq, "Mozilla", numCopies, toPrinter, file);
+  HDC dc = PrnOpenDC(pq, "Mozilla", numCopies, printerDest, file);
 
   if (!dc) {
      return NS_ERROR_FAILURE; //PMERROR("DevOpenDC");

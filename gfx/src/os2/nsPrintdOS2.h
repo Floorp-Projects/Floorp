@@ -40,8 +40,15 @@ PR_BEGIN_EXTERN_C
 #endif
 #endif
 
+typedef enum  
+{
+  printToFile = 0, 
+  printToPrinter, 
+  printPreview 
+} printDest;
+
 typedef struct OS2prdata {
-        PRBool toPrinter;          /* If PR_TRUE, print to printer */
+        printDest destination;     /* print to file, printer or print preview */
         int copies;                /* number of copies to print   0 < n < 999 */
         char printer[ PATH_MAX ];  /* Printer selected - name*/
         char path[ PATH_MAX ];     /* If toPrinter = PR_FALSE, dest file */
