@@ -168,10 +168,9 @@ function appendMessage(messageObject)
         cell.setAttribute("msg", scriptError.message);
         cell.setAttribute("error", scriptError.sourceLine);
     } catch (exn) {
-        dump(exn + '\n');
+//          dump(exn + '\n');
         // QI failed, just try to treat it as an nsIConsoleMessage
-        text = messageObject.message;
-        cell.setAttribute("value", text);
+        cell.setAttribute("msg", messageObject.message);
     }
     row.appendChild(cell);
     item.appendChild(row);
@@ -179,7 +178,7 @@ function appendMessage(messageObject)
 	num_errors++;
 
 	//Deletes top error if error console is long
-	if(num_errors>200) { deleteOne(); }
+	if(num_errors>250) { deleteOne(); }
 
 }
 
