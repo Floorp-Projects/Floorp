@@ -4413,7 +4413,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   }
 
   err = timeout->timer->Init(TimerCallback, timeout, (PRInt32)interval,
-                             PR_FALSE);
+                             PR_TRUE);
   if (NS_OK != err) {
     DropTimeout(timeout);
     return err;
