@@ -97,7 +97,7 @@ static nsModuleComponentInfo components[] =
   { "Unichar Bidi Utility", NS_UNICHARBIDIUTIL_CID,
       NS_UNICHARBIDIUTIL_CONTRACTID, nsBidiUtilsImpConstructor},
   { "Bidi Reordering Engine", NS_BIDI_CID,
-      NS_BIDI_CONTRACTID, nsBidiConstructor}
+      NS_BIDI_CONTRACTID, nsBidiConstructor},
 #endif // IBMBIDI
 };
 
