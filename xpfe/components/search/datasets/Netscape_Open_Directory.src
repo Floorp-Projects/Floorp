@@ -1,0 +1,23 @@
+# Sherlock Plugin for Netscape Open Directory
+# v1.1
+# by David Krull
+# Copyright ©1999 Netscape Communications Corp.
+
+<search
+	name="Netscape Open Directory"
+	description = "Netscape Open Directory"
+	method="GET"
+	action="http://info.netscape.com/fwd/sherlocknod/http://directorysearch.netscape.com/cgi-bin/search"
+	update="http://home.netscape.com/escapes/search/NOD_sherlock.src.hqx"
+	updateCheckDays = 3		
+>
+
+<input name="search" user>
+
+<interpret
+	resultListStart = "Web sites reviewed and categorized by a team of editors."
+	resultItemStart = "<li>"
+	bannerStart="<!--AD_TAG VENDOR=ADFORCE WIDTH=468 HEIGHT=60-->"
+	bannerEnd="<!--/AD_TAG-->"
+>
+</search>
