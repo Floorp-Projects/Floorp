@@ -368,10 +368,29 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
     aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
                                 nsClipCombine_kIntersect, clipState);
   }
+  else{
+    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+      const nsStylePadding* myPadding =
+        (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Padding);
+      nsMargin padding;
+      nsRect clipRect(0, 0, mRect.width, mRect.height);
+      if (myPadding->GetPadding(padding)) {
+        clipRect.Deflate(padding);
+      }
+	  
+      aRenderingContext.PushState();
+      aRenderingContext.SetClipRect(clipRect,nsClipCombine_kIntersect, clipState);
+    }
+  }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if ((0 != offset.x) || (0 != offset.y)) {
     aRenderingContext.PopState(clipState);
   }
+  else { 
+    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+      aRenderingContext.PopState(clipState);         
+    }
+  } 
   
   return NS_OK;
   /*nsFrame::Paint(aPresContext,
