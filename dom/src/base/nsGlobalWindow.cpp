@@ -137,6 +137,7 @@
 #include "nsGlobalWindowCommands.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
+#include "nsCSSProps.h"
 
 #include "plbase64.h"
 
@@ -5601,59 +5602,26 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
 
   // use C strings to keep the code/data size down
   NS_ConvertUCS2toUTF8 cursorString(aCursor);
-  
+
   if (cursorString.Equals("auto"))
     cursor = NS_STYLE_CURSOR_AUTO;
-  else if (cursorString.Equals("default"))
-    cursor = NS_STYLE_CURSOR_DEFAULT;
-  else if (cursorString.Equals("pointer"))
-    cursor = NS_STYLE_CURSOR_POINTER;
-  else if (cursorString.Equals("crosshair"))
-    cursor = NS_STYLE_CURSOR_CROSSHAIR;
-  else if (cursorString.Equals("move"))
-    cursor = NS_STYLE_CURSOR_MOVE;
-  else if (cursorString.Equals("text"))
-    cursor = NS_STYLE_CURSOR_TEXT;
-  else if (cursorString.Equals("wait"))
-    cursor = NS_STYLE_CURSOR_WAIT;
-  else if (cursorString.Equals("help"))
-    cursor = NS_STYLE_CURSOR_HELP;
-  else if (cursorString.Equals("n-resize"))
-    cursor = NS_STYLE_CURSOR_N_RESIZE;
-  else if (cursorString.Equals("s-resize"))
-    cursor = NS_STYLE_CURSOR_S_RESIZE;
-  else if (cursorString.Equals("w-resize"))
-    cursor = NS_STYLE_CURSOR_W_RESIZE;
-  else if (cursorString.Equals("e-resize"))
-    cursor = NS_STYLE_CURSOR_E_RESIZE;
-  else if (cursorString.Equals("ne-resize"))
-    cursor = NS_STYLE_CURSOR_NE_RESIZE;
-  else if (cursorString.Equals("nw-resize"))
-    cursor = NS_STYLE_CURSOR_NW_RESIZE;
-  else if (cursorString.Equals("se-resize"))
-    cursor = NS_STYLE_CURSOR_SE_RESIZE;
-  else if (cursorString.Equals("sw-resize"))
-    cursor = NS_STYLE_CURSOR_SW_RESIZE;
-  else if (cursorString.Equals("copy"))
-    cursor = NS_STYLE_CURSOR_COPY;      // CSS3
-  else if (cursorString.Equals("alias"))
-    cursor = NS_STYLE_CURSOR_ALIAS;
-  else if (cursorString.Equals("context-menu"))
-    cursor = NS_STYLE_CURSOR_CONTEXT_MENU;
-  else if (cursorString.Equals("cell"))
-    cursor = NS_STYLE_CURSOR_CELL;
-  else if (cursorString.Equals("grab"))
-    cursor = NS_STYLE_CURSOR_GRAB;
-  else if (cursorString.Equals("grabbing"))
-    cursor = NS_STYLE_CURSOR_GRABBING;
-  else if (cursorString.Equals("spinning"))
-    cursor = NS_STYLE_CURSOR_SPINNING;
-  else if (cursorString.Equals("-moz-zoom-in"))
-    cursor = NS_STYLE_CURSOR_MOZ_ZOOM_IN;
-  else if (cursorString.Equals("-moz-zoom-out"))
-    cursor = NS_STYLE_CURSOR_MOZ_ZOOM_OUT;
-  else
-    return NS_OK;
+  else {
+    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(aCursor);
+    if (eCSSKeyword_UNKNOWN == keyword ||
+        !nsCSSProps::FindKeyword(keyword, nsCSSProps::kCursorKTable, cursor)) {
+      // XXX remove the following three values (leave return NS_OK) after 1.8
+      // XXX since they should have been -moz- prefixed (covered by FindKeyword).
+      // XXX (also remove |cursorString| at that point?).
+      if (cursorString.Equals("grab"))
+        cursor = NS_STYLE_CURSOR_GRAB;
+      else if (cursorString.Equals("grabbing"))
+        cursor = NS_STYLE_CURSOR_GRABBING;
+      else if (cursorString.Equals("spinning"))
+        cursor = NS_STYLE_CURSOR_SPINNING;
+      else
+        return NS_OK;
+    }
+  }
 
   nsCOMPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));

@@ -295,7 +295,6 @@ protected:
   // ParseColorOpacity will enforce that the color ends with a ')' after the opacity
   PRBool ParseColorOpacity(nsresult& aErrorCode, PRUint8& aOpacity);
   PRBool ParseEnum(nsresult& aErrorCode, nsCSSValue& aValue, const PRInt32 aKeywordTable[]);
-  PRInt32 SearchKeywordTable(nsCSSKeyword aKeyword, const PRInt32 aTable[]);
   PRBool ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
                       PRInt32 aVariantMask,
                       const PRInt32 aKeywordTable[]);
@@ -2759,9 +2758,9 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
       else {
         nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
         if (eCSSKeyword_UNKNOWN < keyword) { // known keyword
-          PRInt32 index = SearchKeywordTable(keyword, nsCSSProps::kColorKTable);
-          if (0 < index) {
-            aValue.SetIntValue(nsCSSProps::kColorKTable[index], eCSSUnit_Integer);
+          PRInt32 value;
+          if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kColorKTable, value)) {
+            aValue.SetIntValue(value, eCSSUnit_Integer);
             return PR_TRUE;
           }
         }
@@ -3442,18 +3441,6 @@ static const nsCSSProperty kBorderLeftIDs[] = {
   eCSSProperty_border_left_color
 };
 
-PRInt32 CSSParserImpl::SearchKeywordTable(nsCSSKeyword aKeyword, const PRInt32 aKeywordTable[])
-{
-  PRInt32 index = 0;
-  while (0 <= aKeywordTable[index]) {
-    if (aKeyword == nsCSSKeyword(aKeywordTable[index++])) {
-      return index;
-    }
-    index++;
-  }
-  return -1;
-}
-
 PRBool CSSParserImpl::ParseEnum(nsresult& aErrorCode, nsCSSValue& aValue,
                                 const PRInt32 aKeywordTable[])
 {
@@ -3463,9 +3450,9 @@ PRBool CSSParserImpl::ParseEnum(nsresult& aErrorCode, nsCSSValue& aValue,
   }
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(*ident);
   if (eCSSKeyword_UNKNOWN < keyword) {
-    PRInt32 index = SearchKeywordTable(keyword, aKeywordTable);
-    if (0 < index) {
-      aValue.SetIntValue(aKeywordTable[index], eCSSUnit_Enumerated);
+    PRInt32 value;
+    if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
+      aValue.SetIntValue(value, eCSSUnit_Enumerated);
       return PR_TRUE;
     }
   }
@@ -3605,9 +3592,9 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
         }
       }
       if ((aVariantMask & VARIANT_KEYWORD) != 0) {
-        PRInt32 index = SearchKeywordTable(keyword, aKeywordTable);
-        if (0 < index) {
-          aValue.SetIntValue(aKeywordTable[index], eCSSUnit_Enumerated);
+        PRInt32 value;
+        if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
+          aValue.SetIntValue(value, eCSSUnit_Enumerated);
           return PR_TRUE;
         }
       }
@@ -3753,8 +3740,9 @@ PRBool CSSParserImpl::ParseCounter(nsresult& aErrorCode, nsCSSValue& aValue)
         if (ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
           if (GetToken(aErrorCode, PR_TRUE) && (eCSSToken_Ident == mToken.mType)) {
             nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+            PRInt32 dummy;
             if ((eCSSKeyword_UNKNOWN < keyword) && 
-                (0 < SearchKeywordTable(keyword, nsCSSProps::kListStyleKTable))) {
+                nsCSSProps::FindKeyword(keyword, nsCSSProps::kListStyleKTable, dummy)) {
               counter.Append(PRUnichar(','));
               counter.Append(mToken.mIdent);
             }
