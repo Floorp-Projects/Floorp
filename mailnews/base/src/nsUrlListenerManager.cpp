@@ -24,22 +24,21 @@
 #endif
 
 nsUrlListenerManager::nsUrlListenerManager() :
-    mRefCnt(0)
+    mRefCnt(0),
+    m_listeners(nsnull)
 {
 	NS_INIT_REFCNT();
 	// create a new isupports array to store our listeners in...
-	nsresult rv = NS_NewISupportsArray(getter_AddRefs(m_listeners));
+	m_listeners = new nsVoidArray();
 }
 
 nsUrlListenerManager::~nsUrlListenerManager()
 {
 	if (m_listeners)
 	{
-		PRUint32 cnt = 0;
+		PRUint32 count = m_listeners->Count();
 
-        m_listeners->Count(&cnt);
-
-		for (int i = cnt - 1; i >= 0; i--)
+		for (int i = count - 1; i >= 0; i--)
 			m_listeners->RemoveElementAt(i);
 	}
 }
@@ -49,7 +48,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsIUrlListenerManager::GetIID
 nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 {
 	if (m_listeners && aUrlListener)
-		m_listeners->AppendElement(aUrlListener);
+		m_listeners->AppendElement((void *) aUrlListener);
 
 	return NS_OK;
 }
@@ -57,7 +56,7 @@ nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 nsresult nsUrlListenerManager::UnRegisterListener(nsIUrlListener * aUrlListener)
 {
 	if (m_listeners && aUrlListener)
-		m_listeners->RemoveElement(aUrlListener);
+		m_listeners->RemoveElement((void *) aUrlListener);
 	return NS_OK;
 }
 
@@ -70,10 +69,8 @@ nsresult nsUrlListenerManager::BroadcastChange(nsIURL * aUrl, nsUrlNotifyType no
 	{
 		// enumerate over all url listeners...(Start at the end and work our way down)
 		nsIUrlListener * listener = nsnull;
-        PRUint32 cnt = 0;
-        m_listeners->Count(&cnt);
 		
-		for (PRUint32 i = cnt; i > 0; i--)
+		for (PRUint32 i = m_listeners->Count(); i > 0; i--)
 		{
 			listener = (nsIUrlListener *) m_listeners->ElementAt(i-1);
 			if (listener)
