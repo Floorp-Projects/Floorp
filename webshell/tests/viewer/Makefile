@@ -17,16 +17,12 @@
 
 DEPTH=../../..
 
-MOTIFLIBDIR = /usr/X11R6/lib
-
-MOTIFLIBS = $(MOTIFLIBDIR)/libXm.a $(MOTIFLIBDIR)/libXt.a $(MOTIFLIBDIR)/libX11.a
-
-
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
-	main.cpp \
+	main.cpp		\
 	$(NULL)
+
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom -I$(PUBLIC)/netlib -I$(PUBLIC)/js
 
@@ -34,9 +30,8 @@ DIRS	=
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
-
-
 EX_LIBS = \
+	$(DIST)/bin/libraptorbase.so	\
 	$(DIST)/bin/libpng.so \
 	$(DIST)/bin/libpref.so \
 	$(DIST)/bin/libraptorbase.so \
@@ -88,11 +83,9 @@ EX_LIBS = \
 	$(DIST)/bin/libzlib.so \
 	$(NULL)
 
-
-PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+PROGS   = $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
 TARGETS = $(PROGS)
-
 
 include $(DEPTH)/config/rules.mk
 
@@ -107,13 +100,18 @@ $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
 
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsDocLoader.o 
+$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsDocLoader.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(MOTIFLIBS)
-
+ifeq ($(OS_ARCH),Linux)
+	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
+else
+	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
+endif
 
 export::
 
 install:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
+
+
 
