@@ -146,7 +146,7 @@ InitDebugFlags()
 }
 
 #undef NOISY_FIRST_LINE
-#undef  REALLY_NOISY_FIRST_LINE
+#undef REALLY_NOISY_FIRST_LINE
 #undef NOISY_FIRST_LETTER
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_FLOATER_CLEARING
@@ -410,6 +410,10 @@ public:
   }
 
   PRBool IsImpactedByFloater() {
+#ifdef REALLY_NOISY_REFLOW
+    printf("nsBlockReflowState::IsImpactedByFloater %p returned %d\n", 
+           this, mBand.GetFloaterCount());
+#endif
     return mBand.GetFloaterCount();
   }
 
@@ -741,16 +745,15 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
                            (const nsStyleStruct*&) spacing);
       switch (spacing->mFloatEdge) {
         default:
-        case NS_STYLE_FLOAT_EDGE_CONTENT:
+        case NS_STYLE_FLOAT_EDGE_CONTENT:  // content and only content does runaround of floaters
           // The child block will flow around the floater. Therefore
           // give it all of the available space.
           aResult.x = borderPadding.left;
           aResult.width = mUnconstrainedWidth
             ? NS_UNCONSTRAINEDSIZE
             : mContentArea.width;
-          break;
-
-        case NS_STYLE_FLOAT_EDGE_BORDER:
+           break;
+        case NS_STYLE_FLOAT_EDGE_BORDER: 
         case NS_STYLE_FLOAT_EDGE_PADDING:
           {
             // The child block's border should be placed adjacent to,
@@ -819,6 +822,9 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
     aResult.x = mAvailSpaceRect.x + borderPadding.left;
     aResult.width = mAvailSpaceRect.width;
   }
+#ifdef REALLY_NOISY_REFLOW
+  printf("  CBAS: result %d %d %d %d\n", aResult.x, aResult.y, aResult.width, aResult.height);
+#endif
 }
 
 PRBool
@@ -1069,7 +1075,11 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       mSpaceManager->AddRectRegion(floater, fc->mRegion);
       fc = fc->Next();
     }
-
+#ifdef DEBUG
+    if (gNoisyReflow || gNoisySpaceManager) {
+      mSpaceManager->List(stdout);
+    }
+#endif
     // And then put the translation back again
     mSpaceManager->Translate(bp.left, bp.top);
   }
@@ -1394,8 +1404,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": begin reflow availSize=%d,%d computedSize=%d,%d\n",
-           aReflowState.availableWidth, aReflowState.availableHeight,
+    printf(": begin reflow type %d availSize=%d,%d computedSize=%d,%d\n",
+           aReflowState.reason, aReflowState.availableWidth, aReflowState.availableHeight,
            aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   }
   if (gNoisy) {
@@ -1437,6 +1447,9 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     // Set the space manager in the existing reflow state
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
     reflowState.mSpaceManager = spaceManager.get();
+#ifdef NOISY_SPACEMANAGER
+    printf("constructed new space manager %p\n", reflowState.mSpaceManager);
+#endif
   }
 
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
@@ -1621,23 +1634,45 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
+  // see if verifyReflow is enabled, and if so store off the space manager pointer
+#ifdef DEBUG
+  PRInt32 verifyReflowFlags = nsIPresShell::GetVerifyReflowFlags();
+  if (VERIFY_REFLOW_INCLUDE_SPACE_MANAGER & verifyReflowFlags)
+  {
+    // this is a leak of the space manager, but it's only in debug if verify reflow is enabled, so not a big deal
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    if (shell) {
+      nsCOMPtr<nsIFrameManager>  frameManager;
+      shell->GetFrameManager(getter_AddRefs(frameManager));  
+      if (frameManager) {
+        nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
+        nsISpaceManager *spaceManager = reflowState.mSpaceManager;
+        NS_ADDREF(spaceManager);
+        rv = frameManager->SetFrameProperty(this, nsLayoutAtoms::spaceManagerProperty,
+                                            reflowState.mSpaceManager, nsnull /* should be nsSpaceManagerDestroyer*/);
+      }
+    }
+  }
+#endif
+
   // If we set the space manager, then restore the old space manager now that we're
   // going out of scope
   if (NS_BLOCK_SPACE_MGR & mState) {
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
+#ifdef NOISY_SPACEMANAGER
+    printf("restoring old space manager %p\n", oldSpaceManager);
+#endif
     reflowState.mSpaceManager = oldSpaceManager;
   }
 
-#if 0
 #ifdef NOISY_SPACEMANAGER
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    if (mSpaceManager) {
-      ListTag(stdout);
-      printf(": space-manager after reflow\n");
-      mSpaceManager->List(stdout);
-    }
+  nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
+  if (reflowState.mSpaceManager) {
+    ListTag(stdout);
+    printf(": space-manager %p after reflow\n", reflowState.mSpaceManager);
+    reflowState.mSpaceManager->List(stdout);
   }
-#endif
 #endif
   
   // If this is an incremental reflow and we changed size, then make sure our
@@ -2364,6 +2399,12 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       }
       else {
         // We can avoid reflowing *some* inline lines in some cases.
+#ifdef REALLY_NOISY_REFLOW
+      printf("PrepareResizeReflow thinks line %p is %simpacted by floaters\n", 
+        line, line->IsImpactedByFloater() ? "" : "not ");
+#endif
+
+
         if (notWrapping) {
           // When no-wrap is set then the only line-breaking that
           // occurs for inline lines is triggered by BR elements or by
@@ -2525,7 +2566,11 @@ nsBlockFrame::PropogateReflowDamage(nsBlockReflowState& aState,
         //then we don't need to mark the line dirty.
         aState.GetAvailableSpace(next->mBounds.y + aDeltaY);
         PRBool wasImpactedByFloater = next->IsImpactedByFloater();
-        PRBool isImpactedByFloater = aState.IsImpactedByFloater();
+        PRBool isImpactedByFloater = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
+#ifdef REALLY_NOISY_REFLOW
+        printf("nsBlockFrame::PropogateReflowDamage %p was = %d, is=%d\n", 
+           this, wasImpactedByFloater, isImpactedByFloater);
+#endif
         if (wasImpactedByFloater != isImpactedByFloater) {
           next->MarkDirty();
         }
@@ -2659,10 +2704,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       if (NS_FAILED(rv)) {
         return rv;
       }
-  if (!(NS_FRAME_IS_COMPLETE(aState.mReflowStatus)))
-  {
-    printf("line %p is not complete\n", line);
-  }
       if (!keepGoing) {
         if (0 == line->GetChildCount()) {
           DeleteLine(aState, line);
@@ -2826,7 +2867,7 @@ nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
 
 /**
  * Reflow a line. The line will either contain a single block frame
- * or contain 1 or more inline frames. aLineReflowStatus indicates
+ * or contain 1 or more inline frames. aKeepReflowGoing indicates
  * whether or not the caller should continue to reflow more lines.
  */
 nsresult
@@ -3512,7 +3553,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
   // Compute the available space for the block
   aState.GetAvailableSpace();
-  aLine->SetLineIsImpactedByFloater(aState.IsImpactedByFloater());
+#ifdef REALLY_NOISY_REFLOW
+  printf("setting line %p isImpacted to %s\n", aLine, aState.IsImpactedByFloater()?"true":"false");
+#endif
+  PRBool isImpacted = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
+  aLine->SetLineIsImpactedByFloater(isImpacted);
   nsSplittableType splitType = NS_FRAME_NOT_SPLITTABLE;
   frame->IsSplittable(splitType);
   nsRect availSpace;
@@ -3855,8 +3900,12 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // into. Apply a previous block frame's bottom margin first.
   aState.mY += aState.mPrevBottomMargin;
   aState.GetAvailableSpace();
-  PRBool impactedByFloaters = aState.IsImpactedByFloater();
+  PRBool impactedByFloaters = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
   aLine->SetLineIsImpactedByFloater(impactedByFloaters);
+#ifdef REALLY_NOISY_REFLOW
+  printf("nsBlockFrame::DoReflowInlineFrames %p impacted = %d\n",
+         this, impactedByFloaters);
+#endif
 
   const nsMargin& borderPadding = aState.BorderPadding();
   nscoord x = aState.mAvailSpaceRect.x + borderPadding.left;
@@ -4697,10 +4746,10 @@ nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
     // we are told to reflow again before a next-in-flow is created
     // and reflows.
     nsLineBox* lastLine = nsLineBox::LastLine(mLines);
-    if (nsnull == lastLine) {
-      mLines = overflowLines;
+    if (nsnull == lastLine) {  // if we had no lines before the drain operation
+      mLines = overflowLines;  // set our mLines to the overflow
     }
-    else {
+    else {                     // otherwise, append the overflow to the mLines list
       lastLine->mNext = overflowLines;
       nsIFrame* lastFrame = lastLine->LastChild();
       lastFrame->SetNextSibling(overflowLines->mFirstChild);

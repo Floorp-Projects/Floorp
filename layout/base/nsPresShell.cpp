@@ -22,6 +22,7 @@
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsIPresShell.h"
+#include "nsISpaceManager.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -48,6 +49,7 @@
 #include "nsIDOMSelection.h"
 #include "nsISelectionController.h"
 #include "nsLayoutCID.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -573,15 +575,7 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrameManager* aFrameManager)
  * means that you cannot perform logging before then.
  */
 static PRLogModuleInfo* gLogModule;
-
 static PRUint32 gVerifyReflowFlags;
-
-#define VERIFY_REFLOW_ON              0x01
-#define VERIFY_REFLOW_NOISY           0x02
-#define VERIFY_REFLOW_ALL             0x04
-#define VERIFY_REFLOW_DUMP_COMMANDS   0x08
-#define VERIFY_REFLOW_NOISY_RC        0x10
-#define VERIFY_REFLOW_REALLY_NOISY_RC 0x20
 #endif
 
 static PRBool gVerifyReflowEnabled;
@@ -625,6 +619,12 @@ NS_LAYOUT void
 nsIPresShell::SetVerifyReflowEnable(PRBool aEnabled)
 {
   gVerifyReflowEnabled = aEnabled;
+}
+
+NS_LAYOUT PRInt32
+nsIPresShell::GetVerifyReflowFlags()
+{
+  return gVerifyReflowFlags;
 }
 
 //----------------------------------------------------------------------
@@ -1406,6 +1406,13 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #endif
   }
   ExitReflowLock(PR_TRUE);
+  // if the proper flag is set, VerifyReflow now
+  if (GetVerifyReflowEnable() && (VERIFY_REFLOW_DURING_RESIZE_REFLOW & gVerifyReflowFlags))
+  {
+    mInVerifyReflow = PR_TRUE;
+    PRBool ok = VerifyIncrementalReflow();
+    mInVerifyReflow = PR_FALSE;
+  }
   
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -3231,6 +3238,8 @@ static PRBool
 CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame, 
              nsIPresContext* aSecondPresContext, nsIFrame* aSecondFrame)
 {
+  if (!aFirstPresContext || !aFirstFrame || !aSecondPresContext || !aSecondFrame)
+    return PR_TRUE;
   PRBool ok = PR_TRUE;
   nsIAtom* listName = nsnull;
   PRInt32 listIndex = 0;
@@ -3304,6 +3313,115 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
         if (!ok && (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags))) {
           break;
         }
+
+        // verify that neither frame has a space manager,
+        // or they both do and the space managers are equivalent
+        nsCOMPtr<nsIFrameManager>fm1;
+        nsCOMPtr<nsIPresShell> ps1;
+        nsISpaceManager *sm1; // note, no ref counting here
+        aFirstPresContext->GetShell(getter_AddRefs(ps1));
+        NS_ASSERTION(ps1, "no pres shell for primary tree!");
+        ps1->GetFrameManager(getter_AddRefs(fm1));
+        NS_ASSERTION(fm1, "no frame manager for primary tree!");
+        fm1->GetFrameProperty((nsIFrame*)k1, nsLayoutAtoms::spaceManagerProperty,
+                                     0, (void **)&sm1);
+        // look at the test frame
+        nsCOMPtr<nsIFrameManager>fm2;
+        nsCOMPtr<nsIPresShell> ps2;
+        nsISpaceManager *sm2; // note, no ref counting here
+        aSecondPresContext->GetShell(getter_AddRefs(ps2));
+        NS_ASSERTION(ps2, "no pres shell for test tree!");
+        ps2->GetFrameManager(getter_AddRefs(fm2));
+        NS_ASSERTION(fm2, "no frame manager for test tree!");
+        fm2->GetFrameProperty((nsIFrame*)k2, nsLayoutAtoms::spaceManagerProperty,
+                                     0, (void **)&sm2);
+        // now compare the space managers
+        if (((nsnull == sm1) && (nsnull != sm2)) ||
+            ((nsnull != sm1) && (nsnull == sm2))) {   // one is null, and the other is not
+          ok = PR_FALSE;
+          LogVerifyMessage(k1, k2, "space managers are not matched\n");
+        }
+        else if (sm1 && sm2) {  // both are not null, compare them
+          // first, compare yMost
+          nscoord yMost1, yMost2;
+          nsresult smresult = sm1->YMost(yMost1);
+          if (NS_ERROR_ABORT != smresult)
+          {
+            NS_ASSERTION(NS_SUCCEEDED(smresult), "bad result");
+            smresult = sm2->YMost(yMost2);
+            NS_ASSERTION(NS_SUCCEEDED(smresult), "bad result");
+            if (yMost1 != yMost2) {
+              LogVerifyMessage(k1, k2, "yMost of space managers differs\n");
+            }
+            // now compare bands by sampling
+            PRInt32 yIncrement = yMost1/100;
+            if (0==yIncrement) {
+              yIncrement = 1;   // guarantee we make progress in the loop below
+            }
+            nscoord yOffset = 0;
+            for ( ; ok && yOffset < yMost1; yOffset += yIncrement)
+            {
+              nscoord small=5, large=100;
+              nsBandData band1, band2;
+              nsBandTrapezoid trap1[20], trap2[20];
+              band1.mSize = band2.mSize = 20;
+              band1.mTrapezoids = trap1;  
+              band2.mTrapezoids = trap2;
+              sm1->GetBandData(yOffset, nsSize(small,small), band1);
+              sm2->GetBandData(yOffset, nsSize(small,small), band2);
+              if (band1.mCount != band2.mCount) 
+              { // count mismatch, stop comparing
+                LogVerifyMessage(k1, k2, "band.mCount of space managers differs\n");
+                printf("count1= %d, count2=%d, yOffset = %d, size=%d\n",
+                        band1.mCount, band2.mCount, yOffset, small);
+                ok = PR_FALSE;
+                      
+              }
+              else   // band counts match, compare individual traps
+              { 
+                PRInt32 trapIndex=0;
+                for ( ;trapIndex<band1.mCount; trapIndex++)
+                {
+                  PRBool match = (trap1[trapIndex].EqualGeometry(trap2[trapIndex])) && 
+                    trap1[trapIndex].mState == trap2[trapIndex].mState;
+                  if (!match)
+                  {
+                    LogVerifyMessage(k1, k2, "band.mTrapezoids of space managers differs\n");
+                    printf ("index %d\n", trapIndex);
+                  }
+                }
+              }
+              // test the larger maxSize
+              sm1->GetBandData(yOffset, nsSize(large,large), band1);
+              sm2->GetBandData(yOffset, nsSize(large,large), band2);
+              if (band1.mCount != band2.mCount) 
+              { // count mismatch, stop comparing
+                LogVerifyMessage(k1, k2, "band.mCount of space managers differs\n");
+                printf("count1= %d, count2=%d, yOffset = %d, size=%d\n",
+                        band1.mCount, band2.mCount, yOffset, small);
+                ok = PR_FALSE;
+                      
+              }
+              else   // band counts match, compare individual traps
+              { 
+                PRInt32 trapIndex=0;
+                for ( ; trapIndex<band1.mCount; trapIndex++)
+                {
+                  PRBool match = (trap1[trapIndex].EqualGeometry(trap2[trapIndex])) && 
+                    trap1[trapIndex].mState == trap2[trapIndex].mState;
+                  if (!match)
+                  {
+                    LogVerifyMessage(k1, k2, "band.mTrapezoids of space managers differs\n");
+                    printf ("index %d\n", trapIndex);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+
+
 
         // Compare the sub-trees too
         if (!CompareTrees(aFirstPresContext, k1, aSecondPresContext, k2)) {

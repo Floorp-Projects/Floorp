@@ -235,6 +235,10 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
                               PRBool aImpactedByFloaters,
                               PRBool aIsTopOfPage)
 {
+#ifdef REALLY_NOISY_REFLOW
+  printf("nsLL::BeginLineReflow %d, %d, %d, %d, impacted=%s\n",
+         aX, aY, aWidth, aHeight, aImpactedByFloaters?"true":"false");
+#endif
   NS_ASSERTION(nsnull == mRootSpan, "bad linelayout user");
 #ifdef DEBUG
   if ((aWidth != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aWidth)) {
@@ -350,6 +354,10 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
                          PRBool aPlacedLeftFloater,
                          nsIFrame* aFloaterFrame)
 {
+#ifdef REALLY_NOISY_REFLOW
+  printf("nsLL::UpdateBand %d, %d, %d, %d, frame=%p placedLeft=%s\n  will set mImpacted to PR_TRUE",
+         aX, aY, aWidth, aHeight, aFloaterFrame, aPlacedLeftFloater?"true":"false");
+#endif
   PerSpanData* psd = mRootSpan;
   NS_PRECONDITION(psd->mX == psd->mLeftEdge, "update-band called late");
 #ifdef DEBUG

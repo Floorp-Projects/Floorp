@@ -140,8 +140,15 @@ public:
   virtual void DeleteChildsNextInFlow(nsIPresContext* aPresContext,
                                       nsIFrame* aNextInFlow);
 
+  /** return the topmost block child based on y-index.
+    * almost always the first or second line, if there is one.
+    * accounts for lines that hold only compressed white space, etc.
+    */
   nsIFrame* GetTopBlockChild();
 
+  /** Place the floaters in the spacemanager for all lines in this block.
+    * recursively adds floaters in child blocks of this frame.
+    */
   nsresult UpdateSpaceManager(nsIPresContext* aPresContext,
                               nsISpaceManager* aSpaceManager);
 
@@ -160,9 +167,16 @@ protected:
     return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
+  /** move the frames contained by aLine by aDY
+    * if aLine is a block, it's child floaters are added to the state manager
+    */
   void SlideLine(nsBlockReflowState& aState,
                  nsLineBox* aLine, nscoord aDY);
 
+  /** grab overflow lines from this block's prevInFlow, and make them
+    * part of this block's mLines list.
+    * @return PR_TRUE if any lines were drained.
+    */
   PRBool DrainOverflowLines(nsIPresContext* aPresContext);
 
   virtual PRIntn GetSkipSides() const;
@@ -171,26 +185,51 @@ protected:
                                 nsBlockReflowState&  aState,
                                 nsHTMLReflowMetrics& aMetrics);
 
+  /** add the frames in aFrameList to this block after aPrevSibling
+    * this block thinks in terms of lines, but the frame construction code
+    * knows nothing about lines at all. So we need to find the line that
+    * contains aPrevSibling and add aFrameList after aPrevSibling on that line.
+    * new lines are created as necessary to handle block data in aFrameList.
+    */
   nsresult AddFrames(nsIPresContext* aPresContext,
                      nsIFrame* aFrameList,
                      nsIFrame* aPrevSibling);
 
+  /** move the frame list rooted at aFrame into this as a child
+    * assumes prev/next sibling pointers will be or have been set elsewhere
+    * changes aFrame's parent to be this, and reparents aFrame's view and stylecontext.
+    */
   void FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
+  /** does all the real work for removing aDeletedFrame from this
+    * finds the line containing aFrame.
+    * handled continued frames
+    * marks lines dirty as needed
+    */
   nsresult DoRemoveFrame(nsIPresContext* aPresContext,
                          nsIFrame* aDeletedFrame);
 
 
+  /** set up the conditions necessary for an initial reflow */
   nsresult PrepareInitialReflow(nsBlockReflowState& aState);
 
+  /** set up the conditions necessary for an styleChanged reflow */
   nsresult PrepareStyleChangedReflow(nsBlockReflowState& aState);
 
+  /** set up the conditions necessary for an incremental reflow.
+    * the primary task is to mark the minimumly sufficient lines dirty. 
+    */
   nsresult PrepareChildIncrementalReflow(nsBlockReflowState& aState);
 
+  /** set up the conditions necessary for an resize reflow
+    * the primary task is to mark the minimumly sufficient lines dirty. 
+    */
   nsresult PrepareResizeReflow(nsBlockReflowState& aState);
 
+  /** reflow all lines that have been marked dirty */
   nsresult ReflowDirtyLines(nsBlockReflowState& aState);
 
+  /** set aState to what it would be if we had done a full reflow to this point. */
   void RecoverStateFrom(nsBlockReflowState& aState,
                         nsLineBox* aLine,
                         nscoord aDeltaY,
@@ -198,8 +237,15 @@ protected:
 
   //----------------------------------------
   // Methods for line reflow
-  // XXX nuke em
-
+  /**
+   * Reflow a line.  
+   * @param aState           the current reflow state
+   * @param aLine            the line to reflow.  can contain a single block frame
+   *                         or contain 1 or more inline frames.
+   * @param aKeepReflowGoing [OUT] indicates whether the caller should continue to reflow more lines
+   * @param aDamageDirtyArea if PR_TRUE, do extra work to mark the changed areas as damaged for painting
+   *                         this indicates that frames may have changed size, for example
+   */
   nsresult ReflowLine(nsBlockReflowState& aState,
                       nsLineBox* aLine,
                       PRBool* aKeepReflowGoing,

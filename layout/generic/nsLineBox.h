@@ -189,6 +189,7 @@ public:
 
   // mImpactedByFloater bit
   void SetLineIsImpactedByFloater(PRBool aValue) {
+    NS_ASSERTION((PR_FALSE==aValue || PR_TRUE==aValue), "somebody is playing fast and loose with bools and bits!");
     mFlags.mImpactedByFloater = aValue;
   }
   PRBool IsImpactedByFloater() const {
@@ -197,6 +198,7 @@ public:
 
   // mTrimmed bit
   void SetTrimmed(PRBool aOn) {
+    NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
     mFlags.mTrimmed = aOn;
   }
   PRBool IsTrimmed() const {
@@ -205,6 +207,7 @@ public:
 
   // mHasPercentageChild bit
   void SetHasPercentageChild(PRBool aOn) {
+    NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
     mFlags.mHasPercentageChild = aOn;
   }
   PRBool HasPercentageChild() const {
@@ -213,6 +216,7 @@ public:
 
   // mLineWrapped bit
   void SetLineWrapped(PRBool aOn) {
+    NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
     mFlags.mLineWrapped = aOn;
   }
   PRBool IsLineWrapped() const {
