@@ -25,4 +25,4 @@ FILES=\
         $(NULL)
 
 install::
-        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\defaults
+        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\defaults\profile
