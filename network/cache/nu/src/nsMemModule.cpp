@@ -22,6 +22,7 @@
 
 #include "nsMemModule.h"
 #include "nsMemCacheObject.h"
+#include "nsCacheManager.h"
 
 /* 
  * nsMemModule
@@ -41,35 +42,38 @@ nsMemModule::nsMemModule(const PRUint32 size):
 
 nsMemModule::~nsMemModule()
 {
-	if (m_pFirstObject) {
-		delete m_pFirstObject;
-		m_pFirstObject = 0;
-	}
+    if (m_pFirstObject) {
+        delete m_pFirstObject;
+        m_pFirstObject = 0;
+    }
 }
 
-PRBool nsMemModule::AddObject(nsCacheObject* i_pObject)
+PRBool nsMemModule::AddObject(nsCacheObject* io_pObject)
 {
 
 #if 0
-    if (i_pObject)
+    if (io_pObject)
     {
-        m_ht.Put(
+        m_ht.Put(io_pObject->Address(), io_pObject);
     }
     return PR_FALSE;
 #endif
 
-    if (i_pObject)
+    if (io_pObject)
 	{
 		if (m_pFirstObject) 
 		{
-			LastObject()->Next(new nsMemCacheObject(i_pObject)); 
+			LastObject()->Next(new nsMemCacheObject(io_pObject)); 
 		}
 		else
 		{
-			m_pFirstObject = new nsMemCacheObject(i_pObject);
+			m_pFirstObject = new nsMemCacheObject(io_pObject);
 		}
 		m_Entries++;
-		return PR_TRUE;
+
+        io_pObject->Module(nsCacheManager::MEM);
+
+        return PR_TRUE;
 	}
 	return PR_FALSE;
 }
@@ -174,4 +178,9 @@ nsHashKey* nsMemModule::nsMemKey::Clone()
 {
     return new nsMemModule::nsMemKey();
 }
-*/
+
+nsMemModule::nsMemKey::neMemKey()
+{
+}
+
+  */

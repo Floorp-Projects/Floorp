@@ -27,11 +27,11 @@
 
 nsMemCacheObject::~nsMemCacheObject()
 {
-	if (m_pNextObject)
-	{
-		delete m_pNextObject;
-		m_pNextObject = 0;
-	}
+    if (m_pNextObject)
+    {
+        delete m_pNextObject;
+        m_pNextObject = 0;
+    }
 
     if (m_pObject)
     {

@@ -19,52 +19,56 @@ IGNORE_MANIFEST = 1
 
 DEPTH=..\..\..\..
 
-MAKE_OBJ_TYPE = DLL
-
-LIBNAME = .\$(OBJDIR)\cachelib
-
-DLL = $(LIBNAME).dll
+MAKE_OBJ_TYPE = EXE
+DLLNAME = cachelib
+#DLL = .\$(OBJDIR)\$(DLLNAME).dll
 
 LIBRARY_NAME=cachelib
 
+# Remember to change libplc21 to $whatever it is...
+LLIBS =				 \
+	$(LIBNSPR)		 \
+	$(DIST)\lib\libplc21.lib \
+	$(DIST)\lib\dbm32.lib    \
+ 	$(DIST)\lib\xpcom32.lib  \
+	$(NULL)
+
+MISCDEP = $(LLIBS)
+
 MODULE = cache
 
-CPP_OBJS =					\
-	.\$(OBJDIR)\nsCacheObject.obj 	\
-	.\$(OBJDIR)\nsCacheModule.obj 	\
-	.\$(OBJDIR)\nsMemModule.obj 	\
-	.\$(OBJDIR)\nsDiskModule.obj 	\
-	.\$(OBJDIR)\nsCacheTrace.obj 	\
-	.\$(OBJDIR)\nsCacheManager.obj 	\
-	.\$(OBJDIR)\nsCachePref.obj 	\
+OBJS =						\
+	.\$(OBJDIR)\nsCacheObject.obj 		\
+	.\$(OBJDIR)\nsCacheModule.obj 		\
+	.\$(OBJDIR)\nsMemModule.obj 		\
+	.\$(OBJDIR)\nsDiskModule.obj 		\
+	.\$(OBJDIR)\nsCacheTrace.obj 		\
+	.\$(OBJDIR)\nsCacheManager.obj 		\
+	.\$(OBJDIR)\nsCachePref.obj 		\
 	.\$(OBJDIR)\nsMemCacheObject.obj 	\
 	$(NULL)
 
+#	.\$(OBJDIR)\nsHash.obj 			\
+
 LINCS = 			\
 	-I$(PUBLIC)\xpcom	\
+	-I$(PUBLIC)\dbm		\
 	-I..\public		\
 	-I..\include		\
 	$(NULL)
 
 LCFLAGS =				\
 	$(LCFLAGS)			\
-	-DNS_DLLNAME=$(DLLNAME).dll	\
 	$(NULL)
-
-# Remember to change libplc21 to $whatever it is...
-LLIBS =				 \
-	$(LIBNSPR)		 \
-	$(DIST)\lib\libplc21.lib \
- 	$(DIST)\lib\xpcom32.lib  \
-	$(NULL)
+	#-DNS_DLLNAME=$(DLLNAME).dll	\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-        $(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
-        $(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
+install:: $(EXE)
+        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).$(LIB_SUFFIX) $(DIST)\lib
+# $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).$(DLL_SUFFIX) $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).$(DLL_SUFFIX)
 	rm -f $(DIST)\lib\$(DLLNAME).$(LIB_SUFFIX)
+# rm -f $(DIST)\bin\$(DLLNAME).$(DLL_SUFFIX)
 
