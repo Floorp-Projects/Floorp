@@ -39,7 +39,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
 // PC
 #if defined(XP_PC)
-#define WM_DNS_SHUTDOWN         (WM_USER + 1)
+#define WM_DNS_SHUTDOWN         (WM_USER + 200)
 #endif /* XP_PC */
 
 // MAC
