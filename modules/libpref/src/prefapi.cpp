@@ -940,19 +940,19 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
 			char *tmp_str = str_escape(pref->userPref.stringVal);
 			if (tmp_str)
 			{
-				PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");" LINEBREAK,
+				PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");",
 					(char*) he->key, tmp_str);
 				PR_Free(tmp_str);
 			}
 		}
 		else if (pref->flags & PREF_INT)
 		{
-			PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" LINEBREAK,
+			PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" ,
 				(char*) he->key, (long) pref->userPref.intVal);
 		}
 		else if (pref->flags & PREF_BOOL)
 		{
-			PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" LINEBREAK, (char*) he->key,
+			PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" , (char*) he->key,
 				(pref->userPref.boolVal) ? "true" : "false");
 		}
 
@@ -966,19 +966,19 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
 		{
 			char *tmp_str = str_escape(pref->defaultPref.stringVal);
 			if (tmp_str) {
-				PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");" LINEBREAK,
+				PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");" ,
 					(char*) he->key, tmp_str);
 				PR_Free(tmp_str);
 			}
 		}
 		else if (pref->flags & PREF_INT)
 		{
-			PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" LINEBREAK,
+			PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" ,
 				(char*) he->key, (long) pref->defaultPref.intVal);
 		}
 		else if (pref->flags & PREF_BOOL)
 		{
-			PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" LINEBREAK, (char*) he->key,
+			PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" , (char*) he->key,
 				(pref->defaultPref.boolVal) ? "true" : "false");
 		}
 		prefArray[i] = PL_strdup(buf);

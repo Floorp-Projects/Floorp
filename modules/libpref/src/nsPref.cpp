@@ -1071,7 +1071,7 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
     {
         if (*walker)
         {
-            stream << *walker;
+            stream << *walker << nsEndl;
             PR_Free(*walker);
         }
     }
