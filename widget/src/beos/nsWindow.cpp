@@ -85,8 +85,6 @@ static nsIWidget         * gRollupWidget             = nsnull;
 static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 // Preserve Mozilla's shortcut for closing 
 static PRBool              gGotQuitShortcut          = PR_FALSE;
-// Keep track of mouse button activity
-static PRBool              gMouseUp                  = PR_TRUE;
 // Tracking last activated BWindow
 static BWindow           * gLastActiveWindow = NULL;
 
@@ -770,7 +768,20 @@ NS_METHOD nsWindow::Show(PRBool bState)
 	}
 	return NS_OK;
 }
-
+//-------------------------------------------------------------------------
+// Set/unset mouse capture
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
+{
+	if (mView)
+	{
+		if (PR_TRUE == aCapture)
+			mView->SetEventMask(B_POINTER_EVENTS);
+		else
+			mView->SetEventMask(0);
+	}
+	return NS_OK;
+}
 //-------------------------------------------------------------------------
 // Capture Roolup Events
 //-------------------------------------------------------------------------
@@ -1721,7 +1732,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		DispatchFocus(NS_LOSTFOCUS);
 		break;
 
-	case nsWindow::ONMOUSE :
+	case nsWindow::BTNCLICK :
 		{
 			NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
 			if (!mEnabled)
@@ -1741,8 +1752,6 @@ bool nsWindow::CallMethod(MethodInfo *info)
 					rollup = true;
 				mView->UnlockLooper();
 			}
-			if (rollup)
-				break;
 
 			DispatchMouseEvent(((int32 *)info->args)[0],
 			                   nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
@@ -1845,7 +1854,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		OnScroll();
 		break;
 
-	case nsWindow::BTNCLICK :
+	case nsWindow::ONMOUSE :
 		NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
 		if (!mEnabled)
 			return false;
@@ -2407,6 +2416,7 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint32 clicks, PRUint32 mod)
 {
+	PRBool result = PR_FALSE;
 	if(nsnull != mEventCallback || nsnull != mMouseListener)
 	{
 		nsMouseEvent event;
@@ -2421,7 +2431,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 		// call the event callback
 		if(nsnull != mEventCallback)
 		{
-			PRBool result = DispatchWindowEvent(&event);
+			result = DispatchWindowEvent(&event);
 			NS_RELEASE(event.widget);
 			return result;
 		}
@@ -2430,24 +2440,23 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 			switch(aEventType)
 			{
 			case NS_MOUSE_MOVE :
-				mMouseListener->MouseMoved(event);
+				result = ConvertStatus(mMouseListener->MouseMoved(event));
 				break;
 
 			case NS_MOUSE_LEFT_BUTTON_DOWN :
 			case NS_MOUSE_MIDDLE_BUTTON_DOWN :
 			case NS_MOUSE_RIGHT_BUTTON_DOWN :
-				mMouseListener->MousePressed(event);
+				result = ConvertStatus(mMouseListener->MousePressed(event));
 				break;
 
 			case NS_MOUSE_LEFT_BUTTON_UP :
 			case NS_MOUSE_MIDDLE_BUTTON_UP :
 			case NS_MOUSE_RIGHT_BUTTON_UP :
-				mMouseListener->MouseReleased(event);
-				mMouseListener->MouseClicked(event);
+				result = ConvertStatus(mMouseListener->MouseReleased(event)) && ConvertStatus(mMouseListener->MouseClicked(event));
 				break;
 			}
-
 			NS_RELEASE(event.widget);
+			return result;
 		}
 	}
 
@@ -2569,7 +2578,8 @@ bool nsWindowBeOS::QuitRequested( void )
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
 	{
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::CLOSEWINDOW);
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::CLOSEWINDOW)))
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
@@ -2628,7 +2638,8 @@ void nsWindowBeOS::FrameMoved(BPoint origin)
 		uint32 args[2];
 		args[0] = (uint32)origin.x;
 		args[1] = (uint32)origin.y;
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONMOVE, 2, args);
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONMOVE, 2, args)))
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
@@ -2704,9 +2715,8 @@ void nsWindowBeOS::DoFrameResized()
 		uint32 args[2];
 		args[0]=(uint32)lastWidth+1;
 		args[1]=(uint32)lastHeight+1;
-
-		MethodInfo *info =
-		    new MethodInfo(w, w, nsWindow::ONRESIZE, 2, args);
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONRESIZE, 2, args)))
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
@@ -2721,8 +2731,8 @@ void nsWindowBeOS::WindowActivated(bool active)
 	{
 		uint32	args[1];
 		args[0] = (uint32)active;
-		MethodInfo *info = 
-			new MethodInfo(w, w, nsWindow::ONACTIVATE, 1, args);
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONACTIVATE, 1, args)))
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
@@ -2739,7 +2749,8 @@ void  nsWindowBeOS::WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace)
 		uint32	args[2];
 		args[0] = newworkspace;
 		args[1] = oldworkspace;
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONWORKSPACE, 2, args);
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONWORKSPACE, 2, args)))
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}	
@@ -2771,7 +2782,8 @@ void nsViewBeOS::Draw(BRect updateRect)
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
 	{
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONPAINT);
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONPAINT)))
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
@@ -2793,7 +2805,6 @@ bool nsViewBeOS::GetPaintRect(nsRect &r)
 void nsViewBeOS::MouseDown(BPoint point)
 {
 	SetMouseEventMask(B_POINTER_EVENTS | B_KEYBOARD_EVENTS);
-	gMouseUp = PR_FALSE;
 	uint32 clicks = 0;
 	Window()->CurrentMessage()->FindInt32("buttons", (int32 *)&buttons);
 	Window()->CurrentMessage()->FindInt32("clicks", (int32 *)&clicks);
@@ -2802,7 +2813,7 @@ void nsViewBeOS::MouseDown(BPoint point)
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
 	{
-		if(buttons & (B_PRIMARY_MOUSE_BUTTON | B_SECONDARY_MOUSE_BUTTON | B_TERTIARY_MOUSE_BUTTON))
+		if(0 != buttons)
 		{
 			int32 ev = (buttons & B_PRIMARY_MOUSE_BUTTON) ? NS_MOUSE_LEFT_BUTTON_DOWN :
 			           ((buttons & B_SECONDARY_MOUSE_BUTTON) ? NS_MOUSE_RIGHT_BUTTON_DOWN :
@@ -2813,7 +2824,8 @@ void nsViewBeOS::MouseDown(BPoint point)
 			args[2] = (uint32)point.y;
 			args[3] = clicks;
 			args[4] = modifiers();
-			MethodInfo *info = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
+			MethodInfo *info = nsnull;
+			if(nsnull != (info = new MethodInfo(w, w, nsWindow::BTNCLICK, 5, args)))
 			t->CallMethodAsync(info);
 		}
 		NS_RELEASE(t);
@@ -2822,10 +2834,6 @@ void nsViewBeOS::MouseDown(BPoint point)
 
 void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 {
-	BPoint cur;
-	GetMouse(&cur, &buttons, false);
-	gMouseUp = buttons & B_PRIMARY_MOUSE_BUTTON?PR_FALSE:PR_TRUE;
-	
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
@@ -2839,21 +2847,21 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 		if(transit == B_ENTERED_VIEW)
 		{
 			args[0] = NS_MOUSE_ENTER;
-			MethodInfo *enterInfo =
-			    new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
+			MethodInfo *enterInfo = nsnull;
+			if(nsnull != (enterInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args)))
 			t->CallMethodAsync(enterInfo);
 		}
 
 		args[0] = NS_MOUSE_MOVE;
-		MethodInfo *moveInfo =
-		    new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
+		MethodInfo *moveInfo = nsnull;
+		if(nsnull != (moveInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args)))
 		t->CallMethodAsync(moveInfo);
 
 		if(transit == B_EXITED_VIEW)
 		{
 			args[0] = NS_MOUSE_EXIT;
-			MethodInfo *exitInfo =
-			    new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
+			MethodInfo *exitInfo = nsnull;
+			if(nsnull != (exitInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args)))
 			t->CallMethodAsync(exitInfo);
 		}
 		NS_RELEASE(t);
@@ -2862,12 +2870,11 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 
 void nsViewBeOS::MouseUp(BPoint point)
 {
-	gMouseUp = PR_TRUE;
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
 	{
-		if(buttons & (B_PRIMARY_MOUSE_BUTTON | B_SECONDARY_MOUSE_BUTTON | B_TERTIARY_MOUSE_BUTTON))
+		if(0 != buttons)
 		{
 			int32 ev = (buttons & B_PRIMARY_MOUSE_BUTTON) ? NS_MOUSE_LEFT_BUTTON_UP :
 			           ((buttons & B_SECONDARY_MOUSE_BUTTON) ? NS_MOUSE_RIGHT_BUTTON_UP :
@@ -2878,7 +2885,8 @@ void nsViewBeOS::MouseUp(BPoint point)
 			args[2] = (int32)point.y;
 			args[3] = 0;
 			args[4] = modifiers();
-			MethodInfo *info = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
+			MethodInfo *info = nsnull;
+			if(nsnull != (info = new MethodInfo(w, w, nsWindow::BTNCLICK, 5, args)))
 			t->CallMethodAsync(info);
 		}
 		NS_RELEASE(t);
@@ -2920,8 +2928,8 @@ void nsViewBeOS::MessageReceived(BMessage *msg)
 					args[0] = (uint32)3;
 				else
 					args[0] = (uint32)-3;
-
-				MethodInfo *info = new MethodInfo(w, w, nsWindow::ONWHEEL, 1, args);
+				MethodInfo *info = nsnull;
+				if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONWHEEL, 1, args)))
 				t->CallMethodAsync(info);
 				NS_RELEASE(t);
 			}
@@ -2960,8 +2968,8 @@ void nsViewBeOS::KeyDown(const char *bytes, int32 numBytes)
 		args[3] = modifiers();
 		args[4] = keycode;
 		args[5] = rawcode;
-
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 6, args);
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONKEY, 6, args)))
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
@@ -2992,8 +3000,8 @@ void nsViewBeOS::KeyUp(const char *bytes, int32 numBytes)
 		args[3] = modifiers();
 		args[4] = keycode;
 		args[5] = rawcode;
-
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 6, args);
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONKEY, 6, args)))
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
@@ -3010,7 +3018,8 @@ void nsViewBeOS::MakeFocus(bool focused)
 	{
 		uint32 args[1];
 		args[0]=(uint32)Window();
-		MethodInfo *info = new MethodInfo(w, w, (focused)? nsWindow::GOT_FOCUS : nsWindow::KILL_FOCUS,1,args);
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, (focused)? nsWindow::GOT_FOCUS : nsWindow::KILL_FOCUS,1,args)))
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
