@@ -47,7 +47,7 @@
 # basic static variables
 # 
 DEPTH		= mozilla
-AUTOCONF	= autoconf
+AUTOCONF	= autoconf -l build/autoconf
 TARGETS		= export libs install
 MKDIR		= mkdir
 SH			= /bin/sh
