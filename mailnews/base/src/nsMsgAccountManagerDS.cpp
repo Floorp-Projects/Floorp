@@ -228,7 +228,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str = "Server";
 
     else if (source == kNC_PageTitleCopies)
-      str = "Copies";
+      str = "Copies and Folders";
 
     else if (source == kNC_PageTitleAdvanced)
       str = "Advanced";
