@@ -531,18 +531,15 @@ function splitLongWord (str, pos)
 
 function getRandomElement (ary)
 {
-    var i = parseInt (Math.random() * ary.length)
-	if (i == ary.length) i = 0;
 
-    return ary[i];
+    return ary[Math.floor(Math.random() * ary.length)];
 
 }
 
 function roundTo (num, prec)
 {
 
-    return parseInt (Math.round(num * Math.pow (10, prec))) /
-        Math.pow (10, prec);   
+    return Math.round(num * Math.pow (10, prec)) / Math.pow (10, prec);   
 
 }
 
@@ -555,9 +552,7 @@ function randomRange (min, max)
     if (typeof max == "undefined")
         max = 1;
 
-    var rv = (parseInt(Math.round((Math.random() * (max - min)) + min )));
-    
-    return rv;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 
 }
 
