@@ -1,7 +1,20 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
 
-<!DOCTYPE window> 
+<!DOCTYPE window
+[
+                            
+<!--  TEXT ENTITY DECLARATION BEGIN  -->
+
+<!ENTITY toAddr.label   "To:"> 
+<!ENTITY ccAddr.label   "Cc:"> 
+<!ENTITY bccAddr.label   "Bcc:"> 
+<!ENTITY newsgroupsAddr.label   "Newsgroups:"> 
+<!ENTITY subject.label   "Subject:"> 
+
+<!-- TEXT ENTITY DECLARATION END     -->
+   
+]>
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -68,6 +81,7 @@
 //			composeAppCore.SendMessage(document.getElementById('msgTo').value, 
 //					   document.getElementById('msgCc').value, 
 //					   document.getElementById('msgBcc').value, 
+//					   document.getElementById('msgNewsgroup').value, 
 //					   document.getElementById('msgSubject').value, 
 //					   window.parent.frames[0].document.forms["fbody"].elements["body"].value);
 //					   EditorGetText());
@@ -83,6 +97,7 @@
 		document.getElementById('msgTo').value = "";
 		document.getElementById('msgCc').value = "";
 		document.getElementById('msgBcc').value = "";
+		document.getElementByID('msgNewsgroup').value = "";
 		document.getElementById('msgSubject').value = "";
 //		window.parent.frames[0].document.forms["fbody"].elements["body"].value = "";
 	}
@@ -101,53 +116,53 @@
 
 <menubar>
 	<menu name="File">
-		<menuitem name="New" cmd="nsCmd:ComposeNew"/>
-		<menuitem name="Save" cmd="nsCmd:ComposeSave"/>
-		<menuitem name="Save As" cmd="nsCmd:ComposeSaveAs"/>
-		<menuitem name="Attach" cmd="nsCmd:ComposeAttach"/>
+		<menuitem name=".New" cmd="nsCmd:ComposeNew"/>
+		<menuitem name=".Save" cmd="nsCmd:ComposeSave"/>
+		<menuitem name=".Save As" cmd="nsCmd:ComposeSaveAs"/>
+		<menuitem name=".Attach" cmd="nsCmd:ComposeAttach"/>
 		<separator/>
-		<menuitem name="Send Now" cmd="nsCmd:ComposeSend"/>
-		<menuitem name="Send Later" cmd="nsCmd:ComposeSendLater"/>
-		<menuitem name="Quote Original Message" cmd="nsCmd:ComposeQuote"/>
-		<menuitem name="Select Addresses..." cmd="nsCmd:ComposeAddress"/>
+		<menuitem name=".Send Now" cmd="nsCmd:ComposeSend"/>
+		<menuitem name=".Send Later" cmd="nsCmd:ComposeSendLater"/>
+		<menuitem name=".Quote Original Message" cmd="nsCmd:ComposeQuote"/>
+		<menuitem name=".Select Addresses..." cmd="nsCmd:ComposeAddress"/>
 		<separator/>
-		<menuitem name="Print Setup" cmd="nsCmd:BrowserPrintSetup"/>
-		<menuitem name="Print Preview" cmd="nsCmd:BrowserPrintPreview"/>
-		<menuitem name="Print" cmd="nsCmd:BrowserPrint"/>
+		<menuitem name=".Print Setup" cmd="nsCmd:BrowserPrintSetup"/>
+		<menuitem name=".Print Preview" cmd="nsCmd:BrowserPrintPreview"/>
+		<menuitem name=".Print" cmd="nsCmd:BrowserPrint"/>
 		<separator/>
-		<menuitem name="Close" cmd="nsCmd:BrowserClose"/>
-		<menuitem name="Exit" onclick="ComposeExit()"/>
+		<menuitem name=".Close" cmd="nsCmd:BrowserClose"/>
+		<menuitem name=".Exit" onclick="ComposeExit()"/>
 	</menu>
-    <menu name="Edit">
-		<menuitem name="Undo" cmd="nsCmd:ComposeNYI"/>
+    <menu name=".Edit">
+		<menuitem name=".Undo" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name="Cut" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="Copy" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="Paste" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="Paste as Quotation" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="Delete" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="Select All" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Cut" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Copy" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Paste" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Paste as Quotation" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Delete" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Select All" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name="Find" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="FInd Again" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Find" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Find Again" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name="Do Not Complete Address" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="Show Matching Addresses" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Do Not Complete Address" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Show Matching Addresses" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name="Preferences..." cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Preferences..." cmd="nsCmd:ComposeNYI"/>
     </menu>
-    <menu name="View">
-		<menuitem name="Show" cmd="nsCmd:ComposeNYI"/>
+    <menu name=".View">
+		<menuitem name=".Show" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name="Address" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="Attachments" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Address" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Attachments" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name="Wrap Long Lines" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Wrap Long Lines" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name="Character Set" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name=".Character Set" cmd="nsCmd:ComposeNYI"/>
     </menu>
-    <menu name="Tools">
-		<menuitem name="Check Spelling..." cmd="nsCmd:ComposeSpelling"/>
+    <menu name=".Tools">
+		<menuitem name=".Check Spelling..." cmd="nsCmd:ComposeSpelling"/>
     </menu>
 </menubar>
 
@@ -166,22 +181,27 @@
 	</toolbar>
 
 	<toolbar>
-		<html:p>To:</html:p>
+		<html:p>&toAddr.label;</html:p>
 		<html:input id="msgTo" style="vertical-align:center; width:200px;" type="text" /> 
 	</toolbar>
 
 	<toolbar>
-		<html:p>Cc:</html:p>
+		<html:p>&ccAddr.label;</html:p>
 		<html:input id="msgCc" style="vertical-align:center; width:200px;" type="text" />   
 	</toolbar>
 
 	<toolbar>
-		<html:p>Bcc:</html:p>
+		<html:p>&bccAddr.label;</html:p>
 		<html:input id="msgBcc" style="vertical-align:center; width:200px;" type="text" />   
+	</toolbar>
+
+	<toolbar>
+		<html:p>&newsgroupsAddr.label;</html:p>
+		<html:input id="msgNewsgroup" style="vertical-align:center; width:200px;" type="text" />   
 	</toolbar>
 	
 	<toolbar>
-		<html:p>Subject:</html:p>
+		<html:p>&subject.label;</html:p>
 		<html:input id="msgSubject" style="vertical-align:center; width:500px;" type="text" /> 
 	</toolbar>
 </toolbox>
