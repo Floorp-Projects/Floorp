@@ -555,6 +555,7 @@ PRIVATE PRBool wallet_captureForms = PR_FALSE;
 PRIVATE PRBool wallet_Notified = PR_FALSE;
 PRIVATE char * wallet_Server = nsnull;
 
+#ifdef AutoCapture
 PRIVATE void
 wallet_SetFormsCapturingPref(PRBool x)
 {
@@ -597,6 +598,7 @@ wallet_GetFormsCapturingPref(void)
     wallet_RegisterCapturePrefCallbacks();
     return wallet_captureForms;
 }
+#endif
 
 PRIVATE void
 wallet_SetWalletNotificationPref(PRBool x) {
@@ -1763,8 +1765,6 @@ wallet_ReadFromURLFieldToSchemaFile
       if (NS_FAILED(wallet_GetLine(strm, aItem1, PR_FALSE))) {
         /* end of file reached */
         break;
-        strm.close();
-        return;
       }
 
       if (aItem1->Length()==0) {
@@ -3059,8 +3059,11 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
                   }
 
                   /* save form if it meets all necessary conditions */
+#ifdef AutoCapture
                   if (wallet_GetFormsCapturingPref() && (count>=3)) {
-
+#else
+                  if (count>=3) {
+#endif
                     /* conditions all met, now save it */
                     for (PRUint32 elementY = 0; elementY < numElements; elementY++) {
                       nsIDOMNode* elementNode = nsnull;
@@ -3201,7 +3204,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
       SINGSIGN_RememberSignonData
         (URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
 
-#ifndef AutoCaputure
+#ifndef AutoCapture
       /* give notification if this is first significant form submitted */
       if ((count>=3) && !wallet_GetWalletNotificationPref()) {
 
