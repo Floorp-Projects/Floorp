@@ -172,6 +172,10 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCButton)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsButton();
     }
+    else if (mClassID.Equals(kCFileOpen)) {
+       inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsFileWidget();
+    }
+#if USE_NATIVE_VERSION
     else if (mClassID.Equals(kCCheckButton)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsCheckButton();
     }
@@ -181,22 +185,20 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCRadioButton)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsRadioButton();
     }
-    else if (mClassID.Equals(kCFileOpen)) {
-       inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsFileWidget();
-    }
     else if (mClassID.Equals(kCListbox)) {
        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsListBox();
     }
+    else if (mClassID.Equals(kCTextArea)) {
+        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsTextAreaWidget();
+    }
+#endif
     else if (mClassID.Equals(kCHorzScrollbar)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_FALSE);
     }
     else if (mClassID.Equals(kCVertScrollbar)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_TRUE);
     }
-    else if (mClassID.Equals(kCTextArea)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsTextAreaWidget();
-    }
-    else if (mClassID.Equals(kCTextField)) {
+   else if (mClassID.Equals(kCTextField)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsTextWidget();
     }
     else if (mClassID.Equals(kCAppShell)) {
