@@ -1,0 +1,87 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/* This object represents the stream of data which will be sent to an
+   NNTP server. You basically set up all the RFC850 required headers, etc,
+   then pass it to something that reads off the nsIInputStream interface.
+*/
+
+#include "nsISupports.idl"
+
+
+[object, uuid(c4164a20-bc74-11d2-b7f2-00805f05ffa5)]
+interface nsINNTPNewsgroupPost : nsISupports {
+    
+    /* from RFC850 */
+    /* section 2.1 - required headers */
+    attribute string relayVersion;
+    attribute string postingVersion;
+    attribute string from;
+    attribute string date;
+    
+    void AddNewsgroup(in string newsgroupName);
+    readonly attribute string newsgroups;
+    
+    attribute string subject;
+    readonly attribute string messageID;
+    attribute string path;
+
+    boolean isValid();
+    
+    /* Secion 2.2 - optional headers */
+    attribute string replyTo;
+    attribute string sender;
+    attribute string followupTo;
+    attribute string dateRecieved;
+    attribute string expires;
+
+    void AddReference(in string referenceID);
+    readonly attribute string references;
+
+    attribute string control;
+    attribute string distribution;
+    attribute string organization;
+
+    /* the message itself */
+    attribute string message;
+
+    /* control messages */
+    void MakeControlCancel(in string messageID);
+    /* probably don't need these
+       void MakeControlNewgroup(in string groupname);
+       void MakeControlRmgroup(in string groupname);
+       void MakeControlSendsys();
+       void MakeControlSenduuname();
+       void MakeControlVersion();
+    */
+    /* is this a control message? */
+    readonly attribute boolean isControl;
+
+    /* this should return a pointer to the full text of the RFC850 message
+     * that gets sent to the NNTP server
+     * return a reference so that we are not strdup()ing an entire message
+     * Each call to getFullMessage will destroy the last reference and return
+     * a new one by reassembling the message.
+     * A better solution would just be to give this message an nsIOutputStream
+     * to write to so that it can better manage the assembled message.
+     */
+    string GetFullMessage();
+};
+
+
+
