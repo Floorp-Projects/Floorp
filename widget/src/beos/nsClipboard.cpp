@@ -192,7 +192,7 @@ void nsClipboard::SetTopLevelView(BView *v)
   * 
   *
   */
-NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
+NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 {
   mIgnoreEmptyNotification = PR_TRUE;
 
@@ -235,7 +235,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 // The blocking Paste routine
 //
 NS_IMETHODIMP
-nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
+nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWhichClipboard )
 {
   nsresult rv = NS_OK;
 
