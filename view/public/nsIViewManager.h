@@ -366,14 +366,12 @@ public:
 
 //when the refresh happens, should it be double buffered?
 #define NS_VMREFRESH_DOUBLE_BUFFER      0x0001
-//is the damagerect in top-level window space?
-#define NS_VMREFRESH_SCREEN_RECT        0x0002
 //update view now?
-#define NS_VMREFRESH_IMMEDIATE          0x0004
+#define NS_VMREFRESH_IMMEDIATE          0x0002
 //prevent "sync painting"
-#define NS_VMREFRESH_NO_SYNC            0x0008
+#define NS_VMREFRESH_NO_SYNC            0x0004
 //if the total damage area is greater than 25% of the
 //area of the root view, use double buffering
-#define NS_VMREFRESH_AUTO_DOUBLE_BUFFER 0x0010
+#define NS_VMREFRESH_AUTO_DOUBLE_BUFFER 0x0008
 
 #endif  // nsIViewManager_h___
