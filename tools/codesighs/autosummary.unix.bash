@@ -181,4 +181,4 @@ fi
 #
 #   Remove our temporary directory.
 #
-#rm -rf $MYTMPDIR
+rm -rf $MYTMPDIR
