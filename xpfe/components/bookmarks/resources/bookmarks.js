@@ -42,7 +42,7 @@ function BookmarkProperties()
 
 function OpenSearch(tabName)
 {
-	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "chrome,resizable", tabName);
+	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName);
 }
 
 function OpenURL(event, node)
