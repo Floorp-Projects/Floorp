@@ -537,15 +537,6 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
               result=HandleToken(theEndToken,mParser);
             }
           }
-          if(!mBodyContext->mFlags.mHadDocTypeDecl) {
-            CToken* theDocTypeToken=mTokenAllocator->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_markupDecl);
-            if(theDocTypeToken) {
-              nsAutoString theDocTypeStr;
-              theDocTypeStr.AssignWithConversion("<!DOCTYPE \"-//W3C//DTD HTML 3.2 Final//EN\">");
-              theDocTypeToken->Reinitialize(eHTMLTag_markupDecl,theDocTypeStr);
-              result=HandleToken(theDocTypeToken,mParser);
-            }
-          }
           if(result==NS_OK) {
             eHTMLTags theTarget; 
 
@@ -2124,10 +2115,6 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   nsresult result=NS_OK;
-
-  if(mBodyContext) {
-    mBodyContext->mFlags.mHadDocTypeDecl=PR_TRUE; 
-  }
 
   #ifdef  RICKG_DEBUG
     WriteTokenToLog(aToken);
