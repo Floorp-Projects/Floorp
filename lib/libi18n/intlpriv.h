@@ -332,6 +332,14 @@ MODULE_PRIVATE XP_Bool INTL_GetCCCCvtflag_SendHankakuKana(CCCDataObject obj);
  */ 
 MODULE_PRIVATE void INTL_SetCCCCvtflag_SendHankakuKana(CCCDataObject obj, XP_Bool flag);
 
+/**
+ * Front end implementation for INTL_GetCharSetID.
+ * 
+ * @param     selector    Specification for a charset ID to get.
+ * @return Charset ID for the input selector. Returns CS_DEFUALT in case of error (e.g. selector invalid).
+ * @see INTL_GetCharSetID. 
+ */
+INTLCharSetID FE_GetCharSetID(INTL_CharSetID_Selector selector);
 
 XP_END_PROTOS
 
