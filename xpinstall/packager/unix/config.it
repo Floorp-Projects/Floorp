@@ -96,3 +96,10 @@ Show Dialog=TRUE
 Title=Mozilla Installer
 Message0=Click the Install button to proceed with this installation.
 XPInstall Engine=xpcom.xpi
+
+
+;-------------------------------------------------------------------------
+[LegacyCheck0]
+;-------------------------------------------------------------------------
+Filename=mozilla-bin
+Message=An older installation of Mozilla was detected.  Please choose to delete the directory contents of your current Mozilla installation by hitting the 'Delete' button.  Alternatively, please hit the 'Cancel' button and choose a different destination directory.  
