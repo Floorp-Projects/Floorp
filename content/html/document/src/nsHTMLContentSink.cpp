@@ -990,6 +990,9 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     }
   }
 
+// XXX sigh
+ScrollToRef();
+
   SINK_TRACE(SINK_TRACE_REFLOW,
              ("HTMLContentSink::DidBuildModel: layout new content"));
   ReflowNewContent();
@@ -1088,7 +1091,7 @@ HTMLContentSink::ReflowNewContent()
 {
   // Trigger reflows in each of the presentation shells
   mDocument->ContentAppended(mBody);
-  ScrollToRef();
+//  ScrollToRef();
 }
 
 void
@@ -1117,20 +1120,24 @@ HTMLContentSink::ScrollToRef()
                 nsIView* view;
                 frame->GetOffsetFromView(offset, view);
                 if (view == rootView) {
-printf("view==rootView ");
+// XXX write me!
+// printf("view==rootView ");
                 }
                 NS_IF_RELEASE(view);
                 nscoord x = 0;
                 nscoord y = offset.y;
+#if 0
 nsIPresContext* cx = shell->GetPresContext();
 float t2p = cx->GetTwipsToPixels();
 printf("x=%d y=%d\n", nscoord(x * t2p), nscoord(y * t2p));
 NS_RELEASE(cx);
+#endif
                 sview->SetScrollPreference(mOriginalScrollPreference);
                 sview->ScrollTo(x, y, NS_VMREFRESH_IMMEDIATE);
 
                 // Note that we did this so that we don't bother doing it again
                 mNotAtRef = PR_FALSE;
+                NS_RELEASE(sview);
               }
               NS_RELEASE(rootView);
             }
@@ -1387,7 +1394,7 @@ HTMLContentSink::AppendToCorrectParent(nsHTMLTag aParentTag,
 
   realParent->AppendChild(aChild, aAllowReflow);
   if (aAllowReflow) {
-    ScrollToRef();
+//    ScrollToRef();
   }
 }
 
