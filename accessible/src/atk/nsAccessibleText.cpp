@@ -63,7 +63,6 @@
 #include "nsIWidget.h"
 #include "nsStyleStruct.h"
 #include "nsTextFragment.h"
-#include "nsArray.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
@@ -137,7 +136,7 @@ nsresult nsAccessibleText::DOMPointToOffset(nsISupports *aClosure, nsIDOMNode* a
 
   *aResult = aNodeOffset;
 
-  nsCOMPtr<nsIArray> domNodeArray(do_QueryInterface(aClosure));
+  nsCOMPtr<nsISupportsArray> domNodeArray(do_QueryInterface(aClosure));
   if (domNodeArray) {
     // Static text, calculate the offset from a given set of (text) node
     PRUint32 textLength, totalLength = 0;
