@@ -28,6 +28,8 @@
 #include "nsPluginInstancePeer.h"
 
 #include "nsIPluginStreamListener.h"
+#include "nsIHTTPHeaderListener.h" 
+#include "nsIHTTPHeader.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -848,6 +850,12 @@ public:
 
   nsILoadGroup* GetLoadGroup();
 
+  NS_IMETHOD
+  ReadHeadersFromChannelAndPostToListener(nsIHTTPChannel *httpChannel,
+                                          nsIHTTPHeaderListener *list);
+  
+
+
 private:
 
   nsresult SetUpCache(nsIURI* aURL);
@@ -1200,6 +1208,24 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIChannel* channel,
   mPluginStreamInfo->SetURL(urlString);
   nsCRT::free(urlString);
 
+  /*
+
+   * Assumption
+
+   * By the time nsPluginStreamListenerPeer::OnDataAvailable() gets
+   * called, all the headers have been read.
+
+   */
+
+  nsCOMPtr<nsIHTTPHeaderListener> headerListener = 
+    do_QueryInterface(mPStreamListener);
+  if (headerListener) {
+    nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+    if (httpChannel) {
+      ReadHeadersFromChannelAndPostToListener(httpChannel, headerListener);
+    }
+  }
+
   // if the plugin has requested an AsFileOnly stream, then don't 
   // call OnDataAvailable
   if(mStreamType != nsPluginStreamType_AsFileOnly)
@@ -1335,6 +1361,60 @@ nsPluginStreamListenerPeer::GetLoadGroup()
     NS_RELEASE(doc);
   }
   return loadGroup;
+}
+
+
+NS_IMETHODIMP
+nsPluginStreamListenerPeer::
+ReadHeadersFromChannelAndPostToListener(nsIHTTPChannel *httpChannel,
+                                        nsIHTTPHeaderListener *listener)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISimpleEnumerator>	enumerator;
+  if (NS_FAILED(rv = httpChannel->
+                GetResponseHeaderEnumerator(getter_AddRefs(enumerator)))) {
+    return rv;
+  }
+  PRBool			bMoreHeaders;
+  nsCOMPtr<nsISupports>   item;
+  nsCOMPtr<nsIHTTPHeader>	header;
+  char                    *name = nsnull;
+  char	                  *val = nsnull;
+  
+  while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&bMoreHeaders))
+         && (bMoreHeaders == PR_TRUE)) {
+    enumerator->GetNext(getter_AddRefs(item));
+    header = do_QueryInterface(item);
+    NS_ASSERTION(header, "nsPluginHostImpl::ReadHeadersFromChannelAndPostToListener - Bad HTTP header.");
+    if (header)	{
+
+      /*
+
+       * Assumption: 
+
+       * The return value from nsIHTTPHeader->{GetFieldName,GetValue}()
+       * must be freed.
+
+       */
+
+      header->GetFieldName(&name);
+      header->GetValue(&val);
+      if (NS_FAILED(rv = listener->NewResponseHeader(name, val))) {
+        break;
+      }
+      nsCRT::free(name); 
+      name = nsnull;
+      nsCRT::free(val); 
+      val = nsnull;
+    }
+    else {
+      rv = NS_ERROR_NULL_POINTER;
+      break;
+    }
+  }
+  
+  return rv;
 }
 
 /////////////////////////////////////////////////////////////////////////
