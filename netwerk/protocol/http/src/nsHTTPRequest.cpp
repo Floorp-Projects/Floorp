@@ -664,6 +664,20 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
             NS_RELEASE(req);
             return rv;
         }
+
+#if defined(PR_LOGGING)
+        nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mTransport, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsXPIDLCString host;
+        PRInt32 port;
+        sTrans->GetHost(getter_Copies(host));
+        sTrans->GetPort(&port);
+
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS,
+              ("nsHTTPPipelinedRequest: Got a socket transport [trans=%x, host=%s, port=%u]\n",
+               mTransport.get(), (const char *) host, port));
+#endif
     }
     
     NS_RELEASE(req);
