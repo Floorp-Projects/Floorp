@@ -80,7 +80,7 @@ sub _create {
         'showmybugslink' => 0,
     };
     bless ($self, $class);
-    return $self unless $cond;
+    return $self unless $cond && $val;
 
     # We're checking for validity here, so any value is OK
     trick_taint($val);
