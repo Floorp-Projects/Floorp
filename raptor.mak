@@ -127,6 +127,8 @@ pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_raptor
 
 pull_lizard:
 	@cd $(MOZ_SRC)\.
+	$(CVSCO_LIZARD) ns/config
+	$(CVSCO_LIZARD) ns/lib/liblayer
 	$(CVSCO_LIZARD) ns/modules/zlib
 	$(CVSCO_LIZARD) ns/modules/libutil
 	$(CVSCO_LIZARD) ns/nsprpub
