@@ -95,7 +95,7 @@ interface nsIProfile : nsISupports {
 
     attribute boolean automigrate;
 
-    readonly attribute nsIFileSpec defaultProfileDir;
+    readonly attribute nsIFileSpec defaultProfileParentDir;
 };
 
 #endif /* nsIProfile_h__ */
