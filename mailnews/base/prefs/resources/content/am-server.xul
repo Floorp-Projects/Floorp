@@ -55,8 +55,8 @@
         <html:div>&deleteMessagePrefix.label;</html:div>
         <html:div>
           <html:select name="imap.deleteModel">
-            <html:option value="0">&modelMoveToTrash.label;</html:option>
-            <html:option value="1">&modelMarkDeleted.label;</html:option>
+            <html:option value="1">&modelMoveToTrash.label;</html:option>
+            <html:option value="0">&modelMarkDeleted.label;</html:option>
             <html:option value="2">&modelDeleteImmediately.label;</html:option>
           </html:select>
         </html:div>
