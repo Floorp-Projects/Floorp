@@ -58,7 +58,7 @@ enum nsTableColType {
   eColContent            = 0, // there is real col content associated   
   eColAnonymousCol       = 1, // the result of a span on a col
   eColAnonymousColGroup  = 2, // the result of a span on a col group
-  eColAnonymousCell      = 3, // the result of a cell alone
+  eColAnonymousCell      = 3 // the result of a cell alone
 };
 
 class nsTableColFrame : public nsFrame {
@@ -70,7 +70,7 @@ public:
   };
 
   nsTableColType GetType() const;
-  void nsTableColFrame::SetType(nsTableColType aType);
+  void SetType(nsTableColType aType);
 
   /** instantiate a new instance of nsTableColFrame.
     * @param aResult    the new object is returned in this out-param
