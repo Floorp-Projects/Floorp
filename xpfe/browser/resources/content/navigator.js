@@ -882,18 +882,24 @@ function OpenSearch(tabName, searchStr)
 	var searchMode = 0;
 	var searchEngineURI = null;
 	var autoOpenSearchPanel = false;
+	var defaultSearchURL = null;
 	try
 	{
 		searchMode = pref.GetIntPref("browser.search.powermode");
-		searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
 		autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
+		searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
+		defaultSearchURL = pref.CopyCharPref("network.search.url");
 	}
 	catch(ex)
 	{
-		searchMode = 0;
-		searchEngineURI = null;
-		autoOpenSearchPanel = false;
 	}
+	
+	if ((defaultSearchURL == null) || (defaultSearchURL == ""))
+	{
+		// Fallback to a Netscape default
+		defaultSearchURL = "http://cgi.netscape.com/cgi-bin/url_search.cgi?search=";
+	}
+
 	if (searchMode == 1)
 	{
 		dump("Power Search: '" + searchStr + "'\n");
@@ -901,13 +907,10 @@ function OpenSearch(tabName, searchStr)
 	}
 	else
 	{
-		dump("Search: '" + searchStr + "'\n");
 		if ((!searchStr) || (searchStr == ""))	return;
-		dump("Default Engine URL: '" + searchEngineURI + "'\n");
 
 		var	escapedSearchStr = escape(searchStr);
-		// default to Netscape unless another search engine was selected
-		var	defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=" + escapedSearchStr;
+		defaultSearchURL += escapedSearchStr;
 
 		if ((searchEngineURI != null) && (searchEngineURI != ""))
 		{
