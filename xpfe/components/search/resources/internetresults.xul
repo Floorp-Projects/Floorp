@@ -21,7 +21,7 @@
 		<titledbutton id="allEngines" onclick="doEngineClick(this)" class="iconic" value="&allresults.title.label;" align="left" />
 	</box>
 
-	<tree id="internetresultstree" ref="" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch"
+	<tree id="internetresultstree" ref="" flex="1" datasources="rdf:internetsearch"
 		onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode); else return doResultClick(event.target.parentNode.parentNode);">
 
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
