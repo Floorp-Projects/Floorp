@@ -272,6 +272,24 @@ nsViewerApp::Initialize(int argc, char** argv)
   rv = ProcessArguments(argc, argv);
 
   mIsInitialized = PR_TRUE;
+
+  // Open first window (used to be in main()).
+  nsIBrowserWindow *newInterface = NULL;
+  OpenWindow( (PRUint32)~0, newInterface );
+  if ( newInterface ) {
+      nsBrowserWindow *newWindow = (nsBrowserWindow*)newInterface; // hack
+      // Check for URL on command line.
+      if( argc>1 ) {
+          nsString startURL = argv[1];
+          newWindow->GoTo(startURL);
+      } else {
+          // Use default start page.
+          newWindow->GoTo(mStartURL);
+      }
+      // Show the window.
+      newWindow->Show();
+  }
+
   return rv;
 }
 
