@@ -36,6 +36,8 @@
 
 package org.mozilla.jss.crypto;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * This is a proprietary NSS interface. It is used for encrypting
  * data with a secret key stored in the NSS key database (which is in turn
@@ -58,6 +60,8 @@ package org.mozilla.jss.crypto;
  */
 public class SecretDecoderRing {
 
+    public static final String encodingFormat = "UTF-8";
+
     /**
      * Encrypts the given plaintext with the Secret Decoder Ring key stored
      * in the NSS key database.
@@ -66,9 +70,38 @@ public class SecretDecoderRing {
         throws TokenException;
 
     /**
+     * Encrypts the given plaintext string with the Secret Decoder Ring key
+     * stored in the NSS key database.
+     */
+    public byte[] encrypt(String plaintext) throws TokenException {
+      try {
+        return encrypt(plaintext.getBytes(encodingFormat));
+      } catch(UnsupportedEncodingException e) {
+        // this shouldn't happen, because we use a universally-supported
+        // charset
+        throw new RuntimeException(e.getMessage());
+      }
+    }
+
+    /**
      * Decrypts the given ciphertext with the Secret Decoder Ring key stored
      * in the NSS key database.
      */
     public native byte[] decrypt(byte[] ciphertext)
         throws TokenException;
+
+    /**
+     * Decrypts the given ciphertext with the Secret Decoder Ring key stored
+     * in the NSS key database, returning the original plaintext string.
+     */
+    public String decryptToString(byte[] ciphertext)
+            throws TokenException {
+      try {
+        return new String(decrypt(ciphertext), encodingFormat);
+      } catch(UnsupportedEncodingException e) {
+        // this shouldn't happen, because we use a universally-supported
+        // charset
+        throw new RuntimeException(e.getMessage());
+      }
+    }
 }
