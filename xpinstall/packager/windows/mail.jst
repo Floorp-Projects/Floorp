@@ -71,6 +71,7 @@ function createShortcuts()
   var filePalmSyncInstallExe;
   var scDescPalmSyncInstall;
   var scDescPalmSyncUninstall;
+  var folderPalmSyncName;
 
   winreg                    = getWinRegistry();
   fWindows                  = getFolder("Windows");
@@ -82,6 +83,7 @@ function createShortcuts()
   scExeDesc                 = "Mail";
   scParam                   = "-mail";
   scFolderName              = "$ProductName$";
+  folderPalmSyncName        = "Palm Tools";
   if(winreg != null) 
   {
     /* This will check to see if the user has restricted access or not.
@@ -190,8 +192,18 @@ function createShortcuts()
     // only create these two shortcuts if the files exist
     if(File.exists(filePalmSyncInstallExe))
     {
-      File.windowsShortcut(filePalmSyncInstallExe, fFolderPath, scDescPalmSyncInstall, fProgram, "", filePalmSyncInstallExe, 0);
-      File.windowsShortcut(filePalmSyncInstallExe, fFolderPath, scDescPalmSyncUninstall, fProgram, "/u", filePalmSyncInstallExe, 0);
+      /* build the path to the sub folder to Palm Sync files */
+      var fStartMenuPalmSync = getFolder("file:///", fFolderPath + "/" + folderPalmSyncName);
+      if(!File.exists(fStartMenuPalmSync))
+        File.dirCreate(fStartMenuPalmSync);
+
+      /* clean up the shortcuts in the old place */
+      deleteThisFile("file:///", fFolderPath + "/" + scDescPalmSyncInstall);
+      deleteThisFile("file:///", fFolderPath + "/" + scDescPalmSyncUninstall);
+
+      /* create the shortcuts in the new sub folder */
+      File.windowsShortcut(filePalmSyncInstallExe, fStartMenuPalmSync, scDescPalmSyncInstall, fProgram, "", filePalmSyncInstallExe, 0);
+      File.windowsShortcut(filePalmSyncInstallExe, fStartMenuPalmSync, scDescPalmSyncUninstall, fProgram, "/u", filePalmSyncInstallExe, 0);
     }
 
     //
