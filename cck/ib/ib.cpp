@@ -2010,7 +2010,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	curVersion      = GetGlobal("Version");
 	curPlatform     = GetGlobal("lPlatform");
 	platformPath    = rootPath+"Version\\"+curVersion+"\\"+curPlatform;
-	curLanguage     = GetGlobal("Language");
+	curLanguage     = GetLocaleCode(GetGlobal("Language"));
 	localePath      = rootPath+"Version\\"+curVersion+"\\"+curPlatform+"\\"+curLanguage;
 	configPath      = rootPath + "Configs\\" + configName;
 	outputPath      = configPath + "\\Output";
