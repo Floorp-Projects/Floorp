@@ -36,6 +36,9 @@ public:
 
   void SetScrollbarFrame(nsIFrame* aFrame);
   void SetFrameConstructor(nsCSSFrameConstructor* aFrameConstructor) { mFrameConstructor = aFrameConstructor; };
+  void SetShouldHaveScrollbar();
+
+  void CreateScrollbar(nsIPresContext& aPresContext);
 
   void MakeLazy() { mIsLazy = PR_TRUE; };
   PRBool IsLazy() { return mIsLazy; };
@@ -51,7 +54,7 @@ public:
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer);
 
-  PRBool ContinueReflow(nscoord y, nscoord height);
+  PRBool ContinueReflow(nsIPresContext& aPresContext, nscoord y, nscoord height);
 
   PRBool IsFull() { return mIsFull; };
 
@@ -84,6 +87,12 @@ protected:
                                       nsReflowStatus&      aStatus,
                                       nsReflowReason       aReason);
 
+  NS_IMETHOD     ReflowAfterRowLayout(nsIPresContext&      aPresContext,
+                                      nsHTMLReflowMetrics& aDesiredSize,
+                                      RowGroupReflowState& aReflowState,
+                                      nsReflowStatus&      aStatus,
+                                      nsReflowReason       aReason);
+
   virtual nsIFrame* GetFirstFrameForReflow(nsIPresContext& aPresContext);
   virtual void GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFrame* aFrame, nsIFrame** aResult);
 
@@ -99,6 +108,8 @@ protected:
                              nsIContent** aResult);
   void GetFirstRowContent(nsIContent** aRowContent);
 
+  void GetVisibleRowCount(PRInt32& rowCount, nsIContent* aParent);
+
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
 protected: // Data Members
@@ -108,9 +119,10 @@ protected: // Data Members
 
   PRBool mIsLazy; // Whether or not we're a lazily instantiated beast
   PRBool mIsFull; // Whether or not we have any more room.
-
+  
   nsIFrame* mScrollbar; // Our scrollbar.
   nsFrameList mScrollbarList; // A frame list that holds our scrollbar.
+  PRBool mShouldHaveScrollbar; // Whether or not we could potentially have a scrollbar.
 
   nsISupportsArray* mContentChain; // Our content chain
 
