@@ -24,7 +24,11 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
 
+#ifdef XP_MAC
+#define LOCALE_DLL_NAME "LOCALE_DLL"
+#else
 #define LOCALE_DLL_NAME "LOCALE.DLL"
+#endif
 
 
 // Collation
@@ -330,7 +334,7 @@ static void TestSortPrint2(collation_rec *key_array, int len)
     aKey = key_array[i].aKey;
     for (int j = 0; j < (int)aLength; j++) {
       if (aKey[j]) {
-        cout << aKey[j];
+        cout << (char) aKey[j];	  // cast to char
       }
     }
     cout << "\n";
