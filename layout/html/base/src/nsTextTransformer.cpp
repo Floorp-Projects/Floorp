@@ -104,6 +104,12 @@ nsTextTransformer::Shutdown()
 
 // XXX I'm sure there are other special characters
 #define CH_NBSP 160
+#define CH_SHY  173
+
+// For now, we have only a single character to strip out. If we get
+// any more, change this to use a bitset to lookup into.
+#define IS_DISCARDED(_ch) \
+  ((_ch) == CH_SHY)
 
 #define MAX_UNIBYTE 127
 
@@ -183,7 +189,11 @@ nsTextTransformer::ScanNormalWhiteSpace_F()
   for (; offset < fragLen; offset++) {
     PRUnichar ch = frag->CharAt(offset);
     if (!XP_IS_SPACE(ch)) {
-      break;
+      // If character is not discardable then stop looping, otherwise
+      // let the discarded character collapse with the other spaces.
+      if (!IS_DISCARDED(ch)) {
+        break;
+      }
     }
   }
 
@@ -208,6 +218,10 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen)
     }
     if (CH_NBSP == ch) {
       ch = ' ';
+    }
+    else if (IS_DISCARDED(ch)) {
+      // Strip discarded characters from the transformed output
+      continue;
     }
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
@@ -237,6 +251,9 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool aForLineBreak,
   PRInt32 offset = mOffset;
 
   PRUnichar firstChar = frag->CharAt(offset++);
+  if (CH_NBSP == firstChar) {
+    firstChar = ' ';
+  }
   mTransformBuf.mBuffer[0] = firstChar;
   if (firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
 
@@ -280,16 +297,25 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool aForLineBreak,
       const PRUnichar* end = cp + numChars - 1;
       while (cp < end) {
         PRUnichar ch = *cp++;
-        if (CH_NBSP == ch) ch = ' ';
+        if (CH_NBSP == ch) {
+          ch = ' ';
+        }
+        else if (IS_DISCARDED(ch)) {
+          // Strip discarded characters from the transformed output
+          continue;
+        }
         if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
         *bp++ = ch;
       }
-    }
 
+      // Recompute offset and numChars in case we stripped something
+      offset += numChars - 1;
+      numChars = bp - mTransformBuf.GetBuffer();
+    }
   }
 
   *aWordLen = numChars;
-  return offset + numChars - 1;
+  return offset;
 }
 
 // wordlen==*aWordLen, contentlen=newOffset-currentOffset, isWhitespace=t
@@ -305,6 +331,10 @@ nsTextTransformer::ScanPreWrapWhiteSpace_F(PRInt32* aWordLen)
   for (; offset < fragLen; offset++) {
     PRUnichar ch = frag->CharAt(offset);
     if (!XP_IS_SPACE(ch) || (ch == '\t') || (ch == '\n')) {
+      if (IS_DISCARDED(ch)) {
+        // Keep looping if this is a discarded character
+        continue;
+      }
       break;
     }
     if (bp == endbp) {
@@ -342,6 +372,9 @@ nsTextTransformer::ScanPreData_F(PRInt32* aWordLen)
     if (CH_NBSP == ch) {
       ch = ' ';
     }
+    else if (IS_DISCARDED(ch)) {
+      continue;
+    }
     if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
@@ -367,8 +400,8 @@ nsTextTransformer::ScanPreAsciiData_F(PRInt32* aWordLen)
   const nsTextFragment* frag = mFrag;
   PRUnichar* bp = mTransformBuf.GetBuffer();
   PRUnichar* endbp = mTransformBuf.GetBufferEnd();
-  const char* cp = frag->Get1b();
-  const char* end = cp + frag->GetLength();
+  const unsigned char* cp = (const unsigned char*) frag->Get1b();
+  const unsigned char* end = cp + frag->GetLength();
   cp += mOffset;
 
   while (cp < end) {
@@ -379,6 +412,9 @@ nsTextTransformer::ScanPreAsciiData_F(PRInt32* aWordLen)
     }
     if (CH_NBSP == ch) {
       ch = ' ';
+    }
+    else if (IS_DISCARDED(ch)) {
+      continue;
     }
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
@@ -394,7 +430,7 @@ nsTextTransformer::ScanPreAsciiData_F(PRInt32* aWordLen)
   }
 
   *aWordLen = bp - mTransformBuf.GetBuffer();
-  return cp - frag->Get1b();
+  return cp - ((const unsigned char*)frag->Get1b());
 }
 
 //----------------------------------------
@@ -413,8 +449,15 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   PRBool isWhitespace = PR_FALSE;
   PRUnichar* result = nsnull;
 
-  if (offset < fragLen) {
+  while (offset < fragLen) {
     PRUnichar firstChar = frag->CharAt(offset);
+
+    // Eat up any discarded characters before dispatching
+    if (IS_DISCARDED(firstChar)) {
+      offset++;
+      continue;
+    }
+
     switch (mMode) {
       default:
       case eNormal:
@@ -481,6 +524,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           break;
       }
     }
+    break;
   }
 
   *aWordLenResult = wordLen;
@@ -504,7 +548,11 @@ nsTextTransformer::ScanNormalWhiteSpace_B()
   while (--offset >= 0) {
     PRUnichar ch = frag->CharAt(offset);
     if (!XP_IS_SPACE(ch)) {
-      break;
+      // If character is not discardable then stop looping, otherwise
+      // let the discarded character collapse with the other spaces.
+      if (!IS_DISCARDED(ch)) {
+        break;
+      }
     }
   }
 
@@ -528,6 +576,9 @@ nsTextTransformer::ScanNormalAsciiText_B(PRInt32* aWordLen)
     }
     if (CH_NBSP == ch) {
       ch = ' ';
+    }
+    else if (IS_DISCARDED(ch)) {
+      continue;
     }
     if (bp == startbp) {
       PRInt32 oldLength = mTransformBuf.mBufferLen;
@@ -556,6 +607,9 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
   PRInt32 offset = mOffset - 1;
 
   PRUnichar firstChar = frag->CharAt(offset);
+  if (CH_NBSP == firstChar) {
+    firstChar = ' ';
+  }
   mTransformBuf.mBuffer[mTransformBuf.mBufferLen - 1] = firstChar;
   if (firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
 
@@ -596,18 +650,27 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
       // 2. check mHasMultibyte flag
       // 3. copy buffer
       PRUnichar* bp = mTransformBuf.GetBufferEnd() - 1;
-      const PRUnichar* end = cp - numChars;
+      const PRUnichar* end = cp - numChars + 1;
       while (cp > end) {
         PRUnichar ch = *--cp;
-        if (CH_NBSP == ch) ch = ' ';
+        if (CH_NBSP == ch) {
+          ch = ' ';
+        }
+        else if (IS_DISCARDED(ch)) {
+          continue;
+        }
         if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
         *--bp = ch;
       }
+
+      // Recompute offset and numChars in case we stripped something
+      offset = offset - numChars;
+      numChars =  mTransformBuf.GetBufferEnd() - bp;
     }
   }
 
   *aWordLen = numChars;
-  return offset - numChars;
+  return offset;
 }
 
 // wordlen==*aWordLen, contentlen=newOffset-currentOffset, isWhitespace=t
@@ -622,6 +685,10 @@ nsTextTransformer::ScanPreWrapWhiteSpace_B(PRInt32* aWordLen)
   while (--offset >= 0) {
     PRUnichar ch = frag->CharAt(offset);
     if (!XP_IS_SPACE(ch) || (ch == '\t') || (ch == '\n')) {
+      // Keep looping if this is a discarded character
+      if (IS_DISCARDED(ch)) {
+        continue;
+      }
       break;
     }
     if (bp == startbp) {
@@ -658,6 +725,9 @@ nsTextTransformer::ScanPreData_B(PRInt32* aWordLen)
     if (CH_NBSP == ch) {
       ch = ' ';
     }
+    else if (IS_DISCARDED(ch)) {
+      continue;
+    }
     if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
     if (bp == startbp) {
       PRInt32 oldLength = mTransformBuf.mBufferLen;
@@ -692,8 +762,14 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   PRBool isWhitespace = PR_FALSE;
   PRUnichar* result = nsnull;
 
-  if (--offset >= 0) {
+  while (--offset >= 0) {
     PRUnichar firstChar = frag->CharAt(offset);
+
+    // Eat up any discarded characters before dispatching
+    if (IS_DISCARDED(firstChar)) {
+      continue;
+    }
+
     switch (mMode) {
       default:
       case eNormal:
@@ -762,6 +838,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
           break;
       }
     }
+    break;
   }
 
   *aWordLenResult = wordLen;
@@ -821,19 +898,34 @@ static int test3Results[] = { 4, 1, 2, 1, 2, 1, };
 static int test3PreResults[] = { 7, 1, 3, };
 static int test3PreWrapResults[] = { 4, 1, 2, 1, 2, 1, };
 
-#if 0
 static PRUnichar test4text[] = {
+  'o', 'n', CH_SHY, 'c', 'e', ' ', CH_SHY, ' ', 'u', 'p', 'o', 'n', '\t',
+  'a', ' ', 's', 'h', 'o', 'r', 't', ' ', 't', 'i', 'm', 'e', 0
+};
+static int test4Results[] = { 4, 1, 4, 1, 1, 1, 5, 1, 4 };
+static int test4PreResults[] = { 10, 1, 12 };
+static int test4PreWrapResults[] = { 4, 2, 4, 1, 1, 1, 5, 1, 4 };
+
+static PRUnichar test5text[] = {
+  CH_SHY, 0
+};
+static int test5Results[] = { 0 };
+static int test5PreResults[] = { 0 };
+static int test5PreWrapResults[] = { 0 };
+
+#if 0
+static PRUnichar test6text[] = {
   0x30d5, 0x30b8, 0x30c6, 0x30ec, 0x30d3, 0x306e, 0x97f3, 0x697d,
   0x756a, 0x7d44, 0x300c, 'H', 'E', 'Y', '!', ' ', 'H', 'E', 'Y', '!',
   '\t', 'H', 'E', 'Y', '!', 0x300d, 0x306e, 0x30db, 0x30fc, 0x30e0,
   0x30da, 0x30fc, 0x30b8, 0x3002, 0
 };
-static int test4Results[] = { 1, 1, 1, 1, 1,
+static int test6Results[] = { 1, 1, 1, 1, 1,
                               1, 1, 1, 1, 1,
                               5, 1, 4, 1, 5,
                               1, 2, 1, 2, 2 };
-static int test4PreResults[] = { 20, 1, 13 };
-static int test4PreWrapResults[] = { 1, 1, 1, 1, 1,
+static int test6PreResults[] = { 20, 1, 13 };
+static int test6PreWrapResults[] = { 1, 1, 1, 1, 1,
                                      1, 1, 1, 1, 1,
                                      5, 1, 4, 1, 5,
                                      1, 2, 1, 2, 2 };
@@ -855,11 +947,21 @@ static SelfTestData tests[] = {
       { sizeof(test3PreResults)/sizeof(int), test3PreResults, },
       { sizeof(test3PreWrapResults)/sizeof(int), test3PreWrapResults, } }
   },
-#if 0
   { test4text,
     { { sizeof(test4Results)/sizeof(int), test4Results, },
       { sizeof(test4PreResults)/sizeof(int), test4PreResults, },
       { sizeof(test4PreWrapResults)/sizeof(int), test4PreWrapResults, } }
+  },
+  { test5text,
+    { { sizeof(test5Results)/sizeof(int), test5Results, },
+      { sizeof(test5PreResults)/sizeof(int), test5PreResults, },
+      { sizeof(test5PreWrapResults)/sizeof(int), test5PreWrapResults, } }
+  },
+#if 0
+  { test6text,
+    { { sizeof(test6Results)/sizeof(int), test6Results, },
+      { sizeof(test6PreResults)/sizeof(int), test6PreResults, },
+      { sizeof(test6PreWrapResults)/sizeof(int), test6PreWrapResults, } }
   },
 #endif
 };
@@ -926,7 +1028,9 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
         expectedResults++;
       }
       if (expectedResults != st->modes[preMode].data + resultsLen) {
-        error = PR_TRUE;
+        if (st->modes[preMode].data[0] != 0) {
+          error = PR_TRUE;
+        }
       }
 
       // Do backwards test
@@ -955,7 +1059,9 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
         }
       }
       if (expectedResults != st->modes[preMode].data) {
-        error = PR_TRUE;
+        if (st->modes[preMode].data[0] != 0) {
+          error = PR_TRUE;
+        }
       }
 
       if (error) {
