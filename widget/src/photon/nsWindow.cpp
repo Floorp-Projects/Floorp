@@ -973,6 +973,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   /* Print out the Photon Damage tiles */
   PhTile_t *top = damage;
   int index=0;
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc Damage Tiles List:\n"));
   do {
     PhRect_t   rect = top->rect;    
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc photon damage %d rect=<%d,%d,%d,%d> next=<%p>\n", index++,rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, top->next));
@@ -995,32 +996,30 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     return;
   }
 
-#if 0
-  if ( !pWin->mParent )
-  {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted because pWin->mParent is NULL!\n"));
-    NS_ASSERTION(pWin->mParent, "nsWindow::RawDrawFunc  aborted because pWin->mParent is NULL!");
-    return;
-  }  
-#endif
-
 #if 1
   if (PtWidgetBrotherInFront(pWidget) != NULL)
   {
-    NS_ASSERTION(0, "nsWindow::RawDrawFunc  Brother In Front is not NULL!");
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc Brother In Front is not NULL\n"));
+  }
+  else
+  {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc Brother In Front is NULL\n"));
+  }
+#endif
 
+#if 1
     if ( PtWidgetIsClass(pWidget, PtRawDrawContainer))
 	{
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc pWidget is aRawDrawCon\n"));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc pWidget is a RawDrawContainer\n"));
 	}
     else
 	{
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc aborted because Brother In Front is not NULL\n"));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc aborted because pWidget is not a RawDrawContainer\n"));
 	  return;  
     }
-  }
 #endif
+
+
   
 #if 1
   // This prevents redraws while any window is resizing, ie there are
@@ -1036,8 +1035,8 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   if ( pWin->mEventCallback )
   {
     PhRect_t   rect;
-    PhArea_t   area;
-    PhPoint_t  offset;
+    PhArea_t   area = {{0,0},{0,0}};
+    PhPoint_t  offset = {0,0};
     nsRect     nsDmg;
 
     // Ok...  I ~think~ the damage rect is in window coordinates and is not neccessarily clipped to
@@ -1047,9 +1046,11 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area=<%d,%d,%d,%d>\n", area.pos.x, area.pos.y, area.size.w, area.size.h));
     PtWidgetOffset( pWidget, &offset );
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc offset=<%d,%d>\n", offset.x, offset.y));
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc mBounds=<%d,%d,%d,%d>\n", pWin->mBounds.x, pWin->mBounds.y, pWin->mBounds.width, pWin->mBounds.height));
+
     offset.x += area.pos.x;  
     offset.y += area.pos.y;  
-PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area+offset=<%d,%d,%d,%d>\n", area.pos.x, area.pos.y, area.size.w, area.size.h));
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc offset+area =<%d,%d>\n", offset.x, offset.y));
 
 
 #if 0
@@ -1071,13 +1072,15 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area+offset=<%d,%d,%d,%d>
 	}
 #endif
 
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect = <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
+
     // Convert damage rect to widget's coordinates...
     rect.ul.x -= offset.x;
     rect.ul.y -= offset.y;
     rect.lr.x -= offset.x;
     rect.lr.y -= offset.y;
 
-PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect + offset <%d,%d,%d,%d> next=<%p>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, damage->next));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect-offset <%d,%d,%d,%d> next=<%p>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, damage->next));
 
     // If the damage tile is not within our bounds, do nothing
     if(( rect.ul.x >= area.size.w ) || ( rect.ul.y >= area.size.h ) || ( rect.lr.x < 0 ) || ( rect.lr.y < 0 ))
@@ -1765,7 +1768,7 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
   /* If I am a top-level window my origin should always be 0,0 */
   if ( (mWindowType == eWindowType_dialog) ||
-       (mWindowType == eWindowType_popup) ||
+//       (mWindowType == eWindowType_popup) ||
 	   (mWindowType == eWindowType_toplevel) )
   {
     //printf("HACK HACK: forcing bounds to 0,0 for toplevel window\n");
