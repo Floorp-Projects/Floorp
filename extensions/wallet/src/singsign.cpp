@@ -3034,9 +3034,10 @@ SINGSIGN_Enumerate
   }
 
   nsAutoString userName;
-  if (NS_FAILED(si_Decrypt(data->value, userName))) {
+  nsresult rv = si_Decrypt(data->value, userName);
+  if (NS_FAILED(rv)) {
     /* don't display saved signons if user couldn't unlock the database */
-    return NS_ERROR_FAILURE;
+    return rv;
   }
   if (!(*user = ToNewUnicode(userName))) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -3051,10 +3052,11 @@ SINGSIGN_Enumerate
   }
 
   nsAutoString passWord;
-  if (NS_FAILED(si_Decrypt(data->value, passWord))) {
+  rv = si_Decrypt(data->value, passWord);
+  if (NS_FAILED(rv)) {
     /* don't display saved signons if user couldn't unlock the database */
     Recycle(*user);
-    return NS_ERROR_FAILURE;
+    return rv;
   }
   if (!(*pswd = ToNewUnicode(passWord))) {
     Recycle(*user);

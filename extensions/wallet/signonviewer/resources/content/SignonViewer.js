@@ -288,7 +288,12 @@ function LoadSignons() {
 
       signons[count] = new Signon(count++, host, user, rawuser, password);
     } catch(e) {
-      /* An entry is corrupt. Go to next element. */
+      /* The user cancelled the master password dialog */
+      if (e.result==Components.results.NS_ERROR_NOT_AVAILABLE) {
+        window.close();
+        return false;
+      }
+      /* Otherwise an entry is corrupt. Go to next element. */
     }
   }
   signonsTreeView.rowCount = signons.length;
