@@ -26,15 +26,16 @@
  *    -- Removed the trailing "s" from FOLLOWING_SIBLING_AXIS, and
  *       PRECEDING_SIBLING_AXIS to be compatible with the
  *       W3C XPath 1.0 Recommendation
+ *    -- Added lang attr declaration
  *
- * $Id: Names.cpp,v 1.4 2000/04/19 10:32:35 kvisco%ziplink.net Exp $
+ * $Id: Names.cpp,v 1.5 2000/05/23 08:13:03 kvisco%ziplink.net Exp $
  */
 
 /**
  * XSL names used throughout the XSLProcessor.
  * Probably should be wrapped in a Namespace
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/04/19 10:32:35 $
+ * @version $Revision: 1.5 $ $Date: 2000/05/23 08:13:03 $
 **/
 #include "Names.h"
 
@@ -92,6 +93,7 @@ const String FORMAT_ATTR             = "format";
 const String FROM_ATTR               = "from";
 const String HREF_ATTR               = "href";
 const String INDENT_ATTR             = "indent";
+const String LANG_ATTR               = "xml:lang";
 const String LEVEL_ATTR              = "level";
 const String MATCH_ATTR              = "match";
 const String METHOD_ATTR             = "method";
