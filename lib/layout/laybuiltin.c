@@ -404,6 +404,11 @@ lo_FormatBuiltinInternal (MWContext *context, lo_DocState *state, PA_Tag *tag,
 	builtin->border_horiz_space = FEUNITS_X(builtin->border_horiz_space,
 						context);
 
+	/* Create a layer for this builtin */
+	builtin->layer =
+	  lo_CreateEmbeddedObjectLayer(context, state, (LO_Element*)builtin);
+
+
 	/* builtin_list for reflection? XXX */
 
 	lo_FinishBuiltin (context, state, builtin);
@@ -438,6 +443,8 @@ lo_FinishBuiltin (MWContext *context, lo_DocState *state, LO_BuiltinStruct *buil
 
 	builtin->x_offset += (int16)builtin->border_horiz_space;
 	builtin->y_offset += (int32)builtin->border_vert_space;
+
+	lo_LayoutInflowBuiltin(context, state, builtin, FALSE, &line_inc, &baseline_inc);
 
 	lo_AppendToLineList(context, state,
 						(LO_Element *)builtin, baseline_inc);

@@ -1315,6 +1315,10 @@ extern void lo_UpdateStateAfterJavaAppLayout( lo_DocState *state, LO_JavaAppStru
 extern void lo_FillInEmbedGeometry(lo_DocState *state, LO_EmbedStruct *embed, Bool relayout);
 extern void lo_LayoutInflowEmbed(MWContext *context, lo_DocState *state, LO_EmbedStruct *embed,
 								   Bool inRelayout, int32 *line_inc, int32 *baseline_inc);
+#ifdef SHACK
+void lo_LayoutInflowBuiltin(MWContext *context, lo_DocState *state, LO_BuiltinStruct *builtin,
+                            Bool inRelayout, int32 *line_inc, int32 *baseline_inc);
+#endif
 extern void lo_LayoutFloatEmbed(MWContext *context, lo_DocState *state, LO_EmbedStruct *embed, Bool updateFE);
 extern void lo_UpdateStateAfterEmbedLayout( lo_DocState *state, LO_EmbedStruct *embed,
 											  int32 line_inc, int32 baseline_inc );

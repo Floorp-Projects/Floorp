@@ -2247,12 +2247,16 @@ lo_CreateEmbeddedObjectLayer(MWContext *context,
 	vspace = tptr->lo_embed.border_vert_space;
 	hspace = tptr->lo_embed.border_horiz_space;
 	is_window = PR_FALSE;
-#ifdef SHACK
-	if (XP_STRNCASECMP (tptr->lo_embed.value_list[0], "builtin/", 8) == 0) {
-		is_window = PR_TRUE;
-	}
-#endif /* SHACK */
 	break;
+#ifdef SHACK
+    case LO_BUILTIN:
+	name = "_BUILTIN";
+	tptr->lo_builtin.ele_attrmask |= LO_ELE_INVISIBLE;
+	vspace = tptr->lo_builtin.border_vert_space;
+	hspace = tptr->lo_builtin.border_horiz_space;
+	is_window = PR_TRUE;
+	break;
+#endif
 #ifdef JAVA
     case LO_JAVA:
 	name = "_JAVA_APPLET";

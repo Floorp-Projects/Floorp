@@ -322,11 +322,28 @@ lo_DisplayEmbed(MWContext *context, LO_EmbedStruct *embed)
 void
 lo_DisplayBuiltin(MWContext *context, LO_BuiltinStruct *builtin)
 {
-    XP_ASSERT (context->compositor);
+	CL_Layer *layer;
 
 	/* need to deal with layers here XXX */
-    FE_DisplayBuiltin(context, FE_VIEW, builtin);
 
+	if (! context->compositor) {
+		FE_DisplayBuiltin(context, FE_VIEW, builtin);
+		return;
+	}
+
+	layer = builtin->layer;
+	XP_ASSERT(layer);
+	if (! layer)				/* Paranoia */
+		return;
+
+        if (!(builtin->ele_attrmask & LO_ELE_DRAWN)) {
+            /* Move layer to new position */
+            CL_MoveLayer(layer,
+                         builtin->x + builtin->x_offset,
+                         builtin->y + builtin->y_offset);
+            CL_SetLayerHidden(layer, PR_FALSE);
+            builtin->ele_attrmask |= LO_ELE_DRAWN;
+        }
 }
 #endif /* SHACK */
 
