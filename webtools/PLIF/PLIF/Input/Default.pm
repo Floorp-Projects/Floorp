@@ -41,36 +41,17 @@ sub defaultOutputProtocol {
     return 'stdout';
 }
 
+sub getMetaData {
+    my $self = shift;
+    my($field) = @_;
+    if ($field eq 'host') {
+        return 'localhost';
+    } elsif ($field eq 'acceptType') {
+        return 'text/plain';
+    } else {
+        return $self->SUPER::getMetaData($field);
+    }
+}
+
 # Everything else that PLIF::Input::Arguments does by default is great
 # for this. Namely, no command, and returning 'undef' for everything.
-
-
-# XXX Grrrr: 
-
-sub UA {
-    return '';
-}
-
-sub referrer {
-    return '';
-}
-
-sub host {
-    return 'localhost';
-}
-
-sub acceptType {
-    return 'text/plain';
-}
-
-sub acceptCharset {
-    return '';
-}
-
-sub acceptEncoding {
-    return '';
-}
-
-sub acceptLanguage {
-    return '';
-}

@@ -57,18 +57,29 @@ sub defaultOutputProtocol {
 
 sub splitArguments {
     my $self = shift;
-    foreach my $parameter (qw(SERVER_SOFTWARE SERVER_NAME
+    # register typical CGI variables
+    foreach my $property (qw(SERVER_SOFTWARE SERVER_NAME
       GATEWAY_INTERFACE SERVER_PROTOCOL SERVER_PORT REQUEST_METHOD
       PATH_INFO PATH_TRANSLATED SCRIPT_NAME QUERY_STRING REMOTE_HOST
       REMOTE_ADDR AUTH_TYPE REMOTE_USER REMOTE_IDENT CONTENT_TYPE
       CONTENT_LENGTH)) {
-        $self->propertySet($parameter, $ENV{$parameter});
+        $self->propertySet($property, $ENV{$property});
     }
-    foreach my $parameter (keys(%ENV)) {
-        if ($parameter =~ /^HTTP_/o) {
-            $self->propertySet($parameter, $ENV{$parameter});
+    foreach my $property (keys(%ENV)) {
+        if ($property =~ /^HTTP_/o) {
+            $self->propertySet($property, $ENV{$property});
         }
     }
+    # hook in the metadata variables
+    $self->metaData({}); # empty the list of meta data first
+    $self->registerPropertyAsMetaData('UA', 'HTTP_USER_AGENT');
+    $self->registerPropertyAsMetaData('referrer', 'HTTP_REFERER');
+    $self->registerPropertyAsMetaData('host', 'REMOTE_HOST', 'REMOTE_ADDR');
+    $self->registerPropertyAsMetaData('acceptType', 'HTTP_ACCEPT');
+    $self->registerPropertyAsMetaData('acceptCharset', 'HTTP_ACCEPT_CHARSET');
+    $self->registerPropertyAsMetaData('acceptEncoding', 'HTTP_ACCEPT_ENCODING');
+    $self->registerPropertyAsMetaData('acceptLanguage', 'HTTP_ACCEPT_LANGUAGE');
+    # decode the arguments
     my $method = $ENV{'REQUEST_METHOD'} || '';
     if ($method eq 'POST') {
         local $/ = undef;
@@ -143,6 +154,7 @@ sub splitArguments {
     } else {
         # should also deal with HTTP HEAD, PUT, etc, here XXX
     }
+    # decode username and password data
     if (defined($ENV{'HTTP_AUTHORIZATION'})) {
         if ($self->HTTP_AUTHORIZATION =~ /^Basic +(.*)$/os) {
             # HTTP Basic Authentication
@@ -165,37 +177,20 @@ sub setCommandArgument {
     }
 }
 
-sub UA {
+sub getMetaData {
     my $self = shift;
-    return $self->getArgument('overrideUserAgent') or $self->HTTP_USER_AGENT;
+    my($field) = @_;
+    return $self->metaData->{$field};
 }
 
-sub referrer {
+sub registerPropertyAsMetaData {
     my $self = shift;
-    return $self->getArgument('overrideReferrer') or $self->HTTP_REFERER; # (sic)
-}
-
-sub host {
-    my $self = shift;
-    return $self->REMOTE_HOST or $self->REMOTE_ADDR;
-}
-
-sub acceptType {
-    my $self = shift;
-    return $self->getArgument('overrideAcceptType') or $self->HTTP_ACCEPT;
-}
-
-sub acceptCharset {
-    my $self = shift;
-    return $self->getArgument('overrideAcceptCharset') or $self->HTTP_ACCEPT_CHARSET;
-}
-
-sub acceptEncoding {
-    my $self = shift;
-    return $self->getArgument('overrideAcceptEncoding') or $self->HTTP_ACCEPT_ENCODING;
-}
-
-sub acceptLanguage {
-    my $self = shift;
-    return $self->getArgument('overrideAcceptLanguage') or $self->HTTP_ACCEPT_LANGUAGE;
+    my($field, @propertys) = @_;
+    foreach my $property (@propertys) {
+        my $value = $self->propertyGet($property);
+        if (defined($value)) {
+            $self->metaData->{$field} = $value;
+            last;
+        }
+    }
 }

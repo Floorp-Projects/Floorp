@@ -29,8 +29,8 @@
 package PLIF::Input::CommandLine;
 use strict;
 use vars qw(@ISA);
-use PLIF::Input::Arguments;
-@ISA = qw(PLIF::Input::Arguments);
+use PLIF::Input::Default;
+@ISA = qw(PLIF::Input::Default);
 1;
 
 sub init {
@@ -42,10 +42,6 @@ sub init {
 
 sub applies {
     return @ARGV > 0;
-}
-
-sub defaultOutputProtocol {
-    return 'stdout';
 }
 
 sub splitArguments {
@@ -88,7 +84,7 @@ sub createArgument {
     # @_ also contains @default, but to save copying it about we don't
     # use it directly in this method
     my($argument) = @_;
-    if ($argument eq 'batch') {
+    if ($argument eq 'batch' or $argument eq 'batch-force-defaults') {
         # if --batch was not set, then we assume that means that
         # we are not in --batch mode... no point asking the user,
         # cos if we are, he won't reply, and if he isn't, we know
@@ -96,7 +92,11 @@ sub createArgument {
         $self->setArgument($argument, 0);
     } else {
         if ($self->getArgument('batch')) {
+            # defer to superclass
             $self->SUPER::createArgument(@_);
+        } elsif ($self->getArgument('batch-force-defaults')) {
+            # set this argument to its default value
+            $self->setArgument(@_);            
         } else {
             $self->app->output->request(@_);
             # get input from user
@@ -126,35 +126,4 @@ sub term {
         $self->{'term'} = Term::ReadLine->new($self->app->name);
     }
     return $self->{'term'};
-}
-
-
-# XXX Grrrr: 
-
-sub UA {
-    return '';
-}
-
-sub referrer {
-    return '';
-}
-
-sub host {
-    return 'localhost';
-}
-
-sub acceptType {
-    return 'text/plain';
-}
-
-sub acceptCharset {
-    return '';
-}
-
-sub acceptEncoding {
-    return '';
-}
-
-sub acceptLanguage {
-    return '';
 }

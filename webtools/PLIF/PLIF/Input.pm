@@ -186,12 +186,54 @@ sub getArgumentsBranch {
     $self->notImplemented();
 }
 
+# if a key has multiple values, getArgumentsTree drops later values on the floor
+sub getArgumentsTree {
+    my $self = shift;
+    my($root) = @_;
+    my $arguments = $self->getArgumentsBranch($root);
+    my $data = {};
+    foreach my $argument (keys(%$arguments)) {
+        my @parts = split(/\./, $argument);
+        my $key = pop(@parts);
+        my $pointer = $data;
+        foreach my $part (@parts) {
+            if (not defined($pointer->{$part})) {
+                $pointer->{$part} = {};
+            } elsif (ref($pointer->{$part}) ne 'HASH') {
+                $pointer->{$part} = {
+                    '' => $pointer->{$part},
+                };
+            }
+            $pointer = $pointer->{$part};
+        }
+        while (exists($pointer->{$key}) and (ref($pointer->{$key}) eq 'HASH')) {
+            $pointer = $pointer->{$key};
+            $key = '';
+        }
+        $pointer->{$key} = $arguments->{$argument}->[0];
+        # if a key has multiple values, getArgumentsTree drops later values on the floor
+    }
+    return $data;
+}
+
+sub getMetaData {
+    my $self = shift;
+    my($field) = @_;
+    $self->notImplemented();
+}
+
 sub hash {
     my $self = shift;
     return {
         'arguments' => $self->getArguments(),
         'protocol' => $self->defaultOutputProtocol(),
-        # XXX also UA, etc...
+        'ua' => $self->getMetaData('UA'),
+        'referrer' => $self->getMetaData('referrer'),
+        'host' => $self->getMetaData('host'),
+        'acceptType' => $self->getMetaData('acceptType'),
+        'acceptCharset' => $self->getMetaData('acceptCharset'),
+        'acceptEncoding' => $self->getMetaData('acceptEncoding'),
+        'acceptLanguage' => $self->getMetaData('acceptLanguage'),
     };
 }
 
@@ -209,41 +251,14 @@ sub hash {
 # 'address' is an out of band argument that should only be provided
 # for input devices that know the address of the user (and can thus
 # construct the username).
-
-
-# XXX I don't like having these here:
-
-sub UA {
-    my $self = shift;
-    $self->notImplemented();
-}
-
-sub referrer {
-    my $self = shift;
-    $self->notImplemented();
-}
-
-sub host {
-    my $self = shift;
-    $self->notImplemented();
-}
-
-sub acceptType {
-    my $self = shift;
-    $self->notImplemented();
-}
-
-sub acceptCharset {
-    my $self = shift;
-    $self->notImplemented();
-}
-
-sub acceptEncoding {
-    my $self = shift;
-    $self->notImplemented();
-}
-
-sub acceptLanguage {
-    my $self = shift;
-    $self->notImplemented();
-}
+#
+# These are separate from the metadata fields, which are available
+# from getMetaData(). The following metadata fields are defined:
+#
+#    UA
+#    referrer
+#    host
+#    acceptType
+#    acceptCharset
+#    acceptEncoding
+#    acceptLanguage
