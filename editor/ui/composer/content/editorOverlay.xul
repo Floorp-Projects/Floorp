@@ -86,20 +86,11 @@
 					events="create"
 					oncommandupdate="goUpdateComposerMenuItems(this)"
   >
-    <command id="cmd_newNavigator"/>
-    <command id="cmd_newMessage"/>
-    <command id="cmd_newCard"/>
-    <command id="cmd_newEditor"/>
-    <command id="cmd_newEditorTemplate"/>
-    <command id="cmd_newEditorDraft"/>
     <command id="cmd_sendPage"/>
 
     <command id="cmd_open"                                          oncommand="goDoCommand('cmd_open')"/>
     <command id="cmd_openRemote"   value="&openremoteCmd.label;"    oncommand="goDoCommand('cmd_openRemote')"/>
     <command id="cmd_close"        value="&closeCmd.label;"         oncommand="goDoCommand('cmd_close')"/>
-
-    <command id="cmd_save"         value="&saveCmd.label;"          oncommand="goDoCommand('cmd_save')"/>
-    <command id="cmd_saveAs"       value="&saveAsCmd.label;"        oncommand="goDoCommand('cmd_saveAs')"/>
 
     <command id="cmd_printSetup"   value="&printSetupCmd.label;"    oncommand="goDoCommand('cmd_printSetup')"/>
     <command id="cmd_printPreview" value="&printPreviewCmd.label;"  oncommand="goDoCommand('cmd_printPreview')"/>
@@ -205,6 +196,13 @@
   <broadcasterset id="broadcasterset">
     <!-- Broadcasters/commands with no other home -->
     <!-- view menu -->
+    <command id="cmd_newNavigator"/>
+    <command id="cmd_newMessage"/>
+    <command id="cmd_newCard"/>
+    <command id="cmd_newEditor"/>
+    <command id="cmd_newEditorTemplate"/>
+    <command id="cmd_newEditorDraft"/>
+
    	<command id="cmd_viewCompToolbar"     oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');"         checked="true"/>
    	<command id="cmd_viewFormatToolbar"   oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');"     checked="true"/>
    	<command id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');" checked="true"/>
