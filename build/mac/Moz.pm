@@ -31,10 +31,11 @@ package			Moz;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw();
-@EXPORT_OK	= qw(BuildProject,OpenErrorLog,CloseErrorLog,UseCodeWarriorLib,StopForErrors,DontStopForErrors);
+@EXPORT			= qw(BuildProject,OpenErrorLog,MakeAlias,StopForErrors,DontStopForErrors);
+@EXPORT_OK	= qw(CloseErrorLog,UseCodeWarriorLib);
 
 	use Cwd;
+	use File::Path;
 
 sub current_directory()
 	{
@@ -196,5 +197,27 @@ END_OF_APPLESCRIPT
 				log_recent_errors($project_path);
 			}
 	}
+
+sub MakeAlias($$)
+	{
+		my ($old_file, $new_file) = @_;
+
+			# if the directory to hold $new_file doesn't exist, create it
+		if ( ($new_file =~ m/(.+:)/) && !-d $1 )
+			{
+				mkpath($1);
+			}
+
+			# if a leaf name wasn't specified for $new_file, use the leaf from $old_file
+		if ( ($new_file =~ m/:$/) && ($old_file =~ m/.+:(.+)/) )
+			{
+				$new_file .= $1;
+			}
+
+		die "Can't make an alias for \"$old_file\"; it doesn't exist.\n" unless -e $old_file;
+		unlink $new_file;
+		symlink($old_file, $new_file) || die "Can't make an alias for \"$old_file\"; unknown error.\n";
+	}
+
 
 1;
