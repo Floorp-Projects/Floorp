@@ -64,7 +64,7 @@ interface nsIObserverService : nsISupports
      * @param anObserve : The interface pointer which will receive notifications.
      * @param aTopic    : The notification topic or subject.
      * @param ownsWeak  : If set to false, the nsIObserverService will hold a 
-     *                    strong reference to |anObserver|.  If set to false and 
+     *                    strong reference to |anObserver|.  If set to true and 
      *                    |anObserver| supports the nsIWeakReference interface,
      *                    a weak reference will be held.  Otherwise an error will be
      *                    returned.
