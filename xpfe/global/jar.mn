@@ -8,7 +8,6 @@ packages/widget-toolkit.jar:
 	global/content/commonDialog.xul             (resources/content/commonDialog.xul) 
 	global/content/commonDialog.js              (resources/content/commonDialog.js) 
 	global/content/strres.js                    (resources/content/strres.js) 
-	global/content/builtinURLs.js               (resources/content/builtinURLs.js) 
 	global/content/logo.gif                     (resources/content/logo.gif) 
 	global/content/about.xul                    (resources/content/about.xul) 
 	global/content/mozilla.html                 (resources/content/mozilla.html) 
