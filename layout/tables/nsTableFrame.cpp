@@ -585,11 +585,32 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCellFrame *
   if (!(0<=aRowIndex && aRowIndex<GetRowCount()))
     return 1;
 
+  // XXX I don't think this is correct...
+#if 0
   PRInt32 rowSpan = aCell->GetRowSpan();
   PRInt32 rowCount = GetRowCount();
   if (rowCount < (aRowIndex + rowSpan))
     return (rowCount - aRowIndex);
   return rowSpan;
+#else
+  PRInt32 rowSpan = aCell->GetRowSpan();
+  PRInt32 rowCount = GetRowCount();
+  PRInt32 startRow;
+  aCell->GetRowIndex(startRow);
+
+  // Clip the row span so it doesn't extend past the bottom of the table
+  if ((startRow + rowSpan) > rowCount) {
+    rowSpan = rowCount - startRow;
+  }
+
+  // Check that aRowIndex is in the range startRow..startRow+rowSpan-1
+  PRInt32 lastRow = startRow + rowSpan - 1;
+  if ((aRowIndex < startRow) || (aRowIndex > lastRow)) {
+    return 0;  // cell doesn't span any rows starting at aRowIndex
+  } else {
+    return lastRow - aRowIndex + 1;
+  }
+#endif
 }
 
 // return the number of cols spanned by aCell starting at aColIndex
