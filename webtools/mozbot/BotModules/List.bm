@@ -1,0 +1,179 @@
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
+################################
+# List Module                  #
+################################
+
+package BotModules::List;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+1;
+
+# XXX Wipe entire list command
+
+# RegisterConfig - Called when initialised, should call registerVariables
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+      # [ name, save?, settable? ]
+        ['lists', 1, 1, {}], # user => 'list name|item 1|item 2||list name|item1|item 2'
+        ['preferredLineLength', 1, 1, 80], # the usual
+        ['maxItemsInChannel', 1, 1, 20], # max number of items to print in the channel (above this and direct messages are used)
+    );
+}
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    return {
+            '' => 'A personal list tracker. Store your lists here. You must be authenticated to use this (see \'newuser\'). Use the \'add\' command to add items to a list.',
+            'add' => 'Add an item to a personal list. List names shouldn\'t contain the word \'to\' otherwise things will be too ambiguous. Syntax: \'add <thing to add> to <list name> list\', e.g. \'add bug 5693 to critical bug list\'.',
+            'remove' => 'Remove an item from a personal list. Syntax: \'remove <thing to add> from <list name> list\', e.g. \'remove bug 5693 from critical bug list\'.',
+            'list' => 'List the items in your list. Syntax: \'list items in <name of list> list\', e.g. \'list items in critical bug list\' or just \'critical bug list\'.',
+            'lists' => 'Tells you what lists you have set up.',
+    };
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*add\s+(\S(?:.*\S)?)\s+to\s+(?:my\s+)?(\S(?:.*\S)?)\s+list[\s!.]*$/osi and $message !~ /\|/o and $event->{'userName'}) {
+        $self->AddItem($event, $1, $2);
+    } elsif ($message =~ /^\s*remove\s+(\S(?:.*\S)?)\s+from\s+(?:my\s+)?(\S(?:.*\S)?)\s+list[\s!.]*$/osi and $message !~ /\|/o and $event->{'userName'}) {
+        $self->RemoveItem($event, $1, $2);
+    } elsif ($message =~ /^\s*   (?:examine \s+                      |
+                                    list \s+ items \s+ in \s+        |
+                                    what (?:\s+is|'s) \s+ (?:in\s+)? )
+                                 (?: my \s+ | the \s+ )?
+                                 ( \S (?:.*\S)? )
+                                \s+ list [\s!?.]* $/osix
+             and $message !~ /\|/o and $event->{'userName'}) {
+        $self->ListItems($event, $1);
+    } elsif ($message =~ /^\s*lists[?\s.!]*$/osi and $event->{'userName'}) {
+        $self->ListLists($event, $1);
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # dealt with it...
+}
+
+sub Baffled {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*(\S(?:.*\S)?)\s+list[\s!?.]*$/osi and $message !~ /\|/o and $event->{'userName'}) {
+        $self->ListItems($event, $1);
+    } else {
+        return $self->SUPER::Baffled(@_);
+    }
+    return 0; # dealt with it...
+}
+
+sub Heard {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*add\s+(\S(?:.*\S)?)\s+to\s+(?:my\s+)?(\S(?:.*\S)?)\s+list[\s!.]*$/osi and $message !~ /\|/o and $event->{'userName'}) {
+        $self->AddItem($event, $1, $2);
+    } elsif ($message =~ /^\s*remove\s+(\S(?:.*\S)?)\s+from\s+(?:my\s+)?(\S(?:.*\S)?)\s+list[\s!.]*$/osi and $message !~ /\|/o and $event->{'userName'}) {
+        $self->RemoveItem($event, $1, $2);
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # dealt with it...
+}
+
+sub AddItem {
+    my $self = shift;
+    my ($event, $what, $list) = @_;
+    my @lists = split(/\|\|/o, $self->{'lists'}->{$event->{'userName'}});
+    local $" = '\', \'';
+    my %lists;
+    foreach my $sublist (@lists) {
+        my @items = split(/\|/o, $sublist);
+        $lists{shift @items} = \@items;
+    }
+    push(@{$lists{lc $list}}, $what);
+    local $" = '|';
+    my $compoundLists = '';
+    foreach my $list (keys(%lists)) {
+        if ($compoundLists ne '') {
+            $compoundLists .= '||';
+        }
+        $compoundLists .= "$list|@{$lists{$list}}";
+    }
+    $self->{'lists'}->{$event->{'userName'}} = $compoundLists;
+    $self->saveConfig();
+    $self->say($event, "$event->{'from'}: stored '$what' in '$list' list");
+}
+
+sub RemoveItem {
+    my $self = shift;
+    my ($event, $what, $list) = @_;
+    my @lists = split(/\|\|/o, $self->{'lists'}->{$event->{'userName'}});
+    local $" = '\', \'';
+    my %lists;
+    my $removed = 0;
+    foreach my $sublist (@lists) {
+        my @items = split(/\|/o, $sublist);
+        if (lc $list eq $items[0]) {
+            my $listName = shift @items;
+            foreach my $item (@items) {
+                if (lc $what ne lc $item) {
+                    push(@{$lists{$listName}}, $item);
+                } else {
+                    $removed++;
+                }
+            }
+        } else {
+            $lists{shift @items} = \@items;
+        }
+    }
+    local $" = '|';
+    my $compoundLists = '';
+    foreach my $list (keys(%lists)) {
+        if ($compoundLists ne '') {
+            $compoundLists .= '||';
+        }
+        $compoundLists .= "$list|@{$lists{$list}}";
+    }
+    $self->{'lists'}->{$event->{'userName'}} = $compoundLists;
+    $self->saveConfig();
+    if ($removed) {
+        $self->say($event, "$event->{'from'}: removed '$what' from '$list' list");
+    } else {
+        $self->say($event, "$event->{'from'}: could not find '$what' in '$list' list");
+    }
+}
+
+sub ListItems {
+    my $self = shift;
+    my ($event, $list) = @_;
+    my @lists = split(/\|\|/o, $self->{'lists'}->{$event->{'userName'}});
+    my %lists;
+    foreach my $list (@lists) {
+        my @items = split(/\|/o, $list);
+        $lists{lc shift @items} = \@items;
+    }
+    if (defined(@{$lists{lc $list}})) {
+        my $size = scalar(@{$lists{lc $list}});
+        if ($size > $self->{'maxItemsInChannel'}) {
+            $self->channelSay($event, "$event->{'from'}: Your $list list contains $size items, which I am /msg'ing you.");
+            $self->directSay($event, $self->prettyPrint($self->{'preferredLineLength'}, "Your $list list contains: ", '', ', ', @{$lists{lc $list}}));
+        } else {
+            $self->say($event, $self->prettyPrint($self->{'preferredLineLength'}, "Your $list list contains: ", $event->{'channel'} eq '' ? '' : "$event->{'from'}: ", ', ', @{$lists{lc $list}}));
+        }
+    } else {
+        $self->say($event, "You don't have a $list list, sorry.");
+    }
+}
+
+sub ListLists {
+    my $self = shift;
+    my ($event) = @_;
+    my @lists = split(/\|\|/o, $self->{'lists'}->{$event->{'userName'}});
+    my @listNames;
+    foreach my $list (@lists) {
+        my @items = split(/\|/o, $list);
+        push(@listNames, $items[0]);
+    }
+    $self->say($event, $self->prettyPrint($self->{'preferredLineLength'}, "Your lists are: ", $event->{'channel'} eq '' ? '' : "$event->{'from'}: ", ', ', @listNames));
+}
