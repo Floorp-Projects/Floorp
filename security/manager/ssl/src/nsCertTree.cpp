@@ -461,7 +461,8 @@ nsCertTree::RemoveCert(PRUint32 index)
     return NS_ERROR_FAILURE;
   }
 
-  int i, idx = 0, cIndex = 0, nc;
+  int i;
+  PRUint32 idx = 0, cIndex = 0, nc;
   // Loop over the threads
   for (i=0; i<mNumOrgs; i++) {
     if (index == idx)

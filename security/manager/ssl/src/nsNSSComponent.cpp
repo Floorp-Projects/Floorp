@@ -628,7 +628,7 @@ nsresult nsNSSComponent::getParamsForNextCrlToDownload(nsAutoString *url, PRTime
     return NS_ERROR_FAILURE;
   }
 
-  for(PRInt32 i=0;i<noOfCrls;i++) {
+  for(PRUint32 i=0;i<noOfCrls;i++) {
     PRBool autoUpdateEnabled;
     nsAutoString tempCrlKey;
   

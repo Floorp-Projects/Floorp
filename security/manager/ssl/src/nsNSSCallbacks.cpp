@@ -196,70 +196,71 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   nsresult rv;
   PRInt32 encryptBits;
 
-  if (SECSuccess == SSL_SecurityStatus(fd, &sslStatus, &cipherName, &keyLength,
-                                       &encryptBits, &signer, nsnull))
-    {
-      PRInt32 secStatus;
-      if (sslStatus == SSL_SECURITY_STATUS_OFF)
-        secStatus = nsIWebProgressListener::STATE_IS_BROKEN;
-      else if (encryptBits >= 90)
-        secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
-                     nsIWebProgressListener::STATE_SECURE_HIGH);
-      else
-        secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
-                     nsIWebProgressListener::STATE_SECURE_LOW);
+  if (SECSuccess != SSL_SecurityStatus(fd, &sslStatus, &cipherName, &keyLength,
+                                       &encryptBits, &signer, nsnull)) {
+    return;
+  }
 
-      CERTCertificate *peerCert = SSL_PeerCertificate(fd);
-      char* caName = CERT_GetOrgName(&peerCert->issuer);
-      CERT_DestroyCertificate(peerCert);
-      if (!caName) {
-        caName = signer;
-      }
+  PRInt32 secStatus;
+  if (sslStatus == SSL_SECURITY_STATUS_OFF)
+    secStatus = nsIWebProgressListener::STATE_IS_BROKEN;
+  else if (encryptBits >= 90)
+    secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
+                 nsIWebProgressListener::STATE_SECURE_HIGH);
+  else
+    secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
+                 nsIWebProgressListener::STATE_SECURE_LOW);
 
-      // If the CA name is RSA Data Security, then change the name to the real
-      // name of the company i.e. VeriSign, Inc.
-      if (nsCRT::strcmp((const char*)caName, "RSA Data Security, Inc.") == 0) {
-        // In this case, caName != signer since the logic implies signer
-        // would be at minimal "O=RSA Data Security, Inc" because caName
-        // is what comes after to O=.  So we're OK just freeing this memory
-        // without checking to see if it's equal to signer;
-        NS_ASSERTION(caName != signer, "caName was equal to caName when it shouldn't be");
-        PR_Free(caName);
-        caName = PL_strdup("Verisign, Inc.");
-      }
+  CERTCertificate *peerCert = SSL_PeerCertificate(fd);
+  char* caName = CERT_GetOrgName(&peerCert->issuer);
+  CERT_DestroyCertificate(peerCert);
+  if (!caName) {
+    caName = signer;
+  }
 
-      nsXPIDLString shortDesc;
-      const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUCS2(caName)) };
-      nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-      if (NS_FAILED(rv))
-        return; 
+  // If the CA name is RSA Data Security, then change the name to the real
+  // name of the company i.e. VeriSign, Inc.
+  if (nsCRT::strcmp((const char*)caName, "RSA Data Security, Inc.") == 0) {
+    // In this case, caName != signer since the logic implies signer
+    // would be at minimal "O=RSA Data Security, Inc" because caName
+    // is what comes after to O=.  So we're OK just freeing this memory
+    // without checking to see if it's equal to signer;
+    NS_ASSERTION(caName != signer, "caName was equal to caName when it shouldn't be");
+    PR_Free(caName);
+    caName = PL_strdup("Verisign, Inc.");
+  }
 
-      rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SignedBy").get(),
-                                                     formatStrings, 1,
-                                                     getter_Copies(shortDesc));
+  nsXPIDLString shortDesc;
+  const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUCS2(caName)) };
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SignedBy").get(),
+                                                   formatStrings, 1,
+                                                   getter_Copies(shortDesc));
 
-      nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
-  
-      nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
-      infoObject->SetSecurityState(secStatus);
-      infoObject->SetShortSecurityDescription((const PRUnichar*)shortDesc);
+    nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
 
-      /* Set the SSL Status information */
-      nsCOMPtr<nsSSLStatus> status = new nsSSLStatus();
+    nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+    infoObject->SetSecurityState(secStatus);
+    infoObject->SetShortSecurityDescription((const PRUnichar*)shortDesc);
 
-      CERTCertificate *serverCert = SSL_PeerCertificate(fd);
-      if (serverCert) status->mServerCert = new nsNSSCertificate(serverCert);
+    /* Set the SSL Status information */
+    nsCOMPtr<nsSSLStatus> status = new nsSSLStatus();
 
-      status->mKeyLength = keyLength;
-      status->mSecretKeyLength = encryptBits;
-      status->mCipherName.Adopt(cipherName);
+    CERTCertificate *serverCert = SSL_PeerCertificate(fd);
+    if (serverCert) status->mServerCert = new nsNSSCertificate(serverCert);
 
-      infoObject->SetSSLStatus(status);
+    status->mKeyLength = keyLength;
+    status->mSecretKeyLength = encryptBits;
+    status->mCipherName.Adopt(cipherName);
 
-      if (caName != signer)
-        PR_Free(caName);
-      PR_Free(signer);
-    }
+    infoObject->SetSSLStatus(status);
+  }
+
+  if (caName != signer) {
+    PR_Free(caName);
+  }
+  PR_Free(signer);
 }
 
 SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
