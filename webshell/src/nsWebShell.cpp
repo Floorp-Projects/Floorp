@@ -2133,6 +2133,8 @@ nsWebShell::LoadURI(nsIURI * aUri,
   CancelRefreshURITimers();
   nsXPIDLCString scheme, CUriSpec;
 
+  if (!aUri) return NS_ERROR_NULL_POINTER; 
+
   rv = aUri->GetScheme(getter_Copies(scheme));
   if (NS_FAILED(rv)) return rv;
   rv = aUri->GetSpec(getter_Copies(CUriSpec));
