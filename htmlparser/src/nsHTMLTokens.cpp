@@ -505,7 +505,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CTextToken::ConsumeUntil(PRUnichar aChar,nsScanner& aScanner,nsString& aTerminalString){
+nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,nsString& aTerminalString){
   PRBool      done=PR_FALSE; 
   nsresult    result=NS_OK; 
   nsString    temp; 
@@ -523,7 +523,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,nsScanner& aScanner,nsString& 
     if((NS_OK==result) && (kLessThan==aChar)) { 
       //we're reading a tag or a comment... 
       result=aScanner.GetChar(theChar); 
-      if((NS_OK==result) && (kExclamation==theChar)) { 
+      if((NS_OK==result) && (kExclamation==theChar) && (PR_FALSE==aIgnoreComments)) { 
         //read a comment... 
         static CCommentToken theComment; 
         result=theComment.Consume(aChar,aScanner); 
