@@ -101,6 +101,7 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 
 class HTMLContentSink : public nsIHTMLContentSink {
 public:
@@ -566,6 +567,11 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     // XXX Temporary code till forms become real content
     // Add the form to the document
     ((nsHTMLDocument*)mDocument)->AddForm(mCurrentForm);
+    nsIContent *content;
+    if (NS_OK == mCurrentForm->QueryInterface(kIContentIID, (void **)&content)) {
+      content->SetDocument(mDocument);
+      NS_RELEASE(content);
+    }
   }
 
   return NS_OK;
@@ -1484,7 +1490,6 @@ HTMLContentSink::FlushText()
 {
   if (nsnull != mCurrentText) {
     // XXX sleazyTextHackXXX repair document pointer in text object
-    static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
     nsIContent* content = nsnull;
     mCurrentText->QueryInterface(kIContentIID, (void**) &content);
     content->SetDocument(mDocument);
@@ -1802,7 +1807,7 @@ nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       NS_RELEASE(context);
       NS_RELEASE(owner);
     }
-    delete script;
+    delete [] script;
   }
 
   return rv;

@@ -32,7 +32,7 @@ nsContentList::nsContentList(nsIDocument *aDocument)
 }
 
 nsContentList::nsContentList(nsIDocument *aDocument,
-			     const nsString& aMatchTag) 
+                             const nsString& aMatchTag) 
 {
   mMatchTag = new nsString(aMatchTag);
   mFunc = nsnull;
@@ -40,7 +40,7 @@ nsContentList::nsContentList(nsIDocument *aDocument,
 }
 
 nsContentList::nsContentList(nsIDocument *aDocument, 
-			     nsContentListMatchFunc aFunc)
+                             nsContentListMatchFunc aFunc)
 {
   mFunc = aFunc;
   mMatchTag = nsnull;
@@ -197,10 +197,10 @@ nsContentList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
       nsAutoString name;
       // XXX Should it be an EqualsIgnoreCase?
       if (((content->GetAttribute("NAME", name) == eContentAttr_HasValue) &&
-	   (aName.Equals(name))) ||
-	  ((content->GetAttribute("ID", name) == eContentAttr_HasValue) &&
-	   (aName.Equals(name)))) {
-	return content->QueryInterface(kIDOMNodeIID, (void **)aReturn);
+           (aName.Equals(name))) ||
+          ((content->GetAttribute("ID", name) == eContentAttr_HasValue) &&
+           (aName.Equals(name)))) {
+        return content->QueryInterface(kIDOMNodeIID, (void **)aReturn);
       }
     }
   }
@@ -274,7 +274,7 @@ void nsContentList::PopulateSelf(nsIContent *aContent)
 
 NS_IMETHODIMP
 nsContentList::ContentAppended(nsIDocument *aDocument,
-			       nsIContent* aContainer)
+                               nsIContent* aContainer)
 {
   if (aContainer->ChildCount() > 0) {
     nsIContent *content = aContainer->ChildAt(aContainer->ChildCount()-1);
@@ -292,9 +292,9 @@ nsContentList::ContentAppended(nsIDocument *aDocument,
 
 NS_IMETHODIMP 
 nsContentList::ContentInserted(nsIDocument *aDocument,
-			       nsIContent* aContainer,
-			       nsIContent* aChild,
-			       PRInt32 aIndexInContainer)
+                               nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer)
 {
   if (MatchSelf(aChild)) {
     Reset();
@@ -308,10 +308,10 @@ nsContentList::ContentInserted(nsIDocument *aDocument,
  
 NS_IMETHODIMP
 nsContentList::ContentReplaced(nsIDocument *aDocument,
-			       nsIContent* aContainer,
-			       nsIContent* aOldChild,
-			       nsIContent* aNewChild,
-			       PRInt32 aIndexInContainer)
+                               nsIContent* aContainer,
+                               nsIContent* aOldChild,
+                               nsIContent* aNewChild,
+                               PRInt32 aIndexInContainer)
 {
   if (MatchSelf(aOldChild) || MatchSelf(aNewChild)) {
     Reset();
@@ -325,9 +325,9 @@ nsContentList::ContentReplaced(nsIDocument *aDocument,
 
 NS_IMETHODIMP
 nsContentList::ContentHasBeenRemoved(nsIDocument *aDocument,
-				     nsIContent* aContainer,
-				     nsIContent* aChild,
-				     PRInt32 aIndexInContainer)
+                                     nsIContent* aContainer,
+                                     nsIContent* aChild,
+                                     PRInt32 aIndexInContainer)
 {
   if (MatchSelf(aChild)) {
     Reset();

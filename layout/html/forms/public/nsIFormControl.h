@@ -60,10 +60,11 @@ public:
   /**
     * Get the name of this control. Controls without names will not have any
     * data submitted.
-    * @param aResult the nsString which will be set to the name (out parm)
-    * @return PR_TRUE if there was a name, PR_FALSE otherwise 
+    * @param aResult the nsString which will be set to the name (out parm).
+    *        If the result has a length of 0, the control has no name
+    * @return NS_OK if successful
     */
-  virtual PRBool GetName(nsString& aResult) const = 0;
+  virtual nsresult GetName(nsString& aResult) = 0;
 
   /**
     * Get the number of references to this control by other objects.

@@ -56,6 +56,7 @@ static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMNSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
 
 NS_LAYOUT nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
@@ -89,9 +90,7 @@ nsHTMLDocument::~nsHTMLDocument()
       NS_RELEASE(form);
     }
   }
-  if (nsnull != mNamedItems) {
-    PL_HashTableDestroy(mNamedItems);
-  }
+  DeleteNamedItems();
   NS_IF_RELEASE(mImages);
   NS_IF_RELEASE(mApplets);
   NS_IF_RELEASE(mEmbeds);
@@ -119,6 +118,11 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
   if (aIID.Equals(kIDOMHTMLDocumentIID)) {
     AddRef();
     *aInstancePtr = (void**) (nsIDOMHTMLDocument *)this;
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMNSHTMLDocumentIID)) {
+    AddRef();
+    *aInstancePtr = (void**) (nsIDOMNSHTMLDocument *)this;
     return NS_OK;
   }
   return nsDocument::QueryInterface(aIID, aInstancePtr);
@@ -323,20 +327,6 @@ nsHTMLDocument::GetFormAt(PRInt32 aIndex, nsIFormManager **aForm) const
   }
 
   return 1;/* XXX NS_NOT_FOUND */
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::AddNamedItem(const nsString& aName, nsIContent *aContent)
-{
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsHTMLDocument::RemoveNamedItem(const nsString& aName)
-{
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
@@ -730,12 +720,50 @@ nsHTMLDocument::Writeln(JSContext *cx, jsval *argv, PRUint32 argc)
   return result;
 }
 
+nsIContent *
+nsHTMLDocument::MatchName(nsIContent *aContent, const nsString& aName)
+{
+  static nsAutoString name("NAME"), id("ID");
+  nsAutoString value;
+  nsIContent *result = nsnull;
+
+  if ((eContentAttr_HasValue == aContent->GetAttribute(id, value)) &&
+      aName.Equals(value)) {
+    return aContent;
+  }
+  else if ((eContentAttr_HasValue == aContent->GetAttribute(name, value)) &&
+           aName.Equals(value)) {
+    return aContent;
+  }
+  
+  PRInt32 i, count;
+  count = aContent->ChildCount();
+  for (i = 0; i < count && result == nsnull; i++) {
+    nsIContent *child = aContent->ChildAt(i);
+    result = MatchName(child, aName);
+    NS_RELEASE(child);
+  }  
+
+  return result;
+}
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetElementById(const nsString& aElementId, nsIDOMElement** aReturn)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsIContent *content;
+
+  // XXX For now, we do a brute force search of the content tree.
+  // We should come up with a more efficient solution.
+  content = MatchName(mRootContent, aElementId);
+
+  if (nsnull != content) {
+    return content->QueryInterface(kIDOMElementIID, (void **)aReturn);
+  }
+  else {
+    *aReturn = nsnull;
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -745,10 +773,201 @@ nsHTMLDocument::GetElementsByName(const nsString& aElementName, nsIDOMNodeList**
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetNamedItem(const nsString& aName, nsIDOMElement **aReturn)
+NS_IMETHODIMP    
+nsHTMLDocument::GetAlinkColor(nsString& aAlinkColor)
 {
-  return NS_OK;
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::SetAlinkColor(const nsString& aAlinkColor)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetLinkColor(nsString& aLinkColor)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::SetLinkColor(const nsString& aLinkColor)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetVlinkColor(nsString& aVlinkColor)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::SetVlinkColor(const nsString& aVlinkColor)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetBgColor(nsString& aBgColor)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::SetBgColor(const nsString& aBgColor)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetFgColor(nsString& aFgColor)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::SetFgColor(const nsString& aFgColor)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetLastModified(nsString& aLastModified)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetLayers(nsIDOMHTMLCollection** aLayers)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetSelection(nsString& aReturn)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRIntn 
+nsHTMLDocument::RemoveStrings(PLHashEntry *he, PRIntn i, void *arg)
+{
+  char *str = (char *)he->key;
+
+  delete [] str;
+  return HT_ENUMERATE_REMOVE;
+}
+
+void
+nsHTMLDocument::DeleteNamedItems()
+{
+  if (nsnull != mNamedItems) {
+    PL_HashTableEnumerateEntries(mNamedItems, RemoveStrings, nsnull);
+    PL_HashTableDestroy(mNamedItems);
+    mNamedItems = nsnull;
+  }
+}
+
+void
+nsHTMLDocument::RegisterNamedItems(nsIContent *aContent, PRBool aInForm)
+{
+  static nsAutoString name("NAME");
+  nsAutoString value;
+  nsIAtom *tag = aContent->GetTag();
+  PRBool inForm;
+
+  // Only the content types reflected in Level 0 with a NAME
+  // attribute are registered. Images and forms always get 
+  // reflected up to the document. Applets and embeds only go
+  // to the closest container (which could be a form).
+  if ((tag == nsHTMLAtoms::img) || (tag == nsHTMLAtoms::form) ||
+      (!aInForm && ((tag == nsHTMLAtoms::applet) || 
+                    (tag == nsHTMLAtoms::embed)))) {
+    if (eContentAttr_HasValue == aContent->GetAttribute(name, value)) {
+      char *nameStr = value.ToNewCString();
+      PL_HashTableAdd(mNamedItems, nameStr, aContent);
+    }
+  }
+
+  inForm = aInForm || (tag == nsHTMLAtoms::form);
+  NS_IF_RELEASE(tag);
+  
+  PRInt32 i, count;
+  count = aContent->ChildCount();
+  for (i = 0; i < count; i++) {
+    nsIContent *child = aContent->ChildAt(i);
+    RegisterNamedItems(child, inForm);
+    NS_RELEASE(child);
+  }  
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
+{
+  static nsAutoString name("NAME");
+  nsresult result = NS_OK;
+  nsIContent *content;
+
+  if (nsnull == mNamedItems) {
+    mNamedItems = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
+                                  PL_CompareValues, nsnull, nsnull);
+    RegisterNamedItems(mRootContent, PR_FALSE);
+    // XXX Need to do this until forms become real content
+    PRInt32 i, count = mTempForms.Count();
+    for (i = 0; i < count; i++) {
+      nsIFormManager *form = (nsIFormManager *)mTempForms.ElementAt(i);
+      if (NS_OK == form->QueryInterface(kIContentIID, (void **)&content)) {
+        nsAutoString value;
+        if (eContentAttr_HasValue == content->GetAttribute(name, value)) {
+          char *nameStr = value.ToNewCString();
+          PL_HashTableAdd(mNamedItems, nameStr, content);
+        }
+        NS_RELEASE(content);
+      }
+    }
+  }
+
+  char *str = aName.ToNewCString();
+
+  content = (nsIContent *)PL_HashTableLookup(mNamedItems, str);
+  if (nsnull != content) {
+    result = content->QueryInterface(kIDOMElementIID, (void **)aReturn);
+  }
+  else {
+    *aReturn = nsnull;
+  }
+
+  delete [] str;
+  return result;
 }
 
 NS_IMETHODIMP

@@ -42,7 +42,9 @@ public:
   // Alphabetical list of html attribute atoms
   static nsIAtom* a;
   static nsIAtom* above;
+  static nsIAtom* accept;
   static nsIAtom* acceptcharset;
+  static nsIAtom* accesskey;
   static nsIAtom* action;
   static nsIAtom* active;
   static nsIAtom* align;
@@ -89,6 +91,7 @@ public:
   static nsIAtom* face;
   static nsIAtom* font;
   static nsIAtom* fontWeight;
+  static nsIAtom* form;
   static nsIAtom* frame;
   static nsIAtom* frameborder;
   static nsIAtom* frameset;
@@ -110,6 +113,7 @@ public:
 
   static nsIAtom* id;
   static nsIAtom* iframe;
+  static nsIAtom* img;
   static nsIAtom* ismap;
 
   static nsIAtom* lang;
@@ -182,6 +186,7 @@ public:
   static nsIAtom* summary;
   static nsIAtom* suppress;
 
+  static nsIAtom* tabindex;
   static nsIAtom* table;
   static nsIAtom* tabstop;
   static nsIAtom* target;

@@ -55,6 +55,10 @@ public:
 
   PRInt32 GetMaxLength() const { return mMaxLength; }
 
+  // From nsIDOMHTMLInputElement interface
+  NS_IMETHOD GetMaxLength(PRInt32* aMaxLength) 
+              { *aMaxLength = mMaxLength; return NS_OK; }
+
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
 
