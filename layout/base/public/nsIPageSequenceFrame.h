@@ -41,10 +41,8 @@ class nsIPresContext;
  * @see   nsIPrintStatusCallback#OnProgress()
  */
 enum nsPrintStatus {
-  ePrintStatus_StartDoc,    // beginning printing of the document
   ePrintStatus_StartPage,   // beginning the specified page
   ePrintStatus_EndPage,     // finished with the specified page
-  ePrintStatus_EndDoc       // finished printing of the document
 };
 
 /**
@@ -98,6 +96,14 @@ enum nsPrintRange {
 struct nsPrintOptions {
   nsPrintRange  range;
   PRInt32       startPage, endPage;  // only used for ePrintRange_SpecifiedRange
+  PRPackedBool  oddNumberedPages;    // print the odd-numbered pages
+  PRPackedBool  evenNumberedPages;   // print the even-numbered pages
+
+  nsPrintOptions() {
+    range = ePrintRange_AllPages;
+    startPage = endPage = 1;
+    oddNumberedPages = evenNumberedPages = PR_TRUE;
+  }
 };
 
 /**
