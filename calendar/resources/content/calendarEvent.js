@@ -100,7 +100,7 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
       try {
           var iCalLibComponent = Components.classes["@mozilla.org/ical-container;1"].createInstance();
       } catch ( e ) {
-          alert( "The ICAL Componenet is not registered properly. Please follow the instructions below:\n"+
+          alert( "The ICAL Component is not registered properly. Please follow the instructions below:\n"+
 				 "Windows Users:\n"+
 				 "-Please quit Mozilla, run regxpcom and run Mozilla again.\n\n"+
 				 "Linux users:\n"+
@@ -133,7 +133,7 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
 
 CalendarEventDataSource.InitService = function calEvent_InitService( root )
 {
-    return new CalendarEventDataSource( null, root.getUserPath() );
+   return new CalendarEventDataSource( null, root.getUserPath() );
 }
 
 // turn on/off debuging
