@@ -12,9 +12,9 @@
 <!ENTITY importFromOpera.label          "Opera">
 <!ENTITY importFromOpera.accesskey      "O">
 <!ENTITY importFromCamino.label         "Camino">
-<!ENTITY importFromCamino.label         "Camino">
+<!ENTITY importFromCamino.accesskey     "Camino">
 <!ENTITY importFromSafari.label         "Safari">
-<!ENTITY importFromSafari.label         "Safari">
+<!ENTITY importFromSafari.accesskey     "Safari">
 <!ENTITY importFromOmniWeb.label        "OmniWeb">
 <!ENTITY importFromOmniWeb.accesskey    "W">
 <!ENTITY importFromICab.label           "iCab">

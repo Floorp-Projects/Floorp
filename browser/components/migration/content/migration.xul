@@ -60,11 +60,13 @@
     <radiogroup id="importSourceGroup">
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
+<!-- XXXben - uncomment these as we write migrators for them
       <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
       <radio id="macie"     label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
       <radio id="camino"    label="&importFromCamino.label;"    accesskey="&importFromCamino.accesskey;"/>
-      <radio id="omniweb"   label="&importFromOmniWeb.label;"   accesskey="&importFromOmniweb.accesskey;"/>
+      <radio id="omniweb"   label="&importFromOmniWeb.label;"   accesskey="&importFromOmniWeb.accesskey;"/>
       <radio id="icab"      label="&importFromICab.label;"      accesskey="&importFromICab.accesskey;"/>
+-->
       <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
       <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
       <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
@@ -72,7 +74,7 @@
       <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
       <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
       <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
-<!--      
+<!-- XXXben - uncomment these as we write migrators for them
       <radio id="konqueror" label="&importFromKonqueror.label;" accesskey="&importFromKonqueror.accesskey;"/>
       <radio id="epiphany"  label="&importFromEpiphany.label;"  accesskey="&importFromEpiphany.accesskey;"/>
       <radio id="galeon"    label="&importFromGaleon.label;"    accesskey="&importFromGaleon.accesskey;"/>

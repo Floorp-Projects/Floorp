@@ -1505,7 +1505,12 @@ function updateToolbarStates(toolbarMenuElt)
 function BrowserImport()
 {
   // goats
-  window.openDialog("chrome://browser/content/migration/migration.xul", "migration", "modal,centerscreen,chrome,resizable=no");
+#ifdef XP_MACOSX
+  var features = "centerscreen,chrome,resizable=no";
+#else
+  var features = "modal,centerscreen,chrome,resizable=no";
+#endif
+  window.openDialog("chrome://browser/content/migration/migration.xul", "migration", features);
 }
 
 function BrowserFullScreen()

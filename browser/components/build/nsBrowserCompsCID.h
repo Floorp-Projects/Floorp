@@ -19,7 +19,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt <hewitt@netscape.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,6 +52,13 @@
 
 #define NS_OMNIWEBPROFILEMIGRATOR_CID \
 { 0xb80ae6d8, 0x766c, 0x43da, { 0x9c, 0x7a, 0xd, 0x82, 0x44, 0x52, 0x61, 0x6a } }
+
+#define NS_CAMINOPROFILEMIGRATOR_CID \
+{ 0x01d88ea9, 0x0feb, 0x495e, { 0x8c, 0x9b, 0x41, 0x65, 0x99, 0x55, 0x52, 0x65 } }
+
+#define NS_ICABPROFILEMIGRATOR_CID \
+{ 0xf394a036, 0xc5e1, 0x46d8, { 0x99, 0x39, 0x6b, 0x35, 0xe1, 0x13, 0x0a, 0x27 } }
+
 #endif
 
 #define NS_OPERAPROFILEMIGRATOR_CID \
@@ -66,3 +72,4 @@
 
 #define NS_PHOENIXPROFILEMIGRATOR_CID \
 { 0x78481e4a, 0x50e4, 0x4489, { 0xb6, 0x8a, 0xef, 0x82, 0x67, 0xe, 0xd6, 0x3f } }
+

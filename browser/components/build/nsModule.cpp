@@ -54,6 +54,8 @@
 #include "nsSafariProfileMigrator.h"
 #include "nsOmniWebProfileMigrator.h"
 #include "nsMacIEProfileMigrator.h"
+#include "nsCaminoProfileMigrator.h"
+#include "nsICabProfileMigrator.h"
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -74,6 +76,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafariProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOmniWebProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacIEProfileMigrator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCaminoProfileMigrator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsICabProfileMigrator)
 #endif
 /////////////////////////////////////////////////////////////////////////////
 
@@ -95,8 +99,8 @@ static const nsModuleComponentInfo components[] =
     NS_BOOKMARKS_DATASOURCE_CONTRACTID,
     nsBookmarksServiceConstructor },
 
-  { "Profile Migrator",
-    NS_PROFILEMIGRATOR_CID,
+  { "Profile Migrator", 
+    NS_PROFILEMIGRATOR_CID, 
     NS_PROFILEMIGRATOR_CONTRACTID,
     nsProfileMigratorConstructor },
 
@@ -121,6 +125,17 @@ static const nsModuleComponentInfo components[] =
     NS_OMNIWEBPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "omniweb",
     nsOmniWebProfileMigratorConstructor },
+
+  { "Camino Profile Migrator",
+    NS_CAMINOPROFILEMIGRATOR_CID,
+    NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "camino",
+    nsCaminoProfileMigratorConstructor },
+
+  { "iCab Profile Migrator",
+    NS_ICABPROFILEMIGRATOR_CID,
+    NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "icab",
+    nsICabProfileMigratorConstructor },
+
 #endif
 
   { "Opera Profile Migrator",
@@ -142,6 +157,7 @@ static const nsModuleComponentInfo components[] =
     NS_DOGBERTPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "dogbert",
     nsDogbertProfileMigratorConstructor }
+
 };
 
 NS_IMPL_NSGETMODULE(nsBrowserCompsModule, components)
