@@ -141,7 +141,7 @@
 <!ENTITY newtodo.startdate.label "Startdatum">
 <!ENTITY newtodo.priority.label "Prioriteit">
 <!ENTITY newtodo.percentcomplete.label "&#37; voltooid">
-<!ENTITY newtodo.categories.label "Categori&#xEB;n">
+<!ENTITY newtodo.categories.label "Categorie">
 <!ENTITY newtodo.starttime.warning "Uw startdatum valt nu uw vervaldatum.">
 <!ENTITY newtodo.cancelled.label "Geannuleerd">
 <!ENTITY newtodo.status.label "Status">
