@@ -29,6 +29,7 @@
 #include <ctype.h>
 #include "nsztool.h"
 #include "zlib.h"
+#include "math.h"
 
 //#define SSU_DEBUG
 
@@ -389,9 +390,9 @@ void AddFile(LPSTR lpszSeaExe, LPSTR lpszFile)
   }
 
   dwFileSize    = GetFileSize(hInputFile, NULL);
-  dwFileSizeCmp = dwFileSize;
+  dwFileSizeCmp = ((long)ceil(dwFileSize * 0.001)) + dwFileSize + 12;
   lpBuf         = (LPBYTE)malloc(dwFileSize);
-  lpBufCmp      = (LPBYTE)malloc(dwFileSize + (sizeof(DWORD) * 2));
+  lpBufCmp      = (LPBYTE)malloc(dwFileSizeCmp + (sizeof(DWORD) * 2));
   if((lpBuf == NULL) || (lpBufCmp == NULL))
   {
     PrintError("Out of memory", ERROR_CODE_HIDE);
