@@ -1158,19 +1158,17 @@ function ComposeStartup(recycled, aParams)
 
   else if (window.arguments && window.arguments[0]) {
     try {
-      if (typeof window.arguments[0] == "string") 
+      if (window.arguments[0] instanceof Components.interfaces.nsIMsgComposeParams)
+        params = window.arguments[0];
+      else
         params = handleMailtoArgs(window.arguments[0]);
-      else if (typeof window.arguments[0] == "object" && window.arguments[0] instanceof Components.interfaces.nsIMsgComposeParams)
-       params = window.arguments[0].QueryInterface(Components.interfaces.nsIMsgComposeParams);
     }
     catch(ex) { dump("ERROR with parameters: " + ex + "\n"); }
       
     // if still no dice, try and see if the params is an old fashioned list of string attributes
     // XXX can we get rid of this yet? 
     if (!params)
-    {
       args = GetArgs(window.arguments[0]);
-    }
   }
 
   var identityList = document.getElementById("msgIdentity");
