@@ -35,6 +35,8 @@
 #include "nsIComponentManager.h"
 #include "secasn1.h"
 #include "nsReadableUtils.h"
+#include "nsArray.h"
+#include "nsXPCOMCID.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Sequence, nsIASN1Sequence, 
                                                  nsIASN1Object);
@@ -123,7 +125,7 @@ buildASN1ObjectFromDER(unsigned char *data,
   nsCOMPtr<nsIASN1Sequence> sequence;
   nsCOMPtr<nsIASN1PrintableItem> printableItem;
   nsCOMPtr<nsIASN1Object> asn1Obj;
-  nsCOMPtr<nsISupportsArray> parentObjects;
+  nsCOMPtr<nsIMutableArray> parentObjects;
 
   NS_ENSURE_ARG_POINTER(parent);
   if (data >= end)
@@ -203,7 +205,7 @@ buildASN1ObjectFromDER(unsigned char *data,
       printableItem->SetData((char*)data, len);
     }
     data += len;
-    parentObjects->AppendElement(asn1Obj);    
+    parentObjects->AppendElement(asn1Obj, PR_FALSE);
   }
 
   return NS_OK;
@@ -222,11 +224,10 @@ CreateFromDER(unsigned char *data,
   if (NS_SUCCEEDED(rv)) {
     // The actual object will be the first element inserted
     // into the sequence of the sequence variable we created.
-    nsCOMPtr<nsISupportsArray> elements;
+    nsCOMPtr<nsIMutableArray> elements;
 
     sequence->GetASN1Objects(getter_AddRefs(elements));
-    nsCOMPtr<nsISupports> isupports = dont_AddRef(elements->ElementAt(0));
-    nsCOMPtr<nsIASN1Object> asn1Obj(do_QueryInterface(isupports));
+    nsCOMPtr<nsIASN1Object> asn1Obj = do_QueryElementAt(elements, 0);
     *retval = asn1Obj;
     if (*retval == nsnull)
       return NS_ERROR_FAILURE;
@@ -249,12 +250,11 @@ nsNSSASN1Sequence::~nsNSSASN1Sequence()
   /* destructor code */
 }
 
-/* attribute nsISupportsArray ASN1Objects; */
 NS_IMETHODIMP 
-nsNSSASN1Sequence::GetASN1Objects(nsISupportsArray * *aASN1Objects)
+nsNSSASN1Sequence::GetASN1Objects(nsIMutableArray * *aASN1Objects)
 {
   if (mASN1Objects == nsnull) {
-    mASN1Objects = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
+    mASN1Objects = do_CreateInstance(NS_ARRAY_CONTRACTID);
   }
   *aASN1Objects = mASN1Objects;
   NS_IF_ADDREF(*aASN1Objects);
@@ -262,7 +262,7 @@ nsNSSASN1Sequence::GetASN1Objects(nsISupportsArray * *aASN1Objects)
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::SetASN1Objects(nsISupportsArray * aASN1Objects)
+nsNSSASN1Sequence::SetASN1Objects(nsIMutableArray * aASN1Objects)
 {
   mASN1Objects = aASN1Objects;
   return NS_OK;

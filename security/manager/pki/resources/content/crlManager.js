@@ -53,8 +53,8 @@ function onLoad()
   var autoupdateEnabledString;
   var autoupdateErrCntString;
 
-  for (i=0; i<crls.Count(); i++) {
-    crlEntry = crls.QueryElementAt(i, nsICRLInfo);
+  for (i=0; i<crls.length; i++) {
+    crlEntry = crls.queryElementAt(i, nsICRLInfo);
     var org = crlEntry.org;
     var orgUnit = crlEntry.orgUnit;
     var lastUpdate = crlEntry.lastUpdateLocale;
@@ -108,7 +108,7 @@ function DeleteCrlSelected() {
   if(i<0){
     return;
   }
-  crlEntry = crls.QueryElementAt(i, nsICRLInfo);
+  crlEntry = crls.queryElementAt(i, nsICRLInfo);
     
   var autoupdateEnabled = false;
   var autoupdateParamAvailable = false;
@@ -203,7 +203,7 @@ function EditAutoUpdatePrefs() {
   if(i<0){
     return;
   }
-  crlEntry = crls.QueryElementAt(i, nsICRLInfo);
+  crlEntry = crls.queryElementAt(i, nsICRLInfo);
   var params = Components.classes[nsPKIParamBlock].createInstance(nsIPKIParamBlock);
   params.setISupportAtIndex(1, crlEntry);
   window.openDialog("chrome://pippki/content/pref-crlupdate.xul","",
@@ -218,6 +218,6 @@ function UpdateCRL()
   if(i<0){
     return;
   }
-  crlEntry = crls.QueryElementAt(i, nsICRLInfo);
+  crlEntry = crls.queryElementAt(i, nsICRLInfo);
   crlManager.updateCRLFromURL(crlEntry.lastFetchURL, crlEntry.nameInDb);
 }

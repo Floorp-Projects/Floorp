@@ -51,6 +51,7 @@
 #include "nsReadableUtils.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
+#include "nsArray.h"
 
 #include "nspr.h"
 extern "C" {
@@ -244,7 +245,7 @@ nsNSSCertificateDB::getCertsFromPackage(PRArenaPool *arena, PRUint8 *data,
 }
 
 nsresult
-nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
+nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
                                          nsIInterfaceRequestor *ctx)
 {
   // First thing we have to do is figure out which certificate we're 
@@ -261,7 +262,7 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
   // case we display the last cert.
   PRUint32 numCerts;
 
-  x509Certs->Count(&numCerts);
+  x509Certs->GetLength(&numCerts);
   NS_ASSERTION(numCerts > 0, "Didn't get any certs to import.");
   if (numCerts == 0)
     return NS_OK; // Nothing to import, so nothing to do.
@@ -272,17 +273,13 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
   if (numCerts == 1) {
     // There's only one cert, so let's show it.
     selCertIndex = 0;
-    isupports = dont_AddRef(x509Certs->ElementAt(selCertIndex));
-    certToShow = do_QueryInterface(isupports);
+    certToShow = do_QueryElementAt(x509Certs, selCertIndex);
   } else {
     nsCOMPtr<nsIX509Cert> cert0;
     nsCOMPtr<nsIX509Cert> cert1;
 
-    isupports = dont_AddRef(x509Certs->ElementAt(0));
-    cert0 = do_QueryInterface(isupports);
-
-    isupports = dont_AddRef(x509Certs->ElementAt(1));
-    cert1 = do_QueryInterface(isupports);
+    cert0 = do_QueryElementAt(x509Certs, 0);
+    cert1 = do_QueryElementAt(x509Certs, 1);
 
     nsXPIDLString cert0SubjectName;
     nsXPIDLString cert0IssuerName;
@@ -300,8 +297,7 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
       // so the first cert is the root.  Let's display the last cert 
       // in the list.
       selCertIndex = numCerts-1;
-      isupports = dont_AddRef(x509Certs->ElementAt(selCertIndex));
-      certToShow = do_QueryInterface(isupports);
+      certToShow = do_QueryElementAt(x509Certs, selCertIndex);
     } else 
     if (nsCRT::strcmp(cert0IssuerName.get(), cert1SubjectName.get()) == 0) { 
       // In this case the second cert has signed the first cert.  The 
@@ -391,8 +387,7 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
     if (i == selCertIndex)
       continue;
 
-    isupports = dont_AddRef(x509Certs->ElementAt(i));
-    certToShow = do_QueryInterface(isupports);
+    certToShow = do_QueryElementAt(x509Certs, i);
     certToShow->GetRawDER(&der.len, (PRUint8 **)&der.data);
 
     CERTCertificate *tmpCert2 = 
@@ -433,8 +428,8 @@ nsNSSCertificateDB::ImportCertificates(PRUint8 * data, PRUint32 length,
     PORT_FreeArena(arena, PR_FALSE);
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsISupportsArray> array;
-  nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
+  nsCOMPtr<nsIMutableArray> array;
+  nsresult rv = NS_NewArray(getter_AddRefs(array));
   if (NS_FAILED(rv)) {
     PORT_FreeArena(arena, PR_FALSE);
     return rv;
@@ -450,7 +445,7 @@ nsNSSCertificateDB::ImportCertificates(PRUint8 * data, PRUint32 length,
      if (!nssCert)
        return NS_ERROR_FAILURE;
      x509Cert = do_QueryInterface((nsIX509Cert*)nssCert);
-     array->AppendElement(x509Cert);
+     array->AppendElement(x509Cert, PR_FALSE);
   }
   switch (type) {
   case nsIX509Cert::CA_CERT:
@@ -897,7 +892,7 @@ GetOCSPResponders (CERTCertificate *aCert,
                    SECItem         *aDBKey,
                    void            *aArg)
 {
-  nsISupportsArray *array = NS_STATIC_CAST(nsISupportsArray*, aArg);
+  nsIMutableArray *array = NS_STATIC_CAST(nsIMutableArray*, aArg);
   PRUnichar* nn = nsnull;
   PRUnichar* url = nsnull;
   char *serviceURL = nsnull;
@@ -922,17 +917,16 @@ GetOCSPResponders (CERTCertificate *aCert,
   nsCOMPtr<nsIOCSPResponder> new_entry = new nsOCSPResponder(nn, url);
 
   // Sort the items according to nickname //
-  rv = array->Count(&count);
+  rv = array->GetLength(&count);
   for (i=0; i < count; ++i) {
-    nsCOMPtr<nsISupports> isupport = dont_AddRef(array->ElementAt(i));
-    nsCOMPtr<nsIOCSPResponder> entry = do_QueryInterface(isupport);
+    nsCOMPtr<nsIOCSPResponder> entry = do_QueryElementAt(array, i);
     if (nsOCSPResponder::CompareEntries(new_entry, entry) < 0) {
-      array->InsertElementAt(new_entry, i);
+      array->InsertElementAt(new_entry, i, PR_FALSE);
       break;
     }
   }
   if (i == count) {
-    array->AppendElement(new_entry);
+    array->AppendElement(new_entry, PR_FALSE);
   }
   return SECSuccess;
 }
@@ -945,11 +939,11 @@ GetOCSPResponders (CERTCertificate *aCert,
  * Export a set of certs and keys from the database to a PKCS#12 file.
 */
 NS_IMETHODIMP 
-nsNSSCertificateDB::GetOCSPResponders(nsISupportsArray ** aResponders)
+nsNSSCertificateDB::GetOCSPResponders(nsIArray ** aResponders)
 {
   SECStatus sec_rv;
-  nsCOMPtr<nsISupportsArray> respondersArray;
-  nsresult rv = NS_NewISupportsArray(getter_AddRefs(respondersArray));
+  nsCOMPtr<nsIMutableArray> respondersArray;
+  nsresult rv = NS_NewArray(getter_AddRefs(respondersArray));
   if (NS_FAILED(rv)) {
     return rv;
   }

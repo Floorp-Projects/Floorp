@@ -38,8 +38,9 @@
 #define __NSNSSCERTIFICATEDB_H__
 
 #include "nsIX509CertDB.h"
-
 #include "nsNSSCertHeader.h"
+
+class nsIArray;
 
 class nsNSSCertificateDB : public nsIX509CertDB
 {
@@ -64,7 +65,7 @@ private:
 
   CERTDERCerts *getCertsFromPackage(PRArenaPool *arena, PRUint8 *data, 
                                     PRUint32 length);
-  nsresult handleCACertDownload(nsISupportsArray *x509Certs, 
+  nsresult handleCACertDownload(nsIArray *x509Certs, 
                                 nsIInterfaceRequestor *ctx);
 };
 

@@ -40,7 +40,7 @@
 
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
+#include "nsArray.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertValidity.h"
 #include "nsPKCS12Blob.h"
@@ -509,7 +509,7 @@ nsNSSCertificate::GetOrganizationalUnit(nsAString &aOrganizationalUnit)
  * nsIEnumerator getChain(); 
  */
 NS_IMETHODIMP
-nsNSSCertificate::GetChain(nsISupportsArray **_rvChain)
+nsNSSCertificate::GetChain(nsIArray **_rvChain)
 {
   NS_ENSURE_ARG(_rvChain);
   nsresult rv;
@@ -523,8 +523,8 @@ nsNSSCertificate::GetChain(nsISupportsArray **_rvChain)
   if (!nssChain)
     return NS_ERROR_FAILURE;
   /* enumerate the chain for scripting purposes */
-  nsCOMPtr<nsISupportsArray> array;
-  rv = NS_NewISupportsArray(getter_AddRefs(array));
+  nsCOMPtr<nsIMutableArray> array;
+  rv = NS_NewArray(getter_AddRefs(array));
   if (NS_FAILED(rv)) { 
     goto done; 
   }
@@ -533,13 +533,13 @@ nsNSSCertificate::GetChain(nsISupportsArray **_rvChain)
        node = CERT_LIST_NEXT(node)) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("adding %s to chain\n", node->cert->nickname));
     nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(node->cert);
-    array->AppendElement(cert);
+    array->AppendElement(cert, PR_FALSE);
   }
 #else // workaround here
   CERTCertificate *cert = nsnull;
   /* enumerate the chain for scripting purposes */
-  nsCOMPtr<nsISupportsArray> array;
-  rv = NS_NewISupportsArray(getter_AddRefs(array));
+  nsCOMPtr<nsIMutableArray> array;
+  rv = NS_NewArray(getter_AddRefs(array));
   if (NS_FAILED(rv)) { 
     goto done; 
   }
@@ -548,7 +548,7 @@ nsNSSCertificate::GetChain(nsISupportsArray **_rvChain)
   while (cert) {
     nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(cert);
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("adding %s to chain\n", cert->nickname));
-    array->AppendElement(pipCert);
+    array->AppendElement(pipCert, PR_FALSE);
     PRBool wantToBreak = PR_FALSE;
     CERTCertificate *next_cert = nsnull;
     if (SECITEM_CompareItem(&cert->derIssuer, &cert->derSubject) == SECEqual) {
@@ -993,14 +993,14 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
   } else {
     nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
     printableItem->SetDisplayValue(text);
-    nsCOMPtr<nsISupportsArray>asn1Objects;
+    nsCOMPtr<nsIMutableArray> asn1Objects;
     sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-    asn1Objects->AppendElement(printableItem);
+    asn1Objects->AppendElement(printableItem, PR_FALSE);
     nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAlgID").get(),
                                         text);
     printableItem->SetDisplayName(text);
     printableItem = new nsNSSASN1PrintableItem();
-    asn1Objects->AppendElement(printableItem);
+    asn1Objects->AppendElement(printableItem, PR_FALSE);
     nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpParams").get(),
                                         text);
     printableItem->SetDisplayName(text); 
@@ -1049,9 +1049,9 @@ ProcessTime(PRTime dispTime, const PRUnichar *displayName,
 
   printableItem->SetDisplayValue(text);
   printableItem->SetDisplayName(nsDependentString(displayName));
-  nsCOMPtr<nsISupportsArray> asn1Objects;
+  nsCOMPtr<nsIMutableArray> asn1Objects;
   parentSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  asn1Objects->AppendElement(printableItem);
+  asn1Objects->AppendElement(printableItem, PR_FALSE);
   return NS_OK;
 }
 
@@ -1078,9 +1078,9 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
   if (NS_FAILED(rv))
     return rv;
   sequenceItem->SetDisplayName(text);
-  nsCOMPtr<nsISupportsArray> asn1Objects;
+  nsCOMPtr<nsIMutableArray> asn1Objects;
   spkiSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  asn1Objects->AppendElement(sequenceItem);
+  asn1Objects->AppendElement(sequenceItem, PR_FALSE);
 
   // The subjectPublicKey field is encoded as a bit string.
   // ProcessRawBytes expects the lenght to be in bytes, so 
@@ -1098,10 +1098,10 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
   nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubjPubKey").get(),
                                       text);
   printableItem->SetDisplayName(text);
-  asn1Objects->AppendElement(printableItem);
+  asn1Objects->AppendElement(printableItem, PR_FALSE);
   
   parentSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  asn1Objects->AppendElement(spkiSequence);
+  asn1Objects->AppendElement(spkiSequence, PR_FALSE);
   return NS_OK;
 }
 
@@ -1121,7 +1121,7 @@ ProcessExtensions(CERTCertExtension **extensions,
   PRInt32 i;
   nsresult rv;
   nsCOMPtr<nsIASN1PrintableItem> newExtension;
-  nsCOMPtr<nsISupportsArray> asn1Objects;
+  nsCOMPtr<nsIMutableArray> asn1Objects;
   extensionSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
   for (i=0; extensions[i] != nsnull; i++) {
     rv = ProcessSingleExtension(extensions[i], nssComponent,
@@ -1129,10 +1129,10 @@ ProcessExtensions(CERTCertExtension **extensions,
     if (NS_FAILED(rv))
       return rv;
 
-    asn1Objects->AppendElement(newExtension);
+    asn1Objects->AppendElement(newExtension, PR_FALSE);
   }
   parentSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  asn1Objects->AppendElement(extensionSequence);
+  asn1Objects->AppendElement(extensionSequence, PR_FALSE);
   return NS_OK;
 }
 
@@ -1237,7 +1237,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   sequence->SetDisplayName(text);
   nsCOMPtr<nsIASN1PrintableItem> printableItem;
   
-  nsCOMPtr<nsISupportsArray> asn1Objects;
+  nsCOMPtr<nsIMutableArray> asn1Objects;
   sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
 
   nsresult rv = ProcessVersion(&mCert->version, nssComponent,
@@ -1245,14 +1245,14 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   if (NS_FAILED(rv))
     return rv;
 
-  asn1Objects->AppendElement(printableItem);
+  asn1Objects->AppendElement(printableItem, PR_FALSE);
   
   rv = ProcessSerialNumberDER(&mCert->serialNumber, nssComponent,
                               getter_AddRefs(printableItem));
 
   if (NS_FAILED(rv))
     return rv;
-  asn1Objects->AppendElement(printableItem); 
+  asn1Objects->AppendElement(printableItem, PR_FALSE);
 
   nsCOMPtr<nsIASN1Sequence> algID;
   rv = ProcessSECAlgorithmID(&mCert->signature,
@@ -1263,7 +1263,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSigAlg").get(),
                                       text);
   algID->SetDisplayName(text);
-  asn1Objects->AppendElement(algID);
+  asn1Objects->AppendElement(algID, PR_FALSE);
 
   nsXPIDLString value;
   ProcessName(&mCert->issuer, nssComponent, getter_Copies(value));
@@ -1276,13 +1276,13 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpIssuer").get(),
                                       text);
   printableItem->SetDisplayName(text);
-  asn1Objects->AppendElement(printableItem);
+  asn1Objects->AppendElement(printableItem, PR_FALSE);
   
   nsCOMPtr<nsIASN1Sequence> validitySequence = new nsNSSASN1Sequence();
   nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpValidity").get(),
                                       text);
   validitySequence->SetDisplayName(text);
-  asn1Objects->AppendElement(validitySequence);
+  asn1Objects->AppendElement(validitySequence, PR_FALSE);
   nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpNotBefore").get(),
                                       text);
   nsCOMPtr<nsIX509CertValidity> validityData;
@@ -1312,7 +1312,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   printableItem->SetDisplayName(text);
   ProcessName(&mCert->subject, nssComponent,getter_Copies(value));
   printableItem->SetDisplayValue(value);
-  asn1Objects->AppendElement(printableItem);
+  asn1Objects->AppendElement(printableItem, PR_FALSE);
 
   rv = ProcessSubjectPublicKeyInfo(&mCert->subjectPublicKeyInfo, sequence,
                                    nssComponent); 
@@ -1338,7 +1338,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
     nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpIssuerUniqueID").get(),
                                          text);
     printableItem->SetDisplayName(text);
-    asn1Objects->AppendElement(printableItem);
+    asn1Objects->AppendElement(printableItem, PR_FALSE);
   }
 
   if (mCert->subjectID.data) {
@@ -1358,7 +1358,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
     nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubjectUniqueID").get(),
                                          text);
     printableItem->SetDisplayName(text);
-    asn1Objects->AppendElement(printableItem);
+    asn1Objects->AppendElement(printableItem, PR_FALSE);
 
   }
   if (mCert->extensions) {
@@ -1377,7 +1377,7 @@ DumpASN1Object(nsIASN1Object *object, unsigned int level)
 {
   nsAutoString dispNameU, dispValU;
   unsigned int i;
-  nsCOMPtr<nsISupportsArray> asn1Objects;
+  nsCOMPtr<nsIMutableArray> asn1Objects;
   nsCOMPtr<nsISupports> isupports;
   nsCOMPtr<nsIASN1Object> currObject;
   PRBool processObjects;
@@ -1422,7 +1422,7 @@ nsNSSCertificate::CreateASN1Struct()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsISupportsArray> asn1Objects;
+  nsCOMPtr<nsIMutableArray> asn1Objects;
   sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
   nsXPIDLCString title;
   GetWindowTitle(getter_Copies(title));
@@ -1440,7 +1440,7 @@ nsNSSCertificate::CreateASN1Struct()
   if (NS_FAILED(rv))
     return rv;
 
-  asn1Objects->AppendElement(sequence);
+  asn1Objects->AppendElement(sequence, PR_FALSE);
   nsCOMPtr<nsIASN1Sequence> algID;
 
   rv = ProcessSECAlgorithmID(&mCert->signatureWrap.signatureAlgorithm, 
@@ -1451,7 +1451,7 @@ nsNSSCertificate::CreateASN1Struct()
   nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSigAlg").get(),
                                       text);
   algID->SetDisplayName(text);
-  asn1Objects->AppendElement(algID);
+  asn1Objects->AppendElement(algID, PR_FALSE);
   nsCOMPtr<nsIASN1PrintableItem>printableItem = new nsNSSASN1PrintableItem();
   nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpCertSig").get(),
                                       text);
@@ -1466,7 +1466,7 @@ nsNSSCertificate::CreateASN1Struct()
   text.Truncate();
   ProcessRawBytes(&temp,text);
   printableItem->SetDisplayValue(text);
-  asn1Objects->AppendElement(printableItem);
+  asn1Objects->AppendElement(printableItem, PR_FALSE);
   return NS_OK;
 }
 

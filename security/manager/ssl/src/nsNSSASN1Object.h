@@ -43,6 +43,7 @@
 #include "nsString.h"
 #include "nsIASN1Sequence.h"
 #include "nsIASN1PrintableItem.h"
+#include "nsIArray.h"
 
 //
 // Read comments in nsIX509Cert.idl for a description of the desired
@@ -60,7 +61,7 @@ public:
   virtual ~nsNSSASN1Sequence();
   /* additional members */
 private:
-  nsCOMPtr<nsISupportsArray> mASN1Objects;
+  nsCOMPtr<nsIMutableArray> mASN1Objects;
   nsString mDisplayName;
   nsString mDisplayValue;
   PRUint32 mType;

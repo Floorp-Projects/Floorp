@@ -40,13 +40,12 @@ function AddCertChain(node, chain, idPrefix)
 {
   var idfier = idPrefix+"chain_";
   var child = document.getElementById(node);
-  var numCerts = chain.Count();
+  var numCerts = chain.length;
   var currCert;
   var displayVal;
   var addTwistie;
   for (var i=numCerts-1; i>=0; i--) {
-    currCert = chain.GetElementAt(i);
-    currCert = currCert.QueryInterface(nsIX509Cert);
+    currCert = chain.queryElementAt(i, nsIX509Cert);
     if (currCert.commonName) {
       displayVal = currCert.commonName;
     } else {

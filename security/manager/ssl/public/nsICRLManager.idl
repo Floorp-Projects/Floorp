@@ -35,7 +35,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsISupportsArray;
+interface nsIArray;
 interface nsICRLInfo;
 
 %{C++
@@ -79,7 +79,7 @@ interface nsICRLManager : nsISupports {
    *
    * Get a list of Crl entries in the DB.
    */
-  nsISupportsArray getCrls();
+  nsIArray getCrls();
 
   /*
    * deleteCrl
