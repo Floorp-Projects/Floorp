@@ -287,12 +287,6 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
     }
   }
 
-  // Create synthetic document
-  rv = CreateSyntheticDocument();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   NS_ASSERTION(aDocListener, "null aDocListener");
   *aDocListener = new ImageListener(this);
   if (!*aDocListener)
@@ -324,7 +318,21 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
       target->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, PR_FALSE);
     }
   }
-  else {
+
+  // Set the script global object on the superclass before doing
+  // anything that might require it....
+  nsresult rv = nsHTMLDocument::SetScriptGlobalObject(aScriptGlobalObject);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  if (aScriptGlobalObject) {
+    // Create synthetic document
+    rv = CreateSyntheticDocument();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
     if (mImageResizingEnabled) {
       nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mImageElement);
       target->AddEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
@@ -335,7 +343,7 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
     }
   }
 
-  return nsHTMLDocument::SetScriptGlobalObject(aScriptGlobalObject);
+  return NS_OK;
 }
 
 
