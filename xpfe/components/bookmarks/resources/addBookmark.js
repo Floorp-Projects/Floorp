@@ -58,20 +58,12 @@
  *
  * 1) <default> (no fifth open parameter).
  *      Opens this dialog with the bookmark Name, URL and folder selection
- *      components visible, as well as a checkbox which allows the user
- *      to bypass the dialog for future bookmark additions. Only useful
- *      for a browser implementation which users BookmarksUtils methods for
- *      adding bookmarks
- * 2) "addBookmark" (fifth open parameter = String("addBookmark"))
- *      Opens the dialog as in (1) above but with no checkbox. Useful
- *      in situations where user ability to choose not to see this dialog
- *      is not applicable, or for clients wishing to customize the launch
- *      behaviour.
- * 3) "newBookmark" (fifth open parameter = String("newBookmark"))
+ *      components visible. 
+ * 2) "newBookmark" (fifth open parameter = String("newBookmark"))
  *      Opens the dialog as in (1) above except the folder selection tree
  *      is hidden. This type of mode is useful when the creation folder 
  *      is pre-determined.
- * 4) "selectFolder" (fifth open parameter = String("selectFolder"))
+ * 3) "selectFolder" (fifth open parameter = String("selectFolder"))
  *      Opens the dialog as in (1) above except the Name/Location section
  *      is hidden, and the dialog takes on the utility of a Folder chooser.
  *      Used when the user must select a Folder for some purpose. 
@@ -91,8 +83,6 @@ var gSelectItemObserver = null;
 
 var gCreateInFolder = "NC:NewBookmarkFolder";
 
-var gCanBypassDialogMode = true;
-
 function Startup()
 {
   doSetOKCancel(onOK);
@@ -105,7 +95,6 @@ function Startup()
     switch (window.arguments[4]) {
     case "selectFolder":
       // If we're being opened as a folder selection window
-      document.getElementById("dontaskagain").setAttribute("hidden", "true");
       document.getElementById("bookmarknamegrid").setAttribute("hidden", "true");
       document.getElementById("createinseparator").setAttribute("hidden", "true");
       document.getElementById("nameseparator").setAttribute("hidden", "true");
@@ -116,27 +105,19 @@ function Startup()
       var folderItem = document.getElementById(window.arguments[2]);
       if (folderItem)
         gFolderTree.selectItem(folderItem);
-      gCanBypassDialogMode = false;
       break;
     case "newBookmark":
       setupFields();
       if (window.arguments[2])
         gCreateInFolder = window.arguments[2];
       document.getElementById("folderbox").setAttribute("hidden", "true");
-      document.getElementById("dontaskagain").setAttribute("hidden", "true");
       windowNode = document.getElementById("newBookmarkWindow");
       windowNode.removeAttribute("persist");
       windowNode.setAttribute("height", "0");
       windowNode.setAttribute("width", "0");
       windowNode.setAttribute("style", windowNode.getAttribute("style"));
       sizeToContent();
-      gCanBypassDialogMode = false;
       break;
-    case "addBookmark":
-      // Regular add bookmark window, but for some sinister purpose...
-      document.getElementById("dontaskagain").setAttribute("hidden", "true");
-      gCanBypassDialogMode = false;
-      // Fall through... --->
     default:
       // Regular Add Bookmark
       setupFields();
@@ -150,8 +131,9 @@ function Startup()
   }
   
   if (shouldSetOKButton)
+    onLocationInput();
+  gFld_Name.select();
   gFld_Name.focus();
-  gFld_Input
 } 
 
 function setupFields()
@@ -212,19 +194,6 @@ function onOK()
     }
     
     kBMS.AddBookmarkToFolder(url, rFolder, gFld_Name.value, gBookmarkCharset);
-  
-    if (gCanBypassDialogMode) {
-      // Persist the 'show this dialog again' preference.   
-      var checkbox = document.getElementById("dontaskagain");
-      const kPrefContractID = "@mozilla.org/preferences;1";
-      const kPrefIID = Components.interfaces.nsIPref;
-      const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
-      try {
-        kPrefSvc.SetBoolPref("browser.bookmarks.add_without_dialog", checkbox.checked);
-      }
-      catch (e) {
-      }
-    }
   }
   close();
 }
