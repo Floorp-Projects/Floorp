@@ -41,6 +41,13 @@ CPPSRCS		= \
 		nsSaveAsCharset.cpp \
 		$(NULL)
 
+ifdef IBMBIDI
+CPPSRCS         += \
+		nsBidiUtilsImp.cpp \
+		nsBidiImp.cpp \
+		$(NULL)
+endif
+
 EXTRA_DSO_LDOPTS =\
 		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
