@@ -39,9 +39,14 @@ var gAllEvents = new Array();
 var CreateAlarmBox = true;
 var gDateFormatter = new DateFormater( opener.gCalendarWindow );  // used to format dates and times
 var kungFooDeathGripOnEventBoxes = new Array();
+var gICalLib;
 
 function onLoad()
 {
+   var calendarEventService = opener.gEventSource;
+   
+   gICalLib = calendarEventService.getICalLib();
+
    var args = window.arguments[0];
    
    if( args.calendarEvent )
@@ -218,11 +223,6 @@ function onOkButton( )
       gAllEvents[i].lastAlarmAck = new Date();
    }
 
-   var calendarEventService = opener.gEventSource;
-   
-   gICalLib = calendarEventService.getICalLib();
-
-   
    for( i = 0; i < gAllEvents.length; i++ )
    {
       gICalLib.modifyEvent( gAllEvents[i] );
