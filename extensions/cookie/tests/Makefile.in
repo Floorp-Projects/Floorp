@@ -34,8 +34,13 @@ LIBS		= \
 	$(NSPR_LIBS) \
 	$(NULL)
 
-PROGRAM		= testCookie
+PROGRAM		= TestCookie
 
 include $(topsrcdir)/config/config.mk
+
+# hack until necko lands
+ifndef NECKO
+PUBLIC=$(DEPTH)/netwerk/dist/include
+endif
 
 include $(topsrcdir)/config/rules.mk
