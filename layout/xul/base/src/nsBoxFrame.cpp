@@ -495,25 +495,30 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
       nsStyleUnit wunit = position->mWidth.GetUnit();
       nsStyleUnit hunit = position->mHeight.GetUnit();
 
-      // set the size to flow at. It should be at least as big
-      // as out min height
-      nsSize flexSize(availableSize);
-      if (mHorizontal) {
-         if (flexSize.height < LargestMinSize)
-            flexSize.height = LargestMinSize;
+      preferredSize.width = 0;
+      preferredSize.height = 0;
 
-         flexSize.width = NS_INTRINSICSIZE;
-      } else { 
-         if (flexSize.width < LargestMinSize)
-            flexSize.width = LargestMinSize;
+      // get the preferred size from css
+      if (wunit == eStyleUnit_Coord) 
+          preferredSize.width = position->mWidth.GetCoordValue();
 
-         flexSize.height = NS_INTRINSICSIZE;
-      }
- 
+      if (hunit == eStyleUnit_Coord)  
+          preferredSize.height = position->mHeight.GetCoordValue();
+
+
       // only flow if fixed and width or height was not set
       
       if (springs[count].springConstant == 0.0 && (wunit != eStyleUnit_Coord || hunit != eStyleUnit_Coord)) 
       {
+            // set the size to flow at. It should be at least as big
+            // as out min height
+            nsSize flexSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
+            if (wunit == eStyleUnit_Coord)
+                flexSize.width = preferredSize.width;
+
+            if (wunit == eStyleUnit_Coord)
+                flexSize.height = preferredSize.height;
+
             FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, flexSize, incrementalChild);
 
             // if it got bigger that expected set that as our min size
@@ -540,20 +545,6 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
            preferredSize.height = desiredSize.height;
       }
       
-      // make sure the preferred size is not instrinic
-      if (NS_INTRINSICSIZE == preferredSize.width)
-         preferredSize.width = 0;
-
-      if (NS_INTRINSICSIZE == preferredSize.height)
-         preferredSize.height = 0;
-
-      // get the preferred size from css
-      if (wunit == eStyleUnit_Coord) 
-          preferredSize.width = position->mWidth.GetCoordValue();
-
-      if (hunit == eStyleUnit_Coord)  
-          preferredSize.height = position->mHeight.GetCoordValue();
-
       // set the preferred size on the spring
       if (mHorizontal) {
           springs[count].preferredSize = preferredSize.width;
