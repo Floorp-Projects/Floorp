@@ -307,7 +307,7 @@ sub process {
 
     my $old_summaries = join(", ", @old_summaries);
     my $new_summaries = join(", ", @new_summaries);
-    my ($removed, $added) = &::DiffStrings($old_summaries, $new_summaries);
+    my ($removed, $added) = diff_strings($old_summaries, $new_summaries);
     if ($removed ne $added) {
         my $sql_removed = &::SqlQuote($removed);
         my $sql_added = &::SqlQuote($added);

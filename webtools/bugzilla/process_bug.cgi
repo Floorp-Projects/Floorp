@@ -37,6 +37,7 @@ require "CGI.pl";
 
 use Bugzilla::Bug;
 use Bugzilla::User;
+use Bugzilla::Util;
 use Bugzilla::RelationSet;
 
 # Use the Flag module to modify flag data if the user set flags.
@@ -1082,7 +1083,7 @@ sub LogDependencyActivity {
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
         # Figure out what's really different...
-        my ($removed, $added) = DiffStrings($oldstr, $newstr);
+        my ($removed, $added) = diff_strings($oldstr, $newstr);
         LogActivityEntry($i,$target,$removed,$added,$whoid,$timestamp);
         # update timestamp on target bug so midairs will be triggered
         SendSQL("UPDATE bugs SET delta_ts=NOW() WHERE bug_id=$i");
@@ -1687,7 +1688,7 @@ foreach my $id (@idlist) {
 
             # If this is the keyword field, only record the changes, not everything.
             if ($col eq 'keywords') {
-                ($old, $new) = DiffStrings($old, $new);
+                ($old, $new) = diff_strings($old, $new);
             }
 
             if ($col eq 'product') {

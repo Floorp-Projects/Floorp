@@ -1442,35 +1442,6 @@ sub RemoveVotes {
     }
 }
 
-# Take two comma or space separated strings and return what
-# values were removed from or added to the new one.
-sub DiffStrings {
-    my ($oldstr, $newstr) = @_;
-
-    # Split the old and new strings into arrays containing their values.
-    $oldstr =~ s/[\s,]+/ /g;
-    $newstr =~ s/[\s,]+/ /g;
-    my @old = split(" ", $oldstr);
-    my @new = split(" ", $newstr);
-
-    # For each pair of (old, new) entries: 
-    # If they're equal, set them to empty. When done, @old contains entries
-    # that were removed; @new contains ones that got added.
-
-    foreach my $oldv (@old) {
-        foreach my $newv (@new) {
-            next if ($newv eq '');
-            if ($oldv eq $newv) {
-                $newv = $oldv = '';
-            }
-        }
-    }
-    my $removed = join (", ", grep { $_ ne '' } @old);
-    my $added = join (", ", grep { $_ ne '' } @new);
-
-    return ($removed, $added);
-}
-
 sub PerformSubsts {
     my ($str, $substs) = (@_);
     $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;

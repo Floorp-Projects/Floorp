@@ -32,7 +32,7 @@ use base qw(Exporter);
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
                              lsearch max min
-                             trim format_time);
+                             trim diff_strings format_time);
 
 use Bugzilla::Config;
 
@@ -146,6 +146,33 @@ sub trim {
     return $str;
 }
 
+sub diff_strings {
+    my ($oldstr, $newstr) = @_;
+
+    # Split the old and new strings into arrays containing their values.
+    $oldstr =~ s/[\s,]+/ /g;
+    $newstr =~ s/[\s,]+/ /g;
+    my @old = split(" ", $oldstr);
+    my @new = split(" ", $newstr);
+
+    # For each pair of (old, new) entries:
+    # If they're equal, set them to empty. When done, @old contains entries
+    # that were removed; @new contains ones that got added.
+
+    foreach my $oldv (@old) {
+        foreach my $newv (@new) {
+            next if ($newv eq '');
+            if ($oldv eq $newv) {
+                $newv = $oldv = '';
+            }
+        }
+    }
+    my $removed = join (", ", grep { $_ ne '' } @old);
+    my $added = join (", ", grep { $_ ne '' } @new);
+
+    return ($removed, $added);
+}
+
 sub format_time {
     my ($time) = @_;
 
@@ -208,8 +235,9 @@ Bugzilla::Util - Generic utility functions for bugzilla
   $val = max($a, $b, $c);
   $val = min($a, $b, $c);
 
-  # Functions for trimming variables
+  # Functions for manipulating strings
   $val = trim(" abc ");
+  ($removed, $added) = diff_strings($old, $new);
 
   # Functions for formatting time
   format_time($time);
@@ -315,7 +343,7 @@ Returns the minimum from a set of values.
 
 =back
 
-=head2 Trimming
+=head2 String Manipulation
 
 =over 4
 
@@ -323,6 +351,14 @@ Returns the minimum from a set of values.
 
 Removes any leading or trailing whitespace from a string. This routine does not
 modify the existing string.
+
+=item C<diff_strings($oldstr, $newstr)>
+
+Takes two strings containing a list of comma- or space-separated items
+and returns what items were removed from or added to the new one, 
+compared to the old one. Returns a list, where the first entry is a scalar
+containing removed items, and the second entry is a scalar containing added
+items.
 
 =back
 
