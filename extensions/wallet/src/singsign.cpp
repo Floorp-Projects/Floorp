@@ -2235,6 +2235,7 @@ si_RestoreOldSignonDataFromBrowser
   if (username.Length() != 0) {
     user = si_GetSpecificUser(passwordRealm, username, NS_ConvertToString(USERNAMEFIELD));
   } else {
+    si_UserHasBeenSelected = PR_FALSE;
     user = si_GetUser(dialog, passwordRealm, pickFirstUser, NS_ConvertToString(USERNAMEFIELD));
   }
   if (!user) {
