@@ -23,6 +23,8 @@
 #include "nsDeleteObserver.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
+#include "prtypes.h"
+
 
 class nsWindow;
 class nsMacWindow;
@@ -36,8 +38,8 @@ public:
 		virtual PRBool	HandleOSEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMenuCommand(EventRecord& aOSEvent, long aMenuResult);
 		
-		// Tell Gecko that a drop has occurred
-		virtual PRBool	DropOccurred ( Point aMouseGlobal, UInt16 aKeyModifiers ) ;
+		// Tell Gecko that a drag event has occurred and should go into Gecko
+		virtual PRBool	DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;
 		//virtual PRBool	TrackDrag ( Point aMouseGlobal, UInt32 aKeyModifiers ) ;
 
 protected:

@@ -188,22 +188,19 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 }
 
 
-//-------------------------------------------------------------------------
 //
-// DropOccurred
+// DragEvent
 //
-//-------------------------------------------------------------------------
-
-//
-// Someone on the outside told us that a drop from the DragManager has occurred in
-// this window. We need to send this event into Gecko for processing. Create a Gecko
-// event of type NS_DRAGDROP_DROP and pass it in.
+// Someone on the outside told us that something related to a drag is happening. The
+// exact event type is passed in as |aMessage|. We need to send this event into Gecko 
+// for processing. Create a Gecko event (using the appropriate message type) and pass
+// it along.
 //
 // ¥¥¥THIS REALLY NEEDS TO BE CLEANED UP! TOO MUCH CODE COPIED FROM ConvertOSEventToMouseEvent
 //
-PRBool nsMacEventHandler::DropOccurred ( Point aMouseGlobal, UInt16 aKeyModifiers )
+PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers )
 {
-printf("dispatching drop into Gecko\n");
+printf("dispatching event %ld into Gecko\n", aMessage);
 	nsMouseEvent geckoEvent;
 
 	// convert the mouse to local coordinates. We have to do all the funny port origin
@@ -234,10 +231,12 @@ printf("dispatching drop into Gecko\n");
 		widgetHit->LocalToWindowCoordinate(widgetOrigin);
 		widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
 	}
+	else
+	  widgetHit = mTopLevelWidget;
 		
 	// nsEvent
 	geckoEvent.eventStructType = NS_DRAGDROP_EVENT;
-	geckoEvent.message = NS_DRAGDROP_DROP;
+	geckoEvent.message = aMessage;
 	geckoEvent.point = widgetHitPoint;
 	geckoEvent.time	= PR_IntervalNow();
 
