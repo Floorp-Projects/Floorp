@@ -67,8 +67,8 @@
   </statusbarpanel>
   
   <menupopup id="taskPopup">
-    <menuitem position="2" accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail"/>
-    <menuitem position="4" label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook"/>
+    <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail" id="tasksMenuMail" insertafter="tasksMenuNavigator"/>
+    <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook" id="tasksMenuAddressBook" insertafter="tasksMenuEditor"/>
   </menupopup>
   
 </overlay>         

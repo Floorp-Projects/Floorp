@@ -19,11 +19,12 @@
 
 <menupopup id="taskPopup">
   <menuitem
-        position="3"
         label="&ircCmd.label;"
         accesskey="&ircCmd.accesskey;"
         key="key_irc"
-        command="Tasks:IRC"/>
+        command="Tasks:IRC"
+        id="tasksMenuIRC"
+        insertbefore="tasksMenuEditor"/>
 </menupopup>
 
 <statusbarpanel id="component-bar">
