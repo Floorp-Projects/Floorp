@@ -46,17 +46,18 @@ public class Filter extends Object {
 
     private int rule;
     private int field;
-    private int attribute1;
     private boolean caseCheck;
     private String value;
+    private String localeName;
 
     /** Creates new Filter */
-    public Filter(int r,int f,String v,boolean cc)
+    public Filter(int r,int f,String v,boolean cc,String ln)
     {
         rule= r;
         field=f;
         value=v;
         caseCheck=cc;
+        localeName=ln;
     }
 
     public int getRule()
@@ -89,12 +90,18 @@ public class Filter extends Object {
         value=v;
     }
     
-    public boolean check(Phrase phrase)
+    public String toString()
     {
-        return check(phrase,"MT_no_locale");
+        String result;
+        result= "Rule : "+ rule + "\n";
+        result = result + "Field  : "+ field + "\n";
+        result = result + "value  : "+ value + "\n";
+        result = result + "case   : " + caseCheck + "\n";
+        result = result + "locale : " + localeName + "\n";
+        return result;
     }
     
-    public boolean check(Phrase phrase,String localeName)
+    public boolean check(Phrase phrase)
     {
         boolean result;
         String compareText;
@@ -156,7 +163,7 @@ public class Filter extends Object {
                 }
                 break;
                 case RULE_CONTAINS_NOT:
-                if (compareText.indexOf(value)!=-1)
+                if (compareText.indexOf(value)==-1)
                 {
                     result=true;
                 }

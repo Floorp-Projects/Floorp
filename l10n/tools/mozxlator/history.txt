@@ -2,18 +2,35 @@ Blue sky:
 + Client/server version with automatiation
 
 
+known issues:
+* doen't handle unsupported file types very well
+* escapes : with \:
+
+
 Todo:
 + define command line commands :-)
 + fix XPI install.js error
 + remember state on all dialogs (where is it missing?)
+
+Today:
+* implement advanced search
+* release
+
+MozillaTranslator 4.2
++ fixed dtd reading where it cut off the first chars of the keys
++ Advanced Search
++ Small UI changes (spelling errors and the like)
++ Read localizations directly from jar and directory
++ removed debug Log.write() call
+
+
+
 
 MozillaTranslator 4.15
 + Now reads installs from jars
 + Fixed bug with missing comment tags around the "Translated by..." comment in dtd files
 + Fixed bug where search did work on translated and comment fields
 + Added about dialog
-
-
 
 MozillaTranslator 4.11
 + Fixed bug that made "write package" fail

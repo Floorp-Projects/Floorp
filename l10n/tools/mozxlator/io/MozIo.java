@@ -72,7 +72,7 @@ public class MozIo extends Object {
                 result = new PropertiesWriter(mfil,os);
                 break;
             case MozFile.TYPE_UNSUPPORTED:
-                result = null;
+                result = new CopyWriter(mfil,os);
                 break;
         }
         return result;

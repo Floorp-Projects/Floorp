@@ -220,6 +220,7 @@ public class DTDReader extends  MozFileReader {
                             {
                                 keyBegun= true;
                                 entityBuffer= new StringBuffer();
+                                entityBuffer.append(letter);
                             }
                         }
                         break;

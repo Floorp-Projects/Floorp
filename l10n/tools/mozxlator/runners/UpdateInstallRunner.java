@@ -328,7 +328,6 @@ public class UpdateInstallRunner extends Thread
         
             if (je!=null)
             {   
-                Log.write("je.getName " + je.getName());
                 tokens = new StringTokenizer(je.getName(),"/",false);
                 
                 componentToken = tokens.nextToken();
@@ -425,6 +424,8 @@ public class UpdateInstallRunner extends Thread
         catch (Exception e)
         {
             Log.write("Error during file read");
+            Log.write("Reak File = " + r_fil);
+            Log.write("MT file   = " + m_fil);
         }
     }
     

@@ -35,16 +35,15 @@ import javax.swing.*;
  * @author  Henrik
  * @version
  */
-public class ImportGlossaryDialog extends javax.swing.JDialog {
+public class ReadLocaleDialog extends javax.swing.JDialog {
     
-    private boolean old;
     /** Creates new form ImportOldGlossaryDialog */
-    public ImportGlossaryDialog(String title,boolean oldImport) {
-        super (MainWindow.getDefaultInstance(),title,true);
+    public ReadLocaleDialog() {
+        super (MainWindow.getDefaultInstance(),"import translarion from mozilla",true);
         initComponents ();
         getRootPane().setDefaultButton(okButton);
         pack ();
-        old=oldImport;
+
         Utils.placeFrameAtCenter(this);
     }
 
@@ -60,6 +59,8 @@ public class ImportGlossaryDialog extends javax.swing.JDialog {
         fileButton = new javax.swing.JButton();
         installLabel = new javax.swing.JLabel();
         installCombo = new JComboBox(Glossary.getDefaultInstance().toArray());
+        localeLabel = new javax.swing.JLabel();
+        localeField = new javax.swing.JTextField();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
         getContentPane().setLayout(new java.awt.GridBagLayout());
@@ -72,7 +73,7 @@ public class ImportGlossaryDialog extends javax.swing.JDialog {
         new javax.swing.border.EtchedBorder(), "Information", 4, 2,
         new java.awt.Font ("Dialog", 0, 10)));
         
-        fileLabel.setText("Glossary file");
+        fileLabel.setText("Location");
           gridBagConstraints2 = new java.awt.GridBagConstraints();
           gridBagConstraints2.insets = new java.awt.Insets(3, 3, 3, 3);
           gridBagConstraints2.anchor = java.awt.GridBagConstraints.WEST;
@@ -120,6 +121,17 @@ public class ImportGlossaryDialog extends javax.swing.JDialog {
           infPanel.add(installCombo, gridBagConstraints2);
           
           
+        localeLabel.setText("Locale");
+          gridBagConstraints2 = new java.awt.GridBagConstraints();
+          infPanel.add(localeLabel, gridBagConstraints2);
+          
+          
+        localeField.setColumns(20);
+          localeField.setText("jTextField1");
+          gridBagConstraints2 = new java.awt.GridBagConstraints();
+          infPanel.add(localeField, gridBagConstraints2);
+          
+          
         gridBagConstraints1 = new java.awt.GridBagConstraints();
         gridBagConstraints1.gridwidth = 0;
         gridBagConstraints1.insets = new java.awt.Insets(3, 3, 3, 3);
@@ -165,8 +177,8 @@ public class ImportGlossaryDialog extends javax.swing.JDialog {
   private void fileButtonPressed (java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileButtonPressed
     File defaultFile = new File(fileField.getText());
     JFileChooser dirChooser = new JFileChooser();
-    dirChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-    dirChooser.setDialogTitle("Select glossary file to import");
+    dirChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+    dirChooser.setDialogTitle("Select locale directory or jar file to import");
     dirChooser.setSelectedFile(defaultFile);        
     int result = dirChooser.showDialog(this,"Choose");
     if (result==JFileChooser.APPROVE_OPTION)
@@ -189,14 +201,10 @@ public class ImportGlossaryDialog extends javax.swing.JDialog {
   public boolean visDialog()
   {
     MozInstall preSelect;
-    if (!old)
-    {
-        fileField.setText(Settings.getString("saved.fileName.partial.import",""));
-    }
-    else
-    {
-        fileField.setText("");
-    }
+
+    fileField.setText(Settings.getString("saved.fileName.locale.import",""));
+    localeField.setText(Settings.getString("saved.localeName",""));
+
     preSelect = (MozInstall) Glossary.getDefaultInstance().getChildByName(Settings.getString("saved.install",""));
     if (preSelect!=null)
     {
@@ -206,11 +214,8 @@ public class ImportGlossaryDialog extends javax.swing.JDialog {
     
     if (okay)
     {
-        if (!old)
-        {
-            Settings.setString("saved.fileName.partial.import",fileField.getText());
-        }
-            
+        Settings.setString("saved.localeName",localeField.getText());
+        Settings.setString("saved.fileName.locale.import",fileField.getText());    
         Settings.setString("saved.install",installCombo.getSelectedItem().toString());
     }
     
@@ -227,7 +232,10 @@ public class ImportGlossaryDialog extends javax.swing.JDialog {
         return (MozInstall) installCombo.getSelectedItem();
     }
     
-
+    public String getLocaleName()
+    {
+        return localeField.getText();
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel infPanel;
@@ -236,6 +244,8 @@ public class ImportGlossaryDialog extends javax.swing.JDialog {
     private javax.swing.JButton fileButton;
     private javax.swing.JLabel installLabel;
     private javax.swing.JComboBox installCombo;
+    private javax.swing.JLabel localeLabel;
+    private javax.swing.JTextField localeField;
     private javax.swing.JButton okButton;
     private javax.swing.JButton cancelButton;
     // End of variables declaration//GEN-END:variables

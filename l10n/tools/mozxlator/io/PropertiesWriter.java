@@ -43,6 +43,8 @@ public class PropertiesWriter extends MozFileWriter
     {
         super(f,o);
     }
+    
+    
 
 
     public void writeFile(String localeName) throws IOException

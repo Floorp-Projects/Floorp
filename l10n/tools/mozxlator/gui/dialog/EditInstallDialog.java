@@ -93,7 +93,7 @@ public class EditInstallDialog extends javax.swing.JDialog {
         infoPanel.add(nameField, gridBagConstraints2);
         
         
-      pathLabel.setText("Path");
+      pathLabel.setText("Location");
         gridBagConstraints2 = new java.awt.GridBagConstraints();
         gridBagConstraints2.gridx = 0;
         gridBagConstraints2.gridy = 1;
@@ -112,7 +112,8 @@ public class EditInstallDialog extends javax.swing.JDialog {
         infoPanel.add(pathField, gridBagConstraints2);
         
         
-      pathButton.setText("Choose");
+      pathButton.setToolTipText("Choose directory or jar file for the install");
+        pathButton.setText("Choose");
         pathButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 pathButtonPressed(evt);
@@ -183,7 +184,7 @@ public class EditInstallDialog extends javax.swing.JDialog {
     File defaultFile = new File(pathField.getText());
     JFileChooser dirChooser = new JFileChooser();
     dirChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-    dirChooser.setDialogTitle("Select directory for the install");
+    dirChooser.setDialogTitle("Select directory or jar file for the install");
     dirChooser.setSelectedFile(defaultFile);
     int result = dirChooser.showDialog(this,"Choose");
     if (result==JFileChooser.APPROVE_OPTION)

@@ -91,7 +91,8 @@ public class MainWindow extends JFrame {
     glossaryMenu.addSeparator();
     addMenuItem(glossaryMenu , new ImportPartialGlossaryAction(), "control shift I");
     addMenuItem(glossaryMenu , new ExportPartialGlossaryAction(), "control shift E");
-//    glossaryMenu.addSeparator();
+    glossaryMenu.addSeparator();
+    addMenuItem(glossaryMenu , new ImportLocaleAction(),"");
 //    addMenuItem(glossaryMenu , new NoOpAction("ImportMozExpAction()"), "");
 //    addMenuItem(glossaryMenu , new NoOpAction("ExportMozExpAction()"), "");
     glossaryMenu.addSeparator();
@@ -118,6 +119,8 @@ public class MainWindow extends JFrame {
     addMenuItem(viewMenu , new RedundantViewAction(), "alt R");
     addMenuItem(viewMenu , new KeepViewAction(), "alt K");
     addMenuItem(viewMenu , new SearchViewAction(), "alt S");
+    addMenuItem(viewMenu , new AdvancedSearchAction() , "");
+    
     
     menuBar.add(viewMenu);
     

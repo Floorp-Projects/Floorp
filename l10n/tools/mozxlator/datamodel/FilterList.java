@@ -76,11 +76,6 @@ public class FilterList extends AbstractListModel {
     
     public boolean check(Phrase phrase)
     {
-        return check(phrase, "MT_no_locale");
-    }
-    
-    public boolean check(Phrase phrase,String localeName)
-    {
         Filter f;
         Iterator i = filters.iterator();
         boolean result=false;
@@ -89,7 +84,7 @@ public class FilterList extends AbstractListModel {
         {
             f = (Filter) i.next();
             
-            result = f.check(phrase,localeName);
+            result = f.check(phrase);
         }
         return result;
     }        

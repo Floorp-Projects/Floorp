@@ -17,18 +17,16 @@ import org.mozilla.translator.datamodel.*;
 public class FetchSearch implements Fetcher 
 {
 
-    private String localeName;
     private Filter filt;
     
     /** Creates new FetchUntranslated */
-    public FetchSearch(String ln,Filter f) 
+    public FetchSearch(Filter f) 
     {
-        localeName = ln;
         filt=f;
     }
 
     public boolean check(Phrase ph) 
     {        
-        return filt.check(ph,localeName);
+        return filt.check(ph);
     }
 }

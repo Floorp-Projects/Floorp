@@ -143,11 +143,17 @@ public class WritePackageRunner extends Thread {
         {
             fos = new FileOutputStream(dir + File.separator + fil);
             writer = MozIo.getFileWriter(fil,fos);
-            writer.writeFile(localeName);
+            if (writer!=null)
+            {
+                writer.writeFile(localeName);
+            }
+            else
+            {
+                // should really copy the file
+            }
         }
         catch (Exception e)
         {
-            Log.write("Error writing file: " + fil);
             Log.write("Exception : "+ e);
         }
     }

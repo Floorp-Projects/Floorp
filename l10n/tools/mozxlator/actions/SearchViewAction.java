@@ -53,7 +53,7 @@ public class SearchViewAction extends AbstractAction {
     /** Creates new SearchViewAction */
     public SearchViewAction()
     {
-        super("Search entries",null);
+        super("Simple Search",null);
     }
 
     public void actionPerformed(ActionEvent evt)
@@ -92,7 +92,7 @@ public class SearchViewAction extends AbstractAction {
 
             
             
-            Filter search = new Filter(rule,column,text,cc);
+            Filter search = new Filter(rule,column,text,cc,lname);
             
             
             ShowWhatDialog swd = new ShowWhatDialog();
@@ -101,7 +101,7 @@ public class SearchViewAction extends AbstractAction {
             {
                 String localeName = swd.getSelectedLocale();
                 List cols = swd.getSelectedColumns();
-                Fetcher sf= new FetchSearch(localeName,search);
+                Fetcher sf= new FetchSearch(search);
                 collectedList  = FetchRunner.getFromGlossary(sf);
                 Collections.sort(collectedList);
                 ComplexTableWindow ctw = new ComplexTableWindow("Found Strings",collectedList,cols,localeName);
