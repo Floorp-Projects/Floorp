@@ -48,7 +48,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIFocusTracker.h"
 #include "nsICaret.h"
-#include "nsXIFConverter.h"
 #include "nsHTMLAtoms.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
