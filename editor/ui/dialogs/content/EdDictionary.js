@@ -37,32 +37,25 @@ function Startup()
     window.close();
     return;
   }
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  if (!dialog)
-  {
-    dump("Failed to create dialog object!!!\n");
-    Close();
-  }
   // The word to add word is passed as the 2nd extra parameter in window.openDialog()
   gWordToAdd = window.arguments[1];
   
-  dialog.WordInput = document.getElementById("WordInput");
-  dialog.DictionaryList = document.getElementById("DictionaryList");
+  gDialog.WordInput = document.getElementById("WordInput");
+  gDialog.DictionaryList = document.getElementById("DictionaryList");
   
-  dialog.WordInput.value = gWordToAdd;
+  gDialog.WordInput.value = gWordToAdd;
   FillDictionaryList();
 
   // Select the supplied word if it is already in the list
   SelectWordToAddInList();
-  SetTextboxFocus(dialog.WordInput);
+  SetTextboxFocus(gDialog.WordInput);
 
   SetWindowLocation();
 }
 
 function ValidateWordToAdd()
 {
-  gWordToAdd = TrimString(dialog.WordInput.value);
+  gWordToAdd = TrimString(gDialog.WordInput.value);
   if (gWordToAdd.length > 0)
   {
     return true;
@@ -73,11 +66,11 @@ function ValidateWordToAdd()
 
 function SelectWordToAddInList()
 {
-  for (var index = 0; index < dialog.DictionaryList.getAttribute("length"); index++)
+  for (var index = 0; index < gDialog.DictionaryList.getAttribute("length"); index++)
   {
-    if (gWordToAdd == GetTreelistValueAt(dialog.DictionaryList,index))
+    if (gWordToAdd == GetTreelistValueAt(gDialog.DictionaryList,index))
     {
-      dialog.DictionaryList.selectedIndex = index;
+      gDialog.DictionaryList.selectedIndex = index;
       break;
     }
   }
@@ -98,7 +91,7 @@ function AddWord()
     FillDictionaryList();
 
     SelectWordToAddInList();
-    dialog.WordInput.value = "";
+    gDialog.WordInput.value = "";
   }
 }
 
@@ -106,16 +99,16 @@ function ReplaceWord()
 {
   if (ValidateWordToAdd())
   {
-    var selIndex = dialog.DictionaryList.selectedIndex;
+    var selIndex = gDialog.DictionaryList.selectedIndex;
     if (selIndex >= 0)
     {
-      gSpellChecker.RemoveWordFromDictionary(GetSelectedTreelistValue(dialog.DictionaryList));
+      gSpellChecker.RemoveWordFromDictionary(GetSelectedTreelistValue(gDialog.DictionaryList));
       try {
         // Add to the dictionary list
         gSpellChecker.AddWordToDictionary(gWordToAdd);
         // Just change the text on the selected item
         //  instead of rebuilding the list
-        ReplaceStringInTreeList(dialog.DictionaryList, selIndex, gWordToAdd);
+        ReplaceStringInTreeList(gDialog.DictionaryList, selIndex, gWordToAdd);
       } catch (e) {
         // Rebuild list and select the word - it was probably already in the list
         dump("Exception occured adding word in ReplaceWord\n");
@@ -128,13 +121,13 @@ function ReplaceWord()
 
 function RemoveWord()
 {
-  var selIndex = dialog.DictionaryList.selectedIndex;
+  var selIndex = gDialog.DictionaryList.selectedIndex;
   if (selIndex >= 0)
   {
-    var word = GetSelectedTreelistValue(dialog.DictionaryList);
+    var word = GetSelectedTreelistValue(gDialog.DictionaryList);
 
     // Remove word from list
-    RemoveSelectedTreelistItem(dialog.DictionaryList);
+    RemoveSelectedTreelistItem(gDialog.DictionaryList);
 
     // Remove from dictionary
     try {
@@ -152,10 +145,10 @@ function RemoveWord()
 
 function FillDictionaryList()
 {
-  var selIndex = dialog.DictionaryList.selectedIndex;
+  var selIndex = gDialog.DictionaryList.selectedIndex;
 
   // Clear the current contents of the list
-  ClearTreelist(dialog.DictionaryList);
+  ClearTreelist(gDialog.DictionaryList);
   // Get the list from the spell checker
   gSpellChecker.GetPersonalDictionary()
 
@@ -166,7 +159,7 @@ function FillDictionaryList()
     var word = gSpellChecker.GetPersonalDictionaryWord();
     if (word != "")
     {
-      AppendStringToTreelist(dialog.DictionaryList, word);
+      AppendStringToTreelist(gDialog.DictionaryList, word);
       haveList = true;
     }
   } while (word != "");
@@ -174,14 +167,14 @@ function FillDictionaryList()
   //XXX: BUG 74467: If list is empty, tree doesn't layout to full height correctly
   //     (ignores "rows" attribute) (bug is latered, so we are fixing here for now)
   if (!haveList)
-    AppendStringToTreelist(dialog.DictionaryList, " ");
+    AppendStringToTreelist(gDialog.DictionaryList, " ");
 
   ResetSelectedItem(selIndex);
 }
 
 function ResetSelectedItem(index)
 {
-  var lastIndex = dialog.DictionaryList.getAttribute("length") - 1;
+  var lastIndex = gDialog.DictionaryList.getAttribute("length") - 1;
   if (index > lastIndex)
     index = lastIndex;
 
@@ -192,7 +185,7 @@ function ResetSelectedItem(index)
 
 dump("ResetSelectedItem to index="+index+"\n");
 
-  dialog.DictionaryList.selectedIndex = index;
+  gDialog.DictionaryList.selectedIndex = index;
 }
 
 function Close()

@@ -67,7 +67,7 @@ function initDialog(){
   //check for relative url
   if (!((srcInput.value.indexOf("http://") != -1) || (srcInput.value.indexOf("file://") != -1))){
     if (editorShell.editorDocument.location == "about:blank"){
-      alert(GetString("ImapRelative"));
+      alert(GetString("SaveToUseRelativeUrl"));
       window.close();
       //TODO: add option to save document now
     }
@@ -344,10 +344,3 @@ function deleteAreas(){
   return true;
 }
 
-// This is contained in editor.js (should be in a common js file
-// I did not want to include the whole file so I copied the function here
-// It retrieves strings from editor string bundle
-function GetString(id)
-{
-  return editorShell.GetString(id);
-}

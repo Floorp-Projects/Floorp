@@ -33,52 +33,30 @@ function Startup()
 
   doSetOKCancel(onOK, onCancel);
 
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  // GET EACH CONTROL -- E.G.:
-  //dialog.editBox = document.getElementById("editBox");
+  // gDialog is declared in EdDialogCommon.js
+  // Set commonly-used widgets like this:
+  gDialog.fooButton = document.getElementById("fooButton");
 
   initDialog();
   
-  // SET FOCUS TO FIRST CONTROL
-  //SetTextboxFocus(dialog.editBox);
+  // Set window location relative to parent window (based on persisted attributes)
   SetWindowLocation();
+
+  // Set focus to first widget in dialog, e.g.:
+  SetTextboxFocus(gDialog.fooButton);
 }
 
-function InitDialog() {
-  // Get a single selected element of the desired type
-  element = editorShell.GetSelectedElement(tagName);
-
-  if (element) {
-    // We found an element and don't need to insert one
-    insertNew = false;
-    dump("Found existing image\n");
-  } else {
-    insertNew = true;
-    // We don't have an element selected, 
-    //  so create one with default attributes
-    dump("Element not selected - calling createElementWithDefaults\n");
-    element = editorShell.createElementWithDefaults(tagName);
-  }
-
-  if(!element)
-  {
-    dump("Failed to get selected element or create a new one!\n");
-    window.close();
-  }
+function InitDialog() 
+{
+  // Initialize all dialog widgets here,
+  // e.g., get attributes from an element for property dialog
 }
 
 function onOK()
 {
-// Set attribute example:
-//  imageElement.setAttribute("src",dialog.srcInput.value);
-  if (insertNew) {
-    try {
-      editorShell.InsertElementAtSelection(element, false);
-    } catch (e) {
-      dump("Exception occured in InsertElementAtSelection\n");
-    }
-  }
+  // Validate all user data and set attributes and possibly insert new element here
+  // If there's an error the user must correct, return false to keep dialog open.
+  
   SaveWindowLocation();
   return true; // do close the window
 }

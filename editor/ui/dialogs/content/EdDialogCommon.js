@@ -32,6 +32,10 @@
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
+
+// Object to attach commonly-used widgets (all dialogs should use this)
+var gDialog = {};
+
 // Bummer! Can't get at enums from nsIDocumentEncoder.h
 var gOutputSelectionOnly = 1;
 var gOutputFormatted     = 2;
@@ -146,7 +150,7 @@ function ValidateNumber(inputWidget, listWidget, minVal, maxVal, element, attNam
 
       // or expand dialog for users of "More / Fewer" button
       if ("dialog" in window && dialog && 
-           "MoreSection" in dialog && dialog.MoreSection)
+           "MoreSection" in gDialog && gDialog.MoreSection)
       {
         if ( !SeeMore )
           onMoreFewer();
@@ -895,9 +899,9 @@ function InitMoreFewer()
 {
   // Set SeeMore bool to the OPPOSITE of the current state,
   //   which is automatically saved by using the 'persist="more"'
-  //   attribute on the dialog.MoreFewerButton button
+  //   attribute on the gDialog.MoreFewerButton button
   //   onMoreFewer will toggle it and redraw the dialog
-  SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
+  SeeMore = (gDialog.MoreFewerButton.getAttribute("more") != "1");
   onMoreFewer();
 }
 
@@ -905,18 +909,18 @@ function onMoreFewer()
 {
   if (SeeMore)
   {
-    dialog.MoreSection.setAttribute("collapsed","true");
+    gDialog.MoreSection.setAttribute("collapsed","true");
     window.sizeToContent();
-    dialog.MoreFewerButton.setAttribute("more","0");
-    dialog.MoreFewerButton.setAttribute("label",GetString("MoreProperties"));
+    gDialog.MoreFewerButton.setAttribute("more","0");
+    gDialog.MoreFewerButton.setAttribute("label",GetString("MoreProperties"));
     SeeMore = false;
   }
   else
   {
-    dialog.MoreSection.removeAttribute("collapsed");
+    gDialog.MoreSection.removeAttribute("collapsed");
     window.sizeToContent();
-    dialog.MoreFewerButton.setAttribute("more","1");
-    dialog.MoreFewerButton.setAttribute("label",GetString("FewerProperties"));
+    gDialog.MoreFewerButton.setAttribute("more","1");
+    gDialog.MoreFewerButton.setAttribute("label",GetString("FewerProperties"));
     SeeMore = true;
   }
 }
@@ -1143,7 +1147,8 @@ function SaveWindowLocation()
 function onCancel()
 {
   SaveWindowLocation();
-  window.close();
+  // Close dialog by returning true
+  return true;
 }
 
 function GetDefaultBrowserColors()

@@ -21,8 +21,6 @@
  *   Dan Haddix
  */
 
-var dialog;
-
 // dialog initialization code
 function Startup()
 {
@@ -31,32 +29,30 @@ function Startup()
 
   doSetOKCancel(onOK, onCancel); // Map OK/Cancel to relevant functions
 
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  dialog.urlInput = document.getElementById("urlInput");
-  dialog.targetInput = document.getElementById("targetInput");
-  dialog.altInput = document.getElementById("altInput");
-  dialog.commonInput = document.getElementById("commonInput");
+  gDialog.urlInput = document.getElementById("urlInput");
+  gDialog.targetInput = document.getElementById("targetInput");
+  gDialog.altInput = document.getElementById("altInput");
+  gDialog.commonInput = document.getElementById("commonInput");
 
-  dialog.hsHref = window.arguments[0].getAttribute("hsHref");
-  if (dialog.hsHref != '')
-    dialog.urlInput.value = dialog.hsHref;
+  gDialog.hsHref = window.arguments[0].getAttribute("hsHref");
+  if (gDialog.hsHref != '')
+    gDialog.urlInput.value = gDialog.hsHref;
 
-  dialog.hsAlt = window.arguments[0].getAttribute("hsAlt");
-  if (dialog.hsAlt != '')
-    dialog.altInput.value = dialog.hsAlt;
+  gDialog.hsAlt = window.arguments[0].getAttribute("hsAlt");
+  if (gDialog.hsAlt != '')
+    gDialog.altInput.value = gDialog.hsAlt;
 
-  dialog.hsTarget = window.arguments[0].getAttribute("hsTarget");
-  if (dialog.hsTarget != ''){
-    dialog.targetInput.value = dialog.hsTarget;
-    len = dialog.commonInput.length;
+  gDialog.hsTarget = window.arguments[0].getAttribute("hsTarget");
+  if (gDialog.hsTarget != ''){
+    gDialog.targetInput.value = gDialog.hsTarget;
+    len = gDialog.commonInput.length;
     for (i=0; i<len; i++){
-      if (dialog.hsTarget == dialog.commonInput.options[i].value)
-        dialog.commonInput.options[i].selected = "true";
+      if (gDialog.hsTarget == gDialog.commonInput.options[i].value)
+        gDialog.commonInput.options[i].selected = "true";
     }
   }
 
-  SetTextboxFocus(dialog.urlInput);
+  SetTextboxFocus(gDialog.urlInput);
 
   SetWindowLocation();
 }
@@ -64,9 +60,9 @@ function Startup()
 function onOK()
 {
   dump(window.arguments[0].id+"\n");
-  window.arguments[0].setAttribute("hsHref", dialog.urlInput.value);
-  window.arguments[0].setAttribute("hsAlt", dialog.altInput.value);
-  window.arguments[0].setAttribute("hsTarget", dialog.targetInput.value);
+  window.arguments[0].setAttribute("hsHref", gDialog.urlInput.value);
+  window.arguments[0].setAttribute("hsAlt", gDialog.altInput.value);
+  window.arguments[0].setAttribute("hsTarget", gDialog.targetInput.value);
 
   SaveWindowLocation();
 
@@ -74,7 +70,7 @@ function onOK()
 }
 
 function changeTarget() {
-  dialog.targetInput.value=dialog.commonInput.value;
+  gDialog.targetInput.value=gDialog.commonInput.value;
 }
 
 function chooseFile()
@@ -83,9 +79,9 @@ function chooseFile()
 
   fileName = GetLocalFileURL("html");
   if (fileName && fileName != "") {
-    dialog.urlInput.value = fileName;
+    gDialog.urlInput.value = fileName;
   }
 
   // Put focus into the input field
-  SetTextboxFocus(dialog.urlInput);
+  SetTextboxFocus(gDialog.urlInput);
 }

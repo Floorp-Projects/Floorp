@@ -35,7 +35,9 @@
 <window class="dialog" title="&windowTitle.label;"
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    buttonpack="end"
     onload="Startup()"
+    onunload="onCancel()"
     orient="vertical">
 
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -47,9 +49,9 @@
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
 
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" align="start">
     <caption label="&pageColors.label;"/>
-    <radiogroup id="pageColorGroup" orient="vertical" autostretch="never">
+    <radiogroup id="pageColorGroup" orient="vertical" align="start">
       <radio group="pageColorGroup" id="DefaultColorsRadio" label="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
         tooltip="aTooltip"     tooltiptext="&defaultColorsRadio.tooltip;" />
       <radio group="pageColorGroup" id="CustomColorsRadio" label="&customColorsRadio.label;" oncommand="UseCustomColors()"
@@ -59,31 +61,31 @@
       <grid>
         <columns><column/><column/></columns>
         <rows>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Text" value="&normalText.label;&colon.character;" />
             <button id="TextButton" class="color-button" oncommand="GetColorAndUpdate('textCW');">
               <spacer id="textCW" class="color-well"/>
             </button>
           </row>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Link" value="&linkText.label;&colon.character;" />
             <button id="LinkButton" class="color-button" oncommand="GetColorAndUpdate('linkCW');">
               <spacer id="linkCW" class="color-well"/>
             </button>
           </row>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
             <button id="ActiveLinkButton" class="color-button" oncommand="GetColorAndUpdate('activeCW');">
               <spacer id="activeCW" class="color-well"/>
             </button>
           </row>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
             <button id="VisitedLinkButton" class="color-button" oncommand="GetColorAndUpdate('visitedCW');">
               <spacer id="visitedCW" class="color-well"/>
             </button>
           </row>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Background" value="&background.label;" />
             <button id="BackgroundButton" class="color-button" oncommand="GetColorAndUpdate('backgroundCW');">
               <spacer id="backgroundCW" class="color-well"/>
@@ -113,7 +115,7 @@
      tooltip="aTooltip" tooltiptext="&backgroundImage.tooltip;" 
      style="min-width : 21em"/>
     <!-- from EdDialogOverlay.xul -->
-    <button class="dialog" id="ChooseFile"/>
+    <button id="ChooseFile"/>
   </hbox>
   <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->
   <checkbox id="MakeRelativeCheckbox" for="BackgroundImageInput"/>
@@ -121,7 +123,7 @@
   <hbox>
     <spacer flex="1"/>
     <!-- from EdDialogOverlay.xul -->
-    <button class="dialog" id="AdvancedEditButton"/>
+    <button id="AdvancedEditButton"/>
   </hbox>
   <separator class="groove"/>
   <hbox id="okCancelButtonsRight"/> 

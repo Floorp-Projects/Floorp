@@ -29,10 +29,10 @@
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <vbox id="AdvancedEdit"  flex="1">
-  <hbox flex="1" style="margin-top: 0.2em" autostretch="never">
+  <hbox flex="1" style="margin-top: 0.2em" align="center">
     <!-- This will right-align the button -->
     <spacer flex="1"/>
-    <button class="dialog" id="AdvancedEditButton1" oncommand="onAdvancedEdit()" label="&AdvancedEditButton.label;"
+    <button id="AdvancedEditButton1" oncommand="onAdvancedEdit()" label="&AdvancedEditButton.label;"
             tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;"/>
   </hbox>
   <separator class="groove"/>

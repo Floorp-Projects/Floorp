@@ -37,7 +37,9 @@
     style="width: 40em;"
     xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
+    buttonpack="end"
     onload="Startup()"
+    onunload="onCancel()"
     orient="vertical">
 
   <keyset id="dialogKeys"/>
@@ -59,7 +61,7 @@
 
   <broadcaster id="args" value=""/>
 
-  <hbox autostretch="never">
+  <hbox>
     <text class="label" value="&currentattributesfor.label;"/>
     <text class="label header" id="tagLabel"/>
   </hbox>
@@ -96,21 +98,21 @@
           </treehead>
           <treechildren id="HTMLAList" flex="1"/>
         </tree>
-        <hbox valign="middle" autostretch="never" flex="1">
+        <hbox align="center" flex="1">
           <text class="label" value="&editAttribute.label;"/>
           <spacer flex="1"/>
-          <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveHTMLAttribute();"/>
+          <button label="&removeAttribute.label;" oncommand="RemoveHTMLAttribute();"/>
         </hbox>
         <grid>
           <columns>
             <column flex="1"/><column flex="1"/>
           </columns>
           <rows>
-            <row valign="bottom" equalsize="always">
+            <row equalsize="always">
               <text class="label" for="AddHTMLAttributeNameInput" value="&AttName.label;"/>
               <text class="label" for="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
             </row>
-            <row valign="middle" equalsize="always">
+            <row align="center" equalsize="always">
               <!-- Lists are built at runtime -->
               <menulist id="AddHTMLAttributeNameInput" editable="true" flex="1"
                         oninput="onInputHTMLAttributeName();"
@@ -146,21 +148,21 @@
           </treehead>
           <treechildren id="CSSAList" flex="1"/>
         </tree>
-        <hbox valign="middle" autostretch="never" flex="1">
+        <hbox align="center" flex="1">
           <text class="label" value="&editAttribute.label;"/>
           <spacer flex="1"/>
-          <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveCSSAttribute();"/>
+          <button label="&removeAttribute.label;" oncommand="RemoveCSSAttribute();"/>
         </hbox>
         <grid>
           <columns>
             <column flex="1"/><column flex="1"/>
           </columns>
           <rows>
-            <row valign="bottom" equalsize="always">
+            <row equalsize="always">
               <text class="label" for="AddCSSAttributeNameInput"  value="&PropertyName.label;"/>
               <text class="label" for="AddCSSAttributeValueInput" value="&AttValue.label;"/>
             </row>
-            <row valign="middle" equalsize="always">
+            <row equalsize="always">
               <textbox id="AddCSSAttributeNameInput" flex="1"
                 oninput="onInputCSSAttributeName();"
                 onchange="onChangeCSSAttribute();"/>
@@ -191,21 +193,21 @@
           </treehead>
           <treechildren id="JSEAList" flex="1"/>
         </tree>
-        <hbox valign="middle" autostretch="never" flex="1">
+        <hbox align="center" flex="1">
           <text class="label" value="&editAttribute.label;"/>
           <spacer flex="1"/>
-          <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveJSEAttribute()"/>
+          <button label="&removeAttribute.label;" oncommand="RemoveJSEAttribute()"/>
         </hbox>
         <grid>
           <columns>
             <column flex="1"/><column flex="1"/>
           </columns>
           <rows>
-            <row valign="bottom" equalsize="always">
+            <row equalsize="always">
               <text class="label" for="AddJSEAttributeNameList" value="&AttName.label;"/>
               <text class="label" for="AddJSEAttributeValueInput" value="&AttValue.label;"/>
             </row>
-            <row valign="middle" equalsize="always">
+            <row align="center" equalsize="always">
               <!-- List is built at runtime -->
               <menulist id="AddJSEAttributeNameList" flex="1"
                 oncommand="onSelectJSEAttribute();"/>

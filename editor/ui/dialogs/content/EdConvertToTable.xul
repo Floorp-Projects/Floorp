@@ -36,6 +36,7 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:html="http://www.w3.org/1999/xhtml"
    onload = "Startup()"
+   onunload="onCancel()"
    orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -56,7 +57,7 @@
         style="margin-left:2em" checked="true" persist="checked"
         tooltip="aTooltip" tooltiptext="&collapseSpaces.tooltip;"/>
     </vbox>
-    <hbox autostretch="never">
+    <hbox align="center">
       <radio group="SepRadioGroup" id="other" label="&otherRadio.label;" oncommand="SelectCharacter('2');"/>
       <textbox class="narrow" id="SepCharacterInput" oninput="InputSepCharacter()"/>
     </hbox>

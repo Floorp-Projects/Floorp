@@ -182,7 +182,7 @@
     <toolbarbutton id="linkButton"/>
     <toolbarbutton id="namedAnchorButton"/>
     <spacer flex="1"/>
-    <hbox id="throbber-box" autostretch="never">
+    <hbox id="throbber-box" align="center">
       <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
         <observes element="Editor:Throbber" attribute="busy"/>
       </button>
@@ -190,7 +190,7 @@
   </toolbar>
   <toolbar id="FormatToolbar" persist="collapsed" tbalign="center" grippytooltip="aTooltip" grippytooltiptext="&formatToolbar.tooltip;">
     <!-- We need this else menulists get stretched -->
-    <hbox autostretch="never">
+    <hbox align="center">
       <!-- from editorOverlay -->
       <menulist id="ParagraphSelect"/>
       <stack id="ColorButtons"/>
@@ -252,7 +252,7 @@
       </vbox>
     </deck>
 
-    <hbox id="EditModeToolbar" hidden="false" autostretch="never" valign="middle" persist="collapsed">
+    <hbox id="EditModeToolbar" align="center" hidden="false" persist="collapsed">
       <tabs id="EditModeTabs" class="tabs-bottom" flex="1">
         <tab id="NormalModeButton"/>
         <tab id="TagModeButton"/>

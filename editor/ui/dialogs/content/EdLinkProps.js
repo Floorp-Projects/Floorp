@@ -34,7 +34,6 @@ var gHaveHeadings = false;
 var gCanChangeHeadingSelected = true;
 var gCanChangeAnchorSelected = true;
 var gHaveDocumentUrl = false;
-var dialog;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
 // The returned node is has an "a" tagName
@@ -48,24 +47,16 @@ function Startup()
 
   doSetOKCancel(onOK, onCancel);
 
-  dialog = new Object;
-  if (!dialog)
-  {
-    dump("Failed to create dialog object!!!\n");
-    window.close();
-    return;
-  }
-
   // Message was wrapped in a <label> or <div>, so actual text is a child text node
-  dialog.linkTextCaption     = document.getElementById("linkTextCaption");
-  dialog.linkTextMessage     = document.getElementById("linkTextMessage");
-  dialog.linkTextInput       = document.getElementById("linkTextInput");
-  dialog.hrefInput           = document.getElementById("hrefInput");
-  dialog.NamedAnchorList     = document.getElementById("NamedAnchorList");
-  dialog.HeadingsList        = document.getElementById("HeadingsList");
-  dialog.MoreSection         = document.getElementById("MoreSection");
-  dialog.MoreFewerButton     = document.getElementById("MoreFewerButton");
-  dialog.AdvancedEditSection = document.getElementById("AdvancedEdit");
+  gDialog.linkTextCaption     = document.getElementById("linkTextCaption");
+  gDialog.linkTextMessage     = document.getElementById("linkTextMessage");
+  gDialog.linkTextInput       = document.getElementById("linkTextInput");
+  gDialog.hrefInput           = document.getElementById("hrefInput");
+  gDialog.NamedAnchorList     = document.getElementById("NamedAnchorList");
+  gDialog.HeadingsList        = document.getElementById("HeadingsList");
+  gDialog.MoreSection         = document.getElementById("MoreSection");
+  gDialog.MoreFewerButton     = document.getElementById("MoreFewerButton");
+  gDialog.AdvancedEditSection = document.getElementById("AdvancedEdit");
 
   var selection = editorShell.editorSelection;
   if (selection)
@@ -151,10 +142,10 @@ function Startup()
   if (insertLinkAtCaret)
   {
     // Groupbox caption:
-    dialog.linkTextCaption.setAttribute("label", GetString("LinkText"));
+    gDialog.linkTextCaption.setAttribute("label", GetString("LinkText"));
 
     // Message above input field:
-    dialog.linkTextMessage.setAttribute("label", GetString("EnterLinkText"));
+    gDialog.linkTextMessage.setAttribute("value", GetString("EnterLinkText"));
   }
   else
   {
@@ -184,18 +175,18 @@ function Startup()
     // Set "caption" for link source and the source text or image URL
     if (imageElement)
     {
-      dialog.linkTextCaption.setAttribute("label",GetString("LinkImage"));
+      gDialog.linkTextCaption.setAttribute("label", GetString("LinkImage"));
       // Link source string is the source URL of image
       // TODO: THIS DOESN'T HANDLE MULTIPLE SELECTED IMAGES!
-      dialog.linkTextMessage.setAttribute("value",imageElement.src);
+      gDialog.linkTextMessage.setAttribute("value", imageElement.src);
     } else {
-      dialog.linkTextCaption.setAttribute("label",GetString("LinkText"));
+      gDialog.linkTextCaption.setAttribute("label", GetString("LinkText"));
       if (selectedText) 
       {
         // Use just the first 60 characters and add "..."
-        dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(ReplaceWhitespace(selectedText, " "), 60, true));
+        gDialog.linkTextMessage.setAttribute("value", TruncateStringAtWordEnd(ReplaceWhitespace(selectedText, " "), 60, true));
       } else {
-        dialog.linkTextMessage.setAttribute("value",GetString("MixedSelection"));
+        gDialog.linkTextMessage.setAttribute("value", GetString("MixedSelection"));
       }
     }
   }
@@ -215,19 +206,19 @@ function Startup()
   // Search for a URI pattern in the selected text
   //  as candidate href
   selectedText = TrimString(selectedText); 
-  if (!dialog.hrefInput.value && TextIsURI(selectedText))
-      dialog.hrefInput.value = selectedText;
+  if (!gDialog.hrefInput.value && TextIsURI(selectedText))
+      gDialog.hrefInput.value = selectedText;
 
   // Set initial focus
   if (insertLinkAtCaret) {
     // We will be using the HREF inputbox, so text message
-    SetTextboxFocus(dialog.linkTextInput);
+    SetTextboxFocus(gDialog.linkTextInput);
   } else {
-    SetTextboxFocus(dialog.hrefInput);
+    SetTextboxFocus(gDialog.hrefInput);
 
     // We will not insert a new link at caret, so remove link text input field
-    dialog.linkTextInput.setAttribute("hidden","true");
-    dialog.linkTextInput = null;
+    gDialog.linkTextInput.setAttribute("hidden", "true");
+    gDialog.linkTextInput = null;
   }
 
   InitMoreFewer();
@@ -245,7 +236,7 @@ function InitDialog()
 {
   // Must use getAttribute, not "globalElement.href", 
   //  or foreign chars aren't coverted correctly!
-  dialog.hrefInput.value = globalElement.getAttribute("href");
+  gDialog.hrefInput.value = globalElement.getAttribute("href");
 
   // Set "Relativize" checkbox according to current URL state
   SetRelativeCheckbox();
@@ -254,20 +245,20 @@ function InitDialog()
 function chooseFile()
 {
   // Get a local file, converted into URL format
-  var fileName = GetLocalFileURL("html,img");
+  var fileName = GetLocalFileURL("html, img");
   if (fileName) 
   {
     // Always try to relativize local file URLs
     if (gHaveDocumentUrl)
       fileName = MakeRelativeUrl(fileName);
 
-    dialog.hrefInput.value = fileName;
+    gDialog.hrefInput.value = fileName;
 
     SetRelativeCheckbox();
     doEnabling();
   }
   // Put focus into the input field
-  SetTextboxFocus(dialog.hrefInput);
+  SetTextboxFocus(gDialog.hrefInput);
 }
 
 function FillListboxes()
@@ -278,14 +269,14 @@ function FillListboxes()
   if (NamedAnchorCount > 0)
   {
     for (var i = 0; i < NamedAnchorCount; i++)
-      AppendStringToTreelist(dialog.NamedAnchorList, NamedAnchorNodeList.item(i).name);
+      AppendStringToTreelist(gDialog.NamedAnchorList, NamedAnchorNodeList.item(i).name);
 
     gHaveNamedAnchors = true;
   } 
   else 
   {
     // Message to tell user there are none
-    item = AppendStringToTreelistById(dialog.NamedAnchorList, "NoNamedAnchors");
+    item = AppendStringToTreelistById(gDialog.NamedAnchorList, "NoNamedAnchors");
     if (item) item.setAttribute("disabled", "true");
   }
   var firstHeading = true;
@@ -316,7 +307,7 @@ function FillListboxes()
         // Append "_" to any name already in the list
         if (GetExistingHeadingIndex(text) > -1)
           text += "_";
-        AppendStringToTreelist(dialog.HeadingsList, text);
+        AppendStringToTreelist(gDialog.HeadingsList, text);
 
         // Save nodes in an array so we can create anchor node under it later
         if (!HNodeArray)
@@ -331,7 +322,7 @@ function FillListboxes()
     gHaveHeadings = true;
   } else {
     // Message to tell user there are none
-    item = AppendStringToTreelistById(dialog.HeadingsList, "NoHeadings");
+    item = AppendStringToTreelistById(gDialog.HeadingsList, "NoHeadings");
     if (item) item.setAttribute("disabled", "true");
   }
 }
@@ -339,7 +330,7 @@ function FillListboxes()
 function doEnabling()
 {
   // We disable Ok button when there's no href text only if inserting a new link
-  var enable = insertNew ? (dialog.hrefInput.value.trimString().length > 0) : true;
+  var enable = insertNew ? (gDialog.hrefInput.value.trimString().length > 0) : true;
 
   SetElementEnabledById( "ok", enable);
 }
@@ -363,10 +354,10 @@ function ChangeLocation()
 
 function GetExistingHeadingIndex(text)
 {
-  var len = dialog.HeadingsList.getAttribute("length");
+  var len = gDialog.HeadingsList.getAttribute("length");
   for (var i=0; i < len; i++)
   {
-    if (GetTreelistValueAt(dialog.HeadingsList, i) == text)
+    if (GetTreelistValueAt(gDialog.HeadingsList, i) == text)
       return i;
   }
   return -1;
@@ -380,7 +371,7 @@ function SelectNamedAnchor()
     {
       // Prevent ChangeLocation() from unselecting the list
       gClearListSelections = false;
-      dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.NamedAnchorList);
+      gDialog.hrefInput.value = "#"+GetSelectedTreelistValue(gDialog.NamedAnchorList);
       gClearListSelections = true;
 
       SetRelativeCheckbox();
@@ -402,7 +393,7 @@ function SelectHeading()
     if (gHaveHeadings)
     {
       gClearListSelections = false;
-      dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.HeadingsList);
+      gDialog.hrefInput.value = "#"+GetSelectedTreelistValue(gDialog.HeadingsList);
       gClearListSelections = true;
 
       SetRelativeCheckbox();
@@ -419,7 +410,7 @@ function UnselectNamedAnchor()
 {
   // Prevent recursive calling of SelectNamedAnchor()
   gCanChangeAnchorSelected = false;
-  dialog.NamedAnchorList.selectedIndex = -1;  
+  gDialog.NamedAnchorList.selectedIndex = -1;  
   gCanChangeAnchorSelected = true;
 }
 
@@ -427,7 +418,7 @@ function UnselectHeadings()
 {
   // Prevent recursive calling of SelectHeading()
   gCanChangeHeadingSelected = false;
-  dialog.HeadingsList.selectedIndex = -1;  
+  gDialog.HeadingsList.selectedIndex = -1;  
   gCanChangeHeadingSelected = true;
 }
 
@@ -435,7 +426,7 @@ function UnselectHeadings()
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  href = dialog.hrefInput.value.trimString();
+  href = gDialog.hrefInput.value.trimString();
   if (href)
   {
     // Set the HREF directly on the editor document's anchor node
@@ -449,11 +440,11 @@ function ValidateData()
     ShowInputErrorMessage(GetString("EmptyHREFError"));
     return false;
   }
-  if (dialog.linkTextInput)
+  if (gDialog.linkTextInput)
   {
     // The text we will insert isn't really an attribute,
     //  but it makes sense to validate it
-    newLinkText = TrimString(dialog.linkTextInput.value);
+    newLinkText = TrimString(gDialog.linkTextInput.value);
     if (!newLinkText)
     {
       if (href)
@@ -461,7 +452,7 @@ function ValidateData()
       else
       {
         ShowInputErrorMessage(GetString("EmptyLinkTextError"));
-        SetTextboxFocus(dialog.linkTextInput);
+        SetTextboxFocus(gDialog.linkTextInput);
         return false;
       }
     }

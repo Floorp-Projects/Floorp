@@ -28,29 +28,24 @@ var ListElement;
 var originalListType = "";
 var ListType = "";
 var MixedListSelection = false;
-var dialog;
 
 // dialog initialization code
 function Startup()
 {
   if (!InitEditorShell())
     return;
-  dialog = new Object;
-  if (!dialog) {
-    window.close();
-    return;
-  }
+
   doSetOKCancel(onOK, onCancel);
 
-  dialog.ListTypeList = document.getElementById("ListType");
-  dialog.BulletStyleList = document.getElementById("BulletStyle");
-  dialog.BulletStyleLabel = document.getElementById("BulletStyleLabel");
-  dialog.StartingNumberInput = document.getElementById("StartingNumber");
-  dialog.StartingNumberLabel = document.getElementById("StartingNumberLabel");
-  dialog.AdvancedEditButton = document.getElementById("AdvancedEditButton1");
-  dialog.RadioGroup = document.getElementById("RadioGroup");
-  dialog.ChangeAllRadio = document.getElementById("ChangeAll");
-  dialog.ChangeSelectedRadio = document.getElementById("ChangeSelected");
+  gDialog.ListTypeList = document.getElementById("ListType");
+  gDialog.BulletStyleList = document.getElementById("BulletStyle");
+  gDialog.BulletStyleLabel = document.getElementById("BulletStyleLabel");
+  gDialog.StartingNumberInput = document.getElementById("StartingNumber");
+  gDialog.StartingNumberLabel = document.getElementById("StartingNumberLabel");
+  gDialog.AdvancedEditButton = document.getElementById("AdvancedEditButton1");
+  gDialog.RadioGroup = document.getElementById("RadioGroup");
+  gDialog.ChangeAllRadio = document.getElementById("ChangeAll");
+  gDialog.ChangeSelectedRadio = document.getElementById("ChangeSelected");
   
   // Try to get an existing list(s)
   var mixedObj = new Object;
@@ -66,21 +61,21 @@ function Startup()
     globalElement = ListElement.cloneNode(false);
 
   // Show extra options for changing entire list if we have one already.
-  dialog.RadioGroup.setAttribute("collapsed", ListElement ? "false" : "true");
+  gDialog.RadioGroup.setAttribute("collapsed", ListElement ? "false" : "true");
   if (ListElement)
   {
     // Radio button index is persistant
-    if (dialog.RadioGroup.getAttribute("index") == "1")
-      dialog.ChangeSelectedRadio.checked = true;
+    if (gDialog.RadioGroup.getAttribute("index") == "1")
+      gDialog.ChangeSelectedRadio.checked = true;
     else
-      dialog.ChangeAllRadio.checked = true;
+      gDialog.ChangeAllRadio.checked = true;
   }
 
   InitDialog();
 
   originalListType = ListType;
 
-  dialog.ListTypeList.focus();
+  gDialog.ListTypeList.focus();
 
   SetWindowLocation();
 }
@@ -96,9 +91,9 @@ function InitDialog()
     ListType = "";
   
   BuildBulletStyleList();
-  dialog.StartingNumberInput.value = "";
+  gDialog.StartingNumberInput.value = "";
 
-  var type = globalElement.getAttribute("type");
+  var type = globalElement ? globalElement.getAttribute("type") : null;
 
   var index = 0;
   if (ListType == "ul")
@@ -134,90 +129,90 @@ function InitDialog()
         index = 5;
         break;
     }
-    dialog.StartingNumberInput.value = globalElement.getAttribute("start");
+    gDialog.StartingNumberInput.value = globalElement.getAttribute("start");
   }
-  dialog.BulletStyleList.selectedIndex = index;
+  gDialog.BulletStyleList.selectedIndex = index;
 }
 
 function BuildBulletStyleList()
 {
-  ClearMenulist(dialog.BulletStyleList);
+  ClearMenulist(gDialog.BulletStyleList);
   var label;
 
   if (ListType == "ul")
   {
-    dialog.BulletStyleList.removeAttribute("disabled");
-    dialog.BulletStyleLabel.removeAttribute("disabled");
-    dialog.StartingNumberInput.setAttribute("disabled", "true");
-    dialog.StartingNumberLabel.setAttribute("disabled", "true");
+    gDialog.BulletStyleList.removeAttribute("disabled");
+    gDialog.BulletStyleLabel.removeAttribute("disabled");
+    gDialog.StartingNumberInput.setAttribute("disabled", "true");
+    gDialog.StartingNumberLabel.setAttribute("disabled", "true");
 
     label = GetString("BulletStyle");
 
-    AppendStringToMenulistById(dialog.BulletStyleList,"Automatic");
-    AppendStringToMenulistById(dialog.BulletStyleList,"SolidCircle");
-    AppendStringToMenulistById(dialog.BulletStyleList,"OpenCircle");
-    AppendStringToMenulistById(dialog.BulletStyleList,"SolidSquare");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"Automatic");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"SolidCircle");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"OpenCircle");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"SolidSquare");
 
-    dialog.BulletStyleList.selectedIndex = BulletStyleIndex;
-    dialog.ListTypeList.selectedIndex = 1;
+    gDialog.BulletStyleList.selectedIndex = BulletStyleIndex;
+    gDialog.ListTypeList.selectedIndex = 1;
   }
   else if (ListType == "ol")
   {
-    dialog.BulletStyleList.removeAttribute("disabled");
-    dialog.BulletStyleLabel.removeAttribute("disabled");
-    dialog.StartingNumberInput.removeAttribute("disabled");
-    dialog.StartingNumberLabel.removeAttribute("disabled");
+    gDialog.BulletStyleList.removeAttribute("disabled");
+    gDialog.BulletStyleLabel.removeAttribute("disabled");
+    gDialog.StartingNumberInput.removeAttribute("disabled");
+    gDialog.StartingNumberLabel.removeAttribute("disabled");
     label = GetString("NumberStyle");
 
-    AppendStringToMenulistById(dialog.BulletStyleList,"Automatic");
-    AppendStringToMenulistById(dialog.BulletStyleList,"Style_1");
-    AppendStringToMenulistById(dialog.BulletStyleList,"Style_I");
-    AppendStringToMenulistById(dialog.BulletStyleList,"Style_i");
-    AppendStringToMenulistById(dialog.BulletStyleList,"Style_A");
-    AppendStringToMenulistById(dialog.BulletStyleList,"Style_a");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"Automatic");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"Style_1");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"Style_I");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"Style_i");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"Style_A");
+    AppendStringToMenulistById(gDialog.BulletStyleList,"Style_a");
 
-    dialog.BulletStyleList.selectedIndex = NumberStyleIndex;
-    dialog.ListTypeList.selectedIndex = 2;
+    gDialog.BulletStyleList.selectedIndex = NumberStyleIndex;
+    gDialog.ListTypeList.selectedIndex = 2;
   } 
   else 
   {
-    dialog.BulletStyleList.setAttribute("disabled", "true");
-    dialog.BulletStyleLabel.setAttribute("disabled", "true");
-    dialog.StartingNumberInput.setAttribute("disabled", "true");
-    dialog.StartingNumberLabel.setAttribute("disabled", "true");
+    gDialog.BulletStyleList.setAttribute("disabled", "true");
+    gDialog.BulletStyleLabel.setAttribute("disabled", "true");
+    gDialog.StartingNumberInput.setAttribute("disabled", "true");
+    gDialog.StartingNumberLabel.setAttribute("disabled", "true");
 
     if (ListType == "dl")
-      dialog.ListTypeList.selectedIndex = 3;
+      gDialog.ListTypeList.selectedIndex = 3;
     else
     {
       // No list or mixed selection that starts outside a list
       // ??? Setting index to 0 fails to draw menulist correctly!
-      dialog.ListTypeList.selectedIndex = 1;
-      dialog.ListTypeList.selectedIndex = 0;
+      gDialog.ListTypeList.selectedIndex = 1;
+      gDialog.ListTypeList.selectedIndex = 0;
     }
   }
   
   // Disable advanced edit button if changing to "normal"
   if (ListType)
-    dialog.AdvancedEditButton.removeAttribute("disabled");
+    gDialog.AdvancedEditButton.removeAttribute("disabled");
   else
-    dialog.AdvancedEditButton.setAttribute("disabled","true");
+    gDialog.AdvancedEditButton.setAttribute("disabled","true");
 
   if (label)
-    dialog.BulletStyleLabel.setAttribute("value",label);
+    gDialog.BulletStyleLabel.setAttribute("value",label);
 }
 
 function SelectListType()
 {
   var NewType;
-  switch (dialog.ListTypeList.selectedIndex)
+  switch (gDialog.ListTypeList.selectedIndex)
   {
     case 1:
       NewType = "ul";
       break;
     case 2:
       NewType = "ol";
-      SetTextboxFocus(dialog.StartingNumberInput);
+      SetTextboxFocus(gDialog.StartingNumberInput);
       break;
     case 3:
       NewType = "dl";
@@ -243,14 +238,14 @@ function SelectBulletStyle()
   // Save the selected index so when user changes
   //   list style, restore index to associated list
   if (ListType == "ul")
-    BulletStyleIndex = dialog.BulletStyleList.selectedIndex;
+    BulletStyleIndex = gDialog.BulletStyleList.selectedIndex;
   else if (ListType == "ol")
   {
-    var index = dialog.BulletStyleList.selectedIndex;
+    var index = gDialog.BulletStyleList.selectedIndex;
     if (NumberStyleIndex != index)
     {
       NumberStyleIndex = index;
-      SetTextboxFocus(dialog.StartingNumberInput);
+      SetTextboxFocus(gDialog.StartingNumberInput);
     }
   }
 }
@@ -264,7 +259,7 @@ function ValidateData()
   {
     if (ListType == "ul")
     {
-      switch (dialog.BulletStyleList.selectedIndex)
+      switch (gDialog.BulletStyleList.selectedIndex)
       {
         // Index 0 = automatic, the default, so we don't set it explicitly
         case 1:
@@ -285,7 +280,7 @@ function ValidateData()
     } 
     else if (ListType == "ol")
     {
-      switch (dialog.BulletStyleList.selectedIndex)
+      switch (gDialog.BulletStyleList.selectedIndex)
       {
         // Index 0 = automatic, the default, so we don't set it explicitly
         case 1:
@@ -309,7 +304,7 @@ function ValidateData()
       else
         globalElement.removeAttribute("type");
         
-      var startingNumber = dialog.StartingNumberInput.value.trimString();
+      var startingNumber = gDialog.StartingNumberInput.value.trimString();
       if (startingNumber)
         globalElement.setAttribute("start",startingNumber);
       else
@@ -329,10 +324,10 @@ function onOK()
 
     // Remember which radio button was checked
     if (ListElement)
-      dialog.RadioGroup.setAttribute("index", dialog.ChangeAllRadio.checked ? "0" : "1");
+      gDialog.RadioGroup.setAttribute("index", gDialog.ChangeAllRadio.checked ? "0" : "1");
 
     var changeList;
-    if (ListElement && dialog.ChangeAllRadio.checked)
+    if (ListElement && gDialog.ChangeAllRadio.checked)
     {
       changeList = true;
     }
@@ -341,7 +336,7 @@ function onOK()
 
     if (changeList)
     {
-      editorShell.MakeOrChangeList(ListType, dialog.ChangeAllRadio.checked);
+      editorShell.MakeOrChangeList(ListType, gDialog.ChangeAllRadio.checked);
 
       if (ListType)
       {

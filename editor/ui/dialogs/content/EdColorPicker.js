@@ -24,8 +24,7 @@
 //Cancel() is in EdDialogCommon.js
 var insertNew = true;
 var tagname = "TAG NAME"
-var dialog;
-var color = "";
+var gColor = "";
 var LastPickedColor = "";
 var ColorType = "Text";
 var TextType = false;
@@ -47,17 +46,14 @@ function Startup()
   gColorObj = window.arguments[1];
   gColorObj.Cancel = false;
 
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-
-  dialog.ColorPicker      = document.getElementById("ColorPicker");
-  dialog.ColorInput       = document.getElementById("ColorInput");
-  dialog.LastPickedButton = document.getElementById("LastPickedButton");
-  dialog.LastPickedColor  = document.getElementById("LastPickedColor");
-  dialog.TableRadio       = document.getElementById("TableRadio");
-  dialog.CellRadio        = document.getElementById("CellRadio");
-  dialog.Ok               = document.getElementById("ok");
-  dialog.ColorSwatch      = document.getElementById("ColorPickerSwatch");
+  gDialog.ColorPicker      = document.getElementById("ColorPicker");
+  gDialog.ColorInput       = document.getElementById("ColorInput");
+  gDialog.LastPickedButton = document.getElementById("LastPickedButton");
+  gDialog.LastPickedColor  = document.getElementById("LastPickedColor");
+  gDialog.TableRadio       = document.getElementById("TableRadio");
+  gDialog.CellRadio        = document.getElementById("CellRadio");
+  gDialog.Ok               = document.getElementById("ok");
+  gDialog.ColorSwatch      = document.getElementById("ColorPickerSwatch");
   
   // The type of color we are setting: 
   //  text: Text, Link, ActiveLink, VisitedLink, 
@@ -74,7 +70,7 @@ function Startup()
     window.title = GetString("Color");
 
 
-  dialog.ColorInput.value = "";
+  gDialog.ColorInput.value = "";
   var tmpColor;
   var haveTableRadio = false;
 
@@ -83,15 +79,15 @@ function Startup()
     case "Page":
       tmpColor = gColorObj.PageColor;
       if (tmpColor && tmpColor.toLowerCase() != "window")
-        color = tmpColor;
+        gColor = tmpColor;
       break;
     case "Table":
       if (gColorObj.TableColor)
-        color = gColorObj.TableColor;
+        gColor = gColorObj.TableColor;
       break;
     case "Cell":
       if (gColorObj.CellColor)
-        color = gColorObj.CellColor;
+        gColor = gColorObj.CellColor;
       break;
     case "TableOrCell":
       TableOrCell = true;
@@ -99,15 +95,15 @@ function Startup()
       haveTableRadio = true;
       if (gColorObj.TableColor)
       {
-        color = gColorObj.TableColor;
-        dialog.TableRadio.checked = true;
-        dialog.TableRadio.focus();
+        gColor = gColorObj.TableColor;
+        gDialog.TableRadio.checked = true;
+        gDialog.TableRadio.focus();
       }
       else 
       {
-        color = gColorObj.CellColor;
-        dialog.CellRadio.checked = true;
-        dialog.CellRadio.focus();
+        gColor = gColorObj.CellColor;
+        gDialog.CellRadio.checked = true;
+        gDialog.CellRadio.focus();
       }
       break;
     default:
@@ -115,39 +111,39 @@ function Startup()
       TextType = true;
       tmpColor = gColorObj.TextColor;
       if (tmpColor && tmpColor.toLowerCase() != "windowtext")
-        color = gColorObj.TextColor;
+        gColor = gColorObj.TextColor;
       break;
   }
 
   // Set initial color in input field and in the colorpicker
-  SetCurrentColor(color);
-  dialog.ColorPicker.initColor(color);
+  SetCurrentColor(gColor);
+  gDialog.ColorPicker.initColor(gColor);
 
   // Use last-picked colors passed in, or those persistent on dialog
   if (TextType)
   {
     if ( !("LastTextColor" in gColorObj) || !gColorObj.LastTextColor)
-      gColorObj.LastTextColor = dialog.LastPickedColor.getAttribute("LastTextColor");
+      gColorObj.LastTextColor = gDialog.LastPickedColor.getAttribute("LastTextColor");
     LastPickedColor = gColorObj.LastTextColor;
   }
   else
   {
     if ( !("LastBackgroundColor" in gColorObj) || !gColorObj.LastBackgroundColor)
-      gColorObj.LastBackgroundColor = dialog.LastPickedColor.getAttribute("LastBackgroundColor");
+      gColorObj.LastBackgroundColor = gDialog.LastPickedColor.getAttribute("LastBackgroundColor");
     LastPickedColor = gColorObj.LastBackgroundColor;
   }
-  dialog.LastPickedColor.setAttribute("style","background-color: "+LastPickedColor);
+  gDialog.LastPickedColor.setAttribute("style","background-color: "+LastPickedColor);
 
   doSetOKCancel(onOK, onCancelColor);
 
   // Set method to detect clicking on OK button
   //  so we don't get fooled by changing "default" behavior
-  dialog.Ok.setAttribute("onclick", "SetDefaultToOk()");
+  gDialog.Ok.setAttribute("onclick", "SetDefaultToOk()");
 
   // Make the "Last-picked" the default button
   //  until the user selects a color
-  dialog.Ok.removeAttribute("default");
-  dialog.LastPickedButton.setAttribute("default","true");
+  gDialog.Ok.removeAttribute("default");
+  gDialog.LastPickedButton.setAttribute("default","true");
 
   // Caller can prevent user from submitting an empty, i.e., default color
   NoDefault = gColorObj.NoDefault;
@@ -159,20 +155,20 @@ function Startup()
 
   // Set focus to colorpicker if not set to table radio buttons above
   if (!haveTableRadio)
-    dialog.ColorPicker.focus();
+    gDialog.ColorPicker.focus();
 
   SetWindowLocation();
 }
 
 function ChangePalette(palette)
 {
-  dialog.ColorPicker.setAttribute("palettename", palette);
+  gDialog.ColorPicker.setAttribute("palettename", palette);
   window.sizeToContent();
 }
 
 function SelectColor()
 {
-  var color = dialog.ColorPicker.color;
+  var color = gDialog.ColorPicker.color;
   if (color)
     SetCurrentColor(color);
 }
@@ -180,7 +176,7 @@ function SelectColor()
 function RemoveColor()
 {
   SetCurrentColor("");
-  dialog.ColorInput.focus();
+  gDialog.ColorInput.focus();
   SetDefaultToOk();
 }
 
@@ -197,58 +193,59 @@ function SelectLastPickedColor()
 {
   SetCurrentColor(LastPickedColor);
   if ( onOK() )
-    window.close();
+    //window.close();
+    return true;
 }
 
 function SetCurrentColor(color)
 {
   // TODO: Validate color?
   if(!color) color = "";
-  color = color.trimString().toLowerCase();
-  if (color == "mixed")
-    color = "";
-  dialog.ColorInput.value = color;
+  gColor = color.trimString().toLowerCase();
+  if (gColor == "mixed")
+    gColor = "";
+  gDialog.ColorInput.value = gColor;
   SetColorSwatch();
 }
 
 function SetColorSwatch()
 {
   // TODO: DON'T ALLOW SPACES?
-  var color = dialog.ColorInput.value.trimString();
+  var color = gDialog.ColorInput.value.trimString();
   if (color.length > 0)
   {
-    dialog.ColorSwatch.setAttribute("style",("background-color:"+color));
-    dialog.ColorSwatch.removeAttribute("default");
+    gDialog.ColorSwatch.setAttribute("style",("background-color:"+color));
+    gDialog.ColorSwatch.removeAttribute("default");
   }
   else
   {
-    dialog.ColorSwatch.setAttribute("style",("background-color:inherit"));
-    dialog.ColorSwatch.setAttribute("default","true");
+    gDialog.ColorSwatch.setAttribute("style",("background-color:inherit"));
+    gDialog.ColorSwatch.setAttribute("default","true");
   }
 }
 
 function SetDefaultToOk()
 {
-  dialog.LastPickedButton.removeAttribute("default");
-  dialog.Ok.setAttribute("default","true");
+  gDialog.LastPickedButton.removeAttribute("default");
+  gDialog.Ok.setAttribute("default","true");
   LastPickedIsDefault = false;
 }
 
 function ValidateData()
 {
   if (LastPickedIsDefault)
-    color = LastPickedColor;
+    gColor = LastPickedColor;
   else
-    color = dialog.ColorInput.value;
+    gColor = gDialog.ColorInput.value;
   
-  color = color.trimString().toLowerCase();
+  gColor = gColor.trimString().toLowerCase();
 
   // TODO: Validate the color string!
 
-  if (NoDefault && !color)
+  if (NoDefault && !gColor)
   {
     ShowInputErrorMessage(GetString("NoColorError"));
-    SetTextboxFocus(dialog.ColorInput);
+    SetTextboxFocus(gDialog.ColorInput);
     return false;   
   }
   return true;
@@ -262,23 +259,23 @@ function onOK()
   // Set return values and save in persistent color attributes
   if (TextType)
   {
-    gColorObj.TextColor = color;
-    if (color.length > 0)
+    gColorObj.TextColor = gColor;
+    if (gColor.length > 0)
     {
-      dialog.LastPickedColor.setAttribute("LastTextColor", color);
-      gColorObj.LastTextColor = color;
+      gDialog.LastPickedColor.setAttribute("LastTextColor", gColor);
+      gColorObj.LastTextColor = gColor;
     }
   }
   else
   {
-    gColorObj.BackgroundColor = color;
-    if (color.length > 0)
+    gColorObj.BackgroundColor = gColor;
+    if (gColor.length > 0)
     {
-      dialog.LastPickedColor.setAttribute("LastBackgroundColor", color);
-      gColorObj.LastBackgroundColor = color;
+      gDialog.LastPickedColor.setAttribute("LastBackgroundColor", gColor);
+      gColorObj.LastBackgroundColor = gColor;
     }
     // If table or cell requested, tell caller which element to set on
-    if (TableOrCell && dialog.TableRadio.checked)
+    if (TableOrCell && gDialog.TableRadio.checked)
       gColorObj.Type = "Table";
   }
   SaveWindowLocation();
@@ -291,5 +288,5 @@ function onCancelColor()
   // Tells caller that user canceled
   gColorObj.Cancel = true;
   SaveWindowLocation();
-  window.close();
+  return true;
 }

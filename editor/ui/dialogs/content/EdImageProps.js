@@ -35,7 +35,6 @@ var imageElement;
 var imageMap = 0;
 var canRemoveImageMap = false;
 var imageMapDisabled = false;
-var dialog;
 var globalMap;
 var firstTimeOkUsed = true;
 var doAltTextError = false;
@@ -69,29 +68,26 @@ function Startup()
 
   doSetOKCancel(onOK, onCancel);
 
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-
-  dialog.srcInput          = document.getElementById( "srcInput" );
-  dialog.altTextInput      = document.getElementById( "altTextInput" );
-  dialog.MoreFewerButton   = document.getElementById( "MoreFewerButton" );
-  dialog.MoreSection       = document.getElementById( "MoreSection" );
-  dialog.customSizeRadio   = document.getElementById( "customSizeRadio" );
-  dialog.actualSizeRadio   = document.getElementById( "actualSizeRadio" );
-  dialog.constrainCheckbox = document.getElementById( "constrainCheckbox" );
-  dialog.widthInput        = document.getElementById( "widthInput" );
-  dialog.heightInput       = document.getElementById( "heightInput" );
-  dialog.widthUnitsMenulist   = document.getElementById( "widthUnitsMenulist" );
-  dialog.heightUnitsMenulist  = document.getElementById( "heightUnitsMenulist" );
-  dialog.imagelrInput      = document.getElementById( "imageleftrightInput" );
-  dialog.imagetbInput      = document.getElementById( "imagetopbottomInput" );
-  dialog.border            = document.getElementById( "border" );
-  dialog.alignTypeSelect   = document.getElementById( "alignTypeSelect" );
-  dialog.ImageHolder       = document.getElementById( "preview-image-holder" );
-  dialog.PreviewWidth      = document.getElementById( "PreviewWidth" );
-  dialog.PreviewHeight     = document.getElementById( "PreviewHeight" );
-  dialog.PreviewSize       = document.getElementById( "PreviewSize" );
-  dialog.PreviewImage      = null;
+  gDialog.srcInput          = document.getElementById( "srcInput" );
+  gDialog.altTextInput      = document.getElementById( "altTextInput" );
+  gDialog.MoreFewerButton   = document.getElementById( "MoreFewerButton" );
+  gDialog.MoreSection       = document.getElementById( "MoreSection" );
+  gDialog.customSizeRadio   = document.getElementById( "customSizeRadio" );
+  gDialog.actualSizeRadio   = document.getElementById( "actualSizeRadio" );
+  gDialog.constrainCheckbox = document.getElementById( "constrainCheckbox" );
+  gDialog.widthInput        = document.getElementById( "widthInput" );
+  gDialog.heightInput       = document.getElementById( "heightInput" );
+  gDialog.widthUnitsMenulist   = document.getElementById( "widthUnitsMenulist" );
+  gDialog.heightUnitsMenulist  = document.getElementById( "heightUnitsMenulist" );
+  gDialog.imagelrInput      = document.getElementById( "imageleftrightInput" );
+  gDialog.imagetbInput      = document.getElementById( "imagetopbottomInput" );
+  gDialog.border            = document.getElementById( "border" );
+  gDialog.alignTypeSelect   = document.getElementById( "alignTypeSelect" );
+  gDialog.ImageHolder       = document.getElementById( "preview-image-holder" );
+  gDialog.PreviewWidth      = document.getElementById( "PreviewWidth" );
+  gDialog.PreviewHeight     = document.getElementById( "PreviewHeight" );
+  gDialog.PreviewSize       = document.getElementById( "PreviewSize" );
+  gDialog.PreviewImage      = null;
 
   // Get a single selected image element
   var tagName = "img"
@@ -129,23 +125,23 @@ function Startup()
   InitDialog();
 
   // Save initial source URL
-  gOriginalSrc = dialog.srcInput.value;
+  gOriginalSrc = gDialog.srcInput.value;
 
   // By default turn constrain on, but both width and height must be in pixels
-  dialog.constrainCheckbox.checked =
-    dialog.widthUnitsMenulist.selectedIndex == 0 &&
-    dialog.heightUnitsMenulist.selectedIndex == 0;
+  gDialog.constrainCheckbox.checked =
+    gDialog.widthUnitsMenulist.selectedIndex == 0 &&
+    gDialog.heightUnitsMenulist.selectedIndex == 0;
 
   // Set SeeMore bool to the OPPOSITE of the current state,
   //   which is automatically saved by using the 'persist="more"'
   //   attribute on the MoreFewerButton button
   //   onMoreFewer will toggle the state and redraw the dialog
-  SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
+  SeeMore = (gDialog.MoreFewerButton.getAttribute("more") != "1");
 
   // Initialize widgets with image attributes in the case where the entire dialog isn't visible
-  onMoreFewer();  // this call will initialize all widgets if entire dialog is visible
+  onMoreFewer();
 
-  SetTextboxFocus(dialog.srcInput);
+  SetTextboxFocus(gDialog.srcInput);
 
   SetWindowLocation();
 }
@@ -157,7 +153,7 @@ function InitDialog()
 {
   // Set the controls to the image's attributes
 
-  dialog.srcInput.value = globalElement.getAttribute("src");
+  gDialog.srcInput.value = globalElement.getAttribute("src");
 
   // Set "Relativize" checkbox according to current URL state
   SetRelativeCheckbox();
@@ -165,7 +161,7 @@ function InitDialog()
   // Force loading of image from its source and show preview image
   LoadPreviewImage();
 
-  dialog.altTextInput.value = globalElement.getAttribute("alt");
+  gDialog.altTextInput.value = globalElement.getAttribute("alt");
 
   // setup the height and width widgets
   var width = InitPixelOrPercentMenulist(globalElement,
@@ -177,20 +173,20 @@ function InitDialog()
 
   // Set actual radio button if both set values are the same as actual
   if (actualWidth && actualHeight)
-    dialog.actualSizeRadio.checked = (width == actualWidth) && (height == actualHeight);
+    gDialog.actualSizeRadio.checked = (width == actualWidth) && (height == actualHeight);
   else if ( !(width || height) )
-    dialog.actualSizeRadio.checked = true;
+    gDialog.actualSizeRadio.checked = true;
 
-  if (!dialog.actualSizeRadio.checked)
-    dialog.customSizeRadio.checked = true;
+  if (!gDialog.actualSizeRadio.checked)
+    gDialog.customSizeRadio.checked = true;
 
-  dialog.widthInput.value  = constrainWidth = width ? width : (actualWidth ? actualWidth : "");
-  dialog.heightInput.value = constrainHeight = height ? height : (actualHeight ? actualHeight : "");
+  gDialog.widthInput.value  = constrainWidth = width ? width : (actualWidth ? actualWidth : "");
+  gDialog.heightInput.value = constrainHeight = height ? height : (actualHeight ? actualHeight : "");
 
   // set spacing editfields
-  dialog.imagelrInput.value = globalElement.getAttribute("hspace");
-  dialog.imagetbInput.value = globalElement.getAttribute("vspace");
-  dialog.border.value       = globalElement.getAttribute("border");
+  gDialog.imagelrInput.value = globalElement.getAttribute("hspace");
+  gDialog.imagetbInput.value = globalElement.getAttribute("vspace");
+  gDialog.border.value       = globalElement.getAttribute("border");
 
   // Get alignment setting
   var align = globalElement.getAttribute("align");
@@ -205,10 +201,10 @@ function InitDialog()
     case "center":
     case "right":
     case "left":
-      dialog.alignTypeSelect.value = align;
+      gDialog.alignTypeSelect.value = align;
       break;
     default:  // Default or "bottom"
-      dialog.alignTypeSelect.value = "bottom";
+      gDialog.alignTypeSelect.value = "bottom";
   }
 
   // Get image map for image
@@ -217,7 +213,7 @@ function InitDialog()
   globalMap = imageMap;
 
   // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
-  wasEnableAll = !IsValidImage(dialog.srcInput.value);
+  wasEnableAll = !IsValidImage(gDialog.srcInput.value);
   doOverallEnabling();
   doDimensionEnabling();
 }
@@ -255,7 +251,7 @@ function chooseFile()
     if (gHaveDocumentUrl)
       fileName = MakeRelativeUrl(fileName);
 
-    dialog.srcInput.value = fileName;
+    gDialog.srcInput.value = fileName;
 
     SetRelativeCheckbox();
     doOverallEnabling();
@@ -263,16 +259,16 @@ function chooseFile()
   LoadPreviewImage();
 
   // Put focus into the input field
-  SetTextboxFocus(dialog.srcInput);
+  SetTextboxFocus(gDialog.srcInput);
 }
 
 function PreviewImageLoaded()
 {
-  if (dialog.PreviewImage)
+  if (gDialog.PreviewImage)
   {
     // Image loading has completed -- we can get actual width
-    actualWidth  = dialog.PreviewImage.naturalWidth;
-    actualHeight = dialog.PreviewImage.naturalHeight;
+    actualWidth  = gDialog.PreviewImage.naturalWidth;
+    actualHeight = gDialog.PreviewImage.naturalHeight;
 
     if (actualWidth && actualHeight)
     {
@@ -289,32 +285,32 @@ function PreviewImageLoaded()
         height = gPreviewImageHeight;
         width = actualWidth * (gPreviewImageHeight / actualHeight);
       }
-      dialog.PreviewImage.width = width;
-      dialog.PreviewImage.height = height;
+      gDialog.PreviewImage.width = width;
+      gDialog.PreviewImage.height = height;
 
-      dialog.PreviewWidth.setAttribute("value", actualWidth);
-      dialog.PreviewHeight.setAttribute("value", actualHeight);
+      gDialog.PreviewWidth.setAttribute("value", actualWidth);
+      gDialog.PreviewHeight.setAttribute("value", actualHeight);
 
-      dialog.PreviewSize.setAttribute("collapsed", "false");
-      dialog.ImageHolder.setAttribute("collapsed", "false");
+      gDialog.PreviewSize.setAttribute("collapsed", "false");
+      gDialog.ImageHolder.setAttribute("collapsed", "false");
 
       // Use values as start for constrain proportions
     }
 
-    if (dialog.actualSizeRadio.checked)
+    if (gDialog.actualSizeRadio.checked)
       SetActualSize();
   }
 }
 
 function LoadPreviewImage()
 {
-  dialog.PreviewSize.setAttribute("collapsed", "true");
+  gDialog.PreviewSize.setAttribute("collapsed", "true");
 
-  var imageSrc = TrimString(dialog.srcInput.value);
+  var imageSrc = TrimString(gDialog.srcInput.value);
   if (!imageSrc)
     return;
 
-  if (IsValidImage(dialog.srcInput.value))
+  if (IsValidImage(gDialog.srcInput.value))
   {
     try {
       // Remove the image URL from image cache so it loads fresh
@@ -343,28 +339,28 @@ function LoadPreviewImage()
       }
     } catch(e) {}
 
-    if(dialog.PreviewImage)
+    if(gDialog.PreviewImage)
       removeEventListener("load", PreviewImageLoaded, true);
 
-    if (dialog.ImageHolder.firstChild)
-      dialog.ImageHolder.removeChild(dialog.ImageHolder.firstChild);
+    if (gDialog.ImageHolder.firstChild)
+      gDialog.ImageHolder.removeChild(gDialog.ImageHolder.firstChild);
       
-    dialog.PreviewImage = document.createElementNS("http://www.w3.org/1999/xhtml", "html:img");
-    if(dialog.PreviewImage)
+    gDialog.PreviewImage = document.createElementNS("http://www.w3.org/1999/xhtml", "html:img");
+    if(gDialog.PreviewImage)
     {
-      dialog.ImageHolder.appendChild(dialog.PreviewImage);
-      dialog.PreviewImage.addEventListener("load", PreviewImageLoaded, true);
-      dialog.PreviewImage.src = imageSrc;
+      gDialog.ImageHolder.appendChild(gDialog.PreviewImage);
+      gDialog.PreviewImage.addEventListener("load", PreviewImageLoaded, true);
+      gDialog.PreviewImage.src = imageSrc;
     }
   }
 }
 
 function SetActualSize()
 {
-  dialog.widthInput.value = actualWidth ? actualWidth : "";
-  dialog.widthUnitsMenulist.selectedIndex = 0;
-  dialog.heightInput.value = actualHeight ? actualHeight : "";
-  dialog.heightUnitsMenulist.selectedIndex = 0;
+  gDialog.widthInput.value = actualWidth ? actualWidth : "";
+  gDialog.widthUnitsMenulist.selectedIndex = 0;
+  gDialog.heightInput.value = actualHeight ? actualHeight : "";
+  gDialog.heightUnitsMenulist.selectedIndex = 0;
   doDimensionEnabling();
 }
 
@@ -378,7 +374,7 @@ function ChangeImageSrc()
 function doDimensionEnabling()
 {
   // Enabled only if "Custom" is checked
-  var enable = (dialog.customSizeRadio.checked);
+  var enable = (gDialog.customSizeRadio.checked);
 
   // BUG 74145: After input field is disabled,
   //   setting it enabled causes blinking caret to appear
@@ -392,8 +388,8 @@ function doDimensionEnabling()
   SetElementEnabledById( "widthUnitsMenulist", enable );
 
   var constrainEnable = enable
-         && ( dialog.widthUnitsMenulist.selectedIndex == 0 )
-         && ( dialog.heightUnitsMenulist.selectedIndex == 0 );
+         && ( gDialog.widthUnitsMenulist.selectedIndex == 0 )
+         && ( gDialog.heightUnitsMenulist.selectedIndex == 0 );
 
   SetElementEnabledById( "constrainCheckbox", constrainEnable );
 }
@@ -402,7 +398,7 @@ function doOverallEnabling()
 {
   // An image is "valid" if it loaded correctly in the preview window
   //  or has the proper file extension
-  var canEnableOk = IsValidImage(dialog.srcInput.value);
+  var canEnableOk = IsValidImage(gDialog.srcInput.value);
   if ( wasEnableAll == canEnableOk )
     return;
 
@@ -420,12 +416,12 @@ function ToggleConstrain()
 {
   // If just turned on, save the current width and height as basis for constrain ratio
   // Thus clicking on/off lets user say "Use these values as aspect ration"
-  if (dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled
-     && (dialog.widthUnitsMenulist.selectedIndex == 0)
-     && (dialog.heightUnitsMenulist.selectedIndex == 0))
+  if (gDialog.constrainCheckbox.checked && !gDialog.constrainCheckbox.disabled
+     && (gDialog.widthUnitsMenulist.selectedIndex == 0)
+     && (gDialog.heightUnitsMenulist.selectedIndex == 0))
   {
-    constrainWidth = Number(dialog.widthInput.value.trimString());
-    constrainHeight = Number(dialog.heightInput.value.trimString());
+    constrainWidth = Number(gDialog.widthInput.value.trimString());
+    constrainHeight = Number(gDialog.heightInput.value.trimString());
   }
 }
 
@@ -443,12 +439,12 @@ function constrainProportions( srcID, destID )
   forceInteger( srcID );
 
   if (!actualWidth || !actualHeight ||
-      !(dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled))
+      !(gDialog.constrainCheckbox.checked && !gDialog.constrainCheckbox.disabled))
     return;
 
   // double-check that neither width nor height is in percent mode; bail if so!
-  if ( (dialog.widthUnitsMenulist.selectedIndex != 0)
-     || (dialog.heightUnitsMenulist.selectedIndex != 0) )
+  if ( (gDialog.widthUnitsMenulist.selectedIndex != 0)
+     || (gDialog.heightUnitsMenulist.selectedIndex != 0) )
     return;
 
   // This always uses the actual width and height ratios
@@ -502,7 +498,7 @@ function removeImageMap()
 //   accessible to AdvancedEdit() [in EdDialogCommon.js]
 function ValidateData()
 {
-  if ( !IsValidImage(dialog.srcInput.value))
+  if ( !IsValidImage(gDialog.srcInput.value))
   {
     AlertWithTitle(null, GetString("MissingImageError"));
     window.focus();
@@ -511,17 +507,17 @@ function ValidateData()
 
   //TODO: WE NEED TO DO SOME URL VALIDATION HERE, E.G.:
   // We must convert to "file:///" or "http://" format else image doesn't load!
-  var src = dialog.srcInput.value.trimString();
+  var src = gDialog.srcInput.value.trimString();
   globalElement.setAttribute("src", src);
 
   // Note: allow typing spaces,
   // Warn user if empty string just once per dialog session
   //   but don't consider this a failure
-  var alt = dialog.altTextInput.value;
+  var alt = gDialog.altTextInput.value;
   if (doAltTextError && !alt)
   {
     AlertWithTitle(null, GetString("NoAltText"));
-    SetTextboxFocus(dialog.altTextInput);
+    SetTextboxFocus(gDialog.altTextInput);
     doAltTextError = false;
     return false;
   }
@@ -530,15 +526,15 @@ function ValidateData()
   var width = "";
   var height = "";
 
-  if (!dialog.actualSizeRadio.checked)
+  if (!gDialog.actualSizeRadio.checked)
   {
     // Get user values for width and height
-    width = ValidateNumber(dialog.widthInput, dialog.widthUnitsMenulist, 1, maxPixels, 
+    width = ValidateNumber(gDialog.widthInput, gDialog.widthUnitsMenulist, 1, maxPixels, 
                            globalElement, "width", false, true);
     if (gValidationError)
       return false;
 
-    height = ValidateNumber(dialog.heightInput, dialog.heightUnitsMenulist, 1, maxPixels, 
+    height = ValidateNumber(gDialog.heightInput, gDialog.heightUnitsMenulist, 1, maxPixels, 
                             globalElement, "height", false, true);
     if (gValidationError)
       return false;
@@ -566,18 +562,18 @@ function ValidateData()
 
   // spacing attributes
 
-  ValidateNumber(dialog.imagelrInput, null, 0, maxPixels, 
+  ValidateNumber(gDialog.imagelrInput, null, 0, maxPixels, 
                  globalElement, "hspace", false, true, true);
   if (gValidationError)
     return false;
 
-  ValidateNumber(dialog.imagetbInput, null, 0, maxPixels, 
+  ValidateNumber(gDialog.imagetbInput, null, 0, maxPixels, 
                  globalElement, "vspace", false, true);
   if (gValidationError)
     return false;
 
   // note this is deprecated and should be converted to stylesheets
-  ValidateNumber(dialog.border, null, 0, maxPixels, 
+  ValidateNumber(gDialog.border, null, 0, maxPixels, 
                  globalElement, "border", false, true);
   if (gValidationError)
     return false;
@@ -586,13 +582,13 @@ function ValidateData()
   // Note that the attributes "left" and "right" are opposite
   //  of what we use in the UI, which describes where the TEXT wraps,
   //  not the image location (which is what the HTML describes)
-  switch ( dialog.alignTypeSelect.value )
+  switch ( gDialog.alignTypeSelect.value )
   {
     case "top":
     case "center":
     case "right":
     case "left":
-      globalElement.setAttribute( "align", dialog.alignTypeSelect.value );
+      globalElement.setAttribute( "align", gDialog.alignTypeSelect.value );
       break;
     default:
       globalElement.removeAttribute( "align" );

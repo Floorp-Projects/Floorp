@@ -28,6 +28,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
+    onunload="Close()"
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -51,7 +52,7 @@
       </row>
       <row>
         <textbox id="WordInput" flex="1"/>
-        <button class="dialog" flex="1" id="AddWord" oncommand="AddWord()" label="&AddButton.label;"/>
+        <button flex="1" id="AddWord" oncommand="AddWord()" label="&AddButton.label;"/>
       </row>
       <row>
         <text class="label" value="&DictionaryList.label;"/>
@@ -62,9 +63,9 @@
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
         <vbox flex="1">
-          <button class="dialog"  id="ReplaceWord" oncommand="ReplaceWord()" label="&ReplaceButton.label;"/>
+          <button  id="ReplaceWord" oncommand="ReplaceWord()" label="&ReplaceButton.label;"/>
           <spacer class="spacer"/>
-          <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" label="&RemoveButton.label;"/>
+          <button  id="RemoveWord" oncommand="RemoveWord()" label="&RemoveButton.label;"/>
           <spacer class="spacer"/>
           <spacer flex="1"/>
           <button class="exit-dialog" id="close" label="&CloseButton.label;" default="true" oncommand="Close();"/>  

@@ -27,7 +27,6 @@ var TableElement;
 var CellElement;
 var TableCaptionElement;
 var TabPanels;
-var dialog;
 var globalCellElement;
 var globalTableElement
 var TablePanel = 0;
@@ -92,53 +91,47 @@ function Startup()
   selection = editorShell.editorSelection;
   if (!selection) return;
 
-  dialog = new Object;
-  if (!dialog)
-  {
-    window.close();
-    return;
-  }
   // Get dialog widgets - Table Panel
-  dialog.TableRowsInput = document.getElementById("TableRowsInput");
-  dialog.TableColumnsInput = document.getElementById("TableColumnsInput");
-  dialog.TableWidthInput = document.getElementById("TableWidthInput");
-  dialog.TableWidthUnits = document.getElementById("TableWidthUnits");
-  dialog.BorderWidthInput = document.getElementById("BorderWidthInput");
-  dialog.SpacingInput = document.getElementById("SpacingInput");
-  dialog.PaddingInput = document.getElementById("PaddingInput");
-  dialog.TableAlignList = document.getElementById("TableAlignList");
-  dialog.TableCaptionList = document.getElementById("TableCaptionList");
-  dialog.TableInheritColor = document.getElementById("TableInheritColor");
+  gDialog.TableRowsInput = document.getElementById("TableRowsInput");
+  gDialog.TableColumnsInput = document.getElementById("TableColumnsInput");
+  gDialog.TableWidthInput = document.getElementById("TableWidthInput");
+  gDialog.TableWidthUnits = document.getElementById("TableWidthUnits");
+  gDialog.BorderWidthInput = document.getElementById("BorderWidthInput");
+  gDialog.SpacingInput = document.getElementById("SpacingInput");
+  gDialog.PaddingInput = document.getElementById("PaddingInput");
+  gDialog.TableAlignList = document.getElementById("TableAlignList");
+  gDialog.TableCaptionList = document.getElementById("TableCaptionList");
+  gDialog.TableInheritColor = document.getElementById("TableInheritColor");
 
   // Cell Panel
-  dialog.SelectionList = document.getElementById("SelectionList");
-  dialog.PreviousButton = document.getElementById("PreviousButton");
-  dialog.NextButton = document.getElementById("NextButton");
+  gDialog.SelectionList = document.getElementById("SelectionList");
+  gDialog.PreviousButton = document.getElementById("PreviousButton");
+  gDialog.NextButton = document.getElementById("NextButton");
   // Currently, we always apply changes and load new attributes when changing selection
   // (Let's keep this for possible future use)
-  //dialog.ApplyBeforeMove =  document.getElementById("ApplyBeforeMove");
-  //dialog.KeepCurrentData = document.getElementById("KeepCurrentData");
+  //gDialog.ApplyBeforeMove =  document.getElementById("ApplyBeforeMove");
+  //gDialog.KeepCurrentData = document.getElementById("KeepCurrentData");
 
-  dialog.CellHeightInput = document.getElementById("CellHeightInput");
-  dialog.CellHeightUnits = document.getElementById("CellHeightUnits");
-  dialog.CellWidthInput = document.getElementById("CellWidthInput");
-  dialog.CellWidthUnits = document.getElementById("CellWidthUnits");
-  dialog.CellHAlignList = document.getElementById("CellHAlignList");
-  dialog.CellVAlignList = document.getElementById("CellVAlignList");
-  dialog.CellInheritColor = document.getElementById("CellInheritColor");
-  dialog.CellStyleList = document.getElementById("CellStyleList");
-  dialog.TextWrapList = document.getElementById("TextWrapList");
+  gDialog.CellHeightInput = document.getElementById("CellHeightInput");
+  gDialog.CellHeightUnits = document.getElementById("CellHeightUnits");
+  gDialog.CellWidthInput = document.getElementById("CellWidthInput");
+  gDialog.CellWidthUnits = document.getElementById("CellWidthUnits");
+  gDialog.CellHAlignList = document.getElementById("CellHAlignList");
+  gDialog.CellVAlignList = document.getElementById("CellVAlignList");
+  gDialog.CellInheritColor = document.getElementById("CellInheritColor");
+  gDialog.CellStyleList = document.getElementById("CellStyleList");
+  gDialog.TextWrapList = document.getElementById("TextWrapList");
 
   // In cell panel, user must tell us which attributes to apply via checkboxes,
   //  else we would apply values from one cell to ALL in selection
   //  and that's probably not what they expect!
-  dialog.CellHeightCheckbox = document.getElementById("CellHeightCheckbox");
-  dialog.CellWidthCheckbox = document.getElementById("CellWidthCheckbox");
-  dialog.CellHAlignCheckbox = document.getElementById("CellHAlignCheckbox");
-  dialog.CellVAlignCheckbox = document.getElementById("CellVAlignCheckbox");
-  dialog.CellStyleCheckbox = document.getElementById("CellStyleCheckbox");
-  dialog.TextWrapCheckbox = document.getElementById("TextWrapCheckbox");
-  dialog.CellColorCheckbox = document.getElementById("CellColorCheckbox");
+  gDialog.CellHeightCheckbox = document.getElementById("CellHeightCheckbox");
+  gDialog.CellWidthCheckbox = document.getElementById("CellWidthCheckbox");
+  gDialog.CellHAlignCheckbox = document.getElementById("CellHAlignCheckbox");
+  gDialog.CellVAlignCheckbox = document.getElementById("CellVAlignCheckbox");
+  gDialog.CellStyleCheckbox = document.getElementById("CellStyleCheckbox");
+  gDialog.TextWrapCheckbox = document.getElementById("TextWrapCheckbox");
+  gDialog.CellColorCheckbox = document.getElementById("CellColorCheckbox");
 
   TabPanels = document.getElementById("TabPanels");
   var TableTab = document.getElementById("TableTab");
@@ -234,7 +227,7 @@ function Startup()
 
   // If only one cell in table, disable change-selection widgets
   if (rowCount == 1 && colCount == 1)
-    dialog.SelectionList.setAttribute("disabled", "true");
+    gDialog.SelectionList.setAttribute("disabled", "true");
 
   // User can change these via textboxes
   newRowCount = rowCount;
@@ -251,9 +244,9 @@ function Startup()
   CellDataChanged = false;
 
   if (currentPanel == CellPanel)
-    dialog.SelectionList.focus();
+    gDialog.SelectionList.focus();
   else
-    SetTextboxFocus(dialog.TableRowsInput);
+    SetTextboxFocus(gDialog.TableRowsInput);
 
   SetWindowLocation();
 }
@@ -270,21 +263,21 @@ function InitDialog()
   }
   
   // Get Table attributes
-  dialog.TableRowsInput.value = rowCount;
-  dialog.TableColumnsInput.value = colCount;
-  dialog.TableWidthInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "width", "TableWidthUnits", gPercent);
-  dialog.BorderWidthInput.value = globalTableElement.border;
-  dialog.SpacingInput.value = globalTableElement.cellSpacing;
-  dialog.PaddingInput.value = globalTableElement.cellPadding;
+  gDialog.TableRowsInput.value = rowCount;
+  gDialog.TableColumnsInput.value = colCount;
+  gDialog.TableWidthInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "width", "TableWidthUnits", gPercent);
+  gDialog.BorderWidthInput.value = globalTableElement.border;
+  gDialog.SpacingInput.value = globalTableElement.cellSpacing;
+  gDialog.PaddingInput.value = globalTableElement.cellPadding;
 
   //BUG: The align strings are converted: e.g., "center" becomes "Center";
   var halign = globalTableElement.align.toLowerCase();
   if (halign == centerStr)
-    dialog.TableAlignList.selectedIndex = 1;
+    gDialog.TableAlignList.selectedIndex = 1;
   else if (halign == rightStr)
-    dialog.TableAlignList.selectedIndex = 2;
+    gDialog.TableAlignList.selectedIndex = 2;
   else // Default = left
-    dialog.TableAlignList.selectedIndex = 0;
+    gDialog.TableAlignList.selectedIndex = 0;
 
   // Be sure to get caption from table in doc, not the copied "globalTableElement"
   TableCaptionElement = TableElement.caption;
@@ -298,7 +291,7 @@ function InitDialog()
     else
       index = 1;
   }
-  dialog.TableCaptionList.selectedIndex = index;
+  gDialog.TableCaptionList.selectedIndex = index;
 
   TableColor = globalTableElement.bgColor;
   SetColor("tableBackgroundCW", TableColor);
@@ -312,29 +305,29 @@ function InitCellPanel()
   if (globalCellElement)
   {
     // This assumes order of items is Cell, Row, Column
-    dialog.SelectionList.selectedIndex = SelectedCellsType-1;
+    gDialog.SelectionList.selectedIndex = SelectedCellsType-1;
 
-    var previousValue = dialog.CellHeightInput.value;
-    dialog.CellHeightInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "height", "CellHeightUnits", gPixel);
-    dialog.CellHeightCheckbox.checked = AdvancedEditUsed && previousValue != dialog.CellHeightInput.value;
+    var previousValue = gDialog.CellHeightInput.value;
+    gDialog.CellHeightInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "height", "CellHeightUnits", gPixel);
+    gDialog.CellHeightCheckbox.checked = AdvancedEditUsed && previousValue != gDialog.CellHeightInput.value;
 
-    previousValue= dialog.CellWidthInput.value;
-    dialog.CellWidthInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "width", "CellWidthUnits", gPixel);
-    dialog.CellWidthCheckbox.checked = AdvancedEditUsed && previousValue != dialog.CellWidthInput.value;
+    previousValue= gDialog.CellWidthInput.value;
+    gDialog.CellWidthInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "width", "CellWidthUnits", gPixel);
+    gDialog.CellWidthCheckbox.checked = AdvancedEditUsed && previousValue != gDialog.CellWidthInput.value;
 
-    var previousIndex = dialog.CellVAlignList.selectedIndex;
+    var previousIndex = gDialog.CellVAlignList.selectedIndex;
     var valign = globalCellElement.vAlign.toLowerCase();
     if (valign == topStr)
-      dialog.CellVAlignList.selectedIndex = 0;
+      gDialog.CellVAlignList.selectedIndex = 0;
     else if (valign == bottomStr)
-      dialog.CellVAlignList.selectedIndex = 2;
+      gDialog.CellVAlignList.selectedIndex = 2;
     else // Default = middle
-      dialog.CellVAlignList.selectedIndex = 1;
+      gDialog.CellVAlignList.selectedIndex = 1;
 
-    dialog.CellVAlignCheckbox.checked = AdvancedEditUsed && previousValue != dialog.CellVAlignList.selectedIndex;
+    gDialog.CellVAlignCheckbox.checked = AdvancedEditUsed && previousValue != gDialog.CellVAlignList.selectedIndex;
 
 
-    previousIndex = dialog.CellHAlignList.selectedIndex;
+    previousIndex = gDialog.CellHAlignList.selectedIndex;
 
     alignWasChar = false;
 
@@ -342,13 +335,13 @@ function InitCellPanel()
     switch (halign)
     {
       case centerStr:
-        dialog.CellHAlignList.selectedIndex = 1;
+        gDialog.CellHAlignList.selectedIndex = 1;
         break;
       case rightStr:
-        dialog.CellHAlignList.selectedIndex = 2;
+        gDialog.CellHAlignList.selectedIndex = 2;
         break;
       case justifyStr:
-        dialog.CellHAlignList.selectedIndex = 3;
+        gDialog.CellHAlignList.selectedIndex = 3;
         break;
       case charStr:
         // We don't support UI for this because layout doesn't work: bug 2212.
@@ -358,25 +351,25 @@ function InitCellPanel()
         // Fall through to use show default alignment in menu
       default:
         // Default depends on cell type (TH is "center", TD is "left")
-        dialog.CellHAlignList.selectedIndex =
+        gDialog.CellHAlignList.selectedIndex =
           (globalCellElement.nodeName.toLowerCase() == "th") ? 1 : 0;
         break;
     }
 
-    dialog.CellHAlignCheckbox.checked = AdvancedEditUsed &&
-      previousIndex != dialog.CellHAlignList.selectedIndex;
+    gDialog.CellHAlignCheckbox.checked = AdvancedEditUsed &&
+      previousIndex != gDialog.CellHAlignList.selectedIndex;
 
-    previousIndex = dialog.CellStyleList.selectedIndex;
-    dialog.CellStyleList.selectedIndex = (globalCellElement.nodeName.toLowerCase() == "th") ? 1 : 0;
-    dialog.CellStyleCheckbox.checked = AdvancedEditUsed && previousIndex != dialog.CellStyleList.selectedIndex;
+    previousIndex = gDialog.CellStyleList.selectedIndex;
+    gDialog.CellStyleList.selectedIndex = (globalCellElement.nodeName.toLowerCase() == "th") ? 1 : 0;
+    gDialog.CellStyleCheckbox.checked = AdvancedEditUsed && previousIndex != gDialog.CellStyleList.selectedIndex;
 
-    previousIndex = dialog.TextWrapList.selectedIndex;
-    dialog.TextWrapList.selectedIndex = globalCellElement.noWrap ? 1 : 0;
-    dialog.TextWrapCheckbox.checked = AdvancedEditUsed && previousIndex != dialog.TextWrapList.selectedIndex;
+    previousIndex = gDialog.TextWrapList.selectedIndex;
+    gDialog.TextWrapList.selectedIndex = globalCellElement.noWrap ? 1 : 0;
+    gDialog.TextWrapCheckbox.checked = AdvancedEditUsed && previousIndex != gDialog.TextWrapList.selectedIndex;
 
     previousValue = CellColor;
     SetColor("cellBackgroundCW", globalCellElement.bgColor);
-    dialog.CellColorCheckbox.checked = AdvancedEditUsed && CellColor != globalCellElement.bgColor;
+    gDialog.CellColorCheckbox.checked = AdvancedEditUsed && CellColor != globalCellElement.bgColor;
     CellColor = globalCellElement.bgColor;
 
     // We want to set this true in case changes came
@@ -489,13 +482,13 @@ function SetColor(ColorWellID, color)
     if (color)
     {
       globalCellElement.setAttribute(bgcolor, color);
-      dialog.CellInheritColor.setAttribute("collapsed","true");
+      gDialog.CellInheritColor.setAttribute("collapsed","true");
     }
     else
     {
       globalCellElement.removeAttribute(bgcolor);
       // Reveal addition message explaining "default" color
-      dialog.CellInheritColor.removeAttribute("collapsed");
+      gDialog.CellInheritColor.removeAttribute("collapsed");
     }
   }
   else
@@ -503,12 +496,12 @@ function SetColor(ColorWellID, color)
     if (color)
     {
       globalTableElement.setAttribute(bgcolor, color);
-      dialog.TableInheritColor.setAttribute("collapsed","true");
+      gDialog.TableInheritColor.setAttribute("collapsed","true");
     }
     else
     {
       globalTableElement.removeAttribute(bgcolor);
-      dialog.TableInheritColor.removeAttribute("collapsed");
+      gDialog.TableInheritColor.removeAttribute("collapsed");
     }
     SetCheckbox('CellColorCheckbox');
   }
@@ -663,7 +656,7 @@ function MoveSelection(forward)
   while(true);
 
   // Save data for current selection before changing
-  if (CellDataChanged) // && dialog.ApplyBeforeMove.checked)
+  if (CellDataChanged) // && gDialog.ApplyBeforeMove.checked)
   {
     if (!ValidateCellData())
       return;
@@ -699,7 +692,7 @@ function MoveSelection(forward)
     selectionController.scrollSelectionIntoView(selectionController.SELECTION_NORMAL, selectionController.SELECTION_ANCHOR_REGION);
 
   // Reinitialize dialog using new cell
-//  if (!dialog.KeepCurrentData.checked)
+//  if (!gDialog.KeepCurrentData.checked)
   // Setting this false unchecks all "set attributes" checkboxes
   AdvancedEditUsed = false;
   InitCellPanel();
@@ -745,14 +738,14 @@ function SetSelectionButtons()
   if (SelectedCellsType == SELECT_ROW)
   {
     // Trigger CSS to set images of up and down arrows
-    dialog.PreviousButton.setAttribute("type","row");
-    dialog.NextButton.setAttribute("type","row");
+    gDialog.PreviousButton.setAttribute("type","row");
+    gDialog.NextButton.setAttribute("type","row");
   }
   else
   {
     // or images of left and right arrows
-    dialog.PreviousButton.setAttribute("type","col");
-    dialog.NextButton.setAttribute("type","col");
+    gDialog.PreviousButton.setAttribute("type","col");
+    gDialog.NextButton.setAttribute("type","col");
   }
   DisableSelectionButtons((SelectedCellsType == SELECT_ROW && rowCount == 1) ||
                           (SelectedCellsType == SELECT_COLUMN && colCount == 1) ||
@@ -761,8 +754,8 @@ function SetSelectionButtons()
 
 function DisableSelectionButtons( disable )
 {
-  dialog.PreviousButton.setAttribute("disabled", disable ? "true" : "false");
-  dialog.NextButton.setAttribute("disabled", disable ? "true" : "false");
+  gDialog.PreviousButton.setAttribute("disabled", disable ? "true" : "false");
+  gDialog.NextButton.setAttribute("disabled", disable ? "true" : "false");
 }
 
 function SwitchToValidatePanel()
@@ -796,10 +789,10 @@ function SetAlign(listID, defaultValue, element, attName)
 function ValidateTableData()
 {
   validatePanel = TablePanel;
-  newRowCount = Number(ValidateNumber(dialog.TableRowsInput, null, 1, maxRows, null, null, true));
+  newRowCount = Number(ValidateNumber(gDialog.TableRowsInput, null, 1, maxRows, null, null, true));
   if (gValidationError) return false;
 
-  newColCount = Number(ValidateNumber(dialog.TableColumnsInput, null, 1, maxColumns, null, null, true));
+  newColCount = Number(ValidateNumber(gDialog.TableColumnsInput, null, 1, maxColumns, null, null, true));
   if (gValidationError) return false;
 
   // If user is deleting any cells, get confirmation
@@ -816,23 +809,23 @@ function ValidateTableData()
     }
     else
     {
-      SetTextboxFocus(newRowCount < rowCount ? dialog.TableRowsInput : dialog.TableColumnsInput);
+      SetTextboxFocus(newRowCount < rowCount ? gDialog.TableRowsInput : gDialog.TableColumnsInput);
       return false;
     }
   }
 
-  ValidateNumber(dialog.TableWidthInput, dialog.TableWidthUnits,
+  ValidateNumber(gDialog.TableWidthInput, gDialog.TableWidthUnits,
                  1, maxPixels, globalTableElement, "width");
   if (gValidationError) return false;
 
-  var border = ValidateNumber(dialog.BorderWidthInput, null, 0, maxPixels, globalTableElement, "border");
+  var border = ValidateNumber(gDialog.BorderWidthInput, null, 0, maxPixels, globalTableElement, "border");
   // TODO: Deal with "BORDER" without value issue
   if (gValidationError) return false;
 
-  ValidateNumber(dialog.SpacingInput, null, 0, maxPixels, globalTableElement, "cellspacing");
+  ValidateNumber(gDialog.SpacingInput, null, 0, maxPixels, globalTableElement, "cellspacing");
   if (gValidationError) return false;
 
-  ValidateNumber(dialog.PaddingInput, null, 0, maxPixels, globalTableElement, "cellpadding");
+  ValidateNumber(gDialog.PaddingInput, null, 0, maxPixels, globalTableElement, "cellpadding");
   if (gValidationError) return false;
 
   SetAlign("TableAlignList", defHAlign, globalTableElement, "align");
@@ -846,23 +839,23 @@ function ValidateCellData()
 
   validatePanel = CellPanel;
 
-  if (dialog.CellHeightCheckbox.checked)
+  if (gDialog.CellHeightCheckbox.checked)
   {
-    ValidateNumber(dialog.CellHeightInput, dialog.CellHeightUnits,
+    ValidateNumber(gDialog.CellHeightInput, gDialog.CellHeightUnits,
                     1, maxPixels, globalCellElement, "height");
     if (gValidationError) return false;
   }
 
-  if (dialog.CellWidthCheckbox.checked)
+  if (gDialog.CellWidthCheckbox.checked)
   {
-    ValidateNumber(dialog.CellWidthInput, dialog.CellWidthUnits,
+    ValidateNumber(gDialog.CellWidthInput, gDialog.CellWidthUnits,
                    1, maxPixels, globalCellElement, "width");
     if (gValidationError) return false;
   }
 
-  if (dialog.CellHAlignCheckbox.checked)
+  if (gDialog.CellHAlignCheckbox.checked)
   {
-    var hAlign = dialog.CellHAlignList.selectedItem.value;
+    var hAlign = gDialog.CellHAlignList.selectedItem.value;
 
     // Horizontal alignment is complicated by "char" type
     // We don't change current values if user didn't edit alignment
@@ -877,7 +870,7 @@ function ValidateCellData()
     }
   }
 
-  if (dialog.CellVAlignCheckbox.checked)
+  if (gDialog.CellVAlignCheckbox.checked)
   {
     // Always set valign (no default in 2nd param) so
     //  the default "middle" is effective in a cell
@@ -885,9 +878,9 @@ function ValidateCellData()
     SetAlign("CellVAlignList", "", globalCellElement, "valign");
   }
 
-  if (dialog.TextWrapCheckbox.checked)
+  if (gDialog.TextWrapCheckbox.checked)
   {
-    if (dialog.TextWrapList.selectedIndex == 1)
+    if (gDialog.TextWrapList.selectedIndex == 1)
       globalCellElement.setAttribute("nowrap","true");
     else
       globalCellElement.removeAttribute("nowrap");
@@ -971,7 +964,7 @@ function CloneAttribute(destElement, srcElement, attr)
 
 function ApplyTableAttributes()
 {
-  var newAlign = dialog.TableCaptionList.selectedItem.value;
+  var newAlign = gDialog.TableCaptionList.selectedItem.value;
   if (!newAlign) newAlign = "";
 
   if (TableCaptionElement)
@@ -1164,10 +1157,10 @@ function ApplyCellAttributes()
     //  thus CSS and JS from Advanced edit is copied
     editorShell.CloneAttributes(selectedCell, globalCellElement);
 
-    if (dialog.CellStyleCheckbox.checked)
+    if (gDialog.CellStyleCheckbox.checked)
     {
       var currentStyleIndex = (selectedCell.nodeName.toLowerCase() == "th") ? 1 : 0;
-      if (dialog.CellStyleList.selectedIndex != currentStyleIndex)
+      if (gDialog.CellStyleList.selectedIndex != currentStyleIndex)
       {
         // Switch cell types
         // (replaces with new cell and copies attributes and contents)
@@ -1190,27 +1183,27 @@ function ApplyCellAttributes()
 
 function ApplyAttributesToOneCell(destElement)
 {
-  if (dialog.CellHeightCheckbox.checked)
+  if (gDialog.CellHeightCheckbox.checked)
     CloneAttribute(destElement, globalCellElement, "height");
 
-  if (dialog.CellWidthCheckbox.checked)
+  if (gDialog.CellWidthCheckbox.checked)
     CloneAttribute(destElement, globalCellElement, "width");
 
-  if (dialog.CellHAlignCheckbox.checked)
+  if (gDialog.CellHAlignCheckbox.checked)
   {
     CloneAttribute(destElement, globalCellElement, "align");
     CloneAttribute(destElement, globalCellElement, charStr);
   }
 
-  if (dialog.CellVAlignCheckbox.checked)
+  if (gDialog.CellVAlignCheckbox.checked)
     CloneAttribute(destElement, globalCellElement, "valign");
 
-  if (dialog.TextWrapCheckbox.checked)
+  if (gDialog.TextWrapCheckbox.checked)
     CloneAttribute(destElement, globalCellElement, "nowrap");
 
-  if (dialog.CellStyleCheckbox.checked)
+  if (gDialog.CellStyleCheckbox.checked)
   {
-    var newStyleIndex = dialog.CellStyleList.selectedIndex;
+    var newStyleIndex = gDialog.CellStyleList.selectedIndex;
     var currentStyleIndex = (destElement.nodeName.toLowerCase() == "th") ? 1 : 0;
 
     if (newStyleIndex != currentStyleIndex)
@@ -1221,7 +1214,7 @@ function ApplyAttributesToOneCell(destElement)
     }
   }
 
-  if (dialog.CellColorCheckbox.checked)
+  if (gDialog.CellColorCheckbox.checked)
     CloneAttribute(destElement, globalCellElement, "bgcolor");
 }
 

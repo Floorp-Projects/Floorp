@@ -31,7 +31,7 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    onclose = "onClose()"
+    onunload = "onClose()"
     orient="vertical">
 
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -54,16 +54,16 @@
       <column class="spell-check"/>
     </columns>
     <rows>
-      <row valign="middle" autostretch="never">
+      <row align="center">
         <text class="label" id="MisspelledWordLabel" value="&misspelledWord.label;"/>
         <text class="label bold" id="MisspelledWord" crop="right"/>
         <spacer/>
       </row>
-      <row valign="middle" autostretch="never">
+      <row align="center">
         <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
-        <hbox valign="middle" autostretch="never" flex="1">
+        <hbox align="center" flex="1">
           <textbox id="ReplaceWordInput" oninput="ChangeReplaceWord()"/>
-          <button class="dialog" id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
+          <button id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
         </hbox>
       </row>
     </rows>
@@ -80,24 +80,24 @@
           </treecolgroup>
         </tree>
         <vbox>
-          <grid flex="1" autostretch="never">
+          <grid flex="1">
             <columns><column class="spell-check" flex="1"/><column class="spell-check" flex="1"/></columns>
             <rows>
               <row>
-                <button class="dialog" id="Ignore"    oncommand="Ignore()" label="&ignoreButton.label;"/>
-                <button class="dialog" id="IgnoreAll" oncommand="IgnoreAll()" label="&ignoreAllButton.label;"/>
+                <button id="Ignore"    oncommand="Ignore()" label="&ignoreButton.label;"/>
+                <button id="IgnoreAll" oncommand="IgnoreAll()" label="&ignoreAllButton.label;"/>
               </row>
               <row>
-                <button class="dialog" id="Replace" oncommand="Replace()" label="&changeButton.label;"/>
-                <button class="dialog" id="ReplaceAll" oncommand="ReplaceAll()" label="&changeAllButton.label;"/>
+                <button id="Replace" oncommand="Replace()" label="&changeButton.label;"/>
+                <button id="ReplaceAll" oncommand="ReplaceAll()" label="&changeAllButton.label;"/>
               </row>
             </rows> 
           </grid>
           <spacer flex="1"/>
           <text class="label" value="&userDictionary.label;"/>
-          <hbox flex="1" autostretch="never">
-            <button class="dialog spell-check" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;" />
-            <button class="dialog spell-check" id="EditDictionary"  oncommand="EditDictionary()" label="&editUserDictionaryButton.label;"   />
+          <hbox flex="1" align="start">
+            <button class="spell-check" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;" />
+            <button class="spell-check" id="EditDictionary"  oncommand="EditDictionary()" label="&editUserDictionaryButton.label;"   />
           </hbox>
         </vbox>
       </row>
@@ -114,8 +114,8 @@
           </menupopup>
         </menulist>
         <hbox flex="1">
-          <button class="dialog spell-check" id="Recheck" label="&recheckButton.label;" oncommand="Recheck()"/>
-          <button class="dialog spell-check" id="Close"   label="&closeButton.label;"   oncommand="onClose()"/>
+          <button class="spell-check" id="Recheck" label="&recheckButton.label;" oncommand="Recheck()"/>
+          <button class="spell-check" id="Close"   label="&closeButton.label;"   oncommand="onClose()"/>
         </hbox>
       </row>
     </rows>

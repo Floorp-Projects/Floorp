@@ -59,11 +59,11 @@ function BuildCSSAttributeTable()
 // add or select attribute in the tree widget
 function onChangeCSSAttribute()
 {
-  var name = TrimString(dialog.AddCSSAttributeNameInput.value);
+  var name = TrimString(gDialog.AddCSSAttributeNameInput.value);
   if ( !name )
     return;
 
-  var value = TrimString(dialog.AddCSSAttributeValueInput.value);
+  var value = TrimString(gDialog.AddCSSAttributeValueInput.value);
 
   // First try to update existing attribute
   // If not found, add new attribute
@@ -73,10 +73,10 @@ function onChangeCSSAttribute()
 
 function ClearCSSInputWidgets()
 {
-  dialog.AddCSSAttributeTree.clearItemSelection();
-  dialog.AddCSSAttributeNameInput.value ="";
-  dialog.AddCSSAttributeValueInput.value = "";
-  dialog.AddCSSAttributeNameInput.inputField.focus();
+  gDialog.AddCSSAttributeTree.clearItemSelection();
+  gDialog.AddCSSAttributeNameInput.value ="";
+  gDialog.AddCSSAttributeValueInput.value = "";
+  gDialog.AddCSSAttributeNameInput.inputField.focus();
 }
 
 function onSelectCSSTreeItem()
@@ -84,38 +84,38 @@ function onSelectCSSTreeItem()
   if (!gDoOnSelectTree)
     return;
 
-  var tree = dialog.AddCSSAttributeTree;
+  var tree = gDialog.AddCSSAttributeTree;
   if (tree && tree.selectedItems && tree.selectedItems.length)
   {
-    dialog.AddCSSAttributeNameInput.value = GetTreeItemAttributeStr(tree.selectedItems[0]);
-    dialog.AddCSSAttributeValueInput.value = GetTreeItemValueStr(tree.selectedItems[0]);
+    gDialog.AddCSSAttributeNameInput.value = GetTreeItemAttributeStr(tree.selectedItems[0]);
+    gDialog.AddCSSAttributeValueInput.value = GetTreeItemValueStr(tree.selectedItems[0]);
   }
 }
 
 function onInputCSSAttributeName()
 {
-  var attName = TrimString(dialog.AddCSSAttributeNameInput.value).toLowerCase();
+  var attName = TrimString(gDialog.AddCSSAttributeNameInput.value).toLowerCase();
   var newValue = "";
 
   var existingValue = GetAndSelectExistingAttributeValue(attName, "CSSAList");
   if (existingValue)
     newValue = existingValue;
 
-  dialog.AddCSSAttributeValueInput.value = newValue;
+  gDialog.AddCSSAttributeValueInput.value = newValue;
 }
 
 function onInputCSSAttributeValue()
 {
   // Update value in the tree list
-  UpdateExistingAttribute( dialog.AddCSSAttributeNameInput.value,
-                           dialog.AddCSSAttributeValueInput.value,
+  UpdateExistingAttribute( gDialog.AddCSSAttributeNameInput.value,
+                           gDialog.AddCSSAttributeValueInput.value,
                            "CSSAList" );
 }
 
 function editCSSAttributeValue(targetCell)
 {
   if (IsNotTreeHeader(targetCell))
-    dialog.AddCSSAttributeValueInput.inputField.select();
+    gDialog.AddCSSAttributeValueInput.inputField.select();
 }
 
 function UpdateCSSAttributes()
@@ -151,12 +151,12 @@ function UpdateCSSAttributes()
 
 function RemoveCSSAttribute()
 {
-  var treechildren = dialog.AddCSSAttributeTree.lastChild;
+  var treechildren = gDialog.AddCSSAttributeTree.lastChild;
 
   // We only allow 1 selected item
-  if (dialog.AddCSSAttributeTree.selectedItems.length)
+  if (gDialog.AddCSSAttributeTree.selectedItems.length)
   {
-    var item = dialog.AddCSSAttributeTree.selectedItems[0];
+    var item = gDialog.AddCSSAttributeTree.selectedItems[0];
 
     // Remove the item from the tree
     // We always rebuild complete "style" string,
@@ -171,7 +171,7 @@ function SelectCSSTree( index )
 {
   gDoOnSelectTree = false;
   try {
-    dialog.AddCSSAttributeTree.selectedIndex = index;
+    gDialog.AddCSSAttributeTree.selectedIndex = index;
   } catch (e) {}
   gDoOnSelectTree = true;
 }

@@ -48,7 +48,7 @@
   <!-- Recent files menu -->
   <groupbox orient="vertical">
     <caption label="&recentFiles.title;"/>
-    <hbox autostretch="never" valign="middle">
+    <hbox align="center">
       <text value="&documentsInMenu;"/>
       <textbox
         id="recentFiles"
@@ -68,7 +68,7 @@
   <groupbox orient="vertical">
     <caption label="&savingFiles.title;"/>
     <spacer class="spacer"/>
-    <radiogroup orient="vertical" autostretch="never"
+    <radiogroup orient="vertical" align="start"
       id            = "preserveFormatting"
       pref          = "true"
       preftype      = "bool"
@@ -93,7 +93,7 @@
     </radiogroup>
   </groupbox>
   
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" align="start">
     <caption label="&tableEditing.label;"/>
     <checkbox 
       label     = "&maintainTableStructure.label;"
@@ -106,13 +106,13 @@
       prefattribute="checked"
     />
     <separator class = "thin"/>
-    <hbox autostretch="never" valign="top">
+    <hbox align="start">
       <text class="label"
         value="&pressingTheDeleteKey.label;" 
         tooltip = "aTooltip" tooltiptext="&pressingTheDeleteKey.tooltip;"
         for="tableDeleteKey" 
       />
-      <radiogroup orient="vertical" autostretch="never"
+      <radiogroup orient="vertical" align="start"
           id       = "tableDeleteKey"
           pref     = "true"
           preftype = "int"
@@ -127,7 +127,7 @@
 <!-- Take out Auto-Save; not supported at this time
   <groupbox orient="vertical">
     <caption label="&saving;"/>
-    <hbox valign="middle">
+    <hbox align="center">
       <checkbox 
         label      = "&AutoSaveCheck;"
         id         = "shouldAutoSave"
@@ -194,7 +194,7 @@
         preftype   = "string" 
         prefstring = "editor.image_editor"
       />
-      <button class="dialog" label="&chooseButton.label;" />
+      <button label="&chooseButton.label;" />
     </hbox> 
 
   </groupbox>

@@ -727,7 +727,7 @@
     </menupopup>
   </menulist>          
 
-  <stack id="ColorButtons" autostretch="never">
+  <stack id="ColorButtons" align="center">
     <observes element="cmd_fontColor"       attribute="state" onbroadcast="onFontColorChange()"/>
     <observes element="cmd_backgroundColor" attribute="state" onbroadcast="onBackgroundColorChange()"/>
     <text class="color-button" id="BackgroundColorButton"

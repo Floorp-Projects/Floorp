@@ -24,6 +24,8 @@
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/EdImageMap.css" type="text/css"?> 
+<!-- Methods common to all editor dialogs -->
+<script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
 
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 

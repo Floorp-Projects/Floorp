@@ -35,7 +35,6 @@
 var BodyElement;
 var prefs;
 var backgroundImage;
-var dialog;
 
 // Initialize in case we can't get them from prefs???
 var defaultTextColor="#000000";
@@ -70,21 +69,14 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  dialog = new Object;
-  if (!dialog)
-  {
-    dump("Failed to create dialog object!!!\n");
-    window.close();
-  }
-
-  dialog.ColorPreview = document.getElementById("ColorPreview");
-  dialog.NormalText = document.getElementById("NormalText");
-  dialog.LinkText = document.getElementById("LinkText");
-  dialog.ActiveLinkText = document.getElementById("ActiveLinkText");
-  dialog.VisitedLinkText = document.getElementById("VisitedLinkText");
-  dialog.DefaultColorsRadio = document.getElementById("DefaultColorsRadio");
-  dialog.CustomColorsRadio = document.getElementById("CustomColorsRadio");
-  dialog.BackgroundImageInput = document.getElementById("BackgroundImageInput");
+  gDialog.ColorPreview = document.getElementById("ColorPreview");
+  gDialog.NormalText = document.getElementById("NormalText");
+  gDialog.LinkText = document.getElementById("LinkText");
+  gDialog.ActiveLinkText = document.getElementById("ActiveLinkText");
+  gDialog.VisitedLinkText = document.getElementById("VisitedLinkText");
+  gDialog.DefaultColorsRadio = document.getElementById("DefaultColorsRadio");
+  gDialog.CustomColorsRadio = document.getElementById("CustomColorsRadio");
+  gDialog.BackgroundImageInput = document.getElementById("BackgroundImageInput");
 
   BodyElement = editorShell.editorDocument.body;
   if (!BodyElement)
@@ -116,10 +108,10 @@ function Startup()
 
   InitDialog();
 
-  if (dialog.DefaultColorsRadio.checked)
-    dialog.DefaultColorsRadio.focus();
+  if (gDialog.DefaultColorsRadio.checked)
+    gDialog.DefaultColorsRadio.focus();
   else
-    dialog.CustomColorsRadio.focus();
+    gDialog.CustomColorsRadio.focus();
 
   SetWindowLocation();
 }
@@ -130,8 +122,8 @@ function InitDialog()
   backgroundImage = globalElement.getAttribute(backgroundStr);
   if (backgroundImage.length)
   {
-    dialog.BackgroundImageInput.value = backgroundImage;
-    dialog.ColorPreview.setAttribute(styleStr, backImageStyle+backgroundImage+");");
+    gDialog.BackgroundImageInput.value = backgroundImage;
+    gDialog.ColorPreview.setAttribute(styleStr, backImageStyle+backgroundImage+");");
   }
 
   SetRelativeCheckbox();
@@ -163,12 +155,12 @@ function InitDialog()
   if (haveCustomColor)
   {
     // If any colors are set, then check the "Custom" radio button
-    dialog.CustomColorsRadio.checked = true;
+    gDialog.CustomColorsRadio.checked = true;
     UseCustomColors();
   }
   else 
   {
-    dialog.DefaultColorsRadio.checked = true;
+    gDialog.DefaultColorsRadio.checked = true;
     UseDefaultColors();
   }
 }
@@ -176,7 +168,7 @@ function InitDialog()
 function GetColorAndUpdate(ColorWellID)
 {
   // Only allow selecting when in custom mode
-  if (!dialog.CustomColorsRadio.checked) return;
+  if (!gDialog.CustomColorsRadio.checked) return;
 
   var colorObj = new Object;
   var colorWell = document.getElementById(ColorWellID);
@@ -237,9 +229,6 @@ function GetColorAndUpdate(ColorWellID)
 
   setColorWell(ColorWellID, color); 
   SetColorPreview(ColorWellID, color);
-  
-  // Setting a color automatically changes into UseCustomColors mode
-  //dialog.CustomColorsRadio.checked = true;
 }
 
 function SetColorPreview(ColorWellID, color)
@@ -247,16 +236,16 @@ function SetColorPreview(ColorWellID, color)
   switch( ColorWellID )
   {
     case "textCW":
-      dialog.NormalText.setAttribute(styleStr,colorStyle+color);
+      gDialog.NormalText.setAttribute(styleStr,colorStyle+color);
       break;
     case "linkCW":
-      dialog.LinkText.setAttribute(styleStr,colorStyle+color);
+      gDialog.LinkText.setAttribute(styleStr,colorStyle+color);
       break;
     case "activeCW":
-      dialog.ActiveLinkText.setAttribute(styleStr,colorStyle+color);
+      gDialog.ActiveLinkText.setAttribute(styleStr,colorStyle+color);
       break;
     case "visitedCW":
-      dialog.VisitedLinkText.setAttribute(styleStr,colorStyle+color);
+      gDialog.VisitedLinkText.setAttribute(styleStr,colorStyle+color);
       break;
     case "backgroundCW":
       // Must combine background color and image style values
@@ -264,7 +253,7 @@ function SetColorPreview(ColorWellID, color)
       if (backgroundImage)
         styleValue += ";"+backImageStyle+backgroundImage+");";
 
-      dialog.ColorPreview.setAttribute(styleStr,styleValue);
+      gDialog.ColorPreview.setAttribute(styleStr,styleValue);
       previewBGColor = color;
       break;
   }
@@ -334,13 +323,13 @@ function chooseFile()
     if (gHaveDocumentUrl)
       fileName = MakeRelativeUrl(fileName);
 
-    dialog.BackgroundImageInput.value = fileName;
+    gDialog.BackgroundImageInput.value = fileName;
 
     SetRelativeCheckbox();
 
     ValidateAndPreviewImage(true);
   }
-  SetTextboxFocus(dialog.BackgroundImageInput);
+  SetTextboxFocus(gDialog.BackgroundImageInput);
 }
 
 function ChangeBackgroundImage()
@@ -356,7 +345,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   var styleValue = backColorStyle+previewBGColor+";";
 
   var retVal = true;
-  var image = dialog.BackgroundImageInput.value.trimString();
+  var image = gDialog.BackgroundImageInput.value.trimString();
   if (image)
   {
     if (IsValidImage(image))
@@ -372,7 +361,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
       backgroundImage = null;
       if (ShowErrorMessage)
       {
-        SetTextboxFocus(dialog.BackgroundImageInput);
+        SetTextboxFocus(gDialog.BackgroundImageInput);
         // Tell user about bad image
         ShowInputErrorMessage(GetString("MissingImageError"));
       }
@@ -381,9 +370,8 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   }
   else backgroundImage = null;
 
-dump("Set preview background CSS: "+styleValue+"\n");
   // Set style on preview (removes image if not valid)
-  dialog.ColorPreview.setAttribute(styleStr, styleValue);
+  gDialog.ColorPreview.setAttribute(styleStr, styleValue);
 
   // Note that an "empty" string is valid
   return retVal;
@@ -392,7 +380,7 @@ dump("Set preview background CSS: "+styleValue+"\n");
 function ValidateData()
 {
   // Colors values are updated as they are picked, no validation necessary
-  if (dialog.DefaultColorsRadio.checked)
+  if (gDialog.DefaultColorsRadio.checked)
   {
     globalElement.removeAttribute(textStr);
     globalElement.removeAttribute(linkStr);
