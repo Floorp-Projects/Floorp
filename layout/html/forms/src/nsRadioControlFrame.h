@@ -73,10 +73,14 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
- 
+
   virtual void PaintRadioButton(nsIPresContext& aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect);
+
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent* aEvent,
+                         nsEventStatus& aEventStatus);
 
   ///XXX: End o the temporary methods
 
