@@ -50,7 +50,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsVoidArray.h"
 #include "nsITextContent.h"
-#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"

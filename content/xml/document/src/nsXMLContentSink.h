@@ -51,7 +51,6 @@ class nsIURI;
 class nsIContent;
 class nsINodeInfo;
 class nsIParser;
-class nsINameSpace;
 class nsIViewManager;
 
 typedef enum {
@@ -92,13 +91,10 @@ public:
   // nsITransformObserver
   NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument);
   NS_IMETHOD OnTransformDone(nsresult aResult, nsIDOMDocument *aResultDocument);
-  static void SplitXMLName(const nsAFlatString& aString, nsIAtom **aPrefix,
-                           nsIAtom **aTagName);
 
 protected:
   void StartLayout();
 
-  nsresult PushNameSpacesFrom(const PRUnichar** aAttributes);
   nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
   nsresult AddText(const PRUnichar* aString, PRInt32 aLength);
   nsresult ProcessEndSCRIPTTag(nsIContent* aContent);
@@ -124,9 +120,6 @@ protected:
                              PRBool* aDidFlush=nsnull);
 
   nsresult AddContentAsLeaf(nsIContent *aContent);
-
-  PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
-  already_AddRefed<nsINameSpace> PopNameSpaces();
 
   nsIContent* GetCurrentContent();
   PRInt32 PushContent(nsIContent *aContent);
@@ -168,7 +161,6 @@ protected:
   PRUint8 unused : 1;  // bit available if someone needs one
   
   nsCOMArray<nsIContent>           mContentStack;
-  nsCOMArray<nsINameSpace>         mNameSpaceStack;
   nsCOMPtr<nsIDocumentTransformer> mXSLTProcessor;
 };
 

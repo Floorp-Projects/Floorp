@@ -83,9 +83,74 @@ txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
  //- Implementation of XMLUtils -/
 //------------------------------/
 
+// static
 nsresult
-XMLUtils::splitXMLName(const nsAString& aName, nsIAtom** aPrefix,
-                       nsIAtom** aLocalName)
+XMLUtils::splitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
+                         nsIAtom **aLocalName, PRInt32* aNameSpaceID)
+{
+    /**
+     *  Expat can send the following:
+     *    localName
+     *    namespaceURI<separator>localName
+     *    namespaceURI<separator>localName<separator>prefix
+     *
+     *  and we use 0xFFFF for the <separator>.
+     *
+     */
+
+    const PRUnichar *uriEnd = nsnull;
+    const PRUnichar *nameEnd = nsnull;
+    const PRUnichar *pos;
+    for (pos = aExpatName; *pos; ++pos) {
+        if (*pos == 0xFFFF) {
+            if (uriEnd) {
+                nameEnd = pos;
+            }
+            else {
+                uriEnd = pos;
+            }
+        }
+    }
+
+    const PRUnichar *nameStart;
+    if (uriEnd) {
+        *aNameSpaceID =
+            txNamespaceManager::getNamespaceID(nsDependentSubstring(aExpatName,
+                                                                    uriEnd));
+        if (*aNameSpaceID == kNameSpaceID_Unknown) {
+            return NS_ERROR_FAILURE;
+        }
+
+        nameStart = (uriEnd + 1);
+        if (nameEnd)  {
+            const PRUnichar *prefixStart = nameEnd + 1;
+            *aPrefix = NS_NewAtom(NS_ConvertUTF16toUTF8(prefixStart,
+                                                        pos - prefixStart));
+            if (!*aPrefix) {
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+        else {
+            nameEnd = pos;
+            *aPrefix = nsnull;
+        }
+    }
+    else {
+        *aNameSpaceID = kNameSpaceID_None;
+        nameStart = aExpatName;
+        nameEnd = pos;
+        *aPrefix = nsnull;
+    }
+
+    *aLocalName = NS_NewAtom(NS_ConvertUTF16toUTF8(nameStart,
+                                                   nameEnd - nameStart));
+
+    return *aLocalName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+nsresult
+XMLUtils::splitQName(const nsAString& aName, nsIAtom** aPrefix,
+                     nsIAtom** aLocalName)
 {
     const nsAFlatString& qName = PromiseFlatString(aName);
     const PRUnichar* colon;

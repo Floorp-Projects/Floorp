@@ -100,7 +100,6 @@
 #include "nsIEventStateManager.h"
 #include "nsIFastLoadService.h"
 #include "nsHTMLStyleSheet.h"
-#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"

@@ -69,7 +69,6 @@
 #include "nsContentUtils.h"
 #include "nsLayoutAtoms.h"
 #include "nsIScriptContext.h"
-#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
@@ -103,7 +102,6 @@
 #include "nsSVGAtoms.h"
 #endif
 
-static const char kNameSpaceSeparator = ':';
 #define kXSLType "text/xsl"
 
 static const char kLoadAsData[] = "loadAsData";
@@ -160,7 +158,6 @@ nsXMLContentSink::nsXMLContentSink()
 
 nsXMLContentSink::~nsXMLContentSink()
 {
-  NS_ASSERTION(mNameSpaceStack.Count() == 0, "Namespaces left on the stack!");
   NS_IF_RELEASE(mDocElement);
   if (mText) {
     PR_Free(mText);  //  Doesn't null out, unlike PR_FREEIF
@@ -398,36 +395,6 @@ nsXMLContentSink::SetParser(nsIParser* aParser)
 {
   mParser = aParser;
   return NS_OK;
-}
-
-// static
-void
-nsXMLContentSink::SplitXMLName(const nsAFlatString& aString, nsIAtom **aPrefix,
-                               nsIAtom **aLocalName)
-{
-  nsAFlatString::const_iterator iter, end;
-
-  aString.BeginReading(iter);
-  aString.EndReading(end);
-
-  FindCharInReadable(kNameSpaceSeparator, iter, end);
-
-  if (iter != end) {
-    nsReadingIterator<PRUnichar> start;
-
-    aString.BeginReading(start);
-
-    *aPrefix = NS_NewAtom(nsDependentSubstring(start, iter));
-
-    ++iter;
-
-    *aLocalName = NS_NewAtom(nsDependentSubstring(iter, end));
-
-    return;
-  }
-
-  *aPrefix = nsnull;
-  *aLocalName = NS_NewAtom(aString);
 }
 
 nsresult
@@ -798,37 +765,6 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
   return rv;
 }
 
-#define NS_ACCUMULATION_BUFFER_SIZE 4096
-
-PRInt32
-nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
-{
-  PRInt32 id = aPrefix ? kNameSpaceID_Unknown : kNameSpaceID_None;
-  PRInt32 count = mNameSpaceStack.Count();
-
-  if (count > 0) {
-    mNameSpaceStack[count - 1]->FindNameSpaceID(aPrefix, &id);
-  }
-
-  return id;
-}
-
-already_AddRefed<nsINameSpace>
-nsXMLContentSink::PopNameSpaces()
-{
-  PRInt32 count = mNameSpaceStack.Count();
-
-  NS_ASSERTION(count > 0, "Bogus Count() or bogus PopNameSpaces call");
-  if (count == 0) {
-    return nsnull;
-  }
-  
-  nsINameSpace* nameSpace = mNameSpaceStack[count - 1];
-  NS_ADDREF(nameSpace);
-  mNameSpaceStack.RemoveObjectAt(count - 1);
-  return nameSpace;
-}
-
 nsIContent*
 nsXMLContentSink::GetCurrentContent()
 {
@@ -1012,32 +948,19 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
 
   mState = eXMLContentSinkState_InDocumentElement;
 
-  nsCOMPtr<nsIAtom> nameSpacePrefix, tagAtom;
+  PRInt32 nameSpaceID;
+  nsCOMPtr<nsIAtom> prefix, localName;
+  nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),
+                                 getter_AddRefs(localName), &nameSpaceID);
 
-  SplitXMLName(nsDependentString(aName), getter_AddRefs(nameSpacePrefix),
-               getter_AddRefs(tagAtom));
-
-  // We must register namespace declarations found in the attribute list
-  // of an element before creating the element. This is because the
-  // namespace prefix for an element might be declared within the attribute
-  // list.
-  result = PushNameSpacesFrom(aAtts);
-  NS_ENSURE_SUCCESS(result, result);
-
-  PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
-
-  if (!OnOpenContainer(aAtts, aAttsCount, nameSpaceID, tagAtom, aLineNumber)) {
-    // Pop the namespaces we pushed for this element, since HandleEndElement
-    // won't get called for it.
-    nsINameSpace* nameSpace = PopNameSpaces().get();
-    NS_IF_RELEASE(nameSpace);
+  if (!OnOpenContainer(aAtts, aAttsCount, nameSpaceID, localName, aLineNumber)) {
     return NS_OK;
   }
   
   nsCOMPtr<nsINodeInfo> nodeInfo;
-
-  mNodeInfoManager->GetNodeInfo(tagAtom, nameSpacePrefix, nameSpaceID,
-                                getter_AddRefs(nodeInfo));
+  result = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
+                                         getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(result, result);
 
   result = CreateElement(aAtts, aAttsCount, nodeInfo, aLineNumber,
                          getter_AddRefs(content), &appendContent);
@@ -1069,7 +992,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
 
   if (NS_OK == result) {
     // Store the element 
-    if (!SetDocElement(nameSpaceID,tagAtom,content) && appendContent) {
+    if (!SetDocElement(nameSpaceID, localName, content) && appendContent) {
       nsCOMPtr<nsIContent> parent = GetCurrentContent();
       NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
@@ -1108,20 +1031,15 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
 #ifdef DEBUG
   // Check that we're closing the right thing
   nsCOMPtr<nsIAtom> debugNameSpacePrefix, debugTagAtom;
-  SplitXMLName(nsDependentString(aName), getter_AddRefs(debugNameSpacePrefix),
-               getter_AddRefs(debugTagAtom));
-  PRInt32 debugNameSpaceID = GetNameSpaceId(debugNameSpacePrefix);
+  PRInt32 debugNameSpaceID;
+  nsContentUtils::SplitExpatName(aName, getter_AddRefs(debugNameSpacePrefix),
+                                 getter_AddRefs(debugTagAtom),
+                                 &debugNameSpaceID);
   NS_ASSERTION(content->GetNodeInfo()->Equals(debugTagAtom, debugNameSpaceID),
                "Wrong element being closed");
 #endif  
 
   result = CloseElement(content, &appendContent);
-
-  // Make sure to pop the namespaces no matter whether CloseElement
-  // succeeded.
-  nsINameSpace* nameSpace = PopNameSpaces().get();
-  NS_IF_RELEASE(nameSpace);
-
   NS_ENSURE_SUCCESS(result, result);
 
   if (mDocElement == content) {
@@ -1345,10 +1263,6 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
 
   mState = eXMLContentSinkState_InProlog;
 
-  // Since we're blowing away all the content we've created up to now,
-  // blow away our namespace stack too.
-  mNameSpaceStack.Clear();
-
   // Clear the current content and
   // prepare to set <parsererror> as the document root
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mDocument));
@@ -1369,97 +1283,36 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
     mXSLTProcessor = nsnull;
   }
 
-  NS_NAMED_LITERAL_STRING(name, "xmlns");
-  NS_NAMED_LITERAL_STRING(value, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
+  const PRUnichar* noAtts[] = { 0, 0 };
 
-  const PRUnichar* atts[] = {name.get(), value.get(), nsnull};
-    
-  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 2,
-                          -1, (PRUint32)-1);
+  NS_NAMED_LITERAL_STRING(errorNs,
+                          "http://www.mozilla.org/newlayout/xml/parsererror.xml");
+
+  nsAutoString parsererror(errorNs);
+  parsererror.Append((PRUnichar)0xFFFF);
+  parsererror.AppendLiteral("parsererror");
+  
+  rv = HandleStartElement(parsererror.get(), noAtts, 0, -1, (PRUint32)-1);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
   NS_ENSURE_SUCCESS(rv,rv);  
   
-  const PRUnichar* noAtts[] = {0, 0};
-  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0,
-                          -1, (PRUint32)-1);
+  nsAutoString sourcetext(errorNs);
+  sourcetext.Append((PRUnichar)0xFFFF);
+  sourcetext.AppendLiteral("sourcetext");
+
+  rv = HandleStartElement(sourcetext.get(), noAtts, 0, -1, (PRUint32)-1);
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  rv = HandleEndElement(NS_LITERAL_STRING("sourcetext").get());
+  rv = HandleEndElement(sourcetext.get());
   NS_ENSURE_SUCCESS(rv,rv); 
   
-  rv = HandleEndElement(NS_LITERAL_STRING("parsererror").get());
+  rv = HandleEndElement(parsererror.get());
   NS_ENSURE_SUCCESS(rv,rv);
-
-  return NS_OK;
-}
-
-nsresult
-nsXMLContentSink::PushNameSpacesFrom(const PRUnichar** aAtts)
-{
-  nsCOMPtr<nsINameSpace> nameSpace;
-  nsresult rv = NS_OK;
-
-  if (0 < mNameSpaceStack.Count()) {
-    nameSpace = mNameSpaceStack[mNameSpaceStack.Count() - 1];
-  } else {
-    rv = nsContentUtils::GetNSManagerWeakRef()->
-        CreateRootNameSpace(getter_AddRefs(nameSpace));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  NS_ENSURE_TRUE(nameSpace, NS_ERROR_UNEXPECTED);
-
-  static NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
-  static const PRUint32 xmlns_len = kNameSpaceDef.Length();
-
-  
-  while (*aAtts) {
-    const nsDependentString key(aAtts[0]);
-
-    // Look for "xmlns" at the start of the attribute name
-
-    PRUint32 key_len = key.Length();
-
-    if (key_len >= xmlns_len &&
-        nsDependentSubstring(key, 0, xmlns_len).Equals(kNameSpaceDef)) {
-      nsCOMPtr<nsIAtom> prefixAtom;
-
-      // If key_len > xmlns_len we have a xmlns:foo type attribute,
-      // extract the prefix. If not, we have a xmlns attribute in
-      // which case there is no prefix.
-
-      if (key_len > xmlns_len) {
-        nsReadingIterator<PRUnichar> start, end;
-
-        key.BeginReading(start);
-        key.EndReading(end);
-
-        start.advance(xmlns_len);
-
-        if (*start == ':') {
-          ++start;
-
-          prefixAtom = do_GetAtom(Substring(start, end));
-        }
-      }
-
-      nsCOMPtr<nsINameSpace> child;
-      rv = nameSpace->CreateChildNameSpace(prefixAtom, nsDependentString(aAtts[1]),
-                                           getter_AddRefs(child));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nameSpace = child;
-    }
-    aAtts += 2;
-  }
-
-
-  mNameSpaceStack.AppendObject(nameSpace);
 
   return NS_OK;
 }
@@ -1469,34 +1322,14 @@ nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
                                 nsIContent* aContent)
 {
   // Add tag attributes to the content attributes
-  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-
+  nsCOMPtr<nsIAtom> prefix, localName;
   while (*aAtts) {
-    // Get upper-cased key
-    const nsDependentString key(aAtts[0]);
-
-    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(nameAtom));
-
     PRInt32 nameSpaceID;
-
-    if (nameSpacePrefix) {
-        nameSpaceID = GetNameSpaceId(nameSpacePrefix);
-    } else {
-      if (nameAtom.get() == nsLayoutAtoms::xmlnsNameSpace)
-        nameSpaceID = kNameSpaceID_XMLNS;
-      else
-        nameSpaceID = kNameSpaceID_None;
-    }
-
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;
-      nameAtom = do_GetAtom(key);
-      nameSpacePrefix = nsnull;
-    }
+    nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
+                                   getter_AddRefs(localName), &nameSpaceID);
 
     // Add attribute to content
-    aContent->SetAttr(nameSpaceID, nameAtom, nameSpacePrefix,
+    aContent->SetAttr(nameSpaceID, localName, prefix,
                       nsDependentString(aAtts[1]), PR_FALSE);
     aAtts += 2;
   }

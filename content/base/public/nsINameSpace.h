@@ -41,12 +41,10 @@
 #include "nsISupports.h"
 
 class nsIAtom;
-class nsString;
 
 #define NS_INAMESPACE_IID \
-  { 0xa6cf90d4, 0x15b3, 0x11d2, \
-    {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
+  { 0x72022492, 0x0fdf, 0x11d9, \
+    { 0xa3, 0x76, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
 
 /**
  * A nsINameSpace registers the NameSpace URI with the NameSpaceManager
@@ -65,22 +63,15 @@ public:
 
   // Get data of this name space
   NS_IMETHOD GetNameSpaceID(PRInt32* aID) const = 0;
-  NS_IMETHOD GetNameSpaceURI(nsAString& aURI) const = 0;
-  NS_IMETHOD GetNameSpacePrefix(nsIAtom** aPrefix) const = 0;
 
-  NS_IMETHOD GetParentNameSpace(nsINameSpace** aParent) const = 0;
-
-  // find name space within self and parents (not children)
+  // Find name space within self and parents (not children)
   NS_IMETHOD FindNameSpace(nsIAtom* aPrefix, nsINameSpace** aNameSpace) const = 0;
   NS_IMETHOD FindNameSpaceID(nsIAtom* aPrefix, PRInt32* aNameSpaceID) const = 0;
   NS_IMETHOD FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom** aPrefix) const = 0;
 
-  // create new child name space
+  // Create new child name space
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, 
                                   const nsAString& aURI,
-                                  nsINameSpace** aChildNameSpace) = 0;
-
-  NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
                                   nsINameSpace** aChildNameSpace) = 0;
 };
 

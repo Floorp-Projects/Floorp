@@ -66,7 +66,6 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIRDFNode.h"
-#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"

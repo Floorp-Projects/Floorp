@@ -127,8 +127,11 @@ extern nsIParserService *gTxParserService;
 class XMLUtils {
 
 public:
-    static nsresult splitXMLName(const nsAString& aName, nsIAtom** aPrefix,
-                                 nsIAtom** aLocalName);
+    static nsresult splitExpatName(const PRUnichar *aExpatName,
+                                   nsIAtom **aPrefix, nsIAtom **aLocalName,
+                                   PRInt32* aNameSpaceID);
+    static nsresult splitQName(const nsAString& aName, nsIAtom** aPrefix,
+                               nsIAtom** aLocalName);
     static const nsDependentSubstring getLocalPart(const nsAString& src);
 
     /*

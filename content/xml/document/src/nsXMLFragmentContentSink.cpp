@@ -317,7 +317,6 @@ nsXMLFragmentContentSink::ReportError(const PRUnichar* aErrorText,
 
   // The following code is similar to the cleanup in nsXMLContentSink::ReportError()
   mState = eXMLContentSinkState_InProlog;
-  mNameSpaceStack.Clear();
 
   // Clear the current content
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mRoot));

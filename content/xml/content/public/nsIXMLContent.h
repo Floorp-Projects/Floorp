@@ -42,10 +42,7 @@
 #include "nsISupports.h"
 #include "nsIStyledContent.h"
 
-class nsINameSpace;
-class nsINodeInfo;
 class nsIDocShell;
-class nsIURI;
 
 #define NS_IXMLCONTENT_IID \
  { 0xb9df7adc, 0x3262, 0x4692, \

@@ -37,6 +37,7 @@
 #include "nscore.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
+#include "nsAutoPtr.h"
 #include "nsINodeInfo.h"
 #include "nsCOMArray.h"
 #include "nsContentCreatorFunctions.h"
@@ -70,19 +71,12 @@ class NameSpaceImpl : public nsINameSpace {
 public:
   NameSpaceImpl(NameSpaceImpl* aParent, 
                 nsIAtom* aPrefix, 
-                const nsAString& aURI);
-  NameSpaceImpl(NameSpaceImpl* aParent, 
-                nsIAtom* aPrefix, 
                 PRInt32 aNameSpaceID);
   virtual ~NameSpaceImpl();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
-  NS_IMETHOD GetNameSpaceURI(nsAString& aURI) const;
-  NS_IMETHOD GetNameSpacePrefix(nsIAtom** aPrefix) const;
-
-  NS_IMETHOD GetParentNameSpace(nsINameSpace** aParent) const;
 
   NS_IMETHOD FindNameSpace(nsIAtom* aPrefix, nsINameSpace** aNameSpace) const;
   NS_IMETHOD FindNameSpaceID(nsIAtom* aPrefix, PRInt32* aNameSpaceID) const;
@@ -90,15 +84,13 @@ public:
 
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, const nsAString& aURI,
                                   nsINameSpace** aChildNameSpace);
-  NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
-                                  nsINameSpace** aChildNameSpace);
 
 private:
   // These are not supported and are not implemented!
   NameSpaceImpl(const NameSpaceImpl& aCopy);
   NameSpaceImpl& operator=(const NameSpaceImpl& aCopy);
 
-  NameSpaceImpl* mParent;
+  nsRefPtr<NameSpaceImpl> mParent;
   nsCOMPtr<nsIAtom> mPrefix;
   PRInt32 mID;
 };
@@ -183,17 +175,6 @@ private:
 static NameSpaceManagerImpl* gNameSpaceManager = nsnull;
 
 
-
-NameSpaceImpl::NameSpaceImpl(NameSpaceImpl* aParent, 
-                             nsIAtom* aPrefix, 
-                             const nsAString& aURI)
-  : mParent(aParent),
-    mPrefix(aPrefix)
-{
-  NS_IF_ADDREF(mParent);
-  gNameSpaceManager->RegisterNameSpace(aURI, mID);
-}
-
 NameSpaceImpl::NameSpaceImpl(NameSpaceImpl* aParent, 
                              nsIAtom* aPrefix, 
                              PRInt32 aNameSpaceID)
@@ -201,12 +182,10 @@ NameSpaceImpl::NameSpaceImpl(NameSpaceImpl* aParent,
     mPrefix(aPrefix),
     mID(aNameSpaceID)
 {
-  NS_IF_ADDREF(mParent);
 }
 
 NameSpaceImpl::~NameSpaceImpl()
 {
-  NS_IF_RELEASE(mParent);
 }
 
 NS_IMPL_ISUPPORTS1(NameSpaceImpl, nsINameSpace)
@@ -215,28 +194,6 @@ NS_IMETHODIMP
 NameSpaceImpl::GetNameSpaceID(PRInt32* aID) const
 {
   *aID = mID;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-NameSpaceImpl::GetNameSpaceURI(nsAString& aURI) const
-{
-  return gNameSpaceManager->GetNameSpaceURI(mID, aURI);
-}
-
-NS_IMETHODIMP
-NameSpaceImpl::GetNameSpacePrefix(nsIAtom** aPrefix) const
-{
-  NS_IF_ADDREF(*aPrefix = mPrefix);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-NameSpaceImpl::GetParentNameSpace(nsINameSpace** aParent) const
-{
-  NS_IF_ADDREF(*aParent = mParent);
 
   return NS_OK;
 }
@@ -309,31 +266,20 @@ NS_IMETHODIMP
 NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, const nsAString& aURI,
                                     nsINameSpace** aChildNameSpace)
 {
-  NameSpaceImpl* child = new NameSpaceImpl(this, aPrefix, aURI);
-  NS_ENSURE_TRUE(child, NS_ERROR_OUT_OF_MEMORY);
+  *aChildNameSpace = nsnull;
 
-  *aChildNameSpace = NS_STATIC_CAST(nsINameSpace*, child);
+  PRInt32 id;
+  nsresult rv = gNameSpaceManager->RegisterNameSpace(aURI, id);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aChildNameSpace = new NameSpaceImpl(this, aPrefix, id);
+  if (!*aChildNameSpace) {
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   NS_ADDREF(*aChildNameSpace);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
-                                    nsINameSpace** aChildNameSpace)
-{
-  if (gNameSpaceManager->HasNameSpaceURI(aNameSpaceID)) {
-    NameSpaceImpl* child = new NameSpaceImpl(this, aPrefix, aNameSpaceID);
-    NS_ENSURE_TRUE(child, NS_ERROR_OUT_OF_MEMORY);
-
-    *aChildNameSpace = NS_STATIC_CAST(nsINameSpace*, child);
-    NS_ADDREF(*aChildNameSpace);
-
-    return NS_OK;
-  }
-  *aChildNameSpace = nsnull;
-
-  return NS_ERROR_ILLEGAL_VALUE;
 }
 
 NameSpaceManagerImpl::NameSpaceManagerImpl()

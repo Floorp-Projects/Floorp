@@ -1682,6 +1682,62 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
 }
 
 // static
+void
+nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
+                               nsIAtom **aLocalName, PRInt32* aNameSpaceID)
+{
+  /**
+   *  Expat can send the following:
+   *    localName
+   *    namespaceURI<separator>localName
+   *    namespaceURI<separator>localName<separator>prefix
+   *
+   *  and we use 0xFFFF for the <separator>.
+   *
+   */
+
+  const PRUnichar *uriEnd = nsnull;
+  const PRUnichar *nameEnd = nsnull;
+  const PRUnichar *pos;
+  for (pos = aExpatName; *pos; ++pos) {
+    if (*pos == 0xFFFF) {
+      if (uriEnd) {
+        nameEnd = pos;
+      }
+      else {
+        uriEnd = pos;
+      }
+    }
+  }
+
+  const PRUnichar *nameStart;
+  if (uriEnd) {
+    sNameSpaceManager->RegisterNameSpace(nsDependentSubstring(aExpatName,
+                                                              uriEnd),
+                                         *aNameSpaceID);
+
+    nameStart = (uriEnd + 1);
+    if (nameEnd)  {
+      const PRUnichar *prefixStart = nameEnd + 1;
+      *aPrefix = NS_NewAtom(NS_ConvertUTF16toUTF8(prefixStart,
+                                                  pos - prefixStart));
+    }
+    else {
+      nameEnd = pos;
+      *aPrefix = nsnull;
+    }
+  }
+  else {
+    *aNameSpaceID = kNameSpaceID_None;
+    nameStart = aExpatName;
+    nameEnd = pos;
+    *aPrefix = nsnull;
+  }
+  *aLocalName = NS_NewAtom(NS_ConvertUTF16toUTF8(nameStart,
+                                                 nameEnd - nameStart));
+}
+
+// static
 PRBool
 nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
                              nsIDocument* aLoadingDocument)
