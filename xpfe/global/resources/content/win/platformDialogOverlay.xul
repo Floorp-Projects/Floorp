@@ -9,13 +9,21 @@
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <box id="okCancelButtons" align="horizontal">
-		<spring flex="1"/>
+  <box id="okCancelButtons">
+    <spring flex="1"/>
     <button class="right dialog" id="ok" value="&okButton.label;" default="true" onclick="doOKButton()"/>	
     <button class="dialog" id="Button2" value="&cancelButton.label;" style="display:none;" onclick="doButton2()"/>	
     <button class="dialog" id="Button3" value="&cancelButton.label;" style="display:none;" onclick="doButton3()"/>	
     <button class="dialog" id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>
     <spring flex="1"/>
+  </box>
+
+  <box id="okCancelButtonsRight" halign="right">
+    <spring flex="1"/>
+    <button class="right dialog" id="ok" value="&okButton.label;" default="true" onclick="doOKButton()"/>	
+    <button class="dialog" id="Button2" value="&cancelButton.label;" style="display:none;" onclick="doButton2()"/>	
+    <button class="dialog" id="Button3" value="&cancelButton.label;" style="display:none;" onclick="doButton3()"/>	
+    <button class="dialog" id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>
   </box>
 	
 	<keyset id="keyset">

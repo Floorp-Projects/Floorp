@@ -57,6 +57,7 @@ install::
 	$(MAKE_INSTALL) charsetDetectorsOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) selectDialog.js $(DISTBROWSER)
 	$(MAKE_INSTALL) selectDialog.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) nsWidgetStateManager.js $(DISTBROWSER)
 	$(MAKE_INSTALL) widgetStateManager.js $(DISTBROWSER)
 	$(MAKE_INSTALL) wizardHandlerSet.js $(DISTBROWSER)
 	$(MAKE_INSTALL) wizardManager.js $(DISTBROWSER)

@@ -25,6 +25,7 @@ charsetDetectorsOverlay.js
 charsetDetectorsOverlay.xul
 selectDialog.js
 selectDialog.xul
+nsWidgetStateManager.js
 widgetStateManager.js
 wizardHandlerSet.js
 wizardManager.js

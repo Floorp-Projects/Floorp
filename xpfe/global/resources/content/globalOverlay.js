@@ -67,7 +67,7 @@ function goEditCardDialog(abURI, card, okCallback)
 }
 
 
-function goPreferences(id, pane)
+function goPreferences(id, paneURL, paneID)
 {
   var prefWindowModalityPref;
   try {
@@ -82,7 +82,7 @@ function goPreferences(id, pane)
   }
   var modality = prefWindowModalityPref ? "yes" : "no";
   
-  var prefWindow = window.openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,modal=" + modality + ",resizable=yes", pane);
+  var prefWindow = window.openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,modal=" + modality+ ",resizable=yes", paneURL, paneID);
 }
 
 

@@ -7,33 +7,33 @@
 
   <binding id="smallheader">
     <content>
-      <xul:toolbar class="decorated header" autostretch="never" flex="1">
-        <xul:text class="left" inherits="title:value"/>
+      <xul:box class="decorated" autostretch="never" flex="1">
+        <xul:text class="box-smallheader-left" inherits="title:value"/>
         <xul:spring flex="1"/>
-        <xul:text class="right" inherits="description:value"/>
-      </xul:toolbar>
+        <xul:text class="box-smallheader-right" inherits="description:value"/>
+      </xul:box>
     </content>
   </binding>
 
   <binding id="largeheader">
     <content>
-      <xul:toolbar class="decorated header" align="horizontal" flex="1">
+      <xul:box class="decorated header" align="horizontal" flex="1">
         <xul:image inherits="src" class="circle"/>
         <xul:box autostretch="never" class="headertext-box">
           <xul:text class="headertext" inherits="value"/>
         </xul:box>
         <xul:spring flex="100%"/>
-      </xul:toolbar>
+      </xul:box>
     </content>
   </binding>
   
   <binding id="status">
     <content>
-      <xul:toolbar class="standard title" flex="1">
+      <xul:box class="standard title" flex="1">
         <xul:text class="statustext" inherits="value"/>
         <xul:spring flex="1"/>
         <xul:text class="statustext" inherits="progress:value"/>
-      </xul:toolbar>  
+      </xul:box>  
     </content>
   </binding>
   
