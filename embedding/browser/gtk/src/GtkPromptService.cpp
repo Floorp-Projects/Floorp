@@ -144,13 +144,20 @@ GtkPromptService::ConfirmEx(nsIDOMWindow* aParent,
     prompter.SetButtons(button0Label.get(), button1Label.get(),
                         button2Label.get());
 
-    prompter.SetCheckMessage(aCheckMsg);
-    prompter.SetCheckValue(*aCheckValue);
+    if (aCheckMsg)
+        prompter.SetCheckMessage(aCheckMsg);
+    if (aCheckValue)
+        prompter.SetCheckValue(*aCheckValue);
+
     prompter.Create(EmbedPrompter::TYPE_UNIVERSAL,
                     GetGtkWindowForDOMWindow(aParent));
     prompter.Run();
-    prompter.GetCheckValue(aCheckValue);
+
+    if (aCheckValue)
+        prompter.GetCheckValue(aCheckValue);
+
     prompter.GetButtonPressed(aRetVal);
+
     return NS_OK;
 }
 
