@@ -403,8 +403,13 @@ nsIMdbFactory *nsAddrDatabase::GetMDBFactory()
 	static nsIMdbFactory *gMDBFactory = nsnull;
 	if (!gMDBFactory)
 	{
-		nsresult rv;
-        rv = nsComponentManager::CreateInstance(kCMorkFactory, nsnull, nsIMdbFactoryFactory::GetIID(), (void **) &gMDBFactory);
+		nsCOMPtr <nsIMdbFactoryFactory> factoryfactory;
+		nsresult rv = nsComponentManager::CreateInstance(kCMorkFactory,
+												  nsnull,
+												  NS_GET_IID(nsIMdbFactoryFactory),
+												  (void **) getter_AddRefs(factoryfactory));
+		if (NS_SUCCEEDED(rv) && factoryfactory)
+		  rv = factoryfactory->GetMdbFactory(&gMDBFactory);
 	}
 	return gMDBFactory;
 }
