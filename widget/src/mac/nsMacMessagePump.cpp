@@ -336,8 +336,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 					if (newSize != 0)
 						::SizeWindow(whichWindow, newSize & 0x0FFFF, (newSize >> 16) & 0x0FFFF, true);
 					::DrawGrowIcon(whichWindow);
-					Point newPt;
-					::GetMouse(&newPt);
+					Point newPt = botRight(whichWindow->portRect);
 					::LocalToGlobal(&newPt);
 					anEvent.where = newPt;	// important!
 					DispatchOSEventToRaptor(anEvent, whichWindow);
