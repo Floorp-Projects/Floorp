@@ -1294,6 +1294,39 @@ NS_METHOD nsWindow::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
 }
 
 //-------------------------------------------------------------------------
+//
+// Maximize, minimize or restore the window.
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
+
+  nsresult rv;
+
+  // save the requested state
+  rv = nsBaseWidget::SetSizeMode(aMode);
+  if (NS_SUCCEEDED(rv)) {
+    int        mode;
+
+    // note we do this regardless of the window's visibility, and it will
+    // make the window visible. this saves us flashing the window visible
+    // at an incorrect size.
+    switch (aMode) {
+      case nsSizeMode_Maximized :
+        mode = SW_MAXIMIZE;
+        break;
+      case nsSizeMode_Minimized :
+        mode = SW_MINIMIZE;
+        break;
+      default :
+        mode = SW_RESTORE;
+    }
+    ::ShowWindow(mWnd, mode);
+    mIsVisible = PR_TRUE;
+  }
+  return rv;
+}
+
+//-------------------------------------------------------------------------
 // Return PR_TRUE in aForWindow if the given event should be processed
 // assuming this is a modal window.
 //-------------------------------------------------------------------------
