@@ -76,8 +76,7 @@ enum HTMLDocument_slots {
   NSHTMLDOCUMENT_FGCOLOR = -16,
   NSHTMLDOCUMENT_LASTMODIFIED = -17,
   NSHTMLDOCUMENT_EMBEDS = -18,
-  NSHTMLDOCUMENT_LAYERS = -19,
-  NSHTMLDOCUMENT_PLUGINS = -20
+  NSHTMLDOCUMENT_PLUGINS = -19
 };
 
 /***********************************************************************/
@@ -476,33 +475,6 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           nsresult result = NS_OK;
           result = b->GetEmbeds(&prop);
-          if(NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-            NS_RELEASE(b);
-          }
-          else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
-          }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-        }
-        break;
-      }
-      case NSHTMLDOCUMENT_LAYERS:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LAYERS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        nsIDOMHTMLCollection* prop;
-        nsIDOMNSHTMLDocument* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetLayers(&prop);
           if(NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -1492,7 +1464,6 @@ static JSPropertySpec HTMLDocumentProperties[] =
   {"fgColor",    NSHTMLDOCUMENT_FGCOLOR,    JSPROP_ENUMERATE},
   {"lastModified",    NSHTMLDOCUMENT_LASTMODIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"embeds",    NSHTMLDOCUMENT_EMBEDS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"layers",    NSHTMLDOCUMENT_LAYERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"plugins",    NSHTMLDOCUMENT_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

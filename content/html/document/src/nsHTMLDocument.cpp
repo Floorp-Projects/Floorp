@@ -2291,10 +2291,10 @@ nsHTMLDocument::MatchLayers(nsIContent *aContent, nsString* aData)
   return result;
 }
 
+#ifdef NS_IMPLEMENT_DOCUMENT_LAYERS
 NS_IMETHODIMP    
 nsHTMLDocument::GetLayers(nsIDOMHTMLCollection** aLayers)
 {
-#ifdef NS_IMPLEMENT_DOCUMENT_LAYERS
   if (nsnull == mLayers) {
     mLayers = new nsContentList(this, MatchLayers, nsnull);
     if (nsnull == mLayers) {
@@ -2305,12 +2305,11 @@ nsHTMLDocument::GetLayers(nsIDOMHTMLCollection** aLayers)
 
   *aLayers = (nsIDOMHTMLCollection *)mLayers;
   NS_ADDREF(mLayers);
-#else
   *aLayers = nsnull;
-#endif
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)

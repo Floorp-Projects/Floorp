@@ -60,8 +60,6 @@ public:
 
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds)=0;
 
-  NS_IMETHOD    GetLayers(nsIDOMHTMLCollection** aLayers)=0;
-
   NS_IMETHOD    GetPlugins(nsIDOMHTMLCollection** aPlugins)=0;
 
   NS_IMETHOD    GetSelection(nsString& aReturn)=0;
@@ -97,7 +95,6 @@ public:
   NS_IMETHOD    SetFgColor(const nsString& aFgColor);  \
   NS_IMETHOD    GetLastModified(nsString& aLastModified);  \
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds);  \
-  NS_IMETHOD    GetLayers(nsIDOMHTMLCollection** aLayers);  \
   NS_IMETHOD    GetPlugins(nsIDOMHTMLCollection** aPlugins);  \
   NS_IMETHOD    GetSelection(nsString& aReturn);  \
   NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn);  \
@@ -124,7 +121,6 @@ public:
   NS_IMETHOD    SetFgColor(const nsString& aFgColor) { return _to SetFgColor(aFgColor); } \
   NS_IMETHOD    GetLastModified(nsString& aLastModified) { return _to GetLastModified(aLastModified); } \
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds) { return _to GetEmbeds(aEmbeds); } \
-  NS_IMETHOD    GetLayers(nsIDOMHTMLCollection** aLayers) { return _to GetLayers(aLayers); } \
   NS_IMETHOD    GetPlugins(nsIDOMHTMLCollection** aPlugins) { return _to GetPlugins(aPlugins); } \
   NS_IMETHOD    GetSelection(nsString& aReturn) { return _to GetSelection(aReturn); }  \
   NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn) { return _to NamedItem(aName, aReturn); }  \
