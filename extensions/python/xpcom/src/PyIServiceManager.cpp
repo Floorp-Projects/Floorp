@@ -54,7 +54,7 @@ static PyObject *PyRegisterService(PyObject *self, PyObject *args)
 	if (!Py_nsISupports::InterfaceFromPyObject(obInterface, NS_GET_IID(nsISupports), getter_AddRefs(pis), PR_FALSE))
 		return NULL;
 	nsresult r;
-	if (PyString_Check(obCID) || PyUnicode_Check(obCID)) {
+	if (PyString_Check(obCID)) {
 		const char *val = PyString_AsString(obCID);
 		Py_BEGIN_ALLOW_THREADS;
 		r = pI->RegisterService(val, pis);
@@ -87,7 +87,7 @@ static PyObject *PyGetService(PyObject *self, PyObject *args)
 
 	nsISupports *pis;
 	nsresult r;
-	if (PyString_Check(obCID) || PyUnicode_Check(obCID)) {
+	if (PyString_Check(obCID)) {
 		char *val = PyString_AsString(obCID);
 		Py_BEGIN_ALLOW_THREADS;
 		r = pI->GetService(val, iid, &pis);
