@@ -2,11 +2,12 @@
 <body name="test_dom_accessor">
 <pre>
 This should run DOMAccessor test.
-Look into the java plugin console for
-document load notifications while surfing 
-around
+TestDOMAccessorApplet1 registers itself
+as a DocumentLoadListener via DOMAccessor
+and dumps load notifications and document 
+source into the java plugin console.
 <pre>
-<applet code="org.mozilla.dom.tests.TestDOMAccessorApplet"
+<applet code="org.mozilla.dom.tests.TestDOMAccessorApplet1"
         width=0
         height=0
         alt="Your browser understands the &lt;APPLET&gt; tag but isn't running the applet, for some reason.">
