@@ -78,6 +78,7 @@ void nsTextWidget::Create(nsIWidget *aParent,
                                     XmNheight, aRect.height,
                                     XmNrecomputeSize, False,
                                     XmNhighlightOnEnter, False,
+                                    XmNeditable, mMakeReadOnly?False:True,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y, 
                                     nsnull);
@@ -94,7 +95,13 @@ void nsTextWidget::Create(nsIWidget *aParent,
   }
   if (mMakePassword) {
     SetPassword(PR_TRUE);
+    PasswordData * data = new PasswordData();
+    data->mPassword = "";
+    XtVaSetValues(mWidget, XmNuserData, data, NULL);
   }
+  
+  
+
 
 }
 
@@ -165,6 +172,7 @@ void nsTextWidget::SetPassword(PRBool aIsPassword)
       mIsPasswordCallBacksInstalled = PR_FALSE;
     }
   }
+  mHelper->SetPassword(aIsPassword);
 }
 
 //--------------------------------------------------------------

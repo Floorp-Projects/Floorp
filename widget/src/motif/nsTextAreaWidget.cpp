@@ -75,6 +75,7 @@ void nsTextAreaWidget::Create(nsIWidget *aParent,
                                     XmNrecomputeSize, False,
                                     XmNhighlightOnEnter, False,
                                     XmNeditMode, XmMULTI_LINE_EDIT,
+                                    XmNeditable, mMakeReadOnly?False:True,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y, 
                                     nsnull);

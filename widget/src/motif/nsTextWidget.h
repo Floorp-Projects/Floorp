@@ -24,11 +24,15 @@
 
 #include "nsITextWidget.h"
 
+typedef struct _PasswordData {
+  nsString mPassword;
+  Boolean  mIgnore;
+} PasswordData;
+
 /**
  * Native Motif single line edit control wrapper. 
  */
 
-//class nsTextWidget : public nsTextHelper
 class nsTextWidget : public nsWindow
 {
 
