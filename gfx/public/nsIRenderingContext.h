@@ -682,11 +682,21 @@ struct nsBoundingMetrics {
   ///////////
   // Metrics that _exactly_ enclose the text:
 
-  // The origin of the character coordinate system is the same
-  // as that of PostScript and Win32, i.e., the origin is located
-  // at the intersection of the baseline with the left of the
-  // character's cell. Any value below can be positive or negative.
-  
+  // The character coordinate system is the one used on X Windows:
+  // 1. The origin is located at the intersection of the baseline
+  //    with the left of the character's cell.
+  // 2. All horizontal bearings are oriented from left to right.
+  // 3. The ascent is oriented from bottom to top (being 0 at the orgin).
+  // 4. The descent is oriented from top to bottom (being 0 at the origin).
+
+  // Note that Win32/Mac/PostScript use a different convention for
+  // the descent (all vertical measurements are oriented from bottom
+  // to top on these palatforms). Make sure to flip to sign of the
+  // descent on these platforms for cross-platform compatibility.
+
+  // Any of the following member variables listed here can have 
+  // positive or negative value.
+
   nscoord leftBearing;
        /* The horizontal distance from the origin of the drawing
           operation to the left-most part of the drawn string. */
@@ -705,7 +715,7 @@ struct nsBoundingMetrics {
        /* The vertical distance from the origin of the drawing 
           operation to the bottom-most part of the drawn string.
           The _exact_ height of the string is therefore:
-          ascent - descent */
+          ascent + descent */
 
   //////////
   // Metrics for placing other surrounding text:
@@ -763,7 +773,7 @@ struct nsBoundingMetrics {
   void 
   operator += (const nsBoundingMetrics& bm) {
     if (ascent < bm.ascent) ascent = bm.ascent;
-    if (descent > bm.descent) descent = bm.descent;   
+    if (descent < bm.descent) descent = bm.descent;   
     rightBearing = width + bm.rightBearing;
     width += bm.width;
     supItalicCorrection = bm.supItalicCorrection;
