@@ -130,7 +130,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
 
                 PRBool isISupportsDescendent = PR_FALSE;
                 nsID* iid;
-                if(NS_SUCCEEDED(oldest->GetIID(&iid))) 
+                if(NS_SUCCEEDED(oldest->GetInterfaceIID(&iid))) 
                 {
                     isISupportsDescendent = iid->Equals(NS_GET_IID(nsISupports));
                     nsMemory::Free(iid);
@@ -351,7 +351,7 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
         current = parent;
 
         nsIID* iid;
-        if(NS_SUCCEEDED(current->GetIID(&iid)) && iid)
+        if(NS_SUCCEEDED(current->GetInterfaceIID(&iid)) && iid)
         {
             PRBool found = aIID.Equals(*iid);
             nsMemory::Free(iid);

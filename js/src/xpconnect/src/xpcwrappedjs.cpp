@@ -430,7 +430,7 @@ nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
 }
 
 NS_IMETHODIMP
-nsXPCWrappedJS::GetIID(nsIID** iid)
+nsXPCWrappedJS::GetInterfaceIID(nsIID** iid)
 {
     NS_PRECONDITION(iid, "bad param");
 

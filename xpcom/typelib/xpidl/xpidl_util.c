@@ -228,6 +228,20 @@ verify_attribute_declaration(IDL_tree attr_tree)
     IDL_tree attr_type;
     gboolean scriptable_interface;
 
+    /* We don't support attributes named IID, conflicts with static GetIID 
+     * member. The conflict is due to certain compilers (VC++) choosing a
+     * different vtable order, placing GetIID at the beginning regardless
+     * of it's placement
+     */
+    if (strcmp(
+        IDL_IDENT(
+            IDL_LIST(IDL_ATTR_DCL(attr_tree).simple_declarations).data).str, 
+        "IID") == 0) {
+        IDL_tree_error(attr_tree,
+                       "Attributes named IID not supported, causes vtable "
+                       "ordering problems");
+        return FALSE;
+    }
     /* 
      * Verify that we've been called on an interface, and decide if the
      * interface was marked [scriptable].
@@ -455,6 +469,17 @@ verify_method_declaration(IDL_tree method_tree)
     gboolean seen_retval = FALSE;
     const char *method_name = IDL_IDENT(IDL_OP_DCL(method_tree).ident).str;
 
+    /* We don't support attributes named IID, conflicts with static GetIID 
+     * member. The conflict is due to certain compilers (VC++) choosing a
+     * different vtable order, placing GetIID at the beginning regardless
+     * of it's placement
+     */
+    if (strcmp(method_name, "GetIID") == 0) {
+        IDL_tree_error(method_tree,
+                       "Methods named GetIID not supported, causes vtable "
+                       "ordering problems");
+        return FALSE;
+    }
     if (op->f_varargs) {
         /* We don't currently support varargs. */
         IDL_tree_error(method_tree, "varargs are not currently supported");

@@ -62,7 +62,7 @@ class nsXPTType;
 interface nsIInterfaceInfo : nsISupports
 {
     readonly attribute string   name;
-    readonly attribute nsIIDPtr IID;
+    readonly attribute nsIIDPtr InterfaceIID;
 
     PRBool isScriptable();
 

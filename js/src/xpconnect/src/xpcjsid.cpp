@@ -422,7 +422,7 @@ NS_IMETHODIMP nsJSIID::GetNumber(char * *aNumber)
 
 NS_IMETHODIMP nsJSIID::GetId(nsID* *aId)
 {
-    return mInfo->GetIID((nsIID**)aId);
+    return mInfo->GetInterfaceIID((nsIID**)aId);
 }
 
 NS_IMETHODIMP nsJSIID::GetValid(PRBool *aValid)
