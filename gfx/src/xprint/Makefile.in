@@ -86,7 +86,7 @@ EXPORTS		= \
 		xprintutil.h \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS +=
+EXTRA_DSO_LDOPTS += \
 		$(MOZ_XPRINT_LDFLAGS) \
 		-lgfxshared_s \
 		$(NULL)
