@@ -43,13 +43,12 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_getName
     return NULL;
   }
 
-  char* cname = name.ToNewCString();
+  const char* cname = name.GetBuffer();
   jstring jname = env->NewStringUTF(cname);
   if (!jname) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Attr.getName: NewStringUTF failed: %s\n", cname));
   }
-  delete[] cname;
 
   return jname;
 }
@@ -105,13 +104,12 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_getValue
     return NULL;
   }
 
-  char* cvalue = value.ToNewCString();
+  const char* cvalue = value.GetBuffer();
   jstring jval = env->NewStringUTF(cvalue);
   if (!jval) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Attr.getValue: NewStringUTF failed: %s\n", cvalue));
   }
-  delete[] cvalue;
 
   return jval;
 }

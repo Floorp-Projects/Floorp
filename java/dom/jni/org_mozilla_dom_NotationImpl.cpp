@@ -44,14 +44,13 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NotationImpl_getPublicId
     return NULL;
   }
 
-  char* cret = ret.ToNewCString();
+  const char* cret = ret.GetBuffer();
   jstring jret = env->NewStringUTF(cret);
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Notation.getPublicId: NewStringUTF failed (%s)\n", cret));
     return NULL;
   }
-  delete[] cret;
 
   return jret;
 }
@@ -80,14 +79,13 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NotationImpl_getSystemId
     return NULL;
   }
 
-  char* cret = ret.ToNewCString();
+  const char* cret = ret.GetBuffer();
   jstring jret = env->NewStringUTF(cret);
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Notation.getSystemId: NewStringUTF failed (%s)\n", cret));
     return NULL;
   }
-  delete[] cret;
 
   return jret;
 }

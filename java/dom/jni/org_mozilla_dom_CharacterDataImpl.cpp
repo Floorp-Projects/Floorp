@@ -101,13 +101,12 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_getData
     return NULL;
   }
 
-  char* cret = ret.ToNewCString();
+  const char* cret = ret.GetBuffer();
   jstring jret = env->NewStringUTF(cret);
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("CharacterData.getData: NewStringUTF failed: %s\n", cret));
   }
-  delete[] cret;
 
   return jret;
 }
@@ -265,13 +264,12 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_substringData
     return NULL;
   }
 
-  char* cret = ret.ToNewCString();
+  const char* cret = ret.GetBuffer();
   jstring jret = env->NewStringUTF(cret);
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("CharacterData.substringData: NewStringUTF failed: %s\n", cret));
   }
-  delete[] cret;
 
   return jret;
 }

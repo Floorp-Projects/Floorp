@@ -56,14 +56,13 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
     return NULL;
   }
 
-  char* cattr = attr.ToNewCString();
+  const char* cattr = attr.GetBuffer();
   jstring jattr = env->NewStringUTF(cattr);
   if (!jattr) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Element.getAttribute: NewStringUTF failed (%s)\n", cattr));
     return NULL;
   }
-  delete[] cattr;
 
   return jattr;
 }
@@ -196,14 +195,13 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getTagName
     return NULL;
   }
 
-  char* cTagName = tagName.ToNewCString();
+  const char* cTagName = tagName.GetBuffer();
   jstring jTagName = env->NewStringUTF(cTagName);
   if (!jTagName) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Element.getTagName: NewStringUTF failed (%s)\n", cTagName));
     return NULL;
   }
-  delete[] cTagName;
 
   return jTagName;
 }

@@ -34,7 +34,7 @@ static void dump_document(nsIDOMDocument* dom, const char* urlSpec);
 static void dump_node(FILE* of, nsIDOMNode* node, int indent, 
 		      PRBool isMapNode);
 static void dump_map(FILE* of, nsIDOMNamedNodeMap* map, int indent);
-static char* strip_whitespace(char* input);
+static char* strip_whitespace(const char* input);
 static const char* describe_type(int type);
 #endif
 
@@ -444,9 +444,8 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader,
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
-  char* cMsg = aMsg.ToNewCString();
+  const char* cMsg = aMsg.GetBuffer();
   jstring jMessage = env->NewStringUTF(cMsg);
-  delete[] cMsg;
   if (!jMessage) return NS_ERROR_FAILURE;
 
   nsIDOMDocument* domDoc = GetDocument(loader);
@@ -565,13 +564,12 @@ static void dump_node(FILE* of, nsIDOMNode* node, int indent,
   node->GetNodeValue(value);
   node->GetNodeType(&type);
 
-  char* cname = name.ToNewCString();
-  char* cvalue = value.ToNewCString();
+  const char* cname = name.GetBuffer();
+  const char* cvalue = value.GetBuffer();
   char* cnorm = strip_whitespace(cvalue);
   fprintf(of, "name=\"%s\" type=%s value=\"%s\"", 
 	  cname, describe_type(type), cnorm);
   delete[] cnorm;
-  delete[] cname;
 
   if (isMapNode) return;
 
@@ -619,13 +617,13 @@ static void dump_map(FILE* of, nsIDOMNamedNodeMap* map, int indent)
   }
 }
 
-static char* strip_whitespace(char* input)
+static char* strip_whitespace(const char* input)
 {
   int len = strlen(input);
   char* out = new char[len];
 
   char* op = out;
-  char* ip = input;
+  const char* ip = input;
   char c = ' ';
   char pc = ' ';
 
@@ -638,7 +636,6 @@ static char* strip_whitespace(char* input)
   }
   *op++ = 0;
 
-  delete[] input;
   return out;
 }
 
