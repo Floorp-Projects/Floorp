@@ -116,6 +116,7 @@ public:
   static nsIAtom* frame;
   static nsIAtom* frameborder;
   static nsIAtom* frameset;
+  static nsIAtom* framesetBlankPseudo;
 
   static nsIAtom* gutter;
 

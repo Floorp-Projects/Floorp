@@ -92,6 +92,7 @@ nsIAtom* nsHTMLAtoms::form;
 nsIAtom* nsHTMLAtoms::frame;
 nsIAtom* nsHTMLAtoms::frameborder;
 nsIAtom* nsHTMLAtoms::frameset;
+nsIAtom* nsHTMLAtoms::framesetBlankPseudo;
 nsIAtom* nsHTMLAtoms::gutter;
 nsIAtom* nsHTMLAtoms::h1;
 nsIAtom* nsHTMLAtoms::h2;
@@ -308,6 +309,7 @@ void nsHTMLAtoms::AddrefAtoms()
     frame = NS_NewAtom("FRAME");
     frameborder = NS_NewAtom("FRAMEBORDER");
     frameset = NS_NewAtom("FRAMESET");
+    framesetBlankPseudo = NS_NewAtom("FRAMESETBLANKPSEUDO");
     gutter = NS_NewAtom("GUTTER");
     h1 = NS_NewAtom("H1");
     h2 = NS_NewAtom("H2");
@@ -518,6 +520,8 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(_for);
     NS_RELEASE(form);
     NS_RELEASE(frameborder);
+    NS_RELEASE(frameset);
+    NS_RELEASE(framesetBlankPseudo);
     NS_RELEASE(gutter);
     NS_RELEASE(h1);
     NS_RELEASE(h2);
