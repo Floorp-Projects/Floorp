@@ -2204,6 +2204,10 @@ void InvalidateContextAndWrapperCache()
 static inline PRBool
 needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
 {
+  // Temporarily disable this optimization since it exposes security
+  // problems. Real fix coming soon...
+#if 0
+
   // Cache a pointer to a wrapper and a context and set these pointers
   // to point to the wrapper and context that doesn't need a security
   // check, thus we avoid doing all this work to find out if we need
@@ -2245,6 +2249,7 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
 
     return PR_FALSE;
   }
+#endif
 
   return PR_TRUE;
 }
