@@ -101,10 +101,6 @@ public:
     return mMetrics.mMaximumWidth;
   }
 
-  PRBool BlockShouldInvalidateItself() const {
-    return mBlockShouldInvalidateItself;
-  }
-
   static void ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
                                         nsHTMLReflowState& aRS,
                            /* inout */  nsCollapsingMargin& aMargin);
@@ -131,7 +127,6 @@ protected:
   nsCollapsingMargin mTopMargin;
   PRPackedBool mIsTable;
   PRPackedBool mComputeMaximumWidth;
-  PRPackedBool mBlockShouldInvalidateItself;
 };
 
 #endif /* nsBlockReflowContext_h___ */

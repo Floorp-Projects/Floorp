@@ -236,8 +236,7 @@ public:
 #define BRS_APPLYTOPMARGIN        0x00000080  // See ShouldApplyTopMargin
 #define BRS_COMPUTEMAXELEMENTWIDTH 0x00000100
 #define BRS_COMPUTEMAXWIDTH       0x00000200
-#define BRS_DAMAGECONSTRAINED     0x00000400  // is the target of an incremental reflow command inside a text control
-#define BRS_LASTFLAG              BRS_DAMAGECONSTRAINED
+#define BRS_LASTFLAG              BRS_COMPUTEMAXWIDTH
 
   PRInt16 mFlags;
  
