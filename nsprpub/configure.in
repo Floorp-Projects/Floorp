@@ -1110,11 +1110,12 @@ pr/src/threads/Makefile
 pr/tests/Makefile 
 pr/tests/dll/Makefile 
 "
-dnl lib/tests/Makefile 
-dnl pr/tests/w16gui/Makefile 
-dnl tools/Makefile 
 
-if test -z "$USE_PTHREADS" && test -z "$USE_BTHREADS"; then 
+dnl lib/tests/Makefile
+dnl pr/tests/w16gui/Makefile
+dnl tools/Makefile
+
+if test -z "$USE_PTHREADS" && test -z "$USE_BTHREADS"; then
     MAKEFILES="$MAKEFILES pr/src/threads/combined/Makefile"
 elif test -n "$USE_PTHREADS"; then
     MAKEFILES="$MAKEFILES pr/src/pthreads/Makefile"
