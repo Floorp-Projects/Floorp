@@ -60,6 +60,7 @@
 #include "mozITXTToHTMLConv.h"
 #include "nsIMIMEService.h"
 #include "nsIImapUrl.h"
+#include "nsMsgI18N.h"
 
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -1732,3 +1733,64 @@ ResetChannelCharset(MimeObject *obj)
     } 
   } 
 }
+
+  ////////////////////////////////////////////////////////////
+  // Functions to set up mail/news font
+  ////////////////////////////////////////////////////////////
+
+int BeginMailNewsFont(MimeObject *obj, const char *prefFontName, const char *prefFontSize)
+{
+  nsIPref *aPrefs = GetPrefServiceManager(obj->options);
+  int status = -1;
+
+  if (aPrefs) {
+    MimeInlineText  *text = (MimeInlineText *) obj;
+	// todo: use folder charset instead of hard coded ISO-8859-1
+    nsAutoString aCharset(text->charset ? text->charset : "ISO-8859-1");
+    PRUnichar *unicode = nsnull;
+    char *fontName = nsnull;
+    PRInt32 fontSize;
+    PRInt32 screenRes;
+    nsresult rv;
+
+    // get a font name from pref, could be non ascii (need charset conversion)
+    // this is not necessary if we insert this tag after the message is converted to UTF-8
+    rv = aPrefs->CopyUnicharPref(prefFontName, &unicode);
+    if (NS_FAILED(rv))
+      goto done;
+    rv = ConvertFromUnicode(aCharset, nsAutoString(unicode), &fontName);
+    if (NS_FAILED(rv))
+      goto done;
+
+    // get a font size from pref
+    rv = aPrefs->GetIntPref(prefFontSize, &fontSize);
+    if (NS_FAILED(rv))
+      goto done;
+
+    // get a screen resolution
+    rv = aPrefs->GetIntPref("browser.screen_resolution", &screenRes);
+     if (NS_FAILED(rv))
+       goto done;
+
+    fontSize = fontSize * 72 / screenRes;
+  
+    char buf[256];
+
+    PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">\n", fontName, fontSize);
+
+    status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+
+done:
+    PR_FREEIF(unicode);
+    PR_FREEIF(fontName);
+  }
+  
+  return status;
+}
+
+int EndMailNewsFont(MimeObject *obj)
+{
+  char buf[] = "</div>";
+  return MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+}
+
