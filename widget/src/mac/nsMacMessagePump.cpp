@@ -802,8 +802,8 @@ void	nsMacMessagePump::DoKey(EventRecord &anEvent)
 	//}
 	//else
 	{
-#if USE_MENUSELECT
 		PRBool handled = DispatchOSEventToRaptor(anEvent, GetFrontApplicationWindow());
+#if USE_MENUSELECT
 		/* we want to call this if cmdKey is pressed and no other modifier keys are pressed */
 		if((!handled) && (anEvent.what == keyDown) && (anEvent.modifiers == cmdKey) )
 		{
