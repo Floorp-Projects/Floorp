@@ -118,7 +118,6 @@ private:
                               nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBackgroundImage(nsIFrame *aFrame,
                               nsIDOMCSSPrimitiveValue*& aValue);
-  nsresult GetDisplay(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   // Padding properties
   nsresult GetPadding(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
@@ -192,10 +191,13 @@ private:
   nsresult GetTextAlign(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetTextDecoration(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);  
 
-  // Display properties
+  // Visibility properties
   nsresult GetVisibility(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
+  // Display properties
   nsresult GetBehavior(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetFloat(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetDisplay(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
 
@@ -228,6 +230,8 @@ static const nsCSSProperty queryableProperties[] = {
   eCSSProperty_background_image,
 
   eCSSProperty_display,
+  eCSSProperty_binding,
+  eCSSProperty_float,
 
   eCSSProperty_padding,
   eCSSProperty_padding_top,
@@ -262,17 +266,16 @@ static const nsCSSProperty queryableProperties[] = {
   eCSSProperty_outline_width,
   eCSSProperty_outline_style,
   eCSSProperty_outline_color,
-  
+
   eCSSProperty_marker_offset,
-  
+
   eCSSProperty_z_index,
-  
+
   eCSSProperty_list_style_image,
-  
+
   eCSSProperty_text_align,
   eCSSProperty_text_decoration,
-  
-  eCSSProperty_binding,
+
 };
 
 nsresult
@@ -424,6 +427,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
       rv = GetBehavior(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_display :
       rv = GetDisplay(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_float :
+      rv = GetFloat(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_width :
       rv = GetWidth(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_height :
@@ -660,6 +665,30 @@ nsComputedDOMStyle::GetBehavior(nsIFrame *aFrame,
 
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetFloat(nsIFrame *aFrame,
+                                      nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleDisplay* display=nsnull;
+  GetStyleData(eStyleStruct_Display,(const nsStyleStruct*&)display,aFrame);
+
+  if(display) {
+    const nsCString& cssFloat =
+      nsCSSProps::SearchKeywordTable(display->mFloats,
+	                                 nsCSSProps::kFloatKTable);
+    val->SetString(cssFloat);
+  }
+  else {
+    val->SetString("");
+  }
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+	                         (void **)&aValue);
 }
 
 #if 0
@@ -1391,7 +1420,7 @@ nsComputedDOMStyle::GetTextAlign(nsIFrame *aFrame,
 
   const nsStyleText* text = nsnull;
   GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)text, aFrame);
-  
+
   if(text) {
     const nsCString& align=
       nsCSSProps::SearchKeywordTable(text->mTextAlign,
@@ -1401,7 +1430,7 @@ nsComputedDOMStyle::GetTextAlign(nsIFrame *aFrame,
   else {
     val->SetString("start");
   }
-  
+
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
 }
@@ -1415,7 +1444,7 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
 
   const nsStyleTextReset* text=nsnull;
   GetStyleData(eStyleStruct_TextReset,(const nsStyleStruct*&)text,aFrame);
-  
+
   if(text) {
     const nsCString& decoration=
       nsCSSProps::SearchKeywordTable(text->mTextDecoration,
@@ -1425,7 +1454,7 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
   else {
     val->SetString("");
   }
-  
+
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
 	                         (void **)&aValue);
 }
@@ -1439,7 +1468,7 @@ nsComputedDOMStyle::GetVisibility(nsIFrame *aFrame,
 
   const nsStyleVisibility* visibility=nsnull;
   GetStyleData(eStyleStruct_Visibility,(const nsStyleStruct*&)visibility,aFrame);
-  
+
   if(visibility) {
     const nsCString& value=
       nsCSSProps::SearchKeywordTable(visibility->mVisible,
@@ -1449,7 +1478,7 @@ nsComputedDOMStyle::GetVisibility(nsIFrame *aFrame,
   else {
     val->SetString("");
   }
-  
+
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
 }
@@ -1498,7 +1527,7 @@ nsComputedDOMStyle::GetCounterReset(nsAWritableString& aCounterReset)
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCssFloat(nsAWritableString& aCssFloat)
+nsComputedDOMStyle::GetFloat(nsAWritableString& aFloat)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -2339,7 +2368,7 @@ nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide,
 
   const nsStyleBorder* border = nsnull;
   GetStyleData(eStyleStruct_Border,(const nsStyleStruct*&)border,aFrame);
-  
+
   if(border) {
     nscolor color; 
     PRBool transparent;
