@@ -26,11 +26,10 @@ XPIDLSRCS = \
     .\nsIProgressDialog.idl \
     $(NULL)
 
-JSCOMPONENTS = \
-    .\nsProgressDialog.js \
-    $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(JSCOMPONENTS)
-        !@$(MAKE_INSTALL) $(JSCOMPONENTS) $(DIST)\bin\components
+libs:: nsProgressDialog.js
+        !@$(MAKE_INSTALL) $** $(DIST)\bin\components
+
+clobber_all::
+        !rm -f $(DIST)\bin\components\nsProgressDialog.js

@@ -1,8 +1,11 @@
 en-US.jar:
     locale/en-US/global/nsHelperAppDlg.dtd (helperAppDlg/locale/en-US/nsHelperAppDlg.dtd)
     locale/en-US/global/nsHelperAppDlg.properties (helperAppDlg/locale/en-US/nsHelperAppDlg.properties)
+    locale/en-US/global/nsProgressDialog.dtd (progressDlg/locale/en-US/nsProgressDialog.dtd)
+    locale/en-US/global/nsProgressDialog.properties (progressDlg/locale/en-US/nsProgressDialog.properties)
 
 toolkit.jar:
     content/global/nsHelperAppDlg.xul (helperAppDlg/nsHelperAppDlg.xul)
     content/global/nsProgressDlg.xul  (progressDlg/nsProgressDlg.xul)
+    content/global/nsProgressDialog.xul  (progressDlg/nsProgressDialog.xul)
     content/global/nsProgressDlg.js   (progressDlg/nsProgressDlg.js)
