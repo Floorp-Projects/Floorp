@@ -32,6 +32,11 @@
 static HINSTANCE g_hInst = NULL;
 #endif
 
+#ifdef XP_BEOS
+#include <OS.h>
+#include <image.h>
+#endif
+
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
