@@ -121,6 +121,7 @@ class nsMsgCompose : public nsIMsgCompose
     nsCOMPtr<nsISupportsArray> 	  mStateListeners;		// contents are nsISupports
     
     friend class QuotingOutputStreamListener;
+	friend class nsMsgDocumentStateListener;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

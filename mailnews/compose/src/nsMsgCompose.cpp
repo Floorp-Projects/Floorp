@@ -122,10 +122,11 @@ nsMsgCompose::nsMsgCompose()
 
 nsMsgCompose::~nsMsgCompose()
 {
-	if (m_editor) 
-		m_editor->UnregisterDocumentStateListener(mDocumentListener);
-
-	NS_IF_RELEASE(mDocumentListener);
+	if (mDocumentListener)
+	{
+		mDocumentListener->SetComposeObj(nsnull);      
+		NS_RELEASE(mDocumentListener);
+	}
 	NS_IF_RELEASE(m_sendListener);
 	NS_IF_RELEASE(m_compFields);
 	NS_IF_RELEASE(mQuoteStreamListener);
@@ -733,8 +734,8 @@ nsresult nsMsgCompose::CloseWindow()
 {
 	if (m_webShellWin)
 	{
-    m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to */
-							                /* be sure we wont use it anymore. */
+		m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to */
+							      /* be sure we wont use it anymore. */
 		nsIWebShellWindow *saveWin = m_webShellWin;
 		m_webShellWin = nsnull;
 		saveWin->Close();
@@ -1596,6 +1597,9 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
 nsresult
 nsMsgDocumentStateListener::NotifyDocumentWillBeDestroyed(void)
 {
+  if (mComposeObj)
+    mComposeObj->m_editor = nsnull;	/* m_editor will be destroyed. Set it to null to */
+									/* be sure we wont use it anymore. */
   return NS_OK;
 }
 
