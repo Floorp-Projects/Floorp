@@ -107,7 +107,7 @@
     [mSearchField setStringValue:[browserController lastFindText]];
   }
 
-  return [super showWindow:sender];
+  [super showWindow:sender];
 }
 
 @end
