@@ -470,7 +470,9 @@ FontNameKey::FontNameKey(const nsString& aString)
 
 PRUint32 FontNameKey::HashValue(void) const
 {
-	return nsCRT::HashValue(mString.GetUnicode());
+  nsString str;
+  mString.ToLowerCase(str);
+	return nsCRT::HashValue(str.GetUnicode());
 }
 
 PRBool FontNameKey::Equals(const nsHashKey *aKey) const
@@ -643,6 +645,13 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 		if (NS_SUCCEEDED(prefs->GetIntPref("browser.screen_resolution", &intVal))) {
 			mPixelsPerInch = intVal;
 		}
+#if 0
+		else {
+			short hppi, vppi;
+			::ScreenRes(&hppi, &vppi);
+			mPixelsPerInch = hppi * 1.17f;
+		}
+#endif
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 
