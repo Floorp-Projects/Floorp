@@ -107,7 +107,7 @@ public class SchemaMatchingRule extends SchemaElement {
         String val = null;
         for (int i = 0; i < attrIds.length; i++) {
             if (attrIds[i].equals(NUMERICOID)) {
-                val = m_ldapMatchingRule.getOID();
+                val = m_ldapMatchingRule.getID();
                 if (val != null) {
                     attrs.put(new BasicAttribute(NUMERICOID, val));
                 }                    

@@ -117,7 +117,7 @@ class LDAPMessageQueue {
         
         // Is the ldap operation completed?
         if (msg instanceof LDAPResponse) {
-            removeRequest(msg.getID());
+            removeRequest(msg.getMessageID());
         }
         
         return msg;
@@ -220,14 +220,16 @@ class LDAPMessageQueue {
      * requests are sent by one thread but processed by another one
      * 
      * A client may be implemented in such a way that one thread makes LDAP
-     * requests and calls l.getIDs(), while another thread is responsible for
+     * requests and calls l.getMessageIDs(), while another thread is
+     * responsible for
      * processing of responses (call l.getResponse()). Both threads are using
      * the same listener objects. In such a case, a race
      * condition may occur, where a LDAP response message is retrieved and
      * the request terminated (request ID removed) before the first thread
-     * has a chance to execute l.getIDs().
+     * has a chance to execute l.getMessageIDs().
      * The proper way to handle this scenario is to create a separate listener
-     * for each new request, and after l.getIDs() has been invoked, merge the
+     * for each new request, and after l.getMessageIDs() has been invoked,
+     * merge the
      * new request with the existing one.
      * @param mq2 message queue to merge with this one
      */
@@ -271,7 +273,7 @@ class LDAPMessageQueue {
         // Mark conn as bound for asych bind operations
         if (isAsynchOp() && msg.getType() == msg.BIND_RESPONSE) {
             if (((LDAPResponse) msg).getResultCode() == 0) {
-                getConnection(msg.getID()).markConnAsBound();
+                getConnection(msg.getMessageID()).markConnAsBound();
             }                
         }
         
@@ -320,7 +322,7 @@ class LDAPMessageQueue {
         int removeCount=0;
         for (int i=(m_messageQueue.size()-1); i>=0; i--) {
             LDAPMessage msg = (LDAPMessage)m_messageQueue.elementAt(i);
-            if (msg.getID() == id) {
+            if (msg.getMessageID() == id) {
                 m_messageQueue.removeElementAt(i);
                 removeCount++;
             }
@@ -377,7 +379,7 @@ class LDAPMessageQueue {
      * Returns message ID of the last request
      * @return message ID.
      */
-    synchronized int getID() {
+    synchronized int getMessageID() {
         int reqCnt = m_requestList.size();
         if ( reqCnt == 0) {
             return -1;
@@ -392,7 +394,7 @@ class LDAPMessageQueue {
      * Returns a list of message IDs for all outstanding requests
      * @return message ID array.
      */
-    synchronized int[] getIDs() {
+    synchronized int[] getMessageIDs() {
         int[] ids = new int[m_requestList.size()];
         for (int i=0; i < ids.length; i++) {
             RequestEntry entry = (RequestEntry)m_requestList.elementAt(i);

@@ -199,10 +199,16 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
     }
 
     public Object addToEnvironment(String propName, Object propValue) throws NamingException {
+        if (propName.equalsIgnoreCase(m_ctxEnv.P_TRACE)) {
+            m_ldapSvc.setTraceOutput(propValue);
+        }            
         return m_ctxEnv.updateProperty(propName, propValue, getSearchConstraints());
     }
 
     public Object removeFromEnvironment(String propName) throws NamingException {
+        if (propName.equalsIgnoreCase(m_ctxEnv.P_TRACE)) {
+            m_ldapSvc.setTraceOutput(null);
+        }
         return m_ctxEnv.removeProperty(propName);
     }
 

@@ -99,7 +99,7 @@ import java.util.*;
  * @see netscape.ldap.LDAPSchemaElement
  **/
 
-public class LDAPMatchingRuleSchema extends LDAPSchemaElement {
+public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
     /**
      * Constructs a matching rule definition, using the specified
      * information.
@@ -171,7 +171,12 @@ public class LDAPMatchingRuleSchema extends LDAPSchemaElement {
                                    String[] attributes,
                                    String syntaxString,
                                    String[] aliases ) {
-        super( name, oid, description );
+        if ( (oid == null) || (oid.trim().length() < 1) ) {
+            throw new IllegalArgumentException( "OID required" );
+        }
+        this.name = name;
+        this.oid = oid;
+        this.description = description;
         attrName = "matchingrules";
         syntaxElement.syntax = syntaxElement.syntaxCheck( syntaxString );
         syntaxElement.syntaxString = syntaxString;
@@ -233,33 +238,6 @@ public class LDAPMatchingRuleSchema extends LDAPSchemaElement {
      */
     public String[] getAttributes() {
         return attributes;
-    }
-
-    /**
-     * Gets the syntax of the schema element
-     * @return One of the following values:
-     * <UL>
-     * <LI><CODE>cis</CODE> (case-insensitive string)
-     * <LI><CODE>ces</CODE> (case-exact string)
-     * <LI><CODE>binary</CODE> (binary data)
-     * <LI><CODE>int</CODE> (integer)
-     * <LI><CODE>telephone</CODE> (telephone number -- identical to cis,
-     * but blanks and dashes are ignored during comparisons)
-     * <LI><CODE>dn</CODE> (distinguished name)
-     * <LI><CODE>unknown</CODE> (not a known syntax)
-     * </UL>
-     */
-    public int getSyntax() {
-        return syntaxElement.syntax;
-    }
-
-    /**
-     * Gets the syntax of the attribute type in dotted-decimal format,
-     * for example "1.2.3.4.5"
-     * @return The attribute syntax in dotted-decimal format.
-     */
-    public String getSyntaxString() {
-        return syntaxElement.syntaxString;
     }
 
     /**
@@ -396,6 +374,4 @@ public class LDAPMatchingRuleSchema extends LDAPSchemaElement {
                                        SYNTAX };
     
     private String[] attributes = null;
-    private LDAPSyntaxSchemaElement syntaxElement =
-        new LDAPSyntaxSchemaElement();
 }

@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -61,7 +61,13 @@ public class LDAPDN {
      */
     public static String[] explodeRDN (String rdn, boolean noTypes) {
         RDN name = new RDN(rdn);
-        return name.explodeRDN(noTypes);
+        if ( noTypes ) {
+            return name.getValues();
+        } else {
+            String[] str = new String[1];
+            str[0] = name.toString();
+            return str;
+        }
     }
 
     /**
@@ -77,23 +83,32 @@ public class LDAPDN {
     public static String escapeRDN(String rdn) {
 
         RDN name = new RDN(rdn);
-        String val = name.getValue();
+        String[] val = name.getValues();
         if (val == null)
             return rdn;
 
-        StringBuffer buffer = new StringBuffer(val);
+        StringBuffer[] buffer = new StringBuffer[val.length];
+        StringBuffer retbuf = new StringBuffer();
+        String[] types = name.getTypes();
 
-        int i=0;
-        while (i<buffer.length()) {
-            if (isEscape(buffer.charAt(i))) {
-                buffer.insert(i, '\\');
+        for (int j = 0; j < val.length; j++ ) {
+            buffer[j] = new StringBuffer(val[j]);
+
+            int i=0;
+            while (i<buffer[j].length()) {
+                if (isEscape(buffer[j].charAt(i))) {
+                    buffer[j].insert(i, '\\');
+                    i++;
+                }
+                
                 i++;
             }
 
-            i++;
+            retbuf.append( ((retbuf.length() > 0) ? " + " : "") + types[j] + "=" +
+                           ( new String( buffer[j] ) ) );
         }
 
-        return name.getType()+"="+(new String(buffer));
+        return new String( retbuf );
     }
 
     /**
@@ -109,11 +124,11 @@ public class LDAPDN {
      */
     public static String unEscapeRDN(String rdn) {
         RDN name = new RDN(rdn);
-        String val = name.getValue();
-        if (val == null)
+        String[] vals = name.getValues();
+        if ( (vals == null) || (vals.length < 1) )
             return rdn;
 
-        StringBuffer buffer = new StringBuffer(val);
+        StringBuffer buffer = new StringBuffer(vals[0]);
         StringBuffer copy = new StringBuffer();
         int i=0;
         while (i<buffer.length()) {
@@ -124,7 +139,26 @@ public class LDAPDN {
             i++;
         }
 
-        return name.getType()+"="+(new String(copy));
+        return name.getTypes()[0]+"="+(new String(copy));
+    }
+
+    /** 
+     * Normalizes the dn.
+     * @param dn the DN to normalize
+     * @return the normalized DN
+     */
+    public static String normalize(String dn) {
+        return (new DN(dn)).toString();
+    }
+    
+    /** 
+     * Compares two dn's for equality.
+     * @param dn1 the first dn to compare
+     * @param dn2 the second dn to compare
+     * @return true if the two dn's are equal
+     */
+    public static boolean equals(String dn1, String dn2) {
+        return normalize(dn1).equals(normalize(dn2));
     }
 
     private static boolean isEscape(char c) {

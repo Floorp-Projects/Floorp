@@ -479,19 +479,10 @@ public class LDAPSearchResults implements Enumeration {
      * Returns message ID.
      * @return Message ID.
      */
-    int getID() {
+    int getMessageID() {
         if ( resultSource == null )
             return -1;
-        return resultSource.getID();
-    }
-
-    /**
-     * Terminates the iteration; called on LDAPConnection.abandon().
-     */
-    void abandon() {
-        synchronized( this ) {
-            searchComplete = true;
-        }
+        return resultSource.getMessageID();
     }
 
     /**
@@ -518,14 +509,21 @@ public class LDAPSearchResults implements Enumeration {
                     return;
                 }
                     
-                if (msg instanceof LDAPResponse) {
-                  try {
-                      // check response and see if we need to do referral
-                      // v2: referral stored in the JDAPResult
-                      currConn.checkSearchMsg(this, msg, currCons,
-                        currBase, currScope, currFilter, currAttrs, currAttrsOnly);
+
+                if (msg == null) { // Request abandoned
+                    searchComplete = true;
+                    currConn.releaseSearchListener(resultSource); 
+                    return; 
+
+                } else if (msg instanceof LDAPResponse) {
+                    try {
+                        // check response and see if we need to do referral
+                        // v2: referral stored in the JDAPResult
+                        currConn.checkSearchMsg(this, msg, currCons,
+                                                currBase, currScope, currFilter,
+                                                currAttrs, currAttrsOnly);
                   } catch (LDAPException e) {
-                      System.err.println("Exception: "+e);
+                      System.err.println("LDAPSearchResults.fetchResult: "+e);
                   } finally {
                       currConn.releaseSearchListener(resultSource);
                   }

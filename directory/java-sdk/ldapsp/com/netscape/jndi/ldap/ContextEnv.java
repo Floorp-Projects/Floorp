@@ -73,6 +73,8 @@ class ContextEnv extends ShareableEnv  {
     
     private static final String SASL_PROP_PREFIX = "javax.security.sasl";
     
+    public static final String P_TRACE = LDAPConnection.TRACE_PROPERTY;
+    
     // Possible values for the Context.REFERRAL env property
     private static final String V_REFERRAL_FOLLOW = "follow";
     private static final String V_REFERRAL_IGNORE = "ignore";

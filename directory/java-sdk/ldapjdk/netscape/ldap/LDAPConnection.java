@@ -176,10 +176,13 @@ public class LDAPConnection
      * When -D command line option is used, defining the property with
      * no value will send the trace output to the standard error. If the 
      * value is defined, it is assumed to be the name of an output file.
+     * If the file name is prefixed with a '+' character, the file is
+     * opened in append mode.
      * <P>
      * When the property is set with <CODE>getProperty</CODE> method,
-     * the property must have an output stream as the value. To stop
-     * tracing, <CODE>null</CODE> should be passed as the property value.
+     * the property value must be either a String (represents a file name)
+     * or an OutputStream. To stop tracing, <CODE>null</CODE> should be
+     * passed as the property value.
      * 
      * @see netscape.ldap.LDAPConnection#setProperty(java.lang.String, java.lang.Object)
      */
@@ -245,15 +248,16 @@ public class LDAPConnection
     private Properties m_securityProperties;
     private Hashtable m_properties = new Hashtable();
     private LDAPConnection m_referralConnection;
+    private String m_authMethod = "none";
 
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(4.04f);
+    private final static Float SdkVersion = new Float(4.05f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(4.0f);
-    private final static Float MinorVersion = new Float(0.4f);
+    private final static Float MinorVersion = new Float(0.5f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
@@ -432,18 +436,19 @@ public class LDAPConnection
 
         } else if ( name.equalsIgnoreCase( TRACE_PROPERTY ) ) {
 
+            OutputStream os = null;
             if (val == null) {
                 m_properties.remove(TRACE_PROPERTY);
             }                
-            else if (! (val instanceof OutputStream)) {
-                throw new LDAPException(TRACE_PROPERTY + " must be OutputStream" );
-            }
             else {
+                if (m_thread != null) {
+                    os = createTraceOutputStream(val);
+                }
                 m_properties.put( TRACE_PROPERTY, val ); 
             }
-            
+
             if (m_thread != null) {
-                m_thread.setTraceOutputStream((OutputStream)val);
+                m_thread.setTraceOutputStream(os);
             }
 
         // This is used only by the ldapjdk test cases to simulate a
@@ -456,6 +461,47 @@ public class LDAPConnection
         }
     }
 
+    /**
+     * Create output stream from the TRACE_PROPERTY value.
+     * The value can be either of type String or OutputStream. The
+     * String value represents output file name. If the name is an empty
+     * string, the output is sent to System.err. If the file name is
+     * prefixed with a '+' character, the file is opened in append mode.
+     * @param out Trace output specifier
+     */
+    OutputStream createTraceOutputStream(Object out) throws LDAPException {
+        OutputStream os = null;
+        
+        if (out instanceof String) { // trace file name
+            String file = (String)out;
+            if (file.length() == 0) {
+                os = System.err;
+            }
+            else {
+                try {
+                    boolean appendMode = (file.charAt(0) == '+');
+                    if (appendMode) {
+                        file = file.substring(1);
+                    }                        
+                    FileOutputStream fos = new FileOutputStream(file, appendMode);
+                    os = new BufferedOutputStream(fos);
+                }
+                catch (IOException e) {
+                    throw new LDAPException(
+                        "Can not open output trace file " + file + " " + e);
+                }
+            }
+        }        
+        else if (out instanceof OutputStream)  {
+            os = (OutputStream) out;
+        }       
+        else {
+            throw new LDAPException(TRACE_PROPERTY + " must be OutputStream or String" );
+        }
+
+        return os;
+    }
+    
     /**
      * Sets the LDAP protocol version that your client prefers to use when
      * connecting to the LDAP server.
@@ -927,33 +973,21 @@ public class LDAPConnection
     /**
      * Returns the trace output stream if set by the user
      */
-    OutputStream getTraceOutputStream() {
+    OutputStream getTraceOutputStream() throws LDAPException {
         
         // Check first if trace output has been set using setProperty()
-        OutputStream os = (OutputStream)m_properties.get(TRACE_PROPERTY);
-        if (os != null) {
-            return os;
+        Object traceOut = m_properties.get(TRACE_PROPERTY);
+        if (traceOut != null) {
+            return createTraceOutputStream(traceOut);
         }
         
         // Check if the property has been set with java -Dcom.netscape.ldap.trace
         // If the property does not have a value, send the trace to the System.err,
         // otherwise use the value as the output file name
         try {
-            String traceProp = System.getProperty(TRACE_PROPERTY);
-            if (traceProp != null) {
-                if (traceProp.length() == 0) {
-                    return System.err;
-                }
-                else {
-                    try {
-                        FileOutputStream fos = new FileOutputStream(traceProp);
-                        return new BufferedOutputStream(fos);
-                    }
-                    catch (Exception e) {
-                        System.err.println("Can not open output trace file: " + e);
-                        return null;
-                    }
-                }                    
+            traceOut = System.getProperty(TRACE_PROPERTY);
+            if (traceOut != null) {
+                return createTraceOutputStream(traceOut);
             }
         }
         catch (Exception e) {
@@ -1073,10 +1107,10 @@ public class LDAPConnection
             return;
         }
 
-        searchResults.abandon();
-
-        int id = searchResults.getID();
-        abandon(id);        
+        int id = searchResults.getMessageID();
+        if ( id != -1 ) {
+            abandon( id );
+        }
     }
 
     /**
@@ -1340,6 +1374,7 @@ public class LDAPConnection
         m_saslBinder = new LDAPSaslBind( dn, mechanisms, packageName,
                                          props, cbh );
         m_saslBinder.bind( this );
+        m_authMethod = "sasl";
         m_boundDN = dn;
     }
     
@@ -1594,6 +1629,7 @@ public class LDAPConnection
 
         if (!isConnected()) {
             m_bound = false;
+            m_authMethod = "none";
             connect ();
             // special case: the connection currently is not bound, and now there is
             // a bind request. The connection needs to reconnect if the thread has
@@ -1649,17 +1685,18 @@ public class LDAPConnection
                 m_referralConnection.disconnect();
                 m_referralConnection = null;
             }
+            m_bound = false;
             sendRequest(new JDAPBindRequest(m_protocolVersion, m_boundDN,
                                             m_boundPasswd),
                         myListener, cons);
             checkMsg( myListener.getResponse() );
+            markConnAsBound();
+            m_authMethod = "simple";
         } catch (LDAPReferralException e) {
             m_referralConnection = createReferralConnection(e, cons);
         } finally {
             releaseResponseListener(myListener);
         }
-
-        markConnAsBound();
     }
 
     /**
@@ -1722,9 +1759,20 @@ public class LDAPConnection
                 connect();
             }
             m_saslBinder.bind(this, false);
+            m_authMethod = "sasl";
         } else {
             internalBind (m_protocolVersion, false, cons);
         }
+    }
+
+    /**
+     * Gets the authentication method used to bind:<BR>
+     * "none", "simple", or "sasl"
+     *
+     * @return the authentication method, or "none"
+     */
+    public String getAuthenticationMethod() {
+        return isConnected() ? m_authMethod : "none";
     }
 
     /**
@@ -1740,6 +1788,7 @@ public class LDAPConnection
         
         if (m_saslBinder != null) {
             m_saslBinder.bind(this, true);
+            m_authMethod = "sasl";
         } else {
             internalBind (m_protocolVersion, true, m_defaultConstraints);
         }
@@ -2333,7 +2382,6 @@ public class LDAPConnection
     public LDAPSearchResults search( String base, int scope, String filter,
         String[] attrs, boolean attrsOnly, LDAPSearchConstraints cons )
         throws LDAPException {
-
         if (cons == null) {
             cons = m_defaultConstraints;
         }
@@ -2392,9 +2440,27 @@ public class LDAPConnection
             throw e;                    
         }
 
+        /* Is this a persistent search? */
+        boolean isPersistentSearch = false;
+        LDAPControl[] controls =
+            (LDAPControl[])getOption(LDAPv3.SERVERCONTROLS, cons);
+        for (int i = 0; (controls != null) && (i < controls.length); i++) {
+            if ( controls[i] instanceof
+                 netscape.ldap.controls.LDAPPersistSearchControl ) {
+                isPersistentSearch = true;
+                break;
+            }
+        }
 
-        /* Synchronous search if all requested at once */
-        if ( cons.getBatchSize() == 0 ) {
+        /* For a persistent search, don't wait for a first result, because
+           there may be none at this time if changesOnly was specified in
+           the control.
+        */
+        if ( isPersistentSearch ) {
+            returnValue.associatePersistentSearch (myListener);
+
+        } else if ( cons.getBatchSize() == 0 ) {
+            /* Synchronous search if all requested at once */
             try {
                 /* Block until all results are in */
                 LDAPMessage response = myListener.completeSearchOperation();
@@ -2432,10 +2498,10 @@ public class LDAPConnection
             * the search didn't fail
             */
             LDAPMessage firstResult = myListener.nextMessage ();
-            if (firstResult instanceof LDAPResponse) {
+            if ( firstResult instanceof LDAPResponse ) {
                 try {
                     checkSearchMsg(returnValue, firstResult, cons, base, scope,
-                      filter, attrs, attrsOnly);
+                                   filter, attrs, attrsOnly);
                 } finally {
                     releaseSearchListener (myListener);
                 }
@@ -2457,15 +2523,6 @@ public class LDAPConnection
                     }
                 }
 
-                LDAPControl[] controls = (LDAPControl[])getOption(LDAPv3.SERVERCONTROLS, cons);
-
-                for (int i=0; (controls != null) && (i<controls.length); i++) {
-                    if ((controls[i].getClass().getName()).equals(PersistSearchPackageName))
-                    {
-                        returnValue.associatePersistentSearch (myListener);
-                        return returnValue;
-                    }
-                }
                 /* we let this listener get garbage collected.. */
                 returnValue.associate (myListener);
             }
@@ -2477,7 +2534,7 @@ public class LDAPConnection
         LDAPSearchConstraints cons, String dn, int scope, String filter,
         String attrs[], boolean attrsOnly) throws LDAPException {
 
-        value.setMsgID(msg.getID());
+        value.setMsgID(msg.getMessageID());
 
         try {
             checkMsg (msg);
@@ -2756,8 +2813,9 @@ public class LDAPConnection
         String resultID;
 
         try {
-            sendRequest ( new JDAPExtendedRequest( op.getID(), op.getValue() ),
-                         myListener, cons );
+            sendRequest ( new JDAPExtendedRequest( op.getID(),
+                                                   op.getValue() ),
+                          myListener, cons );
             response = myListener.getResponse();
             checkMsg (response);
             JDAPExtendedResponse res = (JDAPExtendedResponse)response.getProtocolOp();
@@ -3890,7 +3948,7 @@ public class LDAPConnection
      * @exception LDAPException Failed to send request.
      */
     public void abandon(LDAPSearchListener searchlistener)throws LDAPException {
-        int[] ids = searchlistener.getIDs();
+        int[] ids = searchlistener.getMessageIDs();
         for (int i=0; i < ids.length; i++) {
             searchlistener.removeRequest(ids[i]);
             abandon(ids[i]);
@@ -4853,11 +4911,7 @@ public class LDAPConnection
 
         LDAPConnection connection = null;
         connection = prepareReferral(u[0], cons);
-        String DN = u[0].getDN();
-        if ((DN == null) || (DN.equals(""))) {
-            DN = m_boundDN;
-        }
-        connection.authenticate(m_protocolVersion, DN, m_boundPasswd);
+        connection.authenticate(m_protocolVersion, m_boundDN, m_boundPasswd);
         return connection;
     }
 

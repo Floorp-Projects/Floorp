@@ -37,7 +37,8 @@ public class LdapContextFactory implements InitialContextFactory {
         // present in the env (env has precedence over the System properties)        
         for (Enumeration e = System.getProperties().keys(); e.hasMoreElements();) {
             String key = (String) e.nextElement();
-            if (key.startsWith("java.naming.")) {
+            if (key.startsWith("java.naming.")||
+                key.startsWith("com.netscape.")) {
                 if (ctxEnv.get(key) == null) {
                     ctxEnv.put(key,System.getProperty(key));
                 }

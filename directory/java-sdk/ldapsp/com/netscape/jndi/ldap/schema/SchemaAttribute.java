@@ -145,7 +145,7 @@ public class SchemaAttribute extends SchemaElement {
         String val = null, multiVal[]=null;
         for (int i = 0; i < attrIds.length; i++) {
             if (attrIds[i].equals(NUMERICOID)) {
-                val = m_ldapAttribute.getOID();
+                val = m_ldapAttribute.getID();
                 if (val != null) {
                     attrs.put(new BasicAttribute(NUMERICOID, val));
                 }                    

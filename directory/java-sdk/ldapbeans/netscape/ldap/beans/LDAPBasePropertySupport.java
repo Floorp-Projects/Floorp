@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -342,9 +342,12 @@ public class LDAPBasePropertySupport implements Serializable {
                         m_conn.getAuthenticationPassword() );
                 }
         };
-        LDAPSearchConstraints cons = conn.getSearchConstraints();
-        cons.setReferrals( true );
-        cons.setRebindProc( rebind );
+        try {
+            conn.setOption(LDAPConnection.REFERRALS, Boolean.TRUE);
+            conn.setOption(LDAPConnection.REFERRALS_REBIND_PROC, rebind);
+        } catch (LDAPException e) {
+            //will never happen
+        }
     }
 
     /**

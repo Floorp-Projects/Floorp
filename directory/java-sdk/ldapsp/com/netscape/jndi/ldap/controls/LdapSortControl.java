@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -45,8 +45,8 @@ import netscape.ldap.controls.*;
  * the result of the sorting operation. (The OID for this control
  * is 1.2.840.113556.1.4.474.)
  *
- * @see com.netscape.jndi.ldap.LdapSortKey
- * @see com.netscape.jndi.ldap.LdapSortResponseControl
+ * @see com.netscape.jndi.ldap.controls.LdapSortKey
+ * @see com.netscape.jndi.ldap.controls.LdapSortResponseControl
  */
 public class LdapSortControl extends LDAPSortControl implements Control{
     /**
@@ -56,7 +56,7 @@ public class LdapSortControl extends LDAPSortControl implements Control{
      * @param critical <CODE>true</CODE> if the LDAP operation should be
      * discarded when the server does not support this control (in other
      * words, this control is critical to the LDAP operation).
-     * @see com.netscape.jndi.ldap.LdapSortKey
+     * @see com.netscape.jndi.ldap.controls.LdapSortKey
      */
     public LdapSortControl(LdapSortKey key,
                            boolean critical) {
@@ -70,7 +70,7 @@ public class LdapSortControl extends LDAPSortControl implements Control{
      * @param critical <CODE>true</CODE> if the LDAP operation should be
      * discarded when the server does not support this control (in other
      * words, this control is critical to the LDAP operation).
-     * @see com.netscape.jndi.ldap.LdapSortKey
+     * @see com.netscape.jndi.ldap.controls.LdapSortKey
      */
     public LdapSortControl(LdapSortKey[] keys,
                            boolean critical) {
@@ -93,7 +93,7 @@ public class LdapSortControl extends LDAPSortControl implements Control{
      * @param critical <CODE>true</CODE> if the LDAP operation should be
      * discarded when the server does not support this control (in other
      * words, this control is critical to the LDAP operation).
-     * @see com.netscape.jndi.ldap.LdapSortKey
+     * @see com.netscape.jndi.ldap.controls.LdapSortKey
      */
     public LdapSortControl(String[] keys,
                            boolean critical) {

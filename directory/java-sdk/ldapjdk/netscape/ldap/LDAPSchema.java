@@ -183,6 +183,10 @@ public class LDAPSchema {
     public LDAPSchema() {
     }
 
+    public LDAPSchema( LDAPEntry entry ) {
+        initialize( entry );
+    }
+
     /**
      * Adds an object class schema definition to the current schema.
      * You can also add object class schema definitions by calling the
@@ -363,8 +367,18 @@ public class LDAPSchema {
 
         /* Get the entire schema definition entry */
         LDAPEntry entry = readSchema( ld, entryName );
+        initialize( entry );
+    }
+
+    /**
+     * Extract all schema elements from subschema entry
+     *
+     * @param entry entry containing schema definitions
+     */
+    protected void initialize( LDAPEntry entry ) {
         /* Get all object class definitions */
         LDAPAttribute attr = entry.getAttribute( "objectclasses" );
+        Enumeration en;
         if ( attr != null ) {
             en = attr.getStringValues();
             while( en.hasMoreElements() ) {

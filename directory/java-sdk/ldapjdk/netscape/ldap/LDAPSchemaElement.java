@@ -1,4 +1,4 @@
- /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -115,8 +115,19 @@ public abstract class LDAPSchemaElement {
      * @return the OID of the object class, attribute type,
      * or matching rule.
      */
-    public String getOID() {
+    public String getID() {
         return oid;
+    }
+
+    /**
+     * Gets the object ID (OID) of the object class, attribute type,
+     * or matching rule in dotted-string format (for example, "1.2.3.4").
+     * @return the OID of the object class, attribute type,
+     * or matching rule.
+     * @deprecated Use <CODE>LDAPSchemaElement.getID()</CODE>
+     */
+    public String getOID() {
+        return getID();
     }
 
     /**

@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -288,6 +288,10 @@ public class LDAPFilter implements Cloneable {
             if ( cFilterTemplate[i] == '%' ) {
                 i++;
                 if ( cFilterTemplate[i] == 'v' ) {
+                    if ( i == (cFilterTemplate.length-1) ) {
+                        sbFilter.append ( strValue );
+                        break;
+                    }
                     i++;
                     switch ( cFilterTemplate[i] ) {
                         case '$':

@@ -1,8 +1,23 @@
-/* ======================================================================
- * Copyright (c) 1997 Netscape Communications Corporation
- * This file contains proprietary information of Netscape Communications.
- * Copying or reproduction without prior written approval is prohibited.
- * ======================================================================
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
  */
 
 import java.io.*;
@@ -127,6 +142,7 @@ public class LDAPSearch extends LDAPTool {
 						   "entries surrounding 'index'. 'count' is the "+
 						   "content count, 'value' is the search value.");
 		System.err.println("  -y proxy-DN   DN to use for access control");
+		System.err.println("  -X            output DSML instead of LDIF");
 	}
 
 	/**
@@ -136,7 +152,7 @@ public class LDAPSearch extends LDAPTool {
 	 */
     protected static void extractParameters(String args[]) { 
 
-		String privateOpts = "HATtxvna:b:F:l:s:S:z:G:";
+		String privateOpts = "HATtxvnXa:b:F:l:s:S:z:G:";
 
 		GetOpt options = LDAPTool.extractParameters( privateOpts, args );
 
@@ -225,6 +241,9 @@ public class LDAPSearch extends LDAPTool {
 		if (options.hasOption('T')) { /* if the option is -T */
 			m_foldLine = false;
 		}
+
+		if (options.hasOption('X'))
+			m_printDSML = true;
 
 		parseVlv(options);
 
@@ -384,7 +403,7 @@ public class LDAPSearch extends LDAPTool {
 		LDAPSearchResults res = null;
 		try {
 			LDAPSearchConstraints cons = 
-			  (LDAPSearchConstraints)m_client.getSearchConstraints().clone();
+			        m_client.getSearchConstraints();
 			cons.setServerControls(controls);
 			cons.setDereference( m_deref );
 			cons.setMaxResults( m_sizelimit );
@@ -422,15 +441,26 @@ public class LDAPSearch extends LDAPTool {
 	 * @param res Search results
 	 */
     private static void printResults( LDAPSearchResults res ) { 
+		boolean isSchema = false;
+		boolean didEntryIntro = false;
+		LDAPWriter writer;
+		if ( m_printDSML ) {
+			printString( DSML_INTRO );
+			writer = new DSMLWriter( m_pw );
+		} else {
+			writer = new LDIFWriter( m_pw, m_attrsonly, m_sep, m_foldLine,
+									 m_tempFiles );
+		}
+
 		/* print out the retrieved entries */
 		try {
 			/* Loop on results until finished */
 			while ( res.hasMoreElements() ) {
 
-				LDAPEntry findEntry = null;
+				LDAPEntry entry = null;
 				try {
 					/* Next directory entry */
-					findEntry = (LDAPEntry)res.next();
+					entry = (LDAPEntry)res.next();
 				} catch (LDAPReferralException ee) {
 					LDAPUrl[] urls= ee.getURLs();
 					System.err.println("Referral entries: ");
@@ -442,83 +472,42 @@ public class LDAPSearch extends LDAPTool {
 					continue;
 				}
 
-				String dn = findEntry.getDN();
-				if (dn != null)
-					printString("dn" + m_sep + " " + dn);
-				else
-					printString("dn" + m_sep);
-
-				/* Get the attributes of the entry */
-				LDAPAttributeSet findAttrs = findEntry.getAttributeSet();
-				Enumeration enumAttrs = findAttrs.getAttributes();
-				/* Loop on attributes */
-				while ( enumAttrs.hasMoreElements() ) {
-					LDAPAttribute anAttr =
-						(LDAPAttribute)enumAttrs.nextElement();
-					String attrName = anAttr.getName();
-					if (m_attrsonly) {
-						printString(attrName+":");
-						continue;
+				if ( isSchemaEntry( entry ) ) {
+					writer.printSchema( entry );
+				} else {
+					if ( m_printDSML && !didEntryIntro ) {
+						printString( DSML_RESULTS_INTRO );
+						didEntryIntro = true;
 					}
-
-					/* Loop on values for this attribute */
-					Enumeration enumVals;
-					enumVals = anAttr.getByteValues();
-
-					if (enumVals != null) {
-					  while ( enumVals.hasMoreElements() ) {
-						if ( m_tempFiles ) {
-						    try {
-							    FileOutputStream f = getTempFile( attrName );
-								f.write( (byte[])enumVals.nextElement() );
-							} catch ( Exception e ) {
-							    System.err.println( "Error writing values " +
-													"of " + attrName + ", " +
-													e.toString() );
-							    System.exit(1);
-							}
-						} else {
-							byte[] b = (byte[])enumVals.nextElement();
-							String s = null;
-							if (LDIF.isPrintable(b)) {
-								s = new String(b, "UTF8");
-						    	printString(attrName + m_sep + " " + s);
-							} else {
-								ByteBuf inBuf = new ByteBuf( b, 0, b.length );
-								ByteBuf encodedBuf = new ByteBuf();
-								// Translate to base 64 
-								MimeBase64Encoder encoder = new MimeBase64Encoder();
-								encoder.translate( inBuf, encodedBuf );
-								int nBytes = encodedBuf.length();
-								if ( nBytes > 0 ) {
-									s = new String(encodedBuf.toBytes(), 0, nBytes);
-									printString( attrName + ":: " + s );
-								} else {
-									m_pw.print( attrName + ": \n" );
-								}
-							}
-						}
-					  }
-					}
-					else
-						System.err.println("Failed to do string conversion for "+attrName);
+					writer.printEntry( entry );
 				}
-				m_pw.println();
 			}
 		} catch (Exception e) {
 			System.err.println( e.toString() );
 			System.exit(0);
 		}
+		if ( m_printDSML ) {
+			if ( didEntryIntro ) {
+				printString( DSML_RESULTS_END );
+			}
+			printString( DSML_END );
+		}
 	}
 
+    protected static void printString( String value ) {
+		m_pw.print( value );
+		m_pw.print( '\n' );
+    }
 
-    private static void printString( String value ) {
-	  if (m_foldLine)
-          LDIF.breakString(m_pw, value, MAX_LINE);
-	  else {
-		m_pw.print(value);
-        m_pw.print( '\n' );
-	  }
+	protected static boolean isSchemaEntry( LDAPEntry entry ) {
+        LDAPAttribute attr = entry.getAttribute( "objectclass" );
+        String[] vals = attr.getStringValueArray();
+        for( int i = 0; i < vals.length; i++ ) {
+            if ( vals[i].equalsIgnoreCase( "subschema" ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -527,20 +516,35 @@ public class LDAPSearch extends LDAPTool {
      * @param controls Any server controls returned.
      **/
     private static void showControls( LDAPControl[] controls ) {
-		if ( controls == null )
+                if ( controls == null ) {
 			return;
-        int[] results = new int[1];
-		String bad = LDAPSortControl.parseResponse( controls, results );
-		if ( results[0] != LDAPException.SUCCESS ) {
-    		System.err.println( "Error code: " + results[0] );
-	       	if ( bad != null )
-		        System.err.println( "Offending attribute: " + bad );
-		    else
-		        System.err.println( "No offending attribute returned" );
-		} else
+		}
+
+		LDAPSortControl sControl = null;
+		LDAPVirtualListResponse vResponse = null;
+		for ( int i = 0; i < controls.length; i++ ) {
+		    if ( controls[i] instanceof LDAPSortControl ) {
+		        sControl = (LDAPSortControl)controls[i];
+		    } else if ( controls[i] instanceof LDAPVirtualListResponse ) {
+		        vResponse = (LDAPVirtualListResponse)controls[i];
+		    }
+		}
+
+		if (sControl != null ) {
+		    String bad = sControl.getFailedAttribute();
+		    int result = sControl.getResultCode();
+		    if ( result != LDAPException.SUCCESS ) {
+		        System.err.println( "Error code: " + result );
+			if ( bad != null ) {
+			    System.err.println( "Offending attribute: " + bad );
+			} else {
+			     System.err.println( "No offending attribute returned" );
+			}
+		    } else {
 			m_pw.println("Server indicated results sorted OK");
-		LDAPVirtualListResponse vResponse = 
-			LDAPVirtualListResponse.parseResponse(controls);
+		    }
+		}
+
 		if (vResponse != null) {
 			int resultCode = vResponse.getResultCode();
 			if (resultCode == LDAPException.SUCCESS) {
@@ -553,23 +557,16 @@ public class LDAPSearch extends LDAPTool {
 		}
     }
 
-    private static FileOutputStream getTempFile( String name )
-               throws IOException {
-	    int num = 0;
-		File f;
-		String filename;
-		do {
-		    filename = name + '.' + num;
-		    f = new File( filename );
-			num++;
-		} while ( f.exists() );
-		printString(name + m_sep + " " + filename);
-		return new FileOutputStream( f );
-	}
-
 	/**
 	 * Internal variables
 	 */
+	private static final String DSML_INTRO =
+	    "<dsml:dsml xmlns:dsml=\"http://www.dsml.org/DSML\">";
+	private static final String DSML_END = "</dsml:dsml>";
+	private static final String DSML_RESULTS_INTRO =
+  	    " <dsml:directory-entries>";
+	private static final String DSML_RESULTS_END =
+	    " </dsml:directory-entries>";
   private static boolean m_attrsonly = false;
   private static int m_deref = 0;
   private static int m_scope = 2; // default is sub search
@@ -592,4 +589,6 @@ public class LDAPSearch extends LDAPTool {
   private static boolean m_foldLine = true;
   private static final int MAX_LINE = 77;
   private static PrintWriter m_pw = new PrintWriter(System.out);
+  private static MimeBase64Encoder m_encoder = new MimeBase64Encoder();
+  private static boolean m_printDSML = false;
 }

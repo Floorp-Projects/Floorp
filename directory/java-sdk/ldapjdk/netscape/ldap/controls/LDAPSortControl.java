@@ -611,13 +611,4 @@ public class LDAPSortControl extends LDAPControl {
 
         return sb.toString();
     }
-
-    // register SORTRESPONSE with LDAPControl
-    static {
-        try {
-	    LDAPControl.register( SORTRESPONSE, LDAPSortControl.class );
-	} catch (LDAPException e) {
-	}
-    }
 }
-

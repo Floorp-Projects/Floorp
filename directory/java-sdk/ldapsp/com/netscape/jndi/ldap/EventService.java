@@ -108,7 +108,7 @@ class EventService implements Runnable{
                 Debug.println(1, "Do persistent search for " + base);
                 sl = ld.search( base, scope, filter, attrs,
                                 false, /*l=*/null, cons);
-                int[] ids = sl.getIDs();
+                int[] ids = sl.getMessageIDs();
                 int id = ids[ids.length-1];
                 event = new EventEntry(id, ctx, base, scope, filter, attrs, cons);
                 m_eventList.addElement(event);
@@ -213,14 +213,14 @@ class EventService implements Runnable{
           
             synchronized (EventService.this) {
                 
-                EventEntry eventEntry = getEventEntry(msg.getID());                
+                EventEntry eventEntry = getEventEntry(msg.getMessageID());                
 
                 // If no listeners, abandon this message id
                 if (eventEntry == null) {
-                    Debug.println(1, "Received ldap msg with unknown id="+msg.getID());
+                    Debug.println(1, "Received ldap msg with unknown id="+msg.getMessageID());
 
                     if (! (msg instanceof LDAPResponse)) {
-                        abandonRequest(msg.getID());
+                        abandonRequest(msg.getMessageID());
                     }                    
                     continue;
                 }

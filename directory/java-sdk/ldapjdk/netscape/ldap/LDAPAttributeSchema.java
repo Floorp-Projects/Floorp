@@ -365,6 +365,6 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
                                          NO_USER_MODIFICATION,
                                          SYNTAX};
 
-    private LDAPSyntaxSchemaElement syntaxElement =
+    protected LDAPSyntaxSchemaElement syntaxElement =
         new LDAPSyntaxSchemaElement();
 }

@@ -26,6 +26,7 @@ import javax.naming.directory.*;
 import javax.naming.ldap.*;
 import netscape.ldap.*;
 import java.util.*;
+import java.io.*;
 import com.netscape.jndi.ldap.common.*;
 import com.netscape.jndi.ldap.schema.SchemaRoot;
 
@@ -91,6 +92,7 @@ class LdapService {
         boolean isSSLEnabled = ctx.m_ctxEnv.isSSLEnabled();
         String[] saslMechanisms = ctx.m_ctxEnv.getSaslMechanisms();
         LDAPControl[] ldCtrls= ctx.m_ctxEnv.getConnectControls();
+        Object traceOut = ctx.m_ctxEnv.getProperty(ContextEnv.P_TRACE);
 
         // Set default ssl port if DS not specifed
         if (isSSLEnabled && url == null) {
@@ -121,6 +123,11 @@ class LdapService {
                 throw new IllegalArgumentException(
                 "Illegal value for java.naming.ldap.factory.socket: " + e);
             }
+        }
+
+        // Enable tracing 
+        if (traceOut != null) {
+            setTraceOutput(traceOut);
         }
         
         try {
@@ -539,5 +546,21 @@ class LdapService {
             m_eventSvc = new EventService(this);
         }    
         return m_eventSvc;
+    }
+    
+    /**
+     * Enable/Disable ldap message trace.
+     * @param out Trace output or null (disable trace). Output can
+     * be specified as a file name or a java OutputStream. If an
+     * empty string is specified, the output is sent to System.err.
+     * A file name prefixed with a '+' will open the file in append mode.
+     */
+    void setTraceOutput(Object out) throws NamingException {
+        try {
+            m_ld.setProperty(m_ld.TRACE_PROPERTY, out);
+        }
+        catch (Exception e) {
+            throw new IllegalArgumentException("Can not open trace output " + e);
+        }            
     }
 }

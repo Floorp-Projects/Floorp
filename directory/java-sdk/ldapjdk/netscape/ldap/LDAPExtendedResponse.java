@@ -46,9 +46,19 @@ public class LDAPExtendedResponse extends LDAPResponse {
      *
      * @return the response OID.
      */
-    public String  getOID() {
+    public String  getID() {
         JDAPExtendedResponse result = (JDAPExtendedResponse)getProtocolOp();
         return result.getID();
+    }
+
+    /**
+     * Returns the OID of the response.
+     *
+     * @return the response OID.
+     * @deprecated Use <CODE>LDAPExtendedResponse.getID()</CODE>
+     */
+    public String  getOID() {
+        return getID();
     }
 
     /**

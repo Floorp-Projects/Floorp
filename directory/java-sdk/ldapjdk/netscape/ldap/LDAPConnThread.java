@@ -176,12 +176,12 @@ class LDAPConnThread extends Thread {
             if (!(request instanceof JDAPAbandonRequest ||
                   request instanceof JDAPUnbindRequest)) {
                 /* Only worry about toNotify if we expect a response... */
-                this.m_requests.put (new Integer (msg.getID()), toNotify);
+                this.m_requests.put (new Integer (msg.getMessageID()), toNotify);
                 /* Notify the backlog checker that there may be another outstanding
                    request */
                 resultRetrieved(); 
             }
-            toNotify.addRequest(msg.getID(), conn, this, cons.getTimeLimit());
+            toNotify.addRequest(msg.getMessageID(), conn, this, cons.getTimeLimit());
         }
 
         synchronized( m_sendRequestLock ) {
@@ -435,7 +435,7 @@ class LDAPConnThread extends Thread {
      * @param msg New message from LDAP server
      */
     private void processResponse (LDAPMessage msg, int size) {
-        Integer messageID = new Integer (msg.getID());
+        Integer messageID = new Integer (msg.getMessageID());
         LDAPMessageQueue l = (LDAPMessageQueue)m_requests.get (messageID);
 
         if (l == null) {
@@ -451,7 +451,7 @@ class LDAPConnThread extends Thread {
             /* Were there any controls for this client? */
             LDAPControl[] con = msg.getControls();
             if (con != null) {
-                int msgid = msg.getID();
+                int msgid = msg.getMessageID();
                 LDAPConnection ldc = l.getConnection(msgid);
                 if (ldc != null) {
                     ldc.setResponseControls( this,
@@ -483,7 +483,7 @@ class LDAPConnThread extends Thread {
      * the entry size to -1.
      */
     private synchronized void cacheSearchResult (LDAPSearchListener l, LDAPMessage msg, int size) {
-        Integer messageID = new Integer (msg.getID());
+        Integer messageID = new Integer (msg.getMessageID());
         Long key = l.getKey();
         Vector v = null;
 

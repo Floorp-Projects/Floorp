@@ -129,7 +129,7 @@ public class SchemaObjectClass extends SchemaElement {
         String val = null, multiVal[]=null;
         for (int i = 0; i < attrIds.length; i++) {
             if (attrIds[i].equals(NUMERICOID)) {
-                val = m_ldapObjectClass.getOID();
+                val = m_ldapObjectClass.getID();
                 if (val != null) {
                     attrs.put(new BasicAttribute(NUMERICOID, val));
                 }

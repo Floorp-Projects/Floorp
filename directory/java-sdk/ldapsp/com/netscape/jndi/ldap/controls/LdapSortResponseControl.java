@@ -157,8 +157,8 @@ import com.netscape.jndi.ldap.common.ExceptionMapper;
  * </TR>
  * </TABLE>
  * <P>
- * @see com.netscape.jndi.ldap.LdapSortKey
- * @see com.netscape.jndi.ldap.LdapSortControl
+ * @see com.netscape.jndi.ldap.controls.LdapSortKey
+ * @see com.netscape.jndi.ldap.controls.LdapSortControl
  */
 public class LdapSortResponseControl extends LDAPSortControl implements Control {
 

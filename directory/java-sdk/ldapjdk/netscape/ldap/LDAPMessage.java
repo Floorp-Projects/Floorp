@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -193,7 +193,7 @@ public class LDAPMessage {
      * Returns the message identifer.
      * @return message identifer.
      */
-    public int getID(){
+    public int getMessageID(){
         return m_msgid;
     }
 

@@ -54,25 +54,26 @@ public class LDAPResponseListener extends LDAPMessageQueue{
     }
 
     /**
-     * Merge two response listeners
+     * Merge two response listeners.
      * Move/append the content from another response listener to this one.
-     *   
+     * <P>
      * To be used for synchronization of asynchronous LDAP operations where
-     * requests are sent by one thread but processed by another one
-     * 
+     * requests are sent by one thread but processed by another one.
+     * <P>
      * A client may be implemented in such a way that one thread makes LDAP
-     * requests and calls l.getIDs(), while another thread is responsible for
-     * processing of responses (call l.getResponse()). Both threads are using
+     * requests and calls l.getMessageIDs(), while another thread
+     * is responsible for processing of responses (call l.getResponse()).
+     * Both threads are using
      * the same listener objects. In such a case, a race
      * condition may occur, where a LDAP response message is retrieved and
      * the request terminated (request ID removed) before the first thread
-     * has a chance to execute l.getIDs().
+     * has a chance to execute l.getMessageIDs().
      * The proper way to handle this scenario is to create a separate listener
-     * for each new request, and after l.getIDs() has been invoked, merge the
+     * for each new request, and after l.getMessageIDs() has been invoked, merge the
      * new request with the existing one.
      * @param listener2 the listener with which to merge
      */
-    public void merge(LDAPSearchListener listener2) {
+    public void merge(LDAPResponseListener listener2) {
         super.merge(listener2);
     }
     
@@ -89,7 +90,7 @@ public class LDAPResponseListener extends LDAPMessageQueue{
      * Returns message IDs for all outstanding requests
      * @return message ID array.
      */
-    public int[] getIDs() {
-        return super.getIDs();
+    public int[] getMessageIDs() {
+        return super.getMessageIDs();
     }
 }
