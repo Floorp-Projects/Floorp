@@ -2306,6 +2306,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 		event.isShift   = mod & B_SHIFT_KEY;
 		event.isControl = mod & B_CONTROL_KEY;
 		event.isAlt     = mod & B_COMMAND_KEY;
+		event.isMeta     = PR_FALSE;
 		event.clickCount = clicks;
 		event.eventStructType = NS_MOUSE_EVENT;
 
