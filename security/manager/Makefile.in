@@ -81,7 +81,8 @@ endif # MOZ_NSS_AUTOCONF
 include $(DEPTH)/config/autoconf.mk
 
 ifndef MOZ_NSS_AUTOCONF
-DEFAULT_GMAKE_FLAGS = -f Makefile $(OPT_GMAKE_FLAGS)
+# NSS makefiles are not safe for parallel execution.
+DEFAULT_GMAKE_FLAGS = -j1 $(OPT_GMAKE_FLAGS)
 DEFAULT_GMAKE_FLAGS += SOURCE_MDHEADERS_DIR=$(MOZ_BUILD_ROOT)/dist/include/nspr
 DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 CORECONF_INSTALL     = $(DIST)/$(CORECONF_OBJDIR)
