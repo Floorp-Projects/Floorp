@@ -146,22 +146,30 @@ static const char * kGrandTotalsStr = "Grand Totals";
 // Counting Class
 class ReflowCounter {
 public:
+  ReflowCounter() { mMgr = nsnull; }
   ReflowCounter(ReflowCountMgr * aMgr);
   ~ReflowCounter();
 
   void ClearTotals();
   void DisplayTotals(const char * aStr);
+  void DisplayDiffTotals(const char * aStr);
   void DisplayHTMLTotals(const char * aStr);
 
-  void Add(nsReflowReason aType)                  { mTotals[aType]++; mTotal++; }
-  void Add(nsReflowReason aType, PRUint32 aTotal) { mTotals[aType] += aTotal; mTotal += aTotal; }
+  void Add(nsReflowReason aType)                  { mTotals[aType]++;         }
+  void Add(nsReflowReason aType, PRUint32 aTotal) { mTotals[aType] += aTotal; }
+
+  void CalcDiffInTotals();
+  void SetTotalsCache();
+
+  void SetMgr(ReflowCountMgr * aMgr) { mMgr = aMgr; }
 
 protected:
   void DisplayTotals(PRUint32 * aArray, const char * aTitle);
   void DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle);
 
   PRUint32 mTotals[NUM_REFLOW_TYPES];
-  PRUint32 mTotal;
+  PRUint32 mCacheTotals[NUM_REFLOW_TYPES];
+
   ReflowCountMgr * mMgr;
 };
 
@@ -174,8 +182,10 @@ public:
   ~ReflowCountMgr();
 
   void ClearTotals();
+  void ClearGrandTotals();
   void DisplayTotals(const char * aStr);
   void DisplayHTMLTotals(const char * aStr);
+  void DisplayDiffsInTotals(const char * aStr);
 
   void Add(const char * aName, nsReflowReason aType);
   ReflowCounter * LookUp(const char * aName);
@@ -197,14 +207,21 @@ protected:
   static PRIntn DoSingleHTMLTotal(PLHashEntry *he, PRIntn i, void *arg);
   void DoGrandHTMLTotals();
 
+  // Zero Out the Totals
+  static PRIntn DoClearTotals(PLHashEntry *he, PRIntn i, void *arg);
+
+  // Displays the Diff Totals
+  static PRIntn DoDisplayDiffTotals(PLHashEntry *he, PRIntn i, void *arg);
+
   PLHashTable * mCounts;
   FILE * mFD;
+
+  PRBool mCycledOnce;
 
   // ReflowCountMgr gReflowCountMgr;
 };
 #endif
 //========================================================================
-
 
 // comment out to hide caret
 #define SHOW_CARET
@@ -708,6 +725,8 @@ public:
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
 #ifdef MOZ_REFLOW_PERF
+  NS_IMETHOD ClearTotals();
+  NS_IMETHOD DumpReflows();
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType);
 #endif
 
@@ -959,20 +978,11 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 PresShell::~PresShell()
 {
 #ifdef MOZ_REFLOW_PERF
-  char * uriStr = nsnull;
-  if (mDocument) {
-    nsIURI * uri = mDocument->GetDocumentURL();
-    if (uri) {
-      uri->GetPath(&uriStr);
-      NS_RELEASE(uri);
-    }
+  DumpReflows();
+  if (mReflowCountMgr) {
+    delete mReflowCountMgr;
+    mReflowCountMgr = nsnull;
   }
-  mReflowCountMgr->DisplayTotals(uriStr);
-  mReflowCountMgr->DisplayHTMLTotals(uriStr);
-
-  delete mReflowCountMgr;
-  mReflowCountMgr = nsnull;
-  if (uriStr) delete [] uriStr;
 #endif
 
   // if we allocated any stack memory free it.
@@ -4391,10 +4401,38 @@ nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet)
 #ifdef MOZ_REFLOW_PERF
 //-------------------------------------------------------------
 NS_IMETHODIMP
+PresShell::ClearTotals()
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------
+NS_IMETHODIMP
+PresShell::DumpReflows()
+{
+  if (mReflowCountMgr) {
+    char * uriStr = nsnull;
+    if (mDocument) {
+      nsIURI * uri = mDocument->GetDocumentURL();
+      if (uri) {
+        uri->GetPath(&uriStr);
+        NS_RELEASE(uri);
+      }
+    }
+    mReflowCountMgr->DisplayTotals(uriStr);
+    mReflowCountMgr->DisplayHTMLTotals(uriStr);
+    mReflowCountMgr->DisplayDiffsInTotals("Differences");
+    if (uriStr) delete [] uriStr;
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------
+NS_IMETHODIMP
 PresShell::CountReflows(const char * aName, PRUint32 aType)
 {
   if (mReflowCountMgr) {
-    mReflowCountMgr->Add(aName, (nsReflowReason)aType);
+    //mReflowCountMgr->Add(aName, (nsReflowReason)aType);
   }
   return NS_OK;
 }
@@ -4409,6 +4447,7 @@ ReflowCounter::ReflowCounter(ReflowCountMgr * aMgr) :
   mMgr(aMgr)
 {
   ClearTotals();
+  SetTotalsCache();
 }
 
 //------------------------------------------------------------------
@@ -4420,16 +4459,37 @@ ReflowCounter::~ReflowCounter()
 //------------------------------------------------------------------
 void ReflowCounter::ClearTotals()
 {
-  mTotal = 0;
   for (PRUint32 i=0;i<NUM_REFLOW_TYPES;i++) {
     mTotals[i] = 0;
   }
 }
 
 //------------------------------------------------------------------
+void ReflowCounter::SetTotalsCache()
+{
+  for (PRUint32 i=0;i<NUM_REFLOW_TYPES;i++) {
+    mCacheTotals[i] = mTotals[i];
+  }
+}
+
+//------------------------------------------------------------------
+void ReflowCounter::CalcDiffInTotals()
+{
+  for (PRUint32 i=0;i<NUM_REFLOW_TYPES;i++) {
+    mCacheTotals[i] = mTotals[i] - mCacheTotals[i];
+  }
+}
+
+//------------------------------------------------------------------
 void ReflowCounter::DisplayTotals(const char * aStr)
 {
-  DisplayTotals(mTotals,aStr?aStr:"Totals");
+  DisplayTotals(mTotals, aStr?aStr:"Totals");
+}
+
+//------------------------------------------------------------------
+void ReflowCounter::DisplayDiffTotals(const char * aStr)
+{
+  DisplayTotals(mCacheTotals, aStr?aStr:"Diff Totals");
 }
 
 //------------------------------------------------------------------
@@ -4441,38 +4501,47 @@ void ReflowCounter::DisplayHTMLTotals(const char * aStr)
 //------------------------------------------------------------------
 void ReflowCounter::DisplayTotals(PRUint32 * aArray, const char * aTitle)
 {
-  if (mTotal == 0) {
+  // figure total
+  PRUint32 total = 0;
+  PRUint32 i;
+  for (i=0;i<NUM_REFLOW_TYPES;i++) {
+    total += aArray[i];
+  }
+
+  if (total == 0) {
     return;
   }
   ReflowCounter * gTots = (ReflowCounter *)mMgr->LookUp(kGrandTotalsStr);
 
   printf("%25s\t", aTitle);
-  PRUint32 i;
   for (i=0;i<NUM_REFLOW_TYPES;i++) {
     printf("%d\t", aArray[i]);
     if (gTots != this &&  aArray[i] > 0) {
       gTots->Add((nsReflowReason)i, aArray[i]);
-      //ReflowCountMgr * staticMgr = ReflowCountMgr::GetInstance();
-      //if (staticMgr != mMgr) {
-      //  staticMgr->Add(aTitle, (nsReflowReason)aArray[i]);
-      //}
     }
   }
-  printf("%d\n", mTotal);
+  printf("%d\n", total);
 }
 
 //------------------------------------------------------------------
 void ReflowCounter::DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle)
 {
-  if (mTotal == 0) {
+  // figure total
+  PRUint32 total = 0;
+  PRUint32 i;
+  for (i=0;i<NUM_REFLOW_TYPES;i++) {
+    total += aArray[i];
+  }
+
+  if (total == 0) {
     return;
   }
+
   ReflowCounter * gTots = (ReflowCounter *)mMgr->LookUp(kGrandTotalsStr);
   FILE * fd = mMgr->GetOutFile();
   if (!fd) {
     return;
   }
-  PRUint32 i;
 
   fprintf(fd, "<tr><td><center>%s</center></td>", aTitle);
   for (i=0;i<NUM_REFLOW_TYPES;i++) {
@@ -4487,7 +4556,7 @@ void ReflowCounter::DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle)
       gTots->Add((nsReflowReason)i, aArray[i]);
     }
   }
-  fprintf(fd, "<td><center>%d</center></td></tr>\n", mTotal);
+  fprintf(fd, "<td><center>%d</center></td></tr>\n", total);
 }
 
 //------------------------------------------------------------------
@@ -4495,6 +4564,7 @@ ReflowCountMgr::ReflowCountMgr()
 {
   mCounts = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
                                 PL_CompareValues, nsnull, nsnull);
+  mCycledOnce = PR_FALSE;
 }
 
 //------------------------------------------------------------------
@@ -4636,7 +4706,7 @@ void ReflowCountMgr::DisplayTotals(const char * aStr)
 //------------------------------------
 void ReflowCountMgr::DisplayHTMLTotals(const char * aStr)
 {
-#ifdef WIN32 // XXX NOT XP!
+#ifdef WIN32x // XXX NOT XP!
   char name[1024];
   
   char * sptr = strrchr(aStr, '/');
@@ -4662,4 +4732,68 @@ void ReflowCountMgr::DisplayHTMLTotals(const char * aStr)
   }
 #endif // not XP!
 }
+
+//------------------------------------------------------------------
+PRIntn ReflowCountMgr::DoClearTotals(PLHashEntry *he, PRIntn i, void *arg)
+{
+  ReflowCounter * counter = (ReflowCounter *)he->value;
+  counter->ClearTotals();
+
+  return HT_ENUMERATE_NEXT;
+}
+
+//------------------------------------------------------------------
+void ReflowCountMgr::ClearTotals()
+{
+  PL_HashTableEnumerateEntries(mCounts, DoClearTotals, this);
+}
+
+//------------------------------------------------------------------
+void ReflowCountMgr::ClearGrandTotals()
+{
+  if (nsnull != mCounts) {
+    ReflowCounter * gTots = (ReflowCounter *)PL_HashTableLookup(mCounts, kGrandTotalsStr);
+    if (gTots == nsnull) {
+      gTots = new ReflowCounter(this);
+      PL_HashTableAdd(mCounts, nsCRT::strdup(kGrandTotalsStr), gTots);
+    } else {
+      gTots->ClearTotals();
+      gTots->SetTotalsCache();
+    }
+  }
+}
+
+//------------------------------------------------------------------
+PRIntn ReflowCountMgr::DoDisplayDiffTotals(PLHashEntry *he, PRIntn i, void *arg)
+{
+  PRBool cycledOnce = (PRBool)arg;
+
+  char *str = (char *)he->key;
+  ReflowCounter * counter = (ReflowCounter *)he->value;
+
+  if (cycledOnce) {
+    counter->CalcDiffInTotals();
+    counter->DisplayDiffTotals(str);
+  }
+  counter->SetTotalsCache();
+
+  return HT_ENUMERATE_NEXT;
+}
+
+//------------------------------------------------------------------
+void ReflowCountMgr::DisplayDiffsInTotals(const char * aStr)
+{
+  if (mCycledOnce) {
+    printf("Differences\n");
+    for (PRInt32 i=0;i<78;i++) {
+      printf("-");
+    }
+    printf("\n");
+    ClearGrandTotals();
+  }
+  PL_HashTableEnumerateEntries(mCounts, DoDisplayDiffTotals, (void *)mCycledOnce);
+
+  mCycledOnce = PR_TRUE;
+}
+
 #endif // MOZ_REFLOW_PERF
