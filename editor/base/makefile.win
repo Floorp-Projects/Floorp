@@ -65,6 +65,7 @@ CPPSRCS =				\
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsEditor.obj		        \
+	.\$(OBJDIR)\nsEditorService.obj		        \
 	.\$(OBJDIR)\nsEditorController.obj  \
 	.\$(OBJDIR)\nsEditorCommands.obj	  \
 	.\$(OBJDIR)\nsEditorUtils.obj		    \
