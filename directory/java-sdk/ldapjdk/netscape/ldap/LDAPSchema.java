@@ -358,7 +358,7 @@ public class LDAPSchema {
                 entryName = (String)en.nextElement();
         }
         /* Get the entire schema definition entry */
-        entry = ld.read( entryName );
+        entry = readSchema( ld, entryName );
         /* Get all object class definitions */
         attr = entry.getAttribute( "objectclasses" );
         if ( attr != null ) {
@@ -437,6 +437,13 @@ public class LDAPSchema {
             s += ' ';
         }
         return s;
+    }
+
+    private LDAPEntry readSchema( LDAPConnection ld, String dn ) throws LDAPException {
+        LDAPSearchResults results = ld.search (dn, ld.SCOPE_BASE,
+                                               "objectclass=subschema",
+                                               null, false);
+        return results.next ();
     }
 
     /**

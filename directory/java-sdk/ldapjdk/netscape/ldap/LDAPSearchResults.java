@@ -445,15 +445,18 @@ public class LDAPSearchResults implements Enumeration {
      */
     public int getCount() {
         int totalReferralEntries = 0;
+        int count = 0;
         for (int i=0; i<referralResults.size(); i++) {
             LDAPSearchResults res =
               (LDAPSearchResults)referralResults.elementAt(i);
             totalReferralEntries = totalReferralEntries+res.getCount();
         }
-
+        if (resultSource != null) {
+            count = resultSource.getCount();
+        }     
         if (exceptions != null)
-            return (entries.size() + exceptions.size() + totalReferralEntries);
-        return (entries.size() + totalReferralEntries);
+            return (count + exceptions.size() + totalReferralEntries);
+        return (count + totalReferralEntries);
     }
 
     /**

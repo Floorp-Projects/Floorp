@@ -59,7 +59,7 @@ public class LDAPSortKey {
                 m_key = null;
             else if ( colonIndex > 0 ) {
                 m_matchRule = m_key.substring( colonIndex+1 );
-                m_key = m_key.substring( 0, colonIndex-1 );
+                m_key = m_key.substring( 0, colonIndex );
             }
         }
     }

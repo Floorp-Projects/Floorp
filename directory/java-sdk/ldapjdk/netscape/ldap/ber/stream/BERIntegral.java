@@ -119,7 +119,7 @@ public abstract class BERIntegral extends BERElement {
             if (m_value < 0)  /* convert from 2's complement */
                 binary_value = (m_value * -1) -1;
 
-            while (binary_value > 0) {
+            do {
                 if (m_value < 0)
                     content_octets[num_content_octets+offset] = (byte)((binary_value^0xFF)&0xFF);
                 else
@@ -127,7 +127,8 @@ public abstract class BERIntegral extends BERElement {
 
                 binary_value = (binary_value>>8);
                 num_content_octets++;
-            }
+            } while (binary_value > 0);
+            
             /* pse 1/16/96 we've just created a string that is in non-network order
                flip it for net order */
             for (i=0; i<num_content_octets; i++)
