@@ -33,10 +33,12 @@ use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
-# XXX need to implement the three other places marked XXX in this
-# module to enable real output to be created.
-
 # COSES namespace is: http://bugzilla.mozilla.org/coses
+# XXX that should change
+
+# XXX this module needs work. Would a rewrite using a more functional
+# style and recursion (using tail recursion of the |goto &sub| form)
+# be more efficient and/or easier to read?
 
 sub provides {
     my $class = shift;
@@ -59,8 +61,10 @@ sub expand {
     my @stack = (); my $stack = $xmlService->parseNS($string);
     my @scope = (); my $scope = {'data' => $data};
     my $result = '';
+    my $pendingText = '';
+    my $originalKeys = {}; # hash with keys being the hash refs and values being hashes with keys being the new keys and values being the original keys
     if (not $scope->{'coses: skip sanitation'}) {
-        $self->sanitiseScope($scope);
+        $self->sanitiseScope($scope, $originalKeys);
     }
     node: while (1) {
         if ($index > $#$stack) {
@@ -70,8 +74,15 @@ sub expand {
                 $index = pop(@index);
                 $scope = pop(@scope);
             } else {
-                # end of stack, have a nice day!
-                return $result;
+                # end of stack
+                # deal with any pending text first
+                if ($pendingText =~ /\S/o) {
+                    $pendingText =~ s/^\n//os;
+                    $pendingText =~ s/\n$//os;
+                    $result .= $self->escape($app, $pendingText, $scope);
+                    # XXX this code is also duplicated a few lines lower
+                }
+                return $result; # have a nice day!
             }
         } else {
             # more data to deal with at this level
@@ -80,6 +91,18 @@ sub expand {
             my $superscope = $scope; # scope of parent element
             $index += 2; # move the pointer on to the next node
             if ($node) {
+                # first, get rid of any pending text
+                # xml:space="default" so only include text nodes with non-whitespace
+                # and trim leading and closing newlines
+                if ($pendingText =~ /\S/o) {
+                    $pendingText =~ s/^\n//os;
+                    $pendingText =~ s/\n$//os;
+                    $result .= $self->escape($app, $pendingText, $scope);
+                    # this code is also duplicated at the end of the loop XXX
+                    # (which is above here, at the return)
+                }
+                $pendingText = '';
+
                 # element node
                 my $attributes = $contents->[0];
                 if ($attributes->{'{http://www.w3.org/XML/1998/namespace}space'}) {
@@ -88,9 +111,9 @@ sub expand {
                     # vs 'preserve', which is assumed
                 }
                 if ($node eq '{http://bugzilla.mozilla.org/coses}if') {
-                    if (not $self->evaluateCondition($self->evaluateExpression($attributes->{'lvalue'}, $scope),
-                                                     $self->evaluateExpression($attributes->{'rvalue'}, $scope),
-                                                     $self->evaluateExpression($attributes->{'condition'}, $scope),
+                    if (not $self->evaluateCondition($self->evaluateExpression($attributes->{'lvalue'}, $scope, $originalKeys),
+                                                     $self->evaluateExpression($attributes->{'rvalue'}, $scope, $originalKeys),
+                                                     $self->evaluateExpression($attributes->{'condition'}, $scope, $originalKeys),
                                                      )) {
                         $superscope->{'coses: last condition'} = 0;
                         next node;
@@ -101,15 +124,15 @@ sub expand {
                     }
                     $scope->{'coses: last condition'} = 0;
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}set') {
-                    my $variable = $self->evaluateExpression($attributes->{'variable'}, $scope);
+                    my $variable = $self->evaluateExpression($attributes->{'variable'}, $scope, $originalKeys);
                     $self->assert($variable !~ /[\(\.\)]/o, 1,
                                   "variable '$variable' contains one of '(', ')' or '.' and is therefore not valid to use as a variable name.");
-                    my $value = $self->evaluateExpression($attributes->{'value'}, $scope);
-                    my $order = $self->evaluateExpression($attributes->{'order'}, $scope);
-                    my $source = $self->evaluateExpression($attributes->{'source'}, $scope);
+                    my $value = $self->evaluateExpression($attributes->{'value'}, $scope, $originalKeys);
+                    my $order = $self->evaluateExpression($attributes->{'order'}, $scope, $originalKeys);
+                    my $source = $self->evaluateExpression($attributes->{'source'}, $scope, $originalKeys);
                     if ($order or $source) {
-                        my @items = $self->genericSort($order, $self->genericKeys($value, $source));
-                        if (@items) {
+                        if ((ref($value) eq 'ARRAY' or ref($value) eq 'HASH') and
+                            (my @items = $self->genericSort($order, $self->genericKeys($value, $source)))) {
                             push(@index, $index);
                             push(@stack, $stack);
                             push(@scope, $superscope);
@@ -143,6 +166,7 @@ sub expand {
                         }
                         next node;
                     } else {
+                        # simple aliasing set (not a foreach-style set)
                         if ($scope == $superscope) {
                             # take a copy since we haven't yet
                             $scope = {%$scope};
@@ -157,7 +181,7 @@ sub expand {
                         $scope->{'coses: escapes'} = [$attributes->{'escape'}, @{$scope->{'coses: escapes'}}];
                     }
                     if ($attributes->{'value'}) {
-                        $result .= $self->escape($app, $self->evaluateExpression($attributes->{'value'}, $scope), $scope);
+                        $result .= $self->escape($app, $self->evaluateExpression($attributes->{'value'}, $scope), $scope, $originalKeys);
                         if ($attributes->{'escape'}) {
                             $scope = $superscope;
                         }
@@ -176,18 +200,22 @@ sub expand {
                         push(@index, $index);
                         push(@stack, $stack);
                         $index = 0;
-                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope));
+                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys));
                         $self->assert($type eq 'COSES', 1, 'Tried to include a non-COSES string as COSES data. Set the \'parse\' attribute to \'text\' or \'x-auto\' to handle this correctly.');
                         $stack = $xmlService->parseNS($string);
                         push(@scope, $superscope);
                     } elsif ($attributes->{'parse'} eq 'text') {
                         # raw text inclusion
-                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope));
+                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys));
                         $result .= $self->escape($app, $string, $scope);
                     } elsif ($attributes->{'parse'} eq 'x-auto') {
                         # Get the string expanded automatically and
                         # insert it into the result.
-                        $result .= $self->escape($app, $app->getService('dataSource.strings')->getExpandedString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope), $scope), $scope);
+                        # XXX the nested string will have a corrupted
+                        # scope hash. XXX
+                        $result .= $self->escape($app, $app->getService('dataSource.strings')->getExpandedString($app, $session, $protocol,
+                                                                                                                 $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys), $scope),
+                                                 $scope);
                     }
                     next node; # skip default handling
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}else') {
@@ -195,18 +223,18 @@ sub expand {
                         next node; # skip this block if the variable IS there
                     }
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}with') {
-                    my $variable = $self->evaluateExpression($attributes->{'variable'}, $scope);
+                    my $variable = $self->evaluateExpression($attributes->{'variable'}, $scope, $originalKeys);
                     if (not defined($scope->{$variable})) {
                         next node; # skip this block if the variable isn't there
                     }
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}without') {
-                    my $variable = $self->evaluateExpression($attributes->{'variable'}, $scope);
+                    my $variable = $self->evaluateExpression($attributes->{'variable'}, $scope, $originalKeys);
                     if (defined($scope->{$variable})) {
                         next node; # skip this block if the variable IS there
                     }
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}flatten') {
-                    my $source = $self->evaluateExpression($attributes->{'source'}, $scope);
-                    my $target = $self->evaluateExpression($attributes->{'target'}, $scope);
+                    my $source = $self->evaluateExpression($attributes->{'source'}, $scope, $originalKeys);
+                    my $target = $self->evaluateExpression($attributes->{'target'}, $scope, $originalKeys);
                     $self->assert($target !~ /[\(\.\)]/o, 1,
                                   "variable '$target' contains one of '(', ')' or '.' and is therefore not valid to use as a variable name.");
                     my @result;
@@ -217,7 +245,11 @@ sub expand {
                         foreach my $key (keys(%{$source})) {
                             $self->assert(ref($source->{$key}) eq 'ARRAY', 1, "source variable is not a hash of arrays and cannot be flattened.");
                             my @value = @{$source->{$key}};
-                            if (scalar(@value)) {
+                            if (@value) {
+                                # desanitise the key
+                                if (defined($originalKeys->{$source}) and defined($originalKeys->{$source}->{$key})) {
+                                    $key = $originalKeys->{$source}->{$key};
+                                }
                                 # escape all "\", "|" and "," characters in key and values
                                 foreach my $piece ($key, @value) {
                                     if (defined($piece) and ($piece ne '')) {
@@ -236,8 +268,8 @@ sub expand {
                     $scope->{$target} = "@result";
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}rounden') {
                     # the opposite of 'flat' is going to be 'round', ok...
-                    my $source = $self->evaluateExpression($attributes->{'source'}, $scope);
-                    my $target = $self->evaluateExpression($attributes->{'target'}, $scope);
+                    my $source = $self->evaluateExpression($attributes->{'source'}, $scope, $originalKeys);
+                    my $target = $self->evaluateExpression($attributes->{'target'}, $scope, $originalKeys);
                     $self->assert($target !~ /[\(\.\)]/o, 1,
                                   "variable '$target' contains one of '(', ')' or '.' and is therefore not valid to use as a variable name.");
                     if (defined($source)) {
@@ -259,6 +291,7 @@ sub expand {
                             $isValue = not $isValue;
                         }
                         $scope->{$target} = {@hash};
+                        $self->sanitiseScope($scope->{$target}, $originalKeys);
                     }
                 } else {
                     my $serialisedAttributes = '';
@@ -275,13 +308,7 @@ sub expand {
                 push(@scope, $superscope);
             } elsif ($scope->{'coses: white space'}) {
                 # raw text node which may or may not be included
-                # xml:space="default" so only include text nodes with non-whitespace
-                # and trim leading and closing newlines
-                if ($contents =~ /\S/o) {
-                    $contents =~ s/^\n//os;
-                    $contents =~ s/\n$//os;
-                    $result .= $self->escape($app, $contents, $scope);
-                }
+                $pendingText .= $contents;
             } else {
                 # raw text node
                 $result .= $self->escape($app, $contents, $scope);
@@ -292,7 +319,7 @@ sub expand {
 
 sub evaluateVariable {
     my $self = shift;
-    my($variable, $scope) = @_; # $scope is the whole data hash at this point
+    my($variable, $scope, $originalKeys) = @_; # $scope is the whole data hash at this point
     my @parts = split(/\./o, $variable, -1); # split variable at dots ('.') (the negative number prevents null trailing fields from being stripped)
     # drill down through scope
     my $scopeName = '';
@@ -302,9 +329,9 @@ sub evaluateVariable {
         } else {
             $scopeName = $part;
             if (ref($scope) eq 'HASH') {
-                if (defined($scope->{'coses: original keys'}) and
-                    defined($scope->{'coses: original keys'}->{$part})) {
-                    $scopeName = $scope->{'coses: original keys'}->{$part};
+                if (defined($originalKeys->{$scope}) and
+                    defined($originalKeys->{$scope}->{$part})) {
+                    $scopeName = $originalKeys->{$scope}->{$part};
                 }
                 $scope = $scope->{$part};
             } elsif (ref($scope) eq 'ARRAY') {
@@ -333,8 +360,8 @@ sub evaluateVariable {
 
 sub evaluateNestedVariableSafely {
     my $self = shift;
-    my($variable, $scope) = @_;
-    $scope = $self->evaluateVariable($variable, $scope);
+    my($variable, $scope, $originalKeys) = @_;
+    $scope = $self->evaluateVariable($variable, $scope, $originalKeys);
     if ($scope =~ /[\(\)]/o) {
         $self->error(1, "Evaluated nested variable '$variable' to '$scope' which contains one of '(' or ')' and is therefore not safe to use as a variable part");
     }
@@ -343,7 +370,7 @@ sub evaluateNestedVariableSafely {
 
 sub evaluateExpression {
     my $self = shift;
-    my($expression, $scope) = @_;
+    my($expression, $scope, $originalKeys) = @_;
     if (defined($expression)) {
         if ($expression =~ /^\'(.*)$/os) {
             return $1; # bypass next bit if it's an explicit string
@@ -367,7 +394,7 @@ sub evaluateExpression {
                            [^()]*\).* # anything but brackets, a close bracket then anything
                                     ) # which should be at the
                                     $ # end of the line
-                                   /$1.$self->evaluateNestedVariableSafely($2, $scope).$3/sexo) {
+                                   /$1.$self->evaluateNestedVariableSafely($2, $scope, $originalKeys).$3/sexo) {
                 # this should cope with this smoketest (d=ab, g=fcde): (f.(c).((a).(b)).(e))
                 # note that if b="x" and a="(b)" then "(a)" should be evaluated to "x"
             }
@@ -378,13 +405,13 @@ sub evaluateExpression {
                 # regexp s/// construct ensures we keep references as
                 # live references in strict mode (i.e., we don't call
                 # their "ToString" method or whatever...)
-                $expression = $self->evaluateVariable($1, $scope);
+                $expression = $self->evaluateVariable($1, $scope, $originalKeys);
             } else {
                 # expand all remaining outer variables
                 my $result = '';
                 while ($expression =~ s/^(.*?)\(([^()]*)\)//o) {
                     # ok, let's deal with the next embedded variable
-                    $result .= $1.$self->evaluateVariable($2, $scope);
+                    $result .= $1.$self->evaluateVariable($2, $scope, $originalKeys);
                     # the bit we've dealt with so far will end up
                     # removed from the $expression string (so the
                     # current state is "$result$expression"). This is
@@ -474,7 +501,7 @@ sub genericSort {
     my $self = shift;
     my($order, @list) = @_;
     # sort the list (in reverse order!)
-    if (defined($order) and $order and scalar(@list)) {
+    if (defined($order) and $order and @list) {
         if ($order eq 'lexical') {
             return sort { $b cmp $a } @list;
         } elsif ($order eq 'reverse lexical') {
@@ -507,7 +534,7 @@ sub genericSort {
 
 sub sanitiseScope {
     my $self = shift;
-    my($data) = @_;
+    my($data, $originalKeys) = @_;
     my @stack = ($data);
     while (@stack) {
         my $value = pop(@stack);
@@ -523,10 +550,10 @@ sub sanitiseScope {
                         $key .= '_';
                     }
                     $value->{$key} = $backup;
-                    if (not exists($value->{'coses: original keys'})) {
-                        $value->{'coses: original keys'} = {};
+                    if (not exists($originalKeys->{$value})) {
+                        $originalKeys->{$value} = {};
                     }
-                    $value->{'coses: original keys'}->{$key} = $oldKey;
+                    $originalKeys->{$value}->{$key} = $oldKey;
                 }
             }
         } elsif (ref($value) eq 'ARRAY') {
