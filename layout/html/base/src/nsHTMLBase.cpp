@@ -124,6 +124,9 @@ nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
       return result;
     }
   }
+  else {
+    NS_RELEASE(view);
+  }
   return NS_OK;
 }
 
