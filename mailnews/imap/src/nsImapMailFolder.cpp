@@ -3783,9 +3783,7 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
   if (m_offlineHeader)
     EndNewOfflineMessage();
 
-  nsCOMPtr<nsIMsgDBHdr> msgHdr;
   m_curMsgUid = uidOfMessage;
-  res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
   
   if (commit && mDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
