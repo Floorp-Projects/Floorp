@@ -157,20 +157,32 @@ $(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libv
 ifdef MOZ_ENABLE_GTK
 install:: $(PROGRAM)_gtk
 	$(INSTALL) -m 555 $< $(DIST)/bin
+
+clobber::
+	rm -f $(PROGRAM)_gtk
 endif
 
 ifdef MOZ_ENABLE_MOTIF
 install:: $(PROGRAM)_motif
 	$(INSTALL) -m 555 $< $(DIST)/bin
+
+clobber::
+	rm -f $(PROGRAM)_motif
 endif
 
 ifdef MOZ_ENABLE_QT
 install:: $(PROGRAM)_qt
 	$(INSTALL) -m 555 $< $(DIST)/bin
+
+clobber::
+	rm -f $(PROGRAM)_qt
 endif
 
 ifdef MOZ_ENABLE_XLIB
 install:: $(PROGRAM)_xlib
 	$(INSTALL) -m 555 $< $(DIST)/bin
+
+clobber::
+	rm -f $(PROGRAM)_xlib
 endif
 
