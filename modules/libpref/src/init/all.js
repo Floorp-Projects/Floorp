@@ -289,6 +289,7 @@ pref("intl.charset_menu.static",           "iso-8859-1");
 pref("intl.charset_menu.cache",            "");
 pref("intl.charset.detector",              "");
 
+pref("font.default", "serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
 

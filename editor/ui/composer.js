@@ -172,3 +172,8 @@ pref("editor.last_background_color_picked", "255,255,255");
 pref("editor.new_cell_has_space", true);
 
 pref("editor.throbber.url","http://www.mozilla.org");
+
+pref("editor.maintain_table_structure", true);
+pref("editor.table_delete_key", 0);
+
+pref("editor.use_custom_default_colors", 1);
