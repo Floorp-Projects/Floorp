@@ -1,0 +1,27 @@
+
+FILES:
+
+===* parse_devedge_doc.pl
+Requires: 
+  nothing.
+
+Description: 
+  Parses the nasty devedge document (jsref.htm) into somewhat nicer xml.
+
+Syntax:
+  perl parse_devedge_doc.pl < jsref.htm > jsref.xml
+
+===* parse_apidoc.pl
+Requires:
+  XML::Parser (http://search.cpan.org/search?dist=XML-Parser)
+
+Description:
+  Parses apidoc xml files, producing html output for viewing in normal browsers.
+  Output will be placed in the specified directory, or ./apidocs if none is
+  specified.  Output pages with content will refer to api-content.css, table
+  of content pages will refer to api-toc.css.
+
+Syntax:
+  perl parse_apidoc.pl jsref.xml [<output-directory>]
+
+
