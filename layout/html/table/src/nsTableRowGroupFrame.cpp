@@ -565,7 +565,7 @@ AllocateSpecialHeight(nsIPresContext* aPresContext,
   while (cellFrame) {
     nsCOMPtr<nsIAtom> cellType;
     cellFrame->GetFrameType(getter_AddRefs(cellType));
-    if (nsLayoutAtoms::tableCellFrame == cellType) {
+    if (nsLayoutAtoms::tableCellFrame == cellType.get()) {
       PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*cellFrame);
       if (rowSpan > 1) {
         // use a simple average to allocate the special row. This is not exact, 
@@ -623,7 +623,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
   while (rowFrame) {
     nsCOMPtr<nsIAtom> frameType;
     rowFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableRowFrame == frameType) {
+    if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
       if (startRowIndex == -1) {
         startRowIndex = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
       }
@@ -667,14 +667,14 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
       while (rowFrame) {
         nsCOMPtr<nsIAtom> rowType;
         rowFrame->GetFrameType(getter_AddRefs(rowType));
-        if (nsLayoutAtoms::tableRowFrame == rowType) {
+        if (nsLayoutAtoms::tableRowFrame == rowType.get()) {
           // check this row for a cell with rowspans
           nsIFrame* cellFrame;
           rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
           while (cellFrame) {
             nsCOMPtr<nsIAtom> cellType;
             cellFrame->GetFrameType(getter_AddRefs(cellType));
-            if (nsLayoutAtoms::tableCellFrame == cellType) {
+            if (nsLayoutAtoms::tableCellFrame == cellType.get()) {
               PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex + startRowIndex,
                                                                 (nsTableCellFrame&)*cellFrame);
               if (rowSpan > 1) { // found a cell with rowspan > 1, determine the height 
@@ -803,7 +803,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
   while (rowFrame) {
     nsCOMPtr<nsIAtom> rowType;
     rowFrame->GetFrameType(getter_AddRefs(rowType));
-    if (nsLayoutAtoms::tableRowFrame == rowType) {
+    if (nsLayoutAtoms::tableRowFrame == rowType.get()) {
       // Notify the row of the new size
       ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
     }
