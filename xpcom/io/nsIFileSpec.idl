@@ -44,6 +44,7 @@ interface nsIInputStream;
 
       native nsFileSpec(nsFileSpec);
 [ref] native nsFileSpecRef(nsFileSpec);
+[ptr] native nsFileSpecPtr(nsFileSpec);
 
 [scriptable, uuid(d8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFileSpec : nsISupports
