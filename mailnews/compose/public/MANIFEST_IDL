@@ -18,3 +18,5 @@
 
 nsISmtpServer.idl
 nsISmtpUrl.idl
+nsISmtpService.idl
+
