@@ -125,7 +125,7 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
   target->AddEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
   target->AddEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
   target->AddEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);   
-  
+
   return rv;
 }
 

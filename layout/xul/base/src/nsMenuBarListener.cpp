@@ -108,6 +108,10 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 	keyEvent->GetKeyCode(&theChar);
   PRBool alt;
   keyEvent->GetAltKey(&alt);
+  if (theChar == NS_VK_TAB && mAltKeyDown) {
+    mAltKeyDown = PR_FALSE;
+  }
+
   if (theChar == NS_VK_ALT && alt) {
     // No other modifiers can be down.
     // Especially CTRL.  CTRL+ALT == AltGR, and
@@ -166,12 +170,11 @@ nsresult
 nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 {
   if (!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
-    mMenuBarFrame->ToggleMenuActiveState();
-    PRBool handled;
+	  mMenuBarFrame->ToggleMenuActiveState();
+	  PRBool handled;
     mMenuBarFrame->Escape(handled);
 	  mAltKeyDown = PR_FALSE;
   }
-  
   return NS_OK; // means I am NOT consuming event
 }
   
