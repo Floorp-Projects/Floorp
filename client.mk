@@ -20,11 +20,11 @@
 # This needs CVSROOT set to work, e.g.
 # setenv CVSROOT :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 #  --or--
-# setenv CVSROOT :pserver:$(USER)%netscape.com@cvs.mozilla.org:/cvsroot
+# setenv CVSROOT :pserver:username%somedomain.org@cvs.mozilla.org:/cvsroot
 # 
 # Usage:
 # Pull the source:
-#   cvs update mozilla/client.mk
+#   cvs checkout mozilla/client.mk
 #   gmake -f mozilla/client.mk checkout
 #
 # Build NSPR, maybe only once:
@@ -33,6 +33,7 @@
 # Build the client:
 #   gmake -f mozilla/client.mk build
 #
+# see http://www.mozilla.org/unix/ for more information
 
 # options:
 # MOZ_OBJDIR		 - destination Object Directory
