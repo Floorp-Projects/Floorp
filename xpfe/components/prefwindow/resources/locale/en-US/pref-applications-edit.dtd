@@ -8,8 +8,8 @@
 
 <!ENTITY  handledby.label                       "Handled By">
 
-<!ENTITY  navigator.label                       "Navigator">
-<!ENTITY  navigator.accesskey                   "n">
+<!ENTITY  useDefault.label                      "Use system default">
+<!ENTITY  useDefault.accesskey                  "u">
 <!ENTITY  saveToDisk.label                      "Save to Disk">
 <!ENTITY  saveToDisk.accesskey                  "s">
 <!ENTITY  application.label                     "Application">
