@@ -1170,10 +1170,6 @@ void nsCaret::CaretBlinkCallback(nsITimer *aTimer, void *aClosure)
   if (!theCaret) return;
   
   theCaret->DrawCaret();
-
-#ifndef REPEATING_TIMERS
-  theCaret->PrimeTimer();
-#endif
 }
 
 

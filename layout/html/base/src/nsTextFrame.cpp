@@ -325,13 +325,6 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
   // in unison.
   sBlinkTextOff = PRBool(!sBlinkTextOff);
 
-#ifndef REPEATING_TIMERS
-  // XXX hack to get auto-repeating timers; restart before doing
-  // expensive work so that time between ticks is more even
-  Stop();
-  Start();
-#endif
-
 #ifdef NOISY_BLINK
   PRTime now = PR_Now();
   char buf[50];

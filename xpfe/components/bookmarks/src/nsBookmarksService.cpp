@@ -2132,19 +2132,6 @@ else
 	printf("nsBookmarksService::FireTimer - busy pinging.\n");
 	}
 #endif
-
-#ifndef	REPEATING_TIMERS
-	if (bmks->mTimer)
-	{
-		bmks->mTimer->Cancel();
-		bmks->mTimer = nsnull;
-	}
-	bmks->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-	if (NS_FAILED(rv) || (!bmks->mTimer)) return;
-	bmks->mTimer->InitWithFuncCallback(nsBookmarksService::FireTimer, bmks, BOOKMARK_TIMEOUT, 
-                                       nsITimer::TYPE_REPEATING_SLACK);
-	// Note: don't addref "this" as we'll cancel the timer in the nsBookmarkService destructor
-#endif
 }
 
 

@@ -709,22 +709,6 @@ else
 	printf("    InternetSearchDataSource::FireTimer - busy pinging.\n");
 	}
 #endif
-
-#ifndef	REPEATING_TIMERS
-	if (search->mTimer)
-	{
-		search->mTimer->Cancel();
-		search->mTimer = nsnull;
-	}
-
-	nsresult rv;
-
-	search->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-	if (NS_FAILED(rv) || (!search->mTimer)) return;
-	search->mTimer->InitWithFuncCallback(InternetSearchDataSource::FireTimer, search,
-                                             SEARCH_UPDATE_TIMEOUT, nsITimer::TYPE_REPEATING_SLACK);
-	// Note: don't addref "this" as we'll cancel the timer in the InternetSearchDataSource destructor
-#endif
 }
 
 
