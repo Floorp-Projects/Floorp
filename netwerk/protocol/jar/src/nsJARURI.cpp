@@ -19,11 +19,11 @@
 #include "nsJARURI.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
+#include "nsFileSpec.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIZipReader.h"
- 
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
  
 ////////////////////////////////////////////////////////////////////////////////
