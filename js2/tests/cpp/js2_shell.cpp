@@ -27,35 +27,35 @@
 #include "world.h"
 #include "interpreter.h"
 
-namespace JavaScript {
-    namespace Shell {
-        using namespace Interpreter;
         
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
 #include <SIOUX.h>
 #include <MacTypes.h>
 
-        static char *mac_argv[] = {"js2", 0};
-        
-        static void initConsole(StringPtr consoleName,
-                                const char* startupMessage,
-                                int &argc, char **&argv)
-        {
-            SIOUXSettings.autocloseonquit = false;
-            SIOUXSettings.asktosaveonclose = false;
-            SIOUXSetTitle(consoleName);
-    
-            // Set up a buffer for stderr (otherwise it's a pig).
-            static char buffer[BUFSIZ];
-            setvbuf(stderr, buffer, _IOLBF, BUFSIZ);
+static char *mac_argv[] = {"js2", 0};
 
-            stdOut << startupMessage;
+static void initConsole(StringPtr consoleName,
+                        const char* startupMessage,
+                        int &argc, char **&argv)
+{
+    SIOUXSettings.autocloseonquit = false;
+    SIOUXSettings.asktosaveonclose = false;
+    SIOUXSetTitle(consoleName);
 
-            argc = 1;
-            argv = mac_argv;
-        }
+    // Set up a buffer for stderr (otherwise it's a pig).
+    static char buffer[BUFSIZ];
+    setvbuf(stderr, buffer, _IOLBF, BUFSIZ);
+
+    JavaScript::stdOut << startupMessage;
+
+    argc = 1;
+    argv = mac_argv;
+}
 #endif
 
+namespace JavaScript {
+    namespace Shell {
+        using namespace Interpreter;
 
         // Interactively read a line from the input stream in and put it into
         // s Return false if reached the end of input before reading anything.
