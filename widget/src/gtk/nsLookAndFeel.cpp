@@ -208,6 +208,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     res = mXPLookAndFeel->GetMetric(aID, aMetric);
     if (NS_SUCCEEDED(res))
       return res;
+    res = NS_OK;
   }
 
   switch (aID) {
@@ -305,6 +306,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
     res = mXPLookAndFeel->GetMetric(aID, aMetric);
     if (NS_SUCCEEDED(res))
       return res;
+    res = NS_OK;
   }
 
   switch (aID) {

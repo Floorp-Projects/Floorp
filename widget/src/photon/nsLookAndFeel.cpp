@@ -124,6 +124,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     res = mXPLookAndFeel->GetMetric(aID, aMetric);
     if (NS_SUCCEEDED(res))
       return res;
+    res = NS_OK;
   }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric\n"));
@@ -209,6 +210,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
     res = mXPLookAndFeel->GetMetric(aID, aMetric);
     if (NS_SUCCEEDED(res))
       return res;
+    res = NS_OK;
   }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric with float aID=<%d>\n", aID));
