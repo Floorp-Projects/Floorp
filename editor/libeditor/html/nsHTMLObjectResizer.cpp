@@ -618,9 +618,14 @@ nsHTMLEditor::HideResizers(void)
   nsCOMPtr<nsIDOMNode> parentNode;
   res = mResizedObject->GetParentNode(getter_AddRefs(parentNode));
   erP = do_QueryInterface(parentNode);
-  res = erP->RemoveEventListener(NS_LITERAL_STRING("DOMNodeRemoved"), mMutationListenerP, PR_FALSE);
-  NS_ASSERTION(NS_SUCCEEDED(res), "failed to remove NodeRemoved event listener");
-
+  NS_ASSERTION(erP, "Failed to get event receiver!");
+  if (erP)
+  {
+    res = erP->RemoveEventListener(NS_LITERAL_STRING("DOMNodeRemoved"),
+      mMutationListenerP, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(res),
+      "failed to remove NodeRemoved event listener");
+  }
   mMutationListenerP = nsnull;
 
   res = GetDOMEventReceiver(getter_AddRefs(erP));
