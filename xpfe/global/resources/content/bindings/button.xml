@@ -129,8 +129,8 @@
             event.keyCode == KeyEvent.DOM_VK_RIGHT)
           return window.document.commandDispatcher.advanceFocus();
 
-        if (event.keyCode || event.charCode <= ' ')
-          return;  // No arrow key or potential accesskey pressed
+        if (event.keyCode || event.charCode <= 32)
+          return;  // No printable char pressed, not a potential accesskey
 
         // Possible accesskey pressed
         var charPressedLower = String.fromCharCode(event.charCode).toLowerCase();
