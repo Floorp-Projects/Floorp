@@ -2029,8 +2029,8 @@ nsDocShell::GetChildAt(PRInt32 aIndex, nsIDocShellTreeItem ** aChild)
 {
     NS_ENSURE_ARG_POINTER(aChild);
 
-    NS_ASSERTION(aIndex >= 0 && aIndex < mChildren.Count(),"Bad docshell ChildAt index");
-    *aChild = (nsIDocShellTreeItem *) mChildren.ElementAt(aIndex);
+    NS_WARN_IF_FALSE(aIndex >=0 && aIndex < mChildren.Count(), "index of child element is out of range!");
+    *aChild = (nsIDocShellTreeItem *) mChildren.SafeElementAt(aIndex);
     NS_IF_ADDREF(*aChild);
 
     return NS_OK;
