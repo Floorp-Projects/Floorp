@@ -57,7 +57,7 @@ public class Global {
         // Define some global functions particular to the shell. Note
         // that these functions are not part of ECMA.
         String[] names = { "print", "quit", "version", "load", "help",
-                           "loadClass", "defineClass", "spawn" };
+                           "loadClass", "defineClass", "spawn", "sync" };
         try {
             scope.defineFunctionProperties(names, Global.class,
                                            ScriptableObject.DONTENUM);
@@ -274,6 +274,38 @@ public class Global {
         Thread thread = new Thread(runner);
         thread.start();
         return thread;
+    }
+    
+    /**
+     * The sync function creates a synchronized function (in the sense
+     * of a Java synchronized method) from an existing function. The
+     * new function synchronizes on the <code>this</code> object of
+     * its invocation.
+     * js> var o = { f : sync(function(x) {
+     *       print("entry");
+     *       Packages.java.lang.Thread.sleep(x*1000);
+     *       print("exit");
+     *     })};
+     * js> spawn(function() {o.f(5);});
+     * Thread[Thread-0,5,main]
+     * entry
+     * js> spawn(function() {o.f(5);});
+     * Thread[Thread-1,5,main]
+     * js>
+     * exit
+     * entry
+     * exit
+     */
+    public static Object sync(Context cx, Scriptable thisObj, Object[] args,
+                               Function funObj)
+    {
+        if (args.length == 1 && args[0] instanceof Function) {
+            return new Synchronizer((Function)args[0]);
+        }
+        else {
+            throw Context.reportRuntimeError(ToolErrorReporter.getMessage(
+                "msg.spawn.args"));
+        }
     }
     
     public InputStream getIn() {
