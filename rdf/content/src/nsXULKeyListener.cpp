@@ -219,6 +219,9 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
   while (keysetNode) {
      nsString keysetNodeType;
      nsCOMPtr<nsIDOMElement> keysetElement(do_QueryInterface(keysetNode));
+     if(!keysetElement)
+       return rv;
+       
      keysetElement->GetNodeName(keysetNodeType);
 	 if (keysetNodeType.Equals("keyset")) {
 	  // Given the DOM node and Key Event
