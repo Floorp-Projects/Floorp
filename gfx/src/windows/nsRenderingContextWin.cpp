@@ -633,6 +633,35 @@ void nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, ns
   ::LineTo(mDC, (int)(aX1), (int)(aY1));
 }
 
+void nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
+{
+  // First transform nsPoint's into POINT's; perform coordinate space
+  // transformation at the same time
+  POINT pts[20];
+  POINT* pp0 = pts;
+
+  if (aNumPoints > 20)
+    pp0 = new POINT[aNumPoints];
+
+  POINT* pp = pp0;
+  const nsPoint* np = &aPoints[0];
+
+	for (PRInt32 i = 0; i < aNumPoints; i++, pp++, np++)
+  {
+		pp->x = np->x;
+		pp->y = np->y;
+		mTMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+	}
+
+  // Draw the polyline
+  SetupSolidPen();
+  ::Polyline(mDC, pp0, int(aNumPoints));
+
+  // Release temporary storage if necessary
+  if (pp0 != pts)
+    delete pp0;
+}
+
 void nsRenderingContextWin :: DrawRect(const nsRect& aRect)
 {
   RECT nr;

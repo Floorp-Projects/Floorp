@@ -715,6 +715,29 @@ void nsRenderingContextUnix :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, n
 	      aX0, aY0, aX1, aY1);
 }
 
+void nsRenderingContextUnix :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
+{
+  PRUint32 i ;
+  XPoint * xpoints;
+  XPoint * thispoint;
+  
+  xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
+
+  for (i = 0; i < aNumPoints; i++){
+    thispoint = (xpoints+i);
+    thispoint->x = aPoints[i].x;
+    thispoint->y = aPoints[i].y;
+    mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
+  }
+
+  ::XDrawLines(mRenderingSurface->display,
+	       mRenderingSurface->drawable,
+	       mRenderingSurface->gc,
+	       xpoints, aNumPoints, CoordModeOrigin);
+
+  PR_Free((void *)xpoints);
+}
+
 void nsRenderingContextUnix :: DrawRect(const nsRect& aRect)
 {
   DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);

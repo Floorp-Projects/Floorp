@@ -226,6 +226,13 @@ public:
   virtual void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) = 0;
 
   /**
+   * Draw a polyline
+   * @param aPoints array of endpoints
+   * @param aNumPonts number of points
+   */
+  virtual void DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
+
+  /**
    * Draw a rectangle
    * @param aRect The rectangle to draw
    */

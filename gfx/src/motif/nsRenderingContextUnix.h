@@ -99,6 +99,7 @@ public:
   virtual void DestroyDrawingSurface(nsDrawingSurface aDS);
 
   virtual void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
+  virtual void DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
 
   virtual void DrawRect(const nsRect& aRect);
   virtual void DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
