@@ -25,38 +25,46 @@ REM in the Gecko output system.
 REM
 
 set errmsg=
+set has_err=
 
 echo Testing simple html to html ...
-TestOutput -i text/html -o text/html -f 0 -c OutTestData/simple.html OutTestData/simple.html
-IF ERRORLEVEL 1 echo Simple html to html failed (%errorlevel%). && set errmsg=%errmsg% simple.html
+TestOutput -i text/html -o text\html -f 0 -c OutTestData/simple.html OutTestData/simple.html
+if errorlevel 1 echo Simple html to html failed (%errorlevel%). && set has_err=1 && set errmsg=%errmsg% simple.html
 
 echo Testing simple copy case ...
 TestOutput -i text/html -o text/plain -f 0 -w 0 -c OutTestData/simplecopy.out OutTestData/simple.html
-IF ERRORLEVEL 1 echo Simple copy test failed. && set errmsg=%errmsg% simplecopy.out
+if errorlevel 1 echo Simple copy test failed. && set has_err=1 && set errmsg=%errmsg% simplecopy.out
 
 echo Testing non-wrapped plaintext ...
 TestOutput -i text/html -o text/plain -f 0 -w 0 -c OutTestData/plainnowrap.out OutTestData/plain.html
-IF ERRORLEVEL 1 echo Non-wrapped plaintext test failed. && set errmsg=%errmsg% plainnowrap.out
+if errorlevel 1 echo Non-wrapped plaintext test failed. && set has_err=1 && set errmsg=%errmsg% plainnowrap.out
 
 REM echo Testing wrapped bug unformatted plaintext ...
 REM TestOutput -i text/html -o text/plain -f 32 -w 50 -c OutTestData/plainwrap.out OutTestData/plain.html
-REM IF ERRORLEVEL 1 echo Wrapped plaintext test failed. && set errmsg=%errmsg% plainwrap.out
+REM if errorlevel 1 echo Wrapped plaintext test failed. && set has_err=1 && set errmsg=%errmsg% plainwrap.out
 
 echo Testing mail quoting ...
 TestOutput -i text/html -o text/plain -c OutTestData/mailquote.out OutTestData/mailquote.html
-IF ERRORLEVEL 1 echo Mail quoting test failed. && set errmsg=%errmsg% mailquote.out
+if errorlevel 1 echo Mail quoting test failed. && set has_err=1 && set errmsg=%errmsg% mailquote.out
 
-echo Testing conversion of XIF entities ...
+echo Testing conversion of Xif entities ...
 TestOutput -i text/xif -o text/plain -c OutTestData/entityxif.out OutTestData/entityxif.xif
-IF ERRORLEVEL 1 echo XIF entity conversion test failed. && set errmsg=%errmsg% entityxif.out
+if errorlevel 1 echo Xif entity conversion test failed. && set has_err=1 && set errmsg=%errmsg% entityxif.out
 
-echo Testing XIF to HTML ...
+echo Testing Xif to HTML ...
 TestOutput -i text/xif -o text/html -c OutTestData/xifstuff.out OutTestData/xifstuff.xif
-IF ERRORLEVEL 1 echo XIF to HTML conversion test failed. && set errmsg=%errmsg% xifstuff.out
+if errorlevel 1 echo Xif to HTML conversion test failed. && set has_err=1 && set errmsg=%errmsg% xifstuff.out
 
 echo Testing HTML Table to Text ...
 TestOutput -i text/html -o text/plain -c OutTestData/htmltable.out OutTestData/htmltable.html
-IF ERRORLEVEL 1 echo HTML Table to Plain text failed (%errorlevel%). && set errmsg=%errmsg% htmltable.out
+if errorlevel 1 echo HTML Table to Plain text failed (%errorlevel%). && set has_err=1 && set errmsg=%errmsg% htmltable.out
 
-IF DEFINED %errmsg% echo  && echo TESTS FAILED: %errmsg% && exit 1
+if %has_err% == 0 goto success
+echo.
+echo TESTS FAILED: %errmsg%
+rem exit 1
+goto end
+
+:success
 echo ALL TESTS SUCCEEDED
+:end
