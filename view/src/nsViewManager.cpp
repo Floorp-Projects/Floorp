@@ -2207,7 +2207,8 @@ NS_IMETHODIMP nsViewManager::InsertZPlaceholder(nsIView *aParent, nsIView *aChil
 
   nsZPlaceholderView* placeholder = new nsZPlaceholderView();
   nsRect bounds(0, 0, 0, 0);
-  placeholder->Init(this, bounds, parent, nsViewVisibility_kHide);
+  // mark the placeholder as "shown" so that it will be included in a built display list
+  placeholder->Init(this, bounds, parent, nsViewVisibility_kShow);
   placeholder->SetReparentedView(child);
   placeholder->SetZIndex(child->GetZIndexIsAuto(), child->GetZIndex());
   child->SetZParent(placeholder);
@@ -2970,6 +2971,11 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
 
   NS_ASSERTION((aView != nsnull), "no view");
 
+  if (nsViewVisibility_kHide == aView->GetVisibility()) {
+    // bail out if the view is marked invisible; all children are invisible
+    return retval;
+  }
+
   if (!aTopView)
     aTopView = aView;
 
@@ -3100,15 +3106,13 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       bounds.x -= aOriginX;
       bounds.y -= aOriginY;
 
-      nsViewVisibility  visibility;
       float             opacity;
       PRBool            transparent;
 
-      aView->GetVisibility(visibility);
       aView->GetOpacity(opacity);
       aView->HasTransparency(transparent);
 
-      if ((nsViewVisibility_kShow == visibility) && (aEventProcessing || opacity > 0.0f)) {
+      if (aEventProcessing || opacity > 0.0f) {
         PRUint32 flags = VIEW_RENDERED;
         if (transparent)
           flags |= VIEW_TRANSPARENT;
