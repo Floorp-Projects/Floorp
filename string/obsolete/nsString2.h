@@ -571,6 +571,7 @@ private:
 };
 
 // NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
+NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsString, PRUnichar)
 
 extern NS_COM int fputs(const nsString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsString& aString);
