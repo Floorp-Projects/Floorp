@@ -128,7 +128,9 @@ nsCocoaBrowserService::BrowserClosed()
         // The app is terminating *and* our count dropped to 0.
         NS_IF_RELEASE(sSingleton);
         NS_TermEmbedding();
-        printf("Shutting down embedding!\n");
+#if DEBUG
+        NSLog(@"Shutting down embedding!");
+#endif
     }
 }
 
@@ -139,12 +141,17 @@ nsCocoaBrowserService::TermEmbedding()
     if (sNumBrowsers == 0) {
         NS_IF_RELEASE(sSingleton);
         NS_TermEmbedding();
-        printf("Shutting down embedding.\n");
+#if DEBUG
+        NSLog(@"Shutting down embedding.");
+#endif
     }
-    else
-        printf("Cannot yet shut down embedding.\n");
+    else {
+#if DEBUG
+        NSLog(@"Cannot yet shut down embedding.");
+#endif
         // Otherwise we cannot yet terminate.  We have to let the death of the browser windows
         // induce termination.
+    }
 }
 
 #define NS_ALERT_NIB_NAME "alert"
@@ -569,7 +576,9 @@ nsCocoaBrowserService::Select(nsIDOMWindow *parent,
                               PRInt32 *outSelection, 
                               PRBool *_retval)
 {
-  printf("Uh-oh. Select has not been implemented.\n");
+#if DEBUG
+  NSLog(@"Uh-oh. Select has not been implemented.");
+#endif
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -581,7 +590,9 @@ nsCocoaBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent,
                                           nsIWebBrowserChrome **_retval)
 {
   if (!parent) {
-    printf("Uh-oh. Attempt to create a new browser window with a null parent.  Should not happen in Chimera.\n");
+#if DEBUG
+    NSLog(@"Attempt to create a new browser window with a null parent.  Should not happen in Chimera.");
+#endif
     return NS_ERROR_FAILURE;
   }
     

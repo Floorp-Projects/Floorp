@@ -183,23 +183,31 @@ nsCocoaBrowserListener::CreateChromeWindow(nsIWebBrowserChrome *parent,
                                            nsIWebBrowserChrome **_retval)
 {
   if (parent != this) {
-    printf("Mismatch in nsCocoaBrowserListener::CreateChromeWindow.  We should be the owning parent.\n");
+#if DEBUG
+    NSLog(@"Mismatch in nsCocoaBrowserListener::CreateChromeWindow.  We should be the owning parent.");
+#endif
     return NS_ERROR_FAILURE;
   }
   
   CHBrowserView* childView = [mContainer createBrowserWindow: chromeFlags];
   if (!childView) {
-    printf("No CHBrowserView hooked up for a newly created window yet.\n");
+#if DEBUG
+    NSLog(@"No CHBrowserView hooked up for a newly created window yet.");
+#endif
     return NS_ERROR_FAILURE;
   }
   
   nsCocoaBrowserListener* listener = [childView getCocoaBrowserListener];
   if (!listener) {
-    printf("Uh-oh! No listener yet for a newly created window (nsCocoaBrowserlistener)\n");
+#if DEBUG
+    NSLog(@"Uh-oh! No listener yet for a newly created window (nsCocoaBrowserlistener)");
     return NS_ERROR_FAILURE;
+#endif
   }
   
-  printf("made a chrome window.\n");
+#if DEBUG
+  NSLog(@"Made a chrome window.");
+#endif
   
   *_retval = listener;
   NS_IF_ADDREF(*_retval);
@@ -994,7 +1002,9 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   
   nsCocoaBrowserService::BrowserClosed();
   
-  printf("CHBrowserView died.\n");
+#if DEBUG
+  NSLog(@"CHBrowserView died.");
+#endif
 }
 
 - (void)setFrame:(NSRect)frameRect 
@@ -1377,15 +1387,21 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
       
       rv = commandParams->SetStringValue(NS_LITERAL_STRING("cmd_name"), commandNameStr);
       rv = commandMgr->DoCommand(commandParams);
+#if DEBUG
       if (NS_FAILED(rv))
         NSLog(@"DoCommand failed");
+#endif
     }
     else {
+#if DEBUG
       NSLog(@"Failed to make command params");
+#endif
     }
   }
   else {
+#if DEBUG
     NSLog(@"No command manager");
+#endif
   }
 }
 
@@ -1397,11 +1413,15 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     nsAutoString commandNameStr;
     commandNameStr.AssignWithConversion(commandName);
     nsresult rv = commandMgr->IsCommandEnabled(commandNameStr, &isEnabled);
+#if DEBUG
     if (NS_FAILED(rv))
       NSLog(@"IsCommandEnabled failed");
+#endif
   }
   else {
+#if DEBUG
     NSLog(@"No command manager");
+#endif
   }
   
   return (isEnabled) ? YES : NO;
@@ -1618,8 +1638,6 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  NSLog(@"Drag DROP!");
-  
   PRBool dragAccepted = PR_FALSE;
   if ( mDragHelper ) {
     nsCOMPtr<nsIEventSink> sink;

@@ -71,7 +71,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(void)dealloc
 {
-  printf("The browser wrapper died.\n");
+#if DEBUG
+  NSLog(@"The browser wrapper died.");
+#endif
 
   [[NSNotificationCenter defaultCenter] removeObserver: self];
     

@@ -250,7 +250,9 @@
     nsCOMPtr<nsIRDFNode> valueNode;
     mDataSource->GetTarget(resource, propertyResource, PR_TRUE, getter_AddRefs(valueNode));
     if (!valueNode) {
-        NSLog(@"ValueNode is null!");
+#if DEBUG
+        NSLog(@"ValueNode is null in RDF objectValueForTableColumn");
+#endif
         return nil;
     }
     

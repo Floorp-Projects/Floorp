@@ -1040,7 +1040,9 @@ BookmarksService::ResolveKeyword(NSString* aKeyword)
   if (keyword.IsEmpty())
     return [NSString stringWithCString:""];
   
+#if DEBUG
   NSLog(@"str = %s", keyword.get());
+#endif
   
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
   nsCOMPtr<nsIDOMElement> elt;
@@ -1251,6 +1253,6 @@ BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* 
 void
 BookmarksService::DropURL(NSString* title, NSURL* url, BookmarkItem* parent, int index) 
 {
-  NSLog(@"DropURL not implemented yet\n");
+  NSLog(@"DropURL not implemented yet");
 }
 

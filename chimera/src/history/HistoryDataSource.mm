@@ -55,7 +55,9 @@
     nsCOMPtr<nsIRDFNode> valueNode;
     mDataSource->GetTarget(resource, propertyResource, PR_TRUE, getter_AddRefs(valueNode));
     if (!valueNode) {
-        NSLog(@"ValueNode is null!");
+#if DEBUG
+        NSLog(@"ValueNode is null in objectValueForTableColumn");
+#endif
         return nil;
     }
     
@@ -132,7 +134,9 @@
     nsCOMPtr<nsIRDFNode> valueNode;
     mDataSource->GetTarget(resource, propertyResource, PR_TRUE, getter_AddRefs(valueNode));
     if (!valueNode) {
-        NSLog(@"ValueNode is null!");
+#if DEBUG
+        NSLog(@"ValueNode is null in openHistoryItem");
+#endif
         return;
     }
     

@@ -108,7 +108,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
     [super dealloc];
     [mFindDialog release];
-    printf("Main controller died.\n");
+#if DEBUG
+    NSLog(@"Main controller died");
+#endif
 }
 
 -(void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -394,7 +396,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(void)applicationWillTerminate: (NSNotification*)aNotification
 {
-    printf("Termination notification.\n");
+#if DEBUG
+    NSLog(@"Termination notification");
+#endif
 
     // Autosave one of the windows.
     [[[mApplication mainWindow] windowController] autosaveWindowFrame];
@@ -747,7 +751,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // fork the update script.
 
   if (!_dyld_launched_prebound()) {
-    NSLog(@"Not prebound, launching update script\n");
+    NSLog(@"Not prebound, launching update script");
     NSTask* aTask = [[NSTask alloc] init];
     NSArray* args = [NSArray arrayWithObject: @"redo-prebinding.sh"];
 

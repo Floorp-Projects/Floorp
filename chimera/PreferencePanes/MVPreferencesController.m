@@ -112,7 +112,9 @@ static NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotifica
   if ( [[window contentView] isEqual:mainView] ) return;
   if ( currentPaneIdentifier && [[loadedPanes objectForKey:currentPaneIdentifier] shouldUnselect] != NSUnselectNow ) {
     /* more to handle later */
+#if DEBUG
     NSLog( @"can't unselect current" );
+#endif
     return;
   }
   [window setContentView:[[[NSView alloc] initWithFrame:[mainView frame]] autorelease]];
@@ -141,7 +143,9 @@ static NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotifica
     if ( currentPaneIdentifier &&
         [[loadedPanes objectForKey:currentPaneIdentifier] shouldUnselect] != NSUnselectNow ) {
       /* more to handle later */
+#if DEBUG
       NSLog( @"can't unselect current" );
+#endif
       closeWhenPaneIsReady = NO;
       [pendingPane autorelease];
       pendingPane = [identifier retain];
@@ -194,7 +198,9 @@ static NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotifica
 - (BOOL) windowShouldClose:(id) sender
 {
   if ( currentPaneIdentifier && [[loadedPanes objectForKey:currentPaneIdentifier] shouldUnselect] != NSUnselectNow )   	{
+#if DEBUG
     NSLog( @"can't unselect current" );
+#endif
     closeWhenPaneIsReady = YES;
     return NO;
   }

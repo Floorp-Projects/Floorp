@@ -180,7 +180,9 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)windowWillClose:(NSNotification *)notification
 {
-  printf("Window will close notification.\n");
+#if DEBUG
+  NSLog(@"Window will close notification.");
+#endif
   [mSidebarBookmarksDataSource windowClosing];
 
   [self autosaveWindowFrame];
@@ -189,7 +191,9 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)dealloc
 {
-  printf("Browser controller died.\n");
+#if DEBUG
+  NSLog(@"Browser controller died.");
+#endif
 
   // Loop over all tabs, and tell them that the window is closed.
   int numTabs = [mTabBrowser numberOfTabViewItems];
@@ -338,16 +342,17 @@ static NSArray* sToolbarDefaults = nil;
   //  [[mSidebarBrowserView getBrowserView] loadURI: @"about:blank" flags:NSLoadFlagsNone];
 
   if (mDrawerCachedFrame) {
-    printf("Got here.\n");
     mDrawerCachedFrame = NO;
     NSRect frame = [[self window] frame];
     if (frame.origin.x == mCachedFrameAfterDrawerOpen.origin.x &&
         frame.origin.y == mCachedFrameAfterDrawerOpen.origin.y &&
         frame.size.width == mCachedFrameAfterDrawerOpen.size.width &&
         frame.size.height == mCachedFrameAfterDrawerOpen.size.height) {
+#if 0
       printf("Got here too.\n");
       printf("Xes are %f %f\n", frame.origin.x, mCachedFrameAfterDrawerOpen.origin.x);
       printf("Widths are %f %f\n", frame.size.width, mCachedFrameAfterDrawerOpen.size.width);
+#endif
       // Restore the original frame.
       [[self window] setFrame: mCachedFrameBeforeDrawerOpen display: YES];
     }
