@@ -445,13 +445,14 @@ NewChannel(nsIChannel **aInstancePtrResult, nsIURI *aURI)
 int
 main(int argc, char** argv)
 {
+  nsresult DoFormattingOnly(char *filename);
   nsresult DoRFC822toHTMLConversion(char *filename, int numArgs);
   nsresult rv;
   
   // Do some sanity checking...
   if (argc < 2) 
   {
-    fprintf(stderr, "usage: %s <rfc822_disk_file> <any_arg_for_XUL_output>\n", argv[0]);
+    fprintf(stderr, "usage: %s <rfc822_disk_file> <any_arg_for_XUL_output - 19 for simple processing>\n", argv[0]);
     return 1;
   }
   
@@ -468,8 +469,11 @@ main(int argc, char** argv)
   if (NS_FAILED(rv)) 
     return rv;
  
-  // Do the conversion!
-  DoRFC822toHTMLConversion(argv[1], argc);
+  // Do the conversion or just process the file!
+  if ( (argc >= 3) && (atoi(argv[2]) == 19) )
+    DoFormattingOnly(argv[1]);
+  else
+    DoRFC822toHTMLConversion(argv[1], argc);
 
   // Cleanup stuff necessary...
   NS_IF_RELEASE(ccMan);
@@ -600,5 +604,92 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
   mimeParser->OnStopRequest(nsnull, theURI, NS_OK, nsnull);
   NS_RELEASE(theURI);
 
+  return NS_OK;
+}
+
+nsresult
+DoFormattingOnly(char *filename)
+{
+  char              newURL[1024] = ""; // URL for filename
+  nsIURI            *theURI = nsnull;
+  nsMimeOutputType  outFormat;
+  char              *contentType = nsnull;
+
+  outFormat = nsMimeOutput::nsMimeMessageQuoting;
+
+  char *opts = PL_strchr(filename, '?');
+  char save;
+  if (opts)
+  {
+    save = *opts;
+    *opts = '\0';
+  }
+
+  nsFilePath      inFilePath(filename, PR_TRUE); // relative path.
+  nsFileSpec      mySpec(inFilePath);
+
+  if (!mySpec.Exists())
+  {
+    printf("Unable to open input file %s\n", filename);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (opts)
+    *opts = save;
+
+  
+  nsCOMPtr<nsIStreamListener> out = nsnull;
+  ConsoleOutputStreamListener   *ptr = nsnull;
+  // Create the consumer output stream.. this will receive all the HTML from libmime
+  ptr = new ConsoleOutputStreamListener();
+  out = do_QueryInterface(ptr);
+  if (!out)
+  {
+    printf("Failed to create nsIOutputStream\n");
+    return NS_ERROR_FAILURE;
+  }
+  
+  // This is the producer stream that will deliver data from the disk file...
+  FileInputStreamImpl   *ptr2 = new FileInputStreamImpl();
+  nsCOMPtr<FileInputStreamImpl> in = do_QueryInterface(ptr2);
+  if (!in )
+  {
+    printf("Failed to create nsIInputStream\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_FAILED(in->OpenDiskFile(mySpec)))
+  {
+    printf("Unable to open input file %s\n", filename);
+    return NS_ERROR_FAILURE;
+  }
+  
+  // Create an nsIURI object needed for stream IO...
+  PR_snprintf(newURL, sizeof(newURL), "file://%s", filename);
+  FixURL(newURL);
+  if (NS_FAILED(NewURI(&theURI, newURL)))
+  {
+    printf("Unable to open input file\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIChannel    *tChannel = nsnull;
+
+  NewChannel(&tChannel, theURI);
+
+  if (ptr)
+    ptr->SetFormat(outFormat);
+
+  // Just pump all of the data from the file into formatter...
+  while (NS_SUCCEEDED(in->PumpFileStream()))
+  {
+    PRUint32    len;
+
+    in->GetLength(&len);
+    if (out->OnDataAvailable(tChannel, nsnull, in, 0, len) != NS_OK)
+      break;
+  }
+
+  NS_RELEASE(theURI);
   return NS_OK;
 }

@@ -995,47 +995,6 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
   return 1;
 }
 
-/* 
- * This routine now drives the emitter by printing all of the 
- * attachment headers.
- */
-int
-MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
-								 MimeDisplayOptions *opt,
-								 const char *content_type,
-								 const char *encoding,
-								 const char *lname,
-								 const char *lname_url,
-								 const char *body)
-{
-  int     status = 0;
-
-  // RICHIE SHERRY 
-  // Writing a header "box" is not needed anymore since we are doing
-  // attachments a whole new way... I need to clean this up and this
-  // routine will probably go away for good...but until then, just return
-  // success
-  //
-  nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
-  PRBool      mimeXULOutput = PR_FALSE;
-  
-  if (pref)
-    pref->GetBoolPref("mail.mime_xul_output", &mimeXULOutput);
-
-  if (!mimeXULOutput)
-  {
-    mimeEmitterStartAttachment(opt, lname, content_type, lname_url);
-    status = MimeHeaders_write_all_headers (hdrs, opt, PR_TRUE);
-    mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, lname_url);
-    mimeEmitterEndAttachment(opt);
-  }
-
-  if (status < 0) 
-    return status;
-  else
-    return 0;
-}
-
 #ifdef MOZ_SECURITY
 HG99401
 #endif /* MOZ_SECURITY */

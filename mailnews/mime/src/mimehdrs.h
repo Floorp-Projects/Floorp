@@ -65,16 +65,6 @@ extern int MimeHeaders_write_raw_headers (MimeHeaders *hdrs,
 										  PRBool dont_write_content_type);
 
 
-/* For drawing the tables that represent objects that can't be displayed
-   inline. */
-extern int MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
-											MimeDisplayOptions *opt,
-											const char *content_type,
-											const char *encoding,
-											const char *name,
-											const char *name_url,
-											const char *body);
-
 #ifdef MOZ_SECURITY
 HG77761
 #endif

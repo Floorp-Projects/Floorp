@@ -253,15 +253,6 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
   PRInt32     i = 0;
   struct      nsMsgAttachmentData  *tmp = data;
 
-  // RICHIE - this will go away once we cutover...
-  nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
-  PRBool      mimeXULOutput = PR_TRUE;
-  
-  if (pref)
-    pref->GetBoolPref("mail.mime_xul_output", &mimeXULOutput);
-  if (!mimeXULOutput)
-    return;
-
   if ( (!tmp) || (!tmp->real_name) )
     return;
 
@@ -1342,7 +1333,7 @@ PRBool
 NoEmitterProcessing(nsMimeOutputType    format_out)
 {
   if ( (format_out == nsMimeOutput::nsMimeMessageDraftOrTemplate) ||
-       (format_out == nsMimeOutput::nsMimeMessageEditorTemplate) )
+       (format_out == nsMimeOutput::nsMimeMessageEditorTemplate))
     return PR_TRUE;
   else
     return PR_FALSE;

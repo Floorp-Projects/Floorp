@@ -155,21 +155,6 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	  newopt.fancy_headers_p = PR_TRUE;
 	  newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);
 
-	  {
-		char p[] = "<P>";
-		status = MimeObject_write(obj, p, 3, PR_FALSE);
-		if (status < 0) goto FAIL;
-	  }
-
-	  status = MimeHeaders_write_attachment_box (obj->headers, &newopt,
-												 obj->content_type,
-												 obj->encoding,
-												 id, id_url, 0);
-	  if (status < 0) goto FAIL;
-
-	  /* No <P> after the first attachment-box in an AppleDouble, to keep
-		 them closer together. */
-
 	FAIL:
 	  PR_FREEIF(id);
 	  PR_FREEIF(id_url);

@@ -426,22 +426,6 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  newopt.fancy_headers_p = PR_TRUE;
 	  newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);
 
-	  {
-		char p[] = "<P>";
-		status = MimeObject_write(obj, p, 3, PR_FALSE);
-		if (status < 0) goto FAIL;
-	  }
-
-	  status = MimeHeaders_write_attachment_box (hdrs, &newopt, ct, 0,
-												 lname, lurl, body);
-	  if (status < 0) goto FAIL;
-
-	  {
-		char p[] = "<P>";
-		status = MimeObject_write(obj, p, 3, PR_FALSE);
-		if (status < 0) goto FAIL;
-	  }
-
 	FAIL:
 	  if (hdrs)
 		MimeHeaders_free(hdrs);

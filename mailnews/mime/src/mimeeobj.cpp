@@ -175,28 +175,9 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     all_headers_p = PR_FALSE;
     
     newopt.fancy_headers_p = PR_TRUE;
-    newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);
-    
-    {
-      char p[] = "<P>";
-      status = MimeObject_write(obj, p, 3, PR_FALSE);
-      if (status < 0) goto FAIL;
-    }
-    
-    status = MimeHeaders_write_attachment_box (obj->headers, &newopt,
-                                                obj->content_type,
-                                                obj->encoding,
-                                                id_name? id_name : id, id_url, 0);
+    newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);    
     PR_FREEIF(id_name);
-    if (status < 0) goto FAIL;
     
-    {
-      char p[] = "<P>";
-      status = MimeObject_write(obj, p, 3, PR_FALSE);
-      if (status < 0) goto FAIL;
-    }
-    
-FAIL:
     PR_FREEIF(id);
     PR_FREEIF(id_url);
     PR_FREEIF(id_name);
