@@ -96,7 +96,6 @@
 #include "nsNetCID.h"
 #include "nsIJARURI.h"
 #include "nsIFileURL.h"
-#include "nsIChromeURL.h"
 #include "nsILocaleService.h"
 #include "nsICmdLineService.h"
 #include "nsILookAndFeel.h"
@@ -1261,6 +1260,14 @@ nsChromeRegistry::FlushSkinCaches()
                           NS_CHROME_FLUSH_SKINS_TOPIC, nsnull);
 }
 
+static PRBool IsChromeURI(nsIURI* aURI)
+{
+    PRBool isChrome=PR_FALSE;
+    if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
+        return PR_TRUE;
+    return PR_FALSE;
+}
+
 // XXXbsmedberg: move this to windowmediator
 nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
 {
@@ -1288,8 +1295,6 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   if (!document)
     return NS_OK;
 
-  mozAutoDocUpdate update(document, UPDATE_STYLE, PR_TRUE);
-
   // Deal with the agent sheets first.  Have to do all the style sets by hand.
   PRUint32 shellCount = document->GetNumberOfShells();
   for (PRUint32 k = 0; k < shellCount; k++) {
@@ -1308,15 +1313,10 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
       rv = sheet->GetSheetURI(getter_AddRefs(uri));
       if (NS_FAILED(rv)) return rv;
 
-      nsCOMPtr<nsIChromeURL> chromeURL = do_QueryInterface(uri);
-      if (chromeURL) {
-        // Reload the sheet.  Recreate the URI since the chrome URL
-        // caches its resolved form.
-        nsCOMPtr<nsIChromeURL> newURL;
-        chromeURL->ReConvert(getter_AddRefs(newURL));
-
+      if (IsChromeURI(uri)) {
+        // Reload the sheet.
         nsCOMPtr<nsICSSStyleSheet> newSheet;
-        rv = LoadStyleSheetWithURL(newURL, getter_AddRefs(newSheet));
+        rv = LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
         if (NS_FAILED(rv)) return rv;
         if (newSheet) {
           rv = newAgentSheets.AppendObject(newSheet) ? NS_OK : NS_ERROR_FAILURE;
@@ -1358,20 +1358,17 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
     rv = sheet->GetSheetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIChromeURL> chromeURL = do_QueryInterface(uri);
-    if (chromeURL) {
+    if (IsChromeURI(uri)) {
       // Reload the sheet.
 #ifdef DEBUG
       nsCOMPtr<nsICSSStyleSheet> oldCSSSheet = do_QueryInterface(sheet);
       NS_ASSERTION(oldCSSSheet, "Don't know how to reload a non-CSS sheet");
 #endif
-      nsCOMPtr<nsIChromeURL> newURL;
-      chromeURL->ReConvert(getter_AddRefs(newURL));
       nsCOMPtr<nsICSSStyleSheet> newSheet;
       // XXX what about chrome sheets that have a title or are disabled?  This
       // only works by sheer dumb luck.
       // XXXbz this should really use the document's CSSLoader!
-      LoadStyleSheetWithURL(newURL, getter_AddRefs(newSheet));
+      LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
       // Even if it's null, we put in in there.
       newSheets.AppendObject(newSheet);
     }

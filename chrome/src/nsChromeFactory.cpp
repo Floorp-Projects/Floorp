@@ -46,10 +46,8 @@
 #include "rdf.h"
 #include "nsChromeProtocolHandler.h"
 #include "nsChromeRegistry.h"
-#include "nsChromeURL.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsChromeRegistry, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeURL)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
 
 // The list of components we register
@@ -65,12 +63,6 @@ static const nsModuleComponentInfo components[] =
       NS_CHROMEPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", 
       nsChromeProtocolHandlerConstructor
-    },
-
-    { "Chrome URL", // needed only for fastload
-      NS_CHROMEURL_CID,
-      nsnull,
-      nsChromeURLConstructor
     }
 };
 
