@@ -67,10 +67,10 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
         return nsnull;
     }
 
-    nsVoidKey key(rootObject);
-    if(realToProxyMap->Exists(&key))
+    nsVoidKey rootkey(rootObject);
+    if(realToProxyMap->Exists(&rootkey))
     {
-        root = (nsProxyEventObject*) realToProxyMap->Get(&key);
+        root = (nsProxyEventObject*) realToProxyMap->Get(&rootkey);
         proxy = root->Find(aIID);
 
         if(proxy)
@@ -87,7 +87,10 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
             // the root will do double duty as the interface wrapper
             proxy = root = new nsProxyEventObject(destQueue, proxyType, aObj, clazz, nsnull);
             if(root)
-                realToProxyMap->Put(&key, root);
+            {
+            	nsVoidKey aKey(root);	
+                realToProxyMap->Put(&aKey, root);
+            }
             goto return_wrapper;
         }
         else
@@ -106,7 +109,9 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
             {
                 goto return_wrapper;
             }
-            realToProxyMap->Put(&key, root);
+            
+            nsVoidKey aKey(root);
+            realToProxyMap->Put(&aKey, root);
         }
     }
     // at this point we have a root and may need to build the specific proxy
@@ -168,13 +173,12 @@ nsProxyEventObject::~nsProxyEventObject()
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
     if(mRoot == this && GetClass())
     {   
-        nsVoidKey key(this);
-
         nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
         nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
 
-        if (realToProxyMap == nsnull)
+        if (realToProxyMap != nsnull)
         {
+        	nsVoidKey key(this);
             realToProxyMap->Remove(&key);
         }
     }

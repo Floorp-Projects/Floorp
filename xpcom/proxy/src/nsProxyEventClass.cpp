@@ -164,7 +164,7 @@ nsProxyEventClass::~nsProxyEventClass()
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
     
-    if (iidToClassMap == nsnull)
+    if (iidToClassMap != nsnull)
     {
         iidToClassMap->Remove(&key);
     }
