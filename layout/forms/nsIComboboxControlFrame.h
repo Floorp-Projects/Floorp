@@ -104,6 +104,10 @@ public:
    */
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect) = 0;
 
+  /**
+   *
+   */
+  NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext) = 0;
 
 };
 
