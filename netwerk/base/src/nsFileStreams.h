@@ -84,7 +84,7 @@ public:
     NS_DECL_NSILINEINPUTSTREAM
     
     // Overrided from nsFileStream
-    NS_IMETHOD Seek(PRInt32 aWhence, PRInt32 aOffset);
+    NS_IMETHOD Seek(PRInt32 aWhence, PRInt64 aOffset);
 
     nsFileInputStream() : nsFileStream() 
     {
