@@ -120,7 +120,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
 nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
                                    nsIDeviceContext *aOrigContext)
 {
-//  float origscale, newscale;
+  float origscale, newscale;
   float t2d, a2d;
 
   mPrintDC = (HDC)aContext;
@@ -140,13 +140,16 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
 
   CommonInit( mPrintDC);
 
-//  GetTwipsToDevUnits( newscale);
+  GetTwipsToDevUnits( newscale);
+
+// On OS/2, origscale can be different based on the video resolution.
+// On 640x480, it's 1/15, on everything else it is 1/12.
+// For consistent printing, 1/15 is the correct value to use.
+// It is the closest to 4.x and to Windows.
 //  aOrigContext->GetTwipsToDevUnits( origscale);
+  origscale = 1.0/15.0;
 
-//  mPixelScale = newscale / origscale;
-
-  mPixelScale = (float)mPelsPerMeter / 3622.0f; /* This is ugly - it prevents different size printing on different */
-                                                /* Resolutions */
+  mPixelScale = newscale / origscale;
 
   aOrigContext->GetTwipsToDevUnits( t2d);
   aOrigContext->GetAppUnitsToDevUnits( a2d);
