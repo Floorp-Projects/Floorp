@@ -13113,23 +13113,24 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
       frameManager->ClearAllUndisplayedContentIn(aFrame->GetContent());
 
       CleanupFrameReferences(aPresContext, frameManager, aFrameList);
-      nsFrameList tmp(aFrameList);
-      tmp.DestroyFrames(aPresContext);
       if (aState.mAbsoluteItems.childList) {
         CleanupFrameReferences(aPresContext, frameManager, aState.mAbsoluteItems.childList);
-        tmp.SetFrames(aState.mAbsoluteItems.childList);
-        tmp.DestroyFrames(aPresContext);
       }
       if (aState.mFixedItems.childList) {
         CleanupFrameReferences(aPresContext, frameManager, aState.mFixedItems.childList);
-        tmp.SetFrames(aState.mFixedItems.childList);
-        tmp.DestroyFrames(aPresContext);
       }
       if (aState.mFloatedItems.childList) {
         CleanupFrameReferences(aPresContext, frameManager, aState.mFloatedItems.childList);
-        tmp.SetFrames(aState.mFloatedItems.childList);
-        tmp.DestroyFrames(aPresContext);
       }
+      nsFrameList tmp(aFrameList);
+      tmp.DestroyFrames(aPresContext);
+      tmp.SetFrames(aState.mAbsoluteItems.childList);
+      tmp.DestroyFrames(aPresContext);
+      tmp.SetFrames(aState.mFixedItems.childList);
+      tmp.DestroyFrames(aPresContext);
+      tmp.SetFrames(aState.mFloatedItems.childList);
+      tmp.DestroyFrames(aPresContext);
+      
       // Tell parent of the containing block to reformulate the
       // entire block. This is painful and definitely not optimal
       // but it will *always* get the right answer.
