@@ -1139,29 +1139,16 @@ net_build_http_request (URL_Struct * URL_s,
                  * use the NSPR time functions.  URL_Struct should really be changed
                  * to use the NSPR time type instead of time_t.
                  */
-#ifndef NSPR20
-                uint64   timeInSec;
-                uint64 timeInUSec;
-                uint64   secToUSec;
-                PRTime expandedTime;
-#else
+
                 PRTime   timeInSec;
                 PRTime timeInUSec;
                 PRTime   secToUSec;
                 PRExplodedTime expandedTime;
-#endif /* NSPR20 */
 
                 LL_I2L(timeInSec, URL_s->last_modified);
                 LL_I2L(secToUSec, PR_USEC_PER_SEC);
                 LL_MUL(timeInUSec, timeInSec, secToUSec);
-#ifndef NSPR20
-#ifndef XP_MAC
-                timeInUSec = PR_ToGMT(timeInUSec);
-#endif /* XP_MAC */
-                PR_ExplodeTime(&expandedTime, timeInUSec);
-#else
-                PR_ExplodeTime(timeInUSec, PR_GMTParameters, &expandedTime);
-#endif /* NSPR20 */
+
                 PR_FormatTimeUSEnglish(line_buffer, 400,
                                       "If-Modified-Since: %a, %d %b %Y %H:%M:%S GMT",
                                       &expandedTime);

@@ -1109,9 +1109,7 @@ net_FileLoad (ActiveEntry * cur_entry)
 	char * cp;
     FILEConData * con_data;
 
-#ifndef NSPR20_DISABLED
     NET_SetCallNetlibAllTheTime(CE_WINDOW_ID, "mkfile");
-#endif /* NSPR20_DISABLED */
 
     /* make space for the connection data */
     cur_entry->con_data = PR_NEW(FILEConData);
@@ -1331,9 +1329,7 @@ net_ProcessFile (ActiveEntry * cur_entry)
 				PR_FREEIF(con_data->stream);
 				PR_Free(cur_entry->con_data);
 
-#ifndef NSPR20_DISABLED
     			NET_ClearCallNetlibAllTheTime(CE_WINDOW_ID, "mkfile");
-#endif /* NSPR20_DISABLED */
 
                 return(-1); /* done */
           }
