@@ -46,6 +46,13 @@ nsString::nsString() {
   mStr = 0;
 }
 
+
+
+/**
+ * This constructor accepts an isolatin string
+ * @update	gess7/30/98
+ * @param   anISOLatin1 is a ptr to a 1-byte cstr
+ */
 nsString::nsString(const char* anISOLatin1) {  
   mLength=mCapacity=0;
   mStr=0;
@@ -54,12 +61,12 @@ nsString::nsString(const char* anISOLatin1) {
   this->SetString(anISOLatin1,len);
 }
 
-/*-------------------------------------------------------
- * constructor from string
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+
+/**
+ * This is our copy constructor 
+ * @update	gess7/30/98
+ * @param   reference to another nsString
+ */
 nsString::nsString(const nsString &aString) {
   mLength=mCapacity=0;
   mStr=0;
@@ -680,7 +687,8 @@ nsString& nsString::operator=(PRUnichar aChar) {
   if(mCapacity<1) 
     EnsureCapacityFor(kGrowthDelta);
   mStr[0]=aChar;
-  mStr[1]=0;
+  mLength=1;
+  mStr[mLength]=0;
   return *this;
 }
 
