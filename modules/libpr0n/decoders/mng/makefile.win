@@ -22,20 +22,18 @@
 DEPTH=..\..\..\..
 MODULE		= imgmng
 REQUIRES	= xpcom \
-		  necko \
-		  imglib2 \
 		  gfx \
 		  gfx2 \
+		  imglib2 \
+		  timer \
 		  mng \
 		  jpeg \
-		  timer \
 		  zlib \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME	= imgmng
-DLL		= $(OBJDIR)\$(LIBRARY_NAME).dll
-MAKE_OBJ_TYPE	= DLL
+MODULE_NAME	= nsMNGDecoderModule
 
 OBJS	= \
 		.\$(OBJDIR)\nsMNGDecoder.obj \
@@ -53,11 +51,3 @@ LLIBS=\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

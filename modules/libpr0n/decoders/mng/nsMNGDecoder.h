@@ -27,8 +27,8 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
-#include "imgIRequest.h"
 #include "nsWeakReference.h"
+#include "imgILoad.h"
 
 #define NS_MNGDECODER_CID \
 { /* d407782c-1dd1-11b2-9b49-dbe684d09cd8 */         \
@@ -46,7 +46,6 @@ class nsMNGDecoder : public imgIDecoder
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIDECODER
-  NS_DECL_NSIOUTPUTSTREAM
   
   nsMNGDecoder();
   virtual ~nsMNGDecoder();

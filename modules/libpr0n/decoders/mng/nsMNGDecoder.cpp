@@ -27,7 +27,7 @@
 //////////////////////////////////////////////////////////////////////////////
 // MNG Decoder Implementation
 
-NS_IMPL_ISUPPORTS2(nsMNGDecoder, imgIDecoder, nsIOutputStream);
+NS_IMPL_ISUPPORTS1(nsMNGDecoder, imgIDecoder);
 
 nsMNGDecoder::nsMNGDecoder()
 {
@@ -65,10 +65,6 @@ nsMNGDecoder::Init(imgILoad *aLoad)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// nsIOutputStream methods 
-//////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////
 // void close (); 
 NS_IMETHODIMP
 nsMNGDecoder::Close()
@@ -85,14 +81,6 @@ nsMNGDecoder::Flush()
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// unsigned long write (in string buf, in unsigned long count);
-NS_IMETHODIMP
-nsMNGDecoder::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//////////////////////////////////////////////////////////////////////////////
 // unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count);
 NS_IMETHODIMP
 nsMNGDecoder::WriteFrom(nsIInputStream *inStr, 
@@ -103,41 +91,3 @@ nsMNGDecoder::WriteFrom(nsIInputStream *inStr,
   return NS_OK;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-// [noscript] unsigned long writeSegments (in nsReadSegmentFun reader, in voidPtr closure, in unsigned long count);
-NS_IMETHODIMP
-nsMNGDecoder::WriteSegments(nsReadSegmentFun reader,
-			    void * closure, 
-			    PRUint32 count,
-			    PRUint32 *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// attribute boolean nonBlocking;
-NS_IMETHODIMP
-nsMNGDecoder::GetNonBlocking(PRBool *aNonBlocking)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMNGDecoder::SetNonBlocking(PRBool aNonBlocking)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// attribute nsIOutputStreamObserver observer;
-NS_IMETHODIMP
-nsMNGDecoder::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMNGDecoder::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
