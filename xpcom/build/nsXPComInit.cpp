@@ -774,6 +774,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     nsThread::Shutdown();
     NS_PurgeAtomTable();
 
+    NS_IF_RELEASE(gDebug);
+
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcnt::DumpStatistics();
     nsTraceRefcnt::ResetStatistics();
@@ -784,8 +786,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // Shutdown the Leak detector.
     NS_ShutdownLeakDetector();
 #endif
-
-    NS_IF_RELEASE(gDebug);
 
     gXPCOMHasGlobalsBeenInitalized = PR_FALSE;
     return NS_OK;
