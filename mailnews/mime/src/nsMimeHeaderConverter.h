@@ -49,10 +49,10 @@ public:
                                  char       *charset, 
                                  char **decodedString);
   // Encode routine
-  NS_IMETHOD EncodeMimePartIIStr(const char *header, 
-                                 const char *mailCharset, 
-                                 PRInt32     encodedWordSize, 
-                                 char       **encodedString);
+  NS_IMETHOD EncodeMimePartIIStr(const char    *header, 
+                                 const char    *mailCharset, 
+                                 const PRInt32 encodedWordSize, 
+                                 char          **encodedString);
 }; 
 
 /* this function will be used by the factory to generate an class access object....*/

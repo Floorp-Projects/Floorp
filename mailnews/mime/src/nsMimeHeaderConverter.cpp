@@ -86,10 +86,10 @@ nsMimeHeaderConverter::DecodeMimePartIIStr(const char *header,
 }
 
 nsresult
-nsMimeHeaderConverter::EncodeMimePartIIStr(const char *header, 
-                                           const char *mailCharset, 
-                                           PRInt32     encodedWordSize, 
-                                           char       **encodedString)
+nsMimeHeaderConverter::EncodeMimePartIIStr(const char    *header, 
+                                           const char    *mailCharset, 
+                                           const PRInt32 encodedWordSize, 
+                                           char          **encodedString)
 {
   char *retString = MIME_EncodeMimePartIIStr(header, mailCharset, encodedWordSize);
   if (retString == NULL)

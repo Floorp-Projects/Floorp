@@ -21,8 +21,13 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#ifndef kMIME_ENCODED_WORD_SIZE
 #define kMIME_ENCODED_WORD_SIZE 72
+#endif 
+
+#ifndef kMAX_CSNAME
 #define kMAX_CSNAME 64
+#endif
 
 /**
  * If a header is MIME encoded then decode a header and sets a charset name.

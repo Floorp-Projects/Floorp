@@ -51,7 +51,8 @@ REQUIRES=
 CSS     = mail.css
 JS      = mail.js
 EXPORTS = 	nsRFC822toHTMLStreamConverter.h		\
-			nsMimeObjectClassAccess.h			\
+		nsMimeObjectClassAccess.h		\
+		nsMimeHeaderConverter.h			\
 		$(NULL)
 
 
