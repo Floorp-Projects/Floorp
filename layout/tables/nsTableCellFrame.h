@@ -176,6 +176,9 @@ protected:
                                nscoord aBorderWidth,
                                nsTableFrame *aTableFrame);
 
+  void      MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
+  void      MapHAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
+
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
   NS_IMETHOD IR_StyleChanged(nsIPresContext&          aPresContext,

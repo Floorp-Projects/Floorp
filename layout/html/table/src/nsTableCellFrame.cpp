@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsTableCellFrame.h"
+#include "nsTableColFrame.h"
 #include "nsTableFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
@@ -740,10 +741,92 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     MapHTMLBorderStyle(aPresContext, *spacingData, border, tableFrame);
   }
 
-  // TODO: map the align attributes here
+  MapVAlignAttribute(aPresContext, tableFrame);
+  MapHAlignAttribute(aPresContext, tableFrame);
   
 }
 
+/* XXX: this code will not work properly until the style and layout code has been updated 
+ * as outlined in Bugzilla bug report 1802 and 915 */
+void nsTableCellFrame::MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame)
+{
+  const nsStyleText* textStyle;
+  GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)textStyle);
+  // check if valign is set on the cell
+  //   this condition will also be true if we inherited valign from the row or rowgroup
+  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated)
+  {
+    return; // valign is already set on this cell
+  }
+
+  // check if valign is set on the cell's COL (or COLGROUP by inheritance)
+  nsTableColFrame *colFrame;
+  aTableFrame->GetColumnFrame(GetColIndex(), colFrame);
+  const nsStyleText* colTextStyle;
+  colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
+  if (colTextStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated)
+  {
+    nsStyleText* mutableTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+    mutableTextStyle->mVerticalAlign.SetIntValue(colTextStyle->mVerticalAlign.GetIntValue(), eStyleUnit_Enumerated);
+    return; // valign set from COL info
+  }
+
+  // otherwise, set the vertical align attribute to the HTML default
+  nsStyleText* mutableTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+  mutableTextStyle->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_MIDDLE, eStyleUnit_Enumerated);
+}
+
+/* XXX: this code will not work properly until the style and layout code has been updated 
+ * as outlined in Bugzilla bug report 1802 and 915.
+ * In particular, mTextAlign has to be an nsStyleCoord, not just an int */
+void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame)
+{
+#if 0
+  const nsStyleText* textStyle;
+  GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)textStyle);
+  // check if halign is set on the cell
+  //   cells do not inherited halign from the row or rowgroup
+  if (textStyle->mTextAlign.GetUnit() == eStyleUnit_Enumerated)
+  {
+    if (textStyle->mTextAlign.GetIntValue() != NS_STYLE_TEXT_ALIGN_DEFAULT)
+      return; // valign is already set on this cell
+  }
+
+  // check if halign is set on the cell's ROW (or ROWGROUP by inheritance)
+  nsIFrame *rowFrame;
+  aTableFrame->GetContentParent(rowFrame);
+  const nsStyleText* rowTextStyle;
+  rowFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)rowTextStyle);
+  if (rowTextStyle->mTextAlign.GetUnit() == eStyleUnit_Enumerated)
+  {
+    nsStyleText* mutableTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+    mutableTextStyle->mTextAlign.SetIntValue(rowTextStyle->mTextAlign.GetIntValue(), eStyleUnit_Enumerated);
+    return; // halign set from ROW info
+  }
+
+  // check if halign is set on the cell's COL (or COLGROUP by inheritance)
+  nsTableColFrame *colFrame;
+  aTableFrame->GetColumnFrame(GetColIndex(), colFrame);
+  const nsStyleText* colTextStyle;
+  colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
+  if (colTextStyle->mTextAlign.GetUnit() == eStyleUnit_Enumerated)
+  {
+    nsStyleText* mutableTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+    mutableTextStyle->mTextAlign.SetIntValue(colTextStyle->mTextAlign.GetIntValue(), eStyleUnit_Enumerated);
+    return; // halign set from COL info
+  }
+
+  // otherwise, set the vertical align attribute to the HTML default (center for TH, left for TD and all others)
+  nsStyleText* mutableTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+  nsIAtom *tag=nsnull;
+  if (nsnull!=mContent)
+    mContent->GetTag(tag);
+  if (nsHTMLAtoms::th==tag)
+    mutableTextStyle->mVerticalAlign.SetIntValue(NS_STYLE_TEXT_ALIGN_CENTER, eStyleUnit_Enumerated);
+  else
+    mutableTextStyle->mVerticalAlign.SetIntValue(NS_STYLE_TEXT_ALIGN_LEFT, eStyleUnit_Enumerated);
+#endif
+}  
 
 // Subclass hook for style post processing
 NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
