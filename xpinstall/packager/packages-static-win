@@ -283,7 +283,6 @@ bin\components\msgmdn.xpt
 bin\components\mdn-service.js
 bin\components\mapihook.xpt
 bin\components\msgmailviews.xpt
-bin\components\msgmailviews.dll
 bin\chrome\messenger.jar
 bin\chrome\messenger\*
 
