@@ -1,0 +1,55 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {
+                displayFontPanel = id; 
+                restoreDefaultColors = id; 
+                revertColors = id; 
+                setAlsoUseForIncoming = id; 
+                setColors = id; 
+                setDontShowDisconnected = id; 
+                setDontShowZero = id; 
+                setOverrideColors = id; 
+                setShowOnlineBuddiesInDock = id; 
+                setShowServiceStatusInDock = id; 
+                setShowUserStatusInDock = id; 
+                setSmileyType = id; 
+                setUseAquaServiceIcons = id; 
+                setUseGraphicalSmilies = id; 
+            }; 
+            CLASS = AppearancePane; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                actionWell = id; 
+                alsoUseForIncomingCheck = id; 
+                backgroundWell = id; 
+                dontShowDisconnectedCheck = id; 
+                dontShowZeroCheck = id; 
+                fontSampleText = id; 
+                foregroundWell = id; 
+                myFont = id; 
+                overrideColorsCheck = id; 
+                showOnlineBuddiesInDockCheck = id; 
+                showServiceStatusInDockCheck = id; 
+                showUserStatusInDockCheck = id; 
+                smileyTypeChoice = id; 
+                systemNameWell = id; 
+                theirNameWell = id; 
+                translationNameWell = id; 
+                useAquaServiceIconsCheck = id; 
+                useGraphicalSmiliesCheck = id; 
+                yourNameWell = id; 
+            }; 
+            SUPERCLASS = NSPreferencePane; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = NSPreferencePane; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {_firstKeyView = id; _initialKeyView = id; _lastKeyView = id; _window = id; }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = PersonalPane; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }
+    ); 
+    IBVersion = 1; 
+}
