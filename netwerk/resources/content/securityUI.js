@@ -21,6 +21,7 @@
 */
 
 window.addEventListener("load", SetSecurityButton, false);
+window.addEventListener("unload", DestroySecurity, false);
 
 var securityUI;
 
@@ -28,6 +29,11 @@ function SetSecurityButton()
 {
     var ui = Components.classes["@mozilla.org/secure_browser_ui;1"].createInstance();
     securityUI = ui.QueryInterface(Components.interfaces.nsSecureBrowserUI);
+
+    if ("gBrowser" in window) { // XXXjag see bug 68662
+        gBrowser.boxObject.setPropertyAsSupports("xulwindow", window);
+        gBrowser.boxObject.setPropertyAsSupports("secureBrowserUI", securityUI);
+    }
 
     var button  = document.getElementById('security-button');
     if (button && window._content)
@@ -40,4 +46,10 @@ function displayPageInfo()
      securityUI.displayPageInfoUI();
 }
 
-
+function DestroySecurity()
+{
+    if ("gBrowser" in window) { // XXXjag see bug 68662
+        gBrowser.boxObject.removeProperty("xulwindow");
+        gBrowser.boxObject.removeProperty("secureBrowserUI");
+    }
+}

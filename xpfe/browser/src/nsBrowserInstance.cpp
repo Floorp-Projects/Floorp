@@ -122,8 +122,6 @@
 #include "nsFileStream.h"
 #include "nsIProxyObjectManager.h" 
 
-#include "nsISecureBrowserUI.h"
-
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
@@ -474,7 +472,7 @@ nsBrowserInstance::SetDefaultCharacterSet(const PRUnichar *aCharset)
 }
 
 void
-nsBrowserInstance::ReinitializeContentWindow()
+nsBrowserInstance::ReinitializeContentVariables()
 {
   nsresult rv;
 
@@ -490,33 +488,6 @@ nsBrowserInstance::ReinitializeContentWindow()
 
     if (webShell) {
       mContentAreaDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell)); // Weak reference
-
-      // Add a WebProgressListener to receive start/stop document notifications
-      nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
-      webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
-
-      nsCOMPtr<nsISHistory> sessionHistory;
-      if (mSessionHistory) {
-        /* There is already a Session History for this browser 
-         * component. Maybe the theme changed and we got called
-         * to reinitialize the window, docloader, docshell etc...
-         * Use the existing session History
-         */
-        sessionHistory = mSessionHistory;
-      }
-      else {
-        sessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID, &rv);
-        mSessionHistory = sessionHistory;
-        if (!mSessionHistory) {
-          if (APP_DEBUG) printf("#### Error initialising Session History ####\n");
-        }
-      }
-
-      if (sessionHistory) {
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-        if (webNav)
-           webNav->SetSessionHistory(sessionHistory);
-      }
 
       nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(docShell));
       nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
@@ -536,31 +507,6 @@ nsBrowserInstance::ReinitializeContentWindow()
 
       if (ubHistory)
         mUrlbarHistory = ubHistory;
-    }
-  }
-}
-
-void
-nsBrowserInstance::ReinitializeContentVariables()
-{
-  ReinitializeContentWindow();
-
-  nsresult rv;
-
-  /* reinitialize the security module */
-  nsCOMPtr<nsSecureBrowserUI> security(do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv) && security) {
-    nsCOMPtr<nsIDOMDocument> doc;
-    rv = mDOMWindow->GetDocument(getter_AddRefs(doc));
-    if (NS_SUCCEEDED(rv) && doc) {
-      nsCOMPtr<nsIDOMElement> button;
-      rv = doc->GetElementById(NS_LITERAL_STRING("security-button"), getter_AddRefs(button));
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIDOMWindowInternal> contentWindow;
-        mDOMWindow->Get_content(getter_AddRefs(contentWindow));
-
-        security->Init(contentWindow, button);
-      }
     }
   }
 }
@@ -819,7 +765,7 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
     }
   }
 
-  ReinitializeContentWindow();
+  ReinitializeContentVariables();
 
   return NS_OK;
 }
@@ -832,16 +778,6 @@ nsBrowserInstance::Close()
     return NS_OK;
   else
     mIsClosed = PR_TRUE;
-
-  // Undo other stuff we did in SetContentWindow.
-  // Remove listeners we may have registered
-  nsCOMPtr<nsIDocShell> docShell;
-  GetContentAreaDocShell(getter_AddRefs(docShell));
-  if (docShell)
-  {
-    nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
-    webProgress->RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
-  }
 
   // Release search context.
   mSearchContext = null_nsCOMPtr();;
