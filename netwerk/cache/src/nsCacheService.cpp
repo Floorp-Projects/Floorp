@@ -41,6 +41,7 @@
 #include "nsIPref.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsVoidArray.h"
 
 
 
@@ -1059,6 +1060,10 @@ nsCacheService::OnProfileShutdown(PRBool cleanse)
     if (gService->mDiskDevice) {
         if (cleanse)
             gService->mDiskDevice->EvictEntries(nsnull);
+
+        gService->DoomActiveEntries();
+        gService->ClearDoomList();
+        
         gService->mDiskDevice->Shutdown();
         gService->mEnableDiskDevice = PR_FALSE;
     }
@@ -1440,6 +1445,39 @@ nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
     
     return PL_DHASH_REMOVE; // and continue enumerating
 }
+
+
+void
+nsCacheService::DoomActiveEntries()
+{
+    nsAutoVoidArray array;
+
+    PL_DHashTableEnumerate(&mActiveEntries.table, RemoveActiveEntry, &array);
+
+    PRUint32 count = array.Count();
+    for (PRUint32 i=0; i < count; ++i)
+        DoomEntry_Locked((nsCacheEntry *) array[i]);
+}
+
+
+PLDHashOperator PR_CALLBACK
+nsCacheService::RemoveActiveEntry(PLDHashTable *    table,
+                                  PLDHashEntryHdr * hdr,
+                                  PRUint32          number,
+                                  void *            arg)
+{
+    nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
+    NS_ASSERTION(entry, "### active entry = nsnull!");
+
+    nsVoidArray * array = (nsVoidArray *) arg;
+    NS_ASSERTION(array, "### array = nsnull!");
+    array->AppendElement(entry);
+
+    // entry is being removed from the active entry list
+    entry->MarkInactive();
+    return PL_DHASH_REMOVE; // and continue enumerating
+}
+
 
 #if defined(PR_LOGGING)
 void
