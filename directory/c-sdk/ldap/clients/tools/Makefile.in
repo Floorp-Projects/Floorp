@@ -314,7 +314,7 @@ ifeq ($(HAVE_LIBNLS), 1)
 # $(NLS_VERSION_FILE)
 	sh ../../build/compver.sh $(LIBNLS_DIR) $(LIBNLS_RELDATE) \
 	$(OBJDIR_NAME) ../../../../dist ldapsdk \
-	/share/builds/components/libnls$(NLS_LIBVERSION)/$(LIBNLS_RELDATE)/$(OBJDIR_NAME) \
+	$(LIBNLS_RELEASE_TREE)/libnls$(NLS_LIBVERSION)/$(LIBNLS_RELDATE)/$(OBJDIR_NAME) \
 	libnls$(NLS_LIBVERSION) \
 	"include lib conv$(NLS_LIBVERSION) locale$(NLS_LIBVERSION)" \
 	../../../../../dist/libnls$(NLS_LIBVERSION)/$(OBJDIR_NAME)/locale$(NLS_LIBVERSION)/index.txt
