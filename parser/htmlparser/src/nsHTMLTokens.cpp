@@ -507,11 +507,12 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  *  @return  error result
  */
 nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,nsString& aTerminalString){
-  PRBool       done=PR_FALSE; 
-  nsresult     result=NS_OK; 
-  nsString     temp; 
-  PRUnichar    theChar;
-  nsAutoString theRight;
+  PRBool        done=PR_FALSE; 
+  nsresult      result=NS_OK; 
+  nsString      temp; 
+  PRUnichar     theChar;
+  nsAutoString  theRight;
+  PRInt32       rpos=0;
 
   //We're going to try a new algorithm here. Rather than scan for the matching 
  //end tag like we used to do, we're now going to scan for whitespace and comments. 
@@ -519,7 +520,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
  //target endtag, or the start of another comment. 
 
   static nsAutoString theWhitespace2("\b\t ");
-
+  PRInt32 termStrLen=aTerminalString.Length();
   while((!done) && (NS_OK==result)) { 
     result=aScanner.GetChar(aChar); 
     if((NS_OK==result) && (kLessThan==aChar)) { 
@@ -553,17 +554,20 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
       temp+=aChar; 
       result=aScanner.ReadUntil(temp,kLessThan,PR_FALSE); 
     } 
-    temp.Right(theRight,aTerminalString.Length());
-    done=PRBool(0==theRight.Compare(aTerminalString,PR_TRUE)); 
+    temp.Right(theRight,termStrLen+10); //first, get a wad of chars from the temp string
+    rpos=theRight.RFind('<');   //now scan for the '<'
+    if(-1<rpos)
+      rpos=theRight.RFind(aTerminalString,PR_TRUE,rpos);
+    done=PRBool(-1<rpos); 
   }  //while
   int len=temp.Length(); 
-  temp.Truncate(len-aTerminalString.Length()); 
+  temp.Truncate(len-(theRight.Length()-rpos)); 
   mTextValue=temp; 
 
   // Make aTerminalString contain the name of the end tag ** as seen in **
   // the document and not the made up one.
-  theRight.Cut(0,2);
-  theRight.Cut((theRight.Length()-1),1);
+  theRight.Cut(0,rpos+2);
+  theRight.Truncate(theRight.Length()-1);
   aTerminalString = theRight;
   return result; 
 }
@@ -854,17 +858,6 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
 nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
   PRBool theStrictForm=PR_FALSE;
   nsresult result=(theStrictForm) ? ConsumeStrictComment(aChar,aScanner,mTextValue) : ConsumeComment(aChar,aScanner,mTextValue);
-
-/*
-  //this change is here to make the editor teams' life easier.
-  //I'm removing the leading and trailing markup...
-
-  if(0==mTextValue.Find("<!"))
-    mTextValue.Cut(0,2);  //trim off 1st 2 chars...
-  if(kGreaterThan==mTextValue.Last())
-    mTextValue.Truncate(mTextValue.Length()-1); //trim off last char
-*/
-
   return result;
 }
 

@@ -575,6 +575,19 @@ void nsParser::SetUnusedInput(nsString& aBuffer) {
   mUnusedInput=aBuffer;
 }
 
+/**
+ *  Call this when you want to *force* the parser to terminate the
+ *  parsing process altogether. This is binary -- so once you terminate
+ *  you can't resume without restarting altogether.
+ *  
+ *  @update  gess 7/4/99
+ *  @return  should return NS_OK once implemented
+ */
+nsresult nsParser::Terminate(void){
+  NS_NOTYETIMPLEMENTED("Call again later");
+  nsresult result=NS_ERROR_NOT_IMPLEMENTED;
+  return result;
+}
 
 /**
  *  Call this when you want control whether or not the parser will parse
