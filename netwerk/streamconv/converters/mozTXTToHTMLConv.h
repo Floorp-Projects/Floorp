@@ -107,7 +107,7 @@ protected:
   @return Completed URL at success and empty string at failure
  */
   static nsAutoString CompleteAbbreviatedURL(const nsAutoString& text,
-       PRUint32 pos);
+       const PRUint32 pos);
 
 /*
   <p><em>Note:</em> replaceBefore + replaceAfter + 1 (for char at pos) chars
@@ -124,8 +124,8 @@ protected:
   @param replaceAfter (out): Number of chars of URL after pos
   @return URL found
 */
-  static PRBool FindURL(const nsAutoString& text, PRUint32 pos,
-       PRUint32 whathasbeendone, nsAutoString& outputHTML,
+  static PRBool FindURL(const nsAutoString& text, const PRUint32 pos,
+       const PRUint32 whathasbeendone, nsAutoString& outputHTML,
        PRInt32& replaceBefore, PRInt32& replaceAfter);
 
 /*
