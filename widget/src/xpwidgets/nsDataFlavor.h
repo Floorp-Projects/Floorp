@@ -41,21 +41,13 @@ public:
   //nsIDataFlavor
   NS_IMETHOD Init(const nsString & aMimeType, 
                   const nsString & aHumanPresentableName);
-  NS_IMETHOD GetMimeType(nsString & aMimeStr);
-  NS_IMETHOD GetHumanPresentableName(nsString & aReadableStr);
-
-  NS_IMETHOD GetNativeData(void ** aData);
-  NS_IMETHOD SetNativeData(void * aData);
-
-
-  // Native Methods
-  PRUint32 GetFormat() { return mNativeClipboardFormat; }
+  NS_IMETHOD GetMimeType(nsString & aMimeStr) const;
+  NS_IMETHOD GetHumanPresentableName(nsString & aReadableStr) const;
+  NS_IMETHOD Equals(const nsIDataFlavor * aDataFlavor);
 
 protected:
   nsString mMimeType;
   nsString mHumanPresentableName;
-
-  PRUint32 mNativeClipboardFormat;
 
 };
 
