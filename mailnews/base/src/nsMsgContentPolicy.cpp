@@ -43,6 +43,7 @@
 #include "nsString.h"
 
 static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remote_image";
+static const char kAllowPlugins[] = "mailnews.message_display.allow.plugins";
 
 NS_IMPL_ADDREF(nsMsgContentPolicy)
 NS_IMPL_RELEASE(nsMsgContentPolicy)
@@ -56,6 +57,7 @@ NS_INTERFACE_MAP_END
 
 nsMsgContentPolicy::nsMsgContentPolicy()
 {
+  mAllowPlugins = PR_FALSE;
 }
 
 nsMsgContentPolicy::~nsMsgContentPolicy()
@@ -67,7 +69,10 @@ nsMsgContentPolicy::~nsMsgContentPolicy()
   {
     nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
     if (NS_SUCCEEDED(rv))
+    {
       prefInternal->RemoveObserver(kBlockRemoteImages, this);
+      prefInternal->RemoveObserver(kAllowPlugins, this);
+    }
   }
 }
 
@@ -82,7 +87,9 @@ nsresult nsMsgContentPolicy::Init()
   nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   prefInternal->AddObserver(kBlockRemoteImages, this, PR_TRUE);
+  prefInternal->AddObserver(kAllowPlugins, this, PR_TRUE);
 
+  prefBranch->GetBoolPref(kAllowPlugins, &mAllowPlugins);
   rv = prefBranch->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
   
   return rv;
@@ -100,9 +107,8 @@ nsMsgContentPolicy::ShouldLoad(PRInt32 aContentType, nsIURI *aContentLocation, n
 
   if (aContentType == nsIContentPolicy::OBJECT)
   {
-      // currently, mozilla thunderbird does not allow plugins at all. If someone later writes an extension to enable plugins,
-      // we can read a pref here to figure out if we should allow the plugin to load or not.
-      *shouldLoad = PR_FALSE;
+      // only allow the plugin to load if the allow plugins pref has been set
+      *shouldLoad = mAllowPlugins;
   }
   else if (aContentType == nsIContentPolicy::IMAGE)
   {

@@ -67,6 +67,7 @@ public:
 
 protected:
   PRBool   mBlockRemoteImages;
+  PRBool   mAllowPlugins;
 };
 
 #endif // _nsMsgContentPolicy_H_
