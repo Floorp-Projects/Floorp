@@ -205,8 +205,8 @@ function loadCalendarEventDialog()
    */
    setAdvancedWeekRepeat();
    
-   setFieldValue( "advanced-repeat-dayofmonth", ( gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined ), "checked" );
-   setFieldValue( "advanced-repeat-dayofweek", ( gEvent.recurWeekNumber > 0 ), "checked" );
+   setFieldValue( "advanced-repeat-dayofmonth", ( gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined ), "selected" );
+   setFieldValue( "advanced-repeat-dayofweek", ( gEvent.recurWeekNumber > 0 ), "selected" );
    
    // set up OK, Cancel
    
