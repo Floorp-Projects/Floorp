@@ -776,7 +776,7 @@ nsVoidBTree::ConstIterator::Next()
             if (current->GetType() == Node::eType_Data) {
                 PRBool rightmost = PR_TRUE;
                 for (PRInt32 slot = mPath.mTop - 1; slot >= 0; --slot) {
-                    const Path::Link& link = mPath.mLink[slot];
+                    const Link& link = mPath.mLink[slot];
                     if (link.mIndex != link.mNode->GetCount() - 1) {
                         rightmost = PR_FALSE;
                         break;
