@@ -2939,7 +2939,6 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
   PRBool  localTrue = PRBool(0 == aNegationIndex);
   PRBool  checkType = (0 == aNegationIndex) || (1 < aNegationIndex);
   PRBool  result = localFalse;
-  nsAutoString buffer;
 
   // Bail out early if we can. Do not perform the test if aNegationIndex==1
   // because it then contains only negated IDs, classes, attributes and pseudo-
