@@ -411,6 +411,12 @@ protected:
   nsCOMPtr<nsIChannel> mOriginalChannel; /**< in the case of a redirect, this will be the pre-redirect channel. */
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
   nsExternalHelperAppService *mHelperAppService;
+
+  /**
+   * The request that's being loaded. Not used after OnStopRequest, so a weak
+   * reference suffices. Initialized in OnStartRequest.
+   */
+  nsIRequest*  mRequest;
 };
 
 #endif // nsExternalHelperAppService_h__

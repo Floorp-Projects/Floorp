@@ -534,9 +534,9 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     isAttachment = GetFilenameAndExtensionFromChannel(channel, fileName,
                                                       fileExtension,
                                                       allowURLExt);
-    LOG(("Found extension '%s' (filename is '%s', handling attachment: %s)",
+    LOG(("Found extension '%s' (filename is '%s', handling attachment: %i)",
          fileExtension.get(), NS_ConvertUTF16toUTF8(fileName).get(),
-         isAttachment ? "true" : "false"));
+         isAttachment));
   }
 
   LOG(("HelperAppService::DoContent: mime '%s', extension '%s'\n",
@@ -1052,6 +1052,7 @@ nsExternalAppHandler::nsExternalAppHandler()
   mContentLength = -1;
   mProgress      = 0;
   mHelperAppService = nsnull;
+  mRequest = nsnull;
 }
 
 nsExternalAppHandler::~nsExternalAppHandler()
@@ -1312,6 +1313,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 {
   NS_ENSURE_ARG_POINTER(request);
 
+  mRequest = request;
+
   // first, check to see if we've been canceled....
   if (mCanceled) // then go cancel our underlying channel too
     return request->Cancel(NS_BINDING_ABORTED);
@@ -1418,6 +1421,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     mDialog = do_CreateInstance( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // this will create a reference cycle (the dialog holds a reference to us as
+    // nsIHelperAppLauncher), which will be broken in Cancel or
+    // CreateProgressListener.
     rv = mDialog->Show( this, mWindowContext, mHandlingAttachment );
 
     // what do we do if the dialog failed? I guess we should call Cancel and abort the load....
@@ -1654,7 +1660,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
                                                   nsresult aStatus)
 {
   mStopRequestIssued = PR_TRUE;
-
+  mRequest = nsnull;
   // Cancel if the request did not complete successfully.
   if (!mCanceled && NS_FAILED(aStatus))
   {
@@ -1668,10 +1674,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
   }
 
   // first, check to see if we've been canceled....
-  if (mCanceled) { // then go cancel our underlying channel too
-    nsresult rv = request->Cancel(NS_BINDING_ABORTED);
-    return rv;
-  }
+  if (mCanceled)
+    return NS_OK;
 
   // close the stream...
   if (mOutStream)
@@ -1681,7 +1685,19 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
   }
 
   // Do what the user asked for
-  return ExecuteDesiredAction();
+  ExecuteDesiredAction();
+
+  // At this point, the channel should still own us. So releasing the reference
+  // to us in the nsIDownload should be ok.
+  // This nsIDownload object holds a reference to us (we are its observer), so
+  // we need to release the reference to break a reference cycle (and therefore
+  // to prevent leaking)
+  nsCOMPtr<nsIDownload> dl(do_QueryInterface(mWebProgressListener));
+  if (dl)
+    dl->SetObserver(nsnull);
+  mWebProgressListener = nsnull;
+
+  return NS_OK;
 }
 
 nsresult nsExternalAppHandler::ExecuteDesiredAction()
@@ -1800,6 +1816,9 @@ nsresult nsExternalAppHandler::CreateProgressListener()
 {
   // we are back from the helper app dialog (where the user chooses to save or open), but we aren't
   // done processing the load. in this case, throw up a progress dialog so the user can see what's going on...
+  // Also, release our reference to mDialog. We don't need it anymore, and we
+  // need to break the reference cycle.
+  mDialog = nsnull;
   nsresult rv;
 
   nsCOMPtr<nsIWebProgressListener> listener;
@@ -1813,7 +1832,13 @@ nsresult nsExternalAppHandler::CreateProgressListener()
   // note we might not have a listener here if the QI() failed, or if
   // there is no nsIDownload object, but we still call
   // SetWebProgressListener() to make sure our progress state is sane
+  // NOTE: This will set up a reference cycle (this nsIDownload has us set up as
+  // its observer). This cycle will be broken in Cancel, CloseProgressWindow or
+  // OnStopRequest.
   SetWebProgressListener(listener);
+
+  if (listener)
+    listener->OnStateChange(nsnull, mRequest, nsIWebProgressListener::STATE_START, NS_OK);
 
   return rv;
 }
@@ -2097,6 +2122,9 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
 NS_IMETHODIMP nsExternalAppHandler::Cancel()
 {
   mCanceled = PR_TRUE;
+  // Break our reference cycle with the helper app dialog (set up in
+  // OnStartRequest)
+  mDialog = nsnull;
   // shutdown our stream to the temp file
   if (mOutStream)
   {
@@ -2110,6 +2138,13 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
     mTempFile->Remove(PR_TRUE);
     mTempFile = nsnull;
   }
+
+  // Release the listener, to break the reference cycle with it (we are the
+  // observer of the listener).
+  nsCOMPtr<nsIDownload> dl(do_QueryInterface(mWebProgressListener));
+  if (dl)
+    dl->SetObserver(nsnull);
+  mWebProgressListener = nsnull;
 
   return NS_OK;
 }
@@ -2244,7 +2279,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
   // (1) Ask the OS for a mime info
   PRBool found;
   *_retval = GetMIMEInfoFromOS(aMIMEType, aFileExt, &found).get();
-  LOG(("OS gave back 0x%p - found: %s\n", *_retval, found ? "yes" : "no"));
+  LOG(("OS gave back 0x%p - found: %i\n", *_retval, found));
   // If we got no mimeinfo, something went wrong. Probably lack of memory.
   if (!*_retval)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2302,7 +2337,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
   if (aFileExt && *aFileExt) {
     PRBool matches = PR_FALSE;
     (*_retval)->ExtensionExists(aFileExt, &matches);
-    LOG(("Extension '%s' matches mime info: %s\n", aFileExt, matches ? "yes" : "no"));
+    LOG(("Extension '%s' matches mime info: %i\n", aFileExt, matches));
     if (matches)
       (*_retval)->SetPrimaryExtension(aFileExt);
   }
