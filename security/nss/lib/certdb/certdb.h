@@ -81,6 +81,12 @@ CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 
 SECStatus SEC_DeletePermCertificate(CERTCertificate *cert);
 
+PRBool
+SEC_CrlIsNewer(CERTCrl *inNew, CERTCrl *old);
+
+SECCertTimeValidity
+SEC_CheckCrlTimes(CERTCrl *crl, PRTime t);
+
 #ifdef notdef
 /*
 ** Add a DER encoded certificate to the permanent database.
@@ -128,12 +134,6 @@ SEC_CertDBKeyConflict(SECItem *derCert, PCERTCertDBHandle *handle);
 
 SECStatus
 SEC_GetCrlTimes(PCERTCrl *dates, PRTime *notBefore, PRTime *notAfter);
-
-SECCertTimeValidity
-SEC_CheckCrlTimes(PCERTCrl *crl, PRTime t);
-
-PRBool
-SEC_CrlIsNewer(PCERTCrl *inNew, PCERTCrl *old);
 
 PCERTSignedCrl *
 SEC_AddPermCrlToTemp(PCERTCertDBHandle *handle, certDBEntryRevocation *entry);

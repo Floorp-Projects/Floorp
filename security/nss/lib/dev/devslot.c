@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:14:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.2 $ $Date: 2001/12/07 01:35:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -62,6 +62,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.1 $ $Dat
 /* The flags needed to open a read-only session. */
 static const CK_FLAGS s_ck_readonly_flags = CKF_SERIAL_SESSION;
 
+#ifdef PURE_STAN
 /* In pk11slot.c, this was a no-op.  So it is here also. */
 static CK_RV PR_CALLBACK
 nss_ck_slot_notify
@@ -73,6 +74,7 @@ nss_ck_slot_notify
 {
     return CKR_OK;
 }
+#endif
 
 /* maybe this should really inherit completely from the module...  I dunno,
  * any uses of slots where independence is needed?
@@ -85,10 +87,10 @@ nssSlot_Create
   NSSModule *parent
 )
 {
-    NSSArena *arena;
-    nssArenaMark *mark;
+    NSSArena *arena = NULL;
+    nssArenaMark *mark = NULL;
     NSSSlot *rvSlot;
-    NSSToken *token;
+    NSSToken *token = NULL;
     NSSUTF8 *slotName = NULL;
     PRUint32 length;
     PRBool newArena;
@@ -150,9 +152,11 @@ nssSlot_Create
 	}
     }
     rvSlot->token = token;
-    nssrv = nssArena_Unmark(arena, mark);
-    if (nssrv != PR_SUCCESS) {
-	goto loser;
+    if (mark) {
+	nssrv = nssArena_Unmark(arena, mark);
+	if (nssrv != PR_SUCCESS) {
+	    goto loser;
+	}
     }
     return rvSlot;
 loser:

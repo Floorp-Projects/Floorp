@@ -38,6 +38,7 @@
 #include "nssilock.h"
 #include "secmodi.h"
 #include "pk11func.h"
+#include "pki3hack.h"
 
 /* these are for displaying error messages */
 

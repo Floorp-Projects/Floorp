@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.5 2001/08/17 16:48:50 thayes%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.6 2001/12/07 01:36:13 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -206,7 +206,7 @@ int
 NSS_CMSRecipientInfo_GetVersion(NSSCMSRecipientInfo *ri)
 {
     unsigned long version;
-    SECItem *versionitem;
+    SECItem *versionitem = NULL;
 
     switch (ri->recipientInfoType) {
     case NSSCMSRecipientInfoID_KeyTrans:
@@ -221,6 +221,11 @@ NSS_CMSRecipientInfo_GetVersion(NSSCMSRecipientInfo *ri)
 	versionitem = &(ri->ri.keyAgreeRecipientInfo.version);
 	break;
     }
+
+    PORT_Assert(versionitem);
+    if (versionitem == NULL) 
+	return 0;
+
     /* always take apart the SECItem */
     if (SEC_ASN1DecodeInteger(versionitem, &version) != SECSuccess)
 	return 0;
@@ -231,7 +236,7 @@ NSS_CMSRecipientInfo_GetVersion(NSSCMSRecipientInfo *ri)
 SECItem *
 NSS_CMSRecipientInfo_GetEncryptedKey(NSSCMSRecipientInfo *ri, int subIndex)
 {
-    SECItem *enckey;
+    SECItem *enckey = NULL;
 
     switch (ri->recipientInfoType) {
     case NSSCMSRecipientInfoID_KeyTrans:
@@ -253,7 +258,7 @@ NSS_CMSRecipientInfo_GetEncryptedKey(NSSCMSRecipientInfo *ri, int subIndex)
 SECOidTag
 NSS_CMSRecipientInfo_GetKeyEncryptionAlgorithmTag(NSSCMSRecipientInfo *ri)
 {
-    SECOidTag encalgtag;
+    SECOidTag encalgtag = SEC_OID_SHA1; /* set to not a valid encryption alg */
 
     switch (ri->recipientInfoType) {
     case NSSCMSRecipientInfoID_KeyTrans:

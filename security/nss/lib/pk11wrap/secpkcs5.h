@@ -49,5 +49,9 @@ typedef struct PBEBitGenContextStr PBEBitGenContext;
 SECAlgorithmID *
 SEC_PKCS5CreateAlgorithmID(SECOidTag algorithm, SECItem *salt, int iteration);
 
+SECOidTag SEC_PKCS5GetCryptoAlgorithm(SECAlgorithmID *algid);
+PRBool SEC_PKCS5IsAlgorithmPBEAlg(SECAlgorithmID *algid);
+SECOidTag SEC_PKCS5GetPBEAlgorithm(SECOidTag algTag, int keyLen);
+int SEC_PKCS5GetKeyLength(SECAlgorithmID *algid);
 
 #endif /* _SECPKS5_H_ */

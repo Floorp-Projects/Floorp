@@ -35,7 +35,7 @@
 #define CKFWM_H
 
 #ifdef DEBUG
-static const char CKFWM_CVS_ID[] = "@(#) $RCSfile: ckfwm.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:12 $ $Name:  $";
+static const char CKFWM_CVS_ID[] = "@(#) $RCSfile: ckfwm.h,v $ $Revision: 1.2 $ $Date: 2001/12/07 01:35:51 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -157,5 +157,11 @@ nssCKFWHash_Iterate
   nssCKFWHashIterator fcn,
   void *closure
 );
+
+NSS_EXTERN void
+nssSetLockArgs(
+   CK_C_INITIALIZE_ARGS_PTR pInitArgs
+);
+
 
 #endif /* CKFWM_H */

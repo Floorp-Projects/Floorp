@@ -360,6 +360,8 @@ SECStatus PK11_TraversePrivateKeysInSlot( PK11SlotInfo *slot,
 CERTCertificate * PK11_FindCertFromNickname(char *nickname, void *wincx);
 CERTCertList * PK11_FindCertsFromNickname(char *nickname, void *wincx);
 SECKEYPrivateKey * PK11_FindPrivateKeyFromNickname(char *nickname, void *wincx);
+SECStatus PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
+                CK_OBJECT_HANDLE key, char *nickname, PRBool includeTrust);
 PK11SlotInfo *PK11_ImportCertForKey(CERTCertificate *cert, char *nickname,
 								void *wincx);
 PK11SlotInfo *PK11_ImportDERCertForKey(SECItem *derCert, char *nickname,
@@ -415,6 +417,7 @@ CERTCertList *
 PK11_ListCerts(PK11CertListType type, void *pwarg);
 CERTCertList *
 PK11_ListCertsInSlot(PK11SlotInfo *slot);
+SECStatus PK11_LookupCrls(CERTCrlHeadNode *nodes, int type, void *wincx);
 
 
 /**********************************************************************

@@ -85,6 +85,8 @@ extern SECMODModule *SECMOD_LoadModule(char *moduleSpec,SECMODModule *parent,
 							PRBool recurse);
 SECMODModule * SECMOD_CreateModule(char *lib, char *name, char *param, 
 								char *nss);
+extern void SECMOD_Shutdown(void);
+
 
 /* Module Management */
 char **SECMOD_GetModuleSpecList(SECMODModule *module);

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.7 2001/11/30 23:24:29 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.8 2001/12/07 01:36:17 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -43,10 +43,8 @@
 #include "pcertt.h"
 #include "lowkeyi.h"
 #include "pcert.h"
-/*#include "secmodi.h" */
 #include "secrng.h"
 #include "cdbhdl.h"
-/*#include "pk11func.h" */
 #include "pkcs11i.h"
 
 static char *
@@ -108,7 +106,7 @@ static CK_RV
 pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
     					    NSSLOWCERTCertDBHandle **certdbPtr)
 {
-    NSSLOWCERTCertDBHandle *certdb;
+    NSSLOWCERTCertDBHandle *certdb = NULL;
     CK_RV        crv = CKR_CERTDB_FAILED;
     SECStatus    rv;
     char * name = NULL;

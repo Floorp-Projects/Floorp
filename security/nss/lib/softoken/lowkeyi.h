@@ -32,7 +32,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: lowkeyi.h,v 1.3 2001/11/08 05:39:54 relyea%netscape.com Exp $
+ * $Id: lowkeyi.h,v 1.4 2001/12/07 01:36:18 relyea%netscape.com Exp $
  */
 
 #ifndef _LOWKEYI_H_
@@ -57,13 +57,6 @@ extern NSSLOWKEYDBHandle *nsslowkey_OpenKeyDB(PRBool readOnly,
 
 extern NSSLOWKEYDBHandle *nsslowkey_OpenKeyDBFilename(char *filename,
 						   PRBool readOnly);
-
-/*
-** Update the database
-*/
-extern SECStatus nsslowkey_UpdateKeyDBPass1(NSSLOWKEYDBHandle *handle);
-extern SECStatus nsslowkey_UpdateKeyDBPass2(NSSLOWKEYDBHandle *handle,
-					 SECItem *pwitem);
 
 /*
  * Clear out all the keys in the existing database

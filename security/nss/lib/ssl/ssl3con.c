@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.31 2001/11/09 05:39:34 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.32 2001/12/07 01:36:22 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -474,9 +474,9 @@ ssl3_config_match_init(sslSocket *ss)
 	    /* Mark the suites that are backed by real tokens, certs and keys */
 	    suite->isPresent = (PRBool)
 		(((exchKeyType == kt_null) ||
-		    (!isServer || (svrAuth->serverKey &&
+		    ((!isServer || (svrAuth->serverKey &&
 				   svrAuth->serverCertChain)) &&
-		    PK11_TokenExists(kea_alg_defs[exchKeyType])) &&
+		    PK11_TokenExists(kea_alg_defs[exchKeyType]))) &&
 		((cipher_alg == calg_null) || PK11_TokenExists(cipher_mech)));
 	    if (suite->isPresent)
 	    	++numPresent;
@@ -2955,6 +2955,10 @@ ssl_UnwrapSymWrappingKey(
 	    PK11_PubUnwrapSymKey(svrPrivKey, &wrappedKey,
 				 masterWrapMech, CKA_UNWRAP, 0);
 	break;
+    default:
+	/* Assert? */
+	SET_ERROR_CODE
+	goto loser;
     }
 loser:
     return unwrappedWrappingKey;
@@ -2987,7 +2991,7 @@ getWrappingKey( sslSocket *       ss,
     SECKEYPublicKey *        svrPubKey             = NULL;
     PK11SymKey *             unwrappedWrappingKey  = NULL;
     PK11SymKey **            pSymWrapKey;
-    CK_MECHANISM_TYPE        asymWrapMechanism;
+    CK_MECHANISM_TYPE        asymWrapMechanism = CKM_INVALID_MECHANISM;
     int                      length;
     int                      symWrapMechIndex;
     SECStatus                rv;
@@ -3120,6 +3124,8 @@ getWrappingKey( sslSocket *       ss,
 	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
 	goto loser;
     }
+
+    PORT_Assert(asymWrapMechanism != CKM_INVALID_MECHANISM);
 
     wswk.symWrapMechanism  = masterWrapMech;
     wswk.symWrapMechIndex  = symWrapMechIndex;
@@ -3517,7 +3523,7 @@ loser:
 static SECStatus
 sendFortezzaClientKeyExchange(sslSocket * ss, SECKEYPublicKey * serverKey)
 {
-    ssl3CipherSpec *	pwSpec;
+    ssl3CipherSpec *	pwSpec = NULL;
     sslSessionID *	sid 		= ss->sec->ci.sid;
     PK11SlotInfo *	slot		= NULL;
     PK11SymKey *	pms 		= NULL;

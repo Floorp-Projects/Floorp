@@ -39,6 +39,7 @@
 #include "lowkeyi.h"
 #include "pcert.h"
 #include "secasn1.h"
+#include "blapi.h"
 
 /*
  * ******************** Attribute Utilities *******************************
@@ -1337,11 +1338,11 @@ pk11_SetTrustAttribute(PK11TokenObject *to, CK_ATTRIBUTE_TYPE type,
 	break;
     case CKA_TRUST_CLIENT_AUTH:
 	dbTrust.sslFlags = flags | (cert->trust->sslFlags & 
-				CERTDB_PRESERVE_TRUST_BITS|CERTDB_TRUSTED_CA);
+				(CERTDB_PRESERVE_TRUST_BITS|CERTDB_TRUSTED_CA));
 	break;
     case CKA_TRUST_SERVER_AUTH:
 	dbTrust.sslFlags = flags | (cert->trust->sslFlags & 
-			CERTDB_PRESERVE_TRUST_BITS|CERTDB_TRUSTED_CLIENT_CA);
+			(CERTDB_PRESERVE_TRUST_BITS|CERTDB_TRUSTED_CLIENT_CA));
 	break;
     default:
 	return CKR_ATTRIBUTE_READ_ONLY;
@@ -2612,10 +2613,11 @@ pk11_tokenMatch(PK11Slot *slot, SECItem *dbKey, CK_OBJECT_HANDLE class,
 }
 
 PK11TokenObject *
-pk11_convertSessionToToken(PK11SessionObject *so)
+pk11_convertSessionToToken(PK11Object *obj)
 {
     SECItem *key;
-    PK11TokenObject *to = pk11_narrowToTokenObject(&so->obj);
+    PK11SessionObject *so = (PK11SessionObject *)obj;
+    PK11TokenObject *to = pk11_narrowToTokenObject(obj);
     SECStatus rv;
 
     pk11_DestroySessionObjectData(so);

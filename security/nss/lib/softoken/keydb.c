@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.11 2001/11/30 23:24:29 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.12 2001/12/07 01:36:17 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -719,6 +719,55 @@ done:
 }
 #endif
 
+static PRBool
+seckey_HasAServerKey(DB *db)
+{
+    DBT key;
+    DBT data;
+    int ret;
+    PRBool found = PR_FALSE;
+
+    ret = (* db->seq)(db, &key, &data, R_FIRST);
+    if ( ret ) {
+	return PR_FALSE;
+    }
+    
+    do {
+	/* skip version record */
+	if ( data.size > 1 ) {
+	    /* skip salt */
+	    if ( key.size == ( sizeof(SALT_STRING) - 1 ) ) {
+		if ( PORT_Memcmp(key.data, SALT_STRING, key.size) == 0 ) {
+		    continue;
+		}
+	    }
+	    /* skip pw check entry */
+	    if ( key.size == KEYDB_PW_CHECK_LEN ) {
+		if ( PORT_Memcmp(key.data, KEYDB_PW_CHECK_STRING, 
+						KEYDB_PW_CHECK_LEN) == 0 ) {
+		    continue;
+		}
+	    }
+
+	    /* keys stored by nickname will have 0 as the last byte of the
+	     * db key.  Other keys must be stored by modulus.  We will not
+	     * update those because they are left over from a keygen that
+	     * never resulted in a cert.
+	     */
+	    if ( ((unsigned char *)key.data)[key.size-1] != 0 ) {
+		continue;
+	    }
+
+	    if (PORT_Strcmp(key.data,"Server-Key") == 0) {
+		found = PR_TRUE;
+	        break;
+	    }
+	    
+	}
+    } while ( (* db->seq)(db, &key, &data, R_NEXT) == 0 );
+
+    return found;
+}
 /*
  * currently updates key database from v2 to v3
  */
@@ -1048,7 +1097,9 @@ newdb:
 	    
 	}
 
+#ifdef NSS_USE_KEY4_DB
 skip_v2_db:
+#endif
 	/* we are using the old salt if we updated from an old db */
 	if ( ! updated ) {
 	    rv = makeGlobalSalt(handle);
@@ -1064,7 +1115,9 @@ skip_v2_db:
 	}
     }
 
+#ifdef NSS_USE_KEY4_DB
 done:
+#endif
     handle->global_salt = GetKeyDBGlobalSalt(handle);
     if ( dbname )
         PORT_Free( dbname );
@@ -1493,7 +1546,7 @@ seckey_encrypt_private_key(
     SECStatus rv = SECFailure;
     PLArenaPool *temparena = NULL, *permarena = NULL;
     SECItem *der_item = NULL;
-    NSSPKCS5PBEParameter *param;
+    NSSPKCS5PBEParameter *param = NULL;
     SECItem *dummy = NULL, *dest = NULL;
     SECAlgorithmID *algid;
 
@@ -2144,56 +2197,6 @@ loser:
     }
 	
     return(rv);
-}
-
-static PRBool
-seckey_HasAServerKey(DB *db)
-{
-    DBT key;
-    DBT data;
-    int ret;
-    PRBool found = PR_FALSE;
-
-    ret = (* db->seq)(db, &key, &data, R_FIRST);
-    if ( ret ) {
-	return PR_FALSE;
-    }
-    
-    do {
-	/* skip version record */
-	if ( data.size > 1 ) {
-	    /* skip salt */
-	    if ( key.size == ( sizeof(SALT_STRING) - 1 ) ) {
-		if ( PORT_Memcmp(key.data, SALT_STRING, key.size) == 0 ) {
-		    continue;
-		}
-	    }
-	    /* skip pw check entry */
-	    if ( key.size == KEYDB_PW_CHECK_LEN ) {
-		if ( PORT_Memcmp(key.data, KEYDB_PW_CHECK_STRING, 
-						KEYDB_PW_CHECK_LEN) == 0 ) {
-		    continue;
-		}
-	    }
-
-	    /* keys stored by nickname will have 0 as the last byte of the
-	     * db key.  Other keys must be stored by modulus.  We will not
-	     * update those because they are left over from a keygen that
-	     * never resulted in a cert.
-	     */
-	    if ( ((unsigned char *)key.data)[key.size-1] != 0 ) {
-		continue;
-	    }
-
-	    if (PORT_Strcmp(key.data,"Server-Key") == 0) {
-		found = PR_TRUE;
-	        break;
-	    }
-	    
-	}
-    } while ( (* db->seq)(db, &key, &data, R_NEXT) == 0 );
-
-    return found;
 }
 
 static SECStatus

@@ -45,6 +45,7 @@
 #include "jarjart.h"
 #include "blapi.h"	/* JAR is supposed to be above the line!! */
 #include "pk11func.h"	/* PK11 wrapper funcs are all above the line. */
+#include "certdb.h"
 
 /* from certdb.h */
 #define CERTDB_USER (1<<6)

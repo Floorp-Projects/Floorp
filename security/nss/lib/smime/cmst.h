@@ -34,7 +34,7 @@
 /*
  * Header for CMS types.
  *
- * $Id: cmst.h,v 1.3 2001/01/18 16:36:36 wtc%netscape.com Exp $
+ * $Id: cmst.h,v 1.4 2001/12/07 01:36:13 relyea%netscape.com Exp $
  */
 
 #ifndef _CMST_H_
@@ -444,6 +444,7 @@ struct NSSCMSEncryptedDataStr {
 /* An enumerated type used to select templates based on the encryption
    scenario and data specifics. */
 typedef enum {
+    NSSCMSKEAInvalid = -1,
     NSSCMSKEAUsesSkipjack = 0,
     NSSCMSKEAUsesNonSkipjack = 1,
     NSSCMSKEAUsesNonSkipjackWithPaddedEncKey = 2

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.12 $ $Date: 2001/11/29 19:34:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.13 $ $Date: 2001/12/07 01:36:08 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -50,6 +50,10 @@ static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.12 $ $Da
 #ifndef BASE_H
 #include "base.h"
 #endif /* BASE_H */
+
+#ifdef NSS_3_4_CODE
+#include "cert.h"
+#endif
 
 #ifdef DEBUG_CACHE
 static PRLogModuleInfo *s_log = NULL;
@@ -823,7 +827,7 @@ nssTrustDomain_GetCertsForEmailAddressFromCache
 {
     NSSCertificate **rvArray = NULL;
     cache_entry *ce;
-    nssList *collectList;
+    nssList *collectList = NULL;
 #ifdef DEBUG_CACHE
     PR_LOG(s_log, PR_LOG_DEBUG, ("looking for cert by email %s", email));
 #endif
@@ -854,7 +858,7 @@ nssTrustDomain_GetCertsForEmailAddressFromCache
 	nssListIterator_Finish(iter);
 	nssListIterator_Destroy(iter);
     }
-    if (!certListOpt) {
+    if (!certListOpt && collectList) {
 	PRUint32 count = nssList_Count(collectList);
 	rvArray = nss_ZNEWARRAY(NULL, NSSCertificate *, count);
 	if (rvArray) {

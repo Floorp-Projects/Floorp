@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: atav.c,v $ $Revision: 1.4 $ $Date: 2001/11/08 00:15:24 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: atav.c,v $ $Revision: 1.5 $ $Date: 2001/12/07 01:36:10 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1745,7 +1745,8 @@ nssATAV_Compare
     return PR_SUCCESS;
   }
 
-  return nsslibc_compare(atav1->value, atav2->value, len1, equalp);
+  *equalp = nsslibc_memequal(atav1->value, atav2->value, len1, &status);
+  return status;
 }
 
 

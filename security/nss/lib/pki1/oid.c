@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: oid.c,v $ $Revision: 1.3 $ $Date: 2001/01/31 18:01:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: oid.c,v $ $Revision: 1.4 $ $Date: 2001/12/07 01:36:10 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -324,7 +324,7 @@ oid_hash_compare
 
   PRUint32 size = (i1->size < i2->size) ? i1->size : i2->size;
 
-  rv = (PRIntn)nsslibc_memcmp(i1->data, i2->data, size, (PRStatus *)NULL);
+  rv = (PRIntn)nsslibc_memequal(i1->data, i2->data, size, (PRStatus *)NULL);
   if( 0 == rv ) {
     rv = i1->size - i2->size;
   }

@@ -93,6 +93,7 @@ CERT_GetCertTrust(CERTCertificate *cert, CERTCertTrust *trust)
     return(rv);
 }
 
+#ifdef notdef
 static char *
 cert_parseNickname(char *nickname)
 {
@@ -101,6 +102,7 @@ cert_parseNickname(char *nickname)
     if (*cp == ':') return cp+1;
     return nickname;
 }
+#endif
 
 /* XXX needs work */
 SECStatus
@@ -137,6 +139,9 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 	PORT_Free(cert->nickname);
 	cert->nickname = PORT_Strdup(nickname);
     }
+    return (STAN_ChangeCertTrust(cert, trust ) == PR_SUCCESS) ? 
+							SECSuccess: SECFailure;
+#ifdef notdef
     /*
     nssTrustDomain_AddTempCertToPerm(c);
     if (memcmp(cert->trust, trust, sizeof (*trust)) != 0) {
@@ -146,6 +151,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     }
     */
     return SECFailure;
+#endif
 }
 
 SECStatus
@@ -161,7 +167,6 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 {
     NSSCertificate *c;
     NSSCryptoContext *context;
-    nssDecodedCert *dc;
     NSSArena *arena;
     CERTCertificate *cc;
     arena = NSSArena_Create();

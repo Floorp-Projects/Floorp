@@ -1124,7 +1124,7 @@ SECAlgorithmID *
 nsspkcs5_CreateAlgorithmID(PRArenaPool *arena, SECOidTag algorithm, 
 					NSSPKCS5PBEParameter *pbe_param)
 {
-    SECAlgorithmID *algid, *ret_algid;
+    SECAlgorithmID *algid, *ret_algid = NULL;
     SECItem der_param;
     SECStatus rv = SECFailure;
     void *dummy = NULL;

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.3 $ $Date: 2001/11/28 16:23:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.4 $ $Date: 2001/12/07 01:35:54 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -67,9 +67,9 @@ nssToken_Create
 )
 {
     NSSArena *arena;
-    nssArenaMark *mark;
+    nssArenaMark *mark = NULL;
     NSSToken *rvToken;
-    nssSession *session;
+    nssSession *session = NULL;
     NSSUTF8 *tokenName = NULL;
     PRUint32 length;
     PRBool newArena;
@@ -134,9 +134,11 @@ nssToken_Create
     rvToken->name = tokenName;
     rvToken->ckFlags = tokenInfo.flags;
     rvToken->defaultSession = session;
-    nssrv = nssArena_Unmark(arena, mark);
-    if (nssrv != PR_SUCCESS) {
-	goto loser;
+    if (mark) {
+	nssrv = nssArena_Unmark(arena, mark);
+	if (nssrv != PR_SUCCESS) {
+	    goto loser;
+	}
     }
     return rvToken;
 loser:
