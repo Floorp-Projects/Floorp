@@ -69,7 +69,7 @@ function onInit() {
   // smtp server so that the single string displays the 
   // name of the smtp server.
   var smtpStatic = document.getElementById("smtpStaticText");
-  if (smtpServer && smtpServer.hostname && 
+  if (smtpServer && smtpServer.hostname && smtpStatic &&
       smtpStatic.hasChildNodes()) {
     var staticText = smtpStatic.firstChild.nodeValue;
     staticText = staticText.replace(/@server_name@/, smtpServer.hostname);
