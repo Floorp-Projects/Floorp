@@ -1,0 +1,3 @@
+en-US.jar:
+  locale/en-US/offline-startup/contents.rdf                (resources/locale/en-US/contents.rdf)
+  locale/en-US/offline-startup/offlineStartup.properties      (resources/locale/en-US/offlineStartup.properties)
