@@ -131,6 +131,7 @@ class String : public MITREObject
     String(const String& source); //Create a copy of the source string
     String(const char* source);   //Create a string from the characters
     String(const UNICODE_CHAR* source);
+    String(const UNICODE_CHAR* source, Int32 length);
 
     ~String();                    //Destroy the string, and free memory
 
