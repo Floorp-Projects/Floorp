@@ -118,7 +118,7 @@ classic.jar:
   skin/classic/editor/icons/progress-busy.gif                           (editor/icons/progress-busy.gif)
   skin/classic/editor/icons/progress-done.gif                           (editor/icons/progress-done.gif)
   skin/classic/editor/icons/progress-failed.gif                         (editor/icons/progress-failed.gif)
-#ifdef XP_MAC
+#ifdef XP_MACOSX
   skin/classic/global/button.css                                (global/mac/button.css)
   skin/classic/global/console.css                               (global/mac/console.css)
   skin/classic/global/browser.css                               (global/mac/browser.css)
