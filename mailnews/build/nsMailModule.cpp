@@ -327,7 +327,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerOS2Integration, Init);
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerContentHandler);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgContentPolicy);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgContentPolicy, Init);
 
 ////////////////////////////////////////////////////////////////////////////////
 // addrbook factories
