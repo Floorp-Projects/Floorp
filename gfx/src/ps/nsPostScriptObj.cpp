@@ -198,6 +198,7 @@ nsPostScriptObj::~nsPostScriptObj()
       char VMSPrintCommand[1024];
       PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s /delete %s.",
         mPrintSetup->print_cmd, mPrintSetup->filename);
+      // FixMe: Check for error and return one of NS_ERROR_GFX_PRINTER_* on demand  
       system(VMSPrintCommand);
       free(mPrintSetup->filename);
     }
@@ -290,15 +291,18 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
       } else {
         aSpec->GetPath( &buf );
         mPrintSetup->filename = buf;          
-        mPrintSetup->out = fopen(mPrintSetup->filename, "w");  
+        mPrintSetup->out = fopen(mPrintSetup->filename, "w"); 
+        if (!mPrintSetup->out)
+          return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
       }
     } else 
         return NS_ERROR_FAILURE;
 
     /* make sure the open worked */
 
-    if ( mPrintSetup->out == NULL )
-      return NS_ERROR_FAILURE;
+    if (!mPrintSetup->out)
+      return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+      
     mPrintContext = new PSContext();
     memset(mPrintContext, 0, sizeof(struct PSContext_));
     memset(pi, 0, sizeof(struct PrintInfo_));

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsIDeviceContext_h___
@@ -40,6 +41,43 @@ struct nsColor;
 
 //a cross platform way of specifying a native device context
 typedef void * nsNativeDeviceContext;
+
+/* error codes for printer device contexts */
+#define NS_ERROR_GFX_PRINTER_BASE (1) /* adjustable :-) */
+/* Unix: print command (lp/lpr) not found */
+#define NS_ERROR_GFX_PRINTER_CMD_NOT_FOUND          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+1)
+/* Unix: print command returned an error */  
+#define NS_ERROR_GFX_PRINTER_CMD_FAILURE            \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+2)
+/* no printer available (e.g. cannot find _any_ printer) */
+#define NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAIULABLE  \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+3)
+/* _specified_ (by name) printer not found */
+#define NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND         \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+4)
+/* access to printer denied */
+#define NS_ERROR_GFX_PRINTER_ACCESS_DENIED          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+5)
+/* invalid printer attribute (for example: unsupported paper size etc.) */
+#define NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE      \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+6)
+/* printer not "ready" (offline ?) */
+#define NS_ERROR_GFX_PRINTER_PRINTER_NOT_READY     \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+8)
+/* printer out of paper */
+#define NS_ERROR_GFX_PRINTER_OUT_OF_PAPER           \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+9)
+/* generic printer I/O error */
+#define NS_ERROR_GFX_PRINTER_PRINTER_IO_ERROR       \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+10)
+/* print-to-file: could not open output file */
+#define NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE    \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+11)
+/* print-to-file: I/O error while printing to file */
+#define NS_ERROR_GFX_PRINTER_FILE_IO_ERROR          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+12)
+
 
 #define NS_IDEVICE_CONTEXT_IID   \
 { 0x5931c580, 0xb917, 0x11d1,    \
