@@ -300,47 +300,6 @@ pref("capability.policy.default.Window.self", "allAccess");
 pref("capability.policy.default.Window.top", "allAccess");
 pref("capability.policy.default.Window.window", "allAccess");
 
-// Restrictions on the DOM for mail/news - see bugs 66938 and 84545
-pref("capability.policy.mailnews.sites", "mailbox: imap: news:");
-
-pref("capability.policy.mailnews.*.attributes.get", "noAccess");
-pref("capability.policy.mailnews.*.baseURI.get", "noAccess");
-pref("capability.policy.mailnews.*.data.get", "noAccess");
-pref("capability.policy.mailnews.*.getAttribute", "noAccess");
-pref("capability.policy.mailnews.*.getNamedItem", "noAccess");
-pref("capability.policy.mailnews.*.host.get", "noAccess");
-pref("capability.policy.mailnews.*.hostname.get", "noAccess");
-pref("capability.policy.mailnews.*.href.get", "noAccess");
-pref("capability.policy.mailnews.*.innerHTML.get", "noAccess");
-pref("capability.policy.mailnews.*.lowSrc.get", "noAccess");
-pref("capability.policy.mailnews.*.nodeValue.get", "noAccess");
-pref("capability.policy.mailnews.*.pathname.get", "noAccess");
-pref("capability.policy.mailnews.*.protocol.get", "noAccess");
-pref("capability.policy.mailnews.*.src.get", "noAccess");
-pref("capability.policy.mailnews.*.substringData.get", "noAccess");
-pref("capability.policy.mailnews.*.text.get", "noAccess");
-pref("capability.policy.mailnews.*.title.get", "noAccess");
-pref("capability.policy.mailnews.DOMException.toString", "noAccess");
-pref("capability.policy.mailnews.HTMLAnchorElement.toString", "noAccess");
-pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
-pref("capability.policy.mailnews.HTMLDocument.URL", "noAccess");
-pref("capability.policy.mailnews.Location.toString", "noAccess");
-pref("capability.policy.mailnews.Range.toString", "noAccess");
-pref("capability.policy.mailnews.Window.blur", "noAccess");
-pref("capability.policy.mailnews.Window.focus", "noAccess");
-pref("capability.policy.mailnews.Window.innerWidth.set", "noAccess");
-pref("capability.policy.mailnews.Window.innerHeight.set", "noAccess");
-pref("capability.policy.mailnews.Window.moveBy", "noAccess");
-pref("capability.policy.mailnews.Window.moveTo", "noAccess");
-pref("capability.policy.mailnews.Window.name.set", "noAccess");
-pref("capability.policy.mailnews.Window.outerHeight.set", "noAccess");
-pref("capability.policy.mailnews.Window.outerWidth.set", "noAccess");
-pref("capability.policy.mailnews.Window.resizeBy", "noAccess");
-pref("capability.policy.mailnews.Window.resizeTo", "noAccess");
-pref("capability.policy.mailnews.Window.screenX.set", "noAccess");
-pref("capability.policy.mailnews.Window.screenY.set", "noAccess");
-pref("capability.policy.mailnews.Window.sizeToContent", "noAccess");
-
 // Scripts & Windows prefs
 pref("browser.block.target_new_window",     false);
 pref("dom.disable_cookie_get",              false);
@@ -530,21 +489,6 @@ pref("network.enablePad",                   false); // Allow client to do proxy 
 pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
-pref("wallet.captureForms",                 true);
-pref("wallet.notified",                     false);
-pref("wallet.TutorialFromMenu",             "chrome://navigator/locale/navigator.properties");
-pref("wallet.Server",                       "chrome://navigator/locale/navigator.properties");
-pref("wallet.Samples",                      "chrome://navigator/locale/navigator.properties");
-pref("wallet.version",                      "1");
-pref("wallet.enabled",                      true);
-pref("wallet.crypto",                       false);
-pref("wallet.crypto.autocompleteoverride",  false); // Ignore 'autocomplete=off' - available only when wallet.crypto is enabled. 
-pref("wallet.namePanel.hide",               false);
-pref("wallet.addressPanel.hide",            false);
-pref("wallet.phonePanel.hide",              false);
-pref("wallet.creditPanel.hide",             false);
-pref("wallet.employPanel.hide",             false);
-pref("wallet.miscPanel.hide",               false);
 pref("imageblocker.enabled",                true);
 pref("intl.accept_languages",               "chrome://navigator/locale/navigator.properties");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
