@@ -27,6 +27,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIHTMLContentContainer.h"
 #include "plhash.h"
+#include "jsapi.h"
 
 class nsContentList;
 class nsIContentViewerContainer;
@@ -170,6 +171,8 @@ protected:
   static PRBool MatchAnchors(nsIContent *aContent, nsString* aData);
   static PRBool MatchLayers(nsIContent *aContent, nsString* aData);
   static PRBool MatchNameAttribute(nsIContent* aContent, nsString* aData);
+
+  nsresult GetSourceDocumentURL(JSContext* cx, nsIURL** sourceURL);
 
   PRBool GetBodyContent();
   nsresult GetBodyElement(nsIDOMHTMLBodyElement** aBody);
