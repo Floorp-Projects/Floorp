@@ -7,6 +7,8 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug27038-3.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2757.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2763.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2773.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug277062.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug278385.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug27993-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug27993-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug28341.html
