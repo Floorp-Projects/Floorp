@@ -1664,7 +1664,7 @@ RDFElementImpl::SetParent(nsIContent* aParent)
 
     // If we're an observes node, then we need to add our parent element
     // as a broadcast listener.
-    if (tagName && tagName.get() == kObservesAtom) {
+    if (mDocument && tagName && tagName.get() == kObservesAtom) {
       // Find the node that we're supposed to be
       // observing and perform the hookup.
       nsAutoString elementValue;
@@ -1677,6 +1677,10 @@ RDFElementImpl::SetParent(nsIContent* aParent)
                    attributeValue);
 
       nsCOMPtr<nsIDOMXULDocument> xulDocument( do_QueryInterface(mDocument) );
+      NS_ASSERTION(xulDocument != nsnull, "not in a XUL document");
+      if (! xulDocument)
+          return NS_ERROR_UNEXPECTED;
+
       nsCOMPtr<nsIDOMElement> domElement;
       xulDocument->GetElementById(elementValue, getter_AddRefs(domElement));
       
