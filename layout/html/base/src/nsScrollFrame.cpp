@@ -458,9 +458,10 @@ nsScrollFrame::Paint(nsIPresContext&      aPresContext,
 {
   if (eFramePaintLayer_Underlay == aWhichLayer) {
     // Only paint the border and background if we're visible
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->mVisible) {
+
+    if (display->mVisible) {
       // Paint our border only (no background)
       const nsStyleSpacing* spacing = (const nsStyleSpacing*)
         mStyleContext->GetStyleData(eStyleStruct_Spacing);
