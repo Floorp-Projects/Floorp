@@ -3254,46 +3254,46 @@ PK11_DestroyContext(PK11Context *context, PRBool freeit)
 /*
  * save the current context. Allocate Space if necessary.
  */
-static void *
-pk11_saveContextHelper(PK11Context *context, void *space, 
-	unsigned long *savedLength, PRBool staticBuffer, PRBool recurse)
+static unsigned char *
+pk11_saveContextHelper(PK11Context *context, unsigned char *buffer, 
+                       unsigned long *savedLength)
 {
-    CK_ULONG length;
     CK_RV crv;
 
-    if (staticBuffer) PORT_Assert(space != NULL);
-
-    if (space == NULL) {
-	crv =PK11_GETTAB(context->slot)->C_GetOperationState(context->session,
-				NULL,&length);
-	if (crv != CKR_OK) {
-	    PORT_SetError( PK11_MapError(crv) );
-	    return NULL;
-	}
-	space = PORT_Alloc(length);
-	if (space == NULL) return NULL;
-	*savedLength = length;
-    }
+    /* If buffer is NULL, this will get the length */
     crv = PK11_GETTAB(context->slot)->C_GetOperationState(context->session,
-					(CK_BYTE_PTR)space,savedLength);
-    if (!staticBuffer && !recurse && (crv == CKR_BUFFER_TOO_SMALL)) {
-	if (!staticBuffer) PORT_Free(space);
-	return pk11_saveContextHelper(context, NULL, 
-					savedLength, PR_FALSE, PR_TRUE);
+                                                          (CK_BYTE_PTR)buffer,
+                                                          savedLength);
+    if (!buffer || (crv == CKR_BUFFER_TOO_SMALL)) {
+	/* the given buffer wasn't big enough (or was NULL), but we 
+	 * have the length, so try again with a new buffer and the 
+	 * correct length
+	 */
+	unsigned long bufLen = *savedLength;
+	buffer = PORT_Alloc(bufLen);
+	if (buffer == NULL) {
+	    return (unsigned char *)NULL;
+	}
+	crv = PK11_GETTAB(context->slot)->C_GetOperationState(
+	                                                  context->session,
+                                                          (CK_BYTE_PTR)buffer,
+                                                          savedLength);
+	if (crv != CKR_OK) {
+	    PORT_ZFree(buffer, bufLen);
+	}
     }
     if (crv != CKR_OK) {
-	if (!staticBuffer) PORT_Free(space);
 	PORT_SetError( PK11_MapError(crv) );
-	return NULL;
+	return (unsigned char *)NULL;
     }
-    return space;
+    return buffer;
 }
 
 void *
 pk11_saveContext(PK11Context *context, void *space, unsigned long *savedLength)
 {
-	return pk11_saveContextHelper(context, space, 
-					savedLength, PR_FALSE, PR_FALSE);
+    return pk11_saveContextHelper(context, 
+                                  (unsigned char *)space, savedLength);
 }
 
 /*
@@ -3638,8 +3638,7 @@ PK11_SaveContext(PK11Context *cx,unsigned char *save,int *len, int saveLength)
 
     if (cx->ownSession) {
         PK11_EnterContextMonitor(cx);
-	data = (unsigned char*)pk11_saveContextHelper(cx,save,&length,
-							PR_FALSE,PR_FALSE);
+	data = pk11_saveContextHelper(cx, save, &length);
         PK11_ExitContextMonitor(cx);
 	if (data) *len = length;
     } else if ((unsigned) saveLength >= cx->savedLength) {
@@ -3649,7 +3648,14 @@ PK11_SaveContext(PK11Context *cx,unsigned char *save,int *len, int saveLength)
 	}
 	*len = cx->savedLength;
     }
-    return (data != NULL) ? SECSuccess : SECFailure;
+    if (data != NULL) {
+	if (cx->ownSession) {
+	    PORT_ZFree(data, length);
+	}
+	return SECSuccess;
+    } else {
+	return SECFailure;
+    }
 }
 
 /* same as above, but may allocate the return buffer. */
@@ -3660,28 +3666,10 @@ PK11_SaveContextAlloc(PK11Context *cx,
 {
     unsigned char *stateBuf = NULL;
     unsigned long length = (unsigned long)pabLen;
-    PRBool callerHasBuf = (preAllocBuf != NULL);
 
     if (cx->ownSession) {
         PK11_EnterContextMonitor(cx);
-	stateBuf = (unsigned char *)pk11_saveContextHelper(cx, preAllocBuf,
-	                                                   &length,
-	                                                   callerHasBuf, 
-	                                                   PR_FALSE);
-	if (stateBuf == NULL && callerHasBuf) {
-	    /* pk11_saveContextHelper will attempt to free the supplied
-	     * buffer if staticBuffer == PR_FALSE.  However, it won't
-	     * allocate a new buffer unless staticBuffer == PR_FALSE.  We
-	     * want to allocate a new buffer if this one isn't big enough,
-	     * but we don't want the caller buffer to be freed.  So, 
-	     * we have to try again.
-	     */
-	    length = 0;
-	    stateBuf = (unsigned char *)pk11_saveContextHelper(cx, NULL,
-	                                                       &length, 
-	                                                       PR_FALSE, 
-	                                                       PR_FALSE);
-	}
+	stateBuf = pk11_saveContextHelper(cx, preAllocBuf, &length);
         PK11_ExitContextMonitor(cx);
 	*stateLen = (stateBuf != NULL) ? length : 0;
     } else {
