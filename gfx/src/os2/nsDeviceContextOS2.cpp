@@ -460,9 +460,11 @@ nsresult GetSysFontInfo(nsSystemFontID aID, nsFont* aFont)
   char *szFacename;
 
   pointSize = atoi(szFontNameSize);
-
   szFacename = strchr(szFontNameSize, '.');
-  szFacename++;
+
+  if ((pointSize == 0) || (!szFacename) || (*(szFacename++) == '\0')) {
+     return NS_ERROR_FAILURE;
+  }
 
 #ifdef OLDCODE
   PRUnichar name[FACESIZE];
