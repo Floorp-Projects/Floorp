@@ -608,8 +608,35 @@ MCS_CMD		= true
 # Only IRIX 5.x uses this.
 EXTRA_POST_LINK_CMD	= echo
 
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(BASIC_DSOS) $(OTHER_LIBS) $(NSPR_LIB)
-EXPORT_DEPLIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
+#
+# The only difference between EXPORT_LDFLAGS and 
+# EXPORT_DYN_MOTIF_LDFLAGS is that OTHER_LIBS is
+# replaced by OTHER_DYN_MOTIF_LIBS.
+#
+# OTHER_DYN_MOTIF_LIBS will use something like 
+# '-L/foo/bar -lXm' instead of '/foo/bar/libXm.a'
+#
+EXPORT_LDFLAGS				=\
+							$(BASIC_LIBS) \
+							$(EXPORT_LIB) \
+							$(BASIC_LIBS_2) \
+							$(BASIC_DSOS) \
+							$(OTHER_LIBS) \
+							$(NSPR_LIB)
+
+EXPORT_DYN_MOTIF_LDFLAGS 	=\
+							$(BASIC_LIBS) \
+							$(EXPORT_LIB) \
+							$(BASIC_LIBS_2) \
+							$(BASIC_DSOS) \
+							$(OTHER_DYN_MOTIF_LIBS) \
+							$(NSPR_LIB)
+
+EXPORT_DEPLIBS				=\
+							$(BASIC_LIBS) \
+							$(EXPORT_LIB) \
+							$(BASIC_LIBS_2) \
+							$(NSPR_LIB)
 
 DSO_EX_LIBS	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
 
@@ -772,7 +799,7 @@ OTHER_LIBS			=\
 # Dynamic motif binary
 ifdef MOZILLA_XFE_MOTIF_HAVE_DYNAMIC_LIB
 
-XFE_DYN_MOTIFLIB	=\
+XFE_DYN_MOTIF_LDFLAGS =\
 					$(MOTIFPATCH_LIB) \
 					$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
 					$(MOZILLA_XFE_MOTIF_DYNAMIC_PATHS) \
@@ -783,6 +810,12 @@ EXTRA_EXPORT_OBJS	= $(OBJDIR)/$(XFE_PROGNAME)-motif-export
 EXTRA_EXPORT_BINARY	= $(EXTRA_EXPORT_OBJS)
 
 PLUGIN_DSO	+= $(DIST)/bin/libnullplugin-dynMotif.so
+
+OTHER_DYN_MOTIF_LIBS =\
+					$(XFE_DYN_MOTIF_LDFLAGS) \
+					$(XFE_X11_LDFLAGS) \
+					-lm \
+					-ldl
 
 endif
 
@@ -1081,7 +1114,7 @@ ifdef MOZILLA_XFE_MOTIF_HAVE_DYNAMIC_LIB
 $(OBJDIR)/$(XFE_PROGNAME)-motif-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(XFE_DYN_MOTIFLIB) $(XFE_X11_LDFLAGS) -lm -ldl $(NSPR_LIB) $(DNS_LIB) -lc
+	$(CCLD) -o $@ $(DYNAMIC_SYMBOLS_F) $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_DYN_MOTIF_LDFLAGS) $(DNS_LIB)
 	@$(EXTRA_POST_LINK_CMD) $@
 endif
 endif
