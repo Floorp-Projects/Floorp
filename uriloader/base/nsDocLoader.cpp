@@ -1391,8 +1391,11 @@ NS_IMETHODIMP nsDocLoaderImpl::OnHeadersAvailable(nsISupports * aContext)
 
 NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsISupports * aContext, nsIURI * aNewLocation)
 {
-  // right now I don't think we need to do anything special for this case...
-  FireOnLocationChange(this, mDocumentChannel, aNewLocation);
+  // we have a problem in that this method doesn't give us enough information about
+  // the url being redirected. We need to know if the url is the document url or some other
+  // part of the document (like an image). Proper implementation requires this, otherwise
+  // we end up setting the url bar location to a redirected image url when we didn't want to.
+  // for now, we'll make the implementation empty.
   return NS_OK;
 }
 
