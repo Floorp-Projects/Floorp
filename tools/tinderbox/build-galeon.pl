@@ -62,13 +62,14 @@ sub main {
   #
   # Also, have to set crash_recovery=0 in ~/.gnome/galeon to avoid
   # getting the crash dialog after the alive test times out.
+  # Looks like --disable-crash-dialog is not implemented yet.
   #
 
   # Test galeon, about:blank
   if ($galeon_alive_test and $post_status eq 'success') {
 	$post_status = TinderUtils::AliveTest("GaleonAliveTest",
 										  "$galeon_dir/src",
-										  "galeon --disable-crash-dialog",
+										  "galeon",
 										  "about:blank",
 										  45);
   }
@@ -77,7 +78,7 @@ sub main {
   if ($galeon_test8_test and $post_status eq 'success') {
 	$post_status = TinderUtils::AliveTest("GaleonTest8Test",
 										  "$galeon_dir/src",
-										  "galeon --disable-crash-dialog",
+										  "galeon",
 										  "resource:///res/samples/test8.html",
 										  45);
   }
