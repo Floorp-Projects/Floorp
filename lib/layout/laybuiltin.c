@@ -478,7 +478,7 @@ lo_UpdateStateAfterBuiltinLayout (lo_DocState *state, LO_BuiltinStruct *builtin,
 	printf ("lo_UpdateStateAfterBuiltinLayout\n");
 #endif
 
-	builtin->width = builtin->width + (2 * builtin->border_width) +
+	builtin_width = builtin->width + (2 * builtin->border_width) +
 		(2 * builtin->border_horiz_space);
 
 	state->baseline += (intn) baseline_inc;
@@ -497,6 +497,10 @@ lo_UpdateStateAfterBuiltinLayout (lo_DocState *state, LO_BuiltinStruct *builtin,
 	/* Determine the new position of the layer. */
 	x = builtin->x + builtin->x_offset + builtin->border_width;
 	y = builtin->y + builtin->y_offset + builtin->border_width;
+
+    /* Move layer to new position */
+    if (builtin->layer != NULL)
+      CL_MoveLayer(builtin->layer, x, y);
 }
 
 
