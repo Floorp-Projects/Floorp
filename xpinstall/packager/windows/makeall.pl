@@ -67,7 +67,6 @@ MakeJsFile();
 # Make all xpi files
 MakeXpiFile("core");
 MakeXpiFile("mail");
-MakeXpiFile("editor");
 
 if(-e "$inDistPath\\setup")
 {
