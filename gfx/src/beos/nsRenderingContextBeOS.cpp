@@ -666,7 +666,11 @@ NS_IMETHODIMP nsRenderingContextBeOS::InvertRect(nscoord aX, nscoord aY, nscoord
 	
 	if (w && h) {
 		if (LockAndUpdateView()) {
+			//Mozilla doesn't seem to set clipping for InvertRect, so we do it here - bug 230267
+			BRegion tmpClip = BRegion(BRect(x, y, x + w - 1, y + h - 1));
+			mView->ConstrainClippingRegion(&tmpClip);
 			mView->InvertRect(BRect(x, y, x + w - 1, y + h - 1));
+			mView->Sync();
 			mView->UnlockLooper();
 		}
 	}
