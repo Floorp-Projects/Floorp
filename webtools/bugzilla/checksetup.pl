@@ -3848,7 +3848,7 @@ AddGroup('admin', 'Administrators');
 
 
 if (!GroupDoesExist("editbugs")) {
-    my $id = AddGroup('editbugs', 'Can edit all aspects of any bug.', ".*");
+    my $id = AddGroup('editbugs', 'Can edit all bug fields.', ".*");
     my $sth = $dbh->prepare("SELECT userid FROM profiles");
     $sth->execute();
     while (my ($userid) = $sth->fetchrow_array()) {
