@@ -617,7 +617,7 @@ calStorageCalendar.prototype = {
 
         // fill in common bits
         item.creationDate = newDateTime(row.time_created);
-        item.lastModifiedTime = row.last_modified;
+        item.lastModifiedTime = newDateTime(row.last_modified);
         item.parent = this;
         item.id = row.id;
         item.title = row.title;
@@ -721,7 +721,7 @@ calStorageCalendar.prototype = {
         ip.cal_id = this.mCalId;
         ip.id = item.id;
         ip.time_created = item.creationDate.jsDate;
-        ip.last_modified = item.lastModifiedTime;
+        ip.last_modified = item.lastModifiedTime.jsDate;
         ip.title = item.title;
         ip.priority = item.priority;
         ip.privacy = (item.isPrivate ? 1 : 0);
