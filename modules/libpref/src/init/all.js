@@ -197,7 +197,7 @@ localDefPref("ghist.visitcount.width",     1000);
 localDefPref("ghist.window_rect",          "0,0,0,0");
 
 pref("javascript.enabled",                  true);
-pref("javascript.allow.mailnews",           true);
+pref("javascript.allow.mailnews",           false);
 pref("javascript.allow.signing",            true);
 pref("javascript.reflect_preferences",      false);     // for PE
 
