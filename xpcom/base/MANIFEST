@@ -3,7 +3,6 @@ nsIAllocator.h
 nsCom.h
 nsComObsolete.h
 nsCWeakReference.h
-nsDebug.h
 nsError.h
 nsID.h 
 nsIID.h
@@ -14,7 +13,6 @@ nsISupportsUtils.h
 nsISupportsObsolete.h
 nsIWeakReferenceUtils.h
 nsTraceRefcnt.h
-nsWeakReference.h
 nsWeakPtr.h
 nscore.h
 nsIInterfaceRequestorUtils.h

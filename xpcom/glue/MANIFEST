@@ -1,2 +1,4 @@
 nsCOMPtr.h
+nsDebug.h
 nsMemory.h
+nsWeakReference.h
