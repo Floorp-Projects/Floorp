@@ -6081,6 +6081,14 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
 
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN || aEvent->message == NS_MOUSE_MOVE ||
     aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK ) {
+
+    //we have to add this because any frame that overrides nsFrame::HandleEvent for mouse down MUST capture the mouse events!!
+    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
+    {
+      if (!IsMouseCaptured(aPresContext))
+        CaptureMouse(aPresContext, PR_TRUE);
+    }
+
     nsresult result;
     nsIFrame *resultFrame = nsnull;//this will be passed the handle event when we 
                                    //can tell who to pass it to

@@ -254,6 +254,10 @@ public:
                              SelectionDetails **aReturnDetails, PRBool aSlowCheck);
   NS_IMETHOD SetMouseDownState(PRBool aState);
   NS_IMETHOD GetMouseDownState(PRBool *aState);
+
+  NS_IMETHOD GetTableCellSelection(PRBool *aState){if (aState){*aState = mSelectingTableCellMode; return NS_OK;}return NS_ERROR_NULL_POINTER;}
+  NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
+
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
@@ -261,7 +265,7 @@ public:
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend); 
   NS_IMETHOD SelectAll();
   /*END nsIFrameSelection interfacse*/
 
@@ -324,6 +328,7 @@ private:
   nsCOMPtr<nsIContent> mStartSelectedCell;
   nsCOMPtr<nsIContent> mEndSelectedCell;
   PRBool  mSelectingTableCells;
+  PRBool  mSelectingTableCellMode;
   PRInt32 mSelectedCellIndex;
 
   //batching
@@ -344,6 +349,7 @@ public:
   static nsIAtom *sCellAtom;
   static nsIAtom *sTbodyAtom;
   static PRInt32 sInstanceCount;
+  static nsStyleColor sTableStyleColor;
 };
 
 class nsSelectionIterator : public nsIBidirectionalEnumerator
@@ -515,7 +521,7 @@ nsIAtom *nsSelection::sTableAtom = 0;
 nsIAtom *nsSelection::sCellAtom = 0;
 nsIAtom *nsSelection::sTbodyAtom = 0;
 PRInt32 nsSelection::sInstanceCount = 0;
-
+nsStyleColor nsSelection::sTableStyleColor;
 
 PRInt8
 GetIndexFromSelectionType(SelectionType aType)
@@ -716,10 +722,21 @@ nsSelection::nsSelection()
     sTableAtom = NS_NewAtom("table");
     sCellAtom = NS_NewAtom("td");
     sTbodyAtom = NS_NewAtom("tbody");
+    sTableStyleColor.mColor =  NS_RGB(128,0,0);
+    sTableStyleColor.mBackgroundColor =  NS_RGB(128,0,0);
+    sTableStyleColor.mOpacity=  (float)1;
+    sTableStyleColor.mBackgroundAttachment=0;
+    sTableStyleColor.mBackgroundFlags=NS_STYLE_BG_IMAGE_NONE;
+    sTableStyleColor.mBackgroundRepeat=1;
+    sTableStyleColor.mBackgroundXPosition=0;
+    sTableStyleColor.mBackgroundYPosition=0;
+    sTableStyleColor.mCursor=1;
   }
   mHint = HINTLEFT;
   sInstanceCount ++;
   mSelectingTableCells = PR_FALSE;
+  mSelectingTableCellMode = PR_FALSE;
+
   mSelectedCellIndex = 0;
 }
 
@@ -1466,7 +1483,10 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
   mHint = HINT(aHint);
   // Don't take focus when dragging off of a table
   if (!mSelectingTableCells)
+  {
+    mSelectingTableCellMode = PR_FALSE;
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
+  }
   
   return NS_OK;
 }
@@ -1638,6 +1658,17 @@ nsSelection::GetMouseDownState(PRBool *aState)
   if (!aState)
     return NS_ERROR_NULL_POINTER;
   *aState = mMouseDownState;
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsSelection::GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)
+{
+  if (!aStyleColor)
+    return NS_ERROR_NULL_POINTER;
+  *aStyleColor = &sTableStyleColor;
   return NS_OK;
 }
 
@@ -2114,6 +2145,8 @@ printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->
     if (NS_SUCCEEDED(result))
     {
       mSelectingTableCells = PR_TRUE;
+      mSelectingTableCellMode = PR_TRUE;//only shut off on normal mouse click.
+
       mStartSelectedCell = selectedContent;
       mEndSelectedCell = selectedContent;
     }
