@@ -1997,6 +1997,7 @@ toolbarseparator.line {
 }
 
 
+
 /* NEW WIDGET LANDING: <button> */
 button {
   border: 1px solid #CCCCCC;
@@ -2008,7 +2009,7 @@ button {
 button > .internal-box {
   vertical-align: middle;
   border: 1px outset #CCCCCC;
-  padding: 2px; /* bend over, bitch */
+  padding: 2px 10px 2px 10px; /* bend over, bitch */
 }
 
 button:active {
@@ -2018,12 +2019,11 @@ button:active {
 /* button:active rules */
 button:active > .internal-box {
   border: 1px inset #CCCCCC;
-  padding: 3px 1px 1px 3px; 
+  padding: 3px 9px 1px 11px; 
 }
 
 button:hover {
   border: 1px solid #000000;
-  color: #003366;
 }
 
 /* disabled rules */
@@ -2039,9 +2039,6 @@ button[disabled]:active > .internal-box {
   color: #999999;
   padding: 2px;
 }
-
-
-
 
 /* align text in standard buttons to center in the available space */
 button > .internal-box > .text-container,
@@ -2065,15 +2062,25 @@ button.text-right {
 }
 
 /* button text formatting rules */
-button > .internal-box > .text-container > .text,
-button.left > .internal-box > .text-container > .text,
-button.right > .internal-box > .text-container > .text {
-  padding: 0px 5px 0px 5px;
+button > .internal-box > .text-container > text,
+button.left > .internal-box > .text-container > text,
+button.right > .internal-box > .text-container > text {
+  padding: 0px 2px 0px 2px;
 }
 
-button.top > .internal-box > .text-container > .text,
-button.bottom > .internal-box > .text-container > .text {
+button.top > .internal-box > .text-container > text,
+button.bottom > .internal-box > .text-container > text {
   padding: 2px 0px 2px 0px;
+}
+
+button[default] {
+  behavior: url(resource:/chrome/xulBindings.xml#buttonright);
+  font-weight: bold;
+	list-style-image: url("chrome://global/skin/return.gif");
+}
+
+button[default] > .internal-box > image {
+  margin-left: 3px;
 }
 
 /* NEW WIDGET LANDING: <checkbox> */
@@ -2150,7 +2157,6 @@ radio:hover:active > .internal-box > .checkmark-box > image {
 radio:focus > .internal-box > html {
   border: 1px dotted #000000;
 }*/
-
 
 /* NEW WIDGET LANDING: <separator> */
 separator, separator[orient="horizontal"] {
