@@ -617,6 +617,9 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   switch (parentType) {
   case eHTMLTag_table:
   case eHTMLTag_tr:
+    case eHTMLTag_tbody:
+  case eHTMLTag_thead:
+  case eHTMLTag_tfoot:
     // XXX Discard leaf content (those annoying \n's really) in
     // table's or table rows
     return PR_TRUE;

@@ -566,38 +566,59 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
   {
     nsTableContent *tableChild = (nsTableContent *)ChildAt(childIndex); // tableChild: REFCNT++
     const int tableChildType = tableChild->GetType();
+    // if we've found caption or colgroup, then just skip it and keep going
     if ((tableChildType == nsITableContent::kTableCaptionType) ||
         (tableChildType == nsITableContent::kTableColGroupType))
     {
       NS_RELEASE(tableChild);                                             // tableChild: REFCNT-- (a)
       continue;
     }
+    // if we've found a row group, our action depends on what kind of row group
     else if (tableChildType == nsITableContent::kTableRowGroupType)
     {
       nsIAtom * tableChildTag = tableChild->GetTag();
       NS_RELEASE(tableChild);                                             // tableChild: REFCNT-- (b)
+      // if aContent is a header and the current child is a header, keep going
       if (tHeadTag==rowGroupTag && tHeadTag==tableChildTag)
+      {
         continue;
+      }
+      // if aContent is a footer and the current child is either a header or a footer, keep going
       else if (tFootTag==rowGroupTag &&
-               tHeadTag==tableChildTag || 
-               tFootTag==tableChildTag)
+               (tHeadTag==tableChildTag || 
+                tFootTag==tableChildTag))
+      {
         continue;
-      else if (tBodyTag==tableChildTag)
-        continue;
-      else
+      }
+      // if aContent is a body and the current child is a footer, stop, we've found the spot
+      else if (tBodyTag==rowGroupTag && tFootTag==tableChildTag)
+      {
         break;
+      }
+      // if aContent is a body and we've gotten this far, keep going
+      else if (tBodyTag==rowGroupTag)
+      {
+        continue;
+      }
+      // otherwise, we must have found the right spot so stop
+      else
+      {
+        break;
+      }
     }
+    // otherwise we're already at the right spot, so stop
     else
+    {
+      NS_RELEASE(tableChild);                                           // tableChild: REFCNT-- (c)
       break;
+    }
   }
   NS_RELEASE(tFootTag);
   NS_RELEASE(tHeadTag);
   NS_RELEASE(tBodyTag);
   result = nsHTMLContainer::InsertChildAt(aContent, childIndex);
   if (result)
-  {
     ((nsTableContent *)aContent)->SetTable (this);
-  }
   return result;
 }
 
