@@ -95,6 +95,10 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #ifdef XP_MAC
 #include <Menus.h>
 #endif
+#include "nsIMenuItem.h"
+#include "nsIDOMXULDocument.h"
+// End hack
+
 #include "nsIWindowMediator.h"
 
 /* Define Class IDs */
@@ -621,16 +625,6 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
-    pnsMenuItem->Create(pParentMenu, menuitemName, 0);                 
-    // Set nsMenuItem Name
-    //pnsMenuItem->SetLabel(menuitemName);
-    // Make nsMenuItem a child of nsMenu
-    //pParentMenu->AddMenuItem(pnsMenuItem);
-    nsISupports * supports = nsnull;
-    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
-    pParentMenu->AddItem(supports);
-    NS_RELEASE(supports);
-          
     // Create MenuDelegate - this is the intermediator inbetween 
     // the DOM node and the nsIMenuItem
     // The nsWebShellWindow wacthes for Document changes and then notifies the 
@@ -639,6 +633,71 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     if (!domElement) {
       return NS_ERROR_FAILURE;
     }
+    
+    pnsMenuItem->Create(pParentMenu, menuitemName, 0);                 
+    // Set nsMenuItem Name
+    //pnsMenuItem->SetLabel(menuitemName);
+    
+    // Set key shortcut and modifiers
+    nsAutoString keyAtom("key");
+    nsString keyValue;
+    domElement->GetAttribute(keyAtom, keyValue);
+    
+    // Try to find the key node.
+    nsCOMPtr<nsIDocument> document;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(domElement);
+    if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
+      NS_ERROR("Unable to retrieve the document.");
+      return rv;
+    }
+
+    // Turn the document into a XUL document so we can use getElementById
+    nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
+    if (xulDocument == nsnull) {
+      NS_ERROR("not XUL!");
+      return NS_ERROR_FAILURE;
+    }
+  
+    nsIDOMElement * keyElement = nsnull;
+    xulDocument->GetElementById(keyValue, &keyElement);
+    
+    if(keyElement){
+        PRUint8 modifiers = knsMenuItemNoModifier;
+	    nsAutoString shiftAtom("shift");
+	    nsAutoString altAtom("alt");
+	    nsAutoString commandAtom("command");
+	    nsString shiftValue;
+	    nsString altValue;
+	    nsString commandValue;
+	    nsString keyChar = " ";
+	    
+	    keyElement->GetAttribute(keyAtom, keyChar);
+	    keyElement->GetAttribute(shiftAtom, shiftValue);
+	    keyElement->GetAttribute(altAtom, altValue);
+	    keyElement->GetAttribute(commandAtom, commandValue);
+	    
+	    if(keyChar != " ")
+	      pnsMenuItem->SetShortcutChar(keyChar);
+	      
+	    if(shiftValue == "true")
+	      modifiers |= kMenuShiftModifier;
+	    
+	    if(altValue == "true")
+	      modifiers |= kMenuOptionModifier;
+	    
+	    if(commandValue == "false")
+	     modifiers |= kMenuNoCommandModifier;
+	      
+        pnsMenuItem->SetModifiers(modifiers);
+    }
+    
+    // Make nsMenuItem a child of nsMenu
+    nsISupports * supports = nsnull;
+    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
+    pParentMenu->AddItem(supports);
+    NS_RELEASE(supports);
+          
+
 
     nsAutoString cmdAtom("onclick");
     nsString cmdName;
@@ -650,6 +709,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     menuDelegate->SetWebShell(mWebShell);
     menuDelegate->SetDOMElement(domElement);
     menuDelegate->SetMenuItem(pnsMenuItem);
+    
     nsIXULCommand * icmd;
     if (NS_OK == menuDelegate->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
       nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menuDelegate));
