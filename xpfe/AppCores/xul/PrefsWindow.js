@@ -13,10 +13,6 @@ function StartUp(windowName)
 		{
 			dump("PrefsCore has been created.\n");
 			prefsCore.Init("PrefsCore");
-			if (windowName != "Top" && windowName != "Bottom")
-			{
-				prefsCore.PanelLoaded(window);
-			}
 		}
 		else
 		{
@@ -26,6 +22,10 @@ function StartUp(windowName)
 	else
 	{
 		dump("PrefsCore has already been created! Hurrah!\n");
+	}
+	if (prefsCore != null && windowName != "Top" && windowName != "Bottom")
+	{
+		prefsCore.PanelLoaded(window);
 	}
 }
 

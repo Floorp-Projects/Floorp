@@ -5,6 +5,8 @@ interface PrefsCore : BaseAppCore
 	
 	void PrefsCore();
 	
+	void ShowWindow(in Window currentFrontWin);
+
 	void ChangePanel(in wstring url);
 	void PanelLoaded(in Window win);
 
