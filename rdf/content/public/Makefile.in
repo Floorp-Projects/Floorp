@@ -40,6 +40,7 @@ EXPORTS =				\
 	nsIDOMXULFocusTracker.h \
 	nsIXULFocusTracker.h \
 	nsIStreamLoadableDocument.h	\
+	nsIXULKeyListener.h	\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
