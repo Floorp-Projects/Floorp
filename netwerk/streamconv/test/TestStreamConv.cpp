@@ -24,6 +24,7 @@
 #include "nsIFactory.h"
 #include "nsIStringStream.h"
 #include "nsIIOService.h"
+#include "nsCOMPtr.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nspr.h"
@@ -285,12 +286,13 @@ main(int argc, char* argv[])
     // listener in the chain, he wants the fully converted (toType) data.
     // An example of this listener in mozilla would be the DocLoader.
     nsIStreamListener *dataReceiver = new EndListener();
+    NS_ADDREF(dataReceiver);
 
     // setup a listener to push the data into. This listener sits inbetween the
     // unconverted data of fromType, and the final listener in the chain (in this case
     // the dataReceiver.
-    nsIStreamListener *converterListener = nsnull;
-    rv = StreamConvService->AsyncConvertData(from, to, dataReceiver, nsnull, &converterListener);
+    nsCOMPtr<nsIStreamListener> converterListener;
+    rv = StreamConvService->AsyncConvertData(from, to, dataReceiver, nsnull, getter_AddRefs(converterListener));
     if (NS_FAILED(rv)) return rv;
 
     // at this point we have a stream listener to push data to, and the one
@@ -360,6 +362,10 @@ main(int argc, char* argv[])
 #endif /* XP_UNIX */
 #endif /* !WIN32 */
     }
+
+    NS_RELEASE(dataReceiver);
+
+    //NS_ShutdownXPCOM(NULL);
 
     return rv;
 }
