@@ -63,6 +63,11 @@ public:
 
   ~nsMathMLChar() { // not a virtual destructor: this class is not intended to be subclassed
     MOZ_COUNT_DTOR(nsMathMLChar);
+    // there is only one style context owned by the "root" char
+    // and it may be used by child chars as well
+    if (!mParent) { // only the "root" need to release it
+      NS_IF_RELEASE(mStyleContext);
+    }
     if (mSibling) {
       delete mSibling;
     }
