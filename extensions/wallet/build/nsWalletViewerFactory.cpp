@@ -16,10 +16,6 @@
  * Reserved.
  */
 
-#include "nscore.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
-#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
@@ -28,10 +24,6 @@
 #include "nsISignonViewer.h"
 #include "nsICookieViewer.h"
 #include "nsIWalletEditor.h"
-
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 static NS_DEFINE_CID(kWalletPreviewCID,           NS_WALLETPREVIEW_CID);
 static NS_DEFINE_CID(kSignonViewerCID,            NS_SIGNONVIEWER_CID);
