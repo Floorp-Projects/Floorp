@@ -250,12 +250,12 @@ public:
   /** paste the text in the OS clipboard at the cursor position, replacing
     * the selected text (if any)
     */
-  NS_IMETHOD Paste()=0;
+  NS_IMETHOD Paste(PRInt32 aSelectionType)=0;
 
   /** Can we paste? True if the doc is modifiable, and we have
     * pasteable data in the clipboard.
     */
-  NS_IMETHOD CanPaste(PRBool &aCanPaste)=0;
+  NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)=0;
 
   /* ------------ Selection methods -------------- */
 

@@ -71,10 +71,11 @@ public:
 
   NS_IMETHOD Cut();
   NS_IMETHOD Copy();
-  NS_IMETHOD Paste();
-  NS_IMETHOD PasteAsQuotation();
-  NS_IMETHOD PasteAsPlaintextQuotation();
-  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation);
+  NS_IMETHOD Paste(PRInt32 aSelectionType);
+  NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
+  NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);
+  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation,
+                                   PRInt32 aSelectionType);
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText, nsIDOMNode** aNodeInserted);
   NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText, nsIDOMNode** aNodeInserted);
   NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation, PRBool aInsertHTML, const nsString& aCharset, nsIDOMNode** aNodeInserted);
