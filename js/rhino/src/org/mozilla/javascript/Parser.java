@@ -518,51 +518,47 @@ public class Parser
             skipsemi = true;
 
             decompiler.addToken(Token.SWITCH);
-            pn = nf.createSwitch(ts.getLineno());
-
-            Node cur_case = null;  // to kill warning
-            Node case_statements;
-
+            int lineno = ts.getLineno();
             mustMatchToken(Token.LP, "msg.no.paren.switch");
             decompiler.addToken(Token.LP);
-            nf.addChildToBack(pn, expr(false));
+            pn = nf.createSwitch(expr(false), lineno);
             mustMatchToken(Token.RP, "msg.no.paren.after.switch");
             decompiler.addToken(Token.RP);
             mustMatchToken(Token.LC, "msg.no.brace.switch");
             decompiler.addEOL(Token.LC);
 
+            boolean hasDefault = false;
             while ((tt = ts.getToken()) != Token.RC && tt != Token.EOF) {
-                switch(tt) {
-                case Token.CASE:
+                Node caseExpression;
+                if (tt == Token.CASE) {
                     decompiler.addToken(Token.CASE);
-                    cur_case = nf.createUnary(Token.CASE, expr(false));
-                    decompiler.addEOL(Token.COLON);
-                    break;
-
-                case Token.DEFAULT:
-                    cur_case = nf.createLeaf(Token.DEFAULT);
+                    caseExpression = expr(false);
+                } else {
+                    if (tt != Token.DEFAULT) {
+                        reportError("msg.bad.switch");
+                    }
+                    if (hasDefault) {
+                        reportError("msg.double.switch.default");
+                    }
                     decompiler.addToken(Token.DEFAULT);
-                    decompiler.addEOL(Token.COLON);
-                    // XXX check that there isn't more than one default
-                    break;
-
-                default:
-                    reportError("msg.bad.switch");
-                    break;
+                    hasDefault = true;
+                    caseExpression = null;
                 }
                 mustMatchToken(Token.COLON, "msg.no.colon.case");
+                decompiler.addEOL(Token.COLON);
 
-                case_statements = nf.createLeaf(Token.BLOCK);
-
+                Node block = nf.createLeaf(Token.BLOCK);
                 while ((tt = ts.peekToken()) != Token.RC && tt != Token.CASE &&
                         tt != Token.DEFAULT && tt != Token.EOF)
                 {
-                    nf.addChildToBack(case_statements, statement());
+                    nf.addChildToBack(block, statement());
                 }
-                // assert cur_case
-                nf.addChildToBack(cur_case, case_statements);
 
-                nf.addChildToBack(pn, cur_case);
+                if (caseExpression != null) {
+                    nf.addSwitchCase(pn, caseExpression, block);
+                } else {
+                    nf.addSwitchDefault(pn, block);
+                }
             }
             decompiler.addEOL(Token.RC);
             break;

@@ -84,9 +84,23 @@ final class IRFactory
      * Statement leaf nodes.
      */
 
-    Node createSwitch(int lineno)
+    Node createSwitch(Node expr, int lineno)
     {
-        return new Node.Jump(Token.SWITCH, lineno);
+        return new Node.Jump(Token.SWITCH, expr, lineno);
+    }
+
+    void addSwitchCase(Node switchNode, Node expression, Node statements)
+    {
+        if (switchNode.getType() != Token.SWITCH) throw Kit.codeBug();
+        Node caseNode = new Node(Token.CASE, expression, statements);
+        switchNode.addChildToBack(caseNode);
+    }
+
+    void addSwitchDefault(Node switchNode, Node statements)
+    {
+        if (switchNode.getType() != Token.SWITCH) throw Kit.codeBug();
+        Node defaultNode = new Node(Token.DEFAULT, statements);
+        switchNode.addChildToBack(defaultNode);
     }
 
     Node createVariables(int lineno)
@@ -1158,7 +1172,7 @@ final class IRFactory
 
     Node createUseLocal(Node localBlock)
     {
-        if (Token.LOCAL_BLOCK != localBlock.getType()) Kit.codeBug();
+        if (Token.LOCAL_BLOCK != localBlock.getType()) throw Kit.codeBug();
         Node result = new Node(Token.LOCAL_LOAD);
         result.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
         return result;
