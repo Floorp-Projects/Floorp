@@ -18,10 +18,12 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Steve Clark <buster@netscape.com>
  */
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
+#include "nsIPref.idl"
 
 /**
  * The nsIDocShell
@@ -37,14 +39,65 @@
  {69E5DE01-7B8B-11d3-AF61-00A024FFC08C} - nsIDocShellFile
  {69E5DE02-7B8B-11d3-AF61-00A024FFC08C} - nsIDocShellEdit
  {69E5DE03-7B8B-11d3-AF61-00A024FFC08C} - nsIHTMLDocShell
-
+ {69E5DE04-7B8B-11d3-AF61-00A024FFC08C} - nsIDocShellContainer
  */
+
+[ptr] native nsIPresContext(nsIPresContext);
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
 {
-	void LoadDocument(in wstring url);
-	void LoadDocumentVia(in wstring url, in unsigned long adapterBinding);
+	/*
+	Loads a given URI.  This will give priority to loading the requested URI
+	in the object implementing	this interface.  If it can't be loaded here
+	however, the URL dispatcher will go through its normal process of content
+	loading.
 
+	@param uri - The URI to load.
+	*/
+	void LoadURI(in wstring uri);
+
+	/*
+	Loads a given URI through the specified adapter.  This will give priority
+	to loading the requested URI in the object implementing this interface.
+	If it can't be loaded here	however, the URL dispatcher will go through its
+	normal process of content loading.
+
+	@param uri - The URI to load.
+	@param adapterBinding - The local IP address of the adapter to bind to.
+	*/
+	void LoadURIVia(in wstring uri, in unsigned long adapterBinding);
+
+	/*
+	The current document that is loaded in the DocShell.  When setting this it
+	will will simulate the normal load process.
+	*/
 	attribute nsIDOMDocument document;
+
+	/*
+	name of the DocShell
+	*/
+	attribute wstring name;
+
+	/*
+	Presentation context
+	*/
+	attribute nsIPresContext presContext;
+
+	/*
+	Parent DocShell
+	*/
+	attribute nsIDocShell parent;
+
+	/*
+	Prefs to use for the DocShell.
+	*/
+	attribute nsIPref Prefs;
+
+	/*
+	Returns the root DocShell instance.  Since DocShells can be nested
+	(when frames are present for example) this instance represents the 
+	outermost DocShell.
+	*/
+	readonly attribute nsIDocShell rootDocShell;
 };
