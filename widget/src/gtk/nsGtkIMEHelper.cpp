@@ -262,7 +262,8 @@ void nsIMEPreedit::SetPreeditString(const XIMText *aText,
     Reset();
     return;
   }
-  if (aChangeLength) {
+
+  if (aChangeLength && mIMECompUnicode->Length()) {
     mIMECompUnicode->Cut(aChangeFirst, aChangeLength);
     mIMECompAttr->Cut(aChangeFirst, aChangeLength);
   }
