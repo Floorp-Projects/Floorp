@@ -36,21 +36,17 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
-#ifdef DEBUG_seth
-#define DO_HASHING_OF_HOSTNAME 1
-#endif /* DEBUG_seth */
-
-#ifdef DO_HASHING_OF_HOSTNAME
-#include "nsMsgUtils.h"
-#endif /* DO_HASHING_OF_HOSTNAME */
-
 #define NEW_NEWS_DIR_NAME        "News"
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
 
+// this platform specific junk is so the newsrc filenames we create 
+// will resemble the migrated newsrc filenames.
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #define NEWSRC_FILE_PREFIX "newsrc-"
+#define NEWSRC_FILE_SUFFIX ""
 #else
 #define NEWSRC_FILE_PREFIX ""
+#define NEWSRC_FILE_SUFFIX ".rc"
 #endif /* XP_UNIX || XP_BEOS */
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);                            
@@ -99,14 +95,17 @@ nsNntpIncomingServer::GetNewsrcFilePath(nsIFileSpec **aNewsrcFilePath)
 	rv = GetHostName(getter_Copies(hostname));
 	if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString newsrcFileName = NEWSRC_FILE_PREFIX;
+	// set the leaf name to "dummy", and then call MakeUnique with a suggested leaf name
+	rv = path->AppendRelativeUnixPath("dummy");
+	if (NS_FAILED(rv)) return rv;
+	nsCAutoString newsrcFileName = NEWSRC_FILE_PREFIX;
 	newsrcFileName.Append(hostname);
-#ifdef DO_HASHING_OF_HOSTNAME
-    NS_MsgHashIfNecessary(newsrcFileName);
-#endif /* DO_HASHING_OF_HOSTNAME */
-	path->AppendRelativeUnixPath(newsrcFileName);
+	newsrcFileName.Append(NEWSRC_FILE_SUFFIX);
+	rv = path->MakeUniqueWithSuggestedName((const char *)newsrcFileName);
+	if (NS_FAILED(rv)) return rv;
 
-	SetNewsrcFilePath(path);
+	rv = SetNewsrcFilePath(path);
+	if (NS_FAILED(rv)) return rv;
 
     *aNewsrcFilePath = path;
 	NS_ADDREF(*aNewsrcFilePath);

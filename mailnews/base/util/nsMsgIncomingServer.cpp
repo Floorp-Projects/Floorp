@@ -711,12 +711,8 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
     if (NS_SUCCEEDED(rv) && *aLocalPath) return rv;
     
     // otherwise, create the path using.  note we are using the
-    // server key instead of the hostname
-    //
-    // TODO:  handle the case where they migrated a server of hostname "server4"
-    // and we create a server (with the account wizard) with key "server4"
-    // we'd get a collision.
-    // need to modify the code that creates keys to check for disk collision
+    // hostname, unless that directory exists.
+	// this should prevent all collisions.
     nsXPIDLCString type;
     GetType(getter_Copies(type));
 
@@ -732,11 +728,15 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
     
     path->CreateDir();
     
-    nsXPIDLCString key;
-    rv = GetKey(getter_Copies(key));
+	// set the leaf name to "dummy", and then call MakeUnique with a suggested leaf name
+    rv = path->AppendRelativeUnixPath("dummy");
     if (NS_FAILED(rv)) return rv;
-    rv = path->AppendRelativeUnixPath(key);
+	nsXPIDLCString hostname;
+    rv = GetHostName(getter_Copies(hostname));
     if (NS_FAILED(rv)) return rv;
+	rv = path->MakeUniqueWithSuggestedName((const char *)hostname);
+    if (NS_FAILED(rv)) return rv;
+
     rv = SetLocalPath(path);
     if (NS_FAILED(rv)) return rv;
 
