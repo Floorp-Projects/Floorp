@@ -36,10 +36,10 @@
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
-
 #include "nsJAR.h"
 #include "nsIJARFactory.h"
-#include "nsZlibAllocator.h"
+#include "nsRecyclingAllocator.h"
+extern nsRecyclingAllocator *gZlibAllocator;
 
 // The list of components we register
 static nsModuleComponentInfo components[] = 
