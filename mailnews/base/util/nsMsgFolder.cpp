@@ -35,6 +35,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsINntpIncomingServer.h"
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
@@ -1480,21 +1481,41 @@ nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *item)
 #include "prprf.h"
 #include "prsystem.h"
 
-static const char kMsgRootFolderPref[] = "mail.rootFolder";
 static char *gMailboxRoot = nsnull;
-
-/* sspitzer:  don't panic, this is temporary */
-static const char gNewsRoot[] = "/tmp/mozillanews";
-
+static char *gNewsRoot = nsnull;
 static const char *gImapRoot = nsnull;
-
 
 nsresult
 nsGetNewsRoot(nsFileSpec &result)
 {
   nsresult rv = NS_OK;
 
-  printf("gNewsRoot = %s\n", gNewsRoot);
+  if (gNewsRoot == nsnull) {
+    nsIMsgMailSession *session;
+    rv = nsServiceManager::GetService(kMsgMailSessionCID,
+                                      nsIMsgMailSession::GetIID(),
+                                      (nsISupports **)&session);
+    
+    if (NS_SUCCEEDED(rv)) {
+      nsIMsgIncomingServer *server;
+      rv = session->GetCurrentServer(&server);
+      if (NS_FAILED(rv)) printf("nsGetNewsRoot: Couldn't get current server\n");
+      if (NS_SUCCEEDED(rv)) {
+        nsINntpIncomingServer *nntpServer;
+        rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
+                                    (void **)&nntpServer);
+        if (NS_FAILED(rv)) printf("nsGetNewsRoot: Couldn't get nntp server\n");
+        if (NS_SUCCEEDED(rv)) {
+          rv = nntpServer->GetRootFolderPath(&gNewsRoot);
+          if (NS_FAILED(rv)) printf("nsGetNewsRoot: Couldn't get root\n");
+          NS_RELEASE(nntpServer);
+        }
+        NS_RELEASE(server);
+        
+      }
+      nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
+    }
+  } /* if (gNewsRoot == nsnull) .. */
   result = gNewsRoot;
   return rv;
 }
@@ -1519,32 +1540,7 @@ nsGetMailboxRoot(nsFileSpec &result)
 {
   nsresult rv = NS_OK;
 
-#if 0
-      if (NS_SUCCEEDED(rv)) {
-#if defined(XP_MAC)
-		  char prefValue[1024];
-		  PRInt32 prefLength = 1024;
-
-          rv = prefs->GetCharPref(kMsgRootFolderPref, prefValue, &prefLength);
-		  if (NS_SUCCEEDED(rv) && prefLength > 0) {
-		    gMailboxRoot = PL_strdup(prefValue);
-		    
-		  }
-#else
-          rv = prefs->CopyPathPref(kMsgRootFolderPref, &gMailboxRoot);
-#endif
-      }
-    }
-    if (NS_FAILED(rv)) return rv;
-
-  }
-  result = gMailboxRoot;
-  // XXX free gMailboxRoot somewhere (on shutdown?)
-  return rv;
-
-#else
-     
-    // temporary stuff. for now get everything from the mail session
+  // temporary stuff. for now get everything from the mail session
   if (gMailboxRoot == nsnull) {
     nsIMsgMailSession *session;
     rv = nsServiceManager::GetService(kMsgMailSessionCID,
@@ -1573,8 +1569,6 @@ nsGetMailboxRoot(nsFileSpec &result)
   } /* if (gMailboxRoot == nsnull) .. */
   result = gMailboxRoot;
   return rv;
-      
-#endif
 }
 
 nsresult
