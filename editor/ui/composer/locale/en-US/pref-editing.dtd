@@ -3,7 +3,7 @@
 
 <!ENTITY  authorName.label          "Author">
 <!ENTITY  authorName.accesskey      "a">
-<!ENTITY  pageColorHeader           "Default Page Colors">
+<!ENTITY  pageColorHeader           "Default Page Appearance">
 
 <!ENTITY defaultColorsRadio.label   "Reader's default colors">
 <!ENTITY defaultColors.accesskey    "d">
