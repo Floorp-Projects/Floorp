@@ -25,6 +25,8 @@
 
 #include "nsSize2.h"
 
+#include "nsSupportsArray.h"
+
 #define NS_IMAGECONTAINER_CID \
 { /* aa699204-1dd1-11b2-84a9-a280c268e4fb */         \
      0xaa699204,                                     \
@@ -44,6 +46,8 @@ public:
 
 private:
   /* additional members */
+  nsSupportsArray mFrames;
   nsSize2 mSize;
+  PRUint32 mCurrentFrame;
 };
 
