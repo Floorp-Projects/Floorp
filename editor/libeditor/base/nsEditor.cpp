@@ -1091,7 +1091,7 @@ nsEditor::InsertFormattingForNode(nsIDOMNode* aNode)
   char* nodename = namestr.ToNewCString();
   printf("Inserting formatting for node <%s> at offset %d\n",
          nodename, offset);
-  nsCRT::free(nodename);
+  Recycle(nodename);
 #endif /* DEBUG_akkana */
 
   //
@@ -1650,7 +1650,6 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
       if ((NS_SUCCEEDED(result)) && selection)
       {
         nsCOMPtr<nsIDOMNode> selectedNode;
-        PRInt32 offset;
         result = selection->GetAnchorNode(getter_AddRefs(selectedNode));
         if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
         {
