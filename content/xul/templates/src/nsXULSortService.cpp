@@ -180,16 +180,16 @@ nsresult	RemoveAllChildren(nsIContent *node);
 nsresult	SortTreeChildren(nsIContent *container, PRInt32 colIndex, sortPtr sortInfo, PRInt32 indentLevel);
 nsresult	PrintTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel);
 
-nsresult	GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsString &cellVal1, PRBool &isCollationKey);
-nsresult	GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell);
-nsresult	GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val);
+static nsresult	GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsString &cellVal1, PRBool &isCollationKey);
+static nsresult	GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell);
+static nsresult	GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val);
 
 public:
 
     static nsresult GetSortService(nsIXULSortService** result);
 
-    nsresult	ImplaceSort(nsIContent *node1, nsIContent *node2, sortPtr sortInfo, PRInt32 *sortOrder);
-    nsresult	OpenSort(nsIRDFNode *node1, nsIRDFNode *node2, sortPtr sortInfo, PRInt32 *theSortOrder);
+    static nsresult	ImplaceSort(nsIContent *node1, nsIContent *node2, sortPtr sortInfo, PRInt32 *sortOrder);
+    static nsresult	OpenSort(nsIRDFNode *node1, nsIRDFNode *node2, sortPtr sortInfo, PRInt32 *theSortOrder);
 
     // nsISupports
     NS_DECL_ISUPPORTS
