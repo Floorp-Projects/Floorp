@@ -16,6 +16,6 @@ en-US.jar:
   locale/en-US/browser/downloads/downloadmanager.dtd        (locale/downloadmanager.dtd)
   locale/en-US/browser/downloads/downloadmanager.properties (locale/downloadmanager.properties)
   locale/en-US/browser/downloads/downloadProperties.dtd     (locale/downloadProperties.dtd)
-  locale/en-US/browser/downloads/unknownContentType.properties (locale/unknownContentType.properties)
-  locale/en-US/browser/downloads/unknownContentType.dtd     (locale/unknownContentType.dtd)
+* locale/en-US/browser/downloads/unknownContentType.properties (locale/unknownContentType.properties)
+* locale/en-US/browser/downloads/unknownContentType.dtd     (locale/unknownContentType.dtd)
 
