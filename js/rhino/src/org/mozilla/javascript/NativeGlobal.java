@@ -102,23 +102,21 @@ public class NativeGlobal implements IdFunctionMaster {
         */
         for (int i = 0; i < errorMethods.length; i++) {
             String name = errorMethods[i];
-            IdFunction ctor = new IdFunction(obj, name, Id_new_CommonError);
-            ctor.setFunctionType(IdFunction.FUNCTION_AND_CONSTRUCTOR);
-            ctor.setParentScope(scope);
-            ScriptableObject.defineProperty(scope, name, ctor,
-                                            ScriptableObject.DONTENUM);
-
-            Scriptable errorProto = ScriptRuntime.newObject
-                (cx, scope, "Error", ScriptRuntime.emptyArgs);
-
+            Scriptable errorProto = ScriptRuntime.
+                                        newObject(cx, scope, "Error",
+                                                  ScriptRuntime.emptyArgs);
             errorProto.put("name", errorProto, name);
-            ctor.put("prototype", ctor, errorProto);
+            IdFunction ctor = new IdFunction(obj, name, Id_new_CommonError);
+            ctor.initAsConstructor(scope, errorProto);
             if (sealed) {
                 ctor.sealObject();
                 if (errorProto instanceof ScriptableObject) {
                     ((ScriptableObject)errorProto).sealObject();
                 }
             }
+            ScriptableObject.defineProperty(scope, name, ctor,
+                                            ScriptableObject.DONTENUM);
+
         }
     }
 

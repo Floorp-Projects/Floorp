@@ -39,12 +39,6 @@ package org.mozilla.javascript;
 
 public class IdFunction extends BaseFunction
 {
-    public static final int FUNCTION_ONLY = 0;
-
-    public static final int CONSTRUCTOR_ONLY = 1;
-
-    public static final int FUNCTION_AND_CONSTRUCTOR = 2;
-
     public IdFunction(IdFunctionMaster master, String name, int id) {
         this.functionName = name;
         this.master = master;
@@ -74,14 +68,6 @@ public class IdFunction extends BaseFunction
         ScriptableObject.defineProperty(scope, name, f, attributes);
     }
 
-    public final int functionType() {
-        return functionType;
-    }
-
-    public void setFunctionType(int type) {
-        functionType = type;
-    }
-
     public Scriptable getPrototype() {
         // Lazy initialization of prototype: for native functions this
         // may not be called at all
@@ -97,22 +83,16 @@ public class IdFunction extends BaseFunction
                        Object[] args)
         throws JavaScriptException
     {
-        if (functionType != CONSTRUCTOR_ONLY) {
-            return master.execMethod(methodId, this, cx, scope, thisObj, args);
-        }
-        else {
-            return Undefined.instance;
-        }
+        return master.execMethod(methodId, this, cx, scope, thisObj, args);
     }
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
-        if (functionType == FUNCTION_ONLY) {
+        if (!useCallAsConstructor) {
             return Undefined.instance;
         }
-        Object callResult = master.execMethod(methodId, this, cx, scope,
-                                              null, args);
+        Object callResult = call(cx, scope, null, args);
         if (!(callResult instanceof Scriptable)) {
             // It is program error not to return Scriptable from
             // IdFunctionMaster for IdFunction marked suitable for
@@ -161,7 +141,7 @@ public class IdFunction extends BaseFunction
      ** @param prototype DontEnum, DontDelete, ReadOnly prototype property
      ** of the constructor */
     public void initAsConstructor(Scriptable scope, Scriptable prototype) {
-        setFunctionType(FUNCTION_AND_CONSTRUCTOR);
+        useCallAsConstructor = true;
         setParentScope(scope);
         setImmunePrototypeProperty(prototype);
     }
@@ -174,6 +154,5 @@ public class IdFunction extends BaseFunction
 
     protected IdFunctionMaster master;
     protected int methodId;
-
-    protected int functionType = FUNCTION_ONLY;
+    private boolean useCallAsConstructor;
 }
