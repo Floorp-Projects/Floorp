@@ -147,7 +147,7 @@ public:
    * Update principal responsible for this document to the intersection
    * of its previous value and aPrincipal, and return its new value.
    */
-  NS_IMETHOD UpdatePrincipal(nsIPrincipal **aPrincipal);
+  NS_IMETHOD AddPrincipal(nsIPrincipal *aPrincipal);
 
   /**
    * Return the content (mime) type of this document.

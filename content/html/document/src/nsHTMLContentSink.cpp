@@ -371,8 +371,7 @@ public:
   nsresult EvaluateScript(nsString& aScript,
                           nsIURI *aScriptURI,
                           PRInt32 aLineNo,
-                          const char* aVersion,
-                          nsIPrincipal* aPrincipal);
+                          const char* aVersion);
   const char* mScriptLanguageVersion;
 
   void UpdateAllContexts();
@@ -4121,11 +4120,9 @@ nsresult
 HTMLContentSink::EvaluateScript(nsString& aScript,
                                 nsIURI *aScriptURI,
                                 PRInt32 aLineNo,
-                                const char* aVersion,
-                                nsIPrincipal* aPrincipal)
+                                const char* aVersion)
 {
   nsresult rv = NS_OK;
-  NS_ASSERTION(aPrincipal, "principal required for document");
 
   if (aScript.Length() > 0) {
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
@@ -4136,6 +4133,10 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
     NS_ENSURE_SUCCESS(globalObject->GetContext(getter_AddRefs(context)),
       NS_ERROR_FAILURE);
 
+    nsCOMPtr<nsIPrincipal> principal;
+    mDocument->GetPrincipal(getter_AddRefs(principal));
+    NS_ASSERTION(principal, "principal required for document");
+
     nsAutoString ret;
     char* url = nsnull;
 
@@ -4144,7 +4145,7 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
     }
   
     PRBool isUndefined;
-    context->EvaluateString(aScript, nsnull, aPrincipal, url,
+    context->EvaluateString(aScript, nsnull, principal, url,
                             aLineNo, aVersion, ret, &isUndefined);
     
     if (url) {
@@ -4168,24 +4169,18 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   if (NS_OK == aStatus) {
     PRBool bodyPresent = PreEvaluateScript();
     
-    nsISupports* owner;
-    aLoader->GetOwner(&owner);
-    nsIPrincipal* prin = nsnull;
+    //-- Merge the principal of the script file with that of the document
+    nsCOMPtr<nsISupports> owner;
+    aLoader->GetOwner(getter_AddRefs(owner));
     if (owner)
     {
-      rv = owner->QueryInterface(NS_GET_IID(nsIPrincipal),
-                                 (void**)&prin);
-      NS_RELEASE(owner);
+      nsCOMPtr<nsIPrincipal> prin = do_QueryInterface(owner, &rv);
+      if (NS_FAILED(rv)) return rv;
+      rv = mDocument->AddPrincipal(prin);
       if (NS_FAILED(rv)) return rv;
     }
-    rv = mDocument->UpdatePrincipal(&prin);
-    if (NS_FAILED(rv)) {
-      NS_IF_RELEASE(prin);
-      return rv;
-    }
 
-    rv = EvaluateScript(aData, mScriptURI, 1, mScriptLanguageVersion, prin);
-    NS_IF_RELEASE(prin);
+    rv = EvaluateScript(aData, mScriptURI, 1, mScriptLanguageVersion);
     if (NS_FAILED(rv)) return rv;
 
     PostEvaluateScript(bodyPresent);
@@ -4350,15 +4345,12 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       }
     }
     else {
-      nsCOMPtr<nsIPrincipal> prin;
-      mDocument->GetPrincipal(getter_AddRefs(prin));
-      
       PRBool bodyPresent = PreEvaluateScript();
 
       PRUint32 lineNo = (PRUint32)aNode.GetSourceLineNumber();
       nsIURI *docURI = mDocument->GetDocumentURL();
 
-      EvaluateScript(script, docURI, lineNo, jsVersionString, prin);
+      EvaluateScript(script, docURI, lineNo, jsVersionString);
       NS_IF_RELEASE(docURI);
 
       PostEvaluateScript(bodyPresent);

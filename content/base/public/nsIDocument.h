@@ -125,7 +125,7 @@ public:
    * Update principal responsible for this document to the intersection
    * of its previous value and aPrincipal.
    */
-  NS_IMETHOD UpdatePrincipal(nsIPrincipal **aPrincipal) = 0;
+  NS_IMETHOD AddPrincipal(nsIPrincipal *aPrincipal) = 0;
   
   /**
    * Return the LoadGroup for the document. May return null.
