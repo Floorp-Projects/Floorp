@@ -227,7 +227,7 @@ CMMF_POPODecKeyChallContentSetNextChallenge
     mark = PORT_ArenaMark(poolp);
 
     genNamePool = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
-    genNameDER = cert_EncodeGeneralName(inSender, NULL, genNamePool);
+    genNameDER = CERT_EncodeGeneralName(inSender, NULL, genNamePool);
     if (genNameDER == NULL) {
         rv = SECFailure;
         goto loser;

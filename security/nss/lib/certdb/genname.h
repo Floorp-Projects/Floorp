@@ -53,7 +53,7 @@ extern CERTGeneralName *
 cert_get_prev_general_name(CERTGeneralName *current);
 
 extern SECItem *
-cert_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest,
+CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest,
 		       PRArenaPool *arena);
 
 extern SECItem **
