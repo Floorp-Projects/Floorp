@@ -80,8 +80,8 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
   }
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[NET_STATE_ALL],
-		  (const char *)uriString, aStateFlags, aStatus);
-
+		  (gpointer)(const char *)uriString,
+		  (gint)aStateFlags, (gint)aStatus);
   // and for stop, too
   if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_NETWORK) && 
       (aStateFlags & GTK_MOZ_EMBED_FLAG_STOP))

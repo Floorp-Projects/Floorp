@@ -224,22 +224,48 @@ EmbedWindow::ExitModalEventLoop(nsresult aStatus)
 NS_IMETHODIMP
 EmbedWindow::FocusNextElement()
 {
+#ifdef MOZ_WIDGET_GTK
   GtkWidget* parent = GTK_WIDGET(mOwner->mOwningWidget)->parent;
 
   if (GTK_IS_CONTAINER(parent))
     gtk_container_focus(GTK_CONTAINER(parent),
                         GTK_DIR_TAB_FORWARD);
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+  GtkWidget *toplevel;
+  toplevel = gtk_widget_get_toplevel(GTK_WIDGET(mOwner->mOwningWidget));
+  if (!GTK_WIDGET_TOPLEVEL(toplevel))
+    return NS_OK;
+
+  g_signal_emit_by_name(G_OBJECT(toplevel), "move_focus",
+			GTK_DIR_TAB_FORWARD);
+#endif
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::FocusPrevElement()
 {
+#ifdef MOZ_WIDGET_GTK
   GtkWidget* parent = GTK_WIDGET(mOwner->mOwningWidget)->parent;
 
   if (GTK_IS_CONTAINER(parent))
     gtk_container_focus(GTK_CONTAINER(parent),
                         GTK_DIR_TAB_BACKWARD);
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+  GtkWidget *toplevel;
+  toplevel = gtk_widget_get_toplevel(GTK_WIDGET(mOwner->mOwningWidget));
+  if (!GTK_WIDGET_TOPLEVEL(toplevel))
+    return NS_OK;
+
+  g_signal_emit_by_name(G_OBJECT(toplevel), "move_focus",
+			GTK_DIR_TAB_BACKWARD);
+#endif
+
   return NS_OK;
 }
 
@@ -345,9 +371,15 @@ NS_IMETHODIMP
 EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 			   const PRUnichar *aTipText)
 {
-  
   nsAutoString tipText ( aTipText );
+
+#ifdef MOZ_WIDGET_GTK
   const char* tipString = ToNewCString(tipText);
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+  const char* tipString = ToNewUTF8String(tipText);
+#endif
 
   if (sTipWindow)
     gtk_widget_destroy(sTipWindow);
@@ -405,7 +437,9 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
            0, 0,
            sTipWindow->allocation.width, sTipWindow->allocation.height);
 
+#ifdef MOZ_WIDGET_GTK
   gtk_widget_popup(sTipWindow, aXCoords + root_x, aYCoords + root_y);
+#endif /* MOZ_WIDGET_GTK */
   
   nsMemory::Free( (void*)tipString );
 

@@ -304,8 +304,19 @@ new_gtk_browser(guint32 chromeMask)
 		     FALSE, // fill
 		     0);    // padding
   // new horiz toolbar with buttons + icons
+#ifdef MOZ_WIDGET_GTK
   browser->toolbar = gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL,
 				     GTK_TOOLBAR_BOTH);
+#endif /* MOZ_WIDGET_GTK */
+
+#ifdef MOZ_WIDGET_GTK2
+  browser->toolbar = gtk_toolbar_new();
+  gtk_toolbar_set_orientation(GTK_TOOLBAR(browser->toolbar),
+			      GTK_ORIENTATION_HORIZONTAL);
+  gtk_toolbar_set_style(GTK_TOOLBAR(browser->toolbar),
+			GTK_TOOLBAR_BOTH);
+#endif /* MOZ_WIDGET_GTK2 */
+
   // add it to the hbox
   gtk_box_pack_start(GTK_BOX(browser->toolbarHBox), browser->toolbar,
 		   FALSE, // expand
