@@ -152,7 +152,7 @@ static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
 
-//#define XULTREE
+#define XULTREE
 #ifdef XULTREE
 #include "nsXULTreeFrame.h"
 #include "nsXULTreeOuterGroupFrame.h"
@@ -9050,8 +9050,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
             nsBoxLayoutState state(aPresContext);
             treeRowGroup->MarkDirtyChildren(state);
             treeRowGroup->ClearRowGroupInfo();
-            return NS_OK;
           }
+          return NS_OK;
 #else
           nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
           if (treeRowGroup) {

@@ -72,7 +72,8 @@ public:
     virtual PRInt32 GetRefCount()=0;
     virtual PRBool SetListener(nsIBox* aBox, nsBoxSizeListener& aListener)=0;
     virtual void RemoveListener()=0;
-
+    virtual void SetAdjacent(nsBoxLayoutState& aState, nsBoxSizeList* aList)=0;
+    virtual nsBoxSizeList* GetAdjacent()=0;
 };
 
 // {AF0C1603-06C3-11d4-BA07-001083023C1E}

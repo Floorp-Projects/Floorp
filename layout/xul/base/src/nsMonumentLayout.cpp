@@ -179,16 +179,15 @@ nsMonumentIterator::GetNextObelisk(nsObeliskLayout** aObelisk, PRBool aSearchChi
 
 //------ nsInfoListNodeImpl ----
 
+nsBoxSizeListNodeImpl::~nsBoxSizeListNodeImpl()
+{
+
+}
+
 void
 nsBoxSizeListNodeImpl::Release(nsBoxLayoutState& aState)
 {
-   mRefCount--;
-   if (mRefCount == 0) {
-     Clear(aState);
-     if (mNext)
-       mNext->Release(aState);
-     delete this;
-   }
+  delete this;
 }
 
 void
@@ -201,18 +200,18 @@ nsBoxSizeListNodeImpl::Desecrate(nsBoxLayoutState& aState)
 void
 nsBoxSizeListNodeImpl::MarkDirty(nsBoxLayoutState& aState)
 {
-  mBox->MarkDirty(aState);
+  if (mBox)
+    mBox->MarkDirty(aState);
 }
 
 void nsBoxSizeListNodeImpl::SetNext(nsBoxLayoutState& aState, nsBoxSizeList* aNext)
 {
-  if (mNext) {
-    mNext->Release(aState);
-  }
-
   mNext = aNext;
-  if (mNext)
-    aNext->AddRef();
+}
+
+void nsBoxSizeListNodeImpl::SetAdjacent(nsBoxLayoutState& aState, nsBoxSizeList* aNext)
+{
+  mAdjacent = aNext;
 }
 
 void
@@ -223,6 +222,7 @@ nsBoxSizeListNodeImpl::Append(nsBoxLayoutState& aState, nsBoxSizeList* aChild)
 
 nsBoxSizeListNodeImpl::nsBoxSizeListNodeImpl(nsIBox* aBox):mNext(nsnull), 
                                                            mParent(nsnull), 
+                                                           mAdjacent(nsnull),
                                                            mBox(aBox),
                                                            mRefCount(0),
                                                            mIsSet(PR_FALSE)
@@ -239,7 +239,7 @@ nsBoxSizeListNodeImpl::GetAt(PRInt32 aIndex)
      if (count == aIndex)
         return node;
 
-     node = node->GetNext();
+     node = node->GetAdjacent();
      count++;
    }
 
@@ -272,15 +272,29 @@ nsBoxSizeListImpl::nsBoxSizeListImpl(nsIBox* aBox):nsBoxSizeListNodeImpl(aBox),
 {
 }
 
+nsBoxSizeListImpl::~nsBoxSizeListImpl()
+{
+}
+
 void
 nsBoxSizeListImpl::Release(nsBoxLayoutState& aState)
 {
-   if (mRefCount == 1) {
-     if (mListener)
-       mListener->WillBeDestroyed(mListenerBox, aState, *this);
-   }
+  if (mListener) {
+    mListener->WillBeDestroyed(mListenerBox, aState, *this);
+  }
 
-   nsBoxSizeListNodeImpl::Release(aState);
+  nsBoxSizeList* list = mFirst;
+  while(list)
+  {
+    nsBoxSizeList* toRelease = list;
+    list = list->GetNext();
+    toRelease->SetParent(nsnull);
+  }
+
+  if (mAdjacent)
+    mAdjacent->Release(aState);
+
+  delete this;
 }
 
 void
@@ -308,7 +322,6 @@ nsBoxSizeListImpl::Append(nsBoxLayoutState& aState, nsBoxSizeList* aChild)
 
   mLast = aChild;
   aChild->SetParent(this);
-  aChild->AddRef();
 }
 
 void
@@ -400,6 +413,9 @@ nsBoxSizeListNodeImpl::GetBoxSize(nsBoxLayoutState& aState, PRBool aIsHorizontal
   nsSize max(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
   nscoord ascent = 0;
   nscoord flex = 0;
+
+  if (!mBox)
+    return size;
 
   mBox->GetPrefSize(aState, pref);
   mBox->GetMinSize(aState, min);
@@ -502,8 +518,8 @@ nsMonumentLayout::GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsB
        childBox = do_QueryInterface(childFrame);
      }
 
-     nsIBoxLayout* layout = nsnull;
-     childBox->GetLayoutManager(&layout);
+     nsCOMPtr<nsIBoxLayout> layout;
+     childBox->GetLayoutManager(getter_AddRefs(layout));
      
      // only all monuments
      nsCOMPtr<nsIMonument> monument = do_QueryInterface(layout, &rv);
@@ -556,7 +572,7 @@ nsMonumentLayout::GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSize
         *aList = list;
         return NS_OK;
      }
-     list = list->GetNext();
+     list = list->GetAdjacent();
      count++;
   }
 
@@ -607,7 +623,7 @@ nsMonumentLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
     if (*aList == nsnull) 
       *aList = last = newOne;
     else {
-      last->SetNext(aState, newOne);
+      last->SetAdjacent(aState, newOne);
       last = newOne;
     }
     child->GetNextBox(&child);

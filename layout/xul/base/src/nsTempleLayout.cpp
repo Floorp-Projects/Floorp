@@ -73,52 +73,42 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
      return NS_OK;
   }
 
-  *aList = nsnull;
-
   // run through our children.
   // ask each child for its monument list
   // append the list to our list
-  nsIBox* box = nsnull;
-  aBox->GetChildBox(&box);
+  nsIBox* firstChild = nsnull;
+  aBox->GetChildBox(&firstChild);
+
   nsBoxSizeList* current = nsnull;
   nsCOMPtr<nsIMonument> monument;
+  nsMonumentIterator it(firstChild);
 
-  nsMonumentIterator it(box);
-
+  nsIBox* box = nsnull;
   while(it.GetNextMonument(getter_AddRefs(monument))) {
 
       it.GetBox(&box);
-
-      if (!mMonuments) {
-          mMonuments = new nsBoxSizeListImpl(box);
-          mMonuments->AddRef();
-        }
 
       current = mMonuments;
       nsBoxSizeList* node = nsnull;
       monument->GetMonumentList(box, aState, &node);
 
-      if (node)
-          node->AddRef();
-
       while(node)
       {
+        if (!mMonuments) {
+          mMonuments = new nsBoxSizeListImpl(firstChild);
+          current = mMonuments;
+        }
+
         current->Append(aState, node);
-        node->Release(aState);
-
-        nsBoxSizeList* tmp = node->GetNext();
-        if (tmp)
-          tmp->AddRef();
-
-        node->SetNext(aState, nsnull);
-        node = tmp;
-
-        if (node && !current->GetNext()) {
+       
+        node = node->GetAdjacent();
+        
+        if (node && !current->GetAdjacent()) {
           nsBoxSizeList* newOne = new nsBoxSizeListImpl(box);
-          current->SetNext(aState, newOne);
+          current->SetAdjacent(aState, newOne);
           current = newOne;
         } else {
-          current = current->GetNext();
+          current = current->GetAdjacent();
         }
       }    
   }
@@ -225,10 +215,16 @@ nsTempleLayout::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* 
 NS_IMETHODIMP
 nsTempleLayout::DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
 {
+  nsCOMPtr<nsIMonument> parent;
+  nsCOMPtr<nsIBox> parentBox;
+  GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
+  if (parent)
+    parent->DesecrateMonuments(parentBox, aState);
+
   if (mMonuments) {
     nsBoxSizeList* tmp = mMonuments;
+    mMonuments->Release(aState);
     mMonuments = nsnull;
-    tmp->Release(aState);
   }
 
   return NS_OK;
