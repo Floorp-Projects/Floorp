@@ -450,7 +450,7 @@ typedef signed int     Ipp32s;
 
 /* Table for rows 0,4 - constants are multiplied on cos_4_16 */
 
-__declspec() short tab_i_04[] = { 
+__declspec(align(16)) short tab_i_04[] = { 
 	16384, 21407, 16384, 8867,		
 	-16384, 21407, 16384, -8867,	
 	16384,  -8867,  16384, -21407,  
