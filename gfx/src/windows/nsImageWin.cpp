@@ -89,6 +89,7 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     return NS_ERROR_UNEXPECTED;
   }
 
+  mIsTopToBottom = PR_FALSE;
   if (mNumPaletteColors >= 0){
     // If we have a palette
     if (0 == mNumPaletteColors) {
