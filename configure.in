@@ -27,8 +27,9 @@ dnl AC_CONFIG_HEADER(include/config.h nsprpub/include/config.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
 
-# Set this define to make fixes w/o breaking anything else
+dnl Set this define to make fixes w/o breaking anything else
 AC_DEFINE(USE_AUTOCONF)
+AC_DEFINE(MOZILLA_CLIENT)
 
 d=`pwd`
 if [ test "${srcdir}" = "${d}" || test "${srcdir}" = "." ]; then
@@ -78,24 +79,23 @@ AC_PATH_PROG(ZIP, zip, :)
 
 AC_PATH_XTRA
 
-dnl CFLAGS="$CFLAGS $X_CFLAGS"
-dnl LDFLAGS="$LDFLAGS $XLDFLAGS"
-dnl LIBS="$X_PRE_LIBS $X_EXTRA_LIBS $LIBS"
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
 
-if [ test ! -z "$x_includes" ]; then
-    MOTIF_XINCS="-xif -I$x_includes"
+if [ test "$no_x" != "yes" ]; then
+    if [ test ! -z "$x_includes" ]; then
+	MOTIF_XINCS="-xif -I$x_includes"
+    fi
+
+    MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS`
+    MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -if`
+    MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -sf`
+    MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -df`
+    MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -dp`
+    MOTIF_REQUIRES_XPM=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -xpm`
+
+    ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
 fi
-
-MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS`
-MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -if`
-MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -sf`
-MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -df`
-MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -dp`
-MOTIF_REQUIRES_XPM=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -xpm`
-
-${srcdir}/config/mkdetect/detect_motif.sh --cleanup
 
 if [ test "$GCC" = "yes" ]; then
     GNU_CC=1
@@ -122,7 +122,7 @@ DSO_CFLAGS='-KPIC'
 
 dnl gcc can come with its own linker so its better to use the pass-thru calls
 dnl ========================================================
-if test "$GNU_CC" = 1; then
+if [ test "$GNU_CC" = 1]; then
     MKSHLIB='$(CC) $(DSO_LDOPTS)'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     DSO_CFLAGS='-fPIC'
@@ -149,6 +149,10 @@ alpha-*-linux*)
     else
 	DLL_SUFFIX="so.1.0"
     fi ;;
+
+*-irix*)
+    AC_DEFINE(IRIX6_3)
+
 
 esac
 
@@ -241,15 +245,60 @@ _SAVE_CC=$CC
 CC=$CXX
 AC_MSG_CHECKING(for ios::binary)
 AC_CACHE_VAL(ac_cv_ios_binary,
- [AC_TRY_COMPILE([#include <iostream.h>],
+ [AC_TRY_COMPILE([#include <iostream.h>]
+	         [#include <fstream.h>],
                  [char *buffer = "config.log";
-		  mFileStream = new fstream(buffer, ios::binary);],		
+		  fstream *mFileStream=new fstream(buffer, ios::binary);],
                  [ac_ios_binary=true],
                  [ac_ios_binary=false])
   ac_cv_ios_binary=$ac_ios_binary])
-ac_syserrlist=$ac_cv_ios_binary
+ac_ios_binary=$ac_cv_ios_binary
 if test $ac_ios_binary = true ; then
   AC_DEFINE(HAVE_IOS_BINARY)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi  
+CC=$_SAVE_CC
+
+dnl Checks for c++ features
+dnl Is there a way to make AC_TRY_COMPILE use CXX instead of CC?
+_SAVE_CC=$CC
+CC=$CXX
+AC_MSG_CHECKING(for ios::bin)
+AC_CACHE_VAL(ac_cv_ios_bin,
+ [AC_TRY_COMPILE([#include <iostream.h>]
+               [#include <fstream.h>],
+                 [char *buffer = "config.log";
+                fstream *mFileStream=new fstream(buffer, ios::bin);],
+                 [ac_ios_bin=true],
+                 [ac_ios_bin=false])
+  ac_cv_ios_bin=$ac_ios_bin])
+ac_ios_bin=$ac_cv_ios_bin
+if test $ac_ios_bin = true ; then
+  AC_DEFINE(HAVE_IOS_BIN)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi  
+CC=$_SAVE_CC
+
+dnl Checks for c++ features
+dnl Is there a way to make AC_TRY_COMPILE use CXX instead of CC?
+_SAVE_CC=$CC
+CC=$CXX
+AC_MSG_CHECKING(for ios::bin)
+AC_CACHE_VAL(ac_cv_ios_bin,
+ [AC_TRY_COMPILE([#include <iostream.h>]
+               [#include <fstream.h>],
+                 [char *buffer = "config.log";
+                fstream *mFileStream=new fstream(buffer, ios::bin);],
+                 [ac_ios_bin=true],
+                 [ac_ios_bin=false])
+  ac_cv_ios_bin=$ac_ios_bin])
+ac_ios_bin=$ac_cv_ios_bin
+if test $ac_ios_bin = true ; then
+  AC_DEFINE(HAVE_IOS_BIN)
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
@@ -262,11 +311,13 @@ AC_CHECK_LIB(c_r, gethostbyname_r)
 AC_CHECK_LIB(c, strcpy)
 AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
+if [ test -z "$GNU_CXX" ]; then
+    AC_CHECK_LIB(C, demangle)
+fi
 AC_CHECK_LIB(resolv, res_gethostbyaddr)
 AC_CHECK_LIB(socket, getnetbyaddr)
 AC_CHECK_LIB(util, login)
 AC_CHECK_LIB(nsl, xdr_string)
-AC_CHECK_LIB(C, demangle)
 AC_CHECK_LIB(elf, elf_rawdata)
 AC_CHECK_LIB(intl, textdomain)
 AC_CHECK_LIB(posix4, shm_open)
@@ -478,6 +529,7 @@ dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
+if [ test "$no_x" != "yes" ]; then
 _SAVE_LDFLAGS="$LDFLAGS"
 LDFLAGS="$XLDFLAGS $LDFLAGS"
 AC_CHECK_LIB(X11, XDrawLines, [XLIBS="-lX11 $XLIBS"],
@@ -560,7 +612,7 @@ res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
 if [ test $res != 0 ]; then
     AC_ARG_WITH(gtk-config, 
 	[  --with-gtk-config=\$prog specify which gtk-config to use],
-	if test test ! -x $withval; then
+	if test ! -x $withval; then
 	   AC_MSG_ERROR("Specified --with-gtk-config not executable")
 	else
 	   GTK_CONFIG=$withval
@@ -603,6 +655,8 @@ if [ test $res != 0 ]; then
     CFLAGS=$_SAVE_CFLAGS
     AC_MSG_RESULT("$result")
 fi
+
+fi # $no_x
 
 AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_GTK_CFLAGS)
@@ -835,8 +889,10 @@ AC_SUBST(LIBS)
 AC_SUBST(MKSHLIB)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
+AC_SUBST(DLL_SUFFIX)
 
 dnl Check for missing components
+if [ test "$no_x" != "yes" ]; then
 if [ test -n "$MISSING_X" ]; then
    AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
 fi
@@ -848,10 +904,16 @@ fi
 if [ test -n "$MISSING_MOTIF" ]; then
    AC_MSG_ERROR([ Could not find the following motif libraries: $MISSING_MOTIF ]);
 fi
+fi # $no_x
 
 if [ test -n "$MISSING_NSPR" ]; then
     AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
 fi
+
+dnl Need to manual make the directories to get around deficiency in AC_OUTPUT
+for d in lib modules modules/security; do
+   if [ test ! -d $d ]; then rm -f $d; mkdir $d; fi
+done
 
 NG_MAKEFILES="
 Makefile
@@ -888,6 +950,9 @@ dom/src/events/Makefile
 dom/src/html/Makefile
 dom/src/jsurl/Makefile
 dom/tools/Makefile
+editor/Makefile
+editor/core/Makefile
+editor/public/Makefile
 gfx/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
@@ -942,13 +1007,11 @@ layout/xml/document/Makefile
 layout/xml/document/public/Makefile
 layout/xml/document/src/Makefile
 layout/tools/Makefile
-lib/Makefile
 lib/liblayer/Makefile
 lib/liblayer/include/Makefile
 lib/liblayer/src/Makefile
 lib/libpwcac/Makefile
 lib/xp/Makefile
-modules/Makefile
 modules/libimg/Makefile
 modules/libimg/classes/Makefile
 modules/libimg/classes/netscape/Makefile
@@ -975,7 +1038,6 @@ modules/plugin/nglsrc/Makefile
 modules/plugin/public/Makefile
 modules/plugin/src/Makefile
 modules/plugin/test/Makefile
-modules/security/Makefile
 modules/security/freenav/Makefile
 modules/zlib/Makefile
 modules/zlib/src/Makefile
