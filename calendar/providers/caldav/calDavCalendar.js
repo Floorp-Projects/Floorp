@@ -75,8 +75,8 @@ function makeOccurrence(item, start, end)
         createInstance(calIItemOccurrence);
     // XXX poor form
     occ.wrappedJSObject.item = item;
-    occ.wrappedJSObject.occurrenceStartDate = item.startDate;
-    occ.wrappedJSObject.occurrenceEndDate = item.endDate;
+    occ.wrappedJSObject.occurrenceStartDate = start;
+    occ.wrappedJSObject.occurrenceEndDate = end;
     return occ;
 }
   
@@ -472,7 +472,7 @@ calDavCalendar.prototype = {
                         } else if (itemEndTime >= startTime) {
                         // no occurrences
                         if (itemReturnOccurrences)
-                            itemtoadd = makeOccurrence(item, itemStartDate, itemEndDate);
+                            itemtoadd = makeOccurrence(item, item.startDate, item.endDate);
                         else
                             itemtoadd = item;
                         itemsFound.push(itemtoadd);
