@@ -159,8 +159,14 @@ NS_IMETHODIMP nsDeviceContextMac :: SupportsNativeWidgets(PRBool &aSupportsWidge
   // Raptor currently doesn't work this way and needs to be fixed.
   // (please remove this comment when this situation is rectified)
   
+  if( nsnull != mSpec){
+  	aSupportsWidgets = PR_FALSE;
+  } else {
+  	aSupportsWidgets = PR_TRUE;
+  }
+  
   //if (nsnull == mSurface)
-    aSupportsWidgets = PR_TRUE;
+    
   //else
    //aSupportsWidgets = PR_FALSE;
 
