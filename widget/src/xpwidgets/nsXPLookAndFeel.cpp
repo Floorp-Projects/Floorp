@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-static int colorPrefChanged(const char* aPref, void* aData);
+#include "nscore.h"
+
+static int PR_CALLBACK colorPrefChanged(const char* aPref, void* aData);
 
 #include "nsXPLookAndFeel.h"
 #include "nsIServiceManager.h"
