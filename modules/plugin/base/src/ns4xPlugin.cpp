@@ -1281,13 +1281,19 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   switch (variable) {
+
+    // we should keep backward compatibility with 4x where the
+    // actual pointer value is checked rather than its content
+    // wnen passing booleans
     case NPPVpluginWindowBool: {
-      NPBool bWindowless = !(*((NPBool *)result));
+      NPBool bWindowless = (result == nsnull);
       return inst->SetWindowless(bWindowless);
     }
 
-    case NPPVpluginTransparentBool:
-      return inst->SetTransparent(*((NPBool *)result));
+    case NPPVpluginTransparentBool: {
+      NPBool bTransparent = (result != nsnull);
+      return inst->SetTransparent(bTransparent);
+    }
 
     default:
       return NPERR_NO_ERROR;
