@@ -118,6 +118,7 @@
 				17587328FF379C6511CA2CBB,
 				F52627CD027E976B01000102,
 				F5BAAB1802AC45D301A967F3,
+				F5A8CE4602DFF039013CA8EC,
 			);
 			isa = PBXGroup;
 			name = Products;
@@ -153,6 +154,7 @@
 			projectDirPath = "";
 			targets = (
 				29B97326FDCFA39411CA2CEA,
+				F5A8CE4702DFF039013CA8EC,
 				F52627CE027E976B01000102,
 				F58581AE022B8D62010001CA,
 				F57F205C029997C901000106,
@@ -255,11 +257,11 @@
 				F507BA520213C22C01D93544,
 				F6BD652301B3184301A962F7,
 				F5247C420228B9D7013DD99A,
+				F6BD637B01B30E0F01A962F7,
 				F5247C480228BA0B013DD99A,
 				F54EF7EF022A2F9D01A80165,
 				F5F24BDB022B88EF010001CA,
 				29B9732DFDCFA39411CA2CEA,
-				F6BD637B01B30E0F01A962F7,
 			);
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
@@ -277,6 +279,7 @@
 				WRAPPER_EXTENSION = app;
 			};
 			dependencies = (
+				F5F9FBD702DFF351012B5DB7,
 				F53EAB79027EBDE801000102,
 				F58581BA022B8F28010001CA,
 				F57F20760299A34A01000106,
@@ -597,11 +600,11 @@
 		29B9732DFDCFA39411CA2CEA = {
 			buildActionMask = 2147483647;
 			files = (
-				1058C7A3FEA54F0111CA2CBB,
 				F51D9B2E0209573701A80166,
 				F57F0F4A0209DF5301A967DF,
-				F557193B022B4103010001CA,
 				F5C2CDA802383CE701A967DF,
+				1058C7A3FEA54F0111CA2CBB,
+				F557193B022B4103010001CA,
 				F52D5CDE027D412A01A80166,
 				F52D5CDF027D412A01A80166,
 				F52D5CE0027D412A01A80166,
@@ -1780,6 +1783,7 @@
 		F52627CF027E976B01000102 = {
 			buildActionMask = 2147483647;
 			files = (
+				F5A8CE4302DFEF4C013CA8EC,
 				F52627D6027E982201000102,
 			);
 			isa = PBXHeadersBuildPhase;
@@ -1797,6 +1801,7 @@
 		F52627D1027E976B01000102 = {
 			buildActionMask = 2147483647;
 			files = (
+				F5A8CE4402DFEF4C013CA8EC,
 				F52627D7027E982201000102,
 			);
 			isa = PBXSourcesBuildPhase;
@@ -2361,6 +2366,8 @@
 		F53F21EB022B7C77010001CA = {
 			children = (
 				F5CA1A1D02D4ECDA01F34900,
+				F5A8CE4002DFEF4C013CA8EC,
+				F5A8CE4D02DFF167013CA8EC,
 				F52627CC027E96AE01000102,
 				F57F205D029997E701000106,
 				F53F21F5022B7C77010001CA,
@@ -4442,6 +4449,245 @@
 		};
 		F5A3669C02CCFB7A01DC3354 = {
 			fileRef = F5A3669502CCFAF601DC3354;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE4002DFEF4C013CA8EC = {
+			children = (
+				F5A8CE4102DFEF4C013CA8EC,
+				F5A8CE4202DFEF4C013CA8EC,
+			);
+			isa = PBXGroup;
+			name = Shared;
+			path = "";
+			refType = 4;
+		};
+		F5A8CE4102DFEF4C013CA8EC = {
+			isa = PBXFileReference;
+			name = PreferencePaneBase.h;
+			path = Shared/PreferencePaneBase.h;
+			refType = 4;
+		};
+		F5A8CE4202DFEF4C013CA8EC = {
+			isa = PBXFileReference;
+			name = PreferencePaneBase.mm;
+			path = Shared/PreferencePaneBase.mm;
+			refType = 4;
+		};
+		F5A8CE4302DFEF4C013CA8EC = {
+			fileRef = F5A8CE4102DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE4402DFEF4C013CA8EC = {
+			fileRef = F5A8CE4202DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE4602DFF039013CA8EC = {
+			isa = PBXBundleReference;
+			name = Appearance.prefPane;
+			path = build/Appearance.prefPane;
+			refType = 4;
+		};
+		F5A8CE4702DFF039013CA8EC = {
+			buildPhases = (
+				F5A8CE4802DFF039013CA8EC,
+				F5A8CE4902DFF039013CA8EC,
+				F5A8CE4A02DFF039013CA8EC,
+				F5A8CE4B02DFF039013CA8EC,
+				F5A8CE4C02DFF039013CA8EC,
+			);
+			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
+				HEADER_SEARCH_PATHS = "../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util ../modules/zlib/src";
+				OPTIMIZATION_CFLAGS = "-O2";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "-bundle -lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Appearance;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WRAPPER_EXTENSION = prefPane;
+			};
+			dependencies = (
+			);
+			isa = PBXBundleTarget;
+			name = AppearancePrefPane;
+			productInstallPath = "$(USER_LIBRARY_DIR)/Bundles";
+			productName = AppearancePrefPane;
+			productReference = F5A8CE4602DFF039013CA8EC;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
+<plist version=\"0.9\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>Appearance</string>
+	<key>CFBundleGetInfoString</key>
+	<string></string>
+	<key>CFBundleIconFile</key>
+	<string>Appearance.tiff</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.mozilla.chimera.preference.appearance</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Appearance</string>
+	<key>CFBundlePackageType</key>
+	<string>BNDL</string>
+	<key>CFBundleShortVersionString</key>
+	<string></string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>0.0.1d1</string>
+	<key>NSMainNibFile</key>
+	<string>Appearance</string>
+	<key>NSPrincipalClass</key>
+	<string>OrgMozillaNavigatorPreferenceAppearance</string>
+</dict>
+</plist>
+";
+			shouldUseHeadermap = 0;
+		};
+		F5A8CE4802DFF039013CA8EC = {
+			buildActionMask = 2147483647;
+			files = (
+				F5A8CE5302DFF167013CA8EC,
+				F5A8CE5202DFF167013CA8EC,
+			);
+			isa = PBXHeadersBuildPhase;
+			name = Headers;
+		};
+		F5A8CE4902DFF039013CA8EC = {
+			buildActionMask = 2147483647;
+			files = (
+				F5A8CE5402DFF167013CA8EC,
+				F5A8CE5502DFF167013CA8EC,
+			);
+			isa = PBXResourcesBuildPhase;
+			name = "Bundle Resources";
+		};
+		F5A8CE4A02DFF039013CA8EC = {
+			buildActionMask = 2147483647;
+			files = (
+				F5A8CE5602DFF167013CA8EC,
+				F5A8CE5702DFF167013CA8EC,
+			);
+			isa = PBXSourcesBuildPhase;
+			name = Sources;
+		};
+		F5A8CE4B02DFF039013CA8EC = {
+			buildActionMask = 2147483647;
+			files = (
+				F5A8CE5802DFF167013CA8EC,
+				F5A8CE5902DFF167013CA8EC,
+				F5A8CE5A02DFF167013CA8EC,
+				F5A8CE5B02DFF167013CA8EC,
+			);
+			isa = PBXFrameworksBuildPhase;
+			name = "Frameworks & Libraries";
+		};
+		F5A8CE4C02DFF039013CA8EC = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXRezBuildPhase;
+			name = "ResourceManager Resources";
+		};
+		F5A8CE4D02DFF167013CA8EC = {
+			children = (
+				F5A8CE4E02DFF167013CA8EC,
+				F5A8CE4F02DFF167013CA8EC,
+				F5A8CE5002DFF167013CA8EC,
+				F5A8CE5102DFF167013CA8EC,
+			);
+			isa = PBXGroup;
+			path = Appearance;
+			refType = 4;
+		};
+		F5A8CE4E02DFF167013CA8EC = {
+			isa = PBXFileReference;
+			path = Appearance.h;
+			refType = 4;
+		};
+		F5A8CE4F02DFF167013CA8EC = {
+			isa = PBXFileReference;
+			path = Appearance.mm;
+			refType = 4;
+		};
+		F5A8CE5002DFF167013CA8EC = {
+			isa = PBXFileReference;
+			path = Appearance.nib;
+			refType = 4;
+		};
+		F5A8CE5102DFF167013CA8EC = {
+			isa = PBXFileReference;
+			path = Appearance.tiff;
+			refType = 4;
+		};
+		F5A8CE5202DFF167013CA8EC = {
+			fileRef = F5A8CE4E02DFF167013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE5302DFF167013CA8EC = {
+			fileRef = F5A8CE4102DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE5402DFF167013CA8EC = {
+			fileRef = F5A8CE5002DFF167013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE5502DFF167013CA8EC = {
+			fileRef = F5A8CE5102DFF167013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE5602DFF167013CA8EC = {
+			fileRef = F5A8CE4202DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE5702DFF167013CA8EC = {
+			fileRef = F5A8CE4F02DFF167013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE5802DFF167013CA8EC = {
+			fileRef = F557193A022B4102010001CA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE5902DFF167013CA8EC = {
+			fileRef = 29B97325FDCFA39411CA2CEA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE5A02DFF167013CA8EC = {
+			fileRef = 1058C7A1FEA54F0111CA2CBB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A8CE5B02DFF167013CA8EC = {
+			fileRef = F52D5CDB027D412A01A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -6896,6 +7142,7 @@
 			dstPath = Contents/PreferencePanes;
 			dstSubfolderSpec = 1;
 			files = (
+				F5F9FBD802E09210012B5DB7,
 				F540BD2402ABB11E01026D5D,
 				F540BD2502ABB11E01026D5D,
 				F57F20740299A34101000106,
@@ -6911,6 +7158,16 @@
 		};
 		F5F59322020F4D0201ACA690 = {
 			fileRef = F5F59320020F4CD201ACA690;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F9FBD702DFF351012B5DB7 = {
+			isa = PBXTargetDependency;
+			target = F5A8CE4702DFF039013CA8EC;
+		};
+		F5F9FBD802E09210012B5DB7 = {
+			fileRef = F5A8CE4602DFF039013CA8EC;
 			isa = PBXBuildFile;
 			settings = {
 			};
