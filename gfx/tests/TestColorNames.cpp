@@ -59,6 +59,9 @@ int main(int argc, char** argv)
   nsColorName index;
   int rv = 0;
 
+  // Everything appears to assert if we don't do this first...
+  nsColorNames::AddRefTable();
+
   // First make sure we can find all of the tags that are supposed to
   // be in the table. Futz with the case to make sure any case will
   // work
@@ -68,6 +71,11 @@ int main(int argc, char** argv)
     // Lookup color by name and make sure it has the right id
     index = nsColorName(PRInt32(index) + 1);
     nsCString tagName(nsColorNames::GetStringValue(index));
+    if (tagName.IsEmpty()) {
+      printf("bug: tagName for nsColorNames::GetStringValue(%d) is ''\n", index);
+      rv = -1;
+      continue;
+    }
 
     id = nsColorNames::LookupName(NS_ConvertASCIItoUCS2(tagName));
     if (id == eColorName_UNKNOWN) {
