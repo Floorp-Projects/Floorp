@@ -966,7 +966,7 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidatePrimaryCell(PRInt32 aIndex)
 #if defined(XP_MAC) || defined(XP_MACOSX)
       // Mac can't process the event loop during a drag, so if we're dragging,
       // invalidate synchronously.
-      nsIFrame::Invalidate(cellRect, mDragSession != null);
+      nsIFrame::Invalidate(cellRect, mDragSession != nsnull);
 #else
       nsIFrame::Invalidate(cellRect, PR_FALSE);
 #endif
