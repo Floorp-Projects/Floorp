@@ -31,12 +31,19 @@ MODULE = transformiix
 REQUIRES = string xpcom necko dom layout widget webbrwsr
 endif
 
-CSRCS = xmltok.c xmlrole.c xmlparse.c hashtable.c
 CPPSRCS = XMLParser.cpp
+ifdef MOZ_XSL
+CPPSRCS += nsSyncLoader.cpp
+else
+CSRCS = xmltok.c xmlrole.c xmlparse.c hashtable.c
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../net -I$(srcdir)/../dom
+ifndef MOZ_XSL
+INCLUDES += -I$(srcdir)/xmlparse
 COMPILE_CFLAGS += -DXML_UNICODE -I$(srcdir)/xmltok
-INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../net -I$(srcdir)/../dom -I$(srcdir)/xmlparse
+endif
 
 install:: $(OBJS)

@@ -109,10 +109,6 @@ OBJS =../source/base/ArrayList.o \
   ../source/xml/util/DOMHelper.o \
   ../source/xml/parser/XMLParser.o \
   ../source/xml/parser/nsSyncLoader.o \
-  ../source/xml/parser/hashtable.o \
-  ../source/xml/parser/xmlrole.o \
-  ../source/xml/parser/xmlparse.o \
-  ../source/xml/parser/xmltok.o \
   ../source/xslt/OutputFormat.o \
   ../source/xslt/Names.o \
   ../source/xslt/Numbering.o \
@@ -135,7 +131,7 @@ INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \
   -I$(srcdir)/../source/net \
   -I$(srcdir)/../source/xml -I$(srcdir)/../source/xml/dom \
   -I$(srcdir)/../source/xml/util \
-  -I$(srcdir)/../source/xml/parser -I$(srcdir)/../source/xml/parser/xmlparse \
+  -I$(srcdir)/../source/xml/parser \
   -I$(srcdir)/../source/xml/printer -I$(srcdir)/../source/xpath \
   -I$(srcdir)/../source/xslt/util -I$(srcdir)/../source/xslt/functions
 
