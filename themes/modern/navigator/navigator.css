@@ -256,6 +256,10 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 	height                            : 18px;                               
   }
 
+#urlbar
+  {
+    -moz-binding		  : url(chrome://global/content/xulBindings.xml#textfield);
+  }
 
 #page-proxy-button 
   {
@@ -300,7 +304,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     margin                : 1px 1px 3px 0px;
     width                 : 10px; 
-    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+    list-style-image      : url("chrome://global/skin/simple-arrow-down.gif"); 
     border                : none;
     padding               : 0px;
   }
@@ -312,7 +316,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #action-popup 
   {
-    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+    list-style-image      : url("chrome://global/skin/simple-arrow-down.gif"); 
     margin                : 0px; 
     -moz-border-radius    : 4px;
   }

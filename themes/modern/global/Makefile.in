@@ -92,6 +92,29 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 	moreCols.gif \
 	moreCols_dis.gif \
 	moreCols_mo.gif \
+	button-clicked-left.gif \
+	button-clicked-middle.gif \
+	button-def-clicked-middle.gif \
+	button-def-disabled-left.gif \
+	button-def-disabled-mid.gif \
+	button-def-disabled-right.gif \
+	button-disabled-left.gif \
+	button-disabled-middle.gif \
+	button-disabled-right.gif \
+	button-left.gif \
+	button-middle.gif \
+	button-right.gif \
+	check-cb-check-disabled.gif \
+	check-cb-check-pressed.gif \
+	check-cb-check.gif \
+	check-cb-disabled.gif \
+	check-cb-pressed.gif \
+	check-cb.gif \
+	check-radio-check-disabled.gif \
+	check-radio-check-pressed.gif \
+	check-radio-check.gif \
+	check-radio-focused.gif \
+	check-radio-pressed.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_2 = \
@@ -165,6 +188,24 @@ EXPORT_RESOURCE_SAMPLES_2 = \
 	taskbar-tab-minimized.gif \
 	taskbar-tab-trans.gif \
 	taskbar-tab.gif \
+	textfield-left-bottom.gif \
+	textfield-left-middle.gif \
+	textfield-left-top.gif \
+	textfield-middle-bottom.gif \
+	textfield-middle-top.gif \
+	textfield-right-bottom.gif \
+	textfield-right-middle.gif \
+	textfield-right-top.gif \
+	button-def-left.gif \
+	button-def-middle.gif \
+	button-def-right.gif \
+	button-clicked-right.gif \
+	button-def-clicked-left.gif \
+	button-def-clicked-right.gif \
+	scroll-down-clicked.gif \
+	scroll-left-clicked.gif \
+	scroll-right-clicked.gif \
+	scroll-thumb-vert-top.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_3 = \
@@ -203,6 +244,41 @@ EXPORT_RESOURCE_SAMPLES_3 = \
 	toolbar.css \
 	tree.css \
 	wizardOverlay.css \
+	menulist-clicked-leftcap.gif \
+	menulist-clicked-middle.gif \
+	menulist-clicked-rightcap.gif \
+	menulist-disabled-leftcap.gif \
+	menulist-disabled-middle.gif \
+	menulist-disabled-rightcap.gif \
+	menulist-leftcap.gif \
+	menulist-middle.gif \
+	menulist-rightcap.gif \
+	scroll-thumb-horz-cl-expand.gif \
+	scroll-thumb-horz-cl-grippy.gif \
+	scroll-thumb-horz-cl-left.gif \
+	scroll-thumb-horz-cl-right.gif \
+	scroll-thumb-horz-expand.gif \
+	scroll-thumb-horz-grippy.gif \
+	scroll-thumb-horz-left.gif \
+	scroll-thumb-horz-right.gif \
+	scroll-thumb-vert-bottom.gif \
+	scroll-thumb-vert-cl-bottom.gif \
+	scroll-thumb-vert-cl-expand.gif \
+	scroll-thumb-vert-cl-grippy.gif \
+	scroll-thumb-vert-cl-top.gif \
+	scroll-thumb-vert-expand.gif \
+	scroll-thumb-vert-grippy.gif \
+	scroll-track-horz-middle.gif \
+	scroll-track-vert-middle.gif \
+	scroll-up-clicked.gif \
+	simple-arrow-down-disabled.gif \
+	simple-arrow-down.gif \
+	simple-arrow-left-disabled.gif \
+	simple-arrow-left.gif \
+	simple-arrow-right-disabled.gif \
+	simple-arrow-right.gif \
+	simple-arrow-up-disabled.gif \
+	simple-arrow-up.gif \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

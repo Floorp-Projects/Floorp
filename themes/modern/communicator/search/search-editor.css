@@ -22,32 +22,32 @@
 
 .up
 {
-	list-style-image:url("chrome://global/skin/scroll-up.gif");
+	list-style-image:url("chrome://global/skin/simple-arrow-up.gif");
 	min-width: 0px;
 }
 
 .up[disabled="true"]
 {
-	list-style-image:url("chrome://global/skin/scroll-up-disabled.gif");
+	list-style-image:url("chrome://global/skin/simple-arrow-up-disabled.gif");
 }
 
 .down
 {
 	min-width: 0px;
-	list-style-image:url("chrome://global/skin/scroll-down.gif");
+	list-style-image:url("chrome://global/skin/simple-arrow-down.gif");
 }
 
 .down[disabled="true"]
 {
-	list-style-image:url("chrome://global/skin/scroll-down-disabled.gif");
+	list-style-image:url("chrome://global/skin/simple-arrow-down-disabled.gif");
 }
 
 #add-button
   {
-    list-style-image      : url("chrome://global/skin/scroll-right.gif");
+    list-style-image      : url("chrome://global/skin/simple-arrow-right.gif");
   }
   
 #remove-button
   {
-    list-style-image      : url("chrome://global/skin/scroll-left.gif");
+    list-style-image      : url("chrome://global/skin/simple-arrow-left.gif");
   }

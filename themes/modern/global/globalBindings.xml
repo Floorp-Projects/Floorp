@@ -67,23 +67,6 @@
     </content>
   </binding>
 
-  <binding id="three-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content excludes="observes,template">
-        <xul:spring class="three-slice-button-image-left" inherits="default,disabled"/>
-    	<xul:box flex="1" class="three-slice-button-image-middle" inherits="default,disabled" orient="vertical" align="center">
-    	  	<xul:spring flex="1" class="three-slice-button-top-spring"/>
-    	  	<xul:box flex="1">
-    	  		<xul:image class="three-slice-button-icon" inherits="src"/>
-    	    	<xul:box class="three-slice-button-text-box" flex="1">
-		      		<xul:text inherits="disabled,value,crop,accesskey"/>
-    	    	</xul:box>
-    	    </xul:box>
-		    <xul:spring flex="1" class="three-slice-button-bottom-spring"/>
-    	</xul:box>
-    	<xul:spring class="three-slice-button-image-right" inherits="default,disabled"/>
-    </content>
-  </binding>
-
   <binding id="taskbar" extends="xul:box">
   	<content>
         <xul:box flex="1" class="taskbar-image-middle">
@@ -110,13 +93,167 @@
   <binding id="throbber" extends="chrome://global/content/xulBindings.xml#basetext">
   	<content excludes="observes,template">
   	  <xul:spring class="throbber-groove-left"/>
-  	  <xul:box flex="1" class="throbber-middle" orient="vertical">
+  	  <xul:box flex="1" class="throbber-middle" orient="vertical" autostretch="never">
   	  	<xul:spring class="throbber-groove-top"/>
-  	  	<xul:image flex="1" class="throbber-icon" inherits="src"/>
+  	  	<xul:image flex="1" class="throbber-icon" inherits="src" autostretch="never"/>
   	  	<xul:spring class="throbber-groove-bottom"/>
   	  </xul:box>
   	  <xul:spring class="throbber-groove-right"/>
     </content>
+  </binding>
+
+
+<!-- WIDGETS -->
+
+  <binding id="three-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+        <xul:spring class="button-image-left" inherits="default,disabled"/>
+    	<xul:box flex="1" class="button-image-middle" inherits="default,disabled" orient="vertical" align="center">
+    	  <xul:spring flex="1" class="button-top-spring"/>
+    	  <xul:box flex="1">
+    	  	<xul:image class="button-icon" inherits="src"/>
+    	    <xul:box class="button-text-box" flex="1" inherits="default">
+		      <xul:text inherits="disabled,value,crop,accesskey"/>
+    	    </xul:box>
+    	  </xul:box>
+    	  <xul:spring flex="1" class="button-bottom-spring"/>
+    	</xul:box>
+    	<xul:spring class="button-image-right" inherits="default,disabled"/>
+    </content>
+  </binding>
+
+<!-- The handlers and implementation are not being properly inherited from global/content/menulistBindings.xml,
+     so I've added them manually here.  This is bad. -->
+
+  <binding id="menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
+  	<content inherits="false" excludes="template,observes,menupopup" flex="1">
+    	<xul:spring class="menulist-spring-left" inherits="disabled"/>
+    	<xul:box class="menulist-box-middle" flex="1" inherits="disabled">
+    		<xul:image class="menulist-icon" inherits="src"/>
+    		<xul:box class="menulist-text-box" flex="1">
+		      	<xul:text flex="1" inherits="disabled,value,crop,accesskey"/>
+    	    </xul:box>
+    	</xul:box>
+    	<xul:spring class="menulist-dropmarker-right" inherits="disabled"/>
+    </content>
+    <handlers>
+      <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
+	</handlers>
+    <implementation>
+      <property name="data" onset="this.setAttribute('data',val); return val;"
+                            onget="return this.getAttribute('data');"/>
+    </implementation>  
+  </binding>
+
+  <binding id="scrollbar">
+    <content>
+      <xul:scrollbarbutton type="decrement" inherits="sborient=align">
+          <xul:image inherits="src"/>
+	  </xul:scrollbarbutton>
+      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,align">
+      	<xul:thumb inherits="align,src" flex="1"/>
+      </xul:slider>
+      <xul:scrollbarbutton type="increment" inherits="sborient=align">
+      	  <xul:image inherits="src"/>
+	  </xul:scrollbarbutton>
+    </content>
+  </binding>
+
+  <binding id="thumb-vertical" extends="xul:button">
+    <content orient="vertical">
+      <xul:spring class="thumb-vert-spring-top"/>
+      <xul:box flex="1" class="thumb-vert-box-middle" orient="vertical">
+        <xul:spring flex="1"/>
+		<xul:image class="thumb-vert-grippy"/>
+        <xul:spring flex="1"/>
+      </xul:box>
+      <xul:spring class="thumb-vert-spring-bottom"/>
+    </content>
+  </binding>
+
+  <binding id="thumb-horizontal" extends="xul:button">
+    <content>
+      <xul:spring class="thumb-horz-spring-left"/>
+      <xul:box flex="1" class="thumb-horz-box-middle">
+        <xul:spring flex="1"/>
+		<xul:image class="thumb-horz-grippy"/>
+        <xul:spring flex="1"/>
+      </xul:box>
+      <xul:spring class="thumb-horz-spring-right"/>
+    </content>
+  </binding>
+
+  <binding id="textfield" extends="chrome://global/content/xulBindings.xml#textfield">
+    <content excludes="observes,template">
+      <xul:box class="textfield-left" orient="vertical">
+      	<xul:spring class="textfield-left-top"/>
+      	<xul:spring class="textfield-left-middle" flex="1"/>
+      	<xul:spring class="textfield-left-bottom"/>
+      </xul:box>
+	  <xul:box class="textfield-middle" orient="vertical" flex="1">
+      	<xul:spring class="textfield-middle-top"/>
+      	<xul:box class="textfield-internal-box" flex="1">
+          <html:input class="textfield-input" flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
+      	</xul:box>
+      	<xul:spring class="textfield-middle-bottom"/>
+      </xul:box>      
+      <xul:box class="textfield-right" orient="vertical">
+      	<xul:spring class="textfield-right-top"/>
+      	<xul:spring class="textfield-right-middle" flex="1"/>
+      	<xul:spring class="textfield-right-bottom"/>
+      </xul:box>
+    </content>
+    <implementation>
+      <property name="value"      onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.value = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.value;"/>
+      <property name="type"       onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.type = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.type;"/>
+      <property name="maxlength"  onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.maxlength = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.maxlength;"/>
+      <property name="disabled"   onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.disabled = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.disabled;"/>
+      <property name="size"       onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.size = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.size;"/>
+      <property name="readonly"   onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.readonly = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.readonly;"/>
+
+      <method name="select">
+        <body>
+          document.getAnonymousNodes(this)[1].childNodes[1].firstChild.select();
+        </body>
+      </method>
+      
+      <method name="focus">
+        <body>
+          document.getAnonymousNodes(this)[1].childNodes[1].firstChild.focus();
+        </body>
+      </method>
+
+      <method name="blur">
+        <body>
+          document.getAnonymousNodes(this)[1].childNodes[1].firstChild.blur();
+        </body>
+      </method>
+
+      <property name="controllers"    onget="return document.getAnonymousNodes(this)[1].controllers"/>
+      <property name="textLength"     onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.textLength;"/>
+      <property name="selectionStart" onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.selectionStart = val; return val;"
+                                      onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.selectionStart;"/>
+      <property name="selectionEnd"   onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.selectionEnd = val; return val;"
+                                      onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.selectionEnd;"/>
+
+      <method name="setSelectionRange">
+        <parameter name="aSelectionStart"/>
+        <parameter name="aSelectionEnd"/>
+        <body>
+          document.getAnonymousNodes(this)[1].childNodes[1].firstChild.setSelectionRange( aSelectionStart, aSelectionEnd );
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="focus" phase="capturing" action="this.setAttribute('focused','true');"/>
+      <handler event="blur" phase="capturing" action="this.removeAttribute('focused');"/>
+    </handlers>    
   </binding>
 
 </bindings>

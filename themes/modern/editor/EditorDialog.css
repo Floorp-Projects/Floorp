@@ -125,7 +125,7 @@ titledbox {
 }
 
 .popup-trigger {
-  list-style-image: url(chrome://global/skin/scroll-down.gif);
+  list-style-image: url(chrome://global/skin/simple-arrow-down.gif);
 }
 
 /* temporary -- we need a simple box-based list defined in XBL */
@@ -152,14 +152,14 @@ tree.list {
 }
 
 #MoreFewerButton[more="0"] {
-  list-style-image: url(chrome://global/skin/scroll-down.gif);
+  list-style-image: url(chrome://global/skin/simple-arrow-down.gif);
   /* bug 9459 - changing button text doesn't resize width.
      This covers that problem, but we want this size anyway */
   min-width: 12em;
 }
 
 #MoreFewerButton[more="1"] {
-  list-style-image: url(chrome://global/skin/scroll-up.gif);
+  list-style-image: url(chrome://global/skin/simple-arrow-up.gif);
   min-width: 12em;
 }
 

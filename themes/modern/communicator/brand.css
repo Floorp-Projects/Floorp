@@ -10,6 +10,7 @@
     background-color	  : transparent;
     text-align			  : center;
     -moz-user-focus       : ignore;
+    min-width			  : 0px;
   }  
 
 #navigator-throbber[busy="true"]

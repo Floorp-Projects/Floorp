@@ -57,13 +57,13 @@
   menubutton.menubutton-dual > .menubutton-dropmarker
     {
       border              : 1px outset #CCCCCC;
-      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+      list-style-image    : url("chrome://global/skin/simple-arrow-down.gif");
       padding             : 0px 2px 0px 2px;
     }
     
   menubutton.menubutton-dual[disabled="true"] > .menubutton-dropmarker
     {
-      list-style-image    : url("chrome://global/skin/scroll-down-disabled.gif");
+      list-style-image    : url("chrome://global/skin/simple-arrow-down-disabled.gif");
     }
 
   menubutton.menubutton-dual[open="true"] > .menubutton-dropmarker

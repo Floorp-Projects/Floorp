@@ -2,7 +2,7 @@
 
 .color-dialog
   {
-    background-color      : #CCCCCC;
+    background-color      : #B4C3D4;
     color                 : #000000;
   }
   
@@ -108,7 +108,7 @@
     
   text[disabled="true"] 
     {
-      color                 : #999999;
+      color                 : #5A616A;
     }    
     
   html
@@ -129,7 +129,7 @@
 
   .icon-dropmarker
     {
-      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+      list-style-image    : url("chrome://global/skin/simple-arrow-down.gif");
     }
     
   .box-padded

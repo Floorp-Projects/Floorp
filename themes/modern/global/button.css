@@ -1,5 +1,35 @@
 /* NEW WIDGET ANDING: <button> */
 
+/** plain (raw) buttons, class="plain" **/
+  button.plain, button.plain:hover, button.plain:hover:active,
+  button.plain:hover:active > .button-internal-box,
+  button.plain > .button-internal-box, 
+  button.plain > .button-internal-box:hover:active,
+  button.plain > .button-internal-box > .button-text-container, 
+  button.plain > .button-internal-box > .button-text-container:hover:active,
+  button.plain > .button-internal-box > .button-text-container > .button-text, 
+  button.plain > .button-internal-box > .button-text-container > .button.text:hover:active,
+  button.plain > .button-internal-box > .button-icon, 
+  button.plain > .button-internal-box > .button.icon:hover:active
+    {
+      border              : 0px !important;
+      margin              : 0px;
+      padding             : 0px;
+    }
+    
+/*** class = "plain-extended" ***/
+/********************************/
+/* This is a dummy class that is specified in the several XUL files for the sake of the
+ * Macintosh Classic Skin.  This class has essentially the same behavior and styles as
+ * the above <button> and accompanying styles, but is useful in the Mac Classic skin.  This is because <button>
+ * styles have been completely rewritten to produce Macintosh buttons with bevels, rounded corners,
+ * etc.  Plain-extended thereby functions to produce square buttons with all the same hover and active
+ * effects that modern <button>'s do.
+ ********************************/
+
+button.plain-extended {}
+
+
 /** Default Button Styles (apply to usage of <button> without 
  *  any applied class).
  **/
@@ -7,44 +37,143 @@
 /* outer frame */
   button 
     {
-      border              : 1px solid #000000;
-      -moz-border-radius  : 3px 2px 2px 3px;
-      margin              : 1px 5px 2px 5px;
-      background-color    : transparent;
-    }
-  
-  button[disabled="true"],
-  button[disabled="true"]:hover,
-  button[disabled="true"]:hover:active 
-    {
-      border              : 1px solid #999999;
-      color               : #48617F;
-    }
-        
-/* internal frame */
-  button > .button-internal-box 
-    {
-      vertical-align      : middle;
-      text-align          : center;
-      border              : 1px outset #CCCCCC;
-      padding             : 2px;
-    }
-    
-  button:hover:active > .button-internal-box 
-    {
-      border              : 1px inset #CCCCCC;
-      padding             : 3px 1px 1px 3px;  
-    }
-  
-  button[disabled="true"] > .button-internal-box,
-  button[disabled="true"]:hover > .button-internal-box,
-  button[disabled="true"]:hover:active > .button-internal-box 
-    {
-      border              : 1px outset #CCCCCC;
-      -moz-border-radius  : 0px;
-      padding             : 2px;
+	  -moz-binding			: url("chrome://global/skin/globalBindings.xml#three-slice-button");
+      background-color      : transparent;
+      border				: 0px;
+      margin				: 4px 5px 5px 5px;
+      color					: #1C1D1F;
+      min-width				: 60px;
     }
 
+  button[disabled="true"], button[disabled="true"]:hover, button[disabled="true"]:hover:active
+    {
+      border				: 0px;
+      color					: #595F61;
+    }
+
+  .button-image-left {
+	background			: url(chrome://global/skin/button-left.gif) no-repeat;
+	width				: 9px;
+	height				: 19px;
+  }
+
+  .button-image-middle {
+	background			: url(chrome://global/skin/button-middle.gif) repeat-x;
+  }
+
+  .button-text-box {
+	text-align          : center;
+    vertical-align      : middle;
+    padding				: 0px;
+    font-size 			: 11px;
+    font-family			: charcoal, arial;
+    font-weight			: normal;
+    margin-right		: 2px;
+  }
+
+  .button-image-right {
+	background			: url(chrome://global/skin/button-right.gif) no-repeat;
+	width				: 7px;
+	height				: 19px;
+  }
+
+  .button-top-spring {
+	height				: 2px;
+  }
+
+  .button-bottom-spring {
+	height				: 2px;
+  }
+  
+  button:hover:active {
+  	color				: #1C1D1F;
+  }
+  
+  button:hover:active > .button-image-left {
+	background			: url(chrome://global/skin/button-clicked-left.gif) no-repeat;
+  }
+
+  button:hover:active > .button-image-middle {
+	background			: url(chrome://global/skin/button-clicked-middle.gif) repeat-x;
+  }
+
+  button:hover:active > .button-image-right {
+	background			: url(chrome://global/skin/button-clicked-right.gif) no-repeat;
+  }
+
+  button[disabled="true"] > .button-image-left,
+  button[disabled="true"]:hover:active > .button-image-left {
+	background			: url(chrome://global/skin/button-disabled-left.gif) no-repeat;
+  }
+
+  button[disabled="true"] > .button-image-middle,
+  button[disabled="true"]:hover:active > .button-image-middle {
+	background			: url(chrome://global/skin/button-disabled-middle.gif) repeat-x;
+  }
+
+  button[disabled="true"] > .button-image-right,
+  button[disabled="true"]:hover:active > .button-image-right {
+	background			: url(chrome://global/skin/button-disabled-right.gif) no-repeat;
+  }
+
+
+/* Default Button States */
+
+  button[default="true"] {
+  	margin: 2px 5px 3px 5px;
+  }
+
+  .button-text-box[default="true"] {
+  	//font-weight: bold;    TURN ON LATER, AFTER FIXING FONT ISSUE
+  }
+
+  button[default="true"] > .button-image-middle > .button-top-spring {
+	height: 3px;
+  }
+
+  .button-image-left[default="true"] {
+	background	: url(chrome://global/skin/button-def-left.gif) no-repeat;
+	width: 11px;
+	height: 23px;
+  }
+
+  .button-image-middle[default="true"] {
+	background	: url(chrome://global/skin/button-def-middle.gif) repeat-x;
+  }
+
+  .button-image-right[default="true"] {
+	background	: url(chrome://global/skin/button-def-right.gif) no-repeat;
+	width: 9px;
+	height: 23px;
+  }
+
+  button:hover:active > .button-image-left[default="true"] {
+	background	: url(chrome://global/skin/button-def-clicked-left.gif) no-repeat;
+  }
+
+  button:hover:active > .button-image-middle[default="true"] {
+	background	: url(chrome://global/skin/button-def-clicked-middle.gif) repeat-x;
+  }
+
+  button:hover:active > .button-image-right[default="true"] {
+	background	: url(chrome://global/skin/button-def-clicked-right.gif) no-repeat;
+  }
+
+  .button-image-left[default="true"][disabled="true"],
+  button[default="true"][disabled="true"]:hover:active > .button-image-left {
+	background	: url(chrome://global/skin/button-def-disabled-left.gif) no-repeat;
+  }
+
+  .button-image-middle[default="true"][disabled="true"],
+  button[default="true"][disabled="true"]:hover:active > .button-image-middle {
+	background	: url(chrome://global/skin/button-def-disabled-middle.gif) repeat-x;
+  }
+
+  .button-image-right[default="true"][disabled="true"],
+  button[default="true"][disabled="true"]:hover:active > .button-image-right {
+	background	: url(chrome://global/skin/button-def-disabled-right.gif) no-repeat;
+  }
+  
 /* text wrapping frame (hack because <text> does not support alignment) */
   .button-text-container
     {
@@ -63,27 +192,6 @@
       padding             : 2px 2px 0px 2px;
     }
   
-/** Styles for "DEFAULT" buttons (usually 'OK' or equivalent in dialogs. 
- *  To activate, set 'default' attribute on button.
- **/
- 
-/* outer frame */  
-  button[default] 
-    {
-      /* XXX this is a HACK until 'orient' is supported in CSS! XXX */
-      /* strictly speaking not necessary because default for buttonright is 
-       * to lay image out horizontally, but leaving here as a reminder to
-       * implement this feature */
-      -moz-binding        : url(chrome://global/content/xulBindings.xml#buttonright);
-      font-weight         : bold;
-	    list-style-image    : url("chrome://global/skin/return.gif");
-    }
-  
-  button[default][disabled="true"]
-    {
-      list-style-image    : url("chrome://global/skin/return-disabled.gif");
-    }
-    
 /** Styles for 'dialog' buttons (usually any command button in a dialog)
  *  This class gives buttons 10px of padding on each side to increase the
  *  strike area and make buttons with small amounts of text (e.g. 'OK') 
@@ -131,36 +239,6 @@
       border              : 1px inset #CCCCCC;
     }
 
-/** plain (raw) buttons, class="plain" **/
-  button.plain, button.plain:hover, button.plain:hover:active,
-  button.plain:hover:active > .button-internal-box,
-  button.plain > .button-internal-box, 
-  button.plain > .button-internal-box:hover:active,
-  button.plain > .button-internal-box > .button-text-container, 
-  button.plain > .button-internal-box > .button-text-container:hover:active,
-  button.plain > .button-internal-box > .button-text-container > .button-text, 
-  button.plain > .button-internal-box > .button-text-container > .button.text:hover:active,
-  button.plain > .button-internal-box > .button-icon, 
-  button.plain > .button-internal-box > .button.icon:hover:active
-    {
-      border              : 0px ! important;
-      margin              : 0px;
-      padding             : 0px;
-    }
-    
-/*** class = "plain-extended" ***/
-/********************************/
-/* This is a dummy class that is specified in the several XUL files for the sake of the
- * Macintosh Classic Skin.  This class has essentially the same behavior and styles as
- * the above <button> and accompanying styles, but is useful in the Mac Classic skin.  This is because <button>
- * styles have been completely rewritten to produce Macintosh buttons with bevels, rounded corners,
- * etc.  Plain-extended thereby functions to produce square buttons with all the same hover and active
- * effects that modern <button>'s do.
- ********************************/
-
-button.plain-extended {}
-
-
 /** 
  * utility class for buttons with associated popup
  **/
@@ -178,13 +256,13 @@ button.plain-extended {}
   .reorder-up
     {
       min-width           : 0px;
-      list-style-image    : url("chrome://global/skin/scroll-up.gif");
+      list-style-image    : url("chrome://global/skin/simple-arrow-up.gif");
     }    
     
   .reorder-down
     {
       min-width           : 0px;
-      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+      list-style-image    : url("chrome://global/skin/simple-arrow-down.gif");
     }    
     
   .reorder-up > .button-internal-box > .button-icon,

@@ -4,6 +4,7 @@
  **/
   .button-toolbar
     {
+      -moz-binding          : url("chrome://global/content/xulBindings.xml#buttonleft");
       border                : 0px solid transparent;
       margin                : 0px 0px 0px 0px;
       -moz-border-radius    : 0px;
@@ -11,6 +12,7 @@
       padding               : 0px;
       font                  : 11px arial;
       max-width             : 10em;
+      min-width             : 0px;
     }
     
   .button-toolbar:hover
@@ -22,6 +24,7 @@
   .button-toolbar[home-dragover="true"]
     {
       border                : 0px solid #336699;
+      color					: #D0E7E7;
     }
     
   .button-toolbar > .button-internal-box,
@@ -65,6 +68,7 @@
   .button-toolbar[disabled="true"]:hover:active
     {
       border                : 0px solid transparent;
+      color					: #D0E7E7;
     }
 
 /** The largest type of toolbar buttons. In the Seamonkey implementation, 
@@ -74,12 +78,15 @@
   /* outer frame */
   .button-toolbar-1
     {
+      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttontop");
       color               : #D0E7E7;
       margin              : 3px 2px 9px 2px;
       font-size           : smaller;
       border              : 0px;
       padding			  : 0px;
       -moz-border-radius  : 0px;
+      min-width           : 0px;
+      text-align		  : center;
     }
     
   .button-toolbar-1:hover 
@@ -92,6 +99,7 @@
     {
       border              : 0px;
       padding			  : 0px;
+      color					: #D0E7E7;
     }
 
   .button-toolbar-1[disabled="true"],
@@ -100,6 +108,8 @@
     {
       margin              : 3px 2px 9px 2px;
       border              : none;
+      color					: #D0E7E7;
+      text-align		  : center;
     }
     
 /* internal frame */
@@ -137,6 +147,8 @@
       font-size           : smaller;
       border              : 0px;
       padding			  : 0px;
+      min-width           : 0px;
+      text-align		  : center;
     }
     
   .button-toolbar-2:hover 
@@ -149,6 +161,7 @@
     {
       border              : 0px;
       padding			  : 0px;
+      color				  : #D0E7E7;
     }
 
   .button-toolbar-2[disabled="true"],
@@ -157,6 +170,7 @@
     {
       border              : 0px;
       padding			  : 0px;
+      color				  : #D0E7E7;
     }
     
 /* internal frame */
@@ -167,6 +181,7 @@
       border              : 0px;
       padding			  : 0px;
       vertical-align      : middle;
+      text-align		  : center;
     }
       
   .button-toolbar-2 > .button-internal-box,
@@ -208,73 +223,12 @@
       background-color      : transparent;
       border				: 0px;
       margin				: 3px 7px 2px 0px;
-      color					: #2F405D;
     }
 
   button.button-toolbar-3[disabled="true"], .button-toolbar-3[disabled="true"]:hover, .button-toolbar-3[disabled="true"]:hover:active
     {
       border				: 0px;
     }
-
-  .three-slice-button-image-left {
-	background			: url(chrome://global/skin/button-3slice-normal-left.gif) no-repeat;
-	width				: 5px;
-	height				: 20px;
-  }
-
-  .three-slice-button-image-middle {
-	background			: url(chrome://global/skin/button-3slice-normal-middle.gif) repeat-x;
-  }
-
-  .three-slice-button-text-box {
-	text-align          : center;
-    vertical-align      : middle;
-    padding				: 0px 3px;
-    font-size			: 10px;
-  }
-
-  .three-slice-button-image-right {
-	background			: url(chrome://global/skin/button-3slice-normal-right.gif) no-repeat;
-	width				: 4px;
-	height				: 20px;
-  }
-
-  .three-slice-button-top-spring {
-	height				: 2px;
-  }
-
-  .three-slice-button-bottom-spring {
-	height				: 3px;
-  }
-  
-  button.button-toolbar-3:hover:active {
-  	color				: #B2CAC9;
-  }
-  
-  button.button-toolbar-3:hover:active > .three-slice-button-image-left {
-	background			: url(chrome://global/skin/button-3slice-active-left.gif) no-repeat;
-  }
-
-  button.button-toolbar-3:hover:active > .three-slice-button-image-middle {
-	background			: url(chrome://global/skin/button-3slice-active-middle.gif) repeat-x;
-  }
-
-  button.button-toolbar-3:hover:active > .three-slice-button-image-right {
-	background			: url(chrome://global/skin/button-3slice-active-right.gif) no-repeat;
-  }
-
-  button.button-toolbar-3[disabled="true"]:hover:active > .three-slice-button-image-left {
-	list-style-image	: none;
-  }
-
-  button.button-toolbar-3[disabled="true"]:hover:active > .three-slice-button-image-middle {
-	list-style-image	: none;
-  }
-
-  button.button-toolbar-3[disabled="true"]:hover:active > .three-slice-button-image-right {
-	list-style-image	: none;
-  }
-
 
 /** Expanding Region Button **/
 
@@ -319,12 +273,14 @@
  **/
 .button-toolbar-4
   {
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#buttonleft");
     color                 : #D0E7E7;
     background            : inherit;
     font                  : inherit;
-    border                : none;
     padding               : 1px;
     margin                : 0px;
+    min-width			  : 0px;
+    border				  : 0px;
   }
 
 .button-toolbar-4:hover 
@@ -340,8 +296,9 @@
   
 menubutton.button-toolbar-4
   {
-    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right") !important;
 	margin				  : 0px 6px;
+    min-width             : 0px;
   }
 
 .button-toolbar-4 > .menubutton-internal-box > .menubutton-single-icon

@@ -6,6 +6,9 @@
   checkbox 
     {
       margin: 3px 5px 3px 5px;
+      border: 1px solid transparent;
+      padding-left: 1px;
+      padding-right: 1px;
     }
 
   checkbox > .internal-box
@@ -16,48 +19,45 @@
 /* checkmark outer frame */
   checkbox > .internal-box > .checkmark-box 
     {
-      border: 1px solid #000000;
-      -moz-border-radius: 3px 2px 2px 3px;
-      background-color: #CCCCCC;
-      margin-top: 2px;
-      margin-right: 4px;
+	  margin: 3px 3px 3px 3px;
     }
 
   checkbox[disabled="true"] > .internal-box > .checkmark-box,
   checkbox[disabled="true"]:hover > .internal-box > .checkmark-box 
     {
-      border: 1px solid #999999;
+      //border: 1px solid #999999;
     }
     
 /* checkmark inner frame */
   checkbox > .internal-box > .checkmark-box > .checkbox-check 
     {
-      border: 1px outset #CCCCCC;
-      width: 10px;
-      height: 10px;
-      list-style-image: none;
+      list-style-image: url(chrome://global/skin/check-cb.gif);
+      
     }
   
   checkbox[checked="true"] > .internal-box > .checkmark-box > .checkbox-check 
     {
-      list-style-image: url(chrome://global/skin/check-check.gif);
+      list-style-image: url(chrome://global/skin/check-cb-check.gif);
     }
     
   checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check
     {
-      list-style-image: url(chrome://global/skin/check-check-disabled.gif);
+      list-style-image: url(chrome://global/skin/check-cb-check-disabled.gif);
     }  
 
   checkbox:hover:active > .internal-box > .checkmark-box > .checkbox-check 
     {
-      border: 1px inset #CCCCCC;
+      list-style-image: url(chrome://global/skin/check-cb-pressed.gif);  
     }
   
-  checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
-  checkbox[disabled="true"]:active > .internal-box > .checkmark-box > .checkbox-check 
+  checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check
     {
-      border: 1px outset #CCCCCC;
-      -moz-border-radius: 0px;
+  	  list-style-image: url(chrome://global/skin/check-cb-disabled.gif);  
+    }
+
+  checkbox[checked="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check 
+    {
+      list-style-image: url(chrome://global/skin/check-cb-check-pressed.gif);
     }
 
   checkbox > .internal-box > .checkbox-icon 
@@ -68,8 +68,8 @@
 /* checkmark label/icon frame */
   checkbox[value] > .internal-box > html
     {
-      margin: 0px 0px 0px 4px;
-      padding: 1px;
+      margin: 0px 0px 2px 0px;
+      padding: 2px 2px 2px 0px;
     }
 
   checkbox[disabled="true"][value] > .internal-box > html 
@@ -77,8 +77,9 @@
       color: #999999;
     }
     
-  checkbox:focus > .internal-box > html 
+  checkbox:focus > .internal-box > .checkmark-box
     {
-      border              : 1px dotted black;
-      padding             : 0px;
+      border              : 2px solid #F2C34F;
+      margin			  : 1px 1px 1px 1px;
+      -moz-border-radius  : 4px 5px 4px 5px;
     }

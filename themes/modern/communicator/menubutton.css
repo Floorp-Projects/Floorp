@@ -35,6 +35,11 @@
 /** menubuttons on generic grey toolbars
  *  class="button-toolbar"
  **/ 
+   menubutton.button-toolbar 
+   {
+     -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-left");
+   }
+ 
   .button-toolbar > .menubutton-internal-box
     {
       border                : none;
@@ -67,7 +72,7 @@
 .menubutton-dual.toolbar
   {
     -moz-binding            : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
-    border                  : 0px solid red;
+    border                  : 0px;
     margin      	        : 3px 2px 9px 2px;
     padding					: 0px;
   }

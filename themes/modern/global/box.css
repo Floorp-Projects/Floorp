@@ -1,7 +1,7 @@
 
 titledbox
   {
-    border                : 2px groove #CCCCCC;
+    border                : 2px groove #4D6584;
     padding               : 7px;
     margin                : 5px;
   }
@@ -10,7 +10,7 @@ title
   {
     margin                : 0px 6px 2px 6px;
     padding               : 0px 3px 0px 3px;
-    background-color      : #CCCCCC; 
+    background-color      : transparent; 
   }
 
 .titledbox-body

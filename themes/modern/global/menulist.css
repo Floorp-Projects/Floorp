@@ -9,86 +9,71 @@
 /* outer frame */
   menulist 
     {
+      -moz-binding		  : url(chrome://global/skin/globalBindings.xml#menulist);
       padding             : 0px;
-      border              : 1px solid #000000;
-      background-color    : #CCCCCC;
-      -moz-border-radius  : 3px 2px 2px 3px;
-      margin              : 1px 5px 2px 5px;
+      margin			  : 3px 3px 4px 5px;
+      font-size 		  : 10px;
+      font-family		  : geneva, arial;
     }
 
-  menulist[menuactive="true"],
-  menulist:hover 
+  .menulist-text-box
     {
-      border              : 1px solid #000000;
+   	  margin-top		  : 1px;
+   	  margin-right		  : 2px;
     }
 
-  menulist[open="true"] 
+  .menulist-spring-left 
+  	{
+  	  background		  : url(chrome://global/skin/menulist-leftcap.gif) no-repeat;	
+	  height			  : 16px;
+	  width				  : 8px;
+  	}
+
+  .menulist-box-middle
     {
-      border              : 1px solid #000000;
+      background		  : url(chrome://global/skin/menulist-middle.gif) repeat-x;
+      height			  : 16px;
     }
   
-  menulist[disabled="true"]
+  .menulist-dropmarker-right
     {
-      border              : 1px solid #999999;
-      color               : #999999;
+      background		  : url(chrome://global/skin/menulist-rightcap.gif) no-repeat;
+      height			  : 16px;
+      width				  : 22px;
     }
-    
-/* icon display frame */
-  menulist > .menu-icon 
-    {
-      border-left         : 1px outset #CCCCCC;
-      border-top          : 1px outset #CCCCCC;
-      border-bottom       : 1px outset #CCCCCC;
-      padding             : 2px 0px 2px 0px;
-    }  
 
-  menulist[open="true"] > .menu-icon 
+/* Clicked States */
+
+  menulist:hover:active > .menulist-spring-left, menulist[open="true"]> .menulist-spring-left
+  	{
+  	  background		  : url(chrome://global/skin/menulist-clicked-leftcap.gif) no-repeat;	
+  	}
+
+  menulist:hover:active > .menulist-box-middle, menulist[open="true"]> .menulist-box-middle
     {
-      border-left         : 1px inset #CCCCCC;
-      border-top          : 1px inset #CCCCCC;
-      border-bottom       : 1px solid #CCCCCC;
-      padding             : 3px 0px 1px 0px;
+      background		  : url(chrome://global/skin/menulist-clicked-middle.gif) repeat-x;
     }
   
-/* text display frame */
-  menulist > .menu-text 
+  menulist:hover:active > .menulist-dropmarker-right, menulist[open="true"] > .menulist-dropmarker-right
     {
-      padding             : 2px 4px 2px 4px;
-      border-top          : 1px outset #CCCCCC;
-      border-bottom       : 1px outset #CCCCCC;
-      margin-right        : 0px;
-    }
-    
-  menulist[open="true"] > .menu-text 
-    {
-      border-top          : 1px inset #CCCCCC;
-      border-bottom       : 1px solid #CCCCCC;
-      padding             : 3px 4px 1px 4px;
+      background		  : url(chrome://global/skin/menulist-clicked-rightcap.gif) no-repeat;
     }
 
-/* drop marker display frame */
-  menulist > .menu-dropmarker 
+/* Disabled States */
+
+  .menulist-spring-left[disabled="true"], menulist:hover:active > .menulist-spring-left[disabled="true"]
+  	{
+  	  background		  : url(chrome://global/skin/menulist-disabled-leftcap.gif) no-repeat;	
+  	}
+
+  .menulist-box-middle[disabled="true"], menulist:hover:active > .menulist-box-middle[disabled="true"]
     {
-      border-top          : 1px outset #CCCCCC;
-      border-right        : 1px outset #CCCCCC;
-      border-bottom       : 1px outset #CCCCCC;
-      border-left         : none;
-      list-style-image    : url("chrome://global/skin/scroll-down.gif");
-      padding             : 2px;
+      background		  : url(chrome://global/skin/menulist-disabled-middle.gif) repeat-x;
     }
   
-  menulist[disabled="true"] > .menu-dropmarker
+  .menulist-dropmarker-right[disabled="true"], menulist:hover:active > .menulist-dropmarker-right[disabled="true"]
     {
-      list-style-image    : url("chrome://global/skin/scroll-down-disabled.gif");
-    }
-
-  menulist[open="true"] > .menu-dropmarker 
-    {
-      border-top          : 1px inset #CCCCCC;
-      border-right        : 1px inset #CCCCCC;
-      border-bottom       : 1px solid #CCCCCC;
-      border-left         : 1px solid #CCCCCC;
-      padding             : 3px 2px 1px 2px;
+      background		  : url(chrome://global/skin/menulist-disabled-rightcap.gif) no-repeat;
     }
 
 /** rules for EDITABLE menulists (aka 'comboboxes'). 
@@ -124,9 +109,9 @@
 
 /* drop marker display frame */
   menulist[editable="true"] > .menu-dropmarker 
-    {
+	{
       border              : 1px outset #CCCCCC;
-    }
+	}
 
   menulist[editable="true"][open="true"] > .menu-dropmarker 
     {
@@ -136,34 +121,35 @@
 /* rules for popups and separators associated with menulists */
   menulist > menupopup 
     {
-      border-left         : 1px solid #000000;
-      border-right        : 1px solid #000000;
-      border-bottom       : 1px solid #000000;
-      border-top          : 0px;
+      border			  : 1px solid #313948;
       min-width           : 0px;
       padding             : 0px;
+      background-color	  : #C2D0D0;
     }
     
   menulist > menupopup > .popup-internal-box
     {
-      border-left         : 1px inset #CCCCCC;
-      border-right        : 1px inset #CCCCCC;
-      border-bottom       : 1px inset #CCCCCC;
-      border-top          : 0px;
+      border: 0px;
     }
-/*    
+  
   menulist > menupopup > menuseparator 
     {
-      border-top: 1px solid #172254;
-      border-bottom: 1px solid #5A518A;
+      border-top: 1px solid #919FA3;
+      border-bottom: 1px solid #E6EFEE;
     }
-*/
 
   menulist > menupopup > menuitem 
     {
-      padding             : 0px 5px 0px 0px;
+      padding             : 0px;
       min-width           : 0px;
       max-width           : none;
+      color				  : #000000;
+    }
+
+  menulist > menupopup > menuitem[menuactive="true"]
+    {
+    	background-color  : #465B75;
+    	color			  : #FFFFFF;
     }
 
   menulist > menupopup > menuitem[selected="true"] > .menu-iconic-left
@@ -175,3 +161,11 @@
     {
       list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
     }
+  
+ menulist:focus
+   {
+      border              : 2px solid #F2C34F;
+      margin			  : 1px 1px 2px 3px;
+      -moz-border-radius  : 8px 7px 11px 9px;
+   }
+  
