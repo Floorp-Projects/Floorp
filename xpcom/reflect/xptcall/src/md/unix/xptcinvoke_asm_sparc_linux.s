@@ -44,7 +44,7 @@ XPTC_InvokeByIndex:
 !
 	add	%i1,1,%i1	    ! vTable is zero-based, index is 1 based (?)	
 	ld	[%i0],%l1	    ! *that --> vTable
-	sll	%i1,2,%i1	    | 32 bit pointer
+	sll	%i1,2,%i1	    ! 32 bit pointer
 	add	%i1,%l1,%l1	    ! vTable[index * 4], l1 now points to vTable entry
         ld      [%l1 + 4],%l0       ! target address
 
