@@ -27,6 +27,10 @@
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
+#include "nsIEventQueueService.h"
+#include "nsIThread.h"
+
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
         
 static void* EventHandler(PLEvent *self);
 static void DestroyHandler(PLEvent *self);
@@ -309,12 +313,48 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                     }
                     else
                     {
-                        rv = manager->GetProxyObject(GetQueue(), 
-                                                     *iid,
-                                                     anInterface, 
-                                                     GetProxyType(), 
-                                                     (void**) &aProxyObject);
-                   }
+
+                        nsIEventQueue *eventQ;
+                        /* 
+                           if the parameter is coming |in|, it should only be called on the callers thread.
+                           else, if the parameter is an |out| thread, it should only be called on the proxy
+                           objects thread
+                        */
+
+                        if (paramInfo.IsOut())
+                        {
+                            eventQ = GetQueue();
+                        }
+                        else
+                        {
+                            NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+                            if ( NS_SUCCEEDED( rv ) )
+                            {
+                                rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+                                if ( NS_FAILED( rv ) )
+                                {
+                                    // the caller does not have an eventQ of their own.  bad.
+                                    eventQ = GetQueue();
+#ifdef DEBUG
+                        printf("**************************************************\n");
+                        printf("xpcom-proxy: Caller does not have an EventQ\n");
+                        printf("**************************************************\n");
+#endif /* DEBUG */
+                                    
+                                }   
+                            }
+
+                        }
+
+                        if ( NS_SUCCEEDED( rv ) )
+                        {
+                                rv = manager->GetProxyObject(eventQ, 
+                                                             *iid,
+                                                             anInterface, 
+                                                             GetProxyType(), 
+                                                             (void**) &aProxyObject);
+                        }
+                    }
 
                     nsAllocator::Free((void*)iid);
                     NS_RELEASE(manager);
