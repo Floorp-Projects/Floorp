@@ -69,8 +69,7 @@ toolbarbutton {
   text-align: center;
 }
 
-toolbarbutton:hover,
-toolbarbutton[buttonover="true"] {
+toolbarbutton:hover {
   -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight;
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
@@ -165,9 +164,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 }
 
 toolbarbutton[type="menu-button"]:hover > .toolbarbutton-menubutton-button,
-toolbarbutton[type="menu-button"][buttonover="true"] > .toolbarbutton-menubutton-button,
 toolbarbutton[type="menu-button"]:hover > .toolbarbutton-menubutton-dropmarker,
-toolbarbutton[type="menu-button"][buttonover="true"] > .toolbarbutton-menubutton-dropmarker,
 toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-button {
   -moz-border-top-colors: ThreeDHighlight;
   -moz-border-right-colors: ThreeDShadow;
@@ -175,9 +172,8 @@ toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-butto
   -moz-border-left-colors: ThreeDHighlight;
 }
 
-toolbarbutton[type="menu-button"][buttondown="true"] > .toolbarbutton-menubutton-button,
+toolbarbutton[type="menu-button"]:hover:active > .toolbarbutton-menubutton-button,
 toolbarbutton[type="menu-button"]:hover:active > .toolbarbutton-menubutton-dropmarker,
-toolbarbutton[type="menu-button"][buttondown="true"] > .toolbarbutton-menubutton-dropmarker,
 toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropmarker {
   -moz-border-top-colors: ThreeDShadow;
   -moz-border-right-colors: ThreeDHighlight;
@@ -202,6 +198,6 @@ toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropm
 }
 
 toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropmarker,
-toolbarbutton[type="menu-button"][buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
+toolbarbutton[type="menu-button"]:hover:active > .toolbarbutton-menubutton-dropmarker {
   padding: 1px 0 0 0;
 }

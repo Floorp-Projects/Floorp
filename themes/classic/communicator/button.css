@@ -61,7 +61,7 @@
 
 .toolbarbutton-1:hover:active,
 .toolbarbutton-1[open="true"],
-.toolbarbutton-1[buttondown="true"] > .toolbarbutton-menubutton-button {
+.toolbarbutton-1:hover:active > .toolbarbutton-menubutton-button {
   padding: 3px 6px 1px 7px;
 }
 
@@ -132,4 +132,3 @@
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDHighlight;
   -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
 }
-
