@@ -283,7 +283,10 @@ function getCalendarEventFromEvent( event )
 
 function unifinderOnSelect( event )
 {
-   dump( "\n\nin unifinder onselect" );
+   dump( "\n\nin unifinder onselect\n" );
+
+   if( event.target.view.selection.getRangeCount() == 0 )
+       return;
 
    var ArrayOfEvents = new Array( );
    
