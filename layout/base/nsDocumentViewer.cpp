@@ -693,6 +693,10 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     if (mEnableRendering) {
       mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
     }
+  } else {
+    // Store the visible area so it's available for other callers of
+    // InitialReflow, like nsContentSink::StartLayout.
+    mPresContext->SetVisibleArea(nsRect(0, 0, width, height));
   }
 
   // now register ourselves as a selection listener, so that we get
