@@ -24,29 +24,35 @@ include"inc_sidebar.php";
 <?php
 //Security Check for EditUser/ChangePassword function.
 if ($function=="edituser" or $function=="changepassword") {
-$postuid = escape_string($_GET["userid"]); 
-$userid = escape_string($_SESSION["uid"]);
-  if ($_SESSION["level"] !=="admin" and $postuid != $userid) {
-  //This user isn't an admin, verify the id of the record they're working with is ok.
-   $sql = "SELECT `UserID` from `userprofiles` WHERE ";
-  if ($_SESSION["level"]=="user") { $sql .="`UserID` = '$userid'";
-  } else if ($_SESSION["level"]=="editor") {$sql .="`UserMode`='U' and `UserID`='$postuid'";
-  } else { $sql .=" 0"; }
-   $sql .=" LIMIT 1";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-    if (mysql_num_rows($sql_result)=="0") {
-    echo"<h1>Error Accessing Record</h1>\n";
-    echo"You do not appear to have permission to edit this record.<br>\n";
-    echo"<a href=\"?function=\">&#171;&#171; Go Back</a>\n";
-    include"$page_footer";
-    echo"</body>\n<html>\n";
-    exit;
-    } else {
-    $row = mysql_fetch_array($sql_result);
-    $userid = $row["UserID"];
+  $postuid = escape_string($_GET["userid"]);
+  $userid = escape_string($_SESSION["uid"]);
+  // All users users may change their own accounts, check when trying to change other accounts
+  if ($postuid and $postuid != $userid) {
+    $allowed = false;
+    if ($_SESSION["level"] == "admin") {
+      // Admins may change any account
+      $allowed = true;
+    } else if ($_SESSION["level"]=="editor") {
+      // Editors may only change regular users, not editors or admins
+      $sql = "SELECT `UserID` from `userprofiles` WHERE " .
+             "`UserMode`='U' and `UserID`='$postuid'" .
+             " LIMIT 1";
+      $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+      if (mysql_num_rows($sql_result) == 1) {
+        $allowed = true;
+      }
     }
-  } else {
-  $userid = escape_string($_GET["userid"]);
+
+    if ($allowed == false) {
+      echo"<h1>Error Accessing Record</h1>\n";
+      echo"You do not appear to have permission to edit this record.<br>\n";
+      echo"<a href=\"?function=\">&#171;&#171; Go Back</a>\n";
+      include"$page_footer";
+      echo"</body>\n<html>\n";
+      exit;
+    } else {
+      $userid = $postuid;
+    }
   }
 }
 ?>
