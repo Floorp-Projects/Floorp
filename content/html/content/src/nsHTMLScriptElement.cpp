@@ -447,13 +447,21 @@ nsHTMLScriptElement::GetLineNumber(PRUint32* aLineNumber)
 void
 nsHTMLScriptElement::MaybeProcessScript()
 {
-  if (!mIsEvaluated && mDocument && mParent &&
-      (HasAttr(kNameSpaceID_None, nsHTMLAtoms::src) || mChildren.Count())) {
+  if (mIsEvaluated || !mDocument || !mParent) {
+    return;
+  }
+
+  // We'll always call this to make sure that
+  // ScriptAvailable/ScriptEvaluated gets called. See bug 153600
+  nsCOMPtr<nsIScriptLoader> loader;
+  mDocument->GetScriptLoader(getter_AddRefs(loader));
+  if (loader) {
+    loader->ProcessScriptElement(this, this);
+  }
+
+  // But we'll only set mIsEvaluated if we did really load or evaluate
+  // something
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::src) || mChildren.Count()) {
     mIsEvaluated = PR_TRUE;
-    nsCOMPtr<nsIScriptLoader> loader;
-    mDocument->GetScriptLoader(getter_AddRefs(loader));
-    if (loader) {
-      loader->ProcessScriptElement(this, this);
-    }
   }
 }
