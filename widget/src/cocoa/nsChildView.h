@@ -81,6 +81,9 @@ class nsChildView;
   
     // tag for our mouse enter/exit tracking rect
   NSTrackingRectTag mMouseEnterExitTag;
+
+  // Whether we're a plugin view.
+  BOOL mIsPluginView;
 }
 
   // sets up our view, attaching it to its owning gecko view
@@ -97,6 +100,8 @@ class nsChildView;
           modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
 -(NSMenu*)getContextMenu;
+
+-(void)setIsPluginView:(BOOL)aIsPlugin;
 
 @end
 
@@ -250,7 +255,8 @@ protected:
     // does not create something that inherits from NSQuickDrawView!
   virtual GrafPtr GetQuickDrawPort() ;
 
-protected:
+/* protected: */
+public:
 #if DEBUG
   const char*       gInstanceClassName;
 #endif
