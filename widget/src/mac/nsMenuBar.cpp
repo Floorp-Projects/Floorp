@@ -514,7 +514,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
       
       //XXX "aboutStrName" should be less hardcoded
       PRUnichar *ptrv = nsnull;
-      bundle->GetStringFromName(NS_LITERAL_STRING("aboutStrName"), &ptrv);
+      bundle->GetStringFromName(NS_LITERAL_STRING("aboutStrName").get(), &ptrv);
       nsAutoString label(ptrv);
 		  nsCRT::free(ptrv);
 
