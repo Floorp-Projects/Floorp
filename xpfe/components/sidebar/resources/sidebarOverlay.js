@@ -39,16 +39,10 @@ function debug(msg) {
 
 
 var panel_observer = new Object;
-var gInBatch = false;
 
 panel_observer = {
   OnAssert   : function(src,prop,target)
-    {
-      debug("panel_observer: onAssert");
-      if (prop == RDF.GetResource(NC + "inbatch")) {
-        gInBatch = true;
-      }
-    },
+               { debug("panel_observer: onAssert"); },
   OnUnassert : function(src,prop,target)
     {
       debug("panel_observer: onUnassert"); 
@@ -56,11 +50,6 @@ panel_observer = {
       // Wait for unassert that marks the end of the customize changes.
       // See customize.js for where this is unasserted.
       if (prop == RDF.GetResource(NC + "inbatch")) {
-        gInBatch = false;
-      }
-      if (!gInBatch) {
-        // Reset the selected panel. If the selected panel
-        // was deleted, the first one will get picked instead.
         sidebarOpenDefaultPanel(100, 0);
       }
     },
@@ -106,19 +95,19 @@ function sidebarOverlayInit() {
   sidebar.master_resource = 'urn:sidebar:master-panel-list';
 
   // Initialize the display
-  var sidebar_element = document.getElementById('sidebar-box')
+  var sidebar_element  = document.getElementById('sidebar-box')
   var sidebar_menuitem = document.getElementById('menu_sidebar')
   if (sidebar_element.getAttribute('hidden') == 'true') {
-    sidebar_element.setAttribute('style', 'display:none')
-
-    if (sidebar_menuitem)
+    if (sidebar_menuitem) {
       sidebar_menuitem.setAttribute('checked', 'false')
+    }
   } else {
-    if (sidebar_menuitem)
+    if (sidebar_menuitem) {
       sidebar_menuitem.setAttribute('checked', 'true');
+    }
 
-    debug("sidebar = " + sidebar);
-    debug("sidebar.resource = " + sidebar.resource);
+    debug("sidebar = "                + sidebar);
+    debug("sidebar.resource = "       + sidebar.resource);
     debug("sidebar.datasource_uri = " + sidebar.datasource_uri);
 
     // Add the user's current panel choices to the template builder,
@@ -179,25 +168,32 @@ function sidebarOpenDefaultPanel(wait, tries) {
   debug("sidebarOpenDefaultPanel("+wait+","+tries+")");
   debug("  target="+target);
 
-  if (children.length < 1) {
+  if (children.length <= 1) {
     if (tries < 5) {
       // No children yet, try again later
       setTimeout('sidebarOpenDefaultPanel('+(wait*2)+','+(tries+1)+')',wait);
+    } else {
+      // No panels.
+      // XXX This should load some help page instead of about:blank.
+      iframe.setAttribute('src', 'about:blank');
     }
     return;
   }
+
   if (target && target != '') {
+    // Try to select the prefered panel
     if (iframe.getAttribute('src') != target) {
       iframe.setAttribute('src', target);
     }
     for (var ii=0; ii < children.length; ii++) {
       if (children.item(ii).getAttribute('iframe-src') == target) {
+        // Found it!
         children.item(ii).setAttribute('selected','true');
         return;
       }
     }
   }
-  // Pick the first one
+  // Pick the first panel
   var first_button = children.item(1);
   if (first_button) {
     first_button.setAttribute('selected','true');
@@ -254,7 +250,7 @@ function SidebarSelectPanel(titledbutton) {
 
 // No one is calling this right now.
 function sidebarReload() {
-  sidebarOverlayInit(sidebar);
+  sidebarOverlayInit();
 }
 
 // Set up a lame hack to avoid opening two customize
@@ -298,24 +294,60 @@ function SidebarCustomize() {
 // Show/Hide the entire sidebar.
 // Envoked by the "View / Sidebar" menu option.
 function SidebarShowHide() {
-  var sidebar = document.getElementById('sidebar-box')
-  var sidebar_splitter = document.getElementById('sidebar-splitter')
-  var is_hidden = sidebar.getAttribute('hidden')
+  var sidebar          = document.getElementById('sidebar-box');
+  var sidebar_splitter = document.getElementById('sidebar-splitter');
+  var is_hidden        = sidebar.getAttribute('hidden');
 
   if (is_hidden && is_hidden == "true") {
-    debug("Showing the sidebar")
-    sidebar.setAttribute('hidden','')
-    sidebar_splitter.setAttribute('hidden','')
-    //sidebarOverlayInit()
+    debug("Showing the sidebar");
+    sidebar.removeAttribute('hidden');
+    sidebar_splitter.removeAttribute('hidden');
+    sidebarOverlayInit()
   } else {
-    debug("Hiding the sidebar")
-    sidebar.setAttribute('hidden','true')
-    sidebar_splitter.setAttribute('hidden','true')
+    debug("Hiding the sidebar");
+    sidebar.setAttribute('hidden','true');
+    sidebar_splitter.setAttribute('hidden','true');
   }
   // Immediately save persistent values
   document.persist('sidebar-box', 'hidden');
   document.persist('sidebar-box', 'width');
 }
+
+/*==================================================
+// Handy debug routines
+//==================================================
+function dumpAttributes(node,depth) {
+  var attributes = node.attributes;
+  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | . ";
+
+  if (!attributes || attributes.length == 0) {
+    debug(indent.substr(indent.length - depth*2) + "no attributes");
+  }
+  for (var ii=0; ii < attributes.length; ii++) {
+    var attr = attributes.item(ii);
+    debug(indent.substr(indent.length - depth*2) + attr.name +"="+attr.value);
+  }
+}
+
+function dumpTree(node, depth) {
+  if (!node) {
+    debug("dumpTree: node is null");
+  }
+  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
+  debug(indent.substr(indent.length - depth*2) + node.nodeName);
+  if (node.nodeName != "#text") {
+    //debug(" id="+node.getAttribute('id'));
+    dumpAttributes(node, depth);
+  }
+  var kids = node.childNodes;
+  for (var ii=0; ii < kids.length; ii++) {
+    dumpTree(kids[ii], depth + 1);
+  }
+}
+//==================================================
+// end of handy debug routines
+//==================================================*/
+
 
 // Install our load handler
 addEventListener("load", sidebarOverlayInit, false);
