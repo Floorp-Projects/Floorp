@@ -242,7 +242,7 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     fp->thisp = caller->thisp;
     JS_ASSERT(fp->scopeChain == caller->scopeChain);
     fp->sharpArray = caller->sharpArray;
-    return js_Execute(cx, scopeobj, script, fp, 0, rval);
+    return js_Execute(cx, scopeobj, script, NULL, fp, 0, rval);
 }
 
 #if JS_HAS_XDR

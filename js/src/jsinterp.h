@@ -245,8 +245,8 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool
-js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
-           JSStackFrame *down, uintN flags, jsval *result);
+js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
+	   JSStackFrame *down, uintN flags, jsval *result);
 
 extern JSBool
 js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
