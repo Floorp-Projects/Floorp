@@ -402,17 +402,6 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 endif # IS_COMPONENT
 
 #
-# Allow components to be installed into a secondary path 
-# that is not searched by xpcom.
-ifndef COMPONENTS_PATH
-ifdef INACTIVE_COMPONENT
-COMPONENTS_PATH = components_inactive
-else
-COMPONENTS_PATH = components
-endif
-endif
-
-#
 # MacOS X specific stuff
 #
 
@@ -616,7 +605,7 @@ ifndef NO_DIST_INSTALL
 ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 ifdef LIBRARY
 ifdef IS_COMPONENT
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib/$(COMPONENTS_PATH)
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib/components
 else
 	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib
 endif
@@ -629,24 +618,24 @@ ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 ifdef GRE_MODULE
 ifndef DISABLE_DIST_GRE
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(GRE_DIST)/$(COMPONENTS_PATH)
-	$(ELF_DYNSTR_GC) $(GRE_DIST)/$(COMPONENTS_PATH)/$(SHARED_LIBRARY)
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(GRE_DIST)/components
+	$(ELF_DYNSTR_GC) $(GRE_DIST)/components/$(SHARED_LIBRARY)
 ifdef BEOS_ADDON_WORKAROUND
-	( cd $(GRE_DIST)/$(COMPONENTS_PATH) && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
+	( cd $(GRE_DIST)/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
 endif
 endif # GRE_MODULE
 ifeq ($(OS_ARCH),OS2)
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib/$(COMPONENTS_PATH)
+	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib/components
 else
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib/$(COMPONENTS_PATH)
-	$(ELF_DYNSTR_GC) $(DIST)/lib/$(COMPONENTS_PATH)/$(SHARED_LIBRARY)
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib/components
+	$(ELF_DYNSTR_GC) $(DIST)/lib/components/$(SHARED_LIBRARY)
 endif
 ifndef _SKIP_OLD_GRE_INSTALL
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/$(COMPONENTS_PATH)
-	$(ELF_DYNSTR_GC) $(DIST)/bin/$(COMPONENTS_PATH)/$(SHARED_LIBRARY)
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/components
+	$(ELF_DYNSTR_GC) $(DIST)/bin/components/$(SHARED_LIBRARY)
 ifdef BEOS_ADDON_WORKAROUND
-	( cd $(DIST)/bin/$(COMPONENTS_PATH) && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
+	( cd $(DIST)/bin/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
 endif # ! _SKIP_OLD_GRE_INSTALL
 else # ! IS_COMPONENT
@@ -728,9 +717,9 @@ ifndef NO_INSTALL
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 ifdef MRE_DIST
-	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(DESTDIR)$(mredir)/$(COMPONENTS_PATH)
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(DESTDIR)$(mredir)/components
 else
-	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(DESTDIR)$(mozappdir)/$(COMPONENTS_PATH)
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(DESTDIR)$(mozappdir)/components
 endif
 else
 ifdef MRE_DIST
@@ -1323,20 +1312,20 @@ libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
 ifdef GRE_MODULE
 ifndef DISABLE_DIST_GRE
-	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(GRE_DIST)/$(COMPONENTS_PATH)
+	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(GRE_DIST)/components
 endif
 endif
 ifndef _SKIP_OLD_GRE_INSTALL
-	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/$(COMPONENTS_PATH)
+	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/components
 endif
 endif
 
 install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_INSTALL
 ifdef MRE_DIST
-	$(SYSINSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DESTDIR)$(mredir)/$(COMPONENTS_PATH)
+	$(SYSINSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DESTDIR)$(mredir)/components
 else 
-	$(SYSINSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DESTDIR)$(mozappdir)/$(COMPONENTS_PATH)
+	$(SYSINSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DESTDIR)$(mozappdir)/components
 endif 
 endif # NO_INSTALL
 endif # NO_GEN_XPT

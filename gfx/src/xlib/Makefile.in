@@ -83,11 +83,6 @@ ifdef HAVE_XIE
 CSRCS		+= XIE.c
 endif
 
-# If not primary toolkit, install in secondary path
-ifneq (xlib,$(MOZ_GFX_TOOLKIT))
-INACTIVE_COMPONENT = 1
-endif
-
 ifdef MOZ_ENABLE_XPRINT
 XPU_LCSRCS	 = xprintutil.c
 CSRCS           += $(XPU_LCSRCS)

@@ -116,13 +116,6 @@ CPPSRCS		+= \
 		$(NULL)
 endif
 
-# If not primary toolkit, install in secondary path
-ifneq (gtk,$(MOZ_GFX_TOOLKIT))
-ifneq (gtk2, $(MOZ_GFX_TOOLKIT))
-INACTIVE_COMPONENT = 1
-endif
-endif
-
 ifdef MOZ_ENABLE_XPRINT
 XPU_LCSRCS	 = xprintutil.c
 CSRCS           += $(XPU_LCSRCS)
