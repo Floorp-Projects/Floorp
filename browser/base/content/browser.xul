@@ -210,9 +210,9 @@
                     ondraggesture="PageProxyDragGesture(event);"
                     onload="this.parentNode.selectedIndex = 1;
                             event.stopPropagation();
-                            event.preventBubble();
-                            HandleBookmarkIcon(this.src, true);"
-                    onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);
+                            event.preventBubble();"
+                    onerror="gBrowser.addToMissedIconCache(this.src);
+                             this.removeAttribute('src');
                              this.parentNode.selectedIndex = 0;"
                     tooltiptext="&proxyIcon.tooltip;"/>
           </deck>

@@ -86,7 +86,7 @@ interface nsIBookmarksService : nsISupports
     void setBookmarksToolbarFolder(in nsIRDFResource aSource);
 
     void updateBookmarkIcon(in string aURL, in wstring aIconURL);
-    void removeBookmarkIcon(in string aURL, in wstring aIconURL);
+    void removeBookmarkIcon(in string aURL);
 
     void updateLastVisitedDate(in string aURL, in wstring docCharset);
     
