@@ -41,7 +41,7 @@ Any other render format? HTML?
 // Given an nsIImage, convert it to a DIB that is ready to go on the win32 clipboard
 //
 nsImageToClipboard :: nsImageToClipboard ( nsIImage* inImage )
-  : mHeader(nsnull), mBitmap(nsnull), mImage(inImage)
+  : mImage(inImage)
 {
   // nothing to do here
 }
@@ -55,8 +55,6 @@ nsImageToClipboard :: nsImageToClipboard ( nsIImage* inImage )
 //
 nsImageToClipboard::~nsImageToClipboard()
 {
-  if ( mHeader )
-    ::GlobalFree ( (HGLOBAL)mBitmap );
 }
 
 
@@ -66,19 +64,14 @@ nsImageToClipboard::~nsImageToClipboard()
 // Call to get the actual bits that go on the clipboard. If an error 
 // ocurred during conversion, |outBits| will be null.
 //
-// NOTE: This routine owns the handle that is returned. Do not release the
-//        memory.
+// NOTE: The caller owns the handle and must delete it with ::GlobalRelease()
 //
 nsresult
 nsImageToClipboard :: GetPicture ( HANDLE* outBits )
 {
   NS_ASSERTION ( outBits, "Bad parameter" );
 
-  nsresult res = CreateFromImage ( mImage );
-  if ( NS_SUCCEEDED(res) )
-    *outBits = mBitmap;
-    
-  return res;
+  return CreateFromImage ( mImage, outBits );
 
 } // GetPicture
 
@@ -129,10 +122,11 @@ nsImageToClipboard::CalcSpanLength(PRUint32 aWidth, PRUint32 aBitCount)
 // image. 
 //
 nsresult
-nsImageToClipboard::CreateFromImage ( nsIImage* inImage )
+nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
 {
   nsresult result = NS_OK;
-
+  *outBitmap = nsnull;
+  
 /*
   //pHead = (BITMAPINFOHEADER*)pImage->GetBitInfo();
   //pImage->GetNativeData((void**)&hBitMap);
@@ -180,9 +174,7 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage )
   {
 */
 
-//XXX Lock the bits!!!!
-//XXX I guess i need a locker stack-based object here.
-
+  inImage->LockImagePixels ( PR_FALSE );
   if ( inImage->GetBits() ) {
     BITMAPINFOHEADER* imageHeader = NS_REINTERPRET_CAST(BITMAPINFOHEADER*, inImage->GetBitInfo());
     NS_ASSERTION ( imageHeader, "Can't get header for image" );
@@ -192,27 +184,28 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage )
     PRInt32 imageSize = CalcSize(imageHeader->biHeight, imageHeader->biClrUsed, imageHeader->biBitCount, inImage->GetLineStride());
 
     // Create the buffer where we'll copy the image bits (and header) into and lock it
-    mBitmap = (HANDLE)::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, imageSize);
-    if (mBitmap && (mHeader = (BITMAPINFOHEADER*)::GlobalLock((HGLOBAL) mBitmap)) )
+    BITMAPINFOHEADER*  header = nsnull;
+    outBitmap = (HANDLE)::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, imageSize);
+    if (outBitmap && (header = (BITMAPINFOHEADER*)::GlobalLock((HGLOBAL) outBitmap)) )
     {
-      RGBQUAD *pRGBQUAD = (RGBQUAD *)&mHeader[1];
+      RGBQUAD *pRGBQUAD = (RGBQUAD *)&header[1];
       PBYTE bits = (PBYTE)&pRGBQUAD[imageHeader->biClrUsed];
 
       // Fill in the header info.
 
-      mHeader->biSize          = sizeof(BITMAPINFOHEADER);
-      mHeader->biWidth         = imageHeader->biWidth;
-      mHeader->biHeight        = imageHeader->biHeight;
+      header->biSize          = sizeof(BITMAPINFOHEADER);
+      header->biWidth         = imageHeader->biWidth;
+      header->biHeight        = imageHeader->biHeight;
 
-      mHeader->biPlanes        = 1;
-      mHeader->biBitCount      = imageHeader->biBitCount;
-      mHeader->biCompression   = BI_RGB;               // No compression
+      header->biPlanes        = 1;
+      header->biBitCount      = imageHeader->biBitCount;
+      header->biCompression   = BI_RGB;               // No compression
 
-      mHeader->biSizeImage     = 0;
-      mHeader->biXPelsPerMeter = 0;
-      mHeader->biYPelsPerMeter = 0;
-      mHeader->biClrUsed       = imageHeader->biClrUsed;
-      mHeader->biClrImportant  = 0;
+      header->biSizeImage     = 0;
+      header->biXPelsPerMeter = 0;
+      header->biYPelsPerMeter = 0;
+      header->biClrUsed       = imageHeader->biClrUsed;
+      header->biClrImportant  = 0;
 
       // Set up the color map.
       
@@ -220,8 +213,8 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage )
       if ( colorMap ) {
         PBYTE pClr = colorMap->Index;
 
-        NS_ASSERTION(( ((DWORD)colorMap->NumColors) == mHeader->biClrUsed), "Color counts must match");
-        for ( UINT i=0; i < mHeader->biClrUsed; ++i ) {
+        NS_ASSERTION(( ((DWORD)colorMap->NumColors) == header->biClrUsed), "Color counts must match");
+        for ( UINT i=0; i < header->biClrUsed; ++i ) {
           NS_WARNING ( "Cool! You found a test case for this! Let Gus or Pink know" );
           
           // now verify that the order is correct
@@ -231,17 +224,18 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage )
         }
       }
       else
-        NS_ASSERTION(mHeader->biClrUsed == 0, "Ok, now why are there colors and no table?");
+        NS_ASSERTION(header->biClrUsed == 0, "Ok, now why are there colors and no table?");
 
       // Copy!!
-      ::CopyMemory(bits, inImage->GetBits(), inImage->GetLineStride() * mHeader->biHeight);
+      ::CopyMemory(bits, inImage->GetBits(), inImage->GetLineStride() * header->biHeight);
       
-      ::GlobalUnlock((HGLOBAL)mBitmap);
+      ::GlobalUnlock((HGLOBAL)outBitmap);
     }
     else
       result = NS_ERROR_FAILURE;
   } // if we can get the bits from the image
   
+  inImage->UnlockImagePixels ( PR_FALSE );
   return result;
 }
 

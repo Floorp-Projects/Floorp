@@ -51,8 +51,7 @@ public:
     // Call to get the actual bits that go on the clipboard. If |nsnull|, the
     // setup operations have failed.
     //
-    // NOTE: This routine owns the handle that is returned. Do not release the
-    //        memory.
+    // NOTE: The caller owns the handle and must delete it with ::GlobalRelease()
   nsresult GetPicture ( HANDLE* outBits ) ;
 
 private:
@@ -62,11 +61,9 @@ private:
   PRInt32 CalcSpanLength(PRUint32 aWidth, PRUint32 aBitCount);
 
     // Do the work
-  nsresult CreateFromImage ( nsIImage* inImage );
+  nsresult CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap );
 
   nsCOMPtr<nsIImage> mImage;            // the image we're working with
-  HANDLE             mBitmap;           // the bitmap that will go on the clipboard
-  BITMAPINFOHEADER*  mHeader;           // picture format information (bitmap header).
 
 }; // class nsImageToClipboard
 

@@ -165,7 +165,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
     nsCAutoString * df = NS_REINTERPRET_CAST(nsCAutoString*, mDataFlavors->ElementAt(dfInx));
     if ( df ) {
 		  if (FormatsMatch(fe, *pFE)) {
-			  pSTM->pUnkForRelease = NULL;
+			  pSTM->pUnkForRelease = NULL;        // caller is responsible for deleting this data
 			  CLIPFORMAT format = pFE->cfFormat;
 			  switch(format) {
 			    
@@ -365,9 +365,8 @@ nsDataObj :: GetDib ( nsAReadableCString& inFlavor, FORMATETC &, STGMEDIUM & aST
   mTransferable->GetTransferData(nsPromiseFlatCString(inFlavor).get(), getter_AddRefs(genericDataWrapper), &len);
   nsCOMPtr<nsIImage> image ( do_QueryInterface(genericDataWrapper) );
   if ( image ) {
-    // use a the helper class to build up a bitmap. The helper class owns the
-    // bits, so we don't want to free them. They'll be freed when it goes out
-    // of scope.
+    // use a the helper class to build up a bitmap. We now own the bits,
+    // and pass them back to the OS in |aSTG|.
     nsImageToClipboard converter ( image );
     HANDLE bits = nsnull;
     nsresult rv = converter.GetPicture ( &bits );
