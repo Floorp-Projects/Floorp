@@ -54,7 +54,11 @@ private:
     nsCOMPtr<nsIAtom> mCookieHeader;
     nsCOMPtr<nsIAtom> mSetCookieHeader;
     nsCOMPtr<nsIAtom> mExpiresHeader;
-    nsCOMPtr<nsICookieService> mCookieService;
+
+    // we can't have an owning reference to the cookie service! the cookie service
+    // owns us so we are introducing a circular reference count!
+    // the good news is, if mCookieService ever goes away, we'll be going away too.
+    nsICookieService * mCookieService;
 
     NS_IMETHOD SetupCookieService();
 };
