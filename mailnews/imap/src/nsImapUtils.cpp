@@ -116,8 +116,8 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 	}
 
 	nsCOMPtr<nsIMsgIncomingServer> server;
-	rv = nsGetImapServer(username,
-						 hostname,
+	rv = nsGetImapServer((const char *) username,
+						 (const char *) hostname,
                        getter_AddRefs(server));
   
   if (NS_FAILED(rv)) return rv;
