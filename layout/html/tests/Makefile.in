@@ -66,6 +66,10 @@ LIBS = \
 	-lxpcom \
 	-lreg \
 	-lxp \
+	-lraptorhtmlpars \
+	-lexpat \
+	-lxmltok \
+	-ljsurl \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
