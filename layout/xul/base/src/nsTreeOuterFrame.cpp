@@ -245,7 +245,6 @@ nsTreeOuterFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
 NS_IMETHODIMP
 nsTreeOuterFrame::ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages)
 {
-  printf("nsTreeOuterFrame::ScrollByPages\n");
   // What we need to do is call the corresponding method on our TreeFrame
   // In most cases the TreeFrame will be the only child, but just to make
   // sure we'll check for the right interface
