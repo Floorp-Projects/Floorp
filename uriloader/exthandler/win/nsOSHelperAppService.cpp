@@ -77,8 +77,8 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
       LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
       if (r < 32) 
         rv = NS_ERROR_FAILURE;
-			else
-			  rv = NS_OK;
+      else
+        rv = NS_OK;
     }
   }
 
@@ -151,26 +151,26 @@ nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFile
 
 static BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen)
 {
-	LONG	err;
-	DWORD	bufSz;
-	LPBYTE	pBytes = NULL;
+  LONG err;
+  DWORD bufSz;
+  LPBYTE pBytes = NULL;
 
-	err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, NULL, &bufSz); 
-	if (err == ERROR_SUCCESS) {
-		pBytes = new BYTE[bufSz];
-		err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, pBytes, &bufSz);
-		if (err != ERROR_SUCCESS) {
-			delete [] pBytes;
-			pBytes = NULL;
-        } else {
-            // Return length if caller wanted it.
-            if ( pLen ) {
-                *pLen = bufSz;
-            }
-        }
-	}
+  err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, NULL, &bufSz); 
+  if (err == ERROR_SUCCESS) {
+    pBytes = new BYTE[bufSz];
+    err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, pBytes, &bufSz);
+    if (err != ERROR_SUCCESS) {
+      delete [] pBytes;
+      pBytes = NULL;
+    } else {
+      // Return length if caller wanted it.
+      if ( pLen ) {
+        *pLen = bufSz;
+      }
+    }
+  }
 
-	return( pBytes);
+  return( pBytes);
 }
 
 NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
@@ -196,14 +196,14 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
 
 NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
-	// 1. Find the default app for this protocol
-	// 2. Set up the command line
-	// 3. Launch the app.
+  // 1. Find the default app for this protocol
+  // 2. Set up the command line
+  // 3. Launch the app.
 
-	// For now, we'll just cheat essentially, check for the command line
-	// then just call ShellExecute()!
+  // For now, we'll just cheat essentially, check for the command line
+  // then just call ShellExecute()!
 
   if (aURL)
   {
@@ -211,9 +211,9 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
     nsXPIDLCString urlSpec;
     aURL->GetSpec(getter_Copies(urlSpec));
 
-		LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) urlSpec, NULL, NULL, SW_SHOWNORMAL);
-		if (r < 32) 
-			rv = NS_ERROR_FAILURE;
+    LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) urlSpec, NULL, NULL, SW_SHOWNORMAL);
+    if (r < 32) 
+      rv = NS_ERROR_FAILURE;
   }
 
   return rv;
