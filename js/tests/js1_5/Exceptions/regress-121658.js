@@ -74,8 +74,8 @@ function f()
 i=0; 
 f();
 status = inSection(1);
-actual = formatThis(i>0);
-expect = formatThis(true);
+actual = (i>0);
+expect = true;
 addThis();
 
 
@@ -89,8 +89,8 @@ function g()
 i=0; 
 g();
 status = inSection(2);
-actual = formatThis(i>0);
-expect = formatThis(true);
+actual = (i>0);
+expect = true;
 addThis();
 
 
@@ -99,8 +99,8 @@ addThis();
 var sEval = 'function h(){++i; try{h();} catch(e){}}; i=0; h();';
 eval(sEval);
 status = inSection(3);
-actual = formatThis(i>0);
-expect = formatThis(true);
+actual = (i>0);
+expect = true;
 addThis();
 
 
@@ -109,8 +109,8 @@ addThis();
 sEval = 'function a(){++i; try{h();} catch(e){}}; i=0; a();';
 eval(sEval);
 status = inSection(4);
-actual = formatThis(i>0);
-expect = formatThis(true);
+actual = (i>0);
+expect = true;
 addThis();
 
 
@@ -122,18 +122,18 @@ test();
 
 
 
-function formatThis(bool)
-{
-  return bool? TEST_PASSED : TEST_FAILED;
-}
-
-
 function addThis()
 {
   statusitems[UBound] = status;
-  actualvalues[UBound] = actual;
-  expectedvalues[UBound] = expect;
+  actualvalues[UBound] = formatThis(actual);
+  expectedvalues[UBound] = formatThis(expect);
   UBound++;
+}
+
+
+function formatThis(bool)
+{
+  return bool? TEST_PASSED : TEST_FAILED;
 }
 
 
