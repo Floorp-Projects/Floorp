@@ -62,6 +62,7 @@ CPPSRCS = \
 include $(topsrcdir)/config/config.mk
 
 CXXFLAGS += $(TK_CFLAGS)
+DEFINES += $(TK_CFLAGS)
 
 SHARED_LIBRARY_LIBS =			    \
 	$(DIST)/lib/libraptorbasewidget_s.a \
