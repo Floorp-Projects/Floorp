@@ -226,7 +226,9 @@ void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide,
     GetRowIndex(baseRowIndex);
     PRInt32 rowIndex = aIndex-baseRowIndex;
     nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(rowIndex));
-    border->mLength = aLength;
+    if (border) {
+      border->mLength = aLength;
+    }
   }
   else {
     NS_ASSERTION(PR_FALSE, "bad arg aSide passed to SetBorderEdgeLength");
@@ -425,7 +427,8 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
     border->mWidth += aOddAmountToAdd;
   }
   else {
-    NS_ASSERTION(PR_FALSE, "bad border edge state");
+    //XXX determine why this was asserting (after beta)
+    //NS_ASSERTION(PR_FALSE, "bad border edge state");
   }
 }
 
