@@ -37,7 +37,8 @@
 #include "nsIInterfaceInfoManager.h"
 #include "xptcall.h"
 
-
+// LIFETIME_CACHE will cache class for the entire cyle of the application.
+#define LIFETIME_CACHE
 
 static uint32 zero_methods_descriptor;
 
@@ -82,9 +83,9 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
 	nsCRT::free(iidStr);
 #endif
 
-    if(iidToClassMap->Exists(&key))
-    {
-        clazz = (nsProxyEventClass*) iidToClassMap->Get(&key);
+    clazz = (nsProxyEventClass*) iidToClassMap->Get(&key);
+	if(clazz)
+	{
         NS_ADDREF(clazz);
 #ifdef PROXYEVENTCLASS_DEBUG
 		char* iidStr = aIID.ToString();
@@ -160,6 +161,10 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
     if (iidToClassMap != nsnull)
     {
         iidToClassMap->Put(&key, this);
+#ifdef LIFETIME_CACHE
+		// extra addref to hold it in the cache
+        NS_ADDREF_THIS();
+#endif
 #ifdef PROXYEVENTCLASS_DEBUG
 		char* iidStr = aIID.ToString();
 		printf("GetNewOrUsedClass  %s put\n", iidStr);
@@ -190,6 +195,7 @@ nsProxyEventClass::~nsProxyEventClass()
     if(mDescriptors && mDescriptors != &zero_methods_descriptor)
         delete [] mDescriptors;
 
+#ifndef LIFETIME_CACHE
     nsIDKey key(mIID);
     
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
@@ -206,6 +212,7 @@ nsProxyEventClass::~nsProxyEventClass()
 		nsCRT::free(iidStr);
 #endif
     }
+#endif
 }
 
 nsresult
