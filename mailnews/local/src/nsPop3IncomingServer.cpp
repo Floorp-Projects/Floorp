@@ -132,7 +132,7 @@ NS_IMPL_SERVERPREF_STR(nsPop3IncomingServer,
 
 NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
                             DeferGetNewMail,
-                            "defer_get_new_mail");
+                            "defer_get_new_mail")
 
 //NS_IMPL_GETSET(nsPop3IncomingServer, Authenticated, PRBool, m_authenticated);
 
