@@ -28,8 +28,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "JavaSession.h"
-
 #include "prtypes.h"
 #include "prmacos.h"
 
@@ -40,6 +38,10 @@ char* strdup(const char *str)
 	    strcpy(dup, str);
     return dup;
 }
+
+#if defined(LIVECONNECT)
+
+#include "JavaSession.h"
 
 // Fake VM initialization
 
@@ -99,3 +101,5 @@ jint JNICALL JNI_CreateJavaVM(JavaVM** outVM, JNIEnv ** outEnv, void* args)
 	}
 	return result;
 }
+
+#endif
