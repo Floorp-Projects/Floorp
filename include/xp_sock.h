@@ -47,6 +47,11 @@
 #include <netdb.h>
 #endif /* XP_UNIX */
 
+#ifdef XP_BEOS
+#include <socket.h>
+#include <netinet/in.h>
+#endif
+
 #ifdef XP_MAC
 #include "macsocket.h"
 #define SOCKET_BUFFER_SIZE 4096
