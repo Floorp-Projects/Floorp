@@ -405,12 +405,36 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
       }
     }
 
-#if 0
-  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
-                                                         aDesiredSize, aReflowState, aStatus);
-  if (NS_SUCCEEDED(skiprv)) {
-    return skiprv;
+  PRBool bailOnWidth;
+  PRBool bailOnHeight;
+  // This ifdef is for turning off the optimization
+  // so we can check timings against the old version
+#if 1
+
+  nsFormControlFrame::SkipResizeReflow(mCacheSize, 
+                                       mCachedMaxElementSize, 
+                                       mCachedAvailableSize, 
+                                       aDesiredSize, aReflowState, 
+                                       aStatus, 
+                                       bailOnWidth, bailOnHeight);
+
+  // Here we bail if both the height and the width haven't changed
+  // also we see if we should override the optimization
+  //
+  // The optimization can get overridden by the combobox 
+  // sometime the combobox knows that the list MUST do a full reflow
+  // no matter what
+  if (!mOverrideReflowOpt && bailOnWidth && bailOnHeight) {
+    REFLOW_DEBUG_MSG3("*** Done nsLCF - Bailing on DW: %d  DH: %d ", PX(aDesiredSize.width), PX(aDesiredSize.height));
+    REFLOW_DEBUG_MSG3("bailOnWidth %d  bailOnHeight %d\n", PX(bailOnWidth), PX(bailOnHeight));
+    return NS_OK;
+  } else if (mOverrideReflowOpt) {
+    mOverrideReflowOpt = PR_FALSE;
   }
+
+#else
+  bailOnWidth  = PR_FALSE;
+  bailOnHeight = PR_FALSE;
 #endif
     // XXX So this may do it too often
     // the side effect of this is if the user has scrolled to some other place in the list and
@@ -624,6 +648,32 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
     if (visibleHeight > (kMaxDropDownRows * heightOfARow)) {
       visibleHeight = (kMaxDropDownRows * heightOfARow);
+      // This is an adaptive algorithm for figuring out how many rows 
+      // should be displayed in the drop down. The standard size is 20 rows, 
+      // but on 640x480 it is typically too big.
+      // This takes the height of the screen divides it by two and then subtracts off 
+      // an estimated height of the combobox. I estimate it by taking the max element size
+      // of the drop down and multiplying it by 2 (this is arbitrary) then subtract off
+      // the border and padding of the drop down (again rather arbitrary)
+      // This all breaks down if the font of the combobox is a lot larger then the option items
+      // or CSS style has set the height of the combobox to be rather large.
+      // We can fix these cases later if they actually happen.
+      if (isInDropDownMode) {
+        nscoord screenHeightInPixels = 0;
+        if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(aPresContext, screenHeightInPixels))) {
+          float   p2t;
+          aPresContext->GetPixelsToTwips(&p2t);
+          nscoord screenHeight = NSIntPixelsToTwips(screenHeightInPixels, p2t);
+
+          nscoord availDropHgt = (screenHeight / 2) - (heightOfARow*2); // approx half screen minus combo size
+          availDropHgt -= (border.top + border.bottom + padding.top + padding.bottom);
+
+          nscoord hgt = visibleHeight + border.top + border.bottom + padding.top + padding.bottom;
+          if (hgt > availDropHgt) {
+            visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
+          }
+        }
+      }
     }
    
   } else {
@@ -2152,7 +2202,7 @@ nsGfxListControlFrame::Reset(nsIPresContext* aPresContext)
 
     nsCOMPtr<nsISupportsPRInt32> thisVal;
     PRInt32 j=0;
-    for (PRUint32 i=0; i<count; i++) {
+    for (i=0; i<count; i++) {
       nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
       thisVal = do_QueryInterface(suppval);
       if (thisVal) {
@@ -2651,6 +2701,28 @@ nsGfxListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpd
   }
   return rv;
 }
+
+NS_IMETHODIMP
+nsGfxListControlFrame::GetOptionsContainer(nsIPresContext* aPresContext, nsIFrame** aFrame)
+{
+  // XXX - Assumption
+  // Our first child should always be the ScrollFrame
+  nsIFrame * firstChildFrame = nsnull;
+  FirstChild(mPresContext, nsnull, &firstChildFrame);
+  if (firstChildFrame == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIFrame * scrollPortFrame = nsnull;
+  firstChildFrame->FirstChild(mPresContext, nsnull, &scrollPortFrame);
+  NS_ASSERTION(scrollPortFrame != nsnull, "first child of scrollFrame in nsGfxListControlFrame should not be null!");
+
+  scrollPortFrame->FirstChild(mPresContext, nsnull, aFrame);
+  NS_ASSERTION(*aFrame != nsnull, "first child of scrollPortFrame in nsGfxListControlFrame should not be null!");
+
+  return NS_OK;
+}
+
 
 // Send out an onchange notification.
 nsresult

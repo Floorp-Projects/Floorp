@@ -237,6 +237,7 @@ public:
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent);
   NS_IMETHOD SetPresState(nsIPresState * aState) { mPresState = aState; return NS_OK;}
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
+  NS_IMETHOD GetOptionsContainer(nsIPresContext* aPresContext, nsIFrame** aFrame);
 
   NS_IMETHOD SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState);
   NS_IMETHOD RestoreStateInternal(nsIPresContext* aPresContext, nsIPresState* aState);
