@@ -379,8 +379,8 @@ DateFormater.prototype.parseShortDate = function ( dateString )
   }
   if (year != Number.MIN_VALUE && month != -1 && day != -1) {
     // year, month, day successfully parsed
-    if (this.twoDigitYear && 0 <= year && year < 100) {
-      // If 2-digit year format and 0 <= year < 100,
+    if (0 <= year && year < 100) {
+      // If 0 <= year < 100, treat as 2-digit year(like dateService.FormatDate):
       //   parse year as up to 30 years in future or 69 years in past.
       //   (Covers 30-year mortgage and most working people's birthdate.)
       // otherwise will be treated as four digit year.
