@@ -29,7 +29,12 @@ DEFINES = -D_IMPL_NS_SHELL
 
 EXTRA_DSO_LDOPTS+= -L$(DIST)/lib \
 		$(DIST)/bin/libxpcom.so \
-		$(DIST)/bin/libreg.so  $(LIBNSPR)
+		$(DIST)/bin/libnspr21.so \
+		$(DIST)/bin/libplc21.so \
+		$(DIST)/bin/libplds21.so \
+		$(DIST)/bin/libnspr21.so \
+		$(DIST)/bin/libreg.so \
+		$(NULL) \
 
 ifeq ($(OS_ARCH),linux)
 EXTRA_DSO_LDOPTS+= /usr/lib/libc.a /usr/lib/libstdc++.a 
