@@ -1611,6 +1611,8 @@ namespace MetaData {
                 ValidateExpression(cxt, env, i->op);
                 ExprPairList *ep = i->pairs;
                 uint16 positionalCount = 0;
+                // XXX errors below should only occur at runtime - insert code to throw exception
+                // or let the bytecodes handle (and throw on) multiple & named arguments?
                 while (ep) {
                     if (ep->field)
                         reportError(Exception::argumentMismatchError, "Indexing doesn't support named arguments", p->pos);
@@ -2589,7 +2591,9 @@ doUnary:
     // - If the binding exists (not forbidden) in lower frames in the regional environment, it's an error.
     // - Define a forbidden binding in all the lower frames.
     // 
-    Multiname *JS2Metadata::defineStaticMember(Environment *env, const StringAtom *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos)
+    Multiname *JS2Metadata::defineStaticMember(Environment *env, const StringAtom *id, NamespaceList *namespaces, 
+                                                Attribute::OverrideModifier overrideMod, bool xplicit, Access access,
+                                                StaticMember *m, size_t pos)
     {
         NamespaceList publicNamespaceList;
 
@@ -2603,37 +2607,52 @@ doUnary:
         }
         Multiname *mn = new Multiname(id);
         mn->addNamespace(namespaces);
-	StaticBindingIterator b, end; 
-        for (b = localFrame->staticReadBindings.lower_bound(*id),
-                end = localFrame->staticReadBindings.upper_bound(*id); (b != end); b++) {
-            if (mn->matches(b->second->qname))
-                reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+	StaticBindingIterator b, end;
+        if (access & ReadAccess) {
+            for (b = localFrame->staticReadBindings.lower_bound(*id),
+                    end = localFrame->staticReadBindings.upper_bound(*id); (b != end); b++) {
+                if (mn->matches(b->second->qname))
+                    reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+            }
         }
-        
+        if (access & WriteAccess) {
+            for (b = localFrame->staticWriteBindings.lower_bound(*id),
+                    end = localFrame->staticWriteBindings.upper_bound(*id); (b != end); b++) {
+                if (mn->matches(b->second->qname))
+                    reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+            }
+        }
 
         // Check all frames below the current - up to the RegionalFrame - for a non-forbidden definition
         Frame *regionalFrame = *(env->getRegionalFrame());
         if (localFrame != regionalFrame) {
             Frame *fr = *++fi;
-            while (fr != regionalFrame) {
+            while (true) {
                 for (b = fr->staticReadBindings.lower_bound(*id),
                         end = fr->staticReadBindings.upper_bound(*id); (b != end); b++) {
                     if (mn->matches(b->second->qname) && (b->second->content->kind != StaticMember::Forbidden))
                         reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
                 }
+                if (fr == regionalFrame)
+                    break;
                 fr = *++fi;
             }
             fi = env->getBegin();
             fr = *++fi;
-            while (fr != regionalFrame) {
+            while (true) {
                 for (b = fr->staticWriteBindings.lower_bound(*id),
                         end = fr->staticWriteBindings.upper_bound(*id); (b != end); b++) {
                     if (mn->matches(b->second->qname) && (b->second->content->kind != StaticMember::Forbidden))
                         reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
                 }
+                if (fr == regionalFrame)
+                    break;
                 fr = *++fi;
             }
         }
+
+        // If the regional frame is the global object, make sure there's not a dynamic
+        // property with the same id as the one we're about to define
         if (regionalFrame->kind == GlobalObjectKind) {
             GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
             DynamicPropertyIterator dp = gObj->dynamicProperties.find(*id);
@@ -2641,20 +2660,26 @@ doUnary:
                 reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
         }
         
+        // Now insert the id, via all it's namespaces into the local frame
         for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
             QualifiedName qName(*nli, *id);
             StaticBinding *sb = new StaticBinding(qName, m);
             const StaticBindingMap::value_type e(*id, sb);
             if (access & ReadAccess)
-                regionalFrame->staticReadBindings.insert(e);
+                localFrame->staticReadBindings.insert(e);
             if (access & WriteAccess)
-                regionalFrame->staticWriteBindings.insert(e);
+                localFrame->staticWriteBindings.insert(e);
         }
         
+        // And mark all (any) lower definitions as Forbidden
+        // XXX there's a discrepancy in the spec. -- the comment says:
+        // "Mark the bindings of multiname as Forbidden in all non-innermost frames in the current
+        //  region if they haven't been marked as such already"
+        // But the code simply adds a Forbidden binding in each namespace to each frame in the region
         if (localFrame != regionalFrame) {
             fi = env->getBegin();
             Frame *fr = *++fi;
-            while (fr != regionalFrame) {
+            while (true) {
                 for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
                     QualifiedName qName(*nli, *id);
                     StaticBinding *sb = new StaticBinding(qName, forbiddenMember);
@@ -2664,6 +2689,8 @@ doUnary:
                     if (access & WriteAccess)
                         fr->staticWriteBindings.insert(e);
                 }
+                if (fr == regionalFrame)
+                    break;
                 fr = *++fi;
             }
         }
