@@ -186,7 +186,7 @@ CFLAGS_RELEASE=/DNDEBUG /DCookieManagement /DSingleSignon /DJS_THREADSAFE \
 !else
 CFLAGS_RELEASE=/DNDEBUG \
 !endif
-!ifdef NU_CACHE
+!ifndef NU_CACHE
 	/DNU_CACHE	\
 !endif
 !if defined(MOZ_FULLCIRCLE)
@@ -237,7 +237,7 @@ CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
 !if defined(VERBOSE)
 	/Bd \
 !endif
-!ifdef NU_CACHE
+!ifndef NU_CACHE
 	/DNU_CACHE	\
 !endif
 !if defined(MOZ_FULLCIRCLE)
@@ -478,7 +478,7 @@ LINK_LIBS= \
     $(DIST)\lib\marimurl.lib \
     $(DIST)\lib\remoturl.lib \
     $(DIST)\lib\netcache.lib \
-!ifdef NU_CACHE # TODO Remove later
+!ifndef NU_CACHE # TODO Remove later
     $(DIST)\lib\cache.lib \
 !endif
     $(DIST)\lib\netcnvts.lib \

@@ -47,12 +47,6 @@ WINOS=$(WINOS: =)^
 !if [del osuname.inc]
 !endif
 
-!ifdef NO_NU_CACHE
-NU_CACHE=0
-!else
-NU_CACHE=1
-!endif
-
 # need this everywhere jsapi.h might be included
 LCFLAGS=$(LCFLAGS) -DJS_THREADSAFE
 
@@ -217,7 +211,7 @@ CFLAGS=$(CFLAGS) -DTRANSACTION_RECEIPTS
 !endif
 
 # TODO Cleanup later -Gagan
-!ifdef NU_CACHE 
+!ifndef NU_CACHE 
 CFLAGS=$(CFLAGS) -DNU_CACHE
 !endif
 
