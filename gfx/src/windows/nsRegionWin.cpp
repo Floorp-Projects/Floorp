@@ -58,6 +58,10 @@ NS_IMPL_RELEASE(nsRegionWin)
 
 nsresult nsRegionWin :: Init(void)
 {
+  if (NULL != mRegion) {
+    ::DeleteObject(mRegion);
+    FreeRects(nsnull);
+  }
   mRegion = ::CreateRectRgn(0, 0, 0, 0);
   mRegionType = NULLREGION;
 
