@@ -239,7 +239,7 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
   
     // Compute the child frame's max size
     nsSize  kidMaxSize = GetColumnAvailSpace(aPresContext, borderPadding,
-                                             rsp->maxSize);
+                                             *rsp);
     mSpaceManager->Translate(borderPadding.left, borderPadding.top);
   
     if (eReflowReason_Resize == rsp->reason) {
@@ -478,20 +478,27 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 nsSize
 nsBodyFrame::GetColumnAvailSpace(nsIPresContext& aPresContext,
                                  const nsMargin& aBorderPadding,
-                                 const nsSize&   aMaxSize)
+                                 const nsHTMLReflowState& aReflowState)
 {
-  nsSize  result(aMaxSize);
+  nsSize  result(aReflowState.maxSize);
 
   // If we are being used as a top-level frame then make adjustments
   // for border/padding and a vertical scrollbar
   if (NS_BODY_THE_BODY & mFlags) {
     // If our width is constrained then subtract for the border/padding
-    if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
-      result.width -= aBorderPadding.left +
-                      aBorderPadding.right;
+    if (aReflowState.maxSize.width != NS_UNCONSTRAINEDSIZE) {
+      result.width -= aBorderPadding.left + aBorderPadding.right;
     }
     // If our height is constrained then subtract for the border/padding
-    if (aMaxSize.height != NS_UNCONSTRAINEDSIZE) {
+    if (aReflowState.maxSize.height != NS_UNCONSTRAINEDSIZE) {
+      result.height -= aBorderPadding.top + aBorderPadding.bottom;
+    }
+  }
+  else {
+    if (aReflowState.HaveConstrainedWidth()) {
+      result.width -= aBorderPadding.left + aBorderPadding.right;
+    }
+    if (aReflowState.HaveConstrainedHeight()) {
       result.height -= aBorderPadding.top + aBorderPadding.bottom;
     }
   }
@@ -1007,6 +1014,21 @@ PRIntn nsBodyFrame::GetSkipSides() const
 
 /////////////////////////////////////////////////////////////////////////////
 // Diagnostics
+
+NS_IMETHODIMP
+nsBodyFrame::ListTag(FILE* out) const
+{
+  fprintf(out, "Body<");
+  nsIAtom* atom;
+  mContent->GetTag(atom);
+  if (nsnull != atom) {
+    nsAutoString tmp;
+    atom->ToString(tmp);
+    fputs(tmp, out);
+  }
+  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
+  return NS_OK;
+}
 
 NS_METHOD nsBodyFrame::VerifyTree() const
 {
