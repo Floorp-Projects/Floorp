@@ -405,13 +405,11 @@ char * nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRB
   }
 
   char *encodedString = nsnull;
-  nsIMimeConverter *converter;
-  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                           NS_GET_IID(nsIMimeConverter), (void **)&converter);
-  if (NS_SUCCEEDED(res) && nsnull != converter) {
+  nsresult res;
+  nsCOMPtr<nsIMimeConverter> converter = do_GetService(kCMimeConverterCID, &res);
+  if (NS_SUCCEEDED(res) && nsnull != converter)
     res = converter->EncodeMimePartIIStr_UTF8(header, charset, kMIME_ENCODED_WORD_SIZE, &encodedString);
-    NS_RELEASE(converter);
-  }
+
   return NS_SUCCEEDED(res) ? encodedString : nsnull;
 }
 
