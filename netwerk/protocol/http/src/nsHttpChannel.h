@@ -146,6 +146,7 @@ private:
     nsresult OnDoneReadingPartialCacheEntry(PRBool *streamDone);
 
     // auth specific methods
+    nsresult GenCredsAndSetEntry(nsIHttpAuthenticator *, PRBool proxyAuth, const char *host, PRInt32 port, const char *dir, const char *realm, const char *challenge, const nsHttpAuthIdentity &ident, nsCOMPtr<nsISupports> &session, char **result);
     nsresult GetCredentials(const char *challenges, PRBool proxyAuth, nsAFlatCString &creds);
     nsresult GetCredentialsForChallenge(const char *challenge, const char *scheme,  PRBool proxyAuth, nsIHttpAuthenticator *auth, nsAFlatCString &creds);
     nsresult ParseChallenge(const char *challenge, nsCString &scheme, nsIHttpAuthenticator **auth); 
