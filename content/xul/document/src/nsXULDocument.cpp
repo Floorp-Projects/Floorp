@@ -418,6 +418,9 @@ nsXULDocument::nsXULDocument(void)
     nsCOMPtr<nsIDocumentObserver> observer(do_QueryInterface(mBindingManager));
     if (observer) // We must always be the first observer of the document.
       mObservers.InsertElementAt(observer, 0);
+#ifdef IBMBIDI
+    mBidiEnabled = PR_FALSE;
+#endif // IBMBIDI
 }
 
 nsXULDocument::~nsXULDocument()
@@ -6250,6 +6253,32 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
 
     return rv;
 }
+
+#ifdef IBMBIDI
+/**
+ *  Retrieve and get bidi state of the document 
+ *  set depending on presence of bidi data.
+ *  (see nsIDocument.h)
+ */
+
+NS_IMETHODIMP
+nsXULDocument::GetBidiEnabled(PRBool* aBidiEnabled) const
+{
+  NS_ENSURE_ARG_POINTER(aBidiEnabled);
+  *aBidiEnabled = mBidiEnabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::SetBidiEnabled(PRBool aBidiEnabled)
+{
+  NS_ASSERTION(aBidiEnabled, "cannot disable bidi once enabled");
+  if (aBidiEnabled) {
+    mBidiEnabled = PR_TRUE;
+  }
+  return NS_OK;
+}
+#endif // IBMBIDI
 
 
 //----------------------------------------------------------------------

@@ -126,6 +126,10 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #include "nsITransformMediator.h"
 
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+#endif
+
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
@@ -4562,6 +4566,216 @@ NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSet(const PRUnichar* aHintChar
   mHintCharset = aHintCharacterSet;
   // now set the hint char set on all children of mContainer
   return CallChildren(SetChildHintCharacterSet, (void*) aHintCharacterSet);
+}
+
+#ifdef IBMBIDI
+static void
+SetChildBidiOptions(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  aChild->SetBidiOptions((PRUint32)aClosure);
+}
+
+#endif // IBMBIDI
+
+NS_IMETHODIMP DocumentViewerImpl::SetBidiTextDirection(PRUint8 aTextDirection)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  GetBidiOptions(&bidiOptions);
+  SET_BIDI_OPTION_DIRECTION(bidiOptions, aTextDirection);
+  SetBidiOptions(bidiOptions);
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetBidiTextDirection(PRUint8* aTextDirection)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  if (aTextDirection) {
+    GetBidiOptions(&bidiOptions);
+    *aTextDirection = GET_BIDI_OPTION_DIRECTION(bidiOptions);
+  }
+#endif
+  return NS_OK;
+}
+  
+NS_IMETHODIMP DocumentViewerImpl::SetBidiTextType(PRUint8 aTextType)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  GetBidiOptions(&bidiOptions);
+  SET_BIDI_OPTION_TEXTTYPE(bidiOptions, aTextType);
+  SetBidiOptions(bidiOptions);
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetBidiTextType(PRUint8* aTextType)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  if (aTextType) {
+    GetBidiOptions(&bidiOptions);
+    *aTextType = GET_BIDI_OPTION_TEXTTYPE(bidiOptions);
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetBidiControlsTextMode(PRUint8 aControlsTextMode)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  GetBidiOptions(&bidiOptions);
+  SET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions, aControlsTextMode);
+  SetBidiOptions(bidiOptions);
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetBidiControlsTextMode(PRUint8* aControlsTextMode)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  if (aControlsTextMode) {
+    GetBidiOptions(&bidiOptions);
+    *aControlsTextMode = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetBidiClipboardTextMode(PRUint8 aClipboardTextMode)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  GetBidiOptions(&bidiOptions);
+  SET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions, aClipboardTextMode);
+  SetBidiOptions(bidiOptions);
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetBidiClipboardTextMode(PRUint8* aClipboardTextMode)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  if (aClipboardTextMode) {
+    GetBidiOptions(&bidiOptions);
+    *aClipboardTextMode = GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions);
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetBidiNumeral(PRUint8 aNumeral)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  GetBidiOptions(&bidiOptions);
+  SET_BIDI_OPTION_NUMERAL(bidiOptions, aNumeral);
+  SetBidiOptions(bidiOptions);
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetBidiNumeral(PRUint8* aNumeral)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  if (aNumeral) {
+    GetBidiOptions(&bidiOptions);
+    *aNumeral = GET_BIDI_OPTION_NUMERAL(bidiOptions);
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetBidiSupport(PRUint8 aSupport)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  GetBidiOptions(&bidiOptions);
+  SET_BIDI_OPTION_SUPPORT(bidiOptions, aSupport);
+  SetBidiOptions(bidiOptions);
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetBidiSupport(PRUint8* aSupport)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  if (aSupport) {
+    GetBidiOptions(&bidiOptions);
+    *aSupport = GET_BIDI_OPTION_SUPPORT(bidiOptions);
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetBidiCharacterSet(PRUint8 aCharacterSet)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  GetBidiOptions(&bidiOptions);
+  SET_BIDI_OPTION_CHARACTERSET(bidiOptions, aCharacterSet);
+  SetBidiOptions(bidiOptions);
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetBidiCharacterSet(PRUint8* aCharacterSet)
+{
+#ifdef IBMBIDI
+  PRUint32 bidiOptions;
+
+  if (aCharacterSet) {
+    GetBidiOptions(&bidiOptions);
+    *aCharacterSet = GET_BIDI_OPTION_CHARACTERSET(bidiOptions);
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetBidiOptions(PRUint32 aBidiOptions)
+{
+#ifdef IBMBIDI
+  if (mPresContext) {
+    mPresContext->SetBidi(aBidiOptions, PR_TRUE); // force reflow
+  }
+  // now set bidi on all children of mContainer
+  CallChildren(SetChildBidiOptions, (void*) aBidiOptions);
+#endif // IBMBIDI
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetBidiOptions(PRUint32* aBidiOptions)
+{
+#ifdef IBMBIDI
+  if (aBidiOptions) {
+    if (mPresContext) {
+      mPresContext->GetBidi(aBidiOptions);
+    }
+    else
+      *aBidiOptions = IBMBIDI_DEFAULT_BIDI_OPTIONS;
+  }
+#endif // IBMBIDI
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentViewerImpl::SizeToContent()

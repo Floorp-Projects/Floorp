@@ -104,6 +104,10 @@
 #include "nsPIBoxObject.h"
 #include "nsXULAtoms.h"
 
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+#endif
+
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
@@ -487,6 +491,9 @@ nsDocument::nsDocument()
   mDTD = 0;
   mBoxObjectTable = nsnull;
   mNumCapturers = 0;
+#ifdef IBMBIDI
+  mBidiEnabled = PR_FALSE;
+#endif // IBMBIDI
 
   // Force initialization.
   mBindingManager = do_CreateInstance("@mozilla.org/xbl/binding-manager;1");
@@ -2304,16 +2311,76 @@ nsDocument::SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject)
   return NS_OK;
 }
 
+#ifdef IBMBIDI
+struct DirTable {
+  const char* mName;
+  PRUint8     mValue;
+};
+static const DirTable dirAttributes[] = {
+  {"ltr", IBMBIDI_TEXTDIRECTION_LTR},
+  {"rtl", IBMBIDI_TEXTDIRECTION_RTL},
+  {0}
+};
+#endif // IBMBIDI
+
+/**
+ *  Retrieve the "direction" property of the document.
+ *
+ *  @lina 01/09/2001
+ */
 NS_IMETHODIMP
 nsDocument::GetDir(nsAWritableString& aDirection)
 {
+#ifdef IBMBIDI
+  nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+  if (shell) {
+    nsCOMPtr<nsIPresContext> context;
+    shell->GetPresContext(getter_AddRefs(context) );
+    if (context) {
+      PRUint32 options;
+      context->GetBidi(&options);
+      for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
+        if (GET_BIDI_OPTION_DIRECTION(options) == elt->mValue) {
+          aDirection.Assign(NS_ConvertASCIItoUCS2(elt->mName) );
+          break;
+        }
+      }
+    }
+  }
+#else
   aDirection.Assign(NS_LITERAL_STRING("ltr") );
+#endif // IBMBIDI
   return NS_OK;
 }
 
+/**
+ *  Set the "direction" property of the document.
+ *
+ *  @lina 01/09/2001
+ */
 NS_IMETHODIMP
 nsDocument::SetDir(const nsAReadableString& aDirection)
 {
+#ifdef IBMBIDI
+  nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+  if (shell) {
+    nsCOMPtr<nsIPresContext> context;
+    shell->GetPresContext(getter_AddRefs(context) );
+    if (context) {
+      PRUint32 options;
+      context->GetBidi(&options);
+      for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
+        if (aDirection == NS_ConvertASCIItoUCS2(elt->mName) ) {
+          if (GET_BIDI_OPTION_DIRECTION(options) != elt->mValue) {
+            SET_BIDI_OPTION_DIRECTION(options, elt->mValue);
+            context->SetBidi(options, PR_TRUE);
+          }
+          break;
+        }
+      } // for
+    }
+  }
+#endif // IBMBIDI 
   return NS_OK;
 }
 
@@ -3233,4 +3300,33 @@ nsDocument::GetDTD(nsIDTD** aDTD) const
   return NS_OK;
 }
 
+#ifdef IBMBIDI
+/**
+ *  Check if bidi enabled (set depending on the presence of RTL
+ *  characters). If enabled, we should apply the Unicode Bidi Algorithm
+ *
+ *  @lina 07/12/2000
+ */
+NS_IMETHODIMP
+nsDocument::GetBidiEnabled(PRBool* aBidiEnabled) const
+{
+  NS_ENSURE_ARG_POINTER(aBidiEnabled);
+  *aBidiEnabled = mBidiEnabled;
+  return NS_OK;
+}
 
+/**
+ *  Indicate the document contains RTL characters.
+ *
+ *  @lina 07/12/2000
+ */
+NS_IMETHODIMP
+nsDocument::SetBidiEnabled(PRBool aBidiEnabled)
+{
+  NS_ASSERTION(aBidiEnabled, "cannot disable bidi once enabled");
+  if (aBidiEnabled) {
+    mBidiEnabled = PR_TRUE;
+  }
+  return NS_OK;
+}
+#endif // IBMBIDI

@@ -147,6 +147,25 @@ public:
    */
   NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver) = 0;
 
+#ifdef IBMBIDI
+  // The state BidiEnabled should persist across multiple views (screen, print)
+  // of the same document.
+
+  /**
+   * Check if the document contains bidi data.
+   * If so, we have to apply the Unicode Bidi Algorithm.
+   */
+  NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const = 0;
+
+  /**
+   * Indicate the document contains bidi data.
+   * Currently, we cannot disable bidi, because once bidi is enabled,
+   * it affects a frame model irreversibly, and plays even though
+   * the document no longer contains bidi data.
+   */
+  NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled) = 0;
+#endif // IBMBIDI
+
   /**
    * Return the Line Breaker for the document
    */
