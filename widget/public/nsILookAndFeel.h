@@ -121,6 +121,7 @@ public:
     eMetric_CaretBlinkTime,                               // default, may be overriden by OS
     eMetric_SingleLineCaretWidth,                         // pixel width of caret in a single line field
     eMetric_MultiLineCaretWidth,                          // pixel width of caret in a multi-line field
+    eMetric_ShowCaretWhenSelection,                       // show the caret when text is selected?
     eMetric_SubmenuDelay,                                 // delay before submenus open
     eMetric_MenusCanOverlapOSBar,                         // can popups overlap menu/task bar?
     eMetric_DragFullWindow,                               // show window contents while dragging?
