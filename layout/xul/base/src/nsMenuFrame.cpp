@@ -1328,11 +1328,7 @@ nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
     mType = eMenuType_Checkbox;
   else if (value.EqualsLiteral("radio")) {
     mType = eMenuType_Radio;
-
-    nsAutoString valueName;
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, valueName);
-    if ( mGroupName != valueName )
-      mGroupName = valueName;
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, mGroupName);
   } 
   else {
     if (mType != eMenuType_Normal)
@@ -1359,8 +1355,7 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
     if (mType != eMenuType_Radio)
       return; // only Radio possibly cares about other kinds of change
 
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, value);
-    if (value == mGroupName)
+    if (!mChecked || mGroupName.IsEmpty())
       return;                   // no interesting change
   } else { 
     mChecked = newChecked;
@@ -1378,13 +1373,6 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
    * - we went from checked="false" to checked="true"
    */
 
-  if (!mChecked)
-    /*
-     * If we're not checked, then it must have been a name change, and a name
-     * change on an unchecked item doesn't require any magic.
-     */
-    return;
-  
   /*
    * Behavioural note:
    * If we're checked and renamed _into_ an existing radio group, we are
