@@ -2619,13 +2619,19 @@ RDFElementImpl::GetID(nsIAtom*& aResult) const
 NS_IMETHODIMP
 RDFElementImpl::GetClasses(nsVoidArray& aArray) const
 {
-  return NS_OK;
+	nsresult rv = NS_ERROR_NULL_POINTER;
+  if (mAttributes != nsnull)
+		rv = mAttributes->GetClasses(aArray);
+	return rv;
 }
 
 NS_IMETHODIMP 
 RDFElementImpl::HasClass(nsIAtom* aClass) const
 {
-  return NS_OK;
+	nsresult rv = NS_ERROR_NULL_POINTER;
+	if (mAttributes != nsnull)
+		rv = mAttributes->HasClass(aClass);
+  return rv;
 }
 
 NS_IMETHODIMP
