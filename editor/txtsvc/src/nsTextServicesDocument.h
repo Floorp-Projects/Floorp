@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMRange.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIEditor.h"
@@ -66,7 +67,11 @@ private:
 
   static PRInt32 sInstanceCount;
 
-  typedef enum { eUninitialized=0, eInvalid, eValid, ePrev, eNext } TSDIteratorStatus;
+  typedef enum { eIsDone=0,        // No iterator (I), or itertor doesn't point to anything valid.
+                 eValid,           // I points to first text node (TN) in current block (CB).
+                 ePrev,            // No TN in CB, I points to first TN in prev block.
+                 eNext             // No TN in CB, I points to first TN in next block.
+  } TSDIteratorStatus;
 
   nsCOMPtr<nsIDOMDocument>        mDOMDocument;
   nsCOMPtr<nsIPresShell>          mPresShell;
@@ -96,17 +101,15 @@ public:
   /* Macro for AddRef(), Release(), and QueryInterface() */
   NS_DECL_ISUPPORTS
 
-  /* nsITextServicesDocumentInternal method implementations. */
+  /* nsITextServicesDocument method implementations. */
   NS_IMETHOD InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell);
   NS_IMETHOD InitWithEditor(nsIEditor *aEditor);
-
-  /* nsITextServicesDocument method implementations. */
   NS_IMETHOD CanEdit(PRBool *aCanEdit);
   NS_IMETHOD GetCurrentTextBlock(nsString *aStr);
   NS_IMETHOD FirstBlock();
   NS_IMETHOD LastBlock();
-  NS_IMETHOD FirstSelectedBlock(PRInt32 *aSelOffset, PRInt32 *aSelLength);
-  NS_IMETHOD LastSelectedBlock(PRInt32 *aSelOffset, PRInt32 *aSelLength);
+  NS_IMETHOD FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
+  NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
   NS_IMETHOD PrevBlock();
   NS_IMETHOD NextBlock();
   NS_IMETHOD IsDone(PRBool *aIsDone);
@@ -130,24 +133,42 @@ public:
 private:
 
   /* nsTextServicesDocument private methods. */
-  nsresult InitContentIterator();
+
+  nsresult CreateContentIterator(nsIDOMRange *aRange, nsIContentIterator **aIterator);
+
+  nsresult GetBodyNode(nsIDOMNode **aNode);
+  nsresult CreateBodyContentRange(nsIDOMRange **aRange);
+  nsresult CreateBodyToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, PRBool aToStart, nsIDOMRange **aRange);
+  nsresult CreateBodyContentIterator(nsIContentIterator **aIterator);
+
   nsresult AdjustContentIterator();
 
-  nsresult FirstTextNodeInCurrentBlock();
-  nsresult FirstTextNodeInPrevBlock();
-  nsresult FirstTextNodeInNextBlock();
-  nsresult FindFirstTextNodeInPrevBlock(nsIContent **aContent);
-  nsresult FindFirstTextNodeInNextBlock(nsIContent **aContent);
+  nsresult FirstTextNodeInCurrentBlock(nsIContentIterator *aIterator);
+  nsresult FirstTextNodeInPrevBlock(nsIContentIterator *aIterator);
+  nsresult FirstTextNodeInNextBlock(nsIContentIterator *aIterator);
+  nsresult GetFirstTextNodeInPrevBlock(nsIContent **aContent);
+  nsresult GetFirstTextNodeInNextBlock(nsIContent **aContent);
 
   PRBool IsBlockNode(nsIContent *aContent);
   PRBool IsTextNode(nsIContent *aContent);
+  PRBool IsTextNode(nsIDOMNode *aNode);
 
   PRBool HasSameBlockNodeParent(nsIContent *aContent1, nsIContent *aContent2);
+
+  nsresult SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, PRBool aDoUpdate);
+  nsresult GetSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
+  nsresult GetCollapsedSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
+  nsresult GetUncollapsedSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
 
   PRBool SelectionIsCollapsed();
   PRBool SelectionIsValid();
 
+  nsresult ComparePoints(nsIDOMNode *aParent1, PRInt32 aOffset1, nsIDOMNode *aParent2, PRInt32 aOffset2, PRInt32 *aResult);
+  nsresult GetRangeEndPoints(nsIDOMRange *aRange, nsIDOMNode **aParent1, PRInt32 *aOffset1, nsIDOMNode **aParent2, PRInt32 *aOffset2);
+  nsresult CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset, nsIDOMNode *aEndParent, PRInt32 aEndOffset, nsIDOMRange **aRange);
+
   nsresult RemoveInvalidOffsetEntries();
+  nsresult CreateOffsetTable(nsString *aStr=0);
   nsresult ClearOffsetTable();
   nsresult SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aOffsetIntoEntry);
 
