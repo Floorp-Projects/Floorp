@@ -30,11 +30,7 @@
 #include "nsFileLocations.h"
 #include "nsSpecialSystemDirectory.h"
 
-NS_IMPL_ADDREF(nsMsgFilterService)
-NS_IMPL_RELEASE(nsMsgFilterService)
-
-
-
+NS_IMPL_ISUPPORTS1(nsMsgFilterService, nsIMsgFilterService)
 
 nsMsgFilterService::nsMsgFilterService()
 {
@@ -44,21 +40,6 @@ nsMsgFilterService::nsMsgFilterService()
 nsMsgFilterService::~nsMsgFilterService()
 {
 }
-
-NS_IMETHODIMP nsMsgFilterService::QueryInterface(REFNSIID aIID, void** aResult)
-{   
-    if (aResult == NULL)  
-        return NS_ERROR_NULL_POINTER;  
-
-    if (aIID.Equals(NS_GET_IID(nsIMsgFilterService)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aResult = NS_STATIC_CAST(nsIMsgFilterService*, this);   
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}   
-
 
 NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgFolder *rootFolder, nsIMsgFilterList **resultFilterList)
 {
