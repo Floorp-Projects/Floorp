@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.18 $ $Date: 2003/04/19 00:03:32 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.19 $ $Date: 2003/05/10 14:21:40 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -93,8 +93,22 @@ nssSlot_CreateSession
 	}
 	rvSession->isRW = PR_TRUE;
 	rvSession->slot = slot;
-        /* actually, should get it's own lock if slot->lock is NULL */
-        rvSession->lock = slot->lock;
+        /*
+         * The session doesn't need its own lock.  Here's why.
+         * 1. If we are reusing the default RW session of the slot,
+         *    the slot lock is already locked to protect the session.
+         * 2. If the module is not thread safe, the slot (or rather
+         *    module) lock is already locked.
+         * 3. If the module is thread safe and we are using a new
+         *    session, no higher-level lock has been locked and we
+         *    would need a lock for the new session.  However, the
+         *    NSS_3_4_CODE usage of the session is that it is always
+         *    used and destroyed within the same function and never
+         *    shared with another thread.
+         * So the session is either already protected by another
+         * lock or only used by one thread.
+         */
+        rvSession->lock = NULL;
         rvSession->ownLock = PR_FALSE;
 	return rvSession;
     } else {

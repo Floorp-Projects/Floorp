@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.13 $ $Date: 2003/04/19 00:03:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.14 $ $Date: 2003/05/10 14:21:38 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -795,7 +795,7 @@ nssSlot_CreateSession
 	return (nssSession *)NULL;
     }
     if (nssModule_IsThreadSafe(slot->module)) {
-	/* If the parent module is not threadsafe, 
+	/* If the parent module is threadsafe, 
          * create lock to protect just this session.
 	 */
 	rvSession->lock = PZ_NewLock(nssILockOther);
