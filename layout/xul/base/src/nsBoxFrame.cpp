@@ -600,11 +600,6 @@ printf("\n");
  
   aStatus = NS_FRAME_COMPLETE;
   
-  nsRect damageArea(0,0,0,0);
-  damageArea.y = 0;
-  damageArea.height = aDesiredSize.height;
-  damageArea.width = aDesiredSize.width;
-
 #if 0
 ListTag(stdout); printf(": reflow done\n");
 #endif
@@ -1595,11 +1590,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
   nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aHint);
 
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  return NS_OK;
+  return rv;
 }
 
 /**
