@@ -416,11 +416,8 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   alignFlags |= TPM_RETURNCMD;
 
 /* Commented out. 
-  %&%#&#%&@$ It doesn't look like any of this code was necessary.  It
-  all animates cleverly on its own.  ARGH!  That means I really didn't
-  even need to pass in the anchor alignment at all.
-
-  I suck.  
+  Ok, this animation SHOULD be used.  It is different
+  from the ballooning outward animation used by default.
   
     - Dave
   */
