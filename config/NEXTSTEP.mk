@@ -34,7 +34,7 @@ MOTIF			=
 MOTIFLIB		=
 OS_LIBS			=
 
-PLATFORM_FLAGS		= -Wall -Wno-format -DNEXTSTEP -DRHAPSODY -D_NEXT_SOURCE
+PLATFORM_FLAGS		= -Wall -Wno-format -DNEXTSTEP -DNEXTSTEP$(basename $(OS_RELEASE)) -DNEXTSTEP$(subst .,,$(OS_RELEASE)) -DRHAPSODY -D_NEXT_SOURCE
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
 PORT_FLAGS		= -DSW_THREADS -DNO_CDEFS_H -DNO_REGEX -DNEED_BSDREGEX -DNO_REGCOMP -DHAS_PGNO_T -DNO_MULTICAST -DNO_TZNAME -D_POSIX_SOURCE -DNEED_S_ISLNK -DNEEDS_GETCWD -DNO_X11
 PDJAVA_FLAGS		=
@@ -45,14 +45,6 @@ OS_CFLAGS		= $(PLATFORM_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
 # Version-specific stuff
 ######################################################################
 
-ifeq ($(OS_RELEASE),3.3)
-PLATFORM_FLAGS		+= -DNEXTSTEP3 -DNEXTSTEP33
-else
-ifeq ($(OS_RELEASE),4.2)
-PLATFORM_FLAGS		+= -DNEXTSTEP4 -DNEXTSTEP42
-endif
-endif
-
 ######################################################################
 # Overrides for defaults in config.mk (or wherever)
 ######################################################################
@@ -61,7 +53,7 @@ CC			= cc
 CCC			= c++
 EMACS			= /bin/true
 PERL			= /usr/bin/perl
-AR              = /bin/libtool -static -o $@
+AR			= /bin/libtool -static -o $@
 RANLIB			= /bin/true
 WHOAMI			= /usr/ucb/whoami
 

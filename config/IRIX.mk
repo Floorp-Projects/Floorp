@@ -34,7 +34,7 @@ MOTIF			=
 MOTIFLIB		=
 OS_LIBS			=
 
-PLATFORM_FLAGS		= -DIRIX
+PLATFORM_FLAGS		= -DIRIX -DIRIX$(OS_RELEASE)$(subst .,_,$(OS_VERSION))
 MOVEMAIL_FLAGS		=
 PORT_FLAGS		= -DSVR4 -DHAVE_LCHOWN -DHAVE_SIGNED_CHAR -DHAVE_FILIO_H -DHAS_PGNO_T -DMITSHM -DHAVE_WAITID -DNEED_VBASE -DNEED_SYS_TIME_H -DHAVE_SYSTEMINFO_H -DNO_JNI_STUBS -D_MIPS_SIM_ABI32
 PDJAVA_FLAGS		=
@@ -83,7 +83,7 @@ CC			= cc
 CCC			= CC -woff 3247
 endif
 
-ifeq ($(OS_VERSION),.3)
+ifeq ($(OS_RELEASE)$(OS_VERSION),5.3)
 PERL			= $(LOCAL_BIN)perl5
 ifndef NS_USE_GCC
 XGOT_FLAG		= -xgot
@@ -103,14 +103,7 @@ endif
 endif
 endif
 endif
-PLATFORM_FLAGS		+= $(XGOT_FLAG) -DIRIX5_3
-endif
-
-ifeq ($(OS_VERSION),.2)
-PLATFORM_FLAGS		+= -DIRIX6_2
-endif
-ifeq ($(OS_VERSION),.3)
-PLATFORM_FLAGS		+= -DIRIX6_3
+PLATFORM_FLAGS		+= $(XGOT_FLAG)
 endif
 
 ######################################################################

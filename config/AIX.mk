@@ -34,7 +34,7 @@ MOTIF			=
 MOTIFLIB		= -lXm
 OS_LIBS			= -lm -lbsd
 
-PLATFORM_FLAGS		= -qarch=com -qmaxmem=65536 -DAIX -Daix
+PLATFORM_FLAGS		= -qarch=com -qmaxmem=65536 -DAIX -Daix -DAIX$(subst .,_,$(OS_RELEASE))
 MOVEMAIL_FLAGS		=
 PORT_FLAGS		= -DSYSV -DNEED_CDEFS_H -DNEED_SELECT_H -DNEED_IOCTL_H -DSYS_MACHINE_H -DUSE_NODL_TABS -DHAVE_SIGNED_CHAR -DHAVE_SYS_SELECT_H -DNEED_SYS_WAIT_H -DHAVE_INT32_T -DNEED_H_ERRNO
 PDJAVA_FLAGS		=
@@ -63,7 +63,6 @@ else
 PLATFORM_FLAGS		+= -qtune=604 -qnosom -DAIXV4
 endif
 ifeq ($(OS_RELEASE),4.1)
-PLATFORM_FLAGS		+= -DAIX4_1
 PORT_FLAGS		+= -DSW_THREADS
 OS_LIBS			+= -lsvld 
 DSO_LDOPTS		= -bM:SRE -bh:4 -bnoentry
@@ -83,12 +82,6 @@ PORT_FLAGS		+= -DHW_THREADS -DUSE_PTHREADS -DPOSIX7
 OS_LIBS			+= -ldl 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 DSO_LDOPTS		= -brtl -bM:SRE -bnoentry -bexpall
-ifeq ($(OS_RELEASE),4.2)
-PLATFORM_FLAGS		+= -DAIX4_2
-endif
-ifeq ($(OS_RELEASE),4.3)
-PLATFORM_FLAGS		+= -DAIX4_3
-endif
 endif
 
 ######################################################################
