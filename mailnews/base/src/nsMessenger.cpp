@@ -79,6 +79,8 @@
 
 #include "nsMsgStatusFeedback.h"
 
+#include "nsIContentViewer.h" 
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
@@ -106,6 +108,8 @@ public:
   NS_IMETHOD GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *folderElement);
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
   NS_IMETHOD OpenURL(const char * url);
+  NS_IMETHOD DoPrint();
+  NS_IMETHOD DoPrintPreview();
   NS_IMETHOD DeleteMessages(nsIDOMXULElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
   NS_IMETHOD DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXULElement *parentFolder, nsIDOMXULElement *folder);
 
@@ -1125,4 +1129,35 @@ nsMessenger::LoadFirstDraft()
   } 
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMessenger::DoPrint()
+{
+  printf("nsMessenger::DoPrint()\n");
+
+  nsresult rv = NS_ERROR_FAILURE;
+  nsIContentViewer *viewer;
+
+  if (!mWebShell) {
+	printf("can't print, there is no webshell\n");
+	return rv;
+  }
+
+  mWebShell->GetContentViewer(&viewer);
+
+  if (viewer) {
+    rv = viewer->Print();
+    NS_RELEASE(viewer);
+  }
+  else {
+	printf("failed to get the viewer for printing\n");
+  }
+  
+  return rv;
+}
+
+NS_IMETHODIMP nsMessenger::DoPrintPreview()
+{
+  printf("nsMessenger::DoPrintPreview()\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }

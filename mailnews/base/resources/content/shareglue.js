@@ -27,8 +27,6 @@ function NewBrowserWindow() {}
 function NewBlankPage() {} 
 function TemplatePage() {}
 function WizardPage() {}
-function PrintPreview() {}
-function Print() {}
 
 function OnLoadMessenger()
 {
@@ -76,3 +74,11 @@ function MessengerSetDefaultCharacterSet(aCharset)
     MsgReload();
 }
 
+function Print() {
+	dump("Print()\n");
+	messenger.DoPrint();
+}
+function PrintPreview() {
+	dump("PrintPreview()\n");
+	messenger.DoPrintPreview();
+}

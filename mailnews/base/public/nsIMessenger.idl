@@ -38,6 +38,8 @@ interface nsIMessenger : nsISupports {
 	void Open3PaneWindow();
     void SetWindow(in nsIDOMWindow ptr);
     void OpenURL(in string str);
+    void DoPrint();
+    void DoPrintPreview();
     void DeleteMessages(in nsIDOMXULElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);
     void DeleteFolders(in nsIRDFCompositeDataSource db, in nsIDOMXULElement parentFolder, in nsIDOMXULElement folder);
 	void CopyMessages(in nsIRDFCompositeDataSource database, in nsIDOMXULElement srcFolderElement,
