@@ -38,7 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCollationCID.h"
+#if TARGET_CARBON
+#include "nsCollationMacUC.h"
+#else
 #include "nsCollationMac.h"
+#endif
 #include "nsDateTimeFormatCID.h"
 #include "nsDateTimeFormatMac.h"
 #include "nsIComponentManager.h"
@@ -70,7 +74,11 @@ ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 MAKE_CTOR(CreateLocaleService, nsILocaleService, NS_NewLocaleService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacLocale)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationFactory)
+#if TARGET_CARBON
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationMacUC)
+#else
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationMac)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatMac)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableDateTimeFormat)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLanguageAtomService)
@@ -95,8 +103,11 @@ static nsModuleComponentInfo gComponents[] = {
   { "Collation",
     NS_COLLATION_CID,
     NULL,
+#if TARGET_CARBON
+    nsCollationMacUCConstructor },
+#else
     nsCollationMacConstructor },
-
+#endif
   { "Date/Time formatter",
     NS_DATETIMEFORMAT_CID,
     NULL,
