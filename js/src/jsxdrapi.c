@@ -574,15 +574,10 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
-    JSBool hasMagic;
-
-    if (!js_XDRScript(xdr, scriptp, &hasMagic))
+    if (!js_XDRScript(xdr, scriptp, NULL))
         return JS_FALSE;
-    if (!hasMagic) {
-        JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_SCRIPT_MAGIC);
-        return JS_FALSE;
-    }
+    if (xdr->mode == JSXDR_DECODE)
+        js_CallNewScriptHook(xdr->cx, *scriptp, NULL);
     return JS_TRUE;
 }
 

@@ -1082,7 +1082,6 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     JSString *atomstr;
     char *propname;
     JSScopeProperty *sprop;
-    JSBool magic;
     jsid propid;
     JSAtom *atom;
     uintN i;
@@ -1185,10 +1184,9 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
             }
         }
     }
-    if (!js_XDRScript(xdr, &fun->script, &magic) ||
-        !magic) {
+
+    if (!js_XDRScript(xdr, &fun->script, NULL))
         return JS_FALSE;
-    }
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = fun->object;
@@ -1204,6 +1202,8 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 return JS_FALSE;
             }
         }
+
+        js_CallNewScriptHook(cx, fun->script, fun);
     }
 
     return JS_TRUE;

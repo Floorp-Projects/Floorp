@@ -89,6 +89,17 @@ extern JS_FRIEND_DATA(JSClass) js_ScriptClass;
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
 
+/*
+ * Three successively less primitive ways to make a new JSScript.  The first
+ * two do *not* call a non-null cx->runtime->newScriptHook -- only the last,
+ * js_NewScriptFromCG, calls this optional debugger hook.
+ *
+ * The js_NewScript function can't know whether the script it creates belongs
+ * to a function, or is top-level or eval code, but the debugger wants access
+ * to the newly made script's function, if any -- so callers of js_NewScript
+ * are responsible for notifying the debugger after successfully creating any
+ * kind (function or other) of new JSScript.
+ */
 extern JSScript *
 js_NewScript(JSContext *cx, uint32 length);
 
@@ -101,6 +112,15 @@ js_NewScriptFromParams(JSContext *cx, jsbytecode *code, uint32 length,
 
 extern JS_FRIEND_API(JSScript *)
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun);
+
+/*
+ * New-script-hook calling is factored from js_NewScriptFromCG so that it
+ * and callers of js_XDRScript can share this code.  In the case of callers
+ * of js_XDRScript, the hook should be invoked only after successful decode
+ * of any owning function (the fun parameter) or script object (null fun).
+ */
+extern JS_FRIEND_API(void)
+js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 
 extern void
 js_DestroyScript(JSContext *cx, JSScript *script);
@@ -120,6 +140,15 @@ js_LineNumberToPC(JSScript *script, uintN lineno);
 extern uintN
 js_GetScriptLineExtent(JSScript *script);
 
+/*
+ * If magic is non-null, js_XDRScript succeeds on magic number mismatch but
+ * returns false in *magic; it reflects a match via a true *magic out param.
+ * If magic is null, js_XDRScript returns false on bad magic number errors,
+ * which it reports.
+ *
+ * NB: callers must call js_CallNewScriptHook after successful JSXDR_DECODE
+ * and subsequent set-up of owning function or script object, if any.
+ */
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic);
 

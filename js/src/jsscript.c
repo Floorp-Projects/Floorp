@@ -350,16 +350,22 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     if (magic != JSXDR_MAGIC_SCRIPT_3 &&
         magic != JSXDR_MAGIC_SCRIPT_2 &&
         magic != JSXDR_MAGIC_SCRIPT_1) {
+        if (!hasMagic) {
+            JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BAD_SCRIPT_MAGIC);
+            return JS_FALSE;
+        }
         *hasMagic = JS_FALSE;
         return JS_TRUE;
     }
-    *hasMagic = JS_TRUE;
+    if (hasMagic)
+        *hasMagic = JS_TRUE;
 
     if (xdr->mode == JSXDR_ENCODE) {
         jssrcnote *sn = script->notes;
         length = script->length;
         prologLength = script->main - script->code;
-        version = (int32) script->version;
+        version = (int32)script->version;
         lineno = (uint32)script->lineno;
         depth = (uint32)script->depth;
 
@@ -397,6 +403,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         *scriptp = script;
     }
 
+    /* Control hereafter must goto error on failure, to destroy script. */
     if (!JS_XDRBytes(xdr, (char **)&script->code, length) ||
         !XDRAtomMap(xdr, &script->atomMap) ||
         !JS_XDRUint32(xdr, &notelen) ||
@@ -607,6 +614,7 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         js_DestroyScript(cx, oldscript);
 
     script->object = obj;
+    js_CallNewScriptHook(cx, script, NULL);
 
 out:
     /*
@@ -785,8 +793,6 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     JSTryNote *trynotes;
     jssrcnote *notes;
     JSScript *script;
-    JSRuntime *rt;
-    JSNewScriptHook hook;
 
     if (!js_FinishTakingTryNotes(cx, cg, &trynotes))
         return NULL;
@@ -804,6 +810,16 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     }
 
     /* Tell the debugger about this compiled script. */
+    js_CallNewScriptHook(cx, script, fun);
+    return script;
+}
+
+JS_FRIEND_API(void)
+js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
+{
+    JSRuntime *rt;
+    JSNewScriptHook hook;
+
     rt = cx->runtime;
     hook = rt->newScriptHook;
     if (hook) {
@@ -822,12 +838,11 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
         dummy.script = script;
         cx->fp = &dummy;
 
-        (*hook)(cx, cg->filename, cg->firstLine, script, fun,
-                rt->newScriptHookData);
+        hook(cx, script->filename, script->lineno, script, fun,
+             rt->newScriptHookData);
 
         cx->fp = dummy.down;
     }
-    return script;
 }
 
 void
