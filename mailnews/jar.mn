@@ -27,6 +27,7 @@ messenger.jar:
     content/messenger/addressbook/abMailListDialog.js                          (addrbook/resources/content/abMailListDialog.js)
     content/messenger/addressbook/abListOverlay.xul                            (addrbook/resources/content/abListOverlay.xul)
     content/messenger/addressbook/abEditListDialog.xul                         (addrbook/resources/content/abEditListDialog.xul)
+    content/messenger/addressbook/addressbook-panel.xul                        (addrbook/resources/content/addressbook-panel.xul)
     content/messenger/AccountManager.xul                                       (base/prefs/resources/content/AccountManager.xul)
     content/messenger/AccountManager.js                                        (base/prefs/resources/content/AccountManager.js)
     content/messenger/am-main.xul                                              (base/prefs/resources/content/am-main.xul)
