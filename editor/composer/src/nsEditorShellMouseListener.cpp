@@ -83,6 +83,7 @@ nsEditorShellMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 // Helpers to test if in a table
 
+static
 PRBool GetParentTable(nsIDOMEvent* aMouseEvent, nsIDOMElement **aTableElement)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
@@ -114,6 +115,7 @@ PRBool GetParentTable(nsIDOMEvent* aMouseEvent, nsIDOMElement **aTableElement)
   return PR_FALSE;
 }
 
+static
 PRBool GetParentCell(nsIDOMEvent* aMouseEvent, nsIDOMElement **aCellElement)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
