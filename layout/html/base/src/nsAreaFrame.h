@@ -93,8 +93,15 @@ protected:
   nsAreaFrame();
   virtual ~nsAreaFrame();
 
-  void ReflowAbsoluteItems(nsIPresContext& aPresContext,
-                           const nsHTMLReflowState& aReflowState);
+  nsresult IncrementalReflow(nsIPresContext&          aPresContext,
+                             const nsHTMLReflowState& aReflowState);
+  nsresult ReflowAbsoluteFrame(nsIPresContext&          aPresContext,
+                               const nsHTMLReflowState& aReflowState,
+                               nsIFrame*                aKidFrame,
+                               PRBool                   aInitialReflow,
+                               nsReflowStatus&          aStatus);
+  void ReflowAbsoluteFrames(nsIPresContext&          aPresContext,
+                            const nsHTMLReflowState& aReflowState);
 
 private:
   nsSpaceManager* mSpaceManager;
