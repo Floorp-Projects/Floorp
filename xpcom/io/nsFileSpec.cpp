@@ -1180,9 +1180,11 @@ nsprPath::operator const char*()
     if(resultPath[1] == '|')
 		 resultPath[1] = ':';
 	
-	/* Remove the ending seperator */
-    if(resultPath[PL_strlen(resultPath) - 1 ] == '/')
-		 resultPath[PL_strlen(resultPath) - 1 ] = '\0';	 
+	/* Remove the ending seperator only if it is not the last seperator*/
+    int len = PL_strlen(resultPath);
+    if(resultPath[len - 1 ] == '/')
+        if(resultPath[len - 2 ] != ':')
+		    resultPath[len - 1 ] = '\0';	 
 		
     return resultPath;
 	
