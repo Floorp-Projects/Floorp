@@ -34,9 +34,10 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["nglayoutDebugWindow",
-                       "debugXULBoxes", "nglayoutDebugUseXBLForms", 
+                       "debugXULBoxes", "browserDOMWindowDumpEnabled", 
+                       "javascriptOptionsStrict", "nglayoutDebugUseXBLForms", 
                        "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
-                       "browserEnableTBDnD", "acceleratorKeyValue", "menuAccessKeyValue"];
+                       "acceleratorKeyValue", "menuAccessKeyValue"];
   ]]>
   </script>
         
@@ -56,16 +57,19 @@
        panel and you can damn well click the widgets! -->
   <groupbox orient="vertical" autostretch="never">
     <label value="&debugMiscellaneous.label;"/>
-    <checkbox id="nglayoutDebugUseXBLForms" label="Use XBL-based form controls (takes effect after restart). Don't file bugs on these controls; they are still under construction."
-              pref="true" preftype="bool" prefstring="nglayout.debug.enable_xbl_forms"
+    <checkbox id="browserDOMWindowDumpEnabled" label="&debugEnableDump.label;"
+              pref="true" preftype="bool" prefstring="browser.dom.window.dump.enabled"
               prefattribute="checked"/>
-    <checkbox id="browserEnableTBDnD" label="&debugEnableTBDnD.label;"
-              pref="true" preftype="bool" prefstring="browser.enable.tb_dnd"
+    <checkbox id="javascriptOptionsStrict" label="&debugStrictJavascript.label;"
+              pref="true" preftype="bool" prefstring="javascript.options.strict"
+              prefattribute="checked"/>
+    <checkbox id="nglayoutDebugUseXBLForms" label="&debugUseXBLForms.label;"
+              pref="true" preftype="bool" prefstring="nglayout.debug.enable_xbl_forms"
               prefattribute="checked"/>
     <checkbox id="nglayoutDebugEnableXPCOMRefcntLog" label="&debugEnableXPCOMRefcntLog.label;"
               pref="true" preftype="bool" prefstring="nglayout.debug.enable_xpcom_refcnt_log"
               prefattribute="checked"/>
-    <checkbox id="showAboutAsStupidModalWindow" label="&debugShowAboutAsStupidModalWindow.label;"
+    <checkbox id="showAboutAsStupidModalWindow" label="&debugShowAboutAsModal.label;"
               pref="true" preftype="bool" prefstring="browser.show_about_as_stupid_modal_window"
               prefattribute="checked"/>
   </groupbox>              
