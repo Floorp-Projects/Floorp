@@ -749,7 +749,8 @@ if ($::FORM{'keywords'}) {
         }
         my $i = GetKeywordIdFromName($keyword);
         if (!$i) {
-            PuntTryAgain("Unknown keyword named <code>$keyword</code>. " .
+            PuntTryAgain("Unknown keyword named <code>" .
+                         html_quote($keyword) . "</code>. " .
                          "<P>The legal keyword names are " .
                          "<A HREF=describekeywords.cgi>" .
                          "listed here</A>.");

@@ -85,7 +85,7 @@ sub SqlifyDate {
     }
     my $date = str2time($str);
     if (!defined $date) {
-        PuntTryAgain("The string '<tt>$str</tt>' is not a legal date.");
+        PuntTryAgain("The string '<tt>".html_quote($str)."</tt>' is not a legal date.");
     }
     return time2str("%Y/%m/%d %H:%M:%S", $date);
 }
@@ -172,7 +172,8 @@ sub GenerateSQL {
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
                 return Error("The 'At least ___ votes' field must be a\n" .
-                             "simple number. You entered \"$c\", which\n" .
+                             "simple number. You entered \"" .
+                             html_quote($c) . "\", which\n" .
                              "doesn't cut it.");
             }
             push(@specialchart, ["votes", "greaterthan", $c - 1]);
@@ -250,7 +251,8 @@ sub GenerateSQL {
             push(@specialchart, \@clist);
         } else {
             return Error("You must specify one or more fields in which to\n" .
-                  "search for <tt>$email</tt>.\n");
+                         "search for <tt>" .
+                         html_quote($email) . "</tt>.\n");
         }
     }
 
@@ -260,7 +262,8 @@ sub GenerateSQL {
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
                 return Error("The 'changed in last ___ days' field must be\n" .
-                             "a simple number. You entered \"$c\", which\n" .
+                             "a simple number. You entered \"" .
+                             html_quote($c) . "\", which\n" .
                              "doesn't cut it.");
             }
             push(@specialchart, ["changedin",
@@ -428,7 +431,8 @@ sub GenerateSQL {
                  if ($id) {
                      push(@list, "$table.keywordid = $id");
                  } else {
-                     return Error("Unknown keyword named <code>$v</code>.\n" .
+                     return Error("Unknown keyword named <code>" .
+                                  html_quote($v) . "</code>.\n" .
                                   "<P>The legal keyword names are\n" .
                                   "<A HREF=describekeywords.cgi>" .
                                   "listed here</A>.\n");
