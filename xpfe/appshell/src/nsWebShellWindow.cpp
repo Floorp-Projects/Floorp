@@ -607,6 +607,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
         printf("*** NOT Adding menu listener to [%s]\n", menuitemName.ToNewCString());
       }
 #endif
+      NS_RELEASE(icmd);
     }
     
     // The parent owns us, so we can release
