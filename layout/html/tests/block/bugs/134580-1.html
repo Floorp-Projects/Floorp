@@ -1,0 +1,105 @@
+<title>Testcase, bug 134580</title>
+
+<h2>Testcases where whitespace a single text node</h2>
+
+Leading and trailing whitespace:
+<table border><tr><td> <img src="hack.gif" height=20 width=20> </td></tr></table>
+
+Only leading whitespace:
+<table border><tr><td> <img src="hack.gif" height=20 width=20></td></tr></table>
+
+Only trailing whitespace:
+<table border><tr><td><img src="hack.gif" height=20 width=20> </td></tr></table>
+
+A pair of images with whitespace between only:
+<table border><tr><td><img src="hack.gif" height=20 width=20> <img src="hack.gif" height=20 width=20></td></tr></table>
+
+A pair of images with no whitespace:
+<table border><tr><td><img src="hack.gif" height=20 width=20><img src="hack.gif" height=20 width=20></td></tr></table>
+
+Text with no whitespace:
+<table border><tr><td><font size=7><font size=3>Text</font></font></td></tr></table>
+Text with leading whitespace:
+<table border><tr><td><font size=7> <font size=3>Text</font></font></td></tr></table>
+Text with trailing whitespace:
+<table border><tr><td><font size=7><font size=3>Text</font> </font></td></tr></table>
+Text with intermediate whitespace:
+<table border><tr><td><font size=7><font size=3>Text</font> <font size=3>Text</font></font></td></tr></table>
+
+<h2>Testcases where whitespace is two text nodes separated by comments</h2>
+
+Leading and trailing whitespace:
+<table border><tr><td> <!-- --> <img src="hack.gif" height=20 width=20> <!-- --> </td></tr></table>
+
+Only leading whitespace:
+<table border><tr><td> <!-- --> <img src="hack.gif" height=20 width=20></td></tr></table>
+
+Only trailing whitespace:
+<table border><tr><td><img src="hack.gif" height=20 width=20> <!-- --> </td></tr></table>
+
+A pair of images with whitespace between only:
+<table border><tr><td><img src="hack.gif" height=20 width=20> <!-- --> <img src="hack.gif" height=20 width=20></td></tr></table>
+
+A pair of images with no whitespace:
+<table border><tr><td><img src="hack.gif" height=20 width=20><img src="hack.gif" height=20 width=20></td></tr></table>
+
+Text with no whitespace:
+<table border><tr><td><font size=7><font size=3>Text</font></font></td></tr></table>
+Text with leading whitespace:
+<table border><tr><td><font size=7> <!-- --> <font size=3>Text</font></font></td></tr></table>
+Text with trailing whitespace:
+<table border><tr><td><font size=7><font size=3>Text</font> <!-- --> </font></td></tr></table>
+Text with intermediate whitespace:
+<table border><tr><td><font size=7><font size=3>Text</font> <!-- --> <font size=3>Text</font></font></td></tr></table>
+
+<h2>Testcases where whitespace a single text node</h2>
+
+<p>Leading and trailing whitespace:
+<br><img src="hack.gif" height=5 width=80><br> <img src="hack.gif" height=20 width=20> <br><img src="hack.gif" height=5 width=80><br>
+
+<p>Only leading whitespace:
+<br><img src="hack.gif" height=5 width=80><br> <img src="hack.gif" height=20 width=20><br><img src="hack.gif" height=5 width=80><br>
+
+<p>Only trailing whitespace:
+<br><img src="hack.gif" height=5 width=80><br><img src="hack.gif" height=20 width=20> <br><img src="hack.gif" height=5 width=80><br>
+
+<p>A pair of images with whitespace between only:
+<br><img src="hack.gif" height=5 width=80><br><img src="hack.gif" height=20 width=20> <img src="hack.gif" height=20 width=20><br><img src="hack.gif" height=5 width=80><br>
+
+<p>A pair of images with no whitespace:
+<br><img src="hack.gif" height=5 width=80><br><img src="hack.gif" height=20 width=20><img src="hack.gif" height=20 width=20><br><img src="hack.gif" height=5 width=80><br>
+
+<p>Text with no whitespace:
+<br><img src="hack.gif" height=5 width=80><br><font size=7><font size=3>Text</font></font><br><img src="hack.gif" height=5 width=80><br>
+<p>Text with leading whitespace:
+<br><img src="hack.gif" height=5 width=80><br><font size=7> <font size=3>Text</font></font><br><img src="hack.gif" height=5 width=80><br>
+<p>Text with trailing whitespace:
+<br><img src="hack.gif" height=5 width=80><br><font size=7><font size=3>Text</font> </font><br><img src="hack.gif" height=5 width=80><br>
+<p>Text with intermediate whitespace:
+<br><img src="hack.gif" height=5 width=80><br><font size=7><font size=3>Text</font> <font size=3>Text</font></font><br><img src="hack.gif" height=5 width=80><br>
+
+<h2>Testcases where whitespace is two text nodes separated by comments</h2>
+
+<p>Leading and trailing whitespace:
+<br><img src="hack.gif" height=5 width=80><br> <!-- --> <img src="hack.gif" height=20 width=20> <!-- --> <br><img src="hack.gif" height=5 width=80><br>
+
+<p>Only leading whitespace:
+<br><img src="hack.gif" height=5 width=80><br> <!-- --> <img src="hack.gif" height=20 width=20><br><img src="hack.gif" height=5 width=80><br>
+
+<p>Only trailing whitespace:
+<br><img src="hack.gif" height=5 width=80><br><img src="hack.gif" height=20 width=20> <!-- --> <br><img src="hack.gif" height=5 width=80><br>
+
+<p>A pair of images with whitespace between only:
+<br><img src="hack.gif" height=5 width=80><br><img src="hack.gif" height=20 width=20> <!-- --> <img src="hack.gif" height=20 width=20><br><img src="hack.gif" height=5 width=80><br>
+
+<p>A pair of images with no whitespace:
+<br><img src="hack.gif" height=5 width=80><br><img src="hack.gif" height=20 width=20><img src="hack.gif" height=20 width=20><br><img src="hack.gif" height=5 width=80><br>
+
+<p>Text with no whitespace:
+<br><img src="hack.gif" height=5 width=80><br><font size=7><font size=3>Text</font></font><br><img src="hack.gif" height=5 width=80><br>
+<p>Text with leading whitespace:
+<br><img src="hack.gif" height=5 width=80><br><font size=7> <!-- --> <font size=3>Text</font></font><br><img src="hack.gif" height=5 width=80><br>
+<p>Text with trailing whitespace:
+<br><img src="hack.gif" height=5 width=80><br><font size=7><font size=3>Text</font> <!-- --> </font><br><img src="hack.gif" height=5 width=80><br>
+<p>Text with intermediate whitespace:
+<br><img src="hack.gif" height=5 width=80><br><font size=7><font size=3>Text</font> <!-- --> <font size=3>Text</font></font><br><img src="hack.gif" height=5 width=80><br>
