@@ -293,7 +293,6 @@ protected:
 	nsVoidArray*		m_pAnonymousBoolValues;
 
 	mdb_kind			m_PabTableKind;
- 	mdb_kind			m_HistoryTableKind;
 	mdb_kind			m_MailListTableKind;
 
 	mdb_scope			m_CardRowScopeToken;

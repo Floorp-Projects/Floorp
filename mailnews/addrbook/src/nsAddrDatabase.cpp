@@ -59,7 +59,6 @@ const char *kAnonymousTableKind = "ns:addrbk:db:table:kind:anonymous";
 const char *kAnonymousRowScope = "ns:addrbk:db:row:scope:anonymous:all";
 
 const char *kPabTableKind = "ns:addrbk:db:table:kind:pab";
-const char *kHistoryTableKind = "ns:addrbk:db:table:kind:history";
 const char *kMailListTableKind = "ns:addrbk:db:table:kind:maillist";
 
 const char *kCardRowScope = "ns:addrbk:db:row:scope:card:all";
@@ -119,7 +118,7 @@ nsAddrDatabase::nsAddrDatabase()
 	  m_pAnonymousStrValues(nsnull), m_pAnonymousIntAttributes(nsnull),
 	  m_pAnonymousIntValues(nsnull), m_pAnonymousBoolAttributes(nsnull),
 	  m_pAnonymousBoolValues(nsnull),
-      m_PabTableKind(0), m_HistoryTableKind(0),
+      m_PabTableKind(0),
       m_MailListTableKind(0),
       m_CardRowScopeToken(0),
       m_FirstNameColumnToken(0),
