@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.11 2002/08/27 13:14:39 kaie%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.12 2002/09/20 04:41:47 jpierre%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -55,9 +55,23 @@
 /* =============================================================================
  * SIGNERINFO
  */
+NSSCMSSignerInfo *
+nss_cmssignerinfo_create(NSSCMSMessage *cmsg, NSSCMSSignerIDSelector type, CERTCertificate *cert, SECItem *subjKeyID, SECKEYPublicKey *pubKey, SECKEYPrivateKey *signingKey, SECOidTag digestalgtag);
+
+NSSCMSSignerInfo *
+NSS_CMSSignerInfo_CreateWithSubjKeyID(NSSCMSMessage *cmsg, SECItem *subjKeyID, SECKEYPublicKey *pubKey, SECKEYPrivateKey *signingKey, SECOidTag digestalgtag)
+{
+    return nss_cmssignerinfo_create(cmsg, NSSCMSSignerID_SubjectKeyID, NULL, subjKeyID, pubKey, signingKey, digestalgtag); 
+}
 
 NSSCMSSignerInfo *
 NSS_CMSSignerInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert, SECOidTag digestalgtag)
+{
+    return nss_cmssignerinfo_create(cmsg, NSSCMSSignerID_IssuerSN, cert, NULL, NULL, NULL, digestalgtag); 
+}
+
+NSSCMSSignerInfo *
+nss_cmssignerinfo_create(NSSCMSMessage *cmsg, NSSCMSSignerIDSelector type, CERTCertificate *cert, SECItem *subjKeyID, SECKEYPublicKey *pubKey, SECKEYPrivateKey *signingKey, SECOidTag digestalgtag)
 {
     void *mark;
     NSSCMSSignerInfo *signerinfo;
@@ -74,14 +88,36 @@ NSS_CMSSignerInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert, SECOidTag d
 	return NULL;
     }
 
-    if ((signerinfo->cert = CERT_DupCertificate(cert)) == NULL)
-	goto loser;
 
     signerinfo->cmsg = cmsg;
 
-    signerinfo->signerIdentifier.identifierType = NSSCMSSignerID_IssuerSN;	/* hardcoded for now */
-    if ((signerinfo->signerIdentifier.id.issuerAndSN = CERT_GetCertIssuerAndSN(poolp, cert)) == NULL)
-	goto loser;
+    switch(type) {
+    case NSSCMSSignerID_IssuerSN:
+        signerinfo->signerIdentifier.identifierType = NSSCMSSignerID_IssuerSN;
+        if ((signerinfo->cert = CERT_DupCertificate(cert)) == NULL)
+	    goto loser;
+        if ((signerinfo->signerIdentifier.id.issuerAndSN = CERT_GetCertIssuerAndSN(poolp, cert)) == NULL)
+	    goto loser;
+        break;
+    case NSSCMSSignerID_SubjectKeyID:
+        signerinfo->signerIdentifier.identifierType = NSSCMSSignerID_SubjectKeyID;
+        PORT_Assert(subjKeyID);
+        if (!subjKeyID)
+            goto loser;
+
+        signerinfo->signerIdentifier.id.subjectKeyID = PORT_ArenaNew(poolp, SECItem);
+        SECITEM_CopyItem(poolp, signerinfo->signerIdentifier.id.subjectKeyID,
+                         subjKeyID);
+        signerinfo->signingKey = SECKEY_CopyPrivateKey(signingKey);
+        if (!signerinfo->signingKey)
+            goto loser;
+        signerinfo->pubKey = SECKEY_CopyPublicKey(pubKey);
+        if (!signerinfo->pubKey)
+            goto loser;
+        break;
+    default:
+        goto loser;
+    }
 
     /* set version right now */
     version = NSS_CMS_SIGNER_INFO_VERSION_ISSUERSN;
@@ -129,23 +165,44 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest, SECItem *c
     SECOidTag signalgtag;
     SECItem signature = { 0 };
     SECStatus rv;
-    PLArenaPool *poolp, *tmppoolp; 
+    PLArenaPool *poolp, *tmppoolp;
+    SECAlgorithmID *algID, freeAlgID;
+    CERTSubjectPublicKeyInfo *spki;
 
     PORT_Assert (digest != NULL);
 
     poolp = signerinfo->cmsg->poolp;
 
-    cert = signerinfo->cert;
+    switch (signerinfo->signerIdentifier.identifierType) {
+    case NSSCMSSignerID_IssuerSN:
+        cert = signerinfo->cert;
 
-    if ((privkey = PK11_FindKeyByAnyCert(cert, signerinfo->cmsg->pwfn_arg)) == NULL)
-	goto loser;
-
+        if ((privkey = PK11_FindKeyByAnyCert(cert, signerinfo->cmsg->pwfn_arg)) == NULL)
+	    goto loser;
+        algID = &cert->subjectPublicKeyInfo.algorithm;
+        break;
+    case NSSCMSSignerID_SubjectKeyID:
+        privkey = signerinfo->signingKey;
+        signerinfo->signingKey = NULL;
+        spki = SECKEY_CreateSubjectPublicKeyInfo(signerinfo->pubKey);
+        SECKEY_DestroyPublicKey(signerinfo->pubKey);
+        signerinfo->pubKey = NULL;
+        SECOID_CopyAlgorithmID(NULL, &freeAlgID, &spki->algorithm);
+        SECKEY_DestroySubjectPublicKeyInfo(spki); 
+        algID = &freeAlgID;
+        break;
+    default:
+        goto loser;
+    }
     digestalgtag = NSS_CMSSignerInfo_GetDigestAlgTag(signerinfo);
     /*
      * XXX I think there should be a cert-level interface for this,
      * so that I do not have to know about subjectPublicKeyInfo...
      */
-    signalgtag = SECOID_GetAlgorithmTag(&(cert->subjectPublicKeyInfo.algorithm));
+    signalgtag = SECOID_GetAlgorithmTag(algID);
+    if (signerinfo->signerIdentifier.identifierType == NSSCMSSignerID_SubjectKeyID) {
+      SECOID_DestroyAlgorithmID(&freeAlgID, PR_FALSE);
+    }
 
     /* Fortezza MISSI have weird signature formats.  Map them to standard DSA formats */
     signalgtag = PK11_FortezzaMapSig(signalgtag);
@@ -196,7 +253,6 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest, SECItem *c
     } else {
 	rv = SGN_Digest(privkey, digestalgtag, &signature, digest);
     }
-
     SECKEY_DestroyPrivateKey(privkey);
     privkey = NULL;
 

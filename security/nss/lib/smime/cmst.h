@@ -34,7 +34,7 @@
 /*
  * Header for CMS types.
  *
- * $Id: cmst.h,v 1.4 2001/12/07 01:36:13 relyea%netscape.com Exp $
+ * $Id: cmst.h,v 1.5 2002/09/20 04:41:47 jpierre%netscape.com Exp $
  */
 
 #ifndef _CMST_H_
@@ -243,6 +243,8 @@ struct NSSCMSSignerInfoStr {
     CERTCertificateList *	certList;
     PRTime			signingTime;
     NSSCMSVerificationStatus	verificationStatus;
+    SECKEYPrivateKey *          signingKey; /* Used if we're using subjKeyID*/
+    SECKEYPublicKey *           pubKey;
 };
 #define NSS_CMS_SIGNER_INFO_VERSION_ISSUERSN	1	/* what we *create* */
 #define NSS_CMS_SIGNER_INFO_VERSION_SUBJKEY	3	/* what we *create* */
