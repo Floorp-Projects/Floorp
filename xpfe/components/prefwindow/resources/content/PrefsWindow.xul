@@ -21,8 +21,7 @@
 <html:div flex="100%">
 &categoryHeader;
 <html:br />
-<html:iframe name="preftree" id="preftree" src="preftree.xul"
-	scrolling="auto" resize="yes"/>
+<html:iframe name="preftree" id="preftree" src="preftree.xul" scrolling="auto" resize="yes" width="72%" height="326"/>
 <html:iframe name="pref-appearance" id="pref-appearance"
 	src="pref-appearance.xul" width="72%" height="326" resize="yes" scrolling="no"/>
 <html:table border="0" width="100%" cellpadding="0" cellspacing="0">
