@@ -109,7 +109,7 @@ interface nsIHttpChannel : nsIChannel
      *
      * When there is no Content-Encoding header, this property is null.
      *
-     * Modifying the Content-Encoding header on the channel will case
+     * Modifying the Content-Encoding header on the channel will cause
      * this enumerator to have undefined behavior.  Don't do it.
      */
     readonly attribute nsISimpleEnumerator contentEncodings;
