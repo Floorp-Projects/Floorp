@@ -22,7 +22,7 @@
 #include "nsFormControlFrame.h"
 #include "nsTextControlFrame.h"
 #include "nsIStreamObserver.h"
-#include "nsITextEditor.h"
+#include "nsIEditor.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMKeyListener.h"
 //#include "nsIDOMMouseListener.h"
@@ -34,6 +34,8 @@
 
 class nsIFrame;
 class nsIWebShell;
+class nsIDOMSelection;
+
 
 class nsGfxTextControlFrame;
 
@@ -487,7 +489,7 @@ protected:
   nsCOMPtr<nsIDOMFocusListener>     mFocusListener;  // ref counted
   nsCOMPtr<nsIDOMSelectionListener> mSelectionListener;  // ref counted
 
-  nsCOMPtr<nsITextEditor>   mEditor;  // ref counted
+  nsCOMPtr<nsIEditor>       mEditor;  // ref counted
   nsCOMPtr<nsIDOMDocument>  mDoc;     // ref counted
   nsNativeTextControlFrame *mDummyFrame; //DUMMY
 
