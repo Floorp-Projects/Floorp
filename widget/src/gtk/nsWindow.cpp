@@ -2332,21 +2332,15 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
   if (mIsToplevel && mShell)
   {
     // do it the way it should be done period.
-    if (!mParent)
-    {
-      // XXX don't move the window if it is toplevel window.. this keeps us from moving the
-      // window's title bar off the screen in some Window managers
-      //      if (mWindowType != eWindowType_toplevel)
-        gtk_widget_set_uposition(mShell, aX, aY);
-    }
-    else
-    {
+    if (mParent && mWindowType == eWindowType_popup) {
       // *VERY* stupid hack to make gfx combo boxes work
       nsRect oldrect, newrect;
       oldrect.x = aX;
       oldrect.y = aY;
       mParent->WidgetToScreen(oldrect, newrect);
       gtk_widget_set_uposition(mShell, newrect.x, newrect.y);
+    } else {
+      gtk_widget_set_uposition(mShell, aX, aY);
     }
   }
   else if (mSuperWin)
