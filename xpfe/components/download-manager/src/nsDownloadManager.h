@@ -98,7 +98,8 @@ private:
   friend class nsDownload;
 };
 
-class nsDownload : public nsIDownload
+class nsDownload : public nsIDownload,
+                   public nsIWebProgressListener
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
