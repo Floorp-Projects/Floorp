@@ -261,7 +261,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
             size = 3 + size;  // XXX should be BASEFONT, not three
           }
           size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
-          PRInt32 scaler = aPresContext->GetFontScaler();
+          PRInt32 scaler;
+          aPresContext->GetFontScaler(scaler);
           float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
           font->mFont.size =
             nsStyleUtil::CalcFontPointSize(size, (PRInt32)defaultFont.size,

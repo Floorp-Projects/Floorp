@@ -976,7 +976,8 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         // font-size: enum, length, percent, inherit
         if (eCSSUnit_Enumerated == ourFont->mSize.GetUnit()) {
           PRInt32 value = ourFont->mSize.GetIntValue();
-          PRInt32 scaler = aPresContext->GetFontScaler();
+          PRInt32 scaler;
+          aPresContext->GetFontScaler(scaler);
           float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
 
           if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
