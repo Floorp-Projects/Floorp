@@ -22,5 +22,6 @@
 #include "nsUCvLatinCID.h"
 #include "nsUCVJACID.h"
 #include "nsUCVJA2CID.h"
+#include "nsUCvCnCID.h"
 
 #endif /* __REGISTRYHACK1_H__ */
