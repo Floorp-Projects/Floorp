@@ -520,8 +520,12 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
             mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
           }
         }
+        
+        mSink->WillProcessTokens();
 
         while(NS_SUCCEEDED(result)){
+          //Currently nsIHTMLContentSink does nothing with a call to WillProcessAToken.
+          //mSink->WillProcessAToken();
 
 #if 0
           int n=aTokenizer->GetCount();
@@ -544,12 +548,34 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
             result=mDTDState;
             break;
           }
+
+          if ((NS_ERROR_HTMLPARSER_INTERRUPTED == mSink->DidProcessAToken())) {
+            // The content sink has requested that DTD interrupt processing tokens
+            // So we need to make sure the parser is in a state where it can be
+            // interrupted. 
+            // The mParser->CanInterrupt will return TRUE if BuildModel was called
+            // from a place in the parser where it prepared to handle a return value of
+            // NS_ERROR_HTMLPARSER_INTERRUPTED.
+            // If the parser has mPrevContext then it may be processing
+            // Script so we should not allow it to be interrupted.
+            
+            if ((mParser->CanInterrupt()) && 
+              (nsnull == mParser->PeekContext()->mPrevContext) && 
+              (eHTMLTag_unknown==mSkipTarget)) {     
+              result = NS_ERROR_HTMLPARSER_INTERRUPTED;
+              break;
+            }
+          }
         }//while
         mTokenizer=oldTokenizer;
+        //Currently nsIHTMLContentSink does nothing with a call to DidProcessATokens().
+        //mSink->DidProcessTokens();
+
       }
     }
   }
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
+
   return result;
 }
 
@@ -2219,7 +2245,6 @@ nsresult CNavDTD::HandleAttributeToken(CToken* aToken) {
   return NS_OK;
 }
 
-
 /**
  *  This method gets called when a script token has been 
  *  encountered in the parse process. n
@@ -2235,6 +2260,8 @@ nsresult CNavDTD::HandleScriptToken(const nsIParserNode *aNode) {
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleScriptToken(), this=%p\n", this));
 
   nsresult result=AddLeaf(aNode);
+
+  mParser->SetCanInterrupt(PR_FALSE);
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleScriptToken(), this=%p\n", this));
   START_TIMER();

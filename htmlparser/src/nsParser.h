@@ -70,6 +70,7 @@
 #include "nsDTDUtils.h"
 #include "nsTimer.h"
 #include "nsIProgressEventSink.h"
+#include "nsIEventQueue.h"
 
 class IContentSink;
 class nsIDTD;
@@ -226,6 +227,14 @@ class nsParser : public nsIParser,
     virtual PRBool    IsParserEnabled();
 
     /**
+     * Call this to query whether the parser thinks it's done with parsing.
+     *
+     *  @update  rickg 5/12/01
+     *  @return  complete state
+     */
+    virtual PRBool    IsComplete();
+
+    /**
      *  This rather arcane method (hack) is used as a signal between the
      *  DTD and the parser. It allows the DTD to tell the parser that content
      *  that comes through (parser::parser(string)) but not consumed should
@@ -319,6 +328,44 @@ class nsParser : public nsIParser,
                                    const nsString* aMimeType=nsnull, 
                                    nsDTDMode aDTDMode=eDTDMode_unknown);
 
+    /**
+     *  Removes continue parsing events
+     *  @update  kmcclusk 5/18/98
+     */
+
+    NS_IMETHODIMP CancelParsingEvents();
+
+    /**  
+     *  Indicates whether the parser is in a state where it
+     *  can be interrupted.
+     *  @return PR_TRUE if parser can be interrupted, PR_FALSE if it can not be interrupted.
+     *  @update  kmcclusk 5/18/98
+     */
+    PRBool CanInterrupt(void);
+
+    /**  
+     *  Set to parser state to indicate whether parsing tokens can be interrupted
+     *  @param aCanInterrupt PR_TRUE if parser can be interrupted, PR_FALSE if it can not be interrupted.
+     *  @update  kmcclusk 5/18/98
+     */
+    void SetCanInterrupt(PRBool aCanInterrupt);
+
+    /**
+     * This is called when the final chunk has been
+     * passed to the parser and the content sink has
+     * interrupted token processing. It schedules
+     * a ParserContinue PL_Event which will ask the parser
+     * to HandleParserContinueEvent when it is handled.
+     * @update	kmcclusk6/1/2001
+     */
+    nsresult PostContinueEvent();
+
+    /**
+     *  Fired when the continue parse event is triggered.
+     *  @update  kmcclusk 5/18/98
+     */
+    void HandleParserContinueEvent(void);
+
 protected:
 
     /**
@@ -383,6 +430,8 @@ private:
      *  @return  TRUE if all went well
      */
     PRBool DidTokenize(PRBool aIsFinalChunk = PR_FALSE);
+
+  
 protected:
     //*********************************************
     // And now, some data members...
@@ -396,6 +445,7 @@ protected:
     nsIRequestObserver*   mObserver;
     nsIProgressEventSink* mProgressEventSink;
     nsIContentSink*     mSink;
+   
     nsIParserFilter*    mParserFilter;
     PRBool              mDTDVerification;
     eParserCommands     mCommand;
@@ -412,7 +462,12 @@ protected:
     nsParserBundle*     mBundle;
     nsTokenAllocator    mTokenAllocator;
 
-public:    
+    nsCOMPtr<nsIEventQueue> mEventQueue;
+    PRPackedBool        mPendingContinueEvent;
+    PRPackedBool        mCanInterrupt;
+   
+public:  
+   
     MOZ_TIMER_DECLARE(mParseTime)
     MOZ_TIMER_DECLARE(mDTDTime)
     MOZ_TIMER_DECLARE(mTokenizeTime)

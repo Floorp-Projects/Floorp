@@ -71,6 +71,10 @@ public:
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
   NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref) { return NS_OK; }
+  NS_IMETHOD WillProcessTokens(void) { return NS_OK; }
+  NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
+  NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
+  NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
 
   NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD BeginContext(PRInt32 aPosition);

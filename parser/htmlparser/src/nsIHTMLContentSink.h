@@ -227,6 +227,34 @@ public:
    */
   NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref)=0;
 
+   /**
+   * This method is called when parser is about to begin
+   * synchronously processing a chunk of tokens. 
+   */
+  NS_IMETHOD WillProcessTokens(void)=0;
+
+  /**
+   * This method is called when parser has
+   * completed processing a chunk of tokens. The processing of the
+   * tokens may be interrupted by returning NS_ERROR_HTMLPARSER_INTERRUPTED from
+   * DidProcessAToken.
+   */
+  NS_IMETHOD DidProcessTokens()=0;
+
+  /**
+   * This method is called when parser is about to
+   * process a single token
+   */
+  NS_IMETHOD WillProcessAToken(void)=0;
+
+  /**
+   * This method is called when parser has completed
+   * the processing for a single token.
+   * @return NS_OK if processing should not be interrupted
+   *         NS_ERROR_HTMLPARSER_INTERRUPTED if the parsing should be interrupted
+   */
+  NS_IMETHOD DidProcessAToken(void)=0;
+
 };
 
 extern NS_HTMLPARS nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);

@@ -110,7 +110,7 @@ public:
   virtual PRUint32    GetSize(void)=0;
 };
 
-/**
+/** 
  *  FOR DEBUG PURPOSE ONLY
  *
  *  Use this interface to query objects that contain content information.
@@ -233,6 +233,7 @@ class nsIParser : public nsISupports {
     virtual void      UnblockParser()   =0;
 
     virtual PRBool    IsParserEnabled() =0;
+    virtual PRBool    IsComplete() =0;
     
     virtual nsresult  Parse(nsIURI* aURL,nsIRequestObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     virtual nsresult	Parse(nsIInputStream& aStream, const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
@@ -276,6 +277,18 @@ class nsIParser : public nsISupports {
                                    eParserCommands aCommand,
                                    const nsString* aMimeType=nsnull, 
                                    nsDTDMode aDTDMode=eDTDMode_unknown)=0;
+
+    /**
+     *  Call this method to cancel any pending parsing events.
+     *  Parsing events may be pending if all of the document's content
+     *  has been passed to the parser but the parser has been interrupted
+     *  because processing the tokens took too long.
+     *  
+     *  @update  kmcclusk 05/18/01
+     *  @return  NS_OK if succeeded else ERROR.
+     */
+
+    NS_IMETHOD CancelParsingEvents()=0;
 };
 
 /* ===========================================================*
@@ -303,6 +316,7 @@ class nsIParser : public nsISupports {
 #define NS_ERROR_HTMLPARSER_STOPPARSING                    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1015)
 #define NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1016)
 #define NS_ERROR_HTMLPARSER_HIERARCHYTOODEEP               NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1017)
+
 
 #define NS_ERROR_HTMLPARSER_CONTINUE              NS_OK
 

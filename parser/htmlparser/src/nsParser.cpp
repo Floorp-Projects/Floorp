@@ -46,6 +46,8 @@
 #include "prenv.h" 
 #include "nsParserCIID.h"
 #include "nsCOMPtr.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
 //#define rickgdebug 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -57,6 +59,7 @@ static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
 static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static const char* kNullURL = "Error: Null URL given";
 static const char* kOnStartNotCalled = "Error: OnStartRequest() must be called before OnDataAvailable()";
@@ -149,6 +152,99 @@ public:
   PRBool  mHasXMLDTD;         //also defer XML dtd construction
   nsIDTD  *mOtherDTD;         //it's ok to leak this; the deque contains a copy too.
 };
+
+
+//-------------- Begin ParseContinue Event Definition ------------------------
+/*
+The parser can be explicitly interrupted by passing a return value of NS_ERROR_HTMLPARSER_INTERRUPTED
+from BuildModel on the DTD. This will cause the parser to stop processing and allow 
+the application to return to the event loop. The data which was left at the time of 
+interruption will be processed the next time OnDataAvailable is called. If the parser
+has received its final chunk of data then OnDataAvailable will no longer be called by the 
+networking module, so the parser will schedule a nsParserContinueEvent which will call 
+the parser to process the  remaining data after returning to the event loop. If the parser 
+is interrupted while processing the remaining data it will schedule another 
+ParseContinueEvent. The processing of data followed by scheduling of the continue events 
+will proceed until either:
+
+  1) All of the remaining data can be processed without interrupting
+  2) The parser has been cancelled.
+
+
+This capability is currently used in CNavDTD and nsHTMLContentSink. The nsHTMLContentSink is
+notified by CNavDTD when a chunk of tokens is going to be processed and when each token 
+is processed. The nsHTML content sink records the time when the chunk has started
+processing and will return NS_ERROR_HTMLPARSER_INTERRUPTED if the token processing time 
+has exceeded a threshold called max tokenizing processing time. This allows the content 
+sink to limit how much data is processed in a single chunk which in turn gates how much 
+time is spent away from the event loop. Processing smaller chunks of data also reduces 
+the time spent in subsequent reflows.
+
+This capability is most apparent when loading large documents. If the maximum token 
+processing time is set small enough the application will remain responsive during 
+document load. 
+
+A side-effect of this capability is that document load is not complete when the last chunk
+of data is passed to OnDataAvailable since  the parser may have been interrupted when 
+the last chunk of data arrived. The document is complete when all of the document has 
+been tokenized and there aren't any pending nsParserContinueEvents. This can cause 
+problems if the application assumes that it can monitor the load requests to determine
+when the document load has been completed. This is what happens in Mozilla. The document
+is considered completely loaded when all of the load requests have been satisfied. To delay the
+document load until all of the parsing has been completed the nsHTMLContentSink adds a 
+dummy parser load request which is not removed until the nsHTMLContentSink's DidBuildModel
+is called. The CNavDTD will not call DidBuildModel until the final chunk of data has been 
+passed to the parser through the OnDataAvailable and there aren't any pending 
+nsParserContineEvents.
+
+Currently the parser is ignores requests to be interrupted during the processing of script. 
+This is because a document.write followed by JavaScript calls to manipulate the DOM may 
+fail if the parser was interrupted during the document.write. 
+
+
+For more details @see bugzilla bug 76722
+*/
+
+
+struct nsParserContinueEvent : public PLEvent {
+
+  nsParserContinueEvent(nsIParser* aParser); 
+  ~nsParserContinueEvent() { }
+
+  void HandleEvent() {  
+    if (mParser) {
+      nsParser* parser = NS_STATIC_CAST(nsParser*, mParser);
+      parser->HandleParserContinueEvent();
+      NS_RELEASE(mParser);
+    }
+  };
+ 
+  nsIParser* mParser; 
+};
+
+static void PR_CALLBACK HandlePLEvent(nsParserContinueEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent,"Event is null");
+  aEvent->HandleEvent();
+}
+
+static void PR_CALLBACK DestroyPLEvent(nsParserContinueEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent,"Event is null");
+  delete aEvent;
+}
+
+nsParserContinueEvent::nsParserContinueEvent(nsIParser* aParser)
+{
+  NS_ASSERTION(aParser, "null parameter");  
+  mParser = aParser; 
+  PL_InitEvent(this, aParser,
+               (PLHandleEventProc) ::HandlePLEvent,
+               (PLDestroyEventProc) ::DestroyPLEvent);  
+}
+
+//-------------- End ParseContinue Event Definition ------------------------
+
 
 static CSharedParserObjects* gSharedParserObjects=0;
 
@@ -247,11 +343,24 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
   mCommand=eViewNormal;
   mParserEnabled=PR_TRUE; 
   mBundle=nsnull;
-
+  mPendingContinueEvent=PR_FALSE;
+  mCanInterrupt=PR_FALSE;
+ 
   MOZ_TIMER_DEBUGLOG(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
   MOZ_TIMER_RESET(mParseTime);  
   MOZ_TIMER_RESET(mDTDTime);  
   MOZ_TIMER_RESET(mTokenizeTime);
+
+  nsresult rv = NS_OK;
+  if (mEventQueue == nsnull) {
+    // Cache the event queue of the current UI thread
+    NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &rv);
+    if (NS_SUCCEEDED(rv) && (eventService)) {                  // XXX this implies that the UI is the current thread.
+      rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+    }
+
+    NS_ASSERTION(mEventQueue, "event queue is null");
+  }
 }
 
 /**
@@ -286,6 +395,11 @@ nsParser::~nsParser() {
   //don't forget to add code here to delete 
   //what may be several contexts...
   delete mParserContext;
+
+  if (mPendingContinueEvent) {
+    NS_ASSERTION(mEventQueue != nsnull,"Event queue is null"); 
+    mEventQueue->RevokeEvents(this);
+  }
 }
 
 
@@ -337,6 +451,24 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   NS_ADDREF_THIS();
   return NS_OK;                                                        
+}
+
+// The parser continue event is posted only if
+// all of the data to parse has been passed to ::OnDataAvailable
+// and the parser has been interrupted by the content sink
+// because the processing of tokens took too long.
+ 
+nsresult
+nsParser::PostContinueEvent()
+{
+  if ((! mPendingContinueEvent) && (mEventQueue)) {
+    nsParserContinueEvent* ev = new nsParserContinueEvent(NS_STATIC_CAST(nsIParser*, this));
+    NS_ENSURE_TRUE(ev,NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(this);
+    mEventQueue->PostEvent(ev);
+    mPendingContinueEvent = PR_TRUE;
+  }
+  return NS_OK;
 }
 
 
@@ -1240,6 +1372,19 @@ NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
 
 }
 
+NS_IMETHODIMP 
+nsParser::CancelParsingEvents() {
+  if (mPendingContinueEvent) {
+    NS_ASSERTION(mEventQueue,"Event queue is null");
+    // Revoke all pending continue parsing events 
+    if (mEventQueue != nsnull) {
+      mEventQueue->RevokeEvents(this);
+    } 
+    mPendingContinueEvent=PR_FALSE;
+  }
+  return NS_OK;
+}
+
 //#define TEST_DOCTYPES 
 #ifdef TEST_DOCTYPES
 static const char* doctypes[] = {
@@ -1433,13 +1578,15 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
   //One last thing...close any open containers.
   nsresult result=anErrorCode;
 
-  if(mParserContext && !mParserContext->mPrevContext) {
-    if(mParserContext->mDTD) {
-      result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
-    }
-    //Ref. to bug 61462.
-    NS_IF_RELEASE(mBundle); 
-  }//if
+  if (IsComplete()) {
+    if(mParserContext && !mParserContext->mPrevContext) {
+      if(mParserContext->mDTD) {
+        result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
+      }
+      //Ref. to bug 61462.
+      NS_IF_RELEASE(mBundle); 
+    }//if
+  }
 
   return result;
 }
@@ -1540,7 +1687,7 @@ nsresult nsParser::ContinueParsing(){
   
   if(result!=NS_OK) 
     result=mInternalState;
-
+  
   return result;
 }
 
@@ -1582,6 +1729,29 @@ PRBool nsParser::IsParserEnabled() {
   return mParserEnabled;
 }
 
+/**
+ * Call this to query whether the parser thinks it's done with parsing.
+ *
+ *  @update  rickg 5/12/01
+ *  @return  complete state
+ */
+PRBool nsParser::IsComplete() {
+  return (! mPendingContinueEvent);
+}
+
+
+void nsParser::HandleParserContinueEvent() {
+  mPendingContinueEvent = PR_FALSE;
+  ContinueParsing();
+}
+
+PRBool nsParser::CanInterrupt(void) {
+  return mCanInterrupt;
+}
+
+void nsParser::SetCanInterrupt(PRBool aCanInterrupt) {
+  mCanInterrupt = aCanInterrupt;
+}
 
 /**
  *  This is the main controlling routine in the parsing process. 
@@ -1679,7 +1849,16 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again! 
 
-  nsresult result=NS_OK; 
+  nsresult result=NS_OK;
+  
+ 
+  if(aLastCall && (0==aSourceBuffer.Length())) {
+    // Nothing is being passed to the parser so return
+    // immediately. mUnusedInput will get processed when
+    // some data is actually passed in.
+    return result;
+  }
+
   nsParser* me = this; 
   // Maintain a reference to ourselves so we don't go away 
   // till we're completely done. 
@@ -1687,7 +1866,7 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){
 
   if(aSourceBuffer.Length() || mUnusedInput.Length()) { 
     mDTDVerification=aVerifyEnabled; 
-    CParserContext* pc=0; 
+    CParserContext* pc=0;
 
     if((!mParserContext) || (mParserContext->mKey!=aKey))  { 
       //only make a new context if we dont have one, OR if we do, but has a different context key... 
@@ -1867,10 +2046,19 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
           }
         }
 
+        //Only allow parsing to be interuptted in the subsequent call
+        //to build model.
+        SetCanInterrupt(PR_TRUE); 
         nsresult theTokenizerResult=Tokenize(aIsFinalChunk);   // kEOF==2152596456
         result=BuildModel(); 
 
-        theIterationIsOk=PRBool(kEOF!=theTokenizerResult);
+        if(result==NS_ERROR_HTMLPARSER_INTERRUPTED) {
+          if(aIsFinalChunk)
+            PostContinueEvent();
+        }
+        SetCanInterrupt(PR_FALSE); 
+
+        theIterationIsOk=PRBool((kEOF!=theTokenizerResult) && (result!=NS_ERROR_HTMLPARSER_INTERRUPTED));
       
        // Make sure not to stop parsing too early. Therefore, before shutting down the 
         // parser, it's important to check whether the input buffer has been scanned to 
@@ -1895,7 +2083,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
           break;
         }
                   
-        else if((NS_OK==result) && (theTokenizerResult==kEOF)){
+        else if(((NS_OK==result) && (theTokenizerResult==kEOF)) || (result==NS_ERROR_HTMLPARSER_INTERRUPTED)){
 
           PRBool theContextIsStringBased=PRBool(CParserContext::eCTString==mParserContext->mContextType);
           if( (eOnStop==mParserContext->mStreamListenerState) || 
@@ -1918,11 +2106,11 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
                 MOZ_TIMER_LOG(("Tokenize Time: "));
                 MOZ_TIMER_PRINT(mTokenizeTime);
 
-                return result;
+                return NS_OK;
               }
 
             }
-            else {
+            else { 
 
               CParserContext* theContext=PopContext();
               if(theContext) {
@@ -1933,6 +2121,8 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
                 delete theContext;
               }
               result = mInternalState;  
+              aIsFinalChunk=(mParserContext && mParserContext->mStreamListenerState==eOnStop)? PR_TRUE:PR_FALSE;
+              
                 //...then intentionally fall through to WillInterruptParse()...
             }
 
@@ -1940,9 +2130,11 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
 
         }
 
-        if(kEOF==theTokenizerResult) {
+        if((kEOF==theTokenizerResult) || (result==NS_ERROR_HTMLPARSER_INTERRUPTED)) {
+          result = (result == NS_ERROR_HTMLPARSER_INTERRUPTED) ? NS_OK : result;
           mParserContext->mDTD->WillInterruptParse();
         }
+
 
       }//while
     }//if
@@ -1954,7 +2146,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
   MOZ_TIMER_STOP(mParseTime);
 
-  return result;
+  return (result==NS_ERROR_HTMLPARSER_INTERRUPTED) ? NS_OK : result;
 }
 
 /**
