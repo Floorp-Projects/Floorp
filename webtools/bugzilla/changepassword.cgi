@@ -22,9 +22,17 @@
 
 require "CGI.pl";
 
+
+sub sillyness {
+    my $zz;
+    $zz = $::anyvotesallowed;
+}
+
 confirm_login();
 
 print "Content-type: text/html\n\n";
+
+GetVersionTable();
 
 if (! defined $::FORM{'pwd1'}) {
     PutHeader("Preferences", "Change your password and<br>other preferences",
@@ -98,10 +106,10 @@ risk any bugs), check here.</td>
 <hr>
 <input type=submit value=Submit>
 </form>
-<hr>
-<a href=\"showvotes.cgi\">Review your votes</a>
-<hr>
-";
+<hr>";
+    if ($::anyvotesallowed) {
+        print qq{<a href="showvotes.cgi">Review your votes</a><hr>\n};
+    }
     PutFooter();
     exit;
 }

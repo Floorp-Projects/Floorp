@@ -280,6 +280,7 @@ sub GenerateVersionTable {
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
     SendSQL("select product, description, votesperuser, disallownew$mpart from products");
+    $::anyvotesallowed = 0;
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
@@ -293,6 +294,9 @@ sub GenerateVersionTable {
             $::milestoneurl{$p} = $u;
         }
         $::prodmaxvotes{$p} = $votesperuser;
+        if ($votesperuser > 0) {
+            $::anyvotesallowed = 1;
+        }
     }
             
 
@@ -345,6 +349,7 @@ sub GenerateVersionTable {
     }
     print FID GenerateCode('%::proddesc');
     print FID GenerateCode('%::prodmaxvotes');
+    print FID GenerateCode('$::anyvotesallowed');
 
     if ($dotargetmilestone) {
         my $last = Param("nummilestones");

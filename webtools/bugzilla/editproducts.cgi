@@ -689,9 +689,9 @@ if ($action eq 'update') {
                  SET program='$product'
                  WHERE program=" . SqlQuote($productold));
 
-        unlink "data/versioncache";
         print "Updated product name.<BR>\n";
     }
+    unlink "data/versioncache";
     SendSQL("UNLOCK TABLES");
 
     PutTrailer($localtrailer);

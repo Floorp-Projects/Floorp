@@ -846,6 +846,12 @@ sub GetCommandMenu {
         my $mybugstemplate = Param("mybugstemplate");
         my %substs;
         $substs{'userid'} = $::COOKIE{"Bugzilla_login"};
+        if (!defined $::anyvotesallowed) {
+            GetVersionTable();
+        }
+        if ($::anyvotesallowed) {
+            $html .= qq{ | <A HREF="showvotes.cgi">My votes</A>};
+        }
         my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
         $html = $html . " | <a href='$mybugsurl'>My bugs</a>";
     }

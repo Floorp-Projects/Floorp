@@ -357,7 +357,13 @@ sub NewProcessOneBug {
     }
     my ($start, $end) = (@row);
     $values{'cc'} = ShowCcList($id);
-
+    
+    my @voterlist;
+    SendSQL("SELECT profiles.login_name FROM votes, profiles " .
+            "WHERE votes.bug_id = $id AND profiles.userid = votes.who");
+    while (MoreSQLData()) {
+        push(@voterlist, FetchOneColumn());
+    }
 
     $values{'assigned_to'} = DBID_to_name($values{'assigned_to'});
     $values{'reporter'} = DBID_to_name($values{'reporter'});
@@ -453,6 +459,7 @@ sub NewProcessOneBug {
     my $count = 0;
     for my $person ($values{'assigned_to'}, $values{'reporter'},
                     split(/,/, $values{'cc'}),
+                    @voterlist,
                     @forcecc) {
         $count++;
         if ($seen{$person}) {
