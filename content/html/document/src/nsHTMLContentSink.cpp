@@ -281,7 +281,7 @@ public:
   NS_IMETHOD CloseFrameset();
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap();
-  NS_IMETHOD GetPref(PRInt32 aTag, PRBool& aPref);
+  NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn);
   NS_IMETHOD_(PRBool) IsFormOnStack();
 
   NS_IMETHOD DoFragment(PRBool aFlag);
@@ -3463,16 +3463,16 @@ HTMLContentSink::CloseMap()
 }
 
 NS_IMETHODIMP
-HTMLContentSink::GetPref(PRInt32 aTag, PRBool& aPref)
+HTMLContentSink::IsEnabled(PRInt32 aTag, PRBool* aReturn)
 {
   nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
 
   if (theHTMLTag == eHTMLTag_script) {
-    aPref = mFlags & NS_SINK_FLAG_SCRIPT_ENABLED;
+    *aReturn = mFlags & NS_SINK_FLAG_SCRIPT_ENABLED ? PR_TRUE : PR_FALSE;
   } else if (theHTMLTag == eHTMLTag_frameset) {
-    aPref = mFlags & NS_SINK_FLAG_FRAMES_ENABLED;
+    *aReturn = mFlags & NS_SINK_FLAG_FRAMES_ENABLED ? PR_TRUE : PR_FALSE;
   } else {
-    aPref = PR_FALSE;
+    *aReturn = PR_FALSE;
   }
 
   return NS_OK;

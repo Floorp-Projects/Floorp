@@ -120,7 +120,7 @@ public:
   NS_IMETHOD CloseMap();
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset();
-  NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref);
+  NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn);
   NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
 
   NS_IMETHOD DoFragment(PRBool aFlag);

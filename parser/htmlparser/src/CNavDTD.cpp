@@ -432,12 +432,12 @@ nsresult CNavDTD::WillBuildModel(const CParserContext& aParserContext,
 
    if(mSink) {
       PRBool enabled;
-      mSink->GetPref(eHTMLTag_frameset,enabled);
+      mSink->IsEnabled(eHTMLTag_frameset, &enabled);
       if(enabled) {
         mFlags |= NS_DTD_FLAG_FRAMES_ENABLED;
       }
       
-      mSink->GetPref(eHTMLTag_script,enabled);
+      mSink->IsEnabled(eHTMLTag_script, &enabled);
       if(enabled) {
         mFlags |= NS_DTD_FLAG_SCRIPT_ENABLED;
       }
