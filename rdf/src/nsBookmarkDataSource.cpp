@@ -59,14 +59,14 @@ static const char kPersonalToolbar[]  = "Personal Toolbar";
 
 class BookmarkParser {
 protected:
-    static const PRUnichar* kBRString;
-    static const PRUnichar* kCloseDLString;
-    static const PRUnichar* kDDString;
-    static const PRUnichar* kOpenAnchorString;
-    static const PRUnichar* kOpenDLString;
-    static const PRUnichar* kOpenH3String;
-    static const PRUnichar* kOpenTitleString;
-    static const PRUnichar* kSeparatorString;
+    static const char* kBRString;
+    static const char* kCloseDLString;
+    static const char* kDDString;
+    static const char* kOpenAnchorString;
+    static const char* kOpenDLString;
+    static const char* kOpenH3String;
+    static const char* kOpenTitleString;
+    static const char* kSeparatorString;
 
     enum BookmarkParserState {
         eBookmarkParserState_Initial,
@@ -116,14 +116,14 @@ public:
 };
 
 
-const PRUnichar* BookmarkParser::kBRString         = L"<BR>";
-const PRUnichar* BookmarkParser::kCloseDLString    = L"</DL>";
-const PRUnichar* BookmarkParser::kDDString         = L"<DD>";
-const PRUnichar* BookmarkParser::kOpenAnchorString = L"<A";
-const PRUnichar* BookmarkParser::kOpenDLString     = L"<DL>";
-const PRUnichar* BookmarkParser::kOpenH3String     = L"<H3";
-const PRUnichar* BookmarkParser::kOpenTitleString  = L"<TITLE>";
-const PRUnichar* BookmarkParser::kSeparatorString  = L"<HR>";
+const char* BookmarkParser::kBRString         = "<BR>";
+const char* BookmarkParser::kCloseDLString    = "</DL>";
+const char* BookmarkParser::kDDString         = "<DD>";
+const char* BookmarkParser::kOpenAnchorString = "<A";
+const char* BookmarkParser::kOpenDLString     = "<DL>";
+const char* BookmarkParser::kOpenH3String     = "<H3";
+const char* BookmarkParser::kOpenTitleString  = "<TITLE>";
+const char* BookmarkParser::kSeparatorString  = "<HR>";
 
 
 BookmarkParser::BookmarkParser(nsIRDFResourceManager* resourceMgr,
