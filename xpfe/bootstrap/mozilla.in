@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.4 2004/02/04 00:25:14 cbiesinger%web.de Exp $
+## $Id: mozilla.in,v 1.5 2004/02/05 20:32:05 cbiesinger%web.de Exp $
 ## 
 ## Usage:
 ##
@@ -153,7 +153,7 @@ if [ $debugging = 1 ]
 then
   echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
 fi
-(. "$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@")
+"$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@"
 exitcode=$?
 
 ## Stop addon scripts
