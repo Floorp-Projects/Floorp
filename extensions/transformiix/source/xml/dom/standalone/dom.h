@@ -47,8 +47,6 @@
 typedef 0 NULL;
 #endif
 
-
-typedef String DOMString;
 typedef UNICODE_CHAR DOM_CHAR;
 
 class NodeList;
@@ -72,11 +70,11 @@ class DOMImplementation
     DOMImplementation();
     ~DOMImplementation();
 
-    MBool hasFeature(DOMString feature, const DOMString& version) const;
+    MBool hasFeature(String feature, const String& version) const;
 
   private:
-    DOMString implFeature;
-    DOMString implVersion;
+    String implFeature;
+    String implVersion;
 };
 
 //
@@ -106,9 +104,9 @@ class Node
     virtual ~Node() {}
 
     //Read functions
-    virtual const DOMString& getNodeName() const = 0;
-    virtual const DOMString& getNodeValue() const = 0;
-    virtual const DOMString& getNodeValue() = 0;
+    virtual const String& getNodeName() const = 0;
+    virtual const String& getNodeValue() const = 0;
+    virtual const String& getNodeValue() = 0;
     virtual unsigned short getNodeType() const = 0;
     virtual Node* getParentNode() const = 0;
     virtual NodeList* getChildNodes() = 0;
@@ -120,7 +118,7 @@ class Node
     virtual Document* getOwnerDocument() const = 0;
 
     //Write functions
-    virtual void setNodeValue(const DOMString& nodeValue) = 0;
+    virtual void setNodeValue(const String& nodeValue) = 0;
 
     //Node manipulation functions
     virtual Node* insertBefore(Node* newChild, Node* refChild) = 0;
@@ -191,12 +189,12 @@ class NamedNodeMap : public NodeListDefinition
     NamedNodeMap();
     ~NamedNodeMap();
 
-    Node* getNamedItem(const DOMString& name);
+    Node* getNamedItem(const String& name);
     Node* setNamedItem(Node* arg);
-    Node* removeNamedItem(const DOMString& name);
+    Node* removeNamedItem(const String& name);
 
   private:
-    NodeListDefinition::ListItem* findListItemByName(const DOMString& name);
+    NodeListDefinition::ListItem* findListItemByName(const String& name);
 };
 
 //
@@ -208,14 +206,14 @@ class NamedNodeMap : public NodeListDefinition
 class NodeDefinition : public Node, public NodeList
 {
   public:
-    NodeDefinition(NodeType type, const DOMString& name,
-                   const DOMString& value, Document* owner);
+    NodeDefinition(NodeType type, const String& name,
+                   const String& value, Document* owner);
     virtual ~NodeDefinition();      //Destructor, delete all children of node
 
     //Read functions
-    const DOMString& getNodeName() const;
-    virtual const DOMString& getNodeValue() const;
-    virtual const DOMString& getNodeValue();
+    const String& getNodeName() const;
+    virtual const String& getNodeValue() const;
+    virtual const String& getNodeValue();
     unsigned short getNodeType() const;
     Node* getParentNode() const;
     NodeList* getChildNodes();
@@ -227,7 +225,7 @@ class NodeDefinition : public Node, public NodeList
     Document* getOwnerDocument() const;
 
     //Write functions
-    virtual void setNodeValue(const DOMString& nodeValue);
+    virtual void setNodeValue(const String& nodeValue);
 
     //Child node manipulation functions
     virtual Node* insertBefore(Node* newChild, Node* refChild);
@@ -246,8 +244,8 @@ class NodeDefinition : public Node, public NodeList
     //Name, value, and attributes for this node.  Available to derrived
     //classes, since those derrived classes have a better idea how to use them,
     //than the generic node does.
-    DOMString nodeName;
-    DOMString nodeValue;
+    String nodeName;
+    String nodeValue;
     NamedNodeMap attributes;
 
     void DeleteChildren();
@@ -279,7 +277,7 @@ class NodeDefinition : public Node, public NodeList
 class DocumentFragment : public NodeDefinition
 {
   public:
-    DocumentFragment(const DOMString& name, const DOMString& value, Document* owner);
+    DocumentFragment(const String& name, const String& value, Document* owner);
 
     //Override insertBefore to limit Elements to having only certain nodes as
     //children
@@ -300,14 +298,14 @@ class Document : public NodeDefinition
 
     //Factory functions for various node types
     DocumentFragment* createDocumentFragment();
-    Element* createElement(const DOMString& tagName);
-    Attr* createAttribute(const DOMString& name);
-    Text* createTextNode(const DOMString& theData);
-    Comment* createComment(const DOMString& theData);
-    CDATASection* createCDATASection(const DOMString& theData);
-    ProcessingInstruction* createProcessingInstruction(const DOMString& target,
-                                                       const DOMString& data);
-    EntityReference* createEntityReference(const DOMString& name);
+    Element* createElement(const String& tagName);
+    Attr* createAttribute(const String& name);
+    Text* createTextNode(const String& theData);
+    Comment* createComment(const String& theData);
+    CDATASection* createCDATASection(const String& theData);
+    ProcessingInstruction* createProcessingInstruction(const String& target,
+                                                       const String& data);
+    EntityReference* createEntityReference(const String& name);
 
     //Override functions to enforce the One Element rule for documents, as well
     //as limit documents to certain types of nodes.
@@ -327,20 +325,20 @@ class Document : public NodeDefinition
 class Element : public NodeDefinition
 {
   public:
-    Element(const DOMString& tagName, Document* owner);
+    Element(const String& tagName, Document* owner);
 
     //Override insertBefore to limit Elements to having only certain nodes as
     //children
     Node* insertBefore(Node* newChild, Node* refChild);
 
-    const DOMString& getTagName();
-    const DOMString& getAttribute(const DOMString& name);
-    void setAttribute(const DOMString& name, const DOMString& value);
-    void removeAttribute(const DOMString& name);
-    Attr* getAttributeNode(const DOMString& name);
+    const String& getTagName();
+    const String& getAttribute(const String& name);
+    void setAttribute(const String& name, const String& value);
+    void removeAttribute(const String& name);
+    Attr* getAttributeNode(const String& name);
     Attr* setAttributeNode(Attr* newAttr);
     Attr* removeAttributeNode(Attr* oldAttr);
-    NodeList* getElementsByTagName(const DOMString& name);
+    NodeList* getElementsByTagName(const String& name);
     void normalize();
 };
 
@@ -352,17 +350,17 @@ class Element : public NodeDefinition
 class Attr : public NodeDefinition
 {
   public:
-    Attr(const DOMString& name, Document* owner);
+    Attr(const String& name, Document* owner);
 
-    const DOMString& getName() const;
+    const String& getName() const;
     MBool getSpecified() const;
-    const DOMString& getValue();
-    void setValue(const DOMString& newValue);
+    const String& getValue();
+    void setValue(const String& newValue);
 
     //Override the set and get member functions for a node's value to create a
     //new TEXT node when set, and to interpret its children when read.
-    void setNodeValue(const DOMString& nodeValue);
-    const DOMString& getNodeValue();
+    void setNodeValue(const String& nodeValue);
+    const String& getNodeValue();
 
     //Override insertBefore to limit Attr to having only certain nodes as
     //children
@@ -380,19 +378,19 @@ class Attr : public NodeDefinition
 class CharacterData : public NodeDefinition
 {
   public:
-    const DOMString& getData() const;
-    void setData(const DOMString& source);
+    const String& getData() const;
+    void setData(const String& source);
     Int32 getLength() const;
 
-    DOMString& substringData(Int32 offset, Int32 count, DOMString& dest);
-    void appendData(const DOMString& arg);
-    void insertData(Int32 offset, const DOMString& arg);
+    String& substringData(Int32 offset, Int32 count, String& dest);
+    void appendData(const String& arg);
+    void insertData(Int32 offset, const String& arg);
     void deleteData(Int32 offset, Int32 count);
-    void replaceData(Int32 offset, Int32 count, const DOMString& arg);
+    void replaceData(Int32 offset, Int32 count, const String& arg);
 
   protected:
-    CharacterData(NodeType type, const DOMString& name,
-                   const DOMString& value, Document* owner);
+    CharacterData(NodeType type, const String& name,
+                   const String& value, Document* owner);
 };
 
 //
@@ -402,7 +400,7 @@ class CharacterData : public NodeDefinition
 class Text : public CharacterData
 {
   public:
-    Text(const DOMString& theData, Document* owner);
+    Text(const String& theData, Document* owner);
 
     Text* splitText(Int32 offset);
 
@@ -414,7 +412,7 @@ class Text : public CharacterData
     Node* appendChild(Node* newChild);
 
   protected:
-    Text(NodeType type, const DOMString& name, const DOMString& value,
+    Text(NodeType type, const String& name, const String& value,
          Document* owner);
 };
 
@@ -425,7 +423,7 @@ class Text : public CharacterData
 class Comment : public CharacterData
 {
   public:
-    Comment(const DOMString& theData, Document* owner);
+    Comment(const String& theData, Document* owner);
 
     //Override "child manipulation" function since Comment Nodes can not have
     //any children.
@@ -442,7 +440,7 @@ class Comment : public CharacterData
 class CDATASection : public Text
 {
   public:
-    CDATASection(const DOMString& theData, Document* owner);
+    CDATASection(const String& theData, Document* owner);
 
     //Override "child manipulation" function since CDATASection Nodes can not
     //have any children.
@@ -463,13 +461,13 @@ class CDATASection : public Text
 class ProcessingInstruction : public NodeDefinition
 {
   public:
-    ProcessingInstruction(const DOMString& theTarget, const DOMString& theData,
+    ProcessingInstruction(const String& theTarget, const String& theData,
                           Document* owner);
 
-    const DOMString& getTarget() const;
-    const DOMString& getData() const;
+    const String& getTarget() const;
+    const String& getData() const;
 
-    void setData(const DOMString& theData);
+    void setData(const String& theData);
 
     //Override "child manipulation" function since ProcessingInstruction Nodes
     //can not have any children.
@@ -486,11 +484,11 @@ class ProcessingInstruction : public NodeDefinition
 class Notation : public NodeDefinition
 {
   public:
-    Notation(const DOMString& name, const DOMString& pubID,
-             const DOMString& sysID);
+    Notation(const String& name, const String& pubID,
+             const String& sysID);
 
-    const DOMString& getPublicId() const;
-    const DOMString& getSystemId() const;
+    const String& getPublicId() const;
+    const String& getSystemId() const;
 
     //Override "child manipulation" function since Notation Nodes
     //can not have any children.
@@ -500,8 +498,8 @@ class Notation : public NodeDefinition
     Node* appendChild(Node* newChild);
 
   private:
-    DOMString publicId;
-    DOMString systemId;
+    String publicId;
+    String systemId;
 };
 
 //
@@ -510,21 +508,21 @@ class Notation : public NodeDefinition
 class Entity : public NodeDefinition
 {
   public:
-    Entity(const DOMString& name, const DOMString& pubID,
-           const DOMString& sysID, const DOMString& notName);
+    Entity(const String& name, const String& pubID,
+           const String& sysID, const String& notName);
 
-    const DOMString& getPublicId() const;
-    const DOMString& getSystemId() const;
-    const DOMString& getNotationName() const;
+    const String& getPublicId() const;
+    const String& getSystemId() const;
+    const String& getNotationName() const;
 
     //Override insertBefore to limit Entity to having only certain nodes as
     //children
     Node* insertBefore(Node* newChild, Node* refChild);
 
   private:
-    DOMString publicId;
-    DOMString systemId;
-    DOMString notationName;
+    String publicId;
+    String systemId;
+    String notationName;
 };
 
 //
@@ -533,7 +531,7 @@ class Entity : public NodeDefinition
 class EntityReference : public NodeDefinition
 {
   public:
-    EntityReference(const DOMString& name, Document* owner);
+    EntityReference(const String& name, Document* owner);
 
     //Override insertBefore to limit EntityReference to having only certain
     //nodes as children
@@ -546,7 +544,7 @@ class EntityReference : public NodeDefinition
 class DocumentType : public NodeDefinition
 {
   public:
-    DocumentType(const DOMString& name, NamedNodeMap* theEntities,
+    DocumentType(const String& name, NamedNodeMap* theEntities,
                  NamedNodeMap* theNotations);
     ~DocumentType();
 
@@ -567,7 +565,7 @@ class DocumentType : public NodeDefinition
 
 //NULL string for use by Element::getAttribute() for when the attribute
 //spcified by "name" does not exist, and therefore shoud be "NULL".
-const DOMString NULL_STRING;
+const String NULL_STRING;
 
 #endif
 

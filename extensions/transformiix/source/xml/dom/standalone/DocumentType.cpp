@@ -33,7 +33,7 @@
 //
 //Construct a text object with the specified document owner and data
 //
-DocumentType::DocumentType(const DOMString& name, NamedNodeMap* theEntities,
+DocumentType::DocumentType(const String& name, NamedNodeMap* theEntities,
                            NamedNodeMap* theNotations) :
               NodeDefinition(Node::DOCUMENT_TYPE_NODE, name, NULL_STRING, NULL)
 {

@@ -44,8 +44,8 @@ DOMImplementation::~DOMImplementation()
 //Perform a case insensitive comparison between "feature" and the
 //functionality of this DOM implementation/version.
 //
-MBool DOMImplementation::hasFeature(DOMString feature,
-                                     const DOMString& version) const
+MBool DOMImplementation::hasFeature(String feature,
+                                     const String& version) const
 {
   feature.toUpperCase();
 

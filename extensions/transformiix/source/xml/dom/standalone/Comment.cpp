@@ -33,7 +33,7 @@
 //
 //Construct a text object with the specified document owner and data
 //
-Comment::Comment(const DOMString& theData, Document* owner) :
+Comment::Comment(const String& theData, Document* owner) :
       CharacterData(Node::COMMENT_NODE, "#comment", theData, owner)
 {
 }

@@ -35,8 +35,8 @@
 //Construct a DocumentFragment with the specified name and value.  Call the
 //constructor for NodeDefinition and specify the DocumentFragment Type.
 //
-DocumentFragment::DocumentFragment(const DOMString& name,
-                                   const DOMString& value, Document* owner) :
+DocumentFragment::DocumentFragment(const String& name,
+                                   const String& value, Document* owner) :
                   NodeDefinition(Node::DOCUMENT_FRAGMENT_NODE, name, value, owner)
 {
 }

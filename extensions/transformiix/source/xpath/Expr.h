@@ -25,7 +25,7 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: Expr.h,v 1.4 2000/04/19 10:35:49 kvisco%ziplink.net Exp $
+ * $Id: Expr.h,v 1.5 2000/06/11 11:42:46 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -44,7 +44,7 @@
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.4 $ $Date: 2000/04/19 10:35:49 $
+  @version $Revision: 1.5 $ $Date: 2000/06/11 11:42:46 $
 */
 
 #ifndef TRANSFRMX_EXPR_H
@@ -100,7 +100,7 @@ public:
      * @param nodes the NodeSet to sort
      * <BR />
      * <B>Note:</B> I will be moving this functionality elsewhere soon
-	**/
+    **/
     virtual void sortByDocumentOrder(NodeSet* nodes) = 0;
 
 }; //-- ContextState

@@ -202,7 +202,7 @@ DocumentFragment* Document::createDocumentFragment()
 //Construct an element with the specified tag name.
 //    NOTE:  The caller is responsible for cleaning up the element's menory
 //
-Element* Document::createElement(const DOMString& tagName)
+Element* Document::createElement(const String& tagName)
 {
   return new Element(tagName, this);
 }
@@ -210,7 +210,7 @@ Element* Document::createElement(const DOMString& tagName)
 //
 //Construct an attribute with the specified name
 //
-Attr* Document::createAttribute(const DOMString& name)
+Attr* Document::createAttribute(const String& name)
 {
   return new Attr(name, this);
 }
@@ -218,7 +218,7 @@ Attr* Document::createAttribute(const DOMString& name)
 //
 //Construct a text node with the given data
 //
-Text* Document::createTextNode(const DOMString& theData)
+Text* Document::createTextNode(const String& theData)
 {
   return new Text(theData, this);
 }
@@ -226,7 +226,7 @@ Text* Document::createTextNode(const DOMString& theData)
 //
 //Construct a comment node with the given data
 //
-Comment* Document::createComment(const DOMString& theData)
+Comment* Document::createComment(const String& theData)
 {
   return new Comment(theData, this);
 }
@@ -234,7 +234,7 @@ Comment* Document::createComment(const DOMString& theData)
 //
 //Construct a CDATASection node with the given data
 //
-CDATASection* Document::createCDATASection(const DOMString& theData)
+CDATASection* Document::createCDATASection(const String& theData)
 {
   return new CDATASection(theData, this);
 }
@@ -243,8 +243,8 @@ CDATASection* Document::createCDATASection(const DOMString& theData)
 //Construct a ProcessingInstruction node with the given targe and data.
 //
 ProcessingInstruction*
-  Document::createProcessingInstruction(const DOMString& target,
-                                        const DOMString& data)
+  Document::createProcessingInstruction(const String& target,
+                                        const String& data)
 {
   return new ProcessingInstruction(target, data, this);
 }
@@ -252,7 +252,7 @@ ProcessingInstruction*
 //
 //Construct an EntityReference with the given name
 //
-EntityReference* Document::createEntityReference(const DOMString& name)
+EntityReference* Document::createEntityReference(const String& name)
 {
   return new EntityReference(name, this);
 }

@@ -34,7 +34,7 @@
 //
 //Construct a text object with the specified document owner and data
 //
-EntityReference::EntityReference(const DOMString& name, Document* owner) :
+EntityReference::EntityReference(const String& name, Document* owner) :
           NodeDefinition(Node::ENTITY_REFERENCE_NODE, name, NULL_STRING, owner)
 {
 }

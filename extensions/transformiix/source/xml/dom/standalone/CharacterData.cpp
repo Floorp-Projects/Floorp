@@ -33,8 +33,8 @@
 //
 //Protected constructor.  Just pass parameters onto NodeDefinition.
 //
-CharacterData::CharacterData(NodeType type, const DOMString& name,
-                             const DOMString& value, Document* owner) :
+CharacterData::CharacterData(NodeType type, const String& name,
+                             const String& value, Document* owner) :
                NodeDefinition(type, name, value, owner)
 {
 }
@@ -42,7 +42,7 @@ CharacterData::CharacterData(NodeType type, const DOMString& name,
 //
 //Return a constant reference to the data stored by this object.
 //
-const DOMString& CharacterData::getData() const
+const String& CharacterData::getData() const
 {
   return nodeValue;
 }
@@ -50,7 +50,7 @@ const DOMString& CharacterData::getData() const
 //
 //Set the data stored by this object to the string represented by "source".
 //
-void CharacterData::setData(const DOMString& source)
+void CharacterData::setData(const String& source)
 {
   nodeValue = source;
 }
@@ -68,7 +68,7 @@ Int32 CharacterData::getLength() const
 //characters away.
 //    NOTE:  An empty string will be returned in the event of an error.
 //
-DOMString& CharacterData::substringData(Int32 offset, Int32 count, DOMString& dest)
+String& CharacterData::substringData(Int32 offset, Int32 count, String& dest)
 {
   if ((offset >= 0) && (offset < nodeValue.length()) && (count > 0))
     return nodeValue.subString(offset, offset+count, dest);
@@ -79,12 +79,12 @@ DOMString& CharacterData::substringData(Int32 offset, Int32 count, DOMString& de
     }
 }
 
-void CharacterData::appendData(const DOMString& arg)
+void CharacterData::appendData(const String& arg)
 {
   nodeValue.append(arg);
 }
 
-void CharacterData::insertData(Int32 offset, const DOMString& arg)
+void CharacterData::insertData(Int32 offset, const String& arg)
 {
   if ((offset >= 0) && (offset < nodeValue.length()))
     nodeValue.insert(offset, arg);
@@ -96,9 +96,9 @@ void CharacterData::deleteData(Int32 offset, Int32 count)
     nodeValue.deleteChars(offset, count);
 }
 
-void CharacterData::replaceData(Int32 offset, Int32 count, const DOMString& arg)
+void CharacterData::replaceData(Int32 offset, Int32 count, const String& arg)
 {
-  DOMString tempString;
+  String tempString;
 
   if ((offset >= 0) && (offset < nodeValue.length()) && (count > 0))
     {
