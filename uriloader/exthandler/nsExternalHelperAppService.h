@@ -168,6 +168,7 @@ public:
    * as nsIMIMEService::GetFromTypeAndExtension.
    * This is supposed to be overridden by the platform-specific
    * nsOSHelperAppService!
+   * @param aFileExt The file extension; may be empty. UTF-8 encoded.
    * @param [out] aFound
    *        Should be set to PR_TRUE if the os has a mapping, to
    *        PR_FALSE otherwise. Must not be null.

@@ -49,7 +49,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIStringEnumerator.h"
 #include "nsMemory.h"
@@ -73,8 +72,8 @@
 #include "nsHelperAppRDF.h"
 #include "nsIMIMEInfo.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsIRefreshURI.h"
-#include "nsIDocumentLoader.h"
+#include "nsIRefreshURI.h" // XXX needed to redirect according to Refresh: URI
+#include "nsIDocumentLoader.h" // XXX needed to get orig. channel and assoc. refresh uri
 #include "nsIHelperAppLauncherDialog.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
@@ -85,7 +84,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsIMultiPartChannel.h"
-#include "nsIAtom.h"
 #include "nsIObserverService.h" // so we can be a profile change observer
 
 #if defined(XP_MAC) || defined (XP_MACOSX)
@@ -94,22 +92,21 @@
 #include "nsIAppleFileDecoder.h"
 #endif // defined(XP_MAC) || defined (XP_MACOSX)
 
-#include "nsIPluginHost.h"
+#include "nsIPluginHost.h" // XXX needed for ext->type mapping (bug 233289)
 #include "nsEscape.h"
 
-#include "nsIStringBundle.h"
+#include "nsIStringBundle.h" // XXX needed to localize error msgs
 #include "nsIPromptService.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindow.h" // XXX needed to get parent for error dlg
 
-#include "nsITextToSubURI.h"
+#include "nsITextToSubURI.h" // to unescape the filename
 #include "nsIMIMEHeaderParam.h"
 
 #include "nsIPrefService.h"
 
-#include "nsIGlobalHistory.h"
+#include "nsIGlobalHistory.h" // to mark downloads as visited
 
 #include "nsCRT.h"
-#include "plstr.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsExternalHelperAppService::mLog = nsnull;
@@ -134,6 +131,47 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static nsExternalHelperAppService* sSrv;
 
 // Helper functions for Content-Disposition headers
+
+/**
+ * Given a URI fragment, unescape it
+ * @param aFragment The string to unescape
+ * @param aURI The URI from which this fragment is taken. Only its character set
+ *             will be used.
+ * @param aResult [out] Unescaped string.
+ */
+static nsresult UnescapeFragment(const nsACString& aFragment, nsIURI* aURI,
+                                 nsAString& aResult)
+{
+  // First, we need a charset
+  nsCAutoString originCharset;
+  nsresult rv = aURI->GetOriginCharset(originCharset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now, we need the unescaper
+  nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return textToSubURI->UnEscapeURIForUI(originCharset, aFragment, aResult);
+}
+
+/**
+ * UTF-8 version of UnescapeFragment.
+ * @param aFragment The string to unescape
+ * @param aURI The URI from which this fragment is taken. Only its character set
+ *             will be used.
+ * @param aResult [out] Unescaped string, UTF-8 encoded.
+ * @note It is safe to pass the same string for aFragment and aResult.
+ * @note When this function fails, aResult will not be modified.
+ */
+static nsresult UnescapeFragment(const nsACString& aFragment, nsIURI* aURI,
+                                 nsACString& aResult)
+{
+  nsAutoString result;
+  nsresult rv = UnescapeFragment(aFragment, aURI, result);
+  if (NS_SUCCEEDED(rv))
+    CopyUTF16toUTF8(result, aResult);
+  return rv;
+}
 
 /** Gets the content-disposition header from a channel, using nsIHttpChannel
  * or nsIMultipartChannel if available
@@ -206,7 +244,7 @@ static void GetFilenameFromDisposition(nsAString& aFilename,
  *        WARNING - this filename may contain characters which the OS does not
  *        allow as part of filenames!
  * @param aExtension [out] Reference to the string where the extension should
- *        be stored. Empty if it could not be retrieved.
+ *        be stored. Empty if it could not be retrieved. Stored in UTF-8.
  * @param aAllowURLExtension (optional) Get the extension from the URL if no
  *        Content-Disposition header is present. Default is true.
  * @retval true The server sent Content-Disposition:attachment or equivalent
@@ -270,6 +308,8 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
   {
     if (aAllowURLExtension) {
       url->GetFileExtension(aExtension);
+      UnescapeFragment(aExtension, url, aExtension);
+
       // Windows ignores terminating dots. So we have to as well, so
       // that our security checks do "the right thing"
       // In case the aExtension consisted only of the dot, the code below will
@@ -279,19 +319,11 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
 
     // try to extract the file name from the url and use that as a first pass as the
     // leaf name of our temp file...
-    nsCAutoString leafName; // may be shortened by NS_UnescapeURL
+    nsCAutoString leafName;
     url->GetFileName(leafName);
     if (!leafName.IsEmpty())
     {
-      nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv))
-      {
-        nsCAutoString originCharset;
-        url->GetOriginCharset(originCharset);
-        rv = textToSubURI->UnEscapeURIForUI(originCharset, leafName, 
-                                            aFileName);
-      }
-
+      rv = UnescapeFragment(leafName, url, aFileName);
       if (NS_FAILED(rv))
       {
         CopyUTF8toUTF16(leafName, aFileName); // use escaped name
@@ -372,7 +404,7 @@ struct nsExtraMimeTypeEntry {
 #endif
 
 /**
- * This table lists all of the 'extra" content types that we can deduce from particular
+ * This table lists all of the 'extra' content types that we can deduce from particular
  * file extensions.  These entries also ensure that we provide a good descriptive name
  * when we encounter files with these content types and/or extensions.  These can be
  * overridden by user helper app prefs.
@@ -415,12 +447,13 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 
 /**
  * File extensions for which decoding should be disabled.
+ * NOTE: These MUST be lower-case and ASCII.
  */
 static nsDefaultMimeTypeEntry nonDecodableExtensions [] = {
   { APPLICATION_GZIP, "gz" }, 
   { APPLICATION_GZIP, "tgz" },
   { APPLICATION_ZIP, "zip" },
-  { APPLICATION_COMPRESS, "Z" }
+  { APPLICATION_COMPRESS, "z" }
 };
 
 NS_IMPL_ISUPPORTS6(
@@ -637,8 +670,8 @@ NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const nsACSt
   *aApplyDecoding = PR_TRUE;
   PRUint32 i;
   for(i = 0; i < NS_ARRAY_LENGTH(nonDecodableExtensions); ++i) {
-    if (aExtension.Equals(nonDecodableExtensions[i].mFileExtension, nsCaseInsensitiveCStringComparator()) &&
-        aEncodingType.Equals(nonDecodableExtensions[i].mMimeType, nsCaseInsensitiveCStringComparator())) {
+    if (aExtension.LowerCaseEqualsASCII(nonDecodableExtensions[i].mFileExtension) &&
+        aEncodingType.LowerCaseEqualsASCII(nonDecodableExtensions[i].mMimeType)) {
       *aApplyDecoding = PR_FALSE;
       break;
     }
@@ -699,7 +732,7 @@ nsresult nsExternalHelperAppService::FillTopLevelProperties(nsIRDFResource * aCo
         if (!literal) return NS_ERROR_FAILURE;
 
         literal->GetValueConst(&stringValue);
-        fileExtension.AssignWithConversion(stringValue);
+        CopyUTF16toUTF8(stringValue, fileExtension);
         if (!fileExtension.IsEmpty())
           aMIMEInfo->AppendExtension(fileExtension);
       }
@@ -1077,7 +1110,7 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
   return NS_OK;
 }
 
-// XPCOM Shutdown observer
+// XPCOM profile change observer
 NS_IMETHODIMP
 nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData )
 {
@@ -1327,8 +1360,8 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 #if defined(XP_MAC) || defined (XP_MACOSX)
     nsCAutoString contentType;
     mMimeInfo->GetMIMEType(contentType);
-    if (contentType.EqualsIgnoreCase(APPLICATION_APPLEFILE) ||
-        contentType.EqualsIgnoreCase(MULTIPART_APPLEDOUBLE))
+    if (contentType.LowerCaseEqualsLiteral(APPLICATION_APPLEFILE) ||
+        contentType.LowerCaseEqualsLiteral(MULTIPART_APPLEDOUBLE))
     {
       nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv) && appleFileDecoder)
@@ -1348,10 +1381,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   NS_ENSURE_ARG_POINTER(request);
 
   mRequest = request;
-
-  // first, check to see if we've been canceled....
-  if (mCanceled) // then go cancel our underlying channel too
-    return request->Cancel(NS_BINDING_ABORTED);
 
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
 
@@ -1806,7 +1835,7 @@ nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo,
   // make sure the extention includes the '.'
   if (!aTempFileExtension.IsEmpty() && aTempFileExtension.First() != '.')
     mTempFileExtension = PRUnichar('.');
-  mTempFileExtension.AppendWithConversion(aTempFileExtension);
+  AppendUTF8toUTF16(aTempFileExtension, mTempFileExtension);
 
   mSuggestedFileName = aSuggestedFilename;
 
@@ -2362,7 +2391,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
   // First of all, check our default entries
   for (size_t i = 0; i < NS_ARRAY_LENGTH(defaultMimeEntries); i++)
   {
-    if (aFileExt.Equals(defaultMimeEntries[i].mFileExtension, nsCaseInsensitiveCStringComparator())) {
+    if (aFileExt.LowerCaseEqualsASCII(defaultMimeEntries[i].mFileExtension)) {
       aContentType = defaultMimeEntries[i].mMimeType;
       return rv;
     }
@@ -2446,17 +2475,22 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, nsACStrin
   if (url) {
     nsCAutoString ext;
     rv = url->GetFileExtension(ext);
-    if (NS_FAILED(rv)) return rv;
-    if (ext.IsEmpty()) {
+    if (NS_FAILED(rv))
+      return rv;
+    if (ext.IsEmpty())
       return NS_ERROR_NOT_AVAILABLE;
-    }
+
+    UnescapeFragment(ext, url, ext);
+
     return GetTypeFromExtension(ext, aContentType);
   }
     
   // no url, let's give the raw spec a shot
   nsCAutoString specStr;
   rv = aURI->GetSpec(specStr);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
+  UnescapeFragment(specStr, aURI, specStr);
 
   // find the file extension (if any)
   PRInt32 extLoc = specStr.RFindChar('.');
@@ -2480,25 +2514,24 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACSt
   nsCOMPtr<nsIMIMEInfo> info;
 
   // Get the Extension
-  nsCAutoString fileName;
-  const char* ext = nsnull;
-  rv = aFile->GetNativeLeafName(fileName);
+  nsAutoString fileName;
+  rv = aFile->GetLeafName(fileName);
   if (NS_FAILED(rv)) return rv;
  
+  nsCAutoString fileExt;
   if (!fileName.IsEmpty())
   {
     PRInt32 len = fileName.Length(); 
     for (PRInt32 i = len; i >= 0; i--) 
     {
-      if (fileName[i] == '.') 
+      if (fileName[i] == PRUnichar('.'))
       {
-        ext = fileName.get() + i + 1;
+        CopyUTF16toUTF8(fileName.get() + i + 1, fileExt);
         break;
       }
     }
   }
   
-  nsDependentCString fileExt(ext ? ext : "");
   // Handle the mac case
 #if defined(XP_MAC) || defined (XP_MACOSX)
   nsCOMPtr<nsILocalFileMac> macFile;
@@ -2512,7 +2545,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACSt
     if (icService)
     {
       rv = icService->GetMIMEInfoFromTypeCreator(type, creator, fileExt.get(), getter_AddRefs(info));		 							
-      if ( NS_SUCCEEDED( rv) )
+      if (NS_SUCCEEDED(rv))
 	    return info->GetMIMEType(aContentType);
 	}
   }
@@ -2520,7 +2553,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACSt
   // Windows, unix and mac when no type match occured.   
   if (fileExt.IsEmpty())
 	  return NS_ERROR_FAILURE;    
-  return GetTypeFromExtension( fileExt, aContentType );
+  return GetTypeFromExtension(fileExt, aContentType);
 }
 
 nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo )

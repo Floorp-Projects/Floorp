@@ -70,7 +70,7 @@ interface nsIMIMEService : nsISupports {
      * can be an empty string. At least one of aMIMEType and aFileExt
      * must be nonempty.
      */
-    nsIMIMEInfo getFromTypeAndExtension(in ACString aMIMEType, in ACString aFileExt);
+    nsIMIMEInfo getFromTypeAndExtension(in ACString aMIMEType, in AUTF8String aFileExt);
 
     /**
      * Retrieves a ACString representation of the MIME type
@@ -79,7 +79,7 @@ interface nsIMIMEService : nsISupports {
      * @param  A file extension (excluding the dot ('.')).
      * @return The MIME type, if any.
      */
-    ACString getTypeFromExtension(in ACString aFileExt);
+    ACString getTypeFromExtension(in AUTF8String aFileExt);
 
     /**
      * Retrieves a ACString representation of the MIME type
@@ -102,5 +102,5 @@ interface nsIMIMEService : nsISupports {
      * @param aMIMEType The Type to get information on. Must not be empty.
      * @param aFileExt  File Extension. Can be empty.
      */
-    ACString getPrimaryExtension(in ACString aMIMEType, in ACString aFileExt);
+    AUTF8String getPrimaryExtension(in ACString aMIMEType, in AUTF8String aFileExt);
 };
