@@ -41,7 +41,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         windowtype="Download:Manager"
-        width="600" height="400" screenX="10" screenY="10"
+        width="500" height="300" screenX="10" screenY="10"
         persist="width height screenX screenY"
         title="&downloadManager.title;"
         onload="Startup();">
@@ -130,20 +130,20 @@
     <treecols>
       <treecol id="Name" primary="true"
                    label="&view.header.name.label;"
-                   class="sortDirectionIndicator" width="4*" flex="4"
+                   class="sortDirectionIndicator" width="3*" flex="3"
                    sort="http://home.netscape.com/NC-rdf#Name"
                    persist="width sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="Progress" type="progressmeter"
                    label="&view.header.progress.label;"
-                   class="sortDirectionIndicator" width="4*" flex="4"
+                   class="sortDirectionIndicator" width="3*" flex="3"
                    sort="http://home.netscape.com/NC-rdf#ProgressPercent"
                    persist="width hidden sortActive sortDirection"
                    sortActive="true" sortDirection="descending"/>
       <splitter class="tree-splitter"/>
       <treecol id="ProgressPercent" hidden="true"
                    label="&view.header.progresstext.label;"
-                   class="sortDirectionIndicator" width="4*" flex="4"
+                   class="sortDirectionIndicator" width="1*" flex="1"
                    sort="http://home.netscape.com/NC-rdf#ProgressPercent"
                    persist="width hidden sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
