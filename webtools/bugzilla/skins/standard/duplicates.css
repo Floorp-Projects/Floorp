@@ -18,6 +18,13 @@
  * Contributor(s): Myk Melez <myk@mozilla.org>
  */
 
+tree#results-tree {
+  margin-right: 0px;
+  border-right-width: 0px;
+  margin-left: 0px;
+  border-left-width: 0px;
+}
+
 treechildren:-moz-tree-cell-text(resolution-FIXED) { 
   text-decoration: line-through;
 }
