@@ -2011,7 +2011,8 @@ enum {
     cmd_CreateAndAddCert,
     cmd_ListModules,
     cmd_CheckCertValidity,
-    cmd_ChangePassword
+    cmd_ChangePassword,
+    cmd_Version
 };
 
 /*  Certutil options */
@@ -2067,7 +2068,8 @@ static secuCommandFlag certutil_commands[] =
 	{ /* cmd_CreateAndAddCert    */  'S', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_ListModules         */  'U', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_CheckCertValidity   */  'V', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_ChangePassword      */  'W', PR_FALSE, 0, PR_FALSE }
+	{ /* cmd_ChangePassword      */  'W', PR_FALSE, 0, PR_FALSE },
+	{ /* cmd_Version             */  'Y', PR_FALSE, 0, PR_FALSE }
 };
 
 static secuCommandFlag certutil_options[] =
@@ -2430,6 +2432,11 @@ main(int argc, char **argv)
     CERT_SetDefaultCertDB(certHandle);
     keyHandle = SECKEY_GetDefaultKeyDB();
     SECU_PKCS11Init(PR_FALSE);
+
+    if (certutil.commands[cmd_Version].activated) {
+	int version = CERT_GetDBContentVersion(certHandle);
+	printf("Certificate database content version:  %d\n", version);
+    }
 
     if (PL_strcmp(slotname, "internal") == 0)
 	slot = PK11_GetInternalKeySlot();
