@@ -517,7 +517,7 @@ int lterm_open(int lterm, char *const argv[],
       lts->maxInputMode = LTERM2_EDIT_MODE;
   }
 
-  LTERM_LOG(lterm_open,11,("options=%x, processType=%d, readERRfirst=%d, maxInputMode=%d\n",
+  LTERM_LOG(lterm_open,11,("options=0x%x, processType=%d, readERRfirst=%d, maxInputMode=%d\n",
                 lts->options, lts->processType, lts->readERRfirst, lts->maxInputMode));
   LTERM_LOGUNICODE(lterm_open,11,(prompt_regexp, (int) ucslen(prompt_regexp) ));
 

@@ -34,5 +34,5 @@ fi
 echo cd $MOZILLA_DIR
 cd $MOZILLA_DIR
 
-echo ./run-mozilla.sh $MOZILLA_BIN -telnet
-./run-mozilla.sh $MOZILLA_BIN -telnet
+echo ./run-mozilla.sh $MOZILLA_BIN -terminal
+./run-mozilla.sh $MOZILLA_BIN -terminal
