@@ -81,7 +81,7 @@ nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
                                      kICharsetAliasIID,
                                      (nsISupports**)&calias);
 
-  NS_ASSERTION( nsnull != calias, "cannot find charet alias");
+  NS_ASSERTION( nsnull != calias, "cannot find charset alias");
   nsAutoString charsetName = aCharset;
   if( NS_SUCCEEDED(res) && (nsnull != calias))
   {
@@ -471,10 +471,15 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
 
 void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
 {
-  
   NS_ASSERTION(mUnicodeEncoder != nsnull,"The unicode encoder needs to be initialized");
   if (mUnicodeEncoder == nsnull)
+  {
+    char* str = aSrc.ToNewCString();
+    EnsureBufferSize(aSrc.Length()+1);
+    strcpy(mBuffer, str);
+    delete[] str;
     return;
+  }
 
 #define CH_NBSP 160
 
@@ -602,6 +607,8 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode){
       {
         if (mCharsetOverride.Length() == 0)
           InitEncoder(value);
+        else
+          InitEncoder(mCharsetOverride);
       }
     }
   }
@@ -622,7 +629,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode){
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode){
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-  const nsString&   name = aNode.GetText();
+  //const nsString&   name = aNode.GetText();
 
   if (type == eHTMLTag_body)
     mDoOutput = PR_FALSE;
@@ -652,7 +659,7 @@ NS_IMETHODIMP
 nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode){
    eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   
-  const nsString& text = aNode.GetText();
+  nsString text = aNode.GetText();
 
   if (mDoOutput == PR_FALSE)
     return NS_OK;
@@ -663,7 +670,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode){
   } 
   else if (type == eHTMLTag_entity)
   {
-    const nsString& text = aNode.GetText();
+    text = aNode.GetText();
     EncodeToBuffer(text);
     PRUnichar entity = NS_EntityToUnicode(mBuffer);
     nsString temp;
@@ -677,7 +684,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode){
   {
     if (PR_TRUE)
     {
-      const nsString& text = aNode.GetText();
+      text = aNode.GetText();
       Write(text);
       mColPos += text.Length();
     }
