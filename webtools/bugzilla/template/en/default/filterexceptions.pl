@@ -266,7 +266,6 @@
   'style', 
   'bgcolor', 
   'onload',
-  'bodyattrs', 
   'h1',
   'h2',
   'h3', 
