@@ -149,22 +149,20 @@ nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
                                       nsString &outString)
 {
   PRUnichar *ptrv = nsnull;
+  nsresult rv = NS_ERROR_FAILURE;
+
+  outString.SetLength(0);
   if (mPIPNSSBundle && name) {
-    nsresult rv = mPIPNSSBundle->GetStringFromName(name, &ptrv);
+    rv = mPIPNSSBundle->GetStringFromName(name, &ptrv);
     if (NS_SUCCEEDED(rv)) {
       outString = ptrv;
-      return NS_OK;
-    } else {
-      outString.SetLength(0);
+      rv = NS_OK;
     }
-    nsMemory::Free(ptrv);
-  } else {
-    outString.SetLength(0);
   }
   if (ptrv)
     nsMemory::Free(ptrv);
 
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 void
