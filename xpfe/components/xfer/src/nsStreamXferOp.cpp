@@ -473,6 +473,25 @@ nsStreamXferOp::OnStopRequest( nsIRequest      *request,
         }
     }
 
+#ifdef XP_MAC
+    // Mac only: set the file type and creator based on Internet Config settings
+    
+    if (mInputChannel)
+    {
+        // Get the content type
+        nsXPIDLCString contentType;
+        rv = mInputChannel->GetContentType(getter_Copies(contentType));
+        
+        if (NS_SUCCEEDED(rv))
+        {
+            // Set the creator and file type on the output file
+            nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(mOutputFile);
+            if (contentType.get() && *contentType.get() && macFile)
+                macFile->SetFileTypeAndCreatorFromMIMEType(contentType.get());
+        }
+    }
+#endif // XP_MAC
+    
     // Unhook input/output channels (don't need to cancel 'em).
     mInputChannel = 0;
     mOutputTransport = 0;

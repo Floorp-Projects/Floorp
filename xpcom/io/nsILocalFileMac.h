@@ -64,9 +64,9 @@ public:
 	// we provide a way to initialize an nsLocalFile with one
 	NS_IMETHOD InitWithFSSpec(const FSSpec *fileSpec) = 0;
 
-  // Init this filespec to point to an application which is sought by
-  // creator code. If this app is missing, this will fail. It will first
-  // look for running application with the given creator.
+	// Init this filespec to point to an application which is sought by
+	// creator code. If this app is missing, this will fail. It will first
+	// look for running application with the given creator.
 	NS_IMETHOD InitFindingAppByCreatorCode(OSType aAppCreator) = 0;
 
 	// In case we need to get the FSSpecs at the heart of an nsLocalFileMac
@@ -85,11 +85,15 @@ public:
 	NS_IMETHOD GetFileTypeAndCreator(OSType *type, OSType *creator) = 0;
 	NS_IMETHOD SetFileTypeAndCreator(OSType type, OSType creator) = 0;
 	
-	// Methods for setting the file type from other means. Just setting the
+	// Method for setting the file type by suffix. Just setting the
 	// type is probably enough. The creator is set to that of the current process
 	// by default. Failure is likely on these methods - take it lightly.
 	NS_IMETHOD SetFileTypeFromSuffix(const char *suffix) = 0;
-	NS_IMETHOD SetFileTypeFromMIMEType(const char *mimetype) = 0;
+	
+	// Method for setting the file type and creator by MIME type.  Internet
+	// Config is consulted for the mapping of MIME type to the appropriate file 
+	// type and creator pair.
+	NS_IMETHOD SetFileTypeAndCreatorFromMIMEType(const char *aMIMEType) = 0;
 	
 	// Since Mac files can consist of both a data and resource fork we have a
 	// method that will return the combined size of both forks rather than just the
