@@ -429,6 +429,8 @@ protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
+  virtual PRBool ParentDisablesSelection() const; //override default behavior
+
   /** first pass of ResizeReflow.  
     * lays out all table content with aMaxSize(NS_UNCONSTRAINEDSIZE,NS_UNCONSTRAINEDSIZE) and
     * a non-null aMaxElementSize so we get all the metrics we need to do column balancing.

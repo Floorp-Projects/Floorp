@@ -80,6 +80,8 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
+  NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -169,6 +171,8 @@ public:
 protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
+
+  virtual PRBool ParentDisablesSelection() const; //override default behavior
 
 private:  
 

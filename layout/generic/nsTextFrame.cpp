@@ -1813,7 +1813,10 @@ NS_IMETHODIMP
 nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
   nsresult result;
-  if (eSpreadAcross == aSpread){
+  if (aSelected && ParentDisablesSelection())
+    return NS_OK;
+  if (aSpread == eSpreadDown)
+  {
     nsIFrame *frame = GetPrevInFlow();
     while(frame){
       frame->SetSelected(aRange,aSelected,eSpreadNone);
@@ -1831,10 +1834,10 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   }
   nsFrameState  frameState;
   GetFrameState(&frameState);
-  if ( aSelected )
-    frameState |=  NS_FRAME_SELECTED_CONTENT;
-  else
-    frameState &= ~NS_FRAME_SELECTED_CONTENT;
+  if (aSelected == frameState & NS_FRAME_SELECTED_CONTENT) //allready set thanks
+  {
+    return NS_OK;
+  }
 
   PRBool found = PR_FALSE;
   if (aRange) {
@@ -1881,6 +1884,10 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
     }
   }
 
+  if ( aSelected )
+    frameState |=  NS_FRAME_SELECTED_CONTENT;
+  else
+    frameState &= ~NS_FRAME_SELECTED_CONTENT;
   SetFrameState(frameState);
   if (found){ //if range contains this frame...
     nsRect frameRect;

@@ -2320,7 +2320,7 @@ NS_IMETHODIMP
 nsTableFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
   //traverse through children unselect tables
-  if ((aSpread == eSpreadAcross) && aSelected){
+  if ((aSpread == eSpreadDown) && aSelected){
     nsIFrame* kid;
     nsresult rv = FirstChild(nsnull, &kid);
     while (nsnull != kid) {
@@ -2329,9 +2329,18 @@ nsTableFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread
       kid->GetNextSibling(&kid);
     }
   }
-  return nsFrame::SetSelected(aRange,aSelected,aSpread);
+  return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
 }
 
+PRBool nsTableFrame::ParentDisablesSelection() const //override default behavior
+{
+  PRBool returnval;
+  if (NS_FAILED(GetSelected(&returnval)))
+    return PR_FALSE;
+  if (returnval)
+    return PR_TRUE;
+  return nsFrame::ParentDisablesSelection();
+}
 
 PRIntn
 nsTableFrame::GetSkipSides() const

@@ -1481,6 +1481,22 @@ nsFrame::XMLQuote(nsString& aString)
   }
 }
 
+PRBool
+nsFrame::ParentDisablesSelection() const
+{
+  PRBool selected;
+  if (NS_FAILED(GetSelected(&selected)))
+    return PR_FALSE;
+  if (selected)
+    return PR_FALSE; //if this frame is selected and no one has overridden the selection from "higher up"
+                     //then no one below us will be disabled by this frame.
+  nsIFrame* target;
+  GetParent(&target);
+  if (target)
+    return ((nsFrame *)target)->ParentDisablesSelection();
+  return PR_FALSE; //default this does not happen
+}
+
 NS_IMETHODIMP
 nsFrame::DumpRegressionData(FILE* out, PRInt32 aIndent)
 {
@@ -1570,17 +1586,22 @@ nsFrame::VerifyTree() const
 NS_IMETHODIMP
 nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
+  if (aSelected && ParentDisablesSelection())
+    return NS_OK;
   if (eSpreadDown == aSpread){
     nsIFrame* kid;
     nsresult rv = FirstChild(nsnull, &kid);
     while (nsnull != kid) {
-      kid->SetSelected(nsnull,PR_FALSE,aSpread);
+      kid->SetSelected(nsnull,aSelected,aSpread);
       kid->GetNextSibling(&kid);
     }
   }
-  
   nsFrameState  frameState;
   GetFrameState(&frameState);
+  if (aSelected == frameState & NS_FRAME_SELECTED_CONTENT) //allready set thanks
+  {
+    return NS_OK;
+  }
   if ( aSelected ){
     frameState |=  NS_FRAME_SELECTED_CONTENT;
   }

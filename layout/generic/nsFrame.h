@@ -338,6 +338,8 @@ protected:
 
   static void XMLQuote(nsString& aString);
 
+  virtual PRBool ParentDisablesSelection() const;
+
   // Set the clip rect into the rendering-context after applying CSS's
   // clip property. This method assumes that the caller has checked
   // that the clip property applies to its situation.
