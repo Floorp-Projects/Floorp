@@ -38,8 +38,9 @@
 #include "nsIOutputStream.h"
 #include "nsNeckoUtil.h"
 
-#ifdef NS_DEBUG
 #include "prprf.h"
+
+#ifdef NS_DEBUG
 #define DEBUG_PRINTF PR_fprintf
 #else
 #define DEBUG_PRINTF (void)
