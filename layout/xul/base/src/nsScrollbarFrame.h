@@ -96,6 +96,7 @@ public:
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
 
   // nsIScrollbarFrame
   NS_IMETHOD SetScrollbarMediator(nsIScrollbarMediator* aMediator) { mScrollbarMediator = aMediator; return NS_OK; };
