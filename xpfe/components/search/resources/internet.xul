@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="internet.css" type="text/css"?>
+<?xml-stylesheet href="icons.css" type="text/css"?>
 
 
 <!DOCTYPE window
@@ -10,6 +11,7 @@
 <!ENTITY checkbox.column.label       "On">
 <!ENTITY engine.column.label         "Search Engines">
 
+<!ENTITY search.button.label         "Search">
 <!ENTITY checkall.button.label       "Check All">
 <!ENTITY uncheckall.button.label     "Uncheck All">
 <!ENTITY savesearch.button.label     "Save Search in Bookmarks">
@@ -27,8 +29,8 @@
 	<box align="horizontal" style="width: 100%;" >
 		<spring align="horizontal" flex="100%" />
 		<titledbutton value="&words.label;" />
-		<html:input id="searchtext" type="text" width="20" onkeyup="if (event.which == 13) { doSearch(); }" />
-		<html:input type="button" value="Search" onclick="return doSearch();" />
+		<html:input id="searchtext" width="20" onkeyup="if (event.which == 13) { doSearch(); }" />
+		<html:button onclick="return doSearch();">&search.button.label;</html:button>
 		<spring align="horizontal" flex="100%" />
 	</box>
 
@@ -46,7 +48,7 @@
 							<html:input type="checkbox" onclick="doCheck(this)" />
 						</treecell>
 						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+							<titledbutton class="engine" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
 						</treecell>
 					</treerow>
 				</treeitem>
@@ -70,9 +72,9 @@
 
 	<box align="horizontal" style="width: 100%;" >
 		<spring align="horizontal" flex="100%" />
-		<html:input type="button" value="&checkall.button.label;" onclick="return doCheckAll(true);" />
-		<html:input type="button" value="&uncheckall.button.label;" onclick="return doCheckAll(false);" />
-		<html:input id="SaveSearch" type="button" disabled="true" value="&savesearch.button.label;" onclick="return saveSearch();" />
+		<html:button onclick="return doCheckAll(true);">&checkall.button.label;</html:button>
+		<html:button onclick="return doCheckAll(false);">&uncheckall.button.label;</html:button>
+		<html:button id="SaveSearch" disabled="true" onclick="return saveSearch();">&savesearch.button.label;</html:button>
 		<spring align="horizontal" flex="100%" />
 	</box>
 </window>

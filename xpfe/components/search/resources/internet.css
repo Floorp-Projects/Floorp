@@ -26,31 +26,3 @@ titledbutton {
   background-color: inherit;
   background-image: inherit;
 }
-
-treeitem[loading="true"] > treerow > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
-}
-
-treeitem > treerow > treecell > titledbutton[value="AOL Netfind"] {
-	list-style-image: url("resource:/res/rdf/datasets/AOL_NetFind.gif");
-}
-
-treeitem > treerow > treecell > titledbutton[value="Google"] {
-	list-style-image: url("resource:/res/rdf/datasets/Google.gif");
-}
-
-treeitem > treerow > treecell > titledbutton[value="GoTo.com"] {
-	list-style-image: url("resource:/res/rdf/datasets/GoTo.com.gif");
-}
-
-treeitem > treerow > treecell > titledbutton[value="Netscape Open Directory"] {
-	list-style-image: url("resource:/res/rdf/datasets/Netscape_Open_Directory.gif");
-}
-
-treeitem > treerow > treecell > titledbutton[value="Snap.com"] {
-	list-style-image: url("resource:/res/rdf/datasets/Snap.com.gif");
-}
-
-treeitem > treerow > treecell > titledbutton {
-	list-style-image: url("resource:/res/rdf/document.gif");
-}
