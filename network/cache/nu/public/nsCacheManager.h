@@ -70,12 +70,19 @@ public:
     /* Singleton */
     static nsCacheManager*  GetInstance();
     
-    nsCacheObject*          GetObj(const char* i_url) const;
+    nsDiskModule*           GetDiskModule() const;
+
+    nsMemModule*            GetMemModule() const;
 
     nsCacheModule*          GetModule(PRInt16 i_index) const;
 
-    nsMemModule*            GetMemModule() const;
-    nsDiskModule*           GetDiskModule() const;
+    nsCacheObject*          GetObj(const char* i_url) const;
+
+    nsCachePref*            GetPrefs(void) const;
+
+    // Initialize the cache manager. Constructor doesn't call this. 
+    // So you must specify this separately. 
+    void                    Init();
 
     void                    InfoAsHTML(char* o_Buffer) const;
 
@@ -93,8 +100,6 @@ public:
 protected:
     
     PRBool                  ContainsExactly(const char* i_url) const;
-
-    void                    Init();
   
     nsCacheModule*          LastModule() const;
     //PRBool                  Lock(void);
@@ -112,13 +117,14 @@ protected:
 */
 
 private:
+    nsCacheBkgThd*      m_pBkgThd;
     nsCacheModule*      m_pFirstModule;
     PRMonitor*          m_pMonitor;
+    PRBool              m_bOffline;
+    nsCachePref*        m_pPrefs;
 
     nsCacheManager(const nsCacheManager& cm);
     nsCacheManager& operator=(const nsCacheManager& cm);
-    nsCacheBkgThd*  m_pBkgThd;
-    PRBool          m_bOffline;
 };
 
 inline
@@ -136,40 +142,22 @@ nsMemModule* nsCacheManager::GetMemModule() const
 }
 
 inline
+nsCachePref* nsCacheManager::GetPrefs(void) const
+{
+    PR_ASSERT(m_pPrefs);
+    return m_pPrefs;
+}
+
+inline
 PRBool nsCacheManager::IsOffline(void) const
 {
     return m_bOffline;
 }
-
-/*
-inline
-PRBool nsCacheManager::Lock(void)
-{
-    if (!m_pMonitor)
-    {
-        m_pMonitor = PR_NewMonitor();
-        if (!m_pMonitor)
-            return PR_FALSE;
-    }
-    PR_EnterMonitor(m_pMonitor);
-    return PR_TRUE;
-}
-*/
 
 inline
 void  nsCacheManager::Offline(PRBool i_bSet) 
 {
     m_bOffline = i_bSet;
 }
-
-/*
-inline
-void nsCacheManager::Unlock(void)
-{
-    PR_ASSERT(m_pMonitor);
-    if (m_pMonitor)
-        PR_ExitMonitor(m_pMonitor);
-}
-*/
 
 #endif
