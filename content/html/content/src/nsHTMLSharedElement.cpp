@@ -93,9 +93,6 @@ public:
   // nsIDOMHTMLBaseElement
   NS_DECL_NSIDOMHTMLBASEELEMENT
 
-  // nsIContent
-  NS_IMETHODIMP_(PRBool) IsContentOfType(PRUint32 aFlags);
-
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
@@ -217,12 +214,6 @@ NS_IMETHODIMP
 nsHTMLSharedLeafElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   return FindForm(aForm);
-}
-
-NS_IMETHODIMP_(PRBool)
-nsHTMLSharedLeafElement::IsContentOfType(PRUint32 aFlags)
-{
-  return nsGenericHTMLLeafElement::IsContentOfType(aFlags);
 }
 
 // nsIDOMHTMLBaseElement
