@@ -1151,7 +1151,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 	// for now, we are always done at this point..we aren't making multiple calls
 	// to post data...
 
-  UpdateStatus(SMTP_MESSAGE_SENT_WAITING_MAIL_REPLY);
+  UpdateStatus(SMTP_DELIV_MAIL);
   m_nextState = SMTP_RESPONSE;
   m_nextStateAfterResponse = SMTP_SEND_MESSAGE_RESPONSE;
   return(0);

@@ -3007,9 +3007,10 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     nsXPIDLString msg; 
     mComposeBundle->GetStringByID(NS_MSG_SENDING_MESSAGE, getter_Copies(msg));
     SetStatusMessage( msg );
+    nsCOMPtr<nsIMsgStatusFeedback> msgStatus (do_QueryInterface(mSendProgress));
 
     rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity,
-                                      uriListener, nsnull, 
+                                      uriListener, nsnull, msgStatus,
                                       callbacks, nsnull);
   }
   

@@ -28,7 +28,16 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 
-NS_IMPL_ISUPPORTS1(nsMsgProgress, nsIMsgProgress)
+NS_IMPL_THREADSAFE_ADDREF(nsMsgProgress);
+NS_IMPL_THREADSAFE_RELEASE(nsMsgProgress);
+
+NS_INTERFACE_MAP_BEGIN(nsMsgProgress)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgStatusFeedback)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgProgress)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgStatusFeedback)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+NS_INTERFACE_MAP_END_THREADSAFE
+
 
 nsMsgProgress::nsMsgProgress()
 {
@@ -67,8 +76,12 @@ NS_IMETHODIMP nsMsgProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
     nsCOMPtr<nsISupportsInterfacePointer> ifptr =
       do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsIWebProgressListener * webProg; 
 
-    ifptr->SetData(this);
+    QueryInterface(NS_GET_IID(nsIMsgStatusFeedback), (void **) &webProg);
+
+    ifptr->SetData(webProg);
     ifptr->SetDataIID(&NS_GET_IID(nsIMsgProgress));
 
     array->AppendElement(ifptr);
@@ -229,6 +242,7 @@ NS_IMETHODIMP nsMsgProgress::OnStatusChange(nsIWebProgress *aWebProgress, nsIReq
 {
   nsresult rv = NS_OK;
 
+  if (aMessage && *aMessage)
   m_pendingStatus = aMessage;
   if (m_listenerList)
   {
@@ -277,5 +291,40 @@ nsresult nsMsgProgress::ReleaseListeners()
   }
   
   return rv;
+}
+
+NS_IMETHODIMP nsMsgProgress::ShowStatusString(const PRUnichar *status)
+{
+  return OnStatusChange(nsnull, nsnull, NS_OK, status);
+}
+
+/* void startMeteors (); */
+NS_IMETHODIMP nsMsgProgress::StartMeteors()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void stopMeteors (); */
+NS_IMETHODIMP nsMsgProgress::StopMeteors()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void showProgress (in long percent); */
+NS_IMETHODIMP nsMsgProgress::ShowProgress(PRInt32 percent)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript] void setDocShell (in nsIDocShell shell, in nsIDOMWindowInternal window); */
+NS_IMETHODIMP nsMsgProgress::SetDocShell(nsIDocShell *shell, nsIDOMWindowInternal *window)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void closeWindow (); */
+NS_IMETHODIMP nsMsgProgress::CloseWindow()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -198,6 +198,7 @@ public:
   nsresult SuspendPostFileRead();
   nsresult ResumePostFileRead(); 
   nsresult UpdateSuspendedReadBytes(PRUint32 aNewBytes); 
+  void UpdateProgress(PRUint32 aNewBytes);
   nsMsgFilePostHelper * mFilePostHelper; // needs to be a weak reference
 protected:
   // the streams for the pipe used to queue up data for the async write calls to the server.
@@ -209,6 +210,10 @@ protected:
                                                    // the input stream becomes unblocked
   PRUint32                  mSuspendedReadBytesPostPeriod; // # of bytes which need processed after we insert a '.' before 
                                                            // the input stream becomes unblocked.
+  PRUint32  mFilePostSize; // used for determining progress on posting files.
+  PRUint32  mNumBytesPosted; // used for deterimining progress on posting files 
+  PRBool    mGenerateProgressNotifications; // set during a post operation after we've started sending the post data...
+
   virtual nsresult CloseSocket(); 
 };
 

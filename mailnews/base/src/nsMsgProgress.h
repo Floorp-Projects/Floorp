@@ -26,14 +26,16 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIMsgStatusFeedback.h"
 #include "nsString.h"
 
-class nsMsgProgress : public nsIMsgProgress
+class nsMsgProgress : public nsIMsgProgress, public nsIMsgStatusFeedback
 {
 public: 
 	NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGPROGRESS
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIMSGSTATUSFEEDBACK
 
 	nsMsgProgress();
 	virtual ~nsMsgProgress();

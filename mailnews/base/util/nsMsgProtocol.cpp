@@ -35,6 +35,7 @@
 #include "nsIDNSService.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsIWebProgressListener.h"
 #include "nsIPipe.h"
 #include "nsIPrompt.h"
 #include "nsIStringBundle.h"
@@ -754,6 +755,8 @@ public:
         // before we'll get more ODA calls
         if (mMsgProtocol->mSuspendedRead)
           mMsgProtocol->UnblockPostReader();
+
+        mMsgProtocol->UpdateProgress(bytesWritten);
         return rv;
     }
 
@@ -865,6 +868,7 @@ nsMsgAsyncWriteProtocol::nsMsgAsyncWriteProtocol(nsIURI * aURL) : nsMsgProtocol(
   mSuspendedReadBytes = 0;
   mSuspendedRead = PR_FALSE;
   mInsertPeriodRequired = PR_FALSE;
+  mGenerateProgressNotifications = PR_FALSE;
   mSuspendedReadBytesPostPeriod = 0;
   mFilePostHelper = nsnull;
 }
@@ -887,9 +891,12 @@ nsresult nsMsgAsyncWriteProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec
 
   // be sure to initialize some state before posting
   mSuspendedReadBytes = 0;
+  mNumBytesPosted = 0;
+  fileSpec->GetFileSize(&mFilePostSize);
   mSuspendedRead = PR_FALSE;
   mInsertPeriodRequired = PR_FALSE;
   mSuspendedReadBytesPostPeriod = 0;
+  mGenerateProgressNotifications = PR_TRUE;
 
   mFilePostHelper = NS_STATIC_CAST(nsMsgFilePostHelper*,NS_STATIC_CAST(nsIStreamListener*, listener));
 
@@ -952,6 +959,7 @@ nsresult nsMsgAsyncWriteProtocol::UpdateSuspendedReadBytes(PRUint32 aNewBytes, P
 nsresult nsMsgAsyncWriteProtocol::PostDataFinished()
 {
   SendData(nsnull, CRLF "." CRLF);
+  mGenerateProgressNotifications = PR_FALSE;
   mPostDataStream = nsnull;
   return NS_OK;
 }
@@ -1128,6 +1136,30 @@ nsresult nsMsgAsyncWriteProtocol::CloseSocket()
   m_WriteRequest = 0;
 	return rv;
 }
+
+void nsMsgAsyncWriteProtocol::UpdateProgress(PRUint32 aNewBytes)
+{
+  if (!mGenerateProgressNotifications) return;
+
+  mNumBytesPosted += aNewBytes;
+  if (mFilePostSize > 0)
+  {
+    nsCOMPtr <nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(m_url);
+    if (!mailUrl) return;
+
+    nsCOMPtr<nsIMsgStatusFeedback> statusFeedback;
+    mailUrl->GetStatusFeedback(getter_AddRefs(statusFeedback));
+    if (!statusFeedback) return;
+
+    nsCOMPtr<nsIWebProgressListener> webProgressListener (do_QueryInterface(statusFeedback));
+    if (!webProgressListener) return;
+
+    webProgressListener->OnProgressChange(nsnull, m_WriteRequest, mNumBytesPosted, mFilePostSize, mNumBytesPosted, mFilePostSize);
+  }
+
+  return;
+}
+    
 
 PRInt32 nsMsgAsyncWriteProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging)
 {

@@ -66,6 +66,7 @@ NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                    const char* aRecipients, 
                    nsIMsgIdentity * aSenderIdentity,
                    nsIUrlListener * aUrlListener,
+                   nsIMsgStatusFeedback *aStatusFeedback,
                    nsIInterfaceRequestor* aNotificationCallbacks,
                    nsIURI ** aUrl);
 
@@ -92,6 +93,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         nsIMsgIdentity * aSenderIdentity,
                                         nsIUrlListener * aUrlListener, 
                                         nsISmtpServer * aServer,
+                                        nsIMsgStatusFeedback *aStatusFeedback,
                                         nsIInterfaceRequestor* aNotificationCallbacks,
                                         nsIURI ** aURL)
 {
@@ -124,7 +126,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
     if ((const char*)smtpHostName && (const char*)smtpHostName[0] != 0) 
 		{
       rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,
-                              aRecipients, aSenderIdentity, aUrlListener,
+                              aRecipients, aSenderIdentity, aUrlListener, aStatusFeedback, 
                               aNotificationCallbacks, &urlToRun); // this ref counts urlToRun
       if (NS_SUCCEEDED(rv) && urlToRun)	
       {
@@ -156,6 +158,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                             const char * aRecipients, 
                             nsIMsgIdentity * aSenderIdentity,
                             nsIUrlListener * aUrlListener, 
+                            nsIMsgStatusFeedback *aStatusFeedback,
                             nsIInterfaceRequestor* aNotificationCallbacks,
                             nsIURI ** aUrl)
 {
@@ -169,7 +172,8 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
 		nsCAutoString urlSpec("smtp://");
-		if ((const char *)aSmtpUserName) {
+		if ((const char *)aSmtpUserName) 
+    {
 			nsXPIDLCString escapedUsername;
 			*((char **)getter_Copies(escapedUsername)) = nsEscape((const char *)aSmtpUserName, url_XAlphas);
 			urlSpec += (const char *)escapedUsername;
@@ -204,6 +208,8 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
             smtpUrl->SetPrompt(smtpPrompt);            
             smtpUrl->SetAuthPrompt(smtpAuthPrompt);
 			url->RegisterListener(aUrlListener);
+      if (aStatusFeedback)
+        url->SetStatusFeedback(aStatusFeedback);
 		}
 		rv = smtpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);
 	 }
