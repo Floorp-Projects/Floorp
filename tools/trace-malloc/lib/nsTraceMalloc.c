@@ -78,12 +78,8 @@
 #define WRITE_FLAGS "w"
 
 #ifdef MOZ_DEMANGLE_SYMBOLS
-/* From libiberty, why aren't these in <libiberty.h> ? */
-extern char *cplus_demangle(const char *, int);
+char *nsDemangle(const char *);
 #endif
-
-#define DMGL_PARAMS     0x1
-#define DMGL_ANSI       0x2
 
 extern __ptr_t __libc_malloc(size_t);
 extern __ptr_t __libc_calloc(size_t, size_t);
@@ -1197,8 +1193,7 @@ static callsite *calltree(uint32 *bp)
         method = NULL;
 #ifdef MOZ_DEMANGLE_SYMBOLS
         if (symbol && (len = strlen(symbol)) != 0) {
-            /* Attempt to demangle symbol in case it's a C++ mangled name. */
-            method = cplus_demangle(symbol, DMGL_PARAMS | DMGL_ANSI);
+            method = nsDemangle(symbol);
         }
 #endif
         if (!method) {

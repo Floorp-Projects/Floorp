@@ -180,10 +180,6 @@ ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
 endif
 
-ifdef MOZ_DEMANGLE_SYMBOLS
-LIBS += -liberty
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
 CPPSRCS += nsNativeAppSupportBeOS.cpp
