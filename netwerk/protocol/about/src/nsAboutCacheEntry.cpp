@@ -302,9 +302,10 @@ NS_IMETHODIMP
 nsAboutCacheEntry::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 {
     nsresult rv;
-    nsCString clientID, key;
+    nsCAutoString clientID, key;
+    PRBool streamBased = PR_TRUE;
 
-    rv = ParseURI(clientID, key);
+    rv = ParseURI(clientID, streamBased, key);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICacheService> serv =
@@ -313,7 +314,7 @@ nsAboutCacheEntry::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     rv = serv->CreateSession(clientID,
                              nsICache::STORE_ANYWHERE,
-                             nsICache::STREAM_BASED,
+                             streamBased,
                              getter_AddRefs(mCacheSession));
     if (NS_FAILED(rv)) return rv;
 
@@ -407,12 +408,10 @@ nsAboutCacheEntry::WriteCacheEntryUnavailable(nsIOutputStream *outputStream,
 }
 
 nsresult
-nsAboutCacheEntry::ParseURI(nsCString &clientID, nsCString &key)
+nsAboutCacheEntry::ParseURI(nsCString &clientID, PRBool &streamBased, nsCString &key)
 {
     //
-    // about:cache-entry?client=something&key=something-different
-    //                          ^        ^    ^
-    //                          a        b    c
+    // about:cache-entry?client=[string]&sb=[boolean]&key=[string]
     //
     nsresult rv;
 
@@ -426,27 +425,34 @@ nsAboutCacheEntry::ParseURI(nsCString &clientID, nsCString &key)
 
     nsCAutoString p(path);
 
-    nsReadingIterator<char> begin, end, a, b, c;
-    p.BeginReading(begin);
+    nsReadingIterator<char> i1, i2, i3, end;
+    p.BeginReading(i1);
     p.EndReading(end);
 
-    if (!FindCharInReadable('?', begin, end))
+    i2 = end;
+    if (!FindInReadable(NS_LITERAL_CSTRING("?client="), i1, i2))
         return NS_ERROR_FAILURE;
+    // i2 points to the start of clientID
 
-    b = begin;
-    a = end;
-    if (!FindInReadable(NS_LITERAL_CSTRING("client="), b, a))
+    i1 = i2;
+    i3 = end;
+    if (!FindInReadable(NS_LITERAL_CSTRING("&sb="), i1, i3))
         return NS_ERROR_FAILURE;
-    // now a points to the clientID
+    // i1 points to the end of clientID
+    // i3 points to the start of isStreamBased
 
-    b = a;
-    c = end;
-    if (!FindInReadable(NS_LITERAL_CSTRING("&key="), b, c))
+    clientID.Assign(Substring(i2, i1));
+
+    i1 = i3;
+    i2 = end;
+    if (!FindInReadable(NS_LITERAL_CSTRING("&key="), i1, i2))
         return NS_ERROR_FAILURE;
-    // now c points to the key, and b points to the end of clientID
+    // i1 points to the end of isStreamBased
+    // i2 points to the start of key
 
-    clientID.Assign(Substring(a, b));
-    key.Assign(Substring(c, end));
+    streamBased = FindCharInReadable('1', i3, i1);
+    key.Assign(Substring(i2, end));
+
     return NS_OK;
 }
 
