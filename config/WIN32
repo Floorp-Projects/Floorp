@@ -68,7 +68,7 @@ OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:$(PDBFILE)
 # an optimized build with debugging symbols. useful for debugging
 # compiler optimization bugs
 
-!ifdef MOZ_DEBUGOPT
+!ifdef MOZ_PROFILE
 OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE /opt:ref
 OPTIMIZER=/Zi -O1 -UDEBUG -DNDEBUG
 !else
@@ -78,7 +78,7 @@ OPTIMIZER=/Zi -O1 -UDEBUG -DNDEBUG
 OPTIMIZER=-O1 -UDEBUG -DNDEBUG
 OS_LFLAGS=
 !endif
-# MOZ_DEBUGOPT
+# MOZ_PROFILE
 
 !endif
 # MOZ_DEBUG
