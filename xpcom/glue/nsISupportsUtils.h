@@ -139,7 +139,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
 
-#if defined(NS_DEBUG) && !defined(NS_MT_SUPPORTED)
+#if defined(NS_DEBUG) && defined(NS_MT_SUPPORTED)
 
 extern "C" NS_EXPORT void* NS_CurrentThread(void);
 
