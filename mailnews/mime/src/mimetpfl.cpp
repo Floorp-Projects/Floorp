@@ -31,6 +31,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "mimemoz2.h"
+#include "prprf.h"
 
 #define PREF_MAIL_FIXED_WIDTH_MESSAGES "mail.fixed_width_messages"
 
@@ -73,10 +74,6 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   status =  MimeObject_write(obj, s, 0, PR_TRUE); /* force out any separators... */
   if(status<0) return status;
 
-  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
-      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    status = BeginMailNewsFont(obj);  
-
   // Setup the data structure that is connected to the actual document
   // Saved in a linked list in case this is called with several documents
   // at the same time.
@@ -96,6 +93,33 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   {
     rv=prefs->GetBoolPref(PREF_MAIL_FIXED_WIDTH_MESSAGES, &(exdata->fixedwidthfont));
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the mail.fixed_width_messages pref");
+  }
+
+  // Set a default font (otherwise unicode font will be used since the data is UTF-8).
+  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out) {
+    char fontName[128];
+    char buf[256];
+    PRInt32 fontSize;
+    if (exdata->fixedwidthfont) {
+      rv = GetMailNewsFont(obj, PR_TRUE, fontName, 128, &fontSize);
+      if (NS_SUCCEEDED(rv)) {
+        PR_snprintf(buf, 256, "<tt style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
+        status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+      }
+      else
+        status = MimeObject_write(obj, "<tt>", 4, PR_FALSE);
+    }
+    else {
+      rv = GetMailNewsFont(obj, PR_FALSE, fontName, 128, &fontSize);
+      if (NS_SUCCEEDED(rv)) {
+        PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
+        status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+      }
+      else
+        status = MimeObject_write(obj, "<div>", 5, PR_FALSE);
+    }
+    if(status<0) return status;
   }
 
   MimeInlineTextPlainFlowed *text = (MimeInlineTextPlainFlowed *) obj;
@@ -198,9 +222,14 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
 #endif
   }
 
+  // End defalut font
   if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
-      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    status = EndMailNewsFont(obj);
+      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out) {
+    if (fixedwidthfont)
+      status = MimeObject_write(obj, "</tt>", 5, PR_FALSE);
+    else
+      status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
+  }
 
   return 0;
 }

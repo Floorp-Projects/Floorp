@@ -1962,16 +1962,9 @@ int EndMailNewsFont(MimeObject *obj)
 }
 
 // TODO: rewrite BeginMailNewFont to use this.
-nsresult GetMailNewsFont(MimeObject *obj, const char *contentType, char *fontName, PRInt32 *fontSize)
+nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRUint32 nameBuffSize, PRInt32 *fontSize)
 {
   nsresult rv = NS_OK;
-
-  // check Content-Type:
-  PRBool bTEXT_HTML = PR_FALSE;
-  if (!nsCRT::strcasecmp(contentType, TEXT_HTML))
-    bTEXT_HTML = PR_TRUE;
-  else if (nsCRT::strcasecmp(contentType, TEXT_PLAIN))
-    return NS_ERROR_FAILURE;  // not supported type
 
   nsIPref *aPrefs = GetPrefServiceManager(obj->options);
   if (aPrefs) {
@@ -1998,7 +1991,7 @@ nsresult GetMailNewsFont(MimeObject *obj, const char *contentType, char *fontNam
       nsCOMPtr<nsICharsetConverterManager> aCharSets;
       nsCOMPtr<nsIAtom> aLangGroup;
       const PRUnichar* langGroup = nsnull;
-      nsCAutoString aPrefStr(bTEXT_HTML ? "font.name.serif." : "font.name.monospace.");
+      nsCAutoString aPrefStr(!styleFixed ? "font.name.serif." : "font.name.monospace.");
 
       aCharset.ToLowerCase();
 
@@ -2030,10 +2023,13 @@ nsresult GetMailNewsFont(MimeObject *obj, const char *contentType, char *fontNam
       if (NS_FAILED(rv))
         return rv;
 
+      if (convertedStr.Length() >= nameBuffSize)
+        return NS_ERROR_FAILURE;
+
       PL_strcpy(fontName, convertedStr.GetBuffer());
 
       // get a font size from pref
-      aPrefStr.Assign(bTEXT_HTML ? "font.size.variable." : "font.size.fixed.");
+      aPrefStr.Assign(!styleFixed ? "font.size.variable." : "font.size.fixed.");
       aPrefStr.AppendWithConversion(langGroup);
       rv = aPrefs->GetIntPref(aPrefStr, fontSize);
       if (NS_FAILED(rv))
@@ -2046,7 +2042,7 @@ nsresult GetMailNewsFont(MimeObject *obj, const char *contentType, char *fontNam
 
       // get a font name from pref, could be non ascii (need charset conversion)
       // this is not necessary if we insert this tag after the message is converted to UTF-8
-      rv = aPrefs->CopyUnicharPref(bTEXT_HTML ? "mailnews.font.name.html" : "mailnews.font.name.plain", &unicode);
+      rv = aPrefs->CopyUnicharPref(!styleFixed ? "mailnews.font.name.html" : "mailnews.font.name.plain", &unicode);
       if (NS_FAILED(rv))
         return rv;
 
@@ -2055,10 +2051,13 @@ nsresult GetMailNewsFont(MimeObject *obj, const char *contentType, char *fontNam
       if (NS_FAILED(rv))
         return rv;
 
+      if (convertedStr.Length() >= nameBuffSize)
+        return NS_ERROR_FAILURE;
+
       PL_strcpy(fontName, convertedStr.GetBuffer());
 
       // get a font size from pref
-      rv = aPrefs->GetIntPref(bTEXT_HTML ? "mailnews.font.size.html" : "mailnews.font.size.plain", fontSize);
+      rv = aPrefs->GetIntPref(!styleFixed ? "mailnews.font.size.html" : "mailnews.font.size.plain", fontSize);
       if (NS_FAILED(rv))
         return rv;
 
