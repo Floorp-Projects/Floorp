@@ -48,11 +48,10 @@
 <prefwindow id="OCSPDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
-            onload="gOCSPDialog.init();"
             title="&ocspDialog.title;"
             style="width: 38em !important;">
 
-  <prefpane id="OCSPDialogPane">  
+  <prefpane id="OCSPDialogPane" onpaneload="gOCSPDialog.init();">
     <script type="application/x-javascript" src="chrome://browser/content/preferences/ocsp.js"/>
 
     <preferences>
