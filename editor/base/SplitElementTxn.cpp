@@ -69,6 +69,8 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewLeftNode)), "could not create element.");
   if (NS_FAILED(result)) return result;
   if (!mNewLeftNode) return NS_ERROR_NULL_POINTER;
+  mEditor->MarkNodeDirty(mExistingRightNode);
+
 
   if (gNoisy) { printf("  created left node = %p\n", mNewLeftNode.get()); }
   // get the parent node
@@ -80,9 +82,6 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
   result = mEditor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
   if (NS_SUCCEEDED(result) && mNewLeftNode)
   {
-    // Insert formatting whitespace for the new node:
-    mEditor->InsertFormattingForNode(mExistingRightNode);
-
     nsCOMPtr<nsIDOMSelection>selection;
     mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) return result;

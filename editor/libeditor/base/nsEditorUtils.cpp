@@ -29,39 +29,28 @@
  * nsAutoSelectionReset
  *****************************************************************************/
 
-nsAutoSelectionReset::nsAutoSelectionReset(nsIDOMSelection *aSel) 
+nsAutoSelectionReset::nsAutoSelectionReset(nsIDOMSelection *aSel, nsEditor *aEd) : 
+mSel(nsnull)
+,mEd(nsnull)
 { 
-  mInitialized = PR_FALSE;
+  if (!aSel || !aEd) return;    // not much we can do, bail.
+  if (aEd->mSavedSel) return;   // we already have initted mSavedSel, so this must be nested call.
   mSel = do_QueryInterface(aSel);
+  mEd = aEd;
   if (mSel)
   {
-    mSel->GetAnchorNode(getter_AddRefs(mStartNode));
-    mSel->GetAnchorOffset(&mStartOffset);
-    mSel->GetFocusNode(getter_AddRefs(mEndNode));
-    mSel->GetFocusOffset(&mEndOffset);
-    if (mStartNode && mEndNode)
-      mInitialized = PR_TRUE;
+    mEd->mSavedSel = new nsSelectionState();
+    mEd->mSavedSel->SaveSelection(mSel);
   }
 }
 
 nsAutoSelectionReset::~nsAutoSelectionReset()
 {
-  if (mSel && mInitialized)
+  if (mSel && mEd->mSavedSel)   // mSel will be null if this was nested call
   {
-    // make sure that mStartNode and mEndNode are still in a document
-    nsCOMPtr<nsIDOMDocument> docStart;
-    nsresult res = mStartNode->GetOwnerDocument(getter_AddRefs(docStart)); 
-    if (NS_SUCCEEDED(res) && docStart)
-    {
-      nsCOMPtr<nsIDOMDocument> docEnd;
-      res = mEndNode->GetOwnerDocument(getter_AddRefs(docEnd)); 
-      if (NS_SUCCEEDED(res) && (docStart == docEnd))
-      {
-        // restore original selection
-        mSel->Collapse(mStartNode, mStartOffset);
-        mSel->Extend(mEndNode, mEndOffset);
-      }
-    }
+    mEd->mSavedSel->RestoreSelection(mSel);
+    delete mEd->mSavedSel;
+    mEd->mSavedSel = nsnull;
   }
 }
 

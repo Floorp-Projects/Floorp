@@ -69,18 +69,11 @@ class nsAutoSelectionReset
   private:
     /** ref-counted reference to the selection that we are supposed to restore */
     nsCOMPtr<nsIDOMSelection> mSel;
-
-    /** PR_TRUE if this instance initialized itself correctly */
-    PRBool mInitialized;
-
-    nsCOMPtr<nsIDOMNode> mStartNode;
-    nsCOMPtr<nsIDOMNode> mEndNode;
-    PRInt32 mStartOffset;
-    PRInt32 mEndOffset;
+    nsEditor *mEd;  // non-owning ref to nsEditor
 
   public:
     /** constructor responsible for remembering all state needed to restore aSel */
-    nsAutoSelectionReset(nsIDOMSelection *aSel);
+    nsAutoSelectionReset(nsIDOMSelection *aSel, nsEditor *aEd);
     
     /** destructor restores mSel to its former state */
     ~nsAutoSelectionReset();
@@ -93,16 +86,15 @@ class nsAutoRules
 {
   public:
   
-  nsAutoRules(nsEditor *ed, PRInt32 action, nsIEditor::EDirection aDirection, PRBool setSelection=PR_FALSE) : 
-         mEd(ed), mAction(action), mDirection(aDirection), mSetSelection(setSelection)
+  nsAutoRules(nsEditor *ed, PRInt32 action, nsIEditor::EDirection aDirection) : 
+         mEd(ed), mAction(action), mDirection(aDirection)
                 {if (mEd) mEd->StartOperation(mAction, mDirection);}
-  ~nsAutoRules() {if (mEd) mEd->EndOperation(mAction, mDirection, mSetSelection);}
+  ~nsAutoRules() {if (mEd) mEd->EndOperation(mAction, mDirection);}
   
   protected:
   nsEditor *mEd;
   PRInt32 mAction;
   nsIEditor::EDirection mDirection;
-  PRBool mSetSelection;
 };
 
 
