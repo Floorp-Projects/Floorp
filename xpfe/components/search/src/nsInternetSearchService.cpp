@@ -334,6 +334,8 @@ nsIRDFResource			*InternetSearchDataSource::kNC_Title;
 nsIRDFResource			*InternetSearchDataSource::kNC_Data;
 nsIRDFResource			*InternetSearchDataSource::kNC_Name;
 nsIRDFResource			*InternetSearchDataSource::kNC_Description;
+nsIRDFResource          *InternetSearchDataSource::kNC_actionButton;
+nsIRDFResource          *InternetSearchDataSource::kNC_actionBar;
 nsIRDFResource			*InternetSearchDataSource::kNC_LastText;
 nsIRDFResource			*InternetSearchDataSource::kNC_URL;
 nsIRDFResource			*InternetSearchDataSource::kRDF_InstanceOf;
@@ -398,6 +400,8 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "data",                &kNC_Data);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name",                &kNC_Name);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Description",         &kNC_Description);
+        gRDFService->GetResource(NC_NAMESPACE_URI "actionButton",        &kNC_actionButton);
+        gRDFService->GetResource(NC_NAMESPACE_URI "actionBar",           &kNC_actionBar);
 		gRDFService->GetResource(NC_NAMESPACE_URI "LastText",            &kNC_LastText);
 		gRDFService->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",         &kRDF_InstanceOf);
@@ -460,6 +464,8 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Data);
 		NS_IF_RELEASE(kNC_Name);
 		NS_IF_RELEASE(kNC_Description);
+        NS_IF_RELEASE(kNC_actionButton);
+        NS_IF_RELEASE(kNC_actionBar);
 		NS_IF_RELEASE(kNC_LastText);
 		NS_IF_RELEASE(kNC_URL);
 		NS_IF_RELEASE(kRDF_InstanceOf);
@@ -3120,6 +3126,31 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 			rv = updateAtom(mInner, engine, kNC_Description, descLiteral, nsnull);
 		}
 	}
+
+
+    nsAutoString	buttonValue;
+    if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "actionButton", buttonValue)))
+	{
+        nsCOMPtr<nsIRDFLiteral>	descLiteral;
+        if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(buttonValue.GetUnicode(),
+               getter_AddRefs(descLiteral))))
+        {
+           rv = updateAtom(mInner, engine, kNC_actionButton, descLiteral, nsnull);
+        }
+    }
+
+
+    nsAutoString	barValue;
+    if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "actionBar", barValue)))
+    {
+        nsCOMPtr<nsIRDFLiteral>	descLiteral;
+        if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(barValue.GetUnicode(),
+               getter_AddRefs(descLiteral))))
+        {
+           rv = updateAtom(mInner, engine, kNC_actionBar, descLiteral, nsnull);
+        }
+    }
+
 
 	PRBool	updatePrivateFiles = PR_FALSE;
 
