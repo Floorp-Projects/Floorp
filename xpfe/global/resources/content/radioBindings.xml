@@ -34,45 +34,69 @@
         </getter>
         <setter>
         <![CDATA[
-          var aDOMElement = val;
           if (this.getAttribute("focused") == "true") 
             val.setAttribute("focused", "true");
-          this.data = aDOMElement.data;
+          this.data = val.data;
 
-          aDOMElement.checked = true;
+          val.checked = true;
           
           // uncheck all other group nodes
-          var groupElements = this.getElementsByAttribute( "group", aDOMElement.group );
-          for( var i = 0; i < groupElements.length; i++ )
-            {
-              if( groupElements[i] != aDOMElement && groupElements[i].checked )
-                {
-                  groupElements[i].checked = false;
-                  groupElements[i].removeAttribute("checked");
-                  groupElements[i].removeAttribute("focused");
-                }
+          var groupElements = this.getElementsByAttribute( "group", this.id );
+          for( var i = 0; i < groupElements.length; i++ ) {
+            if( groupElements[i] != val ) {
+              groupElements[i].checked = false;
+              groupElements[i].removeAttribute("focused");
             }
+          }
           return val;
         ]]>
         </setter>        
+      </property>
+      <property name="focusedItem">
+        <getter>
+        <![CDATA[
+          var groupElements = this.getElementsByAttribute( "group", this.id );
+          for( var i = 0; i < groupElements.length; i++ ) {
+            if( groupElements[i].getAttribute( "focused" ) == "true" ) {
+              return groupElements[i];
+            }
+          }
+          return null;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          if (val) val.setAttribute("focused", "true");
+          
+          // unfocus all other group nodes
+          var groupElements = this.getElementsByAttribute( "group", this.id );
+          for( var i = 0; i < groupElements.length; i++ ) {
+            if( groupElements[i] != val ) {
+                groupElements[i].removeAttribute("focused");
+            }
+          }
+          return val;
+        ]]>
+        </setter>
       </property>
       <method name="checkAdjacentElement">
         <parameter name="aNextFlag"/>
         <body>
         <![CDATA[
-          var radios = this.getElementsByTagName("radio");
+          var currentElement = this.focusedItem;
+          var groupElements = this.getElementsByAttribute( "group", this.id );
           var index;
-          for (var i = 0; i < radios.length; i++ ) {
-            if (radios[i] != this.selectedItem) 
+          for (var i = 0; i < groupElements.length; i++ ) {
+            if (groupElements[i] != currentElement) 
               continue;
             if (aNextFlag) {
-              index = i + 1 < radios.length ? i + 1 : 0;
-              this.selectedItem = radios[index];
+              index = (i + 1) % groupElements.length;
+              this.selectedItem = groupElements[index];
               break;
             }
             else {              
-              index = i - 1 >= 0 ? i - 1 : radios.length - 1;
-              this.selectedItem = radios[index];
+              index = i > 0 ? i - 1 : groupElements.length - 1;
+              this.selectedItem = groupElements[index];
               break;
             }
           }
@@ -88,12 +112,12 @@
 
          ]]>
       </handler>
-      <handler event="keypress" key=" ">
+      <handler event="mousedown" button="1">
         <![CDATA[
             if (event.target.localName == "radio" && !event.target.disabled)
-              this.selectedItem = event.target;
+              this.focusedItem = event.target;
 
-        ]]>
+         ]]>
       </handler>
      
       <!-- keyboard navigation -->
@@ -103,6 +127,9 @@
            using the arrow keys. Accessing previous or following radio buttons
            is done solely through the arrow keys and not the tab button. Tab
            takes you to the next widget in the tab order -->
+      <handler event="keypress" key=" ">
+         this.selectedItem = this.focusedItem;
+      </handler>
       <handler event="keypress" keycode="VK_UP">
         this.checkAdjacentElement(false);
       </handler>
@@ -122,11 +149,11 @@
            not the item -->
       <handler event="focus">
         this.setAttribute("focused", "true");
-        this.selectedItem.setAttribute("focused", "true");
+        if (this.focusedItem == null) this.focusedItem = this.selectedItem;
       </handler>
       <handler event="blur">
         this.removeAttribute("focused");
-        this.selectedItem.removeAttribute("focused");
+        this.focusedItem = null;
       </handler>
     </handlers>
   </binding>
