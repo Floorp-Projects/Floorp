@@ -149,8 +149,8 @@ EssentialFiles2Components(char *filename)
 		*tempStr = 'e';
 		
 		strcpy(finalStr, filename);
-		strcpy(&finalStr[prefixLen], "components");
-		strcpy(&finalStr[prefixLen + strlen("components")], &filename[prefixLen + strlen("essential files")]);
+		strcpy(&finalStr[prefixLen], "Components");
+		strcpy(&finalStr[prefixLen + strlen("Components")], &filename[prefixLen + strlen("essential files")]);
 		strcpy(filename, finalStr);
 	}
 
@@ -210,6 +210,7 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 		
 		/* create directories if file is nested in new subdirs */
 		SLASHES_2_COLONS(fullPathStr);
+		EssentialFiles2Components(fullPathStr);
 		err = DirCreateRecursive(fullPathStr);			
 		
 		if (err!=noErr)
@@ -224,8 +225,6 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 			continue; /* XXX do we want to do this? */
 		}
 		
-		EssentialFiles2Components(fullPathStr);
-
 		/* extract the file to its full path destination */
 		rv = ZIP_ExtractFile( hZip, filename, fullPathStr );
 		

@@ -226,7 +226,7 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	Str255				installingStr;
 	
 	err = FSMakeFSSpec(vRefNum, dirID, "\p:viewer", &xpiProgDirSpec); /* temp dir */
-	err = FSMakeFSSpec(vRefNum, dirID, "\p:viewer:components", &xpiStubDirSpec); /* xpistub dir */
+	err = FSMakeFSSpec(vRefNum, dirID, "\p:viewer:Components", &xpiStubDirSpec); /* xpistub dir */
 	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, 0, &tgtDirSpec);	/* program dir */
 	
 	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, xpiStubDirSpec), err);
