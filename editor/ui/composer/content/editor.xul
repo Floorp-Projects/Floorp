@@ -210,7 +210,7 @@ END of Deprecated -->
     </deck>
 
     <!-- TODO: Set collapsed="true" so default is to not show the editmode toolbar -->
-    <toolbar id="EditModeToolbar" autostretch="never" valign="middle" persist="collapsed">
+    <toolbar id="EditModeToolbar" autostretch="never" valign="middle" collapsed="true" persist="collapsed">
       <text id="EditModeLabel" class="margin-left-right" value="&editMode.label;"/>
       <!-- From editorOverlay.xul -->
       <button id="NormalModeButton" persist="type"/>
