@@ -952,7 +952,7 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         const nsString& theString=aNode.GetSkippedContent();
         if(0<theString.Length()) {
           CTextToken *theToken=NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString));
-          nsCParserNode theNode(theToken,0,mTokenAllocator);
+          nsCParserNode theNode(theToken,0);
           result=mSink->AddLeaf(theNode); //when the node get's destructed, so does the new token
         }
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
@@ -971,7 +971,7 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
 
         CTextToken theToken(theNumber);
         PRInt32 theLineNumber=0;
-        nsCParserNode theNode(&theToken,theLineNumber,mTokenAllocator);
+        nsCParserNode theNode(&theToken,theLineNumber);
         result=mSink->AddLeaf(theNode);
       }
       break;
@@ -1420,7 +1420,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
 
               //because this code calls CloseHead() directly, stack-based token/nodes are ok.
             CEndToken     theToken(eHTMLTag_head);
-            nsCParserNode theNode(&theToken,mLineNumber,mTokenAllocator);
+            nsCParserNode theNode(&theToken,mLineNumber);
             result=CloseHead(&theNode);
           }
         }
@@ -1903,7 +1903,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
     case eHTMLTag_form:
       {
           //this is safe because we call close container directly. This node/token is not cached.
-        nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenAllocator);
+        nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
         result=CloseContainer(&theNode,theChildTag,PR_FALSE);
       }
       break;
