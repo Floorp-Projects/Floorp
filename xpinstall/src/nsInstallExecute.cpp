@@ -103,7 +103,18 @@ PRInt32 nsInstallExecute::Complete()
     {
         result = process->Run(mBlocking, (const char**)&cArgs, 1, mPid);
         if (NS_SUCCEEDED(result))
-            DeleteFileNowOrSchedule( mExecutableFile );
+        {
+            if (mBlocking)
+            {
+                // should be OK to delete now since execution done
+                DeleteFileNowOrSchedule( mExecutableFile );
+            }
+            else
+            {
+                // don't try to delete now since execution is async
+                ScheduleFileForDeletion( mExecutableFile );
+            }
+        }
         else
             rv = nsInstall::UNEXPECTED_ERROR;
     }
@@ -112,7 +123,7 @@ PRInt32 nsInstallExecute::Complete()
 
     if(cArgs[0])
         Recycle(cArgs[0]);
-    
+
     return rv;
 }
 
