@@ -35,7 +35,7 @@
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
  *
- * $Id: p7sign.c,v 1.6 2001/02/01 00:57:23 kirke%netscape.com Exp $
+ * $Id: p7sign.c,v 1.7 2002/03/07 22:05:43 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -46,6 +46,7 @@
 #include "certdb.h"
 #include "sechash.h"	/* for HASH_GetHashObject() */
 #include "nss.h"
+#include "pk11func.h"
 
 #if defined(XP_UNIX)
 #include <unistd.h>
@@ -59,6 +60,20 @@ extern int fread(char *, size_t, size_t, FILE*);
 extern int fwrite(char *, size_t, size_t, FILE*);
 extern int fprintf(FILE *, char *, ...);
 #endif
+
+char* KeyDbPassword = 0;
+
+
+char* MyPK11PasswordFunc (PK11SlotInfo *slot, PRBool retry, void* arg)
+{
+    char *ret=0;
+
+    if (retry == PR_TRUE)
+        return NULL;
+    ret = PL_strdup (KeyDbPassword);
+    return ret;
+}
+
 
 static void
 Usage(char *progName)
@@ -76,6 +91,7 @@ Usage(char *progName)
 	    "-o output");
     fprintf(stderr, "%-20s Encapsulate content in signature message\n",
 	    "-e");
+    fprintf(stderr, "%-20s Password to the key databse\n", "-p");
     exit(-1);
 }
 
@@ -84,7 +100,7 @@ SignOut(void *arg, const char *buf, unsigned long len)
 {
    FILE *out;
 
-   out = arg; 
+   out = (FILE*) arg; 
    fwrite (buf, len, 1, out);
 }
 
@@ -190,7 +206,7 @@ main(int argc, char **argv)
     /*
      * Parse command line arguments
      */
-    optstate = PL_CreateOptState(argc, argv, "ed:k:i:o:");
+    optstate = PL_CreateOptState(argc, argv, "ed:k:i:o:p:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -227,6 +243,9 @@ main(int argc, char **argv)
 		return -1;
 	    }
 	    break;
+	  case 'p':
+            KeyDbPassword = strdup (optstate->value);
+            break;
 	}
     }
 
@@ -242,6 +261,8 @@ main(int argc, char **argv)
 	SECU_PrintPRandOSError(progName);
 	return -1;
     }
+
+    PK11_SetPasswordFunc (MyPK11PasswordFunc);
 
     /* open cert database */
     certHandle = CERT_GetDefaultCertDB();
