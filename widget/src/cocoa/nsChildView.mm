@@ -1702,6 +1702,14 @@ NS_IMETHODIMP
 nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseGlobalY,
                          PRUint16 aKeyModifiers, PRBool *_retval)
 {
+  // ensure that this is going to a ChildView (not something else like a
+  // scrollbar). I think it's safe to just bail at this point if it's not
+  // what we expect it to be
+  if ( ![mView isKindOfClass:[ChildView class]] ) {
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+  
   nsMouseEvent geckoEvent;
 	geckoEvent.eventStructType = NS_DRAGDROP_EVENT;
   
