@@ -18,6 +18,8 @@
 #ifndef nsweb_h___
 #define nsweb_h___
 
+#include "nscore.h"
+
 #ifdef _IMPL_NS_WEB
 #define NS_WEB NS_EXPORT
 #else
