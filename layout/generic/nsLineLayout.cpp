@@ -47,7 +47,6 @@ nsLineData::nsLineData()
   mFirstContentOffset = 0;
   mLastContentOffset = 0;
   mLastContentIsComplete = PR_TRUE;
-  mHasBullet = PR_FALSE;
   mIsBlock = PR_FALSE;
   mBounds.SetRect(0, 0, 0, 0);
   mFloaters = nsnull;
@@ -88,17 +87,11 @@ nsLineData::Verify(PRBool aFinalCheck) const
       nextLinesFirstChild = mNextLine->mFirstChild;
     }
 
-
     // Check that number of children are ok and that the index in parent
     // information agrees with the content offsets.
     PRInt32 offset = mFirstContentOffset;
     PRInt32 len = 0;
     nsIFrame* child = mFirstChild;
-    if (mHasBullet) {
-      // Skip bullet
-      child->GetNextSibling(child);
-      len++;
-    }
     while ((nsnull != child) && (child != nextLinesFirstChild)) {
       PRInt32 indexInParent;
       child->GetContentIndex(indexInParent);
