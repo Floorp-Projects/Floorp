@@ -172,12 +172,26 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
        curr;
        curr = curr->GetNext()) {
     nsresult rv = curr->CompileMember(context, mClassName, mClassObject);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      DestroyMembers(curr);
       return rv;
+    }
   }
   return NS_OK;
 }
 
+void
+nsXBLProtoImpl::DestroyMembers(nsXBLProtoImplMember* aBrokenMember)
+{
+  NS_ASSERTION(mClassObject, "This should never be called when there is no class object");
+  PRBool compiled = PR_TRUE;
+  for (nsXBLProtoImplMember* curr = mMembers; curr; curr = curr->GetNext()) {
+    if (curr == aBrokenMember) {
+      compiled = PR_FALSE;
+    }
+    curr->Destroy(compiled);
+  }
+}
 
 nsresult
 NS_NewXBLProtoImpl(nsXBLPrototypeBinding* aBinding, 
