@@ -776,7 +776,7 @@ nsRegistryDataSource::SubkeyEnumerator::ConvertRegistryNodeToResource(nsISupport
 
     nsCAutoString newURI(rootURI);
     if (newURI.Last() != '/') newURI += '/';
-    newURI += path;
+    newURI.Append(path);
 
     rv = gRDF->GetResource(newURI, aResult);
     if (NS_FAILED(rv)) return rv;
