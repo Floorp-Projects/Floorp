@@ -100,26 +100,21 @@ nsImageFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent,
                                    aContext, aPrevInFlow);
 
-#if 0
   // See if we have a SRC attribute
-  PRBool sourcePresent = PR_FALSE;
   nsAutoString src;
   nsresult ca;
   ca = mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
-  if ((NS_CONTENT_ATTR_HAS_VALUE == ca) && (src.Length() > 0)) {
-    sourcePresent = PR_TRUE;
+  if ((NS_CONTENT_ATTR_HAS_VALUE != ca) || (src.Length() == 0))
+  {
+    // Let's see if this is an object tag and we have a DATA attribute
+    nsIAtom*  tag;
+    mContent->GetTag(tag);
+
+    if(tag == nsHTMLAtoms::object)
+      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src);
+  
+    NS_IF_RELEASE(tag);
   }
-  else {
-    // XXX ick: this should only work for OBJECT tags
-    ca = mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src);
-    if ((NS_CONTENT_ATTR_HAS_VALUE == ca) && (src.Length() > 0)) {
-      sourcePresent = PR_TRUE;
-    }
-  }
-#else
-  nsAutoString src;
-  mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
-#endif
 
   // Set the image loader's source URL and base URL
   nsIURL* baseURL = nsnull;
