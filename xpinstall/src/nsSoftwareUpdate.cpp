@@ -94,7 +94,7 @@ nsSoftwareUpdate *nsSoftwareUpdate::GetInstance()
 }
 
 
-NS_IMPL_ISUPPORTS(nsSoftwareUpdate,NS_ISOFTWAREUPDATE_IID)
+NS_IMPL_ISUPPORTS(nsSoftwareUpdate,nsISoftwareUpdate::GetIID());
 
 
 nsresult
@@ -259,7 +259,7 @@ nsSoftwareUpdateFactory::~nsSoftwareUpdateFactory(void)
 {
 }
 
-NS_IMPL_ISUPPORTS(nsSoftwareUpdateFactory,NS_IFACTORY_IID)
+NS_IMPL_ISUPPORTS(nsSoftwareUpdateFactory,kIFactoryIID)
 
 NS_IMETHODIMP
 nsSoftwareUpdateFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
