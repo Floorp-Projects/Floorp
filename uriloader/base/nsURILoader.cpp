@@ -148,7 +148,8 @@ class nsDocumentOpenInfo : public nsIStreamListener
 public:
     nsDocumentOpenInfo();
 
-    nsresult Init(nsISupports * aWindowContext);
+    nsresult Init(nsISupports * aRetargetedWindowContext, 
+                  nsISupports * aOriginalWindowContext);
 
     NS_DECL_ISUPPORTS
 
@@ -176,6 +177,7 @@ protected:
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
     nsCOMPtr<nsIStreamListener> m_targetStreamListener;
+    nsCOMPtr<nsISupports> m_originalContext;
     nsURILoadCommand mCommand;
     nsCString m_windowTarget;
 };
@@ -198,14 +200,13 @@ nsDocumentOpenInfo::~nsDocumentOpenInfo()
 {
 }
 
-nsresult nsDocumentOpenInfo::Init(nsISupports * aWindowContext)
+nsresult nsDocumentOpenInfo::Init(nsISupports * aCurrentWindowContext, 
+                                  nsISupports * aOriginalWindowContext)
 {
   // ask the window context if it has a uri content listener...
   nsresult rv = NS_OK;
-  m_contentListener = do_GetInterface(aWindowContext, &rv);
-
-  // now determine if the 
-
+  m_contentListener = do_GetInterface(aCurrentWindowContext, &rv);
+  m_originalContext = aOriginalWindowContext;
   return rv;
 }
 
@@ -302,9 +303,11 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
     rv = pURILoader->DispatchContent(contentType, mCommand, m_windowTarget, 
                                      aChannel, aCtxt, 
                                      m_contentListener, 
+                                     m_originalContext,
                                      getter_Copies(desiredContentType), 
                                      getter_AddRefs(contentListener),
                                      &abortDispatch);
+    m_originalContext = nsnull; // we don't need this anymore....
 
     // if the uri loader says to abort the dispatch then someone
     // else must have stepped in and taken over for us...so stop..
@@ -561,7 +564,7 @@ NS_IMETHODIMP nsURILoader::GetTarget(const char * aWindowTarget,
 NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel, 
                                       nsURILoadCommand aCommand,
                                       const char * aWindowTarget,
-                                      nsISupports * aWindowContext,
+                                      nsISupports * aOriginalWindowContext,
                                       PRUint32 aLocalIP)
 {
   // we need to create a DocumentOpenInfo object which will go ahead and open the url
@@ -573,7 +576,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
   if (!aChannel) return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsISupports> retargetedWindowContext;
-  NS_ENSURE_SUCCESS(GetTarget(aWindowTarget, aWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetTarget(aWindowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
 
   NS_NEWXPCOM(loader, nsDocumentOpenInfo);
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
@@ -582,7 +585,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
   nsCOMPtr<nsISupports> loadCookie;
   SetupLoadCookie(retargetedWindowContext, getter_AddRefs(loadCookie));
 
-  loader->Init(retargetedWindowContext);    // Extra Info
+  loader->Init(retargetedWindowContext, aOriginalWindowContext);    // Extra Info
 
   // now instruct the loader to go ahead and open the url
   rv = loader->Open(aChannel, aCommand, aWindowTarget, retargetedWindowContext);
@@ -690,6 +693,7 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
                                            nsIChannel * aChannel, 
                                            nsISupports * aCtxt, 
                                            nsIURIContentListener * aContentListener,
+                                           nsISupports * aSrcWindowContext,
                                            char ** aContentTypeToUse,
                                            nsIURIContentListener ** aContentListenerToUse,
                                            PRBool * aAbortProcess)
@@ -775,7 +779,7 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   rv = nsComponentManager::CreateInstance(handlerProgID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
   if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
   {
-      rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aChannel);
+      rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aSrcWindowContext, aChannel);
       *aAbortProcess = PR_TRUE;
   }
   

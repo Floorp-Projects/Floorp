@@ -120,6 +120,7 @@ interface nsIURILoader : nsISupports
 					   in nsIChannel aChannel, 
 					   in nsISupports aCtxt,
 					   in nsIURIContentListener aContentListener,
+					   in nsISupports aSrcWindowContext,
 					   out string aDesiredContentType,
 					   out nsIURIContentListener aTargetListener,
 					   out boolean abortDispatch);

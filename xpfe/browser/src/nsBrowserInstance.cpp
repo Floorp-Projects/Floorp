@@ -2584,18 +2584,40 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
                                                      const char * aCommand,
                                                      const char * aWindowTarget,
+                                                     nsISupports * aWindowContext,
                                                      nsIChannel * aChannel)
 {
   // we need a dom window to create the new browser window...in order
   // to do this, we need to get the window mediator service and ask it for a dom window
   NS_ENSURE_ARG(aChannel);
-
-  nsCOMPtr<nsIAppShellService> windowService (do_GetService(kAppShellServiceCID));
-  nsCOMPtr<nsIDOMWindow> globalWindow;
+  nsCOMPtr<nsIDOMWindow> parentWindow;
   JSContext* jsContext = nsnull;
 
-  NS_ENSURE_SUCCESS(windowService->GetHiddenWindowAndJSContext(getter_AddRefs(globalWindow), &jsContext),
-                    NS_ERROR_FAILURE);
+  if (aWindowContext)
+  {
+    parentWindow = do_GetInterface(aWindowContext);
+    if (parentWindow)
+    {
+      nsCOMPtr<nsIScriptGlobalObject> sgo;     
+      sgo = do_QueryInterface( parentWindow );
+      if (sgo)
+      {
+        nsCOMPtr<nsIScriptContext> scriptContext;
+        sgo->GetContext( getter_AddRefs( scriptContext ) );
+        if (scriptContext)
+          jsContext = (JSContext*)scriptContext->GetNativeContext();
+      }
+
+    }
+  }
+
+  // if we still don't have a parent window, try to use the hidden window...
+  if (!parentWindow || !jsContext)
+  {
+    nsCOMPtr<nsIAppShellService> windowService (do_GetService(kAppShellServiceCID));
+    NS_ENSURE_SUCCESS(windowService->GetHiddenWindowAndJSContext(getter_AddRefs(parentWindow), &jsContext),
+                      NS_ERROR_FAILURE);
+  }
 
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
@@ -2615,12 +2637,11 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   if (!aWindowTarget || !nsCRT::strcasecmp(aWindowTarget, "_new") || !nsCRT::strcasecmp(aWindowTarget, "_blank"))
     windowTarget = "";
 
-  argv = JS_PushArguments(jsContext, &mark, "sssW", "chrome://navigator/content/", windowTarget, 
-                  "chrome,dialog=no,all", value.GetUnicode());
+  argv = JS_PushArguments(jsContext, &mark, "Ws", value.GetUnicode(), windowTarget);
   NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMWindow> newWindow;
-  globalWindow->OpenDialog(jsContext, argv, 4, getter_AddRefs(newWindow));
+  parentWindow->Open(jsContext, argv, 2, getter_AddRefs(newWindow));
   JS_PopArguments(jsContext, mark);
 
   // now abort the current channel load...
