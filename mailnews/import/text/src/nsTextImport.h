@@ -48,7 +48,7 @@ public:
 	NS_DECL_NSIIMPORTMODULE
 
 		
-protected:		
+protected:
 };
 
 

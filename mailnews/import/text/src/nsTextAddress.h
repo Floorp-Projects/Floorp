@@ -39,7 +39,7 @@ public:
 	nsTextAddress();
 	virtual ~nsTextAddress();
 
-	nsresult	ImportAddresses( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsIImportFieldMap *fieldMap, nsString& errors);
+	nsresult	ImportAddresses( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsIImportFieldMap *fieldMap, nsString& errors, PRUint32 *pProgress);
 	nsresult	ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors);
 
 	nsresult	DetermineDelim( nsIFileSpec *pSrc);

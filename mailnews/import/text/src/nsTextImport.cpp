@@ -39,7 +39,8 @@
 #include "nsTextFormatter.h"
 #include "nsTextStringBundle.h"
 #include "nsTextAddress.h"
-
+#include "nsIPref.h"
+#include "nsXPIDLString.h"
 
 #include "TextDebugLog.h"
 
@@ -47,7 +48,7 @@
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kISupportsArrayIID,	NS_ISUPPORTSARRAY_IID);
-
+static NS_DEFINE_CID(kPrefServiceCID,		NS_PREF_CID);
 
 
 class ImportAddressImpl : public nsIImportAddressBooks
@@ -79,8 +80,7 @@ public:
 	NS_IMETHOD FindAddressBooks(nsIFileSpec *location, nsISupportsArray **_retval);
 	
 	/* nsISupports InitFieldMap(nsIFileSpec location, nsIImportFieldMap fieldMap); */
-	NS_IMETHOD InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap)
-		{ return( NS_OK); }
+	NS_IMETHOD InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap);
 	
 	/* void ImportAddressBook (in nsIImportABDescriptor source, in nsISupports destination, in nsISupports fieldMap, out boolean fatalError); */
 	NS_IMETHOD ImportAddressBook(	nsIImportABDescriptor *source, 
@@ -99,6 +99,7 @@ public:
 
 private:
 	void	ClearSampleFile( void);
+	void	SaveFieldMap( nsIImportFieldMap *pMap);
 
 	static void	ReportSuccess( nsString& name, nsString *pStream);
 	static void SetLogs( nsString& success, nsString& error, PRUnichar **pError, PRUnichar **pSuccess);
@@ -110,6 +111,7 @@ private:
 	PRBool			m_haveDelim;
 	nsIFileSpec *	m_fileLoc;
 	char			m_delim;
+	PRUint32		m_bytesImported;
 };
 
 
@@ -388,9 +390,11 @@ void ImportAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
 	if (!pStream)
 		return;
 	// load the success string
-	PRUnichar *pText = nsTextStringBundle::GetStringByID( TEXTIMPORT_ADDRESS_SUCCESS);
+	PRUnichar *pFmt = nsTextStringBundle::GetStringByID( TEXTIMPORT_ADDRESS_SUCCESS);
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
 	pStream->Append( pText);
-	nsTextStringBundle::FreeString( pText);
+	nsTextFormatter::smprintf_free( pText);
+	nsTextStringBundle::FreeString( pFmt);
 	pStream->Append( NS_LINEBREAK);
 }
 
@@ -426,6 +430,8 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
     NS_PRECONDITION(pSource != nsnull, "null ptr");
     NS_PRECONDITION(pDestination != nsnull, "null ptr");
     NS_PRECONDITION(fatalError != nsnull, "null ptr");
+
+	m_bytesImported = 0;
 
 	nsString	success;
 	nsString	error;
@@ -490,7 +496,8 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 		rv = m_text.ImportLDIF( &abort, name.GetUnicode(), inFile, pDestination, error);
 	}
 	else {	
-		rv = m_text.ImportAddresses( &abort, name.GetUnicode(), inFile, pDestination, fieldMap, error);
+		rv = m_text.ImportAddresses( &abort, name.GetUnicode(), inFile, pDestination, fieldMap, error, &m_bytesImported);
+		SaveFieldMap( fieldMap);
 	}
 
     inFile->Release();
@@ -513,6 +520,12 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 
 NS_IMETHODIMP ImportAddressImpl::GetImportProgress(PRUint32 *_retval)
 {
+    NS_PRECONDITION(_retval != nsnull, "null ptr");
+	if (!_retval)
+		return( NS_ERROR_NULL_POINTER);
+	
+	*_retval = m_bytesImported;
+
 	return( NS_OK);
 }
 
@@ -651,5 +664,105 @@ void ImportAddressImpl::ClearSampleFile( void)
 		NS_RELEASE( m_fileLoc);
 		m_fileLoc = nsnull;
 		m_haveDelim = PR_FALSE;
+	}
+}
+
+
+NS_IMETHODIMP ImportAddressImpl::InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap)
+{
+	// Let's remember the last one the user used!
+	// This should be normal for someone importing multiple times, it's usually
+	// from the same file format.
+	
+	nsresult rv;
+	NS_WITH_SERVICE( nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_SUCCEEDED( rv)) {
+		nsXPIDLCString	prefStr;
+		rv = prefs->CopyCharPref( "mailnews.import.text.fieldmap", getter_Copies(prefStr));
+		if (NS_SUCCEEDED( rv)) {
+			const char *pStr = (const char *)prefStr;
+			if (pStr) {
+				fieldMap->SetFieldMapSize( 0);
+				long		fNum;
+				PRBool		active;
+				long		fIndex = 0;
+				while (*pStr) {
+					while (*pStr && (*pStr != '+') && (*pStr != '-'))
+						pStr++;
+					if (*pStr == '+')
+						active = PR_TRUE;
+					else if (*pStr == '-')
+						active = PR_FALSE;
+					else
+						break;
+					fNum = 0;
+					while (*pStr && ((*pStr < '0') || (*pStr > '9')))
+						pStr++;
+					if (!(*pStr))
+						break;
+					while (*pStr && (*pStr >= '0') && (*pStr <= '9')) {
+						fNum *= 10;
+						fNum += (*pStr - '0');
+						pStr++;
+					}
+					while (*pStr && (*pStr != ','))
+						pStr++;
+					if (*pStr == ',')
+						pStr++;
+					fieldMap->SetFieldMap( -1, fNum);
+					fieldMap->SetFieldActive( fIndex, active);
+					fIndex++;
+				}
+				if (!fIndex) {
+					int num;
+					fieldMap->GetNumMozFields( &num);
+					fieldMap->DefaultFieldMap( num);
+				}
+			}
+		}
+	}
+
+	return( NS_OK);
+}
+
+
+void ImportAddressImpl::SaveFieldMap( nsIImportFieldMap *pMap)
+{
+	if (!pMap)
+		return;
+
+	int			size;
+	int			index;
+	PRBool		active;
+	nsCString	str;
+
+	pMap->GetMapSize( &size);
+	for (long i = 0; i < size; i++) {
+		index = i;
+		active = PR_FALSE;
+		pMap->GetFieldMap( i, &index);
+		pMap->GetFieldActive( i, &active);
+		if (active)
+			str.Append( '+');
+		else
+			str.Append( '-');
+
+		str.Append( index);
+		str.Append( ',');
+	}
+
+	PRBool	done = PR_FALSE;
+	nsresult rv;
+	NS_WITH_SERVICE( nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_SUCCEEDED( rv)) {
+		nsXPIDLCString	prefStr;
+		rv = prefs->CopyCharPref( "mailnews.import.text.fieldmap", getter_Copies(prefStr));
+		if (NS_SUCCEEDED( rv)) {
+			if (!str.Compare( (const char *)prefStr))
+				done = PR_TRUE;
+		}
+		if (!done) {
+			rv = prefs->SetCharPref( "mailnews.import.text.fieldmap", str);
+		}
 	}
 }

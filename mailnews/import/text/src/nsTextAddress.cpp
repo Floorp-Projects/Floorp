@@ -76,7 +76,7 @@ nsresult nsTextAddress::ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIF
 }
 
 
-nsresult nsTextAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsIImportFieldMap *fieldMap, nsString& errors)
+nsresult nsTextAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsIImportFieldMap *fieldMap, nsString& errors, PRUint32 *pProgress)
 {
 	// Open the source file for reading, read each line and process it!
 	NS_IF_RELEASE( m_database);
@@ -101,8 +101,12 @@ nsresult nsTextAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pName,
 		return( rv);
 	}
 	
+	PRInt32	loc;
 	PRInt32	lineLen = 0;
 	while (!(*pAbort) && !eof && NS_SUCCEEDED( rv)) {
+		rv = pSrc->Tell( &loc);
+		if (NS_SUCCEEDED( rv) && pProgress)
+			*pProgress = (PRUint32)loc;
 		rv = ReadRecord( pSrc, pLine, kTextAddressBufferSz, m_delim, &lineLen);
 		if (NS_SUCCEEDED( rv)) {
 			rv = ProcessLine( pLine, nsCRT::strlen( pLine), errors);
