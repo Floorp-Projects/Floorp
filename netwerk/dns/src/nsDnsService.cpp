@@ -600,7 +600,7 @@ nsDNSLookup::InitiateLookup(void)
     }
 #endif /* XP_PC */
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
     // temporary SYNC version
     status = PR_GetIPNodeByName(mHostName, 
                                 PR_AF_INET6,
@@ -1152,7 +1152,7 @@ nsDNSService::Lookup(const char*     hostName,
         }
     }
 
-#if !defined(XP_UNIX) && !defined(XP_OS2)
+#if !defined(XP_UNIX) && !defined(XP_OS2) && !defined(XP_BEOS)
     if (mThread == nsnull)
         return NS_ERROR_OFFLINE;
 #endif
@@ -1354,7 +1354,7 @@ nsDNSService::Shutdown()
 {
     nsresult rv = NS_OK;
 
-#if !defined(XP_UNIX) && !defined(XP_OS2)
+#if !defined(XP_UNIX) && !defined(XP_OS2) && !defined(XP_BEOS)
     if (mThread == nsnull) return rv;
 #endif
 
