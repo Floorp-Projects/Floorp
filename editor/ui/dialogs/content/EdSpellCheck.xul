@@ -33,69 +33,71 @@
     onload = "Startup()"
     orient="vertical">
 
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdSpellCheck.js"/>
-  <html:script language="Javascript" src="chrome://global/content/strres.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdSpellCheck.js"/>
+  <script language="Javascript" src="chrome://global/content/strres.js" />
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
   <broadcaster id="args" value=""/>
-
-<box orient="vertical">
   <box>
     <!-- value is set in JS -->
     <text class="label" id="MisspelledWordLabel"/>
     <spring class="bigspacer"/>
     <text class="label bold" id="MisspelledWord"/>
   </box>
-  <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
-  <box>
-    <textfield class="MinWidth20em" id="ReplaceWord" onkeyup="ChangeReplaceWord()"/>
-    <spring class="spacer"/>
-    <box flex="1">
-      <button class="label MinWidth5em" flex="1" id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
-      <spring class="MinWidth20em" flex="1"/>
-    </box>
-  </box>
-  <spring class="spacer"/>
-  <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
-  <box>
-    <tree rows="8" class="list MinWidth20em" id="SuggestedList" onselect="SelectSuggestedWord()" onclick="SelectSuggestedWord()"/>
-    <spring class="spacer"/>
-    <grid flex="1">
-      <columns><column flex="1"/><column flex="1"/></columns>
-      <rows>
-        <row>
-          <button class="dialog" flex="1" id="Ignore" oncommand="Ignore()" value="&ignoreButton.label;"/>
-          <button class="dialog" flex="1" id="IgnoreAll" oncommand="IgnoreAll()" value="&ignoreAllButton.label;"/>
-        </row>
-        <row>
-          <button class="dialog" flex="1" id="Replace" oncommand="Replace()" value="&changeButton.label;"/>
-          <button class="dialog" flex="1" id="ReplaceAll" oncommand="ReplaceAll()" value="&changeAllButton.label;"/>
-        </row>
-        <row>
-          <text class="label" flex="1" value="&userDictionary.label;"/>
-          <spring/>
-        </row>
-        <row>
-          <button class="dialog" flex="1" id="AddToDictionary" oncommand="AddToDictionary()" value="&addToUserDictionaryButton.label;"/>
-          <button class="dialog" flex="1" id="EditDictionary" oncommand="EditDictionary()" value="&editUserDictionaryButton.label;"/>
-        </row>
-      </rows> 
-    </grid>
-  </box>
-  <text class="label" value ="&languagePopup.label;"/>
-  <box>
-    <menulist class="MinWidth20em" id="LanguageMenulist" oncommand="SelectLanguage()">
-      <menupopup>
-        <menuitem id="English" value="&englishLanguagePopup.value;"/>
-        <menuitem id="Spanish" value="&spanishLanguagePopup.value;"/>
-        <menuitem id="French" value="&frenchLanguagePopup.value;"/>
-      </menupopup>
-    </menulist>
-    <spring class="spacer"/>
-    <box flex="1">
-      <button class="dialog" id="Recheck" flex="1" value="&recheckButton.label;" oncommand="Recheck()"/>
-      <button class="dialog" id="Close" flex="1" value="&closeButton.label;" oncommand="Close()"/>
-    </box>
-  </box> 
-</box>
+  <grid>
+    <columns><column style="width: 15em" flex="1"/><column style="width: 15em" flex="1"/></columns>
+    <rows>
+      <row>
+        <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
+        <spring/>
+      </row>
+      <row>
+        <textfield id="ReplaceWord" onkeyup="ChangeReplaceWord()"/>
+        <box flex="1">
+          <button id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
+        </box>
+      </row>
+      <row>
+        <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
+        <spring/>
+      </row>
+      <row>
+        <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
+        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()" onclick="SelectSuggestedWord()"/>
+        <grid flex="1">
+          <columns><column flex="1"/><column flex="1"/></columns>
+          <rows>
+            <row>
+              <button class="dialog" id="Ignore" oncommand="Ignore()" value="&ignoreButton.label;"/>
+              <button class="dialog" flex="1" id="IgnoreAll" oncommand="IgnoreAll()" value="&ignoreAllButton.label;"/>
+            </row>
+            <row>
+              <button class="dialog" id="Replace" oncommand="Replace()" value="&changeButton.label;"/>
+              <button class="dialog" id="ReplaceAll" oncommand="ReplaceAll()" value="&changeAllButton.label;"/>
+            </row>
+            <row>
+              <text class="label" value="&userDictionary.label;"/>
+              <spring/>
+            </row>
+            <row>
+              <button class="dialog" id="AddToDictionary" oncommand="AddToDictionary()" value="&addToUserDictionaryButton.label;"/>
+              <button class="dialog" id="EditDictionary"  oncommand="EditDictionary()" value="&editUserDictionaryButton.label;"/>
+            </row>
+          </rows> 
+        </grid>
+      </row>
+      <row>
+        <text class="label" value ="&languagePopup.label;"/>
+        <spring/>
+      </row>
+      <row>
+        <menulist id="LanguageMenulist" oncommand="SelectLanguage()" flex="1"/>
+          <!-- contents are appended by JS -->
+        <box flex="1">
+          <button class="dialog" id="Recheck" flex="1" value="&recheckButton.label;" oncommand="Recheck()"/>
+          <button class="dialog" id="Close" flex="1" value="&closeButton.label;" oncommand="Close()"/>
+        </box>
+      </row>
+    </rows>
+  </grid>
 </window>

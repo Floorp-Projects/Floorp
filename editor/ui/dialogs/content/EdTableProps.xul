@@ -38,9 +38,9 @@
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdTableProps.js"/>
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdTableProps.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>

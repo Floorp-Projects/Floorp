@@ -37,8 +37,4 @@
 <!ENTITY editUserDictionaryButton.label "Edit">
 <!ENTITY recheckButton.label "Recheck">
 <!ENTITY closeButton.label "Close">
-
 <!ENTITY languagePopup.label "Language:">
-<!ENTITY englishLanguagePopup.value "English">
-<!ENTITY spanishLanguagePopup.value "Spanish">
-<!ENTITY frenchLanguagePopup.value "French">
