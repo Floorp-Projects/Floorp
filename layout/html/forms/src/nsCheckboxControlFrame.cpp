@@ -73,6 +73,11 @@ public:
 
   NS_IMETHOD GetChecked(PRBool* aResult);
 
+  //
+  // XXX: The following methods are TEMPORARY. They are being used to get printing working
+  // under windows. Later it may be used to GFX-render the controls to the display. 
+  // Expect this code to repackaged and moved to a new location in the future.
+
   virtual void GetCurrentCheckState(PRBool* aState);
 
   virtual void PaintFixedSizeCheckMark(nsIRenderingContext& aRenderingContext, 
@@ -88,6 +93,7 @@ public:
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect);
+  //XXX: End of the temporary methods
   
 protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
