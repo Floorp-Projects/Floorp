@@ -53,7 +53,9 @@ function getControls()
 
 function onLoad()
 {
-  if (server.serverType != "imap")
+  if (server.serverType == "imap")
+    document.getElementById("tabbox").selectedTab = document.getElementById("imapTab");
+  else
   {
     document.getElementById("imapTab").hidden = true;
     document.getElementById("imapTabPanel").hidden = true;
