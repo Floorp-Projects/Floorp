@@ -1295,6 +1295,7 @@ nsresult nsMsgDBFolder::StartNewOfflineMessage()
 {
   nsresult rv = GetOfflineStoreOutputStream(getter_AddRefs(m_tempMessageStream));
   WriteStartOfNewLocalMessage();
+  m_numOfflineMsgLines = 0;
   return rv;
 }
 
@@ -1317,6 +1318,7 @@ nsresult nsMsgDBFolder::EndNewOfflineMessage()
     randomStore->Tell(&curStorePos);
     m_offlineHeader->GetMessageOffset(&messageOffset);
     m_offlineHeader->SetOfflineMessageSize(curStorePos - messageOffset);
+    m_offlineHeader->SetLineCount(m_numOfflineMsgLines);
   }
   m_offlineHeader = nsnull;
   return NS_OK;

@@ -36,29 +36,28 @@
 class nsMsgSearchScopeTerm : public nsIMsgSearchScopeTerm
 {
 public:
-	nsMsgSearchScopeTerm (nsIMsgSearchSession *, nsMsgSearchScopeValue, nsIMsgFolder *);
-	nsMsgSearchScopeTerm ();
-	virtual ~nsMsgSearchScopeTerm ();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIMSGSEARCHSCOPETERM
+  nsMsgSearchScopeTerm (nsIMsgSearchSession *, nsMsgSearchScopeValue, nsIMsgFolder *);
+  nsMsgSearchScopeTerm ();
+  virtual ~nsMsgSearchScopeTerm ();
+  
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGSEARCHSCOPETERM
     
-	PRBool IsOfflineNews();
-	PRBool IsOfflineMail ();
-	PRBool IsOfflineIMAPMail();  // added by mscott 
-	nsresult TimeSlice (PRBool *aDone);
-
-	nsresult InitializeAdapter (nsISupportsArray *termList);
-
-	char *GetStatusBarName ();
-
-	nsMsgSearchScopeValue m_attribute;
-	char *m_name;
-	nsCOMPtr <nsIMsgFolder> m_folder;
-	nsCOMPtr <nsIMsgSearchAdapter> m_adapter;
+  PRBool IsOfflineNews();
+  PRBool IsOfflineMail ();
+  nsresult TimeSlice (PRBool *aDone);
+  
+  nsresult InitializeAdapter (nsISupportsArray *termList);
+  
+  char *GetStatusBarName ();
+  
+  nsMsgSearchScopeValue m_attribute;
+  char *m_name;
+  nsCOMPtr <nsIMsgFolder> m_folder;
+  nsCOMPtr <nsIMsgSearchAdapter> m_adapter;
   nsCOMPtr <nsIMsgSearchSession> m_searchSession;
-	PRBool m_searchServer;
-
+  PRBool m_searchServer;
+  
 };
 
 #endif

@@ -3293,7 +3293,20 @@ nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey u
     GetMessageHeader(uidOfMessage, getter_AddRefs(m_offlineHeader));
     rv = StartNewOfflineMessage();
   }
-
+  // adoptedMessageLine is actually a string with a lot of message lines, separated by native line terminators
+  // we need to count the number of MSG_LINEBREAK's to determine how much to increment m_numOfflineMsgLines by.
+  if (m_downloadMessageForOfflineUse)
+  {
+    const char *nextLine = adoptedMessageLine;
+    do
+    {
+      m_numOfflineMsgLines++;
+      nextLine = PL_strstr(nextLine, MSG_LINEBREAK);
+      if (nextLine)
+        nextLine += MSG_LINEBREAK_LEN;
+    }
+    while (nextLine && *nextLine);
+  }
   if (m_tempMessageStream)
   {
      rv = m_tempMessageStream->Write(adoptedMessageLine, 
@@ -4462,7 +4475,12 @@ nsImapMailFolder::SetUrlState(nsIImapProtocol* aProtocol,
                               nsresult statusCode)
 {
   if (!isRunning)
+  {
     ProgressStatus(aProtocol, IMAP_DONE, nsnull);
+    m_urlRunning = PR_FALSE;
+    m_downloadingFolderForOfflineUse = PR_FALSE;
+    SetNotifyDownloadedLines(PR_FALSE);
+  }
 
     if (aUrl)
         return aUrl->SetUrlState(isRunning, statusCode);

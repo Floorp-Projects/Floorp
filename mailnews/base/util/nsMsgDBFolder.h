@@ -45,43 +45,43 @@ class NS_MSG_BASE nsMsgDBFolder:  public nsMsgFolder,
                                         public nsIUrlListener
 {
 public: 
-	nsMsgDBFolder(void);
-	virtual ~nsMsgDBFolder(void);
+  nsMsgDBFolder(void);
+  virtual ~nsMsgDBFolder(void);
   NS_DECL_NSIDBCHANGELISTENER
   
-	NS_IMETHOD StartFolderLoading(void);
-	NS_IMETHOD EndFolderLoading(void);
-	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
-	NS_IMETHOD SetCharset(const PRUnichar * aCharset);
-	NS_IMETHOD GetCharsetOverride(PRBool *aCharsetOverride);
-	NS_IMETHOD SetCharsetOverride(PRBool aCharsetOverride);
-	NS_IMETHOD GetFirstNewMessage(nsIMsgDBHdr **firstNewMessage);
-	NS_IMETHOD ClearNewMessages();
+  NS_IMETHOD StartFolderLoading(void);
+  NS_IMETHOD EndFolderLoading(void);
+  NS_IMETHOD GetCharset(PRUnichar * *aCharset);
+  NS_IMETHOD SetCharset(const PRUnichar * aCharset);
+  NS_IMETHOD GetCharsetOverride(PRBool *aCharsetOverride);
+  NS_IMETHOD SetCharsetOverride(PRBool aCharsetOverride);
+  NS_IMETHOD GetFirstNewMessage(nsIMsgDBHdr **firstNewMessage);
+  NS_IMETHOD ClearNewMessages();
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD GetExpungedBytes(PRUint32 *count);
 
   NS_IMETHOD GetMsgDatabase(nsIMsgWindow *aMsgWindow,
                             nsIMsgDatabase** aMsgDatabase);
 
-	NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS_INHERITED
 
-	NS_DECL_NSIURLLISTENER
+  NS_DECL_NSIURLLISTENER
 
-	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache, PRBool deep);
-	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
-	NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
-	NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
+  NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache, PRBool deep);
+  NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
+  NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
+  NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
 
   NS_IMETHOD AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDispositionState aDispositionFlag);
-	NS_IMETHOD MarkAllMessagesRead(void);
+  NS_IMETHOD MarkAllMessagesRead(void);
   NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
   NS_IMETHOD SetFlag(PRUint32 flag);
 
 
-	NS_IMETHOD Shutdown(PRBool shutdownChildren);
+  NS_IMETHOD Shutdown(PRBool shutdownChildren);
   NS_IMETHOD ForceDBClosed();
-	NS_IMETHOD GetHasNewMessages(PRBool *hasNewMessages);
-	NS_IMETHOD SetHasNewMessages(PRBool hasNewMessages);
+  NS_IMETHOD GetHasNewMessages(PRBool *hasNewMessages);
+  NS_IMETHOD SetHasNewMessages(PRBool hasNewMessages);
   NS_IMETHOD GetGettingNewMessages(PRBool *gettingNewMessages);
   NS_IMETHOD SetGettingNewMessages(PRBool gettingNewMessages);
 
@@ -96,17 +96,17 @@ public:
   NS_IMETHOD SetDownloadSettings(nsIMsgDownloadSettings *settings);
 
 protected:
-	virtual nsresult ReadDBFolderInfo(PRBool force);
+  virtual nsresult ReadDBFolderInfo(PRBool force);
   virtual nsresult FlushToFolderCache();
-	virtual nsresult GetDatabase(nsIMsgWindow *aMsgWindow) = 0;
-	virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
-	nsresult CheckWithNewMessagesStatus(PRBool messageAdded);
-	nsresult OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
-                        nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);
-	nsresult CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &baseDir, char **resultName);
+  virtual nsresult GetDatabase(nsIMsgWindow *aMsgWindow) = 0;
+  virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
+  nsresult CheckWithNewMessagesStatus(PRBool messageAdded);
+  nsresult OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
+                  nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);
+  nsresult CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &baseDir, char **resultName);
 
-	nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
-	nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
+  nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
+  nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
   nsresult NotifyStoreClosedAllHeaders();
 
   virtual nsresult GetOfflineStoreInputStream(nsIInputStream **inputStream);
@@ -120,16 +120,17 @@ protected:
   nsresult MsgFitsDownloadCriteria(nsMsgKey msgKey, PRBool *result);
 
 protected:
-	nsCOMPtr<nsIMsgDatabase> mDatabase;
-	nsString mCharset;
-	PRBool mCharsetOverride;
-	PRBool mAddListener;
-	PRBool mNewMessages;
+  nsCOMPtr<nsIMsgDatabase> mDatabase;
+  nsString mCharset;
+  PRBool mCharsetOverride;
+  PRBool mAddListener;
+  PRBool mNewMessages;
   PRBool mGettingNewMessages;
 
   nsCOMPtr <nsIMsgDBHdr> m_offlineHeader;
+  PRInt32 m_numOfflineMsgLines;
 	// this is currently used when we do a save as of an imap or news message..
-	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
+  nsCOMPtr<nsIOutputStream> m_tempMessageStream;
 
   nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
   nsCOMPtr <nsIMsgDownloadSettings> m_downloadSettings;

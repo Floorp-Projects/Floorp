@@ -578,11 +578,11 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             break;
         case nsMsgSearchAttrib::Body:
 			{
-				nsMsgKey messageKey;
+				nsMsgKey messageOffset;
 				PRUint32 lineCount;
-				msgToMatch->GetMessageKey(&messageKey);
+				msgToMatch->GetMessageOffset(&messageOffset);
 				msgToMatch->GetLineCount(&lineCount);
-	            err = pTerm->MatchBody (scope, messageKey, lineCount, charset, msgToMatch, db, &result);
+	            err = pTerm->MatchBody (scope, messageOffset, lineCount, charset, msgToMatch, db, &result);
 			}
             break;
         case nsMsgSearchAttrib::Date:
