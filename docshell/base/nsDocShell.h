@@ -56,12 +56,41 @@
 
 // Interfaces Needed
 #include "nsIDocumentCharsetInfo.h"
+#include "nsIRefreshURI.h"
 #include "nsISupportsArray.h"
 #include "nsISHistory.h"
+#include "nsIStringBundle.h"
+#include "nsITimerCallback.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 
+//*****************************************************************************
+//***    nsRefreshTimer
+//*****************************************************************************
+
+class nsRefreshTimer : public nsITimerCallback
+{
+public:
+   nsRefreshTimer();
+
+   NS_DECL_ISUPPORTS
+     
+   // nsITimerCallback interface
+   NS_IMETHOD_(void) Notify(nsITimer *timer);
+
+   nsCOMPtr<nsIDocShell>   mDocShell;
+   nsCOMPtr<nsIURI>        mURI;
+   PRBool                  mRepeat;
+   PRInt32                 mDelay;
+
+protected:
+   virtual ~nsRefreshTimer();
+};
+
+//*****************************************************************************
+//***    nsDocShellInitInfo
+//*****************************************************************************
 
 class nsDocShellInitInfo
 {
@@ -73,6 +102,10 @@ public:
    PRInt32        cy;
 };
 
+//*****************************************************************************
+//***    nsDocShell
+//*****************************************************************************
+
 class nsDocShell : public nsIDocShell,
                    public nsIDocShellTreeItem, 
                    public nsIDocShellTreeNode,
@@ -83,7 +116,8 @@ class nsDocShell : public nsIDocShell,
                    public nsITextScroll, 
                    public nsIContentViewerContainer,
                    public nsIInterfaceRequestor,
-                   public nsIScriptGlobalObjectOwner
+                   public nsIScriptGlobalObjectOwner,
+                   public nsIRefreshURI
 {
 friend class nsDSURIContentListener;
 friend class nsDSWebProgressListener;
@@ -101,6 +135,10 @@ public:
    NS_DECL_NSITEXTSCROLL
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
+
+   // nsIRefreshURI
+   NS_IMETHOD RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepeat);
+   NS_IMETHOD CancelRefreshURITimers();
 
    // XXX: move to a macro
    // nsIContentViewerContainer
@@ -185,6 +223,7 @@ protected:
 
    // Helper Routines
    nsDocShellInitInfo* InitInfo();
+   NS_IMETHOD GetStringBundle(nsIStringBundle** aStringBundle);
    NS_IMETHOD GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
       PRInt32* aOffset);
    NS_IMETHOD GetRootScrollableView(nsIScrollableView** aOutScrollView);
@@ -208,6 +247,7 @@ protected:
    nsString                   mName;
    nsString                   mTitle;
    nsVoidArray                mChildren;
+   nsVoidArray                mRefreshURIList;
    nsDSURIContentListener*    mContentListener;
    nsDSWebProgressListener*   mWebProgressListener;
    nsDocShellInitInfo*        mInitInfo;

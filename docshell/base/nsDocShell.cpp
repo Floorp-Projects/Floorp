@@ -56,7 +56,9 @@
 #include "nsIGlobalHistory.h"
 #include "nsIHTTPChannel.h"
 #include "nsILayoutHistoryState.h"
+#include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
+#include "nsITimer.h"
 
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
@@ -147,6 +149,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY(nsITextScroll)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 ///*****************************************************************************
@@ -1024,9 +1027,39 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
 {
    nsCOMPtr<nsIURI> uri;
 
-   CreateFixupURI(aURI, getter_AddRefs(uri));
+   nsresult rv = CreateFixupURI(aURI, getter_AddRefs(uri));
 
-   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+   if(NS_ERROR_UNKNOWN_PROTOCOL == rv)
+      {
+      // we weren't able to find a protocol handler
+      nsCOMPtr<nsIPrompt> prompter;
+      GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
+      
+      nsCOMPtr<nsIStringBundle> stringBundle;
+      GetStringBundle(getter_AddRefs(stringBundle));
+
+      NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
+
+      nsXPIDLString messageStr;
+      nsAutoString name("protocolNotFound");
+      NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(name.GetUnicode(), 
+         getter_Copies(messageStr)), NS_ERROR_FAILURE);
+
+      nsAutoString uriString(aURI);
+      PRInt32 colon = uriString.FindChar(':');
+      // extract the scheme
+      nsAutoString scheme;
+      uriString.Left(scheme, colon);
+
+      nsAutoString dnsMsg(scheme);
+      dnsMsg.Append(' ');
+      dnsMsg.Append(messageStr);
+
+      prompter->Alert(dnsMsg.GetUnicode());
+      } // end unknown protocol
+
+   if(!uri)
+      return NS_ERROR_FAILURE;
 
    NS_ENSURE_SUCCESS(LoadURI(uri, nsnull), NS_ERROR_FAILURE);
    return NS_OK;
@@ -1048,6 +1081,9 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
 
 NS_IMETHODIMP nsDocShell::Stop()
 {
+   // Cancel any timers that were set for this loader.
+   CancelRefreshURITimers();
+
    if(mContentViewer)
       mContentViewer->Stop();
 
@@ -1519,10 +1555,8 @@ NS_IMETHODIMP nsDocShell::SetFocus()
 {
    nsCOMPtr<nsIWidget> mainWidget;
    GetMainWidget(getter_AddRefs(mainWidget));
-
    if(mainWidget)
       mainWidget->SetFocus();
-
    return NS_OK;
 }
 
@@ -2008,6 +2042,52 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString,
 }
 
 //*****************************************************************************
+// nsDocShell::nsIRefreshURI
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepeat)
+{
+   NS_ENSURE_ARG(aURI);
+
+   nsRefreshTimer* refreshTimer = new nsRefreshTimer();
+   NS_ENSURE_TRUE(refreshTimer, NS_ERROR_OUT_OF_MEMORY);
+
+   nsCOMPtr<nsISupports> dataRef = refreshTimer; // Get the ref count to 1
+
+   refreshTimer->mDocShell = this;
+   refreshTimer->mURI = aURI;
+   refreshTimer->mDelay = aDelay;
+   refreshTimer->mRepeat = aRepeat;
+
+   nsITimer* timer = nsnull;
+   NS_NewTimer(&timer);
+   NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
+
+   mRefreshURIList.AppendElement(timer);
+   timer->Init(refreshTimer, aDelay);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::CancelRefreshURITimers()
+{
+   PRInt32 n = mRefreshURIList.Count();
+   nsCOMPtr<nsITimer> timer;
+
+   while(n)
+      {
+      timer = dont_AddRef((nsITimer*)mRefreshURIList.ElementAt(0));
+      mRefreshURIList.RemoveElementAt(0);
+
+      if(timer)
+         timer->Cancel();
+      n--;
+      }
+
+   return NS_OK;
+}
+
+//*****************************************************************************
 // nsDocShell::nsIContentViewerContainer
 //*****************************************************************************   
 
@@ -2258,6 +2338,8 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    
    NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
 
+   mLoadType = aLoadType;
+
    nsURILoadCommand  loadCmd = nsIURILoader::viewNormal;
    if(loadLink == aLoadType)
       loadCmd = nsIURILoader::viewUserClick;
@@ -2274,13 +2356,13 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
    nsAutoString uriString(aStringURI);
    uriString.Trim(" ");  // Cleanup the empty spaces that might be on each end.
 
-   // Check for if it is a file URL
-   FileURIFixup(uriString.GetUnicode(), aURI);
+   // Just try to create an URL out of it
+   NS_NewURI(aURI, uriString.GetUnicode(), nsnull);
    if(*aURI)
       return NS_OK;
 
-   // Just try to create an URL out of it
-   NS_NewURI(aURI, uriString.GetUnicode(), nsnull);
+   // Check for if it is a file URL
+   FileURIFixup(uriString.GetUnicode(), aURI);
    if(*aURI)
       return NS_OK;
 
@@ -2887,6 +2969,26 @@ nsDocShellInitInfo* nsDocShell::InitInfo()
    return mInitInfo = new nsDocShellInitInfo();
 }
 
+#define DIALOG_STRING_URI "chrome://global/locale/appstrings.properties"
+
+NS_IMETHODIMP nsDocShell::GetStringBundle(nsIStringBundle** aStringBundle)
+{
+   nsCOMPtr<nsILocaleService> localeService(do_GetService(NS_LOCALESERVICE_PROGID));
+   NS_ENSURE_TRUE(localeService, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsILocale> locale;
+   localeService->GetSystemLocale(getter_AddRefs(locale));
+   NS_ENSURE_TRUE(locale, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(NS_STRINGBUNDLE_PROGID));
+   NS_ENSURE_TRUE(stringBundleService, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(stringBundleService->CreateBundle(DIALOG_STRING_URI, locale, 
+      getter_AddRefs(aStringBundle)), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
    PRInt32* aOffset)
 {
@@ -3178,3 +3280,43 @@ PRBool nsDocShell::IsFrame()
    return PR_FALSE;
 }
 
+//*****************************************************************************
+//***    nsRefreshTimer: Object Management
+//*****************************************************************************
+
+nsRefreshTimer::nsRefreshTimer() : mRepeat(PR_FALSE), mDelay(0)
+{
+  NS_INIT_REFCNT();
+}
+
+nsRefreshTimer::~nsRefreshTimer()
+{
+}
+
+//*****************************************************************************
+// nsRefreshTimer::nsISupports
+//*****************************************************************************   
+
+NS_IMPL_THREADSAFE_ADDREF(nsRefreshTimer)
+NS_IMPL_THREADSAFE_RELEASE(nsRefreshTimer)
+
+NS_INTERFACE_MAP_BEGIN(nsRefreshTimer)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
+   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+NS_INTERFACE_MAP_END_THREADSAFE
+
+///*****************************************************************************
+// nsRefreshTimer::nsITimerCallback
+//*****************************************************************************   
+
+NS_IMETHODIMP_(void) nsRefreshTimer::Notify(nsITimer *aTimer)
+{
+   NS_ASSERTION(mDocShell, "DocShell is somehow null");
+
+   if(mDocShell)
+      mDocShell->LoadURI(mURI, nsnull);
+  /*
+   * LoadURL(...) will cancel all refresh timers... This causes the Timer and
+   * its refreshData instance to be released...
+   */
+}
