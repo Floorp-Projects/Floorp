@@ -57,6 +57,13 @@ public:
 #endif
 
 private:
+    friend nsIInterfaceInfo*
+        nsXPTParamInfo::GetInterface(nsIInterfaceInfo *info) const;
+    friend const nsIID*
+        nsXPTParamInfo::GetInterfaceIID(nsIInterfaceInfo *info) const;
+
+    XPTInterfaceDirectoryEntry *getIDE() { return mEntry; };
+
     XPTInterfaceDirectoryEntry* mEntry;
     nsInterfaceInfo* mParent;
 

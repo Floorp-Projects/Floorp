@@ -33,10 +33,12 @@
 // Placeholder - this implementation just returns NULL.
 
 nsIInterfaceInfo*
-nsXPTParamInfo::GetInterface(XPTInterfaceDirectoryEntry *entry) const
+nsXPTParamInfo::GetInterface(nsIInterfaceInfo *info) const
 {
     NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,
                     "not an interface");
+
+    XPTInterfaceDirectoryEntry *entry = ((nsInterfaceInfo *)info)->getIDE();
 
     nsIInterfaceInfoManager* mgr;
     if(!(mgr = nsInterfaceInfoManager::GetInterfaceInfoManager()))
@@ -52,20 +54,22 @@ nsXPTParamInfo::GetInterface(XPTInterfaceDirectoryEntry *entry) const
     char *interface_name;
     interface_name = which_header->interface_directory[type.type.interface].name;
 
-    nsIInterfaceInfo *info;
-    nsresult nsr = mymgr->GetInfoForName(interface_name, &info);
+    nsIInterfaceInfo *ii;
+    nsresult nsr = mymgr->GetInfoForName(interface_name, &ii);
     if (NS_IS_ERROR(nsr)) {
         NS_RELEASE(mgr);
         return NULL;
     }
-    return info;
+    return ii;
 }
 
 const nsIID*
-nsXPTParamInfo::GetInterfaceIID(XPTInterfaceDirectoryEntry *entry) const
+nsXPTParamInfo::GetInterfaceIID(nsIInterfaceInfo *info) const
 {
     NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,
                     "not an interface");
+
+    XPTInterfaceDirectoryEntry *entry = ((nsInterfaceInfo *)info)->getIDE();
 
     nsIInterfaceInfoManager* mgr;
     if(!(mgr = nsInterfaceInfoManager::GetInterfaceInfoManager()))
