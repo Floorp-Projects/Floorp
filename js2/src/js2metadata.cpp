@@ -1836,7 +1836,7 @@ doBinary:
         case ExprNode::Void: 
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *rVal = SetupExprNode(env, phase, u->op, exprType);
+                SetupExprNode(env, phase, u->op, exprType);
                 bCon->emitOp(eVoid, p->pos);
             }
             break;
@@ -2403,13 +2403,18 @@ doUnary:
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
     }
 
-    // Attempt the write in the top frame in the current environment, the property must exist
-    // as this is the initialization of a previously defined member.
-    void Environment::lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase)
+    // Initialize a variable - it might not be in the immediate frame, because of hoisting
+    // but it had darn well better be in the environment somewhere.
+    void Environment::lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue)
     {
         LookupKind lookup(true, findThis(false));
-        if (!meta->writeProperty(*getBegin(), multiname, &lookup, false, newValue, phase, true))
-            ASSERT(false);
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
+            if (meta->writeProperty(*fi, multiname, &lookup, false, newValue, RunPhase, true))
+                return;
+            fi++;
+        }
+        ASSERT(false);
     }
 
     // Delete the named property in the current environment, return true if the property
@@ -3577,7 +3582,6 @@ readClassProperty:
     // the property or not.
     bool JS2Metadata::writeProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase)
     {
-        JS2Class *c = NULL;
         if (JS2VAL_IS_PRIMITIVE(containerVal))
             return false;
         JS2Object *container = JS2VAL_TO_OBJECT(containerVal);

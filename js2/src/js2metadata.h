@@ -943,7 +943,7 @@ public:
     js2val findThis(bool allowPrototypeThis);
     js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
-    void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
+    void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
     bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
 
     void instantiateFrame(Frame *pluralFrame, Frame *singularFrame);

@@ -121,7 +121,7 @@
             a = pop();
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env->lexicalInit(meta, mn, a, true, phase);
+            meta->env->lexicalInit(meta, mn, a);
 	}
         break;
 
