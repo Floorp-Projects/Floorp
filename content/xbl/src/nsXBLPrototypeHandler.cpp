@@ -80,6 +80,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsXBLEventHandler.h"
+#include "nsHTMLAtoms.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -298,14 +299,36 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       // certain times.
       nsCOMPtr<nsIDOMElement> focusedElement;
       focusController->GetFocusedElement(getter_AddRefs(focusedElement));
-      
-      if (focusedElement) {
-        nsAutoString tagName;
-        focusedElement->GetTagName(tagName);
-        
-        // if the focused element is a link then we do want space to
-        // scroll down.
-        if (tagName != NS_LITERAL_STRING("A"))
+      PRBool isLink = PR_FALSE;
+      nsCOMPtr<nsIContent> focusedContent = do_QueryInterface(focusedElement);
+      nsIContent *content = focusedContent;
+
+      // if the focused element is a link then we do want space to
+      // scroll down. focused element may be an element in a link,
+      // we need to check the parent node too.
+      if (focusedContent) {
+        while (content) {
+          if (content->Tag() == nsHTMLAtoms::a &&
+              content->IsContentOfType(nsIContent::eHTML)) {
+            isLink = PR_TRUE;
+            break;
+          }
+
+          if (content->HasAttr(kNameSpaceID_XLink, nsHTMLAtoms::type)) {
+            nsAutoString type;
+            content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, type);
+
+            isLink = type.Equals(NS_LITERAL_STRING("simple"));
+
+            if (isLink) {
+              break;
+            }
+          }
+
+          content = content->GetParent();
+        }
+
+        if (!isLink)
           return NS_OK;
       }
     }
