@@ -918,7 +918,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mType = nodeType;
   mStack[mStackPos].mContent = content;
   mStack[mStackPos].mFlags = 0;
-  content->SetDocument(mSink->mDocument);
+  content->SetDocument(mSink->mDocument, PR_FALSE);
 
   nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
   rv = AddAttributes(aNode, content, sco);
@@ -1006,7 +1006,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       }
 
       // Set the content's document
-      content->SetDocument(mSink->mDocument);
+      content->SetDocument(mSink->mDocument, PR_FALSE);
 
       nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
       rv = AddAttributes(aNode, content, sco);
@@ -1149,7 +1149,7 @@ SinkContext::FlushText(PRBool* aDidFlush)
     rv = NS_NewTextNode(&content);
     if (NS_OK == rv) {
       // Set the content's document
-      content->SetDocument(mSink->mDocument);
+      content->SetDocument(mSink->mDocument, PR_FALSE);
 
       // Set the text in the text node
       static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
@@ -1280,7 +1280,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   if (NS_OK != rv) {
     return rv;
   }
-  mRoot->SetDocument(mDocument);
+  mRoot->SetDocument(mDocument, PR_FALSE);
   mDocument->SetRootContent(mRoot);
 
   // Make head part

@@ -29,6 +29,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsDOMEvent.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsIScriptContextOwner.h"
 #include "prprf.h"
 
 // XXX share all id's in this dir
@@ -322,6 +323,11 @@ nsGenericDOMDataNode::GetScriptObject(nsIScriptContext* aContext,
     res = factory->NewScriptCharacterData(nsIDOMNode::TEXT_NODE, 
                                           aContext, mContent,
                                           mParent, (void**)&mScriptObject);
+    if (nsnull != mDocument) {
+      aContext->AddNamedReference((void *)&mScriptObject,
+                                  mScriptObject,
+                                  "Text");
+    }
     NS_RELEASE(factory);
   }
   *aScriptObject = mScriptObject;
@@ -514,10 +520,46 @@ nsGenericDOMDataNode::GetDocument(nsIDocument*& aResult) const
   return NS_OK;
 }
 
+
 nsresult
-nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument)
+nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
+  // If we were part of a document, make sure we get rid of the
+  // script context reference to our script object so that our
+  // script object can be freed (or collected).
+  if ((nsnull != mDocument) && (nsnull != mScriptObject)) {
+    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
+    if (nsnull != owner) {
+      nsIScriptContext *context;
+      if (NS_OK == owner->GetScriptContext(&context)) {
+        context->RemoveReference((void *)&mScriptObject,
+                                 mScriptObject);
+        NS_RELEASE(context);
+      }
+      NS_RELEASE(owner);
+    }
+  }
+
   mDocument = aDocument;
+
+  // If we already have a script object and now we're being added
+  // to a document, make sure that the script context adds a 
+  // reference to our script object. This will ensure that it
+  // won't be freed (or collected) out from under us.
+  if ((nsnull != mDocument) && (nsnull != mScriptObject)) {
+    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
+    if (nsnull != owner) {
+      nsIScriptContext *context;
+      if (NS_OK == owner->GetScriptContext(&context)) {
+        context->AddNamedReference((void *)&mScriptObject,
+                                   mScriptObject,
+                                   "Text");
+        NS_RELEASE(context);
+      }
+      NS_RELEASE(owner);
+    }
+  }
+
   return NS_OK;
 }
 

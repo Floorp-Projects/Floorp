@@ -48,7 +48,7 @@ class nsIContent : public nsISupports {
 public:
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const = 0;
 
-  NS_IMETHOD SetDocument(nsIDocument* aDocument) = 0;
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep) = 0;
 
   NS_IMETHOD GetParent(nsIContent*& aResult) const = 0;
 
