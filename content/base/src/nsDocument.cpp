@@ -2109,11 +2109,12 @@ nsDocument::CreateElement(const nsAString& aTagName,
   nsresult rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ConvertUTF16toUTF8 tmp(aTagName);
-  if (!IsCaseSensitive()) {
-    ToLowerCase(tmp);
-  }
-  nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+  NS_ASSERTION(IsCaseSensitive(),
+               "nsDocument::CreateElement() called on document that is not "
+               "case sensitive. Fix caller, or fix "
+               "nsDocument::CreateElement()!");
+
+  nsCOMPtr<nsIAtom> name = do_GetAtom(aTagName);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(name, nsnull, GetDefaultNamespaceID(),
