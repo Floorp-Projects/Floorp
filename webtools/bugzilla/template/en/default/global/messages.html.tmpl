@@ -25,6 +25,8 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
+[% PROCESS "global/field-descs.none.tmpl" %]
+
 [% message_tag = message %]
 
 [% message = BLOCK %]
@@ -140,6 +142,11 @@
     The product <em>[% product FILTER html %]</em> does not exist
     or you don't have access to it. The following is a list of the
     products you can choose from.
+
+  [% ELSIF message_tag == "remaining_time_zeroed" %]
+    The [% field_descs.remaining_time FILTER html %] field has been 
+    set to zero automatically as part of marking this [% terms.bug %]
+    as either RESOLVED or CLOSED.
 
   [% ELSIF message_tag == "series_created" %]
     [% title = "Series Created" %]

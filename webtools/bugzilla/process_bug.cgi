@@ -23,6 +23,7 @@
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Myk Melez <myk@mozilla.org>
+#                 Jeff Hedlund <jeff.hedlund@matrixsi.com>
 #                 Frédéric Buclin <LpSolit@gmail.com>
 
 use strict;
@@ -565,6 +566,21 @@ $::query = "update bugs\nset";
 $::comma = "";
 umask(0);
 
+sub _remove_remaining_time {
+    if (UserInGroup(Param('timetrackinggroup'))) {
+        if ( defined $::FORM{'remaining_time'} 
+             && $::FORM{'remaining_time'} > 0 )
+        {
+            $::FORM{'remaining_time'} = 0;
+            $vars->{'message'} = "remaining_time_zeroed";
+        }
+    }
+    else {
+        DoComma();
+        $::query .= "remaining_time = 0";
+    }
+}
+
 sub DoComma {
     $::query .= "$::comma\n    ";
     $::comma = ",";
@@ -770,30 +786,6 @@ if (Param("usebugaliases") && defined($::FORM{'alias'})) {
     }
 }
 
-# jeff.hedlund@matrixsi.com time tracking data processing:
-if (UserInGroup(Param('timetrackinggroup'))) {
-    foreach my $field ("estimated_time", "remaining_time") {
-        if (defined $::FORM{$field}) {
-            my $er_time = trim($::FORM{$field});
-            if ($er_time ne $::FORM{'dontchange'}) {
-                DoComma();
-                $::query .= "$field = " . SqlQuote($er_time);
-            }
-        }
-    }
-
-    if (defined $::FORM{'deadline'}) {
-        DoComma();
-        $::query .= "deadline = ";
-        if ($::FORM{'deadline'}) {
-            Bugzilla::Util::ValidateDate($::FORM{'deadline'}, 'YYYY-MM-DD');
-            $::query .= SqlQuote($::FORM{'deadline'});
-        } else {
-            $::query .= "NULL" ;
-        }
-    }
-}
-
 # If the user is submitting changes from show_bug.cgi for a single bug,
 # and that bug is restricted to a group, process the checkboxes that
 # allowed the user to set whether or not the reporter
@@ -918,12 +910,6 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^resolve$/ && CheckonComment( "resolve" ) && do {
-        if (UserInGroup(Param('timetrackinggroup'))) {
-            if (defined $::FORM{'remaining_time'} &&
-                $::FORM{'remaining_time'} > 0) {
-                ThrowUserError("resolving_remaining_time");
-            }
-        }
         # Check here, because its the only place we require the resolution
         CheckFormField(\%::FORM, 'resolution', \@::settable_resolution);
 
@@ -938,6 +924,11 @@ SWITCH: for ($::FORM{'knob'}) {
                                  dependency_count => scalar @dependencies });
             }
         }
+
+        # RESOLVED bugs should have no time remaining;
+        # more time can be added for the VERIFY step, if needed.
+        _remove_remaining_time();
+
         ChangeStatus('RESOLVED');
         ChangeResolution($::FORM{'resolution'});
         last SWITCH;
@@ -992,6 +983,9 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^close$/ && CheckonComment( "close" ) && do {
+        # CLOSED bugs should have no time remaining.
+        _remove_remaining_time();
+
         ChangeStatus('CLOSED');
         last SWITCH;
     };
@@ -1008,6 +1002,10 @@ SWITCH: for ($::FORM{'knob'}) {
         if (!defined($::FORM{'id'}) || $duplicate == $::FORM{'id'}) {
             ThrowUserError("dupe_of_self_disallowed");
         }
+
+        # DUPLICATE bugs should have no time remaining.
+        _remove_remaining_time();
+
         ChangeStatus('RESOLVED');
         ChangeResolution('DUPLICATE');
         $::FORM{'comment'} .= "\n\n*** This bug has been marked " .
@@ -1056,6 +1054,30 @@ if ($::comma eq ""
     ) {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
         ThrowUserError("bugs_not_changed");
+    }
+}
+
+# Process data for Time Tracking fields
+if (UserInGroup(Param('timetrackinggroup'))) {
+    foreach my $field ("estimated_time", "remaining_time") {
+        if (defined $::FORM{$field}) {
+            my $er_time = trim($::FORM{$field});
+            if ($er_time ne $::FORM{'dontchange'}) {
+                DoComma();
+                $::query .= "$field = " . SqlQuote($er_time);
+            }
+        }
+    }
+
+    if (defined $::FORM{'deadline'}) {
+        DoComma();
+        $::query .= "deadline = ";
+        if ($::FORM{'deadline'}) {
+            Bugzilla::Util::ValidateDate($::FORM{'deadline'}, 'YYYY-MM-DD');
+            $::query .= SqlQuote($::FORM{'deadline'});
+        } else {
+            $::query .= "NULL" ;
+        }
     }
 }
 

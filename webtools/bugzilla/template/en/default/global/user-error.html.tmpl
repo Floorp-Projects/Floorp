@@ -940,11 +940,6 @@
     [% title = "Summary Needed" %]
     You must enter a summary for this [% terms.bug %].
 
-  [% ELSIF error == "resolving_remaining_time" %]
-    [% title = "Trying to Resolve with Hours Remaining" %]
-    You cannot resolve [% terms.abug %] with hours still remaining.  Set
-    Remaining Hours to zero if you want to resolve the [% terms.bug %].
-
   [% ELSIF error == "sanity_check_access_denied" %]
     [% title = "Access Denied" %]
     You do not have the permissions necessary to run a sanity check.
