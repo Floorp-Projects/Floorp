@@ -519,7 +519,7 @@ protected:
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     nsVoidArray mForwardReferences;
-    PRBool mForwardReferencesResolved;
+    nsForwardReference::State mResolutionPhase;
 
     // The following are pointers into the content model which provide access to
     // the objects triggering either a popup or a tooltip. These are marked as
@@ -651,7 +651,7 @@ protected:
 
         virtual ~BroadcasterHookup();
 
-        virtual Priority GetPriority() { return ePriority_Hookup; }
+        virtual State GetState() { return eHookup; }
         virtual Result Resolve();
     };
 
@@ -676,7 +676,7 @@ protected:
 
         virtual ~OverlayForwardReference();
 
-        virtual Priority GetPriority() { return ePriority_Construction; }
+        virtual State GetState() { return eConstruction; }
         virtual Result Resolve();
     };
 
@@ -687,6 +687,7 @@ protected:
     nsresult
     CheckBroadcasterHookup(nsXULDocument* aDocument,
                            nsIContent* aElement,
+                           PRBool* aNeedsHookup,
                            PRBool* aDidResolve);
 
     static

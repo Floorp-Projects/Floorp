@@ -2699,29 +2699,25 @@ nsXULElement::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElemen
                 listener->SetAttribute(attr->GetNameSpaceID(), attr->GetName(), value, PR_TRUE);
             }
         }
-
-        return NS_OK;
     }
+    else {
+        // Find out if the attribute is even present at all.
+        nsCOMPtr<nsIAtom> kAtom = dont_AddRef(NS_NewAtom(attr));
 
-    // Find out if the attribute is even present at all.
-    nsAutoString attrValue;
-    nsIAtom* kAtom = NS_NewAtom(attr);
-    nsresult result = GetAttribute(kNameSpaceID_None, kAtom, attrValue);
-    PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
-                          result == NS_CONTENT_ATTR_HAS_VALUE);
+        nsAutoString attrValue;
+        nsresult result = GetAttribute(kNameSpaceID_None, kAtom, attrValue);
+        PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
+                              result == NS_CONTENT_ATTR_HAS_VALUE);
 
-    if (attrPresent)
-        {
+        if (attrPresent) {
             // Set the attribute 
             anElement->SetAttribute(attr, attrValue);
         }
-    else
-        {
+        else {
             // Unset the attribute
             anElement->RemoveAttribute(attr);
         }
-
-    NS_RELEASE(kAtom);
+    }
 
     return NS_OK; 
 }

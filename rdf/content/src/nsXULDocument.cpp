@@ -159,10 +159,10 @@ static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 
-const nsForwardReference::Priority nsForwardReference::kPasses[] = {
-    nsForwardReference::ePriority_Construction,
-    nsForwardReference::ePriority_Hookup,
-    nsForwardReference::ePriority_Done
+const nsForwardReference::State nsForwardReference::kPasses[] = {
+    nsForwardReference::State::eConstruction,
+    nsForwardReference::State::eHookup,
+    nsForwardReference::State::eDone
 };
 
 
@@ -217,7 +217,7 @@ nsXULDocument::nsXULDocument(void)
       mCharSetID("UTF-8"),
       mDisplaySelection(PR_FALSE),
       mIsPopup(PR_FALSE),
-      mForwardReferencesResolved(PR_FALSE),
+      mResolutionPhase(nsForwardReference::State::eStart),
       mState(eState_Master)
 {
     NS_INIT_REFCNT();
@@ -1814,7 +1814,7 @@ nsXULDocument::SetForm(nsIDOMHTMLFormElement* aForm)
 NS_IMETHODIMP
 nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 {
-    if (! mForwardReferencesResolved) {
+    if (mResolutionPhase < aRef->GetState()) {
         mForwardReferences.AppendElement(aRef);
     }
     else {
@@ -1829,13 +1829,8 @@ nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 NS_IMETHODIMP
 nsXULDocument::ResolveForwardReferences()
 {
-    if (mForwardReferencesResolved)
+    if (mResolutionPhase == nsForwardReference::State::eDone)
         return NS_OK;
-
-    // So we're monotonic. This prevents a forward reference from
-    // adding _yet another_ forward reference, which could cause the
-    // 'annealing' process to diverge.
-    mForwardReferencesResolved = PR_TRUE;
 
     // Resolve each outstanding 'forward' reference. We iterate
     // through the list of forward references until no more forward
@@ -1843,9 +1838,8 @@ nsXULDocument::ResolveForwardReferences()
     // guaranteed to converge because we've "closed the gate" to new
     // forward references.
 
-    for (const nsForwardReference::Priority* pass = nsForwardReference::kPasses;
-         *pass != nsForwardReference::ePriority_Done;
-         ++pass) {
+    const nsForwardReference::State* pass = nsForwardReference::kPasses;
+    while ((mResolutionPhase = *pass) != nsForwardReference::eDone) {
         PRInt32 previous = 0;
         while (mForwardReferences.Count() && mForwardReferences.Count() != previous) {
             previous = mForwardReferences.Count();
@@ -1853,27 +1847,28 @@ nsXULDocument::ResolveForwardReferences()
             for (PRInt32 i = 0; i < mForwardReferences.Count(); ++i) {
                 nsForwardReference* fwdref = NS_REINTERPRET_CAST(nsForwardReference*, mForwardReferences[i]);
 
-                if (fwdref->GetPriority() != *pass)
-                    continue;
+                if (fwdref->GetState() == *pass) {
+                    nsForwardReference::Result result = fwdref->Resolve();
 
-                nsForwardReference::Result result = fwdref->Resolve();
+                    switch (result) {
+                    case nsForwardReference::eResolve_Succeeded:
+                    case nsForwardReference::eResolve_Error:
+                        mForwardReferences.RemoveElementAt(i);
+                        delete fwdref;
 
-                switch (result) {
-                case nsForwardReference::eResolve_Succeeded:
-                case nsForwardReference::eResolve_Error:
-                    mForwardReferences.RemoveElementAt(i);
-                    delete fwdref;
+                        // fixup because we removed from list
+                        --i;
+                        break;
 
-                    // fixup because we removed from list
-                    --i;
-                    break;
-
-                case nsForwardReference::eResolve_Later:
-                    // do nothing. we'll try again later
-                    ;
+                    case nsForwardReference::eResolve_Later:
+                        // do nothing. we'll try again later
+                        ;
+                    }
                 }
             }
         }
+
+        ++pass;
     }
 
     DestroyForwardReferences();
@@ -2445,13 +2440,13 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
 
     // 3. Check for a broadcaster hookup attribute, in which case
     // we'll hook the node up as a listener on a broadcaster.
-    PRBool resolved;
-    rv = CheckBroadcasterHookup(this, aElement, &resolved);
+    PRBool listener, resolved;
+    rv = CheckBroadcasterHookup(this, aElement, &listener, &resolved);
     if (NS_FAILED(rv)) return rv;
 
     // If it's not there yet, we may be able to defer hookup until
     // later.
-    if (!resolved && !mForwardReferencesResolved) {
+    if (listener && !resolved && (mResolutionPhase != nsForwardReference::State::eDone)) {
         BroadcasterHookup* hookup = new BroadcasterHookup(this, aElement);
         if (! hookup)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -5141,7 +5136,9 @@ nsForwardReference::Result
 nsXULDocument::BroadcasterHookup::Resolve()
 {
     nsresult rv;
-    rv = CheckBroadcasterHookup(mDocument, mObservesElement, &mResolved);
+
+    PRBool listener;
+    rv = CheckBroadcasterHookup(mDocument, mObservesElement, &listener, &mResolved);
     if (NS_FAILED(rv)) return eResolve_Error;
 
     return mResolved ? eResolve_Succeeded : eResolve_Later;
@@ -5196,6 +5193,7 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
 nsresult
 nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
                                       nsIContent* aElement,
+                                      PRBool* aNeedsHookup,
                                       PRBool* aDidResolve)
 {
     // Resolve a broadcaster hookup. Look at the element that we're
@@ -5233,8 +5231,10 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 
         // If we're still parented by an 'overlay' tag, then we haven't
         // made it into the real document yet. Defer hookup.
-        if (parentTag.get() == kOverlayAtom)
+        if (parentTag.get() == kOverlayAtom) {
+            *aNeedsHookup = PR_TRUE;
             return NS_OK;
+        }
 
         listener = do_QueryInterface(parent);
 
@@ -5253,8 +5253,10 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         if (NS_FAILED(rv)) return rv;
 
         // Bail if there's no broadcasterID
-        if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (broadcasterID.Length() == 0))
+        if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (broadcasterID.Length() == 0)) {
+            *aNeedsHookup = PR_FALSE;
             return NS_OK;
+        }
 
         listener = do_QueryInterface(aElement);
 
@@ -5274,12 +5276,16 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
     // If we can't find the broadcaster, then we'll need to defer the
     // hookup. We may need to resolve some of the other overlays
     // first.
-    if (! target)
+    if (! target) {
+        *aNeedsHookup = PR_TRUE;
         return NS_OK;
+    }
 
     nsCOMPtr<nsIDOMXULElement> broadcaster = do_QueryInterface(target);
-    if (! broadcaster)
+    if (! broadcaster) {
+        *aNeedsHookup = PR_FALSE;
         return NS_OK; // not a XUL element, so we can't subscribe
+    }
 
     rv = broadcaster->AddBroadcastListener(attribute, listener);
     if (NS_FAILED(rv)) return rv;
@@ -5310,6 +5316,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
     }
 #endif
 
+    *aNeedsHookup = PR_FALSE;
     *aDidResolve = PR_TRUE;
     return NS_OK;
 }
