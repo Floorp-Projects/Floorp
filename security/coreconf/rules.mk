@@ -310,9 +310,9 @@ endif
 
 
 ifeq ($(OS_TARGET),OS2)
-$(IMPORT_LIBRARY): $(SHARED_LIBRARY)
+$(IMPORT_LIBRARY): $(MAPFILE)
 	rm -f $@
-	$(IMPLIB) $@ $(SHARED_LIBRARY)
+	$(IMPLIB) $@ $(MAPFILE)
 	$(RANLIB) $@
 endif
 

@@ -55,8 +55,6 @@ LIB_PREFIX  = $(NULL)
 # Override suffix in suffix.mk
 LIB_SUFFIX  = lib
 DLL_SUFFIX  = dll
-OBJ_SUFFIX  = .obj
-ASM_SUFFIX  = .asm
 PROG_SUFFIX = .exe
 
 
@@ -69,8 +67,11 @@ AR                      = emxomfar -p256 r $@
 AR_FLAGS                = 
 RANLIB 			= @echo OS2 RANLIB
 BSDECHO 		= @echo OS2 BSDECHO
-IMPLIB    = emximp -o
-FILTER    = emxexp
+IMPLIB			= emximp -o
+FILTER			= emxexp -o
+
+# GCC for OS/2 currently predefines these, but we don't want them
+DEFINES 		+= -Uunix -U__unix -U__unix__
 
 ifndef NO_SHARED_LIB
 WRAP_MALLOC_LIB         = 
@@ -81,8 +82,10 @@ MKSHLIB                 = $(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@
 MKCSHLIB                = $(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@
 MKSHLIB_FORCE_ALL       = 
 MKSHLIB_UNFORCE_ALL     = 
-DSO_LDOPTS              = -Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO
-# DLL_SUFFIX              = .dll
+DSO_LDOPTS              = -Zomf -Zdll -Zmt -Zcrtdll
+ifeq (,$(EMXOMFLD_LINKER))  # using LINK386.EXE
+  DSO_LDOPTS            += -Zlinker /NOO
+endif
 SHLIB_LDSTARTFILE	= 
 SHLIB_LDENDFILE		= 
 ifdef MAPFILE
@@ -123,6 +126,10 @@ LDFLAGS 		= -DEBUG
 endif   # BUILD_OPT
 
 else    # XP_OS2_VACPP
+
+# Override suffix in suffix.mk
+OBJ_SUFFIX  = .obj
+ASM_SUFFIX  = .asm
 
 AS = alp.exe
 ifdef BUILD_OPT
