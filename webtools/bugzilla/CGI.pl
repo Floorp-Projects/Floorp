@@ -967,6 +967,7 @@ sub PuntTryAgain ($) {
     my ($str) = (@_);
     print PerformSubsts(Param("errorhtml"),
                         {errormsg => $str});
+    SendSQL("UNLOCK TABLES");
     PutFooter();
     exit;
 }
