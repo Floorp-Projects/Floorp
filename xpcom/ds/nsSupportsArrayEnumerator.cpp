@@ -88,7 +88,7 @@ nsSupportsArrayEnumerator::CurrentItem(nsISupports **aItem)
   nsresult rv = mArray->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   if (mCursor >= 0 && mCursor < (PRInt32)cnt) {
-    *aItem = (*mArray)[mCursor];
+    *aItem = mArray->ElementAt(mCursor);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
