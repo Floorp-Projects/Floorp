@@ -187,11 +187,11 @@ CPPSRCS += nsNativeAppSupportBase.cpp
 OS2_PROGRAM_RESOURCE = $(srcdir)/splashos2.rc
 endif
 
-#ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 CPPSRCS += nsNativeAppSupportGtk.cpp \
 	   nsNativeAppSupportBase.cpp
 LIBS += $(MOZ_GTK_LDFLAGS)
-#endif
+endif
 
 XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
 
