@@ -32,6 +32,8 @@ static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
 static NS_DEFINE_IID(kIMacLocaleIID, NS_IMACLOCALE_IID);
 
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -333,7 +335,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   nsICharsetConverterManager * ccm = nsnull;
 
   res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                   kICharsetConverterManagerIID, 
+                                   nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
                                    (nsISupports**)&ccm);
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsIUnicodeDecoder * decoder = nsnull;

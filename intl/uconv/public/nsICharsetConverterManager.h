@@ -28,13 +28,29 @@
 
 // Interface ID for our ConverterManager interface
 // {1E3F79F0-6B6B-11d2-8A86-00600811A836}
-NS_DECLARE_ID(kICharsetConverterManagerIID,
-  0x1e3f79f0, 0x6b6b, 0x11d2, 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+// NS_DECLARE_ID(kICharsetConverterManagerIID,
+//  0x1e3f79f0, 0x6b6b, 0x11d2, 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+#define NS_ICHARSETCONVERTERMANAGER_IID											 \
+{ /* 1E3F79F0-6B6B-11d2-8A86-00600811A836 */         \
+    0x1e3f79f0,                                      \
+    0x6b6b,                                          \
+    0x11d2,                                          \
+    {0x8a, 0x86, 0x00, 0x60, 0x08, 0x11, 0xa8, 0x36} \
+}
 
 // Class ID for our ConverterManager implementation
 // {1E3F79F1-6B6B-11d2-8A86-00600811A836}
-NS_DECLARE_ID(kCharsetConverterManagerCID, 
-  0x1e3f79f1, 0x6b6b, 0x11d2, 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+// NS_DECLARE_ID(kCharsetConverterManagerCID, 
+//  0x1e3f79f1, 0x6b6b, 0x11d2, 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+#define NS_ICHARSETCONVERTERMANAGER_CID											 \
+{ /* 1E3F79F1-6B6B-11d2-8A86-00600811A836 */         \
+    0x1e3f79f1,                                      \
+    0x6b6b,                                          \
+    0x11d2,                                          \
+    {0x8a, 0x86, 0x00, 0x60, 0x08, 0x11, 0xa8, 0x36} \
+}
 
 #define NS_CHARSETCONVERTERMANAGER_PROGID "componment://netscape/intl/charsetconvertermanager"
 
@@ -63,7 +79,7 @@ class nsICharsetConverterManager : public nsISupports
 {
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = kICharsetConverterManagerIID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ICHARSETCONVERTERMANAGER_IID; return iid; }
   /**
    * Find and instantiate a Converter able to encode from Unicode into the 
    * destination charset.

@@ -33,6 +33,7 @@
 #include "nsUConvDll.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -61,7 +62,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 
   *aFactory = NULL; 
   // the converter manager
-  if (aClass.Equals(kCharsetConverterManagerCID)) {
+  if (aClass.Equals(nsCOMTypeInfo<nsICharsetConverterManager>::GetIID())) {
     nsManagerFactory *factory = new nsManagerFactory();
 
     if(nsnull == factory)

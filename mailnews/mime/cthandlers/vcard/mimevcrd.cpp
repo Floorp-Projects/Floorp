@@ -43,6 +43,7 @@
 
 //#include "vobject.h"
 
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 static int MimeInlineTextVCard_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextVCard_parse_eof (MimeObject *, PRBool);

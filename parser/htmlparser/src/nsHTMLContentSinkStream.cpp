@@ -48,6 +48,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
 static char*          gHeaderComment = "<!-- This page was created by the Gecko output system. -->";
 static char*          gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
 const  int            gTabSize=2;
@@ -323,7 +325,7 @@ nsresult nsHTMLContentSinkStream::InitEncoder(const nsString& aCharset)
 
     nsICharsetConverterManager * ccm = nsnull;
     res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                       kICharsetConverterManagerIID, 
+                                       nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
                                        (nsISupports**)&ccm);
     if(NS_SUCCEEDED(res) && (nsnull != ccm))
     {

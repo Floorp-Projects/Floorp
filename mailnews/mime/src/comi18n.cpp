@@ -34,6 +34,7 @@
 #include "nsIPref.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 // BEGIN EXTERNAL DEPENDANCY
 

@@ -26,6 +26,7 @@
 #include "nsICharsetAlias.h"
 #include "nsFileSpec.h"
 
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 const char* kBadHTMLText="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
 const char* kUnorderedStringError = "String argument must be ordered. Don't you read API's?";
@@ -150,7 +151,7 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
 
     nsICharsetConverterManager * ccm = nsnull;
     res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                       kICharsetConverterManagerIID, 
+                                       nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
                                        (nsISupports**)&ccm);
     if(NS_SUCCEEDED(res) && (nsnull != ccm))
     {

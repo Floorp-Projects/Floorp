@@ -171,7 +171,7 @@ public:
 //----------------------------------------------------------------------
 // Class nsCharsetConverterManager [implementation]
 
-NS_IMPL_ISUPPORTS(nsCharsetConverterManager, kICharsetConverterManagerIID);
+NS_IMPL_ISUPPORTS(nsCharsetConverterManager, nsCOMTypeInfo<nsICharsetConverterManager>::GetIID());
 
 nsICharsetConverterManager * nsCharsetConverterManager::mInstance = NULL;
 
@@ -548,7 +548,7 @@ NS_IMETHODIMP nsManagerFactory::CreateInstance(nsISupports *aDelegate,
 
   nsresult res = NS_OK;
 
-  if (aIID.Equals(kICharsetConverterManagerIID))
+  if (aIID.Equals(nsCOMTypeInfo<nsICharsetConverterManager>::GetIID()))
   {
     nsICharsetConverterManager * t = nsCharsetConverterManager::GetInstance();  
     if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
