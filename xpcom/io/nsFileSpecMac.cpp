@@ -849,17 +849,24 @@ void nsFileSpec::CreateDirectory(int /* unix mode */)
 void nsFileSpec::Delete(PRBool inRecursive) const
 //----------------------------------------------------------------------------------------
 {
+	OSErr anErr;
+
     nsresult& mutableError = const_cast<nsFileSpec*>(this)->mError;
     if (inRecursive)
     {
         // MoreFilesExtras
-        mutableError = NS_FILE_RESULT(::DeleteDirectory(
+        anErr = ::DeleteDirectory(
                     mSpec.vRefNum,
                     mSpec.parID,
-                    const_cast<unsigned char*>(mSpec.name)));
+                    const_cast<unsigned char*>(mSpec.name));
     }
     else
-        mutableError = NS_FILE_RESULT(FSpDelete(&mSpec));
+        anErr = ::FSpDelete(&mSpec);
+    
+    if (anErr == fnfErr) // deleting a file that doesn't exist isn't an error!
+    	anErr = noErr;
+    mutableError = NS_FILE_RESULT(anErr);
+   
 } // nsFileSpec::Delete
 
 //----------------------------------------------------------------------------------------
