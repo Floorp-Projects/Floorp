@@ -22,8 +22,6 @@ LIBRARY_NAME	= pref
 
 REQUIRES	= libxp js pref nspr dbm security ldap java img layer util
 
-DEFINES		+= -DNSPR20
-
 ifneq ($(subst /,_,$(shell uname -s)),OS2)
 CSRCS		= unix/unixpref.c
 else
@@ -96,8 +94,6 @@ CONFIG_FILE_EXPORTS = $(addprefix $(HEADER_DEST_DIR)/pref_,$(CONFIG_FILE_HEADERS
 EXPORTS += $(CONFIG_FILE_EXPORTS)
 
 include $(DEPTH)/config/rules.mk
-
-DEFINES += -DNSPR20
 
 # VPATH allows us to make sure the auto-generation rule works for
 # everything in VPATH (so init/all.js->pref_all.h etc)
