@@ -170,7 +170,7 @@ main(int argc, char* argv[])
     name[0] = 0;
     sprintf(name, "%d", i);
     nsAutoString v("");
-    ret = props->GetProperty(name, v);
+    ret = props->GetStringProperty(name, v);
     if (NS_FAILED(ret) || (!v.Length())) {
       break;
     }
