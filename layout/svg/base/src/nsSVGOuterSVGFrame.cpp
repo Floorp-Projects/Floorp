@@ -811,12 +811,13 @@ nsSVGOuterSVGFrame::Paint(nsIPresContext* aPresContext,
 #endif
 
   float pxPerTwips = GetPxPerTwips();
-  // XXX why do we need to inflate the rect here? 
-  nsRect dirtyRectPx((int)(aDirtyRect.x*pxPerTwips), (int)(aDirtyRect.y*pxPerTwips),
-                     (int)(aDirtyRect.width*pxPerTwips), (int)(aDirtyRect.height*pxPerTwips));
-//   nsRect dirtyRectPx((int)(aDirtyRect.x*pxPerTwips-1), (int)(aDirtyRect.y*pxPerTwips-1),
-//                      (int)(aDirtyRect.width*pxPerTwips+2), (int)(aDirtyRect.height*pxPerTwips+2));
-  
+  int x0 = (int)(aDirtyRect.x*pxPerTwips);
+  int y0 = (int)(aDirtyRect.y*pxPerTwips);
+  int x1 = (int)ceil((aDirtyRect.x+aDirtyRect.width)*pxPerTwips);
+  int y1 = (int)ceil((aDirtyRect.y+aDirtyRect.height)*pxPerTwips);
+  NS_ASSERTION(x0>=0 && y0>=0, "unexpected negative coordinates");
+  NS_ASSERTION(x1-x0>0 && y1-y0>0, "zero sized dirtyRect");
+  nsRect dirtyRectPx(x0, y0, x1-x0, y1-y0);
   nsCOMPtr<nsISVGRendererCanvas> canvas;
   mRenderer->CreateCanvas(&aRenderingContext, aPresContext, dirtyRectPx,
                           getter_AddRefs(canvas));
