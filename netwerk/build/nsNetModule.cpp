@@ -34,6 +34,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
@@ -120,6 +121,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsResProtocolHandler, Init)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "nsURIChecker.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsURIChecker)
+
+///////////////////////////////////////////////////////////////////////////////
 
 static NS_METHOD
 RegisterBuiltInURLParsers(nsIComponentManager *aCompMgr, 
@@ -656,6 +661,12 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_LOCALFILEOUTPUTSTREAM_CONTRACTID,
       nsFileOutputStream::Create },
     
+    { "URIChecker",
+      NS_URICHECKER_CID,
+      NS_URICHECKER_CONTRACT_ID,
+      nsURICheckerConstructor
+    },
+
     // The register functions for the build in 
     // parsers just need to be called once.
     { "StdURLParser", 

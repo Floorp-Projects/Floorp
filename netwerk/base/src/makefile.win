@@ -64,6 +64,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsAsyncStreamListener.obj      \
         .\$(OBJDIR)\nsStorageTransport.obj         \
         .\$(OBJDIR)\nsStreamListenerTee.obj        \
+        .\$(OBJDIR)\nsURIChecker.obj               \
 	$(NULL)
 
 JSFILES = \
