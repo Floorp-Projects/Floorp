@@ -1686,7 +1686,7 @@ nsXMLContentSink::ProcessEndSCRIPTTag(nsIContent* aContent)
 
   nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(aContent));
   NS_ASSERTION(scriptElement, "null script element in XML content sink");
-  mScriptElements.AppendObject(scriptElement);
+  mScriptElements->AppendElement(scriptElement);
 
   nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(aContent));
   if (sele) {
