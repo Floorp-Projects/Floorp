@@ -70,7 +70,9 @@ public:
   nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
                                 void * menuNode, void * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
-  
+  nsEventStatus CheckRebuild(PRBool & aMenuEvent);
+  nsEventStatus SetRebuild(PRBool & aMenuEvent);
+ 
   // nsIMenu Methods
   NS_IMETHOD Create ( nsISupports * aParent, const nsString &aLabel, const nsString &aAccessKey, 
                         nsIChangeManager* aManager, nsIWebShell* aShell, nsIDOMNode* aNode ) ;
@@ -128,7 +130,7 @@ protected:
   PRPackedBool          mIsHelpMenu;
   PRPackedBool          mIsEnabled;
   PRPackedBool          mDestroyHandlerCalled;
-
+  PRPackedBool          mNeedsRebuild;
 
   nsresult GetNextVisibleMenu(nsIMenu** outNextVisibleMenu);
 

@@ -69,10 +69,10 @@ nsMenuItem::~nsMenuItem()
   //printf("nsMenuItem::~nsMenuItem() called \n");
   // if we're a radio menu, we've been registered to get AttributeChanged, so
   // make sure we unregister when we go away.
-  if (mMenuType == eRadio) {
+  //if (mMenuType == eRadio) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
     mManager->Unregister(content);
-  }
+  //}
 
 #if DEBUG
   --gMenuItemCounter;
@@ -93,11 +93,11 @@ NS_METHOD nsMenuItem::Create ( nsIMenu* aParent, const nsString & aLabel, PRBool
   
   // if we're a radio menu, register for AttributeChanged messages
   mManager = aManager;
-  if ( aItemType == eRadio ) {
+  //if ( aItemType == eRadio ) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
     nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(NS_STATIC_CAST(nsIChangeObserver*,this));
     mManager->Register(content, obs);   // does not addref this
-  }
+  //}
   
   mIsSeparator = aIsSeparator;
   mLabel = aLabel;
@@ -251,6 +251,19 @@ nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
     return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuItem::CheckRebuild(PRBool & aNeedsRebuild)
+{
+  aNeedsRebuild = PR_TRUE; 
+  return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuItem::SetRebuild(PRBool & aNeedsRebuild)
+{
+  //mNeedsRebuild = aNeedsRebuild; 
+  return nsEventStatus_eIgnore;
+}
 
 //-------------------------------------------------------------------------
 /**
@@ -375,14 +388,29 @@ nsMenuItem :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, n
                                     PRInt32 aHint)
 {
   nsCOMPtr<nsIAtom> checkedAtom = NS_NewAtom("checked");
+  nsCOMPtr<nsIAtom> disabledAtom = NS_NewAtom("disabled");
+  nsCOMPtr<nsIAtom> valueAtom = NS_NewAtom("value");
+  nsCOMPtr<nsIAtom> hiddenAtom = NS_NewAtom("hidden");
+  nsCOMPtr<nsIAtom> collapsedAtom = NS_NewAtom("collapsed");
+  
   if (aAttribute == checkedAtom.get())
   {
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
     nsAutoString checked;
     domElement->GetAttribute(NS_ConvertASCIItoUCS2("checked"), checked);
-    if (checked.EqualsWithConversion("true"))
+    if (checked.EqualsWithConversion("true")) 
       UncheckRadioSiblings(domElement);
+     
+    nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
+    listener->SetRebuild(PR_TRUE);
+    
+  } else if (aAttribute == disabledAtom.get() || 
+             aAttribute == hiddenAtom.get() ||
+             aAttribute == collapsedAtom.get()  )  {
+    nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
+    listener->SetRebuild(PR_TRUE);
   }
+  
   return NS_OK;
     
 } // AttributeChanged
@@ -391,6 +419,9 @@ nsMenuItem :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, n
 NS_IMETHODIMP
 nsMenuItem :: ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
 {
+  
+  nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
+  listener->SetRebuild(PR_TRUE);
   return NS_OK;
   
 } // ContentRemoved

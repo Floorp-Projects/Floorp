@@ -78,6 +78,9 @@ class nsIMenuListener : public nsISupports {
       
 
     virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent) = 0;
+    
+    virtual nsEventStatus CheckRebuild(PRBool & aMenuEvent) = 0;
+    virtual nsEventStatus SetRebuild(PRBool & aMenuEvent) = 0;
 };
 
 #endif // nsIMenuListener_h__
