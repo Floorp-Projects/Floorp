@@ -55,6 +55,8 @@
 #include "nsCocoaBrowserService.h"
 #include "nsIWebProgressListener.h"
 
+#include <QuickDraw.h>
+
 #define DOCUMENT_DONE_STRING @"Document: Done"
 
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
@@ -376,6 +378,19 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [mTab setLabel:NSLocalizedString(@"UntitledPageTitle", @"")];
 }
 
+
+- (NSString *)view:(NSView *)view stringForToolTip:(NSToolTipTag)tag point:(NSPoint)point userData:(void *)data
+{
+  NSLog(@"** stringForToolTip");
+  return @"Foooopy";
+}
+
+
+- (BOOL)isFlipped
+{
+  return YES;
+}
+
 //
 // onShowTooltip:where:withText
 //
@@ -383,16 +398,26 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 // and waiting. We already have waited and we just want to display the tooltip, so we
 // drop down to the Carbon help manager routines.
 //
+// |where| is relative to the browser view in QD coordinates (top left is (0,0)) 
+// and must be converted to global QD coordinates for the carbon help manager.
+//
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text
 {
 #if NOT_YET
   HMHelpContentRec info;
   info.version = kMacHelpVersion;
   
-  // convert to global coordinates, which is what HMDisplayTag expects
+  // convert to global QD coordinates, which is what HMDisplayTag expects. Only
+  // the main device is important in this calculation since that's where the
+  // coordinate systems differ.
   NSPoint p = {where.x, where.y};
   p = [[self window] convertBaseToScreen:[self convertPoint:p toView:nil]];
-  Rect r = {p.y, p.x, p.y + 30, p.x + 30};
+  GDHandle screenDevice = ::GetMainDevice();
+  Rect screenRect  = (**screenDevice).gdRect;
+  short screenHeight = screenRect.bottom - screenRect.top;
+  p.y = screenRect.top + (screenHeight - p.y);
+  
+  Rect r = {p.y, p.x, p.y + 15, p.x + 15};			// center it under the mouse cursorsure
   info.absHotRect = r;
   info.tagSide = kHMOutsideBottomCenterAligned;
   
@@ -408,7 +433,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 - (void)onHideTooltip
 {
 #if NOT_YET
-  NSLog(@"hiding");
   ::HMHideTag();
 #endif
 }
