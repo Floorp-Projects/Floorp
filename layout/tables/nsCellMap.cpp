@@ -538,6 +538,7 @@ void nsTableCellMap::SizeOf(nsISizeOfHandler* aHandler,
 nsCellMap::nsCellMap(nsTableRowGroupFrame& aRowGroup)
   : mRowCount(0), mNextSibling(nsnull), mRowGroupFrame(&aRowGroup)
 {
+  MOZ_COUNT_CTOR(nsCellMap);
 }
 
 nsCellMap::~nsCellMap()
