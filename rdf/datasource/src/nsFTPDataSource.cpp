@@ -450,7 +450,7 @@ FTPDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral** aResult)
 		if (baseFilename)
 		{
 			url = baseFilename;
-			delete [] baseFilename;
+			nsCRT::free(baseFilename);
 			baseFilename = nsnull;
 
 			nsIRDFLiteral	*literal;
@@ -586,7 +586,7 @@ FTPDataSourceCallback::~FTPDataSourceCallback()
 
 	if (mLine)
 	{
-		delete [] mLine;
+		nsCRT::free(mLine);
 		mLine = nsnull;
 	}
 
@@ -691,7 +691,7 @@ FTPDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, P
 		if (mLine)
 		{
 			line += mLine;
-			delete	[]mLine;
+			nsCRT::free(mLine);
 			mLine = nsnull;
 		}
 
@@ -768,7 +768,7 @@ FTPDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, P
 						mDataSource->Assert(mParent, kNC_Child,
 							ftpChild, PR_TRUE);
 					}
-					delete []name;
+					nsCRT::free(name);
 				}
 			}
 		}

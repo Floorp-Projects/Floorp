@@ -872,7 +872,7 @@ SearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkReq
 					if (lastC)
 					{
 						printf("\nLast Search: '%s'\n", lastC);
-						delete [] lastC;
+						nsCRT::free(lastC);
 						lastC = nsnull;
 					}
 				}
@@ -1038,7 +1038,7 @@ SearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkReq
 
 		nsCOMPtr<nsIRDFResource>	engine;
 		gRDFService->GetResource(baseFilename, getter_AddRefs(engine));
-		delete [] baseFilename;
+		nsCRT::free(baseFilename);
 		baseFilename = nsnull;
 		if (!engine)	continue;
 
@@ -1110,7 +1110,7 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 		rv = ReadFileContents(engineSpec, data);
 //		rv = NS_ERROR_UNEXPECTED;			// XXX rjc: fix this
 
-		delete [] baseFilename;
+		nsCRT::free(baseFilename);
 		baseFilename = nsnull;
 		if (NS_FAILED(rv))
 		{
@@ -1148,17 +1148,17 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 	printf(" Search Input: '%s'\n\n", cInput);
 	if (cAction)
 	{
-		delete [] cAction;
+		nsCRT::free(cAction);
 		cAction = nsnull;
 	}
 	if (cMethod)
 	{
-		delete [] cMethod;
+		nsCRT::free(cMethod);
 		cMethod = nsnull;
 	}
 	if (cInput)
 	{
-		delete [] cInput;
+		nsCRT::free(cInput);
 		cInput = nsnull;
 	}
 #endif
@@ -1214,7 +1214,7 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 							}
 							else
 							{
-								delete []postData;
+								nsCRT::free(postData);
 								postData = nsnull;
 							}
 						}
@@ -1252,7 +1252,7 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 		}
 	}
 
-	delete [] searchURL;
+	nsCRT::free(searchURL);
 	searchURL = nsnull;
 	return(rv);
 }
@@ -1342,11 +1342,11 @@ SearchDataSource::GetSearchEngineList(nsFileSpec nativeDir)
 						char		*uriC = uri.ToNewCString();
 						if (!uriC)	continue;
 						char		*uriCescaped = nsEscape(uriC, url_Path);
-						delete [] uriC;
+						nsCRT::free(uriC);
 						if (!uriCescaped)	continue;
 //						searchURL += uri;
 						searchURL += uriCescaped;
-						delete [] uriCescaped;
+						nsCRT::free(uriCescaped);
 
 /*
 						char *baseFilename = uri.ToNewCString();
@@ -1356,7 +1356,7 @@ SearchDataSource::GetSearchEngineList(nsFileSpec nativeDir)
 */
 						nsAutoString	data("");
 						rv = ReadFileContents(fileSpec, data);
-//						delete [] baseFilename;
+//						nsCRT::free(baseFilename);
 //						baseFilename = nsnull;
 						if (NS_FAILED(rv))	continue;
 
@@ -1379,10 +1379,10 @@ SearchDataSource::GetSearchEngineList(nsFileSpec nativeDir)
 									}
 								}
 							}
-							delete [] searchURI;
+							nsCRT::free(searchURI);
 							searchURI = nsnull;
 						}
-//						delete [] baseFilename;
+//						nsCRT::free(baseFilename);
 //						baseFilename = nsnull;
 					}
 				}
@@ -1789,7 +1789,7 @@ SearchDataSourceCallback::~SearchDataSourceCallback()
 
 	if (mLine)
 	{
-		delete [] mLine;
+		nsCRT::free(mLine);
 		mLine = nsnull;
 	}
 
@@ -1831,7 +1831,7 @@ SearchDataSourceCallback::CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aRes
 	if (uriC)
 	{
 		rv = gRDFService->GetResource(uriC, getter_AddRefs(*aResult));
-		delete [] uriC;
+		nsCRT::free(uriC);
 	}
 	else
 	{
@@ -1933,7 +1933,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 #endif
 
 	nsAutoString	htmlResults(mLine);
-	delete [] mLine;
+	nsCRT::free(mLine);
 	mLine = nsnull;
 
 	// save HTML result page for this engine
@@ -1985,42 +1985,42 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 	if (cStr)
 	{
 		printf("resultListStart: '%s'\n", cStr);
-		delete [] cStr;
+		nsCRT::free(cStr);
 		cStr = nsnull;
 	}
 	cStr = resultListEndStr.ToNewCString();
 	if (cStr)
 	{
 		printf("resultListEnd: '%s'\n", cStr);
-		delete [] cStr;
+		nsCRT::free(cStr);
 		cStr = nsnull;
 	}
 	cStr = resultItemStartStr.ToNewCString();
 	if (cStr)
 	{
 		printf("resultItemStart: '%s'\n", cStr);
-		delete [] cStr;
+		nsCRT::free(cStr);
 		cStr = nsnull;
 	}
 	cStr = resultItemEndStr.ToNewCString();
 	if (cStr)
 	{
 		printf("resultItemEnd: '%s'\n", cStr);
-		delete [] cStr;
+		nsCRT::free(cStr);
 		cStr = nsnull;
 	}
 	cStr = relevanceStartStr.ToNewCString();
 	if (cStr)
 	{
 		printf("relevanceStart: '%s'\n", cStr);
-		delete [] cStr;
+		nsCRT::free(cStr);
 		cStr = nsnull;
 	}
 	cStr = relevanceEndStr.ToNewCString();
 	if (cStr)
 	{
 		printf("relevanceEnd: '%s'\n", cStr);
-		delete [] cStr;
+		nsCRT::free(cStr);
 		cStr = nsnull;
 	}
 #endif
@@ -2108,7 +2108,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		if (results)
 		{
 			printf("\n----- Search result: '%s'\n\n", results);
-			delete [] results;
+			nsCRT::free(results);
 			results = nsnull;
 		}
 #endif
@@ -2214,7 +2214,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		}
 #endif
 
-		delete [] href;
+		nsCRT::free(href);
 		href = nsnull;
 		if (NS_FAILED(rv))	continue;
 		
@@ -2513,7 +2513,7 @@ SearchDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream
 		if (mLine)
 		{
 			line += mLine;
-			delete	[]mLine;
+			nsCRT::free(mLine);
 			mLine = nsnull;
 		}
 
