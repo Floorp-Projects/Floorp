@@ -3466,10 +3466,6 @@ nsGenericHTMLContainerFormElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* a
   control = do_QueryInterface(mContent);
   if (mForm && (nsHTMLAtoms::name == aName || nsHTMLAtoms::id == aName)) {
     mForm->AddElementToTable(control, aValue);
-  } else if (nsHTMLAtoms::disabled == aName &&
-             mNodeInfo->Equals(nsHTMLAtoms::button) &&
-             aValue.EqualsWithConversion("false", PR_TRUE)) {
-    return nsGenericHTMLElement::UnsetAttribute(aNameSpaceID, aName, aNotify);
   }
 
   return nsGenericHTMLElement::SetAttribute(aNameSpaceID, aName, aValue, aNotify);
