@@ -141,7 +141,7 @@ NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, P
 // Actual Data Processing
 // ----------------------------------------
 
- nsresult nsBMPDecoder::SetPixel(PRUint8*& aDecoded, PRUint8 idx)
+inline nsresult nsBMPDecoder::SetPixel(PRUint8*& aDecoded, PRUint8 idx)
 {
     PRUint8 red, green, blue;
     red = mColors[idx].red;
@@ -150,7 +150,7 @@ NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, P
     return SetPixel(aDecoded, red, green, blue);
 }
 
- nsresult nsBMPDecoder::SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
+inline nsresult nsBMPDecoder::SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
 {
 #if defined(XP_MAC) || defined(XP_MACOSX)
     *aDecoded++ = 0; // Mac needs this padding byte
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, P
     return NS_OK;
 }
 
- nsresult nsBMPDecoder::Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos)
+inline nsresult nsBMPDecoder::Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos)
 {
     PRUint8 idx = aData >> 4;
     nsresult rv = SetPixel(aDecoded, idx);
@@ -180,7 +180,7 @@ NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, P
     return rv;
 }
 
- nsresult nsBMPDecoder::SetData(PRUint8* aData)
+inline nsresult nsBMPDecoder::SetData(PRUint8* aData)
 {
     PRUint32 bpr;
     nsresult rv;
