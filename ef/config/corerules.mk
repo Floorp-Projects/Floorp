@@ -694,7 +694,7 @@ endif
 
 endif
 
-ifneq ($(filter *.mk,$(wildcard $(CUR_DIR)/$(OBJDIR)/depend.mk)),)
+ifneq ($(wildcard $(CUR_DIR)/$(OBJDIR)/depend.mk),)
 -include $(CUR_DIR)/$(OBJDIR)/depend.mk
 endif
 
