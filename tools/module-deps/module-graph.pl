@@ -25,6 +25,18 @@
 
 use strict;
 
+# For --option1, --option2, ...
+use Getopt::Long;
+Getopt::Long::Configure("bundling_override");
+Getopt::Long::Configure("auto_abbrev");
+
+sub PrintUsage {
+  die <<END_USAGE
+  Prints out required modules for specified directories.
+  usage: module-graph.pl [--list-only] <dir1> <dir2> ...
+END_USAGE
+}
+
 my %clustered;
 my %deps;
 my %toplevel_modules;
@@ -40,6 +52,20 @@ if ($^O eq "linux") {
 use Cwd;
 my @dirs;
 my $curdir = getcwd();
+
+my $list_only_mode = 0;
+my $opt_list_only;
+
+# Print usage if we get an unknown argument.
+PrintUsage() if !GetOptions('list-only' => \$opt_list_only);
+
+
+# Pick up arguments, if any.
+if($opt_list_only) {
+  $list_only_mode = 1;
+}
+
+
 if (!@ARGV) {
   @dirs = (getcwd());
 } else {
@@ -57,7 +83,9 @@ while ($#dirs != -1) {
   # pop the curdir
   $curdir = pop @dirs;
 
-  print STDERR "Entering $curdir..                 \n";
+  if(!$list_only_mode) {
+    print STDERR "Entering $curdir..                 \r";
+  }
   chdir "$curdir" || next;
   if ($^O eq "linux") {
       next if (! -e "$curdir/Makefile");
@@ -96,20 +124,27 @@ while ($#dirs != -1) {
   }
 
 }
-print STDERR "\n";
 
-print "digraph G {\n";
-print "    concentrate=true;\n";
+if(!$list_only_mode) {
+  print STDERR "\n";
+}
 
-# figure out the internal nodes, and place them in a cluster
 
-#print "    subgraph cluster0 {\n";
-#print "        color=blue;\n"; # blue outline around cluster
-
+# Print out digraph.
 my $module;
-# ** new method: just list all modules that came from MODULE=foo
-foreach $module (sort keys %toplevel_modules) {
-  print "        $module [style=filled];\n"
+if(!$list_only_mode) {  
+  print "digraph G {\n";
+  print "    concentrate=true;\n";
+  
+  # figure out the internal nodes, and place them in a cluster
+  
+  #print "    subgraph cluster0 {\n";
+  #print "        color=blue;\n"; # blue outline around cluster
+
+  # ** new method: just list all modules that came from MODULE=foo
+  foreach $module (sort keys %toplevel_modules) {
+	print "        $module [style=filled];\n"
+  }
 }
 
 # ** old method: find only internal nodes
@@ -128,18 +163,43 @@ foreach $module (sort keys %toplevel_modules) {
 
 #print "    };\n";
 
+
+#
+# Run over dependency array to generate raw component list.
+#
+my @raw_list;
+my @unique_list;
 foreach $module (sort sortby_deps keys %deps) {
   my $req;
   foreach $req ( sort { $deps{$module}{$b} <=> $deps{$module}{$a} }
                  keys %{ $deps{$module} } ) {
 #    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
-    print "    $module -> $req;\n";
+
+    if(!$list_only_mode) {
+      print "    $module -> $req;\n";
+    } else {
+      # print "$req ";
+      push(@raw_list, $req);
+    }
   }
 }
 
+# generate unique list, print it out.
+if($list_only_mode) {
+  my %saw;
+  undef %saw;
+  @unique_list = grep(!$saw{$_}++, @raw_list);
 
-print "}";
+  my $i;
+  for ($i=0;$i <= $#unique_list; $i++) {
+	print $unique_list[$i], " ";
+  }
+  print "\n";
+}
 
+if(!$list_only_mode) {
+  print "}\n";
+}
 
 # we're sorting based on clustering
 # order:
