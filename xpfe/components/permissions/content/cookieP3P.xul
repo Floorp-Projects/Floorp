@@ -45,7 +45,6 @@
 <window id="privacySettings"
         class="dialog"
         title="&windowtitle.label;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
         onload="init();">
@@ -144,9 +143,9 @@
   <groupbox orient="vertical">
     <caption label="&privacyLevel.label;"/>
 
-    <html>&p3pDetails;</html>
+    <description>&p3pDetails;</description>
     <spacer/>
-    <html>&choose;</html>
+    <description>&choose;</description>
 
     <radiogroup id="p3pLevel" orient="horizontal" align="center">
       <radio group="p3pLevel" value="0" label="&low.label;"
@@ -172,11 +171,11 @@
       <rows>
         <row align="center">
           <spacer/>
-          <html>&firstParty.label;</html>
-          <html>&thirdParty.label;</html>
+          <description>&firstParty.label;</description>
+          <description>&thirdParty.label;</description>
         </row>
         <row align="center">
-          <html>&noPolicy.label;</html>
+          <description>&noPolicy.label;</description>
           <menulist flex="1" id="menulist_0">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
@@ -193,7 +192,7 @@
           </menulist>
         </row>
         <row align="center">
-          <html>&noConsent.label;</html>
+          <description>&noConsent.label;</description>
           <menulist flex="1" id="menulist_2">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
@@ -210,7 +209,7 @@
           </menulist>
         </row>
         <row align="center">
-          <html>&implicitConsent.label;</html>
+          <description>&implicitConsent.label;</description>
           <menulist flex="1" id="menulist_4">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
@@ -227,7 +226,7 @@
           </menulist>
         </row>
         <row align="center">
-          <html>&explicitConsent.label;</html>
+          <description>&explicitConsent.label;</description>
           <menulist flex="1" id="menulist_6">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
