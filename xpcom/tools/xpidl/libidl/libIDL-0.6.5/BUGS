@@ -1,4 +1,0 @@
-- if an parse error occurs, memory will be leaked--implement an
-  allocator and do a non-recursive free if parse fails
-
-- do wide support string (?)
