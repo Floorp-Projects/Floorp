@@ -61,35 +61,153 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
                      nsIGenericFactory::ConstructorProcPtr constructor,
                      nsIGenericFactory::DestructorProcPtr destructor = NULL);
 
-#define NS_GENERIC_FACTORY_CONSTRUCTOR(_InstanceClass)                          \
-static NS_IMETHODIMP                                                            \
+#define NS_GENERIC_FACTORY_CONSTRUCTOR(_InstanceClass)                        \
+static NS_IMETHODIMP                                                          \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) \
-{                                                                               \
-    nsresult rv;                                                                \
-                                                                                \
-    _InstanceClass * inst;                                                      \
-                                                                                \
-    if (NULL == aResult) {                                                      \
-        rv = NS_ERROR_NULL_POINTER;                                             \
-        goto done;                                                              \
-    }                                                                           \
-    *aResult = NULL;                                                            \
-    if (NULL != aOuter) {                                                       \
-        rv = NS_ERROR_NO_AGGREGATION;                                           \
-        goto done;                                                              \
-    }                                                                           \
-                                                                                \
-    NS_NEWXPCOM(inst, _InstanceClass);                                          \
-    if (NULL == inst) {                                                         \
-        rv = NS_ERROR_OUT_OF_MEMORY;                                            \
-        goto done;                                                              \
-    }                                                                           \
-    NS_ADDREF(inst);                                                            \
-    rv = inst->QueryInterface(aIID, aResult);                                   \
-    NS_RELEASE(inst);                                                           \
-                                                                                \
-  done:                                                                         \
-    return rv;                                                                  \
+{                                                                             \
+    nsresult rv;                                                              \
+                                                                              \
+    _InstanceClass * inst;                                                    \
+                                                                              \
+    if (NULL == aResult) {                                                    \
+        rv = NS_ERROR_NULL_POINTER;                                           \
+        goto done;                                                            \
+    }                                                                         \
+    *aResult = NULL;                                                          \
+    if (NULL != aOuter) {                                                     \
+        rv = NS_ERROR_NO_AGGREGATION;                                         \
+        goto done;                                                            \
+    }                                                                         \
+                                                                              \
+    NS_NEWXPCOM(inst, _InstanceClass);                                        \
+    if (NULL == inst) {                                                       \
+        rv = NS_ERROR_OUT_OF_MEMORY;                                          \
+        goto done;                                                            \
+    }                                                                         \
+    NS_ADDREF(inst);                                                          \
+    rv = inst->QueryInterface(aIID, aResult);                                 \
+    NS_RELEASE(inst);                                                         \
+                                                                              \
+  done:                                                                       \
+    return rv;                                                                \
 } 
+
+#define NS_DECL_MODULE(_class)                                                \
+class _class : public nsIModule {                                             \
+public:                                                                       \
+  _class();                                                                   \
+  virtual ~_class();                                                          \
+  NS_DECL_ISUPPORTS                                                           \
+  NS_DECL_NSIMODULE                                                           \
+};
+
+#define NS_IMPL_MODULE_CORE(_class)                                           \
+_class::_class() { NS_INIT_ISUPPORTS(); }                                     \
+_class::~_class() {}
+
+#define NS_IMPL_MODULE_GETCLASSOBJECT(_class, _table)                         \
+NS_IMETHODIMP                                                                 \
+_class::GetClassObject(nsIComponentManager *aCompMgr,                         \
+                                const nsCID& aClass,                          \
+                                const nsIID& aIID,                            \
+                                void** aResult)                               \
+{                                                                             \
+  if (aResult == nsnull)                                                      \
+    return NS_ERROR_NULL_POINTER;                                             \
+                                                                              \
+  *aResult = nsnull;                                                          \
+                                                                              \
+  nsresult rv;                                                                \
+  nsIGenericFactory::ConstructorProcPtr constructor = nsnull;                 \
+  nsCOMPtr<nsIGenericFactory> fact;                                           \
+                                                                              \
+  for (unsigned int i=0; i<(sizeof(_table) / sizeof(_table[0])); i++) {       \
+    if (aClass.Equals(_table[i].cid)) {                                       \
+      constructor = _table[i].constructor;                                    \
+      break;                                                                  \
+    }                                                                         \
+  }                                                                           \
+                                                                              \
+  if (!constructor) return NS_ERROR_FAILURE;                                  \
+  rv = NS_NewGenericFactory(getter_AddRefs(fact), constructor);               \
+  if (NS_FAILED(rv)) return rv;                                               \
+                                                                              \
+  return fact->QueryInterface(aIID, aResult);                                 \
+}
+
+#define NS_IMPL_MODULE_REGISTERSELF(_class, _table)                           \
+NS_IMETHODIMP                                                                 \
+_class::RegisterSelf(nsIComponentManager *aCompMgr,                           \
+                     nsIFileSpec* aPath,                                      \
+                     const char* registryLocation,                            \
+                     const char* componentType)                               \
+{                                                                             \
+    nsresult rv = NS_OK;                                                      \
+  for (unsigned int i=0; i<(sizeof(_table) / sizeof(_table[0])); i++) {       \
+    rv = aCompMgr->RegisterComponentSpec(_table[i].cid,                       \
+                                         _table[i].description,               \
+                                         _table[i].progid,                    \
+                                         aPath,                               \
+                                         PR_TRUE, PR_TRUE);                   \
+  }                                                                           \
+  return rv;                                                                  \
+}
+
+#define NS_IMPL_MODULE_UNREGISTERSELF(_class, _table)                         \
+NS_IMETHODIMP                                                                 \
+_class::UnregisterSelf(nsIComponentManager *aCompMgr,                         \
+                     nsIFileSpec* aPath,                                      \
+                     const char* registryLocation)                            \
+{                                                                             \
+    nsresult rv = NS_OK; \
+  for (unsigned int i=0; i<(sizeof(_table) / sizeof(_table[0])); i++) {       \
+    rv = aCompMgr->UnregisterComponentSpec(_table[i].cid, aPath);             \
+  }                                                                           \
+  return rv;                                                                  \
+}
+
+#define NS_IMPL_MODULE_CANUNLOAD(_class)                                      \
+NS_IMETHODIMP                                                                 \
+_class::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)          \
+{                                                                             \
+    if (!okToUnload)                                                          \
+        return NS_ERROR_INVALID_POINTER;                                      \
+                                                                              \
+    *okToUnload = PR_FALSE;                                                   \
+    return NS_ERROR_FAILURE;                                                  \
+}
+
+#define NS_IMPL_NSGETMODULE(_class)                                           \
+static _class *g##_class;                                                     \
+extern "C" NS_EXPORT nsresult                                                 \
+NSGetModule(nsIComponentManager *servMgr,                                     \
+            nsIFileSpec* location,                                            \
+            nsIModule** aResult)                                              \
+{                                                                             \
+    nsresult rv = NS_OK;                                                      \
+                                                                              \
+    if (!aResult) return NS_ERROR_NULL_POINTER;                               \
+    if (!g##_class) {                                                         \
+      g##_class = new _class;                                                 \
+      if (!g##_class) return NS_ERROR_OUT_OF_MEMORY;                          \
+    }                                                                         \
+                                                                              \
+    NS_ADDREF(g##_class);                                                     \
+    if (g##_class)                                                            \
+      rv = g##_class->QueryInterface(NS_GET_IID(nsIModule),                   \
+                                   (void **)aResult);                         \
+    NS_RELEASE(g##_class);                                                    \
+    return rv;                                                                \
+}
+
+
+#define NS_IMPL_MODULE(_table) \
+    NS_DECL_MODULE(nsModule)  \
+    NS_IMPL_MODULE_CORE(nsModule) \
+    NS_IMPL_ISUPPORTS1(nsModule, nsIModule) \
+    NS_IMPL_MODULE_GETCLASSOBJECT(nsModule, _table) \
+    NS_IMPL_MODULE_REGISTERSELF(nsModule, _table) \
+    NS_IMPL_MODULE_UNREGISTERSELF(nsModule, _table) \
+    NS_IMPL_MODULE_CANUNLOAD(nsModule)
 
 #endif /* nsIGenericFactory_h___ */
