@@ -808,6 +808,7 @@ function FolderPaneOnClick(event)
         }
     }
     else if ((event.originalTarget.localName == "outlinercol") ||
+             (event.originalTarget.localName == "slider") ||
              (event.originalTarget.localName == "scrollbarbutton")) {
       // clicking on the name column in the folder pane should not sort
       event.preventBubble();
