@@ -60,6 +60,17 @@ NumberFunctionCall::NumberFunctionCall(short type) : FunctionCall() {
     }
 } //-- NumberFunctionCall
 
+static double rint(double r)
+{
+  double integerPart = 0;
+  double fraction = 0;
+  fraction = modf(r, &integerPart);
+  if (fraction >= 0.5)
+    integerPart++;
+
+  return integerPart;
+}
+
 /**
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr
