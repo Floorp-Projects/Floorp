@@ -588,7 +588,7 @@ endif
 $(LIBRARY): $(LIBRARY)($(OBJS) $(LOBJS)) $(LIBRARY:%.a=.%.timestamp) Makefile.in Makefile
 	@touch $(LIBRARY:%.a=.%.timestamp)
 	$(AR) $(AR_FLAGS) $(filter $filter(%.o, $^), $(shell echo *.o))
-	if [ "${AR_FILES_TO_REMOVE}" != "" ]; then $(AR_DELETE) $(LIBRARY) $(AR_FILES_TO_REMOVE); fi
+	if [ "${AR_FILES_TO_REMOVE}" != "" ]; then $(AR_DELETE) $(LIBRARY) $(AR_FILES_TO_REMOVE); else true; fi
 	@touch $@
 
 else
