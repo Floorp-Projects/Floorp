@@ -158,7 +158,7 @@ GetModelList(nsIDOMDocument *domDoc)
 {
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
 
-  return NS_STATIC_CAST(const nsVoidArray *,
+  return NS_STATIC_CAST(nsVoidArray *,
                         doc->GetProperty(nsXFormsAtoms::modelListProperty));
 }
 
