@@ -209,9 +209,10 @@ main(int argc, char** argv)
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to open datasource");
     if (NS_FAILED(rv)) return rv;
 
-    // And this should write it back out.
+    // And this should write it back out. The do_QI() on the pointer
+    // is a hack to make sure that the new object gets AddRef()-ed.
     nsCOMPtr<nsIOutputStream> out =
-        do_QueryInterface(new ConsoleOutputStreamImpl());
+        do_QueryInterface(new ConsoleOutputStreamImpl);
 
     NS_ASSERTION(out, "unable to create console output stream");
     if (! out)
