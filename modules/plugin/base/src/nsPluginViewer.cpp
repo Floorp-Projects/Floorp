@@ -42,6 +42,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMDocument.h"
+#include "nsPluginViewer.h"
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -796,7 +797,7 @@ NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
     }
     else if (nsnull != mWindow)
     {
-      mPluginWindow.window = (nsPluginPort *)mWindow->GetNativeData(NS_NATIVE_WINDOW);
+      mPluginWindow.window = (nsPluginPort *)mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
       mPluginWindow.type = nsPluginWindowType_Window;
     }
     else

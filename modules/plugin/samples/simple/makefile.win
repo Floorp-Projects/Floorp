@@ -51,8 +51,6 @@ MAKE_OBJ_TYPE=DLL
 DLLNAME=npsimple.dll
 PDBFILE=npsimple.pdb
 MAPFILE=npsimple.map
-#DEFFILE=Simple32.def
-RESFILE=Simple32.res
 
 #//------------------------------------------------------------------------
 #//
@@ -91,4 +89,4 @@ LCFLAGS = $(LCFLAGS) -DNEW_PLUGIN_STREAM_API
 install:: $(DLL)
 #        $(MAKE_INSTALL) $(XPDIST)\classes11\Simple.class $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple
 #        $(MAKE_INSTALL) Simple.class $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple
-        $(MAKE_INSTALL) $(OBJDIR)\npsimple.dll $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple
+        $(MAKE_INSTALL) $(OBJDIR)\npsimple.dll $(DIST)\bin\components

@@ -29,14 +29,17 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 LIBRARY_NAME	= gkplugin
 SHORT_LIBNAME	= ngplugin
+IS_COMPONENT    = 1
 
 
 CPPSRCS		= \
-		nsPluginHostImpl.cpp \
-		nsPluginFactory.cpp \
 		ns4xPlugin.cpp \
 		ns4xPluginInstance.cpp \
+		nsPluginDocLoaderFactory.cpp \
+		nsPluginHostImpl.cpp \
+		nsPluginModule.cpp \
 		nsPluginInstancePeer.cpp \
+		nsPluginViewer.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH), BeOS)
@@ -56,6 +59,8 @@ EXPORTS		= \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
+EXTRA_DSO_LIBS  += gkgfx
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_NECKO_UTIL_LIBS) \

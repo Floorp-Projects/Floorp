@@ -181,6 +181,47 @@ public:
             PRUint32 postHeadersLength = 0, 
             const char* postHeaders = NULL) = 0;
 
+
+    /**
+     * Persistently register a plugin with the plugin
+     * manager. aMimeTypes, aMimeDescriptions, and aFileExtensions are
+     * parallel arrays that contain information about the MIME types
+     * that the plugin supports.
+     *
+     * @param aCID - the plugin's CID
+     * @param aPluginName - the plugin's name
+     * @param aDescription - a description of the plugin
+     * @param aMimeTypes - an array of MIME types that the plugin
+     *   is prepared to handle
+     * @param aMimeDescriptions - an array of descriptions for the
+     *   MIME types that the plugin can handle.
+     * @param aFileExtensions - an array of file extensions for
+     *   the MIME types that the plugin can handle.
+     * @param aCount - the number of elements in the aMimeTypes,
+     *   aMimeDescriptions, and aFileExtensions arrays.
+     * @result - NS_OK if the operation was successful.
+     */
+
+    NS_IMETHOD
+    RegisterPlugin(REFNSIID aCID,
+                   const char* aPluginName,
+                   const char* aDescription,
+                   const char** aMimeTypes,
+                   const char** aMimeDescriptions,
+                   const char** aFileExtensions,
+                   PRInt32 aCount) = 0;
+
+
+    /**
+     * Unregister a plugin from the plugin manager
+     *
+     * @param aCID the CID of the plugin to unregister.
+     * @result - NS_OK if the operation was successful.
+     */
+
+    NS_IMETHOD
+    UnregisterPlugin(REFNSIID aCID) = 0;
+                   
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,8 +24,8 @@ include <$(DEPTH)/config/config.mak>
 
 
 EXPORTS =	\
-    nsPluginsCID.h  \
-	nsIPluginHost.h \
+        nsPluginsCID.h          \
+	nsIPluginHost.h         \
 	nsIPluginInstanceOwner.h
 
 MAKE_OBJ_TYPE	= DLL
@@ -33,16 +33,19 @@ DLLNAME = gkplugin
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 MODULE=raptor 
+IS_COMPONENT=1
 
 DEFINES =-D_IMPL_NS_PLUGIN -DWIN32_LEAN_AND_MEAN
 
-OBJS =                              \
-    .\$(OBJDIR)\nsPluginHostImpl.obj  \
-    .\$(OBJDIR)\nsPluginFactory.obj  \
-    .\$(OBJDIR)\ns4xPlugin.obj  \
-    .\$(OBJDIR)\ns4xPluginInstance.obj  \
-    .\$(OBJDIR)\nsPluginInstancePeer.obj  \
-    .\$(OBJDIR)\nsPluginsDirWin.obj  \
+OBJS =                                       \
+    .\$(OBJDIR)\ns4xPlugin.obj               \
+    .\$(OBJDIR)\ns4xPluginInstance.obj       \
+    .\$(OBJDIR)\nsPluginDocLoaderFactory.obj \
+    .\$(OBJDIR)\nsPluginHostImpl.obj         \
+    .\$(OBJDIR)\nsPluginModule.obj           \
+    .\$(OBJDIR)\nsPluginInstancePeer.obj     \
+    .\$(OBJDIR)\nsPluginViewer.obj           \
+    .\$(OBJDIR)\nsPluginsDirWin.obj          \
     $(NULL)
 
 LINCS = \
@@ -76,6 +79,7 @@ CACHELIBNAME=netcache.lib
 !endif
 
 LLIBS = \
+ $(DIST)\lib\gkgfxwin.lib \
  $(DIST)\lib\xpcom.lib \
  $(DIST)\lib\xppref32.lib \
  $(LIBNSPR)  
@@ -89,7 +93,7 @@ it:
 	echo $(LLIBS)
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll

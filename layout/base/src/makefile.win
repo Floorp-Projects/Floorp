@@ -52,7 +52,6 @@ CPPSRCS =				\
 	nsNameSpaceManager.cpp		\
 	nsNodeInfo.cpp			\
 	nsNodeInfoManager.cpp		\
-	nsPluginViewer.cpp		\
 	nsPresContext.cpp		\
 	nsPresState.cpp			\
 	nsPrintContext.cpp		\
@@ -103,7 +102,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsNameSpaceManager.obj	\
 	.\$(OBJDIR)\nsNodeInfo.obj		\
 	.\$(OBJDIR)\nsNodeInfoManager.obj	\
-	.\$(OBJDIR)\nsPluginViewer.obj		\
 	.\$(OBJDIR)\nsPresContext.obj		\
 	.\$(OBJDIR)\nsPresState.obj		\
 	.\$(OBJDIR)\nsPrintContext.obj		\
