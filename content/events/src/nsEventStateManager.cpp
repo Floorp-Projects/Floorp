@@ -67,9 +67,9 @@ nsIFrame * gCurrentlyFocusedTargetFrame = 0;
 nsIContent * gCurrentlyFocusedContent = 0; // Weak because it mirrors the strong mCurrentFocus
 nsIPresContext * gCurrentlyFocusedPresContext = 0; // Strong
 
-nsIContent * gLastFocusedContent = 0;
+nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
-nsIPresContext* gLastFocusedPresContext = 0; // Weak
+nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
 
 PRUint32 nsEventStateManager::mInstanceCount = 0;
 
@@ -107,11 +107,6 @@ nsEventStateManager::nsEventStateManager()
 
 nsEventStateManager::~nsEventStateManager()
 {
-  if (mPresContext == gLastFocusedPresContext) {
-    gLastFocusedPresContext = nsnull;
-    NS_IF_RELEASE(gLastFocusedDocument);
-  }
-
   NS_IF_RELEASE(mCurrentTargetContent);
   NS_IF_RELEASE(mCurrentRelatedContent);
 
@@ -133,7 +128,7 @@ nsEventStateManager::~nsEventStateManager()
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
     
-	NS_IF_RELEASE(gCurrentlyFocusedPresContext);
+	  NS_IF_RELEASE(gCurrentlyFocusedPresContext);
   }
 }
 
@@ -199,8 +194,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_GOTFOCUS:
     {
-      // XXX if I am ender, break.
-
       if (gLastFocusedDocument == mDocument)
         break;
       
@@ -258,8 +251,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     
   case NS_LOSTFOCUS:
     {
-      // If I am Ender, break.
-
       // Hold the blur, wait for the focus so we can query the style of the focus
       // target as to what to do with the event. If appropriate we fire the blur
       // at that time.
@@ -801,6 +792,14 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsEventStateManager::SetPresContext(nsIPresContext* aPresContext)
 {
+  if (aPresContext == nsnull) {
+    // A pres context is going away. Make sure we do cleanup.
+    if (mPresContext == gLastFocusedPresContext) {
+      gLastFocusedPresContext = nsnull;
+      NS_IF_RELEASE(gLastFocusedDocument);
+    }
+  }
+
   mPresContext = aPresContext;
   return NS_OK;
 }
