@@ -182,8 +182,8 @@ nsInstallDlg::Show(int aDirection)
         gtk_box_pack_start(GTK_BOX(hbox), sMsg0Label, FALSE, FALSE, 0);
         gtk_widget_show(hbox);
         gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 1, 2,
-                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-			 GTK_FILL, 20, 20);
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			GTK_FILL, 20, 20);
         gtk_widget_show(sMsg0Label);
 
         // vbox with two widgets packed in: label0 / progmeter0 (major)
@@ -197,8 +197,8 @@ nsInstallDlg::Show(int aDirection)
         // gtk_widget_show(sMajorProgBar);
 
         gtk_table_attach(GTK_TABLE(mTable), vbox, 0, 1, 2, 3, 
-                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-			 GTK_FILL, 20, 20);
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			GTK_FILL, 20, 20);
         gtk_widget_show(vbox); 
 
         // vbox with two widgets packed in: label1 / progmeter1 (minor)
@@ -212,8 +212,8 @@ nsInstallDlg::Show(int aDirection)
         // gtk_widget_show(sMinorProgBar); 
 
         gtk_table_attach(GTK_TABLE(mTable), vbox, 0, 1, 3, 4, 
-                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-			 GTK_FILL, 20, 20);
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			GTK_FILL, 20, 20);
         gtk_widget_show(vbox); 
         
         mWidgetsInit = TRUE;
