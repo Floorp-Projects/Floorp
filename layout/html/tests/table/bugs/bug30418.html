@@ -13,7 +13,7 @@ function createTable()
         // THead creation block
         var oTHead = oTable.createTHead();
         var oRow = oTHead.insertRow(0); 
-        for(col=0;col<8;col++)
+        for( var col=0;col<8;col++)
         {
                 var oCell = oRow.insertCell(col);
                 var cellValue = document.createTextNode("h" + col);
@@ -23,20 +23,20 @@ function createTable()
         
         // TFoot creation block
         var oTFoot = oTable.createTFoot();
-        var oRow = oTFoot.insertRow(0); // create table footer row
+        oRow = oTFoot.insertRow(0); // create table footer row
         for(col=0;col<8;col++)
         {
-                var oCell = oRow.insertCell(col);
-                var cellValue = document.createTextNode("f" + col);
+                 oCell = oRow.insertCell(col);
+                 cellValue = document.createTextNode("f" + col);
                 oCell.appendChild(cellValue);
         } 
         
-        for(row=0;row<1;row++) // ask for just 1 row
+        for(var row=0;row<1;row++) // ask for just 1 row
         {
-                var oRow = oTable.tBodies[0].insertRow(row);
+               oRow = oTable.tBodies[0].insertRow(row);
                 for(col=0;col<8;col++)
                 {
-                        var oCell = oRow.insertCell(col);                       
+                         oCell = oRow.insertCell(col);                       
                         var newValue2 = document.createTextNode("r" + row + "c" 
 + col);
                         oCell.appendChild(newValue2);

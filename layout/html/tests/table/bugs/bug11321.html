@@ -3,12 +3,12 @@
 <SCRIPT>
 <!--
 function run(){
-        tbl = document.body.appendChild(document.createElement("TABLE"));
+        var tbl = document.body.appendChild(document.createElement("TABLE"));
                 //alert("Appending TR to TABLE");
-        tr = tbl.appendChild(document.createElement("TR"));
-        tmp_td = document.createElement("TD")
-        td1 = tr.appendChild(tmp_td);   // <-- Causes Crash
-        td1_text = td1.appendChild(document.createTextNode("testing"));
+        var tr = tbl.appendChild(document.createElement("TR"));
+        var tmp_td = document.createElement("TD")
+        var td1 = tr.appendChild(tmp_td);   // <-- Causes Crash
+        var td1_text = td1.appendChild(document.createTextNode("testing"));
 }
 //-->
 </SCRIPT>
