@@ -334,7 +334,6 @@ pr_ZoneRealloc(void *oldptr, PRUint32 bytes)
     if (!oldptr)
         return pr_ZoneMalloc(bytes);
     mb = (MemBlockHdr *)((char *)oldptr - (sizeof *mb));
-    PR_ASSERT(mb->s.magic == ZONE_MAGIC);
     if (mb->s.magic != ZONE_MAGIC) {
         /* Maybe this just came from ordinary malloc */
 #ifdef DEBUG
