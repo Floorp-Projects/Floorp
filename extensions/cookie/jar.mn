@@ -7,7 +7,9 @@ comm.jar:
     content/cookie/pref-images.xul                 (resources/content/pref-images.xul)
     content/cookie/cookieOverlay.js                (resources/content/cookieOverlay.js)
     content/cookie/p3p.xul                         (resources/content/p3p.xul)
+    content/cookie/p3pDialog.xul                   (resources/content/p3pDialog.xul)
     content/cookie/taskbar-cookie.gif              (resources/content/taskbar-cookie.gif) 
+    content/cookie/status.jpg                      (resources/content/status.jpg) 
 
 en-US.jar:
     locale/en-US/cookie/contents.rdf               (resources/locale/en-US/contents.rdf)
