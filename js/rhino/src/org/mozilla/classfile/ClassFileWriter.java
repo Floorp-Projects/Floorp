@@ -2489,13 +2489,13 @@ final class ClassFileField
         itsHasAttributes = false;
     }
 
-    void setAttributes(short attr1, short attr2, short attr3, short attr4)
+    void setAttributes(short attr1, short attr2, short attr3, int index)
     {
         itsHasAttributes = true;
         itsAttr1 = attr1;
         itsAttr2 = attr2;
         itsAttr3 = attr3;
-        itsAttr4 = attr4;
+        itsIndex = index;
     }
 
     int write(byte[] data, int offset)
@@ -2511,7 +2511,7 @@ final class ClassFileField
             offset = ClassFileWriter.putInt16(itsAttr1, data, offset);
             offset = ClassFileWriter.putInt16(itsAttr2, data, offset);
             offset = ClassFileWriter.putInt16(itsAttr3, data, offset);
-            offset = ClassFileWriter.putInt16(itsAttr4, data, offset);
+            offset = ClassFileWriter.putInt16(itsIndex, data, offset);
         }
         return offset;
     }
@@ -2531,7 +2531,8 @@ final class ClassFileField
     private short itsTypeIndex;
     private short itsFlags;
     private boolean itsHasAttributes;
-    private short itsAttr1, itsAttr2, itsAttr3, itsAttr4;
+    private short itsAttr1, itsAttr2, itsAttr3;
+    private int itsIndex;
 }
 
 final class ClassFileMethod
@@ -2612,7 +2613,7 @@ final class ConstantPool
         return 2 + itsTop;
     }
 
-    short addConstant(int k)
+    int addConstant(int k)
     {
         ensure(5);
         itsPool[itsTop++] = CONSTANT_Integer;
@@ -2620,37 +2621,37 @@ final class ConstantPool
         return (short)(itsTopIndex++);
     }
 
-    short addConstant(long k)
+    int addConstant(long k)
     {
         ensure(9);
         itsPool[itsTop++] = CONSTANT_Long;
         itsTop = ClassFileWriter.putInt64(k, itsPool, itsTop);
-        short index = (short)(itsTopIndex);
+        int index = itsTopIndex;
         itsTopIndex += 2;
         return index;
     }
 
-    short addConstant(float k)
+    int addConstant(float k)
     {
         ensure(5);
         itsPool[itsTop++] = CONSTANT_Float;
         int bits = Float.floatToIntBits(k);
         itsTop = ClassFileWriter.putInt32(bits, itsPool, itsTop);
-        return (short)(itsTopIndex++);
+        return itsTopIndex++;
     }
 
-    short addConstant(double k)
+    int addConstant(double k)
     {
         ensure(9);
         itsPool[itsTop++] = CONSTANT_Double;
         long bits = Double.doubleToLongBits(k);
         itsTop = ClassFileWriter.putInt64(bits, itsPool, itsTop);
-        short index = (short)(itsTopIndex);
+        int index = itsTopIndex;
         itsTopIndex += 2;
         return index;
     }
 
-    short addConstant(String k)
+    int addConstant(String k)
     {
         int utf8Index = 0xFFFF & addUtf8(k);
         int theIndex = itsStringConstHash.getInt(utf8Index, -1);
@@ -2661,7 +2662,7 @@ final class ConstantPool
             itsTop = ClassFileWriter.putInt16(utf8Index, itsPool, itsTop);
             itsStringConstHash.put(utf8Index, theIndex);
         }
-        return (short)theIndex;
+        return theIndex;
     }
 
     boolean isUnderUtfEncodingLimit(String s)
