@@ -705,10 +705,8 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     validX = mDecodedX1; 
   }
 
-  // put the width and hieght into the devices coordinates
 
   // put the DestRect into absolute coordintes of the device
-
   y0 = aDestRect.y - aSYOffset;
   x0 = aDestRect.x - aSXOffset;
   y1 = aDestRect.y + aDestRect.height;
@@ -719,10 +717,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   ScaledTileWidth = PR_MAX(PRInt32(mBHead->biWidth*scale), 1);
   ScaledTileHeight = PR_MAX(PRInt32(mBHead->biHeight*scale), 1);
 
-
-
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
-
 
   // do alpha depth equal to 8 here.. this needs some special attention
 
@@ -735,8 +730,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     if (!mImageBits) {
       ConvertDDBtoDIB();
     }
-
-
 
     // draw the alpha and the bitmap to an offscreen buffer.. for the blend.. first 
     ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
@@ -759,12 +752,14 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       NS_WARNING("The Creation of the tmpBitmap failed \n");
     } else {
       // Copy from the HDC to the memory DC
-      ::StretchBlt(memDC, 0, 0, width, height,theHDC, 0, 0, width, height, SRCCOPY);
+      // this will be the image on the screen into a buffer for the blend.
+      ::StretchBlt(memDC, 0, 0, width, height,theHDC, aDestRect.x, aDestRect.y, width, height, SRCCOPY);
   
       targetRowBytes = ((width * 3) + 3) & ~3;
       ScaledTileHeight_Offset = ScaledTileHeight + aSYOffset;
       ScaledTileWidth_Offset = ScaledTileWidth + aSXOffset;
 
+      // this is the adjusted width of these imagebuffers
       temp1 = mRowBytes + 3 * aSXOffset;
       temp2 = mARowBytes + aSXOffset;
 
@@ -773,25 +768,26 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
           byw = aSYOffset;
         }
         targetRow = screenBits + y * targetRowBytes;
-        imageRow = mImageBits + byw * temp1;
-        alphaRow = mAlphaBits + byw * temp2;
+        imageRow = mImageBits + (byw * temp1);
+        alphaRow = mAlphaBits + (byw * temp2);
 
         for (int x=0,bxw=aSXOffset;x<width;x++,targetRow+=3,imageRow+=3,bxw++, alphaRow++) {
+          // if we went past the row width of our buffer.. go back and start again
           if (bxw>=ScaledTileWidth_Offset) {
             bxw = aSXOffset;
-            imageRow = mImageBits + byw * mRowBytes + ((3*bxw)%mRowBytes);
-            alphaRow = mAlphaBits + byw * mARowBytes + (bxw%mRowBytes);
+            imageRow = mImageBits + (byw * temp1);
+            alphaRow = mAlphaBits + (byw * temp2);
           }
-          alpha = *alphaRow;
 
+          alpha = *alphaRow;
           MOZ_BLEND(targetRow[0], targetRow[0], imageRow[0], alpha);
           MOZ_BLEND(targetRow[1], targetRow[1], imageRow[1], alpha);
           MOZ_BLEND(targetRow[2], targetRow[2], imageRow[2], alpha);
         }
       }
 
-      // Copy back to the HDC 
-      ::StretchBlt(theHDC, 0, 0, width, height,memDC, 0, 0, width, height, SRCCOPY);
+      // copy the blended image back to the screen
+      ::StretchBlt(theHDC, aDestRect.x, aDestRect.y, width, height,memDC, 0, 0, width, height, SRCCOPY);
 
       ::SelectObject(memDC, oldBitmap);
       ::DeleteObject(tmpBitmap);
