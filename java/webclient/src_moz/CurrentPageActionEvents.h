@@ -23,10 +23,11 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *               Kyle Yuan <kyle.yuan@sun.com>
  */
 
 /*
- * nsActions.h
+ * CurrentPageActionEvents.h
  */
  
 #ifndef CurrentPageActionEvents_h___
@@ -100,6 +101,25 @@ protected:
     jclass mClazz;
     jmethodID mID;
     jlong mDoc;
+};
+
+class wsPrintEvent : public nsActionEvent {
+public:
+    wsPrintEvent(WebShellInitContext *yourInitContext);
+    void * handleEvent (void);
+
+protected:
+    WebShellInitContext *mInitContext;
+};
+
+class wsPrintPreviewEvent : public nsActionEvent {
+public:
+    wsPrintPreviewEvent(WebShellInitContext *yourInitContext, jboolean preview);
+    void * handleEvent (void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    jboolean mInPreview;
 };
 
 class wsGetSelectionEvent: public nsActionEvent {

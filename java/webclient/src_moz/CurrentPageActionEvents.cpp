@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -23,8 +23,9 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
- *      Jason Mawdsley <jason@macadamian.com>
- *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
+ *               Jason Mawdsley <jason@macadamian.com>
+ *               Louis-Philippe Gagnon <louisphilippe@macadamian.com>
+ *               Kyle Yuan <kyle.yuan@sun.com>
  */
 
 /*
@@ -46,6 +47,8 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIWebBrowserFind.h"
+#include "nsIWebBrowserPrint.h"
+#include "nsIPrintSettings.h"
 #include "nsIDOMWindow.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
@@ -63,18 +66,18 @@ void *
 wsCopySelectionEvent::handleEvent ()
 {
     void *result = nsnull;
-    
+
     if (mInitContext) {
         nsIContentViewer* contentViewer ;
         nsresult rv = nsnull;
-        
+
         rv = mInitContext->docShell->GetContentViewer(&contentViewer);
         if (NS_FAILED(rv) || contentViewer==nsnull )  {
             return (void *) rv;
         }
-    
+
         nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
-        
+
         rv = contentViewerEdit->CopySelection();
         result = (void *) rv;
     }
@@ -90,7 +93,7 @@ wsGetSelectionEvent::wsGetSelectionEvent(JNIEnv *yourEnv, WebShellInitContext *y
 }
 
 void *
-wsGetSelectionEvent::handleEvent() 
+wsGetSelectionEvent::handleEvent()
 {
     void *result = nsnull;
 
@@ -124,8 +127,8 @@ wsGetSelectionEvent::handleEvent()
         if (NS_FAILED(rv))  {
             return (void *) rv;
         }
-        
-        jstring string = 
+
+        jstring string =
             mEnv->NewString((jchar*)selectionStr, nsCRT::strlen(selectionStr));
 
         // Get the first range object of the selection object
@@ -134,7 +137,7 @@ wsGetSelectionEvent::handleEvent()
         if (NS_FAILED(rv) || range == nsnull)  {
             return (void *) rv;
         }
-        
+
         // Get the properties of the range object (startContainer,
         // startOffset, endContainer, endOffset)
         PRInt32 startOffset;
@@ -170,7 +173,7 @@ wsGetSelectionEvent::handleEvent()
         // and end containers
         jlong node1Long = nsnull;
         jlong node2Long = nsnull;
-        
+
         nsCOMPtr<nsIDOMNode> node1Ptr(do_QueryInterface(startContainer));
         nsCOMPtr<nsIDOMNode> node2Ptr(do_QueryInterface(endContainer));
 
@@ -184,7 +187,7 @@ wsGetSelectionEvent::handleEvent()
         jclass clazz = nsnull;
         jmethodID mid = nsnull;
 
-        if (nsnull == (clazz = ::util_FindClass(mEnv, 
+        if (nsnull == (clazz = ::util_FindClass(mEnv,
                                                 "org/mozilla/dom/DOMAccessor"))) {
             return result;
         }
@@ -206,8 +209,8 @@ wsGetSelectionEvent::handleEvent()
             return result;
         }
 
-        mEnv->CallVoidMethod(mSelection, mid, 
-                             string, node1, node2, 
+        mEnv->CallVoidMethod(mSelection, mid,
+                             string, node1, node2,
                              (jint)startOffset, (jint)endOffset);
     }
 
@@ -245,7 +248,7 @@ wsHighlightSelectionEvent::handleEvent()
         jfieldID nodePtrFID = mEnv->GetFieldID(nodeClass, "p_nsIDOMNode", "J");
         if (!nodePtrFID) {
             return result;
-        } 
+        }
 
         // get the nsIDOMNode representation of the start and end containers
         nsIDOMNode* node1 = (nsIDOMNode*)
@@ -271,23 +274,23 @@ wsHighlightSelectionEvent::handleEvent()
         if (NS_FAILED(rv) || selection == nsnull) {
             return (void *) rv;
         }
-        
+
         nsCOMPtr<nsIDOMDocumentRange> docRange(do_QueryInterface(mInitContext->currentDocument));
         if (docRange) {
             nsCOMPtr<nsIDOMRange> range;
             rv = docRange->CreateRange(getter_AddRefs(range));
-            
+
             if (range) {
                 rv = range->SetStart(node1, mStartOffset);
                 if (NS_FAILED(rv))  {
                     return (void *) rv;
                 }
-                
+
                 rv = range->SetEnd(node2, mEndOffset);
                 if (NS_FAILED(rv))  {
                     return (void *) rv;
                 }
-                
+
                 rv = selection->AddRange(range);
                 if (NS_FAILED(rv))  {
                     return (void *) rv;
@@ -319,7 +322,7 @@ wsClearAllSelectionEvent::handleEvent()
         if (NS_FAILED(rv) || domWindow == nsnull )  {
             return (void *) rv;
         }
-        
+
         // Get the selection object of the DOM window
         nsISelection* selection;
         rv = domWindow->GetSelection(&selection);
@@ -332,7 +335,7 @@ wsClearAllSelectionEvent::handleEvent()
             return (void *) rv;
         }
     }
-    
+
      return result;
 }
 
@@ -361,29 +364,29 @@ wsFindEvent::handleEvent ()
     void *result = nsnull;
     nsresult rv = NS_ERROR_FAILURE;
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-    
+
     if (mInitContext) {
         //First get the nsIWebBrowserFind object
         nsCOMPtr<nsIWebBrowserFind> findComponent;
-        nsCOMPtr<nsIInterfaceRequestor> 
+        nsCOMPtr<nsIInterfaceRequestor>
             findRequestor(do_GetInterface(mInitContext->webBrowser));
-        
+
         rv = findRequestor->GetInterface(NS_GET_IID(nsIWebBrowserFind),
                                          getter_AddRefs(findComponent));
-        
+
         if (NS_FAILED(rv) || nsnull == findComponent)  {
             return (void *) rv;
         }
-            
+
         // If this a Find, not a FindNext, we must make the
         // nsIWebBrowserFind instance aware of the string to search.
         if (mSearchString) {
-            
+
             PRUnichar * srchString = nsnull;
-            
-            srchString = (PRUnichar *) ::util_GetStringChars(env, 
+
+            srchString = (PRUnichar *) ::util_GetStringChars(env,
                                                              mSearchString);
-            
+
             // Check if String is NULL
             if (nsnull == srchString) {
                 return (void *) NS_ERROR_NULL_POINTER;
@@ -401,11 +404,11 @@ wsFindEvent::handleEvent ()
         findComponent->SetFindBackwards(!mForward);
         findComponent->SetMatchCase(mMatchCase);
 
-        
+
         PRBool found = PR_TRUE;
         rv = findComponent->FindNext(&found);
         result = (void *) rv;
-  
+
     }
     return result;
 }
@@ -416,7 +419,7 @@ wsFindEvent::handleEvent ()
 
 wsGetURLEvent::wsGetURLEvent(WebShellInitContext *yourInitContext) :
         nsActionEvent(),
-	mInitContext(yourInitContext)
+    mInitContext(yourInitContext)
 {
 }
 
@@ -431,18 +434,18 @@ wsGetURLEvent::handleEvent ()
         PRInt32 currentIndex;
         char *currentURL = nsnull;
 
-        
+
         rv = mInitContext->webNavigation->GetSessionHistory(&mHistory);
         if (NS_FAILED(rv)) {
             return (void *) rv;
         }
-        
+
         rv = mHistory->GetIndex(&currentIndex);
-        
+
         if (NS_FAILED(rv)) {
             return result;
         }
-        
+
         nsIHistoryEntry * Entry;
         rv = mHistory->GetEntryAtIndex(currentIndex, PR_FALSE, &Entry);
 
@@ -450,21 +453,21 @@ wsGetURLEvent::handleEvent ()
             return result;
         }
 
-	nsIURI * URI;
-	rv = Entry->GetURI(&URI);
+    nsIURI * URI;
+    rv = Entry->GetURI(&URI);
 
-	if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv)) {
             return result;
         }
 
     nsCString urlSpecString;
-	
-	rv = URI->GetSpec(urlSpecString);
-	if (NS_FAILED(rv)) {
+
+    rv = URI->GetSpec(urlSpecString);
+    if (NS_FAILED(rv)) {
         return result;
     }
     currentURL = ToNewCString(urlSpecString);
-    
+
     result = (void *) currentURL;
     }
     return result;
@@ -481,7 +484,7 @@ void *
 wsSelectAllEvent::handleEvent ()
 {
     void *result = nsnull;
-    
+
     if (mInitContext) {
         nsIContentViewer* contentViewer;
         nsresult rv = nsnull;
@@ -492,7 +495,7 @@ wsSelectAllEvent::handleEvent ()
         }
 
         nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
-        
+
         rv = contentViewerEdit->SelectAll();
         result = (void *) rv;
     }
@@ -526,7 +529,7 @@ wsViewSourceEvent::handleEvent ()
 */
 
 
-wsGetDOMEvent::wsGetDOMEvent(JNIEnv *yourEnv, jclass clz, 
+wsGetDOMEvent::wsGetDOMEvent(JNIEnv *yourEnv, jclass clz,
                              jmethodID yourID, jlong yourDoc) :
     nsActionEvent(),
     mEnv(yourEnv),
@@ -541,14 +544,84 @@ wsGetDOMEvent::handleEvent ()
 {
 
     void * result = nsnull;
-    if (mEnv != nsnull && mClazz != nsnull && 
+    if (mEnv != nsnull && mClazz != nsnull &&
         mID != nsnull && mDoc != nsnull)
         result = (void *) util_CallStaticObjectMethodlongArg(mEnv, mClazz, mID, mDoc);
-    
+
+    return result;
+}
+
+// Deal with the Print events. TODO: we need a print setup UI in Java
+wsPrintEvent::wsPrintEvent(WebShellInitContext *yourInitContext) :
+        nsActionEvent(),
+        mInitContext(yourInitContext)
+{
+}
+
+void *
+wsPrintEvent::handleEvent ()
+{
+    void *result = nsnull;
+
+    if (mInitContext) {
+        nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mInitContext->webBrowser));
+        nsresult rv = nsnull;
+        if (print==nsnull)  {
+            mInitContext->initFailCode = kGetContentViewerError;
+            return (void *) rv;
+        }
+
+        nsCOMPtr<nsIPrintSettings> printSettings;
+        rv = print->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+        if (NS_FAILED(rv))
+            return (void *) rv;
+
+        // XXX kyle: we have to disable the Print Progress dialog until we are able to show the java native dialog.
+        printSettings->SetShowPrintProgress(PR_FALSE);
+        rv = print->Print(printSettings, nsnull);
+
+        result = (void *) rv;
+    }
+
     return result;
 }
 
 
+wsPrintPreviewEvent::wsPrintPreviewEvent(WebShellInitContext *yourInitContext, jboolean preview) :
+        nsActionEvent(),
+        mInitContext(yourInitContext), mInPreview(preview)
+{
+}
 
+void *
+wsPrintPreviewEvent::handleEvent ()
+{
+    void *result = nsnull;
 
- 
+    if (mInitContext) {
+        nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mInitContext->webBrowser));
+        nsresult rv = nsnull;
+        if (print==nsnull)  {
+            mInitContext->initFailCode = kGetContentViewerError;
+            return (void *) rv;
+        }
+
+        nsCOMPtr<nsIPrintSettings> printSettings;
+        rv = print->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+        if (NS_FAILED(rv))
+            return (void *) rv;
+
+        // XXX kyle: we have to disable the Print Progress dialog by now because we are unable to show the java native dialog yet.
+        printSettings->SetShowPrintProgress(PR_FALSE);
+        if (mInPreview) {
+            rv = print->PrintPreview(printSettings, nsnull, nsnull);
+        }
+        else {
+            rv = print->ExitPrintPreview();
+        }
+
+        result = (void *) rv;
+    }
+
+    return result;
+}

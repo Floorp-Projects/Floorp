@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -23,6 +23,7 @@
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
  *               Ashutosh Kulkarni <ashuk@eng.sun.com>
+ *               Kyle Yuan <kyle.yuan@sun.com>
  */
 
 /*
@@ -42,34 +43,34 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    
+
     if (initContext->initComplete) {
         wsCopySelectionEvent * actionEvent = new wsCopySelectionEvent(initContext);
-        PLEvent			* event       = (PLEvent*) *actionEvent;      
+        PLEvent         * event       = (PLEvent*) *actionEvent;
         ::util_PostEvent(initContext, event);
-    }	
- 
+    }
+
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSelection
 (JNIEnv *env, jobject obj, jint webShellPtr, jobject selection)
 {
     WebShellInitContext *initContext = (WebShellInitContext *) webShellPtr;
-    
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed nativeGetSelection");
-		return;
-	}
+
+    if (initContext == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed nativeGetSelection");
+        return;
+    }
 
     PR_ASSERT(initContext->initComplete);
 
     if (selection == nsnull) {
         ::util_ThrowExceptionToJava(env, "Exception: null Selection object passed to raptorWebShellGetSelection");
-		return;
+        return;
     }
 
     wsGetSelectionEvent *actionEvent = new wsGetSelectionEvent(env, initContext, selection);
-    
+
     PLEvent *event = (PLEvent *) *actionEvent;
     ::util_PostSynchronousEvent(initContext, event);
 }
@@ -79,14 +80,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 (JNIEnv *env, jobject obj, jint webShellPtr, jobject startContainer, jobject endContainer, jint startOffset, jint endOffset)
 {
     WebShellInitContext *initContext = (WebShellInitContext *) webShellPtr;
-    
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeHighlightSelection");
+
+    if (initContext == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeHighlightSelection");
         return;
-	}
-    
+    }
+
     PR_ASSERT(initContext->initComplete);
-    
+
     wsHighlightSelectionEvent *actionEvent = new wsHighlightSelectionEvent(env, initContext, startContainer, endContainer, (PRInt32) startOffset, (PRInt32) endOffset);
     PLEvent *event = (PLEvent *) *actionEvent;
     ::util_PostSynchronousEvent(initContext, event);
@@ -97,16 +98,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext *initContext = (WebShellInitContext *) webShellPtr;
-    
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeClearAllSelections");
-		return;
-	}
+
+    if (initContext == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeClearAllSelections");
+        return;
+    }
 
     PR_ASSERT(initContext->initComplete);
 
     wsClearAllSelectionEvent *actionEvent = new wsClearAllSelectionEvent(initContext);
-    
+
     PLEvent *event = (PLEvent *) *actionEvent;
     ::util_PostSynchronousEvent(initContext, event);
 }
@@ -122,7 +123,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
 
-  
+
   jstring searchStringGlobalRef = (jstring) ::util_NewGlobalRef(env, searchString);
   if (!searchStringGlobalRef) {
       initContext->initFailCode = kFindComponentError;
@@ -131,9 +132,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   }
 
   if (initContext->initComplete) {
-     wsFindEvent * actionEvent = new wsFindEvent(initContext, searchStringGlobalRef, 
+     wsFindEvent * actionEvent = new wsFindEvent(initContext, searchStringGlobalRef,
                                                  forward, matchCase);
-      PLEvent			* event       = (PLEvent*) *actionEvent;      
+      PLEvent           * event       = (PLEvent*) *actionEvent;
       ::util_PostEvent(initContext, event);
     }
 
@@ -153,12 +154,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
   //First get the FindComponent object
-  
+
   PRBool found = PR_TRUE;
 
   if (initContext->initComplete) {
       wsFindEvent * actionEvent = new wsFindEvent(initContext);
-      PLEvent			* event       = (PLEvent*) *actionEvent;      
+      PLEvent           * event       = (PLEvent*) *actionEvent;
       ::util_PostEvent(initContext, event);
   }
 
@@ -172,36 +173,36 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetCurrentURL
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
-	JNIEnv	*	pEnv = env;
-	jobject		jobj = obj;
-	char	*	charResult = nsnull;
-	jstring		urlString = nsnull;
+    JNIEnv  *   pEnv = env;
+    jobject     jobj = obj;
+    char    *   charResult = nsnull;
+    jstring     urlString = nsnull;
 
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
 
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetURL");
-		return nsnull;
-	}
+    if (initContext == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetURL");
+        return nsnull;
+    }
 
-	if (initContext->initComplete) {
-		wsGetURLEvent	* actionEvent = new wsGetURLEvent(initContext);
-        PLEvent	   	  	* event       = (PLEvent*) *actionEvent;
-        
-		charResult = (char *) ::util_PostSynchronousEvent(initContext, event);
-        
-		if (charResult != nsnull) {
-			urlString = ::util_NewStringUTF(env, (const char *) charResult);
-		}
-		else {
-			::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned NULL");
-			return nsnull;
-		}
-        
+    if (initContext->initComplete) {
+        wsGetURLEvent   * actionEvent = new wsGetURLEvent(initContext);
+        PLEvent         * event       = (PLEvent*) *actionEvent;
+
+        charResult = (char *) ::util_PostSynchronousEvent(initContext, event);
+
+        if (charResult != nsnull) {
+            urlString = ::util_NewStringUTF(env, (const char *) charResult);
+        }
+        else {
+            ::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned NULL");
+            return nsnull;
+        }
+
         nsMemory::Free(charResult);
-	}
-    
-	return urlString;
+    }
+
+    return urlString;
 }
 
 JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetDOM
@@ -213,31 +214,31 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
     jclass clazz = nsnull;
     jmethodID mid = nsnull;
 
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetDOM");
-		return nsnull;
-	}
+    if (initContext == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetDOM");
+        return nsnull;
+    }
     if (nsnull == initContext->currentDocument ||
         nsnull == (documentLong = (jlong) initContext->currentDocument.get())){
         return nsnull;
     }
-    
-	if (nsnull == (clazz = ::util_FindClass(env, 
+
+    if (nsnull == (clazz = ::util_FindClass(env,
                                             "org/mozilla/dom/DOMAccessor"))) {
-		::util_ThrowExceptionToJava(env, "Exception: Can't get DOMAccessor class");
-		return nsnull;
-	}
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get DOMAccessor class");
+        return nsnull;
+    }
     if (nsnull == (mid = env->GetStaticMethodID(clazz, "getNodeByHandle",
                                                 "(J)Lorg/w3c/dom/Node;"))) {
-		::util_ThrowExceptionToJava(env, "Exception: Can't get DOM Node.");
-		return nsnull;
-	}
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get DOM Node.");
+        return nsnull;
+    }
 
     wsGetDOMEvent * actionEvent = new wsGetDOMEvent(env, clazz, mid, documentLong);
-    PLEvent			* event       = (PLEvent*) *actionEvent;      
+    PLEvent         * event       = (PLEvent*) *actionEvent;
     result = (jobject) ::util_PostSynchronousEvent(initContext, event);
 
-    
+
     return result;
 }
 
@@ -253,7 +254,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 (JNIEnv * env, jobject jobj)
 {
     jstring result = nsnull;
-    
+
     return result;
 }
 */
@@ -274,9 +275,9 @@ JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentP
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
 
   if (initContext->initComplete) {
-      wsViewSourceEvent * actionEvent = 
+      wsViewSourceEvent * actionEvent =
           new wsViewSourceEvent(initContext->docShell, ((JNI_TRUE == viewMode)? PR_TRUE : PR_FALSE));
-      PLEvent	   	* event       = (PLEvent*) *actionEvent;
+      PLEvent       * event       = (PLEvent*) *actionEvent;
 
       ::util_PostEvent(initContext, event);
   }
@@ -310,9 +311,42 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 (JNIEnv * env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-	if (initContext->initComplete) {
+    if (initContext->initComplete) {
         wsSelectAllEvent * actionEvent = new wsSelectAllEvent(initContext);
-        PLEvent			* event       = (PLEvent*) *actionEvent;      
+        PLEvent         * event       = (PLEvent*) *actionEvent;
         ::util_PostEvent(initContext, event);
-    }	
+    }
 }
+
+/*
+ * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Method:    nativePrint
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativePrint
+(JNIEnv * env, jobject obj, jint webShellPtr)
+{
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    if (initContext->initComplete) {
+        wsPrintEvent * actionEvent = new wsPrintEvent(initContext);
+        PLEvent         * event       = (PLEvent*) *actionEvent;
+        ::util_PostEvent(initContext, event);
+    }
+}
+
+/*
+ * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Method:    nativePrintPreview
+ * Signature: (IZ)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativePrintPreview
+(JNIEnv * env, jobject obj, jint webShellPtr, jboolean preview)
+{
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    if (initContext->initComplete) {
+        wsPrintPreviewEvent * actionEvent = new wsPrintPreviewEvent(initContext, preview);
+        PLEvent         * event       = (PLEvent*) *actionEvent;
+        ::util_PostEvent(initContext, event);
+    }
+}
+

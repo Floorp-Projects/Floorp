@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):  Daniel Park <daepark@apmindsf.com>
+ *                  Kyle Yuan <kyle.yuan@sun.com>
  */
 
 package org.mozilla.webclient;
@@ -26,10 +27,13 @@ package org.mozilla.webclient;
 public interface CurrentPage2 extends CurrentPage
 {
     public Selection getSelection();
-    
+
     public void highlightSelection(Selection selection);
-    
+
     public void clearAllSelections();
 
-} 
-// end of interface CurrentPage
+    public void print();
+
+    public void printPreview(boolean preview);
+}
+// end of interface CurrentPage2

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -39,7 +39,7 @@ import java.net.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import org.mozilla.webclient.UnimplementedException; 
+import org.mozilla.webclient.UnimplementedException;
 
 import org.mozilla.dom.DOMAccessor;
 
@@ -65,10 +65,10 @@ private static boolean domInitialized = false;
 // Relationship Instance Variables
 
 //
-// Constructors and Initializers    
+// Constructors and Initializers
 //
 
-public CurrentPageImpl(WrapperFactory yourFactory, 
+public CurrentPageImpl(WrapperFactory yourFactory,
                        BrowserControl yourBrowserControl)
 {
     super(yourFactory, yourBrowserControl);
@@ -87,7 +87,7 @@ public CurrentPageImpl(WrapperFactory yourFactory,
 //
 
 //
-// Methods from CurrentPage    
+// Methods from CurrentPage
 //
 
 public void copyCurrentSelectionToSystemClipboard()
@@ -134,7 +134,7 @@ public void clearAllSelections() {
         nativeClearAllSelections(nativeWebShell);
     }
 }
-            
+
 public void findInPage(String stringToFind, boolean forward, boolean matchCase)
 {
     ParameterCheck.nonNull(stringToFind);
@@ -144,27 +144,27 @@ public void findInPage(String stringToFind, boolean forward, boolean matchCase)
         nativeFindInPage(nativeWebShell, stringToFind, forward, matchCase);
     }
 }
-            
+
 public void findNextInPage()
 {
     myFactory.throwExceptionIfNotInitialized();
-    
+
     synchronized(myBrowserControl) {
         nativeFindNextInPage(nativeWebShell);
     }
 }
-            
+
 public String getCurrentURL()
 {
     String result = null;
     myFactory.throwExceptionIfNotInitialized();
-    
+
     synchronized(myBrowserControl) {
         result = nativeGetCurrentURL(nativeWebShell);
     }
     return result;
 }
-            
+
 public Document getDOM()
 {
     Document result = nativeGetDOM(nativeWebShell);
@@ -180,12 +180,12 @@ public Properties getPageInfo()
     }
     return result;
     */
-  
-  throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::getPageInfo has not yet been implemented.\n");
-}  
-  
 
-            
+  throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::getPageInfo has not yet been implemented.\n");
+}
+
+
+
 public String getSource()
 {
     myFactory.throwExceptionIfNotInitialized();
@@ -212,16 +212,16 @@ public String getSource()
         {
             System.out.println("Error occurred while establishing connection -- \n ERROR - " + e);
         }
-    
+
     return HTMLContent;
 }
- 
+
 public byte [] getSourceBytes()
 {
     byte [] result = null;
     myFactory.throwExceptionIfNotInitialized();
-    
-    
+
+
     String HTMLContent = new String();
     String currURL = getCurrentURL();
     System.out.println("\nThe Current URL is -- " + currURL);
@@ -242,9 +242,9 @@ public byte [] getSourceBytes()
             }
     }
     catch (Throwable e)
- 	{
+    {
         System.out.println("Error occurred while establishing connection -- \n ERROR - " + e);
- 	}
+    }
     result = HTMLContent.getBytes();
     return result;
 }
@@ -252,53 +252,74 @@ public byte [] getSourceBytes()
 public void resetFind()
 {
     myFactory.throwExceptionIfNotInitialized();
-    
+
     synchronized(myBrowserControl) {
         nativeResetFind(nativeWebShell);
     }
 }
-            
+
 public void selectAll()
 {
     myFactory.throwExceptionIfNotInitialized();
-    
+
     synchronized(myBrowserControl) {
         nativeSelectAll(nativeWebShell);
     }
 }
 
-// 
+public void print()
+{
+    myFactory.throwExceptionIfNotInitialized();
+
+    synchronized(myBrowserControl) {
+        nativePrint(nativeWebShell);
+    }
+}
+
+public void printPreview(boolean preview)
+{
+    myFactory.throwExceptionIfNotInitialized();
+
+    synchronized(myBrowserControl) {
+        nativePrintPreview(nativeWebShell, preview);
+    }
+}
+
+//
 // Native methods
 //
 
 native public void nativeCopyCurrentSelectionToSystemClipboard(int webShellPtr);
-native public void nativeGetSelection(int webShellPtr, 
+native public void nativeGetSelection(int webShellPtr,
                                       Selection selection);
 
 native public void nativeHighlightSelection(int webShellPtr, Node startContainer, Node endContainer, int startOffset, int endOffset);
 
 native public void nativeClearAllSelections(int webShellPtr);
-            
+
 native public void nativeFindInPage(int webShellPtr, String stringToFind, boolean forward, boolean matchCase);
-            
+
 native public void nativeFindNextInPage(int webShellPtr);
-            
+
 native public String nativeGetCurrentURL(int webShellPtr);
-            
+
 native public Document nativeGetDOM(int webShellPtr);
 
 // webclient.PageInfo getPageInfo();
 
-/* PENDING(ashuk): remove this from here and in the motif directory            
+/* PENDING(ashuk): remove this from here and in the motif directory
  * native public String nativeGetSource();
- 
+
  * native public byte [] nativeGetSourceBytes(int webShellPtr, boolean viewMode);
  */
-            
+
 native public void nativeResetFind(int webShellPtr);
-            
+
 native public void nativeSelectAll(int webShellPtr);
 
+native public void nativePrint(int webShellPtr);
+
+native public void nativePrintPreview(int webShellPtr, boolean preview);
 
 // ----VERTIGO_TEST_START
 
@@ -311,8 +332,8 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.19 2003/04/09 17:42:34 edburns%acm.org Exp $");
-    
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.20 2003/04/18 01:07:52 kyle.yuan%sun.com Exp $");
+
 }
 
 // ----VERTIGO_TEST_END
