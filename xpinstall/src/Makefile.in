@@ -76,6 +76,8 @@ REQUIRES	= xpcom \
 		  plugin \
 		  unicharutil \
 		  appshell \
+		  docshell \
+		  cookie \
 		  layout \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
