@@ -20,18 +20,12 @@
 #ifndef nsCP1253ToUnicode_h___
 #define nsCP1253ToUnicode_h___
 
-#include "nsIFactory.h"
-#include "nsICharsetConverterInfo.h"
+#include "ns1ByteToUnicodeBase.h"
 
 //----------------------------------------------------------------------
-// Class nsCP1253ToUnicodeFactory [declaration]
+// Class nsCP1253ToUnicode [declaration]
 
-/**
- * Factory class for the nsCP1253ToUnicode objects.
- * 
- */
-class nsCP1253ToUnicodeFactory : public nsIFactory, 
-public nsICharsetConverterInfo
+class nsCP1253ToUnicode : public ns1ByteToUnicodeBase
 {
   NS_DECL_ISUPPORTS
 
@@ -40,28 +34,24 @@ public:
   /**
    * Class constructor.
    */
-  nsCP1253ToUnicodeFactory();
+  nsCP1253ToUnicode();
 
   /**
    * Class destructor.
    */
-  ~nsCP1253ToUnicodeFactory();
+  ~nsCP1253ToUnicode();
 
-  //--------------------------------------------------------------------
-  // Interface nsIFactory [declaration]
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
 
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate, const nsIID &aIID,
-                            void **aResult);
+protected:
+  virtual uMappingTable* GetMappingTable();
+  virtual PRUnichar* GetFastTable();
+  virtual PRBool GetFastTableInitState();
+  virtual void SetFastTableInit();
 
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-  //--------------------------------------------------------------------
-  // Interface nsICharsetConverterInfo [declaration]
-
-  NS_IMETHOD GetCharsetSrc(char ** aCharset);
-  NS_IMETHOD GetCharsetDest(char ** aCharset);
 };
-
-
 
 #endif 

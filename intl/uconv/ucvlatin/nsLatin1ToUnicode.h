@@ -20,20 +20,28 @@
 #ifndef nsLatin1ToUnicode_h___
 #define nsLatin1ToUnicode_h___
 
-#include "nsIFactory.h"
-#include "nsICharsetConverterInfo.h"
+#include "nsIUnicodeDecoder.h"
 
 //----------------------------------------------------------------------
 // Class nsLatin1ToUnicodeFactory [declaration]
 
+//----------------------------------------------------------------------
+// Class nsLatin1ToUnicode [declaration]
+
 /**
- * Factory class for the nsLatin1ToUnicode objects.
+ * A character set converter from Latin1 to Unicode.
+ *
+ * This particular converter does not use the general single-byte converter 
+ * helper object. That is because someone may want to optimise this converter 
+ * to the fullest, as it is one of the most heavily used.
+ *
+ * Multithreading: not an issue, the object has one instance per user thread.
+ * As a plus, it is also stateless!
  * 
- * @created         08/Dec/1998
+ * @created         23/Nov/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsLatin1ToUnicodeFactory : public nsIFactory, 
-public nsICharsetConverterInfo
+class nsLatin1ToUnicode : public nsIUnicodeDecoder
 {
   NS_DECL_ISUPPORTS
 
@@ -42,28 +50,30 @@ public:
   /**
    * Class constructor.
    */
-  nsLatin1ToUnicodeFactory();
+  nsLatin1ToUnicode();
 
   /**
    * Class destructor.
    */
-  ~nsLatin1ToUnicodeFactory();
+  ~nsLatin1ToUnicode();
+
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
 
   //--------------------------------------------------------------------
-  // Interface nsIFactory [declaration]
+  // Interface nsIUnicodeDecoder [declaration]
 
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate, const nsIID &aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-  //--------------------------------------------------------------------
-  // Interface nsICharsetConverterInfo [declaration]
-
-  NS_IMETHOD GetCharsetSrc(char ** aCharset);
-  NS_IMETHOD GetCharsetDest(char ** aCharset);
+  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
+      PRInt32 * aDestLength,const char * aSrc, PRInt32 aSrcOffset, 
+      PRInt32 * aSrcLength);
+  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
+      PRInt32 * aDestLength);
+  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+  NS_IMETHOD Reset();
+  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
 };
-
-
 
 #endif /* nsLatin1ToUnicode_h___ */
