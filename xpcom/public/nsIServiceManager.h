@@ -133,6 +133,8 @@ public:
 //
 // and the automatic destructor will take care of releasing the service.
 
+#if 0
+
 template<class T> class nsService {
 protected:
   const nsCID mCID;
@@ -179,6 +181,26 @@ public:
   }
 
 };
+
+#else
+
+#define NS_WITH_SERVICE(T, serv, isupports, cid, rv)                                \
+{                                                                                   \
+  T* serv;                                                                          \
+  const nsCID& _aClass = (cid);                                                     \
+  nsISupports* _isupp = (isupports);                                                \
+  nsIServiceManager* _servMgr;                                                      \
+  *(rv) = (_isupp)->QueryInterface(nsIServiceManager::GetIID(), (void**)&_servMgr); \
+  if (NS_SUCCEEDED(*rv)) {                                                          \
+    *(rv) = _servMgr->GetService(_aClass, T::GetIID(), (nsISupports**)&(serv));     \
+    NS_RELEASE(_servMgr);                                                           \
+  }                                                                                 \
+
+#define NS_END_WITH_SERVICE(cid, serv)                                              \
+  _servMgr->ReleaseService(cid, serv);                                              \
+}                                                                                   \
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
