@@ -548,6 +548,7 @@ static nsGenericHTMLElement::EnumTable kFormMethodTable[] = {
 static nsGenericHTMLElement::EnumTable kFormEnctypeTable[] = {
   { "multipart/form-data", NS_FORM_ENCTYPE_MULTIPART },
   { "application/x-www-form-urlencoded", NS_FORM_ENCTYPE_URLENCODED },
+  { "text/plain", NS_FORM_ENCTYPE_TEXTPLAIN },
   { 0 }
 };
 
@@ -1039,23 +1040,6 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   rv = securityManager->CheckLoadURI(docURL, actionURL,
                                      nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsXPIDLCString scheme;
-  PRBool isMailto = PR_FALSE;
-  if (actionURL && NS_FAILED(rv = actionURL->SchemeIs("mailto", &isMailto))) {
-    return rv;
-  }
-
-  if (isMailto) {
-    PRBool enabled;
-    rv = securityManager->IsCapabilityEnabled("UniversalSendMail", &enabled);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!enabled) {
-      // Form submit to a mailto: URI requires UniversalSendMail privilege
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
-  }
 
   //
   // Assign to the output

@@ -750,6 +750,191 @@ nsFSMultipartFormData::AddPostDataStream()
 
 
 //
+// CLASS nsFSTextPlain
+//
+class nsFSTextPlain : public nsFormSubmission
+{
+public:
+  nsFSTextPlain(const nsAString& aCharset,
+                nsISaveAsCharset* aEncoder,
+                nsIFormProcessor* aFormProcessor,
+                PRInt32 aBidiOptions)
+    : nsFormSubmission(aCharset, aEncoder, aFormProcessor, aBidiOptions)
+  { }
+  virtual ~nsFSTextPlain() { }
+ 
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIFormSubmission
+  NS_IMETHOD AddNameValuePair(nsIDOMHTMLElement* aSource,
+                              const nsAString& aName,
+                              const nsAString& aValue);
+  NS_IMETHOD AddNameFilePair(nsIDOMHTMLElement* aSource,
+                             const nsAString& aName,
+                             const nsAString& aFilename,
+                             nsIInputStream* aStream,
+                             const nsACString& aContentType,
+                             PRBool aMoreFilesToCome);
+
+  NS_IMETHOD Init();
+
+protected:
+  // nsFormSubmission
+  NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
+                                  nsIInputStream** aPostDataStream);
+  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles)
+      { *aAcceptsFiles = PR_FALSE; return NS_OK; }
+
+private:
+  nsString mBody;
+};
+
+NS_IMPL_RELEASE_INHERITED(nsFSTextPlain, nsFormSubmission)
+NS_IMPL_ADDREF_INHERITED(nsFSTextPlain, nsFormSubmission)
+NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSTextPlain, nsFormSubmission)
+
+NS_IMETHODIMP
+nsFSTextPlain::AddNameValuePair(nsIDOMHTMLElement* aSource,
+                                const nsAString& aName,
+                                const nsAString& aValue)
+{
+  //
+  // Let external code process (and possibly change) value
+  //
+  nsString* processedValue = ProcessValue(aSource, aName, aValue);
+
+  // XXX This won't work well with a name like "a=b" or "a\nb" but I suppose
+  // text/plain doesn't care about that.  Parsers aren't built for escaped
+  // values so we'll have to live with it.
+  if (processedValue) {
+    mBody.Append(aName + NS_LITERAL_STRING("=") + *processedValue +
+                 NS_LITERAL_STRING(CRLF));
+
+    delete processedValue;
+  } else {
+    mBody.Append(aName + NS_LITERAL_STRING("=") + aValue +
+                 NS_LITERAL_STRING(CRLF));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFSTextPlain::AddNameFilePair(nsIDOMHTMLElement* aSource,
+                               const nsAString& aName,
+                               const nsAString& aFilename,
+                               nsIInputStream* aStream,
+                               const nsACString& aContentType,
+                               PRBool aMoreFilesToCome)
+{
+  AddNameValuePair(aSource,aName,aFilename);
+  return NS_OK;
+}
+
+//
+// nsFormSubmission
+//
+NS_IMETHODIMP
+nsFSTextPlain::Init()
+{
+  mBody.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
+                                    nsIInputStream** aPostDataStream)
+{
+  nsresult rv = NS_OK;
+
+  // XXX HACK We are using the standard URL mechanism to give the body to the
+  // mailer instead of passing the post data stream to it, since that sounds
+  // hard.
+  PRBool isMailto = PR_FALSE;
+  aURI->SchemeIs("mailto", &isMailto);
+  if (isMailto) {
+    nsCAutoString path;
+    rv = aURI->GetPath(path);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Walk through the string and see if we have a subject already.
+    PRBool hasSubject = PR_FALSE;
+    PRBool hasParams = PR_FALSE;
+    PRInt32 paramSep = path.FindChar('?');
+    while (paramSep != kNotFound && paramSep < (PRInt32)path.Length()) {
+      hasParams = PR_TRUE;
+
+      // Get the end of the name at the = op.  If it is *after* the next &,
+      // assume that someone made a parameter without an = in it
+      PRInt32 nameEnd = path.FindChar('=', paramSep+1);
+      PRInt32 nextParamSep = path.FindChar('&', paramSep+1);
+      if (nextParamSep == kNotFound) {
+        nextParamSep = path.Length();
+      }
+
+      // If the = op is after the &, this parameter is a name without value.
+      // If there is no = op, same thing.
+      if (nameEnd == kNotFound || nextParamSep < nameEnd) {
+        nameEnd = nextParamSep;
+      }
+
+      if (nameEnd != kNotFound) {
+        if (Substring(path, paramSep+1, nameEnd-(paramSep+1)) ==
+            NS_LITERAL_CSTRING("subject")) {
+          hasSubject = PR_TRUE;
+          break;
+        }
+      }
+
+      paramSep = nextParamSep;
+    }
+
+    // If there is no subject, append a preformed subject to the mailto line
+    if (!hasSubject) {
+      if (hasParams) {
+        path.Append('&');
+      } else {
+        path.Append('?');
+      }
+
+      path += NS_LITERAL_CSTRING("subject=Form%20Post%20From%20Mozilla&");
+    }
+
+    // Append the body to and force-plain-text args to the mailto line
+    nsCString escapedBody;
+    escapedBody.Adopt(nsEscape(NS_ConvertUCS2toUTF8(mBody).get(), url_XAlphas));
+
+    path += NS_LITERAL_CSTRING("&force-plain-text=Y&body=") + escapedBody;
+
+    rv = aURI->SetPath(path);
+
+  } else {
+
+    // Create data stream
+    nsCOMPtr<nsIInputStream> bodyStream;
+    rv = NS_NewStringInputStream(getter_AddRefs(bodyStream),
+                                          mBody);
+    if (!bodyStream) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Create mime stream with headers and such
+    nsCOMPtr<nsIMIMEInputStream> mimeStream
+        = do_CreateInstance("@mozilla.org/network/mime-input-stream;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mimeStream->AddHeader("Content-Type", "text/plain");
+    mimeStream->SetAddContentLength(PR_TRUE);
+    mimeStream->SetData(bodyStream);
+    CallQueryInterface(mimeStream, aPostDataStream);
+    NS_ADDREF(*aPostDataStream);
+  }
+
+  return rv;
+}
+
+
+//
 // CLASS nsFormSubmission
 //
 
@@ -818,9 +1003,14 @@ GetSubmissionFromForm(nsIForm* aForm,
   // NOTE:
   // The rule used to be, if enctype=multipart/form-data, do multipart
   // Else do URL encoded
-  if (method == NS_FORM_METHOD_POST && enctype == NS_FORM_ENCTYPE_MULTIPART) {
+  if (method == NS_FORM_METHOD_POST &&
+      enctype == NS_FORM_ENCTYPE_MULTIPART) {
     *aFormSubmission = new nsFSMultipartFormData(charset, encoder,
                                                  formProcessor, bidiOptions);
+  } else if (method == NS_FORM_METHOD_POST &&
+             enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
+    *aFormSubmission = new nsFSTextPlain(charset, encoder,
+                                         formProcessor, bidiOptions);
   } else {
     *aFormSubmission = new nsFSURLEncoded(charset, encoder,
                                           formProcessor, bidiOptions, method);
