@@ -769,9 +769,26 @@ nsHTMLInputElement::Select()
     // XXX Bug?  We have to give the input focus before contents can be
     // selected
 
-    // Just like SetFocus() but without the ScrollIntoView()!
     nsCOMPtr<nsIPresContext> presContext;
     GetPresContext(this, getter_AddRefs(presContext)); 
+
+    // If the window is not active, do not allow the select to bring the
+    // window to the front.  We update the focus controller, but do
+    // nothing else.
+    nsCOMPtr<nsIScriptGlobalObject> globalObj;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
+    nsCOMPtr<nsIFocusController> focusController;
+    win->GetRootFocusController(getter_AddRefs(focusController));
+    PRBool isActive = PR_FALSE;
+    focusController->GetActive(&isActive);
+    if (!isActive) {
+      focusController->SetFocusedElement(this);
+      SelectAll(presContext);
+      return NS_OK;
+    }
+
+    // Just like SetFocus() but without the ScrollIntoView()!
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event;
     event.eventStructType = NS_EVENT;
