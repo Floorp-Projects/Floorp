@@ -17,7 +17,7 @@
 
 DEPTH	= ../..
 
-DIRS  = src
+DIRS  = src2
 
 include $(DEPTH)/config/rules.mk
 
