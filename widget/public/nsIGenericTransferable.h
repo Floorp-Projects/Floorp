@@ -46,12 +46,12 @@ class nsIGenericTransferable : public nsISupports {
   NS_IMETHOD FlavorsTransferableCanImport ( nsISupportsArray** outFlavorList ) = 0;
 
   /**
-    * Set Data into the transferable as a specified DataFlavor. The transferable now
-    * owns the data, so the caller must not delete it.
+    * Gets the data from the transferable as a specified DataFlavor. The transferable still
+    * owns the data, so the caller must NOT delete it.
     *
     * @param  aFlavor the flavor of data that is being set
     * @param  aData the data 
-    * @param  aDataLen the length of the data (it may or may not be meaningful)
+    * @param  aDataLen the length of the data
     */
     NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen) = 0;
 
