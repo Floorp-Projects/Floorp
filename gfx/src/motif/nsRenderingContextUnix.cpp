@@ -206,14 +206,25 @@ nsresult nsRenderingContextUnix :: CommonInit()
                      mContext->GetAppUnitsToDevUnits());
 
 #ifdef MITSHM
-  if (XShmQueryVersion(mRenderingSurface->display, 
-		       &shmMajor, 
-		       &shmMinor, 
-		       &mSupportsSharedPixmaps) != 0) {
 
-    mHasSharedMemory = PR_TRUE;
-    mRenderingSurface->shmImage = nsnull;
-    mRenderingSurface->shmInfo.shmaddr = nsnull;
+  // We need to query the extension first using straight XLib since
+  // the Shared memory invocation prints an error message to stdout
+
+  PRInt32 maj, evt, err;
+
+  if (::XQueryExtension(mRenderingSurface->display,
+			"MIT-SHM",
+			&maj, &evt, &err) == True) {
+
+    if (XShmQueryVersion(mRenderingSurface->display, 
+			 &shmMajor, 
+			 &shmMinor, 
+			 &mSupportsSharedPixmaps) != 0) {
+      
+      mHasSharedMemory = PR_TRUE;
+      mRenderingSurface->shmImage = nsnull;
+      mRenderingSurface->shmInfo.shmaddr = nsnull;
+    }
   }
 #endif
 
