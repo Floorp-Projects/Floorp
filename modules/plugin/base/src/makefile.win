@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  docshell \
 		  webBrowser_core \
-		  timer \
 		  windowwatcher \
 		  gfx \
 		  $(NULL)

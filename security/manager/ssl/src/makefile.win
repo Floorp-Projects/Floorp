@@ -67,7 +67,6 @@ REQUIRES	= \
 		jar \
 		layout_xul \
 		gfx \
-		timer \
 		unicharutil \
                 pipboot \
 		$(NULL)

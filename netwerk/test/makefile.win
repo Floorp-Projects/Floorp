@@ -24,7 +24,6 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  nkcache \
-		  timer \
 		  cookie \
 		  dbm \
 		  util \

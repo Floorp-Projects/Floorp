@@ -27,7 +27,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  intl \
 		  locale \
-		  timer \
 		  rdf \
 		  dom \
 		  docshell \

@@ -29,7 +29,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  exthandler \
 		  caps \
-		  timer \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

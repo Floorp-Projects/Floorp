@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  intl \
 		  uconv \
-		  timer \
 		  zlib \
 		  caps \
 		  $(NULL)

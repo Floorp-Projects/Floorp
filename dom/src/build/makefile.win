@@ -28,7 +28,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  layout \
 		  caps \
-		  timer \
 		  webBrowser_core \
 		  docshell \
 		  sidebar \

@@ -25,7 +25,6 @@ REQUIRES	= xpcom \
 		  string \
 		  widget \
 		  locale \
-		  timer \
 		  gfx \
 		  content \
 		  layout_xul \

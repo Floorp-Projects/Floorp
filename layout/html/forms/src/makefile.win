@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  accessibility \
 		  xpconnect \
 		  unicharutil \
-		  timer \
 		  pref \
 		  gfx \
 		  content \

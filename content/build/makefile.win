@@ -49,7 +49,6 @@ REQUIRES	= xpcom \
 		  lwbrk \
 		  js \
 		  pref \
-		  timer \
 		  layout \
 		  gfx \
 		  layout_xul \

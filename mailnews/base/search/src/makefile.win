@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  unicharutil \
 		  pref \
-		  timer \
 		  msgnews \
 		  txmgr \
 		  msgbase \

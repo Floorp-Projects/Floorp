@@ -32,7 +32,6 @@ REQUIRES=	xpcom \
 			necko \
 			pref \
 			plugin \
-			timer \
 			uconv \
 			intl \
 			locale \

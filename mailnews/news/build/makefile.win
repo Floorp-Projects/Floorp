@@ -30,7 +30,6 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  msgdb \
 		  appshell \
-		  timer \
 		  mime \
 		  necko \
 		  rdf \

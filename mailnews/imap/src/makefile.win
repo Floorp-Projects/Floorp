@@ -37,7 +37,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  intl \
 		  nkcache \
-		  timer \
 		  txmgr \
 		  docshell \
 		  msglocal \

@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  webshell \
 		  plugin \
-		  timer \
 		  docshell \
 		  mimetype \
 		  webBrowser_core \

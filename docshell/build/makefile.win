@@ -28,7 +28,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  layout \
 		  uriloader \
-		  timer \
 		  webshell \
 		  widget \
 		  pref \

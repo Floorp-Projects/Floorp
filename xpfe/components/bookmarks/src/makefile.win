@@ -30,7 +30,6 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  uconv \
 		  pref \
-		  timer \
 		  dom \
 		  intl \
 		  webshell \

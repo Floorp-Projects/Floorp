@@ -31,7 +31,6 @@ REQUIRES	= xpcom \
 		  js \
 		  locale \
 		  widget \
-		  timer \
 		  caps \
 		  xpconnect \
 		  docshell \

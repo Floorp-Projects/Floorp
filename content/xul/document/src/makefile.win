@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  htmlparser \
 		  lwbrk \
-		  timer \
 		  chrome \
 		  docshell \
 		  pref \

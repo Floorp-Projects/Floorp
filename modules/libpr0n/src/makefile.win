@@ -27,7 +27,6 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  nkcache \
-		  timer \
 		  gfx2 \
 		  mimetype \
 		  gfx \
