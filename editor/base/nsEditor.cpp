@@ -480,7 +480,7 @@ NS_IMETHODIMP nsEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
   {
     PRInt32 numTxns=0;
     mTxnMgr->GetNumberOfUndoItems(&numTxns);
-    aCanUndo = ((PRBool)(0==numTxns));
+    aCanUndo = ((PRBool)(0!=numTxns));
   }
   else {
     aCanUndo = PR_FALSE;
@@ -526,7 +526,7 @@ NS_IMETHODIMP nsEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
   {
     PRInt32 numTxns=0;
     mTxnMgr->GetNumberOfRedoItems(&numTxns);
-    aCanRedo = ((PRBool)(0==numTxns));
+    aCanRedo = ((PRBool)(0!=numTxns));
   }
   else {
     aCanRedo = PR_FALSE;
