@@ -887,11 +887,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
   nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
 
-  // make a copy of the GC so that we can completly restore the things we are about to change
-  GdkGC *copyGC;
-  copyGC = gdk_gc_new(drawing->GetDrawable());
-  gdk_gc_copy(copyGC, ((nsRenderingContextGTK&)aContext).GetGC());
-
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
   gStartTime = gPixmapTime = PR_Now();
   gAlphaTime = PR_Now();
@@ -932,8 +927,18 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   CreateOffscreenPixmap(aWidth, aHeight);
   DrawImageOffscreen(validX, validY, validWidth, validHeight);
 
-  SetupGCForAlpha(copyGC, aX, aY);
-
+  // make a copy of the GC so that we can completly restore the things we are about to change
+  GdkGC *copyGC;
+  if (mAlphaPixmap) {
+    copyGC = gdk_gc_new(drawing->GetDrawable());
+    GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+    gdk_gc_copy(copyGC, gc);
+    gdk_gc_unref(gc);
+    SetupGCForAlpha(copyGC, aX, aY);
+  } else {
+    // don't make a copy... we promise not to change it
+    copyGC = ((nsRenderingContextGTK&)aContext).GetGC();
+  }
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::Draw(this=%p) gdk_draw_pixmap(x=%d,y=%d,width=%d,height=%d)\n",
          this,
