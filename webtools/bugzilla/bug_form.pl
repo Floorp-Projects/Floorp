@@ -311,9 +311,13 @@ sub show_bug {
     $vars->{'bug'} = \%bug;
     $vars->{'user'} = \%user;
 
+    # Create the <link> elements for browsing bug lists
+    $vars->{'navigation_links'} = navigation_links(join(':',@bug_list));
+
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("bug/edit.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
  
 1;
+
