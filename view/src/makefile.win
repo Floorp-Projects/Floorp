@@ -44,7 +44,6 @@ OBJS =                              \
     .\$(OBJDIR)\nsScrollPortView.obj \
     .\$(OBJDIR)\nsScrollingView.obj \
     .\$(OBJDIR)\nsViewManager.obj   \
-    .\$(OBJDIR)\nsViewManager2.obj   \
     .\$(OBJDIR)\nsViewFactory.obj   \
     $(NULL)
 
