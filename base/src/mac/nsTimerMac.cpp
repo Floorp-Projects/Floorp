@@ -208,7 +208,7 @@ TimerPeriodical * TimerPeriodical::GetPeriodical()
 
 TimerPeriodical::TimerPeriodical()
 {
-	mTimers.SetComparator( new TimerImplComparator());
+	mTimers.SetComparator( new TimerImplComparator() );
 	mTimers.SetKeepSorted( true );
 }
 
@@ -234,7 +234,10 @@ nsresult TimerPeriodical::AddTimer( TimerImpl * aTimer)
 
 nsresult TimerPeriodical::RemoveTimer( TimerImpl * aTimer)
 {
-	mTimers.Remove( aTimer );
+	mTimers.SetComparator(LLongComparator::GetComparator(), false);
+		mTimers.Remove(&aTimer);
+	mTimers.SetComparator(new TimerImplComparator());
+
 	NS_RELEASE( aTimer );
 	if ( mTimers.GetCount() == 0 )
 		StopRepeating();
@@ -251,12 +254,11 @@ void	TimerPeriodical::SpendTime( const EventRecord &inMacEvent)
 	while (iter.Next(&timer))
 	{
 		if (timer->GetFireTime() <= inMacEvent.when)
-		//if (  1  )
 		{
-			NS_ADDREF(timer);
+			//NS_ADDREF(timer);
 			RemoveTimer(timer);
 			timer->Fire();
-			NS_RELEASE(timer);
+			//NS_RELEASE(timer);
 		}
 		else
 			break;	// Items are sorted, so we do not need to iterate until the end
