@@ -6,8 +6,6 @@
 #
 #bug 152646 Will not fix this in Rhino; too much of a corner case
 js1_5/Regress/regress-152646.js
-# bug 83051
-ecma_3/Function/scope-001.js
 # bug 59861
 ecma/Date/15.9.4.3.js
 #See bug number 94506 
