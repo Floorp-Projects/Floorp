@@ -1281,7 +1281,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     if (!js_IsDelegate(cx, proto, v, bp))
         return JS_FALSE;
 
-    if (!*bp && !JSVAL_IS_PRIMITIVE(v)) {
+    if (!*bp && !JSVAL_IS_PRIMITIVE(v) && v != pval) {
         /*
          * Extension for "brutal sharing" of standard class constructors: if
          * a script is compiled using a single, shared set of constructors, in
