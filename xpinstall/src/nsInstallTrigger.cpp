@@ -27,8 +27,10 @@
 #include "nsISupports.h"
 #include "nsIScriptGlobalObject.h"
 
-#include "pratom.h"
-#include "prefapi.h"
+#include "nsIPref.h"
+
+#include "nsRepository.h"
+#include "nsIServiceManager.h"
 
 #include "nsSpecialSystemDirectory.h"
 
@@ -37,6 +39,7 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 static NS_DEFINE_IID(kIInstallTrigger_IID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
+static NS_DEFINE_IID(kIInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 
 
 
@@ -121,11 +124,36 @@ nsInstallTrigger::SetScriptObject(void *aScriptObject)
   return NS_OK;
 }
 
+static NS_DEFINE_IID(kPrefsIID, NS_IPREF_IID);
+static NS_DEFINE_IID(kPrefsCID,  NS_PREF_CID);
 
 NS_IMETHODIMP    
 nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 {
-    PREF_GetBoolPref( (const char*) AUTOUPDATE_ENABLE_PREF, aReturn);
+    nsIPref * prefs;
+    
+    nsresult rv = nsComponentManager::CreateInstance(kPrefsIID, 
+                                                     nsnull,
+                                                     kPrefsCID,
+                                                     (void**) &prefs);
+
+
+    if ( NS_SUCCEEDED(rv) )
+    {
+        rv = prefs->GetBoolPref( (const char*) AUTOUPDATE_ENABLE_PREF, aReturn);
+
+        if (NS_FAILED(rv))
+        {
+            *aReturn = PR_FALSE;
+        }
+
+        NS_RELEASE(prefs);
+    }
+    else
+    {
+        *aReturn = PR_FALSE;  /* no prefs manager.  set to false */
+    }
+    
     return NS_OK;
 }
 
@@ -260,101 +288,71 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
 /////////////////////////////////////////////////////////////////////////
 // 
 /////////////////////////////////////////////////////////////////////////
-static PRInt32 gInstallTriggerInstanceCnt = 0;
-static PRInt32 gInstallTriggerLock        = 0;
+
+
 
 nsInstallTriggerFactory::nsInstallTriggerFactory(void)
 {
-    mRefCnt=0;
-    PR_AtomicIncrement(&gInstallTriggerInstanceCnt);
+    NS_INIT_REFCNT();
 }
 
 nsInstallTriggerFactory::~nsInstallTriggerFactory(void)
 {
-    PR_AtomicDecrement(&gInstallTriggerInstanceCnt);
+    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
-NS_IMETHODIMP 
-nsInstallTriggerFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
+NS_IMETHODIMP
+nsInstallTriggerFactory::QueryInterface(const nsIID &aIID, void **aResult)
 {
-    if (aInstancePtr == NULL)
-    {
+    if (! aResult)
         return NS_ERROR_NULL_POINTER;
-    }
 
     // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
+    *aResult = nsnull;
 
-    if ( aIID.Equals(kISupportsIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-    else if ( aIID.Equals(kIFactoryIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NO_INTERFACE;
+    if (aIID.Equals(kISupportsIID)) {
+        *aResult = NS_STATIC_CAST(nsISupports*, this);
+        AddRef();
+        return NS_OK;
+    } else if (aIID.Equals(kIFactoryIID)) {
+        *aResult = NS_STATIC_CAST(nsIFactory*, this);
+        AddRef();
+        return NS_OK;
     }
 
-    AddRef();
-    return NS_OK;
+    return NS_NOINTERFACE;
 }
 
-
-
-NS_IMETHODIMP_(nsrefcnt)
-nsInstallTriggerFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
-
-
-NS_IMETHODIMP_(nsrefcnt)
-nsInstallTriggerFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
+NS_IMPL_ADDREF(nsInstallTriggerFactory);
+NS_IMPL_RELEASE(nsInstallTriggerFactory);
 
 NS_IMETHODIMP
 nsInstallTriggerFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    if (aResult == NULL)
-    {
+   if (! aResult)
         return NS_ERROR_NULL_POINTER;
-    }
 
-    *aResult = NULL;
+    *aResult = nsnull;
 
-    /* do I have to use iSupports? */
+    nsresult rv;
+
     nsInstallTrigger *inst = new nsInstallTrigger();
-
-    if (inst == NULL)
+    
+    if (! inst)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult result =  inst->QueryInterface(aIID, aResult);
-
-    if (NS_FAILED(result))
-        delete inst;
-
-    return result;
+    if (NS_FAILED(rv = inst->QueryInterface(aIID, aResult))) 
+    {
+        // We didn't get the right interface.
+        NS_ERROR("didn't support the interface you wanted");
+    }
+    return rv;
 }
 
+    
 NS_IMETHODIMP
 nsInstallTriggerFactory::LockFactory(PRBool aLock)
 {
-    if (aLock)
-        PR_AtomicIncrement(&gInstallTriggerLock);
-    else
-        PR_AtomicDecrement(&gInstallTriggerLock);
-
+    // Not implemented in simplest case.
     return NS_OK;
 }

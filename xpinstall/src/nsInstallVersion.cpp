@@ -27,7 +27,6 @@
 #include "nsISupports.h"
 #include "nsIScriptGlobalObject.h"
 
-#include "pratom.h"
 #include "prprf.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -334,69 +333,40 @@ nsInstallVersion::StringToVersionNumbers(const nsString& version, PRInt32 *aMajo
 /////////////////////////////////////////////////////////////////////////
 // 
 /////////////////////////////////////////////////////////////////////////
-static PRInt32 gInstallVersionInstanceCnt = 0;
-static PRInt32 gInstallVersionLock        = 0;
 
 nsInstallVersionFactory::nsInstallVersionFactory(void)
 {
-    mRefCnt=0;
-    PR_AtomicIncrement(&gInstallVersionInstanceCnt);
+    NS_INIT_REFCNT();
 }
 
 nsInstallVersionFactory::~nsInstallVersionFactory(void)
 {
-    PR_AtomicDecrement(&gInstallVersionInstanceCnt);
+    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
-NS_IMETHODIMP 
-nsInstallVersionFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
+NS_IMETHODIMP
+nsInstallVersionFactory::QueryInterface(const nsIID &aIID, void **aResult)
 {
-    if (aInstancePtr == NULL)
-    {
+    if (! aResult)
         return NS_ERROR_NULL_POINTER;
-    }
 
     // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
+    *aResult = nsnull;
 
-    if ( aIID.Equals(kISupportsIID) )
-    {
-        *aInstancePtr = (void*) this;
+    if (aIID.Equals(kISupportsIID)) {
+        *aResult = NS_STATIC_CAST(nsISupports*, this);
+        AddRef();
+        return NS_OK;
+    } else if (aIID.Equals(kIFactoryIID)) {
+        *aResult = NS_STATIC_CAST(nsIFactory*, this);
+        AddRef();
+        return NS_OK;
     }
-    else if ( aIID.Equals(kIFactoryIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    AddRef();
-    return NS_OK;
+    return NS_NOINTERFACE;
 }
 
-
-
-NS_IMETHODIMP_(nsrefcnt)
-nsInstallVersionFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
-
-
-NS_IMETHODIMP_(nsrefcnt)
-nsInstallVersionFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
+NS_IMPL_ADDREF(nsInstallVersionFactory);
+NS_IMPL_RELEASE(nsInstallVersionFactory);
 
 NS_IMETHODIMP
 nsInstallVersionFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -425,10 +395,5 @@ nsInstallVersionFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void
 NS_IMETHODIMP
 nsInstallVersionFactory::LockFactory(PRBool aLock)
 {
-    if (aLock)
-        PR_AtomicIncrement(&gInstallVersionLock);
-    else
-        PR_AtomicDecrement(&gInstallVersionLock);
-
-    return NS_OK;
+  return NS_OK;
 }
