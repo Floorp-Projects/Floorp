@@ -89,7 +89,14 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
 			if (type == msgComposeType.New) {
 				if (server.type == "nntp") {
 					type = msgComposeType.NewsPost;
-					newsgroup = uri;
+
+					// from the uri, get the newsgroup name
+					var resource = RDF.GetResource(uri);
+					var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder); 
+					if (msgfolder.isServer) 
+						newsgroup = "";
+					else 
+      					newsgroup = msgfolder.name; 
 				}
 			}
 			// dump("server = " + server + "\n");
@@ -125,7 +132,7 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
 	}
         else if (type == msgComposeType.NewsPost) 
 	{
-		//dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
+		dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
 		msgComposeService.OpenComposeWindow(null, newsgroup, type, format, identity);
 		return;
 	}
