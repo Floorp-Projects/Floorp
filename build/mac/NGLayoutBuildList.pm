@@ -431,13 +431,13 @@ sub BuildClientDist()
 	#PLUGIN
     _InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:");
     _InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",					"$distdirectory:plugin:");
-    _InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",						"$distdirectory:plugin:");
+    _InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",					"$distdirectory:plugin:");
     _InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:");
-    _InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",						"$distdirectory:oji:");
+    _InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",					"$distdirectory:oji:");
     
     #DB
-    _InstallFromManifest(":mozilla:db:mdb:public:MANIFEST",					"$distdirectory:db:");
-    _InstallFromManifest(":mozilla:db:mork:build:MANIFEST",					"$distdirectory:db:");
+    _InstallFromManifest(":mozilla:db:mdb:public:MANIFEST",							"$distdirectory:db:");
+    _InstallFromManifest(":mozilla:db:mork:build:MANIFEST",							"$distdirectory:db:");
 
 	#DBM
     _InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
@@ -479,17 +479,17 @@ sub BuildClientDist()
 	}
 
 	#EXTENSIONS
-    _InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",				"$distdirectory:cookie:");
+    _InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",						"$distdirectory:cookie:");
     _InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
 
 	#WEBSHELL
     _InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
-    _InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",  			"$distdirectory:webshell:");
+    _InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",  		"$distdirectory:webshell:");
 
 	#LAYOUT
     _InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
-    _InstallFromManifest(":mozilla:layout:base:public:MANIFEST",						"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:html:content:public:MANIFEST",				"$distdirectory:layout:");
+    _InstallFromManifest(":mozilla:layout:base:public:MANIFEST",					"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:html:content:public:MANIFEST",			"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",				"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:html:document:public:MANIFEST",			"$distdirectory:layout:");
     _InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",				"$distdirectory:layout:");
@@ -500,7 +500,7 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",				"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",			"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",				"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",				"$distdirectory:layout:");
 
@@ -512,23 +512,26 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:view:public:MANIFEST",							"$distdirectory:view:");
 
 	#DOM
-   _InstallFromManifest(":mozilla:dom:public:MANIFEST",								"$distdirectory:dom:");
-   _InstallFromManifest(":mozilla:dom:public:MANIFEST_IDL",							"$distdirectory:idl:");
-   _InstallFromManifest(":mozilla:dom:public:base:MANIFEST",							"$distdirectory:dom:");
-   _InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",						"$distdirectory:dom:");
-   _InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:");
-   _InstallFromManifest(":mozilla:dom:public:events:MANIFEST",						"$distdirectory:dom:");
-   _InstallFromManifest(":mozilla:dom:public:range:MANIFEST",						"$distdirectory:dom:");
-   _InstallFromManifest(":mozilla:dom:public:html:MANIFEST",							"$distdirectory:dom:");
-   _InstallFromManifest(":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:");
-   _InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
-   _InstallFromManifest(":mozilla:dom:src:base:MANIFEST",							"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:public:MANIFEST",							"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:public:MANIFEST_IDL",						"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:dom:public:base:MANIFEST",						"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",					"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:public:events:MANIFEST",						"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:public:range:MANIFEST",						"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:public:html:MANIFEST",						"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:public:css:MANIFEST",						"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
+	_InstallFromManifest(":mozilla:dom:src:base:MANIFEST",							"$distdirectory:dom:");
+
+	#JSURL
+	_InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST_IDL",						"$distdirectory:idl:");
 
 	#HTMLPARSER
-	_InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
+	_InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",						"$distdirectory:htmlparser:");
 
 	#EXPAT
-	_InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",							"$distdirectory:expat:");
+	_InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",						"$distdirectory:expat:");
       
 	#WIDGET
     _InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
@@ -839,6 +842,9 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:modules:oji:macbuild:ojiIDL.mcp",						"oji");
 	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");
 	BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp", 							"dom");
+
+	BuildIDLProject(":mozilla:dom:src:jsurl:macbuild:JSUrlDL.mcp", 					"jsurl");
+	
 	BuildIDLProject(":mozilla:gfx:macbuild:gfxIDL.mcp", 							"gfx");
 	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
 	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
