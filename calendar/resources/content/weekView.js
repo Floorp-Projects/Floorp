@@ -114,10 +114,26 @@ function WeekView( calendarWindow )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         for( i = 0; i < EventSelectionArray.length; i++ )
-         {
-            gCalendarWindow.weekView.selectBoxForEvent( EventSelectionArray[i] );
-         }
+          if( EventSelectionArray.length > 0 )
+          {
+             //if there are selected events.
+
+             //for some reason, this function causes the tree to go into a select / unselect loop
+             //putting it in a settimeout fixes this.
+             setTimeout( "gCalendarWindow.weekView.clearSelectedDate();", 1 );
+
+             var i = 0;
+
+             for( i = 0; i < EventSelectionArray.length; i++ )
+             {
+                 gCalendarWindow.weekView.selectBoxForEvent( EventSelectionArray[i] );
+             }
+          }
+          else
+          {
+             //select the proper day
+             gCalendarWindow.weekView.hiliteSelectedDate();
+          }
       }
    }
       

@@ -392,7 +392,7 @@ function weekEventItemClick( eventBox, event )
 
       newDate.setDate( eventBox.calendarEventDisplay.event.start.day );
 
-      gCalendarWindow.setSelectedDate( newDate );
+      gCalendarWindow.setSelectedDate( newDate, false );
    }
 
    if ( event ) 
