@@ -676,7 +676,7 @@ function InitQuickSearchPopup()
   // value is set to Find in message since you can't really  create a VF from find
   // in message
 
-  if (gSearchInput.searchMode == 4 /* find in page */)
+  if (gSearchInput.searchMode == 4 /* find in page */ || gSearchInput.value == "" || gSearchInput.showingSearchCriteria)
     document.getElementById('quickSearchSaveAsVirtualFolder').setAttribute('disabled', 'true');
   else
     document.getElementById('quickSearchSaveAsVirtualFolder').removeAttribute('disabled');
