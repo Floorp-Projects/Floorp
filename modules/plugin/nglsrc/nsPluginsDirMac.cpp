@@ -34,24 +34,22 @@
 #include <Aliases.h>
 #include <string.h>
 
-static nsresult getApplicationDir(nsFileSpec& outAppDir)
+static nsresult getApplicationSpec(FSSpec& outAppSpec)
 {
 	// Use the process manager to get the application's FSSpec,
 	// then construct an nsFileSpec that encapsulates it.
-	FSSpec spec;
 	ProcessInfoRec info;
 	info.processInfoLength = sizeof(info);
 	info.processName = NULL;
-	info.processAppSpec = &spec;
+	info.processAppSpec = &outAppSpec;
 	ProcessSerialNumber psn = { 0, kCurrentProcess };
 	OSErr result = GetProcessInformation(&psn, &info);
-	nsFileSpec appSpec(spec);
-	appSpec.GetParent(outAppDir);
-	return NS_OK;
+	return (result == noErr ? NS_OK : NS_ERROR_FAILURE);
 }
 
 nsPluginsDir::nsPluginsDir()
 {
+#if 0
 	// Use the folder manager to get location of Extensions folder, and
 	// build an FSSpec for "Netscape Plugins" within it.
 	FSSpec& pluginsDir = *this;
@@ -63,6 +61,13 @@ nsPluginsDir::nsPluginsDir()
 	if (result == noErr) {
 		SetLeafName("Netscape Plugins");
 	}
+#else
+	// The "Plugins" folder in the application's directory is where plugins are loaded from.
+	mError = getApplicationSpec(mSpec);
+	if (NS_SUCCEEDED(mError)) {
+		SetLeafName("Plugins");
+	}
+#endif
 }
 
 nsPluginsDir::~nsPluginsDir() {}
