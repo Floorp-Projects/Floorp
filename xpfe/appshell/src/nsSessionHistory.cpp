@@ -1108,9 +1108,23 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
    if (APP_DEBUG && url) printf("nsSessionHistory::Goto, Trying to load URL %s\n", url);
    Recycle (url);
   
-    mHistoryCurrentIndex = aGotoIndex;
-    if (hCurrentEntry != nsnull)
+
+   // Save the history state for the current index before loading the next one
+   int indix = 0;
+   GetCurrentIndex(&indix);
+   PRBool isInHist=PR_FALSE;
+   if (indix >= 0) {
+     nsCOMPtr<nsISupports>  historyState;
+     nsresult rv = prev->GetHistoryState(getter_AddRefs(historyState));
+	 if (NS_SUCCEEDED(rv) && historyState)
+		 SetHistoryObjectForIndex(indix, historyState);
+   }
+
+   // Set the new current index
+   mHistoryCurrentIndex = aGotoIndex;
+   if (hCurrentEntry != nsnull) {
        result = hCurrentEntry->Load(prev, aIsReload);
+   }
     if (!result) {
        mIsLoadingDoc = PR_FALSE;
        mHistoryEntryInLoad = (nsHistoryEntry *) nsnull;
