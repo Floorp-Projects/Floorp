@@ -55,8 +55,6 @@ nsConnectionInfo::nsConnectionInfo(nsIURL *aURL,
     NS_VERIFY_THREADSAFE_INTERFACE(pURL);
     NS_VERIFY_THREADSAFE_INTERFACE(pNetStream);
     NS_VERIFY_THREADSAFE_INTERFACE(pConsumer);
-
-    pContainer = nsnull;
 }
 
 
@@ -70,7 +68,6 @@ nsConnectionInfo::~nsConnectionInfo()
     NS_IF_RELEASE(pURL);
     NS_IF_RELEASE(pNetStream);
     NS_IF_RELEASE(pConsumer);
-    NS_IF_RELEASE(pContainer);
 }
 
 NS_IMETHODIMP 
