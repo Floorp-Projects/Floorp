@@ -99,7 +99,9 @@ jsj_JavaObjectComparator(const void *v1, const void *v2, void *arg)
 
     if (java_obj1 == java_obj2)
         return 1;
-    return (*jEnv)->IsSameObject(jEnv, java_obj1, java_obj2);
+    if (jEnv)
+        return (*jEnv)->IsSameObject(jEnv, java_obj1, java_obj2);
+    return 0;
 }
 
 /*
@@ -477,9 +479,11 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp)
 extern void
 jsj_ExitJava(JSJavaThreadState *jsj_env)
 {
-    JS_ASSERT(jsj_env->recursion_depth > 0);
-    if (--jsj_env->recursion_depth == 0)
-	jsj_env->cx = NULL;
+    if (jsj_env) {
+        JS_ASSERT(jsj_env->recursion_depth > 0);
+        if (--jsj_env->recursion_depth == 0)
+            jsj_env->cx = NULL;
+    }
 }
 
 /**

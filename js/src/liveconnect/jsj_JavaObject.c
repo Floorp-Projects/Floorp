@@ -84,6 +84,31 @@ static PRMonitor *java_obj_reflections_monitor = NULL;
 static int java_obj_reflections_mutation_count = 0;
 #endif
 
+static JSBool installed_GC_callback = JS_FALSE;
+static JSGCCallback old_GC_callback = NULL;
+static JavaObjectWrapper* deferred_wrappers = NULL;
+
+static JSBool JS_DLL_CALLBACK jsj_GC_callback(JSContext *cx, JSGCStatus status)
+{
+    if (status == JSGC_END && deferred_wrappers) {
+        JNIEnv *jEnv;
+        JSJavaThreadState *jsj_env = jsj_EnterJava(cx, &jEnv);
+        if (jEnv) {
+            JavaObjectWrapper* java_wrapper = deferred_wrappers;
+            while (java_wrapper) {
+                deferred_wrappers = java_wrapper->u.next;
+                (*jEnv)->DeleteGlobalRef(jEnv, java_wrapper->java_obj);
+                jsj_ReleaseJavaClassDescriptor(cx, jEnv, java_wrapper->class_descriptor);
+                JS_free(cx, java_wrapper);
+                java_wrapper = deferred_wrappers;
+            }
+            jsj_ExitJava(jsj_env);
+        }
+    }
+    /* always chain to old GC callback if non-null. */
+    return old_GC_callback ? old_GC_callback(cx, status) : JS_TRUE;
+}
+
 JSBool
 jsj_InitJavaObjReflectionsTable(void)
 {
@@ -132,6 +157,15 @@ jsj_WrapJavaObject(JSContext *cx,
     PR_EnterMonitor(java_obj_reflections_monitor);
 #endif
     
+    if (!installed_GC_callback) {
+        /*
+         * Hook into GC callback mechanism, so we can defer deleting global
+         * references until it's safe.
+         */
+        old_GC_callback =  JS_SetGCCallback(cx, jsj_GC_callback);
+        installed_GC_callback = JS_TRUE;
+    }
+
     hep = JSJ_HashTableRawLookup(java_obj_reflections,
                                  hash_code, java_obj, (void*)jEnv);
     he = *hep;
@@ -205,6 +239,9 @@ jsj_WrapJavaObject(JSContext *cx,
     if (!java_obj)
         goto out_of_memory;
 
+    /* cache the hash code for all time. */
+    java_wrapper->u.hash_code = hash_code; 
+
     /* Add the JavaObject to the hash table */
     he = JSJ_HashTableRawAdd(java_obj_reflections, hep, hash_code,
                              java_obj, js_wrapper_obj, (void*)jEnv);
@@ -226,24 +263,21 @@ out_of_memory:
 }
 
 static void
-remove_java_obj_reflection_from_hashtable(jobject java_obj, JNIEnv *jEnv)
+remove_java_obj_reflection_from_hashtable(jobject java_obj, JSJHashNumber hash_code)
 {
-    JSJHashNumber hash_code;
     JSJHashEntry *he, **hep;
-
-    hash_code = jsj_HashJavaObject((void*)java_obj, (void*)jEnv);
 
 #ifdef JSJ_THREADSAFE
     PR_EnterMonitor(java_obj_reflections_monitor);
 #endif
 
     hep = JSJ_HashTableRawLookup(java_obj_reflections, hash_code,
-                                 java_obj, (void*)jEnv);
+                                 java_obj, NULL);
     he = *hep;
 
     JS_ASSERT(he);
     if (he)
-        JSJ_HashTableRawRemove(java_obj_reflections, hep, he, (void*)jEnv);
+        JSJ_HashTableRawRemove(java_obj_reflections, hep, he, NULL);
 
 #ifdef JSJ_THREADSAFE
     java_obj_reflections_mutation_count++;
@@ -270,11 +304,16 @@ JavaObject_finalize(JSContext *cx, JSObject *obj)
         return;
 
     if (java_obj) {
-        remove_java_obj_reflection_from_hashtable(java_obj, jEnv);
-        (*jEnv)->DeleteGlobalRef(jEnv, java_obj);
+        remove_java_obj_reflection_from_hashtable(java_obj, java_wrapper->u.hash_code);
+
+        /* defer releasing global refs until it is safe to do so. */
+        java_wrapper->u.next = deferred_wrappers;
+        deferred_wrappers = java_wrapper;
+    } else {
+        jsj_ReleaseJavaClassDescriptor(cx, jEnv, java_wrapper->class_descriptor);
+        JS_free(cx, java_wrapper);
     }
-    jsj_ReleaseJavaClassDescriptor(cx, jEnv, java_wrapper->class_descriptor);
-    JS_free(cx, java_wrapper);
+
     jsj_ExitJava(jsj_env);
 }
 

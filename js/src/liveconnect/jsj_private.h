@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -212,11 +212,17 @@ struct JavaClassDescriptor {
     JavaSignature *         array_component_signature; /* Only non-NULL for array classes */
 };
 
+typedef struct JavaObjectWrapper JavaObjectWrapper;
+
 /* This is the native portion of a reflected Java object */
-typedef struct JavaObjectWrapper {
+struct JavaObjectWrapper {
     jobject                 java_obj;           /* Opaque JVM ref to Java object */
     JavaClassDescriptor *   class_descriptor;   /* Java class info */
-} JavaObjectWrapper;
+    union {
+        JSJHashNumber       hash_code;          /* Cached hash code */
+        JavaObjectWrapper * next;               /* Link to next wrapper after finalization */
+    } u;
+};
 
 /* These are definitions of the Java class/method/field modifier bits.
    These really shouldn't be hard-coded here.  Rather,
