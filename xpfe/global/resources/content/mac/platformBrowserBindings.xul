@@ -8,15 +8,12 @@
 <!-- Mac-specific key bindings -->
 <keyset id="editorKeySet" xulkey="meta">
 
-<key id="macRedokb" key="Z" xulkey="true" shift="true" control="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
-    controller.doCommand('cmd_redo');"/>
-<key id="macHomekb" keycode="VK_HOME" control="false" shift="false"
+<!-- Mac bindings for home and end -->
+<key id="macHomekb" keycode="VK_HOME" shift="false"
    onkeypress="
      var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollTop');
      controller.doCommand('cmd_scrollTop');"/>
-<key id="macEndkb" keycode="VK_END" control="false" shift="false"
+<key id="macEndkb" keycode="VK_END" shift="false"
    onkeypress="
      var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollBottom');
      controller.doCommand('cmd_scrollBottom');"/>

@@ -66,6 +66,26 @@
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
             controller.doCommand('cmd_wordNext');"/>
+    <key id="key_up" keycode="VK_UP" shift="false"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_linePrevious');
+            controller.doCommand('cmd_linePrevious');"/>
+    <key id="key_down" keycode="VK_DOWN" shift="false"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_lineNext');
+            controller.doCommand('cmd_lineNext');"/>
+    <key id="key_up_shift" keycode="VK_UP" shift="true"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_selectLinePrevious');
+            controller.doCommand('cmd_selectLinePrevious');"/>
+    <key id="key_down_shift" keycode="VK_DOWN" shift="true"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_selectLineNext');
+            controller.doCommand('cmd_selectLineNext');"/>
     <key id="key_pageup" keycode="VK_PAGE_UP" shift="false" control="false"
         onkeypress="
             var controller =
@@ -76,12 +96,12 @@
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
             controller.doCommand('cmd_scrollPageDown');"/>
-    <key id="key_undo" key="z" xulkey="true" shift="false" control="false"
+    <key id="key_undo" key="z" xulkey="true" shift="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_undo');
             controller.doCommand('cmd_undo');"/>
-    <key id="key_undo" key="y" xulkey="true" shift="false" control="false"
+    <key id="key_redo" key="y" xulkey="true" shift="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_redo');

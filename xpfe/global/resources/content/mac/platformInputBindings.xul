@@ -8,17 +8,26 @@
 <!-- Mac-specific key bindings -->
 <keyset id="editorKeySet" xulkey="meta">
 
-<key id="macRedokb" key="Z" xulkey="true" shift="true" control="false"
+<!-- replace the Windows/Unix xul-Y Redo binding with xul-shift-Z -->
+<key id="noWinRedo" key="y" xulkey="true" shift="false" cancel="true"/>
+<key id="macRedokb" key="Z" xulkey="true" shift="true"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
     controller.doCommand('cmd_redo');"/>
-<key id="macHomekb" keycode="VK_HOME" control="false" shift="false"
+
+<!-- In single-line text fields, ignore the xp bindings for home and end -->
+<key id="macHomekb" keycode="VK_HOME" shift="false" cancel="true">
+<key id="macEndkb" keycode="VK_END" shift="false" cancel="true">
+<!-- and make up and down arrows do those functions -->
+<key id="key_up" keycode="VK_UP" shift="false"
+  onkeypress="
+    var controller =
+      document.commandDispatcher.getControllerForCommand('cmd_beginLine');
+    controller.doCommand('cmd_beginLine');"/>
+<key id="key_down" keycode="VK_DOWN" shift="false"
    onkeypress="
-     var controller = document.commandDispatcher.getControllerForCommand('cmd_beginLine');
-     controller.doCommand('cmd_beginLine');"/>
-<key id="macEndkb" keycode="VK_END" control="false" shift="false"
-   onkeypress="
-     var controller = document.commandDispatcher.getControllerForCommand('cmd_endLine');
+     var controller =
+       document.commandDispatcher.getControllerForCommand('cmd_endLine');
      controller.doCommand('cmd_endLine');"/>
 
 </keyset>
