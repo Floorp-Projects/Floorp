@@ -78,6 +78,10 @@ public:
     void InitScrollbarEvent(nsScrollbarEvent &aEvent, PRUint32 aMsg);
     void InitSizeModeEvent(nsSizeModeEvent &aEvent);
 
+#ifdef ACCESSIBILITY
+    void InitAccessibleEvent(nsAccessibleEvent &aEvent);
+#endif
+
     void DispatchGotFocusEvent(void);
     void DispatchLostFocusEvent(void);
     void DispatchActivateEvent(void);

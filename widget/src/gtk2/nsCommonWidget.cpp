@@ -210,6 +210,20 @@ nsCommonWidget::InitScrollbarEvent(nsScrollbarEvent &aEvent, PRUint32 aMsg)
     // or not?
 }
 
+#ifdef ACCESSIBILITY
+
+void
+nsCommonWidget::InitAccessibleEvent(nsAccessibleEvent &aEvent)
+{
+    memset(&aEvent, 0, sizeof(nsAccessibleEvent));
+    aEvent.message = NS_GETACCESSIBLE;
+    aEvent.eventStructType = NS_ACCESSIBLE_EVENT;
+    aEvent.accessible = nsnull;
+    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+}
+
+#endif
+
 void
 nsCommonWidget::InitSizeModeEvent(nsSizeModeEvent &aEvent)
 {

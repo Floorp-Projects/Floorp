@@ -25,6 +25,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# build our subdirs, too
+DIRS		= mai
+
 MODULE		= widget
 LIBRARY_NAME	= widget_gtk2
 EXPORT_LIBRARY	= 1
@@ -33,7 +36,8 @@ MODULE_NAME	= nsWidgetGtk2Module
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
-		  dom
+		  dom \
+		  accessibility
 
 CSRCS		= \
 		mozcontainer.c \
