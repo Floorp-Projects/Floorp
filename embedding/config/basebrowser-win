@@ -68,6 +68,9 @@ components\caps.xpt
 components\chrome.dll                   
 components\chrome.xpt                   
 
+; cookies
+components\cookie.dll                   
+
 ; docshell
 components\docshell.dll                 
 components\docshell_base.xpt            
