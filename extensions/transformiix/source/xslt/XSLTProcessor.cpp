@@ -1569,7 +1569,7 @@ void XSLTProcessor::processAttributeSets
             //-- an AttributeSet object, which will handle this case better. - Keith V.
             //-- Fix: handle use-attribute-set recursion - Marina M.
             if (attSet->size() > 0) {
-                Element* parent = (Element*) ps->getParentNode(attSet->get(0));
+                Element* parent = (Element*) attSet->get(0)->getXPathParent();
                 processAttributeSets(parent->getAttribute(USE_ATTRIBUTE_SETS_ATTR),node, ps);
             }
             //-- End Fix

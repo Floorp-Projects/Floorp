@@ -78,14 +78,6 @@ public:
     **/
     virtual Stack* getNodeSetStack() = 0;
 
-    /**
-     * handles finding the parent of a node, since in DOM some
-     * nodes such as Attribute Nodes do not have parents
-     * @param node the Node to search for the parent of
-     * @return the parent of the given node, or null
-    **/
-    virtual Node* getParentNode(Node* node) = 0;
-
     virtual MBool isStripSpaceAllowed(Node* node) = 0;
 
     /**

@@ -98,14 +98,6 @@ public:
     **/
     int getChildNumber(Node* node);
  
-    /**
-     * Returns the parent of the given node. This method is available
-     * mainly to compensate for the fact that Attr nodes in DOM 1.0
-     * do not have parents. (Why??)
-     * @param node the Node to return the parent of
-    **/
-    Node* getParentNode(Node* node);
-
     
 private:
     /**

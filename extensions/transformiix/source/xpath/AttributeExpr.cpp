@@ -1,4 +1,5 @@
-/*
+/*-*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -127,8 +128,10 @@ MBool AttributeExpr::matches(Node* node, Node* context, ContextState* cs) {
         nodeName.subString(idx+1, localName);
         if (isNamespaceWild) return localName.isEqual(this->name);
         String nsForNode;
-        Node* parent = cs->getParentNode(node);
-        if (parent) XMLDOMUtils::getNameSpace(prefixForNode, (Element*)parent, nsForNode);
+        Node* parent = node->getXPathParent();
+        if (parent) 
+            XMLDOMUtils::getNameSpace(prefixForNode, (Element*)parent,
+                                      nsForNode);
         String nsForTest;
         if (prefix.length())
             cs->getNameSpaceURIFromPrefix(prefix, nsForTest);

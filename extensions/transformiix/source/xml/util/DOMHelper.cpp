@@ -97,18 +97,6 @@ void DOMHelper::generateId(Node* node, String& dest) {
 
 } //-- generateId
 
-/**
- * Returns the parent of the given node. This method is available
- * mainly to compensate for the fact that Attr nodes in DOM 1.0
- * do not have parents. (Why??)
- * @param node the Node to return the parent of
-**/
-Node* DOMHelper::getParentNode(Node* node) {
-    if (!node) return 0;
-    return node->getXPathParent();
-} //-- getParentNode
-
-
 //-------------------/
 //- Private Methods -/
 //-------------------/
@@ -163,7 +151,7 @@ OrderInfo* DOMHelper::getDocumentOrder(Node* node) {
             orderInfo->order[0] = 0;
         }
         else {
-            Node* parent = getParentNode(node);
+            Node* parent = node->getXPathParent();
             OrderInfo* parentOrder = getDocumentOrder(parent);
             orderInfo = new OrderInfo();
 
