@@ -747,13 +747,20 @@ public:
                                            PRInt32&        aContentOffsetEnd,
                                            PRBool&         aBeginFrameContent) = 0;
 
-
+  /**
+   * This structure holds information about a cursor. mContainer represents a
+   * loaded image that should be preferred. If it is not possible to use it, or
+   * if it is null, mCursor should be used.
+   */
+  struct Cursor {
+    nsCOMPtr<imgIContainer> mContainer;
+    PRInt32                 mCursor;
+  };
   /**
    * Get the cursor for a given frame.
    */
-  NS_IMETHOD  GetCursor(nsPresContext* aPresContext,
-                        nsPoint&        aPoint,
-                        PRInt32&        aCursor) = 0;
+  NS_IMETHOD  GetCursor(const nsPoint&  aPoint,
+                        Cursor&         aCursor) = 0;
 
   /**
    * Get the frame that should receive events for a given point in the

@@ -206,9 +206,8 @@ public:
   NS_IMETHOD  GetContentForEvent(nsPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIContent** aContent);
-  NS_IMETHOD  GetCursor(nsPresContext* aPresContext,
-                        nsPoint&        aPoint,
-                        PRInt32&        aCursor);
+  NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
+                        nsIFrame::Cursor& aCursor);
   NS_IMETHOD  GetFrameForPoint(nsPresContext* aPresContext,
                                const nsPoint& aPoint, 
                                nsFramePaintLayer aWhichLayer,
@@ -522,6 +521,9 @@ protected:
   // applies to its situation.
   void SetOverflowClipRect(nsIRenderingContext& aRenderingContext);
 
+  // Fills aCursor with the appropriate information from ui
+  static void FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
+                                             nsIFrame::Cursor& aCursor);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
 #ifdef DEBUG_LAYOUT

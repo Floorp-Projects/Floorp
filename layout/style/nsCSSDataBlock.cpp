@@ -243,7 +243,8 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 } break;
 
                 case eCSSType_ValueList:
-                    if (iProp == eCSSProperty_content) {
+                    if (iProp == eCSSProperty_content ||
+                        iProp == eCSSProperty_cursor) {
                         for (nsCSSValueList* l = ValueListAtCursor(cursor);
                              l; l = l->mNext)
                             if (l->mValue.GetUnit() == eCSSUnit_URL)

@@ -56,6 +56,7 @@ class nsIDocShell;
 class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;
 class nsIFocusController;
+class imgIContainer;
 
 // mac uses click-hold context menus, a holdover from 4.x
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -127,7 +128,7 @@ public:
   NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey);
   NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey);
 
-  NS_IMETHOD SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor);
+  NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer, nsIWidget* aWidget, PRBool aLockCursor);
 
   //Method for centralized distribution of new DOM events
   NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool *aPreventDefault);

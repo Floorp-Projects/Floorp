@@ -2358,13 +2358,23 @@ nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartData,
     if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
       inherited = PR_TRUE;
       ui->mCursor = parentUI->mCursor;
+      if (ui->mCursorArray.Count() == 0) {
+        // What's going on here is this- If we have any entries, then they were
+        // copied above in the copy ctor from the parent UI. So, we don't need
+        // to do that here.
+        // If we don't have any entries yet, have to copy them here.
+        ui->mCursorArray.AppendObjects(parentUI->mCursorArray);
+      }
     }
     else {
-      // Since we don't support URL values, just skip them.
       // The parser will never create a list that is *all* URL values --
       // that's invalid.
-      while (list->mValue.GetUnit() == eCSSUnit_URL)
+      while (list->mValue.GetUnit() == eCSSUnit_Image) {
+        imgIRequest* req = list->mValue.GetImageValue();
+        if (req)
+          ui->mCursorArray.AppendObject(req);
         list = list->mNext;
+      }
 
       if (eCSSUnit_Enumerated == list->mValue.GetUnit()) {
         ui->mCursor = list->mValue.GetIntValue();

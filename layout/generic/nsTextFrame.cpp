@@ -396,9 +396,8 @@ public:
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
-                       nsPoint& aPoint,
-                       PRInt32& aCursor);
+  NS_IMETHOD GetCursor(const nsPoint& aPoint,
+                       nsIFrame::Cursor& aCursor);
 
   NS_IMETHOD CharacterDataChanged(nsPresContext* aPresContext,
                                   nsIContent*     aChild,
@@ -1339,13 +1338,12 @@ nsTextFrame::GetDocument(nsPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsTextFrame::GetCursor(nsPresContext* aPresContext,
-                       nsPoint& aPoint,
-                       PRInt32& aCursor)
+nsTextFrame::GetCursor(const nsPoint& aPoint,
+                       nsIFrame::Cursor& aCursor)
 {
-  aCursor = GetStyleUserInterface()->mCursor;
-  if (NS_STYLE_CURSOR_AUTO == aCursor) {
-    aCursor = NS_STYLE_CURSOR_TEXT;
+  FillCursorInformationFromStyle(GetStyleUserInterface(), aCursor);  
+  if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
+    aCursor.mCursor = NS_STYLE_CURSOR_TEXT;
 
     // If tabindex >= 0, use default cursor to indicate it's not selectable
     nsIFrame *ancestorFrame = this;
@@ -1357,13 +1355,14 @@ nsTextFrame::GetCursor(nsPresContext* aPresContext,
         if (!tabIndexStr.IsEmpty()) {
           PRInt32 rv, tabIndexVal = tabIndexStr.ToInteger(&rv);
           if (NS_SUCCEEDED(rv) && tabIndexVal >= 0) {
-            aCursor = NS_STYLE_CURSOR_DEFAULT;
+            aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
             break;
           }
         }
       }
     }
   }
+
   return NS_OK;
 }
 

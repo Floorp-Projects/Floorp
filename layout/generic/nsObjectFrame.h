@@ -96,7 +96,7 @@ public:
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
 
   /* fail on any requests to get a cursor from us because plugins set their own! see bug 118877 */
-  NS_IMETHOD GetCursor(nsPresContext* aPresContext, nsPoint& aPoint, PRInt32& aCursor) 
+  NS_IMETHOD GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) 
   { return NS_ERROR_NOT_IMPLEMENTED;  };
 
   //i18n helper

@@ -119,6 +119,8 @@
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
 
+#include "imgIContainer.h"
+
 #if defined (XP_MAC) || defined(XP_MACOSX)
 #include <Events.h>
 #endif
@@ -2312,6 +2314,7 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                   nsEventStatus* aStatus)
 {
   PRInt32 cursor;
+  imgIContainer* container = nsnull;
 
   //If cursor is locked just use the locked one
   if (mLockCursor) {
@@ -2331,8 +2334,11 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
     //If not disabled, check for the right cursor.
     else {
       if (aTargetFrame) {
-        if (NS_FAILED(aTargetFrame->GetCursor(aPresContext, aEvent->point, cursor)))
+        nsIFrame::Cursor framecursor;
+        if (NS_FAILED(aTargetFrame->GetCursor(aEvent->point, framecursor)))
           return;  // don't update the cursor if we failed to get it from the frame see bug 118877
+        cursor = framecursor.mCursor;
+        container = framecursor.mContainer;
       }
     }
   }
@@ -2350,10 +2356,11 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
         (cursor == NS_STYLE_CURSOR_AUTO || cursor == NS_STYLE_CURSOR_DEFAULT))
   {
     cursor = NS_STYLE_CURSOR_SPINNING;
+    container = nsnull;
   }
 
   if (aTargetFrame) {
-    SetCursor(cursor, aTargetFrame->GetWindow(), PR_FALSE);
+    SetCursor(cursor, container, aTargetFrame->GetWindow(), PR_FALSE);
   }
 
   if (mLockCursor || NS_STYLE_CURSOR_AUTO != cursor) {
@@ -2362,7 +2369,8 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsEventStateManager::SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor)
+nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
+                               nsIWidget* aWidget, PRBool aLockCursor)
 {
   nsCursor c;
 
@@ -2483,7 +2491,13 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLock
     break;
   }
 
-  aWidget->SetCursor(c);
+  // First, try the imgIContainer, if non-null
+  nsresult rv = NS_ERROR_FAILURE;
+  if (aContainer)
+    rv = aWidget->SetCursor(aContainer);
+
+  if (NS_FAILED(rv))
+    aWidget->SetCursor(c);
 
   return NS_OK;
 }

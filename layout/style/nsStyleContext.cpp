@@ -384,6 +384,9 @@ nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
         mutable_display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
     }
   }
+
+  // Computer User Interface style, to trigger loads of cursors
+  GetStyleUserInterface();
 }
 
 void

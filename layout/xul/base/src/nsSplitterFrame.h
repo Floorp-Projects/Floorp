@@ -75,9 +75,8 @@ public:
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
-                       nsPoint&        aPoint,
-                       PRInt32&        aCursor);
+  NS_IMETHOD GetCursor(const nsPoint&    aPoint,
+                       nsIFrame::Cursor& aCursor);
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 

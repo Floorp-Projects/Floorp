@@ -1868,9 +1868,8 @@ void nsTreeBodyFrame::CalcInnerBox()
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::GetCursor(nsPresContext* aPresContext,
-                           nsPoint& aPoint,
-                           PRInt32& aCursor)
+nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
+                           nsIFrame::Cursor& aCursor)
 {
   if (mView) {
     PRInt32 row;
@@ -1882,15 +1881,16 @@ nsTreeBodyFrame::GetCursor(nsPresContext* aPresContext,
       // Our scratch array is already prefilled.
       nsStyleContext* childContext = GetPseudoStyleContext(child);
 
-      aCursor = childContext->GetStyleUserInterface()->mCursor;
-      if (aCursor == NS_STYLE_CURSOR_AUTO)
-        aCursor = NS_STYLE_CURSOR_DEFAULT;
+      FillCursorInformationFromStyle(childContext->GetStyleUserInterface(),
+                                     aCursor);
+      if (aCursor.mCursor == NS_STYLE_CURSOR_AUTO)
+        aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
 
       return NS_OK;
     }
   }
 
-  return nsLeafBoxFrame::GetCursor(aPresContext, aPoint, aCursor);
+  return nsLeafBoxFrame::GetCursor(aPoint, aCursor);
 }
 
 NS_IMETHODIMP

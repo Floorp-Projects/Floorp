@@ -64,6 +64,7 @@ class   nsIEventListener;
 class   nsIRollupListener;
 struct  nsGUIEvent;
 struct  nsColorMap;
+class   imgIContainer;
 
 /**
  * Callback function that processes events.
@@ -643,6 +644,15 @@ class nsIWidget : public nsISupports {
      */
 
     NS_IMETHOD SetCursor(nsCursor aCursor) = 0;
+
+    /**
+     * Sets an image as the cursor for this widget.
+     *
+     * @param aCursor the cursor to set
+     * @retval NS_ERROR_NOT_IMPLEMENTED if setting images as cursors is not
+     *         supported
+     */
+    NS_IMETHOD SetCursor(imgIContainer* aCursor) = 0;
 
     /** 
      * Get the window type of this widget

@@ -95,9 +95,8 @@ public:
   }
 #endif
 
-  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
-                       nsPoint&        aPoint,
-                       PRInt32&        aCursor);
+  NS_IMETHOD GetCursor(const nsPoint&    aPoint,
+                       nsIFrame::Cursor& aCursor);
 
   virtual void MouseClicked(nsPresContext* aPresContext);
 
@@ -299,16 +298,17 @@ nsImageControlFrame::GetName(nsAString* aResult)
 }
 
 NS_IMETHODIMP
-nsImageControlFrame::GetCursor(nsPresContext* aPresContext,
-                               nsPoint&        aPoint,
-                               PRInt32&        aCursor)
+nsImageControlFrame::GetCursor(const nsPoint&    aPoint,
+                               nsIFrame::Cursor& aCursor)
 {
   // Use style defined cursor if one is provided, otherwise when
   // the cursor style is "auto" we use the pointer cursor.
-  aCursor = GetStyleUserInterface()->mCursor;
-  if (NS_STYLE_CURSOR_AUTO == aCursor) {
-    aCursor = NS_STYLE_CURSOR_POINTER;
+  FillCursorInformationFromStyle(GetStyleUserInterface(), aCursor);
+
+  if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
+    aCursor.mCursor = NS_STYLE_CURSOR_POINTER;
   }
+
   return NS_OK;
 }
 

@@ -98,6 +98,7 @@
 #include "nsIServiceManager.h"
 #include "nsISelectionImageService.h"
 #include "imgIContainer.h"
+#include "imgIRequest.h"
 #include "gfxIImageFrame.h"
 #include "nsILookAndFeel.h"
 #include "nsLayoutCID.h"
@@ -2027,14 +2028,15 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
 }
 
 NS_IMETHODIMP
-nsFrame::GetCursor(nsPresContext* aPresContext,
-                   nsPoint& aPoint,
-                   PRInt32& aCursor)
+nsFrame::GetCursor(const nsPoint& aPoint,
+                   nsIFrame::Cursor& aCursor)
 {
-  aCursor = GetStyleUserInterface()->mCursor;
-  if (NS_STYLE_CURSOR_AUTO == aCursor) {
-    aCursor = NS_STYLE_CURSOR_DEFAULT;
+  FillCursorInformationFromStyle(GetStyleUserInterface(), aCursor);
+  if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
+    aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
   }
+
+
   return NS_OK;
 }
 
@@ -4698,6 +4700,24 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
     *aTabIndex = tabIndex;
   }
   return isFocusable;
+}
+
+/* static */
+void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
+                                             nsIFrame::Cursor& aCursor)
+{
+  aCursor.mCursor = ui->mCursor;
+
+  PRInt32 count = ui->mCursorArray.Count();
+  for (int i = 0; i < count; i++) {
+    PRUint32 status;
+    nsresult rv = ui->mCursorArray[i]->GetImageStatus(&status);
+    if (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_FRAME_COMPLETE)) {
+      // This is the one we want
+      ui->mCursorArray[i]->GetImage(getter_AddRefs(aCursor.mContainer));
+      break;
+    }
+  }
 }
 
 PRBool

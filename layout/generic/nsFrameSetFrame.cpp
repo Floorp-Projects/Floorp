@@ -139,9 +139,8 @@ public:
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
-                             nsPoint&        aPoint,
-                             PRInt32&        aCursor);
+  NS_IMETHOD GetCursor(const nsPoint&    aPoint,
+                       nsIFrame::Cursor& aCursor);
   
   NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -794,14 +793,13 @@ nsHTMLFramesetFrame::IsGrabbingMouse()
 #endif
 
 NS_IMETHODIMP
-nsHTMLFramesetFrame::GetCursor(nsPresContext* aPresContext,
-                               nsPoint&        aPoint,
-                               PRInt32&        aCursor)
+nsHTMLFramesetFrame::GetCursor(const nsPoint&    aPoint,
+                               nsIFrame::Cursor& aCursor)
 {
   if (mDragger) {
-    aCursor = (mDragger->mVertical) ? NS_STYLE_CURSOR_W_RESIZE : NS_STYLE_CURSOR_N_RESIZE;
+    aCursor.mCursor = (mDragger->mVertical) ? NS_STYLE_CURSOR_W_RESIZE : NS_STYLE_CURSOR_N_RESIZE;
   } else {
-    aCursor = NS_STYLE_CURSOR_DEFAULT;
+    aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
   }
   return NS_OK;
 }
@@ -1739,14 +1737,13 @@ nsHTMLFramesetBorderFrame::GetFrameForPoint(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLFramesetBorderFrame::GetCursor(nsPresContext* aPresContext,
-                                     nsPoint&        aPoint,
-                                     PRInt32&        aCursor)
+nsHTMLFramesetBorderFrame::GetCursor(const nsPoint&    aPoint,
+                                     nsIFrame::Cursor& aCursor)
 {
   if (!mCanResize) {
-    aCursor = NS_STYLE_CURSOR_DEFAULT;
+    aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
   } else {   
-    aCursor = (mVertical) ? NS_STYLE_CURSOR_W_RESIZE : NS_STYLE_CURSOR_N_RESIZE;
+    aCursor.mCursor = (mVertical) ? NS_STYLE_CURSOR_W_RESIZE : NS_STYLE_CURSOR_N_RESIZE;
   }
   return NS_OK;
 }

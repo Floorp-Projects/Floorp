@@ -140,9 +140,8 @@ public:
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
-                       nsPoint&        aPoint,
-                       PRInt32&        aCursor);
+  NS_IMETHOD GetCursor(const nsPoint&    aPoint,
+                       nsIFrame::Cursor& aCursor);
 
   NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
