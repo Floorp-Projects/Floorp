@@ -278,6 +278,7 @@ calDateTime::GetInTimezone(const char *aTimezone, calIDateTime **aResult)
      * assign, since this item is floating */
     if (icalt.zone) {
         icaltimezone_convert_time(&icalt, (icaltimezone*) icalt.zone, destzone);
+        icalt.zone = destzone;
     } else {
         icalt.zone = destzone;
     }
@@ -383,12 +384,6 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
 {
     icaltimetype t = *icalt;
 
-    // if we get a time in a specific timezone,
-    // convert it to UTC.
-    if (!t.is_utc && t.zone) {
-        t = icaltime_convert_to_zone(*icalt, icaltimezone_get_utc_timezone());
-    }
-
     mYear = t.year;
     mMonth = t.month - 1;
     mDay = t.day;
@@ -396,11 +391,13 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
     mMinute = t.minute;
     mSecond = t.second;
 
-    mIsUtc = t.is_utc ? PR_TRUE : PR_FALSE;
+    mIsUtc = (t.zone == icaltimezone_get_utc_timezone());
     mIsDate = t.is_date ? PR_TRUE : PR_FALSE;
 
+    mTimezone.Assign(icaltimezone_get_tzid((icaltimezone*)t.zone));
+
     // reconstruct nativetime
-    time_t tt = icaltime_as_timet(*icalt);
+    time_t tt = icaltime_as_timet_with_zone(*icalt, icaltimezone_get_utc_timezone());
     PRInt64 temp, million;
     LL_I2L(million, PR_USEC_PER_SEC);
     LL_I2L(temp, tt);
@@ -408,7 +405,7 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
     mNativeTime = temp;
 
     // reconstruct weekday/yearday
-    mWeekday = icaltime_day_of_week(*icalt);
+    mWeekday = icaltime_day_of_week(*icalt) - 1;
     mYearday = icaltime_day_of_year(*icalt);
 }
 
