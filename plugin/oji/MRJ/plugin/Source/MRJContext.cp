@@ -179,8 +179,6 @@ void MRJContext::processAppletTag()
 		const char* const* fValues;
 	} attributes = { 0, NULL, NULL }, parameters = { 0, NULL, NULL };
 
-	char* baseURL = NULL;
-	
 	MRJPageAttributes pageAttributes = { 0, NULL, NULL, false };
 
 	// obtain the applet's attributes & parameters.
@@ -194,32 +192,26 @@ void MRJContext::processAppletTag()
 			// get the URL of the HTML document	containing the applet.
 			const char* documentBase = NULL;
 			if (tagInfo2->GetDocumentBase(&documentBase) == NS_OK && documentBase != NULL) {
-				mDocumentBase = ::strdup(documentBase);
-				baseURL = new char[strlen(documentBase) + 1];
-				if (baseURL != NULL) {
-					::strcpy(baseURL, documentBase);
-					char* lastSlash = ::strrchr(baseURL, '/');
-					if (lastSlash != NULL)
-						lastSlash[1] = '\0';	// remove any trailing document name.
-					
-					// establish a page context for this applet to run in.
-					nsIJVMPluginTagInfo* jvmTagInfo = NULL;
-					if (mPeer->QueryInterface(nsIJVMPluginTagInfo::GetIID(), &jvmTagInfo) == NS_OK) {
-						PRUint32 documentID;
-						const char* codeBase;
-						const char* archive;
-						PRBool mayScript;
-						if (tagInfo2->GetUniqueID(&documentID) == NS_OK &&
-							jvmTagInfo->GetCodeBase(&codeBase) == NS_OK &&
-							jvmTagInfo->GetArchive(&archive) == NS_OK &&
-							jvmTagInfo->GetMayScript(&mayScript) == NS_OK) {
-							pageAttributes.documentID = documentID;
-							pageAttributes.codeBase = codeBase;
-							pageAttributes.archive = archive;
-							pageAttributes.mayScript = mayScript;
-						}
-						jvmTagInfo->Release();
+				// record the document base, in case 
+				setDocumentBase(documentBase);
+
+				// establish a page context for this applet to run in.
+				nsIJVMPluginTagInfo* jvmTagInfo = NULL;
+				if (mPeer->QueryInterface(nsIJVMPluginTagInfo::GetIID(), &jvmTagInfo) == NS_OK) {
+					PRUint32 documentID;
+					const char* codeBase;
+					const char* archive;
+					PRBool mayScript;
+					if (tagInfo2->GetUniqueID(&documentID) == NS_OK &&
+						jvmTagInfo->GetCodeBase(&codeBase) == NS_OK &&
+						jvmTagInfo->GetArchive(&archive) == NS_OK &&
+						jvmTagInfo->GetMayScript(&mayScript) == NS_OK) {
+						pageAttributes.documentID = documentID;
+						pageAttributes.codeBase = codeBase;
+						pageAttributes.archive = archive;
+						pageAttributes.mayScript = mayScript;
 					}
+					jvmTagInfo->Release();
 				}
 			}
 			tagInfo2->Release();
@@ -227,10 +219,13 @@ void MRJContext::processAppletTag()
 		tagInfo->Release();
 	}
 	
-	// if a default codeBase was established, use it here.
-	if (baseURL == NULL && mCodeBase != NULL) {
-		baseURL = mCodeBase;
-		mCodeBase = NULL;
+	// compute the URL of the directory containing this applet's HTML page.
+	char* baseURL = ::strdup(getDocumentBase());
+	if (baseURL != NULL) {
+		// trim the trailing document name.
+		char* lastSlash = ::strrchr(baseURL, '/');
+		if (lastSlash != NULL)
+			lastSlash[1] = '\0';
 	}
 	
 	// assume that all arguments might be optional.
@@ -329,6 +324,7 @@ void MRJContext::processAppletTag()
 		
 		// keep the codeBase around for later.
 		setCodeBase(baseURL);
+		delete[] baseURL;
 
 		status = ::JMNewAppletLocatorFromInfo(&mLocator, mSessionRef, &info, NULL);
 	} else {
@@ -1176,16 +1172,25 @@ void MRJContext::releaseFrames()
 	}
 }
 
-void MRJContext::setCodeBase(char* codeBase)
+void MRJContext::setCodeBase(const char* codeBase)
 {
 	if (mCodeBase != NULL)
 		delete[] mCodeBase;
-	mCodeBase = codeBase;
+	if (codeBase != NULL)
+		mCodeBase = ::strdup(codeBase);
 }
 
 const char* MRJContext::getCodeBase()
 {
 	return mCodeBase;
+}
+
+void MRJContext::setDocumentBase(const char* documentBase)
+{
+	if (mDocumentBase != NULL)
+		mDocumentBase = NULL;
+	if (documentBase != NULL)
+		mDocumentBase = ::strdup(documentBase); 
 }
 
 const char* MRJContext::getDocumentBase()

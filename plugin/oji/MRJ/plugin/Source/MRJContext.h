@@ -84,8 +84,10 @@ public:
 	void hideFrames();
 	void releaseFrames();
 	
-	void setCodeBase(char* codeBase);
+	void setCodeBase(const char* codeBase);
 	const char* getCodeBase();
+	
+	void setDocumentBase(const char* documentBase);
 	const char* getDocumentBase();
 
 private:
@@ -127,7 +129,7 @@ private:
 	nsPluginWindow*			mPluginWindow;
 	RgnHandle				mPluginClipping;
 	CGrafPtr				mPluginPort;
-	char*					mCodeBase;
 	char*					mDocumentBase;
+	char*					mCodeBase;
 	MRJPage*				mPage;
 };
