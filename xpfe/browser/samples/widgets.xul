@@ -1,0 +1,148 @@
+<?xml version="1.0"?> 
+
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s): 
+    Ben Goodger <ben@netscape.com>
+    Michael Lowe <michael.lowe@bigfoot.com> 
+
+-->
+
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+
+<window id="openLocation"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
+        style="width: 250px;"
+        align="vertical"> 
+              
+  <box autostretch="never" valign="center">
+    <text class="label" value="Foo Label 1:" for="nerp1"/>
+    <textfield flex="1" id="nerp1" disabled="true" value="disabled"/>
+  </box>
+  <box autostretch="never" valign="center">
+    <text class="label" value="Foo Label 2:" for="nerp2"/>
+    <textfield flex="1" id="nerp2" readonly="true" value="readonly"/>
+  </box>
+  <box autostretch="never" valign="center">
+    <text class="label" value="Foo Label 2:" for="nerp2"/>
+    <textfield flex="1" id="nerp2" readonly="true" disabled="true" value="readonly disabled"/>
+  </box>
+  <box autostretch="never" valign="center">
+    <text class="label" value="Foo Label 3:" for="nerp3"/>
+    <textfield flex="1" id="nerp3" value="regular"/>
+  </box>
+  <box autostretch="never" valign="center">
+    <text class="label" value="Foo Label 5:" for="nerp4"/>
+    <menubutton value="regular menubutton">
+      <menupopup>
+        <menuitem value="foo 1"/>
+        <menuitem value="foo 2"/>
+        <menuitem value="foo 3"/>
+      </menupopup>
+    </menubutton>
+    <menubutton value="disabled menubutton" disabled="true">
+      <menupopup>
+        <menuitem value="foo 1"/>
+        <menuitem value="foo 2"/>
+        <menuitem value="foo 3"/>
+      </menupopup>
+    </menubutton>    
+  </box>
+  
+  <box autostretch="never" valign="center">
+    <text class="label" value="Foo Label 5:" for="nerp4"/>
+    <menulist value="regular menulist">
+      <menupopup>
+        <menuitem value="foo 1"/>
+        <menuitem value="foo 2"/>
+        <menuitem value="foo 3"/>
+      </menupopup>
+    </menulist>
+    <menulist value="disabled menulist" disabled="true">
+      <menupopup>
+        <menuitem value="foo 1"/>
+        <menuitem value="foo 2"/>
+        <menuitem value="foo 3"/>
+      </menupopup>
+    </menulist>    
+  </box>  
+  
+  <box>
+    <text class="label" value="Foo Label 4:"/>
+    <box orient="vertical" flex="1">
+      <textfield flex="1"/>
+      <box orient="vertical" autostretch="never">
+        <checkbox value="Checkbox 1"/>
+        <checkbox value="Checkbox 2" disabled="true" checked="true"/>
+        <checkbox value="Checkbox 3"/>
+      </box>
+      <separator class="groove"/>
+      <radiogroup orient="vertical">
+        <radio value="Radio 1"/>
+        <radio value="Radio 2"/>
+        <radio value="Radio 3" disabled="true" checked="true"/>
+      </radiogroup>
+    </box>
+  </box>
+
+  <separator/>
+  
+  <box autostretch="never" valign="center">
+    <text class="label" value="Foo Label 7:"/>
+    <button value="Standard XUL Button"/>
+    <button class="dialog" value="Dialog XUL Button"/>
+    <button class="dialog" disabled="true" default="true" value="Disabled Button"/>
+  </box>
+        
+  <separator/>
+  
+  <box>
+    <box orient="vertical">
+      <text class="label" value="Foo Label 6:"/>
+      <spring flex="1"/>
+    </box>
+    <textfield rows="3" multiline="true" value="Regular multiline textfield"/>
+  </box>
+  
+  <box>
+    <box orient="vertical">
+      <text class="label" value="Foo Label 6:"/>
+      <spring flex="1"/>
+    </box>
+    <textfield rows="3" multiline="true" disabled="true" value="Disabled multiline textfield"/>
+  </box>
+  
+  <separator/>
+
+  <box class="funky">
+    <button value="foo"/>
+    <button value="foo"/>
+    <button value="foo"/>
+  </box>
+  
+  <box id="boo" style="background-color: blue; color: white;">
+    <box style="background-color: inherit;">
+      <html:input type="text" id="foo" style="border: 1px solid red; background-color: inherit; color: inherit;"/>
+    </box>
+  </box>
+  
+ </window>

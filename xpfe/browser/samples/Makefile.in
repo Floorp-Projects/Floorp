@@ -41,6 +41,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		$(srcdir)/hidetoolicon.xul \
 		$(srcdir)/hidetoolicon.css \
 		$(srcdir)/tab.xul \
+		$(srcdir)/widgets.xul \
 		$(srcdir)/xpmenu.xul \
 		$(NULL)
 

@@ -40,6 +40,7 @@ install:: $(DLL)
         $(MAKE_INSTALL) hidetoolicon.xul $(DIST)\bin\res\samples
         $(MAKE_INSTALL) hidetoolicon.css $(DIST)\bin\res\samples
         $(MAKE_INSTALL) tab.xul $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) widgets.xul $(DIST)\bin\res\samples
         $(MAKE_INSTALL) xpmenu.xul $(DIST)\bin\res\samples
 
 clobber::
@@ -57,4 +58,5 @@ clobber::
         rm -f $(DIST)\res\samples\hidetoolicon.xul
         rm -f $(DIST)\res\samples\hidetoolicon.css
         rm -f $(DIST)\res\samples\tab.xul
+        rm -f $(DIST)\res\samples\widgets.xul
         rm -f $(DIST)\res\samples\xpmenu.xul
