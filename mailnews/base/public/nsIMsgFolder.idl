@@ -68,13 +68,35 @@ interface nsIMsgFolder : nsIFolder {
   nsIEnumerator getVisibleSubFolders();
 	readonly attribute wstring prettiestName;
 
+  /**
+   * URL for this folder
+   */
   readonly attribute string folderURL;
 
+  /**
+   * should probably move to the server
+   */
 	readonly attribute boolean deleteIsMoveToTrash;
+  
+  /**
+   * should probably move to the server
+   */
 	readonly attribute boolean showDeletedMessages;
 
+  /**
+   * this folder's parent server
+   */
   readonly attribute nsIMsgIncomingServer server;
+
+  /**
+   * is this folder the "phantom" server folder?
+   */
   readonly attribute boolean isServer;
+
+  /**
+   * the phantom server folder
+   */
+	readonly attribute nsIMsgFolder rootFolder;
   
 	void OnCloseFolder ();
 	void Delete ();
@@ -89,9 +111,19 @@ interface nsIMsgFolder : nsIFolder {
   void compact();
   void emptyTrash();
 
+  /**
+   * change the name of the folder
+   *
+   * @param name the new name of the folder
+   */
 	void rename(in string name);
 	void adopt(in nsIMsgFolder srcFolder, out unsigned long outPos);
 
+  /**
+   * looks in immediate children of this folder for the given name
+   *
+   * @param name the name of the target subfolder
+   */
 	boolean containsChildNamed(in string name);
 	boolean isAncestorOf(in nsIMsgFolder folder);
 
@@ -100,27 +132,80 @@ interface nsIMsgFolder : nsIFolder {
 
 	void updateSummaryTotals(in boolean force);
 	void summaryChanged();
+  /**
+   * get the total number of unread messages in this folder,
+   * or in all subfolders
+   *
+   * @param deep if true, descends into all subfolders and gets a grand total
+   */  
 	long getNumUnread(in boolean deep);
+
+  /**
+   * get the total number of messages in this folder,
+   * or in all subfolders
+   *
+   * @param deep if true, descends into all subfolders and gets a grand total
+   */  
 	long getTotalMessages(in boolean deep);
 
 	readonly attribute unsigned long expungedBytesCount;
+
+  /**
+   * can this folder be deleted?
+   * for example, special folders cannot be deleted
+   */
 	readonly attribute boolean deletable;
+
+  /**
+   * does this folder allow subfolders?
+   * for example, newsgroups cannot have subfolders, and the INBOX
+   * on some IMAP servers cannot have subfolders
+   */
 	readonly attribute boolean canCreateChildren;
+
+  /**
+   * can you change the name of this folder?
+   * for example, newsgroups cannot be renamed
+   */
 	readonly attribute boolean canBeRenamed;
-	readonly attribute boolean requiresCleanup;
-
-	void clearRequiresCleanup();
-
-	boolean manyHeadersToDownload();
-
-	readonly attribute boolean knowsSearchNntpExtension;
-	readonly attribute boolean allowsPosting;
-
+  
+  /**
+   * should we be displaying recipients instead of the sender?
+   * for example, in the Sent folder, recipients are more relevant
+   * than the sender
+   */
 	readonly attribute boolean displayRecipients;
 
+  /**
+   * used to determine if it will take a long time to download all
+   * the headers in this folder - so that we can do folder notifications
+   * synchronously instead of asynchronously
+   */
+	boolean manyHeadersToDownload();
+
+	readonly attribute boolean requiresCleanup;
+	void clearRequiresCleanup();
+
+  /**
+   * this should go into a news-specific interface
+   */
+	readonly attribute boolean knowsSearchNntpExtension;
+  
+  /**
+   * this should go into a news-specific interface
+   */
+	readonly attribute boolean allowsPosting;
+
 	readonly attribute string relativePathName;
+
+  /**
+   * size of this folder (including headers??) on disk
+   */
 	readonly attribute unsigned long sizeOnDisk;
 
+  /**
+   * set the password for this folder (what is this used for?)
+   */
 	void rememberPassword(in string password);
 	readonly attribute string rememberedPassword;
 	boolean userNeedsToAuthenticateForFolder(in boolean displayOnly);
@@ -161,15 +246,32 @@ interface nsIMsgFolder : nsIFolder {
 	nsIMessage createMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
 	void getNewMessages(in nsIMsgWindow aWindow);
 
+  /**
+   * write out summary data for this folder
+   * to the given folder cache (i.e. panacea.dat)
+   */
 	void writeToFolderCache(in nsIMsgFolderCache folderCache);
+
+  /**
+   * the charset of this folder
+   */
 	attribute wstring charset;
 	attribute unsigned long biffState;
+
+  /**
+   * the number of new messages since this folder was last visited
+   */
 	attribute long numNewMessages;
 
+  /**
+   * verbose description of the new messages in this folder
+   */
 	readonly attribute wstring newMessagesNotificationDescription;
-	readonly attribute nsIMsgFolder rootFolder;
   readonly attribute nsIMsgDatabase msgDatabase;
 
+  /**
+   * local path of this folder
+   */
 	readonly attribute nsIFileSpec path;
 
 	void markMessagesRead(in nsISupportsArray messages, in boolean markRead);
