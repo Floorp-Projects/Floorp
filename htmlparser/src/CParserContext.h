@@ -51,6 +51,7 @@
 #include "nsScanner.h"
 #include "nsIStreamListener.h"
 #include "nsString.h"
+#include "nsIRequest.h"
 
 /**
  * Note that the parser is given FULL access to all
@@ -87,7 +88,9 @@ public:
     eContextType        mContextType;
     eAutoDetectResult   mAutoDetectStatus;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
-    nsIRequest*         mRequest; // provided by necko to differnciate different input streams
+    
+    // Why is mRequest a strong reference? Refer to bug 102376
+    nsCOMPtr<nsIRequest> mRequest; // provided by necko to differnciate different input streams
 
     nsScanner*          mScanner;
     nsIDTD*             mDTD;
