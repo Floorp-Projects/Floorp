@@ -1362,8 +1362,20 @@ nsHTMLDocument::ContentRemoved(nsIContent* aContainer,
 NS_IMETHODIMP 
 nsHTMLDocument::FlushPendingNotifications()
 {
+  // Determine if it is safe to flush the sink
+  // by determining if it safe to flush all the presshells.
+  PRBool isSafeToFlush = PR_TRUE;
+  PRInt32 i = 0, n = mPresShells.Count();
+  while ((i < n) && (isSafeToFlush)) {
+    nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+    if (nsnull != shell) {
+      nsresult rv = shell->IsSafeToFlush(isSafeToFlush);
+    }
+    i++;
+  }
+
   nsresult result = NS_OK;
-  if (mParser) {
+  if ((isSafeToFlush) && (mParser)) {
     nsCOMPtr<nsIContentSink> sink;
     
     // XXX Ack! Parser doesn't addref sink before passing it back

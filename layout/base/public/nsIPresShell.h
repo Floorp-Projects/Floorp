@@ -273,6 +273,14 @@ public:
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType) = 0;
   NS_IMETHOD CancelAllReflowCommands() = 0;
 
+
+  /**
+   * Determine if it is safe to flush all pending notifications
+   * @param aIsSafeToFlush PR_TRUE if it is safe, PR_FALSE otherwise.
+   * 
+   */
+  NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush) = 0;
+
   /**
    * Flush all pending notifications such that the presentation is
    * in sync with the content.
