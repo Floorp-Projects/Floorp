@@ -450,7 +450,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {
         if (cmdResult) {
-            nsAutoString currProfileName(cmdResult);
+            nsAutoString currProfileName; currProfileName.AssignWithConversion(cmdResult);
 
 #ifdef DEBUG_profile
             printf("ProfileName : %s\n", cmdResult);
@@ -505,8 +505,8 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {
         if (cmdResult) {
-            nsAutoString currProfileName(strtok(cmdResult, " "));
-            nsAutoString currProfileDirString(strtok(NULL, " "));
+            nsAutoString currProfileName; currProfileName.AssignWithConversion(strtok(cmdResult, " "));
+            nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
         
             if (!currProfileDirString.IsEmpty()) {
                 currProfileDirSpec = currProfileDirString;
@@ -533,7 +533,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             printf("profileName & profileDir are: %s\n", cmdResult);
 #endif /* DEBUG_profile */
 
-            nsAutoString currProfileDir(currProfileDirSpec.GetNativePathCString());
+            nsAutoString currProfileDir; currProfileDir.AssignWithConversion(currProfileDirSpec.GetNativePathCString());
             rv = CreateNewProfile(currProfileName.GetUnicode(), currProfileDir.GetUnicode());
             if (NS_SUCCEEDED(rv)) {
                 *profileDirSet = PR_TRUE;
@@ -678,7 +678,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec*
     if (NS_FAILED(rv)) return rv;
                            
     // Set this to be a current profile only if it is a 5.0 profile
-    if (aProfile->isMigrated == REGISTRY_YES_STRING)
+    if (aProfile->isMigrated.EqualsWithConversion(REGISTRY_YES_STRING))
     {
         gProfileDataAccess->SetCurrentProfile(profileName);
                                   
@@ -821,12 +821,12 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const PRUnichar *profileName, nsFileSpec&
     // Do I need to check for NS_ERROR_OUT_OF_MEMORY when I do a new on a class?
     ProfileStruct* aProfile = new ProfileStruct();
 
-    nsAutoString profileLocation(profileDirString);
+    nsAutoString profileLocation; profileLocation.AssignWithConversion(profileDirString);
 
 
     aProfile->profileName     = profileName;
     aProfile->profileLocation = profileLocation;
-    aProfile->isMigrated      = REGISTRY_YES_STRING;
+    aProfile->isMigrated.AssignWithConversion(REGISTRY_YES_STRING);
 
 
     rv = CreateUserDirectories(tmpDir);
@@ -854,9 +854,15 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName, const PRUnichar* nativ
     nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
-    printf("ProfileManager : CreateNewProfile\n");
-    printf("Profile Name: %s\n", (const char*)nsCAutoString(profileName));
-    printf("Profile Dir: %s\n", (const char*)nsCAutoString(nativeProfileDir));
+    {
+      printf("ProfileManager : CreateNewProfile\n");
+
+      nsCAutoString temp1; temp1.AssignWithConversion(profileName);
+      printf("Profile Name: %s\n", NS_STATIC_CAST(const char*, temp1));
+
+      nsCAutoString temp2; temp2.AssignWithConversion(nativeProfileDir);
+      printf("Profile Dir: %s\n", NS_STATIC_CAST(const char*, temp2));
+    }
 #endif
 
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
@@ -1007,9 +1013,15 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
     nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
-    printf("ProfileManager : Renaming profile\n");
-    printf("Old name:  %s\n", (const char*)nsCAutoString(oldName));
-    printf("New name:  %s\n", (const char*)nsCAutoString(newName));
+    {
+      printf("ProfileManager : Renaming profile\n");
+
+      nsCAutoString temp1; temp1.AssignWithConversion(oldName);
+      printf("Old name:  %s\n", NS_STATIC_CAST(const char*, temp1));
+
+      nsCAutoString temp2; temp2.AssignWithConversion(newName);
+      printf("New name:  %s\n", NS_STATIC_CAST(const char*, temp2));
+    }
 #endif
 
     PRBool exists;
@@ -1147,8 +1159,12 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
     nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
-    printf("ProfileManager : StartApprunner\n");
-    printf("profileName passed in: %s", (const char*)nsCAutoString(profileName));
+    {
+      printf("ProfileManager : StartApprunner\n");
+
+      nsCAutoString temp; temp.AssignWithConversion(profileName);
+      printf("profileName passed in: %s", NS_STATIC_CAST(const char*, temp));
+    }
 #endif
 
     gProfileDataAccess->SetCurrentProfile(profileName);
@@ -1412,9 +1428,9 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
         return NS_ERROR_FAILURE;
     }
 
-    nsAutoString pName(profileName);
-    nsAutoString emailAddress(userEmail);
-    nsAutoString serviceState(service_denial);
+    nsAutoString pName; pName.AssignWithConversion(profileName);
+    nsAutoString emailAddress; emailAddress.AssignWithConversion(userEmail);
+    nsAutoString serviceState; serviceState.AssignWithConversion(service_denial);
 
     PRInt32 profileNameIndex, serviceIndex, delimIndex;
 
@@ -1463,7 +1479,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
     // If user denies registration, ignore the information entered.
     if (userServiceDenial.mLength > 0)
-        userProfileName.SetString("");
+        userProfileName.SetLength(0);
 
     nsXPIDLString curProfile;
     rv = GetCurrentProfile(getter_Copies(curProfile));
@@ -1484,7 +1500,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
         nsAutoString netcenterProfileName(userProfileName);
 
         // XXX Setting the name to curProfile. Not renaming for BETA1.
-        userProfileName = curProfile;
+        userProfileName.Assign( NS_STATIC_CAST(const PRUnichar*, curProfile) );
 
         ProfileStruct*    aProfile;
 
@@ -1576,7 +1592,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
                 if (NS_FAILED(rv)) return rv;
             }
         }
-        aProfile->NCHavePregInfo = REGISTRY_YES_STRING;
+        aProfile->NCHavePregInfo.AssignWithConversion(REGISTRY_YES_STRING);
 
         gProfileDataAccess->SetValue(aProfile);
         gProfileDataAccess->SetCurrentProfile(userProfileName.GetUnicode());
@@ -1591,7 +1607,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
         if (NS_FAILED(rv)) return rv;
 
         aProfile->NCDeniedService = userServiceDenial;
-        aProfile->NCHavePregInfo = REGISTRY_YES_STRING;
+        aProfile->NCHavePregInfo.AssignWithConversion(REGISTRY_YES_STRING);
 
         gProfileDataAccess->SetValue(aProfile);
 
@@ -1738,9 +1754,13 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
 
 
 #if defined(DEBUG_profile)
-    if (NS_SUCCEEDED(rv))
-    printf("ProfileManager : Cloned CurrentProfile\n");
-    printf("The new profile is ->%s<-\n", (const char*)nsCAutoString(newProfile));
+    {
+      if (NS_SUCCEEDED(rv))
+      printf("ProfileManager : Cloned CurrentProfile\n");
+
+      nsCAutoString temp; temp.AssignWithConversion(newProfile);
+      printf("The new profile is ->%s<-\n", NS_STATIC_CAST(const char*, temp));
+    }
 #endif
 
     gProfileDataAccess->mNumProfiles++;
@@ -1890,9 +1910,10 @@ nsProfile::CreateDefaultProfile(void)
 
     rv = locator->ForgetProfileDir();
 
-    nsAutoString dirSpecStr(profileDirSpec.GetNativePathCString());
+    nsAutoString dirSpecStr; dirSpecStr.AssignWithConversion(profileDirSpec.GetNativePathCString());
 
-    rv = CreateNewProfile(nsAutoString(DEFAULT_PROFILE_NAME).GetUnicode(), dirSpecStr.GetUnicode());
+    nsAutoString defaultProfileName; defaultProfileName.AssignWithConversion(DEFAULT_PROFILE_NAME);
+    rv = CreateNewProfile(defaultProfileName.GetUnicode(), dirSpecStr.GetUnicode());
 
     return rv;
 }
@@ -2032,7 +2053,7 @@ NS_IMETHODIMP nsProfile::RemoveCookie(const char *cookie)
     NS_ENSURE_ARG_POINTER(cookie);
 
     nsresult rv = NS_OK;
-    nsAutoString inputCookie(PL_strstr(cookie, NS_ACTIVATION_COOOKIE));
+    nsAutoString inputCookie; inputCookie.AssignWithConversion(PL_strstr(cookie, NS_ACTIVATION_COOOKIE));
     nsAutoString actvCookie;
     
     inputCookie.Mid(actvCookie, 0, inputCookie.Find(SEMICOLON_DELIMITER, 0));
@@ -2052,23 +2073,23 @@ NS_IMETHODIMP nsProfile::RemoveCookie(const char *cookie)
     nsXPIDLCString path;
 
     pregURI->GetHost(getter_Copies(host));
-    nsAutoString domain(PL_strchr(host, '.'));
+    nsAutoString domain; domain.AssignWithConversion(PL_strchr(host, '.'));
 
     pregURI->GetPath(getter_Copies(path));
 
     // Add domain
-    actvCookie += SEMICOLON_DELIMITER;
-    actvCookie += DOMAIN_STR;
+    actvCookie.AppendWithConversion(SEMICOLON_DELIMITER);
+    actvCookie.AppendWithConversion(DOMAIN_STR);
     actvCookie += domain;
 
     // Add path
-    actvCookie += SEMICOLON_DELIMITER;
-    actvCookie += PATH_STR;
-    actvCookie += path;
+    actvCookie.AppendWithConversion(SEMICOLON_DELIMITER);
+    actvCookie.AppendWithConversion(PATH_STR);
+    actvCookie.AppendWithConversion(path);
 	
     // Add expires string
-    actvCookie += SEMICOLON_DELIMITER;
-    actvCookie += ACTIVATION_COOKIE_EXPIRE_STR;
+    actvCookie.AppendWithConversion(SEMICOLON_DELIMITER);
+    actvCookie.AppendWithConversion(ACTIVATION_COOKIE_EXPIRE_STR);
 
     NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &rv);
     if ((NS_OK == rv) && (nsnull != service) && (nsnull != pregURI)) {

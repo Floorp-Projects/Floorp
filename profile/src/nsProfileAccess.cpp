@@ -256,13 +256,17 @@ nsProfileAccess::FillProfileInfo()
     nsCOMPtr<nsIEnumerator> enumKeys;
     nsRegistryKey profilesTreeKey;
 
+    nsAutoString registryProfileSubtreeString;
+    registryProfileSubtreeString.AssignWithConversion(REGISTRY_PROFILE_SUBTREE_STRING);
+
     rv = m_registry->GetKey(nsIRegistry::Common, 
-                            nsAutoString(REGISTRY_PROFILE_SUBTREE_STRING).GetUnicode(), 
+                            registryProfileSubtreeString.GetUnicode(), 
                             &profilesTreeKey);
+
     if (NS_FAILED(rv)) 
     {
         rv = m_registry->AddKey(nsIRegistry::Common, 
-                                nsAutoString(REGISTRY_PROFILE_SUBTREE_STRING).GetUnicode(), 
+                                registryProfileSubtreeString.GetUnicode(), 
                                 &profilesTreeKey);
         if (NS_FAILED(rv)) return rv;
     }
@@ -281,8 +285,10 @@ nsProfileAccess::FillProfileInfo()
     // for invalid rv values.
 
     // Get the current profile
+    nsAutoString registryCurrentProfileString;
+    registryCurrentProfileString.AssignWithConversion(REGISTRY_CURRENT_PROFILE_STRING);
     rv = m_registry->GetString(profilesTreeKey, 
-                               nsAutoString(REGISTRY_CURRENT_PROFILE_STRING).GetUnicode(), 
+                               registryCurrentProfileString.GetUnicode(), 
                                getter_Copies(tmpCurrentProfile));
 
     if (tmpCurrentProfile)
@@ -294,30 +300,38 @@ nsProfileAccess::FillProfileInfo()
         //    the first profile if profiles exist but no current profile is set
         //    an empty string if no profiles exist.
 
-        mCurrentProfile = tmpCurrentProfile;
+        mCurrentProfile = NS_STATIC_CAST(const PRUnichar*, tmpCurrentProfile);
     }
 
     // Get the profile version
-    rv = m_registry->GetString(profilesTreeKey, 
-                               nsAutoString(REGISTRY_VERSION_STRING).GetUnicode(), 
-                               getter_Copies(tmpVersion));
+    {
+      nsAutoString registryVersionString;
+      registryVersionString.AssignWithConversion(REGISTRY_VERSION_STRING);
+      rv = m_registry->GetString(profilesTreeKey, 
+                                 registryVersionString.GetUnicode(), 
+                                 getter_Copies(tmpVersion));
+    }
 
     if (tmpVersion == nsnull)
     {
         mFixRegEntries = PR_TRUE;
-        mVersion = REGISTRY_VERSION_1_0;
+        mVersion.AssignWithConversion(REGISTRY_VERSION_1_0);
 
         mProfileDataChanged = PR_TRUE;
     }
 
     // Get the preg info
-    rv = m_registry->GetString(profilesTreeKey, 
-                               nsAutoString(REGISTRY_HAVE_PREG_INFO_STRING).GetUnicode(), 
-                               getter_Copies(tmpPREGInfo));
+    {
+      nsAutoString registryHavePRegInfoString;
+      registryHavePRegInfoString.AssignWithConversion(REGISTRY_HAVE_PREG_INFO_STRING);
+      rv = m_registry->GetString(profilesTreeKey, 
+                                 registryHavePRegInfoString.GetUnicode(), 
+                                 getter_Copies(tmpPREGInfo));
+    }
 
     if (tmpPREGInfo == nsnull)
     {
-        mHavePREGInfo = REGISTRY_NO_STRING;
+        mHavePREGInfo.AssignWithConversion(REGISTRY_NO_STRING);
 
         mProfileDataChanged = PR_TRUE;
     }
@@ -362,38 +376,62 @@ nsProfileAccess::FillProfileInfo()
         rv = node->GetKey(&profKey);
         if (NS_FAILED(rv)) return rv;
 
-        rv = m_registry->GetString(profKey, 
-                             nsAutoString(REGISTRY_DIRECTORY_STRING).GetUnicode(), 
-                             getter_Copies(directory));
-        if (NS_FAILED(rv)) return rv;
+        {
+          nsAutoString registryDirectoryString;
+          registryDirectoryString.AssignWithConversion(REGISTRY_DIRECTORY_STRING);
+          rv = m_registry->GetString(profKey, 
+                               registryDirectoryString.GetUnicode(), 
+                               getter_Copies(directory));
+          if (NS_FAILED(rv)) return rv;
+        }
 
         if (mFixRegEntries)
             FixRegEntry(getter_Copies(directory));
 
-        rv = m_registry->GetString(profKey, 
-                             nsAutoString(REGISTRY_MIGRATED_STRING).GetUnicode(), 
-                             getter_Copies(isMigrated));
-        if (NS_FAILED(rv)) return rv;
+        {
+          nsAutoString registryMigratedString;
+          registryMigratedString.AssignWithConversion(REGISTRY_MIGRATED_STRING);
+          rv = m_registry->GetString(profKey, 
+                               registryMigratedString.GetUnicode(), 
+                               getter_Copies(isMigrated));
+          if (NS_FAILED(rv)) return rv;
+        }
 
 
         // Not checking the return values of these variables as they
         // are for activation, they are optional and their values 
         // do not call for a return
-        rv = m_registry->GetString(profKey, 
-                             nsAutoString(REGISTRY_NC_PROFILE_NAME_STRING).GetUnicode(), 
-                             getter_Copies(NCProfileName));
+        {
+          nsAutoString registryNCProfileNameString;
+          registryNCProfileNameString.AssignWithConversion(REGISTRY_NC_PROFILE_NAME_STRING);
+          m_registry->GetString(profKey, 
+                                registryNCProfileNameString.GetUnicode(), 
+                                getter_Copies(NCProfileName));
+        }
 
-        rv = m_registry->GetString(profKey, 
-                             nsAutoString(REGISTRY_NC_SERVICE_DENIAL_STRING).GetUnicode(), 
-                             getter_Copies(NCDeniedService));
+        {
+          nsAutoString registryNCServiceDenialString;
+          registryNCServiceDenialString.AssignWithConversion(REGISTRY_NC_SERVICE_DENIAL_STRING);
+          m_registry->GetString(profKey, 
+                                registryNCServiceDenialString.GetUnicode(), 
+                                getter_Copies(NCDeniedService));
+        }
 
-        rv = m_registry->GetString(profKey, 
-                             nsAutoString(REGISTRY_NC_USER_EMAIL_STRING).GetUnicode(), 
-                             getter_Copies(NCEmailAddress));
+        {
+          nsAutoString registryNCUserEmailString;
+          registryNCUserEmailString.AssignWithConversion(REGISTRY_NC_USER_EMAIL_STRING);
+          m_registry->GetString(profKey, 
+                                registryNCUserEmailString.GetUnicode(), 
+                                getter_Copies(NCEmailAddress));
+        }
 
-        rv = m_registry->GetString(profKey, 
-                             nsAutoString(REGISTRY_NC_HAVE_PREG_INFO_STRING).GetUnicode(), 
-                             getter_Copies(NCHavePregInfo));
+        {
+          nsAutoString registryNCHavePRegInfoString;
+          registryNCHavePRegInfoString.AssignWithConversion(REGISTRY_NC_HAVE_PREG_INFO_STRING);
+          m_registry->GetString(profKey, 
+                                registryNCHavePRegInfoString.GetUnicode(), 
+                                getter_Copies(NCHavePregInfo));
+        }
 
 
         ProfileStruct*  profileItem	= new ProfileStruct();
@@ -402,26 +440,30 @@ nsProfileAccess::FillProfileInfo()
 
         profileItem->updateProfileEntry     = PR_TRUE;
 
-        profileItem->profileName            = profile;
-        profileItem->profileLocation        = directory;
-        profileItem->isMigrated             = isMigrated;
+        profileItem->profileName      = NS_STATIC_CAST(const PRUnichar*, profile);
+        profileItem->profileLocation  = NS_STATIC_CAST(const PRUnichar*, directory);
+        profileItem->isMigrated       = NS_STATIC_CAST(const PRUnichar*, isMigrated);
 
         if (NCProfileName)
-            profileItem->NCProfileName = NCProfileName;
+            profileItem->NCProfileName = NS_STATIC_CAST(const PRUnichar*, NCProfileName);
 
         if (NCDeniedService)
-            profileItem->NCDeniedService = NCDeniedService;
+            profileItem->NCDeniedService = NS_STATIC_CAST(const PRUnichar*, NCDeniedService);
 
         if (NCEmailAddress)
-            profileItem->NCEmailAddress = NCEmailAddress;
+            profileItem->NCEmailAddress = NS_STATIC_CAST(const PRUnichar*, NCEmailAddress);
 
         if (NCHavePregInfo)
-            profileItem->NCHavePregInfo = NCHavePregInfo;
+            profileItem->NCHavePregInfo = NS_STATIC_CAST(const PRUnichar*, NCHavePregInfo);
 
-        if (nsAutoString(REGISTRY_YES_STRING).Equals(isMigrated))
-            mNumProfiles++;
-        else if (nsAutoString(REGISTRY_NO_STRING).Equals(isMigrated))
-            mNumOldProfiles++;
+
+        {
+          nsAutoString isMigratedAutoString(isMigrated);
+          if (isMigratedAutoString.EqualsWithConversion(REGISTRY_YES_STRING))
+              mNumProfiles++;
+          else if (isMigratedAutoString.EqualsWithConversion(REGISTRY_NO_STRING))
+              mNumOldProfiles++;
+        }
 
         if (!mProfiles) {
             mProfiles = new nsVoidArray();
@@ -469,7 +511,7 @@ nsProfileAccess::GetNum4xProfiles(PRInt32 *numProfiles)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if (profileItem->isMigrated == REGISTRY_NO_STRING)
+        if (profileItem->isMigrated.EqualsWithConversion(REGISTRY_NO_STRING))
         {
             (*numProfiles)++;
         }
@@ -510,7 +552,7 @@ nsProfileAccess::GetFirstProfile(PRUnichar **firstProfile)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if (profileItem->isMigrated == REGISTRY_YES_STRING)
+        if (profileItem->isMigrated.EqualsWithConversion(REGISTRY_YES_STRING))
         {
             *firstProfile = profileItem->profileName.ToNewUnicode();
             break;
@@ -572,7 +614,7 @@ nsProfileAccess::RemoveSubTree(const PRUnichar* profileName)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if (profileItem->isMigrated == REGISTRY_NO_STRING)
+        if (profileItem->isMigrated.EqualsWithConversion(REGISTRY_NO_STRING))
             isOldProfile = PR_TRUE;
 
         mProfiles->RemoveElementAt(index);
@@ -586,7 +628,7 @@ nsProfileAccess::RemoveSubTree(const PRUnichar* profileName)
 
         if (mCurrentProfile.Equals(profileName))
         {
-            mCurrentProfile = "";
+            mCurrentProfile.SetLength(0);
         }
     }
 }
@@ -648,7 +690,9 @@ nsProfileAccess::FixRegEntry(PRUnichar** dirName)
         descriptor.SetData(bigBuffer, bytesRead);				
         descriptor.GetData(decodedDirName);
 
-        *dirName = nsAutoString(decodedDirName).ToNewUnicode();
+        nsAutoString dirNameString;
+        dirNameString.AssignWithConversion(decodedDirName);
+        *dirName = dirNameString.ToNewUnicode();
     }
 }   
     
@@ -693,31 +737,45 @@ nsProfileAccess::UpdateRegistry()
     nsRegistryKey profilesTreeKey;
 
     // Get the major subtree
-    rv = m_registry->GetKey(nsIRegistry::Common, 
-                                nsAutoString(REGISTRY_PROFILE_SUBTREE_STRING).GetUnicode(), 
-                                &profilesTreeKey);
-    if (NS_FAILED(rv)) return rv;
+    {
+      nsAutoString registryProfileSubtreeString;
+      registryProfileSubtreeString.AssignWithConversion(REGISTRY_PROFILE_SUBTREE_STRING);
+      rv = m_registry->GetKey(nsIRegistry::Common, 
+                              registryProfileSubtreeString.GetUnicode(), 
+                              &profilesTreeKey);
+      if (NS_FAILED(rv)) return rv;
+    }
 
     // Set the current profile
     if (!mCurrentProfile.IsEmpty()) {
 
+        nsAutoString registry_current_profile_string;
+        registry_current_profile_string.AssignWithConversion(REGISTRY_CURRENT_PROFILE_STRING);
         rv = m_registry->SetString(profilesTreeKey, 
-                                   nsAutoString(REGISTRY_CURRENT_PROFILE_STRING).GetUnicode(), 
+                                   registry_current_profile_string.GetUnicode(), 
                                    mCurrentProfile.GetUnicode());
         if (NS_FAILED(rv)) return rv;
     }
 
     // Set the registry version
-    rv = m_registry->SetString(profilesTreeKey, 
-                               nsAutoString(REGISTRY_VERSION_STRING).GetUnicode(), 
-                               mVersion.GetUnicode());
-    if (NS_FAILED(rv)) return rv;
+    {
+      nsAutoString registry_version_string;
+      registry_version_string.AssignWithConversion(REGISTRY_VERSION_STRING);
+      rv = m_registry->SetString(profilesTreeKey, 
+                                 registry_version_string.GetUnicode(), 
+                                 mVersion.GetUnicode());
+      if (NS_FAILED(rv)) return rv;
+    }
 
     // Set preg info
-    rv = m_registry->SetString(profilesTreeKey, 
-                               nsAutoString(REGISTRY_HAVE_PREG_INFO_STRING).GetUnicode(), 
-                               mHavePREGInfo.GetUnicode());
-    if (NS_FAILED(rv)) return rv;
+    {
+      nsAutoString registry_have_preg_info_string;
+      registry_have_preg_info_string.AssignWithConversion(REGISTRY_HAVE_PREG_INFO_STRING);
+      rv = m_registry->SetString(profilesTreeKey, 
+                                 registry_have_preg_info_string.GetUnicode(), 
+                                 mHavePREGInfo.GetUnicode());
+      if (NS_FAILED(rv)) return rv;
+    }
 
     rv = m_registry->EnumerateSubtrees(profilesTreeKey, getter_AddRefs(enumKeys));
     if (NS_FAILED(rv)) return rv;
@@ -766,31 +824,55 @@ nsProfileAccess::UpdateRegistry()
             rv = node->GetKey(&profKey);
             if (NS_FAILED(rv)) return rv;
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_DIRECTORY_STRING).GetUnicode(), 
-                                profileItem->profileLocation.GetUnicode());
-            if (NS_FAILED(rv)) return rv;
+            {
+              nsAutoString registry_directory_string;
+              registry_directory_string.AssignWithConversion(REGISTRY_DIRECTORY_STRING);
+              rv = m_registry->SetString(profKey, 
+                                  registry_directory_string.GetUnicode(), 
+                                  profileItem->profileLocation.GetUnicode());
+              if (NS_FAILED(rv)) return rv;
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_MIGRATED_STRING).GetUnicode(), 
-                                profileItem->isMigrated.GetUnicode());
-            if (NS_FAILED(rv)) return rv;
+            {
+              nsAutoString registry_migrated_string;
+              registry_migrated_string.AssignWithConversion(REGISTRY_MIGRATED_STRING);
+              rv = m_registry->SetString(profKey, 
+                                  registry_migrated_string.GetUnicode(), 
+                                  profileItem->isMigrated.GetUnicode());
+              if (NS_FAILED(rv)) return rv;
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_NC_PROFILE_NAME_STRING).GetUnicode(),  
+            {
+              nsAutoString registry_nc_profile_name_string;
+              registry_nc_profile_name_string.AssignWithConversion(REGISTRY_NC_PROFILE_NAME_STRING);
+              m_registry->SetString(profKey, 
+                                registry_nc_profile_name_string.GetUnicode(),  
                                 profileItem->NCProfileName.GetUnicode());
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_NC_SERVICE_DENIAL_STRING).GetUnicode(), 
-                                profileItem->NCDeniedService.GetUnicode());
+            {
+              nsAutoString registry_nc_service_denial_string;
+              registry_nc_service_denial_string.AssignWithConversion(REGISTRY_NC_SERVICE_DENIAL_STRING);
+              m_registry->SetString(profKey, 
+                                    registry_nc_service_denial_string.GetUnicode(), 
+                                    profileItem->NCDeniedService.GetUnicode());
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_NC_USER_EMAIL_STRING).GetUnicode(), 
-                                profileItem->NCEmailAddress.GetUnicode());
+            {
+              nsAutoString registry_nc_user_email_string;
+              registry_nc_user_email_string.AssignWithConversion(REGISTRY_NC_USER_EMAIL_STRING);
+              m_registry->SetString(profKey, 
+                                    registry_nc_user_email_string.GetUnicode(), 
+                                    profileItem->NCEmailAddress.GetUnicode());
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_NC_HAVE_PREG_INFO_STRING).GetUnicode(), 
-                                profileItem->NCHavePregInfo.GetUnicode());
+            {
+              nsAutoString registry_nc_have_preg_info_string;
+              registry_nc_have_preg_info_string.AssignWithConversion(REGISTRY_NC_HAVE_PREG_INFO_STRING);
+              m_registry->SetString(profKey, 
+                                    registry_nc_have_preg_info_string.GetUnicode(), 
+                                    profileItem->NCHavePregInfo.GetUnicode());
+            }
 
             profileItem->updateProfileEntry = PR_FALSE;
         }
@@ -811,31 +893,55 @@ nsProfileAccess::UpdateRegistry()
                                     &profKey);
             if (NS_FAILED(rv)) return rv;
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_DIRECTORY_STRING).GetUnicode(), 
-                                profileItem->profileLocation.GetUnicode());
-            if (NS_FAILED(rv)) return rv;
+            {
+              nsAutoString registry_directory_string;
+              registry_directory_string.AssignWithConversion(REGISTRY_DIRECTORY_STRING);
+              m_registry->SetString(profKey, 
+                                    registry_directory_string.GetUnicode(), 
+                                    profileItem->profileLocation.GetUnicode());
+              if (NS_FAILED(rv)) return rv;
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_MIGRATED_STRING).GetUnicode(), 
-                                profileItem->isMigrated.GetUnicode());
-            if (NS_FAILED(rv)) return rv;
+            {
+              nsAutoString registry_migrated_string;
+              registry_migrated_string.AssignWithConversion(REGISTRY_MIGRATED_STRING);
+              rv = m_registry->SetString(profKey, 
+                                         registry_migrated_string.GetUnicode(), 
+                                         profileItem->isMigrated.GetUnicode());
+              if (NS_FAILED(rv)) return rv;
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_NC_PROFILE_NAME_STRING).GetUnicode(), 
-                                profileItem->NCProfileName.GetUnicode());
+            {
+              nsAutoString registry_nc_profile_name_string;
+              registry_nc_profile_name_string.AssignWithConversion(REGISTRY_NC_PROFILE_NAME_STRING);
+              m_registry->SetString(profKey, 
+                                    registry_nc_profile_name_string.GetUnicode(), 
+                                    profileItem->NCProfileName.GetUnicode());
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_NC_SERVICE_DENIAL_STRING).GetUnicode(), 
-                                profileItem->NCDeniedService.GetUnicode());
+            {
+              nsAutoString registry_nc_service_denial_string;
+              registry_nc_service_denial_string.AssignWithConversion(REGISTRY_NC_SERVICE_DENIAL_STRING);
+              m_registry->SetString(profKey, 
+                                    registry_nc_service_denial_string.GetUnicode(), 
+                                    profileItem->NCDeniedService.GetUnicode());
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_NC_USER_EMAIL_STRING).GetUnicode(), 
-                                profileItem->NCEmailAddress.GetUnicode());
+            {
+              nsAutoString registry_nc_user_email_string;
+              registry_nc_user_email_string.AssignWithConversion(REGISTRY_NC_USER_EMAIL_STRING);
+              m_registry->SetString(profKey, 
+                                    registry_nc_user_email_string.GetUnicode(), 
+                                    profileItem->NCEmailAddress.GetUnicode());
+            }
 
-            rv = m_registry->SetString(profKey, 
-                                nsAutoString(REGISTRY_NC_HAVE_PREG_INFO_STRING).GetUnicode(), 
-                                profileItem->NCHavePregInfo.GetUnicode());
+            {
+              nsAutoString registry_nc_have_preg_info_string;
+              registry_nc_have_preg_info_string.AssignWithConversion(REGISTRY_NC_HAVE_PREG_INFO_STRING);
+              m_registry->SetString(profKey, 
+                                    registry_nc_have_preg_info_string.GetUnicode(), 
+                                    profileItem->NCHavePregInfo.GetUnicode());
+            }
 
             profileItem->updateProfileEntry = PR_FALSE;
         }
@@ -855,7 +961,7 @@ nsProfileAccess::GetProfileList(PRUnichar **profileListStr)
 {
     NS_ASSERTION(profileListStr, "Invalid profileListStr pointer");
 
-    nsAutoString profileList("");
+    nsAutoString profileList;
 
     for (PRInt32 index=0; index < mCount; index++)
     {
@@ -863,12 +969,12 @@ nsProfileAccess::GetProfileList(PRUnichar **profileListStr)
 
         if (index != 0)
         {
-            profileList += ",";
+            profileList.AppendWithConversion(",");
         }
         profileList += profileItem->profileName;
 
-        if (profileItem->isMigrated == REGISTRY_NO_STRING)
-            profileList += " - migrate";
+        if (profileItem->isMigrated.EqualsWithConversion(REGISTRY_NO_STRING))
+            profileList.AppendWithConversion(" - migrate");
     }
 
     *profileListStr = profileList.ToNewUnicode();
@@ -975,14 +1081,14 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         // For example something like %20 would probably be interpreted as a space
         // There is some problem I guess in sending a space as itself
 
-        nsAutoString unescpPrfName(nsUnescape
-                                   (NS_CONST_CAST
-                                    (char*, nsCAutoString(profile).GetBuffer())));
+        nsCAutoString temp; temp.AssignWithConversion(profile);
+        nsAutoString unescpPrfName;
+        unescpPrfName.AssignWithConversion(nsUnescape( NS_CONST_CAST(char*, temp.GetBuffer()) ));
 
         profileItem->profileName  = unescpPrfName;
 
-        profileItem->profileLocation = nsAutoString(profLoc);
-        profileItem->isMigrated      = REGISTRY_NO_STRING;
+        profileItem->profileLocation.AssignWithConversion(profLoc);
+        profileItem->isMigrated.AssignWithConversion(REGISTRY_NO_STRING);
 
         if (!m4xProfiles)
             m4xProfiles = new nsVoidArray();
@@ -1105,7 +1211,7 @@ nsProfileAccess::UpdateProfileArray()
 
         if (NS_SUCCEEDED(rv) && profileDirString)
         {
-            profileItem->profileLocation = profileDirString;
+            profileItem->profileLocation.AssignWithConversion(profileDirString);
             SetValue(profileItem);
         }
     }
@@ -1120,7 +1226,7 @@ nsProfileAccess::SetPREGInfo(const char* pregInfo)
     NS_ASSERTION(pregInfo, "Invalid pregInfo");
 
     // This is always going to be just a yes/no string
-    mHavePREGInfo = pregInfo;
+    mHavePREGInfo.AssignWithConversion(pregInfo);
 }
 
 //Get the for PREG info.
