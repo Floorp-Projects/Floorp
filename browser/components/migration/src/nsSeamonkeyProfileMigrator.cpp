@@ -43,9 +43,6 @@
 #include "nsIPasswordManagerInternal.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIPrefService.h"
-#include "nsIProfile.h"
-#include "nsIProfileInternal.h"
-#include "nsIRegistry.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
@@ -187,7 +184,8 @@ nsSeamonkeyProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
     rv = NS_NewISupportsArray(getter_AddRefs(mProfileLocations));
     if (NS_FAILED(rv)) return rv;
 
-    GetProfileDataFromSeamonkeyRegistry(mProfileNames, mProfileLocations);
+    // Fills mProfileNames and mProfileLocations
+    FillProfileDataFromSeamonkeyRegistry();
   }
   
   NS_IF_ADDREF(*aResult = mProfileNames);
@@ -216,8 +214,7 @@ nsSeamonkeyProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
 }
 
 nsresult
-nsSeamonkeyProfileMigrator::GetProfileDataFromSeamonkeyRegistry(nsISupportsArray* aProfileNames,
-                                                                nsISupportsArray* aProfileLocations)
+nsSeamonkeyProfileMigrator::FillProfileDataFromSeamonkeyRegistry()
 {
   nsresult rv = NS_OK;
 
@@ -236,67 +233,7 @@ nsSeamonkeyProfileMigrator::GetProfileDataFromSeamonkeyRegistry(nsISupportsArray
   seamonkeyRegistry->Append(NS_LITERAL_STRING("Application Registry"));
 #endif
 
-  // Open It
-  nsCOMPtr<nsIRegistry> reg(do_CreateInstance("@mozilla.org/registry;1"));
-  reg->Open(seamonkeyRegistry);
-
-  nsRegistryKey profilesTree;
-  rv = reg->GetKey(nsIRegistry::Common, NS_LITERAL_STRING("Profiles").get(), &profilesTree);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIEnumerator> keys;
-  reg->EnumerateSubtrees(profilesTree, getter_AddRefs(keys));
-
-  keys->First();
-  while (keys->IsDone() != NS_OK) {
-    nsCOMPtr<nsISupports> key;
-    keys->CurrentItem(getter_AddRefs(key));
-
-    nsCOMPtr<nsIRegistryNode> node(do_QueryInterface(key));
-
-    nsRegistryKey profile;
-    node->GetKey(&profile);
-
-    // "migrated" is "yes" for all valid Seamonkey profiles. It is only "no"
-    // for 4.x profiles. 
-    nsXPIDLString isMigrated;
-    reg->GetString(profile, NS_LITERAL_STRING("migrated").get(), getter_Copies(isMigrated));
-
-    if (isMigrated.Equals(NS_LITERAL_STRING("no"))) {
-      keys->Next();
-      continue;
-    }
-
-    // Get the profile name and add it to the names array
-    nsXPIDLString profileName;
-    node->GetName(getter_Copies(profileName));
-
-    nsCOMPtr<nsISupportsString> profileNameString(do_CreateInstance("@mozilla.org/supports-string;1"));
-    profileNameString->SetData(profileName);
-    mProfileNames->AppendElement(profileNameString);
-
-    // Get the profile location and add it to the locations array
-    nsXPIDLString directory;
-    reg->GetString(profile, NS_LITERAL_STRING("directory").get(), getter_Copies(directory));
-
-    nsCOMPtr<nsILocalFile> dir;
-#ifdef XP_MACOSX
-    rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(dir));
-    if (NS_FAILED(rv)) return rv;
-    dir->SetPersistentDescriptor(NS_LossyConvertUCS2toASCII(directory));
-#else
-    rv = NS_NewLocalFile(directory, PR_TRUE, getter_AddRefs(dir));
-    if (NS_FAILED(rv)) return rv;
-#endif
-
-    PRBool exists;
-    dir->Exists(&exists);
-
-    if (exists)
-      mProfileLocations->AppendElement(dir);
-
-    keys->Next();
-  }
+  return GetProfileDataFromRegistry(seamonkeyRegistry, mProfileNames, mProfileLocations);
 }
 
 #define F(a) nsSeamonkeyProfileMigrator::a

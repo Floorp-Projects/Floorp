@@ -78,6 +78,9 @@ public:
   static nsresult SetInt(void* aTransform, nsIPrefBranch* aBranch);
 
 protected:
+  nsresult GetProfileDataFromRegistry(nsILocalFile* aRegistryFile,
+                                      nsISupportsArray* aProfileNames,
+                                      nsISupportsArray* aProfileLocations);
   void     GetTargetProfile(const PRUnichar* aSuggestedName, PRBool aReplace);
   void     CreateTemplateProfile(const PRUnichar* aSuggestedName);
   void     GetUniqueProfileName(nsIFile* aProfilesDir, const PRUnichar* aSuggestedName, PRUnichar** aUniqueName);

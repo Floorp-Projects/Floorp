@@ -134,6 +134,8 @@ typedef struct {
 } LANGANDCODEPAGE;
 
 #define INTERNAL_NAME_FIREBIRD        "Firebird"
+#define INTERNAL_NAME_FIREFOX         "Firefox"
+#define INTERNAL_NAME_PHOENIX         "Phoenix"
 #define INTERNAL_NAME_IEXPLORE        "iexplore"
 #define INTERNAL_NAME_SEAMONKEY       "apprunner"
 #define INTERNAL_NAME_DOGBERT         "NETSCAPE"
@@ -226,15 +228,18 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsIBrowserProfileMigrator** aMig
               key->SetData(NS_LITERAL_STRING("dogbert"));
               bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "dogbert");
             }
-            else if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREBIRD)) {
-              *aNeedsActiveProfile = PR_TRUE;
-              key->SetData(NS_LITERAL_STRING("ie"));
-              bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "ie");
-            }
             else if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_OPERA)) {
               *aNeedsActiveProfile = PR_TRUE;
               key->SetData(NS_LITERAL_STRING("opera"));
               bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "opera");
+            }
+            // Migrate data from any existing Application Data\Phoenix\* installations.
+            else if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREBIRD) || 
+                     !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREFOX) ||
+                     !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_PHOENIX)) {
+              *aNeedsActiveProfile = PR_FALSE;
+              key->SetData(NS_LITERAL_STRING("phoenix"));
+              bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
             }
 
             NS_IF_ADDREF(*aKey = key);
