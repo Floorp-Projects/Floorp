@@ -60,6 +60,7 @@ EXPORT_RESOURCE_SKIN = \
 
 EXPORT_RESOURCE_TOOLBAR = \
         $(srcdir)/images/ficon.gif \
+        $(srcdir)/images/wheel.gif \
         $(NULL)
 
 install:: 

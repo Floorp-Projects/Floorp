@@ -92,6 +92,11 @@ foreach my $url (@ARGV) {                 # for each argument
         print "<IMG SRC='$scheme://${host}$pathname'>";
         print "\000";                      # Terminate HTML stream
 
+    } elsif (($scheme eq "file") && ($extension eq ".ps")) {
+##        print STDERR "PostScript local file\n";
+        
+        system("ghostview $pathname&");
+
     } elsif (($scheme eq "file") && ($extension eq ".url")) {
         # URL
         open INFILE, $pathname or next;
@@ -183,5 +188,3 @@ foreach my $url (@ARGV) {                 # for each argument
         next;
     }
 }
-
-

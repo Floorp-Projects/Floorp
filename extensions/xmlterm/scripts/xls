@@ -1,16 +1,16 @@
 #!/usr/bin/perl
 # xls: an XMLterm wrapper for the UNIX "ls" command
-# Usage: xls  [-c|--cols] [-h|help] [-t||--text] [-w|--window] <files>
+# Usage: xls  [-c|--cols] [-h|help] [-t||--text] <files>
 
 use Cwd;
 use Getopt::Long;
 
 Getopt::Long::config('bundling');
 
-&GetOptions("cols|c=i", "help|h!", "text|t!", "window|w!");
+&GetOptions("cols|c=i", "help|h!", "text|t!");
 
 if ($opt_help) {
-    print "Usage: xls [-c|--cols] [-t||--text] [-w|--window] [<files>]\n";
+    print "Usage: xls [-c|--cols] [-t||--text] [<files>]\n";
     exit;
 }
 
@@ -53,40 +53,36 @@ foreach $file (@filelist) {        # for each file in the list
 
     my ($filename, $extension) = ($1, $2);
 
-    my $sendcmd;
-    if ($opt_window) {
-        $sendcmd = "exec";
-    } else {
-        $sendcmd = "execwin";
-    }
+    my ($filetype, $fileimg, $sendcmd, $sendtxt1, $sendtxt2);
 
-    my ($filetype, $fileimg, $sendtxt1, $sendtxt2);
+    $sendtxt1  = $file;
+    if ($dir eq "/") {
+        $sendtxt2  = "/";
+    } else {
+        $sendtxt2  = "$dir/";
+    }
 
     if (-d $file) {                     # directory
         $filetype = "directory";
         $fileimg  = "$imgdir/$img{$filetype}";
-        $sendtxt1  = "cd $dir/$file; xls";
-        $sendtxt2  = "cd $file; xls";
+        $sendcmd  = "cdxls";
 
     } elsif (-x $file) {                # executable
         $filetype = "executable";
         $fileimg  = "$imgdir/$img{$filetype}";
-        $sendtxt1 = "$dir/$file";
-        $sendtxt2 = "./$file";
+        $sendcmd  = "exec";
 
     } elsif (($extension eq ".gif") ||
              ($extension eq ".png") ||
              ($extension eq ".jpg")) {  # image
         $filetype = "imagefile";
         $fileimg  = "file://$dir/$file";
-        $sendtxt1 = "xcat $dir/$file";
-        $sendtxt2 = "xcat $file";
+        $sendcmd  = "xcat";
 
     } elsif ($extension eq ".ps") {     # postscript
         $filetype = "plainfile";
         $fileimg  = "$imgdir/$img{$filetype}";
-        $sendtxt1 = "ghostview $dir/$file &";
-        $sendtxt2 = "ghostview $file &";
+        $sendcmd  = "xcat";
 
     } elsif ($extension eq ".url") {  # URL
         open INFILE, $file or next;
@@ -119,6 +115,8 @@ foreach $file (@filelist) {        # for each file in the list
             $urldesc = $urlstr if !$urldesc;
 
             $sendcmd = "textlink";               # override send command
+            $sendtxt1 = "$urlstr";
+            $sendtxt2 = "$urlstr";
             
             $filetype = "urlfile";
             if ($nurl >= 2) {
@@ -126,20 +124,16 @@ foreach $file (@filelist) {        # for each file in the list
             } else {
                 $fileimg  = "$imgdir/$img{$filetype}";  #default URL icon
             }
-            $sendtxt1 = "$urlstr";
-            $sendtxt2 = "$urlstr";
         } else {
             $filetype = "plainfile";
             $fileimg  = "$imgdir/$img{$filetype}";
-            $sendtxt1 = "xcat $dir/$file";
-            $sendtxt2 = "xcat $file";
+            $sendcmd  = "xcat";
         }
 
     } else {                            # plain file
         $filetype = "plainfile";
         $fileimg  = "$imgdir/$img{$filetype}";
-        $sendtxt1 = "xcat $dir/$file";
-        $sendtxt2 = "xcat $file";
+        $sendcmd  = "xcat";
     }
 
     my @comps = split(m./.,$file);
