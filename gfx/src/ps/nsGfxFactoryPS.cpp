@@ -46,7 +46,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextPS)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "GFX Postscript Device Context",
     NS_DEVICECONTEXTPS_CID,

@@ -143,7 +143,7 @@ nsScriptableRegionConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult
   return rv;
 }
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "nsFontMetricsWin",
     NS_FONT_METRICS_CID,

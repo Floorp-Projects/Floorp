@@ -70,7 +70,7 @@ RegisterWSPProxyTest(nsIComponentManager *aCompMgr,
   return rv;
 }
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { "WebServiceProxyTest", NS_WSPPROXYTEST_CID, NS_WSPPROXYTEST_CONTRACTID,
     WSPProxyTestConstructor, RegisterWSPProxyTest, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(WSPProxyTest), 

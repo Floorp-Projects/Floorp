@@ -69,7 +69,7 @@ static void PR_CALLBACK AccessProxyModuleDtor(nsIModule* self)
     nsAccessProxy::ReleaseInstance();
 }
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "AccessProxy Component", NS_ACCESSPROXY_CID, NS_ACCESSPROXY_CONTRACTID,
     nsAccessProxyConstructor, nsAccessProxyRegistrationProc,

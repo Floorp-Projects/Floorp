@@ -44,7 +44,7 @@
 #include "nsAboutCredits.h"
 #include "mzAboutMozilla.h"
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
    { "About Protocol Handler", 
      NS_ABOUTPROTOCOLHANDLER_CID,

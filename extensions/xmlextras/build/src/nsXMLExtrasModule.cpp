@@ -305,7 +305,7 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
 // information like the function to create an instance, contractid, and
 // class name.
 //
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { "XMLExtras component", NS_XML_EXTRAS_CID, NS_XML_EXTRAS_CONTRACTID,
     nsXMLExtrasConstructor, RegisterXMLExtras },
   { "XML Serializer", NS_XMLSERIALIZER_CID, NS_XMLSERIALIZER_CONTRACTID,

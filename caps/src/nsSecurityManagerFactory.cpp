@@ -368,7 +368,7 @@ RegisterSecurityNameSet(nsIComponentManager *aCompMgr,
 }
 
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
     { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
       NS_SCRIPTSECURITYMANAGER_CID, 

@@ -54,7 +54,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGenericInterfaceInfoSet)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableInterfaceInfo)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   {nsnull, 
    NS_GENERIC_INTERFACE_INFO_SET_CID, 
    NS_GENERIC_INTERFACE_INFO_SET_CONTRACTID, 

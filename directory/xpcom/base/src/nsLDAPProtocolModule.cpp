@@ -62,7 +62,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPProtocolHandler);
 
 // a table of the CIDs implemented by this module (in this case, just one)
 //
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
     { "LDAP Connection", NS_LDAPCONNECTION_CID,
           "@mozilla.org/network/ldap-connection;1", 

@@ -70,7 +70,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroupList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgNewsFolder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNewsDownloadDialogArgs)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "NNTP URL",
     NS_NNTPURL_CID,

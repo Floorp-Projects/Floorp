@@ -60,7 +60,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbSyncDriver)
 //
 ////////////////////////////////////////////////////////////
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "Addressbook Sync",
     NS_ABSYNC_SERVICE_CID,

@@ -186,7 +186,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMapiRegistry);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMapiSupport);
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   {
     NS_IMAPIREGISTRY_CLASSNAME, 

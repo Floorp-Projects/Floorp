@@ -203,7 +203,7 @@ nsDOMSOFactory::GetException(nsresult result, nsIException *aDefaultException,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSOFactory);
 
-static nsModuleComponentInfo gDOMModuleInfo[] = {
+static const nsModuleComponentInfo gDOMModuleInfo[] = {
   { "Script Object Factory",
     NS_DOM_SCRIPT_OBJECT_FACTORY_CID,
     nsnull,

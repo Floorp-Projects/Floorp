@@ -1418,7 +1418,7 @@ CreateNewPICS(nsISupports* aOuter, REFNSIID aIID, void **aResult)
 // information like the function to create an instance, contractid, and
 // class name.
 //
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     { "PICS", NS_PICS_CID, NS_PICS_CONTRACTID, CreateNewPICS, },
 };
 

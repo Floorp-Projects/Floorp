@@ -81,7 +81,7 @@ NS_METHOD OERegister(nsIComponentManager *aCompMgr,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOEImport)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     {	"Outlook Express Import Component", 
 		NS_OEIMPORT_CID,
 		"@mozilla.org/import/import-oe;1", 

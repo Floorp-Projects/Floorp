@@ -36,7 +36,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconDecoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconProtocolHandler)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "icon decoder",
     NS_ICONDECODER_CID,

@@ -51,7 +51,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the history library
 
-static nsModuleComponentInfo gUBHistoryModuleInfo[] = 
+static const nsModuleComponentInfo gUBHistoryModuleInfo[] = 
 {
    { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
       NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },

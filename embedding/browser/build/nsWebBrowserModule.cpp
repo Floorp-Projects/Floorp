@@ -69,7 +69,7 @@ UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 // Component Table
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
    { "WebBrowser Component", NS_WEBBROWSER_CID, 
      NS_WEBBROWSER_CONTRACTID, nsWebBrowserConstructor },

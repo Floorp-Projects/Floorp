@@ -49,7 +49,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(SignonViewerImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(WalletEditorImpl)
 
 // The list of components we register
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     { "WalletPreview World Component", NS_WALLETPREVIEW_CID,
       "@mozilla.org/walletpreview/walletpreview-world;1", WalletPreviewImplConstructor },
     { "SignonViewer World Component", NS_SIGNONVIEWER_CID,

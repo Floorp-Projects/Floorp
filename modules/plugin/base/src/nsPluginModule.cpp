@@ -43,7 +43,7 @@
 #include "nsPluginDocLoaderFactory.h"
 #include "ns4xPlugin.h"
 
-static nsModuleComponentInfo gComponentInfo[] = {
+static const nsModuleComponentInfo gComponentInfo[] = {
   { "Plugin Host",
     NS_PLUGIN_HOST_CID,
     "@mozilla.org/plugin/host;1",

@@ -99,7 +99,7 @@ nsScriptableRegionConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult
   return result->QueryInterface(aIID, aResult);
 }
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "nsFontMetrics",
     NS_FONT_METRICS_CID,

@@ -96,7 +96,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidi)
 // Since our class still refer to this two per dll global  leave it here untill
 // we change their code
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "Unichar Utility", NS_UNICHARUTIL_CID, 
       NS_UNICHARUTIL_CONTRACTID, nsCaseConversionImp2Constructor},

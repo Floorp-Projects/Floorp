@@ -65,7 +65,7 @@ CreateNewPrefMigration(nsISupports* aOuter, REFNSIID aIID, void **aResult)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrefConverter)
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { "Profile Migration", 
       NS_PREFMIGRATION_CID,

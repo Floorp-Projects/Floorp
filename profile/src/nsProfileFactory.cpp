@@ -41,7 +41,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfile);
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
     { "Profile Manager", 
       NS_PROFILE_CID,

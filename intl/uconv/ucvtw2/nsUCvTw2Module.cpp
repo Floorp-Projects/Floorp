@@ -153,7 +153,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCNS11643p5);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCNS11643p6);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCNS11643p7);
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   { 
     DECODER_NAME_BASE "x-euc-tw" , NS_EUCTWTOUNICODE_CID, 

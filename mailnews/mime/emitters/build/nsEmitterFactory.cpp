@@ -78,7 +78,7 @@ static NS_METHOD UnRegisterMimeEmitter(nsIComponentManager *aCompMgr,
   return NS_OK;
 }
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "HTML MIME Emitter",
     NS_HTML_MIME_EMITTER_CID,

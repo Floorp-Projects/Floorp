@@ -65,7 +65,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAStringCharsetClassicDetector);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsKOCharsetClassicDetector);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsKOStringCharsetClassicDetector);
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { "Classic JA Charset Detector", NS_JA_CLASSIC_DETECTOR_CID,
      NS_CHARSET_DETECTOR_CONTRACTID_BASE "jaclassic", nsJACharsetClassicDetectorConstructor},
   { "Classic JA String Charset Detector", NS_JA_CLASSIC_DETECTOR_CID,

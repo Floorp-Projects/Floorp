@@ -59,7 +59,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMailFolder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMockChannel)
 
 // The list of components we register
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
     { "IMAP URL", NS_IMAPURL_CID,
       nsnull, nsImapUrlConstructor },
 

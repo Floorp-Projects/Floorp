@@ -2837,7 +2837,7 @@ jsdASObserver::Observe (nsISupports *aSubject, const char *aTopic,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(jsdASObserver);
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     {"JSDService", JSDSERVICE_CID,     jsdServiceCtrID, jsdServiceConstructor},
     {"JSDASObserver",  JSDASO_CID,  jsdASObserverCtrID, jsdASObserverConstructor}
 };

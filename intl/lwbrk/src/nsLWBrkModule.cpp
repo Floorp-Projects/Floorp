@@ -45,7 +45,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLWBreakerFImp)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { "Line and Word Breaker", NS_LWBRK_CID,
      NS_LWBRK_CONTRACTID, nsLWBreakerFImpConstructor}
 };

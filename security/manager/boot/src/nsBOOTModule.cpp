@@ -33,7 +33,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntropyCollector)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   {
     "Entropy Collector",

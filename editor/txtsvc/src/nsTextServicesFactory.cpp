@@ -61,7 +61,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindAndReplace)
 // information like the function to create an instance, contractid, and
 // class name.
 //
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { NULL, NS_TEXTSERVICESDOCUMENT_CID, "@mozilla.org/textservices/textservicesdocument;1", nsTextServicesDocumentConstructor },
   { NULL, NS_TEXTSERVICESFINDANDREPLACE_CID, NS_FINDANDREPLACE_CONTRACTID, nsFindAndReplaceConstructor },
 };

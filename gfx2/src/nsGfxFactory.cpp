@@ -30,7 +30,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "windows image frame",
     GFX_IMAGEFRAME_CID,

@@ -50,7 +50,7 @@ extern NS_METHOD NS_NewImportService(nsISupports* aOuter, REFNSIID aIID, void **
 //----------------------------------------------------------------------
 
 //----------------------------------------
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
 	{	
 		"Import Service Component", NS_IMPORTSERVICE_CID,
 		NS_IMPORTSERVICE_CONTRACTID, NS_NewImportService

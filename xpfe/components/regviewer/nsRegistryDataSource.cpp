@@ -858,7 +858,7 @@ nsRegistryDataSource::SubkeyEnumerator::GetNext(nsISupports** _retval)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsRegistryDataSource, Init)
 
 // The list of components we register
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     { "Registry Viewer", NS_REGISTRYVIEWER_CID,
       "@mozilla.org/registry-viewer;1", nsRegistryDataSourceConstructor,
     },

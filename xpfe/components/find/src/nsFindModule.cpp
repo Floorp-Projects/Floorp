@@ -13,7 +13,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindService)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIFindService, nsFindService::GetSingleton)
 
 
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
   { 
     NS_IFINDCOMPONENT_CLASSNAME,
     NS_FINDCOMPONENT_CID,

@@ -32,7 +32,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSDialogs, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPKIParamBlock, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSASN1Outliner)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   {
     "NSS Dialogs",

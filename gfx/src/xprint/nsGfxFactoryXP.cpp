@@ -50,7 +50,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextXp)
  
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "GFX Xprint Device Context",
     NS_DEVICECONTEXTXP_CID,

@@ -58,7 +58,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSMIMEComposeFields);
 //
 ////////////////////////////////////////////////////////////
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "Msg Compose Secure",
     NS_MSGCOMPOSESECURE_CID,

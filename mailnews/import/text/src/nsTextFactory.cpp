@@ -62,7 +62,7 @@ NS_METHOD TextRegister(nsIComponentManager *aCompMgr,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextImport)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     {	"Text Import Component", 
 		NS_TEXTIMPORT_CID,
 		"@mozilla.org/import/import-text;1", 

@@ -428,7 +428,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacGurmukhi);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacGujarati);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacHebrew);
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   { 
     DECODER_NAME_BASE "us-ascii" , NS_ASCIITOUNICODE_CID, 

@@ -385,7 +385,7 @@ nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *sug
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamTransfer)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { NS_ISTREAMTRANSFER_CLASSNAME,
     NS_STREAMTRANSFER_CID,
     NS_ISTREAMTRANSFER_CONTRACTID,

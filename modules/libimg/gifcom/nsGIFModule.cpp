@@ -43,7 +43,7 @@
 
 static NS_DEFINE_CID(kGIFDecoderCID, NS_GIFDECODER_CID);
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "GIF Decoder",
      NS_GIFDECODER_CID,

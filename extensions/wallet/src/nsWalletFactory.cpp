@@ -49,7 +49,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPasswordManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSingleSignOnPrompt, Init)
 
 // The list of components we register
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     { NS_WALLETSERVICE_CLASSNAME, NS_WALLETSERVICE_CID,
       NS_WALLETSERVICE_CONTRACTID, nsWalletlibServiceConstructor,
       nsWalletlibService::RegisterProc,

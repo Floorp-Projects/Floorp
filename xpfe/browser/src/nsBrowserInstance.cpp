@@ -947,7 +947,7 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBrowserInstance, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { "nsBrowserInstance",
     NS_BROWSERINSTANCE_CID,
     NS_BROWSERINSTANCE_CONTRACTID, 

@@ -63,7 +63,7 @@ NS_ConstructAccessibilityService(nsISupports *aOuter, REFNSIID aIID, void **aRes
 }
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { "AccessibilityService", 
       NS_ACCESSIBILITY_SERVICE_CID,

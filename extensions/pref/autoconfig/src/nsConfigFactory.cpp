@@ -91,7 +91,7 @@ UnRegisterReadConfig(nsIComponentManager *aCompMgr,
 
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   { 
     NS_AUTOCONFIG_CLASSNAME, 

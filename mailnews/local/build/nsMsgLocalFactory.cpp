@@ -80,7 +80,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoIncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalStringService)
 
 // The list of components we register
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
     { "Mailbox URL", NS_MAILBOXURL_CID,
       NS_MAILBOXURL_CONTRACTID, nsMailboxUrlConstructor },
 

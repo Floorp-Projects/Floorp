@@ -1004,7 +1004,7 @@ done:
 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_CONTRACTID, nsStringBundleServiceConstructor},
 };

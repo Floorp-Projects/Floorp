@@ -73,7 +73,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(CTransitionalDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
 
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
 
 #ifdef NS_DEBUG
   { "Logging sink", NS_LOGGING_SINK_CID, NULL, nsLoggingSinkConstructor },

@@ -58,7 +58,7 @@ public:
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMorkFactoryFactory)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
     { "Mork Factory", 
       NS_MORK_CID, 

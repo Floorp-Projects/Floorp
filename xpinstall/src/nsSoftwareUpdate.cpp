@@ -622,7 +622,7 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
 
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { "SoftwareUpdate Component", 
        NS_SoftwareUpdate_CID,

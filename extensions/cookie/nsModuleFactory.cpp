@@ -92,7 +92,7 @@ UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 
 // The list of components we register
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     { "Cookie",
       NS_COOKIE_CID,
       NS_COOKIE_CONTRACTID,

@@ -234,7 +234,7 @@ CreateNewNSTXTToHTMLConvFactory(nsISupports *aOuter, REFNSIID aIID, void **aResu
 
 
 // The list of components we register
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
     { "FTPDirListingConverter", 
       NS_FTPDIRLISTINGCONVERTER_CID,

@@ -856,7 +856,7 @@ XRemoteService::FindWindow(const PRUnichar *aType,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(XRemoteService)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { NS_IXREMOTESERVICE_CLASSNAME,
     NS_XREMOTESERVICE_CID,
     NS_IXREMOTESERVICE_CONTRACTID,

@@ -583,7 +583,7 @@ static void PR_CALLBACK nsNeckoShutdown(nsIModule *neckoModule)
     nsStandardURL::ShutdownGlobalObjects();
 }
 
-static nsModuleComponentInfo gNetModuleInfo[] = {
+static const nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_IOSERVICE_CLASSNAME,
       NS_IOSERVICE_CID,
       NS_IOSERVICE_CONTRACTID,

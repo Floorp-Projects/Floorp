@@ -48,7 +48,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init);
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
 
-static nsModuleComponentInfo gNetModuleInfo[] = {
+static const nsModuleComponentInfo gNetModuleInfo[] = {
     //gopher:
     { "The Gopher Protocol Handler", 
       NS_GOPHERHANDLER_CID,

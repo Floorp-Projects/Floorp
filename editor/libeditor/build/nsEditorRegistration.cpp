@@ -79,7 +79,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 // information like the function to create an instance, contractid, and
 // class name.
 //
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     { "Text Editor", NS_TEXTEDITOR_CID,
       "@mozilla.org/editor/texteditor;1", nsPlaintextEditorConstructor, },
 #ifdef ENABLE_EDITOR_API_LOG

@@ -90,7 +90,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
    we ask for a specific z-order, we don't assume that widget z-ordering actually works.
 */
 
-//#define NO_DOUBLE_BUFFER
+#define NO_DOUBLE_BUFFER
 
 // if defined widget changes like moves and resizes are defered until and done
 // all in one pass.

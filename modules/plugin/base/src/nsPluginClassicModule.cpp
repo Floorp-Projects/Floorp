@@ -80,7 +80,7 @@ NS_METHOD nsClassicPluginFactory::CreatePlugin(nsIServiceManagerObsolete* aServi
     return ns4xPlugin::CreatePlugin(aServiceMgr, aFileName, aFullPath, aLibrary, aResult);
 }
 
-static nsModuleComponentInfo gComponentInfo[] = {
+static const nsModuleComponentInfo gComponentInfo[] = {
   { "Classic Plugin Factory",
     NS_CLASSIC_PLUGIN_FACTORY_CID,
     NS_CLASSIC_PLUGIN_FACTORY_CONTRACTID,

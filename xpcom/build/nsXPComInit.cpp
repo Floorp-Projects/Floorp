@@ -176,7 +176,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
 
 static nsresult
 RegisterGenericFactory(nsIComponentManager* compMgr,
-                       nsModuleComponentInfo *info)
+                       const nsModuleComponentInfo *info)
 {
     nsresult rv;
     nsIGenericFactory* fact;
@@ -211,7 +211,7 @@ PRBool gXPCOMShuttingDown = PR_FALSE;
    NULL, NULL, NULL, NS_CI_INTERFACE_GETTER_NAME(Class), NULL,                 \
    &NS_CLASSINFO_NAME(Class) }
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
 // ugh
 #define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
 #define NS_MEMORY_CLASSNAME  "Global Memory Service"

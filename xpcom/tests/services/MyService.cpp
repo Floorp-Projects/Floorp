@@ -84,7 +84,7 @@ MyService::Doit(void)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(MyService)
 
-static nsModuleComponentInfo myService_components[] = {
+static const nsModuleComponentInfo myService_components[] = {
     { "MyService", NS_IMYSERVICE_CID, nsnull, MyServiceConstructor },
 };
 

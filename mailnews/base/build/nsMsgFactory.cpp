@@ -148,7 +148,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init);
 #endif
 
 // The list of components we register
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
     { "Netscape Messenger Bootstrapper", NS_MESSENGERBOOTSTRAP_CID,
       NS_MESSENGERBOOTSTRAP_CONTRACTID,
       nsMessengerBootstrapConstructor,

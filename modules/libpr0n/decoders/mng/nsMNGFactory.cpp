@@ -29,7 +29,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMNGDecoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainerMNG)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "MNG decoder",
     NS_MNGDECODER_CID,

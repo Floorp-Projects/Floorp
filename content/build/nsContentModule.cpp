@@ -449,7 +449,7 @@ UnregisterHTMLOptionElement(nsIComponentManager* aCompMgr,
 }
 
 // The list of components we register
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
   { "Namespace manager",
     NS_NAMESPACEMANAGER_CID,
     nsnull,

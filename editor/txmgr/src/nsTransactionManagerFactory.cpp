@@ -54,7 +54,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransactionManager)
 // information like the function to create an instance, contractid, and
 // class name.
 //
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { "nsTransactionManager", NS_TRANSACTIONMANAGER_CID, NS_TRANSACTIONMANAGER_CONTRACTID, nsTransactionManagerConstructor },
 };
 

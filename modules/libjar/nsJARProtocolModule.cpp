@@ -39,7 +39,7 @@
 #include "nsJARProtocolHandler.h"
 
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { "JAR Protocol Handler", 
        NS_JARPROTOCOLHANDLER_CID,

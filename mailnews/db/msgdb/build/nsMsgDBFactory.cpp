@@ -61,7 +61,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgRetentionSettings)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgDownloadSettings)
 
 // The list of components we register
-static nsModuleComponentInfo msgDB_components[] = {
+static const nsModuleComponentInfo msgDB_components[] = {
     { "Mail DB", NS_MAILDB_CID, nsnull, nsMailDatabaseConstructor },
     { "News DB", NS_NEWSDB_CID, nsnull, nsNewsDatabaseConstructor },
     { "Imap DB", NS_IMAPDB_CID, nsnull, nsImapMailDatabaseConstructor },

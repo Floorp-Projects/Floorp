@@ -108,7 +108,7 @@ nsresult nsVertScrollbarConstructor   (nsISupports *aOuter,
   return rv;
 }
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "Gtk2 Window",
     NS_WINDOW_CID,

@@ -40,7 +40,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozXMLTerminal)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozXMLTermStream)
 
 // CIDs implemented by module
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
     { MOZLINETERM_CLASSNAME,
       MOZLINETERM_CID,

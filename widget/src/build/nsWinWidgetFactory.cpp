@@ -141,7 +141,7 @@ nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
   return rv;
 }
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "nsWindow",
     NS_WINDOW_CID,

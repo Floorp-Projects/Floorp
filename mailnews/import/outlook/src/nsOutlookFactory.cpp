@@ -81,7 +81,7 @@ NS_METHOD OutlookRegister(nsIComponentManager *aCompMgr,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOutlookImport)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     {	"Outlook Import Component", 
 		NS_OUTLOOKIMPORT_CID,
 		"@mozilla.org/import/import-outlook;1", 

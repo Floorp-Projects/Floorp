@@ -244,7 +244,7 @@ protected:
 };
 
 // The module loader information.
-static nsModuleComponentInfo gComponentInfo[] = {
+static const nsModuleComponentInfo gComponentInfo[] = {
     { "Events Sample Plugin",
       NS_EVENTSAMPLEPLUGIN_CID,
       NS_INLINE_PLUGIN_CONTRACTID_PREFIX PLUGIN_MIME_TYPE,

@@ -63,7 +63,7 @@ static NS_IMETHODIMP streamConverterDestructor()
 }
 
 // The list of components we register
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
     { "MimeObjectClassAccess", NS_MIME_OBJECT_CLASS_ACCESS_CID,
       nsnull, nsMimeObjectClassAccessConstructor },
 

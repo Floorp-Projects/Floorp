@@ -101,7 +101,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBIG5HKSCSToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToBIG5HKSCS);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToHKSCS);
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   { 
     ENCODER_NAME_BASE "Big5" , NS_UNICODETOBIG5_CID, 

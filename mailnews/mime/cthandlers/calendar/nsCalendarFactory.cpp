@@ -91,7 +91,7 @@ nsCalendarMimeContentTypeHandlerConstructor(nsISupports *aOuter,
 // information like the function to create an instance, contractid, and
 // class name.
 //
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "MIME Calendar Handler", NS_CALENDAR_CONTENT_TYPE_HANDLER_CID, "@mozilla.org/mimecth;1?type=text/calendar",
     nsCalendarMimeContentTypeHandlerConstructor, }

@@ -107,7 +107,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToJISx0201);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToJISx0208);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToJISx0212);
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   { 
     DECODER_NAME_BASE "Shift_JIS" , NS_SJISTOUNICODE_CID, 

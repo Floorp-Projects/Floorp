@@ -122,7 +122,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
 	{	"nsWindow",
 		NS_WINDOW_CID,

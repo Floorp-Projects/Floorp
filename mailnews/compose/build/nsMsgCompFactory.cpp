@@ -98,7 +98,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsURLFetcher);
 //
 ////////////////////////////////////////////////////////////
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "Msg Compose",
     NS_MSGCOMPOSE_CID,

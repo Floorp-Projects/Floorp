@@ -62,7 +62,7 @@ NS_METHOD EudoraRegister(nsIComponentManager *aCompMgr,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEudoraImport)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     {	"Text Import Component", 
 		NS_EUDORAIMPORT_CID,
 		"@mozilla.org/import/import-eudora;1", 

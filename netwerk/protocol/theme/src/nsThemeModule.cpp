@@ -24,7 +24,7 @@
 #include "nsIGenericFactory.h"
 #include "nsThemeHandler.h"
 
-static nsModuleComponentInfo gResComponents[] = {
+static const nsModuleComponentInfo gResComponents[] = {
     { "The Theme Protocol Handler", 
       NS_THEMEHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "theme",
