@@ -239,7 +239,11 @@ END_PRINT
       $curSuite = $File{'SuiteList'}->[$var];
 
       $HTMLreport .= "<tr valign=top>\n";
-      $HTMLreport .= "<td BGCOLOR=#CCCCCC><a href=\"#$curSuite->{'Name'}\">$curSuite->{'Title'}</a></td>\n";
+      if($express) {
+        $HTMLreport .= "<td>$curSuite->{'Title'}</td>\n";
+      } else {
+        $HTMLreport .= "<td bgcolor=#cccccc><a href=\"#$curSuite->{'Name'}\">$curSuite->{'Title'}</a></td>\n";
+      }
       $HTMLreport .= "<td>$File{'SuiteList'}->[$var]->{'tcsPass'}</td>\n";
       $HTMLreport .= "<td>$File{'SuiteList'}->[$var]->{'tcsFail'}</td>\n";
       $HTMLreport .= "<td>$File{'SuiteList'}->[$var]->{'tcsTotal'}</td>\n";
@@ -259,7 +263,7 @@ END_PRINT
 
     $HTMLreport .= <<END_PRINT; 
 <tr valign=top bgcolor=#FFFFCC>
-<td bgcolor=#CCCCCC id="totalHeader" class="tableHeader">Total:</td>
+<td>Total:</td>
 <td>$File{'tcsPass'}</td>
 <td>$File{'tcsFail'}</td>
 <td>$File{'tcsTotal'}</td>
