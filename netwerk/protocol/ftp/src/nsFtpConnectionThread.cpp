@@ -1857,7 +1857,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
         fwdPtr++;
     if (*fwdPtr == '\0') {
         // make it at least a dot
-        mPath.Adopt(".");
+        mPath.Adopt(nsCRT::strdup("."));
     } else {
         // now unescape it
         char *unescPath = nsnull;
