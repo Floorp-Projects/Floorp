@@ -298,11 +298,7 @@ NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	    break;
 
 	  case NS_MOUSE_LEFT_BUTTON_DOWN:
-	    if (NS_FORM_INPUT_IMAGE == type) {
-	      mLastMouseState = eMouseDown;
-	    } else {
-	      mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
-	    }
+            mLastMouseState = eMouseDown;
 	    break;
 
 	  case NS_MOUSE_LEFT_BUTTON_UP:
