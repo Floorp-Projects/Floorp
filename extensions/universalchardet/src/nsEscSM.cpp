@@ -82,7 +82,7 @@ PCK4BITS(     4,eError,     4,     4,     4,eError,     4,eError),//20-27
 PCK4BITS(     4,eItsMe,eStart,eStart,eStart,eStart,eStart,eStart) //28-2f 
 };
 
-static PRUint32 HZCharLenTable[] = {0, 0, 0, 0, 0, 0};
+static const PRUint32 HZCharLenTable[] = {0, 0, 0, 0, 0, 0};
 
 SMModel HZSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, HZ_cls },
@@ -140,7 +140,7 @@ PCK4BITS(eError,eError,eError,eItsMe,eError,eError,eError,eError),//30-37
 PCK4BITS(eError,eError,eError,eError,eError,eItsMe,eError,eStart) //38-3f 
 };
 
-static PRUint32 ISO2022CNCharLenTable[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const PRUint32 ISO2022CNCharLenTable[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 SMModel ISO2022CNSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022CN_cls },
@@ -195,7 +195,7 @@ PCK4BITS(eError,eError,eError,eError,eItsMe,eError,eItsMe,eError),//20-27
 PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eError,eError) //28-2f 
 };
 
-static PRUint32 ISO2022JPCharLenTable[] = {0, 0, 0, 0, 0, 0, 0, 0};
+static const PRUint32 ISO2022JPCharLenTable[] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 SMModel ISO2022JPSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022JP_cls },
@@ -249,7 +249,7 @@ PCK4BITS(eError,eError,eError,eError,     5,eError,eError,eError),//18-1f
 PCK4BITS(eError,eError,eError,eItsMe,eStart,eStart,eStart,eStart) //20-27 
 };
 
-static PRUint32 ISO2022KRCharLenTable[] = {0, 0, 0, 0, 0, 0};
+static const PRUint32 ISO2022KRCharLenTable[] = {0, 0, 0, 0, 0, 0};
 
 SMModel ISO2022KRSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022KR_cls },
