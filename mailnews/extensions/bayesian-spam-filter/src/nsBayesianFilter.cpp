@@ -50,63 +50,82 @@
 
 static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>?@[\\]^_`{|}~";
 
-#if POOLED_TOKEN_ALLOCATION
-typedef nsDependentCString nsTokenString;
-#else
-typedef nsCString nsTokenString;
-#endif
-
-class Token {
-public:
-    Token(const char* word, PRUint32 len, PRUint32 count) : mWord(word, len), mCount(count), mProbability(0) {}
-    Token(const Token& token) : mWord(token.mWord.get(), token.mWord.Length()), mCount(token.mCount), mProbability(token.mProbability) {}
-    
-    nsTokenString mWord;        // TODO:  change to const char*?
+struct Token : public PLDHashEntryHdr {
+    const char* mWord;
+    PRUint32 mLength;
     PRUint32 mCount;            // TODO:  put good/bad count values in same token object.
     double mProbability;        // TODO:  cache probabilities
 };
 
-#if !POOLED_TOKEN_ALLOCATION
+// PLDHashTable operation callbacks
 
-static void* PR_CALLBACK cloneToken(nsHashKey *aKey, void *aData, void* aClosure)
+static const void* PR_CALLBACK GetKey(PLDHashTable* table, PLDHashEntryHdr* entry)
 {
-    Token* token = (Token*) aData;
-    return new Token(*token);
+    return NS_STATIC_CAST(Token*, entry)->mWord;
 }
 
-static PRIntn PR_CALLBACK destroyToken(nsHashKey *aKey, void *aData, void* aClosure)
+static PRBool PR_CALLBACK MatchEntry(PLDHashTable* table,
+                                     const PLDHashEntryHdr* entry,
+                                     const void* key)
 {
-    Token* token = (Token*) aData;
-    delete token;
-    return kHashEnumerateNext;
+    const Token* token = NS_STATIC_CAST(const Token*, entry);
+    return (strcmp(token->mWord, NS_REINTERPRET_CAST(const char*, key)) == 0);
 }
 
-#endif
+static void PR_CALLBACK MoveEntry(PLDHashTable* table,
+                                  const PLDHashEntryHdr* from,
+                                  PLDHashEntryHdr* to)
+{
+    const Token* fromToken = NS_STATIC_CAST(const Token*, from);
+    Token* toToken = NS_STATIC_CAST(Token*, to);
+    NS_ASSERTION(fromToken->mLength != 0, "zero length token in table!");
+    *toToken = *fromToken;
+}
+
+static void PR_CALLBACK ClearEntry(PLDHashTable* table, PLDHashEntryHdr* entry)
+{
+    // We use the mWord field to further indicate liveness when using PL_DHASH_ADD.
+    // So we simply clear it when an entry is removed.
+    Token* token = NS_STATIC_CAST(Token*, entry);
+    token->mWord = NULL;
+}
 
 struct VisitClosure {
     bool (*f) (Token*, void*);
     void* data;
 };
 
-static PRIntn PR_CALLBACK visitToken(nsHashKey *aKey, void *aData, void* aClosure)
+static PLDHashOperator PR_CALLBACK VisitEntry(PLDHashTable* table, PLDHashEntryHdr* entry,
+                                              PRUint32 number, void* arg)
 {
-    Token* token = (Token*) aData;
-    VisitClosure* closure = (VisitClosure*) aClosure;
-    return (closure->f(token, closure->data) ?
-            kHashEnumerateNext : kHashEnumerateStop);
+    VisitClosure* closure = NS_REINTERPRET_CAST(VisitClosure*, arg);
+    Token* token = NS_STATIC_CAST(Token*, entry);
+    return (closure->f(token, closure->data) ? PL_DHASH_NEXT : PL_DHASH_STOP);
 }
 
-#if POOLED_TOKEN_ALLOCATION
+// member variables
+static PLDHashTableOps gTokenTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    GetKey,
+    PL_DHashStringKey,      // Save the extra layer of function call to PL_DHashStringKey.
+    MatchEntry,
+    MoveEntry,
+    ClearEntry,
+    PL_DHashFinalizeStub
+};
 
-Tokenizer::Tokenizer() : mTokens(NULL, NULL, NULL, NULL)
+Tokenizer::Tokenizer()
 {
-    PL_InitArenaPool(&mTokenPool, "Tokens Arena", 4096 * sizeof(Token), sizeof(double));
-    PL_InitArenaPool(&mWordPool, "Words Arena", 32768, sizeof(char));
+    PRBool ok = PL_DHashTableInit(&mTokenTable, &gTokenTableOps, nsnull, sizeof(Token), 256);
+    NS_ASSERTION(ok, "mTokenTable failed to initialize");
+    PL_INIT_ARENA_POOL(&mWordPool, "Words Arena", 16384);
 }
 
 Tokenizer::~Tokenizer()
 {
-    PL_FinishArenaPool(&mTokenPool);
+    if (mTokenTable.entryStore)
+        PL_DHashTableFinish(&mTokenTable);
     PL_FinishArenaPool(&mWordPool);
 }
 
@@ -117,67 +136,51 @@ char* Tokenizer::copyWord(const char* word, PRUint32 len)
     PL_ARENA_ALLOCATE(result, &mWordPool, size);
     if (result)
         memcpy(result, word, size);
-    return (char*) result;
+    return NS_REINTERPRET_CAST(char*, result);
 }
-
-Token* Tokenizer::newToken(const char* word, PRUint32 count)
-{
-    void* p;
-    PL_ARENA_ALLOCATE(p, &mTokenPool, sizeof(Token));
-    if (p) {
-        PRUint32 len = strlen(word);
-        return new(p) Token(copyWord(word, len), len, count);
-    }
-    return NULL;
-}
-
-#else
-
-Tokenizer::Tokenizer() : mTokens(cloneToken, NULL, destroyToken, NULL) {}
-Tokenizer::~Tokenizer() {}
-
-inline Token* Tokenizer::newToken(const char* word, PRUint32 count)
-{
-    return new Token(word, count);
-}
-
-#endif
 
 inline Token* Tokenizer::get(const char* word)
 {
-    nsCStringKey key(word);
-    Token* token = (Token*) mTokens.Get(&key);
-    return token;
+    PLDHashEntryHdr* entry = PL_DHashTableOperate(&mTokenTable, word, PL_DHASH_LOOKUP);
+    if (PL_DHASH_ENTRY_IS_BUSY(entry))
+        return NS_STATIC_CAST(Token*, entry);
+    return NULL;
 }
 
 Token* Tokenizer::add(const char* word, PRUint32 count)
 {
-    nsCStringKey key(word);
-    Token* token = (Token*) mTokens.Get(&key);
-    if (!token) {
-        token = newToken(word, count);
-        if (token && token->mWord.get()) {
-            // NOTE:  to save space, sharedKey shares the string pointer with the token itself.
-            // This is safe, as long as the token's lifetime exceeds the hash table / key itself.
-            // Since the token string is now arena allocated, this will always be true.
-            nsCStringKey sharedKey(token->mWord.get(), token->mWord.Length(), nsCStringKey::NEVER_OWN);
-            mTokens.Put(&sharedKey, token);
+    PLDHashEntryHdr* entry = PL_DHashTableOperate(&mTokenTable, word, PL_DHASH_ADD);
+    Token* token = NS_STATIC_CAST(Token*, entry);
+    if (token) {
+        if (token->mWord == NULL) {
+            PRUint32 len = strlen(word);
+            NS_ASSERTION(len != 0, "adding zero length word to tokenizer");
+            token->mWord = copyWord(word, len);
+            NS_ASSERTION(token->mWord, "copyWord failed");
+            if (!token->mWord) {
+                PL_DHashTableRawRemove(&mTokenTable, entry);
+                return NULL;
+            }
+            token->mLength = len;
+            token->mCount = count;
+            token->mProbability = 0;
+        } else {
+            token->mCount += count;
         }
-    } else {
-        token->mCount += count;
     }
     return token;
 }
 
 void Tokenizer::remove(const char* word, PRUint32 count)
 {
-    nsCStringKey key(word);
-    Token* token = (Token*) mTokens.Get(&key);
+    Token* token = get(word);
     if (token) {
         NS_ASSERTION(token->mCount >= count, "token count underflow");
-        token->mCount -= count;
-        if (token->mCount == 0)
-            mTokens.RemoveAndDelete(&key);
+        if (token->mCount >= count) {
+            token->mCount -= count;
+            if (token->mCount == 0)
+                PL_DHashTableRawRemove(&mTokenTable, token);
+        }
     }
 }
 
@@ -210,6 +213,7 @@ void Tokenizer::tokenize(char* text)
     char* word;
     char* next = text;
     while ((word = nsCRT::strtok(next, kBayesianFilterTokenDelimiters, &next)) != NULL) {
+        if (word[0] == '\0') continue;
         if (isDecimalNumber(word)) continue;
         add(toLowerCase(word));
     }
@@ -227,35 +231,48 @@ void Tokenizer::tokenize(const char* str)
 void Tokenizer::visit(bool (*f) (Token*, void*), void* data)
 {
     VisitClosure closure = { f, data };
-    mTokens.Enumerate(visitToken, &closure);
+    PRUint32 visitCount = PL_DHashTableEnumerate(&mTokenTable, VisitEntry, &closure);
+    NS_ASSERTION(visitCount == mTokenTable.entryCount, "visitCount != entryCount!");
 }
 
 struct GatherClosure {
-    Token** tokens;
+    PRUint32 count;
+    PRUint32 offset;
+    Token* tokens;
 };
 static bool gatherTokens(Token* token, void* data)
 {
-    GatherClosure* closure = (GatherClosure*) data;
-    *closure->tokens++ = token;
+    GatherClosure* closure = NS_REINTERPRET_CAST(GatherClosure*, data);
+    NS_ASSERTION(closure->offset < closure->count, "too many tokens");
+    if (closure->offset < closure->count)
+        closure->tokens[closure->offset++] = *token;
     return true;
 }
 
-Token** Tokenizer::getTokens()
+inline PRUint32 Tokenizer::countTokens()
+{
+    return mTokenTable.entryCount;
+}
+
+Token* Tokenizer::getTokens()
 {
     PRUint32 count = countTokens();
-    Token** tokens = new Token*[count];
-    if (tokens) {
-        GatherClosure closure = { tokens };
-        visit(gatherTokens, &closure);
+    if (count > 0) {
+        Token* tokens = new Token[count];
+        if (tokens) {
+            GatherClosure closure = { count, 0, tokens };
+            visit(gatherTokens, &closure);
+        }
+        return tokens;
     }
-    return tokens;
+    return NULL;
 }
 
 class TokenAnalyzer {
 public:
     virtual ~TokenAnalyzer() {}
     
-    virtual void analyzeTokens(const char* source, Tokenizer& tokens) = 0;
+    virtual void analyzeTokens(const char* source, PRUint32 count, Token tokens[]) = 0;
 };
 
 /**
@@ -302,15 +319,18 @@ NS_IMPL_ISUPPORTS2(TokenStreamListener, nsIRequestObserver, nsIStreamListener)
 /* void onStartRequest (in nsIRequest aRequest, in nsISupports aContext); */
 NS_IMETHODIMP TokenStreamListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
+    if (!mTokenizer)
+        return NS_ERROR_OUT_OF_MEMORY;
     mBuffer = new char[mBufferSize];
-    if (!mBuffer) return NS_ERROR_OUT_OF_MEMORY;
+    if (!mBuffer)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 /* void onDataAvailable (in nsIRequest aRequest, in nsISupports aContext, in nsIInputStream aInputStream, in unsigned long aOffset, in unsigned long aCount); */
 NS_IMETHODIMP TokenStreamListener::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext, nsIInputStream *aInputStream, PRUint32 aOffset, PRUint32 aCount)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     while (aCount > 0) {
         PRUint32 readCount, totalCount = (aCount + mLeftOverCount);
@@ -382,8 +402,14 @@ NS_IMETHODIMP TokenStreamListener::OnStopRequest(nsIRequest *aRequest, nsISuppor
     }
     
     /* finally, analyze the tokenized message. */
-    if (mAnalyzer)
-        mAnalyzer->analyzeTokens(mTokenSource.get(), mTokenizer);
+    if (mAnalyzer) {
+        PRUint32 count = mTokenizer.countTokens();
+        Token* tokens = mTokenizer.getTokens();
+        if (count && tokens) {
+            mAnalyzer->analyzeTokens(mTokenSource.get(), count, tokens);
+            delete[] tokens;
+        }
+    }
     
     return NS_OK;
 }
@@ -393,18 +419,17 @@ NS_IMPL_ISUPPORTS2(nsBayesianFilter, nsIMsgFilterPlugin, nsIJunkMailPlugin)
 
 nsBayesianFilter::nsBayesianFilter()
     :   mGoodCount(0), mBadCount(0),
-        mServerPrefsKey(NULL), mBatchUpdate(PR_FALSE), mTrainingDataDirty(PR_FALSE)
+        mBatchUpdate(PR_FALSE), mTrainingDataDirty(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
     
-    // should probably wait until Init() is called to do this.
-    readTrainingData();
+    bool ok = (mGoodTokens && mBadTokens);
+    NS_ASSERTION(ok, "error allocating tokenizers");
+    if (ok)
+        readTrainingData();
 }
 
-nsBayesianFilter::~nsBayesianFilter()
-{
-    delete mServerPrefsKey;
-}
+nsBayesianFilter::~nsBayesianFilter() {}
 
 class MessageClassifier : public TokenAnalyzer {
 public:
@@ -413,9 +438,9 @@ public:
     {
     }
     
-    virtual void analyzeTokens(const char* source, Tokenizer& tokens)
+    virtual void analyzeTokens(const char* source, PRUint32 count, Token tokens[])
     {
-        mFilter->classifyMessage(tokens, source, mListener);
+        mFilter->classifyMessage(count, tokens, source, mListener);
     }
 
 private:
@@ -428,11 +453,12 @@ nsresult nsBayesianFilter::tokenizeMessage(const char* messageURI, TokenAnalyzer
 {
     nsresult rv;
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString messageURL;
+    NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
     NS_ENSURE_SUCCESS(rv, rv);
+
+    nsXPIDLCString messageURL;
     rv = mailSession->ConvertMsgURIToMsgURL(messageURI, nsnull, getter_Copies(messageURL));
     // Tell mime we just want to scan the message data
     nsCAutoString aUrl(messageURL);
@@ -441,21 +467,22 @@ nsresult nsBayesianFilter::tokenizeMessage(const char* messageURI, TokenAnalyzer
 
     nsCOMPtr<nsIChannel> channel;
     rv = ioService->NewChannel(aUrl, NULL, NULL, getter_AddRefs(channel));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsIStreamListener> tokenListener = new TokenStreamListener(messageURI, analyzer);
+    if (!tokenListener) return NS_ERROR_OUT_OF_MEMORY;
 
     static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
     nsCOMPtr<nsIStreamConverterService> streamConverter = do_GetService(kIStreamConverterServiceCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIStreamListener> newListener;
+    nsCOMPtr<nsIStreamListener> conversionListener;
     rv = streamConverter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(),
                                            NS_LITERAL_STRING("*/*").get(),
-                                           tokenListener, channel, getter_AddRefs(newListener));
+                                           tokenListener, channel, getter_AddRefs(conversionListener));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = channel->AsyncOpen(newListener, NULL);
+    rv = channel->AsyncOpen(conversionListener, NULL);
     return rv;
 }
 
@@ -463,7 +490,7 @@ inline double abs(double x) { return (x >= 0 ? x : -x); }
 
 static int compareTokens(const void* p1, const void* p2, void* /* data */)
 {
-    Token *t1 = *(Token**) p1, *t2 = *(Token**) p2;
+    Token *t1 = (Token*) p1, *t2 = (Token*) p2;
     double delta = abs(t1->mProbability - 0.5) - abs(t2->mProbability - 0.5);
     return (delta == 0.0 ? 0 : (delta > 0.0 ? 1 : -1));
 }
@@ -471,18 +498,15 @@ static int compareTokens(const void* p1, const void* p2, void* /* data */)
 inline double max(double x, double y) { return (x > y ? x : y); }
 inline double min(double x, double y) { return (x < y ? x : y); }
 
-void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* messageURI,
+void nsBayesianFilter::classifyMessage(PRUint32 count, Token tokens[], const char* messageURI,
                                        nsIJunkMailClassificationListener* listener)
 {
     /* run the kernel of the Graham filter algorithm here. */
-    Token ** tokens = messageTokens.getTokens();
-    if (!tokens) return;
-    
-    PRUint32 i, count = messageTokens.countTokens();
+    PRUint32 i;
     double ngood = mGoodCount, nbad = mBadCount;
     for (i = 0; i < count; ++i) {
-        Token* token = tokens[i];
-        const char* word = token->mWord.get();
+        Token& token = tokens[i];
+        const char* word = token.mWord;
         // ((g (* 2 (or (gethash word good) 0)))
         Token* t = mGoodTokens.get(word);
         double g = 2.0 * ((t != NULL) ? t->mCount : 0);
@@ -494,13 +518,13 @@ void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* mes
             //      (min .99 (float (/ (min 1 (/ b nbad))
             //                         (+ (min 1 (/ g ngood))
             //                            (min 1 (/ b nbad)))))))
-            token->mProbability = max(.01,
+            token.mProbability = max(.01,
                                      min(.99,
                                          (min(1.0, (b / nbad)) /
                                               (min(1.0, (g / ngood)) +
                                                min(1.0, (b / nbad))))));
         } else {
-            token->mProbability = 0.4;
+            token.mProbability = 0.4;
         }
     }
     
@@ -508,21 +532,19 @@ void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* mes
     PRUint32 first, last = count;
     if (count > 15) {
         first = count - 15;
-        NS_QuickSort(tokens, count, sizeof(Token*), compareTokens, NULL);
+        NS_QuickSort(tokens, count, sizeof(Token), compareTokens, NULL);
     } else {
         first = 0;
     }
 
     double prod1 = 1.0, prod2 = 1.0;
     for (i = first; i < last; ++i) {
-        double value = tokens[i]->mProbability;
+        double value = tokens[i].mProbability;
         prod1 *= value;
         prod2 *= (1.0 - value);
     }
     double prob = (prod1 / (prod1 + prod2));
     bool isJunk = (prob >= 0.90);
-    
-    delete[] tokens;
 
     if (listener)
         listener->OnMessageClassified(messageURI, isJunk ? nsMsgJunkStatus(nsIJunkMailPlugin::JUNK) : nsMsgJunkStatus(nsIJunkMailPlugin::GOOD));
@@ -531,7 +553,9 @@ void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* mes
 /* void shutdown (); */
 NS_IMETHODIMP nsBayesianFilter::Shutdown()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mTrainingDataDirty)
+        writeTrainingData();
+    return NS_OK;
 }
 
 /* readonly attribute boolean shouldDownloadAllHeaders; */
@@ -562,6 +586,7 @@ NS_IMETHODIMP nsBayesianFilter::SetBatchUpdate(PRBool aBatchUpdate)
 NS_IMETHODIMP nsBayesianFilter::ClassifyMessage(const char *aMessageURL, nsIJunkMailClassificationListener *aListener)
 {
     TokenAnalyzer* analyzer = new MessageClassifier(this, aListener);
+    if (!analyzer) return NS_ERROR_OUT_OF_MEMORY;
     return tokenizeMessage(aMessageURL, analyzer);
 }
 
@@ -589,9 +614,10 @@ public:
     {
     }
     
-    virtual void analyzeTokens(const char* source, Tokenizer& tokens)
+    virtual void analyzeTokens(const char* source, PRUint32 count, Token tokens[])
     {
-        mFilter->observeMessage(tokens, source, mOldClassification, mNewClassification, mListener);
+        mFilter->observeMessage(count, tokens, source, mOldClassification,
+                                mNewClassification, mListener);
     }
 
 private:
@@ -602,30 +628,26 @@ private:
     nsMsgJunkStatus mNewClassification;
 };
 
-static void forgetTokens(Tokenizer& corpus, Token* tokens[], PRUint32 count)
+static void forgetTokens(Tokenizer& corpus, Token tokens[], PRUint32 count)
 {
     for (PRUint32 i = 0; i < count; ++i) {
-        Token* token = tokens[i];
-        corpus.remove(token->mWord.get(), token->mCount);
+        Token& token = tokens[i];
+        corpus.remove(token.mWord, token.mCount);
     }
 }
 
-static void rememberTokens(Tokenizer& corpus, Token* tokens[], PRUint32 count)
+static void rememberTokens(Tokenizer& corpus, Token tokens[], PRUint32 count)
 {
     for (PRUint32 i = 0; i < count; ++i) {
-        Token* token = tokens[i];
-        corpus.add(token->mWord.get(), token->mCount);
+        Token& token = tokens[i];
+        corpus.add(token.mWord, token.mCount);
     }
 }
 
-void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* messageURL,
+void nsBayesianFilter::observeMessage(PRUint32 count, Token tokens[], const char* messageURL,
                                       nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification,
                                       nsIJunkMailClassificationListener* listener)
 {
-    Token** tokens = messageTokens.getTokens();
-    if (!tokens) return;
-    
-    PRUint32 count = messageTokens.countTokens();
     switch (oldClassification) {
     case nsIJunkMailPlugin::JUNK:
         // remove tokens from junk corpus.
@@ -659,11 +681,9 @@ void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* mess
         break;
     }
     
-    delete[] tokens;
-    
     if (listener)
         listener->OnMessageClassified(messageURL, newClassification);
-        
+    
     if (mTrainingDataDirty && !mBatchUpdate)
         writeTrainingData();
 }
@@ -724,18 +744,17 @@ static bool writeTokens(FILE* stream, Tokenizer& tokenizer)
         return false;
 
     if (tokenCount > 0) {
-        Token ** tokens = tokenizer.getTokens();
+        Token* tokens = tokenizer.getTokens();
         if (!tokens) return false;
         
         for (PRUint32 i = 0; i < tokenCount; ++i) {
-            Token* token = tokens[i];
-            PRUint32 count = token->mCount;
-            if (writeUInt32(stream, count) != 1)
+            Token& token = tokens[i];
+            if (writeUInt32(stream, token.mCount) != 1)
                 break;
-            PRUint32 size = token->mWord.Length();
-            if (writeUInt32(stream, size) != 1)
+            PRUint32 tokenLength = token.mLength;
+            if (writeUInt32(stream, tokenLength) != 1)
                 break;
-            if (fwrite(token->mWord.get(), size, 1, stream) != 1)
+            if (fwrite(token.mWord, tokenLength, 1, stream) != 1)
                 break;
         }
         
@@ -846,5 +865,6 @@ NS_IMETHODIMP nsBayesianFilter::SetMessageClassification(const char *aMsgURL,
                                                          nsIJunkMailClassificationListener *aListener)
 {
     MessageObserver* analyzer = new MessageObserver(this, aOldClassification, aNewClassification, aListener);
+    if (!analyzer) return NS_ERROR_OUT_OF_MEMORY;
     return tokenizeMessage(aMsgURL, analyzer);
 }

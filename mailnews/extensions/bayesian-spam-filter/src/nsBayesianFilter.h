@@ -40,26 +40,29 @@
 #define nsBayesianFilter_h__
 
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
 #include "nsIMsgFilterPlugin.h"
+#include "pldhash.h"
+
+// XXX can't simply byte align arenas, must at least 2-byte align.
+#define PL_ARENA_CONST_ALIGN_MASK 1
 #include "plarena.h"
 
 class Token;
 class TokenAnalyzer;
-
-#define POOLED_TOKEN_ALLOCATION 1
 
 class Tokenizer {
 public:
     Tokenizer();
     ~Tokenizer();
     
+    operator int() { return mTokenTable.entryStore != NULL; }
+    
     Token* get(const char* word);
     Token* add(const char* word, PRUint32 count = 1);
     void remove(const char* word, PRUint32 count = 1);
     
-    PRUint32 countTokens() { return mTokens.Count(); }
-    Token** getTokens();
+    PRUint32 countTokens();
+    Token* getTokens();
 
     /**
      * Assumes that text is mutable and
@@ -78,15 +81,11 @@ public:
     void visit(bool (*f) (Token*, void*), void* data);
 
 private:
-    Token* newToken(const char* word, PRUint32 count);
-    char* copyWord(const char* word, PRUint32 size);
+    char* copyWord(const char* word, PRUint32 len);
 
 private:
-    nsObjectHashtable mTokens;
-#if POOLED_TOKEN_ALLOCATION
-    PLArenaPool mTokenPool;
+    PLDHashTable mTokenTable;
     PLArenaPool mWordPool;
-#endif
 };
 
 class nsBayesianFilter : public nsIJunkMailPlugin {
@@ -99,8 +98,8 @@ public:
     virtual ~nsBayesianFilter();
     
     nsresult tokenizeMessage(const char* messageURI, TokenAnalyzer* analyzer);
-    void classifyMessage(Tokenizer& messageTokens, const char* messageURI, nsIJunkMailClassificationListener* listener);
-    void observeMessage(Tokenizer& messageTokens, const char* messageURI, nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification, nsIJunkMailClassificationListener* listener);
+    void classifyMessage(PRUint32 count, Token tokens[], const char* messageURI, nsIJunkMailClassificationListener* listener);
+    void observeMessage(PRUint32 count, Token tokens[], const char* messageURI, nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification, nsIJunkMailClassificationListener* listener);
 
     void writeTrainingData();
     void readTrainingData();
@@ -108,7 +107,6 @@ public:
 protected:
     Tokenizer mGoodTokens, mBadTokens;
     PRUint32 mGoodCount, mBadCount;
-    nsACString* mServerPrefsKey;
     PRPackedBool mBatchUpdate;
     PRPackedBool mTrainingDataDirty;
 };
