@@ -146,7 +146,7 @@ WindowControlImpl.java
 public void delete()
 {
     nativeWebShell = -1;
-    System.out.println("debug: edburns: ImplObjectNative.delete()");
+    System.out.println("ImplObjectNative.delete()");
     super.delete();
 }
 

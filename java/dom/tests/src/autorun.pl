@@ -33,7 +33,7 @@ use Win32::Process;
 ###################################################################
 
 #sometimes we need to specify additional parameters for mozilla
-$ADDITIONAL_PARAMETERS="-P mozProfile";
+$ADDITIONAL_PARAMETERS="-P default";
 
 # time in seconds after which the mozilla has to be killed.
 # by default the mozilla will be up for so much time regardless of
@@ -85,8 +85,8 @@ sub title() {
     print "   Automated Execution of DOM API TestSuite\n";
     print "################################################\n";
     print "\n";
-    print "NOTE: You need to copy files redirect.html, test.html and test.xml,\n";
-    print "      redirectxml.html into some document directory of HTTP server\n";
+    print "NOTE: You need to copy files test.html and test.xml,\n";
+    print "      into some document directory of HTTP server\n";
     print "      TEST_URL environment variable should contain the URL of \n";
     print "      this directory.\n";
     print "\n";
@@ -270,6 +270,7 @@ $LOGFILE = "$curdir/log/BWTestRun.log";
 $LOGTXT = "$curdir/log/BWTest.txt";
 $LOGHTML = "$curdir/log/BWTest.html";
 
+$x=`mkdir -p $curdir/log`;
 # process command-line parameters
 # and check for valid usage
 
@@ -361,7 +362,7 @@ if ( -f "$LOGHTML" ) {
 if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
 	$DOCFILE = "$DOCROOT/TestLoaderHTML.html";
 } else {
-	$DOCFILE = "$DOCROOT/redirect.html";
+	$DOCFILE = "$DOCROOT/test.html";
 }
 $runcnt = 1;
 $filename = "$curdir/BWTestClass.lst.ORIG";
@@ -370,7 +371,7 @@ if ($runtype == 1) {
     if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
       $DOCFILE = "$DOCROOT/TestLoaderHTML.html";
     } else {
-      $DOCFILE = "$DOCROOT/redirect.html";
+      $DOCFILE = "$DOCROOT/test.html";
     }
     $filename = "$curdir/BWTestClass.lst.html.ORIG";
     $runcnt = 1;
@@ -380,7 +381,7 @@ if ($runtype == 2) {
     if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
       $DOCFILE = "$DOCROOT/TestLoaderXML.html";
     } else {
-      $DOCFILE = "$DOCROOT/redirectxml.html";
+      $DOCFILE = "$DOCROOT/testxml.html";
     }
     $filename = "$curdir/BWTestClass.lst.xml.ORIG";
     $runcnt = 1;
@@ -390,7 +391,7 @@ if ($runtype == 3) {
     if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
       $DOCFILE = "$DOCROOT/TestLoaderHTML.html";
     } else {
-      $DOCFILE = "$DOCROOT/redirect.html";
+      $DOCFILE = "$DOCROOT/test.html";
     }
     $filename = "$curdir/BWTestClass.lst.html.ORIG";
     $runcnt = 2;
@@ -492,7 +493,7 @@ while (true) {
     ( ++$currcnt < $runcnt ) || last;
     
     if ( $runtype == 3 ) {
-	$DOCFILE="$DOCROOT/redirectxml.html";
+	$DOCFILE="$DOCROOT/testxml.html";
 	$filename="$curdir/BWTestClass.lst.xml.ORIG";
 	constructHTML;
 	appendEntries;

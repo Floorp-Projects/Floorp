@@ -18,14 +18,17 @@
 #
 # Contributor(s): 
 
+DEPTH= ../../../..
 
-DOMViewer.jar: DOMViewerFactory.class DOMAccessPanel.class DOMTreeDumper.class manifest
-	$(JDKHOME)/bin/jar cvfm DOMViewer.jar manifest *.class
+PLUGLET=ZipView
+CLASSES=ZipView.class
 
-.SUFFIXES: .java .class
-.java.class:
-	$(JDKHOME)/bin/javac -classpath .:../../classes:$(CLASSPATH):JavaDOM.jar $<
-clobber:
-	rm *.class *.jar
-install:
-	cp *.jar $(PLUGLET)
+MISC=ZipView.jar
+HTML=zip.html
+
+include ../../config/rules.mk
+
+
+
+
+

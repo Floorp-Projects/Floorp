@@ -63,14 +63,14 @@ Requirements:
 
 * current mozilla built tree
 
-* JDK1.2 or JDK1.3 
+* JDK1.3 
 
 * Perl 5 must be in your path
 
 How To Build:
 
 *  make sure the environment var JDKHOME is set to your jdk installation
-   directory, ie export  JDKHOME=/usr/local/jdk1.2
+   directory, ie export  JDKHOME=/usr/local/jdk1.3
 
 * Add following directories to to your LD_LIBRARY_PATH:
 
@@ -84,13 +84,13 @@ How to Run:
 * Add $MOZILLA_FILE_HOME/../classes to your CLASSPATH
 
 How to build and run test
+
 * go to the test directory and type "gmake"
+  test.jar will be placed  in mozilla/dist/bin/plugins directory
 
-* Set PLUGLET environment to the  directory you have test.jar
+* set LD_PRELOAD to libXm.so
 
-* Run mozilla and load page test.html from test directory and if everething is ok you will see
-  some awt demo.
-
+* Run mozilla and load page resource:///res/javadev/pluglets/test.html and if everething is ok you will see  some awt demo.
   
   
 ========================================================================
@@ -98,6 +98,8 @@ How to build and run test
 Problems:
 
 * post to netscape.public.mozilla.java newsgroup
+
+
 
 
 

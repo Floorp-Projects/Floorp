@@ -33,11 +33,14 @@ IGNORE_MANIFEST=1
 #// root of NS
 #//
 #//------------------------------------------------------------------------
-DEPTH = ..
-
-DIRS  = external \
-	util \
-	dom \
-	webclient 
+DEPTH = ..\..
 
 include <$(DEPTH)\config\rules.mak>
+
+export::
+	if not exist $(DEPTH)\dist\classes $(MKDIR) $(DEPTH)\dist\classes
+	cd $(DEPTH)\dist\classes
+	$(JDKHOME)\bin\jar -xf ..\..\java\external\dom2.jar
+
+clobber_all::
+	$(RM) -rf $(DEPTH)\dist\classes\org\w3c

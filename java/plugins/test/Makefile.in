@@ -18,14 +18,9 @@
 #
 # Contributor(s): 
 
+DEPTH= ../../..
 
-JMPlayer.jar: JMPlayer.class manifest
-	$(JDKHOME)/bin/jar cvfm JMPlayer.jar manifest *.class
-
-.SUFFIXES: .java .class
-.java.class:
-	$(JDKHOME)/bin/javac -classpath ../classes:$(CLASSPATH) $<
-clobber:
-	rm *.class *.jar
-install:
-	cp *.jar $(PLUGLET)
+PLUGLET=test
+CLASSES=test.class
+HTML=test.html
+include ../config/rules.mk

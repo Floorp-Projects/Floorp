@@ -98,8 +98,9 @@ gtk_mozilla_get_type (void)
       sizeof (GtkMozillaClass),
       (GtkClassInitFunc) gtk_mozilla_class_init,
       (GtkObjectInitFunc) gtk_mozilla_init,
-      (GtkArgSetFunc) NULL,
-      (GtkArgGetFunc) NULL,
+      /* reserved_1 */ NULL,
+      /* reserved_2 */ NULL,
+      (GtkClassInitFunc) NULL
     };
     mozilla_type = gtk_type_unique (GTK_TYPE_LAYOUT, &mozilla_info);
   }

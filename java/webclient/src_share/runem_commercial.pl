@@ -28,10 +28,13 @@
 # Verification, usage checking
 #
 $ARGC = $#ARGV + 1;
-$MIN_ARGC = 2;
+$MIN_ARGC = 1;
 
-if ($MIN_ARGC > $ARGC) {
-  print "usage runem.pl <mozilla bin dir> <class name>\n";
+if ($MIN_ARGC > $ARGC || !($ENV{"MOZILLA_FIVE_HOME"})) {
+  if (!($ENV{"MOZILLA_FIVE_HOME"})) {
+     print "MOZILLA_FIVE_HOME must be set to the absolute path\nto the mozilla bin directory.\n";
+ }
+  print "usage runem.pl <class name>\n";
   exit -1;
 }
 
@@ -39,7 +42,7 @@ if ($MIN_ARGC > $ARGC) {
 # Constant definitions
 #
 
-$CLASSNAME = $ARGV[1];
+$CLASSNAME = $ARGV[0];
 
 # determine the path separator
 $_ = $ENV{PATH};
@@ -56,30 +59,13 @@ if ($SEP eq "/") {
   $IS_UNIX = 1;
 }
 
-if ($IS_UNIX) {
-# Under red hat linux $ENV{"PWD"} is undefined,
-# so it only appends a '/' to argv[0].
-  if ( $ENV{"PWD"} == "" ) {
-      $BINDIR = $ARGV[0];
-  }
-  else {
-    $BINDIR = $ENV{"PWD"} . $SEP . $ARGV[0];
-  }
-}
-else {
-  open(CD, "cd |");
-  $_ = <CD>;
-  chop;
-  close(CD);
-  $BINDIR = $_ . $SEP . $ARGV[0];
-}
+$BINDIR = $ENV{"MOZILLA_FIVE_HOME"};
+
 $JAVA_CMD = $ENV{"JDKHOME"} . $SEP . "bin" . $SEP . "java";
 
 #
 # set up environment vars
 #
-
-$ENV{"MOZILLA_FIVE_HOME"} = $BINDIR;
 
 # prepend mozilla dist to path
 $ENV{PATH} = $BINDIR . $CPSEP . $ENV{PATH};
@@ -113,11 +99,12 @@ $ENV{"CLASSPATH"} = $ENV{"JDKHOME"} . $SEP . "lib" . $SEP . "tools.jar" .
   $CPSEP . $ENV{"JDKHOME"} . $SEP . "lib" . $SEP . "rt.jar" . $CPSEP . 
   $ENV{"CLASSPATH"};
 if ($IS_UNIX) {
-  $ENV{"CLASSPATH"} = $ENV{"CLASSPATH"} . $CPSEP . $BINDIR . $SEP . ".." . 
-    $SEP . "classes";
+  $ENV{"CLASSPATH"} = $ENV{"CLASSPATH"} . $CPSEP . $BINDIR . $SEP . "javadev" . 
+    $SEP . "lib" . $SEP . "blackwood.jar";
 }
 else {
-  $ENV{"CLASSPATH"} = $ENV{"CLASSPATH"} . $CPSEP ."../lib" . $SEP . "blackwood.jar";
+  $ENV{"CLASSPATH"} = $ENV{"CLASSPATH"} . $CPSEP . $BINDIR . $SEP . "javadev" . 
+    $SEP . "lib" . $SEP . "blackwood.jar";
 }
 
 # build up the command invocation string
@@ -128,7 +115,8 @@ if ($SEP eq "/") {
   $cmd = $cmd . " -native";
 }
 #tack on the java library path
-$cmd = $cmd . " -Djava.library.path=" . $BINDIR;
+$cmd = $cmd . " -Djava.library.path=" . $BINDIR . $CPSEP . $BINDIR . $SEP .
+          "javadev" . $SEP . "lib";
 #tack on the classpath, class name, and bin dir
 $cmd = $cmd . " -classpath " . $ENV{"CLASSPATH"} . " " . $CLASSNAME . " " . 
   $BINDIR;

@@ -18,14 +18,9 @@
 #
 # Contributor(s): 
 
+DEPTH= ../../../..
 
-ZipView.jar: ZipView.class manifest
-	$(JDKHOME)/bin/jar cvfm ZipView.jar manifest *.class
+PLUGLET=JMPlayer
+CLASSES=JMPlayer.class
 
-.SUFFIXES: .java .class
-.java.class:
-	$(JDKHOME)/bin/javac -classpath ../classes:$(CLASSPATH) $<
-clobber:
-	rm *.class *.jar
-install:
-	cp *.jar $(PLUGLET)
+include ../../config/rules.mk

@@ -67,7 +67,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_close
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativeRead
     (JNIEnv *env, jobject jthis, jbyteArray b, jint off, jint len) {
-    PRUint32 retval = 0;
+    jint retval = -1;
     nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);
     if (input) {
 	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
@@ -91,17 +91,19 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativ
 	//nb throw OutOfMemory
     }
     nsresult res;
-    res = input->Read((char*)bufElems,(PRUint32)len,&retval);
+    PRUint32 actualLen;
+    res = input->Read((char*)bufElems,(PRUint32)len,&actualLen);
     if (NS_FAILED(res)) {
 	free(bufElems);
 	return retval;
     }
+    retval = actualLen;
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletInputStream.nativeRead: %i bytes read\n", retval));
 
     env->SetByteArrayRegion(b,off,retval,bufElems);
     free(bufElems);
-    return retval;
+    return (len > 0 && actualLen <= 0) ? -1 : retval;
 }
 
 /*

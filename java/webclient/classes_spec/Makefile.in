@@ -76,9 +76,12 @@ ifneq ($(PACKAGE_BUILD),)
 	if test ! -d $(PACKAGE_LIB) ; then mkdir $(PACKAGE_LIB) ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB)/blackwood.$(VERSION_NUMBER).jar ; then rm -f $(PACKAGE_LIB)/blackwood.$(VERSION_NUMBER).jar ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB)/blackwood.jar ; then rm -f $(PACKAGE_LIB)/blackwood.jar ; else true ; fi ;
-	jar -xvf $(topsrcdir)/java/external/dom2.jar $(topsrcdir)/dist/classes/.
-	jar -cvf $(PACKAGE_LIB)/blackwood.$(VERSION_NUMBER).jar  $(topsrcdir)/dist/classes/org
-	ln -s blackwood.$(VERSION_NUMBER).jar $(PACKAGE_LIB)/blackwood.jar
+	cd $(topsrcdir)/dist/classes ; \
+	jar -xvf ../../java/external/dom2.jar ; \
+	jar -cvfM0 blackwood.$(VERSION_NUMBER).jar org ; \
+	cp blackwood.$(VERSION_NUMBER).jar  ../javadev/lib/blackwood.$(VERSION_NUMBER).jar ;
+	cd $(topsrcdir)/dist/javadev/lib ; \
+	ln -s blackwood.$(VERSION_NUMBER).jar $(PACKAGE_LIB)/blackwood.jar ;
 endif
 
 doc::

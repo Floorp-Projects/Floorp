@@ -114,7 +114,7 @@ public Object newImpl(String interfaceName,
                                              interfaceName + 
                                              ": not implemented.");
         }
-        System.out.println("debug: edburns: native library does implement " +
+        System.out.println("native library does implement " +
                            interfaceName);
         if (BrowserControl.WINDOW_CONTROL_NAME == interfaceName) {
             result = new WindowControlImpl(this, browserControl);
@@ -222,7 +222,7 @@ public static void main(String [] args)
     WrapperFactory me = new WrapperFactoryImpl();
     Log.setApplicationName("WrapperFactoryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WrapperFactoryImpl.java,v 1.2 2000/03/07 22:10:08 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: WrapperFactoryImpl.java,v 1.3 2000/11/02 23:33:13 edburns%acm.org Exp $");
 
     
 }

@@ -21,7 +21,6 @@
  */
 
 #include "rdf_util.h"
-#include "rdf_progids.h"
 
 #include "ns_globals.h" // for prLogModuleInfo and gComponentManager
 
@@ -45,6 +44,8 @@ nsCOMPtr<nsIRDFResource> kNC_Folder = nsnull;
 nsCOMPtr<nsIRDFResource> kRDF_type = nsnull;
 
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
+static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 
 nsresult rdf_InitRDFUtils()
 {
@@ -75,7 +76,7 @@ nsresult rdf_InitRDFUtils()
 
     if (nsnull == gRDF) {
         // get the RDF service
-        gRDF = do_GetService(NS_RDFSERVICE_PROGID, &rv);
+        gRDF = do_GetService(kRDFServiceCID, &rv);
         if (NS_FAILED(rv)) {
             return rv;
         }
@@ -83,7 +84,7 @@ nsresult rdf_InitRDFUtils()
     
     if (nsnull == gRDFCU) {
         // get the RDF service
-        gRDFCU = do_GetService(NS_CONTAINERUTILS_PROGID, &rv);
+        gRDFCU = do_GetService(kRDFContainerUtilsCID, &rv);
         if (NS_FAILED(rv)) {
             return rv;
         }
@@ -313,6 +314,13 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
 
 void rdf_printArcLabels(nsCOMPtr<nsIRDFResource> currentResource)
 {
+    if (!currentResource) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, ("resource: null\n"));
+        }
+        return;
+    }
+        
     nsCOMPtr<nsISimpleEnumerator> labels;
     nsCOMPtr<nsISupports> supportsResult;
     nsCOMPtr<nsIRDFResource> resourceResult;

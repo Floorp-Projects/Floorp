@@ -18,14 +18,11 @@
 #
 # Contributor(s): 
 
+DEPTH= ../../../..
 
-JView.jar: JView.class manifest
-	$(JDKHOME)/bin/jar cvfm JView.jar manifest *.class
+HTML=index.html
 
-.SUFFIXES: .java .class
-.java.class:
-	$(JDKHOME)/bin/javac -classpath ../classes:$(CLASSPATH) $<
-clobber:
-	rm *.class *.jar
-install:
-	cp *.jar $(PLUGLET)
+include ../../config/rules.mk
+
+export:
+	cp pluglet_run.sh $(DEPTH)/bin

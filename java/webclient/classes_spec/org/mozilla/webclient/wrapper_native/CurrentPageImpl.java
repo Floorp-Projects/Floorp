@@ -103,18 +103,23 @@ public void findInPage(String stringToFind, boolean forward, boolean matchCase)
     ParameterCheck.nonNull(stringToFind);
     myFactory.throwExceptionIfNotInitialized();
 
-    synchronized(myBrowserControl) {
+    /*    synchronized(myBrowserControl) {
         nativeFindInPage(nativeWebShell, stringToFind, forward, matchCase);
-    }
+        }*/
+    
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::findInPage is not implemented in Webclient release 0.9\n");
+    
 }
             
 public void findNextInPage(boolean forward)
 {
     myFactory.throwExceptionIfNotInitialized();
     
-    synchronized(myBrowserControl) {
+    /*    synchronized(myBrowserControl) {
         nativeFindNextInPage(nativeWebShell, forward);
-    }
+        }*/
+
+     throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::findNextInPage is not implemented in Webclient release 0.9\n");
 }
             
 public String getCurrentURL()
@@ -211,9 +216,11 @@ public void resetFind()
 {
     myFactory.throwExceptionIfNotInitialized();
     
-    synchronized(myBrowserControl) {
+    /*    synchronized(myBrowserControl) {
         nativeResetFind(nativeWebShell);
-    }
+    }*/
+
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::resetFind is not implemented in Webclient release 0.9\n");
 }
             
 public void selectAll()
@@ -261,7 +268,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.8 2000/07/22 02:48:25 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.9 2000/11/02 23:33:12 edburns%acm.org Exp $");
     
 }
 

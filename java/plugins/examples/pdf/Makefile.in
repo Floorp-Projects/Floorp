@@ -18,14 +18,9 @@
 #
 # Contributor(s): 
 
+DEPTH= ../../../..
 
-test.jar: test.class manifest
-	$(JDKHOME)/bin/jar cvfm test.jar manifest *.class
+PLUGLET=PDFView.jar
+CLASSES=PDFView.class
 
-.SUFFIXES: .java .class
-.java.class:
-	$(JDKHOME)/bin/javac -classpath ../classes $<
-
-
-clobber:
-	rm *.class *.jar
+include ../../config/rules.mk

@@ -20,36 +20,23 @@
 # Contributor(s):
 
 
-HOMEDIR=..
-SRCDIR=$(HOMEDIR)\src
+HOMEDIR=..\..
+SRCDIR=$(HOMEDIR)\src\newsrc
 CLASSDIR=$(HOMEDIR)\classes
 
 JAVAC=javac
 TESTPACKAGE=org\mozilla\dom\test
 DOMPACKAGE=org\mozilla\dom
-
-GENERATOR_FILES=BWJavaTemplate.java \
-	ReflectionTest.java \
-	ParamCombination.java	
-
-JAVAFILES= Execution.java \
-	   BWBaseTest.java \
-	   TestLoader.java \
-	   ParamCombination.java \
-	   ReflectionTest.java \
-	   BWTestThread.java \
-	   BWJavaTemplate.java
+DOMPLUGLET_JAR=DOMPLUGLET.jar
 
 
-DOMFILE=DOMAccessor.java \
-	DocumentImpl.java 
+JAVAFILES=DOMViewerFactory.java
+
 
 all: testloader
 	@echo done
-	@cd api
-	@nmake -f Makefile.win
-	@cd ..\newsrc
-	@nmake -f Makefile.win
+	@cd $(CLASSDIR); jar cvfm $(DOMPLUGLET_JAR) manifest org
+	@cd $(CLASSDIR); cp $(DOMPLUGLET_JAR) $(MOZILLA_FIVE_HOME)\..\classes; del /f/q  *.class
 
 testloader:
 	@echo "******************************************************"
@@ -59,17 +46,8 @@ testloader:
 	@echo ""
 	@echo Building test accessory classes ...		
 	@$(JAVAC) -d $(CLASSDIR) $(JAVAFILES) 
+	@cp manifest $(CLASSDIR)
 
-
-accessor:
-!if !defined(USE_APPLET_FOR_REGISTRATION)
-	@echo Building DOMAccessor ...
-	@$(JAVAC) -d $(CLASSDIR) $(DOMFILE) 
-!endif
-	
-
-generator:
-	javac $(GENERATOR_FILES) -d $(CLASSDIR)
 
 clean:
 	del /f/q $(CLASSDIR)\$(TESTPACKAGE)\*.class

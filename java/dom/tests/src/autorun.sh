@@ -32,7 +32,10 @@
 DELAY_FACTOR=50
 SERVER=`hostname`
 USER=`logname`
-DOCROOT="http://$SERVER/~$USER"
+#DOCROOT="http://$SERVER/~$USER"
+curdir=`pwd`
+DOCROOT="file://$curdir"
+ADDITIONAL_PARAMETERS="-P default"
 
 
 
@@ -64,8 +67,8 @@ title()
    echo "   Automated Execution of DOM API TestSuite"
    echo "################################################"
    echo
-   echo "NOTE: You need to copy files redirect.html, test.html and"
-   echo "      redirectxml.html, test.xml to DOCUMENT_ROOT dir. of"
+   echo "NOTE: You need to copy files test.html and"
+   echo "      testxml.html to DOCUMENT_ROOT dir. of"
    echo "      your Web-Server on this machine."
    echo
    echo
@@ -135,14 +138,14 @@ checkRun()
 
 ##################################################################
 #
-# check Document Root and check if files test.html and test.xml
+# check Document Root and check if files test.html and testxml.html
 # exists in thos directories
 #
 ##################################################################
 #checkDocRoot()
 #{
 #  echo
-#echo "You need to copy files test.html and test.xml to your DOCUMENT_ROOT"
+#echo "You need to copy files test.html and testxml.html to your DOCUMENT_ROOT"
 #echo "of your Web-Server"
 #echo
 #echo "This test assumes that you have set up you WebServer and copied the"
@@ -169,8 +172,8 @@ checkRun()
 #
 #
 #echo
-#echo "Checking if the files test.html and test.xml exists in DOCUMENT_ROOT..."
-#if [ ! -f "$docroot/test.html" ]
+#echo "Checking if the files test.html and testxml.html exists in DOCUMENT_ROOT..."
+#if [ ! -f "$docroot/test.html" 
 #then
 #  echo "Could not find 'test.html' in DOCUMENT_ROOT directory"
 #  echo "Please copy test.html to DOCUMENT_ROOT and rerun this script"
@@ -178,10 +181,10 @@ checkRun()
 #  exit 1
 #fi
 #
-#if [ ! -f "$docroot/test.xml" ]
+#if [ ! -f "$docroot/testxml.html" ]
 #then
-#   echo "Could not find 'test.xml' in DOCUMENT_ROOT directory"
-#  echo "Please copy test.xml to DOCUMENT_ROOT and rerun this script"
+#   echo "Could not find 'testxml.html' in DOCUMENT_ROOT directory"
+#  echo "Please copy testxml.html to DOCUMENT_ROOT and rerun this script"
 #  echo
 #  exit 1
 #fi
@@ -308,7 +311,7 @@ constructLogFooter()
 
 ##################################################################
 #
-# check Document Root and check if files test.html and test.xml
+# check Document Root and check if files test.html and testxml.html
 # exists in thos directories
 #
 ##################################################################
@@ -334,10 +337,12 @@ clear
 title
 
 curdir=`pwd`
+LOGDIRECTORY="$curdir/log";
 LOGFILE="$curdir/log/BWTestRun.log"
 LOGTXT="$curdir/log/BWTest.txt"
 LOGHTML="$curdir/log/BWTest.html"
 
+/bin/mkdir -p "$LOGDIRECTORY";
 
 testparam="";
 if [ $# -gt 2 ] 
@@ -465,7 +470,7 @@ fi
 appreg=${USE_APPLET_FOR_REGISTRATION}
 if [ -z "$appreg" ]
 then
-	DOCFILE="$DOCROOT/redirect.html";
+	DOCFILE="$DOCROOT/test.html";
 else
 	DOCFILE="$DOCROOT/TestLoaderHTML.html";
 fi
@@ -477,7 +482,7 @@ if [ "$runtype" = "1" ]
 then
   if [ -z "$appreg" ]
   then
-	DOCFILE="$DOCROOT/redirect.html";
+	DOCFILE="$DOCROOT/test.html";
   else
 	DOCFILE="$DOCROOT/TestLoaderHTML.html";
   fi
@@ -487,10 +492,10 @@ fi
 
 if [ "$runtype" = "2" ]
 then
-  DOCFILE="$DOCROOT/redirectxml.html"
+  DOCFILE="$DOCROOT/testxml.html"
   if [ -z "$appreg" ]
   then
-	DOCFILE="$DOCROOT/redirectxml.html";
+	DOCFILE="$DOCROOT/testxml.html";
   else
 	DOCFILE="$DOCROOT/TestLoaderXML.html";
   fi
@@ -502,7 +507,7 @@ if [ "$runtype" = "3" ]
 then
   if [ -z "$appreg" ]
   then
-	DOCFILE="$DOCROOT/redirect.html";
+	DOCFILE="$DOCROOT/test.html";
   else
 	DOCFILE="$DOCROOT/TestLoaderHTML.html";
   fi
@@ -560,7 +565,7 @@ do
    format=`echo $testcase | sed 's/\./\//g'`
    nom=`basename $format`
    testlog="$curdir/log/$nom.$id.log"
-   ./mozilla-bin -P mozProfile $DOCFILE 2>$testlog 1>&2 &
+   ./mozilla-bin $ADDITIONAL_PARAMETERS $DOCFILE 2>$testlog 1>&2 &
 
    # dummy sleep to allow mozilla-bin to show up on process table
    sleep 3
@@ -636,7 +641,7 @@ do
 
  if [ "$runtype" = "3" ]
  then
-     DOCFILE="$DOCROOT/redirectxml.html"
+     DOCFILE="$DOCROOT/testxml.html"
      filename="$curdir/BWTestClass.lst.xml.ORIG"
      constructHTML
      appendEntries

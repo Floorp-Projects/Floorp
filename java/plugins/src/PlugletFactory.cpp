@@ -179,7 +179,7 @@ int PlugletFactory::Compare(const char *mimeType) {
     char *p1 = mimeDescription;
     char *p2 = strchr(p1,';');
     while ( p1 != NULL && p1 < terminator ) {
-        size_t n = sizeof(char) * ( ( (p2 == NULL) ? terminator : p2) - p1 );
+        size_t n = sizeof(char) * ( ( (p2 == NULL || p2 > terminator) ? terminator : p2) - p1 );
         if (PL_strncasecmp(p1,mimeType,n) == 0) {
             return 1;
         }

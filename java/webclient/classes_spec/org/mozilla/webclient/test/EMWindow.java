@@ -54,7 +54,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.21 2000/09/20 21:53:01 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.22 2000/11/02 23:33:10 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -113,34 +113,34 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		// Create the Menu Bar
 		menuBar = new MenuBar();
 		this.setMenuBar(menuBar);
-		Menu fileMenu = new Menu("File");
+        //		Menu fileMenu = new Menu("File");
 		Menu viewMenu = new Menu("View");
-		Menu searchMenu = new Menu("Search");
+        //		Menu searchMenu = new Menu("Search");
 		Menu editMenu = new Menu("Edit");
-		MenuItem newItem = new MenuItem("New Window");
-		MenuItem closeItem = new MenuItem("Close");
-		MenuItem findItem = new MenuItem("Find");
-		MenuItem findNextItem = new MenuItem("Find Next");
+        //		MenuItem newItem = new MenuItem("New Window");
+        //		MenuItem closeItem = new MenuItem("Close");
+        //		MenuItem findItem = new MenuItem("Find");
+        //		MenuItem findNextItem = new MenuItem("Find Next");
 		MenuItem sourceItem = new MenuItem("View Page Source");
 		MenuItem pageInfoItem = new MenuItem("View Page Info");
 		MenuItem selectAllItem = new MenuItem("Select All");
         MenuItem copyItem = new MenuItem("Copy");
-		menuBar.add(fileMenu);
+        //		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
-		menuBar.add(searchMenu);
+        //		menuBar.add(searchMenu);
 		menuBar.add(editMenu);
-		fileMenu.add(newItem);
-		newItem.addActionListener(this);
-		fileMenu.add(closeItem);
-		closeItem.addActionListener(this);
-		searchMenu.add(findItem);
-		findItem.addActionListener(this);
-		searchMenu.add(findNextItem);
-		findNextItem.addActionListener(this);
+        //		fileMenu.add(newItem);
+        //		newItem.addActionListener(this);
+        //		fileMenu.add(closeItem);
+        //		closeItem.addActionListener(this);
+        //		searchMenu.add(findItem);
+        //		findItem.addActionListener(this);
+        //		searchMenu.add(findNextItem);
+        //		findNextItem.addActionListener(this);
 		viewMenu.add(sourceItem);
 		sourceItem.addActionListener(this);
-		viewMenu.add(pageInfoItem);
-		pageInfoItem.addActionListener(this);
+        //		viewMenu.add(pageInfoItem);
+        //		pageInfoItem.addActionListener(this);
 		editMenu.add(selectAllItem);
 		selectAllItem.addActionListener(this);
         editMenu.add(copyItem);
@@ -165,8 +165,8 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
         stopButton.setEnabled(false);
 		refreshButton = makeItem(buttonsPanel, "Refresh", 3, 0, 1, 1, 0.0, 0.0);
         refreshButton.setEnabled(false);
-		makeItem(buttonsPanel, "Bookmarks",    4, 0, 1, 1, 0.0, 0.0);
-		makeItem(buttonsPanel, "DOMViewer",    5, 0, 1, 1, 0.0, 0.0);
+        //		makeItem(buttonsPanel, "Bookmarks",    4, 0, 1, 1, 0.0, 0.0);
+        //		makeItem(buttonsPanel, "DOMViewer",    5, 0, 1, 1, 0.0, 0.0);
 
 		// Create the control panel
 		controlPanel = new Panel();
@@ -312,7 +312,7 @@ public void delete()
 	domViewer.setVisible(false);
 	domViewer.dispose();
 	domViewer = null;
-    }
+    } 
     BrowserControlFactory.deleteBrowserControl(browserControl);
     browserControl = null;
     this.hide();

@@ -1,0 +1,10 @@
+This Directory contains files needed by the Blackwood project components,
+that are external to the Mozilla project. 
+
+- dom2.jar
+  This is a .jar file of all the org.w3c.dom classes built from source
+  files published by the W3C. This jar file was created using sources
+  available on May 10 2000 from the W3C HomePage http://www.w3.org/
+  This jar contains the Interfaces for the JavaDOM spec as defined by
+  the consortium.
+

@@ -18,7 +18,6 @@
 # Contributor(s):
 
 
-
 HOMEDIR=../
 SRCDIR=$(HOMEDIR)/src
 CLASSDIR=$(HOMEDIR)/classes
@@ -33,10 +32,10 @@ all:
 	@echo "and source it else it may not compile..."
 	@echo "******************************************************"
 	@echo ""
+	mkdir -p $(CLASSDIR)
 	$(JAVAC) -d $(CLASSDIR) $(JAVAFILES) 
-	$(JAVAC) -d $(CLASSDIR) $(DOMFILE) 
 	cd  api; make
-	cd $(CLASSDIR); jar cvf testdom.jar org
+	cd newsrc; make
 
 JAVAFILES= Execution.java \
 	   BWBaseTest.java \

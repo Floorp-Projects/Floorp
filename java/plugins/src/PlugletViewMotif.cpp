@@ -28,12 +28,6 @@
 #include <Xm/PushB.h>
 #include <Xm/DrawingA.h>
 
-#include <gdk/gdkx.h>
-#include <gtk/gtk.h>
-
-#include <gdksuperwin.h>
-#include <gtkmozbox.h>
-
 #include "PlugletViewMotif.h"
 #include "PlugletEngine.h"
 
@@ -67,6 +61,10 @@ static Colormap awt_cmap;
 static Visual * awt_visual;
 static int awt_num_colors;
 
+static void (*AwtLock)(JNIEnv *);
+static void (*AwtUnLock)(JNIEnv *);
+static void (*AwtNoFlushUnLock)(JNIEnv *);
+
 void PlugletViewMotif::Initialize() {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	   ("PlugletViewMotif.Initialize\n"));
@@ -83,6 +81,7 @@ void PlugletViewMotif::Initialize() {
         return;
     }
     getAwtData(&awt_depth, &awt_cmap, &awt_visual, &awt_num_colors, NULL);
+    getAwtLockFunctions(&AwtLock, &AwtUnLock, &AwtNoFlushUnLock,NULL);
 }
 
 PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
@@ -100,7 +99,7 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
         || !win->window) {
         if (win && !win->window) {
 	    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	              ("PlugletViewMotif.SetWindow  win->window = NULL. We have a bug in plugin module. this=%p\n",this));
+               ("PlugletViewMotif.SetWindow  win->window = NULL. We have a bug in plugin module. this=%p\n",this));
         }
         if (frame) {
             env->DeleteGlobalRef(frame);
@@ -112,30 +111,16 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
         }
         return PR_FALSE;
     }
-    GdkSuperWin * superWin = (GdkSuperWin *) win->window;
-    Window parentWindowID;
-    Window rootWindowID;
-    Window * childrenWindowIDs;
-    unsigned int numberOfChildren;
-    int containerWindowID = GDK_WINDOW_XWINDOW(superWin->shell_window);
-
-    Status status = XQueryTree(GDK_DISPLAY(), containerWindowID,
-                               &rootWindowID, &parentWindowID,
-                               &childrenWindowIDs, & numberOfChildren);
-    if (numberOfChildren >= 1) {
-        containerWindowID = childrenWindowIDs[0];
-    }
-    if (WindowID == containerWindowID) {
-        return PR_FALSE;
-    }
-
-
-    WindowID = containerWindowID;
-    void (*AwtLock)(JNIEnv *);
-    void (*AwtUnLock)(JNIEnv *);
-    void (*AwtNoFlushUnLock)(JNIEnv *);
-    getAwtLockFunctions(&AwtLock, &AwtUnLock, &AwtNoFlushUnLock,NULL);
     AwtLock(env);
+    int containerWindowID = win->window;
+    printf("containerWindowID=%d WindowID=%d\n",containerWindowID, WindowID);
+#if 0
+    if (WindowID == containerWindowID) {
+        printf("about to return false\n");
+        return PR_FALSE; 
+    }
+#endif
+    WindowID = containerWindowID;
     Display *awt_display = getAwtDisplay();
     XSync(awt_display, FALSE);
     Arg args[40];

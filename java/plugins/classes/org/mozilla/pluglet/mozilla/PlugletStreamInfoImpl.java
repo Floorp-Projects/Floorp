@@ -43,7 +43,9 @@ public class  PlugletStreamInfoImpl implements PlugletStreamInfo {
      * @param offset the start point for reading.
      * @param length the number of bytes to be read.
      */
-    public native void requestRead(ByteRanges ranges);
+    public void requestRead(ByteRanges ranges) {
+	throw(new UnsupportedOperationException("PlugletStreamInfo.requestRead not implemented yet"));
+    }
     protected void finalize() {
         nativeFinalize();
     }

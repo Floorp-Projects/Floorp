@@ -29,7 +29,7 @@ LIBRARY_NAME	= javadom
 IS_COMPONENT	= 1
 
 CPPSRCS		= \
-	nsJavaDOMImpl.cpp 
+	nsJavaDOMImpl.cpp
 
 include $(topsrcdir)/config/config.mk
 

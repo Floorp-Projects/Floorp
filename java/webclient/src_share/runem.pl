@@ -28,10 +28,13 @@
 # Verification, usage checking
 #
 $ARGC = $#ARGV + 1;
-$MIN_ARGC = 3;
+$MIN_ARGC = 2;
 
-if ($MIN_ARGC > $ARGC) {
-  print "usage runem.pl <mozilla bin dir> <class name> <depth>\n";
+if ($MIN_ARGC > $ARGC || !($ENV{"MOZILLA_FIVE_HOME"})) {
+  if (!($ENV{"MOZILLA_FIVE_HOME"})) {
+     print "MOZILLA_FIVE_HOME must be set to the absolute path\nto the mozilla bin directory.\n";
+ }
+  print "usage runem.pl <class name> <depth>\n";
   exit -1;
 }
 
@@ -39,8 +42,8 @@ if ($MIN_ARGC > $ARGC) {
 # Constant definitions
 #
 
-$CLASSNAME = $ARGV[1];
-$DEPTH = $ARGV[2];
+$CLASSNAME = $ARGV[0];
+$DEPTH = $ARGV[1];
 
 # determine the path separator
 $_ = $ENV{PATH};
@@ -57,30 +60,13 @@ if ($SEP eq "/") {
   $IS_UNIX = 1;
 }
 
-if ($IS_UNIX) {
-# Under red hat linux $ENV{"PWD"} is undefined,
-# so it only appends a '/' to argv[0].
-  if ( $ENV{"PWD"} == "" ) {
-      $BINDIR = $ARGV[0];
-  }
-  else {
-    $BINDIR = $ENV{"PWD"} . $SEP . $ARGV[0];
-  }
-}
-else {
-  open(CD, "cd |");
-  $_ = <CD>;
-  chop;
-  close(CD);
-  $BINDIR = $_ . $SEP . $ARGV[0];
-}
+$BINDIR = $ENV{"MOZILLA_FIVE_HOME"};
+
 $JAVA_CMD = $ENV{"JDKHOME"} . $SEP . "bin" . $SEP . "java";
 
 #
 # set up environment vars
 #
-
-$ENV{"MOZILLA_FIVE_HOME"} = $BINDIR;
 
 # prepend mozilla dist to path
 $ENV{PATH} = $BINDIR . $CPSEP . $ENV{PATH};

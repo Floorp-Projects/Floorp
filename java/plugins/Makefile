@@ -29,6 +29,8 @@ DIRS=   \
 	src 		\
 	jni		\
 	classes		\
+	test		\
+	examples 	\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

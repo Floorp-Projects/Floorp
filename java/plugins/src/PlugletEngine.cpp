@@ -183,13 +183,15 @@ void PlugletEngine::StartJVM() {
                ("PlugletEngine::StartJVM we got already started JVM\n"));
         return;
     }
-    char classpath[1024];
+    char classpath[1024]="";
     JavaVMInitArgs vm_args;
     JavaVMOption options[2];
-
-    sprintf(classpath, "-Djava.class.path=%s",PR_GetEnv("CLASSPATH"));
-    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-           ("PlugletEngine::StartJVM about to create JVM classpath=%s\n",classpath));
+    char * classpathEnv = PR_GetEnv("CLASSPATH");
+    if (classpath != NULL) {
+        sprintf(classpath, "-Djava.class.path=%s",classpathEnv);
+        PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+               ("PlugletEngine::StartJVM about to create JVM classpath=%s\n",classpath));
+    }
     options[0].optionString = classpath;
     options[1].optionString=""; //-Djava.compiler=NONE";
     vm_args.version = 0x00010002;

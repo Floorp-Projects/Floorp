@@ -54,7 +54,6 @@ CPPSRCS = \
 	RDFTreeNode.cpp \
 	WindowControlImpl.cpp \
 	WrapperFactoryImpl.cpp \
-	nsSetupRegistry.cpp \
 	motif/MotifBrowserControlCanvas.cpp \
 	motif/gtkmozilla.cpp \
 	$(NULL)
@@ -65,11 +64,11 @@ ifdef MOZ_ENABLE_GTK
 ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)
 CFLAGS          += $(MOZ_GTK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -lxpfelocation_s -L/usr/X11R6/lib -lXt
 else
 CXXFLAGS        += $(TK_CFLAGS)
 CFLAGS          += $(TK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt 
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -lxpfelocation_s -L/usr/X11R6/lib -lXt 
 endif
 endif
 
@@ -104,14 +103,7 @@ PACKAGE_LIB=$(PACKAGE_DIR)/lib
 PACKAGE_EXAMPLE=$(PACKAGE_DIR)/example
 endif # PACKAGE_BUILD
 
-export:: linkSetupRegistry
-
-linkSetupRegistry:
-	rm -f nsSetupRegistry.cpp
-	ln -s $(DEPTH)/xpfe/bootstrap/nsSetupRegistry.cpp .
-
 clobber_all::
-	rm -f nsSetupRegistry.cpp
 
 buildRunems:
 ifeq ($(BAL_INTERFACE),)
@@ -119,14 +111,10 @@ ifeq ($(PACKAGE_BUILD),)
 	@echo +++ Creating runem.  Use this to run the test browser.
 	rm -f runem
 	@echo #!/bin/sh > runem
-	@echo $(PERL) ../src_share/runem.pl $(DIST)/bin org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
+	@echo $(PERL) ../src_share/runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
 	chmod 755 runem
 else
-	@echo +++ Commercial Packaging - Creating runem. Used to run test
-	rm -f runem
-	@echo #!/bin/sh > runem
-	@echo $(PERL) runem.pl ../../ org.mozilla.test.EmbeddedMozilla "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
-	chmod 755 runem
+	@echo +++ Commercial Packaging - Copying runem_solaris. Used to run test
 	if test ! -d $(PACKAGE_EXAMPLE) ; then mkdir $(PACKAGE_EXAMPLE) ; else true ; fi ;
 	cp $(topsrcdir)/dist/bin/libwebclientstub.so $(PACKAGE_LIB)/libwebclientstub.so.$(VERSION_NUMBER)
 	cp $(topsrcdir)/dist/bin/libwebclient.so $(PACKAGE_LIB)/libwebclient.so.$(VERSION_NUMBER)
@@ -135,10 +123,19 @@ else
 	cp $(topsrcdir)/dist/bin/libplugletjni.so $(PACKAGE_LIB)/libplugletjni.so.$(VERSION_NUMBER)
 	cp $(topsrcdir)/dist/bin/components/libpluglet.so $(PACKAGE_LIB)/libpluglet.so.$(VERSION_NUMBER)
 	cp $(topsrcdir)/dist/bin/components/libjavadom.so $(PACKAGE_LIB)/libjavadom.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libpluglet.so $(topsrcdir)/dist/bin/components/libpluglet.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libjavadom.so $(topsrcdir)/dist/bin/components/libjavadom.so.$(VERSION_NUMBER)
-	rm -r $(topsrcdir)/dist/bin/components/libpluglet.so
-	rm -r $(topsrcdir)/dist/bin/components/libjavadom.so
+	rm -f $(topsrcdir)/dist/bin/libwebclientstub.so
+	rm -f $(topsrcdir)/dist/lib/libwebclientstub.so
+	rm -f $(topsrcdir)/dist/bin/libwebclient.so
+	rm -f $(topsrcdir)/dist/lib/libwebclient.so
+	rm -f $(topsrcdir)/dist/lib/libwc_share.a
+	rm -f $(topsrcdir)/dist/bin/libjavadomjni.so
+	rm -f $(topsrcdir)/dist/lib/libjavadomjni.so
+	rm -f $(topsrcdir)/dist/bin/libplugletjni.so
+	rm -f $(topsrcdir)/dist/lib/libplugletjni.so
+	rm -f $(topsrcdir)/dist/bin/components/libpluglet.so
+	rm -f $(topsrcdir)/dist/lib/components/libpluglet.so
+	rm -f $(topsrcdir)/dist/bin/components/libjavadom.so
+	rm -f $(topsrcdir)/dist/lib/components/libjavadom.so
 	chmod 555 $(PACKAGE_LIB)/libwebclientstub.so.$(VERSION_NUMBER)
 	chmod 555 $(PACKAGE_LIB)/libwebclient.so.$(VERSION_NUMBER)
 	chmod 555 $(PACKAGE_LIB)/libwc_share.a.$(VERSION_NUMBER)
@@ -146,8 +143,6 @@ else
 	chmod 555 $(PACKAGE_LIB)/libplugletjni.so.$(VERSION_NUMBER)
 	chmod 555 $(PACKAGE_LIB)/libpluglet.so.$(VERSION_NUMBER)
 	chmod 555 $(PACKAGE_LIB)/libjavadom.so.$(VERSION_NUMBER)
-	chmod 555 $(topsrcdir)/dist/bin/components/libpluglet.so.$(VERSION_NUMBER)
-	chmod 555 $(topsrcdir)/dist/bin/components/libjavadom.so.$(VERSION_NUMBER)
 	if test ! -d $(PACKAGE_LIB)/libwc_share.a ; then ln -s libwc_share.a.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwc_share.a ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB)/libwebclientstub.so ; then ln -s libwebclientstub.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwebclientstub.so ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB)/libwebclient.so ; then ln -s libwebclient.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwebclient.so ; else true ; fi ;
@@ -155,12 +150,11 @@ else
 	if test ! -d $(PACKAGE_LIB)/libplugletjni.so ; then ln -s libplugletjni.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libplugletjni.so ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB)/libpluglet.so ; then ln -s libpluglet.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libpluglet.so ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB)/libjavadom.so ; then ln -s libjavadom.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libjavadom.so ; else true ; fi ;
-	if test ! -d $(topsrcdir)/dist/bin/components/libpluglet.so ; then ln -s libpluglet.so.$(VERSION_NUMBER) $(topsrcdir)/dist/bin/components/libpluglet.so ; else true ; fi ;
-	if test ! -d $(topsrcdir)/dist/bin/components/libjavadom.so ; then ln -s libjavadom.so.$(VERSION_NUMBER) $(topsrcdir)/dist/bin/components/libjavadom.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_EXAMPLE)/runem ; then cp $(topsrcdir)/java/webclient/src_moz/runem $(PACKAGE_EXAMPLE)/runem ; else true ; fi ;
-	if test ! -d $(PACKAGE_EXAMPLE)/runem.pl ; then cp $(topsrcdir)/java/webclient/src_share/runem_commercial.pl $(PACKAGE_EXAMPLE)/runem.pl ; else true ; fi ;
-	chmod 755 $(PACKAGE_EXAMPLE)/runem.pl
+	if test ! -d $(PACKAGE_EXAMPLE)/runem ; then cp $(topsrcdir)/java/webclient/src_share/runem_solaris $(PACKAGE_EXAMPLE)/runem ; else true ; fi ;
+	chmod 755 $(PACKAGE_EXAMPLE)/runem
+	cp $(topsrcdir)/java/README.commercial $(PACKAGE_DIR)/README
 endif # PACKAGE_BUILD
 endif # BAL_INTERFACE
 
 install:: buildRunems
+

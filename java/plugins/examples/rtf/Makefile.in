@@ -18,14 +18,9 @@
 #
 # Contributor(s): 
 
+DEPTH= ../../../..
 
-PDFView.jar: PDFView.class manifest
-	$(JDKHOME)/bin/jar cvfm PDFView.jar manifest *.class
+PLUGLET=JView
+CLASSES=JView.class
 
-.SUFFIXES: .java .class
-.java.class:
-	$(JDKHOME)/bin/javac -classpath ../classes:$(CLASSPATH) $<
-clobber:
-	rm *.class *.jar
-install:
-	cp *.jar $(PLUGLET)
+include ../../config/rules.mk

@@ -44,7 +44,6 @@ OBJS =                              \
     .\$(OBJDIR)\RDFEnumeration.obj  \
     .\$(OBJDIR)\RDFTreeNode.obj  \
     .\$(OBJDIR)\ISupportsPeer.obj  \
-#    .\$(OBJDIR)\nsSetupRegistry.obj  \
     $(NULL)
 
 
@@ -76,7 +75,6 @@ LLIBS = \
 	$(DIST)\lib\nspr4.lib \
 	$(DIST)\lib\plc4.lib \
 	$(DIST)\lib\plds4.lib \
-#	$(DEPTH)\xpfe\bootstrap\$(OBJDIR)\nsSetupRegistry.obj \
 	$(NULL)  
 
 WIN_LIBS=                       \
@@ -121,17 +119,13 @@ INCS = \
 !CMDSWITCHES -S
 
 # generate the jni header
-export:: nsSetupRegistry.cpp 
-
-nsSetupRegistry.cpp:
-	copy $(MOZ_SRC)\mozilla\xpfe\bootstrap\nsSetupRegistry.cpp
 
 buildRunems:
 !ifdef BAL_INTERFACE
 !else
 	@echo +++ Creating runem.bat.  Use this to run the test browser.
 	rm -f runem.bat
-	@echo $(PERL) ..\src_share\runem.pl $(DIST)\bin org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem.bat
+	@echo $(PERL) ..\src_share\runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem.bat
 !endif
 
 install:: $(DLL) buildRunems
@@ -142,6 +136,5 @@ clobber_all:: clobber
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f nsSetupRegistry.cpp
 	rm -f runem.bat
 

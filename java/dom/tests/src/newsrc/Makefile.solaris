@@ -18,13 +18,17 @@
 # Contributor(s):
 
 
-HOMEDIR=../
-SRCDIR=$(HOMEDIR)/src
+HOMEDIR=../..
+SRCDIR=$(HOMEDIR)/src/newsrc
 CLASSDIR=$(HOMEDIR)/classes
 
 JAVAC=javac
 TESTPACKAGE=org/mozilla/dom/test
 DOMPACKAGE=org/mozilla/dom
+DOMPLUGLET_JAR=DOMPLUGLET.jar
+
+
+
 
 all: 
 	@echo "******************************************************"
@@ -32,28 +36,16 @@ all:
 	@echo "and source it else it may not compile..."
 	@echo "******************************************************"
 	@echo ""
-	mkdir -p $(CLASSDIR)
-	$(JAVAC) -d $(CLASSDIR) $(JAVAFILES) 
-	cd  api; make
-	cd newsrc; make
+	cd  $(HOMEDIR); $(JAVAC) -d $(CLASSDIR) $(JAVAFILES) 
+	/bin/cp manifest $(CLASSDIR)
+	cd  $(HOMEDIR)/src/api; make
+	cd $(CLASSDIR); jar cvfm $(DOMPLUGLET_JAR) manifest org
+	cd $(CLASSDIR); /bin/cp $(DOMPLUGLET_JAR) $(MOZILLA_FIVE_HOME)/../classes; rm -rf *.class
 
-JAVAFILES= Execution.java \
-	   BWBaseTest.java \
-	   TestLoader.java \
-	   ParamCombination.java \
-	   ReflectionTest.java \
-	   BWTestThread.java \
-	   BWJavaTemplate.java
-
-DOMFILE=  DocumentImpl.java \
-	  DOMAccessor.java
+JAVAFILES= DOMViewerFactory.java
 
 clean:
 	for i in ${JAVAFILES} ; do \
 		file=$$i; \
 		classfile=`echo $$file | sed 's/java/class/g'` ; \
 		/bin/rm $(CLASSDIR)/$(TESTPACKAGE)/$$classfile ; done
-	/bin/rm $(CLASSDIR)/$(DOMPACKAGE)/DOMFactory.class ;
-	cd api; make clean
-	
-	

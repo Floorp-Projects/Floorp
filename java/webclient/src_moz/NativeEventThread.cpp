@@ -114,14 +114,6 @@ extern const char * gBinDir; // defined in WrapperFactoryImpl.cpp
 #endif // XP_PC
 
 //
-// Functions to hook into mozilla
-// 
-
-extern "C" void NS_SetupRegistry();
-extern nsresult NS_AutoregisterComponents();
-
-
-//
 // Local functions
 //
 
@@ -410,7 +402,7 @@ int processEventLoop(WebShellInitContext * initContext)
 
     // PENDING(edburns): revisit this.  Not sure why this is necessary, but
     // this fixes bug 44327
-    printf("%c", 8); // 8 is ASCII for backspace
+    //    printf("%c", 8); // 8 is ASCII for backspace
 
     return 1;
 }
@@ -455,7 +447,6 @@ void DoMozInitialization(WebShellInitContext * initContext)
         // It is vitally important to call NS_InitEmbedding before calling
         // anything else.
         NS_InitEmbedding(pathFile, nsnull);
-        //        NS_SetupRegistry();
         rv = NS_GetGlobalComponentManager(&gComponentManager);
         if (NS_FAILED(rv)) {
             ::util_ThrowExceptionToJava(env, "NS_GetGlobalComponentManager() failed.");
@@ -471,8 +462,6 @@ void DoMozInitialization(WebShellInitContext * initContext)
         gComponentManager->RegisterComponentLib(kSHistoryCID, nsnull, 
                                                 nsnull, APPSHELL_DLL, 
                                                 PR_FALSE, PR_FALSE);
-        NS_AutoregisterComponents();
-
         // handle the profile manager nonsense
         nsCOMPtr<nsICmdLineService> cmdLine =do_GetService(kCmdLineServiceCID);
         nsCOMPtr<nsIProfile> profile = do_GetService(NS_PROFILE_CONTRACTID);
@@ -645,10 +634,6 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(initContext->docShell));
     webShell->SetContainer(wsContainer);
     
-    // set the URIContentListener
-    nsCOMPtr<nsIURIContentListener> contentListener(do_QueryInterface(initContext->browserContainer));
-    webBrowser->SetParentURIContentListener(contentListener);
-    
     // set the TreeOwner
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(initContext->docShell));
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner(do_QueryInterface(initContext->browserContainer));
@@ -688,7 +673,7 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     }
     
     initContext->initComplete = TRUE;
-    
+   
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
         PR_LOG(prLogModuleInfo, 3, 
