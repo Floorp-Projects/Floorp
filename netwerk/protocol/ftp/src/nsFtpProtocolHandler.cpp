@@ -208,7 +208,7 @@ nsFtpProtocolHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo, ns
                             getter_AddRefs(mCacheSession));
     
     if (mCacheSession)
-        rv = mCacheSession->SetDoomEntriesIfExpired(PR_TRUE);
+        rv = mCacheSession->SetDoomEntriesIfExpired(PR_FALSE);
 
     rv = channel->Init(url, proxyInfo, mCacheSession);
     if (NS_FAILED(rv)) {
