@@ -12,4 +12,4 @@ nsINetlibURL.h
 nsIProtocol.h
 nsIProtocolURLFactory.h
 nsIUnicharStreamLoader.h
-
+nsSocketTransport.h
