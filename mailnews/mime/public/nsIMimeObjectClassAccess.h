@@ -32,7 +32,7 @@
       { 0xc09edb23, 0xb7af, 0x11d2,	 \
       { 0xb3, 0x5e, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } };
 
-class nsIMimeObjectClassAccess {
+class nsIMimeObjectClassAccess : public nsISupports {
 public: 
   // These methods are all implemented by libmime to be used by 
   // content type handler plugins for processing stream data. 
