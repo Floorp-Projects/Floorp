@@ -45,8 +45,9 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie);
+  NS_IMETHOD GetCookieStringFromHTTP(nsIURI *aURL, nsIURI *aFirstURL, nsString& aCookie);
   NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie);
-  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, const char *aCookie, const char *aExpires);
+  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, const char *aCookie, const char *aExpires);
   NS_IMETHOD Cookie_RemoveAllCookies(void);
   NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results);
   NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList);
@@ -122,6 +123,25 @@ nsCookieService::GetCookieString(nsIURI *aURL, nsString& aCookie) {
 }
 
 NS_IMETHODIMP
+nsCookieService::GetCookieStringFromHTTP(nsIURI *aURL, nsIURI *aFirstURL, nsString& aCookie) {
+  nsXPIDLCString spec;
+  nsresult rv = aURL->GetSpec(getter_Copies(spec));
+  if (NS_FAILED(rv)) return rv;
+  nsXPIDLCString firstSpec;
+  rv = aFirstURL->GetSpec(getter_Copies(firstSpec));
+  if (NS_FAILED(rv)) return rv;
+  char *cookie = COOKIE_GetCookieFromHttp((char *)(const char *)spec, (char *)(const char *)firstSpec);
+  if (nsnull != cookie) {
+    aCookie.SetString(cookie);
+    nsCRT::free(cookie);
+  } else {
+    // No Cookie isn't an error condition.
+    aCookie.SetString("");
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCookieService::SetCookieString(nsIURI *aURL, const nsString& aCookie) {
   char *spec = NULL;
   nsresult result = aURL->GetSpec(&spec);
@@ -134,12 +154,15 @@ nsCookieService::SetCookieString(nsIURI *aURL, const nsString& aCookie) {
 }
 
 NS_IMETHODIMP
-nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, const char *aCookie, const char *aExpires) {
+nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, const char *aCookie, const char *aExpires) {
   char *spec = NULL;
   nsresult rv = aURL->GetSpec(&spec);
   if (NS_FAILED(rv)) return rv;
-  COOKIE_SetCookieStringFromHttp(spec, (char *)aCookie, (char *)aExpires);
+  char *firstSpec = NULL;
+  rv = aFirstURL->GetSpec(&firstSpec);  if (NS_FAILED(rv)) return rv;
+  COOKIE_SetCookieStringFromHttp(spec, firstSpec, (char *)aCookie, (char *)aExpires);
   nsCRT::free(spec);
+  nsCRT::free(firstSpec);
   return NS_OK;
 }
 
