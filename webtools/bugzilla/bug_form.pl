@@ -118,6 +118,9 @@ my $assignedtoid = $bug{'assigned_to'};
 my $reporterid = $bug{'reporter'};
 my $qacontactid =  $bug{'qa_contact'};
 
+
+$bug{'assigned_name'} = DBID_to_real_name($bug{'assigned_to'});
+$bug{'reporter_name'} = DBID_to_real_name($bug{'reporter'});
 $bug{'assigned_to'} = DBID_to_name($bug{'assigned_to'});
 $bug{'reporter'} = DBID_to_name($bug{'reporter'});
 
@@ -183,8 +186,8 @@ print "
     <TD ALIGN=RIGHT><B>OS:</B></TD>
     <TD><SELECT NAME=op_sys>" .
     make_options(\@::legal_opsys, $bug{'op_sys'}) .
-    "</SELECT><TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
-  </TR><TR>
+    "</SELECT><TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'} $bug{'reporter_name'}</TD>
+     </TDTR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
       <TD>$bug{'bug_status'}</TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
@@ -202,7 +205,7 @@ print "
   </TR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned&nbsp;To:
         </A></B></TD>
-      <TD>$bug{'assigned_to'}</TD>";
+      <TD>$bug{'assigned_to'} $bug{'assigned_name'}</TD>";
 
 if (Param("usetargetmilestone")) {
     my $url = "";

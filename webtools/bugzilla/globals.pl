@@ -546,6 +546,16 @@ sub InsertNewUser {
     return $password;
 }
 
+sub DBID_to_real_name {
+    my ($id) = (@_);
+    SendSQL("SELECT realname FROM profiles WHERE userid = $id");
+    my ($r) = FetchSQLData();
+    if ($r eq "") {
+        return;
+    } else {
+        return "($r)";
+    }
+}
 
 sub DBID_to_name {
     my ($id) = (@_);
@@ -721,7 +731,7 @@ sub GetLongDescriptionAsHTML {
         $knownattachments{FetchOneColumn()} = 1;
     }
 
-    my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
+    my ($query) = ("SELECT profiles.realname, profiles.login_name, longdescs.bug_when, " .
                    "       longdescs.thetext " .
                    "FROM longdescs, profiles " .
                    "WHERE profiles.userid = longdescs.who " .
@@ -740,12 +750,18 @@ sub GetLongDescriptionAsHTML {
     $query .= "ORDER BY longdescs.bug_when";
     SendSQL($query);
     while (MoreSQLData()) {
-        my ($who, $when, $text) = (FetchSQLData());
+        my ($who, $email, $when, $text) = (FetchSQLData());
         if ($count) {
-            $result .= "<BR><BR><I>------- Additional Comments From " .
-                qq{<A HREF="mailto:$who">$who</A> } .
-                    time2str("%Y-%m-%d %H:%M", str2time($when)) .
-                        " -------</I><BR>\n";
+            $result .= "<BR><BR><I>------- Additional Comments From ";
+              if ($who) {
+                  $result .= qq{<A HREF="mailto:$email">$who</A> } .
+                      time2str("%Y-%m-%d %H:%M", str2time($when)) .
+                          " -------</I><BR>\n";
+              } else {
+                  $result .= qq{<A HREF="mailto:$email">$email</A> } .
+                      time2str("%Y-%m-%d %H:%M", str2time($when)) .
+                          " -------</I><BR>\n";
+              }
         }
         $result .= "<PRE>" . quoteUrls(\%knownattachments, $text) . "</PRE>\n";
         $count++;
