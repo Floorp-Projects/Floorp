@@ -48,7 +48,8 @@ endif
 LIBS := \
 	-lraptorbase    \
 	-lpref \
-	-lraptorbase \
+	-lxmltok \
+	-lexpat \
 	$(TOOLKIT_WIDGET_LIB) \
 	-lraptorgfx \
 	$(TOOLKIT_GFX_LIB) \
