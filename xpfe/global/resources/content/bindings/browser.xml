@@ -109,11 +109,12 @@
       <!-- throws exception for unknown schemes -->
       <method name="loadURI">
         <parameter name="aURI"/>
+        <parameter name="aReferrerURI"/>
         <body>
           <![CDATA[
             const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
             const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
-            this.loadURIWithFlags(aURI, flags);
+            this.loadURIWithFlags(aURI, flags, aReferrerURI);
           ]]>
         </body>
       </method>
@@ -122,12 +123,13 @@
       <method name="loadURIWithFlags">
         <parameter name="aURI"/>
         <parameter name="aFlags"/>
+        <parameter name="aReferrerURI"/>
         <body>
           <![CDATA[
             if (!aURI)
               aURI = "about:blank";
 
-            this.webNavigation.loadURI(aURI, aFlags, null, null, null);
+            this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, null, null);
           ]]>
         </body>
       </method>

@@ -187,7 +187,8 @@
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
           if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
             getBrowser() && getBrowser().localName == "tabbrowser") {
-            theTab = getBrowser().addTab(href); // open link in new tab
+            
+            theTab = getBrowser().addTab(href, getReferrer(document)); // open link in new tab
             if (!event.shiftKey && !pref.getBoolPref("browser.tabs.loadInBackground"))
               getBrowser().selectedTab = theTab;
             event.preventBubble();
@@ -220,7 +221,7 @@
       case 1:                                                         // if middle button clicked
         if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
             getBrowser() && getBrowser().localName == "tabbrowser") {
-          theTab = getBrowser().addTab(href); // open link in new tab
+          theTab = getBrowser().addTab(href, getReferrer(document)); // open link in new tab
           if (!event.shiftKey && !pref.getBoolPref("browser.tabs.loadInBackground"))
             getBrowser().selectedTab = theTab;
           event.preventBubble();

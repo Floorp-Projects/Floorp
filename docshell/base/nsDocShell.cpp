@@ -2306,9 +2306,9 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 
     loadInfo->SetLoadType(ConvertLoadTypeToDocShellLoadInfo(aLoadFlags));
     loadInfo->SetPostDataStream(aPostStream);
+    loadInfo->SetReferrer(aReferingURI);
 
     // XXX: Need to pass in the extra headers stream too...
-    // XXX: Need to pass in referer...
 
     rv = LoadURI(uri, loadInfo, 0);
     return rv;
