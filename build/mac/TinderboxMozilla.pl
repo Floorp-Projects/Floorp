@@ -20,9 +20,9 @@
 	use Moz;
 	use BuildList;
 
-$DEBUG = 1;
-$MOZ_LITE = 0;		# build moz medium. This will come from a config file at some stage.
-$MOZ_LDAP = 1;
+$MOZ_LITE   = 0;
+$MOZ_MEDIUM = 1;
+$MOZ_DARK   = 0;
 
 Moz::OpenErrorLog("::::Mozilla.BuildLog");
 #Moz::StopForErrors();
