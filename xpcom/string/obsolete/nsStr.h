@@ -22,6 +22,13 @@
  *   Scott Collins <scc@mozilla.org>
  */
 
+/* nsStr.h --- the underlying buffer for rickg's original string implementations;
+    these classes will be replaced by the new shared-buffer string (see bug #53065)
+ */
+
+#ifndef _nsStr
+#define _nsStr
+
 /***********************************************************************
   MODULE NOTES:
 
@@ -180,9 +187,6 @@
 
  **********************************************************************************/
 
-
-#ifndef _nsStr
-#define _nsStr
 
 #include "nscore.h"
 #include "nsMemory.h"

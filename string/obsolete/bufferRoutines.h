@@ -21,6 +21,13 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+/* bufferRoutines.h --- rickg's original string manipulation underpinnings;
+    this code will be made obsolete by the new shared-buffer string (see bug #53065)
+ */
+
+#ifndef _BUFFERROUTINES_H
+#define _BUFFERROUTINES_H
+
 /******************************************************************************************
   MODULE NOTES:
 
@@ -30,9 +37,6 @@
   Not so, today though.
 
 *******************************************************************************************/
-
-#ifndef _BUFFERROUTINES_H
-#define _BUFFERROUTINES_H
 
 #include "nsCRT.h"
 
