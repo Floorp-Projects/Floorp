@@ -122,3 +122,5 @@ titledbutton#SaveButton[dirty="true"] {
   list-style-image:url(chrome://editor/skin/images/ED_SaveMod.gif); 
 }
 
+// Override the browser's pointer cursor over links
+a { cursor: default; }

@@ -24,7 +24,6 @@ var insertNew = true;
 var tagName = "anchor";
 var anchorElement = null;
 var nameInput;
-var name;
 
 // dialog initialization code
 function Startup()
@@ -45,7 +44,6 @@ function Startup()
     // We found an element and don't need to insert one
     insertNew = false;
     dump("Found existing anchor\n");
-    name = anchorElement.getAttribute("name");
   } else {
     insertNew = true;
     // We don't have an element selected, 
@@ -53,7 +51,7 @@ function Startup()
     dump("Element not selected - calling createElementWithDefaults\n");
     anchorElement = editorShell.CreateElementWithDefaults(tagName);
     // Use the current selection as suggested name
-    name = GetSelectionAsText();
+    var name = GetSelectionAsText();
     // Get 40 characters of the selected text and don't add "..."
     name = TruncateStringAtWordEnd(name, 40, false);
     // Replace whitespace with "_"
@@ -62,6 +60,8 @@ function Startup()
     //Be sure the name is unique to the document
     if (AnchorNameExists(name))
       name += "_"
+
+    anchorElement.setAttribute("name",name);
   }
 
   if(!anchorElement)
@@ -69,8 +69,9 @@ function Startup()
     dump("Failed to get selected element or create a new one!\n");
     window.close();
   }
+
   // Make a copy to use for AdvancedEdit
-  globalElement = anchorElement.cloneNode;
+  globalElement = anchorElement.cloneNode(false);
 
   InitDialog();
   
@@ -79,7 +80,7 @@ function Startup()
 
 function InitDialog()
 {
-  nameInput.value = name;
+  nameInput.value = globalElement.getAttribute("name");
 }
 
 function AnchorNameExists(name)
@@ -96,34 +97,40 @@ function AnchorNameExists(name)
   return false;
 }
 
-function onAdvancedEdit()
+// Get and validate data from widgets.
+// Set attributes on globalElement so they can be accessed by AdvancedEdit()
+function ValidateData()
 {
-  dump("\n\n Need to write onAdvancedEdit for Named Anchor dialog\n\n");
-}
-
-}
-
-function onOK()
-{
-  name = nameInput.value;
-  name = TrimString(name);
+  var name = TrimString(nameInput.value);
   if (name.length == 0) {
-      ShowInputErrorMessage("You must enter a name for this anchor.");
+      ShowInputErrorMessage(GetString("MissingAnchorNameError"));
       nameInput.focus();
       return false;
   } else {
     // Replace spaces with "_" else it causes trouble in URL parsing
     name = ReplaceWhitespace(name, "_");
     if (AnchorNameExists(name)) {
-      ShowInputErrorMessage("\""+name+"\" already exists in this page.\nPlease enter a different name.");            
+      ShowInputErrorMessage("\""+name+"\" "+GetString("DuplicateAnchorNameError"));            
       nameInput.focus();
       return false;
     }
-    anchorElement.setAttribute("name",name);
+    globalElement.setAttribute("name",name);
+  }
+  return true;
+}
+
+function onOK()
+{
+  if (ValidateData())
+  {
+    // Copy attributes to element we are changing or inserting
+    editorShell.CloneAttributes(anchorElement, globalElement);
+
     if (insertNew) {
       // Don't delete selected text when inserting
       editorShell.InsertElement(anchorElement, false);
     }
+    return true;
   }
-  return true;
+  return false;
 }

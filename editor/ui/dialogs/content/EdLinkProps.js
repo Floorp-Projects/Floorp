@@ -28,6 +28,8 @@ var insertLinkAroundSelection = false;
 var linkTextInput;
 var hrefInput;
 var linkMessage;
+var href;
+var newLinkText;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
 // The returned node is has an "a" tagName
@@ -76,9 +78,6 @@ function Startup()
     editorShell.SelectElement(anchorElement);
     selection = editorShell.editorSelection;
 
-// Moved to InitDialog()
-//    hrefInput.value = anchorElement.getAttribute("href");
-//    dump("Current HREF: "+hrefInput.value+"\n");
   } else {
     // See if we have a selected image instead of text
     imageElement = editorShell.GetSelectedElement("img");
@@ -91,7 +90,7 @@ function Startup()
       if (parent) {
         anchorElement = parent;
         insertNew = false;
-        linkCaption.data = editorShell.GetString("LinkImage");
+        linkCaption.data = GetString("LinkImage");
         // Link source string is the source URL of image
         // TODO: THIS STILL DOESN'T HANDLE MULTIPLE SELECTED IMAGES!
         linkMessage.data = imageElement.getAttribute("src");;
@@ -142,6 +141,9 @@ function Startup()
     dump("insertLinkAroundSelection is TRUE\n");
   }
 
+  // Make a copy to use for AdvancedEdit and onSaveDefault
+  globalElement = anchorElement.cloneNode(false);
+
   // Set data for the dialog controls
   InitDialog();
 
@@ -164,9 +166,12 @@ function Startup()
   }
 }
 
+// Set dialog widgets with attribute data
+// We get them from globalElement copy so this can be used
+//   by AdvancedEdit(), which is shared by all property dialogs
 function InitDialog()
 {
-  hrefInput.value = anchorElement.getAttribute("href");
+  hrefInput.value = globalElement.getAttribute("href");
   dump("Current HREF: "+hrefInput.value+"\n");
 }
 
@@ -187,55 +192,70 @@ function RemoveLink()
   hrefInput.value = "";
 }
 
-function onAdvancedEdit()
+// Get and validate data from widgets.
+// Set attributes on globalElement so they can be accessed by AdvancedEdit()
+function ValidateData()
 {
-  dump("\n\n Need to write onAdvancedEdit for Link dialog\n\n");
+  href = TrimString(hrefInput.value);
+  if (href.length > 0) {
+    // Set the HREF directly on the editor document's anchor node
+    //  or on the newly-created node if insertNew is true
+    globalElement.setAttribute("href",href);
+  } else if (insertNew) {
+    // We must have a URL to insert a new link
+    //NOTE: WE ACCEPT AN EMPTY HREF TO ALLOW REMOVING AN EXISTING LINK,
+    ShowInputErrorMessage(GetString("EmptyHREFError"));
+    return false;
+  }
+  if (linkTextInput) {
+    // The text we will insert isn't really an attribute,
+    //  but it makes sense to validate it
+    newLinkText = TrimString(linkTextInput.value);
+    if (newLinkText.length == 0) {
+      ShowInputErrorMessage(GetString("GetInputError"));
+      linkTextInput.focus();
+      return false;
+    }
+  }
+  return true;
 }
+
 
 function onOK()
 {
-  dump("***** Clicked OK in link props dialog\n");
-  // TODO: VALIDATE FIELDS BEFORE COMMITING CHANGES
+  if (ValidateData())
+  {
+    if (href.length > 0) {
+      // Copy attributes to element we are changing or inserting
+      editorShell.CloneAttributes(anchorElement, globalElement);
 
-  href = TrimString(hrefInput.value);
-  if (href.length > 0) {
-    // Coalesce into one undo transaction
-    editorShell.BeginBatchChanges();
+      // Coalesce into one undo transaction
+      editorShell.BeginBatchChanges();
 
-    // Set the HREF directly on the editor document's anchor node
-    //  or on the newly-created node if insertNew is true
-    anchorElement.setAttribute("href",href);
-
-    // Get text to use for a new link
-    if (insertNew) {
-      // Append the link text as the last child node 
-      //   of the anchor node
-      dump("Creating text node\n");
-      newText = TrimString(linkTextInput.value);
-      if (newText.length == 0) {
-        ShowInputErrorMessage("You must enter some text for this link.");
-        linkTextInput.focus();
-        return false;
+      // Get text to use for a new link
+      if (insertNew) {
+        // Append the link text as the last child node 
+        //   of the anchor node
+        dump("Creating text node\n");
+        textNode = editorShell.editorDocument.createTextNode(newLinkText);
+        if (textNode) {
+          anchorElement.appendChild(textNode);
+        }
+        dump("Inserting\n");
+        editorShell.InsertElement(anchorElement, false);
+      } else if (insertLinkAroundSelection) {
+        // Text was supplied by the selection,
+        //  so insert a link node as parent of this text
+        dump("Setting link around selected text\n");
+        editorShell.InsertLinkAroundSelection(anchorElement);
       }
-      textNode = editorShell.editorDocument.createTextNode(newText);
-      if (textNode) {
-        anchorElement.appendChild(textNode);
-      }
-      dump("Inserting\n");
-      editorShell.InsertElement(anchorElement, false);
-    } else if (insertLinkAroundSelection) {
-      // Text was supplied by the selection,
-      //  so insert a link node as parent of this text
-      dump("Setting link around selected text\n");
-      editorShell.InsertLinkAroundSelection(anchorElement);
+      editorShell.EndBatchChanges();
+    } else if (!insertNew) {
+      // We already had a link, but empty HREF means remove it
+      editorShell.RemoveTextProperty("a", "");
     }
-    editorShell.EndBatchChanges();
-  } else if (!insertNew) {
-    // We already had a link, but empty HREF means remove it
-    editorShell.RemoveTextProperty("a", "");
+    return true;
   }
-  // Note: if HREF is empty and we were inserting a new link, do nothing
-  
-  return true;
+  return false;
 }
 

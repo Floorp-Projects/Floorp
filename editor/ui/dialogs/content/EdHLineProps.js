@@ -66,6 +66,9 @@ function Startup()
   dialog.heightInput.focus();
 }
 
+// Set dialog widgets with attribute data
+// We get them from globalElement copy so this can be used
+//   by AdvancedEdit(), which is shared by all property dialogs
 function InitDialog()
 {
   // Just to be confusing, "size" is used instead of height
@@ -137,23 +140,8 @@ function onSaveDefault()
   }
 }
 
-function onAdvancedEdit()
-{
-  if (ValidateData()) {
-    // Set true if OK is clicked in the Advanced Edit dialog
-    window.AdvancedEditOK = false;
-    window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "AdvancedEdit", "chrome,close,titlebar,modal", "", globalElement);
-    if (window.AdvancedEditOK) {
-      dump("OK was pressed in AdvancedEdit Dialog\n");
-      // Copy edited attributes to the dialog widgets:
-      // Note that we still don't want
-      InitDialog();
-    } else {
-      dump("OK was NOT pressed in AdvancedEdit Dialog\n");
-    }
-  }
-}
-
+// Get and validate data from widgets.
+// Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
   // Height is always pixels

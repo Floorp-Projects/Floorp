@@ -134,7 +134,7 @@ function ValidateNumberString(value, minValue, maxValue)
       return number + "";
     }
   }
-  message = "The number you entered ("+number+") is outside of allowed range.\nPlease enter a number between "+minValue+" and "+maxValue;
+  message = GetString("ValidateNumber1")+number+GetString("ValidateNumber2")+" "+minValue+" "+GetString("ValidateNumber3")+" "+maxValue;
   ShowInputErrorMessage(message);
 
   // Return an empty string to indicate error
@@ -145,6 +145,11 @@ function ValidateNumberString(value, minValue, maxValue)
 function ShowInputErrorMessage(message)
 {
   window.openDialog("chrome://editor/content/EdMessage.xul", "MsgDlg", "chrome,close,titlebar,modal", "", message, "Input Error");
+}
+
+function GetString(name)
+{
+  return editorShell.GetString(name);
 }
 
 function TrimStringLeft(string)
@@ -396,7 +401,32 @@ function forceInteger(elementID)
   }
 }
 
-// All dialogs share this simple method
+
+function onAdvancedEdit()
+{
+  // First validate data from widgets in the "simpler" property dialog
+  if (ValidateData()) {
+    // Set true if OK is clicked in the Advanced Edit dialog
+    window.AdvancedEditOK = false;
+    // Open the AdvancedEdit dialog, passing in the element to be edited
+    //  (the copy named "globalElement")
+    window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "AdvancedEdit", "chrome,close,titlebar,modal", "", globalElement);
+    if (window.AdvancedEditOK) {
+      dump("Advanced Dialog closed with OK\n");
+      // Copy edited attributes to the dialog widgets:
+      //  to setup for validation
+      InitDialog();
+      // Try to just close the parent dialog as well,
+      //  but this will do validation first
+      if (onOK()) {
+        // I'm not sure why, but calling onOK() from JS doesn't trigger closing
+        //   automatically as it does when you click on the OK button!
+        window.close();
+      }
+    }
+    // Should we Cancel the parent dialog if user Cancels in AdvancedEdit?
+  }
+}
 
 function onCancel()
 {

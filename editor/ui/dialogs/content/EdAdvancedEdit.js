@@ -54,7 +54,7 @@ function Startup()
   // TODO: REMOVE THIS WHEN WE CAN RESIZE DIALOG AFTER CREATION
   msgParent.removeChild(msgParent.firstChild);
 
-  var msg = editorShell.GetString("AttributesFor");
+  var msg = GetString("AttributesFor");
   dump("Tagname Msg = "+msg+"\n");
   msg +=(" "+element.nodeName);
   dump("Tagname Msg = "+msg+"\n");
