@@ -145,7 +145,6 @@
 <!ENTITY goForwardCmd.accesskey "f">
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY goHomeCmd.accesskey "h">
-<!ENTITY history.commandKey "h">
 
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
