@@ -27,6 +27,7 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= winEmbed$(BIN_SUFFIX)
 RESFILE		= winEmbed.res
 
+MODULE		= winEmbed
 REQUIRES	= xpcom \
 		  string \
 		  embed_base \
