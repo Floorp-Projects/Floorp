@@ -877,10 +877,7 @@ PRIntervalTime timeout)
 	rv = _PR_MD_TRANSMITFILE(
 		sd, fd,
 		headers, hlen, flags, timeout);
-	if (rv < 0) {
-		rv = -1;
-	}
-	if (flags & PR_TRANSMITFILE_CLOSE_SOCKET) {
+	if ((rv >= 0) && (flags == PR_TRANSMITFILE_CLOSE_SOCKET)) {
 		/*
 		 * This should be kept the same as SocketClose, except
 		 * that _PR_MD_CLOSE_SOCKET(sd->secret->md.osfd) should
