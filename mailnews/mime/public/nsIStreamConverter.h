@@ -18,16 +18,13 @@
 #ifndef nsIStreamConverter_h_
 #define nsIStreamConverter_h_
 
-#ifndef nsIStreamConverter_h_ 
-#define nsIStreamConverter_h_ 
-
 #include "nsIStreamListener.h" 
 #include "nsIOutputStream.h" 
 
 // {C9CDF8E5-95FA-11d2-8807-00805F5A1FB8} 
-#define NS_ISTREAM_CONVERTER_IID \ 
-   { 0xc9cdf8e5, 0x95fa, 0x11d2,    \ 
-   { 0x88, 0x7, 0x0, 0x80, 0x5f, 0x5a, 0x1f, 0xb8 } }; 
+#define NS_ISTREAM_CONVERTER_IID \
+   { 0xc9cdf8e5, 0x95fa, 0x11d2,    \
+   { 0x88, 0x7, 0x0, 0x80, 0x5f, 0x5a, 0x1f, 0xb8 } };
 
 class nsIStreamConverter : public nsIStreamListener { 
 public: 
