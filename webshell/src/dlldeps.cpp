@@ -25,7 +25,7 @@
 void
 XXXNeverCalled()
 	{
-#ifdef NS_DEBUG
+#ifdef DETECT_WEBSHELL_LEAKS
 		NS_TotalWebShellsInExistence();
 #endif
 	}
