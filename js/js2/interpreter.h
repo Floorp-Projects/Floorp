@@ -34,14 +34,6 @@ namespace Interpreter {
 
     struct Activation;
     
-    enum InterpretStage {
-        IS_NONE = 0,
-        IS_STEP = 1,
-        IS_THROW = 2,
-        IS_TRAP = 4,
-        IS_ALL = 0xffff
-    };
-    
     struct Linkage;
     
     class Context : public gc_base {
@@ -56,9 +48,17 @@ namespace Interpreter {
         JSValues& getRegisters();
         ICodeModule* getICode();
 
+        enum Event {
+            EV_NONE     = 0x0000,
+            EV_STEP     = 0x0001,
+            EV_THROW    = 0x0002,
+            EV_TRAP     = 0x0004,
+            EV_ALL      = 0xffff
+        };
+    
         class Listener {
         public:
-            virtual void listen(Context *context, InterpretStage Stage) = 0;
+            virtual void listen(Context *context, Event event) = 0;
         };
     
         void addListener(Listener* listener);
@@ -76,16 +76,17 @@ namespace Interpreter {
         JSValue interpret(ICodeModule* iCode, const JSValues& args);
 
     private:
-        void broadcast(InterpretStage Stage);
+        void broadcast(Event event);
 
     private:
         World& mWorld;
         JSScope* mGlobal;
         Linkage* mLinkage;
-        std::vector<Listener*> mListeners;
+        typedef std::vector<Listener*, gc_allocator<Listener*> > ListenerList;
+        typedef ListenerList::iterator ListenerIterator;
+        ListenerList mListeners;
         Activation* mActivation;
         InstructionIterator mPC;
-        
     }; /* class Context */
 
 } /* namespace Interpreter */
