@@ -4140,11 +4140,8 @@ MOZ_ARG_HEADER(Debugging and Optimizations)
 
 dnl ========================================================
 dnl = Disable building with debug info.
-dnl = Debugging is ON by default so that we get more useful
-dnl = bug reports.
+dnl = Debugging is OFF by default
 dnl ========================================================
-MOZ_DEBUG=1
-
 if test -z "$MOZ_DEBUG_FLAGS"
 then
     case "$target" in
@@ -4169,8 +4166,9 @@ then
     esac
 fi
 
-MOZ_ARG_DISABLE_BOOL(debug,
-[  --disable-debug         Disable building with debug info],
+MOZ_ARG_ENABLE_BOOL(debug,
+[  --enable-debug          Enable building with developer debug info],
+    MOZ_DEBUG=1,
     MOZ_DEBUG=)
 
 MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
@@ -4190,22 +4188,24 @@ MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DTRACING"
 MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
 
 dnl ========================================================
-dnl = Enable code optimization. OFF by default.
+dnl = Enable code optimization. ON by default.
 dnl ========================================================
-MOZ_OPTIMIZE=
 if test -z "$MOZ_OPTIMIZE_FLAGS"; then
 	MOZ_OPTIMIZE_FLAGS="-O"
 fi
 
 MOZ_ARG_ENABLE_STRING(optimize,
-[  --enable-optimize[=OPT] Enable optimizations using compiler flags [OPT=-O]],
+[  --disable-optimize      Disable compiler optimization
+  --enable-optimize=[OPT] Specify compiler optimization flags [OPT=-O]],
 [ if test "$enableval" != "no"; then
     MOZ_OPTIMIZE=1
     if test -n "$enableval" && test "$enableval" != "yes"; then
         MOZ_OPTIMIZE_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
         MOZ_OPTIMIZE=2
     fi
-fi ])
+else
+    MOZ_OPTIMIZE=
+fi ], MOZ_OPTIMIZE=1)
 
 if test -n "$MOZ_OPTIMIZE"; then
     AC_MSG_CHECKING([for valid optimization flags])
@@ -5815,6 +5815,12 @@ unset CONFIG_FILES
 
 if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla"
+    if test -z "$MOZ_DEBUG"; then
+        ac_configure_args="$ac_configure_args --disable-debug"
+    fi
+    if test "$MOZ_OPTIMIZE" == "1"; then
+        ac_configure_args="$ac_configure_args --enable-optimize"
+    fi
     if test "$OS_ARCH" = "WINNT" && test "$NS_TRACE_MALLOC"; then
        ac_configure_args="$ac_configure_args --enable-debug --disable-optimize"
     fi
@@ -5858,6 +5864,12 @@ if test "$MOZ_LDAP_XPCOM"; then
     fi
 
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-dist-prefix=$MOZ_BUILD_ROOT/dist --without-nss --with-mozilla"
+    if test -z "$MOZ_DEBUG"; then
+        ac_configure_args="$ac_configure_args --disable-debug"
+    fi
+    if test "$MOZ_OPTIMIZE" == "1"; then
+        ac_configure_args="$ac_configure_args --enable-optimize"
+    fi
     if test -n "$HAVE_64BIT_OS"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
     fi
