@@ -45,6 +45,13 @@ export PATH
 MOZILLA_FIVE_HOME=.
 export MOZILLA_FIVE_HOME
 
-./mozilla-installer-bin --sync $@
+BASEDIR=`dirname $0`
+if [ "$BASEDIR" = "" ]; then
+    echo "dirname is not in your PATH"
+    ./mozilla-installer-bin --sync $@
+else
+    cd ${BASEDIR:-.}
+    ./mozilla-installer-bin --sync $@
+fi
 
 rm -rf /tmp/.tmp.xi.*
