@@ -220,6 +220,12 @@ public:
                 nsAutoString(const PRUnichar* us, PRInt32 uslen = -1);
   virtual       ~nsAutoString();
 
+  nsAutoString& operator=(const nsString& aString) {nsString::operator=(aString); return *this;}
+  nsAutoString& operator=(const char* anISOLatin1) {nsString::operator=(anISOLatin1); return *this;}
+  nsAutoString& operator=(char aChar) {nsString::operator=(aChar); return *this;}
+  nsAutoString& operator=(const PRUnichar* aBuffer) {nsString::operator=(aBuffer); return *this;}
+  nsAutoString& operator=(PRUnichar aChar) {nsString::operator=(aChar); return *this;}
+
   virtual void  SizeOf(nsISizeOfHandler* aHandler) const;
 
   static  void  SelfTest();
@@ -228,10 +234,6 @@ protected:
   virtual void EnsureCapacityFor(PRInt32 aNewLength);
 
   PRUnichar mBuf[32];
-
-private:
-  // XXX these need writing I suppose
-  nsAutoString& operator=(const nsAutoString& other);
 };
 
 #endif
