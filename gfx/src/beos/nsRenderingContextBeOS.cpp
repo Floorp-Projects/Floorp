@@ -1086,3 +1086,30 @@ NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsDrawingSurface aSrcSur
 NS_IMETHODIMP nsRenderingContextBeOS::RetrieveCurrentNativeGraphicData(PRUint32 *ngd) {
 	return NS_OK;
 }
+
+
+
+#ifdef MOZ_MATHML
+  /**
+   * Returns metrics (in app units) of an 8-bit character string
+   */
+NS_IMETHODIMP 
+nsRenderingContextBeOS::GetBoundingMetrics(const char*        aString,
+                                         PRUint32           aLength,
+                                         nsBoundingMetrics& aBoundingMetrics) {
+  // Fill me up 
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+  /**
+   * Returns metrics (in app units) of a Unicode character string
+   */
+NS_IMETHODIMP 
+nsRenderingContextBeOS::GetBoundingMetrics(const PRUnichar*   aString,
+                                         PRUint32           aLength,
+                                         nsBoundingMetrics& aBoundingMetrics,
+                                         PRInt32*           aFontID) {
+  // Fill me up 
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif /* MOZ_MATHML */
