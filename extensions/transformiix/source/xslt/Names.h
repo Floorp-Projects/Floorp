@@ -44,7 +44,6 @@ extern const String ASCENDING_VALUE;
 extern const String DESCENDING_VALUE;
 extern const String LOWER_FIRST_VALUE;
 extern const String NUMBER_VALUE;
-extern const String PRESERVE_VALUE;
 extern const String TEXT_VALUE;
 extern const String UPPER_FIRST_VALUE;
 extern const String YES_VALUE;

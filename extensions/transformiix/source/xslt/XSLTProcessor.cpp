@@ -1008,8 +1008,8 @@ void XSLTProcessor::processAction(Node* aNode,
     if (nodeType == Node::TEXT_NODE ||
         nodeType == Node::CDATA_SECTION_NODE) {
         const String& textValue = aXSLTAction->getNodeValue();
-        if (!aPs->isXSLStripSpaceAllowed(aXSLTAction) ||
-            !XMLUtils::isWhitespace(textValue)) {
+        if (!XMLUtils::isWhitespace(textValue) ||
+            XMLUtils::getXMLSpacePreserve(aXSLTAction)) {
             NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
             mResultHandler->characters(textValue);
         }

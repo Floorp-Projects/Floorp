@@ -137,7 +137,12 @@ public:
      * Returns true if the given character is an allowable NCName character
      */
     static MBool isNCNameChar(UNICODE_CHAR ch);
+
+    /*
+     * Walks up the document tree and returns true if the closest xml:space
+     * attribute is "preserve"
+     */
+    static MBool getXMLSpacePreserve(Node* aNode);
 };
 
 #endif
-

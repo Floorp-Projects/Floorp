@@ -46,7 +46,6 @@ const String ASCENDING_VALUE("ascending");
 const String DESCENDING_VALUE("descending");
 const String LOWER_FIRST_VALUE("lower-first");
 const String NUMBER_VALUE("number");
-const String PRESERVE_VALUE("preserve");
 const String TEXT_VALUE("text");
 const String UPPER_FIRST_VALUE("upper-first");
 const String YES_VALUE("yes");
