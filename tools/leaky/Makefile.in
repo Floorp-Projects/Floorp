@@ -98,6 +98,6 @@ test:
 	@echo LIBPRELOAD = $(LIBPRELOAD)
 	@echo TARGETS = $(TARGETS)
 
-install::
+install:: $(OTHER_LIBRARIES) $(RESOURCES)
 	$(INSTALL) -m 555 $(OTHER_LIBRARIES) $(DIST)/lib
 	$(INSTALL) $(RESOURCES) $(DIST)/bin/res/leaky
