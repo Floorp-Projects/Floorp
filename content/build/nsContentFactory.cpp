@@ -71,6 +71,8 @@
 #include "nsIComputedDOMStyle.h"
 
 #include "nsEventStateManager.h"
+#include "nsIGenericFactory.h"
+#include "nsContentHTTPStartup.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -132,6 +134,7 @@ static NS_DEFINE_CID(kContentPolicyCID, NS_CONTENTPOLICY_CID);
 static NS_DEFINE_CID(kComputedDOMStyleCID, NS_COMPUTEDDOMSTYLE_CID);
 
 static NS_DEFINE_CID(kControllerCommandManagerCID, NS_CONTROLLERCOMMANDMANAGER_CID);
+static NS_DEFINE_CID(kContentHTTPStartupCID, NS_CONTENTHTTPSTARTUP_CID);
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
 extern nsresult NS_NewDomSelection(nsISelection** aResult);
@@ -157,6 +160,7 @@ extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 
 extern nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 
 #ifdef MOZ_XUL
 #include "nsIXULSortService.h"
@@ -519,6 +523,14 @@ nsContentFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewComputedDOMStyle((nsIComputedDOMStyle**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewComputedDOMStyle", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kContentHTTPStartupCID)) {
+    res = nsContentHTTPStartupConstructor(aOuter, NS_GET_IID(nsISupports),
+                                          (void **)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("nsContentHTTPStartupConstructor", res);
       return res;
     }
   }
