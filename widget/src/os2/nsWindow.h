@@ -67,7 +67,9 @@
    #define      nsWindowState_eDoingDelete 0x00000010
    // window destroyed 
    #define      nsWindowState_eDead        0x00000100         
-   
+
+MRESULT EXPENTRY fnwpNSWindow( HWND, ULONG, MPARAM, MPARAM);
+MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
 
 class nsWindow : public nsBaseWidget,
                  public nsSwitchToUIThread
