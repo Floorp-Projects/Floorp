@@ -55,6 +55,7 @@ endif
 
 ifdef MOZ_ENABLE_QT
 DIRS		+= qt
+DIRS		+= xremoteclient
 endif
 
 ifdef MOZ_ENABLE_PHOTON
