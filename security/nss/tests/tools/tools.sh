@@ -83,10 +83,6 @@ tools_init()
   R_TOOLSDIR=../tools
   R_COPYDIR=../tools/copydir
 
-  SIGNSCRIPT=${TMP}/tests_sign.$$
-
-  TEMPFILES="${TEMPFILES} ${SIGNSCRIPT}"
-
   mkdir -p ${TOOLSDIR}
   mkdir -p ${COPYDIR}
   mkdir -p ${TOOLSDIR}/html
@@ -120,15 +116,16 @@ tools_sign()
 {
   echo "$SCRIPTNAME: Create objsign cert -------------------------------"
   echo "signtool -G \"objectsigner\" -d ${R_ALICEDIR} -p \"nss\""
-  echo "y"    > ${SIGNSCRIPT}
-  echo "TEST" >> ${SIGNSCRIPT}
-  echo "MOZ"  >> ${SIGNSCRIPT}
-  echo "NSS"  >> ${SIGNSCRIPT}
-  echo "NY"   >> ${SIGNSCRIPT}
-  echo "US"   >> ${SIGNSCRIPT}
-  echo "liz"  >> ${SIGNSCRIPT}
-  echo "liz@moz.org" >> ${SIGNSCRIPT}
-  signtool -G "objsigner" -d ${R_ALICEDIR} -p "nss" < ${SIGNSCRIPT} 2>&1
+  signtool -G "objsigner" -d ${R_ALICEDIR} -p "nss" 2>&1 <<SIGNSCRIPT
+y
+TEST
+MOZ
+NSS
+NY
+US
+liz
+liz@moz.org
+SIGNSCRIPT
 
   echo "$SCRIPTNAME: Signing a set of files ----------------------------"
   echo "signtool -Z nojs.jar -d ${R_ALICEDIR} -p \"nss\" -k objsigner \\"
