@@ -114,6 +114,11 @@ nsRDFTreeDataModelItem::GetParent(nsIDMItem*& pItem) const
     return nsRDFDataModelItem::GetParent(pItem);
 }
 
+NS_IMETHODIMP
+nsRDFTreeDataModelItem::SetOpenState(PRBool open)
+{
+	return nsRDFDataModelItem::SetOpenState(open);
+}
 
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetStringPropertyValue(nsString& result, const nsString& property) const

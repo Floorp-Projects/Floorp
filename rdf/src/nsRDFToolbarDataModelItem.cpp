@@ -110,6 +110,11 @@ nsRDFToolbarDataModelItem::GetParent(nsIDMItem*& pItem) const
     return nsRDFDataModelItem::GetParent(pItem);
 }
 
+NS_IMETHODIMP
+nsRDFToolbarDataModelItem::SetOpenState(PRBool open)
+{
+	return nsRDFDataModelItem::SetOpenState(open);
+}
 
 NS_IMETHODIMP
 nsRDFToolbarDataModelItem::GetStringPropertyValue(nsString& result, const nsString& property) const
