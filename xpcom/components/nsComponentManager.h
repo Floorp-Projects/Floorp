@@ -119,6 +119,16 @@ public:
     // Unload dynamically loaded factories that are not in use
     NS_IMETHOD FreeLibraries(void);
 
+    // Is the given CID currently registered?
+    NS_IMETHOD IsRegistered(const nsCID &aClass,
+                            PRBool *aRegistered);
+
+    // Get an enumeration of all the CIDs
+    NS_IMETHOD EnumerateCLSIDs(nsIEnumerator** aEmumerator);
+    
+    // Get an enumeration of all the ProgIDs
+    NS_IMETHOD EnumerateProgIDs(nsIEnumerator** aEmumerator);
+
     //////////////////////////////////////////////////////////////////////////////
     // DLL registration support
     // Autoregistration will try only files with these extensions.
@@ -178,6 +188,7 @@ protected:
     nsIRegistry::Key    mXPCOMKey;
     nsIRegistry::Key    mClassesKey;
     nsIRegistry::Key    mCLSIDKey;
+    PRBool              mPrePopulationDone;
 };
 
 #define NS_MAX_FILENAME_LEN	1024

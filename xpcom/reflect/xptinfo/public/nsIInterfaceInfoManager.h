@@ -46,7 +46,7 @@ public:
     NS_IMETHOD GetNameForIID(const nsIID* iid, char** name) = 0;
 
     // Get an enumeration of all the interfaces
-    NS_IMETHOD GetInterfaceEnumerator(nsIEnumerator** emumerator) = 0;
+    NS_IMETHOD EnumerateInterfaces(nsIEnumerator** emumerator) = 0;
 
     // XXX other methods?
 

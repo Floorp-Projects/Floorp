@@ -186,3 +186,34 @@ nsComponentManager::AutoRegisterComponent(nsIComponentManager::RegistrationTime 
     if (NS_FAILED(rv)) return rv;
     return cm->AutoRegisterComponent(when, fullname);
 }
+
+nsresult 
+nsComponentManager::IsRegistered(const nsCID &aClass,
+                                 PRBool *aRegistered)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->IsRegistered(aClass, aRegistered);
+}
+
+nsresult 
+nsComponentManager::EnumerateCLSIDs(nsIEnumerator** aEmumerator)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->EnumerateCLSIDs(aEmumerator);
+}
+
+nsresult 
+nsComponentManager::EnumerateProgIDs(nsIEnumerator** aEmumerator)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->EnumerateProgIDs(aEmumerator);
+}
+
+
+

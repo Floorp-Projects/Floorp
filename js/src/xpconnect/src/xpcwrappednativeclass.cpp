@@ -697,24 +697,24 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
         return JS_TRUE;
     }
     case JSENUMERATE_NEXT:
-        holder = (EnumStateHolder*) JSVAL_TO_PRIVATE(*statep);
-        NS_ASSERTION(holder,"bad statep");
-
-        if(holder->dstate != JSVAL_NULL)
+        if(NULL != (holder = (EnumStateHolder*) JSVAL_TO_PRIVATE(*statep)))
         {
-            JSBool retval;
-            if(NS_FAILED(ds->Enumerate(cx, obj, JSENUMERATE_NEXT,
-                                &holder->dstate, idp, wrapper,
-                                as, &retval)) || !retval)
-                *idp = holder->dstate = JSVAL_NULL;
+            if(holder->dstate != JSVAL_NULL)
+            {
+                JSBool retval;
+                if(NS_FAILED(ds->Enumerate(cx, obj, JSENUMERATE_NEXT,
+                                    &holder->dstate, idp, wrapper,
+                                    as, &retval)) || !retval)
+                    *idp = holder->dstate = JSVAL_NULL;
+            }
+            
+            if(holder->dstate == JSVAL_NULL && holder->sstate != JSVAL_NULL)
+                StaticEnumerate(wrapper, JSENUMERATE_NEXT, &holder->sstate, idp);
+            
+            // are we done?
+            if(holder->dstate != JSVAL_NULL || holder->sstate != JSVAL_NULL)
+                return JS_TRUE;
         }
-
-        if(holder->dstate == JSVAL_NULL && holder->sstate != JSVAL_NULL)
-            StaticEnumerate(wrapper, JSENUMERATE_NEXT, &holder->sstate, idp);
-
-        // are we done?
-        if(holder->dstate != JSVAL_NULL || holder->sstate != JSVAL_NULL)
-            return JS_TRUE;
 
         /* Fall through ... */
 

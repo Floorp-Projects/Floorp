@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIFileSpec.h"
+#include "nsIEnumerator.h"
 
 /*
  * Prototypes for dynamic library export functions. Your DLL/DSO needs to export
@@ -175,6 +176,17 @@ public:
 
   NS_IMETHOD AutoRegister(RegistrationTime when, nsIFileSpec* directory) = 0;
   NS_IMETHOD AutoRegisterComponent(RegistrationTime when, nsIFileSpec *component) = 0;
+
+  // Is the given CID currently registered?
+  NS_IMETHOD IsRegistered(const nsCID &aClass,
+                          PRBool *aRegistered) = 0;
+
+  // Get an enumeration of all the CIDs
+  NS_IMETHOD EnumerateCLSIDs(nsIEnumerator** aEmumerator) = 0;
+    
+  // Get an enumeration of all the ProgIDs
+  NS_IMETHOD EnumerateProgIDs(nsIEnumerator** aEmumerator) = 0;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +279,6 @@ public:
 
   // Unload dynamically loaded factories that are not in use
   static nsresult FreeLibraries(void);
-
   //////////////////////////////////////////////////////////////////////////////
   // DLL registration support
 
@@ -278,6 +289,16 @@ public:
                                nsIFileSpec* directory);
   static nsresult AutoRegisterComponent(nsIComponentManager::RegistrationTime when,
                                         nsIFileSpec *component);
+
+  // Is the given CID currently registered?
+  static nsresult IsRegistered(const nsCID &aClass,
+                               PRBool *aRegistered);
+
+  // Get an enumeration of all the CIDs
+  static nsresult EnumerateCLSIDs(nsIEnumerator** aEmumerator);
+    
+  // Get an enumeration of all the ProgIDs
+  static nsresult EnumerateProgIDs(nsIEnumerator** aEmumerator);
 
 };
 

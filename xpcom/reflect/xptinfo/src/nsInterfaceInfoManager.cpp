@@ -511,9 +511,13 @@ NS_IMETHODIMP convert_interface_record(nsHashKey *key, void *data,
 }
 
 NS_IMETHODIMP
-nsInterfaceInfoManager::GetInterfaceEnumerator(nsIEnumerator** emumerator)
+nsInterfaceInfoManager::EnumerateInterfaces(nsIEnumerator** emumerator)
 {
-    NS_PRECONDITION (emumerator, "null ptr");
+    if(!emumerator)
+    {
+        NS_ASSERTION(0, "null ptr");
+        return NS_ERROR_NULL_POINTER;
+    }
 
     return NS_NewHashtableEnumerator(this->IIDTable, convert_interface_record,
                                      nsnull, emumerator);

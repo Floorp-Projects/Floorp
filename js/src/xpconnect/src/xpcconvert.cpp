@@ -93,6 +93,41 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 
 /***************************************************************************/
 
+static JSBool
+ObjectHasPrivate(JSContext* cx, JSObject* obj)
+{
+    JSClass* jsclass =
+#ifdef JS_THREADSAFE
+            JS_GetClass(cx, obj);
+#else
+            JS_GetClass(obj);
+#endif
+    NS_ASSERTION(jsclass, "obj has no class");
+    return jsclass && (jsclass->flags & JSCLASS_HAS_PRIVATE);
+}        
+
+static JSBool
+GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
+{
+    JSClass* jsclass =
+#ifdef JS_THREADSAFE
+            JS_GetClass(cx, obj);
+#else
+            JS_GetClass(obj);
+#endif
+    NS_ASSERTION(jsclass, "obj has no class");
+    if(jsclass &&
+       (jsclass->flags & JSCLASS_HAS_PRIVATE) &&
+       (jsclass->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS))
+    {
+        *iface = (nsISupports*) JS_GetPrivate(cx, obj);
+        return JS_TRUE;
+    }
+    return JS_FALSE;
+}
+
+/***************************************************************************/
+
 /*
 * Support for 64 bit conversions were 'long long' not supported.
 * (from John Fairhurst <mjf35@cam.ac.uk>)
@@ -269,6 +304,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                     NS_ASSERTION(owner,"QI succeeded but yielded NULL!");
                     if(NULL != (globalObject = 
                                     JS_GetGlobalObject(cx)) &&
+                       ObjectHasPrivate(cx, globalObject) &&
                        NULL != (domObject = (nsISupports*)
                                     JS_GetPrivate(cx, globalObject)))
                     {
@@ -321,26 +357,6 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
         }
     }
     return JS_TRUE;
-}
-
-static JSBool
-GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
-{
-    JSClass* jsclass =
-#ifdef JS_THREADSAFE
-            JS_GetClass(cx, obj);
-#else
-            JS_GetClass(obj);
-#endif
-    NS_ASSERTION(jsclass, "obj has no class");
-    if(jsclass &&
-       (jsclass->flags & JSCLASS_HAS_PRIVATE) &&
-       (jsclass->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS))
-    {
-        *iface = (nsISupports*) JS_GetPrivate(cx, obj);
-        return JS_TRUE;
-    }
-    return JS_FALSE;
 }
 
 /***************************************************************************/

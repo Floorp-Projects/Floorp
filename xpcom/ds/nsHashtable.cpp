@@ -300,6 +300,11 @@ nsHashKey* nsStringKey::Clone() const
 	return new nsStringKey(mStr);
 }
 
+const nsString& nsStringKey::GetString() const
+{
+    return mStr;
+}    
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsObjectHashtable: an nsHashtable where the elements are C++ objects to be
 // deleted

@@ -29,12 +29,18 @@ interface nsIXPCClasses : nsISupports
 {
 };
 
+[scriptable, uuid(336a9590-4d19-11d3-9893-006008962422)]
+interface nsIXPCClassesByID : nsISupports
+{
+};
+
 
 [scriptable, uuid(42624f80-d26c-11d2-9842-006008962422)]
 interface nsIXPCComponents : nsISupports
 {
     readonly attribute nsIXPCInterfaces         interfaces;
     readonly attribute nsIXPCClasses            classes;
+    readonly attribute nsIXPCClassesByID        classesByID;
     readonly attribute nsIJSStackFrameLocation  stack;
 
     /* 'lastResult' is accessable via JavaScript only */
