@@ -1,7 +1,7 @@
 #import <Cocoa/Cocoa.h>
 #import <PreferencePanes/NSPreferencePane.h>
 
-@interface PrivacyPane : NSPreferencePane
+@interface OrgMozillaChimeraPreferencePrivacy : NSPreferencePane
 {
   IBOutlet id mCookies;
   IBOutlet NSButton* mPromptForCookie;

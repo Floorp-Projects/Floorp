@@ -2460,7 +2460,7 @@
 	<key>CFBundleIconFile</key>
 	<string>Privacy.tiff</string>
 	<key>CFBundleIdentifier</key>
-	<string>Chimera.PrivacyPrefPane</string>
+	<string>org.mozilla.chimera.preference.privacy</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -2476,7 +2476,7 @@
 	<key>NSMainNibFile</key>
 	<string>Privacy</string>
 	<key>NSPrincipalClass</key>
-	<string>PrivacyPane</string>
+	<string>OrgMozillaChimeraPreferencePrivacy</string>
 </dict>
 </plist>
 ";
@@ -2821,7 +2821,7 @@
 	<key>CFBundleIconFile</key>
 	<string>Personal.tiff</string>
 	<key>CFBundleIdentifier</key>
-	<string>Chimera.PersonalPrefPane</string>
+	<string>org.mozilla.chimera.preference.personal</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -2839,7 +2839,7 @@
 	<key>NSPrefPaneIconFIle</key>
 	<string>Personal.tiff</string>
 	<key>NSPrincipalClass</key>
-	<string>PersonalPane</string>
+	<string>OrgMozillaChimeraPreferencePersonal</string>
 </dict>
 </plist>
 ";

@@ -1,7 +1,7 @@
 #import <Cocoa/Cocoa.h>
 #import <PreferencePanes/NSPreferencePane.h>
 
-@interface PersonalPane : NSPreferencePane
+@interface OrgMozillaChimeraPreferencePersonal : NSPreferencePane
 {
 
 }
