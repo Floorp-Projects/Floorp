@@ -243,7 +243,7 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
 
     if (NS_SUCCEEDED(rv)) {
       it->SetWrapColumn(aWrapColumn);
-      nsAutoString ucs2("ucs2");
+      nsAutoString ucs2; ucs2.AssignWithConversion("ucs2");
       it->SetCharsetOverride(&ucs2);
       rv = it->QueryInterface(NS_GET_IID(nsIHTMLContentSink),
                               (void**)aInstancePtrResult);

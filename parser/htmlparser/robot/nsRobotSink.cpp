@@ -219,7 +219,7 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsAutoString tmp(aNode.GetText());
   tmp.ToLowerCase();
-  if (tmp.Equals("a")) {
+  if (tmp.EqualsWithConversion("a")) {
     nsAutoString k, v;
     PRInt32 ac = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < ac; i++) {
@@ -228,7 +228,7 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
       k.Truncate();
       k.Append(key);
       k.ToLowerCase();
-      if (k.Equals("href")) {
+      if (k.EqualsWithConversion("href")) {
         // Get value and remove mandatory quotes
         v.Truncate();
         v.Append(aNode.GetValueAt(i));
@@ -363,7 +363,7 @@ void RobotSink::ProcessLink(const nsString& aLink)
       absURLSpec.Truncate();
       char* str;
       absurl->GetSpec(&str);
-      absURLSpec = str;
+      absURLSpec.AssignWithConversion(str);
       nsCRT::free(str);
     }
   }

@@ -107,7 +107,7 @@ NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult)
  *  @param   
  *  @return  
  */
-nsHTMLNullSink::nsHTMLNullSink() : nsIHTMLContentSink(), mTitle("") {
+nsHTMLNullSink::nsHTMLNullSink() : nsIHTMLContentSink() {
   NS_INIT_REFCNT();
   mNodeStackPos=0;
   memset(mNodeStack,0,sizeof(mNodeStack));

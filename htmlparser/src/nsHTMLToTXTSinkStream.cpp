@@ -71,7 +71,7 @@ nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
   nsresult res = NS_OK;
   
   // If the converter is ucs2, then do not use a converter
-  if (aCharset.Equals("ucs2"))
+  if (aCharset.EqualsWithConversion("ucs2"))
   {
     NS_IF_RELEASE(mUnicodeEncoder);
     return res;
@@ -92,7 +92,7 @@ nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
     if(NS_FAILED(res))
     {
        // failed - unknown alias , fallback to ISO-8859-1
-      charsetName = "ISO-8859-1";
+      charsetName.AssignWithConversion("ISO-8859-1");
     }
 
     nsICharsetConverterManager * ccm = nsnull;
@@ -178,7 +178,6 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
 
   // Flow
   mEmptyLines=1; // The start of the document is an "empty line" in itself,
-  mCurrentLine = "";
   mInWhitespace = PR_TRUE;
   mPreFormatted = PR_FALSE;
   mCacheLine = PR_FALSE;
@@ -368,7 +367,7 @@ nsHTMLToTXTSinkStream::GetValueOfAttribute(const nsIParserNode& aNode,
                                            char* aMatchKey,
                                            nsString& aValueRet)
 {
-  nsAutoString matchKey (aMatchKey);
+  nsAutoString matchKey; matchKey.AssignWithConversion(aMatchKey);
   PRInt32 count=aNode.GetAttributeCount();
   for (PRInt32 i=0;i<count;i++)
   {
@@ -418,7 +417,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   printf("OpenContainer: %d    ", type);
 #endif  
   const nsString&   name = aNode.GetText();
-  if (name.Equals("document_info"))
+  if (name.EqualsWithConversion("document_info"))
   {
     nsString value;
     if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "charset", value)))
@@ -541,9 +540,9 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     {
       if (mOLStackIndex > 0)
         // This is what nsBulletFrame does for OLs:
-        mInIndentString.Append(mOLStack[mOLStackIndex-1]++, 10);
+        mInIndentString.AppendWithConversion(mOLStack[mOLStackIndex-1]++, 10);
       else
-        mInIndentString.Append("#");
+        mInIndentString.AppendWithConversion("#");
 
       mInIndentString.Append('.');
 
@@ -565,7 +564,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     // when a mail is sent.
     nsString value;
     if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "type", value))
-        && value.StripChars("\"").Equals("cite", PR_TRUE))
+        && value.StripChars("\"").EqualsWithConversion("cite", PR_TRUE))
       mCiteQuoteLevel++;
     else
       mIndent += gTabSize; // Check for some maximum value?
@@ -586,30 +585,30 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "alt", desc))
           && !desc.IsEmpty())
       {
-        temp += " (";
+        temp.AppendWithConversion(" (");
         temp += desc.StripChars("\"");
-        temp += " <";
+        temp.AppendWithConversion(" <");
         temp += url.StripChars("\"");
-        temp += ">) ";
+        temp.AppendWithConversion(">) ");
       }
       else
       {
-        temp += " <";
+        temp.AppendWithConversion(" <");
         temp += url.StripChars("\"");
-        temp += "> ";
+        temp.AppendWithConversion("> ");
       }
       Write(temp);
     }
   }
   else if (type == eHTMLTag_sup)
-    Write("^");
+    Write( NS_ConvertToString("^") );
   // I don't know a plain text representation of sub
   else if (type == eHTMLTag_strong || type == eHTMLTag_b)
-    Write("*");
+    Write( NS_ConvertToString("*") );
   else if (type == eHTMLTag_em || type == eHTMLTag_i)
-    Write("/");
+    Write( NS_ConvertToString("/") );
   else if (type == eHTMLTag_u)
-    Write("_");
+    Write( NS_ConvertToString("_") );
 
   return NS_OK;
 }
@@ -667,9 +666,9 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     if(!mInWhitespace) {
       // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
       if(mCacheLine) {
-        AddToLine(nsAutoString(" ").GetUnicode(), 1);
+        AddToLine(NS_ConvertToString(" ").GetUnicode(), 1);
       } else {
-        nsAutoString space(" ");
+        nsAutoString space; space.AssignWithConversion(" ");
         WriteSimple(space);
       }
       mInWhitespace = PR_TRUE;
@@ -703,21 +702,21 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
   { // these brackets must stay here
     if (!mURL.IsEmpty())
     {
-      nsAutoString temp(" <");
+      nsAutoString temp; temp.AssignWithConversion(" <");
       temp += mURL;
-      temp += ">";
+      temp.AppendWithConversion(">");
       Write(temp);
       mURL.Truncate();
     }
   }
   else if (type == eHTMLTag_sup)
-    Write(" ");
+    Write( NS_ConvertToString(" ") );
   else if (type == eHTMLTag_strong || type == eHTMLTag_b)
-    Write("*");
+    Write( NS_ConvertToString("*") );
   else if (type == eHTMLTag_em || type == eHTMLTag_i)
-    Write("/");
+    Write( NS_ConvertToString("/") );
   else if (type == eHTMLTag_u)
-    Write("_");
+    Write( NS_ConvertToString("_") );
 
   return NS_OK;
 }
@@ -793,7 +792,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
       {
         Write(text); // XXX: spacestuffing (maybe call AddToLine if mCacheLine==true)
       } else if(!mInWhitespace) {
-        Write(" ");
+        Write( NS_ConvertToString(" ") );
         mInWhitespace = PR_TRUE;
       }
   }
@@ -920,7 +919,7 @@ void nsHTMLToTXTSinkStream::WriteSimple(nsString& aString)
     }
     if (mString != nsnull)
     {
-      mString->Append(mBuffer);
+      mString->AppendWithConversion(mBuffer);
     }
   }
   else
@@ -984,7 +983,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
         goodSpace--;
       }
     
-      nsAutoString restOfLine = "";
+      nsAutoString restOfLine;
       if(goodSpace<0) {
         // If we don't found a good place to break, accept long line and
         // try to find another place to break
@@ -1005,7 +1004,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
         if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
           if((restOfLine[0] == '>') ||
              (restOfLine[0] == ' ') ||
-             (!restOfLine.Compare("From ",PR_FALSE,5))) {
+             (!restOfLine.CompareWithConversion("From ",PR_FALSE,5))) {
             // Space stuffing a la RFC 2646 if this will be used in a mail,
             // but how can I know that??? Now space stuffing is done always
             // when formatting text as HTML and that is wrong! XXX: Fix this!
@@ -1042,7 +1041,7 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
       // Add the soft part of the soft linebreak (RFC 2646 4.1)
       mCurrentLine.Append(' ');
     }
-    mCurrentLine.Append(NS_LINEBREAK);
+    mCurrentLine.AppendWithConversion(NS_LINEBREAK);
     WriteSimple(mCurrentLine);
     mCurrentLine.Truncate();
     mColPos=0;
@@ -1059,7 +1058,7 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
     // Remove SPACE from the end of the line.
     while(' ' == mCurrentLine[mCurrentLine.Length()-1])
       mCurrentLine.SetLength(mCurrentLine.Length()-1);
-    mCurrentLine.Append(NS_LINEBREAK);
+    mCurrentLine.AppendWithConversion(NS_LINEBREAK);
     WriteSimple(mCurrentLine);
     mCurrentLine.Truncate();
     mColPos=0;
@@ -1250,7 +1249,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
         if(mFlags & nsIDocumentEncoder::OutputPreformatted) {
           bol = nextpos;
         } else {
-          tempstr.Append(" ");
+          tempstr.AppendWithConversion(" ");
           bol = nextpos + 1;
           mInWhitespace = PR_TRUE;
         }
@@ -1268,7 +1267,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
          } else {
            // Replace the whitespace with a space
            AddToLine(offsetIntoBuffer, nextpos-bol);
-           AddToLine(nsAutoString(" ").GetUnicode(),1);
+           AddToLine(NS_ConvertToString(" ").GetUnicode(),1);
            bol = nextpos + 1; // Let's eat the whitespace
          }
       }

@@ -114,7 +114,7 @@ NS_IMPL_RELEASE(nsExpatDTD)
  *  @param   
  *  @return  
  */
-nsExpatDTD::nsExpatDTD() : nsIDTD(), mFilename("") {
+nsExpatDTD::nsExpatDTD() {
   NS_INIT_REFCNT();
     
   mExpatParser=0;
@@ -172,15 +172,15 @@ eAutoDetectResult nsExpatDTD::CanParse(CParserContext& aParserContext,nsString& 
   eAutoDetectResult result=eUnknownDetect;
 
   if(eViewSource!=aParserContext.mParserCommand) {
-    if(aParserContext.mMimeType.Equals(kXMLTextContentType) ||
-       aParserContext.mMimeType.Equals(kRDFTextContentType) ||
-       aParserContext.mMimeType.Equals(kXULTextContentType)) {
+    if(aParserContext.mMimeType.EqualsWithConversion(kXMLTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType)) {
       result=eValidDetect;
     }
     else {
       if(-1<aBuffer.Find("<?xml ")) {
         if(0==aParserContext.mMimeType.Length()) {
-          aParserContext.SetMimeType(kXMLTextContentType);
+          aParserContext.SetMimeType( NS_ConvertToString(kXMLTextContentType) );
         }
         result=eValidDetect;
       }

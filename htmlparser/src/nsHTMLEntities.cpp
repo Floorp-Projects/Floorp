@@ -221,12 +221,12 @@ public:
        NS_ASSERTION(value != -1, "can't find entity");
        NS_ASSERTION(value == gEntityArray[i].mUnicode, "bad unicode value");
 
-       entity = nsHTMLEntities::UnicodeToEntity(value);
-       NS_ASSERTION(entity.Equals(gEntityArray[i].mStr.mStr), "bad entity name");
+       entity.AssignWithConversion(nsHTMLEntities::UnicodeToEntity(value));
+       NS_ASSERTION(entity.EqualsWithConversion(gEntityArray[i].mStr.mStr), "bad entity name");
      }
 
      // Make sure we don't find things that aren't there
-     value = nsHTMLEntities::EntityToUnicode(nsAutoString("@"));
+     value = nsHTMLEntities::EntityToUnicode(NS_ConvertToString("@"));
      NS_ASSERTION(value == -1, "found @");
      value = nsHTMLEntities::EntityToUnicode(nsCAutoString("zzzzz"));
      NS_ASSERTION(value == -1, "found zzzzz");

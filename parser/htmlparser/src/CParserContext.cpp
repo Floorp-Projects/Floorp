@@ -40,8 +40,7 @@ CParserContext::CParserContext(nsScanner* aScanner,
                                nsIStreamObserver* aListener, 
                                nsIDTD *aDTD, 
                                eAutoDetectResult aStatus, 
-                               PRBool aCopyUnused) : 
-  mMimeType("") 
+                               PRBool aCopyUnused)
 { 
   MOZ_COUNT_CTOR(CParserContext); 
 
@@ -126,19 +125,19 @@ CParserContext::~CParserContext(){
  * @update	rickg 03.18.2000
  */
 void CParserContext::SetMimeType(const nsString& aMimeType){
-  mMimeType=aMimeType;
+  mMimeType.Assign(aMimeType);
 
   mDocType=ePlainText;
 
-  if(mMimeType.Equals(kHTMLTextContentType))
+  if(mMimeType.EqualsWithConversion(kHTMLTextContentType))
     mDocType=eHTMLText;
-  else if(mMimeType.Equals(kXMLTextContentType))
+  else if(mMimeType.EqualsWithConversion(kXMLTextContentType))
     mDocType=eXMLText;
-  else if(mMimeType.Equals(kXULTextContentType))
+  else if(mMimeType.EqualsWithConversion(kXULTextContentType))
     mDocType=eXMLText;
-  else if(mMimeType.Equals(kRDFTextContentType))
+  else if(mMimeType.EqualsWithConversion(kRDFTextContentType))
     mDocType=eXMLText;
-  else if(mMimeType.Equals(kXIFTextContentType))
+  else if(mMimeType.EqualsWithConversion(kXIFTextContentType))
     mDocType=eXMLText;
 
 }

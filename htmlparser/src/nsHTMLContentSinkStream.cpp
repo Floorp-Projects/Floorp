@@ -55,7 +55,7 @@ static char*          gHeaderComment = "<!-- This page was created by the Gecko 
 static char*          gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
 const  int            gTabSize=2;
 
-static const nsString gMozDirty ("_moz_dirty");
+static const nsString gMozDirty = NS_ConvertToString("_moz_dirty");
 
 static PRBool IsInline(eHTMLTags aTag);
 static PRBool IsBlockLevel(eHTMLTags aTag);
@@ -154,7 +154,7 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
   mStream = aOutStream;
   mString = aOutString;
   if (aCharsetOverride != nsnull)
-    mCharsetOverride.Assign(*aCharsetOverride);
+    mCharsetOverride.AssignWithConversion(aCharsetOverride->GetUnicode());
 
   return NS_OK;
 }
@@ -218,12 +218,14 @@ nsHTMLContentSinkStream::InitEncoders()
   {
     nsAutoString charsetName = mCharsetOverride;
     NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
-    if (NS_SUCCEEDED(res) && calias)
-      res = calias->GetPreferred(mCharsetOverride, charsetName);
+    if (NS_SUCCEEDED(res) && calias) {
+      nsAutoString temp; temp.AssignWithConversion(mCharsetOverride);
+      res = calias->GetPreferred(temp, charsetName);
+    }
     if (NS_FAILED(res))
     {
       // failed - unknown alias , fallback to ISO-8859-1
-      charsetName = "ISO-8859-1";
+      charsetName.AssignWithConversion("ISO-8859-1");
     }
 
     res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, 
@@ -345,7 +347,7 @@ void nsHTMLContentSinkStream::Write(const char* aData)
   }
   if (mString)
   {
-    mString->Append(aData);
+    mString->AppendWithConversion(aData);
   }
 }
 
@@ -406,8 +408,8 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
       // used by the editor.  Bug 16988.  Yuck.
       //
       if ((eHTMLTags)aNode.GetNodeType() == eHTMLTag_br
-          && ((key.Equals("type", PR_TRUE) && value.Equals("_moz"))
-              || key.Equals("_moz", PR_TRUE, 4)))
+          && ((key.EqualsWithConversion("type", PR_TRUE) && value.EqualsWithConversion("_moz"))
+              || key.EqualsWithConversion("_moz", PR_TRUE, 4)))
         continue;
 
       // 
@@ -431,7 +433,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
 
       // Make all links absolute when converting only the selection:
       if ((mFlags & nsIDocumentEncoder::OutputAbsoluteLinks)
-          && (key.Equals("href", PR_TRUE) || key.Equals("src", PR_TRUE)
+          && (key.EqualsWithConversion("href", PR_TRUE) || key.EqualsWithConversion("src", PR_TRUE)
               // Would be nice to handle OBJECT and APPLET tags,
               // but that gets more complicated since we have to
               // search the tag list for CODEBASE as well.
@@ -513,7 +515,7 @@ nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode)
     // See bug 20246: the html tag doesn't have "html" in its text,
     // so AddStartTag will do the wrong thing
     Write(kLessThan);
-    nsAutoCString tagname (nsHTMLTags::GetStringValue(tag));
+    nsAutoCString tagname( nsString(nsHTMLTags::GetStringValue(tag)) );
     Write(tagname);
     Write(kGreaterThan);
   }
@@ -700,7 +702,7 @@ nsHTMLContentSinkStream::CloseFrameset(const nsIParserNode& aNode){
 
 void nsHTMLContentSinkStream::AddIndent()
 {
-  nsString padding("  ");
+  nsString padding; padding.AssignWithConversion("  ");
   for (PRInt32 i = mIndent; --i >= 0; ) 
   {
     Write(padding);
@@ -854,11 +856,11 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 
   if (tag == eHTMLTag_unknown)
   {
-    tagName = aNode.GetText();
+    tagName.Assign(aNode.GetText());
   }
   else if (tag == eHTMLTag_comment)
   {
-    tagName = "--";
+    tagName.AssignWithConversion("--");
   }
   else if(tag == eHTMLTag_markupDecl) 
   {
@@ -869,7 +871,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   }
   else
   {
-    tagName = nsHTMLTags::GetStringValue(tag);
+    tagName.AssignWithConversion(nsHTMLTags::GetStringValue(tag));
   }
   if (mLowerCaseTags == PR_TRUE)
     tagName.ToLowerCase();
@@ -1156,21 +1158,21 @@ nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode)
   if (tag == eHTMLTag_userdefined)
   {
     nsAutoString name = aNode.GetText();
-    if (name.Equals("document_info"))
+    if (name.EqualsWithConversion("document_info"))
     {
       PRInt32 count=aNode.GetAttributeCount();
       for(PRInt32 i=0;i<count;i++)
       {
         const nsString& key=aNode.GetKeyAt(i);
 
-        if (key.Equals("charset"))
+        if (key.EqualsWithConversion("charset"))
         {
           const nsString& value=aNode.GetValueAt(i);
           if (mCharsetOverride.IsEmpty())
-            mCharsetOverride.Assign(value);
+            mCharsetOverride.AssignWithConversion(value.GetUnicode());
           InitEncoders();
         }
-        else if (key.Equals("uri"))
+        else if (key.EqualsWithConversion("uri"))
         {
           nsAutoString uristring (aNode.GetValueAt(i));
 

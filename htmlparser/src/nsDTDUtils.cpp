@@ -649,7 +649,7 @@ nsIParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
  * @update  gess7/25/98
  * @param 
  */
-CTokenRecycler::CTokenRecycler() : nsITokenRecycler(),mEmpty("") {
+CTokenRecycler::CTokenRecycler() : nsITokenRecycler() {
 
   MOZ_COUNT_CTOR(CTokenRecycler);
 
@@ -971,8 +971,8 @@ nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aU
         theKeys[index]   = aNode.GetKeyAt(index).GetUnicode(); 
         theValues[index] = aNode.GetValueAt(index).GetUnicode(); 
       } 
-      nsAutoString theCharsetKey("charset"); 
-      nsAutoString theSourceKey("charsetSource"); 
+      nsAutoString theCharsetKey; theCharsetKey.AssignWithConversion("charset"); 
+      nsAutoString theSourceKey; theSourceKey.AssignWithConversion("charsetSource"); 
       nsAutoString intValue;
       
       // Add pseudo attribute in the end
@@ -989,11 +989,11 @@ nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aU
       if(index < 50) {
         theKeys[index]=theSourceKey.GetUnicode(); 
         PRInt32 sourceInt = theCharsetSource;
-        intValue.Append(sourceInt,10);
+        intValue.AppendWithConversion(sourceInt,10);
         theValues[index] = intValue.GetUnicode();
 	  	  index++;
       }
-      nsAutoString theDTDKey("X_COMMAND");
+      nsAutoString theDTDKey; theDTDKey.AssignWithConversion("X_COMMAND");
       // nsAutoString theDTDValue(aCommand);
       if(index < 50) {
         theKeys[index]=theDTDKey.GetUnicode();
@@ -1026,10 +1026,10 @@ CObserverService::CObserverService() : mTopics(0) {
 
   MOZ_COUNT_CTOR(CObserverService);
 
-  nsAutoString theHTMLTopic(kHTMLTextContentType);
+  nsAutoString theHTMLTopic; theHTMLTopic.AssignWithConversion(kHTMLTextContentType);
   RegisterObservers(theHTMLTopic);
 
-  nsAutoString theXMLTopic(kXMLTextContentType);  //use the mimetype for the topic
+  nsAutoString theXMLTopic; theXMLTopic.AssignWithConversion(kXMLTextContentType);  //use the mimetype for the topic
   RegisterObservers(theXMLTopic);
 
 }

@@ -72,7 +72,7 @@ CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(aTag) {
  */
 void CHTMLToken::SetStringValue(const char* name){
   if(name) {
-    mTextValue=name;
+    mTextValue.AssignWithConversion(name);
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 }
@@ -88,7 +88,7 @@ nsString& CHTMLToken::GetStringValueXXX(void) {
 
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
-      mTextValue = nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID);
+      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID));
     }
   }
   return mTextValue;
@@ -248,7 +248,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
     }
   }
   else {
-    mTextValue=aChar;
+    mTextValue.AssignWithConversion(aChar);
     result=aScanner.ReadIdentifier(mTextValue);
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
@@ -280,7 +280,7 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CStartToken::GetSource(nsString& anOutputString){
-  anOutputString="<";
+  anOutputString.AssignWithConversion("<");
   /*
    * mTextValue used to contain the name of the tag.
    * But for the sake of performance we now rely on the tagID
@@ -302,7 +302,7 @@ void CStartToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CStartToken::AppendSource(nsString& anOutputString){
-  anOutputString+="<";
+  anOutputString.AppendWithConversion("<");
   /*
    * mTextValue used to contain the name of the tag.
    * But for the sake of performance we now rely on the tagID
@@ -352,7 +352,7 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) 
    //Stop consuming as soon as you see a space or a '>'.
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
-  mTextValue="";
+  mTextValue.SetLength(0);
   nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_FALSE);
 
   if(NS_OK==result){
@@ -432,9 +432,9 @@ void CEndToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CEndToken::GetSource(nsString& anOutputString){
-  anOutputString="</";
+  anOutputString.AssignWithConversion("</");
   anOutputString+=mTextValue;
-  anOutputString+=">";
+  anOutputString.AppendWithConversion(">");
 }
 
 /*
@@ -445,9 +445,9 @@ void CEndToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CEndToken::AppendSource(nsString& anOutputString){
-  anOutputString+="</";
+  anOutputString.AppendWithConversion("</");
   anOutputString+=mTextValue;
-  anOutputString+=">";
+  anOutputString.AppendWithConversion(">");
 }
 
 /*
@@ -503,7 +503,7 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {;
-  static nsString theTerminals("\n\r&<",4);  
+  static nsString theTerminals = NS_ConvertToString("\n\r&<",4);  
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
@@ -528,23 +528,23 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
               if(kLF==theNextChar) {
                 result=aScanner.GetChar(theNextChar);
               }
-              mTextValue.Append("\n");
+              mTextValue.AppendWithConversion("\n");
               mNewlineCount++;
             }
-            mTextValue.Append("\n");
+            mTextValue.AppendWithConversion("\n");
             mNewlineCount++;
             break;
           case kLF:
             if((kLF==theNextChar) || (kCR==theNextChar)) {
               result=aScanner.GetChar(theNextChar);
-              mTextValue.Append("\n");
+              mTextValue.AppendWithConversion("\n");
               mNewlineCount++;
             }
-            mTextValue.Append("\n");
+            mTextValue.AppendWithConversion("\n");
             mNewlineCount++;
             break;
           default:
-            mTextValue.Append("\n");
+            mTextValue.AppendWithConversion("\n");
             mNewlineCount++;
             break;
         } //switch
@@ -732,14 +732,14 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
           switch(aChar) {
             case kCR:
               result=aScanner.GetChar(aChar); //strip off the \r
-              mTextValue.Append("\n\n");
+              mTextValue.AppendWithConversion("\n\n");
               break;
             case kNewLine:
                //which means we saw \r\n, which becomes \n
               result=aScanner.GetChar(aChar); //strip off the \n
                   //now fall through on purpose...
             default:
-              mTextValue.Append("\n");
+              mTextValue.AppendWithConversion("\n");
               break;
           } //switch
         } //if
@@ -809,7 +809,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
           <!-- xx -- xx --> 
    *********************************************************/
 
-  aString="<!";
+  aString.AssignWithConversion("<!");
   while(NS_OK==result) {
     result=aScanner.GetChar(aChar);
     if(NS_OK==result) {
@@ -822,7 +822,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
             aString+=aChar;
             if(NS_OK==result) {
               PRInt32 findpos=-1;
-              nsAutoString temp("");
+              nsAutoString temp;
               //Read to the first ending sequence '--'
               while((kNotFound==findpos) && (NS_OK==result)) {
                 result=aScanner.ReadUntil(temp,kMinus,PR_TRUE);
@@ -831,7 +831,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
               aString+=temp;
               if(NS_OK==result) {
                 if(NS_OK==result) {
-                  temp="->";
+                  temp.AssignWithConversion("->");
                   result=aScanner.ReadUntil(aString,temp,PR_FALSE);
                 }
               } 
@@ -1043,8 +1043,10 @@ PRInt32 CNewlineToken::GetTokenType(void) {
  */
 nsString& CNewlineToken::GetStringValueXXX(void) {
   static nsString* theStr=0;
-  if(!theStr)
-    theStr=new nsString("\n");
+  if(!theStr) {
+    theStr=new nsString;
+    theStr->AssignWithConversion("\n");
+  }
   return *theStr;
 }
 
@@ -1059,7 +1061,7 @@ nsString& CNewlineToken::GetStringValueXXX(void) {
 nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
 
 #if 1
-  mTextValue=kNewLine;  //This is what I THINK we should be doing.
+  mTextValue.AssignWithConversion(kNewLine);  //This is what I THINK we should be doing.
 #else
   mTextValue=aChar;
 #endif
@@ -1216,9 +1218,9 @@ void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
  */
 void CAttributeToken::GetSource(nsString& anOutputString){
   anOutputString=mTextKey;
-  anOutputString+="=";
+  anOutputString.AppendWithConversion("=");
   anOutputString+=mTextValue;
-  anOutputString+=";";
+  anOutputString.AppendWithConversion(";");
 }
 
 /*
@@ -1230,9 +1232,9 @@ void CAttributeToken::GetSource(nsString& anOutputString){
  */
 void CAttributeToken::AppendSource(nsString& anOutputString){
   anOutputString+=mTextKey;
-  anOutputString+="=";
+  anOutputString.AppendWithConversion("=");
   anOutputString+=mTextValue;
-  anOutputString+=";";
+  anOutputString.AppendWithConversion(";");
 }
 
 /*
@@ -1277,7 +1279,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
  */
 static
 nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScanner){
-  static nsString theTerminals("\b\t\n\r >",6);
+  static nsString theTerminals = NS_ConvertToString("\b\t\n\r >",6);
   nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_FALSE);
   
   //Let's force quotes if either the first or last char is quoted.
@@ -1333,7 +1335,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
       }
       else {
           //If you're here, handle an unquoted key.
-        static nsString theTerminals("\b\t\n\r \"<=>",9);
+        static nsString theTerminals = NS_ConvertToString("\b\t\n\r \"<=>",9);
         result=aScanner.ReadUntil(mTextKey,theTerminals,PR_FALSE);
       }
 
@@ -1475,7 +1477,7 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  mTextValue=aChar;
+  mTextValue.AssignWithConversion(aChar);
   nsresult result=aScanner.ReadWhitespace(mTextValue);
   if(NS_OK==result) {
     mTextValue.StripChar(kCR);
@@ -1520,7 +1522,7 @@ CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
  */
 nsresult CEntityToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
   if(aChar)
-    mTextValue=aChar;
+    mTextValue.AssignWithConversion(aChar);
   nsresult result=ConsumeEntity(aChar,mTextValue,aScanner);
   return result;
 }
@@ -1686,7 +1688,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
       value = nsHTMLEntities::EntityToUnicode(mTextValue);
       if(-1<value) {
         //we found a named entity...
-        aString=PRUnichar(value);
+        aString.AssignWithConversion(PRUnichar(value));
       }
     }//else
   }//if
@@ -1715,7 +1717,7 @@ void CEntityToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CEntityToken::GetSource(nsString& anOutputString){
-  anOutputString="&";
+  anOutputString.AssignWithConversion("&");
   anOutputString+=mTextValue;
   //anOutputString+=";";
 }
@@ -1728,7 +1730,7 @@ void CEntityToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CEntityToken::AppendSource(nsString& anOutputString){
-  anOutputString+="&";
+  anOutputString.AppendWithConversion("&");
   anOutputString+=mTextValue;
   //anOutputString+=";";
 }
@@ -1806,7 +1808,7 @@ PRInt32 CStyleToken::GetTokenType(void) {
  *  @return  
  */
 CSkippedContentToken::CSkippedContentToken(const nsString& aName) : CAttributeToken(aName) {
-  mTextKey = "$skipped-content";/* XXX need a better answer! */
+  mTextKey.AssignWithConversion("$skipped-content");/* XXX need a better answer! */
 }
 
 /*
@@ -1885,7 +1887,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt
     } 
     nsAutoString theRight;
     temp.Right(theRight,mTextValue.Length());
-    done=PRBool(0==theRight.Compare(mTextValue,PR_TRUE)); 
+    done=PRBool(0==theRight.CompareWithConversion(mTextValue,PR_TRUE)); 
   } 
   int len=temp.Length(); 
   temp.Truncate(len-mTextValue.Length()); 
@@ -1916,7 +1918,7 @@ void CSkippedContentToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CSkippedContentToken::GetSource(nsString& anOutputString){
-  anOutputString="$skipped-content";
+  anOutputString.AssignWithConversion("$skipped-content");
 }
 
 /*
@@ -1927,7 +1929,7 @@ void CSkippedContentToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CSkippedContentToken::AppendSource(nsString& anOutputString){
-  anOutputString+="$skipped-content";
+  anOutputString.AppendWithConversion("$skipped-content");
 }
 
 /**
@@ -1975,7 +1977,7 @@ CInstructionToken::CInstructionToken(const nsString& aString) : CHTMLToken(aStri
  *  @return  
  */
 nsresult CInstructionToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode){
-  mTextValue="<?";
+  mTextValue.AssignWithConversion("<?");
   nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
   return result;
 }
@@ -2045,7 +2047,7 @@ CDoctypeDeclToken::CDoctypeDeclToken(eHTMLTags aTag) : CHTMLToken(aTag) {
  */
 nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
   
-  mTextValue="<!";
+  mTextValue.AssignWithConversion("<!");
   
   nsresult result=aScanner.ReadUntil(mTextValue,'<',PR_FALSE); 
   return result;
