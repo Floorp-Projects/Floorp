@@ -890,6 +890,11 @@ nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
     if (aElementsToAppend == 0)
       return;
   }
+
+  // We want to make sure we don't move up past our root node. So if
+  // we're there, don't move to the parent.
+  if (aStartRoot == mRootContent)
+    return;
   
   nsCOMPtr<nsIContent> parent;
   aStartRoot->GetParent(*getter_AddRefs(parent));
@@ -916,8 +921,8 @@ nsContentList::PopulateSelf(PRUint32 aNeededLength)
   if (count != 0) {
     PopulateWithStartingAfter(NS_STATIC_CAST(nsIContent*,
                                              mElements.ElementAt(count - 1)),
-                           nsnull,
-                           elementsToAppend);
+                              nsnull,
+                              elementsToAppend);
     NS_ASSERTION(elementsToAppend + mElements.Count() == invariant,
                  "Something is awry in PopulateWithStartingAfter!");
   } else if (mRootContent) {
