@@ -24,5 +24,10 @@ class JSStack {
     {
         return stack.size();
     }
+    
+    void setStack(int top)
+    {
+        stack.setSize(top);
+    }
 
 }

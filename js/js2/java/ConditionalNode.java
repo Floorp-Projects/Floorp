@@ -1,5 +1,10 @@
 class ConditionalNode extends ControlNode {
     
+    ConditionalNode(ExpressionNode aCondition)
+    {
+        super(aCondition);
+    }
+    
     ConditionalNode(ExpressionNode aCondition, ControlNode aTrueCode)
     {
         super(aCondition);
@@ -11,6 +16,12 @@ class ConditionalNode extends ControlNode {
         super(aCondition);
         trueCode = aTrueCode;
         setNext(aFalseCode);
+    }
+    
+    void moveNextToTrue()
+    {
+        trueCode = next;
+        setNext(null);
     }
     
     ControlNode eval(Environment theEnv)

@@ -371,8 +371,8 @@ expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
 	:	e = assignment_expression[initial, allowIn] ("," e2 = assignment_expression[false, allowIn] { e = new BinaryNode(",", e, e2); } )*
 	;
 
-optional_expression
-    { ExpressionNode e = null; }
+optional_expression returns [ExpressionNode e]
+    { e = null; }
 	:	( e = expression[false, true])?
 	;
 
@@ -384,35 +384,32 @@ type_expression[boolean initial, boolean allowIn]
 
 // ********* Statements **********
 
-statement[int scope, boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
-    { c = null; }
+statement[int scope, boolean non_empty, ControlNodeGroup container]
 	:	(definition[scope]) => definition[scope]
-	|	c = code_statement[non_empty, prev]
+	|	code_statement[non_empty, container, null]
 	;
 
-code_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
-    { c = null; }
-	:	c = empty_statement[non_empty]
-	|	(identifier ":") => c = labeled_statement[non_empty, prev]
+code_statement[boolean non_empty, ControlNodeGroup container, String label]
+	:	empty_statement[non_empty]
 
 // Bogus predicate required to eliminate ANTLR nondeterminism warning
 // on lookahead of '{' between expression_statement and block, even
 // though the symantic predicate in the primary_expression rule disambiguates
 // the two.
-	|	{true}? c = expression_statement[prev] semicolon
-	|	(identifier ":") => c = labeled_statement[non_empty, prev]
-	|	c = block[BlockScope]
-	|	c = if_statement[non_empty, prev]
-	|	switch_statement
-	|	c = do_statement[prev] semicolon
-	|	c = while_statement[non_empty, prev]
-	|	for_statement[non_empty]
-	|	with_statement[non_empty]
-	|	continue_statement semicolon
-	|	break_statement semicolon
-	|	return_statement semicolon
-	|	throw_statement semicolon
-	|	try_statement
+	|	("{") => block[BlockScope, container]
+	|	(identifier ":") => labeled_statement[non_empty, container]
+	|	expression_statement[container] semicolon
+	|	if_statement[non_empty, container]
+	|	switch_statement[container]
+	|	do_statement[container, label] semicolon
+	|	while_statement[non_empty, container, label]
+	|	for_statement[non_empty, container, label]
+	|	with_statement[non_empty, container]
+	|	continue_statement[container] semicolon
+	|	break_statement[container] semicolon
+	|	return_statement[container] semicolon
+	|	throw_statement[container] semicolon
+	|	try_statement[container]
 	|	import_statement[non_empty]
 	;
 
@@ -423,155 +420,171 @@ semicolon
 
 // ********* Empty Statement **********
 // FIXME
-empty_statement[boolean non_empty]returns [ControlNodeGroup c]
-    { c = null; }
+empty_statement[boolean non_empty]
 	:	";"
 	;
 
 // ********* Expression Statement **********
-expression_statement[ControlNodeGroup prev] returns [ControlNodeGroup c]
-    { c = null; ControlNode t = null; ExpressionNode e = null; }
+expression_statement[ControlNodeGroup container]
+    { ExpressionNode e = null; }
 	:	e = expression[true, true]
 	    {
-	        t = new ControlNode(e);
-	        if (prev == null) {
-	            c = new ControlNodeGroup(t);
-	            c.addTail(t);
-	        }
-	        else {
-            	prev.fixTails(t);
-            	prev.addTail(t);
-            	c = prev;
-	        }
+	        container.add(new ControlNode(e));
 	    }
 
 	;
 
 // ********* Block **********
-block[int scope] returns [ControlNodeGroup c]
-    { c = null; }
-	:	"{" c = statements[scope] "}"
+block[int scope, ControlNodeGroup container]
+    { ControlNodeGroup subContainer = new ControlNodeGroup(); }
+	:	"{"
+	        statements[scope, subContainer]
+	        {
+	            container.add(subContainer);    // necessary ?
+	        }
+	    "}"
 	;
 
 // FIXME
-statements[int scope] returns [ControlNodeGroup c]
-    { c = null; ControlNodeGroup c2 = null; }
-	:	 c = statement[scope, false, null]
-	        ( c = statement[scope, false, c] )*
+statements[int scope, ControlNodeGroup container]
+	:	 statement[scope, false, container]
+	        ( statement[scope, false, container] )*
 	;
 
 // ********* Labeled Statements **********
-labeled_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
-    { c = null; ExpressionNode e = null; }
-	:	e = identifier ":" c = code_statement[non_empty, prev]
+labeled_statement[boolean non_empty, ControlNodeGroup container]
+    { ExpressionNode e = null; }
+	:	e = identifier ":" code_statement[non_empty, container, ((JSValue)e).value]
 	;
 
-if_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
-    { c = null; ControlNodeGroup c2 = null; ConditionalNode t = null; ExpressionNode e = null; }
-	:	"if"  e = parenthesized_expression c = code_statement[non_empty, null]
-	        {
-	            t = new ConditionalNode(e, c.getHead());
-	            if (prev != null) {
-	                prev.fixTails(t);
-	                c.setHead(prev.getHead());
-	            }
-	            else
-	                c.setHead(t);
-                c.addTail(t);
-	        }
+if_statement[boolean non_empty, ControlNodeGroup container]
+    { ConditionalNode condition = null; ExpressionNode e = null; }
+	:	"if"  e = parenthesized_expression
+	    {
+	        condition = new ConditionalNode(e);
+	        container.add(condition);
+	    }
+	    code_statement[non_empty, container, null]
+	    {
+            condition.moveNextToTrue();
+            container.addTail(condition);
+	    }
 	    (
     		// Standard if/else ambiguity
 	        options { warnWhenFollowAmbig=false; }:
-			"else" c2 = code_statement[non_empty, null]
-			    {
-			        t.setNext(c2.getHead());
-			        c.removeTail(t);
-			        c.addTails(c2);
-			    }
+			"else" code_statement[non_empty, container, null]
     	)?
 	;
 
 // ********* Switch statement **********
-switch_statement
-    { ExpressionNode e = null; }
-	:	"switch" e = parenthesized_expression "{" (case_groups)? "}"
+switch_statement[ControlNodeGroup container]
+    { ExpressionNode e = null; SwitchNode s = null; ControlNodeGroup c = new ControlNodeGroup(); }
+	:	"switch" e = parenthesized_expression
+	    {
+	        s = new SwitchNode(e);
+	    }
+	    "{" (case_groups[s, c])? "}"
+	    {
+	        container.add(s);
+	        c.shiftBreakTails(null);
+	        container.addTails(c);
+	    }
 	;
 
-case_groups
-	:	(case_group)+
+case_groups[SwitchNode s, ControlNodeGroup container]
+	:	(case_group[s, container])+
 	;
 
-case_group
-    { ControlNodeGroup c = null; }
-	:	(case_guard)+ (c = code_statement[true, null])+
+case_group[SwitchNode s, ControlNodeGroup container]
+    { ExpressionNode e = null; ControlNodeGroup c = new ControlNodeGroup(); }
+	:	( e = case_guard)+ (code_statement[true, c, null])+
+	{
+	    s.addCase(e, c.getHead());
+	    container.add(c);
+	}
 	;
 
-case_guard
-    { ExpressionNode e = null; }
+case_guard returns [ExpressionNode e]
+    { e = null; }
 	:	"case" e = expression[false, true] ":"
 	|	"default" ":"
 	;
 
 // FIXME
 case_statements
-    { ControlNodeGroup c = null; }
-	:	(c = code_statement[false, null])+
+    { ControlNodeGroup c = new ControlNodeGroup(); }
+	:	( code_statement[false, c, null] )+
 	;
 
 // ********* Do-While statement **********
-do_statement[ControlNodeGroup prev] returns [ControlNodeGroup c]
-    { c = null; ConditionalNode t = null; ExpressionNode e = null; }
-	:	"do" c = code_statement[true, null] "while" e = parenthesized_expression
+do_statement[ControlNodeGroup container, String label]
+    { ControlNodeGroup body = new ControlNodeGroup(); ExpressionNode e = null; }
+	:	"do" code_statement[true, body, null] "while" e = parenthesized_expression
 	{
-	    t = new ConditionalNode(e, c.getHead());
-	    if (prev != null) {
-            prev.fixTails(c.getHead());
-            c.setHead(prev.getHead());
-        }
-        c.fixTails(t);
-        c.addTail(t);
+	    ConditionalNode condition = new ConditionalNode(e, body.getHead());
+	    body.fixTails(condition);
+	    body.fixContinues(condition);
+	    body.shiftBreakTails(label);
+        container.add(body);
 	}
 	;
 
 // ********* While statement **********
-while_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
-    { c = null; ConditionalNode t = null; ExpressionNode e = null; }
-	:	"while" e = parenthesized_expression c = code_statement[non_empty, null]
+while_statement[boolean non_empty, ControlNodeGroup container, String label]
+    { ExpressionNode e = null; ControlNodeGroup body = new ControlNodeGroup(); }
+	:	"while" e = parenthesized_expression code_statement[non_empty, body, null]
 	    {
-	        t = new ConditionalNode(e, c.getHead());
-            if (prev != null) {
-                prev.fixTails(t);
-                c.setHead(prev.getHead());
-            }
-            else
-                c.setHead(t);
-            c.fixTails(t);
-            c.addTail(t);
+	        ConditionalNode condition = new ConditionalNode(e, body.getHead());
+            body.fixTails(condition);
+            body.fixContinues(condition);
+            body.shiftBreakTails(label);
+            body.setHead(condition);
+            container.add(body);
 	    }
 	;
 
 // ********* For statement **********
-for_statement[boolean non_empty]
-    { ExpressionNode e = null; ControlNodeGroup c = null; }
+for_statement[boolean non_empty, ControlNodeGroup container, String label]
+    {
+        ExpressionNode ei = null;
+        ExpressionNode ec = null;
+        ExpressionNode en = null;
+        ControlNodeGroup body = new ControlNodeGroup();
+    }
 	:	"for" "("
 		(
-			(for_initializer ";") => for_initializer ";" optional_expression ";" optional_expression
-		|	for_in_binding "in" e = expression[false, true]
+			(for_initializer ";") => ei = for_initializer ";" ec = optional_expression ";" en = optional_expression
+		|	ei = for_in_binding "in" ec = expression[false, true]
 		)
 		")"
-		c = code_statement[non_empty, null]
+		code_statement[non_empty, body, null]
+		{
+		    container.add(new ControlNode(ei));
+
+		    ControlNode increment = new ControlNode(en);
+		    body.fixContinues(increment);
+		    body.add(increment);
+
+		    ControlNode condition = new ConditionalNode(ec, body.getHead());
+		    body.fixTails(condition);
+		    body.shiftBreakTails(label);
+            body.setHead(condition);
+
+		    container.add(body);
+
+		}
 	;
 
-for_initializer
-    { ExpressionNode e = null; }
+for_initializer returns [ExpressionNode e]
+    { e = null; }
 	:	(
 			e = expression[false, true]
 		|	("var" | "const") variable_binding_list[false]
 		)?
 	;
 
-for_in_binding
-    { ExpressionNode e = null; }
+for_in_binding returns [ExpressionNode e]
+    { e = null; }
 	:	(
 			e = postfix_expression[false]
 		|	("var" | "const") variable_binding_list[false]
@@ -579,51 +592,83 @@ for_in_binding
 	;
 
 // ********* With statement **********
-with_statement[boolean non_empty]
-    { ExpressionNode e = null; ControlNodeGroup c = null; }
-	:	"with" e = parenthesized_expression c = code_statement[non_empty, null]
+with_statement[boolean non_empty, ControlNodeGroup container]
+    { ExpressionNode e = null; ControlNodeGroup body = new ControlNodeGroup(); }
+	:	"with" e = parenthesized_expression code_statement[non_empty, body, null]
+	    {
+	        container.add(new ControlNode(e));
+	        container.add(body);
+	    }
 	;
 
 // ********* Continue and Break statement **********
-continue_statement
+continue_statement [ControlNodeGroup container]
     { ExpressionNode e = null; }
 	:	"continue" (e = identifier)?
+	{
+	    container.addContinue(new ControlNode(e));
+	}
 	;
 
-break_statement
+break_statement [ControlNodeGroup container]
     { ExpressionNode e = null; }
 	:	"break" (e = identifier)?
+	{
+	    container.addBreak(new ControlNode(e));
+	}
 	;
 
 // ********* Return statement **********
-return_statement
-	:	"return" optional_expression
+return_statement [ControlNodeGroup container]
+    { ExpressionNode e = null; }
+	:	"return" e = optional_expression
+	    {
+	        container.add(new ControlNode(e));
+	    }
 	;
 
 // ********* Throw statement **********
-throw_statement
+throw_statement [ControlNodeGroup container]
     { ExpressionNode e = null; }
 	:	"throw" e = expression[false, true]
+	    {
+	        container.add(new ThrowNode(e));
+	    }
 	;
 
 // ********* Try statement **********
-try_statement
-    { ControlNodeGroup c = null; }
-	:	"try"	c = block[BlockScope] (catch_clause)* ("finally" c = block[BlockScope])?
+try_statement [ControlNodeGroup container]
+    {
+        TryNode t = null;
+        ControlNodeGroup tryBody = new ControlNodeGroup();
+        ControlNodeGroup finallyBody = new ControlNodeGroup();
+    }
+	:	"try"	block[BlockScope, tryBody]
+	    {
+            t = new TryNode(tryBody.getHead());
+	    }
+	    (catch_clause[t])*
+	    ("finally" block[BlockScope, finallyBody] { t.addFinally(finallyBody.getHead()); } )?
+	    {
+	        container.add(t);
+	    }
 	;
 
-catch_clause
-    { ControlNodeGroup c = null; }
-	:	"catch"	"(" typed_identifier[true] ")" c = block[BlockScope]
+catch_clause [TryNode t]
+    { ControlNodeGroup catchCode = new ControlNodeGroup(); ExpressionNode e = null; }
+	:	"catch"	"(" e = typed_identifier[true] ")" block[BlockScope, catchCode]
+	    {
+	        t.addCatchClause(e, catchCode.getHead());
+	    }
 	;
 
 // ********* Import statement **********
 import_statement[boolean non_empty]
-    { ControlNodeGroup c = null; }
+    { ControlNodeGroup c = new ControlNodeGroup(); }
 	:	"import" import_list
 		(
 			";"
-		|	c = block[BlockScope] ("else" c = code_statement[non_empty, null])
+		|	block[BlockScope, c] ("else" code_statement[non_empty, c, null])
 		)
 	;
 
@@ -717,11 +762,11 @@ variable_binding_list[boolean allowIn]
 
 variable_binding[boolean allowIn]
     { ExpressionNode e = null; }
-	:	typed_identifier[allowIn] ("=" e = assignment_expression[false, allowIn])?
+	:	e = typed_identifier[allowIn] ("=" e = assignment_expression[false, allowIn])?
 	;
 
-typed_identifier[boolean allowIn]
-    { ExpressionNode e = null; }
+typed_identifier[boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
 	:	(type_expression[false, allowIn] identifier) => type_expression[false, allowIn] e = identifier
 	|	e = identifier
 	;
@@ -746,13 +791,13 @@ named_function returns [ExpressionNode e]
 	;
 
 function[boolean nameRequired] returns [ExpressionNode e]
-    { e = null; ControlNodeGroup c = null; }
+    { e = null; ControlNodeGroup body = new ControlNodeGroup(); }
 	:	"function"
 		(
 			{nameRequired}? e = identifier
 		|	e = identifier
 		)
-		function_signature c = block[BlockScope]
+		function_signature block[BlockScope, body]
 	;
 
 function_signature
@@ -770,7 +815,7 @@ parameters
 // FIXME - Required parameters cannot follow optional parameters
 parameter
     { ExpressionNode e = null; }
-	:	typed_identifier[true] ("=" (e = assignment_expression[false, true])? )?
+	:	e = typed_identifier[true] ("=" (e = assignment_expression[false, true])? )?
 	;
 
 rest_parameter
@@ -791,8 +836,8 @@ result_signature
 	;
 
 traditional_function
-    { ExpressionNode e = null; ControlNodeGroup c = null; }
-	: "traditional" "function" e = identifier "(" traditional_parameter_list ")" c = block[BlockScope]
+    { ExpressionNode e = null; ControlNodeGroup c = new ControlNodeGroup(); }
+	: "traditional" "function" e = identifier "(" traditional_parameter_list ")" block[BlockScope, c]
 	;
 
 traditional_parameter_list
@@ -812,8 +857,8 @@ field_definition
 	;
 
 method_definition
-    { ExpressionNode e = null; ControlNodeGroup c = null; }
-	:	method_prefix e = identifier function_signature (c = block[BlockScope] | semicolon)
+    { ExpressionNode e = null; ControlNodeGroup c = new ControlNodeGroup(); }
+	:	method_prefix e = identifier function_signature ( block[BlockScope, c] | semicolon)
 	;
 
 method_prefix
@@ -821,26 +866,26 @@ method_prefix
 	;
 
 constructor_definition
-    { ExpressionNode e = null; ControlNodeGroup c = null; }
-	:	"constructor" ("new" | e = identifier) parameter_signature c = block[BlockScope]
+    { ExpressionNode e = null; ControlNodeGroup c = new ControlNodeGroup(); }
+	:	"constructor" ("new" | e = identifier) parameter_signature block[BlockScope, c]
 	;
 
 // ********* Class Definition **********
 class_definition
-    { ExpressionNode e = null; ControlNodeGroup c = null; }
+    { ExpressionNode e = null; ControlNodeGroup c = new ControlNodeGroup(); }
 	:	"class"
 		(
 			"extends" type_expression[true, true]
 		|	e = identifier ("extends" type_expression[true, true])?
 		)
-		c = block[ClassScope]
+		block[ClassScope, c]
 	;
 
 // ********* Programs **********
 // Start symbol for JS programs
-program returns [ControlNodeGroup c]
-    { c = null; }
-	:	c = statements[TopLevelScope]
+program returns [ControlNodeGroup contents]
+    { contents = new ControlNodeGroup(); }
+	:	statements[TopLevelScope, contents]
 	;
 
 // ************************************************************************************************
