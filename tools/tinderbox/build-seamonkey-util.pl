@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.269 $ ';
+$::UtilsVersion = '$Revision: 1.270 $ ';
 
 package TinderUtils;
 
@@ -1708,6 +1708,9 @@ sub run_all_tests {
             if ($Settings::BinaryName =~ /^firefox/) {
                 set_pref($pref_file, 'privacy.popups.firstTime', 'false');
                 set_pref($pref_file, 'dom.disable_open_during_load', 'false');
+
+                # Suppress default browser dialog
+                set_pref($pref_file, 'browser.shell.checkDefaultBrowser', 'false');
             }
 
             # Suppress security warnings for QA test.
