@@ -1,0 +1,16 @@
+?Release@nsJPEGDecoder@@UAGKXZ ; 172
+?AddRef@nsJPEGDecoder@@UAGKXZ ; 172
+?fill_input_buffer@@YAEPAUjpeg_decompress_struct@@@Z ; 126
+?skip_input_data@@YAXPAUjpeg_decompress_struct@@J@Z ; 109
+?WriteFrom@nsJPEGDecoder@@UAGIPAVnsIInputStream@@IPAI@Z ; 106
+?OutputScanlines@nsJPEGDecoder@@IAEHH@Z ; 93
+?init_source@@YAXPAUjpeg_decompress_struct@@@Z ; 86
+??1nsJPEGDecoder@@UAE@XZ ; 86
+?Close@nsJPEGDecoder@@UAGIXZ ; 86
+?term_source@@YAXPAUjpeg_decompress_struct@@@Z ; 86
+?Init@nsJPEGDecoder@@UAGIPAVimgIRequest@@@Z ; 86
+??0nsJPEGDecoder@@QAE@XZ ; 86
+?Flush@nsJPEGDecoder@@UAGIXZ ; 86
+?QueryInterface@nsJPEGDecoder@@UAGIABUnsID@@PAPAX@Z ; 86
+??_EnsJPEGDecoder@@UAEPAXI@Z ; 86
+_NSGetModule ; 1

@@ -1,52 +1,45 @@
-basic_nsAWritableString<char>::Assign ; 22
-basic_nsLiteralString<unsigned short>::Length ; 20
-nsCOMPtr_base::assign_assuming_AddRef ; 16
-nsReadingIterator<char>::normalize_forward ; 14
-nsProfile::Release ; 14
-nsProfile::AddRef ; 14
-basic_nsAReadableString<char>::BeginReading ; 14
-nsProfileAccess::GetCurrentProfile ; 11
-nsProfile::QueryInterface ; 11
-nsProfile::GetCurrentProfile ; 11
-ProfileStruct::~ProfileStruct ; 11
-nsProfileAccess::FindProfileIndex ; 9
-ProfileStruct::GetResolvedProfileDir ; 9
-nsProfileAccess::SetCurrentProfile ; 9
-nsProfileAccess::GetValue ; 9
-ProfileStruct::ProfileStruct ; 9
-basic_nsLiteralString<unsigned short>::GetReadableFragment ; 9
-nsProfile::GetCurrentProfileDir ; 9
-nsProfile::CloneProfileDirectorySpec ; 9
-nsProfile::GetProfileDir ; 9
-nsProfile::GetFile ; 9
-Compare ; 6
-basic_nsAReadableString<unsigned short>::Equals ; 6
-nsProfile::EnsureProfileFileExists ; 4
-basic_nsLiteralString<unsigned short>::basic_nsLiteralString<unsigned short> ; 4
-nsCharTraits<unsigned short>::length ; 4
-ProfileStruct::ProfileStruct ; 2
-NS_GetSpecialDirectory ; 2
-ProfileStruct::InternalizeLocation ; 2
-ProfileStruct::SetResolvedProfileDir ; 2
-nsProfileAccess::FreeProfileMembers ; 2
-ProfileStruct::EnsureDirPathExists ; 2
-nsVoidArray::`scalar deleting destructor' ; 2
-nsProfileAccess::~nsProfileAccess ; 1
-NSGetModule ; 1
-nsProfileAccess::DetermineForceMigration ; 1
-basic_nsLiteralString<char>::Length ; 1
-nsProfile::nsProfile ; 1
-Compare ; 1
-basic_nsLiteralString<char>::basic_nsLiteralString<char> ; 1
-nsProfile::~nsProfile ; 1
-nsProfileAccess::nsProfileAccess ; 1
-nsProfileAccess::FillProfileInfo ; 1
-nsProfile::ProcessArgs ; 1
-nsProfile::GetProfileCount ; 1
-nsProfileAccess::GetMozRegDataMovedFlag ; 1
-nsProfileAccess::`scalar deleting destructor' ; 1
-nsProfileAccess::GetNumProfiles ; 1
-basic_nsLiteralString<char>::GetReadableFragment ; 1
-nsProfile::LoadDefaultProfileDir ; 1
-nsProfile::StartupWithArgs ; 1
-nsProfile::`vector deleting destructor' ; 1
+?assign_assuming_AddRef@nsCOMPtr_base@@IAEXPAVnsISupports@@@Z ; 21
+?Release@nsProfile@@UAGKXZ ; 14
+?AddRef@nsProfile@@UAGKXZ ; 14
+?FindProfileIndex@nsProfileAccess@@QAEHPBG@Z ; 11
+?GetCurrentProfile@nsProfile@@UAGIPAPAG@Z ; 11
+?GetCurrentProfile@nsProfileAccess@@QAEXPAPAG@Z ; 11
+??1ProfileStruct@@QAE@XZ ; 11
+?QueryInterface@nsProfile@@UAGIABUnsID@@PAPAX@Z ; 11
+?SetCurrentProfile@nsProfileAccess@@QAEXPBG@Z ; 10
+??0ProfileStruct@@QAE@ABV0@@Z ; 9
+?CloneProfileDirectorySpec@nsProfile@@AAEIPAPAVnsILocalFile@@@Z ; 9
+?GetResolvedProfileDir@ProfileStruct@@QAEIPAPAVnsILocalFile@@@Z ; 9
+?GetProfileDir@nsProfile@@UAGIPBGPAPAVnsIFile@@@Z ; 9
+?GetFile@nsProfile@@UAGIPBDPAHPAPAVnsIFile@@@Z ; 9
+?GetCurrentProfileDir@nsProfile@@UAGIPAPAVnsIFile@@@Z ; 9
+?GetValue@nsProfileAccess@@QAEIPBGPAPAVProfileStruct@@@Z ; 9
+?EnsureProfileFileExists@nsProfile@@AAEIPAVnsIFile@@@Z ; 4
+??0ProfileStruct@@QAE@XZ ; 2
+?EnsureDirPathExists@ProfileStruct@@AAEIPAVnsILocalFile@@PAH@Z ; 2
+?InternalizeLocation@ProfileStruct@@QAEIPAVnsIRegistry@@IHH@Z ; 2
+?ExternalizeLocation@ProfileStruct@@QAEIPAVnsIRegistry@@I@Z ; 2
+??_EnsVoidArray@@UAEPAXI@Z ; 2
+?FreeProfileMembers@nsProfileAccess@@QAEXPAVnsVoidArray@@H@Z ; 2
+?SetResolvedProfileDir@ProfileStruct@@QAEIPAVnsILocalFile@@@Z ; 2
+??0nsProfile@@QAE@XZ ; 1
+?ProcessArgs@nsProfile@@AAEIPAVnsICmdLineService@@PAHAAVnsCString@@@Z ; 1
+?UpdateRegistry@nsProfileAccess@@QAEIPAVnsIFile@@@Z ; 1
+?DefineLocaleDefaultsDir@nsProfile@@AAEIXZ ; 1
+?FillProfileInfo@nsProfileAccess@@QAEIPAVnsIFile@@@Z ; 1
+?GetProfileCount@nsProfile@@UAGIPAH@Z ; 1
+?NS_GetSpecialDirectory@@YAIPBDPAPAVnsIFile@@@Z ; 1
+??1nsProfile@@UAE@XZ ; 1
+?DetermineForceMigration@nsProfileAccess@@QAEIPAH@Z ; 1
+?SetCurrentProfile@nsProfile@@UAGIPBG@Z ; 1
+?LoadDefaultProfileDir@nsProfile@@AAEIAAVnsCString@@@Z ; 1
+??_GnsHashtable@@UAEPAXI@Z ; 1
+?ProfileExists@nsProfileAccess@@QAEHPBG@Z ; 1
+??0nsProfileAccess@@QAE@XZ ; 1
+??_GnsProfileAccess@@UAEPAXI@Z ; 1
+_NSGetModule ; 1
+??1nsProfileAccess@@UAE@XZ ; 1
+?GetNumProfiles@nsProfileAccess@@QAEXPAH@Z ; 1
+??_EnsProfile@@UAEPAXI@Z ; 1
+?StartupWithArgs@nsProfile@@UAGIPAVnsICmdLineService@@@Z ; 1
+?ProfileExists@nsProfile@@UAGIPBGPAH@Z ; 1

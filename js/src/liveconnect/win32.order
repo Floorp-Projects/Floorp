@@ -1,6 +1,6 @@
-nsCLiveconnectFactory::AddRef ; 2
-nsCLiveconnectFactory::Release ; 2
-nsCLiveconnectFactory::~nsCLiveconnectFactory ; 1
-JSJ_RegisterLiveConnectFactory ; 1
-nsCLiveconnectFactory::nsCLiveconnectFactory ; 1
-nsCLiveconnectFactory::`vector deleting destructor' ; 1
+?AddRef@nsCLiveconnectFactory@@UAGKXZ ; 2
+?Release@nsCLiveconnectFactory@@UAGKXZ ; 2
+??0nsCLiveconnectFactory@@QAE@XZ ; 1
+_JSJ_RegisterLiveConnectFactory ; 1
+??_EnsCLiveconnectFactory@@UAEPAXI@Z ; 1
+??1nsCLiveconnectFactory@@UAE@XZ ; 1

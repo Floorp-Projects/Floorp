@@ -1,7 +1,7 @@
-nsStreamTransferModule::AddRef ; 4
-nsStreamTransferModule::Release ; 4
-nsStreamTransferModule::QueryInterface ; 1
-nsStreamTransferModule::`vector deleting destructor' ; 1
-nsStreamTransferModule::CanUnload ; 1
-NSGetModule ; 1
-nsStreamTransferModule::RegisterSelf ; 1
+?Release@nsStreamTransferModule@@UAGKXZ ; 4
+?AddRef@nsStreamTransferModule@@UAGKXZ ; 4
+?CanUnload@nsStreamTransferModule@@UAGIPAVnsIComponentManager@@PAH@Z ; 1
+??_EnsStreamTransferModule@@UAEPAXI@Z ; 1
+?QueryInterface@nsStreamTransferModule@@UAGIABUnsID@@PAPAX@Z ; 1
+_NSGetModule ; 1
+?RegisterSelf@nsStreamTransferModule@@UAGIPAVnsIComponentManager@@PAVnsIFile@@PBD2@Z ; 1
