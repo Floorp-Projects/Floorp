@@ -551,7 +551,18 @@ sub MakeResourceAliases()
     #//
     #// Make aliases of resource files
     #//
-    _MakeAlias(":mozilla:layout:html:document:src:ua.css",                              "$resource_dir");
+    if (! $main::options{mathml})
+    {
+        _MakeAlias(":mozilla:layout:html:document:src:ua.css",                          "$resource_dir");
+    }
+    else
+    {
+        #// Building MathML so include the mathml.css file in ua.css
+        _MakeAlias(":mozilla:layout:mathml:content:src:mathml.css",                     "$resource_dir");
+        _copy(":mozilla:layout:html:document:src:ua.css",                               "$resource_dir"."ua.css");
+        @ARGV = ("$resource_dir"."ua.css");
+        do ":mozilla:layout:mathml:content:src:mathml-css.pl";
+    }
     _MakeAlias(":mozilla:layout:html:document:src:html.css",                            "$resource_dir");
     _MakeAlias(":mozilla:layout:html:document:src:quirk.css",                           "$resource_dir");
     _MakeAlias(":mozilla:layout:html:document:src:arrow.gif",                           "$resource_dir"); 
