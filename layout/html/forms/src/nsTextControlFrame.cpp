@@ -45,6 +45,9 @@
 #include "nsIFontMetrics.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
+#include "nsIStatefulFrame.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
@@ -65,6 +68,21 @@ nsTextControlFrame::nsTextControlFrame()
 
 nsTextControlFrame::~nsTextControlFrame() 
 {
+}
+
+nsresult
+nsTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+  
+  return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 nscoord 
@@ -354,4 +372,50 @@ nsTextControlFrame::GetWrapProperty(nsString &aOutValue)
     NS_RELEASE(content);
   }
   return result;
+}
+
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsTextControlFrame::GetStateType(StateType* aStateType)
+{
+  *aStateType = eTextType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextControlFrame::SaveState(nsISupports** aState)
+{
+  nsISupportsString* value = nsnull;
+  nsAutoString string;
+  nsresult res = GetProperty(nsHTMLAtoms::value, string);
+  if (NS_SUCCEEDED(res)) {
+    char* chars = string.ToNewCString();
+    if (chars) {
+      res = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+                                           NS_GET_IID(nsISupportsString), (void**)&value);
+      if (NS_SUCCEEDED(res) && value) {
+        value->SetData(chars);
+      }
+      nsCRT::free(chars);
+    } else {
+      res = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  *aState = (nsISupports*)value;
+  return res;
+}
+
+NS_IMETHODIMP
+nsTextControlFrame::RestoreState(nsISupports* aState)
+{
+  char* chars = nsnull;
+  nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
+  if (NS_SUCCEEDED(res) && chars) {
+    nsAutoString string(chars);
+    res = SetProperty(nsHTMLAtoms::value, string);
+    nsCRT::free(chars);
+  }
+  return res;
 }
