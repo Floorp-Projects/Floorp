@@ -90,10 +90,19 @@ public:
 
   NS_IMETHOD    ToString(nsString& aReturn);
 
-  // nsIDOMNSRange interface
+/*BEGIN nsIDOMNSRange interface implementations*/
   NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, 
                                          nsIDOMDocumentFragment** aReturn);
   NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn);
+
+  NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset,
+                               PRBool* aResult);
+  NS_IMETHOD    ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset,
+                             PRInt16* aResult);
+  NS_IMETHOD    IntersectsNode(nsIDOMNode* aNode, PRBool* aReturn);
+  NS_IMETHOD    CompareNode(nsIDOMNode* aNode, PRInt16* aReturn);
+/*END nsIDOMNSRange interface implementations*/
+  
   NS_IMETHOD    GetHasGeneratedBefore(PRBool *aBool);
   NS_IMETHOD    GetHasGeneratedAfter(PRBool *aBool);
   NS_IMETHOD    SetHasGeneratedBefore(PRBool aBool);
@@ -159,8 +168,6 @@ public:
   PRBool        IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
                              nsIDOMNode* aEndN, PRInt32 aEndOff);
                        
-  nsresult      IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult);
-  
   nsresult      ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult);
   
   
@@ -172,7 +179,7 @@ public:
   nsresult      RemoveFromListOf(nsIDOMNode* aNode);
  
   nsresult      ContentOwnsUs(nsIDOMNode* domNode);
-  
+
   protected:
   	void*				mScriptObject;
 	PRBool mBeforeGenContent;
@@ -207,9 +214,9 @@ PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange);
  *
  ************************************************************************************/
 nsresult CompareNodeToRange(nsIContent* aNode, 
-                        nsIDOMRange* aRange,
-                        PRBool *outNodeBefore,
-                        PRBool *outNodeAfter);
+                            nsIDOMRange* aRange,
+                            PRBool *outNodeBefore,
+                            PRBool *outNodeAfter);
 
 
 /*************************************************************************************
