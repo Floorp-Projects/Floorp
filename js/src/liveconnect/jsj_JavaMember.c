@@ -101,8 +101,8 @@ JavaMember_finalize(JSContext *cx, JSObject *obj)
         return;
 
     JS_RemoveRoot(cx, &member_val->method_val);
-    if (JSVAL_IS_GCTHING(member_val->method_val))
-        JS_RemoveRoot(cx, &member_val->method_val);
+    if (JSVAL_IS_GCTHING(member_val->field_val))
+        JS_RemoveRoot(cx, &member_val->field_val);
     JS_free(cx, member_val);
 }
 
