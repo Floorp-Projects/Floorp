@@ -422,14 +422,18 @@ PRInt32 PR_GetSysfdTableMax(void)
     return rlim.rlim_max;
 #elif defined(AIX) || defined(NEXTSTEP) || defined(QNX)
     return sysconf(_SC_OPEN_MAX);
-#elif defined(WIN32) || defined(OS2)
+#elif defined(WIN32)
     /*
      * There is a systemwide limit of 65536 user handles.
-     * Not sure on OS/2, but sounds good.
      */
     return 16384;
 #elif defined (WIN16)
     return FOPEN_MAX;
+#elif defined(XP_OS2)
+    ULONG ulReqCount = 0;
+    ULONG ulCurMaxFH = 0;
+    DosSetRelMaxFH(&ulReqCount, &ulCurMaxFH);
+    return ulCurMaxFH;
 #elif defined (XP_MAC) || defined(XP_BEOS)
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
    return -1;
@@ -464,9 +468,19 @@ PRInt32 PR_SetSysfdTableSize(int table_size)
     }
 
     return rlim.rlim_cur;
+#elif defined(XP_OS2)
+    PRInt32 tableMax = PR_GetSysfdTableMax();
+    if (table_size > tableMax) {
+      APIRET rc = NO_ERROR;
+      rc = DosSetMaxFH(table_size);
+      if (rc == NO_ERROR)
+        return table_size;
+      else
+        return -1;
+    } 
+    return tableMax;
 #elif defined(AIX) || defined(NEXTSTEP) || defined(QNX) \
-        || defined(WIN32) || defined(WIN16) || defined(OS2) \
-        || defined(XP_BEOS)
+        || defined(WIN32) || defined(WIN16) || defined(XP_BEOS)
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return -1;
 #elif defined (XP_MAC)
