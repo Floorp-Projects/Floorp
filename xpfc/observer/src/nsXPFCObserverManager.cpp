@@ -20,6 +20,7 @@
 #include "nsIXPFCObserver.h"
 #include "nsIXPFCSubject.h"
 #include "nsIXPFCCommand.h"
+#include "nsIXPFCCommandStateObserver.h"
 #include "nsxpfcCIID.h"
 
 static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
@@ -41,11 +42,27 @@ public:
   }
 };
 
+class StateEntry {
+public:
+  nsCommandState state;
+  nsIXPFCCommandStateObserver * observer;
+
+  StateEntry(nsCommandState aState, 
+            nsIXPFCCommandStateObserver * aObserver) { 
+    state = aState;
+    observer = aObserver;
+  }
+  ~StateEntry() {
+  }
+};
+
 
 nsXPFCObserverManager :: nsXPFCObserverManager()
 {
   NS_INIT_REFCNT();
+
   mList = nsnull;
+  mState = nsnull;
   monitor = nsnull;
 
   Init();
@@ -54,6 +71,7 @@ nsXPFCObserverManager :: nsXPFCObserverManager()
 nsXPFCObserverManager :: ~nsXPFCObserverManager()  
 {
   NS_IF_RELEASE(mList);
+  NS_IF_RELEASE(mState);
   PR_DestroyMonitor(monitor);
 }
 
@@ -77,6 +95,22 @@ nsresult nsXPFCObserverManager::Init()
       return res ;
 
     mList->Init();
+  }
+
+  if (mState == nsnull) {
+
+    static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
+    static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+
+    nsresult res = nsRepository::CreateInstance(kCVectorCID, 
+                                       nsnull, 
+                                       kCVectorCID, 
+                                       (void **)&mState);
+
+    if (NS_OK != res)
+      return res ;
+
+    mState->Init();
   }
 
   if (monitor == nsnull) {
@@ -228,3 +262,13 @@ nsresult nsXPFCObserverManager::Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand
   return NS_OK;
 }
 
+nsresult nsXPFCObserverManager::RegisterForCommandState(nsIXPFCCommandStateObserver * aCommandStateObserver, nsCommandState aCommandState)
+{
+  PR_EnterMonitor(monitor);
+
+  mState->Append(new StateEntry(aCommandState, aCommandStateObserver));
+
+  PR_ExitMonitor(monitor);
+
+  return NS_OK;
+}

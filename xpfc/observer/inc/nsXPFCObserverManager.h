@@ -42,6 +42,7 @@ public:
   NS_IMETHOD Unregister(nsISupports * aSubjectObserver);
   NS_IMETHOD Unregister(nsIXPFCSubject * aSubject, nsIXPFCObserver * aObserver);
   NS_IMETHOD Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand);
+  NS_IMETHOD RegisterForCommandState(nsIXPFCCommandStateObserver * aCommandStateObserver, nsCommandState aCommandState);
 
 protected:
   ~nsXPFCObserverManager();
@@ -51,7 +52,7 @@ public:
 
 public:
   nsIVector * mList ;
-  nsIXPFCSubject * mCurrentSubject;
+  nsIVector * mState ;
 
 };
 
