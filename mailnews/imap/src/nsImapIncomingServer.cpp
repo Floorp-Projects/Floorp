@@ -3828,8 +3828,10 @@ nsImapIncomingServer::GetMsgFolderFromURI(nsIMsgFolder *aFolderResource, const c
       nsCOMPtr <nsIMsgFolder> folderResource;
       folderResource = do_QueryInterface(resource, &rv);
       NS_ENSURE_SUCCESS(rv,rv);
-    }   
-    msgFolder = aFolderResource;
+      msgFolder = folderResource;
+    }
+    else
+      msgFolder = aFolderResource;
   }
 
   NS_IF_ADDREF(*aFolder = msgFolder);
