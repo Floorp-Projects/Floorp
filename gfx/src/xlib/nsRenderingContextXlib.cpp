@@ -1376,7 +1376,7 @@ nsRenderingContextXlib::GetTextDimensions(const PRUnichar* aString, PRUint32 aLe
       nsFontXlib** font = metrics->mLoadedFonts;
       nsFontXlib** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+        if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
