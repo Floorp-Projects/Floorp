@@ -402,6 +402,17 @@
 #define NS_ABLDAP_REPLICATIONQUERY_CONTRACTID \
  "@mozilla.org/addressbook/ldap-replication-query;1"
 
+
+// nsAbLDAPChangeLogQuery
+//
+// {63E11D51-3C9B-11d6-B7B9-00B0D06E5F27}
+#define NS_ABLDAP_CHANGELOGQUERY_CID \
+  {0x63e11d51, 0x3c9b, 0x11d6, \
+    { 0xb7, 0xb9, 0x0, 0xb0, 0xd0, 0x6e, 0x5f, 0x27 }}
+
+#define NS_ABLDAP_CHANGELOGQUERY_CONTRACTID \
+ "@mozilla.org/addressbook/ldap-changelog-query;1"
+
 // nsAbLDAPProcessReplicationData
 //
 // {5414fff1-263b-11d6-b791-00b0d06e5f27}
@@ -413,6 +424,16 @@
 #define NS_ABLDAP_PROCESSREPLICATIONDATA_CONTRACTID \
  "@mozilla.org/addressbook/ldap-process-replication-data;1"
 
+
+// nsAbLDAPProcessChangeLogData
+//
+// {63E11D52-3C9B-11d6-B7B9-00B0D06E5F27}
+#define NS_ABLDAP_PROCESSCHANGELOGDATA_CID \
+  {0x63e11d52, 0x3c9b, 0x11d6, \
+    {0xb7, 0xb9, 0x0, 0xb0, 0xd0, 0x6e, 0x5f, 0x27 }}
+
+#define NS_ABLDAP_PROCESSCHANGELOGDATA_CONTRACTID \
+ "@mozilla.org/addressbook/ldap-process-changelog-data;1"
 
 // nsABView
 

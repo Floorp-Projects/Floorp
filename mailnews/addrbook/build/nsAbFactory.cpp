@@ -82,6 +82,8 @@
 #include "nsAbLDAPReplicationService.h"
 #include "nsAbLDAPReplicationQuery.h"
 #include "nsAbLDAPReplicationData.h"
+#include "nsAbLDAPChangeLogQuery.h"
+#include "nsAbLDAPChangeLogData.h"
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddressBook)
@@ -119,6 +121,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPAutoCompFormatter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPReplicationService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPReplicationQuery)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessReplicationData)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPChangeLogQuery)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
@@ -270,6 +274,16 @@ static const nsModuleComponentInfo components[] =
    NS_ABLDAP_PROCESSREPLICATIONDATA_CID,
    NS_ABLDAP_PROCESSREPLICATIONDATA_CONTRACTID,
    nsAbLDAPProcessReplicationDataConstructor },
+
+ {"Address LDAP ChangeLog Query Interface",
+   NS_ABLDAP_CHANGELOGQUERY_CID,
+   NS_ABLDAP_CHANGELOGQUERY_CONTRACTID,
+   nsAbLDAPChangeLogQueryConstructor },
+
+ {"Address LDAP ChangeLog Processor Interface",
+   NS_ABLDAP_PROCESSCHANGELOGDATA_CID,
+   NS_ABLDAP_PROCESSCHANGELOGDATA_CONTRACTID,
+   nsAbLDAPProcessChangeLogDataConstructor },
 
   { "Address LDAP autocomplete factory Interface", 
     NS_ABLDAPDIRFACTORY_CID,
