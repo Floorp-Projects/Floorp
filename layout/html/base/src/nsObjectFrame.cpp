@@ -2502,7 +2502,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 		nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
 		PRBool eventHandled = PR_FALSE;
 		mInstance->HandleEvent(&pluginEvent, &eventHandled);
-		if (eventHandled)
+		if(eventHandled && anEvent.message != NS_MOUSE_LEFT_BUTTON_DOWN)
 			rv = nsEventStatus_eConsumeNoDefault;
 	}
 #endif
