@@ -26,7 +26,7 @@
 
 #include "stdio.h"
 
-#define DBG 1
+#define DBG 0
 
 //==============================================================
 void nsXtWidget_InitNSEvent(XEvent   * anXEv,
@@ -133,8 +133,31 @@ static Bool checkForExpose(Display *dpy, XEvent *evt, XtPointer client_data)
 void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
 
-  if (DBG) fprintf(stderr, "In nsXtWidget_ExposureMask_EventHandler\n");
+  if (DBG) fprintf(stderr, "In nsXtWidget_ExposureMask_EventHandler Type %d (%d,%d)\n", event->type, Expose, GraphicsExpose);
   nsWindow * widgetWindow = (nsWindow *) p ;
+
+  nsPaintEvent pevent;
+  nsRect       rect;
+  nsXtWidget_InitNSEvent(event, p, pevent, NS_PAINT);
+  pevent.rect = (nsRect *)&rect;
+  XEvent xev;
+
+  int count = 0;
+  while (XPeekEvent(XtDisplay(w), &xev))
+  {
+     if ((xev.type == Expose || xev.type == GraphicsExpose || xev.type == 14) && 
+         (xev.xexpose.window == XtWindow(w))) {
+       XNextEvent(XtDisplay(w), &xev);
+       count++;
+     } else {
+       if (DBG) printf("Ate %d events\n", count);
+       break;
+     }
+  }
+
+  widgetWindow->OnPaint(pevent);
+
+#if 0
 
   nsPaintEvent pevent;
   nsRect       rect;
@@ -182,7 +205,7 @@ printf("After %d %d %d %d\n", rect.x, rect.y, rect.width, rect.height);
   widgetWindow->OnPaint(pevent);
 
   if (DBG) fprintf(stderr, "Out nsXtWidget_ExposureMask_EventHandler\n");
-
+#endif
 }
 
 //==============================================================
