@@ -36,9 +36,17 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#include "nsIDOMSVGTextPositionElem.idl"
+#include "nsIDOMSVGTextContentElement.idl"
 
-[scriptable, uuid(4a23cb1f-cf1e-437e-9524-8756f7928b2e)]
-interface nsIDOMSVGTSpanElement : nsIDOMSVGTextPositioningElement
+interface nsIDOMSVGAnimatedLengthList;
+interface nsIDOMSVGAnimatedNumberList;
+
+[scriptable, uuid(5d052835-8cb0-442c-9754-a8e616db1f89)]
+interface nsIDOMSVGTextPositioningElement : nsIDOMSVGTextContentElement
 { 
+  readonly attribute nsIDOMSVGAnimatedLengthList x;
+  readonly attribute nsIDOMSVGAnimatedLengthList y;
+  readonly attribute nsIDOMSVGAnimatedLengthList dx;
+  readonly attribute nsIDOMSVGAnimatedLengthList dy;
+  readonly attribute nsIDOMSVGAnimatedNumberList rotate;
 };

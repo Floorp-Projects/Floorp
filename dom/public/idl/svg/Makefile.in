@@ -30,7 +30,7 @@ XPIDL_MODULE	= dom_svg
 
 
 XPIDLSRCS	= \
-		nsIDOMSVGAnimatedEnumeration.idl \
+		nsIDOMSVGAnimatedEnum.idl \
 		nsIDOMSVGAnimatedLength.idl \
 		nsIDOMSVGAnimatedLengthList.idl \
 		nsIDOMSVGAnimatedNumberList.idl \
@@ -67,7 +67,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGStylable.idl \
 		nsIDOMSVGTextContentElement.idl \
 		nsIDOMSVGTextElement.idl \
-		nsIDOMSVGTextPositioningElem.idl \
+		nsIDOMSVGTextPositionElem.idl \
 		nsIDOMSVGTransform.idl \
 		nsIDOMSVGTransformList.idl \
 		nsIDOMSVGTransformable.idl \
