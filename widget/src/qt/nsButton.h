@@ -60,7 +60,7 @@ public:
     nsButton();
     virtual ~nsButton();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIButton
     NS_IMETHOD     SetLabel(const nsString& aText);
@@ -71,7 +71,6 @@ public:
     virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
 
 protected:
-    NS_METHOD CreateNative(QWidget *parentWindow);
     virtual void InitCallbacks(char * aName = nsnull);
 };
 

@@ -49,14 +49,8 @@ NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsClipboard::nsClipboard()\n"));
-    //NS_INIT_REFCNT();
     mIgnoreEmptyNotification = PR_FALSE;
     mWindow         = nsnull;
-
-    // Create a Native window for the shell container...
-    //nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID, (void**)&mWindow);
-    //mWindow->Show(PR_FALSE);
-    //mWindow->Resize(1,1,PR_FALSE);
 }
 
 //-------------------------------------------------------------------------
@@ -102,7 +96,7 @@ return rv;
   * 
   *
   */
-NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
+NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData()\n"));
     mIgnoreEmptyNotification = PR_TRUE;
@@ -122,7 +116,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   *
   */
 NS_IMETHODIMP 
-nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
+nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWhichClipboard)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsClipboard::GetNativeClipboardData()\n"));
     // make sure we have a good transferable
@@ -139,7 +133,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   * 
   *
   */
-NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
+NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsClipboard::ForceDataToClipboard()\n"));
     // make sure we have a good transferable

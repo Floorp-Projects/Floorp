@@ -29,10 +29,12 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
+#include "nsWindow.h"
+
 #include <qlineedit.h>
 #include <qmultilineedit.h>
 
-#define DBG 0
+//JCG #define DBG 0
 
 //-------------------------------------------------------------------------
 //
@@ -109,7 +111,7 @@ NS_METHOD nsTextHelper::GetText(nsString& aTextBuffer,
     }
 
     aTextBuffer.SetLength(0);
-    aTextBuffer.Append((const char *) string);
+    aTextBuffer.AppendWithConversion((const char *) string);
 
     aActualSize = (PRUint32) string.length();
 
@@ -154,7 +156,7 @@ NS_METHOD nsTextHelper::InsertText(const nsString &aText,
     PRUint32 actualSize;
     GetText(currentText, 256, actualSize);
     nsString newText(aText);
-    currentText.Insert(newText, aStartPos, aText.Length());
+    currentText.Insert(newText, aStartPos);
     SetText(currentText,actualSize);
     aActualSize = aText.Length();
 
@@ -331,16 +333,5 @@ NS_METHOD nsTextHelper::GetCaretPosition(PRUint32& aPosition)
     {
         aPosition = (PRUint32) ((QLineEdit *)mWidget)->cursorPosition();
     }
-    else
-    {
-        //((QMultiLineEdit *)mWidget)->cursorPosition(&line, &col);
-     
-        // based on the row and column number, we need to calculate the
-        // position of the character where the cursor is.
-        
-        aPosition = -1;
-    }
-
-
     return NS_OK;
 }

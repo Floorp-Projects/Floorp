@@ -37,22 +37,25 @@ class QPaintDevice;
 class nsIDrawingSurfaceQT : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_QT_IID)
+
     /**
-     * Initialize a drawing surface using a windows DC.
-     * aDC is "owned" by the drawing surface until the drawing
+     * Initialize a drawing surface using a QPainter and QPaintDevice.
+     * these are "owned" by the drawing surface until the drawing
      * surface is destroyed.
-     * @param  aDC HDC to initialize drawing surface with
+     * @param  aGC QPainter to initialize drawing surface with
+     * @param  aPaintDevice QPixmap to initialize drawing surface with
      * @return error status
      **/
-    NS_IMETHOD Init(QPaintDevice * aPaintDevice, QPainter * aGC) = 0;
+    NS_IMETHOD Init(QPaintDevice *aPaintDevice, QPainter *aGC) = 0;
 
     /**
      * Initialize an offscreen drawing surface using a
-     * windows DC. aDC is not "owned" by this drawing surface, instead
+     * QPainter. aGC is not "owned" by this drawing surface, instead
      * it is used to create a drawing surface compatible
-     * with aDC. if width or height are less than zero, aDC will
+     * with aGC. if width or height are less than zero, aGC will
      * be created with no offscreen bitmap installed.
-     * @param  aDC HDC to initialize drawing surface with
+     * @param  aGC QPainter to initialize drawing surface with
      * @param  aWidth width of drawing surface
      * @param  aHeight height of drawing surface
      * @param  aFlags flags used to control type of drawing
@@ -63,24 +66,6 @@ public:
                     PRUint32 aWidth, 
                     PRUint32 aHeight,
                     PRUint32 aFlags) = 0;
-
-#if 0
-    /**
-     * Get a windows DC that represents the drawing surface.
-     * GetDC() must be paired with ReleaseDC(). Getting a DC
-     * and Lock()ing are mutually exclusive operations.
-     * @param  aDC out parameter for HDC
-     * @return error status
-     **/
-    NS_IMETHOD GetGC(QPainter * aGC) = 0;
-
-    /**
-     * Release a windows DC obtained by GetDC().
-     * ReleaseDC() must be preceded by a call to ReleaseDC().
-     * @return error status
-     **/
-    NS_IMETHOD ReleaseGC(void) = 0;
-#endif
 };
 
 #endif  // nsIDrawingSurfaceQT_h___ 

@@ -54,13 +54,10 @@ public:
     nsTextWidget();
     virtual ~nsTextWidget();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
     
     virtual PRBool OnPaint(nsPaintEvent & aEvent);
     virtual PRBool OnResize(nsRect &aRect);
-
-protected:
-    NS_IMETHOD CreateNative(QWidget *parentWindow);
 };
 
 #endif // nsTextWidget_h__

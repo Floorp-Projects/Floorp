@@ -28,12 +28,12 @@
 #include <qpixmap.h>
 #include <qimage.h>
 
-#define IsFlagSet(a,b) (a & b)
+#define IsFlagSet(a,b) ((a) & (b))
 
 #undef CHEAP_PERFORMANCE_MEASUREMENT
 
-static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
-
+NS_IMPL_ISUPPORTS1(nsImageQT, nsIImage)
+ 
 //------------------------------------------------------------
 
 nsImageQT::nsImageQT()
@@ -44,12 +44,24 @@ nsImageQT::nsImageQT()
     mWidth       = 0;
     mHeight      = 0;
     mDepth       = 0;
+    mRequestDepth = 0;
     mAlphaBits   = nsnull;
     mAlphaPixmap = nsnull;
     mImagePixmap = nsnull;
+    mAlphaDepth = 0;
+    mRowBytes = 0;
+    mSizeImage = 0;
+    mAlphaHeight = 0;
+    mAlphaWidth = 0;
+    mAlphaRowBytes = 0;
+    mNumBytesPixel = 0;
+    mIsTopToBottom = PR_TRUE;
+    mDecodedX1 = 0; 
+    mDecodedY1 = 0; 
+    mDecodedX2 = 0; 
+    mDecodedY2 = 0; 
     mNaturalWidth = 0;
     mNaturalHeight = 0;
-
 }
 
 //------------------------------------------------------------
@@ -57,28 +69,21 @@ nsImageQT::nsImageQT()
 nsImageQT::~nsImageQT()
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsImageQT::~nsImageQT()\n"));
-    if(nsnull != mImageBits) 
-    {
+    if (nsnull != mImageBits) {
         delete[] (PRUint8*)mImageBits;
         mImageBits = nsnull;
     }
-
-    if (nsnull != mAlphaBits) 
-    {
+    if (nsnull != mAlphaBits) {
         delete[] (PRUint8*)mAlphaBits;
         mAlphaBits = nsnull;
-        if (nsnull != mAlphaPixmap) 
-        {
-            delete mAlphaPixmap;
-        }
     }
-
-    if (nsnull != mImagePixmap)
-    {
+    if (nsnull != mAlphaPixmap) {
+        delete mAlphaPixmap;
+    }
+    if (nsnull != mImagePixmap) {
         delete mImagePixmap;
     }
 }
-NS_IMPL_ISUPPORTS(nsImageQT, kIImageIID);
 
 //------------------------------------------------------------
 
@@ -93,80 +98,66 @@ nsresult nsImageQT::Init(PRInt32 aWidth,
             aWidth, 
             aHeight, 
             aDepth));
-    if ((aWidth == 0) && (aHeight == 0))
-    {
+    if (aWidth == 0 && aHeight == 0) {
         return NS_ERROR_FAILURE;
     }
-
+    if (nsnull != mImageBits) {
+        delete[] (PRUint8*)mImageBits;
+        mImageBits = nsnull;
+    }
+    if (nsnull != mAlphaBits) {
+        delete[] (PRUint8*)mAlphaBits;
+        mAlphaBits = nsnull;
+    }
+    if (nsnull != mAlphaPixmap) {
+        delete mAlphaPixmap;
+        mAlphaPixmap = nsnull;
+    }
     SetDecodedRect(0,0,0,0);  //init
     SetNaturalWidth(0);
     SetNaturalHeight(0);
 
-    if (nsnull != mImageBits) 
-    {
-        delete[] (PRUint8*)mImageBits;
-        mImageBits = nsnull;
-    }
-
-    if (nsnull != mAlphaBits) 
-    {
-        delete[] (PRUint8*)mAlphaBits;
-        mAlphaBits = nsnull;
-        if (nsnull != mAlphaPixmap) 
-        {
-            delete mAlphaPixmap;
-            mAlphaPixmap = nsnull;
-        }
-    }
-
     // mImagePixmap gets created once per unique image bits in Draw()
     // ImageUpdated(nsImageUpdateFlags_kBitsChanged) can cause the
     // image bits to change and mImagePixmap will be unrefed and nulled.
-    if (nsnull != mImagePixmap) 
-    {
+    if (nsnull != mImagePixmap) {
         delete mImagePixmap;
         mImagePixmap = nsnull;
     }
-
-#if 1
-    if (32 == aDepth)
-    {
+    if (32 == aDepth) {
         mNumBytesPixel = 4;
+        mDepth = aDepth;
+        mRequestDepth = mDepth;
     }
-#else
-    if (24 == aDepth) 
-    {
-        mNumBytesPixel = 3;
+    else if (24 == aDepth) {
+        mNumBytesPixel = 4;
+        mDepth = 32;
+        mRequestDepth = aDepth;
     }
-#endif
     else 
     {
         NS_ASSERTION(PR_FALSE, "unexpected image depth");
         return NS_ERROR_UNEXPECTED;
     }
-
     mWidth = aWidth;
     mHeight = aHeight;
-    mDepth = aDepth;
     mIsTopToBottom = PR_TRUE;
 
     // create the memory for the image
     ComputeMetrics();
 
-    //mSizeImage = 8 * mWidth * mHeight;
-
-    mImageBits = (PRUint8*) new PRUint8[mSizeImage];
+    mImageBits = (PRUint8*)new PRUint8[mSizeImage];
 
     switch(aMaskRequirements)
     {
-    case nsMaskRequirements_kNoMask:
+      case nsMaskRequirements_kNoMask:
         PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsImageQT::Init: no mask needed\n"));
         mAlphaBits = nsnull;
         mAlphaWidth = 0;
         mAlphaHeight = 0;
         break;
 
-    case nsMaskRequirements_kNeeds1Bit:
+      case nsMaskRequirements_kNeeds1Bit:
         PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsImageQT::Init: 1 bit mask needed\n"));
         mAlphaRowBytes = (aWidth + 7) / 8;
         mAlphaDepth = 1;
@@ -174,22 +165,23 @@ nsresult nsImageQT::Init(PRInt32 aWidth,
         // 32-bit align each row
         mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 
-        mAlphaBits = new unsigned char[mAlphaRowBytes * aHeight];
+        mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
         mAlphaWidth = aWidth;
         mAlphaHeight = aHeight;
         break;
 
-    case nsMaskRequirements_kNeeds8Bit:
+      case nsMaskRequirements_kNeeds8Bit:
         PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsImageQT::Init: 8 bit mask needed\n"));
-        mAlphaBits = nsnull;
-        mAlphaWidth = 0;
-        mAlphaHeight = 0;
-        PR_LOG(QtGfxLM, 
-               PR_LOG_DEBUG, 
-               ("nsImageQT::Init: TODO want an 8bit mask for an image...\n"));
+        mAlphaRowBytes = aWidth;
+        mAlphaDepth = 8;
+ 
+        // 32-bit align each row
+        mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
+        mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
+        mAlphaWidth = aWidth;
+        mAlphaHeight = aHeight;
         break;
     }
-
     return NS_OK;
 }
 
@@ -355,16 +347,22 @@ NS_IMETHODIMP nsImageQT::Draw(nsIRenderingContext &aContext,
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
            ("nsImageQT::Draw with source and destination coordinates\n"));
-    if (nsnull == aSurface)
-    {
+    if (nsnull == aSurface) {
         return NS_ERROR_FAILURE;
     }
+    // Render unique image bits onto an off screen pixmap only once
+    // The image bits can change as a result of ImageUpdated() - for
+    // example: animated GIFs.
+    if (nsnull == mImagePixmap) {
+      CreateImagePixmap(aSWidth,aSHeight);
+    }
+    if (nsnull == mImagePixmap)
+        return NS_ERROR_FAILURE;
 
     // Copy data from mImageBits to the drawing surface specified by aSurface.
     // We only want a subset of the data in mImageBits, and the data might
     // need to be scaled.
-
-    nsDrawingSurfaceQT * drawing = (nsDrawingSurfaceQT *) aSurface;
+    nsDrawingSurfaceQT *drawing = (nsDrawingSurfaceQT*)aSurface;
 
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
@@ -388,7 +386,6 @@ NS_IMETHODIMP nsImageQT::Draw(nsIRenderingContext &aContext,
                                 aSY, 
                                 aSWidth, 
                                 aSHeight);
-
     return NS_OK;
 }
 
@@ -405,16 +402,14 @@ NS_IMETHODIMP nsImageQT::Draw(nsIRenderingContext &aContext,
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
            ("nsImageQT::Draw with just destination coordinates\n"));
-    if (nsnull == aSurface)
-    {
+    if (nsnull == aSurface) {
         PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsImageQT::Draw: no surface!!\n"));
         return NS_ERROR_FAILURE;
     }
 
     // XXX kipp: this is temporary code until we eliminate the
     // width/height arguments from the draw method.
-    if ((aWidth != mWidth) || (aHeight != mHeight)) 
-    {
+    if ((aWidth != mWidth) || (aHeight != mHeight)) {
         aWidth = mWidth;
         aHeight = mHeight;
     }
@@ -423,73 +418,116 @@ NS_IMETHODIMP nsImageQT::Draw(nsIRenderingContext &aContext,
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
            ("nsImageQT::Draw:this=%p,x=%d,y=%d,width=%d,height=%d\n",
-            this,
-            aX,
-            aY,
-            aWidth,
-            aHeight));
+            this, aX, aY, aWidth, aHeight));
 #endif
 
-    nsDrawingSurfaceQT * drawing = (nsDrawingSurfaceQT *) aSurface;
+    nsDrawingSurfaceQT *drawing = (nsDrawingSurfaceQT*)aSurface;
 
     // Render unique image bits onto an off screen pixmap only once
     // The image bits can change as a result of ImageUpdated() - for
     // example: animated GIFs.
-    if (nsnull == mImagePixmap)
-    {
-        PRInt32 depth = 32;//drawing->GetPixmap()->depth();
-        mImagePixmap = new QImage(aWidth,
-                                  aHeight,
-                                  32);//drawing->GetPixmap()->depth());
-
-        PRInt32 bytesperpixel = depth / 8;
-
-        PRUint32 * mImagePixels = new PRUint32[mSizeImage / bytesperpixel];
-
-        memcpy(mImagePixels, mImageBits, mSizeImage);
-
-        if (mImagePixmap)
-        {
-            for (PRInt32 i = 0; i < aHeight; i++)
-            {
-                QRgb * line = (QRgb *) mImagePixmap->scanLine(i);
-
-                for (PRInt32 j = 0; j < aWidth; j++)
-                {
-                    //line[j] = mImageBits[(i * aWidth) + j];
-                    PRUint32 c = mImagePixels[(i * aWidth) + j];
-                    PRUint8 r = NS_GET_R(c);
-                    PRUint8 g = NS_GET_G(c);
-                    PRUint8 b = NS_GET_B(c);
-                    PRUint8 a = NS_GET_A(c);
-                    //debug("nsColor=%4x, r=%x, g=%x, b=%x, a=%x", c, a, b, g, r);
-                    //QRgb qcolor = qRgb(r, b, g);
-                    QRgb qcolor = qRgba(a, b, g, r);
-                    line[j] = qcolor;
-                }
-            }
-        }
+    if (nsnull == mImagePixmap) {
+      CreateImagePixmap(aWidth,aHeight);
     }
+    if (nsnull == mImagePixmap)
+        return NS_ERROR_FAILURE;
 
-    drawing->GetGC()->drawImage(aX, 
-                                aY, 
-                                *mImagePixmap, 
-                                0, 
-                                0, 
-                                aWidth, 
-                                aHeight);
+    drawing->GetGC()->drawImage(aX, aY, *mImagePixmap, 0, 0, aWidth, aHeight);
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
            ("nsImageQT::Draw:x=%d, y=%d, width=%d, height=%d, imagesize=%d",
-            aX,
-            aY,
-            aWidth,
-            aHeight,
-            mSizeImage));
+            aX, aY, aWidth, aHeight, mSizeImage));
 
     return NS_OK;
 }
 
+void nsImageQT::CreateImagePixmap(PRInt32 aWidth,PRInt32 aHeight)
+{
+  mImagePixmap = new QImage(aWidth, aHeight, mDepth);
+  mImagePixmap->setAlphaBuffer(PR_TRUE);
+
+  if (mImagePixmap) {
+    PRInt8 BytesPerPixel = mRequestDepth / 8;
+    PRUint8 *alpha = mAlphaBits;
+
+    for (PRInt32 i = 0; i < aHeight; i++) {
+      QRgb * line = (QRgb*)mImagePixmap->scanLine(i);
+
+      for (PRInt32 j = 0, l = 0; l < aWidth; j += BytesPerPixel, l++) {
+        PRUint32 c = 0;
+        PRUint8 tmp;
+
+        for (PRInt8 k = (BytesPerPixel - 1); k >= 0; k--) {
+          c <<= 8;
+          tmp = mImageBits[(i * mRowBytes) + j + k];
+          c |= tmp;
+        }
+        PRUint8 a;
+        PRUint8 r = NS_GET_R(c);
+        PRUint8 g = NS_GET_G(c);
+        PRUint8 b = NS_GET_B(c);
+
+        if (mAlphaBits)
+          a = mAlphaDepth == 1 ? ((alpha[l / 8] & (1 << (7 - (l % 8)))) ? 255 : 0) : alpha[l];
+        else if (BytesPerPixel == 4)
+          a = NS_GET_A(c);
+        else
+          a = 255;
+                 
+        QRgb qcolor = qRgba(r, g, b, a);
+        line[l] = qcolor;
+      }
+      alpha += mAlphaRowBytes;
+    }
+  }
+}
+
+NS_IMETHODIMP nsImageQT::DrawTile(nsIRenderingContext &aContext,
+                                  nsDrawingSurface aSurface,
+                                  nsRect &aSrcRect, nsRect &aTileRect)
+{
+  nsDrawingSurfaceQT *drawing = (nsDrawingSurfaceQT*)aSurface;
+
+  if (drawing->GetDepth() == 8 || mAlphaDepth == 8) {
+    PRInt32 aY0 = aTileRect.y, aX0 = aTileRect.x;
+    PRInt32 aY1 = aTileRect.y + aTileRect.height;
+    PRInt32 aX1 = aTileRect.x + aTileRect.width;
+ 
+    for (PRInt32 y = aY0; y < aY1; y += aSrcRect.height)
+      for (PRInt32 x = aX0; x < aX1; x += aSrcRect.width)
+        Draw(aContext,aSurface,x,y, PR_MIN(aSrcRect.width, aX1 - x),
+             PR_MIN(aSrcRect.height, aY1 - y));
+ 
+    return NS_OK;
+  }
+  QPixmap qPmap;
+
+  // Render unique image bits onto an off screen pixmap only once
+  // The image bits can change as a result of ImageUpdated() - for
+  // example: animated GIFs.
+  if (nsnull == mImagePixmap) {
+    CreateImagePixmap(mWidth,mHeight);
+  }
+  if (nsnull == mImagePixmap)
+    return NS_ERROR_FAILURE;
+
+  qPmap.convertFromImage(*mImagePixmap);
+  drawing->GetGC()->drawTiledPixmap(aTileRect.x,aTileRect.y,
+                                    aTileRect.width,aTileRect.height,
+                                    qPmap,aSrcRect.x,aSrcRect.y);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImageQT::DrawTile(nsIRenderingContext &aContext,
+                                  nsDrawingSurface aSurface,
+                                  PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                  const nsRect &aTileRect)
+{
+  nsRect srcRect(aSXOffset,aSYOffset,mWidth,mHeight);
+  nsRect dstRect(aTileRect);
+
+  return DrawTile(aContext, aSurface, srcRect, dstRect);
+}
 
 //------------------------------------------------------------
 
@@ -502,13 +540,13 @@ nsresult nsImageQT::Optimize(nsIDeviceContext* aContext)
 PRInt32 nsImageQT::GetBytesPix()
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsImageQT::GetBytesPix()\n"));
-    return 1;
+    return mNumBytesPixel;
 }
  
 PRBool nsImageQT::GetIsRowOrderTopToBottom()
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsImageQT::GetIsRowOrderTopToBottom()\n"));
-    return PR_TRUE;
+    return mIsTopToBottom;
 }
 
 //------------------------------------------------------------

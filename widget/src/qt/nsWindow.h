@@ -24,6 +24,7 @@
 
 #include "nsISupports.h"
 #include "nsWidget.h"
+#include "nsQEventHandler.h"
 #include "nsIAppShell.h"
 #include "nsString.h"
 
@@ -40,7 +41,7 @@ class nsFont;
 // nsQWidget class
 //
 //=============================================================================
-class nsQWidget : public QWidget, public nsQBaseWidget
+class nsQWidget : public QWidget , public nsQBaseWidget
 {
     Q_OBJECT
 public:
@@ -49,24 +50,7 @@ public:
               const char * name = 0, 
               WFlags f = WResizeNoErase);
 	~nsQWidget();
-
-protected:
-#if 0
-    virtual void closeEvent(QCloseEvent * event);
-	virtual void showEvent(QShowEvent * event);
-	virtual void hideEvent(QHideEvent * event);
-	virtual void resizeEvent(QResizeEvent * event);
-	virtual void moveEvent(QMoveEvent * event);
-    virtual void paintEvent(QPaintEvent * event);
-    virtual void mousePressedEvent(QMouseEvent * event);
-    virtual void mouseReleasedEvent(QMouseEvent * event);
-    virtual void mouseDoubleClickedEvent(QMouseEvent * event);
-    virtual void focusInEvent(QFocusEvent * event);
-    virtual void focusOutEvent(QFocusEvent * event);
-    virtual void enterEvent(QEvent * event);
-    virtual void leaveEvent(QEvent * event);
-#endif
-
+        void Destroy();
 };
 
 /**
@@ -75,48 +59,40 @@ protected:
 
 class nsWindow : public nsWidget
 {
-
 public:
-    // nsIWidget interface
-
     nsWindow();
     virtual ~nsWindow();
 
     // nsIsupports
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+    NS_DECL_ISUPPORTS_INHERITED
 
+    // nsIWidget interface
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
     NS_IMETHOD PreCreateWidget(nsWidgetInitData *aWidgetInitData);
-
-    //virtual void* GetNativeData(PRUint32 aDataType);
 
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
     NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 
     NS_IMETHOD SetTitle(const nsString& aTitle);
-    NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar);
-    NS_IMETHOD ShowMenuBar(PRBool aShow);
 
     NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
     NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
-    NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-    NS_IMETHOD Resize(PRInt32 aX, 
-                      PRInt32 aY, 
-                      PRInt32 aWidth,
-                      PRInt32 aHeight, 
-                      PRBool aRepaint);
 
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener,
+                                   PRBool aDoCapture,PRBool aConsumeRollupEvent);
     NS_IMETHOD SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
     NS_IMETHOD UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD RemoveTooltips();
 
     NS_IMETHOD BeginResizingChildren(void);
     NS_IMETHOD EndResizingChildren(void);
-    NS_IMETHOD Destroy(void);
-
+    NS_IMETHOD SetFocus(void);
 
     virtual PRBool IsChild() const;
+    virtual PRBool IsPopup() const { return mIsPopup; };
+    virtual PRBool IsDialog() const { return mIsDialog; };
+
     virtual void SetIsDestroying( PRBool val) { mIsDestroying = val; };
 
     PRBool IsDestroying() const { return mIsDestroying; }
@@ -126,14 +102,10 @@ public:
     PRBool OnKey(nsKeyEvent &aEvent);
     PRBool DispatchFocus(nsGUIEvent &aEvent);
     virtual PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-    // in nsWidget now
-    //    virtual  PRBool OnResize(nsSizeEvent &aEvent);
 
     char gInstanceClassName[256];
   
 protected:
-    virtual void OnDestroy();
-
     virtual void InitCallbacks(char * aName = nsnull);
     NS_IMETHOD CreateNative(QWidget *parentWidget);
 
@@ -141,6 +113,9 @@ protected:
     PRBool           mVisible;
     PRBool           mDisplayed;
     PRBool           mIsDestroying;
+    PRBool           mBlockFocusEvents;
+    PRBool           mIsDialog;
+    PRBool           mIsPopup;
 
     // XXX Temporary, should not be caching the font
     nsFont         * mFont;
@@ -150,9 +125,9 @@ protected:
     int              mResized;
     PRBool           mLowerLeft;
 
-    QWidget        * mShell;  /* used for toplevel windows */
-    QHBoxLayout    * mHBox;
-    nsIMenuBar     * m_nsIMenuBar;
+    // are we doing a grab?
+    static PRBool      mIsGrabbing;
+    static nsWindow   *mGrabWindow;
 };
 
 //
@@ -164,7 +139,7 @@ public:
   ChildWindow();
   ~ChildWindow();
   virtual PRBool IsChild() const;
-  NS_IMETHOD Destroy(void);
+  NS_IMETHOD CreateNative(QWidget *parentWidget);
 };
 
 #endif // Window_h__

@@ -27,7 +27,7 @@
 
 
 /**
- * Native GTK DragService wrapper
+ * Native QT DragService wrapper
  */
 
 class nsDragService : public nsBaseDragService
@@ -49,47 +49,47 @@ public:
     // Native Impl.
     NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
 
-    static void SetTopLevelWidget(GtkWidget* w);
+    static void SetTopLevelWidget(QWidget* w);
 
-    static GtkWidget  *sWidget;
+    static Qwidget  *sWidget;
 
 protected:
     static PRBool gHaveDrag;
 
-    static void DragLeave(GtkWidget      *widget,
-                          GdkDragContext *context,
-                          guint           time);
+    static void DragLeave(QWidget      *widget,
+                          QDragContext *context,
+                          unsigned int time);
 
-    static PRBool DragMotion(GtkWidget      *widget,
-                             GdkDragContext *context,
-                             gint            x,
-                             gint            y,
-                             guint           time);
+    static PRBool DragMotion(QWidget      *widget,
+                             QDragContext *context,
+                             int          x,
+                             int          y,
+                             unsigned int time);
 
-    static PRBool DragDrop(GtkWidget   *widget,
-                           GdkDragContext *context,
-                           gint            x,
-                           gint            y,
-                           guint            time);
+    static PRBool DragDrop(QWidget      *widget,
+                           QDragContext *context,
+                           int          x,
+                           int          y,
+                           unsigned int time);
 
-    static void DragDataReceived(GtkWidget        *widget,
-                                 GdkDragContext   *context,
-                                 gint              x,
-                                 gint              y,
-                                 GtkSelectionData *data,
-                                 guint             info,
-                                 guint             time);
+    static void DragDataReceived(QWidget        *widget,
+                                 QDragContext   *context,
+                                 int            x,
+                                 int            y,
+                                 QSelectionData *data,
+                                 unsigned int   info,
+                                 unsigned int   time);
 
-    static void DragDataGet(GtkWidget          *widget,
-                            GdkDragContext     *context,
-                            GtkSelectionData   *selection_data,
-                            guint               info,
-                            guint               time,
-                            gpointer            data);
+    static void DragDataGet(QWidget          *widget,
+                            QDragContext     *context,
+                            QSelectionData   *selection_data,
+                            unsigned int     info,
+                            unsigned int     time,
+                            void*            data);
 
-    static void  DragDataDelete(GtkWidget          *widget,
-                                GdkDragContext     *context,
-                                gpointer            data);
+    static void  DragDataDelete(QWidget          *widget,
+                                QDragContext     *context,
+                                void*            data);
 #endif
 };
 

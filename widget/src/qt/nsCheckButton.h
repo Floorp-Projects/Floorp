@@ -54,7 +54,7 @@ public:
     nsCheckButton();
     virtual ~nsCheckButton();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsICheckButton
     NS_IMETHOD SetLabel(const nsString &aText);
@@ -67,7 +67,6 @@ public:
     virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
 
 protected:
-    NS_IMETHOD CreateNative(QWidget *parentWindow);
     QWidget *mLabel;
 };
 

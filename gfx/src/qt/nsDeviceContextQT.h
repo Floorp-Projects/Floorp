@@ -42,6 +42,9 @@ public:
     NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
 
     NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
+    NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) {return(DeviceContextImpl::CreateRenderingContext(aView,aContext));}
+    NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aWidget,aContext));}
+
     NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
     NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
@@ -52,7 +55,6 @@ public:
     //that is passed in is used to create the drawing surface if there isn't
     //already one in the device context. the drawing surface is then cached
     //in the device context for re-use.
-
     NS_IMETHOD GetDrawingSurface(nsIRenderingContext &aContext, 
                                  nsDrawingSurface &aSurface);
 
@@ -61,6 +63,7 @@ public:
 
     NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
     NS_IMETHOD GetClientRect(nsRect &aRect);
+    NS_IMETHOD GetRect(nsRect &aRect);
 
     NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                    nsIDeviceContext *&aContext);
@@ -73,7 +76,9 @@ public:
 
     // Overridden DeviceContextImpl functions.
     NS_IMETHOD GetDepth(PRUint32& aDepth);
-    NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace);
+
+    static int prefChanged(const char *aPref, void *aClosure);
+    nsresult   SetDPI(PRInt32 dpi);
 
 private:
     PRUint32      mDepth;
@@ -85,6 +90,11 @@ private:
     PRInt16       mWindowBorderWidth;
     PRInt16       mWindowBorderHeight;
     QWidget *     mWidget;    
+    PRInt32       mWidth;
+    PRInt32       mHeight; 
+    float         mWidthFloat;
+    float         mHeightFloat; 
+    static nscoord mDpi;
 };
 
 #endif /* nsDeviceContextQT_h___ */

@@ -49,6 +49,4 @@ void nsTimerEventHandler::FireTimeout()
     
 // Always repeating here
     
-// if (mRepeat)
-//  mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
 }

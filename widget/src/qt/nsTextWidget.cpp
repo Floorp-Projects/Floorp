@@ -26,7 +26,7 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 
-#define DBG 0
+//JCG #define DBG 0
 
 extern int mIsPasswordCallBacksInstalled;
 
@@ -47,9 +47,9 @@ nsQLineEdit::~nsQLineEdit()
 {
 }
 
-NS_IMPL_ADDREF(nsTextWidget)
-NS_IMPL_RELEASE(nsTextWidget)
-
+NS_IMPL_ADDREF_INHERITED(nsTextWidget, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsTextWidget, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsTextWidget, nsITextWidget, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -70,60 +70,6 @@ nsTextWidget::~nsTextWidget()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsTextWidget::~nsTextWidget()\n"));
 }
-
-//-------------------------------------------------------------------------
-//
-// Create the native Entry widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsTextWidget::CreateNative(QWidget *parentWindow)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsTextWidget::CreateNative()\n"));
-    mWidget = new nsQLineEdit(this, 
-                              parentWindow, 
-                              QLineEdit::tr("nsTextWidget"));
-    
-    if (mWidget)
-    {
-#if 0
-        QObject::connect(mWidget, 
-                         SIGNAL(textChanged(const QString &)), 
-                         (QObject *)mEventHandler, 
-                         SLOT(TextChangedEvent(const QString &)));
-#endif
-
-        PRBool oldIsReadOnly;
-        SetPassword(mIsPassword);
-        SetReadOnly(mIsReadOnly, oldIsReadOnly);
-
-        mWidget->show();
-    }
-
-    return nsWidget::CreateNative(parentWindow);
-}
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsTextWidget::QueryInterface()\n"));
-    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-
-    static NS_DEFINE_IID(kInsTextWidgetIID, NS_ITEXTWIDGET_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsTextWidgetIID)) 
-    {
-        *aInstancePtr = (void*) ((nsITextWidget*)this);
-        AddRef();
-        result = NS_OK;
-    }
-
-    return result;
-}
-
-
 
 //-------------------------------------------------------------------------
 //

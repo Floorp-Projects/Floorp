@@ -44,8 +44,9 @@ nsQLabel::~nsQLabel()
 {
 }
 
-NS_IMPL_ADDREF(nsLabel)
-NS_IMPL_RELEASE(nsLabel)
+NS_IMPL_ADDREF_INHERITED(nsLabel,nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsLabel,nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsLabel, nsILabel, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -57,30 +58,8 @@ nsLabel::nsLabel() : nsWidget(), nsILabel()
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsLabel::nsLabel()\n"));
+    NS_INIT_REFCNT();
     mAlignment = eAlign_Left;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Create the nativeLabel widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD  nsLabel::CreateNative(QWidget *parentWindow)
-{
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsLabel::CreateNative()\n"));
-    int alignment = GetNativeAlignment();
-
-    mWidget = new nsQLabel(this, parentWindow, QLabel::tr("nsLabel"));
-
-    if (mWidget)
-    {
-        ((QLabel *)mWidget)->setAlignment(alignment);
-    }
-
-    return nsWidget::CreateNative(parentWindow);
 }
 
 //-------------------------------------------------------------------------
@@ -126,31 +105,6 @@ nsLabel::~nsLabel()
            PR_LOG_DEBUG, 
            ("nsLabel::~nsLabel()\n"));
 }
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsLabel::QueryInterface()\n"));
-
-    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-
-    static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kILabelIID)) 
-    {
-        *aInstancePtr = (void*) ((nsILabel*)this);
-        AddRef();
-        result = NS_OK;
-    }
-
-    return result;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -215,7 +169,7 @@ NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
     QString string = ((QLabel *)mWidget)->text();
 
     aBuffer.SetLength(0);
-    aBuffer.Append((const char *)string);
+    aBuffer.AppendWithConversion((const char *)string);
 
     return NS_OK;
 }

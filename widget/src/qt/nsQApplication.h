@@ -25,23 +25,51 @@
 
 #include "nsIEventQueue.h"
 #include <qapplication.h>
+#include <qsocketnotifier.h>
+
+class nsQtEventQueue : public QObject
+{
+    Q_OBJECT
+public:
+	nsQtEventQueue(nsIEventQueue *EQueue);
+	~nsQtEventQueue();
+        unsigned long IncRefCnt();
+        unsigned long DecRefCnt();
+
+public slots:
+    void DataReceived();
+
+private:
+    nsIEventQueue   *mEventQueue;
+    QSocketNotifier *mQSocket;
+    unsigned long   mRefCnt;
+};
 
 class nsQApplication : public QApplication
 {
     Q_OBJECT
 public:
-	nsQApplication(int argc, char ** argv);
+    static nsQApplication *Instance(int argc, char ** argv);
+    static nsQApplication *Instance(Display * display);
+
+    static void Release();
+
+    static void AddEventProcessorCallback(nsIEventQueue * EQueue);
+    static void RemoveEventProcessorCallback(nsIEventQueue * EQueue);
+
+#ifdef DEBUG
+    bool x11EventFilter(XEvent *event);
+#endif
+
+protected:
+    nsQApplication(int argc, char ** argv);
     nsQApplication(Display * display);
-	~nsQApplication();
-
-public:
-    void SetEventProcessorCallback(nsIEventQueue * EQueue);
-
-protected slots:
-    void DataReceived();
+    ~nsQApplication();
 
 private:
-    nsIEventQueue * mEventQueue;
+    static QIntDict<nsQtEventQueue> mQueueDict;
+    static nsQApplication           *mInstance;
+    static PRUint32                 mRefCnt;
 };
 
 #endif // nsQApplication_h__

@@ -118,7 +118,7 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
             filter += f;
             filter += ")";
 
-            strList.append((const char *) filter);
+            strList.append(filter);
         }
 
         delete [] t;
@@ -187,7 +187,7 @@ NS_METHOD nsFileWidget::SetDefaultString(const nsString& aString)
 NS_METHOD nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsFileWidget::SetDisplayDirectory()\n"));
-    mDisplayDirectory = aDirectory;
+    ((nsFileSpec&)aDirectory).GetNativePathString(mDisplayDirectory);
 
     char * dir = mDisplayDirectory.ToNewCString();
 
@@ -234,7 +234,7 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
 
     if (mWidget)
     {
-        mWidget->setCaption(title);
+        mWidget->setCaption(QString::fromLocal8Bit(title));
 
         switch (mMode)
         {

@@ -94,7 +94,7 @@ NS_IMETHODIMP nsDragService::StartDragSession(nsITransferable * aTransferable,
     return NS_OK;
 }
 
-#if 0
+#if 0 //JCG
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetData(nsITransferable * aTransferable,
                                      PRUint32 aItemIndex)
@@ -103,7 +103,7 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable * aTransferable,
 }
 
 //-------------------------------------------------------------------------
-void nsDragService::SetTopLevelWidget(GtkWidget* w)
+void nsDragService::SetTopLevelWidget(QWidget* w)
 {
     printf("  nsDragService::SetTopLevelWidget\n");
   
@@ -123,123 +123,74 @@ void nsDragService::SetTopLevelWidget(GtkWidget* w)
         return;
     }
 
-#if 0
-    gtk_signal_connect (GTK_OBJECT (pixmap), "drag_leave",
-                        GTK_SIGNAL_FUNC (nsDragService::DragLeave), dragService);
-
-    gtk_signal_connect (GTK_OBJECT (pixmap), "drag_motion",
-                        GTK_SIGNAL_FUNC (nsDragService::DragMotion), dragService);
-
-    gtk_signal_connect (GTK_OBJECT (pixmap), "drag_drop",
-                        GTK_SIGNAL_FUNC (nsDragService::DragDrop), dragService);
-
-    gtk_signal_connect (GTK_OBJECT (pixmap), "drag_data_received",
-                        GTK_SIGNAL_FUNC (nsDragService::DragDataReceived), dragService);
-#endif
-
     // We're done with our reference to the dragService.
     //NS_IF_RELEASE(dragService);
 }
 
 //-------------------------------------------------------------------------
 void  
-nsDragService::DragLeave(GtkWidget	       *widget,
-			                   GdkDragContext   *context,
-                         guint             time)
+nsDragService::DragLeave(QWidget	*widget,
+			 QDragContext   *context,
+                         unsigned int   time)
 {
-    g_print("leave\n");
-    //gHaveDrag = PR_FALSE;
+    printf("leave\n");
 }
 
 //-------------------------------------------------------------------------
 PRBool
-nsDragService::DragMotion(GtkWidget	       *widget,
-			                    GdkDragContext   *context,
-			                    gint              x,
-			                    gint              y,
-			                    guint             time)
+nsDragService::DragMotion(QWidget	 *widget,
+			  QDragContext   *context,
+			  int            x,
+			  int            y,
+			  unsigned int   time)
 {
-    g_print("drag motion\n");
-    GtkWidget *source_widget;
-
-#if 0
-    if (!gHaveDrag) 
-    {
-        gHaveDrag = PR_TRUE;
-    }
-#endif
-
-    source_widget = gtk_drag_get_source_widget (context);
-    g_print("motion, source %s\n", source_widget ?
-	          gtk_type_name (GTK_OBJECT (source_widget)->klass->type) :
-	          "unknown");
-
-    gdk_drag_status (context, context->suggested_action, time);
-  
+    printf("drag motion\n");
     return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
 PRBool
-nsDragService::DragDrop(GtkWidget	       *widget,
-			                  GdkDragContext   *context,
-			                  gint              x,
-			                  gint              y,
-			                  guint             time)
+nsDragService::DragDrop(QWidget	       *widget,
+			QDragContext   *context,
+			int            x,
+			int            y,
+			unsigned int   time)
 {
-    g_print("drop\n");
-    //gHaveDrag = PR_FALSE;
-
-    if (context->targets)
-    {
-        gtk_drag_get_data (widget, context, 
-                           GPOINTER_TO_INT (context->targets->data), 
-                           time);
-        return PR_TRUE;
-    }
-  
+    printf("drop\n");
     return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
 void  
-nsDragService::DragDataReceived(GtkWidget          *widget,
-                                GdkDragContext     *context,
-                                gint                x,
-                                gint                y,
-                                GtkSelectionData   *data,
-                                guint               info,
+nsDragService::DragDataReceived(QWidget          *widget,
+                                QDragContext     *context,
+                                int              x,
+                                int              y,
+                                QSelectionData   *data,
+                                unsigned int     info,
                                 guint               time)
 {
-    if ((data->length >= 0) && (data->format == 8)) {
-        g_print ("Received \"%s\"\n", (gchar *)data->data);
-        gtk_drag_finish (context, PR_TRUE, PR_FALSE, time);
-        return;
-    }
-  
-    gtk_drag_finish (context, PR_FALSE, PR_FALSE, time);
+    printf("Data Received!\n");
 }
   
 //-------------------------------------------------------------------------
 void  
-nsDragService::DragDataGet(GtkWidget          *widget,
-		                       GdkDragContext     *context,
-		                       GtkSelectionData   *selection_data,
-		                       guint               info,
-		                       guint               time,
-		                       gpointer            data)
+nsDragService::DragDataGet(QWidget          *widget,
+		           QDragContext     *context,
+		           QSelectionData   *selection_data,
+		           unsigned int     info,
+		           unsigned int     time,
+		           void             *data)
 {
-    gtk_selection_data_set (selection_data,
-                            selection_data->target,
-                            8, (guchar *)"I'm Data!", 9);
+    printf("Get the data!\n");
 }
 
 //-------------------------------------------------------------------------
 void  
-nsDragService::DragDataDelete(GtkWidget          *widget,
-			                        GdkDragContext     *context,
-			                        gpointer            data)
+nsDragService::DragDataDelete(QWidget          *widget,
+			      QDragContext     *context,
+			      void             *data)
 {
-    g_print ("Delete the data!\n");
+    printf("Delete the data!\n");
 }
-#endif
+#endif /* JCG */

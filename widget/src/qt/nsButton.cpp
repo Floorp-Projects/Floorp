@@ -43,8 +43,9 @@ nsQPushButton::~nsQPushButton()
 {
 }
 
-NS_IMPL_ADDREF(nsButton)
-NS_IMPL_RELEASE(nsButton)
+NS_IMPL_ADDREF_INHERITED(nsButton, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsButton, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsButton, nsIButton, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -54,21 +55,6 @@ NS_IMPL_RELEASE(nsButton)
 nsButton::nsButton() : nsWidget() , nsIButton()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsButton::nsButton()\n"));
-}
-
-//-------------------------------------------------------------------------
-//
-// Create the native Button widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsButton::CreateNative(QWidget *parentWindow)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsButton::CreateNative()\n"));
-    mWidget = new nsQPushButton(this, 
-                                parentWindow, 
-                                QPushButton::tr("nsButton"));
-
-    return nsWidget::CreateNative(parentWindow);
 }
 
 //-------------------------------------------------------------------------
@@ -89,49 +75,7 @@ nsButton::~nsButton()
 void nsButton::InitCallbacks(char * aName)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsButton::InitCallbacks()\n"));
-    //nsWidget::InitCallbacks();
-
-#if 0
-    QObject::connect((QPushButton *) mWidget,
-                     SIGNAL(pressed()),
-                     (QPushButton *) mWidget,
-                     SLOT(Pressed()));
-
-    QObject::connect((QPushButton *)mWidget,
-                     SIGNAL(released()),
-                     (QPushButton *) mWidget,
-                     SLOT(Released()));
-#endif
-
 }
-
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @modify gpk 8/4/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- *
-*/
-nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsButton::QueryInterface()\n"));
-    if (NULL == aInstancePtr) 
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
-    if (aIID.Equals(kIButton)) 
-    {
-        *aInstancePtr = (void*) ((nsIButton*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    return nsWidget::QueryInterface(aIID, aInstancePtr);
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -162,7 +106,7 @@ NS_METHOD nsButton::GetLabel(nsString& aBuffer)
     QString string = ((QPushButton *)mWidget)->text();
 
     aBuffer.SetLength(0);
-    aBuffer.Append((const char *) string);
+    aBuffer.AppendWithConversion((const char *) string);
 
     return (NS_OK);
 }

@@ -56,7 +56,7 @@ public:
     nsLabel();
     virtual ~nsLabel();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsILabel part
     NS_IMETHOD SetLabel(const nsString &aText);
@@ -70,7 +70,6 @@ public:
     virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
     
 protected:
-    NS_METHOD CreateNative(QWidget *parentWindow);
     int GetNativeAlignment();
     nsLabelAlignment mAlignment;
 };

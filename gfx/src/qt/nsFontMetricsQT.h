@@ -23,13 +23,15 @@
 #ifndef nsFontMetricsQT_h__
 #define nsFontMetricsQT_h__
 
+#include "nsDeviceContextQT.h"
 #include "nsIFontMetrics.h"
+#include "nsIFontEnumerator.h"
 #include "nsFont.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
-#include "nsDeviceContextQT.h"
+#include "nsCOMPtr.h"
 
 #include <qfont.h>
 
@@ -43,7 +45,8 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+    NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
+                     nsIDeviceContext* aContext);
     NS_IMETHOD  Destroy();
 
     NS_IMETHOD  GetXHeight(nscoord& aResult);
@@ -53,30 +56,36 @@ public:
     NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
 
     NS_IMETHOD  GetHeight(nscoord &aHeight);
+    NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight);
     NS_IMETHOD  GetLeading(nscoord &aLeading);
+    NS_IMETHOD  GetEmHeight(nscoord &aHeight);
+    NS_IMETHOD  GetEmAscent(nscoord &aAscent);
+    NS_IMETHOD  GetEmDescent(nscoord &aDescent);
+    NS_IMETHOD  GetMaxHeight(nscoord &aHeight);
     NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
     NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
     NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
     NS_IMETHOD  GetFont(const nsFont *&aFont);
+    NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
     NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
+    nsCOMPtr<nsIAtom> mLangGroup;
+ 
 protected:
-#if 0
-    char *PickAppropriateSize(char **names, 
-                              XFontStruct *fonts, 
-                              int cnt, 
-                              nscoord desired);
-#endif
     void RealizeFont();
 
     nsIDeviceContext * mDeviceContext;
     nsFont           * mFont;
     QFont            * mFontHandle;
 
+    nscoord            mLeading;
+    nscoord            mEmHeight;
+    nscoord            mEmAscent;
+    nscoord            mEmDescent;
     nscoord            mHeight;
     nscoord            mAscent;
     nscoord            mDescent;
-    nscoord            mLeading;
+    nscoord            mMaxHeight;
     nscoord            mMaxAscent;
     nscoord            mMaxDescent;
     nscoord            mMaxAdvance;
@@ -87,6 +96,14 @@ protected:
     nscoord            mStrikeoutOffset;
     nscoord            mUnderlineSize;
     nscoord            mUnderlineOffset;
+};
+
+class nsFontEnumeratorQT : public nsIFontEnumerator
+{
+public:
+  nsFontEnumeratorQT();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFONTENUMERATOR
 };
 
 #endif

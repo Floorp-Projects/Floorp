@@ -58,7 +58,6 @@ public:
     NS_IMETHOD InsertSeparator(const PRUint32 aCount);
     NS_IMETHOD RemoveItem(const PRUint32 aCount);
     NS_IMETHOD RemoveAll();
-    //static void GetXY(GtkMenu *menu, gint *x, gint *y, gpointer user_data);
     NS_IMETHOD ShowMenu(PRInt32 aX, PRInt32 aY);
     NS_IMETHOD GetNativeData(void*& aData);
     NS_IMETHOD GetParent(nsIWidget*& aParent);

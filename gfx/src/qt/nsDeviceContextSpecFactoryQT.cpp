@@ -22,9 +22,9 @@
 
 #include "nsDeviceContextSpecFactoryQT.h"
 #include "nsDeviceContextSpecQT.h"
+#include "nsRenderingContextQT.h"
 #include "nsGfxCIID.h"
 #include "plstr.h"
-#include "nsRenderingContextQT.h"
 #include <qapplication.h>
 
 /** -------------------------------------------------------
@@ -36,6 +36,7 @@ nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT()
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
            ("nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT\n"));
+     NS_INIT_REFCNT();
 }
 
 /** -------------------------------------------------------
@@ -75,16 +76,14 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryQT::Init(void)
  *  Get a device context specification
  *  @update   dc 2/16/98
  */
-NS_IMETHODIMP nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec
-(
-    nsIDeviceContextSpec *aOldSpec,
-    nsIDeviceContextSpec *&aNewSpec,
-    PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+                                                                    nsIDeviceContextSpec *&aNewSpec,
+                                                                    PRBool aQuiet)
 {
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
            ("nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec\n"));
-    nsresult  					rv = NS_ERROR_FAILURE;
+    nsresult  rv = NS_ERROR_FAILURE;
     nsIDeviceContextSpec  *devSpec = nsnull;
 
     nsComponentManager::CreateInstance(kDeviceContextSpecCID, 
@@ -92,10 +91,8 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec
                                        kIDeviceContextSpecIID, 
                                        (void **)&devSpec);
 
-    if (nsnull != devSpec)
-    {
-        if (NS_OK == ((nsDeviceContextSpecQT *)devSpec)->Init(aQuiet))
-        {
+    if (nsnull != devSpec) {
+        if (NS_OK == ((nsDeviceContextSpecQT*)devSpec)->Init(aQuiet)) {
             aNewSpec = devSpec;
             rv = NS_OK;
         }

@@ -26,39 +26,29 @@
 class nsIWidget;
 class nsIMenuItem;
 
-//#include "nsISupports.h"
 #include "nsWidget.h"
 
 #include <qobject.h>
 #include <qevent.h>
-#include <map>
 
-
-
-class nsQEventHandler : public QObject//, public nsISupports
+class nsQEventHandler : public QObject
 {
     Q_OBJECT
 
 public:
-    //NS_DECL_ISUPPORTS
+    nsQEventHandler(nsWidget *aWidget);
+    ~nsQEventHandler();
 
-protected:
-    nsQEventHandler();
-
-public:
-    static nsQEventHandler * Instance(void * qWidget, 
-                                      nsWidget * nWidget);
-
-public slots:
+    void Enable(bool aEnable);
+    void Destroy(void);
     bool eventFilter(QObject * object, QEvent * event);
-    bool MouseButtonEvent(QMouseEvent * event, 
-                          nsWidget    * widget, 
-                          bool          buttonDown);
+
+    bool MouseButtonEvent(QMouseEvent *event,nsWidget *widget,
+                          bool buttonDown,int clickCnt);
     bool MouseMovedEvent(QMouseEvent * event, nsWidget * widget);
     bool MouseEnterEvent(QEvent * event, nsWidget * widget);
     bool MouseExitEvent(QEvent * event, nsWidget * widget);
     bool DestroyEvent(QCloseEvent * event, nsWidget * widget);
-    bool ShowEvent(QShowEvent * event, nsWidget * widget);
     bool HideEvent(QHideEvent * event, nsWidget * widget);
     bool ResizeEvent(QResizeEvent * event, nsWidget * widget);
     bool MoveEvent(QMoveEvent * event, nsWidget * widget);
@@ -67,16 +57,14 @@ public slots:
     bool KeyReleaseEvent(QKeyEvent * event, nsWidget * widget);
     bool FocusInEvent(QFocusEvent * event, nsWidget * widget);
     bool FocusOutEvent(QFocusEvent * event, nsWidget * widget);
-    bool ScrollbarValueChanged(int value);
-    bool TextChangedEvent(const QString & string);
 
 protected:
     PRInt32 GetNSKey(PRInt32 key, PRInt32 state);
 
 private:
-    static nsQEventHandler *            mInstance;
-    static std::map<void *, nsWidget *> mMap;
-    static QString                      mObjectName;
+    nsWidget * mWidget;
+    bool       mEnabled;
+    bool       mDestroyed;
 };
 
 #endif  // __nsQEventHandler.h

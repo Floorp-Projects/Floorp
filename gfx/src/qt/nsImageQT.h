@@ -74,6 +74,17 @@ public:
                     PRInt32 aDY, 
                     PRInt32 aDWidth, 
                     PRInt32 aDHeight);
+
+  NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
+                      nsDrawingSurface aSurface,
+                      nsRect &aSrcRect,
+                      nsRect &aTileRect);
+ 
+  NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
+                      nsDrawingSurface aSurface,
+                      PRInt32 aSXOffset, PRInt32 aSYOffset,
+                      const nsRect &aTileRect);
+
     virtual void ImageUpdated(nsIDeviceContext *aContext,
                               PRUint8 aFlags, nsRect *aUpdateRect);
     virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight,
@@ -109,14 +120,15 @@ private:
      */
     void ComputeMetrics();
     void ComputePaletteSize(PRIntn nBitCount);
+    void CreateImagePixmap(PRInt32 aWidth,PRInt32 aHeight);
 
 private:
     PRInt32   mWidth;
     PRInt32   mHeight;
-    PRInt32   mDepth;       // bits per pixel
+    PRInt32   mDepth;       // actual bits per pixel
+    PRInt32   mRequestDepth;       // requested bits per pixel
     PRInt32   mRowBytes;
     PRUint8 * mImageBits;
-    PRUint8 * mConvertedBits;
     PRInt32   mSizeImage;
     PRBool    mIsTopToBottom;
 
@@ -137,9 +149,7 @@ private:
     PRInt16   mAlphaRowBytes;     // alpha bytes per row
     PRInt16   mAlphaWidth;        // alpha layer width
     PRInt16   mAlphaHeight;       // alpha layer height
-    nsPoint   mLocation;          // alpha mask location
     QImage  * mImagePixmap;
-    //QPixmap * mImagePixmap;
 };
 
 #endif

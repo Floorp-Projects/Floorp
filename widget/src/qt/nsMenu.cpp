@@ -58,7 +58,7 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_OK;
     }
 
-    if (aIID.Equals(kIMenuListenerIID)) 
+    if (aIID.Equals(NS_GET_IID(nsIMenuListener))) 
     {
         *aInstancePtr = (void*)(nsIMenuListener*)this;
         NS_ADDREF_THIS();
@@ -90,7 +90,7 @@ nsMenu::nsMenu() : nsIMenu()
     mDOMNode       = nsnull;
     mWebShell      = nsnull;
     mDOMElement    = nsnull;
-    mAccessKey     = "_";
+    mAccessKey     =  NS_ConvertASCIItoUCS2("_").GetUnicode();
 }
 
 //-------------------------------------------------------------------------
