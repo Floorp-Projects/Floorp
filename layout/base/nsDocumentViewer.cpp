@@ -979,6 +979,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
   // Clear PrintPreview Alternate Device
   if (mDeviceContext) {
     mDeviceContext->SetAltDevice(nsnull);
+    mDeviceContext->SetCanonicalPixelScale(1.0);
   }
 #endif
 
@@ -4834,6 +4835,13 @@ DocumentViewerImpl::PrintPreview()
       nsresult rv = mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(ppDC)); 
       if (NS_SUCCEEDED(rv)) {
         mDeviceContext->SetAltDevice(ppDC);
+        if (printService) {
+          double scaling;
+          printService->GetScaling(&scaling);
+          if (scaling < 1.0) {
+            mDeviceContext->SetCanonicalPixelScale(float(scaling));
+          }
+        }
         ppDC->GetDeviceSurfaceDimensions(width, height);
         NS_RELEASE(devspec);
       }
@@ -5032,6 +5040,13 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
       rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
       if (NS_SUCCEEDED(rv))
         rv = dx->GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC));
+        if (printService) {
+          double scaling;
+          printService->GetScaling(&scaling);
+          if (scaling < 1.0) {
+            dx->SetCanonicalPixelScale(float(scaling));
+          }
+        }
         
       if (NS_SUCCEEDED(rv)) {
         NS_RELEASE(devspec);
