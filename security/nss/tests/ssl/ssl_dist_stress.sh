@@ -333,7 +333,7 @@ get_certrange()
 ################## main #################################################
 
 DO_DIST_ST="TRUE"
-. ssl.sh
+. ./ssl.sh
 ssl_ds_init $*
 if [ -n  "$DO_REM_ST" -a "$DO_REM_ST" = "TRUE" ] ; then
     ssl_ds_rem_stress

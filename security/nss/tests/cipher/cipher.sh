@@ -58,7 +58,7 @@ cipher_init()
   fi
   if [ -z "${INIT_SOURCED}" ] ; then
       cd ../common
-      . init.sh
+      . ./init.sh
   fi
   SCRIPTNAME="cipher.sh"
   html_head "Cipher Tests"

@@ -81,7 +81,7 @@ cd `dirname $0`	# will cause problems if sourced
 #all.sh should be the first one to try to source the init 
 if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     cd common
-    . init.sh
+    . ./init.sh
 fi
 
 if [ -z "O_CRON" -o "$O_CRON" != "ON" ]
@@ -94,7 +94,7 @@ for i in ${TESTS}
 do
     SCRIPTNAME=${i}.sh
     echo "Running Tests for $i"
-    (cd ${QADIR}/$i ; . $SCRIPTNAME all file >> ${LOGFILE} 2>&1)
+    (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file >> ${LOGFILE} 2>&1)
 done
 
 SCRIPTNAME=all.sh

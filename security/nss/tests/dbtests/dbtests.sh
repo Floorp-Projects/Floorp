@@ -68,11 +68,11 @@ dbtest_init()
   fi
   if [ -z "${INIT_SOURCED}" ] ; then
       cd ../common
-      . init.sh
+      . ./init.sh
   fi
   if [ ! -r $CERT_LOG_FILE ]; then  # we need certificates here
       cd ../cert
-      . cert.sh
+      . ./cert.sh
   fi
 
   SCRIPTNAME="dbtests.sh"
