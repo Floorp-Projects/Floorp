@@ -204,8 +204,8 @@ function backupCerts()
           nsIFilePicker.modeSave);
   fp.appendFilter("PKCS12 Files (*.p12)", "*.p12");
   fp.appendFilters(nsIFilePicker.filterAll);
-  if (fp.show() == nsIFilePicker.returnOK ||
-      fp.show() == nsIFilePicker.returnReplace) {
+  var rv = fp.show();
+  if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
     certdb.exportPKCS12File(null, fp.file, 
                             selected_certs.length, selected_certs);
   }
