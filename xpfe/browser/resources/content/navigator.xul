@@ -287,20 +287,6 @@ Contributor(s): ______________________________________. -->
 
     </toolbar>
 
-    <!-- Form toolbar items -->
-    <toolbar id="FormToolbar" class="chromeclass-directories"
-             persist="collapsed" hidden="true">
-        <button class="button-toolbar-3 top" id="formPrefill" crop="right"
-                oncommand="formPrefill();"
-                value="&formPrefill.label;" tooltip="aTooltip" tooltiptext="&formPrefill.tooltip;"/>
-        <button class="button-toolbar-3 top" id="formCapture" crop="right"
-                oncommand="formCapture();"
-                value="&formCapture.label;" tooltip="aTooltip" tooltiptext="&formCapture.tooltip;"/>
-        <button class="button-toolbar-3 top" id="formShow" crop="right"
-                oncommand="formShow();"
-                value="&formView.label;" tooltip="aTooltip" tooltiptext="&formView.tooltip;"/>
-    </toolbar>
-
   </toolbox>
     
   <box flex="1" >
