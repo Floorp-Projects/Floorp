@@ -25,11 +25,10 @@
 #include <memory>
 #include <ToolUtils.h>
 
-#define DBG 0
-
 NS_IMPL_ADDREF(nsTextAreaWidget);
 NS_IMPL_RELEASE(nsTextAreaWidget);
 
+#define MARGIN	4
 
 //-------------------------------------------------------------------------
 //	¥ NOTE ABOUT MENU HANDLING ¥
@@ -60,8 +59,8 @@ nsTextAreaWidget::nsTextAreaWidget(): nsWindow()
 {
   NS_INIT_REFCNT();
   mIsPasswordCallBacksInstalled = PR_FALSE;
-  mMakeReadOnly=PR_FALSE;
-  mMakePassword=PR_FALSE;
+  mMakeReadOnly = PR_FALSE;
+  mMakePassword = PR_FALSE;
   mTE_Data = nsnull;
   strcpy(gInstanceClassName, "nsTextAreaWidget");
   //mBackground = NS_RGB(124, 124, 124);
@@ -83,11 +82,6 @@ nsTextAreaWidget::nsTextAreaWidget(): nsWindow()
 NS_IMETHODIMP nsTextAreaWidget::Create(nsIWidget *aParent,const nsRect &aRect,EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,nsIAppShell *aAppShell,nsIToolkit *aToolkit, nsWidgetInitData *aInitData) 
 {
-LongRect		destRect,viewRect;
-PRUint32		teFlags=0;
-GrafPtr			curport;
-PRInt32			offx,offy;
-
 	nsWindow::Create(aParent, aRect, aHandleEventFunction,
 						aContext, aAppShell, aToolkit, aInitData);
 
@@ -97,22 +91,20 @@ PRInt32			offx,offy;
 	else if (aAppShell)
 		mWindowPtr = (WindowPtr)aAppShell->GetNativeData(NS_NATIVE_SHELL);
   
-	  // Initialize the TE record
-	  CalcOffset(offx,offy);
-	  
-	  viewRect.left = aRect.x;
-	  viewRect.top = aRect.y;
-	  viewRect.right = aRect.x+aRect.width;
-	  viewRect.bottom = aRect.y+aRect.height;
-	  destRect = viewRect;
-	  ::GetPort(&curport);
-	  ::SetPort(mWindowPtr);
-	  //::SetOrigin(-offx,-offy);
-		WENew(&destRect,&viewRect,teFlags,&mTE_Data);
-		//::SetOrigin(0,0);
-		::SetPort(curport);
+	// Initialize the TE record
+	LongRect destRect, viewRect;
+	viewRect.top	= MARGIN;
+	viewRect.left	= MARGIN;
+	viewRect.bottom	= aRect.height - MARGIN;
+	viewRect.right	= aRect.width - MARGIN;
+	destRect = viewRect;
+
+	StartDraw();
+	PRUint32 teFlags = weFAutoScroll;
+	WENew(&destRect, &viewRect, teFlags, &mTE_Data);
+	EndDraw();
 		
-	return NS_OK;
+	return (mTE_Data ? NS_OK : NS_ERROR_FAILURE);
 }
 
 /**-------------------------------------------------------------------------------
@@ -121,7 +113,7 @@ PRInt32			offx,offy;
  */ 
 nsTextAreaWidget::~nsTextAreaWidget()
 {
-	if(mTE_Data!=nsnull)
+	if (mTE_Data)
 		WEDispose(mTE_Data);
 }
 
@@ -134,15 +126,15 @@ nsTextAreaWidget::~nsTextAreaWidget()
  */ 
 nsresult nsTextAreaWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
+	static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 
-  if (aIID.Equals(kITextAreaWidgetIID)) {
-    AddRef();
-    *aInstancePtr = (void**)(nsITextAreaWidget*)this;
-    return NS_OK;
-  }
+	if (aIID.Equals(kITextAreaWidgetIID)) {
+		AddRef();
+		*aInstancePtr = (void**)(nsITextAreaWidget*)this;
+		return NS_OK;
+	}
 
-  return nsWindow::QueryInterface(aIID, aInstancePtr);
+	return nsWindow::QueryInterface(aIID, aInstancePtr);
 }
 
 //-------------------------------------------------------------------------
@@ -153,31 +145,31 @@ nsresult nsTextAreaWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
  */ 
 PRBool nsTextAreaWidget::OnPaint(nsPaintEvent & aEvent)
 {
-PRInt32							offx,offy;
-nsRect							therect;
-Rect								macrect;
-GrafPtr							theport;
-RgnHandle						thergn;
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	if (! mVisible)
+		return PR_FALSE;
+
+	StartDraw();
+	{
+		// erase all
+		nsRect	rect;
+		Rect	macRect;
+		GetBounds(rect);
+		rect.x = rect.y = 0;
+		nsRectToMacRect(rect, macRect);
+		::EraseRect(&macRect);
+
+		// update text
+		WEUpdate(nsnull, mTE_Data);
+
+		// draw frame
+		::FrameRect(&macRect);
+	}
+	EndDraw();
 	
-	CalcOffset(offx,offy);
-	::GetPort(&theport);
-	::SetPort(mWindowPtr);
-	::SetOrigin(-offx,-offy);
-	GetBounds(therect);
-	nsRectToMacRect(therect,macrect);
-	thergn = ::NewRgn();
-	::GetClip(thergn);
-	::ClipRect(&macrect);
-	::EraseRect(&macrect);
-	::PenSize(1,1);
-	WEActivate(mTE_Data);
-	WEUpdate(nsnull,mTE_Data);
-	::FrameRect(&macrect);
-	::SetClip(thergn);
-	::SetOrigin(0,0);
-	::SetPort(theport);
-	
-  return PR_FALSE;
+	return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -187,29 +179,14 @@ RgnHandle						thergn;
  * @param aModifiers -- the modifiers of the key pressed, like command, shift, etc.
  * @return -- PR_TRUE if painted, false otherwise
  */ 
-void nsTextAreaWidget::PrimitiveKeyDown(PRInt16	aKey,PRInt16 aModifiers)
+void nsTextAreaWidget::PrimitiveKeyDown(PRInt16	aKey, PRInt16 aModifiers)
 {
-PRBool 		result=PR_TRUE;
-GrafPtr		thePort;
-RgnHandle	theRgn;
-nsRect		theRect;
-Rect			macRect;
-PRInt32		offX,offY;
+	if (! mTE_Data)
+		return;
 
-	CalcOffset(offX,offY);
-	::GetPort(&thePort);
-	::SetPort(mWindowPtr);
-
-	GetBounds(theRect);
-	nsRectToMacRect(theRect,macRect);
-	theRgn = ::NewRgn();
-	::GetClip(theRgn);
-	::ClipRect(&macRect);
-	WEKey(aKey,aModifiers,mTE_Data);
-	::SetClip(theRgn);
-	::DisposeRgn(theRgn);
-	::SetPort(thePort);
-	
+	StartDraw();
+	WEKey(aKey, aModifiers, mTE_Data);
+	EndDraw();
 }
 
 /**-------------------------------------------------------------------------------
@@ -220,32 +197,36 @@ PRInt32		offX,offY;
  */ 
 PRBool nsTextAreaWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
-PRBool 		result=PR_TRUE;
-Point			mouseLoc;
-PRInt16 	modifiers=0;
-nsRect		therect;
-Rect			macrect;
-PRInt32		offx,offy;
-GrafPtr		theport;
-	
-	switch (aEvent.message){
+	if (! mTE_Data)
+		return PR_FALSE;
+
+	PRBool result = PR_FALSE;
+	switch (aEvent.message)
+	{
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
-			CalcOffset(offx,offy);
-			::GetPort(&theport);
-			::SetPort(mWindowPtr);
-			GetBounds(therect);
-			nsRectToMacRect(therect,macrect);
-			::ClipRect(&macrect);
+			Point mouseLoc;
 			mouseLoc.h = aEvent.point.x;
 			mouseLoc.v = aEvent.point.y;
-			WEClick(mouseLoc,modifiers,aEvent.time,mTE_Data);
-			::SetPort(theport);
-			result = PR_FALSE;
+
+			EventModifiers modifiers = 0;
+			if (aEvent.nativeMsg != nsnull)
+			{
+				EventRecord* osEvent = (EventRecord*)aEvent.nativeMsg;
+				modifiers = osEvent->modifiers;
+			}
+
+			StartDraw();
+			WEClick(mouseLoc, modifiers, aEvent.time, mTE_Data);
+			EndDraw();
+			result = PR_TRUE;
 			break;
+
 		case NS_MOUSE_LEFT_BUTTON_UP:
 			break;
+
 		case NS_MOUSE_EXIT:
 			break;
+
 		case NS_MOUSE_ENTER:
 			break;
 	}
@@ -255,16 +236,36 @@ GrafPtr		theport;
 //-------------------------------------------------------------------------
 PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 {
-	PRBool keyHandled = nsWindow::DispatchWindowEvent(aEvent);
+	PRBool eventHandled = nsWindow::DispatchWindowEvent(aEvent);
 
-	if (! keyHandled)
+	if (! eventHandled)
 	{
 		switch ( aEvent.message )
 	  	{
+			case NS_GOTFOCUS:
+			{
+				if (mTE_Data)
+				{
+					StartIdling();
+					WEActivate(mTE_Data);
+				}
+				break;
+			}
+
+			case NS_LOSTFOCUS:
+			{
+				if (mTE_Data)
+				{
+					WEDeactivate(mTE_Data);
+					StopIdling();
+				}
+				break;
+			}
+
 	  		case NS_KEY_DOWN:
 	  		{
 		  		char theChar;
-		  		short theModifiers;
+		  		EventModifiers theModifiers;
 		  		EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
 		  		if (theOSEvent)
 		  		{
@@ -281,12 +282,11 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 		  				theModifiers |= controlKey;
 		  			if (keyEvent->isAlt)
 		  				theModifiers |= optionKey;
+		  			if (keyEvent->isCommand)
+		  				theModifiers |= cmdKey;
 		  		}
-		  		if (theChar != NS_VK_RETURN)	// don't pass Return: nsTextAreaWidget is a single line editor
-		  		{
-		  			PrimitiveKeyDown(theChar, theModifiers);
-		  			keyHandled = PR_TRUE;
-		  		}
+	  			PrimitiveKeyDown(theChar, theModifiers);
+	  			eventHandled = PR_TRUE;
 		  		break;
 		  	}
 		  	
@@ -386,7 +386,7 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 	  	} // switch on which event message
 	} // if key event not handled
 
-	return (keyHandled);
+	return (eventHandled);
 }
 
 /**-------------------------------------------------------------------------------
@@ -397,10 +397,9 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
  */ 
 NS_METHOD nsTextAreaWidget::SetPassword(PRBool aIsPassword)
 {
-  if ( aIsPassword) {
-    mMakePassword = PR_TRUE;
-    return NS_OK;
-  }
+	//¥TODO?: can we really have textAreas displayed as passwords?
+	if (aIsPassword)
+		mMakePassword = PR_TRUE;
   
 	return NS_OK;
 }
@@ -414,8 +413,9 @@ NS_METHOD nsTextAreaWidget::SetPassword(PRBool aIsPassword)
  */ 
 NS_METHOD  nsTextAreaWidget::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 {
+	//¥TODO: toggle between read-only and editable modes
 	aOldFlag = mMakeReadOnly;
-  mMakeReadOnly = aReadOnlyFlag;
+	mMakeReadOnly = aReadOnlyFlag;
 	return NS_OK;  	
 }
 
@@ -427,7 +427,8 @@ NS_METHOD  nsTextAreaWidget::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
  */ 
 NS_METHOD nsTextAreaWidget::SetMaxTextLength(PRUint32 aChars)
 {
-  return NS_OK;
+	//¥TODO: implement this
+	return NS_OK;
 }
 
 /**-------------------------------------------------------------------------------
@@ -440,25 +441,21 @@ NS_METHOD nsTextAreaWidget::SetMaxTextLength(PRUint32 aChars)
  */ 
 NS_METHOD  nsTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aSize) 
 {
-Handle				thetext;
-PRInt32 			len,i;
-char					*str;
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
 
-  thetext = WEGetText(mTE_Data);
-  len = WEGetTextLength(mTE_Data);
+	Handle text = WEGetText(mTE_Data);
+	PRInt32 len = WEGetTextLength(mTE_Data);
   
-  //HLock(thetext);
-  str = new char[len+1];
+	char* str = new char[len+1];
+	for (PRInt32 i = 0; i < len; i++)
+		str[i] = (*text)[i];
+	str[len] = 0;
 
-  for(i=0;i<len;i++)
-  	str[i] = (*thetext)[i];
-  str[len] = 0;
-  //HUnlock(thetext);	
-  
-  aTextBuffer.SetLength(0);
-  aTextBuffer.Append(str);
+	aTextBuffer.SetLength(0);
+	aTextBuffer.Append(str);
 	aSize = aTextBuffer.Length();
-	
+
 	delete [] str;
 	return NS_OK;
 }
@@ -473,39 +470,7 @@ char					*str;
  */ 
 NS_IMETHODIMP nsTextAreaWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-nsSizeEvent 	event;
-//nsEventStatus	eventStatus;
-LongRect			macRect;
-
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  
-   if(nsnull!=mWindowRegion)
-  	::DisposeRgn(mWindowRegion);
-	mWindowRegion = NewRgn();
-	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
-	
-	if(mTE_Data != nsnull){
-		macRect.top = mBounds.y;
-		macRect.left = mBounds.x;
-		macRect.bottom = mBounds.y+mBounds.height;
-		macRect.right = mBounds.x+mBounds.width;
-		WESetDestRect(&macRect,mTE_Data);
-		WESetViewRect(&macRect,mTE_Data);
-	}
-			 
-  if (aRepaint){
-  	//¥TODO
-  }
-  
-  event.message = NS_SIZE;
-  event.point.x = 0;
-  event.point.y = 0;
-  event.windowSize = &mBounds;
-  event.eventStructType = NS_SIZE_EVENT;
-  event.widget = this;
- 	//this->DispatchEvent(&event, eventStatus);
-	return NS_OK;
+	return Resize(0, 0, aWidth, aHeight, aRepaint);
 }
 
 /**-------------------------------------------------------------------------------
@@ -520,39 +485,22 @@ LongRect			macRect;
  */ 
 NS_IMETHODIMP nsTextAreaWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-nsSizeEvent 	event;
-//nsEventStatus	eventStatus;
-LongRect			macRect;
+	Inherited::Resize(aX, aY, aWidth, aHeight, aRepaint);
 
-  mBounds.x      = aX;
-  mBounds.y      = aY;
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  if(nsnull!=mWindowRegion)
-  	::DisposeRgn(mWindowRegion);
-	mWindowRegion = NewRgn();
-	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
 
-	if(mTE_Data != nsnull){
-		macRect.top = mBounds.y;
-		macRect.left = mBounds.x;
-		macRect.bottom = mBounds.y+mBounds.height;
-		macRect.right = mBounds.x+mBounds.width;
-		WESetDestRect(&macRect,mTE_Data);
-		WESetViewRect(&macRect,mTE_Data);
-	}
+	LongRect macRect;
+	macRect.top		= mBounds.y + MARGIN;
+	macRect.left	= mBounds.x + MARGIN;
+	macRect.bottom	= mBounds.YMost() - MARGIN;
+	macRect.right	= mBounds.XMost() - MARGIN;
 
-  if (aRepaint){
-  	//¥TODO
-  }
-  
-  event.message = NS_SIZE;
-  event.point.x = 0;
-  event.point.y = 0;
-  event.windowSize = &mBounds;
-  event.widget = this;
-  event.eventStructType = NS_SIZE_EVENT;
- 	//this->DispatchEvent(&event, eventStatus);
+	StartDraw();
+	WESetDestRect(&macRect, mTE_Data);
+	WESetViewRect(&macRect, mTE_Data);
+	EndDraw();
+
 	return NS_OK;
 }
 
@@ -566,29 +514,31 @@ LongRect			macRect;
  */ 
 PRUint32  nsTextAreaWidget::SetText(const nsString& aText, PRUint32& outSize)
 { 
-PRInt32		offx,offy;
-GrafPtr		theport;
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
 
 	outSize = aText.Length();
 	const unsigned int bufferSize = outSize + 1;	// add 1 for null
-
-	CalcOffset(offx,offy);
-	::GetPort(&theport);
-	::SetPort(mWindowPtr);
-	//::SetOrigin(-offx,-offy);
  
  	this->RemoveText();
-	auto_ptr<char> buffer ( new char[bufferSize] );
-	if ( buffer.get() ) {
-		aText.ToCString(buffer.get(),bufferSize);
-		WEInsert(buffer.get(),outSize,0,0,mTE_Data);
+	auto_ptr<char> buffer(new char[bufferSize]);
+	if (buffer.get())
+	{
+		aText.ToCString(buffer.get(), bufferSize);
+
+		char* occur = buffer.get();		// replace LineFeed with Return
+		while ((occur = strchr(occur, '\n')) != nil) {
+			*occur = '\r';
+		}
+
+		StartDraw();
+		WEInsert(buffer.get(), outSize, 0, 0, mTE_Data);
+		EndDraw();
 	}
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
-	
-	//::SetOrigin(0,0);
-	::SetPort(theport);
-  return NS_OK;
+
+	return NS_OK;
 }
 
 /**-------------------------------------------------------------------------------
@@ -602,24 +552,31 @@ GrafPtr		theport;
  */ 
 PRUint32  nsTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aSize)
 { 
-char 			buffer[256];
-PRInt32 	len;
-PRInt32		offX,offY;
-GrafPtr		thePort;
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
 
-	CalcOffset(offX,offY);
-	::GetPort(&thePort);
-	::SetPort(mWindowPtr);
-	//::SetOrigin(-offx,-offy);
+	const unsigned int bufferSize = aSize + 1;	// add 1 for null
+ 
+ 	this->RemoveText();
+	auto_ptr<char> buffer(new char[bufferSize]);
+	if (buffer.get())
+	{
+		aText.ToCString(buffer.get(), bufferSize);
 
-	aText.ToCString(buffer,255);
-	len = strlen(buffer);
-	
-	WEInsert(buffer,len,0,0,mTE_Data);
-	aSize = len;
-	//::SetOrigin(0,0);
-	::SetPort(thePort);
-  return NS_OK;
+		char* occur = buffer.get();		// replace LineFeed with Return
+		while ((occur = strchr(occur, '\n')) != nil) {
+			*occur = '\r';
+		}
+		
+		StartDraw();
+		WESetSelection(aStartPos, aEndPos, mTE_Data);
+		WEInsert(buffer.get(), aSize, 0, 0, mTE_Data);
+		EndDraw();
+	}
+	else
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	return NS_OK;
 }
 
 /**-------------------------------------------------------------------------------
@@ -629,9 +586,15 @@ GrafPtr		thePort;
  */ 
 NS_METHOD  nsTextAreaWidget::RemoveText()
 {
-	WESetSelection(0, 32000,mTE_Data);
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	StartDraw();
+	WESetSelection(0, WEGetTextLength(mTE_Data), mTE_Data);
 	WEDelete(mTE_Data);
-  return NS_OK;
+	EndDraw();
+
+	return NS_OK;
 }
 
 /**-------------------------------------------------------------------------------
@@ -641,8 +604,14 @@ NS_METHOD  nsTextAreaWidget::RemoveText()
  */ 
 NS_METHOD nsTextAreaWidget::SelectAll()
 {
-	WESetSelection(0, 32000,mTE_Data);
-  return NS_OK;
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	StartDraw();
+	WESetSelection(0, WEGetTextLength(mTE_Data), mTE_Data);
+	EndDraw();
+
+	return NS_OK;
 }
 
 /**-------------------------------------------------------------------------------
@@ -654,8 +623,14 @@ NS_METHOD nsTextAreaWidget::SelectAll()
  */ 
 NS_METHOD  nsTextAreaWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
-  WESetSelection(aStartSel, aEndSel,mTE_Data);
-  return NS_OK;
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	StartDraw();
+	WESetSelection(aStartSel, aEndSel, mTE_Data);
+	EndDraw();
+
+	return NS_OK;
 }
 
 /**-------------------------------------------------------------------------------
@@ -667,8 +642,14 @@ NS_METHOD  nsTextAreaWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
  */ 
 NS_METHOD  nsTextAreaWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 {
-	WEGetSelection((long*)aStartSel,(long*)aEndSel,mTE_Data);
-  return NS_OK;
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	StartDraw();
+	WEGetSelection((SInt32*)aStartSel, (SInt32*)aEndSel, mTE_Data);
+	EndDraw();
+
+	return NS_OK;
 }
 
 /**-------------------------------------------------------------------------------
@@ -679,8 +660,7 @@ NS_METHOD  nsTextAreaWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel
  */ 
 NS_METHOD  nsTextAreaWidget::SetCaretPosition(PRUint32 aPosition)
 {
-  //mHelper->SetCaretPosition(aPosition);
-  return NS_OK;
+	return SetSelection(aPosition, aPosition);
 }
 
 /**-------------------------------------------------------------------------------
@@ -691,7 +671,23 @@ NS_METHOD  nsTextAreaWidget::SetCaretPosition(PRUint32 aPosition)
  */ 
 NS_METHOD nsTextAreaWidget::GetCaretPosition(PRUint32& aPos)
 {
-  //return mHelper->GetCaretPosition();
-  return NS_OK;
+	PRUint32 startSel, endSel;
+	nsresult res = GetSelection(&startSel, &endSel);
+	aPos = (res == NS_OK ? startSel : 0);
+	return res;
 }
 
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void	nsTextAreaWidget::RepeatAction(const EventRecord& inMacEvent)
+{
+	if (mTE_Data)
+	{
+		UInt32 maxSleep = 0;
+		StartDraw();
+		WEIdle(&maxSleep, mTE_Data);
+		EndDraw();
+	}
+}
