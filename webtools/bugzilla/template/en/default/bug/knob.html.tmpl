@@ -96,10 +96,10 @@
         <a href="page.cgi?id=fields.html#assigned_to">Reassign</a> 
         [% terms.bug %] to
       </label>
-      [% safe_assigned_to = FILTER js; bug.assigned_to.email; END %]
+      [% safe_assigned_to = FILTER js; bug.assigned_to.login; END %]
       [% INCLUDE global/userselect.html.tmpl
            name => "assigned_to"
-           value => bug.assigned_to.email
+           value => bug.assigned_to.login
            size => 32
            onchange => "if ((this.value != '$safe_assigned_to') && (this.value != '')) {
                           document.changeform.knob[$knum].checked=true;

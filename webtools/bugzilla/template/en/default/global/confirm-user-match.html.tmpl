@@ -97,7 +97,7 @@
                     <select name="[% field.key FILTER html %]"
                      id="[% field.key FILTER html %]">
                       [% FOREACH match = query.value.users %]
-                        <option value="[% match.email FILTER html %]">
+                        <option value="[% match.login FILTER html %]">
                          [%- match.identity FILTER html -%]
                         </option>
                       [% END %]
@@ -118,7 +118,7 @@
                        multiple="multiple" size="[% query.value.users.size %]">
                       [% END %]
                       [% FOREACH match = query.value.users %]
-                        <option value="[% match.email FILTER html %]">
+                        <option value="[% match.login FILTER html %]">
                          [%- match.identity FILTER html -%]
                         </option>
                       [% END %]
