@@ -247,6 +247,7 @@ PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
 
   // Now convert as much of the byte buffer to unicode as possible
   PRInt32 srcLen = CountValidUTF8Bytes(mByteData->GetBuffer(),remainder + nb);
+  NS_ASSERTION( (remainder+nb >= srcLen), "cannot be longer than out buffer");
 
   NS_ConvertUTF8toUCS2
     unicodeValue(Substring(mByteData->GetBuffer(),
@@ -264,7 +265,7 @@ PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
 
   mUnicharDataOffset = 0;
   mUnicharDataLength = dstLen;
-  mByteDataOffset += srcLen;
+  mByteDataOffset = srcLen;
   
   return dstLen;
 }
@@ -274,8 +275,10 @@ UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRInt32 aMaxBytes)
 {
   const char *c = aBuffer;
   const char *end = aBuffer + aMaxBytes;
+  const char *lastchar = c;     // pre-initialize in case of 0-length buffer
   
   while (c < end && *c) {
+    lastchar = c;
     if (UTF8traits::isASCII(*c))
       c++;
     else if (UTF8traits::is2byte(*c))
@@ -293,6 +296,8 @@ UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRInt32 aMaxBytes)
       break; // Otherwise we go into an infinite loop.  But what happens now?
     }
   }
+  if (c > end)
+    c = lastchar;
 
   return c - aBuffer;
 }
