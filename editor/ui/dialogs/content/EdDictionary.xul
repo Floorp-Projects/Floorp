@@ -20,12 +20,12 @@
   <table>
     <tr>
       <td colspan="2">
-        NewWord<br/>
+        New word:<br/>
       </td>
     </tr>
     <tr>
       <td>
-        <input type="text" class="SpellCheckWord" id="Word" size="10"/>
+        <input type="text" class="SpellCheckWord" id="WordInput" size="10"/>
       </td>
       <td>
         <xul:titledbutton class="SizeToCell"  id="AddWord" onclick="AddWord()" value="Add"/>
@@ -33,31 +33,22 @@
     </tr>
     <tr>
       <td colspan="2">
-        Words:
+        Words in dictionary:
       </td>
     </tr>
     <tr>
       <td>
-        <select class="SpellCheckList" id="SuggestedList" size="6" onchange="SelectWord()">
-          <option>Sample contents 1</option>
-          <option>Sample contents 2</option>
-          <option>Sample contents 3</option>
+        <select class="SpellCheckList" id="DictionaryList" size="10">
         </select>
       </td>
-    </tr>
-    <tr>
       <td>
         <xul:titledbutton class="SizeToCell"  id="ReplaceWord" onclick="ReplaceWord()" value="Replace"/>
         <br/>
         <xul:titledbutton class="SizeToCell"  id="RemoveWord" onclick="RemoveWord()" value="Remove"/>
+        <br/>
+        <!-- This simply closes the window -->
+        <xul:titledbutton class="CloseButton"  id="Close" onclick="onCancel()" value="Close"/>
       </td>
     </tr>
   </table>
-  <xul:box>
-    <xul:spring flex="100%"/>    
-    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
-    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>
-    <xul:spring flex="100%"/>    
-  </xul:box>
-
 </xul:window>

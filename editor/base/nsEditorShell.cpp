@@ -130,19 +130,20 @@ NS_NewEditorShell(nsIEditorShell** aEditorShell)
 /////////////////////////////////////////////////////////////////////////
 
 nsEditorShell::nsEditorShell()
-:  mSuggestedWordIndex(0)
-,  mToolbarWindow(nsnull)
+:  mToolbarWindow(nsnull)
 ,  mContentWindow(nsnull)
 ,  mWebShellWin(nsnull)
 ,  mWebShell(nsnull)
 ,  mContentAreaWebShell(nsnull)
 ,  mEditorType(eUninitializedEditorType)
 ,  mWrapColumn(0)
+,  mSuggestedWordIndex(0)
+,  mDictionaryIndex(0)
 {
 #ifdef APP_DEBUG
   printf("Created nsEditorShell\n");
 #endif
-  
+
   NS_INIT_REFCNT();
 }
 
@@ -609,6 +610,13 @@ NS_IMETHODIMP nsEditorShell::SetBackgroundColor(const PRUnichar *color)
         result = htmlEditor->SetBackgroundColor(aColor);
       break;
     }
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          result = textEditor->SetBackgroundColor(aColor);
+      }
+      break;
     default:
       result = NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -2019,10 +2027,10 @@ nsEditorShell::SetSelectionAfterElement(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP    
-nsEditorShell::StartSpellChecking(PRUnichar **firstMisspelledWord)
+nsEditorShell::StartSpellChecking(PRUnichar **aFirstMisspelledWord)
 {
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString aFirstMisspelledWord;
+  nsAutoString firstMisspelledWord;
    // We can spell check with any editor type
   if (mEditor)
   {
@@ -2068,124 +2076,147 @@ nsEditorShell::StartSpellChecking(PRUnichar **firstMisspelledWord)
 
     DeleteSuggestedWordList();
     // Return the first misspelled word and initialize the suggested list
-    result = mSpellChecker->NextMisspelledWord(&aFirstMisspelledWord, &mSuggestedWordList);
+    result = mSpellChecker->NextMisspelledWord(&firstMisspelledWord, &mSuggestedWordList);
   }
-  *firstMisspelledWord = aFirstMisspelledWord.ToNewUnicode();
+  *aFirstMisspelledWord = firstMisspelledWord.ToNewUnicode();
   return result;
 }
 
 NS_IMETHODIMP    
-nsEditorShell::GetNextMisspelledWord(PRUnichar **nextMisspelledWord)
+nsEditorShell::GetNextMisspelledWord(PRUnichar **aNextMisspelledWord)
 {
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString aNextMisspelledWord;
+  nsAutoString nextMisspelledWord;
   
    // We can spell check with any editor type
   if (mEditor && mSpellChecker)
   {
     DeleteSuggestedWordList();
-    result = mSpellChecker->NextMisspelledWord(&aNextMisspelledWord, &mSuggestedWordList);
+    result = mSpellChecker->NextMisspelledWord(&nextMisspelledWord, &mSuggestedWordList);
   }
-  *nextMisspelledWord = aNextMisspelledWord.ToNewUnicode();
+  *aNextMisspelledWord = nextMisspelledWord.ToNewUnicode();
   return result;
 }
 
 NS_IMETHODIMP    
-nsEditorShell::GetSuggestedWord(PRUnichar **suggestedWord)
+nsEditorShell::GetSuggestedWord(PRUnichar **aSuggestedWord)
 {
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString aSuggestedWord;
+  nsAutoString word;
    // We can spell check with any editor type
   if (mEditor)
   {
     if ( mSuggestedWordIndex < mSuggestedWordList.Count())
     {
-      mSuggestedWordList.StringAt(mSuggestedWordIndex, aSuggestedWord);
+      mSuggestedWordList.StringAt(mSuggestedWordIndex, word);
       mSuggestedWordIndex++;
     } else {
       // A blank string signals that there are no more strings
-      aSuggestedWord = "";
+      word = "";
     }
     result = NS_OK;
   }
-  *suggestedWord = aSuggestedWord.ToNewUnicode();
+  *aSuggestedWord = word.ToNewUnicode();
   return result;
 }
 
 NS_IMETHODIMP    
-nsEditorShell::CheckCurrentWord(const PRUnichar *suggestedWord, PRBool *aIsMisspelled)
+nsEditorShell::CheckCurrentWord(const PRUnichar *aSuggestedWord, PRBool *aIsMisspelled)
 {
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString aSuggestedWord(suggestedWord);
+  nsAutoString suggestedWord(aSuggestedWord);
    // We can spell check with any editor type
   if (mEditor && mSpellChecker)
   {
     DeleteSuggestedWordList();
-    result = mSpellChecker->CheckWord(&aSuggestedWord, aIsMisspelled, &mSuggestedWordList);
+    result = mSpellChecker->CheckWord(&suggestedWord, aIsMisspelled, &mSuggestedWordList);
   }
   return result;
 }
 
 NS_IMETHODIMP    
-nsEditorShell::ReplaceWord(const PRUnichar *misspelledWord, const PRUnichar *replaceWord, PRBool allOccurrences)
+nsEditorShell::ReplaceWord(const PRUnichar *aMisspelledWord, const PRUnichar *aReplaceWord, PRBool allOccurrences)
 {
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString aMisspelledWord(misspelledWord);
-  nsAutoString aReplaceWord(replaceWord);
+  nsAutoString misspelledWord(aMisspelledWord);
+  nsAutoString replaceWord(aReplaceWord);
   if (mEditor && mSpellChecker)
   {
-    result = mSpellChecker->Replace(&aMisspelledWord, &aReplaceWord, allOccurrences);
+    result = mSpellChecker->Replace(&misspelledWord, &replaceWord, allOccurrences);
   }
   return result;
 }
 
 NS_IMETHODIMP    
-nsEditorShell::IgnoreWordAllOccurrences(const PRUnichar *word)
+nsEditorShell::IgnoreWordAllOccurrences(const PRUnichar *aWord)
 {
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString aWord(word);
+  nsAutoString word(aWord);
   if (mEditor && mSpellChecker)
   {
-    result = mSpellChecker->IgnoreAll(&aWord);
+    result = mSpellChecker->IgnoreAll(&word);
   }
   return result;
 }
 
 NS_IMETHODIMP    
-nsEditorShell::AddWordToDictionary(const PRUnichar *word)
+nsEditorShell::GetPersonalDictionary()
 {
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString aWord(word);
+   // We can spell check with any editor type
   if (mEditor && mSpellChecker)
   {
-    result = mSpellChecker->AddWordToPersonalDictionary(&aWord);
+    mDictionaryList.Clear();
+    mDictionaryIndex = 0;
+    result = mSpellChecker->GetPersonalDictionary(&mDictionaryList);
   }
   return result;
 }
 
 NS_IMETHODIMP    
-nsEditorShell::RemoveWordFromDictionary(const PRUnichar *word)
+nsEditorShell::GetPersonalDictionaryWord(PRUnichar **aDictionaryWord)
 {
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString aWord(word);
+  nsAutoString word;
+  if (mEditor)
+  {
+    if ( mDictionaryIndex < mDictionaryList.Count())
+    {
+      mDictionaryList.StringAt(mDictionaryIndex, word);
+      mDictionaryIndex++;
+    } else {
+      // A blank string signals that there are no more strings
+      word = "";
+    }
+    result = NS_OK;
+  }
+  *aDictionaryWord = word.ToNewUnicode();
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::AddWordToDictionary(const PRUnichar *aWord)
+{
+  nsresult  result = NS_NOINTERFACE;
+  nsString word(aWord);
   if (mEditor && mSpellChecker)
   {
-    result = mSpellChecker->RemoveWordFromPersonalDictionary(&aWord);
+    result = mSpellChecker->AddWordToPersonalDictionary(&word);
   }
   return result;
 }
 
 NS_IMETHODIMP    
-nsEditorShell::GetPersonalDictionaryWord(const PRUnichar *word, PRUnichar **suggestedWord)
+nsEditorShell::RemoveWordFromDictionary(const PRUnichar *aWord)
 {
   nsresult  result = NS_NOINTERFACE;
+  nsString word(aWord);
   if (mEditor && mSpellChecker)
   {
-    printf("GetPersonalDictionaryWord NOT IMPLEMENTED\n");
+    result = mSpellChecker->RemoveWordFromPersonalDictionary(&word);
   }
   return result;
 }
-
 
 NS_IMETHODIMP    
 nsEditorShell::CloseSpellChecking()
@@ -2196,6 +2227,8 @@ nsEditorShell::CloseSpellChecking()
   {
     // Cleanup - kill the spell checker
     DeleteSuggestedWordList();
+    mDictionaryList.Clear();
+    mDictionaryIndex = 0;
     mSpellChecker = 0;
     result = NS_OK;
   }

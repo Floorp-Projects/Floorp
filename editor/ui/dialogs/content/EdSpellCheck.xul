@@ -67,9 +67,6 @@
     <tr>
       <td rowspan="5">
         <select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()">
-          <option>Sample contents 1</option>
-          <option>Sample contents 2</option>
-          <option>Sample contents 3</option>
         </select>
       </td>
       <!-- THIS IS A BOGUS HACK TO COMPENSATE FOR A DISPLAY BUG -->

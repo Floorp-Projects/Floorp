@@ -27,6 +27,37 @@ function ClearList(list)
   }
 }
 
+function ReplaceStringInList(list, index, string)
+{
+  //Hmmm... We should be able to simply set the "text" and "value"
+  //  properties of the option element, but setting "text" doesn't work.
+  //  Replace with a new node instead:
+  if (index < list.options.length)
+  {
+/*
+    node = list.options[index];
+    dump("BEFORE Option node text: "+node.text+" Value: "+node.value+"\n");
+    node.text = string;
+    node.value = string;
+    dump("AFTER Option node text: "+node.text+" Value: "+node.value+"\n");
+*/
+    // Save and remove selection else we have trouble below!
+    //  (This must be a bug!)
+    selIndex = list.selectedIndex;
+    list.selectedIndex = -1;
+
+    optionNode = new Option(string, string);
+    // Remove existing option node
+    //list.remove(index);
+    list.options[index] = null;
+    // Insert the new node
+    list.options[index] = optionNode;
+    // NOTE: If we insert, then remove, we crash!
+    // Reset the selected item
+    list.selectedIndex = selIndex;
+  }
+}
+
 function AppendStringToList(list, string)
 {
   
