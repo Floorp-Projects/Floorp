@@ -1189,10 +1189,22 @@ function MsgOpenSelectedMessages()
   // gWindowReuse values: false, true
   //    false: open new standalone message window for each message
   //    true : reuse existing standalone message window for each message
-  if ((!gWindowReuse) || (numMessages != 1) || (!MsgOpenSelectedMessageInExistingWindow())) {
-      for (var i = 0; i < numMessages; i++) {
-          MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[i]),dbView.getFolderForViewIndex(indices[i]).URI);
-      }
+  if (gWindowReuse && numMessages == 1 && MsgOpenSelectedMessageInExistingWindow())
+    return;
+    
+  var openWindowWarning = gPrefBranch.getIntPref("mailnews.open_window_warning");
+  if ((openWindowWarning > 1) && (numMessages >= openWindowWarning)) {
+    InitPrompts();
+    if (!gMessengerBundle)
+        gMessengerBundle = document.getElementById("bundle_messenger");
+    var title = gMessengerBundle.getString("openWindowWarningTitle");
+    var text = gMessengerBundle.getFormattedString("openWindowWarningText", [numMessages]);
+    if (!gPromptService.confirm(window, title, text))
+      return;
+  }
+
+  for (var i = 0; i < numMessages; i++) {
+    MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[i]), dbView.getFolderForViewIndex(indices[i]).URI);
   }
 }
 

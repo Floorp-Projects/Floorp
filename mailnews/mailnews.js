@@ -281,6 +281,7 @@ pref("ldap_2.prefs_migrated",      false);
 pref("mailnews.confirm.moveFoldersToTrash", true);
 
 pref("mailnews.reuse_message_window", true);
+pref("mailnews.open_window_warning", 10); // warn user if they attempt to open more than this many messages at once
 
 pref("mailnews.start_page.url", "chrome://messenger-region/locale/region.properties");
 pref("mailnews.start_page.enabled", true);
