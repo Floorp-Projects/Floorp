@@ -19,6 +19,7 @@ interface BrowserAppCore : BaseAppCore
 	void setWebShellWindow(in Window win);
 
 	void newWindow();
+	void openWindow();
 	void printPreview();
 	void copy();
 	void print();
