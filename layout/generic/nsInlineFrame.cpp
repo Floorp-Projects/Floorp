@@ -138,7 +138,7 @@ IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 }
 
 /* virtual */ PRBool
-nsInlineFrame::IsFrameEmpty()
+nsInlineFrame::IsSelfEmpty()
 {
 #if 0
   // I used to think inline frames worked this way, but it seems they
@@ -170,12 +170,13 @@ nsInlineFrame::IsFrameEmpty()
                     margin->mMargin.GetLeft(coord))) {
     return PR_FALSE;
   }
+  return PR_TRUE;
 }
 
 PRBool
 nsInlineFrame::IsEmpty()
 {
-  if (!IsFrameEmpty()) {
+  if (!IsSelfEmpty()) {
     return PR_FALSE;
   }
 

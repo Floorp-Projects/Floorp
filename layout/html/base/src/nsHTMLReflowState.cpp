@@ -713,7 +713,7 @@ static PRBool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
     *aFound = PR_TRUE;
     return PR_TRUE;
   }
-  if (!aFrame->IsFrameEmpty()) {
+  if (!aFrame->IsSelfEmpty()) {
     *aFound = PR_FALSE;
     return PR_FALSE;
   }

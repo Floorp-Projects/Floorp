@@ -109,7 +109,7 @@ public:
   virtual nsIAtom* GetType() const;
 
   virtual PRBool IsEmpty();
-  virtual PRBool IsFrameEmpty();
+  virtual PRBool IsSelfEmpty();
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsPresContext* aPresContext,

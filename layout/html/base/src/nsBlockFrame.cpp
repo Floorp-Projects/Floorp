@@ -2939,7 +2939,7 @@ IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 }
 
 /* virtual */ PRBool
-nsBlockFrame::IsFrameEmpty()
+nsBlockFrame::IsSelfEmpty()
 {
   const nsStylePosition* position = GetStylePosition();
 
@@ -2993,7 +2993,7 @@ nsBlockFrame::IsFrameEmpty()
 PRBool
 nsBlockFrame::IsEmpty()
 {
-  if (!IsFrameEmpty()) {
+  if (!IsSelfEmpty()) {
     return PR_FALSE;
   }
 
