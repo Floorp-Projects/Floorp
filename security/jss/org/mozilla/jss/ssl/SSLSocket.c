@@ -646,7 +646,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_socketRead(JNIEnv *env, jobject self,
 finish:
     EXCEPTION_CHECK(env, sock)
     (*env)->ReleaseByteArrayElements(env, bufBA, buf,
-        (nread>0) ? JNI_COMMIT : JNI_ABORT);
+        (nread>0) ? 0 /*copy and free*/ : JNI_ABORT /*free, no copy*/);
     return nread;
 }
 
