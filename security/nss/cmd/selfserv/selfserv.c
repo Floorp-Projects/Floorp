@@ -210,25 +210,30 @@ errExit(char * funcString)
     exit(3);
 }
 
-void
-disableSSL2Ciphers(void)
-{
-    int i;
 
-    /* disable all the SSL2 cipher suites */
-    for (i = 0; ssl2CipherSuites[i] != 0;  ++i) {
-        SSL_EnableCipher(ssl2CipherSuites[i], SSL_NOT_ALLOWED);
-    }
-}
+/**************************************************************************
+** 
+** Routines for disabling SSL ciphers.
+**
+**************************************************************************/
 
 void
-disableSSL3Ciphers(void)
+disableAllSSLCiphers(void)
 {
-    int i;
+    const PRUint16 *cipherSuites = SSL_ImplementedCiphers;
+    int             i            = SSL_NumImplementedCiphers;
+    SECStatus       rv;
 
     /* disable all the SSL3 cipher suites */
-    for (i = 0; ssl3CipherSuites[i] != 0;  ++i) {
-        SSL_EnableCipher(ssl3CipherSuites[i], SSL_NOT_ALLOWED);
+    while (--i >= 0) {
+	PRUint16 suite = cipherSuites[i];
+        rv = SSL_CipherPrefSetDefault(suite, PR_FALSE);
+	if (rv != SECSuccess) {
+	    printf("SSL_CipherPrefSetDefault didn't like value 0x%04x (i = %d)\n",
+	    	   suite, i);
+	    errWarn("SSL_CipherPrefSetDefault");
+	    exit(2);
+	}
     }
 }
 
@@ -743,20 +748,20 @@ send_answer:
 	    if (cert) {
 		CERT_DestroyCertificate(cert);
 	    } else {
-		rv = SSL_Enable(ssl_sock, SSL_REQUEST_CERTIFICATE, 1);
+		rv = SSL_OptionSet(ssl_sock, SSL_REQUEST_CERTIFICATE, 1);
 		if (rv < 0) {
-		    errWarn("second SSL_Enable SSL_REQUEST_CERTIFICATE");
+		    errWarn("second SSL_OptionSet SSL_REQUEST_CERTIFICATE");
 		    break;
 		}
-		rv = SSL_Enable(ssl_sock, SSL_REQUIRE_CERTIFICATE, 
+		rv = SSL_OptionSet(ssl_sock, SSL_REQUIRE_CERTIFICATE, 
 				(requestCert == 4));
 		if (rv < 0) {
-		    errWarn("second SSL_Enable SSL_REQUIRE_CERTIFICATE");
+		    errWarn("second SSL_OptionSet SSL_REQUIRE_CERTIFICATE");
 		    break;
 		}
-		rv = SSL_RedoHandshake(ssl_sock);
+		rv = SSL_ReHandshake(ssl_sock, PR_TRUE);
 		if (rv != 0) {
-		    errWarn("SSL_RedoHandshake");
+		    errWarn("SSL_ReHandshake");
 		    break;
 		}
 		rv = SSL_ForceHandshake(ssl_sock);
@@ -923,23 +928,23 @@ server_main(
     ** Setting it explicitly should not be necessary.
     ** Let's test and make sure that's true.
     */
-    rv = SSL_Enable(model_sock, SSL_SECURITY, 1);
+    rv = SSL_OptionSet(model_sock, SSL_SECURITY, 1);
     if (rv < 0) {
-	errExit("SSL_Enable SSL_SECURITY");
+	errExit("SSL_OptionSet SSL_SECURITY");
     }
 #endif
 
-    rv = SSL_Enable(model_sock, SSL_ENABLE_SSL3, !disableSSL3);
+    rv = SSL_OptionSet(model_sock, SSL_ENABLE_SSL3, !disableSSL3);
     if (rv != SECSuccess) {
 	errExit("error enabling SSLv3 ");
     }
 
-    rv = SSL_Enable(model_sock, SSL_ENABLE_TLS, !disableTLS);
+    rv = SSL_OptionSet(model_sock, SSL_ENABLE_TLS, !disableTLS);
     if (rv != SECSuccess) {
 	errExit("error enabling TLS ");
     }
 
-    rv = SSL_Enable(model_sock, SSL_ROLLBACK_DETECTION, !disableRollBack);
+    rv = SSL_OptionSet(model_sock, SSL_ROLLBACK_DETECTION, !disableRollBack);
     if (rv != SECSuccess) {
 	errExit("error enabling RollBack detection ");
     }
@@ -954,9 +959,9 @@ server_main(
     }
 
     if (bigBuf.data) { /* doing FDX */
-	rv = SSL_Enable(model_sock, SSL_ENABLE_FDX, 1);
+	rv = SSL_OptionSet(model_sock, SSL_ENABLE_FDX, 1);
 	if (rv < 0) {
-	    errExit("SSL_Enable SSL_ENABLE_FDX");
+	    errExit("SSL_OptionSet SSL_ENABLE_FDX");
 	}
     }
 
@@ -964,9 +969,9 @@ server_main(
      * would like it to be. Turn this cipher on.
      */
 
-    secStatus = SSL_EnableCipher( SSL_RSA_WITH_NULL_MD5, PR_TRUE);
+    secStatus = SSL_CipherPrefSetDefault( SSL_RSA_WITH_NULL_MD5, PR_TRUE);
     if ( secStatus != SECSuccess ) {
-	errExit("SSL_EnableCipher:SSL_RSA_WITH_NULL_MD5");
+	errExit("SSL_CipherPrefSetDefault:SSL_RSA_WITH_NULL_MD5");
     }
 
 
@@ -974,14 +979,14 @@ server_main(
 	SSL_AuthCertificateHook(model_sock, mySSLAuthCertificate, 
 	                        (void *)CERT_GetDefaultCertDB());
 	if (requestCert <= 2) { 
-	    rv = SSL_Enable(model_sock, SSL_REQUEST_CERTIFICATE, 1);
+	    rv = SSL_OptionSet(model_sock, SSL_REQUEST_CERTIFICATE, 1);
 	    if (rv < 0) {
-		errExit("first SSL_Enable SSL_REQUEST_CERTIFICATE");
+		errExit("first SSL_OptionSet SSL_REQUEST_CERTIFICATE");
 	    }
-	    rv = SSL_Enable(model_sock, SSL_REQUIRE_CERTIFICATE, 
+	    rv = SSL_OptionSet(model_sock, SSL_REQUIRE_CERTIFICATE, 
 	                    (requestCert == 2));
 	    if (rv < 0) {
-		errExit("first SSL_Enable SSL_REQUIRE_CERTIFICATE");
+		errExit("first SSL_OptionSet SSL_REQUIRE_CERTIFICATE");
 	    }
 	}
     }
@@ -1208,8 +1213,7 @@ main(int argc, char **argv)
     	int ndx;
 
 	/* disable all the ciphers, then enable the ones we want. */
-	disableSSL2Ciphers();
-	disableSSL3Ciphers();
+	disableAllSSLCiphers();
 
 	while (0 != (ndx = *cipherString++)) {
 	    int *cptr;

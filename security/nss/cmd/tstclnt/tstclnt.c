@@ -209,7 +209,7 @@ disableAllSSLCiphers(void)
     /* disable all the SSL3 cipher suites */
     while (--i >= 0) {
 	PRUint16 suite = cipherSuites[i];
-        rv = SSL_CipherPrefSetDefault(suite, SSL_NOT_ALLOWED);
+        rv = SSL_CipherPrefSetDefault(suite, PR_FALSE);
 	if (rv != SECSuccess) {
 	    PRErrorCode err = PR_GetError();
 	    printf("SSL_CipherPrefSet didn't like value 0x%04x (i = %d): %s\n",
@@ -437,13 +437,13 @@ int main(int argc, char **argv)
 	return -1;
     }
 
-    rv = SSL_Enable(s, SSL_SECURITY, 1);
+    rv = SSL_OptionSet(s, SSL_SECURITY, 1);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling socket");
 	return -1;
     }
 
-    rv = SSL_Enable(s, SSL_HANDSHAKE_AS_CLIENT, 1);
+    rv = SSL_OptionSet(s, SSL_HANDSHAKE_AS_CLIENT, 1);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error enabling client handshake");
 	return -1;
@@ -471,26 +471,26 @@ int main(int argc, char **argv)
 	}
     }
 
-    rv = SSL_Enable(s, SSL_ENABLE_SSL2, !disableSSL2);
+    rv = SSL_OptionSet(s, SSL_ENABLE_SSL2, !disableSSL2);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error enabling SSLv2 ");
 	return -1;
     }
 
-    rv = SSL_Enable(s, SSL_ENABLE_SSL3, !disableSSL3);
+    rv = SSL_OptionSet(s, SSL_ENABLE_SSL3, !disableSSL3);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error enabling SSLv3 ");
 	return -1;
     }
 
-    rv = SSL_Enable(s, SSL_ENABLE_TLS, !disableTLS);
+    rv = SSL_OptionSet(s, SSL_ENABLE_TLS, !disableTLS);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error enabling TLS ");
 	return -1;
     }
 
     /* disable ssl2 and ssl2-compatible client hellos. */
-    rv = SSL_Enable(s, SSL_V2_COMPATIBLE_HELLO, !disableSSL2);
+    rv = SSL_OptionSet(s, SSL_V2_COMPATIBLE_HELLO, !disableSSL2);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error disabling v2 compatibility");
 	return -1;

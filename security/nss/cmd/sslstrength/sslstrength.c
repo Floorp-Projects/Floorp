@@ -67,9 +67,9 @@ PRInt32 debug;
 
 /* Set SSL Policy to Domestic (strong=1) or Export (strong=0) */
 
-#define ALLOW(x) SSL_SetPolicy(x,SSL_ALLOWED); SSL_EnableCipher(x,1);
-#define DISALLOW(x) SSL_SetPolicy(x,SSL_NOT_ALLOWED); SSL_EnableCipher(x,0);
-#define MAYBEALLOW(x) SSL_SetPolicy(x,SSL_RESTRICTED); SSL_EnableCipher(x,1);
+#define ALLOW(x) SSL_CipherPolicySet(x,SSL_ALLOWED); SSL_CipherPrefSetDefault(x,1);
+#define DISALLOW(x) SSL_CipherPolicySet(x,SSL_NOT_ALLOWED); SSL_CipherPrefSetDefault(x,0);
+#define MAYBEALLOW(x) SSL_CipherPolicySet(x,SSL_RESTRICTED); SSL_CipherPrefSetDefault(x,1);
 
 struct CipherPolicy {
   char number;
@@ -167,8 +167,8 @@ void SetPolicy(char *c,int policy) {  /* policy==1 : domestic,   policy==0, expo
   int i,j,cpolicy;
   /* first, enable all relevant ciphers according to policy */
   for (j=0;j<(sizeof(ciphers)/sizeof(struct CipherPolicy));j++) {
-    SSL_SetPolicy(ciphers[j].id,policy?ciphers[j].domestic:ciphers[j].export);
-    SSL_EnableCipher(ciphers[j].id,0);
+    SSL_CipherPolicySet(ciphers[j].id,policy?ciphers[j].domestic:ciphers[j].export);
+    SSL_CipherPrefSetDefault(ciphers[j].id, PR_FALSE);
     ciphers[j].pref =0;
   }
   
@@ -183,7 +183,7 @@ void SetPolicy(char *c,int policy) {  /* policy==1 : domestic,   policy==0, expo
 	}
 	else {
 	  ciphers[j].pref=1;
-	  SSL_EnableCipher(ciphers[j].id,1);
+	  SSL_CipherPrefSetDefault(ciphers[j].id, PR_TRUE);
 	}
       }
     }
@@ -388,7 +388,7 @@ PRInt32 main(PRInt32 argc,char **argv, char **envp)
   
   dbmsg("10: About to enable security\n");
   
-  rv = SSL_Enable(s, SSL_SECURITY, 1);
+  rv = SSL_OptionSet(s, SSL_SECURITY, PR_TRUE);
   if (rv < 0) {
     PrintErrString(progname, "error enabling socket");
     return -1;
@@ -409,7 +409,7 @@ PRInt32 main(PRInt32 argc,char **argv, char **envp)
 
   PrintCiphers(1);
 
-  rv = SSL_Enable(s, SSL_HANDSHAKE_AS_CLIENT, 1);
+  rv = SSL_OptionSet(s, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE);
   if (rv < 0) {
     PrintErrString(progname, "error enabling client handshake");
     return -1;
