@@ -421,8 +421,8 @@ retry_token_password="Please retype the Personal Security Password for the %1$s 
 ;
 ; PKCS 12 prompt strings
 ;
-pkcs12_import_file_prompt="File Name to Import"
-pkcs12_export_file_prompt="File Name to Export"
+pkcs12_import_file_prompt="File Name to Restore"
+pkcs12_export_file_prompt="File Name to Backup"
 pkcs12_request_password_prompt="Please enter the portable security password protecting this security certificate and<psm:lf>private key."
 pkcs12_restore_success="Successfully restored your security certificate and private key"
 pkcs12_restore_failure="Unable to restore your security certificate and private key"
