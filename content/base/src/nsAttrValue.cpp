@@ -299,13 +299,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     }
     case eCSSStyleRule:
     {
+      aResult.Truncate();
       nsCSSDeclaration* decl = 
         GetMiscContainer()->mCSSStyleRule->GetDeclaration();
       if (decl) {
         decl->ToString(aResult);
-      }
-      else {
-        aResult.Truncate();
       }
 
       break;
