@@ -597,14 +597,6 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         StringBeginsWith(valueStr, _mozStr)) {
       continue;
     }
-    
-    // XXX: This special cased textarea code should be
-    //      removed when bug #17003 is fixed.  
-    if ((aTagName == nsHTMLAtoms::textarea) &&
-        ((attrName == nsHTMLAtoms::value) || 
-         (attrName == nsHTMLAtoms::defaultvalue))){
-        continue;
-    }
 
     if (mIsCopying && mIsFirstChildOfOL && (aTagName == nsHTMLAtoms::li) && 
         (attrName == nsHTMLAtoms::value)){
@@ -761,15 +753,6 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     AppendToString(mLineBreak, aStr);
     mMayIgnoreLineBreakSequence = PR_TRUE;
     mColPos = 0;
-  }
-
-  // XXX: This special cased textarea code should be
-  //      removed when bug #17003 is fixed.  
-  if (name == nsHTMLAtoms::textarea)
-  {
-    nsAutoString valueStr;
-    content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, valueStr);
-    AppendToString(valueStr, aStr);
   }
 
   if (name == nsHTMLAtoms::script ||
