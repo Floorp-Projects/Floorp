@@ -41,6 +41,8 @@
 
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsIFormControl.h"
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMMouseEvent.h"
@@ -269,6 +271,23 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
         deleteSelection = PR_FALSE;
       }
     }
+  }
+
+  nsCOMPtr<nsIContent> newSelectionContent =
+    do_QueryInterface(newSelectionParent);
+  nsIContent *content = newSelectionContent;
+
+  while (content) {
+    nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
+
+    if (formControl && !formControl->AllowDrop()) {
+      // Don't allow dropping into a form control that doesn't allow being
+      // dropped into.
+
+      return NS_OK;
+    }
+
+    content = content->GetParent();
   }
 
   PRUint32 i; 

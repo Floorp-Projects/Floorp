@@ -139,6 +139,8 @@ public:
    * @param aState the pres state to use to restore the control
    */
   NS_IMETHOD RestoreState(nsIPresState* aState) = 0;
+
+  virtual PRBool AllowDrop() = 0;
 };
 
 #endif /* nsIFormControl_h___ */
