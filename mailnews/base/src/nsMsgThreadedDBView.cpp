@@ -586,7 +586,7 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
         // if we have a collapsed thread which just got a new
         // top of thread, change the keys array.
         PRInt32 level = FindLevelInThread(msgHdr, threadIndex);
-        if ((flags & MSG_FLAG_ELIDED)
+        if (((flags & MSG_FLAG_ELIDED) || threadCount == 1)
           && (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) || !(msgFlags & MSG_FLAG_READ)))
         {
           if (level == 0) {
