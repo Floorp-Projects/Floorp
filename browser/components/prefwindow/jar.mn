@@ -1,0 +1,10 @@
+browser.jar:
+    content/browser/pref/pref-appearance.xul               (resources/content/pref-appearance.xul)
+    content/browser/pref/pref-scripts.xul                  (resources/content/pref-scripts.xul)
+    content/browser/pref/pref.xul                          (resources/content/pref.xul)
+    content/browser/pref/preftree.xul                      (resources/content/preftree.xul)
+
+en-US.jar:
+    locale/en-US/browser/pref/pref-appearance.dtd          (resources/locale/pref-appearance.dtd)
+    locale/en-US/browser/pref/preftree.dtd                 (resources/locale/preftree.dtd)
+    locale/en-US/browser/pref/pref.dtd                     (resources/locale/pref.dtd)
