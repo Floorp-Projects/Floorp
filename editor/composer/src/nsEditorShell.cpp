@@ -138,6 +138,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
+
 #include "nsISupportsArray.h"
 
 /* Define Class IDs */
@@ -4435,27 +4436,31 @@ nsEditorShell::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 *_retval)
 /* end of table editing */
 
 NS_IMETHODIMP
+nsEditorShell::GetLinkedObjects(nsISupportsArray **aObjectArray)
+{
+  if (!aObjectArray)
+    return NS_ERROR_NULL_POINTER;
+
+  if (mEditorType == eHTMLTextEditorType)
+    return mEditor->GetLinkedObjects(aObjectArray);
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsEditorShell::GetEmbeddedObjects(nsISupportsArray **aObjectArray)
 {
   if (!aObjectArray)
     return NS_ERROR_NULL_POINTER;
 
-  nsresult result = NS_NOINTERFACE;
-
-  switch (mEditorType)
+  if (mEditorType == eHTMLTextEditorType)
   {
-    case eHTMLTextEditorType:
-    {
-      nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-      if (mailEditor)
-        result = mailEditor->GetEmbeddedObjects(aObjectArray);
-    }
-    break;
-
-    default:
-      result = NS_NOINTERFACE;
+    nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
+    if (mailEditor)
+      return mailEditor->GetEmbeddedObjects(aObjectArray);
   }
-  return result;
+
+  return NS_NOINTERFACE;
 }
 
 NS_IMETHODIMP    
@@ -5054,8 +5059,6 @@ nsEditorShell::OnStateChange(nsIWebProgress *aProgress,
                              PRInt32 aStateFlags,
                              nsresult aStatus)
 {
-  nsresult    rv = NS_OK;
-  
   //
   // A Request has started...
   //

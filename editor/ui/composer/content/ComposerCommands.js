@@ -96,6 +96,8 @@ function SetupTextEditorCommands()
   controller.registerCommand("cmd_find",       nsFindCommand);
   controller.registerCommand("cmd_findNext",   nsFindNextCommand);
   controller.registerCommand("cmd_spelling",   nsSpellingCommand);
+  controller.registerCommand("cmd_validate",   nsValidateCommand);
+  controller.registerCommand("cmd_checkLinks", nsCheckLinksCommand);
   controller.registerCommand("cmd_insertChars", nsInsertCharsCommand);
 }
 
@@ -615,6 +617,157 @@ var nsSpellingCommand =
       dump("*** Exception error: SpellChecker Dialog Closing\n");
     }
     window._content.focus();
+  }
+};
+
+// Validate using http://validator.w3.org/file-upload.html
+var URL2Validate;
+var nsValidateCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell != null);
+  },
+
+  doCommand: function(aCommand)
+  {
+    // If the document hasn't been modified,
+    // then just validate the current url.
+    if (editorShell.documentModified || gHTMLSourceChanged)
+    {
+      if (!CheckAndSaveDocument(window.editorShell.GetString("BeforeValidate"),
+                                false))
+        return;
+
+      // Check if we saved again just in case?
+      if (!DocumentHasBeenSaved())    // user hit cancel?
+        return;
+    }
+
+    URL2Validate = window.editorShell.editorDocument.location;
+    // XXX This should use SchemeIs instead of comparing against file:
+    if (URL2Validate.toString().indexOf("file://") >= 0)
+    {
+      URL2Validate = window.editorShell.editorDocument.location.pathname;
+      var vwin = window.open("http://validator.w3.org/file-upload.html",
+                             "EditorValidate");
+      // Window loads asynchronously, so pass control to the load listener:
+      vwin.addEventListener("load", this.validateFilePageLoaded, false);
+    }
+    else
+    {
+      var vwin = window.open("http://validator.w3.org/",
+                             "EditorValidate");
+      // Window loads asynchronously, so pass control to the load listener:
+      vwin.addEventListener("load", this.validateWebPageLoaded, false);
+    }
+  },
+  validateFilePageLoaded: function(event)
+  {
+    event.target.forms[0].uploaded_file.value = URL2Validate;
+  },
+  validateWebPageLoaded: function(event)
+  {
+    event.target.forms[0].uri.value = URL2Validate;
+  }
+};
+
+// Link checking.
+// XXX THIS CODE IS WORK IN PROGRESS (only exposed in the debug menu).
+
+const kIOSERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
+const nsIIOService = Components.interfaces['nsIIOService'];
+
+var nsLinkChecker =
+{
+  uri : null,
+  linkCheckDone : true,
+  ios : Components.classes[kIOSERVICE_CONTRACTID].getService(nsIIOService),
+  linkCheckURI : "",
+
+  LoadFromURI: function(aURI, ioService) {
+    this.done = false;
+    this.uri = aURI;
+    dump("LoadFromURI(" + this.uri + ")\n");
+    var theURI = this.ios.newURI(this.uri, null);
+    //pacURL = uri.spec;
+
+    var channel = this.ios.newChannelFromURI(theURI);
+    // Don't load for cache, that would be cheating:
+    //channel.loadFlags |= nsIRequest::LOAD_BYPASS_CACHE;
+    try {
+    var httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+    if (httpChannel) {
+      httpChannel.requestMethod = "HEAD";
+    }
+    } catch(e) { }
+    try {
+      channel.asyncOpen(this, null);
+    }
+    catch (ex) {
+      dump("asyncOpen failed for " + this.uri + "\n");
+    }
+  },
+
+  // nsIStreamListener interface
+  onStartRequest: function(request, ctxt) { 
+    dump("onStartRequest(" + this.uri + ", status = " + request.status
+         + ")\n");
+    try {
+    var httpChannel = request.QueryInterface(Components.interfaces.nsIHttpChannel);
+    if (httpChannel) {
+      var stat = httpChannel.responseStatus/100;
+      dump("Response status was " + stat + "\n");
+    }
+    } catch(e) { }
+    // Probably don't actually need this stream if we're not going to read:
+    this.sis = 
+      Components.Constructor('@mozilla.org/scriptableinputstream;1',
+                             'nsIScriptableInputStream', 
+                             'init');
+    throw(Components.results.NS_ERROR_FAILURE);
+  },
+
+  onStopRequest: function(request, ctxt, status, errorMsg) {
+    dump("onStopRequest(" + this.uri + ", status = " + status + ")\n");
+    this.done = true;
+  },
+
+  onDataAvailable: function(request, ctxt, inStream, sourceOffset, count) {
+    dump("onDataAvailable(" + this.uri + ")\n");
+    var ins = new this.sis(inStream);
+    pac += ins.read(count);
+
+    // Now check the error code and cancel the request.
+    // This should pass NS_BINDING_ABORTED, according to nsIRequest.idl,
+    // but it doesn't seem to be available from JS.
+    // ((nsresult) (((PRUint32)(NS_ERROR_SEVERITY_ERROR)<<31) | ((PRUint32)(module+
+    //     NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))
+    //request.cancel(0x80000001);
+  }
+};
+
+var nsCheckLinksCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell != null);
+  },
+
+  doCommand: function(aCommand)
+  {
+    objects = window.editorShell.GetLinkedObjects();
+    // Objects is an nsISupportsArray.
+    var uri;
+    dump("Checking links in " + objects.Count() + " items ...\n");
+    for (var i = 0; i < objects.Count(); ++i)
+    {
+      var refobj = objects.GetElementAt(i).QueryInterface(Components.interfaces.nsIURIRefObject);
+      uri = refobj.GetNextURI();
+      dump(i + ": '" + uri + "'\n");
+    }
+    // Check only the last link, for now:
+    nsLinkChecker.LoadFromURI(uri);
   }
 };
 
@@ -1457,7 +1610,6 @@ var nsTableOrCellColorCommand =
     EditorSelectColor("TableOrCell");
   }
 };
-
 
 //-----------------------------------------------------------------------------------
 var nsPreferencesCommand =

@@ -26,6 +26,7 @@
 #include "domstubs.idl"
 #include "nsIAtom.idl"
 
+interface nsISupportsArray;
 
 %{C++
 #define NS_EDITOR_ELEMENT_NOT_FOUND \
@@ -405,5 +406,13 @@ interface nsIHTMLEditor : nsISupports
   // Don't use this method! It will go away after first release!
   void  IgnoreSpuriousDragEvent(in boolean aIgnoreSpuriousDragEvent);
 
+  /**
+   * Find all the nodes in the document which contain references
+   * to outside URIs (e.g. a href, img src, script src, etc.)
+   * The objects in the array will be type nsIURIRefObject.
+   *
+   * @return aNodeList    the linked nodes found
+   */
+  nsISupportsArray GetLinkedObjects();
 };
 

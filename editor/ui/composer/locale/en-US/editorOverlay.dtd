@@ -108,6 +108,8 @@
 <!ENTITY editfindnext.accesskey "n">
 <!ENTITY editfindnext.keybinding "g">
 <!ENTITY checkSpellingCmd.label "Check Spelling">
+<!ENTITY validateCmd.label "Validate HTML">
+<!ENTITY checkLinksCmd.label "Check Links">
 <!ENTITY editcheckspelling.accesskey "s">
 <!ENTITY editcheckspelling.keybinding "k">
 
