@@ -71,11 +71,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsGenericFactory,
 NS_IMETHODIMP nsGenericFactory::CreateInstance(nsISupports *aOuter,
                                                REFNSIID aIID, void **aResult)
 {
-    if (!mInfo || !mInfo->mConstructor) {
-        *aResult = nsnull;
-        return NS_ERROR_FACTORY_NOT_REGISTERED;
+    if (mInfo->mConstructor) {
+        return mInfo->mConstructor(aOuter, aIID, aResult);
     }
-    return mInfo->mConstructor(aOuter, aIID, aResult);
+
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
 
 NS_IMETHODIMP nsGenericFactory::LockFactory(PRBool aLock)
@@ -87,7 +87,7 @@ NS_IMETHODIMP nsGenericFactory::LockFactory(PRBool aLock)
 NS_IMETHODIMP nsGenericFactory::GetInterfaces(PRUint32 *countp,
                                               nsIID* **array)
 {
-    if (!mInfo || !mInfo->mGetInterfacesProc) {
+    if (!mInfo->mGetInterfacesProc) {
         *countp = 0;
         *array = nsnull;
         return NS_OK;
@@ -98,7 +98,7 @@ NS_IMETHODIMP nsGenericFactory::GetInterfaces(PRUint32 *countp,
 NS_IMETHODIMP nsGenericFactory::GetHelperForLanguage(PRUint32 language,
                                                      nsISupports **helper)
 {
-    if (mInfo && mInfo->mGetLanguageHelperProc)
+    if (mInfo->mGetLanguageHelperProc)
         return mInfo->mGetLanguageHelperProc(language, helper);
     *helper = nsnull;
     return NS_OK;
@@ -106,42 +106,44 @@ NS_IMETHODIMP nsGenericFactory::GetHelperForLanguage(PRUint32 language,
 
 NS_IMETHODIMP nsGenericFactory::GetContractID(char **aContractID)
 {
-    const char *contractID = NS_GENERICFACTORY_CONTRACTID;
-    if (mInfo && mInfo->mContractID)
-        contractID = mInfo->mContractID;
-    *aContractID = (char *)nsMemory::Clone(contractID, strlen(contractID) + 1);
-    if (!*aContractID)
-        return NS_ERROR_OUT_OF_MEMORY;
+    if (mInfo->mContractID) {
+        *aContractID = (char *)nsMemory::Alloc(strlen(mInfo->mContractID) + 1);
+        if (!*aContractID)
+            return NS_ERROR_OUT_OF_MEMORY;
+        strcpy(*aContractID, mInfo->mContractID);
+    } else {
+        *aContractID = nsnull;
+    }
     return NS_OK;
 }
 
 NS_IMETHODIMP nsGenericFactory::GetClassDescription(char * *aClassDescription)
 {
-    const char* description =
-        "The prototypical implementation for a `factory' class, "
-        "that is, a class used to produce instance objects";
-    if (mInfo && mInfo->mDescription)
-        description=mInfo->mDescription;
-    *aClassDescription = (char *)nsMemory::Clone(description, strlen(description) + 1);
-    if (!*aClassDescription)
-        return NS_ERROR_OUT_OF_MEMORY;
+    if (mInfo->mDescription) {
+        *aClassDescription = (char *)
+            nsMemory::Alloc(strlen(mInfo->mDescription) + 1);
+        if (!*aClassDescription)
+            return NS_ERROR_OUT_OF_MEMORY;
+        strcpy(*aClassDescription, mInfo->mDescription);
+    } else {
+        *aClassDescription = nsnull;
+    }
     return NS_OK;
 }
 
 NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID * *aClassID)
 {
-    *aClassID = NS_REINTERPRET_CAST(nsCID*, nsMemory::Alloc(sizeof(nsCID)));
-    if (!*aClassID)
+    *aClassID =
+        NS_REINTERPRET_CAST(nsCID*,
+                            nsMemory::Clone(&mInfo->mCID, sizeof mInfo->mCID));
+    if (! *aClassID)
         return NS_ERROR_OUT_OF_MEMORY;
-    return GetClassIDNoAlloc(*aClassID);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsGenericFactory::GetClassIDNoAlloc(nsCID *aClassID)
 {
-    if (mInfo)
-        *aClassID = mInfo->mCID;
-    else
-        *aClassID = GetCID();
+    *aClassID = mInfo->mCID;
     return NS_OK;
 }
 
@@ -153,9 +155,6 @@ NS_IMETHODIMP nsGenericFactory::GetImplementationLanguage(PRUint32 *langp)
 
 NS_IMETHODIMP nsGenericFactory::GetFlags(PRUint32 *flagsp)
 {
-    if (!mInfo)
-        return NS_ERROR_NOT_AVAILABLE;
-
     *flagsp = mInfo->mFlags;
     return NS_OK;
 }
@@ -180,15 +179,18 @@ NS_IMETHODIMP nsGenericFactory::GetComponentInfo(const nsModuleComponentInfo **i
 NS_METHOD nsGenericFactory::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
     // sorry, aggregation not spoken here.
-    if (outer)
-        return NS_ERROR_NO_AGGREGATION;
-    nsGenericFactory* factory = new nsGenericFactory;
-    if (!factory)
-        return NS_ERROR_OUT_OF_MEMORY;
-    nsresult rv = factory->QueryInterface(aIID, aInstancePtr);
-    if (NS_FAILED(rv))
-        delete factory;
-    return rv;
+    nsresult res = NS_ERROR_NO_AGGREGATION;
+    if (outer == NULL) {
+        nsGenericFactory* factory = new nsGenericFactory;
+        if (factory != NULL) {
+            res = factory->QueryInterface(aIID, aInstancePtr);
+            if (res != NS_OK)
+                delete factory;
+        } else {
+            res = NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    return res;
 }
 
 NS_COM nsresult
@@ -197,7 +199,7 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 {
     nsresult rv;
     nsIGenericFactory* fact;
-    rv = nsGenericFactory::Create(nsnull, NS_GET_IID(nsIGenericFactory), (void**)&fact);
+    rv = nsGenericFactory::Create(NULL, NS_GET_IID(nsIGenericFactory), (void**)&fact);
     if (NS_FAILED(rv)) return rv;
     rv = fact->SetComponentInfo(info);
     if (NS_FAILED(rv)) goto error;
@@ -335,7 +337,7 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
     if (!r_classObj) {
         return NS_ERROR_INVALID_POINTER;
     }
-    *r_classObj = nsnull;
+    *r_classObj = NULL;
 
     // Do one-time-only initialization if necessary
     if (!mInitialized) {
@@ -481,6 +483,7 @@ NS_NewGenericModule2(nsModuleInfo* info, nsIModule* *result)
     rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)result);
     if (NS_FAILED(rv)) {
         delete m;
+        m = nsnull;
     }
     return rv;
 }
