@@ -300,6 +300,8 @@ nsIAtom*             nsXULElement::kRadioAtom;
 nsIAtom*             nsXULElement::kRadioGroupAtom;
 nsIAtom*             nsXULElement::kMenuListAtom;
 nsIAtom*             nsXULElement::kMenuButtonAtom;
+nsIAtom*             nsXULElement::kTextAreaAtom;
+nsIAtom*             nsXULElement::kTextFieldAtom;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
@@ -370,8 +372,10 @@ nsXULElement::Init()
         kCheckboxAtom       = NS_NewAtom("checkbox");
         kRadioAtom          = NS_NewAtom("radio");
         kRadioGroupAtom     = NS_NewAtom("radiogroup");
-        kMenuListAtom     = NS_NewAtom("menulist");
+        kMenuListAtom       = NS_NewAtom("menulist");
         kMenuButtonAtom     = NS_NewAtom("menubutton");
+        kTextAreaAtom       = NS_NewAtom("textarea");
+        kTextFieldAtom      = NS_NewAtom("textfield");
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
@@ -454,6 +458,8 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kRadioGroupAtom);
         NS_IF_RELEASE(kMenuListAtom);
         NS_IF_RELEASE(kMenuButtonAtom);
+        NS_IF_RELEASE(kTextFieldAtom);
+        NS_IF_RELEASE(kTextAreaAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
 
@@ -4052,12 +4058,14 @@ nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
 PRBool
 nsXULElement::IsFocusableContent()
 {
+  // XXX This method sucks. I mean it. It really really sucks.
   nsCOMPtr<nsIAtom> tag;
   GetBaseTag(getter_AddRefs(tag));
   if (!tag)
     tag = Tag();
   return (tag.get() == kTitledButtonAtom) || (tag.get() == kTreeAtom) || (tag.get() == kCheckboxAtom) || (tag.get() == kRadioAtom) ||
-         (tag.get() == kMenuListAtom) || (tag.get() == kMenuButtonAtom);
+         (tag.get() == kMenuListAtom) || (tag.get() == kMenuButtonAtom) || (tag.get() == kTextFieldAtom) ||
+         (tag.get() == kTextAreaAtom);
 }
 
 // nsIBindableContent Interface
