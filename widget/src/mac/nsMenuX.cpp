@@ -65,12 +65,13 @@
 #include <Appearance.h>
 #include <ToolUtils.h>
 #include <UnicodeConverter.h>
-#include <CarbonEvents.h>
 
 #include "nsGUIEvent.h"
 
 #include "nsDynamicMDEF.h"
 
+
+static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler) ;
 
 // keep track of the menuID of the menu the mouse is currently over. Yes, this is ugly,
 // but necessary to work around bugs in Carbon with ::MenuSelect() sometimes returning
@@ -116,7 +117,7 @@ nsMenuX::nsMenuX()
     :   mNumMenuItems(0), mParent(nsnull), mManager(nsnull),
         mMacMenuID(0), mMacMenuHandle(nsnull), mHelpMenuOSItemsCount(0),
         mIsHelpMenu(PR_FALSE), mIsEnabled(PR_TRUE), mDestroyHandlerCalled(PR_FALSE),
-        mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE)
+        mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE), mHandler(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -133,8 +134,11 @@ nsMenuX::~nsMenuX()
 {
   RemoveAll();
 
-  if ( mMacMenuHandle ) 
+  if ( mMacMenuHandle ) {
+    if ( mHandler )
+      ::RemoveEventHandler(mHandler);
     ::ReleaseMenu(mMacMenuHandle);
+  }
   
   // alert the change notifier we don't care no more
   mManager->Unregister(mMenuContent);
@@ -200,7 +204,6 @@ NS_METHOD nsMenuX::GetLabel(nsString &aText)
   return NS_OK;
 }
 
-static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData);
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuX::SetLabel(const nsAReadableString &aText)
@@ -863,7 +866,7 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
   return result;
 }
 
-static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData)
+static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler)
 {
   // install the event handler for the various carbon menu events.
   static EventTypeSpec eventList[] = {
@@ -879,7 +882,7 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData)
   static EventHandlerUPP gMyMenuEventHandlerUPP = NewEventHandlerUPP(&MyMenuEventHandler);
   return ::InstallMenuEventHandler(menuRef, gMyMenuEventHandlerUPP,
                                    sizeof(eventList) / sizeof(EventTypeSpec), eventList,
-                                   userData, NULL);
+                                   userData, outHandler);
 }
 
 //-------------------------------------------------------------------------
@@ -895,7 +898,7 @@ MenuHandle nsMenuX::NSStringNewMenu(short menuID, nsString& menuTitle)
     ::CFRelease(titleRef);
   }
   
-  status = ::InstallMyMenuEventHandler(menuRef, this);
+  status = InstallMyMenuEventHandler(menuRef, this, &mHandler);
   NS_ASSERTION(status == noErr,"nsMenuX::NSStringNewMenu: InstallMyMenuEventHandler failed.");
 
   return menuRef;
