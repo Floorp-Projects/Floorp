@@ -27,7 +27,7 @@ NS_IMPL_RELEASE(ChildWindow)
 
 ChildWindow::ChildWindow() : nsWindow()
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "ChildWindow");
 }
 
@@ -39,7 +39,8 @@ ChildWindow::ChildWindow() : nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::nsWindow() : nsBaseWidget()
 {
-	strcpy(gInstanceClassName, "nsWindow");
+  NS_INIT_REFCNT();
+  strcpy(gInstanceClassName, "nsWindow");
 
   mParent = nsnull;
   mBounds.SetRect(0,0,0,0);
