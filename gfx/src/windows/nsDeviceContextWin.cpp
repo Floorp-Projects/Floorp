@@ -215,3 +215,8 @@ NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextWin :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
+{
+  aPixel = aColor;
+  return NS_OK;
+}

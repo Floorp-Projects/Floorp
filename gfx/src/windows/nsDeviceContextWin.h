@@ -45,6 +45,8 @@ public:
 
   NS_IMETHOD  GetPaletteInfo(nsPaletteInfo&);
 
+  NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
+
 protected:
   virtual ~nsDeviceContextWin();
 
