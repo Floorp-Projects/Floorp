@@ -288,6 +288,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 }
 
 // Bookmarks menu actions.
+-(IBAction) importBookmarks:(id)aSender
+{
+
+}
+
 -(IBAction) addBookmark:(id)aSender
 {
   [[[mApplication mainWindow] windowController] addBookmarkExtended: YES isFolder: NO];

@@ -98,6 +98,7 @@ class BookmarksService;
 -(IBAction) toggleSmoothText:(id)aSender;
 
 // Bookmarks menu actions.
+-(IBAction) importBookmarks:(id)aSender;
 -(IBAction) addBookmark:(id)aSender;
 -(IBAction) openMenuBookmark:(id)aSender;
 -(IBAction) manageBookmarks: (id)aSender;
