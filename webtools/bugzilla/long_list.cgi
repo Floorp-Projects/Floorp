@@ -28,7 +28,7 @@ use Bugzilla;
 
 require "CGI.pl";
 
-use vars qw($userid @legal_keywords %FORM);
+use vars qw($userid @legal_keywords);
 
 # Use global template variables.
 use vars qw($template $vars);
@@ -69,9 +69,9 @@ my $generic_query = "
   WHERE assign.userid = bugs.assigned_to AND report.userid = bugs.reporter
     AND bugs.product_id=products.id AND bugs.component_id=components.id";
 
-my $buglist = $::FORM{'buglist'} || 
-              $::FORM{'bug_id'}  || 
-              $::FORM{'id'}      || "";
+my $buglist = $cgi->param('buglist') || 
+              $cgi->param('bug_id')  || 
+              $cgi->param('id')      || "";
 
 my @bugs;
 

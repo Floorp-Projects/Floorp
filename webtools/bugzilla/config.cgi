@@ -53,8 +53,6 @@ use vars
     @legal_target_milestone 
     @legal_versions 
     @legal_keywords 
-
-    %FORM 
   );
 
 # Use the global template variables defined in globals.pl 
@@ -92,7 +90,9 @@ $vars->{'field'} = [GetFieldDefs()];
 
 # Determine how the user would like to receive the output; 
 # default is JavaScript.
-my $format = GetFormat("config", $::FORM{'format'}, $::FORM{'ctype'} || "js");
+my $cgi = Bugzilla->cgi;
+my $format = GetFormat("config", scalar($cgi->param('format')),
+                       scalar($cgi->param('ctype')) || "js");
 
 # Return HTTP headers.
 print "Content-Type: $format->{'ctype'}\n\n";

@@ -31,8 +31,6 @@ require "CGI.pl";
 # Use global template variables.
 use vars qw($template $vars);
 
-use vars %::FORM;
-
 ConnectToDatabase();
 
 quietly_check_login();
@@ -52,12 +50,12 @@ $::userid = $::userid;
 
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
-ValidateBugID($::FORM{'id'});
-my $id = $::FORM{'id'};
+my $id = $cgi->param('id');
+ValidateBugID($id);
 
-my $hide_resolved = $::FORM{'hide_resolved'} ? 1 : 0;
+my $hide_resolved = $cgi->param('hide_resolved') ? 1 : 0;
 
-my $maxdepth = $::FORM{'maxdepth'} || 0;
+my $maxdepth = $cgi->param('maxdepth') || 0;
 if ($maxdepth !~ /^\d+$/) { $maxdepth = 0 };
 
 ################################################################################

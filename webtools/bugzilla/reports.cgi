@@ -40,7 +40,6 @@ use lib qw(.);
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
 require "CGI.pl";
-use vars qw(%FORM); # globals from CGI.pl
 
 require "globals.pl";
 use vars qw(@legal_product); # globals from er, globals.pl
@@ -71,7 +70,7 @@ my @myproducts;
 push( @myproducts, "-All-");
 push( @myproducts, GetSelectableProducts());
 
-if (! defined $FORM{'product'}) {
+if (! defined $cgi->param('product')) {
 
     print $cgi->header();
     PutHeader("Bug Charts");
@@ -79,29 +78,29 @@ if (! defined $FORM{'product'}) {
     PutFooter();
 
 } else {
+    my $product = $cgi->param('product');
 
     # For security and correctness, validate the value of the "product" form variable.
     # Valid values are those products for which the user has permissions which appear
     # in the "product" drop-down menu on the report generation form.
-    grep($_ eq $FORM{'product'}, @myproducts)
-      || ThrowUserError("invalid_product_name", {product => $FORM{'product'}});
+    grep($_ eq $product, @myproducts)
+      || ThrowUserError("invalid_product_name", {product => $product});
 
     # We don't want people to be able to view
     # reports for products they don't have permissions for...
-    if (($FORM{'product'} ne '-All-')
-      && (!CanEnterProduct($FORM{'product'}))) {
+    if (($product ne '-All-') && (!CanEnterProduct($product))) {
         ThrowUserError("report_access_denied");
     }
           
     # We've checked that the product exists, and that the user can see it
     # This means that is OK to detaint
-    trick_taint($FORM{'product'});
+    trick_taint($product);
 
     print $cgi->header(-Content_Disposition=>'inline; filename=bugzilla_report.html');
 
     PutHeader("Bug Charts");
 
-    show_chart();
+    show_chart($product);
 
     PutFooter();
 }
@@ -189,21 +188,25 @@ sub daily_stats_filename {
 }
 
 sub show_chart {
-    if (! $FORM{datasets}) {
+    my ($product) = @_;
+
+    if (! defined $cgi->param('datasets')) {
         ThrowUserError("missing_datasets");
     }
+    my $datasets = join('', $cgi->param('datasets'));
 
   print <<FIN;
 <center>
 FIN
 
     my $type = chart_image_type();
-    my $data_file = daily_stats_filename($FORM{product});
-    my $image_file = chart_image_name($data_file, $type);
+    my $data_file = daily_stats_filename($product);
+    my $image_file = chart_image_name($data_file, $type, $datasets);
     my $url_image = "$graph_dir/" . url_quote($image_file);
 
     if (! -e "$graph_dir/$image_file") {
-        generate_chart("$dir/$data_file", "$graph_dir/$image_file", $type);
+        generate_chart("$dir/$data_file", "$graph_dir/$image_file", $type,
+                       $product, $datasets);
     }
     
     print <<FIN;
@@ -223,7 +226,7 @@ sub chart_image_type {
 }
 
 sub chart_image_name {
-    my ($data_file, $type) = @_;
+    my ($data_file, $type, $datasets) = @_;
 
     # This routine generates a filename from the requested fields. The problem
     # is that we have to check the safety of doing this. We can't just require
@@ -232,15 +235,16 @@ sub chart_image_name {
     # Instead, just require that each field name consists only of letters
     # and number
 
-    if ($FORM{'datasets'} !~ m/[A-Za-z0-9:]/) {
-        die "Invalid datasets $FORM{'datasets'}";
+    if ($datasets !~ m/[A-Za-z0-9:]/) {
+        die "Invalid datasets $datasets";
     }
+
     # Since we pass the tests, consider it OK
-    trick_taint($FORM{'datasets'});
+    trick_taint($datasets);
 
     # Cache charts by generating a unique filename based on what they
     # show. Charts should be deleted by collectstats.pl nightly.
-    my $id = join ("_", split (":", $FORM{datasets}));
+    my $id = join ("_", split (":", $datasets));
 
     return "${data_file}_${id}.$type";
 }
@@ -253,7 +257,7 @@ sub day_of_year {
 }
 
 sub generate_chart {
-    my ($data_file, $image_file, $type) = @_;
+    my ($data_file, $image_file, $type, $product, $datasets) = @_;
     
     if (! open FILE, $data_file) {
         ThrowCodeError("chart_data_not_generated");
@@ -261,7 +265,7 @@ sub generate_chart {
 
     my @fields;
     my @labels = qw(DATE);
-    my %datasets = map { $_ => 1 } split /:/, $FORM{datasets};
+    my %datasets = map { $_ => 1 } split /:/, $datasets;
 
     my %data = ();
     while (<FILE>) {
@@ -318,7 +322,7 @@ sub generate_chart {
 
     my %settings =
         (
-         "title" => "Status Counts for $FORM{'product'}",
+         "title" => "Status Counts for $product",
          "x_label" => "Dates",
          "y_label" => "Bug Counts",
          "legend_labels" => \@labels,

@@ -88,7 +88,7 @@ if (defined($height)) {
 # These shenanigans are necessary to make sure that both vertical and 
 # horizontal 1D tables convert to the correct dimension when you ask to
 # display them as some sort of chart.
-if ($::FORM{'format'} && $::FORM{'format'} eq "table") {
+if (defined $cgi->param('format') && $cgi->param('format') eq "table") {
     if ($col_field && !$row_field) {    
         # 1D *tables* should be displayed vertically (with a row_field only)
         $row_field = $col_field;
@@ -256,7 +256,7 @@ $vars->{'width'} = $width if $width;
 $vars->{'height'} = $height if $height;
 
 $vars->{'query'} = $query;
-$vars->{'debug'} = $::FORM{'debug'};
+$vars->{'debug'} = $cgi->param('debug');
 
 my $formatparam = $cgi->param('format');
 
@@ -306,7 +306,7 @@ my $format = GetFormat("reports/report", $formatparam, $cgi->param('ctype'));
 # If we get a template or CGI error, it comes out as HTML, which isn't valid
 # PNG data, and the browser just displays a "corrupt PNG" message. So, you can
 # set debug=1 to always get an HTML content-type, and view the error.
-$format->{'ctype'} = "text/html" if $::FORM{'debug'};
+$format->{'ctype'} = "text/html" if $cgi->param('debug');
 
 my @time = localtime(time());
 my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
@@ -316,7 +316,7 @@ print $cgi->header(-type => $format->{'ctype'},
 
 # Problems with this CGI are often due to malformed data. Setting debug=1
 # prints out both data structures.
-if ($::FORM{'debug'}) {
+if ($cgi->param('debug')) {
     require Data::Dumper;
     print "<pre>data hash:\n";
     print Data::Dumper::Dumper(%data) . "\n\n";

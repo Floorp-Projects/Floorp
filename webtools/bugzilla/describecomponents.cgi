@@ -22,7 +22,6 @@
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 
 use vars qw(
-  %FORM
   %legal_product
   $userid
 );
@@ -41,8 +40,9 @@ quietly_check_login();
 GetVersionTable();
 
 my $cgi = Bugzilla->cgi;
+my $product = $cgi->param('product');
 
-if (!defined $::FORM{'product'}) {
+if (!$product) {
     # Reference to a subset of %::proddesc, which the user is allowed to see
     my %products;
 
@@ -73,10 +73,8 @@ if (!defined $::FORM{'product'}) {
         exit;
     }
 
-    $::FORM{'product'} = (keys %products)[0];
+    $product = (keys %products)[0];
 }
-
-my $product = $::FORM{'product'};
 
 # Make sure the user specified a valid product name.  Note that
 # if the user specifies a valid product name but is not authorized

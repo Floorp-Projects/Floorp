@@ -1474,7 +1474,8 @@ sub FormatTimeUnit {
 
 # Constructs a format object from URL parameters. You most commonly call it 
 # like this:
-# my $format = GetFormat("foo/bar", $::FORM{'format'}, $::FORM{'ctype'});
+# my $format = GetFormat("foo/bar", scalar($cgi->param('format')),
+#                        scalar($cgi->param('ctype')));
 
 sub GetFormat {
     my ($template, $format, $ctype) = @_;

@@ -32,8 +32,6 @@ use lib qw(.);
 require "globals.pl";
 require "CGI.pl";
 
-use vars qw($buffer);
-
 use Bugzilla;
 use Bugzilla::Search;
 use Bugzilla::Config qw(:DEFAULT $datadir);
@@ -44,8 +42,8 @@ my $cgi = Bugzilla->cgi;
 # Go directly to the XUL version of the duplicates report (duplicates.xul)
 # if the user specified ctype=xul.  Adds params if they exist, and directs
 # the user to a signed copy of the script in duplicates.jar if it exists.
-if ($::FORM{'ctype'} && $::FORM{'ctype'} eq "xul") {
-    my $params = CanonicaliseParams($::buffer, ["format", "ctype"]);
+if (defined $cgi->param('ctype') && $cgi->param('ctype') eq "xul") {
+    my $params = CanonicaliseParams($cgi->query_string(), ["format", "ctype"]);
     my $url = (-e "duplicates.jar" ? "duplicates.jar!/" : "") . 
           "duplicates.xul" . ($params ? "?$params" : "") . "\n\n";
 
@@ -71,7 +69,7 @@ else {
 
 Bugzilla->switch_to_shadow_db();
 
-use vars qw (%FORM $userid @legal_product);
+use vars qw ($userid @legal_product);
 
 my %dbmcount;
 my %count;
@@ -80,7 +78,7 @@ my %before;
 # Get params from URL
 sub formvalue {
     my ($name, $default) = (@_);
-    return $FORM{$name} || $default || "";
+    return $cgi->param($name) || $default || "";
 }
 
 my $sortby = formvalue("sortby");
@@ -218,7 +216,7 @@ if (scalar(%count)) {
     }
 
     # Restrict to product if requested
-    if ($::FORM{'product'}) {
+    if ($cgi->param('product')) {
         $params->param('product', join(',', @query_products));
     }
 
@@ -267,13 +265,13 @@ $vars->{'changedsince'} = $changedsince;
 $vars->{'maxrows'} = $maxrows;
 $vars->{'openonly'} = $openonly;
 $vars->{'reverse'} = $reverse;
-$vars->{'format'} = $::FORM{'format'};
+$vars->{'format'} = $cgi->param('format');
 $vars->{'query_products'} = \@query_products;
 $vars->{'products'} = \@::legal_product;
 
 
-my $format = 
-  GetFormat("reports/duplicates", $::FORM{'format'}, $::FORM{'ctype'});
+my $format = GetFormat("reports/duplicates", scalar($cgi->param('format')),
+                       scalar($cgi->param('ctype')));
 
 print $cgi->header($format->{'ctype'});
 

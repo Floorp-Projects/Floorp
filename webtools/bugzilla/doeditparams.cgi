@@ -30,8 +30,6 @@ use Bugzilla::Config qw(:DEFAULT :admin $datadir);
 
 require "CGI.pl";
 
-use vars %::MFORM;
-
 ConnectToDatabase();
 confirm_login();
 
@@ -52,13 +50,13 @@ my $howto = "";
 
 foreach my $i (GetParamList()) {
     my $name = $i->{'name'};
-    my $value = $::FORM{$name};
-    if (exists $::FORM{"reset-$name"}) {
+    my $value = $cgi->param($name);
+    if (defined $cgi->param("reset-$name")) {
         $value = $i->{'default'};
     } else {
         if ($i->{'type'} eq 'm') {
             # This simplifies the code below
-            $value = \@{$::MFORM{$name}};
+            $value = [ $cgi->param($name) ];
         } else {
             # Get rid of windows/mac-style line endings.
             $value =~ s/\r\n?/\n/g;

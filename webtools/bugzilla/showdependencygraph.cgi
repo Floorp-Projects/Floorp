@@ -100,11 +100,11 @@ sub AddLink {
     }
 }
 
-$::FORM{'rankdir'} = "LR" if !defined $::FORM{'rankdir'};
+my $rankdir = $cgi->param('rankdir') || "LR";
 
-if (!defined($::FORM{'id'}) && !defined($::FORM{'doall'})) {
+if (!defined $cgi->param('id') && !defined $cgi->param('doall')) {
     ThrowCodeError("missing_bug_id");
-}    
+}
 
 my ($fh, $filename) = File::Temp::tempfile("XXXXXXXXXX",
                                            SUFFIX => '.dot',
@@ -113,13 +113,13 @@ my $urlbase = Param('urlbase');
 
 print $fh "digraph G {";
 print $fh qq{
-graph [URL="${urlbase}query.cgi", rankdir=$::FORM{'rankdir'}, size="64,64"]
+graph [URL="${urlbase}query.cgi", rankdir=$rankdir, size="64,64"]
 node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
 };
 
 my %baselist;
 
-if ($::FORM{'doall'}) {
+if ($cgi->param('doall')) {
     SendSQL("SELECT blocked, dependson FROM dependencies");
 
     while (MoreSQLData()) {
@@ -127,7 +127,7 @@ if ($::FORM{'doall'}) {
         AddLink($blocked, $dependson, $fh);
     }
 } else {
-    foreach my $i (split('[\s,]+', $::FORM{'id'})) {
+    foreach my $i (split('[\s,]+', $cgi->param('id'))) {
         $i = trim($i);
         ValidateBugID($i);
         $baselist{$i} = 1;
@@ -179,7 +179,7 @@ foreach my $k (keys(%seen)) {
 
     my @params;
 
-    if ($summary ne "" && $::FORM{'showsummary'}) {
+    if ($summary ne "" && $cgi->param('showsummary')) {
         $summary =~ s/([\\\"])/\\$1/g;
         push(@params, qq{label="$k\\n$summary"});
     }
@@ -205,7 +205,7 @@ foreach my $k (keys(%seen)) {
 
     # Show the bug summary in tooltips only if not shown on 
     # the graph and it is non-empty (the user can see the bug)
-    if (!$::FORM{'showsummary'} && $summary ne "") {
+    if (!$cgi->param('showsummary') && $summary ne "") {
         $bugtitles{$k} .= " - $summary";
     }
 }
@@ -271,11 +271,11 @@ foreach my $f (@files)
     }
 }
 
-$vars->{'bug_id'} = $::FORM{'id'};
-$vars->{'multiple_bugs'} = ($::FORM{'id'} =~ /[ ,]/);
-$vars->{'doall'} = $::FORM{'doall'};
-$vars->{'rankdir'} = $::FORM{'rankdir'};
-$vars->{'showsummary'} = $::FORM{'showsummary'};
+$vars->{'bug_id'} = $cgi->param('id');
+$vars->{'multiple_bugs'} = ($cgi->param('id') =~ /[ ,]/);
+$vars->{'doall'} = $cgi->param('doall');
+$vars->{'rankdir'} = $rankdir;
+$vars->{'showsummary'} = $cgi->param('showsummary');
 
 # Generate and return the UI (HTML page) from the appropriate template.
 print $cgi->header();
