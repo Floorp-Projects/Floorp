@@ -98,7 +98,6 @@ public:
                                     PRBool aInsertHTML, const nsAString& aCharset, 
                                     nsIDOMNode** aNodeInserted);
 
-  NS_IMETHOD ApplyStyleSheet(const nsAString& aURL, nsICSSStyleSheet **aStyleSheet);
   NS_IMETHOD SetDocumentTitle(const nsAString& aTitle);
 
   NS_IMETHOD SetBackgroundColor(const nsAString& aColor);

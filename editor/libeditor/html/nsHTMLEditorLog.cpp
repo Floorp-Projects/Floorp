@@ -765,27 +765,6 @@ nsHTMLEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::ApplyStyleSheet(const nsAString& aURL, nsICSSStyleSheet **aStyleSheet)
-{
-  nsAutoHTMLEditorLogLock logLock(this);
-
-  if (!mLocked && mFileStream)
-  {
-    // Note that the editorShell (IDL) method does
-    //  not return the style sheet created from aURL
-    // TODO: Investigate if RemoveStyleSheet works or do we have to 
-    //       store the returned style sheet!
-    Write("window.editorShell.ApplyStyleSheet(\"");
-    PrintUnicode(aURL);
-    Write("\");\n");
-
-    Flush();
-  }
-
-  return nsHTMLEditor::ApplyStyleSheet(aURL, aStyleSheet);
-}
-
-NS_IMETHODIMP
 nsHTMLEditorLog::SetDocumentTitle(const nsAString& aTitle)
 {
   nsAutoHTMLEditorLogLock logLock(this);
