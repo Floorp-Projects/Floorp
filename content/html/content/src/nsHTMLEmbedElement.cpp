@@ -30,6 +30,19 @@
 #include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
+#include "nsIFrame.h"
+#include "nsObjectFrame.h"
+#include "nsLayoutAtoms.h"
+#include "nsObjectFrame.h"
+#include "nsCOMPtr.h"
+#include "nsIAllocator.h"
+#include "xptinfo.h"
+#include "nsIInterfaceInfoManager.h"
+#include "nsIPluginInstance.h"
+#include "nsIXPConnect.h"
+#include "nsIServiceManager.h"
 
 // XXX define nsIDOMHTMLEmbedElement; add in nav attrs
 
@@ -58,13 +71,28 @@ public:
   // nsIDOMHTMLEmbedElement
 
   // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+
+protected:
+    nsresult GetPluginInstance(nsIPluginInstance** aPluginInstance);
 
 protected:
   nsGenericHTMLLeafElement mInner;
@@ -215,3 +243,141 @@ nsHTMLEmbedElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   return mInner.SizeOf(aSizer, aResult, sizeof(*this));
 }
+
+/***************************************************************************/
+
+// This is cribbed from nsHTMLImageElement::GetImageFrame.
+
+nsresult
+nsHTMLEmbedElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
+{
+  nsresult result;
+  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsIPresShell> shell;
+  
+  if (mInner.mDocument) {
+    // Make sure the presentation is up-to-date
+    result = mInner.mDocument->FlushPendingNotifications();
+    if (NS_FAILED(result)) {
+      return result;
+    }
+  }
+  
+  result = nsGenericHTMLElement::GetPresContext(this, 
+                                                getter_AddRefs(context));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  
+  result = context->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  
+  nsIFrame* frame;
+  result = shell->GetPrimaryFrameFor(this, &frame);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  
+  if (frame) {
+    nsCOMPtr<nsIAtom> type;
+    
+    frame->GetFrameType(getter_AddRefs(type));
+    
+    if (type.get() == nsLayoutAtoms::objectFrame) {
+      // XXX We could have created an interface for this, but Troy
+      // preferred the ugliness of a static cast to the weight of
+      // a new interface.
+      
+      nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, frame);
+      
+      return objectFrame->GetPluginInstance(*aPluginInstance);
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+/***************************************************************************/
+
+// nsIJSScriptObject
+
+PRBool    
+nsHTMLEmbedElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+{
+  return mInner.AddProperty(aContext, aObj, aID, aVp);
+}
+
+PRBool    
+nsHTMLEmbedElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+{
+  return mInner.DeleteProperty(aContext, aObj, aID, aVp);
+}
+
+PRBool    
+nsHTMLEmbedElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+{
+  if (JSVAL_IS_STRING(aID)) {
+    PRBool retval = PR_FALSE;
+    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+
+    nsCOMPtr<nsIInterfaceInfoManager> iim = 
+        dont_AddRef(XPTI_GetInterfaceInfoManager());
+    nsCOMPtr<nsIXPConnect> xpc =
+        do_GetService(nsIXPConnect::GetCID()); 
+
+    if (iim && xpc) {
+      nsIID* iid;
+      if (NS_SUCCEEDED(iim->GetIIDForName(cString, &iid)) && iid) {
+        nsCOMPtr<nsIPluginInstance> pi;
+        if (NS_SUCCEEDED(GetPluginInstance(getter_AddRefs(pi))) && pi) {
+          nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+          JSObject* ifaceObj;
+
+          if (NS_SUCCEEDED(xpc->WrapNative(aContext, aObj, pi, *iid, 
+                                           getter_AddRefs(holder))) && holder && 
+              NS_SUCCEEDED(holder->GetJSObject(&ifaceObj)) && ifaceObj) {
+              *aVp = OBJECT_TO_JSVAL(ifaceObj);
+              retval = PR_TRUE;
+          }
+        }
+        nsAllocator::Free(iid);        
+        return retval;
+      }
+    }
+  }
+
+  return mInner.GetProperty(aContext, aObj, aID, aVp);
+}
+
+nsHTMLEmbedElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+{
+  return mInner.SetProperty(aContext, aObj, aID, aVp);
+}
+
+PRBool    
+nsHTMLEmbedElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
+{
+  return mInner.EnumerateProperty(aContext, aObj);
+}
+
+PRBool    
+nsHTMLEmbedElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+{
+  return mInner.Resolve(aContext, aObj, aID);
+}
+
+PRBool    
+nsHTMLEmbedElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
+{
+  return mInner.Convert(aContext, aObj, aID);
+}
+
+void      
+nsHTMLEmbedElement::Finalize(JSContext *aContext, JSObject *aObj)
+{
+  mInner.Finalize(aContext, aObj);
+}
+
+
