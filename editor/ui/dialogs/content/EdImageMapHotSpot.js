@@ -74,7 +74,7 @@ function onOK()
 }
 
 function changeTarget() {
-  dialog.targetInput.value = dialog.commonInput.options[dialog.commonInput.selectedIndex].value;
+  dialog.targetInput.value=dialog.commonInput.data;
 }
 
 function chooseFile()

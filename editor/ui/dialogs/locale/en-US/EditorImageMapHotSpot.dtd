@@ -35,6 +35,7 @@
 
 <!-- Targets -->
 <!ENTITY commonFieldset.label	"Common Targets:">
+<!ENTITY none.value				"(none)">
 <!ENTITY same.value				"Same Frame">
 <!ENTITY whole.value			"Whole Page">
 <!ENTITY new.value				"New Window">
