@@ -288,6 +288,9 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
       // The child frame contains the point. Now see if it really
       // contains the point.
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+
+#ifdef KIPPS_FIX_FOR_BUG_1413
+
       nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aFrame);
       if (NS_SUCCEEDED(rv)) {
         // We found the target frame somewhere in the child frame.
@@ -299,6 +302,18 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
       // situations where overlap occurs (e.g. floaters overlapping
       // the background of a block element) find the floater.
       break;
+
+#else
+
+      // XXX: The following code backs out Kipp's fix for 1413 temporarily
+      //      so we could prevent bug #18002 and #18006 from happening
+      //      and get M11 out the door. I will reenable the code above after
+      //      M11 branches, and make sure that #18002 and #18006 are properly
+      //      fixed. -- kin@netscape.com
+
+      return kid->GetFrameForPoint(aPresContext, tmp, aFrame);
+
+#endif
     }
     kid->GetNextSibling(&kid);
   }
