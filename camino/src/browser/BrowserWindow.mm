@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <sfraser@netscape.com>
+ *   Nate Weaver (Wevah) <wevah@derailer.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,10 +65,14 @@ static const int kEscapeKeyCode = 53;
   // We need this hack because NSWindow::sendEvent will eat the escape key
   // and won't pass it down to the key handler of responders in the window.
   // We have to override sendEvent for all of our escape key needs.
-  if ([theEvent type] == NSKeyDown &&
-      [theEvent keyCode] == kEscapeKeyCode && [self firstResponder] == [mAutoCompleteTextField fieldEditor])
-    [mAutoCompleteTextField revertText];
-  else
+  // Revert the URL field if it is the first responder, attempt to stop page
+  // load otherwise.
+  if ([theEvent type] == NSKeyDown && [theEvent keyCode] == kEscapeKeyCode) {
+      if ([self firstResponder] == [mAutoCompleteTextField fieldEditor])
+        [mAutoCompleteTextField revertText];
+      else
+        [[self delegate] stop:nil];
+  } else
     [super sendEvent:theEvent];
 }
 
@@ -81,7 +86,8 @@ static const int kEscapeKeyCode = 53;
 	mSuppressMakeKeyFront = inSuppress;
 }
 
-// pass command-return off to the controller so that locations/searches may be opened in a new tab
+// Pass command-return off to the controller so that locations/searches may be opened in a new tab
+// and pass command-plus off to the controller to enlarge the text size.
 - (BOOL)performKeyEquivalent:(NSEvent *)theEvent
 {
   BrowserWindowController* windowController = (BrowserWindowController*)[self delegate];
@@ -90,6 +96,9 @@ static const int kEscapeKeyCode = 53;
   BOOL handled = NO;
   if (keyChar == NSCarriageReturnCharacter) {
     handled = [windowController handleCommandReturn];
+  } else if (keyChar == '+') {
+    [windowController biggerTextSize:nil];
+    handled = YES;
   }
   return handled ? handled : [super performKeyEquivalent:theEvent];
 }
