@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= PalmSyncProxy
 LIBRARY_NAME	= $(MODULE)
 DEFFILE		= $(srcdir)/PalmSyncProxy.def
+MOZILLA_INTERNAL_API = 1
 
 EXPORTS		= IPalmSync.h
 

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= calendar
+MOZILLA_INTERNAL_API = 1
 
 ifndef MOZ_STATIC_MAIL_BUILD
 LIBRARY_NAME	= calendar

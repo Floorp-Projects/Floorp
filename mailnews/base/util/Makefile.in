@@ -51,6 +51,7 @@ SHORT_LIBNAME	= msgbsutl
 else
 LIBRARY_NAME	= msgbsutl_s
 endif
+MOZILLA_INTERNAL_API = 1
 
 META_COMPONENT = mail
 

@@ -45,6 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= bayesflt
 LIBRARY_NAME	= bayesflt_s
 META_COMPONENT = mail
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  unicharutil \

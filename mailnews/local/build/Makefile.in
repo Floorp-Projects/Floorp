@@ -49,6 +49,7 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME 	= msglocal
 IS_COMPONENT	= 1
 MODULE_NAME	= local_mail_services
+MOZILLA_INTERNAL_API = 1
 
 PACKAGE_FILE = msglocal.pkg
 

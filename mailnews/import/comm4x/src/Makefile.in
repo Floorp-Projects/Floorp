@@ -66,6 +66,7 @@ LIBRARY_NAME   = imp4mail_s
 endif
 
 PACKAGE_FILE = importcomm4x.pkg
+MOZILLA_INTERNAL_API = 1
 
 META_COMPONENT  = mail
 REQUIRES	= xpcom \

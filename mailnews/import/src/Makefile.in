@@ -56,6 +56,7 @@ LIBRARY_NAME = import_s
 endif
 
 META_COMPONENT = mail
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
 		  xpcom_obsolete \

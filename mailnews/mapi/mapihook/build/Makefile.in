@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= MapiProxy
 LIBRARY_NAME	= $(MODULE)
 DEFFILE		= $(srcdir)/MapiProxy.def
+MOZILLA_INTERNAL_API = 1
 
 EXPORTS		= msgMapi.h
 

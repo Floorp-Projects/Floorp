@@ -52,6 +52,7 @@ MODULE_NAME	= nsMsgComposeModule
 ifeq ($(OS_ARCH),WINNT)
 XPIDL_MODULE	= msgcompo
 endif
+MOZILLA_INTERNAL_API = 1
 
 PACKAGE_FILE = msgcompose.pkg
 
