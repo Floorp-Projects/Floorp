@@ -497,9 +497,10 @@ sub maybe_upgrade {
     $req->header('If-Modified-Since' => $time_str);
     my $res = $this->{UA}->request($req);
     if ($res->code() == 200) {
+      my $old_script = "";
       open PROG, $0;
       open PROG_BAK, ">$0.bak";
-      while (<PROG>) { print PROG_BAK; }
+      while (<PROG>) { $old_script .= $_; print PROG_BAK; }
       close PROG;
       close PROG_BAK;
       open PROG, ">$0";
@@ -507,16 +508,26 @@ sub maybe_upgrade {
       close PROG;
       $this->print_log("New version found:\n");
       $this->print_log($res->content());
+      $this->print_log("Overwrote $0 (now modified " . $this->get_prog_mtime() . ")\n");
       $this->end_section("CHECKING FOR UPGRADE");
-      $this->print_log("Executing newly upgraded script ...\n");
-      print "UPGRADING!  Throttling just for fun first ...\n";
-      $this->build_finish(303);
-      eval {
-        # Throttle just in case we get in an upgrade client loop
-        $this->maybe_throttle();
-        exec("perl", $0, @{$this->{ORIGINAL_ARGS}});
-      };
-      exit(0);
+      # Check if old content and new content are the same.  If so, continue on;
+      # something funky must be happening with the date.
+      if ($old_script eq $res->content()) { 
+        $this->print_log("---> HMM.  The script I just downloaded is the same as the one before. <---\n");
+        $this->print_log("---> There must be a date problem on this machine.  I think I'll just stick <---\n");
+        $this->print_log("---> my head in the sand and hope the problem goes away. <---\n");
+        $this->print_log("---> ... continuing with build as if nothing untoward had happened ... <---\n");
+      } else {
+        $this->print_log("Executing newly upgraded script ...\n");
+        print "UPGRADING!  Throttling just for fun first ...\n";
+        $this->build_finish(303);
+        eval {
+          # Throttle just in case we get in an upgrade client loop
+          $this->maybe_throttle();
+          exec("perl", $0, @{$this->{ORIGINAL_ARGS}});
+        };
+        exit(0);
+      }
     } elsif ($res->code() == 304) {
       $this->print_log("Perl script not modified\n");
     } else {
