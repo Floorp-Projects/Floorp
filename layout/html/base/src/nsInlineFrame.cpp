@@ -714,6 +714,9 @@ nsInlineFrame::PullUpChildren(nsInlineReflowState& aState,
     nsIFrame* child = PullOneChild(nextInFlow, aState.mLastChild,
                                    reflowStatus);
     if (nsnull == child) {
+      if (NS_FRAME_NOT_COMPLETE == reflowStatus) {
+        break;
+      }
       nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
       continue;
     }
@@ -839,7 +842,8 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
       // left in them.
       nsInlineFrame* nextInFlow = (nsInlineFrame*) mNextInFlow;
       while (nsnull != nextInFlow) {
-        if (nsnull != nextInFlow->mFirstChild) {
+        if ((nsnull != nextInFlow->mFirstChild) ||
+            (nsnull != nextInFlow->mOverflowList)) {
           // One of our next-in-flows has a child remaining. Therefore
           // we are not complete and must let our parent know so that
           // our parent doesn't accidently remove our next-in-flows!
