@@ -73,7 +73,7 @@ void _PR_InitLocks(void)
 
 #ifdef LINUX
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 2)
-    rv = pthread_mutexattr_setkind_np(&_pt_mattr, PTHREAD_MUTEX_ADAPTIVE_NP);
+    rv = pthread_mutexattr_settype(&_pt_mattr, PTHREAD_MUTEX_ADAPTIVE_NP);
     PR_ASSERT(0 == rv);
 #endif
 #endif
