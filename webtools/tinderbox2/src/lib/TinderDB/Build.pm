@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.46 $ 
-# $Date: 2002/05/06 18:37:00 $ 
+# $Revision: 1.47 $ 
+# $Date: 2002/05/06 20:45:18 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -473,10 +473,12 @@ sub trim_db_history {
     # medians are a more robust statistical estimator then the mean.
     # They will give us better answers then a typical "average"
 
+    delete $DATABASE{$tree}{$buildname}{'average_buildtime'};
     my $run_avg = main::median(@run_times);
     ($run_avg) &&
       ( $DATABASE{$tree}{$buildname}{'average_buildtime'} = $run_avg);
     
+    delete $DATABASE{$tree}{$buildname}{'average_deadtime'};
     my $dead_avg = main::median(@dead_times);
     ($dead_avg) &&
       ( $DATABASE{$tree}{$buildname}{'average_deadtime'} = $dead_avg);
@@ -1029,7 +1031,7 @@ sub apply_db_updates {
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
      ) {
     $METADATA{$tree}{'updates_since_trim'}=0;
-    $self->trim_db_history(@_);
+    $self->trim_db_history($tree);
   }
 
 
@@ -1261,7 +1263,7 @@ sub status_table_row {
 
     if ($current_rec->{'print'}) {
         $links .= (
-                   "\t\t". 
+                   "\t\t\t". 
                    $current_rec->{'print'}.
                    "\n".
                    "");
