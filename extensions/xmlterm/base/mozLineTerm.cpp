@@ -359,8 +359,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   XMLT_LOG(mozLineTerm::Open,22, ("mCookie=%s\n", cookieCStr));
 
   // Convert initInput to CString
-  nsCAutoString initCStr;
-  initCStr.AssignWithConversion(initInput);
+  NS_LossyConvertUTF16toASCII initCStr(initInput); // XXX ASCII?
   XMLT_LOG(mozLineTerm::Open,22, ("initInput=%s\n", initCStr.get()));
 
   // List of prompt delimiters
