@@ -180,7 +180,7 @@
 <!ENTITY addCurPageCmd.commandkey "d">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "m">
-<!ENTITY manBookmarksCmd.commandkey "m">
+<!ENTITY manBookmarksCmd.commandkey "b">
 
 <!ENTITY helpMenuCmd.label "Help">
 <!ENTITY helpContentsCmd.label "Help Contents">
