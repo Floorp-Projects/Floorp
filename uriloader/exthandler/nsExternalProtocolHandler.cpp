@@ -366,30 +366,61 @@ NS_IMETHODIMP nsExternalProtocolHandler::GetDefaultPort(PRInt32 *aDefaultPort)
     return NS_OK;
 }
 
+// returns TRUE if the OS can handle this protocol scheme and false otherwise.
+PRBool nsExternalProtocolHandler::HaveProtocolHandler(nsIURI * aURI)
+{
+  PRBool haveHandler = PR_FALSE;
+  nsXPIDLCString scheme;
+  if (aURI)
+  {
+    aURI->GetScheme(getter_Copies(scheme));
+    nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
+    extProtService->ExternalProtocolHandlerExists(scheme, &haveHandler);
+  }
+
+  return haveHandler;
+}
+
 NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
-  nsresult rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
-                                                   NS_GET_IID(nsIURI),
-                                                  (void**) _retval);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = NS_ERROR_UNKNOWN_PROTOCOL;
+  nsCOMPtr<nsIURI> uri = do_CreateInstance(kSimpleURICID, &rv);
+  if (uri)
+  {
+    uri->SetSpec(aSpec);
+    PRBool haveHandler = HaveProtocolHandler(uri);
 
-  (*_retval)->SetSpec((char*)aSpec);
-  return rv;
+    if (haveHandler)
+    {
+      *_retval = uri;
+      NS_IF_ADDREF(*_retval);
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_UNKNOWN_PROTOCOL;
 }
 
 NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
-  nsCOMPtr<nsIChannel> channel;
-  NS_NEWXPCOM(channel, nsExtProtocolChannel);
-  if (!channel) return NS_ERROR_OUT_OF_MEMORY;
+  // only try to return a channel if we have a protocol handler for the url
 
-  channel->SetURI(aURI);
-
-  if (_retval)
+  PRBool haveHandler = HaveProtocolHandler(aURI);
+  if (haveHandler)
   {
-    *_retval = channel;
-    NS_IF_ADDREF(*_retval);
+    nsCOMPtr<nsIChannel> channel;
+    NS_NEWXPCOM(channel, nsExtProtocolChannel);
+    if (!channel) return NS_ERROR_OUT_OF_MEMORY;
+
+    channel->SetURI(aURI);
+
+    if (_retval)
+    {
+      *_retval = channel;
+      NS_IF_ADDREF(*_retval);
+      return NS_OK;
+    }
   }
 
-  return NS_OK;
+  return NS_ERROR_UNKNOWN_PROTOCOL;
 }

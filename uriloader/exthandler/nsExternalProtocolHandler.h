@@ -27,6 +27,7 @@
 #include "nsString.h"
 #include "nsWeakReference.h"
 
+class nsIURI;
 
 // protocol handlers need to support weak references if we want the netlib nsIOService to cache them.
 class nsExternalProtocolHandler : public nsIProtocolHandler, public nsSupportsWeakReference
@@ -39,6 +40,8 @@ public:
 	virtual ~nsExternalProtocolHandler();
 
 protected:
+  // helper function
+  PRBool HaveProtocolHandler(nsIURI * aURI);
 	nsCString	m_schemeName;
 };
 
