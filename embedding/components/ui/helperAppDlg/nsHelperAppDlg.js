@@ -271,14 +271,14 @@ nsHelperAppDialog.prototype = {
          // Initialize "always ask me" box. This should always be disabled
          // and set to true for the ambiguous type application/octet-stream.
          // Same if this dialog was forced
-         var alwaysAskCheckbox = this.dialogElement( "alwaysAskMe" );
+         var alwaysHandleCheckbox = this.dialogElement( "alwaysHandle" );
          if (this.mForced ||
              this.mLauncher.MIMEInfo.MIMEType == "application/octet-stream"){
-            alwaysAskCheckbox.checked = true;
-            alwaysAskCheckbox.disabled = true;
+            alwaysHandleCheckbox.checked = false;
+            alwaysHandleCheckbox.disabled = true;
          }
          else {
-            alwaysAskCheckbox.checked = this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
+            alwaysHandleCheckbox.checked = !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
          }
 
          // Position it.
@@ -535,7 +535,7 @@ nsHelperAppDialog.prototype = {
         if ( !this.mForced )
         {
           // We will also need to update if the "always ask" flag has changed.
-          needUpdate = needUpdate || this.mLauncher.MIMEInfo.alwaysAskBeforeHandling != this.dialogElement( "alwaysAskMe" ).checked;
+          needUpdate = needUpdate || this.mLauncher.MIMEInfo.alwaysAskBeforeHandling == this.dialogElement( "alwaysHandle" ).checked;
         
           // One last special case: If the input "always ask" flag was false, then we always
           // update.  In that case we are displaying the helper app dialog for the first
@@ -546,7 +546,7 @@ nsHelperAppDialog.prototype = {
           needUpdate = needUpdate || !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
         
           // Make sure mime info has updated setting for the "always ask" flag.
-          this.mLauncher.MIMEInfo.alwaysAskBeforeHandling = this.dialogElement( "alwaysAskMe" ).checked;
+          this.mLauncher.MIMEInfo.alwaysAskBeforeHandling = !this.dialogElement( "alwaysHandle" ).checked;
         }
 
         return needUpdate;        
