@@ -3365,12 +3365,14 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
           }
         }
 #ifdef IBMBIDI
-        if (aContentOffset >= mContentOffset) {
-          PRInt32 stopOffset = mContentOffset + mContentLength;
-          while (aContentOffset < stopOffset &&
-                 IS_BIDI_DIACRITIC(text[ip[aContentOffset - mContentOffset]]) )
-		  {
-            aContentOffset++;
+        PRInt32 bidiStopOffset = mContentOffset + mContentLength;
+
+        if (aContentOffset >= mContentOffset && aContentOffset < bidiStopOffset) {
+          PRInt32 curindx = ip[aContentOffset - mContentOffset] - mContentOffset;
+          while (curindx < textLength && IS_BIDI_DIACRITIC(text[curindx])) {
+            if (++aContentOffset >= bidiStopOffset)
+              break;
+            curindx = ip[aContentOffset - mContentOffset] - mContentOffset;
           }
         }
 #endif // IBMBIDI
