@@ -77,8 +77,6 @@ protected:
    void XULWindow(nsXULWindow* aXULWindow);
    nsXULWindow* XULWindow();
 
-   NS_IMETHOD ApplyChromeFlags();
-
 protected:
    nsXULWindow      *mXULWindow;
    nsSiteWindow2    *mSiteWindow2;
@@ -88,9 +86,6 @@ protected:
    nsString          mTitleSeparator;
    nsString          mTitlePreface;
    nsString          mTitleDefault;
-
-private:
-   PRUint32          mChromeFlags; // don't use directly! use GetChromeFlags()
 };
 
 #endif /* nsContentTreeOwner_h__ */

@@ -125,7 +125,8 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
    mCenterAfterLoad(PR_FALSE), mIsHiddenWindow(PR_FALSE),
    mContextFlags(0), mBlurSuppressionLevel(0),
-   mPersistentAttributesDirty(0), mPersistentAttributesMask(0)
+   mPersistentAttributesDirty(0), mPersistentAttributesMask(0),
+   mChromeFlags(nsIWebBrowserChrome::CHROME_ALL)
 {
 }
 
@@ -279,9 +280,35 @@ NS_IMETHODIMP nsXULWindow::GetContextFlags(PRUint32 *aContextFlags)
 NS_IMETHODIMP nsXULWindow::SetContextFlags(PRUint32 aContextFlags)
 {
   mContextFlags = aContextFlags;
-  if(mContentTreeOwner)
-    mContentTreeOwner->ApplyChromeFlags();
+  return NS_OK;
+}
 
+NS_IMETHODIMP nsXULWindow::GetChromeFlags(PRUint32 *aChromeFlags)
+{
+  NS_ENSURE_ARG_POINTER(aChromeFlags);
+  *aChromeFlags = mChromeFlags;
+  /* mChromeFlags is kept up to date, except for scrollbar visibility.
+     That can be changed directly by the content DOM window, which
+     doesn't know to update the chrome window. So that we must check
+     separately. */
+
+  // however, it's pointless to ask if the window isn't set up yet
+  if (!mChromeLoaded)
+    return NS_OK;
+
+  if (GetContentScrollbarVisibility())
+    *aChromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
+  else
+    *aChromeFlags &= ~nsIWebBrowserChrome::CHROME_SCROLLBARS;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::SetChromeFlags(PRUint32 aChromeFlags)
+{
+  mChromeFlags = aChromeFlags;
+  if (mChromeLoaded)
+    NS_ENSURE_SUCCESS(ApplyChromeFlags(), NS_ERROR_FAILURE);
   return NS_OK;
 }
 
@@ -926,9 +953,7 @@ void nsXULWindow::OnChromeLoaded()
 
   if (NS_SUCCEEDED(rv)) {
     mChromeLoaded = PR_TRUE;
-
-    if(mContentTreeOwner)
-      mContentTreeOwner->ApplyChromeFlags();
+    ApplyChromeFlags();
 
     LoadWindowClassFromXUL();
     LoadIconFromXUL();
@@ -1160,13 +1185,7 @@ PRBool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
       /* Honor request to maximize only if the window is sizable.
          An unsizable, unmaximizable, yet maximized window confuses
          Windows OS and is something of a travesty, anyway. */
-      PRUint32 chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_RESIZE;
-      nsCOMPtr<nsIWebBrowserChrome> chrome(do_GetInterface(
-                                      NS_ISUPPORTS_CAST(nsIXULWindow *, this)));
-      if (chrome)
-        chrome->GetChromeFlags(&chromeFlags);
-
-      if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
+      if (mChromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
         mIntrinsicallySized = PR_FALSE;
         sizeMode = nsSizeMode_Maximized;
       }
@@ -1589,28 +1608,14 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   nsContentShellInfo* shellInfo = nsnull;
   nsDependentString newID(aID);
 
-  PRBool resetTreeOwner = PR_FALSE;
-
   PRInt32 count = mContentShells.Count();
-
-  // First null any extant references to us in any of the content shell
-  // fields.
   PRInt32 i;
   for (i = 0; i < count; i++) {
     nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
     if (info->child == aContentShell) {
-      info->child = nsnull;
-      resetTreeOwner = PR_TRUE;
-    }
-  }
-
-  // Now find the appropriate entry and put ourselves in as the content shell.
-  for (i = 0; i < count; i++) {
-    nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
-       
-    if (info->primary == aPrimary && info->id.Equals(newID)) {
       // We already exist. Do a replace.
-      info->child = aContentShell;
+      info->id = newID;
+      info->primary = aPrimary;
       shellInfo = info;
       break;
     }
@@ -1621,18 +1626,14 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
     mContentShells.AppendElement((void*)shellInfo);
   }
     
-  // Set the default content tree owner if one does not exist.
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  aContentShell->GetTreeOwner(getter_AddRefs(treeOwner));
-  if (!treeOwner || resetTreeOwner) {
-    if (aPrimary) {
-      NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
-      aContentShell->SetTreeOwner(mPrimaryContentTreeOwner);
-    }
-    else {
-      NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
-      aContentShell->SetTreeOwner(mContentTreeOwner);
-    }
+  // Set the default content tree owner
+  if (aPrimary) {
+    NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
+    aContentShell->SetTreeOwner(mPrimaryContentTreeOwner);
+  }
+  else {
+    NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
+    aContentShell->SetTreeOwner(mContentTreeOwner);
   }
 
   return NS_OK;
@@ -1708,10 +1709,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
 
    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 
-   // XXX Ick, this should be able to go away.....
-   nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(newWindow));
-   if(browserChrome)
-      browserChrome->SetChromeFlags(aChromeFlags);
+   newWindow->SetChromeFlags(aChromeFlags);
 
    *_retval = newWindow;
    NS_ADDREF(*_retval);
@@ -1775,9 +1773,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
 
    nsCOMPtr<nsIWebShellWindow> webShellWindow(do_QueryInterface(newWindow));
 
-   nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(newWindow));
-   if(browserChrome)
-      browserChrome->SetChromeFlags(aChromeFlags);
+   newWindow->SetChromeFlags(aChromeFlags);
 
    nsCOMPtr<nsIAppShell> subShell(do_CreateInstance(kAppShellCID));
    NS_ENSURE_TRUE(subShell, NS_ERROR_FAILURE);
@@ -2017,6 +2013,56 @@ PRBool nsXULWindow::GetContentScrollbarVisibility() {
 void nsXULWindow::PersistentAttributesDirty(PRUint32 aDirtyFlags) {
 
   mPersistentAttributesDirty |= aDirtyFlags & mPersistentAttributesMask;
+}
+
+nsresult nsXULWindow::ApplyChromeFlags()
+{
+  nsCOMPtr<nsIDOMElement> window;
+  GetWindowDOMElement(getter_AddRefs(window));
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+  // menubar has its own special treatment
+  mWindow->ShowMenuBar(mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR ? 
+                       PR_TRUE : PR_FALSE);
+
+  // Scrollbars have their own special treatment.
+  SetContentScrollbarVisibility(mChromeFlags &
+                                  nsIWebBrowserChrome::CHROME_SCROLLBARS ?
+                                PR_TRUE : PR_FALSE);
+
+  /* the other flags are handled together. we have style rules
+     in navigator.css that trigger visibility based on
+     the 'chromehidden' attribute of the <window> tag. */
+  nsAutoString newvalue;
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR))
+    newvalue.AppendLiteral("menubar ");
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR))
+    newvalue.AppendLiteral("toolbar ");
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_LOCATIONBAR))
+    newvalue.AppendLiteral("location ");
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR))
+    newvalue.AppendLiteral("directories ");
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR))
+    newvalue.AppendLiteral("status ");
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_EXTRA))
+    newvalue.AppendLiteral("extrachrome ");
+
+
+  // Get the old value, to avoid useless style reflows if we're just
+  // setting stuff to the exact same thing.
+  nsAutoString oldvalue;
+  window->GetAttribute(NS_LITERAL_STRING("chromehidden"), oldvalue);
+
+  if (oldvalue != newvalue)
+    window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow)

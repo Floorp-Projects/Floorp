@@ -51,7 +51,7 @@ interface nsIDocShellTreeItem;
 interface nsIAppShell;
 interface nsIXULBrowserWindow;
 
-[scriptable, uuid(5d72a699-a252-4161-a45f-e7d35e78b7f3)]
+[scriptable, uuid(b6c2f9e1-53a0-45f2-a2b8-fe37861fe8a8)]
 interface nsIXULWindow : nsISupports
 {
   /**
@@ -128,6 +128,7 @@ interface nsIXULWindow : nsISupports
    */
   attribute PRUint32 contextFlags;
 
+  attribute PRUint32 chromeFlags;
   /**
    * Create a new window.
    * @param aChromeFlags see nsIWebBrowserChrome
