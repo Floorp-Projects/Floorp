@@ -280,7 +280,7 @@ NS_WildCardMatch(char *str, char *xp, PRBool case_insensitive) {
             break;
         }
     }
-    if(_shexp_match(str,expr, PR_FALSE) == MATCH) {
+    if(_shexp_match(str,expr, case_insensitive) == MATCH) {
         PR_Free(expr);
         return 0;
     }

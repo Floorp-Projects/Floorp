@@ -285,7 +285,7 @@ NS_WildCardMatch(const PRUnichar *str, const PRUnichar *xp,
             break;
         }
     }
-    if(_shexp_match(str,expr, PR_FALSE) == MATCH) {
+    if(_shexp_match(str,expr, case_insensitive) == MATCH) {
         PR_Free(expr);
         return 0;
     }
