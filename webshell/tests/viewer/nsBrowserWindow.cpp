@@ -16,6 +16,8 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsIPref.h"
+
 #ifdef XP_MAC
 #include "nsBrowserWindow.h"
 #define NS_IMPL_IDS
@@ -61,7 +63,6 @@
 #include "nsIRadioButton.h"
 #include "nsILabel.h"
 #include "nsWidgetSupport.h"
-
 
 #include "resources.h"
 
@@ -2119,6 +2120,14 @@ nsBrowserWindow::DoToggleSelection()
   }
 }
 
+void 
+nsBrowserWindow::SetCompatibilityMode(PRBool aIsStandard)
+{
+  if (nsnull != mPrefs) { 
+    int32 prefInt = (aIsStandard) ? eCompatibility_Standard : eCompatibility_NavQuirks;
+    mPrefs->SetIntPref("nglayout.compatibility.mode", prefInt);
+  }
+}
 
 void
 nsBrowserWindow::DoDebugRobot()
@@ -2216,6 +2225,11 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 
   case VIEWER_TOP100:
     DoSiteWalker();
+    break;
+
+  case VIEWER_NAV_QUIRKS_MODE:
+  case VIEWER_STANDARD_MODE:
+    SetCompatibilityMode(VIEWER_STANDARD_MODE == aID);
     break;
   }
   return(result);
