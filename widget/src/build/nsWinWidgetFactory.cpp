@@ -25,6 +25,7 @@
 #include "nsdefs.h"
 #include "nsWidgetsCID.h"
 
+#include "nsFilePicker.h"
 #include "nsFileWidget.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsLookAndFeel.h"
@@ -48,6 +49,7 @@
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCFilePicker,    NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
@@ -159,6 +161,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCFileOpen)) {
         inst = (nsISupports*)new nsFileWidget();
+    }
+    else if (mClassID.Equals(kCFilePicker)) {
+        inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
     }
     else if (mClassID.Equals(kCHorzScrollbar)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_FALSE);

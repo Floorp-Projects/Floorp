@@ -269,3 +269,100 @@ void nsFilePicker::GetFilterListArray(nsString& aFilterList)
   }
   aFilterList.Append('\0'); 
 }
+
+
+
+
+
+//-------------------------------------------------------------------------
+void nsFilePicker::GetFileSystemCharset(nsString & fileSystemCharset)
+{
+  static nsAutoString aCharset;
+  nsresult rv;
+
+  if (aCharset.Length() < 1) {
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+	  if (NS_SUCCEEDED(rv)) 
+		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
+	  if (NS_FAILED(rv)) 
+		  aCharset.Assign("windows-1252");
+  }
+  fileSystemCharset = aCharset;
+}
+
+//-------------------------------------------------------------------------
+char * nsFilePicker::ConvertToFileSystemCharset(const PRUnichar *inString)
+{
+  char *outString = nsnull;
+  nsresult rv = NS_OK;
+
+  // get file system charset and create a unicode encoder
+  if (nsnull == mUnicodeEncoder) {
+    nsAutoString fileSystemCharset;
+    GetFileSystemCharset(fileSystemCharset);
+
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+    if (NS_SUCCEEDED(rv)) {
+      rv = ccm->GetUnicodeEncoder(&fileSystemCharset, &mUnicodeEncoder);
+    }
+  }
+
+  // converts from unicode to the file system charset
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 inLength = nsCRT::strlen(inString);
+    PRInt32 outLength;
+    rv = mUnicodeEncoder->GetMaxLength(inString, inLength, &outLength);
+    if (NS_SUCCEEDED(rv)) {
+      outString = new char[outLength+1];
+      if (nsnull == outString) {
+        return nsnull;
+      }
+      rv = mUnicodeEncoder->Convert(inString, &inLength, outString, &outLength);
+      if (NS_SUCCEEDED(rv)) {
+        outString[outLength] = '\0';
+      }
+    }
+  }
+  
+  return NS_SUCCEEDED(rv) ? outString : nsnull;
+}
+
+//-------------------------------------------------------------------------
+PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
+{
+  PRUnichar *outString = nsnull;
+  nsresult rv = NS_OK;
+
+  // get file system charset and create a unicode encoder
+  if (nsnull == mUnicodeDecoder) {
+    nsAutoString fileSystemCharset;
+    GetFileSystemCharset(fileSystemCharset);
+
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+    if (NS_SUCCEEDED(rv)) {
+      rv = ccm->GetUnicodeDecoder(&fileSystemCharset, &mUnicodeDecoder);
+    }
+  }
+
+  // converts from the file system charset to unicode
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 inLength = nsCRT::strlen(inString);
+    PRInt32 outLength;
+    rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
+    if (NS_SUCCEEDED(rv)) {
+      outString = new PRUnichar[outLength+1];
+      if (nsnull == outString) {
+        return nsnull;
+      }
+      rv = mUnicodeDecoder->Convert(inString, &inLength, outString, &outLength);
+      if (NS_SUCCEEDED(rv)) {
+        outString[outLength] = 0;
+      }
+    }
+  }
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "error charset conversion");
+  return NS_SUCCEEDED(rv) ? outString : nsnull;
+}
