@@ -43,6 +43,16 @@
 #include "nsRepository.h"
 #include "nsParserCIID.h"
 
+#include "nsIDocument.h"
+#include "nsIPresContext.h"
+#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
+#include "nsXIFDTD.h"
+#include "nsIParser.h"
+#include "nsHTMLContentSinkStream.h"
+
 #include "resources.h"
 
 #if defined(WIN32)
@@ -925,22 +935,6 @@ nsBrowserWindow::DestroyThrobberImages()
 {
 }
 
-//----------------------------------------------------------------------
-
-#ifdef NS_DEBUG
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
-#include "nsIDocumentViewer.h"
-#include "nsIDocument.h"
-#include "nsIContent.h"
-#include "nsIFrame.h"
-#include "nsIStyleContext.h"
-#include "nsISizeOfHandler.h"
-#include "nsIStyleSet.h"
-#include "nsXIFDTD.h"
-#include "nsIParser.h"
-#include "nsHTMLContentSinkStream.h"
-
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 nsIPresShell*
@@ -967,6 +961,100 @@ nsBrowserWindow::GetPresShell()
   }
   return shell;
 }
+
+
+void
+nsBrowserWindow::DoCopy()
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsString buffer;
+
+      doc->CreateXIF(buffer,PR_TRUE);
+
+      nsIParser* parser;
+
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+      nsresult rv = NSRepository::CreateInstance(kCParserCID, 
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
+
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+        
+        rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+
+        ostrstream  data;
+        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
+
+        if (NS_OK == rv) {
+          parser->SetContentSink(sink);
+          
+          nsIDTD* dtd = nsnull;
+          rv = NS_NewXIFDTD(&dtd);
+          if (NS_OK == rv) 
+          {
+            parser->RegisterDTD(dtd);
+            dtd->SetContentSink(sink);
+            dtd->SetParser(parser);
+            parser->Parse(buffer, PR_FALSE);           
+          }
+          NS_IF_RELEASE(dtd);
+          NS_IF_RELEASE(sink);
+          char* str = data.str();
+
+#if defined(WIN32)
+          HGLOBAL     hGlobalMemory;
+          PSTR        pGlobalMemory;
+
+          PRInt32 len = data.pcount();
+          if (len)
+          {
+            // Copy text to Global Memory Area
+            hGlobalMemory = (HGLOBAL)GlobalAlloc(GHND, len+1);
+            if (hGlobalMemory != NULL) {
+              pGlobalMemory = (PSTR) GlobalLock(hGlobalMemory);
+              char * s  = str;
+              for (int i=0;i< len;i++) {
+                *pGlobalMemory++ = *s++;
+              }
+
+              // Put data on Clipboard
+              GlobalUnlock(hGlobalMemory);
+              OpenClipboard(NULL);
+              EmptyClipboard();
+              SetClipboardData(CF_TEXT, hGlobalMemory);
+              CloseClipboard();
+            }
+          }
+          // in ostrstreams if you cal the str() function
+          // then you are responsible for deleting the string
+#endif
+          if (str) delete str;
+
+        }
+        NS_RELEASE(parser);
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
+}
+
+//----------------------------------------------------------------------
+
+#ifdef NS_DEBUG
+#include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIStyleContext.h"
+#include "nsISizeOfHandler.h"
+#include "nsIStyleSet.h"
+
 
 void
 nsBrowserWindow::DumpContent(FILE* out)
@@ -1346,86 +1434,6 @@ nsBrowserWindow::DoDebugSave()
   }
 }
 
-void
-nsBrowserWindow::DoCopy()
-{
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
-    if (nsnull != doc) {
-      nsString buffer;
-
-      doc->CreateXIF(buffer,PR_TRUE);
-
-      nsIParser* parser;
-
-      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-      nsresult rv = NSRepository::CreateInstance(kCParserCID, 
-                                                 nsnull, 
-                                                 kCParserIID, 
-                                                 (void **)&parser);
-
-      if (NS_OK == rv) {
-        nsIHTMLContentSink* sink = nsnull;
-        
-        rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
-
-        ostrstream  data;
-        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
-
-        if (NS_OK == rv) {
-          parser->SetContentSink(sink);
-          
-          nsIDTD* dtd = nsnull;
-          rv = NS_NewXIFDTD(&dtd);
-          if (NS_OK == rv) 
-          {
-            parser->RegisterDTD(dtd);
-            dtd->SetContentSink(sink);
-            dtd->SetParser(parser);
-            parser->Parse(buffer, PR_FALSE);           
-          }
-          NS_IF_RELEASE(dtd);
-          NS_IF_RELEASE(sink);
-          char* str = data.str();
-
-#if defined(WIN32)
-          HGLOBAL     hGlobalMemory;
-          PSTR        pGlobalMemory;
-
-          PRInt32 len = data.pcount();
-          if (len)
-          {
-            // Copy text to Global Memory Area
-            hGlobalMemory = (HGLOBAL)GlobalAlloc(GHND, len+1);
-            if (hGlobalMemory != NULL) {
-              pGlobalMemory = (PSTR) GlobalLock(hGlobalMemory);
-              char * s  = str;
-              for (int i=0;i< len;i++) {
-                *pGlobalMemory++ = *s++;
-              }
-
-              // Put data on Clipboard
-              GlobalUnlock(hGlobalMemory);
-              OpenClipboard(NULL);
-              EmptyClipboard();
-              SetClipboardData(CF_TEXT, hGlobalMemory);
-              CloseClipboard();
-            }
-          }
-          // in ostrstreams if you cal the str() function
-          // then you are responsible for deleting the string
-#endif
-          if (str) delete str;
-
-        }
-        NS_RELEASE(parser);
-      }
-    }
-  }
-}
 
 
 void 

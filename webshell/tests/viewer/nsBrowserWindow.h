@@ -32,10 +32,7 @@ class nsITextWidget;
 class nsIButton;
 class nsIThrobber;
 class nsViewerApp;
-
-#ifdef NS_DEBUG
 class nsIPresShell;
-#endif
 
 #define SAMPLES_BASE_URL "resource:/res/samples"
 
@@ -114,6 +111,7 @@ public:
 
   void DoFileOpen();
   void DoCopy();
+  nsIPresShell* GetPresShell();
 
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);
@@ -134,7 +132,6 @@ public:
   void DoJSConsole();
   void DoEditorMode();
   nsEventStatus DispatchDebugMenu(PRInt32 aID);
-  nsIPresShell* GetPresShell();
 #endif
 
   void SetApp(nsViewerApp* aApp) {
