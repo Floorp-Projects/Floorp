@@ -36,8 +36,7 @@
 #include "nsIPref.h"
 #include "prenv.h"
 #include "nsIFileStream.h"
-
-
+#include "nsIFileSpec.h"
 // Number of test entries to be placed in the cache
 #define NUM_CACHE_ENTRIES  250
 
