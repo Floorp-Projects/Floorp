@@ -127,6 +127,7 @@ protected:
   nsVoidArray* mCompositionListeners;
   nsVoidArray* mMenuListeners;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  PRBool mDestroyed;
 };
 
 

@@ -74,6 +74,7 @@ nsEventListenerManager::nsEventListenerManager()
   mTextListeners = nsnull;
   mCompositionListeners = nsnull;
   mMenuListeners = nsnull;
+  mDestroyed = PR_FALSE;
   NS_INIT_REFCNT();
 }
 
@@ -849,7 +850,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
-          for (int i=0; i<mMouseMotionListeners->Count(); i++) {
+          for (int i=0; mMouseMotionListeners && i<mMouseMotionListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMMouseMotionListener *mMouseMotionListener;
 
@@ -900,7 +901,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,aEvent);
         }
         if (NS_OK == ret) {
-          for(int i=0;i<mTextListeners->Count();i++) {
+          for(int i=0; mTextListeners && i<mTextListeners->Count();i++) {
             nsListenerStruct *ls;
             nsIDOMCompositionListener* mCompositionListener;
             ls =(nsListenerStruct*)mCompositionListeners->ElementAt(i);
@@ -962,7 +963,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,aEvent);
         }
         if (NS_OK == ret) {
-          for (int i=0; i<mTextListeners->Count(); i++) {
+          for (int i=0; mTextListeners && i<mTextListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMTextListener *mTextListener;
 
@@ -997,7 +998,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
-          for (int i=0; i<mKeyListeners->Count(); i++) {
+          for (int i=0; mKeyListeners && i<mKeyListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMKeyListener *mKeyListener;
 
@@ -1062,7 +1063,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
-          for (int i=0; i<mFocusListeners->Count(); i++) {
+          for (int i=0; mFocusListeners && i<mFocusListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMFocusListener *mFocusListener;
 
@@ -1121,7 +1122,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
-          for (int i=0; i<mFormListeners->Count(); i++) {
+          for (int i=0; mFormListeners && i<mFormListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMFormListener *mFormListener;
 
@@ -1205,7 +1206,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
-          for (int i=0; i<mLoadListeners->Count(); i++) {
+          for (int i=0; mLoadListeners && i<mLoadListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMLoadListener *mLoadListener;
 
@@ -1260,7 +1261,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
-          for (int i=0; i<mPaintListeners->Count(); i++) {
+          for (int i=0; mPaintListeners && i<mPaintListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMPaintListener *paintListener;
 
@@ -1299,7 +1300,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
         }
 
         if (NS_OK == ret) {
-          for (int i=0; i<mDragListeners->Count(); i++) {
+          for (int i=0; mDragListeners && i<mDragListeners->Count(); i++) {
             nsListenerStruct *dragStruct;
 
             dragStruct = (nsListenerStruct*)mDragListeners->ElementAt(i);
@@ -1377,7 +1378,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
-          for (int i=0; i<mMenuListeners->Count(); i++) {
+          for (int i=0; mMenuListeners && i<mMenuListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMMenuListener *mMenuListener;
 
@@ -1471,7 +1472,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     : nsEventStatus_eConsumeNoDefault;
 
   // This is correct
-  *aEventStatus = (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT)
+  *aEventStatus = (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) || mDestroyed
     ? nsEventStatus_eConsumeNoDefault
     : *aEventStatus;
 
@@ -1728,7 +1729,7 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
   ReleaseListeners(&mPaintListeners, aScriptOnly);
   ReleaseListeners(&mTextListeners, aScriptOnly);
   ReleaseListeners(&mCompositionListeners, aScriptOnly);
-
+  mDestroyed = PR_TRUE;
   return NS_OK;
 }
 
