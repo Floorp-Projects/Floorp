@@ -1006,6 +1006,8 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 	m_runningURL->GetPostMessageFile(&filePath);
 	if (filePath && *filePath)
 	{
+		// mscott -- this function should be re-written to use the file url code so it can be
+		// asynch
 		nsInputFileStream * fileStream = new nsInputFileStream(nsFileSpec(*filePath), PR_RDONLY, 00700);
 		if (fileStream && fileStream->is_open())
 		{
@@ -1022,20 +1024,17 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
                 PRInt32 bsize = POST_DATA_BUFFER_SIZE;
                 amtInBuffer =  0;
                 do {
-					
+					lastLineWasComplete = PR_TRUE;
 					PRInt32 L = 0;
 					if (fileStream->eof())
 					{
 						line = nsnull;
 						break;
 					}
-					if (!fileStream->readline(b, bsize-5)) // if the readline returns false, jump out. we've reached the end of the file
-					{
-						line = nsnull;
-						break;
-					}
-					else
-						line = b;
+					
+					if (!fileStream->readline(b, bsize-5)) 
+						lastLineWasComplete = PR_FALSE;
+					line = b;
 
 					L = PL_strlen(line);
 
@@ -1053,10 +1052,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 						L++;
                     }
 
-					/* set default */
-					lastLineWasComplete = PR_TRUE;
-
-					if (L > 1 && line[L-2] == CR && line[L-1] == LF)
+					if (!lastLineWasComplete || (L > 1 && line[L-2] == CR && line[L-1] == LF))
                     {
                         /* already ok */
                     }
@@ -1076,13 +1072,6 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
                           line[L] = 0;
                       }
 					}
-					else
-                    {
-						line[L++] = CR;
-                        line[L++] = LF;
-                        line[L] = 0;
-						lastLineWasComplete = PR_FALSE;
-                    }
 
 					bsize -= L;
 					b += L;
@@ -1092,7 +1081,9 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 					if (bsize < 100) // i chose 100 arbitrarily.
 					{
 						nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-						SendData(url, buffer);
+						PRUint32 bufferSize = PL_strlen(buffer);
+						if (*buffer)
+							SendData(url, buffer);
 						buffer[0] = '\0';
 						b = buffer; // reset buffer
 						bsize = POST_DATA_BUFFER_SIZE;
