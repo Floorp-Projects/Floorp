@@ -27,7 +27,7 @@ Subject: [% flag.type.name %]: [Bug [% flag.target.bug.id %]] [% flag.target.bug
 
 [%+ USE wrap -%]
 [%- FILTER bullet = wrap(80) -%]
-[% flag.setter.identity %] has asked you for [% flag.type.name %] on bug #
+[% user.realname %] <[% user.login %]> has asked you for [% flag.type.name %] on bug #
   [%- flag.target.bug.id %] ([% flag.target.bug.summary %])
 [%- IF flag.target.attachment.exists %], attachment #
   [%- flag.target.attachment.id %] ([% flag.target.attachment.summary %])[% END %].
