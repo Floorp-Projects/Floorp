@@ -29,6 +29,7 @@
 
 #include "nsBoxFrame.h"
 #include "nsIMenuParent.h"
+#include "nsIWidget.h"
 
 nsresult NS_NewMenuPopupFrame(nsIFrame** aResult) ;
 
@@ -60,6 +61,8 @@ public:
   // Hides the chain of cascaded menus without closing them up.
   NS_IMETHOD HideChain();
 
+  NS_IMETHOD GetWidget(nsIWidget **aWidget);
+
   // The dismissal listener gets created and attached to the window.
   NS_IMETHOD CreateDismissalListener();
 
@@ -82,7 +85,7 @@ public:
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
 
   void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
-  void GetNearestEnclosingView(nsIFrame* aStartFrame, nsIView** aResult);
+  static void GetNearestEnclosingView(nsIFrame* aStartFrame, nsIView** aResult);
 
   nsresult SyncViewWithFrame(nsIPresContext& aPresContext, PRBool aOnMenuBar, 
                              nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);

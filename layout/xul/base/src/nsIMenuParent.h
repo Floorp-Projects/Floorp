@@ -38,6 +38,7 @@ public:
 
   NS_IMETHOD SetActive(PRBool aActiveFlag) = 0;
   NS_IMETHOD GetIsActive(PRBool& isActive) = 0;
+  NS_IMETHOD GetWidget(nsIWidget **aWidget) = 0;
   
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) = 0;
 

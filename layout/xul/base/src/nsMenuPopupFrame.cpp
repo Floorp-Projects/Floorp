@@ -387,9 +387,10 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
   if (mCurrentMenu) {
     PRBool isOpen = PR_FALSE;
     mCurrentMenu->MenuIsOpen(isOpen);
+    mCurrentMenu->SelectMenu(PR_FALSE);
     if (isOpen)
       mCurrentMenu->OpenMenu(PR_FALSE);
-    mCurrentMenu->SelectMenu(PR_FALSE);
+
   }
 
   // Set the new child.
@@ -634,6 +635,10 @@ nsMenuPopupFrame::HideChain()
 NS_IMETHODIMP
 nsMenuPopupFrame::DismissChain()
 {
+  // Stop capturing rollups
+  if (nsMenuFrame::mDismissalListener)
+    nsMenuFrame::mDismissalListener->Unregister();
+  
   // Get our menu parent.
   nsIFrame* frame;
   GetParent(&frame);
@@ -662,8 +667,22 @@ nsMenuPopupFrame::DismissChain()
 }
 
 NS_IMETHODIMP
+nsMenuPopupFrame::GetWidget(nsIWidget **aWidget)
+{
+  // Get parent view
+  nsIView * view = nsnull;
+  nsMenuPopupFrame::GetNearestEnclosingView(this, &view);
+  if (!view)
+    return NS_OK;
+
+  view->GetWidget(*aWidget);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMenuPopupFrame::CreateDismissalListener()
 {
+  NS_ADDREF(nsMenuFrame::mDismissalListener = new nsMenuDismissalListener());
   return NS_OK;
 }
 

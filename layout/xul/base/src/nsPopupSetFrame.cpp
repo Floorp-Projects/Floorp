@@ -19,6 +19,8 @@
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsPopupSetFrame.h"
+#include "nsIMenuParent.h"
+#include "nsMenuFrame.h"
 #include "nsBoxFrame.h"
 #include "nsIContent.h"
 #include "prtypes.h"
@@ -450,29 +452,24 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     ActivatePopup(PR_TRUE);
     
     nsIFrame* activeChild = GetActiveChild();
+
+    nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);
+    UpdateDismissalListener(childPopup);
   }
   else {
+    if (!OnDestroy())
+      return;
+
     // Close the menu. 
     nsIFrame* frame = GetActiveChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
-    // Make sure we clear out our own items.
-    if (menuPopup)
-      menuPopup->SetCurrentMenuItem(nsnull);
+    // Unregister.
+    if (nsMenuFrame::mDismissalListener) {
+      nsMenuFrame::mDismissalListener->Unregister();
+    }
 
     ActivatePopup(PR_FALSE);
-
-    // Set the focus back to our view's widget.
-    nsIView*  view;
-    mElementFrame->GetView(&view);
-    if (!view) {
-      nsPoint offset;
-      mElementFrame->GetOffsetFromView(offset, &view);
-    }
-    nsCOMPtr<nsIWidget> widget;
-    view->GetWidget(*getter_AddRefs(widget));
-    if (widget)
-      widget->SetFocus();
   }
 }
 
@@ -533,4 +530,20 @@ nsPopupSetFrame::GetActiveChildElement(nsIContent** aResult)
     child->GetContent(aResult);
   }
 }
+
+void
+nsPopupSetFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
+{
+  if (!nsMenuFrame::mDismissalListener) {
+    if (!aMenuParent)
+       return;
+    // Create the listener and attach it to the outermost window.
+    aMenuParent->CreateDismissalListener();
+  }
+  
+  // Make sure the menu dismissal listener knows what the current
+  // innermost menu popup frame is.
+  nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
+}
+
 

@@ -33,6 +33,7 @@
 #include "nsMenuFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsMenuPopupFrame.h"
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
@@ -377,9 +378,9 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
   // Unset the current child.
   if (mCurrentMenu) {
     mCurrentMenu->MenuIsOpen(wasOpen);
+    mCurrentMenu->SelectMenu(PR_FALSE);
     if (wasOpen)
       mCurrentMenu->OpenMenu(PR_FALSE);
-    mCurrentMenu->SelectMenu(PR_FALSE);
   }
 
   // Set the new child.
@@ -422,6 +423,10 @@ nsMenuBarFrame::Escape()
 
   // Clear our current menu item if we've got one.
   SetCurrentMenuItem(nsnull);
+
+  // Clear out our dismissal listener
+  if (nsMenuFrame::mDismissalListener)
+    nsMenuFrame::mDismissalListener->Unregister();
 }
 
 void 
@@ -457,35 +462,32 @@ nsMenuBarFrame::HideChain()
 NS_IMETHODIMP
 nsMenuBarFrame::DismissChain()
 {
+  // Stop capturing rollups
+  if (nsMenuFrame::mDismissalListener)
+    nsMenuFrame::mDismissalListener->Unregister();
+  
   SetCurrentMenuItem(nsnull);
   SetActive(PR_FALSE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMenuBarFrame::CreateDismissalListener()
+nsMenuBarFrame::GetWidget(nsIWidget **aWidget)
 {
-  // Create the listener.
-  /*
-  nsMenuFrame::mMenuDismissalListener = new nsMenuDismissalListener();
-  
-  // Get the global object for the content node and convert it to a DOM
-  // window.
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
-  if (!doc)
+  // Get parent view
+  nsIView * view = nsnull;
+  nsMenuPopupFrame::GetNearestEnclosingView(this, &view);
+  if (!view)
     return NS_OK;
 
-  doc->GetScriptContextOwner(...);
+  view->GetWidget(*aWidget);
+  return NS_OK;
+}
 
-  owner->GetScriptGlobalObject(...);
-
-  // qi global object to an nsidomwindow
-
-  // Walk up the parent chain until we reach the outermost window.
-
-  // Attach ourselves as a mousedown listener.
-*/
+NS_IMETHODIMP
+nsMenuBarFrame::CreateDismissalListener()
+{
+  NS_ADDREF(nsMenuFrame::mDismissalListener = new nsMenuDismissalListener());
   return NS_OK;
 }
 
