@@ -32,9 +32,7 @@
 #include "nsIToolbarManagerListener.h"
 #include "nsIImageButtonListener.h"
 
-#ifdef NGEDITOR
 #include "nsIEditor.h"
-#endif
 
 class nsILabel;
 class nsICheckButton;
@@ -150,9 +148,7 @@ public:
   void DoViewSource();
   void DoCopy();
   void DoJSConsole();
-#ifdef NGEDITOR
   void DoEditorMode(nsIWebShell* aWebShell);
-#endif
   nsIPresShell* GetPresShell();
 
   void DoFind();
@@ -299,10 +295,8 @@ protected:
 
   void UpdateToolbarBtns();
 
-#ifdef NGEDITOR
   void AddEditor(nsIEditor *); //this function is temporary and WILL be depricated
   nsIEditor      * mEditor; //this will hold the editor for future commands. we must think about this mjudge
-#endif
 };
 
 // nsViewSourceWindow
