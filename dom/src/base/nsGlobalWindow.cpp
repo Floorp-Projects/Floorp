@@ -4548,7 +4548,7 @@ GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
     return QueryInterface(aIID, aSink);
   }
 
-  return NS_OK;
+  return *aSink ? NS_ERROR_NO_INTERFACE : NS_OK;
 }
 
 //*****************************************************************************
