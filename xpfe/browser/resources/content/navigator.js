@@ -1163,18 +1163,53 @@ function BrowserEditBookmarks()
 							       "chrome,dialog=no",
 							       window.content.location);
     }
- 
   }
 
 
-        function doTests() {
+  function BrowserPageInfo()
+  {
+    dump("BrowserPageInfo(); \n ");
+    var charsetArg = new String();
+    
+    if (appCore != null) {
+      
+      try 
+        {
+          //let's try to extract the current charset menu setting
+          var DocCharset = appCore.GetDocumentCharset();
+          charsetArg = "charset="+DocCharset;
+          dump("*** Current document charset: " + DocCharset + "\n");
+          
+          //we should "inherit" the charset menu setting in a new window
+          window.openDialog( "chrome://navigator/content/pageInfo.xul",
+                             "_blank",
+                             "chrome,dialog=no",
+                             window.content.location, charsetArg);
         }
+      
+      catch(ex) 
+        { 
+          dump("*** failed to read document charset \n");
+        }
+      
+    } else {
+      //if everythig else fails, forget about the charset
+      window.openDialog( "chrome://navigator/content/viewSource.xul",
+                         "_blank",
+                         "chrome,dialog=no",
+                         window.content.location);
+    }
+  }
 
-        function dumpProgress() {
-            var meter       = document.getElementById("statusbar-icon");
-            dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
-            dump( "meter value=" + meter.getAttribute("value") + "\n" );
-        }
+
+function doTests() {
+}
+
+function dumpProgress() {
+    var meter       = document.getElementById("statusbar-icon");
+    dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
+    dump( "meter value=" + meter.getAttribute("value") + "\n" );
+}
 
 function BrowserReload() {
     dump( "Sorry, command not implemented.\n" );

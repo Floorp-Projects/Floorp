@@ -1,12 +1,14 @@
 contentframe.js
 openLocation.js
-viewsource.js
 navigator.xul
 navigatorOverlay.xul
 navExtraOverlay.xul
 navigator.js
 openLocation.xul
 viewSource.xul
+viewsource.js
+pageInfo.xul
+pageInfo.js
 NetSupportConfirmYN.xul
 NetSupportConfirmCheckYN.xul
 tooltip.js
