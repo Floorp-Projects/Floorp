@@ -56,6 +56,7 @@ extern "C"
 
 JS_BEGIN_EXTERN_C
 #include "jsapi.h"
+#include "jsdbgapi.h"
 #ifdef LIVEWIRE
 #include "lwdbgapi.h"
 #endif
@@ -1293,14 +1294,18 @@ JSD_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval);
  *
  * XXX these must stay the same as the JSPD_ flags in jsdbgapi.h
  */
-#define JSDPD_ENUMERATE  0x01    /* visible to for/in loop */
-#define JSDPD_READONLY   0x02    /* assignment is error */
-#define JSDPD_PERMANENT  0x04    /* property cannot be deleted */
-#define JSDPD_ALIAS      0x08    /* property has an alias id */
-#define JSDPD_ARGUMENT   0x10    /* argument to function */
-#define JSDPD_VARIABLE   0x20    /* local variable in function */
+#define JSDPD_ENUMERATE  JSPD_ENUMERATE    /* visible to for/in loop */
+#define JSDPD_READONLY   JSPD_READONLY     /* assignment is error */
+#define JSDPD_PERMANENT  JSPD_PERMANENT    /* property cannot be deleted */
+#define JSDPD_ALIAS      JSPD_ALIAS        /* property has an alias id */
+#define JSDPD_ARGUMENT   JSPD_ARGUMENT     /* argument to function */
+#define JSDPD_VARIABLE   JSPD_VARIABLE     /* local variable in function */
+#define JSDPD_EXCEPTION  JSPD_EXCEPTION    /* exception occurred looking up */
+                                           /* proprety, value is exception  */
+#define JSDPD_ERROR      JSPD_ERROR        /* native getter returned JS_FALSE */
+                                           /* without throwing an exception */
 /* this is not one of the JSPD_ flags in jsdbgapi.h  - careful not to overlap*/
-#define JSDPD_HINTED     0x800   /* found via explicit lookup */
+#define JSDPD_HINTED     0x800             /* found via explicit lookup */
 
 /*
 * Release this JSDProperty
