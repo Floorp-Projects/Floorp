@@ -25,6 +25,8 @@ CPPSRCS=				\
 	nsBRFrame.cpp			\
 	nsBlockFrame.cpp		\
 	nsBodyFrame.cpp			\
+	nsContainerFrame.cpp		\
+	nsFrame.cpp			\
 	nsFrameReflowState.cpp		\
 	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
@@ -42,8 +44,10 @@ CPPSRCS=				\
 	nsObjectFrame.cpp		\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
+	nsPresShell.cpp			\
 	nsScrollFrame.cpp		\
 	nsSpacerFrame.cpp		\
+	nsSplittableFrame.cpp		\
 	nsTextFrame.cpp			\
 	nsWBRFrame.cpp			\
 	$(NULL)
@@ -54,7 +58,7 @@ EXPORTS =				\
 
 MODULE = raptor
 
-REQUIRES = xpcom raptor dom netlib plugin java js oji
+REQUIRES = xpcom raptor dom netlib plugin java js oji pref
 
 include $(DEPTH)/config/config.mk
 
