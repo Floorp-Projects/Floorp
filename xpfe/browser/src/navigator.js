@@ -76,31 +76,31 @@
           // 2 = last 
           // 3 = splash (browser.startup.splash)
           choice = pref.GetIntPref("browser.startup.page");
-          if (choice == 0) {
-            startpage = "about:blank";
-          }
-          else if (choice == 1) {
-            startpage = pref.CopyCharPref("browser.startup.homepage");
-          }
-          else if (choice == 2) {
-            var history = Components.classes['component://netscape/browser/global-history'];
-            if (history) {
-               history = history.getService();
-	    }
-	    if (history) {
-               history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-	    }
-	    if (history) {
-		startpage = history.GetLastPageVisted();
-	    }
-          }
-          else if (choice == 3) {
-            startpage = pref.CopyCharPref("browser.startup.splash");
-          }
-          else {
-	    // use about: as the default
-            startpage = "about:";
-          }
+	  switch (choice) {
+		case 0:
+            		startpage = "about:blank";
+      			break;
+		case 1:
+            		startpage = pref.CopyCharPref("browser.startup.homepage");
+      			break;
+		case 2:
+            		var history = Components.classes['component://netscape/browser/global-history'];
+			if (history) {
+               			history = history.getService();
+	    		}
+	    		if (history) {
+              			history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+	    		}
+	    		if (history) {
+				startpage = history.GetLastPageVisted();
+	    		}
+      			break;
+		case 3:
+            		startpage = pref.CopyCharPref("browser.startup.splash");
+      			break;
+   		default:
+            		startpage = "about:";
+	  }
         }
         document.getElementById("args").setAttribute("value", startpage);
         appCore.loadInitialPage();
