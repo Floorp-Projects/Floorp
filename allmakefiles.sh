@@ -566,6 +566,7 @@ xpcom/reflect/xptcall/src/md/Makefile
 xpcom/reflect/xptcall/src/md/os2/Makefile
 xpcom/reflect/xptcall/src/md/test/Makefile
 xpcom/reflect/xptcall/src/md/unix/Makefile
+xpcom/reflect/xptcall/src/md/win32/Makefile
 xpcom/reflect/xptcall/tests/Makefile
 xpcom/reflect/xptinfo/Makefile
 xpcom/reflect/xptinfo/public/Makefile
@@ -579,12 +580,15 @@ xpcom/sample/Makefile
 xpcom/threads/Makefile
 xpcom/tools/Makefile
 xpcom/tools/registry/Makefile
+xpcom/tools/windows/Makefile
+xpcom/windbgdlg/Makefile
 
 $MAKEFILES_libreg
 $MAKEFILES_libjar
 intl/unicharutil/public/Makefile
 intl/uconv/public/Makefile
 netwerk/base/public/Makefile
+netwerk/build/Makefile
 "
 
 MAKEFILES_xpcom_tests="
