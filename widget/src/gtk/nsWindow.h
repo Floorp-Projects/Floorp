@@ -67,7 +67,7 @@ public:
   gint                 ConvertBorderStyles(nsBorderStyle bs);
 
   // Add an XATOM property to this window.
-  void                 StoreProperty(char *property, const unsigned char *data);
+  void                 StoreProperty(char *property, unsigned char *data);
 
   virtual PRBool IsChild() const;
 
