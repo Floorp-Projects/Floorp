@@ -200,6 +200,24 @@ if (exists $::FORM{'bug_status'}
     $::FORM{'everconfirmed'} = 1;
 }
 
+my %ccids;
+my @cc;
+
+# Create the ccid hash for inserting into the db
+# and the list for passing to processmail
+# use a hash rather than a list to avoid adding users twice
+if (defined $::FORM{'cc'}) {
+    foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
+        if ($person ne "") {
+            my $ccid = DBNameToIdAndCheck($person);
+            if ($ccid && !$ccids{$ccid}) {
+                $ccids{$ccid} = 1;
+                push(@cc, $person);
+            }
+        }
+    }
+}
+
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
   "(" . join(",", @used_fields) . ", reporter, creation_ts, groupset) " . 
@@ -256,22 +274,9 @@ my $id = FetchOneColumn();
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) 
          VALUES ($id, $::userid, now(), " . SqlQuote($comment) . ")");
 
-my %ccids;
-my $ccid;
-my @cc;
-
-# Add the CC list
-if (defined $::FORM{'cc'}) {
-    foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
-        if ($person ne "") {
-            $ccid = DBNameToIdAndCheck($person);
-            if ($ccid && !$ccids{$ccid}) {
-                SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $ccid)");
-                $ccids{$ccid} = 1;
-                push(@cc, $person);
-            }
-        }
-    }
+# Insert the cclist into the database
+foreach my $ccid (keys(%ccids)) {
+    SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $ccid)");
 }
 
 SendSQL("UNLOCK TABLES") if Param("shadowdb");
