@@ -94,6 +94,10 @@ function okToCapture() {
     return;
   }
   var formsArray = window._content.document.forms;
+  if (!formsArray) {
+    capture.setAttribute("disabled", "true");
+    return;
+  }
   var form;
   for (form=0; form<formsArray.length; form++) {
     var elementsArray = formsArray[form].elements;
@@ -120,6 +124,10 @@ function okToPrefill() {
     return;
   }
   var formsArray = window._content.document.forms;
+  if (!formsArray) {
+    prefill.setAttribute("disabled", "true");
+    return;
+  }
   var form;
   for (form=0; form<formsArray.length; form++) {
     var elementsArray = formsArray[form].elements;
