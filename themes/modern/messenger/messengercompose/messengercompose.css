@@ -52,7 +52,8 @@ box.padded {
 /* addressing widget */
 
 #addressingWidgetTree {
-  width : 0px;
+  height: 80px;
+  width: 0px;
   border: 1px inset #5B7693;
   -moz-user-focus: none;
 }  
