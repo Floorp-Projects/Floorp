@@ -94,6 +94,13 @@ mIsActive(PR_FALSE), mTarget(nsnull)
 
 nsMenuBarFrame::~nsMenuBarFrame()
 {
+  /* The menubar can still be active at this point under unusual circumstances.
+     (say, while switching skins (which tears down all frames including
+     this one) after having made a menu selection (say, Edit->Preferences,
+     to get to the skin switching UI)). SetActive(PR_FALSE) releases
+     mKeyboardNavigator, which is by now pointing to a deleted frame.
+  */
+  SetActive(PR_FALSE);
 }
 
 NS_IMETHODIMP
