@@ -5023,7 +5023,7 @@ void nsImapProtocol::RefreshACLForFolder(const char *mailboxName)
 
 void nsImapProtocol::RefreshFolderACLView(const char *mailboxName, nsIMAPNamespace *nsForMailbox)
 {
-  char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, FALSE);
+  char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, PR_FALSE);
   nsXPIDLCString canonicalMailboxName;
   if (nonUTF7ConvertedName)
     mailboxName = nonUTF7ConvertedName;
