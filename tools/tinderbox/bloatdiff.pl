@@ -164,20 +164,6 @@ printf "%-40s %10s %10.2f%% %10s %10.2f%%\n",
         $newMap{"TOTAL"}{leaked}, $newMap{"TOTAL"}{leakPercent},
         $newMap{"TOTAL"}{bloat}, $newMap{"TOTAL"}{bloatPercent});
 
-# build-seamonkey-util.pl does this printing now.
-#
-#my $leakstr  = PrintSize($newMap{"TOTAL"}{leaked}) . "B\n";
-#my $bloatstr = PrintSize($newMap{"TOTAL"}{bloat}) . "B\n";
-#
-#if($LABEL) {
-#  print "TinderboxPrint:<a title=\"$LABEL nsTraceRefcnt leaks\">$LABEL Lk:$leakstr</a>\n";
-#  print "TinderboxPrint:<a title=\"$LABEL nsTraceRefcnt bloat\">$LABEL Bl:$bloatstr</a>\n";
-#} else {
-#  print "TinderboxPrint:<a title=\"nsTraceRefcnt leaks\">Lk:$leakstr</a>\n";
-#  print "TinderboxPrint:<a title=\"nsTraceRefcnt bloat\">Bl:$bloatstr</a>\n";
-#}
-
-
 ################################################################################
 
 sub percentStr {
