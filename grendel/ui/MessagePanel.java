@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
- * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
+ * Modified: Jeff Galyan <talisman@anamorphic.com>, 30 Dec 1998
  */
 
 package grendel.ui;
@@ -42,15 +42,17 @@ import java.util.ResourceBundle;
 import javax.swing.Action;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JToolBar;
+//import javax.swing.JToolBar;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.EventListenerList;
 import javax.swing.text.Document;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.html.*;
 
 //import netscape.orion.toolbars.NSToolbar;
 
@@ -64,6 +66,8 @@ import grendel.mime.html.MimeHTMLOperatorFactory;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.ui.UIAction;
+import grendel.widgets.GrendelToolBar;
+
 import grendel.widgets.StatusEvent;
 
 /* ####
@@ -83,7 +87,8 @@ import calypso.util.PreferencesFactory;
 //import mg.magellan.document.IDocument;
 
 public class MessagePanel extends GeneralPanel {
-  JTextArea     fTextArea;
+  //  JTextArea     fTextArea;
+  JEditorPane   fTextArea;
   //  URLComponent  fViewer;
   Thread        fMessageLoadThread;
   Message       fMessage;
@@ -113,8 +118,9 @@ public class MessagePanel extends GeneralPanel {
       // Component viewComponent = fViewer.getComponent();
       // add(viewComponent);
     } else {
-      fTextArea = new JTextArea();
+      fTextArea = new JEditorPane();
       fTextArea.setEditable(false);
+      fTextArea.setContentType("text/html");
       fTextArea.setBorder(BorderFactory.createLoweredBevelBorder());
       add(new JScrollPane(fTextArea));
     }
@@ -143,7 +149,7 @@ public class MessagePanel extends GeneralPanel {
    * Returns the toolbar associated with this panel.
    */
 
-  public JToolBar getToolBar() {
+  public GrendelToolBar getToolBar() {
     return buildToolBar("messageToolBar", fActions);
   }
 
@@ -255,12 +261,16 @@ public class MessagePanel extends GeneralPanel {
                 if (makeRealHTML) {
                   stream = new MakeItHTML(stream).getHTMLInputStream();
                 }
-                InputStreamReader reader = new InputStreamReader(stream);
-                char buff[] = new char[4096];
-                int count;
-                while ((count = reader.read(buff, 0, 4096)) != -1) {
-                  fTextArea.append(new String(buff, 0, count));
-                }
+                // Okay, let's try to read from the stream and set the 
+                // text from the InputStream. We may need to put this
+                // stuff back later. (talisman)
+                //InputStreamReader reader = new InputStreamReader(stream);
+                //  char buff[] = new char[4096];
+                // int count;
+                // while ((count = reader.read(buff, 0, 4096)) != -1) {
+                //   fTextArea.append(new String(buff, 0, count));
+                fTextArea.read(stream, "Message");
+                //  }
               } catch (MessagingException me) {
                 fTextArea.setText(me.toString());
                 me.printStackTrace();
