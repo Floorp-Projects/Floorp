@@ -54,6 +54,30 @@ literal_hello( PRUnichar* )
 #endif
   }
 
+template <class T>
+struct string_class_traits
+  {
+  };
+
+NS_SPECIALIZE_TEMPLATE
+struct string_class_traits<PRUnichar>
+  {
+    typedef PRUnichar* pointer;
+    typedef nsString implementation_t;
+    
+    static basic_nsLiteralString<PRUnichar> literal_hello() { return ::literal_hello(pointer()); }
+  };
+
+NS_SPECIALIZE_TEMPLATE
+struct string_class_traits<char>
+  {
+    typedef char* pointer;
+    typedef nsCString implementation_t;
+    
+    static basic_nsLiteralString<char> literal_hello() { return ::literal_hello(pointer()); }
+  };
+
+
 static
 void
 CallCMid( nsAWritableCString& aResult, const nsAReadableCString& aSource, PRUint32 aStartPos, PRUint32 aLengthToCopy )
@@ -194,6 +218,81 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
   }
 
 
+template <class CharT>
+int
+test_SetLength( basic_nsAWritableString<CharT>& aWritable )
+  {
+    int tests_failed = 0;
+
+    string_class_traits<CharT>::implementation_t oldValue(aWritable);
+
+    size_t oldLength = aWritable.Length();
+
+    if ( oldValue != Substring(aWritable, 0, oldLength) )
+      {
+        cout << "FAILED growing a string in |test_SetLength|, saving the value didn't work." << endl;
+        ++tests_failed;
+      }
+
+    size_t newLength = 2*(oldLength+1);
+
+    aWritable.SetLength(newLength);
+    if ( aWritable.Length() != newLength )
+      {
+        cout << "FAILED growing a string in |test_SetLength|, length is wrong." << endl;
+        ++tests_failed;
+      }
+
+    if ( oldValue != Substring(aWritable, 0, oldLength) )
+      {
+        cout << "FAILED growing a string in |test_SetLength|, contents damaged after growing." << endl;
+        ++tests_failed;
+      }
+
+    aWritable.SetLength(oldLength);
+    if ( aWritable.Length() != oldLength )
+      {
+        cout << "FAILED shrinking a string in |test_SetLength|." << endl;
+        ++tests_failed;
+      }
+
+    if ( oldValue != Substring(aWritable, 0, oldLength) )
+      {
+        cout << "FAILED growing a string in |test_SetLength|, contents damaged after shrinking." << endl;
+        ++tests_failed;
+      }
+
+    return tests_failed;
+  }
+
+
+template <class CharT>
+int
+test_insert( basic_nsAWritableString<CharT>& aWritable )
+  {
+    int tests_failed = 0;
+
+    string_class_traits<CharT>::implementation_t oldValue(aWritable);
+    if ( oldValue != aWritable )
+      {
+        cout << "FAILED saving the old string value in |test_insert|." << endl;
+        ++tests_failed;
+      }
+
+    string_class_traits<CharT>::implementation_t insertable( string_class_traits<CharT>::literal_hello() );
+    insertable.SetLength(1);
+    aWritable.Insert(insertable, 0);
+
+    if ( aWritable != (insertable + oldValue) )
+      {
+        cout << "FAILED in |test_insert|." << endl;
+        ++tests_failed;
+      }
+
+    aWritable = oldValue;
+
+    return tests_failed;
+  }
 
 
 
@@ -217,6 +316,9 @@ test_writable( basic_nsAWritableString<CharT>& aWritable )
 
       tests_failed += test_readable_hello(aWritable);
     }
+
+    tests_failed += test_SetLength(aWritable);
+    tests_failed += test_insert(aWritable);
 
     return tests_failed;
   }

@@ -63,15 +63,6 @@ using namespace std;
   'C') is a string of |char|s.
 */
 
-template <class CharT> class basic_nsAReadableString;
-
-template <class CharT> class basic_nsAWritableString;
-  // ...because we sometimes use them as `out' params
-
-template <class CharT> class basic_nsLiteralString;
-  // ...because we sometimes use them as in params to force the conversion of |CharT*|s
-
-
 enum nsFragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
 
 template <class CharT>
@@ -87,6 +78,12 @@ struct nsReadableFragment
         // nothing else to do here
       }
   };
+
+template <class CharT> class basic_nsAReadableString;
+
+template <class CharT> class basic_nsAWritableString;
+  // ...because we sometimes use them as `out' params
+
 
 template <class CharT>
 class nsReadingIterator
@@ -267,11 +264,11 @@ class basic_nsAReadableString
 
 
       int  Compare( const basic_nsAReadableString<CharT>& rhs ) const;
-      int  Compare( const basic_nsLiteralString<CharT>& rhs ) const;
+      // int  Compare( const basic_nsLiteralString<CharT>& rhs ) const;
 
         // |Equals()| is a synonym for |Compare()|
       PRBool  Equals( const basic_nsAReadableString<CharT>& rhs ) const;
-      PRBool  Equals( const basic_nsLiteralString<CharT>& rhs ) const;
+      // PRBool  Equals( const basic_nsLiteralString<CharT>& rhs ) const;
 
         // Comparison operators are all synonyms for |Compare()|
       PRBool  operator!=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)!=0; }
@@ -381,6 +378,7 @@ basic_nsAReadableString<CharT>::Equals( const basic_nsAReadableString<CharT>& rh
     return Compare(rhs) == 0;
   }
 
+#if 0
 template <class CharT>
 inline
 PRBool
@@ -388,7 +386,7 @@ basic_nsAReadableString<CharT>::Equals( const basic_nsLiteralString<CharT>& rhs 
   {
     return Compare(rhs) == 0;
   }
-
+#endif
 
 template <class CharT>
 inline
@@ -561,6 +559,7 @@ basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& r
     return ::Compare(*this, rhs);
   }
 
+#if 0
 template <class CharT>
 inline
 int
@@ -568,7 +567,7 @@ basic_nsAReadableString<CharT>::Compare( const basic_nsLiteralString<CharT>& rhs
   {
     return ::Compare(*this, rhs);
   }
-
+#endif
 
 
 
@@ -907,7 +906,7 @@ string_copy( InputIterator first, InputIterator last, OutputIterator result )
         if ( first.fragment().mStart == last.fragment().mStart )
           lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
 
-        // assert(lengthToCopy > 0);
+        NS_ASSERTION(lengthToCopy, "|string_copy| will never terminate");
 
         nsCharTraits<InputIterator::value_type>::copy(result.operator->(), first.operator->(), lengthToCopy);
 
@@ -928,12 +927,33 @@ string_copy( InputIterator first, InputIterator last, CharT* result )
         if ( first.fragment().mStart == last.fragment().mStart )
           lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
 
-        // assert(lengthToCopy > 0);
+        NS_ASSERTION(lengthToCopy, "|string_copy| will never terminate");
 
         nsCharTraits<CharT>::copy(result, first.operator->(), lengthToCopy);
 
         first += PRInt32(lengthToCopy);
         result += PRInt32(lengthToCopy);
+      }
+
+    return result;
+  }
+
+template <class InputIterator, class OutputIterator>
+OutputIterator
+string_copy_backward( InputIterator first, InputIterator last, OutputIterator result )
+  {
+    while ( first != last )
+      {
+        PRUint32 lengthToCopy = PRUint32( NS_MIN(last.size_backward(), result.size_backward()) );
+        if ( first.fragment().mStart == last.fragment().mStart )
+          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
+
+        NS_ASSERTION(lengthToCopy, "|string_copy_backward| will never terminate");
+
+        nsCharTraits<InputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+
+        last -= PRInt32(lengthToCopy);
+        result -= PRInt32(lengthToCopy);
       }
 
     return result;
@@ -972,7 +992,6 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
     for (;;)
       {
         PRUint32 lengthAvailable = PRUint32( NS_MIN(leftIter.size_forward(), rightIter.size_forward()) );
-        // assert( lengthAvailable >= 0 );
 
         if ( lengthAvailable > lengthToCompare )
           lengthAvailable = lengthToCompare;
