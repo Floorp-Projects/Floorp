@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.12 $';
+$Version = '$Revision: 1.13 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -30,7 +30,7 @@ sub InitVars {
     $Make = 'gmake'; # Must be GNU make
     $MakeOverrides = '';
     $mail = '/bin/mail';
-    $CVS = 'cvs -z3';
+    $CVS = 'cvs -q -z3';
     $CVSCO = 'co -P';
 
     # Set these proper values for your tinderbox server
