@@ -128,12 +128,12 @@ nsWidgetStateManager.prototype =
             for( var i = 0; i < elements.length; i++ )
               {
                 var elementID   = elements[i].id;
-                var elementType = elements[i].nodeName;
+                var elementType = elements[i].localName;
                 if (!this.dataManager.pageData[aPageTag])
                     this.dataManager.pageData[aPageTag] = [];
                 this.dataManager.pageData[aPageTag][elementID] = [];
                 // persist element Type
-                this.dataManager.pageData[aPageTag][elementID].nodeName = elementType;
+                this.dataManager.pageData[aPageTag][elementID].localName = elementType;
                 // persist attributes
                 var get_Func = this.handlers[elementType] != undefined ? 
                                 this.handlers[elementType].get : 
@@ -157,7 +157,7 @@ nsWidgetStateManager.prototype =
               var element = this.contentArea.document.getElementById( elementID );
               if( element ) 
                 {
-                  var elementType = element.nodeName;
+                  var elementType = element.localName;
                   var set_Func = this.handlers[elementType] != undefined ?
                                   this.handlers[elementType].set :
                                   this.handlers.default_handler.set;
