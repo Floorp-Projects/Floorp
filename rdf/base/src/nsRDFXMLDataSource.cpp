@@ -1185,8 +1185,13 @@ RDFXMLDataSourceImpl::Serialize(nsIOutputStream* aStream)
     // Add any namespace information that we picked up when reading
     // the RDF/XML
     nsNameSpaceMap::const_iterator last = mNameSpaces.last();
-    for (nsNameSpaceMap::const_iterator iter = mNameSpaces.first(); iter != last; ++iter)
-        serializer->AddNameSpace(iter->mPrefix, iter->mURI);
+    for (nsNameSpaceMap::const_iterator iter = mNameSpaces.first();
+         iter != last; ++iter) {
+        // We might wanna change nsIRDFXMLSerializer to nsACString and
+        // use a heap allocated buffer here in the future.
+        NS_ConvertUTF8toUTF16 uri(iter->mURI);
+        serializer->AddNameSpace(iter->mPrefix, uri);
+    }
 
     // Serialize!
     nsCOMPtr<nsIRDFXMLSource> source = do_QueryInterface(serializer);

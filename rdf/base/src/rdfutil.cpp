@@ -70,7 +70,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI)
+rdf_MakeRelativeRef(const nsCSubstring& aBaseURI, nsCString& aURI)
 {
     // This implementation is extremely simple: e.g., it can't compute
     // relative paths, or anything fancy like that. If the context URI

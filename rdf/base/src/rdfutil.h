@@ -62,7 +62,7 @@ class nsString;
 class nsIURI;
 
 nsresult
-rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI);
+rdf_MakeRelativeRef(const nsCSubstring& aBaseURI, nsCString& aURI);
 
 nsresult
 rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI);

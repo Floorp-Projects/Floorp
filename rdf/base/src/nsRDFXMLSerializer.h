@@ -73,9 +73,9 @@ protected:
     // Implementation methods
     PRBool
     MakeQName(nsIRDFResource* aResource,
-              nsString& aPproperty,
-              nsString& aNameSpacePrefix,
-              nsString& aNameSpaceURI);
+              nsCString& aPproperty,
+              nsCString& aNameSpacePrefix,
+              nsCString& aNameSpaceURI);
 
     nsresult
     SerializeInlineAssertion(nsIOutputStream* aStream,
