@@ -5027,7 +5027,10 @@ HTMLContentSink::FlushPendingNotifications()
   // Only flush tags if we're not doing the notification ourselves
   // (since we aren't reentrant) and if we're in a script (since 
   // we only care to flush if this is done via script).
-  if (mCurrentContext && !mInNotification && mInScript) {
+  // Bug 4891: Also flush outside of <script> tags - if script is executing
+  //           after the page has finished loading, and a document.write
+  //           occurs, we might need this flush.
+  if (mCurrentContext && !mInNotification) {
     result = mCurrentContext->FlushTags();
   }
 
