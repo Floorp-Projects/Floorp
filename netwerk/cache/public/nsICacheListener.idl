@@ -38,7 +38,7 @@ interface nsICacheListener : nsISupports
      * acquired.  The status parameter equals NS_OK on success.
      * See nsICacheService.idl for accessGranted values.
      */
-    void onDescriptorAvailable(in nsICacheEntryDescriptor descriptor,
+    void onCacheEntryAvailable(in nsICacheEntryDescriptor descriptor,
                                in nsCacheAccessMode       accessGranted,
                                in nsresult                status);
 };
