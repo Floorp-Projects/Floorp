@@ -808,7 +808,8 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
     aChannel = do_QueryInterface(aCtxt, &rv);
   }
 
-  mDesiredOutputType = nsCRT::strdup(aToType);
+  if (aToType)
+      mDesiredOutputType = nsCRT::strdup(aToType);
 
 	NS_ASSERTION(aChannel && NS_SUCCEEDED(rv), "mailnews mime converter has to have the channel passed in...");
 	if (NS_FAILED(rv)) return rv;
