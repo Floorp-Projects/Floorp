@@ -73,26 +73,15 @@ XPCDispObject::WrapIDispatch(IDispatch *pDispatch, XPCCallContext &ccx,
     return PR_TRUE;
 }
 
-HRESULT XPCDispObject::COMCreateInstance(XPCCallContext & ccx, BSTR className,
-                                         PRBool enforceSecurity,
-                                         IDispatch ** result)
+HRESULT XPCDispObject::SecurityCheck(XPCCallContext & ccx, const CLSID & aCID,
+                                     IDispatch ** createdObject)
 {
-    // Turn the string into a CLSID
-    _bstr_t bstrName(className);
-    CLSID classID = CLSID_NULL;
-    HRESULT hr = CLSIDFromString(bstrName, &classID);
-    if(FAILED(hr))
-        hr = CLSIDFromProgID(bstrName, &classID);
-    if(FAILED(hr) || ::IsEqualCLSID(classID, CLSID_NULL))
-        return hr;
-    
     nsresult rv;
     nsCOMPtr<nsIDispatchSupport> dispSupport = do_GetService(NS_IDISPATCH_SUPPORT_CONTRACTID, &rv);
     if(NS_FAILED(rv)) return E_UNEXPECTED;
 
     PRUint32 hostingFlags = nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_NOTHING;
     dispSupport->GetHostingFlags(nsnull, &hostingFlags);
-
     PRBool allowSafeObjects;
     if(hostingFlags & (nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS))
         allowSafeObjects = PR_TRUE;
@@ -103,46 +92,75 @@ HRESULT XPCDispObject::COMCreateInstance(XPCCallContext & ccx, BSTR className,
         allowAnyObjects = PR_TRUE;
     else
         allowAnyObjects = PR_FALSE;
-
-    // There is no point proceeding if flags say we can't script safe or unsafe objects
-    if(enforceSecurity && !allowSafeObjects && !allowAnyObjects)
-    {
+    if(!allowSafeObjects && !allowAnyObjects)
         return E_FAIL;
-    }
+
     PRBool classExists = PR_FALSE;
     PRBool ok = PR_FALSE;
-    const nsCID & ourCID = XPCDispCLSID2nsCID(classID);
+    const nsCID & ourCID = XPCDispCLSID2nsCID(aCID);
     dispSupport->IsClassSafeToHost(ccx, ourCID, PR_FALSE, &classExists, &ok);
     if(classExists && !ok)
         return E_FAIL;
 
     // Test if the object is scriptable
     PRBool isScriptable = PR_FALSE;
-    if(enforceSecurity && !allowAnyObjects)
+    if(!allowAnyObjects)
     {
         PRBool classExists = PR_FALSE;
         dispSupport->IsClassMarkedSafeForScripting(ourCID, &classExists, &isScriptable);
         if(!classExists)
             return REGDB_E_CLASSNOTREG;
     }
-    
+
     // Create the object
+    CComPtr<IDispatch> disp;
+    // If createdObject isn't null we need to create the object
+    if (createdObject)
+    {
+        HRESULT hr = disp.CoCreateInstance(aCID);
+        if(FAILED(hr))
+            return hr;
+        // if we don't allow just any object, and it wasn't marked 
+        // safe for scripting then ask the object (MS idea of security)
+        if (!allowAnyObjects && !isScriptable)
+        {
+            dispSupport->IsObjectSafeForScripting(disp, NSID_IDISPATCH, &isScriptable);
+            if(!isScriptable)
+                return E_FAIL;
+        }
+        disp.CopyTo(createdObject);
+    }
+
+    return S_OK;
+}
+
+HRESULT XPCDispObject::COMCreateInstance(XPCCallContext & ccx, BSTR className,
+                                         PRBool enforceSecurity,
+                                         IDispatch ** result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    // Turn the string into a CLSID
+    _bstr_t bstrName(className);
+    CLSID classID = CLSID_NULL;
+    HRESULT hr = CLSIDFromString(bstrName, &classID);
+    if(FAILED(hr))
+        hr = CLSIDFromProgID(bstrName, &classID);
+    if(FAILED(hr) || ::IsEqualCLSID(classID, CLSID_NULL))
+        return hr;
+    
+    // If the caller cares about security do the necessary checks
+    // This results in the object being instantiated, so we'll use
+    // it
+    if(enforceSecurity)
+        return SecurityCheck(ccx, classID, result);
+    
     CComPtr<IDispatch> disp;
     hr = disp.CoCreateInstance(classID);
     if(FAILED(hr))
         return hr;
 
-    // If we're enforcing security and it didn't have a scripting category
-    // we'll check via the IObjectSafety interface
-    if(enforceSecurity && !allowAnyObjects && !isScriptable)
-    {
-        dispSupport->IsObjectSafeForScripting(disp, NSID_IDISPATCH, &isScriptable);
-        if(!isScriptable)
-            return E_FAIL;
-    }
-
-    // Copy and addref
     disp.CopyTo(result);
+
     return S_OK;
 }
 

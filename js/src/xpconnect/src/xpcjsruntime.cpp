@@ -55,6 +55,7 @@ const char* XPCJSRuntime::mStrings[] = {
 #ifdef XPC_IDISPATCH_SUPPORT
     , "GeckoActiveXObject"  // IDX_ACTIVEX_OBJECT
     , "COMObject"           // IDX_COMOBJECT
+    , "supports"            // IDX_ACTIVEX_SUPPORTS
 #endif
 };
 
