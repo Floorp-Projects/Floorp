@@ -508,15 +508,15 @@ nsresult nsBayesianFilter::tokenizeMessage(const char* messageURI, TokenAnalyzer
 
 inline double abs(double x) { return (x >= 0 ? x : -x); }
 
-static int compareTokens(const void* p1, const void* p2, void* /* data */)
+PR_STATIC_CALLBACK(int) compareTokens(const void* p1, const void* p2, void* /* data */)
 {
     Token *t1 = (Token*) p1, *t2 = (Token*) p2;
     double delta = abs(t1->mProbability - 0.5) - abs(t2->mProbability - 0.5);
     return (delta == 0.0 ? 0 : (delta > 0.0 ? 1 : -1));
 }
 
-inline double max(double x, double y) { return (x > y ? x : y); }
-inline double min(double x, double y) { return (x < y ? x : y); }
+inline double dmax(double x, double y) { return (x > y ? x : y); }
+inline double dmin(double x, double y) { return (x < y ? x : y); }
 
 void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* messageURI,
                                        nsIJunkMailClassificationListener* listener)
@@ -541,11 +541,11 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
             //      (min .99 (float (/ (min 1 (/ b nbad))
             //                         (+ (min 1 (/ g ngood))
             //                            (min 1 (/ b nbad)))))))
-            token.mProbability = max(.01,
-                                     min(.99,
-                                         (min(1.0, (b / nbad)) /
-                                              (min(1.0, (g / ngood)) +
-                                               min(1.0, (b / nbad))))));
+            token.mProbability = dmax(.01,
+                                     dmin(.99,
+                                         (dmin(1.0, (b / nbad)) /
+                                              (dmin(1.0, (g / ngood)) +
+                                               dmin(1.0, (b / nbad))))));
         } else {
             token.mProbability = 0.4;
         }
