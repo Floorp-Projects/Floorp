@@ -21,6 +21,7 @@
  */
 
 #include "nsIDOMRange.h"
+#include "nsIDOMElement.h"
 
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
 
