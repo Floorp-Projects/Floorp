@@ -158,10 +158,6 @@ PRMJ_LocalGMTDifference()
 #define G2037GMTMICROHI        0x00e45fab /* micro secs to 2037 high */
 #define G2037GMTMICROLOW       0x7a238000 /* micro secs to 2037 low */
 
-/* Convert from extended time to base time (time since Jan 1 1970) it
- * truncates dates if time is before 1970 and after 2037.
- */
-
 /* Convert from base time to extended time */
 PR_IMPLEMENT(PRInt64)
 PRMJ_ToExtendedTime(PRInt32 time)
@@ -287,10 +283,10 @@ PRMJ_DSTOffset(PRInt64 time)
     PRInt32 diff;
     PRInt64  maxtimet;
     struct tm tm;
+    PRMJTime prtm;
 #if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 )
     struct tm *ptm;
 #endif
-    PRMJTime prtm;
 
 
     LL_UI2L(us2s, PRMJ_USEC_PER_SEC);
@@ -372,12 +368,19 @@ PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
      * Still not sure if MKLINUX is necessary; this is borrowed from the NSPR20
      * prtime.c.  I'm leaving it out - My Linux does the right thing without it
      * (and the wrong thing with it) even though it has the tm_gmtoff, tm_zone
-     * fields.
+     * fields.  Linux seems to be happy so long as the tm struct is zeroed out.
+     * The #ifdef in nspr is:
+     * #if defined(SUNOS4) || defined(MKLINUX) || defined (__GLIBC >= 2)
      */
 
 #if defined(SUNOS4)
     if (mktime(&a) == -1) {
-        PR_snprintf(buf, buflen, "can't get timezone");
+        /* Seems to fail whenever the requested date is outside of the 32-bit
+         * UNIX epoch.  We could proceed at this point (setting a.tm_zone to
+         * "") but then strftime returns a string with a 2-digit field of
+         * garbage for the year.  So we return 0 and hope jsdate.c
+         * will fall back on toString.
+         */
         return 0;
     }
 #endif
