@@ -1587,11 +1587,12 @@ public class Codegen extends Interpreter {
             aload(variableObjectLocal);
             aload(funObjLocal);
             aload(thisObjLocal);
+            push(0);
             addScriptRuntimeInvoke("initScript",
                           "(Lorg/mozilla/javascript/Context;" +
                            "Lorg/mozilla/javascript/Scriptable;" +
                            "Lorg/mozilla/javascript/NativeFunction;" +
-                           "Lorg/mozilla/javascript/Scriptable;)",
+                           "Lorg/mozilla/javascript/Scriptable;Z)",
                           "Lorg/mozilla/javascript/Scriptable;");
             debugVariableName = "global";
         }

@@ -1937,7 +1937,8 @@ public class ScriptRuntime {
     
     public static Scriptable initScript(Context cx, Scriptable scope,
                                         NativeFunction funObj, 
-                                        Scriptable thisObj) 
+                                        Scriptable thisObj, 
+                                        boolean fromEvalCode) 
     {
         String[] names = funObj.names;
         if (names != null) {
@@ -1959,7 +1960,7 @@ public class ScriptRuntime {
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
                 if (!hasProp(scope, name)) {
-                    if (so != null)
+                    if (so != null && !fromEvalCode)
                         so.defineProperty(name, Undefined.instance, 
                                           ScriptableObject.PERMANENT);
                     else

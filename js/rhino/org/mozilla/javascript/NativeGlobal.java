@@ -436,6 +436,7 @@ public class NativeGlobal {
             }
 
             InterpretedScript is = (InterpretedScript) script;
+            is.itsData.itsFromEvalCode = true;
             Object result = is.call(cx, scope, (Scriptable) thisArg, null);
                              
             return result;

@@ -70,6 +70,7 @@ class InterpreterData {
     String itsSource;
     String itsSourceFile;
     boolean itsNeedsActivation;
+    boolean itsFromEvalCode;
 
     String[] itsStringTable;
     int itsStringTableIndex;

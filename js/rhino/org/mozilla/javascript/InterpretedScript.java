@@ -58,7 +58,8 @@ public class InterpretedScript extends NativeScript {
                        Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        scope = ScriptRuntime.initScript(cx, scope, this, thisObj);
+        scope = ScriptRuntime.initScript(cx, scope, this, thisObj, 
+                                         itsData.itsFromEvalCode);
         itsData.itsCX = cx;
         itsData.itsScope = scope;
         itsData.itsThisObj = thisObj;
