@@ -20,6 +20,34 @@
 #define nsMacMessageSink_h__
 
 #include "prtypes.h"
+class nsMacWindow;
+
+
+/*================================================
+¥¥¥IMPORTANT
+Hacks to make Raptor coexist with other windows.
+================================================*/
+
+// This bit is set in the Raptor windows 'windowKind'
+#define kRaptorWindowKindBit		0x4000
+
+
+// An nsRefData pointer is stored in the Raptor windows 'refCon'
+class nsRefData
+{
+protected:
+	nsMacWindow*	mNSMacWindow;			// The nsMacWindow, ie. the top level widget
+	long					mUserData;				// Embedding applications data, guaranteed not to be used by widget code
+
+public:
+	nsMacWindow*	GetNSMacWindow()	{return(mNSMacWindow);}
+	long					GetUserData()			{return(mUserData);}
+
+	void					SetNSMacWindow(nsMacWindow* aNSMacWindow)	{mNSMacWindow = aNSMacWindow;}
+	void					SetUserData(long aUserData)								{mUserData = aUserData;}
+};
+
+
 
 /*================================================
 ¥¥¥IMPORTANT
@@ -40,7 +68,6 @@ public:
 	void			DispatchMenuCommand(EventRecord &anEvent, long menuResult);
 
 };
-
 
 
 #endif // nsMacMessageSink_h__
