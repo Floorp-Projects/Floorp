@@ -24,6 +24,7 @@
 #include "nsINetService.h"
 
 class nsINetContainerApplication;
+class nsITimer;
 
 class nsNetlibService : public nsINetService {
 
@@ -47,11 +48,17 @@ public:
 protected:
     virtual ~nsNetlibService();
 
+    void SchedulePollingTimer();
+    void CleanupPollingTimer(nsITimer* aTimer);
+    static void NetPollSocketsCallback(nsITimer* aTimer, void* aClosure);
+
 private:
     /* XXX: This is temporary until bamwrap.cpp is removed... */
     void *m_stubContext;
     nsINetContainerApplication *mContainer;
     nsIPref *mPref;
+
+    nsITimer* mPollingTimer;
 };
 
 
