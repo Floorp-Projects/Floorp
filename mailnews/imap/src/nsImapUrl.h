@@ -21,26 +21,14 @@
 
 #include "nsIImapUrl.h"
 #include "nsCOMPtr.h"
-#include "nsIUrlListenerManager.h"
-#include "nsINetlibURL.h" /* this should be temporary until nunet project lands */
+#include "nsMsgMailNewsUrl.h"
 #include "nsIMsgIncomingServer.h"
 
-class nsImapUrl : public nsIImapUrl, public nsINetlibURL
+class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl
 {
 public:
 
-	NS_DECL_ISUPPORTS
-
-	/////////////////////////////////////////////////////////////////////////////// 
-	// we support the nsIMsgMailNewsUrl interface...
-	///////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);
-	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
-
-	NS_IMETHOD SetErrorMessage (char * errorMessage);
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;  // caller must free using PR_Free
-	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
-	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
+	NS_DECL_ISUPPORTS_INHERITED
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
@@ -90,66 +78,14 @@ public:
 	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange);
 	NS_IMETHOD  GetAllowContentChange(PRBool *results);
 
-	/////////////////////////////////////////////////////////////////////////////// 
-	// we support the nsINetlibURL interface
-	///////////////////////////////////////////////////////////////////////////////
-
-    NS_IMETHOD GetURLInfo(URL_Struct_ **aResult) const;
-    NS_IMETHOD SetURLInfo(URL_Struct_ *URL_s);
-
-	/////////////////////////////////////////////////////////////////////////////// 
-	// we support the nsIURL interface
-	///////////////////////////////////////////////////////////////////////////////
-
-	// mscott: some of these we won't need to implement..as part of the netlib re-write we'll be removing them
-	// from nsIURL and then we can remove them from here as well....
-    NS_IMETHOD_(PRBool) Equals(const nsIURL *aURL) const;
-    NS_IMETHOD GetSpec(const char* *result) const;
-    NS_IMETHOD SetSpec(const char* spec);
-    NS_IMETHOD GetProtocol(const char* *result) const;
-    NS_IMETHOD SetProtocol(const char* protocol);
-    NS_IMETHOD GetHost(const char* *result) const;
-    NS_IMETHOD SetHost(const char* host);
-    NS_IMETHOD GetHostPort(PRUint32 *result) const;
-    NS_IMETHOD SetHostPort(PRUint32 port);
-    NS_IMETHOD GetFile(const char* *result) const;
-    NS_IMETHOD SetFile(const char* file);
-    NS_IMETHOD GetRef(const char* *result) const;
-    NS_IMETHOD SetRef(const char* ref);
-    NS_IMETHOD GetSearch(const char* *result) const;
-    NS_IMETHOD SetSearch(const char* search);
-    NS_IMETHOD GetContainer(nsISupports* *result) const;
-    NS_IMETHOD SetContainer(nsISupports* container);	
-    NS_IMETHOD GetLoadAttribs(nsILoadAttribs* *result) const;	// make obsolete
-    NS_IMETHOD SetLoadAttribs(nsILoadAttribs* loadAttribs);	// make obsolete
-    NS_IMETHOD GetURLGroup(nsIURLGroup* *result) const;	// make obsolete
-    NS_IMETHOD SetURLGroup(nsIURLGroup* group);	// make obsolete
-    NS_IMETHOD SetPostHeader(const char* name, const char* value);	// make obsolete
-    NS_IMETHOD SetPostData(nsIInputStream* input);	// make obsolete
-    NS_IMETHOD GetContentLength(PRInt32 *len);
-    NS_IMETHOD GetServerStatus(PRInt32 *status);  // make obsolete
-    NS_IMETHOD ToString(PRUnichar* *aString) const;
-
 	// nsImapUrl
 	nsImapUrl();
 	virtual ~nsImapUrl();
 
 protected:
 
-	nsresult ParseURL(const nsString& aSpec, const nsIURL* aURL = nsnull);
-	void ReconstructSpec(void);
-	// manager of all of current url listeners....
-	nsCOMPtr<nsIUrlListenerManager>  m_urlListeners;
-	// Here's our link to the old netlib world....
-    URL_Struct *m_URL_s;
-
-	char		*m_spec;
-    char		*m_protocol;
-    char		*m_host;
-	PRUint32	 m_port;
-	char		*m_search;
-	char		*m_file;
-	char		*m_errorMessage;
+	virtual nsresult ParseUrl(const nsString& aSpec);
+	virtual void ReconstructSpec(void);
 	char		*m_listOfMessageIds;
 
 	// handle the imap specific parsing
