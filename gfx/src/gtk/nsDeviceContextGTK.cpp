@@ -61,7 +61,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #define GDK_DEFAULT_FONT1 "-*-helvetica-medium-r-*--*-120-*-*-*-*-iso8859-1"
 #define GDK_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
 extern GdkFont *default_font;
-nsresult GetSystemFontInfo(GdkFont* iFont, nsSystemAttrID anID, nsFont* aFont);
 
 nscoord nsDeviceContextGTK::mDpi = 96;
 
@@ -538,7 +537,8 @@ int nsDeviceContextGTK::prefChanged(const char *aPref, void *aClosure)
   return 0;
 }
 
-nsresult GetSystemFontInfo( GdkFont* iFont, nsSystemAttrID anID, nsFont* aFont)
+nsresult
+nsDeviceContextGTK::GetSystemFontInfo( GdkFont* iFont, nsSystemAttrID anID, nsFont* aFont) const
 {
   nsresult status = NS_OK;
   GdkFont *theFont = iFont;
@@ -589,25 +589,10 @@ nsresult GetSystemFontInfo( GdkFont* iFont, nsSystemAttrID anID, nsFont* aFont)
       aFont->weight = NS_FONT_WEIGHT_BOLD;
     
     pr = 0;
-    ::XGetFontProperty( fontInfo, XA_POINT_SIZE, &pr );
+    Atom pixelSizeAtom = ::XInternAtom(gdk_display, "PIXEL_SIZE", 0);
+    ::XGetFontProperty( fontInfo, pixelSizeAtom, &pr );
     if( pr )
-    {
-      int fontSize = pr/10;
-      // Per rods@netscape.com, the default size of 12 is too large
-      // we need to bump it down two points.
-      if( anID == eSystemAttr_Font_Button ||
-          anID == eSystemAttr_Font_Field ||
-          anID == eSystemAttr_Font_List ||
-          anID == eSystemAttr_Font_Widget ||
-          anID == eSystemAttr_Font_Caption )
-        fontSize -= 2;
-      
-      // if we are below 1 then we have a problem we just make it 1
-      if( fontSize < 1 )
-        fontSize = 1;
-      
-      aFont->size = NSIntPointsToTwips( fontSize );
-    }
+      aFont->size = NSIntPixelsToTwips(pr, mPixelsToTwips);
 
     pr = 0;
     ::XGetFontProperty( fontInfo, XA_ITALIC_ANGLE, &pr );
