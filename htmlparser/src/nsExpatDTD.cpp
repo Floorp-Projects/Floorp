@@ -455,7 +455,7 @@ NS_IMETHODIMP nsExpatDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   mParser=(nsParser*)aParser;
   mSink=aParser->GetContentSink();
 
-  nsCParserNode theNode(theToken,mLineNumber,mTokenizer->GetTokenAllocator());
+  nsCParserNode theNode(theToken,mLineNumber);
   switch(theType) {
 
     case eToken_newline:

@@ -40,25 +40,7 @@ const nsString& GetEmptyString() {
 
 
 /**
- *  Default Constructor
- */
-nsCParserNode::nsCParserNode()
-  : mLineNumber(1),
-    mToken(nsnull),
-    mAttributes(nsnull),
-    mSkippedContent(nsnull),
-    mUseCount(0),
-    mGenericState(PR_FALSE),
-    mTokenAllocator(nsnull)
-{
-  MOZ_COUNT_CTOR(nsCParserNode);
-#ifdef HEAP_ALLOCATED_NODES
-  mNodeAllocator=nsnull;
-#endif
-}
-
-/**
- *  Constructor
+ *  Default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aToken -- token to init internal token
@@ -361,11 +343,13 @@ void nsCParserNode::GetSource(nsString& aString) {
  * @return  void
  */
 nsresult nsCParserNode::ReleaseAll() {
-  NS_ASSERTION(mTokenAllocator != nsnull, "aiee! no token allocator!");
   if(mAttributes) {
     CToken* theAttrToken=0;
     while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
-      IF_FREE(theAttrToken, mTokenAllocator);
+      // nsViewSourceHTML.cpp:513 creates nsCParserNodes with a NULL token allocator
+      // need to check to see if mTokenAllocator is non-null
+      if(mTokenAllocator)
+        IF_FREE(theAttrToken, mTokenAllocator);
     }
     delete mAttributes;
     mAttributes=0;
