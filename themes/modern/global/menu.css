@@ -16,6 +16,7 @@ menu, menuitem
     font                  : menu;
     color                 : #17222E;
     vertical-align        : middle;
+    list-style-image      : none;
   }
 
 menuitem
