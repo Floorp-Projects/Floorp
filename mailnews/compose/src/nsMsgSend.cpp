@@ -2095,6 +2095,7 @@ nsMsgComposeAndSend::DoFcc()
 #endif
 
     NotifyListenersOnStopSending(nsnull, NS_OK, nsnull, nsnull);
+    NotifyListenersOnStopCopy(NS_OK);  // For closure of compose window...
     return NS_OK;
   }
 
