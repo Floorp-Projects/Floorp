@@ -2386,10 +2386,11 @@ nsMsgComposeAndSend::SnarfAndCopyBody(const char  *attachment1_body,
   {
 		// strip out whitespaces from the end of body ONLY.
 		while (attachment1_body_length > 0 &&
-      IS_SPACE (attachment1_body [attachment1_body_length - 1]))
+      (attachment1_body[attachment1_body_length - 1] == ' ') )
     {
       attachment1_body_length--;
     }
+
     if (attachment1_body_length <= 0)
       attachment1_body = 0;
     
