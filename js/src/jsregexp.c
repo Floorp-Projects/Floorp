@@ -1003,6 +1003,7 @@ do_octal:
                     num = (uintN)JS7_UNDEC(c);
                     for (c = *++cp; JS7_ISDEC(c); c = *++cp)
 		        num = 10 * num + (uintN)JS7_UNDEC(c);
+                    cp--;
 	            ren = NewRENode(state, REOP_BACKREF, NULL);
 	            if (!ren)
 		        return NULL;
