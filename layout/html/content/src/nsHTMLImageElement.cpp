@@ -582,6 +582,16 @@ nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    PRUint32 aFlags,
                                    nsEventStatus* aEventStatus)
 {
+  // If we are a map and get a mouse click, don't let it be handled by the
+  // Generic Element as this could cause a click event to fire twice, once by
+  // the image frame for the map and once by the Anchor element.  (bug 39723)
+  if (NS_MOUSE_LEFT_CLICK == aEvent->message) {
+    PRBool isMap = PR_FALSE;
+    GetIsMap(&isMap);
+    if (isMap) {
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
+    }
+  }
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
