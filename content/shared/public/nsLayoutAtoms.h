@@ -68,6 +68,8 @@ public:
   static nsIAtom* areaFrame;
   static nsIAtom* blockFrame;
   static nsIAtom* inlineFrame;
+  static nsIAtom* letterFrame;
+  static nsIAtom* lineFrame;
   static nsIAtom* pageFrame;
   static nsIAtom* placeholderFrame;
   static nsIAtom* positionedInlineFrame;

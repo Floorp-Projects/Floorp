@@ -54,6 +54,8 @@ nsIAtom* nsLayoutAtoms::pagePseudo;
 nsIAtom* nsLayoutAtoms::areaFrame;
 nsIAtom* nsLayoutAtoms::blockFrame;
 nsIAtom* nsLayoutAtoms::inlineFrame;
+nsIAtom* nsLayoutAtoms::letterFrame;
+nsIAtom* nsLayoutAtoms::lineFrame;
 nsIAtom* nsLayoutAtoms::pageFrame;
 nsIAtom* nsLayoutAtoms::placeholderFrame;
 nsIAtom* nsLayoutAtoms::positionedInlineFrame;
@@ -102,6 +104,8 @@ void nsLayoutAtoms::AddrefAtoms()
     areaFrame = NS_NewAtom("AreaFrame");
     blockFrame = NS_NewAtom("BlockFrame");
     inlineFrame = NS_NewAtom("InlineFrame");
+    letterFrame = NS_NewAtom("LetterFrame");
+    lineFrame = NS_NewAtom("LineFrame");
     pageFrame = NS_NewAtom("PageFrame");
     placeholderFrame = NS_NewAtom("PlaceholderFrame");
     positionedInlineFrame = NS_NewAtom("PositionedInlineFrame");
@@ -152,6 +156,8 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(areaFrame);
     NS_RELEASE(blockFrame);
     NS_RELEASE(inlineFrame);
+    NS_RELEASE(letterFrame);
+    NS_RELEASE(lineFrame);
     NS_RELEASE(pageFrame);
     NS_RELEASE(placeholderFrame);
     NS_RELEASE(positionedInlineFrame);
