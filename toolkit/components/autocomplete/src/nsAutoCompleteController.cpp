@@ -88,7 +88,7 @@ nsAutoCompleteController::GetMatchCount(PRUint32 *aMatchCount)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::AttachToInput(nsIAutoCompleteInput *aInput)
+nsAutoCompleteController::AttachToInput(nsIAutoCompleteInput *aInput, const nsAString &aSearchString)
 {
   if (!aInput)
     return NS_ERROR_ILLEGAL_VALUE;
@@ -97,6 +97,7 @@ nsAutoCompleteController::AttachToInput(nsIAutoCompleteInput *aInput)
     DetachFromInput();
 
   mInput = aInput;
+  mSearchString = aSearchString;
   
   // reset all search state members to default values
   mSearchString.Truncate(0);
