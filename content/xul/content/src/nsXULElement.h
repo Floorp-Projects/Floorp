@@ -532,7 +532,6 @@ protected:
 #ifdef DEBUG
     PRBool                              mIsScriptObjectRooted;
 #endif
-    PRInt32                             mContentId;
 
     // The state of our sloth for lazy content model construction via
     // RDF; see nsIXULContent and nsRDFGenericBuilder.

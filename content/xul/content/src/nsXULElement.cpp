@@ -524,7 +524,6 @@ nsXULElement::nsXULElement()
 #ifdef DEBUG
       mIsScriptObjectRooted(PR_FALSE),
 #endif
-      mContentId(0),
       mLazyState(0),
       mBindingParent(nsnull),
       mSlots(nsnull)
@@ -3778,14 +3777,13 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsXULElement::GetContentID(PRUint32* aID)
 {
-    *aID = mContentId;
+    *aID = 0;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULElement::SetContentID(PRUint32 aID)
 {
-    mContentId = aID;
     return NS_OK;
 }
 
