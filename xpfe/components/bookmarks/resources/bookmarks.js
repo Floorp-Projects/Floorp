@@ -33,7 +33,7 @@ function BookmarksNewWindow()
     }
   }
   if (toolkitCore) {
-    toolkitCore.ShowWindow("resource://res/rdf/bookmarks.xul",window);
+    toolkitCore.ShowWindow("resource://res/samples/bookmarks.xul",window);
   }
 }
 
@@ -57,7 +57,7 @@ function BookmarkProperties()
     }
     if (propsCore) {
       dump("Bookmark Properties: opening new window\n");
-      propsCore.showProperties("resource://res/rdf/bm-props.xul",
+      propsCore.showProperties("resource://res/samples/bm-props.xul",
 			       window, select_list[0]);
       return true;
     }

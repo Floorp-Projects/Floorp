@@ -27,12 +27,15 @@ FILES=\
         bookmarks.html                  \
         bookmarks.js                    \
         bookmarks.xul                   \
+        iefavorite.gif                  \
+        personal-folder-closed.gif      \
+        personal-folder-open.gif        \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(FILES:/=\)
-	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\rdf
+	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\samples
 
 clobber:: $(FILES:/=\)
         !$(RM) $(DIST)\bin\res\samples\$**

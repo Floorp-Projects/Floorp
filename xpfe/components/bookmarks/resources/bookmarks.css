@@ -70,31 +70,31 @@ treeitem[container="true"][open="true"][loading="true"] > treecell > titledbutto
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
+ list-style-image: url("resource:/res/samples/bookmark-folder-closed.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/bookmark-folder-open.gif");
+ list-style-image: url("resource:/res/samples/bookmark-folder-open.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/personal-folder-closed.gif");
+ list-style-image: url("resource:/res/samples/personal-folder-closed.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/personal-folder-open.gif");
+ list-style-image: url("resource:/res/samples/personal-folder-open.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/bookmark-item.gif");
+ list-style-image: url("resource:/res/samples/bookmark-item.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#IEFavorite"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/IEFavorite.gif");
+ list-style-image: url("resource:/res/samples/IEFavorite.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/bookmark-item.gif");
+ list-style-image: url("resource:/res/samples/bookmark-item.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treecell > titledbutton {
@@ -122,5 +122,5 @@ treeitem > treecell > titledbutton {
 }
 
 titledbutton#bookmarks {
-	list-style-image:url("resource:/res/rdf/bookmark-item.gif");
+	list-style-image:url("resource:/res/samples/bookmark-item.gif");
 }
