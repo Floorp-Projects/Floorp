@@ -172,8 +172,6 @@ protected:
   }
 
   PRBool HaveOutsideBullet() const {
-    NS_ASSERTION((mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET) ? nsnull!=mBullet : nsnull==mBullet,
-                  "HaveOutsideBullet flag and mBullet are out of synch");
     return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
