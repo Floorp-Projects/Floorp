@@ -177,8 +177,28 @@ PRBool nsRegionMac :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt
 
 //---------------------------------------------------------------------
 
-PRBool nsRegionMac :: ForEachRect(nsRectInRegionFunc *func, void *closure)
+NS_IMETHODIMP nsRegionMac :: GetRects(nsRegionRectSet **aRects)
 {
+  nsRegionRectSet *rects;
+
+  NS_ASSERTION(!(nsnull == aRects), "bad ptr");
+
+  rects = *aRects;
+
+  if (nsnull == rects)
+  {
+    rects = (nsRegionRectSet *)PR_Malloc(sizeof(nsRegionRectSet) + (sizeof(nsRegionRect) << 3));
+
+    if (nsnull == rects)
+    {
+      *aRects = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    rects->mNumRects = 0;
+    rects->mRectsLen = 9;
+  }
+
 /* This is a minor adaptation of code written by Hugh Fisher
    and published in the RegionToRectangles example in the InfoMac archives.
    ported to raptor from old macfe. MMP
@@ -187,97 +207,153 @@ PRBool nsRegionMac :: ForEachRect(nsRectInRegionFunc *func, void *closure)
 #define MaxY		32767
 #define StackMax	1024
 
-	typedef struct {
+	typedef struct
+  {
 		short	size;
 		Rect	bbox;
 		short	data[];
-		} ** Internal;
+  } ** Internal;
 	
-	Internal region;
-	short	 width, xAdjust, y, index, x1, x2, x;
-	nsRect	 box;
-	short	 stackStorage[1024];
-	short *	 buffer;
+	Internal  region;
+	short	    width, xAdjust, y, index, x1, x2, x;
+	short	    stackStorage[1024];
+	short     *buffer;
 	
 	region = (Internal)mRegion;
 	
 	/* Check for plain rectangle */
-	if ((**region).size == 10) {
-		box.x = (**region).bbox.left;
-		box.y = (**region).bbox.top;
-		box.width = (**region).bbox.right - box.x;
-		box.height = (**region).bbox.bottom - box.y;
-		(*func)(closure, box);
-		return PR_FALSE;
+	if ((**region).size == 10)
+  {
+		rects->mRects[0].x = (**region).bbox.left;
+		rects->mRects[0].y = (**region).bbox.top;
+		rects->mRects[0].width = (**region).bbox.right - (**region).bbox.left;
+		rects->mRects[0].height = (**region).bbox.bottom - (**region).bbox.top;
+
+    rects->mNumRects = 1;
+
+    *aRects = rects;
+
+		return NS_OK;
 	}
+
 	/* Got to scale x coordinates into range 0..something */
 	xAdjust = (**region).bbox.left;
 	width = (**region).bbox.right - xAdjust;
+
 	/* Most regions will be less than 1024 pixels wide */
+
 	if (width < StackMax)
 		buffer = stackStorage;
-	else {
+	else
+  {
 		buffer = (short *)PR_Malloc(width * 2);
+
 		if (buffer == NULL)
+    {
 			/* Truly humungous region or very low on memory.
 			   Quietly doing nothing seems to be the
 			   traditional Quickdraw response. */
-			return PR_FALSE;
+      *aRects = rects;
+			return NS_OK;
+    }
 	}
+
 	/* Initialise scan line list to bottom edges */
+
 	for (x = (**region).bbox.left; x < (**region).bbox.right; x++)
 		buffer[x - xAdjust] = MaxY;
+
 	index = 0;
+
 	/* Loop until we hit an empty scan line */
-	while ((**region).data[index] != EndMark) {
+
+	while ((**region).data[index] != EndMark)
+  {
 		y = (**region).data[index];
 		index ++;
+
 		/* Loop through horizontal runs on this line */
-		while ((**region).data[index] != EndMark) {
+
+		while ((**region).data[index] != EndMark)
+    {
 			x1 = (**region).data[index];
 			index ++;
 			x2 = (**region).data[index];
 			index ++;
 			x = x1;
-			while (x < x2) {
-				if (buffer[x - xAdjust] < y) {
+
+			while (x < x2)
+      {
+				if (buffer[x - xAdjust] < y)
+        {
+          nsRegionRect box;
+
 					/* We have a bottom edge - how long for? */
+
 					box.x = x;
 					box.y  = buffer[x - xAdjust];
-					while (x < x2 && buffer[x - xAdjust] == box.y) {
+
+					while (x < x2 && buffer[x - xAdjust] == box.y)
+          {
 						buffer[x - xAdjust] = MaxY;
 						x ++;
 					}
+
 					/* Pass to client proc */
 					box.width  = x - box.x;
 					box.height = y - box.y;
-					(*func)(closure, box);
-				} else {
+
+          if (rects->mNumRects == rects->mRectsLen)
+          {
+            void *buf = PR_Realloc((void *)rects, sizeof(nsRegionRectSet) + sizeof(nsRegionRect) * (rects->mRectsLen + 7));
+
+            if (nsnull != buf)
+            {
+              rects = (nsRegionRectSet *)buf;
+              rects->mRectsLen += 8;
+            }
+          }
+
+          if (rects->mNumRects != rects->mRectsLen)
+          {
+            rects->mRects[rects->mNumRects] = box;
+            rects->mNumRects++;
+          }
+				}
+        else
+        {
 					/* This becomes a top edge */
+
 					buffer[x - xAdjust] = y;
 					x ++;
 				}
 			}
 		}
+
 		index ++;
 	}
+
 	/* Clean up after ourselves */
+
 	if (width >= StackMax)
 		PR_Free((void *)buffer);
+
 #undef EndMark
 #undef MaxY
 #undef StackMax
 
-  return PR_FALSE;
-}
+  *aRects = rects;
 
-NS_IMETHODIMP nsRegionMac :: GetRects(nsRegionRectSet **aRects)
-{
   return NS_OK;
 }
 
+//---------------------------------------------------------------------
+
 NS_IMETHODIMP nsRegionMac :: FreeRects(nsRegionRectSet *aRects)
 {
+  if (nsnull != aRects)
+    PR_Free((void *)aRects);
+
   return NS_OK;
 }
 

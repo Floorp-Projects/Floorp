@@ -44,7 +44,6 @@ public:
   virtual void GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight);
   virtual void Offset(PRInt32 aXOffset, PRInt32 aYOffset);
   virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual PRBool ForEachRect(nsRectInRegionFunc *func, void *closure);
   NS_IMETHOD GetRects(nsRegionRectSet **aRects);
   NS_IMETHOD FreeRects(nsRegionRectSet *aRects);
   NS_IMETHOD GetNativeRegion(void *&aRegion) const;
@@ -53,8 +52,10 @@ public:
 private:
   ~nsRegionWin();
 
-  HRGN  mRegion;
-  int   mRegionType;
+  HRGN      mRegion;
+  int       mRegionType;
+  LPRGNDATA mData;
+  PRUint32  mDataSize;
 };
 
 #endif  // nsRegionWin_h___ 
