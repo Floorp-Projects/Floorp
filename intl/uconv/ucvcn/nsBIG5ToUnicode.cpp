@@ -58,10 +58,10 @@ static uRange g_BIG5Ranges[] = {
 // Class nsBIG5ToUnicode [implementation]
 
 nsBIG5ToUnicode::nsBIG5ToUnicode() 
-: nsTablesDecoderSupport(2, 
-                        (uRange* ) &g_BIG5Ranges,
-                        (uShiftTable**) &g_BIG5ShiftTableSet, 
-                        (uMappingTable**) &g_BIG5MappingTableSet)
+: nsMultiTableDecoderSupport(2, 
+                            (uRange* ) &g_BIG5Ranges,
+                            (uShiftTable**) &g_BIG5ShiftTableSet, 
+                            (uMappingTable**) &g_BIG5MappingTableSet)
 {
 }
 
@@ -72,7 +72,7 @@ nsresult nsBIG5ToUnicode::CreateInstance(nsISupports ** aResult)
 }
 
 //----------------------------------------------------------------------
-// Subclassing of nsTablesDecoderSupport class [implementation]
+// Subclassing of nsMultiTableDecoderSupport class [implementation]
 
 NS_IMETHODIMP nsBIG5ToUnicode::GetMaxLength(const char * aSrc, 
                                               PRInt32 aSrcLength, 

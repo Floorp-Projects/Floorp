@@ -74,7 +74,7 @@ static uRange g_EUCTWRanges[] = {
 // Class nsEUCTWToUnicode [implementation]
 
 nsEUCTWToUnicode::nsEUCTWToUnicode() 
-: nsTablesDecoderSupport(3, 
+: nsMultiTableDecoderSupport(3, 
                         (uRange*) &g_EUCTWRanges, 
                         (uShiftTable**) &g_EUCTWShiftTableSet, 
                         (uMappingTable**) &g_EUCTWMappingTableSet)
