@@ -69,9 +69,10 @@ static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININST
 nsresult NSGetFactory(const nsCID &classID, nsIFactory **aFactory)
 {
 	if (classID.Equals(kIPluginIID)) {
-		static MRJPlugin thePlugin;
-		*aFactory = &thePlugin;
-		::thePlugin = &thePlugin;
+		static MRJPlugin thePluginSingleton;
+		*aFactory = &thePluginSingleton;
+		thePlugin = &thePluginSingleton;
+		thePlugin->AddRef();
 		// *aFactory = new MRJPlugin();
 		return NS_OK;
 	}
