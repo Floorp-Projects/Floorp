@@ -112,7 +112,10 @@ public:
 
 protected:
   GlobalPrinters() {}
-  nsresult EnumerateNativePrinters(DWORD aWhichPrinters, char* aDefPrinter);
+  nsresult EnumerateNativePrinters(DWORD             aWhichPrinters, 
+                                   char*             aDefPrinter, 
+                                   PRInt32           aDefInx,
+                                   LPPRINTER_INFO_2& aDefPtr);
   void     ReallocatePrinters();
 
   static GlobalPrinters mGlobalPrinters;
@@ -1401,7 +1404,10 @@ GlobalPrinters::FindPrinterByName(const PRUnichar* aPrinterName)
 
 //----------------------------------------------------------------------------------
 nsresult 
-GlobalPrinters::EnumerateNativePrinters(DWORD aWhichPrinters, char* aDefPrinter)
+GlobalPrinters::EnumerateNativePrinters(DWORD             aWhichPrinters, 
+                                        char*             aDefPrinter, 
+                                        PRInt32           aDefInx,
+                                        LPPRINTER_INFO_2& aDefPtr)
 {
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
   OSVERSIONINFO os;
@@ -1440,8 +1446,9 @@ GlobalPrinters::EnumerateNativePrinters(DWORD aWhichPrinters, char* aDefPrinter)
     PRBool isDef  = aDefPrinter && !PL_strcmp(printerInfo[i].pPrinterName, aDefPrinter);
     // put the default printer at the beginning of list
     if (isDef) {
-      defInx = i;
-      defPtr = &printerInfo[i];
+      NS_ASSERTION(aDefInx == -1, "Can't have two default printers!");
+      aDefInx = i;
+      aDefPtr = &printerInfo[i];
     }
     mPrinters->AppendElement((void*)&printerInfo[i]);
 
@@ -1458,14 +1465,6 @@ GlobalPrinters::EnumerateNativePrinters(DWORD aWhichPrinters, char* aDefPrinter)
     }
 #endif
   }
-
-  // swap the default printer with the zero'th item
-  if (defInx > 0) {
-    LPPRINTER_INFO_2 ptr = (LPPRINTER_INFO_2)mPrinters->ElementAt(0);
-    mPrinters->ReplaceElementAt((void*)defPtr, 0);
-    mPrinters->ReplaceElementAt((void*)ptr, defInx);
-  }
-
 
   // hang onto the pointer until we are done
   mPrinterInfoArray->AppendElement((void*)printerInfo);
@@ -1515,12 +1514,22 @@ GlobalPrinters::EnumeratePrinterList()
   char* defPrinterName;
   GetDefaultPrinterName(defPrinterName);
 
+  PRInt32            defInx = -1;
+  LPPRINTER_INFO_2   defPtr = nsnull;
+
   // any of these could only fail with an OUT_MEMORY_ERROR
   // PRINTER_ENUM_LOCAL should get the network printers on Win95
-  nsresult rv = EnumerateNativePrinters(PRINTER_ENUM_LOCAL, defPrinterName);
+  nsresult rv = EnumerateNativePrinters(PRINTER_ENUM_CONNECTIONS, defPrinterName, defInx, defPtr);
   if (NS_SUCCEEDED(rv)) {
     // Gets all networked printer the user has connected to
-    rv = EnumerateNativePrinters(PRINTER_ENUM_CONNECTIONS, defPrinterName);
+    rv = EnumerateNativePrinters(PRINTER_ENUM_LOCAL, defPrinterName, defInx, defPtr);
+  }
+
+  // swap the default printer with the zero'th item
+  if (defInx > 0) {
+    LPPRINTER_INFO_2 ptr = (LPPRINTER_INFO_2)mPrinters->ElementAt(0);
+    mPrinters->ReplaceElementAt((void*)defPtr, 0);
+    mPrinters->ReplaceElementAt((void*)ptr, defInx);
   }
 
   if (defPrinterName) delete[] defPrinterName;
