@@ -178,6 +178,12 @@ AC_ARG_ENABLE(win32-target,
     MOZ_WIN32_TARGET=`echo $enableval | tr a-z A-Z`,
     MOZ_WIN32_TARGET=)
 
+AC_ARG_ENABLE(debug-rtl,
+    [  --enable-debug-rtl      Use the MSVC debug runtime library],
+    [ if test "$enableval" = "yes"; then
+	    USE_DEBUG_RTL=1
+      fi ])
+
 AC_ARG_ENABLE(n32,
     [  --enable-n32            Enable n32 ABI support (IRIX only)],
     [ if test "$enableval" = "yes"; then
