@@ -3,4 +3,5 @@ RemoveConsole
 WriteCharsToConsole
 ReadCharsFromConsole
 SIOUXHandleOneEvent
+SIOUXIsAppWindow
 SIOUXSettings
