@@ -2099,6 +2099,12 @@ if test "$result" = "yes"; then
 fi
 AC_SUBST(HAVE_64BIT_OS)
 
+if test "$HAVE_64BIT_OS"; then
+	case "$target_os" in
+	solaris*) TARGET_NSPR_MDCPUCFG='\"md/_solaris64.cfg\"' ;;
+	esac
+fi
+
 dnl Check for usable wchar_t (2 bytes, unsigned)
 dnl (we really don't need the unsignedness check anymore)
 dnl ========================================================
@@ -4548,6 +4554,9 @@ unset CONFIG_FILES
 
 if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist"
+    if test -n "$HAVE_64BIT_OS"; then
+        ac_configure_args="$ac_configure_args --enable-64bit"
+    fi
     AC_OUTPUT_SUBDIRS(nsprpub)
 fi
 
@@ -4586,5 +4595,8 @@ if test "$MOZ_LDAP_XPCOM"; then
   fi
 
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
+    if test -n "$HAVE_64BIT_OS"; then
+        ac_configure_args="$ac_configure_args --enable-64bit"
+    fi
   AC_OUTPUT_SUBDIRS(directory/c-sdk/ldap)
 fi
