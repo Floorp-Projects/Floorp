@@ -570,15 +570,32 @@ nsContextMenu.prototype = {
           return this.link.href;
         }
         var href = this.link.getAttributeNS("http://www.w3.org/1999/xlink","href");
-        if (href == "") {
+        if (!href || !href.match(/\S/)) {
           throw "Empty href"; // Without this we try to save as the current doc, for example, HTML case also throws if empty
         }
         href = this.makeURLAbsolute(this.link.baseURI,href);
         return href;
     },
-    // Get text of link (if possible).
+    // Get text of link.
     linkText : function () {
         var text = gatherTextUnder( this.link );
+        if (!text || !text.match(/\S/)) {
+          text = this.link.getAttribute("title");
+          if (!text || !text.match(/\S/)) {
+            text = this.link.getAttribute("alt");
+            if (!text || !text.match(/\S/)) {
+              if (this.link.href) {                
+                text = this.link.href;
+              } else {
+                text = getAttributeNS("http://www.w3.org/1999/xlink", "href");
+                if (text && text.match(/\S/)) {
+                  text = this.makeURLAbsolute(this.link.baseURI, text);
+                }
+              }
+            }
+          }
+        }
+
         return text;
     },
     // Returns "true" if there's no text selected, null otherwise.
