@@ -44,7 +44,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
 
 nsPlatformCharset::nsPlatformCharset()
 {
-  mCharset.Assign(NS_LITERAL_STRING("UTF-8"));
+  mCharset = NS_LITERAL_CSTRING("UTF-8");
 }
 
 nsPlatformCharset::~nsPlatformCharset()
@@ -52,7 +52,7 @@ nsPlatformCharset::~nsPlatformCharset()
 }
 
 NS_IMETHODIMP
-nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAString& aResult)
+nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& aResult)
 {
   aResult = mCharset;
   return NS_OK;
@@ -71,35 +71,35 @@ nsPlatformCharset::Init()
   return NS_OK;
 }
 nsresult
-nsPlatformCharset::MapToCharset(short script, short region, nsAString& aCharset)
+nsPlatformCharset::MapToCharset(short script, short region, nsACString& aCharset)
 {
   return NS_OK;
 }
 
 nsresult
-nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsAString& aCharset)
+nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& aCharset)
 {
   return NS_OK;
 }
 
 nsresult
-nsPlatformCharset::InitGetCharset(nsAString &aString)
+nsPlatformCharset::InitGetCharset(nsACString &aString)
 {
-  aString.Assign(mCharset);
+  aString = mCharset;
   return NS_OK;
 }
 
 nsresult
 nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAString& aResult)
 {
-  aResult.Assign(mCharset);
+  CopyASCIItoUCS2(mCharset, aResult);
   return NS_OK;
 }
 
 nsresult
-nsPlatformCharset::VerifyCharset(nsString &aCharset)
+nsPlatformCharset::VerifyCharset(nsCString &aCharset)
 {
-  aCharset.Assign(mCharset);
+  aCharset = mCharset;
   return NS_OK;
 }
 
