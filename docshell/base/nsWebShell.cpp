@@ -135,7 +135,6 @@ void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
 static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-static nsAutoString LinkCommand("linkclick");
 //----------------------------------------------------------------------
 
 typedef enum {
@@ -2273,6 +2272,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       nsCOMPtr<nsIUrlDispatcher>  urlDispatcher;
       rv = root->GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
       if (NS_SUCCEEDED(rv) && urlDispatcher) {
+        nsAutoString LinkCommand("linkclick");
         urlDispatcher->HandleUrl(LinkCommand.GetUnicode(),
                                  urlAStr.GetUnicode(), aPostDataStream);
         return NS_OK;
