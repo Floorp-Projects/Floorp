@@ -91,7 +91,7 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DB_ONE_M
 
-GARBAGE		+= $(addprefix $(DIST)/bin/components/, \
+GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
                         debug-developer.js \
 			initpref.js all.js mailnews.js editor.js config.js \
 			beos.js unix.js winpref.js os2prefs.js openvms.js photon.js)
