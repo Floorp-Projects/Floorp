@@ -76,6 +76,9 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
 
       nsresult DoSpecialUpdates(nsFileSpec profilePath);
 
+      nsresult SetPremigratedCharPref(const char *pref_name, char *value);
+      nsresult SetPremigratedFilePref(const char *pref_name, nsFileSpec &filePath);
+
 private:
       nsIPref* m_prefs;
       nsresult getPrefService();
