@@ -54,6 +54,9 @@ nsImageXlib::nsImageXlib()
   mLocation.y = 0;
   mDisplay = nsnull;
   mConvertedBits = nsnull;
+  mNaturalWidth = 0;
+  mNaturalHeight = 0;
+
 }
 
 nsImageXlib::~nsImageXlib()
@@ -114,6 +117,8 @@ nsresult nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
   }
 
   SetDecodedRect(0,0,0,0);
+  SetNaturalWidth(0);
+  SetNaturalHeight(0);
 
   if (nsnull != mImagePixmap) {
     XFreePixmap(mDisplay, mImagePixmap);

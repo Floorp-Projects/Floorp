@@ -52,6 +52,9 @@ nsImageMac::nsImageMac()
 ,	mARowBytes(0)
 ,	mIsTopToBottom(PR_TRUE)
 ,	mPixelDataSize(0)
+,   mNaturalWidth(0)
+,   mNaturalHeight(0)
+
 {
 	NS_INIT_REFCNT();
 }
@@ -145,7 +148,9 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
   mWidth = aWidth;
   mHeight = aHeight;
   SetDecodedRect(0,0,0,0);  //init
- 
+  SetNaturalWidth(0);
+  SetNaturalHeight(0);
+
 	PRInt16 bufferdepth;
 
 	switch(aDepth)

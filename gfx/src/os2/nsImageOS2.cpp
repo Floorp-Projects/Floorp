@@ -59,6 +59,9 @@ nsImageOS2::nsImageOS2()
    mIsTopToBottom = PR_FALSE;   
 
    mDeviceDepth = 0;
+   mNaturalWidth = 0;
+   mNaturalHeight = 0;
+
 }
 
 nsImageOS2::~nsImageOS2()
@@ -87,6 +90,8 @@ nsresult nsImageOS2::Init( PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
 // mRowBytes = (mRowBytes + 3) & ~0x3;
 
   SetDecodedRect(0,0,0,0);  //init
+  SetNaturalWidth(0);
+  SetNaturalHeight(0);
 
    mImageBits = new PRUint8 [ aHeight * mRowBytes ];
 

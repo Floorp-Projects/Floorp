@@ -65,6 +65,9 @@ public:
                         				 PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
                         				 PRUint32 aIconNumber);
 
+  NS_IMETHOD SetImageNaturalDimensions(IL_Pixmap* aImage, PRInt32 naturalwidth, PRInt32 naturalheight);
+
+
   NS_IMETHOD SetDecodedRect(IL_Pixmap* aImage, 
 			                    PRInt32 x1, PRInt32 y1,
                                 PRInt32 x2, PRInt32 y2);
@@ -72,6 +75,20 @@ public:
 
 };
 
+NS_IMETHODIMP
+ImageRendererImpl::SetImageNaturalDimensions(
+                   IL_Pixmap* aImage, 
+                   PRInt32 naturalwidth, 
+                   PRInt32 naturalheight){
+
+    nsIImage *img = (nsIImage *)aImage->client_data;
+
+    if(img){
+        nsresult rv = img->SetNaturalWidth(naturalwidth);
+        rv = img->SetNaturalHeight(naturalheight);
+    }
+    return NS_OK;
+}
 ImageRendererImpl::ImageRendererImpl()
 {
   NS_INIT_REFCNT();

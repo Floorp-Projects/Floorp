@@ -70,6 +70,9 @@ nsImageGTK::nsImageGTK()
   mAlphaWidth = 0;
   mConvertedBits = nsnull;
   mGC = nsnull;
+  mNaturalWidth = 0;
+  mNaturalHeight = 0;
+
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::nsImageGTK(this=%p)\n",
          this);
@@ -131,7 +134,8 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
   }
 
   SetDecodedRect(0,0,0,0);  //init
-
+  SetNaturalWidth(0);
+  SetNaturalHeight(0);
 
   // mImagePixmap gets created once per unique image bits in Draw()
   // ImageUpdated(nsImageUpdateFlags_kBitsChanged) can cause the

@@ -42,6 +42,9 @@ nsImageBeOS::nsImageBeOS()
   mAlphaBits = nsnull;
   mAlphaPixmap = nsnull;
   mImage = nsnull;
+  mNaturalWidth = 0;
+  mNaturalHeight = 0;
+
 }
 
 //------------------------------------------------------------
@@ -93,6 +96,8 @@ nsresult
   }
 
   SetDecodedRect(0,0,0,0);  //init
+  SetNaturalWidth(0);
+  SetNaturalHeight(0);
 
   mWidth = aWidth;
   mHeight = aHeight;

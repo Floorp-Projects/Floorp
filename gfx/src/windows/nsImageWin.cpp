@@ -58,6 +58,9 @@ nsImageWin :: nsImageWin()
   mColorMap = nsnull;
   mBHead = nsnull;
 
+  mNaturalWidth = 0;
+  mNaturalHeight = 0;
+
 	//CleanUp(PR_TRUE);
   CleanUpDDB();
   CleanUpDIB();
@@ -98,6 +101,9 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected image depth");
     return NS_ERROR_UNEXPECTED;
+
+  SetNaturalWidth(0);
+  SetNaturalHeight(0);
   }
 
   SetDecodedRect(0,0,0,0);  //init
