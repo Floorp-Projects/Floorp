@@ -213,7 +213,6 @@ for (int i = 0; i < endPC; i++) {
 System.out.println();
 }
         this.parenCount = state.parenCount;
-        this.flags = flags;
         this.lastIndex = 0;
 
         scope = getTopLevelScope(scope);
