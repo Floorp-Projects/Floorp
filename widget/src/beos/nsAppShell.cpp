@@ -29,6 +29,7 @@
 #include "nsSwitchToUIThread.h"
 #include "nsTimerBeOS.h"
 #include "plevent.h"
+#include "prprf.h"
 
 #include <stdlib.h>
 #include <AppKit.h>
@@ -143,8 +144,10 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 	// NOTE: this needs to be run from within the main application thread
 	char		portname[64];
 	char		semname[64];
-	sprintf(portname, "event%lx", PR_GetCurrentThread());
-	sprintf(semname, "sync%lx", PR_GetCurrentThread());
+	PR_snprintf(portname, sizeof(portname), "event%lx", 
+		(long unsigned) PR_GetCurrentThread());
+	PR_snprintf(semname, sizeof(semname), "sync%lx", 
+		(long unsigned) PR_GetCurrentThread());
 
 	if((eventport = find_port(portname)) < 0)
 	{
@@ -210,7 +213,9 @@ nsresult nsAppShell::Run()
 				break;
 
 			default :
+#ifdef DEBUG
 				printf("nsAppShell::Run - UNKNOWN EVENT\n");
+#endif
 				break;
 		}
 
@@ -289,14 +294,83 @@ NS_METHOD nsAppShell::Spindown()
 
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
-	aRealEvent = PR_FALSE;
-	printf("nsAppShell::GetNativeEvent - FIXME: not implemented\n");
-	return NS_OK;
+  aRealEvent = PR_FALSE;
+  aEvent = 0;
+
+  return NS_OK;
 }
 
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-	printf("nsAppShell::DispatchNativeEvent - FIXME: not implemented\n");
-	return NS_OK;
+  // should we check for eventport initialization ?
+  char  portname[64];
+  PR_snprintf(portname, sizeof(portname), "event%lx", 
+	(long unsigned) PR_GetCurrentThread());
+
+  if((eventport = find_port(portname)) < 0) {
+    // not initialized
+#ifdef DEBUG
+    printf("nsAppShell::DispatchNativeEvent() was called before init\n");
+#endif
+    fflush(stdout);
+    return NS_ERROR_FAILURE;
+  }
+
+  int32 code;
+  ThreadInterfaceData id;
+  id.data = 0;
+  id.sync = 0;
+  bool gotMessage = false;
+
+  do {
+    if (read_port(eventport, &code, &id, sizeof(id)) >= 0) {
+      switch(code) {
+      case 'WMti' :
+        {
+          // Hack
+          nsCOMPtr<nsTimerBeOS> timer = (nsTimerBeOS *)id.data;
+          timer->FireTimeout();
+        }
+        break;
+      case WM_CALLMETHOD :
+        {
+          MethodInfo *mInfo = (MethodInfo *)id.data;
+          mInfo->Invoke();
+          if(! id.sync)
+            delete mInfo;
+          gotMessage = PR_TRUE;
+        }
+        break;
+      case 'natv' :	// native queue PLEvent
+        {
+          PREventQueue *queue = (PREventQueue *)id.data;
+          PR_ProcessPendingEvents(queue);
+          gotMessage = PR_TRUE;
+        }
+        break;
+      default :
+#ifdef DEBUG
+        printf("nsAppShell::Run - UNKNOWN EVENT\n");
+#endif
+        break;
+      }
+
+      if(id.sync)
+        release_sem(syncsem);
+
+    } else {
+      // read_port failure
+#ifdef DEBUG
+      printf("nsAppShell::GetNativeEvent() read_port failed.\n");
+#endif
+      return NS_ERROR_FAILURE;
+    }
+  } while (!gotMessage);
+
+  // no need to do this?
+  //if(mDispatchListener)
+  //	mDispatchListener->AfterDispatch();
+
+  return NS_OK;
 }
 
