@@ -159,9 +159,6 @@ public:
     return aParentFrame->ReplaceFrame(aListName, aOldFrame, aNewFrame);
   }
 
-  // Notification that we were unable to render a replaced element
-  NS_HIDDEN_(nsresult) CantRenderReplacedElement(nsIFrame* aFrame);
-
   /*
    * Notification that a frame is about to be destroyed. This allows any
    * outstanding references to the frame to be cleaned up.
@@ -226,8 +223,6 @@ public:
 
 private:
 
-  friend struct CantRenderReplacedElementEvent;
-
   NS_HIDDEN_(nsIPresShell*) GetPresShell() const { return mPresShell; }
   NS_HIDDEN_(nsPresContext*) GetPresContext() const {
     return mPresShell->GetPresContext();
@@ -239,18 +234,6 @@ private:
                           nsIContent        *aParentContent,
                           nsStyleChangeList *aChangeList, 
                           nsChangeHint       aMinChange);
-
-  NS_HIDDEN_(nsresult) RevokePostedEvents();
-  NS_HIDDEN_(CantRenderReplacedElementEvent**)
-    FindPostedEventFor(nsIFrame* aFrame);
-
-  NS_HIDDEN_(void) DequeuePostedEventFor(nsIFrame* aFrame);
-
-  static NS_HIDDEN_(void)
-    HandlePLEvent(CantRenderReplacedElementEvent* aEvent);
-
-  static NS_HIDDEN_(void)
-    DestroyPLEvent(CantRenderReplacedElementEvent* aEvent);
 };
 
 #endif

@@ -63,8 +63,6 @@ class nsIAtom;
 class nsStyleChangeList;
 class nsILayoutHistoryState;
 
-struct CantRenderReplacedElementEvent;
-
 class nsFrameManagerBase
 {
 protected:
@@ -78,7 +76,6 @@ protected:
   PLDHashTable                    mPrimaryFrameMap;
   PLDHashTable                    mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
-  CantRenderReplacedElementEvent* mPostedEvents;
   PRBool                          mIsDestroyingFrames;
 };
 
