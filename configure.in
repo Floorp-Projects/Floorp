@@ -365,7 +365,7 @@ else
   AC_MSG_RESULT(no)
 fi  
 
-dnl Checks for c++ features
+dnl Put your C++ language/feature checks below
 dnl Is there a way to make AC_TRY_COMPILE use CXX instead of CC?
 _SAVE_CC=$CC
 CC=$CXX
@@ -385,12 +385,8 @@ if test $ac_ios_binary = true ; then
 else
   AC_MSG_RESULT(no)
 fi  
-CC=$_SAVE_CC
 
-dnl Checks for c++ features
-dnl Is there a way to make AC_TRY_COMPILE use CXX instead of CC?
-_SAVE_CC=$CC
-CC=$CXX
+
 AC_MSG_CHECKING(for ios::bin)
 AC_CACHE_VAL(ac_cv_ios_bin,
  [AC_TRY_COMPILE([#include <iostream.h>]
@@ -407,7 +403,34 @@ if test $ac_ios_bin = true ; then
 else
   AC_MSG_RESULT(no)
 fi  
+
+dnl Check for static_cast<>
+AC_CACHE_CHECK(for advanced C++ casting,
+               ac_cv_cpp_casts,
+               [AC_TRY_COMPILE(class A {};
+                               class B: public A {};,
+                               B* b = new B;
+                               A* a = static_cast<A*>(b);,
+                               ac_cv_cpp_casts=yes,
+                               ac_cv_cpp_casts=no)])
+if test $ac_cv_cpp_casts = yes ; then
+   AC_DEFINE(HAVE_CPP_CASTS)
+fi
+
+AC_CACHE_CHECK(for namespaces,
+               ac_cv_cpp_namespaces,
+               [AC_TRY_COMPILE(namespace X {},
+                               using namespace X;,
+                               ac_cv_cpp_namespaces=yes,
+                               ac_cv_cpp_namespaces=no)])
+if test $ac_cv_cpp_namespaces = yes ; then
+   AC_DEFINE(HAVE_CPP_NAMESPACES)
+fi
+
 CC=$_SAVE_CC
+
+dnl End of C++ language/feature checks
+
 
 dnl Check cc for  -include flag support (command-line include files)
 dnl Assume that cxx has the feature if cc has it.
