@@ -25,36 +25,29 @@ EditAggregateTxn::EditAggregateTxn()
   : EditTxn()
 {
   // base class does this: NS_INIT_REFCNT();
-  mChildren = new nsVoidArray();
+  nsresult res = NS_NewISupportsArray(getter_AddRefs(mChildren));
+  NS_POSTCONDITION(NS_SUCCEEDED(res), "EditAggregateTxn failed in constructor");
   SetTransactionDescriptionID( kTransactionID );
   /* log description initialized in parent constructor */
 }
 
 EditAggregateTxn::~EditAggregateTxn()
 {
-  if (nsnull!=mChildren)
-  {
-    PRInt32 i;
-    PRInt32 count = mChildren->Count();
-    for (i=0; i<count; i++)
-    {
-      EditTxn *txn = (EditTxn*)(mChildren->ElementAt(i));
-      NS_IF_RELEASE(txn);
-    }
-    delete mChildren;
-  }
+  // nsISupportsArray cleans up array for us at destruct time
 }
 
 NS_IMETHODIMP EditAggregateTxn::Do(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
-  if (nsnull!=mChildren)
+  if (mChildren)
   {
     PRInt32 i;
-    PRInt32 count = mChildren->Count();
+    PRUint32 count;
+    mChildren->Count(&count);
     for (i=0; i<count; i++)
     {
-      EditTxn *txn = (EditTxn*)(mChildren->ElementAt(i));
+      nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
+      nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
       if (!txn) { return NS_ERROR_NULL_POINTER; }
       result = txn->Do();
       if (NS_FAILED(result))
@@ -67,14 +60,17 @@ NS_IMETHODIMP EditAggregateTxn::Do(void)
 NS_IMETHODIMP EditAggregateTxn::Undo(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
-  if (nsnull!=mChildren)
+  if (mChildren)
   {
     PRInt32 i;
-    PRInt32 count = mChildren->Count();
+    PRUint32 count;
+    mChildren->Count(&count);
     // undo goes through children backwards
     for (i=count-1; i>=0; i--)
     {
-      EditTxn *txn = (EditTxn*)(mChildren->ElementAt(i));
+      nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
+      nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
+      if (!txn) { return NS_ERROR_NULL_POINTER; }
       result = txn->Undo();
       if (NS_FAILED(result))
         break;
@@ -86,13 +82,16 @@ NS_IMETHODIMP EditAggregateTxn::Undo(void)
 NS_IMETHODIMP EditAggregateTxn::Redo(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
-  if (nsnull!=mChildren)
+  if (mChildren)
   {
     PRInt32 i;
-    PRInt32 count = mChildren->Count();
+    PRUint32 count;
+    mChildren->Count(&count);
     for (i=0; i<count; i++)
     {
-      EditTxn *txn = (EditTxn*)(mChildren->ElementAt(i));
+      nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
+      nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
+      if (!txn) { return NS_ERROR_NULL_POINTER; }
       result = txn->Redo();
       if (NS_FAILED(result))
         break;
@@ -113,13 +112,17 @@ NS_IMETHODIMP EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransa
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
-  if (nsnull!=mChildren)
+  if (mChildren)
   {
-    PRInt32 count = mChildren->Count();
+    PRInt32 i;
+    PRUint32 count;
+    mChildren->Count(&count);
     NS_ASSERTION(count>0, "bad count");
     if (0<count)
     {
-      EditTxn *txn = (EditTxn*)(mChildren->ElementAt(count-1));
+      nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
+      nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
+      if (!txn) { return NS_ERROR_NULL_POINTER; }
       result = txn->Merge(aDidMerge, aTransaction);
     }
   }
@@ -148,22 +151,25 @@ NS_IMETHODIMP EditAggregateTxn::GetRedoString(nsString *aString)
 
 NS_IMETHODIMP EditAggregateTxn::AppendChild(EditTxn *aTxn)
 {
-  if ((nsnull!=mChildren) && (nsnull!=aTxn))
+  if (mChildren && aTxn)
   {
-    mChildren->AppendElement(aTxn);
+    // aaahhhh! broken interfaces drive me crazy!!!
+    nsCOMPtr<nsISupports> isupports;
+    aTxn->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(isupports));
+    mChildren->AppendElement(isupports);
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP EditAggregateTxn::GetCount(PRInt32 *aCount)
+NS_IMETHODIMP EditAggregateTxn::GetCount(PRUint32 *aCount)
 {
   if (!aCount) {
     return NS_ERROR_NULL_POINTER;
   }
   *aCount=0;
   if (mChildren) {
-    *aCount = mChildren->Count();
+    mChildren->Count(aCount);
   }
   return NS_OK;
 }
@@ -183,14 +189,16 @@ NS_IMETHODIMP EditAggregateTxn::GetTxnAt(PRInt32 aIndex, EditTxn **aTxn)
   }
 
   // get the transaction at aIndex
-  const PRInt32 txnCount = mChildren->Count();
+  PRUint32 txnCount;
+  mChildren->Count(&txnCount);
   if (0>aIndex || txnCount<=aIndex) {
     return NS_ERROR_UNEXPECTED;
   }
-  *aTxn = (EditTxn *)(mChildren->ElementAt(aIndex));
+  nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(aIndex));
+  // ugh, this is all wrong - what a mess we have with editor transaction interfaces
+  isupports->QueryInterface(EditTxn::GetCID(), (void**)aTxn);
   if (!*aTxn)
     return NS_ERROR_UNEXPECTED;
-  NS_ADDREF(*aTxn);
   return NS_OK;
 }
 

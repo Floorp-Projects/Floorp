@@ -91,7 +91,9 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
   switch (info->action)
   {
     case kInsertText:
-      return WillInsertText(aSelection, 
+    case kInsertTextIME:
+      return WillInsertText(info->action,
+                            aSelection, 
                             aCancel, 
                             aHandled,
                             info->inString,
@@ -148,13 +150,14 @@ nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
  ********************************************************/
  
 nsresult
-nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection, 
+nsHTMLEditRules::WillInsertText(PRInt32          aAction,
+                                nsIDOMSelection *aSelection, 
                                 PRBool          *aCancel,
                                 PRBool          *aHandled,
-                                const nsString *inString,
-                                nsString       *outString,
-                                TypeInState    typeInState,
-                                PRInt32         aMaxLength)
+                                const nsString  *inString,
+                                nsString        *outString,
+                                TypeInState      typeInState,
+                                PRInt32          aMaxLength)
 {  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
   // initialize out param
@@ -249,9 +252,11 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
     if (priorNode && IsBreak(priorNode) && HasMozAttr(priorNode)  
          && (blockParent == mEditor->GetBlockNodeParent(priorNode)))
     {
-      needMozDiv = PR_TRUE;
       res = mEditor->DeleteNode(priorNode);
       if (NS_FAILED(res)) return res;
+      // but we only need to make a moz div if we weren't in a listitem
+      if (!IsListItem(blockParent)) 
+        needMozDiv = PR_TRUE;
     }
   
     // if we are directly in a body or (non-moz) div, create a moz-div.
@@ -271,59 +276,62 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
   }
   
   char nbspStr[2] = {nbsp, 0};
-  
+  PRBool bCancel;  
   nsString theString(*inString);  // copy instring for now
   PRInt32 pos = theString.FindCharInSet(specialChars);
-  if(0 == theString.Length()) { 
-	 // special case for IME. We need this to remove the last 
-	 // unconverted text.
-	 PRBool bCancel;
-     nsString partialString;
-     res = DoTextInsertion(aSelection, &bCancel, &partialString, typeInState);
+  if(aAction == kInsertTextIME) 
+  { 
+	 // special case for IME. We need this to :
+	 // a) handle null strings, which are meaningful for IME
+	 // b) prevent the string from being broken into substrings,
+	 //    which can happen in non-IME processing below.
+     // I should probably convert runs of spaces and tabs here as well
+     res = DoTextInsertion(aSelection, &bCancel, &theString, typeInState);
   }
-  while (theString.Length())
+  else // aAction == kInsertText
   {
-    PRBool bCancel;
-    nsString partialString;
-    // if first char is special, then use just it
-    if (pos == 0) pos = 1;
-    if (pos == -1) pos = theString.Length();
-    theString.Left(partialString, pos);
-    theString.Cut(0, pos);
-    // is it a solo tab?
-    if (partialString == "\t" )
+    while (theString.Length())
     {
-      res = InsertTab(aSelection,outString);
+      nsString partialString;
+      // if first char is special, then use just it
+      if (pos == 0) pos = 1;
+      if (pos == -1) pos = theString.Length();
+      theString.Left(partialString, pos);
+      theString.Cut(0, pos);
+      // is it a solo tab?
+      if (partialString == "\t" )
+      {
+        res = InsertTab(aSelection,outString);
+        if (NS_FAILED(res)) return res;
+        res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
+      }
+      // is it a solo space?
+      else if (partialString == " ")
+      {
+        res = InsertSpace(aSelection,outString);
+        if (NS_FAILED(res)) return res;
+        res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
+      }
+      // is it a solo nbsp?
+      else if (partialString == nbspStr)
+      {
+        res = InsertSpace(aSelection,outString);
+        if (NS_FAILED(res)) return res;
+        res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
+      }
+      // is it a solo return?
+      else if (partialString == "\n")
+      {
+        res = mEditor->InsertBreak();
+      }
+      else
+      {
+        res = DoTextInsertion(aSelection, &bCancel, &partialString, typeInState);
+      }
       if (NS_FAILED(res)) return res;
-      res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
+      pos = theString.FindCharInSet(specialChars);
     }
-    // is it a solo space?
-    else if (partialString == " ")
-    {
-      res = InsertSpace(aSelection,outString);
-      if (NS_FAILED(res)) return res;
-      res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
-    }
-    // is it a solo nbsp?
-    else if (partialString == nbspStr)
-    {
-      res = InsertSpace(aSelection,outString);
-      if (NS_FAILED(res)) return res;
-      res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
-    }
-    // is it a solo return?
-    else if (partialString == "\n")
-    {
-      res = mEditor->InsertBreak();
-    }
-    else
-    {
-      res = DoTextInsertion(aSelection, &bCancel, &partialString, typeInState);
-    }
-    if (NS_FAILED(res)) return res;
-    pos = theString.FindCharInSet(specialChars);
   }
-  
   return res;
 }
 
@@ -423,15 +431,8 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
       if (NS_FAILED(res)) return res;
     }
     nsCOMPtr<nsIDOMNode> brNode;
-    res = mEditor->InsertBR(&brNode);  // only inserts a br node
+    res = InsertMozBR();  // inserts a br node with moz attr
     if (NS_FAILED(res)) return res;
-    // give it special moz attr
-    nsCOMPtr<nsIDOMElement> brElem = do_QueryInterface(brNode);
-    if (brElem)
-    {
-      res = mEditor->SetAttribute(brElem, "type", "_moz");
-      if (NS_FAILED(res)) return res;
-    }
     *aHandled = PR_TRUE;
   }
   else if (bIsMozDiv && AtStartOfBlock(node, offset, blockParent))
@@ -1672,6 +1673,17 @@ nsHTMLEditRules::IsMozDiv(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// IsMozBR: true if node an html br node with type = _moz
+//                  
+PRBool 
+nsHTMLEditRules::IsMozBR(nsIDOMNode *node)
+{
+  if (IsBreak(node) && HasMozAttr(node)) return PR_TRUE;
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // HasMozAttr: true if node has type attribute = _moz
 //             (used to indicate the div's and br's we use in
 //              mail compose rules)
@@ -1744,7 +1756,10 @@ nsHTMLEditRules::InBody(nsIDOMNode *node)
 //               if the children are empty or non-editable.
 //                  
 nsresult 
-nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode, PRBool *outIsEmptyBlock)
+nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode, 
+                              PRBool *outIsEmptyBlock, 
+                              PRBool aMozBRDoesntCount,
+                              PRBool aListItemsNotEmpty) 
 {
   if (!aNode || !outIsEmptyBlock) return NS_ERROR_NULL_POINTER;
   *outIsEmptyBlock = PR_TRUE;
@@ -1752,10 +1767,11 @@ nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode, PRBool *outIsEmptyBlock)
 //  nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> nodeToTest;
   if (nsEditor::IsBlockNode(aNode)) nodeToTest = do_QueryInterface(aNode);
-  else nsCOMPtr<nsIDOMElement> block;
+//  else nsCOMPtr<nsIDOMElement> block;
+//  looks like I forgot to finish this.  Wonder what I was going to do?
 
   if (!nodeToTest) return NS_ERROR_NULL_POINTER;
-  return IsEmptyNode(nodeToTest, outIsEmptyBlock);
+  return IsEmptyNode(nodeToTest, outIsEmptyBlock, aMozBRDoesntCount, aListItemsNotEmpty);
 }
 
 
@@ -1765,7 +1781,10 @@ nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode, PRBool *outIsEmptyBlock)
 //               if the children are empty or non-editable.
 //                  
 nsresult 
-nsHTMLEditRules::IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode)
+nsHTMLEditRules::IsEmptyNode( nsIDOMNode *aNode, 
+                              PRBool *outIsEmptyNode, 
+                              PRBool aMozBRDoesntCount,
+                              PRBool aListItemsNotEmpty)
 {
   if (!aNode || !outIsEmptyNode) return NS_ERROR_NULL_POINTER;
   *outIsEmptyNode = PR_TRUE;
@@ -1785,9 +1804,9 @@ nsHTMLEditRules::IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode)
   // then we dont call it empty (it's an <hr>, or <br>, etc).
   // Also, if it's an anchor then dont treat it as empty - even though
   // anchors are containers, named anchors are "empty" but we don't
-  // want to treat them as such.  Also, don't call ListItems empty:
-  // empty list items still render and might be wanted.
-  if (!mEditor->IsContainer(aNode) || IsAnchor(aNode) || IsListItem(aNode)) 
+  // want to treat them as such.  Also, don't call ListItems empty
+  // if caller desires.
+  if (!mEditor->IsContainer(aNode) || IsAnchor(aNode) || (aListItemsNotEmpty &&IsListItem(aNode))) 
   {
     *outIsEmptyNode = PR_FALSE;
     return NS_OK;
@@ -1830,8 +1849,13 @@ nsHTMLEditRules::IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode)
       {
         // is it the node we are iterating over?
         if (node.get() == aNode) break;
-        // otherwise it ain't empty
-        *outIsEmptyNode = PR_FALSE;
+        // is it a moz-BR and did the caller ask us not to consider those relevant?
+        if (!(aMozBRDoesntCount && IsMozBR(node)))
+        {
+          // otherwise it ain't empty
+          *outIsEmptyNode = PR_FALSE;
+          break;
+        }
       }
     }
     res = iter->Next();
@@ -2635,6 +2659,25 @@ nsHTMLEditRules::InsertSpace(nsIDOMSelection *aSelection,
 
 
 ///////////////////////////////////////////////////////////////////////////
+// InsertMozBR: put a BR node with moz attribute at current insertion point
+//                       
+nsresult 
+nsHTMLEditRules::InsertMozBR()
+{
+  nsCOMPtr<nsIDOMNode> brNode;
+  nsresult res = mEditor->InsertBR(&brNode);  // only inserts a br node
+  if (NS_FAILED(res)) return res;
+  // give it special moz attr
+  nsCOMPtr<nsIDOMElement> brElem = do_QueryInterface(brNode);
+  if (brElem)
+  {
+    res = mEditor->SetAttribute(brElem, "type", "_moz");
+    if (NS_FAILED(res)) return res;
+  }
+  return res;
+}
+
+///////////////////////////////////////////////////////////////////////////
 // ReturnInHeader: do the right thing for returns pressed in headers
 //                       
 nsresult 
@@ -2658,7 +2701,7 @@ nsHTMLEditRules::ReturnInHeader(nsIDOMSelection *aSelection,
   
   // if the new (righthand) header node is empty, delete it
   PRBool isEmpty;
-  res = IsEmptyBlock(aHeader, &isEmpty);
+  res = IsEmptyBlock(aHeader, &isEmpty, PR_TRUE);
   if (NS_FAILED(res)) return res;
   if (isEmpty)
   {
@@ -2797,7 +2840,7 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
   
   // if we are in an empty listitem, then we want to pop up out of the list
   PRBool isEmpty;
-  res = IsEmptyBlock(aListItem, &isEmpty);
+  res = IsEmptyBlock(aListItem, &isEmpty, PR_TRUE, PR_FALSE);
   if (NS_FAILED(res)) return res;
   if (isEmpty)
   {
@@ -2832,6 +2875,8 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
   res = mEditor->SplitNodeDeep( aListItem, aNode, aOffset, &newOffset);
   if (NS_FAILED(res)) return res;
   res = aSelection->Collapse(aListItem,0);
+  // insert a moz-br
+  InsertMozBR();
   return res;
 }
 
@@ -3342,7 +3387,7 @@ nsHTMLEditRules::CleanUpSelection(nsIDOMSelection *aSelection)
         if (!node) return NS_ERROR_FAILURE;
         
         PRBool bIsEmptyNode;
-        res = IsEmptyNode(node, &bIsEmptyNode);
+        res = IsEmptyNode(node, &bIsEmptyNode, PR_FALSE, PR_TRUE);
         if (NS_FAILED(res)) return res;
         if (bIsEmptyNode && !IsBody(node))
         {
