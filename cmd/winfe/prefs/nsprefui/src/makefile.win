@@ -33,7 +33,7 @@ LLIBS = $(DIST)\lib\prefuuid.lib
 LLIBS16 = ole2.lib
 LLIBS32 = ole32.lib uuid.lib
 
-!if "$(_MSC_VER)" != "1100"
+!if "$(_MSC_VER)" != "1100" && "$(_MSC_VER)" != "1200"
 LLIBS32 = $(LLIBS32) uuid2.lib
 !endif
 !if defined(MOZ_DEBUG) && defined(GLOWCODE)

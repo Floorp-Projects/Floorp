@@ -636,9 +636,9 @@ CLanguagesPrefs::InitDialog()
 {
 	// Load the bitmaps
 #ifdef _WIN32
-	m_hUpBitmap = LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_UPARROW), IMAGE_BITMAP,
+	m_hUpBitmap = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_UPARROW), IMAGE_BITMAP,
 		0, 0, LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS);
-	m_hDownBitmap = LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_DOWNARROW), IMAGE_BITMAP,
+	m_hDownBitmap = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_DOWNARROW), IMAGE_BITMAP,
 		0, 0, LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS);
 #else
 	m_hUpBitmap = LoadTransparentBitmap(m_hInstance, IDB_UPARROW);

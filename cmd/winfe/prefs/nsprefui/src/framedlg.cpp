@@ -518,7 +518,7 @@ CPropertyFrameDialog::OnPaint(HDC hdc)
 	else if (m_hBrush)
 		FillRect(hdc, &rect, m_hBrush);
 	else
-		FillRect(hdc, &rect, GetStockObject(GRAY_BRUSH));
+		FillRect(hdc, &rect, (HBRUSH)GetStockObject(GRAY_BRUSH));
 
 	// Display the title and description
 	if (m_pCurPage) {

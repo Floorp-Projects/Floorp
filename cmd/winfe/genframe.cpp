@@ -2450,7 +2450,7 @@ void CGenericFrame::OnIBMHostOnDemand()
 
 	CString installDirectory, executable;
 	
-	if(!FEU_IsIBMHostOnDemandAvailable)
+	if(!FEU_IsIBMHostOnDemandAvailable())
 		return;
 
 #ifdef WIN32

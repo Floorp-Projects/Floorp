@@ -353,6 +353,10 @@ CDialog::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	// Call the original window procedure
 	assert(m_wpOriginalProc);
-	return CallWindowProc((FARPROC)m_wpOriginalProc, m_hwndDlg, uMsg, wParam, lParam);
+	return CallWindowProc(
+#if _MSC_VER < 1200
+		(FARPROC)
+#endif
+		m_wpOriginalProc, m_hwndDlg, uMsg, wParam, lParam);
 }
 

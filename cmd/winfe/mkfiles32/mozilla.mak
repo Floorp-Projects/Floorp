@@ -526,7 +526,7 @@ LINK_LIBS= \
 LINK_FLAGS= \
 !if "$(MOZ_BITS)"=="32"
 !if defined(MOZ_DEBUG)
-!if "$(_MSC_VER)"=="1020" || "$(_MSC_VER)"=="1100"
+!if "$(_MSC_VER)"=="1020" || "$(_MSC_VER)"=="1100" || "$(_MSC_VER)"=="1200"
     mfc42d.lib \
     mfco42d.lib \
     mfcs42d.lib \
@@ -536,7 +536,7 @@ LINK_FLAGS= \
     mfcs40d.lib \
 !endif
 !else
-!if "$(_MSC_VER)"=="1020" || "$(_MSC_VER)"=="1100"
+!if "$(_MSC_VER)"=="1020" || "$(_MSC_VER)"=="1100" || "$(_MSC_VER)"=="1200"
     mfc42.lib \
     mfcs42.lib \
 !else
@@ -549,7 +549,7 @@ LINK_FLAGS= \
     $(LINKFLAGS_DEBUG) \
     kernel32.lib shell32.lib user32.lib gdi32.lib oldnames.lib advapi32.lib \
     comdlg32.lib uuid.lib oleaut32.lib ole32.lib \
-!if "$(_MSC_VER)"!="1100"
+!if "$(_MSC_VER)"!="1100" && "$(_MSC_VER)"!="1200"
 	uuid2.lib \
 !endif
     /subsystem:windows \
@@ -1987,7 +1987,7 @@ install:    \
 !ENDIF
 !endif
 
-!if "$(_MSC_VER)" == "1100"
+!if "$(_MSC_VER)" == "1100" || "$(_MSC_VER)" == "1200"
 REBASE=rebase.exe
 !if [for %i in (. %PATH%) do $(QUIET)if exist %i\$(REBASE) echo %i\$(REBASE) > rebase.yes]
 !endif

@@ -70,11 +70,16 @@ CNetscapeCntrItem::~CNetscapeCntrItem()
 }
 void CNetscapeCntrItem::OnActivate()
 {
+#if _MSC_VER >= 1200
+	USES_CONVERSION;
+#endif
 	char * pSource = NULL;
 	const char* ptr;
 	LPDISPATCH pdisp;
 	HRESULT hr;
+#if _MSC_VER < 1200
 	int _convert;
+#endif
 	if (m_lpObject->QueryInterface(IID_IDispatch, (void**)&pdisp) == S_OK){
 #ifdef XP_WIN32
 		LPCOLESTR lpOleStr = T2COLE("SaveAs");
@@ -104,7 +109,9 @@ void CNetscapeCntrItem::OnActivate()
 	// we can use OLESave().
 	if (!m_bCanSavedByOLE) {
 #ifdef XP_WIN32		// we will only want to handle saving when the object had storage file.
+#if _MSC_VER < 1200
 		int _convert;
+#endif
 		LPCOLESTR lpsz = A2CW(m_csDosName);
 		if (StgIsStorageFile(lpsz) == S_OK) 
 			m_bCanSavedByOLE = TRUE;

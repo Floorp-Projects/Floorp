@@ -1134,9 +1134,13 @@ BOOL CGenericDoc::PromptForFileName(CNetscapeCntrItem* pItem, CString& lpszPathN
 BOOL CGenericDoc::DoSaveFile( CNetscapeCntrItem* pItem, LPCTSTR lpszPathName)
 {
 	COleDispatchDriver pDispDrv;
+#if _MSC_VER < 1200
 	int _convert;
+#else
+	USES_CONVERSION;
+#endif
 	BOOL cont = TRUE;
-	LPCOLESTR lpsz =T2COLE(lpszPathName); 
+	LPCOLESTR lpsz =T2COLE(lpszPathName);
 #ifdef XP_WIN32
 	LPDISPATCH pdisp = QUERYINTERFACE(pItem->m_lpObject, IDispatch);
 	WIN32_FIND_DATA fileHandle;
