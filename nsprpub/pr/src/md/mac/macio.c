@@ -329,7 +329,7 @@ ErrorExit:
 /* File I/O functions called by PR I/O routines */
 PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
 {
-// Macintosh doesn’t really have mode bits, just drop them
+// Macintosh doesn't really have mode bits, just drop them
 #pragma unused (mode)
 
 	OSErr 				err;
@@ -351,7 +351,6 @@ PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
 	hpb.ioParam.ioVRefNum 		= 0;
 	hpb.ioParam.ioVersNum 		= 0;
 
-
 	if (flags & PR_RDWR)
 		perm = fsRdWrPerm;
 	else if (flags & PR_WRONLY)
@@ -360,7 +359,7 @@ PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
 		perm = fsRdPerm;	
 	hpb.ioParam.ioPermssn 		= perm;
 
-	hpb.ioParam.ioMisc	 		= NULL;
+	hpb.ioParam.ioMisc			= NULL;
 	
 open:
 	err = PBHOpenSync(&hpb);
