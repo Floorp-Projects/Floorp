@@ -34,9 +34,14 @@ public:
   NS_IMETHOD Init();
 
   NS_IMETHOD SetShowHeaders(PRBool aShowHeaders);
-  NS_IMETHOD SetShowStatus(PRBool aShowHeaders);
   NS_IMETHOD_(PRBool) GetShowHeaders();
+
+  NS_IMETHOD SetShowStatus(PRBool aShowHeaders);
   NS_IMETHOD_(PRBool) GetShowStatus();
+
+  NS_IMETHOD SetShowTimeScale(PRBool aShowTimeScale);
+  NS_IMETHOD_(PRBool) GetShowTimeScale();
+
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
   NS_IMETHOD Action(nsIXPFCCommand * aCommand);
 
@@ -49,6 +54,7 @@ protected:
 private:
   PRBool mShowHeaders;
   PRBool mShowStatus;
+  PRBool mShowTimeScale;
 
 };
 

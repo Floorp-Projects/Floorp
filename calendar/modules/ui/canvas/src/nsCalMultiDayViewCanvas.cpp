@@ -177,7 +177,13 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
   AddChildCanvas(canvas);
 
   canvas->SetBackgroundColor(GetBackgroundColor());
-  ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
+  
+  nsLayoutAlignment la = ((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment();
+
+  if (eLayoutAlignment_horizontal == la)
+    ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
+  else
+    ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_horizontal);
 
   parent = canvas;
 
@@ -256,226 +262,6 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
   return (parent);
 }
 
-nsresult nsCalMultiDayViewCanvas :: ChangeChildDateTime(PRUint32 aIndex, nsDateTime * aDateTime)
-{
-  nsresult res = NS_OK;
-  nsIIterator * iterator ;
-  nsCalTimebarCanvas * canvas ;
-  PRUint32 index = 0;
-
-  res = CreateIterator(&iterator);
-
-  if (NS_OK != res)
-    return res;
-
-  iterator->Init();
-
-  while((!(iterator->IsDone())))
-  {
-
-    if ((index == aIndex)) {
-
-      /*
-       * Iterate through these children til we find the right one
-       */
-
-      canvas = (nsCalTimebarCanvas *) iterator->CurrentItem();
-
-      nsresult res2 = NS_OK;
-      nsIIterator * iterator2 ;
-      nsCalTimebarCanvas * canvas2 ;
-
-      res2 = canvas->CreateIterator(&iterator2);
-
-      if (NS_OK != res2)
-        return res2;
-
-      iterator2->Init();
-
-      while(!(iterator2->IsDone()))
-      {
-
-        canvas2 = (nsCalTimebarCanvas *) iterator2->CurrentItem();
-
-        nsCalTimebarCanvas * canvas_iface = nsnull;;
-
-        canvas2->QueryInterface(kCalTimebarCanvasCID, (void**) &canvas_iface);
-
-        if ((canvas_iface != nsnull)) {
-        
-          ChangeChildDateTime(canvas_iface, aDateTime);
-
-          NS_RELEASE(canvas_iface);
-        }
-
-        iterator2->Next();
-
-      }
-
-    }
-       
-    index++;
-    iterator->Next();
-  }
-
-  return res;
-}
-
-/*
- * Call SetContext on all child canvas that support the
- * nsCalTimebarCanvas interface.  This routine is recursive. 
- *
- * We need to store this TimeContext for ourselves also in case
- * we get asked to add new DayView Canvas's, we'll ask the DayView
- * to copy our context to start with.
- */
-
-nsresult nsCalMultiDayViewCanvas :: SetTimeContext(nsICalTimeContext * aContext)
-{
-
-  nsresult res = NS_OK;
-  nsIIterator * iterator ;
-  nsCalTimebarCanvas * canvas ;
-  PRUint32 index = 0;
-
-  res = CreateIterator(&iterator);
-
-  if (NS_OK != res)
-    return res;
-
-  iterator->Init();
-
-  while(!(iterator->IsDone()))
-  {
-
-    /*
-     * Iterate through these children til we find the right one
-     */
-
-    canvas = (nsCalTimebarCanvas *) iterator->CurrentItem();
-
-    nsresult res2 = NS_OK;
-    nsIIterator * iterator2 ;
-    nsCalTimebarCanvas * canvas2 ;
-
-    res2 = canvas->CreateIterator(&iterator2);
-
-    if (NS_OK != res2)
-      return res2;
-
-    iterator2->Init();
-
-    while(!(iterator2->IsDone()))
-    {
-
-      canvas2 = (nsCalTimebarCanvas *) iterator2->CurrentItem();
-
-      nsCalTimebarCanvas * canvas_iface = nsnull;;
-
-      canvas2->QueryInterface(kCalTimebarCanvasCID, (void**) &canvas_iface);
-
-      if (canvas_iface) {
-        
-        SetChildTimeContext(canvas_iface, aContext, index);
-
-        NS_RELEASE(canvas_iface);
-      }
-
-      iterator2->Next();
-
-    }
-       
-    index++;
-    iterator->Next();
-  }
-
-  return (nsCalTimebarComponentCanvas::SetTimeContext(aContext));
-}
-
-nsresult nsCalMultiDayViewCanvas :: ChangeChildDateTime(nsCalTimebarCanvas * aCanvas,
-                                                        nsDateTime * aDateTime)
-{
-
-  nsIDateTime * datetime;
-  nsICalTimeContext * context = aCanvas->GetTimeContext();
-
-  if (context == nsnull)
-    return NS_OK;
-
-  context->SetDate(aDateTime);
-
-  datetime = context->GetDTStart() ;
-  datetime->SetYear(aDateTime->GetYear());
-  datetime->SetMonth(aDateTime->GetMonth());
-  datetime->SetDay(aDateTime->GetDay());
-
-  datetime = context->GetDTEnd() ;
-  datetime->SetYear(aDateTime->GetYear());
-  datetime->SetMonth(aDateTime->GetMonth());
-  datetime->SetDay(aDateTime->GetDay()+1);
-
-  datetime = context->GetDTFirstVisible() ;
-  datetime->SetYear(aDateTime->GetYear());
-  datetime->SetMonth(aDateTime->GetMonth());
-  datetime->SetDay(aDateTime->GetDay());
-
-  datetime = context->GetDTLastVisible() ;
-  datetime->SetYear(aDateTime->GetYear());
-  datetime->SetMonth(aDateTime->GetMonth());
-  datetime->SetDay(aDateTime->GetDay());
-
-  return NS_OK;
-}
-
-nsresult nsCalMultiDayViewCanvas :: SetChildTimeContext(nsCalTimebarCanvas * aCanvas,
-                                                        nsICalTimeContext * aContext,
-                                                        PRUint32 increment)
-{
-  nsICalTimeContext * context;
-
-  static NS_DEFINE_IID(kCCalTimeContextCID,  NS_CAL_TIME_CONTEXT_CID);
-  static NS_DEFINE_IID(kCCalTimeContextIID,  NS_ICAL_TIME_CONTEXT_IID);
-
-  nsresult res = nsRepository::CreateInstance(kCCalTimeContextCID, 
-                                              nsnull, 
-                                              kCCalTimeContextIID, 
-                                              (void **)&context);
-
-  if (NS_OK != res)
-    return res ;
-
-  context->Init();
-
-  context->Copy(aContext);
-
-  /* 
-   * Register this context to observe the copied context.  We'll
-   * need to deal with context mgmt if these things get frivolously
-   * destroyed/created.
-   */
-  static NS_DEFINE_IID(kXPFCObserverIID, NS_IXPFC_OBSERVER_IID);
-  static NS_DEFINE_IID(kXPFCSubjectIID,  NS_IXPFC_SUBJECT_IID);
-
-  nsIXPFCSubject  * context_subject;
-  nsIXPFCObserver * context_observer;
-
-  aContext->QueryInterface(kXPFCSubjectIID, (void **)&context_subject);
-  context->QueryInterface(kXPFCObserverIID, (void **)&context_observer);
-
-  gXPFCToolkit->GetObserverManager()->Register(context_subject, context_observer);
-
-
-  /*
-   * TODO:  Add the increment here for the appropriate period
-   */
-
-  aCanvas->SetTimeContext(context);
-
-
-  context->AddPeriod(nsCalPeriodFormat_kDay,increment);
-
-  return NS_OK;
-}
 
 nsresult nsCalMultiDayViewCanvas::Action(nsIXPFCCommand * aCommand)
 {
@@ -682,4 +468,75 @@ nsresult nsCalMultiDayViewCanvas :: SetParameter(nsString& aKey, nsString& aValu
   }
 
   return (nsCalMultiViewCanvas::SetParameter(aKey, aValue));
+}
+
+/*
+ * Call SetContext on all child canvas that support the
+ * nsCalTimebarCanvas interface.  This routine is recursive. 
+ *
+ * We need to store this TimeContext for ourselves also in case
+ * we get asked to add new DayView Canvas's, we'll ask the DayView
+ * to copy our context to start with.
+ */
+
+nsresult nsCalMultiDayViewCanvas :: SetTimeContext(nsICalTimeContext * aContext)
+{
+
+  nsresult res = NS_OK;
+  nsIIterator * iterator ;
+  nsCalTimebarCanvas * canvas ;
+  PRUint32 index = 0;
+
+  res = CreateIterator(&iterator);
+
+  if (NS_OK != res)
+    return res;
+
+  iterator->Init();
+
+  while(!(iterator->IsDone()))
+  {
+
+    /*
+     * Iterate through these children til we find the right one
+     */
+
+    canvas = (nsCalTimebarCanvas *) iterator->CurrentItem();
+
+    nsresult res2 = NS_OK;
+    nsIIterator * iterator2 ;
+    nsCalTimebarCanvas * canvas2 ;
+
+    res2 = canvas->CreateIterator(&iterator2);
+
+    if (NS_OK != res2)
+      return res2;
+
+    iterator2->Init();
+
+    while(!(iterator2->IsDone()))
+    {
+
+      canvas2 = (nsCalTimebarCanvas *) iterator2->CurrentItem();
+
+      nsCalTimebarCanvas * canvas_iface = nsnull;;
+
+      canvas2->QueryInterface(kCalTimebarCanvasCID, (void**) &canvas_iface);
+
+      if (canvas_iface) {
+        
+        SetChildTimeContext(canvas_iface, aContext, index);
+
+        NS_RELEASE(canvas_iface);
+      }
+
+      iterator2->Next();
+
+    }
+       
+    index++;
+    iterator->Next();
+  }
+
+  return (nsCalMultiViewCanvas :: SetTimeContext(aContext));
 }

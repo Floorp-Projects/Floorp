@@ -32,6 +32,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init();
+  NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
 
 protected:
   ~nsCalMultiUserViewCanvas();

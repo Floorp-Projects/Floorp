@@ -40,23 +40,11 @@ public:
   NS_IMETHOD_(PRUint32) GetNumberViewableDays();
   NS_IMETHOD SetNumberViewableDays(PRUint32 aNumberViewableDays);
 
-  NS_IMETHOD SetTimeContext(nsICalTimeContext * aContext);
-
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
+  NS_IMETHOD SetTimeContext(nsICalTimeContext * aContext);
 
   // nsIXPFCCommandReceiver methods
   NS_IMETHOD Action(nsIXPFCCommand * aCommand);
-
-
-  NS_IMETHOD SetChildTimeContext(nsCalTimebarCanvas * aCanvas,
-                                 nsICalTimeContext * aContext,
-                                 PRUint32 increment);
-  NS_IMETHOD ChangeChildDateTime(nsCalTimebarCanvas * aCanvas,
-                                 nsDateTime * aDateTime);
-  NS_IMETHOD ChangeChildDateTime(PRUint32 aIndex, nsDateTime * aDateTime);
-
-
-
 
 protected:
   ~nsCalMultiDayViewCanvas();
