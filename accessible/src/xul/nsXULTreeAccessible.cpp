@@ -41,11 +41,7 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsITreeSelection.h"
 #include "nsITreeColumns.h"
-#if defined(MOZ_ACCESSIBILITY_ATK) || defined(XP_WIN)
 #include "nsXULTreeAccessibleWrap.h"
-#else
-#include "nsXULTreeAccessible.h"
-#endif
 #include "nsArray.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
