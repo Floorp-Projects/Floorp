@@ -55,6 +55,10 @@ public:
   NS_IMETHOD ConvertByTable(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
       char * aDest, PRInt32 * aDestLength, uShiftTable * aShiftTable, 
       uMappingTable  * aMappingTable);
+
+  NS_IMETHOD ConvertByTables(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+      char * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
+      uShiftTable ** aShiftTable, uMappingTable  ** aMappingTable);
 };
 
 //----------------------------------------------------------------------
@@ -114,6 +118,49 @@ NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByTable(const PRUnichar * aSrc,
   return res;
 }
 
+NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByTables(const PRUnichar * aSrc, 
+                                                    PRInt32 * aSrcLength, 
+                                                    char * aDest, 
+                                                    PRInt32 * aDestLength, 
+                                                    PRInt32 aTableCount, 
+                                                    uShiftTable ** aShiftTable, 
+                                                    uMappingTable  ** aMappingTable)
+{
+  const PRUnichar * src = aSrc;
+  const PRUnichar * srcEnd = aSrc + *aSrcLength;
+  char * dest = aDest;
+  PRInt32 destLen = *aDestLength;
+
+  PRUnichar med;
+  PRInt32 bcw; // byte count for write;
+  nsresult res = NS_OK;
+  PRInt32 i;
+
+  while (src < srcEnd) {
+    for (i=0; i<aTableCount; i++) 
+      if (uMapCode((uTable*) aMappingTable[i], *src, &med)) break;
+
+    src++;
+    if (i == aTableCount) {
+      res = NS_ERROR_UENC_NOMAPPING;
+      break;
+    }
+
+    if (!uGenerate(aShiftTable[i], 0, med, (PRUint8 *)dest, destLen, 
+      (PRUint32 *)&bcw)) { 
+      src--;
+      res = NS_OK_UENC_MOREOUTPUT;
+      break;
+    }
+
+    dest += bcw;
+    destLen -= bcw;
+  }
+
+  *aSrcLength = src - aSrc;
+  *aDestLength  = dest - aDest;
+  return res;
+}
 
 //----------------------------------------------------------------------
 // Class nsEncodeHelperFactory [implementation]
