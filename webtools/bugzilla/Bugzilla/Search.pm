@@ -34,6 +34,7 @@ use vars qw($userid);
 package Bugzilla::Search;
 
 use Bugzilla::Config;
+use Bugzilla::Error;
 use Bugzilla::Util;
 
 use Date::Format;
@@ -103,7 +104,7 @@ sub init {
         my $c = trim($params->param('votes'));
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                &::ThrowUserError("illegal_at_least_x_votes",
+                ThrowUserError("illegal_at_least_x_votes",
                                   { value => $c });
             }
             push(@specialchart, ["votes", "greaterthan", $c - 1]);
@@ -217,7 +218,7 @@ sub init {
         my $c = trim($params->param('changedin'));
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                &::ThrowUserError("illegal_changed_in_last_x_days",
+                ThrowUserError("illegal_changed_in_last_x_days",
                                  { value => $c });
             }
             push(@specialchart, ["changedin",
@@ -460,10 +461,10 @@ sub init {
                  $t = "greaterthan";
              }
              if ($field eq "ispatch" && $v ne "0" && $v ne "1") {
-                 &::ThrowUserError("illegal_attachment_is_patch");
+                 ThrowUserError("illegal_attachment_is_patch");
              }
              if ($field eq "isobsolete" && $v ne "0" && $v ne "1") {
-                 &::ThrowUserError("illegal_is_obsolete");
+                 ThrowUserError("illegal_is_obsolete");
              }
              $f = "$table.$field";
          },
@@ -992,7 +993,7 @@ sub SqlifyDate {
     }
     my $date = str2time($str);
     if (!defined($date)) {
-        &::ThrowUserError("illegal_date", { date => $str });
+        ThrowUserError("illegal_date", { date => $str });
     }
     return time2str("%Y-%m-%d %H:%M:%S", $date);
 }
