@@ -37,7 +37,7 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsFileSpec &folderName, PRBool create, ns
 	PRBool			newFile = PR_FALSE;
 	nsLocalFolderSummarySpec	summarySpec(folderName);
 
-#ifdef DEBUG
+#ifdef DEBUG_bienvenu
     printf("nsImapMailDatabase::Open(%s, %s, %p, %s) -> %s\n",
            (const char*)folderName, create ? "TRUE":"FALSE",
            pMessageDB, upgrading ? "TRUE":"FALSE", (const char*)folderName);
