@@ -48,7 +48,8 @@ public:
   void Reset() {
     mTotalPlacedFrames = 0;
     mColumn = 0;
-    mSkipLeadingWS = PR_TRUE;
+    mEndsInWhiteSpace = PR_TRUE;
+    mUnderstandsWhiteSpace = PR_FALSE;
     mBRFrame = nsnull;
     mPlacedFrames.Clear();
     ForgetWordFrames();
@@ -162,18 +163,28 @@ public:
   PRBool mListPositionOutside;
   PRInt32 mLineNumber;
   PRInt32 mColumn;
-
-  //XXX temporary?
-
-  void SetSkipLeadingWhiteSpace(PRBool aNewSetting) {
-    mSkipLeadingWS = aNewSetting;
+    
+  void SetUnderstandsWhiteSpace(PRBool aSetting) {
+    mUnderstandsWhiteSpace = aSetting;
   }
-  PRBool GetSkipLeadingWhiteSpace() { return mSkipLeadingWS; }
 
-  PRBool mSkipLeadingWS;
+  PRBool GetUnderstandsWhiteSpace() const {
+    return mUnderstandsWhiteSpace;
+  }
+
+  void SetEndsInWhiteSpace(PRBool aState) {
+    mEndsInWhiteSpace = aState;
+  }
+
+  PRBool GetEndsInWhiteSpace() const {
+    return mEndsInWhiteSpace;
+  }
 
 protected:
   nsIFrame* mBRFrame;
+
+  PRBool mEndsInWhiteSpace;
+  PRBool mUnderstandsWhiteSpace;
 
   PRInt32 mTotalPlacedFrames;
   nsVoidArray mPlacedFrames;

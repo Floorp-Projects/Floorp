@@ -56,9 +56,9 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   mSpaceManager = aSpaceManager;
   mListPositionOutside = PR_FALSE;
   mLineNumber = 0;
-//  mLeftEdge = 0;
   mColumn = 0;
-  mSkipLeadingWS = PR_TRUE;
+  mUnderstandsWhiteSpace = PR_FALSE;
+  mEndsInWhiteSpace = PR_TRUE;
 
   mTextRuns = nsnull;
   ResetTextRuns();
