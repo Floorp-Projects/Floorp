@@ -519,6 +519,11 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
     // Make nsMenu a child of nsMenuBar
     aMenuBar->AddMenu(pnsMenu); 
 
+    // Open the node so that the contents are visible.
+    nsCOMPtr<nsIDOMElement> menuElement = do_QueryInterface(aMenuNode);
+    if (menuElement)
+      menuElement->SetAttribute("open", "true");
+
     // Begin menuitem inner loop
     nsCOMPtr<nsIDOMNode> menuitemNode;
     aMenuNode->GetFirstChild(getter_AddRefs(menuitemNode));
