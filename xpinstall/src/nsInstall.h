@@ -267,7 +267,7 @@ class nsInstall
         PRInt32    FileOpFileUnixLink(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn);
         PRInt32    FileOpWinRegisterServer(nsInstallFolder& aTarget, PRInt32* aReturn);
 
-        void       LogComment(nsString& aComment);
+        void       LogComment(const nsAString& aComment);
 
         PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName, nsIFile** aRealName);
         char*      GetResourcedString(const nsAString& aResName);

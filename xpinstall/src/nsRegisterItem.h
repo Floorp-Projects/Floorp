@@ -54,6 +54,10 @@ class nsRegisterItem : public nsInstallObject
 
     private:
         nsresult GetURLFromIFile(nsIFile *aFile, char **aOutURL);
+        /* write a message to install.log and include the nsresult code in hexadecimal form */
+        void LogError(const nsAString& aMessage, nsresult code);
+        /* same as above, but also write the filename */
+        void LogErrorWithFilename(const nsAString& aMessage, nsresult code, nsILocalFile *localFile);
 
         nsCString mURL;
         nsCOMPtr<nsIFile> mChrome;
