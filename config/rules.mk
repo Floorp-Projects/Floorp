@@ -685,7 +685,7 @@ endif
 endif # LIBRARY
 endif # BUILD_STATIC_LIBS || FORCE_STATIC_LIB
 ifdef MAPS
-	$(INSTALL) $(IFLAGS1) $(MAPS) $(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $(MAPS) $(FINAL_TARGET)
 endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
@@ -705,10 +705,10 @@ else
 	$(ELF_DYNSTR_GC) $(DIST)/lib/components/$(SHARED_LIBRARY)
 endif
 ifndef _SKIP_OLD_GRE_INSTALL
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/components
-	$(ELF_DYNSTR_GC) $(DIST)/bin/components/$(SHARED_LIBRARY)
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/components
+	$(ELF_DYNSTR_GC) $(FINAL_TARGET)/components/$(SHARED_LIBRARY)
 ifdef BEOS_ADDON_WORKAROUND
-	( cd $(DIST)/bin/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
+	( cd $(FINAL_TARGET)/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
 endif # ! _SKIP_OLD_GRE_INSTALL
 else # ! IS_COMPONENT
@@ -726,9 +726,9 @@ else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
 endif
 ifndef _SKIP_OLD_GRE_INSTALL
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)
 ifdef BEOS_ADDON_WORKAROUND
-	( cd $(DIST)/bin && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
+	( cd $(FINAL_TARGET) && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
 endif # ! _SKIP_OLD_GRE_INSTALL
 endif # IS_COMPONENT
@@ -740,11 +740,11 @@ ifndef DISABLE_DIST_GRE
 endif
 endif
 ifndef _SKIP_OLD_GRE_INSTALL
-	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(FINAL_TARGET)
 endif
 endif
 ifdef SIMPLE_PROGRAMS
-	$(INSTALL) $(IFLAGS2) $(SIMPLE_PROGRAMS) $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) $(SIMPLE_PROGRAMS) $(FINAL_TARGET)
 endif
 ifdef HOST_PROGRAM
 	$(INSTALL) $(IFLAGS2) $(HOST_PROGRAM) $(DIST)/host/bin
@@ -825,8 +825,8 @@ endif # NO_INSTALL
 checkout:
 	$(MAKE) -C $(topsrcdir) -f client.mk checkout
 
-run_viewer: $(DIST)/bin/viewer
-	cd $(DIST)/bin; \
+run_viewer: $(FINAL_TARGET)/viewer
+	cd $(FINAL_TARGET); \
 	MOZILLA_FIVE_HOME=`pwd` \
 	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
 	viewer
@@ -940,7 +940,7 @@ else
 	$(PURIFY) $(CC) -o $^.pure $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS2) $^.pure $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) $^.pure $(FINAL_TARGET)
 endif
 
 quantify: $(PROGRAM)
@@ -950,7 +950,7 @@ else
 	$(QUANTIFY) $(CC) -o $^.quantify $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS2) $^.quantify $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) $^.quantify $(FINAL_TARGET)
 endif
 
 #
@@ -1252,6 +1252,11 @@ $(JAVA_DIST_DIR)::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 endif
 
+ifneq ($(XPI_NAME),)
+export::
+	@if test ! -d $(FINAL_TARGET); then echo Creating $(FINAL_TARGET); rm -fr $(FINAL_TARGET); $(NSINSTALL) -D $(FINAL_TARGET); else true; fi
+endif
+
 ifneq ($(EXPORTS),)
 ifndef NO_DIST_INSTALL
 export:: $(EXPORTS) $(PUBLIC)
@@ -1279,11 +1284,11 @@ ifdef GRE_MODULE
 PREF_DIST_DIR    = $(GRE_DIST)
 PREF_DIR = greprefs
 else
-PREF_DIST_DIR    = $(DIST)/bin
+PREF_DIST_DIR    = $(FINAL_TARGET)
 PREF_DIR = defaults/pref
 endif
 
-$(DIST)/bin/$(PREF_DIR) $(GRE_DIST)/$(PREF_DIR) $(DESTDIR)$(mozappdir)/$(PREF_DIR):
+$(FINAL_TARGET)/$(PREF_DIR) $(GRE_DIST)/$(PREF_DIR) $(DESTDIR)$(mozappdir)/$(PREF_DIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 # on win32, pref files need CRLF line endings... see bug 206029
@@ -1300,10 +1305,10 @@ export:: $(PREF_JS_EXPORTS) $(PREF_DIST_DIR)/$(PREF_DIR)
 
 ifdef GRE_MODULE
 ifndef _SKIP_OLD_GRE_INSTALL
-export:: $(PREF_JS_EXPORTS) $(DIST)/bin/$(PREF_DIR)
+export:: $(PREF_JS_EXPORTS) $(FINAL_TARGET)/$(PREF_DIR)
 	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $$i > $(DIST)/bin/$(PREF_DIR)/`basename $$i`; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $$i > $(FINAL_TARGET)/$(PREF_DIR)/`basename $$i`; \
 	done
 endif
 endif
@@ -1319,14 +1324,14 @@ endif
 endif
 
 ################################################################################
-# Copy each element of AUTOCFG_JS_EXPORTS to $(DIST)/bin/defaults/autoconfig
+# Copy each element of AUTOCFG_JS_EXPORTS to $(FINAL_TARGET)/defaults/autoconfig
 
 ifneq ($(AUTOCFG_JS_EXPORTS),)
-$(DIST)/bin/defaults/autoconfig::
+$(FINAL_TARGET)/defaults/autoconfig::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 ifndef NO_DIST_INSTALL
-export:: $(AUTOCFG_JS_EXPORTS) $(DIST)/bin/defaults/autoconfig
+export:: $(AUTOCFG_JS_EXPORTS) $(FINAL_TARGET)/defaults/autoconfig
 	$(INSTALL) $(IFLAGS1) $^
 endif
 
@@ -1374,7 +1379,7 @@ $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 
 ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
-# into $(XPIDL_MODULE).xpt and export it to $(DIST)/bin/components.
+# into $(XPIDL_MODULE).xpt and export it to $(FINAL_TARGET)/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
 	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
@@ -1393,7 +1398,7 @@ ifndef DISABLE_DIST_GRE
 endif
 endif
 ifndef _SKIP_OLD_GRE_INSTALL
-	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/components
+	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(FINAL_TARGET)/components
 endif
 endif
 
@@ -1533,11 +1538,11 @@ endif
 endif # JAVA_XPIDLSRCS
 
 ################################################################################
-# Copy each element of EXTRA_COMPONENTS to $(DIST)/bin/components
+# Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components
 ifdef EXTRA_COMPONENTS
 libs:: $(EXTRA_COMPONENTS)
 ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS2) $^ $(DIST)/bin/components
+	$(INSTALL) $(IFLAGS2) $^ $(FINAL_TARGET)/components
 endif
 
 install:: $(EXTRA_COMPONENTS)
@@ -1551,7 +1556,7 @@ libs:: $(EXTRA_PP_COMPONENTS)
 ifndef NO_DIST_INSTALL
 	$(EXIT_ON_ERROR) \
 	for i in $^; \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DIST)/bin/components/`basename $$i`; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(FINAL_TARGET)/components/`basename $$i`; \
 	done
 endif
 
@@ -1621,18 +1626,18 @@ libs realchrome:: $(CHROME_DEPS)
 ifndef NO_DIST_INSTALL
 	@$(EXIT_ON_ERROR) \
 	if test -f $(JAR_MANIFEST); then \
-	  if test ! -d $(DIST)/bin/chrome; then mkdir $(DIST)/bin/chrome; fi; \
+	  if test ! -d $(FINAL_TARGET)/chrome; then mkdir $(FINAL_TARGET)/chrome; fi; \
 	  $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
 	    $(JAR_MANIFEST) | \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
 	    $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) \
 	    $(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(_NO_FLOCK) $(_JAR_AUTO_REG) \
-	    -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome \
+	    -f $(MOZ_CHROME_FILE_FORMAT) -d $(FINAL_TARGET)/chrome \
 	    $(_JAR_LOCALE_SOURCE) \
 	    -s $(srcdir) -t $(topsrcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl -- \
 	    "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl \
-	    $(DIST)/bin/chrome $(JAR_MANIFEST) $(_NO_FLOCK); \
+	    $(FINAL_TARGET)/chrome $(JAR_MANIFEST) $(_NO_FLOCK); \
 	fi
 endif
 
@@ -1655,9 +1660,23 @@ ifndef NO_INSTALL
 	fi
 endif
 
+ifneq ($(XPI_PKGNAME),)
+INSTALL_RDF ?= $(srcdir)/install.rdf
+
+libs realchrome::
+	@if test -f $(INSTALL_RDF); then					\
+		echo "Packaging $(XPI_PKGNAME).xpi..."; 			\
+		$(INSTALL) $(IFLAGS1) $(INSTALL_RDF) $(FINAL_TARGET); 		\
+		cd $(FINAL_TARGET);						\
+		$(ZIP) -qr ../$(XPI_PKGNAME).xpi *;				\
+	else									\
+		echo "$(INSTALL_RDF) not found; not packaging $(XPI_PKGNAME).xpi";	\
+	fi
+endif
+
 REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl \
 	$(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) \
-	$(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(DIST)/bin/chrome/installed-chrome.txt \
+	$(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(FINAL_TARGET)/chrome/installed-chrome.txt \
 	$(_JAR_REGCHROME_DISABLE_JAR)
 
 REGCHROME_INSTALL = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl \

@@ -61,6 +61,17 @@ endif
 
 GRE_DIST	= $(DIST)/gre
 
+# FINAL_TARGET specifies the location into which we copy end-user-shipped
+# build products (typelibs, components, chrome).
+#
+# It will usually be the well-loved $(DIST)/bin, today, but can also be an
+# XPI-contents staging directory for ambitious and right-thinking extensions.
+ifdef XPI_NAME
+FINAL_TARGET = $(DIST)/xpi-stage/$(XPI_NAME)
+else
+FINAL_TARGET = $(DIST)/bin
+endif
+
 #
 # The VERSION_NUMBER is suffixed onto the end of the DLLs we ship.
 # Since the longest of these is 5 characters without the suffix,
