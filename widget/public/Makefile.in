@@ -91,6 +91,7 @@ EXPORTS = \
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = raptor
+XPILD_MODULE = widget
 
 include $(topsrcdir)/config/config.mk
 

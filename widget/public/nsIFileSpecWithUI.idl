@@ -72,5 +72,5 @@ interface nsIFileSpecWithUI : nsIFileSpec
 	
 %{C++
 // Factory methods
-NS_WIDGET nsresult NS_NewFileSpecWithUI(nsIFileSpecWithUI** result);
+extern NS_WIDGET nsresult NS_NewFileSpecWithUI(nsIFileSpecWithUI** result);
 %}

@@ -61,6 +61,7 @@ LLIBS =				            \
     $(DIST)\lib\jsdombase_s.lib \
     $(DIST)\lib\jsdomevents_s.lib \
 	$(DIST)\lib\raptorgfxwin.lib	\
+    $(DIST)\lib\raptorwidget.lib \
 	$(LIBNSPR)		            \
     $(DIST)\lib\plc3.lib    \
     $(NULL)
