@@ -71,7 +71,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
                                        NS_GET_IID(nsISupportsCString), getter_AddRefs(primitive));
     if ( primitive ) {
-      const char * start = NS_STATIC_CAST(const char*, aDataBuff);
+      const char * start = (const char*)aDataBuff;
       primitive->SetData(Substring(start, start + aDataLen));
       nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
       *aPrimitive = genericPrimitive;
@@ -84,7 +84,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
                                                       NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
     if (NS_SUCCEEDED(rv) && primitive ) {
       // recall that length takes length as characters, not bytes
-      const PRUnichar* start = NS_STATIC_CAST(const PRUnichar*, aDataBuff);
+      const PRUnichar* start = (const PRUnichar*)aDataBuff;
       primitive->SetData(Substring(start, start + (aDataLen / 2)));
       nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
       *aPrimitive = genericPrimitive;
