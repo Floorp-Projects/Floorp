@@ -4201,14 +4201,18 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
 
 #ifdef USE_XPRINT
     /* I am not sure what Xprint built-in printer fonts exactly look like
-     * (usually '-adobe-helvetica-medium-r-normal--50-120-300-300-p-0-iso8859-1'
-     * for a 300DPI printer) - but this test is good enough (except when
-     * someone installs 300DPI bitmap (!!) fonts on a system... =:-)
+     * (usually '-adobe-helvetica-medium-r-normal--0-0-1200-1200-p-0-iso8859-1'
+     * for a 300DPI printer ("fonts.dir" entry in 
+     * $XPCONFIGDIR/C/print/models/SPSPARC2/fonts/ for "Helvetica.pmf" 
+     * (PMF=printer font metrics) looks like this: 
+     * '-adobe-helvetica-medium-r-normal--199-120-1200-1200-p-1085-iso8859-1'))
+     * but this test is good enough (except when someone installs 1200DPI
+     * bitmap (!!) fonts on a system... =:-)
      */
     if (nsFontMetricsXlib::mPrinterMode &&
         averageWidth[0] == '0' && 
-        resX >= screen_xres    && 
-        resY >= screen_yres) {
+        resX > screen_xres && 
+        resY > screen_yres) {
       builtin_printer_font = PR_TRUE;
       /* Treat built-in printer fonts like outline-scaled ones... */
       outline_scaled = PR_TRUE;
