@@ -224,7 +224,6 @@ void nsSpecialFileSpec::operator = (Type aType)
     
     switch (aType)
     {
-    #ifdef XP_MAC
         case App_PrefsDirectory30:
         case App_PrefsDirectory40:
             NS_NOTYETIMPLEMENTED("Write me!");
@@ -234,27 +233,6 @@ void nsSpecialFileSpec::operator = (Type aType)
                 *this = nsSpecialFileSpec(App_UserProfileDirectory50);
                 break;
             }
-    #elif defined(XP_PC)
-        case App_PrefsDirectory30:
-        case App_PrefsDirectory40:
-            NS_NOTYETIMPLEMENTED("Write me!");
-            break;    
-        case App_PrefsDirectory50:
-            {
-                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
-                break;
-            }
-    #else
-        case App_PrefsDirectory30:
-        case App_PrefsDirectory40:
-            NS_NOTYETIMPLEMENTED("Write me!");
-            break;    
-        case App_PrefsDirectory50:
-            {
-                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
-                break;
-            }
-    #endif
         
         case App_UserProfileDirectory30:
         case App_UserProfileDirectory40:
