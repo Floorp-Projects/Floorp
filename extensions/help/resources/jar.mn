@@ -9,7 +9,6 @@ help.jar:
 
 en-US.jar:
         locale/en-US/help/mozillahelp.rdf               (locale/en-US/mozillahelp.rdf)
-        locale/en-US/help/search-db.rdf                 (locale/en-US/search-db.rdf)
         locale/en-US/help/testhelp.rdf                  (locale/en-US/testhelp.rdf)
         locale/en-US/help/help-glossary.rdf             (locale/en-US/help-glossary.rdf)
         locale/en-US/help/contents.rdf                  (locale/en-US/contents.rdf)
