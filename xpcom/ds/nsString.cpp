@@ -342,10 +342,10 @@ void nsCString::ToUpperCase(nsCString& aString) const {
  */
 nsCString& nsCString::StripChar(PRUnichar aChar,PRInt32 anOffset){
   
-  anOffset=nsStr::FindChar(*this,aChar,PR_FALSE,anOffset);
+  anOffset=nsStr::FindChar(*this,aChar,PR_FALSE,anOffset,mLength);
   while(kNotFound<anOffset) {
     nsStr::Delete(*this,anOffset,1);
-    anOffset=nsStr::FindChar(*this,aChar,PR_FALSE,anOffset);
+    anOffset=nsStr::FindChar(*this,aChar,PR_FALSE,anOffset,mLength);
   }
   return *this;
 }
@@ -457,7 +457,7 @@ nsCString& nsCString::ReplaceSubstring(const nsCString& aTarget,const nsCString&
     }
     else {
       PRInt32 theIndex=0;
-      while(kNotFound!=(theIndex=nsStr::FindSubstr(*this,aTarget,PR_FALSE,theIndex))) {
+      while(kNotFound!=(theIndex=nsStr::FindSubstr(*this,aTarget,PR_FALSE,theIndex,mLength))) {
         if(aNewValue.mLength<aTarget.mLength) {
           //Since target is longer than newValue, we should delete a few chars first, then overwrite.
           PRInt32 theDelLen=aTarget.mLength-aNewValue.mLength;
@@ -504,9 +504,34 @@ PRInt32 nsCString::CountChar(PRUnichar aChar) {
  *           both ends
  *  @return  this
  */
-nsCString& nsCString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool aEliminateTrailing){
+nsCString& nsCString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool aEliminateTrailing,PRBool aIgnoreQuotes){
+
   if(aTrimSet){
+    
+    PRUnichar theFirstChar=0;
+    PRUnichar theLastChar=0;
+    PRBool    theQuotesAreNeeded=PR_FALSE;
+
+    if(aIgnoreQuotes && (mLength>2)) {
+      theFirstChar=First();    
+      theLastChar=Last();
+      if(theFirstChar==theLastChar) {
+        if(('\''==theFirstChar) || ('"'==theFirstChar)) {
+          Cut(0,1);
+          Truncate(mLength-1);
+          theQuotesAreNeeded=PR_TRUE;
+        }
+        else theFirstChar=0;
+      }
+    }
+    
     nsStr::Trim(*this,aTrimSet,aEliminateLeading,aEliminateTrailing);
+
+    if(aIgnoreQuotes && theQuotesAreNeeded) {
+      Insert(theFirstChar,0);
+      Append(theLastChar);
+    }
+
   }
   return *this;
 }
@@ -644,7 +669,7 @@ float nsCString::ToFloat(PRInt32* aErrorCode) const {
  * @return  int rep of string value
  */
 PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
-
+ 
   //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
   PRInt32 result=0;
 
@@ -712,10 +737,11 @@ PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
  */
 static PRInt32 GetNumericSubstring(nsCString& aString,PRUint32& aRadix) {
 
-  const char* cp=aString.GetBuffer();
+  const char* cp=aString.mStr;
   PRInt32 result=NS_ERROR_ILLEGAL_VALUE;
   if(cp) {
 
+    aRadix = (kAutoDetect==aRadix) ? 10 : aRadix;
     
     //begin by skipping over leading chars that shouldn't be part of the number...
     
@@ -725,16 +751,19 @@ static PRInt32 GetNumericSubstring(nsCString& aString,PRUint32& aRadix) {
 
     while(!done){
       switch(*cp) {
-        case '0': case '1': case '2': case '3': case '4': 
-        case '5': case '6': case '7': case '8': case '9':
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
         case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+          aRadix=16;
+          done=PR_TRUE;
+          break;
+        case '0': case '1': case '2': case '3': case '4': 
+        case '5': case '6': case '7': case '8': case '9':
         case '-': case '+': case '#': 
           done=PR_TRUE;
           break;
         default:
           cp++;
-          done=cp<endcp;
+          done=(cp==endcp);
           break;
       } //switch
     }
@@ -794,7 +823,8 @@ static PRInt32 GetNumericSubstring(nsCString& aString,PRUint32& aRadix) {
 PRUint32 nsCString::DetermineRadix(void) {
   PRUint32 result=kRadixUnknown;
   if(0<mLength) {
-    nsCAutoString theString(*this);
+    //nsCAutoString theString(*this);
+    nsSubsumeCStr theString(mStr,mLength);
     if(NS_OK!=GetNumericSubstring(theString,result))
       result=kRadixUnknown;
   }
@@ -811,23 +841,127 @@ PRUint32 nsCString::DetermineRadix(void) {
  * @return  int rep of string value
  */
 PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
-
+#if 1
   //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
   PRInt32   result=0;
-  nsCAutoString theString(*this);
-  PRUint32  theRadix=aRadix;
 
-  *anErrorCode=GetNumericSubstring(theString,theRadix); //we actually don't use this radix; use given radix instead
+  if(0<mLength) {
 
-  if(NS_OK==*anErrorCode){
-    if(kAutoDetect==aRadix)
-      aRadix=theRadix;
-    if((kRadix10==aRadix) || (kRadix16==aRadix))
-      result=_ToInteger(theString,anErrorCode,aRadix); //note we use the given radix, not the computed one.
-    else *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
+    nsCAutoString theString(mStr,mLength);
+    PRUint32  theRadix=aRadix;
+
+    *anErrorCode=GetNumericSubstring(theString,theRadix); //we actually don't use this radix; use given radix instead
+
+    if(NS_OK==*anErrorCode){
+      if(kAutoDetect==aRadix)
+        aRadix=theRadix;
+      if((kRadix10==aRadix) || (kRadix16==aRadix))
+        result=_ToInteger(theString,anErrorCode,aRadix); //note we use the given radix, not the computed one.
+      else *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
+    }
   }
 
   return result;
+#else 
+  char*       cp=aString.mStr;
+  PRInt32     theRadix = (kAutoDetect==aRadix) ? 10 : aRadix;
+  PRInt32     result=0;
+  PRBool      negate=PR_FALSE;
+  char        theChar=0;
+
+  *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
+  
+  if(cp) {
+  
+    //begin by skipping over leading chars that shouldn't be part of the number...
+    
+    char*  endcp=cp+aString.mLength;
+    PRBool done=PR_FALSE;
+    
+    while((cp<endcp) && (!done)){
+      theChar=*cp;
+      switch(*cp++) {
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+          theRadix=16;
+          done=PR_TRUE;
+          break;
+        case '0': case '1': case '2': case '3': case '4': 
+        case '5': case '6': case '7': case '8': case '9':
+          done=PR_TRUE;
+          break;
+        case '-': 
+          negate=PR_TRUE; //fall through...
+          break;
+        case 'X': case 'x': 
+          theRadix=16;
+          break; 
+        default:
+          break;
+      } //switch
+    }
+
+      //if you don't have any valid chars, return 0, but set the error;
+    if(cp<=endcp) {
+
+      *anErrorCode = NS_OK;
+
+        //now iterate the numeric chars and build our result
+      char* first=--cp;  //in case we have to back up.
+
+      while(cp<=endcp){
+        theChar=*cp++;
+        if(('0'<=theChar) && (theChar<='9')){
+          result = (theRadix * result) + (theChar-'0');
+        }
+        else if((theChar>='A') && (theChar<='F')) {
+          if(10==theRadix) {
+            if(kAutoDetect==aRadix){
+              theRadix=16;
+              cp=first; //backup
+              result=0;
+            }
+            else {
+              *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
+              result=0;
+              break;
+            }
+          }
+          else {
+            result = (theRadix * result) + ((theChar-'A')+10);
+          }
+        }
+        else if((theChar>='a') && (theChar<='f')) {
+          if(10==theRadix) {
+            if(kAutoDetect==aRadix){
+              theRadix=16;
+              cp=first; //backup
+              result=0;
+            }
+            else {
+              *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
+              result=0;
+              break;
+            }
+          }
+          else {
+            result = (theRadix * result) + ((theChar-'a')+10);
+          }
+        }
+        else if(('X'==theChar) || ('x'==theChar) || ('#'==theChar) || ('+'==theChar)) {
+          continue;
+        }
+        else {
+          //we've encountered a char that's not a legal number or sign
+          break;
+        }
+      } //while
+      if(negate)
+        result=-result;
+    } //if
+  }
+  return result;
+#endif
 }
 
 /**********************************************************************
@@ -894,7 +1028,7 @@ nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
       // If this assertion fires, the caller is probably lying about the length of
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0);
+      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
       NS_WARN_IF_FALSE(kNotFound==len,"possible embedded null in Assign(PRUnichar*)");
 #endif
 
@@ -1183,7 +1317,7 @@ nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
       // If this assertion fires, the caller is probably lying about the length of
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0);
+      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
       NS_WARN_IF_FALSE(kNotFound==len,"possible embedded null in Insert(char*)");
 #endif
 
@@ -1287,18 +1421,19 @@ PRInt32 nsCString::BinarySearch(PRUnichar aChar) const{
  *  
  *  @update  gess 3/25/98
  *  @param   aCString - substr to be found
- *  @param   aIgnoreCase
- *  @param   anOffset
+ *  @param   aIgnoreCase tells us whether or not to do caseless compare
+ *  @param   anOffset tells us where in this string to start searching
+ *  @param   aCount tells us how many iterations to make starting at the given offset
  *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsCString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset) const{
+PRInt32 nsCString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
   PRInt32 result=kNotFound;
   if(aCString) {
     nsStr temp;
     nsStr::Initialize(temp,eOneByte);
-    temp.mLength=nsCRT::strlen(aCString);
+    temp.mLength = nsCRT::strlen(aCString);
     temp.mStr=(char*)aCString;
-    result=nsStr::FindSubstr(*this,temp,aIgnoreCase,anOffset);
+    result=nsStr::FindSubstr(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
 }
@@ -1307,21 +1442,22 @@ PRInt32 nsCString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset
  *  Search for given buffer within this string
  *  
  *  @update  gess 3/25/98
- *  @param   aString  unichar* to be found
- *  @param   aIgnoreCase
- *  @param   anOffset
+ *  @param   aString - substr to be found
+ *  @param   aIgnoreCase tells us whether or not to do caseless compare
+ *  @param   anOffset tells us where in this string to start searching
+ *  @param   aCount tells us how many iterations to make starting at the given offset
  *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsCString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOffset) const{
+PRInt32 nsCString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
   NS_ASSERTION(0!=aString,kNullPointerError);
 
   PRInt32 result=kNotFound;
   if(aString) {
     nsStr temp;
     nsStr::Initialize(temp,eTwoByte);
-    temp.mLength=nsCRT::strlen(aString);
+    temp.mLength = nsCRT::strlen(aString);
     temp.mUStr=(PRUnichar*)aString;
-    result=nsStr::FindSubstr(*this,temp,aIgnoreCase,anOffset);
+    result=nsStr::FindSubstr(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
 }
@@ -1330,28 +1466,30 @@ PRInt32 nsCString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOf
  *  Search for given string within this string
  *  
  *  @update  gess 3/25/98
- *  @param   aSTring -- buffer to be found
- *  @param   aIgnoreCase
- *  @param   anOffset
+ *  @param   aString - substr to be found
+ *  @param   aIgnoreCase tells us whether or not to do caseless compare
+ *  @param   anOffset tells us where in this string to start searching
+ *  @param   aCount tells us how many iterations to make starting at the given offset
  *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsCString::Find(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::FindSubstr(*this,aString,aIgnoreCase,anOffset);
+PRInt32 nsCString::Find(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
+  PRInt32 result=nsStr::FindSubstr(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
 
 /**
- *  Search for a given char, starting at given offset
+ *  This searches this string for a given character 
  *  
- *  @update  gess 3/25/98
- *  @param   aChar the unichar to be sought
- *  @param   aIgnoreCase
- *  @param   anOffset
- *  @return  offset of found char, or -1 (kNotFound)
+ *  @update  gess 2/04/00
+ *  @param   char is the character you're trying to find.
+ *  @param   aIgnorecase indicates case sensitivity of search
+ *  @param   anOffset tells us where to start the search; -1 means start at 0.
+ *  @param   aCount tell us how many chars to search from offset; -1 means use full length.
+ *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsCString::FindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::FindChar(*this,aChar,aIgnoreCase,anOffset);
+PRInt32 nsCString::FindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
+  PRInt32 result=nsStr::FindChar(*this,aChar,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
@@ -1416,30 +1554,32 @@ PRInt32 nsCString::FindCharInSet(const nsStr& aSet,PRInt32 anOffset) const{
 }
 
 /**
- *  Reverse search for substring
+ *  Reverse search for given string within this string
  *  
  *  @update  gess 3/25/98
- *  @param   aString
- *  @param   aIgnoreCase
- *  @param   anOffset - tells us where to begin the search
- *  @return  offset of substring or -1
+ *  @param   aString - substr to be found
+ *  @param   aIgnoreCase tells us whether or not to do caseless compare
+ *  @param   anOffset tells us where in this string to start searching
+ *  @param   aCount tells us how many iterations to make starting at the given offset
+ *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsCString::RFind(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::RFindSubstr(*this,aString,aIgnoreCase,anOffset);
+PRInt32 nsCString::RFind(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
+  PRInt32 result=nsStr::RFindSubstr(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
 
 /**
- *  Reverse search for substring
+ *  Reverse search for given string within this string
  *  
  *  @update  gess 3/25/98
- *  @param   aString
- *  @param   aIgnoreCase
- *  @param   anOffset - tells us where to begin the search
- *  @return  offset of substring or -1
+ *  @param   aString - substr to be found
+ *  @param   aIgnoreCase tells us whether or not to do caseless compare
+ *  @param   anOffset tells us where in this string to start searching
+ *  @param   aCount tells us how many iterations to make starting at the given offset
+ *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset) const{
+PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
   NS_ASSERTION(0!=aString,kNullPointerError);
 
   PRInt32 result=kNotFound;
@@ -1448,22 +1588,23 @@ PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset
     nsStr::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aString);
     temp.mStr=(char*)aString;
-    result=nsStr::RFindSubstr(*this,temp,aIgnoreCase,anOffset);
+    result=nsStr::RFindSubstr(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
 }
 
 /**
- *  Reverse search for char
+ *  This reverse searches this string for a given character 
  *  
- *  @update  gess 3/25/98
- *  @param   aChar
- *  @param   aIgnoreCase
- *  @param   anOffset - tells us where to begin the search
- *  @return  offset of substring or -1
+ *  @update  gess 2/04/00
+ *  @param   char is the character you're trying to find.
+ *  @param   aIgnorecase indicates case sensitivity of search
+ *  @param   anOffset tells us where to start the search; -1 means start at 0.
+ *  @param   aCount tell us how many chars to search from offset; -1 means use full length.
+ *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsCString::RFindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::RFindChar(*this,aChar,aIgnoreCase,anOffset);
+PRInt32 nsCString::RFindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
+  PRInt32 result=nsStr::RFindChar(*this,aChar,aIgnoreCase,anOffset,aCount);
   return result;
 }
 

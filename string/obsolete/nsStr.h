@@ -223,8 +223,6 @@ public:
 
 struct NS_COM nsStr {  
 
-//----------------------------------------------------------------------------------------
-
   nsStr() {
     MOZ_COUNT_CTOR(nsStr);
   }
@@ -402,12 +400,12 @@ struct NS_COM nsStr {
   * @param  anOffset tells us where in the dest string to start searching
   * @return the index of the source (substr) in dest, or -1 (kNotFound) if not found.
   */
-  static PRInt32 FindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset);
-  static PRInt32 FindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 FindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 FindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
 
-  static PRInt32 RFindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset);
-  static PRInt32 RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 RFindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
 
   static void    Overwrite(nsStr& aDest,const nsStr& aSource,PRInt32 anOffset);
@@ -444,6 +442,9 @@ private:
   static PRBool Free(nsStr& aString);
 
 };
+
+
+
 
 /**************************************************************
   A couple of tiny helper methods used in the string classes.
@@ -484,6 +485,7 @@ inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex){
   }//if
   return 0;
 }
+
 
 #ifdef NS_STR_STATS
 

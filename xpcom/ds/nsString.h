@@ -270,9 +270,12 @@ public:
    *  
    *  @param   aTrimSet -- contains chars to be trimmed from
    *           both ends
+   *  @param   aEliminateLeading
+   *  @param   aEliminateTrailing
+   *  @param   aIgnoreQuotes
    *  @return  this
    */
-  nsCString& Trim(const char* aSet,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE);
+  nsCString& Trim(const char* aSet,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE,PRBool aIgnoreQuotes=PR_FALSE);
 
   /**
    *  This method strips whitespace from string.
@@ -533,11 +536,12 @@ public:
    *  @param   aString is substring to be sought in this
    *  @param   aIgnoreCase selects case sensitivity
    *  @param   anOffset tells us where in this strig to start searching
+   *  @param   aCount tells us how many iterations to make starting at the given offset
    *  @return  offset in string, or -1 (kNotFound)
    */
-  PRInt32 Find(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
-  PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
-  PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
+  PRInt32 Find(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+  PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+  PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
   /**
    *  Search for given char within this string
@@ -545,9 +549,10 @@ public:
    *  @param   aString is substring to be sought in this
    *  @param   anOffset tells us where in this strig to start searching
    *  @param   aIgnoreCase selects case sensitivity
+   *  @param   aCount tells us how many iterations to make starting at the given offset
    *  @return  find pos in string, or -1 (kNotFound)
    */
-  PRInt32 FindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
+  PRInt32 FindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
   /**
    * This method searches this string for the first character
@@ -565,11 +570,12 @@ public:
    * This methods scans the string backwards, looking for the given string
    * @param   aString is substring to be sought in this
    * @param   aIgnoreCase tells us whether or not to do caseless compare
+   * @param   aCount tells us how many iterations to make starting at the given offset
    * @return  offset in string, or -1 (kNotFound)
    */
-  PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
-  PRInt32 RFind(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
-  PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
+  PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+  PRInt32 RFind(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+  PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
 
   /**
@@ -580,7 +586,7 @@ public:
    *  @param   aIgnoreCase selects case sensitivity
    *  @return  find pos in string, or -1 (kNotFound)
    */
-  PRInt32 RFindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
+  PRInt32 RFindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
   /**
    * This method searches this string for the last character

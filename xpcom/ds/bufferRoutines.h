@@ -247,64 +247,100 @@ CopyChars gCopyChars[2][2]={
  *  
  *  @update  gess 3/25/98
  *  @param   aDest is the buffer to be searched
- *  @param   aLength is the size (in char-units, not bytes) of the buffer
+ *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
  *  @param   aChar is the target character we're looking for
  *  @param   aIgnorecase tells us whether to use a case sensitive search
+ *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
 
-  if(aChar<256) {
-    if(aIgnoreCase) {
-      char theChar=(char)nsCRT::ToUpper(aChar);
-      const char* ptr=aDest+(anOffset-1);
-      const char* last=aDest+aLength;
-      while(++ptr<last){
-        if(nsCRT::ToUpper(*ptr)==theChar)
-          return ptr-aDest;
+  if(anOffset<0)
+    anOffset=0;
+
+  if(aCount<0)
+    aCount = (PRInt32)aDestLength;
+
+  if((0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+ 
+    if(0<aCount) {
+
+      const char* left= aDest+anOffset;
+      const char* last= left+aCount;
+      const char* max = aDest+aDestLength;
+      const char* end = (last<max) ? last : max;
+
+      if(aIgnoreCase) {
+    
+        char theChar=(char)nsCRT::ToUpper(aChar);
+        while(left<end){
+          if(nsCRT::ToUpper(*left)==theChar)
+            return left-aDest;
+          ++left;
+        }
       }
-    }
-    else {
+      else {
 
-      const char* ptr = aDest+anOffset;
-      char theChar=(char)aChar;
-      const char* result=(const char*)memchr(ptr, theChar,aLength-anOffset);
-      if(result) {
-        return result-aDest;
+        PRInt32 theMax = aDestLength-anOffset;
+        char theChar=(char)aChar;
+        const char* result=(const char*)memchr(left, theChar, theMax);
+        if(result) {
+          return result-aDest;
+        }
       }
     }
   }
+
   return kNotFound;
 }
+
 
 /**
  *  This methods cans the given buffer for the given char
  *  
  *  @update  gess 3/25/98
  *  @param   aDest is the buffer to be searched
- *  @param   aLength is the size (in char-units, not bytes) of the buffer
+ *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
  *  @param   aChar is the target character we're looking for
  *  @param   aIgnorecase tells us whether to use a case sensitive search
+ *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
-  const PRUnichar*  root=(PRUnichar*)aDest;
-  const PRUnichar*  ptr=root+(anOffset-1);
-  const PRUnichar*  last=root+aLength;
+inline PRInt32 FindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
 
-  if(aIgnoreCase) {
-    PRUnichar theChar=nsCRT::ToUpper(aChar);
-    while(++ptr<last){
-      if(nsCRT::ToUpper(*ptr)==theChar)
-        return ptr-root;
-    }
-  }
-  else {
-    while(++ptr<last){
-      if(*ptr==aChar)
-        return (ptr-root);
+  if(anOffset<0)
+    anOffset=0;
+
+  if(aCount<0)
+    aCount = (PRInt32)aDestLength;
+
+  if((0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+ 
+    if(0<aCount) {
+
+      const PRUnichar* root = (PRUnichar*)aDest;
+      const PRUnichar* left = root+anOffset;
+      const PRUnichar* last = left+aCount;
+      const PRUnichar* max  = root+aDestLength;
+      const PRUnichar* end  = (last<max) ? last : max;
+
+      if(aIgnoreCase) {
+        PRUnichar theChar=nsCRT::ToUpper(aChar);
+        while(left<end){
+          if(nsCRT::ToUpper(*left)==theChar)
+            return left-root;
+          ++left;
+        }
+      }
+      else {
+        while(left<end){
+          if(*left==aChar)
+            return (left-root);
+          ++left;
+        }
+      }
     }
   }
 
@@ -317,26 +353,48 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  *  
  *  @update  gess 3/25/98
  *  @param   aDest is the buffer to be searched
- *  @param   aLength is the size (in char-units, not bytes) of the buffer
+ *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
  *  @param   aChar is the target character we're looking for
  *  @param   aIgnorecase tells us whether to use a case sensitive search
+ *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
-  PRInt32 theIndex=0;
 
-  if(aIgnoreCase) {
-    PRUnichar theChar=nsCRT::ToUpper(aChar);
-    for(theIndex=(PRInt32)anOffset;theIndex>=0;theIndex--){
-      if(nsCRT::ToUpper(aDest[theIndex])==theChar)
-        return theIndex;
-    }
-  }
-  else {
-    for(theIndex=(PRInt32)anOffset;theIndex>=0;theIndex--){
-      if(aDest[theIndex]==aChar)
-        return theIndex;
+inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
+
+  if(anOffset<0)
+    anOffset=(PRInt32)aDestLength-1;
+
+  if(aCount<0)
+    aCount = aDestLength;
+
+  if((0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+ 
+    if(0<aCount) {
+
+      const char* rightmost = aDest+anOffset;  
+      const char* min       = rightmost-aCount+1;
+      const char* leftmost  = (min<aDest) ? aDest: min;
+
+      if(aIgnoreCase) {
+    
+        char theChar=(char)nsCRT::ToUpper(aChar);
+        while(leftmost<rightmost){
+          if(nsCRT::ToUpper(*rightmost)==theChar)
+            return rightmost-aDest;
+          --rightmost;
+        }
+      }
+      else {
+
+        char theChar=(char)aChar;
+        while(leftmost<=rightmost){
+          if((*rightmost)==theChar)
+            return rightmost-aDest;
+          --rightmost;
+        }
+      }
     }
   }
 
@@ -349,35 +407,54 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRUint32 anOffs
  *  
  *  @update  gess 3/25/98
  *  @param   aDest is the buffer to be searched
- *  @param   aLength is the size (in char-units, not bytes) of the buffer
+ *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
  *  @param   aChar is the target character we're looking for
  *  @param   aIgnorecase tells us whether to use a case sensitive search
+ *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
 
-  PRInt32 theIndex=0;
-  PRUnichar*  theBuf=(PRUnichar*)aDest;
+  if(anOffset<0)
+    anOffset=(PRInt32)aDestLength-1;
 
-  if(aIgnoreCase) {
-    PRUnichar theChar=nsCRT::ToUpper(aChar);
-    for(theIndex=(PRInt32)anOffset;theIndex>=0;theIndex--){
-      if(nsCRT::ToUpper(theBuf[theIndex])==theChar)
-        return theIndex;
-    }
-  }
-  else {
-    for(theIndex=(PRInt32)anOffset;theIndex>=0;theIndex--){
-      if(theBuf[theIndex]==aChar)
-        return theIndex;
+  if(aCount<0)
+    aCount = aDestLength;
+
+  if((0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+ 
+    if(0<aCount) {
+
+      const PRUnichar* root      = (PRUnichar*)aDest;
+      const PRUnichar* rightmost = root+anOffset;  
+      const PRUnichar* min       = rightmost-aCount+1;
+      const PRUnichar* leftmost  = (min<root) ? root: min;
+
+      if(aIgnoreCase) {
+    
+        PRUnichar theChar=nsCRT::ToUpper(aChar);
+        while(leftmost<rightmost){
+          if(nsCRT::ToUpper(*rightmost)==theChar)
+            return rightmost-root;
+          --rightmost;
+        }
+      }
+      else {
+
+        while(leftmost<=rightmost){
+          if((*rightmost)==aChar)
+            return rightmost-root;
+          --rightmost;
+        }
+      }
     }
   }
 
   return kNotFound;
 }
 
-typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aDestLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase);
+typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount);
 FindChars gFindChars[]={&FindChar1,&FindChar2};
 FindChars gRFindChars[]={&RFindChar1,&RFindChar2};
 
@@ -607,7 +684,7 @@ CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
 /**
  * This method compresses duplicate runs of a given char from the given buffer 
  *
- * @update	gess 11/02/99
+ * @update	gess 01/04/99
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -627,11 +704,11 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
     PRUint32 aSetLen=strlen(aSet);
     while (from <= end) {
       char theChar = *from++;
-      if(kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+      if(kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
         *to++=theChar;
         while (from <= end) {
           theChar = *from++;
-          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
             *to++ = theChar;
             break;
           }
@@ -649,7 +726,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
 /**
  * This method compresses duplicate runs of a given char from the given buffer 
  *
- * @update	gess 12/20/99
+ * @update	gess 01/04/99
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -669,17 +746,16 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){
     PRUint32 aSetLen=strlen(aSet);
     while (from <= end) {
       PRUnichar theChar = *from++;
-      if((theChar<256) && (kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE))){
+      if((255<theChar) || (kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen))){
         *to++=theChar;
         while (from <= end) {
           theChar = *from++;
-          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
             *to++ = theChar;
             break;
           }
         }
-      } 
-      else {
+      } else {
         *to++ = theChar;
       }
     }
@@ -694,7 +770,7 @@ CompressChars gCompressChars[]={&CompressChars1,&CompressChars2};
 /**
  * This method strips chars in a given set from the given buffer 
  *
- * @update	gess 11/02/99
+ * @update	gess 01/04/99
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -712,7 +788,7 @@ PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){
     PRUint32 aSetLen=strlen(aSet);
     while (++from < end) {
       char theChar = *from;
-      if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+      if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
         *to++ = theChar;
       }
     }
@@ -725,7 +801,7 @@ PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){
 /**
  * This method strips chars in a given set from the given buffer 
  *
- * @update	gess 11/02/99
+ * @update	gess 01/04/99
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -746,8 +822,7 @@ PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet){
       //Note the test for ascii range below. If you have a real unicode char, 
       //and you're searching for chars in the (given) ascii string, there's no
       //point in doing the real search since it's out of the ascii range.
-
-      if((255<theChar) || (kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE))){
+      if((255<theChar) || (kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen))){
         *to++ = theChar;
       }
     }
@@ -755,6 +830,7 @@ PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet){
   }
   return to - (PRUnichar*)aString;
 }
+
 
 typedef PRInt32 (*StripChars)(char* aString,PRUint32 aCount,const char* aSet);
 StripChars gStripChars[]={&StripChars1,&StripChars2};
