@@ -61,6 +61,8 @@
 - (NSRect)insertionRectForButton:(NSView*)aButton position:(int)aPosition;
 - (BookmarkButton*)makeNewButtonWithItem:(BookmarkItem*)aItem;
 - (void)managerStarted:(NSNotification*)inNotify;
+- (BOOL)anchorFoundAtPoint:(NSPoint)testPoint forButton:(NSButton*)sourceButton;
+- (BOOL)anchorFoundScanningFromPoint:(NSPoint)testPoint withStep:(int)step;
 @end
 
 @implementation BookmarkToolbar
@@ -391,33 +393,62 @@
   mDragInsertionButton = nil;
   mDragInsertionPosition = CHInsertAfter;
 
-  NSView* foundView = [self hitTest:superviewLoc];
-  if (foundView && [foundView isMemberOfClass:[BookmarkButton class]])
-  {
-    BookmarkButton* targetButton = foundView;
-    BookmarkItem* targetItem 	= [targetButton BookmarkItem];
+  static const int kScanningIncrement = 5;
+  
+  // check for a button at current location to use as an anchor
+  if ([self anchorFoundAtPoint:superviewLoc forButton:sourceButton]) return;
+  // otherwise see if there's a view around it to use as an anchor point
+  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:(kScanningIncrement * -1)]) return;
+  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:kScanningIncrement]) return;
+  
+  // if neither worked, it's probably the dead zone between lines.
+  // treat that zone as the line above, and try everything again
+  superviewLoc.y += kScanningIncrement;
+  if ([self anchorFoundAtPoint:superviewLoc forButton:sourceButton]) return;
+  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:(kScanningIncrement * -1)]) return;
+  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:kScanningIncrement]) return;
+  
+  // if nothing works, just throw it in at the end
+  mDragInsertionButton = ([mButtons count] > 0) ? [mButtons objectAtIndex:[mButtons count] - 1] : 0;
+  mDragInsertionPosition = CHInsertAfter;
+}
 
-    if ([targetItem isKindOfClass:[BookmarkFolder class]])
-    {
-      mDragInsertionButton = targetButton;
+- (BOOL)anchorFoundAtPoint:(NSPoint)testPoint forButton:(NSButton*)sourceButton
+{
+  NSView* foundView = [self hitTest:testPoint];
+  if (foundView && [foundView isMemberOfClass:[BookmarkButton class]]) {
+    BookmarkButton* targetButton = foundView;
+    
+    // if over current position, leave mDragInsertButton unset but return success so nothing happens
+    if (targetButton == sourceButton)
+      return YES;
+    
+    mDragInsertionButton = targetButton;
+    if ([[targetButton BookmarkItem] isKindOfClass:[BookmarkFolder class]])
       mDragInsertionPosition = CHInsertInto;
+    else {
+      NSPoint localLocation = [[self superview] convertPoint:testPoint toView:foundView];
+      mDragInsertionPosition = (localLocation.x < NSWidth([targetButton bounds]) / 2.0) ? CHInsertBefore : CHInsertAfter;
     }
-    else if (targetButton != sourceButton)
-    {
-      NSPoint	localLocation = [[self superview] convertPoint:superviewLoc toView:foundView];
-      mDragInsertionButton = targetButton;
-      if (localLocation.x < NSWidth([targetButton bounds]) / 2.0)
-        mDragInsertionPosition = CHInsertBefore;
-      else
-        mDragInsertionPosition = CHInsertAfter;
-    }
+    return YES;
   }
-  else
-  {
-    // throw it in at the end
-    mDragInsertionButton   = ([mButtons count] > 0) ? [mButtons objectAtIndex:[mButtons count] - 1] : 0;
-    mDragInsertionPosition = CHInsertAfter;
+  return NO;
+}
+
+- (BOOL)anchorFoundScanningFromPoint:(NSPoint)testPoint withStep:(int)step
+{
+  NSView* foundView;
+  // scan horizontally until we find a bookmark or leave the view
+  do {
+    testPoint.x += step;
+    foundView = [self hitTest:testPoint];
+  } while (foundView && ![foundView isMemberOfClass:[BookmarkButton class]]);
+  if (foundView && [foundView isMemberOfClass:[BookmarkButton class]]) {
+    mDragInsertionButton = (BookmarkButton *)foundView;
+    mDragInsertionPosition = (step < 0) ? CHInsertAfter : CHInsertBefore;
+    return YES;
   }
+  return NO;
 }
 
 - (BOOL)dropDestinationValid:(id <NSDraggingInfo>)sender
@@ -434,7 +465,10 @@
     NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[draggingPasteboard propertyListForType: @"MozBookmarkType"]];
     BookmarkItem* destItem = nil;
 
-    if (mDragInsertionPosition == CHInsertInto) {
+    if (mDragInsertionButton == nil) {
+      return NO;
+    }
+    else if (mDragInsertionPosition == CHInsertInto) {
       // drop onto folder
       destItem = [mDragInsertionButton BookmarkItem];
     }
