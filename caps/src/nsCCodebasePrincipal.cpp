@@ -35,7 +35,7 @@ NS_IMPL_QUERY_INTERFACE(nsCCodebasePrincipal, kICodebasePrincipalIID);
 // from nsIPrincipal:
 
 NS_METHOD
-nsCCodebasePrincipal::IsTrusted(char* scope, PRBool *pbIsTrusted)
+nsCCodebasePrincipal::IsTrusted(const char* scope, PRBool *pbIsTrusted)
 {
    if(m_pNSPrincipal == NULL)
    {

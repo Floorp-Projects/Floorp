@@ -1,0 +1,77 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+#include "nsISupports.idl"
+
+[ptr] native nsJSPrincipalsList(nsJSPrincipalsList);
+[ptr] native JSContext(JSContext);
+[ptr] native JSObject(JSObject);
+[ptr] native JSPrincipals(JSPrincipals);
+[ptr] native JSFunction(JSFunction);
+[ptr] native jsval(jsval);
+
+interface nsString;
+interface nsIScriptContext;
+interface nsIScriptGlobalObject;
+interface nsIURI;
+
+%{C++
+struct nsJSPrincipalsList;
+%}
+
+[uuid(58df5780-8006-11d2-bd91-00805f8ae3f4)]
+interface nsIScriptSecurityManager : nsISupports
+{
+	const short SCRIPT_SECURITY_ALL_ACCESS = 0 << 0;
+	const short SCRIPT_SECURITY_NO_ACCESS = 1 << 0;
+	const short SCRIPT_SECURITY_SAME_DOMAIN_ACCESS  = 1 << 1;
+	const short SCRIPT_SECURITY_SIGNED_ACCESS = 1 << 2;
+
+
+	const short eJSTarget_UniversalBrowserRead=0;
+	const short eJSTarget_UniversalBrowserWrite=1;
+	const short eJSTarget_UniversalSendMail=2;
+	const short eJSTarget_UniversalFileRead=3;
+	const short eJSTarget_UniversalFileWrite=4;
+	const short eJSTarget_UniversalPreferencesRead=5;
+	const short eJSTarget_UniversalPreferencesWrite=6;
+	const short eJSTarget_UniversalDialerAccess=7;
+	const short eJSTarget_Max=8;
+
+	void Init();
+	void CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, [const] in string prop, out boolean res);
+	void GetSubjectOriginURL(in JSContext cx, out nsString origin);
+	void GetObjectOriginURL(in JSContext cx, in JSObject obj, out nsString origin);
+	void GetPrincipalsFromStackFrame(in JSContext cx, out JSPrincipals prins);
+	void GetCompilationPrincipals(in nsIScriptContext cx, in nsIScriptGlobalObject go, in JSPrincipals prins, out JSPrincipals resultprins);
+	void CanAccessTarget(in JSContext cx, in short target, out boolean res);
+	void CheckPermissions(in JSContext cx, in JSObject obj, in short target, out boolean res);
+	void CheckContainerAccess(in JSContext cx, in JSObject obj, in short target, out boolean res);
+	void GetContainerPrincipals(in JSContext cx, in JSObject container, out JSPrincipals prins);
+	void SetContainerPrincipals(in JSContext cx, in JSObject container, in JSPrincipals prins);
+	void CanCaptureEvent(in JSContext cx, in JSFunction func, in JSObject eventTarget, out boolean res);
+	void SetExternalCapture(in JSContext cx, in JSPrincipals prins, in boolean abool);
+	void CheckSetParentSlot(in JSContext cx, in JSObject obj, in jsval aVp, out boolean res);
+	void SetDocumentDomain(in JSContext cx, in JSPrincipals prins, in nsString aNewDomain, out boolean res);
+	void DestroyPrincipalsList(in JSContext cx, in nsJSPrincipalsList list);
+	void NewJSPrincipals(in nsIURI aURL, in nsString aName, in nsString aCodebase, out JSPrincipals aPrincipals);
+	void RegisterPrincipals(in nsIScriptContext aContext, in nsIScriptGlobalObject aGlobal, in JSPrincipals principals, 
+							in nsString aName, in nsString aSrc, out JSPrincipals aPrincipals);
+};
+%{C++
+extern "C" NS_DOM nsresult NS_NewScriptSecurityManager(nsIScriptSecurityManager ** aInstancePtrResult);
+%}

@@ -33,7 +33,7 @@ public:
     // from nsIPrincipal:
 
     NS_IMETHOD
-    IsTrusted(char* scope, PRBool *pbIsTrusted);
+    IsTrusted(const char* scope, PRBool *pbIsTrusted);
      
 
     ///////////////////////////////////////////////////////////////////////////
