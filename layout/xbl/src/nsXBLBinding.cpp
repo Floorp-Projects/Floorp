@@ -36,6 +36,9 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD GetBindingElement(nsIContent** aResult);
   NS_IMETHOD SetBindingElement(nsIContent* aElement);
 
+  NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
+  NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
+
 public:
   nsXBLBinding();
   virtual ~nsXBLBinding();
@@ -107,6 +110,19 @@ NS_IMETHODIMP
 nsXBLBinding::SetBindingElement(nsIContent* aElement)
 {
   binding = aElement;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
+{
+  // XXX Implement me!
   return NS_OK;
 }
 
