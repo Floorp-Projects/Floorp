@@ -2649,27 +2649,29 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
  * aChild is one of aNode's ancestors. -- jst@citec.fi
  */
 
-static PRBool
-isSelfOrAncestor(nsIContent *aNode, nsIContent *aChild)
+/* static */
+PRBool
+nsGenericElement::isSelfOrAncestor(nsIContent *aNode,
+                                   nsIContent *aPossibleAncestor)
 {
   NS_PRECONDITION(aNode, "Must have a node");
   
-  if (aNode == aChild)
+  if (aNode == aPossibleAncestor)
     return PR_TRUE;
 
   /*
    * If aChild doesn't have children it can't be our ancestor
    */
-  if (aChild->GetChildCount() == 0) {
+  if (aPossibleAncestor->GetChildCount() == 0) {
     return PR_FALSE;
   }
 
   for (nsIContent* ancestor = aNode->GetParent();
        ancestor;
        ancestor = ancestor->GetParent()) {
-    if (ancestor == aChild) {
+    if (ancestor == aPossibleAncestor) {
       /*
-       * We found aChild as one of our ancestors
+       * We found aPossibleAncestor as one of our ancestors
        */
       return PR_TRUE;
     }
