@@ -155,10 +155,12 @@ nsPresContext::GetFontPreferences()
       nsAllocator::Free(value);
       value = nsnull;
     }
-    if (mLangGroup) {
+    if (mLanguage) {
       nsAutoString pref; pref.AssignWithConversion("font.size.variable.");
       const PRUnichar* langGroup = nsnull;
-      mLangGroup->GetUnicode(&langGroup);
+      nsCOMPtr<nsIAtom> langGroupAtom;
+      mLanguage->GetLanguageGroup(getter_AddRefs(langGroupAtom));
+      langGroupAtom->GetUnicode(&langGroup);
       pref.Append(langGroup);
       char name[128];
       pref.ToCString(name, sizeof(name));
@@ -314,7 +316,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 
   mDeviceContext = dont_QueryInterface(aDeviceContext);
 
-  mCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
+  mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_PROGID);
   mPrefs = do_GetService(NS_PREF_PROGID);
   if (mPrefs) {
     // Register callbacks so we're notified when the preferences change
@@ -351,12 +353,11 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
         doc->GetBaseURL(*getter_AddRefs(mBaseURL));
-        if (mCharSets) {
+        if (mLangService) {
           nsAutoString charset;
           doc->GetDocumentCharacterSet(charset);
-          // XXX GetCharsetLangGroup ought to do the lower-casing for me
-          charset.ToLowerCase();
-          mCharSets->GetCharsetLangGroup(&charset, getter_AddRefs(mLangGroup));
+          mLangService->LookupCharSet(charset.GetUnicode(),
+                                      getter_AddRefs(mLanguage));
           GetFontPreferences();
         }
       }
@@ -561,7 +562,11 @@ nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
 
   nsIFontMetrics* metrics = nsnull;
   if (mDeviceContext) {
-    mDeviceContext->GetMetricsFor(aFont, mLangGroup, metrics);
+    nsCOMPtr<nsIAtom> langGroup;
+    if (mLanguage) {
+      mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
+    }
+    mDeviceContext->GetMetricsFor(aFont, langGroup, metrics);
   }
   *aResult = metrics;
   return NS_OK;
@@ -1072,6 +1077,17 @@ NS_IMETHODIMP
 nsPresContext::SetDefaultDirection(PRUint8 aDirection)
 {
   mDefaultDirection = aDirection;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetLanguage(nsILanguageAtom** aLanguage)
+{
+  NS_ENSURE_ARG_POINTER(aLanguage);
+
+  *aLanguage = mLanguage;
+  NS_IF_ADDREF(*aLanguage);
+
   return NS_OK;
 }
 

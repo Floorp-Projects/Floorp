@@ -33,6 +33,8 @@
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
 #include "nsStyleConsts.h"
+#include "nsCOMPtr.h"
+#include "nsILanguageAtom.h"
 
 class nsISizeOfHandler;
 
@@ -209,6 +211,7 @@ struct nsStyleDisplay : public nsStyleStruct {
 #else
   nsRect    mClip;              // [reset] offsets from upper-left border edge
 #endif
+  nsCOMPtr<nsILanguageAtom> mLanguage; // [inherited]
 
   PRBool IsBlockLevel() const {return (NS_STYLE_DISPLAY_BLOCK == mDisplay) ||
                                       (NS_STYLE_DISPLAY_LIST_ITEM == mDisplay) ||

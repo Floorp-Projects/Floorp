@@ -45,6 +45,7 @@
 #include "nsIImageGroup.h"
 #include "nsIPref.h"
 #include "nsICharsetConverterManager.h"
+#include "nsILanguageAtomService.h"
 #include "nsIURL.h"
 #include "nsIEventStateManager.h"
 
@@ -134,6 +135,8 @@ public:
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
   NS_IMETHOD GetDefaultDirection(PRUint8* aDirection);
   NS_IMETHOD SetDefaultDirection(PRUint8 aDirection);
+  NS_IMETHOD GetLanguage(nsILanguageAtom** aLanguage);
+
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType);
 #endif
@@ -151,8 +154,8 @@ protected:
   nsRect                mVisibleArea;
   nsCOMPtr<nsIDeviceContext>  mDeviceContext; // could be weak, but better safe than sorry. Cannot reintroduce cycles
                                               // since there is no dependency from gfx back to layout.
-  nsCOMPtr<nsICharsetConverterManager> mCharSets;
-  nsCOMPtr<nsIAtom>     mLangGroup;
+  nsCOMPtr<nsILanguageAtomService> mLangService;
+  nsCOMPtr<nsILanguageAtom> mLanguage;
   nsCOMPtr<nsIImageGroup> mImageGroup;
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsISupports*          mContainer;     // [WEAK]
