@@ -469,11 +469,8 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     rv = cc->GetJSContext(&cx);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-    nsISupports *supports =
-      (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
-      ? NS_STATIC_CAST(nsISupports*, ::JS_GetContextPrivate(cx))
-      : nsnull;
-    nsCOMPtr<nsIScriptContext> scriptContext = do_QueryInterface(supports);
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
     if (scriptContext) {
       nsCOMPtr<nsIScriptGlobalObject> globalObject;
       scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
