@@ -2825,9 +2825,6 @@ nsBrowserStatusHandler.prototype =
       
       // XXXBlake gPrefService.getBoolPref("browser.chrome.site_icons"))
       gProxyFavIcon.setAttribute("src", aHref);
-
-      // update any bookmarks with new icon reference
-      BMSVC.updateBookmarkIcon(gURLBar.value, aHref);
     }
   },
 

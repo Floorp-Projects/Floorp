@@ -825,7 +825,8 @@
                             event.stopPropagation();
                             event.preventBubble();
                             HandleBookmarkIcon(this.src, true);"
-                    onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"
+                    onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);
+                             this.parentNode.selectedIndex = 0;"
                     tooltiptext="&proxyIcon.tooltip;"/>
           </deck>
         </textbox>
