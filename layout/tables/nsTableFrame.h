@@ -272,11 +272,11 @@ public:
                          nsIFrame*       aOldFrame);
 
   // Get the offset from the border box to the area where the row groups fit
-  nsMargin GetChildAreaOffset(nsIPresContext&          aPresContext,
+  nsMargin GetChildAreaOffset(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState* aReflowState) const;
 
   // Get the offset from the border box to the area where the content fits
-  nsMargin GetContentAreaOffset(nsIPresContext&          aPresContext,
+  nsMargin GetContentAreaOffset(nsIPresContext*          aPresContext,
                                 const nsHTMLReflowState* aReflowState) const;
 
   /** helper method to find the table parent of any table frame object */
@@ -331,9 +331,11 @@ public:
                              nsFramePaintLayer    aWhichLayer,
                              PRUint32             aFlags = 0);
 
-  nsMargin* GetBCBorder(nsIPresContext& aPresContext,
-                        PRBool          aInnerBorderOnly,
-                        nsMargin&       aBorder) const;
+  nsMargin GetBCBorder(nsIPresContext* aPresContext) const;
+
+  // get the area that the border leak out from the inner table frame into
+  // the surrounding margin space
+  nsMargin GetBCMargin(nsIPresContext* aPresContext) const;
 
   void SetBCDamageArea(nsIPresContext& aPresContext,
                        const nsRect&   aValue);
@@ -615,6 +617,7 @@ protected:
                            PRBool               aDirtyOnly,
                            nsReflowStatus&      aStatus,
                            nsIFrame*&           aLastChildReflowed,
+                           nsRect&              aOverflowArea,
                            PRBool*              aReflowedAtLeastOne = nsnull);
 // begin incremental reflow methods
   
@@ -716,7 +719,7 @@ protected:
   void PlaceChild(nsIPresContext*      aPresContext,
                   nsTableReflowState&  aReflowState,
                   nsIFrame*            aKidFrame,
-                  nsHTMLReflowMetrics& aDesiredSize);
+                  nsHTMLReflowMetrics& aKidDesiredSize);
 
   /** assign widths for each column, taking into account the table content, the effective style, 
     * the layout constraints, and the compatibility mode.  

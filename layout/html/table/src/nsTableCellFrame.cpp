@@ -345,7 +345,7 @@ nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
         result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
         if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
           nscolor       bordercolor;
-          if(displaySelection == nsISelectionController::SELECTION_DISABLED) {
+          if (displaySelection == nsISelectionController::SELECTION_DISABLED) {
             bordercolor = NS_RGB(176,176,176);// disabled color
           }
           else {
@@ -642,6 +642,12 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
       kidYTop = nsTableFrame::RoundToPixel(kidYTop, p2t, eAlwaysRoundDown);
   }
   firstKid->SetPosition(nsPoint(kidRect.x, kidYTop));
+  nsHTMLReflowMetrics desiredSize(PR_FALSE);
+  desiredSize.width = mRect.width;
+  desiredSize.height = mRect.height;
+  desiredSize.mOverflowArea = nsRect(0, 0, mRect.width, mRect.height);
+  ConsiderChildOverflow(aPresContext, desiredSize.mOverflowArea, firstKid);
+  StoreOverflow(aPresContext, desiredSize);
   if (kidYTop != kidRect.y) {
     // Make sure any child views are correctly positioned. We know the inner table
     // cell won't have a view
@@ -1018,6 +1024,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 
   aDesiredSize.ascent  += kidSize.ascent;
   aDesiredSize.descent += kidSize.descent;
+  
+  // the overflow area will be computed when the child will be vertically aligned
 
   if (aDesiredSize.mComputeMEW) {
     aDesiredSize.mMaxElementWidth =

@@ -469,7 +469,8 @@ nsTableOuterFrame::InitChildReflowState(nsIPresContext&    aPresContext,
     if (mInnerTableFrame->NeedToCalcBCBorders()) {
       mInnerTableFrame->CalcBCBorders(aPresContext);
     }
-    pCollapseBorder  = mInnerTableFrame->GetBCBorder(aPresContext, PR_FALSE, collapseBorder);
+    collapseBorder  = mInnerTableFrame->GetBCBorder(&aPresContext);
+    pCollapseBorder = &collapseBorder;
     pCollapsePadding = &collapsePadding;
   }
   aReflowState.Init(&aPresContext, -1, -1, pCollapseBorder, pCollapsePadding);
@@ -558,13 +559,21 @@ nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
                                     PRUint8         aCaptionSide,
                                     nsSize&         aOuterSize,
                                     PRBool          aInnerChanged,
-                                    PRBool          aCaptionChanged)
+                                    PRBool          aCaptionChanged,
+                                    nsRect*         aOldOverflowArea)
 {
   if (!aInnerChanged && !aCaptionChanged) return;
 
   nsRect damage;
   if (aInnerChanged && aCaptionChanged) {
     damage = nsRect(0, 0, aOuterSize.width, aOuterSize.height);
+    if (aOldOverflowArea) {
+      damage.UnionRect(damage, *aOldOverflowArea);
+    }
+    nsRect* overflowArea = GetOverflowAreaProperty(aPresContext);
+    if (overflowArea) {
+      damage.UnionRect(damage, *overflowArea);
+    }
   }
   else {
     nsRect captionRect(0,0,0,0);
@@ -572,7 +581,7 @@ nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
     if (mCaptionFrame) {
       captionRect = mCaptionFrame->GetRect();
     }
-    // only works for vertical captions {
+    
     damage.x = 0;
     damage.width  = aOuterSize.width;
     switch(aCaptionSide) {
@@ -612,7 +621,7 @@ nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
         damage.height = innerRect.YMost();
       }
       break;
-    default: // NS_SIDE_LEFT
+    default: // NS_SIDE_TOP
       if (aCaptionChanged) {
         damage.y = 0;
         damage.height = innerRect.y;
@@ -622,6 +631,12 @@ nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
         damage.height = aOuterSize.height - damage.y;
       }
       break;
+    }
+     
+    nsIFrame* kidFrame = aCaptionChanged ? mCaptionFrame : mInnerTableFrame;
+    ConsiderChildOverflow(aPresContext, damage, kidFrame);
+    if (aOldOverflowArea) {
+      damage.UnionRect(damage, *aOldOverflowArea);
     }
   }
   Invalidate(aPresContext, damage);
@@ -713,12 +728,12 @@ nsTableOuterFrame::GetInnerTableAvailWidth(nsIPresContext*          aPresContext
     PRUint8 captionSide = GetCaptionSide();
     switch (captionSide) {
       case NS_SIDE_LEFT:
-        if(captionWidth > marginIgnore.left) {
+        if (captionWidth > marginIgnore.left) {
           availWidth -= captionWidth - aInnerMargin.left;
         }
         break;
       case NS_SIDE_RIGHT:
-        if(captionWidth > marginIgnore.right) {
+        if (captionWidth > marginIgnore.right) {
           availWidth -= captionWidth - aInnerMargin.right;
         }
         break;
@@ -748,7 +763,7 @@ nsTableOuterFrame::GetMaxElementWidth(PRUint8         aCaptionSide,
       }
       break;
     case NS_SIDE_RIGHT:
-      if(capWidth > aInnerMargin.right) {
+      if (capWidth > aInnerMargin.right) {
         width += capWidth - aInnerMargin.right;
       }
       break;
@@ -1351,57 +1366,13 @@ nsTableOuterFrame::UpdateReflowMetrics(nsIPresContext*      aPresContext,
   if (aMet.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aMet.mMaximumWidth = GetMaxWidth(aCaptionSide, aInnerMarginNoAuto, aCaptionMarginNoAuto);
   }
-  // see if the caption or the inner table frame leaks out
-  // the overflow area of the inner table and caption frame needs to be factored in once 
-  // one can retrieve them from the frames (see bug 197581)
-  switch (aCaptionSide) {
-    case NS_SIDE_LEFT:
-      aMet.mOverflowArea.x      = PR_MIN(0, aCaptionMarginNoAuto.left);
-      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x - 
-                                  PR_MIN(0, aInnerMarginNoAuto.right);
-      aMet.mOverflowArea.y      = PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.top), aInnerMarginNoAuto.top);
-      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y -
-                                  PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.bottom), aInnerMarginNoAuto.bottom); 
-      break;
-    case NS_SIDE_RIGHT:
-      aMet.mOverflowArea.x      = PR_MIN(0, aInnerMarginNoAuto.left);
-      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x - 
-                                  PR_MIN(0, aCaptionMarginNoAuto.right);
-      aMet.mOverflowArea.y      = PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.top), aInnerMarginNoAuto.top);
-      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y -
-                                  PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.bottom), aInnerMarginNoAuto.bottom);
-      break;
-    case NS_SIDE_BOTTOM:
-      aMet.mOverflowArea.x      = PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.left), aInnerMarginNoAuto.left);
-      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x -
-                                  PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.right), aInnerMarginNoAuto.right);
-      aMet.mOverflowArea.y      = PR_MIN(0, aInnerMarginNoAuto.top);
-      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y - 
-                                  PR_MIN(0, aCaptionMarginNoAuto.bottom);
-      break;
-    case NS_SIDE_TOP:
-      aMet.mOverflowArea.x      = PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.left), aInnerMarginNoAuto.left);
-      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x -
-                                  PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.right), aInnerMarginNoAuto.right);
-      aMet.mOverflowArea.y      = PR_MIN(0, aCaptionMarginNoAuto.top);
-      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y - 
-                                  PR_MIN(0, aInnerMarginNoAuto.bottom);
-      break;
-    default: // no caption
-      aMet.mOverflowArea.x      = PR_MIN(0, aInnerMarginNoAuto.left);
-      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x - PR_MIN(0, aInnerMarginNoAuto.right);
-      aMet.mOverflowArea.y      = PR_MIN(0, aInnerMarginNoAuto.top);
-      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y - PR_MIN(0, aInnerMarginNoAuto.bottom);
+ 
+  aMet.mOverflowArea = nsRect(0, 0, aMet.width, aMet.height);
+  ConsiderChildOverflow(aPresContext, aMet.mOverflowArea, mInnerTableFrame);
+  if (mCaptionFrame) {
+    ConsiderChildOverflow(aPresContext, aMet.mOverflowArea, mCaptionFrame);
   }
-  if ((aMet.mOverflowArea.x < 0) ||
-      (aMet.mOverflowArea.y < 0) ||
-      (aMet.mOverflowArea.XMost() > aMet.width) ||
-      (aMet.mOverflowArea.YMost() > aMet.height)) {
-    mState |= NS_FRAME_OUTSIDE_CHILDREN;
-  } 
-  else {
-    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-  } 
+  StoreOverflow(aPresContext, aMet);
 }
 
 nsresult 
@@ -1543,7 +1514,7 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
   nsPoint captionOrigin;
   if (needInnerReflow) {
     nsSize innerSize;
-    nsHTMLReflowMetrics innerMet(nsnull);
+    nsHTMLReflowMetrics innerMet(PR_FALSE);
     nscoord availWidth = GetInnerTableAvailWidth(aPresContext, mInnerTableFrame, aOuterRS, 
                                                  &capMin, innerMargin, innerPadding);
     OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS, innerMet, availWidth, innerSize, 
@@ -1572,12 +1543,13 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
 
   rv = FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                          captionOrigin.x, captionOrigin.y, 0);
-
+  nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
   UpdateReflowMetrics(aPresContext, captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
                       innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
   nsSize desSize(aDesiredSize.width, aDesiredSize.height);
   PRBool innerMoved = (innerOrigin.x != prevInnerRect.x) || (innerOrigin.y != prevInnerRect.y);
-  InvalidateDamage(aPresContext, captionSide, desSize, innerMoved, PR_TRUE);
+  InvalidateDamage(aPresContext, captionSide, desSize, innerMoved, PR_TRUE,
+                   oldOverflowArea);
   return rv;
 }
 
@@ -1622,9 +1594,12 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*           aPresContext,
     aDesiredSize.height = innerRect.YMost() + innerMargin.bottom; 
     sizeSet = PR_TRUE;
     // Repaint the inner's entire bounds if it moved
-    if ((innerRect.x != innerOrigin.x) || (innerRect.y != innerOrigin.y)) {
-      Invalidate(aPresContext, nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
-    }
+    nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
+    PRBool innerMoved = (innerRect.x != innerOrigin.x) ||
+                         (innerRect.y != innerOrigin.y);
+    InvalidateDamage(aPresContext, NO_SIDE, nsSize(aDesiredSize.width,
+                     aDesiredSize.height), innerMoved, PR_FALSE,
+                     oldOverflowArea);
   }
   if (!sizeSet) {
     // set our desired size to what it was before
@@ -1774,11 +1749,13 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   if (aOuterMet.mComputeMEW) {
     aOuterMet.mMaxElementWidth = innerMet.mMaxElementWidth;
   }
-
+  nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
   UpdateReflowMetrics(aPresContext, captionSide, aOuterMet, innerMargin, innerMarginNoAuto, 
                       innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
   nsSize desSize(aOuterMet.width, aOuterMet.height);
-  InvalidateDamage(aPresContext, captionSide, desSize, (innerSize.width != priorInnerSize.width), captionMoved);
+  InvalidateDamage(aPresContext, captionSide, desSize,
+                   (innerSize.width != priorInnerSize.width), captionMoved,
+                   oldOverflowArea);
 
   return rv;
 }
@@ -1856,11 +1833,13 @@ nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
   rv = FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                          captionOrigin.x, captionOrigin.y, 0);
 
+  nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
   UpdateReflowMetrics(aPresContext, captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
                       innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
   nsSize desSize(aDesiredSize.width, aDesiredSize.height);
   PRBool innerMoved = innerOrigin != prevInnerOrigin;
-  InvalidateDamage(aPresContext, captionSide, desSize, innerMoved, PR_TRUE);
+  InvalidateDamage(aPresContext, captionSide, desSize, innerMoved, PR_TRUE,
+                   oldOverflowArea);
 
   return rv;
 }
@@ -2004,7 +1983,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
       // reflow the caption
       nscoord availWidth = GetCaptionAvailWidth(aPresContext, mCaptionFrame, aOuterRS, captionMargin,
                                                 ignorePadding, &innerSize.width, &innerMarginNoAuto, &innerMargin);
-      nsHTMLReflowMetrics captionMet(nsnull);
+      nsHTMLReflowMetrics captionMet(PR_FALSE);
       nsReflowStatus capStatus; // don't let the caption cause incomplete
       rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS, captionMet, 
                             availWidth, captionSize, captionMargin, captionMarginNoAuto,
