@@ -57,7 +57,7 @@ function calendarUnifinderInit( )
       {
          if( gCalendarEventTreeClicked === false )
          {
-            var SearchTree = document.getElementById( "unifinder-search-results-listbox" );
+            var SearchTree = document.getElementById( UnifinderTreeName );
             
             SearchTree.treeBoxObject.selection.select( -1 );
             
@@ -227,9 +227,8 @@ function getCalendarEventFromEvent( event )
 
    if( row.value != -1 && row.value < tree.view.rowCount )
    { 
-      var treeitem = tree.treeBoxObject.view.getItemAtIndex( row.value );
-      var eventId = treeitem.getAttribute("eventId");
-      return gICalLib.fetchEvent( eventId );
+      var event = tree.eventView.getCalendarEventAtRow( row.value );
+      return event;
    }
 }
 
@@ -242,39 +241,37 @@ function unifinderClickEvent( event )
    var ArrayOfEvents = new Array( );
    
    gCalendarEventTreeClicked = true;
+   
+   var calendarEvent;
 
    //get the selected events from the tree
    var tree = document.getElementById( UnifinderTreeName );
    var start = new Object();
    var end = new Object();
    var numRanges = tree.view.selection.getRangeCount();
-
+   
    for (var t=0; t<numRanges; t++){
       tree.view.selection.getRangeAt(t,start,end);
+      
       for (var v=start.value; v<=end.value; v++){
-         //dump( "\n in unifinder click event, v is "+v );
          try {
-            var treeitem = tree.treeBoxObject.view.getItemAtIndex( v );
+            calendarEvent = tree.eventView.getCalendarEventAtRow( v );
          }
          catch( e )
          {
+            dump( "e is "+e );
             return;
          }
-         var eventId = treeitem.getAttribute("eventId");
-         ArrayOfEvents.push( gICalLib.fetchEvent( eventId ) );
+         ArrayOfEvents.push( calendarEvent );
       }
    }
-   /*var tree = document.getElementById( UnifinderTreeName );
    
-   var ThisEvent = getCalendarEventFromEvent( event );
-   
-   */
    gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
 
    if( ArrayOfEvents.length == 1 )
    {
       /*start date is either the next or last occurence, or the start date of the event */
-      var eventStartDate = getNextOrPreviousRecurrence( gICalLib.fetchEvent( eventId ) );
+      var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
       
       /* you need this in case the current day is not visible. */
       gCalendarWindow.currentView.goToDay( eventStartDate, true);
@@ -554,6 +551,90 @@ function setUnifinderEventTreeItem( treeItem, calendarEvent )
 /**
 *  Redraw the categories unifinder tree
 */
+function treeView( EventArray )
+{
+   this.eventArray = EventArray;
+   this.rowCount = EventArray.length;
+}
+
+treeView.prototype.isContainer = function()
+{return false;}
+treeView.prototype.getCellProperties = function()
+{return false;}
+treeView.prototype.getColumnProperties = function()
+{return false;}
+treeView.prototype.getRowProperties = function()
+{return false;}
+treeView.prototype.isSorted = function()
+{return false;}
+treeView.prototype.isEditable = function()
+{return false;}
+treeView.prototype.isSeparator = function()
+{return false;}
+treeView.prototype.getImageSrc = function()
+{return false;}
+treeView.prototype.cycleHeader = function()
+{return false;}
+treeView.prototype.selectionChanged = function()
+{
+   alert( 'selection changed' );
+}
+treeView.prototype.setTree = function( tree )
+{
+   this.tree = tree;
+}
+treeView.prototype.getCellText = function(row,column)
+{
+   calendarEvent = this.eventArray[row];
+   switch( column )
+   {
+      case "unifinder-search-results-tree-col-title":
+         if( calendarEvent.title == "" )
+            var titleText = "Untitled";
+         else  
+         var titleText = calendarEvent.title;
+         return( titleText );
+      break;
+      case "unifinder-search-results-tree-col-startdate":
+         var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
+         var startDate = formatUnifinderEventDate( eventStartDate );
+         if( calendarEvent.allDay )
+         {
+            startText = "All day " + startDate;
+         }
+         else
+         {
+            startText = startDate + " " + startTime;
+         }
+         return( startText );
+      break;
+      case "unifinder-search-results-tree-col-enddate":
+         var eventEndDate = getNextOrPreviousRecurrence( calendarEvent );
+         var endDate = formatUnifinderEventDate( eventEndDate );
+         if( calendarEvent.allDay )
+         {
+            endText = "All day " + endDate;
+         }
+         else
+         {
+            endText = startDate + " " + endTime;
+         }
+         return( endText );
+      break;
+   }
+}
+
+
+function calendarEventView( eventArray )
+{
+   this.eventArray = eventArray;   
+}
+
+calendarEventView.prototype.getCalendarEventAtRow = function( i )
+{
+   return( this.eventArray[ i ] );
+}
+
 
 function refreshEventTree( eventArray )
 {
@@ -561,9 +642,13 @@ function refreshEventTree( eventArray )
    {
       eventArray = getEventTable();
    }
+   
+   document.getElementById(UnifinderTreeName).view = new treeView( eventArray );
+
+   document.getElementById( UnifinderTreeName ).eventView = new calendarEventView( eventArray );
 
    // get the old tree children item and remove it
-   
+   /*
    var tree = document.getElementById( UnifinderTreeName );
 
    var elementsToRemove = document.getElementsByAttribute( "calendarevent", "true" );
@@ -585,7 +670,8 @@ function refreshEventTree( eventArray )
       setUnifinderEventTreeItem( treeItem, calendarEvent );
 
       tree.getElementsByTagName( "treechildren" )[0]. appendChild( treeItem );
-   }  
+   }
+   */  
 }
 
 function focusFirstItemIfNoSelection()
@@ -593,7 +679,7 @@ function focusFirstItemIfNoSelection()
    if( gCalendarWindow.EventSelection.selectedEvents.length == 0 )
    {
       //select the first event in the list.
-      var ListBox = document.getElementById( "unifinder-search-results-listbox" );
+      var ListBox = document.getElementById( UnifinderTreeName );
 
       if( ListBox.childNodes.length > 0 )
       {

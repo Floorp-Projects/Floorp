@@ -380,7 +380,6 @@
                </hbox>
                <tree id="unifinder-search-results-listbox" flex="1" 
                   onselect="unifinderClickEvent( event )"
-                  seltype="multiple" 
                   enableColumnDrag="true"
                   >
                <treecols id="unifinder-search-results-tree-cols">
@@ -409,8 +408,7 @@
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
                     ondblclick="unifinderDoubleClickEvent( event )"
-                    onfocus="focusFirstItemIfNoSelection( );">
-                 </treechildren>
+                    onfocus="focusFirstItemIfNoSelection( );"/>
                </tree>
             </vbox>
             
