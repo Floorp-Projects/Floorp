@@ -298,6 +298,11 @@ nsGfxListControlFrame::~nsGfxListControlFrame()
   if (mSelectionCache) {
     delete mSelectionCache;
   }
+  
+#ifdef DO_DRAGGING
+  NS_IF_RELEASE ( mAutoScrollTimer );
+#endif
+
 }
 
 //---------------------------------------------------------
