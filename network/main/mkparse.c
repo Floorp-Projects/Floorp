@@ -25,6 +25,7 @@
 #include "mkparse.h"
 #include "xp_time.h"
 #include "mkfsort.h"
+#include "prlong.h"
 #include "prtime.h"
 
 extern int MK_OUT_OF_MEMORY;
@@ -559,15 +560,17 @@ MODULE_PRIVATE time_t
 NET_ParseDate(char *date_string)
 {
 #ifndef USE_OLD_TIME_FUNC
-	PRTime date;
+	PRTime prdate;
+    time_t date = 0;
 
     TRACEMSG(("Parsing date string: %s\n",date_string));
 
 	/* try using PR_ParseTimeString instead
 	 */
 	
-	if(PR_ParseTimeString(date_string, TRUE, &date))
+	if(PR_ParseTimeString(date_string, TRUE, &prdate))
 	  {
+        LL_L2I(date, prdate);
 		TRACEMSG(("Parsed date as GMT: %s\n", asctime(gmtime(&date))));
 		TRACEMSG(("Parsed date as local: %s\n", ctime(&date)));
 	  }
@@ -1665,7 +1668,7 @@ net_parse_http_index_201_line(HTTPIndexParserData *obj, char *data_line)
                 {
                     PRTime prtime;
 				    PR_ParseTimeString(token, TRUE, &prtime);
-                    file_struct->date = (time_t) prtime;
+                    LL_L2I(file_struct->date, prtime);
                 }
 				break;
 
