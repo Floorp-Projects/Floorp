@@ -92,6 +92,7 @@ en-US.jar:
     locale/en-US/global/wizardManager.properties    (resources/locale/en-US/wizardManager.properties) 
     locale/en-US/global/wizardOverlay.dtd           (resources/locale/en-US/wizardOverlay.dtd) 
     locale/en-US/global/keys.properties             (resources/locale/en-US/keys.properties)
+    locale/en-US/global/config.properties           (resources/locale/en-US/config.properties) 
     locale/en-US/global/config.dtd                  (resources/locale/en-US/config.dtd) 
     locale/en-US/global/about.dtd                   (resources/locale/en-US/about.dtd) 
     locale/en-US/global/accept2locale.properties    (resources/locale/en-US/accept2locale.properties) 
