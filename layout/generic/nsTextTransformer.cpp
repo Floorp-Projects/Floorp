@@ -206,6 +206,9 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen)
     if (XP_IS_SPACE(ch)) {
       break;
     }
+    if (CH_NBSP == ch) {
+      ch = ' ';
+    }
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
       nsresult rv = mTransformBuf.GrowBy(1000);
@@ -336,6 +339,9 @@ nsTextTransformer::ScanPreData_F(PRInt32* aWordLen)
     if ((ch == '\t') || (ch == '\n')) {
       break;
     }
+    if (CH_NBSP == ch) {
+      ch = ' ';
+    }
     if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
@@ -370,6 +376,9 @@ nsTextTransformer::ScanPreAsciiData_F(PRInt32* aWordLen)
     if ((ch == '\t') || (ch == '\n')) {
       cp--;
       break;
+    }
+    if (CH_NBSP == ch) {
+      ch = ' ';
     }
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
@@ -517,6 +526,9 @@ nsTextTransformer::ScanNormalAsciiText_B(PRInt32* aWordLen)
     if (XP_IS_SPACE(ch)) {
       break;
     }
+    if (CH_NBSP == ch) {
+      ch = ' ';
+    }
     if (bp == startbp) {
       PRInt32 oldLength = mTransformBuf.mBufferLen;
       nsresult rv = mTransformBuf.GrowBy(1000);
@@ -642,6 +654,9 @@ nsTextTransformer::ScanPreData_B(PRInt32* aWordLen)
     PRUnichar ch = frag->CharAt(offset);
     if ((ch == '\t') || (ch == '\n')) {
       break;
+    }
+    if (CH_NBSP == ch) {
+      ch = ' ';
     }
     if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
     if (bp == startbp) {
