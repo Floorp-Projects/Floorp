@@ -82,7 +82,7 @@ extern CGenericFrame *wfe_pLastFrame;
 // bookmark menu before we add the bookmark items. We need this so we
 // know how many menu items to delete when the menu goes away
 static int      nExistingBookmarkMenuItems;
-s
+
 // We destroy the menu items we added when we receive the WM_MENUSELECT.
 // Because Windows sends the WM_MENUSELECT that the menu is going away
 // before they send the WM_COMMAND, we need to remember the last menu item
