@@ -46,7 +46,9 @@ public:
 
     // nsIsupports
     NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  
+
+    NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
+    NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);  
 
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 

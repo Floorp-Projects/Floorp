@@ -110,6 +110,48 @@ PRBool nsWindow::IsChild() const
   return PR_FALSE;
 }
 
+NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+{
+  gint x;
+  gint y;
+
+  g_print("nsWidget::WidgetToScreen\n");
+  if (mIsToplevel && mShell)
+  {
+    if (mShell->window)
+    {
+      gdk_window_get_origin(mWidget->window, &x, &y);
+      aNewRect.x = x + aOldRect.x;
+      aNewRect.y = y + aOldRect.y;
+      g_print("  x = %i, y = %i\n", x, y);
+    }
+    else
+      return NS_ERROR_FAILURE;
+  }
+  else if (mWidget)
+  {
+    if (mWidget->window)
+    {
+      gdk_window_get_origin(mWidget->window, &x, &y);
+      aNewRect.x = x - aOldRect.x;
+      aNewRect.y = y - aOldRect.y;
+      g_print("  x = %i, y = %i\n", x, y);
+    }
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_METHOD nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+{
+    g_print("nsWidget::ScreenToWidget\n");
+    NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
+    return NS_OK;
+}
+
+
 //-------------------------------------------------------------------------
 void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 {
@@ -165,6 +207,12 @@ NS_METHOD nsWindow::Destroy()
     nsBaseWidget::Destroy();
     if (PR_FALSE == mOnDestroyCalled)
         nsWidget::OnDestroy();
+    if (mVBox)
+    {
+      if (GTK_IS_WIDGET(mVBox))
+        gtk_widget_destroy(mVBox);
+      mVBox = nsnull;
+    }
     if (mShell) {
     	if (GTK_IS_WIDGET(mShell))
      		gtk_widget_destroy(mShell);
@@ -274,9 +322,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
       GTK_SIGNAL_FUNC(handle_delete_event),
       this);
     */
-    // XXX Hack, give the clipboard class a pointer to
-    // any top-level window, how about mShell.
-    nsClipboard::SetTopLevelWidget(mShell);
   }
 
   else if (!parentWidget) {
@@ -295,10 +340,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                      "delete_event",
                      GTK_SIGNAL_FUNC(handle_delete_event),
                      this);
-
-    // XXX Hack, give the clipboard class a pointer to
-    // any top-level window, how about mShell.
-    nsClipboard::SetTopLevelWidget(mShell);
   }
   
   // Force cursor to default setting
@@ -616,54 +657,64 @@ NS_METHOD nsWindow::Show(PRBool bState)
     return NS_OK; // Will be null durring printing
 
 
+  // show
   if (bState)
   {
+    // show mWidget
     ::gtk_widget_show(mWidget);
-
 #ifdef DEBUG_pavlov
     g_print("  showing mWidget\n");
 #endif
 
+    // are we a toplevel window?
     if (mIsToplevel && mShell)
     {
-      ::gtk_widget_show(mVBox);
 
+      // popup windows don't have vboxes
+      if (mVBox)
+      {
+        gtk_widget_show(mVBox);
 #ifdef DEBUG_pavlov
-      g_print("  showing mVBox\n");
+        g_print("  showing mmVBox\n");
 #endif
+      }
 
-      ::gtk_widget_show(mShell);
-
+      gtk_widget_show(mShell);
 #ifdef DEBUG_pavlov
       g_print("  showing mShell\n");
 #endif
     }
   }
+  // hide
   else
   {
-    ::gtk_widget_hide(mWidget);
-
+    gtk_widget_hide(mWidget);
 #ifdef DEBUG_pavlov
     g_print("  hiding mWidget\n");
 #endif
 
+    // are we a toplevel window?
     if (mIsToplevel && mShell)
     {
-      ::gtk_widget_hide(mShell);
 
+      // popup windows don't have vboxes
+      if (mVBox)
+      {
+        gtk_widget_hide(mVBox);
+#ifdef DEBUG_pavlov
+        g_print("  hiding mVBox\n");
+#endif
+      }
+
+      gtk_widget_hide(mShell);
 #ifdef DEBUG_pavlov
       g_print("  hiding mShell\n");
 #endif
 
-      ::gtk_widget_hide(mVBox);
-
-#ifdef DEBUG_pavlov
-      g_print("  hiding mVBox\n");
-#endif
     }    
     // For some strange reason, gtk_widget_hide() does not seem to
     // unmap the window.
-    ::gtk_widget_unmap(mWidget);
+    gtk_widget_unmap(mWidget);
   }
 
   mShown = bState;
@@ -693,12 +744,15 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
 NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
   // not implimented for toplevel windows
-
-  if (!mIsToplevel)
+  if (mIsToplevel && mShell)
   {
-    if (mWidget) {
-      ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
-    }
+    mShell->allocation.x = aX;
+    mShell->allocation.y = aY;
+    if (mShell->window)
+      gdk_window_move(mShell->window, aX, aY);
+  }
+  else if (mWidget) {
+    ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
   }
 
   return NS_OK;
@@ -736,7 +790,7 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
       else
       {
 #ifdef DEBUG_pavlov
-        g_print("nsWindow::Resize on toplevel window with null gdkwindow for parent -- window not realized\n");
+        g_print("nsWindow::Resize on toplevel window with null gdkwindow for parent -- window not yet realized\n");
 #endif
         gtk_widget_realize(mShell);
         if (mShell->window)
