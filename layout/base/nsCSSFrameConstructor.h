@@ -472,7 +472,8 @@ protected:
                                              nsIAtom*                 aTag,
                                              nsFrameConstructorState& aState,
                                              nsIContent*              aParent,
-                                             nsIFrame*                aNewFrame,
+                                             nsIFrame*                aNewCellBodyFrame,
+                                             nsIFrame*                aNewCellFrame,
                                              nsFrameItems&            aChildItems);
 
 #ifdef INCLUDE_XUL
