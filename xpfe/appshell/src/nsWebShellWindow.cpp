@@ -2297,11 +2297,11 @@ void nsWebShellWindow::LoadContentAreas() {
     for (endPos = 0; endPos < searchSpec.Length(); ) {
       // extract contentAreaID and URL substrings
       begPos = endPos;
-      eqPos = searchSpec.Find('=', begPos);
+      eqPos = searchSpec.FindChar('=', PR_FALSE,begPos);
       if (eqPos < 0)
         break;
 
-      endPos = searchSpec.Find(';', eqPos);
+      endPos = searchSpec.FindChar(';', PR_FALSE,eqPos);
       if (endPos < 0)
         endPos = searchSpec.Length();
       searchSpec.Mid(contentAreaID, begPos, eqPos-begPos);
@@ -2749,7 +2749,7 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
   nsAutoString url(aURLSpec);
   nsresult rv;
 
-  PRInt32 offset = url.Find(":");
+  PRInt32 offset = url.FindChar(':');
   if (offset <= 0)
      return NS_ERROR_FAILURE;
 
