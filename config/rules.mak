@@ -160,7 +160,7 @@ PDBFILE=$(DLLNAME)
 !ifdef PDBFILE
 PDBFILE=.\$(OBJDIR)\$(PDBFILE).pdb
 !else
-PDBFILE=.\$(OBJDIR)\default
+PDBFILE=.\$*.pdb  # used for executables
 !endif
 !ifdef RESFILE
 RESFILE=.\$(OBJDIR)\$(RESFILE)
