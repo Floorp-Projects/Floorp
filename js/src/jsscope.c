@@ -425,26 +425,52 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
     scope->data = NULL;
 
 #ifdef JS_THREADSAFE
-    js_NewLock(&scope->lock);
-    scope->count = 0;
+    scope->ownercx = cx;
+    memset(&scope->lock, 0, sizeof scope->lock);
+
+    /*
+     * Set u.link = NULL, not u.count = 0, in case the target architecture's
+     * null pointer has a non-zero integer representation.
+     */
+    scope->u.link = NULL;
+
 #ifdef DEBUG
     scope->file[0] = scope->file[1] = scope->file[2] = scope->file[3] = NULL;
     scope->line[0] = scope->line[1] = scope->line[2] = scope->line[3] = 0;
+    JS_ATOMIC_INCREMENT(&cx->runtime->liveScopes);
+    JS_ATOMIC_INCREMENT(&cx->runtime->totalScopes);
 #endif
 #endif
 
     return scope;
 }
 
+#ifdef DEBUG_SCOPE_COUNT
+extern void
+js_unlog_scope(JSScope *scope);
+#endif
+
 void
 js_DestroyScope(JSContext *cx, JSScope *scope)
 {
-    JS_LOCK_SCOPE(cx, scope);
-    scope->ops->clear(cx, scope);
-    JS_UNLOCK_SCOPE(cx, scope);
+#ifdef DEBUG_SCOPE_COUNT
+    js_unlog_scope(scope);
+#endif
 #ifdef JS_THREADSAFE
-    JS_ASSERT(scope->count == 0);
-    js_DestroyLock(&scope->lock);
+    /*
+     * Scope must be single-threaded at this point, so set scope->ownercx.
+     * This also satisfies the JS_IS_SCOPE_LOCKED assertions in the _clear
+     * implementations.
+     */
+    JS_ASSERT(scope->u.count == 0);
+    scope->ownercx = cx;
+#endif
+    scope->ops->clear(cx, scope);
+#ifdef JS_THREADSAFE
+    js_FinishLock(&scope->lock);
+#endif
+#ifdef DEBUG
+    JS_ATOMIC_DECREMENT(&cx->runtime->liveScopes);
 #endif
     JS_free(cx, scope);
 }

@@ -66,11 +66,10 @@ struct JSRuntime {
 
     /* Garbage collector state, used by jsgc.c. */
     JSArenaPool         gcArenaPool;
-    JSGCThing           *gcFinalVec;
     JSHashTable         *gcRootsHash;
     JSHashTable         *gcLocksHash;
     JSGCThing           *gcFreeList;
-    jsword              gcDisabled;
+    jsrefcount          gcDisabled;
     uint32              gcBytes;
     uint32              gcLastBytes;
     uint32              gcMaxBytes;
@@ -158,18 +157,50 @@ struct JSRuntime {
 
     /* Used to serialize cycle checks when setting __proto__ or __parent__. */
     PRLock              *setSlotLock;
+
+    /*
+     * State for sharing single-threaded scopes, once a second thread tries to
+     * lock a scope.  The scopeSharingDone condvar is protected by rt->gcLock,
+     * to minimize number of locks taken in JS_EndRequest.
+     *
+     * The scopeSharingTodo linked list is likewise "global" per runtime, not
+     * one-list-per-context, to conserve space over all contexts, optimizing
+     * for the likely case that scopes become shared rarely, and among a very
+     * small set of threads (contexts).
+     */
+    PRCondVar           *scopeSharingDone;
+    JSScope             *scopeSharingTodo;
+
+/*
+ * Magic terminator for the rt->scopeSharingTodo linked list, threaded through
+ * scope->u.link.  This hack allows us to test whether a scope is on the list
+ * by asking whether scope->u.link is non-null.  We use a large, likely bogus
+ * pointer here to distinguish this value from any valid u.count (small int)
+ * value.
+ */
+#define NO_SCOPE_SHARING_TODO   ((JSScope *) 0xfeedbeef)
 #endif
 
 #ifdef DEBUG
-    jsword              inlineCalls;
-    jsword              nativeCalls;
-    jsword              nonInlineCalls;
-    jsword              constructs;
+    /* Function invocation metering. */
+    jsrefcount          inlineCalls;
+    jsrefcount          nativeCalls;
+    jsrefcount          nonInlineCalls;
+    jsrefcount          constructs;
+
+    /* Scope lock metering. */
+    jsrefcount          claimAttempts;
+    jsrefcount          claimedScopes;
+    jsrefcount          deadContexts;
+    jsrefcount          deadlocksAvoided;
+    jsrefcount          liveScopes;
+    jsrefcount          sharedScopes;
+    jsrefcount          totalScopes;
 #endif
 };
 
-#define JS_ENABLE_GC(rt)    JS_ATOMIC_ADDREF(&(rt)->gcDisabled, -1);
-#define JS_DISABLE_GC(rt)   JS_ATOMIC_ADDREF(&(rt)->gcDisabled, 1);
+#define JS_ENABLE_GC(rt)    JS_ATOMIC_DECREMENT(&(rt)->gcDisabled);
+#define JS_DISABLE_GC(rt)   JS_ATOMIC_INCREMENT(&(rt)->gcDisabled);
 
 #ifdef JS_ARGUMENT_FORMATTER_DEFINED
 /*
@@ -248,6 +279,7 @@ struct JSContext {
 #ifdef JS_THREADSAFE
     jsword              thread;
     jsrefcount          requestDepth;
+    JSScope             *scopeToShare;      /* weak reference, see jslock.c */
 #endif
 
 #if JS_HAS_LVALUE_RETURN
@@ -290,6 +322,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize);
 
 extern void
 js_DestroyContext(JSContext *cx, JSGCMode gcmode);
+
+extern JSBool
+js_LiveContext(JSRuntime *rt, JSContext *cx);
 
 extern JSContext *
 js_ContextIterator(JSRuntime *rt, JSContext **iterp);

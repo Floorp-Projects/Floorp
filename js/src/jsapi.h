@@ -353,11 +353,11 @@ JS_EndRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_YieldRequest(JSContext *cx);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(jsrefcount)
 JS_SuspendRequest(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_ResumeRequest(JSContext *cx);
+JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
 
 #endif /* JS_THREADSAFE */
 

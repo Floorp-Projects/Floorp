@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -41,8 +41,9 @@
 #include <stdlib.h>
 #include "jspubtd.h"
 #include "prthread.h"
-#include "pratom.h"
 #include "jsutil.h" /* Added by JSIFY */
+#include "jstypes.h"
+#include "jsbit.h"
 #include "jscntxt.h"
 #include "jsscope.h"
 #include "jspubtd.h"
@@ -52,48 +53,49 @@
 #include <memory.h>
 #endif
 
-static PRLock **_global_locks;
-static int _nr_of_globals=1;
+static PRLock **global_locks;
+static uint32 global_lock_count = 1;
+static uint32 global_locks_log2 = 0;
+static uint32 global_locks_mask = 0;
+
+#define GLOBAL_LOCK_INDEX(id)   (((uint32)(id) >> 2) & global_locks_mask)
 
 static void
 js_LockGlobal(void *id)
 {
-    int i = ((int)id/4)%_nr_of_globals;
-    PR_Lock(_global_locks[i]);
+    uint32 i = GLOBAL_LOCK_INDEX(id);
+    PR_Lock(global_locks[i]);
 }
 
 static void
 js_UnlockGlobal(void *id)
 {
-    int i = ((int)id/4)%_nr_of_globals;
-    PR_Unlock(_global_locks[i]);
+    uint32 i = GLOBAL_LOCK_INDEX(id);
+    PR_Unlock(global_locks[i]);
 }
 
 #define ReadWord(W) (W)
-#define AtomicAddBody(P,I)                                                    \
-    jsword n;                                                                 \
-    do {                                                                      \
-	n = ReadWord(*(P));                                                   \
-    } while (!js_CompareAndSwap(P, n, n + I))
+
+#if !defined(NSPR_LOCK)
 
 /* Exclude Alpha NT. */
-#if defined(_WIN32) && defined(_M_IX86) && !defined(NSPR_LOCK)
+#if defined(_WIN32) && defined(_M_IX86)
 #pragma warning( disable : 4035 )
 
 JS_INLINE int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     __asm {
-		mov eax,ov
-		mov ecx, nv
-		mov ebx, w
-		lock cmpxchg [ebx], ecx
-		sete al
-		and eax,1h
-	}
+        mov eax, ov
+        mov ecx, nv
+        mov ebx, w
+        lock cmpxchg [ebx], ecx
+        sete al
+        and eax, 1h
+    }
 }
 
-#elif defined(__GNUC__) && defined(__i386__) && !defined(NSPR_LOCK)
+#elif defined(__GNUC__) && defined(__i386__)
 
 /* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
 JS_INLINE int
@@ -107,61 +109,18 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
                           "sete %%al\n"
                           "andl $1, %%eax\n"
                           : "=a" (res)
-                          : "r" (w), "r" (nv), "a" (ov) 
+                          : "r" (w), "r" (nv), "a" (ov)
                           : "cc", "memory");
-    return res;
+    return (int)res;
 }
 
-#elif defined(SOLARIS) && defined(sparc) && !defined(NSPR_LOCK)
-
-#ifndef ULTRA_SPARC
-JS_INLINE jsword
-js_ReadWord(jsword *p)
-{
-    jsword n;
-    while ((n = *p) == -1)
-	;
-    return n;
-}
-
-#undef ReadWord
-#define ReadWord(W) js_ReadWord(&(W))
-
-static PRLock *_counter_lock;
-#define UsingCounterLock 1
-
-#undef AtomicAddBody
-#define AtomicAddBody(P,I)                                                    \
-    PR_Lock(_counter_lock);                                                   \
-    *(P) += I;                                                                \
-    PR_Unlock(_counter_lock)
-
-#endif /* !ULTRA_SPARC */
+#elif defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)
 
 JS_INLINE int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
 #if defined(__GNUC__)
     unsigned int res;
-#ifndef ULTRA_SPARC
-    JS_ASSERT(nv != -1);
-    asm volatile ("\
-stbar\n\
-swap [%1],%4\n\
-1:  cmp %4,-1\n\
-be,a 1b\n\
-swap [%1],%4\n\
-cmp %2,%4\n\
-be,a 2f\n\
-swap [%1],%3\n\
-swap [%1],%4\n\
-ba 3f\n\
-mov 0,%0\n\
-2:  mov 1,%0\n\
-3:"
-		  : "=r" (res)
-		  : "r" (w), "r" (ov), "r" (nv), "r" (-1));
-#else /* ULTRA_SPARC */
     JS_ASSERT(ov != nv);
     asm volatile ("\
 stbar\n\
@@ -171,65 +130,33 @@ be,a 1f\n\
 mov 1,%0\n\
 mov 0,%0\n\
 1:"
-		  : "=r" (res)
-		  : "r" (w), "r" (ov), "r" (nv));
-#endif /* ULTRA_SPARC */
+                  : "=r" (res)
+                  : "r" (w), "r" (ov), "r" (nv));
     return (int)res;
 #else /* !__GNUC__ */
-    extern int compare_and_swap(jsword*,jsword,jsword);
-#ifndef ULTRA_SPARC
-    JS_ASSERT(nv != -1);
-#else
+    extern int compare_and_swap(jsword*, jsword, jsword);
     JS_ASSERT(ov != nv);
-#endif
-    return compare_and_swap(w,ov,nv);
+    return compare_and_swap(w, ov, nv);
 #endif
 }
 
-#elif defined(AIX) && !defined(NSPR_LOCK)
+#elif defined(AIX)
+
 #include <sys/atomic_op.h>
 
 JS_INLINE int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
-    return !_check_lock((atomic_p)w,ov,nv);
+    return !_check_lock((atomic_p)w, ov, nv);
 }
 
 #else
 
-static PRLock *_counter_lock;
-#define UsingCounterLock 1
-
-#undef AtomicAddBody
-#define AtomicAddBody(P,I)                                                    \
-    PR_Lock(_counter_lock);                                                   \
-    *(P) += I;                                                                \
-    PR_Unlock(_counter_lock)
-
-static PRLock *_compare_and_swap_lock;
-#define UsingCompareAndSwapLock 1
-
-JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
-{
-    int res = 0;
-
-    PR_Lock(_compare_and_swap_lock);
-    if (*w == ov) {
-      *w = nv;
-      res = 1;
-    }
-    PR_Unlock(_compare_and_swap_lock);
-    return res;
-}
+#error "Define NSPR_LOCK if your platform lacks a compare-and-swap instruction."
 
 #endif /* arch-tests */
 
-JS_INLINE void
-js_AtomicAdd(jsword *p, jsword i)
-{
-    AtomicAddBody(p,i);
-}
+#endif /* !defined(NSPR_LOCK) */
 
 jsword
 js_CurrentThreadId()
@@ -238,7 +165,7 @@ js_CurrentThreadId()
 }
 
 void
-js_NewLock(JSThinLock *tl)
+js_InitLock(JSThinLock *tl)
 {
 #ifdef NSPR_LOCK
     tl->owner = 0;
@@ -249,11 +176,12 @@ js_NewLock(JSThinLock *tl)
 }
 
 void
-js_DestroyLock(JSThinLock *tl)
+js_FinishLock(JSThinLock *tl)
 {
 #ifdef NSPR_LOCK
     tl->owner = 0xdeadbeef;
-    JS_DESTROY_LOCK(((JSLock*)tl->fat));
+    if (tl->fat)
+        JS_DESTROY_LOCK(((JSLock*)tl->fat));
 #else
     JS_ASSERT(tl->owner == 0);
     JS_ASSERT(tl->fat == NULL);
@@ -262,90 +190,377 @@ js_DestroyLock(JSThinLock *tl)
 
 static void js_Dequeue(JSThinLock *);
 
-JS_INLINE jsval
-js_GetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot)
+#ifdef DEBUG_SCOPE_COUNT
+
+#include <stdio.h>
+#include "jsdhash.h"
+
+static FILE *logfp;
+static JSDHashTable logtbl;
+
+typedef struct logentry {
+    JSDHashEntryStub stub;
+    char             op;
+    const char       *file;
+    int              line;
+} logentry;
+
+static void
+logit(JSScope *scope, char op, const char *file, int line)
 {
-    jsval v;
-#ifndef NSPR_LOCK
-    JSScope *scope = OBJ_SCOPE(obj);
-    JSThinLock *tl = &scope->lock;
-    jsword me = cx->thread;
+    logentry *entry;
+
+    if (!logfp) {
+        logfp = fopen("/tmp/scope.log", "w");
+        if (!logfp)
+            return;
+        setvbuf(logfp, NULL, _IONBF, 0);
+    }
+    fprintf(logfp, "%p %c %s %d\n", scope, op, file, line);
+
+    if (!logtbl.entryStore &&
+        !JS_DHashTableInit(&logtbl, JS_DHashGetStubOps(), NULL,
+                           sizeof(logentry), 100)) {
+        return;
+    }
+    entry = (logentry *) JS_DHashTableOperate(&logtbl, scope, JS_DHASH_ADD);
+    if (!entry)
+        return;
+    entry->stub.key = scope;
+    entry->op = op;
+    entry->file = file;
+    entry->line = line;
+}
+
+void
+js_unlog_scope(JSScope *scope)
+{
+    if (!logtbl.entryStore)
+        return;
+    (void) JS_DHashTableOperate(&logtbl, scope, JS_DHASH_REMOVE);
+}
+
+# define LOGIT(scope,op) logit(scope, op, __FILE__, __LINE__)
+
+#else
+
+# define LOGIT(scope,op) /* nothing */
+
+#endif /* DEBUG_SCOPE_COUNT */
+
+#ifdef DEBUG
+# define METER_LOCK_EVENT(rt, which) JS_ATOMIC_INCREMENT(&(rt)->which)
+#else
+# define METER_LOCK_EVENT(rt, which) /* nothing */
 #endif
 
-    JS_ASSERT(obj->slots && slot < obj->map->freeslot);
+/*
+ * Return true if scope's ownercx, or the ownercx of a single-threaded scope
+ * for which ownercx is waiting to become multi-threaded and shared, is cx.
+ * That condition implies deadlock in ClaimScope if cx's thread were to wait
+ * to share scope.
+ *
+ * (i) rt->gcLock held
+ */
+static JSBool
+WillDeadlock(JSScope *scope, JSContext *cx)
+{
+    JSContext *ownercx;
+
+    do {
+        ownercx = scope->ownercx;
+        if (ownercx == cx) {
+            METER_LOCK_EVENT(cx->runtime, deadlocksAvoided);
+            return JS_TRUE;
+        }
+    } while (ownercx && (scope = ownercx->scopeToShare) != NULL);
+    return JS_FALSE;
+}
+
+/*
+ * Make scope multi-threaded, i.e. shared its ownership among contexts in rt
+ * using a "thin" or (if necessary due to contention) "fat" lock.
+ *
+ * (i) rt->gcLock held
+ */
+static void
+ShareScope(JSRuntime *rt, JSScope *scope)
+{
+    JSScope **todop;
+
+    if (scope->u.link) {
+        for (todop = &rt->scopeSharingTodo; *todop != scope;
+             todop = &(*todop)->u.link) {
+            JS_ASSERT(*todop != NO_SCOPE_SHARING_TODO);
+        }
+        *todop = scope->u.link;
+        JS_NOTIFY_ALL_CONDVAR(rt->scopeSharingDone);
+    }
+    js_InitLock(&scope->lock);
+    scope->u.count = 0;
+    scope->ownercx = NULL;  /* NB: set last, after lock init */
+    METER_LOCK_EVENT(rt, sharedScopes);
+}
+
+/*
+ * Given a scope with apparently non-null ownercx different from cx, try to
+ * set ownercx to cx, claiming exclusive (single-threaded) ownership of scope.
+ * If we claim ownership, return true.  Otherwise, we wait for ownercx to be
+ * set to null (indicating that scope is multi-threaded); or if waiting would
+ * deadlock, we set ownercx to null ourselves via ShareScope.  In any case,
+ * once ownercx is null we return false.
+ */
+static JSBool
+ClaimScope(JSScope *scope, JSContext *cx)
+{
+    JSRuntime *rt;
+    JSContext *ownercx;
+    jsrefcount saveDepth;
+    PRStatus stat;
+
+    rt = cx->runtime;
+    METER_LOCK_EVENT(rt, claimAttempts);
+    JS_LOCK_GC(rt);
+
+    /* Reload in case ownercx went away while we blocked on the lock. */
+    while ((ownercx = scope->ownercx) != NULL) {
+        /*
+         * Avoid selflock if ownercx is dead, or is not running a request, or
+         * has the same thread as cx.  Set scope->ownercx to cx so that the
+         * matching JS_UNLOCK_SCOPE or JS_UNLOCK_OBJ macro call will take the
+         * fast path around the corresponding js_UnlockScope or js_UnlockObj
+         * function call.
+         *
+         * If scope->u.link is non-null, scope has already been inserted on
+         * the rt->scopeSharingTodo list, because another thread's context
+         * already wanted to lock scope while ownercx was running a request.
+         * We can't claim any scope whose u.link is non-null at this point,
+         * even if ownercx->requestDepth is 0 (see below where we suspend our
+         * request before waiting on rt->scopeSharingDone).
+         */
+        if (!scope->u.link &&
+            (!js_LiveContext(rt, ownercx) ||
+             !ownercx->requestDepth ||
+             ownercx->thread == cx->thread)) {
+            JS_ASSERT(scope->u.count == 0);
+            scope->ownercx = cx;
+            JS_UNLOCK_GC(rt);
+            METER_LOCK_EVENT(rt, claimedScopes);
+            return JS_TRUE;
+        }
+
+        /*
+         * Avoid deadlock if scope's owner context is waiting on a scope that
+         * we own, by revoking scope's ownership.  This approach to deadlock
+         * avoidance works because the engine never nests scope locks, except
+         * for the notable case of js_SetProtoOrParent (see jsobj.c).
+         *
+         * If cx could hold locks on ownercx->scopeToShare, or if ownercx
+         * could hold locks on scope, we would need to keep reentrancy counts
+         * for all such "flyweight" (ownercx != NULL) locks, so that control
+         * would unwind properly once these locks became "thin" or "fat".
+         *
+         * In the case of js_SetProtoOrParent, we ensure that the "outer"
+         * scope's lock is not flyweight before that function tries to hold
+         * the inner scope's lock.
+         */
+        if (ownercx->scopeToShare &&
+            WillDeadlock(ownercx->scopeToShare, cx)) {
+            ShareScope(rt, scope);
+            break;
+        }
+
+        /*
+         * Thanks to the non-zero NO_SCOPE_SHARING_TODO link terminator, we
+         * can decide whether scope is on rt->scopeSharingTodo with a single
+         * non-null test, and avoid double-insertion bugs.
+         */
+        if (!scope->u.link) {
+            scope->u.link = rt->scopeSharingTodo;
+            rt->scopeSharingTodo = scope;
+            js_HoldObjectMap(cx, &scope->map);
+        }
+
+        /*
+         * Inline JS_SuspendRequest before we wait on rt->scopeSharingDone,
+         * saving and clearing cx->requestDepth so we don't deadlock if the
+         * GC needs to run on ownercx.
+         */
+        saveDepth = cx->requestDepth;
+        if (saveDepth) {
+            cx->requestDepth = 0;
+            JS_ASSERT(rt->requestCount > 0);
+            rt->requestCount--;
+            if (rt->requestCount == 0)
+                JS_NOTIFY_REQUEST_DONE(rt);
+        }
+
+        /*
+         * We know that some other thread's context owns scope, which is now
+         * linked onto rt->scopeSharingTodo, awaiting the end of that other
+         * thread's request.  So it is safe to wait on rt->scopeSharingDone.
+         */
+        cx->scopeToShare = scope;
+        stat = PR_WaitCondVar(rt->scopeSharingDone, PR_INTERVAL_NO_TIMEOUT);
+        JS_ASSERT(stat != PR_FAILURE);
+        cx->scopeToShare = NULL;
+
+        /*
+         * Inline JS_ResumeRequest after waiting on rt->scopeSharingDone,
+         * restoring cx->requestDepth.
+         */
+        if (saveDepth) {
+            if (rt->gcThread != cx->thread) {
+                while (rt->gcLevel > 0)
+                    JS_AWAIT_GC_DONE(rt);
+            }
+            rt->requestCount++;
+            cx->requestDepth = saveDepth;
+        }
+    }
+
+    JS_UNLOCK_GC(rt);
+    return JS_FALSE;
+}
+
+jsval
+js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
+{
+    jsval v;
+    JSScope *scope;
 #ifndef NSPR_LOCK
+    JSThinLock *tl;
+    jsword me;
+#endif
+
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    scope = OBJ_SCOPE(obj);
+    JS_ASSERT(scope->ownercx != cx);
+    JS_ASSERT(obj->slots && slot < obj->map->freeslot);
+    if (scope->ownercx && ClaimScope(scope, cx))
+        return obj->slots[slot];
+
+#ifndef NSPR_LOCK
+    tl = &scope->lock;
+    me = cx->thread;
     JS_ASSERT(me == CurrentThreadId());
     if (js_CompareAndSwap(&tl->owner, 0, me)) {
-	if (scope == OBJ_SCOPE(obj)) {
-	    v = obj->slots[slot];
-	    if (!js_CompareAndSwap(&tl->owner, me, 0)) {
-		scope->count = 1;
-		js_UnlockObj(cx,obj);
-	    }
-	    return v;
-	}
-	if (!js_CompareAndSwap(&tl->owner, me, 0))
-	    js_Dequeue(tl);
+        /*
+         * Got the lock with one compare-and-swap.  Even so, someone else may
+         * have mutated obj so it now has its own scope and lock, which would
+         * require either a restart from the top of this routine, or a thin
+         * lock release followed by fat lock acquisition.
+         */
+        if (scope == OBJ_SCOPE(obj)) {
+            v = obj->slots[slot];
+            if (!js_CompareAndSwap(&tl->owner, me, 0)) {
+                /* Assert that scope locks never revert to flyweight. */
+                JS_ASSERT(scope->ownercx != cx);
+                LOGIT(scope, '1');
+                scope->u.count = 1;
+                js_UnlockObj(cx, obj);
+            }
+            return v;
+        }
+        if (!js_CompareAndSwap(&tl->owner, me, 0))
+            js_Dequeue(tl);
     }
     else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-	return obj->slots[slot];
+        return obj->slots[slot];
     }
 #endif
-    js_LockObj(cx,obj);
+
+    js_LockObj(cx, obj);
     v = obj->slots[slot];
-    js_UnlockObj(cx,obj);
+
+    /*
+     * Test whether cx took ownership of obj's scope during js_LockObj.
+     *
+     * This does not mean that a given scope reverted to flyweight from "thin"
+     * or "fat" -- it does mean that obj's map pointer changed due to another
+     * thread setting a property, requiring obj to cease sharing a prototype
+     * object's scope (whose lock was not flyweight, else we wouldn't be here
+     * in the first place!).
+     */
+    scope = OBJ_SCOPE(obj);
+    if (scope->ownercx != cx)
+        js_UnlockScope(cx, scope);
     return v;
 }
 
-JS_INLINE void
-js_SetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
+void
+js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
+    JSScope *scope;
 #ifndef NSPR_LOCK
-    JSScope *scope = OBJ_SCOPE(obj);
-    JSThinLock *tl = &scope->lock;
-    jsword me = cx->thread;
+    JSThinLock *tl;
+    jsword me;
 #endif
 
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    scope = OBJ_SCOPE(obj);
+    JS_ASSERT(scope->ownercx != cx);
     JS_ASSERT(obj->slots && slot < obj->map->freeslot);
+    if (scope->ownercx && ClaimScope(scope, cx)) {
+        obj->slots[slot] = v;
+        return;
+    }
+
 #ifndef NSPR_LOCK
+    tl = &scope->lock;
+    me = cx->thread;
     JS_ASSERT(me == CurrentThreadId());
     if (js_CompareAndSwap(&tl->owner, 0, me)) {
-	if (scope == OBJ_SCOPE(obj)) {
-	    obj->slots[slot] = v;
-	    if (!js_CompareAndSwap(&tl->owner, me, 0)) {
-		scope->count = 1;
-		js_UnlockObj(cx,obj);
-	    }
-	    return;
-	}
-	if (!js_CompareAndSwap(&tl->owner, me, 0))
-	    js_Dequeue(tl);
+        if (scope == OBJ_SCOPE(obj)) {
+            obj->slots[slot] = v;
+            if (!js_CompareAndSwap(&tl->owner, me, 0)) {
+                /* Assert that scope locks never revert to flyweight. */
+                JS_ASSERT(scope->ownercx != cx);
+                LOGIT(scope, '1');
+                scope->u.count = 1;
+                js_UnlockObj(cx, obj);
+            }
+            return;
+        }
+        if (!js_CompareAndSwap(&tl->owner, me, 0))
+            js_Dequeue(tl);
     }
     else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-	obj->slots[slot] = v;
-	return;
+        obj->slots[slot] = v;
+        return;
     }
 #endif
-    js_LockObj(cx,obj);
+
+    js_LockObj(cx, obj);
     obj->slots[slot] = v;
-    js_UnlockObj(cx,obj);
+
+    /*
+     * Same drill as above, in js_GetSlotThreadSafe.  Note that we cannot
+     * assume obj has its own mutable scope (where scope->object == obj) yet,
+     * because OBJ_SET_SLOT is called for the "universal", common slots such
+     * as JSSLOT_PROTO and JSSLOT_PARENT, without a prior js_GetMutableScope.
+     * See also the JSPROP_SHARED attribute and its usage.
+     */
+    scope = OBJ_SCOPE(obj);
+    if (scope->ownercx != cx)
+        js_UnlockScope(cx, scope);
 }
 
 static JSFatLock *
-mallocFatlock()
+NewFatlock()
 {
     JSFatLock *fl = (JSFatLock *)malloc(sizeof(JSFatLock)); /* for now */
     if (!fl) return NULL;
     fl->susp = 0;
     fl->next = NULL;
-    fl->prev = NULL;
+    fl->prevp = NULL;
     fl->slock = PR_NewLock();
     fl->svar = PR_NewCondVar(fl->slock);
     return fl;
 }
 
 static void
-freeFatlock(JSFatLock *fl)
+DestroyFatlock(JSFatLock *fl)
 {
     PR_DestroyLock(fl->slock);
     PR_DestroyCondVar(fl->svar);
@@ -353,110 +568,120 @@ freeFatlock(JSFatLock *fl)
 }
 
 static JSFatLock *
-listOfFatlocks(int l)
+ListOfFatlocks(int l)
 {
     JSFatLock *m;
     JSFatLock *m0;
     int i;
 
     JS_ASSERT(l>0);
-    m0 = m = mallocFatlock();
+    m0 = m = NewFatlock();
     for (i=1; i<l; i++) {
-        m->next = mallocFatlock();
+        m->next = NewFatlock();
         m = m->next;
     }
     return m0;
 }
 
 static void
-deleteListOfFatlocks(JSFatLock *m)
+DeleteListOfFatlocks(JSFatLock *m)
 {
     JSFatLock *m0;
     for (; m; m=m0) {
-	m0 = m->next;
-	freeFatlock(m);
+        m0 = m->next;
+        DestroyFatlock(m);
     }
 }
 
-static JSFatLockTable* _fl_tables;
+static JSFatLockTable *fl_list_table = NULL;
+static uint32          fl_list_table_len = 0;
 
 static JSFatLock *
-allocateFatlock(void *id)
+GetFatlock(void *id)
 {
     JSFatLock *m;
 
-    int i = ((int)id/4)%_nr_of_globals;
-    if (_fl_tables[i].free == NULL) {
-  #ifdef DEBUG
+    uint32 i = GLOBAL_LOCK_INDEX(id);
+    if (fl_list_table[i].free == NULL) {
+#ifdef DEBUG
         printf("Ran out of fat locks!\n");
-  #endif
-        _fl_tables[i].free = listOfFatlocks(10);
+#endif
+        fl_list_table[i].free = ListOfFatlocks(10);
     }
-    m = _fl_tables[i].free;
-    _fl_tables[i].free = m->next;
-    _fl_tables[i].free->prev = NULL;
+    m = fl_list_table[i].free;
+    fl_list_table[i].free = m->next;
     m->susp = 0;
-    m->next = _fl_tables[i].taken;
-    m->prev = NULL;
-    if (_fl_tables[i].taken != NULL)
-        _fl_tables[i].taken->prev = m;
-    _fl_tables[i].taken = m;
+    m->next = fl_list_table[i].taken;
+    m->prevp = &fl_list_table[i].taken;
+    if (fl_list_table[i].taken)
+        fl_list_table[i].taken->prevp = &m->next;
+    fl_list_table[i].taken = m;
     return m;
 }
 
 static void
-deallocateFatlock(JSFatLock *m, void *id)
+PutFatlock(JSFatLock *m, void *id)
 {
-    int i = ((int)id/4)%_nr_of_globals;
+    uint32 i;
     if (m == NULL)
-	return;
-    if (m->prev != NULL)
-	m->prev->next = m->next;
-    if (m->next != NULL)
-	m->next->prev = m->prev;
-    if (m == _fl_tables[i].taken)
-	_fl_tables[i].taken = m->next;
-    m->next = _fl_tables[i].free;
-    _fl_tables[i].free = m;
+        return;
+
+    /* Unlink m from fl_list_table[i].taken. */
+    *m->prevp = m->next;
+    if (m->next)
+        m->next->prevp = m->prevp;
+
+    /* Insert m in fl_list_table[i].free. */
+    i = GLOBAL_LOCK_INDEX(id);
+    m->next = fl_list_table[i].free;
+    fl_list_table[i].free = m;
 }
 
-int
+JSBool
 js_SetupLocks(int l, int g)
 {
-    int i;
+    uint32 i;
 
-    if (_global_locks)
-        return 1;
-    if (l > 10000 || l < 0)       /* l equals number of initially allocated fat locks */
+    if (global_locks)
+        return JS_TRUE;
+    if (l > 10000 || l < 0) /* l == number of initially allocated fat locks */
 #ifdef DEBUG
-        printf("Bad number %d in js_SetupLocks()!\n",l);
+        printf("Bad number %d in js_SetupLocks()!\n", l);
 #endif
     if (g > 100 || g < 0)       /* g equals number of global locks */
 #ifdef DEBUG
-        printf("Bad number %d in js_SetupLocks()!\n",l);
+        printf("Bad number %d in js_SetupLocks()!\n", l);
 #endif
-    _nr_of_globals = g;
-    _global_locks = (PRLock**)malloc(_nr_of_globals * sizeof(PRLock*));
-    JS_ASSERT(_global_locks != NULL);
-    for (i=0; i<_nr_of_globals; i++) {
-        _global_locks[i] = PR_NewLock();
-        JS_ASSERT(_global_locks[i] != NULL);
+    global_locks_log2 = JS_CeilingLog2(g);
+    global_locks_mask = JS_BITMASK(global_locks_log2);
+    global_lock_count = JS_BIT(global_locks_log2);
+    global_locks = (PRLock **) malloc(global_lock_count * sizeof(PRLock*));
+    if (!global_locks)
+        return JS_FALSE;
+    for (i = 0; i < global_lock_count; i++) {
+        global_locks[i] = PR_NewLock();
+        if (!global_locks[i]) {
+            global_lock_count = i;
+            js_CleanupLocks();
+            return JS_FALSE;
+        }
     }
-#ifdef UsingCounterLock
-    _counter_lock = PR_NewLock();
-    JS_ASSERT(_counter_lock);
-#endif
-#ifdef UsingCompareAndSwapLock
-    _compare_and_swap_lock = PR_NewLock();
-    JS_ASSERT(_compare_and_swap_lock);
-#endif
-    _fl_tables = (JSFatLockTable*)malloc(_nr_of_globals * sizeof(JSFatLockTable));
-    JS_ASSERT(_fl_tables != NULL);
-    for (i=0; i<_nr_of_globals; i++) {
-        _fl_tables[i].free = listOfFatlocks(l);
-        _fl_tables[i].taken = NULL;
+    fl_list_table = (JSFatLockTable *) malloc(i * sizeof(JSFatLockTable));
+    if (!fl_list_table) {
+        js_CleanupLocks();
+        return JS_FALSE;
     }
-    return 1;
+    fl_list_table_len = global_lock_count;
+    for (i = 0; i < global_lock_count; i++) {
+        fl_list_table[i].free = ListOfFatlocks(l);
+        if (!fl_list_table[i].free) {
+            fl_list_table_len = i;
+            js_CleanupLocks();
+            return JS_FALSE;
+        }
+        fl_list_table[i].taken = NULL;
+    }
+    return JS_TRUE;
 }
 
 /* pull in the cleanup function from jsdtoa.c */
@@ -465,33 +690,32 @@ extern void js_FinishDtoa(void);
 void
 js_CleanupLocks()
 {
-    int i;
+    uint32 i;
 
-    if (_global_locks != NULL) {
-        for (i=0; i<_nr_of_globals; i++) {
-            PR_DestroyLock(_global_locks[i]);
-            deleteListOfFatlocks(_fl_tables[i].free);
-            _fl_tables[i].free = NULL;
-            deleteListOfFatlocks(_fl_tables[i].taken);
-            _fl_tables[i].taken = NULL;
-        }
-        free(_fl_tables);
-        _fl_tables = NULL;
-        free(_global_locks);
-        _global_locks = NULL;
-#ifdef UsingCounterLock
-        PR_DestroyLock(_counter_lock);
-        _counter_lock = NULL;
-#endif
-#ifdef UsingCompareAndSwapLock
-        PR_DestroyLock(_compare_and_swap_lock);
-        _compare_and_swap_lock = NULL;
-#endif
-        js_FinishDtoa();
+    if (global_locks) {
+        for (i = 0; i < global_lock_count; i++)
+            PR_DestroyLock(global_locks[i]);
+        free(global_locks);
+        global_locks = NULL;
+        global_lock_count = 1;
+        global_locks_log2 = 0;
+        global_locks_mask = 0;
     }
+    if (fl_list_table) {
+        for (i = 0; i < fl_list_table_len; i++) {
+            DeleteListOfFatlocks(fl_list_table[i].free);
+            fl_list_table[i].free = NULL;
+            DeleteListOfFatlocks(fl_list_table[i].taken);
+            fl_list_table[i].taken = NULL;
+        }
+        free(fl_list_table);
+        fl_list_table = NULL;
+        fl_list_table_len = 0;
+    }
+    js_FinishDtoa();
 }
 
-JS_PUBLIC_API(void)
+void
 js_InitContextForLocking(JSContext *cx)
 {
     cx->thread = CurrentThreadId();
@@ -499,81 +723,81 @@ js_InitContextForLocking(JSContext *cx)
 }
 
 /*
-  Fast locking and unlocking is implemented by delaying the
-  allocation of a system lock (fat lock) until contention. As long as
-  a locking thread A runs uncontended, the lock is represented solely
-  by storing A's identity in the object being locked.
+ * Fast locking and unlocking is implemented by delaying the allocation of a
+ * system lock (fat lock) until contention.  As long as a locking thread A
+ * runs uncontended, the lock is represented solely by storing A's identity in
+ * the object being locked.
+ *
+ * If another thread B tries to lock the object currently locked by A, B is
+ * enqueued into a fat lock structure (which might have to be allocated and
+ * pointed to by the object), and suspended using NSPR conditional variables
+ * (wait).  A wait bit (Bacon bit) is set in the lock word of the object,
+ * signalling to A that when releasing the lock, B must be dequeued and
+ * notified.
+ *
+ * The basic operation of the locking primitives (js_Lock, js_Unlock,
+ * js_Enqueue, and js_Dequeue) is compare-and-swap.  Hence, when locking into
+ * the word pointed at by p, compare-and-swap(p, 0, A) success implies that p
+ * is unlocked.  Similarly, when unlocking p, if compare-and-swap(p, A, 0)
+ * succeeds this implies that p is uncontended (no one is waiting because the
+ * wait bit is not set).
+ *
+ * When dequeueing, the lock is released, and one of the threads suspended on
+ * the lock is notified.  If other threads still are waiting, the wait bit is
+ * kept (in js_Enqueue), and if not, the fat lock is deallocated.
+ *
+ * The functions js_Enqueue, js_Dequeue, js_SuspendThread, and js_ResumeThread
+ * are serialized using a global lock.  For scalability, a hashtable of global
+ * locks is used, which is indexed modulo the thin lock pointer.
+ */
 
-  If another thread B tries to lock the object currently locked by A,
-  B is enqueued into a fat lock structure (which might have to be
-  allocated and pointed to by the object), and suspended using NSPR
-  conditional variables (wait).  A wait bit (Bacon bit) is set in the
-  lock word of the object, signalling to A that when releasing the
-  lock, B must be dequeued and notified.
-
-  The basic operation of the locking primitives (js_Lock(),
-  js_Unlock(), js_Enqueue(), and js_Dequeue()) is
-  compare-and-swap. Hence, when locking into p, if
-  compare-and-swap(p,NULL,me) succeeds this implies that p is
-  unlocked.  Similarly, when unlocking p, if
-  compare-and-swap(p,me,NULL) succeeds this implies that p is
-  uncontended (no one is waiting because the wait bit is not set).
-
-  When dequeueing, the lock is released, and one of the threads
-  suspended on the lock is notified.  If other threads still are
-  waiting, the wait bit is kept (in js_Enqueue), and if not, the fat
-  lock is deallocated.
-
-  The functions js_Enqueue, js_Dequeque, js_SuspendThread, and js_ResumeThread
-  are serialized using a global lock. For further
-  scalability an array of global locks is used, which is index modulo the
-  thin lock pointer.
-*/
-
-/* (i) global lock is held
-   (ii) fl->susp >= 0
-*/
+/*
+ * Invariants:
+ * (i)  global lock is held
+ * (ii) fl->susp >= 0
+ */
 static int
 js_SuspendThread(JSThinLock *tl)
 {
     JSFatLock *fl;
-    JSStatus stat;
+    PRStatus stat;
 
     if (tl->fat == NULL)
-        fl = tl->fat = allocateFatlock(tl);
+        fl = tl->fat = GetFatlock(tl);
     else
         fl = tl->fat;
     JS_ASSERT(fl->susp >= 0);
     fl->susp++;
     PR_Lock(fl->slock);
     js_UnlockGlobal(tl);
-    stat = (JSStatus)PR_WaitCondVar(fl->svar,PR_INTERVAL_NO_TIMEOUT);
-    JS_ASSERT(stat != JS_FAILURE);
+    stat = PR_WaitCondVar(fl->svar, PR_INTERVAL_NO_TIMEOUT);
+    JS_ASSERT(stat != PR_FAILURE);
     PR_Unlock(fl->slock);
     js_LockGlobal(tl);
     fl->susp--;
     if (fl->susp == 0) {
-        deallocateFatlock(fl,tl);
+        PutFatlock(fl, tl);
         tl->fat = NULL;
     }
     return tl->fat == NULL;
 }
 
-/* (i) global lock is held
-   (ii) fl->susp > 0
-*/
+/*
+ * (i)  global lock is held
+ * (ii) fl->susp > 0
+ */
 static void
 js_ResumeThread(JSThinLock *tl)
 {
     JSFatLock *fl = tl->fat;
-    JSStatus stat;
+    PRStatus stat;
 
     JS_ASSERT(fl != NULL);
     JS_ASSERT(fl->susp > 0);
     PR_Lock(fl->slock);
     js_UnlockGlobal(tl);
-    stat = (JSStatus)PR_NotifyCondVar(fl->svar);
-    JS_ASSERT(stat != JS_FAILURE);
+    stat = PR_NotifyCondVar(fl->svar);
+    JS_ASSERT(stat != PR_FAILURE);
     PR_Unlock(fl->slock);
 }
 
@@ -583,33 +807,33 @@ js_Enqueue(JSThinLock *tl, jsword me)
     jsword o, n;
 
     js_LockGlobal(tl);
-    while (1) {
-	o = ReadWord(tl->owner);
-	n = Thin_SetWait(o);
-	if (o != 0 && js_CompareAndSwap(&tl->owner,o,n)) {
-	    if (js_SuspendThread(tl))
+    for (;;) {
+        o = ReadWord(tl->owner);
+        n = Thin_SetWait(o);
+        if (o != 0 && js_CompareAndSwap(&tl->owner, o, n)) {
+            if (js_SuspendThread(tl))
                 me = Thin_RemoveWait(me);
-	    else
-		me = Thin_SetWait(me);
-	}
-	else if (js_CompareAndSwap(&tl->owner,0,me)) {
+            else
+                me = Thin_SetWait(me);
+        }
+        else if (js_CompareAndSwap(&tl->owner, 0, me)) {
             js_UnlockGlobal(tl);
-	    return;
-	}
+            return;
+        }
     }
 }
 
 static void
 js_Dequeue(JSThinLock *tl)
 {
-    int o;
+    jsword o;
 
     js_LockGlobal(tl);
     o = ReadWord(tl->owner);
     JS_ASSERT(Thin_GetWait(o) != 0);
     JS_ASSERT(tl->fat != NULL);
-    if (!js_CompareAndSwap(&tl->owner,o,0)) /* release it */
-	JS_ASSERT(0);
+    if (!js_CompareAndSwap(&tl->owner, o, 0)) /* release it */
+        JS_ASSERT(0);
     js_ResumeThread(tl);
 }
 
@@ -618,12 +842,12 @@ js_Lock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(me == CurrentThreadId());
     if (js_CompareAndSwap(&tl->owner, 0, me))
-	return;
+        return;
     if (Thin_RemoveWait(ReadWord(tl->owner)) != me)
-	js_Enqueue(tl, me);
+        js_Enqueue(tl, me);
 #ifdef DEBUG
     else
-	JS_ASSERT(0);
+        JS_ASSERT(0);
 #endif
 }
 
@@ -632,12 +856,12 @@ js_Unlock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(me == CurrentThreadId());
     if (js_CompareAndSwap(&tl->owner, me, 0))
-	return;
+        return;
     if (Thin_RemoveWait(ReadWord(tl->owner)) == me)
-	js_Dequeue(tl);
+        js_Dequeue(tl);
 #ifdef DEBUG
     else
-	JS_ASSERT(0);
+        JS_ASSERT(0);
 #endif
 }
 
@@ -659,46 +883,64 @@ js_UnlockRuntime(JSRuntime *rt)
     PR_Unlock(rt->rtLock);
 }
 
-static JS_INLINE void
-js_LockScope1(JSContext *cx, JSScope *scope, jsword me)
+void
+js_PromoteScopeLock(JSContext *cx, JSScope *scope)
 {
-    JSThinLock *tl;
+    JSRuntime *rt;
 
-    if (Thin_RemoveWait(ReadWord(scope->lock.owner)) == me) {
-	JS_ASSERT(scope->count > 0);
-	scope->count++;
-    } else {
-	tl = &scope->lock;
-	JS_LOCK0(tl,me);
-	JS_ASSERT(scope->count == 0);
-	scope->count = 1;
-    }
+    JS_ASSERT(cx == scope->ownercx);
+    rt = cx->runtime;
+    JS_LOCK_GC(rt);
+    ShareScope(rt, scope);
+    JS_UNLOCK_GC(rt);
+    js_LockScope(cx, scope);
 }
 
 void
 js_LockScope(JSContext *cx, JSScope *scope)
 {
-    JS_ASSERT(cx->thread == CurrentThreadId());
-    js_LockScope1(cx,scope,cx->thread);
+    jsword me = cx->thread;
+
+    JS_ASSERT(me == CurrentThreadId());
+    JS_ASSERT(scope->ownercx != cx);
+    if (scope->ownercx && ClaimScope(scope, cx))
+        return;
+
+    if (Thin_RemoveWait(ReadWord(scope->lock.owner)) == me) {
+        JS_ASSERT(scope->u.count > 0);
+        LOGIT(scope, '+');
+        scope->u.count++;
+    } else {
+        JSThinLock *tl = &scope->lock;
+        JS_LOCK0(tl, me);
+        JS_ASSERT(scope->u.count == 0);
+        LOGIT(scope, '1');
+        scope->u.count = 1;
+    }
 }
 
 void
 js_UnlockScope(JSContext *cx, JSScope *scope)
 {
     jsword me = cx->thread;
-    JSThinLock *tl;
 
-    JS_ASSERT(scope->count > 0);
+    JS_ASSERT(scope->ownercx == NULL);
+    JS_ASSERT(scope->u.count > 0);
     if (Thin_RemoveWait(ReadWord(scope->lock.owner)) != me) {
-	JS_ASSERT(0);
-	return;
+        JS_ASSERT(0);   /* unbalanced unlock */
+        return;
     }
-    if (--scope->count == 0) {
-	tl = &scope->lock;
-	JS_UNLOCK0(tl,me);
+    LOGIT(scope, '-');
+    if (--scope->u.count == 0) {
+        JSThinLock *tl = &scope->lock;
+        JS_UNLOCK0(tl, me);
     }
 }
 
+/*
+ * NB: oldscope may be null if our caller is js_GetMutableScope and it just
+ * dropped the last reference to oldscope.
+ */
 void
 js_TransferScopeLock(JSContext *cx, JSScope *oldscope, JSScope *newscope)
 {
@@ -716,30 +958,45 @@ js_TransferScopeLock(JSContext *cx, JSScope *oldscope, JSScope *newscope)
     JS_ASSERT(JS_IS_SCOPE_LOCKED(oldscope));
 
     /*
-     * Transfer oldscope's entry count to newscope, as it will be unlocked
-     * now via JS_UNLOCK_OBJ(cx,obj) calls made while we unwind the C stack
-     * from the current point (under js_GetMutableScope).
+     * If oldscope is single-threaded, there's nothing to do.
+     * XXX if (!newscope->ownercx), assume newscope->u.count is properly set
      */
-    newscope->count = oldscope->count;
+    if (oldscope->ownercx) {
+        JS_ASSERT(oldscope->ownercx == cx);
+        JS_ASSERT(newscope->ownercx == cx || !newscope->ownercx);
+        return;
+    }
+
+    /*
+     * We transfer oldscope->u.count only if newscope is not single-threaded.
+     * Flow unwinds from here through some number of JS_UNLOCK_SCOPE and/or
+     * JS_UNLOCK_OBJ macro calls, which will decrement newscope->u.count only
+     * if they find newscope->ownercx != cx.
+     */
+    if (newscope->ownercx != cx) {
+        JS_ASSERT(!newscope->ownercx);
+        newscope->u.count = oldscope->u.count;
+    }
 
     /*
      * Reset oldscope's lock state so that it is completely unlocked.
      */
-    oldscope->count = 0;
+    LOGIT(oldscope, '0');
+    oldscope->u.count = 0;
     tl = &oldscope->lock;
     me = cx->thread;
-    JS_UNLOCK0(tl,me);
+    JS_UNLOCK0(tl, me);
 }
 
 void
 js_LockObj(JSContext *cx, JSObject *obj)
 {
     JSScope *scope;
-    jsword me = cx->thread;
-    JS_ASSERT(me == CurrentThreadId());
+
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
     for (;;) {
         scope = OBJ_SCOPE(obj);
-        js_LockScope1(cx, scope, me);
+        js_LockScope(cx, scope);
 
         /* If obj still has this scope, we're done. */
         if (scope == OBJ_SCOPE(obj))
@@ -753,6 +1010,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
 void
 js_UnlockObj(JSContext *cx, JSObject *obj)
 {
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
     js_UnlockScope(cx, OBJ_SCOPE(obj));
 }
 
@@ -769,15 +1027,16 @@ js_IsObjLocked(JSObject *obj)
     JSScope *scope = OBJ_SCOPE(obj);
 
     return MAP_IS_NATIVE(&scope->map) &&
-           CurrentThreadId() == Thin_RemoveWait(ReadWord(scope->lock.owner));
+           (scope->ownercx ||
+            CurrentThreadId() == Thin_RemoveWait(ReadWord(scope->lock.owner)));
 }
 
 JSBool
 js_IsScopeLocked(JSScope *scope)
 {
-    return CurrentThreadId() == Thin_RemoveWait(ReadWord(scope->lock.owner));
+    return scope->ownercx ||
+           CurrentThreadId() == Thin_RemoveWait(ReadWord(scope->lock.owner));
 }
 #endif
 
-#undef ReadWord
 #endif /* JS_THREADSAFE */

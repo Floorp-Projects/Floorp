@@ -81,10 +81,7 @@
 #define GC_ARENA_SIZE   (GC_THINGS_SIZE + GC_FLAGS_SIZE)
 
 /*
- * The private JSGCThing struct, which describes a gcFreelist element.  We use
- * it also for things to be finalized in rt->gcFinalVec, in which case next is
- * not a next-thing link, it points to the thing to be finalized.  The flagp
- * member points to this thing's flags, for fast recycling and finalization.
+ * The private JSGCThing struct, which describes a gcFreelist element.
  */
 struct JSGCThing {
     JSGCThing   *next;
@@ -268,17 +265,11 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 
     JS_InitArenaPool(&rt->gcArenaPool, "gc-arena", GC_ARENA_SIZE,
 		     sizeof(JSGCThing));
-    rt->gcFinalVec = malloc(GC_FINALIZE_LEN * sizeof(JSGCThing));
-    if (!rt->gcFinalVec)
-        return JS_FALSE;
     rt->gcRootsHash = JS_NewHashTable(GC_ROOTS_SIZE, gc_hash_root,
 				      JS_CompareValues, JS_CompareValues,
 				      NULL, NULL);
-    if (!rt->gcRootsHash) {
-        free(rt->gcFinalVec);
-        rt->gcFinalVec = NULL;
+    if (!rt->gcRootsHash)
 	return JS_FALSE;
-    }
     rt->gcLocksHash = NULL;     /* create lazily */
     rt->gcMaxBytes = maxbytes;
     return JS_TRUE;
@@ -339,10 +330,6 @@ js_FinishGC(JSRuntime *rt)
 #endif
     JS_FinishArenaPool(&rt->gcArenaPool);
     JS_ArenaFinish();
-    if (rt->gcFinalVec) {
-        free(rt->gcFinalVec);
-        rt->gcFinalVec = NULL;
-    }
 
 #if DEBUG        
     {
@@ -382,9 +369,31 @@ js_AddRoot(JSContext *cx, void *rp, const char *name)
     JSRuntime *rt;
     JSBool ok;
 
+    /*
+     * Due to the long-standing, but now removed, use of rt->gcLock across the
+     * bulk of js_GC, API users have come to depend on JS_AddRoot etc. locking
+     * properly with a racing GC, without calling JS_AddRoot from a request.
+     * We have to preserve API compatibility here, now that we avoid holding
+     * rt->gcLock across the mark phase (including the root hashtable mark).
+     *
+     * If the GC is running and we're called on another thread, wait for this
+     * GC activation to finish.  We can safely wait here (in the case where we
+     * are called within a request on another thread's context) without fear
+     * of deadlock because the GC doesn't set rt->gcRunning until after it has
+     * waited for all active requests to end.
+     */
     rt = cx->runtime;
-    JS_LOCK_GC_VOID(rt,
-	ok = (JS_HashTableAdd(rt->gcRootsHash, rp, (void *)name) != NULL));
+    JS_LOCK_GC(rt);
+#ifdef JS_THREADSAFE
+    JS_ASSERT(!rt->gcRunning || rt->gcLevel > 0);
+    if (rt->gcRunning && rt->gcThread != js_CurrentThreadId()) {
+        do {
+            JS_AWAIT_GC_DONE(rt);
+        } while (rt->gcLevel > 0);
+    }
+#endif
+    ok = (JS_HashTableAdd(rt->gcRootsHash, rp, (void *)name) != NULL);
+    JS_UNLOCK_GC(rt);
     if (!ok)
 	JS_ReportOutOfMemory(cx);
     return ok;
@@ -393,7 +402,19 @@ js_AddRoot(JSContext *cx, void *rp, const char *name)
 JSBool
 js_RemoveRoot(JSRuntime *rt, void *rp)
 {
+    /*
+     * Due to the JS_RemoveRootRT API, we may be called outside of a request.
+     * Same synchronization drill as above in js_AddRoot.
+     */
     JS_LOCK_GC(rt);
+#ifdef JS_THREADSAFE
+    JS_ASSERT(!rt->gcRunning || rt->gcLevel > 0);
+    if (rt->gcRunning && rt->gcThread != js_CurrentThreadId()) {
+        do {
+            JS_AWAIT_GC_DONE(rt);
+        } while (rt->gcLevel > 0);
+    }
+#endif
     JS_HashTableRemove(rt->gcRootsHash, rp);
     rt->gcPoke = JS_TRUE;
     JS_UNLOCK_GC(rt);
@@ -503,8 +524,8 @@ gc_hash_thing(const void *key)
     return num >> JSVAL_TAGBITS;
 }
 
-#define gc_lock_get_count(he)   ((jsword)(he)->value)
-#define gc_lock_set_count(he,n) ((jsword)((he)->value = (void *)(n)))
+#define gc_lock_get_count(he)   ((jsrefcount)(he)->value)
+#define gc_lock_set_count(he,n) ((jsrefcount)((he)->value = (void *)(n)))
 #define gc_lock_increment(he)   gc_lock_set_count(he, gc_lock_get_count(he)+1)
 #define gc_lock_decrement(he)   gc_lock_set_count(he, gc_lock_get_count(he)-1)
 
@@ -922,40 +943,6 @@ js_ForceGC(JSContext *cx)
         }                                                                     \
     JS_END_MACRO
 
-/*
- * Finalize phase.
- * Don't hold the GC lock while running finalizers!
- */
-static void
-gc_finalize_phase(JSContext *cx, uintN len)
-{
-    JSRuntime *rt;
-    JSGCThing *final, *limit, *thing;
-    uint8 flags, *flagp;
-    GCFinalizeOp finalizer;
-
-    rt = cx->runtime;
-    JS_UNLOCK_GC(rt);
-    for (final = rt->gcFinalVec, limit = final + len; final < limit; final++) {
-	thing = final->next;
-	flagp = final->flagp;
-	flags = *flagp;
-	finalizer = gc_finalizers[flags & GCF_TYPEMASK];
-	if (finalizer) {
-	    *flagp = (uint8)(flags | GCF_FINAL);
-	    finalizer(cx, thing);
-	}
-
-	/*
-	 * Set flags to GCF_FINAL, signifying that thing is free, but don't
-	 * thread thing onto rt->gcFreeList.  We need the GC lock to rebuild
-	 * the freelist below while also looking for free-able arenas.
-	 */
-	*flagp = GCF_FINAL;
-    }
-    JS_LOCK_GC(rt);
-}
-
 void
 js_GC(JSContext *cx, uintN gcflags)
 {
@@ -965,9 +952,9 @@ js_GC(JSContext *cx, uintN gcflags)
     uintN i, depth, nslots;
     JSStackHeader *sh;
     JSArena *a, **ap;
-    uintN finalpos;
     uint8 flags, *flagp, *split;
-    JSGCThing *thing, *limit, *final, **flp, **oflp;
+    JSGCThing *thing, *limit, **flp, **oflp;
+    GCFinalizeOp finalizer;
     JSBool all_clear;
 #ifdef JS_THREADSAFE
     jsword currentThread;
@@ -1034,8 +1021,8 @@ js_GC(JSContext *cx, uintN gcflags)
          * We assert, but check anyway, in case someone is misusing the API.
          * Avoiding the loop over all of rt's contexts is a win in the event
          * that the GC runs only on request-less contexts with 0 thread-ids,
-         * in a special thread such as the UI/DOM/Layout "mozilla" or "main"
-         * thread in Mozilla-the-browser.
+         * in a special thread such as might be used by the UI/DOM/Layout
+         * "mozilla" or "main" thread in Mozilla-the-browser.
          */
         JS_ASSERT(cx->requestDepth == 0);
         if (cx->requestDepth)
@@ -1058,8 +1045,8 @@ js_GC(JSContext *cx, uintN gcflags)
         /* Wait for the other thread to finish, then resume our request. */
         while (rt->gcLevel > 0)
             JS_AWAIT_GC_DONE(rt);
-	if (cx->requestDepth)
-	    rt->requestCount++;
+        if (requestDebit)
+            rt->requestCount += requestDebit;
 	JS_UNLOCK_GC(rt);
 	return;
     }
@@ -1083,9 +1070,19 @@ js_GC(JSContext *cx, uintN gcflags)
 
 #endif /* !JS_THREADSAFE */
 
+    /*
+     * Set rt->gcRunning here within the GC lock, and after waiting for any
+     * active requests to end, so that new requests that try to JS_AddRoot,
+     * JS_RemoveRoot, or JS_RemoveRootRT block in JS_BeginRequest waiting for
+     * rt->gcLevel to drop to zero, while request-less calls to the *Root*
+     * APIs block in js_AddRoot or js_RemoveRoot (see above in this file),
+     * waiting for GC to finish.
+     */
+    rt->gcRunning = JS_TRUE;
+    JS_UNLOCK_GC(rt);
+
     /* Reset malloc counter */
     rt->gcMallocBytes = 0;
-    rt->gcRunning = JS_TRUE;
 
     /* Drop atoms held by the property cache, and clear property weak links. */
     js_FlushPropertyCache(cx);
@@ -1173,9 +1170,11 @@ restart:
     }
 
     /*
-     * Sweep phase, with interleaved finalize phase.
+     * Sweep phase.
+     * Finalize as we sweep, outside of rt->gcLock, but with rt->gcRunning set
+     * so that any attempt to allocate a GC-thing from a finalizer will fail,
+     * rather than nest badly and leave the unmarked newborn to be swept.
      */
-    finalpos = 0;
     js_SweepAtomState(&rt->atomState);
     for (a = rt->gcArenaPool.first.next; a; a = a->next) {
         flagp = (uint8 *) a->base;
@@ -1190,13 +1189,16 @@ restart:
             if (flags & GCF_MARK) {
                 *flagp &= ~GCF_MARK;
             } else if (!(flags & (GCF_LOCKMASK | GCF_FINAL))) {
-                if (finalpos == GC_FINALIZE_LEN) {
-                    gc_finalize_phase(cx, finalpos);
-                    finalpos = 0;
+                /* Call the finalizer with GCF_FINAL ORed into flags. */
+                finalizer = gc_finalizers[flags & GCF_TYPEMASK];
+                if (finalizer) {
+                    *flagp = (uint8)(flags | GCF_FINAL);
+                    finalizer(cx, thing);
                 }
-                final = &rt->gcFinalVec[finalpos++];
-                final->next = thing;
-                final->flagp = flagp;
+
+                /* Set flags to GCF_FINAL, signifying that thing is free. */
+                *flagp = GCF_FINAL;
+
                 JS_ASSERT(rt->gcBytes >= sizeof(JSGCThing) + sizeof(uint8));
                 rt->gcBytes -= sizeof(JSGCThing) + sizeof(uint8);
             }
@@ -1204,12 +1206,6 @@ restart:
                 flagp += GC_THINGS_SIZE;
         }
     }
-
-    /*
-     * Last finalize phase, if needed.
-     */
-    if (finalpos)
-        gc_finalize_phase(cx, finalpos);
 
     /*
      * Free phase.
@@ -1260,9 +1256,11 @@ restart:
     *flp = NULL;
 
 out:
+    JS_LOCK_GC(rt);
     if (rt->gcLevel > 1) {
-	rt->gcLevel = 1;
-	goto restart;
+        rt->gcLevel = 1;
+        JS_UNLOCK_GC(rt);
+        goto restart;
     }
     rt->gcLevel = 0;
     rt->gcLastBytes = rt->gcBytes;

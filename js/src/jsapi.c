@@ -645,7 +645,7 @@ JS_NewRuntime(uint32 maxbytes)
     rt->requestDone = JS_NEW_CONDVAR(rt->gcLock);
     if (!rt->requestDone)
 	goto bad;
-    js_SetupLocks(20,20);       /* this is asymmetric with JS_ShutDown. */
+    js_SetupLocks(20, 32);      /* this is asymmetric with JS_ShutDown. */
     rt->rtLock = JS_NEW_LOCK();
     if (!rt->rtLock)
 	goto bad;
@@ -655,6 +655,10 @@ JS_NewRuntime(uint32 maxbytes)
     rt->setSlotLock = JS_NEW_LOCK();
     if (!rt->setSlotLock)
 	goto bad;
+    rt->scopeSharingDone = JS_NEW_CONDVAR(rt->gcLock);
+    if (!rt->scopeSharingDone)
+	goto bad;
+    rt->scopeSharingTodo = NO_SCOPE_SHARING_TODO;
 #endif
     rt->propertyCache.empty = JS_TRUE;
     JS_INIT_CLIST(&rt->contextList);
@@ -701,6 +705,8 @@ JS_DestroyRuntime(JSRuntime *rt)
         JS_DESTROY_CONDVAR(rt->stateChange);
     if (rt->setSlotLock)
         JS_DESTROY_LOCK(rt->setSlotLock);
+    if (rt->scopeSharingDone)
+        JS_DESTROY_CONDVAR(rt->scopeSharingDone);
 #endif
     free(rt);
 }
@@ -748,7 +754,9 @@ JS_BeginRequest(JSContext *cx)
 
 	/* Indicate that a request is running. */
 	rt->requestCount++;
+        cx->requestDepth = 1;
 	JS_UNLOCK_GC(rt);
+        return;
     }
     cx->requestDepth++;
 }
@@ -757,18 +765,59 @@ JS_PUBLIC_API(void)
 JS_EndRequest(JSContext *cx)
 {
     JSRuntime *rt;
+    JSScope *scope, **todop;
+    uintN nshares;
 
     CHECK_REQUEST(cx);
-    cx->requestDepth--;
-    if (!cx->requestDepth) {
-	rt = cx->runtime;
-	JS_LOCK_GC(rt);
-	JS_ASSERT(rt->requestCount > 0);
-	rt->requestCount--;
+    JS_ASSERT(cx->requestDepth > 0);
+    if (cx->requestDepth == 1) {
+        /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
+        rt = cx->runtime;
+        JS_LOCK_GC(rt);
+        cx->requestDepth = 0;
+
+        /* See whether cx has any single-threaded scopes to start sharing. */
+        todop = &rt->scopeSharingTodo;
+        nshares = 0;
+        while ((scope = *todop) != NO_SCOPE_SHARING_TODO) {
+            if (scope->ownercx != cx) {
+                todop = &scope->u.link;
+                continue;
+            }
+            *todop = scope->u.link;
+            scope->u.link = NULL;       /* null u.link for sanity ASAP */
+
+            /*
+             * If js_DropObjectMap returns null, we held the last ref to scope.
+             * The waiting thread(s) must have been killed, after which the GC
+             * collected the object that held this scope.  Unlikely, because it
+             * requires that the GC ran (e.g., from a branch callback) during
+             * this request, but possible.
+             */
+            if (js_DropObjectMap(cx, &scope->map, NULL)) {
+                js_InitLock(&scope->lock);
+                scope->u.count = 0;     /* don't assume NULL puns as 0 */
+                scope->ownercx = NULL;  /* NB: set last, after lock init */
+                nshares++;
+#ifdef DEBUG
+                JS_ATOMIC_INCREMENT(&rt->sharedScopes);
+#endif
+            }
+        }
+        if (nshares)
+            JS_NOTIFY_ALL_CONDVAR(rt->scopeSharingDone);
+
+        /* Give the GC a chance to run if this was the last request running. */
+        JS_ASSERT(rt->requestCount > 0);
+        rt->requestCount--;
         if (rt->requestCount == 0)
-	    JS_NOTIFY_REQUEST_DONE(rt);
-	JS_UNLOCK_GC(rt);
+            JS_NOTIFY_REQUEST_DONE(rt);
+
+        JS_UNLOCK_GC(rt);
+        return;
     }
+
+    cx->requestDepth--;
 }
 
 /* Yield to pending GC operations, regardless of request depth */
@@ -794,16 +843,22 @@ JS_YieldRequest(JSContext *cx)
     JS_UNLOCK_GC(rt);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API(jsrefcount)
 JS_SuspendRequest(JSContext *cx)
 {
-    JS_EndRequest(cx);
+    jsrefcount saveDepth = cx->requestDepth;
+
+    while (cx->requestDepth)
+        JS_EndRequest(cx);
+    return saveDepth;
 }
 
 JS_PUBLIC_API(void)
-JS_ResumeRequest(JSContext *cx)
+JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 {
-    JS_BeginRequest(cx);
+    JS_ASSERT(!cx->requestDepth);
+    while (--saveDepth >= 0)
+        JS_BeginRequest(cx);
 }
 
 #endif /* JS_THREADSAFE */

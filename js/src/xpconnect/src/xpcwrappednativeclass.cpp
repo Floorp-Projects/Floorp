@@ -557,13 +557,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     XPCJSRuntime* rt;
     nsXPConnect* xpc;
 
-    // This is used to gate calls to JS_SuspendRequest/JS_ResumeRequest 
-    // XXX Looking at cx->requestDepth is currently necessary because the DOM
-    // nsJSContexts break the nice rules and don't do their work within
-    // JS Requests. Calling JS_SuspendRequest with a zero requestDepth
-    // would cause the requestDepth to wrap around to a big number and
-    // Bad Things would happen.
-    JSBool useJSRequest = JS_GetContextThread(cx) && cx->requestDepth;
+    // This is used to nest calls to JS_SuspendRequest/JS_ResumeRequest 
+    // NB: It's safe to call JS_SuspendRequest outside of any request, and
+    // the matching JS_ResumeRequest(cx, 0) will do no harm.
+    jsrefcount saveDepth;
 
 #ifdef DEBUG_stats_jband
     PRIntervalTime startTime = PR_IntervalNow();
@@ -915,15 +912,15 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     ccdata.init(callee, vtblIndex, wrapper, cx, argc, argv, vp);
     oldccdata = cc->SetData(&ccdata);
 
-    if(useJSRequest)
-        JS_SuspendRequest(cx);
+    // avoid deadlock in case the native method blocks somehow
+    saveDepth = JS_SuspendRequest(cx);
     
     // do the invoke
     invokeResult = XPTC_InvokeByIndex(callee, vtblIndex,
                                       paramCount, dispatchParams);
     
-    if(useJSRequest)
-        JS_ResumeRequest(cx);
+    // resume non-blocking JS operations now
+    JS_ResumeRequest(cx, saveDepth);
 
     xpcc->SetLastResult(invokeResult);
     cc->SetData(oldccdata);

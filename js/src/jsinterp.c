@@ -566,9 +566,9 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
 }
 
 #ifdef DEBUG
-# define METER_INVOCATION(rt, which) JS_ATOMIC_ADDREF(&(rt)->which, 1)
+# define METER_INVOCATION(rt, which) JS_ATOMIC_INCREMENT(&(rt)->which)
 #else
-# define METER_INVOCATION(rt, which) ((void)0)
+# define METER_INVOCATION(rt, which) /* nothing */
 #endif
 
 /*
@@ -1751,27 +1751,31 @@ js_Interpret(JSContext *cx, jsval *result)
  * in case a getter or setter function is invoked.
  */
 #define CACHED_GET(call) {                                                    \
-    JS_LOCK_OBJ(cx, obj);                                                     \
-    PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);                   \
-    if (prop) {                                                               \
-        JSScope *_scope = OBJ_SCOPE(obj);                                     \
-        sprop = (JSScopeProperty *)prop;                                      \
-        JS_ATOMIC_ADDREF(&sprop->nrefs, 1);                                   \
-        slot = (uintN)sprop->slot;                                            \
-        rval = LOCKED_OBJ_GET_SLOT(obj, slot);                                \
-        JS_UNLOCK_SCOPE(cx, _scope);                                          \
-        ok = SPROP_GET(cx, sprop, obj, obj, &rval);                           \
-        if (ok) {                                                             \
-            JS_LOCK_SCOPE(cx, _scope);                                        \
-            sprop = js_DropScopeProperty(cx, _scope, sprop);                  \
-            if (sprop)                                                        \
-                LOCKED_OBJ_SET_SLOT(obj, slot, rval);                         \
-            JS_UNLOCK_SCOPE(cx, _scope);                                      \
-        }                                                                     \
-    } else {                                                                  \
-        JS_UNLOCK_OBJ(cx, obj);                                               \
+    if (!OBJ_IS_NATIVE(obj)) {                                                \
         ok = call;                                                            \
-        /* No fill here: js_GetProperty fills the cache. */                   \
+    } else {                                                                  \
+        JS_LOCK_OBJ(cx, obj);                                                 \
+        PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);               \
+        if (prop) {                                                           \
+            JSScope *_scope = OBJ_SCOPE(obj);                                 \
+            sprop = (JSScopeProperty *)prop;                                  \
+            sprop->nrefs++;                                                   \
+            slot = (uintN)sprop->slot;                                        \
+            rval = LOCKED_OBJ_GET_SLOT(obj, slot);                            \
+            JS_UNLOCK_SCOPE(cx, _scope);                                      \
+            ok = SPROP_GET(cx, sprop, obj, obj, &rval);                       \
+            if (ok) {                                                         \
+                JS_LOCK_SCOPE(cx, _scope);                                    \
+                sprop = js_DropScopeProperty(cx, _scope, sprop);              \
+                if (sprop)                                                    \
+                    LOCKED_OBJ_SET_SLOT(obj, slot, rval);                     \
+                JS_UNLOCK_SCOPE(cx, _scope);                                  \
+            }                                                                 \
+        } else {                                                              \
+            JS_UNLOCK_OBJ(cx, obj);                                           \
+            ok = call;                                                        \
+            /* No fill here: js_GetProperty fills the cache. */               \
+        }                                                                     \
     }                                                                         \
 }
 
@@ -1782,28 +1786,32 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif
 
 #define CACHED_SET(call) {                                                    \
-    JS_LOCK_OBJ(cx, obj);                                                     \
-    PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);                   \
-    if ((sprop = (JSScopeProperty *)prop) &&                                  \
-        !(sprop->attrs & JSPROP_READONLY)) {                                  \
-        JSScope *_scope = OBJ_SCOPE(obj);                                     \
-        JS_ATOMIC_ADDREF(&sprop->nrefs, 1);                                   \
-        JS_UNLOCK_SCOPE(cx, _scope);                                          \
-        ok = SPROP_SET(cx, sprop, obj, obj, &rval);                           \
-        if (ok) {                                                             \
-            JS_LOCK_SCOPE(cx, _scope);                                        \
-            sprop = js_DropScopeProperty(cx, _scope, sprop);                  \
-            if (sprop) {                                                      \
-                LOCKED_OBJ_SET_SLOT(obj, sprop->slot, rval);                  \
-                SET_ENUMERATE_ATTR(sprop);                                    \
-                GC_POKE(cx, JSVAL_NULL);  /* second arg ignored! */           \
-            }                                                                 \
-            JS_UNLOCK_SCOPE(cx, _scope);                                      \
-        }                                                                     \
-    } else {                                                                  \
-        JS_UNLOCK_OBJ(cx, obj);                                               \
+    if (!OBJ_IS_NATIVE(obj)) {                                                \
         ok = call;                                                            \
-        /* No fill here: js_SetProperty writes through the cache. */          \
+    } else {                                                                  \
+        JS_LOCK_OBJ(cx, obj);                                                 \
+        PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);               \
+        if ((sprop = (JSScopeProperty *)prop) &&                              \
+            !(sprop->attrs & JSPROP_READONLY)) {                              \
+            JSScope *_scope = OBJ_SCOPE(obj);                                 \
+            sprop->nrefs++;                                                   \
+            JS_UNLOCK_SCOPE(cx, _scope);                                      \
+            ok = SPROP_SET(cx, sprop, obj, obj, &rval);                       \
+            if (ok) {                                                         \
+                JS_LOCK_SCOPE(cx, _scope);                                    \
+                sprop = js_DropScopeProperty(cx, _scope, sprop);              \
+                if (sprop) {                                                  \
+                    LOCKED_OBJ_SET_SLOT(obj, sprop->slot, rval);              \
+                    SET_ENUMERATE_ATTR(sprop);                                \
+                    GC_POKE(cx, JSVAL_NULL);  /* second arg ignored! */       \
+                }                                                             \
+                JS_UNLOCK_SCOPE(cx, _scope);                                  \
+            }                                                                 \
+        } else {                                                              \
+            JS_UNLOCK_OBJ(cx, obj);                                           \
+            ok = call;                                                        \
+            /* No fill here: js_SetProperty writes through the cache. */      \
+        }                                                                     \
     }                                                                         \
 }
 
