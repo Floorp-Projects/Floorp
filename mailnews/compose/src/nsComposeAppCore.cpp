@@ -51,6 +51,10 @@
 #include "nsIMsgCompFields.h"
 #include "nsIMsgSend.h"
 
+// jefft
+#include "nsIXULWindowCallbacks.h"
+#include "nsIDocumentViewer.h"
+
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, nsIDocument::GetIID());
 static NS_DEFINE_IID(kIMsgComposeIID, NS_IMSGCOMPOSE_IID); 
@@ -64,7 +68,6 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
-
 NS_BEGIN_EXTERN_C
 
 //nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer);
@@ -77,7 +80,8 @@ NS_END_EXTERN_C
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 class nsComposeAppCore : public nsIDOMComposeAppCore,
-                     public nsIScriptObjectOwner
+                         public nsIScriptObjectOwner,
+						 public nsIXULWindowCallbacks
 {
   
 public:
@@ -90,6 +94,16 @@ public:
 	// nsIScriptObjectOwner
 	NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 	NS_IMETHOD SetScriptObject(void* aScriptObject);
+
+	// nsIXULWindowCallbacks
+	// this method will be called by the window creation code after
+	// the UI has been loaded, before the window is visible, and before
+	// the equivalent JavaScript (XUL "onConstruction" attribute) callback.
+	NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
+
+	// like ConstructBeforeJavaScript, but called after the onConstruction callback
+	NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell);
+
 
 	// nsIComposeAppCore
 	NS_IMETHOD CompleteCallback(nsAutoString& aScript);
@@ -107,7 +121,7 @@ public:
 protected:
   
 	nsIScriptContext *	GetScriptContext(nsIDOMWindow * aWin);
-	void SetWindowFields(nsString& to, nsString& cc, nsString& bcc,
+	void SetWindowFields(nsIDOMDocument* domDoc, nsString& to, nsString& cc, nsString& bcc,
 		nsString& subject, nsString& body);
 
 	nsString mId;
@@ -119,6 +133,10 @@ protected:
 	nsIDOMWindow			*mWindow;
 	nsIWebShell				*mWebShell;
 	nsIDOMEditorAppCore     *mEditor;
+
+	/* jefft */
+	nsIMsgCompFields *mMsgCompFields;
+	nsIMsgSend *mMsgSend;
 };
 
 //
@@ -131,6 +149,8 @@ nsComposeAppCore::nsComposeAppCore()
 	mScriptContext	= nsnull;
 	mWindow			= nsnull;
 	mEditor			= nsnull;
+	mMsgCompFields	= nsnull;
+	mMsgSend		= nsnull;
 
 	NS_INIT_REFCNT();
 }
@@ -141,6 +161,57 @@ nsComposeAppCore::~nsComposeAppCore()
   NS_IF_RELEASE(mScriptContext);
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mEditor);
+  NS_IF_RELEASE(mMsgSend);
+  NS_IF_RELEASE(mMsgCompFields);
+}
+
+NS_IMETHODIMP
+nsComposeAppCore::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
+{
+	return NS_OK;
+}
+
+	// like ConstructBeforeJavaScript, but called after the onConstruction callback
+NS_IMETHODIMP 
+nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
+{
+	nsIDOMDocument* domDoc = nsnull;
+	if (nsnull != aWebShell) {
+		nsIContentViewer* mCViewer;
+		aWebShell->GetContentViewer(&mCViewer);
+		if (nsnull != mCViewer) {
+		  nsIDocumentViewer* mDViewer;
+		  if (NS_OK == mCViewer->QueryInterface(nsIDocumentViewer::GetIID(), (void**) &mDViewer)) {
+			  nsIDocument* mDoc;
+			  mDViewer->GetDocument(mDoc);
+			  if (nsnull != mDoc) {
+				  if (NS_OK == mDoc->QueryInterface(nsIDOMDocument::GetIID(), (void**) &domDoc)) {
+				}
+				NS_RELEASE(mDoc);
+			  }
+			  NS_RELEASE(mDViewer);
+		  }
+		  NS_RELEASE(mCViewer);
+		}
+	}
+
+	if (mMsgCompFields && domDoc)
+	{
+        char *aString;
+        mMsgCompFields->GetTo(&aString);
+        nsString to = aString;
+        mMsgCompFields->GetCc(&aString);
+        nsString cc = aString;
+        mMsgCompFields->GetBcc(&aString);
+        nsString bcc = aString;
+        mMsgCompFields->GetSubject(&aString);
+        nsString subject = aString;
+        mMsgCompFields->GetBody(&aString);
+        nsString body = aString;
+		
+		SetWindowFields(domDoc, to, cc, bcc, subject, body);
+	}
+	return NS_OK;
 }
 
 nsresult nsComposeAppCore::SetDocumentCharset(class nsString const & aCharset) 
@@ -196,51 +267,46 @@ nsComposeAppCore::GetScriptContext(nsIDOMWindow * aWin)
 }
 
 
-void nsComposeAppCore::SetWindowFields(nsString& msgTo, nsString& msgCc, nsString& msgBcc,
+void nsComposeAppCore::SetWindowFields(nsIDOMDocument *domDoc, nsString& msgTo, nsString& msgCc, nsString& msgBcc,
 		nsString& msgSubject, nsString& msgBody)
 {
 	nsresult res = NS_OK;
 
-	nsCOMPtr<nsIDOMDocument> domDoc;
 	nsCOMPtr<nsIDOMNode> node;
 	nsCOMPtr<nsIDOMNodeList> nodeList;
 	nsCOMPtr<nsIDOMHTMLInputElement> inputElement;
 
-	if (nsnull != mWindow) 
+	if (domDoc) 
 	{
-		res = mWindow->GetDocument(getter_AddRefs(domDoc));
-		if (NS_SUCCEEDED(res) && domDoc) 
+		res = domDoc->GetElementsByTagName("input", getter_AddRefs(nodeList));
+		if ((NS_SUCCEEDED(res)) && nodeList)
 		{
-			res = domDoc->GetElementsByTagName("input", getter_AddRefs(nodeList));
-			if ((NS_SUCCEEDED(res)) && nodeList)
+			PRUint32 count;
+			PRUint32 i;
+			nodeList->GetLength(&count);
+			for (i = 0; i < count; i ++)
 			{
-				PRUint32 count;
-				PRUint32 i;
-				nodeList->GetLength(&count);
-				for (i = 0; i < count; i ++)
+				res = nodeList->Item(i, getter_AddRefs(node));
+				if ((NS_SUCCEEDED(res)) && node)
 				{
-					res = nodeList->Item(i, getter_AddRefs(node));
-					if ((NS_SUCCEEDED(res)) && node)
+					nsString value;
+					res = node->QueryInterface(nsIDOMHTMLInputElement::GetIID(), getter_AddRefs(inputElement));
+					if ((NS_SUCCEEDED(res)) && inputElement)
 					{
-						nsString value;
-						res = node->QueryInterface(nsIDOMHTMLInputElement::GetIID(), getter_AddRefs(inputElement));
-						if ((NS_SUCCEEDED(res)) && inputElement)
-						{
-							nsString id;
-							inputElement->GetId(id);
-							if (id == "msgTo") inputElement->SetValue(msgTo);
-							if (id == "msgCc") inputElement->SetValue(msgCc);
-							if (id == "msgBcc") inputElement->SetValue(msgBcc);
-							if (id == "msgSubject") inputElement->SetValue(msgSubject);
-						}
-
+						nsString id;
+						inputElement->GetId(id);
+						if (id == "msgTo") inputElement->SetValue(msgTo);
+						if (id == "msgCc") inputElement->SetValue(msgCc);
+						if (id == "msgBcc") inputElement->SetValue(msgBcc);
+						if (id == "msgSubject") inputElement->SetValue(msgSubject);
 					}
-				}
 
-				if (mEditor)
-				{
-					mEditor->InsertText(msgBody);
 				}
+			}
+
+			if (mEditor)
+			{
+				mEditor->InsertText(msgBody);
 			}
 		}
 	}
@@ -278,11 +344,17 @@ nsComposeAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
       AddRef();
       return NS_OK;
   }
+  else if ( aIID.Equals(nsIXULWindowCallbacks::GetIID()) ) {
+      *aInstancePtr = (void*) (nsIXULWindowCallbacks*)this;
+      AddRef();
+      return NS_OK;
+  }
   else if ( aIID.Equals(kISupportsIID) ) {
       *aInstancePtr = (void*)(nsISupports*) (nsIScriptObjectOwner *) this;
       AddRef();
       return NS_OK;
   }
+
 
   return NS_NOINTERFACE;
 }
@@ -322,6 +394,27 @@ nsComposeAppCore::Init(const nsString& aId)
 {
 	printf("Init\n");
 	mId = aId;
+	nsresult res;
+
+	if (!mMsgSend)
+	{
+		res = nsComponentManager::CreateInstance(kMsgSendCID, 
+		                                         NULL, 
+			                                     kIMsgSendIID, 
+                                                 (void **) &mMsgSend); 
+		if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+		printf("We succesfully obtained a nsIMsgSend interface....\n");
+	}
+
+	if (!mMsgCompFields)
+	{
+		res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
+												 NULL, 
+												 kIMsgCompFieldsIID, 
+												 (void **) &mMsgCompFields); 
+		if (NS_FAILED(NS_OK)) return NS_ERROR_FAILURE;
+		printf("We succesfully obtained a nsIMsgCompFields interface....\n");
+	}
 	return NS_OK;
 }
 
@@ -391,7 +484,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl)
                                    controllerCID,
                                    newWindow,   // result widget
                                    nsnull,      // observer
-                                   nsnull,      // callbacks
+                                   this,      // callbacks
                                    615,         // width
                                    650);        // height
 done:
@@ -412,12 +505,16 @@ NS_IMETHODIMP nsComposeAppCore::ReplyMessage(nsAutoString& url, nsIDOMXULTreeEle
 			nsCOMPtr<nsIMessage> message;
 			res = object->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message));
 			if ((NS_SUCCEEDED(res)) && message) {
-				nsString subject;
-				message->GetSubject(subject);
-//				subject = "Re: " + subject;
-				//We need to extract the others elements from the message
+				nsString aString;
+				nsString bString = "Re: ";
+
+				message->GetSubject(aString);
+				bString += aString;
+				mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
+				message->GetAuthor(aString);
+				mMsgCompFields->SetTo(aString.ToNewCString(), NULL);
+                /* We need to get more information out from the message. */
 				NewMessage(url);
-				SetWindowFields(nsString("to"), nsString("cc"), nsString("bcc"), subject, nsString("body"));
 			}
 		}
 	}
@@ -435,13 +532,16 @@ NS_IMETHODIMP nsComposeAppCore::ForwardMessage(nsAutoString& url, nsIDOMXULTreeE
 		if ((NS_SUCCEEDED(res)) && object) {
 			nsCOMPtr<nsIMessage> message;
 			res = object->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message));
-			if ((NS_SUCCEEDED(res)) && message) {
-				nsString subject;
-				message->GetSubject(subject);
-//				subject = "[Fwd: " + subject + "]";
-				//We need to extract the others elements from the message
+			if ((NS_SUCCEEDED(res)) && message && mMsgCompFields) {
+				nsString aString;
+				nsString bString = "[Fwd: ";
+				message->GetSubject(aString);
+				bString = bString + aString + "]";
+				mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
+				message->GetAuthor(aString);
+				mMsgCompFields->SetTo(aString.ToNewCString(), NULL);
+                /* We need to get more information out from the message. */
 				NewMessage(url);
-				SetWindowFields(nsString("to"), nsString("cc"), nsString("bcc"), subject, nsString("body"));
 			}
 		}
 	}
@@ -468,38 +568,18 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString&
 #endif //DEBUG
 
 //	nsIMsgCompose *pMsgCompose; 
-	nsIMsgCompFields *pMsgCompFields;
-	nsIMsgSend *pMsgSend;
-	nsresult res;
-	
-	res = nsComponentManager::CreateInstance(kMsgSendCID, 
-                                               NULL, 
-                                               kIMsgSendIID, 
-                                               (void **) &pMsgSend); 
+	if (mMsgCompFields) { 
+		mMsgCompFields->SetFrom((char *)pCompPrefs.GetUserEmail(), NULL);
+		mMsgCompFields->SetReplyTo((char *)pCompPrefs.GetReplyTo(), NULL);
+		mMsgCompFields->SetOrganization((char *)pCompPrefs.GetOrganization(), NULL);
+		mMsgCompFields->SetTo(aAddrTo.ToNewCString(), NULL);
+		mMsgCompFields->SetCc(aAddrCc.ToNewCString(), NULL);
+		mMsgCompFields->SetBcc(aAddrBcc.ToNewCString(), NULL);
+		mMsgCompFields->SetSubject(aSubject.ToNewCString(), NULL);
+		mMsgCompFields->SetBody(aMsg.ToNewCString(), NULL);
 
-	if (NS_SUCCEEDED(res) && pMsgSend) { 
-		printf("We succesfully obtained a nsIMsgSend interface....\n");
-
-		res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
-													NULL, 
-													kIMsgCompFieldsIID, 
-													(void **) &pMsgCompFields); 
-		if (NS_SUCCEEDED(NS_OK) && pMsgCompFields) { 
-			pMsgCompFields->SetFrom((char *)pCompPrefs.GetUserEmail(), NULL);
-			pMsgCompFields->SetReplyTo((char *)pCompPrefs.GetReplyTo(), NULL);
-			pMsgCompFields->SetOrganization((char *)pCompPrefs.GetOrganization(), NULL);
-			pMsgCompFields->SetTo(aAddrTo.ToNewCString(), NULL);
-			pMsgCompFields->SetCc(aAddrCc.ToNewCString(), NULL);
-			pMsgCompFields->SetBcc(aAddrBcc.ToNewCString(), NULL);
-			pMsgCompFields->SetSubject(aSubject.ToNewCString(), NULL);
-			pMsgCompFields->SetBody(aMsg.ToNewCString(), NULL);
-
-			pMsgSend->SendMessage(pMsgCompFields, NULL);
-
-			pMsgCompFields->Release(); 
-		}
-
-		pMsgSend->Release();
+		if (mMsgSend)
+			mMsgSend->SendMessage(mMsgCompFields, NULL);
 	}
 
 	if (nsnull != mScriptContext) {
