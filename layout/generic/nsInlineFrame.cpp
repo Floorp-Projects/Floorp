@@ -278,6 +278,37 @@ nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
   PRBool    result = PR_TRUE;
 
   for (nsIFrame* kidFrame = aChildFrame; nsnull != kidFrame; ) {
+    // If the previous child just reflowed has indicated a pending
+    // break, stop reflowing our remaining children.  This can only
+    // happen when a prev-in-flow has pushed some junk into this
+    // frame.
+    if (NS_STYLE_CLEAR_NONE != aState.lineLayout->mPendingBreak) {
+      PushChildren(kidFrame, prevKidFrame, originalLastContentIsComplete);
+      SetLastContentOffset(prevKidFrame);
+
+      result = PR_FALSE;
+      break;
+    }
+
+    // If the frame being reflowed is not appropriate (e.g. a block
+    // frame) then we should stop! This can only happen when a
+    // prev-in-flow has pushed some junk into this frame.
+    nsIStyleContext* kidSC;
+    kidFrame->GetStyleContext(aPresContext, kidSC);
+    const nsStyleDisplay* kidDisplay = (const nsStyleDisplay*)
+      kidSC->GetStyleData(eStyleStruct_Display);
+    if ((NS_STYLE_DISPLAY_BLOCK == kidDisplay->mDisplay) ||
+        (NS_STYLE_DISPLAY_LIST_ITEM == kidDisplay->mDisplay)) {
+      if (mFirstChild != kidFrame) {
+        PushChildren(kidFrame, prevKidFrame, originalLastContentIsComplete);
+        SetLastContentOffset(prevKidFrame);
+        result = PR_FALSE;
+        NS_RELEASE(kidSC);
+        break;
+      }
+    }
+    NS_RELEASE(kidSC);
+
     nsReflowMetrics kidSize(pKidMaxElementSize);
     nsReflowState   kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                    eReflowReason_Resize);
@@ -393,11 +424,11 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
                                      nsInlineState&  aState)
 {
   NS_FRAME_LOG(NS_FRAME_TRACE_PUSH_PULL,
-               ("nsInlineFrame::PullUpChildren: [%d,%d,%c] childCount=%d",
-                mFirstContentOffset,
-                mLastContentOffset,
-                mLastContentIsComplete ? 'T' : 'F',
-                mChildCount));
+     ("enter nsInlineFrame::PullUpChildren: [%d,%d,%c] childCount=%d",
+      mFirstContentOffset,
+      mLastContentOffset,
+      mLastContentIsComplete ? 'T' : 'F',
+      mChildCount));
 #ifdef NS_DEBUG
   if (GetVerifyTreeEnable()) {
     VerifyLastIsComplete();
@@ -445,8 +476,19 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
       break;
     }
 
-    // XXX if the frame being pulled up is not appropriate (e.g. a block
+    // If the frame being pulled up is not appropriate (e.g. a block
     // frame) then we should stop!
+    nsIStyleContext* kidSC;
+    kidFrame->GetStyleContext(aPresContext, kidSC);
+    const nsStyleDisplay* kidDisplay = (const nsStyleDisplay*)
+      kidSC->GetStyleData(eStyleStruct_Display);
+    if ((NS_STYLE_DISPLAY_BLOCK == kidDisplay->mDisplay) ||
+        (NS_STYLE_DISPLAY_LIST_ITEM == kidDisplay->mDisplay)) {
+      result = PR_FALSE;
+      NS_RELEASE(kidSC);
+      break;
+    }
+    NS_RELEASE(kidSC);
 
     // If there is no room, stop pulling up
     if (!CanFitChild(aPresContext, aState, kidFrame)) {
@@ -602,11 +644,11 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
   }
 #endif
   NS_FRAME_LOG(NS_FRAME_TRACE_PUSH_PULL,
-               ("nsInlineFrame::PullUpChildren: [%d,%d,%c] childCount=%d",
-                mFirstContentOffset,
-                mLastContentOffset,
-                mLastContentIsComplete ? 'T' : 'F',
-                mChildCount));
+     ("exit nsInlineFrame::PullUpChildren: [%d,%d,%c] childCount=%d",
+      mFirstContentOffset,
+      mLastContentOffset,
+      mLastContentIsComplete ? 'T' : 'F',
+      mChildCount));
   return result;
 }
 
@@ -812,7 +854,9 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
                                 const nsReflowState& aReflowState,
                                 nsReflowStatus&      aStatus)
 {
-  NS_FRAME_TRACE_REFLOW_IN("nsInlineFrame::Reflow"); 
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+               ("enter nsInlineFrame::Reflow: this=%p: childCount=%d",
+                this, mChildCount));
 #ifdef NS_DEBUG
   if (GetVerifyTreeEnable()) {
     PreReflowCheck();
@@ -999,7 +1043,10 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
     PostReflowCheck(aStatus);
   }
 #endif
-  NS_FRAME_TRACE_REFLOW_OUT("nsInlineFrame::ResizeReflow", aStatus); 
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+     ("exit nsInlineFrame::Reflow: this=%p: childCount=%d status=%scomplete",
+      this, mChildCount,
+      NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not "));
   return NS_OK;
 }
 
