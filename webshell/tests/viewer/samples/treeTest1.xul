@@ -1,83 +1,110 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="treeTest1.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <!DOCTYPE window>
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 
+<html:div flex="1" style="width: 50px; height: 50px">
+
 <html:h1>Tree Test 1</html:h1>
 
 <html:h3>
-A simple tree view with things that can expand and collapse. Nothing fancy in this test.
+A simple static tree view with things that can expand and collapse. Nothing fancy in this test.
 </html:h3>
 
-<html:hr/>
-<tree>
+
+</html:div>
+
+<html:div flex="2" style="width: 100px; height: 100px">
+
+<html:p/>
+<html:br/>
+
+<tree flex="1" style="width: 100%; height: 100%">
+	<treecol style="width: 10%"/><treecol style="width: 90%" />
   <treehead>
-     <treeitem>
-      <treecell>Name</treecell>
-      <treecell>URL</treecell>
-      <treecell>Last Modified</treecell>
-     </treeitem>
+     <treerow>
+      <treecell><html:div>Name</html:div></treecell>
+      <treecell><html:div>URL</html:div></treecell>
+     </treerow>
   </treehead>
   
-  <treebody>
-  
-    <treeitem>
+	<treechildren>
+		<treeitem>
+			<treerow>
+				<treecell></treecell>
+				<treecell><html:div><treeindentation/><treeicon>Mozilla Links</treeicon></html:div></treecell>
+			</treerow>
        
-      <treecell><treeindentation/><treeicon>Mozilla Links</treeicon></treecell>
-      <treecell></treecell>
+			<treechildren>
+				<treeitem>
+					<treerow>
+						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Tinderbox</treecell>
+						<treecell><html:div>http://cvs-mirror.mozilla.org/webtools/tinderbox</html:div></treecell>  
+					</treerow>
+				</treeitem>
+				<treeitem>
+					<treerow>
+						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bonsai</treecell>
+						<treecell><html:div>http://cvs-mirror.mozilla.org/webtools/bonsai</html:div></treecell>  
+					</treerow>
+				</treeitem>
+				<treeitem>
+					<treerow>
+						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Mozilla.org</treecell>
+						<treecell><html:div>http://www.mozilla.org</html:div></treecell>  
+					</treerow>
+				</treeitem>
+				<treeitem>
+					<treerow>
+						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bugzilla</treecell>
+						<treecell><html:div>http://bugzilla.mozilla.org</html:div></treecell>  
+					</treerow>
+				</treeitem>
+			</treechildren>
+		</treeitem>
+
+		<treeitem>
+			<treerow>
+				<treecell></treecell>
+				<treecell><html:div><treeindentation/><treeicon>Test Links</treeicon></html:div></treecell>
+			</treerow>
        
-	  <treechildren>
-        <treeitem>
-          <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Tinderbox</treecell>
-          <treecell>http://cvs-mirror.mozilla.org/webtools/tinderbox</treecell>  
-	    </treeitem>
-        <treeitem>
-          <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bonsai</treecell>
-          <treecell>http://cvs-mirror.mozilla.org/webtools/bonsai</treecell>  
-	    </treeitem>
-        <treeitem>
-          <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Mozilla.org</treecell>
-          <treecell>http://www.mozilla.org</treecell>  
-	    </treeitem>
-        <treeitem>
-          <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bugzilla</treecell>
-          <treecell>http://bugzilla.mozilla.org</treecell>  
-	    </treeitem>
-      </treechildren>
+			<treechildren>
+				<treeitem>
+					<treerow>
+						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Tinderbox</treecell>
+						<treecell><html:div>http://cvs-mirror.mozilla.org/webtools/tinderbox</html:div></treecell>  
+					</treerow>
+				</treeitem>
+				<treeitem>
+					<treerow>
+						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bonsai</treecell>
+						<treecell><html:div>http://cvs-mirror.mozilla.org/webtools/bonsai</html:div></treecell>  
+					</treerow>
+				</treeitem>
+				<treeitem>
+					<treerow>
+						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Mozilla.org</treecell>
+						<treecell><html:div>http://www.mozilla.org</html:div></treecell>  
+					</treerow>
+				</treeitem>
+				<treeitem>
+					<treerow>
+						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bugzilla</treecell>
+						<treecell><html:div>http://bugzilla.mozilla.org</html:div></treecell>  
+					</treerow>
+				</treeitem>
+			</treechildren>
+		</treeitem>
+	</treechildren>
     
-    </treeitem>
- 
-     <treeitem>
-       
-      <treecell><treeindentation/><treeicon>Test Links</treeicon></treecell>
-      <treecell></treecell>
-       
-	  <treechildren>
-        <treeitem>
-          <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Tinderbox</treecell>
-          <treecell>http://cvs-mirror.mozilla.org/webtools/tinderbox</treecell>  
-	    </treeitem>
-        <treeitem>
-          <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bonsai</treecell>
-          <treecell>http://cvs-mirror.mozilla.org/webtools/bonsai</treecell>  
-	    </treeitem>
-        <treeitem>
-          <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Mozilla.org</treecell>
-          <treecell>http://www.mozilla.org</treecell>  
-	    </treeitem>
-        <treeitem>
-          <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bugzilla</treecell>
-          <treecell>http://bugzilla.mozilla.org</treecell>  
-	    </treeitem>
-      </treechildren>
-    
-    </treeitem>
-    
-  </treebody>
-  
 </tree>
+
+<html:hr/>
+
+</html:div>
 
 </window>
