@@ -76,7 +76,7 @@
           <html>&concatName.label;</html>
           <menulist id="name" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -86,7 +86,7 @@
           <html>&concatZipcode.label;</html>
           <menulist id="home.postalcode" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -96,7 +96,7 @@
           <html>&concatPhone.label;</html>
           <menulist id="home.phone" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -106,7 +106,7 @@
           <html>&concatPhonenumber.label;</html>
           <menulist id="home.phone.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -116,7 +116,7 @@
           <html>&concatAltPhone.label;</html>
           <menulist id="home.altphone" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -126,7 +126,7 @@
           <html>&concatAltPhonenumber.label;</html>
           <menulist id="home.altphone.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -136,7 +136,7 @@
           <html>&concatFax.label;</html>
           <menulist id="home.fax" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -146,7 +146,7 @@
           <html>&concatFaxnumber.label;</html>
           <menulist id="home.fax.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -156,7 +156,7 @@
           <html>&concatMobile.label;</html>
           <menulist id="home.mobile" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -166,7 +166,7 @@
           <html>&concatMobilenumber.label;</html>
           <menulist id="home.mobile.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -176,7 +176,7 @@
           <html>&concatPager.label;</html>
           <menulist id="home.pager" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -186,7 +186,7 @@
           <html>&concatPagernumber.label;</html>
           <menulist id="home.pager.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -209,7 +209,7 @@
           <html>&concatShiptoName.label;</html>
           <menulist id="shipto.name" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -219,7 +219,7 @@
           <html>&concatShiptoZipcode.label;</html>
           <menulist id="shipto.postalcode" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -229,7 +229,7 @@
           <html>&concatShiptoPhone.label;</html>
           <menulist id="shipto.phone" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -239,7 +239,7 @@
           <html>&concatShiptoPhonenumber.label;</html>
           <menulist id="shipto.phone.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -249,7 +249,7 @@
           <html>&concatShiptoAltPhone.label;</html>
           <menulist id="shipto.altphone" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -259,7 +259,7 @@
           <html>&concatShiptoAltPhonenumber.label;</html>
           <menulist id="shipto.altphone.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -269,7 +269,7 @@
           <html>&concatShiptoFax.label;</html>
           <menulist id="shipto.fax" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -279,7 +279,7 @@
           <html>&concatShiptoFaxnumber.label;</html>
           <menulist id="shipto.fax.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -289,7 +289,7 @@
           <html>&concatShiptoMobile.label;</html>
           <menulist id="shipto.mobile" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -299,7 +299,7 @@
           <html>&concatShiptoMobilenumber.label;</html>
           <menulist id="shipto.mobile.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -309,7 +309,7 @@
           <html>&concatShiptoPager.label;</html>
           <menulist id="shipto.pager" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -319,7 +319,7 @@
           <html>&concatShiptoPagernumber.label;</html>
           <menulist id="shipto.pager.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -342,7 +342,7 @@
           <html>&concatBilltoName.label;</html>
           <menulist id="billto.name" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -352,7 +352,7 @@
           <html>&concatBilltoZipcode.label;</html>
           <menulist id="billto.postalcode" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -362,7 +362,7 @@
           <html>&concatBilltoPhone.label;</html>
           <menulist id="billto.phone" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -372,7 +372,7 @@
           <html>&concatBilltoPhonenumber.label;</html>
           <menulist id="billto.phone.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -382,7 +382,7 @@
           <html>&concatBilltoAltPhone.label;</html>
           <menulist id="billto.altphone" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -392,7 +392,7 @@
           <html>&concatBilltoAltPhonenumber.label;</html>
           <menulist id="billto.altphone.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -402,7 +402,7 @@
           <html>&concatBilltoFax.label;</html>
           <menulist id="billto.fax" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -412,7 +412,7 @@
           <html>&concatBilltoFaxnumber.label;</html>
           <menulist id="billto.fax.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -422,7 +422,7 @@
           <html>&concatBilltoMobile.label;</html>
           <menulist id="billto.mobile" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -432,7 +432,7 @@
           <html>&concatBilltoMobilenumber.label;</html>
           <menulist id="billto.mobile.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -442,7 +442,7 @@
           <html>&concatBilltoPager.label;</html>
           <menulist id="billto.pager" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -452,7 +452,7 @@
           <html>&concatBilltoPagernumber.label;</html>
           <menulist id="billto.pager.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -475,7 +475,7 @@
           <html>&concatCardExpdate.label;</html>
           <menulist id="card.expdate" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -485,7 +485,7 @@
           <html>&concatSocSec.label;</html>
           <menulist id="socsec" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -495,7 +495,7 @@
           <html>&concatBdate.label;</html>
           <menulist id="bdate" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -505,7 +505,7 @@
           <html>&concatAnniv.label;</html>
           <menulist id="anniv" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>

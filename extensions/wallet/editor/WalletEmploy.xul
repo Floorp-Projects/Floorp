@@ -60,7 +60,7 @@
           <html>&employName.label;</html>
           <menulist id="business.companyname" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -70,7 +70,7 @@
           <html>&employTitle.label;</html>
           <menulist id="business.jobtitle" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -80,7 +80,7 @@
           <html>&employDepartment.label;</html>
           <menulist id="business.department" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>

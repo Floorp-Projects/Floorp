@@ -62,7 +62,7 @@
           <html>&addressLine1.label;</html>
           <menulist id="street.line1" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -72,7 +72,7 @@
           <html>&addressLine2.label;</html>
           <menulist id="street.line2" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -82,7 +82,7 @@
           <html>&addressLine3.label;</html>
           <menulist id="street.line3" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -91,8 +91,8 @@
         <row>
           <html>&addressCity.label;</html>
           <menulist id="city" editable="true" autoSelectMenuitem="false"
-                    onchange="Append(this)">
-            <menupopup>
+                     onchange="Append(this)">
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -102,7 +102,7 @@
           <html>&addressState.label;</html>
           <menulist id="state" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -113,14 +113,14 @@
           <hbox>
           <menulist id="postalcode.prefix" editable="true" autoSelectMenuitem="false" flex="55%" width="0"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <text value="__"/>
           <menulist id="postalcode.suffix" editable="true" autoSelectMenuitem="false" flex="45%" width="0"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -131,7 +131,7 @@
           <html>&addressCountry.label;</html>
           <menulist id="country" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -141,7 +141,7 @@
           <html>&email.label;</html>
           <menulist id="email" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -152,7 +152,7 @@
           <menulist id="uri" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
 
-            <menupopup>
+            <menupopup oncreate="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
