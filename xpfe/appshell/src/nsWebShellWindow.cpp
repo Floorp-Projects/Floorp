@@ -779,10 +779,15 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     domElement->GetAttribute(cmdAtom, cmdName);
 
     nsXULCommand * menuDelegate = new nsXULCommand();
-    menuDelegate->SetCommand(cmdName);
-    menuDelegate->SetWebShell(mWebShell);
-    menuDelegate->SetDOMElement(domElement);
-    menuDelegate->SetMenuItem(pnsMenuItem);
+    if ( menuDelegate ) {
+        menuDelegate->SetCommand(cmdName);
+        menuDelegate->SetWebShell(mWebShell);
+        menuDelegate->SetDOMElement(domElement);
+        menuDelegate->SetMenuItem(pnsMenuItem);
+    } else {
+        NS_RELEASE( pnsMenuItem );
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
     
     nsIXULCommand * icmd;
     if (NS_OK == menuDelegate->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
@@ -807,7 +812,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     
     // The parent owns us, so we can release
     NS_RELEASE(pnsMenuItem);
-  } 
+  }
   return NS_OK;
 }
 
