@@ -1499,18 +1499,9 @@ public abstract class ScriptableObject implements Scriptable {
 }
 
 
-class Slot implements Cloneable {
+class Slot {
     static final int HAS_GETTER  = 0x01;
     static final int HAS_SETTER  = 0x02;
-    
-    public Object clone() {
-        try {
-            return super.clone();
-        } catch (CloneNotSupportedException e) {
-            // We know we've implemented Cloneable, so we'll never get here
-            return null;
-        }
-    }
     
     int intKey;
     String stringKey;
