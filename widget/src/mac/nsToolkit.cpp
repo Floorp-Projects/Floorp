@@ -110,7 +110,7 @@ NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit);
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-nsToolkit::nsToolkit()
+nsToolkit::nsToolkit() : mInited(false)
 {
 	NS_INIT_REFCNT();
 	if (gEventQueueHandler == nsnull)
@@ -122,7 +122,12 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
-	if (gEventQueueHandler) {
+	/* StopPumping decrements a refcount on gEventQueueHandler; a prelude toward
+	   stopping event handling. This is not something you want to do unless you've
+	   bloody well started event handling and incremented the refcount. That's
+	   done in the Init method, not the constructor, and that's what mInited is about.
+	*/
+	if (mInited && gEventQueueHandler) {
 		if (gEventQueueHandler->StopPumping()) {
 			delete gEventQueueHandler;
 			gEventQueueHandler = nsnull;
@@ -140,6 +145,7 @@ NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
 {
 	if (gEventQueueHandler)
 		gEventQueueHandler->StartPumping();
+	mInited = true;
 	return NS_OK;
 }
 
