@@ -43,7 +43,6 @@ function nsDownloadProgressListener() {
 }
 
 nsDownloadProgressListener.prototype = {
-    startTime: 0,
     elapsed: 0,
     rateChanges: 0,
     rateChangeLimit: 0,
@@ -77,9 +76,6 @@ nsDownloadProgressListener.prototype = {
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
                                aCurTotalProgress, aMaxTotalProgress, aDownload)
     {
-      if (!this.startTime)
-        this.startTime = aDownload.startTime / 1000;
-
       var overallProgress = aCurTotalProgress;
       // Get current time.
       var now = ( new Date() ).getTime();
@@ -92,7 +88,7 @@ nsDownloadProgressListener.prototype = {
       this.lastUpdate = now;
 
       // Update download rate.
-      this.elapsed = now - this.startTime;
+      this.elapsed = now - (aDownload.startTime / 1000);
       var rate; // aCurTotalProgress/sec
       if ( this.elapsed )
         rate = ( aCurTotalProgress * 1000 ) / this.elapsed;
