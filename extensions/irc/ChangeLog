@@ -10,7 +10,7 @@ KOIKE Kazuhiko, Katsuhiko Momoi, Shoji Matsumoto, and others who helped out in
 bug 41564 to get charsets working.
 
 * strict warning cleanup.
-* add input/output charset support.  use /eval setCharset("charsetname"); to
+* add input/output charset support.  use /charset <charsetname> to
   change the current charset, settings will be saved.
 * add "open at startup" item to view menus.
 * implement urls for /query views (isnick urls.)
