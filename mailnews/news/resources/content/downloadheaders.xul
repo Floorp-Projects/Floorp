@@ -1,0 +1,45 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/downloadheaders.dtd">
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        align="vertical"
+        class="dialog"
+	onload="OnLoad()"
+	title="&window.title;"
+        style="padding:10px"> 
+
+	<keyset id="keyset"/>
+
+	<box align="vertical" style="width:36em; min-height:12em">
+		<spring flex="100%"/>
+		<html:div style="margin-bottom:.3em">&info.label;</html:div>
+		<spring flex="100%"/>
+		<box id="okCancelButtons"/>
+	</box>
+</window>
