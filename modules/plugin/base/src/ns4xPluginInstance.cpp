@@ -212,21 +212,6 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   #endif
 			  amountRead -= numtowrite;
 			  mPosition += numtowrite;
-/**/
-        if(amountRead == 0)//~~~this is a temporary workaround to make RealAudio work
-        {
-          NPError error = CallNPP_DestroyStreamProc(callbacks->destroystream, npp, &mNPStream, NPRES_DONE);
-  		    if(error != NPERR_NO_ERROR)
-			      return NS_ERROR_FAILURE;
-
-          if(callbacks->urlnotify != NULL && mNotifyData != nsnull)
-          {
-#if !TARGET_CARBON
-            CallNPP_URLNotifyProc(callbacks->urlnotify,npp,mNPStream.url,nsPluginReason_Done,mNotifyData);
-#endif
-          }
-        }
-
 		  }
     }
 

@@ -898,10 +898,10 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIChannel* channel,
     nsCRT::free(urlString);
 
 	// tell the plugin that the stream has ended only if the cache is done
-	if(mCacheDone)
+//	if(mCacheDone)
 		mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
-	else // otherwise, we store the status so we can report it later in OnFileAvailable
-		mStatus = aStatus;
+//	else // otherwise, we store the status so we can report it later in OnFileAvailable
+//		mStatus = aStatus;
   }
 
   mOnStopRequest = PR_TRUE;
