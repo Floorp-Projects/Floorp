@@ -219,6 +219,9 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     if test -z "$LD"; then
 	AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
     fi
+    if test -z "$STRIP"; then
+	AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
+    fi
     if test -z "$DLLTOOL"; then
 	AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", :)
     fi
@@ -233,6 +236,7 @@ else
     AC_PATH_PROGS(AS, as, $CC)
     AC_PATH_PROGS(AR, ar, :)
     AC_PATH_PROGS(LD, ld, :)
+    AC_PATH_PROGS(STRIP, strip, :)
     AC_PATH_PROGS(DLLTOOL, dlltool, :)
     if test -z "$HOST_CC"; then
 	HOST_CC="$CC"
