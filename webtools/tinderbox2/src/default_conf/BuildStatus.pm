@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.3 $ 
-# $Date: 2001/02/15 21:11:04 $ 
+# $Revision: 1.4 $ 
+# $Date: 2001/02/16 20:03:13 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -134,6 +134,8 @@ package BuildStatus;
 # complete.
 
 sub is_status_final {
+  my ($buildstatus) = @_;
+
   if ( ($buildstatus eq 'not_running') ||
        ($buildstatus eq 'building') ) {
     return 0;
@@ -183,12 +185,12 @@ sub get_all_status {
 # return the states in an order sorted by $STATUS{*}{'order'}
 
 sub get_all_sorted_status {
-  my @sorted_status = (
-		       map { $_->[0] }
-		       sort{ $a->[1] <=> $b->[1] }	
-		       map { [ $_, $STATUS{$_}{'order'} ] }
-		       (keys %STATUS ) 
-		      );
+  my (@sorted_status) = (
+                         map { $_->[0] }
+                         sort{ $a->[1] <=> $b->[1] }	
+                         map { [ $_, $STATUS{$_}{'order'} ] }
+                         (keys %STATUS ) 
+                        );
 
   return @sorted_status;
 }
@@ -198,7 +200,7 @@ sub get_all_sorted_status {
 
 sub status2html_colors {
   my (@latest_status) = @_;
-  my @out;
+  my (@out);
 
   for ($i=0; $i <= $#latest_status; $i++) {
     my ($status) = $latest_status[$i];
@@ -214,7 +216,7 @@ sub status2html_colors {
 
 sub status2hdml_chars {
   my (@latest_status) = @_;
-  my @out;
+  my (@out);
 
   for ($i=0; $i <= $#latest_status; $i++) {
     my ($status) = $latest_status[$i];
@@ -229,7 +231,7 @@ sub status2hdml_chars {
 
 sub status2descriptions {
   my (@latest_status) = @_;
-  my @out;
+  my (@out);
 
   for ($i=0; $i <= $#latest_status; $i++) {
     my ($status) = $latest_status[$i];
