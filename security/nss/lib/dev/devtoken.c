@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.25 $ $Date: 2002/06/24 23:54:16 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.26 $ $Date: 2002/07/02 15:11:22 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -393,24 +393,25 @@ find_objects
     CK_RV ckrv;
     CK_ULONG count;
     CK_OBJECT_HANDLE *objectHandles;
+    CK_OBJECT_HANDLE staticObjects[OBJECT_STACK_SIZE];
     PRUint32 arraySize, numHandles;
     void *epv = nssToken_GetCryptokiEPV(tok);
     nssCryptokiObject **objects;
     NSSArena *arena;
     nssSession *session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+
     /* the arena is only for the array of object handles */
-    arena = nssArena_Create();
-    if (!arena) {
-	if (statusOpt) *statusOpt = PR_FAILURE;
-	return (nssCryptokiObject **)NULL;
-    }
     if (maximumOpt > 0) {
 	arraySize = maximumOpt;
     } else {
 	arraySize = OBJECT_STACK_SIZE;
     }
     numHandles = 0;
-    objectHandles = nss_ZNEWARRAY(arena, CK_OBJECT_HANDLE, arraySize);
+    if (arraySize <= OBJECT_STACK_SIZE) {
+	objectHandles = staticObjects;
+    } else {
+	objectHandles = nss_ZNEWARRAY(NULL, CK_OBJECT_HANDLE, arraySize);
+    }
     if (!objectHandles) {
 	goto loser;
     }
@@ -462,11 +463,15 @@ find_objects
     } else {
 	objects = NULL;
     }
-    nssArena_Destroy(arena);
+    if (objectHandles && objectHandles != staticObjects) {
+	nss_ZFreeIf(objectHandles);
+    }
     if (statusOpt) *statusOpt = PR_SUCCESS;
     return objects;
 loser:
-    nssArena_Destroy(arena);
+    if (objectHandles && objectHandles != staticObjects) {
+	nss_ZFreeIf(objectHandles);
+    }
     if (statusOpt) *statusOpt = PR_FAILURE;
     return (nssCryptokiObject **)NULL;
 }
@@ -1213,8 +1218,6 @@ nssToken_FindTrustForCertificate
     nssSession *session = sessionOpt ? sessionOpt : token->defaultSession;
     nssCryptokiObject *object, **objects;
 
-    sha1_result.data = sha1; sha1_result.size = sizeof sha1;
-    sha1_hash(certEncoding, &sha1_result);
     NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);
     if (searchType == nssTokenSearchType_SessionOnly) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
@@ -1222,19 +1225,8 @@ nssToken_FindTrustForCertificate
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS,          tobjc);
-    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CERT_SHA1_HASH, &sha1_result);
-#ifdef NSS_3_4_CODE
-    if (!PK11_HasRootCerts(token->pk11slot)) {
-#endif
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ISSUER,         certIssuer);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER , certSerial);
-#ifdef NSS_3_4_CODE
-    }
-    /*
-     * we need to arrange for the built-in token to lose the bottom 2 
-     * attributes so that old built-in tokens will continue to work.
-     */
-#endif
     NSS_CK_TEMPLATE_FINISH(tobj_template, attr, tobj_size);
     object = NULL;
     objects = find_objects_by_template(token, session,

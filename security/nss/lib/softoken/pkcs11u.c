@@ -1027,7 +1027,6 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     NSSLOWKEYPublicKey  *pubKey;
     unsigned char hash[SHA1_LENGTH];
     SECItem *item;
-    PK11Attribute *attr;
 
     switch (type) {
     case CKA_PRIVATE:
@@ -1054,7 +1053,7 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	if (((cert->trust->sslFlags & CERTDB_USER) == 0) &&
 		((cert->trust->emailFlags & CERTDB_USER) == 0) &&
 		((cert->trust->objectSigningFlags & CERTDB_USER) == 0)) {
-	    return NULL;
+	    return (PK11Attribute *) &pk11_StaticNullAttr;
 	}
 	pubKey = nsslowcert_ExtractPublicKey(cert);
 	if (pubKey == NULL) break;
@@ -1792,54 +1791,70 @@ pk11_tokenKeyUnlock(PK11Slot *slot) {
 
 
 /* allocation hooks that allow us to recycle old object structures */
-static PK11Object * objectFreeList = NULL;
-static PZLock *objectLock = NULL;
-static int object_count = 0;
+static PK11ObjectFreeList sessionObjectList = { NULL, NULL, 0 };
+static PK11ObjectFreeList tokenObjectList = { NULL, NULL, 0 };
 
 PK11Object *
 pk11_GetObjectFromList(PRBool *hasLocks, PRBool optimizeSpace, 
-						unsigned int hashSize) {
+     PK11ObjectFreeList *list, unsigned int hashSize, PRBool isSessionObject)
+{
     PK11Object *object;
+    int size = 0;
 
     if (!optimizeSpace) {
-	if (objectLock == NULL) {
-	    objectLock = PZ_NewLock(nssILockObject);
+	if (list->lock == NULL) {
+	    list->lock = PZ_NewLock(nssILockObject);
 	}
 
-	PK11_USE_THREADS(PZ_Lock(objectLock));
-	object = objectFreeList;
+	PK11_USE_THREADS(PZ_Lock(list->lock));
+	object = list->head;
 	if (object) {
-	    objectFreeList = object->next;
-	    object_count--;
+	    list->head = object->next;
+	    list->count--;
 	}    	
-	PK11_USE_THREADS(PZ_Unlock(objectLock));
+	PK11_USE_THREADS(PZ_Unlock(list->lock));
 	if (object) {
 	    object->next = object->prev = NULL;
             *hasLocks = PR_TRUE;
 	    return object;
 	}
     }
+    size = isSessionObject ? sizeof(PK11SessionObject) 
+		+ hashSize *sizeof(PK11Attribute *) : sizeof(PK11TokenObject);
 
-    object  = (PK11Object*)PORT_ZAlloc(sizeof(PK11SessionObject) + 
-		hashSize * sizeof(PK11Attribute *));
-    ((PK11SessionObject *)object)->hashSize = hashSize;
+    object  = (PK11Object*)PORT_ZAlloc(size);
+    if (isSessionObject) {
+	((PK11SessionObject *)object)->hashSize = hashSize;
+    }
     *hasLocks = PR_FALSE;
     return object;
 }
 
 static void
-pk11_PutObjectToList(PK11SessionObject *object) {
-    if (!object->optimizeSpace && (object_count < MAX_OBJECT_LIST_SIZE)) {
-	PK11_USE_THREADS(PZ_Lock(objectLock));
-	object->obj.next = objectFreeList;
-	objectFreeList = &object->obj;
-	object_count++;
-	PK11_USE_THREADS(PZ_Unlock(objectLock));
+pk11_PutObjectToList(PK11Object *object, PK11ObjectFreeList *list,
+						PRBool isSessionObject) {
+
+    /* the code below is equivalent to :
+     *     optimizeSpace = isSessionObject ? object->optimizeSpace : PR_FALSE;
+     * just faster.
+     */
+    PRBool optimizeSpace = isSessionObject && 
+				((PK11SessionObject *)object)->optimizeSpace; 
+    if (!optimizeSpace && (list->count < MAX_OBJECT_LIST_SIZE)) {
+	PK11_USE_THREADS(PZ_Lock(list->lock));
+	object->next = list->head;
+	list->head = object;
+	list->count++;
+	PK11_USE_THREADS(PZ_Unlock(list->lock));
 	return;
     }
-    PK11_USE_THREADS(PZ_DestroyLock(object->attributeLock);)
-    PK11_USE_THREADS(PZ_DestroyLock(object->obj.refLock);)
-    object->attributeLock = object->obj.refLock = NULL;
+    if (isSessionObject) {
+	PK11SessionObject *so = (PK11SessionObject *)object;
+	PK11_USE_THREADS(PZ_DestroyLock(so->attributeLock);)
+	so->attributeLock = NULL;
+    }
+    PK11_USE_THREADS(PZ_DestroyLock(object->refLock);)
+    object->refLock = NULL;
     PORT_Free(object);
 }
 
@@ -1851,27 +1866,36 @@ pk11_freeObjectData(PK11Object *object) {
    return next;
 }
    
-void
-pk11_CleanupFreeLists()
+static void
+pk11_CleanupFreeList(PK11ObjectFreeList *list, PRBool isSessionList)
 {
     PK11Object *object;
 
-    if (!objectLock) {
+    if (!list->lock) {
 	return;
     }
-    PK11_USE_THREADS(PZ_Lock(objectLock));
-    for (object= objectFreeList; object != NULL; 
+    PK11_USE_THREADS(PZ_Lock(list->lock));
+    for (object= list->head; object != NULL; 
 					object = pk11_freeObjectData(object)) {
 #ifdef PKCS11_USE_THREADS
 	PZ_DestroyLock(object->refLock);
-	PZ_DestroyLock(((PK11SessionObject *)object)->attributeLock);
+	if (isSessionList) {
+	    PZ_DestroyLock(((PK11SessionObject *)object)->attributeLock);
+	}
 #endif
     }
-    object_count = 0;
-    objectFreeList = NULL;
-    PK11_USE_THREADS(PZ_Unlock(objectLock));
-    PZ_DestroyLock(objectLock);
-    objectLock = NULL;
+    list->count = 0;
+    list->head = NULL;
+    PK11_USE_THREADS(PZ_Unlock(list->lock));
+    PK11_USE_THREADS(PZ_DestroyLock(list->lock));
+    list->lock = NULL;
+}
+
+void
+pk11_CleanupFreeLists(void)
+{
+    pk11_CleanupFreeList(&sessionObjectList, PR_TRUE);
+    pk11_CleanupFreeList(&tokenObjectList, PR_FALSE);
 }
 
 
@@ -1884,14 +1908,15 @@ pk11_NewObject(PK11Slot *slot)
     PK11Object *object;
     PK11SessionObject *sessObject;
     PRBool hasLocks = PR_FALSE;
-    int i;
+    unsigned int i;
     unsigned int hashSize = 0;
 
     hashSize = (slot->optimizeSpace) ? SPACE_ATTRIBUTE_HASH_SIZE :
 				TIME_ATTRIBUTE_HASH_SIZE;
 
 #ifdef PKCS11_STATIC_ATTRIBUTES
-    object = pk11_GetObjectFromList(&hasLocks, slot->optimizeSpace, hashSize);
+    object = pk11_GetObjectFromList(&hasLocks, slot->optimizeSpace,
+				&sessionObjectList,  hashSize, PR_TRUE);
     if (object == NULL) {
 	return NULL;
     }
@@ -2026,15 +2051,14 @@ pk11_DestroyObject(PK11Object *object)
     }
     if (object->objectInfo) {
 	(*object->infoFree)(object->objectInfo);
+	object->objectInfo = NULL;
+	object->infoFree = NULL;
     }
 #ifdef PKCS11_STATIC_ATTRIBUTES
     if (so) {
-	pk11_PutObjectToList(so);
+	pk11_PutObjectToList(object,&sessionObjectList,PR_TRUE);
     } else {
-	if (object->refLock) {
-	    PK11_USE_THREADS(PZ_DestroyLock(object->refLock);)
-	}
-	PORT_Free(to);
+	pk11_PutObjectToList(object,&tokenObjectList,PR_FALSE);
     }
 #else
     if (object->refLock) {
@@ -2235,7 +2259,7 @@ pk11_CopyObject(PK11Object *destObject,PK11Object *srcObject)
 {
     PK11Attribute *attribute;
     PK11SessionObject *src_so = pk11_narrowToSessionObject(srcObject);
-    int i;
+    unsigned int i;
 
     if (src_so == NULL) {
 	return CKR_DEVICE_ERROR; /* can't copy token objects yet */
@@ -2319,7 +2343,7 @@ pk11_searchObjectList(PK11SearchResults *search,PK11Object **head,
 	unsigned int size, PZLock *lock, CK_ATTRIBUTE_PTR theTemplate, 
 						int count, PRBool isLoggedIn)
 {
-    int i;
+    unsigned int i;
     PK11Object *object;
     CK_RV crv = CKR_OK;
 
@@ -2403,7 +2427,7 @@ pk11_update_state(PK11Slot *slot,PK11Session *session)
 void
 pk11_update_all_states(PK11Slot *slot)
 {
-    int i;
+    unsigned int i;
     PK11Session *session;
 
     for (i=0; i < slot->sessHashSize; i++) {
@@ -2631,10 +2655,12 @@ pk11_NewTokenObject(PK11Slot *slot, SECItem *dbKey, CK_OBJECT_HANDLE handle)
 {
     PK11Object *object = NULL;
     PK11TokenObject *tokObject = NULL;
+    PRBool hasLocks = PR_FALSE;
     SECStatus rv;
 
 #ifdef PKCS11_STATIC_ATTRIBUTES
-    object = (PK11Object *) PORT_ZAlloc(sizeof(PK11TokenObject));
+    object = pk11_GetObjectFromList(&hasLocks, PR_FALSE, &tokenObjectList,  0,
+							PR_FALSE);
     if (object == NULL) {
 	return NULL;
     }
@@ -2674,7 +2700,9 @@ pk11_NewTokenObject(PK11Slot *slot, SECItem *dbKey, CK_OBJECT_HANDLE handle)
 	goto loser;
     }
 #ifdef PKCS11_USE_THREADS
-    object->refLock = PZ_NewLock(nssILockRefLock);
+    if (!hasLocks) {
+	object->refLock = PZ_NewLock(nssILockRefLock);
+    }
     if (object->refLock == NULL) {
 	goto loser;
     }

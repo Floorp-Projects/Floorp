@@ -287,6 +287,14 @@ PK11_MatchItem(PK11SlotInfo *slot, CK_OBJECT_HANDLE searchID,
 	return CK_INVALID_HANDLE;
     }
 
+    if ((theTemplate[0].ulValueLen == 0) || (theTemplate[0].ulValueLen == -1)) {
+	PORT_FreeArena(arena,PR_FALSE);
+	PORT_SetError(SEC_ERROR_BAD_KEY);
+	return CK_INVALID_HANDLE;
+     }
+	
+	
+
     /*
      * issue the find
      */
@@ -3225,24 +3233,20 @@ struct listCertsStr {
 };
 
 static PRBool
-isOnList(CERTCertList *certList,CERTCertificate *cert)
+isOnList(CERTCertList *certList,NSSCertificate *c)
 {
 	CERTCertListNode *cln;
 
 	for (cln = CERT_LIST_HEAD(certList); !CERT_LIST_END(cln,certList);
 			cln = CERT_LIST_NEXT(cln)) {
-	    if (cln->cert == cert) {
+	    if (cln->cert->nssCertificate == c) {
 		return PR_TRUE;
 	    }
 	}
 	return PR_FALSE;
 }
 static SECStatus
-#ifdef NSS_CLASSIC
-pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
-#else
-pk11ListCertCallback(CERTCertificate *cert, void *arg)
-#endif
+pk11ListCertCallback(NSSCertificate *c, void *arg)
 {
     struct listCertsStr *listCertP = (struct listCertsStr *)arg;
     CERTCertificate *newCert = NULL;
@@ -3260,53 +3264,37 @@ pk11ListCertCallback(CERTCertificate *cert, void *arg)
     if ((type == PK11CertListCA) || (type == PK11CertListRootUnique)) {
 	isCA = PR_TRUE;
     }
-    /* at this point the nickname is correct for the cert. save it for later */
-    if (!isUnique && cert->nickname) {
-         nickname = PORT_ArenaStrdup(listCertP->certList->arena,cert->nickname);
-    }
-#ifdef NSS_CLASSIC
-    if (derCert == NULL) {
-	newCert=CERT_DupCertificate(cert);
-    } else {
-	newCert=CERT_FindCertByDERCert(CERT_GetDefaultCertDB(),&cert->derCert);
-    }
-#else
-    newCert=CERT_DupCertificate(cert);
-#endif
 
-    if (newCert == NULL) return SECSuccess;
-
-    trust = newCert->trust;
 
     /* if we want user certs and we don't have one skip this cert */
     if ((type == PK11CertListUser) && 
-	  ((trust == NULL) || 
-		( ((trust->sslFlags & CERTDB_USER) == 0)  && 
-			((trust->emailFlags & CERTDB_USER) == 0) )) ) {
-	CERT_DestroyCertificate(newCert);
+		!NSSCertificate_IsPrivateKeyAvailable(c, NULL,NULL)) {
 	return SECSuccess;
     }
 
     /* if we want root certs, skip the user certs */
     if ((type == PK11CertListRootUnique) && 
-	  ((trust) && (((trust->sslFlags & CERTDB_USER )  || 
-				(trust->emailFlags & CERTDB_USER))) ) ) {
-	CERT_DestroyCertificate(newCert);
+		NSSCertificate_IsPrivateKeyAvailable(c, NULL,NULL)) {
 	return SECSuccess;
     }
-
 
     /* if we want Unique certs and we already have it on our list, skip it */
-    if ( isUnique && isOnList(certList,newCert) ) {
-	CERT_DestroyCertificate(newCert);
+    if ( isUnique && isOnList(certList,c) ) {
 	return SECSuccess;
     }
 
-    /* if we want CA certs and it ain't one, skip it */
-    if( isCA  && (!CERT_IsCACert(newCert, &certType)) ) {
-	CERT_DestroyCertificate(newCert);
+
+    newCert = STAN_GetCERTCertificate(c);
+    if (!newCert) {
 	return SECSuccess;
     }
+    /* if we want CA certs and it ain't one, skip it */
+    if( isCA  && (!CERT_IsCACert(newCert, &certType)) ) {
+	return SECSuccess;
+    }
+    CERT_DupCertificate(newCert);
+
+    nickname = STAN_GetCERTCertificateName(c);
 
     /* put slot certs at the end */
     if (newCert->slot && !PK11_IsInternal(newCert->slot)) {
@@ -3339,25 +3327,15 @@ PK11_ListCerts(PK11CertListType type, void *pwarg)
 #else
     NSSTrustDomain *defaultTD = STAN_GetDefaultTrustDomain();
     CERTCertList *certList = NULL;
-    struct nss3_cert_cbstr pk11cb;
     struct listCertsStr listCerts;
     certList = CERT_NewCertList();
     listCerts.type = type;
     listCerts.certList = certList;
-    pk11cb.callback = pk11ListCertCallback;
-    pk11cb.arg = &listCerts;
 
     /* authenticate to the slots */
     (void) pk11_TraverseAllSlots( NULL, NULL, pwarg);
-#ifdef notdef
-    if (type == PK11CertListUser) {
-	NSSTrustDomain_TraverseUserCertificates(defaultTD, convert_cert &pk11cb);
-    } else {
-	NSSTrustDomain_TraverseCertificates(defaultTD, convert_cert, &pk11cb);
-    }
-#else
-	NSSTrustDomain_TraverseCertificates(defaultTD, convert_cert, &pk11cb);
-#endif
+    NSSTrustDomain_TraverseCertificates(defaultTD, pk11ListCertCallback,
+								 &listCerts);
     return certList;
 #endif
 }

@@ -143,6 +143,7 @@
 /* define typedefs, double as forward declarations as well */
 typedef struct PK11AttributeStr PK11Attribute;
 typedef struct PK11ObjectListStr PK11ObjectList;
+typedef struct PK11ObjectFreeListStr PK11ObjectFreeList;
 typedef struct PK11ObjectListElementStr PK11ObjectListElement;
 typedef struct PK11ObjectStr PK11Object;
 typedef struct PK11SessionObjectStr PK11SessionObject;
@@ -216,6 +217,12 @@ struct PK11ObjectListStr {
     PK11ObjectList *next;
     PK11ObjectList *prev;
     PK11Object	   *parent;
+};
+
+struct PK11ObjectFreeListStr {
+    PK11Object	*head;
+    PZLock	*lock;
+    int		count;
 };
 
 /*
