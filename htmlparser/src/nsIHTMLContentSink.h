@@ -182,6 +182,22 @@ public:
    */     
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode)=0;
 
+  /**
+   * This method is used in opening a NOSCRIPT container.
+   *
+   * @update harishd 08/25/00
+   * @param  nsIParserNode reference to parser node interface
+   */     
+  NS_IMETHOD OpenNoscript(const nsIParserNode& aNode)=0;
+
+  
+  /**
+   * This method is used in closing a NOSCRIPT container.
+   *
+   * @update harishd 08/25/00
+   * @param  nsIParserNode reference to parser node interface
+   */     
+  NS_IMETHOD CloseNoscript(const nsIParserNode& aNode)=0;
 
   /**
    * This method tells the sink whether or not it is 

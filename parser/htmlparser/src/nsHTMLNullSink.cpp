@@ -69,6 +69,8 @@ public:
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD OpenNoscript(const nsIParserNode& aNode) { return NS_OK; }
+  NS_IMETHOD CloseNoscript(const nsIParserNode& aNode){ return NS_OK; }
 
   NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD BeginContext(PRInt32 aPosition);

@@ -139,6 +139,7 @@ CToken::~CToken() {
   mUseCount=0;
 }
 
+
 /**
  * This method gets called when a token is about to be reused
  * for some other purpose. The token should initialize itself 

@@ -636,7 +636,7 @@ nsresult CWellFormedDTD::HandleStartToken(CToken* aToken) {
 
   // Pass the ID Attribute atom from the start token to the parser node
   CStartToken* startToken = NS_STATIC_CAST(CStartToken *, aToken);
-  nsCOMPtr<nsIAtom> IDAttr;
+  nsCOMPtr<nsIAtom> IDAttr=nsnull;
   result = startToken->GetIDAttributeAtom(getter_AddRefs(IDAttr));
   if (IDAttr && NS_SUCCEEDED(result))
     result = theNode.SetIDAttributeAtom(IDAttr);

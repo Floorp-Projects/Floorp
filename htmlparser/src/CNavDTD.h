@@ -429,6 +429,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult OpenForm(const nsIParserNode *aNode);
     nsresult OpenMap(const nsIParserNode *aNode);
     nsresult OpenFrameset(const nsIParserNode *aNode);
+    nsresult OpenNoscript(const nsIParserNode *aNode,nsEntryStack* aStyleStack=0);
     nsresult OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedByStartTag,nsEntryStack* aStyleStack=0);
 
     /**
@@ -444,6 +445,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult CloseForm(const nsIParserNode *aNode);
     nsresult CloseMap(const nsIParserNode *aNode);
     nsresult CloseFrameset(const nsIParserNode *aNode);
+    nsresult CloseNoscript(const nsIParserNode *aNode);
     
     /**
      * The special purpose methods automatically close
