@@ -57,13 +57,13 @@ Cancelled Because:
     Account [% email %] already exists.
 
   [% ELSIF cancelaction == 'email_change_cancelled' %]
-    The request to change the email address for the
-    [% old_email %] account to [% new_email %]
-    has been cancelled.
+    The request to change the email address for
+    the [% old_email %] account to [% new_email %] has
+    been cancelled.
 
   [% ELSIF cancelaction == 'email_change_cancelled_reinstated' %]
-    The request to change the email address for your account to
-    [% new_email %] has been cancelled. Your old account
+    The request to change the email address for your account
+    to [% new_email %] has been cancelled. Your old account
     settings have been reinstated.
 
   [% ELSIF cancelaction == 'emailold_change_cancelled' %]
