@@ -26,9 +26,11 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsITransactionManager.h"
+#include "nsIMsgWindowData.h"
 
 class nsMsgRDFDataSource : public nsIRDFDataSource,
-                           public nsIShutdownListener
+                           public nsIShutdownListener,
+						   public nsIMsgWindowData
 {
  public:
   nsMsgRDFDataSource();
@@ -160,6 +162,13 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
                        nsISupportsArray *aArguments);
 
 
+  //nsIMsgWindowData interface
+  NS_IMETHOD GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback);
+  NS_IMETHOD SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback);
+
+  NS_IMETHOD GetTransactionManager(nsITransactionManager * *aTransactionManager);
+  NS_IMETHOD SetTransactionManager(nsITransactionManager * aTransactionManager);
+
  protected:
 	nsIRDFService *getRDFService();
 	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
@@ -168,6 +177,8 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 								nsIRDFNode *object, PRBool assert);
 	nsresult GetTransactionManager(nsISupportsArray *sources, nsITransactionManager **aTransactionManager);
 
+	nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
+	nsCOMPtr<nsITransactionManager> mTransactionManager;
  private:
   nsIRDFService *mRDFService;
   nsCOMPtr<nsISupportsArray> mObservers;

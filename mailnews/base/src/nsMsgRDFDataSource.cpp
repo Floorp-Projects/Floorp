@@ -71,6 +71,8 @@ nsMsgRDFDataSource::QueryInterface(const nsIID& iid, void **result)
       res = NS_STATIC_CAST(nsIRDFDataSource*, this);
   else if(iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
       res = NS_STATIC_CAST(nsIShutdownListener*, this);
+  else if(iid.Equals(nsCOMTypeInfo<nsIMsgWindowData>::GetIID()))
+	  res = NS_STATIC_CAST(nsIMsgWindowData*, this);
 
   if (res) {
       NS_ADDREF(this);
@@ -275,6 +277,40 @@ nsMsgRDFDataSource::OnShutdown(const nsCID& aClass, nsISupports* service)
     return NS_OK;
 }
 
+
+NS_IMETHODIMP nsMsgRDFDataSource::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback)
+{
+	if(!aStatusFeedback)
+		return NS_ERROR_NULL_POINTER;
+
+	*aStatusFeedback = mStatusFeedback;
+	NS_IF_ADDREF(*aStatusFeedback);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgRDFDataSource::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
+{
+	mStatusFeedback = aStatusFeedback;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMsgRDFDataSource::GetTransactionManager(nsITransactionManager * *aTransactionManager)
+{
+	if(!aTransactionManager)
+		return NS_ERROR_NULL_POINTER;
+
+	*aTransactionManager = mTransactionManager;
+	NS_IF_ADDREF(*aTransactionManager);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgRDFDataSource::SetTransactionManager(nsITransactionManager * aTransactionManager)
+{
+	mTransactionManager = aTransactionManager;
+	return NS_OK;
+}
+
 nsIRDFService *
 nsMsgRDFDataSource::getRDFService()
 {
@@ -364,3 +400,4 @@ nsMsgRDFDataSource::GetTransactionManager(nsISupportsArray *aSources, nsITransac
 
 	return NS_OK;	
 }
+
