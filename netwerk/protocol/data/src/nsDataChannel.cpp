@@ -43,6 +43,7 @@
 #include "nsNetUtil.h"
 #include "nsILoadGroup.h"
 #include "plbase64.h"
+#include "prmem.h"
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -85,34 +86,6 @@ nsDataChannel::Init(nsIURI* uri)
     rv = ParseData();
 
     return rv;
-}
-
-typedef struct _writeData {
-    PRUint32 dataLen;
-    char *data;
-} writeData;
-
-static NS_METHOD
-nsReadData(nsIOutputStream* out,
-           void* closure, // the data from
-           char* toRawSegment, // where to put the data
-           PRUint32 offset, // where to start
-           PRUint32 count, // how much data is there
-           PRUint32 *readCount) { // how much data was read
-  nsresult rv = NS_OK;
-  writeData *dataToWrite = (writeData*)closure;
-  PRUint32 write = PR_MIN(count, dataToWrite->dataLen - offset);
-
-  *readCount = 0;
-
-  if (offset == dataToWrite->dataLen)
-      return NS_OK;     // *readCount == 0 is EOF
-
-  memcpy(toRawSegment, dataToWrite->data + offset, write);
-
-  *readCount = write;
-
-  return rv;
 }
 
 nsresult
@@ -193,7 +166,6 @@ nsDataChannel::ParseData() {
     
     nsCOMPtr<nsIInputStream> bufInStream;
     nsCOMPtr<nsIOutputStream> bufOutStream;
-    writeData* dataToWrite = nsnull;
     
     // create an unbounded pipe.
     rv = NS_NewPipe(getter_AddRefs(bufInStream),
@@ -202,13 +174,6 @@ nsDataChannel::ParseData() {
                     PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv))
         goto cleanup;
-
-    PRUint32 wrote;
-    dataToWrite = (writeData*)nsMemory::Alloc(sizeof(writeData));
-    if (!dataToWrite) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto cleanup;
-    }
 
     PRUint32 dataLen;
     dataLen = nsUnescapeCount(dataBuffer);
@@ -234,23 +199,14 @@ nsDataChannel::ParseData() {
             goto cleanup;
         }
 
-        dataToWrite->dataLen = resultLen;
-        dataToWrite->data = decodedData;
+        rv = bufOutStream->Write(decodedData, resultLen, (PRUint32*)&mContentLength);
 
-        rv = bufOutStream->WriteSegments(nsReadData, dataToWrite, dataToWrite->dataLen, &wrote);
-
-        nsMemory::Free(decodedData);
+        PR_Free(decodedData);
     } else {
-        dataToWrite->dataLen = dataLen;
-        dataToWrite->data = dataBuffer;
-
-        rv = bufOutStream->WriteSegments(nsReadData, dataToWrite, dataLen, &wrote);
+        rv = bufOutStream->Write(dataBuffer, dataLen, (PRUint32*)&mContentLength);
     }
     if (NS_FAILED(rv))
         goto cleanup;
-
-    // Initialize the content length of the data...
-    mContentLength = dataToWrite->dataLen;
 
     rv = bufInStream->QueryInterface(NS_GET_IID(nsIInputStream), getter_AddRefs(mDataStream));
     if (NS_FAILED(rv))
@@ -261,8 +217,6 @@ nsDataChannel::ParseData() {
     rv = NS_OK;
 
  cleanup:
-    if (dataToWrite)
-        nsMemory::Free(dataToWrite);
     if (cleanup)
         nsMemory::Free(dataBuffer);
     return rv;
