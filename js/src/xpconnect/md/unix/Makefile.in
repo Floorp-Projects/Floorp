@@ -16,50 +16,29 @@
 # Reserved.
 #
 
-DEPTH=../../..
+DEPTH=../../../../..
 
 topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
 VPATH		= @srcdir@
+srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = md
-
-LIBRARY_NAME=xpconnect
-MODULE=xpconnect
-
 CFLAGS	+= -DJSFILE -DEXPORT_XPC_API -DJS_THREADSAFE
 
+LIBRARY_NAME	= xpcmd
+
+MODULE		= xpconnect
+
+ifeq ($(OS_ARCH), Linux)
 CPPSRCS=		\
-	xpt_cpp.cpp			\
-	nsXPConnect.cpp		\
-	xpcarbitrary.cpp	\
-	xpccontext.cpp		\
-	xpcconvert.cpp		\
-	xpclog.cpp			\
-	xpcmaps.cpp			\
-	xpcnsid.cpp			\
-	xpcwrappedjs.cpp	\
-	xpcwrappedjsclass.cpp	\
-	xpcwrappednative.cpp	\
-	xpcwrappednativeclass.cpp	\
+	xpcinvoke_linux_x86.cpp \
+	xpcstubs_linux_x86.cpp \
 	$(NULL)
-
-EXPORTS	= \
-    nsIXPCScriptable.h \
-    nsIInterfaceInfo.h \
-    nsIInterfaceInfoManager.h \
-    nsIXPConnect.h     \
-    xpclog.h     \
-	$(NULL)
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(srcdir)
-
-# MD_LIBRARY	=	md/unix/libxpcmd.a
+INCLUDES	+= -I$(srcdir)/../..

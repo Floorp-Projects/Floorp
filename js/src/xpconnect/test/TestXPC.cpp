@@ -152,7 +152,8 @@ MyScriptable::MyScriptable()
     NS_ADDREF_THIS();
 }    
 
-NS_IMPL_ISUPPORTS(MyScriptable,NS_IXPCSCRIPTABLE_IID);
+static NS_DEFINE_IID(kMyScriptableIID, NS_IXPCSCRIPTABLE_IID);
+NS_IMPL_ISUPPORTS(MyScriptable, kMyScriptableIID);
 
 // XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(MyScriptable);
     XPC_IMPLEMENT_FORWARD_CREATE(MyScriptable);
@@ -297,7 +298,8 @@ private:
     nsIAllocator* mAllocator;
 };
 
-NS_IMPL_ISUPPORTS(MyEcho, NS_IECHO_IID);
+static NS_DEFINE_IID(kMyEchoIID, NS_IECHO_IID);
+NS_IMPL_ISUPPORTS(MyEcho, kMyEchoIID);
 
 MyEcho::MyEcho() 
     : mReciever(NULL)

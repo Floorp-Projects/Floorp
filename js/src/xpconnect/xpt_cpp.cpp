@@ -569,7 +569,8 @@ InterfaceInfoImpl::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
     }
 
     // else...
-    *info = NS_STATIC_CAST(nsXPTMethodInfo*, &mEntry->interface_descriptor->method_descriptors[index-mMethodBaseIndex]);
+    *info = NS_REINTERPRET_CAST(nsXPTMethodInfo*, 
+    &mEntry->interface_descriptor->method_descriptors[index-mMethodBaseIndex]);
     return NS_OK;
 
 }
@@ -589,6 +590,7 @@ InterfaceInfoImpl::GetConstant(uint16 index, const nsXPTConstant** constant)
     }
 
     // else...
-    *constant = NS_STATIC_CAST(nsXPTConstant*,&mEntry->interface_descriptor->const_descriptors[index-mConstantBaseIndex]);
+    *constant = NS_REINTERPRET_CAST(nsXPTConstant*,
+    &mEntry->interface_descriptor->const_descriptors[index-mConstantBaseIndex]);
     return NS_OK;
 }
