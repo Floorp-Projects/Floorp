@@ -900,7 +900,7 @@ function BrowserCloseTabOrWindow()
   var browser = getBrowser();
   if (browser && browser.localName == 'tabbrowser' && browser.mTabContainer.childNodes.length > 1) {
     // Just close up a tab.
-    browser.removeCurrentTab(); // XXXdwh In tab mode, the menu item should say close tab.
+    browser.removeCurrentTab();
     return;
   }
 
