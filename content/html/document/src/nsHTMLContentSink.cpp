@@ -4154,17 +4154,10 @@ HTMLContentSink::ProcessMAPTag(const nsIParserNode& aNode,
     return rv;
   }
 
-  // Strip out whitespace in the name for navigator compatability
-  // XXX NAV QUIRK -- XXX this should be done in the content node, not the sink
-  nsHTMLValue name;
-  aContent->GetHTMLAttribute(nsHTMLAtoms::name, name);
-  if (eHTMLUnit_String == name.GetUnit()) {
-    nsAutoString tmp;
-    name.GetStringValue(tmp);
-    tmp.StripWhitespace();
-    name.SetStringValue(tmp);
-    aContent->SetHTMLAttribute(nsHTMLAtoms::name, name, PR_FALSE);
-  }
+  /*
+   * We used to strip whitespace from the NAME attribute here, to match a 4.x quirk, but
+   * it proved too quirky for us, and IE never did that.  See bug 79738 for details.
+   */
 
   // This is for nav4 compatibility. (Bug 18478)
   // The base tag should only appear in the head,
