@@ -52,7 +52,7 @@ function Startup()
   }
   else {
     titleString = BookmarksUtils.getLocaleString("bookmarks_title", title);
-    // always open the bookmark top root folder
+    // always open the bookmark root folder
     if (!bookmarksView.treeBoxObject.view.isContainerOpen(0))
       bookmarksView.treeBoxObject.view.toggleOpenState(0);
   }

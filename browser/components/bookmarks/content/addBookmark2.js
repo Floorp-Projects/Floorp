@@ -200,6 +200,9 @@ function expandTree()
   else {
     document.documentElement.buttons = "accept,cancel,extra2";
     gBookmarksTree.focus();
+#   always open the bookmark root folder
+    if (!gBookmarksTree.treeBoxObject.view.isContainerOpen(0))
+      gBookmarksTree.treeBoxObject.view.toggleOpenState(0);
   }
   gBookmarksTree.collapsed = willCollapse;
   sizeToContent();
