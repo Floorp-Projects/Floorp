@@ -161,7 +161,7 @@ class nsDetectionAdaptor :
                    const char* aCommand=nsnull);
   
    // Methode to suppor nsIParserFilter
-   NS_IMETHOD RawBuffer(char * buffer, PRUint32 * buffer_length) ;
+   NS_IMETHOD RawBuffer(const char * buffer, PRUint32 * buffer_length) ;
    NS_IMETHOD Finish();
 
    // really don't care the following two, only because they are defined
@@ -267,7 +267,7 @@ NS_IMETHODIMP nsDetectionAdaptor::Init(
 }
 //--------------------------------------------------------------
 NS_IMETHODIMP nsDetectionAdaptor::RawBuffer
-    (char * buffer, PRUint32 * buffer_length) 
+    (const char * buffer, PRUint32 * buffer_length) 
 {
     if((mDontFeedToDetector) || (nsnull == mDetector))
        return NS_OK;

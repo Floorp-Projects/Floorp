@@ -114,7 +114,7 @@ protected:
   void FlushLine();
   void WriteQuotesAndIndent();
   void WriteSimple(nsString& aString);
-  void Write(const nsString& aString);
+  void Write(const nsAReadableString& aString);
   PRBool DoOutput();
   PRBool MayWrap(); 
   PRBool IsBlockLevel(PRInt32 aId);
@@ -125,7 +125,7 @@ protected:
   nsresult GetParserService(nsIParserService** aParserService);
   nsresult DoOpenContainer(PRInt32 aTag);
   nsresult DoCloseContainer(PRInt32 aTag);
-  nsresult DoAddLeaf(PRInt32 aTag, const nsString& aText);
+  nsresult DoAddLeaf(PRInt32 aTag, const nsAReadableString& aText);
 
 protected:
   nsString         mCurrentLine;

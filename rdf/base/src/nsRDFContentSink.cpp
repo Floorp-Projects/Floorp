@@ -75,6 +75,7 @@
 #include "prmem.h"
 #include "rdf.h"
 #include "rdfutil.h"
+#include "nsReadableUtils.h"
 
 #include "nsHTMLTokens.h" // XXX so we can use nsIParserNode::GetTokenType()
 
@@ -214,7 +215,7 @@ protected:
     PRBool mConstrainSize;
 
     // namespace management
-    PRBool IsXMLNSDirective(const nsString& aAttributeKey, nsIAtom** aPrefix = nsnull);
+    PRBool IsXMLNSDirective(const nsAReadableString& aAttributeKey, nsIAtom** aPrefix = nsnull);
     nsresult PushNameSpacesFrom(const nsIParserNode& aNode);
     nsresult PopNameSpaces();
 
@@ -246,12 +247,12 @@ protected:
     GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI);
 
     nsresult
-    ParseTagString(const nsString& aTagName,
+    ParseTagString(const nsAReadableString& aTagName,
                    const char** aNameSpaceURI,
                    nsIAtom** aTag);
 
     nsresult
-    ParseAttributeString(const nsString& aAttributeName,
+    ParseAttributeString(const nsAReadableString& aAttributeName,
                          const char** aNameSpaceURI,
                          nsIAtom** aAttribute);
 
@@ -584,8 +585,8 @@ RDFContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
         // XXX parser didn't catch unmatched tags?
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
-            const nsString& tagStr = aNode.GetText();
-            char* tagCStr = tagStr.ToNewCString();
+            const nsAReadableString& tagStr = aNode.GetText();
+            char* tagCStr = ToNewCString(tagStr);
 
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("rdfxml: extra close tag '%s' at line %d",
@@ -942,7 +943,7 @@ RDFContentSinkImpl::GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI
 }
 
 nsresult
-RDFContentSinkImpl::ParseTagString(const nsString& aTagName,
+RDFContentSinkImpl::ParseTagString(const nsAReadableString& aTagName,
                                    const char** aNameSpaceURI,
                                    nsIAtom** aTag)
 {
@@ -957,7 +958,7 @@ RDFContentSinkImpl::ParseTagString(const nsString& aTagName,
 
 
 nsresult
-RDFContentSinkImpl::ParseAttributeString(const nsString& aAttributeName,
+RDFContentSinkImpl::ParseAttributeString(const nsAReadableString& aAttributeName,
                                          const char** aNameSpaceURI,
                                          nsIAtom** aAttribute)
 {
@@ -993,7 +994,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
 
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
-        const nsString& key = aNode.GetKeyAt(i);
+        const nsAReadableString& key = aNode.GetKeyAt(i);
 
         const char* nameSpaceURI;
         nsCOMPtr<nsIAtom> attr;
@@ -1068,7 +1069,7 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
 
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
-        const nsString& key = aNode.GetKeyAt(i);
+        const nsAReadableString& key = aNode.GetKeyAt(i);
 
         const char* nameSpaceURI;
         nsCOMPtr<nsIAtom> attr;
@@ -1117,7 +1118,7 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
 
     for (PRInt32 i = 0; i < count; i++) {
         // Get upper-cased key
-        const nsString& key = aNode.GetKeyAt(i);
+        const nsAReadableString& key = aNode.GetKeyAt(i);
 
         // skip 'xmlns' directives, these are "meta" information
         if (IsXMLNSDirective(key))
@@ -1572,27 +1573,29 @@ RDFContentSinkImpl::PopContext(nsIRDFResource*& rResource, RDFContentSinkState& 
 // Namespace management
 
 PRBool
-RDFContentSinkImpl::IsXMLNSDirective(const nsString& aAttributeKey, nsIAtom** aPrefix)
+RDFContentSinkImpl::IsXMLNSDirective(const nsAReadableString& aAttributeKey, nsIAtom** aPrefix)
 {
+    nsAutoString attr(aAttributeKey);
+
     // Look for `xmlns' at the start of the attribute name
-    PRInt32 offset = aAttributeKey.Find(kNameSpaceDef);
+    PRInt32 offset = attr.Find(kNameSpaceDef);
     if (offset != 0)
         return PR_FALSE;
 
-    PRInt32 prefixLen = aAttributeKey.Length() - sizeof(kNameSpaceDef);
+    PRInt32 prefixLen = attr.Length() - sizeof(kNameSpaceDef);
     if (prefixLen <= 0) {
         // they're setting the default namespace; leave `prefix'
         // as nsnull.
     }
     else {
         // make sure there's a `:' character
-        if (aAttributeKey[sizeof(kNameSpaceDef) - 1] != kNameSpaceSeparator)
+        if (attr[sizeof(kNameSpaceDef) - 1] != kNameSpaceSeparator)
             return PR_FALSE;
 
         // if the caller wants the prefix back, compute it for them.
         if (aPrefix) {
             nsAutoString prefixStr;
-            aAttributeKey.Right(prefixStr, prefixLen);
+            attr.Right(prefixStr, prefixLen);
 
             *aPrefix = NS_NewAtom(prefixStr);
         }
@@ -1611,7 +1614,7 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
 
     PRInt32 count = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < count; ++i) {
-        const nsString& key = aNode.GetKeyAt(i);
+        const nsAReadableString& key = aNode.GetKeyAt(i);
 
         nsCOMPtr<nsIAtom> prefix;
         if (! IsXMLNSDirective(key, getter_AddRefs(prefix)))

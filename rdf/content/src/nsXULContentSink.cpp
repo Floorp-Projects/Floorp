@@ -178,7 +178,7 @@ protected:
     // RDF-specific parsing
     nsresult GetXULIDAttribute(const nsIParserNode& aNode, nsString& aID);
     nsresult AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElement* aElement);
-    nsresult ParseTag(const nsString& aText, nsINodeInfo*& aNodeInfo);
+    nsresult ParseTag(const nsAReadableString& aText, nsINodeInfo*& aNodeInfo);
     nsresult NormalizeAttributeString(const nsAReadableString& aText,
                                       nsINodeInfo*& aNodeInfo);
     nsresult CreateElement(nsINodeInfo *aNodeInfo, nsXULPrototypeElement** aResult);
@@ -591,7 +591,7 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-        const nsString& text = aNode.GetText();
+        const nsAReadableString& text = aNode.GetText();
 
         nsCAutoString extraWhiteSpace;
         PRInt32 count = mContextStack.Depth();
@@ -668,7 +668,7 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-        const nsString& text = aNode.GetText();
+        const nsAReadableString& text = aNode.GetText();
 
         nsCAutoString extraWhiteSpace;
         PRInt32 count = mContextStack.Depth();
@@ -692,7 +692,7 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
-            char* tagStr = aNode.GetText().ToNewCString();
+            char* tagStr = ToNewCString(aNode.GetText());
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xul: extra close tag '</%s>' detected at line %d\n",
                     tagStr, aNode.GetSourceLineNumber()));
@@ -924,7 +924,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 
     // XXX For now, we don't add the PI to the content model.
     // We just check for a style sheet PI
-    const nsString& text = aNode.GetText();
+    nsAutoString text(aNode.GetText());
 
     if (text.Find(kOverlayPI) == 0) {
         // Load a XUL overlay.
@@ -1205,7 +1205,7 @@ nsresult
 XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode, nsString& aID)
 {
     for (PRInt32 i = aNode.GetAttributeCount(); i >= 0; --i) {
-        if (aNode.GetKeyAt(i).EqualsWithConversion("id")) {
+        if (aNode.GetKeyAt(i).Equals(NS_LITERAL_STRING("id"))) {
             aID = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(aID);
             return NS_OK;
@@ -1232,7 +1232,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
         generateIDAttr = PR_TRUE;
 
         for (PRInt32 i = 0; i < count; i++) {
-            if (aNode.GetKeyAt(i).EqualsWithConversion("id")) {
+            if (aNode.GetKeyAt(i).Equals(NS_LITERAL_STRING("id"))) {
                 generateIDAttr = PR_FALSE;
                 break;
             }
@@ -1271,7 +1271,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
 
     // Copy the attributes into the prototype
     for (PRInt32 i = 0; i < count; i++) {
-        const nsString& qname = aNode.GetKeyAt(i);
+        const nsAReadableString& qname = aNode.GetKeyAt(i);
 
         rv = NormalizeAttributeString(qname,
                                       *getter_AddRefs(attrs->mNodeInfo));
@@ -1360,7 +1360,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
 
 
 nsresult
-XULContentSinkImpl::ParseTag(const nsString& aText, nsINodeInfo*& aNodeInfo)
+XULContentSinkImpl::ParseTag(const nsAReadableString& aText, nsINodeInfo*& aNodeInfo)
 {
     nsresult rv;
 
@@ -1520,12 +1520,14 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode, nsINodeInfo *aNodeInfo)
     rv = CreateElement(aNodeInfo, &element);
 
     if (NS_FAILED(rv)) {
+#ifdef PR_LOGGING
         nsCAutoString anodeC;
         anodeC.AssignWithConversion(aNode.GetText());
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("xul: unable to create element '%s' at line %d",
                 NS_STATIC_CAST(const char*, anodeC),
                 aNode.GetSourceLineNumber()));
+#endif
 
         return rv;
     }
@@ -1565,7 +1567,7 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
     // Look for SRC attribute and look for a LANGUAGE attribute
     nsAutoString src;
     for (PRInt32 i = 0; i < ac; i++) {
-        const nsString& key = aNode.GetKeyAt(i);
+        nsAutoString key(aNode.GetKeyAt(i));
         if (key.EqualsIgnoreCase("src")) {
             src.Assign(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(src);

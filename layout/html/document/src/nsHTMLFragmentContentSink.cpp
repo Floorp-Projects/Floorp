@@ -42,6 +42,7 @@
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "prmem.h"
+#include "nsReadableUtils.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -114,7 +115,7 @@ public:
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIContent* aContent);
 
-  nsresult AddText(const nsString& aString);
+  nsresult AddText(const nsAReadableString& aString);
   nsresult AddTextToContent(nsIHTMLContent* aContent,const nsString& aText);
   nsresult FlushText();
 
@@ -489,7 +490,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
     nsAutoString tmpName;
 
     if (nodeType == eHTMLTag_userdefined) {
-      tmpName = aNode.GetText();
+      tmpName.Assign(aNode.GetText());
     } else {
       result = parserService->HTMLIdToStringTag(nodeType, tmpName);
       NS_ENSURE_SUCCESS(result, result);
@@ -567,7 +568,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         nsAutoString tmpName;
 
         if (nodeType == eHTMLTag_userdefined) {
-          tmpName = aNode.GetText();
+          tmpName.Assign(aNode.GetText());
         } else {
           result = parserService->HTMLIdToStringTag(nodeType, tmpName);
           NS_ENSURE_SUCCESS(result, result);
@@ -741,7 +742,7 @@ nsHTMLFragmentContentSink::PopContent()
 #define NS_ACCUMULATION_BUFFER_SIZE 4096
 
 nsresult
-nsHTMLFragmentContentSink::AddText(const nsString& aString)
+nsHTMLFragmentContentSink::AddText(const nsAReadableString& aString)
 {
   PRInt32 addLen = aString.Length();
   if (0 == addLen) {
@@ -770,8 +771,7 @@ nsHTMLFragmentContentSink::AddText(const nsString& aString)
         return rv;
       }
     }
-    memcpy(&mText[mTextLength], aString.GetUnicode() + offset,
-           sizeof(PRUnichar) * amount);
+    CopyUnicodeTo(aString, offset, &mText[mTextLength], amount);
     mTextLength += amount;
     offset += amount;
     addLen -= amount;
@@ -985,7 +985,7 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
-    const nsString& key = aNode.GetKeyAt(i);
+    const nsAReadableString& key = aNode.GetKeyAt(i);
     k.Truncate();
     k.Append(key);
     k.ToLowerCase();

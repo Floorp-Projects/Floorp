@@ -110,6 +110,7 @@
 #include "nsIScrollable.h"
 #include "nsContentPolicyUtils.h"
 
+#include "nsReadableUtils.h"
 #include "nsWeakReference.h"//nshtmlelementfactory supports weak references
 
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
@@ -437,7 +438,7 @@ public:
   nsresult End();
 
   nsresult GrowStack();
-  nsresult AddText(const nsString& aText);
+  nsresult AddText(const nsAReadableString& aText);
   nsresult FlushText(PRBool* aDidFlush = nsnull, PRBool aReleaseLast = PR_FALSE);  
   nsresult FlushTextAndRelease(PRBool* aDidFlush = nsnull)
   {
@@ -493,6 +494,7 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
     const char* cp;
     nsAutoString str;
     PRInt32 nt = aNode.GetNodeType();
+    NS_ConvertUCS2toUTF8 flat(aNode.GetText());
     if ((nt > PRInt32(eHTMLTag_unknown)) &&
         (nt < PRInt32(eHTMLTag_text)) && mParser) {
       nsCOMPtr<nsIDTD> dtd;
@@ -500,8 +502,7 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
       dtd->IntTagToStringTag(nsHTMLTag(aNode.GetNodeType()), str);
       cp = str.ToCString(cbuf, sizeof(cbuf));
     } else {
-      aNode.GetText().ToCString(cbuf, sizeof(cbuf));
-      cp = cbuf;
+      cp = (const char*)flat;
     }
     PR_LogPrint("%s: this=%p node='%s' stackPos=%d", aMsg, aThis, cp, aStackPos);
   }
@@ -699,7 +700,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
-    const nsString& key = aNode.GetKeyAt(i);
+    const nsAReadableString& key = aNode.GetKeyAt(i);
     k.Truncate();
     k.Append(key);
     k.ToLowerCase();
@@ -1922,7 +1923,7 @@ SinkContext::GrowStack()
  */
 // XXX If we get a giant string grow the buffer instead of chopping it up???
 nsresult
-SinkContext::AddText(const nsString& aText)
+SinkContext::AddText(const nsAReadableString& aText)
 {
   PRInt32 addLen = aText.Length();
   if (0 == addLen) {
@@ -1954,8 +1955,7 @@ SinkContext::AddText(const nsString& aText)
         return rv;
       }
     }
-    memcpy(&mText[mTextLength], aText.GetUnicode() + offset,
-           sizeof(PRUnichar) * amount);
+    CopyUnicodeTo(aText, offset, &mText[mTextLength], amount);
     mTextLength += amount;
     offset += amount;
     addLen -= amount;
@@ -3253,7 +3253,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   if (!doc)
     return NS_OK;
 
-  const nsString& docTypeStr = aNode.GetText(); 
+  nsAutoString docTypeStr(aNode.GetText()); 
 
   PRInt32 publicStart = docTypeStr.Find("PUBLIC", PR_TRUE);
   PRInt32 systemStart = docTypeStr.Find("SYSTEM", PR_TRUE);
@@ -4175,7 +4175,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
       nsAutoString media; 
 
       for (i = 0; i < count; i++) {
-        const nsString& key = aNode.GetKeyAt(i);
+        nsAutoString key(aNode.GetKeyAt(i));
         if (key.EqualsIgnoreCase("href")) {
           GetAttributeValueAt(aNode, i, href);
           href.StripWhitespace();
@@ -4837,7 +4837,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // Look for SRC attribute and look for a LANGUAGE attribute
   nsAutoString src;
   for (i = 0; i < ac; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
+    nsAutoString key(aNode.GetKeyAt(i));
     if (key.EqualsIgnoreCase("src")) {
       GetAttributeValueAt(aNode, i, src);
     }
@@ -5099,7 +5099,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       nsAutoString media; 
 
       for (i = 0; i < count; i++) {
-        const nsString& key = aNode.GetKeyAt(i);
+        nsAutoString key(aNode.GetKeyAt(i));
         if (key.EqualsIgnoreCase("src")) {
           GetAttributeValueAt(aNode, i, src);
           src.StripWhitespace();

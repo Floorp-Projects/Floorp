@@ -26,6 +26,7 @@
 #include "nsIObserverService.h"
 
 #include "nsWeakReference.h"
+#include "nsString.h"
 #include "nsVoidArray.h"
 
 class nsEditorParserObserver : public nsSupportsWeakReference,
