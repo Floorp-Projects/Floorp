@@ -25,56 +25,65 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=mime
 LIBRARY_NAME=mime
 
+EXPORTS = 	nsRFC822toHTMLStreamConverter.h		\
+		nsMimeObjectClassAccess.h		\
+		nsMimeHeaderConverter.h			\
+		$(NULL)
+
 CPPSRCS = \
-		comi18n.cpp \
-		commsg.cpp \
+		nsMimeFactory.cpp	\
+		nsRFC822toHTMLStreamConverter.cpp	\
+		nsMimeObjectClassAccess.cpp		\
+		nsMimeHeaderConverter.cpp		\
+		plugin_inst.cpp	\
+		rebuffer.cpp	\
 		$(NULL)
 
 CSRCS = \
-		mimecont.c \
-		mimeebod.c \
-		mimeenc.c \
-		mimeeobj.c \
-		mimei.c \
-		mimeiimg.c \
-		mimeleaf.c \
-		mimemalt.c \
-		mimemapl.c \
-		mimemdig.c \
-		mimemmix.c \
-		mimempar.c \
-		mimemrel.c \
-		mimemsg.c \
-		mimemsig.c \
-		mimemult.c \
-		mimeobj.c \
-		mimepbuf.c \
-		mimesun.c \
-		mimetenr.c \
-		mimetext.c \
-		mimethtm.c \
-		mimetpla.c \
-		mimetric.c \
-		mimeunty.c \
-		mimemoz.c \
-		mimevcrd.c \
-		oldvcc.c \
-		oldnet.c \
-		oldi18n.c \
-		oldmsg.c \
-		oldmaddr.c \
-		oldvobj.c \
+		mimecont.c	\
+		mimeebod.c	\
+		mimeenc.c	\
+		mimeeobj.c	\
+		mimehdrs.c	\
+		mimei.c		\
+		mimeiimg.c	\
+		mimeleaf.c	\
+		mimemalt.c	\
+		mimemapl.c	\
+		mimemdig.c	\
+		mimemmix.c	\
+		mimempar.c	\
+		mimemrel.c	\
+		mimemsg.c	\
+		mimemsig.c	\
+		mimemult.c	\
+		mimeobj.c	\
+		mimepbuf.c	\
+		mimesun.c	\
+		mimetenr.c	\
+		mimetext.c	\
+		mimethtm.c	\
+		mimetpla.c	\
+		mimetric.c	\
+		mimeunty.c	\
+		mimemoz2.c	\
+		mimecth.c	\
+		mimebuf.c	\
+		mimecom.c	\
+		comi18n.c	\
+		commsg.c	\
+		oldnet.c	\
+		oldi18n.c	\
+		oldmaddr.c	\
+		oldfile.c	\
+		oldxp.c		\
 		$(NULL)
 
+#
 # THIS WILL NEED WORK AFTER WE GET A LIBMSG MORE XP-COM-afied
-#		mimedrft.c \
+#			mimedrft.c	\
+# XP-COM BRIDGES
 
-# not in windows makefile:
-#		mimefilt.c \
-#		mimehdrs.c \
-# these files won't compile under unix
-#		oldxp.c \
-#		oldfile.c \
 
 include $(topsrcdir)/config/config.mk
 
