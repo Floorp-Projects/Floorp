@@ -43,8 +43,16 @@
 #include "nsCellMap.h"//table cell navigation
 
 /* ----------- nsTableRowGroupFrame ---------- */
-NS_IMPL_ADDREF_INHERITED(nsTableRowGroupFrame, nsHTMLContainerFrame)
-NS_IMPL_RELEASE_INHERITED(nsTableRowGroupFrame, nsHTMLContainerFrame)
+nsrefcnt nsTableRowGroupFrame::AddRef(void)
+{
+  return 1;//implementation of nsLineIterator
+}
+
+nsrefcnt nsTableRowGroupFrame::Release(void)
+{
+  return 1;//implementation of nsLineIterator
+}
+
 
 nsresult
 nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -1692,6 +1700,15 @@ nsTableRowGroupFrame::GetLine(PRInt32 aLineNumber, nsIFrame** aFirstFrameOnLine,
 
   CellData* firstCellData = cellMap->GetCellAt(aLineNumber, 0);
   *aFirstFrameOnLine = (nsIFrame*)firstCellData->GetCellFrame();
+  if(!(*aFirstFrameOnLine))
+  {
+    while((aLineNumber > 0)&&(!(*aFirstFrameOnLine)))
+    {
+      aLineNumber--;
+      firstCellData = cellMap->GetCellAt(aLineNumber, 0);
+      *aFirstFrameOnLine = (nsIFrame*)firstCellData->GetCellFrame();
+    }
+  }
   *aNumFramesOnLine = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
   return NS_OK;
 }
@@ -1736,13 +1753,17 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32 aLineNumber, nscoord aX, nsIFrame** aF
   *aXIsBeforeFirstFrame = PR_FALSE;
   *aXIsAfterLastFrame = PR_FALSE;
 
+  PRBool gotParentRect = PR_FALSE;
   for(int i =0;i < cellCount; i++)
   {
     cellData = cellMap->GetCellAt(aLineNumber, i);
     tempFrame = (nsIFrame*)cellData->GetCellFrame();
+
+    if(!tempFrame)
+      continue;
     
     tempFrame->GetRect(tempRectRef);//offsetting x to be in row coordinates
-    if(i==0)
+    if(!gotParentRect)
     {//only do this once
       nsRect parentRect;
       nsRect& parentRectRef = parentRect;
@@ -1755,13 +1776,18 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32 aLineNumber, nscoord aX, nsIFrame** aF
 
       parentFrame->GetRect(parentRectRef);
       aX -= parentRect.x;
+      gotParentRect = PR_TRUE;
     }
 
-    if(aX <= 0)//short circuit for negative x coords
+    if(i==0 &&(aX <= 0))//short circuit for negative x coords
     {
       *aXIsBeforeFirstFrame = PR_TRUE;
       *aFrameFound = tempFrame;
       return NS_OK;
+    }
+    if(aX < tempRect.x)
+    {
+      return NS_ERROR_FAILURE;
     }
     if(aX < (tempRect.x + tempRect.width))
     {
@@ -1772,6 +1798,8 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32 aLineNumber, nscoord aX, nsIFrame** aF
   //x coord not found in frame, return last frame
   *aXIsAfterLastFrame = PR_TRUE;
   *aFrameFound = tempFrame;
+  if(!(*aFrameFound))
+    return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
@@ -1811,6 +1839,27 @@ nsTableRowGroupFrame::GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber)
   }
 
   aFrame = (nsIFrame*)cellData->GetCellFrame();
+  if(!aFrame)
+  {
+    //PRInt32 numCellsInRow = cellMap->GetNumCellsOriginatingInRow(aLineNumber) - 1;
+    PRInt32 tempCol = colIndex + 1;
+    PRInt32 tempRow = aLineNumber;
+    while((tempCol > 0) && (!aFrame))
+    {
+      tempCol--;
+      cellData = cellMap->GetCellAt(aLineNumber, tempCol);
+      aFrame = (nsIFrame*)cellData->GetCellFrame();
+      if(!aFrame && (tempCol==0))
+      {
+        while((tempRow > 0) && (!aFrame))
+        {
+          tempRow--;
+          cellData = cellMap->GetCellAt(tempRow, 0);
+          aFrame = (nsIFrame*)cellData->GetCellFrame();
+        }
+      }
+    }
+  }
   return NS_OK;
 }
 

@@ -2297,8 +2297,6 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       continue;
     if (NS_SUCCEEDED(result)){
       lastFrame = firstFrame;
-    if(!lastFrame)
-      return NS_ERROR_FAILURE;//XXX this is temporary, to avoid crashing
       for (;lineFrameCount > 1;lineFrameCount --){
         //result = lastFrame->GetNextSibling(&lastFrame, searchingLine);
         result = it->GetNextSibling(lastFrame, searchingLine);
@@ -2306,8 +2304,6 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
           NS_ASSERTION(0,"should not be reached nsFrame\n");
           continue;
         }
-        if(!lastFrame)
-          return NS_ERROR_FAILURE;
       }
       GetLastLeaf(aPresContext, &lastFrame);
 
@@ -2324,6 +2320,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       aBlockFrame->GetOffsetFromView(aPresContext, offset,&view);
       nscoord newDesiredX  = aPos->mDesiredX - offset.x;//get desired x into blockframe coordinates!
       result = it->FindFrameAt(searchingLine, newDesiredX, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
+      if(NS_FAILED(result))
+        continue;
     }
 
     if (NS_SUCCEEDED(result) && resultFrame)
