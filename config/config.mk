@@ -44,8 +44,6 @@ NS_CONFIG_MK	= 1
 #
 LIBS_NEQ_INSTALL = 1
 
-ifndef DEBUG_AUTOCONF_XCOMPILE
-
 # This wastes time.
 include $(topsrcdir)/config/common.mk
 
@@ -484,95 +482,3 @@ else
 JAVA_DEFINES	+= -DAWT_102
 endif
 
-else # DEBUG_AUTOCONF_XCOMPILE
-
-
-OS_CONFIG	:= $(OS_TARGET)
-#
-# Personal makefile customizations go in these optional make include files.
-#
-MY_CONFIG	:= $(DEPTH)/config/myconfig.mk
-MY_RULES	:= $(DEPTH)/config/myrules.mk
-
-#
-# Relative pathname from top-of-tree to current source directory
-#
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-REVDEPTH	:= $(topsrcdir)/config/revdepth
-endif
-
-CCC		:= $(CXX)
-
-NFSPWD		= $(DEPTH)/config/nfspwd
-
-CFLAGS		= $(OS_CFLAGS) $(MDUPDATE_FLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROF_FLAGS)
-CXXFLAGS	= $(OS_CXXFLAGS) $(MDUPDATE_FLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROF_FLAGS)
-COMPILE_CFLAGS	= $(CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS)
-COMPILE_CXXFLAGS = $(CXXFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS)
-
-NOMD_CFLAGS	= $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
-NOMD_CXXFLAGS	= $(OS_CXXFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
-
-LDFLAGS		= $(OS_LDFLAGS)
-
-INCLUDES	= $(LOCAL_INCLUDES) -I$(PUBLIC) -I$(DIST)/include -I$(XPDIST)/include -I$(topsrcdir)/include $(OS_INCLUDES) $(G++INCLUDES)
-
-XPDIST		:= $(DIST)
-
-MOC		= moc
-XPIDL_COMPILE 	:= $(DIST)/bin/xpidl
-XPIDL_LINK	:= $(DIST)/bin/xpt_link
-
-NSINSTALL	:= $(DEPTH)/config/$(OBJDIR_NAME)/nsinstall
-
-ifeq ($(NSDISTMODE),copy)
-# copy files, but preserve source mtime
-INSTALL		:= $(NSINSTALL) -t
-else
-ifeq ($(NSDISTMODE),absolute_symlink)
-# install using absolute symbolic links
-INSTALL		:= $(NSINSTALL) -L `$(NFSPWD)`
-else
-# install using relative symbolic links
-INSTALL		:= $(NSINSTALL) -R
-endif
-endif
-
-GARBAGE		+= $(DEPENDENCIES) core $(wildcard core.[0-9]*)
-
-# We need to know where to find the libraries we
-# put on the link line for binaries, and should
-# we link statically or dynamic?  Assuming dynamic for now.
-LIBS_DIR	:= -L$(DIST)/bin -L$(DIST)/lib
-
-# all public include files go in subdirectories of PUBLIC:
-PUBLIC		= $(XPDIST)/include
-
-DEPENDENCIES	= .md
-
-ifdef MOZ_NATIVE_MAKEDEPEND
-MKDEPEND_DIR	=
-# Adding the '-w' flag shortens the depend.mk files by allowing
-# more dependencies on one line. It may even speed up makedepend.
-# (Picking 3000 somewhat arbitrarily.)
-MKDEPEND	:= $(MOZ_NATIVE_MAKEDEPEND) -Y -w 3000
-else
-MKDEPEND_DIR	:= $(DEPTH)/config/mkdepend
-MKDEPEND	:= $(MKDEPEND_DIR)/mkdepend
-endif
-
-MKDEPENDENCIES	:= depend.mk
-
-ifneq (, $(filter $(MODULE), $(MOZ_DEBUG_MODULES)))
-  MOZ_DEBUG=1
-  OS_CFLAGS += -g
-  OS_CXXFLAGS += -g
-endif
-
-DEFINES		+= -DOSTYPE=\"$(OS_CONFIG)\"
-
-ifdef MOZ_SECURITY
-DEFINES		+= -DMOZ_SECURITY
-endif
-
-endif # ! DEBUG_AUTOCONF_XCOMPILE
