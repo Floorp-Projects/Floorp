@@ -49,10 +49,15 @@ var gStatusFeedback = {
   },
 	stopMeteors: function() 
   {
-    // change run button to be a stop button
-    gRunFiltersButton.setAttribute("label", gRunFiltersButton.getAttribute("runlabel"));
-    gRunFiltersButton.setAttribute("accesskey", gRunFiltersButton.getAttribute("runaccesskey"));
-    gStatusBar.setAttribute("mode", "normal");
+    try {
+      // change run button to be a stop button
+      gRunFiltersButton.setAttribute("label", gRunFiltersButton.getAttribute("runlabel"));
+      gRunFiltersButton.setAttribute("accesskey", gRunFiltersButton.getAttribute("runaccesskey"));
+      gStatusBar.setAttribute("mode", "normal");
+    }
+    catch (ex) {
+      // can get here if closing window when running filters
+    }
   },
   showProgress: function(percentage)
   {
@@ -60,11 +65,6 @@ var gStatusFeedback = {
   },
   closeWindow: function()
   {
-    // if we are running, and the user closes the window, stop.
-    // XXX todo, prompt first, though.
-    if (gRunFiltersButton.getAttribute("label") == gRunFiltersButton.getAttribute("stoplabel")) {
-      gFilterListMsgWindow.StopUrls();
-    }
   }
 };
 
@@ -108,14 +108,7 @@ function onLoad()
     }
 }
 
-function onOk()
-{
-  // make sure to save the filter to disk
-  var filterList = currentFilterList();
-  if (filterList) filterList.saveToDefaultFile();
-  window.close();
-}
-
+/*
 function onCancel()
 {
     var firstItem = getSelectedServerForFilters();
@@ -144,6 +137,7 @@ function onCancel()
     }
     window.close();
 }
+*/
 
 function onServerClick(event)
 {
@@ -291,6 +285,37 @@ function viewLog()
   var args = {filterList: filterList};
 
   window.openDialog("chrome://messenger/content/viewLog.xul", "FilterLog", "chrome,modal,titlebar,resizable,centerscreen", args);
+}
+
+function onFilterClose()
+{
+  // make sure to save the filter to disk
+  var filterList = currentFilterList();
+  if (filterList) 
+    filterList.saveToDefaultFile();
+
+  var nsIPromptService = Components.interfaces.nsIPromptService;
+  if (gRunFiltersButton.getAttribute("label") == gRunFiltersButton.getAttribute("stoplabel")) {
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+
+    var promptTitle = gFilterBundle.getString("promptTitle");
+    var promptMsg = gFilterBundle.getString("promptMsg");;
+    var stopButtonLabel = gFilterBundle.getString("stopButtonLabel");
+    var continueButtonLabel = gFilterBundle.getString("continueButtonLabel");
+    
+    var result = promptService.confirmEx(window, promptTitle, promptMsg,
+          (promptService.BUTTON_TITLE_IS_STRING*promptService.BUTTON_POS_0) +
+          (promptService.BUTTON_TITLE_IS_STRING*promptService.BUTTON_POS_1),
+          continueButtonLabel, stopButtonLabel, null, null, {value:0});
+
+    if (result)
+      gFilterListMsgWindow.StopUrls();
+    else
+      return false;
+  }
+
+  window.close();
+  return true;
 }
 
 function runSelectedFilters()

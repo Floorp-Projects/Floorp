@@ -28,15 +28,12 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd">
 
-<dialog id="filterListDialog"
+<window id="filterListDialog"
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="mailnews:filterlist"
-  buttons="accept,cancel,help"
   onload="onLoad();"
-  ondialogaccept="return onOk();"
-  ondialogcancel="return onCancel();"
-  ondialoghelp="return doHelpButton();"
+  onclose="return onFilterClose();"
   persist="width height screenX screenY"
   title="&window.title;">
 
@@ -172,10 +169,10 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
 
   <separator/>
 
-  <hbox id="statusContainerBox">
+  <hbox id="statusContainerBox" align="center">
+    <spacer flex="1"/>
     <label id="statusText" crop="right" flex="1"/> 
     <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
   </hbox>
-
-</dialog>
+</window>
 
