@@ -84,7 +84,8 @@ public:
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
 
-       NS_IMETHOD  CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
+       NS_IMETHOD  CreateAnonymousContent(nsIPresContext* aPresContext,
+                                          nsISupportsArray& aAnonymousItems);
 
    NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

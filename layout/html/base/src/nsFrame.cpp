@@ -566,7 +566,9 @@ nsFrame::GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const
   return aIndex < 0 ? NS_ERROR_INVALID_ARG : NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+NS_IMETHODIMP nsFrame::FirstChild(nsIPresContext* aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame**      aFirstChild) const
 {
   *aFirstChild = nsnull;
   return nsnull == aListName ? NS_OK : NS_ERROR_INVALID_ARG;
@@ -1034,7 +1036,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
   if (NS_FAILED(result))
     return result;
 
-  result = FirstChild(nsnull, &kid);
+  result = FirstChild(aCX, nsnull, &kid);
 
   if (NS_SUCCEEDED(result) && nsnull != kid) {
 
@@ -1802,7 +1804,7 @@ nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32
   nsIAtom* list = nsnull;
   PRInt32 listIndex = 0;
   do {
-    nsresult rv = FirstChild(list, &kid);
+    nsresult rv = FirstChild(aPresContext, list, &kid);
     if (NS_SUCCEEDED(rv) && (nsnull != kid)) {
       IndentBy(out, aIndent);
       if (nsnull != list) {
@@ -2056,7 +2058,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
           continue;
         }
       }
-      GetLastLeaf(&lastFrame);
+      GetLastLeaf(aPresContext, &lastFrame);
 
       if (aPos->mDirection == eDirNext){
         nearStoppingFrame = firstFrame;
@@ -2087,7 +2089,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
 
       nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
       result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
-                                    resultFrame);
+                                    aPresContext, resultFrame);
       if (NS_FAILED(result))
         return result;
       nsISupports *isupports = nsnull;
@@ -2127,7 +2129,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       if (!found){
         resultFrame = storeOldResultFrame;
         result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
-                                      resultFrame);
+                                      aPresContext, resultFrame);
       }
       while ( !found ){
         nsCOMPtr<nsIPresContext> context;
@@ -2211,7 +2213,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           if ((aPos->mDirection == eDirNext && newOffset < aPos->mStartOffset) || //need to go to next one
               (aPos->mDirection == eDirPrevious && newOffset >= aPos->mStartOffset))
           {
-            result = GetFrameFromDirection(aPos);
+            result = GetFrameFromDirection(aPresContext, aPos);
             if (NS_FAILED(result) || !aPos->mResultFrame)
             {
               return result?result:NS_ERROR_FAILURE;
@@ -2440,7 +2442,7 @@ nsFrame::GetLineNumber(nsIFrame *aFrame)
 //this should change to use geometry and also look to ALL the child lists
 //we need to set up line information to make sure we dont jump across line boundaries
 NS_IMETHODIMP
-nsFrame::GetFrameFromDirection(nsPeekOffsetStruct *aPos)
+nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
   nsIFrame *blockFrame = this;
   nsIFrame *thisBlock;
@@ -2483,8 +2485,8 @@ nsFrame::GetFrameFromDirection(nsPeekOffsetStruct *aPos)
     }
   }
  
-  GetFirstLeaf( &firstFrame);
-  GetLastLeaf(&lastFrame);
+  GetFirstLeaf(aPresContext, &firstFrame);
+  GetLastLeaf(aPresContext, &lastFrame);
   //END LINE DATA CODE
   if ((aPos->mDirection == eDirNext && lastFrame == this)
     ||(aPos->mDirection == eDirPrevious && firstFrame == this))
@@ -2510,7 +2512,7 @@ nsFrame::GetFrameFromDirection(nsPeekOffsetStruct *aPos)
   if (aPos->mAmount == eSelectDir)
     aPos->mAmount = eSelectNoAmount;//just get to next frame.
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
+  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF, aPresContext, this);
   if (NS_FAILED(result))
     return result;
   nsISupports *isupports = nsnull;
@@ -2592,7 +2594,7 @@ static void RefreshAllContentFrames(nsIPresContext* aPresContext, nsIFrame * aFr
   }
   NS_IF_RELEASE(frameContent);
 
-  aFrame->FirstChild(nsnull, &aFrame);
+  aFrame->FirstChild(aPresContext, nsnull, &aFrame);
   while (aFrame) {
     RefreshAllContentFrames(aPresContext, aFrame, aContent);
     aFrame->GetNextSibling(&aFrame);
@@ -2631,7 +2633,7 @@ void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame)//, PRBool)
 }
 
 void
-nsFrame::GetLastLeaf(nsIFrame **aFrame)
+nsFrame::GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
 {
   if (!aFrame || !*aFrame)
     return;
@@ -2639,7 +2641,7 @@ nsFrame::GetLastLeaf(nsIFrame **aFrame)
   nsresult result;
   nsIFrame *lookahead = nsnull;
   while (1){
-    result = child->FirstChild(nsnull, &lookahead);
+    result = child->FirstChild(aPresContext, nsnull, &lookahead);
     if (NS_FAILED(result) || !lookahead)
       return;//nothing to do
     child = lookahead;
@@ -2651,7 +2653,7 @@ nsFrame::GetLastLeaf(nsIFrame **aFrame)
 }
 
 void
-nsFrame::GetFirstLeaf(nsIFrame **aFrame)
+nsFrame::GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
 {
   if (!aFrame || !*aFrame)
     return;
@@ -2659,7 +2661,7 @@ nsFrame::GetFirstLeaf(nsIFrame **aFrame)
   nsIFrame *lookahead;
   nsresult result;
   while (1){
-    result = child->FirstChild(nsnull, &lookahead);
+    result = child->FirstChild(aPresContext, nsnull, &lookahead);
     if (NS_FAILED(result) || !lookahead)
       return;//nothing to do
     child = lookahead;

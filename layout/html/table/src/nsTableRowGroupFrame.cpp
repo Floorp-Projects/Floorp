@@ -113,12 +113,13 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
 }
 
 nsresult
-nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame)
+nsTableRowGroupFrame::InitRepeatedFrame(nsIPresContext*       aPresContext,
+                                        nsTableRowGroupFrame* aHeaderFooterFrame)
 {
   nsIFrame* originalRowFrame;
   nsIFrame* copyRowFrame = GetFirstFrame();
 
-  aHeaderFooterFrame->FirstChild(nsnull, &originalRowFrame);
+  aHeaderFooterFrame->FirstChild(aPresContext, nsnull, &originalRowFrame);
   while (copyRowFrame) {
     // Set the row frame index
     int rowIndex = ((nsTableRowFrame*)originalRowFrame)->GetRowIndex();
@@ -127,8 +128,8 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame
     // For each table cell frame set its column index
     nsIFrame* originalCellFrame;
     nsIFrame* copyCellFrame;
-    originalRowFrame->FirstChild(nsnull, &originalCellFrame);
-    copyRowFrame->FirstChild(nsnull, &copyCellFrame);
+    originalRowFrame->FirstChild(aPresContext, nsnull, &originalCellFrame);
+    copyRowFrame->FirstChild(aPresContext, nsnull, &copyCellFrame);
     while (copyCellFrame) {
       nsIAtom*  frameType;
       copyCellFrame->GetFrameType(&frameType);
@@ -189,7 +190,7 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
         // every row group is short by the ending cell spacing X
         nsRect rect(0, 0, mRect.width, mRect.height);
         nsIFrame* firstRowGroup = nsnull;
-        tableFrame->FirstChild(nsnull, &firstRowGroup);
+        tableFrame->FirstChild(aPresContext, nsnull, &firstRowGroup);
         // first row group may have gotten too much cell spacing Y
         if (tableFrame->GetRowCount() != 1) {
           if (this == firstRowGroup) { 
@@ -287,13 +288,13 @@ nsTableRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   nsPoint tmp;
   *aFrame = this;
 
-  FirstChild(nsnull, &kid);
+  FirstChild(aPresContext, nsnull, &kid);
   while (nsnull != kid) {
     kid->GetRect(kidRect);
     const nsStyleDisplay *childDisplay;
     kid->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay) {
-      if (((nsTableRowFrame*)(kid))->Contains(aPoint)) {
+      if (((nsTableRowFrame*)(kid))->Contains(aPresContext, aPoint)) {
         tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
         return kid->GetFrameForPoint(aPresContext, tmp, aFrame);
       }
@@ -647,7 +648,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
         {
           // check this row for a cell with rowspans
           nsIFrame *cellFrame;
-          rowFrame->FirstChild(nsnull, &cellFrame);
+          rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
           while (nsnull != cellFrame)
           {
             const nsStyleDisplay *cellChildDisplay;
@@ -1236,7 +1237,7 @@ nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
     nsTableFrame* tableFrame = nsnull;
     nsTableFrame::GetTableFrame(this, tableFrame);
     if (tableFrame) {
-      nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
+      nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(aPresContext, this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
       PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : 0;
       tableFrame->InsertRows(*aPresContext, *this, rows, rowIndex, PR_TRUE);
 
@@ -1344,12 +1345,12 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableRowGroupFrame::GetHeightOfRows(nscoord& aResult)
+NS_METHOD nsTableRowGroupFrame::GetHeightOfRows(nsIPresContext* aPresContext, nscoord& aResult)
 {
   // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
   // and the rowgroup itself needs to be expanded by SUM(row height deltas)
   nsIFrame * rowFrame=nsnull;
-  nsresult rv = FirstChild(nsnull, &rowFrame);
+  nsresult rv = FirstChild(aPresContext, nsnull, &rowFrame);
   while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
   {
     const nsStyleDisplay *rowDisplay;
@@ -1362,7 +1363,7 @@ NS_METHOD nsTableRowGroupFrame::GetHeightOfRows(nscoord& aResult)
     }
     else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay)
     {
-      ((nsTableRowGroupFrame*)rowFrame)->GetHeightOfRows(aResult);
+      ((nsTableRowGroupFrame*)rowFrame)->GetHeightOfRows(aPresContext, aResult);
     }
     GetNextFrame(rowFrame, &rowFrame);
   }

@@ -43,10 +43,10 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  static nsIFrame* GetChildBeforeAfter(nsIFrame* start, PRBool before);
-  static nsIFrame* GetChildAt(nsIFrame* parent, PRInt32 index);
-  static PRInt32 IndexOf(nsIFrame* parent, nsIFrame* child);
-  static PRInt32 CountFrames(nsIFrame* aFrame);
+  static nsIFrame* GetChildBeforeAfter(nsIPresContext* aPresContext, nsIFrame* start, PRBool before);
+  static nsIFrame* GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt32 index);
+  static PRInt32 IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFrame* child);
+  static PRInt32 CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame);
   nsGrippyFrame();  
 
 protected:

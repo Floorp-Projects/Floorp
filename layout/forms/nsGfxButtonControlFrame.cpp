@@ -194,7 +194,7 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
       value = "  ";
       // The child frame will br the generated content
       nsIFrame* fKid;
-      firstKid->FirstChild(nsnull, &fKid);
+      firstKid->FirstChild(aPresContext, nsnull, &fKid);
       if (fKid) {
         const nsStyleContent* content;
         fKid->GetStyleData(eStyleStruct_Content,  (const nsStyleStruct *&)content);

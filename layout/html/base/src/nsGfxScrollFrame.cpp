@@ -209,7 +209,7 @@ public:
    void RemoveVerticalScrollbar  (const nsSize& aSbSize, nsSize& aScrollAreaSize);
    nsIScrollableView* GetScrollableView(nsIPresContext* aPresContext);
 
-   void GetScrolledContentSize(nsSize& aSize);
+   void GetScrolledContentSize(nsIPresContext* aPresContext, nsSize& aSize);
 
   void ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
   nsresult GetContentOf(nsIFrame* aFrame, nsIContent** aContent);
@@ -279,7 +279,7 @@ nsGfxScrollFrame::SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScro
 NS_IMETHODIMP
 nsGfxScrollFrame::GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const
 {
-   return mInner->mScrollAreaFrame->FirstChild(nsnull, &aScrolledFrame);
+   return mInner->mScrollAreaFrame->FirstChild(aPresContext, nsnull, &aScrolledFrame);
 }
 
 /**
@@ -314,7 +314,8 @@ nsGfxScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext,
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
 
 NS_IMETHODIMP
-nsGfxScrollFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+                                         nsISupportsArray& aAnonymousChildren)
 {
   
   /*
@@ -807,11 +808,11 @@ nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
 }
 
 void
-nsGfxScrollFrameInner::GetScrolledContentSize(nsSize& aSize)
+nsGfxScrollFrameInner::GetScrolledContentSize(nsIPresContext* aPresContext, nsSize& aSize)
 {
     // get the ara frame is the scrollarea
     nsIFrame* child = nsnull;
-    mScrollAreaFrame->FirstChild(nsnull, &child);
+    mScrollAreaFrame->FirstChild(aPresContext, nsnull, &child);
 
     nsRect rect(0,0,0,0);
     child->GetRect(rect);
@@ -1345,7 +1346,7 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*          aPresContext
           if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
             // get the ara frame is the scrollarea
             nsSize size;
-            GetScrolledContentSize(size);
+            GetScrolledContentSize(aPresContext, size);
 
             PRBool  mustReflow = PR_FALSE;
 
@@ -1401,7 +1402,7 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*          aPresContext
             {
               // get the ara frame is the scrollarea
               nsSize size;
-              GetScrolledContentSize(size);
+              GetScrolledContentSize(aPresContext, size);
 
               // if the child is wider that the scroll area
               // and we don't have a scrollbar add one.
@@ -1443,7 +1444,7 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*          aPresContext
       }
 
       nsSize size;
-      GetScrolledContentSize(size);
+      GetScrolledContentSize(aPresContext, size);
 
       float p2t;
       aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -1641,7 +1642,6 @@ nsGfxScrollFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowSta
 {
   aSize.Clear();
 
-  nsresult rv;
   nsBoxInfo scrollAreaInfo, vboxInfo, hboxInfo;
   nsCOMPtr<nsIBox> ibox ( do_QueryInterface(mInner->mScrollAreaFrame) );
   if (ibox) ibox->GetBoxInfo(aPresContext, aReflowState, scrollAreaInfo);

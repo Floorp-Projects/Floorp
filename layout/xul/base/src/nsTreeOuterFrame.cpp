@@ -124,7 +124,7 @@ nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsresult rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
-  nsITreeFrame* tree = FindTreeFrame();
+  nsITreeFrame* tree = FindTreeFrame(aPresContext);
   nsTreeFrame* treeFrame = (nsTreeFrame*)tree;
   if (treeFrame->GetFixedRowSize() != -1) {
     // The tree had a rows attribute that altered its dimensions.  We
@@ -224,11 +224,11 @@ nsTreeOuterFrame::FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
 }
 
 nsITreeFrame*
-nsTreeOuterFrame::FindTreeFrame()
+nsTreeOuterFrame::FindTreeFrame(nsIPresContext* aPresContext)
 {
   nsITreeFrame* treeframe;
   nsIFrame* child;
-  FirstChild(nsnull, &child);
+  FirstChild(aPresContext, nsnull, &child);
 
   while (child != nsnull) {
     if (NS_OK == child->QueryInterface(NS_GET_IID(nsITreeFrame),
@@ -249,7 +249,7 @@ nsTreeOuterFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
   // In most cases the TreeFrame will be the only child, but just to make
   // sure we'll check for the right interface
 
-  nsITreeFrame* treeframe = FindTreeFrame();
+  nsITreeFrame* treeframe = FindTreeFrame(aPresContext);
   nsISelfScrollingFrame* ssf;
 
   if (treeframe) {
@@ -269,7 +269,7 @@ nsTreeOuterFrame::ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages)
   // In most cases the TreeFrame will be the only child, but just to make
   // sure we'll check for the right interface
 
-  nsITreeFrame* treeframe = FindTreeFrame();
+  nsITreeFrame* treeframe = FindTreeFrame(aPresContext);
   nsISelfScrollingFrame* ssf;
 
   if (treeframe) {
@@ -289,7 +289,7 @@ nsTreeOuterFrame::CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide)
   // In most cases the TreeFrame will be the only child, but just to make
   // sure we'll check for the right interface
 
-  nsITreeFrame* treeframe = FindTreeFrame();
+  nsITreeFrame* treeframe = FindTreeFrame(aPresContext);
   nsISelfScrollingFrame* ssf;
 
   if (treeframe) {

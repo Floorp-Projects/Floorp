@@ -100,7 +100,8 @@ nsFileControlFrame::~nsFileControlFrame()
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
+nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+                                           nsISupportsArray& aChildList)
 {
   
   // create text field
@@ -280,7 +281,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (mFormFrame == nsnull && eReflowReason_Initial == aReflowState.reason) {
     // add ourself as an nsIFormControlFrame
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
-    mTextFrame = GetTextControlFrame(this);
+    mTextFrame = GetTextControlFrame(aPresContext, this);
     if (!mTextFrame) return NS_ERROR_UNEXPECTED;
     if (mCachedState) {
       mTextFrame->SetProperty(aPresContext, nsHTMLAtoms::value, *mCachedState);
@@ -312,11 +313,11 @@ nsFileControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
  * node from the constructor and we find it in our tree.
  */
 nsTextControlFrame*
-nsFileControlFrame::GetTextControlFrame(nsIFrame* aStart)
+nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* aStart)
 {
   // find the text control frame.
   nsIFrame* childFrame = nsnull;
-  aStart->FirstChild(nsnull, &childFrame);
+  aStart->FirstChild(aPresContext, nsnull, &childFrame);
 
   while (childFrame) {
     // see if the child is a text control
@@ -336,7 +337,7 @@ nsFileControlFrame::GetTextControlFrame(nsIFrame* aStart)
     }
 
     // if not continue looking
-    nsTextControlFrame* frame = GetTextControlFrame(childFrame);
+    nsTextControlFrame* frame = GetTextControlFrame(aPresContext, childFrame);
     if (frame)
        return frame;
      

@@ -154,13 +154,15 @@ public:
 
   void DeleteColFrame(nsIPresContext* aPresContext, nsTableColFrame* aColFrame);
 
-  static nsTableColGroupFrame* GetColGroupFrameContaining(nsFrameList&     aColGroupList,
+  static nsTableColGroupFrame* GetColGroupFrameContaining(nsIPresContext*  aPresContext,
+                                                          nsFrameList&     aColGroupList,
                                                           nsTableColFrame& aColFrame);
   nsFrameList& GetChildList();
 
-  static void ResetColIndices(nsIFrame* aFirstColGroup,
-                              PRInt32   aFirstColIndex,
-                              nsIFrame* aStartColFrame = nsnull);
+  static void ResetColIndices(nsIPresContext* aPresContext,
+                              nsIFrame*       aFirstColGroup,
+                              PRInt32         aFirstColIndex,
+                              nsIFrame*       aStartColFrame = nsnull);
 protected:
   nsTableColGroupFrame();
 

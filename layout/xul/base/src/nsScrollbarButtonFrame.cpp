@@ -177,11 +177,12 @@ nsScrollbarButtonFrame::MouseClicked()
 }
 
 nsresult
-nsScrollbarButtonFrame::GetChildWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result)
+nsScrollbarButtonFrame::GetChildWithTag(nsIPresContext* aPresContext,
+                                        nsIAtom* atom, nsIFrame* start, nsIFrame*& result)
 {
   // recursively search our children
   nsIFrame* childFrame;
-  start->FirstChild(nsnull, &childFrame); 
+  start->FirstChild(aPresContext, nsnull, &childFrame); 
   while (nsnull != childFrame) 
   {    
     // get the content node
@@ -200,7 +201,7 @@ nsScrollbarButtonFrame::GetChildWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame
     }
 
      // recursive search the child
-     GetChildWithTag(atom, childFrame, result);
+     GetChildWithTag(aPresContext, atom, childFrame, result);
      if (result != nsnull) 
        return NS_OK;
 

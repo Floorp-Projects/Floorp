@@ -104,7 +104,8 @@ public:
                                            PRBool&         aBeginFrameContent);
 
   // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
+  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+                                    nsISupportsArray& aAnonymousItems);
 
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);

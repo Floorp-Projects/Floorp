@@ -217,7 +217,7 @@ public:
   /**
    * DEBUG ONLY method to verify integrity of style tree versus frame tree
    */
-  NS_IMETHOD DebugVerifyStyleTree(nsIFrame* aFrame) = 0;
+  NS_IMETHOD DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame) = 0;
 #endif
 };
 

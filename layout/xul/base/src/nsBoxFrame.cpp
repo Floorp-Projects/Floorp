@@ -895,7 +895,7 @@ nsBoxFrame::CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame, PRBool 
       
       // collapse the child
       nsIFrame* child = nsnull;
-      frame->FirstChild(nsnull, &child);
+      frame->FirstChild(aPresContext, nsnull, &child);
 
       while (nsnull != child) 
       {

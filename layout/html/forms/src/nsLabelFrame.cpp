@@ -111,7 +111,9 @@ public:
 #endif
 
 protected:
-  PRBool FindFirstControl(nsIFrame* aParentFrame, nsIFormControlFrame*& aResultFrame);
+  PRBool FindFirstControl(nsIPresContext* aPresContext,
+                          nsIFrame* aParentFrame,
+                          nsIFormControlFrame*& aResultFrame);
   PRBool FindForControl(nsIFormControlFrame*& aResultFrame);
   void GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect);
 
@@ -335,10 +337,12 @@ nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
 }
 
 PRBool 
-nsLabelFrame::FindFirstControl(nsIFrame* aParentFrame, nsIFormControlFrame*& aResultFrame)
+nsLabelFrame::FindFirstControl(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIFormControlFrame*& aResultFrame)
 {
   nsIFrame* child = nsnull;
-  aParentFrame->FirstChild(nsnull, &child);
+  aParentFrame->FirstChild(aPresContext, nsnull, &child);
   while (nsnull != child) {
     nsIFormControlFrame* fcFrame = nsnull;
     nsresult result = child->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
@@ -351,7 +355,7 @@ nsLabelFrame::FindFirstControl(nsIFrame* aParentFrame, nsIFormControlFrame*& aRe
         return PR_TRUE;
       }
       NS_RELEASE(fcFrame);
-    } else if (FindFirstControl(child, aResultFrame)) {
+    } else if (FindFirstControl(aPresContext, child, aResultFrame)) {
       return PR_TRUE;
     }
     child->GetNextSibling(&child);
@@ -483,7 +487,7 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
       mControlIsInside = PR_FALSE;
     } else {
       // find the 1st (and should be only) form control contained within if there is no "for"
-      mControlIsInside = FindFirstControl(this, mControlFrame);
+      mControlIsInside = FindFirstControl(aPresContext, this, mControlFrame);
     }
   }
 

@@ -348,7 +348,7 @@ public:
 
   PRBool ClearPastFloaters(PRUint8 aBreakType);
 
-  PRBool IsLeftMostChild(nsIFrame* aFrame);
+  PRBool IsLeftMostChild(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
   PRBool IsAdjacentWithTop() const {
     return mY == mReflowState.mComputedBorderPadding.top;
@@ -1270,7 +1270,7 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
     if (nsnull == listName) {
       break;
     }
-    FirstChild(listName, &kid);
+    FirstChild(aPresContext, listName, &kid);
     if (nsnull != kid) {
       IndentBy(out, aIndent);
       nsAutoString tmp;
@@ -1331,11 +1331,18 @@ nsBlockFrame::GetFrameType(nsIAtom** aType) const
 // Child frame enumeration
 
 NS_IMETHODIMP
-nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+nsBlockFrame::FirstChild(nsIPresContext* aPresContext,
+                         nsIAtom*        aListName,
+                         nsIFrame**      aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (nsnull == aListName) {
     *aFirstChild = (nsnull != mLines) ? mLines->mFirstChild : nsnull;
+    return NS_OK;
+  }
+  else if (aListName == nsLayoutAtoms::overflowList) {
+    nsLineBox*  overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
+    *aFirstChild = overflowLines ? overflowLines->mFirstChild : nsnull;
     return NS_OK;
   }
   else if (aListName == nsLayoutAtoms::floaterList) {
@@ -1449,7 +1456,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                            NS_BLOCK_MARGIN_ROOT & mState);
 
   if (eReflowReason_Resize != aReflowState.reason) {
-    RenumberLists();
+    RenumberLists(aPresContext);
     ComputeTextRuns(aPresContext);
   }
 
@@ -3107,7 +3114,7 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
   }
   if (nsHTMLAtoms::start == aAttribute) {
     // XXX Not sure if this is necessary anymore
-    RenumberLists();
+    RenumberLists(aPresContext);
 
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
@@ -3144,7 +3151,7 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
       // itself
       if (nsnull != blockParent) {
         // XXX Not sure if this is necessary anymore
-        blockParent->RenumberLists();
+        blockParent->RenumberLists(aPresContext);
 
         nsCOMPtr<nsIPresShell> shell;
         aPresContext->GetShell(getter_AddRefs(shell));
@@ -4557,7 +4564,7 @@ nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
 
 nsLineBox*
 nsBlockFrame::GetOverflowLines(nsIPresContext* aPresContext,
-                               PRBool          aRemoveProperty)
+                               PRBool          aRemoveProperty) const
 {
   nsCOMPtr<nsIPresShell>     presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
@@ -4573,7 +4580,7 @@ nsBlockFrame::GetOverflowLines(nsIPresContext* aPresContext,
       if (aRemoveProperty) {
         options |= NS_IFRAME_MGR_REMOVE_PROP;
       }
-      frameManager->GetFrameProperty(this, nsLayoutAtoms::overflowLinesProperty,
+      frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowLinesProperty,
                                      options, &value);
       return (nsLineBox*)value;
     }
@@ -5184,7 +5191,7 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
 }
 
 PRBool
-nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
+nsBlockReflowState::IsLeftMostChild(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
   for (;;) {
     nsIFrame* parent;
@@ -5209,7 +5216,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
       // See if there are any non-zero sized child frames that precede
       // aFrame in the child list
       nsIFrame* child;
-      parent->FirstChild(nsnull, &child);
+      parent->FirstChild(aPresContext, nsnull, &child);
       while ((nsnull != child) && (aFrame != child)) {
         nsSize  size;
 
@@ -6245,7 +6252,7 @@ nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 }
 
 void
-nsBlockFrame::RenumberLists()
+nsBlockFrame::RenumberLists(nsIPresContext* aPresContext)
 {
   if (!FrameStartsCounterScope(this)) {
     // If this frame doesn't start a counter scope then we don't need
@@ -6273,11 +6280,12 @@ nsBlockFrame::RenumberLists()
 
   // Get to first-in-flow
   nsBlockFrame* block = (nsBlockFrame*) GetFirstInFlow();
-  RenumberListsInBlock(block, &ordinal);
+  RenumberListsInBlock(aPresContext, block, &ordinal);
 }
 
 PRBool
-nsBlockFrame::RenumberListsInBlock(nsBlockFrame* aBlockFrame,
+nsBlockFrame::RenumberListsInBlock(nsIPresContext* aPresContext,
+                                   nsBlockFrame* aBlockFrame,
                                    PRInt32* aOrdinal)
 {
   PRBool renumberedABullet = PR_FALSE;
@@ -6289,7 +6297,7 @@ nsBlockFrame::RenumberListsInBlock(nsBlockFrame* aBlockFrame,
       nsIFrame* kid = line->mFirstChild;
       PRInt32 n = line->GetChildCount();
       while (--n >= 0) {
-        PRBool kidRenumberedABullet = RenumberListsFor(kid, aOrdinal);
+        PRBool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal);
         if (kidRenumberedABullet) {
           line->MarkDirty();
           renumberedABullet = PR_TRUE;
@@ -6309,7 +6317,9 @@ nsBlockFrame::RenumberListsInBlock(nsBlockFrame* aBlockFrame,
 // XXX temporary code: after ib work is done in frame construction
 // code this can be removed.
 PRBool
-nsBlockFrame::RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal)
+nsBlockFrame::RenumberListsIn(nsIPresContext* aPresContext,
+                              nsIFrame* aContainerFrame,
+                              PRInt32* aOrdinal)
 {
   PRBool renumberedABullet = PR_FALSE;
 
@@ -6317,9 +6327,9 @@ nsBlockFrame::RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal)
   while (nsnull != aContainerFrame) {
     // For each frame in the flow-block...
     nsIFrame* kid;
-    aContainerFrame->FirstChild(nsnull, &kid);
+    aContainerFrame->FirstChild(aPresContext, nsnull, &kid);
     while (nsnull != kid) {
-      PRBool kidRenumberedABullet = RenumberListsFor(kid, aOrdinal);
+      PRBool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal);
       if (kidRenumberedABullet) {
         renumberedABullet = PR_TRUE;
       }
@@ -6331,7 +6341,9 @@ nsBlockFrame::RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal)
 }
 
 PRBool
-nsBlockFrame::RenumberListsFor(nsIFrame* aKid, PRInt32* aOrdinal)
+nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
+                               nsIFrame* aKid,
+                               PRInt32* aOrdinal)
 {
   PRBool kidRenumberedABullet = PR_FALSE;
 
@@ -6359,7 +6371,7 @@ nsBlockFrame::RenumberListsFor(nsIFrame* aKid, PRInt32* aOrdinal)
       // XXX temporary? if the list-item has child list-items they
       // should be numbered too; especially since the list-item is
       // itself (ASSUMED!) not to be a counter-reseter.
-      PRBool meToo = RenumberListsInBlock(listItem, aOrdinal);
+      PRBool meToo = RenumberListsInBlock(aPresContext, listItem, aOrdinal);
       if (meToo) {
         kidRenumberedABullet = PR_TRUE;
       }
@@ -6378,7 +6390,7 @@ nsBlockFrame::RenumberListsFor(nsIFrame* aKid, PRInt32* aOrdinal)
       nsBlockFrame* kidBlock;
       nsresult rv = aKid->QueryInterface(kBlockFrameCID, (void**) &kidBlock);
       if (NS_SUCCEEDED(rv)) {
-        kidRenumberedABullet = RenumberListsInBlock(kidBlock, aOrdinal);
+        kidRenumberedABullet = RenumberListsInBlock(aPresContext, kidBlock, aOrdinal);
       }
     }
   } else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
@@ -6392,7 +6404,7 @@ nsBlockFrame::RenumberListsFor(nsIFrame* aKid, PRInt32* aOrdinal)
     nsresult rv = aKid->QueryInterface(nsInlineFrame::kInlineFrameCID,
                                        (void**) &kidInline);
     if (NS_SUCCEEDED(rv)) {
-      kidRenumberedABullet = RenumberListsIn(aKid, aOrdinal);
+      kidRenumberedABullet = RenumberListsIn(aPresContext, aKid, aOrdinal);
     }
   }
   return kidRenumberedABullet;

@@ -135,13 +135,14 @@ nsPopupSetFrame::Init(nsIPresContext*  aPresContext,
 // The following methods are all overridden to ensure that the menupopup frames
 // are placed in the appropriate list.
 NS_IMETHODIMP
-nsPopupSetFrame::FirstChild(nsIAtom*   aListName,
-                        nsIFrame** aFirstChild) const
+nsPopupSetFrame::FirstChild(nsIPresContext* aPresContext,
+                            nsIAtom*        aListName,
+                            nsIFrame**      aFirstChild) const
 {
   if (nsLayoutAtoms::popupList == aListName) {
     *aFirstChild = mPopupFrames.FirstChild();
   } else {
-    nsBoxFrame::FirstChild(aListName, aFirstChild);
+    nsBoxFrame::FirstChild(aPresContext, aListName, aFirstChild);
   }
   return NS_OK;
 }

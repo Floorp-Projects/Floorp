@@ -46,13 +46,13 @@ MOZ_DECL_CTOR_COUNTER(nsCellMap);
 
 // nsTableCellMap
 
-nsTableCellMap::nsTableCellMap(nsTableFrame& aTableFrame)
+nsTableCellMap::nsTableCellMap(nsIPresContext* aPresContext, nsTableFrame& aTableFrame)
 {
   MOZ_COUNT_CTOR(nsTableCellMap);
   mFirstMap = nsnull;
   nsTableRowGroupFrame* prior = nsnull;
   nsIFrame* child;
-  aTableFrame.FirstChild(nsnull, &child);
+  aTableFrame.FirstChild(aPresContext, nsnull, &child);
   while(child) {
     nsTableRowGroupFrame* groupFrame = aTableFrame.GetRowGroupFrame(child);
     if (groupFrame) {
@@ -250,7 +250,8 @@ nsTableCellMap::AddColsAtEnd(PRUint32 aNumCols)
 }
 
 void
-nsTableCellMap::InsertRows(nsTableRowGroupFrame& aParent,
+nsTableCellMap::InsertRows(nsIPresContext*       aPresContext,
+                           nsTableRowGroupFrame& aParent,
                            nsVoidArray&          aRows,
                            PRInt32               aFirstRowIndex,
                            PRBool                aConsiderSpans)
@@ -260,7 +261,7 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame& aParent,
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     if (cellMap->GetRowGroup() == &aParent) {
-      cellMap->InsertRows(*this, aRows, rowIndex, aConsiderSpans);
+      cellMap->InsertRows(aPresContext, *this, aRows, rowIndex, aConsiderSpans);
       return;
     }
     rowIndex -= cellMap->GetRowCount();
@@ -273,15 +274,16 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame& aParent,
 }
 
 void
-nsTableCellMap::RemoveRows(PRInt32 aFirstRowIndex,
-                           PRInt32 aNumRowsToRemove,
-                           PRBool  aConsiderSpans)
+nsTableCellMap::RemoveRows(nsIPresContext* aPresContext,
+                           PRInt32         aFirstRowIndex,
+                           PRInt32         aNumRowsToRemove,
+                           PRBool          aConsiderSpans)
 {
   PRInt32 rowIndex = aFirstRowIndex;
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     if (cellMap->GetRowCount() > rowIndex) {
-      cellMap->RemoveRows(*this, rowIndex, aNumRowsToRemove, aConsiderSpans);
+      cellMap->RemoveRows(aPresContext, *this, rowIndex, aNumRowsToRemove, aConsiderSpans);
       break;
     }
     rowIndex -= cellMap->GetRowCount();
@@ -614,7 +616,8 @@ void nsCellMap::GrowRow(nsVoidArray& aRow,
 }
 
 void
-nsCellMap::InsertRows(nsTableCellMap& aMap,
+nsCellMap::InsertRows(nsIPresContext* aPresContext,
+                      nsTableCellMap& aMap,
                       nsVoidArray&    aRows,
                       PRInt32         aFirstRowIndex,
                       PRBool          aConsiderSpans)
@@ -627,7 +630,7 @@ nsCellMap::InsertRows(nsTableCellMap& aMap,
   }
 
   if (!aConsiderSpans) {
-    ExpandWithRows(aMap, aRows, aFirstRowIndex);
+    ExpandWithRows(aPresContext, aMap, aRows, aFirstRowIndex);
     return;
   }
 
@@ -638,19 +641,20 @@ nsCellMap::InsertRows(nsTableCellMap& aMap,
   // if any of the new cells span out of the new rows being added, then rebuild
   // XXX it would be better to only rebuild the portion of the map that follows the new rows
   if (!spansCauseRebuild && (aFirstRowIndex < mRows.Count())) {
-    spansCauseRebuild = CellsSpanOut(aRows);
+    spansCauseRebuild = CellsSpanOut(aPresContext, aRows);
   }
 
   if (spansCauseRebuild) {
-    RebuildConsideringRows(aMap, aFirstRowIndex, &aRows);
+    RebuildConsideringRows(aPresContext, aMap, aFirstRowIndex, &aRows);
   }
   else {
-    ExpandWithRows(aMap, aRows, aFirstRowIndex);
+    ExpandWithRows(aPresContext, aMap, aRows, aFirstRowIndex);
   }
 }
 
 void
-nsCellMap::RemoveRows(nsTableCellMap& aMap,
+nsCellMap::RemoveRows(nsIPresContext* aPresContext,
+                      nsTableCellMap& aMap,
                       PRInt32         aFirstRowIndex,
                       PRInt32         aNumRowsToRemove,
                       PRBool          aConsiderSpans)
@@ -674,7 +678,7 @@ nsCellMap::RemoveRows(nsTableCellMap& aMap,
                                               0, numCols - 1, numCols);
 
   if (spansCauseRebuild) {
-    RebuildConsideringRows(aMap, aFirstRowIndex, nsnull, aNumRowsToRemove);
+    RebuildConsideringRows(aPresContext, aMap, aFirstRowIndex, nsnull, aNumRowsToRemove);
   }
   else {
     ShrinkWithoutRows(aMap, aFirstRowIndex, aNumRowsToRemove);
@@ -800,13 +804,13 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   return startColIndex;
 }
 
-PRBool nsCellMap::CellsSpanOut(nsVoidArray& aRows)
+PRBool nsCellMap::CellsSpanOut(nsIPresContext* aPresContext, nsVoidArray& aRows)
 { 
   PRInt32 numNewRows = aRows.Count();
   for (PRInt32 rowX = 0; rowX < numNewRows; rowX++) {
     nsIFrame* rowFrame = (nsIFrame *) aRows.ElementAt(rowX);
     nsIFrame* cellFrame = nsnull;
-    rowFrame->FirstChild(nsnull, &cellFrame);
+    rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
     while (cellFrame) {
       nsIAtom* frameType;
       cellFrame->GetFrameType(&frameType);
@@ -921,7 +925,8 @@ void nsCellMap::InsertCells(nsTableCellMap& aMap,
 }
  
 void
-nsCellMap::ExpandWithRows(nsTableCellMap& aMap,
+nsCellMap::ExpandWithRows(nsIPresContext* aPresContext,
+                          nsTableCellMap& aMap,
                           nsVoidArray&    aRowFrames,
                           PRInt32         aStartRowIndex)
 {
@@ -940,7 +945,7 @@ nsCellMap::ExpandWithRows(nsTableCellMap& aMap,
     nsTableRowFrame* rFrame = (nsTableRowFrame *)aRowFrames.ElementAt(newRowIndex);
     // append cells 
     nsIFrame* cFrame = nsnull;
-    rFrame->FirstChild(nsnull, &cFrame);
+    rFrame->FirstChild(aPresContext, nsnull, &cFrame);
     while (cFrame) {
       nsIAtom* cFrameType;
       cFrame->GetFrameType(&cFrameType);
@@ -1295,7 +1300,8 @@ nsCellMap::RemoveCol(PRInt32 aColIndex)
 }
 
 void
-nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
+nsCellMap::RebuildConsideringRows(nsIPresContext* aPresContext,
+                                  nsTableCellMap& aMap,
                                   PRInt32         aStartRowIndex,
                                   nsVoidArray*    aRowsToInsert,
                                   PRBool          aNumRowsToRemove)
@@ -1341,7 +1347,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
     for (PRInt32 newRowX = 0; newRowX < numNewRows; newRowX++) {
       nsTableRowFrame* rFrame = (nsTableRowFrame *)aRowsToInsert->ElementAt(newRowX);
       nsIFrame* cFrame = nsnull;
-      rFrame->FirstChild(nsnull, &cFrame);
+      rFrame->FirstChild(aPresContext, nsnull, &cFrame);
       while (cFrame) {
         nsIAtom* cFrameType;
         cFrame->GetFrameType(&cFrameType);

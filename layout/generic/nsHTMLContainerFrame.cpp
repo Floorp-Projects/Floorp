@@ -165,8 +165,14 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
     // Iterate the child frames, and check each child frame to see if it has
     // a view
     nsIFrame* childFrame;
+    aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    while (childFrame) {
+      ReparentFrameViewTo(aPresContext, childFrame, aViewManager, aNewParentView, aOldParentView);
+      childFrame->GetNextSibling(&childFrame);
+    }
 
-    aFrame->FirstChild(nsnull, &childFrame);
+    // Also check the overflow-list
+    aFrame->FirstChild(aPresContext, nsLayoutAtoms::overflowList, &childFrame);
     while (childFrame) {
       ReparentFrameViewTo(aPresContext, childFrame, aViewManager, aNewParentView, aOldParentView);
       childFrame->GetNextSibling(&childFrame);
@@ -217,7 +223,7 @@ nsHTMLContainerFrame::ReparentFrameView(nsIPresContext* aPresContext,
   if (!childView) {
     // Child frame doesn't have a view. See if it has any child frames
     nsIFrame* firstChild;
-    aChildFrame->FirstChild(nsnull, &firstChild);
+    aChildFrame->FirstChild(aPresContext, nsnull, &firstChild);
     if (!firstChild) {
       return NS_OK;
     }

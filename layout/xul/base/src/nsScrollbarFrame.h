@@ -55,7 +55,8 @@ public:
                               PRInt32 aHint);
 
   // nsIAnonymousConentCreator
-  NS_IMETHOD  CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
+  NS_IMETHOD  CreateAnonymousContent(nsIPresContext* aPresContext,
+                                     nsISupportsArray& aAnonymousItems);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

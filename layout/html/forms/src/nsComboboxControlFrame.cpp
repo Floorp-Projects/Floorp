@@ -1340,7 +1340,8 @@ nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 
 
 NS_IMETHODIMP
-nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
+nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+                                               nsISupportsArray& aChildList)
 {
   // The frames used to display the combo box and the button used to popup the dropdown list
   // are created through anonymous content. The dropdown list is not created through anonymous
@@ -1402,13 +1403,14 @@ nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
 
 
 NS_IMETHODIMP
-nsComboboxControlFrame::FirstChild(nsIAtom*   aListName,
-                                      nsIFrame** aFirstChild) const
+nsComboboxControlFrame::FirstChild(nsIPresContext* aPresContext,
+                                   nsIAtom*        aListName,
+                                   nsIFrame**      aFirstChild) const
 {
   if (nsLayoutAtoms::popupList == aListName) {
     *aFirstChild = mPopupFrames.FirstChild();
   } else {
-    nsAreaFrame::FirstChild(aListName, aFirstChild);
+    nsAreaFrame::FirstChild(aPresContext, aListName, aFirstChild);
   }
   return NS_OK;
 }

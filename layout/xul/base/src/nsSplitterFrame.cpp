@@ -112,7 +112,7 @@ public:
 
   void UpdateState();
 
-  void AddListener();
+  void AddListener(nsIPresContext* aPresContext);
   void RemoveListener();
 
   enum ResizeType { Closest, Farthest, Grow };
@@ -263,7 +263,8 @@ nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNam
  * Anonymous interface
  */
 NS_IMETHODIMP
-nsSplitterFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+nsSplitterFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+                                        nsISupportsArray& aAnonymousChildren)
 {
   // if not content the create some anonymous content
   PRInt32 count = 0;
@@ -326,7 +327,7 @@ nsSplitterFrame::AttributeChanged(nsIPresContext* aPresContext,
      // tell the slider its attribute changed so it can 
      // update itself
      nsIFrame* grippy = nsnull;
-     nsScrollbarButtonFrame::GetChildWithTag(nsXULAtoms::grippy, this, grippy);
+     nsScrollbarButtonFrame::GetChildWithTag(aPresContext, nsXULAtoms::grippy, this, grippy);
      if (grippy)
         grippy->AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
   } else if (aAttribute == nsXULAtoms::state) {
@@ -366,7 +367,7 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
                      nsnull);
 */
 
-  mImpl->AddListener();
+  mImpl->AddListener(aPresContext);
 
   return rv;
 }
@@ -465,7 +466,7 @@ nsSplitterFrameImpl::MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 {
       if (IsMouseCaptured(aPresContext)) {
           AdjustChildren(aPresContext);
-          AddListener();
+          AddListener(aPresContext);
           CaptureMouse(aPresContext, PR_FALSE);
           mSplitter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "", PR_TRUE);
           mPressed = PR_FALSE;
@@ -592,10 +593,10 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 }
 
 void
-nsSplitterFrameImpl::AddListener()
+nsSplitterFrameImpl::AddListener(nsIPresContext* aPresContext)
 {
   nsIFrame* thumbFrame = nsnull;
-  mSplitter->FirstChild(nsnull,&thumbFrame);
+  mSplitter->FirstChild(aPresContext, nsnull,&thumbFrame);
   nsCOMPtr<nsIContent> content;
   mSplitter->GetContent(getter_AddRefs(content));
 
@@ -689,8 +690,8 @@ nsSplitterFrameImpl::MouseDown(nsIDOMEvent* aMouseEvent)
   mParentBox = (nsBoxFrame*)parent;
 
   // get our index
-  nscoord childIndex = nsFrameNavigator::IndexOf(mParentBox, mSplitter);
-  PRInt32 childCount = nsFrameNavigator::CountFrames(mParentBox);
+  nscoord childIndex = nsFrameNavigator::IndexOf(mSplitter->mPresContext, mParentBox, mSplitter);
+  PRInt32 childCount = nsFrameNavigator::CountFrames(mSplitter->mPresContext, mParentBox);
 
   // if its 0 or the last index then stop right here.
   if (childIndex == 0 || childIndex == childCount-1) {
@@ -715,7 +716,7 @@ nsSplitterFrameImpl::MouseDown(nsIDOMEvent* aMouseEvent)
   mChildInfosAfterCount = 0;
 
   nsIFrame* childFrame = nsnull;
-  mParentBox->FirstChild(nsnull, &childFrame); 
+  mParentBox->FirstChild(mSplitter->mPresContext, nsnull, &childFrame); 
 
   while (nsnull != childFrame) 
   { 
@@ -900,7 +901,7 @@ nsSplitterFrameImpl::UpdateState()
         // find the child just in the box just before the splitter. If we are not currently collapsed then
         // then get the childs style attribute and store it. Then set the child style attribute to be display none.
         // if we are already collapsed then set the child's style back to our stored value.
-        nsIFrame* child = nsFrameNavigator::GetChildBeforeAfter(splitter,(d == Before));
+        nsIFrame* child = nsFrameNavigator::GetChildBeforeAfter(mSplitter->mPresContext, splitter,(d == Before));
         if (child == nsnull)
           return;
 

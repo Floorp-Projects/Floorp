@@ -172,7 +172,7 @@ public:
   /** set this row's starting row index */
   void SetRowIndex (int aRowIndex);
 
-  virtual PRBool Contains(const nsPoint& aPoint);
+  virtual PRBool Contains(nsIPresContext* aPresContext, const nsPoint& aPoint);
 
   void GetMaxElementSize(nsSize& aMaxElementSize) const;
 

@@ -62,9 +62,10 @@ void nsTableColGroupFrame::SetType(nsTableColGroupType aType) {
   mBits.mType = aType - eColGroupContent;
 }
 
-void nsTableColGroupFrame::ResetColIndices(nsIFrame* aFirstColGroup,
-                                           PRInt32   aFirstColIndex,
-                                           nsIFrame* aStartColFrame)
+void nsTableColGroupFrame::ResetColIndices(nsIPresContext* aPresContext,
+                                           nsIFrame*       aFirstColGroup,
+                                           PRInt32         aFirstColIndex,
+                                           nsIFrame*       aStartColFrame)
 {
   nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame*)aFirstColGroup;
   PRInt32 colIndex = aFirstColIndex;
@@ -75,7 +76,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame* aFirstColGroup,
       colGroupFrame->SetStartColumnIndex(colIndex);
       nsIFrame* colFrame = aStartColFrame; 
       if (!colFrame || (colIndex != aFirstColIndex)) {
-        colGroupFrame->FirstChild(nsnull, &colFrame);
+        colGroupFrame->FirstChild(aPresContext, nsnull, &colFrame);
       }
       while (colFrame) {
         nsIAtom* colType;
@@ -134,7 +135,7 @@ nsTableColGroupFrame::AddColsToTable(nsIPresContext&  aPresContext,
     nsIFrame* nextSibling;
     GetNextSibling(&nextSibling);
     if (nextSibling) {
-      ResetColIndices(nextSibling, colIndex);
+      ResetColIndices(&aPresContext, nextSibling, colIndex);
     }
   }
 
@@ -319,7 +320,7 @@ nsTableColGroupFrame::InsertFrames(nsIPresContext* aPresContext,
   nsIFrame* lastFrame = frames.LastChild();
 
   mFrames.InsertFrames(this, aPrevFrameIn, aFrameList);
-  nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(this, aPrevFrameIn, 
+  nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(aPresContext, this, aPrevFrameIn, 
                                                          nsLayoutAtoms::tableColFrame);
 
   PRInt32 colIndex = (prevFrame) ? ((nsTableColFrame*)prevFrame)->GetColIndex() + 1 : 0;
@@ -359,7 +360,7 @@ nsTableColGroupFrame::RemoveChild(nsIPresContext&  aPresContext,
   if (mFrames.DestroyFrame(&aPresContext, (nsIFrame*)&aChild)) {
     mColCount--;
     if (aResetColIndices) {
-      ResetColIndices(this, colIndex, nextChild);
+      ResetColIndices(&aPresContext, this, colIndex, nextChild);
     }
   }
 }
@@ -703,7 +704,8 @@ PRInt32 nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
 // this could be optimized by using col group frame starting indicies, 
 // but typically there aren't enough very large col groups for the added complexity.
 nsTableColGroupFrame* 
-nsTableColGroupFrame::GetColGroupFrameContaining(nsFrameList&     aColGroupList,
+nsTableColGroupFrame::GetColGroupFrameContaining(nsIPresContext*  aPresContext,
+                                                 nsFrameList&     aColGroupList,
                                                  nsTableColFrame& aColFrame)
 {
   nsIFrame* childFrame = aColGroupList.FirstChild();
@@ -712,7 +714,7 @@ nsTableColGroupFrame::GetColGroupFrameContaining(nsFrameList&     aColGroupList,
     childFrame->GetFrameType(&frameType);
     if (nsLayoutAtoms::tableColGroupFrame == frameType) {
       nsTableColFrame* colFrame = nsnull;
-      childFrame->FirstChild(nsnull, (nsIFrame **)&colFrame);
+      childFrame->FirstChild(aPresContext, nsnull, (nsIFrame **)&colFrame);
       while (colFrame) {
         if (colFrame == &aColFrame) {
           NS_RELEASE(frameType);

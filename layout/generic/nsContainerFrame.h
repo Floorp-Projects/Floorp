@@ -42,7 +42,9 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const;
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -171,7 +173,7 @@ protected:
    * Get the frames on the overflow list
    */
   nsIFrame* GetOverflowFrames(nsIPresContext* aPresContext,
-                              PRBool          aRemoveProperty);
+                              PRBool          aRemoveProperty) const;
 
   /**
    * Set the overflow list

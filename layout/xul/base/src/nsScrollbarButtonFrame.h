@@ -50,7 +50,8 @@ public:
                          nsEventStatus* aEventStatus);
 
 
-  static nsresult GetChildWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
+  static nsresult GetChildWithTag(nsIPresContext* aPresContext,
+                                  nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
   static nsresult GetParentWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
 
    NS_IMETHOD HandlePress(nsIPresContext* aPresContext,

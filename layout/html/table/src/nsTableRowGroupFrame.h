@@ -180,13 +180,14 @@ public:
    * @param aHeaderFooterFrame the original header or footer row group frame
    * that was repeated
    */
-  nsresult  InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame);
+  nsresult  InitRepeatedFrame(nsIPresContext*       aPresContext,
+                              nsTableRowGroupFrame* aHeaderFooterFrame);
 
   
   /**
    * Get the total height of all the row rects
    */
-  NS_METHOD GetHeightOfRows(nscoord& aResult);
+  NS_METHOD GetHeightOfRows(nsIPresContext* aPresContext, nscoord& aResult);
   
   virtual PRBool RowGroupReceivesExcessSpace() { return PR_TRUE; }
 

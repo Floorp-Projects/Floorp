@@ -636,7 +636,9 @@ public:
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified name
    * @see     #GetAdditionalListName()
    */
-  NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const = 0;
+  NS_IMETHOD  FirstChild(nsIPresContext* aPresContext,
+                         nsIAtom*        aListName,
+                         nsIFrame**      aFirstChild) const = 0;
 
   /**
    * Child frames are linked together in a singly-linked

@@ -2927,7 +2927,7 @@ static void ShowReport(FILE* out, nsISizeOfHandler* aHandler)
 //----------------------------------------
 
 static void
-GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIFrame* aFrame)
+GatherFrameDataSizes(nsIPresContext* aPresContext, nsISizeOfHandler* aHandler, nsIFrame* aFrame)
 {
   if (aFrame) {
     // Add in the frame
@@ -2945,9 +2945,9 @@ GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIFrame* aFrame)
     nsIAtom* listName = nsnull;
     do {
       nsIFrame* kid;
-      aFrame->FirstChild(listName, &kid);
+      aFrame->FirstChild(aPresContext, listName, &kid);
       while (kid) {
-        GatherFrameDataSizes(aHandler, kid);
+        GatherFrameDataSizes(aPresContext, aHandler, kid);
         kid->GetNextSibling(&kid);
       }
       NS_IF_RELEASE(listName);
@@ -2963,10 +2963,12 @@ GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIDocShell* aDocShell)
   if (nsnull != aDocShell) {
     nsIPresShell* shell = GetPresShellFor(aDocShell);
     if (nsnull != shell) {
+      nsCOMPtr<nsIPresContext> presContext;
       nsIFrame* root;
       shell->GetRootFrame(&root);
+      shell->GetPresContext(getter_AddRefs(presContext));
       if (nsnull != root) {
-        GatherFrameDataSizes(aHandler, root);
+        GatherFrameDataSizes(presContext, aHandler, root);
       }
       NS_RELEASE(shell);
     }

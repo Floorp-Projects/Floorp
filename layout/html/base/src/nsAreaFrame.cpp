@@ -159,14 +159,16 @@ nsAreaFrame::GetAdditionalChildListName(PRInt32   aIndex,
 }
 
 NS_IMETHODIMP
-nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+nsAreaFrame::FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (aListName == nsLayoutAtoms::absoluteList) {
     return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
   }
 
-  return nsBlockFrame::FirstChild(aListName, aFirstChild);
+  return nsBlockFrame::FirstChild(aPresContext, aListName, aFirstChild);
 }
 
 static void

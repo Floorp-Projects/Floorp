@@ -184,7 +184,9 @@ public:
   NS_IMETHOD  MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
   NS_IMETHOD  SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD  GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const;
-  NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+  NS_IMETHOD  FirstChild(nsIPresContext* aPresContext,
+                         nsIAtom*        aListName,
+                         nsIFrame**      aFirstChild) const;
   NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
@@ -388,7 +390,7 @@ protected:
   PRBool DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
 
   //this will modify aPos and return the next frame ect.
-  NS_IMETHOD GetFrameFromDirection(nsPeekOffsetStruct *aPos);
+  NS_IMETHOD GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos);
 
   // Style post processing hook
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
@@ -396,8 +398,8 @@ protected:
   //return the line number of the aFrame
   static PRInt32 GetLineNumber(nsIFrame *aFrame);
   //given a frame five me the first/last leaf available
-  static void GetLastLeaf(nsIFrame **aFrame);
-  static void GetFirstLeaf(nsIFrame **aFrame);
+  static void GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame);
+  static void GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame);
 
   static void XMLQuote(nsString& aString);
 

@@ -172,7 +172,7 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
   // Now loop through the child and see if the mouse is over a child
   //
   
-  dropAreaFrame->FirstChild(nsnull, &childFrame); 
+  dropAreaFrame->FirstChild(mPresContext, nsnull, &childFrame); 
   while ( childFrame ) {    
 
     // The mouse coords are in the toolbar's domain

@@ -601,7 +601,9 @@ protected:
                           nsIFrame*            aFrame,
                           nsFramePaintLayer    aWhichLayer);
 
-  NS_IMETHOD FirstChild(nsIAtom *aListName, nsIFrame **aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const;
   
   NS_IMETHOD GetAdditionalChildListName(PRInt32 aIndex,
                                         nsIAtom** aListName) const;

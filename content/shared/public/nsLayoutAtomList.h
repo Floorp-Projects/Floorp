@@ -63,6 +63,7 @@ LAYOUT_ATOM(colGroupList, "ColGroup-list")
 LAYOUT_ATOM(editorDisplayList, "EditorDisplay-List")
 LAYOUT_ATOM(fixedList, "Fixed-list")
 LAYOUT_ATOM(floaterList, "Floater-list")
+LAYOUT_ATOM(overflowList, "Overflow-list")
 LAYOUT_ATOM(popupList, "Popup-list")
 
   // Alphabetical list of pseudo tag names for non-element content

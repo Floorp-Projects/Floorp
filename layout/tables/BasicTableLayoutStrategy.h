@@ -58,8 +58,9 @@ public:
     * in the table (content, structure, or style) 
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
     */
-  virtual PRBool Initialize(nsSize*      aMaxElementSize,
-                            nscoord       aMaxSize);
+  virtual PRBool Initialize(nsIPresContext* aPresContext,
+                            nsSize*         aMaxElementSize,
+                            nscoord         aMaxSize);
 
   /** compute the max element size of the table.
     * assumes that Initialize has been called
@@ -73,7 +74,8 @@ public:
 	  * @param aReflowState - the reflow state for mTableFrame
  	  * @param aMaxWidth - the computed max width for columns to fit into
 	  */
-  virtual PRBool BalanceColumnWidths(nsIStyleContext*         aTableStyle,
+  virtual PRBool BalanceColumnWidths(nsIPresContext*          aPresContext,
+                                     nsIStyleContext*         aTableStyle,
                                      const nsHTMLReflowState& aReflowState,
                                      nscoord                  aMaxWidth);
 
@@ -97,7 +99,8 @@ protected:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool AssignPreliminaryColumnWidths(nscoord aComputedWidth);
+  virtual PRBool AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,
+                                               nscoord         aComputedWidth);
 
   /** 
     * Calculate the adjusted widths (min, desired, fixed, or pct) for a cell

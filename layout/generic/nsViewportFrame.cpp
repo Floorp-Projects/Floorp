@@ -72,7 +72,9 @@ public:
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const;
 
-  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const;
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -270,7 +272,9 @@ ViewportFrame::GetAdditionalChildListName(PRInt32   aIndex,
 }
 
 NS_IMETHODIMP
-ViewportFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+ViewportFrame::FirstChild(nsIPresContext* aPresContext,
+                          nsIAtom*        aListName,
+                          nsIFrame**      aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (aListName == nsLayoutAtoms::fixedList) {
@@ -278,7 +282,7 @@ ViewportFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
     return NS_OK;
   }
 
-  return nsContainerFrame::FirstChild(aListName, aFirstChild);
+  return nsContainerFrame::FirstChild(aPresContext, aListName, aFirstChild);
 }
 
 void

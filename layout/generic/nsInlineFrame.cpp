@@ -954,14 +954,16 @@ nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32   aIndex,
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+nsPositionedInlineFrame::FirstChild(nsIPresContext* aPresContext,
+                                    nsIAtom*        aListName,
+                                    nsIFrame**      aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (aListName == nsLayoutAtoms::absoluteList) {
     return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
   }
 
-  return nsInlineFrame::FirstChild(aListName, aFirstChild);
+  return nsInlineFrame::FirstChild(aPresContext, aListName, aFirstChild);
 }
 
 NS_IMETHODIMP
