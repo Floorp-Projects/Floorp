@@ -269,14 +269,14 @@ nsXFormsSwitchElement::Process()
 }
 
 NS_IMETHODIMP
-nsXFormsSwitchElement::SetContextNode(nsIDOMElement *aContextNode)
+nsXFormsSwitchElement::SetContextNode(nsIDOMNode *aContextNode)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
 nsXFormsSwitchElement::GetContext(nsAString&      aModelID,
-                                 nsIDOMElement **aContextNode,
+                                 nsIDOMNode    **aContextNode,
                                  PRInt32        *aContextPosition,
                                  PRInt32        *aContextSize)
 {

@@ -235,7 +235,7 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
                               nsIDOMNode    **aModel,
                               nsIDOMElement **aBindElement,
                               PRBool         *aOuterBind,
-                              nsIDOMElement **aContextNode,
+                              nsIDOMNode    **aContextNode,
                               PRInt32        *aContextPosition,
                               PRInt32        *aContextSize)
 {
@@ -306,7 +306,7 @@ nsXFormsUtils::GetModel(nsIDOMElement  *aElement,
 {
 
   nsCOMPtr<nsIDOMNode> model;
-  nsCOMPtr<nsIDOMElement> contextNode;
+  nsCOMPtr<nsIDOMNode> contextNode;
   nsCOMPtr<nsIDOMElement> bind;
   PRBool outerbind;
 
@@ -386,8 +386,11 @@ nsXFormsUtils::EvaluateXPath(const nsAString &aExpression,
 nsXFormsUtils::FindBindContext(nsIDOMElement         *aBindElement,
                                PRBool                *aOuterBind,
                                nsIDOMNode           **aModel,
-                               nsIDOMElement        **aContextNode)
+                               nsIDOMNode           **aContextNode)
 {
+  NS_ENSURE_ARG_POINTER(aContextNode);
+  *aContextNode = nsnull;
+  
   // 1) Find the model for the bind
   *aOuterBind = GetParentModel(aBindElement, aModel);
   NS_ENSURE_STATE(*aModel);
@@ -401,8 +404,10 @@ nsXFormsUtils::FindBindContext(nsIDOMElement         *aBindElement,
                                 getter_AddRefs(instanceDoc));
   NS_ENSURE_STATE(instanceDoc);
 
-  instanceDoc->GetDocumentElement(aContextNode);  // addrefs
-  NS_ENSURE_STATE(*aContextNode);
+  nsIDOMElement* docElement;
+  instanceDoc->GetDocumentElement(&docElement); // addrefs
+  NS_ENSURE_STATE(docElement);
+  *aContextNode = docElement; // addref'ed above
 
   return NS_OK;
 }
@@ -418,13 +423,13 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement      *aElement,
                                    nsIMutableArray    *aDeps)
 {
   if (!aElement || !aModel || !aResult) {
-    return nsnull;
+    return NS_OK;
   }
 
   *aModel = nsnull;
   *aResult = nsnull;
 
-  nsCOMPtr<nsIDOMElement> contextNode;
+  nsCOMPtr<nsIDOMNode>    contextNode;
   nsCOMPtr<nsIDOMElement> bindElement;
   PRBool outerBind;
   PRInt32 contextPosition;
@@ -476,7 +481,9 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement      *aElement,
     
       NS_ENSURE_STATE(instanceDoc);
     
-      instanceDoc->GetDocumentElement(getter_AddRefs(contextNode));
+      nsCOMPtr<nsIDOMElement> docElement;
+      instanceDoc->GetDocumentElement(getter_AddRefs(docElement));
+      contextNode = docElement;
     
       if (!contextNode) {
         return NS_OK;   // this will happen if the doc is still loading
@@ -768,7 +775,7 @@ nsXFormsUtils::CloneScriptingInterfaces(const nsIID *aIIDList,
 /* static */ nsresult
 nsXFormsUtils::FindParentContext(nsIDOMElement  *aElement,
                                  nsIDOMNode    **aModel,
-                                 nsIDOMElement **aContextNode,
+                                 nsIDOMNode    **aContextNode,
                                  PRInt32        *aContextPosition,
                                  PRInt32        *aContextSize)
 {
@@ -802,7 +809,7 @@ nsXFormsUtils::FindParentContext(nsIDOMElement  *aElement,
     if (contextControl && cElement) {
       PRInt32 cSize;
       PRInt32 cPosition;
-      nsCOMPtr<nsIDOMElement> tempNode;
+      nsCOMPtr<nsIDOMNode> tempNode;
       rv = contextControl->GetContext(contextModelID, getter_AddRefs(tempNode), &cPosition, &cSize);
       NS_ENSURE_SUCCESS(rv, rv);
       // If the call failed, it means that we _have_ a parent which sets the

@@ -173,7 +173,7 @@ public:
                    nsIDOMNode    **aModel,
                    nsIDOMElement **aBindElement,
                    PRBool         *aOuterBind,
-                   nsIDOMElement **aContextNode,
+                   nsIDOMNode    **aContextNode,
                    PRInt32        *aContextPosition = nsnull,
                    PRInt32        *aContextSize = nsnull);
 
@@ -218,7 +218,7 @@ public:
     FindBindContext(nsIDOMElement         *aBindElement,
                     PRBool                *aOuterBind,
                     nsIDOMNode           **aModel,
-                    nsIDOMElement        **aContextNode);
+                    nsIDOMNode           **aContextNode);
   
   /**
    * Convenience method for doing XPath evaluations.  This gets a
@@ -303,7 +303,7 @@ public:
    */
   static NS_HIDDEN_(nsresult) FindParentContext(nsIDOMElement  *aElement,
                                                 nsIDOMNode    **aModel,
-                                                nsIDOMElement **aContextNode,
+                                                nsIDOMNode    **aContextNode,
                                                 PRInt32        *aContextPosition,
                                                 PRInt32        *aContextSize);
 

@@ -74,9 +74,6 @@ protected:
   /** The HTML representation for the node */
   nsCOMPtr<nsIDOMElement> mHTMLElement;
 
-  /** The context node for the node */
-  nsCOMPtr<nsIDOMElement> mContextNode;
-
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -112,17 +109,11 @@ nsXFormsContextContainer::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   printf("nsXFormsContextContainer::OnCreated(aWrapper=%p)\n", (void*) aWrapper);
 #endif
 
-  nsresult rv;
-
-  // Get node and document
-  nsCOMPtr<nsIDOMElement> node;
-  rv = aWrapper->GetElementNode(getter_AddRefs(node));
+  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
-  
+
   nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = node->GetOwnerDocument(getter_AddRefs(domDoc));
+  rv = mElement->GetOwnerDocument(getter_AddRefs(domDoc));
   NS_ENSURE_SUCCESS(rv, rv);
   
   PRBool isBlock;
@@ -170,27 +161,25 @@ NS_IMETHODIMP
 nsXFormsContextContainer::OnDestroyed()
 {
   mHTMLElement = nsnull;
-  mElement = nsnull;
-  mContextNode = nsnull;
-  
-  return NS_OK;
+
+  return nsXFormsControlStub::OnDestroyed();
 }
 
 // nsIXFormsContextControl
 NS_IMETHODIMP
-nsXFormsContextContainer::SetContextNode(nsIDOMElement *aContextNode)
+nsXFormsContextContainer::SetContextNode(nsIDOMNode *aContextNode)
 {
-  mContextNode = aContextNode;
+  mBoundNode = aContextNode;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXFormsContextContainer::GetContext(nsAString& aModelID,
-                                      nsIDOMElement **aContextNode,
-                                      PRInt32 *aContextPosition,
-                                      PRInt32 *aContextSize)
+nsXFormsContextContainer::GetContext(nsAString    &aModelID,
+                                      nsIDOMNode **aContextNode,
+                                      PRInt32     *aContextPosition,
+                                      PRInt32     *aContextSize)
 {
-  NS_IF_ADDREF(*aContextNode = mContextNode);
+  NS_IF_ADDREF(*aContextNode = mBoundNode);
   nsAutoString val;
   mElement->GetAttribute(NS_LITERAL_STRING("contextsize"), val);
   PRInt32 errCode;

@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
+interface nsIDOMNode;
 
 /**
  * Interface for elements that sets the XPath context of its children.
@@ -58,10 +58,10 @@ interface nsIXFormsContextControl : nsISupports
    * @note The actual model ID must be returned. An empty |aModelID| should
    * only be returned if the default model has an id="".
    */
-  void getContext(out AString aModelID, out nsIDOMElement aContextNode, out long aContextPosition, out long aContextSize);
+  void getContext(out AString aModelID, out nsIDOMNode aContextNode, out long aContextPosition, out long aContextSize);
 
   /**
    * Used by parents to set the context node for children.
    */
-  void setContextNode(in nsIDOMElement aContextNode);
+  void setContextNode(in nsIDOMNode aContextNode);
 };

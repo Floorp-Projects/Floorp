@@ -172,20 +172,17 @@ nsXFormsRepeatElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   printf("nsXFormsRepeatElement::OnCreated(aWrapper=%p)\n", (void*) aWrapper);
 #endif
 
-  nsresult rv;
+  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aWrapper->SetNotificationMask(kStandardNotificationMask |
+                                nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
 
   // Initialize members  
   mDoneAddingChildren = PR_FALSE;
 
-  // Get node and document
-  nsCOMPtr<nsIDOMElement> node;
-  rv = aWrapper->GetElementNode(getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, rv);
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
-  
   nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = node->GetOwnerDocument(getter_AddRefs(domDoc));
+  rv = mElement->GetOwnerDocument(getter_AddRefs(domDoc));
   NS_ENSURE_SUCCESS(rv, rv);
   
   // Create UI element
@@ -197,11 +194,6 @@ nsXFormsRepeatElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   mHTMLElement = do_QueryInterface(domElement);
   NS_ENSURE_TRUE(mHTMLElement, NS_ERROR_FAILURE);
 
-  // Setup notifications we want to receive
-  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
-                                nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
-    
   return NS_OK;
 }
 
@@ -221,9 +213,8 @@ NS_IMETHODIMP
 nsXFormsRepeatElement::OnDestroyed()
 {
   mHTMLElement = nsnull;
-  mElement = nsnull;
-  
-  return NS_OK;
+
+  return nsXFormsControlStub::OnDestroyed();
 }
 
 NS_IMETHODIMP

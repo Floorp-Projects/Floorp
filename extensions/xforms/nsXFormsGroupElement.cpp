@@ -216,14 +216,14 @@ nsXFormsGroupElement::Refresh()
 
 // nsIXFormsContextControl
 NS_IMETHODIMP
-nsXFormsGroupElement::SetContextNode(nsIDOMElement *aContextNode)
+nsXFormsGroupElement::SetContextNode(nsIDOMNode *aContextNode)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
 nsXFormsGroupElement::GetContext(nsAString&      aModelID,
-                                 nsIDOMElement **aContextNode,
+                                 nsIDOMNode    **aContextNode,
                                  PRInt32        *aContextPosition,
                                  PRInt32        *aContextSize)
 {
