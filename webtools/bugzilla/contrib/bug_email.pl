@@ -21,6 +21,7 @@
 #                 Gregor Fischer <fischer@suse.de>
 #                 Klaas Freitag  <freitag@suse.de>
 #                 Seth Landsman  <seth@dworkin.net>
+#                 Ludovic Dubost <ludovic@pobox.com>
 ###############################################################
 # Bugzilla: Create a new bug via email
 ###############################################################
@@ -37,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.17 2003/11/22 03:50:41 bbaetz%acm.org Exp $
+# $Id: bug_email.pl,v 1.18 2004/01/20 06:03:38 justdave%syndicomm.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -57,6 +58,16 @@
 # - added in $DEFAULT_PRODUCT and $DEFAULT_COMPONENT.  i.e., if $DEFAULT_PRODUCT = "PENDING",
 #    any email submitted bug will be entered with a product of PENDING, if no other product is
 #    specified in the email.
+
+# 10/21/2003 (Ludovic)
+# - added $DEFAULT_VERSION, similar to product and component above
+# - added command line switches to override version, product, and component, so separate
+#   email addresses can be used for different product/component/version combinations.
+#   Example for procmail:
+#    # Feed mail to stdin of bug_email.pl
+#    :0 Ec
+#    * !^Subject: .*[Bug .*]
+#    RESULT=|(cd $BUGZILLA_HOME/contrib && ./bug_email.pl -p='Tier_3_Operations' -c='General' )
 
 # Next round of revisions :
 # - querying a bug over email
@@ -103,6 +114,7 @@ my $Message_ID;
 # change to use default product / component functionality
 my $DEFAULT_PRODUCT = "PENDING";
 my $DEFAULT_COMPONENT = "PENDING";
+my $DEFAULT_VERSION = "unspecified";
 
 ###############################################################
 # storeAttachments
@@ -673,6 +685,22 @@ sub extractControls( $ )
 foreach( @ARGV ) {
     $restricted = 1 if ( /-r/ );
     $test = 1 if ( /-t/ );
+
+    if ( /-p=['"]?(.+)['"]?/ )
+    {
+      $DEFAULT_PRODUCT = $1;
+    }
+
+    if ( /-c=['"]?(.+)["']?/ )
+    {
+      $DEFAULT_COMPONENT = $1;
+    }
+
+    if ( /-v=['"]?(.+)["']?/ )
+    {
+      $DEFAULT_VERSION = $1;
+    }
+
 }
 
 #
@@ -928,7 +956,7 @@ CheckSystem( );
 
 ### Check values ...
 # Version
-my $Version = "";
+my $Version = "$DEFAULT_VERSION";
 $Version = CheckVersion( $Control{'product'}, $Control{'version'} ) if( defined( $Control{'version'}));
 if ( $Version eq "" ) {
     my $Text = "You did not send a value for the required key \@version!\n\n";
