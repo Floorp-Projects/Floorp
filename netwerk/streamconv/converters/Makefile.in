@@ -43,9 +43,6 @@ REQUIRES	= xpcom \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
-EXPORTS =                 \
-        $(NULL)
-
 CPPSRCS		= \
 		ParseFTPList.cpp \
 		nsMultiMixedConv.cpp \
