@@ -634,7 +634,7 @@ nsFileChannel::OnDataWritable(nsIRequest *aRequest, nsISupports *aContext,
                               PRUint32 aLength)
 {
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
 #endif
 
