@@ -248,6 +248,8 @@ bin\components\transformiix.dll
 bin\ISimpleDOMNodeMarshal.dll
 bin\ISimpleDOMDocumentMarshal.dll
 bin\components\nsSetDefaultBrowser.js
+bin\components\typeaheadfind.xpt
+bin\components\typeaheadfind.dll
 
 ; LDAP components need to be in the browser for AutoConfig
 bin\components\mozldap.dll
@@ -420,9 +422,3 @@ bin\chrome\icons\default\winInspectorMain.ico
 bin\defaults\pref\inspector.js
 bin\res\inspector\viewer-registry.rdf
 bin\res\inspector\search-registry.rdf
-
-[typeaheadfind]
-bin\components\typeaheadfind.dll
-bin\components\typeaheadfind.xpt
-bin\chrome\typeaheadfind.jar
-bin\defaults\pref\typeaheadfind.js

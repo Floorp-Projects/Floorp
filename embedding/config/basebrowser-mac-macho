@@ -179,6 +179,11 @@ components/rdf.xpt
 components/libshistory.dylib
 components/shistory.xpt
 
+; optional typeaheadfind 
+; (docs at http://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html)
+;components/typeaheadfind.shlb
+;components/typeaheadfind.xpt
+
 ; required l10n libraries
 
 components/libuconv.dylib

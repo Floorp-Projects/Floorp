@@ -219,6 +219,9 @@ viewer:Components:Necko2.shlb
 viewer:Components:necko.xpt 
 viewer:Components:cache.xpt
 
+viewer:Components:typeaheadfind.shlb
+viewer:Components:typeaheadfind.xpt
+
 ; LDAP components need to be in the browser for AutoConfig
 viewer:Components:mozldap.shlb
 viewer:Components:mozldap.xpt
@@ -367,9 +370,3 @@ viewer:chrome:inspector.jar
 viewer:defaults:pref:inspector.js
 viewer:res:inspector:viewer-registry.rdf
 viewer:res:inspector:search-registry.rdf
-
-[typeaheadfind]
-viewer:Components:typeaheadfind.shlb
-viewer:Components:typeaheadfind.xpt
-viewer:chrome:typeaheadfind.jar
-viewer:defaults:pref:typeaheadfind.js

@@ -61,11 +61,12 @@
 #include "nsISupportsArray.h"
 
 #define TYPEAHEADFIND_BUNDLE_URL \
-        "chrome://typeaheadfind/locale/typeaheadfind.properties"
+        "chrome://navigator/locale/typeaheadfind.properties"
 
 enum {
   eRepeatingNone,
   eRepeatingChar,
+  eRepeatingReverseChar,
   eRepeatingForward,
   eRepeatingReverse
 }; 

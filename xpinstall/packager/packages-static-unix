@@ -175,6 +175,7 @@ bin/components/nsDownloadProgressListener.js
 bin/components/transformiix.xpt
 bin/components/filepicker.xpt
 bin/components/mozldap.xpt
+bin/components/typeaheadfind.xpt
 
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
@@ -302,9 +303,3 @@ bin/chrome/inspector.jar
 bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
-
-[typeaheadfind]
-bin/components/libtypeaheadfind.so
-bin/components/typeaheadfind.xpt
-bin/chrome/typeaheadfind.jar
-bin/defaults/pref/typeaheadfind.js

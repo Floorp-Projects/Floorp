@@ -126,6 +126,11 @@ components\profile.xpt
 components\shistory.dll
 components\shistory.xpt
 
+; optional typeaheadfind 
+; (docs at http://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html)
+;components\typeaheadfind.dll
+;components\typeaheadfind.xpt
+
 ; rdf
 components\rdf.dll
 components\rdf.xpt
