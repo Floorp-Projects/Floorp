@@ -119,15 +119,14 @@ class basic_nsAReadableString
             CharT
             operator*()
               {
-                normalize_forward();
                 return *mPosition;
               }
 
             ConstIterator&
             operator++()
               {
-                normalize_forward();
                 ++mPosition;
+                normalize_forward();
                 return *this;
               }
 
@@ -135,8 +134,8 @@ class basic_nsAReadableString
             operator++( int )
               {
                 ConstIterator result(*this);
-                normalize_forward();
                 ++mPosition;
+                normalize_forward();
                 return result;
               }
 
@@ -144,7 +143,7 @@ class basic_nsAReadableString
             operator--()
               {
                 normalize_backward();
-                ++mPosition;
+                --mPosition;
                 return *this;
               }
 
@@ -153,17 +152,17 @@ class basic_nsAReadableString
               {
                 ConstIterator result(*this);
                 normalize_backward();
-                ++mPosition;
+                --mPosition;
                 return result;
               }
 
-            bool
+            PRBool
             operator==( const ConstIterator& rhs )
               {
                 return mPosition == rhs.mPosition;
               }
 
-            bool
+            PRBool
             operator!=( const ConstIterator& rhs )
               {
                 return mPosition != rhs.mPosition;
@@ -185,7 +184,7 @@ class basic_nsAReadableString
       End( PRUint32 aOffset = 0 ) const
         {
           ConstFragment fragment(this);
-          const CharT* startPos = GetFragment(fragment, kFragmentAt, min(0U, Length()-aOffset));
+          const CharT* startPos = GetFragment(fragment, kFragmentAt, max(0U, Length()-aOffset));
           return ConstIterator(fragment, startPos);
         }
 
@@ -202,8 +201,8 @@ class basic_nsAReadableString
       PRBool IsUnicode() const { return PR_FALSE; }
         // ...but note specialization for |PRUnichar|, below
 
-      const CharT* GetBuffer() const { return 0; }
-      const CharT* GetUnicode() const { return 0; }
+      const char* GetBuffer() const { return 0; }
+      const PRUnichar* GetUnicode() const { return 0; }
         // ...but note specializations for |char| and |PRUnichar|, below
 
       // CharT operator[]( PRUint32 ) const;
@@ -363,34 +362,97 @@ basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, 
   }
 
 template <class CharT>
+int
+Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    PRUint32 lLength = lhs.Length();
+    PRUint32 rLength = rhs.Length();
+    int result = 0;
+    if ( lLength < rLength )
+      result = -1;
+    else if ( lLength > rLength )
+      result = 1;
+
+    PRUint32 lengthToCompare = min(lLength, rLength);
+
+    typedef typename basic_nsAReadableString<CharT>::ConstIterator ConstIterator;
+    ConstIterator lPos = lhs.Begin();
+    ConstIterator lEnd = lhs.Begin(lengthToCompare);
+    ConstIterator rPos = rhs.Begin();
+
+    while ( lPos != lEnd )
+      {
+        if ( *lPos < *rPos )
+          return -1;
+        if ( *rPos < *lPos )
+          return 1;
+
+        ++lPos;
+        ++rPos;
+      }
+
+    return result;
+  }
+
+template <class CharT>
 inline
 int
 basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& rhs ) const
   {
-    // ...
+    return ::Compare(*this, rhs);
   }
 
-// readable != readable
+template <class CharT>
+PRBool
+operator!=( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    return lhs.Compare(rhs) != 0;
+  }
 // readable != CharT*
 // CharT* != readable
 
-// readable < readable
+template <class CharT>
+PRBool
+operator<( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    return lhs.Compare(rhs) < 0;
+  }
 // readable < CharT*
 // CharT* < readable
 
-// readable <= readable
+template <class CharT>
+PRBool
+operator<=( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    return lhs.Compare(rhs) <= 0;
+  }
 // readable <= CharT*
 // CharT* <= readable
 
-// readable == readable
+template <class CharT>
+PRBool
+operator==( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    return lhs.Compare(rhs) == 0;
+  }
 // readable == CharT*
 // CharT* == readable
 
-// readable >= readable
+template <class CharT>
+PRBool
+operator>=( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    return lhs.Compare(rhs) >= 0;
+  }
 // readable >= CharT*
 // CharT* >= readable
 
-// readable > readable
+template <class CharT>
+PRBool
+operator>( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    return lhs.Compare(rhs) > 0;
+  }
 // readable > CharT*
 // CharT* > readable
 
@@ -419,7 +481,7 @@ template <class CharT>
 class nsConcatString
       : public basic_nsAReadableString<CharT>
     /*
-      ...not unlike RickG's original |nsSubsumeString| in intent.
+      ...not unlike RickG's original |nsSubsumeString| in _intent_.
     */
   {
     public:
@@ -427,9 +489,26 @@ class nsConcatString
     // ...
   };
 
-// readable + readable --> concat
-// readable + CharT* --> concat
-// CharT* + readable --> concat
+template <class CharT>
+nsConcatString<CharT>
+operator+( const basic_nsAReadableString<CharT>&, const basic_nsAReadableString<CharT>& )
+  {
+    // ...
+  }
+
+template <class CharT>
+nsConcatString<CharT>
+operator+( const basic_nsAReadableString<CharT>&, const CharT* )
+  {
+    // ...
+  }
+
+template <class CharT>
+nsConcatString<CharT>
+operator+( const CharT*, const basic_nsAReadableString<CharT>& )
+  {
+    // ...
+  }
 
 template <class CharT, class TraitsT>
 basic_ostream<CharT, class TraitsT>&

@@ -108,15 +108,14 @@ class basic_nsAWritableString
             CharT&
             operator*()
               {
-                normalize_forward();
                 return *mPosition;
               }
 
             Iterator&
             operator++()
               {
-                normalize_forward();
                 ++mPosition;
+                normalize_forward();
                 return *this;
               }
 
@@ -124,8 +123,8 @@ class basic_nsAWritableString
             operator++( int )
               {
                 Iterator result(*this);
-                normalize_forward();
                 ++mPosition;
+                normalize_forward();
                 return result;
               }
 
@@ -133,7 +132,7 @@ class basic_nsAWritableString
             operator--()
               {
                 normalize_backward();
-                ++mPosition;
+                --mPosition;
                 return *this;
               }
 
@@ -142,14 +141,20 @@ class basic_nsAWritableString
               {
                 Iterator result(*this);
                 normalize_backward();
-                ++mPosition;
+                --mPosition;
                 return result;
               }
 
-            const CharT*
-            get() const
+            PRBool
+            operator==( const ConstIterator& rhs )
               {
-                return mPosition;
+                return mPosition == rhs.mPosition;
+              }
+
+            PRBool
+            operator!=( const ConstIterator& rhs )
+              {
+                return mPosition != rhs.mPosition;
               }
         };
 
@@ -170,7 +175,7 @@ class basic_nsAWritableString
       End( PRUint32 aOffset = 0 )
         {
           Fragment fragment(this);
-          CharT* startPos = GetFragment(fragment, kFragmentAt, min(0U, Length()-aOffset));
+          CharT* startPos = GetFragment(fragment, kFragmentAt, max(0U, Length()-aOffset));
           return Iterator(fragment, startPos);
         }
 
