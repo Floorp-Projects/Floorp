@@ -22,7 +22,9 @@
 
 
 
-#include "BookmarkBase.h"
+#include "RDFMenuToolbarBase.h"
+#include "xp_core.h"
+#include <X11/Intrinsic.h>
 
 #ifndef _xfe_bookmarkmenu_h
 #define _xfe_bookmarkmenu_h
@@ -30,7 +32,9 @@
 // This class can be used with a DYNA_CASCADEBUTTON or
 // DYNA_MENUITEMS.
 
-class XFE_BookmarkMenu : public XFE_BookmarkBase
+class XFE_Frame;
+
+class XFE_BookmarkMenu : public XFE_RDFMenuToolbarBase
 {
 public:
 	
@@ -48,12 +52,11 @@ public:
 protected:
 
 	virtual void	prepareToUpdateRoot		();
-	virtual void	reallyUpdateRoot		();
+	virtual void	updateRoot      		();
 
 private:
 
-	XFE_BookmarkMenu		(MWContext *	bookmarkContext,
-							 Widget			cascade,
+	XFE_BookmarkMenu		(Widget			cascade,
 							 XFE_Frame *	frame,
 							 XP_Bool		onlyHeaders,
 							 XP_Bool		fancyItems);

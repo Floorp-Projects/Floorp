@@ -40,13 +40,15 @@ XP_BEGIN_PROTOS
 extern MWContext* fe_showAddrBook(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec);
 
 /* bookmarks */
-extern MWContext* fe_showBookmarks(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec);
+extern void fe_showBookmarks(Widget toplevel);
 extern MWContext* fe_getBookmarkContext();
+#ifdef OLD_BOOKMARKS
 extern void fe_createBookmarks(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec);
+#endif /*OLD_BOOKMARKS*/
 extern char *fe_getDefaultBookmarks(void);
 
 /* history */
-extern MWContext* fe_showHistory(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec);
+extern void fe_showHistory(Widget toplevel);
 extern void fe_createHistory(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec);
 
 

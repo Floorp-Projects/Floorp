@@ -30,7 +30,7 @@
 #include "NotificationCenter.h"
 #include "Frame.h"
 #include "intl_csi.h"
-#include "bkmks.h"
+#include "htrdf.h"
 
 #ifndef _xfe_bookmark_base_h_
 #define _xfe_bookmark_base_h_
@@ -43,56 +43,56 @@ class XFE_BookmarkBase : public XFE_NotificationCenter
 
 public:
 
- 	XFE_BookmarkBase			(MWContext *	bookmarkContext,
-								 XFE_Frame *	frame,
+ 	XFE_BookmarkBase			(XFE_Frame *	frame,
  								 XP_Bool		onlyHeaders,
 								 XP_Bool		fancyItems);
 
 	virtual ~XFE_BookmarkBase	();
 
-	MWContext *			getBookmarkContext();
+    void newPane();
+    void setPaneFromURL(char * url);
+    void setPaneFromResource(HT_Resource node);
 
-	static BM_Entry * BM_FindFolderByName	(BM_Entry *		root_entry,
+	static HT_Resource HT_FindFolderByName	(HT_Resource		root_entry,
 											 char *			folder_name);
 
-	static BM_Entry * BM_FindEntryByAddress(BM_Entry *		root_entry,
+	static HT_Resource HT_FindEntryByAddress(HT_Resource		root_entry,
 										 const char *	entry_name);
 
-	static BM_Entry * BM_FindNextEntry		(BM_Entry *		entry);
-	static BM_Entry * BM_FindPreviousEntry	(BM_Entry *		entry);
+	static HT_Resource HT_FindNextEntry		(HT_Resource		entry);
+	static HT_Resource HT_FindPreviousEntry	(HT_Resource		entry);
 
-	static XP_Bool	BM_EntryHasHeaderChildren	(BM_Entry *		header);
+	static XP_Bool	HT_ResourceHasHeaderChildren	(HT_Resource		header);
 
 	static void		guessTitle			(XFE_Frame *	frame,
-										 MWContext *	bookmarkContext,
 										 const char *	address,
 										 XP_Bool		sameShell,
 										 char **		resolvedTitleOut,
-										 BM_Date *		resolvedLastDateOut);
+										 time_t *		resolvedLastDateOut);
 	
 
 	void			addEntryAfter		(const char *	address,
 										 const char *	title,
-										 BM_Date		lastAccess,
-										 BM_Entry *		entryAfter);
+										 time_t		lastAccess,
+										 HT_Resource		entryAfter);
 	
 	void			addEntryBefore		(const char *	address,
 										 const char *	title,
-										 BM_Date		lastAccess,
-										 BM_Entry *		entryBefore);
+										 time_t		lastAccess,
+										 HT_Resource		entryBefore);
 	
 	void			addEntryToFolder	(const char *	address,
 										 const char *	title,
-										 BM_Date		lastAccess,
-										 BM_Entry *		header);
+										 time_t		lastAccess,
+										 HT_Resource		header);
 
 	void			setDropAddress		(const char *	address);
 	void			setDropTitle		(const char *	title);
-	void			setDropLastAccess	(BM_Date		lastAccess);
+	void			setDropLastAccess	(time_t		lastAccess);
 
 	const char *	getDropAddress		();
 	const char *	getDropTitle		();
-	BM_Date			getDropLastAccess	();
+	time_t			getDropLastAccess	();
 
 	// Access methods
 	XFE_Frame *		getFrame			();
@@ -151,36 +151,38 @@ protected:
 	static Pixmap _newPersonalMenuFolderPixmap;
 
 
-	void getPixmapsForEntry(BM_Entry *	entry,
+	void getPixmapsForEntry(HT_Resource	entry,
 							Pixmap *	pixmap,
 							Pixmap *	mask,
 							Pixmap *	armedPixmap,
 							Pixmap *	armedMask);
 
 #if 0
-	/* 	static */ Pixmap bookmarkPixmapFromEntry(BM_Entry *entry);
- 	/* static */ Pixmap bookmarkMaskFromEntry(BM_Entry *entry);
+	/* 	static */ Pixmap bookmarkPixmapFromEntry(HT_Resourceentry);
+ 	/* static */ Pixmap bookmarkMaskFromEntry(HT_Resourceentry);
 #endif
 
 	static void getBookmarkPixmaps(Pixmap & pixmap_out,Pixmap & mask_out);
 
+#if 0
 	// Access bookmark entries
-	BM_Entry *		getFirstEntry			();
-	BM_Entry *		getTopLevelFolder		(const char * name);
+	HT_Resource		getFirstEntry			();
+	HT_Resource		getTopLevelFolder		(const char * name);
+#endif /*0*/
 
 	// Create a bookmark item menu tree
-	void			createItemTree			(Widget menu,BM_Entry * entry);
+	void			createItemTree			(Widget menu,HT_Resource entry);
 
 	// Install submenu pane that controls dropping disability
 	void			trackSubmenuMapping		(Widget submenu);
 
 	// Override in derived class to configure
-	virtual void	entryArmed				(Widget,BM_Entry *);
-	virtual void	entryDisarmed			(Widget,BM_Entry *);
-	virtual void	entryActivated			(Widget,BM_Entry *);
-	virtual void	entryCascading			(Widget,BM_Entry *);
-	virtual void	entryEnter				(Widget,BM_Entry *);
-	virtual void	entryLeave				(Widget,BM_Entry *);
+	virtual void	entryArmed				(Widget,HT_Resource);
+	virtual void	entryDisarmed			(Widget,HT_Resource);
+	virtual void	entryActivated			(Widget,HT_Resource);
+	virtual void	entryCascading			(Widget,HT_Resource);
+	virtual void	entryEnter				(Widget,HT_Resource);
+	virtual void	entryLeave				(Widget,HT_Resource);
 
 	// Gets called when the whole thing needs updating
 	virtual void	prepareToUpdateRoot		();
@@ -195,31 +197,35 @@ protected:
 	virtual void	updateToolbarFolderName	();
 
 	// Configure the items
-	virtual void	configureXfeCascade		(Widget,BM_Entry *);
-	virtual void	configureXfeButton		(Widget,BM_Entry *);
-	virtual void	configureXfeBmButton	(Widget,BM_Entry *);
-	virtual void	configureXfeBmCascade	(Widget,BM_Entry *);
-	virtual void	configureButton			(Widget,BM_Entry *);
-	virtual void	configureCascade		(Widget,BM_Entry *);
-	virtual void	configureSeparator		(Widget,BM_Entry *);
+	virtual void	configureXfeCascade		(Widget,HT_Resource);
+	virtual void	configureXfeButton		(Widget,HT_Resource);
+	virtual void	configureXfeBmButton	(Widget,HT_Resource);
+	virtual void	configureXfeBmCascade	(Widget,HT_Resource);
+	virtual void	configureButton			(Widget,HT_Resource);
+	virtual void	configureCascade		(Widget,HT_Resource);
+	virtual void	configureSeparator		(Widget,HT_Resource);
 
 	// Menu component creation methods
-	Widget	createCascadeButton		(Widget menu,BM_Entry * entry,XP_Bool ignore_children);
-	Widget	createPushButton		(Widget menu,BM_Entry * entry);
+	Widget	createCascadeButton		(Widget menu,HT_Resource entry,XP_Bool ignore_children);
+	Widget	createPushButton		(Widget menu,HT_Resource entry);
 	Widget	createSeparator			(Widget menu);
 	Widget	createMoreButton		(Widget menu);
 
 	// Toolbar component creation methods
-	Widget	createXfeCascade		(Widget parent,BM_Entry * entry);
-	Widget	createXfeButton			(Widget parent,BM_Entry * entry);
+	Widget	createXfeCascade		(Widget parent,HT_Resource entry);
+	Widget	createXfeButton			(Widget parent,HT_Resource entry);
 
-	BM_Entry * getRootFolder		();
-	BM_Entry * getAddFolder			();
-	BM_Entry * getMenuFolder		();
+	HT_Resource getRootFolder		();
+	HT_Resource getAddFolder			();
+	HT_Resource getMenuFolder		();
+
+
+    HT_Pane _ht_pane;
+    HT_View _ht_view;
+    HT_NotificationStruct _ht_ns;
 
 private:
 
-	MWContext *			_bookmarkContext;		// Bookmark context
 	XFE_Frame *			_frame;					// The ancestor frame
 	XP_Bool				_onlyHeaders;			// Only show headers
 	XP_Bool				_fancyItems;			// Fancy items (pixmap & label)
@@ -227,7 +233,7 @@ private:
 
 	char *				_dropAddressBuffer;		// 
 	char *				_dropTitleBuffer;		// 
-	BM_Date				_dropLastAccess;		// 
+	time_t				_dropLastAccess;		// 
 
 	// Item callbacks
 	static void		item_armed_cb		(Widget,XtPointer,XtPointer);
@@ -240,18 +246,16 @@ private:
 	static void		pane_mapping_eh		(Widget,XtPointer,XEvent *,Boolean *);
 
 	// Format item blah blah blah
-	static XmString	formatItem			(MWContext *	bookmarkContext, 
-										 BM_Entry *		entry, 
+	static XmString	formatItem			(HT_Resource		entry, 
 										 Boolean		no_indent,
 										 int16			charset);
 
 	// Obtain an internationallized XmString from an entry
-	static XmString entryToXmString	(MWContext *		bookmarkContext,
-									 BM_Entry *			entry,
+	static XmString entryToXmString	(HT_Resource			entry,
 									 INTL_CharSetInfo	char_set_info);
 
 
-	void setItemLabelString(Widget menu,BM_Entry * entry);
+	void setItemLabelString(Widget menu, HT_Resource entry);
 
 	void createPixmaps();
 
@@ -263,8 +267,12 @@ private:
     // update the icon appearance
     XFE_CALLBACK_DECL(updateIconAppearance)
 
-    // update the personal toolbar folder
-    XFE_CALLBACK_DECL(updatePersonalToolbarFolderName)
+    void notify(HT_Notification ns, HT_Resource n, HT_Event whatHappened);
+
+    static void notify_cb(HT_Notification ns, HT_Resource n, 
+                          HT_Event whatHappened, 
+                          void *token, uint32 tokenType);
 };
+
 
 #endif /* _xfe_bookmark_base_h_ */

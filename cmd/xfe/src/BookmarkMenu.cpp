@@ -23,25 +23,24 @@
 
 
 #include "BookmarkMenu.h"
-#include "BookmarkFrame.h"
-#include "BookmarkView.h"
-#include "PersonalToolbar.h"
-#include "bkmks.h"
 
 #include <Xfe/XfeAll.h>
 #include <Xfe/BmButton.h>
 #include <Xfe/BmCascade.h>
+#include <Xm/CascadeB.h>
+#include <Xm/CascadeBG.h>
+#include <Xm/PushB.h>
+#include <Xm/PushBG.h>
 
 #define IS_CASCADE(w)	(XmIsCascadeButton(w) || XmIsCascadeButtonGadget(w))
 #define IS_PUSH(w)		(XmIsPushButton(w) || XmIsPushButtonGadget(w))
 
 //////////////////////////////////////////////////////////////////////////
-XFE_BookmarkMenu::XFE_BookmarkMenu(MWContext *	bookmarkContext,
-								   Widget		cascade,
+XFE_BookmarkMenu::XFE_BookmarkMenu(Widget		cascade,
 								   XFE_Frame *	frame,
 								   XP_Bool		onlyHeaders,
 								   XP_Bool		fancyItems) :
-	XFE_BookmarkBase(bookmarkContext,frame,onlyHeaders,fancyItems),
+	XFE_RDFMenuToolbarBase(frame,onlyHeaders,fancyItems),
 	_cascade(cascade),
 	_subMenu(NULL),
 	_firstSlot(0)
@@ -64,6 +63,9 @@ XFE_BookmarkMenu::XFE_BookmarkMenu(MWContext *	bookmarkContext,
 
 	// Keep track of the submenu mapping
 	trackSubmenuMapping(_subMenu);
+
+    RDF_Resource bookmarks = RDF_GetResource(NULL,"NC:Bookmarks",PR_TRUE);
+    newPaneFromResource(bookmarks);
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -73,8 +75,7 @@ XFE_BookmarkMenu::generate(Widget		cascade,
 {
 	XFE_BookmarkMenu * object;
 
-	object = new XFE_BookmarkMenu(XFE_BookmarkFrame::main_bm_context,
-								  cascade,
+	object = new XFE_BookmarkMenu(cascade,
 								  frame,
 								  (int) clientData,
 								  True);
@@ -87,8 +88,7 @@ XFE_BookmarkMenu::generateQuickfile(Widget		cascade,
 {
 	XFE_BookmarkMenu * object;
 
-	object = new XFE_BookmarkMenu(XFE_BookmarkFrame::main_bm_context,
-								  cascade,
+	object = new XFE_BookmarkMenu(cascade,
 								  frame,
 								  (int) clientData,
 								  True);
@@ -120,7 +120,7 @@ XFE_BookmarkMenu::update_cb(Widget		cascade,
 	XtVaGetValues(cascade,XmNsubMenuId,&subMenu,NULL);
 
 	// Really update
-	object->reallyUpdateRoot();
+	object->updateRoot();
 
 	// Make sure the submenu is realized
 	XtRealizeWidget(subMenu);
@@ -153,17 +153,19 @@ XFE_BookmarkMenu::prepareToUpdateRoot()
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_BookmarkMenu::reallyUpdateRoot()
+XFE_BookmarkMenu::updateRoot()
 {
  	WidgetList		children;
  	Cardinal		numChildren;
- 	BM_Entry *		root = getMenuFolder();
+ 	HT_Resource		root = getMenuFolder();
 
+#ifdef OLD_BOOKMARKS
 	// Ignore the root header (ie, "Joe's Bookmarks")
-	if (root && BM_IsHeader(root))
+	if (root && HT_IsContainer(root))
 	{
 		root = BM_GetChildren(root);
 	}
+#endif
 
  	XfeChildrenGet(_subMenu,&children,&numChildren);	
 	
@@ -199,7 +201,7 @@ XFE_BookmarkMenu::enableDropping()
 	update_cb(_cascade,(XtPointer) this,(XtPointer) NULL);
 
 	// Chain
-	XFE_BookmarkBase::enableDropping();
+	XFE_RDFMenuToolbarBase::enableDropping();
 
 	// Make all the fixed items insensitive
 	setFixedItemSensitive(False);
@@ -209,7 +211,7 @@ XFE_BookmarkMenu::enableDropping()
 XFE_BookmarkMenu::disableDropping()
 {
 	// Chain
-	XFE_BookmarkBase::disableDropping();
+	XFE_RDFMenuToolbarBase::disableDropping();
 
 	// Make all the fixed items sensitive
 	setFixedItemSensitive(True);

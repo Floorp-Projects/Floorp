@@ -46,8 +46,6 @@
 
 #include "ThreadView.h"
 #include "BrowserFrame.h"
-#include "BookmarkView.h"
-#include "HistoryView.h"
 
 // from lib/libmsg
 extern "C" XP_Bool MSG_RequiresMailMsgWindow(const char*);
@@ -948,74 +946,6 @@ int XFE_ComposeAttachDrop::processTargets(Atom *targets,const char **data,int nu
 //
 
 
-void XFE_ComposeAttachFolderView::processBookmarkDrop(fe_dnd_Source *source)
-{
-    XFE_BookmarkView* bookmarkView=( XFE_BookmarkView*)source->closure;
-    if (!bookmarkView)
-        return;
-
-    MWContext *context=bookmarkView->getContext();
-    XFE_Outliner *outliner=bookmarkView->getOutliner();
-    const int *selectedList;
-    int numSelected;
-
-    if (outliner->getSelection(&selectedList, &numSelected)) {
-        char **items=new char*[numSelected];
-        int numItems=0;
-        int i;
-        
-        for (i=0; i<numSelected; i++) {
-            BM_Entry* entry=BM_AtIndex(context,selectedList[i]+1);
-            if (BM_GetType(entry)==BM_TYPE_URL ||
-                BM_GetType(entry)==BM_TYPE_ALIAS) {
-                const char *address=BM_GetAddress(entry);
-                if (address) {
-                    XDEBUG(printf("    %d:%s\n",selectedList[i],address));
-                    items[numItems++]=XP_STRDUP(address);
-                }
-            }
-        } 
-        if (numItems>0)
-            addAttachments((const char **) items,numItems);
-        
-        for (i=0; i<numItems; i++)
-            XP_FREE(items[i]);
-        delete items;
-    }
-}
-
-void XFE_ComposeAttachFolderView::processHistoryDrop(fe_dnd_Source *source)
-{
-    XFE_HistoryView *historyView = (XFE_HistoryView*)source->closure;
-    if (!historyView)
-        return;
-
-    MWContext *context=historyView->getContext();
-    XFE_Outliner *outliner=historyView->getOutliner();
-    const int *selectedList;
-    int numSelected;
-
-    if (outliner->getSelection(&selectedList, &numSelected)) {
-        char **items=new char*[numSelected];
-        int numItems=0;
-        int i;
-        
-        for (i=0; i<numSelected; i++) {
-            gh_HistEntry *entry=historyView->getEntry(selectedList[i]);
-            if (entry && entry->address) {
-                XDEBUG(printf("    %d:%s\n",selectedList[i],entry->address));
-                items[numItems++]=XP_STRDUP(entry->address);
-            }
-        } 
-        if (numItems>0)
-            addAttachments((const char **) items,numItems);
-        
-        for (i=0; i<numItems; i++)
-            XP_FREE(items[i]);
-        delete items;
-    }
-}
-
 void XFE_ComposeAttachFolderView::processMessageDrop(fe_dnd_Source *source)
 {
     XFE_ThreadView *threadView=(XFE_ThreadView*)source->closure;
@@ -1062,10 +992,10 @@ void XFE_ComposeAttachFolderView::attachDropCb(fe_dnd_Source *source)
         processMessageDrop(source);
         break;
     case FE_DND_BOOKMARK:
-        processBookmarkDrop(source);
+        /*xxxslamm: ripped out old bookmarks.  To be replaced by RDF*/
         break;
     case FE_DND_HISTORY:
-        processHistoryDrop(source);
+        /*xxxslamm: ripped out old history.  To be replaced by RDF*/
         break;
 
     // maybe interesting

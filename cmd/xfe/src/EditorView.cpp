@@ -24,7 +24,7 @@
 #include "EditorFrame.h"
 #include "EditorView.h"
 #include "SpellHandler.h"
-
+#include "htrdf.h"       // for HT_AddBookmark()
 #include <Xm/Label.h>
 #include <Xfe/Xfe.h>
 
@@ -2795,8 +2795,7 @@ public:
     
 		if (href_data != NULL) {
 			if (href_data->pURL != NULL) {
-				fe_AddToBookmark(context, 0,
-					 NET_CreateURLStruct(href_data->pURL, NET_DONT_RELOAD), 0);
+                HT_AddBookmark (href_data->pURL, NULL /*Title*/);
 			}
 			EDT_FreeHREFData(href_data);
 		}

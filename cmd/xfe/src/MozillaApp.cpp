@@ -352,7 +352,6 @@ XFE_MozillaApp::byebye(int status)
 	GH_FreeGlobalHistory ();
 	NET_ShutdownNetLib ();
 	NPL_Shutdown ();
-	HOT_FreeBookmarks ();
 	GH_FreeGlobalHistory ();
 
 	/* Mailcap and MimeType have been written out when the prefdialog was closed */

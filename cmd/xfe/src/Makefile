@@ -69,14 +69,9 @@ endif
 CPPSRCS		= \
 		  plugin.cpp \
 		  BackForwardMenu.cpp \
-		  BookmarkBase.cpp \
-		  BookmarkFindDialog.cpp \
-		  BookmarkMenu.cpp \
-		  BookmarkPropDialog.cpp \
-		  BookmarkWhatsNewDialog.cpp \
-		  Button.cpp \
 		  BookmarkFrame.cpp \
-		  BookmarkView.cpp \
+		  BookmarkMenu.cpp \
+		  Button.cpp \
 		  BrowserDrop.cpp \
 		  BrowserFrame.cpp \
 		  BrowserView.cpp \
@@ -94,10 +89,8 @@ CPPSRCS		= \
 		  Frame.cpp \
 		  HTMLDialogFrame.cpp \
 		  HistoryMenu.cpp \
-		  HistoryView.cpp \
 		  HTMLDrag.cpp \
 		  HTMLView.cpp \
-		  HistoryFrame.cpp \
 		  IconGroup.cpp \
 		  Image.cpp \
 		  LocationDrag.cpp \
@@ -111,7 +104,6 @@ CPPSRCS		= \
 		  Netcaster.cpp \
 		  NotificationCenter.cpp \
 		  Outliner.cpp \
-		  PersonalToolbar.cpp \
 		  PopupMenu.cpp \
 		  PrefsDialogAppl.cpp \
 		  PropertyTabView.cpp \
@@ -123,9 +115,13 @@ CPPSRCS		= \
 		  PrefsDialogMailnews.cpp \
 		  PrefsLang.cpp \
 		  PrefsProxiesView.cpp \
+		  RDFBase.cpp \
 		  RDFImage.cpp \
-		  RDFView.cpp \
+		  RDFMenuToolbarBase.cpp \
 		  RDFTreeView.cpp \
+		  RDFToolbar.cpp \
+		  RDFToolbox.cpp \
+		  RDFView.cpp \
 		  RadioGroup.cpp \
 		  Splash.cpp \
 		  Toolbar.cpp \

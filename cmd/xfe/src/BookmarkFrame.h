@@ -27,38 +27,24 @@
 
 #include "Frame.h"
 #include "xp_core.h"
-#include <Xm/Xm.h>
 
 class XFE_BookmarkFrame : public XFE_Frame
 {
 public:
-  XFE_BookmarkFrame(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec);
+  XFE_BookmarkFrame(Widget toplevel);
   virtual ~XFE_BookmarkFrame();
 
   static MWContext *main_bm_context;
 
-  // To allow window close (we need a more graceful way of doing this)
-  virtual XP_Bool isCommandEnabled(CommandType cmd, void *calldata = NULL,
-						 XFE_CommandInfo* = NULL);
-
-
-  static void createBookmarkFrame(Widget toplevel, 
-								  XFE_Frame *parent_frame, 
-								  Chrome *chromespec);
+  static void createBookmarkFrame(Widget toplevel);
 
   static XFE_BookmarkFrame * getBookmarkFrame();
 
 private:
-  static MenuSpec menu_bar_spec[];
-  static MenuSpec file_menu_spec[];
-  static MenuSpec edit_menu_spec[];
-  static MenuSpec view_menu_spec[];
-
   static XFE_BookmarkFrame * m_bookmarkFrame;
 };
 
-extern "C" MWContext* fe_showBookmarks(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec);
+extern "C" void fe_showBookmarks(Widget toplevel);
 extern "C" MWContext* fe_getBookmarkContext();
-extern "C" void fe_createBookmarks(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec);
 
 #endif /* _xfe_bookmarkframe_h */
