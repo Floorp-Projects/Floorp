@@ -213,7 +213,6 @@ function themeSelect()
       uninstallButton.disabled = selectedSkin == skinName;
 
       var newText = prefbundle.getString("oldTheme");
-      newText = newText.replace(/%theme_name%/, themeName);
       
       newText = newText.replace(/%brand%/g, brandbundle.getString("brandShortName"));
 
