@@ -262,7 +262,7 @@ everything: checkout clean build
 # CVS checkout
 #
 checkout::
-	@: Backup the last checkout log.
+#	@: Backup the last checkout log.
 	@if test -f $(CVSCO_LOGFILE) ; then \
 	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
 	else true; \
@@ -274,8 +274,8 @@ checkout::
 	$(MAKE) -f mozilla/client.mk real_checkout
 
 real_checkout:
-	@: Start the checkout. Split the output to the tty and a log file. \
-	 : If it fails, touch an error file because "tee" hides the error.
+#	@: Start the checkout. Split the output to the tty and a log file. \
+#	 : If it fails, touch an error file because "tee" hides the error.
 	@failed=.cvs-failed.tmp; rm -f $$failed*; \
 	cvs_co() { echo "$$@" ; \
 	  ("$$@" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
@@ -285,7 +285,7 @@ real_checkout:
         cvs_co $(CVSCO_LDAPCSDK) && \
 	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
-	@: Check the log for conflicts. ;\
+#	@: Check the log for conflicts. ;\
 	conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
 	  echo "$(MAKE): *** Conflicts during checkout." ;\
