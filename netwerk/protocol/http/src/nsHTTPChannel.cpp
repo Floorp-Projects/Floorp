@@ -61,11 +61,55 @@
 #include "netCore.h"
 
 #ifdef MOZ_NEW_CACHE
+
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
+
+static PRTime
+SecondsToPRTime(PRUint32 t_sec)
+{
+    PRTime t_usec, usec_per_sec;
+    LL_L2I(t_usec, t_sec);
+    LL_L2I(usec_per_sec, PR_USEC_PER_SEC);
+    LL_MUL(t_usec, t_usec, usec_per_sec);
+    return t_usec;
+}
+
+static PRUint32
+PRTimeToSeconds(PRTime t_usec)
+{
+    PRTime usec_per_sec;
+    PRUint32 t_sec;
+    LL_L2I(usec_per_sec, PR_USEC_PER_SEC);
+    LL_DIV(t_usec, t_usec, usec_per_sec);
+    LL_I2L(t_sec, t_usec);
+    return t_sec;
+}
+
+static void
+SecondsToTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
+{
+    PRTime t_usec = SecondsToPRTime(t_sec);
+    PRExplodedTime et;
+    PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
+    PR_FormatTime(buf, bufsize, "%c", &et);
+}
+
+static void
+TimeStringToSeconds(const char *str, PRUint32 *t_sec)
+{
+    PRTime t_usec = 0;
+    PR_ParseTimeString(str, PR_TRUE, &t_usec);
+    *t_sec = PRTimeToSeconds(t_usec);
+}
+
+#define NowInSeconds() PRTimeToSeconds(PR_Now())
+
 #else
+
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
-#endif
+
+#endif // MOZ_NEW_CACHE
 
 // FIXME - Temporary include.  Delete this when cache is enabled on all 
 // platforms
@@ -821,7 +865,7 @@ nsHTTPChannel::OpenCacheEntry()
 
 // The request-time is the time at which we sent the request.
 nsresult
-nsHTTPChannel::GetRequestTime(PRTime *result)
+nsHTTPChannel::GetRequestTime(PRUint32 *value)
 {
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
 
@@ -829,31 +873,28 @@ nsHTTPChannel::GetRequestTime(PRTime *result)
     nsresult rv = mCacheEntry->GetMetaDataElement("request-time", getter_Copies(str));
     if (NS_FAILED(rv)) return rv;
 
-    *result = LL_Zero();
+    *value = 0;
 
     if (str)
-        PR_ParseTimeString((const char *) str, PR_TRUE, result);
+        TimeStringToSeconds(str, value);
 
     return NS_OK;
 }
 
 nsresult
-nsHTTPChannel::SetRequestTime(PRTime t)
+nsHTTPChannel::SetRequestTime(PRUint32 value)
 {
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
 
     char buf[256];
-    PRExplodedTime et;
-
-    PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
-    PR_FormatTime(buf, sizeof(buf), "%c", &et);
+    SecondsToTimeString(buf, sizeof(buf), value);
 
     return mCacheEntry->SetMetaDataElement("request-time", buf); 
 }
 
 // The response-time is the time at which we received the response.
 nsresult
-nsHTTPChannel::GetResponseTime(PRTime *result)
+nsHTTPChannel::GetResponseTime(PRUint32 *value)
 {
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
 
@@ -861,24 +902,21 @@ nsHTTPChannel::GetResponseTime(PRTime *result)
     nsresult rv = mCacheEntry->GetMetaDataElement("response-time", getter_Copies(str));
     if (NS_FAILED(rv)) return rv;
 
-    *result = LL_Zero();
+    *value = 0;
 
     if (str)
-        PR_ParseTimeString((const char *) str, PR_TRUE, result);
+        TimeStringToSeconds(str, value);
 
     return NS_OK;
 }
 
 nsresult
-nsHTTPChannel::SetResponseTime(PRTime t)
+nsHTTPChannel::SetResponseTime(PRUint32 value)
 {
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
 
     char buf[256];
-    PRExplodedTime et;
-
-    PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
-    PR_FormatTime(buf, sizeof(buf), "%c", &et);
+    SecondsToTimeString(buf, sizeof(buf), value);
 
     return mCacheEntry->SetMetaDataElement("response-time", buf); 
 }
@@ -890,12 +928,12 @@ nsHTTPChannel::SetResponseTime(PRTime t)
 //               + now - requestTime
 //
 nsresult
-nsHTTPChannel::ComputeCurrentAge(PRTime now,
+nsHTTPChannel::ComputeCurrentAge(PRUint32 now,
                                  PRUint32 *result)
 {
     NS_ENSURE_TRUE(mResponse, NS_ERROR_NOT_AVAILABLE);
 
-    PRTime requestTime, responseTime, dateValue, diff;
+    PRUint32 requestTime, responseTime, dateValue, diff;
     PRUint32 ageValue;
     PRBool avail = PR_FALSE;
     nsresult rv;
@@ -965,7 +1003,7 @@ nsHTTPChannel::ComputeFreshnessLifetime(PRUint32 *result)
     if (avail)
         return NS_OK;
 
-    PRTime date, date2, diff;
+    PRUint32 date, date2;
 
     rv = mResponse->GetDateValue(&date, &avail);
     if (NS_FAILED(rv)) return rv;
@@ -974,9 +1012,7 @@ nsHTTPChannel::ComputeFreshnessLifetime(PRUint32 *result)
         rv = mResponse->GetExpiresValue(&date2, &avail);
         if (NS_FAILED(rv)) return rv;
         if (avail) {
-            LL_SUB(diff, date2, date);
-            LL_DIV(diff, diff, 1000000); // convert u-sec to sec
-            LL_L2UI(*result, diff);
+            *result = date2 - date;
             return NS_OK;
         }
 
@@ -985,11 +1021,8 @@ nsHTTPChannel::ComputeFreshnessLifetime(PRUint32 *result)
         if (NS_FAILED(rv)) return rv;
         if (avail) {
             LOG(("using last-modified to determine freshness-lifetime\n"));
-            LOG(("last-modified = %lld, date = %lld\n", date2, date));
-            LL_SUB(diff, date, date2);
-            LL_DIV(diff, diff, 1000000); // convert u-sec to sec
-            LL_L2UI(*result, diff);
-            *result /= 10;
+            LOG(("last-modified = %u, date = %u\n", date2, date));
+            *result = (date - date2) / 10;
             return NS_OK;
         }
     }
@@ -1014,7 +1047,7 @@ nsresult
 nsHTTPChannel::UpdateExpirationTime()
 {
     nsresult rv;
-    PRTime expirationTime, now = PR_Now();
+    PRUint32 now = NowInSeconds();
     PRUint32 freshnessLifetime, currentAge, timeRemaining;
 
     rv = SetResponseTime(now);
@@ -1032,14 +1065,7 @@ nsHTTPChannel::UpdateExpirationTime()
     timeRemaining = freshnessLifetime - currentAge;
     timeRemaining = PR_MAX(0, timeRemaining);
 
-    LL_UI2L(expirationTime, timeRemaining);
-    LL_MUL(expirationTime, expirationTime, 1000000); // convert sec to u-sec
-
-    LOG(("timeRemaining (in u-sec) = %lld\n", expirationTime));
-
-    LL_ADD(expirationTime, now, expirationTime); // compute expiration time
-
-    return mCacheEntry->SetExpirationTime(expirationTime);
+    return mCacheEntry->SetExpirationTime(now + timeRemaining);
 }
 
 // CheckCache is called from Connect after a cache entry has been opened for
@@ -1140,7 +1166,7 @@ nsHTTPChannel::CheckCache()
     // accessed in this session.
     {
         PRBool firstAccessThisSession;
-        PRTime sessionStartTime, lastWritten, expirationTime, now = PR_Now();
+        PRUint32 sessionStartTime, lastWritten, expirationTime, now = NowInSeconds();
 
         rv = mCacheEntry->GetLastModified(&lastWritten);
         if (NS_FAILED(rv)) return rv;
@@ -1148,8 +1174,8 @@ nsHTTPChannel::CheckCache()
         rv = mCacheEntry->GetExpirationTime(&expirationTime);
         if (NS_FAILED(rv)) return rv;
 
-        sessionStartTime = mHandler->GetSessionStartTime();
-        if (LL_UCMP(sessionStartTime, > ,lastWritten))
+        sessionStartTime = PRTimeToSeconds(mHandler->GetSessionStartTime());
+        if (sessionStartTime > lastWritten)
             firstAccessThisSession = PR_TRUE;
 
         // Check to see if we can use the cache data without revalidating 
@@ -1158,7 +1184,7 @@ nsHTTPChannel::CheckCache()
         //    mLoadAttributes & nsIChannel::VALIDATE_HEURISTICALLY;
 
         // If the content is stale, issue an if-modified-since request
-        if (LL_UCMP(now, >, expirationTime)) {
+        if (now > expirationTime) {
             if (mLoadAttributes & nsIChannel::VALIDATE_ONCE_PER_SESSION)
                 doIfModifiedSince = firstAccessThisSession;
             else
