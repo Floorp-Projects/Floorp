@@ -48,6 +48,7 @@
 #include "nsICSSParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsLayoutCID.h"
+#include "nsRDFCID.h"
 
 /* Forward declarations.... */
 class nsDocLoaderImpl;
@@ -86,6 +87,7 @@ NS_DEFINE_IID(kINetServiceIID,            NS_INETSERVICE_IID);
 /* Define CIDs... */
 NS_DEFINE_IID(kCHTMLDocumentCID,          NS_HTMLDOCUMENT_CID);
 NS_DEFINE_IID(kCXMLDocumentCID,           NS_XMLDOCUMENT_CID);
+NS_DEFINE_IID(kCRDFDocumentCID,           NS_RDFDOCUMENT_CID);
 NS_DEFINE_IID(kCImageDocumentCID,         NS_IMAGEDOCUMENT_CID);
 NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
 
@@ -184,6 +186,12 @@ public:
                                nsIStreamListener** aDocListener,
                                nsIContentViewer** aDocViewer);
 
+    nsresult CreateRDFDocument(nsIURL* aURL, 
+                               const char* aCommand,
+                               nsIContentViewerContainer* aContainer,
+                               nsIStreamListener** aDocListener,
+                               nsIContentViewer** aDocViewer);
+
     nsresult CreateImageDocument(nsIURL* aURL, 
                                  const char* aCommand,
                                  nsIContentViewerContainer* aContainer,
@@ -212,6 +220,7 @@ NS_IMPL_ISUPPORTS(nsDocFactoryImpl,kIDocumentLoaderFactoryIID);
 
 static char* gValidTypes[] = {"text/html","application/rtf",0};
 static char* gXMLTypes[] = {"text/xml", "application/xml", 0};
+static char* gRDFTypes[] = {"text/rdf", 0};
 
 static char* gImageTypes[] = {"image/gif", "image/jpeg", "image/png", 0 };
 
@@ -261,13 +270,24 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
 
     // Try XML
     typeIndex = 0;
-    while(gValidTypes[typeIndex]) {
+    while(gXMLTypes[typeIndex]) {
       if (0== PL_strcmp(gXMLTypes[typeIndex++], aContentType)) {
           return CreateXMLDocument(aURL, aCommand,
                                    aContainer,
                                    aDocListener,
                                    aDocViewer);
       }
+    }
+
+    // Try RDF
+    typeIndex = 0;
+    while (gRDFTypes[typeIndex]) {
+        if (0 == PL_strcmp(gRDFTypes[typeIndex++], aContentType)) {
+            return CreateRDFDocument(aURL, aCommand,
+                                     aContainer,
+                                     aDocListener,
+                                     aDocViewer);
+        }
     }
 
     // Try image types
@@ -383,6 +403,65 @@ nsDocFactoryImpl::CreateXMLDocument(nsIURL* aURL,
      * Create the image document...
      */
     rv = nsRepository::CreateInstance(kCXMLDocumentCID,
+                                      nsnull,
+                                      kIDocumentIID,
+                                      (void **)&doc);
+    if (NS_OK != rv) {
+        goto done;
+    }
+
+    /*
+     * Create the image content viewer...
+     */
+    rv = NS_NewDocumentViewer(docv);
+    if (NS_OK != rv) {
+        goto done;
+    }
+    docv->SetUAStyleSheet(gUAStyleSheet);
+
+    /* 
+     * Initialize the document to begin loading the data...
+     *
+     * An nsIStreamListener connected to the parser is returned in
+     * aDocListener.
+     */
+    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener, aCommand);
+    if (NS_OK != rv) {
+        NS_IF_RELEASE(docv);
+        goto done;
+    }
+
+    /*
+     * Bind the document to the Content Viewer...
+     */
+    rv = docv->BindToDocument(doc, aCommand);
+    *aDocViewer = docv;
+
+done:
+    NS_IF_RELEASE(doc);
+    return rv;
+}
+
+nsresult
+nsDocFactoryImpl::CreateRDFDocument(nsIURL* aURL, 
+                                    const char* aCommand,
+                                    nsIContentViewerContainer* aContainer,
+                                    nsIStreamListener** aDocListener,
+                                    nsIContentViewer** aDocViewer)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    nsIDocument* doc = nsnull;
+    nsIDocumentViewer* docv = nsnull;
+
+    // Load the UA style sheet if we haven't already done that
+    if (nsnull == gUAStyleSheet) {
+        InitUAStyleSheet();
+    }
+
+    /*
+     * Create the image document...
+     */
+    rv = nsRepository::CreateInstance(kCRDFDocumentCID,
                                       nsnull,
                                       kIDocumentIID,
                                       (void **)&doc);
