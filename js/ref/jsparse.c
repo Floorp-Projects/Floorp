@@ -2420,11 +2420,11 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	 */
 	oldflags = tc->flags;
 	tc->flags &= ~TCF_IN_FOR_INIT;
-#endif /* JS_HAS_IN_OPERATOR */
+#endif
 	pn2 = Expr(cx, ts, tc);
 #if JS_HAS_IN_OPERATOR
 	tc->flags = oldflags;
-#endif /* JS_HAS_IN_OPERATOR */
+#endif
 	if (!pn2)
 	    return NULL;
 
@@ -2438,7 +2438,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_STRING:
 #if JS_HAS_SHARP_VARS
 	notsharp = JS_TRUE;
-#endif /* JS_HAS_SHARP_VARS */
+#endif
 	/* FALL THROUGH */
       case TOK_NAME:
       case TOK_OBJECT:
@@ -2463,7 +2463,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_dval = ts->token.t_dval;
 #if JS_HAS_SHARP_VARS
 	notsharp = JS_TRUE;
-#endif /* JS_HAS_SHARP_VARS */
+#endif
 	break;
 
       case TOK_PRIMARY:
@@ -2473,7 +2473,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_op = ts->token.t_op;
 #if JS_HAS_SHARP_VARS
 	notsharp = JS_TRUE;
-#endif /* JS_HAS_SHARP_VARS */
+#endif
 	break;
 
 #if !JS_HAS_EXPORT_IMPORT
@@ -2508,7 +2508,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	defsharp->pn_kid = pn;
 	return defsharp;
     }
-#endif /* JS_HAS_SHARP_VARS */
+#endif
     return pn;
 }
 

@@ -125,6 +125,9 @@ PR_BEGIN_EXTERN_C
  *                          each has pn_left: property id, pn_right: value
  *                          #n={...} produces TOK_DEFSHARP at head of list
  * TOK_DEFSHARP unary       pn_num: jsint value of n in #n=
+ *                          pn_kid: null for #n=[...] and #n={...}, primary
+ *                          if #n=primary for function, paren, name, object
+ *                          literal expressions
  * TOK_USESHARP nullary     pn_num: jsint value of n in #n#
  * TOK_RP       unary       pn_kid: parenthesized expression
  * TOK_NAME,    name        pn_atom: name, string, or object atom
