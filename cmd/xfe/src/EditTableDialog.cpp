@@ -1514,7 +1514,7 @@ XFE_EditTableDialog::tablePropertiesValidate()
 	memset(&table_data, 0, sizeof(EDT_AllTableData));
 	memcpy(&table_data.td, tmp, sizeof(EDT_TableData));
 
-	tablePropertiesCommonSet(&table_data, );
+	tablePropertiesCommonSet(&table_data);
 
 	if (m_table->number_rows_text != NULL) {
 		t->iRows = fe_get_numeric_text_field(m_table->number_rows_text);
