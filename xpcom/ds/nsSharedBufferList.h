@@ -51,7 +51,7 @@ class nsSharedBufferList
                 : nsXXXBufferHandle<PRUnichar>(aDataStart, aDataEnd, aStorageStart, aStorageEnd)
               {
                 if ( aIsSingleAllocation )
-                  mFlags |= kIsSingleAllocationWithBuffer;
+                  this->mFlags |= kIsSingleAllocationWithBuffer;
               }
 
             Buffer* mPrev;
