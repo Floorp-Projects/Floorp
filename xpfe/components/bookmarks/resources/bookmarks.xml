@@ -572,7 +572,6 @@
             rContainer = this.mOuter.rdf.GetResource("NC:BookmarksRoot");
           else
             rContainer = this.mOuter.outlinerBuilder.getResourceAtIndex(parentIndex);
-
           var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
           var rBookmark = this.mOuter.rdf.GetResource(this.mOuter.NC_NS + "Bookmark");
           trans.addDataFlavor("moz/rdfitem");
@@ -650,8 +649,12 @@
                   RDFC.Init(kBMDS, rParent);
                   ix = RDFC.IndexOf(rSource);
                   if (ix >= 1) {
+                    var index = this.mOuter.outlinerBuilder.getIndexOfResource(rSource);
                     RDFC.RemoveElementAt(ix, true);
-                    --row;
+                    // only need to decrement the target row if the index of the resource
+                    // we're removing is before it 
+                    if (index < row)
+                      --row;
                   }
                 }
                 catch (ex) { }
