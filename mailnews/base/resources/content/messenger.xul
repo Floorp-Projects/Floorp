@@ -31,7 +31,6 @@ Rights Reserved.
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -172,8 +171,10 @@ Rights Reserved.
       <vbox id="messagepanebox" flex="3" persist="collapsed height" onclick="contentAreaClick(event);">
         <hbox id="msgHeaderView"/>
     
-        <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" 
-          disableHistory="true" type="content-primary" src="about:blank"/>
+        <browser id="messagepane" context="messagePaneContext"
+                 style="height: 0px" flex="1" name="messagepane" 
+                 disablehistory="true" type="content-primary" src="about:blank"
+                 disablesecurity="true"/>
       </vbox>  
       </vbox>
 

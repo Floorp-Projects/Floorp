@@ -49,6 +49,8 @@
         var w;
         if ("arguments" in window && window.arguments.length > 1 && window.arguments[0])
           w = window.arguments[0];
+        else if ("gBrowser" in window.opener)
+          w = window.opener.gBrowser.contentWindow;
         else
           w = window.opener.frames[0];
 
@@ -97,9 +99,8 @@
       // Find the secureBrowserUI object (if present)
       _getSecurityUI : function() {
         if ("gBrowser" in window.opener)
-          return window.opener.gBrowser.boxObject.getPropertyAsSupports("secureBrowserUI");
-        else
-          return null;
+          return window.opener.gBrowser.securityUI;
+        return null;
       },
 
       // Interface for mapping a certificate issuer organization to

@@ -79,7 +79,6 @@ public:
 protected:
   
   nsCOMPtr<nsIDOMWindow> mWindow;
-  nsCOMPtr<nsIDOMElement> mSecurityButton;
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIURI> mCurrentURI;
   
@@ -87,6 +86,8 @@ protected:
   PRInt32 mSecurityState;
   PRBool mFirstRequest;
   PRBool mRedirecting;
+
+  nsString mTooltipText;
 
   nsCOMPtr<nsISupports> mSSLStatus;
 

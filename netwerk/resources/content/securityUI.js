@@ -20,38 +20,8 @@
  * Contributor(s):
 */
 
-window.addEventListener("load", SetSecurityButton, false);
-window.addEventListener("unload", DestroySecurity, false);
-
-var securityUI;
-
-function SetSecurityButton()
-{
-    const ui = Components.classes["@mozilla.org/secure_browser_ui;1"];
-    if (ui) {
-        var securityUI = ui.createInstance(Components.interfaces.nsISecureBrowserUI);
-
-        if ("gBrowser" in window) { // XXXjag see bug 68662
-            gBrowser.boxObject.setPropertyAsSupports("xulwindow", window);
-            gBrowser.boxObject.setPropertyAsSupports("secureBrowserUI", securityUI);
-        }
-
-        var button = document.getElementById("security-button");
-        if (button && _content)
-            securityUI.init(_content, button);
-    }
-}
-
 function displayPageInfo()
 {
-   window.openDialog("chrome://navigator/content/pageInfo.xul", "_blank",
-                     "dialog=no", null, "securityTab");
-}
-
-function DestroySecurity()
-{
-    if ("gBrowser" in window) { // XXXjag see bug 68662
-        gBrowser.boxObject.removeProperty("xulwindow");
-        gBrowser.boxObject.removeProperty("secureBrowserUI");
-    }
+    window.openDialog("chrome://navigator/content/pageInfo.xul", "_blank",
+                      "dialog=no", null, "securityTab");
 }
