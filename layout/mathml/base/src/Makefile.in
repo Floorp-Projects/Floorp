@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  docshell \
 		  webbrwsr \
+		  windowwatcher \
 		  pref \
 		  $(NULL)
 
