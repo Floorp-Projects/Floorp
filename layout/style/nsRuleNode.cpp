@@ -1409,9 +1409,14 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   }
 
   // We need to compute the data from the information that the rules specified.
-  ComputeStyleDataFn fn = gComputeStyleDataFn[aSID];
-  const nsStyleStruct* res = (this->*fn)(startStruct, *aSpecificData, aContext, highestNode, detail,
-                                         !aRuleData->mCanStoreInRuleTree);
+  const nsStyleStruct* res;
+#define STYLE_STRUCT_TEST aSID
+#define STYLE_STRUCT(name, checkdata_cb, ctor_args)                           \
+  res = Compute##name##Data(startStruct, *aSpecificData, aContext,            \
+                      highestNode, detail, !aRuleData->mCanStoreInRuleTree);
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#undef STYLE_STRUCT_TEST
 
   // If we have a post-resolve callback, handle that now.
   if (aRuleData->mPostResolveCallback)
@@ -1586,17 +1591,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
   }
   return nsnull;
 }
-
-nsRuleNode::ComputeStyleDataFn
-nsRuleNode::gComputeStyleDataFn[] = {
-
-#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
-  &nsRuleNode::Compute##name##Data,
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
-  nsnull
-};
 
 static void
 SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
@@ -4366,17 +4360,6 @@ nsRuleNode::GetParentData(const nsStyleStructID aSID)
   return nsnull;
 }
 
-nsRuleNode::GetStyleDataFn
-nsRuleNode::gGetStyleDataFn[] = {
-
-#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
-  &nsRuleNode::Get##name##Data,
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
-  nsnull
-};
-
 const nsStyleStruct* 
 nsRuleNode::GetStyleData(nsStyleStructID aSID, 
                          nsStyleContext* aContext,
@@ -4400,12 +4383,13 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
     return nsnull;
 
   // Nothing is cached.  We'll have to delve further and examine our rules.
-  GetStyleDataFn fn = gGetStyleDataFn[aSID];
-  if (!fn) {
-    NS_NOTREACHED("unknown style struct requested");
-    return nsnull;
-  }
-  data = (this->*fn)(aContext);
+#define STYLE_STRUCT_TEST aSID
+#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
+  data = Get##name##Data(aContext);
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#undef STYLE_STRUCT_TEST
+
   if (data)
     return data;
 
