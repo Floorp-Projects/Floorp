@@ -31,7 +31,17 @@ CPU_ARCH		= ppc
 #OS_REL_CFLAGS		= -mno-486 -Di386
 #CPU_ARCH		= x86
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -pipe -DRHAPSODY -DHAVE_STRERROR -DHAVE_BSD_FLOCK
+# "Commons" are tentative definitions in a global scope, like this:
+#     int x;
+# The meaning of a common is ambiguous.  It may be a true definition:
+#     int x = 0;
+# or it may be a declaration of a symbol defined in another file:
+#     extern int x;
+# Use the -fno-common option to force all commons to become true
+# definitions so that the linker can catch multiply-defined symbols.
+# Also, common symbols are not allowed with Rhapsody dynamic libraries.
+
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -fno-common -pipe -DRHAPSODY -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY -D_PR_NEED_FAKE_POLL
 
