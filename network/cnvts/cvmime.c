@@ -796,7 +796,15 @@ NET_RegisterMIMEDecoders (void)
 									(void *) 1, IL_ViewStream);
 #endif
 
-#ifdef SMART_MAIL
+#if defined(SMART_MAIL) || defined(XP_UNIX)
+  /* #### This should really be done all the time, because all versions of
+     Mozilla should be able to sensibly display documents of type
+     message/rfc822.  But I don't know what Makefile arcanity has happened on
+     Windows, so for now, this only gets called if SMART_MAIL is defined, or
+     if we're on Unix.  Someone please fix this on non-SmartMail Windows, and
+     on Mac.
+   */
+
   /* Decoders for libmime/mimemoz.c */
   MIME_RegisterConverters();
 #endif /* SMART_MAIL */
