@@ -744,6 +744,9 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
         rv = LaunchApplicationWithArgs((const char *)(argv[i]),
                                        cmdLineArgs, command,
                                        height, width, windowOpened);
+        if (rv == NS_ERROR_NOT_AVAILABLE) {
+          return rv;
+        }
       }
     }
   }

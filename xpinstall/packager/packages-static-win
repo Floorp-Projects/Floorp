@@ -178,6 +178,7 @@ bin\components\xmlsoap.xpt
 bin\components\xmlschema.xpt
 bin\components\nsHelperAppDlg.js
 bin\components\helperAppDlg.xpt
+bin\components\nsKillAll.js
 bin\components\nsProgressDialog.js
 bin\components\progressDlg.xpt
 bin\components\nsDownloadProgressListener.js

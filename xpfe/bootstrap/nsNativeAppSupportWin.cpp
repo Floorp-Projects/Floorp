@@ -560,6 +560,8 @@ DWORD WINAPI nsSplashScreenWin::ThreadProc( LPVOID splashScreen ) {
     return 0;
 }
 
+PRBool gAbortServer = PR_FALSE;
+
 void
 nsNativeAppSupportWin::CheckConsole() {
     for ( int i = 1; i < __argc; i++ ) {
@@ -627,6 +629,15 @@ nsNativeAppSupportWin::CheckConsole() {
             break;
         }
     }
+
+    for ( int j = 1; j < __argc; j++ ) {
+        if (strcmp("-killAll", __argv[j]) == 0 || strcmp("/killAll", __argv[j]) == 0 ||
+            strcmp("-kill", __argv[j]) == 0 || strcmp("/kill", __argv[j]) == 0) {
+            gAbortServer = PR_TRUE;
+            break;
+        }
+    }
+
     // check if this is a restart of the browser after quiting from
     // the servermoded browser instance.
     if (!mServerMode ) {
@@ -975,12 +986,14 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
         rv = msgWindow.SendRequest( cmd );
     } else {
         // We will be server.
-        rv = msgWindow.Create();
-        if ( NS_SUCCEEDED( rv ) ) {
-            // Start up DDE server.
-            this->StartDDE();
-            // Tell caller to spin message loop.
-            *aResult = PR_TRUE;
+        if (!gAbortServer) {
+            rv = msgWindow.Create();
+            if ( NS_SUCCEEDED( rv ) ) {
+                // Start up DDE server.
+                this->StartDDE();
+                // Tell caller to spin message loop.
+                *aResult = PR_TRUE;
+            }
         }
     }
 
@@ -1448,7 +1461,9 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 
     // If a window was opened, then we're done.
     // Note that we keep on trying in the unlikely event of an error.
-    if (windowOpened) return;
+    if (rv == NS_ERROR_NOT_AVAILABLE || windowOpened) {
+      return;
+    }
 
     // ok, no idea what the param is.
 #if MOZ_DEBUG_DDE
