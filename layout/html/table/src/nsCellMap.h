@@ -42,6 +42,8 @@
 #include "nsVoidArray.h"
 #include "nsRect.h"
 
+#undef DEBUG_TABLE_CELLMAP
+
 class nsTableColFrame;
 class nsTableCellFrame;
 class nsTableRowGroupFrame;

@@ -1121,8 +1121,10 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
                          PRInt32               aRowIndex,
                          PRBool                aConsiderSpans)
 {
-  //printf("insertRowsBefore firstRow=%d \n", aRowIndex);
-  //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+#ifdef DEBUG_TABLE_CELLMAP
+  printf("insertRowsBefore firstRow=%d \n", aRowIndex);
+  Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+#endif
 
   PRInt32 numColsToAdd = 0;
   nsTableCellMap* cellMap = GetCellMap();
@@ -1152,9 +1154,10 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
       SetBCDamageArea(aPresContext, damageArea);
     }
   }
-
-  //printf("insertRowsAfter \n");
-  //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+#ifdef DEBUG_TABLE_CELLMAP
+  printf("insertRowsAfter \n");
+  Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+#endif
 
   return numColsToAdd;
 }
@@ -1165,10 +1168,6 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
                               PRInt32          aNumRowsToRemove,
                               PRBool           aConsiderSpans)
 {
-  //printf("removeRowsBefore firstRow=%d numRows=%d\n", aFirstRowIndex, aNumRowsToRemove);
-  //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
-
-  
 #ifdef TBD_OPTIMIZATION
   // decide if we need to rebalance. we have to do this here because the row group 
   // cannot do it when it gets the dirty reflow corresponding to the frame being destroyed
@@ -1186,6 +1185,10 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
 #endif
 
   PRInt32 firstRowIndex = aFirstRowFrame.GetRowIndex();
+#ifdef DEBUG_TABLE_CELLMAP
+  printf("removeRowsBefore firstRow=%d numRows=%d\n", firstRowIndex, aNumRowsToRemove);
+  Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+#endif
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     nsRect damageArea(0,0,0,0);
@@ -1207,8 +1210,10 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
     }
   }
   AdjustRowIndices(firstRowIndex, -aNumRowsToRemove);
-  //printf("removeRowsAfter\n");
-  //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+#ifdef DEBUG_TABLE_CELLMAP
+  printf("removeRowsAfter\n");
+  Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+#endif
 }
 
 void nsTableFrame::AppendRowGroups(nsIPresContext& aPresContext,
@@ -6056,7 +6061,9 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
   // reset the bc flag and damage area
   SetNeedToCalcBCBorders(PR_FALSE);
   propData->mDamageArea.x = propData->mDamageArea.y = propData->mDamageArea.width = propData->mDamageArea.height = 0;
-  //mCellMap->Dump();
+#ifdef DEBUG_TABLE_CELLMAP
+  mCellMap->Dump();
+#endif
 }
 
 // Iterates over borders (left border, corner, top border) in the cell map within a damage area
