@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
+		TestStreamLoader.cpp \
 		PropertiesTest.cpp \
 		urltest.cpp \
 		TestCallbacks.cpp \
