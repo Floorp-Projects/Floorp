@@ -202,26 +202,36 @@ private:
   PRUnichar* mStr;
 
 public:
-  nsUnicharKey(const PRUnichar* str) {
-    mStr = nsCRT::strdup(str);
-    NS_ASSERTION(mStr, "out of memory");
-  }
+  inline nsUnicharKey(const PRUnichar* str);
 
-  virtual ~nsUnicharKey(void) {
-    delete[] mStr;
-  }
+  inline ~nsUnicharKey(void);
 
-  virtual PRUint32 HashValue(void) const {
-    return nsCRT::HashValue(mStr);
-  }
+  inline PRUint32 HashValue(void) const;
 
-  virtual PRBool Equals(const nsHashKey* aKey) const {
-    return nsCRT::strcmp(NS_STATIC_CAST(const nsUnicharKey*, aKey)->mStr, mStr) == 0;
-  }
+  inline PRBool Equals(const nsHashKey* aKey) const;
 
-  virtual nsHashKey* Clone() const {
-    return new nsUnicharKey(mStr);
-  }
+  inline nsHashKey* Clone() const;
 };
+
+inline nsUnicharKey::nsUnicharKey(const PRUnichar* str) {
+  mStr = nsCRT::strdup(str);
+  NS_ASSERTION(mStr, "out of memory");
+}
+
+inline nsUnicharKey::~nsUnicharKey(void) {
+  delete[] mStr;
+}
+
+inline PRUint32 nsUnicharKey::HashValue(void) const {
+  return nsCRT::HashValue(mStr);
+}
+
+inline PRBool nsUnicharKey::Equals(const nsHashKey* aKey) const {
+  return nsCRT::strcmp(NS_STATIC_CAST(const nsUnicharKey*, aKey)->mStr, mStr) == 0;
+}
+
+inline nsHashKey* nsUnicharKey::Clone() const {
+  return new nsUnicharKey(mStr);
+}
 
 #endif /* nsCRT_h___ */
