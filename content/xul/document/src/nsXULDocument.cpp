@@ -563,8 +563,6 @@ public:
 protected:
     // pseudo constants
     static PRInt32 gRefCnt;
-    static nsIAtom* kAttributeAtom;
-    static nsIAtom* kElementAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kObservesAtom;
 
@@ -608,8 +606,6 @@ protected:
 };
 
 PRInt32 XULDocumentImpl::gRefCnt;
-nsIAtom* XULDocumentImpl::kAttributeAtom;
-nsIAtom* XULDocumentImpl::kElementAtom;
 nsIAtom* XULDocumentImpl::kIdAtom;
 nsIAtom* XULDocumentImpl::kObservesAtom;
 
@@ -649,8 +645,6 @@ XULDocumentImpl::XULDocumentImpl(void)
     }
 
     if (gRefCnt++ == 0) {
-        kAttributeAtom = NS_NewAtom("attribute");
-        kElementAtom   = NS_NewAtom("element");
         kIdAtom        = NS_NewAtom("id");
         kObservesAtom  = NS_NewAtom("observes");
     }
@@ -681,8 +675,6 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mLineBreaker);
 
     if (--gRefCnt == 0) {
-        NS_IF_RELEASE(kAttributeAtom);
-        NS_IF_RELEASE(kElementAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kObservesAtom);
     }
@@ -1974,23 +1966,21 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
         if (!tag)
           break;
 
-        nsString tagName;
-        tag->ToString(tagName);
-
-        if (tagName.EqualsIgnoreCase("observes"))
+        if (tag == kObservesAtom)
         {
             // Find the node that we're supposed to be
             // observing and perform the hookup.
             nsString elementValue;
             nsString attributeValue;
-
-            childContent->GetAttribute(kNameSpaceID_None, 
-                                        kElementAtom,
-                                        elementValue);
             
-            childContent->GetAttribute(kNameSpaceID_None, 
-                                        kAttributeAtom,
-                                        attributeValue);
+            nsCOMPtr<nsIDOMElement> domContent;
+            domContent = do_QueryInterface(childContent);
+
+            domContent->GetAttribute("element",
+                                     elementValue);
+            
+            domContent->GetAttribute("attribute",
+                                     attributeValue);
 
             nsIDOMElement* domElement = nsnull;
             GetElementById(elementValue, &domElement);

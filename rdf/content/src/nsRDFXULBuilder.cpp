@@ -60,6 +60,8 @@
 #include "nsString.h"
 #include "rdf.h"
 #include "rdfutil.h"
+#include "nsIDOMXULElement.h"
+#include "nsIDOMXULDocument.h"
 
 // XXX These are needed as scaffolding until we get to a more
 // DOM-based solution.
@@ -1413,6 +1415,75 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
         NS_ERROR("unable to get nsIContent interface");
         return rv;
     }
+
+    // The observes relationship has to be hooked up here, since the children
+    // were already built.  We'll miss out on it if we don't plug in here.
+    // Now that the contents have been created, perform broadcaster
+    // hookups if any of the children are observes nodes.
+    // XXX: Initial sync-up doesn't work, since no document observer exists
+    // yet.
+    PRInt32 childCount;
+    element->ChildCount(childCount);
+    for (PRInt32 j = 0; j < childCount; j++)
+    {
+        nsIContent* childContent = nsnull;
+        element->ChildAt(j, childContent);
+      
+        if (!childContent)
+          break;
+
+        nsIAtom* tag = nsnull;
+        childContent->GetTag(tag);
+
+        if (!tag)
+          break;
+
+        nsString tagName;
+        tag->ToString(tagName);
+
+        if (tagName == "observes")
+        {
+            // Find the node that we're supposed to be
+            // observing and perform the hookup.
+            nsString elementValue;
+            nsString attributeValue;
+            nsCOMPtr<nsIDOMElement> domContent;
+            domContent = do_QueryInterface(childContent);
+
+            domContent->GetAttribute("element",
+                                     elementValue);
+            
+            domContent->GetAttribute("attribute",
+                                     attributeValue);
+
+            nsIDOMElement* domElement = nsnull;
+            nsCOMPtr<nsIDOMXULDocument> xulDoc;
+            xulDoc = do_QueryInterface(doc);
+            
+            if (xulDoc)
+              xulDoc->GetElementById(elementValue, &domElement);
+            
+            if (!domElement)
+              break;
+
+            // We have a DOM element to bind to.  Add a broadcast
+            // listener to that element, but only if it's a XUL element.
+            // XXX: Handle context nodes.
+            nsCOMPtr<nsIDOMElement> listener( do_QueryInterface(element) );
+            nsCOMPtr<nsIDOMXULElement> broadcaster( do_QueryInterface(domElement) );
+            if (listener)
+            {
+                broadcaster->AddBroadcastListener(attributeValue,
+                                                  listener);
+            }
+
+            NS_RELEASE(domElement);
+        }
+
+        NS_RELEASE(childContent);
+        NS_RELEASE(tag);
+    }
+
 
     return NS_OK;
 }
