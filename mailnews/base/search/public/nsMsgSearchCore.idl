@@ -23,8 +23,11 @@
 #include "MailNewsTypes2.idl"
 #include "nsIMsgFolder.idl"
 
-#include "nsIMsgHeaderParser.idl"
+interface nsIMsgHeaderParser;
 
+%{C++
+#include "nsIMsgHeaderParser.h"
+%}
 interface nsIMsgDatabase;
 interface nsIMsgDBHdr;
 
