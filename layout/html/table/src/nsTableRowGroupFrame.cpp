@@ -975,8 +975,10 @@ nsTableRowGroupFrame::SplitSpanningCells(nsIPresContext&          aPresContext,
   aDesiredHeight     = 0;
 
   PRInt32 lastRowIndex = aLastRow.GetRowIndex();
+  PRBool wasLast = PR_FALSE;
   // Iterate the rows between aFirstRow and aLastRow
-  for (nsTableRowFrame* row = &aFirstRow; row; row = row->GetNextRow()) {
+  for (nsTableRowFrame* row = &aFirstRow; !wasLast; row = row->GetNextRow()) {
+    wasLast = (row == &aLastRow);
     PRInt32 rowIndex = row->GetRowIndex();
     nsRect rowRect;
     row->GetRect(rowRect);
