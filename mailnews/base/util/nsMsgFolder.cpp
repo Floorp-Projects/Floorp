@@ -185,7 +185,6 @@ nsMsgFolder::initializeStrings()
     nsCOMPtr<nsIStringBundleService> bundleService =
         do_GetService(kStringBundleServiceCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    
     nsCOMPtr<nsIStringBundle> bundle;
     rv = bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
                                      getter_AddRefs(bundle));
@@ -884,7 +883,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder ** child)
+NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, PRBool caseInsensitive, nsIMsgFolder ** child)
 {
 	NS_ASSERTION(child, "NULL child");
 	nsresult rv;
@@ -914,8 +913,11 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 			char *folderURI =nsnull;
 			rv = folderResource->GetValue(&folderURI);
 			if(NS_FAILED(rv)) return rv;
-
-            PRBool equal = (folderURI && nsCRT::strcmp(folderURI, uri)==0);
+            PRBool equal;
+            if (caseInsensitive) 
+              equal = (folderURI && nsCRT::strcasecmp(folderURI, uri)==0);  
+            else
+              equal = (folderURI && nsCRT::strcmp(folderURI, uri)==0);
 			nsMemory::Free(folderURI);
 			if (equal)
 			{
@@ -925,7 +927,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 			}
 			else if(deep)
 			{
-				rv = folder->GetChildWithURI(uri, deep, child);
+				rv = folder->GetChildWithURI(uri, deep, caseInsensitive, child);
 				if(NS_FAILED(rv))
 					return rv;
 

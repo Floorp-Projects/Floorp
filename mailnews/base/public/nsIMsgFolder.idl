@@ -350,7 +350,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   nsITransport getOfflineFileTransport(in nsMsgKey msgKey, out PRUint32 offset, out PRUint32 size);
   void DownloadMessagesForOffline(in nsISupportsArray messages, in nsIMsgWindow window);        
-  nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
+  nsIMsgFolder getChildWithURI(in string uri, in boolean deep, in boolean caseInsensitive);
   void downloadAllForOffline(in nsIUrlListener listener, in nsIMsgWindow window);
   /**
    *	Turn notifications on/off for various notification types. Currently only supporting

@@ -441,7 +441,8 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 #endif
         destFolderUri.Append('/');
         destFolderUri.Append(moveValue);
-        localMailRootMsgFolder->GetChildWithURI (destFolderUri, PR_TRUE, getter_AddRefs(destIMsgFolder));
+        //local folders are case-insensitive
+        localMailRootMsgFolder->GetChildWithURI (destFolderUri, PR_TRUE, PR_TRUE /*caseInsensitive*/, getter_AddRefs(destIMsgFolder));
 
         if (destIMsgFolder)
         {

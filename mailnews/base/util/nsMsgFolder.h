@@ -169,7 +169,7 @@ public:
   NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
   NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
 
-  NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder **_retval); 
+  NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, PRBool caseInsensitive, nsIMsgFolder **_retval); 
   NS_IMETHOD EnableNotifications(PRInt32 notificationType, PRBool enable);
 
   // end NS_DECL_NSIMSGFOLDER

@@ -943,7 +943,7 @@ NS_IMETHODIMP nsImapIncomingServer::GetPFC(PRBool createIfMissing, nsIMsgFolder 
     folderUri.Append("/");
     folderUri.Append(GetPFCName());
 
-    rootMsgFolder->GetChildWithURI(folderUri, PR_FALSE, pfcFolder);
+    rootMsgFolder->GetChildWithURI(folderUri, PR_FALSE, PR_FALSE /*caseInsensitive */, pfcFolder);
     if (!*pfcFolder && createIfMissing)
     {
 			// get the URI from the incoming server
@@ -995,7 +995,7 @@ nsresult nsImapIncomingServer::GetPFCForStringId(PRBool createIfMissing, PRInt32
 //  pfcMailUri.Append(".sbd");
   pfcMailUri.Append("/");
   pfcMailUri.AppendWithConversion(pfcName.get());
-  pfcParent->GetChildWithURI(pfcMailUri, PR_FALSE, aFolder);
+  pfcParent->GetChildWithURI(pfcMailUri, PR_FALSE, PR_FALSE /* caseInsensitive*/, aFolder);
   if (!*aFolder && createIfMissing)
   {
 		// get the URI from the incoming server
@@ -1044,6 +1044,20 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
     return rv;
   }
 
+  nsCOMPtr<nsIFolder> rootFolder;
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+
+  if(NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIMsgFolder> a_nsIFolder(do_QueryInterface(rootFolder, &rv));
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  hostFolder = do_QueryInterface(a_nsIFolder, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
   nsCAutoString dupFolderPath(folderPath);
   if (dupFolderPath.Last() == hierarchyDelimiter)
   {
@@ -1076,22 +1090,24 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 		parentUri.Append('/');
 		parentUri.Append(parentName);
 		folderName.Cut(0, leafPos + 1);	// get rid of the parent name
-	}
+        if ((nsCRT::strcasecmp("INBOX", parentName) == 0) && (nsCRT::strcmp(parentName, "INBOX") != 0 ))
+        {
+          NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+          NS_ENSURE_SUCCESS(rv,rv);
+          nsCOMPtr<nsIRDFResource> res;
+          nsCAutoString inboxUri(uri);
+          inboxUri.Append('/');
+          inboxUri.Append("INBOX");
+          rv = rdf->GetResource(inboxUri, getter_AddRefs(res));
+          if (NS_SUCCEEDED(rv))
+          {
+            nsCOMPtr<nsIMsgFolder> inboxFolder = do_QueryInterface(res, &rv);
+            if (NS_SUCCEEDED(rv) && res)
+              a_nsIFolder->PropagateDelete(inboxFolder, PR_TRUE);
+          }
+        }
+    }
 
-
-	nsCOMPtr<nsIFolder> rootFolder;
-    rv = GetRootFolder(getter_AddRefs(rootFolder));
-
-    if(NS_FAILED(rv))
-        return rv;
-    nsCOMPtr<nsIMsgFolder> a_nsIFolder(do_QueryInterface(rootFolder, &rv));
-
-    if (NS_FAILED(rv))
-		return rv;
-
-	hostFolder = do_QueryInterface(a_nsIFolder, &rv);
-	if (NS_FAILED(rv))
-		return rv;
 
     if (nsCRT::strcasecmp("INBOX", folderPath) == 0 &&
         hierarchyDelimiter == kOnlineHierarchySeparatorNil)
@@ -1104,31 +1120,34 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
 //	nsCString possibleName(aSpec->allocatedPathName);
 
-	uri.Append('/');
+
+  	uri.Append('/');
 	uri.Append(dupFolderPath);
 
 
-	a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
-
+    PRBool caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath) == 0);
+    a_nsIFolder->GetChildWithURI(uri, PR_TRUE, caseInsensitive, getter_AddRefs(child));
 	if (child)
 		found = PR_TRUE;
     if (!found)
     {
 		// trying to find/discover the parent
 		if (haveParent)
-		{											
-			nsCOMPtr <nsIMsgFolder> parent;
-			a_nsIFolder->GetChildWithURI(parentUri, PR_TRUE, getter_AddRefs(parent));
+		{	
+            nsCOMPtr <nsIMsgFolder> parent;
+            caseInsensitive = (nsCRT::strcasecmp("INBOX", parentName) == 0);
+            a_nsIFolder->GetChildWithURI(parentUri, PR_TRUE, caseInsensitive, getter_AddRefs(parent));
 			if (!parent /* || parentFolder->GetFolderNeedsAdded()*/)
 			{
-				PossibleImapMailbox(parentName, hierarchyDelimiter,kNoselect |		// be defensive
-											((boxFlags &	// only inherit certain flags from the child
+				PossibleImapMailbox(parentName, hierarchyDelimiter, kNoselect |		// be defensive
+											((boxFlags  &	 //only inherit certain flags from the child
 											(kPublicMailbox | kOtherUsersMailbox | kPersonalMailbox)))); 
 			}
 		}
 
         hostFolder->CreateClientSubfolderInfo(dupFolderPath, hierarchyDelimiter,boxFlags);
-		a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
+        caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath)== 0);
+		a_nsIFolder->GetChildWithURI(uri, PR_TRUE, caseInsensitive , getter_AddRefs(child));
     }
 	if (child)
 	{
