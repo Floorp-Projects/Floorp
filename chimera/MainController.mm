@@ -454,4 +454,34 @@ static PRBool gSetupSmoothTextMenu = PR_FALSE;
   //XXX do nothing for now
 }
 
++ (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle
+{
+  NSImage* image;
+  NSSize titleSize, imageSize;
+  NSRect imageRect;
+  NSDictionary* stringAttrs;
+  
+  // get the size of the new image we are creating
+  titleSize = [aTitle sizeWithAttributes:nil];
+  imageSize = NSMakeSize(titleSize.width + [aIcon size].width,
+                         titleSize.height > [aIcon size].height ? 
+                            titleSize.height : [aIcon size].height);
+                        
+  // create the image and lock drawing focus on it
+  image = [[[NSImage alloc] initWithSize:imageSize] autorelease];
+  [image lockFocus];
+  
+  // draw the image and title in image with translucency
+  imageRect = NSMakeRect(0,0, [aIcon size].width, [aIcon size].height);
+  [aIcon drawAtPoint: NSMakePoint(0,0) fromRect: imageRect operation:NSCompositeCopy fraction:0.8];
+  
+  stringAttrs = [NSDictionary dictionaryWithObject: [[NSColor textColor] colorWithAlphaComponent:0.8]
+                  forKey: NSForegroundColorAttributeName];
+  [aTitle drawAtPoint: NSMakePoint([aIcon size].width, 0) withAttributes: stringAttrs];
+  
+  [image unlockFocus]; 
+  
+  return image;
+}
+
 @end

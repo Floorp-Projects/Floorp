@@ -26,10 +26,13 @@
 class nsIDOMElement;
 
 class BookmarksService;
+class CHBookmarksButton;
 
 @interface CHBookmarksToolbar : NSView {
   BookmarksService* mBookmarks;
   NSMutableArray* mButtons;
+  CHBookmarksButton* mDragInsertionButton;
+  int mDragInsertionPosition;
 }
 
 -(void)initializeToolbar;
@@ -44,5 +47,8 @@ class BookmarksService;
 -(void)reflowButtonsStartingAtIndex: (int)aIndex;
 
 -(void)showBookmarksToolbar: (BOOL)aShow;
+
+- (void) setButtonInsertionPoint:(NSPoint)aPoint;
+- (NSRect)insertionRectForButton:(NSView*)aButton position:(int)aPosition;
 
 @end

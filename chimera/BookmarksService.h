@@ -112,6 +112,10 @@ public:
   static void BookmarkAdded(nsIContent* aContainer, nsIContent* aChild);
   static void BookmarkChanged(nsIContent* aItem);
   static void BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild);
+
+  static void AddBookmarkToFolder(nsString& aURL, nsString& aTitle, nsIDOMElement* aFolder, nsIDOMElement* aBeforeElt);
+  static void MoveBookmarkToFolder(nsIDOMElement* aBookmark, nsIDOMElement* aFolder, nsIDOMElement* aBeforeElt);
+  static void DeleteBookmark(nsIDOMElement* aBookmark);
   
 public:
   static void GetRootContent(nsIContent** aResult);
@@ -131,6 +135,12 @@ public:
   
   static void GetTitleAndHrefForBrowserView(id aBrowserView, nsString& aTitle, nsString& aHref);
   static void OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder);
+
+  static NSImage* CreateIconForBookmark(nsIDOMElement* aElement);
+  
+  static void DragBookmark(nsIDOMElement* aElement, NSView* aView, NSEvent* aEvent);
+  static void CompleteBookmarkDrag(NSPasteboard* aPasteboard, nsIDOMElement* aFolderElt, nsIDOMElement* aBeforeElt, int aPosition);
+  
   
 public:
   // Global counter and pointers to our singletons.
@@ -149,6 +159,10 @@ public:
   static nsIAtom* gBookmarkAtom;
   static nsIDocument* gBookmarks;
   static nsVoidArray* gInstances;
+  static int CHInsertNone;
+  static int CHInsertInto;
+  static int CHInsertBefore;
+  static int CHInsertAfter;
   
 private:
   // There are three kinds of bookmarks data sources:

@@ -83,9 +83,8 @@
     nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
     NSMenu* menu = BookmarksService::LocateMenu(content);
     [NSMenu popUpContextMenu: menu withEvent: aEvent forView: self];
-  }
-  else
-    [super mouseDown: aEvent];
+  } else
+    [super mouseDown:aEvent];
 }
 
 -(void)setElement: (nsIDOMElement*)aElt
@@ -126,6 +125,19 @@
 -(nsIDOMElement*)element
 {
   return mElement;
+}
+
+- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)flag
+{
+    return NSDragOperationGeneric;
+}
+
+- (void) mouseDragged: (NSEvent*) aEvent
+{
+  // XXX mouseDragged is never called because buttons cancel dragging while you mouse down 
+  //     I have to fix this in an ugly way, by doing the "click" stuff myself and never relying
+  //     on the superclass for that.  Bah!
+  BookmarksService::DragBookmark(mElement, self, aEvent);
 }
 
 @end

@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "CHBrowserView.h"
-#include "BookmarksService.h"
+#import "BookmarksService.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -469,6 +469,63 @@
         [mOutlineView reloadItem: item reloadChildren: aReloadChildren];
 }
 
+- (BOOL)outlineView:(NSOutlineView*)outlineView acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index
+{
+  BookmarkItem* beforeItem = nil;
+  nsCOMPtr<nsIDOMElement> beforeElt;
+  nsCOMPtr<nsIDOMElement> folderElt;
+  nsCOMPtr<nsIContent> folderContent;
+  
+  if (index == NSOutlineViewDropOnItemIndex)
+    return NO;
+
+  // get the folder element
+  if (!item)
+      mBookmarks->GetRootContent(getter_AddRefs(folderContent));
+  else 
+      folderContent = [item contentNode];
+  folderElt = do_QueryInterface(folderContent);
+
+  // get the element to insert before, if there is one
+  PRInt32 childCount = 0;
+  folderContent->ChildCount(childCount);
+  if (index < childCount)
+    beforeItem = [[outlineView dataSource] outlineView:outlineView child:index ofItem:item];
+  if (beforeItem)
+    beforeElt = do_QueryInterface([beforeItem contentNode]);
+  
+  // insert the dragged stuff into bookmarks
+  BookmarksService::CompleteBookmarkDrag([info draggingPasteboard], folderElt, beforeElt, 
+                                         BookmarksService::CHInsertBefore);
+
+  return YES;
+}
+
+- (NSDragOperation)outlineView:(NSOutlineView*)outlineView validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index
+{
+  if (index == NSOutlineViewDropOnItemIndex)
+    return NSDragOperationNone;
+
+  return NSDragOperationGeneric;
+}
+
+- (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard
+{
+  NSMutableArray* contentIds = [NSMutableArray array];
+  
+  for (int i = 0; i < [items count]; ++i) {
+    nsCOMPtr<nsIContent> content = [[items objectAtIndex:i] contentNode];
+    PRUint32 contentId;
+    content->GetContentID(&contentId);
+    [contentIds addObject:[NSNumber numberWithInt:contentId]];
+  }
+  
+  [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:outlineView];
+  [pboard setPropertyList:contentIds forType:@"MozBookmarkType"];
+
+  return YES;
+}
+
 @end
 
 @implementation BookmarkItem
@@ -527,6 +584,10 @@ nsIAtom* BookmarksService::gBookmarkAtom = nsnull;
 nsIAtom* BookmarksService::gHrefAtom = nsnull;
 nsIAtom* BookmarksService::gNameAtom = nsnull;
 nsVoidArray* BookmarksService::gInstances = nsnull;
+int BookmarksService::CHInsertNone = 0;
+int BookmarksService::CHInsertInto = 1;
+int BookmarksService::CHInsertBefore = 2;
+int BookmarksService::CHInsertAfter = 3;
 
 BookmarksService::BookmarksService(BookmarksDataSource* aDataSource)
 {
@@ -754,6 +815,74 @@ BookmarksService::RemoveObserver()
         NS_RELEASE(gHrefAtom);
         [gDictionary release];
     }
+}
+
+void
+BookmarksService::AddBookmarkToFolder(nsString& aURL, nsString& aTitle, nsIDOMElement* aFolder, nsIDOMElement* aBeforeElt)
+{
+  // XXX if no folder provided, default to root folder
+  if (!aFolder) return;
+  
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
+  nsCOMPtr<nsIDOMElement> elt;
+  domDoc->CreateElementNS(NS_LITERAL_STRING("http://chimera.mozdev.org/bookmarks/"),
+                          NS_LITERAL_STRING("bookmark"),
+                          getter_AddRefs(elt));
+
+  elt->SetAttribute(NS_LITERAL_STRING("name"), aTitle);
+  elt->SetAttribute(NS_LITERAL_STRING("href"), aURL);
+
+  MoveBookmarkToFolder(elt, aFolder, aBeforeElt);
+}
+
+void
+BookmarksService::MoveBookmarkToFolder(nsIDOMElement* aBookmark, nsIDOMElement* aFolder, nsIDOMElement* aBeforeElt)
+{
+  if (!aBookmark || !aFolder) return;
+  
+  nsCOMPtr<nsIDOMNode> oldParent;
+  aBookmark->GetParentNode(getter_AddRefs(oldParent));
+
+  nsCOMPtr<nsIDOMNode> dummy;
+  if (oldParent) {
+    nsCOMPtr<nsIDOMNode> bookmarkNode = do_QueryInterface(aBookmark);
+    oldParent->RemoveChild(bookmarkNode, getter_AddRefs(dummy));
+  }
+
+  if (aBeforeElt) {
+    aFolder->InsertBefore(aBookmark, aBeforeElt, getter_AddRefs(dummy));
+  } else {
+    aFolder->AppendChild(aBookmark, getter_AddRefs(dummy));
+  }
+  
+  nsCOMPtr<nsIContent> childContent(do_QueryInterface(aBookmark));
+  nsCOMPtr<nsIContent> parentContent(do_QueryInterface(aFolder));
+
+  if (oldParent) {
+    nsCOMPtr<nsIContent> oldParentContent(do_QueryInterface(oldParent));
+    BookmarkRemoved(oldParentContent, childContent);
+  }
+  
+  BookmarkAdded(parentContent, childContent);
+}
+
+void
+BookmarksService::DeleteBookmark(nsIDOMElement* aBookmark)
+{
+  if (!aBookmark) return;
+  
+  nsCOMPtr<nsIDOMNode> oldParent;
+  aBookmark->GetParentNode(getter_AddRefs(oldParent));
+
+  if (oldParent) {
+    nsCOMPtr<nsIDOMNode> dummy;
+    nsCOMPtr<nsIDOMNode> bookmarkNode = do_QueryInterface(aBookmark);
+    oldParent->RemoveChild(bookmarkNode, getter_AddRefs(dummy));
+
+    nsCOMPtr<nsIContent> childContent(do_QueryInterface(aBookmark));
+    nsCOMPtr<nsIContent> oldParentContent(do_QueryInterface(oldParent));
+    BookmarkRemoved(oldParentContent, childContent);
+  }
 }
 
 void
@@ -1202,3 +1331,81 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
   [aTabView selectTabViewItemAtIndex: 0];
   [[[[aTabView tabViewItemAtIndex: 0] view] getBrowserView] setActive: YES];
 }
+
+NSImage*
+BookmarksService::CreateIconForBookmark(nsIDOMElement* aElement)
+{
+  nsCOMPtr<nsIAtom> tagName;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  content->GetTag(*getter_AddRefs(tagName));
+  if (tagName == BookmarksService::gFolderAtom)
+    return [NSImage imageNamed:@"folder"];
+    
+  nsAutoString group;
+  aElement->GetAttribute(NS_LITERAL_STRING("group"), group);
+  if (!group.IsEmpty())
+    return [NSImage imageNamed:@"smallgroup"];
+  
+  return [NSImage imageNamed:@"groupbookmark"];
+}
+
+void
+BookmarksService::DragBookmark(nsIDOMElement* aElement, NSView* aView, NSEvent* aEvent)
+{
+  NSPasteboard *pboard;
+  NSString* title;
+  
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  PRUint32 contentId;
+  content->GetContentID(&contentId);
+  
+  pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
+  [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:aView];
+  [pboard setPropertyList:[NSArray arrayWithObject:[NSNumber numberWithInt:contentId]] forType:@"MozBookmarkType"];
+  
+  nsAutoString nameStr;
+  aElement->GetAttribute(NS_LITERAL_STRING("name"), nameStr);
+  title = [NSString stringWithCharacters: nameStr.get() length: nsCRT::strlen(nameStr.get())];
+  
+  [aView dragImage: [MainController createImageForDragging: CreateIconForBookmark(aElement) title:title]
+                    at:NSMakePoint(0,0) offset:NSMakeSize(0,0)
+                    event:aEvent pasteboard:pboard source:aView slideBack:YES];
+}
+
+void
+BookmarksService::CompleteBookmarkDrag(NSPasteboard* aPasteboard, nsIDOMElement* aFolderElt,
+                                       nsIDOMElement* aBeforeElt, int aPosition)
+{
+  NSArray* contentIds;
+  
+  nsCOMPtr<nsIDOMElement> beforeElt = aBeforeElt;
+  if (aPosition == BookmarksService::CHInsertAfter && aBeforeElt) {
+    nsCOMPtr<nsIDOMNode> beforeNode;
+    aBeforeElt->GetNextSibling(getter_AddRefs(beforeNode));
+    beforeElt = do_QueryInterface(beforeNode);
+  }
+  
+  if (aPosition == BookmarksService::CHInsertInto) {
+    aFolderElt = aBeforeElt;
+    beforeElt = nsnull;
+  }
+    
+  // check for recognized drag types
+  contentIds = [aPasteboard propertyListForType: @"MozBookmarkType"];
+  if (contentIds) {
+    // drag type is chimera bookmarks
+    for (int i = 0; i < [contentIds count]; ++i) {
+      BookmarkItem* item = [gDictionary objectForKey: [contentIds objectAtIndex:i]];
+      nsCOMPtr<nsIDOMElement> bookmarkElt = do_QueryInterface([item contentNode]);
+      MoveBookmarkToFolder(bookmarkElt, aFolderElt, beforeElt);
+    }
+  } else {
+    // add bookmark for chimera url type
+    NSDictionary* data = [aPasteboard propertyListForType: @"MozURLType"];
+    nsAutoString url; url.AssignWithConversion([[data objectForKey:@"url"] cString]);
+    nsAutoString title; title.AssignWithConversion([[data objectForKey:@"title"] cString]);
+    
+    AddBookmarkToFolder(url, title, aFolderElt, beforeElt);
+  }
+}
+

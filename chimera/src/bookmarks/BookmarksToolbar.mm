@@ -25,6 +25,7 @@
 #import "CHBookmarksToolbar.h"
 #import "BookmarksService.h"
 #include "nsIDOMElement.h"
+#include "nsIContent.h"
 
 @implementation CHBookmarksToolbar
 
@@ -32,6 +33,9 @@
   if ( (self = [super initWithFrame:frame]) ) {
     mBookmarks = nsnull;
     mButtons = [[NSMutableArray alloc] init];
+    mDragInsertionButton = nil;
+    mDragInsertionPosition = BookmarksService::CHInsertNone;
+    [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", nil]];
   }
   return self;
 }
@@ -70,6 +74,12 @@
 
   // The buttons will paint themselves. Just call our base class method.
   [super drawRect: aRect];
+  
+  // draw a separator at drag n drop insertion point if there is one
+  if (mDragInsertionPosition) {
+    [[[NSColor controlShadowColor] colorWithAlphaComponent:0.6] set];
+    NSRectFill([self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]);
+  }
 }
 
 -(void)buildButtonList
@@ -238,6 +248,102 @@
   //else
     // Reflowing the buttons will do the right thing.
   //  [self reflowButtons];
+}
+
+- (void)setButtonInsertionPoint:(NSPoint)aPoint
+{
+  int count = [mButtons count];
+  
+  mDragInsertionButton = nsnull;
+  mDragInsertionPosition = BookmarksService::CHInsertAfter;
+  
+  for (int i = 0; i < count; ++i) {
+    CHBookmarksButton* button = [mButtons objectAtIndex: i];
+    //NSLog(@"check %d - %d,%d %d,%d\n", i, [button frame].origin.x, [button frame].origin.y, aPoint.x, aPoint.y);
+    // XXX origin.y is coming up zero here! Need that to check the row we're dragging in :(
+    
+    nsCOMPtr<nsIAtom> tagName;
+    nsCOMPtr<nsIContent> contentNode = do_QueryInterface([button element]);
+    contentNode->GetTag(*getter_AddRefs(tagName));
+    
+    if (tagName == BookmarksService::gFolderAtom) {
+      if (([button frame].origin.x+([button frame].size.width) > aPoint.x)) {
+        mDragInsertionButton = button;
+        mDragInsertionPosition = BookmarksService::CHInsertInto;
+        return;
+      }
+    } else if (([button frame].origin.x+([button frame].size.width/2) > aPoint.x)) {
+      mDragInsertionButton = button;
+      mDragInsertionPosition = BookmarksService::CHInsertBefore;
+      return;
+    } else if (([button frame].origin.x+([button frame].size.width) > aPoint.x)) {
+      mDragInsertionButton = button;
+      mDragInsertionPosition = BookmarksService::CHInsertAfter;
+      return;
+    }
+  }
+}
+
+// NSDraggingDestination ///////////
+
+- (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
+{
+  return NSDragOperationGeneric;
+}
+
+- (void)draggingExited:(id <NSDraggingInfo>)sender
+{
+  if (mDragInsertionPosition)
+    [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
+
+  mDragInsertionButton = nil;
+  mDragInsertionPosition = BookmarksService::CHInsertNone;
+}
+
+- (unsigned int)draggingUpdated:(id <NSDraggingInfo>)sender
+{
+  if (mDragInsertionPosition)
+    [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
+
+  [self setButtonInsertionPoint:[sender draggingLocation]];
+  
+  if (mDragInsertionPosition)
+    [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
+
+  return NSDragOperationGeneric;
+}
+
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
+{
+  return YES;
+}
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+{
+  BookmarksService::CompleteBookmarkDrag([sender draggingPasteboard], BookmarksService::gToolbarRoot, 
+                                         mDragInsertionButton ? [mDragInsertionButton element] : nil,
+                                         mDragInsertionPosition);
+  
+  mDragInsertionButton = nil;
+  mDragInsertionPosition = BookmarksService::CHInsertNone;
+
+  [self setNeedsDisplay:YES];
+
+  return YES;    
+}
+
+- (NSRect)insertionRectForButton:(NSView*)aButton position:(int) aPosition
+{
+  if (aPosition == BookmarksService::CHInsertInto) {
+    return NSMakeRect([aButton frame].origin.x, [aButton frame].origin.y,
+                      [aButton frame].size.width, [aButton frame].size.height);
+  } else if (aPosition == BookmarksService::CHInsertAfter) {
+    return NSMakeRect([aButton frame].origin.x+[aButton frame].size.width, [aButton frame].origin.y,
+                      2, [aButton frame].size.height);
+  } else {// if (aPosition == BookmarksService::CHInsertBefore) {
+    return NSMakeRect([aButton frame].origin.x - 2, [aButton frame].origin.y,
+                      2, [aButton frame].size.height);
+  }
 }
 
 @end

@@ -121,4 +121,6 @@ class BookmarksService;
 
 - (IBAction)showAboutBox:(id)sender;
 
++ (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle;
+
 @end
