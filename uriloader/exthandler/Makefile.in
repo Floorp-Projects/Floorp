@@ -44,6 +44,7 @@ endif
 OSHELPER	= nsOSHelperAppService.cpp
 
 EXPORTS = 	nsExternalHelperAppService.h \
+		nsExternalProtocolHandler.h \
 		$(OSDIR)/nsOSHelperAppService.h \
 		nsHelperAppRDF.h	    \
 			$(NULL)
@@ -56,6 +57,7 @@ XPIDLSRCS = \
 
 CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
+	nsExternalProtocolHandler.cpp \
 	$(OSHELPER) \
 	$(NULL)
 
