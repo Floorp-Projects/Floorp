@@ -259,8 +259,6 @@ xpmenubar {
     background-color: #CCCCDD;
     border-bottom: 1px solid #9999cc;
     font: inherit;
-    min-height: 2em;
-    width: 100%;
 }
 
 xpmenubar[collapsed="true"] {
@@ -597,19 +595,24 @@ toolbar titledbutton[disabled="true"]:active {
 	padding: 2px;
 }
 
-xpmenubar xpmenu {
+xpmenubar > xpmenu {
   border: 1px solid transparent;
-  padding: 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 3px;
+  padding-right: 3px;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
-xpmenubar xpmenu {
+xpmenuchildren > xpmenu {
   border: 1px solid transparent;
-  padding: 4px;
+  padding: 2px;
 }
 
-xpmenubar xpmenuitem {
+xpmenuchildren > xpmenuitem {
   border: 1px solid transparent;
-  padding: 4px;
+  padding: 2px;
 }
 
 xpmenubar > xpmenu[menuactive="true"] {
@@ -631,15 +634,22 @@ xpmenuchildren > xpmenuitem[menuactive="true"] {
   color: white;
 }
 
-xpmenuchildren > xpmenu > titledbutton {
+.menu-right {
   padding: 0px;
   border: 0px;
   width: 6px;
   margin-left: 8px;
+}
+
+xpmenuitem > .menu-right {
+  list-style-image: none;
+}
+
+xpmenu > .menu-right {
   list-style-image: url(chrome://global/skin/menuArrow.gif);
 }
 
-xpmenuchildren > xpmenu[menuactive="true"] > titledbutton {
+xpmenu[menuactive="true"] > .menu-right {
   list-style-image: url(chrome://global/skin/menuArrow_mo.gif);
 }
 
