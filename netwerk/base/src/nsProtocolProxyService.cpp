@@ -506,10 +506,13 @@ nsProtocolProxyService::AddNoProxyFor(const char* iHost, PRInt32 iPort)
     if (!hp)
         return NS_ERROR_OUT_OF_MEMORY;
     hp->host = new nsCString(iHost);
+    if (!hp->host) {
+        delete hp;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
     hp->port = iPort;
     
     nsAutoLock lock(mArrayLock);
-
     return (mFiltersArray.AppendElement(hp)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -592,8 +595,10 @@ nsProtocolProxyService::LoadFilters(const char* filters)
         if (!hp)
             return; // fail silently
         hp->host = new nsCString(np, endproxy-np);
-        if (!hp->host)
+        if (!hp->host) {
+            delete hp;
             return;
+        }
         hp->port = nport>0 ? nport : -1;
 
         mFiltersArray.AppendElement(hp);
