@@ -371,8 +371,8 @@
   <rdf:Description about="#ieusers">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="ieusers-firebird-ie-terminology-differences" nc:name="&brandFullName; and Internet Explorer Terminology Differences" nc:link="forieusers.xhtml#firebird_and_internet_explorer_terminology_differences"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="ieusers-about-your-ie-settings" nc:name="About Your IE Settings" nc:link="forieusers.xhtml#about_your_ie_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="ieusers-firebird-ie-terminology-differences" nc:name="Terminology Differences" nc:link="forieusers.xhtml#firebird_and_internet_explorer_terminology_differences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="ieusers-about-your-ie-settings" nc:name="About Your IE Favorites and Settings" nc:link="forieusers.xhtml#about_your_ie_settings"/> </rdf:li>
         <rdf:li> <rdf:Description ID="ieusers-firebirds-features" nc:name="&brandFullName;'s Features" nc:link="forieusers.xhtml#firebirds_features"/> </rdf:li>
         <rdf:li> <rdf:Description ID="ieusers-keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="forieusers.xhtml#keyboard_shortcuts"/> </rdf:li>
       </rdf:Seq>
