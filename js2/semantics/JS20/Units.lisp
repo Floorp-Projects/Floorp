@@ -23,6 +23,11 @@
                                        (:character-literal #\A) :nbhy (:character-literal #\Z) ", and "
                                        (:character-literal #\a) :nbhy (:character-literal #\z) ")"))
                 () t)
+               (:white-space-character (++ (#?0009 #?000B #?000C #\space #?00A0)
+                                           (#?2000 #?2001 #?2002 #?2003 #?2004 #?2005 #?2006 #?2007)
+                                           (#?2008 #?2009 #?200A #?200B)
+                                           (#?3000)) ())
+               (:line-terminator (#?000A #?000D #?2028 #?2029) ())
                (:initial-identifier-character (+ :unicode-initial-alphabetic (#\$ #\_))
                                               (($default-action $default-action)))
                (:continuing-identifier-character (+ :unicode-alphanumeric (#\$ #\_))
@@ -40,29 +45,49 @@
        (%print-actions)
        
        
+       (%section "White Space")
+       
+       (grammar-argument :sigma wsopt wsreq)
+
+       (%charclass :white-space-character)
+       (%charclass :line-terminator)
+
+       (production :required-white-space (:white-space-character) required-white-space-character)
+       (production :required-white-space (:line-terminator) required-white-space-line-terminator)
+       (production :required-white-space (:required-white-space :white-space-character) required-white-space-more-character)
+       (production :required-white-space (:required-white-space :line-terminator) required-white-space-more-line-terminator)
+
+       (production (:white-space :sigma) (:required-white-space) white-space-required-white-space)
+       (production (:white-space wsopt) () white-space-empty)
+
        (%section "Unit Patterns")
+
        (rule :unit-pattern ((value unit-list))
-         (production :unit-pattern (:unit-product) unit-pattern-product
+         (production :unit-pattern ((:white-space wsopt) :unit-quotient) unit-pattern-quotient
+           (value (value :unit-quotient))))
+       
+       (rule :unit-quotient ((value unit-list))
+         (production :unit-quotient ((:unit-product wsopt)) unit-quotient-product
            (value (value :unit-product)))
-         (production :unit-pattern (:unit-product #\/ :unit-product) unit-pattern-quotient
-           (value (append (value :unit-product 1) (unit-reciprocal (value :unit-product 2)))))
-         (production :unit-pattern (#\/ :unit-product) unit-pattern-reciprocal
-           (value (unit-reciprocal (value :unit-product)))))
+         (production :unit-quotient ((:unit-product wsopt) #\/ (:white-space wsopt) (:unit-product wsopt)) unit-quotient-quotient
+           (value (append (value :unit-product 1) (unit-reciprocal (value :unit-product 2))))))
        
-       (rule :unit-product ((value unit-list))
-         (production :unit-product (:unit-factor) unit-product-factor
+       (rule (:unit-product :sigma) ((value unit-list))
+         (production (:unit-product :sigma) ((:unit-factor :sigma)) unit-product-factor
            (value (value :unit-factor)))
-         (production :unit-product (:unit-factor #\* :unit-factor) unit-product-product
-           (value (append (value :unit-factor 1) (value :unit-factor 2)))))
+         (production (:unit-product :sigma) ((:unit-product wsopt) #\* (:white-space wsopt) (:unit-factor :sigma)) unit-product-product
+           (value (append (value :unit-product) (value :unit-factor))))
+         (production (:unit-product :sigma) ((:unit-product wsreq) (:unit-factor :sigma)) unit-product-implied-product
+           (value (append (value :unit-product) (value :unit-factor)))))
        
-       (rule :unit-factor ((value unit-list))
-         (production :unit-factor (#\1) unit-factor-one
+       (rule (:unit-factor :sigma) ((value unit-list))
+         (production (:unit-factor :sigma) (#\1 (:white-space :sigma)) unit-factor-one
            (value (vector-of unit-factor)))
-         (production :unit-factor (#\1 #\^ :signed-integer) unit-factor-one-exponent
+         (production (:unit-factor :sigma) (#\1 (:white-space wsopt) #\^ (:white-space wsopt) :signed-integer (:white-space :sigma)) unit-factor-one-exponent
            (value (vector-of unit-factor)))
-         (production :unit-factor (:identifier) unit-factor-identifier
+         (production (:unit-factor :sigma) (:identifier (:white-space :sigma)) unit-factor-identifier
            (value (vector (tuple unit-factor (name :identifier) 1))))
-         (production :unit-factor (:identifier #\^ :signed-integer) unit-factor-identifier-exponent
+         (production (:unit-factor :sigma) (:identifier (:white-space wsopt) #\^ (:white-space wsopt) :signed-integer (:white-space :sigma)) unit-factor-identifier-exponent
            (value (vector (tuple unit-factor (name :identifier) (integer-value :signed-integer))))))
        
        (deftype unit-list (vector unit-factor))
