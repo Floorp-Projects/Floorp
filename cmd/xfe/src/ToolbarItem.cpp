@@ -220,40 +220,29 @@ XFE_ToolbarItem::tipStringObtain(XmString *	stringReturn,
 								 Boolean *	needToFreeString)
 {
 	HT_Resource			entry = getHtResource();
-	MWContext *			context = getAncestorContext();
 
 	XP_ASSERT( entry != NULL );
-	XP_ASSERT( context != NULL );
 
     void *				data = NULL;
-    XmFontList			font_list = NULL;
-    XmString			xmstr = NULL;
 
     HT_GetTemplateData(HT_TopNode(HT_GetView(entry)),
 					   gNavCenter->buttonTooltipText,
 					   HT_COLUMN_STRING,
 					   &data);
 
+    XmFontList dummyFontListForNow = NULL;
     if (data != NULL) 
-	{
-		MWContext * context = getAncestorContext();
-
-		INTL_CharSetInfo charSetInfo = LO_GetDocumentCharacterSetInfo(context);
-    
-		xmstr = fe_ConvertToXmString((unsigned char *) data,
-									 INTL_GetCSIWinCSID(charSetInfo) ,
-									 NULL, 
-									 XmFONT_IS_FONT, 
-									 &font_list);
-
-		*stringReturn = xmstr;
-		*needToFreeString = True;
+    {
+      XFE_RDFUtils::utf8ToXmStringAndFontList((char*)data, XtDisplay(m_parent),
+                               stringReturn, &dummyFontListForNow);
     }
     else 
     {
-		*stringReturn = XFE_RDFUtils::getStringFromResource(context,entry);
-		*needToFreeString = True;
+      XFE_RDFUtils::entryToXmStringAndFontList(entry, XtDisplay(m_parent),
+                               stringReturn, &dummyFontListForNow);
     }
+    XmFontListFree(dummyFontListForNow);
+    *needToFreeString = True;
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
@@ -261,40 +250,28 @@ XFE_ToolbarItem::docStringObtain(XmString *	stringReturn,
 								 Boolean *	needToFreeString)
 {
 	HT_Resource			entry = getHtResource();
-	MWContext *			context = getAncestorContext();
 
 	XP_ASSERT( entry != NULL );
-	XP_ASSERT( context != NULL );
 
     void *				data = NULL;
-    XmFontList			font_list = NULL;
-    XmString			xmstr = NULL;
 
     HT_GetTemplateData(HT_TopNode(HT_GetView(entry)),
 					   gNavCenter->buttonStatusbarText,
 					   HT_COLUMN_STRING,
 					   &data);
-
+    XmFontList dummyFontListForNow = NULL;
     if (data != NULL) 
-	{
-		MWContext * context = getAncestorContext();
-
-		INTL_CharSetInfo charSetInfo = LO_GetDocumentCharacterSetInfo(context);
-    
-		xmstr = fe_ConvertToXmString((unsigned char *) data,
-									 INTL_GetCSIWinCSID(charSetInfo) ,
-									 NULL, 
-									 XmFONT_IS_FONT, 
-									 &font_list);
-
-		*stringReturn = xmstr;
-		*needToFreeString = True;
+    {
+      XFE_RDFUtils::utf8ToXmStringAndFontList((char*)data, XtDisplay(m_parent),
+                               stringReturn, &dummyFontListForNow);
     }
     else 
     {
-		*stringReturn = XFE_RDFUtils::getStringFromResource(context,entry);
-		*needToFreeString = True;
+      XFE_RDFUtils::entryToXmStringAndFontList(entry, XtDisplay(m_parent),
+                               stringReturn, &dummyFontListForNow);
     }
+    XmFontListFree(dummyFontListForNow);
+
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void

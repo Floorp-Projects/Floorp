@@ -91,21 +91,21 @@ public:
 	//////////////////////////////////////////////////////////////////////
 
     // Format item blah blah blah
-    static XmString  formatItem         (HT_Resource        entry, 
-                                         int16              charset);
+    static XmString  formatItem         (HT_Resource        entry);
 
     // Obtain an internationallized XmString from an entry
-    static XmString  entryToXmString    (HT_Resource        entry,
-                                         INTL_CharSetInfo   char_set_info);
-
-
-	static XmString	getStringFromResource	(MWContext *		context,
-											 HT_Resource		entry);
+    static void  entryToXmStringAndFontList    (HT_Resource        entry, 
+											Display* dsp,
+											XmString*	pStr, 
+											XmFontList*	pFontList);
+    static void  utf8ToXmStringAndFontList    (char*	utf8str,
+											Display* dsp,
+											XmString*	pStr, 
+											XmFontList*	pFontList);
 
 
 	// Set the XmNlabelString for a widget
-	static void		setItemLabelString		(MWContext *	context,
-											 Widget			item,
+	static void		setItemLabelString		(Widget			item,
 											 HT_Resource	entry);
 
 

@@ -125,8 +125,7 @@ XFE_ToolbarButton::configure()
 	// XtVaSetValues(m_widget,XmNforceDimensionToMax,False,NULL);
 
     // Set the item's label
-    XFE_RDFUtils::setItemLabelString(getAncestorContext(),
-									 m_widget,
+    XFE_RDFUtils::setItemLabelString( m_widget,
 									 getHtResource());
 
 	// Set the item's style and layout

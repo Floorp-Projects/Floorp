@@ -56,8 +56,6 @@
 
 extern "C"  {
 extern RDF_NCVocab  gNavCenter;
-extern XmString fe_ConvertToXmString(unsigned char *, int16, fe_Font, XmFontType, XmFontList * );
-extern INTL_CharSetInfo LO_GetDocumentCharacterSetInfo(MWContext *);
 }
 
 typedef struct _tbarTooltipCBStruct {
@@ -517,7 +515,8 @@ XFE_RDFToolbar::createCascade(Widget parent,HT_Resource entry)
 
     
     // Set the item's label
-    XFE_RDFUtils::setItemLabelString(_frame->getContext(),cascade,entry);
+    // ftang- i18n issue
+    XFE_RDFUtils::setItemLabelString(cascade,entry);
 
     configureXfeCascade(cascade,entry);
 
@@ -529,11 +528,14 @@ XFE_RDFToolbar::createCascade(Widget parent,HT_Resource entry)
 
     /* Set the tooltip callback */
     XfeTipStringAdd(cascade);
+    // ftang- i18n issue
     XfeTipStringSetObtainCallback(cascade, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) data);
 
     /* Set up the status bar text */
     XfeDocStringAdd(cascade);
+    // ftang- i18n issue
     XfeDocStringSetObtainCallback(cascade, docStringSetCB, (XtPointer)data);
+    // ftang- i18n issue
     XfeDocStringSetCallback(cascade, docStringCB, (XtPointer)data);
 
 
@@ -588,7 +590,7 @@ XFE_RDFToolbar::updateAppearance()
 //////////////////////////////////////////////////////////////////////////
 /* static */
 void
-XFE_RDFToolbar::tooltipCB(Widget		/* w */, 
+XFE_RDFToolbar::tooltipCB(Widget		 w , 
 						  XtPointer		client_data, 
 						  XmString *	string_return, 
 						  Boolean *		need_to_free_string)
@@ -599,79 +601,63 @@ XFE_RDFToolbar::tooltipCB(Widget		/* w */,
     HT_Resource  entry = (HT_Resource) ttip->entry;
 
     void *        data=NULL;
-    XmFontList    font_list;
-    XmString      str = NULL;
 
     HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &data);
+    XmFontList dummyFontListForNow = NULL;
     if (data) {
-       MWContext * context = (obj->getFrame())->getContext();
-       INTL_CharSetInfo charSetInfo =
-            LO_GetDocumentCharacterSetInfo(context);
-    
-       str = fe_ConvertToXmString((unsigned char *) data,
-                                        INTL_GetCSIWinCSID(charSetInfo) ,
-                                        NULL, XmFONT_IS_FONT, &font_list);
-
-    
-       *string_return = str;
-       *need_to_free_string = True;
+      XFE_RDFUtils::utf8ToXmStringAndFontList((char*)data, XtDisplay(w),
+                               string_return, &dummyFontListForNow);
+      XmFontListFree(dummyFontListForNow);	
     }
     else 
     {
-      MWContext * context = (obj->getFrame())->getContext();
-
-      *string_return = XFE_RDFUtils::getStringFromResource(context,entry);
-      *need_to_free_string = True;
+      XFE_RDFUtils::entryToXmStringAndFontList(entry, XtDisplay(w),
+                               string_return, &dummyFontListForNow);
+      XmFontListFree(dummyFontListForNow);	
     }
+    *need_to_free_string = True;
 
 }
 
 //////////////////////////////////////////////////////////////////////////
 /* static */
+// ftang- i18n issue
 void
-XFE_RDFToolbar::docStringSetCB(Widget		/* w */, 
+XFE_RDFToolbar::docStringSetCB(Widget		w , 
 							   XtPointer	client_data, 
 							   XmString *	string_return, 
 							   Boolean *	need_to_free_string)
 {
 
     ItemCallbackStruct * ttip = (ItemCallbackStruct * )client_data;
-    XFE_RDFToolbar * obj = (XFE_RDFToolbar *) ttip->object;
     HT_Resource  entry = (HT_Resource) ttip->entry;
 
     void *        data=NULL;
-    XmFontList    font_list;
-    XmString      str = NULL;
+    XmFontList dummyFontListForNow = NULL;
 
     HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), gNavCenter->buttonStatusbarText, HT_COLUMN_STRING, &data);
     if (data) {
       D(printf("Doc string obtained from HT = %s\n", (char *) data););
-       MWContext * context = (obj->getFrame())->getContext();
     
-       INTL_CharSetInfo charSetInfo =
-            LO_GetDocumentCharacterSetInfo(context);
-     
-       str = fe_ConvertToXmString((unsigned char *) data,
-                                        INTL_GetCSIWinCSID(charSetInfo) ,
-                                        NULL, XmFONT_IS_FONT, &font_list);
-
-    
-       *string_return = str;
-       *need_to_free_string = True;
+      XFE_RDFUtils::utf8ToXmStringAndFontList((char*)data, XtDisplay(w),
+            string_return, &dummyFontListForNow);
+      XmFontListFree(dummyFontListForNow);	
     }
     else
 	{
 		
 //		Boolean isContainer = HT_IsContainer(entry);
-		MWContext * context = (obj->getFrame())->getContext();
 		
-		*string_return = XFE_RDFUtils::getStringFromResource(context,entry);
+      XFE_RDFUtils::entryToXmStringAndFontList(entry, XtDisplay(w),
+            string_return, &dummyFontListForNow);
+      XmFontListFree(dummyFontListForNow);	
 
-		*need_to_free_string = True;
     }
+    *need_to_free_string = True;
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ void
+// ftang- i18n issue
 XFE_RDFToolbar::docStringCB(Widget			/* w */, 
 							XtPointer		client_data, 
 							unsigned char	reason, 

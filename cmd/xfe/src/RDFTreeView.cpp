@@ -741,7 +741,7 @@ XFE_RDFTreeView::initCell(HT_Resource node, int row, int column)
 
     if (column == 0)
     {
-        xmstr = XFE_RDFUtils::formatItem(node, charset);
+        xmstr = XFE_RDFUtils::formatItem(node);
     }
     else
     {

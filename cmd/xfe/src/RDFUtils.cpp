@@ -300,112 +300,57 @@ XFE_RDFUtils::guessTitle(MWContext *		context,
 // XmString hackery
 //
 //////////////////////////////////////////////////////////////////////////
-/* static */ XmString
-XFE_RDFUtils::entryToXmString(HT_Resource			entry,
-							  INTL_CharSetInfo		char_set_info)
+/* static */ void
+XFE_RDFUtils::entryToXmStringAndFontList(HT_Resource			entry,
+	Display* dpy, 
+	XmString* pStr, 
+	XmFontList* pFontList)
 {
     XP_ASSERT( entry != NULL );
+    char *name = HT_GetNodeName(entry);
+    XFE_RDFUtils::utf8ToXmStringAndFontList(name, dpy, pStr, pFontList);
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ void
+XFE_RDFUtils::utf8ToXmStringAndFontList(char* utf8str,
+	Display* dpy, 
+	XmString* pXmStr, 
+	XmFontList* pFontList)
+{
 
-    XmString            result = NULL;
-    XmString            tmp;
-    char *                psz;
+    fe_Font fe_font;
+    XmFontList dontFreeFontList;
 
-    int16 charset = INTL_GetCSIWinCSID(char_set_info);
+    // need to perform mid truncation here 
+    // need to replace with UTF8 to XmString conversion and get FontList here
 
-    tmp = XFE_RDFUtils::formatItem(entry,charset);
-    
-    // Mid truncate the name
-    if (XmStringGetLtoR(tmp,XmSTRING_DEFAULT_CHARSET,&psz))
-    {
-        XmStringFree(tmp);
+    fe_font = fe_LoadUnicodeFont(NULL, "", 0, 2, 0,0,0, 0,dpy);
 
-        INTL_MidTruncateString(charset, psz, psz, 40);
-
-        result = XmStringCreateLtoR(psz,XmSTRING_DEFAULT_CHARSET);
-
-        if (psz)
-        {
-            XtFree(psz);
-        }
-    }
-    else
-    {
-        result = tmp;
-    }
-
-    return result;
+    *pXmStr = fe_ConvertToXmString((unsigned char*) utf8str, CS_UTF8, fe_font, 
+	XmFONT_IS_FONT, &dontFreeFontList);
+    *pFontList = XmFontListCopy(dontFreeFontList);
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ XmString
-XFE_RDFUtils::formatItem(HT_Resource entry, int16 charset)
+XFE_RDFUtils::formatItem(HT_Resource entry)
 {
   XmString xmstring;
-  char buf [1024];
-  char *name = HT_GetNodeName(entry);
-  char *url = HT_GetNodeURL(entry);
-  XmFontList font_list;
+  char *data;
 
   if (HT_IsSeparator(entry))
-  {
-      strcpy (buf, "-------------------------");
-  }
-  else if (name || url)
-  {
-      fe_FormatDocTitle (name, url, buf, 1024);
-  }
+      data = "-------------------------";
+  else	
+      data = HT_GetNodeName(entry);
 
-  if (!*buf)
-  {
-      xmstring = 0;
-  }
-  else if (name || url)
-  {
-      xmstring = fe_ConvertToXmString ((unsigned char *) buf, charset, 
-                                       NULL, XmFONT_IS_FONT, &font_list);
-  }
-  else
-  {
-      char *loc;
-
-      loc = (char *) fe_ConvertToLocaleEncoding (charset,
-                                                 (unsigned char *) buf);
-
-      xmstring = XmStringSegmentCreate (loc, "HEADING",
-                                        XmSTRING_DIRECTION_L_TO_R, False);
-      if (loc != buf)
-      {
-          XP_FREE(loc);
-      }
-  }
-
-  if (!xmstring)
-  {
-	  xmstring = XmStringCreateLtoR ("", XmFONTLIST_DEFAULT_TAG);
-  }
+  // need to replace with UTF8 to XmString conversion and get FontList here
+    
+  xmstring = XmStringCreateLtoR(data ,XmSTRING_DEFAULT_CHARSET);
 
   return (xmstring);
 }
 //////////////////////////////////////////////////////////////////////////
-/* static */ XmString
-XFE_RDFUtils::getStringFromResource(MWContext *		context,
-									HT_Resource		entry)
-{
-	XmString xmname;
-
-	XP_ASSERT( context != NULL );
-	XP_ASSERT( entry != NULL );
-
-    INTL_CharSetInfo charSetInfo = LO_GetDocumentCharacterSetInfo(context);
-	
-    // Create am XmString from the entry
-	xmname = XFE_RDFUtils::entryToXmString(entry, charSetInfo);
-	
-    return xmname;
-}
-//////////////////////////////////////////////////////////////////////////
 /* static */ void 
-XFE_RDFUtils::setItemLabelString(MWContext *	context,
-								 Widget			item,
+XFE_RDFUtils::setItemLabelString(Widget			item,
 								 HT_Resource	entry)
 {
     XP_ASSERT( XfeIsAlive(item) );
@@ -416,16 +361,18 @@ XFE_RDFUtils::setItemLabelString(MWContext *	context,
                XmIsLabelGadget(item) ||
                XfeIsLabel(item) );
 
-    INTL_CharSetInfo charSetInfo = LO_GetDocumentCharacterSetInfo(context);
 
     // Create am XmString from the entry
-    XmString xmname = XFE_RDFUtils::entryToXmString(entry,charSetInfo);
+    XmString xmname;
+    XmFontList fontlist = NULL;
+    XFE_RDFUtils::entryToXmStringAndFontList(entry, XtDisplay(item), &xmname, &fontlist);
 	
     if (xmname != NULL)
     {
-        XtVaSetValues(item,XmNlabelString,xmname,NULL);
+        XtVaSetValues(item,XmNlabelString,xmname,XmNfontList, fontlist, NULL);
 		
         XmStringFree(xmname);
+        XmFontListFree(fontlist);
     }
 }
 //////////////////////////////////////////////////////////////////////////

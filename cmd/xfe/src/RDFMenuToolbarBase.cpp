@@ -580,7 +580,7 @@ XFE_RDFMenuToolbarBase::createCascadeButton(Widget        menu,
                               &pulldown);
 
     // Set the item's label
-    XFE_RDFUtils::setItemLabelString(_frame->getContext(),cascade,entry);
+    XFE_RDFUtils::setItemLabelString(cascade,entry);
     
     // Configure the new cascade button
 	XFE_RDFUtils::configureMenuCascadeButton(cascade,entry);
@@ -642,7 +642,7 @@ XFE_RDFMenuToolbarBase::createPushButton(Widget menu, HT_Resource entry)
 	XFE_RDFUtils::configureMenuPushButton(button,entry);
 
     // Set the item's label
-    XFE_RDFUtils::setItemLabelString(_frame->getContext(),button,entry);
+    XFE_RDFUtils::setItemLabelString(button,entry);
 
     // Create a new bookmark data structure for the callbacks
     data = XP_NEW_ZAP(ItemCallbackStruct);
