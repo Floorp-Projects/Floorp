@@ -27,6 +27,30 @@ class nsIPresContext;
 class nsISpaceManager;
 class nsBlockFrame;
 struct nsBlockReflowState;
+struct nsLineLayout;
+
+/* d76e29b0-ff56-11d1-89e7-006008911b81 */
+#define NS_IINLINE_FRAME_IID \
+{0xd76e29b0, 0xff56, 0x11d1, {0x89, 0xe7, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81}}
+
+/**
+ * Interface to "inline frames". Inline frames are those that are aware
+ * of html line layout.
+ *
+ * Note that this interface does not expose AddRef/Release (like all frame
+ * interfaces)
+ */
+class nsIInlineFrame : private nsISupports {
+public:
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) = 0;
+
+  NS_IMETHOD ReflowInline(nsLineLayout&        aLineLayout,
+                          nsReflowMetrics&     aDesiredSize,
+                          const nsReflowState& aReflowState,
+                          nsReflowStatus&      aStatus) = 0;
+};
+
+//----------------------------------------------------------------------
 
 /**
  * Persistent per-line data
