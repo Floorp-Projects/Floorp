@@ -39,8 +39,7 @@
 
   <bookmarks-tree id="bookmarks-view" style="height:15em;" flex="1" type="single-column"
                   onpopupshowing="return false;"
-                  ondblclick="onDblClick()"
-                  onselect="updateOK();"/>
+                  onselect="clearTimeout(gTimer); gTimer=setTimeout(updateOK,100);"/>
   <separator/>
 
 </dialog>

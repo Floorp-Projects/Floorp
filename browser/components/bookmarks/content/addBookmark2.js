@@ -124,10 +124,8 @@ function onOK()
   if (!gBMtxmgr)
     gBMtxmgr= BookmarksUtils.getTransactionManager();
 
-  var selection, target;
-  selection = BookmarksUtils.getSelectionFromResource(rSource);
-  target    = BookmarksUtils.getSelectionFromResource(rFolder);
-  target    = BookmarksUtils.getTargetFromSelection(target);
+  var selection = BookmarksUtils.getSelectionFromResource(rSource);
+  var target    = BookmarksUtils.getTargetFromFolder(rFolder);
   BookmarksUtils.insertSelection("newbookmark", selection, target);
   // in insertSelection, the ds flush is delayed. It will never be performed,
   // since this dialog is destroyed before.

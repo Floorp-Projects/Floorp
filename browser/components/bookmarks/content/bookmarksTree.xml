@@ -348,7 +348,6 @@ dump("error in refresh sort:"+e)
           selection.item       = [];
           selection.parent     = [];
           selection.isExpanded = [];
-          selection.isRef      = false;
           var rangeCount = this.treeBoxObject.selection.getRangeCount();
           // workaround for bug 171547: if rowCount==0, rangeCount==1
           if (this.treeBuilder.rowCount > 0)
@@ -365,18 +364,29 @@ dump("error in refresh sort:"+e)
               selection.isExpanded.push(isExpanded);
             }
           }
-          if (selection.item.length == 0) {
-            // if no item is selected, let's select the ref.
-            // but we have to keep track of it.
-            selection = { item      : [this.getRootResource()],
-                          parent    : [null],
-                          isExpanded: [true],
-                          isRef     : true
-                        }
-          }
           selection.length = selection.item.length;
           BookmarksUtils.checkSelection(selection);
           return selection;
+        ]]></body>
+      </method>
+
+      <method name="getTreeTarget">
+        <parameter name="aItem"/>
+        <parameter name="aParent"/>
+        <parameter name="aOrientation"/>
+        <body><![CDATA[
+          if (aItem === undefined)
+            return BookmarksUtils.getTargetFromFolder(this.getRootResource());
+
+          if (aOrientation == BookmarksUtils.DROP_ON) {
+            return BookmarksUtils.getTargetFromFolder(aItem);
+          }
+
+          RDFC.Init(this.db, aParent);
+          var index = RDFC.IndexOf(aItem);
+          if (aOrientation == BookmarksUtils.DROP_AFTER)
+            ++index;
+          return { parent: aParent, index: index };
         ]]></body>
       </method>
 
@@ -589,8 +599,7 @@ dump("error in refresh sort:"+e)
              !this.mOuter.treeBoxObject.view.isContainerEmpty(row))
             target = { parent: rItem, index: 1 };
           else {
-            target = BookmarksUtils.getSelectionFromResource(rItem, rParent);
-            target = BookmarksUtils.getTargetFromSelection(target, orientation);
+            target = this.mOuter.getTreeTarget(rItem, rParent, orientation);
           }
           var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
           this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
@@ -648,7 +657,7 @@ dump("6:"+(Date.now()-date)+"\n")
 dump("ONSELECTION CHANGED\n")
           var selection = this.mOuter.getTreeSelection();
           this.mOuter._selection = selection;
-          this.mOuter._target    = BookmarksUtils.getTargetFromSelection(selection);
+          this.mOuter._target    = this.mOuter.getTreeTarget(selection.item[0], selection.parent[0], BookmarksUtils.DROP_BEFORE);
           this.mOuter.onCommandUpdate();
           const kStatusBar = document.getAnonymousElementByAttribute(this.mOuter, "anonid", "statusbar-text");
           var displayValue;

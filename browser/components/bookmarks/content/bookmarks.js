@@ -500,12 +500,10 @@ var BookmarksCommand = {
     var rv = { selectedFolder: null };      
     openDialog("chrome://browser/content/bookmarks/addBookmark.xul", "", 
                "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, null, null, "selectFolder", rv);
-    if (!rv.selectedFolder)
+    if (!rv.target)
       return;
     
-    var target = RDF.GetResource(rv.selectedFolder);
-    target = BookmarksUtils.getSelectionFromResource(target);
-    target = BookmarksUtils.getTargetFromSelection(target);
+    var target = rv.target;
     BookmarksUtils.moveSelection("move", aSelection, target);
   },
 
@@ -754,13 +752,13 @@ var BookmarksController = {
 
   isCommandEnabled: function (aCommand, aSelection, aTarget)
   {
-    var length   = aSelection.length;
-    if (length == 0)
-      return false;
+    var item0, type0;
+    var length = aSelection.length;
+    if (length != 0) {
+      item0 = aSelection.item[0].Value;
+      type0 = aSelection.type[0];
+    }
     var isValidTarget = BookmarksUtils.isValidTargetContainer(aTarget.parent)
-    var item0    = aSelection.item[0].Value;
-    var type0    = aSelection.type[0];
-    var isNotRef = !aSelection.isRef;
     var i;
 
     switch(aCommand) {
@@ -790,21 +788,21 @@ var BookmarksController = {
       var hasFlavours = clipboard.hasDataMatchingFlavors(flavourArray, kClipboardIID.kGlobalClipboard);
       return hasFlavours;
     case "cmd_bm_copy":
-      return isNotRef;
+      return length > 0;
     case "cmd_bm_cut":
     case "cmd_bm_delete":
-      return isNotRef && aSelection.containsMutable;
+      return length > 0 && aSelection.containsMutable;
     case "cmd_bm_selectAll":
       return true;
     case "cmd_bm_open":
     case "cmd_bm_expandfolder":
     case "cmd_bm_managefolder":
-      return isNotRef && length == 1;
+      return length == 1;
     case "cmd_bm_openinnewwindow":
     case "cmd_bm_openinnewtab":
       return true;
     case "cmd_bm_openfolder":
-      for (i=0; i<aSelection.length; ++i) {
+      for (i=0; i<length; ++i) {
         if (aSelection.type[i] == ""         ||
             aSelection.type[i] == "Bookmark" ||
             aSelection.type[i] == "BookmarkSeparator")
@@ -824,26 +822,26 @@ var BookmarksController = {
     case "cmd_bm_newbookmark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
-      return isValidTarget && length == 1;
+      return isValidTarget;
     case "cmd_bm_properties":
     case "cmd_bm_rename":
-      return isNotRef && length == 1;
+      return length == 1;
     case "cmd_bm_setnewbookmarkfolder":
-      if (!isNotRef || length != 1) 
+      if (length != 1) 
         return false;
       return item0 != "NC:NewBookmarkFolder"     &&
              (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_setpersonaltoolbarfolder":
-      if (!isNotRef || length != 1)
+      if (length != 1)
         return false
       return item0 != "NC:PersonalToolbarFolder" && type0 == "Folder";
     case "cmd_bm_setnewsearchfolder":
-      if (!isNotRef || length != 1)
+      if (length != 1)
         return false
       return item0 != "NC:NewSearchFolder"       && 
              (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_movebookmark":
-      return isNotRef;
+      return length > 0;
     default:
       return false;
     }
@@ -1154,6 +1152,9 @@ var BookmarksUtils = {
   // Caches frequently used informations about the selection
   checkSelection: function (aSelection)
   {
+    if (aSelection.length == 0)
+      return;
+
     aSelection.type            = new Array(aSelection.length);
     aSelection.protocol        = new Array(aSelection.length);
     aSelection.isContainer     = new Array(aSelection.length);
@@ -1444,36 +1445,13 @@ var BookmarksUtils = {
     return selection;
   },
 
-  getTargetFromSelection: function (aSelection, aOrientation)
+  getTargetFromFolder: function(aResource)
   {
-    var parent, index;
-    var orientation = aOrientation !== undefined? aOrientation:
-                      aSelection.isContainer[0]? BookmarksUtils.DROP_ON:BookmarksUtils.DROP_BEFORE;
-    var item = aSelection.item[0];
-    if (orientation == BookmarksUtils.DROP_ON) {
-      parent = item;
-      if (aSelection.protocol == "file" || aSelection.protocol == "find")
-        parent = null;
-    } else
-      parent = aSelection.parent[0];
-
-    if (!parent)
-      // for file: or find: containers or children
-      index = -1;
-    else {
-      RDFC.Init(BMDS, parent);
-      if (orientation == BookmarksUtils.DROP_ON)
-        index = parseInt(this.getProperty(parent, RDF_NS+"nextVal"));
-      else {
-        if (orientation != this.DROP_ON) {
-          index = RDFC.IndexOf(item);
-          if (orientation == this.DROP_AFTER)
-            ++index;
-        }
-      }
-    }
-    var target = { parent: parent, index: index };
-    return target;
+    var index = parseInt(this.getProperty(aResource, RDF_NS+"nextVal"));
+    if (isNaN(index))
+      return {parent: null, index: -1};
+    else
+      return {parent: aResource, index: index};
   },
 
   getSelectionFromResource: function (aItem, aParent)
