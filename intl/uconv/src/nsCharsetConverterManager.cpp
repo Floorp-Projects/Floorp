@@ -26,6 +26,8 @@
 #include "nsIRegistry.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIStringBundle.h"
+#include "nsILocaleService.h"
 #include "nsUConvDll.h"
 
 // just for CIDs
@@ -34,6 +36,10 @@
 
 static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
+
+#define DATA_BUNDLE_REGISTRY_KEY "software/netscape/intl/xuconv/data/"
 
 //----------------------------------------------------------------------------
 // Class nsObject [declaration]
@@ -99,6 +105,7 @@ private:
 
   nsObjectArray mDecoderArray;
   nsObjectArray mEncoderArray;
+  nsIStringBundle * mDataBundle;
 
   /**
    * Takes charset information from Registry and puts it into those arrays.
@@ -115,11 +122,17 @@ private:
   nsresult GetConverterList(nsObjectArray * aArray, nsString *** aResult, 
       PRInt32 * aCount);
 
+  nsresult LoadExtensibleBundle(const char* aRegistryKey, 
+      nsIStringBundle ** aResult);
+
   static nsresult RegisterConverterTitles(nsIRegistry * aRegistry, 
       char * aRegistryPath);
 
   static nsresult RegisterConverterData(nsIRegistry * aRegistry, 
       char * aRegistryPath);
+
+  nsresult GetBundleValue(nsIStringBundle * aBundle, nsString * aName, 
+      nsString * aProp, nsString ** aResult);
 
 public:
 
@@ -137,8 +150,11 @@ public:
       nsIUnicodeDecoder ** aResult);
   NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount);
   NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount);
-  NS_IMETHOD GetDecoderFlags(nsString * aName, PRInt32 * aFlags);
-  NS_IMETHOD GetEncoderFlags(nsString * aName, PRInt32 * aFlags);
+  NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
+      nsString ** aResult);
+  NS_IMETHOD GetMIMEMailCharset(nsString * aCharset, nsString ** aResult);
+  NS_IMETHOD GetMIMEHeaderEncodingMethod(nsString * aCharset, nsString ** 
+      aResult);
 };
 
 //----------------------------------------------------------------------------
@@ -268,6 +284,7 @@ nsConverterInfo::~nsConverterInfo()
 NS_IMPL_ISUPPORTS(nsCharsetConverterManager, nsICharsetConverterManager::GetIID());
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
+:mDataBundle(NULL)
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
@@ -279,6 +296,7 @@ nsCharsetConverterManager::nsCharsetConverterManager()
 
 nsCharsetConverterManager::~nsCharsetConverterManager() 
 {
+  NS_IF_RELEASE(mDataBundle);
   PR_AtomicDecrement(&g_InstanceCount);
 }
 
@@ -503,6 +521,48 @@ nsresult nsCharsetConverterManager::GetConverterList(
   // to the existing ones
 }
 
+nsresult nsCharsetConverterManager::LoadExtensibleBundle(
+                                    const char* aRegistryKey, 
+                                    nsIStringBundle ** aResult)
+{
+  nsresult res = NS_OK;
+  nsCOMPtr<nsILocale> locale = nsnull;
+
+  NS_WITH_SERVICE(nsIStringBundleService, sbServ, kStringBundleServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  NS_WITH_SERVICE(nsILocaleService, localeServ, kLocaleServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  res = localeServ->GetApplicationLocale(getter_AddRefs(locale));
+  if (NS_FAILED(res)) return res;
+
+  res = sbServ->CreateExtensibleBundle(aRegistryKey, locale, aResult);
+  if (NS_FAILED(res)) return res;
+
+  return res;
+}
+
+nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle, 
+                                                   nsString * aName, 
+                                                   nsString * aProp, 
+                                                   nsString ** aResult)
+{
+  nsresult res = NS_OK;
+
+  nsAutoString key(aName->GetUnicode());
+  key.Append(*aProp);
+
+  PRUnichar * value = NULL;
+  res = aBundle->GetStringFromName(key.GetUnicode(), &value);
+  if (NS_FAILED(res)) return res;
+
+  *aResult = new nsString(value);
+  delete value;
+  return res;
+}
+
+
 //----------------------------------------------------------------------------
 // Interface nsICharsetConverterManager [implementation]
 
@@ -560,26 +620,33 @@ NS_IMETHODIMP nsCharsetConverterManager::GetEncoderList(nsString *** aResult,
   return GetConverterList(&mEncoderArray, aResult, aCount);
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetDecoderFlags(nsString * aName, 
-                                                         PRInt32 * aFlags)
+NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData(nsString * aCharset, 
+                                                        nsString * aProp, 
+                                                        nsString ** aResult)
 {
-  *aFlags = 0;
+  nsresult res = NS_OK;;
 
-  nsConverterInfo * info = GetConverterInfo(&mDecoderArray, aName);
-  if (info == NULL) return NS_ERROR_UCONV_NOCONV;
+  if (mDataBundle == NULL) {
+    res = LoadExtensibleBundle(DATA_BUNDLE_REGISTRY_KEY, &mDataBundle);
+    if (NS_FAILED(res)) return res;
+  }
 
-  *aFlags = info->mFlags;
-  return NS_OK;
+  res = GetBundleValue(mDataBundle, aCharset, aProp, aResult);
+  return res;
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetEncoderFlags(nsString * aName, 
-                                                         PRInt32 * aFlags)
+NS_IMETHODIMP nsCharsetConverterManager::GetMIMEMailCharset(
+                                         nsString * aCharset, 
+                                         nsString ** aResult)
 {
-  *aFlags = 0;
+  nsAutoString prop(".MIMEMailCharset");
+  return GetCharsetData(aCharset, &prop, aResult);
+}
 
-  nsConverterInfo * info = GetConverterInfo(&mEncoderArray, aName);
-  if (info == NULL) return NS_ERROR_UCONV_NOCONV;
-
-  *aFlags = info->mFlags;
-  return NS_OK;
+NS_IMETHODIMP nsCharsetConverterManager::GetMIMEHeaderEncodingMethod(
+                                         nsString * aCharset, 
+                                         nsString ** aResult)
+{
+  nsAutoString prop(".MIMEHeaderEncodingMethod");
+  return GetCharsetData(aCharset, &prop, aResult);
 }
