@@ -44,6 +44,11 @@ function addItemToToolbar(newItem, newToolbar)
 function buildDialog()
 {
   var toolbar = window.opener.document.getElementById("nav-bar");
+
+  var useSmallIcons = document.getElementById("smallicons");
+  var iconSize = toolbar.getAttribute("iconsize");
+  useSmallIcons.checked = (iconSize == "small");
+
   var cloneToolbarBox = document.getElementById("cloned-bar-container");
   var paletteBox = document.getElementById("palette-box");
   var currentSet = toolbar.getAttribute("currentset");
@@ -58,6 +63,8 @@ function buildDialog()
   var newToolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "toolbar");
   newToolbar.id = "cloneToolbar";
+  if (useSmallIcons)
+    newToolbar.setAttribute("iconsize", "small");
 
   // Walk through and manually clone the children of the to-be-customized toolbar.
   // Make sure all buttons look enabled (and that textboxes are disabled).
