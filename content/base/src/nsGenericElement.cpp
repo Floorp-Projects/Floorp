@@ -2489,7 +2489,7 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager **aResult)
     // We're already shut down, don't bother creating a event listener
     // manager.
 
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   EventListenerManagerMapEntry *entry =
