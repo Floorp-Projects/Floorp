@@ -381,10 +381,17 @@ function upgradeCleanup()
   deleteThisFile("Program",    "img3250.dll");
   deleteThisFile("Program",    "gkgfxwin.dll");
   deleteThisFile("Program",    "gkwidget.dll");
+  deleteThisFile("Program",    "jpeg3250.dll");
+  deleteThisFile("Program",    "mozreg.dll");
   deleteThisFile("Program",    "defaults/pref/config.js");
   deleteThisFile("Program",    "defaults/pref/initpref.js");
   deleteThisFile("Program",    "defaults/pref/psm-glue.js");
+  deleteThisFile("Program",    "defaults/pref/typeaheadfind.js");
   deleteThisFile("Program",    "defaults/wallet/URLFieldSchema.tbl");
+  deleteThisFile("Program",    "res/samples/collapsing.css");
+  deleteThisFile("Program",    "res/samples/collapsing.xul");
+  deleteThisFile("Program",    "res/samples/import-test.html");
+  deleteThisFile("Program",    "res/samples/sampleimages/xpconnect-sample.html");
   deleteThisFile("Components", "gkhtml.dll");
   deleteThisFile("Components", "mozucth.dll");
   deleteThisFile("Components", "mozxfer.dll");
@@ -423,8 +430,21 @@ function upgradeCleanup()
   deleteThisFile("Components", "nkcache.dll");
   deleteThisFile("Components", "jsloader.dll");
   deleteThisFile("Components", "gkcontent.dll");
+  deleteThisFile("Components", "psm.xpt");
+  deleteThisFile("Components", "typeaheadfind.xpt");
   deleteThisFile("Chrome",     "chrome.rdf");
+  deleteThisFile("Chrome",     "forms.jar");
+  deleteThisFile("Chrome",     "typeaheadfind.jar");
   deleteThisFolder("Chrome",   "overlayinfo");
+  deleteThisFolder("Components",   "Netscape/Gecko1.0");
+  deleteThisFolder("Components",   "Netscape/Netscape6.00");
+  deleteThisFolder("Components",   "Netscape/Netscape6.01");
+  deleteThisFolder("Components",   "Netscape/Netscape6.10");
+  deleteThisFolder("Components",   "Netscape/Netscape6.20");
+  deleteThisFolder("Components",   "Netscape/Netscape6.21");
+  deleteThisFolder("Components",   "Netscape/Netscape6.22");
+  deleteThisFolder("Components",   "Netscape/Netscape6.23");
+  deleteThisFolder("Components",   "Netscape/Mozilla1.2");
 
   if(!gGreLocal)
   {
