@@ -1602,10 +1602,8 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
   nsCAutoString curSelectedUrlFolderName;
   nsCAutoString pendingUrlFolderName;
   if (inSelectedState)
-  {
-    curSelectedUrlFolderName = 
-      GetServerStateParser().GetSelectedMailboxName();
-  }
+    curSelectedUrlFolderName = GetServerStateParser().GetSelectedMailboxName();
+
   if (isBusy)
   {
     nsImapState curUrlImapState;
@@ -3337,10 +3335,11 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       // lets see if we should expunge during a full sync of flags.
       if (!DeathSignalReceived()) // only expunge if not reading messages manually and before fetching new
       {
-        // ### TODO read gExpungeThreshhold from prefs. Don't do expunge when we are lite selecting folder because we could be doing undo
+        // ### TODO read gExpungeThreshhold from prefs. Don't do expunge when we 
+        // are lite selecting folder because we could be doing undo
         if ((m_flagState->GetNumberOfDeletedMessages() >= 20/* gExpungeThreshold */)  
-                 && GetDeleteIsMoveToTrash() && m_imapAction != nsIImapUrl::nsImapLiteSelectFolder)
-          Expunge();  // might be expensive, test for user cancel
+                 && !GetShowDeletedMessages() && m_imapAction != nsIImapUrl::nsImapLiteSelectFolder)
+          Expunge();  
       }
 
     }
@@ -7158,6 +7157,15 @@ nsImapProtocol::GetDeleteIsMoveToTrash()
     NS_ASSERTION (m_hostSessionList, "fatal... null host session list");
     if (m_hostSessionList)
         m_hostSessionList->GetDeleteIsMoveToTrashForHost(GetImapServerKey(), rv);
+    return rv;
+}
+
+PRBool
+nsImapProtocol::GetShowDeletedMessages()
+{
+    PRBool rv = PR_FALSE;
+    if (m_hostSessionList)
+        m_hostSessionList->GetShowDeletedMessagesForHost(GetImapServerKey(), rv);
     return rv;
 }
 

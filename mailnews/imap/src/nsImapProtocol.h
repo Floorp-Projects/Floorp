@@ -431,6 +431,7 @@ private:
   // End thread support stuff
   
   PRBool GetDeleteIsMoveToTrash();
+  PRBool GetShowDeletedMessages();
   PRMonitor *GetDataMemberMonitor();
   nsCString m_currentCommand;
   nsImapServerResponseParser m_parser;
