@@ -878,7 +878,7 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
                                                 .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
                // ics files are always utf8
                unicodeConverter.charset = "UTF-8";
-               var result = unicodeConverter.convertFromByteArray( result, result.length );
+               result = unicodeConverter.convertFromByteArray( result, result.length );
             } catch(e) {
                // Now try the pre-1.8a5 method, which might have problems
                // with utf8 chars
