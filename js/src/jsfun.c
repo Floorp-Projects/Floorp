@@ -387,7 +387,6 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     uintN slot;
     JSString *str;
     JSAtom *atom;
-    JSScopeProperty *sprop;
     intN tinyid;
     jsval value;
 
@@ -436,18 +435,11 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         }
 
         if (atom && !TEST_OVERRIDE_BIT(fp, tinyid)) {
-            if (!js_DefineProperty(cx, obj, (jsid) atom, value,
-                                   args_getProperty, args_setProperty, 0,
-                                   (JSProperty **) &sprop)) {
+            if (!js_DefineNativeProperty(cx, obj, (jsid) atom, value,
+                                         args_getProperty, args_setProperty, 0,
+                                         SPROP_HAS_SHORTID, tinyid, NULL)) {
                 return JS_FALSE;
             }
-#ifdef JS_DOUBLE_HASHING
-            sprop->attrs |= JSPROP_INDEX;
-            sprop->tinyid = tinyid;
-#else
-            sprop->id = INT_TO_JSVAL(tinyid);
-#endif
-            OBJ_DROP_PROPERTY(cx, obj, (JSProperty *) sprop);
             *objp = obj;
         }
     }
@@ -707,7 +699,7 @@ static JSBool
 call_enumerate(JSContext *cx, JSObject *obj)
 {
     JSStackFrame *fp;
-    JSFunction *fun;
+    JSObject *funobj;
     JSScope *scope;
     JSScopeProperty *sprop;
     JSPropertyOp getter;
@@ -716,20 +708,22 @@ call_enumerate(JSContext *cx, JSObject *obj)
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (!fp)
         return JS_TRUE;
-    fun = fp->fun;
-    if (!fun->script || !fun->object)
+    funobj = fp->argv ? JSVAL_TO_OBJECT(fp->argv[-2]) : fp->fun->object;
+    if (!funobj)
         return JS_TRUE;
 
-    /* Reflect actual args for formal parameters, and all local variables. */
-    scope = OBJ_SCOPE(fun->object);
-    for (sprop = scope->props; sprop; sprop = sprop->next) {
-        getter = SPROP_GETTER_SCOPE(sprop, scope);
+    /* Reflect actual args for formal parameters and local variables. */
+    scope = OBJ_SCOPE(funobj);
+
+    for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
+        getter = sprop->getter;
         if (getter != js_GetArgument && getter != js_GetLocalVariable)
             continue;
 
         /* Trigger reflection in call_resolve by doing a lookup. */
-        if (!js_LookupProperty(cx, obj, sym_id(sprop->symbols), &obj, &prop))
+        if (!js_LookupProperty(cx, obj, sprop->id, &obj, &prop))
             return JS_FALSE;
+        JS_ASSERT(obj && prop);
         OBJ_DROP_PROPERTY(cx, obj, prop);
     }
 
@@ -746,10 +740,11 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     JSAtom *atom;
     JSObject *obj2;
     JSScopeProperty *sprop;
+    jsid propid;
     JSPropertyOp getter, setter;
-    jsval propid, *vp;
-    jsid symid;
-    uintN attrs, slot, nslots;
+    uintN attrs, slot, nslots, spflags;
+    jsval *vp, value;
+    intN shortid;
 
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (!fp)
@@ -767,16 +762,16 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     atom = js_AtomizeString(cx, str, 0);
     if (!atom)
         return JS_FALSE;
-    if (!OBJ_LOOKUP_PROPERTY(cx, funobj, (jsid)atom, &obj2,
-                             (JSProperty **)&sprop)) {
+    if (!js_LookupProperty(cx, funobj, (jsid)atom, &obj2,
+                           (JSProperty **)&sprop)) {
         return JS_FALSE;
     }
 
-    if (sprop) {
-        getter = SPROP_GETTER(sprop, obj2);
+    if (sprop && OBJ_IS_NATIVE(obj2)) {
         propid = sprop->id;
-        symid = (jsid) sym_atom(sprop->symbols);
-        attrs = sprop->attrs;
+        getter = sprop->getter;
+        attrs = sprop->attrs & ~JSPROP_SHARED;
+        slot = (uintN) sprop->shortid;
         OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
         if (getter == js_GetArgument || getter == js_GetLocalVariable) {
             if (getter == js_GetArgument) {
@@ -789,17 +784,20 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                 getter = js_GetCallVariable;
                 setter = js_SetCallVariable;
             }
-            slot = (uintN)JSVAL_TO_INT(propid);
-            if (!js_DefineProperty(cx, obj, symid,
-                                   (slot < nslots) ? vp[slot] : JSVAL_VOID,
-                                   getter, setter, attrs,
-                                   (JSProperty **)&sprop)) {
+            if (slot < nslots) {
+                value = vp[slot];
+                spflags = SPROP_HAS_SHORTID;
+                shortid = (intN) slot;
+            } else {
+                value = JSVAL_VOID;
+                spflags = 0;
+                shortid = 0;
+            }
+            if (!js_DefineNativeProperty(cx, obj, propid, value,
+                                         getter, setter, attrs,
+                                         spflags, shortid, NULL)) {
                 return JS_FALSE;
             }
-            JS_ASSERT(sprop);
-            if (slot < nslots)
-                sprop->id = INT_TO_JSVAL(slot);
-            OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
             *objp = obj;
         }
     }
@@ -1061,9 +1059,9 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     JSString *atomstr;
     char *propname;
     JSScopeProperty *sprop;
-    jsid propid;
+    jsid userid;
     JSAtom *atom;
-    uintN i;
+    uintN i, dupflag;
     uint32 type;
 #ifdef DEBUG
     uintN nvars = 0, nargs = 0;
@@ -1100,8 +1098,9 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         if (xdr->mode == JSXDR_ENCODE) {
             JSScope *scope = OBJ_SCOPE(fun->object);
 
-            for (sprop = scope->props; sprop; sprop = sprop->next) {
-                JSPropertyOp getter = SPROP_GETTER_SCOPE(sprop, scope);
+            for (sprop = SCOPE_LAST_PROP(scope); sprop;
+                 sprop = sprop->parent) {
+                JSPropertyOp getter = sprop->getter;
 
                 if (getter == js_GetArgument) {
                     type = JSXDR_FUNARG;
@@ -1114,10 +1113,11 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 } else {
                     continue;
                 }
-                propname = ATOM_BYTES(sym_atom(sprop->symbols));
-                propid = sprop->id;
+                JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+                userid = INT_TO_JSVAL(sprop->shortid);
+                propname = ATOM_BYTES((JSAtom *)sprop->id);
                 if (!JS_XDRUint32(xdr, &type) ||
-                    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
+                    !JS_XDRUint32(xdr, (uint32 *)&userid) ||
                     !JS_XDRCString(xdr, &propname)) {
                     return JS_FALSE;
                 }
@@ -1130,7 +1130,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
                 if (!JS_XDRUint32(xdr, &type) ||
-                    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
+                    !JS_XDRUint32(xdr, (uint32 *)&userid) ||
                     !JS_XDRCString(xdr, &propname)) {
                     return JS_FALSE;
                 }
@@ -1152,14 +1152,21 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 }
                 atom = js_Atomize(cx, propname, strlen(propname), 0);
                 JS_free(cx, propname);
-                if (!atom ||
-                    !OBJ_DEFINE_PROPERTY(cx, fun->object, (jsid)atom,
-                                         JSVAL_VOID, getter, setter, attrs,
-                                         (JSProperty **)&sprop)) {
+                if (!atom)
+                    return JS_FALSE;
+
+                /* Flag duplicate argument if atom is bound in fun->object. */
+                dupflag = SCOPE_GET_PROPERTY(OBJ_SCOPE(fun->object), (jsid)atom)
+                          ? SPROP_IS_DUPLICATE
+                          : 0;
+
+                if (!js_AddNativeProperty(cx, fun->object, (jsid)atom,
+                                          getter, setter, SPROP_INVALID_SLOT,
+                                          attrs | JSPROP_SHARED,
+                                          SPROP_HAS_SHORTID | dupflag,
+                                          JSVAL_TO_INT(userid))) {
                     return JS_FALSE;
                 }
-                sprop->id = propid;
-                OBJ_DROP_PROPERTY(cx, fun->object, (JSProperty *)sprop);
             }
         }
     }
@@ -1560,7 +1567,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSFunction *fun;
     JSObject *parent;
-    uintN i, n, lineno;
+    uintN i, n, lineno, dupflag;
     JSAtom *atom;
     const char *filename;
     JSObject *obj2;
@@ -1573,7 +1580,6 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jschar *collected_args, *cp;
     size_t arg_length, args_length;
     JSTokenType tt;
-    jsid oldArgId;
     JSBool ok;
 
     if (cx->fp && !(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
@@ -1720,48 +1726,43 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                        (JSProperty **)&sprop)) {
                     goto bad_formal;
                 }
-                if (sprop && obj2 == obj) {
-                    /*
-                     * A duplicate parameter name. We create a dummy symbol
-                     * entry with property id of the parameter number and set
-                     * the id to the name of the parameter.  See jsopcode.c:
-                     * the decompiler knows to treat this case specially.
-                     */
-                    JS_ASSERT(SPROP_GETTER(sprop, obj) == js_GetArgument);
-                    oldArgId = (jsid) sprop->id;
-                    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-                    sprop = NULL;
-
-                    if (JS_HAS_STRICT_OPTION(cx) &&
-                        !js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                     JSREPORT_WARNING |
-                                                     JSREPORT_STRICT,
-                                                     JSMSG_DUPLICATE_FORMAL,
-                                                     ATOM_BYTES(atom))) {
-                        goto bad_formal;
-                    }
-
-                    if (!js_DefineProperty(cx, obj, oldArgId, JSVAL_VOID,
-                                           js_GetArgument, js_SetArgument,
-                                           JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                           (JSProperty **)&sprop)) {
-                        goto bad_formal;
-                    }
-                    sprop->id = (jsid) atom;
-                }
+                dupflag = 0;
                 if (sprop) {
+                    ok = JS_TRUE;
+                    if (obj2 == obj) {
+                        /*
+                         * A duplicate parameter name. We force a duplicate
+                         * node on the SCOPE_LAST_PROP(scope) list with the
+                         * same id, distinguished by the SPROP_IS_DUPLICATE
+                         * flag, and not mapped by an entry in scope.
+                         */
+                        JS_ASSERT(sprop->getter == js_GetArgument);
+
+                        if (JS_HAS_STRICT_OPTION(cx)) {
+                            ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                                                         JSREPORT_WARNING |
+                                                         JSREPORT_STRICT,
+                                                         JSMSG_DUPLICATE_FORMAL,
+                                                         ATOM_BYTES(atom));
+                        }
+
+                        dupflag = SPROP_IS_DUPLICATE;
+                    }
                     OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+                    if (!ok)
+                        goto bad_formal;
                     sprop = NULL;
                 }
-                if (!js_DefineProperty(cx, obj, (jsid)atom, JSVAL_VOID,
-                                       js_GetArgument, js_SetArgument,
-                                       JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                       (JSProperty **)&sprop)) {
+                if (!js_AddNativeProperty(cx, fun->object, (jsid)atom,
+                                          js_GetArgument, js_SetArgument,
+                                          SPROP_INVALID_SLOT,
+                                          JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                                          JSPROP_SHARED,
+                                          SPROP_HAS_SHORTID | dupflag,
+                                          fun->nargs)) {
                     goto bad_formal;
                 }
-                JS_ASSERT(sprop);
-                sprop->id = INT_TO_JSVAL(fun->nargs++);
-                OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
+                fun->nargs++;
 
                 /*
                  * Get the next token.  Stop on end of stream.  Otherwise

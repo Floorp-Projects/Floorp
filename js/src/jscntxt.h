@@ -61,6 +61,11 @@ typedef enum JSRuntimeState {
     JSRTS_LANDING
 } JSRuntimeState;
 
+typedef struct JSPropertyTreeEntry {
+    JSDHashEntryHdr     hdr;
+    JSScopeProperty     *child;
+} JSPropertyTreeEntry;
+
 struct JSRuntime {
     JSRuntimeState      state;
 
@@ -182,7 +187,7 @@ struct JSRuntime {
  * value.
  */
 #define NO_SCOPE_SHARING_TODO   ((JSScope *) 0xfeedbeef)
-#endif
+#endif /* JS_THREADSAFE */
 
     /*
      * Check property accessibility for objects of arbitrary class.  Used at
@@ -193,6 +198,11 @@ struct JSRuntime {
     /* Security principals serialization support. */
     JSPrincipalsTranscoder principalsTranscoder;
 
+    /* Shared scope property tree, and allocator for its nodes. */
+    JSDHashTable        propertyTreeHash;
+    JSScopeProperty     *propertyFreeList;
+    JSArenaPool         propertyArenaPool;
+
 #ifdef DEBUG
     /* Function invocation metering. */
     jsrefcount          inlineCalls;
@@ -200,7 +210,7 @@ struct JSRuntime {
     jsrefcount          nonInlineCalls;
     jsrefcount          constructs;
 
-    /* Scope lock and related metering. */
+    /* Scope lock and property metering. */
     jsrefcount          claimAttempts;
     jsrefcount          claimedScopes;
     jsrefcount          deadContexts;
@@ -209,6 +219,13 @@ struct JSRuntime {
     jsrefcount          sharedScopes;
     jsrefcount          totalScopes;
     jsrefcount          badUndependStrings;
+    jsrefcount          liveScopeProps;
+    jsrefcount          totalScopeProps;
+    jsrefcount          livePropTreeNodes;
+    jsrefcount          duplicatePropTreeNodes;
+    jsrefcount          totalPropTreeNodes;
+    jsrefcount          propTreeKidsChunks;
+    jsrefcount          middleDeleteFixups;
 
     /* String instrumentation. */
     jsrefcount          liveStrings;

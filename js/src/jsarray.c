@@ -600,12 +600,12 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         /* This part isn't done yet. */
 
         if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
-                    return JS_FALSE;
-                if (!prop) {
-                    OBJ_DELETE_PROPERTY(cx, obj, id2, &v); /* v is junk. */
-                    continue;
-                }
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
+            return JS_FALSE;
+        if (!prop) {
+            OBJ_DELETE_PROPERTY(cx, obj, id2, &v); /* v is junk. */
+            continue;
+        }
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
 #endif
 
 	if (!OBJ_SET_PROPERTY(cx, obj, id, &v2))
@@ -816,10 +816,9 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (!prop) {
                 vec[i] = JSVAL_VOID;
                 continue;
-            } else {
-                newlen++;
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
             }
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            newlen++;
         }
 #endif
 	ca.status = OBJ_GET_PROPERTY(cx, obj, id, &vec[i]);

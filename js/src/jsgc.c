@@ -82,7 +82,7 @@
 #define GC_ARENA_SIZE   (GC_THINGS_SIZE + GC_FLAGS_SIZE)
 
 /*
- * The private JSGCThing struct, which describes a gcFreelist element.
+ * The private JSGCThing struct, which describes a gcFreeList element.
  */
 struct JSGCThing {
     JSGCThing   *next;
@@ -674,24 +674,39 @@ gc_object_class_name(void* thing)
 {
     uint8 *flagp = js_GetGCThingFlags(thing);
     const char *className = "";
+    static char depbuf[32];
 
-    if (flagp && ((*flagp & GCF_TYPEMASK) == GCX_OBJECT)) {
+    switch (*flagp & GCF_TYPEMASK) {
+      case GCX_OBJECT:
         JSObject  *obj = (JSObject *)thing;
         JSClass   *clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
         className = clasp->name;
 #ifdef HAVE_XPCONNECT
-        if ((clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) &&
-            (clasp->flags & JSCLASS_HAS_PRIVATE)) {
+        if (clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
             jsval privateValue = obj->slots[JSSLOT_PRIVATE];
-            void  *privateThing = JSVAL_IS_VOID(privateValue)
-                                  ? NULL
-                                  : JSVAL_TO_PRIVATE(privateValue);
 
-            const char *xpcClassName = GetXPCObjectClassName(privateThing);
-            if (xpcClassName)
-                className = xpcClassName;
+            JS_ASSERT(clasp->flags & JSCLASS_HAS_PRIVATE);
+            if (!JSVAL_IS_VOID(privateValue)) {
+                void  *privateThing = JSVAL_TO_PRIVATE(privateValue);
+                const char *xpcClassName = GetXPCObjectClassName(privateThing);
+
+                if (xpcClassName)
+                    className = xpcClassName;
+            }
         }
 #endif
+        break;
+
+      case GCX_MUTABLE_STRING:
+        if (JSSTRING_IS_DEPENDENT(str)) {
+            PR_snprintf(depbuf, sizeof depbuf, "start:%u, length:%u",
+                        JSSTRDEP_START(str), JSSTRDEP_LENGTH(str));
+            className = depbuf;
+        }
+        break;
+
+      default:
+        JS_ASSERT(0);
     }
 
     return className;
@@ -859,9 +874,7 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
                             break;
                         }
                         if (sprop->slot == slot) {
-                            nval = sprop->symbols
-                                   ? js_IdToValue(sym_id(sprop->symbols))
-                                   : sprop->id;
+                            nval = ID_TO_VALUE(sprop->id);
                             if (JSVAL_IS_INT(nval)) {
                                 JS_snprintf(name, sizeof name, "%ld",
                                             (long)JSVAL_TO_INT(nval));
@@ -893,7 +906,7 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
       case GCX_MUTABLE_STRING:
         str = (JSString *)thing;
         if (JSSTRING_IS_DEPENDENT(str))
-            js_MarkGCThing(cx, JSSTRDEP_BASE(str), arg);
+            GC_MARK(cx, JSSTRDEP_BASE(str), "base", arg);
         break;
     }
 
@@ -1122,6 +1135,12 @@ js_GC(JSContext *cx, uintN gcflags)
     /* Drop atoms held by the property cache, and clear property weak links. */
     js_DisablePropertyCache(cx);
     js_FlushPropertyCache(cx);
+#ifdef DEBUG_brendan
+  { extern void js_DumpScopeMeters(JSRuntime *rt);
+    js_DumpScopeMeters(rt);
+  }
+#endif
+
 restart:
     rt->gcNumber++;
 
@@ -1227,6 +1246,7 @@ restart:
      * rather than nest badly and leave the unmarked newborn to be swept.
      */
     js_SweepAtomState(&rt->atomState);
+    js_SweepScopeProperties(rt);
     for (a = rt->gcArenaPool.first.next; a; a = a->next) {
         flagp = (uint8 *) a->base;
         split = (uint8 *) FIRST_THING_PAGE(a);

@@ -41,7 +41,6 @@
 
 #if JS_VERSION == 100
 
-#define JS_BUG_AUTO_INDEX_PROPS 1       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 1       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 1       /* o[""] is equivalent to o[0] */
 #define JS_BUG_EAGER_TOSTRING   1       /* o.toString() trumps o.valueOf() */
@@ -51,7 +50,6 @@
 #define JS_BUG_FALLIBLE_EQOPS   1       /* fallible/intransitive equality ops */
 #define JS_BUG_FALLIBLE_TONUM   1       /* fallible ValueToNumber primitive */
 #define JS_BUG_WITH_CLOSURE     0       /* with(o)function f(){} sets o.f */
-#define JS_BUG_SET_ENUMERATE    1       /* o.p=q flags o.p JSPROP_ENUMERATE */
 
 #define JS_HAS_PROP_DELETE      0       /* delete o.p removes p from o */
 #define JS_HAS_CALL_OBJECT      0       /* fun.caller is stack frame obj */
@@ -97,7 +95,6 @@
 
 #elif JS_VERSION == 110
 
-#define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 1       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 1       /* o[""] is equivalent to o[0] */
 #define JS_BUG_EAGER_TOSTRING   1       /* o.toString() trumps o.valueOf() */
@@ -107,7 +104,6 @@
 #define JS_BUG_FALLIBLE_EQOPS   1       /* fallible/intransitive equality ops */
 #define JS_BUG_FALLIBLE_TONUM   1       /* fallible ValueToNumber primitive */
 #define JS_BUG_WITH_CLOSURE     0       /* with(o)function f(){} sets o.f */
-#define JS_BUG_SET_ENUMERATE    1       /* o.p=q flags o.p JSPROP_ENUMERATE */
 
 #define JS_HAS_PROP_DELETE      0       /* delete o.p removes p from o */
 #define JS_HAS_CALL_OBJECT      0       /* fun.caller is stack frame obj */
@@ -153,7 +149,6 @@
 
 #elif JS_VERSION == 120
 
-#define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 0       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 0       /* o[""] is equivalent to o[0] */
 #define JS_BUG_EAGER_TOSTRING   0       /* o.toString() trumps o.valueOf() */
@@ -163,7 +158,6 @@
 #define JS_BUG_FALLIBLE_EQOPS   0       /* fallible/intransitive equality ops */
 #define JS_BUG_FALLIBLE_TONUM   0       /* fallible ValueToNumber primitive */
 #define JS_BUG_WITH_CLOSURE     1       /* with(o)function f(){} sets o.f */
-#define JS_BUG_SET_ENUMERATE    1       /* o.p=q flags o.p JSPROP_ENUMERATE */
 
 #define JS_HAS_PROP_DELETE      1       /* delete o.p removes p from o */
 #define JS_HAS_CALL_OBJECT      1       /* fun.caller is stack frame obj */
@@ -209,7 +203,6 @@
 
 #elif JS_VERSION == 130
 
-#define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 0       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 0       /* o[""] is equivalent to o[0] */
 #define JS_BUG_EAGER_TOSTRING   0       /* o.toString() trumps o.valueOf() */
@@ -219,7 +212,6 @@
 #define JS_BUG_FALLIBLE_EQOPS   0       /* fallible/intransitive equality ops */
 #define JS_BUG_FALLIBLE_TONUM   0       /* fallible ValueToNumber primitive */
 #define JS_BUG_WITH_CLOSURE     1       /* with(o)function f(){} sets o.f */
-#define JS_BUG_SET_ENUMERATE    0       /* o.p=q flags o.p JSPROP_ENUMERATE */
 
 #define JS_HAS_PROP_DELETE      1       /* delete o.p removes p from o */
 #define JS_HAS_CALL_OBJECT      1       /* fun.caller is stack frame obj */
@@ -265,7 +257,6 @@
 
 #elif JS_VERSION == 140
 
-#define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 0       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 0       /* o[""] is equivalent to o[0] */
 #define JS_BUG_EAGER_TOSTRING   0       /* o.toString() trumps o.valueOf() */
@@ -275,7 +266,6 @@
 #define JS_BUG_FALLIBLE_EQOPS   0       /* fallible/intransitive equality ops */
 #define JS_BUG_FALLIBLE_TONUM   0       /* fallible ValueToNumber primitive */
 #define JS_BUG_WITH_CLOSURE     1       /* with(o)function f(){} sets o.f */
-#define JS_BUG_SET_ENUMERATE    0       /* o.p=q flags o.p JSPROP_ENUMERATE */
 
 #define JS_HAS_PROP_DELETE      1       /* delete o.p removes p from o */
 #define JS_HAS_CALL_OBJECT      1       /* fun.caller is stack frame obj */
@@ -321,7 +311,6 @@
 
 #elif JS_VERSION == 150
 
-#define JS_BUG_AUTO_INDEX_PROPS 0       /* new object o: o.p = v sets o[0] */
 #define JS_BUG_NULL_INDEX_PROPS 0       /* o[0] defaults to null, not void */
 #define JS_BUG_EMPTY_INDEX_ZERO 0       /* o[""] is equivalent to o[0] */
 #define JS_BUG_EAGER_TOSTRING   0       /* o.toString() trumps o.valueOf() */
@@ -331,7 +320,6 @@
 #define JS_BUG_FALLIBLE_EQOPS   0       /* fallible/intransitive equality ops */
 #define JS_BUG_FALLIBLE_TONUM   0       /* fallible ValueToNumber primitive */
 #define JS_BUG_WITH_CLOSURE     0       /* with(o)function f(){} sets o.f */
-#define JS_BUG_SET_ENUMERATE    0       /* o.p=q flags o.p JSPROP_ENUMERATE */
 
 #define JS_HAS_PROP_DELETE      1       /* delete o.p removes p from o */
 #define JS_HAS_CALL_OBJECT      1       /* fun.caller is stack frame obj */

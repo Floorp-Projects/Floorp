@@ -304,6 +304,25 @@ extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
 /*
+ * Find or create a property named by id in obj's scope, with the given getter
+ * and setter, slot, attributes, and other members.
+ */
+extern JSScopeProperty *
+js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
+                     JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
+                     uintN attrs, uintN flags, intN shortid);
+
+/*
+ * Change sprop to have the given attrs, getter, and setter in scope, morphing
+ * it into a potentially new JSScopeProperty.  Return a pointer to the changed
+ * or identical property.
+ */
+extern JSScopeProperty *
+js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
+                             JSScopeProperty *sprop, uintN attrs, uintN mask,
+                             JSPropertyOp getter, JSPropertyOp setter);
+
+/*
  * On error, return false.  On success, if propp is non-null, return true with
  * obj locked and with a held property in *propp; if propp is null, return true
  * but release obj's lock first.  Therefore all callers who pass non-null propp
@@ -314,6 +333,11 @@ extern JSBool
 js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 		  JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
 		  JSProperty **propp);
+
+extern JSBool
+js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
+                        JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
+                        uintN flags, intN shortid, JSProperty **propp);
 
 /*
  * Unlike js_DefineProperty, propp must be non-null.  On success, and if id was

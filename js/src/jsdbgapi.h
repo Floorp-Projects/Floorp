@@ -78,14 +78,14 @@ extern JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 		 JSWatchPointHandler handler, void *closure);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(JSBool)
 JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 		   JSWatchPointHandler *handlerp, void **closurep);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(JSBool)
 JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(JSBool)
 JS_ClearAllWatchPoints(JSContext *cx);
 
 #ifdef JS_HAS_OBJ_WATCHPOINT
@@ -94,7 +94,11 @@ JS_ClearAllWatchPoints(JSContext *cx);
  * header file "jsconfig.h" has been included.
  */
 extern JSScopeProperty *
-js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsval userid);
+js_FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id);
+
+extern JSPropertyOp
+js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
+                    const JSScopeProperty *sprop);
 
 extern JSBool JS_DLL_CALLBACK
 js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp);

@@ -88,7 +88,6 @@ typedef struct JSScopeProperty      JSScopeProperty;
 typedef struct JSStackFrame         JSStackFrame;
 typedef struct JSStackHeader        JSStackHeader;
 typedef struct JSSubString          JSSubString;
-typedef struct JSSymbol             JSSymbol;
 
 /* "Friend" types used by jscntxt.h and jsdbgapi.h. */
 typedef enum JSTrapStatus {
