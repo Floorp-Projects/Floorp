@@ -343,6 +343,11 @@ protected:
 
   static void XMLQuote(nsString& aString);
 
+  // Set the clip rect into the rendering-context after applying CSS's
+  // clip property. This method assumes that the caller has checked
+  // that the clip property applies to its situation.
+  void SetClipRect(nsIRenderingContext& aRenderingContext);
+
   nsRect           mRect;
   nsIContent*      mContent;
   nsIStyleContext* mStyleContext;
