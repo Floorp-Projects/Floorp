@@ -1532,6 +1532,7 @@ COOKIE_SetCookieString(char * curURL, char * setCookieHeader) {
   cookie_SetCookieString(curURL, setCookieHeader, 0);
 }
 
+#ifdef later // We need to come back and fix this.  - Neeti
 /* Determines whether the inlineHost is in the same domain as the currentHost.
  * For use with rfc 2109 compliance/non-compliance.
  */
@@ -1574,6 +1575,7 @@ cookie_SameDomain(char * currentHost, char * inlineHost) {
   }
   return 0;
 }
+#endif
 
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
  * determining whether or not a cookie is inline (we need the URL struct, 
