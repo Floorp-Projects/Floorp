@@ -85,6 +85,9 @@ static PRBool OnMacOSX();
 
 #include "nsAppShellService.h"
 #include "nsIProfileInternal.h"
+#ifdef MOZ_PHOENIX
+#include "nsIProfileMigrator.h"
+#endif
 #include "nsIProfileChangeStatus.h"
 #include "nsICloseAllWindows.h"
 #include "nsISupportsPrimitives.h"
@@ -267,18 +270,41 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
 
     EnterLastWindowClosingSurvivalArea();
 
+#ifdef MOZ_PHOENIX
+    // This will eventually change to MOZ_XULAPP
+    PRInt32 numProfiles = 0;
+    profileMgr->GetProfileCount(&numProfiles);
+
+    if (numProfiles == 0) {
+      nsCOMPtr<nsIProfileMigrator> pm(do_CreateInstance("@mozilla.org/profile/migrator;1", &rv));
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIObserver> obs(do_QueryInterface(pm));
+
+        nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+        os->AddObserver(obs, "profile-initial-state", PR_FALSE);
+        rv = pm->Migrate();
+      }
+      if (NS_FAILED(rv)) {
+        // Migration failed for some reason, or there was no profile migrator. 
+        // Create a generic default profile. 
+        rv = profileMgr->CreateDefaultProfile();
+      }
+    }
+#endif
     // If we are being launched in turbo mode, profile mgr cannot show UI
     rv = profileMgr->StartupWithArgs(aCmdLineService, canInteract);
     if (!canInteract && rv == NS_ERROR_PROFILE_REQUIRES_INTERACTION) {
         NS_WARNING("nsIProfileInternal::StartupWithArgs returned NS_ERROR_PROFILE_REQUIRES_INTERACTION");       
         rv = NS_OK;
     }
-    
+
+#ifndef MOZ_PHOENIX
     if (NS_SUCCEEDED(rv)) {
         rv = CheckAndRemigrateDefunctProfile();
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to check and remigrate profile");
         rv = NS_OK;
     }
+#endif
 
     ExitLastWindowClosingSurvivalArea();
 
@@ -288,6 +314,7 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
     return rv;
 }
 
+#ifndef MOZ_PHOENIX
 nsresult
 nsAppShellService::CheckAndRemigrateDefunctProfile()
 {
@@ -419,6 +446,7 @@ nsAppShellService::CheckAndRemigrateDefunctProfile()
   }
   return NS_OK;
 }   
+#endif
 
 NS_IMETHODIMP
 nsAppShellService::CreateHiddenWindow()

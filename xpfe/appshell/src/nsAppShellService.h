@@ -95,8 +95,10 @@ protected:
   PR_STATIC_CALLBACK(void) DestroyExitEvent(PLEvent* aEvent);
 
 private:
+#ifndef MOZ_PHOENIX  
   nsresult CheckAndRemigrateDefunctProfile();
-  
+#endif
+
   nsresult LaunchTask(const char *aParam,
                       PRInt32 height, PRInt32 width,
                       PRBool *windowOpened);
