@@ -26,6 +26,7 @@
 #include "nsBaseWidget.h"
 #include "nsIKBStateControl.h"
 #include "nsIRegion.h"
+#include "nsIRollupListener.h"
 
 
 // XXX: This must go away when nsAutoCString moves out of nsFileSpec.h
