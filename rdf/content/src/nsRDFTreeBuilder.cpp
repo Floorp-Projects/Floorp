@@ -363,9 +363,9 @@ RDFTreeBuilderImpl::Notify(nsITimer *timer)
 
 	if (mRoot)
 	{
+		nsresult		rv;
 #ifdef	DEBUG
 		nsIDOMXULElement	*domElement;
-		nsresult		rv;
 
 		if (NS_SUCCEEDED(rv = mRoot->QueryInterface(kIDomXulElementIID, (void **)&domElement)))
 		{
