@@ -42,8 +42,3 @@ tab[busy] > .tab-icon {
 .tabs-closebutton > .toolbarbutton-icon {
   margin: 0;
 }
-
-.tabs-newbutton {
-  margin: 0px;
-  list-style-image: url("chrome://global/skin/icons/tab-new.gif");
-}
