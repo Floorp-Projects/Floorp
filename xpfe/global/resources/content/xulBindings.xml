@@ -47,7 +47,7 @@
   <binding id="menu-menubar">
     <content>
       <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
-	  <children includes="menupopup"/>
+      <children includes="menupopup"/>
     </content>
   </binding>
 
@@ -55,7 +55,7 @@
     <content>
       <xul:image class="menubar-left"/>
       <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
-	  <children includes="menupopup"/>
+      <children includes="menupopup"/>
     </content>
   </binding>
 
@@ -66,7 +66,7 @@
       <xul:box autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
-	  <children includes="menupopup"/>
+      <children includes="menupopup"/>
     </content>
     <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
@@ -166,46 +166,50 @@
 
   <!-- XUL <button>s -->
   <binding id="buttonleft" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content includes="menupopup">
+    <content>
   	  <xul:box class="button-internal-box" autostretch="never" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
           <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
       </xul:box>
+      <children includes="menupopup"/>
     </content>
   </binding>
 
   <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content includes="menupopup">
+    <content>
   	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
           <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
       </xul:box>
+      <children includes="menupopup"/>
     </content>
   </binding>
   
   <binding id="buttonright" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content includes="menupopup">
+    <content>
   	  <xul:box class="button-internal-box" inherits="orient" autostretch="never" flex="1">
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
           <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
         <xul:image class="button-icon" inherits="src"/>
       </xul:box>
+      <children includes="menupopup"/>
     </content>
   </binding>
 
   <binding id="buttonbottom" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content includes="menupopup">
+    <content>
   	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
           <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
         <xul:image class="button-icon" inherits="src"/>
       </xul:box>
+      <children includes="menupopup"/>
     </content>
   </binding>
   

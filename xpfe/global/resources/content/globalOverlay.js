@@ -78,7 +78,7 @@ function goDoCommand(command)
 
 function goSetCommandEnabled(id, enabled)
 {
-	var node = top.document.getElementById(id);
+	var node = document.getElementById(id);
 
 	if ( node )
 	{
