@@ -144,6 +144,7 @@ nsresult CStartToken::GetIDAttributeAtom(nsIAtom** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = mIDAttributeAtom;
+  NS_IF_ADDREF(*aResult);
 
   return NS_OK;
 }

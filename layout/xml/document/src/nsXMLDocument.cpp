@@ -899,6 +899,17 @@ MatchName(nsIContent *aContent, const nsAReadableString& aName)
       return aContent;
     }
   }
+  else {
+    nsCOMPtr<nsIXMLContent> xmlContent = do_QueryInterface(aContent);    
+    nsCOMPtr<nsIAtom> IDValue;
+    if (xmlContent && NS_SUCCEEDED(xmlContent->GetID(*getter_AddRefs(IDValue))) && IDValue) {
+      const PRUnichar* IDValStr = nsnull;
+      IDValue->GetUnicode(&IDValStr);       
+      if (aName.Equals(IDValStr)) {
+        return aContent;
+      }
+    }
+  }
   
   PRInt32 i, count;
   aContent->ChildCount(count);
