@@ -95,7 +95,7 @@ void nsHTMLDocument::LoadURL(nsIURL* aURL)
   // XXX temporary hack code
   static NS_DEFINE_IID(kPostToServerIID, NS_IPOSTTOSERVER_IID);
   const char* temp = aURL->GetFile();
-  if (strcmp(temp,"/cgi-bin/post-query") == 0) {
+  if (temp != NULL && strcmp(temp,"/cgi-bin/post-query") == 0) {
     nsIPostToServer* pts;
     nsresult result = aURL->QueryInterface(kPostToServerIID, (void **)&pts);
     if (NS_OK == result) {
