@@ -201,7 +201,6 @@ typedef enum JSErrNum {
 #include "jsmsg.def"
 #undef MSG_DEF
     JSErr_Limit
-#undef MSGDEF
 } JSErrNum;
 
 extern JSBool
