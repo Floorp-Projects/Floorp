@@ -19,7 +19,7 @@ DEPTH=..\..\..
 
 DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
-MODULE=ucvja2
+MODULE=uconv
 REQUIRES=xpcom uconv
 
 MAKE_OBJ_TYPE = DLL
@@ -46,6 +46,9 @@ LINCS=					\
 	-I$(PUBLIC)\raptor		\
 	-I$(PUBLIC)\xpcom 		\
 	-I$(PUBLIC)\uconv		\
+	$(NULL)
+
+EXPORTS= nsUCVJA2CID.h			\
 	$(NULL)
 
 LLIBS=					\

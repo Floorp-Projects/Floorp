@@ -32,6 +32,10 @@ CPPSRCS		= \
                   nsUCVJADll.cpp \
 		  $(NULL)
 
+EXPORTS         = \
+                  nsUCVJACID.h \
+		  $(NULL)
+                
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 CFLAGS		+= -DUSE_NSREG -D__STDC__
