@@ -34,56 +34,52 @@ RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService)
 
 // the default sidebar:
 var defaultsidebar = new Object;
-defaultsidebar.db = null;
+defaultsidebar.db = 'chrome://sidebar/content/sidebar.rdf';
 defaultsidebar.resource = 'NC:SidebarRoot';
 
 // the current sidebar:
-var sidebar = new Object;
-sidebar.db = null;
-sidebar.resource = 'NC:SidebarRoot';
-
-var default_sidebar_db = 'chrome://sidebar/content/sidebar.rdf'
+var sidebar = null;
 
 function sidebarOverlayInit(usersidebar)
 {
-  defaultsidebar.db = default_sidebar_db;
-  try 
-  {
-	profileService  = Components.classes['component://netscape/profile/manager'].getService();
-	profileService = profileService.QueryInterface(Components.interfaces.nsIProfile);
-	var sidebar_url = profileService.getCurrentProfileDirFromJS();
-	sidebar_url.URLString += "sidebar.rdf";
-      
-	if (!(sidebar_url.exists())) {
-		dump("using " + default_sidebar_db + " because " + sidebar_url.URLString + " does not exist\n");
-		
-		defaultsidebar.db = default_sidebar_db;
-	}
-	else {
-		dump("sidebar url is " + sidebar_url.URLString + "\n");
-		defaultsidebar.db = sidebar_url.URLString;
-	}
-  }
-  catch (ex) 
-  {
-	dump("failed to get sidebar url, using default\n");
-  	defaultsidebar.db = default_sidebar_db;
+  // load up user-specified sidebar
+  if (usersidebar) {
+    //dump("usersidebar = " + usersidebar + "\n");
+    //dump("usersidebar.resource = " + usersidebar.resource + "\n");
+    //dump("usersidebar.db = " + usersidebar.db + "\n");
+    sidebar = usersidebar;
+  } 
+  else {                  
+	  try 
+	  {
+		profileService  = Components.classes['component://netscape/profile/manager'].getService();
+		profileService = profileService.QueryInterface(Components.interfaces.nsIProfile);
+		var sidebar_url = profileService.getCurrentProfileDirFromJS();
+		sidebar_url.URLString += "sidebar.rdf";
+	      
+		if (!(sidebar_url.exists())) {
+			//dump("using " + defaultsidebar.db + " because " + sidebar_url.URLString + " does not exist\n");
+		}
+		else {
+			//dump("sidebar url is " + sidebar_url.URLString + "\n");
+			defaultsidebar.db = sidebar_url.URLString;
+		}
+	  }
+	  catch (ex) 
+	  {
+		//dump("failed to get sidebar url, using default\n");
+	  }
+  	sidebar = defaultsidebar;
   }
 
   var sidebar_element = document.getElementById('sidebarbox');
   if (sidebar_element.getAttribute('hidden')) {
     return
- 	}
-
-  // load up user-specified sidebar
-  if (!usersidebar)
-    sidebar = defaultsidebar;
-  else {
-    dump("usersidebar = " + usersidebar + "\n");
-    sidebar.db = usersidebar.db;
   }
 
-  dump("sidebar.db = " + sidebar.db + "\n");
+  //dump("sidebar = " + sidebar + "\n");
+  //dump("sidebar.resource = " + sidebar.resource + "\n");
+  //dump("sidebar.db = " + sidebar.db + "\n");
 
   var registry
   try {
@@ -112,15 +108,28 @@ function sidebarOverlayInit(usersidebar)
   // resource so we can use some utility routines that make access a
   // bit easier.
   var sb_datasource = Components.classes['component://netscape/rdf/container']
-  sb_datasource     = sb_datasource.createInstance()
-  var containder    = Components.interfaces.nsIRDFContainer
-  sb_datasource     = sb_datasource.QueryInterface(containder)
-  sb_datasource.Init(registry, RDF.GetResource(sidebar.resource))
+  var container    = Components.interfaces.nsIRDFContainer
+  try {
+	  sb_datasource     = sb_datasource.createInstance()
+	  sb_datasource     = sb_datasource.QueryInterface(container)
+	  sb_datasource.Init(registry, RDF.GetResource(sidebar.resource))
+  }
+  catch (ex) {
+	//dump("failed to init sb_datasource\n");
+  }
   
   var mypanelsbox = document.getElementById('sidebarpanels')
 
   // Now enumerate all of the flash datasources.
-  var enumerator = sb_datasource.GetElements()
+  var enumerator = null;
+  try {
+	enumerator = sb_datasource.GetElements()
+  }
+  catch (ex) {
+	//dump("sb_datasource has no elements.\n");
+  }
+
+  if (!enumerator) return;
 
   while (enumerator.HasMoreElements()) {
     var service = enumerator.GetNext()
@@ -140,7 +149,7 @@ function addSidebarPanel(parent, registry, service, is_last) {
 
 	iframe.setAttribute('src', panel_content)
   if (panel_height) iframe.setAttribute('height', panel_height);
-	dump("panel_content="+panel_content+"\n")
+  //dump("panel_content="+panel_content+"\n")
   if (is_last) {
     //iframe.setAttribute('flex', '100%')
     iframe.setAttribute('class','panelframe')
@@ -206,14 +215,18 @@ function openCloseSidebarPanel(splitter) {
 }
 
 function reloadSidebar() {
+	/*
 	var titlebox = document.getElementById('titlebox')
 	var panel = titlebox.nextSibling
-  while (panel) {
-    var next = panel.nextSibling
-    panel.parentNode.removeChild(panel)
-    panel = next
-	}
-  sidebarOverlayInit(sidebar.db, sidebar.resource)
+
+	while (panel) {
+		var next = panel.nextSibling
+		panel.parentNode.removeChild(panel)
+		panel = next
+	} 
+	sidebarOverlayInit(sidebar) 
+	*/
+	dump("reloadSidebar() is not working.\n");
 }
 
 function customizeSidebar() {
@@ -229,7 +242,7 @@ function sidebarShowHide() {
     //dump("Showing the sidebar\n")
     sidebar.setAttribute('hidden','')
     sidebar_splitter.setAttribute('hidden','')
-    sidebarOverlayInit(sidebar.db, sidebar.resource)
+    sidebarOverlayInit(sidebar)
 	} else {
     //dump("Hiding the sidebar\n")
     sidebar.setAttribute('hidden','true')
