@@ -364,6 +364,14 @@ LIBRARY_PATH=${MOZ_DIST_BIN}:${MOZ_DIST_BIN}/components${LIBRARY_PATH+":$LIBRARY
 #
 ## Set ADDON_PATH for BeOS
 ADDON_PATH=${MOZ_DIST_BIN}${ADDON_PATH+":$ADDON_PATH"}
+#
+## Solaris Xserver(Xsun) tuning - use shared memory transport if available
+if [ "$XSUNTRANSPORT" = "" ]
+then 
+        XSUNTRANSPORT="shmem" 
+        XSUNSMESIZE="64"
+        export XSUNTRANSPORT XSUNSMESIZE
+fi
 
 echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"
 echo "  LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
