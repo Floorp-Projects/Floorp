@@ -532,9 +532,6 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 	NS_IF_RELEASE(mFontMetrics);
 	if (mContext)
 		mContext->GetMetricsFor(aFont, mFontMetrics);
-
-	if (mFontMetrics)
-		nsFontMetricsMac::SetFont(aFont, mContext);
 }
 
 //------------------------------------------------------------------------
@@ -542,21 +539,8 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 void nsRenderingContextMac :: SetFont(nsIFontMetrics *aFontMetrics)
 {
 	NS_IF_RELEASE(mFontMetrics);
-  mFontMetrics = aFontMetrics;
+	mFontMetrics = aFontMetrics;
 	NS_IF_ADDREF(mFontMetrics);
-
-	if (mFontMetrics)
-  {
-    nsFont *font;
-
-    //XXX this is incredibly hokey. nothing should really
-    //be done with the fontmetrics passed in (either here or in
-    //SetFont() above) until you want to actually *use* the font
-    //for somethin. MMP
-
-    mFontMetrics->GetFont(font);
-		nsFontMetricsMac::SetFont(*font, mContext);
-  }
 }
 
 //------------------------------------------------------------------------
@@ -921,26 +905,26 @@ NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const char *aString, nscoord &aW
 NS_IMETHODIMP
 nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
 {
-  nsFont *font;
+	// set native font and attributes
+	nsFont font = GetFont();
+	nsFontMetricsMac::SetFont(font, mContext);
 
-  short textWidth = ::TextWidth(aString, 0, aLength);
-  aWidth = NSToCoordRound(float(textWidth) * mP2T);
+	// measure text
+	short textWidth = ::TextWidth(aString, 0, aLength);
+	aWidth = NSToCoordRound(float(textWidth) * mP2T);
 
-  mFontMetrics->GetFont(font);
+	// add a bit for italic
+	switch (font.style)
+	{
+		case NS_FONT_STYLE_ITALIC:
+		case NS_FONT_STYLE_OBLIQUE:
+			nscoord aAdvance;
+			mFontMetrics->GetMaxAdvance(aAdvance);
+			aWidth += aAdvance;
+			break;
+	}
 
-  if (font != nsnull) {
-	  switch (font->style)
-	  {
-		  case NS_FONT_STYLE_ITALIC:
-		  case NS_FONT_STYLE_OBLIQUE:
-			  nscoord aAdvance;
-			  mFontMetrics->GetMaxAdvance(aAdvance);
-			  aWidth += aAdvance;
-			  break;
-	  }
-  }
-
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -961,54 +945,56 @@ void nsRenderingContextMac :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth)
 {
-PRInt32 x = aX;
-PRInt32 y = aY;
+	PRInt32 x = aX;
+	PRInt32 y = aY;
 
 	::SetPort(mRenderingSurface);
 	::SetClip(mMainRegion);
 
-  // Substract xFontStruct ascent since drawing specifies baseline
-  if (mFontMetrics)
-  	{
-  	nscoord ascent = 0;
-  	mFontMetrics->GetMaxAscent(ascent);
-  	y += ascent;
-  	}
+	if (mFontMetrics)
+	{
+		// set native font and attributes
+		nsFontMetricsMac::SetFont(GetFont(), mContext);
 
-  mTMatrix->TransformCoord(&x,&y);
-	
+		// substract ascent since drawing specifies baseline
+		nscoord ascent = 0;
+		mFontMetrics->GetMaxAscent(ascent);
+		y += ascent;
+	}
+
+	mTMatrix->TransformCoord(&x,&y);
+
 	::MoveTo(x,y);
 	::DrawText(aString,0,aLength);
 
-  if (mFontMetrics)
-  	{
-    const nsFont* font;
-    mFontMetrics->GetFont(font);
-    PRUint8 deco = font->decorations;
+	if (mFontMetrics)
+	{
+		const nsFont* font;
+		mFontMetrics->GetFont(font);
+		PRUint8 deco = font->decorations;
 
-    if (deco & NS_FONT_DECORATION_OVERLINE)
-      DrawLine(aX, aY, aX + aWidth, aY);
+		if (deco & NS_FONT_DECORATION_OVERLINE)
+			DrawLine(aX, aY, aX + aWidth, aY);
 
-    if (deco & NS_FONT_DECORATION_UNDERLINE)
-    	{
-      nscoord ascent = 0;
-      nscoord descent = 0;
-      mFontMetrics->GetMaxAscent(ascent);
-      mFontMetrics->GetMaxDescent(descent);
+		if (deco & NS_FONT_DECORATION_UNDERLINE)
+		{
+			nscoord ascent = 0;
+			nscoord descent = 0;
+			mFontMetrics->GetMaxAscent(ascent);
+			mFontMetrics->GetMaxDescent(descent);
 
-      DrawLine(aX, aY + ascent + (descent >> 1),
-               aX + aWidth, aY + ascent + (descent >> 1));
-    	}
+			DrawLine(aX, aY + ascent + (descent >> 1),
+						aX + aWidth, aY + ascent + (descent >> 1));
+		}
 
-    if (deco & NS_FONT_DECORATION_LINE_THROUGH)
-    	{
-      nscoord height = 0;
-      mFontMetrics->GetHeight(height);
+		if (deco & NS_FONT_DECORATION_LINE_THROUGH)
+		{
+			nscoord height = 0;
+			mFontMetrics->GetHeight(height);
 
-      DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
-    	}
-  }
-
+			DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
+		}
+	}
 }
 
 //------------------------------------------------------------------------
