@@ -19,11 +19,13 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
 
 use vars %::COOKIE;
+use vars qw($template $vars);
 
 use lib qw(.);
 
@@ -51,23 +53,24 @@ if ($::userid) {
 my $cookiepath = Param("cookiepath");
 print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
 Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
-Content-type: text/html
-
 ";
 
 # delete the cookie before dumping the header so that it shows the user
 # as logged out if %commandmenu% is in the header
 delete $::COOKIE{"Bugzilla_login"};
 
-PutHeader ("Relogin");
-
-print "<B>Your login has been forgotten</B>.</P>
-The cookie that was remembering your login is now gone.  The next time you
-do an action that requires a login, you will be prompted for it.
-<p>
-";
-
-PutFooter();
+    $vars->{'title'} = "Logged Out";
+    $vars->{'message'} = "<b>Your login has been forgotten</b>.
+                          The cookie that was remembering your login is 
+                          now gone. You will be prompted for a login the 
+                          next time it is required.";
+    $vars->{'url'} = "query.cgi?GoAheadAndLogIn=1";
+    $vars->{'link'} = "Log in again here";
+    
+    print "Content-Type: text/html\n\n";
+    $template->process("global/message.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error())
+      && exit;
 
 exit;
 
