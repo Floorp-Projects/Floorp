@@ -44,7 +44,7 @@ public:
 
   // nsIClipboard  
   NS_IMETHOD ForceDataToClipboard();
-
+  NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult);
 
   // invisible widget.  also used by dragndrop
   static GtkWidget *sWidget;

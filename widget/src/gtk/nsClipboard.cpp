@@ -58,7 +58,7 @@ enum {
   TARGET_IMAGE_JPEG,
   TARGET_IMAGE_GIF,
   // compatibility types
-  TARGET_COMPOUND_TEXT,
+  TARGET_UTF8,
   TARGET_UNKNOWN,
   TARGET_LAST
 };
@@ -188,6 +188,7 @@ void nsClipboard::Init(void)
   sSelTypes[TARGET_TEXT_PLAIN]    = gdk_atom_intern(kTextMime, FALSE);
   sSelTypes[TARGET_TEXT_XIF]      = gdk_atom_intern(kXIFMime, FALSE);
   sSelTypes[TARGET_TEXT_UNICODE]  = gdk_atom_intern(kUnicodeMime, FALSE);
+  sSelTypes[TARGET_UTF8]          = gdk_atom_intern("UTF8", FALSE);
   sSelTypes[TARGET_TEXT_HTML]     = gdk_atom_intern(kHTMLMime, FALSE);
   sSelTypes[TARGET_AOLMAIL]       = gdk_atom_intern(kAOLMailMime, FALSE);
   sSelTypes[TARGET_IMAGE_PNG]     = gdk_atom_intern(kPNGImageMime, FALSE);
@@ -353,8 +354,8 @@ void nsClipboard::RegisterFormat(gint format)
     // text/unicode (default)
     AddTarget(sSelTypes[format]);
 
-    // COMPOUND_TEXT (what X uses)
-    AddTarget(sSelTypes[TARGET_COMPOUND_TEXT]);
+    // UTF8 (what X uses)
+    AddTarget(sSelTypes[TARGET_UTF8]);
     break;
 
 
@@ -462,7 +463,7 @@ PRBool nsClipboard::DoConvert(gint format)
   case TARGET_TEXT_UNICODE:
     r = DoRealConvert(sSelTypes[format]);
     if (r) return r;
-    r = DoRealConvert(sSelTypes[TARGET_COMPOUND_TEXT]);
+    r = DoRealConvert(sSelTypes[TARGET_UTF8]);
     if (r) return r;
     break;
 
@@ -642,7 +643,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
   switch (type)
   {
   case GDK_TARGET_STRING:
-  case TARGET_COMPOUND_TEXT:
+  case TARGET_UTF8:
   case TARGET_TEXT_PLAIN:
   case TARGET_TEXT_XIF:
   case TARGET_TEXT_UNICODE:
@@ -695,6 +696,13 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
     return NS_ERROR_FAILURE;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult)
+{
+  *outResult = PR_TRUE;  // say we always do.
   return NS_OK;
 }
 
@@ -757,7 +765,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
       dataFlavor = kXIFMime;
       break;
     case TARGET_TEXT_UNICODE:
-    case TARGET_COMPOUND_TEXT:
+    case TARGET_UTF8:
       dataFlavor = kUnicodeMime;
       break;
     case TARGET_TEXT_HTML:
