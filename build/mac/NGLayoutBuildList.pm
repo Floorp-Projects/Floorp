@@ -660,6 +660,14 @@ sub MakeResourceAliases()
     _copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir"."bookmarks.html");
     _copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir"."panels.rdf");
     _copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir"."search.rdf");
+
+    # make a dup in en-US
+    my($default_profile_dir_en_US) = "$default_profile_dir"."en-US:";
+    mkdir($default_profile_dir_en_US, 0);
+
+    _copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir_en_US"."bookmarks.html");
+    _copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir_en_US"."panels.rdf");
+    _copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir_en_US"."search.rdf");
     }
     
     # Default _pref_ directory stuff
