@@ -346,7 +346,7 @@ nsNativeComponentLoader::RegisterComponentsInDir(PRInt32 when,
 }
 
 static nsresult
-nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
+nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
 {
     nsresult rv = NS_ERROR_FAILURE;
 
@@ -372,13 +372,6 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
     if (NS_SUCCEEDED(rv))
         {
             rv = mobj->CanUnload(nsComponentManagerImpl::gComponentManager, &canUnload);
-            if (NS_FAILED(rv))
-                {
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                           ("nsComponentManager: nsIModule::CanUnload() returned error for %s.",
-                            dll->GetNativePath()));
-                    return rv;
-                }
         }
 #ifndef OBSOLETE_MODULE_LOADING
     else
@@ -388,6 +381,7 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
             if (proc)
                 {
                     canUnload = proc(serviceMgr);
+                    rv = NS_OK;	// No error status returned by call.
                 }
             else
                 {
@@ -398,6 +392,24 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
                 }
         }
 #endif /* OBSOLETE_MODULE_LOADING */
+
+    mobj = nsnull; // Release our reference to the module object
+
+    // When shutting down, whether we can unload the dll or not,
+    // we will shutdown the dll to release any memory it has got
+    if (when == nsIComponentManager::NS_Shutdown)
+        {
+            dll->Shutdown();
+        }
+        
+    // Check error status on CanUnload() call
+    if (NS_FAILED(rv))
+        {
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                   ("nsComponentManager: nsIModule::CanUnload() returned error for %s.",
+                    dll->GetNativePath()));
+            return rv;
+        }
 
     if (canUnload)
         {
@@ -426,12 +438,20 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
     return rv;
 }
 
+struct freeLibrariesClosure
+{
+    nsIServiceManager *serviceMgr;
+    PRInt32 when;
+};
+
 static PRBool
 nsFreeLibraryEnum(nsHashKey *aKey, void *aData, void* closure) 
 {
     nsDll *dll = (nsDll *) aData;
-    nsIServiceManager* serviceMgr = (nsIServiceManager*)closure;
-    nsFreeLibrary(dll, serviceMgr);
+    struct freeLibrariesClosure *callData = (struct freeLibrariesClosure *) closure;
+    nsFreeLibrary(dll,
+                  (callData ? callData->serviceMgr : NULL),
+                  (callData ? callData->when : nsIComponentManager::NS_Timer));
     return PR_TRUE;
 }
 
@@ -775,10 +795,9 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
                 {
                     // We loaded the old version of the dll and now we find that the
                     // on-disk copy if newer. Try to unload the dll.
-                    nsIServiceManager* serviceMgr = NULL;
+                    nsIServiceManager *serviceMgr = NULL;
                     nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-                    // if getting the serviceMgr failed, we can still pass NULL to FreeLibraries
-                    rv = nsFreeLibrary(dll, serviceMgr);
+                    rv = nsFreeLibrary(dll, serviceMgr, when);
                     if (NS_FAILED(rv))
                         {
                             // THIS IS THE WORST SITUATION TO BE IN.
@@ -869,8 +888,12 @@ nsNativeComponentLoader::UnloadAll(PRInt32 aWhen)
 {
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsNativeComponentLoader: Unloading...."));
 
+    struct freeLibrariesClosure callData;
+    callData.serviceMgr = NULL; // XXX need to get this as a parameter
+    callData.when = aWhen;
+
     // Cycle through the dlls checking to see if they want to be unloaded
-    mDllStore->Enumerate(nsFreeLibraryEnum, NULL);
+    mDllStore->Enumerate(nsFreeLibraryEnum, &callData);
     return NS_OK;
 }
 

@@ -296,12 +296,8 @@ PRBool nsDll::Unload(void)
 	if (m_status != DLL_OK || m_instance == NULL)
 		return (PR_FALSE);
 
-    nsrefcnt refcnt;
-    if (m_moduleObject)
-    {
-        NS_RELEASE2(m_moduleObject, refcnt);
-        NS_ASSERTION(refcnt == 0, "Dll moduleObject refcount non zero");
-    }
+    // Shutdown the dll
+    Shutdown();
 
 	PRStatus ret = PR_UnloadLibrary(m_instance);
 	if (ret == PR_SUCCESS)
@@ -376,4 +372,17 @@ nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
         *cobj = m_moduleObject;
     }
     return rv;
+}
+
+nsresult nsDll::Shutdown(void)
+{
+    // Release the module object if we got one
+    nsrefcnt refcnt;
+    if (m_moduleObject)
+    {
+        NS_RELEASE2(m_moduleObject, refcnt);
+        NS_ASSERTION(refcnt == 0, "Dll moduleObject refcount non zero");
+    }
+    return NS_OK;
+
 }

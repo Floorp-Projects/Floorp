@@ -93,6 +93,10 @@ public:
     void MarkForUnload(PRBool mark) { m_markForUnload = mark; }
     PRBool IsMarkedForUnload(void) { return m_markForUnload; }
 
+    // Shutdown the dll. This will call any on unload hook for the dll.
+    // This wont unload the dll. Unload() implicitly calls Shutdown().
+    nsresult Shutdown(void);
+
 	void *FindSymbol(const char *symbol);
 	
     PRBool HasChanged(void);
