@@ -1,3 +1,0 @@
-rm serverInOut.res
-rm clientInOut.res
-clientInOut
