@@ -227,3 +227,12 @@ const char* nsGetTypeName(void* ptr)
 }
 
 #endif
+
+#ifdef XP_WIN32
+const char* nsGetTypeName(void* ptr)
+{
+  //TODO: COMPLETE THIS
+    return "void*";
+}
+
+#endif //XP_WIN32

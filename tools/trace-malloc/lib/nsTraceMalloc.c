@@ -33,8 +33,7 @@
  * file under either the MPL or the GPL.
  */
 #ifdef NS_TRACE_MALLOC
-
-/*
+ /*
  * TODO:
  * - fix my_dladdr so it builds its own symbol tables from bfd
  * - extend logfile so 'F' record tells free stack
@@ -48,14 +47,32 @@
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
+#ifdef XP_UNIX
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#endif
 #include "plhash.h"
 #include "prlog.h"
 #include "prmon.h"
 #include "prprf.h"
 #include "nsTraceMalloc.h"
+
+#ifdef XP_WIN32
+#include "nsStackFrameWin.h"
+#include <sys/timeb.h>/*for timeb*/
+#include <sys/stat.h>/*for fstat*/
+
+#include <io.h> /*for write*/
+#include "nsTraceMallocCallbacks.h"
+
+#define WRITE_FLAGS "w"
+
+#endif //WIN32
+
+
+#ifdef XP_UNIX
+#define WRITE_FLAGS "w"
 
 /* From libiberty, why aren't these in <libiberty.h> ? */
 extern char *cplus_demangle(const char *, int);
@@ -188,6 +205,45 @@ static int my_dladdr(const void *address, Dl_info *info)
     return 1;
 }
 #endif /* 0 */
+#else /*NOT UNIX DEFINE OUT LIBC*/
+#define __libc_malloc(x) malloc(x)
+#define __libc_calloc(x, y) calloc(x,y)
+#define __libc_realloc(x, y) realloc(x,y)
+#define __libc_free(x) free(x)
+/*
+ok we need to load the malloc,free,realloc,calloc from the dll and store the function pointers somewhere and call them by function
+that is the only way that "I" can see to override malloc ect assuredly. all other dlls that link with this library should have their
+malloc overridden to call this one.
+*/
+
+typedef void * (__stdcall *MALLOCPROC)(size_t);
+typedef void * (__stdcall *REALLOCPROC)(void *, size_t);
+typedef void * (__stdcall *CALLOCPROC)(size_t,size_t);
+typedef void (__stdcall *FREEPROC)(void *);
+
+/*debug types*/
+#ifdef _DEBUG
+typedef void * (__stdcall *MALLOCDEBUGPROC) ( size_t, int, const char *, int);
+typedef void * (__stdcall *CALLOCDEBUGPROC) ( size_t, size_t, int, const char *, int);
+typedef void * (__stdcall *REALLOCDEBUGPROC) ( void *, size_t, int, const char *, int);
+typedef void   (__stdcall *FREEDEBUGPROC) ( void *, int);
+#endif
+
+struct AllocationFuncs
+{
+  MALLOCPROC   malloc_proc;    
+  CALLOCPROC   calloc_proc;    
+  REALLOCPROC  realloc_proc;    
+  FREEPROC     free_proc;
+#ifdef _DEBUG
+  MALLOCDEBUGPROC   malloc_debug_proc;    
+  CALLOCDEBUGPROC   calloc_debug_proc;    
+  REALLOCDEBUGPROC  realloc_debug_proc;    
+  FREEDEBUGPROC     free_debug_proc;    
+#endif
+  int          prevent_reentry;
+}gAllocFuncs;
+#endif /*!XP_UNIX*/
 
 typedef struct logfile logfile;
 
@@ -261,7 +317,8 @@ retry:
 
 static void flush_logfile(logfile *fp)
 {
-    int len, cnt, fd;
+    int len, cnt;
+	int fd;
     char *bp;
 
     len = fp->pos;
@@ -475,6 +532,314 @@ static PLHashTable *libraries = NULL;
 /* Table mapping method names to logged 'N' record serial numbers. */
 static PLHashTable *methods = NULL;
 
+#if XP_WIN32
+#define  MAX_STACKFRAMES 256
+#define  MAX_UNMANGLED_NAME_LEN 256
+
+
+
+static callsite *calltree(int skip)
+{
+    logfile *fp = logfp;
+    HANDLE myProcess;
+    HANDLE myThread;
+    CONTEXT context;
+    int ok, maxstack, offset;
+    STACKFRAME frame[MAX_STACKFRAMES];
+    uint32 library_serial, method_serial;
+    int framenum;
+    uint32 pc;
+    uint32 depth, nkids;
+    callsite *parent, *site, **csp, *tmp;
+    char *demangledname;
+    const char *library;
+    IMAGEHLP_MODULE imagehelp;
+    char buf[sizeof(IMAGEHLP_SYMBOL) + 512];
+    PIMAGEHLP_SYMBOL symbol;
+    char *method, *slash;
+    PLHashNumber hash;
+    PLHashEntry **hep, *he;
+    lfdset_entry *le;
+
+    imagehelp.SizeOfStruct = sizeof(imagehelp);
+    framenum = 0;
+    myProcess = GetCurrentProcess();
+    myThread = GetCurrentThread();
+
+    ok = EnsureSymInitialized();
+    if (! ok)
+      return 0;
+
+    // Get the context information for this thread. That way we will
+    // know where our sp, fp, pc, etc. are and can fill in the
+    // STACKFRAME with the initial values.
+    context.ContextFlags = CONTEXT_FULL;
+    ok = GetThreadContext(myThread, &context);
+    if (! ok)
+      return 0;
+
+    // Setup initial stack frame to walk from
+    memset(&(frame[0]), 0, sizeof(frame[0]));
+    frame[0].AddrPC.Offset    = context.Eip;
+    frame[0].AddrPC.Mode      = AddrModeFlat;
+    frame[0].AddrStack.Offset = context.Esp;
+    frame[0].AddrStack.Mode   = AddrModeFlat;
+    frame[0].AddrFrame.Offset = context.Ebp;
+    frame[0].AddrFrame.Mode   = AddrModeFlat;
+    while (1) {
+      PIMAGEHLP_SYMBOL symbol = (PIMAGEHLP_SYMBOL) buf;
+      if (framenum)
+      {
+        memcpy(&(frame[framenum]),&(frame[framenum-1]),sizeof(STACKFRAME));
+      }
+
+      ok = _StackWalk(IMAGE_FILE_MACHINE_I386,
+                     myProcess,
+                     myThread,
+                     &(frame[framenum]),
+                     &context,
+                     0,                        // read process memory routine
+                     _SymFunctionTableAccess,  // function table access routine
+                     _SymGetModuleBase,        // module base routine
+                     0);                       // translate address routine
+
+      if (!ok) {
+        break;
+      }
+      if (skip)
+      {
+        skip--;
+        continue;/*skip tells us to skip the first skip amount of stackframes*/
+      }
+      if (frame[framenum].AddrPC.Offset == 0)
+        break;
+      framenum++;
+    }
+    depth = framenum;
+    maxstack = (depth > tmstats.calltree_maxstack);
+    if (maxstack)
+        tmstats.calltree_maxstack = depth;
+    /* Reverse the stack again, finding and building a path in the tree. */
+    parent = &calltree_root;
+    do {
+        DWORD displacement;/*used for getsymfromaddr*/
+
+        pc = frame[--framenum].AddrPC.Offset;
+
+        csp = &parent->kids;
+        while ((site = *csp) != NULL) {
+            if (site->pc == pc) {
+                tmstats.calltree_kidhits++;
+
+                /* Put the most recently used site at the front of siblings. */
+                *csp = site->siblings;
+                site->siblings = parent->kids;
+                parent->kids = site;
+
+                /* Check whether we've logged for this site and logfile yet. */
+                if (!LFD_TEST(fp->lfd, &site->lfdset)) {
+                    /*
+                     * Some other logfile put this site in the calltree.  We
+                     * must log an event for site, and possibly first for its
+                     * method and/or library.  Note the code after the while
+                     * loop that tests if (!site).
+                     */
+                    break;
+                }
+
+                /* Site already built and logged to fp -- go up the stack. */
+                goto upward;
+            }
+            tmstats.calltree_kidsteps++;
+            csp = &site->siblings;
+        }
+
+        if (!site) {
+            tmstats.calltree_kidmisses++;
+
+            /* Check for recursion: see if pc is on our ancestor line. */
+            for (site = parent; site; site = site->parent) {
+                if (site->pc == pc) {
+                    tmstats.callsite_recurrences++;
+                    last_callsite_recurrence = site;
+                    goto upward;
+                }
+            }
+        }
+
+        /*
+         * Not in tree at all, or not logged to fp: let's find our symbolic
+         * callsite info.  XXX static syms are masked by nearest lower global
+         */
+
+        if (!_SymGetModuleInfo(myProcess,frame[framenum].AddrPC.Offset,&imagehelp))/*load up the info for the dll*/
+        {
+            DWORD error = GetLastError();
+            PR_ASSERT(error);
+            library = "unknown";//ew
+        }
+        else
+        {
+          library = imagehelp.ModuleName;
+        }
+
+        symbol = (PIMAGEHLP_SYMBOL) buf;
+        symbol->SizeOfStruct = sizeof(buf);
+        symbol->MaxNameLength = 512;
+
+        ok = _SymGetSymFromAddr(myProcess,
+                                frame[framenum].AddrPC.Offset,
+                                &displacement,
+                                symbol);
+
+        /* Check whether we need to emit a library trace record. */
+        library_serial = 0;
+        if (library) {
+           if (!libraries) {
+                libraries = PL_NewHashTable(100, PL_HashString,
+                                            PL_CompareStrings, PL_CompareValues,
+                                            &lfdset_hashallocops, NULL);
+                if (!libraries) {
+                    tmstats.btmalloc_failures++;
+                    return NULL;
+                }
+            }
+            hash = PL_HashString(library);
+            hep = PL_HashTableRawLookup(libraries, hash, library);
+            he = *hep;
+            library = strdup(library); //strdup it always?
+            if (he) {
+                library_serial = (uint32) he->value;
+                le = (lfdset_entry *) he;
+                if (LFD_TEST(fp->lfd, &le->lfdset)) {
+                    /* We already logged an event on fp for this library. */
+                    le = NULL;
+                }
+            } else {
+//                library = strdup(library);
+                if (library) {
+                    library_serial = ++library_serial_generator;
+                    he = PL_HashTableRawAdd(libraries, hep, hash, library,
+                                            (void*) library_serial);
+                }
+                if (!he) {
+                    tmstats.btmalloc_failures++;
+                    return NULL;
+                }
+                le = (lfdset_entry *) he;
+            }
+            if (le) {
+                /* Need to log an event to fp for this lib. */
+                slash = strrchr(library, '/');
+                if (slash)
+                    library = slash + 1;
+                log_event1(fp, TM_EVENT_LIBRARY, library_serial);
+                log_string(fp, library);
+                LFD_SET(fp->lfd, &le->lfdset);
+            }
+        }
+
+        /* Now find the demangled method name and pc offset in it. */
+        demangledname = (char *)malloc(MAX_UNMANGLED_NAME_LEN);
+        if (!_SymUnDName(symbol,demangledname,MAX_UNMANGLED_NAME_LEN))
+          return 0;
+        method = demangledname;
+        offset = (char*)pc - (char*)(symbol->Address);
+        /* Emit an 'N' (for New method, 'M' is for malloc!) event if needed. */
+        method_serial = 0;
+        if (!methods) {
+            methods = PL_NewHashTable(10000, PL_HashString,
+                                      PL_CompareStrings, PL_CompareValues,
+                                      &lfdset_hashallocops, NULL);
+            if (!methods) {
+                tmstats.btmalloc_failures++;
+                free((void*) method);
+                return NULL;
+            }
+        }
+        hash = PL_HashString(method);
+        hep = PL_HashTableRawLookup(methods, hash, method);
+        he = *hep;
+        if (he) {
+            method_serial = (uint32) he->value;
+            free((void*) method);
+            method = (char *) he->key;
+            le = (lfdset_entry *) he;
+            if (LFD_TEST(fp->lfd, &le->lfdset)) {
+                /* We already logged an event on fp for this method. */
+                le = NULL;
+            }
+        } else {
+            method_serial = ++method_serial_generator;
+            he = PL_HashTableRawAdd(methods, hep, hash, method,
+                                    (void*) method_serial);
+            if (!he) {
+                tmstats.btmalloc_failures++;
+                free((void*) method);
+                return NULL;
+            }
+            le = (lfdset_entry *) he;
+        }
+        if (le) {
+            log_event2(fp, TM_EVENT_METHOD, method_serial, library_serial);
+            log_string(fp, method);
+            LFD_SET(fp->lfd, &le->lfdset);
+        }
+
+        /* Create a new callsite record. */
+        if (!site) {
+            site = malloc(sizeof(callsite));
+            if (!site) {
+                tmstats.btmalloc_failures++;
+                return NULL;
+            }
+
+            /* Update parent and max-kids-per-parent stats. */
+            if (!parent->kids)
+                tmstats.calltree_parents++;
+            nkids = 1;
+            for (tmp = parent->kids; tmp; tmp = tmp->siblings)
+                nkids++;
+            if (nkids > tmstats.calltree_maxkids) {
+                tmstats.calltree_maxkids = nkids;
+                calltree_maxkids_parent = parent;
+            }
+
+            /* Insert the new site into the tree. */
+            site->pc = pc;
+            site->serial = ++callsite_serial_generator;
+            LFD_ZERO(&site->lfdset);
+            site->name = method;
+            site->offset = offset;
+            site->parent = parent;
+            site->siblings = parent->kids;
+            site->library = library;
+            parent->kids = site;
+            site->kids = NULL;
+        }
+
+        /* Log the site with its parent, method, and offset. */
+        log_event4(fp, TM_EVENT_CALLSITE, site->serial, parent->serial,
+                   method_serial, offset);
+        LFD_SET(fp->lfd, &site->lfdset);
+
+      upward:
+        parent = site;
+    } while (framenum);
+
+    if (maxstack)
+        calltree_maxstack_top = site;
+    depth = 0;
+    for (tmp = site; tmp; tmp = tmp->parent)
+        depth++;
+    if (depth > tmstats.calltree_maxdepth)
+        tmstats.calltree_maxdepth = depth;
+    return site;
+}
+
+
+#else
+/*XP_UNIX*/
 static callsite *calltree(uint32 *bp)
 {
     logfile *fp = logfp;
@@ -725,6 +1090,30 @@ static callsite *calltree(uint32 *bp)
     return site;
 }
 
+#endif
+
+#ifdef XP_WIN32
+
+callsite *
+backtrace(int skip)
+{
+    callsite *site;
+
+    tmstats.backtrace_calls++;
+    suppress_tracing++;
+
+    site = calltree(skip);
+    if (!site) {
+        tmstats.backtrace_failures++;
+        PR_ASSERT(tmstats.backtrace_failures < 100);
+    }
+    suppress_tracing--;
+    return site;
+}
+
+#else
+/*XP_UNIX*/
+
 callsite *
 backtrace(int skip)
 {
@@ -757,6 +1146,10 @@ backtrace(int skip)
     suppress_tracing--;
     return site;
 }
+
+
+#endif /*XP_WIN32*/
+
 
 typedef struct allocation {
     PLHashEntry entry;
@@ -829,6 +1222,8 @@ static PLHashTable *new_allocations(void)
 }
 
 #define get_allocations() (allocations ? allocations : new_allocations())
+
+#if XP_UNIX
 
 __ptr_t malloc(size_t size)
 {
@@ -1003,6 +1398,7 @@ void free(__ptr_t ptr)
         PR_ExitMonitor(tmmon);
     __libc_free(ptr);
 }
+#endif 
 
 static const char magic[] = NS_TRACE_MALLOC_MAGIC;
 
@@ -1025,7 +1421,15 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
 
     atexit(NS_TraceMallocShutdown);
     tmmon = PR_NewMonitor();
+    /*register listeners for win32*/
+#ifdef XP_WIN32
+    {
+      StartupHooker();
+    }
+#endif
 }
+
+
 
 PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
 {
@@ -1042,79 +1446,81 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
             int pipefds[2];
 
             logfilename = argv[i+1];
-            switch (*logfilename) {
-              case '|':
-                if (pipe(pipefds) == 0) {
-                    pid_t pid = fork();
-                    if (pid == 0) {
-                        /* In child: set up stdin, parse args, and exec. */
-                        int maxargc, nargc;
-                        char **nargv, *token;
+			switch (*logfilename) {
+		#if XP_UNIX
+			case '|':
+				if (pipe(pipefds) == 0) {
+					pid_t pid = fork();
+					if (pid == 0) {
+						/* In child: set up stdin, parse args, and exec. */
+						int maxargc, nargc;
+						char **nargv, *token;
 
-                        if (pipefds[0] != 0) {
-                            dup2(pipefds[0], 0);
-                            close(pipefds[0]);
-                        }
-                        close(pipefds[1]);
+						if (pipefds[0] != 0) {
+							dup2(pipefds[0], 0);
+							close(pipefds[0]);
+						}
+						close(pipefds[1]);
 
-                        logfilename = strtok(logfilename + 1, " \t");
-                        maxargc = 3;
-                        nargv = (char **) malloc((maxargc+1) * sizeof(char *));
-                        if (!nargv) exit(1);
-                        nargc = 0;
-                        nargv[nargc++] = logfilename;
-                        while ((token = strtok(NULL, " \t")) != NULL) {
-                            if (nargc == maxargc) {
-                                maxargc *= 2;
-                                nargv = (char**)
-                                    realloc(nargv, (maxargc+1) * sizeof(char*));
-                                if (!nargv) exit(1);
-                            }
-                            nargv[nargc++] = token;
-                        }
-                        nargv[nargc] = NULL;
+						logfilename = strtok(logfilename + 1, " \t");
+						maxargc = 3;
+						nargv = (char **) malloc((maxargc+1) * sizeof(char *));
+						if (!nargv) exit(1);
+						nargc = 0;
+						nargv[nargc++] = logfilename;
+						while ((token = strtok(NULL, " \t")) != NULL) {
+							if (nargc == maxargc) {
+								maxargc *= 2;
+								nargv = (char**)
+									realloc(nargv, (maxargc+1) * sizeof(char*));
+								if (!nargv) exit(1);
+							}
+							nargv[nargc++] = token;
+						}
+						nargv[nargc] = NULL;
 
-                        (void) setsid();
-                        execvp(logfilename, nargv);
-                        exit(127);
-                    }
+						(void) setsid();
+						execvp(logfilename, nargv);
+						exit(127);
+					}
 
-                    if (pid > 0) {
-                        /* In parent: set logfd to the pipe's write side. */
-                        close(pipefds[0]);
-                        logfd = pipefds[1];
-                    }
-                }
-                if (logfd < 0) {
-                    fprintf(stderr,
-                        "%s: can't pipe to trace-malloc child process %s: %s\n",
-                        argv[0], logfilename, strerror(errno));
-                    exit(1);
-                }
-                break;
+					if (pid > 0) {
+						/* In parent: set logfd to the pipe's write side. */
+						close(pipefds[0]);
+						logfd = pipefds[1];
+					}
+				}
+				if (logfd < 0) {
+					fprintf(stderr,
+						"%s: can't pipe to trace-malloc child process %s: %s\n",
+						argv[0], logfilename, strerror(errno));
+					exit(1);
+				}
+				break;
+		#endif /*XP_UNIX*/
+			  case '-':
+				/* Don't log from startup, but do prepare to log later. */
+				/* XXX traditional meaning of '-' as option argument is "stdin" or "stdout" */
+				if (logfilename[1] == '\0')
+					break;
+				/* FALL THROUGH */
 
-              case '-':
-                /* Don't log from startup, but do prepare to log later. */
-                /* XXX traditional meaning of '-' as option argument is "stdin" or "stdout" */
-                if (logfilename[1] == '\0')
-                    break;
-                /* FALL THROUGH */
-
-              default:
-                logfd = open(logfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-                if (logfd < 0) {
-                    fprintf(stderr,
-                        "%s: can't create trace-malloc logfilename %s: %s\n",
-                        argv[0], logfilename, strerror(errno));
-                    exit(1);
-                }
-                break;
-            }
-
+			  default:
+				logfd = open(logfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+				if (logfd < 0) {
+					fprintf(stderr,
+						"%s: can't create trace-malloc logfilename %s: %s\n",
+						argv[0], logfilename, strerror(errno));
+					exit(1);
+				}
+				break;
+			}
+#ifndef XP_WIN32
             /* Now remove --trace-malloc and its argument from argv. */
             for (argc -= 2; i < argc; i++)
                 argv[i] = argv[i+2];
             argv[argc] = NULL;
+#endif//if you dont comment this out it will crash windows
             break;
         }
     }
@@ -1152,6 +1558,9 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
         PR_DestroyMonitor(tmmon);
         tmmon = NULL;
     }
+#ifdef XP_WIN32
+    ShutdownHooker();
+#endif
 }
 
 PR_IMPLEMENT(void) NS_TraceMallocDisable()
@@ -1169,12 +1578,13 @@ PR_IMPLEMENT(void) NS_TraceMallocDisable()
 
 PR_IMPLEMENT(void) NS_TraceMallocEnable()
 {
-    if (tmmon)
+    if (tmmon) 
         PR_EnterMonitor(tmmon);
     suppress_tracing--;
     if (tmmon)
         PR_ExitMonitor(tmmon);
 }
+
 
 PR_IMPLEMENT(int) NS_TraceMallocChangeLogFD(int fd)
 {
@@ -1197,6 +1607,8 @@ PR_IMPLEMENT(int) NS_TraceMallocChangeLogFD(int fd)
         PR_ExitMonitor(tmmon);
     return oldfp->fd;
 }
+
+
 
 static PRIntn
 lfd_clr_enumerator(PLHashEntry *he, PRIntn i, void *arg)
@@ -1260,11 +1672,18 @@ NS_TraceMallocCloseLogFD(int fd)
     close(fd);
 }
 
+
 PR_IMPLEMENT(void)
 NS_TraceMallocLogTimestamp(const char *caption)
 {
     logfile *fp;
+#if defined(XP_UNIX)
     struct timeval tv;
+#endif
+#if defined(XP_WIN32)
+    struct _timeb tb;
+#endif	
+
 
     if (tmmon)
         PR_EnterMonitor(tmmon);
@@ -1272,9 +1691,16 @@ NS_TraceMallocLogTimestamp(const char *caption)
     fp = logfp;
     log_byte(fp, TM_EVENT_TIMESTAMP);
 
-    gettimeofday(&tv, NULL);
+#if defined(XP_UNIX)
+     gettimeofday(&tv, NULL);
     log_uint32(fp, (uint32) tv.tv_sec);
     log_uint32(fp, (uint32) tv.tv_usec);
+#endif
+#if defined(XP_WIN32)
+     _ftime(&tb);
+    log_uint32(fp, (uint32) tb.time);
+    log_uint32(fp, (uint32) tb.millitm);
+#endif
     log_string(fp, caption);
 
     if (tmmon)
@@ -1306,13 +1732,13 @@ allocation_enumerator(PLHashEntry *he, PRIntn i, void *arg)
     return HT_ENUMERATE_NEXT;
 }
 
+
 PR_IMPLEMENT(int)
 NS_TraceMallocDumpAllocations(const char *pathname)
 {
     FILE *ofp;
     int rv;
-
-    ofp = fopen(pathname, "w");
+    ofp = fopen(pathname, WRITE_FLAGS);
     if (!ofp)
         return -1;
     if (allocations)
@@ -1337,4 +1763,189 @@ NS_TraceMallocFlushLogfiles()
         PR_ExitMonitor(tmmon);
 }
 
+#ifdef XP_WIN32
+
+
+
+PR_IMPLEMENT(void) 
+MallocCallback(void *aPtr, size_t size)
+{
+    callsite *site;
+    PLHashEntry *he;
+    allocation *alloc;
+    tmstats.malloc_calls++;
+    if (!aPtr) {
+        tmstats.malloc_failures++;
+    } else if (suppress_tracing == 0) {
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
+        site = backtrace(4);
+        if (site)
+            log_event2(logfp, TM_EVENT_MALLOC, site->serial, size);
+        if (get_allocations()) {
+            suppress_tracing++;
+            he = PL_HashTableAdd(allocations, aPtr, site);
+            suppress_tracing--;
+            if (he) {
+                alloc = (allocation*) he;
+                alloc->size = size;
+            }
+        }
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
+    }
+}
+
+
+
+PR_IMPLEMENT(void)
+CallocCallback(void *ptr, size_t count, size_t size)
+{
+    callsite *site;
+    PLHashEntry *he;
+    allocation *alloc;
+
+    tmstats.calloc_calls++;
+    if (!ptr) {
+        tmstats.calloc_failures++;
+    } else if (suppress_tracing == 0) {
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
+        site = backtrace(1);
+        size *= count;
+        if (site)
+            log_event2(logfp, TM_EVENT_CALLOC, site->serial, size);
+        if (get_allocations()) {
+            suppress_tracing++;
+            he = PL_HashTableAdd(allocations, ptr, site);
+            suppress_tracing--;
+            if (he) {
+                alloc = (allocation*) he;
+                alloc->size = size;
+            }
+        }
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
+    }
+}
+
+PR_IMPLEMENT(void)
+ReallocCallback(void * oldptr, void *ptr, size_t size)
+{
+    callsite *oldsite, *site;
+    size_t oldsize;
+    PLHashNumber hash;
+    PLHashEntry **hep, *he;
+    allocation *alloc;
+
+    tmstats.realloc_calls++;
+    if (suppress_tracing == 0) {
+        oldsite = NULL;
+        oldsize = 0;
+        he = NULL;
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
+        if (oldptr && get_allocations()) {
+            hash = hash_pointer(oldptr);
+            hep = PL_HashTableRawLookup(allocations, hash, oldptr);
+            he = *hep;
+            if (he) {
+                oldsite = (callsite*) he->value;
+                alloc = (allocation*) he;
+                oldsize = alloc->size;
+            }
+        }
+#ifdef EXIT_TMMON_AROUND_REALLOC
+        /* XXX rusty.lynch@intel.com found that oldsize gets corrupted on
+               his SMP Linux box occasionally, unless tmmon is held across
+               the call to __libc_realloc.  Figure out why that stack var
+               is being trashed, and until then use his workaround. */
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
+#endif
+      }
+      if (!ptr && size) {
+          tmstats.realloc_failures++;
+  #ifndef EXIT_TMMON_AROUND_REALLOC
+          if (tmmon && suppress_tracing == 0)
+              PR_ExitMonitor(tmmon);
+  #endif
+
+          /*
+           * When realloc() fails, the original block is not freed or moved, so
+           * we'll leave the allocation entry untouched.
+           */
+      } else if (suppress_tracing == 0) {
+#ifdef EXIT_TMMON_AROUND_REALLOC
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
+#endif
+        site = backtrace(1);
+        if (site) {
+            log_event4(logfp, TM_EVENT_REALLOC, site->serial, size,
+                       oldsite ? oldsite->serial : 0, oldsize);
+        }
+        if (ptr && allocations) {
+            suppress_tracing++;
+            if (ptr != oldptr) {
+                /*
+                 * If we're reallocating (not allocating new space by passing
+                 * null to realloc) and realloc moved the block, free oldptr.
+                 */
+                if (he)
+                    PL_HashTableRawRemove(allocations, hep, he);
+
+                /* Record the new allocation now, setting he. */
+                he = PL_HashTableAdd(allocations, ptr, site);
+            } else {
+                /*
+                 * If we haven't yet recorded an allocation (possibly due to a
+                 * temporary memory shortage), do it now.
+                 */
+                if (!he)
+                    he = PL_HashTableAdd(allocations, ptr, site);
+            }
+            suppress_tracing--;
+            if (he) {
+                alloc = (allocation*) he;
+                alloc->size = size;
+            }
+        }
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
+    }
+}
+
+PR_IMPLEMENT(void)
+FreeCallback(void * ptr)
+{
+    PLHashEntry **hep, *he;
+    callsite *site;
+    allocation *alloc;
+
+    tmstats.free_calls++;
+    if (!ptr) {
+        tmstats.null_free_calls++;
+    } else if (suppress_tracing == 0) {
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
+        if (get_allocations()) {
+            hep = PL_HashTableRawLookup(allocations, hash_pointer(ptr), ptr);
+            he = *hep;
+            if (he) {
+                site = (callsite*) he->value;
+                if (site) {
+                    alloc = (allocation*) he;
+                    log_event2(logfp, TM_EVENT_FREE, site->serial, alloc->size);
+                }
+                PL_HashTableRawRemove(allocations, hep, he);
+            }
+        }
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
+    }
+}
+
+#endif /*XP_WIN32*/
+ 
 #endif /* NS_TRACE_MALLOC */

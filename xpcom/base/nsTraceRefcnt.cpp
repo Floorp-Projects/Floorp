@@ -835,6 +835,7 @@ static void InitTraceLog(void)
 #if defined(_WIN32) && defined(_M_IX86) // WIN32 x86 stack walking code
 #include "imagehlp.h"
 #include <stdio.h>
+#include "nsStackFrameWin.h"
 
 // Define these as static pointers so that we can load the DLL on the
 // fly (and not introduce a link-time dependency on it). Tip o' the
@@ -842,34 +843,28 @@ static void InitTraceLog(void)
 //
 //   http://msdn.microsoft.com/library/periodic/period97/F1/D3/S245C6.htm
 //
-typedef BOOL (__stdcall *SYMINITIALIZEPROC)(HANDLE, LPSTR, BOOL);
-static SYMINITIALIZEPROC _SymInitialize;
 
-typedef BOOL (__stdcall *SYMCLEANUPPROC)(HANDLE);
-static SYMCLEANUPPROC _SymCleanup;
+PR_BEGIN_EXTERN_C
 
-typedef BOOL (__stdcall *STACKWALKPROC)(DWORD,
-                                        HANDLE,
-                                        HANDLE,
-                                        LPSTACKFRAME,
-                                        LPVOID,
-                                        PREAD_PROCESS_MEMORY_ROUTINE,
-                                        PFUNCTION_TABLE_ACCESS_ROUTINE,
-                                        PGET_MODULE_BASE_ROUTINE,
-                                        PTRANSLATE_ADDRESS_ROUTINE);
-static STACKWALKPROC _StackWalk;
+SYMINITIALIZEPROC _SymInitialize;
 
-typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC)(HANDLE, DWORD);
-static SYMFUNCTIONTABLEACCESSPROC _SymFunctionTableAccess;
+SYMCLEANUPPROC _SymCleanup;
 
-typedef DWORD (__stdcall *SYMGETMODULEBASEPROC)(HANDLE, DWORD);
-static SYMGETMODULEBASEPROC _SymGetModuleBase;
+STACKWALKPROC _StackWalk;
 
-typedef BOOL (__stdcall *SYMGETSYMFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_SYMBOL);
-static SYMGETSYMFROMADDRPROC _SymGetSymFromAddr;
+SYMFUNCTIONTABLEACCESSPROC _SymFunctionTableAccess;
 
-typedef DWORD ( __stdcall *SYMLOADMODULE)(HANDLE, HANDLE, PSTR, PSTR, DWORD, DWORD);
-static SYMLOADMODULE _SymLoadModule;
+SYMGETMODULEBASEPROC _SymGetModuleBase;
+
+SYMGETSYMFROMADDRPROC _SymGetSymFromAddr;
+
+SYMLOADMODULE _SymLoadModule;
+
+SYMUNDNAME _SymUnDName;
+
+SYMGETMODULEINFO _SymGetModuleInfo;
+
+PR_END_EXTERN_C
 
 static PRBool
 EnsureImageHlpInitialized()
@@ -901,13 +896,19 @@ EnsureImageHlpInitialized()
     _SymLoadModule = (SYMLOADMODULE)GetProcAddress(module, "SymLoadModule");
     if (!_SymLoadModule) return PR_FALSE;
 
+    _SymUnDName = (SYMUNDNAME)GetProcAddress(module, "SymUnDName");
+    if (!_SymUnDName) return PR_FALSE;
+
+    _SymGetModuleInfo = (SYMGETMODULEINFO)GetProcAddress(module, "SymGetModuleInfo");
+    if (!_SymGetModuleInfo) return PR_FALSE;
+
     gInitialized = PR_TRUE;
   }
 
   return gInitialized;
 } 
 
-static PRBool
+PRBool
 EnsureSymInitialized()
 {  
   static PRBool gInitialized = PR_FALSE;
@@ -1982,3 +1983,4 @@ nsTraceRefcnt::LogReleaseCOMPtr(void* aCOMPtr,
   }
 #endif
 }
+

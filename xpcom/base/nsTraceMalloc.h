@@ -177,6 +177,7 @@ NS_TraceMallocDumpAllocations(const char *pathname);
 PR_EXTERN(void)
 NS_TraceMallocFlushLogfiles(void);
 
+
 PR_END_EXTERN_C
 
 #endif /* nsTraceMalloc_h___ */

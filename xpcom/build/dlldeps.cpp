@@ -71,6 +71,9 @@
 #endif
 #include "pldhash.h"
 #include "nsLogging.h"
+#ifdef NS_TRACE_MALLOC
+#include "nsTraceMalloc.h"
+#endif
 
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
@@ -159,5 +162,17 @@ void XXXNeverCalled()
     nsSlidingString sliding(NULL, NULL, NULL);
 #ifdef NS_ENABLE_LOGGING
     nsLog();
+#endif
+#ifdef NS_TRACE_MALLOC
+    NS_TraceMallocStartup(0);
+    NS_TraceMallocStartupArgs(0, NULL);
+    NS_TraceMallocShutdown();
+    NS_TraceMallocDisable();
+    NS_TraceMallocEnable();
+    NS_TraceMallocChangeLogFD(0);
+    NS_TraceMallocCloseLogFD(0);
+    NS_TraceMallocLogTimestamp(NULL);
+    NS_TraceMallocDumpAllocations(NULL);
+    NS_TraceMallocFlushLogfiles();
 #endif
 }
