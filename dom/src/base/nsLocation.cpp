@@ -25,6 +25,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
@@ -143,11 +144,18 @@ nsresult
 LocationImpl::SetURL(nsIURI* aURL)
 {
   if (mDocShell) {
+    
+    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+    NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
     nsCOMPtr<nsIURI> referrer;
     if(NS_FAILED(CheckURL(aURL, getter_AddRefs(referrer))))
       return NS_ERROR_FAILURE;
 
-    return mDocShell->LoadURI(aURL, referrer);
+    loadInfo->SetReferrer(referrer);
+
+    return mDocShell->LoadURI(aURL, loadInfo);
   }
   else {
     return NS_OK;
@@ -357,36 +365,23 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
 {
   nsresult result;
   nsCOMPtr<nsIURI> newUrl;
-  nsAutoString newHref;
 
   result = NS_NewURI(getter_AddRefs(newUrl), aHref, aBase);
-  if (NS_OK == result) {
-    char* spec;
-    result = newUrl->GetSpec(&spec);
-    if (NS_SUCCEEDED(result)) {
-      newHref.Assign(spec);
-      nsCRT::free(spec);
-    }
-  }
 
   if ((NS_OK == result) && (mDocShell)) {
 
+    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+    NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
     nsCOMPtr<nsIURI> referrer;
-    if (NS_FAILED(CheckURL(newUrl, getter_AddRefs(referrer))))
+    if(NS_FAILED(CheckURL(newUrl, getter_AddRefs(referrer))))
       return NS_ERROR_FAILURE;
 
-    nsXPIDLCString referrerCSpec;
-    if(referrer)
-      referrer->GetSpec(getter_Copies(referrerCSpec));
-    nsAutoString referrerSpec(referrerCSpec);
+    loadInfo->SetReferrer(referrer);
+    loadInfo->SetReplaceSessionHistorySlot(aReplace);
 
-    // Load new URI.
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    result = webShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace, 
-                               nsIChannel::LOAD_NORMAL, 0, nsnull, 
-                               referrerSpec.Length() > 0
-                               ? referrerSpec.GetUnicode()
-                               : nsnull);
+    return mDocShell->LoadURI(newUrl, loadInfo);
   }
   
   return result;

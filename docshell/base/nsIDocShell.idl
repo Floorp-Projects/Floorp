@@ -54,11 +54,13 @@ interface nsIDocShell : nsISupports
 	loading.
 
 	@param uri - The URI to load.
-	@param referrer - The referrer of this load.
-	@param presContext - Presentation Context to use for the new URL.  This
-		may be null.
+	@param loadInfo - This is the extended load info for this load.  This most
+		most often will be null, but if you need to do additional setup for this
+		load you can get a loadInfo object by calling createLoadInfo.  Once you have
+		this object you can set the needed properties on it and then pass it to 
+		loadURI.
 	*/
-	[noscript]void loadURI(in nsIURI uri, in nsIURI referrer);
+	[noscript]void loadURI(in nsIURI uri, in nsIDocShellLoadInfo loadInfo);
 
 	/*
 	Creates a DocShellLoadInfo object that you can manipulate and then pass to 

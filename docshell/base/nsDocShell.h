@@ -132,9 +132,10 @@ protected:
    // Site Loading
    typedef enum
    {
-      loadNormal,
-      loadHistory,
-      loadReloadNormal,
+      loadNormal,          // Normal Load
+      loadNormalReplace,   // Normal Load but replaces current history slot
+      loadHistory,         // Load from history
+      loadReloadNormal,    // Reload
       loadReloadBypassCache,
       loadReloadBypassProxy,
       loadRelaodBypassProxyAndCache,
@@ -220,7 +221,7 @@ protected:
    PRInt32                    mItemType;
    nsPoint                    mCurrentScrollbarPref; // this document only
    nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
-   PRBool                     mUpdateHistoryOnLoad;
+   loadType                   mLoadType;
    PRBool                     mInitialPageLoad;
    PRBool                     mAllowPlugins;
    PRInt32                    mViewMode;
