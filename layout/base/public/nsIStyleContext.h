@@ -164,7 +164,7 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRUint8 mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*
   PRPackedBool mBreakBefore;    // [reset] 
   PRPackedBool mBreakAfter;     // [reset] 
-  PRPackedBool mVisible;        // [inherited]
+  PRUint8   mVisible;           // [inherited]
   PRUint8   mOverflow;          // [reset] see nsStyleConsts.h
 
   PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
