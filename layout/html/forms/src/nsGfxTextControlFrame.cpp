@@ -3944,7 +3944,12 @@ nsEnderEventListener::MouseDown(nsIDOMEvent* aEvent)
         break;
       case 2: //XXX: I can't believe there isn't a symbol for this!
         eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
-        break;
+        // XXX See bug 23336: the ender event listener is superfluous,
+        // causing double mouse click events to get through.
+        // This is a temporary way of disabling it in the middle-click case.
+        // Arguably, the whole event listener should be disabled,
+        // or at least rewritten; we'll look into that post-M14.
+        return NS_OK;
       case 3: //XXX: I can't believe there isn't a symbol for this!
         eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
         break;
