@@ -3371,7 +3371,8 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
     return NS_ERROR_UNEXPECTED;
   nsresult rv = NS_ERROR_FAILURE;
   PRBool found = PR_FALSE;
-  while (!found)  // I have no idea why this loop exists.  Mike?
+  nsCOMPtr<nsIAtom> frameType;
+  while (!found)  // this loop searches for a valid point to leave the peek offset struct.
   {
     nsIFrame *nextFrame = aFrame;
     nsIFrame *currentFrame = aFrame;
@@ -3389,7 +3390,12 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
       nextFrame = currentFrame; //back it up. lets show a warning
       NS_WARNING("lineFrame Count lied to us from nsILineIterator!\n");
     }
-	
+    nextFrame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::brFrame == frameType.get()) 
+    {
+      nextFrame = currentFrame; 
+    }
+      
     nsPoint offsetPoint; //used for offset of result frame
     nsIView * view; //used for call of get offset from view
     nextFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
