@@ -24,6 +24,16 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
+// list of tags that have skipped content
+static char gSkippedContentTags[] = {
+  eHTMLTag_style,
+  eHTMLTag_script,
+  eHTMLTag_server,
+  eHTMLTag_textarea,
+  eHTMLTag_title,
+  0
+};
+
 class nsLoggingSink : public nsILoggingSink {
 public:
   nsLoggingSink();
@@ -65,6 +75,7 @@ public:
   nsresult LeafNode(const nsIParserNode& aNode);
   nsresult WriteAttributes(const nsIParserNode& aNode);
   nsresult QuoteText(const nsString& aValue, nsString& aResult);
+  PRBool WillWriteAttributes(const nsIParserNode& aNode);
 
 protected:
   FILE* mFile;
@@ -278,24 +289,30 @@ nsLoggingSink::CloseFrameset(const nsIParserNode& aNode)
 nsresult
 nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode)
 {
-  fprintf(mFile, "<open kind=\"%s\">\n", aKind);
+  fprintf(mFile, "<open kind=\"%s\" ", aKind);
 
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
     const char* tag = NS_EnumToTag(nodeType);
-    fprintf(mFile, " <tag tag=\"%s\"/>\n", tag);
+    fprintf(mFile, "tag=\"%s\"", tag);
   }
   else {
     const nsString& text = aNode.GetText();
-    fputs(" <tag tag=\"", mFile);
+    fputs("tag=\"", mFile);
     fputs(text, mFile);
-    fputs(" \"/>", mFile);
+    fputs(" \"", mFile);
   }
 
-  WriteAttributes(aNode);
+  if (WillWriteAttributes(aNode)) {
+    fputs(">\n", mFile);
+    WriteAttributes(aNode);
+    fputs("</open>\n", mFile);
+  }
+  else {
+    fputs("/>\n", mFile);
+  }
 
-  fputs("</open>\n", mFile);
   return NS_OK;
 }
 
@@ -306,20 +323,66 @@ nsLoggingSink::CloseNode(const char* aKind)
   return NS_OK;
 }
 
+
 nsresult
 nsLoggingSink::WriteAttributes(const nsIParserNode& aNode)
 {
+  nsAutoString tmp, tmp2;
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     const nsString& k = aNode.GetKeyAt(i);
     const nsString& v = aNode.GetValueAt(i);
     fputs(" <attr key=\"", mFile);
     fputs(k, mFile);
-    fputs("\" value=", mFile);
-    fputs(v, mFile);
-    fputs("/>\n", mFile);
+    fputs("\" value=\"", mFile);
+
+    tmp.Truncate();
+    tmp.Append(v);
+    PRUnichar first = tmp.First();
+    if ((first == '"') || (first == '\'')) {
+      if (tmp.Last() == first) {
+        tmp.Cut(0, 1);
+        PRInt32 pos = tmp.Length() - 1;
+        if (pos >= 0) {
+          tmp.Cut(pos, 1);
+        }
+      } else {
+        // Mismatched quotes - leave them in
+      }
+    }
+    QuoteText(tmp, tmp2);
+    fputs(tmp2, mFile);
+    fputs("\"/>\n", mFile);
   }
+
+  if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
+    const nsString& content = aNode.GetSkippedContent();
+    if (content.Length() > 0) {
+      nsAutoString tmp;
+      fputs(" <content value=\"", mFile);
+      QuoteText(content, tmp);
+      fputs(tmp, mFile);
+      fputs("\"/>\n", mFile);
+    }
+  }
+
   return NS_OK;
+}
+
+PRBool
+nsLoggingSink::WillWriteAttributes(const nsIParserNode& aNode)
+{
+  PRInt32 ac = aNode.GetAttributeCount();
+  if (0 != ac) {
+    return PR_TRUE;
+  }
+  if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
+    const nsString& content = aNode.GetSkippedContent();
+    if (content.Length() > 0) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
 }
 
 nsresult
@@ -329,21 +392,30 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
     const char* tag = NS_EnumToTag(nodeType);
-    fprintf(mFile, "<leaf tag=\"%s\">\n", tag);
-    WriteAttributes(aNode);
-    fputs("</leaf>\n", mFile);
+    fprintf(mFile, "<leaf tag=\"%s\"", tag);
+    if (WillWriteAttributes(aNode)) {
+      fputs(">\n", mFile);
+      WriteAttributes(aNode);
+      fputs("</leaf>\n", mFile);
+    }
+    else {
+      fputs("/>\n", mFile);
+    }
   }
   else {
     PRInt32 pos;
     nsAutoString tmp;
     switch (nodeType) {
     case eHTMLTag_whitespace:
-    case eHTMLTag_newline:
     case eHTMLTag_text:
       QuoteText(aNode.GetText(), tmp);
       fputs("<text value=\"", mFile);
       fputs(tmp, mFile);
       fputs("\"/>\n", mFile);
+      break;
+
+    case eHTMLTag_newline:
+      fputs("<newline/>\n", mFile);
       break;
 
     case eHTMLTag_entity:
@@ -368,6 +440,7 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 nsresult
 nsLoggingSink::QuoteText(const nsString& aValue, nsString& aResult)
 {
+  aResult.Truncate();
   const PRUnichar* cp = aValue.GetUnicode();
   const PRUnichar* end = cp + aValue.Length();
   while (cp < end) {
