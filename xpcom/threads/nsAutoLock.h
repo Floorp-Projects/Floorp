@@ -84,17 +84,17 @@ private:
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an nsAutoLock object incorrectly.
     nsAutoLock(void) {}
-    nsAutoLock(nsAutoLock& aLock) {}
-    nsAutoLock& operator =(nsAutoLock& aLock) {
+    nsAutoLock(nsAutoLock& /*aLock*/) {}
+    nsAutoLock& operator =(nsAutoLock& /*aLock*/) {
         return *this;
     }
 
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an nsAutoLock object on the heap.
-    static void* operator new(size_t size) {
+    static void* operator new(size_t /*size*/) {
         return nsnull;
     }
-    static void operator delete(void* memory) {}
+    static void operator delete(void* /*memory*/) {}
 
 public:
     nsAutoLock(PRLock* aLock) : mLock(aLock) {
@@ -164,17 +164,17 @@ private:
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an nsAutoLock object incorrectly.
     nsAutoMonitor(void) {}
-    nsAutoMonitor(nsAutoMonitor& aMon) {}
-    nsAutoMonitor& operator =(nsAutoMonitor& aMon) {
+    nsAutoMonitor(nsAutoMonitor& /*aMon*/) {}
+    nsAutoMonitor& operator =(nsAutoMonitor& /*aMon*/) {
         return *this;
     }
 
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an nsAutoLock object on the heap.
-    static void* operator new(size_t size) {
+    static void* operator new(size_t /*size*/) {
         return nsnull;
     }
-    static void operator delete(void* memory) {}
+    static void operator delete(void* /*memory*/) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,17 +221,17 @@ private:
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an nsAutoLock object incorrectly.
     nsAutoCMonitor(void) {}
-    nsAutoCMonitor(nsAutoCMonitor& aMon) {}
-    nsAutoCMonitor& operator =(nsAutoCMonitor& aMon) {
+    nsAutoCMonitor(nsAutoCMonitor& /*aMon*/) {}
+    nsAutoCMonitor& operator =(nsAutoCMonitor& /*aMon*/) {
         return *this;
     }
 
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an nsAutoLock object on the heap.
-    static void* operator new(size_t size) {
+    static void* operator new(size_t /*size*/) {
         return nsnull;
     }
-    static void operator delete(void* memory) {}
+    static void operator delete(void* /*memory*/) {}
 };
 
 #endif // nsAutoLock_h__
