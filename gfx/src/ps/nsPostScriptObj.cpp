@@ -823,7 +823,7 @@ void
 nsPostScriptObj::preshow(const PRUnichar* txt, int len)
 {
   XP_File f = mPrintContext->prSetup->out;
-  unsigned char highbyte, lowbyte;
+  unsigned char highbyte;
   PRUnichar uch;
 
   char outbuffer[6];
@@ -839,7 +839,7 @@ nsPostScriptObj::preshow(const PRUnichar* txt, int len)
 	inbuffer[1] = 0;
 
 	PRInt32 *ncode = nsnull;
-	nsStringKey key(inbuffer);
+	nsStringKey key(inbuffer, 1);
 
 	ncode = (int *) gU2Ntable->Get(&key);
 
@@ -1455,15 +1455,14 @@ nsPostScriptObj::setlanggroup(nsIAtom * aLangGroup)
   }
   nsAutoString langstr;
   aLangGroup->ToString(langstr);
-  nsCAutoString langstrC;
-  langstrC.AssignWithConversion(langstr);
 
   /* already exist */
-  nsStringKey key((const char *) langstrC);
+  nsStringKey key(langstr);
   PS_LangGroupInfo *linfo = (PS_LangGroupInfo *) gLangGroups->Get(&key);
 
   if (linfo) {
-    XP_FilePrintf(f, "%s_ls\n", (const char *) langstrC);
+    nsCAutoString str; str.AssignWithConversion(langstr);
+    XP_FilePrintf(f, "%s_ls\n", (const char*) str);
     gEncoder = linfo->mEncoder;
     gU2Ntable = linfo->mU2Ntable;
     return;
@@ -1477,14 +1476,14 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 {
   XP_File f = (XP_File) aClosure;
 
-  nsCAutoString lang(aName);
+  nsAutoString lang; lang.AssignWithConversion(aName);
 
   if (strstr(aName, "print.psnativefont.")) {
     lang.Cut(0, 19);
   } else if (strstr(aName, "print.psunicodefont.")) {
     lang.Cut(0, 20);
   }
-  nsStringKey key((const char *) lang);
+  nsStringKey key(lang);
 
   PS_LangGroupInfo *linfo = (PS_LangGroupInfo *) gLangGroups->Get(&key);
 
@@ -1501,11 +1500,11 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 
   /* check native fonts */
   nsCAutoString namepsnativefont("print.psnativefont.");
-  namepsnativefont.Append(lang);
+  namepsnativefont.AppendWithConversion(lang);
   gPrefs->CopyCharPref(namepsnativefont.GetBuffer(), &psnativefont);
 
   nsCAutoString namepsnativecode("print.psnativecode.");
-  namepsnativecode.Append(lang);
+  namepsnativecode.AppendWithConversion(lang);
   gPrefs->CopyCharPref(namepsnativecode.GetBuffer(), &psnativecode);
 
   /* psnativefont and psnativecode both should be set */
@@ -1520,13 +1519,13 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
     psnativecode = nsnull;
   } else {
     nsCAutoString namepsfontorder("print.psfontorder.");
-    namepsfontorder.Append(lang);
+    namepsfontorder.AppendWithConversion(lang);
     gPrefs->GetIntPref(namepsfontorder.GetBuffer(), &psfontorder);
   }
 
   /* check UCS fonts */
   nsCAutoString namepsunicodefont("print.psunicodefont.");
-  namepsunicodefont.Append(lang);
+  namepsunicodefont.AppendWithConversion(lang);
   gPrefs->CopyCharPref(namepsunicodefont.GetBuffer(), &psunicodefont);
 
   nsresult res = NS_OK;
@@ -1558,18 +1557,19 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 
     gLangGroups->Put(&key, (void *) linfo);
 
+    nsCAutoString langstrC; langstrC.AssignWithConversion(lang);
     if (psnativefont && linfo->mEncoder) {
-      XP_FilePrintf(f, "/Unicode2NativeDict%s 0 dict def\n", (const char *) lang);
+      XP_FilePrintf(f, "/Unicode2NativeDict%s 0 dict def\n", (const char *) langstrC);
     }
 
-    XP_FilePrintf(f, "/%s_ls {\n", (const char *) lang);
+    XP_FilePrintf(f, "/%s_ls {\n", (const char *) langstrC);
     XP_FilePrintf(f, "  /NativeFont /%s def\n",
       (psnativefont && linfo->mEncoder) ? psnativefont : "Courier");
     XP_FilePrintf(f, "  /UCS2Font /%s def\n",
 		  psunicodefont ? psunicodefont : "Courier");
     if (psnativefont && linfo->mEncoder) {
       XP_FilePrintf(f, "  /Unicode2NativeDict Unicode2NativeDict%s def\n",
-		    (const char *) lang);
+		    (const char *) langstrC);
     }
 
     if (psfontorder) {
