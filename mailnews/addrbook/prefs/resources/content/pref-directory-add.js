@@ -204,7 +204,10 @@ function onOK()
     pref_string_content = false;
   }
   window.opener.gNewServer = description;
-  window.opener.gNewServerString = gPref_string_desc;  
+  window.opener.gNewServerString = gPref_string_desc;
+  // set window.opener.gUpdate to true so that LDAP Directory Servers
+  // dialog gets updated
+  window.opener.gUpdate = true; 
   window.close();
   }
   else

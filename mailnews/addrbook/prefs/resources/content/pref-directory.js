@@ -6,6 +6,7 @@ var gRefresh = false;
 var gNewServer = null;
 var gNewServerString = null;
 var gFromGlobalPref = false;
+var gUpdate = false;
 
 function onEditDirectories()
 {
@@ -359,6 +360,24 @@ function editDirectory()
     window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul",
                       "editDirectory", "chrome,modal=yes,resizable=no", args);
   }
+  if(gUpdate) 
+  {
+    // directory server properties have changed. So, update the  
+    // LDAP Directory Servers dialog.  
+    var directoriesTree = document.getElementById("directoriesTree"); 
+    var selectedNode = directoriesTree.selectedItems[0]; 
+    var row  =  selectedNode.firstChild; 
+    var cell =  row.firstChild; 
+    cell.setAttribute('label', gNewServer); 
+    cell.setAttribute('string', gNewServerString);
+    // set gUpdate to false since we have updated the server name in the list.
+    gUpdate = false;
+    // window.opener is either global pref window or 
+    // mail/news account settings window.
+    // set window.opener.gRefresh to true such that the 
+    // dropdown list box gets updated 
+    window.opener.gRefresh = true; 
+  } 
 }
 
 function removeDirectory()
