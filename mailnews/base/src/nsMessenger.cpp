@@ -45,6 +45,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsIFileSpecWithUI.h"
 #include "nsFileSpec.h"
+#include "nsFileStream.h"
 
 #include "nsIMessage.h"
 #include "nsIMsgFolder.h"
@@ -478,7 +479,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile)
             }
           }
           if (NS_SUCCEEDED(rv))
-            messageService->SaveMessageToDisk(url, aSpec, PR_FALSE,
+            messageService->SaveMessageToDisk(url, aSpec, PR_TRUE,
                                               urlListener, nsnull);
         }
       }
@@ -1317,12 +1318,14 @@ NS_IMETHODIMP
 nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
   nsresult rv = exitCode;
+  char *templateUri = nsnull;
+
   if (m_fileSpec)
   {
     m_fileSpec->Flush();
     m_fileSpec->CloseStream();
     if (NS_FAILED(rv)) goto done;
-
+#if 0
     NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID,
                     &rv);
     if (NS_FAILED(rv)) goto done;
@@ -1364,6 +1367,28 @@ nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
       rv = copyService->CopyFileMessage(m_fileSpec, templateFolder, nsnull,
                                         PR_TRUE, this, nsnull);
     }
+#else
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) goto done;
+    prefs->CopyCharPref("mail.default_templates_uri", &templateUri);
+    if (!templateUri || !*templateUri) 
+    {
+      rv = NS_ERROR_FAILURE;
+      goto done;
+    }
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    if (NS_FAILED(rv)) goto done;
+    nsCOMPtr<nsIRDFResource> res;
+    rv = rdf->GetResource(templateUri, getter_AddRefs(res));
+    if (NS_FAILED(rv)) goto done;
+    nsCOMPtr<nsIMsgFolder> templateFolder;
+    templateFolder = do_QueryInterface(res, &rv);
+    if (NS_FAILED(rv)) goto done;
+    NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv);
+    if (NS_FAILED(rv)) goto done;
+    rv = copyService->CopyFileMessage(m_fileSpec, templateFolder, nsnull,
+                                      PR_TRUE, this, nsnull);
+#endif
   }
 
 done:
@@ -1377,6 +1402,7 @@ done:
       Release(); // no more work to be done; kill ourself
     }
   }
+  PR_FREEIF(templateUri);
   return rv;
 }
 
