@@ -522,7 +522,7 @@ void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, const char *location)
 
 
 
-int nsMsgSearchNews::CompareArticleNumbers (const void *v1, const void *v2, void *data)
+int PR_CALLBACK nsMsgSearchNews::CompareArticleNumbers (const void *v1, const void *v2, void *data)
 {
 	// QuickSort callback to compare article numbers
 

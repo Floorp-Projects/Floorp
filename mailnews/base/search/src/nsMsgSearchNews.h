@@ -44,7 +44,7 @@ public:
 	
     PRBool DuplicateHit(PRUint32 artNum) ;
     void CollateHits ();
-    static int CompareArticleNumbers (const void *v1, const void *v2, void *data);
+    static int PR_CALLBACK CompareArticleNumbers (const void *v1, const void *v2, void *data);
     void ReportHit (nsIMsgDBHdr *pHeaders, const char *location);
 
 protected:
