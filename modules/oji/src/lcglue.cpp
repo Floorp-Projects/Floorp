@@ -346,12 +346,23 @@ get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
 }
 
 static jint PR_CALLBACK
-unwrap_java_wrapper_impl(JNIEnv *jEnv, jobject java_wrapper)
+unwrap_java_wrapper_impl(JNIEnv *pJNIEnv, jobject java_wrapper)
 {
     jint obj = 0;
  
-    /* todo: insert code that calls the plugin that does the unwrapping. */
-
+    nsresult       err    = NS_OK;
+    nsJVMManager* pJVMMgr = JVM_GetJVMMgr();
+    if (pJVMMgr != NULL) {
+      nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
+      if (pJVMPI != NULL) {
+         err = pJVMPI->UnwrapJavaWrapper(pJNIEnv, java_wrapper, &obj);
+      }
+      pJVMMgr->Release();
+    }
+    if ( err != NS_OK )
+    {
+       return 0;
+    }
     return obj;
 }
 
@@ -482,7 +493,7 @@ static JSJCallbacks jsj_callbacks = {
     exit_js_impl,
     NULL,       // error_print
     get_java_wrapper_impl,
-    NULL /*unwrap_java_wrapper_impl*/, /* enable when implemented by plugin. */
+    unwrap_java_wrapper_impl,
     create_java_vm_impl,
     destroy_java_vm_impl,
     attach_current_thread_impl,
