@@ -52,8 +52,8 @@ nsWidget::nsWidget() : nsBaseWidget()
   mPreferredWidth = 0;
   mPreferredHeight = 0;
   mBaseWindow = 0;
-  bg_rgb = NS_RGB(192,192,192);
-  bg_pixel = xlib_rgb_xpixel_from_rgb(bg_rgb);
+  mBackground = NS_RGB(192,192,192);
+  bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
   border_rgb = NS_RGB(192,192,192);
   border_pixel = xlib_rgb_xpixel_from_rgb(border_rgb);
   mGC = 0;
@@ -289,10 +289,8 @@ NS_IMETHODIMP nsWidget::Update()
 NS_IMETHODIMP nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
   printf("nsWidget::SetBackgroundColor()\n");
-  bg_rgb = NS_RGB(NS_GET_R(aColor),
-                  NS_GET_G(aColor),
-                  NS_GET_B(aColor));
-  bg_pixel = xlib_rgb_xpixel_from_rgb(bg_rgb);
+  nsBaseWidget::SetBackgroundColor(aColor);
+  bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
   // set the window attrib
   XSetWindowBackground(gDisplay, mBaseWindow, bg_pixel);
   return NS_OK;
@@ -340,7 +338,7 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   // be discarded...
   attr.bit_gravity = NorthWestGravity;
   // make sure that we listen for events
-  attr.event_mask = SubstructureNotifyMask | StructureNotifyMask | ExposureMask;
+  attr.event_mask = StructureNotifyMask | ExposureMask;
   // set the default background color and border to that awful gray
   attr.background_pixel = bg_pixel;
   attr.border_pixel = border_pixel;
