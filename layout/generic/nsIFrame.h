@@ -115,6 +115,9 @@ typedef PRUint32 nsFrameState;
 // a frame displaying an image
 #define NS_FRAME_REPLACED_ELEMENT 0x00000020
 
+// If this bit is set, then the frame corresponds to generated content
+#define NS_FRAME_GENERATED_CONTENT 0x00000040
+
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
 
