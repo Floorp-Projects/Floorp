@@ -30,7 +30,7 @@
 
 #ifdef NS_DEBUG
 
-#define TEST_RESULT(r) { if (NS_FAILED(r)) {printf("FAILURE result=%d\n", r); return r; } }
+#define TEST_RESULT(r) { if (NS_FAILED(r)) {printf("FAILURE result=%X\n", r); return r; } }
 #define TEST_POINTER(p) { if (!p) {printf("FAILURE null pointer\n"); return NS_ERROR_NULL_POINTER; } }
 
 TextEditorTest::TextEditorTest()
@@ -43,33 +43,51 @@ TextEditorTest::~TextEditorTest()
   printf("destroyed a TextEditorTest\n");
 }
 
-void TextEditorTest::Run(nsITextEditor *aEditor)
+void TextEditorTest::Run(nsITextEditor *aEditor, PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 {
   if (!aEditor) return;
   mTextEditor = do_QueryInterface(aEditor);
   mEditor = do_QueryInterface(aEditor);
-  RunUnitTest();
+  RunUnitTest(outNumTests, outNumTestsFailed);
 }
 
-nsresult TextEditorTest::RunUnitTest()
+nsresult TextEditorTest::RunUnitTest(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 {
   nsresult result;
+  
+  if (!outNumTests || !outNumTestsFailed)
+    return NS_ERROR_NULL_POINTER;
+  
+  *outNumTests = 0;
+  *outNumTestsFailed = 0;
+  
   result = InitDoc();
   TEST_RESULT(result);
-
+  // shouldn't we just bail on error here?
+  
   // insert some simple text
   nsString docContent("1234567890abcdefghij1234567890");
   result = mTextEditor->InsertText(docContent);
   TEST_RESULT(result);
-
+  (*outNumTests)++;
+  (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);
+  
   // insert some more text
   nsString docContent2("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere");
   result = mTextEditor->InsertText(docContent2);
   TEST_RESULT(result);
+  (*outNumTests)++;
+  (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);
 
   result = TestInsertBreak();
+  TEST_RESULT(result);
+  (*outNumTests)++;
+  (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);
 
   result = TestTextProperties();
+  TEST_RESULT(result);
+  (*outNumTests)++;
+  (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);
 
   return result;
 }

@@ -379,6 +379,8 @@ public:
   /** Dumps a text representation of the content tree to standard out */
   NS_IMETHOD DebugDumpContent() const =0;
 
+  /* Run unit tests. Noop in optimized builds */
+  NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)=0;
 };
 
 #endif //nsIEditor_h__

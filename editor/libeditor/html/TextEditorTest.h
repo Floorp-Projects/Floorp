@@ -29,7 +29,7 @@ class TextEditorTest
 {
 public:
 
-  void Run(nsITextEditor *aEditor);
+  void Run(nsITextEditor *aEditor, PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
   TextEditorTest();
   ~TextEditorTest();
 
@@ -38,7 +38,7 @@ protected:
   /** create an empty document */
   nsresult InitDoc();
 
-  nsresult RunUnitTest();
+  nsresult RunUnitTest(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
   nsresult TestInsertBreak();
 

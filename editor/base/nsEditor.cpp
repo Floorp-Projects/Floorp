@@ -724,6 +724,34 @@ nsEditor::InsertBreak()
 
 //BEGIN nsEditor Private methods
 
+NS_IMETHODIMP 
+nsEditor::DoAfterDoTransaction(nsITransaction *aTxn)
+{
+  nsresult rv = NS_OK;
+  
+  PRBool  isTransientTransaction;
+  rv = aTxn->GetIsTransient(&isTransientTransaction);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  if (!isTransientTransaction)
+  {
+    rv = IncDocModCount(+1);		// don't count transient transactions
+  }
+  
+  return rv;
+}
+
+
+NS_IMETHODIMP 
+nsEditor::DoAfterUndoTransaction()
+{
+  nsresult rv = NS_OK;
+
+  rv = IncDocModCount(-1);		// all undoable transactions are non-transient
+
+  return rv;
+}
 
 NS_IMETHODIMP 
 nsEditor::Do(nsITransaction *aTxn)
@@ -742,16 +770,14 @@ nsEditor::Do(nsITransaction *aTxn)
       else {
         result = aTxn->Do();
       }
+      
+      if (NS_SUCCEEDED(result))
+        result = DoAfterDoTransaction(aTxn);
     }
+    
     selection->EndBatchChanges();
   }
-  
-  PRBool  isTransientTransaction;
-  if (NS_SUCCEEDED(result) &&
-      NS_SUCCEEDED(aTxn->GetIsTransient(&isTransientTransaction)) &&
-      !isTransientTransaction)		// don't count transient transactions
-    result = IncDocModCount(+1);
-    
+
   return result;
 }
 
@@ -770,15 +796,16 @@ nsEditor::Undo(PRUint32 aCount)
       for ( ; i<aCount; i++)
       {
         result = mTxnMgr->Undo();
+
+        if (NS_SUCCEEDED(result))
+	        result = DoAfterUndoTransaction();
+	        
         if (NS_FAILED(result))
           break;
       }
     }
     selection->EndBatchChanges();
   }
-
-  if (NS_SUCCEEDED(result))
-    result = IncDocModCount(-1);		// all undoable transactions are non-transient
 
   return result;
 }
@@ -2841,6 +2868,13 @@ nsEditor::SetCompositionString(const nsString& aCompositionString)
 	printf("nsEditor::SetCompositionString: string=%s\n",aCompositionString);
 #endif
 	return SetPreeditText(aCompositionString);
+}
+
+NS_IMETHODIMP
+nsEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
+{
+  NS_NOTREACHED("This should never get called. Overridden by subclasses");
+  return NS_OK;
 }
 
 NS_IMETHODIMP

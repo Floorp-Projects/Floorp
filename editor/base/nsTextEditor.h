@@ -257,6 +257,8 @@ protected:
   NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
   NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
 
+  // this overrides the base class implementation. It is not exported in nsITextEditor.
+  NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
 // Data members
 protected:
