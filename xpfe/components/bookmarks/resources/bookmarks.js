@@ -72,6 +72,8 @@ var kDSContractID;
 var kDSIID;
 var DS;
 
+var gLoadInBackground = false;
+
 // should be moved in a separate file
 function initServices()
 {
@@ -563,10 +565,8 @@ var BookmarksCommand = {
       break;
     case "tab":
       var tab = browser.addTab(url);
-      browser.selectedTab = tab;
-      break;
-    case "tab_background":
-      browser.addTab(url);
+      if (!gLoadInBackground)
+        browser.selectedTab = tab;
       break;
     }
   },
@@ -598,7 +598,7 @@ var BookmarksCommand = {
     } else {
       var browser = w.getBrowser();
       var tab = browser.loadGroup(URIs);
-      if (aTargetBrowser != "tab_background")
+      if (!gLoadInBackground)
         browser.selectedTab = tab;
     }
   },
@@ -1593,6 +1593,8 @@ var BookmarksUtils = {
     if (!aEvent)
       return null;
 
+    gLoadInBackground = this.shouldLoadTabInBackground(aEvent);
+
     switch (aEvent.type) {
     case "click":
     case "dblclick":
@@ -1617,7 +1619,7 @@ var BookmarksUtils = {
     }
 
     if (PREF && PREF.getBoolPref("browser.tabs.opentabfor.middleclick"))
-      return this.shouldLoadTabInBackground(aEvent) ? "tab_background" : "tab";
+      return "tab";
 
     if (PREF && PREF.getBoolPref("middlemouse.openNewWindow"))
       return "window";
