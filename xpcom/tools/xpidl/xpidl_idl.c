@@ -344,6 +344,11 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                             data->point - check_point, check_point);
 #endif
                 }
+                else {
+                    data->point = data->buf + data->len;
+                    goto fill_start;
+                }
+
                 assert(!data->f_raw && !data->f_include);
                 /*
                  * Now that we've advanced data->point to skip the comment,
