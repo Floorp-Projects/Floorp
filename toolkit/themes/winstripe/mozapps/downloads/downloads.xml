@@ -7,10 +7,8 @@
 
   <binding id="download-view" extends="chrome://mozapps/content/downloads/download.xml#download-view">
     <content>
-      <xul:vbox flex="1" class="downloadViewInner1">
-        <xul:vbox flex="1" class="downloadViewInner2">
-          <children/>
-        </xul:vbox>
+      <xul:vbox flex="1" class="downloadViewInner">
+        <children/>
       </xul:vbox>
     </content>
   </binding>

@@ -10,10 +10,8 @@
       <stylesheet src="chrome://mozapps/skin/shared/richview.css"/>
     </resources>
     <content>
-      <xul:vbox flex="1" class="richviewInner1">
-        <xul:vbox flex="1" class="richviewInner2">
-          <children/>
-        </xul:vbox>
+      <xul:vbox flex="1" class="richviewInner">
+        <children/>
       </xul:vbox>
     </content>
   </binding>

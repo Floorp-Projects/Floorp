@@ -8,19 +8,13 @@
   margin: 10px 10px 5px 10px;
   -moz-appearance: listbox;
   -moz-user-focus: normal;
+  background-color: Window;
 }
 
-.downloadViewInner2 {
+.downloadViewInner {
   background-image: url("chrome://mozapps/skin/downloads/viewFader.png");
   padding: 0px;
 }  
-
-.downloadViewInner1 {
-  background-color: Window;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-position: bottom right;
-}
 
 /* Download Manager Command Bar */
 #commandBar {
