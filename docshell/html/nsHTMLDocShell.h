@@ -52,11 +52,13 @@ protected:
    nsresult GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame);
 
 protected:
-   PRBool   m_AllowPlugins;
-   PRInt32  m_MarginWidth;
-   PRInt32  m_MarginHeight;
-   PRBool   m_IsFrame;
-   nsCOMPtr<nsIDOMDocument> m_Document;
+   PRBool   mAllowPlugins;
+   PRInt32  mMarginWidth;
+   PRInt32  mMarginHeight;
+   PRBool   mIsFrame;
+   // XXX: mDocument is going away RSN!  we shouldn't hold onto it at this level.  
+   //      the content viewer owns it
+   nsCOMPtr<nsIDOMDocument> mDocument;
 };
 
 #endif /* nsHTMLDocShell_h__ */

@@ -36,6 +36,7 @@
 #include "nsIGenericWindow.h"
 #include "nsIScrollable.h"
 #include "nsITextScroll.h"
+#include "nsIPref.h"
 
 class nsDocShellInitInfo
 {
@@ -71,12 +72,14 @@ protected:
    nsresult GetRootScrollableView(nsIScrollableView** aOutScrollView);
 
 protected:
-   PRBool                     m_Created;
-   nsDocShellInitInfo*        m_BaseInitInfo;
-   nsCOMPtr<nsIDocShell>      m_Parent;
-   nsCOMPtr<nsIPresContext>   m_PresContext;
-   nsCOMPtr<nsIWidget>        m_ParentWidget;
-   nsCOMPtr<nsIPresShell>     m_PresShell;
+   PRBool                     mCreated;
+   nsString                   mName;
+   nsDocShellInitInfo*        mBaseInitInfo;
+   nsCOMPtr<nsIDocShell>      mParent;
+   nsCOMPtr<nsIPresContext>   mPresContext;
+   nsCOMPtr<nsIWidget>        mParentWidget;
+   nsCOMPtr<nsIPresShell>     mPresShell;
+   nsCOMPtr<nsIPref>          mPrefs;
 };
 
 #endif /* nsDocShellBase_h__ */
