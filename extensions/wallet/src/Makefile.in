@@ -39,6 +39,8 @@ REQUIRES=wallet
 EXPORTS= $(NULL)
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
+EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lxp
+
 include $(topsrcdir)/config/rules.mk
 
 install::
