@@ -140,6 +140,27 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 
+static
+nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
+{
+	nsresult rv;
+	nsCOMPtr<nsIFileSpec> spec;
+	rv = NS_NewFileSpecWithSpec(inSpec, getter_AddRefs(spec));
+	if (NS_SUCCEEDED(rv)) {
+        	rv = spec->GetPersistentDescriptorString(string);
+		if (NS_SUCCEEDED(rv)) {
+			return NS_OK;
+                }
+		else {
+			PR_FREEIF(*string);
+			return rv;
+		}
+        } 
+	else {
+		*string = nsnull;
+		return rv;
+	}
+}
 class nsProfile: public nsIProfile,
                  public nsIShutdownListener
 {
@@ -303,7 +324,9 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
 	PRBool profileDirSet = PR_FALSE;
 	char *profstr=nsnull;
   
+#if defined(DEBUG_profile)
   printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
+#endif
   Startup(nsnull);
 
 
@@ -314,7 +337,9 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
   if (!profileDirSet)
     rv = LoadDefaultProfileDir(profstr);
 
+#if defined(DEBUG_profile)
   printf("Profile Manager : Profile Wizard and Manager activites : End\n");
+#endif
 
   return NS_OK;
 }
@@ -410,7 +435,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     nsresult rv;
 	char* cmdResult = nsnull;
 	nsFileSpec currProfileDirSpec;
+#ifdef DEBUG_profile
     printf("Profile Manager : Command Line Options : Begin\n");
+#endif
   
     // check for command line arguments for profile manager
     //	
@@ -423,11 +450,20 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
         {
             if (cmdResult) {
                 char* currProfileName = cmdResult;
-
-                fprintf(stderr, "ProfileName : %s\n", cmdResult);
+#ifdef DEBUG_profile
+                printf("ProfileName : %s\n", cmdResult);
+#endif /* DEBUG_profile */
 			
                 GetProfileDir(currProfileName, &currProfileDirSpec);
-                printf("** ProfileDir  :  %s **\n", currProfileDirSpec.GetCString());
+#ifdef DEBUG_profile
+		char *currProfileDirSpecStr = nsnull;
+		rv = GetStringFromSpec(currProfileDirSpec, &currProfileDirSpecStr);
+
+		if (NS_SUCCEEDED(rv) && currProfileDirSpecStr && *currProfileDirSpecStr) {
+			printf("** ProfileDir  :  %s **\n", currProfileDirSpecStr);
+		}
+		PR_FREEIF(currProfileDirSpecStr);
+#endif /* DEBUG_profile */
 			
                 if (NS_SUCCEEDED(rv)){
                     *profileDirSet = PR_TRUE;
@@ -472,8 +508,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 
                         rv = locator->ForgetProfileDir();
                     }
-
-                fprintf(stderr, "profileName & profileDir are: %s\n", cmdResult);
+#ifdef DEBUG_profile
+                printf("profileName & profileDir are: %s\n", cmdResult);
+#endif
                 SetProfileDir(currProfileName, currProfileDirSpec);
                 *profileDirSet = PR_TRUE;
 			
@@ -528,7 +565,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             }
         }
 
+#ifdef DEBUG_profile
     printf("Profile Manager : Command Line Options : End\n");
+#endif
 
 
 
@@ -588,15 +627,12 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 					if (NS_SUCCEEDED(rv))
 					{
 						nsXPIDLCString isMigrated;
-                        nsXPIDLCString orgProfileDir;
 						
 						// Use persistent classes to make the directory names XPlatform
 						nsInputStringStream stream(encodedProfileDir);
 						nsPersistentFileDescriptor descriptor;
 						stream >> descriptor;
 						*profileDir = descriptor;
-
-						orgProfileDir = profileDir->GetCString();
 
 						// Get the value of entry "migrated" to check the nature of the profile
 						m_reg->GetString( newKey, "migrated",
@@ -614,7 +650,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 #endif
 					        }
 
-							nsFileSpec tmpFileSpec(orgProfileDir);
+							nsFileSpec tmpFileSpec(*profileDir);
 							if (!tmpFileSpec.Exists()) {
 							    
 								// Get profile defaults folder..
@@ -1091,7 +1127,12 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 #if defined(DEBUG_profile)
     printf("ProfileManager : SetProfileDir\n");
     printf("profileName : %s ", profileName);
-    printf("profileDir  : %s\n", profileDir.GetCString());
+    char *profileDirStr = nsnull;
+    rv = GetStringFromSpec(profileDir, &profileDirStr);
+    if (NS_SUCCEEDED(rv) && profileDirStr && *profileDirStr) {
+	printf("profileDir  : %s\n", profileDirStr);
+    }
+    PR_FREEIF(profileDirStr);
 #endif
 
     // Check result.
@@ -1127,7 +1168,8 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 					// Persistency
 					nsPersistentFileDescriptor descriptor(profileDir);
 					char* profileDirString = nsnull;
-					profileDirString = nsCRT::strdup(profileDir.GetCString());
+					rv = GetStringFromSpec(profileDir, &profileDirString);
+				        NS_ASSERTION((NS_SUCCEEDED(rv) && profileDirString && *profileDirString), "profileDir is bad?");
 					nsOutputStringStream stream(profileDirString);
 					stream << descriptor;
     
@@ -1156,6 +1198,7 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 							printf("NULL value received for directory name.\n" );
 #endif
 					}
+					PR_FREEIF(profileDirString);
 				}
 				else
 				{
@@ -1459,7 +1502,9 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 	// That profile already exists...
 	if (NS_SUCCEEDED(rv))
 	{
+#if defined(DEBUG_profile)  
 		printf("ProfileManager : Rename Operation failed : Profile exists. Provide a different new name for profile.\n");
+#endif
 		return NS_ERROR_FAILURE;
 	}
 
@@ -1941,7 +1986,8 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 			 return NS_ERROR_FAILURE;
 		oldAppRegistry.SetLeafName(OLD_WINREG);
         
-		rv = m_reg->Open(oldAppRegistry.GetCString());
+#error DONT_USE_GETCSTRING
+		rv = m_reg->Open(oldAppRegistryGetCString());
 		************************/
 
 #ifdef XP_PC
@@ -2231,9 +2277,18 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 					NS_GET_IID(nsIPrefMigration),
 					getter_AddRefs(pPrefMigrator));
     if (NS_FAILED(rv)) return rv;
-                                      
-	rv = pPrefMigrator->ProcessPrefs(oldProfDir.GetCString(), 
-                                newProfDir.GetCString());
+        
+	char *oldProfDirStr = nsnull;
+	char *newProfDirStr = nsnull;
+	rv = GetStringFromSpec(oldProfDir, &oldProfDirStr); 
+	if (NS_SUCCEEDED(rv)) {                             
+		rv = GetStringFromSpec(newProfDir, &newProfDirStr); 
+		if (NS_SUCCEEDED(rv)) {                             
+			rv = pPrefMigrator->ProcessPrefs(oldProfDirStr,  newProfDirStr);
+		}
+	}
+	PR_FREEIF(oldProfDirStr);
+	PR_FREEIF(newProfDirStr);
 
 	if (NS_FAILED(rv)) return rv;
 
@@ -2394,8 +2449,9 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 		delimIndex    = pName.Find("[-]", profileNameIndex-1);
     
 		pName.Mid(userProfileName, profileNameIndex+1,delimIndex-(profileNameIndex+1));
-
+#if defined(DEBUG_profile)  
 		printf("\nProfiles : PREG Cookie user profile name = %s\n", userProfileName.ToNewCString());
+#endif
 	}
 
 	if (serviceState.Length())
@@ -2405,7 +2461,9 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
 		serviceState.Mid(userServiceDenial, serviceIndex+1,delimIndex-(serviceIndex+1));
 
+#if defined(DEBUG_profile)  
 		printf("\nProfiles : PREG Cookie netcenter service option = %s\n", userServiceDenial.ToNewCString());
+#endif
 	}
 
 	// User didn't provide any information.
