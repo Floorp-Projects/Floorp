@@ -152,6 +152,8 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #define NS_MSG_CUSTOM_HEADERS_OVERFLOW NS_MSG_GENERATE_FAILURE(28) //when num of custom headers exceeds 50
 #define NS_MSG_INVALID_CUSTOM_HEADER NS_MSG_GENERATE_FAILURE(29) //when custom header has invalid characters (as per rfc 2822) 
 
+#define NS_MSG_USER_NOT_AUTHENTICATED NS_MSG_GENERATE_FAILURE(30) // when local caches are password protect and user isn't auth
+
 #define NS_MSGCOMP_ERROR_BEGIN	12500
 /* NS_ERROR_NNTP_NO_CROSS_POSTING lives here, and not in nsMsgComposeStringBundle.h, because it is used in news and compose. */
 #define NS_ERROR_NNTP_NO_CROSS_POSTING NS_MSG_GENERATE_FAILURE(12554)

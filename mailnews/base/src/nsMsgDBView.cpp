@@ -64,6 +64,7 @@
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
 #include "nsISpamSettings.h"
+#include "nsIMsgAccountManager.h"
 
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 
@@ -1722,10 +1723,21 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
   m_sortOrder = sortOrder;
   m_sortType = sortType;
 
+  nsresult rv;
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool userNeedsToAuthenticate = PR_FALSE;
+  // if we're PasswordProtectLocalCache, then we need to find out if the server is authenticated.
+  (void) accountManager->GetUserNeedsToAuthenticate(&userNeedsToAuthenticate);
+  if (userNeedsToAuthenticate)
+    return NS_MSG_USER_NOT_AUTHENTICATED;
+
   if (folder) // search view will have a null folder
   {
+
     nsCOMPtr <nsIDBFolderInfo> folderInfo;
-    nsresult rv = folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(m_db));
+    rv = folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(m_db));
     NS_ENSURE_SUCCESS(rv,rv);
     m_db->AddListener(this);
     m_folder = folder;
