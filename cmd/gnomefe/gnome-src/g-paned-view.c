@@ -77,6 +77,7 @@ moz_paned_view_create_vertical(MozFrame *parent_frame,
   if (view == NULL) return NULL;
 
   moz_paned_view_init(view, parent_frame, context, FALSE);
+  return view;
 }
 
 void
