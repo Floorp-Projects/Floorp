@@ -25,8 +25,13 @@ CC			= gcc
 CCC			= g++
 RANLIB			= ranlib
 
+ifeq ($(OS_TEST),alpha)
+CPU_ARCH		= alpha
+else
 OS_REL_CFLAGS		= -mno-486 -Di386
 CPU_ARCH		= x86
+endif
+CPU_ARCH_TAG		= _$(CPU_ARCH)
 
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DFREEBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
@@ -34,6 +39,7 @@ ifeq ($(USE_PTHREADS),1)
 IMPL_STRATEGY		= _PTH
 OS_LIBS			= -lc_r
 DEFINES			+= -D_THREAD_SAFE
+OS_CFLAGS		+= -pthread
 else
 IMPL_STRATEGY		= _EMU
 OS_LIBS			= -lc

@@ -362,6 +362,7 @@ endif
 
 ifeq ($(OS_ARCH),FreeBSD)
 ifeq ($(USE_PTHREADS),1)
+LDOPTS += -pthread
 EXTRA_LIBS = -lc_r
 endif
 LDOPTS += -Xlinker -R $(PWD)/$(DIST)/lib
