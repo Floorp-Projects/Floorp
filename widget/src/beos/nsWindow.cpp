@@ -1744,7 +1744,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsWindow::GOT_FOCUS:
-		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
+		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
 		if (!mEnabled)
 			return false;
 		DispatchFocus(NS_GOTFOCUS);
@@ -1761,7 +1761,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsWindow::KILL_FOCUS:
-		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
+		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
 		//This was old hack borrowed from MS Windows code. 
 		//if(mJustGotDeactivate) 
 		//{
@@ -2973,10 +2973,8 @@ void nsViewBeOS::MakeFocus(bool focused)
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
 	{
-		uint32 args[1];
-		args[0]=(uint32)Window();
 		MethodInfo *info = nsnull;
-		if(nsnull != (info = new MethodInfo(w, w, (focused)? nsWindow::GOT_FOCUS : nsWindow::KILL_FOCUS,1,args)))
+		if(nsnull != (info = new MethodInfo(w, w, (focused)? nsWindow::GOT_FOCUS : nsWindow::KILL_FOCUS)))
 			t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
