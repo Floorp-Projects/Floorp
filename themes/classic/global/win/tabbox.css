@@ -51,7 +51,9 @@ tabpanels {
 
 /* ::::: tab ::::: */
 
-tab {
+tab 
+{
+  -moz-appearance: tab;
   margin-top: 2px;
   border-top: 2px solid;
   border-right: 2px solid;
@@ -78,11 +80,13 @@ tab[selected="true"] {
 }
 
 tab[beforeselected="true"] {
+  -moz-appearance: tab-left-edge;
   border-right: none;
   -moz-border-radius-topright: 0;
 }
 
 tab[afterselected="true"] {
+  -moz-appearance: tab-right-edge;
   border-left: none;
   -moz-border-radius-topleft: 0;
 }
