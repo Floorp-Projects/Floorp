@@ -64,7 +64,6 @@
 
 // Interfaces Needed
 #include "nsIDocShell.h"
-#include "nsIWebShell.h"
 #include "nsIWebBrowserChrome.h"
 
 #include "nsIScriptGlobalObject.h"
