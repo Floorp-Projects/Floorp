@@ -352,6 +352,21 @@ _MD_send (PRFileDesc *fd, const void *buf, PRInt32 amount, PRInt32 flags,
         }
     }
 
+#ifdef BONE_VERSION
+    /*
+     * optimization; if bytes sent is less than "amount" call
+     * select before returning. This is because it is likely that
+     * the next writev() call will return EWOULDBLOCK.
+     */
+    if ((!fd->secret->nonblocking) && (rv > 0) && (rv < amount)
+        && (timeout != PR_INTERVAL_NO_WAIT)) {
+        if (socket_io_wait(osfd, WRITE_FD, timeout) < 0) {
+            rv = -1;
+            goto done;
+        }
+    }
+#endif /* BONE_VERSION */
+    
     if (rv < 0) {
         _PR_MD_MAP_SEND_ERROR(err);
     }
@@ -450,6 +465,20 @@ PRInt32 _MD_writev(
             break;
         }
     }
+
+    /*
+     * optimization; if bytes sent is less than "amount" call
+     * select before returning. This is because it is likely that
+     * the next writev() call will return EWOULDBLOCK.
+     */
+    if ((!fd->secret->nonblocking) && (rv > 0) && (rv < amount)
+        && (timeout != PR_INTERVAL_NO_WAIT)) {
+        if (socket_io_wait(osfd, WRITE_FD, timeout) < 0) {
+            rv = -1;
+            goto done;
+        }
+    }
+
 
     if (rv < 0) {
         _PR_MD_MAP_WRITEV_ERROR(err);
