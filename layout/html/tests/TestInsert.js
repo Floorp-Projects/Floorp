@@ -59,7 +59,7 @@ function TestInsert(parent, child)
 
   // Insert a piece of text before the span; after the above, this tests
   // insertion in the middle.
-  trace("insert middle [" + parent.getTagName() + "," + childTag + "]");
+  trace("insert middle [" + parent.tagName + "," + childTag + "]");
   count++;
   parent.insertBefore(document.createTextNode("middle "), child);
 }
