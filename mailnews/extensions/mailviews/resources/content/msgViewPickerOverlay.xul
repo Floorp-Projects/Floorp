@@ -30,12 +30,8 @@
 
   <script src="chrome://messenger/content/msgViewPickerOverlay.js"/>
   
-  <script type="application/x-javascript"><![CDATA[
-    window.addEventListener("load", viewPickerOnLoad, true);
-  ]]></script>
-
   <hbox id="searchBox">
-    <hbox id="viewPickerBox" flex="1" insertbefore="searchCriteria" align="center">
+    <hbox id="viewPickerBox" insertbefore="searchCriteria" align="center">
       <label id="ViewPickerText" value="&ViewPicker.label;" control="viewPicker"  accesskey="&ViewPicker.accesskey;"/>
       <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this);">
        <menupopup id="viewPickerPopup">
@@ -52,8 +48,9 @@
          <menuitem id="createCustomView" value="7" label="&ViewPickerCustomView.label;"/>
        </menupopup>
       </menulist>
-      <spring flex="1"/>
     </hbox>
+    <!-- overlay the advanced button to save space -->
+    <button id="advancedButton" hidden="true"/>
   </hbox>
 
 </overlay>

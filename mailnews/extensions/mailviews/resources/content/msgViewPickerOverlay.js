@@ -22,11 +22,9 @@
 
 const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
 
-var gOnLoadCalled = false; 
 var gMailViewList = null;
 var gLastDefaultViewIndex = 8;
 var gCurrentViewValue = "0"; // initialize to the first view ("All")
-var gOldViewValue = "0";  // initialize to the first view ("All")
 
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
@@ -38,27 +36,22 @@ function viewChange(aMenuList)
 {
   var val = aMenuList.value;
 
+  if (val == "7") {
+    // restore to the previous view value, in case they cancel
+    aMenuList.value = gCurrentViewValue;
+    LaunchCustomizeDialog();
+    return;
+  }
+
   // bail out early if the user picked the same view
-  // (unless they picked "Customize...")
-  if (val == gCurrentViewValue && val != "7") 
+  if (val == gCurrentViewValue)
     return; 
-
-  GetSearchInput();
-
-  // switching views, clear out the quick search text
-  gSearchInput.value = "";
-
-  // remember the previous view value
-  // in case they do "Customize..." and then cancel
-  // in which case we'll restore to the previous view value
-  gOldViewValue = gCurrentViewValue;
   gCurrentViewValue = val;
 
   switch (val)
   {
    case "0": // View All
      gDefaultSearchViewTerms = null;
-     onClearSearch(); 
      break;
    case "1": // Unread
      ViewNewMail();
@@ -70,26 +63,57 @@ function viewChange(aMenuList)
    case "6":
      ViewLabel(parseInt(val) - 1);
      break;
-   case "7":
-     LaunchCustomizeDialog();
-     break;
    default:
      LoadCustomMailView(parseInt(val) - gLastDefaultViewIndex);
      break;
   } //      
+
+  gQSViewIsDirty = true;
+  onEnterInSearchBar();
+}
+
+const kLabelPrefs = "mailnews.labels.description.";
+
+const gLabelPrefListener = {
+  observe: function(subject, topic, prefName)
+  {
+    if (topic != "nsPref:changed")
+      return;
+
+    var index = parseInt(prefName.substring(kLabelPrefs.length));
+    if (index >= 1 && index <= 5)
+      setLabelAttributes(index, "labelMenuItem" + index);
+  }
+};
+
+function AddLabelPrefListener()
+{
+  try {
+    gPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    gPrefs.addObserver(kLabelPrefs, gLabelPrefListener, false);
+  } catch(ex) {
+    dump("Failed to observe prefs: " + ex + "\n");
+  }
+}
+
+function RemoveLabelPrefListener()
+{
+  try {
+    gPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    gPrefs.removeObserver(kLabelPrefs, gLabelPrefListener);
+  } catch(ex) {
+    dump("Failed to remove pref observer: " + ex + "\n");
+  }
 }
 
 function viewPickerOnLoad()
 {
-  if (gOnLoadCalled) return;
+  if (document.getElementById('viewPicker')) {
+    window.addEventListener("unload", RemoveLabelPrefListener, false);
+    
+    AddLabelPrefListener();
 
-  // hide the advanced search button
-  var searchButton = document.getElementById('advancedButton');
-  if (searchButton)
-  {
-    searchButton.setAttribute('collapsed', true);
     FillLabelValues();
-    gOnLoadCalled = true;
 
     refreshCustomMailViews(-1);
   }
@@ -99,7 +123,7 @@ function LaunchCustomizeDialog()
 {
   // making it modal, see bug #191188
   //OpenOrFocusWindow({onOkCallback: refreshCustomMailViews, onCancelCallback: cancelCustomMailViews}, 'mailnews:mailviewlist', 'chrome://messenger/content/mailViewList.xul'); 
-  window.openDialog("chrome://messenger/content/mailViewList.xul", "mailnews:mailviewlist", "chrome,modal,titlebar,resizable,centerscreen", {onOkCallback: refreshCustomMailViews, onCancelCallback: cancelCustomMailViews});
+  window.openDialog("chrome://messenger/content/mailViewList.xul", "mailnews:mailviewlist", "chrome,modal,titlebar,resizable,centerscreen", {onOkCallback: refreshCustomMailViews});
 }
 
 function LoadCustomMailView(index)
@@ -136,15 +160,8 @@ function LoadCustomMailView(index)
     searchTermsArrayForQS.AppendElement(searchTermForQS);
   }
 
-  onSearch(searchTermsArrayForQS);   
+  createSearchTermsWithList(searchTermsArrayForQS);
   gDefaultSearchViewTerms = searchTermsArrayForQS;
-}
-
-function cancelCustomMailViews()
-{
-  var viewPicker = document.getElementById('viewPicker');
-  viewPicker.value = gOldViewValue;
-  UpdateView();
 }
 
 function refreshCustomMailViews(aDefaultSelectedIndex)
@@ -205,7 +222,7 @@ function FillLabelValues()
 function setLabelAttributes(labelID, menuItemID)
 {
   var prefString;
-  prefString = gPrefs.getComplexValue("mailnews.labels.description." + labelID,  Components.interfaces.nsIPrefLocalizedString);
+  prefString = gPrefs.getComplexValue(kLabelPrefs + labelID, Components.interfaces.nsIPrefLocalizedString).data;
   document.getElementById(menuItemID).setAttribute("label", prefString);
 }
 
@@ -233,7 +250,7 @@ function ViewLabel(labelID)
   term.booleanAnd = true;
 
   searchTermsArray.AppendElement(term);
-  onSearch(searchTermsArray);  
+  createSearchTermsWithList(searchTermsArray);
   gDefaultSearchViewTerms = searchTermsArray;
 }
 
@@ -254,12 +271,8 @@ function ViewNewMail()
   term.booleanAnd = true;
 
   searchTermsArray.AppendElement(term);
-  onSearch(searchTermsArray); 
-  
+  createSearchTermsWithList(searchTermsArray);
   gDefaultSearchViewTerms = searchTermsArray;
 }
 
-function UpdateView()
-{
-  viewChange(document.getElementById('viewPicker'));
-}
+window.addEventListener("load", viewPickerOnLoad, false);
