@@ -84,6 +84,8 @@ class nsIAtom;
 -(IBAction)openBookmarkInNewTab:(id)aSender;
 -(IBAction)openBookmarkInNewWindow:(id)aSender;
 
+-(void)openBookmarkGroup:(id)aTabView groupElement:(nsIDOMElement*)aFolder;
+
 // Datasource methods.
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
 - (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item;

@@ -750,6 +750,25 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
   }
 }
 
+-(void)openNewWindowWithGroup: (nsIDOMElement*)aFolderElement loadInBackground: (BOOL)aLoadInBG
+{
+  // Autosave our dimensions before we open a new window.  That ensures the size ends up matching.
+  [self autosaveWindowFrame];
+
+  // Tell the Tab Browser in the newly created window to load the group
+  BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
+  if (aLoadInBG)
+    [[browser window] orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
+  else {
+    // Focus the content area and show the window.
+    [browser enterModalSession];
+    [[[browser getBrowserWrapper] getBrowserView] setActive: YES];
+  }
+
+  id tabBrowser = [browser getTabBrowser]; 
+  [mSidebarBookmarksDataSource openBookmarkGroup: tabBrowser groupElement: aFolderElement];
+}
+
 -(void)openNewTabWithURL: (NSURL*)aURL loadInBackground: (BOOL)aLoadInBG
 {
     NSTabViewItem* newTab = [[[NSTabViewItem alloc] initWithIdentifier: nil] autorelease];
