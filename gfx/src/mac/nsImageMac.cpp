@@ -44,6 +44,7 @@
 #include <Quickdraw.h>
 
 #include "nsGfxUtils.h"
+#include "imgScaler.h"
 
 #if 0
 #if TARGET_CARBON
@@ -229,6 +230,7 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
                  PRInt32 aSWidth, PRInt32 aSHeight, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   Rect                srcRect, dstRect, maskRect;
+  nsresult rv = NS_OK;
 
   if (!mImageGWorld)
     return NS_ERROR_FAILURE;
@@ -278,29 +280,33 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
   // get the destination pix map
   nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
   CGrafPtr    destPort;
-  nsresult    rv = surface->GetGrafPtr(&destPort);
+  rv = surface->GetGrafPtr(&destPort);
   if (NS_FAILED(rv)) return rv;
-  
+
   StPortSetter    destSetter(destPort);
   ::ForeColor(blackColor);
   ::BackColor(whiteColor);
-    
-  // can only do this if we are NOT printing
-  if (RenderingToPrinter(aContext))   // we are printing
+
+  if (!mMaskGWorld)
   {
-    if (!mMaskGWorld)
+    ::CopyBits(::GetPortBitMapForCopyBits(mImageGWorld),
+               ::GetPortBitMapForCopyBits(destPort),
+               &srcRect, &dstRect, srcCopy, nsnull);
+  }
+  else
+  {
+    if (RenderingToPrinter(aContext))
     {
-      ::CopyBits(::GetPortBitMapForCopyBits(mImageGWorld), ::GetPortBitMapForCopyBits(destPort), &srcRect, &dstRect, srcCopy, nsnull);
-    }
-    else
-    {
+      // If we are printing, then we need to render everything into a temp
+      // GWorld, and then blit that out to the destination.  We do this
+      // since Copy{Deep}Mask are not supported for printing.
+
       GWorldPtr tempGWorld;
-      
+
       // if we have a mask, blit the transparent image into a new GWorld which is
       // just white, and print that. This is marginally better than printing the
       // image directly, since the transparent pixels come out black.
-      
-      // We do all this because Copy{Deep}Mask is not supported when printing
+
       PRInt16 pixelDepth = ::GetPixDepth(::GetGWorldPixMap(mImageGWorld));
       if (AllocateGWorld(pixelDepth, nsnull, srcRect, &tempGWorld) == noErr)
       {
@@ -311,35 +317,110 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
         if (tempPixMap)
         {
           StPixelLocker   tempPixLocker(tempPixMap);      // locks the pixels
-        
-          // copy from the destination into our temp GWorld, to get the background
-          // for some reason this copies garbage, so we erase to white above instead.
-          // ::CopyBits((BitMap*)*destPixels, (BitMap*)*tempPixMap, &dstRect, &srcRect, srcCopy, nsnull);
-          
-          if (mAlphaDepth > 1)
-            ::CopyDeepMask(::GetPortBitMapForCopyBits(mImageGWorld), ::GetPortBitMapForCopyBits(mMaskGWorld),
-                            ::GetPortBitMapForCopyBits(tempGWorld), &srcRect, &maskRect, &srcRect, srcCopy, nsnull);
-          else
-            ::CopyMask(::GetPortBitMapForCopyBits(mImageGWorld), ::GetPortBitMapForCopyBits(mMaskGWorld),
-                            ::GetPortBitMapForCopyBits(tempGWorld), &srcRect, &maskRect, &srcRect);
 
-          // now copy to the screen
-          ::CopyBits(::GetPortBitMapForCopyBits(tempGWorld), ::GetPortBitMapForCopyBits(destPort), &srcRect, &dstRect, srcCopy, nsnull);
+          // Copy everything into tempGWorld
+          if (mAlphaDepth > 1)
+            ::CopyDeepMask(::GetPortBitMapForCopyBits(mImageGWorld),
+                           ::GetPortBitMapForCopyBits(mMaskGWorld),
+                           ::GetPortBitMapForCopyBits(tempGWorld),
+                           &srcRect, &maskRect, &srcRect, srcCopy, nsnull);
+          else
+            ::CopyMask(::GetPortBitMapForCopyBits(mImageGWorld),
+                       ::GetPortBitMapForCopyBits(mMaskGWorld),
+                       ::GetPortBitMapForCopyBits(tempGWorld),
+                       &srcRect, &maskRect, &srcRect);
+
+          // now copy tempGWorld bits to destination
+          ::CopyBits(::GetPortBitMapForCopyBits(tempGWorld),
+                     ::GetPortBitMapForCopyBits(destPort),
+                     &srcRect, &dstRect, srcCopy, nsnull);
         }
         
         ::DisposeGWorld(tempGWorld);  // do this after dtor of tempPixLocker!
       }
     }
+    else
+    {
+      // not printing...
+      if (mAlphaDepth == 1 && ((aSWidth != aDWidth) || (aSHeight != aDHeight)))
+      {
+        // If scaling an image that has a 1-bit mask...
+
+        // Bug 195022 - Seems there is a bug in the Copy{Deep}Mask functions
+        // where scaling an image that has a 1-bit mask can cause some ugly
+        // artifacts to appear on screen.  To work around this issue, we use the
+        // functions in imgScaler.cpp to do the actual scaling of the source
+        // image and mask.
+
+        GWorldPtr tempSrcGWorld = nsnull, tempMaskGWorld = nsnull;
+
+        // create temporary source GWorld
+        char* scaledSrcBits;
+        PRInt32 tmpSrcRowBytes;
+        PRInt16 pixelDepthSrc = ::GetPixDepth(::GetGWorldPixMap(mImageGWorld));
+        OSErr err = CreateGWorld(aDWidth, aDHeight, pixelDepthSrc,
+                                 &tempSrcGWorld, &scaledSrcBits, &tmpSrcRowBytes);
+
+        if (err != noErr)  return NS_ERROR_FAILURE;
+
+        // create temporary mask GWorld
+        char* scaledMaskBits;
+        PRInt32 tmpMaskRowBytes;
+        err = CreateGWorld(aDWidth, aDHeight, mAlphaDepth, &tempMaskGWorld,
+                           &scaledMaskBits, &tmpMaskRowBytes);
+
+        if (err == noErr)
+        {
+          PixMapHandle srcPixMap = ::GetGWorldPixMap(mImageGWorld);
+          PixMapHandle maskPixMap = ::GetGWorldPixMap(mMaskGWorld);
+          if (srcPixMap && maskPixMap)
+          {
+            StPixelLocker srcPixLocker(srcPixMap);      // locks the pixels
+            StPixelLocker maskPixLocker(maskPixMap);
+
+            // scale the source
+            RectStretch(aSWidth, aSHeight, aDWidth, aDHeight,
+                        0, 0, aDWidth - 1, aDHeight - 1,
+                        mImageBits, mRowBytes, scaledSrcBits, tmpSrcRowBytes,
+                        pixelDepthSrc);
+
+            // scale the mask
+            RectStretch(aSWidth, aSHeight, aDWidth, aDHeight,
+                        0, 0, aDWidth - 1, aDHeight - 1,
+                        mMaskBits, mAlphaRowBytes, scaledMaskBits,
+                        tmpMaskRowBytes, mAlphaDepth);
+
+            Rect tmpRect;
+            ::SetRect(&tmpRect, 0, 0, aDWidth, aDHeight);
+
+            // copy to screen
+            CopyBitsWithMask(::GetPortBitMapForCopyBits(tempSrcGWorld),
+                             ::GetPortBitMapForCopyBits(tempMaskGWorld),
+                             mAlphaDepth, ::GetPortBitMapForCopyBits(destPort),
+                             tmpRect, tmpRect, dstRect, PR_TRUE);
+          }
+
+          ::DisposeGWorld(tempMaskGWorld);
+        }
+        else
+        {
+          rv = NS_ERROR_FAILURE;
+        }
+
+        ::DisposeGWorld(tempSrcGWorld);
+      }
+      else
+      {
+        // not scaling...
+        CopyBitsWithMask(::GetPortBitMapForCopyBits(mImageGWorld),
+                         ::GetPortBitMapForCopyBits(mMaskGWorld),
+                         mAlphaDepth, ::GetPortBitMapForCopyBits(destPort),
+                         srcRect, maskRect, dstRect, PR_TRUE);
+      }
+    }
   }
-  else  // not printing
-  {
-    CopyBitsWithMask(::GetPortBitMapForCopyBits(mImageGWorld),
-        mMaskGWorld ? ::GetPortBitMapForCopyBits(mMaskGWorld) : nsnull, mAlphaDepth,
-        ::GetPortBitMapForCopyBits(destPort),
-        srcRect, maskRect, dstRect, PR_TRUE);
-  }
-  
-  return NS_OK;
+
+  return rv;
 }
 
 /** ---------------------------------------------------
@@ -642,7 +723,8 @@ void nsImageMac::ClearGWorld(GWorldPtr theGWorld)
 /** -----------------------------------------------------------------
  *  Allocate a GWorld
  */
-OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld)
+OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable,
+                                 const Rect& bounds, GWorldPtr *outGWorld)
 {
   GWorldPtr newGWorld = NULL;
   // on Mac OS X, there's no reason to use the temp mem flag
@@ -654,8 +736,10 @@ OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rec
   return noErr;
 }
 
-void nsImageMac::CopyBitsWithMask(const BitMap* srcBits, const BitMap* maskBits, PRInt16 maskDepth, const BitMap* destBits,
-        const Rect& srcRect, const Rect& maskRect, const Rect& destRect, PRBool inDrawingToPort)
+void nsImageMac::CopyBitsWithMask(const BitMap* srcBits, const BitMap* maskBits,
+                                  PRInt16 maskDepth, const BitMap* destBits,
+                                  const Rect& srcRect, const Rect& maskRect,
+                                  const Rect& destRect, PRBool inDrawingToPort)
 {
   if (maskBits)
   {
@@ -678,11 +762,11 @@ void nsImageMac::CopyBitsWithMask(const BitMap* srcBits, const BitMap* maskBits,
       ::SetClip(newClip);
     }
 
-    if (maskDepth > 1) {
-      ::CopyDeepMask(srcBits, maskBits, destBits, &srcRect, &maskRect, &destRect, ditherCopy, nsnull);
-    } else {
+    if (maskDepth > 1)
+      ::CopyDeepMask(srcBits, maskBits, destBits, &srcRect, &maskRect,
+                     &destRect, ditherCopy, nsnull);
+    else
       ::CopyMask(srcBits, maskBits, destBits, &srcRect, &maskRect, &destRect);
-    }
 
     if (inDrawingToPort)
     {
