@@ -118,7 +118,7 @@ sub Checkout()
 	#//
 	if ($main::pull{all})
 	{
-		$session->checkout("RaptorMac")						|| die "checkout failure";
+		$session->checkout("SeaMonkeyEditor")						|| die "checkout failure";
   
 		#// beard:  additional libraries needed to make shared libraries link.
 		#//$session->checkout("mozilla/lib/mac/PowerPlant")	|| die "checkout failure";
