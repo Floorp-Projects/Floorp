@@ -27,6 +27,7 @@ class nsQApplication : public QApplication
     Q_OBJECT
 public:
 	nsQApplication(int argc, char ** argv);
+    nsQApplication(Display * display);
 	~nsQApplication();
 
 public:

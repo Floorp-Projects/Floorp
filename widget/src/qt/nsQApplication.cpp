@@ -25,8 +25,16 @@ nsQApplication::nsQApplication(int argc, char ** argv)
     mEventQueue = nsnull;
 }
 
+nsQApplication::nsQApplication(Display * display)
+	: QApplication(display)
+{
+    mEventQueue = nsnull;
+    setGlobalMouseTracking(true);
+}
+
 nsQApplication::~nsQApplication()
 {
+    setGlobalMouseTracking(false);
     NS_IF_RELEASE(mEventQueue);
 }
 
