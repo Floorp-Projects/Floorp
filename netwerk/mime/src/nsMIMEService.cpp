@@ -299,7 +299,14 @@ nsMIMEService::InitFromHack() {
     rv = AppendExtension("application/postscript", "ai");
     if (NS_FAILED(rv)) return rv;
                  
-    rv = AddMapping("application/rtf", "rtf", "Rich Text File", nsnull);
+    rv = AddMapping("text/rtf", "rtf", "Rich Text Format", nsnull);
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension("text/rtf", "rtf");
+    if (NS_FAILED(rv)) return rv;
+
+    rv = AddMapping("text/cpp", "cpp", "CPP file", nsnull);
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension("text/cpp", "cpp");
     if (NS_FAILED(rv)) return rv;
     
     return NS_OK;
