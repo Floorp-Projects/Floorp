@@ -21,6 +21,7 @@
 
 #include "nsIToolbarItemHolder.h"
 #include "nsIToolbarItem.h"
+#include "nsCOMPtr.h"
 
 class nsIWidget;
 struct nsRect;
@@ -53,7 +54,7 @@ public:
 
 protected:
   
-  nsIWidget * mWidget;
+  nsCOMPtr<nsIWidget> mWidget;
 
 };
 
