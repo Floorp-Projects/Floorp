@@ -583,6 +583,10 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_X9_42_DH_HYBRID_DERIVE     0x00000032
 #define CKM_X9_42_MQV_DERIVE           0x00000033
 
+#define CKM_SHA256_RSA_PKCS            0x00000040	/* v2.20 */
+#define CKM_SHA384_RSA_PKCS            0x00000041	/* v2.20 */
+#define CKM_SHA512_RSA_PKCS            0x00000042	/* v2.20 */
+
 #define CKM_RC2_KEY_GEN                0x00000100
 #define CKM_RC2_ECB                    0x00000101
 #define CKM_RC2_CBC                    0x00000102
@@ -649,6 +653,18 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_RIPEMD160_HMAC             0x00000241
 #define CKM_RIPEMD160_HMAC_GENERAL     0x00000242
 
+#define CKM_SHA256                     0x00000250	/* v2.20 */
+#define CKM_SHA256_HMAC_GENERAL        0x00000251	/* v2.20 */
+#define CKM_SHA256_HMAC                0x00000252	/* v2.20 */
+
+#define CKM_SHA384                     0x00000260	/* v2.20 */
+#define CKM_SHA384_HMAC_GENERAL        0x00000261	/* v2.20 */
+#define CKM_SHA384_HMAC                0x00000262	/* v2.20 */
+
+#define CKM_SHA512                     0x00000270	/* v2.20 */
+#define CKM_SHA512_HMAC_GENERAL        0x00000271	/* v2.20 */
+#define CKM_SHA512_HMAC                0x00000272	/* v2.20 */
+
 /* All of the following mechanisms are new for v2.0 */
 /* Note that CAST128 and CAST5 are the same algorithm */
 #define CKM_CAST_KEY_GEN               0x00000300
@@ -712,6 +728,10 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_MD5_KEY_DERIVATION         0x00000390
 #define CKM_MD2_KEY_DERIVATION         0x00000391
 #define CKM_SHA1_KEY_DERIVATION        0x00000392
+#define CKM_SHA256_KEY_DERIVATION      0x00000393	/* v2.20 */
+#define CKM_SHA384_KEY_DERIVATION      0x00000394	/* v2.20 */
+#define CKM_SHA512_KEY_DERIVATION      0x00000395	/* v2.20 */
+
 #define CKM_PBE_MD2_DES_CBC            0x000003A0
 #define CKM_PBE_MD5_DES_CBC            0x000003A1
 #define CKM_PBE_MD5_CAST_CBC           0x000003A2
