@@ -118,7 +118,7 @@ protected:
                                   const PRUnichar* aDontCancelButton);
 
   static void     OpenTimerCallback(nsITimer* aTimer, void* aClosure);
-  static nsresult OpenDownloadManager(PRBool aShouldFocus, nsIDownload* aDownload, nsIDOMWindow* aParent);
+  static nsresult OpenDownloadManager(PRBool aShouldFocus, PRInt32 aFlashCount, nsIDownload* aDownload, nsIDOMWindow* aParent);
 
   PRBool   NeedsUIUpdate() { return mListener != nsnull; }
   PRInt32  GetRetentionBehavior();
