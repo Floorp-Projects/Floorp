@@ -45,7 +45,6 @@ MODULE		= expat
 LIBRARY_NAME	= expat_s
 
 CSRCS		= \
-		hashtable.c \
 		xmlparse.c \
 		$(NULL)
 
