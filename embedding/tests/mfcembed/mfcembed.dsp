@@ -110,6 +110,10 @@ SOURCE=.\BrowserImplWebPrgrsLstnr.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\BrowserToolTip.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\BrowserView.cpp
 # End Source File
 # Begin Source File
@@ -171,6 +175,10 @@ SOURCE=.\BrowserFrm.h
 # Begin Source File
 
 SOURCE=.\BrowserImpl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\BrowserToolTip.h
 # End Source File
 # Begin Source File
 

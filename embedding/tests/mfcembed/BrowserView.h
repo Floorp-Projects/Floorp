@@ -38,7 +38,7 @@
 #define _BROWSERVIEW_H
 
 #if _MSC_VER > 1000
-	#pragma once
+    #pragma once
 #endif
 
 #include "IBrowserFrameGlue.h"
@@ -55,59 +55,59 @@ class CPrintProgressDialog;
 class CBrowserView : public CWnd
 {
 public:
-	CBrowserView();
-	virtual ~CBrowserView();
+    CBrowserView();
+    virtual ~CBrowserView();
 
-	// Some helper methods
-	HRESULT CreateBrowser();
-	HRESULT DestroyBrowser();
-	void OpenURL(const char* pUrl);
-	void OpenURL(const PRUnichar* pUrl);
-	CBrowserFrame* CreateNewBrowserFrame(PRUint32 chromeMask = nsIWebBrowserChrome::CHROME_ALL, 
-							PRInt32 x = -1, PRInt32 y = -1, 
-							PRInt32 cx = -1, PRInt32 cy = -1,
-							PRBool bShowWindow = PR_TRUE);
-	void OpenURLInNewWindow(const PRUnichar* pUrl);
-	void LoadHomePage();
+    // Some helper methods
+    HRESULT CreateBrowser();
+    HRESULT DestroyBrowser();
+    void OpenURL(const char* pUrl);
+    void OpenURL(const PRUnichar* pUrl);
+    CBrowserFrame* CreateNewBrowserFrame(PRUint32 chromeMask = nsIWebBrowserChrome::CHROME_ALL, 
+                            PRInt32 x = -1, PRInt32 y = -1, 
+                            PRInt32 cx = -1, PRInt32 cy = -1,
+                            PRBool bShowWindow = PR_TRUE);
+    void OpenURLInNewWindow(const PRUnichar* pUrl);
+    void LoadHomePage();
 
-	void GetBrowserWindowTitle(nsCString& title);
-	
-	// Called by the CBrowserFrame after it creates the view
-	// Essentially a back pointer to the BrowserFrame
-	void SetBrowserFrame(CBrowserFrame* pBrowserFrame);
-	CBrowserFrame* mpBrowserFrame;
+    void GetBrowserWindowTitle(nsCString& title);
+    
+    // Called by the CBrowserFrame after it creates the view
+    // Essentially a back pointer to the BrowserFrame
+    void SetBrowserFrame(CBrowserFrame* pBrowserFrame);
+    CBrowserFrame* mpBrowserFrame;
 
-	// Called by the CBrowserFrame after it creates the view
-	// The view passes this on to the embedded Browser's Impl
-	// obj
-	void SetBrowserFrameGlue(PBROWSERFRAMEGLUE pBrowserFrameGlue);
-	PBROWSERFRAMEGLUE mpBrowserFrameGlue;
+    // Called by the CBrowserFrame after it creates the view
+    // The view passes this on to the embedded Browser's Impl
+    // obj
+    void SetBrowserFrameGlue(PBROWSERFRAMEGLUE pBrowserFrameGlue);
+    PBROWSERFRAMEGLUE mpBrowserFrameGlue;
 
-	// Pointer to the object which implements
-	// the inerfaces required by Mozilla embedders
-	//
-	CBrowserImpl* mpBrowserImpl;
+    // Pointer to the object which implements
+    // the inerfaces required by Mozilla embedders
+    //
+    CBrowserImpl* mpBrowserImpl;
 
-	// Mozilla interfaces
-	//
-	nsCOMPtr<nsIWebBrowser> mWebBrowser;
-	nsCOMPtr<nsIBaseWindow> mBaseWindow;
-	nsCOMPtr<nsIWebNavigation> mWebNav;	
+    // Mozilla interfaces
+    //
+    nsCOMPtr<nsIWebBrowser> mWebBrowser;
+    nsCOMPtr<nsIBaseWindow> mBaseWindow;
+    nsCOMPtr<nsIWebNavigation> mWebNav;    
 
-	void UpdateBusyState(PRBool aBusy);
-	PRBool mbDocumentLoading;
+    void UpdateBusyState(PRBool aBusy);
+    PRBool mbDocumentLoading;
 
-	void SetCtxMenuLinkUrl(nsAutoString& strLinkUrl);
-	nsAutoString mCtxMenuLinkUrl;
+    void SetCtxMenuLinkUrl(nsAutoString& strLinkUrl);
+    nsAutoString mCtxMenuLinkUrl;
 
-	void SetCtxMenuImageSrc(nsAutoString& strImgSrc);
-	nsAutoString mCtxMenuImgSrc;
+    void SetCtxMenuImageSrc(nsAutoString& strImgSrc);
+    nsAutoString mCtxMenuImgSrc;
 
-	void SetCurrentFrameURL(nsAutoString& strCurrentFrameURL);
-	nsString mCtxMenuCurrentFrameURL;
+    void SetCurrentFrameURL(nsAutoString& strCurrentFrameURL);
+    nsString mCtxMenuCurrentFrameURL;
 
-	inline void ClearFindDialog() { m_pFindDlg = NULL; }
-	CFindDialog* m_pFindDlg;
+    inline void ClearFindDialog() { m_pFindDlg = NULL; }
+    CFindDialog* m_pFindDlg;
   CPrintProgressDialog* m_pPrintProgressDlg;
     // When set to TRUE...
     // indicates that the clipboard operation needs to be 
@@ -134,70 +134,70 @@ public:
 
     BOOL ViewContentContainsFrames();
     
-	// Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CBrowserView)
-	protected:
-	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
-	//}}AFX_VIRTUAL
+    // Overrides
+    // ClassWizard generated virtual function overrides
+    //{{AFX_VIRTUAL(CBrowserView)
+    protected:
+    virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+    //}}AFX_VIRTUAL
 
 
-	// Generated message map functions
+    // Generated message map functions
 protected:
-	nsCOMPtr<nsIPrintSettings> m_PrintSettings;
+    nsCOMPtr<nsIPrintSettings> m_PrintSettings;
   BOOL                       m_InPrintPreview;
 
-	//{{AFX_MSG(CBrowserView)
-	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnDestroy();
-	afx_msg void OnSize( UINT, int, int );
-	// UrlBar command handlers
-	//
-	afx_msg void OnUrlSelectedInUrlBar();
-	afx_msg void OnNewUrlEnteredInUrlBar();
+    //{{AFX_MSG(CBrowserView)
+    afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+    afx_msg void OnDestroy();
+    afx_msg void OnSize( UINT, int, int );
+    // UrlBar command handlers
+    //
+    afx_msg void OnUrlSelectedInUrlBar();
+    afx_msg void OnNewUrlEnteredInUrlBar();
 
-	// ToolBar/Menu command handlers
-	//
-	afx_msg void OnFileOpen();
-	afx_msg void OnFileSaveAs();
-	afx_msg void OnViewSource();
-	afx_msg void OnViewInfo();
-	afx_msg void OnNavBack();
-	afx_msg void OnNavForward();
-	afx_msg void OnNavHome();
-	afx_msg void OnNavReload();
-	afx_msg void OnNavStop();
-	afx_msg void OnCut();
-	afx_msg void OnCopy();
-	afx_msg void OnPaste();
+    // ToolBar/Menu command handlers
+    //
+    afx_msg void OnFileOpen();
+    afx_msg void OnFileSaveAs();
+    afx_msg void OnViewSource();
+    afx_msg void OnViewInfo();
+    afx_msg void OnNavBack();
+    afx_msg void OnNavForward();
+    afx_msg void OnNavHome();
+    afx_msg void OnNavReload();
+    afx_msg void OnNavStop();
+    afx_msg void OnCut();
+    afx_msg void OnCopy();
+    afx_msg void OnPaste();
     afx_msg void OnUndoUrlBarEditOp();
-	afx_msg void OnSelectAll();
-	afx_msg void OnSelectNone();
-	afx_msg void OnCopyLinkLocation();
-	afx_msg void OnOpenLinkInNewWindow();
-	afx_msg void OnViewImageInNewWindow();
-	afx_msg void OnSaveLinkAs();
-	afx_msg void OnSaveImageAs();
-	afx_msg void OnShowFindDlg();
-	afx_msg void OnFilePrint();
-	afx_msg void OnFilePrintPreview();
-	afx_msg void OnFilePrintSetup();
-	afx_msg void OnUpdateFilePrint(CCmdUI* pCmdUI);
-	afx_msg void OnUpdatePrintSetup(CCmdUI* pCmdUI);
-	afx_msg LRESULT OnFindMsg(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnViewFrameSource();
-	afx_msg void OnOpenFrameInNewWindow();
+    afx_msg void OnSelectAll();
+    afx_msg void OnSelectNone();
+    afx_msg void OnCopyLinkLocation();
+    afx_msg void OnOpenLinkInNewWindow();
+    afx_msg void OnViewImageInNewWindow();
+    afx_msg void OnSaveLinkAs();
+    afx_msg void OnSaveImageAs();
+    afx_msg void OnShowFindDlg();
+    afx_msg void OnFilePrint();
+    afx_msg void OnFilePrintPreview();
+    afx_msg void OnFilePrintSetup();
+    afx_msg void OnUpdateFilePrint(CCmdUI* pCmdUI);
+    afx_msg void OnUpdatePrintSetup(CCmdUI* pCmdUI);
+    afx_msg LRESULT OnFindMsg(WPARAM wParam, LPARAM lParam);
+    afx_msg void OnViewFrameSource();
+    afx_msg void OnOpenFrameInNewWindow();
 
-	// Handlers to keep the toolbar/menu items up to date
-	//
-	afx_msg void OnUpdateNavBack(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateNavForward(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateNavStop(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateCut(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateCopy(CCmdUI* pCmdUI);
-	afx_msg void OnUpdatePaste(CCmdUI* pCmdUI);
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+    // Handlers to keep the toolbar/menu items up to date
+    //
+    afx_msg void OnUpdateNavBack(CCmdUI* pCmdUI);
+    afx_msg void OnUpdateNavForward(CCmdUI* pCmdUI);
+    afx_msg void OnUpdateNavStop(CCmdUI* pCmdUI);
+    afx_msg void OnUpdateCut(CCmdUI* pCmdUI);
+    afx_msg void OnUpdateCopy(CCmdUI* pCmdUI);
+    afx_msg void OnUpdatePaste(CCmdUI* pCmdUI);
+    //}}AFX_MSG
+    DECLARE_MESSAGE_MAP()
 };
 
 #endif //_BROWSERVIEW_H

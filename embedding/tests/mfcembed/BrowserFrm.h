@@ -41,6 +41,7 @@
 #endif // _MSC_VER > 1000
 
 #include "BrowserView.h"
+#include "BrowserToolTip.h"
 #include "IBrowserFrameGlue.h"
 #include "MostRecentUrls.h"
 
@@ -48,24 +49,24 @@
 class CUrlBar : public CComboBoxEx
 {
 public:
-	inline void GetEnteredURL(CString& url) {
-		GetEditCtrl()->GetWindowText(url);
-	}
-	inline void GetSelectedURL(CString& url) {
-		GetLBText(GetCurSel(), url);
-	}
-	inline void SetCurrentURL(LPCTSTR pUrl) {
-		SetWindowText(pUrl);
-	}
-	inline void AddURLToList(CString& url, bool bAddToMRUList = true) {
-		COMBOBOXEXITEM ci;
-		ci.mask = CBEIF_TEXT; ci.iItem = -1;
-		ci.pszText = (LPTSTR)(LPCTSTR)url;
-		InsertItem(&ci);
+    inline void GetEnteredURL(CString& url) {
+        GetEditCtrl()->GetWindowText(url);
+    }
+    inline void GetSelectedURL(CString& url) {
+        GetLBText(GetCurSel(), url);
+    }
+    inline void SetCurrentURL(LPCTSTR pUrl) {
+        SetWindowText(pUrl);
+    }
+    inline void AddURLToList(CString& url, bool bAddToMRUList = true) {
+        COMBOBOXEXITEM ci;
+        ci.mask = CBEIF_TEXT; ci.iItem = -1;
+        ci.pszText = (LPTSTR)(LPCTSTR)url;
+        InsertItem(&ci);
 
         if(bAddToMRUList)
             m_MRUList.AddURL((LPTSTR)(LPCTSTR)url);
-	}
+    }
     inline void LoadMRUList() {
         for (int i=0;i<m_MRUList.GetNumURLs();i++) 
         {
@@ -116,38 +117,40 @@ protected:
 class CMyStatusBar : public CStatusBar
 {
 public:
-	CMyStatusBar();
-	virtual ~CMyStatusBar();
+    CMyStatusBar();
+    virtual ~CMyStatusBar();
 
 protected:
     afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 
-	DECLARE_MESSAGE_MAP()
+    DECLARE_MESSAGE_MAP()
 };
 
 class CBrowserFrame : public CFrameWnd
-{	
+{    
 public:
-	CBrowserFrame();
-	CBrowserFrame(PRUint32 chromeMask);
+    CBrowserFrame();
+    CBrowserFrame(PRUint32 chromeMask);
 
 protected: 
-	DECLARE_DYNAMIC(CBrowserFrame)
+    DECLARE_DYNAMIC(CBrowserFrame)
 
 public:
-	inline CBrowserImpl *GetBrowserImpl() { return m_wndBrowserView.mpBrowserImpl; }
+    inline CBrowserImpl *GetBrowserImpl() { return m_wndBrowserView.mpBrowserImpl; }
 
-	CToolBar    m_wndToolBar;
-	CMyStatusBar  m_wndStatusBar;
-	CProgressCtrl m_wndProgressBar;
-	CUrlBar m_wndUrlBar;
-	CReBar m_wndReBar;
-	// The view inside which the embedded browser will
-	// be displayed in
-	CBrowserView    m_wndBrowserView;
+    CToolBar    m_wndToolBar;
+    CMyStatusBar  m_wndStatusBar;
+    CProgressCtrl m_wndProgressBar;
+    CUrlBar m_wndUrlBar;
+    CReBar m_wndReBar;
+    CBrowserToolTip m_wndTooltip;
 
-	void UpdateSecurityStatus(PRInt32 aState);
-	void ShowSecurityInfo();
+    // The view inside which the embedded browser will
+    // be displayed in
+    CBrowserView    m_wndBrowserView;
+
+    void UpdateSecurityStatus(PRInt32 aState);
+    void ShowSecurityInfo();
 
     // Wrapper functions for UrlBar clipboard operations
     inline BOOL CanCutUrlBarSelection() { return m_wndUrlBar.CanCutToClipboard(); }
@@ -159,62 +162,62 @@ public:
     inline BOOL CanUndoUrlBarEditOp() { return m_wndUrlBar.CanUndoEditOp(); }
     inline void UndoUrlBarEditOp() { m_wndUrlBar.UndoEditOp(); }
 
-	// This specifies what UI elements this frame will sport
-	// w.r.t. toolbar, statusbar, urlbar etc.
-	PRUint32 m_chromeMask;
+    // This specifies what UI elements this frame will sport
+    // w.r.t. toolbar, statusbar, urlbar etc.
+    PRUint32 m_chromeMask;
 
 protected:
-	//
-	// This nested class implements the IBrowserFramGlue interface
-	// The Gecko embedding interfaces call on this interface
-	// to update the status bars etc.
-	//
-	class BrowserFrameGlueObj : public IBrowserFrameGlue 
-	{
-		//
-		// NS_DECL_BROWSERFRAMEGLUE below is a macro which expands
-		// to the function prototypes of methods in IBrowserFrameGlue
-		// Take a look at IBrowserFrameGlue.h for this macro define
-		//
+    //
+    // This nested class implements the IBrowserFramGlue interface
+    // The Gecko embedding interfaces call on this interface
+    // to update the status bars etc.
+    //
+    class BrowserFrameGlueObj : public IBrowserFrameGlue 
+    {
+        //
+        // NS_DECL_BROWSERFRAMEGLUE below is a macro which expands
+        // to the function prototypes of methods in IBrowserFrameGlue
+        // Take a look at IBrowserFrameGlue.h for this macro define
+        //
 
-		NS_DECL_BROWSERFRAMEGLUE
+        NS_DECL_BROWSERFRAMEGLUE
 
-	} m_xBrowserFrameGlueObj;
-	friend class BrowserFrameGlueObj;
+    } m_xBrowserFrameGlueObj;
+    friend class BrowserFrameGlueObj;
 
 public:
-	void SetupFrameChrome();
+    void SetupFrameChrome();
     void SetEditable(BOOL isEditor) { mIsEditor = isEditor; }
     BOOL GetEditable() { return mIsEditor; }
 
 // Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CBrowserFrame)
-	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
-	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
-	//}}AFX_VIRTUAL
+    // ClassWizard generated virtual function overrides
+    //{{AFX_VIRTUAL(CBrowserFrame)
+    virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+    virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
+    //}}AFX_VIRTUAL
 
 // Implementation
 public:
-	virtual ~CBrowserFrame();
+    virtual ~CBrowserFrame();
 #ifdef _DEBUG
-	virtual void AssertValid() const;
-	virtual void Dump(CDumpContext& dc) const;
+    virtual void AssertValid() const;
+    virtual void Dump(CDumpContext& dc) const;
 #endif
 
 // Generated message map functions
 protected:
-	//{{AFX_MSG(CBrowserFrame)
-	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnSetFocus(CWnd *pOldWnd);
-	afx_msg void OnSize(UINT nType, int cx, int cy);
-	afx_msg void OnClose();
-	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+    //{{AFX_MSG(CBrowserFrame)
+    afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+    afx_msg void OnSetFocus(CWnd *pOldWnd);
+    afx_msg void OnSize(UINT nType, int cx, int cy);
+    afx_msg void OnClose();
+    afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+    //}}AFX_MSG
+    DECLARE_MESSAGE_MAP()
 
 private:
-	BOOL mIsEditor;
+    BOOL mIsEditor;
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -82,22 +82,22 @@ static void ValidateProfileName(const CString& profileName, CDataExchange* pDX)
 
 
 CNewProfileDlg::CNewProfileDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CNewProfileDlg::IDD, pParent)
+    : CDialog(CNewProfileDlg::IDD, pParent)
 {
-	//{{AFX_DATA_INIT(CNewProfileDlg)
-	m_LocaleIndex = -1;
-	m_Name = _T("");
-	//}}AFX_DATA_INIT
+    //{{AFX_DATA_INIT(CNewProfileDlg)
+    m_LocaleIndex = -1;
+    m_Name = _T("");
+    //}}AFX_DATA_INIT
 }
 
 
 void CNewProfileDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CNewProfileDlg)
-	DDX_CBIndex(pDX, IDC_LOCALE_COMBO, m_LocaleIndex);
-	DDX_Text(pDX, IDC_NEW_PROF_NAME, m_Name);
-	//}}AFX_DATA_MAP
+    CDialog::DoDataExchange(pDX);
+    //{{AFX_DATA_MAP(CNewProfileDlg)
+    DDX_CBIndex(pDX, IDC_LOCALE_COMBO, m_LocaleIndex);
+    DDX_Text(pDX, IDC_NEW_PROF_NAME, m_Name);
+    //}}AFX_DATA_MAP
 
     pDX->PrepareEditCtrl(IDC_NEW_PROF_NAME);
     if (pDX->m_bSaveAndValidate)
@@ -108,9 +108,9 @@ void CNewProfileDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CNewProfileDlg, CDialog)
-	//{{AFX_MSG_MAP(CNewProfileDlg)
-		// NOTE: the ClassWizard will add message map macros here
-	//}}AFX_MSG_MAP
+    //{{AFX_MSG_MAP(CNewProfileDlg)
+        // NOTE: the ClassWizard will add message map macros here
+    //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -122,20 +122,20 @@ END_MESSAGE_MAP()
 
 
 CRenameProfileDlg::CRenameProfileDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CRenameProfileDlg::IDD, pParent)
+    : CDialog(CRenameProfileDlg::IDD, pParent)
 {
-	//{{AFX_DATA_INIT(CRenameProfileDlg)
-	m_NewName = _T("");
-	//}}AFX_DATA_INIT
+    //{{AFX_DATA_INIT(CRenameProfileDlg)
+    m_NewName = _T("");
+    //}}AFX_DATA_INIT
 }
 
 
 void CRenameProfileDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CRenameProfileDlg)
-	DDX_Text(pDX, IDC_NEW_NAME, m_NewName);
-	//}}AFX_DATA_MAP
+    CDialog::DoDataExchange(pDX);
+    //{{AFX_DATA_MAP(CRenameProfileDlg)
+    DDX_Text(pDX, IDC_NEW_NAME, m_NewName);
+    //}}AFX_DATA_MAP
 
     pDX->PrepareEditCtrl(IDC_NEW_NAME);
     if (pDX->m_bSaveAndValidate)
@@ -146,9 +146,9 @@ void CRenameProfileDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CRenameProfileDlg, CDialog)
-	//{{AFX_MSG_MAP(CRenameProfileDlg)
-		// NOTE: the ClassWizard will add message map macros here
-	//}}AFX_MSG_MAP
+    //{{AFX_MSG_MAP(CRenameProfileDlg)
+        // NOTE: the ClassWizard will add message map macros here
+    //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -160,22 +160,22 @@ END_MESSAGE_MAP()
 
 
 CProfilesDlg::CProfilesDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CProfilesDlg::IDD, pParent)
+    : CDialog(CProfilesDlg::IDD, pParent)
 {
-	//{{AFX_DATA_INIT(CProfilesDlg)
+    //{{AFX_DATA_INIT(CProfilesDlg)
     m_bAtStartUp = FALSE;
-	m_bAskAtStartUp = FALSE;
-	//}}AFX_DATA_INIT
+    m_bAskAtStartUp = FALSE;
+    //}}AFX_DATA_INIT
 }
 
 
 void CProfilesDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CProfilesDlg)
-	DDX_Control(pDX, IDC_LIST1, m_ProfileList);
-	DDX_Check(pDX, IDC_CHECK_ASK_AT_START, m_bAskAtStartUp);
-	//}}AFX_DATA_MAP
+    CDialog::DoDataExchange(pDX);
+    //{{AFX_DATA_MAP(CProfilesDlg)
+    DDX_Control(pDX, IDC_LIST1, m_ProfileList);
+    DDX_Check(pDX, IDC_CHECK_ASK_AT_START, m_bAskAtStartUp);
+    //}}AFX_DATA_MAP
 
     if (pDX->m_bSaveAndValidate)
     {
@@ -193,12 +193,12 @@ void CProfilesDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CProfilesDlg, CDialog)
-	//{{AFX_MSG_MAP(CProfilesDlg)
-	ON_BN_CLICKED(IDC_PROF_NEW, OnNewProfile)
-	ON_BN_CLICKED(IDC_PROF_RENAME, OnRenameProfile)
-	ON_BN_CLICKED(IDC_PROF_DELETE, OnDeleteProfile)
-	ON_LBN_DBLCLK(IDC_LIST1, OnDblclkProfile)
-	//}}AFX_MSG_MAP
+    //{{AFX_MSG_MAP(CProfilesDlg)
+    ON_BN_CLICKED(IDC_PROF_NEW, OnNewProfile)
+    ON_BN_CLICKED(IDC_PROF_RENAME, OnRenameProfile)
+    ON_BN_CLICKED(IDC_PROF_DELETE, OnDeleteProfile)
+    ON_LBN_DBLCLK(IDC_LIST1, OnDblclkProfile)
+    //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -208,8 +208,8 @@ BOOL CProfilesDlg::OnInitDialog()
 {
     USES_CONVERSION;
 
-	CDialog::OnInitDialog();
-	
+    CDialog::OnInitDialog();
+    
     nsCAutoString   cStr;        
     nsXPIDLString   curProfileName;
 
@@ -238,14 +238,14 @@ BOOL CProfilesDlg::OnInitDialog()
     {
         GetDlgItem(IDCANCEL)->EnableWindow(FALSE);
     }
-	
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
+    
+    return TRUE;  // return TRUE unless you set the focus to a control
+                  // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 void CProfilesDlg::OnNewProfile() 
 {
-	CNewProfileDlg dialog;
+    CNewProfileDlg dialog;
 
     if (dialog.DoModal() == IDOK)
     {
@@ -258,7 +258,7 @@ void CProfilesDlg::OnNewProfile()
         {
             USES_CONVERSION;
 
-   		    rv = profileService->CreateNewProfile(T2W(dialog.m_Name), nsnull, nsnull, PR_FALSE);
+               rv = profileService->CreateNewProfile(T2W(dialog.m_Name), nsnull, nsnull, PR_FALSE);
             ASSERT(NS_SUCCEEDED(rv));
             if (NS_SUCCEEDED(rv))
             {
@@ -272,7 +272,7 @@ void CProfilesDlg::OnNewProfile()
 
 void CProfilesDlg::OnRenameProfile() 
 {
-	CRenameProfileDlg dialog;
+    CRenameProfileDlg dialog;
 
     int itemIndex = m_ProfileList.GetCurSel();
     ASSERT(itemIndex != LB_ERR);
@@ -295,7 +295,7 @@ void CProfilesDlg::OnRenameProfile()
             rv = profileService->RenameProfile(T2W(dialog.m_CurrentName), T2W(dialog.m_NewName));
             ASSERT(NS_SUCCEEDED(rv));
         }
-    }	
+    }    
 }
 
 void CProfilesDlg::OnDeleteProfile() 
@@ -324,7 +324,7 @@ void CProfilesDlg::OnDeleteProfile()
             if (itemCount == 0)
                 GetDlgItem(IDOK)->EnableWindow(FALSE);
         }
-    }	
+    }    
 }
 
 void CProfilesDlg::OnDblclkProfile() 

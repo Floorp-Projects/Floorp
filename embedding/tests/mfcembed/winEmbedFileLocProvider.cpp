@@ -84,12 +84,12 @@ NS_IMPL_ISUPPORTS1(winEmbedFileLocProvider, nsIDirectoryServiceProvider)
 NS_IMETHODIMP
 winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
 {    
-	nsCOMPtr<nsILocalFile>  localFile;
-	nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsILocalFile>  localFile;
+    nsresult rv = NS_ERROR_FAILURE;
 
-	*_retval = nsnull;
-	*persistant = PR_TRUE;
-	
+    *_retval = nsnull;
+    *persistant = PR_TRUE;
+    
     if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {
         rv = GetProductDirectory(getter_AddRefs(localFile));
@@ -173,10 +173,10 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
             rv = localFile->AppendRelativeNativePath(COMPONENTS_DIR_NAME);
     }    
 
-	if (localFile && NS_SUCCEEDED(rv))
-		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
-		
-	return rv;
+    if (localFile && NS_SUCCEEDED(rv))
+        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
+        
+    return rv;
 }
 
 // Get the location of the GRE version we're compatible with from 
@@ -245,7 +245,7 @@ NS_METHOD winEmbedFileLocProvider::GetGreDirectory(nsILocalFile **aLocalFile)
     if(pGreDir)
     {
         nsCOMPtr<nsILocalFile> tempLocal;
-	    rv = NS_NewNativeLocalFile(nsDependentCString(pGreDir), TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewNativeLocalFile(nsDependentCString(pGreDir), TRUE, getter_AddRefs(tempLocal));
 
         if (tempLocal)
         {

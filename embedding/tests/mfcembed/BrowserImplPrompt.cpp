@@ -52,25 +52,25 @@
 NS_IMETHODIMP
 CBrowserImpl::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
 {
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-	
-	m_pBrowserFrameGlue->Alert(dialogTitle, text);
+    if(! m_pBrowserFrameGlue)
+        return NS_ERROR_FAILURE;
+    
+    m_pBrowserFrameGlue->Alert(dialogTitle, text);
 
-	return NS_OK;
+    return NS_OK;
 }
 
 // Invoked in the case of a JS confirm() method invocation
 NS_IMETHODIMP
 CBrowserImpl::Confirm(const PRUnichar *dialogTitle, 
-			   const PRUnichar *text, PRBool *retval)
+               const PRUnichar *text, PRBool *retval)
 {
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
+    if(! m_pBrowserFrameGlue)
+        return NS_ERROR_FAILURE;
 
-	m_pBrowserFrameGlue->Confirm(dialogTitle, text, retval);
+    m_pBrowserFrameGlue->Confirm(dialogTitle, text, retval);
 
-	return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -79,12 +79,12 @@ CBrowserImpl::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text,
                      const PRUnichar *checkMsg, PRBool *checkValue,
                      PRBool *_retval)
 {
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
+    if(! m_pBrowserFrameGlue)
+        return NS_ERROR_FAILURE;
 
-	m_pBrowserFrameGlue->Prompt(dialogTitle, text, promptText, checkMsg, checkValue, _retval);
+    m_pBrowserFrameGlue->Prompt(dialogTitle, text, promptText, checkMsg, checkValue, _retval);
 
-	return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -93,11 +93,11 @@ CBrowserImpl::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text
                              const PRUnichar *checkMsg, PRBool *checkValue,
                              PRBool *_retval)
 {
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
+    if(! m_pBrowserFrameGlue)
+        return NS_ERROR_FAILURE;
 
-	m_pBrowserFrameGlue->PromptPassword(dialogTitle, text, password,
-	                                    checkMsg, checkValue, _retval);
+    m_pBrowserFrameGlue->PromptPassword(dialogTitle, text, password,
+                                        checkMsg, checkValue, _retval);
 
     return NS_OK;
 }
@@ -108,33 +108,33 @@ CBrowserImpl::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUn
                                         const PRUnichar *checkMsg, PRBool *checkValue,
                                         PRBool *_retval)
 {
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
+    if(! m_pBrowserFrameGlue)
+        return NS_ERROR_FAILURE;
 
-	m_pBrowserFrameGlue->PromptUserNamePassword(dialogTitle, text, 
-							                    username, password,
-							                    checkMsg, checkValue, 
-							                    _retval);
+    m_pBrowserFrameGlue->PromptUserNamePassword(dialogTitle, text, 
+                                                username, password,
+                                                checkMsg, checkValue, 
+                                                _retval);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
 CBrowserImpl::AlertCheck(const PRUnichar *dialogTitle, 
-			      const PRUnichar *text, 
-			      const PRUnichar *checkMsg,
-			      PRBool *checkValue)
+                  const PRUnichar *text, 
+                  const PRUnichar *checkMsg,
+                  PRBool *checkValue)
 {
-	    return NS_ERROR_NOT_IMPLEMENTED;
+        return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 CBrowserImpl::ConfirmCheck(const PRUnichar *dialogTitle,
-				const PRUnichar *text,
-				const PRUnichar *checkMsg, 
-				PRBool *checkValue, PRBool *retval)
+                const PRUnichar *text,
+                const PRUnichar *checkMsg, 
+                PRBool *checkValue, PRBool *retval)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -149,9 +149,9 @@ CBrowserImpl::ConfirmEx(const PRUnichar *dialogTitle, const PRUnichar *text,
 
 NS_IMETHODIMP
 CBrowserImpl::Select(const PRUnichar *dialogTitle,
-			  const PRUnichar *text, PRUint32 count,
-			  const PRUnichar **selectList,
-			  PRInt32 *outSelection, PRBool *retval)
+              const PRUnichar *text, PRUint32 count,
+              const PRUnichar **selectList,
+              PRInt32 *outSelection, PRBool *retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

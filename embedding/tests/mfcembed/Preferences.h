@@ -44,35 +44,35 @@
 
 class CStartupPrefsPage : public CPropertyPage
 {
-	DECLARE_DYNCREATE(CStartupPrefsPage)
+    DECLARE_DYNCREATE(CStartupPrefsPage)
 
 // Construction
 public:
-	CStartupPrefsPage();
-	~CStartupPrefsPage();
+    CStartupPrefsPage();
+    ~CStartupPrefsPage();
 
 // Dialog Data
-	//{{AFX_DATA(CStartupPrefsPage)
-	enum { IDD = IDD_PREFS_START_PAGE };
-	CEdit	m_HomePage;
-	CString	m_strHomePage;
-	int		m_iStartupPage;
-	//}}AFX_DATA
+    //{{AFX_DATA(CStartupPrefsPage)
+    enum { IDD = IDD_PREFS_START_PAGE };
+    CEdit    m_HomePage;
+    CString    m_strHomePage;
+    int        m_iStartupPage;
+    //}}AFX_DATA
 
 
 // Overrides
-	// ClassWizard generate virtual function overrides
-	//{{AFX_VIRTUAL(CStartupPrefsPage)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
+    // ClassWizard generate virtual function overrides
+    //{{AFX_VIRTUAL(CStartupPrefsPage)
+    protected:
+    virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+    //}}AFX_VIRTUAL
 
 // Implementation
 protected:
-	// Generated message map functions
-	//{{AFX_MSG(CStartupPrefsPage)
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+    // Generated message map functions
+    //{{AFX_MSG(CStartupPrefsPage)
+    //}}AFX_MSG
+    DECLARE_MESSAGE_MAP()
 
 };
 
@@ -81,11 +81,11 @@ protected:
 
 class CPreferences : public CPropertySheet
 {
-	DECLARE_DYNAMIC(CPreferences)
+    DECLARE_DYNAMIC(CPreferences)
 
 // Construction
 public:
-	CPreferences(LPCTSTR pszCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
+    CPreferences(LPCTSTR pszCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
 
 // Attributes
 public:
@@ -95,22 +95,22 @@ public:
 public:
 
 // Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CPreferences)
-	public:
-	virtual BOOL OnInitDialog();
-	//}}AFX_VIRTUAL
+    // ClassWizard generated virtual function overrides
+    //{{AFX_VIRTUAL(CPreferences)
+    public:
+    virtual BOOL OnInitDialog();
+    //}}AFX_VIRTUAL
 
 // Implementation
 public:
-	virtual ~CPreferences();
+    virtual ~CPreferences();
 
-	// Generated message map functions
+    // Generated message map functions
 protected:
-	//{{AFX_MSG(CPreferences)
-		// NOTE - the ClassWizard will add and remove member functions here.
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+    //{{AFX_MSG(CPreferences)
+        // NOTE - the ClassWizard will add and remove member functions here.
+    //}}AFX_MSG
+    DECLARE_MESSAGE_MAP()
 };
 
 //{{AFX_INSERT_LOCATION}}
