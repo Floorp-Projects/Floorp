@@ -34,7 +34,7 @@
 /*
  * Encryption/decryption routines for CMS implementation, none of which are exported.
  *
- * $Id: cmscipher.c,v 1.5 2003/11/18 06:16:25 nelsonb%netscape.com Exp $
+ * $Id: cmscipher.c,v 1.6 2003/11/20 02:04:07 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -507,7 +507,6 @@ NSS_CMSCipherContext_Decrypt(NSSCMSCipherContext *cc, unsigned char *output,
 	 * If we do not, there is something wrong, either with our own
 	 * logic or with (length of) the data given to us.
 	 */
-	PORT_Assert ((padsize == 0) || (pcount % padsize) == 0);
 	if ((padsize != 0) && (pcount % padsize) != 0) {
 	    PORT_Assert (final);	
 	    PORT_SetError (SEC_ERROR_BAD_DATA);
