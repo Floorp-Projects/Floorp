@@ -1455,6 +1455,13 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, nsISelectionDisplay::DISPLAY_IMAGES);
 }
 
+NS_IMETHODIMP
+nsImageFrame::GetImageMap(nsIPresContext *aPresContext, nsIImageMap **aImageMap)
+{
+  nsImageMap *map = GetImageMap(aPresContext);
+  return map->QueryInterface(NS_GET_IID(nsIImageMap), (void**)aImageMap);
+}
+
 nsImageMap*
 nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
 {

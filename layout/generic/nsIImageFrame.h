@@ -40,6 +40,8 @@
 #include "nsISupports.h"
 struct nsSize;
 class imgIRequest;
+class nsIPresContext;
+class nsIImageMap;
 
 // {B261A0D5-E696-11d4-9885-00C04FA0CF4B}
 #define NS_IIMAGEFRAME_IID \
@@ -57,6 +59,8 @@ public:
   NS_IMETHOD GetImageRequest(imgIRequest **aRequest) = 0;
 
   NS_IMETHOD IsImageComplete(PRBool* aComplete) = 0;
+
+  NS_IMETHOD GetImageMap(nsIPresContext *aPresContext, nsIImageMap **aImageMap) = 0;
 };
 
 #endif /* nsIImageFrame_h___ */

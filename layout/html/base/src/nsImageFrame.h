@@ -140,6 +140,8 @@ public:
   NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 #endif
 
+  NS_IMETHOD GetImageMap(nsIPresContext *aPresContext, nsIImageMap **aImageMap);
+
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
 
   NS_IMETHOD GetNaturalImageSize(PRUint32* naturalWidth, 
