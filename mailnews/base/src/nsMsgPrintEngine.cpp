@@ -399,7 +399,7 @@ nsMsgPrintEngine::ShowProgressDialog(PRBool aIsForPrinting, PRBool& aDoNotify)
     }
     if (mPrintPromptService) 
     {
-      nsCOMPtr<nsIDOMWindow> domWin = mParentWindow;
+      nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(mParentWindow));
       if (!domWin) 
       {
         domWin = mWindow;
@@ -659,11 +659,11 @@ nsMsgPrintEngine::PrintMsgWindow()
       {
         mWebBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(mPrintSettings));
       }
-      nsresult rv;
+      nsresult rv = NS_ERROR_FAILURE;
       if (mIsDoingPrintPreview) 
       {
         if (mStartupPPObs) {
-          mStartupPPObs->Observe(nsnull, nsnull, nsnull);
+          rv = mStartupPPObs->Observe(nsnull, nsnull, nsnull);
         }
       } 
       else 
