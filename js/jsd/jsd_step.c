@@ -136,7 +136,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
     }
     else
     {
-        hookresult = JS_FALSE;
+        hookresult = JS_TRUE;
     }
     
 #ifdef JSD_TRACE

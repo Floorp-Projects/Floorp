@@ -32,12 +32,17 @@ MODULE		= jsdebug
 LIBRARY_NAME	= jsd
 
 # REQUIRES	= java js
-REQUIRES	= xpcom \
+REQUIRES	= js
+
+ifndef JSD_STANDALONE
+REQUIRES += \
 		  string \
-		  js \
+          xpcom \
 		  xpconnect \
 		  widget \
+          dom \
 		  $(NULL)
+endif
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \

@@ -56,6 +56,15 @@ jsd_InterruptHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rva
     if( JSD_IS_DANGEROUS_THREAD(jsdc) )
         return JSTRAP_CONTINUE;
 
+    /* local in case jsdc->interruptHook gets cleared on another thread */
+    JSD_LOCK();
+    hook     = jsdc->interruptHook;
+    hookData = jsdc->interruptHookData;
+    JSD_UNLOCK();
+
+    if (!hook)
+        return JSTRAP_CONTINUE;
+    
     JSD_LOCK_SCRIPTS(jsdc);
     jsdscript = jsd_FindJSDScript(jsdc, script);
     JSD_UNLOCK_SCRIPTS(jsdc);
@@ -66,12 +75,6 @@ jsd_InterruptHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rva
     if( ! jsdlw_UserCodeAtPC(jsdc, jsdscript, (jsuword)pc) )
         return JSTRAP_CONTINUE;
 #endif
-
-    /* local in case jsdc->interruptHook gets cleared on another thread */
-    JSD_LOCK();
-    hook     = jsdc->interruptHook;
-    hookData = jsdc->interruptHookData;
-    JSD_UNLOCK();
 
     return jsd_CallExecutionHook(jsdc, cx, JSD_HOOK_INTERRUPTED,
                                  hook, hookData, rval);
@@ -92,17 +95,19 @@ jsd_DebuggerHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
     if( JSD_IS_DANGEROUS_THREAD(jsdc) )
         return JSTRAP_CONTINUE;
 
-    JSD_LOCK_SCRIPTS(jsdc);
-    jsdscript = jsd_FindJSDScript(jsdc, script);
-    JSD_UNLOCK_SCRIPTS(jsdc);
-    if( ! jsdscript )
-        return JSTRAP_CONTINUE;
-
     /* local in case jsdc->debuggerHook gets cleared on another thread */
     JSD_LOCK();
     hook     = jsdc->debuggerHook;
     hookData = jsdc->debuggerHookData;
     JSD_UNLOCK();
+    if(!hook)
+        return JSTRAP_CONTINUE;
+
+    JSD_LOCK_SCRIPTS(jsdc);
+    jsdscript = jsd_FindJSDScript(jsdc, script);
+    JSD_UNLOCK_SCRIPTS(jsdc);
+    if( ! jsdscript )
+        return JSTRAP_CONTINUE;
 
     return jsd_CallExecutionHook(jsdc, cx, JSD_HOOK_DEBUGGER_KEYWORD,
                                  hook, hookData, rval);
@@ -118,12 +123,18 @@ jsd_ThrowHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
     JSD_ExecutionHookProc hook;
     void*                 hookData;
 
-    JS_GetPendingException(cx, rval);
-
     if( ! jsdc || ! jsdc->inited )
         return JSD_HOOK_RETURN_CONTINUE_THROW;
 
     if( JSD_IS_DANGEROUS_THREAD(jsdc) )
+        return JSD_HOOK_RETURN_CONTINUE_THROW;
+
+    /* local in case jsdc->throwHook gets cleared on another thread */
+    JSD_LOCK();
+    hook     = jsdc->throwHook;
+    hookData = jsdc->throwHookData;
+    JSD_UNLOCK();
+    if (!hook)
         return JSD_HOOK_RETURN_CONTINUE_THROW;
 
     JSD_LOCK_SCRIPTS(jsdc);
@@ -132,11 +143,7 @@ jsd_ThrowHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
     if( ! jsdscript )
         return JSD_HOOK_RETURN_CONTINUE_THROW;
 
-    /* local in case jsdc->throwHook gets cleared on another thread */
-    JSD_LOCK();
-    hook     = jsdc->throwHook;
-    hookData = jsdc->throwHookData;
-    JSD_UNLOCK();
+    JS_GetPendingException(cx, rval);
 
     return jsd_CallExecutionHook(jsdc, cx, JSD_HOOK_THROW,
                                  hook, hookData, rval);

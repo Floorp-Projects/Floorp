@@ -25,13 +25,15 @@
 #//------------------------------------------------------------------------
 DEPTH=..\..
 
-REQUIRES	= xpcom \
+REQUIRES = js \
+!if !defined(JSD_STANDALONE)
+		   xpcom \
 		  string \
-		  js \
 		  xpconnect \
 		  widget \
 		  appshell \
-		  pref \
+		   dom \
+!endif
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

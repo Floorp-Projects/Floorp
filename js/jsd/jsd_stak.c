@@ -95,7 +95,6 @@ _destroyFrame(JSDStackFrameInfo* jsdframe)
         free(jsdframe);
 }
 
-
 JSDThreadState*
 jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
 {
@@ -188,6 +187,19 @@ jsd_GetStackFrame(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
     return jsdframe;
 }
 
+JSContext *
+jsd_GetJSContext (JSDContext* jsdc, JSDThreadState* jsdthreadstate)
+{
+    JSContext* cx = NULL;
+
+    JSD_LOCK_THREADSTATES(jsdc);
+    if( jsd_IsValidThreadState(jsdc, jsdthreadstate) )
+        cx = jsdthreadstate->context;
+    JSD_UNLOCK_THREADSTATES(jsdc);
+
+    return cx;
+}
+    
 JSDStackFrameInfo*
 jsd_GetCallingStackFrame(JSDContext* jsdc, 
                          JSDThreadState* jsdthreadstate,
