@@ -449,12 +449,10 @@ nsHttpChannel::ProcessNotModified()
     rv = mCachedResponseHead->UpdateHeaders(mResponseHead->Headers());
     if (NS_FAILED(rv)) return rv;
 
-    // update the cached response headers
-    nsCAutoString headers;
-    rv = mCachedResponseHead->Flatten(headers, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mCacheEntry->SetMetaDataElement("http-headers", headers.get());
+    // update the cached response head
+    nsCAutoString head;
+    mCachedResponseHead->Flatten(head, PR_TRUE);
+    rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
     if (NS_FAILED(rv)) return rv;
 
     // make the cached response be the current response
@@ -632,13 +630,24 @@ nsHttpChannel::CheckCache()
     if (!mCacheEntry || !(mCacheAccess & nsICache::ACCESS_READ))
         return NS_OK;
 
-    // Get the cached HTTP response headers
     nsXPIDLCString buf;
-    rv = mCacheEntry->GetMetaDataElement("http-headers", getter_Copies(buf));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("cache entry does not contain http headers!");
-        return rv;
+
+    // Get the method that was used to generate the cached response
+    rv = mCacheEntry->GetMetaDataElement("request-method", getter_Copies(buf));
+    if (NS_FAILED(rv)) return rv;
+
+    nsHttpAtom method = nsHttp::ResolveAtom(buf);
+    if (method == nsHttp::Head) {
+        // The cached response does not contain an entity.  We can only reuse
+        // the response if the current request is also HEAD.
+        if (mRequestHead.Method() != nsHttp::Head)
+            return NS_OK;
     }
+    buf = 0;
+
+    // Get the cached HTTP response headers
+    rv = mCacheEntry->GetMetaDataElement("response-head", getter_Copies(buf));
+    if (NS_FAILED(rv)) return rv;
 
     // Parse the cached HTTP response headers
     NS_ASSERTION(!mCachedResponseHead, "memory leak detected");
@@ -647,8 +656,6 @@ nsHttpChannel::CheckCache()
         return NS_ERROR_OUT_OF_MEMORY;
     rv = mCachedResponseHead->Parse((char *) buf.get());
     if (NS_FAILED(rv)) return rv;
-
-    // we're done with the header buf
     buf = 0;
 
     // If we were only granted read access, then assume the entry is valid.
@@ -920,14 +927,16 @@ nsHttpChannel::CacheReceivedResponse()
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
 
-    // Store the received HTTP headers with the cache entry as an element of
-    // the meta data.
-
-    nsCAutoString headers;
-    rv = mResponseHead->Flatten(headers, PR_TRUE);
+    // Store the HTTP request method with the cache entry so we can distinguish
+    // for example GET and HEAD responses.
+    rv = mCacheEntry->SetMetaDataElement("request-method", mRequestHead.Method().get());
     if (NS_FAILED(rv)) return rv;
 
-    rv = mCacheEntry->SetMetaDataElement("http-headers", headers.get());
+    // Store the received HTTP head with the cache entry as an element of
+    // the meta data.
+    nsCAutoString head;
+    mResponseHead->Flatten(head, PR_TRUE);
+    rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
     if (NS_FAILED(rv)) return rv;
 
     // Open an output stream to the cache entry and insert a listener tee into

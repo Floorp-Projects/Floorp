@@ -43,7 +43,7 @@ public:
 
     nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor);
 
-    nsresult Flatten(nsACString &);
+    void     Flatten(nsACString &);
 
     PRUint32 Count() { return (PRUint32) mHeaders.Count(); }
 

@@ -102,7 +102,7 @@ nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor)
     return NS_OK;
 }
 
-nsresult
+void
 nsHttpHeaderArray::Flatten(nsACString &buf)
 {
     PRInt32 i, count = mHeaders.Count();
@@ -113,7 +113,6 @@ nsHttpHeaderArray::Flatten(nsACString &buf)
         buf.Append(entry->value);
         buf.Append("\r\n");
     }
-    return NS_OK;
 }
 
 const char *
