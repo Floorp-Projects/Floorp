@@ -42,6 +42,7 @@
 #include <ControlDefinitions.h>
 #endif
 
+#include "nsReadableUtils.h"
 #include "nsWidgetAtoms.h"
 #include "nsWatchTask.h"
 #include "nsINameSpaceManager.h"
@@ -69,23 +70,24 @@ nsNativeScrollbar::~nsNativeScrollbar()
 }
 
 
+//
+// CreateCocoaView
+//
+// Create a NativeScrollbarView for insertion into the cocoa view hierarchy.
+// Cocoa sets the orientation of a scrollbar at creation time by looking
+// at its frame and taking the longer side to be the orientation. Since
+// chances are good at this point gecko just wants us to be 1x1, assume
+// we're going to be vertical. If later when we get a content node assigned
+// we find we're horizontal, we can update then.
+//
 NSView*
 nsNativeScrollbar::CreateCocoaView ( )
 {
-  // Cocoa sets the orientation of a scrollbar at creation time by looking
-  // at its frame and taking the longer side to be the orientation. Since
-  // chances are good at this point gecko just wants us to be 1x1, use
-  // the flag at creation to force the desired orientation.
   NSRect orientation;
   orientation.origin.x = orientation.origin.y = 0;
-  if ( 1 ) {
-    orientation.size.width = 20;
-    orientation.size.height = 100;
-  }
-  else {
-    orientation.size.width = 100;
-    orientation.size.height = 20;
-  }
+  orientation.size.width = 20;
+  orientation.size.height = 100;
+
   return [[[NativeScrollbarView alloc] initWithFrame:orientation geckoChild:this] autorelease];
 }
 
@@ -222,12 +224,13 @@ nsNativeScrollbar::UpdateContentPosition(PRUint32 inNewPos)
 }
 
 
-/**-------------------------------------------------------------------------------
- * DispatchMouseEvent handle an event for this scrollbar
- * @update  dc 08/31/98
- * @Param aEvent -- The mouse event to respond to for this button
- * @return -- True if the event was handled, PR_FALSE if we did not handle it.
- */ 
+
+//
+// DispatchMouseEvent
+//
+// We don't need to do much here, cocoa will handle tracking the mouse for us. Returning
+// true means that the event is handled.
+//
 PRBool
 nsNativeScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
@@ -279,9 +282,19 @@ nsNativeScrollbar::SetPosition(PRUint32 aPos)
   if ((PRInt32)aPos < 0)
     aPos = 0;
 
-  mValue = ((PRInt32)aPos) > mMaxValue ? mMaxValue : ((int)aPos);
-  [mView setFloatValue:(aPos / (float)mMaxValue)];
-
+  // while we _should_ be ensuring that we don't set our value higher
+  // than our max value, the gfx scrollview code plays fast and loose
+  // with the rules while going back/forward and adjusts the value to the
+  // previous value long before it sets the max. As a result, we would
+  // lose the given value (since max would most likely be 0). The only
+  // way around that is to relax our restrictions a little bit. (bug 135191)
+  //   mValue = ((PRInt32)aPos) > mMaxValue ? mMaxValue : ((int)aPos);
+  mValue = aPos;
+  if ( mMaxValue )
+    [mView setFloatValue:(aPos / (float)mMaxValue)];
+  else
+    [mView setFloatValue:0.0];
+    
   return NS_OK;
 }
 
@@ -313,7 +326,6 @@ nsNativeScrollbar::SetViewSize(PRUint32 aSize)
   
   PRInt32 fullVisibleArea = mVisibleImageSize + mMaxValue;
   [mView setFloatValue:[mView floatValue] knobProportion:(mVisibleImageSize / (float)fullVisibleArea)];
-  
   return NS_OK;
 }
 
@@ -388,7 +400,53 @@ nsNativeScrollbar::SetContent(nsIContent* inContent, nsIScrollbarMediator* inMed
 {
   mContent = inContent;
   mMediator = inMediator;
+  
+  if ( mContent ) {
+    // we may have to re-create the scrollbar view as horizontal. Check the
+    // 'orient' attribute and rebuild the view with all the settings
+    // present in the current view
+    nsAutoString orient;
+    mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::orient, orient);
+    if ( orient.Equals(NS_LITERAL_STRING("horizontal")) )
+      RecreateHorizontalScrollbar();
+  }
+  
   return NS_OK;
+}
+
+
+//
+// RecreateHorizontalScrollbar
+//
+// Replace the vertical scroller we created earlier with a horizontal scroller
+// of the same dimensions and values
+//
+void
+nsNativeScrollbar::RecreateHorizontalScrollbar()
+{
+  // set framerect so that cocoa thinks it's a horizontal scroller
+  NSRect orientation;
+  orientation.origin.x = orientation.origin.y = 0;
+  orientation.size.width = 100;
+  orientation.size.height = 16;
+  
+  // save off the old values and get rid of the previous view. Hiding
+  // it removes it from the parent hierarchy.
+  NSRect oldBounds = [mView bounds];
+  float oldValue = [mView floatValue];
+  float oldProportion = [mView knobProportion];
+  mVisible = PR_TRUE;														// ensure that hide does the work
+  Show(PR_FALSE);
+  [mView release];
+  
+  // create the new horizontal scroller, init it, hook it up to the
+  // view hierarchy and reset the values.
+  mView = [[[NativeScrollbarView alloc] initWithFrame:orientation geckoChild:this] retain];
+  [mView setNativeWindow: [mParentView getNativeWindow]];
+  [mView setFrame:oldBounds];
+  [mView setFloatValue:oldValue knobProportion:oldProportion];
+  Show(PR_TRUE);
+  Enable(PR_TRUE);
 }
 
 
