@@ -131,6 +131,9 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     nsCAutoString leafName = folder;
     PRInt32 dirEnd = parentName.FindChar('/');
     
+    // FIXME : This would break with multibyte encodings such as 
+    // Shift_JIS, Big5 because '0x5c' in the second byte of a multibyte
+    // character would be mistaken for '/'. 
     while(dirEnd > 0)
     {
       parentName.Right(leafName, parentName.Length() - dirEnd -1);

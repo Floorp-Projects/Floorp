@@ -66,6 +66,7 @@
 #include "nsCategoryManagerUtils.h"
 #include "nsISpamSettings.h"
 #include "nsISignatureVerifier.h"
+#include "nsNativeCharsetUtils.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -329,55 +330,50 @@ nsresult NS_MsgHashIfNecessary(nsAutoString &name)
 }
 
 
-nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& pathString)
+nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& pathCString)
 {
-	// A file name has to be in native charset, convert from UTF-8.
-	nsCAutoString oldPath;
-  if (nsCRT::IsAscii(folderURI))
-    oldPath.Assign(folderURI);
-  else {
-    nsresult rv = nsMsgI18NCopyUTF16ToNative(NS_ConvertUTF8toUTF16(folderURI),
-                                             oldPath);
-    if (NS_FAILED(rv))
-      oldPath.Assign(folderURI);
+  // A file name has to be in native charset. Here we convert 
+  // to UTF-16 and check for 'unsafe' characters before converting 
+  // to native charset.
+  NS_ENSURE_TRUE(IsUTF8(nsDependentCString(folderURI)), NS_ERROR_UNEXPECTED); 
+  NS_ConvertUTF8toUTF16 oldPath(folderURI);
+
+  nsAutoString pathPiece, path;
+
+  PRInt32 startSlashPos = oldPath.FindChar('/');
+  PRInt32 endSlashPos = (startSlashPos >= 0) 
+    ? oldPath.FindChar('/', startSlashPos + 1) - 1 : oldPath.Length() - 1;
+  if (endSlashPos < 0)
+    endSlashPos = oldPath.Length();
+  // trick to make sure we only add the path to the first n-1 folders
+  PRBool haveFirst=PR_FALSE;
+  while (startSlashPos != -1) {
+    oldPath.Mid(pathPiece, startSlashPos + 1, endSlashPos - startSlashPos);
+    // skip leading '/' (and other // style things)
+    if (!pathPiece.IsEmpty()) {
+
+      // add .sbd onto the previous path
+      if (haveFirst) {
+        path.AppendLiteral(".sbd/");
+      }
+        
+      NS_MsgHashIfNecessary(pathPiece);
+      path += pathPiece;
+      haveFirst=PR_TRUE;
+    }
+    // look for the next slash
+    startSlashPos = endSlashPos + 1;
+
+    endSlashPos = (startSlashPos >= 0) 
+      ? oldPath.FindChar('/', startSlashPos + 1)  - 1: oldPath.Length() - 1;
+    if (endSlashPos < 0)
+      endSlashPos = oldPath.Length();
+
+    if (startSlashPos >= endSlashPos)
+      break;
   }
 
-	nsCAutoString pathPiece;
-
-	PRInt32 startSlashPos = oldPath.FindChar('/');
-	PRInt32 endSlashPos = (startSlashPos >= 0) 
-		? oldPath.FindChar('/', startSlashPos + 1) - 1 : oldPath.Length() - 1;
-	if (endSlashPos < 0)
-		endSlashPos = oldPath.Length();
-    // trick to make sure we only add the path to the first n-1 folders
-    PRBool haveFirst=PR_FALSE;
-    while (startSlashPos != -1) {
-	  oldPath.Mid(pathPiece, startSlashPos + 1, endSlashPos - startSlashPos);
-      // skip leading '/' (and other // style things)
-      if (!pathPiece.IsEmpty()) {
-
-        // add .sbd onto the previous path
-        if (haveFirst) {
-          pathString += ".sbd/";
-        }
-        
-        NS_MsgHashIfNecessary(pathPiece);
-        pathString += pathPiece;
-        haveFirst=PR_TRUE;
-      }
-	  // look for the next slash
-      startSlashPos = endSlashPos + 1;
-
-	  endSlashPos = (startSlashPos >= 0) 
-			? oldPath.FindChar('/', startSlashPos + 1)  - 1: oldPath.Length() - 1;
-	  if (endSlashPos < 0)
-			endSlashPos = oldPath.Length();
-
-      if (startSlashPos >= endSlashPos)
-		  break;
-    }
-
-	return NS_OK;
+  return NS_CopyUnicodeToNative(path, pathCString);
 }
 
 /* Given a string and a length, removes any "Re:" strings from the front.

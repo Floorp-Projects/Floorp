@@ -132,32 +132,41 @@ nsMsgCreateTempFileSpec(const char *tFileName)
     tempName = SAFE_TMP_FILENAME;
   }
   else {
-    tempName = tFileName;
+    nsAutoString tempNameUni; 
+    if (NS_FAILED(nsMsgI18NCopyNativeToUTF16(tFileName, tempNameUni))) {
+      tempName = SAFE_TMP_FILENAME;
+      goto fallback;
+    }
 
-    PRInt32 dotChar = tempName.RFindChar('.');
+    PRInt32 dotChar = tempNameUni.RFindChar('.');
     if (dotChar == kNotFound) {
-       rv = NS_MsgHashIfNecessary(tempName);
+       rv = NS_MsgHashIfNecessary(tempNameUni);
     }
     else {
-      // this scary code will not lose any 3 or 4 character normal extensions, like foo.eml, foo.txt, foo.html
-      // this code is to turn arbitrary attachment file names to ones that are safe for the underlying OS 
+      // this scary code will not lose any 3 or 4 character normal extensions, 
+      // like foo.eml, foo.txt, foo.html
+      // this code is to turn arbitrary attachment file names to ones 
+      // that are safe for the underlying OS 
       // eventually, this code will go away once bug #86089 is fixed
-      nsCAutoString extension;
-      tempName.Right(extension, tempName.Length() - dotChar - 1);
-      tempName.Truncate(dotChar);
-      rv = NS_MsgHashIfNecessary(tempName);
+      nsAutoString extension;
+      tempNameUni.Right(extension, tempNameUni.Length() - dotChar - 1);
+      tempNameUni.Truncate(dotChar);
+      rv = NS_MsgHashIfNecessary(tempNameUni);
       if (NS_SUCCEEDED(rv)) {
         rv = NS_MsgHashIfNecessary(extension);    // should be a NOOP for normal 3 or 4 char extension
         if (NS_SUCCEEDED(rv)) {
-          tempName += '.';
-          tempName += extension;
+          tempNameUni += '.';
+          tempNameUni += extension;
           // hash the combinded string, so that filenames like "<giant string>.<giant string>" are made safe
-          rv = NS_MsgHashIfNecessary(tempName);   
+          rv = NS_MsgHashIfNecessary(tempNameUni);   
         }
       }
     } 
+    rv = nsMsgI18NCopyUTF16ToNative(tempNameUni, tempName);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "UTF-16 to native filename failed"); 
   }
 
+fallback:
   NS_ASSERTION(NS_SUCCEEDED(rv), "hash failed");
   if (NS_FAILED(rv)) {
     tempName = SAFE_TMP_FILENAME;

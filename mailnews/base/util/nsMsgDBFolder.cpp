@@ -717,6 +717,12 @@ nsresult nsMsgDBFolder::CreateFileSpecForDB(const char *userLeafName, nsFileSpec
 {
   NS_ENSURE_ARG_POINTER(dbFileSpec);
   NS_ENSURE_ARG_POINTER(userLeafName);
+
+  // XXX : This function is only called by nsImapMailFolder which calls
+  // this function with UTF-7 (ASCII only) userLeafName so that we can
+  // use 'char' version of NS_MsgHasIfNcessary (bug 264071). 
+  // If this becomes not the case any more, we should use PRUnichar-version,
+  // instead.
   nsCAutoString proposedDBName(userLeafName);
   NS_MsgHashIfNecessary(proposedDBName);
 
@@ -3239,13 +3245,11 @@ NS_IMETHODIMP nsMsgDBFolder::Rename(const PRUnichar *aNewName, nsIMsgWindow *msg
   // convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
   // function in nsIFileSpec
   
-  nsCAutoString convertedNewName;
-  if (NS_FAILED(nsMsgI18NCopyUTF16ToNative(aNewName, convertedNewName)))
-    return NS_ERROR_FAILURE;
-  
+  nsAutoString safeName(aNewName);
+  NS_MsgHashIfNecessary(safeName);
   nsCAutoString newDiskName;
-  newDiskName.Assign(convertedNewName.get());
-  NS_MsgHashIfNecessary(newDiskName);
+  if (NS_FAILED(nsMsgI18NCopyUTF16ToNative(safeName, newDiskName)))
+    return NS_ERROR_FAILURE;
   
   nsXPIDLCString oldLeafName;
   oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
@@ -3276,7 +3280,7 @@ NS_IMETHODIMP nsMsgDBFolder::Rename(const PRUnichar *aNewName, nsIMsgWindow *msg
   
   ForceDBClosed();
   
-  nsCAutoString newNameDirStr(newDiskName.get());  //save of dir name before appending .msf 
+  nsCAutoString newNameDirStr(newDiskName);  //save of dir name before appending .msf 
   
   if (! (mFlags & MSG_FOLDER_FLAG_VIRTUAL))
     rv = oldPathSpec->Rename(newDiskName.get());

@@ -2446,6 +2446,9 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
         alteredHost = "host-";
     }
 
+    // XXX hostname is assumed to be ASCII only here. To support IDN,
+    // we have to use PRUnichar-version of NS_MsgHashIfNecessary
+    // (ref. bug 264071)
 	alteredHost += hostAndPort;
 	NS_MsgHashIfNecessary(alteredHost);	
 	thisNewsHostsDir += alteredHost.get();

@@ -901,7 +901,11 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         parentName.Truncate(folderStart);
 
 	// the parentName might be too long or have some illegal chars
-        // so we make it safe
+    // so we make it safe.
+    // XXX Here it's assumed that IMAP folder names are stored locally 
+    // in modified UTF-7 (ASCII-only) as is stored remotely.  If we ever change
+    // this, we have to work with nsString instead of nsCString 
+    // (ref. bug 264071)
         nsCAutoString safeParentName;
         safeParentName.AssignWithConversion(parentName);
         NS_MsgHashIfNecessary(safeParentName);
@@ -1585,6 +1589,10 @@ NS_IMETHODIMP nsImapMailFolder::PrepareToRename()
 
 NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *parent)
 {
+    // XXX Here it's assumed that IMAP folder names are stored locally 
+    // in modified UTF-7 (ASCII-only) as is stored remotely.  If we ever change
+    // this, we have to work with nsString instead of nsCString 
+    // (ref. bug 264071)
     nsCAutoString leafname(newName);
     nsCAutoString parentName;
     // newName always in the canonical form "greatparent/parentname/leafname"
