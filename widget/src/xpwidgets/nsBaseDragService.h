@@ -54,7 +54,8 @@ class nsPresContext;
  * XP DragService wrapper base class
  */
 
-class nsBaseDragService : public nsIDragService, public nsIDragSession
+class nsBaseDragService : public nsIDragService,
+                          public nsIDragSession
 {
 
 public:
@@ -63,21 +64,21 @@ public:
 
   //nsISupports
   NS_DECL_ISUPPORTS
-  
+
   //nsIDragSession and nsIDragService
   NS_DECL_NSIDRAGSERVICE
   NS_DECL_NSIDRAGSESSION
 
 protected:
 
-  virtual void GetFrameFromNode ( nsIDOMNode* inNode, nsIFrame** outFrame,
-                                   nsPresContext** outContext ) ;
+  virtual void GetFrameFromNode(nsIDOMNode* inNode, nsIFrame** outFrame,
+                                nsPresContext** outContext);
 
+  PRPackedBool mCanDrop;
+  PRPackedBool mDoingDrag;
+  PRUint32 mDragAction;
+  nsSize mTargetSize;
   nsCOMPtr<nsISupportsArray> mTransArray;
-  PRBool             mCanDrop;
-  PRBool             mDoingDrag;
-  nsSize             mTargetSize;
-  PRUint32           mDragAction;  
   nsCOMPtr<nsIDOMNode> mSourceNode;
   nsCOMPtr<nsIDOMDocument> mSourceDocument;       // the document at the drag source. will be null
                                                   //  if it came from outside the app.
