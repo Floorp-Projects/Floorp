@@ -635,8 +635,11 @@ nsResChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 NS_IMETHODIMP
 nsResChannel::GetShouldCache(PRBool *aShouldCache)
 {
-    NS_NOTREACHED("GetShouldCache");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mResolvedChannel) {
+        mResolvedChannel->GetShouldCache(aShouldCache);
+    }
+    *aShouldCache = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

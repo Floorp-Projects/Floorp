@@ -394,8 +394,7 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> jarBaseChannel;
-    rv = NS_OpenURI(getter_AddRefs(jarBaseChannel),
-                    mJARBaseURI, nsnull);
+    rv = NS_OpenURI(getter_AddRefs(jarBaseChannel), mJARBaseURI, nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = jarBaseChannel->SetLoadGroup(mLoadGroup);
     if (NS_FAILED(rv)) return rv;
@@ -407,9 +406,12 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
     if (mLoadGroup)
         (void)mLoadGroup->AddChannel(this, nsnull);
 
-    mJARBaseFile = do_QueryInterface(jarBaseChannel, &rv);
+//    mJARBaseFile = do_QueryInterface(jarBaseChannel, &rv);
 
-    if (NS_SUCCEEDED(rv)) {
+    PRBool shouldCache;
+    rv = jarBaseChannel->GetShouldCache(&shouldCache);
+
+    if (NS_SUCCEEDED(rv) && !shouldCache) {
         // then we've already got a local jar file -- no need to download it
         PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
                ("nsJarProtocol: extracting local jar file %s", (const char*)jarURLStr));
@@ -732,8 +734,11 @@ nsJARChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 NS_IMETHODIMP
 nsJARChannel::GetShouldCache(PRBool *aShouldCache)
 {
-    NS_NOTREACHED("GetShouldCache");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // Jar files report that you shouldn't cache them because this is really
+    // a question about the jar entry, and the jar entry is always in a jar
+    // file on disk.
+    *aShouldCache = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
