@@ -6,7 +6,7 @@
 # i had to use ksh because sh doesn't recognize -nt
 # find a more portable way to do this that doesn't suck as badly as using find
 
-PATH=/opt/local/bin:/opt/cvs-tools/bin:/usr/ucb:$PATH
+PATH=/opt/gnu/bin:/opt/tools/bin:/usr/ucb:$PATH
 export PATH
 
 CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
