@@ -2815,3 +2815,5 @@ function BeginDragTree(event, tree, selArray, flavor)
     return(!dragStarted);  // don't propagate the event if a drag has begun
 }
 
+
+
