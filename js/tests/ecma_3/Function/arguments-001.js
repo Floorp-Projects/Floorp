@@ -37,19 +37,37 @@ var a = '';
 
 
 status = 'Section A of test';
-function g()
+function f()
 {
   delete arguments.length;
   return arguments;
 }
-a = g();
+
+a = f();
+actual = a instanceof Object;
+expect = true;
+addThis();
+
+actual = a instanceof Array;
+expect = false;
+addThis();
+
 actual = a.length;
 expect = undefined;
 addThis();
 
 
+
 status = 'Section B of test';
-a = g(1,2,3);
+a = f(1,2,3);
+actual = a instanceof Object;
+expect = true;
+addThis();
+
+actual = a instanceof Array;
+expect = false;
+addThis();
+
 actual = a.length;
 expect = undefined;
 addThis();
@@ -65,6 +83,7 @@ addThis();
 actual = a[2];
 expect = 3;
 addThis();
+
 
 
 status = 'Section C of test';
