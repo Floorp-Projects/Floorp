@@ -163,7 +163,8 @@ sub catch($$) {
         not $continuation->isa('PLIF::Exception::Internal::With')) {
         syntax 'Syntax error: missing "with" operator in "catch" clause', caller;
     }
-    syntax 'Syntax error after "catch ... with" clause', caller if (scalar(@more));
+    { local $" = '\', \'';
+      syntax "Syntax error after \"catch ... with\" clause ('@_'?)", caller if (scalar(@more)); }
     $continuation->{'resolved'} = 1;
     my $handler = $continuation->{'handler'};
     $continuation = $continuation->{'continuation'};
@@ -176,9 +177,9 @@ sub catch($$) {
 
 sub with(&;$) {
     my($handler, $continuation) = @_;
-    if (not defined($continuation) or
-        not ref($continuation) or
-        not $continuation->isa('PLIF::Exception::Internal::Continuation')) {
+    if (defined($continuation) and
+        (not ref($continuation) or
+         not $continuation->isa('PLIF::Exception::Internal::Continuation'))) {
         syntax 'Syntax error after "catch ... with" clause', caller;
     }
     return PLIF::Exception::Internal::With->create($handler, $continuation, caller);
