@@ -169,15 +169,6 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
     // Are we an HTML document? If so, we will want to append an accessory view to
     // the save dialog to provide the user with the option of doing a complete
     // save vs. a single file save.
-#if 0
-    // The MOZILLA_1_0_BRANCH source Chimera is currently based on can't handle saving an XML
-    // document other than as source so only offer the format popup if it's a text/html content.
-    // Leaving this code here #ifdef'd out for when we get to a more recent
-    // version of the Mozilla source tree.
-    PRBool isHTML = (mDocument && mContentType.Equals("text/html") ||
-                     mContentType.Equals("text/html") ||
-                     mContentType.Equals("application/xhtml+xml"));
-#endif
     PRBool isHTML = (mDocument && mContentType.Equals("text/html"));
     
     // Next find out the directory that we should start in.
@@ -241,11 +232,11 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
     
     if (defaultFileName.IsEmpty()) {
         nsCOMPtr<nsIURL> url(do_QueryInterface(origURI));
-        if (url)
-        {
+        if (url) {
             nsCAutoString urlFileName;
             url->GetFileName(urlFileName); // (2) For file URLs, use the file name.
-            CopyUTF8toUTF16(urlFileName, defaultFileName);
+            NSString* unescapedString = [NSString unescapedURLString:[NSString stringWithUTF8String:urlFileName.get()]];
+            CopyUTF8toUTF16([unescapedString UTF8String], defaultFileName);
         }
     }
     

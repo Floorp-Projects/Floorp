@@ -53,6 +53,7 @@ typedef enum
 
 + (id)ellipsisString;
 + (id)escapedURLString:(NSString *)unescapedString;
++ (NSString*)unescapedURLString:(NSString*)escapedString;
 + (id)stringWithPRUnichars:(const PRUnichar*)inString;
 + (id)stringWith_nsAString:(const nsAString&)inString;
 - (void)assignTo_nsAString:(nsAString&)ioString;

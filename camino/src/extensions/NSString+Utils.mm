@@ -66,6 +66,12 @@
   return [escapedString autorelease];
 }
 
++ (NSString*)unescapedURLString:(NSString*)escapedString
+{
+  NSString *unescapedString = (NSString *)CFURLCreateStringByReplacingPercentEscapes(NULL, (CFStringRef)escapedString, CFSTR(""));
+  return [unescapedString autorelease];
+}
+
 + (id)stringWithPRUnichars:(const PRUnichar*)inString
 {
   if (inString)
