@@ -39,7 +39,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTYBAG
   NS_DECL_NSIXPCSCRIPTABLE
-  nsresult SetProperty(const nsAString & aName, nsIVariant * aValue);
+  NS_IMETHOD SetProperty(const nsAString & aName, nsIVariant * aValue);
 
 protected:
    nsSupportsHashtable * mProperties;
