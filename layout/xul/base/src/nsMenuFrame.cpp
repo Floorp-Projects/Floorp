@@ -241,8 +241,8 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
            mMenuParent) {
     // The menu item was invoked and can now be dismissed.
     // Execute the execute event handler.
-    Execute();
     mMenuParent->DismissChain();
+    Execute();
   }
   else if (aEvent->message == NS_MOUSE_EXIT) {
     // Kill our timer if one is active.
@@ -547,11 +547,11 @@ nsMenuFrame::Enter()
   if (!mMenuOpen) {
     // The enter key press applies to us.
     if (!IsMenu() && mMenuParent) {
-      // Execute our event handler
-      Execute();
-
       // Close up the parent.
       mMenuParent->DismissChain();
+
+      // Execute our event handler
+      Execute();
     }
     else {
       OpenMenu(PR_TRUE);
