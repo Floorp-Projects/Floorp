@@ -68,6 +68,10 @@ my $SYM_FILE  = 8;     # (not part of readelf) file for symbol
 
 # Tell readelf to print out the list of sections and then the symbols
 die "Usage: $^X <binary>\n" unless ($#ARGV >= 0);
+my $readelf = $ENV{'READELF_PROG'};
+if (!$readelf) {
+    $readelf = 'readelf';
+}
 open(READELF_OUTPUT, "$readelf -Ss $ARGV[0] | c++filt |") or die "readelf failed to run on $ARGV[0]\n";
 
 my @section_list;
