@@ -25,13 +25,9 @@
 #include "nsFormControlHelper.h"
 #include "nsIContent.h"
 #include "prtypes.h"
-#include "nsIFrame.h"
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
 #include "nsHTMLAtoms.h"
-#include "nsIStyleContext.h"
-#include "nsStyleUtil.h"
-#include "nsIFormControl.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 
