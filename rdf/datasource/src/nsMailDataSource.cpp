@@ -172,11 +172,26 @@ MailDataSource::MailDataSource(void)
 {
     NS_INIT_REFCNT();
 
+    NS_ASSERTION(gRDFService == nsnull, "already constructed mail's RDF service");
     nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
                                                kIRDFServiceIID,
                                                (nsISupports**) &gRDFService);
 
     PR_ASSERT(NS_SUCCEEDED(rv));
+
+    if (! kNC_Child) {
+        gRDFService->GetResource(kURINC_Columns,  &kNC_Columns);
+        gRDFService->GetResource(kURINC_Folder,   &kNC_Folder);
+        gRDFService->GetResource(kURINC_MailRoot, &kNC_MailRoot);
+        gRDFService->GetResource(kURINC_Name,     &kNC_Name);
+        gRDFService->GetResource(kURINC_account,  &kNC_account);
+        gRDFService->GetResource(kURINC_child,    &kNC_Child);
+        gRDFService->GetResource(kURINC_date,     &kNC_date);
+        gRDFService->GetResource(kURINC_from,     &kNC_From);
+        gRDFService->GetResource(kURINC_host,     &kNC_host);
+        gRDFService->GetResource(kURINC_subject,  &kNC_subject);
+        gRDFService->GetResource(kURINC_user,     &kNC_user);
+    }
 
     gMailDataSource = this;
 }
@@ -186,25 +201,26 @@ MailDataSource::~MailDataSource (void)
     gRDFService->UnregisterDataSource(this);
 
     PL_strfree(mURI);
+
     if (mObservers) {
-        for (PRInt32 i = mObservers->Count(); i >= 0; --i) {
+        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
             NS_RELEASE(obs);
         }
         delete mObservers;
     }
-    nsrefcnt refcnt;
-    NS_RELEASE2(kNC_Child, refcnt);
-    NS_RELEASE2(kNC_Folder, refcnt);
-    NS_RELEASE2(kNC_From, refcnt);
-    NS_RELEASE2(kNC_subject, refcnt);
-    NS_RELEASE2(kNC_date, refcnt);
-    NS_RELEASE2(kNC_user, refcnt);
-    NS_RELEASE2(kNC_host, refcnt);
-    NS_RELEASE2(kNC_account, refcnt);
-    NS_RELEASE2(kNC_Name, refcnt);
-    NS_RELEASE2(kNC_MailRoot, refcnt);
-    NS_RELEASE2(kNC_Columns, refcnt);
+
+    NS_RELEASE(kNC_Child);
+    NS_RELEASE(kNC_Columns);
+    NS_RELEASE(kNC_Folder);
+    NS_RELEASE(kNC_From);
+    NS_RELEASE(kNC_MailRoot);
+    NS_RELEASE(kNC_Name);
+    NS_RELEASE(kNC_account);
+    NS_RELEASE(kNC_date);
+    NS_RELEASE(kNC_host);
+    NS_RELEASE(kNC_subject);
+    NS_RELEASE(kNC_user);
 
     gMailDataSource = nsnull;
 
@@ -233,33 +249,19 @@ MailDataSource::RemoveAccount(nsIRDFMailAccount* folder)
 NS_IMETHODIMP
 MailDataSource::Init(const char* uri)
 {
-    if (mMiscMailData)
+    NS_ASSERTION(mURI == nsnull, "already initialized");
+    if (mURI)
         return NS_ERROR_ALREADY_INITIALIZED;
 
     if ((mURI = PL_strdup(uri)) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv;
-
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
                                                     (void**) &mMiscMailData)))
         return rv;
-
-    if (! kNC_Child) {
-        gRDFService->GetResource(kURINC_child,   &kNC_Child);
-        gRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
-        gRDFService->GetResource(kURINC_from,    &kNC_From);
-        gRDFService->GetResource(kURINC_subject, &kNC_subject);
-        gRDFService->GetResource(kURINC_date,    &kNC_date);
-        gRDFService->GetResource(kURINC_user,    &kNC_user);
-        gRDFService->GetResource(kURINC_host,    &kNC_host);
-        gRDFService->GetResource(kURINC_account, &kNC_account);
-        gRDFService->GetResource(kURINC_Name,    &kNC_Name);
-        gRDFService->GetResource(kURINC_Columns, &kNC_Columns);
-        gRDFService->GetResource(kURINC_MailRoot, &kNC_MailRoot);
-    }
 
     if (NS_FAILED(rv = InitAccountList()))
         return rv;
