@@ -526,6 +526,7 @@ nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
     // of inline style, all nodes along this path must have exactly one child.  This
     // is not a bushy subtree, and so we know that by clearing this path, we've
     // invalidated everything that we need to.
+    // XXXldb What about !important :hover rules, and such?
     nsRuleNode* curr = this;
     while (curr) {
       curr->mNoneBits &= ~NS_STYLE_INHERIT_MASK;
@@ -560,7 +561,7 @@ nsRuleNode::ClearCachedDataInSubtree(nsIStyleRule* aRule)
       mStyleData.Destroy(0, mPresContext);
     mNoneBits &= ~NS_STYLE_INHERIT_MASK;
     mDependentBits &= ~NS_STYLE_INHERIT_MASK;
-    aRule = nsnull;
+    aRule = nsnull;  // Cause everything to be blown away in the descendants.
   }
 
   if (!mParent) {
@@ -569,7 +570,7 @@ nsRuleNode::ClearCachedDataInSubtree(nsIStyleRule* aRule)
   } 
   else
     for (nsRuleList* curr = mChildren; curr; curr = curr->mNext)
-      curr->mRuleNode->ClearCachedDataInSubtree(curr->mRuleNode->mRule);
+      curr->mRuleNode->ClearCachedDataInSubtree(aRule);
 
   return NS_OK;
 }
