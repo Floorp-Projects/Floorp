@@ -348,6 +348,14 @@ public class SetupPlugin extends Plugin
 			return false;
     }
 
+	final public boolean GenerateMoreInfoPage( String isp )
+	{
+		if ( privilegeCheck() == true )
+			return CPGenerator.generateMoreInfoPage( isp );
+		else
+			return false;
+	}
+	
 	final public String[] GetISPPopList( String isp )
 	{
 		if ( privilegeCheck() == true )

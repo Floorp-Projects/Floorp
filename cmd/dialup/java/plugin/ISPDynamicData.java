@@ -26,16 +26,19 @@ import java.util.Vector;
 
 public class ISPDynamicData
 {
-	static final String			NAME_STRING = "ISPNAME";
-	static final String			LANGUAGE_STRING = "LANGUAGE";
-	static final String			SERVICE_TYPE_STRING = "SERVICE_TYPE";
-	static final String			DYNAMIC_DATA_STRING = "DYNAMICDATA";
+	public static final String	NAME_STRING = "ISPNAME";
+	public static final String	LANGUAGE_STRING = "LANGUAGE";
+	public static final String	SERVICE_TYPE_STRING = "SERVICE_TYPE";
+	public static final String	DYNAMIC_DATA_STRING = "DYNAMICDATA";
+	public static final String	LEVEL_STRING = "LEVEL";
+	
 	//  static final String			zipFilesURL = "http://seaspace.netscape.com:8080/programs/ias5/regserv/docs/ISP/";
 	
 	public NameValueSet			reggieData = null;
 	protected String			name = null;
 	protected String			language = null;
 	protected String			serviceType = null;
+	protected String			level = null;
 	
 	static String				lastName = null;
 	
@@ -124,6 +127,25 @@ public class ISPDynamicData
                 {
                     name = temp;
                     return name;
+                }
+            }
+        }
+        return "";
+    }
+
+    public String getLevel()
+    {
+        if ( level != null )
+            return level;
+        else
+        {
+            if ( reggieData != null )
+            {
+                String      temp = reggieData.getValue( LEVEL_STRING );
+                if ( temp != null && temp.compareTo( "" ) != 0 )
+                {
+                    level = temp;
+                    return level;
                 }
             }
         }

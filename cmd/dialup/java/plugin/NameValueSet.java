@@ -43,11 +43,12 @@ public class NameValueSet
     Hashtable					nameValuePairs;
 	boolean						ignoreSections = false;
 	final static int			READ_AHEAD = 8192;		
-
+	File						initFile = null;
 
 	protected void init()
 	{
         nameValuePairs = new Hashtable();
+        initFile = null;
 	}
 	
 	/* delimiterB between name-value pairs, delimiterA between the name and value */
@@ -111,6 +112,7 @@ public class NameValueSet
         BufferedReader  bufferedReader = new BufferedReader( new FileReader( inputFile ) );
 
 		this.read( bufferedReader );
+		initFile = inputFile;
 	}
 			
 	public NameValueSet()
@@ -256,6 +258,11 @@ public class NameValueSet
         nameValuePairs.put( name, value );
     }
 
+	public File getInitFile()
+	{
+		return initFile;
+	}
+	
     public final void printNameValueSet()
     {
         for ( Enumeration names = nameValuePairs.keys(); names.hasMoreElements(); )

@@ -49,14 +49,16 @@ public class CPGenerator
 	public static int				totalBytes = 0;
 	
 	static final String				REG_SOURCE_STRING = "REG_SOURCE";
-		
+	static final String				ISP_DIRECTORY_PATH = "isp_dir";
+	static final String				COMPARE_PAGE_TEMPLATE_FILENAME = "compare.tmpl";
+	static final String				COMPARE_PAGE_FILENAME = "compare.htm";
+	static final String				MOREINFO_PAGE_TEMPLATE_FILENAME = "ispplans.tmpl";
+	static final String				MOREINFO_PAGE_FILENAME = "ispplans.htm";
+	
 	static int						state = DONE;
 	
 	static String					regSource;
 	
-	static String					ispDirectorySymbol = "isp_dir";
-	static String					comparePageTemplateFileName = "compare.tmpl";
-	static String					comparePageFileName = "compare.htm";
 	static String					localPath;
 	
 	// ispList is a vector of ISPDynamicData's that is created from the stream passed back
@@ -101,6 +103,13 @@ public class CPGenerator
 								File.separator + "config" + File.separator );
     }
 
+	private static String getHTMLPath( ISPDynamicData isp )
+	{
+		return new String( getISPPath() + isp.getLanguage() + File.separator +
+							isp.getName() + File.separator + "client_data" +
+								File.separator + "html" + File.separator );
+	}
+	
 	private static String getConfigFilePath( ISPDynamicData isp )
 	{
 		return new String( getConfigPath( isp ) + "config.ias" );
@@ -111,10 +120,12 @@ public class CPGenerator
 		return new String( getConfigPath( isp ) + "compare.cfg" );
 	}
 
+	/*
 	private static String getMasterFilePath( ISPDynamicData isp )
 	{
 		return new String( getConfigPath( isp ) + "master.cfg" );
 	}
+	*/
 	
 	private static ISPDynamicData getISPDynamicData( String ispName )
 	{
@@ -377,7 +388,8 @@ public class CPGenerator
         @param bufferedInputReader      input file containing constraint template to be replaced
         @param bufferedOutputWriter     output file (html)
     */
-    public static void executeConstraintReplacement( Vector inSets, BufferedReader bufferedInputReader, BufferedWriter bufferedOutputWriter )
+    public static void executeConstraintReplacement( Vector inSets, String templateFilePath,
+    	String ispHTMLPath, BufferedReader bufferedInputReader, BufferedWriter bufferedOutputWriter )
     throws Exception
     {
 		int c = bufferedInputReader.read();
@@ -416,33 +428,76 @@ public class CPGenerator
 						{
                             successful = true;
 
-                            String          criterionFileName = getMetadataPath() + buffer.toString() + ".mat"; /* will be something like "template1.mat" */
-                            String          templateFileName = getMetadataPath() + buffer.toString() + ".tmpl"; /* will be something like "template1.tmpl" */
-                            String          outputFileName = getMetadataPath() + buffer.toString() + ".html";
-
+							String			fileStub = buffer.toString();
+							
+                            String          criterionFileName = templateFilePath + fileStub + ".mat"; /* will be something like "template1.mat" */
+                            String          templateFileName = templateFilePath + fileStub + ".tmpl"; /* will be something like "template1.tmpl" */
+                            String          outputFileName = templateFilePath + fileStub + ".html";
+							String			includeFileName = ispHTMLPath + fileStub + ".html";
+							
                             //Trace.TRACE( "criterionFile: " + criterionFileName );
                             //Trace.TRACE( "templateFile: " + templateFileName );
                             //Trace.TRACE( "outputFile: " + outputFileName );
-
+							
                             File            templateFile = new File( templateFileName );
                             File            criterionFile = new File( criterionFileName );
                             File            outputFile = new File( outputFileName );
-
-                            NameValueSet    criterionSet = new NameValueSet( criterionFile );
-							criterionSet.printNameValueSet();
+							File			includeFile = new File( includeFileName );
 							
-							for ( int i = 0; i < inSets.size(); i++ )
+							if ( criterionFile.exists() )
 							{
-								NameValueSet        nvSet = (NameValueSet)inSets.elementAt( i );
-								//Trace.TRACE( "testing a set: " );
-								//nvSet.printNameValueSet();
-								if ( criterionSet.isSubsetOf( nvSet ) )
+	                            NameValueSet    criterionSet = new NameValueSet( criterionFile );
+								criterionSet.printNameValueSet();
+							
+								for ( int i = 0; i < inSets.size(); i++ )
 								{
-									executeNameValueReplacement( nvSet, templateFile, outputFile );
-									BufferedReader bufSubInputReader = new BufferedReader( new FileReader( outputFile ) );
-									executeConstraintReplacement( inSets, bufSubInputReader, bufferedOutputWriter );
-									bufSubInputReader.close();
+									NameValueSet        nvSet = (NameValueSet)inSets.elementAt( i );
+									//Trace.TRACE( "testing a set: " );
+									//nvSet.printNameValueSet();
+									if ( criterionSet.isSubsetOf( nvSet ) )
+									{
+										executeNameValueReplacement( nvSet, templateFile, outputFile );
+										BufferedReader bufSubInputReader = new BufferedReader( new FileReader( outputFile ) );
+										executeConstraintReplacement( inSets, templateFilePath, ispHTMLPath, bufSubInputReader, bufferedOutputWriter );
+										bufSubInputReader.close();
+									}
 								}
+							}
+							else if ( templateFile.exists() )
+							{
+								for ( int i = 0; i < inSets.size(); i++ )
+								{
+									NameValueSet		nvSet = (NameValueSet)inSets.elementAt( i );
+									
+									//Trace.TRACE( "testing a set: " );
+									//nvSet.printNameValueSet();
+									
+									File				initFile = nvSet.getInitFile();
+									
+									if ( initFile != null )
+									{
+										String			fileName = initFile.getName();
+										if ( fileName.lastIndexOf( '.' ) != -1 )
+											fileName = fileName.substring( 0, fileName.lastIndexOf( '.' ) );
+										
+										Trace.TRACE( "fileName: " + fileName );
+										Trace.TRACE( "fileStub: " + fileStub );
+										if ( fileName.compareTo( fileStub ) == 0 )
+										{
+											Trace.TRACE( "executing name-value replacement" );
+											executeNameValueReplacement( nvSet, templateFile, outputFile );
+											BufferedReader bufSubInputReader = new BufferedReader( new FileReader( outputFile ) );
+											executeConstraintReplacement( inSets, templateFilePath, ispHTMLPath, bufSubInputReader, bufferedOutputWriter );
+											bufSubInputReader.close();
+										}
+									}
+								}
+							}
+							else if ( includeFile.exists() )
+							{
+								BufferedReader		bufSubInputReader = new BufferedReader( new FileReader( includeFile ) );
+								executeConstraintReplacement( inSets, templateFilePath, ispHTMLPath, bufSubInputReader, bufferedOutputWriter );
+								bufSubInputReader.close();
 							}
 						}
 					}
@@ -564,7 +619,7 @@ public class CPGenerator
 				newData = new ISPDynamicData();
 				newData.read( is );
 			
-				//newData.printISPDynamicData();
+				newData.printISPDynamicData();
 			
 				ispList.addElement( newData );
 			}
@@ -572,6 +627,7 @@ public class CPGenerator
         catch ( EOFException e )
         {
 			state = DONE;
+			newData.printISPDynamicData();
 			ispList.addElement( newData );
 			Trace.TRACE( "successfully finished downloading dynamic data" );
         }
@@ -694,12 +750,10 @@ public class CPGenerator
 			ispData = (ISPDynamicData)ispList.elementAt( i );
 			
 			String          ispConfigFileName = getCompareFilePath( ispData );
-			String			ispMasterFileName = getMasterFilePath( ispData );
 			
 			//Trace.TRACE( "ispConfigFileName: " + ispConfigFileName );
 			
 			File            ispConfigFile = new File( ispConfigFileName );
-			File			ispMasterFile = new File( ispMasterFileName );
 			
 			NameValueSet	nvSet = new NameValueSet();
 			nvSet.setIgnoreSections( true );
@@ -707,17 +761,93 @@ public class CPGenerator
 			if ( ispConfigFile.exists() )
 				nvSet.read( ispConfigFile );
 			
-			if ( ispMasterFile.exists() )
-				nvSet.read( ispMasterFile );
-				
-			nvSet.setValue( ispDirectorySymbol, new String( ispData.language + "/" + ispData.name + "/client_data" ) );
+			nvSet.setValue( ISP_DIRECTORY_PATH, new String( ispData.getLanguage() + "/" + ispData.getName() + "/client_data" ) );
+			nvSet.setValue( ISPDynamicData.LEVEL_STRING, new String( ispData.getLevel() ) );
 			parseFeatureSet( nvSet, featureMappings );
 			returnSets.addElement( nvSet );
 			//nvSet.printNameValueSet();
 		}
 		return returnSets;
 	}
-	
+
+	private static Vector parsePlanSets( String	configPath ) throws Throwable
+	{
+		//Trace.TRACE( "parsePlanSets" );
+		
+		File		configDirectory = new File( configPath );
+		Vector		returnSets = new Vector();
+		
+		boolean		isDirectory = configDirectory.isDirectory();
+		//Trace.TRACE( "directory? " + isDirectory );
+		
+		/*
+		if ( isDirectory == false )
+			return null;
+		*/
+		
+		String[]		files = configDirectory.list();
+		
+		for ( int count = 0; count < files.length; count++ )
+		{
+			String		file = files[ count ];
+			Trace.TRACE( "file: " + file );
+			
+			if ( file.startsWith( "plan" ) && file.endsWith( ".cfg" ) )
+			{
+				String				filePath = configPath + file;
+				File				configFile = new File( filePath );
+				NameValueSet		nvSet = null;
+
+				if ( configFile.exists() && configFile.canRead() )
+				{
+					nvSet = new NameValueSet( configFile );
+					nvSet.printNameValueSet();
+					returnSets.addElement( nvSet );
+				}
+			}
+		}
+		return returnSets;
+	}
+
+	public static boolean generateMoreInfoPage( String selectedISP )
+	{
+		try
+		{
+			//Trace.TRACE( "generateMoreInfoPage" );
+			ISPDynamicData		ispData = getISPDynamicData( selectedISP );
+			if ( ispData == null )
+				return false;
+
+			ispData.printISPDynamicData();
+			
+			String		configPath = getConfigPath( ispData );
+			//Trace.TRACE( "configPath: " + configPath );
+			
+			Vector		planSets = parsePlanSets( configPath );
+			
+			if ( planSets == null )
+				return false;
+
+			File inputFile = new File( getMetadataPath() + MOREINFO_PAGE_TEMPLATE_FILENAME );
+			File outputFile = new File( getLocalPath() + MOREINFO_PAGE_FILENAME );
+			
+			BufferedReader  bufferedReader = new BufferedReader( new FileReader( inputFile ) );
+			BufferedWriter  bufferedWriter = new BufferedWriter( new FileWriter( outputFile ) );
+
+			executeConstraintReplacement( planSets, getMetadataPath(), getHTMLPath( ispData ), bufferedReader, bufferedWriter );
+			
+			bufferedWriter.close();
+			bufferedReader.close();
+			return true;
+		}
+		catch ( Throwable e )
+		{
+			Trace.TRACE( e.getMessage() );
+			e.printStackTrace();	
+			return false;
+		}
+	}			
+			
 	public static boolean generateComparePage( String inLocalPath, String sCGIUrl, 
 		String sRootURL, String metadataMode, String reggieData[] )
 	{
@@ -775,13 +905,13 @@ public class CPGenerator
         //  }
 
 			// * now, generate the compare page using the compare page template and the name/value pairs for each ISP
-			File inputFile = new File( getMetadataPath() + comparePageTemplateFileName );
-			File outputFile = new File( getLocalPath() + comparePageFileName );
+			File inputFile = new File( getMetadataPath() + COMPARE_PAGE_TEMPLATE_FILENAME );
+			File outputFile = new File( getLocalPath() + COMPARE_PAGE_FILENAME );
 			
 			BufferedReader  bufferedReader = new BufferedReader( new FileReader( inputFile ) );
 			BufferedWriter  bufferedWriter = new BufferedWriter( new FileWriter( outputFile ) );
 			
-			executeConstraintReplacement( nameValueSets, bufferedReader, bufferedWriter );
+			executeConstraintReplacement( nameValueSets, getMetadataPath(), null, bufferedReader, bufferedWriter );
 			bufferedWriter.close();
 			bufferedReader.close();
 			
