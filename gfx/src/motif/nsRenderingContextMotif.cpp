@@ -1117,16 +1117,16 @@ NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(char ch, nscoord &aWidth)
   return GetWidth(buf, 1, aWidth);
 }
 
-NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(PRUnichar ch, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
 {
   PRUnichar buf[1];
   buf[0] = ch;
-  return GetWidth(buf, 1, aWidth);
+  return GetWidth(buf, 1, aWidth, aFontID);
 }
 
-NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const nsString& aString, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const nsString& aString, nscoord &aWidth, PRInt32 *aFontID)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const char *aString, nscoord &aWidth)
@@ -1149,7 +1149,7 @@ NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const char *aString,
 
 NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const PRUnichar *aString,
                                             PRUint32 aLength,
-                                            nscoord &aWidth)
+                                            nscoord &aWidth, PRInt32 *aFontID)
 {
   XChar2b * thischar ;
   PRUint16 aunichar;
@@ -1184,13 +1184,15 @@ NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const PRUnichar *aString,
   width = ::XTextWidth16(font, mDrawStringBuf, aLength);
   aWidth = nscoord(width * mP2T);
 
+  if (nsnull != aFontID)
+    *aFontID = 0;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextMotif :: DrawString(const char *aString, PRUint32 aLength,
                                      nscoord aX, nscoord aY,
-                                     nscoord aWidth,
                                      const nscoord* aSpacing)
 {
   nscoord x = aX;
@@ -1209,6 +1211,10 @@ nsRenderingContextMotif :: DrawString(const char *aString, PRUint32 aLength,
 		mRenderingSurface->gc,
 		x, y, aString, aLength);
 
+#if 0
+  //this code no longer needs to be here. another routine will
+  //take it places that does this stuff and this code will need
+  //to be there. MMP
   if (mFontMetrics)
   {
     nsFont *font;
@@ -1238,13 +1244,14 @@ nsRenderingContextMotif :: DrawString(const char *aString, PRUint32 aLength,
       DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
     }
   }
+#endif
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextMotif :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                     nscoord aX, nscoord aY, nscoord aWidth,
+                                     nscoord aX, nscoord aY, PRInt32 aFontID,
                                      const nscoord* aSpacing)
 {
   nscoord x = aX;
@@ -1286,45 +1293,15 @@ nsRenderingContextMotif :: DrawString(const PRUnichar *aString, PRUint32 aLength
                 mRenderingSurface->gc,
                 x, y, mDrawStringBuf, aLength);
 
-  if (mFontMetrics)
-  {
-    nsFont *font;
-    mFontMetrics->GetFont(font);
-    PRUint8 deco = font->decorations;
-
-    if (deco & NS_FONT_DECORATION_OVERLINE)
-      DrawLine(aX, aY, aX + aWidth, aY);
-
-    if (deco & NS_FONT_DECORATION_UNDERLINE)
-    {
-      nscoord ascent,descent;
-
-	  mFontMetrics->GetMaxAscent(ascent);
-      mFontMetrics->GetMaxDescent(descent);
-
-      DrawLine(aX, aY + ascent + (descent >> 1),
-               aX + aWidth, aY + ascent + (descent >> 1));
-    }
-
-    if (deco & NS_FONT_DECORATION_LINE_THROUGH)
-    {
-      nscoord height;
-
-	  mFontMetrics->GetHeight(height);
-
-      DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
-    }
-  }
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextMotif :: DrawString(const nsString& aString,
-                                     nscoord aX, nscoord aY, nscoord aWidth,
+                                     nscoord aX, nscoord aY, PRInt32 aFontID,
                                      const nscoord* aSpacing)
 {
-  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
+  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextMotif :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)

@@ -125,23 +125,24 @@ public:
                      float aStartAngle, float aEndAngle);
 
   NS_IMETHOD GetWidth(char aC, nscoord& aWidth);
-  NS_IMETHOD GetWidth(PRUnichar aC, nscoord& aWidth);
-  NS_IMETHOD GetWidth(const nsString& aString, nscoord& aWidth);
+  NS_IMETHOD GetWidth(PRUnichar aC, nscoord& aWidth,
+                      PRInt32 *aFontID);
+  NS_IMETHOD GetWidth(const nsString& aString, nscoord& aWidth,
+                      PRInt32 *aFontID);
   NS_IMETHOD GetWidth(const char* aString, nscoord& aWidth);
   NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
   NS_IMETHOD GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                      nscoord& aWidth);
+                      nscoord& aWidth, PRInt32 *aFontID);
 
   NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
-                        nscoord aWidth,
                         const nscoord* aSpacing);
   NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
-                        nscoord aWidth,
+                        PRInt32 aFontID,
                         const nscoord* aSpacing);
   NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                        nscoord aWidth,
+                        PRInt32 aFontID,
                         const nscoord* aSpacing);
 
   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);

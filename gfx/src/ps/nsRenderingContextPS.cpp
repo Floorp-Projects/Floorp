@@ -923,11 +923,11 @@ nsRenderingContextPS :: GetWidth(char ch, nscoord& aWidth)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: GetWidth(PRUnichar ch, nscoord &aWidth)
+nsRenderingContextPS :: GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
 {
   PRUnichar buf[1];
   buf[0] = ch;
-  return GetWidth(buf, 1, aWidth);
+  return GetWidth(buf, 1, aWidth, aFontID);
 }
 
 /** ---------------------------------------------------
@@ -966,9 +966,9 @@ nsRenderingContextPS :: GetWidth(const char* aString,PRUint32 aLength,nscoord& a
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: GetWidth(const nsString& aString, nscoord& aWidth)
+nsRenderingContextPS :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
 /** ---------------------------------------------------
@@ -976,7 +976,7 @@ nsRenderingContextPS :: GetWidth(const nsString& aString, nscoord& aWidth)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoord &aWidth)
+nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoord &aWidth, PRInt32 *aFontID)
 {
   if (nsnull != mFontMetrics){
     SIZE  size;
@@ -985,6 +985,9 @@ nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoo
     aWidth = 12;
     //::GetTextExtentPoint32W(mDelRenderingContext->mDC, aString, aLength, &size);
     //aWidth = NSToCoordRound(float(size.cx) * mP2T);
+
+    if (nsnull != aFontID)
+      *aFontID = 0;
 
     return NS_OK;
   }
@@ -999,7 +1002,6 @@ nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoo
 NS_IMETHODIMP 
 nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
-                        nscoord aWidth,
                         const nscoord* aSpacing)
 {
 PRInt32	      x = aX;
@@ -1020,13 +1022,15 @@ PRInt32       y = aY;
 	mTMatrix->TransformCoord(&x, &y);
   //::ExtTextOut(mDC, x, y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
    //XXX: Remove ::ExtTextOut later
-  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, aSpacing ? dx0 : NULL, FALSE);
+  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), 0, aSpacing ? dx0 : NULL, FALSE);
 
   if ((nsnull != aSpacing) && (dx0 != dxMem)) {
     delete [] dx0;
   }
 
-#ifdef NOTNOW
+#if 0
+  //this doesn't need to happen here anymore, but a
+  //new api will come along that will need this stuff. MMP
   if (nsnull != mFontMetrics){
     nsFont *font;
     mFontMetrics->GetFont(font);
@@ -1040,7 +1044,6 @@ PRInt32       y = aY;
     }
   }
 
-
 #endif
 
   return NS_OK;
@@ -1052,7 +1055,7 @@ PRInt32       y = aY;
  */
 NS_IMETHODIMP 
 nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, nscoord aWidth,
+                                    nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {
 PRInt32         x = aX;
@@ -1072,28 +1075,13 @@ nsIFontMetrics  *fMetrics;
       x = aX;
       y = aY;
       mTMatrix->TransformCoord(&x, &y);
-	    PostscriptTextOut((const char *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aWidth, aSpacing, PR_TRUE);
+	    PostscriptTextOut((const char *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
       aX += *aSpacing++;
       aString++;
     }
   } else {
     mTMatrix->TransformCoord(&x, &y);
-	  PostscriptTextOut((const char *)aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aWidth, aSpacing, PR_TRUE);
-  }
-
-  fMetrics = mFontMetrics;
-
-  if (nsnull != fMetrics){
-    nsFont *font;
-    fMetrics->GetFont(font);
-    PRUint8 decorations = font->decorations;
-
-    if (decorations & NS_FONT_DECORATION_OVERLINE){
-      nscoord offset;
-      nscoord size;
-      fMetrics->GetUnderline(offset, size);
-      FillRect(aX, aY, aWidth, size);
-    }
+	  PostscriptTextOut((const char *)aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
   }
   return NS_OK;
 }
@@ -1103,10 +1091,10 @@ nsIFontMetrics  *fMetrics;
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: DrawString(const nsString& aString,nscoord aX, nscoord aY, nscoord aWidth,
+nsRenderingContextPS :: DrawString(const nsString& aString,nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {
-  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
+  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 /** ---------------------------------------------------
@@ -1307,7 +1295,7 @@ int postscriptFont = 0;
  */
 void 
 nsRenderingContextPS :: PostscriptTextOut(const char *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, nscoord aWidth,
+                                    nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing, PRBool aIsUnicode)
 {
 int             ptr = 0;
