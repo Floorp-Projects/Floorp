@@ -908,14 +908,12 @@ PRBool nsXULWindow::LoadPositionFromXUL()
         specX += parentX;
         specY += parentY;
       }
-      mWindow->ConstrainPosition(PR_FALSE, &specX, &specY);
-    } else {
+    } else
       StaggerPosition(specX, specY, currWidth, currHeight);
-      mWindow->ConstrainPosition(PR_TRUE, &specX, &specY);
-    }
-    if (specX != currX || specY != currY)
-      SetPosition(specX, specY);
   }
+  mWindow->ConstrainPosition(PR_FALSE, &specX, &specY);
+  if (specX != currX || specY != currY)
+    SetPosition(specX, specY);
 
   return gotPosition;
 }
