@@ -28,6 +28,7 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMHTMLOptionElement.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -243,8 +244,9 @@ nsJSContext::InitClasses()
       NS_OK == NS_InitNodeListClass(this, nsnull) &&
       NS_OK == InitializeExternalClasses() && 
       NS_OK == InitializeLiveConnectClasses() &&
-      // XXX Temporarily here. This shouldn't be hardcoded.
-      NS_OK == NS_InitHTMLImageElementClass(this, nsnull)) {
+      // XXX Temporarily here. These shouldn't be hardcoded.
+      NS_OK == NS_InitHTMLImageElementClass(this, nsnull) &&
+      NS_OK == NS_InitHTMLOptionElementClass(this, nsnull)) {
     res = NS_OK;
   }
 

@@ -28,6 +28,11 @@
 #include "nsString.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMOption.h"
+#include "nsIScriptNameSpaceManager.h"
+#include "nsIComponentManager.h"
+#include "nsIJSNativeInitializer.h"
+#include "nsDOMCID.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -35,9 +40,11 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
+static NS_DEFINE_IID(kIOptionIID, NS_IDOMOPTION_IID);
 
 NS_DEF_PTR(nsIDOMHTMLFormElement);
 NS_DEF_PTR(nsIDOMHTMLOptionElement);
+NS_DEF_PTR(nsIDOMOption);
 
 //
 // HTMLOptionElement property ids
@@ -333,9 +340,62 @@ static JSFunctionSpec HTMLOptionElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLOptionElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_FALSE;
-}
+  nsresult result;
+  nsIID classID;
+  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  nsIScriptNameSpaceManager* manager;
+  nsIDOMHTMLOptionElement *nativeThis;
+  nsIScriptObjectOwner *owner = nsnull;
+  nsIJSNativeInitializer* initializer = nsnull;
 
+  static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
+  static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
+
+  result = context->GetNameSpaceManager(&manager);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  result = manager->LookupName("HTMLOptionElement", PR_TRUE, classID);
+  NS_RELEASE(manager);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  result = nsComponentManager::CreateInstance(classID,
+                                        nsnull,
+                                        kIDOMHTMLOptionElementIID,
+                                        (void **)&nativeThis);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);
+  if (NS_OK != result) {
+    NS_RELEASE(nativeThis);
+    return JS_FALSE;
+  }
+
+  result = initializer->Initialize(cx, argc, argv);
+  NS_RELEASE(initializer);
+
+  if (NS_OK != result) {
+    NS_RELEASE(nativeThis);
+    return JS_FALSE;
+  }
+
+  result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
+  if (NS_OK != result) {
+    NS_RELEASE(nativeThis);
+    return JS_FALSE;
+  }
+
+  owner->SetScriptObject((void *)obj);
+  JS_SetPrivate(cx, obj, nativeThis);
+
+  NS_RELEASE(owner);
+  return JS_TRUE;
+}
 
 //
 // HTMLOptionElement class initialization
@@ -372,6 +432,7 @@ extern "C" NS_DOM nsresult NS_InitHTMLOptionElementClass(nsIScriptContext *aCont
       return NS_ERROR_FAILURE;
     }
 
+    JS_AliasProperty(jscontext, global, "HTMLOptionElement", "Option");
   }
   else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {
     proto = JSVAL_TO_OBJECT(vp);

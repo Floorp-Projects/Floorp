@@ -30,6 +30,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsDOMCID.h"
 
 
@@ -469,8 +470,10 @@ HTMLImageElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   nsIScriptNameSpaceManager* manager;
   nsIDOMHTMLImageElement *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
+  nsIJSNativeInitializer* initializer = nsnull;
 
   static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
+  static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
   result = context->GetNameSpaceManager(&manager);
   if (NS_OK != result) {
@@ -491,7 +494,19 @@ HTMLImageElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     return JS_FALSE;
   }
 
-  // XXX We should be calling Init() on the instance
+  result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);
+  if (NS_OK != result) {
+    NS_RELEASE(nativeThis);
+    return JS_FALSE;
+  }
+
+  result = initializer->Initialize(cx, argc, argv);
+  NS_RELEASE(initializer);
+
+  if (NS_OK != result) {
+    NS_RELEASE(nativeThis);
+    return JS_FALSE;
+  }
 
   result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
   if (NS_OK != result) {
