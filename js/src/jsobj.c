@@ -482,7 +482,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     if (JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) &&
         cx->branchCallback &&
         !cx->branchCallback(cx, NULL)) {
-        return JS_FALSE;
+        return NULL;
     }
 
     /* Set to null in case we return an early error. */
