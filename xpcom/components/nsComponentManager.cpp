@@ -813,7 +813,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
     rv = mRegistry->EnumerateSubtrees( mCLSIDKey, getter_AddRefs(cidEnum));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRegistryEnumerator> regEnum = do_QueryInterface(cidEnum, &rv);
+    nsCOMPtr<nsIRegistryEnumerator> regEnum(do_QueryInterface(cidEnum, &rv));
     if (NS_FAILED(rv)) return rv;
 
     for (rv = regEnum->First();
