@@ -35,7 +35,7 @@
 #include "URLMON.h"
 #include "shlobj.h"
 
-#if 1
+#if 0
 #define PRNTDEBUG(_x) printf(_x);
 #define PRNTDEBUG2(_x1, _x2) printf(_x1, _x2);
 #define PRNTDEBUG3(_x1, _x2, _x3) printf(_x1, _x2, _x3);
