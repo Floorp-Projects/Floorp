@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
 
-B_NAME = mozilla-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)-$(MOZILLA_VERSION)
+B_NAME = mozilla-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)
 STUB_NAME = $(B_NAME)-installer
 SEA_NAME  = $(B_NAME)-full-installer
 
