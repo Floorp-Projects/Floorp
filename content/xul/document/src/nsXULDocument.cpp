@@ -117,6 +117,7 @@
 #include "nsRDFCID.h"
 #include "nsIXULContentUtils.h"
 #include "nsRDFDOMNodeList.h"
+#include "nsWeakPtr.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h" // XXX should go away
 #include "plhash.h"
@@ -893,7 +894,7 @@ protected:
     nsVoidArray                mObservers;
     nsAutoString               mDocumentTitle;
     nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
-    nsCOMPtr<nsILoadGroup>     mDocumentLoadGroup;  // [OWNER] leads to loader
+    nsWeakPtr                  mDocumentLoadGroup;  // [WEAK] leads to loader
     nsCOMPtr<nsIPrincipal>     mDocumentPrincipal;  // [OWNER]
     nsCOMPtr<nsIRDFResource>   mRootResource;       // [OWNER]
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER] 
@@ -1303,7 +1304,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
     if (NS_FAILED(rv)) return rv;
 
 #ifdef NECKO
-    mDocumentLoadGroup = aLoadGroup;
+    mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
 #else
     syntheticURL->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
 #endif
@@ -1528,7 +1529,9 @@ XULDocumentImpl::GetDocumentPrincipal() const
 NS_IMETHODIMP
 XULDocumentImpl::GetDocumentLoadGroup(nsILoadGroup **aGroup) const
 {
-    *aGroup = mDocumentLoadGroup;
+    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+
+    *aGroup = group;
     NS_IF_ADDREF(*aGroup);
     return NS_OK;
 }

@@ -631,7 +631,6 @@ nsDocument::nsDocument()
   mArena = nsnull;
   mDocumentTitle = nsnull;
   mDocumentURL = nsnull;
-  mDocumentLoadGroup = nsnull;
   mCharacterSet = "ISO-8859-1";
   mParentDocument = nsnull;
   mRootContent = nsnull;
@@ -676,7 +675,7 @@ nsDocument::~nsDocument()
     mDocumentTitle = nsnull;
   }
   NS_IF_RELEASE(mDocumentURL);
-  NS_IF_RELEASE(mDocumentLoadGroup);
+  mDocumentLoadGroup = null_nsCOMPtr();
 
   mParentDocument = nsnull;
 
@@ -849,7 +848,7 @@ nsDocument::Reset(nsIURI *aURL)
     mDocumentTitle = nsnull;
   }
   NS_IF_RELEASE(mDocumentURL);
-  NS_IF_RELEASE(mDocumentLoadGroup);
+  mDocumentLoadGroup = null_nsCOMPtr();
 
   // Delete references to sub-documents
   PRInt32 index = mSubDocuments.Count();
@@ -894,23 +893,14 @@ nsDocument::Reset(nsIURI *aURL)
 
   NS_IF_RELEASE(mNameSpaceManager);
 
-#ifdef NECKO
   (void)aChannel->GetURI(&mDocumentURL);
   nsCOMPtr<nsISupports> owner;
   aChannel->GetOwner(getter_AddRefs(owner));
   if (owner)
     owner->QueryInterface(nsIPrincipal::GetIID(), (void**)&mPrincipal);
-//  (void)aChannel->GetLoadGroup(&mDocumentLoadGroup);
-  mDocumentLoadGroup = aLoadGroup;
-  NS_ADDREF(mDocumentLoadGroup);
-  NS_ASSERTION(mDocumentLoadGroup, "Should have a load group now on construction.");
-#else
-  mDocumentURL = aURL;
-  if (nsnull != aURL) {
-    NS_ADDREF(aURL);
-    rv = aURL->GetLoadGroup(&mDocumentLoadGroup);
-  }
-#endif
+
+  mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
+  NS_ASSERTION(aLoadGroup, "Should have a load group now on construction.");
 
   if (NS_OK == rv) {
     rv = NS_NewNameSpaceManager(&mNameSpaceManager);
@@ -964,8 +954,10 @@ nsDocument::GetContentType(nsString& aContentType) const
 NS_IMETHODIMP
 nsDocument::GetDocumentLoadGroup(nsILoadGroup **aGroup) const
 {
-  *aGroup = mDocumentLoadGroup;
-  NS_IF_ADDREF(mDocumentLoadGroup);
+  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+
+  *aGroup = group;
+  NS_IF_ADDREF(*aGroup);
   return NS_OK;
 }
 

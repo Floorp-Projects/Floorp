@@ -20,6 +20,7 @@
 
 #include "nsIDocument.h"
 #include "nsWeakReference.h"
+#include "nsWeakPtr.h"
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
@@ -456,7 +457,7 @@ protected:
   nsString* mDocumentTitle;
   nsIURI* mDocumentURL;
   nsIPrincipal* mPrincipal;
-  nsILoadGroup* mDocumentLoadGroup;
+  nsWeakPtr mDocumentLoadGroup;
   nsString mCharacterSet;
   nsIDocument* mParentDocument;
   nsVoidArray mSubDocuments;
