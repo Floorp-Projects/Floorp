@@ -457,7 +457,7 @@ class nsTAString_CharT
         // default because that might tempt people into using it (where it
         // would be invalid).
 #if !defined(__SUNPRO_CC) && \
-    !defined(__GNUC__) || __GNUC__ > 2 || __GNUC_MINOR__ > 95
+   (!defined(__GNUC__) || __GNUC__ > 2 || __GNUC_MINOR__ > 95)
 
         // NOT TO BE IMPLEMENTED
       nsTAString_CharT( const self_type& );
