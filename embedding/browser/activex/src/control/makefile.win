@@ -35,6 +35,30 @@ DLLNAME = mozctl
 QUIET =
 DEPTH=..\..\..\..\..
 
+REQUIRES = \
+	xpcom \
+	string \
+	js \
+	widget \
+	gfx \
+	view \
+	cookie \
+	necko \
+	pref \
+	webBrowser_core \
+	docshell \
+	dom \
+	uriloader \
+	layout \
+	content \
+	editor \
+	webshell \
+	profile \
+	embed_base \
+	necko \
+	windowwatcher \
+	$(NULL)
+
 MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = MozillaControl.res
