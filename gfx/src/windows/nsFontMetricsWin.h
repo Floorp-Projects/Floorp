@@ -134,9 +134,12 @@ class nsFontWinSubstitute : public nsFontWin
 {
 public:
   nsFontWinSubstitute(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap, PRBool aDisplayUnicode);
+  nsFontWinSubstitute(PRUint16* aCCMap);
   virtual ~nsFontWinSubstitute();
 
-  virtual PRBool HasGlyph(PRUint32 ch) {return IS_IN_BMP(ch) && IS_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual PRBool HasGlyph(PRUint32 ch) {
+	  return mIsForIgnorable ? CCMAP_HAS_CHAR_EXT(mCCMap, ch) :
+		  IS_IN_BMP(ch) && IS_REPRESENTABLE(mRepresentableCharMap, ch);};
   virtual void SetRepresentable(PRUint32 ch) { if (IS_IN_BMP(ch)) SET_REPRESENTABLE(mRepresentableCharMap, ch); };
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength);
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
@@ -153,6 +156,7 @@ public:
 #endif
 private:
   PRBool mDisplayUnicode;
+  PRBool mIsForIgnorable; 
 
   //We need to have a easily operatable charmap for substitute font
   PRUint32 mRepresentableCharMap[UCS2_MAP_LEN];

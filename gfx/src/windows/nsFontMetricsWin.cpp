@@ -161,6 +161,19 @@ static int gInitialized = 0;
 static PRBool gDoingLineheightFixup = PR_FALSE;
 static PRUint16* gUserDefinedCCMap = nsnull;
 
+// 'virtual' font to 'absorb' truly invisible characters (a subset of
+// default_ignorable_codepoints listed in 
+// http://www.unicode.org/Public/UNIDATA/DerivedCoreProperties.txt)
+// and turn them to  nothingness.
+static nsFontWin* gFontForIgnorable = nsnull;
+static PRUint16 gIgnorableCCMapExtRaw[] = {
+#include "ignorable.x-ccmap"
+};
+
+// It's a pre-compiled extended ccmap so that the pointer
+// has to point at the 3rd element.
+static PRUint16 *gIgnorableCCMapExt = gIgnorableCCMapExtRaw + 2;
+
 static nsCharsetInfo gCharsetInfo[eCharset_COUNT] =
 {
   { "DEFAULT",     0,    "",               GenerateDefault,    nsnull},
@@ -218,6 +231,11 @@ FreeGlobals(void)
     }
     delete nsFontMetricsWin::gGlobalFonts;
     nsFontMetricsWin::gGlobalFonts = nsnull;
+  }
+
+  if (gFontForIgnorable) {
+    delete gFontForIgnorable;
+    gFontForIgnorable = nsnull;
   }
 
   // free FamilyNames
@@ -345,6 +363,12 @@ InitGlobals(void)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  gFontForIgnorable = new nsFontWinSubstitute(gIgnorableCCMapExt); 
+  if (!gFontForIgnorable) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   //register an observer to take care of cleanup
   gFontCleanupObserver = new nsFontCleanupObserver();
   NS_ASSERTION(gFontCleanupObserver, "failed to create observer");
@@ -390,7 +414,8 @@ nsFontMetricsWin::~nsFontMetricsWin()
   mSubstituteFont = nsnull; // released below
   mFontHandle = nsnull; // released below
 
-  for (PRInt32 i = mLoadedFonts.Count()-1; i >= 0; --i) {
+  // mLoadedFont[0] is gFontForIgnorable that will be deleted in FreeGlobal
+  for (PRInt32 i = mLoadedFonts.Count()-1; i > 0; --i) {
     delete (nsFontWin*)mLoadedFonts[i];
   }
   mLoadedFonts.Clear();
@@ -3467,6 +3492,12 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
 nsFontWin*
 nsFontMetricsWin::FindFont(HDC aDC, PRUint32 aChar)
 {
+  // the first font should be for invisible ignorable characters
+  if (mLoadedFonts.Count() < 1)
+    mLoadedFonts.AppendElement(gFontForIgnorable);
+  if (gFontForIgnorable->HasGlyph(aChar))
+      return gFontForIgnorable;
+
   nsFontWin* font = FindUserDefinedFont(aDC, aChar);
   if (!font) {
     font = FindLocalFont(aDC, aChar);
@@ -3900,8 +3931,13 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
 
   //This if block is meant to speedup the process in normal situation, when
   //most characters can be found in first font
-  if (currFont == mLoadedFonts[0]) {
-    while (currChar < lastChar && (currFont->HasGlyph(*currChar)))
+  NS_ASSERTION(count > 1, "only one font loaded");
+  // mLoadedFont[0] == font for invisible ignorable characters
+  PRUint32 firstFont = count > 1 ? 1 : 0; 
+  if (currFont == mLoadedFonts[firstFont]) { 
+    while (currChar < lastChar && 
+           (currFont->HasGlyph(*currChar)) &&
+           !CCMAP_HAS_CHAR_EXT(gIgnorableCCMapExt, *currChar))
       ++currChar;
     fontSwitch.mFontWin = currFont;
     if (!(*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData))
@@ -4286,6 +4322,15 @@ nsFontWinSubstitute::nsFontWinSubstitute(LOGFONT* aLogFont, HFONT aFont,
   PRUint16* aCCMap, PRBool aDisplayUnicode) : nsFontWin(aLogFont, aFont, aCCMap)
 {
   mDisplayUnicode = aDisplayUnicode;
+  mIsForIgnorable = PR_FALSE; 
+  memset(mRepresentableCharMap, 0, sizeof(mRepresentableCharMap));
+}
+
+nsFontWinSubstitute::nsFontWinSubstitute(PRUint16 *aCCMap) :
+  nsFontWin(NULL, NULL, aCCMap)
+{
+  mIsForIgnorable = PR_TRUE;
+  mDisplayUnicode = PR_FALSE;
   memset(mRepresentableCharMap, 0, sizeof(mRepresentableCharMap));
 }
 
@@ -4359,6 +4404,8 @@ PRInt32
 nsFontWinSubstitute::GetWidth(HDC aDC, const PRUnichar* aString,
   PRUint32 aLength)
 {
+  if (mIsForIgnorable)
+    return 0;
   nsAutoChar16Buffer buffer;
   nsresult rv = SubstituteChars(PR_FALSE, aString, aLength, buffer, &aLength);
   if (NS_FAILED(rv) || !aLength) return 0;
@@ -4374,6 +4421,8 @@ void
 nsFontWinSubstitute::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
+  if (mIsForIgnorable)
+    return;
   nsAutoChar16Buffer buffer;
   nsresult rv = SubstituteChars(PR_FALSE, aString, aLength, buffer, &aLength);
   if (NS_FAILED(rv) || !aLength) return;
@@ -4389,6 +4438,8 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
                                         nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
+  if (mIsForIgnorable)
+    return NS_OK;
   nsAutoChar16Buffer buffer;
   nsresult rv = SubstituteChars(mDisplayUnicode, aString, aLength, buffer, &aLength);
   if (NS_FAILED(rv)) {
@@ -4417,7 +4468,7 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
 void 
 nsFontWinSubstitute::DumpFontInfo()
 {
-  printf("FontName: %s @%p\n", mName, this);
+  printf("FontName: %s @%p\n", mIsForIgnorable ? "For the ignorable" : mName, this);
   printf("FontType: nsFontWinSubstitute\n");
 }
 #endif // NS_DEBUG
@@ -5231,8 +5282,13 @@ nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
 
   //This if block is meant to speedup the process in normal situation, when
   //most characters can be found in first font
-  if (currFont == mLoadedFonts[0]) {
-    while (++currChar < lastChar && currFont->HasGlyph(*(currChar)) && currSubset->HasGlyph(*currChar)) ;
+  NS_ASSERTION(count > 1, "only one font loaded");
+  // mLoadedFont[0] == font for invisible ignorable characters
+  PRUint32 firstFont = count > 1 ? 1 : 0; 
+  if (currFont == mLoadedFonts[firstFont]) { 
+    while (currChar < lastChar && 
+           currFont->HasGlyph(*currChar) && currSubset->HasGlyph(*currChar) &&
+           !CCMAP_HAS_CHAR_EXT(gIgnorableCCMapExt, *currChar))
 
     fontSwitch.mFontWin = currSubset;
     if (!(*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData))
