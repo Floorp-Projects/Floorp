@@ -92,7 +92,6 @@ CPP_OBJS=                                       \
   ../xpath/$(OBJDIR)/TextExpr.obj \
   ../xpath/$(OBJDIR)/UnionExpr.obj \
   ../xpath/$(OBJDIR)/VariableRefExpr.obj \
-  ../xpath/$(OBJDIR)/WildCardExpr.obj \
   ../xpath/$(OBJDIR)/XPathNames.obj \
   ../xml/$(OBJDIR)/XMLUtils.obj \
   ../xml/$(OBJDIR)/XMLDOMUtils.obj \

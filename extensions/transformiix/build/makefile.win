@@ -88,6 +88,7 @@ CPP_OBJS=							\
 	..\source\xpath\$(OBJDIR)\MultiplicativeExpr.obj \
 	..\source\xpath\$(OBJDIR)\NodeSet.obj \
 	..\source\xpath\$(OBJDIR)\NodeSetFunctionCall.obj \
+	..\source\xpath\$(OBJDIR)\nsNodeSet.obj \
 	..\source\xpath\$(OBJDIR)\NumberExpr.obj \
 	..\source\xpath\$(OBJDIR)\NumberFunctionCall.obj \
 	..\source\xpath\$(OBJDIR)\NumberResult.obj \
@@ -102,7 +103,6 @@ CPP_OBJS=							\
 	..\source\xpath\$(OBJDIR)\TextExpr.obj \
 	..\source\xpath\$(OBJDIR)\UnionExpr.obj \
 	..\source\xpath\$(OBJDIR)\VariableRefExpr.obj \
-	..\source\xpath\$(OBJDIR)\WildCardExpr.obj \
 	..\source\xpath\$(OBJDIR)\XPathNames.obj \
 	..\source\xpath\$(OBJDIR)\XPathProcessor.obj \
 	..\source\xml\$(OBJDIR)\XMLUtils.obj \

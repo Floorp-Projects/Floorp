@@ -87,6 +87,7 @@ OBJS =../source/base/ArrayList.o \
   ../source/xpath/MultiplicativeExpr.o \
   ../source/xpath/NodeSet.o \
   ../source/xpath/NodeSetFunctionCall.o \
+  ../source/xpath/nsNodeSet.o \
   ../source/xpath/NumberExpr.o \
   ../source/xpath/NumberFunctionCall.o \
   ../source/xpath/NumberResult.o \
@@ -101,7 +102,6 @@ OBJS =../source/base/ArrayList.o \
   ../source/xpath/TextExpr.o \
   ../source/xpath/UnionExpr.o \
   ../source/xpath/VariableRefExpr.o \
-  ../source/xpath/WildCardExpr.o \
   ../source/xpath/XPathNames.o \
   ../source/xpath/XPathProcessor.o \
   ../source/xml/XMLUtils.o \

@@ -59,7 +59,6 @@ CPPSRCS = AdditiveExpr.cpp \
         TextExpr.cpp \
         UnionExpr.cpp \
         VariableRefExpr.cpp \
-        WildCardExpr.cpp \
         XPathNames.cpp
 ifdef MOZ_XSL
 CPPSRCS += XPathProcessor.cpp \
