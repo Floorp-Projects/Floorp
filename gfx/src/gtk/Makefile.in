@@ -57,10 +57,6 @@ endif
 
 CSRCS		= nsPrintdGTK.c
 
-ifdef NATIVE_THEME_SUPPORT
-CSRCS		+= gtkdrawing.c
-endif
-
 # Code shared between GTK+, Xlib and Xprint gfx modules
 X11SHARED_LCPPSRCS = \
 		nsAntiAliasedGlyph.cpp \
@@ -90,16 +86,19 @@ ifdef MOZ_ENABLE_GTK
 CPPSRCS 	+= \
 		nsRegionGTK.cpp \
 		$(NULL)
+
+ifdef NATIVE_THEME_SUPPORT
+CSRCS		+= gtkdrawing.c
+CPPSRCS		+= nsNativeThemeGTK.cpp
+DEFINES		+= -DNATIVE_THEME_SUPPORT
+endif
+
 endif
 
 ifdef MOZ_ENABLE_GTK2
 CPPSRCS		+= \
 		nsRegionGTK2.cpp \
 		$(NULL)
-endif
-
-ifdef NATIVE_THEME_SUPPORT
-CPPSRCS		+= nsNativeThemeGTK.cpp
 endif
 
 # If not primary toolkit, install in secondary path
@@ -162,10 +161,6 @@ ifdef MOZ_ENABLE_XPRINT
 DEFINES         += -DUSE_XPRINT -DUSE_MOZILLA_TYPES
 INCLUDES	+= -I$(srcdir)/../xprint
 EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
-endif
-
-ifdef NATIVE_THEME_SUPPORT
-DEFINES		+= -DNATIVE_THEME_SUPPORT
 endif
 
 LOCAL_INCLUDES	= \
