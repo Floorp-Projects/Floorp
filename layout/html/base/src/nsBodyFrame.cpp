@@ -17,6 +17,7 @@
  */
 #include "nsBodyFrame.h"
 #include "nsIContent.h"
+#include "nsIHTMLContent.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -33,7 +34,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsIWebShell.h"
 #include "nsHTMLValue.h"
-#include "nsHTMLTagContent.h"
+//#include "nsHTMLTagContent.h"
 #include "nsHTMLParts.h"
 #include "nsCSSLayout.h"
 
@@ -448,22 +449,23 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 
   nsHTMLValue value;
   float p2t = aPresContext->GetPixelsToTwips();
-  nsHTMLTagContent* content = (nsHTMLTagContent*)mContent;
-
-  content->GetAttribute(nsHTMLAtoms::marginwidth, value);
-  if (eHTMLUnit_Pixel == value.GetUnit()) { // marginwidth is set in body 
-    marginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-    if (marginWidth < 0) {
-      marginWidth = 0;
+  nsIHTMLContent* hc;
+  if (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc)) {
+    hc->GetAttribute(nsHTMLAtoms::marginwidth, value);
+    if (eHTMLUnit_Pixel == value.GetUnit()) { // marginwidth is set in body 
+      marginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      if (marginWidth < 0) {
+        marginWidth = 0;
+      }
     }
-  }
-
-  content->GetAttribute(nsHTMLAtoms::marginheight, value);
-  if (eHTMLUnit_Pixel == value.GetUnit()) { // marginheight is set in body
-    marginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-    if (marginHeight < 0) {
-      marginHeight = 0;
+    hc->GetAttribute(nsHTMLAtoms::marginheight, value);
+    if (eHTMLUnit_Pixel == value.GetUnit()) { // marginheight is set in body
+      marginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      if (marginHeight < 0) {
+        marginHeight = 0;
+      }
     }
+    NS_RELEASE(hc);
   }
 
   nsStyleSpacing* spacing = nsnull;
