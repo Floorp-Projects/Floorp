@@ -604,7 +604,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
           ::JS_ClearRegExpStatics(cx);
 
           if (gsp) {
-            nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
+            nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(aDocument));
 
             nsWindowSH::InstallGlobalScopePolluter(cx, mJSObject, gsp,
                                                    html_doc);
