@@ -21,6 +21,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= xpidl
+# DIRS = xpidl
+DIRS = registry
 
 include $(topsrcdir)/config/rules.mk
