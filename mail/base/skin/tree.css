@@ -270,12 +270,12 @@ treechildren::-moz-tree-column(insertafter) {
 treechildren::-moz-tree-twisty {
   padding-right: 2px;
   width: 10px; /* The image's width is 9 pixels */
-  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
 }
 
 treechildren::-moz-tree-twisty(open) {
   width: 10px; /* The image's width is 9 pixels */
-  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-open.png");
 }
 
 treechildren::-moz-tree-indentation {

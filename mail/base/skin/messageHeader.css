@@ -173,11 +173,11 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   padding-right: 5px;
 
   padding-top: 4px;
-  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
 }
 
 .addresstwisty[open] {
-  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-open.png");
 }
 
 /* ::::: view expand and collapse twisties  ::::: */
@@ -188,11 +188,11 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 }
 
 .expandHeaderViewButton {
-  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-open.png");
 }
 
 .collapsedHeaderViewButton  {
-  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
 }
 
 /* ::::: collapsed view styles ::::: */

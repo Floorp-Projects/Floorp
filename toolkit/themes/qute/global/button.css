@@ -145,12 +145,12 @@ button[type="disclosure"] {
   margin: 0px !important;
   padding: 0px !important;
   -moz-appearance: none;
-  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
   min-width: 0px !important;
   background-color: transparent;
 }
 
 button[type="disclosure"][open="true"] {
-  list-style-image: url("chrome://global/skin/tree/twisty-open.gif"); 
+  list-style-image: url("chrome://global/skin/tree/twisty-open.png"); 
 }
 
