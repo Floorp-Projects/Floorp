@@ -70,34 +70,34 @@ span[-moz-smiley] > span {
 
 
 span[-moz-smiley="s1"] {
-  background-image: url(chrome://editor/content/images/smile.gif);
+  background-image: url(chrome://editor/content/images/smile_n.gif);
 }
 
 
 span[-moz-smiley="s2"] {
-  background-image: url(chrome://editor/content/images/frown.gif);
+  background-image: url(chrome://editor/content/images/frown_n.gif);
 }
 
 
 span[-moz-smiley="s3"] {
-  background-image: url(chrome://editor/content/images/wink.gif);
+  background-image: url(chrome://editor/content/images/wink_n.gif);
 }
 
 
 span[-moz-smiley="s4"] { 
-  background-image: url(chrome://editor/content/images/sick.gif);
+  background-image: url(chrome://editor/content/images/tongue_n.gif);
 }
 
 span[-moz-smiley="s5"] {
-  background-image: url(chrome://editor/content/images/s_smile.gif);
+  background-image: url(chrome://editor/content/images/laughing_n.gif);
 }
 
 span[-moz-smiley="s6"] {
-  background-image: url(chrome://editor/content/images/s_frown.gif);
+  background-image: url(chrome://editor/content/images/embarrassed_n.gif);
 }
 
 
 span[-moz-smiley="s7"] {
-  background-image: url(chrome://editor/content/images/s_wink.gif);
+  background-image: url(chrome://editor/content/images/undecided_n.gif);
 }
 

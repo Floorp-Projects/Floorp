@@ -897,13 +897,13 @@ var nsSetSmiley =
         break;
         case ";-)": strSml="s3";
         break;
-        case ";-P": strSml="s4";
+        case ":-P": strSml="s4";
         break;
-        case ":)":  strSml="s5";
+        case ":-D": strSml="s5";
         break;
-        case ":(":  strSml="s6";
+        case ":-[": strSml="s6";
         break;
-        case ";)":  strSml="s7";
+        case ":-\\": strSml="s7";
         break;
         default:	strSml="";
         break;

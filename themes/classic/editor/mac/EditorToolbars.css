@@ -141,58 +141,59 @@ button.edit-mode[selected="1"]:hover:active
     list-style-image      : url("chrome://editor/skin/images/bold-hover-active.gif");
   } 
 
-#smilyPopup{
-
-    width : 130px;
-}
-
-#smileButton {
+#smileButtonMenu {
   list-style-image:url("chrome://editor/skin/images/smile.gif"); 
 }
 
-menu:hover > #smileButton, 
-menu:hover:active > #smileButton[toggled="true"] {
+#smileButtonMenu:hover {
 	list-style-image:url("chrome://editor/skin/images/smile_hover.gif");
 }
 
-menu:hover:active > #smileButton,
-menu:hover > #smileButton[toggled="true"] {
+#smileButtonMenu:hover:active,
+#smileButtonMenu[open="true"] {
 	list-style-image:url("chrome://editor/skin/images/smile_active.gif");
 }
 
-#smileButton[disabled="true"], 
-menu:hover > #smileButton[disabled="true"], 
-menu:hover:active > #smileButton[disabled="true"] {
+#smileButtonMenu[disabled="true"],
+#smileButtonMenu[disabled="true"]:hover,
+#smileButtonMenu[disabled="true"]:hover:active  {
 	list-style-image:url("chrome://editor/skin/images/smile_disabled.gif");
 }
 
-#insert-smile {
-  list-style-image:url(chrome://editor/skin/images/smile.gif); 
+.insert-smile > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/smile_n.gif); 
 }
 
-#insert-sick {
-  list-style-image:url(chrome://editor/skin/images/sick.gif); 
+.insert-tongue > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/tongue_n.gif); 
 }
 
-#insert-frown {
-  list-style-image:url(chrome://editor/skin/images/frown.gif); 
+.insert-frown > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/frown_n.gif); 
+ }
+
+.insert-wink > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/wink_n.gif); 
+ }
+
+.insert-laughing > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/laughing_n.gif); 
+ }
+
+.insert-embarrassed > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/embarrassed_n.gif); 
+ }
+
+
+.insert-undecided > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/undecided_n.gif); 
 }
 
-#insert-wink {
-  list-style-image:url(chrome://editor/skin/images/wink.gif); 
+.smiley > .menu-iconic-left {
+
+    margin-right: 15px;
 }
 
-#insert-smile5 {
-  list-style-image:url(chrome://editor/skin/images/s_smile.gif); 
-}
-
-#insert-smile6 {
-  list-style-image:url(chrome://editor/skin/images/s_frown.gif); 
-}
-
-#insert-smile7 {
-  list-style-image:url(chrome://editor/skin/images/s_wink.gif); 
-}
 
 
 #italicButton

@@ -625,52 +625,61 @@
   list-style-image: url("chrome://editor/skin/btn2/justify-dis.gif");
 }
 
+
+
 #smileButtonMenu {
   list-style-image: url("chrome://editor/skin/btn2/smiley.gif");
 }
 
-#smileButtonMenu:hover > #smileButton {
+#smileButtonMenu:hover {
   list-style-image: url("chrome://editor/skin/btn2/smiley-hov.gif");
 }
 
-#smileButtonMenu:hover:active > #smileButton {
+#smileButtonMenu:hover:active,
+#smileButtonMenu[open="true"] {
   list-style-image: url("chrome://editor/skin/btn2/smiley-act.gif");
 }
 
-#smileButton[disabled="true"],
-#smileButtonMenu:hover:active > #smileButton[disabled="true"] {
+#smileButtonMenu[disabled="true"],
+#smileButtonMenu[disabled="true"]:hover,
+#smileButtonMenu[disabled="true"]:hover:active  {
   list-style-image: url("chrome://editor/skin/btn2/smiley-dis.gif");
 }
 
-/* ::::: smiley icons ::::: */
-
-#insert-smile {
-  list-style-image: url("chrome://editor/skin/icons/smiley/smile.gif");
+.insert-smile > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/smile_n.gif); 
 }
 
-#insert-sick {
-  list-style-image: url("chrome://editor/skin/icons/smiley/sick.gif");
+.insert-tongue > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/tongue_n.gif); 
 }
 
-#insert-frown {
-  list-style-image: url("chrome://editor/skin/icons/smiley/frown.gif");
+.insert-frown > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/frown_n.gif); 
+ }
+
+.insert-wink > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/wink_n.gif); 
+ }
+
+.insert-laughing > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/laughing_n.gif); 
+ }
+
+.insert-embarrassed > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/embarrassed_n.gif); 
+ }
+
+
+.insert-undecided > .menu-iconic-left {
+  list-style-image:url(chrome://editor/skin/images/undecided_n.gif); 
 }
 
-#insert-wink {
-  list-style-image: url("chrome://editor/skin/icons/smiley/wink.gif");
+.smiley > .menu-iconic-left {
+
+    margin-right: 15px;
 }
 
-#insert-smile5 {
-  list-style-image: url("chrome://editor/skin/icons/smiley/smile.gif");
-}
-
-#insert-smile6 {
-  list-style-image: url("chrome://editor/skin/icons/smiley/frown.gif");
-}
-
-#insert-smile7 {
-  list-style-image: url("chrome://editor/skin/icons/smiley/wink.gif");
-}
 
 /* ::::: fg/bg color picker ::::: */
 

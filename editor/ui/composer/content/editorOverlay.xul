@@ -107,7 +107,7 @@
     <command id="cmd_objectProperties" oncommand="goDoCommand('cmd_objectProperties')"/>
     <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"     label="&insertCharsCmd.label;"/>
     <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"     label="&insertHTMLCmd.label;"/>
-    <command id="cmd_smiley"           state=""         oncommand="goDoCommand('cmd_smiley')"/>
+    <command id="cmd_smiley"           state=""  />
     <command id="cmd_insertBreak"      oncommand="goDoCommand('cmd_insertBreak')"/>
     <command id="cmd_insertBreakAll"   oncommand="goDoCommand('cmd_insertBreakAll')"/>
     <command id="cmd_NormalMode"       oncommand="goDoCommand('cmd_NormalMode')"     label="&NormalMode.label;"/>
@@ -553,34 +553,26 @@
 
 
   <!-- smiley menu -->
-  <menu id="smileButtonMenu" tooltip="aTooltip" tooltiptext="&SmileButton.tooltip;">
-       <button class="button-toolbar" id="smileButton">
-       </button>
-       <menupopup id="smilyPopup" flex="100%">
-               <menuitem oncommand="doStatefulCommand('cmd_smiley', ':-)' )">
-                       <button class="plain" id="insert-smile" align="left"  label="&smiley1Cmd.label;"/>
-               </menuitem>
-               <menuitem oncommand="doStatefulCommand('cmd_smiley', ':-(' )">
-                       <button class="plain" id="insert-frown" align="left"  label="&smiley2Cmd.label;"/>
-               </menuitem>
-               <menuitem oncommand="doStatefulCommand('cmd_smiley', ';-)' )">
-                       <button class="plain" id="insert-wink" align="left"   label="&smiley3Cmd.label;"/>
-               </menuitem>
-               <menuitem oncommand="doStatefulCommand('cmd_smiley', ':-P' )">
-                       <button class="plain" id="insert-sick" align="left"   label="&smiley4Cmd.label;"/>
-               </menuitem>
-               <menuitem oncommand="doStatefulCommand('cmd_smiley', ':)' )">
-                       <button class="plain" id="insert-smile5" align="left" label="&smiley5Cmd.label;"/>
-               </menuitem>
-               <menuitem oncommand="doStatefulCommand('cmd_smiley', ':(' )">
-                       <button class="plain" id="insert-smile6" align="left" label="&smiley6Cmd.label;"/>
-           </menuitem>
-               <menuitem oncommand="doStatefulCommand('cmd_smiley', ';)' )">
-                       <button class="plain" id="insert-smile7" align="left" label="&smiley7Cmd.label;"/>
-               </menuitem>
-           <spring flex="100%" />
+  <menubutton id="smileButtonMenu" class="button-toolbar" observes="cmd_smiley"
+			tooltip="aTooltip" tooltiptext="&SmileButton.tooltip;">
+       <menupopup id="smilyPopup">
+               <menuitem class="smiley insert-smile menuitem-iconic"       label="&smiley1Cmd.label;" 
+						oncommand="doStatefulCommand('cmd_smiley', ':-)'  )"  />
+               <menuitem class="smiley insert-frown menuitem-iconic"       label="&smiley2Cmd.label;"
+						oncommand="doStatefulCommand('cmd_smiley', ':-('  )" />                                              
+               <menuitem class="smiley insert-wink menuitem-iconic"        label="&smiley3Cmd.label;"
+						oncommand="doStatefulCommand('cmd_smiley', ';-)'  )"  />                       
+               <menuitem class="smiley insert-tongue menuitem-iconic"      label="&smiley4Cmd.label;"
+						oncommand="doStatefulCommand('cmd_smiley', ':-P'  )" />
+               <menuitem class="smiley insert-laughing menuitem-iconic"    label="&smiley5Cmd.label;"
+						oncommand="doStatefulCommand('cmd_smiley', ':-D'  )" />
+               <menuitem class="smiley insert-embarrassed menuitem-iconic" label="&smiley6Cmd.label;"
+						oncommand="doStatefulCommand('cmd_smiley', ':-['  )" />
+               <menuitem class="smiley insert-undecided menuitem-iconic"   label="&smiley7Cmd.label;"
+						oncommand="doStatefulCommand('cmd_smiley', ':-\\' )" />           
        </menupopup>
-   </menu>
+   </menubutton>
+
 
   <!-- this is only used in mailnews -->
   <menubutton id="AlignPopupButton" class="button-toolbar" observes="cmd_align"
