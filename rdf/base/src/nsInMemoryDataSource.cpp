@@ -184,96 +184,16 @@ public:
     NS_DECL_AGGREGATED
 
     // nsIRDFDataSource methods
-    NS_IMETHOD GetURI(char* *uri);
-
-    NS_IMETHOD GetSource(nsIRDFResource* property,
-                         nsIRDFNode* target,
-                         PRBool tv,
-                         nsIRDFResource** source);
-
-    NS_IMETHOD GetSources(nsIRDFResource* property,
-                          nsIRDFNode* target,
-                          PRBool tv,
-                          nsISimpleEnumerator** sources);
-
-    NS_IMETHOD GetTarget(nsIRDFResource* source,
-                         nsIRDFResource* property,
-                         PRBool tv,
-                         nsIRDFNode** target);
-
-    NS_IMETHOD GetTargets(nsIRDFResource* source,
-                          nsIRDFResource* property,
-                          PRBool tv,
-                          nsISimpleEnumerator** targets);
-
-    NS_IMETHOD Assert(nsIRDFResource* source, 
-                      nsIRDFResource* property, 
-                      nsIRDFNode* target,
-                      PRBool tv);
-
-    NS_IMETHOD Unassert(nsIRDFResource* source,
-                        nsIRDFResource* property,
-                        nsIRDFNode* target);
-
-    NS_IMETHOD Change(nsIRDFResource* aSource,
-                      nsIRDFResource* aProperty,
-                      nsIRDFNode* aOldTarget,
-                      nsIRDFNode* aNewTarget);
-
-    NS_IMETHOD Move(nsIRDFResource* aOldSource,
-                    nsIRDFResource* aNewSource,
-                    nsIRDFResource* aProperty,
-                    nsIRDFNode* aTarget);
-
-    NS_IMETHOD HasAssertion(nsIRDFResource* source,
-                            nsIRDFResource* property,
-                            nsIRDFNode* target,
-                            PRBool tv,
-                            PRBool* hasAssertion);
-
-    NS_IMETHOD AddObserver(nsIRDFObserver* n);
-
-    NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
-
-    NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsISimpleEnumerator** labels);
-
-    NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsISimpleEnumerator** labels);
-
-    NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult);
-
-    NS_IMETHOD Flush();
-
-    NS_IMETHOD GetAllCommands(nsIRDFResource* source,
-                              nsIEnumerator/*<nsIRDFResource>*/** commands);
-
-    NS_IMETHOD GetAllCmds(nsIRDFResource* source,
-                              nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
-
-    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-                                nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-                                PRBool* aResult);
-
-    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-                         nsIRDFResource*   aCommand,
-                         nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+    NS_DECL_NSIRDFDATASOURCE
 
     // nsIRDFPurgeableDataSource methods
-    NS_IMETHOD Mark(nsIRDFResource* aSource,
-                    nsIRDFResource* aProperty,
-                    nsIRDFNode* aTarget,
-                    PRBool aTruthValue,
-                    PRBool* aDidMark);
-
-    NS_IMETHOD Sweep();
+    NS_DECL_NSIRDFPURGEABLEDATASOURCE
 
 protected:
     static PRIntn SweepForwardArcsEntries(PLHashEntry* he, PRIntn i, void* arg);
 
 public:
-    // Implemenatation methods
+    // Implementation methods
     Assertion* GetForwardArcs(nsIRDFResource* u);
     Assertion* GetReverseArcs(nsIRDFNode* v);
     void       SetForwardArcs(nsIRDFResource* u, Assertion* as);
@@ -329,8 +249,7 @@ public:
     NS_DECL_ISUPPORTS
    
     // nsISimpleEnumerator interface
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
+    NS_DECL_NSISIMPLEENUMERATOR
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -464,8 +383,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsISimpleEnumerator interface
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
+    NS_DECL_NSISIMPLEENUMERATOR
 };
 
 InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aDataSource,
@@ -1382,13 +1300,6 @@ InMemoryDataSource::GetAllResources(nsISimpleEnumerator** aResult)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aResult);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-InMemoryDataSource::Flush()
-{
-    // XXX nothing to flush, right?
     return NS_OK;
 }
 
