@@ -680,6 +680,48 @@ _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)                    \
   return NS_OK;                                                               \
 }
 
+#define NS_IMPL_HTMLCONTENT_QI4(_class, _base, _if1, _if2, _if3, _if4)        \
+nsresult                                                                      \
+_class::QueryInterface(REFNSIID aIID, void** aInstancePtr)                    \
+{                                                                             \
+  NS_ENSURE_ARG_POINTER(aInstancePtr);                                        \
+                                                                              \
+  *aInstancePtr = nsnull;                                                     \
+                                                                              \
+  nsresult rv;                                                                \
+                                                                              \
+  rv = _base::QueryInterface(aIID, aInstancePtr);                             \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  rv = DOMQueryInterface(this, aIID, aInstancePtr);                           \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  nsISupports *inst = nsnull;                                                 \
+                                                                              \
+  if (aIID.Equals(NS_GET_IID(_if1))) {                                        \
+    inst = NS_STATIC_CAST(_if1 *, this);                                      \
+  } else if (aIID.Equals(NS_GET_IID(_if2))) {                                 \
+    inst = NS_STATIC_CAST(_if2 *, this);                                      \
+  } else if (aIID.Equals(NS_GET_IID(_if3))) {                                 \
+    inst = NS_STATIC_CAST(_if3 *, this);                                      \
+  } else if (aIID.Equals(NS_GET_IID(_if4))) {                                 \
+    inst = NS_STATIC_CAST(_if4 *, this);                                      \
+  } else {                                                                    \
+    return NS_NOINTERFACE;                                                    \
+  }                                                                           \
+                                                                              \
+  NS_ADDREF(inst);                                                            \
+                                                                              \
+  *aInstancePtr = inst;                                                       \
+                                                                              \
+  return NS_OK;                                                               \
+}
+
+
 /**
  * A macro to implement the getter and setter for a given string
  * valued content property. The method uses the generic SetAttr and
