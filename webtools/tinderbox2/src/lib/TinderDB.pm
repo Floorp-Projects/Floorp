@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.21 $ 
-# $Date: 2003/08/16 18:31:07 $ 
+# $Revision: 1.22 $ 
+# $Date: 2003/08/17 01:44:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -44,7 +44,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
@@ -852,7 +853,7 @@ not green.
 
 =head1 AUTHOR
 
-Ken Estes (kestes@staff.mail.com)
+Ken Estes
 
 
 =cut

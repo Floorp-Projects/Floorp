@@ -12,8 +12,8 @@
 
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/07/20 19:04:59 $ 
+# $Revision: 1.8 $ 
+# $Date: 2003/08/17 01:44:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence.pm,v $ 
 # $Name:  $ 
@@ -37,10 +37,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 

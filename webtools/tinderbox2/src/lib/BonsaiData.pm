@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.14 $ 
-# $Date: 2003/08/04 17:15:10 $ 
+# $Revision: 1.15 $ 
+# $Date: 2003/08/17 01:44:06 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -32,10 +32,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 

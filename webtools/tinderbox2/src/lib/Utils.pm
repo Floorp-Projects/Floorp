@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.38 $ 
-# $Date: 2003/08/16 18:31:07 $ 
+# $Revision: 1.39 $ 
+# $Date: 2003/08/17 01:44:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -30,10 +30,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
