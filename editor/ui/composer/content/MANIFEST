@@ -41,5 +41,3 @@ sb-file-contextMenu.js
 sb-file-panel.js
 sb-file-panel.xul
 sb-FileWidgetFileHandler.js
-viewsource.xul
-viewsource.js

@@ -45,8 +45,6 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/sb-file-panel.js \
 		$(srcdir)/sb-file-panel.xul \
 		$(srcdir)/sb-FileWidgetFileHandler.js \
-		$(srcdir)/viewsource.xul \
-		$(srcdir)/viewsource.js \
 		$(srcdir)/editorOverlay.xul \
 		$(srcdir)/editorOverlay.js \
 		$(NULL)
