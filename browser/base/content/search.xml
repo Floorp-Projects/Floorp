@@ -239,9 +239,10 @@
 
 #         if the search box is empty, let''s load the host
           if (!this.value) {
-            var uri = Components.classes['@mozilla.org/network/standard-url;1']
-                                .createInstance(Components.interfaces.nsIURI);
-            uri.spec = searchURL;
+            var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newURI(searchURL, null, null);
+
             searchURL = uri.host;
             if (!searchURL)
               return;

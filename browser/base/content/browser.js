@@ -325,9 +325,12 @@ const gPopupBlockerObserver = {
 
   showBlockedPopup: function (aEvent)
   {
-    var requestingWindowURI = Components.classes["@mozilla.org/network/standard-url;1"]
-                                        .createInstance(Components.interfaces.nsIURI);
-    requestingWindowURI.spec = aEvent.target.getAttribute("requestingWindowURI");
+    var requestingWindow = aEvent.target.getAttribute("requestingWindowURI");
+    var requestingWindowURI = 
+                      Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newURI(requestingWindow, null, null);
+
     var popupWindowURI = aEvent.target.getAttribute("popupWindowURI");
     var features = aEvent.target.getAttribute("popupWindowFeatures");
     
@@ -3394,10 +3397,12 @@ nsBrowserAccess.prototype =
                             .getInterface(nsCI.nsIDOMWindow);
         try {
           if (aOpener) {
-            referrer = Components.classes["@mozilla.org/network/standard-url;1"]
-                                 .createInstance(nsCI.nsIURI);
-            referrer.spec = Components.lookupMethod(aOpener,"location")
-                                      .call(aOpener);
+            var location = Components.lookupMethod(aOpener,"location")
+                                     .call(aOpener);
+            var referrer = 
+                    Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService)
+                              .newURI(location, null, null);
           }
           newWindow.QueryInterface(nsCI.nsIInterfaceRequestor)
                    .getInterface(nsCI.nsIWebNavigation)
@@ -3411,10 +3416,13 @@ nsBrowserAccess.prototype =
           if (aOpener) {
             newWindow = Components.lookupMethod(aOpener,"top")
                                   .call(aOpener);
-            referrer = Components.classes["@mozilla.org/network/standard-url;1"]
-                                 .createInstance(nsCI.nsIURI);
-            referrer.spec = Components.lookupMethod(aOpener,"location")
-                                      .call(aOpener);
+            var location = Components.lookupMethod(aOpener,"location")
+                                     .call(aOpener);
+            var referrer = 
+                    Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService)
+                              .newURI(location, null, null);
+
             newWindow.QueryInterface(nsCI.nsIInterfaceRequestor)
                      .getInterface(nsIWebNavigation)
                      .loadURI(url, nsIWebNavigation.LOAD_FLAGS_NONE, referrer,
@@ -3875,8 +3883,7 @@ nsContextMenu.prototype = {
         if (this.onImage) {
           var blockImage = document.getElementById("context-blockimage");
 
-          var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
-          uri.spec = this.imageURL;
+          var uri = this.target.QueryInterface(Components.interfaces.nsIImageLoadingContent).currentURI;
 
           var shortenedUriHost = uri.host.replace(/^www\./i,"");
           if (shortenedUriHost.length > 15)
@@ -4251,10 +4258,10 @@ nsContextMenu.prototype = {
       var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
       var permissionmanager =
         Components.classes["@mozilla.org/permissionmanager;1"]
-          .getService(nsIPermissionManager);
-      var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                          .createInstance(Components.interfaces.nsIURI);
-      uri.spec = this.imageURL;
+                  .getService(nsIPermissionManager);
+
+      var uri = this.target.QueryInterface(Components.interfaces.nsIImageLoadingContent).currentURI;
+
       permissionmanager.add(uri, "image",
                             aBlock ? nsIPermissionManager.DENY_ACTION : nsIPermissionManager.ALLOW_ACTION);
     },
@@ -4263,9 +4270,9 @@ nsContextMenu.prototype = {
       var permissionmanager =
         Components.classes["@mozilla.org/permissionmanager;1"]
           .getService(Components.interfaces.nsIPermissionManager);
-      var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                          .createInstance(Components.interfaces.nsIURI);
-      uri.spec = this.imageURL;
+
+      var uri = this.target.QueryInterface(Components.interfaces.nsIImageLoadingContent).currentURI;
+
       return permissionmanager.testPermission(uri, "image") == nsIPermissionManager.DENY_ACTION;
     },
     // Generate email address and put it on clipboard.
@@ -5480,10 +5487,8 @@ function AddKeywordForSearchField()
   var node = document.popupNode;
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService);
-  var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                      .getService(Components.interfaces.nsIURI);
-  uri.spec = node.ownerDocument.URL;
-  
+  var uri = ioService.newURI(node.ownerDocument.URL, node.ownerDocument.characterSet, null);
+
   var keywordURL = ioService.newURI(node.form.action, node.ownerDocument.characterSet, uri);
   var spec = keywordURL.spec;
   var postData = "";

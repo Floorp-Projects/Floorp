@@ -154,9 +154,10 @@ function handleHistoryClick(aEvent)
 
 function checkURLSecurity(aURL)
 {
-  var uri = Components.classes["@mozilla.org/network/standard-url;1"].
-              createInstance(Components.interfaces.nsIURI);
-  uri.spec = aURL;
+  var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService)
+                      .newURI(aURL, null, null);
+
   if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
     var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                       .getService(Components.interfaces.nsIStringBundleService);
