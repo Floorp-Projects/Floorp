@@ -7,7 +7,7 @@
 /*                                                                         */
 /*    This is _not_ used to retrieve glyph names!                          */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -128,7 +128,7 @@ FT_BEGIN_HEADER
   /* <Input>                                                               */
   /*    face  :: A handle to the source face.                              */
   /*                                                                       */
-  /*    index :: The index of the `name' string.                           */
+  /*    idx   :: The index of the `name' string.                           */
   /*                                                                       */
   /* <Output>                                                              */
   /*    aname :: The indexed FT_SfntName structure.                        */
@@ -146,7 +146,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Get_Sfnt_Name( FT_Face       face,
-                    FT_UInt       index,
+                    FT_UInt       idx,
                     FT_SfntName  *aname );
 
 

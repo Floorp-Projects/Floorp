@@ -6,7 +6,7 @@
 /*    recorders (specification only).  These are used to support native    */
 /*    T1/T2 hints in the "type1", "cid" and "cff" font drivers.            */
 /*                                                                         */
-/*  Copyright 2001 by                                                      */
+/*  Copyright 2001, 2002 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,7 +25,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_TYPE1_TABLES_H
-#include FT_INTERNAL_POSTSCRIPT_GLOBALS_H
 
 
 FT_BEGIN_HEADER
@@ -57,7 +56,7 @@ FT_BEGIN_HEADER
   (*PSH_Globals_DestroyFunc)( PSH_Globals  globals );
 
 
-  typedef struct PSH_Globals_FuncsRec_
+  typedef struct  PSH_Globals_FuncsRec_
   {
     PSH_Globals_NewFunc       create;
     PSH_Globals_SetScaleFunc  set_scale;
@@ -99,7 +98,7 @@ FT_BEGIN_HEADER
   /*      strange happened (e.g. memory shortage).                         */
   /*                                                                       */
   /*    The hints accumulated in the object can later be used by the       */
-  /*    Postscript hinter.                                                 */
+  /*    PostScript hinter.                                                 */
   /*                                                                       */
   typedef struct T1_HintsRec_*  T1_Hints;
 
@@ -216,6 +215,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* @input:                                                               */
   /*    hints     :: A handle to the Type 1 hints recorder.                */
+  /*                                                                       */
   /*    end_point :: The index of the last point in the input glyph in     */
   /*                 which the previously defined hints apply.             */
   /*                                                                       */
@@ -607,7 +607,9 @@ FT_BEGIN_HEADER
     T1_Hints_Funcs     (*get_t1_funcs)     ( FT_Module  module );
     T2_Hints_Funcs     (*get_t2_funcs)     ( FT_Module  module );
 
-  } PSHinter_Interface, *PSHinter_InterfacePtr;
+  } PSHinter_Interface;
+
+  typedef PSHinter_Interface*  PSHinter_Service;
 
 
 FT_END_HEADER

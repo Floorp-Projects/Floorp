@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver interface (specification).                      */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -28,81 +28,81 @@ FT_BEGIN_HEADER
 
 
   typedef FT_Error
-  (*FTDriver_initFace)( FT_Stream      stream,
-                        FT_Face        face,
-                        FT_Int         typeface_index,
-                        FT_Int         num_params,
-                        FT_Parameter*  parameters );
+  (*FT_Face_InitFunc)( FT_Stream      stream,
+                       FT_Face        face,
+                       FT_Int         typeface_index,
+                       FT_Int         num_params,
+                       FT_Parameter*  parameters );
 
   typedef void
-  (*FTDriver_doneFace)( FT_Face  face );
+  (*FT_Face_DoneFunc)( FT_Face  face );
 
 
   typedef FT_Error
-  (*FTDriver_initSize)( FT_Size  size );
+  (*FT_Size_InitFunc)( FT_Size  size );
 
   typedef void
-  (*FTDriver_doneSize)( FT_Size  size );
+  (*FT_Size_DoneFunc)( FT_Size  size );
 
 
   typedef FT_Error
-  (*FTDriver_initGlyphSlot)( FT_GlyphSlot  slot );
+  (*FT_Slot_InitFunc)( FT_GlyphSlot  slot );
 
   typedef void
-  (*FTDriver_doneGlyphSlot)( FT_GlyphSlot  slot );
+  (*FT_Slot_DoneFunc)( FT_GlyphSlot  slot );
 
 
   typedef FT_Error
-  (*FTDriver_setCharSizes)( FT_Size     size,
-                            FT_F26Dot6  char_width,
-                            FT_F26Dot6  char_height,
-                            FT_UInt     horz_resolution,
-                            FT_UInt     vert_resolution );
+  (*FT_Size_ResetPointsFunc)( FT_Size     size,
+                              FT_F26Dot6  char_width,
+                              FT_F26Dot6  char_height,
+                              FT_UInt     horz_resolution,
+                              FT_UInt     vert_resolution );
 
   typedef FT_Error
-  (*FTDriver_setPixelSizes)( FT_Size  size,
-                             FT_UInt  pixel_width,
-                             FT_UInt  pixel_height );
+  (*FT_Size_ResetPixelsFunc)( FT_Size  size,
+                              FT_UInt  pixel_width,
+                              FT_UInt  pixel_height );
 
   typedef FT_Error
-  (*FTDriver_loadGlyph)( FT_GlyphSlot  slot,
-                         FT_Size       size,
-                         FT_UInt       glyph_index,
-                         FT_Int        load_flags );
+  (*FT_Slot_LoadFunc)( FT_GlyphSlot  slot,
+                       FT_Size       size,
+                       FT_UInt       glyph_index,
+                       FT_Int        load_flags );
 
 
   typedef FT_UInt
-  (*FTDriver_getCharIndex)( FT_CharMap  charmap,
-                            FT_Long     charcode );
+  (*FT_CharMap_CharIndexFunc)( FT_CharMap  charmap,
+                               FT_Long     charcode );
 
   typedef FT_Long
-  (*FTDriver_getNextChar)( FT_CharMap   charmap,
-                           FT_Long      charcode );
+  (*FT_CharMap_CharNextFunc)( FT_CharMap  charmap,
+                              FT_Long     charcode );
 
   typedef FT_Error
-  (*FTDriver_getKerning)( FT_Face      face,
-                          FT_UInt      left_glyph,
-                          FT_UInt      right_glyph,
-                          FT_Vector*   kerning );
-
-
-  typedef FT_Error
-  (*FTDriver_attachFile)( FT_Face    face,
-                          FT_Stream  stream );
+  (*FT_Face_GetKerningFunc)( FT_Face     face,
+                             FT_UInt     left_glyph,
+                             FT_UInt     right_glyph,
+                             FT_Vector*  kerning );
 
 
   typedef FT_Error
-  (*FTDriver_getAdvances)( FT_Face     face,
-                           FT_UInt     first,
-                           FT_UInt     count,
-                           FT_Bool     vertical,
-                           FT_UShort*  advances );
+  (*FT_Face_AttachFunc)( FT_Face    face,
+                         FT_Stream  stream );
+
+
+  typedef FT_Error
+  (*FT_Face_GetAdvancesFunc)( FT_Face     face,
+                              FT_UInt     first,
+                              FT_UInt     count,
+                              FT_Bool     vertical,
+                              FT_UShort*  advances );
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    FT_Driver_Class                                                    */
+  /*    FT_Driver_ClassRec                                                 */
   /*                                                                       */
   /* <Description>                                                         */
   /*    The font driver class.  This structure mostly contains pointers to */
@@ -165,36 +165,35 @@ FT_BEGIN_HEADER
   /*    Most function pointers, with the exception of `load_glyph' and     */
   /*    `get_char_index' can be set to 0 to indicate a default behaviour.  */
   /*                                                                       */
-  typedef struct  FT_Driver_Class_
+  typedef struct  FT_Driver_ClassRec_
   {
-    FT_Module_Class         root;
+    FT_Module_Class           root;
 
-    FT_Int                  face_object_size;
-    FT_Int                  size_object_size;
-    FT_Int                  slot_object_size;
+    FT_Int                    face_object_size;
+    FT_Int                    size_object_size;
+    FT_Int                    slot_object_size;
 
-    FTDriver_initFace       init_face;
-    FTDriver_doneFace       done_face;
+    FT_Face_InitFunc          init_face;
+    FT_Face_DoneFunc          done_face;
 
-    FTDriver_initSize       init_size;
-    FTDriver_doneSize       done_size;
+    FT_Size_InitFunc          init_size;
+    FT_Size_DoneFunc          done_size;
 
-    FTDriver_initGlyphSlot  init_slot;
-    FTDriver_doneGlyphSlot  done_slot;
+    FT_Slot_InitFunc          init_slot;
+    FT_Slot_DoneFunc          done_slot;
 
-    FTDriver_setCharSizes   set_char_sizes;
-    FTDriver_setPixelSizes  set_pixel_sizes;
+    FT_Size_ResetPointsFunc   set_char_sizes;
+    FT_Size_ResetPixelsFunc   set_pixel_sizes;
 
-    FTDriver_loadGlyph      load_glyph;
-    FTDriver_getCharIndex   get_char_index;
+    FT_Slot_LoadFunc          load_glyph;
+    FT_CharMap_CharIndexFunc  get_char_index;
 
-    FTDriver_getKerning     get_kerning;
-    FTDriver_attachFile     attach_file;
+    FT_Face_GetKerningFunc    get_kerning;
+    FT_Face_AttachFunc        attach_file;
+    FT_Face_GetAdvancesFunc   get_advances;
+    FT_CharMap_CharNextFunc   get_next_char;
 
-    FTDriver_getAdvances    get_advances;
-
-    FTDriver_getNextChar    get_next_char;
-  } FT_Driver_Class;
+  } FT_Driver_ClassRec, *FT_Driver_Class;
 
 
 FT_END_HEADER
