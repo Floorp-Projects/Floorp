@@ -34,11 +34,13 @@
 #include "nsGfxCIID.h"
 #include "nsIBlender.h"
 #include "nsIRegion.h"
+#include "nsIClipView.h"
 
 //mmptemp
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kIClipViewIID, NS_ICLIPVIEW_IID);
 
 static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
@@ -1374,9 +1376,10 @@ NS_IMETHODIMP nsView :: GetScratchPoint(nsPoint **aPoint)
 
 static void calc_extents(nsIView *view, nsRect *extents, nscoord ox, nscoord oy)
 {
-  nsIView *kid;
-  PRInt32 numkids, cnt;
-  nsRect  bounds;
+  nsIView     *kid;
+  PRInt32     numkids, cnt;
+  nsRect      bounds;
+  nsIClipView *cview;
 
   view->GetChildCount(numkids);
 
@@ -1390,7 +1393,12 @@ static void calc_extents(nsIView *view, nsRect *extents, nscoord ox, nscoord oy)
 
     extents->UnionRect(*extents, bounds);
 
-    calc_extents(kid, extents, bounds.x, bounds.y);
+    cview = nsnull;
+
+    kid->QueryInterface(kIClipViewIID, (void **)&cview);
+
+    if (!cview)
+      calc_extents(kid, extents, bounds.x, bounds.y);
   }
 }
 
