@@ -62,6 +62,19 @@ static pthread_t pt_zero_tid;  /* a null pthread_t (pthread_t is a struct
 #endif  /* defined(_PR_DCETHREADS) */
 #endif  /* defined(DEBUG) */
 
+#if defined(FREEBSD)
+/*
+ * On older versions of FreeBSD, pthread_mutex_trylock returns EDEADLK.
+ * Newer versions return EBUSY.  We still need to support both.
+ */
+static int
+pt_pthread_mutex_is_locked(pthread_mutex_t *m)
+{
+    int rv = pthread_mutex_trylock(m);
+    return (EBUSY == rv || EDEADLK == rv);
+}
+#endif
+
 /**************************************************************/
 /**************************************************************/
 /*****************************LOCKS****************************/

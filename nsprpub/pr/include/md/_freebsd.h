@@ -49,10 +49,14 @@
 #define _PR_SI_SYSNAME  "FREEBSD"
 #if defined(__i386__)
 #define _PR_SI_ARCHITECTURE "x86"
-#elif defined(__alpha)
+#elif defined(__alpha__)
 #define _PR_SI_ARCHITECTURE "alpha"
 #elif defined(__sparc__)
 #define _PR_SI_ARCHITECTURE "sparc"
+#elif defined(__ia64__)
+#define _PR_SI_ARCHITECTURE "ia64"
+#elif defined(__amd64__)
+#define _PR_SI_ARCHITECTURE "amd64"
 #else
 #error "Unknown CPU architecture"
 #endif
@@ -99,6 +103,7 @@
 #define _PR_HAVE_GETHOSTBYNAME2
 #define _PR_HAVE_GETADDRINFO
 #define _PR_INET6_PROBE
+#define _PR_IPV6_V6ONLY_PROBE
 #endif
 
 #define USE_SETJMP

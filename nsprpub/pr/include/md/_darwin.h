@@ -88,6 +88,11 @@
 #if MACOS_DEPLOYMENT_TARGET >= 100200
 #define _PR_HAVE_INET_NTOP
 #endif
+#define _PR_IPV6_V6ONLY_PROBE
+/* The IPV6_V6ONLY socket option is not defined on Mac OS X 10.1. */
+#ifndef IPV6_V6ONLY
+#define IPV6_V6ONLY 27
+#endif
 
 #if defined(__ppc__)
 #define _PR_HAVE_ATOMIC_OPS
