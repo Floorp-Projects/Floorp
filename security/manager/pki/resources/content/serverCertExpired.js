@@ -48,6 +48,18 @@ function onLoad()
   setText("message2", message2);
   //Set the focus so key press events work.
   document.getElementById('ok-button').focus();
+
+  var xulWindow = document.getElementById("serverCertExpired");
+
+  var wdth = window.innerWidth; // THIS IS NEEDED,
+  window.sizeToContent();
+  xulWindow.setAttribute("width",window.innerWidth + 30);
+
+  var hght = window.innerHeight; // THIS IS NEEDED,
+  window.sizeToContent();
+  xulWindow.setAttribute("height",window.innerHeight + 40);
+  
+
 }
 
 function doOK()
