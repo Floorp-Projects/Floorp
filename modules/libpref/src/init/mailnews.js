@@ -138,6 +138,9 @@ pref("mail.addr_book.displayName.lastnamefirst", "chrome://messenger/locale/mess
 pref("mail.addr_book.show_phonetic_fields", "chrome://messenger/locale/messenger.properties");
 pref("mail.attach_vcard",                   false);
 pref("mail.html_compose",                   true);
+// you can specify one, option header
+// this will show up in the address picker in the compose window
+// examples: "X-Face" or "Approved"
 pref("mail.compose.other.header",	    "");
 pref("mail.fcc_folder",                     "");
 pref("mail.encrypt_outgoing_mail",          false);
