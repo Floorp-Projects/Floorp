@@ -32,6 +32,7 @@ install::
 	$(MAKE_INSTALL) tasksOverlay.css $(DISTBROWSER)
 	$(MAKE_INSTALL) globalBindings.xml $(DISTBROWSER)
 	$(MAKE_INSTALL) global.css $(DISTBROWSER)
+  $(MAKE_INSTALL) scrollbars.css $(DISTBROWSER)
 	$(MAKE_INSTALL) htmlBindings.xml $(DISTXUL)
 	$(MAKE_INSTALL) xulBindings.xml $(DISTXUL)
 	$(MAKE_INSTALL) xul.css $(DISTXUL)

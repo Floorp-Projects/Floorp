@@ -6,6 +6,8 @@
    CHANGES REVIEWED BY hyatt@netscape.com.
 **/
 
+@import url(chrome://global/skin/scrollbars.css);
+
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to XUL */
 
 * {
@@ -36,7 +38,6 @@ template {
  **********************************/
 
 window { 
-  display: block; 
   overflow: hidden;
   height: 100%;
   width: 100%;
@@ -54,27 +55,14 @@ browser, editor, iframe {
 
 /******** Box *******/
 
-box {
-  	display: block;
-}
-
-
-/**
- * Used as a space between things in boxes
- */
-spring {
-   display: block;
-}
 
 /******* ToolBox & ToolBar *******/
 
 toolbox { 
-  display: block;
   user-focus: ignore;
 }
 
 toolbar, menubar {
-  display:block;
   user-focus: ignore;
 }
 
@@ -92,21 +80,7 @@ toolbarseparator {
 
 /****** Progress Meter ********/
 
-progressmeter {
-	display: inline;
-}
-
 /****** TitledBox ******/
-
-titledbox
-{
-  display: block;
-}
-
-title
-{
-   display: block;
-}
 
 /********* XP Menus ***********/
 
@@ -122,8 +96,7 @@ menubar > menu {
 }
 
 menu,menuitem {
-   display: block;
-   behavior: url("resource:/chrome/xulBindings.xml#menus");
+  behavior: url("resource:/chrome/xulBindings.xml#menus");
 }
 
 menu[hidden="true"] {
@@ -132,9 +105,6 @@ menu[hidden="true"] {
 
 menuitem[hidden="true"] {
 	display:none;
-}
-popupset {
-  display: block;
 }
 
 menupopup {
@@ -166,10 +136,6 @@ popup[menuactive="true"] {
   visibility: visible;
 }
 
-menuseparator {
-  display: block;
-}
-
 menuseparator[hidden="true"] {
   display: none;
 }
@@ -187,10 +153,6 @@ menubutton {
 }
 
 /******** Titled buttons **********/
-
-titledbutton {
-  display: inline;
-}
 
 /******** Tree widget **********/
 
@@ -250,206 +212,13 @@ treecolgroup {
 
 /********** Tab widget *********/
 
-tab { 
-  display: inline;
-}
-
-tab:active { 
-  display: inline;
-}
-
-tabbox { 
-  display: block;
-}
-
-tabcontrol { 
-  display: block;
+tab {
+  behavior: url(resource:/chrome/xulBindings.xml#tab);
 }
 
 :-moz-deck-hidden {
    visibility: hidden;
 }
-
-/********* XP Scrollbar *********/
-
-scrollbar {
-   behavior: url("resource:/chrome/xulBindings.xml#scrollbar");
-}
-
-thumb {
-   display: block;
-   user-focus: ignore;
-}
-
-slider {
-   display: block;
-   user-focus: ignore;
-}
-
-scrollbarbutton {
-  display: inline;
-  user-focus: ignore;
-}
-
-scrollbar[value="hidden"] {
-   visibility: hidden;
-   user-focus: ignore;
-}
-
-/********* XP Scrollbar *********/
-
-thumb {
-   user-focus: ignore;
-   background-color: #CCCCCC;
-   border: 1px outset white;
-   list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")
-}
-
-/*
-pinkerton - workaround. removed until bug 15722 can be fixed.
-thumb:hover {
-   list-style-image: url(chrome://global/skin/scroll-thumb-horiz-hover.gif);
-}
-*/
-
-thumb[disabled="true"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-thumb-horiz-disabled.gif");
-}
-
-slider[align="vertical"] thumb {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-thumb-vert.gif")
-}
-
-/*
-pinkerton - workaround. removed until bug 15722 can be fixed.
-slider[align="vertical"] thumb:hover {
-   list-style-image: url(chrome://global/skin/scroll-thumb-vert-hover.gif);
-
-}
-*/
-
-slider[align="vertical"] thumb[disabled="true"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-thumb-vert-disabled.gif");
-}
-
-thumb:active {
-   user-focus: ignore;
-   background-color: #CCCCCC;
-}
-
-slider[align="vertical"] thumb:active {
-   user-focus: ignore;
-   background-color: #CCCCCC;
-}
-
-
-slider {
-   user-focus: ignore;
-   background-color: #999999;
-}
-
-scrollbarbutton {
-  user-focus: ignore;
-  vertical-align: bottom;
-  cursor: default;
-
-  border: 1px outset white;
-  background-color: #CCCCCC;
-  color:black; 
-
-  padding: 1px;
-}
-
-scrollbarbutton:active {
-  user-focus: ignore;
-  border-style: inset;
-
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}
-
-scrollbarbutton[type="decrement"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-left.gif")
-}
-
-/*
-pinkerton - workaround. removed until bug 15722 can be fixed.
-scrollbarbutton[type="decrement"]:hover {
-   list-style-image: url(chrome://global/skin/scroll-left-hover.gif)
-}
-*/
-
-scrollbarbutton[type="decrement"][disabled="true"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-left-disabled.gif") 
-}
-
-scrollbarbutton[type="increment"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-right.gif")
-}
-
-/*
-pinkerton - workaround. removed until bug 15722 can be fixed.
-scrollbarbutton[type="increment"]:hover {
-   list-style-image: url(chrome://global/skin/scroll-right-hover.gif)
-}
-*/
-
-scrollbarbutton[type="increment"][disabled="true"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
-}
-
-
-scrollbar[align="vertical"] scrollbarbutton[type="decrement"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-up.gif")
-}
-
-/*
-pinkerton - workaround. removed until bug 15722 can be fixed.
-scrollbar[align="vertical"] scrollbarbutton[type="decrement"]:hover {
-   list-style-image: url(chrome://global/skin/scroll-up-hover.gif)
-}
-*/
-
-scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-up-disabled.gif") 
-}
-
-scrollbar[align="vertical"] scrollbarbutton[type="increment"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-down.gif")
-}
-
-/*
-pinkerton - workaround. removed until bug 15722 can be fixed.
-scrollbar[align="vertical"] scrollbarbutton[type="increment"]:hover {
-   list-style-image: url(chrome://global/skin/scroll-down-hover.gif)
-}
-*/
-
-scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] {
-   user-focus: ignore;
-   list-style-image: url("chrome://global/skin/scroll-down-disabled.gif") 
-}
-
-splitter {
-   display: block;
-}
-
-grippy {
-   display: block;
-}
-
 
 /********** checkbox **********/
 
@@ -457,8 +226,24 @@ checkbox {
   behavior: url(resource:/chrome/xulBindings.xml#checkbox);
 }
 
+radio {
+  behavior: url(resource:/chrome/xulBindings.xml#radio);
+}
+
+button, button.left {
+  behavior: url(resource:/chrome/xulBindings.xml#buttonleft);
+}
+
 radiogroup {
   behavior: url(resource:/chrome/xulBindings.xml#radiogroup);
+}
+
+button.top {
+  behavior: url(resource:/chrome/xulBindings.xml#buttontop);
+}
+
+button.right {
+  behavior: url(resource:/chrome/xulBindings.xml#buttonright);
 }
 
 separator {
