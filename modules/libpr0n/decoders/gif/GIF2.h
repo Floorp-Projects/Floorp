@@ -105,8 +105,7 @@ typedef struct gif_struct {
       void*    aClientData,
       PRUint32 aLogicalScreenWidth, 
       PRUint32 aLogicalScreenHeight,
-      GIF_RGB* aLogicalScreenBackgroundRGB,
-      GIF_RGB* aTransparencyChromaKey);
+      PRUint8  aLogicalScreenBackgroundRGBIndex);
       
     int (PR_CALLBACK* GIFCallback_EndGIF)(
       void*    aClientData,
@@ -220,8 +219,7 @@ PRBool GIFInit(
     void* aClientData,
     PRUint32 aLogicalScreenWidth, 
     PRUint32 aLogicalScreenHeight,
-    GIF_RGB* aBackgroundRGB,
-    GIF_RGB* aTransparencyChromaKey),
+    PRUint8  aBackgroundRGBIndex),
     
   int (*PR_CALLBACK GIFCallback_EndGIF)(
     void*    aClientData,
@@ -283,14 +281,7 @@ typedef int (*PR_CALLBACK BEGINGIF_CALLBACK)(
   void*    aClientData,
   PRUint32 aLogicalScreenWidth, 
   PRUint32 aLogicalScreenHeight,
-  GIF_RGB* aLogicalScreenBackgroundRGB);
-/*
-typedef int (PR_CALLBACK *GIFCallback_BeginGIF)(
-  void*    aClientData,
-  PRUint32 aLogicalScreenWidth, 
-  PRUint32 aLogicalScreenHeight,
-  GIF_RGB* aLogicalScreenBackgroundRGB);
-*/
+  PRUint8  aLogicalScreenBackgroundRGBIndex);
                             
 typedef int (PR_CALLBACK *GIFCallback_EndGIF)(
   void*    aClientData,

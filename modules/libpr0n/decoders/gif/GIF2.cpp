@@ -200,7 +200,7 @@ output_row(gif_struct *gs)
               gs->rgbrow,                /* Pointer to temporary storage for dithering/mapping */
               gs->x_offset,              /* x offset with respect to GIF logical screen origin */
               width,                     /* Length of the row */
-              gs->y_offset + drow_start, /* Row number? */
+              drow_start,                /* Row number */
               drow_end - drow_start + 1, /* Number of times to duplicate the row? */
               drawmode,                  /* il_draw_mode */
               gs->ipass);                /* interlace pass (1-4) */
@@ -429,8 +429,7 @@ PRBool GIFInit(
     void* aClientData,
     PRUint32 aLogicalScreenWidth, 
     PRUint32 aLogicalScreenHeight,
-    GIF_RGB* aBackgroundRGB,
-    GIF_RGB* aTransparencyChromaKey),
+    PRUint8  aBackgroundRGBIndex),
     
   int (*PR_CALLBACK GIFCallback_EndGIF)(
         void*    aClientData,
@@ -965,8 +964,7 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
               gs->clientptr,
               gs->screen_width, 
               gs->screen_height,
-              nsnull,
-              nsnull);
+              gs->screen_bgcolor);
     
             if( q[4] & 0x80 ) /* global map */
             {
@@ -1103,6 +1101,7 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
             }
             else
             {
+                gs->is_transparent = PR_FALSE;
                 //ILTRACE(2,("il:gif: ignoring gfx control extension"));
             }
             gs->control_extension = PR_TRUE;

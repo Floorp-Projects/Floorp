@@ -36,6 +36,7 @@
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "imgIDecoderObserver.h"
 
 #include "gfxIImageFrame.h"
 
@@ -48,11 +49,14 @@
 }
 
 class imgContainer : public imgIContainer,
-                     public nsITimerCallback
+                     public nsITimerCallback,
+                     public imgIDecoderObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGICONTAINER
+  NS_DECL_IMGIDECODEROBSERVER
+  NS_DECL_IMGICONTAINEROBSERVER
 
   NS_IMETHOD_(void) Notify(nsITimer *timer);
 
@@ -63,8 +67,8 @@ private:
   /* additional members */
   nsSupportsArray mFrames;
   nsSize mSize;
-  PRUint32 mCurrentFrame;
-  PRUint32 mCurrentAnimationFrame;
+  PRUint32 mCurrentDecodingFrameIndex; // 0 to numFrames-1
+  PRUint32 mCurrentAnimationFrameIndex; // 0 to numFrames-1
   PRBool   mCurrentFrameIsFinishedDecoding;
   PRBool   mDoneDecoding;
   PRBool   mAnimating;
