@@ -227,11 +227,6 @@ public:
   /*
    * Get Chrome Event Handler 
    */
-  NS_IMETHOD GetChromeEventHandler(nsIChromeEventHandler** aChromeEventHandler) = 0;
-
-  /*
-   * Get Chrome Event Handler 
-   */
   NS_IMETHOD SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHandler) = 0;
 
   /**
