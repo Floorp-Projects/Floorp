@@ -758,7 +758,7 @@
           var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);  
           var dragSession = dragService.getCurrentSession();
           if (!dragSession)
-            return false;
+            return;
           const kRDFCContractID = "@mozilla.org/rdf/container;1";
           const kRDFIID = Components.interfaces.nsIRDFContainer;
           var RDFC = Components.classes[kRDFCContractID].getService(kRDFIID);
