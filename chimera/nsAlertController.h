@@ -95,6 +95,8 @@
 - (BOOL)promptUserNameAndPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text userNameText:(NSMutableString*)userNameText passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck;
 - (BOOL)promptPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck;
 
+- (BOOL)postToInsecureFromSecure:(NSWindow*)parent;
+
 - (BOOL)badCert:(NSWindow*)parent;
 - (BOOL)expiredCert:(NSWindow*)parent;
 - (int)unknownCert:(NSWindow*)parent;
