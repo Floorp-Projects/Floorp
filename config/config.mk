@@ -39,11 +39,6 @@ endif
 #
 NS_CONFIG_MK	= 1
 
-#
-# Force a final install pass so we can build tests properly.
-#
-LIBS_NEQ_INSTALL = 1
-
 # This wastes time.
 include $(topsrcdir)/config/common.mk
 

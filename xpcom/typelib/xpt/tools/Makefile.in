@@ -58,5 +58,5 @@ endif
 endif
 
 # Build xpt_link and xpt_dump early.  (libs creates .deps used by install.)
-export:: libs install
+export:: install
 
