@@ -910,10 +910,10 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 OBJ_DROP_PROPERTY(cx, pobj, prop);
             if (!prop || pobj != varobj) {
                 if (!js_DefineNativeProperty(cx, varobj, (jsid)funAtom,
-                                             OBJECT_TO_JSVAL(fun->object),
+                                             JSVAL_VOID,
                                              js_GetLocalVariable,
                                              js_SetLocalVariable,
-                                             JSPROP_ENUMERATE,
+                                             JSPROP_ENUMERATE | JSPROP_SHARED,
                                              SPROP_HAS_SHORTID, fp->fun->nvars,
                                              NULL)) {
                     return NULL;
