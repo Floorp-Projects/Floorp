@@ -94,7 +94,7 @@ Rights Reserved.
 	<key id="key_close"/>
 	<key id="key_save" xulkey="true" key="&saveCmd.key;" disabled="true"/>
 	<!-- key id="key_attachFile" xulkey="true" key="&attachFileCmd.key;" observes="cmd_attachFile"/ -->
-	<key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/>
+	<!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/ -->
 	<!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" observes="cmd_sendNow"/ -->
 	<!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" observes="cmd_sendLater"/ -->
 	<key id="key_print" xulkey="true" key="&printCmd.key;" disabled="true" observes="cmd_print"/>
@@ -165,14 +165,14 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 		</menu>
 		<menuseparator/>
 
-		<menuitem value="&attachFileCmd.label;" key="key_attachFile" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
+		<menuitem value="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
 		<menuitem value="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" oncommand="AttachPage()"/>
 		<!-- the next menu item is TEMPORARY until we figure how to hook up the deleted key in the attachment tree -->
 		<menuitem value="&removeLastAttachmentCmd.label;" oncommand="RemoveSelectedAttachment()"/>
 	    <menuseparator/>
 		
-		<menuitem value="&sendNowCmd.label;" key="key_sendNow" accessKey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
-		<menuitem value="&sendLaterCmd.label;" key="key_sendLater" accessKey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
+		<menuitem value="&sendNowCmd.label;" accessKey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
+		<menuitem value="&sendLaterCmd.label;" accessKey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
 		<menuseparator/>
 		<menuitem id="menu_pageSetup" disabled="true"/>
 		<menuitem value="&printPreviewCmd.label;" disabled="true" accessKey="&printPreviewCmd.accesskey;" oncommand="nsCmd:BrowserPrintPreview"/>
@@ -280,7 +280,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 
 	<menu value="&optionsMenu.label;">
     <menupopup>	
-		<menuitem value="&selectAddressCmd.label;" key="key_selectAddresses" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
+		<menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
 		<menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" disabled="true" oncommand="nsCmd:ComposeQuote"/>
 	    <menuseparator/>
 	    
