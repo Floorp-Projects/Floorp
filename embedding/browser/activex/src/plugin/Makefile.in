@@ -187,14 +187,14 @@ clean::
 ## Note: Ensure you create the redist dir containing the correct runtime dlls
 
 xpi:: install.js $(SHARED_LIBRARY)
-	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) install.js
-	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) $(SHARED_LIBRARY)
-	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) $(subst \,/,$(MOZ_SRC))/redist/microsoft/system/msvcrt.dll
-	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) $(subst \,/,$(MOZ_SRC))/redist/microsoft/system/msvcp60.dll
+	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) install.js
+	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $(SHARED_LIBRARY)
+	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $(subst \,/,$(MOZ_SRC))/redist/microsoft/system/msvcrt.dll
+	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $(subst \,/,$(MOZ_SRC))/redist/microsoft/system/msvcp60.dll
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 xpi::
-	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) MozAxPlugin.class
+	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) MozAxPlugin.class
 endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
