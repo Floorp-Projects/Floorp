@@ -79,10 +79,10 @@
     </treehead>
     <treechildren id="crlList" flex="1"/>
   </tree>
-  <box>
+  <hbox>
     <button id="deleteCrl" class="dialog push" disabled="true"
                           label="&validation.deletecrl.label;"
                           oncommand="DeleteCrlSelected();"/>
-  </box>
+  </hbox>
   <separator class="thin"/>
 </window>

@@ -34,7 +34,7 @@
 <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
 
-<box orient="vertical" style="margin: 5px;" flex="1">
+<vbox style="margin: 5px;" flex="1">
 
   <html>&escrowWarn.message1;</html>
   <separator/>
@@ -43,18 +43,18 @@
   <html>&escrowWarn.message2;</html>
   <separator/>
   <html id="message1" />
-  <box>
+  <hbox>
   <button id="examineCert-button" class="dialog" label="&examineCert.label;"
      onclick="viewCert();"/> 
-  </box>
+  </hbox>
   <separator/>
-  <box>
+  <hbox>
   <button id="ok-button" class="dialog" label="&ok.label;"
      style="width: 10ex" onclick="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
   <button id="help-button" class="dialog" label="&help.label;"
     style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?priv_key_copy');" /> 
-  </box>
-</box>
+  </hbox>
+</vbox>
 </window>

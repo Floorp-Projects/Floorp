@@ -38,7 +38,7 @@
         onload="parent.initPanel('chrome://pippki/content/pref-ssl.xul');" >
 
   <!-- List elements to manage for prefs -->
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["enableSSL2", "enableSSL3", "enableTLS", 
         "warnEnteringSecure", "warnEnteringWeak", 
@@ -48,13 +48,13 @@
   </script>
             
   <!-- Fancy panel header -->
-  <box class="box-smallheader" title="SSL"/>
+  <hbox class="box-smallheader" title="SSL"/>
 
-  <titledbox orient="horizontal">
+  <groupbox orient="horizontal">
     <label value="&SSLProtocolVersions;"/>
 
     <!-- Prefs -->
-    <box orient="vertical" flex="1" autostretch="never" >
+    <vbox flex="1" autostretch="never" >
       <checkbox id="enableSSL2" label="&enable.ssl2;"
                 pref="true" preftype="bool" prefstring="security.enable_ssl2"
                 prefattribute="checked"/>
@@ -64,17 +64,17 @@
       <checkbox id="enableTLS" label="&enable.tls;"
                 pref="true" preftype="bool" prefstring="security.enable_tls"
                 prefattribute="checked"/>
-    </box>
+    </vbox>
 
-    <box orient="vertical" halign="right">
+    <vbox halign="right">
       <button class="dialog" label="&edit.sslciphers;"
         oncommand="window.openDialog('chrome://pippki/content/pref-ciphers.xul', '',
                        'modal=yes,resizable,chrome');" />
-    </box>
+    </vbox>
 
-  </titledbox>
+  </groupbox>
 
-  <titledbox orient="vertical" autostretch="never" >
+  <groupbox orient="vertical" autostretch="never" >
     <label value="&SSLWarnings;"/>
     <html> &warn.description; </html>
     <!-- Prefs -->
@@ -90,6 +90,6 @@
     <checkbox id="warnViewMixed" label="&warn.viewmixed;"
               pref="true" preftype="bool" prefstring="security.warn_viewing_mixed"
               prefattribute="checked" checked="true"/>
-  </titledbox>
+  </groupbox>
 
 </window>

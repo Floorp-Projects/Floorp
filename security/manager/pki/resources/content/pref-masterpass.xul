@@ -36,30 +36,30 @@
         orient="vertical" title="certs.title;"
         onload="parent.initPanel('chrome://pippki/content/pref-masterpass.xul'); onMasterPasswordLoad();" >
 
-  <script language="JavaScript" src="pref-masterpass.js"/>
+  <script type="application/x-javascript" src="pref-masterpass.js"/>
 
   <!-- Fancy panel header -->
-  <box class="box-smallheader" title="&lheader;"/>
+  <hbox class="box-smallheader" title="&lheader;"/>
 
   <!-- Change Password -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&changepassword.label;"/>
     <html>
       &changepassword.text;
     </html>
-    <box halign="left" autostretch="never">
+    <hbox halign="left" autostretch="never">
       <button class="dialog" label="&changepassword.button;" disabled="false"
         oncommand="ChangePW();" />
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
   <!-- Password Prefs -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&managepassword.label;"/>
     <html>
       &managepassword.text;
     </html>
-    <box halign="left" autostretch="never">
+    <hbox halign="left" autostretch="never">
       <radiogroup id="passwordAskTimes" orient="vertical" 
                   pref="true" preftype="int" 
                   prefstring="security.ask_for_password" prefattribute="value"
@@ -72,7 +72,7 @@
         <radio label="&managepassword.askeverytime;" value="1"
           id="askEveryTime" group="passwordAskTimes"
           oncommand="changePasswordSettings();"/>
-        <box>
+        <hbox>
           <radio label="&managepassword.asktimeout;" value="2"
             id="askTimeout" group="passwordAskTimes"
             oncommand="changePasswordSettings();"/>
@@ -82,9 +82,9 @@
                    prefattribute="value"
                    oninput="changePasswordSettings();"/>
           <text for="timeoutField" value="&managepassword.timeout.unit;"/>
-        </box>
+        </hbox>
       </radiogroup>
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
 </window>

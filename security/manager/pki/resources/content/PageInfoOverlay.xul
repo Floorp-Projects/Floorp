@@ -29,7 +29,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://global/content/strres.js" />
   <script src="chrome://pippki/content/pippki.js" />
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     var security = {
       // Display the server certificate (static)

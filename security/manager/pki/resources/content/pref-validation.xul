@@ -37,7 +37,7 @@
         onload="onLoad();" >
 
   <!-- List elements to manage for prefs -->
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["securityOCSPEnabled", "serviceURL", "signingCA"];
   ]]>
@@ -46,18 +46,18 @@
   <script src="pref-validation.js"/>
 
   <!-- Fancy panel header -->
-  <box class="box-smallheader" title="&validation.title;"/>
+  <hbox class="box-smallheader" title="&validation.title;"/>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&validation.crl.label;"/>
     <html> &validation.crl.description; </html>
-    <box halign="left" autostretch="never">
+    <hbox halign="left" autostretch="never">
       <button class="dialog" label="&validation.managecrls.button;" disabled="false"
         oncommand="openCrlManager();" />
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
-  <titledbox orient="vertical" autostretch="never" >
+  <groupbox orient="vertical" autostretch="never" >
     <label value="&validation.ocsp.label;"/>
     <html> &validation.ocsp.description; </html>
     <!-- Prefs -->
@@ -90,5 +90,5 @@
          </rows>
        </grid>
     </radiogroup>
-  </titledbox>
+  </groupbox>
 </window>

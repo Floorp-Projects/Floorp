@@ -40,17 +40,17 @@
         onload="parent.initPanel('chrome://pippki/content/pref-certs.xul');" >
 
   <!-- List elements to manage for prefs -->
-  <script language="JavaScript" src="pref-security.js"/>
-  <script language="JavaScript">
+  <script type="application/x-javascript" src="pref-security.js"/>
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = [ "certSelection" ];
   ]]>
   </script>
             
   <!-- Fancy panel header -->
-  <box class="box-smallheader" title="&certs.label;"/>
+  <hbox class="box-smallheader" title="&certs.label;"/>
 
-  <titledbox orient="vertical" autostretch="never" >
+  <groupbox orient="vertical" autostretch="never">
     <label value="&SSLClientAuthMethod;"/>
     <html> &certselect.description; </html>
     <!-- Prefs -->
@@ -59,30 +59,30 @@
     <radio group="certSelection" label="&certselect.auto;" value="Select Automatically"/>
     <radio group="certSelection" label="&certselect.ask;" value="Ask Every Time"/>
     </radiogroup>
-  </titledbox>
+  </groupbox>
 
   <!-- Certificate manager -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&managecerts.label;"/>
     <html>
       &managecerts.text;
     </html>
-    <box halign="left" autostretch="never">
+    <hbox halign="left" autostretch="never">
       <button class="dialog" label="&managecerts.button;" disabled="false"
         oncommand="openCertManager();" />
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
   <!-- Device manager -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&managedevices.label;"/>
     <html>
       &managedevices.text;
     </html>
-    <box halign="left" autostretch="never">
+    <hbox halign="left" autostretch="never">
       <button class="dialog" label="&managedevices.button;" disabled="false"
         oncommand="openDeviceManager();" />
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
 </window>

@@ -43,21 +43,21 @@
 <script src="choosetoken.js" />
 <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
-<box orient="vertical" style="margin: 5px;" flex="1">
-    <titledbox orient="vertical">
+<vbox style="margin: 5px;" flex="1">
+    <groupbox orient="vertical">
     <html>&chooseToken.message1;</html>
     <menulist id="tokens">
         <menupopup/>
     </menulist>
-    </titledbox>
+    </groupbox>
   <separator />
-  <box>
+  <hbox>
   <button id="ok-button" class="dialog" label="&ok.label;"
      style="width: 10ex" onclick="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
   <button id="help-button" class="dialog" label="&help.label;"
     style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?which_token');" /> 
-  </box>
-</box>
+  </hbox>
+</vbox>
 </window>

@@ -30,7 +30,7 @@
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<box class="box-padded" id="certPrettyPrint" orient="vertical" flex="1">
+<vbox class="box-padded" id="certPrettyPrint" flex="1">
   <text class="header" value="&certmgr.hierarchy.label;"/>
   <tree class="inset" id="treesetDump" debug="false" flex="1"
         style="overflow:auto; max-height: 80px;" onselect="updateCertDump();">
@@ -48,5 +48,5 @@
   <text class="header" value="&certmgr.fields.label;" />
   <tree class="inset" id="certDumpVal" debug="false" clip="never"
         style="overflow:auto;"/>
-</box>
+</vbox>
 </overlay>

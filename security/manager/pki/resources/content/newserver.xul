@@ -47,7 +47,7 @@
   <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel()"/>
 </keyset>
 
-<box orient="vertical" style="margin: 5px;" flex="1">
+<vbox style="margin: 5px;" flex="1">
 
   <html id="message1" />
   <separator/>
@@ -71,19 +71,19 @@
            label="&newserver.reject;" value="2"/>
   </radiogroup>
 
-  <box>
+  <hbox>
   <button id="examineCert-button" class="dialog" label="&examineCert.label;"
      onclick="viewCert();"/> 
-  </box>
+  </hbox>
   <separator/>
   
-  <box>
+  <hbox>
   <button id="ok-button" class="dialog" label="&ok.label;" 
      style="width: 10ex" onclick="doOK();" disabled="false" primary="true"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;" 
      style="width: 10ex" onclick="doCancel();" /> 
   <button id="help-button" class="dialog" label="&help.label;"
     style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?new_web_cert');" /> 
-  </box>
-</box>
+  </hbox>
+</vbox>
 </window>

@@ -87,7 +87,7 @@
 
   <vbox style="overflow: hidden;" flex="1">
 
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&cipher.ssl2.label;"/>
 
     <checkbox label="&cipher.ssl2.rc4_128;" pref="true"
@@ -103,9 +103,9 @@
     <checkbox label="&cipher.ssl2.rc2_40;" pref="true"
          prefstring="security.ssl2.rc2_40"/>
 
-  </titledbox>
+  </groupbox>
 
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&cipher.ssl3.label;"/>
 
     <checkbox label="&cipher.ssl3.rsa_rc4_128_md5;" pref="true"
@@ -126,12 +126,12 @@
          prefstring="security.ssl3.rsa_rc2_40_md5"/>
     <checkbox label="&cipher.ssl3.rsa_null_md5;" pref="true"
          prefstring="security.ssl3.rsa_null_md5"/>
-  </titledbox>
+  </groupbox>
 
   <separator/>
 
   <keyset id="dialogKeys"/>
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
   </vbox>
 

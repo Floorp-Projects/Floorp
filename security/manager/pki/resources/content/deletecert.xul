@@ -39,19 +39,19 @@
   <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
 
-  <box orient="vertical" flex="1">
+  <vbox flex="1">
     <html>&certmgr.deletecert.beforename;</html>
     <text id="certname"/>
     <html>&certmgr.deletecert.aftername;</html>
     <separator />
-    <box orient="horizontal" align="center">
+    <hbox align="center">
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
            style="width: 8ex" oncommand="doOK();"/> 
       <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
            style="width: 8ex" oncommand="window.close();" /> 
       <button id="help-button" class="dialog" label="&certmgr.help.label;"
            style="width: 8ex" oncommand="openHelp('chrome://help/content/help.xul?delete_my_certs');" /> 
-    </box>
-  </box>
+    </hbox>
+  </vbox>
 
 </window>
