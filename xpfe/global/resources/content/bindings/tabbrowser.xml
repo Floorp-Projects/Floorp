@@ -51,8 +51,7 @@
 
     <content>
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
-      <xul:tabbox flex="1" eventnode="document"
-                  onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
+      <xul:tabbox flex="1" eventnode="document">
         <xul:hbox class="tabbrowser-strip chromeclass-toolbar" collapsed="true" tooltip="_child" context="_child">
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
           <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
@@ -814,13 +813,13 @@
             this.mTabContainer.removeChild(oldTab);
             this.mPanelContainer.removeChild(oldBrowser);
 
-            this.selectedTab = this.mTabContainer.childNodes[newIndex];
+            // When the current tab is removed select a new tab
+            // and fire select events on tabpanels and tabs
+            this.mTabContainer.selectedIndex = newIndex;
 
-            if (newIndex == index) {
-              // No select event is going to fire.  We need to just call updateCurrentBrowser()
-              // by hand.
-              this.updateCurrentBrowser();
-            }
+            // When removing a tab to the left of the current tab
+            // fix up the panel index without firing any events
+            this.mPanelContainer.selectedIndex = newIndex;
           ]]>
         </body>
       </method>
@@ -1182,6 +1181,8 @@
     </implementation>
 
     <handlers>
+      <handler event="select" action="if (event.originalTarget == this.mPanelContainer) this.updateCurrentBrowser();"/>
+
       <handler event="keypress" modifiers="control" keycode="vk_f4" action="this.removeCurrentTab();"/>
 
       <handler event="DOMWindowClose">
