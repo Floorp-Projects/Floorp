@@ -27,6 +27,7 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMCharacterData.h"
 #include "nsEditorCID.h"
 #include "nsISupportsArray.h"
 #include "nsIEnumerator.h"
@@ -179,16 +180,41 @@ nsresult nsTextEditor::SetTextProperties(nsISupportsArray *aPropList)
                     nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
                     range->GetStartParent(getter_AddRefs(startParent));
                     range->GetEndParent(getter_AddRefs(endParent));
-                    if (startParent.get()==endParent.get()) {
+                    if (startParent.get()==endParent.get()) 
+                    { // the range is entirely contained within a single text node
                       result = SetTextPropertiesForNode(startParent, commonParent, 
                                                         startOffset, endOffset,
                                                         propName);
+                    }
+                    else
+                    {
+                      nsCOMPtr<nsIDOMNode> startGrandParent;
+                      startParent->GetParentNode(getter_AddRefs(startGrandParent));
                       if (NS_SUCCEEDED(result))
-                      { // set the selection
-                        // don't want to actually do anything with selection, because
-                        // I'm still iterating through it.  Just want to create and remember
-                        // an nsIDOMRange, and later add the range to the selection after clearing it.
+                      {
+                        if (commonParent.get()==startGrandParent.get())
+                        { // the range is between 2 nodes that have a common (immediate) grandparent
+                          result = SetTextPropertiesForNodesWithSameParent(startParent,startOffset,
+                                                                           endParent,  endOffset,
+                                                                           commonParent,
+                                                                           propName);
+                        }
+                        else
+                        { // the range is between 2 nodes that have no simple relationship
+                          result = SetTextPropertiesForNodeWithDifferentParents(startParent,startOffset, 
+                                                                                endParent,  endOffset,
+                                                                                commonParent,
+                                                                                propName);
+                        }
                       }
+                    }
+                    if (NS_SUCCEEDED(result))
+                    { // compute a range for the selection
+                      // don't want to actually do anything with selection, because
+                      // we are still iterating through it.  Just want to create and remember
+                      // an nsIDOMRange, and later add the range to the selection after clearing it.
+                      // XXX: I'm blocked here because nsIDOMSelection doesn't provide a mechanism
+                      //      for setting a compound selection yet.
                     }
                   }
                 }
@@ -197,8 +223,12 @@ nsresult nsTextEditor::SetTextProperties(nsISupportsArray *aPropList)
           }
           NS_RELEASE(propAsSupports);
         }
-      }
+      } // end for loop
       mEditor->EndTransaction();
+      if (NS_SUCCEEDED(result))
+      { // set the selection
+        // XXX: can't do anything until I can create ranges
+      }
     }
   }
   return result;
@@ -521,32 +551,47 @@ nsresult nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
                                                 PRInt32 aEndOffset,
                                                 nsIAtom *aPropName)
 {
-  nsresult result;
-  nsCOMPtr<nsIDOMNode>newTextNode;  // this will be the middle text node
-  result = mEditor->SplitNode(aNode, aStartOffset, getter_AddRefs(newTextNode));
+  nsresult result=NS_OK;
+  nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
+  nodeAsChar =  aNode;
+  if (!nodeAsChar)
+    return NS_ERROR_FAILURE;
+  PRUint32 count;
+  nodeAsChar->GetLength(&count);
+
+  nsCOMPtr<nsIDOMNode>newTextNode;  // this will be the text node we move into the new style node
+  if (aStartOffset!=0)
+  {
+    result = mEditor->SplitNode(aNode, aStartOffset, getter_AddRefs(newTextNode));
+  }
   if (NS_SUCCEEDED(result))
   {
-    result = mEditor->SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newTextNode));
+    if (aEndOffset!=count)
+    {
+      result = mEditor->SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newTextNode));
+    }
+    else
+    {
+      newTextNode = aNode;
+    }
     if (NS_SUCCEEDED(result))
     {
       nsAutoString tag;
-      if (nsIEditProperty::bold==aPropName) {
-        tag = "b";
-      }
-      else if (nsIEditProperty::italic==aPropName) {
-        tag = "i";
-      }
-      PRInt32 offsetInParent;
-      result = nsIEditorSupport::GetChildOffset(aNode, aParent, offsetInParent);
+      result = SetTagFromProperty(tag, aPropName);
       if (NS_SUCCEEDED(result))
       {
-        nsCOMPtr<nsIDOMNode>newStyleNode;
-        result = mEditor->CreateNode(tag, aParent, offsetInParent, getter_AddRefs(newStyleNode));
+        PRInt32 offsetInParent;
+        result = nsIEditorSupport::GetChildOffset(aNode, aParent, offsetInParent);
         if (NS_SUCCEEDED(result))
         {
-          result = mEditor->DeleteNode(newTextNode);
-          if (NS_SUCCEEDED(result)) {
-            result = mEditor->InsertNode(newTextNode, newStyleNode, 0);
+          nsCOMPtr<nsIDOMNode>newStyleNode;
+          result = mEditor->CreateNode(tag, aParent, offsetInParent, getter_AddRefs(newStyleNode));
+          if (NS_SUCCEEDED(result))
+          {
+            result = mEditor->DeleteNode(newTextNode);
+            if (NS_SUCCEEDED(result)) {
+              result = mEditor->InsertNode(newTextNode, newStyleNode, 0);
+            }
           }
         }
       }
@@ -554,3 +599,131 @@ nsresult nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
   }
   return result;
 }
+
+nsresult 
+nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
+                                                      PRInt32     aStartOffset,
+                                                      nsIDOMNode *aEndNode,
+                                                      PRInt32     aEndOffset,
+                                                      nsIDOMNode *aParent,
+                                                      nsIAtom    *aPropName)
+{
+  nsresult result=NS_OK;
+  nsCOMPtr<nsIDOMNode>newLeftTextNode;  // this will be the middle text node
+  if (0!=aStartOffset) {
+    result = mEditor->SplitNode(aStartNode, aStartOffset, getter_AddRefs(newLeftTextNode));
+  }
+  if (NS_SUCCEEDED(result))
+  {
+    nsCOMPtr<nsIDOMCharacterData>endNodeAsChar;
+    endNodeAsChar = aEndNode;
+    if (!endNodeAsChar)
+      return NS_ERROR_FAILURE;
+    PRUint32 count;
+    endNodeAsChar->GetLength(&count);
+    nsCOMPtr<nsIDOMNode>newRightTextNode;  // this will be the middle text node
+    if (count!=aEndOffset) {
+      result = mEditor->SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightTextNode));
+    }
+    else {
+      newRightTextNode = aEndNode;
+    }
+    if (NS_SUCCEEDED(result))
+    {
+      PRInt32 offsetInParent;
+      if (newLeftTextNode) {
+        result = nsIEditorSupport::GetChildOffset(newLeftTextNode, aParent, offsetInParent);
+      }
+      else {
+        offsetInParent = -1; // relies on +1 below in call to CreateNode
+      }
+      if (NS_SUCCEEDED(result))
+      {
+        nsAutoString tag;
+        result = SetTagFromProperty(tag, aPropName);
+        if (NS_SUCCEEDED(result))
+        { // create the new style node, which will be the new parent for the selected nodes
+          nsCOMPtr<nsIDOMNode>newStyleNode;
+          result = mEditor->CreateNode(tag, aParent, offsetInParent+1, getter_AddRefs(newStyleNode));
+          if (NS_SUCCEEDED(result))
+          { // move the right half of the start node into the new style node
+            nsCOMPtr<nsIDOMNode>intermediateNode;
+            result = aStartNode->GetNextSibling(getter_AddRefs(intermediateNode));
+            if (NS_SUCCEEDED(result))
+            {
+              result = mEditor->DeleteNode(aStartNode);
+              if (NS_SUCCEEDED(result)) 
+              { 
+                PRInt32 childIndex=0;
+                result = mEditor->InsertNode(aStartNode, newStyleNode, childIndex);
+                childIndex++;
+                if (NS_SUCCEEDED(result))
+                { // move all the intermediate nodes into the new style node
+                  nsCOMPtr<nsIDOMNode>nextSibling;
+                  while (intermediateNode.get() != aEndNode)
+                  {
+                    if (!intermediateNode)
+                      result = NS_ERROR_NULL_POINTER;
+                    if (NS_FAILED(result)) {
+                      break;
+                    }
+                    // get the next sibling before moving the current child!!!
+                    intermediateNode->GetNextSibling(getter_AddRefs(nextSibling));
+                    result = mEditor->DeleteNode(intermediateNode);
+                    if (NS_SUCCEEDED(result)) {
+                      result = mEditor->InsertNode(intermediateNode, newStyleNode, childIndex);
+                      childIndex++;
+                    }
+                    intermediateNode = do_QueryInterface(nextSibling);
+                  }
+                  if (NS_SUCCEEDED(result))
+                  { // move the left half of the end node into the new style node
+                    result = mEditor->DeleteNode(newRightTextNode);
+                    if (NS_SUCCEEDED(result)) 
+                    {
+                      result = mEditor->InsertNode(newRightTextNode, newStyleNode, childIndex);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
+nsresult 
+nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMNode *aStartNode,
+                                                           PRInt32     aStartOffset,
+                                                           nsIDOMNode *aEndNode,
+                                                           PRInt32     aEndOffset,
+                                                           nsIDOMNode *aParent,
+                                                           nsIAtom    *aPropName)
+{
+  nsresult result = NS_OK;
+  return result;
+}
+
+
+
+nsresult 
+nsTextEditor::SetTagFromProperty(nsAutoString &aTag, nsIAtom *aPropName) const
+{
+  if (!aPropName) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (nsIEditProperty::bold==aPropName) {
+    aTag = "b";
+  }
+  else if (nsIEditProperty::italic==aPropName) {
+    aTag = "i";
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+

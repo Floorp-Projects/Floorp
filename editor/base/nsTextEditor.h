@@ -79,14 +79,29 @@ public:
   virtual nsresult OutputText(nsIOutputStream *aOutputStream);
   virtual nsresult OutputHTML(nsIOutputStream *aOutputStream);
 
-
 protected:
 // Utility Methods
   virtual nsresult SetTextPropertiesForNode(nsIDOMNode *aNode, 
                                             nsIDOMNode *aParent,
-                                            PRInt32 aStartOffset,
-                                            PRInt32 aEndOffset,
-                                            nsIAtom *aPropName);
+                                            PRInt32     aStartOffset,
+                                            PRInt32     aEndOffset,
+                                            nsIAtom    *aPropName);
+
+  virtual nsresult SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
+                                                           PRInt32     aStartOffset,
+                                                           nsIDOMNode *aEndNode,
+                                                           PRInt32     aEndOffset,
+                                                           nsIDOMNode *aParent,
+                                                           nsIAtom    *aPropName);
+
+  virtual nsresult SetTextPropertiesForNodeWithDifferentParents(nsIDOMNode *aStartNode,
+                                                                PRInt32     aStartOffset,
+                                                                nsIDOMNode *aEndNode,
+                                                                PRInt32     aEndOffset,
+                                                                nsIDOMNode *aParent,
+                                                                nsIAtom    *aPropName);
+
+  virtual nsresult SetTagFromProperty(nsAutoString &aTag, nsIAtom *aPropName) const;
 
 // Data members
 protected:
