@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.11 2003/01/16 00:55:53 nelsonb%netscape.com Exp $
+ * $Id: loader.c,v 1.12 2003/01/16 01:44:43 nelsonb%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -1247,7 +1247,7 @@ AESKeyWrap_DestroyContext(AESKeyWrapContext *cx, PRBool freeit)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return;
-  return vector->p_AESKeyWrap_DestroyContext(cx, freeit);
+  vector->p_AESKeyWrap_DestroyContext(cx, freeit);
 }
 
 SECStatus 
