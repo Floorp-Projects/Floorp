@@ -59,6 +59,11 @@
 #define MAXPATHLEN	1024  /* Guessing this is okay.  Works for SCO. */
 #endif
  
+#if defined(__QNX__)
+#include <unix.h>	/* for realpath */
+#define f_bavail	f_bfree
+#endif
+
 #if defined(SUNOS4)
 extern "C" int statfs(char *, struct statfs *);
 #endif
@@ -451,7 +456,11 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
         sprintf(curdir, "%.200s", (const char*)mPath);
  
     struct STATFS fs_buf;
+#if defined(__QNX__)  /* Maybe this should be handled differently? */
+    if (STATFS(curdir, &fs_buf, 0, 0) < 0)
+#else
     if (STATFS(curdir, &fs_buf) < 0)
+#endif
         return ULONG_MAX; /* hope for the best as we did in cheddar */
  
 #ifdef DEBUG_DISK_SPACE
