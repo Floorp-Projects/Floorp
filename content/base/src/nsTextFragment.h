@@ -75,10 +75,9 @@ public:
   /**
    * Default constructor. Initialize the fragment to be empty.
    */
-  inline
-  nsTextFragment() {
-    m1b = nsnull;
-    mAllBits = 0;
+  nsTextFragment()
+    : m1b(nsnull), mAllBits(0)
+  {
   }
 
   ~nsTextFragment();
@@ -93,13 +92,13 @@ public:
    * Initialize the contents of this fragment to be a copy of
    * the argument 7bit ascii string.
    */
-  nsTextFragment(const char* aString);
+  nsTextFragment(const char *aString);
 
   /**
    * Initialize the contents of this fragment to be a copy of
    * the argument ucs2 string.
    */
-  nsTextFragment(const PRUnichar* aString);
+  nsTextFragment(const PRUnichar *aString);
 
   /**
    * Initialize the contents of this fragment to be a copy of
@@ -117,13 +116,13 @@ public:
    * Change the contents of this fragment to be a copy of the
    * the argument 7bit ascii string.
    */
-  nsTextFragment& operator=(const char* aString);
+  nsTextFragment& operator=(const char *aString);
 
   /**
    * Change the contents of this fragment to be a copy of the
    * the argument ucs2 string.
    */
-  nsTextFragment& operator=(const PRUnichar* aString);
+  nsTextFragment& operator=(const PRUnichar *aString);
 
   /**
    * Change the contents of this fragment to be a copy of the
@@ -134,16 +133,16 @@ public:
   /**
    * Return PR_TRUE if this fragment is represented by PRUnichar data
    */
-  inline
-  PRBool Is2b() const {
+  PRBool Is2b() const
+  {
     return mState.mIs2b;
   }
 
   /**
    * Get a pointer to constant PRUnichar data.
    */
-  inline
-  const PRUnichar* Get2b() const {
+  const PRUnichar *Get2b() const
+  {
     NS_ASSERTION(Is2b(), "not 2b text"); 
     return m2b;
   }
@@ -151,39 +150,19 @@ public:
   /**
    * Get a pointer to constant char data.
    */
-  inline
-  const char* Get1b() const {
+  const char *Get1b() const
+  {
     NS_ASSERTION(!Is2b(), "not 1b text"); 
-    return (const char*) m1b;
+    return (const char *)m1b;
   }
 
   /**
    * Get the length of the fragment. The length is the number of logical
    * characters, not the number of bytes to store the characters.
    */
-  inline
-  PRInt32 GetLength() const {
+  PRInt32 GetLength() const
+  {
     return PRInt32(mState.mLength);
-  }
-
-  /**
-   * Mutable version of Get2b. Only works for a non-const object.
-   * Returns a pointer to the PRUnichar data.
-   */
-  inline
-  PRUnichar* Get2b() {
-    NS_ASSERTION(Is2b(), "not 2b text"); 
-    return m2b;
-  }
-
-  /**
-   * Mutable version of Get1b. Only works for a non-const object.
-   * Returns a pointer to the char data.
-   */
-  inline
-  char* Get1b() {
-    NS_ASSERTION(!Is2b(), "not 1b text"); 
-    return (char*) m1b;
   }
 
   /**
@@ -192,25 +171,21 @@ public:
    * the memory for aBuffer must have been allocated using the 
    * nsIMemory interface.
    */
-  void SetTo(PRUnichar* aBuffer, PRInt32 aLength, PRBool aRelease);
+  void SetTo(PRUnichar *aBuffer, PRInt32 aLength, PRBool aRelease);
 
   /**
    * Change the contents of this fragment to be a copy of the given
    * buffer. Like operator= except a length is specified instead of
    * assuming 0 termination.
    */
-#ifdef IBMBIDI
-  PRBool SetTo(const PRUnichar* aBuffer, PRInt32 aLength);
-#else
-  void SetTo(const PRUnichar* aBuffer, PRInt32 aLength);
-#endif
+  PRBool SetTo(const PRUnichar *aBuffer, PRInt32 aLength);
 
   /**
    * Change the contents of this fragment to be a copy of the given
    * buffer. Like operator= except a length is specified instead of
    * assuming 0 termination.
    */
-  void SetTo(const char* aBuffer, PRInt32 aLength);
+  void SetTo(const char *aBuffer, PRInt32 aLength);
 
   /**
    * Append the contents of this string fragment to aString
@@ -223,7 +198,7 @@ public:
    * lie within the fragments data. The fragments data is converted if
    * necessary.
    */
-  void CopyTo(PRUnichar* aDest, PRInt32 aOffset, PRInt32 aCount);
+  void CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount);
 
   /**
    * Make a copy of the fragments contents starting at offset for
@@ -231,38 +206,36 @@ public:
    * lie within the fragments data. The fragments data is converted if
    * necessary.
    */
-  void CopyTo(char* aDest, PRInt32 aOffset, PRInt32 aCount);
+  void CopyTo(char *aDest, PRInt32 aOffset, PRInt32 aCount);
 
   /**
    * Return the character in the text-fragment at the given
    * index. This always returns a PRUnichar.
    */
-  inline
-  PRUnichar CharAt(PRInt32 aIndex) const {
+  PRUnichar CharAt(PRInt32 aIndex) const
+  {
     NS_ASSERTION(PRUint32(aIndex) < mState.mLength, "bad index");
     return mState.mIs2b ? m2b[aIndex] : PRUnichar(m1b[aIndex]);
   }
 
 protected:
-  union {
-    PRUnichar* m2b;
-    unsigned char* m1b;
-  };
+  void ReleaseText();
 
-public:
   struct FragmentBits {
-    PRUint32 mInHeap : 1;
-    PRUint32 mIs2b : 1;
+    PRBool mInHeap : 1;
+    PRBool mIs2b : 1;
     PRUint32 mLength : 30;
   };
 
-protected:
+  union {
+    const PRUnichar *m2b;
+    const unsigned char *m1b;
+  };
+
   union {
     PRUint32 mAllBits;
     FragmentBits mState;
   };
-
-  void ReleaseText();
 };
 
 #endif /* nsTextFragment_h___ */

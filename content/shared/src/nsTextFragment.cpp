@@ -44,6 +44,10 @@
 #include "nsIUBidiUtils.h"
 #endif
 
+// Static buffer used for newline fragments
+static unsigned char sNewLineCharacter = '\n';
+
+
 nsTextFragment::~nsTextFragment()
 {
   ReleaseText();
@@ -53,48 +57,41 @@ void
 nsTextFragment::ReleaseText()
 {
   if (mState.mLength && m1b && mState.mInHeap) {
-    if (mState.mIs2b) {
-      nsMemory::Free(m2b);
-    }
-    else {
-      nsMemory::Free(m1b);
-    }
+    unsigned char *buf = NS_CONST_CAST(unsigned char *, m1b);
+
+    nsMemory::Free(buf); // m1b == m2b as far as nsMemory is concerned
   }
+
   m1b = nsnull;
-  mState.mIs2b = 0;
-  mState.mInHeap = 0;
-  mState.mLength = 0;
+
+  // Set mState.mIs2b, mState.mInHeap, and mState.mLength = 0 with mAllBits;
+  mAllBits = 0;
 }
 
 nsTextFragment::nsTextFragment(const nsTextFragment& aOther)
-  : m1b(nsnull),
-    mAllBits(0)
+  : m1b(nsnull), mAllBits(0)
 {
   if (aOther.Is2b()) {
     SetTo(aOther.Get2b(), aOther.GetLength());
-  }
-  else {
+  } else {
     SetTo(aOther.Get1b(), aOther.GetLength());
   }
 }
 
-nsTextFragment::nsTextFragment(const char* aString)
-  : m1b(nsnull),
-    mAllBits(0)
+nsTextFragment::nsTextFragment(const char *aString)
+  : m1b(nsnull), mAllBits(0)
 {
   SetTo(aString, strlen(aString));
 }
 
-nsTextFragment::nsTextFragment(const PRUnichar* aString)
-  : m1b(nsnull),
-    mAllBits(0)
+nsTextFragment::nsTextFragment(const PRUnichar *aString)
+  : m1b(nsnull), mAllBits(0)
 {
   SetTo(aString, nsCRT::strlen(aString));
 }
 
 nsTextFragment::nsTextFragment(const nsString& aString)
-  : m1b(nsnull),
-    mAllBits(0)
+  : m1b(nsnull), mAllBits(0)
 {
   SetTo(aString.get(), aString.Length());
 }
@@ -104,24 +101,26 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
 {
   if (aOther.Is2b()) {
     SetTo(aOther.Get2b(), aOther.GetLength());
-  }
-  else {
+  } else {
     SetTo(aOther.Get1b(), aOther.GetLength());
   }
+
   return *this;
 }
 
 nsTextFragment&
-nsTextFragment::operator=(const char* aString)
+nsTextFragment::operator=(const char *aString)
 {
   SetTo(aString, nsCRT::strlen(aString));
+
   return *this;
 }
 
 nsTextFragment&
-nsTextFragment::operator=(const PRUnichar* aString)
+nsTextFragment::operator=(const PRUnichar *aString)
 {
   SetTo(aString, nsCRT::strlen(aString));
+
   return *this;
 }
 
@@ -131,49 +130,55 @@ nsTextFragment::operator=(const nsAReadableString& aString)
   ReleaseText();
 
   PRUint32 length = aString.Length();
+
   if (length > 0) {
+    PRBool in_heap = PR_TRUE;
+
     if (IsASCII(aString)) {
-      m1b = NS_REINTERPRET_CAST(unsigned char *, ToNewCString(aString));
-      mState.mIs2b = 0;
-    }
-    else {
+      if (length == 1 && aString.First() == '\n') {
+        m1b = &sNewLineCharacter;
+
+        in_heap = PR_FALSE;
+      } else {
+        m1b = (unsigned char *)ToNewCString(aString);
+      }
+
+      mState.mIs2b = PR_FALSE;
+    } else {
       m2b = ToNewUnicode(aString);
-      mState.mIs2b = 1;
+      mState.mIs2b = PR_TRUE;
     }
-    mState.mInHeap = 1;
-    mState.mLength = (PRInt32)length;
+
+    mState.mInHeap = in_heap;
+    mState.mLength = length;
   }
 
   return *this;
 }
 
 void
-nsTextFragment::SetTo(PRUnichar* aBuffer, PRInt32 aLength, PRBool aRelease)
+nsTextFragment::SetTo(PRUnichar *aBuffer, PRInt32 aLength, PRBool aRelease)
 {
   ReleaseText();
 
   m2b = aBuffer;
-  mState.mIs2b = 1;
-  mState.mInHeap = aRelease ? 1 : 0;
+  mState.mIs2b = PR_TRUE;
+  mState.mInHeap = aRelease;
   mState.mLength = aLength;
 }
 
-#ifdef IBMBIDI
 PRBool
-#else
-void
-#endif
-nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
+nsTextFragment::SetTo(const PRUnichar *aBuffer, PRInt32 aLength)
 {
-#ifdef IBMBIDI
   PRBool bidiEnabled = PR_FALSE;
-#endif // IBMBIDI
+
   ReleaseText();
-  if (0 != aLength) {
+
+  if (aLength != 0) {
     // See if we need to store the data in ucs2 or not
     PRBool need2 = PR_FALSE;
-    const PRUnichar* ucp = aBuffer;
-    const PRUnichar* uend = aBuffer + aLength;
+    const PRUnichar *ucp = aBuffer;
+    const PRUnichar *uend = aBuffer + aLength;
     while (ucp < uend) {
       PRUnichar ch = *ucp++;
       if (ch >> 8) {
@@ -191,56 +196,81 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
 
     if (need2) {
       // Use ucs2 storage because we have to
-      PRUnichar* nt = (PRUnichar*)nsMemory::Alloc(aLength*sizeof(PRUnichar));
-      if (nsnull != nt) {
-        // Copy data
-        nsCRT::memcpy(nt, aBuffer, sizeof(PRUnichar) * aLength);
+      m2b = (const PRUnichar *)nsMemory::Clone(aBuffer,
+                                               aLength * sizeof(PRUnichar));
 
-        // Setup our fields
-        m2b = nt;
-        mState.mIs2b = 1;
-        mState.mInHeap = 1;
-        mState.mLength = aLength;
+      if (!m2b) {
+        NS_ERROR("Failed to clone string buffer!");
+
+        return PR_FALSE;
       }
-    }
-    else {
+
+      // Setup our fields
+      mState.mIs2b = PR_TRUE;
+      mState.mInHeap = PR_TRUE;
+      mState.mLength = aLength;
+    } else {
       // Use 1 byte storage because we can
-      unsigned char* nt = (unsigned char*)nsMemory::Alloc(aLength*sizeof(unsigned char));
-      if (nsnull != nt) {
-        // Copy data
-        unsigned char* cp = nt;
-        unsigned char* end = nt + aLength;
-        while (cp < end) {
-          *cp++ = (unsigned char) *aBuffer++;
+
+      PRBool in_heap = PR_TRUE;
+
+      if (aLength == 1 && *aBuffer == '\n') {
+        m1b = &sNewLineCharacter;
+
+        in_heap = PR_FALSE;
+      } else {
+        unsigned char *nt =
+          (unsigned char *)nsMemory::Alloc(aLength * sizeof(char));
+
+        if (!nt) {
+          NS_ERROR("Failed to allocate string buffer!");
+
+          return bidiEnabled;
         }
 
-        // Setup our fields
+        // Copy data
+        for (PRUint32 i = 0; i < (PRUint32)aLength; ++i) {
+          nt[i] = (unsigned char)aBuffer[i];
+        }
+
         m1b = nt;
-        mState.mIs2b = 0;
-        mState.mInHeap = 1;
-        mState.mLength = aLength;
       }
+
+      // Setup our fields
+      mState.mIs2b = PR_FALSE;
+      mState.mInHeap = in_heap;
+      mState.mLength = aLength;
     }
   }
-#ifdef IBMBIDI
+
   return bidiEnabled;
-#endif // IBMBIDI
 }
 
 void
-nsTextFragment::SetTo(const char* aBuffer, PRInt32 aLength)
+nsTextFragment::SetTo(const char *aBuffer, PRInt32 aLength)
 {
   ReleaseText();
-  if (0 != aLength) {
-    unsigned char* nt = (unsigned char*)nsMemory::Alloc(aLength*sizeof(unsigned char));
-    if (nsnull != nt) {
-      nsCRT::memcpy(nt, aBuffer, sizeof(unsigned char) * aLength);
+  if (aLength != 0) {
+    PRBool in_heap = PR_TRUE;
 
-      m1b = nt;
-      mState.mIs2b = 0;
-      mState.mInHeap = 1;
-      mState.mLength = aLength;
+    if (aLength == 1 && *aBuffer == '\n') {
+      m1b = &sNewLineCharacter;
+
+      in_heap = PR_FALSE;
+    } else {
+      m1b = (unsigned char *)nsMemory::Clone(aBuffer, aLength * sizeof(char));
+
+      if (!m1b) {
+        NS_ERROR("Failed to allocate string buffer!");
+
+        return;
+      }
     }
+
+    // Setup our fields
+    mState.mIs2b = PR_FALSE;
+    mState.mInHeap = in_heap;
+    mState.mLength = aLength;
   }
 }
 
@@ -249,26 +279,31 @@ nsTextFragment::AppendTo(nsString& aString) const
 {
   if (mState.mIs2b) {
     aString.Append(m2b, mState.mLength);
-  }
-  else {
-    aString.AppendWithConversion((char*)m1b, mState.mLength);
+  } else {
+    aString.AppendWithConversion((char *)m1b, mState.mLength);
   }
 }
 
 void
-nsTextFragment::CopyTo(PRUnichar* aDest, PRInt32 aOffset, PRInt32 aCount)
+nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
 {
-  if (aOffset < 0) aOffset = 0;
+  NS_ASSERTION(aOffset >= 0, "Bad offset passed to nsTextFragment::CopyTo()!");
+  NS_ASSERTION(aCount >= 0, "Bad count passed to nsTextFragment::CopyTo()!");
+
+  if (aOffset < 0) {
+    aOffset = 0;
+  }
+
   if (aOffset + aCount > GetLength()) {
     aCount = mState.mLength - aOffset;
   }
-  if (0 != aCount) {
+
+  if (aCount != 0) {
     if (mState.mIs2b) {
       nsCRT::memcpy(aDest, m2b + aOffset, sizeof(PRUnichar) * aCount);
-    }
-    else {
-      unsigned char* cp = m1b + aOffset;
-      unsigned char* end = cp + aCount;
+    } else {
+      unsigned const char *cp = m1b + aOffset;
+      unsigned const char *end = cp + aCount;
       while (cp < end) {
         *aDest++ = PRUnichar(*cp++);
       }
@@ -277,21 +312,27 @@ nsTextFragment::CopyTo(PRUnichar* aDest, PRInt32 aOffset, PRInt32 aCount)
 }
 
 void
-nsTextFragment::CopyTo(char* aDest, PRInt32 aOffset, PRInt32 aCount)
+nsTextFragment::CopyTo(char *aDest, PRInt32 aOffset, PRInt32 aCount)
 {
-  if (aOffset < 0) aOffset = 0;
+  NS_ASSERTION(aOffset >= 0, "Bad offset passed to nsTextFragment::CopyTo()!");
+  NS_ASSERTION(aCount >= 0, "Bad count passed to nsTextFragment::CopyTo()!");
+
+  if (aOffset < 0) {
+    aOffset = 0;
+  }
+
   if (aOffset + aCount > GetLength()) {
     aCount = mState.mLength - aOffset;
   }
-  if (0 != aCount) {
+
+  if (aCount != 0) {
     if (mState.mIs2b) {
-      PRUnichar* cp = m2b + aOffset;
-      PRUnichar* end = cp + aCount;
+      const PRUnichar *cp = m2b + aOffset;
+      const PRUnichar *end = cp + aCount;
       while (cp < end) {
-        *aDest++ = (unsigned char) (*cp++);
+        *aDest++ = (char)(*cp++);
       }
-    }
-    else {
+    } else {
       nsCRT::memcpy(aDest, m1b + aOffset, sizeof(char) * aCount);
     }
   }
