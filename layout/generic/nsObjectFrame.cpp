@@ -460,60 +460,57 @@ nsObjectFrame::GetSkipSides() const
 
 // #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
 
-void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
+PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
 {
-  *aImage = PR_FALSE;
+  if (!aContent)
+    return PR_FALSE;
 
-  if(aContent == NULL)
-    return;
-
-  nsAutoString type;
-  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-  if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
+  nsAutoString uType;
+  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, uType);
+  nsCAutoString type = NS_ConvertUCS2toUTF8(uType);
+  PRBool haveType = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!type.IsEmpty());
+  if (!haveType) 
   {
-    nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
-    loader->SupportImageWithMimeType(NS_LossyConvertUCS2toASCII(type).get(), aImage);
-    return;
-  }
+    nsAutoString data;
+    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
 
-  nsAutoString data;
-  rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
+    PRBool havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!data.IsEmpty());
 
-  PRBool havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0);
+    if (!havedata)
+    {// try it once more for SRC attribute
+      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
+      havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!data.IsEmpty());
+    }
 
-  if(!havedata)
-  {// try it once more for SRC attrubute
-    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
-    havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0);
-  }
-
-  if(havedata) 
-  {
-    // should be really call to imlib
-    nsAutoString ext;
-    
+    if (!havedata)
+      return PR_FALSE;
+ 
+    // Find the extension in the string 
     PRInt32 iLastCharOffset = data.Length() - 1;
     PRInt32 iPointOffset = data.RFindChar('.');
 
-    if(iPointOffset != -1)
-    {
-      data.Mid(ext, iPointOffset + 1, iLastCharOffset - iPointOffset);
+    if (iPointOffset == -1)
+      return PR_FALSE;
+  
+    const nsAString & ext = Substring(data, iPointOffset + 1, iLastCharOffset - iPointOffset);
 
-      if(ext.EqualsIgnoreCase(IMAGE_EXT_GIF) ||
-         ext.EqualsIgnoreCase(IMAGE_EXT_JPG) ||
-         ext.EqualsIgnoreCase(IMAGE_EXT_PNG) ||
-         ext.EqualsIgnoreCase(IMAGE_EXT_XBM) ||
-         ext.EqualsIgnoreCase(IMAGE_EXT_BMP) ||
-         ext.EqualsIgnoreCase(IMAGE_EXT_ICO) ||
-         ext.EqualsIgnoreCase(IMAGE_EXT_CUR) ||
-         ext.EqualsIgnoreCase(IMAGE_EXT_MNG) ||
-         ext.EqualsIgnoreCase(IMAGE_EXT_JNG))
-      {
-        *aImage = PR_TRUE;
-      }
-    }
-    return;
+    nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1", &rv));
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+
+    nsXPIDLCString cType;
+    rv = mimeService->GetTypeFromExtension(NS_ConvertUCS2toUTF8(ext).get(), getter_Copies(cType));
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+
+    type.Assign(cType);
+
   }
+  
+  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
+  PRBool supported;
+  rv = loader->SupportImageWithMimeType(type.get(), &supported);
+  return NS_SUCCEEDED(rv) && supported;
 }
 
 void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
@@ -600,13 +597,8 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
 
   mPresContext = aPresContext; // weak ref
 
-  PRBool bImage = PR_FALSE;
-
-  //Ideally should be call to imlib, when it is available
-  // and even move this code to Reflow when the stream starts to come
-  IsSupportedImage(aContent, &bImage);
-  
-  if(bImage)
+  //Ideally this should move to Reflow when the stream starts to come
+  if (IsSupportedImage(aContent))
   {
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
