@@ -26,9 +26,11 @@
 		}
 		parent.frames[0].commit();
 		//dump("*****************************count: "+count+"\n");
-		parent.frames[0].location.replace( pages[count] );
+		//parent.frames[0].location.replace( pages[count] );
+		parent.frames[0].location.href = pages[count];
 		parent.count = count;
-		parent.frames[1].location.replace("resource:/res/profile/navigationManagerStart.xul");
+		//parent.frames[1].location.replace("resource:/res/profile/navigationManagerStart.xul");
+		parent.frames[1].location.href = "resource:/res/profile/navigationManagerStart.xul";
 	}
 
 
@@ -44,7 +46,8 @@
 	{
 		parent.frames[0].commit();
 		parent.Finish();
-		parent.location.replace("resource:/res/profile/pm.xul");
+		//parent.location.replace("resource:/res/profile/pm.xul");
+		parent.location.href = "resource:/res/profile/pm.xul";
 	}
 </html:script>
 

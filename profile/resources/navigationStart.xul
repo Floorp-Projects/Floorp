@@ -33,11 +33,13 @@
 		}
 
 		parent.frames[0].commit();
-		parent.frames[0].location.replace( pages[count] );
+		//parent.frames[0].location.replace( pages[count] );
+		parent.frames[0].location.href = pages[count];
 
 		if (count == 1) {
 			parent.count = count;
-			parent.frames[1].location.replace("resource:/res/profile/navigationFinish.xul");
+			//parent.frames[1].location.replace("resource:/res/profile/navigationFinish.xul");
+			parent.frames[1].location.href = "resource:/res/profile/navigationFinish.xul";
 		}
 	}
 

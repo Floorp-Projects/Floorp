@@ -16,12 +16,14 @@ function RenameProfile()
 		profileCore.RenameProfile(curProfileName, newProfileName);
 
 		// Load this xul to see the updated profile list
-		this.location.replace("resource:/res/profile/profileManager.html");
+		//this.location.replace("resource:/res/profile/profileManager.html");
+		this.location.href = "resource:/res/profile/profileManager.html";
 	}
 	else {
 		dump("************Please enter a new profile name first\n");
 
-		this.location.replace("resource:/res/profile/renameProfile.html");
+		//this.location.replace("resource:/res/profile/renameProfile.html");
+		this.location.href = "resource:/res/profile/renameProfile.html";
 	}
 }
 
