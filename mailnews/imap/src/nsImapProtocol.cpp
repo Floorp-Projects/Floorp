@@ -1000,25 +1000,28 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
   nsresult rv = NS_OK;
   PRUint32 writeCount;
 
-  if (closeNeeded && GetDeleteIsMoveToTrash() &&
-      TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
+  if (m_currentServerCommandTagNumber > 0)
   {
-    IncrementCommandTagNumber();
-    command = GetServerCommandTag();
-    command.Append(" close" CRLF);
-    rv = m_outputStream->Write(command.get(), command.Length(),
-                               &writeCount);
-    Log("SendData", "TellThreadToDie", command.get());
-  }
+    if (closeNeeded && GetDeleteIsMoveToTrash() &&
+        TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
+    {
+      IncrementCommandTagNumber();
+      command = GetServerCommandTag();
+      command.Append(" close" CRLF);
+      rv = m_outputStream->Write(command.get(), command.Length(),
+                                 &writeCount);
+      Log("SendData", "TellThreadToDie", command.get());
+    }
 
-  if (NS_SUCCEEDED(rv) && TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
-  {
-    IncrementCommandTagNumber();
-    command = GetServerCommandTag();
-    command.Append(" logout" CRLF);
-    rv = m_outputStream->Write(command.get(), command.Length(),
-                               &writeCount);
-    Log("SendData", "TellThreadToDie", command.get());
+    if (NS_SUCCEEDED(rv) && TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
+    {
+      IncrementCommandTagNumber();
+      command = GetServerCommandTag();
+      command.Append(" logout" CRLF);
+      rv = m_outputStream->Write(command.get(), command.Length(),
+                                 &writeCount);
+      Log("SendData", "TellThreadToDie", command.get());
+    }
   }
 
   if (mAsyncReadRequest)
