@@ -35,12 +35,19 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init();
-
   NS_IMETHOD CreateIterator(nsIIterator ** aIterator) ;
-
   NS_IMETHOD AddLayer(nsILayer * aLayer);
   NS_IMETHOD RemoveLayer(nsILayer * aLayer);
 
+  NS_IMETHOD SetCurl(const JulianString& s);
+  NS_IMETHOD GetCurl(JulianString& s);
+  NS_IMETHOD SetCal(NSCalendar* aCal);
+  NS_IMETHOD GetCal(NSCalendar*& aCal);
+  NS_IMETHOD FetchEventsByRange(
+                      const DateTime* aStart, 
+                      const DateTime* aStop,
+                      JulianPtrArray* &anArray
+                      );
 private:
   nsIVector * mLayers ;
 

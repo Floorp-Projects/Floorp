@@ -113,3 +113,35 @@ nsresult nsLayerCollection :: RemoveLayer(nsILayer * aLayer)
   NS_IF_RELEASE(aLayer);
   return NS_OK;
 }
+
+nsresult nsLayerCollection::SetCurl(const JulianString& s)
+{
+  return (NS_OK);
+}
+
+nsresult nsLayerCollection::GetCurl(JulianString& s)
+{
+  return (NS_OK);
+}
+
+
+nsresult nsLayerCollection::SetCal(NSCalendar* aCal)
+{
+  return (NS_OK);
+}
+
+
+nsresult nsLayerCollection::GetCal(NSCalendar*& aCal)
+{
+  return (NS_OK);
+}
+
+
+nsresult nsLayerCollection::FetchEventsByRange(
+                      const DateTime*  aStart, 
+                      const DateTime*  aStop,
+                      JulianPtrArray*& anArray
+                      )
+{
+  return (NS_OK);
+}

@@ -19,11 +19,17 @@
 #define nsILayer_h___
 
 #include "nsISupports.h"
+#include "jdefines.h"
+#include "julnstr.h"
 
 //5482d0d0-4cca-11d2-924a-00805f8a7ab6
 #define NS_ILAYER_IID   \
 { 0x5482d0d0, 0x4cca, 0x11d2,    \
 { 0x92, 0x4a, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
+
+class NSCalendar;
+class DateTime;
+class JulianPtrArray;
 
 class nsILayer : public nsISupports
 {
@@ -31,6 +37,15 @@ class nsILayer : public nsISupports
 public:
   NS_IMETHOD Init() = 0;
 
+  NS_IMETHOD SetCurl(const JulianString& s) = 0;
+  NS_IMETHOD GetCurl(JulianString& s) = 0;
+  NS_IMETHOD SetCal(NSCalendar* aCal) = 0;
+  NS_IMETHOD GetCal(NSCalendar*& aCal) = 0;
+  NS_IMETHOD FetchEventsByRange(
+                      const DateTime* aStart, 
+                      const DateTime* aStop,
+                      JulianPtrArray* &anArray
+                      ) = 0;
 };
 
 

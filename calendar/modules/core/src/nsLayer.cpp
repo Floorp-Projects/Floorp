@@ -24,6 +24,7 @@ static NS_DEFINE_IID(kILayerIID,       NS_ILAYER_IID);
 nsLayer::nsLayer(nsISupports* outer)
 {
   NS_INIT_REFCNT();
+  mpCal = 0;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsLayer, kILayerIID)
@@ -36,8 +37,45 @@ nsLayer::~nsLayer()
 
 nsresult nsLayer::Init()
 {
-
   return (NS_OK);
 }
+
+nsresult nsLayer::SetCurl(const JulianString& s)
+{
+  msCurl = s;
+  return (NS_OK);
+}
+
+nsresult nsLayer::GetCurl(JulianString& s)
+{
+  s = msCurl;
+  return (NS_OK);
+}
+
+
+nsresult nsLayer::SetCal(NSCalendar* aCal)
+{
+  mpCal = aCal;
+  return (NS_OK);
+}
+
+
+nsresult nsLayer::GetCal(NSCalendar*& aCal)
+{
+  aCal = mpCal;
+  return (NS_OK);
+}
+
+
+nsresult nsLayer::FetchEventsByRange(
+                      const DateTime*  aStart, 
+                      const DateTime*  aStop,
+                      JulianPtrArray*& anArray
+                      )
+{
+  return (NS_OK);
+}
+
+
 
 

@@ -25,6 +25,9 @@
 class NS_CALENDAR nsLayer : public nsILayer 
 {
 
+  JulianString msCurl;
+  NSCalendar* mpCal;
+
 public:
   nsLayer(nsISupports* outer);
   ~nsLayer();
@@ -32,7 +35,15 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init();
-
+  NS_IMETHOD SetCurl(const JulianString& s);
+  NS_IMETHOD GetCurl(JulianString& s);
+  NS_IMETHOD SetCal(NSCalendar* aCal);
+  NS_IMETHOD GetCal(NSCalendar*& aCal);
+  NS_IMETHOD FetchEventsByRange(
+                      const DateTime* aStart, 
+                      const DateTime* aStop,
+                      JulianPtrArray* &anArray
+                      );
 };
 
 #endif //nsLayer_h___
