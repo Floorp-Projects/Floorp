@@ -35,6 +35,9 @@
       <property name="selectionTail">
         -1
       </property>
+      <property name="singleSelection"
+                onget="return this.getAttribute('seltype') == 'single'"
+                readonly="true"/>
     </implementation>
     
     <handlers>
@@ -107,6 +110,8 @@
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="shift">
         <![CDATA[
+         if (this.singleSelection)
+           return;
          var c = this.currentIndex;
          if (c == -1 || c == 0)
            return;
@@ -130,6 +135,8 @@
       </handler>
       <handler event="keypress" keycode="vk_down" modifiers="shift">
         <![CDATA[
+         if (this.singleSelection)
+           return;
          var c = this.currentIndex;
          try { if (c+1 == this.outlinerBoxObject.view.rowCount)
            return;
@@ -214,6 +221,8 @@
       </handler>
       <handler event="keypress" keycode="vk_page_up" modifiers="shift">
         <![CDATA[
+         if (this.singleSelection)
+           return;
          var c = this.currentIndex;
          if (c == 0)
            return;
@@ -251,6 +260,8 @@
       </handler>
       <handler event="keypress" keycode="vk_page_down" modifiers="shift">
         <![CDATA[
+         if (this.singleSelection)
+           return;
          var c = this.currentIndex;
          var l = this.outlinerBoxObject.view.rowCount - 1;
          if (c == l)
@@ -349,6 +360,8 @@
       </handler>
       <handler event="keypress" keycode="vk_home" modifiers="shift">
         <![CDATA[
+         if (this.singleSelection)
+           return;
          var c = this.currentIndex;
          if (c == 0)
            return;
@@ -363,6 +376,8 @@
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="shift">
         <![CDATA[
+         if (this.singleSelection)
+           return;
          var c = this.currentIndex;
          var l = this.outlinerBoxObject.view.rowCount - 1;
          if (c == l)
@@ -479,10 +494,8 @@
 		 }
 
          var augment = event.ctrlKey || event.metaKey;
-         if (event.shiftKey) {
+         if (event.shiftKey)
            b.selection.rangedSelect(-1, row.value, augment);
-           b.selection.currentIndex = row.value;
-         }
          else if (augment) {
            b.selection.toggleSelect(row.value);
            b.selection.currentIndex = row.value;

@@ -33,6 +33,8 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
+#include "nsINameSpaceManager.h"
+#include "nsXULAtoms.h"
 
 // A helper class for managing our ranges of selection.
 struct nsOutlinerRange
@@ -366,8 +368,10 @@ NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
   if (!mFirstRange)
     Select(aIndex);
   else {
-    if (!mFirstRange->Contains(aIndex))
-      mFirstRange->Add(aIndex);
+    if (!mFirstRange->Contains(aIndex)) {
+      if (! SingleSelection())
+        mFirstRange->Add(aIndex);
+    }
     else
       mFirstRange->Remove(aIndex);
     
@@ -381,6 +385,9 @@ NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
 
 NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aAugment)
 {
+  if ((mFirstRange || (aStartIndex != aEndIndex)) && SingleSelection())
+    return NS_OK;
+
   if (!aAugment) {
     // Clear our selection.
     if (mFirstRange) {
@@ -457,12 +464,6 @@ NS_IMETHODIMP nsOutlinerSelection::InvertSelection()
 
 NS_IMETHODIMP nsOutlinerSelection::SelectAll()
 {
-  mShiftSelectPivot = -1;
-
-  // Invalidate not necessary when clearing selection, since 
-  // we're going to invalidate the world on the SelectAll.
-  delete mFirstRange;
-  
   nsCOMPtr<nsIOutlinerView> view;
   mOutliner->GetView(getter_AddRefs(view));
   if (!view)
@@ -470,9 +471,14 @@ NS_IMETHODIMP nsOutlinerSelection::SelectAll()
 
   PRInt32 rowCount;
   view->GetRowCount(&rowCount);
-
-  if (rowCount == 0)
+  if (rowCount == 0 || (rowCount > 1 && SingleSelection()))
     return NS_OK;
+
+  mShiftSelectPivot = -1;
+
+  // Invalidate not necessary when clearing selection, since 
+  // we're going to invalidate the world on the SelectAll.
+  delete mFirstRange;
 
   mFirstRange = new nsOutlinerRange(this, 0, rowCount-1);
   mFirstRange->Invalidate();
@@ -707,6 +713,20 @@ nsOutlinerSelection::FireOnSelectHandler()
   }
 
   return NS_OK;
+}
+
+PRBool nsOutlinerSelection::SingleSelection()
+{
+  nsCOMPtr<nsIDOMElement> element;
+  mOutliner->GetOutlinerBody(getter_AddRefs(element));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(element));
+  nsCOMPtr<nsIContent> parent;
+  content->GetParent(*getter_AddRefs(parent));
+  nsAutoString seltype;
+  parent->GetAttr(kNameSpaceID_None, nsXULAtoms::seltype, seltype);
+  if (seltype.EqualsIgnoreCase("single"))
+    return PR_TRUE;
+  return PR_FALSE;
 }
 
 
