@@ -205,9 +205,7 @@ private:
 
 #ifdef DEBUG
   void DebugPrintEvent(nsGUIEvent &   aEvent,
-                       char *         sMessage,
-                       HWND           aWnd,
-                       PRBool         aPrintCoords);
+                       HWND           aWnd);
 #endif
 
 protected:
