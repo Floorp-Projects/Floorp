@@ -3192,16 +3192,16 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   JSString *expr = nsnull;
   JSObject *funobj = nsnull;
   nsTimeoutImpl *timeout;
-  jsdouble interval;
+  jsdouble interval = 0.0;
   PRInt64 now, delta;
 
-  if (argc < 2) {
-    ::JS_ReportError(cx, "Function %s requires at least 2 parameters",
+  if (argc < 1) {
+    ::JS_ReportError(cx, "Function %s requires at least 1 parameters",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
     return NS_ERROR_FAILURE;
   }
 
-  if (!::JS_ValueToNumber(cx, argv[1], &interval)) {
+  if (argc > 1 && !::JS_ValueToNumber(cx, argv[1], &interval)) {
     ::JS_ReportError(cx,
                      "Second argument to %s must be a millisecond interval",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
