@@ -40,6 +40,10 @@
 #include "nsHTMLValue.h"
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"
+#include "nsICSSStyleRule.h"
+#include "nsCSSDeclaration.h"
+#include "nsIHTMLDocument.h"
+#include "nsIDocument.h"
 
 nsAttrValue::nsAttrValue()
     : mBits(0)
@@ -58,13 +62,7 @@ nsAttrValue::nsAttrValue(const nsAString& aValue)
   SetTo(aValue);
 }
 
-nsAttrValue::nsAttrValue(const nsHTMLValue& aValue)
-    : mBits(0)
-{
-  SetTo(aValue);
-}
-
-nsAttrValue::nsAttrValue(nsIAtom* aValue)
+nsAttrValue::nsAttrValue(nsICSSStyleRule* aValue)
     : mBits(0)
 {
   SetTo(aValue);
@@ -72,31 +70,57 @@ nsAttrValue::nsAttrValue(nsIAtom* aValue)
 
 nsAttrValue::~nsAttrValue()
 {
-  Reset();
+  ResetIfSet();
+}
+
+nsAttrValue::ValueType
+nsAttrValue::Type() const
+{
+  switch (BaseType()) {
+    case eIntegerBase:
+    {
+      return NS_STATIC_CAST(ValueType, mBits & NS_ATTRVALUE_INTEGERTYPE_MASK);
+    }
+    case eOtherBase:
+    {
+      return GetMiscContainer()->mType;
+    }
+    default:
+    {
+      return NS_STATIC_CAST(ValueType, BaseType());
+    }
+  }
 }
 
 void
 nsAttrValue::Reset()
 {
-  void* ptr = GetPtr();
-  switch(GetType()) {
-    case eString:
+  switch(BaseType()) {
+    case eStringBase:
     {
-      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, ptr);
+      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, GetPtr());
       if (str) {
         nsCheapStringBufferUtils::Free(str);
       }
+
       break;
     }
-    case eHTMLValue:
+    case eOtherBase:
     {
-      delete NS_STATIC_CAST(nsHTMLValue*, ptr);
+      EnsureEmptyMiscContainer();
+      delete GetMiscContainer();
+
       break;
     }
-    case eAtom:
+    case eAtomBase:
     {
-      nsIAtom* atom = NS_STATIC_CAST(nsIAtom*, ptr);
+      nsIAtom* atom = GetAtomValue();
       NS_RELEASE(atom);
+
+      break;
+    }
+    case eIntegerBase:
+    {
       break;
     }
   }
@@ -107,20 +131,59 @@ nsAttrValue::Reset()
 void
 nsAttrValue::SetTo(const nsAttrValue& aOther)
 {
-  switch (aOther.GetType()) {
-    case eString:
+  switch (aOther.BaseType()) {
+    case eStringBase:
     {
       SetTo(aOther.GetStringValue());
+      return;
+    }
+    case eOtherBase:
+    {
       break;
     }
-    case eHTMLValue:
+    case eAtomBase:
     {
-      SetTo(*aOther.GetHTMLValue());
+      ResetIfSet();
+      nsIAtom* atom = aOther.GetAtomValue();
+      NS_ADDREF(atom);
+      SetPtrValueAndType(atom, eAtomBase);
+      return;
+    }
+    case eIntegerBase:
+    {
+      ResetIfSet();
+      mBits = aOther.mBits;
+      return;      
+    }
+  }
+
+  MiscContainer* otherCont = aOther.GetMiscContainer();
+  switch (otherCont->mType) {
+    case eColor:
+    {
+      if (EnsureEmptyMiscContainer()) {
+        MiscContainer* cont = GetMiscContainer();
+        cont->mColor = otherCont->mColor;
+        cont->mType = eColor;
+      }
       break;
     }
-    case eAtom:
+    case eCSSStyleRule:
     {
-      SetTo(aOther.GetAtomValue());
+      SetTo(otherCont->mCSSStyleRule);
+      break;
+    }
+    case eAtomArray:
+    {
+      if (!EnsureEmptyAtomArray() ||
+          !GetAtomArrayValue()->AppendObjects(*otherCont->mAtomArray)) {
+        Reset();
+      }
+      break;
+    }
+    default:
+    {
+      NS_NOTREACHED("unknown type stored in MiscContainer");
       break;
     }
   }
@@ -132,7 +195,7 @@ nsAttrValue::SetTo(const nsAString& aValue)
   PRUnichar* str = nsnull;
   PRBool empty = aValue.IsEmpty();
   void* ptr;
-  if (GetType() == eString && (ptr = GetPtr())) {
+  if (BaseType() == eStringBase && (ptr = GetPtr())) {
     if (!empty) {
       nsCheapStringBufferUtils::
         CopyToExistingBuffer(str, NS_STATIC_CAST(PRUnichar*, ptr), aValue);
@@ -142,47 +205,28 @@ nsAttrValue::SetTo(const nsAString& aValue)
     }
   }
   else {
-    Reset();
+    ResetIfSet();
     if (!empty) {
       nsCheapStringBufferUtils::CopyToBuffer(str, aValue);
     }
   }
-  SetValueAndType(str, eString);
+  SetPtrValueAndType(str, eStringBase);
 }
 
 void
-nsAttrValue::SetTo(const nsHTMLValue& aValue)
+nsAttrValue::SetTo(PRInt16 aInt, ValueType aType)
 {
-  Reset();
-  nsHTMLValue* htmlValue = new nsHTMLValue(aValue);
-  if (htmlValue) {
-      SetValueAndType(htmlValue, eHTMLValue);
-  }
+  ResetIfSet();
+  SetIntValueAndType(aInt, aType);
 }
 
 void
-nsAttrValue::SetTo(nsIAtom* aValue)
+nsAttrValue::SetTo(nsICSSStyleRule* aValue)
 {
-  NS_ASSERTION(aValue, "null value in nsAttrValue::SetTo");
-  Reset();
-  NS_ADDREF(aValue);
-  SetValueAndType(aValue, eAtom);
-}
-
-void
-nsAttrValue::SetToStringOrAtom(const nsAString& aValue)
-{
-  PRUint32 len = aValue.Length();
-  // Don't bother with atoms if it's an empty string since
-  // we can store those efficently anyway.
-  if (len && len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
-    nsCOMPtr<nsIAtom> atom = do_GetAtom(aValue);
-    if (atom) {
-      SetTo(atom);
-    }
-  }
-  else {
-    SetTo(aValue);
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    NS_ADDREF(cont->mCSSStyleRule = aValue);
+    cont->mType = eCSSStyleRule;
   }
 }
 
@@ -197,12 +241,10 @@ nsAttrValue::SwapValueWith(nsAttrValue& aOther)
 void
 nsAttrValue::ToString(nsAString& aResult) const
 {
-  void* ptr = GetPtr();
-
-  switch(GetType()) {
+  switch(Type()) {
     case eString:
     {
-      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, ptr);
+      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, GetPtr());
       if (str) {
         aResult = nsCheapStringBufferUtils::GetDependentString(str);
       }
@@ -211,14 +253,136 @@ nsAttrValue::ToString(nsAString& aResult) const
       }
       break;
     }
-    case eHTMLValue:
+    case eAtom:
     {
-      NS_STATIC_CAST(nsHTMLValue*, ptr)->ToString(aResult);
+      NS_STATIC_CAST(nsIAtom*, GetPtr())->ToString(aResult);
+
+      break;
+    }
+    case eInteger:
+    {
+      nsAutoString intStr;
+      intStr.AppendInt(GetIntInternal());
+      aResult = intStr;
+
+      break;
+    }
+    case eColor:
+    {
+      nscolor v;
+      GetColorValue(v);
+      NS_RGBToHex(v, aResult);
+
+      break;
+    }
+    case eProportional:
+    {
+      nsAutoString intStr;
+      intStr.AppendInt(GetIntInternal());
+      aResult = intStr + NS_LITERAL_STRING("*");
+
+      break;
+    }
+    case eEnum:
+    {
+      NS_NOTREACHED("trying to convert enum to string");
+
+      break;
+    }
+    case ePercent:
+    {
+      nsAutoString intStr;
+      intStr.AppendInt(GetIntInternal());
+      aResult = intStr + NS_LITERAL_STRING("%");
+
+      break;
+    }
+    case eCSSStyleRule:
+    {
+      nsCSSDeclaration* decl = 
+        GetMiscContainer()->mCSSStyleRule->GetDeclaration();
+      if (decl) {
+        decl->ToString(aResult);
+      }
+      else {
+        aResult.Truncate();
+      }
+
+      break;
+    }
+    case eAtomArray:
+    {
+      MiscContainer* cont = GetMiscContainer();
+      PRInt32 count = cont->mAtomArray->Count();
+      if (count) {
+        cont->mAtomArray->ObjectAt(0)->ToString(aResult);
+        nsAutoString tmp;
+        PRInt32 i;
+        for (i = 1; i < count; ++i) {
+          cont->mAtomArray->ObjectAt(i)->ToString(tmp);
+          aResult.Append(NS_LITERAL_STRING(" ") + tmp);
+        }
+      }
+      else {
+        aResult.Truncate();
+      }
+      break;
+    }
+  }
+}
+
+void
+nsAttrValue::ToHTMLValue(nsHTMLValue& aResult) const
+{
+  switch(Type()) {
+    case eString:
+    {
+      aResult.SetStringValue(GetStringValue());
       break;
     }
     case eAtom:
     {
-      NS_STATIC_CAST(nsIAtom*, ptr)->ToString(aResult);
+      nsAutoString tmp;
+      GetAtomValue()->ToString(tmp);
+      aResult.SetStringValue(tmp);
+      break;
+    }
+    case eInteger:
+    {
+      aResult.SetIntValue(GetIntInternal(), eHTMLUnit_Integer);
+      break;
+    }
+    case eColor:
+    {
+      nscolor v;
+      GetColorValue(v);
+      aResult.SetColorValue(v);
+      break;
+    }
+    case eProportional:
+    {
+      aResult.SetIntValue(GetProportionalValue(), eHTMLUnit_Proportional);
+      break;
+    }
+    case eEnum:
+    {
+      aResult.SetIntValue(GetEnumValue(), eHTMLUnit_Enumerated);
+      break;
+    }
+    case ePercent:
+    {
+      aResult.SetPercentValue(GetPercentValue());
+      break;
+    }
+    case eCSSStyleRule:
+    {
+      aResult.SetCSSStyleRuleValue(GetCSSStyleRuleValue());
+      break;
+    }
+    case eAtomArray:
+    {
+      nsCOMArray<nsIAtom>* array = new nsCOMArray<nsIAtom>(*GetAtomArrayValue());
+      aResult.SetAtomArrayValue(array);
       break;
     }
   }
@@ -227,8 +391,7 @@ nsAttrValue::ToString(nsAString& aResult) const
 const nsDependentSubstring
 nsAttrValue::GetStringValue() const
 {
-  NS_PRECONDITION(GetType() == eString,
-                  "Some dork called GetStringValue() on a non-string!");
+  NS_PRECONDITION(Type() == eString, "wrong type");
 
   static const PRUnichar blankStr[] = { '\0' };
   void* ptr = GetPtr();
@@ -237,68 +400,445 @@ nsAttrValue::GetStringValue() const
          : Substring(blankStr, blankStr);
 }
 
-const nsHTMLValue*
-nsAttrValue::GetHTMLValue() const
+PRBool
+nsAttrValue::GetColorValue(nscolor& aColor) const
 {
-  NS_PRECONDITION(GetType() == eHTMLValue,
-                  "Some dork called GetHTMLValue() on a non-htmlvalue!");
-  return NS_REINTERPRET_CAST(nsHTMLValue*, mBits & NS_ATTRVALUE_VALUE_MASK);
-}
+  NS_PRECONDITION(Type() == eColor || Type() == eString, "wrong type");
+  switch (BaseType()) {
+    case eString:
+    {
+      return GetPtr() && NS_ColorNameToRGB(GetStringValue(), &aColor);
+    }
+    case eOtherBase:
+    {
+      aColor = GetMiscContainer()->mColor;
+      
+      break;
+    }
+    case eIntegerBase:
+    {
+      aColor = NS_STATIC_CAST(nscolor, GetIntInternal());
+      
+      break;
+    }
+  }
 
-nsIAtom*
-nsAttrValue::GetAtomValue() const
-{
-  NS_PRECONDITION(GetType() == eAtom,
-                  "Some dork called GetAtomValue() on a non-atomvalue!");
-  return NS_REINTERPRET_CAST(nsIAtom*, mBits & NS_ATTRVALUE_VALUE_MASK);
+  return PR_TRUE;
 }
 
 PRUint32
 nsAttrValue::HashValue() const
 {
-  void* ptr = GetPtr();
-  switch(GetType()) {
-    case eString:
+  switch(BaseType()) {
+    case eStringBase:
     {
-      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, ptr);
+      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, GetPtr());
       return str ? nsCheapStringBufferUtils::HashCode(str) : 0;
     }
-    case eHTMLValue:
+    case eOtherBase:
     {
-      return NS_STATIC_CAST(nsHTMLValue*, ptr)->HashValue();
+      break;
     }
-    case eAtom:
+    case eAtomBase:
+    case eIntegerBase:
     {
-      return NS_PTR_TO_INT32(ptr);
+      // mBits and PRUint32 might have different size. This should silence
+      // any warnings or compile-errors. This is what the implementation of
+      // NS_PTR_TO_INT32 does to take care of the same problem.
+      return mBits - 0;
     }
   }
 
-  NS_NOTREACHED("unknown attrvalue type");
-  return 0;
+  MiscContainer* cont = GetMiscContainer();
+  switch (cont->mType) {
+    case eColor:
+    {
+      return cont->mColor;
+    }
+    case eCSSStyleRule:
+    {
+      return NS_PTR_TO_INT32(cont->mCSSStyleRule);
+    }
+    case eAtomArray:
+    {
+      PRUint32 retval = 0;
+      PRInt32 i, count = cont->mAtomArray->Count();
+      for (i = 0; i < count; ++i) {
+        retval ^= NS_PTR_TO_INT32(cont->mAtomArray->ObjectAt(i));
+      }
+      return retval;
+    }
+    default:
+    {
+      NS_NOTREACHED("unknown type stored in MiscContainer");
+      return 0;
+    }
+  }
 }
 
 PRBool
 nsAttrValue::Equals(const nsAttrValue& aOther) const
 {
-  if (GetType() != aOther.GetType()) {
+  if (BaseType() != aOther.BaseType()) {
     return PR_FALSE;
   }
 
-  switch(GetType()) {
-    case eString:
+  switch(BaseType()) {
+    case eStringBase:
     {
       return GetStringValue().Equals(aOther.GetStringValue());
     }
-    case eHTMLValue:
+    case eOtherBase:
     {
-      return *GetHTMLValue() == *aOther.GetHTMLValue();
+      break;
     }
-    case eAtom:
+    case eAtomBase:
+    case eIntegerBase:
     {
-      return GetAtomValue() == aOther.GetAtomValue();
+      return mBits == aOther.mBits;
     }
   }
 
-  NS_NOTREACHED("unknown attrvalue type");
+  MiscContainer* thisCont = GetMiscContainer();
+  MiscContainer* otherCont = aOther.GetMiscContainer();
+  if (thisCont->mType != otherCont->mType) {
+    return PR_FALSE;
+  }
+
+  switch (thisCont->mType) {
+    case eColor:
+    {
+      return thisCont->mColor == otherCont->mColor;
+    }
+    case eCSSStyleRule:
+    {
+      return thisCont->mCSSStyleRule == otherCont->mCSSStyleRule;
+    }
+    case eAtomArray:
+    {
+      // For classlists we could be insensitive to order, however
+      // classlists are never mapped attributes so they are never compared.
+
+      PRInt32 count = thisCont->mAtomArray->Count();
+      if (count != otherCont->mAtomArray->Count()) {
+        return PR_FALSE;
+      }
+
+      PRInt32 i;
+      for (i = 0; i < count; ++i) {
+        if (thisCont->mAtomArray->ObjectAt(i) !=
+            otherCont->mAtomArray->ObjectAt(i)) {
+          return PR_FALSE;
+        }
+      }
+      return PR_TRUE;
+    }
+    default:
+    {
+      NS_NOTREACHED("unknown type stored in MiscContainer");
+      return PR_FALSE;
+    }
+  }
+}
+
+void
+nsAttrValue::ParseAtom(const nsAString& aValue)
+{
+  ResetIfSet();
+
+  nsIAtom* atom = NS_NewAtom(aValue);
+  if (atom) {
+    SetPtrValueAndType(atom, eAtomBase);
+  }
+}
+
+void
+nsAttrValue::ParseAtomArray(const nsAString& aValue)
+{
+  nsAString::const_iterator iter, end;
+  aValue.BeginReading(iter);
+  aValue.EndReading(end);
+
+  // skip initial whitespace
+  while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+    ++iter;
+  }
+
+  if (iter == end) {
+    ResetIfSet();
+    return;
+  }
+
+  nsAString::const_iterator start(iter);
+
+  // get first - and often only - atom
+  do {
+    ++iter;
+  } while (iter != end && !nsCRT::IsAsciiSpace(*iter));
+
+  nsCOMPtr<nsIAtom> classAtom = do_GetAtom(Substring(start, iter));
+  if (!classAtom) {
+    Reset();
+    return;
+  }
+
+  // skip whitespace
+  while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+    ++iter;
+  }
+
+  if (iter == end) {
+    // we only found one classname so don't bother storing a list
+    ResetIfSet();
+    nsIAtom* atom = nsnull;
+    classAtom.swap(atom);
+    SetPtrValueAndType(atom, eAtomBase);
+    return;
+  }
+
+  if (!EnsureEmptyAtomArray()) {
+    return;
+  }
+
+  nsCOMArray<nsIAtom>* array = GetAtomArrayValue();
+  
+  if (!array->AppendObject(classAtom)) {
+    Reset();
+    return;
+  }
+
+  // parse the rest of the classnames
+  do {
+    start = iter;
+
+    do {
+      ++iter;
+    } while (iter != end && !nsCRT::IsAsciiSpace(*iter));
+
+    classAtom = do_GetAtom(Substring(start, iter));
+
+    if (!array->AppendObject(classAtom)) {
+      Reset();
+      return;
+    }
+
+    // skip whitespace
+    while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+      ++iter;
+    }
+  } while (iter != end);
+
+  return;
+}
+
+void
+nsAttrValue::ParseStringOrAtom(const nsAString& aValue)
+{
+  PRUint32 len = aValue.Length();
+  // Don't bother with atoms if it's an empty string since
+  // we can store those efficently anyway.
+  if (len && len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
+    ParseAtom(aValue);
+  }
+  else {
+    SetTo(aValue);
+  }
+}
+
+PRBool
+nsAttrValue::ParseEnumValue(const nsAString& aValue,
+                            const nsHTMLValue::EnumTable* aTable,
+                            PRBool aCaseSensitive)
+{
+  nsAutoString val(aValue);
+  while (aTable->tag) {
+    if (aCaseSensitive ? val.EqualsWithConversion(aTable->tag) :
+                         val.EqualsIgnoreCase(aTable->tag)) {
+      SetIntValueAndType(aTable->value, eEnum);
+
+      return PR_TRUE;
+    }
+    aTable++;
+  }
+
   return PR_FALSE;
+}
+
+PRBool
+nsAttrValue::ParseSpecialIntValue(const nsAString& aString,
+                                  PRBool aCanBePercent,
+                                  PRBool aCanBeProportional)
+{
+  PRInt32 ec;
+  nsAutoString tmp(aString);
+  PRInt32 val = tmp.ToInteger(&ec);
+
+  if (NS_FAILED(ec) && aCanBeProportional) {
+    // Even if the integer could not be parsed, it might just be "*"
+    tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
+    if (tmp.Length() == 1 && tmp.Last() == '*') {
+      // special case: HTML spec says a value '*' == '1*'
+      // see http://www.w3.org/TR/html4/types.html#type-multi-length
+      // bug 29061
+      SetIntValueAndType(1, eProportional);
+      return PR_TRUE;
+    }
+  }
+
+  val = PR_MAX(val, 0);
+  val = PR_MIN(val, NS_ATTRVALUE_INTEGERTYPE_MAXVALUE);
+
+  // % (percent)
+  // XXX RFindChar means that 5%x will be parsed!
+  if (aCanBePercent && tmp.RFindChar('%') >= 0) {
+    if (val > 100) {
+      val = 100;
+    }
+    SetIntValueAndType(val, ePercent);
+    return PR_TRUE;
+  }
+
+  // * (proportional) 
+  // XXX RFindChar means that 5*x will be parsed!
+  if (aCanBeProportional && tmp.RFindChar('*') >= 0) {
+    SetIntValueAndType(val, eProportional);
+    return PR_TRUE;
+  }
+
+  // Straight number is interpreted as integer
+  SetIntValueAndType(val, eInteger);
+  return PR_TRUE;
+}
+
+PRBool
+nsAttrValue::ParseIntWithBounds(const nsAString& aString,
+                                PRInt32 aMin, PRInt32 aMax)
+{
+  NS_PRECONDITION(aMin < aMax &&
+                  aMin >= NS_ATTRVALUE_INTEGERTYPE_MINVALUE &&
+                  aMax <= NS_ATTRVALUE_INTEGERTYPE_MAXVALUE, "bad boundaries");
+
+  PRInt32 ec;
+  PRInt32 val = PromiseFlatString(aString).ToInteger(&ec);
+  if (NS_FAILED(ec)) {
+    return PR_FALSE;
+  }
+
+  val = PR_MAX(val, aMin);
+  val = PR_MIN(val, aMax);
+  SetIntValueAndType(val, eInteger);
+
+  return PR_TRUE;
+}
+
+PRBool
+nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
+{
+  nsAutoString colorStr(aString);
+  colorStr.CompressWhitespace(PR_TRUE, PR_TRUE);
+  if (colorStr.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  nscolor color;
+  // No color names begin with a '#', but numerical colors do so
+  // it is a very common first char
+  if ((colorStr.CharAt(0) != '#') && NS_ColorNameToRGB(colorStr, &color)) {
+    SetTo(colorStr);
+    return PR_TRUE;
+  }
+
+  // Check if we are in compatibility mode
+  // XXX evil NS_HexToRGB and NS_LooseHexToRGB take nsString as argument!
+  nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(aDocument));
+  if (doc && doc->GetCompatibilityMode() == eCompatibility_NavQuirks) {
+    NS_LooseHexToRGB(colorStr, &color);
+  }
+  else {
+    if (colorStr.First() != '#') {
+      return PR_FALSE;
+    }
+    colorStr.Cut(0, 1);
+    if (!NS_HexToRGB(colorStr, &color)) {
+      return PR_FALSE;
+    }
+  }
+
+  PRInt32 colAsInt = NS_STATIC_CAST(PRInt32, color);
+  PRInt32 tmp = colAsInt * NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER;
+  if (tmp / NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER == colAsInt) {
+    ResetIfSet();
+    SetIntValueAndType(colAsInt, eColor);
+  }
+  else if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mColor = color;
+    cont->mType = eColor;
+  }
+
+  return PR_TRUE;
+}
+
+PRBool
+nsAttrValue::EnsureEmptyMiscContainer()
+{
+  MiscContainer* cont;
+  if (BaseType() == eOtherBase) {
+    cont = GetMiscContainer();
+    switch (cont->mType) {
+      case eCSSStyleRule:
+      {
+        NS_RELEASE(cont->mCSSStyleRule);
+        break;
+      }
+      case eAtomArray:
+      {
+        delete cont->mAtomArray;
+        break;
+      }
+      default:
+      {
+        break;
+      }
+    }
+  }
+  else {
+    ResetIfSet();
+
+    cont = new MiscContainer;
+    NS_ENSURE_TRUE(cont, PR_FALSE);
+
+    SetPtrValueAndType(cont, eOtherBase);
+  }
+
+  cont->mType = eColor;
+  cont->mColor = 0;
+
+  return PR_TRUE;
+}
+
+PRBool
+nsAttrValue::EnsureEmptyAtomArray()
+{
+  if (Type() == eAtomArray) {
+    GetAtomArrayValue()->Clear();
+    return PR_TRUE;
+  }
+
+  if (!EnsureEmptyMiscContainer()) {
+    // should already be reset
+    return PR_FALSE;
+  }
+
+  nsCOMArray<nsIAtom>* array = new nsCOMArray<nsIAtom>;
+  if (!array) {
+    Reset();
+    return PR_FALSE;
+  }
+
+  MiscContainer* cont = GetMiscContainer();
+  cont->mAtomArray = array;
+  cont->mType = eAtomArray;
+
+  return PR_TRUE;
 }

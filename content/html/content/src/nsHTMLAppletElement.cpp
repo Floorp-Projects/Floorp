@@ -76,9 +76,9 @@ public:
   // nsIDOMHTMLAppletElement
   NS_DECL_NSIDOMHTMLAPPLETELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -175,21 +175,20 @@ NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Object, object)
 NS_IMPL_INT_ATTR(nsHTMLAppletElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Width, width)
 
-NS_IMETHODIMP
-nsHTMLAppletElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsAString& aValue,
-                                       nsHTMLValue& aResult)
+PRBool
+nsHTMLAppletElement::ParseAttribute(nsIAtom* aAttribute,
+                                    const nsAString& aValue,
+                                    nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return nsGenericHTMLElement::ParseAlignValue(aValue, aResult);
   }
-  else if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
-                                                     aValue, aResult)) {
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
+                                                aValue, aResult)) {
+    return PR_TRUE;
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

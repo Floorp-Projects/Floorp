@@ -56,7 +56,6 @@
 #include "nsDOMError.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsHTMLValue.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
 #include "nsIDOMAttr.h"
@@ -2089,7 +2088,6 @@ nsresult
 nsXULElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
                       const nsAString& aValue, PRBool aNotify)
 {
-    nsresult rv;
     nsAutoString oldValue;
     PRBool hasListeners = PR_FALSE;
     PRBool modification = PR_FALSE;
@@ -2150,17 +2148,13 @@ nsXULElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
             // Store id as atom.
             // id="" means that the element has no id. Not that it has
             // emptystring as id.
-            nsCOMPtr<nsIAtom> idAtom = do_GetAtom(aValue);
-            NS_ENSURE_TRUE(idAtom, NS_ERROR_OUT_OF_MEMORY);
-
-            attrValue.SetTo(idAtom);
+            attrValue.ParseAtom(aValue);
         }
         else if (aName == nsXULAtoms::clazz) {
-            rv = nsGenericHTMLElement::ParseClassAttribute(aValue, attrValue);
-            NS_ENSURE_SUCCESS(rv, rv);
+            attrValue.ParseAtomArray(aValue);
         }
         else {
-            attrValue.SetToStringOrAtom(aValue);
+            attrValue.ParseStringOrAtom(aValue);
         }
 
         // Add popup and event listeners. We can't call AddListenerFor since
@@ -2180,7 +2174,7 @@ nsXULElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
         // to unhook the old one.
     }
     else {
-        attrValue.SetToStringOrAtom(aValue);
+        attrValue.ParseStringOrAtom(aValue);
     }
 
     return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
@@ -3161,12 +3155,12 @@ nsXULElement::GetID(nsIAtom** aResult) const
     const nsAttrValue* attrVal = FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::id);
 
     NS_ASSERTION(!attrVal ||
-                 attrVal->GetType() == nsAttrValue::eAtom ||
-                 (attrVal->GetType() == nsAttrValue::eString &&
+                 attrVal->Type() == nsAttrValue::eAtom ||
+                 (attrVal->Type() == nsAttrValue::eString &&
                   attrVal->GetStringValue().IsEmpty()),
                  "unexpected attribute type");
 
-    if (attrVal && attrVal->GetType() == nsAttrValue::eAtom) {
+    if (attrVal && attrVal->Type() == nsAttrValue::eAtom) {
         NS_ADDREF(*aResult = attrVal->GetAtomValue());
     }
 
@@ -3180,15 +3174,12 @@ nsXULElement::GetClasses(nsVoidArray& aArray) const
 
     const nsAttrValue* val = FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::clazz);
     if (val) {
-        const nsHTMLValue* htmlVal;
-        if (val->GetType() == nsAttrValue::eAtom) {
+        if (val->Type() == nsAttrValue::eAtom) {
             // NOTE atom is not addrefed
             aArray.AppendElement(val->GetAtomValue());
         }
-        else if (val->GetType() == nsAttrValue::eHTMLValue &&
-                 (htmlVal = val->GetHTMLValue())->GetUnit() ==
-                 eHTMLUnit_AtomArray) {
-            nsCOMArray<nsIAtom>* array = htmlVal->AtomArrayValue();
+        else if (val->Type() == nsAttrValue::eAtomArray) {
+            nsCOMArray<nsIAtom>* array = val->GetAtomArrayValue();
             PRInt32 i, count = array->Count();
             for (i = 0; i < count; ++i) {
                 // NOTE atom is not addrefed
@@ -3205,14 +3196,11 @@ nsXULElement::HasClass(nsIAtom* aClass, PRBool /*aCaseSensitive*/) const
 {
     const nsAttrValue* val = FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::clazz);
     if (val) {
-        const nsHTMLValue* htmlVal;
-        if (val->GetType() == nsAttrValue::eAtom) {
+        if (val->Type() == nsAttrValue::eAtom) {
             return aClass == val->GetAtomValue();
         }
-        if (val->GetType() == nsAttrValue::eHTMLValue &&
-            (htmlVal = val->GetHTMLValue())->GetUnit() ==
-            eHTMLUnit_AtomArray) {
-            return htmlVal->AtomArrayValue()->IndexOf(aClass) >= 0;
+        if (val->Type() == nsAttrValue::eAtomArray) {
+            return val->GetAtomArrayValue()->IndexOf(aClass) >= 0;
         }
     }
 
@@ -3233,10 +3221,8 @@ nsXULElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
     // Fetch the cached style rule from the attributes.
     const nsAttrValue* attrVal = FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::style);
 
-    const nsHTMLValue* htmlVal;
-    if (attrVal && attrVal->GetType() == nsAttrValue::eHTMLValue &&
-        (htmlVal = attrVal->GetHTMLValue())->GetUnit() == eHTMLUnit_CSSStyleRule) {
-        NS_IF_ADDREF(*aStyleRule = htmlVal->GetCSSStyleRuleValue());
+    if (attrVal && attrVal->Type() == nsAttrValue::eCSSStyleRule) {
+        NS_ADDREF(*aStyleRule = attrVal->GetCSSStyleRuleValue());
     }
 
     return NS_OK;
@@ -3261,9 +3247,7 @@ nsXULElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
         }
     }
 
-    // MSVC won't let me do: nsAttrValue attrValue(nsHTMLValue(aStyleRule));
-    nsAttrValue attrValue;
-    attrValue.SetTo(nsHTMLValue(aStyleRule));
+    nsAttrValue attrValue(aStyleRule);
 
     return SetAttrAndNotify(kNameSpaceID_None, nsXULAtoms::style, nsnull,
                             oldValueStr, attrValue, modification, hasListeners,
@@ -4434,7 +4418,7 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
     // Any changes should be made to both functions.
 
     if (!mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
-        mAttributes[aPos].mValue.SetToStringOrAtom(aValue);
+        mAttributes[aPos].mValue.ParseStringOrAtom(aValue);
 
         return NS_OK;
     }
@@ -4444,17 +4428,15 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
         // Store id as atom.
         // id="" means that the element has no id. Not that it has
         // emptystring as id.
-        nsCOMPtr<nsIAtom> atom = do_GetAtom(aValue);
-        NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
-
-        mAttributes[aPos].mValue.SetTo(atom);
+        mAttributes[aPos].mValue.ParseAtom(aValue);
 
         return NS_OK;
     }
     else if (mAttributes[aPos].mName.Equals(nsXULAtoms::clazz)) {
         // Compute the element's class list
-        return nsGenericHTMLElement::ParseClassAttribute(aValue,
-            mAttributes[aPos].mValue);
+        mAttributes[aPos].mValue.ParseAtomArray(aValue);
+        
+        return NS_OK;
     }
     else if (mAttributes[aPos].mName.Equals(nsXULAtoms::style)) {
         // Parse the element's 'style' attribute
@@ -4465,14 +4447,14 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
         parser->ParseStyleAttribute(aValue, aDocumentURI,
                                     getter_AddRefs(rule));
         if (rule) {
-            mAttributes[aPos].mValue.SetTo(nsHTMLValue(rule));
+            mAttributes[aPos].mValue.SetTo(rule);
 
             return NS_OK;
         }
         // Don't abort if parsing failed, it could just be malformed css.
     }
 
-    mAttributes[aPos].mValue.SetToStringOrAtom(aValue);
+    mAttributes[aPos].mValue.ParseStringOrAtom(aValue);
 
     return NS_OK;
 }

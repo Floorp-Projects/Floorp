@@ -68,125 +68,10 @@ nsHTMLValue::nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit)
   }
 }
 
-nsHTMLValue::nsHTMLValue(float aValue)
-  : mUnit(eHTMLUnit_Percent)
-{
-  mValue.mFloat = aValue;
-}
-
-nsHTMLValue::nsHTMLValue(const nsAString& aValue, nsHTMLUnit aUnit)
-  : mUnit(aUnit)
-{
-  SetStringValueInternal(aValue, aUnit);
-}
-
-nsHTMLValue::nsHTMLValue(nsICSSStyleRule* aValue)
-  : mUnit(eHTMLUnit_CSSStyleRule)
-{
-  mValue.mCSSStyleRule = aValue;
-  NS_IF_ADDREF(mValue.mCSSStyleRule);
-}
-
-nsHTMLValue::nsHTMLValue(nscolor aValue)
-  : mUnit(eHTMLUnit_Color)
-{
-  mValue.mColor = aValue;
-}
-
-nsHTMLValue::nsHTMLValue(nsCOMArray<nsIAtom>* aArray)
-  : mUnit(eHTMLUnit_AtomArray)
-{
-  mValue.mAtomArray = aArray;
-}
-
-nsHTMLValue::nsHTMLValue(const nsHTMLValue& aCopy)
-{
-  InitializeFrom(aCopy);
-}
-
 nsHTMLValue::~nsHTMLValue(void)
 {
   Reset();
 }
-
-nsHTMLValue& nsHTMLValue::operator=(const nsHTMLValue& aCopy)
-{
-  Reset();
-  InitializeFrom(aCopy);
-  return *this;
-}
-
-PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
-{
-  if (mUnit != aOther.mUnit) {
-    return PR_FALSE;
-  }
-  // Call GetUnitClass() so that we turn StringWithLength into String
-  PRUint32 unitClass = GetUnitClass();
-  switch (unitClass) {
-    case HTMLUNIT_STRING:
-      if (mValue.mString && aOther.mValue.mString) {
-        return GetDependentString().Equals(aOther.GetDependentString());
-      }
-      // One of them is null.  An == check will see if they are both null.
-      return mValue.mString == aOther.mValue.mString;
-
-    case HTMLUNIT_INTEGER:
-      return mValue.mInt == aOther.mValue.mInt;
-
-    case HTMLUNIT_COLOR:
-      return mValue.mColor == aOther.mValue.mColor;
-
-    case HTMLUNIT_CSSSTYLERULE:
-      return mValue.mCSSStyleRule == aOther.mValue.mCSSStyleRule;
-
-    case HTMLUNIT_PERCENT:
-      return mValue.mFloat == aOther.mValue.mFloat;
-
-    case HTMLUNIT_ATOMARRAY:
-    {
-      // For classlists we could be insensitive to order, however
-      // classlists are never mapped attributes so they are never compared.
-
-      PRInt32 count = mValue.mAtomArray->Count();
-      if (count != aOther.mValue.mAtomArray->Count()) {
-        return PR_FALSE;
-      }
-
-      PRInt32 i;
-      for (i = 0; i < count; ++i) {
-        if (mValue.mAtomArray->ObjectAt(i) !=
-            aOther.mValue.mAtomArray->ObjectAt(i)) {
-          return PR_FALSE;
-        }
-      }
-      return PR_TRUE;
-    }
-
-    default:
-      NS_WARNING("Unknown unit");
-      return PR_TRUE;
-  }
-}
-
-PRUint32 nsHTMLValue::HashValue(void) const
-{
-  PRUint32 retval;
-  if (GetUnitClass() == HTMLUNIT_STRING) {
-    retval = mValue.mString ? nsCheapStringBufferUtils::HashCode(mValue.mString)
-                            : 0;
-  } else if (mUnit == eHTMLUnit_AtomArray) {
-    retval = 0;
-    PRInt32 i, count = mValue.mAtomArray->Count();
-    for (i = 0; i < count; ++i) {
-      retval ^= NS_PTR_TO_INT32(mValue.mAtomArray->ObjectAt(i));
-    }
-  } else {
-    retval = mValue.mInt;
-  }
-  return retval ^ PRUint32(mUnit);
-}
-
 
 void nsHTMLValue::Reset(void)
 {
@@ -259,6 +144,13 @@ void nsHTMLValue::SetCSSStyleRuleValue(nsICSSStyleRule* aValue)
   NS_IF_ADDREF(mValue.mCSSStyleRule);
 }
 
+void nsHTMLValue::SetAtomArrayValue(nsCOMArray<nsIAtom>* aValue)
+{
+  Reset();
+  mUnit = eHTMLUnit_AtomArray;
+  mValue.mAtomArray = aValue;
+}
+
 void nsHTMLValue::SetColorValue(nscolor aValue)
 {
   Reset();
@@ -266,70 +158,9 @@ void nsHTMLValue::SetColorValue(nscolor aValue)
   mValue.mColor = aValue;
 }
 
-void
-nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
-{
-  mUnit = aCopy.mUnit;
-  switch (GetUnitClass()) {
-    case HTMLUNIT_STRING:
-      if (aCopy.mValue.mString) {
-        nsCheapStringBufferUtils::Clone(mValue.mString, aCopy.mValue.mString);
-      } else {
-        mValue.mString = nsnull;
-      }
-      break;
-
-    case HTMLUNIT_INTEGER:
-      mValue.mInt = aCopy.mValue.mInt;
-      break;
-
-    case HTMLUNIT_COLOR:
-      mValue.mColor = aCopy.mValue.mColor;
-      break;
-
-    case HTMLUNIT_CSSSTYLERULE:
-      mValue.mCSSStyleRule = aCopy.mValue.mCSSStyleRule;
-      NS_IF_ADDREF(mValue.mCSSStyleRule);
-      break;
-
-    case HTMLUNIT_PERCENT:
-      mValue.mFloat = aCopy.mValue.mFloat;
-      break;
-
-    case HTMLUNIT_ATOMARRAY:
-      mValue.mAtomArray = new nsCOMArray<nsIAtom>(*aCopy.mValue.mAtomArray);
-      if (!mValue.mAtomArray) {
-        mUnit = eHTMLUnit_String;
-        mValue.mString = nsnull;
-      }
-      break;
-
-    default:
-      NS_ERROR("Unknown HTMLValue type!");
-  }
-}
-
-
 //
 // Parsing methods
 //
-
-PRBool
-nsHTMLValue::ParseEnumValue(const nsAString& aValue,
-                            const EnumTable* aTable,
-                            PRBool aCaseSensitive)
-{
-  nsAutoString val(aValue);
-  while (aTable->tag) {
-    if (aCaseSensitive ? val.EqualsWithConversion(aTable->tag) :
-                         val.EqualsIgnoreCase(aTable->tag)) {
-      SetIntValue(aTable->value, eHTMLUnit_Enumerated);
-      return PR_TRUE;
-    }
-    aTable++;
-  }
-  return PR_FALSE;
-}
 
 PRBool
 nsHTMLValue::EnumValueToString(const EnumTable* aTable,
@@ -347,198 +178,5 @@ nsHTMLValue::EnumValueToString(const EnumTable* aTable,
     }
   }
   aResult.Truncate();
-  return PR_FALSE;
-}
-
-/* used to parse attribute values that could be either:
- *   integer  (n),
- *   percent  (n%),
- *   or proportional (n*)
- */
-PRBool
-nsHTMLValue::ParseSpecialIntValue(const nsAString& aString,
-                                  nsHTMLUnit aDefaultUnit,
-                                  PRBool aCanBePercent,
-                                  PRBool aCanBeProportional)
-{
-  nsAutoString tmp(aString);
-  PRInt32 ec;
-  PRInt32 val = tmp.ToInteger(&ec);
-
-  if (NS_SUCCEEDED(ec)) {
-    if (val < 0) {
-      val = 0;
-    }
-    // % (percent) (XXX RFindChar means that 5%x will be parsed!)
-    if (aCanBePercent && tmp.RFindChar('%') >= 0) {
-      if (val > 100) {
-        val = 100;
-      }
-      SetPercentValue(float(val)/100.0f);
-      return PR_TRUE;
-    }
-      
-    // * (proportional) (XXX RFindChar means that 5*x will be parsed!)
-    if (aCanBeProportional && tmp.RFindChar('*') >= 0) {
-      SetIntValue(val, eHTMLUnit_Proportional);
-      return PR_TRUE;
-    }
-
-    // Straight number is interpreted with the default unit
-    SetIntValue(val, aDefaultUnit);
-    return PR_TRUE;
-  }
-
-  // Even if the integer could not be parsed, it might just be "*"
-  tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
-  if (tmp.Length() == 1 && tmp.Last() == '*') {
-    // special case: HTML spec says a value '*' == '1*'
-    // see http://www.w3.org/TR/html4/types.html#type-multi-length
-    // b=29061
-    SetIntValue(1, eHTMLUnit_Proportional);
-    return PR_TRUE;
-  }
-  
-  return PR_FALSE;
-}
-
-PRBool
-nsHTMLValue::ToString(nsAString& aResult) const
-{
-  nsAutoString intStr;
-  aResult.Truncate();
-
-  switch (GetUnit()) {
-    case eHTMLUnit_Integer:
-    case eHTMLUnit_Proportional:
-      intStr.AppendInt(GetIntValue());
-      aResult.Append(intStr);
-      if (GetUnit() == eHTMLUnit_Proportional) {
-        aResult.Append(PRUnichar('*'));
-      }
-      return PR_TRUE;
-
-    case eHTMLUnit_Percent:
-    {
-      float percentVal = GetPercentValue() * 100.0f;
-      intStr.AppendInt(NSToCoordRoundExclusive(percentVal));
-      aResult.Append(intStr);
-      aResult.Append(PRUnichar('%'));
-      return PR_TRUE;
-    }
-    case eHTMLUnit_Color:
-    {
-      nscolor v;
-      GetColorValue(v);
-      char buf[10];
-      PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
-                  NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
-      AppendASCIItoUTF16(buf, aResult);
-      return PR_TRUE;
-    }
-    case eHTMLUnit_String:
-      GetStringValue(aResult);
-      return PR_TRUE;
-    case eHTMLUnit_AtomArray:
-    {
-      PRInt32 count = mValue.mAtomArray->Count();
-      if (count) {
-        mValue.mAtomArray->ObjectAt(0)->ToString(aResult);
-        nsAutoString tmp;
-        PRInt32 i;
-        for (i = 1; i < count; ++i) {
-          mValue.mAtomArray->ObjectAt(i)->ToString(tmp);
-          aResult.Append(NS_LITERAL_STRING(" ") + tmp);
-        }
-      }
-      return PR_TRUE;
-    }
-    case eHTMLUnit_CSSStyleRule:
-    {
-      if (mValue.mCSSStyleRule) {
-        nsCSSDeclaration* decl = mValue.mCSSStyleRule->GetDeclaration();
-        if (decl) {
-          decl->ToString(aResult);
-        }
-      }
-
-      return PR_TRUE;
-    }
-
-    default:
-      return PR_FALSE;
-  }
-}
-
-PRBool
-nsHTMLValue::ParseIntWithBounds(const nsAString& aString,
-                                nsHTMLUnit aDefaultUnit,
-                                PRInt32 aMin, PRInt32 aMax)
-{
-  nsAutoString str(aString);
-  PRInt32 ec;
-  PRInt32 val = str.ToInteger(&ec);
-  if (NS_SUCCEEDED(ec)) {
-    val = PR_MAX(val, aMin);
-    val = PR_MIN(val, aMax);
-    SetIntValue(val, aDefaultUnit);
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-PRBool
-nsHTMLValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
-{
-  if (aString.IsEmpty()) {
-    return PR_FALSE;
-  }
-
-  // Previously we did a complicated algorithm to strip leading and trailing
-  // whitespace; now we just use CompressWhitespace like everyone else.
-  // Since all color values are just one word, this is ok.
-
-  nsAutoString colorStr(aString);
-  colorStr.CompressWhitespace(PR_TRUE, PR_TRUE);
-  if (colorStr.IsEmpty()) {
-    return PR_FALSE;
-  }
-
-  nscolor color;
-
-  // No color names begin with a '#', but numerical colors do so
-  // it is a very common first char
-  if ((colorStr.CharAt(0) != '#') && NS_ColorNameToRGB(colorStr, &color)) {
-    SetStringValue(colorStr, eHTMLUnit_String);
-    return PR_TRUE;
-  }
-
-  // Check if we are in compatibility mode
-  PRBool inNavQuirksMode;
-  {
-    nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(aDocument));
-    if (doc) {
-      inNavQuirksMode = (doc->GetCompatibilityMode() == eCompatibility_NavQuirks);
-    } else {
-      inNavQuirksMode = PR_FALSE;
-    }
-  }
-  if (!inNavQuirksMode) {
-    if (colorStr.CharAt(0) == '#') {
-      colorStr.Cut(0, 1);
-      if (NS_HexToRGB(colorStr, &color)) {
-        SetColorValue(color);
-        return PR_TRUE;
-      }
-    }
-  }
-  else {
-    if (NS_LooseHexToRGB(colorStr, &color)) { 
-      SetColorValue(color);
-      return PR_TRUE;
-    }
-  }
-
   return PR_FALSE;
 }

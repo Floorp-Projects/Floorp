@@ -48,6 +48,7 @@
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include <math.h>
+#include "prprf.h"
 
 static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
 {
@@ -156,6 +157,14 @@ extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor*
     }
   }
   return PR_TRUE;
+}
+
+extern "C" NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult)
+{
+  char buf[10];
+  PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
+              NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
+  CopyASCIItoUTF16(buf, aResult);
 }
 
 extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)

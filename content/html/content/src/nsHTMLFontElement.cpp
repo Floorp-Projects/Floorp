@@ -71,9 +71,9 @@ public:
   // nsIDOMHTMLFontElement
   NS_DECL_NSIDOMHTMLFONTELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -161,32 +161,32 @@ NS_IMPL_STRING_ATTR(nsHTMLFontElement, Face, face)
 NS_IMPL_STRING_ATTR(nsHTMLFontElement, Size, size)
 
 
-NS_IMETHODIMP
-nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsHTMLValue& aResult)
+PRBool
+nsHTMLFontElement::ParseAttribute(nsIAtom* aAttribute,
+                                  const nsAString& aValue,
+                                  nsAttrValue& aResult)
 {
-  if ((aAttribute == nsHTMLAtoms::size) ||
-      (aAttribute == nsHTMLAtoms::pointSize) ||
-      (aAttribute == nsHTMLAtoms::fontWeight)) {
+  if (aAttribute == nsHTMLAtoms::size) {
     nsAutoString tmp(aValue);
-      //rickg: fixed flaw where ToInteger error code was not being checked.
-      //       This caused wrong default value for font size.
     PRInt32 ec, v = tmp.ToInteger(&ec);
     if(NS_SUCCEEDED(ec)) {
       tmp.CompressWhitespace(PR_TRUE, PR_FALSE);
-      PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
-      aResult.SetIntValue(v, (ch == '+' || ch == '-') ?
-                             eHTMLUnit_Enumerated : eHTMLUnit_Integer);
-      return NS_CONTENT_ATTR_HAS_VALUE;
+      PRUnichar ch = tmp.First();
+      aResult.SetTo(v, (ch == '+' || ch == '-') ?
+                       nsAttrValue::eEnum : nsAttrValue::eInteger);
+      return PR_TRUE;
     }
+    return PR_FALSE;
   }
-  else if (aAttribute == nsHTMLAtoms::color) {
-    if (aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument())) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::pointSize ||
+      aAttribute == nsHTMLAtoms::fontWeight) {
+    return aResult.ParseIntValue(aValue);
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+  if (aAttribute == nsHTMLAtoms::color) {
+    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
+  }
+
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

@@ -100,9 +100,9 @@ public:
   // nsIContent overrides...
   virtual void SetFocus(nsIPresContext* aPresContext);
   virtual void RemoveFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -316,30 +316,25 @@ static const nsHTMLValue::EnumTable kButtonTypeTable[] = {
   { 0 }
 };
 
-NS_IMETHODIMP
-nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsAString& aValue,
-                                       nsHTMLValue& aResult)
+PRBool
+nsHTMLButtonElement::ParseAttribute(nsIAtom* aAttribute,
+                                    const nsAString& aValue,
+                                    nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0, 32767)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseIntWithBounds(aValue, 0, 32767);
   }
-  else if (aAttribute == nsHTMLAtoms::type) {
-    const nsHTMLValue::EnumTable *table = kButtonTypeTable;
-    nsAutoString val(aValue);
-    while (nsnull != table->tag) { 
-      if (val.EqualsIgnoreCase(table->tag)) {
-        aResult.SetIntValue(table->value, eHTMLUnit_Enumerated);
-        mType = table->value;  
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
-      table++;
+  if (aAttribute == nsHTMLAtoms::type) {
+    // XXX ARG!! This is major evilness. ParseAttribute
+    // shouldn't set members. Override SetAttr instead
+    PRBool res = aResult.ParseEnumValue(aValue, kButtonTypeTable);
+    if (res) {
+      mType = aResult.GetEnumValue();
     }
+    return res;
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

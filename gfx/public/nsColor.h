@@ -93,6 +93,10 @@ extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aBuf, nscolor* aResult);
 // This version accepts 1 to 9 digits (missing digits are 0)
 extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aBuf, nscolor* aResult);
 
+// Translate a color to a hex string and prepend a '#'.
+// The returned string is always 7 characters including a '#' character.
+extern "C" NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult);
+
 // Translate a color name to a color. Return true if it parses ok,
 // otherwise return false.
 extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aBuf, nscolor* aResult);

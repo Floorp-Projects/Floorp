@@ -146,14 +146,7 @@ nsMappedAttributes::GetAttribute(nsIAtom* aAttrName,
     return NS_CONTENT_ATTR_NOT_THERE;
   }
 
-  if (val->GetType() == nsAttrValue::eHTMLValue) {
-    aValue = *val->GetHTMLValue();
-  }
-  else {
-    nsAutoString strVal;
-    val->ToString(strVal);
-    aValue.SetStringValue(strVal);
-  }
+  val->ToHTMLValue(aValue);
 
   return NS_CONTENT_ATTR_HAS_VALUE;
 
