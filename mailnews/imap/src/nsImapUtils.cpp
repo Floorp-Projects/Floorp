@@ -155,6 +155,25 @@ nsImapURI2Name(const char* rootURI, char* uriStr, nsString& name)
   return uri.Right(name, count);
 }
 
+nsresult
+nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
+                   nsString& name)
+{
+    nsAutoString uri = uriStr;
+    nsAutoString fullName;
+    if (uri.Find(rootURI) != 0) return NS_ERROR_FAILURE;
+    PRInt32 hostStart = uri.Find(hostname);
+    if (hostStart <= 0) return NS_ERROR_FAILURE;
+    uri.Right(fullName, uri.Length() - hostStart);
+    uri = fullName;
+    PRInt32 hostEnd = uri.Find('/');
+    if (hostEnd <= 0) return NS_ERROR_FAILURE;
+    uri.Right(fullName, uri.Length() - hostEnd - 1);
+    if (fullName == "") return NS_ERROR_FAILURE;
+    name = fullName;
+    return NS_OK;
+}
+
 /* parses ImapMessageURI */
 nsresult nsParseImapMessageURI(const char* uri, nsString& folderURI, PRUint32 *key)
 {

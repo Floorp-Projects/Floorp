@@ -26,7 +26,7 @@ static const char kImapRootURI[] = "imap:/";
 static const char kImapMessageRootURI[] = "imap_message:/";
 
 extern nsresult
-nsGetImapRoot(nsFileSpec &result);
+nsGetImapRoot(const char* hostname, nsFileSpec &result);
 
 extern nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
@@ -36,6 +36,10 @@ nsPath2ImapURI(const char* rootURI, const nsFileSpec& path, char* *uri);
 
 extern nsresult
 nsImapURI2Name(const char* rootURI, char* uriStr, nsString& name);
+
+extern nsresult
+nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
+                   nsString& name);
 
 extern nsresult
 nsParseImapMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);

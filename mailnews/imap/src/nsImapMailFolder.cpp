@@ -477,7 +477,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 
     char *folderName = nsnull;
     rv = GetName(&folderName);
-	if (folderName && !PL_strcasecmp(folderName, "INBOX"))
+	// if (folderName && !PL_strcasecmp(folderName, "INBOX"))
 		selectFolder = PR_TRUE;
 
     delete [] folderName;
@@ -761,7 +761,7 @@ NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
         return rv;
     else
         *userName = nsnull;
-	
+#if 1 // for now
 	NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
     
     if (NS_SUCCEEDED(rv) && session) 
@@ -773,6 +773,32 @@ NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
           rv = server->GetUserName(userName);
       NS_IF_RELEASE (server);
     }
+#else  // **** for the future
+    nsCOMPtr<nsIFolder> aFolder(do_QueryInterface((nsIMsgFolder*) this, &rv));
+    if (NS_FAILED(rv)) return rv;
+    char *uri = nsnull;
+    rv = aFolder->GetURI(&uri);
+    if (NS_FAILED(rv)) return rv;
+    nsAutoString aName = uri;
+    PR_FREEIF(uri);
+    if (aName.Find(kImapRootURI) != 0)
+        return NS_ERROR_FAILURE;
+    aName.Cut(0, PL_strlen(kImapRootURI));
+    while (aName[0] == '/')
+        aName.Cut(0, 1);
+    PRInt32 userEnd = aName.Find('@');
+    if (userEnd < 1)
+        return NS_ERROR_NULL_POINTER;
+    aName.SetLength(userEnd);
+    char *tmpCString = aName.ToNewCString();
+    if (tmpCString && *tmpCString)
+    {
+        *userName = PL_strdup(tmpCString);
+        rv = NS_OK;
+        delete []tmpCString;
+    }
+    return rv;
+#endif 
 
     return rv;
 }
@@ -787,18 +813,29 @@ NS_IMETHODIMP nsImapMailFolder::GetHostName(char** hostName)
     else
         *hostName = nsnull;
 
-	NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
-    
-    if (NS_SUCCEEDED(rv) && session) 
+    nsCOMPtr<nsIFolder> aFolder(do_QueryInterface((nsIMsgFolder*)this, &rv));
+    if (NS_FAILED(rv)) return rv;
+    char *uri = nsnull;
+    rv = aFolder->GetURI(&uri);
+    if (NS_FAILED(rv)) return rv;
+    nsAutoString aName = uri;
+    PR_FREEIF(uri);
+    if (aName.Find(kImapRootURI) == 0)
+        aName.Cut(0, PL_strlen(kImapRootURI));
+    else
+        return NS_ERROR_FAILURE;
+    while (aName[0] == '/')
+        aName.Cut(0, 1);
+    PRInt32 hostEnd = aName.Find('/');
+    if (hostEnd > 0) // must have at least one valid charater
+        aName.SetLength(hostEnd);
+    char *tmpCString = aName.ToNewCString();
+    if (tmpCString && *tmpCString)
     {
-      nsIMsgIncomingServer *server = nsnull;
-      rv = session->GetCurrentServer(&server);
-
-      if (NS_SUCCEEDED(rv) && server)
-          rv = server->GetHostName(hostName);
-      NS_IF_RELEASE (server);
+        *hostName = PL_strdup(tmpCString);
+        rv = NS_OK;
+        delete [] tmpCString;
     }
-
     return rv;
 }
 
@@ -858,7 +895,10 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
  
     if(NS_FAILED(rv))
         return rv;
-    
+
+    if (!m_haveDiscoverAllFolders)
+        m_haveDiscoverAllFolders = PR_TRUE;
+
     nsAutoString folderName = aSpec->allocatedPathName;
     nsAutoString uri;
     uri.Append(kImapRootURI);

@@ -34,6 +34,8 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
+#include "nsIImapIncomingServer.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -170,40 +172,16 @@ NS_IMETHODIMP nsImapUrl::GetRequiredImapState(nsImapState * aImapUrlState)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetServer(nsIMsgIncomingServer * aServer)
-{
-	if (aServer)
-	{
-		NS_IF_RELEASE(m_server);
-		m_server = aServer;
-		NS_ADDREF(m_server);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
 NS_IMETHODIMP nsImapUrl::GetServer(nsIMsgIncomingServer **aServer)
 {
-	nsresult rv = NS_OK;
-
+    nsresult rv = NS_ERROR_NULL_POINTER;
 	if (aServer) // valid argument to return result in?
 	{
-		// if we weren't given an server, let's be creative and go fetch the default current
-		// server. 
-		if (!m_server)
-		{
-			NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
-			if (NS_SUCCEEDED(rv) && session)
-				// store the server in m_server so we don't have to do this again.
-				rv = session->GetCurrentServer(&m_server);
-		}
-
-		// if we were given a server then use it. 
 		if (m_server)
 		{
 			*aServer = m_server;
 			NS_ADDREF(m_server);
+            rv = NS_OK;
 		}
 		else
 			*aServer = nsnull;
@@ -583,6 +561,30 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 
 	ParseImapPart(imapPartOfUrl);
     delete [] cSpec;
+
+    if (m_host)
+    {
+        nsresult rv;
+        NS_IF_RELEASE (m_server);
+        m_server = nsnull;
+        NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+        if (NS_FAILED(rv)) return rv;
+        
+        nsCOMPtr<nsIMsgAccountManager> accountManager;
+        rv = session->GetAccountManager(getter_AddRefs(accountManager));
+        if(NS_FAILED(rv)) return rv;
+        
+        nsCOMPtr<nsISupportsArray> servers;
+        rv = accountManager->FindServersByHostname(m_host,
+                              nsIImapIncomingServer::GetIID(),
+                                       getter_AddRefs(servers));
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIMsgIncomingServer>
+            server(do_QueryInterface(servers->ElementAt(0)));
+        if (NS_FAILED(rv)) return rv;
+        rv = server->QueryInterface(nsIMsgIncomingServer::GetIID(), (void**)
+                                    &m_server);
+    }
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;

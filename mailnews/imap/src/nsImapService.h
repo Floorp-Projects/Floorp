@@ -143,12 +143,18 @@ public:
 							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 protected:
+    nsresult GetFolderName(nsIImapUrl* aImapUrl, nsIMsgFolder* aImapFolder,
+                           nsString2& folderName);
 	nsresult GetImapConnectionAndUrl(PLEventQueue * aClientEventQueue,
-                                     nsIImapUrl  * &imapUrl, 
+                                     nsIImapUrl  * &imapUrl,
+                                     nsIMsgFolder* &aImapFolder,
                                      nsIImapProtocol * &protocolInstance,
                                      nsString2 &urlSpec);
+
 	nsresult CreateStartOfImapUrl(nsIImapUrl &imapUrl, 
-                                  nsString2 &urlString);
+                                  nsString2 &urlString,
+                                  const char* hostName,
+                                  const char* userName);
     nsresult SetImapUrlSink(nsIMsgFolder* aMsgFolder,
                               nsIImapUrl* aImapUrl);
 	nsresult DiddleFlags(PLEventQueue * aClientEventQueue,

@@ -44,7 +44,6 @@ public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
 	///////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD SetServer(nsIMsgIncomingServer * aServer);
 	NS_IMETHOD GetServer(nsIMsgIncomingServer ** aServer);
 
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
