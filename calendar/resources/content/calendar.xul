@@ -450,7 +450,7 @@
 
       <spacer flex="1"/>
       <hbox id="throbber-box" align="center">
-         <button id="navigator-throbber2"
+         <button id="navigator-throbber"
                  oncommand="displayCalendarVersion()"
                  tooltiptext="&throbber.tooltip;"/>
       </hbox>

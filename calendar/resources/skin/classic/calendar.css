@@ -286,15 +286,22 @@
  *   Throbber button
  *-------------------------------------------------------------------*/
 
-#navigator-throbber2 {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  margin: 0 !important;
-  border: none !important;
-  padding: 0px !important;
-  min-width: 0;
-  background-color: transparent;
-  list-style-image: url('chrome://calendar/content/sunbird_small.png');
+#navigator-throbber {
+   -moz-appearance: none;
+   -moz-binding: url("chrome://global/content/bindings/button.xml#button-image");
+   -moz-user-focus: ignore;
+   -moz-box-align: center;
+   -moz-box-pack: center;
+   margin: 1px 2px 1px 10px;
+   border: 2px solid;
+   -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight;
+   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+   -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight;
+   -moz-border-radius: 0;
+   padding: 1px;
+   min-width: 0;
+   list-style-image: url('chrome://calendar/content/sunbird_small.png');
 }
 
 /*
