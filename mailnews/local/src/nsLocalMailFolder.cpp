@@ -123,6 +123,7 @@ nsLocalMailCopyState::nsLocalMailCopyState() :
   m_isMove(PR_FALSE), m_dummyEnvelopeNeeded(PR_FALSE), m_fromLineSeen(PR_FALSE), m_writeFailed(PR_FALSE),
   m_notifyFolderLoaded(PR_FALSE)
 {
+  LL_I2L(m_lastProgressTime, PR_IntervalToMilliseconds(PR_IntervalNow()));
 }
 
 nsLocalMailCopyState::~nsLocalMailCopyState()
@@ -3390,6 +3391,7 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::NotifyCompactCompleted()
 {
   mExpungedBytes = 0;
+  m_newMsgs.RemoveAll(); // if compacted, m_newMsgs probably aren't valid.
   (void) RefreshSizeOnDisk();
   (void) CloseDBIfFolderNotOpen();
   nsCOMPtr <nsIAtom> compactCompletedAtom;
