@@ -102,7 +102,14 @@ static char *nsMailboxGetURI(const char *nativepath)
             const char *relpath = nativepath + len;
             // skip past leading / if any
             while (*relpath == '/') relpath++;
-            uri = PR_smprintf("%s/%s", (const char*)serverURI, relpath);
+			nsCAutoString pathStr(relpath);
+			PRInt32 sbdIndex;
+			while((sbdIndex = pathStr.Find(".sbd", PR_TRUE)) != -1)
+			{
+				pathStr.Cut(sbdIndex, 4);
+			}
+
+            uri = PR_smprintf("%s/%s", (const char*)serverURI, pathStr.GetBuffer());
 
             break;
         }
