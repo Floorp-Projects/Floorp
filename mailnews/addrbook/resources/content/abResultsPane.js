@@ -27,7 +27,7 @@ function AbResultsPaneOnClick(event)
     if (event.button != 0) return;
 
     // all we need to worry about here is double clicks
-    // and column header.
+    // and column header clicks.
     //
     // we get in here for clicks on the "outlinercol" (headers)
     // and the "scrollbarbutton" (scrollbar buttons)
@@ -35,7 +35,20 @@ function AbResultsPaneOnClick(event)
 
     var t = event.originalTarget;
 
-    if (t.localName == "outlinerbody") {
+    if (t.localName == "outlinercol") {
+      var sortDirection = kDefaultDescending;
+
+      if (gAbView) {
+        var node = document.getElementById(gAbView.URI);
+        sortDirection = node.getAttribute("sortDirection");
+        if (sortDirection == kDefaultDescending)
+          sortDirection = kDefaultAscending;
+        else 
+          sortDirection = kDefaultDescending;
+      }
+      SortAndUpdateIndicators(t.id, sortDirection);
+    }
+    else if (t.localName == "outlinerbody") {
        var row = new Object;
        var colID = new Object;
        var childElt = new Object;
@@ -53,11 +66,6 @@ function AbResultsPaneOnClick(event)
     }
 }
 
-function AbResultsPaneKeyPress(event)
-{
-  dump("XXX key press\n");
-}
-
 var gAbResultsOutliner = null;
 
 function GetAbResultsOutliner()
@@ -68,12 +76,3 @@ function GetAbResultsOutliner()
 	gAbResultsOutliner = document.getElementById('abResultsOutliner');
 	return gAbResultsOutliner;
 }
-
-
-function AbResultPaneOnLoad()
-{
-  var outliner = GetAbResultsOutliner();
-  outliner.addEventListener("click",AbResultsPaneOnClick,true);
-}
-
-addEventListener("load",AbResultPaneOnLoad,true);
