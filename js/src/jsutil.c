@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -52,9 +52,9 @@
 #endif
 
 #ifdef XP_MAC
-#	 include <Types.h>
+#    include <Types.h>
 #    include <stdarg.h>
-#	 include "jsprf.h"
+#    include "jsprf.h"
 #endif
 
 #ifdef XP_MAC
@@ -65,76 +65,76 @@
  * If the C String pointer is NULL, the pascal string's length is
  * set to zero.
  */
-static void PStrFromCStr(const char* src, Str255 dst)
+static void PStrFromCStr(const char *src, Str255 dst)
 {
-	short 	length  = 0;
+    short length = 0;
 
-	/* handle case of overlapping strings */
-	if ( (void*)src == (void*)dst )
-	{
-		unsigned char*		curdst = &dst[1];
-		unsigned char		thisChar;
+    /* handle case of overlapping strings */
+    if ( (void*)src == (void*)dst )
+    {
+        unsigned char *curdst = &dst[1];
+        unsigned char thisChar;
 
-		thisChar = *(const unsigned char*)src++;
-		while ( thisChar != '\0' )
-		{
-			unsigned char	nextChar;
+        thisChar = *(const unsigned char*)src++;
+        while ( thisChar != '\0' )
+        {
+            unsigned char nextChar;
 
-			/*
-                         * Use nextChar so we don't overwrite what we
-                         * are about to read
-                         */
-			nextChar = *(const unsigned char*)src++;
-			*curdst++ = thisChar;
-			thisChar = nextChar;
+            /*
+             * Use nextChar so we don't overwrite what we
+             * are about to read
+             */
+            nextChar = *(const unsigned char*)src++;
+            *curdst++ = thisChar;
+            thisChar = nextChar;
 
-			if ( ++length >= 255 )
-				break;
-		}
-	}
-	else if ( src != NULL )
-	{
-		unsigned char*		curdst = &dst[1];
-		/* count down so test it loop is faster */
-		short 				overflow = 255;
-		register char		temp;
+            if ( ++length >= 255 )
+                break;
+        }
+    }
+    else if ( src != NULL )
+    {
+        unsigned char *curdst = &dst[1];
+        /* count down so test it loop is faster */
+        short overflow = 255;
+        register char temp;
 
-		/*
-                 * Can't do the K&R C thing of while (*s++ = *t++)
-                 * because it will copy trailing zero which might
-                 * overrun pascal buffer.  Instead we use a temp variable.
-                 */
-		while ( (temp = *src++) != 0 )
-		{
-			*(char*)curdst++ = temp;
+        /*
+         * Can't do the K&R C thing of while (*s++ = *t++)
+         * because it will copy trailing zero which might
+         * overrun pascal buffer.  Instead we use a temp variable.
+         */
+        while ( (temp = *src++) != 0 )
+        {
+            *(char*)curdst++ = temp;
 
-			if ( --overflow <= 0 )
-				break;
-		}
-		length = 255 - overflow;
-	}
-	dst[0] = length;
+            if ( --overflow <= 0 )
+                break;
+        }
+        length = 255 - overflow;
+    }
+    dst[0] = length;
 }
 
 static void jsdebugstr(const char *debuggerMsg)
 {
-	Str255		pStr;
+    Str255 pStr;
 
-	PStrFromCStr(debuggerMsg, pStr);
-	DebugStr(pStr);
+    PStrFromCStr(debuggerMsg, pStr);
+    DebugStr(pStr);
 }
 
 static void dprintf(const char *format, ...)
 {
     va_list ap;
-	char	*buffer;
+    char *buffer;
 
-	va_start(ap, format);
-	buffer = (char *)JS_vsmprintf(format, ap);
-	va_end(ap);
+    va_start(ap, format);
+    buffer = (char *)JS_vsmprintf(format, ap);
+    va_end(ap);
 
-	jsdebugstr(buffer);
-	JS_DELETE(buffer);
+    jsdebugstr(buffer);
+    JS_smprintf_free(buffer);
 }
 #endif   /* XP_MAC */
 
