@@ -17,8 +17,8 @@
 
 <!ENTITY prompt.label          "What should #1 do with this file?">
 
-<!ENTITY alwaysAsk.label       "Always show this dialog before handling files of this type">
-<!ENTITY alwaysAsk.accesskey   "a">
+<!ENTITY alwaysHandle.label     "Always perform this action when handling files of this type">
+<!ENTITY alwaysHandle.accesskey "a">
 
 <!ENTITY saveToDisk.label      "Save it to disk">
 <!ENTITY saveToDisk.accesskey  "s">

@@ -91,7 +91,7 @@
         
         <separator orient="horizontal" class="thin"/>
 
-        <checkbox id="alwaysAskMe" label="&alwaysAsk.label;" accesskey="&alwaysAsk.accesskey;"/>
+        <checkbox id="alwaysHandle" label="&alwaysHandle.label;" accesskey="&alwaysHandle.accesskey;"/>
 
         <separator class="groove"/>
     </vbox>
