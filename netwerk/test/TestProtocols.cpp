@@ -70,7 +70,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
-#include "nsIHttpEventSink.h" 
+#include "nsIChannelEventSink.h" 
 #include "nsIInterfaceRequestor.h" 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDNSService.h" 
@@ -199,34 +199,37 @@ URLLoadInfo::~URLLoadInfo()
 NS_IMPL_THREADSAFE_ISUPPORTS0(URLLoadInfo)
 
 //-----------------------------------------------------------------------------
-// TestHttpEventSink
+// TestChannelEventSink
 //-----------------------------------------------------------------------------
 
-class TestHttpEventSink : public nsIHttpEventSink
+class TestChannelEventSink : public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIHTTPEVENTSINK
+  NS_DECL_NSICHANNELEVENTSINK
 
-  TestHttpEventSink();
-  virtual ~TestHttpEventSink();
+  TestChannelEventSink();
+  virtual ~TestChannelEventSink();
 };
 
-TestHttpEventSink::TestHttpEventSink()
+TestChannelEventSink::TestChannelEventSink()
 {
 }
 
-TestHttpEventSink::~TestHttpEventSink()
+TestChannelEventSink::~TestChannelEventSink()
 {
 }
 
 
-NS_IMPL_ISUPPORTS1(TestHttpEventSink, nsIHttpEventSink)
+NS_IMPL_ISUPPORTS1(TestChannelEventSink, nsIChannelEventSink)
 
 NS_IMETHODIMP
-TestHttpEventSink::OnRedirect(nsIHttpChannel *channel, nsIChannel *newChannel)
+TestChannelEventSink::OnChannelRedirect(nsIChannel *channel,
+                                        nsIChannel *newChannel,
+                                        PRUint32 flags)
 {
-    LOG(("\n+++ TestHTTPEventSink::OnRedirect +++\n"));
+    LOG(("\n+++ TestChannelEventSink::OnChannelRedirect (with flags %x) +++\n",
+         flags));
     return NS_OK;
 }
 
@@ -560,10 +563,10 @@ public:
     NS_IMETHOD GetInterface(const nsIID& iid, void* *result) {
         nsresult rv = NS_ERROR_FAILURE;
 
-        if (iid.Equals(NS_GET_IID(nsIHttpEventSink))) {
-          TestHttpEventSink *sink;
+        if (iid.Equals(NS_GET_IID(nsIChannelEventSink))) {
+          TestChannelEventSink *sink;
 
-          sink = new TestHttpEventSink();
+          sink = new TestChannelEventSink();
           if (sink == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
           NS_ADDREF(sink);

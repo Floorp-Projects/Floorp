@@ -69,7 +69,7 @@
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsTextFormatter.h"
-#include "nsIHttpEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsIUploadChannel.h"
 #include "nsISecurityEventSink.h"
 #include "nsIScriptSecurityManager.h"

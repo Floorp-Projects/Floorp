@@ -41,7 +41,7 @@
 #include "nsDocument.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIHttpEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIScriptContext.h"
 #include "nsHTMLStyleSheet.h"
@@ -55,7 +55,7 @@ class nsIURI;
 
 class nsXMLDocument : public nsDocument,
                       public nsIInterfaceRequestor,
-                      public nsIHttpEventSink
+                      public nsIChannelEventSink
 {
 public:
   nsXMLDocument();
@@ -87,7 +87,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // nsIHTTPEventSink
-  NS_DECL_NSIHTTPEVENTSINK
+  NS_DECL_NSICHANNELEVENTSINK
 
   // nsIDOMXMLDocument
   NS_DECL_NSIDOMXMLDOCUMENT

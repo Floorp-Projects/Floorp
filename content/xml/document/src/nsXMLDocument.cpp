@@ -200,7 +200,7 @@ nsXMLDocument::~nsXMLDocument()
 // QueryInterface implementation for nsXMLDocument
 NS_INTERFACE_MAP_BEGIN(nsXMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXMLDocument)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
@@ -259,11 +259,13 @@ nsXMLDocument::GetInterface(const nsIID& aIID, void** aSink)
   return QueryInterface(aIID, aSink);
 }
 
-// nsIHttpEventSink
+// nsIChannelEventSink
 NS_IMETHODIMP
-nsXMLDocument::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
+nsXMLDocument::OnChannelRedirect(nsIChannel *aOldChannel,
+                                 nsIChannel *aNewChannel,
+                                 PRUint32 aFlags)
 {
-  NS_ENSURE_ARG_POINTER(aNewChannel);
+  NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
 
   nsCOMPtr<nsIURI> newLocation;
   nsresult rv = aNewChannel->GetURI(getter_AddRefs(newLocation)); // The redirected URI

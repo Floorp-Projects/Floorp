@@ -42,7 +42,7 @@
 #include "nsIURIChecker.h"
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
-#include "nsIHttpEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -52,7 +52,7 @@
 
 class nsURIChecker : public nsIURIChecker,
                      public nsIStreamListener,
-                     public nsIHttpEventSink,
+                     public nsIChannelEventSink,
                      public nsIInterfaceRequestor
 {
 public:
@@ -64,7 +64,7 @@ public:
     NS_DECL_NSIREQUEST
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSIHTTPEVENTSINK
+    NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
 
 protected:
