@@ -18,7 +18,7 @@ QUIET=@
 CFLAGS = /nologo /MDd /W3 /Gm /GX /Zi /Od\
          /I $(JS)\
          /I $(JSD)\
-         /DDEBUG /DWIN32 /D_CONSOLE /DXP_PC /D_WINDOWS /D_WIN32\
+         /DDEBUG /DWIN32 /D_CONSOLE /DXP_WIN /D_WINDOWS /D_WIN32\
          /DJSDEBUGGER\
 !IF "$(JSD_THREADSAFE)" != ""
          /DJSD_THREADSAFE\
