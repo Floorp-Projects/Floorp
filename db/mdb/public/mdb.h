@@ -301,6 +301,9 @@ class mdbCell;
 
 // { %%%%% begin temporary dummy base class for class hierarchy %%%%%
 class mdbISupports { // msg db base class
+public:
+	mdb_count Release(void);
+	mdb_count AddRef(void);
 };
 // } %%%%% end temporary dummy base class for class hierarchy %%%%%
 
@@ -1121,7 +1124,7 @@ class mdbPortTableCursor : public mdbCursor { // table collection iterator
 **| the drop to be cancelled.)
 |*/
 class mdbCollection : public mdbObject { // sequence of objects
-
+public:
 // { ===== begin mdbCollection methods =====
 
   // { ----- begin attribute methods -----
@@ -1601,7 +1604,7 @@ class mdbRowCellCursor : public mdbCursor { // cell collection iterator
 **| be used to set state in another cell, without extracting a buffer.)
 |*/
 class mdbBlob : public mdbObject { // a string with associated charset
-
+public:
 // { ===== begin mdbBlob methods =====
 
   // { ----- begin attribute methods -----
