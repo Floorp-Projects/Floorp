@@ -91,6 +91,7 @@
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
+#include "nsIScrollableFrame.h"
 
 
 // Drag & Drop, Clipboard Support
@@ -130,6 +131,7 @@ static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 
 // Largest chunk size we recycle
 static const int  gMaxRecycledSize = 200;
@@ -1444,26 +1446,30 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 
   nsIFrame*             rootFrame;
   nsIFrame*             child;
-  nsIPageSequenceFrame* pageSequence;
+  nsIPageSequenceFrame* pageSequence = nsnull;
 
-  // The page sequence frame should be either the immediate child or
-  // its child
+  // The page sequence frame is the child of the rootFrame
   mFrameManager->GetRootFrame(&rootFrame);
   rootFrame->FirstChild(nsnull, &child);
+
   if (nsnull != child) {
-    if (NS_SUCCEEDED(child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence))) {
+
+      // but the child could be wrapped in a scrollframe so lets check
+      nsIScrollableFrame* scrollable = nsnull;
+      nsresult rv = child->QueryInterface(kIScrollableFrameIID, (void **)&scrollable);
+      if (NS_SUCCEEDED(rv) && (nsnull != scrollable)) {
+          // if it is then get the scrolled frame
+          scrollable->GetScrolledFrame(nsnull, child);
+      }
+
+      // make sure the child is a pageSequence
+      rv = child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence);
+      NS_ASSERTION(NS_SUCCEEDED(rv),"Error: Could not find pageSequence!");
+
       *aResult = pageSequence;
       return NS_OK;
-    }
-  
-    child->FirstChild(nsnull, &child);
-    if (nsnull != child) {
-      if (NS_SUCCEEDED(child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence))) {
-        *aResult = pageSequence;
-        return NS_OK;
-      }
-    }
   }
+
   *aResult = nsnull;
 
   return NS_ERROR_FAILURE;
