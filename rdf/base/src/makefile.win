@@ -22,6 +22,10 @@ LCFLAGS=-D_IMPL_NS_RDF -DWIN32_LEAN_AND_MEAN
 MODULE=rdf
 LIBRARY_NAME=rdfbase_s
 
+C_OBJS=\
+        .\$(OBJDIR)\rdf_qsort.obj             \
+	$(NULL)
+
 CPP_OBJS=\
         .\$(OBJDIR)\nsCompositeDataSource.obj     \
         .\$(OBJDIR)\nsContainerCursor.obj         \
