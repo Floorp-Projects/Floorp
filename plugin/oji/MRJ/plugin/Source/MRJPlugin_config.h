@@ -25,4 +25,4 @@
 
 #include "MacHeaders.h"
 
-#define NEW_PLUGIN_STREAM_API
+/* #define NEW_PLUGIN_STREAM_API */
