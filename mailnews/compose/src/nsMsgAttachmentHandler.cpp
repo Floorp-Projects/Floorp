@@ -240,7 +240,7 @@ JFD */
 				// The only time we want to send just the data fork of a two-fork
 				// Mac file is if uuencoding has been requested.
 				NS_ASSERTION(UseUUEncode_p(), "not UseUUEncode_p");
-				if (!((nsMsgCompose *) m_mime_delivery_state->m_pane)->m_confirmed_uuencode_p)
+//JFD				if (!((nsMsgCompose *) m_mime_delivery_state->m_pane)->m_confirmed_uuencode_p)
 				{
 #ifdef UNREADY_CODE
 					PRBool confirmed = FE_Confirm(m_mime_delivery_state->m_pane->GetContext(), 
@@ -250,7 +250,7 @@ JFD */
 #endif
 
 					// only want to do this once
-					((nsMsgCompose *) m_mime_delivery_state->m_pane)->m_confirmed_uuencode_p = PR_TRUE;
+//JFD					((nsMsgCompose *) m_mime_delivery_state->m_pane)->m_confirmed_uuencode_p = PR_TRUE;
 					
 					if (! confirmed) // cancelled
 						return MK_INTERRUPTED;

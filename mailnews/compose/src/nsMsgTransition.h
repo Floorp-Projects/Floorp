@@ -59,6 +59,7 @@ HJ08142
 class MSG_NewsHost;
 class MSG_HTMLRecipients;
 
+#if 0
 class nsMsgCompose : public nsIMsgCompose, public MSG_Pane {
 public:
 
@@ -313,5 +314,7 @@ protected:
        int m_lineWidth; // for quoting plain text to html then convert back
                                                 // to plain text
 };
+
+#endif
 
 #endif /* _MsgCompose_H_ */
