@@ -6,8 +6,8 @@
 # tinderbox trees.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2001/12/03 19:46:04 $ 
+# $Revision: 1.3 $ 
+# $Date: 2002/01/29 01:11:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/ReqData.pm,v $ 
 # $Name:  $ 
@@ -33,7 +33,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@ReefEdge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
