@@ -40,8 +40,7 @@
 
 NS_IMPL_ISUPPORTS1(nsSHTransaction, nsISHTransaction)
 
-nsSHTransaction::nsSHTransaction() : mSHEntry(nsnull), mParent(nsnull), 
-                                     mChild(nsnull), mLRVList(nsnull)
+nsSHTransaction::nsSHTransaction() : mParent(nsnull), mChild(nsnull),mLRVList(nsnull), mSHEntry(nsnull)
 {
 NS_INIT_REFCNT();
 }
