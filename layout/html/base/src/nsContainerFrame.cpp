@@ -422,9 +422,6 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
  * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow
  * pointers
  *
- * Updates the child count and content offsets of all containers that are
- * affected
- *
  * @param   aChild child this child's next-in-flow
  * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
