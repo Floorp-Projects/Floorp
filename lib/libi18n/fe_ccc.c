@@ -58,9 +58,6 @@ mz_hz2gb(CCCDataObject obj, const unsigned char *kscbuf, int32 kscbufsz);
 PRIVATE unsigned char *
 mz_mbNullConv(CCCDataObject obj, const unsigned char *buf, int32 bufsz);
 
-PRIVATE unsigned char *
-mz_AnyToAnyThroughUCS2(CCCDataObject obj, const unsigned char *buf, int32 bufsz);
-
 /*	intl_CharLenFunc is designed to used with mz_mbNullConv */
 typedef int16 (*intl_CharLenFunc) (	unsigned char ch);
 PRIVATE int16 intl_CharLen_SJIS(		unsigned char ch);
@@ -349,6 +346,36 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 
 		{CS_X_BIG5,		CS_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 		{CS_BIG5,		CS_X_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
+
+                /*************** Vietnamese ****************/
+                {CS_VIET_VIQR,   CS_VIET_VIQR,   0, (CCCFunc)0, 0},
+                {CS_VIET_VISCII, CS_VIET_VISCII, 0, (CCCFunc)0, 0},
+                {CS_VIET_VPS,    CS_VIET_VPS,    0, (CCCFunc)0, 0},
+                {CS_VIET_TCVN,   CS_VIET_TCVN,   0, (CCCFunc)0, 0},
+ 
+                {CS_VIET_VPS,    CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_TCVN,   CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VISCII, CS_VIET_VPS,    0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_TCVN,   CS_VIET_VPS,    0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VISCII, CS_VIET_TCVN,   0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VPS,    CS_VIET_TCVN,   0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
+ 
+                {CS_VIET_VIQR,   CS_VIET_VISCII, 0, (CCCFunc)viet_viqr_2_any,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VIQR,   CS_VIET_VPS,    0, (CCCFunc)viet_viqr_2_any,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VIQR,   CS_VIET_TCVN,   0, (CCCFunc)viet_viqr_2_any,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VNI,    CS_VIET_VISCII, 0, (CCCFunc)viet_vni_2_any,         INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VNI,    CS_VIET_VPS,    0, (CCCFunc)viet_vni_2_any,         INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VNI,    CS_VIET_TCVN,   0, (CCCFunc)viet_vni_2_any,         INTL_CHARLEN_SINGLEBYTE},
+ 
+                {CS_VIET_VISCII, CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_TCVN,   CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VPS,    CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VNI,    CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
+ 
+                {CS_VIET_VIQR,   CS_UTF8,   0,      (CCCFunc)viet_viqr_2_any,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VISCII, CS_UTF8,   0,      (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
+                {CS_UTF8,        CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_UTF8},
+                /*******************************************/
 
 		/* UNICODE */
 		{CS_UTF8,		CS_UTF8,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_UTF8},
@@ -826,7 +853,7 @@ mz_mbNullConv(CCCDataObject obj, const unsigned char *buf, int32 bufsz)
 	buf -> mz_mbNullConv -> frombuf -> INTL_TextToUnicode -> ucs2buf
 	-> INTL_UnicodeToStr -> tobuf
 */
-PRIVATE unsigned char* mz_AnyToAnyThroughUCS2(CCCDataObject obj, const unsigned char *buf, int32 bufsz)
+MODULE_PRIVATE unsigned char* mz_AnyToAnyThroughUCS2(CCCDataObject obj, const unsigned char *buf, int32 bufsz)
 {
 	/* buffers */
 	unsigned char* fromBuf = NULL;
@@ -933,6 +960,23 @@ PUBLIC int16 INTL_DocToWinCharSetID(int16 csid)
 	cscvt_t		*cscvtp;
 	int16       from_csid = 0,  to_csid = 0;
 
+        /**************************************************************/
+        /*** This section should work for everybody, but for now we ***/
+        /*** make it work for vietnamese only (our area). Basically ***/
+        /*** instead of returning the first csid found in the rules,***/
+        /*** we check the default view encoding first, and return   ***/
+        /*** that default view csid if a rule is found, otherwise   ***/
+        /*** it will return the first rule as the usual way         ***/
+        int16   def_doccsid;
+        def_doccsid = INTL_DefaultDocCharSetID(0);
+        if (! ((def_doccsid == CS_VIET_VISCII) ||
+               (def_doccsid == CS_VIET_VPS) ||
+               (def_doccsid == CS_VIET_TCVN) ||
+               (def_doccsid == CS_VIET_VIQR)
+           )) {
+                def_doccsid = 0;
+        }
+        
 	from_csid = csid & ~CS_AUTO;	/* remove auto bit  */
 
 	/* Look-up conversion method given FROM and TO char. code sets	*/
@@ -956,6 +1000,20 @@ PUBLIC int16 INTL_DocToWinCharSetID(int16 csid)
 			}
 #endif
 			to_csid = cscvtp->to_csid;
+                        if (def_doccsid) {
+                           /*************************************************/
+                           /*** This happens for vietnamese only (for now)***/
+                           cscvtp++;
+                           while (cscvtp->from_csid) {
+                                  if ((cscvtp->from_csid == from_csid) &&
+                                      (cscvtp->to_csid == def_doccsid)) {
+                                      to_csid = cscvtp->to_csid;
+                                      break;
+                                  }
+                                  cscvtp++;
+                           }
+                           /*********************************************/
+                        }
 			break ;
 		}
 		cscvtp++;

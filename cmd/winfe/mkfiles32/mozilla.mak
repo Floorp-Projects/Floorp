@@ -887,6 +887,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libi18n\euc2jis.c
 	$(DEPTH)\lib\libi18n\euc2sjis.c
 	$(DEPTH)\lib\libi18n\euckr2is.c
+	$(DEPTH)\lib\libi18n\vietnam.c
 	$(DEPTH)\lib\libi18n\fe_ccc.c
 	$(DEPTH)\lib\libi18n\doc_ccc.c
 	$(DEPTH)\lib\libi18n\intl_csi.c

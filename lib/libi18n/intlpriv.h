@@ -281,8 +281,12 @@ MODULE_PRIVATE unsigned char *autoKCCC (CCCDataObject, const unsigned char *s, i
 MODULE_PRIVATE int16	      intl_detect_JCSID (uint16, const unsigned char *, int32);
 MODULE_PRIVATE int16		  intl_detect_KCSID (uint16, const unsigned char *, int32);
 
+MODULE_PRIVATE unsigned char *viet_any_2_viqr(CCCDataObject, const unsigned char *s, int32 l);
+MODULE_PRIVATE unsigned char *viet_viqr_2_any(CCCDataObject, const unsigned char *s, int32 l);
+MODULE_PRIVATE unsigned char *viet_vni_2_any(CCCDataObject, const unsigned char *s, int32 l);
 
-
+MODULE_PRIVATE unsigned char *
+mz_AnyToAnyThroughUCS2(CCCDataObject obj,const unsigned char *buf, int32 bufsz);
 
 void	      FE_fontchange(iDocumentContext window_id, int16  csid);
 void          FE_ChangeURLCharset(const char *newCharset);

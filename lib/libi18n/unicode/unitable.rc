@@ -164,6 +164,33 @@ BEGIN
 #include "utotbl\\armscii.ut"
 END
 
+viscii.uf RCDATA
+BEGIN
+#include "ufrmtbl\\viscii.uf"
+END
+viscii.ut RCDATA
+BEGIN
+#include "utotbl\\viscii.ut"
+END
+ 
+tcvn5712.uf RCDATA
+BEGIN
+#include "ufrmtbl\\tcvn5712.uf"
+END
+tcvn5712.ut RCDATA
+BEGIN
+#include "utotbl\\tcvn5712.ut"
+END
+ 
+vps.uf RCDATA
+BEGIN
+#include "ufrmtbl\\vps.uf"
+END
+vps.ut RCDATA
+BEGIN
+#include "utotbl\\vps.ut"
+END
+
 cp874.uf RCDATA
 BEGIN
 #include "ufrmtbl\\cp874.uf"
