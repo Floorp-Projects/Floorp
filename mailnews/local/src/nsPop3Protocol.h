@@ -111,7 +111,7 @@ extern int MK_CONNECTION_TIMED_OUT;
 #endif
 
 #define POP3_PORT 110 // The IANA port for Pop3
-#define OUTPUT_BUFFER_SIZE 512 // maximum size of command string
+#define OUTPUT_BUFFER_SIZE 8192 // maximum size of command string
 
 /* structure to hold data pertaining to the active state of
  * a transfer in progress.
@@ -211,7 +211,6 @@ typedef struct Pop3MsgInfo {
 } Pop3MsgInfo;
 
 typedef struct _Pop3ConData {
-    // MSG_Pane* pane;				  /* msglib pane object. */
     
     PRBool leave_on_server;     /* Whether we're supposed to leave messages
                                    on server. */
@@ -226,9 +225,6 @@ typedef struct _Pop3ConData {
     PRBool command_succeeded;   /* did the last command succeed? */
     char *command_response;     /* text of last response */
     PRInt32 first_msg;
-    // TCP_ConData *tcp_con_data;  /* Data pointer for tcp connect state machine */
-    char *data_buffer;
-    PRUint32	data_buffer_size;
 
     char *obuffer;              /* line buffer for output to msglib */
     PRUint32 obuffer_size;
@@ -307,18 +303,15 @@ public:
     /////////////////////////////////////////////////////////////////////////////
     // nsIStreamListener interface
     ////////////////////////////////////////////////////////////////////////////
-    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) 
-    { return NS_OK;};	// for now
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream* aInputStream,
-                               PRUint32 aLength);
+    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)   { return NS_OK;};	// for now
+    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream* aInputStream, PRUint32 aLength);
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char* aContentType);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar*
-                             aMsg);
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
     
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 pProgress, PRUint32
-                          aProgressMax)
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 pProgress, PRUint32 aProgressMax)
     { return NS_OK; };
-    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) 
+    
+	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) 
     { return NS_OK; };
 
 public:
@@ -339,6 +332,7 @@ private:
     nsITransport* m_transport;
     nsIOutputStream* m_outputStream; // from the transport
     nsIStreamListener* m_outputConsumer; // from the transport
+	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
     nsIPop3Sink* m_nsIPop3Sink;
     PRBool m_isRunning;
 
@@ -358,10 +352,6 @@ private:
 
     void net_pop3_write_state(Pop3UidlHost* host);
     ***********************************************************************/
-    PRInt32 ReadLine(nsIInputStream* inputStream, PRUint32 length, char
-                     **line);
-    PRInt32 Read(nsIInputStream* inputStream, PRUint32 length, char** buffer);
-
     void FreeMsgInfo();
     PRInt32 WaitForStartOfConnectionResponse(nsIInputStream* inputStream, 
                                              PRUint32 length);
@@ -382,18 +372,14 @@ private:
     PRInt32 SendGurl();
     PRInt32 GurlResponse();
     PRInt32 SendList();
-    PRInt32 GetList(nsIInputStream* inputStream, 
-                    PRUint32 length);
+    PRInt32 GetList(nsIInputStream* inputStream, PRUint32 length);
     PRInt32 SendFakeUidlTop();
     PRInt32 StartUseTopForFakeUidl();
-    PRInt32 GetFakeUidlTop(nsIInputStream* inputStream, 
-                           PRUint32 length);
+    PRInt32 GetFakeUidlTop(nsIInputStream* inputStream, PRUint32 length);
     PRInt32 SendXtndXlstMsgid();
-    PRInt32 GetXtndXlstMsgid(nsIInputStream* inputStream, 
-                             PRUint32 length);
+    PRInt32 GetXtndXlstMsgid(nsIInputStream* inputStream, PRUint32 length);
     PRInt32 SendUidlList();
-    PRInt32 GetUidlList(nsIInputStream* inputStream, 
-                        PRUint32 length);
+    PRInt32 GetUidlList(nsIInputStream* inputStream, PRUint32 length);
     PRInt32 GetMsg();
     PRInt32 SendTop();
     PRInt32 SendXsender();
@@ -401,14 +387,12 @@ private:
     PRInt32 SendRetr();
     PRInt32 HandleLine(char *line, PRUint32 line_length);
 
-    PRInt32 RetrResponse(nsIInputStream* inputStream, 
-                         PRUint32 length);
+    PRInt32 RetrResponse(nsIInputStream* inputStream, PRUint32 length);
     PRInt32 TopResponse(nsIInputStream* inputStream, PRUint32 length);
     PRInt32 SendDele();
     PRInt32 DeleResponse();
     PRInt32 CommitState(PRBool remove_last_entry);
-    PRInt32 ProcessPop3State(nsIURL* aURL, nsIInputStream* aInputStream,
-                             PRUint32 aLength); 
+    PRInt32 ProcessPop3State(nsIURL* aURL, nsIInputStream* aInputStream, PRUint32 aLength); 
 
 	void Initialize(nsIURL * aURL);
 };
