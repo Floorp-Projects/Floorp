@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LOCAL_INCLUDES = -I../src
+LOCAL_INCLUDES = -I$(srcdir)/../src
 
 CPPSRCS = \
 	TestSpaceManager.cpp \
