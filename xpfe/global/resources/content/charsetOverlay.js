@@ -220,7 +220,7 @@ function mailCharsetLoadListener (event)
 var wintype = document.firstChild.getAttribute('windowtype');
 if (window && (wintype == "navigator:browser"))
 {
-  contentArea = window.document.getElementById("appcontent");
+  var contentArea = window.document.getElementById("appcontent");
   if (contentArea)
     contentArea.addEventListener("load", charsetLoadListener, true);
 }
@@ -229,8 +229,8 @@ else
   var arrayOfStrings = wintype.split(":");
   if (window && arrayOfStrings[0] == "mail") 
   {
-    contentArea = window.document.getElementById("messagepane");
-    if (contentArea)
-      contentArea.addEventListener("load", mailCharsetLoadListener, true);
+    var messageContent = window.document.getElementById("messagepane");
+    if (messageContent)
+      messageContent.addEventListener("load", mailCharsetLoadListener, true);
   }
 }

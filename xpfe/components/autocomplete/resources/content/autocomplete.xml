@@ -42,7 +42,7 @@
 		<property name="autoCompleteSession">
         <![CDATA[
             if (this.getAttribute('searchSessionType') != "") {
-                searchSession = unescape('component:%2F%2Fnetscape%2FautocompleteSession%26type=');
+                var searchSession = unescape('component:%2F%2Fnetscape%2FautocompleteSession%26type=');
                 searchSession = searchSession + this.getAttribute('searchSessionType');
                 try {
                     Components.classes[searchSession].getService(Components.interfaces.nsIAutoCompleteSession);
@@ -184,7 +184,7 @@
 					{
             me.ignoreInputEvent = true;
 						inputElement.value = menuitem.getAttribute("value");
-						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
+						inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
 						needToAutocomplete = false;
 						me.privatefunc.selectedItemIndex = i;
@@ -199,7 +199,7 @@
                     case 'startLookup':
                         if (me.disableAutocomplete == "true")
                             return;
-						            var inputElement = document.getAnonymousNodes(me)[0].firstChild;
+                        inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         if (!me.lastResults || inputElement.value != me.lastResults.searchString)
                             me.autoCompleteSession.onStartLookup(inputElement.value, me.lastResults, me.autoCompleteListener);
                         break;

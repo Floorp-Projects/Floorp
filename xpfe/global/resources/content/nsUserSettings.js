@@ -92,6 +92,6 @@ var nsPreferences = {
           return aDefVal != undefined ? aDefVal : null;
         }
       return null;        // quiet warnings
-    },
+    }
 };
 

@@ -83,9 +83,9 @@ var nsTransferable = {
   get: function (aFlavourList, aRetrievalFunc, aAnyFlag)
     {
       var firstFlavour = null;
-      for (var flavour in aFlavourList)
+      for (var flav in aFlavourList)
         {
-          firstFlavour = flavour;
+          firstFlavour = flav;
           break;
         }
       
@@ -128,17 +128,19 @@ var nsTransferable = {
               else
                 {
                   trans.getTransferData(firstFlavour, data, length);
-                  var currData = data ? this.wrapData(data.value, length.value, aFlavourList[firstFlavour].width) : null;
+                  var curData = data ? this.wrapData(data.value, length.value, aFlavourList[firstFlavour].width) : null;
                   if (supportsArray.Count() == 1)
-                    return currData;
+                    return curData;
                   else
-                    dataArray[i] = currData;
+                    dataArray[i] = curData;
                 }
             }
           return dataArray;
         }
       else
         throw "No data retrieval handler provided!";
+        
+      return null;      // quiet warnings
     },
 
   /** 
@@ -188,5 +190,7 @@ var nsTransferable = {
       var data = aDataObject.QueryInterface(IID);
       if (data)
         return data.data.substring(0, aLength / aWidth);
-    },
+      
+      return null;
+    }
 };  
