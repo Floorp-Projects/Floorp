@@ -43,7 +43,7 @@
 ;;; SEMANTIC DEPICTION UTILITIES
 
 (defparameter *semantic-keywords*
-  '(not and or is type oneof tuple action function if then else throw try catch in new case of end let letexc))
+  '(not and or mod is type oneof tuple action function if then else throw try catch in new case of end let letexc))
 
 ; Emit markup for one of the semantic keywords, as specified by keyword-symbol.
 (defun depict-semantic-keyword (markup-stream keyword-symbol)
@@ -331,7 +331,10 @@
    ((integerp constant)
     (depict-integer markup-stream constant))
    ((floatp constant)
-    (depict markup-stream (format nil (if (= constant (floor constant 1)) "~,1F" "~F") constant)))
+    (depict markup-stream
+            (if (zerop constant)
+              (if (minusp (float64-sign constant)) "-0.0" "+0.0")
+              (format nil (if (= constant (floor constant 1)) "~,1F" "~F") constant))))
    ((characterp constant)
     (depict markup-stream ':left-single-quote)
     (depict-char-style (markup-stream ':character-literal)
@@ -439,8 +442,8 @@
 
 (defmacro depict-statement ((markup-stream keyword &optional (space t)) &body body)
   `(depict-logical-block (,markup-stream 0)
-     (when (partial-order-< level %stmt%)
-       (depict-break ,markup-stream))
+     ;(when (partial-order-< level %stmt%)
+     ;  (depict-break ,markup-stream))
      (depict-expr-parentheses (,markup-stream level %stmt%)
        (depict-semantic-keyword ,markup-stream ,keyword)
        ,@(and space `((depict-space ,markup-stream)))
@@ -460,9 +463,11 @@
                    (depict markup-stream ": ")
                    (depict-type-expr markup-stream world (second arg-binding)))
                arg-binding-exprs
+               :indent 6
                :prefix "("
                :suffix ")"
-               :separator ", "
+               :separator ","
+               :break 1
                :empty nil))
 
 ; (function ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>)
@@ -470,8 +475,8 @@
   (depict-statement (markup-stream 'function nil)
     (depict-function-bindings markup-stream world arg-binding-exprs)
     (depict-logical-block (markup-stream 4)
-      (depict-break markup-stream)
-      (depict-annotated-value-expr markup-stream world body-annotated-expr %stmt%))))
+      (depict-break markup-stream 2)
+      (depict-annotated-value-expr markup-stream world body-annotated-expr %progn%))))
 
 
 ; (if <condition-expr> <true-expr> <false-expr>)
@@ -479,16 +484,29 @@
   (depict-statement (markup-stream 'if)
     (depict-logical-block (markup-stream 4)
       (depict-annotated-value-expr markup-stream world condition-annotated-expr))
-    (depict-break markup-stream)
+    (depict-break markup-stream 1)
     (depict-semantic-keyword markup-stream 'then)
     (depict-space markup-stream)
     (depict-logical-block (markup-stream 7)
       (depict-annotated-value-expr markup-stream world true-annotated-expr %stmt%))
-    (depict-break markup-stream)
+    (depict-break markup-stream 1)
     (depict-semantic-keyword markup-stream 'else)
     (depict-space markup-stream)
     (depict-logical-block (markup-stream (if (special-form-annotated-expr? 'if false-annotated-expr) nil 6))
       (depict-annotated-value-expr markup-stream world false-annotated-expr %stmt%))))
+
+
+; (progn <void-expr> ... <void-expr> <expr>)
+(defun depict-progn (markup-stream world level &rest annotated-exprs)
+  (depict-expr-parentheses (markup-stream level %progn%)
+    (depict-logical-block (markup-stream 0)
+      (mapl #'(lambda (annotated-exprs)
+                (let ((annotated-expr (first annotated-exprs)))
+                  (depict-annotated-value-expr markup-stream world annotated-expr %stmt%)
+                  (when (cdr annotated-exprs)
+                    (depict markup-stream ";")
+                    (depict-break markup-stream 1))))
+            annotated-exprs))))
 
 
 ; (throw <value-expr>)
@@ -503,7 +521,7 @@
   (depict-statement (markup-stream 'try nil)
     (depict-logical-block (markup-stream 4)
       (depict-break markup-stream)
-      (depict-annotated-value-expr markup-stream world body-annotated-expr %stmt%))
+      (depict-annotated-value-expr markup-stream world body-annotated-expr %progn%))
     (depict-break markup-stream)
     (depict-semantic-keyword markup-stream 'catch)
     (depict-space markup-stream)
@@ -723,7 +741,7 @@
                       (depict markup-stream ")"))
                     (depict markup-stream ":")
                     (depict-break markup-stream 1)
-                    (depict-annotated-value-expr markup-stream world value-annotated-expr %stmt%)
+                    (depict-annotated-value-expr markup-stream world value-annotated-expr %progn%)
                     (when (cdr annotated-cases)
                       (depict markup-stream ";")))))
             annotated-cases)
@@ -761,13 +779,13 @@
                  #'(lambda (markup-stream parameter)
                      (let ((tag (pop tags)))
                        (depict-field-name markup-stream tag :reference type)
+                       (depict markup-stream " " :vector-assign-10)
                        (depict-logical-block (markup-stream 4)
                          (depict-break markup-stream 1)
-                         (depict-annotated-value-expr markup-stream world parameter %unary%))))
+                         (depict-annotated-value-expr markup-stream world parameter %expr%))))
                  annotated-exprs
                  :indent 4
                  :prefix ':tuple-begin
-                 :prefix-break 0
                  :suffix ':tuple-end
                  :separator ","
                  :break 1
@@ -780,7 +798,8 @@
 (defun depict-new (markup-stream world level value-annotated-expr)
   (depict-logical-block (markup-stream 5)
     (depict-semantic-keyword markup-stream 'new)
-    (depict-space markup-stream)
+    (unless (partial-order-< level %unparenthesized-new%)
+      (depict-space markup-stream))
     (depict-expr-parentheses (markup-stream level %unparenthesized-new%)
       (depict-annotated-value-expr markup-stream world value-annotated-expr
                                    (if (partial-order-< level %unparenthesized-new%) %expr% %prefix%)))))
@@ -800,7 +819,7 @@
     (depict-logical-block (markup-stream 0)
       (depict markup-stream "@")
       (depict-annotated-value-expr markup-stream world address-annotated-expr %prefix%)
-      (depict markup-stream " :=")
+      (depict markup-stream " " :vector-assign-10)
       (depict-logical-block (markup-stream 6)
         (depict-break markup-stream 1)
         (depict-annotated-value-expr markup-stream world value-annotated-expr %stmt%)))))
@@ -826,7 +845,7 @@
     (depict-break markup-stream 1)
     (depict-logical-block (markup-stream 3)
       (depict markup-stream "= ")
-      (depict-annotated-value-expr markup-stream world value-annotated-expr %stmt%))))
+      (depict-annotated-value-expr markup-stream world value-annotated-expr %progn%))))
 
 
 (defun depict-let-body (markup-stream world body-annotated-expr)
@@ -1014,7 +1033,7 @@
         (when (depict-mode markup-stream depict-env :syntax)
           (depict-charclass markup-stream charclass)
           (dolist (action-cons (charclass-actions charclass))
-            (depict-charclass-action world depict-env (car action-cons) (cdr action-cons) nonterminal)))
+            (depict-charclass-action markup-stream world depict-env (car action-cons) (cdr action-cons) nonterminal)))
         (setf (gethash nonterminal (depict-env-seen-nonterminals depict-env)) t)))))
 
 
@@ -1103,8 +1122,11 @@
 
 
 (defmacro depict-delayed-action ((markup-stream depict-env) &body depictor)
-  `(push #'(lambda (,markup-stream ,depict-env) ,@depictor)
-         (depict-env-pending-actions-reverse ,depict-env)))
+  (let ((saved-block-style (gensym "SAVED-BLOCK-STYLE")))
+    `(let ((,saved-block-style (save-block-style ,markup-stream)))
+       (push #'(lambda (,markup-stream ,depict-env)
+                 (with-saved-block-style (,markup-stream ,saved-block-style t) ,@depictor))
+             (depict-env-pending-actions-reverse ,depict-env)))))
 
 
 (defun depict-declare-action-contents (markup-stream world action-name general-grammar-symbol type-expr)
@@ -1122,7 +1144,6 @@
 
 ; (declare-action <action-name> <general-grammar-symbol> <type>)
 (defun depict-declare-action (markup-stream world depict-env action-name general-grammar-symbol-source type-expr)
-  (declare (ignore markup-stream))
   (let* ((grammar-info (checked-depict-env-grammar-info depict-env))
          (general-grammar-symbol (grammar-parametrization-intern (grammar-info-grammar grammar-info) general-grammar-symbol-source)))
     (unless (or (and (general-nonterminal? general-grammar-symbol) (hidden-nonterminal? general-grammar-symbol))
@@ -1134,7 +1155,7 @@
 
 
 ; Declare and define the lexer-action on the charclass given by nonterminal.
-(defun depict-charclass-action (world depict-env action-name lexer-action nonterminal)
+(defun depict-charclass-action (markup-stream world depict-env action-name lexer-action nonterminal)
   (unless (default-action? action-name)
     (depict-delayed-action (markup-stream depict-env)
       (depict-semantics (markup-stream depict-env)
@@ -1156,7 +1177,6 @@
 ; and converted into
 ;   (action <action-name> <production-name> (function ((<arg1> <type1>) ... (<argn> <typen>)) <body>) t)
 (defun depict-action (markup-stream world depict-env action-name production-name body-expr destructured)
-  (declare (ignore markup-stream))
   (let* ((grammar-info (checked-depict-env-grammar-info depict-env))
          (grammar (grammar-info-grammar grammar-info))
          (general-production (grammar-general-production grammar production-name))
@@ -1178,7 +1198,7 @@
                    (depict-break markup-stream 1)
                    (depict-logical-block (markup-stream 3)
                      (depict markup-stream "= ")
-                     (depict-annotated-value-expr markup-stream world body-annotated-expr %stmt%))))
+                     (depict-annotated-value-expr markup-stream world body-annotated-expr %progn%))))
                 
                 (if destructured
                   (progn
