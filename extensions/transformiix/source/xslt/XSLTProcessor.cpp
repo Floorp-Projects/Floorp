@@ -20,12 +20,19 @@
  * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
+ *
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
+ *
  * Pierre Phaneuf, pp@ludusdesign.com
  *    -- fixed some XPCOM usage.
  *
- * $Id: XSLTProcessor.cpp,v 1.6 2000/04/12 11:25:21 kvisco%ziplink.net Exp $
+ * Marina Mechtcheriakova, mmarina@mindspring.com
+ *    -- Added call to recurisvely attribute-set processing on
+ *       xsl:attribute-set itself
+ *    -- Added call to handle attribute-set processing for xsl:copy
+ *
+ * $Id: XSLTProcessor.cpp,v 1.7 2000/04/13 09:39:28 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -38,7 +45,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2000/04/12 11:25:21 $
+ * @version $Revision: 1.7 $ $Date: 2000/04/13 09:39:28 $
 **/
 
 /**
@@ -1323,6 +1330,8 @@ void XSLTProcessor::processAction
 void XSLTProcessor::processAttributeSets
     (const String& names, Node* node, ProcessorState* ps)
 {
+    if (names.length() == 0) return;
+
     //-- split names
     Tokenizer tokenizer(names);
     String name;
@@ -1330,6 +1339,17 @@ void XSLTProcessor::processAttributeSets
         tokenizer.nextToken(name);
         NodeSet* attSet = ps->getAttributeSet(name);
         if ( attSet ) {
+
+            //-- issue: we still need to handle the following fix cleaner, since
+            //-- attribute sets are merged, a different parent could exist
+            //-- for different xsl:attribute nodes. I will probably create
+            //-- an AttributeSet object, which will handle this case better. - Keith V.
+            //-- Fix: handle use-attribute-set recursion - Marina M.
+            if (attSet->size() > 0) {
+                Element* parent = (Element*) ps->getParentNode(attSet->get(0));
+                processAttributeSets(parent->getAttribute(USE_ATTRIBUTE_SETS_ATTR),node, ps);
+            }
+            //-- End Fix
             for ( int i = 0; i < attSet->size(); i++) {
                 processAction(node, attSet->get(i), ps);
             }
@@ -1508,8 +1528,14 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
             copy = resultDoc->createElement(nodeName);
             ps->addToResultTree(copy);
             ps->getNodeStack()->push(copy);
+
             //-- copy namespace attributes
-            // * add later *
+            // * add later * - kv
+
+            // fix: handle use-attribute-sets - Marina M.
+            processAttributeSets(action->getAttribute(USE_ATTRIBUTE_SETS_ATTR), copy, ps);
+
+            //-- process template
             processTemplate(node, action, ps);
             ps->getNodeStack()->pop();
             return;
