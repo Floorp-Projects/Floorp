@@ -831,17 +831,8 @@ case "$target" in
     STRIP="$STRIP -x -S"
     case "${target_cpu}" in
     powerpc*)
-        AC_DEFINE(XP_MACOSX)
-        AC_DEFINE(TARGET_CARBON)
-        AC_DEFINE(TARGET_API_MAC_CARBON)
-        no_x=yes
-        MACOSX=1
         _PLATFORM_DEFAULT_TOOLKIT='mac'
         DSO_LDOPTS="$DSO_LDOPTS -arch ppc"
-        TK_LIBS='-framework Carbon /System/Library/Frameworks/Carbon.framework/Carbon'
-        TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
-        CFLAGS="$CFLAGS $TK_CFLAGS"
-        CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
         MOZ_ENABLE_POSTSCRIPT=
         ;;
     esac
@@ -1762,6 +1753,7 @@ esac
 AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
 AC_CHECK_HEADERS(sys/bitypes.h memory.h unistd.h)
 AC_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
+AC_CHECK_HEADERS(malloc.h)
 AC_CHECK_HEADERS(X11/XKBlib.h)
 
 dnl These are all the places some variant of statfs can be hiding.
@@ -3062,9 +3054,18 @@ photon)
 	MOZ_ENABLE_PHOTON=1
 	AC_DEFINE(MOZ_WIDGET_PHOTON)
     ;;
-cocoa)
-    MOZ_ENABLE_COCOA=1
-    AC_DEFINE(MOZ_WIDGET_COCOA)
+mac|cocoa)
+    TK_LIBS='-framework Carbon /System/Library/Frameworks/Carbon.framework/Carbon'
+    TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
+    CFLAGS="$CFLAGS $TK_CFLAGS"
+    CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
+    AC_DEFINE(XP_MACOSX)
+    AC_DEFINE(TARGET_CARBON)
+    AC_DEFINE(TARGET_API_MAC_CARBON)
+    if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+        MOZ_ENABLE_COCOA=1
+        AC_DEFINE(MOZ_WIDGET_COCOA)
+    fi
     ;;
 esac
 
@@ -3141,6 +3142,7 @@ if test "$MOZ_ENABLE_GTK" \
 || test "$MOZ_ENABLE_GTK2"
 then
     AC_DEFINE(MOZ_X11)
+    _X11_TOOLKIT=1
 fi
 
 
@@ -3246,7 +3248,7 @@ MOZ_ARG_DISABLE_BOOL(postscript,
 dnl ========================================================
 dnl = Xprint print module
 dnl ========================================================
-if test "$no_x" != "yes"
+if test "$_X11_TOOLKIT"
 then
     MOZ_ENABLE_XPRINT=1
 

@@ -5,7 +5,7 @@
   
   DESCRIPTION:
   
-  $Id: icallangbind.c,v 1.8 2002/12/11 04:14:41 seawood%netscape.com Exp $
+  $Id: icallangbind.c,v 1.9 2003/03/04 04:06:01 seawood%netscape.com Exp $
   $Locker:  $
 
   (C) COPYRIGHT 1999 Eric Busboom 
@@ -25,12 +25,10 @@
 #include <string.h>
 #ifdef XP_MAC
 #include <extras.h> /* for malloc */
-#include <stdlib.h> /* for free */
-#elif defined(XP_MACOSX)
-#include <stdlib.h>
-#else
+#elif defined(HAVE_MALLOC_H)
 #include <malloc.h>
 #endif
+#include <stdlib.h> /* for free */
 
 #ifdef WIN32
 #define snprintf      _snprintf

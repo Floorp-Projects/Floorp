@@ -307,7 +307,9 @@ endif
 
 ifeq ($(OS_ARCH),Darwin)
 EXTRA_DSO_LDOPTS := $(subst -dynamiclib -install_name @executable_path/\$@ -compatibility_version 1 -current_version 1,-execute,$(EXTRA_DSO_LDOPTS))
+endif
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef BUILD_STATIC_LIBS
 LIBS	+= -framework QuickTime
 endif
