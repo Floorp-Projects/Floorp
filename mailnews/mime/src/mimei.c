@@ -59,6 +59,7 @@
 #include "mimeeobj.h"	/*   |     |--- MimeExternalObject					*/
 #include "mimeebod.h"	/*   |--- MimeExternalBody							*/
 #include "prmem.h"
+#include "prenv.h"
 #include "plstr.h"
 #include "prlink.h"
 #include "mimecth.h"
@@ -101,7 +102,18 @@ find_plugin_directory(char *path, PRInt32 size)
   PL_strcat(path, MIME_PLUGIN_DIR);
   return PR_TRUE;
 #else
-  PL_strcat(path, "./components");
+  char  *tmpPath;
+  tmpPath = PR_GetEnv("MOZILLA_FIVE_HOME"); 
+  if (tmpPath)
+  {
+    PL_strcpy(path, tmpPath);
+    PR_FREEIF(tmpPath);
+  }
+  else
+    PL_strcpy(path, ".");
+  
+
+  PL_strcat(path, "/components");
   return PR_TRUE;
 #endif
 }
@@ -134,7 +146,7 @@ get_plugin_count(void)
   PRDirEntry        *dirEntry;
   PRInt32           count = 0;
   PRDir             *dir;
-  char              path[1024];
+  char              path[1024] = "";
 
   if (!find_plugin_directory(path, sizeof(path)))
     return 0;
