@@ -67,8 +67,15 @@ public:
             nsCOMPtr<nsIInputStreamNotify> event;
             NS_NewInputStreamReadyEvent(getter_AddRefs(event), mNotify, mEventQ);
             mNotify = 0;
-            if (event)
-                event->OnInputStreamReady(nsnull);
+            if (event) {
+                nsresult rv = event->OnInputStreamReady(nsnull);
+                if (NS_FAILED(rv)) {
+                    // PostEvent failed, we must be shutting down.  better to
+                    // leak than crash!
+                    NS_NOTREACHED("leaking stream event");
+                    NS_ADDREF(event);
+                }
+            }
         }
     }
 
@@ -98,7 +105,9 @@ private:
     static void *PR_CALLBACK EventHandler(PLEvent *plevent)
     {
         nsInputStreamReadyEvent *ev = (nsInputStreamReadyEvent *) plevent;
-        ev->mNotify->OnInputStreamReady(ev->mStream);
+        // bypass event delivery if this is a cleanup event...
+        if (ev->mStream)
+            ev->mNotify->OnInputStreamReady(ev->mStream);
         ev->mNotify = 0;
         return NULL;
     }
