@@ -76,14 +76,15 @@ nsToolkit::~nsToolkit()
 void nsToolkit::SetFocus(nsWindow *aFocusWidget)
 { 
 	nsGUIEvent		guiEvent;
-	nsEventStatus	status;
 	
+	guiEvent.eventStructType = NS_GUI_EVENT;
+
 	// tell the old widget, it is not focused
 	if (mFocusedWidget)
 	{
 		guiEvent.message = NS_LOSTFOCUS;
 		guiEvent.widget = mFocusedWidget;
-		mFocusedWidget->DispatchEvent(&guiEvent, status);
+		mFocusedWidget->DispatchWindowEvent(guiEvent);
 	}
 	
 	// let the new one know
@@ -92,7 +93,7 @@ void nsToolkit::SetFocus(nsWindow *aFocusWidget)
 		mFocusedWidget =  aFocusWidget;
 		guiEvent.message = NS_GOTFOCUS;
 		guiEvent.widget = mFocusedWidget;		
-		mFocusedWidget->DispatchEvent(&guiEvent, status);
+		mFocusedWidget->DispatchWindowEvent(guiEvent);
 	}
 }
 
