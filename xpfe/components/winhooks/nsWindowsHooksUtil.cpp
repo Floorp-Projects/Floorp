@@ -22,6 +22,7 @@
  */
 #include <windows.h>
 #include <string.h>
+
 #include "nsString.h"
 
 // Where Mozilla stores its own registry values.
@@ -32,7 +33,7 @@ static const char chromeSuffix[] = " -chrome \"%1\"";
 
 // Returns the (fully-qualified) name of this executable.
 static nsCString thisApplication() {
-    static nsCString result;
+    static nsCAutoString result;
 
     if ( result.IsEmpty() ) {
         char buffer[MAX_PATH] = { 0 };
@@ -121,7 +122,7 @@ struct ProtocolRegistryEntry : public SavedRegistryEntry {
         keyName += "\\shell\\open\\command";
 
         // Append appropriate suffix to setting.
-        if ( this->protocol.Equals( "chrome" ) ) {
+        if ( this->protocol.Equals( "chrome" ) || this->protocol.Equals( "MozillaXUL" ) ) {
             // Use "-chrome" command line flag.
             setting += chromeSuffix;
         } else {
@@ -136,14 +137,31 @@ struct ProtocolRegistryEntry : public SavedRegistryEntry {
 // DDERegistryEntry
 //
 // Like a protocol registry entry, but for the shell\open\ddeexec subkey.
-// We don't need to do anything special for set/reset, either.
+//
+// set/reset handle setting/resetting various ddeexec sub-entries, also.
 struct DDERegistryEntry : public SavedRegistryEntry {
     DDERegistryEntry( const char *protocol )
-        : SavedRegistryEntry( HKEY_LOCAL_MACHINE, "", "", thisApplication() ) {
+        : SavedRegistryEntry( HKEY_LOCAL_MACHINE, "", "", "-url \"%1\"" ),
+          app( HKEY_LOCAL_MACHINE, "", "", "Mozilla" ),
+          topic( HKEY_LOCAL_MACHINE, "", "", "WWW_OpenURL" ) {
+        // Derive keyName from protocol.
         keyName = "Software\\Classes\\";
         keyName += protocol;
         keyName += "\\shell\\open\\ddeexec";
+        // Set subkey names.
+        app.keyName = keyName;
+        app.keyName += "\\Application";
+        topic.keyName = keyName;
+        topic.keyName += "\\Topic";
+        // Use -chrome for some protocols, though.
+        nsCAutoString strProtocol( protocol );
+        if ( strProtocol.Equals( "chrome" ) || strProtocol.Equals( "MozillaXUL" ) ) {
+            setting = "-chrome \"%1\"";
+        }
     }
+    nsresult set();
+    nsresult reset();                                     
+    SavedRegistryEntry app, topic;
 };
 
 // FileTypeRegistryEntry
@@ -198,7 +216,7 @@ nsCString RegistryEntry::fullName() const {
 PRBool RegistryEntry::isAlreadySet() const {
     PRBool result = FALSE;
 
-    nsCString current(currentSetting());
+    nsCAutoString current( currentSetting() );
 
     result = ( current == setting );
 
@@ -247,7 +265,7 @@ NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, (const char*)fullName() );
 // Get current setting, set new one, then save the previous.
 nsresult SavedRegistryEntry::set() {
     nsresult rv = NS_OK;
-    nsCString prev(currentSetting());
+    nsCAutoString prev( currentSetting() );
     // See if value is changing.
     if ( setting != prev ) {
         // Set new.
@@ -266,27 +284,21 @@ nsresult ProtocolRegistryEntry::set() {
     // Set this entry.
     nsresult rv = SavedRegistryEntry::set();
 
-    // Save and set corresponding DDE entry.  This stops Windows from trying to use
-    // DDE (and getting an error).
-    nsCString ddeName("Software\\Classes\\");
-    ddeName += protocol;
-    ddeName += "\\shell\\open\\ddeexec";
-    SavedRegistryEntry( HKEY_LOCAL_MACHINE, ddeName, NULL, NULL ).set();
+    // Save and set corresponding DDE entry(ies).
+    DDERegistryEntry( protocol ).set();
 
-    // Special case.
-    if ( protocol.Equals( "http" ) ) {
-        // We need to zap HKLM\Software\Classes\http\shell\open\ddeexec\Application
-        // because Communicator looks there to determine whether they're the
-        // "default browser."  If they are (the value there is "NSShell" or "Netscape")
-        // then it will reset lots of registry entries, "stealing" them from us.
-        SavedRegistryEntry special( HKEY_LOCAL_MACHINE, "Software\\Classes\\http\\shell\\open\\ddeexec\\Application", NULL, NULL );
-        nsCString specialVal(special.currentSetting());
-        if ( specialVal.Equals( "NSShell" ) || specialVal.Equals( "Netscape" ) ) {
-            // Reset this so Communicator will at least prompt the user.
-            special.set();
-        }
-    }
+    return rv;
+}
 
+// Set ddexec values:
+//    .../ddeexec         -url "%1" / -chrome "%1"
+//          /Application  Mozilla
+//          /Topic        WWW_OpenURL
+nsresult DDERegistryEntry::set() {
+    // Root (parameter to load url or chrome)
+    nsresult rv = SavedRegistryEntry::set();
+    rv = app.set();
+    rv = topic.set();
     return rv;
 }
 
@@ -307,7 +319,7 @@ nsresult SavedRegistryEntry::reset() {
     nsresult result = NS_OK;
 
     // Get current setting for this key/value.
-    nsCString current(currentSetting());
+    nsCAutoString current( currentSetting() );
 
     // Test if we "own" it.
     if ( current == setting ) {
@@ -334,15 +346,17 @@ nsresult ProtocolRegistryEntry::reset() {
     // Restore this entry.
     nsresult rv = SavedRegistryEntry::reset();
 
-    // Do same for corresponding DDE entry (which we had to zap to stop DDE).
+    // Do same for corresponding DDE entry.
     DDERegistryEntry( protocol ).reset();
 
-    // Special case.
-    if ( protocol = "http" ) {
-        // We had to zap HKLM\Software\Classes\http\shell\open\ddeexec\Application
-        // (see comment above under ProtocolRegistryEntry::set).  Restore it here.
-        SavedRegistryEntry( HKEY_LOCAL_MACHINE, "Software\\Classes\\http\\shell\\open\\ddeexec\\Application", NULL, NULL ).reset();
-    }
+    return rv;
+}
+
+// Reset the main (ddeexec) value but also the Application and Topic.
+nsresult DDERegistryEntry::reset() {
+    nsresult rv = SavedRegistryEntry::reset();
+    rv = app.reset();
+    rv = topic.reset();
     return rv;
 }
 
@@ -372,7 +386,7 @@ nsresult FileTypeRegistryEntry::set() {
 
     // Set file extensions.
     for ( int i = 0; NS_SUCCEEDED( rv ) && ext[i]; i++ ) {
-        nsCString thisExt("Software\\Classes\\");
+        nsCAutoString thisExt( "Software\\Classes\\" );
         thisExt += ext[i];
         rv = SavedRegistryEntry( HKEY_LOCAL_MACHINE, thisExt, "", fileType ).set();
     }
@@ -383,18 +397,18 @@ nsresult FileTypeRegistryEntry::set() {
 
         // If we just created this file type entry, set description and default icon.
         if ( NS_SUCCEEDED( rv ) ) {
-            nsCString descKey("Software\\Classes\\");
+            nsCAutoString descKey( "Software\\Classes\\" );
             descKey += protocol;
             RegistryEntry descEntry( HKEY_LOCAL_MACHINE, descKey, NULL, desc );
             if ( descEntry.currentSetting().IsEmpty() ) {
                 descEntry.set();
             }
-            nsCString iconKey("Software\\Classes\\");
+            nsCAutoString iconKey( "Software\\Classes\\" );
             iconKey += protocol;
             iconKey += "\\DefaultIcon";
 
             RegistryEntry iconEntry( HKEY_LOCAL_MACHINE, iconKey, NULL,
-                                     nsCAutoString( thisApplication() + NS_LITERAL_CSTRING(",1") ) );
+                                     nsCAutoString( thisApplication() + NS_LITERAL_CSTRING(",0") ) );
 
             if ( iconEntry.currentSetting().IsEmpty() ) {
                 iconEntry.set();
@@ -412,7 +426,7 @@ nsresult FileTypeRegistryEntry::reset() {
     nsresult rv = ProtocolRegistryEntry::reset();
 
     for ( int i = 0; ext[ i ]; i++ ) {
-        nsCString thisExt("Software\\Classes\\");
+        nsCAutoString thisExt( "Software\\Classes\\" );
         thisExt += ext[i];
         (void)SavedRegistryEntry( HKEY_LOCAL_MACHINE, thisExt, "", fileType ).reset();
     }
@@ -429,10 +443,10 @@ nsresult FileTypeRegistryEntry::reset() {
 nsresult EditableFileTypeRegistryEntry::set() {
     nsresult rv = FileTypeRegistryEntry::set();
     if ( NS_SUCCEEDED( rv ) ) {
-        nsCString editKey("Software\\Classes\\");
+        nsCAutoString editKey( "Software\\Classes\\" );
         editKey += protocol;
         editKey += "\\shell\\edit\\command";
-        nsCString editor(thisApplication());
+        nsCAutoString editor( thisApplication() );
         editor += " -edit \"%1\"";
         rv = RegistryEntry( HKEY_LOCAL_MACHINE, editKey, "", editor ).set();
     }

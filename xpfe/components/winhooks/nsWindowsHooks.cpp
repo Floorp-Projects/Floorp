@@ -25,6 +25,13 @@
 
 // Implementation utilities.
 #include "nsWindowsHooksUtil.cpp"
+#include "nsIDOMWindowInternal.h"
+#include "nsIServiceManager.h"
+#include "nsICommonDialogs.h"
+#include "nsIStringBundle.h"
+#include "nsIAllocator.h"
+#include "nsICmdLineService.h"
+#include "nsXPIDLString.h"
 
 // Objects that describe the Windows registry entries that we need to tweak.
 static ProtocolRegistryEntry
@@ -100,6 +107,8 @@ DEFINE_GETTER_AND_SETTER( IsHandlingHTTP,   mHandleHTTP   )
 DEFINE_GETTER_AND_SETTER( IsHandlingHTTPS,  mHandleHTTPS  )
 DEFINE_GETTER_AND_SETTER( IsHandlingFTP,    mHandleFTP    )
 DEFINE_GETTER_AND_SETTER( IsHandlingCHROME, mHandleCHROME )
+DEFINE_GETTER_AND_SETTER( ShowDialog,       mShowDialog   )
+DEFINE_GETTER_AND_SETTER( HaveBeenSet,      mHaveBeenSet  )
 
 
 // Implementation of the nsIWindowsHooks interface.
@@ -139,6 +148,8 @@ nsWindowsHooks::GetSettings( nsWindowsHooksSettings **result ) {
     prefs->mHandlePNG    = (void*)( BoolRegistryEntry( "isHandlingPNG"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleXML    = (void*)( BoolRegistryEntry( "isHandlingXML"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleXUL    = (void*)( BoolRegistryEntry( "isHandlingXUL"    ) ) ? PR_TRUE : PR_FALSE;
+    prefs->mShowDialog   = (void*)( BoolRegistryEntry( "showDialog"       ) ) ? PR_TRUE : PR_FALSE;
+    prefs->mHaveBeenSet  = (void*)( BoolRegistryEntry( "haveBeenSet"      ) ) ? PR_TRUE : PR_FALSE;
 
 #ifdef DEBUG_law
 NS_WARN_IF_FALSE( NS_SUCCEEDED( rv ), "GetPreferences failed" );
@@ -159,6 +170,245 @@ nsWindowsHooks::GetSettings( nsIWindowsHooksSettings **_retval ) {
         rv = prefs->QueryInterface( NS_GET_IID( nsIWindowsHooksSettings ), (void**)_retval );
         // Release (to undo our Get...).
         NS_RELEASE( prefs );
+    }
+
+    return rv;
+}
+
+static PRBool misMatch( const PRBool &flag, const ProtocolRegistryEntry &entry ) {
+    PRBool result = PR_FALSE;
+    // Check if we care.
+    if ( flag ) { 
+        // Compare registry entry setting to what it *should* be.
+        if ( entry.currentSetting() != entry.setting ) {
+            result = PR_TRUE;
+        }
+    }
+
+    return result;
+}
+
+// Implementation of method that checks settings versus registry and prompts user
+// if out of synch.
+NS_IMETHODIMP
+nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
+    nsresult rv = NS_OK;
+
+    // Only do this once!
+    static PRBool alreadyChecked = PR_FALSE;
+    if ( alreadyChecked ) {
+        return NS_OK;
+    } else {
+        alreadyChecked = PR_TRUE;
+    }
+
+    // Get settings.
+    nsWindowsHooksSettings *settings;
+    rv = this->GetSettings( &settings );
+
+    if ( NS_SUCCEEDED( rv ) && settings ) {
+        // If not set previously, set to defaults so that they are
+        // set properly when/if the user says to.
+        if ( !settings->mHaveBeenSet ) {
+            settings->mHandleHTTP   = PR_TRUE;
+            settings->mHandleHTTPS  = PR_TRUE;
+            settings->mHandleFTP    = PR_TRUE;
+            settings->mHandleCHROME = PR_TRUE;
+            settings->mHandleHTML   = PR_TRUE;
+            settings->mHandleJPEG   = PR_TRUE;
+            settings->mHandleGIF    = PR_TRUE;
+            settings->mHandlePNG    = PR_TRUE;
+            settings->mHandleXML    = PR_TRUE;
+            settings->mHandleXUL    = PR_TRUE;
+
+            settings->mShowDialog       = PR_TRUE;
+        }
+
+        // If launched with "-installer" then override mShowDialog.
+        PRBool installing = PR_FALSE;
+        if ( !settings->mShowDialog ) {
+            // Get command line service.
+            nsCID cmdLineCID = NS_COMMANDLINE_SERVICE_CID;
+            nsCOMPtr<nsICmdLineService> cmdLineArgs( do_GetService( cmdLineCID, &rv ) );
+            if ( NS_SUCCEEDED( rv ) && cmdLineArgs ) {
+                // See if "-installer" was specified.
+                nsXPIDLCString installer;
+                rv = cmdLineArgs->GetCmdLineValue( "-installer", getter_Copies( installer ) );
+                if ( NS_SUCCEEDED( rv ) && installer ) {
+                    installing = PR_TRUE;
+                }
+            }
+        }
+
+        // First, make sure the user cares.
+        if ( settings->mShowDialog || installing ) {
+            // Look at registry setting for all things that are set.
+            if ( misMatch( settings->mHandleHTTP,   http )
+                 ||
+                 misMatch( settings->mHandleHTTPS,  https )
+                 ||
+                 misMatch( settings->mHandleFTP,    ftp )
+                 ||
+                 misMatch( settings->mHandleCHROME, chrome )
+                 ||
+                 misMatch( settings->mHandleHTML,   mozillaMarkup )
+                 ||
+                 misMatch( settings->mHandleJPEG,   jpg )
+                 ||
+                 misMatch( settings->mHandleGIF,    gif )
+                 ||
+                 misMatch( settings->mHandlePNG,    png )
+                 ||
+                 misMatch( settings->mHandleXML,    xml )
+                 ||
+                 misMatch( settings->mHandleXUL,    xul ) ) {
+                // Need to prompt user.
+                // First:
+                //   o We need the common dialog service to show the dialog.
+                //   o We need the string bundle service to fetch the appropriate
+                //     dialog text.
+                nsCID commonDlgCID = NS_CommonDialog_CID;
+                nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
+                nsCOMPtr<nsICommonDialogs> commonDlgService( do_GetService( commonDlgCID, &rv ) );
+                nsCOMPtr<nsIStringBundleService> bundleService( do_GetService( bundleCID, &rv ) );
+
+                if ( commonDlgService && bundleService ) {
+                    // Next, get bundle that provides text for dialog.
+                    nsILocale *locale = 0;
+                    nsIStringBundle *bundle;
+                    rv = bundleService->CreateBundle( "chrome://global/locale/nsWindowsHooks.properties",
+                                                      locale, 
+                                                      getter_AddRefs( &bundle ) );
+                    if ( NS_SUCCEEDED( rv ) && bundle ) {
+                        // Get text for dialog and checkbox label.
+                        //
+                        // The window text depends on whether this is the first time
+                        // the user is seeing this dialog.
+                        const char *textKey  = "promptText";
+                        if ( !settings->mHaveBeenSet ) {
+                            textKey  = "initialPromptText";
+                        }
+                        nsXPIDLString text, label, title, yesButtonLabel, noButtonLabel, cancelButtonLabel;
+                        if ( NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_ConvertASCIItoUCS2( textKey ).GetUnicode(),
+                                                                             getter_Copies( text ) ) ) )
+                             &&
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "checkBoxLabel" ),
+                                                                             getter_Copies( label ) ) ) )
+                             &&
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "title" ),
+                                                                             getter_Copies( title ) ) ) )
+                             &&
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "yesButtonLabel" ),
+                                                                             getter_Copies( yesButtonLabel ) ) ) )
+                             &&
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "noButtonLabel" ),
+                                                                             getter_Copies( noButtonLabel ) ) ) )
+                             &&
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "cancelButtonLabel" ),
+                                                                             getter_Copies( cancelButtonLabel ) ) ) ) ) {
+                            // Got the text, now show dialog.
+                            PRBool  showDialog = settings->mShowDialog;
+                            PRInt32 dlgResult  = -1;
+                            // No checkbox for initial display.
+                            const PRUnichar *labelArg = 0;
+                            if ( settings->mHaveBeenSet ) {
+                                // Subsequent display uses label string.
+                                labelArg = label;
+                            }
+                            // Note that the buttons need to be passed in this order:
+                            //    o Yes
+                            //    o Cancel
+                            //    o No
+                            // because UniversalDialog will move "Cancel" to the right.
+                            rv = commonDlgService->UniversalDialog( aParent,
+                                                                    0, // title          
+                                                                    title,    // dlg title
+                                                                    text,     // dlg text      
+                                                                    labelArg, // Checkbox label
+                                                                    yesButtonLabel,    // yes button
+                                                                    cancelButtonLabel, // cancel button
+                                                                    noButtonLabel,     // no button
+                                                                    0, // button 3
+                                                                    0, // edit 1 msg
+                                                                    0, // edit 2 msg
+                                                                    0, // edit 1 value
+                                                                    0, // edit 2 value
+                                                                    0, // icon (q-mark)
+                                                                    &showDialog,
+                                                                    3, // 3 buttons
+                                                                    0, // no edit fields
+                                                                    PR_FALSE, // no pw
+                                                                    &dlgResult );
+                            if ( NS_SUCCEEDED( rv ) ) {
+                                // Did they say go ahead?
+                                switch ( dlgResult ) {
+                                    case 0:
+                                        // User says: make the changes.
+                                        // Remember "show dialog" choice.
+                                        settings->mShowDialog = showDialog;
+                                        // Apply settings; this single line of
+                                        // code will do different things depending
+                                        // on whether this is the first time (i.e.,
+                                        // when "haveBeenSet" is false).  The first
+                                        // time, this will set all prefs to true
+                                        // (because that's how we initialized 'em
+                                        // in GetSettings, above) and will update the
+                                        // registry accordingly.  On subsequent passes,
+                                        // this will only update the registry (because
+                                        // the settings we got from GetSettings will
+                                        // not have changed).
+                                        //
+                                        // BTW, the term "prefs" in this context does not
+                                        // refer to conventional Mozilla "prefs."  Instead,
+                                        // it refers to "Desktop Integration" prefs which
+                                        // are stored in the windows registry.
+                                        rv = SetSettings( settings );
+                                        #ifdef DEBUG_law
+                                            printf( "Yes, SetSettings returned 0x%08X\n", (int)rv );
+                                        #endif
+                                        break;
+
+                                    case 2:
+                                        // User says: Don't mess with Windows.
+                                        // We update only the "showDialog" and
+                                        // "haveBeenSet" keys.  Note that this will
+                                        // have the effect of setting all the prefs
+                                        // *off* if the user says no to the initial
+                                        // prompt.
+                                        BoolRegistryEntry( "haveBeenSet" ).set();
+                                        if ( showDialog ) {
+                                            BoolRegistryEntry( "showDialog" ).set();
+                                        } else {
+                                            BoolRegistryEntry( "showDialog" ).reset();
+                                        }
+                                        #ifdef DEBUG_law
+                                            printf( "No, haveBeenSet=1 and showDialog=%d\n", (int)showDialog );
+                                        #endif
+                                        break;
+
+                                    default:
+                                        // User says: I dunno.  Make no changes (which
+                                        // should produce the same dialog next time).
+                                        #ifdef DEBUG_law
+                                            printf( "Cancel\n" );
+                                        #endif
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            #ifdef DEBUG_law
+            else { printf( "Registry and prefs match\n" ); }
+            #endif
+        }
+        #ifdef DEBUG_law
+        else { printf( "showDialog is false and not installing\n" ); }
+        #endif
+
+        // Release the settings.
+        settings->Release();
     }
 
     return rv;
@@ -195,6 +445,10 @@ nsWindowsHooks::SetSettings(nsIWindowsHooksSettings *prefs) {
     putPRBoolIntoRegistry( "isHandlingPNG",    prefs, &nsIWindowsHooksSettings::GetIsHandlingPNG );
     putPRBoolIntoRegistry( "isHandlingXML",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXML );
     putPRBoolIntoRegistry( "isHandlingXUL",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXUL );
+    putPRBoolIntoRegistry( "showDialog",       prefs, &nsIWindowsHooksSettings::GetShowDialog );
+
+    // Indicate that these settings have indeed been set.
+    BoolRegistryEntry( "haveBeenSet" ).set();
 
     rv = SetRegistry();
 
@@ -258,9 +512,9 @@ nsWindowsHooks::SetRegistry() {
         (void) ftp.reset();
     }
     if ( prefs->mHandleCHROME ) {
-        (void) ftp.set();
+        (void) chrome.set();
     } else {
-        (void) ftp.reset();
+        (void) chrome.reset();
     }
 
     return NS_OK;
