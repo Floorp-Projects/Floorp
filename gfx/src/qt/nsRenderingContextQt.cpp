@@ -308,7 +308,7 @@ NS_IMETHODIMP nsRenderingContextQt::PopState()
         delete mTranMatrix;
         mTranMatrix = state->mMatrix;
     }
-    mClipRegion = state->mClipRegion;
+    mClipRegion.swap(state->mClipRegion);
 
     if (state->mColor != mCurrentColor)
       SetColor(state->mColor);
