@@ -121,9 +121,6 @@
                 oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
                                                       gContextMenu.linkText(), 
                                                       undefined, true);"/>
-      <menuitem id="context-searchselect" class="menuitem-iconic"
-                oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
-       
       <menuseparator id="context-sep-bookmark"/>
       <!-- Save ==================================== -->
       <menuitem id="context-savepage"
@@ -182,6 +179,10 @@
                 label="&metadataCmd.label;"
                 accesskey="&metadataCmd.accesskey;"
                 oncommand="gContextMenu.showMetadata();"/>
+      <menuseparator id="context-sep-search"/>
+      <!-- Search ================================== -->
+      <menuitem id="context-searchselect" class="menuitem-iconic"
+                oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
     </popup>
   </popupset>
 </overlay>

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*- */
+/* -*- Mode: C++; tab-width: /; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -2495,7 +2495,8 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 
 NS_IMETHODIMP
 InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
-	const PRUnichar *searchStr, char **resultURL)
+  const PRUnichar *searchStr, PRInt16 direction, PRUint16 pageNumber, 
+  PRUint16 *whichButtons, char **resultURL)
 {
 	if (!resultURL)	return(NS_ERROR_NULL_POINTER);
 	*resultURL = nsnull;
@@ -2579,7 +2580,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	    return(rv);
 	if (NS_FAILED(rv = GetData(dataUni, "search", 0, "method", method)))
 	    return(rv);
-	if (NS_FAILED(rv = GetInputs(dataUni, userVar, text, input)))
+	if (NS_FAILED(rv = GetInputs(dataUni, userVar, text, input, direction, pageNumber, whichButtons)))
 	    return(rv);
 	if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
 
@@ -2711,7 +2712,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 
 		// look for query option which is the string the user is searching for
 		nsAutoString	userVar, inputUnused;
-		if (NS_FAILED(rv = GetInputs(dataUni, userVar, nsAutoString(), inputUnused)))	return(rv);
+    if (NS_FAILED(rv = GetInputs(dataUni, userVar, nsAutoString(), inputUnused, 0, 0, 0)))  return(rv);
 		if (userVar.Length() < 1)	return(NS_RDF_NO_VALUE);
 
 		nsAutoString	queryStr;
@@ -3690,7 +3691,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	}
 	else if (methodStr.EqualsIgnoreCase("get"))
 	{
-		if (NS_FAILED(rv = GetInputs(dataUni, userVar, textTemp, input)))	return(rv);
+    if (NS_FAILED(rv = GetInputs(dataUni, userVar, textTemp, input, 0, 0, 0)))  return(rv);
 		if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
 
 		// HTTP Get method support
@@ -4332,12 +4333,13 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 
 nsresult
 InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
-					const nsString &text, nsString &input)
+  const nsString &text, nsString &input, PRInt16 direction, PRUint16 pageNumber,  PRUint16 *whichButtons)
 {
 	nsString	buffer(dataUni);
 
 	nsresult	rv = NS_OK;
 	PRBool		inSection = PR_FALSE;
+  PRBool        inDirInput; // directional input: "inputnext" or "inputprev"
 
 	while(buffer.Length() > 0)
 	{
@@ -4372,7 +4374,28 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 		// look for inputs
 		if (line.Find("input", PR_TRUE) == 0)
 		{
-			line.Cut(0, 6);
+      line.Cut(0, 5);
+
+      // look for "inputnext" or "inputprev"
+      inDirInput = PR_FALSE;
+
+      if (line.Find("next", PR_TRUE) == 0)
+      {
+        inDirInput = PR_TRUE;
+        if (whichButtons)
+          *whichButtons |= kHaveNext;
+      }
+
+      if (line.Find("prev", PR_TRUE) == 0)
+      {
+        inDirInput = PR_TRUE;
+        if (whichButtons)
+          *whichButtons |= kHavePrev;
+      }
+
+      if (inDirInput)
+        line.Cut(0, 4);
+      
 			line.Trim(" \t");
 			
 			// first look for name attribute
@@ -4417,7 +4440,11 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 			// first look for value attribute
 			nsAutoString	valueAttrib;
 
-			PRInt32	valueOffset = line.Find("value", PR_TRUE);
+      PRInt32  valueOffset;
+      if (!inDirInput)
+        valueOffset = line.Find("value", PR_TRUE);
+      else
+        valueOffset = line.Find("factor", PR_TRUE);
 			if (valueOffset >= 0)
 			{
 				PRInt32 equal = line.FindChar(PRUnichar('='), valueOffset);
@@ -4464,12 +4491,41 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 					input.Append(NS_LITERAL_STRING("&"));
 				}
 				input += nameAttrib;
-				input.Append(NS_LITERAL_STRING("="));
+        input.Append(NS_LITERAL_STRING("="));
+        if (!inDirInput)
 				input += valueAttrib;
+        else
+          input.AppendInt( computeIndex(valueAttrib, pageNumber, direction) );
 			}
 		}
 	}
 	return(rv);
+}
+
+PRInt32
+InternetSearchDataSource::computeIndex(nsAutoString &factor, 
+                                       PRUint16 page, PRInt16 direction)
+{
+  // XXX get page
+  PRInt32 errorCode, index = 0;
+  PRInt32 factorInt = factor.ToInteger(&errorCode);
+  
+  if (NS_SUCCEEDED(errorCode))
+  {
+    // if factor is garbled assume 10
+    if (factorInt <= 0)
+      factorInt = 10;
+
+    if (direction < 0)
+    {
+      // don't pass back a negative index!
+      if (0 <= (page - 1))
+        --page;
+    }
+    index = factorInt * page;
+  }
+
+  return index;
 }
 
 

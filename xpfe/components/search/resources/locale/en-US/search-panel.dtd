@@ -32,4 +32,8 @@
 <!ENTITY stop.button.label        "Stop">
 <!ENTITY customize.menuitem.label   "Edit Categories ...">
 <!ENTITY savesearch.button.label  "Bookmark this Search">
+<!ENTITY next.button.label        "Next">
+<!ENTITY previous.button.label    "Previous">
+<!ENTITY next.button.tooltip      "Show next search results">
+<!ENTITY previous.button.tooltip  "Show previous search results">
 
