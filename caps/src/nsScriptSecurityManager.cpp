@@ -154,16 +154,16 @@ public:
         return GetFlags() & nsIClassInfo::CONTENT_NODE;
     }
 
-    char* GetName()
+    const char* GetName()
     {
         if (!mName)
         {
             if (mClassInfo)
                 mClassInfo->GetClassDescription(&mName);
-            if (mName)
-                mMustFreeName = PR_TRUE;
-            else
-                mName = NS_REINTERPRET_CAST(char*,"UnnamedClass");
+            if (!mName)
+                return "UnnamedClass";
+
+            mMustFreeName = PR_TRUE;
         }
         return mName;
     }
@@ -907,7 +907,7 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
 
 nsresult
 nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
-                                     char* aClassName, jsval aProperty,
+                                     const char* aClassName, jsval aProperty,
                                      PRUint32 aAction,
                                      ClassPolicy** aCachedClassPolicy,
                                      SecurityLevel* result)
