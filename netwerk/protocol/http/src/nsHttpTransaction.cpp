@@ -217,6 +217,8 @@ nsHttpTransaction::ParseLine(char *line)
     if (!mHaveStatusLine) {
         mResponseHead->ParseStatusLine(line);
         mHaveStatusLine = PR_TRUE;
+        if (mResponseHead->Version() == NS_HTTP_VERSION_0_9)
+            mHaveAllHeaders = PR_TRUE;
     }
     else if (*line == '\0')
         mHaveAllHeaders = PR_TRUE;
