@@ -400,21 +400,23 @@ int HaveDecodedRow(
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
       {
+        memset(aRGBrowBufPtr, 0, bpr);
         memset(decoder->alphaLine, 0, abpr);
         PRUint32 iwidth = (PRUint32)width;
         for (PRUint32 x=0; x<iwidth; x++) {
-
-#ifdef XP_PC
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
-#else
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
-#endif
           if (*rowBufIndex != decoder->mGIFStruct.tpixel) {
+#ifdef XP_PC
+            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
+            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
+            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
+#else
+            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
+            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
+            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
+#endif
             decoder->alphaLine[x>>3] |= 1<<(7-x&0x7);
+          } else {
+            rgbRowIndex+=3;
           }
 
           ++rowBufIndex;
