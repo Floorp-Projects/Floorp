@@ -220,9 +220,9 @@ NS_IMETHODIMP
 nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
 {
     nsresult rv;
-    
+ #ifndef XP_MAC   
     rv = nsServiceManager::RegisterService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
-    
+ #endif
     return rv;
 }
 
@@ -230,9 +230,9 @@ NS_IMETHODIMP
 nsSoftwareUpdate::Shutdown()
 {
     nsresult rv;
-
+#ifdef XP_MAC
     rv = nsServiceManager::ReleaseService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
-    
+#endif
     return rv;
 }
 
