@@ -24,7 +24,7 @@
 //#include "nsFileTransportService.h"
 #include "nsSocketTransportService.h"
 #include "nscore.h"
-#include "nsStdURL.h"
+#include "nsStandardUrl.h"
 #include "nsSimpleURI.h"
 #include "nsDnsService.h"
 #include "nsLoadGroup.h"
@@ -33,7 +33,7 @@
 static NS_DEFINE_CID(kComponentManagerCID,       NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 //static NS_DEFINE_CID(kFileTransportServiceCID,   NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kStdURLCID,            NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSimpleURICID,              NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kExternalModuleManagerCID,  NS_NETMODULEMGR_CID);
@@ -69,8 +69,8 @@ NSGetFactory(nsISupports* aServMgr,
     else if (aClass.Equals(kDNSServiceCID)) {
         rv = NS_NewGenericFactory(&fact, nsDNSService::Create);
     }
-    else if (aClass.Equals(kStdURLCID)) {
-        rv = NS_NewGenericFactory(&fact, nsStdURL::Create);
+    else if (aClass.Equals(kStandardURLCID)) {
+        rv = NS_NewGenericFactory(&fact, nsStandardURL::Create);
     }
     else if (aClass.Equals(kSimpleURICID)) {
         rv = NS_NewGenericFactory(&fact, nsSimpleURI::Create);
@@ -128,7 +128,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->RegisterComponent(kStdURLCID, 
+    rv = compMgr->RegisterComponent(kStandardURLCID, 
                                     "Standard URL Implementation",
                                     "component://netscape/network/standard-url",
                                     aPath, PR_TRUE, PR_TRUE);
@@ -173,7 +173,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kDNSServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kStdURLCID, aPath);
+    rv = compMgr->UnregisterComponent(kStandardURLCID, aPath);
     if (NS_FAILED(rv)) return rv;
     
     rv = compMgr->UnregisterComponent(kSimpleURICID, aPath);
