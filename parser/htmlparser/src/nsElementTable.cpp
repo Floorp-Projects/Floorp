@@ -2022,35 +2022,26 @@ PRBool nsHTMLElement::CanContainSelf(void) const {
  *
  * @update	gess 12/20/99
  * @param   aContext is the tag stack we're testing against
+ * @param   aIndex is the index of the tag we want to close
  * @param   aChildTag is the child we're trying to close
- * @param   aCount is the number tags we should test
  * @return  TRUE if we can autoclose the start tag; FALSE otherwise
  */
-PRBool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,eHTMLTags aChildTag) const{
+PRBool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,PRInt32 aIndex,
+                                      eHTMLTags aChildTag) const{
 
-  PRInt32 thePos=aContext.GetCount(); 
-  PRBool  result=PR_FALSE;
-  eHTMLTags thePrevTag=eHTMLTag_unknown;
+  PRInt32 thePos;
+  PRBool  result = PR_TRUE;
+  eHTMLTags thePrevTag;
 
-  for(thePos=aContext.GetCount()-1;thePos>0;thePos--) {
-    thePrevTag=aContext.TagAt(thePos);
-    switch(thePrevTag) {
-      case eHTMLTag_applet:
-      case eHTMLTag_td:                  
-        thePos=0;
-        result=PR_FALSE;
-        break;
-      case eHTMLTag_body:
-        result=aChildTag!=thePrevTag;
-        thePos=0;
-      default:
-        if(aChildTag==thePrevTag) {
-          result=PR_TRUE;
-          thePos=0;
-        }
-        break;
-    } //switch
-  } //for
+  for(thePos = aContext.GetCount() - 1; thePos >= aIndex; thePos--) {
+    thePrevTag = aContext.TagAt(thePos);
+
+    if (thePrevTag == eHTMLTag_applet ||
+        thePrevTag == eHTMLTag_td) {
+          result = PR_FALSE;
+          break;
+    }
+  }
   
   return result;
 }
