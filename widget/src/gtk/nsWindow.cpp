@@ -989,7 +989,7 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
          break;
  
        case eCursor_spinning:
-         newCursor = gdk_cursor_new(GDK_EXCHANGE);
+         newCursor = gdk_cursor_new(GDK_WATCH);
          break;
  
        case eCursor_count_up:
