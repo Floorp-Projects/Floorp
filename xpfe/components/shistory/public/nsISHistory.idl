@@ -42,9 +42,9 @@ interface nsISHistory: nsISupports
    void  addEntry(in nsISHEntry aEntry);
 
   /**
-   * Get the length of the History list
+   * Get the size of the History list
    */
-   readonly attribute long length;
+   readonly attribute long count;
 
   /**
    * Get the index of the current document in the history list
@@ -67,13 +67,8 @@ interface nsISHistory: nsISupports
    nsISHEntry getEntryAtIndex(in long index, in boolean modifyIndex);
 
   /**
-   * Get the root entry
+   * Get the root transaction
    */
-   readonly attribute nsISHEntry rootEntry;
-
-   /** 
-    * Get the Transaction for an index
-    */
-    nsISHTransaction getTransactionAtIndex(in long aIndex);
+   readonly attribute nsISHTransaction rootTransaction;
 
 };

@@ -44,7 +44,7 @@ private:
     friend NS_IMETHODIMP
 		NS_NewSHistory(nsISupports * aOuter, REFNSIID aIID, void** aResult);
       NS_IMETHOD PrintHistory();
-      NS_IMETHOD GetRootTransaction(nsISHTransaction ** aResult);
+      NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
 	nsCOMPtr<nsISHTransaction> mListRoot;
 	PRInt32 mIndex;
 	PRInt32 mLength;
