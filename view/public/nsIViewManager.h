@@ -243,8 +243,11 @@ public:
    * @param aView view to move
    * @param width new view width
    * @param height new view height
+   * @param RepaintExposedAreaOnly if PR_TRUE Repaint only the expanded or contracted region,
+   *                               if PR_FALSE Repaint the union of the old and new rectangles.
+   *                          
    */
-  NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight) = 0;
+  NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight, PRBool aRepaintExposedAreaOnly = PR_FALSE) = 0;
 
   /**
    * Set the clipping of a view's children

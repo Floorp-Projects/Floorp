@@ -99,7 +99,7 @@ public:
 
   NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord aX, nscoord aY);
 
-  NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight, PRBool aRepaintExposedAreaOnly = PR_FALSE);
 
   NS_IMETHOD  SetViewChildClip(nsIView *aView, nsRect *aRect);
 
