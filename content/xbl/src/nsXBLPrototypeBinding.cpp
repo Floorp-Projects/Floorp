@@ -54,7 +54,7 @@
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
 
-#ifdef USE_IMGLIB2
+#ifdef USE_IMG2
 #include "imgILoader.h"
 #include "imgIRequest.h"
 #endif
@@ -399,7 +399,7 @@ nsXBLPrototypeBinding::LoadResources()
   nsCOMPtr<nsIContent> content;
   GetImmediateChild(kResourcesAtom, getter_AddRefs(content));
   if (content) {
-#ifdef USE_IMGLIB2
+#ifdef USE_IMG2
     // Get the image loader.
     nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
     if (!il) return NS_ERROR_FAILURE;
