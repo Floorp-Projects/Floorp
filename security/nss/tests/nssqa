@@ -28,11 +28,11 @@
 ########################################################################
 
 O_OPTIONS=ON            # accept options (see above for listing)
-WIN_SET_LOCALDIRS=ON    # run QA in a local directory rather than accross 
-                        # the net
 WIN_WAIT_FOREVER=ON     # first we wait forever for a TESTDIR to appear, than 
                         # we wait forever for the build to finish...
 
+TBX_EXIT=10             # in case we are running on a tinderbox build, any 
+                        # early exit needs to return an error
 . `dirname $0`/header   # utilities, shellfunctions etc, global to NSS QA
 
 is_running ${TMP}/nssqa # checks if the file exists, if yes Exits, if not 
@@ -98,6 +98,89 @@ all_sh()
 }
 
 
+########################### wait_for_build #############################
+# local shell function to wait until the build is finished
+########################################################################
+wait_for_build()
+{
+  if [ $O_WIN = "ON" ]
+  then
+      WaitForever ${OSDIR}/SVbuild.InProgress.1 0 
+                     #Wait for the build to finish Windows a lot longer
+      OS_TARGET=WINNT;export OS_TARGET;Debug "OS_TARGET set to $OS_TARGET"
+      QA_OS_NAME=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name | \
+          sed -e "s/WINNT4.0.*/Windows-NT-4.0/" -e "s/WINNT5.0.*/Windows-2000/"`
+      Echo "WINDOWS-OS-LINE: $QA_OS_NAME"
+  else
+      Wait ${OSDIR}/SVbuild.InProgress.1 0     
+                     #Wait for the build to finish... Unix a few hours
+  fi
+  find_nt_masterbuild
+}
+
+
+########################### map_os #############################
+# local shell function: From the operatingsystem figure out the name of 
+#     the build ; needed to detemine if the build finished, passed and for
+#     the directory names
+########################################################################
+map_os32()
+{
+    case `uname -s` in
+        SunOS)
+            #first testing the 32 bit 2.6 build, even on 2.8
+            MAPPED_OS=Solaris2.6
+            ;;
+        OSF1)
+            MAPPED_OS=OSF1V4.0
+            ;;
+        AIX)
+            MAPPED_OS=AIX4.3
+            ;;
+        Linux)
+            MAPPED_OS=Linux2.2
+            ;;
+        HP-UX)
+            MAPPED_OS=HPUX11.00
+            ;;
+        *)
+            if [ "$os_name" = "Windows" ]
+            then
+                MAPPED_OS=NT4.0
+            else
+                Exit "Sorry, operating system `uname -s` is not supported yet"
+            fi
+            ;;
+    esac
+    OSDIR=${D2}/*${MAPPED_OS}*
+}
+map_os64()
+{
+  IS_64=""
+  case `uname -s` in
+      #OSF1) has been done already - always 64 bit
+      SunOS)
+          MAPPED_OS=Solaris*8
+          IS_64=`(isainfo -v | grep 64)>/dev/null 2>/dev/null && echo 64 bit`
+          if [ "$O_TBX" = "OFF" ] ; then
+              OSDIR=${D2}/*${MAPPED_OS}
+              if [ -n "$IS_64" ] 
+              then #Wait for the 64 bit build to finish...
+                  Debug Testing build for $MAPPED_OS in $OSDIR
+                  Wait ${OSDIR}/SVbuild.InProgress.1 0     
+              fi
+          fi
+          ;;
+      AIX)
+          IS_64=`lslpp -l | grep "bos.64bit"> /dev/null && echo 64 bit`
+          ;;
+      HP-UX)
+          IS_64=`getconf KERNEL_BITS | grep 64 >/dev/null && echo 64 bit`
+          ;;
+  esac
+}
+  
+
 ############################# nssqa_main ###############################
 # local shell function main controlling function of the nss qa
 ########################################################################
@@ -105,7 +188,7 @@ nssqa_main()
 {
   Debug "In function nssqa_main"
 
-  if [ $O_WIN = "OFF" ] ; then
+  if [ $O_WIN = "OFF" -a "$O_TBX" = "OFF" ] ; then
       if [ ! -h ${NTDIST}/WINNT5.0_DBG.OBJ -o \
               ! -h ${UXDIST}/SunOS5.8_OPT.OBJ -o \
               ! -h ${UXDIST}/OSF1V5.0_DBG.OBJ ] ; then
@@ -126,118 +209,46 @@ nssqa_main()
 
   Debug "Testing from `pwd`"
   line
-
   Debug "HOST: $HOST, DOMSUF: $DOMSUF"
 
-  # From the operatingsystem figure out the name of the build 
-
-  case `uname -s` in
-      SunOS)
-          #first testing the 32 bit 2.6 build, even on 2.8
-          MAPPED_OS=Solaris2.6
-          ;;
-      OSF1)
-          MAPPED_OS=OSF1V4.0
-          ;;
-      AIX)
-          MAPPED_OS=AIX4.3
-          ;;
-      Linux)
-          MAPPED_OS=Linux2.2
-          ;;
-      HP-UX)
-          MAPPED_OS=HPUX11.00
-          ;;
-      *)
-          if [ "$os_name" = "Windows" ]
-          then
-              MAPPED_OS=NT4.0
-          else
-              Exit "Sorry, operating system `uname -s` is not supported yet"
-          fi
-          ;;
-  esac
-  
-  OSDIR=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}/*${MAPPED_OS}*
-  Debug Testing build for $MAPPED_OS in $OSDIR
-  
-  if [ $O_WIN = "ON" ]
-  then
-      WaitForever ${OSDIR}/SVbuild.InProgress.1 0 
-                     #Wait for the build to finish Windows a lot longer
-      OS_TARGET=WINNT;export OS_TARGET;Debug "OS_TARGET set to $OS_TARGET"
-      QA_OS_NAME=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name | \
-          sed -e "s/WINNT4.0.*/Windows-NT-4.0/" -e "s/WINNT5.0.*/Windows-2000/"`
-      Echo "WINDOWS-OS-LINE: $QA_OS_NAME"
-  else
-      Wait ${OSDIR}/SVbuild.InProgress.1 0     
-                     #Wait for the build to finish... Unix a few hours
+  if [  "$O_TBX" = "OFF" ] ; then
+      map_os32 # From the operatingsystem figure out the name of the build 
+      Debug Testing build for $MAPPED_OS in $OSDIR
+      wait_for_build
   fi
-  find_nt_masterbuild
-  Debug "Dist $DIST"
   run_all
   BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
   run_all
-  IS_64=""
   
   # now for the 64 bit build!
-  
-  case `uname -s` in
-      #OSF1) has been done already - always 64 bit
-      SunOS)
-          MAPPED_OS=Solaris*8
-          IS_64=`(isainfo -v | grep 64)>/dev/null 2>/dev/null && echo 64 bit`
-          OSDIR=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}/*${MAPPED_OS}
-          if [ -n "$IS_64" ] 
-          then #Wait for the 64 bit build to finish...
-              Debug Testing build for $MAPPED_OS in $OSDIR
-              Wait ${OSDIR}/SVbuild.InProgress.1 0     
-          fi
-          ;;
-      AIX)
-          IS_64=`lslpp -l | grep "bos.64bit"> /dev/null && echo 64 bit`
-          ;;
-      HP-UX)
-          IS_64=`getconf KERNEL_BITS | grep 64 >/dev/null && echo 64 bit`
-          ;;
-      *)
-          if [ "$O_WIN" = "ON" ]
-          then
-              OS_TARGET=WIN95;export OS_TARGET
-              Debug "OS_TARGET set to $OS_TARGET"
-              #Echo "WINDOWS-OS-LINE: $os_name $os_full $OS_TARGET"
-              unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
-              #if [ "$TEST_LEVEL" = "0" ] ; then
-                  #QA_OS_NAME=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name | \
-                      #sed -e "s/WINNT4.0.*/Windows-NT-4.0/" -e \
-                             #"s/WINNT5.0.*/Windows-2000/"`
-                  #Echo "WINDOWS-OS-LINE: $QA_OS_NAME $OS_TARGET"
-              #fi
-              run_all
-              BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
-              run_all
-          fi
-          return
-          ;;
-  esac
-  
-  if [ -n "$IS_64" ] 
-  then #Wait for the 64 bit build to finish...
+  map_os64 # From the operatingsystem figure out the name of the build 
+  if [ -n "$IS_64" ] ; then #Wait for the 64 bit build to finish...
       Debug "This is a $IS_64 platform"
       USE_64=1;export USE_64;Debug "Use_64 set to $USE_64"
       unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
-  
+
+      run_all
+      BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
+      run_all
+  elif [ "$O_WIN" = "ON" ] ; then
+      OS_TARGET=WIN95;export OS_TARGET
+      Debug "OS_TARGET set to $OS_TARGET"
+      #Echo "WINDOWS-OS-LINE: $os_name $os_full $OS_TARGET"
+      unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
+      #if [ "$TEST_LEVEL" = "0" ] ; then
+          #QA_OS_NAME=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name | \
+              #sed -e "s/WINNT4.0.*/Windows-NT-4.0/" -e \
+                     #"s/WINNT5.0.*/Windows-2000/"`
+          #Echo "WINDOWS-OS-LINE: $QA_OS_NAME $OS_TARGET"
+      #fi
       run_all
       BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
       run_all
   else
       Debug "This is a 32 bit platform"
   fi
-  
 }
   
-#FIXME start TEST_LEVEL with 0
-
 TEST_LEVEL=0
 
 while [ $TEST_LEVEL -lt 3 ] ; do
@@ -253,4 +264,11 @@ while [ $TEST_LEVEL -lt 3 ] ; do
     TEST_LEVEL=`expr $TEST_LEVEL + 1 `
 done
 
-Exit "Done."
+if [  "$O_TBX" = "ON" ] ; then
+    . `dirname $0`/qa_stat
+fi
+
+  
+qa_stat_get_sysinfo
+
+Exit "nssqa completed. Done `uname -n` $QA_OS_STRING"
