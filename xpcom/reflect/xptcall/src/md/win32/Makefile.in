@@ -81,10 +81,11 @@ endif
 
 ifeq ($(OS_ARCH),WINCE)
 ifeq ($(TARGET_CPU),arm)
-CPPSRCS 	= xptcinvokece.cpp xptcstubsce.cpp
-ASFILES		= 
-AS		    = 
-ASFLAGS		+= /I../../..public
+CPPSRCS 	= xptcinvokece.cpp xptcstubsce.cpp 
+ASFILES		= xptc_arm_ceppc.asm
+AS			= $(CYGWIN_WRAPPER) arm-wince-as
+ASFLAGS		+= -I ../../../public
+AS_DASH_C_FLAG = 
 endif
 endif
 
