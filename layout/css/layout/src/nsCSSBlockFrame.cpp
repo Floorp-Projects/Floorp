@@ -1923,6 +1923,9 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
                             LineData*              aLine,
                             nsInlineReflowStatus&  aReflowResult)
 {
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("nsCSSBlockFrame::ReflowLine: line=%p", aLine));
+
   PRBool keepGoing = PR_FALSE;
   nsCSSBlockFrame* nextInFlow;
   aState.mInlineLayoutPrepared = PR_FALSE;
@@ -1945,7 +1948,22 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
     }
     else {
       while (--n >= 0) {
-        if (!ReflowInlineFrame(aState, aLine, frame, aReflowResult)) {
+        keepGoing = ReflowInlineFrame(aState, aLine, frame, aReflowResult);
+        if (!keepGoing) {
+          // It is possible that one or more of next lines are empty
+          // (because of DeleteNextInFlowsFor). If so, delete them now
+          // in case we are finished.
+          LineData* nextLine = aLine->mNext;
+          while ((nsnull != nextLine) && (0 == nextLine->mChildCount)) {
+            // Discard empty lines immediately. Empty lines can happen
+            // here because of DeleteNextInFlowsFor not being able to
+            // delete lines.
+            aLine->mNext = nextLine->mNext;
+            NS_ASSERTION(nsnull == nextLine->mFirstChild, "bad empty line");
+            nextLine->mNext = aState.mFreeList;
+            aState.mFreeList = nextLine;
+            nextLine = aLine->mNext;
+          }
           goto done;
         }
         frame->GetNextSibling(frame);
@@ -3178,7 +3196,7 @@ nsCSSBlockFrame::DeleteNextInFlowsFor(nsIFrame* aChild)
   // the sibling list.
   if (RemoveChild(parent->mLines, nextInFlow)) {
     NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-       ("nsCSSBlockFrame::DeleteChildsNextInFlow: frame=%p (from mLines)",
+       ("nsCSSBlockFrame::DeleteNextInFlowsFor: frame=%p (from mLines)",
         nextInFlow));
     goto done;
   }
@@ -3188,7 +3206,7 @@ nsCSSBlockFrame::DeleteNextInFlowsFor(nsIFrame* aChild)
   if (nsnull != mOverflowLines) {
     if (RemoveChild(parent->mOverflowLines, nextInFlow)) {
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("nsCSSBlockFrame::DeleteChildsNextInFlow: frame=%p (from overflow)",
+         ("nsCSSBlockFrame::DeleteNextInFlowsFor: frame=%p (from overflow)",
           nextInFlow));
       goto done;
     }
@@ -3228,6 +3246,9 @@ nsCSSBlockFrame::RemoveChild(LineData* aLines, nsIFrame* aChild)
       nsIFrame* nextChild;
       child->GetNextSibling(nextChild);
       if (child == aChild) {
+        NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+           ("nsCSSBlockFrame::RemoveChild: line=%p frame=%p",
+            line, aChild));
         // Continuations HAVE to be at the start of a line
         NS_ASSERTION(child == line->mFirstChild, "bad continuation");
         line->mFirstChild = nextChild;
