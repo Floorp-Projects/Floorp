@@ -1052,7 +1052,7 @@ nsresult nsDiskCacheDevice::deleteDiskCacheEntry(DiskCacheEntry * diskEntry)
                                   getter_AddRefs(metaFile));
     if (NS_SUCCEEDED(rv)) {
         rv = metaFile->Delete(PR_FALSE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsDiskCacheDevice::deleteDiskCacheEntry");
+        // NS_ASSERTION(NS_SUCCEEDED(rv), "nsDiskCacheDevice::deleteDiskCacheEntry");
     }
     
     // delete the data file
@@ -1061,7 +1061,7 @@ nsresult nsDiskCacheDevice::deleteDiskCacheEntry(DiskCacheEntry * diskEntry)
                                   getter_AddRefs(dataFile));
     if (NS_SUCCEEDED(rv)) {
         rv = dataFile->Delete(PR_FALSE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsDiskCacheDevice::deleteDiskCacheEntry");
+        // NS_ASSERTION(NS_SUCCEEDED(rv), "nsDiskCacheDevice::deleteDiskCacheEntry");
     }
     
     return NS_OK;
