@@ -765,10 +765,43 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
     return NS_OK;
 }
 
+PRBool
+nsScriptSecurityManager::EnsureNameSetRegistered()
+{
+    // Confirm that our nameset is registered. We used to do this only when the 
+    // secman was first created. But it turns out that it is possible for code
+    // to force instatiation of the security manager *before* the namespace
+    // registry is available. In that case we would fail to register our
+    // nameset and never try again. Now we keep trying until it succeeds.
+    
+    if (!mNameSetRegistered) {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, 
+                        kCScriptNameSetRegistryCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            nsSecurityNameSet* nameSet = new nsSecurityNameSet();
+            if (nameSet) {
+                rv = registry->AddExternalNameSet(nameSet);
+                if (NS_SUCCEEDED(rv)) {
+                    mNameSetRegistered = PR_TRUE;
+#ifdef DEBUG_jband
+                    printf("##### security manager nameset registered\n");
+#endif
+                }
+            }
+        }
+    }
+    return mNameSetRegistered;
+}
+
 NS_IMETHODIMP
 nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
                                            PRBool *result)
 {
+    // XXX Really OK to fail? 
+    // I suppose that in some embedding there may be no ScriptNameSetRegistry.
+    EnsureNameSetRegistered();
+
     if (principal == mSystemPrincipal) {
          // Even if JavaScript is disabled, we must still execute system scripts
         *result = PR_TRUE;
@@ -1464,7 +1497,9 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mSystemPrincipal(nsnull), mPrincipals(nsnull), 
       mIsJavaScriptEnabled(PR_FALSE),
       mIsMailJavaScriptEnabled(PR_FALSE),
-      mIsWritingPrefs(PR_FALSE)
+      mIsWritingPrefs(PR_FALSE),
+      mNameSetRegistered(PR_FALSE)
+
 {
     NS_INIT_REFCNT();
     memset(hasDomainPolicyVector, 0, sizeof(hasDomainPolicyVector));
@@ -1487,13 +1522,13 @@ nsScriptSecurityManager::GetScriptSecurityManager()
         ssecMan = new nsScriptSecurityManager();
         if (!ssecMan)
             return NULL;
-	    nsresult rv;
-	    NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, 
-                        kCScriptNameSetRegistryCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            nsSecurityNameSet* nameSet = new nsSecurityNameSet();
-            registry->AddExternalNameSet(nameSet);
-        }
+        nsresult rv;
+
+        // Try to register the nameset. This can sometimes fail on first run
+        // when the nameset service is not yet available at the time when 
+        // the script security manager is created. That is OK. We will try 
+        // again when CanExecuteSCripts is called if necessary.
+        ssecMan->EnsureNameSetRegistered();
 
         NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
         if (NS_SUCCEEDED(rv) && xpc) {
