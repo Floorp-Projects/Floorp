@@ -749,7 +749,7 @@ sub BuildIDLProjects()
 	if ( $main::build{xpidl} )
 	{
 		#// beard:  build the IDL compiler itself.
-		# BuildProject(":mozilla:xpcom:typelib:xpidl:macbuild:xpidl.mcp", "build all");
+		BuildProject(":mozilla:xpcom:typelib:xpidl:macbuild:xpidl.mcp", "build all");
 	}
 	
 	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"xpcom");
