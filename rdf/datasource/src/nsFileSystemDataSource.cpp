@@ -1215,7 +1215,7 @@ FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL
 
 		line.Append(buffer);
 
-		if (untruncated)
+		if (untruncated || stream.eof())
 		{
 			if (line.Find("URL=", PR_TRUE) == 0)
 			{
