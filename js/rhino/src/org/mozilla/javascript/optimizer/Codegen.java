@@ -3647,12 +3647,12 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             if (objectChild.getType() == Token.THIS
                 && nameChild.getType() == Token.STRING)
             {
-                cfw.addALoad(variableObjectLocal);
-                addOptRuntimeInvoke(
-                    "thisGet",
+                cfw.addALoad(contextLocal);
+                addScriptRuntimeInvoke(
+                    "getObjectProp",
                     "(Lorg/mozilla/javascript/Scriptable;"
                     +"Ljava/lang/String;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
+                    +"Lorg/mozilla/javascript/Context;"
                     +")Ljava/lang/Object;");
             } else {
                 cfw.addALoad(contextLocal);
