@@ -182,7 +182,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          *  Search for given char within this string
          *  
          *  @param   aChar is the character to search for
-         *  @param   aOffset tells us where in this strig to start searching
+         *  @param   aOffset tells us where in this string to start searching
          *  @param   aCount tells us how far from the offset we are to search.
          *           Use -1 to search the whole string.
          *  @return  offset in string, or kNotFound
