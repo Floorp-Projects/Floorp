@@ -71,8 +71,6 @@
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
-#define XXX_ART_HACK 1
-
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
@@ -780,78 +778,14 @@ CreateContentObject(const nsIParserNode& aNode,
   }
 
   // Make the content object
-  nsresult rv;
- 
-  // XXX right now this code is here because we need aNode to create
-  // images, textareas and input form elements. As soon as all of the
-  // generic content code is in use, it can be moved up into
-  // MakeContentObject
-  switch (aNodeType) {
-  case eHTMLTag_img:
-#ifdef XXX_ART_HACK
-    {
-      /* HACK - Jim Dunn 8/6
-       * Check to see if this is an ART image type
-       * If so then process it using the ART plugin
-       * Otherwise treat it like a normal image
-       */
-
-      PRBool bArt = PR_FALSE;
-      nsAutoString v;
-      PRInt32 ac = aNode.GetAttributeCount();
-      for (PRInt32 i = 0; i < ac; i++)    /* Go through all of this tag's attributes */
-      {
-        const nsString& key = aNode.GetKeyAt(i);
-
-        if (!key.Compare("SRC", PR_TRUE))   /* Find the SRC (source) tag */
-        {
-          const nsString& key2 = aNode.GetValueAt(i);
-
-          v.Truncate();
-          v.Append(key2);
-          v.ToLowerCase();
-          if (-1 != v.Find(".art"))   /* See if it has an ART extension */
-          {
-            bArt = PR_TRUE;    /* Treat this like an embed */
-            break;
-          }
-        }
-        if (!key.Compare("TYPE", PR_TRUE))  /* Find the TYPE (mimetype) tag */
-        {
-          const nsString& key2 = aNode.GetValueAt(i);
-
-          v.Truncate();
-          v.Append(key2);
-          v.ToLowerCase();
-          if ((-1 != v.Find("image/x-art"))   /* See if it has an ART Mimetype */
-              || (-1 != v.Find("image/art"))
-              || (-1 != v.Find("image/x-jg")))
-          {
-            bArt = PR_TRUE;    /* Treat this like an embed */
-            break;
-          }
-        }
-      }
-      if (bArt)
-        rv = NS_NewHTMLEmbedElement(aResult, atom);
-      else
-        rv = NS_NewHTMLImageElement(aResult, atom);
-    }
-#else
-    rv = NS_NewHTMLImageElement(aResult, atom);
-#endif /* XXX */
-    break;
-  default:
-    {
-      // XXX why is textarea not a container?
-      nsAutoString content;
-      if (eHTMLTag_textarea == aNodeType) {
-        content = aNode.GetSkippedContent();
-      }
-      rv = MakeContentObject(aNodeType, atom, aForm, aWebShell, aResult, &content);
-      break;
-    }
+  // XXX why is textarea not a container?
+  nsAutoString content;
+  if (eHTMLTag_textarea == aNodeType) {
+    content = aNode.GetSkippedContent();
   }
+  nsresult rv = MakeContentObject(aNodeType, atom, aForm, aWebShell,
+                                  aResult, &content);
+
   NS_RELEASE(atom);
 
   return rv;
