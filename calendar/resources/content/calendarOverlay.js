@@ -25,8 +25,67 @@
 
 function openCalendar() 
 {
+   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+   
+   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+   
+   var topWindow = windowManagerInterface.getMostRecentWindow( "calendar" );
+   
+   //the topWindow is always null, but it loads chrome://calendar/content/calendar.xul into the open window.
 
-	toOpenWindowByType("calendar", "chrome://calendar/content/calendar.xul");
+   if ( topWindow )
+   {
+      topWindow.focus();
+   }
+   else
+      window.open("chrome://calendar/content/calendar.xul", "calendar", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+}
 
+
+function getAlarmDialog( Event )
+{
+   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+ 
+   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+
+   var topWindow = windowManagerInterface.getMostRecentWindow( "caAlarmDialog" );
+   
+   if ( topWindow )
+      return topWindow;
+   else
+   {
+      var args = new Object();
+
+      args.calendarEvent = Event;
+   
+      window.open("chrome://calendar/content/ca-event-alert-dialog.xul", "caAlarmDialog", "chrome,extrachrome,resizable,scrollbars,status,toolbar,alwaysRaised", args);
+
+      return false;
+   }
+
+}
+
+function addEventToDialog( Event )
+{
+   var alarmWindow = getAlarmDialog( Event );
+   if( alarmWindow )
+    {
+        if( "createAlarmBox" in alarmWindow )
+        {
+           alarmWindow.onAlarmCall( Event );
+        }
+        else
+        {
+            if( !("pendingEvents" in alarmWindow) )
+            {
+                alarmWindow.pendingEvents = new Array();
+            }
+            
+            //dump( "\n ADDING PENDING EVENT TO DIALOG _______________________" );
+            
+            alarmWindow.pendingEvents.push( Event );
+        }
+        
+    }
 }
 
