@@ -1726,7 +1726,8 @@ nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
 
         //printf("Parse(string) iterate: %i",PR_FALSE); 
         pc->mScanner->Append(aSourceBuffer); 
-        result=ResumeParse(PR_FALSE); 
+        // Do not interrupt document.write() - bug 95487
+        result = ResumeParse(PR_FALSE, PR_FALSE, PR_FALSE);
 
       } 
       else { 
@@ -1743,7 +1744,7 @@ nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
         if(aLastCall) {
           mParserContext->mStreamListenerState=eOnStop;
         }
-        ResumeParse(PR_FALSE);
+        ResumeParse(PR_FALSE, PR_FALSE, PR_FALSE);
       }
     } 
   }//if 
@@ -1806,7 +1807,7 @@ nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,
  *  @param   aIsFinalChunk : tells us when the last chunk of data is provided.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
+nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBool aCanInterrupt) {
 
   //printf("  Resume %i, prev-context: %p\n",allowIteration,mParserContext->mPrevContext);
   
@@ -1841,7 +1842,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
 
         //Only allow parsing to be interuptted in the subsequent call
         //to build model.
-        SetCanInterrupt(PR_TRUE); 
+        SetCanInterrupt(aCanInterrupt); 
         nsresult theTokenizerResult=Tokenize(aIsFinalChunk);   // kEOF==2152596456
         result=BuildModel(); 
 

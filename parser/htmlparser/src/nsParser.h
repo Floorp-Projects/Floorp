@@ -269,7 +269,9 @@ class nsParser : public nsIParser,
      * @update	gess5/11/98
      * @return  TRUE if all went well, otherwise FALSE
      */
-    virtual nsresult ResumeParse(PRBool allowIteration=PR_TRUE, PRBool aIsFinalChunk=PR_FALSE);
+    virtual nsresult ResumeParse(PRBool allowIteration = PR_TRUE, 
+                                 PRBool aIsFinalChunk = PR_FALSE,
+                                 PRBool aCanInterrupt = PR_TRUE);
 
 #ifdef DEBUG
     void  DebugDumpSource(nsOutputStream& anOutput);
