@@ -1440,12 +1440,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_WINDOWPOSCHANGED: 
         {
             WINDOWPOS *wp = (LPWINDOWPOS)lParam;
-            RECT r;
-            ::GetClientRect(mWnd, &r);
-            nsRect rect(wp->x, wp->y, PRInt32(r.right - r.left), PRInt32(r.bottom - r.top));
-            ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
-            //nsRect rect(wp->x, wp->y, r->width, r->height);
-            result = OnResize(rect);
+
+            // We only care about a resize, so filter out things like z-order
+            // changes. Note: there's a WM_MOVE handler above which is why we're
+            // not handling them here...
+            if (0 == (wp->flags & SWP_NOSIZE)) {
+              // XXX Why are we using the client size area? If the size notification
+              // is for the client area then the origin should be (0,0) and not
+              // the window origin in screen coordinates...
+              RECT r;
+              ::GetClientRect(mWnd, &r);
+              nsRect rect(wp->x, wp->y, PRInt32(r.right - r.left), PRInt32(r.bottom - r.top));
+              ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
+              result = OnResize(rect);
+            }
             break;
         }
         case WM_QUERYNEWPALETTE:
