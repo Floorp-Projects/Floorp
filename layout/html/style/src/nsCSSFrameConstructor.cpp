@@ -6864,15 +6864,17 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
       break;
   }
 
-  if (reframe) {
-    result = ReconstructDocElementHierarchy(aPresContext);
-  }
-  else if (restyle) {
+  if (restyle) {
     nsIStyleContext* sc;
     frame->GetStyleContext(&sc);
     sc->RemapStyle(aPresContext);
     NS_RELEASE(sc);
+  }
 
+  if (reframe) {
+    result = ReconstructDocElementHierarchy(aPresContext);
+  }
+  else {
     // XXX hack, skip the root and scrolling frames
     frame->FirstChild(nsnull, &frame);
     frame->FirstChild(nsnull, &frame);
