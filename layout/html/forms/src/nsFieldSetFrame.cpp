@@ -194,13 +194,13 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
         nsRect rect(0, mTopBorderOffset, mRect.width, mRect.height - margin.top - 
                     margin.bottom - mTopBorderOffset);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, 0, 0);
+                                        aDirtyRect, rect, *color, *spacing, 0, 0);
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *spacing, skipSides, &mTopBorderGap);
       } else {
         nsRect rect(0, mTopBorderOffset, mRect.width, mRect.height - mTopBorderOffset);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, 0, 0);
+                                        aDirtyRect, rect, *color, *spacing, 0, 0);
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *spacing, skipSides, &mTopBorderGap);
       } 

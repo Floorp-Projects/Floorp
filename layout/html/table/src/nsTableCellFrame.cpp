@@ -122,7 +122,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *myColor, 0, 0);
+                                      aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
     
       // empty cells do not render their border
       PRBool renderBorder = PR_TRUE;
