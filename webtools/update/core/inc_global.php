@@ -38,6 +38,17 @@
 
 //inc_global.php -- Stuff that needs to be done globally to all of Mozilla Update
 
+//Cache Control Headers
+if ($nocache==TRUE) {
+$expstr = gmdate("D, d M Y H:i:s", time() - 1800) . " GMT";
+header("Expires: $expstr");
+header("Cache-Control: public, max-age=0");
+} else {
+$expstr = gmdate("D, d M Y H:i:s", time() + 1800) . " GMT";
+header("Expires: $expstr");
+header("Cache-Control: public, max-age=1800");
+}
+
 // ---------------------------
 // escape_string() --  Quote a variable to make it safe
 // ---------------------------
