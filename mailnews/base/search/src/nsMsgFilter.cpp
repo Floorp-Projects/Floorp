@@ -22,6 +22,7 @@
 #include "nsMsgFilterList.h"
 #include "nsMsgFilter.h"
 #include "nsMsgUtils.h"
+#include "nsFileStream.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -159,6 +160,61 @@ NS_IMETHODIMP nsMsgFilter::GetAction(nsMsgRuleActionType *type, void **value)
 		break;
 	default:
 		break;
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHdr)
+{
+	char	*filterName = "";
+	time_t	date;
+	char	dateStr[40];	/* 30 probably not enough */
+	nsMsgRuleActionType actionType;
+	void				*value;
+	nsString	author;
+	nsString	subject;
+
+	GetFilterName(&filterName);
+	GetAction(&actionType, &value);
+	nsresult res = msgHdr->GetDate(&date);
+	struct tm* tmTime = localtime(&date);
+	strftime(dateStr, 100, "%m/%d/%Y %I:%M %p", tmTime);
+
+	msgHdr->GetAuthor(author);
+	msgHdr->GetSubject(subject);
+	if (stream)
+	{
+		*stream << "Applied filter \"";
+		*stream << filterName;
+		*stream << "\" to message from ";
+		*stream << nsAutoCString(author);
+		*stream << " - ";
+		*stream << nsAutoCString(subject);
+		*stream << " at ";
+		*stream << dateStr;
+		*stream << "\n";
+		const char *actionStr = GetActionStr(actionType);
+		char *actionValue = "";
+		if (actionType == nsMsgFilterActionMoveToFolder)
+			actionValue = (char *) value;
+		*stream << "Action = ";
+		*stream << actionStr;
+		*stream << " ";
+		*stream << actionValue;
+		*stream << "\n\n";
+//		XP_FilePrintf(*m_logFile, "Action = %s %s\n\n", actionStr, actionValue);
+		if (actionType == nsMsgFilterActionMoveToFolder)
+		{
+			nsString msgId;
+			msgHdr->GetMessageId(msgId);
+			*stream << "mailbox:";
+			*stream << (char *) value;
+			*stream << "id = ";
+			*stream << nsAutoCString(msgId);
+			*stream << "\n";
+
+//			XP_FilePrintf(m_logFile, "mailbox:%s?id=%s\n", value, (const char *) msgId);
+		}
 	}
 	return NS_OK;
 }
@@ -340,19 +396,18 @@ static struct RuleActionsTableEntry ruleActionsTable[] =
 	{ nsMsgFilterActionWatchThread,		nsMsgFilterAll,		0, /*XP_FILTER_WATCH_THREAD */		"Watch thread"}
 };
 
-#ifdef FILTER_UI
-/*static */char *MSG_Rule::GetActionStr(MSG_RuleActionType action)
+const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)
 {
 	int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);
 
 	for (int i = 0; i < numActions; i++)
 	{
+		// ### TODO use string bundle
 		if (action == ruleActionsTable[i].action)
-			return XP_GetString(ruleActionsTable[i].xp_strIndex);
+			return ruleActionsTable[i].actionFilingStr; // XP_GetString(ruleActionsTable[i].xp_strIndex);
 	}
 	return "";
 }
-#endif
 /*static */nsresult nsMsgFilter::GetActionFilingStr(nsMsgRuleActionType action, nsString2 &actionStr)
 {
 	int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);

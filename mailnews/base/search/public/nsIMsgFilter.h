@@ -23,6 +23,9 @@
 #include "nsISupports.h"
 #include "nsMsgFilterCore.h"
 
+class nsOutputStream;
+class nsIMsgDBHdr;
+
 // 605db0f8-04a1-11d3-a50a-0060b0fc04b7
 #define NS_IMSGFILTER_IID                         \
 { 0x605db0f8, 0x04a1, 0x11d3,                 \
@@ -66,7 +69,7 @@ public:
 	*/
 	NS_IMETHOD SetAction(nsMsgRuleActionType type, void *value)= 0;
 	NS_IMETHOD GetAction(nsMsgRuleActionType *type, void **value) = 0;
-
+	NS_IMETHOD LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *header) = 0;
 };
 
 #endif

@@ -1368,15 +1368,15 @@ MWContextType nsMsgResultElement::GetContextType ()
 	MWContextType type=(MWContextType)0;
 	switch (m_adapter->m_scope->m_attribute)
 	{
-	case scopeMailFolder:
+	case nsMsgSearchScopeMailFolder:
 		type = MWContextMailMsg;
 		break;
-	case scopeOfflineNewsgroup:    // added by mscott could be bug fix...
-	case scopeNewsgroup:
-	case scopeAllSearchableGroups:
+	case nsMsgSearchScopeOfflineNewsgroup:    // added by mscott could be bug fix...
+	case nsMsgSearchScopeNewsgroup:
+	case nsMsgSearchScopeAllSearchableGroups:
 		type = MWContextNewsMsg;
 		break;
-	case scopeLdapDirectory:
+	case nsMsgSearchScopeLdapDirectory:
 		type = MWContextBrowser;
 		break;
 	default:
@@ -1394,7 +1394,7 @@ nsresult nsMsgResultElement::Open (void *window)
 
 	if (window)
 	{
-		if (m_adapter->m_scope->m_attribute != scopeLdapDirectory)
+		if (m_adapter->m_scope->m_attribute != nsMsgSearchScopeLdapDirectory)
 		{
 			msgPane = (MSG_MessagePane *) window; 
 			XP_ASSERT (MSG_MESSAGEPANE == msgPane->GetPaneType());

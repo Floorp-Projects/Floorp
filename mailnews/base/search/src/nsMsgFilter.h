@@ -76,6 +76,7 @@ public:
 	*/
 	NS_IMETHOD SetAction(nsMsgRuleActionType type, void *value);
 	NS_IMETHOD GetAction(nsMsgRuleActionType *type, void **value) ;
+	NS_IMETHOD LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *header);
 
 
 	nsMsgFilterType	GetType() {return m_type;}
@@ -106,7 +107,7 @@ public:
 #endif
 
 	nsresult		ConvertMoveToFolderValue(nsString2 &relativePath);
-static	char *GetActionStr(nsMsgRuleActionType action);
+static	const char *GetActionStr(nsMsgRuleActionType action);
 static	nsresult GetActionFilingStr(nsMsgRuleActionType action, nsString2 &actionStr);
 static nsMsgRuleActionType GetActionForFilingStr(nsString2 &actionStr);
 	nsMsgRuleAction      m_action;
