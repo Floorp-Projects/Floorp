@@ -55,7 +55,6 @@
 	#include "CGrayBevelView.h"
 	#include "CPatternBevelView.h"
 	#include "CPatternButtonPopup.h"
-	#include "CGuidePopupMenu.h"
 	#include "CNavigationButtonPopup.h"
 	#include "CCloseAllAttachment.h"
 	#include "CColorEraseAttachment.h"
@@ -82,6 +81,7 @@
 	#include "CSaveProgress.h"	
 	#include "CPatternProgressBar.h"
 	#include "CScrollerWithArrows.h"
+	#include "CTargetFramer.h"
 	
 #ifdef MOZ_MAIL_NEWS
 	#include "CBiffButtonAttachment.h"
@@ -241,6 +241,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CSlaveEnabler);
 	RegisterClass_(CScrollerWithArrows);
 	RegisterClass_(CScrollArrowControl);
+	RegisterClass_(CTargetFramer);
 	
 #ifdef MOZ_MAIL_NEWS
 	RegisterClass_(CSingleLineEditField);
@@ -264,7 +265,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CTextEdit);
 	RegisterClass_(CEditBroadcaster);
 
-	RegisterClass_(CGuidePopupMenu);
 	RegisterClass_(CNavigationButtonPopup);
 	
 	// *** Browser Specific UI Classes
