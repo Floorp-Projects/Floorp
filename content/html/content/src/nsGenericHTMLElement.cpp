@@ -644,17 +644,23 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 }
 
 PRBool
-nsGenericHTMLElement::InNavQuirksMode() const
+nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc) 
 {
   PRBool status = PR_FALSE;
-  if (mDocument) {
-    nsCOMPtr<nsIHTMLDocument> hdoc(do_QueryInterface(mDocument));
-    if (hdoc) {
-      nsDTDMode mode;
-      hdoc->GetDTDMode(mode);
-      if (eDTDMode_Nav == mode) {
-        status = PR_TRUE;
+  if (aDoc) {
+    nsCompatibility mode;
+    // multiple shells on the same doc are out of luck 
+    nsIPresShell* shell = aDoc->GetShellAt(0);
+    if (shell) {
+      nsCOMPtr<nsIPresContext> presContext;
+      shell->GetPresContext(getter_AddRefs(presContext));
+      if (presContext) {
+        presContext->GetCompatibilityMode(&mode);
+        if (eCompatibility_NavQuirks == mode) {
+          status = PR_TRUE;
+        }
       }
+      NS_RELEASE(shell);
     }
   }
   return status;
@@ -1869,19 +1875,8 @@ nsGenericHTMLElement::ParseColor(const nsString& aString,
       aResult.SetStringValue(colorStr, eHTMLUnit_ColorName);
       return PR_TRUE;
     }
-    nsDTDMode mode = eDTDMode_NoQuirks;
-    if (aDocument) {
-      nsIHTMLDocument* htmlDoc;
-      nsresult         result;
-      result = aDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
-      if (NS_SUCCEEDED(result)) {
-        // Check the compatibility mode
-        result = htmlDoc->GetDTDMode(mode);
-        NS_RELEASE(htmlDoc);
-      }
-    }
 
-    if (eDTDMode_NoQuirks == mode) {
+    if (!InNavQuirksMode(aDocument)) {
       if (colorStr.CharAt(0) == '#') {
         colorStr.Cut(0, 1);
         if (NS_HexToRGB(colorStr, &color)) {
@@ -2132,7 +2127,7 @@ PRBool
 nsGenericHTMLElement::ParseTableHAlignValue(const nsString& aString,
                                             nsHTMLValue& aResult) const
 {
-  if (InNavQuirksMode()) {
+  if (InNavQuirksMode(mDocument)) {
     return ParseEnumValue(aString, kCompatTableHAlignTable, aResult);
   }
   return ParseEnumValue(aString, kTableHAlignTable, aResult);
@@ -2142,7 +2137,7 @@ PRBool
 nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
                                                nsString& aResult) const
 {
-  if (InNavQuirksMode()) {
+  if (InNavQuirksMode(mDocument)) {
     return EnumValueToString(aValue, kCompatTableHAlignTable, aResult);
   }
   return EnumValueToString(aValue, kTableHAlignTable, aResult);
@@ -2172,7 +2167,7 @@ PRBool
 nsGenericHTMLElement::ParseTableCellHAlignValue(const nsString& aString,
                                                 nsHTMLValue& aResult) const
 {
-  if (InNavQuirksMode()) {
+  if (InNavQuirksMode(mDocument)) {
     return ParseEnumValue(aString, kCompatTableCellHAlignTable, aResult);
   }
   return ParseEnumValue(aString, kTableHAlignTable, aResult);
@@ -2182,7 +2177,7 @@ PRBool
 nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
                                                    nsString& aResult) const
 {
-  if (InNavQuirksMode()) {
+  if (InNavQuirksMode(mDocument)) {
     return EnumValueToString(aValue, kCompatTableCellHAlignTable, aResult);
   }
   return EnumValueToString(aValue, kTableHAlignTable, aResult);
@@ -2215,7 +2210,7 @@ PRBool
 nsGenericHTMLElement::ParseDivAlignValue(const nsString& aString,
                                          nsHTMLValue& aResult) const
 {
-  if (InNavQuirksMode()) {
+  if (InNavQuirksMode(mDocument)) {
     return ParseEnumValue(aString, kCompatDivAlignTable, aResult);
   }
   return ParseEnumValue(aString, kDivAlignTable, aResult);
@@ -2225,7 +2220,7 @@ PRBool
 nsGenericHTMLElement::DivAlignValueToString(const nsHTMLValue& aValue,
                                             nsString& aResult) const
 {
-  if (InNavQuirksMode()) {
+  if (InNavQuirksMode(mDocument)) {
     return EnumValueToString(aValue, kCompatDivAlignTable, aResult);
   }
   return EnumValueToString(aValue, kDivAlignTable, aResult);

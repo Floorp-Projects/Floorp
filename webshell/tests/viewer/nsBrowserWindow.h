@@ -196,7 +196,7 @@ public:
   void GetStringPref(const char * aPrefName, nsString& aValue);
 
   nsEventStatus DispatchStyleMenu(PRInt32 aID);
-  void SetCompatibilityMode(PRBool aIsStandard);
+  void SetCompatibilityMode(PRUint32 aMode);
 
   nsEventStatus ProcessDialogEvent(nsGUIEvent *aEvent);
 

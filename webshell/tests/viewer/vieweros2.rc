@@ -119,6 +119,7 @@ MENU IDM_VIEWERBAR
     }
     SUBMENU "~Compatibility Mode Pref", 0
     {
+      MENUITEM "Use DTD", VIEWER_USE_DTD_MODE
       MENUITEM "Nav Quirks", VIEWER_NAV_QUIRKS_MODE
       MENUITEM "Standard", VIEWER_STANDARD_MODE
     }

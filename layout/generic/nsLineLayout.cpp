@@ -197,33 +197,11 @@ nsLineLayout::~nsLineLayout()
 PRBool
 nsLineLayout::InStrictMode()
 {
-// XXX For now this is always part of the build until harishd lands
-// the dtd auto-detect code...
-#if 1
-  static PRBool forceStrictMode = PR_FALSE;
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
-  {
-    static int firstTime = 1;
-    if (firstTime) {
-      if (getenv("GECKO_FORCE_STRICT_MODE")) {
-        forceStrictMode = PR_TRUE;
-      }
-      firstTime = 0;
-    }
-  }
-#endif
-  if (forceStrictMode) {
-    mKnowStrictMode = PR_TRUE;
-    mInStrictMode = PR_TRUE;
-    return mInStrictMode;
-  }
-#endif
   if (!mKnowStrictMode) {
     mKnowStrictMode = PR_TRUE;
-    mInStrictMode = PR_TRUE;
+    mInStrictMode   = PR_TRUE;
 
-    // Dig up the compatabilty mode out of the underlying document, if
-    // we can find it.
+    // Get the compatabilty mode from pres context via the document and pres shell
     if (mBlockReflowState->frame) {
       nsCOMPtr<nsIContent> content;
       mBlockReflowState->frame->GetContent(getter_AddRefs(content));
@@ -231,13 +209,18 @@ nsLineLayout::InStrictMode()
         nsCOMPtr<nsIDocument> doc;
         content->GetDocument(*getter_AddRefs(doc));
         if (doc) {
-          nsCOMPtr<nsIHTMLDocument> hdoc(do_QueryInterface(doc));
-          if (hdoc) {
-            nsDTDMode mode;
-            hdoc->GetDTDMode(mode);
-            if (eDTDMode_NoQuirks != mode) {
-              mInStrictMode = PR_FALSE;
+          nsIPresShell* shell = doc->GetShellAt(0);
+          if (shell) {
+            nsCOMPtr<nsIPresContext> presContext;
+            shell->GetPresContext(getter_AddRefs(presContext));
+            if (presContext) {
+              nsCompatibility mode;
+              presContext->GetCompatibilityMode(&mode);
+              if (eCompatibility_NavQuirks == mode) {
+                mInStrictMode = PR_FALSE;
+              }
             }
+            NS_RELEASE(shell);
           }
         }
       }

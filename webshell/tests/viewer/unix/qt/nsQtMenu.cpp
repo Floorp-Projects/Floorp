@@ -196,6 +196,7 @@ void CreateViewerMenus(QWidget *aParent, void * data, PRInt32 * aMenuBarHeight)
 
     style->insertItem("Select &Style Sheet", select);
 
+    InsertMenuItem(compatibility, "Use DTD", eventHandler, VIEWER_USE_DTD_MODE);
     InsertMenuItem(compatibility, "Nav Quirks", eventHandler, VIEWER_NAV_QUIRKS_MODE);
     InsertMenuItem(compatibility, "Standard", eventHandler, VIEWER_STANDARD_MODE);
 

@@ -120,7 +120,8 @@ enum
 	item_GFXWidgetMode = 24,
 	item_NativeWidgetMode,
 
-	cmd_Compatibility_NavQuirks	= 4200,
+	cmd_Compatibility_UseDTD	= 4200,
+	cmd_Compatibility_NavQuirks,
 	cmd_Compatibility_Standard,
 	
 	cmd_JSConsole				= 5000,
@@ -395,6 +396,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 		case submenu_CompatibilityMode:
 			switch (menuItem)
 			{
+				case cmd_Compatibility_UseDTD:		  xpID = VIEWER_USE_DTD_MODE;	break;
 				case cmd_Compatibility_NavQuirks:		xpID = VIEWER_NAV_QUIRKS_MODE;	break;
 				case cmd_Compatibility_Standard:		xpID = VIEWER_STANDARD_MODE;		break;
 			}
