@@ -31,69 +31,115 @@
 
 <br>
 [% IF NOT userid %]
-   <input type="hidden" name="cmdtype" value="doit">
+  <input type="hidden" name="cmdtype" value="doit">
 [% ELSE %]
-   <input type="radio" name="cmdtype" value="doit" checked="checked">
-     Run this query
-   <br>
-   [% IF namedqueries.size > 0 %]
-     <br>
-     <table cellspacing="0" cellpadding="0">
-       <tr>
-         <td>
-           <input type="radio" name="cmdtype" value="editnamed">
-           Load my remembered query:
-         </td>
-         <td rowspan="3">
-           &nbsp;&nbsp;<select name="namedcmd">
-             [% FOREACH query = namedqueries %]
-               <option value="[% query FILTER html %]">
-                 [% query FILTER html %]</option>
-             [% END %]
-           </select>
-         </td>
-       </tr>  
-       <tr>
-         <td>
-           <input type="radio" name="cmdtype" value="runnamed">
-           Run my remembered query:
-         </td>
-       </tr>
-       <tr>
-          <td>
-           <input type="radio" name="cmdtype" value="forgetnamed">
-           Forget my remembered query:
-         </td>
-       </tr>
-     </table>
-     <br>
-   [% END %]
-   <input type="radio" name="cmdtype" value="asdefault">
-     Remember this as my default query
-   <br>
-   <input type="radio" name="cmdtype" value="asnamed">
-     Remember this query, and name it: 
-     <input type="text" name="newqueryname">
-     <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-     <input type="checkbox" name="tofooter" value="1">
-       and put it in my page footer
+  <script> <!--
+    function remCheckboxChanged() {
+      if (document.queryform.remember.checked == true) {
+        document.queryform.remtype[0].disabled = false;
+        document.queryform.remtype[1].disabled = false;
+        remTypeChanged();
+      }
+      else {
+        document.queryform.remtype[0].disabled = true;
+        document.queryform.remtype[1].disabled = true;
+        document.queryform.newqueryname.disabled = true;
+        document.queryform.tofooter.disabled = true;
+      }
+    }
+
+    function remTypeChanged() {
+      if (document.queryform.remtype[0].checked == true) {
+        document.queryform.newqueryname.disabled = false;
+        document.queryform.tofooter.disabled = false;
+      }
+      else {
+        document.queryform.newqueryname.disabled = true;
+        document.queryform.tofooter.disabled = true;
+      }
+    }
+
+    function selectDoRem() {
+      document.queryform.cmdtype[1].checked = true;
+    }
+    // -->
+  </script>
+
+  <table>
+    <tr>
+      <td>
+        <input type="radio" name="cmdtype" value="doit" checked="checked">
+        Run this search
+      </td>
+      <td>&nbsp;</td>
+    </tr>
+    
+    <tr>
+      <td valign="top">
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="checkbox" name="remember" value="1" 
+               onclick="remCheckboxChanged()">
+        and remember it
+      </td>
+      <td>
+        <input type="radio" name="remtype" value="asnamed" 
+               onclick="remTypeChanged()">
+        with this name: 
+        <input type="text" name="newqueryname"><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <input type="checkbox" name="tofooter" value="1">
+          and put it in my page footer<br>          
+        <input type="radio" name="remtype" value="asdefault"
+               onclick="remTypeChanged()">
+        as my default options for this page<br>
+      </td>
+    </tr>
+  
+    <tr>
+      <td colspan="2">
+        [% IF namedqueries.size > 0 %]
+          <input type="radio" name="cmdtype" value="dorem">
+          <select name="remaction" onclick="selectDoRem()">
+            <option value="run">Run</option>
+            <option value="load">Load</option>
+            <option value="forget">Forget</option>
+          </select>
+          my remembered search:
+          <select name="namedcmd" onclick="selectDoRem()">
+            [% FOREACH query = namedqueries %]
+              <option value="[% query FILTER html %]">
+                [% query FILTER html %]</option>
+            [% END %]
+          </select>        
+        [% END %]
+      </td>
+    </tr>
+  </table>
+  
+  <script> <!--
+    remCheckboxChanged();
+    remTypeChanged(); 
+    // -->
+  </script>
 [% END %]
 
-  <p>
-    Sort results by:
-    <select name="order">
-    [% FOREACH order = orders %]
-      <option value="[% order FILTER html %]"
-        [% " selected" IF default.order.0 == order %]>
-           [% ordersdesc.$order FILTER html %]</option> 
-    [% END %]
-    </select>
+<p>
+  Sort results by:
+  <select name="order">
+  [% FOREACH order = orders %]
+    <option value="[% order FILTER html %]"
+      [% " selected" IF default.order.0 == order %]>
+         [% ordersdesc.$order FILTER html %]</option> 
+  [% END %]
+  </select>
 
-    <input type="submit" value="[% button_name %]">
-    [% IF userdefaultquery %]
-       <p>
-         <a href="query.cgi?nukedefaultquery=1">
-           Set my default query back to the system default</a>
-       </p>
-    [% END %]
-  </p>
+  <input type="submit" value="[% button_name %]">
+  
+  [% IF userdefaultquery %]
+     <p>
+       <a href="query.cgi?nukedefaultquery=1">
+         Set my default query back to the system default</a>.
+     </p>
+  [% END %]
+</p>
+
