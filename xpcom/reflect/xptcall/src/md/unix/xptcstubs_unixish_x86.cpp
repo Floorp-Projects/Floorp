@@ -110,7 +110,7 @@ nsresult nsXPTCStubBase::Stub##n() \
     return result; \
 }
 
-#else if defined(__SUNPRO_CC)           /* Sun Workshop Compiler. */
+#elif defined(__SUNPRO_CC)           /* Sun Workshop Compiler. */
 
 #define STUB_ENTRY(n) \
 nsresult nsXPTCStubBase::Stub##n() \
