@@ -10,4 +10,4 @@
 <!ENTITY bccAddress.label "Bcc another address:">
 <!ENTITY specialFolderTitle.label "Special Folders">
 <!ENTITY draftMailFolder.label "Keep message drafts in:">
-<!ENTITY templateMailFolder.label "Keep message stationery in:">
+<!ENTITY templateMailFolder.label "Keep message templates in:">
