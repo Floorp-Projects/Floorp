@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: ldappasswd.pl,v 1.1 1998/07/30 08:42:31 leif Exp $
+# $Id: ldappasswd.pl,v 1.2 1998/07/30 09:02:33 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -114,7 +114,13 @@ foreach $search ($#ARGV >= $[ ? @ARGV : $ld{bind})
     {
       $entry->{userpassword} = ["{crypt}" . $crypted];
       print "Updated: $entry->{dn}\n" if $opt_v;
-      $ret = $conn->update($entry) unless $opt_n;
+
+      if (!$opt_n)
+	{
+	  $conn->update($entry) unless $opt_n;
+	  $conn->printError() if $conn->getError();
+	}
+
       $entry = $conn->nextEntry();
     }
 }
