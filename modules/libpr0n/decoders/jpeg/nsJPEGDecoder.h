@@ -60,7 +60,6 @@ typedef enum {
     JPEG_START_DECOMPRESS,
     JPEG_DECOMPRESS_PROGRESSIVE,          /* Output progressive pixels */
     JPEG_DECOMPRESS_SEQUENTIAL,           /* Output sequential pixels */
-    JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT,
     JPEG_DONE,
     JPEG_SINK_NON_JPEG_TRAILER,          /* Some image files have a */
                                          /* non-JPEG trailer */
@@ -81,7 +80,7 @@ public:
   PRUint32 mBytesToSkip;
 
 protected:
-  int OutputScanlines(int num_scanlines);
+  int OutputScanlines();
 
 public:
   nsCOMPtr<imgIContainer> mImage;
@@ -112,9 +111,6 @@ public:
   PRUint32 mBackBufferLen; // Offset of end of active backtrack data
   PRUint32 mBackBufferSize; // size in bytes what mBackBuffer was created with
   PRUint32 mBackBufferUnreadLen; // amount of data currently in mBackBuffer
-
-
-
 };
 
 #endif // nsJPEGDecoder_h__
