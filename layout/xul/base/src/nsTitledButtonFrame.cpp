@@ -747,15 +747,20 @@ nsTitledButtonFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   nsIImage*         icon;
 
   if (NS_SUCCEEDED(dc->LoadIconImage(aIconId, icon))) {
-    aRenderingContext.DrawImage(icon, inner.x, inner.y);
+     //XXX: #bug 6934 check for null icon as a patch
+     //A question remains, why does LoadIconImage above, sometimes
+     //return a null icon.
+    if (nsnull != icon) {
+      aRenderingContext.DrawImage(icon, inner.x, inner.y);
 
-    // Reduce the inner rect by the width of the icon, and leave an
-    // additional six pixels padding
-    PRInt32 iconWidth = NSIntPixelsToTwips(icon->GetWidth() + 6, p2t);
-    inner.x += iconWidth;
-    inner.width -= iconWidth;
+      // Reduce the inner rect by the width of the icon, and leave an
+      // additional six pixels padding
+      PRInt32 iconWidth = NSIntPixelsToTwips(icon->GetWidth() + 6, p2t);
+      inner.x += iconWidth;
+      inner.width -= iconWidth;
 
-    NS_RELEASE(icon);
+      NS_RELEASE(icon);
+    }
   }
 
   NS_RELEASE(dc);
