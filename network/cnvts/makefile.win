@@ -95,19 +95,21 @@ EXPORTS= \
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
 LINCS= \
-    -I$(XPDIST)\public\nspr2 	\
-    -I$(XPDIST)\public\util	\
-    -I$(XPDIST)\public\java	\
-    -I$(XPDIST)\public\pref	\
-    -I$(XPDIST)\public\js	\
-    -I$(XPDIST)\public\parse	\
-    -I$(XPDIST)\public\security	\
-    -I$(XPDIST)\public\marimurl	\
-    -I$(XPDIST)\public\lay	\
-    -I$(XPDIST)\public\style	\
-    -I$(XPDIST)\public\zlib	\
-    -I$(XPDIST)\public\softupdt	\
-    -I$(XPDIST)\public\network 
+    -I$(PUBLIC)\nspr2 	\
+    -I$(PUBLIC)\util	\
+    -I$(PUBLIC)\java	\
+    -I$(PUBLIC)\pref	\
+    -I$(PUBLIC)\js	\
+    -I$(PUBLIC)\parse	\
+    -I$(PUBLIC)\security	\
+    -I$(PUBLIC)\marimurl	\
+    -I$(PUBLIC)\lay	\
+    -I$(PUBLIC)\style	\
+    -I$(PUBLIC)\zlib	\
+    -I$(PUBLIC)\softupdt	\
+    -I$(PUBLIC)\network \
+    -I$(PUBLIC)\mimetype \
+    $(NULL)
 #!endif
 
 include <$(DEPTH)\config\rules.mak> 

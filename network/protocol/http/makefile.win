@@ -42,7 +42,6 @@ OBJS=   \
 	.\$(OBJDIR)\mkhttp.obj		\
 	.\$(OBJDIR)\mkaccess.obj		\
 	$(NULL)
-	
 
 CSRCS =	\
 	mkhttp.c	\
@@ -66,15 +65,16 @@ EXPORTS= httpurl.h cookies.h httpauth.h jscookie.h
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
 LINCS= \
-    -I$(XPDIST)\public\nspr2 	\
-    -I$(XPDIST)\public\util	\
-    -I$(XPDIST)\public\java	\
-    -I$(XPDIST)\public\pref	\
-    -I$(XPDIST)\public\htmldlgs \
-    -I$(XPDIST)\public\js	\
-    -I$(XPDIST)\public\security	\
-    -I$(XPDIST)\public\netcache	\
-    -I$(XPDIST)\public\network 
+    -I$(PUBLIC)\nspr2 	\
+    -I$(PUBLIC)\util	\
+    -I$(PUBLIC)\java	\
+    -I$(PUBLIC)\pref	\
+    -I$(PUBLIC)\htmldlgs \
+    -I$(PUBLIC)\js	\
+    -I$(PUBLIC)\security	\
+    -I$(PUBLIC)\netcache	\
+    -I$(PUBLIC)\network \
+    -I$(PUBLIC)\mimetype \
 #!endif
 
 include <$(DEPTH)\config\rules.mak> 
