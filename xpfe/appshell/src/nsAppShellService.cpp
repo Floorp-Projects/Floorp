@@ -723,17 +723,14 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
   if (0 == cnt)
   {
   #if XP_MAC
-  	if (mHiddenWindow)
+   nsCOMPtr<nsIBaseWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
+  	if (hiddenWin)
   	{
 	  	// Given hidden window the focus so it puts up the menu
-	 	nsIWidget* widget = NULL;
-	 	mHiddenWindow->GetWidget( widget );
-	 	if( widget )
-	 	{
+      nsCOMPtr<nsIWidget> widget;
+	 	hiddenWin->GetMainWidget(getter_AddRefs(widget));
+	 	if(widget)
 	 		widget->SetFocus();
-	 	
-	  		widget->Release();
-	  	}
 	}
 	else
 	{
