@@ -25,15 +25,14 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= pop3Test
 CPPSRCS		= pop3Test.cpp
 
-
-LIBS = \
-	-lmsgbaseutil \
-	-lxpcom	\
-	-lmozjs	\
-	$(MOZ_TIMER_LIBS) \
-	$(NSPR_LIBS) \
-	$(TK_LIBS) \
-	$(NULL)
+LIBS		= \
+		-lmsgbaseutil \
+		-lxpcom \
+		-lmozjs \
+		$(MOZ_TIMER_LIBS) \
+		$(NSPR_LIBS) \
+		$(TK_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
