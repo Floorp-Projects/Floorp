@@ -261,8 +261,9 @@ function onExit()
 
 function SetUpOKCancelButtons()
 {
-  var okButton = document.documentElement.getButton("accept");
-  var cancelButton = document.documentElement.getButton("cancel");
+  doSetOKCancel( onStart, onExit, null, null );
+  var okButton = document.getElementById("ok");
+  var cancelButton = document.getElementById("cancel");
 
   var okButtonString;
   var cancelButtonString;
@@ -283,5 +284,6 @@ function SetUpOKCancelButtons()
   }
 
   okButton.setAttribute( "label", okButtonString );
+  okButton.setAttribute( "class", ( okButton.getAttribute("class") + " padded" ) );
   cancelButton.setAttribute( "label", cancelButtonString );
 }
