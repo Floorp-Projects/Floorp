@@ -42,7 +42,7 @@ CPPSRCS =				\
 
 MODULE=raptor 
 REQUIRES=xpcom raptor dom 
-EXPORTS=nsSelectionRange.h
+EXPORTS=nsSelectionRange.h nsSelectionPoint.h
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsContainerFrame.obj	\
