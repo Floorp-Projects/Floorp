@@ -1164,7 +1164,7 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
   PRBool anyRendered;
   OptimizeDisplayListClipping(&displayList, PR_FALSE, fakeClipRect, index, anyRendered);
 
-  PRInt32 translucentViewCount;
+  PRInt32 translucentViewCount = 0;
   nsRect translucentArea(0, 0, 0, 0);
   PRInt32 i;
   // count number of translucent views, and
