@@ -33,6 +33,10 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 
+// define to include temporary code which prevents a common startup crash
+// (Bugzilla bug 46267) without addressing the unerlying issue.
+#define MASK_PREMATURE_STREAM_RELEASE
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsPipe : public nsIPipe
@@ -620,6 +624,9 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                                           PRUint32 *writeCount)
 {
     nsresult rv = NS_OK;
+#ifdef MASK_PREMATURE_STREAM_RELEASE
+    nsCOMPtr<nsIBufferOutputStream> kungFuDeathGrip(this);
+#endif
     nsPipe* pipe = GET_OUTPUTSTREAM_PIPE(this);
     PRUint32 amt = count;
     {
