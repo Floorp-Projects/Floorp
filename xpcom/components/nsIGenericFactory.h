@@ -157,13 +157,11 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) 
         rv = NS_ERROR_OUT_OF_MEMORY;                                            \
         return rv;                                                              \
     }                                                                           \
-	rv = inst->_InitMethod();                                                   \
-    if(NS_FAILED(rv)) {                                                         \
-        NS_DELETEXPCOM(inst);                                                   \
-        return rv;                                                              \
-    }                                                                           \
     NS_ADDREF(inst);                                                            \
-    rv = inst->QueryInterface(aIID, aResult);                                   \
+	rv = inst->_InitMethod();                                                   \
+    if(NS_SUCCEEDED(rv)) {                                                      \
+        rv = inst->QueryInterface(aIID, aResult);                               \
+    }                                                                           \
     NS_RELEASE(inst);                                                           \
                                                                                 \
     return rv;                                                                  \
