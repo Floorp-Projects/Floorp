@@ -57,6 +57,7 @@ function initCommands(commandObject)
     add (CMD_PROPSD, "onInputPropsD",    CMD_PROPSD_PARAMS, CMD_PROPSD_HELP);
     add (CMD_SCOPE,  "onInputScope",     CMD_SCOPE_PARAMS,  CMD_SCOPE_HELP);
     add (CMD_STEP,   "onInputStep",      CMD_STEP_PARAMS,   CMD_STEP_HELP);
+    add (CMD_TMODE,  "onInputTMode",     CMD_TMODE_PARAMS,  CMD_TMODE_HELP);
     add (CMD_WHERE,  "onInputWhere",     CMD_WHERE_PARAMS,  CMD_WHERE_HELP);
     add (CMD_QUIT,   "onInputQuit",      CMD_QUIT_PARAMS,   CMD_QUIT_HELP);
     
