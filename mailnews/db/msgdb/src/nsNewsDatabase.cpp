@@ -22,7 +22,7 @@
 #include "nsMsgKeySet.h"
 #include "nsCOMPtr.h"
 
-#if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
+#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_NEWS_DATABASE 1
 #endif
 

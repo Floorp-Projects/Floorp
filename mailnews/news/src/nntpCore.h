@@ -21,7 +21,7 @@
 
 #include "rosetta.h"
 
-#if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
+#if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_)
 #define DEBUG_NEWS 1
 #endif
 

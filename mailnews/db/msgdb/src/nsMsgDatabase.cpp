@@ -46,7 +46,7 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 #include "nsCollationCID.h"
 #include "nsIPref.h"
 
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_MSGKEYSET 1
 #endif
 
