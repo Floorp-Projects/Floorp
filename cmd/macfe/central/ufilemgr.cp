@@ -1080,7 +1080,6 @@ tryagain:
 
 OSErr CFileMgr::UpdateFinderDisplay(const FSSpec& inSpec)
 {
-	AppleEvent theEvent;
 	AliasHandle	theAlias = NULL;
 	OSErr		theErr = noErr;
 	
@@ -1097,6 +1096,7 @@ OSErr CFileMgr::UpdateFinderDisplay(const FSSpec& inSpec)
 		StHandleLocker theAliasLocker((Handle)theAlias);
 		//LAEStream theEventStream('fndr', 'fupd', typeProcessSerialNumber, &theFinderPSN, sizeof( ProcessSerialNumber ));
 		//theEventStream.WriteKeyDesc(keyDirectObject, typeAlias, *theAlias, ::GetHandleSize((Handle)theAlias));
+		//AppleEvent theEvent;
 		//theEventStream.Close(&theEvent);
 		//UAppleEventsMgr::SendAppleEvent(theEvent);
 		}
