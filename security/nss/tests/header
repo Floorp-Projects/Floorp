@@ -471,21 +471,25 @@ tbx_dirs()
     fi
     TBX_DAILY_BUILD=`cd ../../../../..;pwd`
     NSS_VER_DIR="${TBX_DAILY_BUILD}/../.." 
-    if [ "$O_WIN" = "ON" ] ; then
-        TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/stalker_NT"
-    else
-        Debug "Testing for TBX_LOGDIR ${TBX_LOGDIR}"
-        if [ -n "${TBX_LOGDIR}" ] ; then
-            Debug "found TBX_LOGDIR ${TBX_LOGDIR}"
-            TBX_LOGFILE_DIR="${TBX_LOGDIR}"
-        elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris8_64" ] ; then
-            TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
-        elif [ -d "${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00" ] ; then
-#/export/nss_tbx_hpux11.00/logs/tinderbox/HP-UX-11.00/qa.lu
-            TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00"
-        elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris2.6" ] ; then
-            TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris2.6"
-        else
+    #if [ "$O_WIN" = "ON" ] ; then
+        #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/stalker_NT"
+    #else
+        #Debug "Testing for TBX_LOGDIR ${TBX_LOGDIR}"
+        #if [ -n "${TBX_LOGDIR}" ] ; then
+            #Debug "found TBX_LOGDIR ${TBX_LOGDIR}"
+            #TBX_LOGFILE_DIR="${TBX_LOGDIR}"
+        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris8" ] ; then
+            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8"
+        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris8_64" ] ; then
+            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
+        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00" ] ; then
+            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00"
+        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00-64" ] ; then
+            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00-64"
+        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris2.6" ] ; then
+            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris2.6"
+#/export/nss_tbx_aix64/logs/tinderbox/AIX64
+        #else
             TBX_LOGFILE_DIR=`ls ${NSS_VER_DIR}/logs/tinderbox |
                      sed -e 's/ .*//g'`
             if [ -z "$TBX_LOGFILE_DIR" ] ; then
@@ -496,9 +500,9 @@ tbx_dirs()
                 TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/${TBX_LOGFILE_DIR}"
             fi
             #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs"
-        fi
+        #fi
         Debug "Set TBX_LOGFILE_DIR ${TBX_LOGFILE_DIR}"
-    fi
+    #fi
     
     set_daily_build_dirs
     UX_MASTERDIR=`cd ../../../..;pwd`
@@ -658,6 +662,9 @@ init_files()
         fi
         Debug "About to touch $NEWFILENAME "
         touch $NEWFILENAME || Exit "Error: can't touch $NEWFILENAME"
+        if [ "$O_TBX" = "ON" ] ; then
+             echo "QA results in $RESULTDIR" >>$NEWFILENAME || Exit "Error: can't write to $NEWFILENAME"
+        fi
         Debug "About to cat $FILENAME >>$NEWFILENAME "
         cat $FILENAME >>$NEWFILENAME || Exit "Error: can't append $FILENAME to $NEWFILENAME"
         TMPFILES="$TMPFILES $FILENAME"
