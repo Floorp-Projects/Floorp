@@ -19,7 +19,6 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <iomanip>
 #include "utilities.h"
 
 #ifdef WIN32
