@@ -667,14 +667,8 @@ nsExtensionManager.prototype = {
       catch (e) { /* can't handle this */ }
     }
     
-    if (file.exists()) {
-      var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                                .createInstance(Components.interfaces.nsIZipReader);
-      zipReader.init(file);
-      zipReader.open();
-      this.installExtensionFromXPI(zipReader, nsIExtensionManager.FLAG_INSTALL_GLOBAL);
-      zipReader.close();
-    }
+    if (file.exists())
+      this.installExtensionFromXPI(file, nsIExtensionManager.FLAG_INSTALL_GLOBAL);
     else {
       printf("Invalid XPI Path: " + aPath + "\n");
     }
@@ -919,7 +913,7 @@ nsExtensionManager.prototype = {
   
   /////////////////////////////////////////////////////////////////////////////  
   // nsIExtensionManager
-  installExtensionFromXPI: function (aZipReader, aFlags)
+  installExtensionFromXPI: function (aXPIFile, aFlags)
   {
     // Since we're installing a "new type" extension, we assume a file layout
     // within the XPI like so:
@@ -929,10 +923,15 @@ nsExtensionManager.prototype = {
     //         components/ 
     //         defaults/
     //                  prefs/
+    var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
+                              .createInstance(Components.interfaces.nsIZipReader);
+    zipReader.init(aXPIFile);
+    zipReader.open();
+
     var installProfile = aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE;
     var tempManifest = getFile(getDirKey(installProfile),
                                [DIR_EXTENSIONS, DIR_TEMP, FILE_EXTENSION_MANIFEST]);
-    aZipReader.extract(FILE_EXTENSION_MANIFEST, tempManifest);
+    zipReader.extract(FILE_EXTENSION_MANIFEST, tempManifest);
     
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                         .getService(Components.interfaces.nsIRDFService);
@@ -950,8 +949,9 @@ nsExtensionManager.prototype = {
                                     this._ds._emL("true"), installProfile);
       // Then we stage the extension's XPI into a temporary directory so we 
       // can extract them after the next restart. 
-      this._stageExtensionXPI(aZipReader, extensionID, installProfile);
+      this._stageExtensionXPI(zipReader, extensionID, installProfile);
     }
+    zipReader.close();
     tempManifest.remove(false);
     
     this._writeAutoReg(installProfile);
