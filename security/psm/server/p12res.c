@@ -512,7 +512,8 @@ SSM_UCS2_UTF8Conversion(PRBool toUnicode, unsigned char *inBuf,
         /* The value in *outBufLen isn't right, so we'll force it to be
          * right.
          */
-        *outBufLen = PL_strlen(outBuf);
+        *outBufLen = inBufLen/2;
+	outBuf[*outBufLen] ='\0';
 	}
 #ifdef DEBUG
     fprintf(stderr,"Output: \n");
