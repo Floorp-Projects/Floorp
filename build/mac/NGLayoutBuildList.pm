@@ -420,6 +420,7 @@ sub BuildLayoutProjects()
 	BuildProject(":mozilla:widget:macbuild:widget.mcp",					"widget$D.o");
 	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",				"webshell$D.o");
 	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",		"viewer$D");
+	BuildProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",				"xpfeViewer$D");
 }
 
 
