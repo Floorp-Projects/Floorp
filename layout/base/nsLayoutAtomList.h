@@ -164,6 +164,9 @@ LAYOUT_ATOM(onoverflow, "onoverflow")
 LAYOUT_ATOM(onunderflow, "onunderflow")
 LAYOUT_ATOM(onoverflowchanged, "onoverflowchanged")
 
+  // other
+LAYOUT_ATOM(wildcard, "*")
+
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code
 LAYOUT_ATOM(cellMap, "TableCellMap")

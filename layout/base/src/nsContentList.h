@@ -134,8 +134,6 @@ protected:
   PRBool ContainsRoot(nsIContent* aContent);
   nsresult CheckDocumentExistence();
 
-  static nsIAtom* gWildCardAtom;
-
   nsIAtom* mMatchAtom;
   PRInt32 mMatchNameSpaceId;
   nsContentListMatchFunc mFunc;
