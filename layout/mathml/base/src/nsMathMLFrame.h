@@ -145,9 +145,8 @@ public:
   }
 
   NS_IMETHOD
-  ReResolveScriptStyle(nsIPresContext*  aPresContext,
-                       nsIStyleContext* aParentContext,
-                       PRInt32          aParentScriptLevel)
+  ReResolveScriptStyle(nsIPresContext* aPresContext,
+                       PRInt32         aParentScriptLevel)
   {
     return NS_OK;
   }

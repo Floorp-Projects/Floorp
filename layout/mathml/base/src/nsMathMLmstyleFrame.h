@@ -35,6 +35,14 @@ public:
   friend nsresult NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
+  AttributeChanged(nsIPresContext* aPresContext,
+                   nsIContent*     aContent,
+                   PRInt32         aNameSpaceID,
+                   nsIAtom*        aAttribute,
+                   PRInt32         aModType, 
+                   PRInt32         aHint);
+
+  NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
@@ -42,9 +50,10 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
-                         PRUint32 aFlagsValues,
-                         PRUint32 aFlagsToUpdate);
+  UpdatePresentationData(nsIPresContext* aPresContext,
+                         PRInt32         aScriptLevelIncrement,
+                         PRUint32        aFlagsValues,
+                         PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
@@ -73,6 +82,9 @@ protected:
   virtual ~nsMathMLmstyleFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }
+
+  PRUint32 mInheritedDisplayStyle;
+  PRInt32  mInheritedScriptLevel;
 };
 
 #endif /* nsMathMLmstyleFrame_h___ */
