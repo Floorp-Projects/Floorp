@@ -60,6 +60,8 @@ pref("mail.imap.max_chunk_size",            40960);
 pref("mail.imap.chunk_fast",                2);
 pref("mail.imap.chunk_ideal",               4);
 pref("mail.imap.chunk_add",                 2048);
+pref("mail.imap.hide_other_users",			false);
+pref("mail.imap.hide_unused_namespaces",	true);
 pref("mail.imap.auto_subscribe",            true);
 pref("mail.imap.auto_unsubscrube",          true);
 pref("mail.imap.new_mail_get_headers",      true);
