@@ -334,8 +334,12 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   /**
    * the number of new messages since this folder was last visited
-   */
-	attribute long numNewMessages;
+   * @param deep if true, descends into all subfolders and gets a grand total
+   */  
+   
+   long getNumNewMessages (in boolean deep);
+
+   void setNumNewMessages(in long numNewMessages);
 
   /**
    * verbose description of the new messages in this folder

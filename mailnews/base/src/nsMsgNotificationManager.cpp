@@ -320,7 +320,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	}
 
 	PRInt32 newMessages;
-	rv = folder->GetNumNewMessages(&newMessages);
+	rv = folder->GetNumNewMessages(PR_FALSE, &newMessages);
 	if(NS_SUCCEEDED(rv))
 	{
 		char *str = PR_smprintf("%d new %s", newMessages, (newMessages == 1) ? "message" : "messages");

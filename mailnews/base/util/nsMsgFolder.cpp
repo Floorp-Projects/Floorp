@@ -2027,7 +2027,6 @@ NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
           return folder->SetBiffState(aBiffState);
       }
 
-
       server->SetBiffState(aBiffState);
       nsCOMPtr<nsISupports> supports;
       if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
@@ -2037,12 +2036,35 @@ NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetNumNewMessages(PRInt32 *aNumNewMessages)
+NS_IMETHODIMP nsMsgFolder::GetNumNewMessages(PRBool deep, PRInt32 *aNumNewMessages)
 {
 	if(!aNumNewMessages)
 		return NS_ERROR_NULL_POINTER;
 
-	*aNumNewMessages = mNumNewBiffMessages;
+  PRInt32 numNewMessages = mNumNewBiffMessages;
+  if (deep) 
+  {
+		nsCOMPtr<nsIMsgFolder> folder;
+		PRUint32 count;
+    nsresult rv = NS_OK;
+    rv = mSubFolders->Count(&count);
+    if (NS_SUCCEEDED(rv)) 
+    {
+      for (PRUint32 i = 0; i < count; i++)
+      {
+        nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+        folder = do_QueryInterface(supports, &rv);
+        if(NS_SUCCEEDED(rv))
+        {
+          PRInt32 num;
+          folder->GetNumNewMessages(deep, &num);
+          if (num >= 0) // it's legal for counts to be negative if we don't know
+            numNewMessages += num;
+        }
+      }
+    }
+  }
+	*aNumNewMessages = numNewMessages;
 	return NS_OK;
 }
 

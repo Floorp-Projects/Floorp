@@ -170,7 +170,7 @@ public:
   // NS_IMETHOD SetCharset(const PRUnichar * aCharset);
   NS_IMETHOD GetBiffState(PRUint32 *aBiffState);
   NS_IMETHOD SetBiffState(PRUint32 aBiffState);
-  NS_IMETHOD GetNumNewMessages(PRInt32 *aNumNewMessages);
+  NS_IMETHOD GetNumNewMessages(PRBool deep, PRInt32 *aNumNewMessages);
   NS_IMETHOD SetNumNewMessages(PRInt32 aNumNewMessages);
   NS_IMETHOD GetNewMessagesNotificationDescription(PRUnichar * *aNewMessagesNotificationDescription);
   NS_IMETHOD GetRootFolder(nsIMsgFolder * *aRootFolder);
