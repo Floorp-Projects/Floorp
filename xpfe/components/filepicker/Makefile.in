@@ -28,7 +28,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifneq ($(OS_ARCH),OS2)
 DIRS = src
+endif
 
 include $(topsrcdir)/config/rules.mk
 
