@@ -523,8 +523,8 @@ sub BuildLayoutProjects()
 	ReconcileProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",					":mozilla:webshell:tests:viewer:mac:viewer.toc");
 	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",						"viewer$D");
 
-	ReconcileProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",							":mozilla:xpfe:macbuild:xpfeviewer.toc");
-	BuildProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",								"xpfeViewer$D");
+#	ReconcileProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",							":mozilla:xpfe:macbuild:xpfeviewer.toc");
+#	BuildProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",								"xpfeViewer$D");
 	
 	ReconcileProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",					":mozilla:xpfe:appshell:macbuild:AppShell.toc");
 	BuildProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",						"AppShell$D.shlb");
