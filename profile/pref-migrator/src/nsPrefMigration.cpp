@@ -918,7 +918,7 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
   // rename the bookmarks file, but only if we need to.
   rv = Rename4xFileAfterMigration(profilePath,BOOKMARKS_FILE_NAME_IN_4x,BOOKMARKS_FILE_NAME_IN_5x);
   if (NS_FAILED(rv)) return rv;
-  
+
 #ifdef MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
   rv = RenameAndMoveFilterFiles(profilePath);
   if (NS_FAILED(rv)) return rv;

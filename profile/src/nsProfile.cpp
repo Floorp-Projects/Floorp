@@ -86,6 +86,8 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
+#include "nsIBookmarksService.h"
+
 #define _MAX_LENGTH			256
 #define _MAX_NUM_PROFILES	50
 
@@ -123,7 +125,7 @@ static PRBool renameCurrProfile = PR_FALSE;
 
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
-
+static NS_DEFINE_CID(kBookmarksCID, NS_BOOKMARKS_SERVICE_CID);      
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
@@ -1931,6 +1933,12 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 		}
 		
 	}
+
+	// we need to re-read the bookmarks here, other wise the user
+	// won't have there 4.x bookmarks until after they exit and come back
+	NS_WITH_SERVICE(nsIBookmarksService, bookmarks, kBookmarksCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	rv = bookmarks->ReadBookmarks();
 
     return rv;
 }
