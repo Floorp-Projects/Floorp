@@ -52,7 +52,6 @@ REQUIRES	= xpcom \
 		  txmgr \
 		  htmlparser \
 		  necko \
-		  appshell \
 		  xuldoc \
 		  commandhandler \
 		  gfx \

@@ -32,24 +32,21 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutDebugModule
 
-REQUIRES=	xpcom \
-		string \
-		windowwatcher \
-		docshell \
-		string \
-		dom \
-		gfx \
-		content \
-		necko \
-		layout \
-		widget \
-		locale \
-		view \
-		pref \
-		imglib2 \
-		unicharutil \
-		appshell \
-		$(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  windowwatcher \
+		  docshell \
+		  dom \
+		  gfx \
+		  content \
+		  necko \
+		  layout \
+		  widget \
+		  locale \
+		  view \
+		  pref \
+		  appshell \
+		  $(NULL)
 
 XPIDLSRCS	= \
 		nsILayoutRegressionTester.idl \

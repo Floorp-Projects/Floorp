@@ -34,15 +34,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsFindComponent
 REQUIRES	= xpcom \
 		  string \
-		  dom \
-		  gfx \
-		  layout \
-		  content \
-		  widget \
-		  editor \
-		  necko \
-		  txtsvc \
-		  docshell \
 		  $(NULL)
 
 CPPSRCS		= \

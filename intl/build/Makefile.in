@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  chardet \
 		  uconv \
 		  lwbrk \
-		  unicharutil \
 		  intl \
 		  locale \
 		  htmlparser \

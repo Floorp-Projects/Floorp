@@ -32,7 +32,6 @@ META_COMPONENT = mail
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  string \
-		  dom \
 		  msgbase \
 		  mailnews \
 		  necko \

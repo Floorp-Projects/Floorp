@@ -38,7 +38,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsMsgBaseModule
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
-		  xpobsolete \
 		  string \
 		  necko \
 		  intl \
@@ -51,15 +50,13 @@ REQUIRES	= xpcom \
 		  mime \
 		  uriloader \
 		  mailnews \
-          addrbook \
+		  addrbook \
 		  mork \
 		  txmgr \
 		  pref \
 		  msgcompose \
 		  msgbaseutil \
-		  appcomps \
 		  msgdb \
-		  editor \
 		  appshell \
 		  msgnews \
 		  msgimap \
@@ -67,6 +64,10 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  content \
 		  $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+REQUIRES	+= appcomps
+endif
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

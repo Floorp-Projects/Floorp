@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  appcomps \
 		  webbrwsr \
-		  chardet \
 		  windowwatcher \
 		  $(NULL)
 

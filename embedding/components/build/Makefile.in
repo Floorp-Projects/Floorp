@@ -49,7 +49,6 @@ REQUIRES	= js \
 		  htmlparser \
 		  embed_base \
 		  dom \
-		  txtsvc \
 		  lwbrk \
 		  mimetype \
 		  content \

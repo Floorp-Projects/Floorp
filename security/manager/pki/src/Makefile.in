@@ -68,7 +68,6 @@ REQUIRES	= nspr \
 		  necko \
 		  pipnss \
 		  layout \
-		  pipboot \
 		  $(NULL)
 
 INCLUDES	+= \

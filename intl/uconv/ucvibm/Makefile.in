@@ -42,7 +42,6 @@ LIBRARY_NAME	= ucvibm_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsUCvIBMModule
 REQUIRES	= xpcom \
-		  string \
 		  uconv \
 		  $(NULL)
 

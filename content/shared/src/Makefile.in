@@ -36,9 +36,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  dom \
 		  necko \
-		  htmlparser \
 		  unicharutil \
-		  uconv \
 		  $(NULL)
 
 CPPSRCS		= \

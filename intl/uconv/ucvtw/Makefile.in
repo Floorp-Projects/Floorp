@@ -31,7 +31,6 @@ LIBRARY_NAME	= ucvtw_s
 MODULE_NAME	= nsUCvTWModule
 FORCE_STATIC_LIB=1
 REQUIRES	= xpcom \
-		  string \
 		  uconv \
 		  $(NULL)
 

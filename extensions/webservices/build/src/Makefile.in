@@ -40,8 +40,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  caps \
 		  necko \
-		  webbrwsr \
-		  embedcomponents \
 		  xpconnect \
 		  xmlextras \
 		  $(NULL)

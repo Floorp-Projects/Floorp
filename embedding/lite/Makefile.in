@@ -33,13 +33,7 @@ REQUIRES	= xpcom \
 		  string \
 		  chrome \
 		  necko \
-		  history \
 		  pref \
-		  content \
-		  caps \
-		  xpconnect \
-		  js \
-		  xuldoc \
 		  appcomps \
 		  $(NULL)
 

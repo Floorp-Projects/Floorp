@@ -40,8 +40,6 @@ REQUIRES	= xpcom \
 		  java \
 		  pref \
 		  necko \
-		  gtkxtbin \
-		  webshell \
 		  caps \
 		  intl \
 		  uconv \
@@ -54,14 +52,18 @@ REQUIRES	= xpcom \
 		  oji \
 		  exthandler \
 		  docshell \
-		  webbrwsr \
 		  windowwatcher \
 		  imglib2 \
 		  layout \
 		  js \
 		  $(NULL)
-# for xlib port
+
+ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+REQUIRES	+= gtkxtbin
+endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),xlib)
 REQUIRES	+= xlibxtbin xlibrgb
+endif
 
 CPPSRCS		= \
 		ns4xPlugin.cpp \

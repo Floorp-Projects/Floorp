@@ -38,7 +38,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  view \
 		  pref \
-		  imglib2 \
 		  unicharutil \
 		  $(NULL)
 

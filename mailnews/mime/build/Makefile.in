@@ -33,7 +33,6 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= mime_services
 REQUIRES	= xpcom \
-                  xpcom_obsolete \
 		  string \
 		  necko \
 		  msgbase \

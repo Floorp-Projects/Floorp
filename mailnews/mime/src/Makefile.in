@@ -38,7 +38,7 @@ MODULE		= mime
 LIBRARY_NAME	= mime_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
-                  xpcom_obsolete \
+		  xpcom_obsolete \
 		  string \
 		  msgbase \
 		  msgbaseutil \
@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  unicharutil \
 		  msgcompose \
-		  editor \
 		  dom \
 		  intl \
 		  msgimap \

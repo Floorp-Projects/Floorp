@@ -31,7 +31,6 @@ LIBRARY_NAME	= ucvlatin_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsUCvLatinModule
 REQUIRES	= xpcom \
-		  string \
 		  uconv \
 		  $(NULL)
 

@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  caps \
 		  uconv \
 		  necko \
-		  docshell \
 		  xpconnect \
 		  htmlparser \
 		  windowwatcher \

@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  mailnews \
 		  addrbook \
 		  uconv \
-		  mork \
 		  msgbase \
 		  msgbaseutil \
 		  intl \

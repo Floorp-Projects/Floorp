@@ -33,8 +33,7 @@ DEFINES		+= -DXPCOM_GLUE
 
 REQUIRES	= string \
 		  embedstring \
-		  xpcom \
-	          $(NULL)
+		  $(NULL)
 
 
 LOCAL_INCLUDES	= \

@@ -29,7 +29,6 @@ REQUIRES	= string \
 		  xpcom \
 		  dom \
 		  widget \
-		  layout \
 		  content \
 		  xuldoc \
 		  caps \

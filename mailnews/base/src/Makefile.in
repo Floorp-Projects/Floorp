@@ -34,16 +34,13 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  dom \
-		  js \
 		  appshell \
-		  appcomps \
 		  uconv \
 		  intl \
 		  htmlparser \
 		  widget \
 		  docshell \
 		  rdf \
-		  editor \
 		  gfx \
 		  layout \
 		  content \
@@ -67,7 +64,6 @@ REQUIRES	= xpcom \
 		  mime \
 		  mimetype \
 		  windowwatcher \
-		  profile \
 		  webbrwsr \
 		  exthandler \
 		  $(NULL)
@@ -93,15 +89,15 @@ CPPSRCS		= \
 		nsMsgStatusFeedback.cpp \
 		nsMsgWindow.cpp \
 		nsMessengerMigrator.cpp \
-		nsMsgServiceProvider.cpp	\
-		nsSubscribeDataSource.cpp	\
+		nsMsgServiceProvider.cpp \
+		nsSubscribeDataSource.cpp \
 		nsSubscribableServer.cpp \
-		nsMsgPrintEngine.cpp	\
+		nsMsgPrintEngine.cpp \
 		nsStatusBarBiffManager.cpp \
 		nsMsgDBView.cpp \
 		nsMsgThreadedDBView.cpp \
 		nsMsgSpecialViews.cpp \
-    nsMsgQuickSearchDBView.cpp \
+		nsMsgQuickSearchDBView.cpp \
 		nsMsgSearchDBView.cpp \
 		nsMsgOfflineManager.cpp \
 		nsMsgProgress.cpp \
@@ -116,6 +112,9 @@ REQUIRES += macmorefiles
 endif
 
 ifeq ($(OS_ARCH),WINNT)
+REQUIRES	+= appcomps \
+		   profile \
+		   $(NULL)
 CPPSRCS		+= nsMessengerWinIntegration.cpp 
 endif
 

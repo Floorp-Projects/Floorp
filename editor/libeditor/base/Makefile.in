@@ -36,14 +36,12 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  txmgr \
-		  txtsvc \
 		  htmlparser \
 		  necko \
 		  pref \
 		  view \
 		  gfx \
 		  widget \
-		  xuldoc \
 		  unicharutil \
 		  commandhandler \
 		  docshell \

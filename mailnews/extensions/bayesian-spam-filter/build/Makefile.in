@@ -34,13 +34,8 @@ SHORT_LIBNAME	= bayesflt
 IS_COMPONENT	= 1
 MODULE_NAME	= nsBayesianFilterModule
 REQUIRES	= xpcom \
-		  string \
 		  mailnews \
-		  mime \
 		  msgbase \
-		  msgbaseutil \
-		  msgdb \
-		  necko \
 		  lwbrk \
 		  $(NULL)
 

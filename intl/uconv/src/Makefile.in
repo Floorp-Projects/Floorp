@@ -38,8 +38,6 @@ ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME  = mozuconv
 endif
 REQUIRES	= xpcom \
-                  mozreg \
-                  xpcom_obsolete \
 		  string \
 		  intl \
 		  locale \

@@ -28,19 +28,18 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE    = websrvcs
 LIBRARY_NAME	= websrvcswsdl_s
-REQUIRES = xpcom \
-	   string \
-	   dom \
-	   xpconnect \
-	   caps \
-	   layout \
-	   widget \
-	   content \
-	   js \
-	   necko \
-	   pref \
-	   xmlextras \
-	   $(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  xpconnect \
+		  caps \
+		  widget \
+		  content \
+		  js \
+		  necko \
+		  pref \
+		  xmlextras \
+		  $(NULL)
 
 CPPSRCS	= 				\
 		nsWSDLLoader.cpp	\

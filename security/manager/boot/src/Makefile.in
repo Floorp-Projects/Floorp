@@ -63,17 +63,13 @@ REQUIRES	= nspr \
 		  xpcom \
 		  string \
 		  necko \
-		  necko2 \
 		  uriloader \
 		  dom \
 		  intl \
-		  js \
 		  docshell \
 		  widget \
 		  layout \
 		  content \
-		  unicharutil \
-		  pipnss \
 		  pref \
 		  $(NULL)
 

@@ -41,7 +41,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  mimetype \
 		  webshell \
-		  xul \
 		  htmlparser \
 		  uconv \
 		  xuldoc \

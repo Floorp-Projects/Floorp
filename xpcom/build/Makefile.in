@@ -33,8 +33,7 @@ LIBRARY_NAME	= xpcom
 #EXPORT_LIBRARY = 1
 GRE_MODULE	= 1
 
-REQUIRES	= libreg \
-		  string \
+REQUIRES	= string \
 		  $(NULL)
 
 # pull in MoreFiles for MacOSX

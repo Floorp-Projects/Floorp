@@ -30,8 +30,7 @@ MODULE		= profile
 LIBRARY_NAME	= profile_s
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
-		  xpcom_obsolete \
-	          string \
+		  string \
 		  chrome \
 		  docshell \
 		  webbrwsr \

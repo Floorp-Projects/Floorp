@@ -51,10 +51,8 @@ REQUIRES	= xpcom \
 		  js \
 		  pref \
 		  widget \
-		  content \
 		  uriloader \
 		  xpconnect \
-		  docshell \
 		  dom \
 		  windowwatcher \
 		  plugin \

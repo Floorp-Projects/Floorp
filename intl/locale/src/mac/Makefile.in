@@ -49,9 +49,7 @@ FORCE_STATIC_LIB	= 1
 REQUIRES	= xpcom \
 		  string \
 		  unicharutil \
-		  pref \
 		  uconv \
-		  intl \
 		  $(NULL)
 
 CPPSRCS		= \

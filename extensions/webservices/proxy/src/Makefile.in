@@ -28,15 +28,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE    = websrvcs
 LIBRARY_NAME	= websrvcsproxy_s
-REQUIRES 	= xpcom \
-		string \
-		xpconnect \
-		caps \
-		js \
-		necko \
-		dom \
-		iiextras \
-		$(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  xpconnect \
+		  js \
+		  dom \
+		  $(NULL)
 
 CPPSRCS=			\
 	wspinfoservice.cpp	\

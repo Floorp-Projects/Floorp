@@ -51,7 +51,6 @@ endif
 
 MODULE		= apprunner
 REQUIRES	= xpcom \
-		  xpconnect \
 		  string \
 		  webbrwsr \
 		  widget \
@@ -63,32 +62,22 @@ REQUIRES	= xpcom \
 		  chrome \
 		  xpinstall \
 		  uriloader \
-		  view \
 		  windowwatcher \
 		  embed_base \
 		  embedcomponents \
-		  browser \
 		  docshell \
-		  uconv \
 		  locale \
-		  xremoteservice \
 		  profile \
 		  $(NULL)
 # for jprof
 REQUIRES	+= jprof
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-REQUIRES	+= \
-		  intl \
-		  profile \
-		  $(NULL)
-DIRS		+= os2turbo
-endif
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-REQUIRES	+= intl profile appcomps
-endif
 
 ifdef NS_TRACE_MALLOC
 REQUIRES	+= tracemalloc
+endif
+
+ifdef MOZ_ENABLE_XREMOTE
+REQUIRES	+= xremoteservice
 endif
 
 include $(topsrcdir)/config/config.mk
@@ -203,6 +192,8 @@ LIBS += -lphexlib -lph
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+DIRS += os2turbo
+REQUIRES += xpconnect intl profile
 CPPSRCS += nsNativeAppSupportOS2.cpp
 CPPSRCS += nsNativeAppSupportBase.cpp
 RESFILE = splashos2.res
@@ -231,6 +222,7 @@ LIBS += $(MOZ_GTK2_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+REQUIRES += xpconnect intl appcomps
 RCINCLUDE = splash.rc
 CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
 OS_LIBS	+= $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)

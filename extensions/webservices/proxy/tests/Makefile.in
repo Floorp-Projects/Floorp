@@ -33,16 +33,12 @@ XPIDL_MODULE	= wsproxytest
 IS_COMPONENT	= 1
 MODULE_NAME	= WSPProxyTestModule
 
-REQUIRES = xpcom \
-	   string \
-	   xmlextras \
-	   xpconnect \
-	   caps \
-	   js \
-	   necko \
-	   dom \
-	   websrvcs \
-	   $(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  xpconnect \
+		  dom \
+		  websrvcs \
+		  $(NULL)
 
 XPIDLSRCS       = \
 		nsIWSPProxyTest.idl \

@@ -38,18 +38,16 @@ REQUIRES	= xpcom \
 		  content \
 		  rdf \
 		  necko \
-		  necko2 \
 		  nkcache \
 		  intl \
 		  locale \
 		  mork \
 		  widget \
 		  dom \
-                  alerts\
-                  uriloader \
-                  mimetype \
-                  webbrowserpersist \
-                  progressDlg \
+		  uriloader \
+		  mimetype \
+		  webbrowserpersist \
+		  progressDlg \
 		  pref \
 		  docshell \
 		  webshell \

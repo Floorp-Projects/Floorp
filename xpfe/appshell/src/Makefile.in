@@ -52,13 +52,11 @@ REQUIRES	= xpcom \
 		  pref \
 		  xpconnect \
 		  intl \
-		  xul \
 		  windowwatcher \
 		  browser \
 		  caps \
 		  profile \
 		  unicharutil \
-		  embed_base \
 		  uconv \
 		  exthandler \
 		  $(NULL)

@@ -34,19 +34,11 @@ REQUIRES	= xpcom \
 		  content \
 		  gfx \
 		  widget \
-		  locale \
-		  view \
 		  necko \
-		  webshell \
 		  pref \
 		  docshell \
-		  plugin \
-		  xuldoc \
-		  imglib2 \
-		  gfx2 \
-	 	  webbrwsr \
+		  webbrwsr \
 		  appshell \
-		  layout \
 		  caps \
 		  uriloader \
 		  $(NULL)

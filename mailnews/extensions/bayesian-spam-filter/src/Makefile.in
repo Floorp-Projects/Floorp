@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  mailnews \
 		  msgbaseutil \
 		  msgdb \
-		  mime \
 		  profile \
 		  lwbrk \
 		  $(NULL)

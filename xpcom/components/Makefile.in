@@ -31,8 +31,7 @@ XPIDL_MODULE	= xpcom_components
 LIBRARY_NAME	= xpcomcomponents_s
 GRE_MODULE	= 1
 
-REQUIRES	= libreg \
-		  string \
+REQUIRES	= string \
 		  $(NULL)
 
 CPPSRCS		= \
