@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Travis Bogard <travis@netscape.com>
+ *   Brendan Eich <brendan@mozilla.org>
  */
 
 // Local Includes
@@ -32,6 +33,7 @@
 #include "nsXPIDLString.h"
 #include "nsJSUtils.h"
 #include "prmem.h"
+#include "jsdbgapi.h"   // for JS_ClearWatchPointsForObject
 
 // Other Classes
 #include "nsEventListenerManager.h"
@@ -243,76 +245,84 @@ NS_IMETHODIMP GlobalWindowImpl::GetContext(nsIScriptContext **aContext)
 
 NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 {
-   if (aDocument) {
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
-      if (doc)
-         doc->GetPrincipal(getter_AddRefs(mDocumentPrincipal));
-   }
+    if (aDocument) {
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
+        if (doc)
+            doc->GetPrincipal(getter_AddRefs(mDocumentPrincipal));
+    }
 
-   if(mFirstDocumentLoad)
-      {
-      mFirstDocumentLoad = PR_FALSE;
-      mDocument = aDocument;
-      return NS_OK;
-      }
+    // Always clear watchpoints, to deal with two cases:
+    // 1.  The first document for this window is loading, and a miscreant has
+    //     preset watchpoints on the window object in order to attack the new
+    //     document's privileged information.
+    // 2.  A document loaded and used watchpoints on its own window, leaving
+    //     them set until the next document loads.  We must clean up window
+    //     watchpoints here.
+    // Watchpoints set on document and subordinate objects are all cleared
+    // when those sub-window objects are finalized, after JS_ClearScope and
+    // a GC run that finds them to be garbage.
 
-   if(mDocument)
-      {
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-      nsCOMPtr<nsIURI> docURL;
+    ::JS_ClearWatchPointsForObject((JSContext *)mContext->GetNativeContext(),
+                                   (JSObject *)mScriptObject);
 
-      if(doc)
-         {
-         docURL = dont_AddRef(doc->GetDocumentURL());
-         doc = nsnull; // Forces release now
-         }
+    if (mFirstDocumentLoad) {
+        mFirstDocumentLoad = PR_FALSE;
+        mDocument = aDocument;
+        return NS_OK;
+    }
 
-      if(docURL)
-         {
-         char* str;
-         docURL->GetSpec(&str);
+    if (mDocument) {
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+        nsCOMPtr<nsIURI> docURL;
 
-         nsAutoString url; url.AssignWithConversion(str);
+        if (doc) {
+            docURL = dont_AddRef(doc->GetDocumentURL());
+            doc = nsnull; // Forces release now
+        }
 
-         //about:blank URL's do not have ClearScope called on page change.
-         if(!url.EqualsWithConversion("about:blank"))
-            {
-            ClearAllTimeouts();
-  
-            if (mSidebar)
-              {
-                mSidebar->SetWindow(nsnull);
-                mSidebar = nsnull;
-              }
+        if (docURL) {
+            char* str;
+            docURL->GetSpec(&str);
 
-            if(mListenerManager)
-               mListenerManager->RemoveAllListeners(PR_FALSE);
+            nsAutoString url; url.AssignWithConversion(str);
 
-            if(mScriptObject && mContext /*&& aDocument XXXbe why commented out?*/)
-               JS_ClearScope((JSContext *)mContext->GetNativeContext(),
-                              (JSObject *)mScriptObject);
+            //about:blank URL's do not have ClearScope called on page change.
+            if (!url.EqualsWithConversion("about:blank")) {
+                ClearAllTimeouts();
+     
+                if (mSidebar) {
+                    mSidebar->SetWindow(nsnull);
+                    mSidebar = nsnull;
+                }
+
+                if (mListenerManager)
+                    mListenerManager->RemoveAllListeners(PR_FALSE);
+
+                if (mScriptObject &&
+                    mContext /*&& aDocument XXXbe why commented out?*/) {
+                    ::JS_ClearScope((JSContext *)mContext->GetNativeContext(),
+                                    (JSObject *)mScriptObject);
+                }
             }
-         nsCRT::free(str);
-         }
-      }
+            nsCRT::free(str);
+        }
 
-   //XXX Should this be outside the about:blank clearscope exception?
-   if(mDocument)
-      mDocument = nsnull; // Forces Release
+        //XXX Should this be outside the about:blank clearscope exception?
+        mDocument = nsnull; // Forces Release
+    }
    
-   if(mContext) 
-   {
-      // Add an extra ref in case we release mContext during GC.
-      nsCOMPtr<nsIScriptContext> kungFuDeathGrip = mContext;
-      kungFuDeathGrip->GC();
-   }
+    if (mContext) {
+        // Add an extra ref in case we release mContext during GC.
+        nsCOMPtr<nsIScriptContext> kungFuDeathGrip = mContext;
+        kungFuDeathGrip->GC();
+    }
 
-   mDocument = aDocument;
+    mDocument = aDocument;
 
-   if(mDocument && mContext)
-      mContext->InitContext(this);
+    if (mDocument && mContext)
+        mContext->InitContext(this);
 
-   return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
