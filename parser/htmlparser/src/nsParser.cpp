@@ -1472,7 +1472,7 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
   nsITokenizer* theTokenizer=0;
   nsresult rv=mParserContext->mDTD->GetTokenizer(theTokenizer);
 
-  if (theTokenizer) {
+  if (NS_SUCCEEDED(rv) && theTokenizer) {
     result = theTokenizer->DidTokenize(aIsFinalChunk);
     if(mTokenObserver) {
       PRInt32 theCount=theTokenizer->GetCount();
