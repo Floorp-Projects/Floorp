@@ -86,7 +86,6 @@ function constructResults()
   {
     varaccFocused = "Not Focused";
   }
-alert(accNode.accKeyboardShortcut);
 
   var name = getName();
   var role = getRole();
@@ -98,6 +97,7 @@ alert(accNode.accKeyboardShortcut);
     alert("When i last modified the test case numActions was 1. Now numActions is more than 1. Add tests for other numActions");
   var actionName = getActionName();
   var action = doAction();
+  var keyboardShortcut = getAccKeyboardShortcut();
 
   var expectedName          = "Submit";
   var expectedRole          = "43";
@@ -108,6 +108,7 @@ alert(accNode.accKeyboardShortcut);
   var expectednumActions    = "1";
   var expectedactionName    = "Press";
   var expectednodeClick     = "Button Pressed";
+  var expectedkeyboardShortcut = "Alt+b";
 
   var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
   var row1 = new Array("Name->", expectedName, name);
@@ -119,8 +120,9 @@ alert(accNode.accKeyboardShortcut);
   var row7 = new Array("accNumActions->", expectednumActions, numActions);
   var row8 = new Array("getAccActionName()->", expectedactionName, actionName);
   var row9 = new Array("accDoAction()->", expectednodeClick, nodeClick);
+  var row10 = new Array("accKeyboardShortcut->", expectedkeyboardShortcut, keyboardShortcut);
 
-  row = new Array(row0, row1, row2, row3, row4, row5, row6, row7, row8, row9);
+  row = new Array(row0, row1, row2, row3, row4, row5, row6, row7, row8, row9, row10);
 
   if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
   if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
@@ -131,6 +133,8 @@ alert(accNode.accKeyboardShortcut);
   if (numActions == expectednumActions)     row7[3] = "PASS"; else row7[3] = "FAIL";
   if (actionName == expectedactionName)     row8[3] = "PASS"; else row8[3] = "FAIL";
   if (nodeClick == expectednodeClick)       row9[3] = "PASS"; else row9[3] = "FAIL";
+  if (keyboardShortcut == expectedkeyboardShortcut)
+                                            row10[3] = "PASS"; else row10[3] = "FAIL";
 
   appendTableRes();
   if(!isRunningStandalone())
@@ -158,7 +162,7 @@ if(readCookie(cookieName) == null)
   <!-- Test Button -->
   document.write('<br>');
   document.write('<b>Testing HTML Button for Accessibility..</b><br><br>');
-  document.write('<button accesskey="b" value="submit"> Submit </button>');
+  document.write('<button value="submit" accesskey="b"> Submit </button>');
 
   setTimeout("executeTestCase();", 2000);
 }
