@@ -25,7 +25,7 @@
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % prefImagesDTD SYSTEM "chrome://communicator/locale/cookie/pref-images.dtd" >
+<!ENTITY % prefImagesDTD SYSTEM "chrome://cookie/locale/pref-images.dtd" >
 %prefImagesDTD;
 ]>
 
@@ -33,9 +33,9 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         align="vertical"
-        onload="imageBlockingEnabled(); parent.initPanel('chrome://communicator/content/cookie/pref-images.xul');">
+        onload="imageBlockingEnabled(); parent.initPanel('chrome://cookie/content/pref-images.xul');">
           
-  <script language="javascript" src="chrome://communicator/content/cookie/cookieOverlay.js"/>
+  <script language="javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
   <script language="JavaScript">
   <![CDATA[

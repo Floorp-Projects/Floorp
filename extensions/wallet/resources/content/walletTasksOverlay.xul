@@ -22,12 +22,12 @@
    Contributor(s): 
   -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/walletTasksOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://wallet/locale/walletTasksOverlay.dtd">
 
 <overlay id="walletTasksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="javascript" src="chrome://communicator/content/wallet/walletOverlay.js"/>
+  <script language="javascript" src="chrome://wallet/content/walletOverlay.js"/>
 
   <script language="JavaScript">
   <![CDATA[

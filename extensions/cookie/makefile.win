@@ -84,5 +84,5 @@ clobber::
 	rm -f $(DIST)\lib\$(DLLNAME).lib
 
 chrome::
-	$(REGCHROME) content cookie comm.jar
-	$(REGCHROME) locale en-US/cookie en-US.jar
+	$(REGCHROME) content cookie cookie.jar
+	$(REGCHROME) locale en-US/cookie cookie.jar

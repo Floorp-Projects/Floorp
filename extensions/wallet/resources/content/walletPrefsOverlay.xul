@@ -21,7 +21,7 @@
    - Contributor(s):
    -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/walletPrefsOverlay.dtd" >
+<!DOCTYPE window SYSTEM "chrome://wallet/locale/walletPrefsOverlay.dtd" >
 
 <overlay id="walletPrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -30,14 +30,14 @@
     <treeitem position="1">
       <treerow>
         <treecell class="treecell-indent"
-                  url="chrome://communicator/content/wallet/pref-wallet.xul"
+                  url="chrome://wallet/content/pref-wallet.xul"
                   value="&wallet.label;"/> 
       </treerow>
     </treeitem>
     <treeitem position="2">
       <treerow>
         <treecell class="treecell-indent"
-                  url="chrome://communicator/content/wallet/pref-passwords.xul"
+                  url="chrome://wallet/content/pref-passwords.xul"
                   value="&passwords.label;"/> 
       </treerow>
     </treeitem>
