@@ -26,7 +26,7 @@ TESTCASES = testxpc.js
 
 LCFLAGS=-DUSE_NSREG -DJSFILE
 
-DEFINES=-DWIN32_LEAN_AND_MEAN -DJS_THREADSAFE -DDEBUG
+DEFINES=-DWIN32_LEAN_AND_MEAN -DJS_THREADSAFE
 
 REQUIRES=xpcom js xpconnect
 
@@ -46,8 +46,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 	-for %p in ($(TESTCASES)) do $(MAKE_INSTALL) %p $(DIST)\bin
-
-clean :: clobber
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
