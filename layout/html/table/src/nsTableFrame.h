@@ -188,7 +188,8 @@ public:
   //virtual void ListColumnLayoutData(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  
+  void GetTableBorder(nsMargin &aBorder);
+
   /** return the width of the column at aColIndex    */
   virtual PRInt32 GetColumnWidth(PRInt32 aColIndex);
 

@@ -4338,6 +4338,23 @@ NS_METHOD nsTableFrame::GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin&
   return result;
 }
 
+//XXX: ok, this looks dumb now.  but in a very short time this will get filled in
+void nsTableFrame::GetTableBorder(nsMargin &aBorder)
+{
+  if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
+  {
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    spacing->GetBorder(aBorder);
+  }
+  else
+  {
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    spacing->GetBorder(aBorder);
+  }
+}
+
 PRUint8 nsTableFrame::GetBorderCollapseStyle()
 {
   const nsStyleTable* tableStyle;
