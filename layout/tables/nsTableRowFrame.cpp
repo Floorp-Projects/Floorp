@@ -844,7 +844,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
 
           if (eReflowReason_Initial == reason) {
             // Save the pass1 reflow information
-            ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(desiredSize);
+            ((nsTableCellFrame *)kidFrame)->SetMaximumWidth(desiredSize.width);
             if (kidMaxElementSize) {
               ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(*kidMaxElementSize);
             }
@@ -1008,7 +1008,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
         kidSize.height = kidMaxElementSize.height;
       }
 
-      ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
+      ((nsTableCellFrame *)kidFrame)->SetMaximumWidth(kidSize.width);
       ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "unexpected child reflow status");
 
@@ -1243,7 +1243,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
 
     // Remember the current desired size, we'll need it later
     nsSize  oldMinSize = ((nsTableCellFrame*)aNextFrame)->GetPass1MaxElementSize();
-    nsSize  oldDesiredSize = ((nsTableCellFrame*)aNextFrame)->GetPass1DesiredSize();
+    nscoord oldMaximumWidth = ((nsTableCellFrame*)aNextFrame)->GetMaximumWidth();
     
     // Reflow the cell passing it the incremental reflow command. We can't pass
     // in a max width of NS_UNCONSTRAINEDSIZE, because the max width must match
@@ -1302,14 +1302,14 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
 #endif
   
         // Update the cell layout data.
-        ((nsTableCellFrame *)aNextFrame)->SetPass1DesiredSize(desiredSize);
+        ((nsTableCellFrame *)aNextFrame)->SetMaximumWidth(desiredSize.width);
       }
 
       // Now that we know the minimum and preferred widths see if the column
       // widths need to be rebalanced
       if (aReflowState.tableFrame->ColumnsAreValidFor(*(nsTableCellFrame*)aNextFrame,
                                                       oldMinSize.width,
-                                                      oldDesiredSize.width)) {
+                                                      oldMaximumWidth)) {
         // The column widths don't need to be rebalanced. Now reflow the cell
         // again this time constraining the width back to the column width again
         kidReflowState.reason = eReflowReason_Resize;

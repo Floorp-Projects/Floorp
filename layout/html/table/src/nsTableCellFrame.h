@@ -178,11 +178,11 @@ public:
   /** set the desired size returned by this frame during its last reflow */
   virtual void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
 
-  /** return the desired size returned by this frame during its last reflow */
-  virtual nsSize GetPass1DesiredSize() const;
+  /** return the maximum width of the cell */
+  virtual nscoord GetMaximumWidth() const;
 
-  /** set the desired size returned by this frame during its last reflow */
-  virtual void SetPass1DesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
+  /** set the maximum width of the cell */
+  virtual void SetMaximumWidth(nscoord aMaximumWidth);
 
   /** return the MaxElement size returned by this frame during its last reflow 
     * not counting reflows where MaxElementSize is not requested.  
@@ -248,8 +248,8 @@ protected:
   /** these are the last computed desired and max element sizes */
   nsSize       mDesiredSize;
 
-  /** these are the Pass 1 unconstrained desired and max element sizes */
-  nsSize       mPass1DesiredSize;
+  /** these are the Pass 1 maximum width and max element sizes */
+  nscoord      mMaximumWidth;
   nsSize       mPass1MaxElementSize;
 
 public:
@@ -298,13 +298,12 @@ inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesire
   mDesiredSize.height = aDesiredSize.height;
 }
 
-inline nsSize nsTableCellFrame::GetPass1DesiredSize() const
-{ return mPass1DesiredSize; }
+inline nscoord nsTableCellFrame::GetMaximumWidth() const
+{ return mMaximumWidth; }
 
-inline void nsTableCellFrame::SetPass1DesiredSize(const nsHTMLReflowMetrics & aDesiredSize)
+inline void nsTableCellFrame::SetMaximumWidth(nscoord aMaximumWidth)
 { 
-  mPass1DesiredSize.width = aDesiredSize.width;
-  mPass1DesiredSize.height = aDesiredSize.height;
+  mMaximumWidth = aMaximumWidth;
 }
 
 inline nsSize nsTableCellFrame::GetPass1MaxElementSize() const

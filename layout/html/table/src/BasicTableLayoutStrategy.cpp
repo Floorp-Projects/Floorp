@@ -462,7 +462,7 @@ BasicTableLayoutStrategy::ComputeColspanWidths(PRInt32           aWidthIndex,
     cellWidth = aCellFrame->GetPass1MaxElementSize().width;
   }
   else if (DES_CON == aWidthIndex) {
-    cellWidth = aCellFrame->GetPass1DesiredSize().width;
+    cellWidth = aCellFrame->GetMaximumWidth();
   }
   else { // FIX width
     // see if the cell has a style width specified
@@ -738,7 +738,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
       }
       // these values include borders and padding
       minWidth = PR_MAX(minWidth, cellFrame->GetPass1MaxElementSize().width);
-      nscoord cellDesWidth = cellFrame->GetPass1DesiredSize().width;
+      nscoord cellDesWidth = cellFrame->GetMaximumWidth();
       if (cellDesWidth > desWidth) {
         desContributor = cellFrame;
         desWidth = cellDesWidth;
@@ -1781,7 +1781,7 @@ PRBool BasicTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCel
   nscoord colSpan = mTableFrame->GetEffectiveColSpan(&aCellFrame);
 
   nscoord cellMin = aCellFrame.GetPass1MaxElementSize().width;
-  nscoord cellDes = aCellFrame.GetPass1DesiredSize().width;
+  nscoord cellDes = aCellFrame.GetMaximumWidth();
   nscoord colMin  = colFrame->GetMinWidth();
   nscoord colDes  = colFrame->GetDesWidth();
 
