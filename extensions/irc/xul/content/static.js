@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg("defaultNick");
 
-client.version = "0.8.12";
+client.version = "0.8.13";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -516,8 +516,8 @@ function insertChannelLink (matchText, containerTag, eventData)
     
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
-    anchor.setAttribute ("href", "irc://" + escape(eventData.network.name) +
-                         "/" + escape (encodedMatchText));
+    anchor.setAttribute ("href", eventData.network.getURL() +
+                         escape (encodedMatchText));
     anchor.setAttribute ("class", "chatzilla-link");
     //anchor.setAttribute ("target", "_content");
     insertHyphenatedWord (matchText, anchor);
@@ -2659,6 +2659,9 @@ function addHistory (source, obj, mergeData, collapseRow)
         if (source.messageCount > source.MAX_MESSAGES)
             if (client.PRINT_DIRECTION == 1)
             {
+                var height = tbody.firstChild.scrollHeight;
+                var x = source.frame.contentWindow.pageXOffset;
+                var y = source.frame.contentWindow.pageYOffset;
                 tbody.removeChild (tbody.firstChild);
                 --source.messageCount;
                 while (tbody.firstChild &&
@@ -2668,6 +2671,8 @@ function addHistory (source, obj, mergeData, collapseRow)
                     --source.messageCount;
                     tbody.removeChild (tbody.firstChild);
                 }
+                if (!checkScroll(source.frame) && (y > height))
+                    source.frame.contentWindow.scrollTo(x, y - height);
             }
             else
             {

@@ -37,7 +37,7 @@
   <treechildren id="panelChildren">
     <treeitem container="true" id="chatzillaItem" insertbefore="advancedItem">
       <treerow>
-        <treecell url="chrome://chatzilla/content/pref-irc.xul" 
+        <treecell url="chrome://chatzilla/content/prefpanel/pref-irc.xul" 
             label="ChatZilla"/>
       </treerow>
       <treechildren id="chatzillaChildren">

@@ -35,7 +35,7 @@
 <!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="parent.initPanel('chrome://chatzilla/content/pref-irc.xul');"
+    onload="parent.initPanel('chrome://chatzilla/content/prefpanel/pref-irc.xul');"
     headertitle="&window.title;">
 
   <script type="application/x-javascript">

@@ -201,7 +201,7 @@
             <menuitem id="menu_selectAll"/>
             <menuseparator/>
             <menuitem id="menu_preferences"
-              oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
+              oncommand="goPreferences('chatzillaItem', 'chrome://chatzilla/content/prefpanel/pref-irc.xul', 'chatzillaItem')"/>
           </menupopup>
         </menu> 
 
