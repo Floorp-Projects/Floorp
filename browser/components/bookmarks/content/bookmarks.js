@@ -1193,7 +1193,7 @@ var BookmarksUtils = {
       SOUND.beep();
       return false;
     }
-    this.removeSelection(aAction, aSelection, aTarget);
+    this.removeSelection(aAction, aSelection);
     BookmarksUtils.flushDataSource();
     return true;
   },
