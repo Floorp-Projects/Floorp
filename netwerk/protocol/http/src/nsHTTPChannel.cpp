@@ -1272,7 +1272,8 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   if (referrer && *referrer)
   {
       nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
-      httpChannel->SetRequestHeader(nsHTTPAtoms::Referer, referrer);
+      if (httpChannel)
+          httpChannel->SetRequestHeader(nsHTTPAtoms::Referer, referrer);
   }
 
   // Start the redirect...
