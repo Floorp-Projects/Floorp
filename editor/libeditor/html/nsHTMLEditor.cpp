@@ -62,13 +62,13 @@ nsHTMLEditor::~nsHTMLEditor()
 //NS_IMPL_ADDREF_INHERITED(Class, Super)
 NS_IMETHODIMP_(nsrefcnt) nsHTMLEditor::AddRef(void)
 {
-  return Inherited::AddRef();
+  return nsTextEditor::AddRef();
 }
 
 //NS_IMPL_RELEASE_INHERITED(Class, Super)
 NS_IMETHODIMP_(nsrefcnt) nsHTMLEditor::Release(void)
 {
-  return Inherited::Release();
+  return nsTextEditor::Release();
 }
 
 //NS_IMPL_QUERY_INTERFACE_INHERITED(Class, Super, AdditionalInterface)
@@ -81,7 +81,7 @@ NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  return Inherited::QueryInterface(aIID, aInstancePtr);
+  return nsTextEditor::QueryInterface(aIID, aInstancePtr);
 }
 
 
@@ -91,151 +91,151 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   nsresult result=NS_ERROR_NULL_POINTER;
   if ((nsnull!=aDoc) && (nsnull!=aPresShell))
   {
-    return Inherited::Init(aDoc, aPresShell);
+    return nsTextEditor::Init(aDoc, aPresShell);
   }
   return result;
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetTextProperty(nsIAtom *aProperty)
 {
-  return Inherited::SetTextProperty(aProperty);
+  return nsTextEditor::SetTextProperty(aProperty);
 }
 
 NS_IMETHODIMP nsHTMLEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PRBool &aAll)
 {
-  return Inherited::GetTextProperty(aProperty, aAny, aAll);
+  return nsTextEditor::GetTextProperty(aProperty, aAny, aAll);
 }
 
 NS_IMETHODIMP nsHTMLEditor::RemoveTextProperty(nsIAtom *aProperty)
 {
-  return Inherited::RemoveTextProperty(aProperty);
+  return nsTextEditor::RemoveTextProperty(aProperty);
 }
 
 NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
-  return Inherited::DeleteSelection(aDir);
+  return nsTextEditor::DeleteSelection(aDir);
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 {
-  return Inherited::InsertText(aStringToInsert);
+  return nsTextEditor::InsertText(aStringToInsert);
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 {
-  return Inherited::InsertBreak();
+  return nsTextEditor::InsertBreak();
 }
 
 // Methods shared with the base editor.
 // Note: We could call each of these via nsTextEditor -- is that better?
 NS_IMETHODIMP nsHTMLEditor::EnableUndo(PRBool aEnable)
 {
-  return Inherited::EnableUndo(aEnable);
+  return nsTextEditor::EnableUndo(aEnable);
 }
 
 NS_IMETHODIMP nsHTMLEditor::Undo(PRUint32 aCount)
 {
-  return Inherited::Undo(aCount);
+  return nsTextEditor::Undo(aCount);
 }
 
 NS_IMETHODIMP nsHTMLEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 {
-  return Inherited::CanUndo(aIsEnabled, aCanUndo);
+  return nsTextEditor::CanUndo(aIsEnabled, aCanUndo);
 }
 
 NS_IMETHODIMP nsHTMLEditor::Redo(PRUint32 aCount)
 {
-  return Inherited::Redo(aCount);
+  return nsTextEditor::Redo(aCount);
 }
 
 NS_IMETHODIMP nsHTMLEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 {
-  return Inherited::CanRedo(aIsEnabled, aCanRedo);
+  return nsTextEditor::CanRedo(aIsEnabled, aCanRedo);
 }
 
 NS_IMETHODIMP nsHTMLEditor::BeginTransaction()
 {
-  return Inherited::BeginTransaction();
+  return nsTextEditor::BeginTransaction();
 }
 
 NS_IMETHODIMP nsHTMLEditor::EndTransaction()
 {
-  return Inherited::EndTransaction();
+  return nsTextEditor::EndTransaction();
 }
 
 NS_IMETHODIMP nsHTMLEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  return Inherited::MoveSelectionUp(aIncrement, aExtendSelection);
+  return nsTextEditor::MoveSelectionUp(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  return Inherited::MoveSelectionDown(aIncrement, aExtendSelection);
+  return nsTextEditor::MoveSelectionDown(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  return Inherited::MoveSelectionNext(aIncrement, aExtendSelection);
+  return nsTextEditor::MoveSelectionNext(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  return Inherited::MoveSelectionPrevious(aIncrement, aExtendSelection);
+  return nsTextEditor::MoveSelectionPrevious(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection) 
 {
-  return Inherited::SelectNext(aIncrement, aExtendSelection);
+  return nsTextEditor::SelectNext(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  return Inherited::SelectPrevious(aIncrement, aExtendSelection);
+  return nsTextEditor::SelectPrevious(aIncrement, aExtendSelection);
 }
 
 NS_IMETHODIMP nsHTMLEditor::ScrollUp(nsIAtom *aIncrement)
 {
-  return Inherited::ScrollUp(aIncrement);
+  return nsTextEditor::ScrollUp(aIncrement);
 }
 
 NS_IMETHODIMP nsHTMLEditor::ScrollDown(nsIAtom *aIncrement)
 {
-  return Inherited::ScrollDown(aIncrement);
+  return nsTextEditor::ScrollDown(aIncrement);
 }
 
 NS_IMETHODIMP nsHTMLEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
-  return Inherited::ScrollIntoView(aScrollToBegin);
+  return nsTextEditor::ScrollIntoView(aScrollToBegin);
 }
 
 NS_IMETHODIMP nsHTMLEditor::Cut()
 {
-  return Inherited::Cut();
+  return nsTextEditor::Cut();
 }
 
 NS_IMETHODIMP nsHTMLEditor::Copy()
 {
-  return Inherited::Copy();
+  return nsTextEditor::Copy();
 }
 
 NS_IMETHODIMP nsHTMLEditor::Paste()
 {
-  return Inherited::Paste();
+  return nsTextEditor::Paste();
 }
 
 NS_IMETHODIMP nsHTMLEditor::Insert(nsIInputStream *aInputStream)
 {
-  return Inherited::Insert(aInputStream);
+  return nsTextEditor::Insert(aInputStream);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputText(nsString& aOutputString)
 {
-  return Inherited::OutputText(aOutputString);
+  return nsTextEditor::OutputText(aOutputString);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsString& aOutputString)
 {
-  return Inherited::OutputHTML(aOutputString);
+  return nsTextEditor::OutputHTML(aOutputString);
 }
 
 //================================================================

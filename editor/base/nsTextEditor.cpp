@@ -98,7 +98,7 @@ nsTextEditor::~nsTextEditor()
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
   nsCOMPtr<nsIDOMDocument> doc;
-  Inherited::GetDocument(getter_AddRefs(doc));
+  nsEditor::GetDocument(getter_AddRefs(doc));
   if (doc)
   {
     nsCOMPtr<nsIDOMEventReceiver> erP;
@@ -123,13 +123,13 @@ nsTextEditor::~nsTextEditor()
 //NS_IMPL_ADDREF_INHERITED(Class, Super)
 NS_IMETHODIMP_(nsrefcnt) nsTextEditor::AddRef(void)
 {
-  return Inherited::AddRef();
+  return nsEditor::AddRef();
 }
 
 //NS_IMPL_RELEASE_INHERITED(Class, Super)
 NS_IMETHODIMP_(nsrefcnt) nsTextEditor::Release(void)
 {
-  return Inherited::Release();
+  return nsEditor::Release();
 }
 
 //NS_IMPL_QUERY_INTERFACE_INHERITED(Class, Super, AdditionalInterface)
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsTextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  return Inherited::QueryInterface(aIID, aInstancePtr);
+  return nsEditor::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
@@ -152,7 +152,7 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   if ((nsnull!=aDoc) && (nsnull!=aPresShell))
   {
     // Init the base editor
-    result = Inherited::Init(aDoc, aPresShell);
+    result = nsEditor::Init(aDoc, aPresShell);
     if (NS_OK != result) 
       return result;
 
@@ -202,10 +202,10 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
 
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMSelection>selection;
-  result = Inherited::GetSelection(getter_AddRefs(selection));
+  result = nsEditor::GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
-    Inherited::BeginTransaction();
+    nsEditor::BeginTransaction();
     nsCOMPtr<nsIEnumerator> enumerator;
     enumerator = do_QueryInterface(selection, &result);
     if ((NS_SUCCEEDED(result)) && enumerator)
@@ -268,7 +268,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
         }
       }
     }
-    Inherited::EndTransaction();
+    nsEditor::EndTransaction();
     if (NS_SUCCEEDED(result))
     { // set the selection
       // XXX: can't do anything until I can create ranges
@@ -286,7 +286,7 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PR
   aAny=PR_FALSE;
   aAll=PR_TRUE;
   nsCOMPtr<nsIDOMSelection>selection;
-  result = Inherited::GetSelection(getter_AddRefs(selection));
+  result = nsEditor::GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
     nsCOMPtr<nsIEnumerator> enumerator;
@@ -312,7 +312,6 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PR
           // ask the style context about the property
           nsCOMPtr<nsIContent> content;
           result = iter->CurrentNode(getter_AddRefs(content));
-          int i=0;
           while (NS_COMFALSE == iter->IsDone())
           {
             nsCOMPtr<nsIDOMCharacterData>text;
@@ -320,7 +319,7 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PR
             if (text)
             {
               nsCOMPtr<nsIPresShell>presShell;
-              Inherited::GetPresShell(getter_AddRefs(presShell));
+              nsEditor::GetPresShell(getter_AddRefs(presShell));
               NS_ASSERTION(presShell, "bad state, null pres shell");
               if (presShell)
               {
@@ -376,18 +375,17 @@ void nsTextEditor::IsTextStyleSet(nsIStyleContext *aSC,
 
 NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
-  return Inherited::DeleteSelection(aDir);
+  return nsEditor::DeleteSelection(aDir);
 }
 
 NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
 {
-  return Inherited::InsertText(aStringToInsert);
+  return nsEditor::InsertText(aStringToInsert);
 }
 
 NS_IMETHODIMP nsTextEditor::InsertBreak()
@@ -398,18 +396,18 @@ NS_IMETHODIMP nsTextEditor::InsertBreak()
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool cancel= PR_FALSE;
 
-  result = Inherited::BeginTransaction();
+  result = nsEditor::BeginTransaction();
   if (NS_FAILED(result)) { return result; }
 
   // pre-process
-  Inherited::GetSelection(getter_AddRefs(selection));
+  nsEditor::GetSelection(getter_AddRefs(selection));
   result = mRules->WillInsertBreak(selection, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
     // create the new BR node
     nsCOMPtr<nsIDOMNode> newNode;
     nsAutoString tag("BR");
-    result = Inherited::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+    result = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
     if (NS_SUCCEEDED(result) && newNode)
     {
       // set the selection to the new node
@@ -421,7 +419,7 @@ NS_IMETHODIMP nsTextEditor::InsertBreak()
         result = nsIEditorSupport::GetChildOffset(newNode, parent, offsetInParent);
         if (NS_SUCCEEDED(result))
         {
-          result = Inherited::GetSelection(getter_AddRefs(selection));
+          result = nsEditor::GetSelection(getter_AddRefs(selection));
           if (NS_SUCCEEDED(result))
           {
             selection->Collapse(parent, offsetInParent);
@@ -432,7 +430,7 @@ NS_IMETHODIMP nsTextEditor::InsertBreak()
       }
     }
   }
-  nsresult endTxnResult = Inherited::EndTransaction();  // don't return this result!
+  nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
   NS_ASSERTION ((NS_SUCCEEDED(result)), "bad end transaction result");
   return result;
 }
@@ -440,37 +438,37 @@ NS_IMETHODIMP nsTextEditor::InsertBreak()
 
 NS_IMETHODIMP nsTextEditor::EnableUndo(PRBool aEnable)
 {
-  return Inherited::EnableUndo(aEnable);
+  return nsEditor::EnableUndo(aEnable);
 }
 
 NS_IMETHODIMP nsTextEditor::Undo(PRUint32 aCount)
 {
-  return Inherited::Undo(aCount);
+  return nsEditor::Undo(aCount);
 }
 
 NS_IMETHODIMP nsTextEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 {
-  return Inherited::CanUndo(aIsEnabled, aCanUndo);
+  return nsEditor::CanUndo(aIsEnabled, aCanUndo);
 }
 
 NS_IMETHODIMP nsTextEditor::Redo(PRUint32 aCount)
 {
-  return Inherited::Redo(aCount);
+  return nsEditor::Redo(aCount);
 }
 
 NS_IMETHODIMP nsTextEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 {
-  return Inherited::CanRedo(aIsEnabled, aCanRedo);
+  return nsEditor::CanRedo(aIsEnabled, aCanRedo);
 }
 
 NS_IMETHODIMP nsTextEditor::BeginTransaction()
 {
-  return Inherited::BeginTransaction();
+  return nsEditor::BeginTransaction();
 }
 
 NS_IMETHODIMP nsTextEditor::EndTransaction()
 {
-  return Inherited::EndTransaction();
+  return nsEditor::EndTransaction();
 }
 
 NS_IMETHODIMP nsTextEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)
@@ -505,7 +503,7 @@ NS_IMETHODIMP nsTextEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSe
 
 NS_IMETHODIMP nsTextEditor::SelectAll()
 {
-  return Inherited::SelectAll();
+  return nsEditor::SelectAll();
 }
 
 NS_IMETHODIMP nsTextEditor::ScrollUp(nsIAtom *aIncrement)
@@ -520,22 +518,22 @@ NS_IMETHODIMP nsTextEditor::ScrollDown(nsIAtom *aIncrement)
 
 NS_IMETHODIMP nsTextEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
-  return Inherited::ScrollIntoView(aScrollToBegin);
+  return nsEditor::ScrollIntoView(aScrollToBegin);
 }
 
 NS_IMETHODIMP nsTextEditor::Cut()
 {
-  return Inherited::Cut();
+  return nsEditor::Cut();
 }
 
 NS_IMETHODIMP nsTextEditor::Copy()
 {
-  return Inherited::Copy();
+  return nsEditor::Copy();
 }
 
 NS_IMETHODIMP nsTextEditor::Paste()
 {
-  return Inherited::Paste();
+  return nsEditor::Paste();
 }
 
 NS_IMETHODIMP nsTextEditor::Insert(nsIInputStream *aInputStream)
@@ -722,13 +720,13 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
   nsCOMPtr<nsIDOMNode>newTextNode;  // this will be the text node we move into the new style node
   if (aStartOffset!=0)
   {
-    result = Inherited::SplitNode(aNode, aStartOffset, getter_AddRefs(newTextNode));
+    result = nsEditor::SplitNode(aNode, aStartOffset, getter_AddRefs(newTextNode));
   }
   if (NS_SUCCEEDED(result))
   {
     if (aEndOffset!=(PRInt32)count)
     {
-      result = Inherited::SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newTextNode));
+      result = nsEditor::SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newTextNode));
     }
     else
     {
@@ -745,12 +743,12 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
         if (NS_SUCCEEDED(result))
         {
           nsCOMPtr<nsIDOMNode>newStyleNode;
-          result = Inherited::CreateNode(tag, aParent, offsetInParent, getter_AddRefs(newStyleNode));
+          result = nsEditor::CreateNode(tag, aParent, offsetInParent, getter_AddRefs(newStyleNode));
           if (NS_SUCCEEDED(result))
           {
-            result = Inherited::DeleteNode(newTextNode);
+            result = nsEditor::DeleteNode(newTextNode);
             if (NS_SUCCEEDED(result)) {
-              result = Inherited::InsertNode(newTextNode, newStyleNode, 0);
+              result = nsEditor::InsertNode(newTextNode, newStyleNode, 0);
             }
           }
         }
@@ -771,7 +769,7 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
   nsresult result=NS_OK;
   nsCOMPtr<nsIDOMNode>newLeftTextNode;  // this will be the middle text node
   if (0!=aStartOffset) {
-    result = Inherited::SplitNode(aStartNode, aStartOffset, getter_AddRefs(newLeftTextNode));
+    result = nsEditor::SplitNode(aStartNode, aStartOffset, getter_AddRefs(newLeftTextNode));
   }
   if (NS_SUCCEEDED(result))
   {
@@ -783,7 +781,7 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
     endNodeAsChar->GetLength(&count);
     nsCOMPtr<nsIDOMNode>newRightTextNode;  // this will be the middle text node
     if ((PRInt32)count!=aEndOffset) {
-      result = Inherited::SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightTextNode));
+      result = nsEditor::SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightTextNode));
     }
     else {
       newRightTextNode = do_QueryInterface(aEndNode);
@@ -804,18 +802,18 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
         if (NS_SUCCEEDED(result))
         { // create the new style node, which will be the new parent for the selected nodes
           nsCOMPtr<nsIDOMNode>newStyleNode;
-          result = Inherited::CreateNode(tag, aParent, offsetInParent+1, getter_AddRefs(newStyleNode));
+          result = nsEditor::CreateNode(tag, aParent, offsetInParent+1, getter_AddRefs(newStyleNode));
           if (NS_SUCCEEDED(result))
           { // move the right half of the start node into the new style node
             nsCOMPtr<nsIDOMNode>intermediateNode;
             result = aStartNode->GetNextSibling(getter_AddRefs(intermediateNode));
             if (NS_SUCCEEDED(result))
             {
-              result = Inherited::DeleteNode(aStartNode);
+              result = nsEditor::DeleteNode(aStartNode);
               if (NS_SUCCEEDED(result)) 
               { 
                 PRInt32 childIndex=0;
-                result = Inherited::InsertNode(aStartNode, newStyleNode, childIndex);
+                result = nsEditor::InsertNode(aStartNode, newStyleNode, childIndex);
                 childIndex++;
                 if (NS_SUCCEEDED(result))
                 { // move all the intermediate nodes into the new style node
@@ -829,19 +827,19 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
                     }
                     // get the next sibling before moving the current child!!!
                     intermediateNode->GetNextSibling(getter_AddRefs(nextSibling));
-                    result = Inherited::DeleteNode(intermediateNode);
+                    result = nsEditor::DeleteNode(intermediateNode);
                     if (NS_SUCCEEDED(result)) {
-                      result = Inherited::InsertNode(intermediateNode, newStyleNode, childIndex);
+                      result = nsEditor::InsertNode(intermediateNode, newStyleNode, childIndex);
                       childIndex++;
                     }
                     intermediateNode = do_QueryInterface(nextSibling);
                   }
                   if (NS_SUCCEEDED(result))
                   { // move the left half of the end node into the new style node
-                    result = Inherited::DeleteNode(newRightTextNode);
+                    result = nsEditor::DeleteNode(newRightTextNode);
                     if (NS_SUCCEEDED(result)) 
                     {
-                      result = Inherited::InsertNode(newRightTextNode, newStyleNode, childIndex);
+                      result = nsEditor::InsertNode(newRightTextNode, newStyleNode, childIndex);
                     }
                   }
                 }
@@ -934,13 +932,13 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
             parentContent->IndexOf(content, offsetInParent);
 
             nsCOMPtr<nsIDOMNode>newStyleNode;
-            result = Inherited::CreateNode(tag, parent, offsetInParent, getter_AddRefs(newStyleNode));
+            result = nsEditor::CreateNode(tag, parent, offsetInParent, getter_AddRefs(newStyleNode));
             if (NS_SUCCEEDED(result) && newStyleNode) {
               nsCOMPtr<nsIDOMNode>contentNode;
               contentNode = do_QueryInterface(content);
-              result = Inherited::DeleteNode(contentNode);
+              result = nsEditor::DeleteNode(contentNode);
               if (NS_SUCCEEDED(result)) {
-                result = Inherited::InsertNode(contentNode, newStyleNode, 0);
+                result = nsEditor::InsertNode(contentNode, newStyleNode, 0);
               }
             }
           }
