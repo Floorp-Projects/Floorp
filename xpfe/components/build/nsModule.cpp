@@ -50,6 +50,7 @@
 #include "nsAutoComplete.h"
 #include "nsBookmarksService.h"
 #include "nsGlobalHistory.h"
+#include "nsDocShellCID.h"
 #include "nsUrlbarHistory.h"
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
@@ -68,6 +69,13 @@
 #include "nsBrowserStatusFilter.h"
 #include "nsBrowserInstance.h"
 #include "nsCURILoader.h"
+
+// {9491C382-E3C4-11D2-BDBE-0050040A9B44}
+#define NS_GLOBALHISTORY_CID \
+{ 0x9491c382, 0xe3c4, 0x11d2, { 0xbd, 0xbe, 0x0, 0x50, 0x4, 0xa, 0x9b, 0x44} }
+
+#define NS_GLOBALHISTORY_DATASOURCE_CONTRACTID \
+    "@mozilla.org/rdf/datasource;1?name=history"
 
 // Factory constructors
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
@@ -159,7 +167,7 @@ static const nsModuleComponentInfo components[] = {
       nsAutoCompleteItemConstructor},
     { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
       NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },
-    { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_CONTRACTID,
+    { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY2_CONTRACTID,
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,
       nsGlobalHistoryConstructor },

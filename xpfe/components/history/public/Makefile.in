@@ -30,9 +30,6 @@ MODULE		= history
 XPIDL_MODULE	= history
 GRE_MODULE	= 1
 
-SDK_XPIDLSRCS   = nsIGlobalHistory.idl  \
-		  $(NULL)
-
 XPIDLSRCS	= nsIBrowserHistory.idl \
                   $(NULL)
 

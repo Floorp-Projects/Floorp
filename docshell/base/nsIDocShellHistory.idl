@@ -21,11 +21,8 @@
 
 #include "nsISupports.idl"
 interface nsISHEntry;
-interface nsIGlobalHistory;
 
-
-
-[scriptable, uuid(bd0a9ac0-4d3d-11d4-9bb1-00e09872a416)]
+[scriptable, uuid(89caa9f0-8b1c-47fb-b0d3-f0aef0bff749)]
 interface nsIDocShellHistory : nsISupports
 {
   /**
@@ -40,12 +37,9 @@ interface nsIDocShellHistory : nsISupports
                        in nsISHEntry aHistoryEntry,
                        in long aChildOffset);
 
-    /*
-     * The global history object used to store 
-     * the global history for the session.
-     */
-     attribute nsIGlobalHistory globalHistory;
-
-
+  /*
+   * Whether this docshell should save entries in global history.
+   */
+  attribute boolean useGlobalHistory;
 };
 

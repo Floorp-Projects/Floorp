@@ -33,6 +33,7 @@
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIPluginHost.h"
 #include "nsCURILoader.h"
+#include "nsDocShellCID.h"
 #include "nsLayoutCID.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -126,9 +127,7 @@
 
 #include "nsISelectionDisplay.h"
 
-// this is going away - see
-//
-#include "nsIBrowserHistory.h"
+#include "nsIGlobalHistory2.h"
 
 #ifdef DEBUG_DOCSHELL_FOCUS
 #include "nsIEventStateManager.h"
@@ -2033,7 +2032,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
         nsCOMPtr<nsIDocShellHistory>
             dsHistoryChild(do_QueryInterface(aChild));
         if (dsHistoryChild)
-            dsHistoryChild->SetGlobalHistory(mGlobalHistory);
+            dsHistoryChild->SetUseGlobalHistory(PR_TRUE);
     }
 
 
@@ -2311,19 +2310,27 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
 }
 
 NS_IMETHODIMP
-nsDocShell::SetGlobalHistory(nsIGlobalHistory * aGlobalHistory)
+nsDocShell::SetUseGlobalHistory(PRBool aUseGlobalHistory)
 {
-    mGlobalHistory = aGlobalHistory;
-    return NS_OK;
+    nsresult rv;
+
+    if (!aUseGlobalHistory) {
+        mGlobalHistory = nsnull;
+        return NS_OK;
+    }
+
+    if (mGlobalHistory) {
+        return NS_OK;
+    }
+
+    mGlobalHistory = do_GetService(NS_GLOBALHISTORY2_CONTRACTID, &rv);
+    return rv;
 }
 
 NS_IMETHODIMP
-nsDocShell::GetGlobalHistory(nsIGlobalHistory ** aGlobalHistory)
+nsDocShell::GetUseGlobalHistory(PRBool *aUseGlobalHistory)
 {
-    NS_ENSURE_ARG_POINTER(aGlobalHistory);
-
-    *aGlobalHistory = mGlobalHistory;
-    NS_IF_ADDREF(*aGlobalHistory);
+    *aUseGlobalHistory = (mGlobalHistory != nsnull);
     return NS_OK;
 }
 
@@ -2988,8 +2995,6 @@ nsDocShell::Create()
     nsresult rv = NS_ERROR_FAILURE;
     mPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    //GlobalHistory is now set in SetGlobalHistory
-    //  mGlobalHistory = do_GetService(NS_GLOBALHISTORY_CONTRACTID);
 
     // i don't want to read this pref in every time we load a url
     // so read it in once here and be done with it...
@@ -3370,12 +3375,7 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
     }
 
     if (mGlobalHistory && mCurrentURI) {
-        nsCAutoString url;
-        mCurrentURI->GetSpec(url);
-        nsCOMPtr<nsIBrowserHistory> browserHistory =
-            do_QueryInterface(mGlobalHistory);
-        if (browserHistory)
-            browserHistory->SetPageTitle(url.get(), aTitle);
+        mGlobalHistory->SetPageTitle(mCurrentURI, nsDependentString(aTitle));
     }
 
 
@@ -5143,7 +5143,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             /* This is a anchor traversal with in the same page.
              * call OnNewURI() so that, this traversal will be 
              * recorded in session and global history.
-             */             
+             */
             OnNewURI(aURI, nsnull, mLoadType);
             nsCOMPtr<nsIInputStream> postData;
             
@@ -5979,7 +5979,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         }
 
         // Update Global history
-        AddToGlobalHistory(aURI, IsFrame());
+        AddToGlobalHistory(aURI, PR_FALSE);
     }
 
     // If this was a history load, update the index in 
@@ -6424,58 +6424,6 @@ nsDocShell::ShouldDiscardLayoutState(nsIHttpChannel * aChannel)
 }
 
 //*****************************************************************************
-// nsDocShell: Global History
-//*****************************************************************************   
-
-nsresult
-nsDocShell::ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd)
-{
-    *aShouldAdd = PR_FALSE;
-    if (!mGlobalHistory || !aURI || (typeContent != mItemType))
-        return NS_OK;
-
-    // The model is really if we don't know differently then add which basically
-    // means we are suppose to try all the things we know not to allow in and
-    // then if we don't bail go on and allow it in.  But here lets compare
-    // against the most common case we know to allow in and go on and say yes
-    // to it.
-    PRBool isHTTP = PR_FALSE;
-    PRBool isHTTPS = PR_FALSE;
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("http", &isHTTP), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("https", &isHTTPS), NS_ERROR_FAILURE);
-
-    if (isHTTP || isHTTPS) {
-        *aShouldAdd = PR_TRUE;
-        return NS_OK;
-    }
-
-    PRBool isAbout = PR_FALSE;
-    PRBool isImap = PR_FALSE;
-    PRBool isNews = PR_FALSE;
-    PRBool isMailbox = PR_FALSE;
-    PRBool isViewSource = PR_FALSE;
-    PRBool isChrome = PR_FALSE;
-    PRBool isData = PR_FALSE;
-
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("about", &isAbout), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("imap", &isImap), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("news", &isNews), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("mailbox", &isMailbox), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("view-source", &isViewSource),
-                      NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("chrome", &isChrome), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("data", &isData), NS_ERROR_FAILURE);
-
-    if (isAbout || isImap || isNews || isMailbox || isViewSource || isChrome || isData)
-        return NS_OK;
-
-    *aShouldAdd = PR_TRUE;
-    return NS_OK;
-}
-
-
-
-//*****************************************************************************
 // nsDocShell: nsIEditorDocShell
 //*****************************************************************************   
 
@@ -6532,68 +6480,20 @@ NS_IMETHODIMP nsDocShell::MakeEditable(PRBool inWaitForUriLoad)
 }
 
 nsresult
-nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aHidden)
+nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect)
 {
-    // first check if we should be adding it
-    PRBool updateHistory;
-    ShouldAddToGlobalHistory(aURI, &updateHistory);
-    if (!updateHistory) return NS_OK;
-    
-    NS_ENSURE_STATE(mGlobalHistory);
+    if (mItemType != typeContent)
+        return NS_OK;
 
-    nsCAutoString spec;
-    NS_ENSURE_SUCCESS(aURI->GetSpec(spec), NS_ERROR_FAILURE);
+    if (!mGlobalHistory)
+        return NS_OK;
 
-    PRBool isJavascript;
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("javascript", &isJavascript), NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIBrowserHistory> browserHistory;
-    if (isJavascript || aHidden) {
-        browserHistory = do_QueryInterface(mGlobalHistory);
-    }
-
-    // If this is a JS url, hide it in global history so that
-    // it doesn't show up in the autocomplete dropdown.  AddPage()
-    // contains logic to unhide urls if they are typed, so this call
-    // to HidePage() needs to be before the AddPage() call.
-    // See bug 197127 and bug 161531 for more details.
-    if (isJavascript && browserHistory) {
-        browserHistory->HidePage(spec.get());
-    }
-
-    NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec.get()), NS_ERROR_FAILURE);
-
-    // Only save last page visited if it is not a frame and one of the
-    // startup, new window or new tab prefs is set to last page visited.
-    // See bug 58613 for more details.
-    if (mPrefs && !IsFrame()) {
-      PRInt32 choice = 0;
-      if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.startup.page", &choice))) {
-        if (choice != 2) {
-          if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.windows.loadOnNewWindow", &choice))) {
-            if (choice != 2)
-              mPrefs->GetIntPref("browser.tabs.loadOnNewTab", &choice);
-          }
-        }
-      }
-      if (choice == 2) {
-        browserHistory = do_QueryInterface(mGlobalHistory);
-        if (browserHistory)
-          browserHistory->SetLastPageVisited(spec.get());
-      }
-    }
-
-    // this is a redirect, hide the page from
-    // being enumerated in history
-    if (aHidden && browserHistory) {                
-        browserHistory->HidePage(spec.get());
-    }
-    return NS_OK;
+    return mGlobalHistory->AddURI(aURI, aRedirect, !IsFrame());
 }
 
 //*****************************************************************************
 // nsDocShell: Helper Routines
-//*****************************************************************************   
+//*****************************************************************************
 
 nsresult
 nsDocShell::SetLoadCookie(nsISupports * aCookie)

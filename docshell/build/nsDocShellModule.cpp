@@ -37,6 +37,10 @@
 #include "nsSHistory.h"
 #include "nsSHTransaction.h"
 
+// global history
+#include "nsGlobalHistoryAdapter.h"
+#include "nsGlobalHistory2Adapter.h"
+
 // docshell
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultURIFixup)
@@ -108,7 +112,15 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
    { "nsSHistory", NS_SHISTORY_CID,
       NS_SHISTORY_CONTRACTID, nsSHistoryConstructor },
    { "nsSHistory", NS_SHISTORY_INTERNAL_CID,
-      NS_SHISTORY_INTERNAL_CONTRACTID, nsSHistoryConstructor }
+      NS_SHISTORY_INTERNAL_CONTRACTID, nsSHistoryConstructor },
+
+    // global history adapters
+    { "nsGlobalHistoryAdapter", NS_GLOBALHISTORYADAPTER_CID,
+      nsnull, nsGlobalHistoryAdapter::Create,
+      nsGlobalHistoryAdapter::RegisterSelf },
+    { "nsGlobalHistory2Adapter", NS_GLOBALHISTORY2ADAPTER_CID,
+      nsnull, nsGlobalHistory2Adapter::Create,
+      nsGlobalHistory2Adapter::RegisterSelf }
 };
 
 // "docshell provider" to illustrate that this thing really *should*

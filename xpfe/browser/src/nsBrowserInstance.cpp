@@ -89,8 +89,8 @@
 #include "nsAppShellCIDs.h"
 
 #include "nsIDocumentViewer.h"
-#include "nsIGlobalHistory.h"
 #include "nsIBrowserHistory.h"
+#include "nsDocShellCID.h"
 
 #include "nsIObserverService.h"
 
@@ -118,7 +118,6 @@ static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID,    NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID,        NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_CID(kCGlobalHistoryCID,        NS_GLOBALHISTORY_CID);
 
 #ifdef DEBUG                                                           
 static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
@@ -772,7 +771,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
           return GetHomePageGroup(prefs, aDefaultArgs);
         }
         case 2: {
-          nsCOMPtr<nsIBrowserHistory> history(do_GetService(kCGlobalHistoryCID));
+          nsCOMPtr<nsIBrowserHistory> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
           if (history) {
             nsXPIDLCString curl;
             rv = history->GetLastPageVisited(getter_Copies(curl));
