@@ -4533,7 +4533,7 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
       nsIComboboxControlFrame * comboboxFrame;
       res = frame->QueryInterface(nsCOMTypeInfo<nsIComboboxControlFrame>::GetIID(),
                                                (void**)&comboboxFrame);
-      if (comboboxFrame) {
+      if (NS_SUCCEEDED(res) && comboboxFrame) {
         nsIFrame * listFrame;
         comboboxFrame->GetDropDown(&listFrame);
         if (nsnull != listFrame) {
