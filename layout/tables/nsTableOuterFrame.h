@@ -146,6 +146,10 @@ public:
     */
   nscoord GetMinCaptionWidth();
 
+  NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
+                                           nsIFrame** aProviderFrame, 
+                                           nsContextProviderRelationship& aRelationship);
+
   /*---------------- nsITableLayout methods ------------------------*/
 
   /** @see nsITableFrame::GetCellDataAt */

@@ -59,11 +59,15 @@
 #include "nsISizeOfHandler.h"
 #include "nsIScrollableFrame.h"
 #include "nsHTMLReflowCommand.h"
+#include "nsIFrameManager.h"
 
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 static NS_DEFINE_IID(kITableRowGroupFrameIID, NS_ITABLEROWGROUPFRAME_IID);
 static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
+
+// helper function for dealing with placeholder for positioned/floated table
+static void GetPlaceholderFor(nsIPresContext& aPresContext, nsIFrame& aFrame, nsIFrame** aPlaceholder);
 
 static const PRInt32 kColumnWidthIncrement=10;
 
@@ -849,6 +853,7 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
   for (PRInt32 childX = startIndex; childX <= lastIndex; childX++) {
     nsCOMPtr<nsIContent> iContent;
     nsCOMPtr<nsIStyleContext> styleContext;
+    nsCOMPtr<nsIStyleContext> parentStyleContext;
 
     if ((aColType == eColAnonymousCol) && aPrevFrameIn) {
       // a col due to a span in a previous col uses the style context of the col
@@ -857,8 +862,9 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
     else {
       // all other anonymous cols use a pseudo style context of the col group
       aColGroupFrame.GetContent(getter_AddRefs(iContent));
+      aColGroupFrame.GetStyleContext(getter_AddRefs(parentStyleContext));
       aPresContext.ResolvePseudoStyleContextFor(iContent, nsHTMLAtoms::tableColPseudo,
-                                                styleContext, PR_FALSE, getter_AddRefs(styleContext));
+                                                parentStyleContext, PR_FALSE, getter_AddRefs(styleContext));
     }
     // create the new col frame
     nsIFrame* colFrame;
@@ -1534,6 +1540,40 @@ nsTableFrame::SetColumnDimensions(nsIPresContext* aPresContext,
 }
 
 // SEC: TODO need to worry about continuing frames prev/next in flow for splitting across pages.
+
+// GetParentStyleContextProvider:
+//  The grandparent frame is he parent style context provider
+//  That is, the parent of the outerTableFrame is the frame that has our parent style context
+//  NOTE: if ther is a placeholder frame for the outer table, then we use its grandparent frame.
+//
+NS_IMETHODIMP 
+nsTableFrame::GetParentStyleContextProvider(nsIPresContext* aPresContext,
+                                            nsIFrame** aProviderFrame, 
+                                            nsContextProviderRelationship& aRelationship)
+{
+  NS_ASSERTION(aProviderFrame, "null argument aProviderFrame");
+  if (aProviderFrame) {
+    nsIFrame* f;
+    GetParent(&f);
+    NS_ASSERTION(f,"TableFrame has no parent frame");
+    if (f) {
+      // see if there is a placeholder frame representing our parent's place in the frame tree
+      // if there is, we get the parent of that frame as our surrogate grandparent
+      nsIFrame* placeholder = nsnull;
+      GetPlaceholderFor(*aPresContext,*f,&placeholder);
+      if (placeholder) {
+        f = placeholder;
+      } 
+      f->GetParent(&f);
+      NS_ASSERTION(f,"TableFrame has no grandparent frame");
+    }
+    // parent context provider is the grandparent frame
+    *aProviderFrame = f;
+    aRelationship = eContextProvider_Ancestor;
+  }
+  return ((aProviderFrame != nsnull) && (*aProviderFrame != nsnull)) ? NS_OK : NS_ERROR_FAILURE;
+}
+
 
 /* overview:
   if mFirstPassValid is false, this is our first time through since content was last changed
@@ -4658,6 +4698,23 @@ PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
   return result;
 }
 
+void GetPlaceholderFor(nsIPresContext& aPresContext, nsIFrame& aFrame, nsIFrame** aPlaceholder)
+{
+  NS_ASSERTION(aPlaceholder, "null placeholder argument is illegal");
+  if (aPlaceholder) {
+    *aPlaceholder = nsnull;
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext.GetShell(getter_AddRefs(shell));
+    if(shell) {
+      nsCOMPtr<nsIFrameManager> frameManager;
+      shell->GetFrameManager(getter_AddRefs(frameManager));
+      if (frameManager) {
+        frameManager->GetPlaceholderFrameFor(&aFrame,
+                                             aPlaceholder);
+      }
+    }
+  }
+}
 
 #ifdef DEBUG
 NS_IMETHODIMP
