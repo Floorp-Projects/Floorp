@@ -94,6 +94,12 @@ mailing address.
 const int kGifAllocatorNBucket = 9;
 nsRecyclingAllocator *gGifAllocator = nsnull;
 
+void nsGifShutdown()
+{
+  // Release cached buffers from zlib allocator
+  delete gGifAllocator;
+}
+
 #define MAX_HOLD 768        /* for now must be big enough for a cmap */
 
 #define MAX_LZW_BITS          12

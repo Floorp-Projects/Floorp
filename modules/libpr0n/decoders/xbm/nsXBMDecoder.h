@@ -53,13 +53,6 @@
   { 0x90, 0x2f, 0x2c, 0x5e, 0x1a, 0x14, 0x94, 0xce } \
 }
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-#define GFXFORMAT gfxIFormats::BGR_A1
-#else
-#define USE_RGB
-#define GFXFORMAT gfxIFormats::RGB_A1
-#endif
-
 class nsXBMDecoder : public imgIDecoder
 {
 public:

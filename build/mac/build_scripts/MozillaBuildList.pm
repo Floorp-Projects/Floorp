@@ -1722,12 +1722,7 @@ sub BuildImglib2Projects()
     if ($main::options{useimg2})
     {
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:libimg2.xml",            "libimg2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-        BuildOneProject(":mozilla:modules:libpr0n:macbuild:pngdecoder2.xml",        "pngdecoder2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-        BuildOneProject(":mozilla:modules:libpr0n:macbuild:gifdecoder2.xml",        "gifdecoder2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-        BuildOneProject(":mozilla:modules:libpr0n:macbuild:jpegdecoder2.xml",       "jpegdecoder2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:icondecoder.xml",        "icondecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-        BuildOneProject(":mozilla:modules:libpr0n:macbuild:bmpdecoder.xml",         "bmpdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-        BuildOneProject(":mozilla:modules:libpr0n:macbuild:xbmdecoder.xml",         "xbmdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         
         # MNG
         if ($main::options{mng})

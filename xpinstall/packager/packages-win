@@ -132,15 +132,9 @@ bin\components\gklayout.dll
 bin\components\gkparser.dll
 bin\components\gkplugin.dll
 bin\components\gkview.dll
-bin\components\imggif.dll
-bin\components\imgjpeg.dll
-bin\components\imgbmp.dll
 bin\components\imgmng.dll
-bin\components\imgxbm.dll
 bin\components\imglib2.dll
 bin\components\imglib2.xpt
-bin\components\imgpng.dll
-bin\components\imgppm.dll
 bin\components\imgicon.dll
 bin\components\imgicon.xpt
 bin\components\intl.xpt

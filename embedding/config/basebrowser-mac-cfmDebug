@@ -129,12 +129,7 @@ Components:cache.xpt
 ; imagelib
 Components:libimg2Debug.shlb
 Components:libimg2.xpt
-Components:gifdecoder2Debug.shlb
-Components:jpegdecoder2Debug.shlb
-Components:pngdecoder2Debug.shlb
 Components:mngdecoderDebug.shlb
-Components:gfx2Debug.shlb
-Components:gfx2.xpt
 
 ; jar
 Components:libjarDebug.shlb

@@ -67,17 +67,8 @@ components/content_base.xpt
 ; Imaging:
 libmozjpeg.so
 libmozz.so
-components/libnsgif.so                    
-components/libnsjpg.so                    
-components/libnspng.so
 components/libimglib2.so
 components/imglib2.xpt
-components/libimggif.so
-components/libimgjpeg.so
-components/libimgpng.so
-components/libimgppm.so
-
-
 
 ; 
 ; Components: (need to trim fat)
@@ -174,7 +165,6 @@ components/editor.xpt
 
 ; find functionality
 ; Optional - only if your code uses nsIWebBrowserFind
-components/libtxtsvc.so
 components/txtsvc.xpt
 
 ; netwerk
