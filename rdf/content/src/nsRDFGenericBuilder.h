@@ -166,7 +166,10 @@ public:
     IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* aProperty);
 
     PRBool
-    IsContainer(nsIContent* aParentElement, nsIRDFResource* aTargetResource, PRBool trackEmptyFlag = PR_TRUE);
+    IsContainer(nsIContent* aParentElement, nsIRDFResource* aTargetResource);
+
+    PRBool
+    IsEmpty(nsIContent* aParentElement, nsIRDFResource* aContainer);
 
     PRBool
     IsOpen(nsIContent* aElement);
