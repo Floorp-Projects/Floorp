@@ -28,6 +28,7 @@
     h2 = filtered_desc
     h3 = "Last modified: $bug.calc_disp_date"
     header_html = navigation_links
+    style_urls = [ "css/edit_bug.css" ]
    %]
 [% END %]
 
@@ -310,6 +311,9 @@
 
   <br>
   <b>Additional <u>C</u>omments:</b>
+  [% IF Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
+    <input type="checkbox" name="commentprivacy" value="1"> Private
+  [% END %]
   <br>
   <textarea wrap="hard" name="comment" rows="10" cols="80"
             accesskey="c"></textarea>
@@ -482,7 +486,6 @@
              value="[% Param("move-button-text") %]">
     [% END %]
   </p>  
-</form>
 
 [%# *** Additional Comments *** %]
 
@@ -502,8 +505,10 @@
 
 [% PROCESS bug/comments.html.tmpl 
    comments = bug.comments 
+   mode = "edit"
  %]
   
+</form>
 <hr>
 
 [% PROCESS bug/navigate.html.tmpl %]

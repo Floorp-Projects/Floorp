@@ -323,7 +323,7 @@ sub FetchOneColumn {
                           "status", "resolution", "summary");
 
 sub AppendComment {
-    my ($bugid,$who,$comment) = (@_);
+    my ($bugid,$who,$comment,$isprivate) = (@_);
     $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
     $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
     if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
@@ -331,9 +331,10 @@ sub AppendComment {
     }
 
     my $whoid = DBNameToIdAndCheck($who);
-
-    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
-            "VALUES($bugid, $whoid, now(), " . SqlQuote($comment) . ")");
+    my $privacyval = $isprivate ? 1 : 0 ;
+    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate) " .
+        "VALUES($bugid, $whoid, now(), " . SqlQuote($comment) . ", " . 
+        $privacyval . ")");
 
     SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $bugid");
 }
@@ -1137,8 +1138,9 @@ sub GetLongDescriptionAsText {
     my ($id, $start, $end) = (@_);
     my $result = "";
     my $count = 0;
+    my $anyprivate = 0;
     my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
-                   "       longdescs.thetext " .
+                   "       longdescs.thetext, longdescs.isprivate " .
                    "FROM   longdescs, profiles " .
                    "WHERE  profiles.userid = longdescs.who " .
                    "AND    longdescs.bug_id = $id ");
@@ -1156,25 +1158,29 @@ sub GetLongDescriptionAsText {
     $query .= "ORDER BY longdescs.bug_when";
     SendSQL($query);
     while (MoreSQLData()) {
-        my ($who, $when, $text) = (FetchSQLData());
+        my ($who, $when, $text, $isprivate) = (FetchSQLData());
         if ($count) {
             $result .= "\n\n------- Additional Comments From $who".Param('emailsuffix')."  ".
                 time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------\n";
+        }
+        if (($isprivate > 0) && Param("insidergroup")) {
+            $anyprivate = 1;
         }
         $result .= $text;
         $count++;
     }
 
-    return $result;
+    return ($result, $anyprivate);
 }
 
 sub GetComments {
     my ($id) = (@_);
     my @comments;
-    
     SendSQL("SELECT  profiles.realname, profiles.login_name, 
                      date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
-                     longdescs.thetext
+                     longdescs.thetext,
+                     isprivate,
+                     date_format(longdescs.bug_when,'%Y%m%d%H%i%s') 
             FROM     longdescs, profiles
             WHERE    profiles.userid = longdescs.who 
               AND    longdescs.bug_id = $id 
@@ -1182,7 +1188,8 @@ sub GetComments {
              
     while (MoreSQLData()) {
         my %comment;
-        ($comment{'name'}, $comment{'email'}, $comment{'time'}, $comment{'body'}) = FetchSQLData();
+        ($comment{'name'}, $comment{'email'}, $comment{'time'}, $comment{'body'},
+        $comment{'isprivate'}, $comment{'when'}) = FetchSQLData();
         
         $comment{'email'} .= Param('emailsuffix');
         $comment{'name'} = $comment{'name'} || $comment{'email'};

@@ -19,8 +19,9 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% DEFAULT start_at = 0 %]
+[% DEFAULT start_at = 0 mode = "show" %]
 [% count = 0 %]
+[% isinsider = Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
 [% FOREACH comment = comments %]
   [% IF count >= start_at %]
     [% PROCESS a_comment %]
@@ -35,14 +36,25 @@
 [%############################################################################%]
 
 [% BLOCK a_comment %]
-  [% IF count > 0 %]
-    <br>
-    <i>------- Additional Comment
-      <a name="c[% count %]" href="#c[% count %]">#[% count %]</a> From 
-      <a href="mailto:[% comment.email FILTER html %]">[% comment.name FILTER html %]</a>
-      [%+ comment.time %] -------
-    </i>
-  [% END %]
+  [% IF NOT comment.isprivate || isinsider %]
+    <div [% "class=\"bz_private\"" IF comment.isprivate %]>
+      [% IF count > 0 %]
+        <br>
+        <i>------- Additional Comment
+        <a name="c[% count %]" href="#c[% count %]">#[% count %]</a> From 
+        <a href="mailto:[% comment.email FILTER html %]">[% comment.name FILTER html %]</a>
+        [%+ comment.time %] -------
+        </i>
+      [% END %]
+      [% IF mode == "edit" && isinsider %]
+        <i>
+          <input type=hidden name="oisprivate-[% count %]" 
+                 value="[% comment.isprivate %]">
+          <input type=hidden name="when-[% count %]" value="[% comment.when %]">
+          <input type=checkbox name="isprivate-[% count %]" value="1"
+          [% " checked=\"checked\"" IF comment.isprivate %]> Private
+        </i>
+      [% END %]
     
 [%# Don't indent the <pre> block, since then the spaces are displayed in the
   # generated HTML
@@ -50,4 +62,6 @@
 <pre>
   [%- quoteUrls(comment.body) -%]
 </pre>
+    </div>
+  [% END %]
 [% END %]

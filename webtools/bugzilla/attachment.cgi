@@ -109,6 +109,7 @@ elsif ($action eq "update")
   validateIsPatch();
   validateContentType() unless $::FORM{'ispatch'};
   validateIsObsolete();
+  validatePrivate();
   validateStatuses();
   update();
 }
@@ -125,22 +126,25 @@ exit;
 
 sub validateID
 {
-  # Validate the value of the "id" form field, which must contain an
-  # integer that is the ID of an existing attachment.
+    # Validate the value of the "id" form field, which must contain an
+    # integer that is the ID of an existing attachment.
 
-  detaint_natural($::FORM{'id'})
-    || DisplayError("You did not enter a valid attachment number.") 
+    detaint_natural($::FORM{'id'})
+      || DisplayError("You did not enter a valid attachment number.") 
       && exit;
   
-  # Make sure the attachment exists in the database.
-  SendSQL("SELECT bug_id FROM attachments WHERE attach_id = $::FORM{'id'}");
-  MoreSQLData()
-    || DisplayError("Attachment #$::FORM{'id'} does not exist.") 
-    && exit;
+    # Make sure the attachment exists in the database.
+    SendSQL("SELECT bug_id, isprivate FROM attachments WHERE attach_id = $::FORM{'id'}");
+    MoreSQLData()
+      || DisplayError("Attachment #$::FORM{'id'} does not exist.") 
+      && exit;
 
-  # Make sure the user is authorized to access this attachment's bug.
-  my ($bugid) = FetchSQLData();
-  ValidateBugID($bugid);
+    # Make sure the user is authorized to access this attachment's bug.
+    my ($bugid, $isprivate) = FetchSQLData();
+    ValidateBugID($bugid);
+    if (($isprivate > 0 ) && Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
+        ThrowUserError("You are not permitted access to this attachment.");
+    }
 }
 
 sub validateCanEdit
@@ -242,6 +246,14 @@ sub validateIsObsolete
   # an HTML checkbox to represent this flag, and unchecked HTML checkboxes
   # do not get sent in HTML requests.
   $::FORM{'isobsolete'} = $::FORM{'isobsolete'} ? 1 : 0;
+}
+
+sub validatePrivate
+{
+    # Set the isprivate flag to zero if it is undefined, since the UI uses
+    # an HTML checkbox to represent this flag, and unchecked HTML checkboxes
+    # do not get sent in HTML requests.
+    $::FORM{'isprivate'} = $::FORM{'isprivate'} ? 1 : 0;
 }
 
 sub validateStatuses
@@ -354,16 +366,16 @@ sub validateObsolete
 
 sub view
 {
-  # Display an attachment.
+    # Display an attachment.
 
-  # Retrieve the attachment content and its content type from the database.
-  SendSQL("SELECT mimetype, thedata FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my ($contenttype, $thedata) = FetchSQLData();
+    # Retrieve the attachment content and its content type from the database.
+    SendSQL("SELECT mimetype, thedata FROM attachments WHERE attach_id = $::FORM{'id'}");
+    my ($contenttype, $thedata) = FetchSQLData();
     
-  # Return the appropriate HTTP response headers.
-  print "Content-Type: $contenttype\n\n";
+    # Return the appropriate HTTP response headers.
+    print "Content-Type: $contenttype\n\n";
 
-  print $thedata;
+    print $thedata;
 }
 
 
@@ -373,14 +385,20 @@ sub viewall
 
   # Retrieve the attachments from the database and write them into an array
   # of hashes where each hash represents one attachment.
-  SendSQL("SELECT attach_id, creation_ts, mimetype, description, ispatch, isobsolete 
-           FROM attachments WHERE bug_id = $::FORM{'bugid'} ORDER BY attach_id");
+    my $privacy = "";
+    if (Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
+        $privacy = "AND isprivate < 1 ";
+    }
+    SendSQL("SELECT attach_id, creation_ts, mimetype, description, 
+            ispatch, isobsolete, isprivate 
+            FROM attachments WHERE bug_id = $::FORM{'bugid'} $privacy 
+            ORDER BY attach_id");
   my @attachments; # the attachments array
   while (MoreSQLData())
   {
     my %a; # the attachment hash
     ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, 
-     $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}) = FetchSQLData();
+     $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'}) = FetchSQLData();
 
     # Flag attachments as to whether or not they can be viewed (as opposed to
     # being downloaded).  Currently I decide they are viewable if their MIME type 
@@ -432,7 +450,7 @@ sub enter
   if (!UserInGroup("editbugs")) {
       $canEdit = "AND submitter_id = $::userid";
   }
-  SendSQL("SELECT attach_id, description 
+  SendSQL("SELECT attach_id, description, isprivate
            FROM attachments
            WHERE bug_id = $::FORM{'bugid'}
            AND isobsolete = 0 $canEdit
@@ -440,7 +458,7 @@ sub enter
   my @attachments; # the attachments array
   while ( MoreSQLData() ) {
     my %a; # the attachment hash
-    ($a{'id'}, $a{'description'}) = FetchSQLData();
+    ($a{'id'}, $a{'description'}, $a{'isprivate'}) = FetchSQLData();
 
     # Add the hash representing the attachment to the array of attachments.
     push @attachments, \%a;
@@ -473,10 +491,11 @@ sub insert
   my $description = SqlQuote($::FORM{'description'});
   my $contenttype = SqlQuote($::FORM{'contenttype'});
   my $thedata = SqlQuote($::FORM{'data'});
+  my $isprivate = $::FORM{'isprivate'} ? 1 : 0;
 
   # Insert the attachment into the database.
-  SendSQL("INSERT INTO attachments (bug_id, creation_ts, filename, description, mimetype, ispatch, submitter_id, thedata) 
-           VALUES ($::FORM{'bugid'}, now(), $filename, $description, $contenttype, $::FORM{'ispatch'}, $::userid, $thedata)");
+  SendSQL("INSERT INTO attachments (bug_id, creation_ts, filename, description, mimetype, ispatch, isprivate, submitter_id, thedata) 
+           VALUES ($::FORM{'bugid'}, now(), $filename, $description, $contenttype, $::FORM{'ispatch'}, $isprivate, $::userid, $thedata)");
 
   # Retrieve the ID of the newly created attachment record.
   SendSQL("SELECT LAST_INSERT_ID()");
@@ -493,14 +512,15 @@ sub insert
 
   AppendComment($::FORM{'bugid'}, 
                 $::COOKIE{"Bugzilla_login"},
-                $comment);
+                $comment,
+                $isprivate);
 
   # Make existing attachments obsolete.
   my $fieldid = GetFieldID('attachments.isobsolete');
   foreach my $attachid (@{$::MFORM{'obsolete'}}) {
-    SendSQL("UPDATE attachments SET isobsolete = 1 WHERE attach_id = $attachid");
-    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($::FORM{'bugid'}, $attachid, $::userid, NOW(), $fieldid, '0', '1')");
+      SendSQL("UPDATE attachments SET isobsolete = 1 WHERE attach_id = $attachid");
+      SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
+               VALUES ($::FORM{'bugid'}, $attachid, $::userid, NOW(), $fieldid, '0', '1')");
   }
 
   # Send mail to let people know the attachment has been created.  Uses a 
@@ -540,9 +560,9 @@ sub edit
   # Users cannot edit the content of the attachment itself.
 
   # Retrieve the attachment from the database.
-  SendSQL("SELECT description, mimetype, bug_id, ispatch, isobsolete 
+  SendSQL("SELECT description, mimetype, bug_id, ispatch, isobsolete, isprivate 
            FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my ($description, $contenttype, $bugid, $ispatch, $isobsolete) = FetchSQLData();
+  my ($description, $contenttype, $bugid, $ispatch, $isobsolete, $isprivate) = FetchSQLData();
 
   # Flag attachment as to whether or not it can be viewed (as opposed to
   # being downloaded).  Currently I decide it is viewable if its content
@@ -592,6 +612,7 @@ sub edit
   $vars->{'bugsummary'} = $bugsummary; 
   $vars->{'ispatch'} = $ispatch; 
   $vars->{'isobsolete'} = $isobsolete; 
+  $vars->{'isprivate'} = $isprivate; 
   $vars->{'isviewable'} = $isviewable; 
   $vars->{'statuses'} = \%statuses; 
   $vars->{'statusdefs'} = \@statusdefs; 
@@ -619,12 +640,12 @@ sub update
   # Lock database tables in preparation for updating the attachment.
   SendSQL("LOCK TABLES attachments WRITE , attachstatuses WRITE , 
            attachstatusdefs READ , fielddefs READ , bugs_activity WRITE");
-
   # Get a copy of the attachment record before we make changes
   # so we can record those changes in the activity table.
-  SendSQL("SELECT description, mimetype, ispatch, isobsolete 
+  SendSQL("SELECT description, mimetype, ispatch, isobsolete, isprivate 
            FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my ($olddescription, $oldcontenttype, $oldispatch, $oldisobsolete) = FetchSQLData();
+  my ($olddescription, $oldcontenttype, $oldispatch, $oldisobsolete, 
+      $oldisprivate ) = FetchSQLData();
 
   # Get the list of old status flags.
   SendSQL("SELECT    attachstatusdefs.name 
@@ -672,6 +693,7 @@ sub update
                    mimetype = $quotedcontenttype , 
                    ispatch = $::FORM{'ispatch'} , 
                    isobsolete = $::FORM{'isobsolete'}
+                   isprivate = $::FORM{'isprivate'} , 
            WHERE   attach_id = $::FORM{'id'}
          ");
 
@@ -697,6 +719,11 @@ sub update
     my $fieldid = GetFieldID('attachments.isobsolete');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
              VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldisobsolete, $::FORM{'isobsolete'})");
+  }
+  if ($oldisprivate ne $::FORM{'isprivate'}) {
+    my $fieldid = GetFieldID('attachments.isprivate');
+    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
+             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldisprivate, $::FORM{'isprivate'})");
   }
   if ($oldstatuslist ne $newstatuslist) {
     my ($removed, $added) = DiffStrings($oldstatuslist, $newstatuslist);
@@ -759,7 +786,7 @@ sub update
     my $neverused = $::userid;
 
     # Append the comment to the list of comments in the database.
-    AppendComment($bugid, $who, $wrappedcomment);
+    AppendComment($bugid, $who, $wrappedcomment, $::FORM{'isprivate'});
 
   }
 

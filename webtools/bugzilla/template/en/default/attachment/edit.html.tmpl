@@ -163,6 +163,9 @@
           <input type="checkbox" id="isobsolete" name="isobsolete" value="1"
                  [% 'checked="checked"' IF isobsolete %]>
           <label for="isobsolete">obsolete</label><br>
+          [% IF (Param("insidergroup") && UserInGroup(Param("insidergroup"))) %]
+            <input type="checkbox" name="isprivate" value="1"[% " checked" IF isprivate %]> private<br><br>
+          [% END %]
 
         [% IF statusdefs.size %]
           <b>Status:</b><br>

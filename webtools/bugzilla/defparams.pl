@@ -717,4 +717,10 @@ DefParam("maxattachmentsize" ,
          "t" , 
          '1000');
 
+DefParam("insidergroup",
+         "The name of the group of users who can see/change private comments
+          and attachments.",
+         "t",
+         '');
 1;
+

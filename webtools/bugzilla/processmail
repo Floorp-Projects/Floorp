@@ -225,7 +225,7 @@ sub ProcessOneBug {
     }
 
 
-    my $newcomments = GetLongDescriptionAsText($id, $start, $end);
+    my ($newcomments, $anyprivate) = GetLongDescriptionAsText($id, $start, $end);
 
     #
     # Start of email filtering code
@@ -303,7 +303,8 @@ sub ProcessOneBug {
                                           \@reasons, \%values,
                                           \%defmailhead, 
                                           \%fielddescription, $difftext, 
-                                          $newcomments, $start, $id, 
+                                          $newcomments, $anyprivate, 
+                                          $start, $id, 
                                           \@depbugs))) 
         {
 
@@ -612,9 +613,9 @@ sub filterEmailGroup ($$$) {
     return @recipients;
 }
 
-sub NewProcessOnePerson ($$$$$$$$$$$$) {
+sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     my ($person, $count, $hlRef, $reasonsRef, $valueRef, $dmhRef, $fdRef, $difftext, 
-        $newcomments, $start, $id, $depbugsRef) = @_;
+        $newcomments, $anyprivate, $start, $id, $depbugsRef) = @_;
 
     my %values = %$valueRef;
     my @headerlist = @$hlRef;
@@ -650,7 +651,19 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
     # quietly disappear from their radar.
     #
     return unless CanSeeBug($id, $userid, $groupset);
-    
+
+    #  Drop any non-insiders if the comment is private
+     if (Param("insidergroup") && ($anyprivate != 0)) {
+        ConnectToDatabase();
+        PushGlobalSQLState();
+        SendSQL("select (bit & $groupset ) != 0 from groups where name = " . SqlQuote(Param("insidergroup")));
+        my $bit = FetchOneColumn();
+        PopGlobalSQLState();
+        if (!$bit) {
+            return;
+        }
+     }
+
     # We shouldn't send changedmail if this is a dependency mail, and any of 
     # the depending bugs is not visible to the user.
     foreach my $dep_id (@depbugs) {

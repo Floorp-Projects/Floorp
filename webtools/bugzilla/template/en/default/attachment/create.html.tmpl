@@ -94,15 +94,28 @@
                  onchange="if (this.value) this.form.contenttypemethod[2].checked = true;">
       </td>
     </tr>
+    [% IF (Param("insidergroup") && UserInGroup(Param("insidergroup"))) %]
+      <tr>
+        <th>Privacy:</th>
+        <td>
+          <em>If the attachment is private, check the box below.</em><br>
+          <input type="checkbox" name="isprivate" id="isprivate" value="1">
+        <label for="isprivate">Private</label>
+        </td>
+      </tr>
+    [% END %]
     <tr>
       <th>Obsoletes:</th>
       <td>
         <em>(optional) Check each existing attachment made obsolete by your new attachment.</em><br>
         [% IF attachments.size %]
           [% FOREACH attachment = attachments %]
-            <input type="checkbox" id="[% attachment.id %]"
+            [% IF ((attachment.isprivate == 0) || (Param("insidergroup")
+              && UserInGroup(Param("insidergroup")))) %]
+              <input type="checkbox" id="[% attachment.id %]"
                    name="obsolete" value="[% attachment.id %]">
-            <a href="attachment.cgi?id=[% attachment.id %]&amp;action=edit">[% attachment.id %]: [% attachment.description FILTER html %]</a><br>
+              <a href="attachment.cgi?id=[% attachment.id %]&amp;action=edit">[% attachment.id %]: [% attachment.description FILTER html %]</a><br>
+            [% END %]
           [% END %]
         [% ELSE %]
             [no attachments can be made obsolete]

@@ -630,6 +630,22 @@ if ( $::FORM{'id'} ) {
     }
 }
 
+if ($::FORM{'id'} && 
+    (Param("insidergroup") && UserInGroup(Param("insidergroup")))) {
+    detaint_natural($::FORM{'id'});
+    foreach my $field (keys %::FORM) {
+        if ($field =~ /when-([0-9]+)/) {
+            my $sequence = $1;
+            my $private = $::FORM{"isprivate-$sequence"} ? 1 : 0 ;
+            if ($private != $::FORM{"oisprivate-$sequence"}) {
+                detaint_natural($::FORM{"$field"});
+                SendSQL("UPDATE longdescs SET isprivate = $private 
+                    WHERE bug_id = $::FORM{'id'} AND bug_when = " . $::FORM{"$field"});
+            }
+        }
+
+    }
+}
 
 my $duplicate = 0;
 
@@ -1098,7 +1114,8 @@ foreach my $id (@idlist) {
     $timestamp = FetchOneColumn();
     
     if (defined $::FORM{'comment'}) {
-        AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'});
+        AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
+            $::FORM{'commentprivacy'});
     }
     
     my $removedCcString = "";
@@ -1368,7 +1385,7 @@ foreach my $id (@idlist) {
             LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter));
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
-        AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
+        AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***", 1);
         CheckFormFieldDefined(\%::FORM,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         

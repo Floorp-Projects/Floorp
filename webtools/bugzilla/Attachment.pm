@@ -49,7 +49,7 @@ sub query
   # of hashes in which each hash represents a single attachment.
   &::SendSQL("
               SELECT attach_id, creation_ts, mimetype, description, ispatch, 
-               isobsolete, submitter_id 
+               isobsolete, isprivate, submitter_id
               FROM attachments WHERE bug_id = $bugid ORDER BY attach_id
             ");
   my @attachments = ();
@@ -57,7 +57,8 @@ sub query
     my %a;
     my $submitter_id;
     ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, $a{'description'},
-     $a{'ispatch'}, $a{'isobsolete'}, $submitter_id) = &::FetchSQLData();
+     $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'}, $submitter_id) 
+        = &::FetchSQLData();
 
     # Format the attachment's creation/modification date into a standard
     # format (YYYY-MM-DD HH:MM)

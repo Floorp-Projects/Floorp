@@ -937,7 +937,7 @@ sub CheckIfVotedConfirmed {
         }
         
         AppendComment($id, DBID_to_name($who),
-                      "*** This bug has been confirmed by popular vote. ***");
+                      "*** This bug has been confirmed by popular vote. ***", 0);
                       
         $vars->{'type'} = "votes";
         $vars->{'id'} = $id;

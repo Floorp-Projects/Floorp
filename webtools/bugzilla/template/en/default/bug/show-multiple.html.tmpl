@@ -22,8 +22,8 @@
 
 [% PROCESS global/header.html.tmpl 
   title = "Full Text Bug Listing"
+  style_urls = [ "css/show_multiple.css" ]
 %]
-
 [% IF bugs.first %]
   [% FOREACH bug = bugs %]
     [% PROCESS bug_display %]

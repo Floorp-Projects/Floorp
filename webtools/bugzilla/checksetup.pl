@@ -1316,6 +1316,7 @@ $table{attachments} =
     thedata longblob not null,
     submitter_id mediumint not null,
     isobsolete tinyint not null default 0, 
+    isprivate tinyint not null default 0,
 
     index(bug_id),
     index(creation_ts)';
@@ -1414,7 +1415,7 @@ $table{longdescs} =
     who mediumint not null,
     bug_when datetime not null,
     thetext mediumtext,
-
+    isprivate tinyint not null default 0,
     index(bug_id),
     index(who),
     index(bug_when)';
@@ -1794,6 +1795,7 @@ AddFDef("attachments.thedata", "Attachment data", 0);
 AddFDef("attachments.mimetype", "Attachment mime type", 0);
 AddFDef("attachments.ispatch", "Attachment is patch", 0);
 AddFDef("attachments.isobsolete", "Attachment is obsolete", 0);
+AddFDef("attachments.isprivate", "Attachment is private", 0);
 AddFDef("attachstatusdefs.name", "Attachment Status", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
 AddFDef("delta_ts", "Last changed date", 0);
@@ -2503,6 +2505,12 @@ if (GetFieldDef('bugs_activity', 'field')) {
 
     DropField('bugs_activity', 'field');
 }
+
+# 2002-05-10 - enhanchment bug 143826
+# Add private comments and private attachments on less-private bugs
+AddField('longdescs', 'isprivate', 'tinyint not null default 0');
+AddField('attachments', 'isprivate', 'tinyint not null default 0');
+
         
 
 # 2000-01-18 New email-notification scheme uses a new field in the bug to 
