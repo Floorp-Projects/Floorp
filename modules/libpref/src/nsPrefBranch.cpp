@@ -119,6 +119,7 @@ nsPrefBranch::nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch)
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (observerService) {
     ++mRefCnt;    // Our refcnt must be > 0 when we call this, or we'll get deleted!
+    // add weak so we don't have to clean up at shutdown
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     --mRefCnt;
   }
@@ -127,10 +128,6 @@ nsPrefBranch::nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch)
 nsPrefBranch::~nsPrefBranch()
 {
   freeObserverList();
-  nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-  if (observerService)
-    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 }
 
 
