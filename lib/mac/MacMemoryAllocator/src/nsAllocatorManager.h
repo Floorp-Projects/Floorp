@@ -50,47 +50,47 @@ void WriteString(PRFileDesc *file, const char * string);
 //--------------------------------------------------------------------
 class nsHeapZoneHeader
 {
-	public:
-	
-								nsHeapZoneHeader(Ptr zonePtr, Size ptrSize);
-								nsHeapZoneHeader(Handle zoneHandle, Size handleSize);
-								~nsHeapZoneHeader();
-								
-		nsHeapZoneHeader *		GetNextZone()							{ return mNextHeapZone;	}
-		void					SetNextZone(nsHeapZoneHeader *nextZone)	{ mNextHeapZone = nextZone; }
+    public:
+    
+                                nsHeapZoneHeader(Ptr zonePtr, Size ptrSize);
+                                nsHeapZoneHeader(Handle zoneHandle, Size handleSize);
+                                ~nsHeapZoneHeader();
+                                
+        nsHeapZoneHeader *      GetNextZone()                           { return mNextHeapZone; }
+        void                    SetNextZone(nsHeapZoneHeader *nextZone) { mNextHeapZone = nextZone; }
 
-		Ptr						AllocateZonePtr(Size ptrSize);
-		void					DisposeZonePtr(Ptr thePtr, Boolean &outWasLastChunk);
-		
+        Ptr                     AllocateZonePtr(Size ptrSize);
+        void                    DisposeZonePtr(Ptr thePtr, Boolean &outWasLastChunk);
+        
 #if DEBUG_HEAP_INTEGRITY
-		Boolean					IsGoodZone()	{ return (mSignature == kHeapZoneSignature); }
+        Boolean                 IsGoodZone()    { return (mSignature == kHeapZoneSignature); }
 #endif
 
-		static nsHeapZoneHeader*	GetZoneFromPtr(Ptr subheapPtr);
-		
-	protected:
+        static nsHeapZoneHeader*    GetZoneFromPtr(Ptr subheapPtr);
+        
+    protected:
 
-		void					SetupHeapZone(Ptr zonePtr, Size zoneSize);		
-		
-		enum
-		{
-			kHeapZoneMasterPointers = 24			// this number doesn't really matter, because we never
-													// allocate handles in our heap zones
-		};
+        void                    SetupHeapZone(Ptr zonePtr, Size zoneSize);      
+        
+        enum
+        {
+            kHeapZoneMasterPointers = 24            // this number doesn't really matter, because we never
+                                                    // allocate handles in our heap zones
+        };
 
-		
+        
 #if DEBUG_HEAP_INTEGRITY
-		enum {
-			kHeapZoneSignature = 'HZne'
-		};
+        enum {
+            kHeapZoneSignature = 'HZne'
+        };
 
-		OSType					mSignature;
+        OSType                  mSignature;
 #endif
-		
-		nsHeapZoneHeader		*mNextHeapZone;
-		Handle					mZoneHandle;		// the handle containing the zone. Nil if Ptr in app heap
-		UInt32					mChunkCount;		// how many chunks are allocated in this zone
-		THz						mHeapZone;
+        
+        nsHeapZoneHeader        *mNextHeapZone;
+        Handle                  mZoneHandle;        // the handle containing the zone. Nil if Ptr in app heap
+        UInt32                  mChunkCount;        // how many chunks are allocated in this zone
+        THz                     mHeapZone;
 };
 
 
@@ -98,65 +98,81 @@ class nsHeapZoneHeader
 
 class nsAllocatorManager
 {
-	public:
+    public:
 
-		static const SInt32			kNumMasterPointerBlocks;
-		static const SInt32			kApplicationStackSizeIncrease;
-		
-		static const float			kHeapZoneHeapPercentage;
-		static const SInt32			kTempMemHeapZoneSize;
-		static const SInt32			kTempMemHeapMinZoneSize;
-		
-		static const Size			kChunkSizeMultiple;
-		static const Size			kMaxChunkSize;
-		
-		static const SInt32			kSmallHeapByteRange;
-		
-		static nsAllocatorManager*	GetAllocatorManager()	{ return sAllocatorManager ? sAllocatorManager : CreateAllocatorManager(); }
+        static const SInt32         kNumMasterPointerBlocks;
+        static const SInt32         kApplicationStackSizeIncrease;
+        
+        static const float          kHeapZoneHeapPercentage;
+        static const SInt32         kTempMemHeapZoneSize;
+        static const SInt32         kTempMemHeapMinZoneSize;
+        
+        static const Size           kChunkSizeMultiple;
+        static const Size           kMaxChunkSize;
+        
+        static const SInt32         kSmallHeapByteRange;
+        
+        static nsAllocatorManager*  GetAllocatorManager() { return sAllocatorManager ? sAllocatorManager : CreateAllocatorManager(); }
 
-									nsAllocatorManager();
-									~nsAllocatorManager();
-									
-		static OSErr				InitializeMacMemory(SInt32 inNumMasterPointerBlocks,
-															SInt32 inAppStackSizeInc);
-		
-		nsMemAllocator*				GetAllocatorForBlockSize(size_t blockSize);
+                                    nsAllocatorManager();
+                                    ~nsAllocatorManager();
+                                    
+        OSErr                       InitializeAllocators();
+        
+        static OSErr                InitializeMacMemory(SInt32 inNumMasterPointerBlocks,
+                                                            SInt32 inAppStackSizeInc);
+        
+        inline nsMemAllocator*      GetAllocatorForBlockSize(size_t blockSize);
 
-		
-		Ptr							AllocateSubheap(Size preferredSize, Size &outActualSize);
-		void						FreeSubheap(Ptr subheapPtr);		
+        static nsMemAllocator*      GetAllocatorFromBlock(void *thisBlock)
+                                    {
+                                        MemoryBlockHeader   *blockHeader = MemoryBlockHeader::GetHeaderFromBlock(thisBlock);
+                                    #if DEBUG_HEAP_INTEGRITY
+                                        MEM_ASSERT(blockHeader->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header tag");
+                                        MEM_ASSERT(blockHeader->owningChunk->IsGoodChunk(), "Block has bad chunk pointer");
+                                    #endif
+                                        return (blockHeader->owningChunk->GetOwningAllocator());
+                                    }
+        
+        
+        static size_t               GetBlockSize(void *thisBlock);
+
+        
+        Ptr                         AllocateSubheap(Size preferredSize, Size &outActualSize);
+        void                        FreeSubheap(Ptr subheapPtr);        
 
 #if STATS_MAC_MEMORY
-		void						DumpMemoryStats();
+        void                        DumpMemoryStats();
 #endif
 
-	protected:
-	
-		static nsAllocatorManager *	CreateAllocatorManager();
+        static nsAllocatorManager*  CreateAllocatorManager();
 
-		static const Size			kMacMemoryPtrOvehead;
+    protected:
+    
 
-		nsHeapZoneHeader *			MakeNewHeapZone(Size zoneSize, Size minZoneSize);
-		
-	private:
-	
-		SInt32						mNumFixedSizeAllocators;
-		SInt32						mNumSmallBlockAllocators;
-		
-		UInt32						mMinSmallBlockSize;			// blocks >= this size come out of the small block allocator
-		UInt32						mMinLargeBlockSize;			// blocks >= this size come out of the large allocator
-		
-		nsMemAllocator**			mFixedSizeAllocators;		// array of pointers to allocator objects
-		nsMemAllocator**			mSmallBlockAllocators;		// array of pointers to allocator objects
-	
-		nsMemAllocator*				mLargeAllocator;
+        static const Size           kMacMemoryPtrOvehead;
 
-		nsHeapZoneHeader*			mFirstHeapZone;				// first of a linked list of heap zones
-		nsHeapZoneHeader*			mLastHeapZone;				// last of a linked list of heap zones
-		
-		THz							mHeapZone;					// the heap zone for our memory heaps
+        nsHeapZoneHeader *          MakeNewHeapZone(Size zoneSize, Size minZoneSize);
+        
+    private:
+    
+        SInt32                      mNumFixedSizeAllocators;
+        SInt32                      mNumSmallBlockAllocators;
+        
+        UInt32                      mMinSmallBlockSize;         // blocks >= this size come out of the small block allocator
+        UInt32                      mMinLargeBlockSize;         // blocks >= this size come out of the large allocator
+        
+        nsMemAllocator**            mFixedSizeAllocators;       // array of pointers to allocator objects
+        nsMemAllocator**            mSmallBlockAllocators;      // array of pointers to allocator objects
+    
+        nsMemAllocator*             mLargeAllocator;
 
-		static nsAllocatorManager	*sAllocatorManager;		
+        nsHeapZoneHeader*           mFirstHeapZone;             // first of a linked list of heap zones
+        nsHeapZoneHeader*           mLastHeapZone;              // last of a linked list of heap zones
+        
+        THz                         mHeapZone;                  // the heap zone for our memory heaps
+
+        static nsAllocatorManager   *sAllocatorManager;     
 
 };
 

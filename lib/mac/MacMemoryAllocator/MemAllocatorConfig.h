@@ -29,6 +29,8 @@
 
 #include "IDE_Options.h"
 
+#pragma exceptions off
+
 #ifdef DEBUG
 
 /* Debug macros and switches */
@@ -37,8 +39,6 @@
 #define STATS_MAC_MEMORY		0
 
 #define MEM_ASSERT(condition, message)		((condition) ? ((void)0) : DebugStr("\p"message))
-
-
 
 
 #else

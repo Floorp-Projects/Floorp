@@ -46,7 +46,7 @@ void *calloc(size_t nele, size_t elesize);
 void *malloc(size_t blockSize)
 //--------------------------------------------------------------------
 {
-	return (void *)::NewPtr(blockSize);
+    return (void *)::NewPtr(blockSize);
 }
 
 
@@ -54,8 +54,8 @@ void *malloc(size_t blockSize)
 void free(void *deadBlock)
 //--------------------------------------------------------------------
 {
-	if (deadBlock)
-		::DisposePtr((Ptr)deadBlock);
+    if (deadBlock)
+        ::DisposePtr((Ptr)deadBlock);
 }
 
 
@@ -63,27 +63,27 @@ void free(void *deadBlock)
 void* realloc(void* block, size_t newSize)
 //--------------------------------------------------------------------
 {
-	::SetPtrSize((Ptr)block, newSize);
-	if (MemError() == noErr)
-		return block;
-	
-	void*	newBlock = ::NewPtr(newSize);
-	if (!newBlock) return nil;
-	
-	BlockMoveData(block, newBlock, newSize);	// might copy off the end of block,
-												// but who cares?
-	
-	return newBlock;
+    ::SetPtrSize((Ptr)block, newSize);
+    if (MemError() == noErr)
+        return block;
+    
+    void*   newBlock = ::NewPtr(newSize);
+    if (!newBlock) return nil;
+    
+    BlockMoveData(block, newBlock, newSize);    // might copy off the end of block,
+                                                // but who cares?
+    
+    return newBlock;
 }
 
 //--------------------------------------------------------------------
 void *calloc(size_t nele, size_t elesize)
 //--------------------------------------------------------------------
 {
-	size_t	space = nele * elesize;
-	void	*newBlock = ::malloc(space);
-	if (newBlock)
-		memset(newBlock, 0, space);
-	return newBlock;
+    size_t  space = nele * elesize;
+    void    *newBlock = ::malloc(space);
+    if (newBlock)
+        memset(newBlock, 0, space);
+    return newBlock;
 }
 

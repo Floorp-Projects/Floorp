@@ -28,178 +28,178 @@ class nsSmallHeapChunk;
 
 struct SmallHeapBlock
 {
-	
-	enum {
-		kBlockPaddingBytes	= 'ננננ',
-		kBlockInUseFlag		= 0x8000,
-		kBlockPaddingMask	= 0x0003
-	};
+    
+    enum {
+        kBlockPaddingBytes  = 'ננננ',
+        kBlockInUseFlag     = 0x8000,
+        kBlockPaddingMask   = 0x0003
+    };
 
-	static const UInt32			kBlockOverhead;
-	
-	static SmallHeapBlock*		GetBlockHeader(void *block)	{ return (SmallHeapBlock *)((char *)block - sizeof(SmallHeapBlock)); }
-	
-	SmallHeapBlock*				GetNextBlock()		{ return (SmallHeapBlock *)((UInt32)this + GetBlockHeapUsage()); }
-	SmallHeapBlock*				GetPrevBlock()		{ return prevBlock; }
-	
-	void						SetPrevBlock(SmallHeapBlock *prev)		{ prevBlock = prev; }
-	void						SetBlockSize(UInt32 inBlockSize)		{ blockSize = inBlockSize;	}
+    static const UInt32         kBlockOverhead;
+    
+    static SmallHeapBlock*      GetBlockHeader(void *block) { return (SmallHeapBlock *)((char *)block - sizeof(SmallHeapBlock)); }
+    
+    SmallHeapBlock*             GetNextBlock()      { return (SmallHeapBlock *)((UInt32)this + GetBlockHeapUsage()); }
+    SmallHeapBlock*             GetPrevBlock()      { return prevBlock; }
+    
+    void                        SetPrevBlock(SmallHeapBlock *prev)      { prevBlock = prev; }
+    void                        SetBlockSize(UInt32 inBlockSize)        { blockSize = inBlockSize;  }
 
-	UInt32						GetBlockSize()		{ return blockSize;	}
-	UInt32						GetBlockHeapUsage()	{ return (GetBlockSize() + kBlockOverhead); }
-	
-	Boolean						IsBlockUsed()		{ return (blockFlags & kBlockInUseFlag) != 0; }
+    UInt32                      GetBlockSize()      { return blockSize; }
+    UInt32                      GetBlockHeapUsage() { return (GetBlockSize() + kBlockOverhead); }
+    
+    Boolean                     IsBlockUsed()       { return (blockFlags & kBlockInUseFlag) != 0; }
 
-	void						SetBlockUsed()		{ blockFlags = 0; blockFlags |= kBlockInUseFlag; }
-	void						SetBlockUnused()	{ blockFlags &= ~kBlockInUseFlag; }
-	
-	void						SetNextFree(SmallHeapBlock *next)	{ info.freeInfo.nextFree = next; }
-	void						SetPrevFree(SmallHeapBlock *prev)	{ info.freeInfo.prevFree = prev; }
-	
-	SmallHeapBlock*				GetNextFree()		{ return info.freeInfo.nextFree; }
-	SmallHeapBlock*				GetPrevFree()		{ return info.freeInfo.prevFree; }
-	
-	
-	void						SetOwningChunk(nsHeapChunk *inOwningChunk) { info.inUseInfo.freeProc.owningChunk = inOwningChunk; }
-	nsSmallHeapChunk*			GetOwningChunk()	{ return (nsSmallHeapChunk *)info.inUseInfo.freeProc.owningChunk; }
-	
+    void                        SetBlockUsed()      { blockFlags = 0; blockFlags |= kBlockInUseFlag; }
+    void                        SetBlockUnused()    { blockFlags &= ~kBlockInUseFlag; }
+    
+    void                        SetNextFree(SmallHeapBlock *next)   { info.freeInfo.nextFree = next; }
+    void                        SetPrevFree(SmallHeapBlock *prev)   { info.freeInfo.prevFree = prev; }
+    
+    SmallHeapBlock*             GetNextFree()       { return info.freeInfo.nextFree; }
+    SmallHeapBlock*             GetPrevFree()       { return info.freeInfo.prevFree; }
+    
+    
+    void                        SetOwningChunk(nsHeapChunk *inOwningChunk) { info.inUseInfo.freeProc.owningChunk = inOwningChunk; }
+    nsSmallHeapChunk*           GetOwningChunk()    { return (nsSmallHeapChunk *)info.inUseInfo.freeProc.owningChunk; }
+    
 #if DEBUG_HEAP_INTEGRITY
-	void						SetPaddingBytes(UInt32 padding)	{ blockFlags &= ~kBlockPaddingMask; blockFlags |= padding; }
-	void						FillPaddingBytes()				{
-																	UInt32	padding 	= blockFlags & kBlockPaddingMask;
-																	long	*lastLong 	= (long *)((char *)&memory + blockSize - sizeof(long));
-																	UInt32	mask 		= (1 << (8 * padding)) - 1;
-																	*lastLong &= ~mask;
-																	*lastLong |= (mask & kBlockPaddingBytes);
-																}
+    void                        SetPaddingBytes(UInt32 padding) { blockFlags &= ~kBlockPaddingMask; blockFlags |= padding; }
+    void                        FillPaddingBytes()              {
+                                                                    UInt32  padding     = blockFlags & kBlockPaddingMask;
+                                                                    long    *lastLong   = (long *)((char *)&memory + blockSize - sizeof(long));
+                                                                    UInt32  mask        = (1 << (8 * padding)) - 1;
+                                                                    *lastLong &= ~mask;
+                                                                    *lastLong |= (mask & kBlockPaddingBytes);
+                                                                }
 
-	Boolean						CheckPaddingBytes()				{
-																	UInt32	padding 	= blockFlags & kBlockPaddingMask;
-																	long	*lastLong 	= (long *)((char *)&memory + blockSize - sizeof(long));
-																	UInt32	mask 		= (1 << (8 * padding)) - 1;
-																	return (*lastLong & mask) == (mask & kBlockPaddingBytes);
-																}
+    Boolean                     CheckPaddingBytes()             {
+                                                                    UInt32  padding     = blockFlags & kBlockPaddingMask;
+                                                                    long    *lastLong   = (long *)((char *)&memory + blockSize - sizeof(long));
+                                                                    UInt32  mask        = (1 << (8 * padding)) - 1;
+                                                                    return (*lastLong & mask) == (mask & kBlockPaddingBytes);
+                                                                }
 
-	UInt32						GetPaddingBytes()				{ return (blockFlags & kBlockPaddingMask); }
+    UInt32                      GetPaddingBytes()               { return (blockFlags & kBlockPaddingMask); }
 
-	void						ZapBlockContents(UInt8 pattern) { memset(&memory, pattern, blockSize); }
+    void                        ZapBlockContents(UInt8 pattern) { memset(&memory, pattern, blockSize); }
 
-	// inline, so won't crash if this is a bad block
-	Boolean						HasHeaderTag(MemoryBlockTag inHeaderTag)
-										{ return info.inUseInfo.freeProc.headerTag == inHeaderTag; }
+    // inline, so won't crash if this is a bad block
+    Boolean                     HasHeaderTag(MemoryBlockTag inHeaderTag)
+                                        { return info.inUseInfo.freeProc.headerTag == inHeaderTag; }
 
-	void						SetHeaderTag(MemoryBlockTag inHeaderTag)
-										{ info.inUseInfo.freeProc.headerTag = inHeaderTag; }
+    void                        SetHeaderTag(MemoryBlockTag inHeaderTag)
+                                        { info.inUseInfo.freeProc.headerTag = inHeaderTag; }
 
-	void						SetTrailerTag(UInt32 blockSize, MemoryBlockTag theTag)
-											{
-												MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
-												trailer->trailerTag = theTag;
-											}
-	Boolean						HasTrailerTag(UInt32 blockSize, MemoryBlockTag theTag)
-											{
-												MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
-												return (trailer->trailerTag == theTag);
-											}
+    void                        SetTrailerTag(UInt32 blockSize, MemoryBlockTag theTag)
+                                            {
+                                                MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
+                                                trailer->trailerTag = theTag;
+                                            }
+    Boolean                     HasTrailerTag(UInt32 blockSize, MemoryBlockTag theTag)
+                                            {
+                                                MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
+                                                return (trailer->trailerTag == theTag);
+                                            }
 #endif
 
 #if STATS_MAC_MEMORY
-	size_t						GetLogicalBlockSize()					{ return info.inUseInfo.freeProc.logicalBlockSize; }
-	void						SetLogicalBlockSize(size_t blockSize)	{ info.inUseInfo.freeProc.logicalBlockSize = blockSize; }
+    size_t                      GetLogicalBlockSize()                   { return info.inUseInfo.freeProc.logicalBlockSize; }
+    void                        SetLogicalBlockSize(size_t blockSize)   { info.inUseInfo.freeProc.logicalBlockSize = blockSize; }
 #endif
-	
-	private:
-	
-		SmallHeapBlock				*prevBlock;
-		UInt16						blockFlags;			// the top bit is the in use flag, the bottom 3 bits padding bytes
-		UInt16						blockSize;
-		union {
-			struct {
-				SmallHeapBlock		*nextFree;
-				SmallHeapBlock		*prevFree;
-			}						freeInfo;
-			struct {
-				UInt32				filler;
-				MemoryBlockHeader	freeProc;		// this must be the last variable before memory
-			}						inUseInfo;
-		}							info;
-	
-	public:
-		char						memory[];
+    
+    private:
+    
+        SmallHeapBlock              *prevBlock;
+        UInt16                      blockFlags;         // the top bit is the in use flag, the bottom 3 bits padding bytes
+        UInt16                      blockSize;
+        union {
+            struct {
+                SmallHeapBlock      *nextFree;
+                SmallHeapBlock      *prevFree;
+            }                       freeInfo;
+            struct {
+                UInt32              filler;
+                MemoryBlockHeader   freeProc;       // this must be the last variable before memory
+            }                       inUseInfo;
+        }                           info;
+    
+    public:
+        char                        memory[];
 };
 
 
 //--------------------------------------------------------------------
 class nsSmallHeapAllocator : public nsMemAllocator
 {
-	friend class nsSmallHeapChunk;
+    friend class nsSmallHeapChunk;
 
-	private:
-	
-		typedef nsMemAllocator	Inherited;
+    private:
+    
+        typedef nsMemAllocator  Inherited;
 
-	public:
-			
-								nsSmallHeapAllocator(size_t minBlockSize, size_t maxBlockSize);
-								~nsSmallHeapAllocator();
+    public:
+            
+                                nsSmallHeapAllocator(size_t minBlockSize, size_t maxBlockSize);
+                                ~nsSmallHeapAllocator();
 
-		virtual void *			AllocatorMakeBlock(size_t blockSize);
-		virtual void 			AllocatorFreeBlock(void *freeBlock);
-		virtual void *			AllocatorResizeBlock(void *block, size_t newSize);
-		virtual size_t 			AllocatorGetBlockSize(void *thisBlock);
-		
-		virtual nsHeapChunk*	AllocateChunk(size_t blockSize);
-		virtual void			FreeChunk(nsHeapChunk *chunkToFree);
+        void *                  AllocatorMakeBlock(size_t blockSize);
+        void                    AllocatorFreeBlock(void *freeBlock);
+        void *                  AllocatorResizeBlock(void *block, size_t newSize);
+        size_t                  AllocatorGetBlockSize(void *thisBlock);
+        
+        nsHeapChunk*            AllocateChunk(size_t blockSize);
+        void                    FreeChunk(nsHeapChunk *chunkToFree);
 
 
-	protected:
+    protected:
 
-		nsSmallHeapChunk*		mChunkWithSpace;		// cheap optimization
+        nsSmallHeapChunk*       mChunkWithSpace;        // cheap optimization
 };
 
 
 //--------------------------------------------------------------------
 class nsSmallHeapChunk : public nsHeapChunk
 {
-	public:
-		
-								nsSmallHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize);
-								~nsSmallHeapChunk();
-		
-		void *					GetSpaceForBlock(UInt32 roundedBlockSize);
-		void					ReturnBlock(SmallHeapBlock *deadBlock);
-		
-		void *					GrowBlock(SmallHeapBlock *growBlock, size_t newSize);
-		void *					ShrinkBlock(SmallHeapBlock *shrinkBlock, size_t newSize);
-		void *					ResizeBlockInPlace(SmallHeapBlock *shrinkBlock, size_t newSize);
-		
-	protected:
-	
-		enum {
-			kDefaultSmallHeadMinSize	= 4L,
-			kDefaultSmallHeapBins 		= 128L,
-			kMaximumBinBlockSize		= kDefaultSmallHeadMinSize + 4L * kDefaultSmallHeapBins - 1,
-			kMaximumBlockSize			= 0xFFFF
-		};
+    public:
+        
+                                nsSmallHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize);
+                                ~nsSmallHeapChunk();
+        
+        void *                  GetSpaceForBlock(UInt32 roundedBlockSize);
+        void                    ReturnBlock(SmallHeapBlock *deadBlock);
+        
+        void *                  GrowBlock(SmallHeapBlock *growBlock, size_t newSize);
+        void *                  ShrinkBlock(SmallHeapBlock *shrinkBlock, size_t newSize);
+        void *                  ResizeBlockInPlace(SmallHeapBlock *shrinkBlock, size_t newSize);
+        
+    protected:
+    
+        enum {
+            kDefaultSmallHeadMinSize    = 4L,
+            kDefaultSmallHeapBins       = 128L,
+            kMaximumBinBlockSize        = kDefaultSmallHeadMinSize + 4L * kDefaultSmallHeapBins - 1,
+            kMaximumBlockSize           = 0xFFFF
+        };
 
-		SmallHeapBlock**		GetBins(UInt32 binIndex)
-												{
-													MEM_ASSERT(binIndex < kDefaultSmallHeapBins, "Bad bin index!");
-													return mBins + binIndex;
-												}
+        SmallHeapBlock**        GetBins(UInt32 binIndex)
+                                                {
+                                                    MEM_ASSERT(binIndex < kDefaultSmallHeapBins, "Bad bin index!");
+                                                    return mBins + binIndex;
+                                                }
 
-		SmallHeapBlock*			GetOverflow()	{ return mOverflow;	}
+        SmallHeapBlock*         GetOverflow()   { return mOverflow; }
 
-		void					RemoveBlockFromFreeList(SmallHeapBlock *removeBlock);
-		void					AddBlockToFreeList(SmallHeapBlock *addBlock);
+        void                    RemoveBlockFromFreeList(SmallHeapBlock *removeBlock);
+        void                    AddBlockToFreeList(SmallHeapBlock *addBlock);
 
-		UInt32					mTotalFree;
+        UInt32                  mTotalFree;
 #if DEBUG
-		UInt32					mInitialFree;
+        UInt32                  mInitialFree;
 #endif
-		SmallHeapBlock*			mOverflow;
-		SmallHeapBlock*			mBins[kDefaultSmallHeapBins];
-		SmallHeapBlock			mMemory[];
+        SmallHeapBlock*         mOverflow;
+        SmallHeapBlock*         mBins[kDefaultSmallHeapBins];
+        SmallHeapBlock          mMemory[];
 
 };
 

@@ -32,7 +32,7 @@ const UInt32 FixedMemoryBlock::kFixedSizeBlockOverhead = sizeof(FixedMemoryBlock
 
 //--------------------------------------------------------------------
 nsFixedSizeAllocator::nsFixedSizeAllocator(size_t minBlockSize, size_t maxBlockSize)
-:	nsMemAllocator(minBlockSize, maxBlockSize)
+:	nsMemAllocator(eAllocatorTypeFixed, minBlockSize, maxBlockSize)
 ,	mChunkWithSpace(nil)
 //--------------------------------------------------------------------
 {
@@ -240,52 +240,25 @@ nsFixedSizeHeapChunk::nsFixedSizeHeapChunk(
 	mHeapSize = numBlocks * allocBlockSize;
 
 	// build the free list for this chunk
-	UInt32	blockCount = numBlocks;
+	UInt32	blockCount = numBlocks - 1;		// -1 because we do the last one by hand
 	
 	FixedMemoryBlock *freePtr = mMemory;
-	FixedMemoryBlock *lastFree;
+	FixedMemoryBlock *nextFree;
 	
 	mFreeList = freePtr;
 	
 	do
 	{
-		lastFree = freePtr;
-		FixedMemoryBlock *nextFree = (FixedMemoryBlock *) ((UInt32)freePtr + allocBlockSize);
+		nextFree = (FixedMemoryBlock *) ((UInt32)freePtr + allocBlockSize);
+		freePtr->SetOwningChunk(this);
 		freePtr->SetNextFree(nextFree);
+
 		freePtr = nextFree;
 	}
 	while (--blockCount);
 	
-	lastFree->next = nil;
+	freePtr->SetOwningChunk(this);
+	freePtr->SetNextFree(nil);
+
 }
-
-
-//--------------------------------------------------------------------
-nsFixedSizeHeapChunk::~nsFixedSizeHeapChunk()
-//--------------------------------------------------------------------
-{
-}
-
-
-//--------------------------------------------------------------------
-FixedMemoryBlock* nsFixedSizeHeapChunk::FetchFirstFree()
-//--------------------------------------------------------------------
-{
-	FixedMemoryBlock*	firstFree = mFreeList;
-	mFreeList = firstFree->GetNextFree();
-	mUsedBlocks ++;
-	firstFree->SetOwningChunk(this);
-	return firstFree;
-}
-
-
-//--------------------------------------------------------------------
-void nsFixedSizeHeapChunk::ReturnToFreeList(FixedMemoryBlock *freeBlock)
-//--------------------------------------------------------------------
-{
-	freeBlock->SetNextFree(mFreeList);
-	mFreeList = freeBlock;
-	mUsedBlocks --;
-}
-
 

@@ -28,3 +28,14 @@ __nwa__FUl
 __nwa__FUlRCQ23std9nothrow_t
 __nw__FUlRCQ23std9nothrow_t
 
+GC_stderr
+GC_stdout
+GC_trace_object
+MWUnmangle
+GC_malloc_atomic
+GC_address_to_source
+GC_gcollect
+GC_generic_init_threads
+GC_clear_roots
+GC_unregister_fragment
+GC_register_fragment

@@ -28,112 +28,113 @@ class nsLargeHeapChunk;
 //--------------------------------------------------------------------
 struct LargeBlockHeader
 {
-	
-	static LargeBlockHeader *GetBlockHeader(void *block)	{ return (LargeBlockHeader *)((char *)block - sizeof(LargeBlockHeader));	}
-	
-	Boolean					IsFreeBlock() 	{ return prev == nil; }
-	UInt32					GetBlockSize()	{ return ((UInt32)next - (UInt32)this - kLargeBlockOverhead);	}
+    
+    static LargeBlockHeader *GetBlockHeader(void *block)    { return (LargeBlockHeader *)((char *)block - sizeof(LargeBlockHeader));    }
+    
+    Boolean                 IsFreeBlock()   { return prev == nil; }
+    UInt32                  GetBlockSize()  { return ((UInt32)next - (UInt32)this - kLargeBlockOverhead);   }
 
 
-	UInt32					GetBlockHeapUsageSize()	{ return ((UInt32)next - (UInt32)this);	}
-	
-	void					SetLogicalSize(UInt32 inSize) { logicalSize = inSize; }
-	UInt32					GetLogicalSize() { return logicalSize; }
-	
-	LargeBlockHeader*		SkipDummyBlock() { return (LargeBlockHeader *)((UInt32)this + kLargeBlockOverhead); }
-	
-	
-	LargeBlockHeader*		GetNextBlock()	{ return next; }
-	LargeBlockHeader*		GetPrevBlock()	{ return prev; }
+    UInt32                  GetBlockHeapUsageSize() { return ((UInt32)next - (UInt32)this); }
+    
+    void                    SetLogicalSize(UInt32 inSize) { logicalSize = inSize; }
+    UInt32                  GetLogicalSize() { return logicalSize; }
+    
+    LargeBlockHeader*       SkipDummyBlock() { return (LargeBlockHeader *)((UInt32)this + kLargeBlockOverhead); }
+    
+    
+    LargeBlockHeader*       GetNextBlock()  { return next; }
+    LargeBlockHeader*       GetPrevBlock()  { return prev; }
 
-	void					SetNextBlock(LargeBlockHeader *inNext)	{ next = inNext; }
-	void					SetPrevBlock(LargeBlockHeader *inPrev)	{ prev = inPrev; }
-	
-	void					SetOwningChunk(nsHeapChunk *chunk)		{ header.owningChunk = chunk; }
-	nsLargeHeapChunk*		GetOwningChunk() { return (nsLargeHeapChunk *)(header.owningChunk); }
-	
+    void                    SetNextBlock(LargeBlockHeader *inNext)  { next = inNext; }
+    void                    SetPrevBlock(LargeBlockHeader *inPrev)  { prev = inPrev; }
+    
+    void                    SetOwningChunk(nsHeapChunk *chunk)      { header.owningChunk = chunk; }
+    nsLargeHeapChunk*       GetOwningChunk() { return (nsLargeHeapChunk *)(header.owningChunk); }
+    
 #if DEBUG_HEAP_INTEGRITY
-	enum {
-		kBlockPaddingBytes	= 'ננננ'
-	};
-	
-	void					SetPaddingBytes(UInt32 padding)	{ paddingBytes = padding; }
-	void					FillPaddingBytes()				{
-																	long	*lastLong 	= (long *)((char *)&memory + GetBlockSize() - sizeof(long));
-																	UInt32	mask 		= (1 << (8 * paddingBytes)) - 1;
-																	
-																	*lastLong &= ~mask;
-																	*lastLong |= (mask & kBlockPaddingBytes);
-															}
-	Boolean					CheckPaddingBytes()				{
-																	long	*lastLong 	= (long *)((char *)&memory + GetBlockSize() - sizeof(long));
-																	UInt32	mask 		= (1 << (8 * paddingBytes)) - 1;
-																	return (*lastLong & mask) == (mask & kBlockPaddingBytes);
-															}
-	UInt32					GetPaddingBytes()				{ return paddingBytes; }
+    enum {
+        kBlockPaddingBytes  = 'ננננ'
+    };
+    
+    void                    SetPaddingBytes(UInt32 padding) { paddingBytes = padding; }
+    void                    FillPaddingBytes()              {
+                                                                    long    *lastLong   = (long *)((char *)&memory + GetBlockSize() - sizeof(long));
+                                                                    UInt32  mask        = (1 << (8 * paddingBytes)) - 1;
+                                                                    
+                                                                    *lastLong &= ~mask;
+                                                                    *lastLong |= (mask & kBlockPaddingBytes);
+                                                            }
+    Boolean                 CheckPaddingBytes()             {
+                                                                    long    *lastLong   = (long *)((char *)&memory + GetBlockSize() - sizeof(long));
+                                                                    UInt32  mask        = (1 << (8 * paddingBytes)) - 1;
+                                                                    return (*lastLong & mask) == (mask & kBlockPaddingBytes);
+                                                            }
+    UInt32                  GetPaddingBytes()               { return paddingBytes; }
 
-	void					ZapBlockContents(UInt8 pattern)	{ memset(&memory, pattern, GetBlockSize()); }
-	
-	// inline, so won't crash if this is a bad block
-	Boolean					HasHeaderTag(MemoryBlockTag inHeaderTag)
-											{ return header.headerTag == inHeaderTag; }
-	void					SetHeaderTag(MemoryBlockTag inHeaderTag)
-											{ header.headerTag = inHeaderTag; }
-	void					SetTrailerTag(UInt32 blockSize, MemoryBlockTag theTag)
-											{
-												MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
-												trailer->trailerTag = theTag;
-											}
-	Boolean					HasTrailerTag(UInt32 blockSize, MemoryBlockTag theTag)
-											{
-												MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
-												return (trailer->trailerTag == theTag);
-											}
+    void                    ZapBlockContents(UInt8 pattern) { memset(&memory, pattern, GetBlockSize()); }
+    
+    // inline, so won't crash if this is a bad block
+    Boolean                 HasHeaderTag(MemoryBlockTag inHeaderTag)
+                                            { return header.headerTag == inHeaderTag; }
+    void                    SetHeaderTag(MemoryBlockTag inHeaderTag)
+                                            { header.headerTag = inHeaderTag; }
+    void                    SetTrailerTag(UInt32 blockSize, MemoryBlockTag theTag)
+                                            {
+                                                MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
+                                                trailer->trailerTag = theTag;
+                                            }
+    Boolean                 HasTrailerTag(UInt32 blockSize, MemoryBlockTag theTag)
+                                            {
+                                                MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
+                                                return (trailer->trailerTag == theTag);
+                                            }
 #endif
 
-	static const UInt32		kLargeBlockOverhead;
-	
-	LargeBlockHeader		*next;
-	LargeBlockHeader 		*prev;
+    static const UInt32     kLargeBlockOverhead;
+    
+    LargeBlockHeader        *next;
+    LargeBlockHeader        *prev;
 
 #if DEBUG_HEAP_INTEGRITY
-	UInt32					paddingBytes;
+    UInt32                  paddingBytes;
 #endif
 
-	UInt32					logicalSize;
-	MemoryBlockHeader		header;		// this must be the last variable before memory
+    UInt32                  logicalSize;
+    MemoryBlockHeader       header;     // this must be the last variable before memory
 
-	char					memory[];
+    char                    memory[];
 };
 
 
 //--------------------------------------------------------------------
 class nsLargeHeapAllocator : public nsMemAllocator
 {
-	private:
-	
-		typedef nsMemAllocator		Inherited;
-	
-	
-	public:
-								nsLargeHeapAllocator(size_t minBlockSize, size_t maxBlockSize);
-								~nsLargeHeapAllocator();
+    private:
+    
+        typedef nsMemAllocator      Inherited;
+    
+    
+    public:
+                                nsLargeHeapAllocator(size_t minBlockSize, size_t maxBlockSize);
+                                ~nsLargeHeapAllocator();
 
 
-		virtual void *			AllocatorMakeBlock(size_t blockSize);
-		virtual void 			AllocatorFreeBlock(void *freeBlock);
-		virtual void *			AllocatorResizeBlock(void *block, size_t newSize);
-		virtual size_t 			AllocatorGetBlockSize(void *thisBlock);
+        void *              AllocatorMakeBlock(size_t blockSize);
+        void                AllocatorFreeBlock(void *freeBlock);
+        void *              AllocatorResizeBlock(void *block, size_t newSize);
+        size_t              AllocatorGetBlockSize(void *thisBlock);
 
-		virtual nsHeapChunk*	AllocateChunk(size_t requestedBlockSize);
-		virtual void			FreeChunk(nsHeapChunk *chunkToFree);
+        nsHeapChunk*            AllocateChunk(size_t requestedBlockSize);
+        void                    FreeChunk(nsHeapChunk *chunkToFree);
 
-    UInt32            GetPaddedBlockSize(UInt32 blockSize)  { return ((blockSize + 3) & ~3) + LargeBlockHeader::kLargeBlockOverhead; }
-	protected:
+        UInt32                  GetPaddedBlockSize(UInt32 blockSize)  { return ((blockSize + 3) & ~3) + LargeBlockHeader::kLargeBlockOverhead; }
 
-		UInt32					mBaseChunkPercentage;
-		UInt32					mBestTempChunkSize;
-		UInt32					mSmallestTempChunkSize;
+    protected:
+
+        UInt32                  mBaseChunkPercentage;
+        UInt32                  mBestTempChunkSize;
+        UInt32                  mSmallestTempChunkSize;
 
 };
 
@@ -142,33 +143,33 @@ class nsLargeHeapAllocator : public nsMemAllocator
 //--------------------------------------------------------------------
 class nsLargeHeapChunk : public nsHeapChunk
 {
-	public:
-	
-							nsLargeHeapChunk(	nsMemAllocator *inOwningAllocator,
-												Size 			heapSize);
-							~nsLargeHeapChunk();
+    public:
+    
+                            nsLargeHeapChunk(   nsMemAllocator *inOwningAllocator,
+                                                Size            heapSize);
+                            ~nsLargeHeapChunk();
 
-		LargeBlockHeader*	GetHeadBlock()		{ return mHead;	}
-																							
-		LargeBlockHeader*	GetSpaceForBlock(UInt32 roundedBlockSize);
+        LargeBlockHeader*   GetHeadBlock()      { return mHead; }
+                                                                                            
+        LargeBlockHeader*   GetSpaceForBlock(UInt32 roundedBlockSize);
 
-		void *				GrowBlock(LargeBlockHeader *growBlock, size_t newSize);
-		void *				ShrinkBlock(LargeBlockHeader *shrinkBlock, size_t newSize);
-		void *				ResizeBlockInPlace(LargeBlockHeader *theBlock, size_t newSize);
-		
-		void				ReturnBlock(LargeBlockHeader *deadBlock);
-		
-		UInt32      GetLargestFreeBlock()   { return mLargestFreeBlock; }
-		
-	protected:
-	
-		void				UpdateLargestFreeBlock();
-		
-		UInt32				mTotalFree;
-		UInt32				mLargestFreeBlock;		// heap useage for largest block we can allocate
-		
-		LargeBlockHeader*	mTail;
-		LargeBlockHeader	mHead[];
+        void *              GrowBlock(LargeBlockHeader *growBlock, size_t newSize);
+        void *              ShrinkBlock(LargeBlockHeader *shrinkBlock, size_t newSize);
+        void *              ResizeBlockInPlace(LargeBlockHeader *theBlock, size_t newSize);
+        
+        void                ReturnBlock(LargeBlockHeader *deadBlock);
+        
+        UInt32      GetLargestFreeBlock()   { return mLargestFreeBlock; }
+        
+    protected:
+    
+        void                UpdateLargestFreeBlock();
+        
+        UInt32              mTotalFree;
+        UInt32              mLargestFreeBlock;      // heap useage for largest block we can allocate
+        
+        LargeBlockHeader*   mTail;
+        LargeBlockHeader    mHead[];
 };
 
 
