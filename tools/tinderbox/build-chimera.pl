@@ -16,6 +16,7 @@
 #
 #
 use strict;
+use File::Path;     # for rmtree();
 
 package PostMozilla;
 
@@ -135,9 +136,22 @@ sub main {
   #
 
   # Clean profile out, if set.
+  # Assume Chimera always uses ~/Library/Chimera/Profiles/default for now.
   if ($Settings::CleanProfile) {
-    # Clean profile here.
+    #my $chim_profile_dir = "$ENV{HOME}/Library/Chimera/Profiles/default";
+    # delete the whole chimera dir to work around bug 154815
+    my $chim_profile_dir = "$ENV{HOME}/Library/Chimera";
+    
+    TinderUtils::print_log "Deleting $chim_profile_dir...\n";
+    File::Path::rmtree([$chim_profile_dir], 0, 0);
+
+    if (-e "$chim_profile_dir") {
+      TinderUtils::print_log "Error: rmtree('$chim_profile_dir') failed\n";
+    }
   }
+
+  # Set up performance prefs.
+  
 
   # AliveTest for chimera, about:blank
   if ($chimera_alive_test and $post_status eq 'success') {
