@@ -952,16 +952,18 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nscoord tx = x - psd->mReflowState->mComputedBorderPadding.left;
   nscoord ty = y - psd->mReflowState->mComputedBorderPadding.top;
   mSpaceManager->Translate(tx, ty);
+
+  pfd->mIsTextFrame = PR_FALSE;
+  pfd->mIsLetterFrame = PR_FALSE;
+  pfd->mIsNonEmptyTextFrame = PR_FALSE;
+  pfd->mIsSticky = PR_FALSE;
+
   aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
 
   // XXX See if the frame is a placeholderFrame and if it is process
   // the floater.
   nsIAtom* frameType;
   aFrame->GetFrameType(&frameType);
-  pfd->mIsTextFrame = PR_FALSE;
-  pfd->mIsLetterFrame = PR_FALSE;
-  pfd->mIsNonEmptyTextFrame = PR_FALSE;
-  pfd->mIsSticky = PR_FALSE;
   if (frameType) {
     if (frameType == nsLayoutAtoms::placeholderFrame) {
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
