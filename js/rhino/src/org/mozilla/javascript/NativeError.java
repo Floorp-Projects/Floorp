@@ -47,6 +47,16 @@ public class NativeError extends ScriptableObject {
     public NativeError() {
     }
     
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function funObj, boolean inNewExpr)
+    {
+        NativeError result = new NativeError();
+        if (args.length >= 1) 
+            result.put("message", result, cx.toString(args[0]));
+        result.setPrototype(getClassPrototype(funObj, "Error"));
+        return result;
+    }
+    
     public String getClassName() { 
         return "Error"; 
     }
