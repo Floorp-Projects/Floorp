@@ -1919,6 +1919,7 @@ WrappedLinesAreDirty(nsLineList::iterator aLine,
 }
 
 static void PlaceFrameView(nsPresContext* aPresContext, nsIFrame* aFrame);
+static PRUint8 CombineBreakType(PRUint8 aOrigBreakType, PRUint8 aNewBreakType);
 
 /**
  * Reflow the dirty lines
@@ -1968,6 +1969,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // recompute the carried out margin before the line if we want to
     // reflow it or if its previous margin is dirty
   PRBool needToRecoverState = PR_FALSE;
+  PRUint8 floatBreakType = NS_STYLE_CLEAR_NONE;
   
   // Reflow the lines that are already ours
   line_iterator line = begin_lines(), line_end = end_lines();
@@ -2004,18 +2006,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // before calling PropagateFloatDamage.
     if (needToRecoverState &&
         (line->IsDirty() || line->IsPreviousMarginDirty())) {
-
-      // If the previous line had a 'clear' in it, we need to do the
-      // same thing that we do in |PlaceLine|.
-      --line;
-      if (line->IsInline()) {
-        PRUint8 breakType = line->GetBreakType();
-        if (breakType == NS_STYLE_CLEAR_LEFT ||
-            breakType == NS_STYLE_CLEAR_RIGHT ||
-            breakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT)
-          aState.ClearFloats(aState.mY, breakType);
+      if (floatBreakType != NS_STYLE_CLEAR_NONE) {
+        aState.ClearFloats(aState.mY, floatBreakType);
+        floatBreakType = NS_STYLE_CLEAR_NONE;
       }
-      ++line;
 
       // We need to reconstruct the bottom margin only if we didn't
       // reflow the previous line and we do need to reflow (or repair
@@ -2105,7 +2099,17 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // PlaceLine does.
       if (!line->IsEmpty()) {
         aState.mY = line->mBounds.YMost();
+        // This will include any pending float clearing height, so
+        // don't bother clearing previous lines' floats
+        floatBreakType = NS_STYLE_CLEAR_NONE;
       }
+
+      // Record if we need to clear floats before reflowing the next
+      // line
+      if (line->HasFloatBreak()) {
+        floatBreakType = ::CombineBreakType(floatBreakType, line->GetBreakType());
+      }
+
       needToRecoverState = PR_TRUE;
     }
 
@@ -4091,13 +4095,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // Apply break-after clearing if necessary
   // This must stay in sync with |ReflowDirtyLines|.
-  PRUint8 breakType = aLine->GetBreakType();
-  switch (breakType) {
-  case NS_STYLE_CLEAR_LEFT:
-  case NS_STYLE_CLEAR_RIGHT:
-  case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
-    aState.ClearFloats(aState.mY, breakType);
-    break;
+  if (aLine->HasFloatBreak()) {
+    aState.ClearFloats(aState.mY, aLine->GetBreakType());
   }
 
   return PR_FALSE;
@@ -5164,11 +5163,8 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       if (mPrevInFlow) {
         // get the break type of the last line in mPrevInFlow
         line_iterator endLine = --((nsBlockFrame*)mPrevInFlow)->end_lines();
-        PRUint8 breakType = endLine->GetBreakType();
-        if ((NS_STYLE_CLEAR_LEFT           == breakType) ||
-            (NS_STYLE_CLEAR_RIGHT          == breakType) ||
-            (NS_STYLE_CLEAR_LEFT_AND_RIGHT == breakType)) {
-          aState.mFloatBreakType = breakType;
+        if (endLine->HasFloatBreak()) {
+          aState.mFloatBreakType = endLine->GetBreakType();
         }
       }
       else NS_ASSERTION(PR_FALSE, "no prev in flow");
