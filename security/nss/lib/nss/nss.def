@@ -719,6 +719,7 @@ SECKEY_CopyPublicKey;
 CERT_GetFirstEmailAddress;
 CERT_GetNextEmailAddress;
 CERT_VerifySignedDataWithPubKeyInfo;
+CERT_VerifySignedDataWithPublicKey;
 ;+    local:
 ;+       *;
 ;+};
