@@ -121,6 +121,6 @@ nsresult nsXPTCStubBase::Sentinel##n() \
     return NS_ERROR_NOT_IMPLEMENTED; \
 }
 
-#include "xpcstubsdef.inc"
+#include "xptcstubsdef.inc"
 
 #endif
