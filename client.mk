@@ -181,7 +181,7 @@ checkout:
 	  false; \
 	else true; \
 	fi
-	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE) \
+	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE); \
 	 : \
 	 : Check the log for conflicts. \
 	 ; \
