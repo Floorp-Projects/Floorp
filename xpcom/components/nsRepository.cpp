@@ -710,7 +710,7 @@ nsresult nsRepository::SyncComponentsInPathList(const char *pathlist)
 {
 	char *paths = PL_strdup(pathlist);
 
-	if (paths == NULL || *paths == NULL)
+	if (paths == NULL || *paths == '\0')
 		return(NS_ERROR_FAILURE);
 
 	char *pathsMem = paths;
@@ -735,7 +735,7 @@ nsresult nsRepository::SyncComponentsInDir(const char *dir)
 	// the filename each time in the loop
 	char fullname[NS_MAX_FILENAME_LEN];
 	PL_strncpyz(fullname, dir, sizeof(fullname));
-	int n = strlen(fullname);
+	unsigned int n = strlen(fullname);
 	if (n+1 < sizeof(fullname))
 	{
 		fullname[n] = PR_GetDirectorySeparator();
