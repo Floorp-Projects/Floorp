@@ -594,12 +594,8 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 
 //-------------------------------------------------------------------------
 //	StartDraw
-//		Initialize graphic attributes.
-//		When they receive a Paint event, XP Widgets rely
-//		on these attributes to be set.
 //
 //-------------------------------------------------------------------------
-//¥TODO: some of that work is done by the rendering context -> do some cleanup
 void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 {
 	// make sure we have a rendering context
@@ -609,27 +605,21 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 	{
 		NS_IF_ADDREF(aRenderingContext);
 		mTempRenderingContext = aRenderingContext;
-	}
-	if (mTempRenderingContext)
 		mTempRenderingContext->PushState();
+		mTempRenderingContext->Init(mContext, this);
+	}
 
-	// set the origin to the topLeft corner of the widget
-	nsPoint widgetOrigin(mBounds.x, mBounds.y);
-	//nsPoint widgetOrgin( (**mMacPortRelativeRegion).rgnBBox.left, (**mMacPortRelativeRegion).rgnBBox.top );
-	LocalToWindowCoordinate(widgetOrigin);
-	::SetOrigin(-widgetOrigin.x, -widgetOrigin.y);
-
-	//::SetClip(mTempRenderingContext->mCurStatePtr->mOriginRelativeClipRgn);
-		
-	// set the font
+	// set the widget font
 	if (mFontMetrics)
 	{
 		nsFont* font;
 		mFontMetrics->GetFont(font);
 		nsFontMetricsMac::SetFont(*font, mContext);
+
+		mTempRenderingContext->SetFont(mFontMetrics);	// just in case, set the rendering context font too
 	}
 
-	// set the background & foreground colors
+	// set the widget background and foreground colors
 	nscolor color = GetBackgroundColor();
 	RGBColor macColor;
 	macColor.red   = COLOR8TOCOLOR16(NS_GET_R(color));
@@ -643,7 +633,7 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 	macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
 	::RGBForeColor(&macColor);
 
-	::PenNormal();
+	mTempRenderingContext->SetColor(color);				// just in case, set the rendering context color too
 }
 
 
@@ -730,7 +720,7 @@ NS_IMETHODIMP	nsWindow::Update(nsIRenderingContext* aRenderingContext)
 				do
 				{
           if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))  {
-					  child->Update(/*renderingContext*/);
+					  child->Update(renderingContext);
           }
 				}
         while (NS_SUCCEEDED(children->Next()));			
