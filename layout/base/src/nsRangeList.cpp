@@ -485,7 +485,7 @@ nsRangeList::RemoveItem(nsISupports *aItem)
   {
     nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeArray->ElementAt(i));
 
-    if (indexIsupports == aItem)
+    if (aItem == indexIsupports)
     {
       mRangeArray->RemoveElementAt(i);
       return NS_OK;
