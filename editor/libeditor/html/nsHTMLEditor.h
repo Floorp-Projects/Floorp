@@ -243,7 +243,7 @@ protected:
 
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
-  NS_IMETHOD InsertBR();
+  NS_IMETHOD InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode);
 
 // Table Editing (implemented in EditTable.cpp)
 
@@ -473,6 +473,9 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
   PRBool 	mIsComposing;
   PRInt32 mMaxTextLength;
+
+public:
+  static nsIAtom *gTypingTxnName;
 
 // friends
 friend class nsHTMLEditRules;

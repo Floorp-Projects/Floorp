@@ -19,8 +19,6 @@
 #include "nsTextEditRules.h"
 
 #include "nsEditor.h"
-#include "PlaceholderTxn.h"
-#include "InsertTextTxn.h"
 
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
@@ -140,7 +138,6 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
     case kInsertText:
       return WillInsertText(aSelection, 
                             aCancel, 
-                            info->placeTxn, 
                             info->inString,
                             info->outString,
                             info->typeInState,
@@ -265,7 +262,6 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 nsresult
 nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
                                 PRBool          *aCancel,
-                                PlaceholderTxn **aTxn,
                                 const nsString  *aInString,
                                 nsString        *aOutString,
                                 TypeInState      aTypeInState,
@@ -293,7 +289,7 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   
   // do text insertion
   PRBool bCancel;
-  res = DoTextInsertion(aSelection, &bCancel, aTxn, aOutString, aTypeInState);
+  res = DoTextInsertion(aSelection, &bCancel, aOutString, aTypeInState);
 
   return res;
 }
@@ -1059,7 +1055,6 @@ nsTextEditRules::EchoInsertionToPWBuff(nsIDOMSelection *aSelection, nsString *aO
 nsresult
 nsTextEditRules::DoTextInsertion(nsIDOMSelection *aSelection, 
                                  PRBool          *aCancel,
-                                 PlaceholderTxn **aTxn,
                                  const nsString  *aInString,
                                  TypeInState      aTypeInState)
 {
@@ -1070,14 +1065,6 @@ nsTextEditRules::DoTextInsertion(nsIDOMSelection *aSelection,
   // rules code always does the insertion
   *aCancel = PR_TRUE;
   
-  if (mBogusNode || (PR_TRUE==aTypeInState.IsAnySet()))
-  {
-    res = TransactionFactory::GetNewTransaction(PlaceholderTxn::GetCID(), (EditTxn **)aTxn);
-    if (NS_FAILED(res)) { return res; }
-    if (!*aTxn) { return NS_ERROR_NULL_POINTER; }
-    (*aTxn)->SetName(InsertTextTxn::gInsertTextTxnName);
-    mEditor->Do(*aTxn);
-  }
   PRBool bCancel;
   res = WillInsert(aSelection, &bCancel);
   if (NS_SUCCEEDED(res) && (!bCancel))

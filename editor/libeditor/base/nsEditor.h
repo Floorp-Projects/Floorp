@@ -121,6 +121,9 @@ public:
   NS_IMETHOD BeginTransaction();
   NS_IMETHOD EndTransaction();
 
+  NS_IMETHOD BeginPlaceHolderTransaction(nsIAtom *aName);
+  NS_IMETHOD EndPlaceHolderTransaction();
+
   // pure virtual, because the definition of 'empty' depends on the doc type
   NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)=0;
 
@@ -553,10 +556,16 @@ public:
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
 
   /** returns PR_TRUE if aParent can contain a child of type aTag */
-  PRBool     CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
+  PRBool CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
   
+  /** returns PR_TRUE if aNode is a container */
+  PRBool IsContainer(nsIDOMNode *aNode);
+
   /** returns PR_TRUE if aNode is an editable node */
   PRBool IsEditable(nsIDOMNode *aNode);
+
+  /** returns PR_TRUE if content is an merely formatting whitespacce */
+  PRBool IsEmptyTextContent(nsIContent* aContent);
 
   /** counts number of editable child nodes */
   nsresult CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount);
@@ -608,6 +617,11 @@ protected:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   nsCOMPtr<nsIEditProperty>  mEditProperty;
   nsCOMPtr<nsICSSStyleSheet> mLastStyleSheet;			// is owning this dangerous?
+  nsWeakPtr       mPlaceHolderTxn;
+  nsIAtom        *mPlaceHolderName;
+  PRInt32         mPlaceHolderBatch;
+  nsCOMPtr<nsIDOMNode> mTxnStartNode;
+  PRInt32         mTxnStartOffset;
 
   //
   // data necessary to build IME transactions

@@ -25,6 +25,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMSelection.h"
 #include "nsIEditor.h"
+#include "nsIAtom.h"
 
 class nsAutoEditBatch
 {
@@ -43,9 +44,19 @@ class nsAutoEditMayBatch
     PRBool mDidBatch;
   public:
     nsAutoEditMayBatch( nsIEditor *aEd) : mEd(do_QueryInterface(aEd)), mDidBatch(PR_FALSE) {}
-    nsAutoEditMayBatch() { if (mEd && mDidBatch) mEd->EndTransaction(); }
+    ~nsAutoEditMayBatch() { if (mEd && mDidBatch) mEd->EndTransaction(); }
     
     void batch()  { if (mEd && !mDidBatch) {mEd->BeginTransaction(); mDidBatch=PR_TRUE;} }
+};
+
+class nsAutoPlaceHolderBatch
+{
+  private:
+    nsCOMPtr<nsIEditor> mEd;
+  public:
+    nsAutoPlaceHolderBatch( nsIEditor *aEd, nsIAtom *atom) : mEd(do_QueryInterface(aEd)) 
+                   { if (mEd) mEd->BeginPlaceHolderTransaction(atom); }
+    ~nsAutoPlaceHolderBatch() { if (mEd) mEd->EndPlaceHolderTransaction(); }
 };
 
 

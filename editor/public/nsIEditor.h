@@ -203,6 +203,8 @@ public:
     */
   NS_IMETHOD EndTransaction()=0;
 
+  NS_IMETHOD BeginPlaceHolderTransaction(nsIAtom *aName)=0;
+  NS_IMETHOD EndPlaceHolderTransaction()=0;
 
   /* ------------ Clipboard methods -------------- */
 
