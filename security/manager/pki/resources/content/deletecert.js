@@ -94,6 +94,8 @@ function setWindowName()
   var text;
   for(x=0;x<certs.length;x++)
   {
+    if (!certs[x])
+      continue;
     text = document.createElement("text");
     text.setAttribute("value",certs[x].commonName);
     box.appendChild(text);
@@ -107,7 +109,10 @@ function doOK()
 {
   for(var i=0;i<certs.length;i++)
   {
-    certdb.deleteCertificate(certs[i]);
+    if (certs[i]) {
+      certdb.deleteCertificate(certs[i]);
+      certs[i] = null;
+    }
   }
   window.close();
 }

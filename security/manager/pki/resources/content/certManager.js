@@ -80,7 +80,6 @@ function LoadCerts()
     enableBackupAllButton.setAttribute("enabled",true);
   }
 
-
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var verifiedColText;
   if (certdb.ocspOn) {
@@ -98,6 +97,14 @@ function ReloadCerts()
   serverTreeView.loadCerts(nsIX509Cert.SERVER_CERT);
   emailTreeView.loadCerts(nsIX509Cert.EMAIL_CERT);
   userTreeView.loadCerts(nsIX509Cert.USER_CERT);
+}
+
+function CleanUp()
+{
+  caTreeView = null;
+  serverTreeView = null;
+  emailTreeView = null;
+  userTreeView = null;
 }
 
 function getSelectedTab()
@@ -264,6 +271,7 @@ function backupCerts()
     certdb.exportPKCS12File(null, fp.file, 
                             selected_certs.length, selected_certs);
   }
+  selected_certs = [];
 }
 
 function backupAllCerts()
@@ -289,6 +297,7 @@ function editCerts()
                   'chrome,width=100,resizable=1,modal');
     }
   }
+  selected_certs = [];
 }
 
 function restoreCerts()
@@ -338,6 +347,7 @@ function deleteCerts()
   }
   else
   {
+    selected_certs = [];
     return;
   }
 
@@ -346,7 +356,10 @@ function deleteCerts()
   {
     var cert = selected_certs[t];
     params.SetString(t+1, cert.dbKey);  
+    cert = null;
   }
+
+  selected_certs = [];
    
   window.openDialog('chrome://pippki/content/deletecert.xul', "",
                 'chrome,resizable=1,modal',params);
@@ -361,6 +374,7 @@ function viewCerts()
   for (var t=0; t<numcerts; t++) {
     selected_certs[t].view();
   }
+  selected_certs = [];
 }
 
 /* XXX future - import a DER cert from a file? */

@@ -2888,6 +2888,57 @@ nsNSSCertificateDB::GetCertsByType(PRUint32           aType,
        !CERT_LIST_END(node, certList);
        node = CERT_LIST_NEXT(node)) {
     if (getCertType(node->cert) == aType) {
+
+      // Work around bug 138626.
+
+      PRBool deleted = PR_FALSE;
+
+      {
+        SECItem key;
+        key.len = NS_NSS_LONG*4+node->cert->serialNumber.len+node->cert->derIssuer.len;
+        key.data = (unsigned char *)nsMemory::Alloc(key.len);
+        NS_NSS_PUT_LONG(0,key.data); // later put moduleID
+        NS_NSS_PUT_LONG(0,&key.data[NS_NSS_LONG]); // later put slotID
+        NS_NSS_PUT_LONG(node->cert->serialNumber.len,&key.data[NS_NSS_LONG*2]);
+        NS_NSS_PUT_LONG(node->cert->derIssuer.len,&key.data[NS_NSS_LONG*3]);
+        memcpy(&key.data[NS_NSS_LONG*4],node->cert->serialNumber.data,
+						      node->cert->serialNumber.len);
+        memcpy(&key.data[NS_NSS_LONG*4+node->cert->serialNumber.len],
+			      node->cert->derIssuer.data, node->cert->derIssuer.len);
+
+        SECItem &keyItem = key;
+
+        CERTIssuerAndSN issuerSN;
+        unsigned long moduleID,slotID;
+
+        // someday maybe we can speed up the search using the moduleID and slotID
+        moduleID = NS_NSS_GET_LONG(keyItem.data);
+        slotID = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG]);
+
+        // build the issuer/SN structure
+        issuerSN.serialNumber.len = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG*2]);
+        issuerSN.derIssuer.len = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG*3]);
+        issuerSN.serialNumber.data= &keyItem.data[NS_NSS_LONG*4];
+        issuerSN.derIssuer.data= &keyItem.data[NS_NSS_LONG*4+
+                                                    issuerSN.serialNumber.len];
+
+        CERTCertificate *cert = CERT_FindCertByIssuerAndSN(CERT_GetDefaultCertDB(), &issuerSN);
+
+        nsMemory::Free(key.data); // SECItem is a 'c' type without a destrutor
+
+        if (!cert)
+        {
+          deleted = PR_TRUE;
+        }
+        else
+        {
+          CERT_DestroyCertificate(cert);
+        }
+      }
+
+      if (deleted)
+        continue;
+
       nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(node->cert);
       if (pipCert) {
         for (i=0; i<count; i++) {

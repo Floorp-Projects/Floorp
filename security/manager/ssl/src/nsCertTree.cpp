@@ -78,12 +78,17 @@ nsCertTree::FreeCertArray()
   if (mCertArray) {
     PRUint32 count;
     nsresult rv = mCertArray->Count(&count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    if (NS_FAILED(rv))
+    {
+      NS_ASSERTION(0, "Count failed");
+      return;
+    }
     PRInt32 i;
     for (i = count - 1; i >= 0; i--)
+    {
       mCertArray->RemoveElementAt(i);
+    }
   }
-  mCertArray = nsnull;
 }
 
 // CmpByToken
@@ -293,7 +298,7 @@ nsCertTree::LoadCerts(PRUint32 aType)
   if (rowsChanged) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%d,%d]", mNumRows, numChanged));
     numChanged = mNumRows - numChanged;
-    if (mTree) mTree->RowCountChanged(0, numChanged);
+    if (mTree) mTree->RowCountChanged(0, mNumRows);
   }
   return NS_OK;
 }
