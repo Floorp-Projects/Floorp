@@ -1146,6 +1146,13 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
     aEvent->PreventBubble();
     mEditor->GetFlags(&flags);
     nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
+
+    // when imeEditor exists, call ForceCompositionEnd() to tell
+    // the input focus is leaving first
+    nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
+    if (imeEditor)
+      imeEditor->ForceCompositionEnd();
+
     if (editor)
     {
       nsCOMPtr<nsISelectionController>selCon;
