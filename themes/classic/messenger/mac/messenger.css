@@ -423,6 +423,12 @@ searchterm
   margin-left: 5px;
 }
 
+/* ::::: account manager :::::: */
+
+.specialFolderPickerGrid {
+  margin-left: 20px;
+}
+
 #accountCentralBox
 {
   background-color:#FFFFFF;

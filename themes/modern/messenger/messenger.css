@@ -541,6 +541,12 @@ statusbar,
   margin-left: 5px;
 }
 
+/* ::::: account manager :::::: */
+
+.specialFolderPickerGrid {
+  margin-left: 20px;
+}
+
 /* ::::: account central :::::: */
 
 #accountCentralBox {
