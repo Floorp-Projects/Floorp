@@ -24,7 +24,6 @@
 #ifdef ENDER_LITE
 
 #include "nsCOMPtr.h"
-#include "nsWeakReference.h"
 #include "nsGfxTextControlFrame2.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
@@ -100,6 +99,26 @@
 
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
+
+
+static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
+{
+  nsresult rv(NS_OK);
+  static nsWeakPtr sElementFactory = getter_AddRefs( NS_GetWeakReference(nsCOMPtr<nsIElementFactory>(do_GetService(
+                     NS_ELEMENT_FACTORY_PROGID_PREFIX"http://www.w3.org/1999/xhtml", &rv) )));
+  if (sElementFactory)
+  {
+    nsCOMPtr<nsIElementFactory> fac(do_QueryReferent(sElementFactory));
+    *aFactory = fac.get();
+    if (!*aFactory)
+      rv = NS_ERROR_FAILURE;
+    NS_IF_ADDREF(*aFactory);
+  }
+  else
+    return NS_ERROR_FAILURE;
+  return rv;
+}
+
 
 //listen for the return key. kinda lame.
 //listen for onchange notifications
@@ -1389,13 +1408,10 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
   
   // Now create a DIV and add it to the anonymous content child list.
-
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory,
-                  NS_ELEMENT_FACTORY_PROGID_PREFIX
-                  "http://www.w3.org/1999/xhtml",
-                  &rv);
-  if (!elementFactory)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIElementFactory> elementFactory;
+  rv = GetElementFactoryService(getter_AddRefs(elementFactory));
+  if (NS_FAILED(rv) || ! elementFactory)
+    return rv?rv:NS_ERROR_FAILURE;
 
   nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
   rv = doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
