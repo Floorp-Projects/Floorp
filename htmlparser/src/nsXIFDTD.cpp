@@ -931,11 +931,22 @@ NS_IMETHODIMP nsXIFDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32*
 }
 
 
+PRBool nsXIFDTD::IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const {
+  PRBool result=PR_FALSE;
+  return result;
+}
+
+PRBool nsXIFDTD::IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const {
+  PRBool result=PR_FALSE;
+  return result;
+}
+
+
 /**
  *  This method gets called to determine whether a given 
  *  tag is itself a container
  *  
- *  @update  gpk 06/18/98
+ *  @update  rickg 06June2000
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */

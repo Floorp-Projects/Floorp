@@ -327,7 +327,7 @@ PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
  * @update  gess 02/24/00
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
- */
+ */ 
 eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
@@ -338,14 +338,22 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
     else if(aParserContext.mMimeType.EqualsWithConversion(kRTFTextContentType)){ 
       result=ePrimaryDetect;
     }
-  }
+  }     
   else {
     if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
-      result=(eDTDMode_strict==aParserContext.mDTDMode) ? eValidDetect : ePrimaryDetect;
+      switch(aParserContext.mDTDMode) {
+        case eDTDMode_strict:
+        case eDTDMode_transitional:
+          result=eValidDetect;
+          break;
+        default:
+          result=ePrimaryDetect;
+          break;
+      }
     }
     else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
       result=ePrimaryDetect;
-    }
+    } 
     else {
       //otherwise, look into the buffer to see if you recognize anything...
       PRBool theBufHasXML=PR_FALSE;
@@ -354,12 +362,20 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
         if(0==aParserContext.mMimeType.Length()) {
           aParserContext.SetMimeType(NS_ConvertToString(kHTMLTextContentType));
           if(!theBufHasXML) {
-            result=(eDTDMode_strict==aParserContext.mDTDMode) ? eValidDetect : ePrimaryDetect;
+            switch(aParserContext.mDTDMode) {
+              case eDTDMode_strict:
+              case eDTDMode_transitional:
+                result=eValidDetect;
+                break;
+              default:
+                result=ePrimaryDetect;
+                break;
+            }
           }
           else result=eValidDetect;
         }
       }
-    }
+    } 
   }
   return result;
 }
@@ -815,6 +831,12 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
  */
 nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
   nsresult result=NS_OK;
+
+#if 0
+    // XXX --- Ignore this: it's just rickg debug testing...
+  nsAutoString theStr;
+  aNode.GetSource(theStr);
+#endif
 
   switch(aChildTag){
 
@@ -2097,7 +2119,22 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   
-    result = (mSink)? mSink->AddDocTypeDecl(*theNode,mDTDMode):NS_OK;
+    /*************************************************************
+      While the parser is happy to deal with various modes, the
+      rest of layout prefers only 2: strict vs. quirks. So we'll
+      constrain the modes when reporting to layout.
+     *************************************************************/
+    nsDTDMode theMode=mDTDMode;
+    switch(mDTDMode) {
+      case eDTDMode_transitional:
+      case eDTDMode_strict:
+        theMode=eDTDMode_strict;
+        break;
+      default:
+        theMode=eDTDMode_quirks;
+    }
+
+    result = (mSink)? mSink->AddDocTypeDecl(*theNode,theMode):NS_OK;
     
     mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
   
@@ -2268,6 +2305,47 @@ NS_IMETHODIMP CNavDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const 
 NS_IMETHODIMP CNavDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const {
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
   return NS_OK;
+}
+
+
+/**
+ *  This method is called to determine whether or not
+ *  the given childtag is a block element.
+ *
+ *  @update  gess 6June2000
+ *  @param   aChildID -- tag id of child 
+ *  @param   aParentID -- tag id of parent (or eHTMLTag_unknown)
+ *  @return  PR_TRUE if this tag is a block tag
+ */
+PRBool CNavDTD::IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const {
+  PRBool result=PR_FALSE;
+  eHTMLTags theTag=(eHTMLTags)aTagID;
+
+  if((theTag>eHTMLTag_unknown) && (theTag<eHTMLTag_userdefined)) {
+    result=gHTMLElements[theTag].IsBlockEntity();
+  }
+
+  return result;
+}
+
+/**
+ *  This method is called to determine whether or not
+ *  the given childtag is an inline element.
+ *
+ *  @update  gess 6June2000
+ *  @param   aChildID -- tag id of child 
+ *  @param   aParentID -- tag id of parent (or eHTMLTag_unknown)
+ *  @return  PR_TRUE if this tag is an inline tag
+ */
+PRBool CNavDTD::IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const {
+  PRBool result=PR_FALSE;
+  eHTMLTags theTag=(eHTMLTags)aTagID;
+
+  if((theTag>eHTMLTag_unknown) && (theTag<eHTMLTag_userdefined)) {
+    result=nsHTMLElement::IsInlineEntity(theTag);
+  }
+
+  return result;
 }
 
 /**
@@ -3064,6 +3142,9 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
       }
       break;
 
+    case eHTMLTag_counter: //drop it on the floor.
+      break;
+
     case eHTMLTag_style:
     case eHTMLTag_title:
       break;
@@ -3335,34 +3416,6 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
       }//if anode
       mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
     }
-
-
-    if(eDTDMode_quirks==mDTDMode) {
-
-#if 0 
-
-      //This code takes any nodes in style stack for at this level and reopens
-      //then where they were originally.
-
-      if(!aClosedByStartTag) {
-        nsEntryStack* theStack=mBodyContext->GetStylesAt(anIndex-1);
-        if(theStack){
-
-          PRUint32 scount=theStack->mCount;
-          PRUint32 sindex=0;
-
-          for(sindex=0;sindex<scount;sindex++){
-            nsIParserNode* theNode=theStack->NodeAt(sindex);
-            if(theNode) {
-              ((nsCParserNode*)theNode)->mUseCount--;
-              result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE);
-            }
-          } 
-          theStack->mCount=0; 
-        } //if
-      } //if
-#endif
-    }//if
 
   } //if
   return result;

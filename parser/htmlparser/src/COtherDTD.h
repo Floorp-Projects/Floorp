@@ -270,23 +270,6 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
     virtual PRBool IsContainer(PRInt32 aTag) const;
 
     /**
-     * Ask parser if a given container is open ANYWHERE on stack
-     * @update	gess5/11/98
-     * @param   id of container you want to test for
-     * @return  TRUE if the given container type is open -- otherwise FALSE
-     */
-    virtual PRBool HasOpenContainer(eHTMLTags aContainer) const;
-
-    /**
-     * Ask parser if a given container is open ANYWHERE on stack
-     * @update	gess5/11/98
-     * @param   id of container you want to test for
-     * @return  TRUE if the given container type is open -- otherwise FALSE
-     */
-    virtual PRBool HasOpenContainer(const eHTMLTags aTagSet[],PRInt32 aCount) const;
-
-
-    /**
      * Use this id you want to stop the building content model
      * --------------[ Sets DTD to STOP mode ]----------------
      * It's recommended to use this method in accordance with
@@ -308,6 +291,9 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
 
     NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
 
+    virtual PRBool  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;
+    virtual PRBool  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
+
     /**
      * The following set of methods are used to partially construct 
      * the content model (via the sink) according to the type of token.
@@ -317,24 +303,13 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
      */
     nsresult    HandleStartToken(CToken* aToken);
     nsresult    HandleEndToken(CToken* aToken);
-    nsresult    HandleDocTypeDeclToken(CToken* aToken);
-
+    nsresult    HandleEntityToken(CToken* aToken);
 
     //*************************************************
     //these cover methods mimic the sink, and are used
     //by the parser to manage its context-stack.
     //*************************************************
     
-    /**
-     * The special purpose methods automatically close
-     * one or more open containers.
-     * @update	gess5/11/98
-     * @return  error code - 0 if all went well.
-     */
-    nsresult CloseContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aClosedByStartTag);
-    nsresult CloseContainersTo(eHTMLTags aTag,PRBool aClosedByStartTag);
-    nsresult CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aClosedByStartTag);
-
     static void ReleaseTable(void);
 
 protected:

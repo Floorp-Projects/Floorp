@@ -253,6 +253,7 @@ public:
   PRInt32         mContextTopIndex;
   PRBool          mHadBody;
   PRBool          mHadFrameset;
+  PRBool          mTransitional;
   PRBool          mHadDocTypeDecl;
 
   static   CNodeRecycler* mNodeRecycler;
@@ -383,20 +384,54 @@ inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags *aTagSet,PRInt32 aCount)
 
 /**
  * Called from various DTD's to determine the type of data in the buffer...
- * @update	gess11/20/98
- * @param 
- * @return
+ * @update	gess 06Jun2000
+ * @param   aBuffer: contains a string with first block of html from source document
+ * @param   aHasXMLFragment: tells us whether we detect XML in the buffer (based on PI)
+ * @return  TRUE if we find HTML
  */
 inline PRBool BufferContainsHTML(nsString& aBuffer,PRBool& aHasXMLFragment){
   PRBool result=PR_FALSE;
-  nsString temp;
-  aBuffer.Left(temp,200);
-  temp.ToLowerCase();
 
-  aHasXMLFragment=PRBool(-1<temp.Find("<?xml"));
-  if((-1<temp.Find("<html ") || (-1<temp.Find("!doctype html public")))) {
-    result=PR_TRUE;
+  aHasXMLFragment=PRBool(-1!=aBuffer.Find("<?XML",PR_TRUE,100));
+
+  PRInt32 theDocTypePos=aBuffer.Find("DOCTYPE",PR_TRUE,0,200);
+  if(-1!=theDocTypePos) {
+    PRInt32 theHTMLPos=aBuffer.Find("HTML",PR_TRUE,theDocTypePos+8,200);
+    if(-1==theHTMLPos) {
+      theHTMLPos=aBuffer.Find("ISO/IEC 15445",PR_TRUE,theDocTypePos+8,200);
+      if(-1==theHTMLPos) {
+        theHTMLPos=aBuffer.Find("HYPERTEXT MARKUP",PR_TRUE,theDocTypePos+8,200);
+      }
+    }
+    result=PRBool(-1!=theHTMLPos);
   }
+  else {
+      //worst case scenario: let's look for a few HTML tags...
+    PRInt32 theCount=0;
+    PRInt32 theLTPos=0;
+    PRInt32 theStartPos=0;
+    nsAutoString  theTagName;
+    PRInt32 theTagCount=0;
+
+    for(theCount=0;theCount<5;theCount++) {
+      theLTPos=aBuffer.Find("<",PR_TRUE,theStartPos,200);
+      if(-1!=theLTPos) {
+        //we found what may be a start tag...
+        PRInt32 theTagEnd=aBuffer.FindCharInSet(" >\"",theLTPos);
+        aBuffer.Mid(theTagName,theLTPos+1,theTagEnd-theLTPos-1);
+
+        nsHTMLTag theTag=nsHTMLTags::LookupTag(theTagName);
+        if(eHTMLTag_userdefined!=theTag) {
+          theTagCount++;
+        }
+        //now let's see if it's a tag or not...
+        theStartPos=theTagEnd+1;
+      }
+      else break;
+    }
+    result=PRBool(2<=theTagCount); //claim HTML if we find at least 2 real html tags...
+  }
+
   return result;
 }
 

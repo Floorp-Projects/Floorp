@@ -23,6 +23,7 @@
   
 #define DEBUG_XMLENCODING
 #define XMLENCODING_PEEKBYTES 64
+//#define TEST_DOCTYPES 
 
 #include "nsParser.h"
 #include "nsIContentSink.h" 
@@ -103,11 +104,13 @@ public:
 
     nsIDTD* theDTD;
 
+#if 1
     NS_NewNavHTMLDTD(&theDTD);    //do this as a default HTML DTD...
     mDTDDeque.Push(theDTD);
+#endif
 
-    NS_NewOtherHTMLDTD(&theDTD);  //do this as the default DTD for strict documents...
-    mDTDDeque.Push(theDTD);
+    NS_NewOtherHTMLDTD(&mOtherDTD);  //do this as the default DTD for strict documents...
+    mDTDDeque.Push(mOtherDTD);
 
     mHasViewSourceDTD=PR_FALSE;
     mHasRTFDTD=mHasXMLDTD=PR_FALSE;
@@ -135,6 +138,7 @@ public:
   PRBool  mHasViewSourceDTD;  //this allows us to defer construction of this object.
   PRBool  mHasXMLDTD;         //also defer XML dtd construction
   PRBool  mHasRTFDTD;         //also defer RTF dtd construction
+  nsIDTD  *mOtherDTD;         //it's ok to leak this; the deque contains a copy too.
 };
 
 static CSharedParserObjects* gSharedParserObjects=0;
@@ -515,7 +519,7 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
 
   aParseMode = eDTDMode_unknown;
     
-  PRInt32 theIndex=aBuffer.Find("DOCTYPE",PR_TRUE,0,10);
+  PRInt32 theIndex=aBuffer.Find("DOCTYPE",PR_TRUE,0,100);
   if(kNotFound<theIndex) {
   
     //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
@@ -527,102 +531,99 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
 
     //note that if we don't find '>', then we just scan the first 512 bytes.
 
-    if(0<=theSubIndex) {
+    if(kNotFound!=theSubIndex) {
+
+        //if you're here then we found the //DTD identifier type...
+
       PRInt32 theStartPos=theSubIndex+5;
       PRInt32 theCount=theEnd-theStartPos;
 
-      if(kNotFound<theSubIndex) {
-
-        theSubIndex=aBuffer.Find("XHTML",PR_TRUE,theStartPos,theCount);
-        if(0<=theSubIndex) {
-          aDocType=eXHTMLText;
-          aParseMode=eDTDMode_strict;
-          return;
-        }
-        else {
-          theSubIndex=aBuffer.Find("ISO/IEC 15445:",PR_TRUE,theIndex+8,theEnd-(theIndex+8));
-          if(0<=theSubIndex) {
-            aDocType=eHTML4Text;
-            aParseMode=eDTDMode_strict;
-            theMajorVersion=4;
-            theSubIndex+=15;
-            return;
-          }
-          else {
-            theSubIndex=aBuffer.Find("HTML",PR_TRUE,theStartPos,theCount);
-            if(0<=theSubIndex) {
-              aDocType=eHTML4Text;
-              aParseMode=eDTDMode_strict;
-              theMajorVersion=3;
-            }
-            else {
-              theSubIndex=aBuffer.Find("HYPERTEXT MARKUP",PR_TRUE,theStartPos,theCount);
-              if(0<=theSubIndex) {
-                aDocType=eHTML3Text;
-                aParseMode=eDTDMode_quirks;
-                theSubIndex+=20;
-              }
-            } 
-          }
-        }
-      }
-
-      theStartPos=theSubIndex+5;
-      theCount=theEnd-theStartPos;
-      nsAutoString theNum;
-
-        //get the next substring from the buffer, which should be a number.
-        //now see what the version number is...
-
-      theStartPos=aBuffer.FindCharInSet("123456789",theStartPos);
-      if(0<=theStartPos) {
-        PRInt32 theTerminal=aBuffer.FindCharInSet(" />",theStartPos+1);
-        if(theTerminal) {
-          aBuffer.Mid(theNum,theStartPos,theTerminal-theStartPos);
-        }
-        else aBuffer.Mid(theNum,theStartPos,3);
-        theMajorVersion=theNum.ToInteger(&theErr);
-      }
-
-      //now see what the
-      theStartPos+=theNum.Length();
-      theCount=theEnd-theStartPos;
-      if((aBuffer.Find("TRANSITIONAL",PR_TRUE,theStartPos,theCount)>kNotFound)||
-         (aBuffer.Find("LOOSE",PR_TRUE,theStartPos,theCount)>kNotFound)       ||
-         (aBuffer.Find("FRAMESET",PR_TRUE,theStartPos,theCount)>kNotFound)    ||
-         (aBuffer.Find("LATIN1", PR_TRUE,theStartPos,theCount) >kNotFound)    ||
-         (aBuffer.Find("SYMBOLS",PR_TRUE,theStartPos,theCount) >kNotFound)    ||
-         (aBuffer.Find("SPECIAL",PR_TRUE,theStartPos,theCount) >kNotFound)) {
-        aParseMode=eDTDMode_quirks;
-      }
-
-      //one last thing: look for a URI that specifies the strict.dtd
-      theStartPos+=6;
-      theCount=theEnd-theStartPos;
-      theSubIndex=aBuffer.Find("STRICT.DTD",PR_TRUE,theStartPos,theCount);
-      if(0<theSubIndex) {
-        //Since we found it, regardless of what's in the descr-text, kick into strict mode.
+      if(kNotFound!=aBuffer.Find("ISO/IEC 15445:1999",PR_TRUE,theIndex,theEnd-theIndex)) {
+          //per spec, this DTD is always strict...
         aParseMode=eDTDMode_strict;
         aDocType=eHTML4Text;
+        theMajorVersion=4;
+        return;
+      }
+      
+      if (kNotFound!=aBuffer.Find("XHTML",PR_TRUE,theStartPos,theCount)) {
+        aDocType=eXHTMLText;
+        aParseMode=eDTDMode_strict;
+        return;
       }
 
-      if (0==theErr){
-        switch(theMajorVersion) {
-          case 0: case 1: case 2: case 3:
-            if(aDocType!=eXHTMLText){
-              aParseMode=eDTDMode_quirks; //be as backward compatible as possible
-              aDocType=eHTML3Text;
+      if(kNotFound<theSubIndex) {
+
+        PRInt32 theHTMLTagPos=aBuffer.Find("HTML",PR_TRUE,theStartPos,theCount);  
+        if(kNotFound==theHTMLTagPos) {
+          theHTMLTagPos=aBuffer.Find("HYPERTEXT MARKUP",PR_TRUE,theStartPos,theCount);  
+        }
+
+        if(kNotFound!=theHTMLTagPos) {
+
+            //get the next substring from the buffer, which should be a number.
+            //now see what the version number is...
+
+          PRInt32 theVersionPos=aBuffer.FindCharInSet("1234567890",theHTMLTagPos);
+          if((0<=theVersionPos) && (theVersionPos<theEnd)) {
+            nsAutoString theNum;
+            PRInt32 theTerminal=aBuffer.FindCharInSet(" />",theVersionPos+1);
+            if(theTerminal) {
+              aBuffer.Mid(theNum,theVersionPos,theTerminal-theVersionPos);
             }
-            break;
-  
-          default:
-              //XXX hack -- someday, the next line of code will be criticized 
-              //for it's lack of vision...
-            if(theMajorVersion>20) {
+            else aBuffer.Mid(theNum,theVersionPos,3);
+            theMajorVersion=theNum.ToInteger(&theErr);
+            if(theMajorVersion>10) {
+              theMajorVersion=3; //assume that's an error for now.
+            }
+          }
+
+            //now let's see if we have descriptive text (providing strictness id)...
+
+          theStartPos=theVersionPos+2;
+          theCount=theEnd-theStartPos;              
+          if((aBuffer.Find("TRANSITIONAL",PR_TRUE,theVersionPos+2,theCount)>kNotFound)||
+             (aBuffer.Find("LOOSE",PR_TRUE,theStartPos,theCount)>kNotFound)       ||
+             (aBuffer.Find("FRAMESET",PR_TRUE,theStartPos,theCount)>kNotFound)    ||
+             (aBuffer.Find("LATIN1", PR_TRUE,theStartPos,theCount) >kNotFound)    ||
+             (aBuffer.Find("SYMBOLS",PR_TRUE,theStartPos,theCount) >kNotFound)    ||
+             (aBuffer.Find("SPECIAL",PR_TRUE,theStartPos,theCount) >kNotFound)) {
+
+              //for now TRANSITIONAL 4.0 documents are handled in the compatibility DTD.
+              //Soon, they'll be handled in the strictDTD in transitional mode.
+            aParseMode=eDTDMode_transitional;
+
+          }
+          else {
+            //since we didn't find descriptive text, let's check out the URI...
+            //to see whether that specifies the strict.dtd...
+            theStartPos+=6;
+            theCount=theEnd-theStartPos;
+            theSubIndex=aBuffer.Find("STRICT.DTD",PR_TRUE,theStartPos,theCount);
+            if(0<theSubIndex) {
+              //Since we found it, regardless of what's in the descr-text, kick into strict mode.
               aParseMode=eDTDMode_strict;
+              aDocType=eHTML4Text;
             }
-            break;
-        } //switch
+          }
+
+          switch(theMajorVersion) {
+            case 1:
+            case 2:
+            case 3:
+              aParseMode=eDTDMode_quirks;
+              aDocType=eHTML4Text;
+              break;
+
+            default:
+              if(eDTDMode_unknown==aParseMode) {
+                aParseMode=eDTDMode_strict;
+              }
+
+              break;
+          }
+
+        }
       }
  
     } //if
@@ -648,6 +649,10 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
     else aDocType=eXMLText;
   }
   else if(aMimeType.EqualsWithConversion(kPlainTextContentType)) {
+    aDocType=ePlainText;
+    aParseMode=eDTDMode_quirks;
+  }
+  else if(aMimeType.EqualsWithConversion(kRTFTextContentType)) {
     aDocType=ePlainText;
     aParseMode=eDTDMode_quirks;
   }
@@ -680,7 +685,7 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
       return PR_TRUE;
 
   CSharedParserObjects& gSharedObjects=GetSharedObjects();
-
+  aParserContext.mValidator=gSharedObjects.mOtherDTD;
 
   aParserContext.mAutoDetectStatus=eUnknownDetect;
   PRInt32 theDTDIndex=0;
@@ -800,7 +805,7 @@ nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
 
       switch(theDocType) {
         case eHTML4Text:
-          if(theDTDMode==eDTDMode_strict) {
+          if((theDTDMode==eDTDMode_strict) || (theDTDMode==eDTDMode_transitional)) {
             theDTDClassID=&kCOtherDTDCID;
             break;
           }
@@ -821,7 +826,7 @@ nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
       NS_ASSERTION(aDTDMode!=eDTDMode_unknown,"DTD selection might require a parsemode");
 
       if(aMimeType->EqualsWithConversion(kHTMLTextContentType)) {
-        if(aDTDMode==eDTDMode_strict) {
+        if((aDTDMode==eDTDMode_strict) || (aDTDMode==eDTDMode_transitional)) {
           theDTDClassID=&kCOtherDTDCID;
         }
         else {
@@ -856,37 +861,60 @@ nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
 
 }
 
+
 #ifdef TEST_DOCTYPES
 static const char* doctypes[] = {
 
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\">",
+
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" >",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">",
+  
     //here are a few HTML doctypes we'll treat as strict...
+
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">",
+
   "<!DOCTYPE HTML PUBLIC PublicID SystemID>",
   "<!DOCTYPE HTML SYSTEM SystemID>",
+
+  "<!DOCTYPE \"-//W3C//DTD HTML 4.0//EN\">",
+  "<!DOCTYPE \"-//W3C//DTD HTML 4.01//EN\">",
+  "<!DOCTYPE \"-//W3C//DTD HTML 4.0 STRICT//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">",
+
+  "<!DOCTYPE \"ISO/IEC 15445:1999//DTD HyperText Markup Language//EN\">",
+  "<!DOCTYPE \"ISO/IEC 15445:1999//DTD HTML//EN\">",
+  "<!DOCTYPE \"-//SoftQuad Software//DTD HoTMetaL PRO 6.::19990601::extensions to HTML 4.//EN\">", 
 
   "<!DOCTYPE \"-//W3C//DTD HTML 5.0//EN\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 6.01 Transitional//EN\">",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 6.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">",
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">",
-  "<!DOCTYPE \"-//W3C//DTD HTML 4.0 STRICT//EN\">",
-  "<!DOCTYPE \"-//W3C//DTD HTML 4.01//EN\">",
-  "<!DOCTYPE \"-//W3C//DTD HTML 4.0//EN\">",
-  "<!DOCTYPE \"ISO/IEC 15445:1999//DTD HyperText Markup Language//EN\">",
-  "<!DOCTYPE \"ISO/IEC 15445:1999//DTD HTML//EN\">",
-  "<!DOCTYPE \"-//SoftQuad Software//DTD HoTMetaL PRO 6.::19990601::extensions to HTML 4.//EN\">", 
 
     //here are the XHTML doctypes we'll treat as strict...
   "<!DOCTYPE \"-//W3C//DTD XHTML 1.0 Strict//EN\">",
   "<!DOCTYPE \"-//W3C//DTD XHTML 1.0 Transitional//EN\">",
   "<!DOCTYPE \"-//W3C//DTD XHTML 1.0 Frameset//EN\">",
   
-    //these we treat as standard (no quirks)...
+    //these we treat as compatible (no quirks if possible)...
+
   "<!DOCTYPE \"-//W3C//DTD HTML Experimental 19960712//EN\">", 
   "<!DOCTYPE \"-//W3C//DTD HTML 4.01 Transitional//EN\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 4.1 Frameset//EN\">", 
   "<!DOCTYPE \"-//W3C//DTD HTML 4.0 Transitional//EN\">", 
   "<!DOCTYPE \"-//W3C//DTD HTML 4.0 Frameset//EN\">", 
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">",
 
-    //these we treat as quirks... (along with any other we encounter)...
+    //these we treat as compatible with quirks... (along with any other we encounter)...
   "<!DOCTYPE \"-//W3O//DTD W3 HTML 3.0//EN//\">", 
   "<!DOCTYPE \"-//IETF//DTD HTML//EN//3.\">", 
   "<!DOCTYPE \"-//W3C//DTD W3 HTML 3.0//EN//\">", 
@@ -902,6 +930,7 @@ static const char* doctypes[] = {
   "<!DOCTYPE \"-//W3C//DTD W3 HTML Strict 3//EN//\">", 
   "<!DOCTYPE \"-//IETF//DTD HTML Strict Level 3//EN\">", 
   "<!DOCTYPE \"-//IETF//DTD HTML Strict Level 3//EN//3.0\">", 
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">",
 
   "<!DOCTYPE \"HTML\">", 
   "<!DOCTYPE \"-//IETF//DTD HTML//EN\">", 
@@ -970,20 +999,20 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
 
   nsresult       result=NS_OK;
 
-#if TEST_DOCTYPES
+#ifdef TEST_DOCTYPES
 
   static PRBool tested=PR_FALSE;
   const char** theDocType=doctypes;
 
   if(!tested) {
     tested=PR_TRUE;
-    eParseMode       theParseMode=eDTDMode_unknown;
-    eParserDocType   theDocumentType=ePlainText;
+    nsDTDMode        theMode=eDTDMode_unknown;
+    eParserDocType  theDocumentType=ePlainText;
     
     while(*theDocType) {
       nsAutoString theType;
       theType.AssignWithConversion(*theDocType);
-      DetermineParseMode(theType,theParseMode,theDocumentType,mParserContext->mMimeType);
+      DetermineParseMode(theType,theMode,theDocumentType,mParserContext->mMimeType);
       theDocType++;
     }
   }

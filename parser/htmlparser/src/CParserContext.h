@@ -76,6 +76,7 @@ public:
 
     nsScanner*          mScanner;
     nsIDTD*             mDTD;
+    nsIDTD*             mValidator;
 
     char*               mTransferBuffer;
     nsIStreamObserver*  mListener;

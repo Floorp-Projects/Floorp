@@ -225,6 +225,9 @@ class CWellFormedDTD : public nsIDTD {
   
     NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
 
+    virtual PRBool  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const {return PR_FALSE;}
+    virtual PRBool  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const {return PR_FALSE;}
+
 protected:
 /*
     NS_IMETHODIMP ConsumeTag(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);

@@ -472,6 +472,7 @@ NS_IMETHODIMP CWellFormedDTD::ConvertEntityToUnicode(const nsString& aEntity, PR
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 /**
  *  This method gets called to determine whether a given 
  *  tag is itself a container

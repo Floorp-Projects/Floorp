@@ -28,6 +28,9 @@
  */
  
 
+#define ENABLE_ERROR_OUTPUT   //debug only for now...
+
+
 #ifdef RAPTOR_PERF_METRICS
 #  define START_TIMER()                    \
     if(mParser) mParser->mParseTime.Start(PR_FALSE); \
@@ -54,7 +57,7 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
-
+#include "COtherDTD.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -73,6 +76,7 @@ Stopwatch vsTimer;
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID); 
+static int gErrorThreshold = 10;
 
 static CTokenRecycler* gTokenRecycler=0;
 
@@ -171,9 +175,11 @@ public:
     mEndNode(), 
     mStartNode(),
     mTokenNode(),
+    mErrorNode(),
     mITextToken(),
     mITextNode(&mITextToken),
     mTextToken(),
+    mErrorToken("error"),
     mTextNode(&mTextToken){
   }
   
@@ -188,9 +194,11 @@ public:
   nsCParserNode       mEndNode;
   nsCParserNode       mStartNode;
   nsCParserNode       mTokenNode;
+  nsCParserNode       mErrorNode;
   CIndirectTextToken  mITextToken;
   nsCParserNode       mITextNode;
   CTextToken          mTextToken;
+  CToken              mErrorToken;
   nsCParserNode       mTextNode;
 };
 
@@ -202,8 +210,7 @@ public:
  *  @param   
  *  @return  
  */
-CViewSourceHTML::CViewSourceHTML()
-{
+CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   NS_INIT_REFCNT();
 
   mStartTag.AssignWithConversion("start");
@@ -216,12 +223,15 @@ CViewSourceHTML::CViewSourceHTML()
   mText.AssignWithConversion("txt");
   mKey.AssignWithConversion("key");
   mValue.AssignWithConversion("val");
+  mSummaryTag.AssignWithConversion("summary");
+  mPopupTag.AssignWithConversion("popup");
 
   mParser=0;
   mSink=0;
   mLineNumber=0;
   mTokenizer=0;
   mDocType=eHTML3Text;
+  mValidator=0;
 
 #ifdef rickgdebug
   gDumpFile = new fstream("c:/temp/viewsource.xml",ios::trunc);
@@ -317,10 +327,16 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
 
   if((!aParserContext.mPrevContext) && (mSink)) {
 
+    mTags.Truncate();
+    mErrors.AssignWithConversion(" HTML 4.0 Strict-DTD validation (enabled); [Should use Transitional?].\n");
+
+    mValidator=aParserContext.mValidator;
     mDocType=aParserContext.mDocType;
     mMimeType=aParserContext.mMimeType;
     mDTDMode=aParserContext.mDTDMode;
     mParserCommand=aParserContext.mParserCommand;
+    mErrorCount=0;
+    mTagCount=0;
 
     static const char* theHeader="<?xml version=\"1.0\"?>";
     CToken ssToken(theHeader);
@@ -394,6 +410,29 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
   return result;
 }
 
+
+/**
+ * Call this to display an error summary regarding the page.
+ * 
+ * @update	rickg 6June2000
+ * @return  nsresult
+ */
+nsresult  CViewSourceHTML::GenerateSummary() {
+  nsresult result=NS_OK;
+
+  if(mErrorCount && mTagCount) {
+
+    mErrors.AppendWithConversion("\n\n ");
+    mErrors.AppendInt(mErrorCount);
+    mErrors.AppendWithConversion(" error(s) detected -- see highlighted portions.\n");
+
+    result=WriteTag(mSummaryTag,mErrors,0,PR_FALSE);
+
+  }
+
+  return result;
+}
+
 /**
  * 
  * @update	gess5/18/98
@@ -424,6 +463,9 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
 
       if(ePlainText!=mDocType) {
         //now let's automatically close the root container...
+
+        GenerateSummary();
+
         CToken theToken("viewsource");
         nsCParserNode theNode(&theToken,0);
         mSink->CloseContainer(theNode);
@@ -575,6 +617,17 @@ NS_IMETHODIMP CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag
 NS_IMETHODIMP CViewSourceHTML::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+PRBool CViewSourceHTML::IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const {
+  PRBool result=PR_FALSE;
+  return result;
+}
+
+PRBool CViewSourceHTML::IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const {
+  PRBool result=PR_FALSE;
+  return result;
 }
 
 /**
@@ -748,70 +801,6 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
   return result;
 }
 
-
-/**
- *  This method gets called when a tag needs to be sent out
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  result status
- */
-nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired) {
-  static nsString       theString;
-
-  nsresult result=NS_OK;
-
-  CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
-
-  CToken theTagToken(theXMLTagName);
-  theContext.mStartNode.Init(&theTagToken,mLineNumber);
-
-  STOP_TIMER();
-  mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
-  START_TIMER();
-
-
-#ifdef rickgdebug
-
-      if(aNewlineRequired) {
-        (*gDumpFile)<<endl;
-      }
-
-      nsCAutoString cstr(theXMLTagName);
-      (*gDumpFile) << "<" << cstr << ">";
-      cstr.Assign(aToken->GetStringValueXXX());
-      if('<'==cstr.First()) {
-        cstr.Cut(0,2);
-        cstr.Truncate(cstr.Length()-1);
-      }
-      (*gDumpFile) << cstr;
-#endif
-  
-  nsString& theStr=aToken->GetStringValueXXX();
-  theStr.StripChar(kCR);
-
-  theContext.mITextToken.SetIndirectString(theStr);  //now emit the tag name...
-  STOP_TIMER();
-  mSink->AddLeaf(theContext.mITextNode);
-  START_TIMER();
-
-  if(attrCount){
-    result=WriteAttributes(attrCount);
-  }
-
-  STOP_TIMER();
-  theContext.mEndNode.Init(&theTagToken,mLineNumber);
-  mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
-  START_TIMER();
-
-#ifdef rickgdebug
-      cstr.Assign(theXMLTagName);
-      (*gDumpFile) << "</" << cstr << ">";
-#endif
-
-  return result;
-}
-
 /**
  *  This method gets called when a tag needs to be sent out
  *  
@@ -830,9 +819,8 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRIn
   theContext.mStartNode.Init(&theTagToken,mLineNumber);
 
   STOP_TIMER();
-  mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
-  START_TIMER();
 
+  mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
 
 #ifdef rickgdebug
 
@@ -849,29 +837,103 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRIn
 
   theContext.mITextToken.SetIndirectString(aText);  //now emit the tag name...
 
-  STOP_TIMER();
   mSink->AddLeaf(theContext.mITextNode);
-  START_TIMER();
 
   if(attrCount){
     result=WriteAttributes(attrCount);
   }
 
   theContext.mEndNode.Init(&theTagToken,mLineNumber);
-
-  STOP_TIMER();
   mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
-  START_TIMER();
-
 
 #ifdef rickgdebug
       cstr.Assign(theXMLTagName);
       (*gDumpFile) << "</" << cstr << ">";
 #endif
 
+  START_TIMER();
+
   return result;
 }
 
+/**
+ *  This method gets called when a tag needs to be sent out
+ *  
+ *  @update  gess 6June2000 -- factored to use WriteTag(txt,txt...);
+ *  @param   
+ *  @return  result status
+ */
+nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired) {
+
+  nsString& theStr=aToken->GetStringValueXXX();
+  theStr.StripChar(kCR);
+
+  nsresult result=WriteTag(theXMLTagName,theStr,attrCount,aNewlineRequired);
+  return result;
+}
+
+/**
+ *  This method gets called when a tag needs to be sent out but is known to be misplaced (error)
+ *  
+ *  @update  gess 6June2000 -- 
+ *  @param   
+ *  @return  result status
+ */
+nsresult CViewSourceHTML::WriteTagWithError(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired) {
+
+  STOP_TIMER();
+
+  CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
+  nsresult result=NS_OK;
+  
+  if(ePlainText!=mDocType) {
+
+    //first write the error tag itself...
+
+    theContext.mErrorNode.Init(&theContext.mErrorToken,mLineNumber);
+    result=mSink->OpenContainer(theContext.mErrorNode);  //emit <error>...
+  }
+
+    //now write the tag from the source file...
+  result=WriteTag(theXMLTagName,aToken,attrCount,aNewlineRequired);
+
+  if(ePlainText!=mDocType) {
+
+   //now close the error tag...
+    STOP_TIMER();
+    theContext.mErrorNode.Init(&theContext.mErrorToken,mLineNumber);
+    mSink->CloseContainer(theContext.mErrorNode);
+    START_TIMER();
+  }
+
+  return result; 
+}
+
+void CViewSourceHTML::AddContainmentError(eHTMLTags aChildTag,eHTMLTags aParentTag,PRInt32 aLineNumber) {
+
+#ifdef  ENABLE_ERROR_OUTPUT
+
+  mErrorCount++;
+
+  if(mErrorCount<=gErrorThreshold) {
+
+    char theChildMsg[100];
+    if(eHTMLTag_text==aChildTag) 
+      strcpy(theChildMsg,"text");
+    else sprintf(theChildMsg,"<%s>",nsHTMLTags::GetCStringValue(aChildTag));
+
+    char theMsg[256];
+    sprintf(theMsg,"\n -- Line (%i) error: %s is not a legal child of <%s>",
+            aLineNumber,theChildMsg,nsHTMLTags::GetCStringValue(aParentTag));
+
+    mErrors.AppendWithConversion(theMsg);
+  }
+  else if(gErrorThreshold+1==mErrorCount){
+    mErrors.AppendWithConversion("\n -- Too many errors -- terminating output.");
+  }
+#endif
+
+}
 
 /**
  *  
@@ -890,25 +952,53 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
   CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
   theContext.mTokenNode.Init(theToken,mLineNumber);
 
+  eHTMLTags theParent=(mTags.Length()) ? (eHTMLTags)mTags.Last() : eHTMLTag_unknown;
+  eHTMLTags theChild=(eHTMLTags)aToken->GetTypeID();
+
   switch(theType) {
     
     case eToken_start:
+      {
+        mTagCount++;
 
-      result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
-      if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
-        CObserverService* theService=mParser->GetObserverService();
-        if(theService) {
-          CParserContext*   pc=mParser->PeekContext(); 
-          void*             theDocID=(pc)? pc->mKey:0; 
-          eHTMLTags         theTag=(eHTMLTags)theToken->GetTypeID();  
-
-          result=theService->Notify(theTag,theContext.mTokenNode,theDocID, NS_ConvertToString(kViewSourceCommand), mParser);
+#ifdef ENABLE_ERROR_OUTPUT
+        PRBool theChildIsValid=PR_TRUE;
+        if(mValidator) {
+          theChildIsValid=mValidator->CanContain(theParent,theChild);
+          if(theChildIsValid) {
+            if(mValidator->IsContainer(theChild))
+              mTags.Append(PRUnichar(theChild));
+          }
         }
+
+        if(theChildIsValid)
+          result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
+        else {
+          AddContainmentError(theChild,theParent,mLineNumber);
+          result=WriteTagWithError(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
+        }
+#else
+        result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
+#endif
+
+        if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
+          CObserverService* theService=mParser->GetObserverService();
+          if(theService) {
+            CParserContext*   pc=mParser->PeekContext(); 
+            void*             theDocID=(pc)? pc->mKey:0; 
+            eHTMLTags         theTag=(eHTMLTags)theToken->GetTypeID();  
+
+            result=theService->Notify(theTag,theContext.mTokenNode,theDocID, NS_ConvertToString(kViewSourceCommand), mParser);
+          }
+        }
+        theContext.mTokenNode.Init(0,0,gTokenRecycler);  //now recycle.
       }
-      theContext.mTokenNode.Init(0,0,gTokenRecycler);  //now recycle.
       break;
 
     case eToken_end:
+      if(theParent==theChild) {
+        mTags.Truncate(mTags.Length()-1);
+      }
       result=WriteTag(mEndTag,aToken,0,PR_TRUE);
       break;
 
@@ -921,7 +1011,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       }
       break;
 
-    case eToken_comment:
+    case eToken_comment: 
       result=WriteTag(mCommentTag,aToken,0,PR_TRUE);
       break;
 
@@ -932,10 +1022,23 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       break;
 
     case eToken_newline:
-      mLineNumber++;
+      mLineNumber++; //now fall through...
     case eToken_whitespace:
-    case eToken_text:
       result=WriteTag(mText,aToken,0,PR_FALSE);
+      break;
+
+    case eToken_text:
+
+#ifdef ENABLE_ERROR_OUTPUT
+      if((0==mValidator) || mValidator->CanContain(theParent,eHTMLTag_text))
+        result=WriteTag(mText,aToken,aToken->GetAttributeCount(),PR_TRUE);
+      else {
+        AddContainmentError(eHTMLTag_text,theParent,mLineNumber);
+        result=WriteTagWithError(mText,aToken,aToken->GetAttributeCount(),PR_FALSE);
+      }
+#else
+      result=WriteTag(mText,aToken,aToken->GetAttributeCount(),PR_TRUE);
+#endif
       break;
 
     case eToken_entity:

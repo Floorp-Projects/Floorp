@@ -174,6 +174,12 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual CToken* PopAttributeToken();
 
+    /** Retrieve a string containing the tag and its attributes in "source" form
+     * @update	rickg 06June2000
+     * @return  void
+     */
+    virtual void GetSource(nsString& aString);
+
     /**
      * This pair of methods allows us to set a generic bit (for arbitrary use)
      * on each node stored in the context.

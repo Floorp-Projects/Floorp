@@ -52,8 +52,8 @@ enum eAutoDetectResult {
 
 enum nsDTDMode {
   eDTDMode_unknown=0,
-  eDTDMode_quirks,    //pre 5.0 versions
-  eDTDMode_noquirks,  //raptor versions...)
+  eDTDMode_quirks,        //pre 4.0 versions
+  eDTDMode_transitional,  
   eDTDMode_strict,
   eDTDMode_autodetect
 };
@@ -214,6 +214,10 @@ class nsIDTD : public nsISupports {
     NS_IMETHOD IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const =0;
 
     NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const =0;
+
+    virtual PRBool  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const=0;
+    virtual PRBool  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const=0;
+
 };
 
 
