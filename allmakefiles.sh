@@ -845,6 +845,8 @@ extensions/typeaheadfind/Makefile
 MAKEFILES_phoenix="
 browser/Makefile
 browser/app/Makefile
+browser/app/profile/Makefile
+browser/app/profile/chrome/Makefile
 browser/base/Makefile
 browser/components/Makefile
 browser/components/bookmarks/Makefile
@@ -854,11 +856,13 @@ browser/components/build/Makefile
 browser/components/downloads/Makefile
 browser/components/downloads/public/Makefile
 browser/components/downloads/src/Makefile
+browser/components/history/Makefile
 browser/components/prefwindow/Makefile
 browser/components/prefwindow/content/Makefile
 browser/components/prefwindow/locale/Makefile
 browser/components/search/Makefile
 browser/components/search/resources/Makefile
+browser/components/security/Makefile
 "
 
 MAKEFILES_xulapp="
