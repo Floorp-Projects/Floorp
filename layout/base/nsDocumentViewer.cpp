@@ -416,6 +416,22 @@ public:
     }
   }
 
+
+  nsresult startTimer()
+  {
+  nsresult result;
+  
+    mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
+    if (NS_FAILED(result)){
+      NS_WARNING("unable to start the timer");
+    } else {
+      mTimer->Init(this, mDelay, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT);
+    } 
+    return result;
+  }
+
+
+
   // nsITimerCallback
   NS_IMETHOD_(void) Notify(nsITimer *timer)
   {
@@ -428,6 +444,13 @@ public:
         // now clean up print or print the next webshell
         if (mDocViewer->DonePrintingPages()) {
           Stop();
+        }
+      } else {
+        nsresult result;
+        Stop();
+        result = startTimer();
+        if (NS_FAILED(result)){
+          donePrinting = PR_TRUE;     // had a failure.. we are finished..
         }
       }
     }
@@ -450,16 +473,7 @@ public:
                  PRUint32            aDelay) 
   {
     Init(aDocViewerImpl, aPresContext, aPrintOptions, aDelay);
-
-    if (!mTimer) {
-      nsresult result;
-      mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
-
-      if (NS_FAILED(result))
-        return result;
-    }
-
-    return mTimer->Init(this, mDelay, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+    return startTimer();
   }
 
   void Stop() { if (mTimer) mTimer->Cancel(); }
