@@ -355,7 +355,7 @@ int XP_MakeDirectory(const char* name, XP_FileType type)
 	if (!*s) return -1;
 	result = mkdir (s, mode);
   }
-#elif defined(SUNOS4)
+#elif defined(SUNOS4) || defined(BSDI)
   {
 	char rp[MAXPATHLEN];
 	char *s = WH_FileName (name, type);
