@@ -66,6 +66,12 @@ function onLoadViewPartialSource()
         gWrapLongLines = true;
       }
     } catch (e) { }
+    try {
+      document.getElementById("menu_highlightSyntax").setAttribute("checked", gPrefs.getBoolPref("view_source.syntax_highlight"));
+    } catch (e) {
+    }
+  } else {
+    document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
   }
 
   // disable menu items that don't work since the selection is munged and

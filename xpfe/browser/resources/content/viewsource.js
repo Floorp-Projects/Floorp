@@ -136,11 +136,11 @@ function viewSource(url)
     } catch (ex) {
     }
     try {
-      document.getElementById("cmd_highlightSyntax").setAttribute("checked", gPrefs.getBoolPref("view_source.syntax_highlight"));
+      document.getElementById("menu_highlightSyntax").setAttribute("checked", gPrefs.getBoolPref("view_source.syntax_highlight"));
     } catch (ex) {
     }
   } else {
-    document.getElementById("cmd_highlightSyntax").setAttribute("hidden", "true");
+    document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
   }
 
   window._content.focus();
@@ -200,9 +200,8 @@ function wrapLongLines()
 //pref to persist the last state
 function highlightSyntax()
 {
-  var highlightSyntaxCmd = document.getElementById("cmd_highlightSyntax");
-  var highlightSyntax = highlightSyntaxCmd.getAttribute("checked") != "true";
-  highlightSyntaxCmd.setAttribute("checked", highlightSyntax);
+  var highlightSyntaxMenu = document.getElementById("menu_highlightSyntax");
+  var highlightSyntax = (highlightSyntaxMenu.getAttribute("checked") == "true");
   gPrefs.setBoolPref("view_source.syntax_highlight", highlightSyntax);
 
   var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
