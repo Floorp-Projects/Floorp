@@ -167,6 +167,7 @@ protected:
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
   static PRBool MatchLinks(nsIContent *aContent, nsString* aData);
   static PRBool MatchAnchors(nsIContent *aContent, nsString* aData);
+  static PRBool MatchLayers(nsIContent *aContent, nsString* aData);
   static PRBool MatchNameAttribute(nsIContent* aContent, nsString* aData);
 
   PRBool GetBodyContent();
@@ -192,6 +193,7 @@ protected:
   nsContentList *mLinks;
   nsContentList *mAnchors;
   nsContentList *mForms;
+  nsContentList *mLayers;
   
   PLHashTable *mNamedItems;
 

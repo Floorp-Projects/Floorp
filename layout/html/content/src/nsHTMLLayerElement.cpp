@@ -18,7 +18,10 @@
  */
 #include "nsIDOMHTMLElement.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIDOMHTMLLayerElement.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
@@ -30,12 +33,13 @@
 
 #define _I32_MIN  (-2147483647 - 1) /* minimum signed 32 bit value */
 
-static NS_DEFINE_IID(kIDOMHTMLLayerElementIID, NS_IDOMHTMLELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLLayerElementIID, NS_IDOMHTMLLAYERELEMENT_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 
-class nsHTMLLayerElement : public nsIDOMHTMLElement,/* XXX need layer api */
-                    public nsIScriptObjectOwner,
-                    public nsIDOMEventReceiver,
-                    public nsIHTMLContent
+class nsHTMLLayerElement : public nsIDOMHTMLLayerElement,
+                           public nsIScriptObjectOwner,
+                           public nsIDOMEventReceiver,
+                           public nsIHTMLContent
 {
 public:
   nsHTMLLayerElement(nsIAtom* aTag);
@@ -54,8 +58,21 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLLayerElement
-  NS_IMETHOD GetCite(nsString& aCite);
-  NS_IMETHOD SetCite(const nsString& aCite);
+  NS_IMETHOD    GetTop(PRInt32* aTop);
+  NS_IMETHOD    SetTop(PRInt32 aTop);
+  NS_IMETHOD    GetLeft(PRInt32* aLeft);
+  NS_IMETHOD    SetLeft(PRInt32 aLeft);
+  NS_IMETHOD    GetVisibility(nsString& aVisibility);
+  NS_IMETHOD    SetVisibility(const nsString& aVisibility);
+  NS_IMETHOD    GetBackground(nsString& aBackground);
+  NS_IMETHOD    SetBackground(const nsString& aBackground);
+  NS_IMETHOD    GetBgColor(nsString& aBgColor);
+  NS_IMETHOD    SetBgColor(const nsString& aBgColor);
+  NS_IMETHOD    GetName(nsString& aName);
+  NS_IMETHOD    SetName(const nsString& aName);
+  NS_IMETHOD    GetZIndex(PRInt32* aZIndex);
+  NS_IMETHOD    SetZIndex(PRInt32 aZIndex);
+  NS_IMETHOD    GetDocument(nsIDOMDocument** aReturn);
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -105,15 +122,41 @@ nsresult
 nsHTMLLayerElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-#if XXX
   if (aIID.Equals(kIDOMHTMLLayerElementIID)) {
     nsIDOMHTMLLayerElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     mRefCnt++;
     return NS_OK;
   }
-#endif
   return NS_NOINTERFACE;
+}
+
+NS_IMPL_INT_ATTR(nsHTMLLayerElement, Top, top)
+NS_IMPL_INT_ATTR(nsHTMLLayerElement, Left, left)
+NS_IMPL_STRING_ATTR(nsHTMLLayerElement, Visibility, visibility)
+NS_IMPL_STRING_ATTR(nsHTMLLayerElement, Background, background)
+NS_IMPL_STRING_ATTR(nsHTMLLayerElement, BgColor, bgcolor)
+NS_IMPL_STRING_ATTR(nsHTMLLayerElement, Name, name)
+NS_IMPL_INT_ATTR(nsHTMLLayerElement, ZIndex, zindex)
+
+NS_IMETHODIMP    
+nsHTMLLayerElement::GetDocument(nsIDOMDocument** aDocument)
+{
+  // XXX This is cheating. We should really return the layer's
+  // internal document.
+  nsresult result = NS_OK;
+  nsIDocument* document;
+  
+  result = mInner.GetDocument(document);
+  if (NS_SUCCEEDED(result)) {
+    result = document->QueryInterface(kIDOMDocumentIID, (void**)&aDocument);
+    NS_RELEASE(document);
+  }
+  else {
+    *aDocument = nsnull;
+  }
+
+  return result;
 }
 
 nsresult
@@ -127,11 +170,12 @@ nsHTMLLayerElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLLayerElement, Cite, cite)
-
 static nsGenericHTMLElement::EnumTable kVisibilityTable[] = {
-  {"hide", NS_STYLE_VISIBILITY_HIDDEN},
+  {"hidden", NS_STYLE_VISIBILITY_HIDDEN},
   {"visible", NS_STYLE_VISIBILITY_VISIBLE},
+  {"show", NS_STYLE_VISIBILITY_VISIBLE},
+  {"hide", NS_STYLE_VISIBILITY_HIDDEN},
+  {"inherit", NS_STYLE_VISIBILITY_VISIBLE},
   {0}
 };
 
@@ -159,7 +203,8 @@ nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::zindex) {
+  else if ((aAttribute == nsHTMLAtoms::zindex) ||
+           (aAttribute == nsHTMLAtoms::z_index)) {
     if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -251,6 +296,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     if (value.GetUnit() == eHTMLUnit_Integer) {
       position->mZIndex.SetIntValue(value.GetIntValue(), eStyleUnit_Integer);
     }
+    aAttributes->GetAttribute(nsHTMLAtoms::z_index, value);
+    if (value.GetUnit() == eHTMLUnit_Integer) {
+      position->mZIndex.SetIntValue(value.GetIntValue(), eStyleUnit_Integer);
+    }
 
     // Visibility
     aAttributes->GetAttribute(nsHTMLAtoms::visibility, value);
@@ -293,6 +342,17 @@ nsHTMLLayerElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  if ((aAttribute == nsHTMLAtoms::visibility) ||
+      (aAttribute == nsHTMLAtoms::z_index) ||
+      (aAttribute == nsHTMLAtoms::zindex)) {
+    *aHint = NS_STYLE_HINT_VISUAL;
+  }
+  else if ((aAttribute == nsHTMLAtoms::top) ||
+           (aAttribute == nsHTMLAtoms::left)) {
+    *aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else {
+    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  }
   return NS_OK;
 }

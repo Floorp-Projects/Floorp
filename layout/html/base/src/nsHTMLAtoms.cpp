@@ -140,6 +140,7 @@ nsIAtom* nsHTMLAtoms::httpEquiv;
 nsIAtom* nsHTMLAtoms::ibPseudo;
 nsIAtom* nsHTMLAtoms::id;
 nsIAtom* nsHTMLAtoms::iframe;
+nsIAtom* nsHTMLAtoms::ilayer;
 nsIAtom* nsHTMLAtoms::img;
 nsIAtom* nsHTMLAtoms::index;
 nsIAtom* nsHTMLAtoms::input;
@@ -147,6 +148,7 @@ nsIAtom* nsHTMLAtoms::ismap;
 nsIAtom* nsHTMLAtoms::label;
 nsIAtom* nsHTMLAtoms::labelContentPseudo;
 nsIAtom* nsHTMLAtoms::lang;
+nsIAtom* nsHTMLAtoms::layer;
 nsIAtom* nsHTMLAtoms::layout;
 nsIAtom* nsHTMLAtoms::li;
 nsIAtom* nsHTMLAtoms::link;
@@ -274,6 +276,7 @@ nsIAtom* nsHTMLAtoms::width;
 nsIAtom* nsHTMLAtoms::wrap;
 nsIAtom* nsHTMLAtoms::wrappedFramePseudo;
 nsIAtom* nsHTMLAtoms::zindex;
+nsIAtom* nsHTMLAtoms::z_index;
 
 
 static nsrefcnt gRefCnt;
@@ -403,6 +406,7 @@ void nsHTMLAtoms::AddrefAtoms()
     ibPseudo = NS_NewAtom(":ib-pseudo");
     id = NS_NewAtom("id");
     iframe = NS_NewAtom("iframe");
+    ilayer = NS_NewAtom("ilayer");
     img = NS_NewAtom("img");
     index = NS_NewAtom("index");
     input = NS_NewAtom("input");
@@ -410,6 +414,7 @@ void nsHTMLAtoms::AddrefAtoms()
     label = NS_NewAtom("label");
     labelContentPseudo = NS_NewAtom(":label-content");
     lang = NS_NewAtom("lang");
+    layer = NS_NewAtom("layer");
     layout = NS_NewAtom("layout");
     li = NS_NewAtom("li");
     link = NS_NewAtom("link");
@@ -537,6 +542,7 @@ void nsHTMLAtoms::AddrefAtoms()
     wrap = NS_NewAtom("wrap");
     wrappedFramePseudo = NS_NewAtom(":wrapped-frame");
     zindex = NS_NewAtom("zindex");
+    z_index = NS_NewAtom("z-index");
   }
   ++gRefCnt;
 }
@@ -657,6 +663,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(ibPseudo);
     NS_RELEASE(id);
     NS_RELEASE(iframe);
+    NS_RELEASE(ilayer);
     NS_RELEASE(img);
     NS_RELEASE(index);
     NS_RELEASE(input);
@@ -664,6 +671,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(label);
     NS_RELEASE(labelContentPseudo);
     NS_RELEASE(lang);
+    NS_RELEASE(layer);
     NS_RELEASE(layout);
     NS_RELEASE(li);
     NS_RELEASE(link);
@@ -786,6 +794,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(wrap);
     NS_RELEASE(wrappedFramePseudo);
     NS_RELEASE(zindex);
+    NS_RELEASE(z_index);
   }
 }
 
