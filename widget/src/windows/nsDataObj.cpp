@@ -74,6 +74,8 @@ nsDataObj::~nsDataObj()
     delete df;
   }
 
+  delete mDataFlavors;
+
 	m_cRef = 0;
   m_enumFE->Release();
 
