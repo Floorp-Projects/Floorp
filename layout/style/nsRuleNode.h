@@ -263,16 +263,17 @@ struct nsCachedStyleData
  * depends on the normal case being that style rules specify relatively
  * few properties and even that elements generally have relatively few
  * properties specified.  This allows sharing in the following ways:
- *   1. [reset structs] When a style data struct will contain the same
- *      computed value for any elements that match the same set of rules
- *      (common for reset structs), it can be stored on the nsRuleNode
- *      instead of on the nsStyleContext.
- *   2. [reset structs] When (1) occurs, and an nsRuleNode doesn't have
- *      any rules that change the values in the struct, the nsRuleNode
- *      can share that struct with its parent nsRuleNode.
- *   3. [inherited structs] When an element doesn't match any rules that
- *      change the value of a property, the nsStyleContext can use the
- *      same nsStyle* struct as its parent nsStyleContext.
+ *   1. [mainly reset structs] When a style data struct will contain the
+ *      same computed value for any elements that match the same set of
+ *      rules (common for reset structs), it can be stored on the
+ *      nsRuleNode instead of on the nsStyleContext.
+ *   2. [only? reset structs] When (1) occurs, and an nsRuleNode doesn't
+ *      have any rules that change the values in the struct, the
+ *      nsRuleNode can share that struct with its parent nsRuleNode.
+ *   3. [mainly inherited structs] When an element doesn't match any
+ *      rules that change the value of a property (or, in the edge case,
+ *      when all the values specified are 'inherit'), the nsStyleContext
+ *      can use the same nsStyle* struct as its parent nsStyleContext.
  *
  * Since the data represented by an nsIStyleRule are immutable, the data
  * represented by an nsRuleNode are also immutable (with a few
