@@ -58,7 +58,6 @@ AC_ARG_ENABLE(random-options,
 		6) _new_args="$_new_args --with-xlib" ;;
 		7) _new_args="$_new_args --with-qt" ;;
 		8) _new_args="$_new_args --with-qt --with-static-qt" ;;
-		9) _new_args="$_new_args --without-pthreads" ;;
 		10) _new_args="$_new_args --disable-async-dns" ;;
 		11) _new_args="$_new_args --enable-oji" ;;
 		12) _new_args="$_new_args --enable-pics" ;;
@@ -924,7 +923,7 @@ dnl    MOTIF_REQUIRES_XPM=`${detect_motif} -xpm`
 	then
 	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
 		MOTIF_XP_LIBS="-lXp",
-		[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XLIBS)
+		[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XEXT_LIBS $XLIBS)
 	fi
 
 	LDFLAGS="$_SAVE_LDFLAGS"
