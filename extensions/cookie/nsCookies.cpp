@@ -892,11 +892,9 @@ cookie_IsForeign(nsIURI *aHostURI, nsIURI *aFirstURI) {
 
   // first ensure we're not dealing with IP addresses; if we are, require an
   // exact match. we can't avoid this, otherwise the algo below will allow two
-  // IP's such as 128.12.96.5 and 213.12.96.5 to match. if we decide this is
-  // unlikely or doesn't matter, this can be removed (which will remove the
-  // dependency on prnetdb.h -> codesize).
+  // IP's such as 128.12.96.5 and 213.12.96.5 to match.
   if (cookie_IsIPAddress(firstHost)) {
-    return cookie_IsInDomain(firstHost, currentHost, PR_FALSE);
+    return !cookie_IsInDomain(firstHost, currentHost, PR_FALSE);
   }
 
   // next, allow a one-subdomain-level "fuzz" in the comparison. first, we need
