@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
 LIBRARY_NAME	= urlbarhistory_s
-REQUIRES	= xpcom rdf pref js
+REQUIRES	= xpcom rdf pref js necko
 
 CPPSRCS		= nsUrlbarHistory.cpp
 
