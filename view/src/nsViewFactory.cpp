@@ -109,43 +109,17 @@ nsresult nsViewFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }
 
-//Uncomment the following line to go back to the "new" compositor.
-//#define USE_NEW_COMPOSITOR 1
-
-#if 0
-#if USE_NEW_COMPOSITOR
-#include "nsViewManager.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
-#else
 #include "nsViewManager2.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager2)
-#define nsViewManagerConstructor nsViewManager2Constructor
-#endif
-#else
 
-#include "nsViewManager.h"
-#include "nsViewManager2.h"
-#include "nsIPref.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager2)
 
 static NS_IMETHODIMP ViewManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-	PRBool useViewManager2 = PR_TRUE;
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-	if (NS_SUCCEEDED(rv))
-		prefs->GetBoolPref("nglayout.view.useViewManager2", &useViewManager2);
-	if (useViewManager2)
-		return nsViewManager2Constructor(aOuter, aIID, aResult);
-	else
-		return nsViewManagerConstructor(aOuter, aIID, aResult);
+  return nsViewManager2Constructor(aOuter, aIID, aResult);
 }
 
 #define nsViewManagerConstructor ViewManagerConstructor
 
-#endif
 
 //////////////////////////////////////////////////////////////////////
 // Module object definition
