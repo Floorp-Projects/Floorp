@@ -77,6 +77,7 @@ CSRCS =             \
 	lock.c          \
 	lockfile.c      \
 	logger.c		\
+	multiacc.c		\
 	multiwait.c		\
 	many_cv.c		\
 	nbconn.c		\
