@@ -67,6 +67,8 @@ public:
 
 	NS_IMETHOD GetApplicationLocale(nsILocale** applicationLocale);
 
+	NS_IMETHOD GetLocaleFromAcceptLanguage(const char* acceptLanguage, nsILocale** acceptLocale);
+
 };
 
 #endif /* nsILocaleManager_h__ */

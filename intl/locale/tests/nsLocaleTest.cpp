@@ -229,6 +229,7 @@ factory_get_locale(void)
 	nsILocale*			locale;
 	nsString*			catagory;
 	nsString*			value;
+	const char*			acceptLangString = "ja;q=0.9,en;q=1.0,*";
 
 	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
 										(nsIFactory**)&localeFactory);
@@ -285,9 +286,35 @@ factory_get_locale(void)
 	delete catagory;
 	delete value;
 
+	//
+	// test GetLocaleFromAcceptLanguage
+	//
+	result = localeFactory->GetLocaleFromAcceptLanguage(acceptLangString,&locale);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
+	NS_ASSERTION(locale!=NULL,"nsLocaleTest: factory_get_locale failed");
+
+	//
+	// test and make sure the locale is a valid Interface
+	//
+	locale->AddRef();
+
+	catagory = new nsString("NSILOCALE_CTYPE");
+	value = new nsString();
+
+	result = locale->GetCatagory(catagory,value);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
+	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
+
+	locale->Release();
+	locale->Release();
+
+	delete catagory;
+	delete value;
+
 	localeFactory->Release();
 
 }
+
 
 #ifdef XP_PC
 

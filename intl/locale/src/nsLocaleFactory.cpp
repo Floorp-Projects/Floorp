@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #endif
 
+#define NSILOCALE_MAX_ACCEPT_LANGUAGE	16
+#define NSILOCALE_MAX_ACCEPT_LENGTH		18
 
 NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
@@ -349,7 +351,6 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 	//
 #ifdef XP_PC
 	LCID				appLCID;
-	nsIWin32Locale*		iWin32Locale;
 	
 	appLCID = GetUserDefaultLCID();
 	if (appLCID==0) {
@@ -408,3 +409,113 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 
 }
 
+NS_IMETHODIMP
+nsLocaleFactory::GetLocaleFromAcceptLanguage(const char* acceptLanguage, nsILocale** acceptLocale)
+{
+  char* input;
+  char* cPtr;
+  char* cPtr1;
+  char* cPtr2;
+  int i;
+  int j;
+  int countLang = 0;
+  char	acceptLanguageList[NSILOCALE_MAX_ACCEPT_LANGUAGE][NSILOCALE_MAX_ACCEPT_LENGTH];
+  nsresult	result;
+  nsString*	localeName;
+
+  input = new char[strlen(acceptLanguage)+1];
+  NS_ASSERTION(input!=nsnull,"nsLocaleFactory::GetLocaleFromAcceptLanguage: memory allocation failed.");
+  if (input == (char*)NULL){ return NS_ERROR_OUT_OF_MEMORY; }
+
+  strcpy(input, acceptLanguage);
+  cPtr1 = input-1;
+  cPtr2 = input;
+
+  /* put in standard form */
+  while (*(++cPtr1)) {
+    if      (isalpha(*cPtr1))  *cPtr2++ = tolower(*cPtr1); /* force lower case */
+    else if (isspace(*cPtr1));                             /* ignore any space */
+    else if (*cPtr1=='-')      *cPtr2++ = '_';             /* "-" -> "_"       */
+    else if (*cPtr1=='*');                                 /* ignore "*"       */
+    else                       *cPtr2++ = *cPtr1;          /* else unchanged   */
+  }
+  *cPtr2 = '\0';
+
+  countLang = 0;
+
+  if (strchr(input,';')) {
+    /* deal with the quality values */
+
+    float qvalue[NSILOCALE_MAX_ACCEPT_LANGUAGE];
+    float qSwap;
+    float bias = 0.0f;
+    char* ptrLanguage[NSILOCALE_MAX_ACCEPT_LANGUAGE];
+    char* ptrSwap;
+
+    /* cPtr = STRTOK(input,"," CPTR2); */
+    cPtr = strtok(input,",");
+    while (cPtr) {
+      qvalue[countLang] = 1.0f;
+      if (cPtr1 = strchr(cPtr,';')) {
+        sscanf(cPtr1,";q=%f",&qvalue[countLang]);
+        *cPtr1 = '\0';
+      }
+      if (strlen(cPtr)<NSILOCALE_MAX_ACCEPT_LANGUAGE) {     /* ignore if too long */
+        qvalue[countLang] -= (bias += 0.0001f); /* to insure original order */
+        ptrLanguage[countLang++] = cPtr;
+        if (countLang>=NSILOCALE_MAX_ACCEPT_LANGUAGE) break; /* quit if too many */
+      }
+      /* cPtr = STRTOK(NULL,"," CPTR2); */
+      cPtr = strtok(NULL,",");
+    }
+
+    /* sort according to decending qvalue */
+    /* not a very good algorithm, but count is not likely large */
+    for ( i=0 ; i<countLang-1 ; i++ ) {
+      for ( j=i+1 ; j<countLang ; j++ ) {
+        if (qvalue[i]<qvalue[j]) {
+          qSwap     = qvalue[i];
+          qvalue[i] = qvalue[j];
+          qvalue[j] = qSwap;
+          ptrSwap        = ptrLanguage[i];
+          ptrLanguage[i] = ptrLanguage[j];
+          ptrLanguage[j] = ptrSwap;
+        }
+      }
+    }
+    for ( i=0 ; i<countLang ; i++ ) {
+      strcpy(acceptLanguageList[i],ptrLanguage[i]);
+    }
+
+  } else {
+    /* simple case: no quality values */
+
+    /* cPtr = STRTOK(input,"," CPTR2); */
+    cPtr = strtok(input,",");
+    while (cPtr) {
+      if (strlen(cPtr)<NSILOCALE_MAX_ACCEPT_LENGTH) {        /* ignore if too long */
+        strcpy(acceptLanguageList[countLang++],cPtr);
+        if (countLang>=NSILOCALE_MAX_ACCEPT_LENGTH) break; /* quit if too many */
+      }
+      /* cPtr = STRTOK(NULL,"," CPTR2); */
+      cPtr = strtok(NULL,",");
+    }
+  }
+
+  //
+  // now create the locale 
+  //
+  result = NS_ERROR_FAILURE;
+  if (countLang>0) {
+	  localeName = new nsString(acceptLanguageList[0]);
+	  result = NewLocale(localeName,acceptLocale);
+	  delete localeName;
+  }
+
+  //
+  // clean up
+  //
+  delete[] input;
+  return result;
+
+}
