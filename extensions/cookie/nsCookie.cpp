@@ -868,6 +868,7 @@ permission_Check(
       hostname++;
     }
     StrAllocCopy(hostname2, hostname);
+    Recycle(hostname);
     permission_Add(hostname2, permission, type, PR_TRUE);
   }
   if (rememberChecked != permission_GetRememberChecked(type)) {
@@ -2529,9 +2530,10 @@ Image_Block(nsString imageURL) {
   char * imageURLCString = imageURL.ToNewCString();
   char *host = cookie_ParseURL(imageURLCString, GET_HOST_PART);
   Recycle(imageURLCString);
-  if (PL_strlen(host) != 0) {
-    permission_Add(host, PR_FALSE, IMAGEPERMISSION, PR_TRUE);
-  }
+  char * hostname = nsnull;
+  StrAllocCopy(hostname, host);
+  Recycle(host);
+  permission_Add(hostname, PR_FALSE, IMAGEPERMISSION, PR_TRUE);
 }
 
 PUBLIC void
@@ -2542,9 +2544,10 @@ Permission_Add(nsString imageURL, PRBool permission, PRInt32 type) {
   char * imageURLCString = imageURL.ToNewCString();
   char *host = cookie_ParseURL(imageURLCString, GET_HOST_PART);
   Recycle(imageURLCString);
-  if (PL_strlen(host) != 0) {
-    permission_Add(host, permission, type, PR_TRUE);
-  }
+  char * hostname = nsnull;
+  StrAllocCopy(hostname, host);
+  Recycle(host);
+  permission_Add(hostname, permission, type, PR_TRUE);
 }
 
 MODULE_PRIVATE time_t 
