@@ -27,6 +27,7 @@ netwerk/mime/src/Makefile
 netwerk/socket/Makefile
 netwerk/socket/base/Makefile
 netwerk/streamconv/Makefile
+netwerk/streamconv/converters/Makefile
 netwerk/streamconv/public/Makefile
 netwerk/streamconv/src/Makefile
 netwerk/streamconv/test/Makefile
