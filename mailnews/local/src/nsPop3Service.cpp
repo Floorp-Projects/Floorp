@@ -332,7 +332,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     nsCAutoString folderUri(aSpec);
     nsCOMPtr<nsIRDFResource> resource;
     PRInt32 offset = folderUri.Find("?");
-    if (offset)
+    if (offset != -1)
         folderUri.Truncate(offset);
 
 	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv)); 
@@ -393,7 +393,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
             messageUri.ReplaceSubstring("mailbox:", "mailbox-message:");
             messageUri.ReplaceSubstring("?number=", "#");
             offset = messageUri.Find("&");
-            if (offset)
+            if (offset != -1)
                 messageUri.Truncate(offset);
             popurl->SetMessageUri(messageUri.get());
             nsCOMPtr<nsIPop3Sink> pop3Sink;
