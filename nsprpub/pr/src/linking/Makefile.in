@@ -58,6 +58,11 @@ TARGETS	= $(OBJS)
 
 INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
 
+# For Dl_info and dladdr.
+ifeq ($(OS_TARGET),Linux)
+DEFINES    += -D_GNU_SOURCE
+endif
+
 # On Mac OS X use flat #includes.
 ifeq ($(OS_TARGET),MacOSX)
 INCLUDES    += -I/Developer/Headers/FlatCarbon

@@ -239,6 +239,14 @@ NSPR_API(PRFuncPtr) PR_FindFunctionSymbolAndLibrary(const char *name,
 NSPR_API(PRLibrary*) PR_LoadStaticLibrary(
     const char *name, const PRStaticLinkTable *table);
 
+/*
+** Return the pathname of the file that the library "name" was loaded
+** from. "addr" is the address of a function defined in the library.
+**
+** The caller is responsible for freeing the result with PR_Free.
+*/
+NSPR_API(char *) PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr);
+
 PR_END_EXTERN_C
 
 #endif /* prlink_h___ */

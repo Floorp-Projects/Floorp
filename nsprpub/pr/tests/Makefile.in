@@ -94,6 +94,7 @@ CSRCS =             \
 	joinuu.c        \
 	layer.c		    \
 	lazyinit.c		\
+	libfilename.c	\
 	lltest.c        \
 	lock.c          \
 	lockfile.c      \

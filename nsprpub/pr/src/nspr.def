@@ -389,3 +389,8 @@ NSPR_4.1 {
 		PR_ImportPipe;
 		PR_SetEnv;
 } NSPR_4.0;
+
+NSPR_4.3 {
+	global:
+		PR_GetLibraryFilePathname;
+} NSPR_4.1;

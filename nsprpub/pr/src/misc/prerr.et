@@ -128,6 +128,7 @@ ec PR_NETWORK_DOWN_ERROR,       "Network is down"
 ec PR_SOCKET_SHUTDOWN_ERROR,    "Socket shutdown"
 ec PR_CONNECT_ABORTED_ERROR,    "Connection aborted"
 ec PR_HOST_UNREACHABLE_ERROR,   "Host is unreachable"
+ec PR_LIBRARY_NOT_LOADED_ERROR, "The library is not loaded"
 
 ec PR_MAX_ERROR,                "Placeholder for the end of the list"
 
