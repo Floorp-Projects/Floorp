@@ -129,7 +129,7 @@ NS_IMETHODIMP nsCaret::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  return !NS_OK;
+  return NS_NOINTERFACE;
 }
 
 
@@ -310,8 +310,8 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 		nsCOMPtr<nsIDOMNode>	focusNode;
 		PRInt32	focusOffset;
 		
-		if (NS_SUCCEEDED(domSelection->GetFocusNodeAndOffset(getter_AddRefs(focusNode), &focusOffset)) &&
-						focusNode)
+		if (NS_SUCCEEDED(domSelection->GetFocusNode(getter_AddRefs(focusNode))) && focusNode &&
+				NS_SUCCEEDED(domSelection->GetFocusOffset(&focusOffset)))
 		{
 			// is this a text node?
 			nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
