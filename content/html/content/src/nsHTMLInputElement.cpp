@@ -502,23 +502,31 @@ nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent,
 NS_IMETHODIMP 
 nsHTMLInputElement::SetChecked(PRBool aValue)
 {
+  // First check to see if the new value is the same as our current value.
+  // If so, then return.
+  PRBool checked = PR_TRUE;
+  GetChecked(&checked);
+  if (checked == aValue) {
+    return NS_OK;
+  }
+
+  // Since the value is changing, send out an onchange event (bug 23571)
+  nsCOMPtr<nsIPresContext> presContext;
+  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsGUIEvent event;
+  event.eventStructType = NS_GUI_EVENT;
+  event.message = NS_FORM_CHANGE;
+  event.flags = NS_EVENT_FLAG_NONE;
+  event.widget = nsnull;
+  HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
 
-    // First check to see if the new value 
-    // is different than our current Value
-    // if so, then return
-    nsAutoString checkedStr;
-    formControlFrame->GetProperty(nsHTMLAtoms::checked, checkedStr);
-    if ((checkedStr.EqualsWithConversion("1") && aValue) || (checkedStr.EqualsWithConversion("0") && !aValue)) {
-      return NS_OK;
-    }
-
     // the value is being toggled
-    nsIPresContext* presContext;
-    nsGenericHTMLElement::GetPresContext(this, &presContext);
     formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, NS_ConvertASCIItoUCS2(PR_TRUE == aValue?"1":"0"));
-    NS_IF_RELEASE(presContext);
   }
   else {
     // Retrieve the presentation state instead.
