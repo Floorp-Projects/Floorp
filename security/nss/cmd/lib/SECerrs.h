@@ -442,16 +442,16 @@ ER3(SEC_ERROR_OCSP_OLD_RESPONSE,		(SEC_ERROR_BASE + 132),
 "The OCSP response contains out-of-date information.")
 
 ER3(SEC_ERROR_DIGEST_NOT_FOUND,			(SEC_ERROR_BASE + 133),
-"The CMS or PKCS #7 Digest not found in Signed Message.")
+"The CMS or PKCS #7 Digest was not found in signed message.")
 
 ER3(SEC_ERROR_UNSUPPORTED_MESSAGE_TYPE,		(SEC_ERROR_BASE + 134),
-"The CMS or PKCS #7 Message type unsupported.")
+"The CMS or PKCS #7 Message type is unsupported.")
 
 ER3(SEC_ERROR_MODULE_STUCK,			(SEC_ERROR_BASE + 135),
-"PKCS #11 module could not be removed because of outstanding references.")
+"PKCS #11 module could not be removed because it is still in use.")
 
 ER3(SEC_ERROR_BAD_TEMPLATE,			(SEC_ERROR_BASE + 136),
-"Could not decode ASN.1 data, Specified Template was invalid.")
+"Could not decode ASN.1 data. Specified template was invalid.")
 
 ER3(SEC_ERROR_CRL_NOT_FOUND,			(SEC_ERROR_BASE + 137),
-"PKCS #11 module could not be removed because of outstanding references.")
+"No matching CRL was found.")
