@@ -19,6 +19,7 @@
 #
 # Contributor(s):
 #    Chris Waterson <waterson@netscape.com>
+#    Jim Roskind <jar@netscape.com>
 #
 #
 # A perl version of Patrick Beard's ``Leak Soup'', which processes the
@@ -39,8 +40,9 @@ $::opt_nochildstacks = 0;
 $::opt_depth = 9999;
 $::opt_noentrained = 0;
 $::opt_noslop = 0;
+$::opt_showtype = 100000000;
 
-GetOptions("help", "format=s", "nostacks", "nochildstacks", "depth=i", "noentrained", "noslop");
+GetOptions("help", "format=s", "nostacks", "nochildstacks", "depth=i", "noentrained", "noslop", "showtype=i");
 
 if ($::opt_help) {
     die "usage: leak-soup.pl [options] <leakfile>
@@ -51,14 +53,27 @@ if ($::opt_help) {
   --nochildstacks Do not compute stack traces for entrained objects
   --depth=<max>   Only compute stack traces to depth of <max>
   --noentrained   Do not compute amount of memory entrained by root objects
-  --noslop        Don't ignore low bits when searching for pointers";
+  --noslop        Don't ignore low bits when searching for pointers
+  --showtype=<i>  Show memory usage most-significant <i>  types";
 }
 
 # This is the table that keeps a graph of objects. It's indexed by the
 # object's address (as an integer), and refers to a simple hash that
 # has information about the object's type, size, slots, and allocation
 # stack.
-$::Objects = { };
+%::Objects = %{0};
+
+# This is the table that keeps track of memory usage on a per-type basis.
+# It is indexed by the type name (string), and keeps a tally of the 
+# total number of such objects, and the memory usage of such objects.
+%::Types = %{0};
+$::TotalSize = 0; # sum of sizes of all objects included $::Types{}
+
+# This is an array of leaf node addresses.  A leaf node has no children
+# with memory allocations. We traverse them sweeping memory
+# tallies into parents.  Note that after all children have
+# been swept into a parent, that parent may also become a leaf node.
+@::Leafs = @{0};
 
 
 #----------------------------------------------------------------------
@@ -187,36 +202,320 @@ else {
     die "unknown format ``$::opt_format''.";
 }
 
+
+
+#----------------------------------------------------------------------
+#
+# Do basic initialization of the type hash table.  Accumulate
+# total counts, and basic memory usage (not including children)
+sub init_type_table() {
+    # Reset global counter and hash table
+    $::TotalSize = 0;
+    %::Types = %{0};
+
+    OBJECT: foreach my $addr (keys %::Objects) {
+	my $obj = $::Objects{$addr};
+	my ($type, $size, $swept_in) = 
+	    ($obj->{'type'}, $obj->{'size'}, $obj->{'swept_in'});
+
+	my $type_data = $::Types{$type};
+	if (! defined $type_data) {
+	    $::Types{$type} =
+		$type_data = {'count' => 0, 'size' => 0, 
+			      'max' => $size, 'min' => $size,
+			      'swept_in' => 0, 'swept' => 0};
+	}
+
+	if (!$size) {
+	    $type_data->{'swept'}++;
+	    next OBJECT;
+	}
+	$::TotalSize += $size;
+
+	$type_data->{'count'}++;
+	$type_data->{'size'} += $size;
+	if (defined $swept_in) {
+	    $type_data->{'swept_in'} += $swept_in;
+	}
+
+	if ($type_data->{'max'} < $size) {
+	    $type_data->{'max'} = $size;
+	}
+	# Watch out for case where min is produced by a swept object
+	if (!$type_data->{'min'} || $type_data->{'min'} > $size) {
+	    $type_data->{'min'} = $size;
+	}
+    }
+}
+
+
+#----------------------------------------------------------------------
+sub print_type_table(){
+    if (!$::opt_showtype) {
+	return;
+    }
+    my $line_count = 0;
+    my $bytes_printed_tally = 0;
+
+    # Display type summary information
+    my @sorted_types = keys (%::Types);
+    print "There are ", 1 + $#sorted_types, " types containing ", $::TotalSize, " bytes\n";
+    @sorted_types = sort {$::Types{$b}->{'size'}
+			  <=> $::Types{$a}->{'size'} } @sorted_types;
+
+    foreach my $type (@sorted_types) {
+	last if (++$line_count > $::opt_showtype);
+
+	my $type_data = $::Types{$type};
+	$bytes_printed_tally += $type_data->{'size'};
+
+	if ($type_data->{'count'}) {
+	    printf "%2.2f%% ", $type_data->{'size'} * 100.0/$::TotalSize;
+	    print $type_data->{'size'}, 
+	    "\t(", 
+	    $type_data->{'min'}, "/", 
+	    int($type_data->{'size'} / $type_data->{'count'}),"/", 
+	    $type_data->{'max'}, ")";
+	    print "\t", $type_data->{'count'}, 
+	    " x ";
+	}
+	print $type, "\t";
+	if ($type_data->{'swept_in'}) {	    
+	    print $type_data->{'swept_in'}, " sub-objs absorbed ";
+	}
+	if (0 < $type_data->{'swept'}) {
+	    print $type_data->{'swept'}, " swept away";
+	}
+	print "\n" ;
+    }
+    if ($bytes_printed_tally != $::TotalSize) {
+	printf "%2.2f%% ", ($::TotalSize- $bytes_printed_tally) * 100.0/$::TotalSize;
+	print $::TotalSize - $bytes_printed_tally, "\t not shown due to truncation of type list\n\n";
+    }
+
+}
 
 #----------------------------------------------------------------------
 #
 # Now thread the parents and children together by looking through the
 # slots for each object.
 #
-foreach my $parent (keys %::Objects) {
-    # We'll collect a list of this parent object's children
-    # by iterating through its slots.
-    my @children;
+sub create_parent_links(){
+    # Build sorted list of address for validating interior pointers
+    my @addrs = sort {$a <=> $b} keys %::Objects;
+    my $min_addr = $addrs[0];
+    my $max_addr = $addrs[ $#addrs]; #allow one beyond each object
+    $max_addr += $::Objects{$max_addr}->{'size'};
 
-    my $slots = $::Objects{$parent}->{'slots'};
-    SLOT: foreach my $child (@$slots) {
-        # We only care about pointers that refer to other objects
-        next SLOT unless $::Objects{$child};
+    # Gather stats as we try to convert slots to children
+    my $slot_count = 0;   # total slots examined
+    my $fixed_addr_count = 0; # slots into interiors that were adjusted
+    my $parent_child_count = 0;  # Number of parent-child links
+    my $child_count = 0;   # valid slots, discounting sibling twins
+    my $child_dup_count = 0; # number of duplicate child pointers
+    my $self_pointer_count = 0; # count of discarded self-pointers
 
-        # Add the parent to the child's list of parents
-        my $parents = $::Objects{$child}->{'parents'};
-        if (! $parents) {
-            $parents = $::Objects{$child}->{'parents'} = [];
-        }
+    foreach my $parent (keys %::Objects) {
+	# We'll collect a list of this parent object's children
+	# by iterating through its slots.
+	my @children;
+	my %children_hash;
+	my $self_pointer = 0;
 
-        $parents->[scalar(@$parents)] = $parent;
+	my @slots = @{$::Objects{$parent}->{'slots'}};
+	$slot_count += $#slots + 1;
+	SLOT: foreach my $child (@slots) {
 
-        # Add the child to the parent's list of children
-        $children[$#children + 1] = $child;
+	    # We only care about pointers that refer to other objects
+	    if (! defined $::Objects{$child}) {
+		# check to see if we are an interior pointer
+
+		# Punt if we are completely out of range
+		next SLOT unless ($max_addr >= $child && 
+				  $child >= $min_addr);
+
+		# Do binary search to find object below this address
+		my ($min_index, $beyond_index) = (0, $#addrs + 1);
+		my $test_index;
+		while ($min_index != 
+		       ($test_index = int (($beyond_index+$min_index)/2)))  {
+		    if ($child >= $addrs[$test_index]) {
+			$min_index = $test_index;
+		    } else {
+			$beyond_index = $test_index;
+		    }
+		}
+		# See if pointer is within extent of this object
+		my $address = $addrs[$test_index];
+		next SLOT unless ($child < 
+				  $address + $::Objects{$address}->{'size'});
+
+		# Make adjustment so we point to the actual child precisely
+		$child = $address;
+		$fixed_addr_count++;
+	    }
+
+	    if ($child == $parent) {
+		$self_pointer_count++;
+		next SLOT; # Discard self-pointers
+	    }
+
+	    # Avoid creating duplicate child-parent links
+	    if (! defined $children_hash{$child}) {
+		$parent_child_count++;
+		# Add the parent to the child's list of parents
+		my $parents = $::Objects{$child}->{'parents'};
+		if (! $parents) {
+		    $parents = $::Objects{$child}->{'parents'} = [];
+		}
+
+		$parents->[scalar(@$parents)] = $parent;
+
+		# Add the child to the parent's list of children
+		$children_hash{$child} = 1;
+	    } else {
+		$child_dup_count++;
+	    }
+	}
+	@children = keys %children_hash;
+	# Track tally of unique children linked
+	$child_count += $#children + 1;
+
+	$::Objects{$parent}->{'children'} = \@children;
+
+	if (! @children) {
+	    $::Leafs[$#::Leafs + 1] = $parent;
+	} 
+    }
+    print "Scanning $#addrs objects linked $parent_child_count pointers by chasing $slot_count addresses.\n",
+    "This required $fixed_addr_count interior pointer fixups, skipping $child_dup_count duplicates, ",
+    "and $self_pointer_count self pointers\nAlso discarded ", 
+    $slot_count - $parent_child_count -$self_pointer_count - $child_dup_count, 
+    " out-of-range pointers\n";
+}
+
+
+#----------------------------------------------------------------------
+# For every leaf, if a leaf has only one parent, then sweep the memory 
+# cost into the parent from the leaf
+sub sweep_leaf_memory () {
+    my $sweep_count = 0;
+    my $leaf_counter = 0;
+    LEAF: while ($leaf_counter <= $#::Leafs) {
+
+	my $leaf_obj = $::Objects{$::Leafs[$leaf_counter++]};
+	my $parents = $leaf_obj->{'parents'};
+
+	next LEAF if (! defined($parents) || 1 != scalar(@$parents));
+
+	# We have only one parent, so we'll try to sweep upwards
+	my $parent_obj = $::Objects{@$parents[0]};
+
+	# watch out for self-pointers
+	next LEAF if ($parent_obj == $leaf_obj); 
+
+	$parent_obj->{'size'} += $leaf_obj->{'size'};
+	$parent_obj->{'swept_in'} += 
+	    defined ($leaf_obj->{'swept_in'}) 
+	    ? $leaf_obj->{'swept_in'} + 1 
+		: 1;		
+	$leaf_obj->{'size'} = 0;
+	$sweep_count++;
+
+	# Tally another swept child, and see if we created another leaf
+	my $consumed_children = $parent_obj->{'consumed'}++;
+	my @children = $parent_obj->{'children'};
+	if ($consumed_children == $#children) {
+	    $::Leafs[$#::Leafs + 1] = @$parents[0];
+	}
+    }
+    print "Processed ", $leaf_counter, " leaves sweeping memory to parents in ", $sweep_count, " objects\n";
+}
+
+
+#----------------------------------------------------------------------
+#
+# Subdivide the types of objects that are in our "expand" list
+# List types that should be sub-divided based on parents, and possibly 
+# children
+# The argument supplied is a hash table with keys selecting types that
+# need to be "refined" by including the types of the parent objects,
+# and (when we are desparate) the types of the children objects.
+
+sub expand_type_names($) {
+    my %TypeExpand = %{$_[0]};
+
+    my @retype; # array of addrs that get extended type names
+    foreach my $child (keys %::Objects) {
+	my $child_obj = $::Objects{$child};
+	next unless (defined ($TypeExpand{$child_obj->{'type'}}));
+
+	foreach my $relation ('parents','children') {
+	    my $relatives = $child_obj->{$relation};
+	    next unless defined @$relatives;
+
+	    # Sort out the names of the types of the relatives
+	    my %names;
+	    foreach my $relative (@$relatives) {
+		%names->{$::Objects{$relative}->{'type'}} = 1;
+	    }
+	    my $related_type_names = join(',' , sort(keys(%names)));
+
+
+	    $child_obj->{'name' . $relation} = $related_type_names;
+
+	    # Don't bother with children if we have significant parent types 
+	    last if (!defined ($TypeExpand{$related_type_names}));
+	}
+	$retype[$#retype + 1] = $child;
     }
 
-    $::Objects{$parent}->{'children'} = \@children;
+    # Revisit all addresses we've marked
+    foreach my $child (@retype) {
+	my $child_obj = $::Objects{$child};
+	$child_obj->{'type'} = $TypeExpand{$child_obj->{'type'}};
+	my $extended_type = $child_obj->{'namechildren'};
+	if (defined $extended_type) {
+	    $child_obj->{'type'}.= "->(" . $extended_type . ")";
+	    delete ($child_obj->{'namechildren'});
+	}
+	$extended_type = $child_obj->{'nameparents'};
+	if (defined $extended_type) {
+	    $child_obj->{'type'} = "(" . $extended_type . ")->" . $::Objects{$child}->{'type'};
+	    delete ($child_obj->{'nameparents'});
+	}
+    }
 }
+
+#----------------------------------------------------------------------
+# Provide a nice summary of the types during the process
+print "Before doing any work on types:\n";
+init_type_table();
+print_type_table();
+print "\n\n";
+
+create_parent_links();
+sweep_leaf_memory ();
+print "After doing basic leaf-sweep processing of instances:\n";
+init_type_table();
+print_type_table();
+print "\n\n";
+
+expand_type_names({'void*'=>'void*'});
+print "After subdividing <void*> types:\n";
+init_type_table();
+print_type_table();
+print "\n\n";
+
+
+expand_type_names({'(void*)->void*->(void*)'=>'void*'});
+print "After subdividing <(void*)->void*->(void*)> types:\n";
+init_type_table();
+print_type_table();
+print "\n\n";
+
+
+exit();  # Don't bother with SCCs yet.
 
 
 #----------------------------------------------------------------------
