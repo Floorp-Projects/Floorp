@@ -779,13 +779,6 @@ nscoord nsTableOuterFrame::ComputeAvailableTableWidth(const nsHTMLReflowState& a
     switch (position->mWidth.GetUnit()) {
     case eStyleUnit_Coord:
       maxWidth = position->mWidth.GetCoordValue();
-      // NAV4 compatibility:  0-coord-width == auto-width
-      // XXX This doesn't belong here. If the HTML attribute "width=0" should work
-      // like 'auto', then have the style mapping code in the content object
-      // handle it...
-      if (0 == maxWidth) {
-        maxWidth = aReflowState.availableWidth;
-      }
       break;
   
     case eStyleUnit_Auto:
@@ -794,11 +787,6 @@ nscoord nsTableOuterFrame::ComputeAvailableTableWidth(const nsHTMLReflowState& a
   
     case eStyleUnit_Percent:
       maxWidth = (nscoord)((float)aReflowState.availableWidth * position->mWidth.GetPercentValue());
-      // NAV4 compatibility:  0-percent-width == auto-width
-      // XXX Ditto...
-      if (0 == maxWidth) {
-        maxWidth = aReflowState.availableWidth;
-      }
       break;
 
     case eStyleUnit_Proportional:
