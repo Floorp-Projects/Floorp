@@ -1155,7 +1155,6 @@ sub MakeResourceAliases()
 	my($chrome_dir) = "$dist_dir" . "Chrome:";
 	my($resource_dir) = "$dist_dir" . "res:";
 	my($samples_dir) = "$resource_dir" . "samples:";
-	my($defaults_dir) = "$dist_dir" . "Defaults:";
 
 	#//
 	#// Make aliases of resource files
@@ -1186,8 +1185,14 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpinstall:res:MANIFEST",                                "$xpinstall_dir");
 	
 	my($profile_dir) = "$resource_dir" . "profile:";
-	BuildFolderResourceAliases(":mozilla:profile:resources:",							"$profile_dir");
-	BuildFolderResourceAliases(":mozilla:profile:defaults:",							"$defaults_dir");
+	my($profile_chrome_dir) = "$chrome_dir" . "Profile";
+	_InstallResources(":mozilla:profile:resources:MANIFEST",							"$profile_dir");
+	_InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",				"$profile_chrome_dir:locale:en-US:", 0);
+
+	# need to duplicate this line if more files in default profile folder
+	my($defaults_dir) = "$dist_dir" . "Defaults:";
+	mkdir($defaults_dir, 0);
+	_copy(":mozilla:profile:defaults:bookmarks.html", 									"$defaults_dir"."bookmarks.html");
 
 	my($prefmigrator_dir) = "$resource_dir" . "pref-migrator:";
 	BuildFolderResourceAliases(":mozilla:profile:pref-migrator:resources:",				"$resource_dir");
