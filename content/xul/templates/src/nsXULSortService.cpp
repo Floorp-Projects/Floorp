@@ -111,7 +111,7 @@ static const char kXULNameSpaceURI[]
     = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
-
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 
 
 typedef	struct	_sortStruct	{
@@ -164,6 +164,9 @@ private:
     static nsIAtom	*kSortDirectionAtom;
     static nsIAtom	*kIdAtom;
     static nsIAtom	*kNaturalOrderPosAtom;
+    static nsIAtom	*kRDF_type;
+
+    static nsIRDFResource	*kNC_Name;
 
     static PRInt32	kNameSpaceID_XUL;
     static PRInt32	kNameSpaceID_RDF;
@@ -212,6 +215,9 @@ nsIAtom* XULSortServiceImpl::kSortAtom;
 nsIAtom* XULSortServiceImpl::kSortDirectionAtom;
 nsIAtom* XULSortServiceImpl::kIdAtom;
 nsIAtom* XULSortServiceImpl::kNaturalOrderPosAtom;
+nsIAtom* XULSortServiceImpl::kRDF_type;
+
+nsIRDFResource		*XULSortServiceImpl::kNC_Name;
 
 PRInt32  XULSortServiceImpl::kNameSpaceID_XUL;
 PRInt32  XULSortServiceImpl::kNameSpaceID_RDF;
@@ -238,6 +244,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		kSortDirectionAtom		= NS_NewAtom("sortDirection");
 		kIdAtom				= NS_NewAtom("id");
 		kNaturalOrderPosAtom		= NS_NewAtom("pos");
+		kRDF_type			= NS_NewAtom("type");
  
 		nsresult rv;
 
@@ -246,6 +253,9 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		{
 			NS_ERROR("couldn't create rdf service");
 		}
+
+		gRDFService->GetResource(kURINC_Name, &kNC_Name);
+
 	        // Register the XUL and RDF namespaces: these'll just retrieve
 	        // the IDs if they've already been registered by someone else.
 		nsINameSpaceManager* mgr;
@@ -298,6 +308,9 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 	        NS_RELEASE(kSortDirectionAtom);
 	        NS_RELEASE(kIdAtom);
 	        NS_RELEASE(kNaturalOrderPosAtom);
+		NS_RELEASE(kRDF_type);
+
+	        NS_RELEASE(kNC_Name);
 
 		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
 		gRDFService = nsnull;
@@ -860,8 +873,46 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 				flatArray[loop] = (nsIContent *)childArray->ElementAt(loop);
 			}
 
-			nsQuickSort((void *)flatArray, numElements, sizeof(nsIContent *),
-				inplaceSortCallback, (void *)sortInfo);
+			/* smart sorting (sort within separators) on name column */
+			if (sortInfo->sortProperty == kNC_Name)
+			{
+				PRInt32			startIndex=0;
+				for (loop=0; loop<numElements; loop++)
+				{
+					nsAutoString	type;
+					if (NS_OK == flatArray[loop]->GetAttribute(kNameSpaceID_None, kRDF_type, type))
+					{
+					
+						char *	crap = type.ToNewCString();
+						if (crap)
+						{
+							delete []crap;
+							crap = nsnull;
+						}
+
+						if (type.EqualsIgnoreCase(kURINC_BookmarkSeparator))
+						{
+							if (loop > startIndex+1)
+							{
+								nsQuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
+									inplaceSortCallback, (void *)sortInfo);
+								startIndex = loop+1;
+							}
+						}
+					}
+				}
+				if (loop > startIndex+1)
+				{
+					nsQuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
+						inplaceSortCallback, (void *)sortInfo);
+					startIndex = loop+1;
+				}
+			}
+			else
+			{
+				nsQuickSort((void *)flatArray, numElements, sizeof(nsIContent *),
+					inplaceSortCallback, (void *)sortInfo);
+			}
 
 			RemoveAllChildren(container);
 			if (NS_FAILED(rv = container->UnsetAttribute(kNameSpaceID_None,
