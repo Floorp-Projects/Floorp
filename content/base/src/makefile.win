@@ -95,6 +95,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsContentUtils.obj   \
 	.\$(OBJDIR)\nsScriptLoader.obj   \
 	.\$(OBJDIR)\nsStyleLinkElement.obj   \
+	.\$(OBJDIR)\nsContentAreaDragDrop.cpp \
 	$(NULL)
 
 LINCS=-I..\..\html\base\src -I..\..\html\style\src \

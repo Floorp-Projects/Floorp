@@ -168,8 +168,6 @@
   </toolbox>
 
   <vbox id="appcontent" flex="1"
-       ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
-       ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"

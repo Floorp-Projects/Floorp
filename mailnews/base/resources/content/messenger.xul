@@ -74,7 +74,6 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/searchBar.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-<script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
@@ -170,7 +169,7 @@ Rights Reserved.
         <grippy onclick="OnClickThreadAndMessagePaneSplitterGrippy()"/>
       </splitter>
       
-      <vbox id="messagepanebox" flex="3" persist="collapsed height" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
+      <vbox id="messagepanebox" flex="3" persist="collapsed height" onclick="contentAreaClick(event);">
         <hbox id="msgHeaderView"/>
     
         <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" 

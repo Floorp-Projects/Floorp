@@ -116,7 +116,6 @@ Contributor(s): ______________________________________. -->
   </toolbox>
   <hbox flex="1" >
     <vbox id="appcontent" flex="1"
-         ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
          ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
       <!-- this box is temporary, pending XBLified <browser> -->
@@ -124,8 +123,7 @@ Contributor(s): ______________________________________. -->
         <browser id="content" type="content-primary" src="about:blank"
                  flex="1" tooltip="aHTMLTooltip"
                  context="contentAreaContextMenu"
-                 onclick="return contentAreaClick(event);"
-                 ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
+                 onclick="return contentAreaClick(event);"/>
       </hbox>
     
     </vbox>

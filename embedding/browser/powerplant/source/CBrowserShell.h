@@ -28,6 +28,7 @@
 #include <LPeriodical.h>
 #include <LListener.h>
 #include <LString.h>
+#include <LDragAndDrop.h>
 
 #include "nsCOMPtr.h"
 #include "nsAString.h"
@@ -36,6 +37,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIEventSink.h"
 #include "nsIWebProgress.h"
+#include "nsIDragHelperService.h"
 
 class CBrowserChrome;
 class CBrowserShellProgressListener;
@@ -52,7 +54,8 @@ class nsIDOMNode;
 class CBrowserShell : public LView,
                       public LCommander,
                       public LBroadcaster,
-                      public LPeriodical
+                      public LPeriodical,
+                      public LDropArea
 {
     friend class CBrowserChrome;
       
@@ -151,6 +154,15 @@ public:
     Boolean                 FindNext();
                             
 protected:
+
+    // LDropArea
+	  virtual void            InsideDropArea( DragReference inDragRef );
+    virtual Boolean         PointInDropArea( Point inGlobalPt) ;
+    virtual Boolean         DragIsAcceptable( DragReference inDragRef );
+    virtual void            EnterDropArea( DragReference inDragRef, Boolean inDragHasLeftSender);
+    virtual void            LeaveDropArea( DragReference inDragRef );
+    virtual void            DoDragReceive( DragReference inDragRef );
+
     NS_METHOD               OnShowContextMenu(PRUint32 aContextFlags,
                                               nsIDOMEvent *aEvent,
                                               nsIDOMNode *aNode);
@@ -188,6 +200,8 @@ protected:
     nsCOMPtr<nsIBaseWindow>         mWebBrowserAsBaseWin;   // Convenience interface to above 
     nsCOMPtr<nsIWebNavigation>      mWebBrowserAsWebNav;    // Ditto
    
+    static nsCOMPtr<nsIDragHelperService> sDragHelper;
+
     CBrowserChrome                  *mChrome;
     CBrowserShellProgressListener   *mProgressListener;
     

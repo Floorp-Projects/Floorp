@@ -64,7 +64,6 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailContextMenus.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
@@ -132,7 +131,7 @@ Rights Reserved.
 
     <!-- message view -->
     <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" 
-      disableHistory="true" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
+      disableHistory="true" type="content-primary" src="about:blank" onclick="contentAreaClick(event);"/>
   </vbox>  
 
 

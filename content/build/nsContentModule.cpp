@@ -102,6 +102,8 @@
 #include "nsXMLContentSerializer.h"
 #include "nsRuleNode.h"
 #include "nsWyciwygProtocolHandler.h"
+#include "nsContentAreaDragDrop.h"
+
 
 class nsIDocumentLoaderFactory;
 
@@ -359,6 +361,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 MAKE_CTOR(CreateContentDLF,                nsIDocumentLoaderFactory,   NS_NewContentDocumentLoaderFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
 
 static NS_IMETHODIMP
 CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -809,7 +812,12 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Wyciwyg Handler",
     NS_WYCIWYGPROTOCOLHANDLER_CID,
     NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wyciwyg",
-    nsWyciwygProtocolHandlerConstructor }
+    nsWyciwygProtocolHandlerConstructor },
+
+  { "Content Area DragDrop",
+    NS_CONTENTAREADRAGDROP_CID,
+    NS_CONTENTAREADRAGDROP_CONTRACTID,
+    nsContentAreaDragDropConstructor }
 
 };
 
