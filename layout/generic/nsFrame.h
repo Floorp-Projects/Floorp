@@ -328,11 +328,13 @@ protected:
    */
   virtual void DumpBaseRegressionData(FILE* out, PRInt32 aIndent);
 
-  void IndentBy(FILE* out, PRInt32 aIndent) const {
+  static void IndentBy(FILE* out, PRInt32 aIndent) {
     while (--aIndent >= 0) fputs("  ", out);
   }
 
   nsresult MakeFrameName(const char* aKind, nsString& aResult) const;
+
+  static void XMLQuote(nsString& aString);
 
   nsRect           mRect;
   nsIContent*      mContent;

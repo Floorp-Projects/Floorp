@@ -1567,7 +1567,7 @@ nsresult
 nsFrame::MakeFrameName(const char* aType, nsString& aResult) const
 {
   aResult = aType;
-  aResult.Append("<");
+  aResult.Append("(");
   if (nsnull != mContent) {
     nsIAtom* tag;
     mContent->GetTag(tag);
@@ -1579,9 +1579,39 @@ nsFrame::MakeFrameName(const char* aType, nsString& aResult) const
     }
   }
   char buf[40];
-  PR_snprintf(buf, sizeof(buf), ">(%d)", ContentIndexInContainer(this));
+  PR_snprintf(buf, sizeof(buf), ")(%d)", ContentIndexInContainer(this));
   aResult.Append(buf);
   return NS_OK;
+}
+
+void
+nsFrame::XMLQuote(nsString& aString)
+{
+  PRInt32 i, len = aString.Length();
+  for (i = 0; i < len; i++) {
+    PRUnichar ch = aString[i];
+    if (ch == '<') {
+      nsAutoString tmp("&lt;");
+      aString.Cut(i, 1);
+      aString.Insert(tmp, i);
+      len += 3;
+      i += 3;
+    }
+    else if (ch == '>') {
+      nsAutoString tmp("&gt;");
+      aString.Cut(i, 1);
+      aString.Insert(tmp, i);
+      len += 3;
+      i += 3;
+    }
+    else if (ch == '"') {
+      nsAutoString tmp("&quot;");
+      aString.Cut(i, 1);
+      aString.Insert(tmp, i);
+      len += 5;
+      i += 5;
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -1591,6 +1621,7 @@ nsFrame::DumpRegressionData(FILE* out, PRInt32 aIndent)
   fprintf(out, "<frame type=\"");
   nsAutoString name;
   GetFrameName(name);
+  XMLQuote(name);
   fputs(name, out);
   fprintf(out, "\">\n");
 
@@ -1656,6 +1687,7 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
         nsAutoString listName;
         list->ToString(listName);
         fprintf(out, "<child-list name=\"");
+        XMLQuote(listName);
         fputs(listName, out);
         fprintf(out, "\">\n");
       }
