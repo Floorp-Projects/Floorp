@@ -86,7 +86,10 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     if (nsnull != atom) {
       atom->ToString(tmp);
       if (tmp.EqualsIgnoreCase("select") ||
-          tmp.EqualsIgnoreCase("table")) {
+          tmp.EqualsIgnoreCase("table") ||
+          tmp.EqualsIgnoreCase("embed") ||
+          tmp.EqualsIgnoreCase("object") ||
+          tmp.EqualsIgnoreCase("applet")) {
         select = PR_TRUE;
       }
       NS_RELEASE(atom);
