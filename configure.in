@@ -3876,8 +3876,14 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth` -ne 0; then
         dnl Try to determine if the GSS_C_NT_HOSTBASED_SERVICE value is
         dnl defined.  Older MIT releases did not define this correctly.
         dnl
+        AC_CHECK_HEADERS([gssapi_generic.h])
         AC_CHECK_HEADERS([gssapi/gssapi_generic.h])
-        AC_TRY_COMPILE([ #include <gssapi/gssapi.h> ],
+
+        AC_TRY_COMPILE([ #if defined(HAVE_GSSAPI_H)
+                         #include <gssapi.h>
+                         #elif defined(HAVE_GSSAPI_GSSAPI_H)
+                         #include <gssapi/gssapi.h>
+                         #endif ],
             [ gss_OID oid = GSS_C_NT_HOSTBASED_SERVICE; ],
             [AC_DEFINE(HAVE_GSS_C_NT_HOSTBASED_SERVICE)],[
              AC_MSG_WARN([GSS_C_NT_HOSTBASED_SERVICE not found])
