@@ -152,6 +152,11 @@ public class KeyManager {
                                          String nickname)
             throws TokenException
     {
+        // always strip all preceding/trailing whitespace
+        // from passed-in String parameters
+        if( nickname != null ) {
+            nickname = nickname.trim();
+        }
         if( alg == null ) {
             throw new NullPointerException("alg is null");
         }
@@ -246,6 +251,11 @@ public class KeyManager {
                                           String nickname)
         throws TokenException
     {
+        // always strip all preceding/trailing whitespace
+        // from passed-in String parameters
+        if( nickname != null ) {
+            nickname = nickname.trim();
+        }
         if( alg == null || nickname == null || nickname.equals("") ) {
             throw new NullPointerException();
         }
