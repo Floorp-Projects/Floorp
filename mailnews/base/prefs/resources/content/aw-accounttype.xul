@@ -46,6 +46,7 @@ Rights Reserved.
     <html:input type="radio" name="acctyperadio" id="newsaccount" value="news"/>
     <html:label for="newsaccount">&accountTypeNews.label;</html:label>
   </html:div>
+<!-- design #2 for webmail
   <html:div>
     <html:input type="radio" name="acctyperadio" id="otheraccount" value="othermail"/>
     Other type (or whatver):
@@ -55,6 +56,7 @@ Rights Reserved.
       <html:option value="Earthlink">Earthlink</html:option>
     </html:select>
    </html:div>
+-->
 <!-- no webmail yet...
   <html:div>
     <html:input type="radio" name="acctyperadio" id="webmailaccount" value="webmail"/>
