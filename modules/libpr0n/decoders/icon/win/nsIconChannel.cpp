@@ -261,6 +261,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     filePath = NS_LITERAL_CSTRING(".") + fileExt;
   }
 
+  rv = NS_ERROR_NOT_AVAILABLE;
   // (1) get an hIcon for the file
   if (SHGetFileInfo(filePath.get(), FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags) && sfi.hIcon)
   {
