@@ -2406,7 +2406,7 @@ dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random strerror lchown fchmod snprintf localtime_r statvfs memmove rint)
-AC_CHECK_FUNCS(nl_langinfo)
+AC_CHECK_FUNCS(nl_langinfo strtok_r)
 
 AC_LANG_CPLUSPLUS
 AC_CACHE_CHECK(
