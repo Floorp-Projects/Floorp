@@ -653,8 +653,11 @@ nsProfileAccess::UpdateRegistry()
 	if (NS_FAILED(rv)) return rv;
 
 	// Set the current profile
-	rv = m_registry->SetStringUTF8(profilesTreeKey, REGISTRY_CURRENT_PROFILE_STRING, mCurrentProfile);
-	if (NS_FAILED(rv)) return rv;
+	if (mCurrentProfile)
+	{
+        rv = m_registry->SetStringUTF8(profilesTreeKey, REGISTRY_CURRENT_PROFILE_STRING, mCurrentProfile);
+        if (NS_FAILED(rv)) return rv;
+	}
 
 	// Set the registry version
 	rv = m_registry->SetStringUTF8(profilesTreeKey, REGISTRY_VERSION_STRING, mVersion);
