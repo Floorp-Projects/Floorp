@@ -33,6 +33,9 @@
 
 XP_BEGIN_PROTOS
 
+typedef void * XP_Rect;
+typedef void * LO_TextBlock;
+
 /* Carriage return and linefeeds */
 
 #define CR '\015'
