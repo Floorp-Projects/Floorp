@@ -73,7 +73,9 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 
 psm_RelEng_srvr_bld:
-	cd ../nss; gmake nss_RelEng_bld
+ifeq ($(OS_ARCH), SunOS)
+ifeq ($(OS_RELEASE), 5.5.1)
+	cd ../nss; gmake IMPORTS=nspr20/v4.0-sol251-20000504 RELEASE_TREE=/h/tortoise/export/share/builds/components; gmake nss_RelEng_bld
 	gmake
-
-
+endif
+endif
