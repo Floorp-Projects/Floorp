@@ -17,11 +17,19 @@ Business.PostalCode
 Business.PostalCode.Prefix
 Business.PostalCode.Suffix
 
+Home.Phone.Number
+Home.Phone.Number.Prefix
+Home.Phone.Number.Suffix
+
 Home.Phone
 Home.Phone.IntCode
 Home.Phone.LocCode
 Home.Phone.Number.Prefix
 Home.Phone.Number.Suffix
+
+Home.AltPhone.Number
+Home.AltPhone.Number.Prefix
+Home.AltPhone.Number.Suffix
 
 Home.AltPhone
 Home.AltPhone.IntCode
@@ -29,11 +37,19 @@ Home.AltPhone.LocCode
 Home.AltPhone.Number.Prefix
 Home.AltPhone.Number.Suffix
 
+Home.Fax.Number
+Home.Fax.Number.Prefix
+Home.Fax.Number.Suffix
+
 Home.Fax
 Home.Fax.IntCode
 Home.Fax.LocCode
 Home.Fax.Number.Prefix
 Home.Fax.Number.Suffix
+
+Home.Mobile.Number
+Home.Mobile.Number.Prefix
+Home.Mobile.Number.Suffix
 
 Home.Mobile
 Home.Mobile.IntCode
@@ -41,17 +57,39 @@ Home.Mobile.LocCode
 Home.Mobile.Number.Prefix
 Home.Mobile.Number.Suffix
 
+Home.Pager.Number
+Home.Pager.Number.Prefix
+Home.Pager.Number.Suffix
+
+Home.Pager
+Home.Pager.IntCode
+Home.Pager.LocCode
+Home.Pager.Number.Prefix
+Home.Pager.Number.Suffix
+
+Business.Phone.Number
+Business.Phone.Number.Prefix
+Business.Phone.Number.Suffix
+
 Business.Phone
 Business.Phone.IntCode
 Business.Phone.LocCode
 Business.Phone.Number.Prefix
 Business.Phone.Number.Suffix
 
+Business.AltPhone.Number
+Business.AltPhone.Number.Prefix
+Business.AltPhone.Number.Suffix
+
 Business.AltPhone
 Business.AltPhone.IntCode
 Business.AltPhone.LocCode
 Business.AltPhone.Number.Prefix
 Business.AltPhone.Number.Suffix
+
+Business.Fax.Number
+Business.Fax.Number.Prefix
+Business.Fax.Number.Suffix
 
 Business.Fax
 Business.Fax.IntCode
