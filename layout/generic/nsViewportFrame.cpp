@@ -375,7 +375,7 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext*          aPresContext,
   // Size and position the view and set its opacity, visibility, content
   // transparency, and clip
   nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, kidView,
-                                             &kidDesiredSize.mCombinedArea);
+                                             &kidDesiredSize.mOverflowArea);
   aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   return rv;
 }

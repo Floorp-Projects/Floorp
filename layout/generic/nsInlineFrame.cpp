@@ -461,12 +461,12 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
     }
   }
 
-  // For now our combined area is zero. The real value will be
+  // For now our overflow area is zero. The real value will be
   // computed during vertical alignment of the line we are on.
-  aMetrics.mCombinedArea.x = 0;
-  aMetrics.mCombinedArea.y = 0;
-  aMetrics.mCombinedArea.width = aMetrics.width;
-  aMetrics.mCombinedArea.height = aMetrics.height;
+  aMetrics.mOverflowArea.x = 0;
+  aMetrics.mOverflowArea.y = 0;
+  aMetrics.mOverflowArea.width = aMetrics.width;
+  aMetrics.mOverflowArea.height = aMetrics.height;
 
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
@@ -973,12 +973,13 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
     // Give the absolute positioning code a chance to handle it
     PRBool  handled;
+    nsRect  childBounds;
     nscoord containingBlockWidth = -1;
     nscoord containingBlockHeight = -1;
     
     mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
                                          containingBlockWidth, containingBlockHeight,
-                                         handled);
+                                         handled, childBounds);
 
     // If the incremental reflow command was handled by the absolute positioning
     // code, then we're all done
@@ -989,7 +990,25 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
       nsHTMLReflowState reflowState(aReflowState);
       reflowState.reason = eReflowReason_Resize;
       reflowState.reflowCommand = nsnull;
-      return nsInlineFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+      rv = nsInlineFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+
+      // XXX Although this seems like the correct thing to do the line layout
+      // code seems to reset the NS_FRAME_OUTSIDE_CHILDREN and so it is ignored
+#if 0
+      // Factor the absolutely positioned child bounds into the overflow area
+      aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, childBounds);
+
+      // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+      if ((aDesiredSize.mOverflowArea.x < 0) ||
+          (aDesiredSize.mOverflowArea.y < 0) ||
+          (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) ||
+          (aDesiredSize.mOverflowArea.YMost() > aDesiredSize.height)) {
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+      } else {
+        mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+      }
+#endif
+      return rv;
     }
   }
 
@@ -1001,9 +1020,28 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_SUCCEEDED(rv)) {
     nscoord containingBlockWidth = -1;
     nscoord containingBlockHeight = -1;
+    nsRect  childBounds;
 
     rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
-                                   containingBlockWidth, containingBlockHeight);
+                                   containingBlockWidth, containingBlockHeight,
+                                   childBounds);
+    
+    // XXX Although this seems like the correct thing to do the line layout
+    // code seems to reset the NS_FRAME_OUTSIDE_CHILDREN and so it is ignored
+#if 0
+    // Factor the absolutely positioned child bounds into the overflow area
+    aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, childBounds);
+
+    // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+    if ((aDesiredSize.mOverflowArea.x < 0) ||
+        (aDesiredSize.mOverflowArea.y < 0) ||
+        (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) ||
+        (aDesiredSize.mOverflowArea.YMost() > aDesiredSize.height)) {
+      mState |= NS_FRAME_OUTSIDE_CHILDREN;
+    } else {
+      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+    }
+#endif
   }
 
   return rv;

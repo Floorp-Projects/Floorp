@@ -23,10 +23,8 @@
 #include "nsIHTMLContent.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsITextContent.h"
-#include "nsIAreaFrame.h"
 
 const nsIID kIHTMLContentIID = NS_IHTMLCONTENT_IID;
 const nsIID kIPageSequenceFrameIID = NS_IPAGESEQUENCEFRAME_IID;
 const nsIID kIStyledContentIID = NS_ISTYLEDCONTENT_IID;
 const nsIID kITextContentIID = NS_ITEXT_CONTENT_IID;
-const nsIID kIAreaFrameIID = NS_IAREAFRAME_IID;

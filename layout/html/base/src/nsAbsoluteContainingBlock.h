@@ -71,30 +71,34 @@ public:
   // Called by the delegating frame after it has done its reflow first. This
   // function will reflow any absolutely positioned child frames that need to
   // be reflowed, e.g., because the absolutely positioned child frame has
-  // 'auto' for an offset, or a percentage based width or height
+  // 'auto' for an offset, or a percentage based width or height.
+  // Returns (in the local coordinate space) the bounding rect of the absolutely
+  // positioned child elements taking into account their overflow area (if it
+  // is visible)
   nsresult Reflow(nsIFrame*                aDelegatingFrame,
                   nsIPresContext*          aPresContext,
                   const nsHTMLReflowState& aReflowState,
                   nscoord                  aContainingBlockWidth,
-                  nscoord                  aContainingBlockHeight);
+                  nscoord                  aContainingBlockHeight,
+                  nsRect&                  aChildBounds);
 
   // Called only for a reflow reason of eReflowReason_Incremental. The
   // aWasHandled return value indicates whether the reflow command was
   // handled (i.e., the reflow command involved an absolutely positioned
-  // child element), or whether the caller should handle it
+  // child element), or whether the caller should handle it.
+  // Returns (in the local coordinate space) the bounding rect of the absolutely
+  // positioned child elements taking into account their overflow area (if it
+  // is visible). This is only set if the reflow command was handled
   nsresult IncrementalReflow(nsIFrame*                aDelegatingFrame,
                              nsIPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nscoord                  aContainingBlockWidth,
                              nscoord                  aContainingBlockHeight,
-                             PRBool&                  aWasHandled);
+                             PRBool&                  aWasHandled,
+                             nsRect&                  aChildBounds);
 
   void DestroyFrames(nsIFrame*       aDelegatingFrame,
                      nsIPresContext* aPresContext);
-
-  nsresult GetPositionedInfo(const nsIFrame* aDelegatingFrame,
-                             nscoord&        aXMost,
-                             nscoord&        aYMost) const;
 
 protected:
   nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
@@ -105,6 +109,8 @@ protected:
                                nsIFrame*                aKidFrame,
                                PRBool                   aInitialReflow,
                                nsReflowStatus&          aStatus);
+
+  void CalculateChildBounds(nsIPresContext* aPresContext, nsRect& aChildBounds);
 
 protected:
   nsFrameList mAbsoluteFrames;  // additional named child list

@@ -1511,7 +1511,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     // children, make sure its big enough to include those that stick
     // outside the box.
     if (NS_FRAME_OUTSIDE_CHILDREN & mState) {
-      nscoord xMost = aMetrics.mCombinedArea.XMost();
+      nscoord xMost = aMetrics.mOverflowArea.XMost();
       if (xMost > aMetrics.width) {
 #ifdef NOISY_FINAL_SIZE
         ListTag(stdout);
@@ -1519,7 +1519,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 #endif
         aMetrics.width = xMost;
       }
-      nscoord yMost = aMetrics.mCombinedArea.YMost();
+      nscoord yMost = aMetrics.mOverflowArea.YMost();
       if (yMost > aMetrics.height) {
 #ifdef NOISY_FINAL_SIZE
         ListTag(stdout);
@@ -1622,10 +1622,10 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
            aMetrics.mCarriedOutBottomMargin);
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
       printf(" combinedArea={%d,%d,%d,%d}",
-             aMetrics.mCombinedArea.x,
-             aMetrics.mCombinedArea.y,
-             aMetrics.mCombinedArea.width,
-             aMetrics.mCombinedArea.height);
+             aMetrics.mOverflowArea.x,
+             aMetrics.mOverflowArea.y,
+             aMetrics.mOverflowArea.width,
+             aMetrics.mOverflowArea.height);
     }
     if (aMetrics.maxElementSize) {
       printf(" maxElementSize=%d,%d",
@@ -1969,14 +1969,14 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
   // If the combined area of our children exceeds our bounding box
   // then set the NS_FRAME_OUTSIDE_CHILDREN flag, otherwise clear it.
-  aMetrics.mCombinedArea.x = xa;
-  aMetrics.mCombinedArea.y = ya;
-  aMetrics.mCombinedArea.width = xb - xa;
-  aMetrics.mCombinedArea.height = yb - ya;
-  if ((aMetrics.mCombinedArea.x < 0) ||
-      (aMetrics.mCombinedArea.y < 0) ||
-      (aMetrics.mCombinedArea.XMost() > aMetrics.width) ||
-      (aMetrics.mCombinedArea.YMost() > aMetrics.height)) {
+  aMetrics.mOverflowArea.x = xa;
+  aMetrics.mOverflowArea.y = ya;
+  aMetrics.mOverflowArea.width = xb - xa;
+  aMetrics.mOverflowArea.height = yb - ya;
+  if ((aMetrics.mOverflowArea.x < 0) ||
+      (aMetrics.mOverflowArea.y < 0) ||
+      (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+      (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
     mState |= NS_FRAME_OUTSIDE_CHILDREN;
   }
   else {
@@ -2000,6 +2000,7 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
   // XXX Huh, that's not true anymore. We do cache the width component of
   // the max-element-size...
   if (aState.mComputeMaxElementSize) {
+    printf("BLOCK: marking all child frames dirty...\n");
     return PrepareResizeReflow(aState);
   }
 
@@ -4875,7 +4876,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   aMarginResult.left = m.left;
 
   const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
-  aCombinedRect = metrics.mCombinedArea;
+  aCombinedRect = metrics.mOverflowArea;
   // Set the rect, make sure the view is properly sized and positioned,
   // and tell the frame we're done reflowing it
   floater->SizeTo(aState.mPresContext, metrics.width, metrics.height);
@@ -4883,7 +4884,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   floater->GetView(aState.mPresContext, &view);
   if (view) {
     nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, floater, view,
-                                               &metrics.mCombinedArea,
+                                               &metrics.mOverflowArea,
                                                NS_FRAME_NO_MOVE_VIEW);
   }
   floater->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);

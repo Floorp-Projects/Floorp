@@ -34,7 +34,6 @@
 #include "nsCSSRendering.h"
 #include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
-#include "nsIAreaFrame.h"
 #include "nsGfxScrollFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsIXMLContent.h"
@@ -54,7 +53,6 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
 
@@ -893,23 +891,8 @@ nsGfxScrollFrameInner::CalculateChildTotalSize(nsIFrame*            aKidFrame,
   nsFrameState  kidState;
   aKidFrame->GetFrameState(&kidState);
   if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
-    aKidReflowMetrics.width = aKidReflowMetrics.mCombinedArea.width;
-    aKidReflowMetrics.height = aKidReflowMetrics.mCombinedArea.height;
-  }
-
-  // If it's an area frame, then get the total size which includes the
-  // space taken up by absolutely positioned child elements
-  nsIAreaFrame* areaFrame;
-  if (NS_SUCCEEDED(aKidFrame->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
-    nscoord xMost, yMost;
-
-    areaFrame->GetPositionedInfo(xMost, yMost);
-    if (xMost > aKidReflowMetrics.width) {
-      aKidReflowMetrics.width = xMost;
-    }
-    if (yMost > aKidReflowMetrics.height) {
-      aKidReflowMetrics.height = yMost;
-    }
+    aKidReflowMetrics.width = aKidReflowMetrics.mOverflowArea.width;
+    aKidReflowMetrics.height = aKidReflowMetrics.mOverflowArea.height;
   }
 
   return NS_OK;

@@ -1062,7 +1062,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   aFrame->GetFrameState(&state);
   if (NS_FRAME_OUTSIDE_CHILDREN & state) {
-    pfd->mCombinedArea = metrics.mCombinedArea;
+    pfd->mCombinedArea = metrics.mOverflowArea;
   }
   else {
     pfd->mCombinedArea.x = 0;
@@ -1480,7 +1480,7 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
 
     // Note: y value will be updated during vertical alignment
     aFrame->GetRect(pfd->mBounds);
-    pfd->mCombinedArea = aMetrics.mCombinedArea;
+    pfd->mCombinedArea = aMetrics.mOverflowArea;
     if (mComputeMaxElementSize) {
       pfd->mMaxElementSize.SizeTo(aMetrics.width, aMetrics.height);
     }

@@ -41,12 +41,10 @@
 #include "nsIEventStateManager.h"
 #include "nsIDeviceContext.h"
 #include "nsIScrollableView.h"
-#include "nsIAreaFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 
 // Interface IDs
-static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
@@ -345,33 +343,13 @@ RootFrame::Reflow(nsIPresContext*          aPresContext,
       nscoord paddingEdgeX = kidDesiredSize.width - border.right;
       nscoord paddingEdgeY = kidDesiredSize.height - border.bottom;
 
-      if (kidDesiredSize.mCombinedArea.XMost() > paddingEdgeX) {
-        kidDesiredSize.width = kidDesiredSize.mCombinedArea.XMost() +
+      if (kidDesiredSize.mOverflowArea.XMost() > paddingEdgeX) {
+        kidDesiredSize.width = kidDesiredSize.mOverflowArea.XMost() +
                                border.right;
       }
-      if (kidDesiredSize.mCombinedArea.YMost() > paddingEdgeY) {
-        kidDesiredSize.height = kidDesiredSize.mCombinedArea.YMost() +
+      if (kidDesiredSize.mOverflowArea.YMost() > paddingEdgeY) {
+        kidDesiredSize.height = kidDesiredSize.mOverflowArea.YMost() +
                                 border.bottom;
-      }
-    }
-
-    // XXX It would be nice if this were also part of the reflow metrics...
-    nsIAreaFrame* areaFrame;
-    if (NS_SUCCEEDED(kidFrame->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
-      // Get the x-most and y-most of the absolutely positioned children
-      nscoord positionedXMost, positionedYMost;
-      areaFrame->GetPositionedInfo(positionedXMost, positionedYMost);
-      
-      // The background covers the content area and padding area, so check
-      // for children sticking outside the padding edge
-      nscoord paddingEdgeX = kidDesiredSize.width - border.right;
-      nscoord paddingEdgeY = kidDesiredSize.height - border.bottom;
-
-      if (positionedXMost > paddingEdgeX) {
-        kidDesiredSize.width = positionedXMost + border.right;
-      }
-      if (positionedYMost > paddingEdgeY) {
-        kidDesiredSize.height = positionedYMost + border.bottom;
       }
     }
 

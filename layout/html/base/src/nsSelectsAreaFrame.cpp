@@ -23,9 +23,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIContent.h"
-#include "nsIAreaFrame.h"
-
-static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 nsresult
 NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsIFrame** aNewFrame, PRUint32 aFlags)
