@@ -814,6 +814,7 @@ main(int argc, char **argv)
 
     if (!slot) {
 	SECU_PrintError(progName,"Invalid slot \"%s\"", slotname);
+	pk12uErrno = PK12UERR_PK11GETSLOT;
 	goto done;
     }
 
