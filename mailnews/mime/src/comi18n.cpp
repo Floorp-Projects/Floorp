@@ -951,8 +951,14 @@ static void intl_copy_uncoded_header(char **output, const char *input,
 
   // If not UTF-8, treat as default charset
   nsAutoString tempUnicodeString;
-  if (!intl_is_utf8(input, len) &&
-      NS_SUCCEEDED(ConvertToUnicode(default_charset, nsCAutoString(input, len).get(), tempUnicodeString))) {
+  if (!intl_is_utf8(input, len))    {
+    if (NS_FAILED(ConvertToUnicode(default_charset, nsCAutoString(input, len).get(), tempUnicodeString))) {
+      // Failed to convert. Populate the outString with Unicode Replacement Char
+      tempUnicodeString.Truncate();
+      for (unsigned i = 0; i < len; i++) {
+        tempUnicodeString.Append((PRUnichar)0xFFFD);
+      }
+    }
     NS_ConvertUCS2toUTF8 utf8_text(tempUnicodeString);
     PRInt32 output_len = utf8_text.Length();
     memcpy(dest, utf8_text.get(), output_len);
