@@ -132,7 +132,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
 
             if (consistent) {
                 Element* element =
-                    Element::Create(mConflictSet.GetPool(),
+                    nsContentTestNode::Element::Create(mConflictSet.GetPool(),
                                     VALUE_TO_ICONTENT(contentValue));
 
                 if (! element)
@@ -168,7 +168,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
                     newinst.AddAssignment(mIdVariable, Value(resource.get()));
 
                     Element* element =
-                        Element::Create(mConflictSet.GetPool(), content);
+                        nsContentTestNode::Element::Create(mConflictSet.GetPool(), content);
 
                     if (! element)
                         return NS_ERROR_OUT_OF_MEMORY;
@@ -213,7 +213,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
                     newinst.AddAssignment(mContentVariable, Value(content.get()));
 
                     Element* element =
-                        Element::Create(mConflictSet.GetPool(), content);
+                        nsContentTestNode::Element::Create(mConflictSet.GetPool(), content);
 
                     if (! element)
                         return NS_ERROR_OUT_OF_MEMORY;

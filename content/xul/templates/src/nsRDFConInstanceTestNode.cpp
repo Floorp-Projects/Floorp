@@ -173,9 +173,9 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
 
             if (empty == mEmpty) {
                 Element* element =
-                    Element::Create(mConflictSet.GetPool(),
-                                    VALUE_TO_IRDFRESOURCE(value),
-                                    mContainer, mEmpty);
+                    nsRDFConInstanceTestNode::Element::Create(mConflictSet.GetPool(),
+                                                              VALUE_TO_IRDFRESOURCE(value),
+                                                              mContainer, mEmpty);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
@@ -235,9 +235,9 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
 
             if (container == mContainer) {
                 Element* element =
-                    Element::Create(mConflictSet.GetPool(),
-                                    VALUE_TO_IRDFRESOURCE(value),
-                                    mContainer, mEmpty);
+                    nsRDFConInstanceTestNode::Element::Create(mConflictSet.GetPool(),
+                                                              VALUE_TO_IRDFRESOURCE(value),
+                                                              mContainer, mEmpty);
 
 
                 if (! element)
