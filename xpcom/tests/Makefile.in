@@ -21,7 +21,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= dynamic
+DIRS		= dynamic services
 
 TESTS_NOT_COMPILING	=	\
 	TestArray.cpp		\
