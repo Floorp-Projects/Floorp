@@ -99,7 +99,7 @@ nsXBLContentSink::Init(nsIDocument* aDoc,
                        nsIWebShell* aContainer)
 {
   nsresult rv;
-  rv = nsXMLContentSink::Init(aDoc, aURL, aContainer);
+  rv = nsXMLContentSink::Init(aDoc, aURL, aContainer, nsnull);
   return rv;
 }
 

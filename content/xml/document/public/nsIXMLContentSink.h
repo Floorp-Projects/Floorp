@@ -45,6 +45,7 @@
 class nsIDocument;
 class nsIURI;
 class nsIWebShell;
+class nsIChannel;
 
 #define NS_IXMLCONTENT_SINK_IID \
  { 0xa6cf90c9, 0x15b3, 0x11d2, \
@@ -83,6 +84,7 @@ public:
 extern nsresult NS_NewXMLContentSink(nsIXMLContentSink** aInstancePtrResult,
                                      nsIDocument* aDoc,
                                      nsIURI* aURL,
-                                     nsIWebShell* aWebShell);
+                                     nsIWebShell* aWebShell,
+                                     nsIChannel *aChannel);
 
 #endif // nsIXMLContentSink_h___

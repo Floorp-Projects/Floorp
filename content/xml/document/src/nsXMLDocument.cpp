@@ -622,13 +622,13 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     if (aSink)
       sink = do_QueryInterface(aSink);
     else
-      rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, webShell);
+      rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, webShell, aChannel);
   }
   else {
     if (aSink)
       sink = do_QueryInterface(aSink);
     else
-      rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, nsnull);
+      rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, nsnull, aChannel);
   }
 
   if (NS_OK == rv) {      

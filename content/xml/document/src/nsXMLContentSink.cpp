@@ -100,6 +100,11 @@
 #include "nsICharsetConverterManager2.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsICookieService.h"
+#include "nsIPrompt.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIChannel.h"
+#include "nsIHttpChannel.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -126,7 +131,8 @@ nsresult
 NS_NewXMLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
                      nsIURI* aURL,
-                     nsIWebShell* aWebShell)
+                     nsIWebShell* aWebShell,
+                     nsIChannel* aChannel)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -137,7 +143,7 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult rv = it->Init(aDoc, aURL, aWebShell);
+  nsresult rv = it->Init(aDoc, aURL, aWebShell, aChannel);
   if (NS_OK != rv) {
     delete it;
     return rv;
@@ -208,7 +214,8 @@ nsXMLContentSink::~nsXMLContentSink()
 nsresult
 nsXMLContentSink::Init(nsIDocument* aDoc,
                        nsIURI* aURL,
-                       nsIWebShell* aContainer)
+                       nsIWebShell* aContainer,
+                       nsIChannel* aChannel)
 {
   NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
 
@@ -241,6 +248,8 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
     htmlContainer->GetCSSLoader(mCSSLoader);
     NS_RELEASE(htmlContainer);
   }
+
+  ProcessHTTPHeaders(aChannel);
 
   return aDoc->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
 }
@@ -724,6 +733,24 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     if (NS_FAILED(rv))
       return NS_OK;
     rv = LoadXSLStyleSheet(url);
+  } else if (aType.Equals(NS_LITERAL_STRING("text/css"))) {
+    nsCOMPtr<nsIURI> url;
+    rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
+    if (NS_FAILED(rv)) {
+      return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
+    }
+    PRBool doneLoading;
+    rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
+                                   mStyleSheetCount++, 
+                                   ((!aAlternate) ? mParser : nsnull),
+                                   doneLoading, 
+                                   this);
+    if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK)) {
+      if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+        mParser->BlockParser();
+      }
+      mStyleSheetCount++;
+    }
   }
   return rv;
 }
@@ -763,6 +790,181 @@ nsXMLContentSink::ProcessBASETag()
   return rv;
 }
 
+static IsAlternateHTTPStyleSheetHeader(const nsAString& aRel)
+{
+  nsStringArray linkTypes;
+  nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
+  if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet"))) {  // is it a stylesheet link?
+
+    if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("alternate"))) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+// XXX Copied from HTML, should be shared
+static const PRUnichar kSemiCh = PRUnichar(';');
+static const PRUnichar kCommaCh = PRUnichar(',');
+static const PRUnichar kEqualsCh = PRUnichar('=');
+static const PRUnichar kLessThanCh = PRUnichar('<');
+static const PRUnichar kGreaterThanCh = PRUnichar('>');
+
+nsresult 
+nsXMLContentSink::ProcessLink(nsIHTMLContent* aElement,
+                              const nsAString& aLinkData)
+{
+  nsresult result = NS_OK;
+  
+  // parse link content and call process style link
+  nsAutoString href;
+  nsAutoString rel;
+  nsAutoString title;
+  nsAutoString type;
+  nsAutoString media;
+  PRBool didBlock = PR_FALSE;
+
+  nsAutoString  stringList(aLinkData); // copy to work buffer
+  
+  stringList.Append(kNullCh);  // put an extra null at the end
+
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.get();
+  PRUnichar* end   = start;
+  PRUnichar* last  = start;
+  PRUnichar  endCh;
+
+  while (kNullCh != *start) {
+    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
+      start++;
+    }
+
+    end = start;
+    last = end - 1;
+
+    while ((kNullCh != *end) && (kSemiCh != *end) && (kCommaCh != *end)) { // look for semicolon or comma
+      if ((kApostrophe == *end) || (kQuote == *end) || 
+          (kLessThanCh == *end)) { // quoted string
+        PRUnichar quote = *end;
+        if (kLessThanCh == quote) {
+          quote = kGreaterThanCh;
+        }
+        PRUnichar* closeQuote = (end + 1);
+        while ((kNullCh != *closeQuote) && (quote != *closeQuote)) {
+          closeQuote++; // seek closing quote
+        }
+        if (quote == *closeQuote) { // found closer
+          end = closeQuote; // skip to close quote
+          last = end - 1;
+          if ((kSemiCh != *(end + 1)) && (kNullCh != *(end + 1)) && (kCommaCh != *(end + 1))) {
+            *(++end) = kNullCh;     // end string here
+            while ((kNullCh != *(end + 1)) && (kSemiCh != *(end + 1)) &&
+                   (kCommaCh != *(end + 1))) { // keep going until semi or comma
+              end++;
+            }
+          }
+        }
+      }
+      end++;
+      last++;
+    }
+
+    endCh = *end;
+    *end = kNullCh; // end string here
+
+    if (start < end) {
+      if ((kLessThanCh == *start) && (kGreaterThanCh == *last)) {
+        *last = kNullCh;
+        if (href.IsEmpty()) { // first one wins
+          href = (start + 1);
+          href.StripWhitespace();
+        }
+      }
+      else {
+        PRUnichar* equals = start;
+        while ((kNullCh != *equals) && (kEqualsCh != *equals)) {
+          equals++;
+        }
+        if (kNullCh != *equals) {
+          *equals = kNullCh;
+          nsAutoString  attr(start);
+          attr.StripWhitespace();
+
+          PRUnichar* value = ++equals;
+          while (nsCRT::IsAsciiSpace(*value)) {
+            value++;
+          }
+          if (((kApostrophe == *value) || (kQuote == *value)) &&
+              (*value == *last)) {
+            *last = kNullCh;
+            value++;
+          }
+
+          if (attr.EqualsIgnoreCase("rel")) {
+            if (rel.IsEmpty()) {
+              rel = value;
+              rel.CompressWhitespace();
+            }
+          }
+          else if (attr.EqualsIgnoreCase("title")) {
+            if (title.IsEmpty()) {
+              title = value;
+              title.CompressWhitespace();
+            }
+          }
+          else if (attr.EqualsIgnoreCase("type")) {
+            if (type.IsEmpty()) {
+              type = value;
+              type.StripWhitespace();
+            }
+          }
+          else if (attr.EqualsIgnoreCase("media")) {
+            if (media.IsEmpty()) {
+              media = value;
+              ToLowerCase(media); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
+            }
+          }
+        }
+      }
+    }
+    if (kCommaCh == endCh) {  // hit a comma, process what we've got so far
+      if (!href.IsEmpty()) {
+        result = ProcessStyleLink(
+          aElement, 
+          href, 
+          !title.IsEmpty() && IsAlternateHTTPStyleSheetHeader(rel), 
+          title, 
+          type, 
+          media);
+        if (NS_ERROR_HTMLPARSER_BLOCK == result) {
+          didBlock = PR_TRUE;
+        }
+      }
+      href.Truncate();
+      rel.Truncate();
+      title.Truncate();
+      type.Truncate();
+      media.Truncate();
+    }
+
+    start = ++end;
+  }
+
+  if (!href.IsEmpty()) {
+    result = ProcessStyleLink(
+      aElement, 
+      href, 
+      !title.IsEmpty() && IsAlternateHTTPStyleSheetHeader(rel), 
+      title, 
+      type, 
+      media);
+    if (NS_SUCCEEDED(result) && didBlock) {
+      result = NS_ERROR_HTMLPARSER_BLOCK;
+    }
+  }
+  return result;
+}
+
+// XXX Copied from HTML, should be shared
 nsresult
 nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsIHTMLContent* aContent)
 {
@@ -787,6 +989,86 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
       if (NS_FAILED(rv)) return rv;
     }
   } // END refresh
+  else if (aHeader == nsHTMLAtoms::setcookie) {
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
+    rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
+    if (NS_FAILED(rv)) return rv;
+    char *cookie = ToNewUTF8String(aValue);
+    nsCOMPtr<nsIScriptGlobalObject> globalObj;
+    nsCOMPtr<nsIPrompt> prompt;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+    if (globalObj) {
+      nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
+      if (window) {
+        window->GetPrompter(getter_AddRefs(prompt));
+      }
+    }
+    
+    nsCOMPtr<nsIHttpChannel> httpChannel;
+    if (mParser) {
+      nsCOMPtr<nsIChannel> channel;
+      if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
+        httpChannel = do_QueryInterface(channel);
+      }
+    }
+
+    rv = cookieServ->SetCookieString(baseURI, prompt, cookie, httpChannel);
+    nsCRT::free(cookie);
+    if (NS_FAILED(rv)) return rv;
+  } // END set-cookie
+  else if (aHeader == nsHTMLAtoms::link) {
+    rv = ProcessLink(aContent, aValue);
+  }
+  else if (mParser) {
+    // we also need to report back HTTP-EQUIV headers to the channel
+    // so that it can process things like pragma: no-cache or other
+    // cache-control headers. Ideally this should also be the way for
+    // cookies to be set! But we'll worry about that in the next
+    // iteration
+    nsCOMPtr<nsIChannel> channel;
+    if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
+      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+      if (httpChannel) {
+        const PRUnichar *header = 0;
+        (void)aHeader->GetUnicode(&header);
+        (void)httpChannel->SetResponseHeader(
+                       NS_ConvertUCS2toUTF8(header),
+                       NS_ConvertUCS2toUTF8(aValue));
+      }
+    }
+  }
+  return rv;
+}
+
+// XXX Copied from HTML content sink, should be shared
+nsresult 
+nsXMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
+  nsresult rv=NS_OK;
+
+  if(aChannel) {
+    nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
+    if (httpchannel) {
+      const char *const headers[]={"link","default-style",0}; // add more http headers if you need
+      const char *const *name=headers;
+      nsCAutoString tmp;
+
+      while(*name) {
+        rv = httpchannel->GetResponseHeader(nsDependentCString(*name), tmp);
+        if (NS_SUCCEEDED(rv) && !tmp.IsEmpty()) {
+          nsCOMPtr<nsIAtom> key(dont_AddRef(NS_NewAtom(*name)));
+          ProcessHeaderData(key,NS_ConvertASCIItoUCS2(tmp),nsnull);
+        }
+        name++;
+      }//while
+    }//if - httpchannel 
+  }//if - channel
+
   return rv;
 }
 

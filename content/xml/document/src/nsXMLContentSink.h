@@ -93,7 +93,8 @@ public:
 
   nsresult Init(nsIDocument* aDoc,
                 nsIURI* aURL,
-                nsIWebShell* aContainer);
+                nsIWebShell* aContainer,
+                nsIChannel* aChannel);
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -157,7 +158,10 @@ protected:
   nsresult ProcessBASETag();
   nsresult ProcessMETATag();
   nsresult ProcessLINKTag();
-  nsresult ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsIHTMLContent* aContent);
+  nsresult ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
+                             nsIHTMLContent* aContent);
+  nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
+  nsresult ProcessLink(nsIHTMLContent* aElement, const nsAString& aLinkData);
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
   
