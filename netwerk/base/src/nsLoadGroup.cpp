@@ -160,13 +160,14 @@ nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 nsresult
 nsLoadGroup::PropagateDown(PropagateDownFun fun)
 {
-    nsresult rv;
+    nsresult rv, firstError;
     PRUint32 i;
     PRUint32 count = 0;
     if (mChannels) {
         rv = mChannels->Count(&count);
         if (NS_FAILED(rv)) return rv;
     }
+    firstError = NS_OK;
     for (i = 0; i < count; i++) {
         // Operate the elements from back to front so that if items get
         // get removed from the list it won't affect our iteration
@@ -176,7 +177,10 @@ nsLoadGroup::PropagateDown(PropagateDownFun fun)
             continue;
         rv = fun(req);
         NS_RELEASE(req);
-        if (NS_FAILED(rv)) return rv;
+        // Remember the first failure and return it...
+        if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) {
+          firstError = rv;
+        }
     }
 
     count = 0;
@@ -193,9 +197,12 @@ nsLoadGroup::PropagateDown(PropagateDownFun fun)
             continue;
         rv = fun(req);
         NS_RELEASE(req);
-        if (NS_FAILED(rv)) return rv;
+        // Remember the first failure and return it...
+        if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) {
+          firstError = rv;
+        }
     }
-    return NS_OK;
+    return firstError;
 }
 
 #ifdef DEBUG
@@ -309,10 +316,24 @@ nsLoadGroup::Cancel()
     mForegroundCount = 0;
     mIsActive = PR_FALSE;
 
+#if defined(PR_LOGGING)
+    PRUint32 count = 0;
+    if (mChannels) {
+      mChannels->Count(&count);
+    }
+
+    if (count) {
+      PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+             ("LOADGROUP: %x Cancelling %d active channels.\n", 
+             this, count));
+    }
+#endif /* PR_LOGGING */
+
+    (void) PropagateDown(CancelFun);
+
     if (mChannels) {
         mChannels->Clear();
     }
-    (void) PropagateDown(CancelFun);
 
     if (isActive) {
         PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
