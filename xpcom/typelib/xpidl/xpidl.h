@@ -43,17 +43,18 @@
  * ## idiom, which allows us to pass through varargs calls.
  */
 #if !(LIBIDL_MAJOR_VERSION == 0 && LIBIDL_MINOR_VERSION == 6 && \
-      LIBIDL_MICRO_VERSION == 5)
+      LIBIDL_MICRO_VERSION == 5) && !defined(DEBUG_shaver)
 /*
- * This turns a varargs call to XPIDL_WARNING directly into a varargs call to
- * IDL_tree_warning.  The only tricky bit is that you must call XPIDL_WARNING
- * with extra parens, e.g. XPIDL_WARNING((foo, bar, "sil"))
+ * This turns a varargs call to XPIDL_WARNING directly into a varargs
+ * call to IDL_tree_warning or xpidl_tree_warning as appropriate.  The
+ * only tricky bit is that you must call XPIDL_WARNING with extra
+ * parens, e.g. XPIDL_WARNING((foo, bar, "sil"))
  *
- * Probably best removed when we leave 6.5.
-*/
+ * Probably best removed when we leave 6.5.  */
 #define XPIDL_WARNING(x) IDL_tree_warning##x
 #else
-#define XPIDL_WARNING(x) do { } while (0)
+extern void xpidl_tree_warning(IDL_tree p, int level, const char *fmt, ...);
+#define XPIDL_WARNING(x) xpidl_tree_warning##x
 #endif
 
 /*
@@ -195,5 +196,12 @@ xpidl_parse_iid(nsID *id, const char *str);
  */
 gboolean
 verify_method_declaration(IDL_tree method_tree);
+
+/*
+ * Verify that a native declaration has an associated C++ expression, i.e. that
+ * it's of the form native <idl-name>(<c++-name>)
+ */
+gboolean
+check_native(TreeState *state);
 
 #endif /* __xpidl_h */

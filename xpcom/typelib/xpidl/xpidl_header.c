@@ -487,26 +487,9 @@ attr_dcl(TreeState *state)
 static gboolean
 do_enum(TreeState *state)
 {
-    XPIDL_WARNING((state->tree, IDL_WARNING1,
-                   "enums not supported, enum \'%s\' ignored",
-                   IDL_IDENT(IDL_TYPE_ENUM(state->tree).ident).str));
-    return TRUE;
-#if 0
-    IDL_tree enumb = state->tree, iter;
-
-    fprintf(state->file, "enum %s {\n",
-            IDL_IDENT(IDL_TYPE_ENUM(enumb).ident).str);
-
-    for (iter = IDL_TYPE_ENUM(enumb).enumerator_list;
-         iter;
-         iter = IDL_LIST(iter).next) {
-        fprintf(state->file, "  %s%s\n", IDL_IDENT(IDL_LIST(iter).data).str,
-                IDL_LIST(iter).next ? ",": "");
-    }
-
-    fputs("};\n\n", state->file);
-    return TRUE;
-#endif
+    IDL_tree_error(state->tree, "enums not supported, "
+                   "see http://bugzilla.mozilla.org/show_bug.cgi?id=8781");
+    return FALSE;
 }
 
 static gboolean
@@ -542,8 +525,9 @@ do_const_dcl(TreeState *state)
                              name, (int) IDL_INTEGER(dcl->const_exp).value);
     } else {
         IDL_tree_error(state->tree,
-                       "const decl \'%s\' must be of type short or long",
+                       "const declaration \'%s\' must be of type short or long",
                        name);
+        return FALSE;
     }
     return TRUE;
 }
@@ -769,10 +753,11 @@ static gboolean
 codefrag(TreeState *state)
 {
     const char *desc = IDL_CODEFRAG(state->tree).desc;
-    if (strcmp(desc, "C++")) {
+    
+    if (strcmp(desc, "C++") && /* libIDL bug? */ strcmp(desc, "C++\r")) {
         XPIDL_WARNING((state->tree, IDL_WARNING1,
                        "ignoring '%%{%s' escape. "
-                       "(Use '%%{C++' to escape verbatim code.)", desc));
+                       "(Use '%%{C++' to escape verbatim C++ code.)", desc));
 
         return TRUE;
     }
@@ -785,8 +770,9 @@ nodeHandler *
 xpidl_header_dispatch(void)
 {
     static nodeHandler table[IDLN_LAST];
+    static gboolean initialized = FALSE;
 
-    if (!table[IDLN_NONE]) {
+    if (!initialized) {
         table[IDLN_NONE] = pass_1;
         table[IDLN_LIST] = list;
         table[IDLN_ATTR_DCL] = attr_dcl;
@@ -797,6 +783,8 @@ xpidl_header_dispatch(void)
         table[IDLN_CODEFRAG] = codefrag;
         table[IDLN_TYPE_DCL] = do_typedef;
         table[IDLN_CONST_DCL] = do_const_dcl;
+        table[IDLN_NATIVE] = check_native;
+        initialized = TRUE;
     }
 
     return table;

@@ -463,12 +463,7 @@ pass_1(TreeState *state)
     destroy_header:
         /* XXX XPT_DestroyHeader(HEADER(state)) */
 
-#ifdef DEBUG_shaver
-        fprintf(stderr, "writing typelib was %ssuccessful\n",
-                ok ? "" : "not ");
-#else
         ;   /* msvc would like a statement here */
-#endif
     }
 
     return ok;
@@ -853,18 +848,10 @@ handle_iid_is:
                       }
                   }
                   if (isID) {
-#ifdef DEBUG_shaver
-                      fprintf(stderr, "doing nsID for %s\n",
-                              IDL_IDENT(type).str);
-#endif
                       td->prefix.flags = TD_PNSIID | XPT_TDP_POINTER;
                       if(IDL_tree_property_get(type, "ref"))
                           td->prefix.flags |= XPT_TDP_REFERENCE;
                   } else {
-#ifdef DEBUG_shaver
-                      fprintf(stderr, "not doing nsID for %s\n",
-                              IDL_IDENT(type).str);
-#endif
                       td->prefix.flags = TD_VOID | XPT_TDP_POINTER;
                   }
                   break;
@@ -894,11 +881,12 @@ handle_iid_is:
                 }
                 IDL_tree_error(type, "can't handle %s ident in param list\n",
 #ifdef DEBUG_shaver
-                        IDL_NODE_TYPE_NAME(IDL_NODE_UP(type))
+                               /* XXX is this safe to use on Win now? */
+                               IDL_NODE_TYPE_NAME(IDL_NODE_UP(type))
 #else
-                        "that type of"
+                               "that type of"
 #endif
-                        );
+                               );
 #ifdef DEBUG_shaver
                 XPT_ASSERT(0);
 #endif
@@ -908,7 +896,8 @@ handle_iid_is:
           default:
             IDL_tree_error(type, "can't handle %s in param list\n",
 #ifdef DEBUG_shaver
-                        IDL_NODE_TYPE_NAME(IDL_NODE_UP(type))
+                           /* XXX is this safe to use on Win now? */
+                           IDL_NODE_TYPE_NAME(IDL_NODE_UP(type))
 #else
                         "that type"
 #endif
@@ -1035,6 +1024,7 @@ typelib_op_dcl(TreeState *state)
     IDL_tree iter;
     uint16 num_args = 0;
     uint8 op_flags = 0;
+    gboolean saw_retval = FALSE;
     gboolean op_notxpcom = (IDL_tree_property_get(op->ident, "notxpcom")
                             != NULL);
     gboolean op_noscript = (IDL_tree_property_get(op->ident, "noscript")
@@ -1070,9 +1060,22 @@ typelib_op_dcl(TreeState *state)
 
     for (num_args = 0, iter = op->parameter_dcls; iter;
          iter = IDL_LIST(iter).next, num_args++) {
-        if (!fill_pd_from_param(state, &meth->params[num_args],
-                                IDL_LIST(iter).data))
+        XPTParamDescriptor *pd = &meth->params[num_args];
+        if (!fill_pd_from_param(state, pd, IDL_LIST(iter).data))
             return FALSE;
+        if (pd->flags & XPT_PD_RETVAL) {
+            if (op->op_type_spec) {
+                IDL_tree_error(state->tree, 
+                               "can't have [retval] with non-void return type");
+                return FALSE;
+            }
+            if (saw_retval) {
+                IDL_tree_error(state->tree,
+                               "can't have more than one [retval] parameter");
+                return FALSE;
+            }
+            saw_retval = TRUE;
+        }
     }
 
     /* XXX unless [notxpcom] */
@@ -1286,6 +1289,7 @@ xpidl_typelib_dispatch(void)
       table[IDLN_INTERFACE] = typelib_interface;
       table[IDLN_CONST_DCL] = typelib_const_dcl;
       table[IDLN_TYPE_ENUM] = typelib_enum;
+      table[IDLN_NATIVE] = check_native;
       initialized = TRUE;
   }
 
