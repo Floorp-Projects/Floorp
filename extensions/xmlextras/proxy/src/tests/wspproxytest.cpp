@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsCOMPtr.h"
 #include "wspproxytest.h"
 #include "nsAString.h"
 #include "nsIInterfaceInfoManager.h"

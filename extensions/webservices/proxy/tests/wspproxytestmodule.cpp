@@ -38,11 +38,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "wspproxytest.h"
+#include "nsCOMPtr.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsIScriptNameSpaceManager.h"
+#include "wspproxytest.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(WSPProxyTest)
 NS_DECL_CLASSINFO(WSPProxyTest)
