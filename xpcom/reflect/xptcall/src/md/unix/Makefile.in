@@ -223,7 +223,7 @@ endif
 
 ifeq ($(OS_ARCH),Darwin)
 CPPSRCS		:= xptcinvoke_ppc_rhapsody.cpp xptcstubs_ppc_rhapsody.cpp
-ASFILES		:= xptcinvoke_asm_ppc_rhapsody.s xptcstubs_asm_ppc_rhapsody.s
+ASFILES		:= xptcinvoke_asm_ppc_rhapsody.s xptcstubs_asm_ppc_darwin.s
 endif
 
 ######################################################################
@@ -298,6 +298,13 @@ xptcstubs_asm_mips.o: xptcstubs_asm_mips.s.m4 $(PUBLIC)/xptcstubsdef.inc
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_mips.s
 	$(RM) -f ./xptcstubs_asm_mips.s
 endif
+endif
+
+ifeq ($(OS_ARCH),Darwin)
+xptcstubs_asm_ppc_darwin.o: xptcstubs_asm_ppc_darwin.s.m4 $(PUBLIC)/xptcstubsdef.inc Makefile
+	gm4 $(INCLUDES) $< > ./xptcstubs_asm_ppc_darwin.s && \
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_ppc_darwin.s
+	$(RM) -f ./xptcstubs_asm_ppc_darwin.s
 endif
 
 ifeq ($(OS_ARCH),IRIX)
