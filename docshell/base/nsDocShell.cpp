@@ -2246,7 +2246,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI, PRUint32 aLoadFlags)
         prompter->Alert(nsnull, messageStr.get());
     }
 
-    if (!uri)
+    if (NS_FAILED(rv) || !uri)
         return NS_ERROR_FAILURE;
 
     NS_ENSURE_SUCCESS(LoadURI(uri, nsnull, aLoadFlags), NS_ERROR_FAILURE);
@@ -4082,10 +4082,12 @@ nsDocShell::CreateFixupURI(const PRUnichar * aStringURI, nsIURI ** aURI)
 {
     *aURI = nsnull;
     nsAutoString uriString(aStringURI);
-    uriString.Trim(" ");        // Cleanup the empty spaces that might be on each end.
+    uriString.CompressWhitespace();        // Cleanup the empty spaces that might be on each end.
 
     // Eliminate embedded newlines, which single-line text fields now allow:
     uriString.StripChars("\r\n");
+
+    NS_ENSURE_TRUE(uriString.Length() > 0, NS_ERROR_FAILURE);
 
     // Create the fixup object if necessary
     if (!mURIFixup) {
