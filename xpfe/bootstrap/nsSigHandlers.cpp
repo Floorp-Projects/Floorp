@@ -58,7 +58,7 @@ extern "C" char * strsignal(int);
 
 #include "nslog.h"
 
-NS_IMPL_LOG(nsSigHandlersLog, 0)
+NS_IMPL_LOG(nsSigHandlersLog)
 #define PRINTF NS_LOG_PRINTF(nsSigHandlersLog)
 #define FLUSH  NS_LOG_FLUSH(nsSigHandlersLog)
 
