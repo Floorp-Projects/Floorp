@@ -47,11 +47,7 @@
 #include "nsClipboard.h"
 #include "nsTransferable.h"
 #include "nsXIFFormatConverter.h"
-
-// #include "nsDragService.h"
-// #include "nsDragSource.h"
-// #include "nsDragTarget.h"
-// #include "nsDraggedObject.h"
+#include "nsDragService.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -83,10 +79,7 @@ static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
-// static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
-// static NS_DEFINE_IID(kCDragSource,    NS_DRAGSOURCE_CID);
-// static NS_DEFINE_IID(kCDragTarget,    NS_DRAGTARGET_CID);
-// static NS_DEFINE_IID(kCDraggedObject, NS_DRAGGEDOBJECT_CID);
+static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -244,11 +237,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCFontRetrieverService)) {
         inst = (nsISupports*)(nsIFontRetrieverService *) new nsFontRetrieverService();
     }
-#if 0
     else if (mClassID.Equals(kCDragService)) {
-        inst = (nsISupports*)new nsDragService();
+        inst = (nsISupports*) (nsIDragService *) new nsDragService();
     }
-#endif
     else {
         printf("nsWidgetFactory::CreateInstance(), unhandled class.\n");
     }
