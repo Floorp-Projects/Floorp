@@ -93,9 +93,10 @@ nsldapi_getdxbyname( char *domain )
 
     /* XXX not MT safe XXX */
     if (( rc = res_search( domain, C_IN, T_TXT, buf, sizeof( buf ))) < 0
+		|| ( rc > sizeof( buf ))
 		|| ( dxs = decode_answer( buf, rc )) == NULL ) {
 	/*
-	 * punt:  return list conisting of the original domain name only
+	 * punt:  return list consisting of the original domain name only
 	 */
 	if (( dxs = (char **)NSLDAPI_MALLOC( 2 * sizeof( char * ))) == NULL ||
 		( dxs[ 0 ] = nsldapi_strdup( domain )) == NULL ) {
@@ -131,6 +132,11 @@ decode_answer( unsigned char *answer, int len )
     hp = (HEADER *)answer;
     eom = answer + len;
 
+    if ( len < sizeof( *hp ) ) {
+	h_errno = NO_RECOVERY;
+	return( NULL );
+    }
+
     if ( ntohs( hp->qdcount ) != 1 ) {
 	h_errno = NO_RECOVERY;
 	return( NULL );
@@ -162,6 +168,10 @@ decode_answer( unsigned char *answer, int len )
 	    continue;
 	}
 	p += rc;	/* skip over name */
+	if ( p + 3 * INT16SZ + INT32SZ > eom ) {
+	    err = NO_RECOVERY;
+	    continue;
+	}
 	type = _getshort( p );
 	p += INT16SZ;
 	class = _getshort( p );
@@ -169,6 +179,10 @@ decode_answer( unsigned char *answer, int len )
 	p += INT32SZ;		/* skip over TTL */
 	rr_len = _getshort( p );
 	p += INT16SZ;
+	if ( p + rr_len > eom ) {
+	    err = NO_RECOVERY;
+	    continue;
+	}
 	if ( class == C_IN && type == T_TXT ) {
 	    int 	i, n, pref, txt_len;
 	    char	*q, *r;
