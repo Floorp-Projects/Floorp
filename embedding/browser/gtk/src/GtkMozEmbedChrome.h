@@ -37,6 +37,7 @@
 // utility classes
 #include "nsXPIDLString.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
 
 // include our gtk stuff here
 #include "gdksuperwin.h"
@@ -84,6 +85,7 @@ public:
 
 private:
   GtkWidget                 *mOwningGtkWidget;
+  nsCOMPtr<nsIWebBrowser>    mWebBrowser;
   GtkMozEmbedChromeCB       *mNewBrowserCB;
   void                      *mNewBrowserCBData;
   GtkMozEmbedDestroyCB      *mDestroyCB;
@@ -109,6 +111,8 @@ private:
   nsXPIDLCString             mLocation;
   nsXPIDLCString             mTitle;
   nsString                   mTitleUnicode;
+  PRUint32                   mChromeMask;
+  static nsVoidArray        *sBrowsers;
 };
 
 #endif /* __GtkMozEmbedChrome_h */

@@ -44,7 +44,7 @@ typedef struct _TestGtkBrowser {
   char       *tempMessage;
 } TestGtkBrowser;
 
-static TestGtkBrowser *new_gtk_browser    (void);
+static TestGtkBrowser *new_gtk_browser    (guint32 chromeMask);
 
 static int num_browsers = 0;
 
@@ -54,8 +54,9 @@ static void     stop_clicked_cb    (GtkButton   *button, TestGtkBrowser *browser
 static void     forward_clicked_cb (GtkButton   *button, TestGtkBrowser *browser);
 static void     reload_clicked_cb  (GtkButton   *button, TestGtkBrowser *browser);
 static void     url_activate_cb    (GtkEditable *widget, TestGtkBrowser *browser);
-static gboolean destroy_cb         (GtkWidget *widget,   GdkEventAny *event,
+static gboolean delete_cb          (GtkWidget *widget,   GdkEventAny *event,
 				    TestGtkBrowser *browser);
+static void     destroy_cb         (GtkWidget *widget, TestGtkBrowser *browser);
 
 // callbacks from the widget
 static void location_changed_cb  (GtkMozEmbed *embed, TestGtkBrowser *browser);
@@ -70,6 +71,7 @@ static void js_status_cb         (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void new_window_cb        (GtkMozEmbed *embed, GtkMozEmbed **retval, guint chromemask,
 				  TestGtkBrowser *browser);
 static void visibility_cb        (GtkMozEmbed *embed, gboolean visibility, TestGtkBrowser *browser);
+static void destroy_brsr_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser);
 
 // some utility functions
 static void update_status_bar_text  (TestGtkBrowser *browser);
@@ -81,7 +83,7 @@ main(int argc, char **argv)
 {
   gtk_init(&argc, &argv);
 
-  TestGtkBrowser *browser = new_gtk_browser();
+  TestGtkBrowser *browser = new_gtk_browser(gtk_moz_embed_flag_defaultChrome);
 
   // set our minimum size
   gtk_widget_set_usize(browser->topLevelWindow, 400, 400);
@@ -95,7 +97,7 @@ main(int argc, char **argv)
 }
 
 static TestGtkBrowser *
-new_gtk_browser(void)
+new_gtk_browser(guint32 chromeMask)
 {
   TestGtkBrowser *browser = 0;
 
@@ -200,7 +202,7 @@ new_gtk_browser(void)
 
   // catch the destruction of the toplevel window
   gtk_signal_connect(GTK_OBJECT(browser->topLevelWindow), "delete_event",
-		     GTK_SIGNAL_FUNC(destroy_cb), browser);
+		     GTK_SIGNAL_FUNC(delete_cb), browser);
   // hook up the activate signal to the right callback
   gtk_signal_connect(GTK_OBJECT(browser->urlEntry), "activate",
 		     GTK_SIGNAL_FUNC(url_activate_cb), browser);
@@ -233,6 +235,14 @@ new_gtk_browser(void)
   // hookup to any requested visibility changes
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "visibility",
 		     GTK_SIGNAL_FUNC(visibility_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy_browser",
+		     GTK_SIGNAL_FUNC(destroy_brsr_cb), browser);
+  // hookup to when the window is destroyed
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy",
+		     GTK_SIGNAL_FUNC(destroy_cb), browser);
+
+  // set the chrome type so it's stored in the object
+  gtk_moz_embed_set_chrome_mask(GTK_MOZ_EMBED(browser->mozEmbed), chromeMask);
 
   return browser;
 }
@@ -272,16 +282,22 @@ url_activate_cb    (GtkEditable *widget, TestGtkBrowser *browser)
 }
 
 gboolean
-destroy_cb(GtkWidget *widget, GdkEventAny *event, TestGtkBrowser *browser)
+delete_cb(GtkWidget *widget, GdkEventAny *event, TestGtkBrowser *browser)
+{
+  g_print("delete_cb\n");
+  gtk_widget_destroy(widget);
+  return TRUE;
+}
+
+void
+destroy_cb         (GtkWidget *widget, TestGtkBrowser *browser)
 {
   g_print("destroy_cb\n");
+  num_browsers--;
   if (browser->tempMessage)
     g_free(browser->tempMessage);
-  num_browsers--;
-  gtk_widget_destroy(widget);
   if (num_browsers == 0)
     gtk_main_quit();
-  return TRUE;
 }
 
 void
@@ -434,7 +450,7 @@ new_window_cb (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask, Tes
 {
   g_print("new_window_cb\n");
   g_print("embed is %p chromemask is %d\n", embed, chromemask);
-  TestGtkBrowser *newBrowser = new_gtk_browser();
+  TestGtkBrowser *newBrowser = new_gtk_browser(chromemask);
   gtk_widget_set_usize(newBrowser->topLevelWindow, 400, 400);
   *newEmbed = GTK_MOZ_EMBED(newBrowser->mozEmbed);
   g_print("new browser is %p\n", *newEmbed);
@@ -448,6 +464,13 @@ visibility_cb (GtkMozEmbed *embed, gboolean visibility, TestGtkBrowser *browser)
     gtk_widget_show_all(browser->topLevelWindow);
   else
     gtk_widget_hide_all(browser->topLevelWindow);
+}
+
+void
+destroy_brsr_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser)
+{
+  g_print("destroy_brsr_cb\n");
+  gtk_widget_destroy(browser->topLevelWindow);
 }
 
 // utility functions

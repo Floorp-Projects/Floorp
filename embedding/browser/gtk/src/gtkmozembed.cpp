@@ -42,8 +42,6 @@ public:
   nsCOMPtr<nsIWebBrowser>     webBrowser;
   nsCOMPtr<nsIWebNavigation>  navigation;
   nsCOMPtr<nsIGtkEmbed>       embed;
-  nsCOMPtr<nsISupportsArray>  topLevelWindowWebShells;
-  nsVoidArray                 topLevelWindows;
   nsCString		      mInitialURL;
 };
 
@@ -60,6 +58,7 @@ enum {
   NET_STOP,
   NEW_WINDOW,
   VISIBILITY,
+  DESTROY_BROWSER,
   LAST_SIGNAL
 };
 
@@ -125,6 +124,9 @@ gtk_moz_embed_handle_new_window(PRUint32 chromeMask, nsIWebBrowser **_retval, vo
 
 static void
 gtk_moz_embed_handle_visibility(PRBool aVisibility, void *aData);
+
+static void
+gtk_moz_embed_handle_destroy(void *aData);
 
 static GtkBinClass *parent_class;
 
@@ -286,6 +288,13 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, visibility),
 		   gtk_marshal_NONE__BOOL,
 		   GTK_TYPE_NONE, 1, GTK_TYPE_BOOL);
+  moz_embed_signals[DESTROY_BROWSER] =
+    gtk_signal_new("destroy_browser",
+		   GTK_RUN_FIRST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, destroy_brsr),
+		   gtk_marshal_NONE__NONE,
+		   GTK_TYPE_NONE, 0);
 
   gtk_object_class_add_signals(object_class, moz_embed_signals, LAST_SIGNAL);
 
@@ -316,7 +325,10 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   // set the toplevel window
   embed_private->webBrowser->SetTopLevelWindow(browserChrome);
   // set the widget as the owner of the object
-  embed_private->embed->Init((GtkWidget *)embed);
+  embed_private->embed->Init(GTK_WIDGET(embed));
+
+  // so the embedding widget can find it's owning nsIWebBrowser object
+  browserChrome->SetWebBrowser(embed_private->webBrowser);
 
   // track the window changes
   embed_private->embed->SetLinkChangeCallback((generic_cb_with_data)gtk_moz_embed_handle_link_change,
@@ -333,6 +345,7 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
 				       embed);
   embed_private->embed->SetNewBrowserCallback(gtk_moz_embed_handle_new_window, embed);
   embed_private->embed->SetVisibilityCallback(gtk_moz_embed_handle_visibility, embed);
+  embed_private->embed->SetDestroyCallback(gtk_moz_embed_handle_destroy, embed);
   // get our hands on a copy of the nsIWebNavigation interface for later
   embed_private->navigation = do_QueryInterface(embed_private->webBrowser);
   g_return_if_fail(embed_private->navigation);
@@ -444,6 +457,38 @@ gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 flags)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
   embed_private->navigation->Reload(flags);
+}
+
+void
+gtk_moz_embed_set_chrome_mask (GtkMozEmbed *embed, guint32 flags)
+{
+  GtkMozEmbedPrivate *embed_private;
+  
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_QueryInterface(embed_private->embed);
+  g_return_if_fail(browserChrome);
+  browserChrome->SetChromeMask(flags);
+}
+
+guint32
+gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed)
+{
+  GtkMozEmbedPrivate *embed_private;
+  PRUint32 curMask = 0;
+  
+  g_return_val_if_fail ((embed != NULL), 0);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), 0);
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_QueryInterface(embed_private->embed);
+  g_return_val_if_fail(browserChrome, 0);
+  if (browserChrome->GetChromeMask(&curMask) == NS_OK)
+    return curMask;
+  else
+    return 0;
 }
 
 char *
@@ -662,6 +707,9 @@ gtk_moz_embed_destroy(GtkObject *object)
 
   if (embed_private)
   {
+    nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = do_QueryInterface(embed_private->webBrowser);
+    g_return_if_fail(webBrowserBaseWindow);
+    webBrowserBaseWindow->Destroy();
     embed_private->webBrowser = nsnull;
     embed_private->embed = nsnull;
     // XXX XXX delete all the members of the topLevelWindows
@@ -780,4 +828,12 @@ gtk_moz_embed_handle_visibility(PRBool aVisibility, void *aData)
   GtkMozEmbed *embed = (GtkMozEmbed *)aData;
   g_return_if_fail(GTK_IS_MOZ_EMBED(embed));
   gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[VISIBILITY], aVisibility);
+}
+
+static void
+gtk_moz_embed_handle_destroy(void *aData)
+{
+  GtkMozEmbed *embed = (GtkMozEmbed *)aData;
+  g_return_if_fail(GTK_IS_MOZ_EMBED(embed));
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[DESTROY_BROWSER]);
 }
