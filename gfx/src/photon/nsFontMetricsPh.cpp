@@ -23,6 +23,8 @@
 #include "nsFontMetricsPh.h"
 #include "nsPhGfxLog.h"
 
+#include <errno.h>
+
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 nsFontMetricsPh :: nsFontMetricsPh()
@@ -236,8 +238,8 @@ nsFontMetricsPh :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
     // 56% of ascent, best guess for non-true type
     mXHeight = NSToCoordRound((float) fontInfo.ascender * f * 0.56f * -1.0);
 
-    mUnderlineOffset = -NSToIntRound(MAX (1, floor (0.1 * height + 0.5)) * f);
-    mUnderlineSize = NSToIntRound(MAX(1, floor (0.05 * height + 0.5)) * f);
+    mUnderlineOffset = -NSToIntRound(PR_MAX (1, floor (0.1 * height + 0.5)) * f);
+    mUnderlineSize = NSToIntRound(PR_MAX(1, floor (0.05 * height + 0.5)) * f);
     mStrikeoutOffset = NSToIntRound((mAscent + 1) / 2.5);
     mStrikeoutSize = mUnderlineSize;
     mSuperscriptOffset = mXHeight;

@@ -61,23 +61,7 @@ public:
    **/
   NS_IMETHOD Init( PhGC_t * &aGC, PRUint32 aWidth, PRUint32 aHeight,
                   PRUint32 aFlags) = 0;
-
-  /**
-   * Get a windows DC that represents the drawing surface.
-   * GetDC() must be paired with ReleaseDC(). Getting a DC
-   * and Lock()ing are mutually exclusive operations.
-   * @param  aDC out parameter for HDC
-   * @return error status
-   **/
-  NS_IMETHOD GetGC( PhGC_t **aGC ) = 0;
-
-  /**
-   * Release a windows DC obtained by GetDC().
-   * ReleaseDC() must be preceded by a call to ReleaseDC().
-   * @return error status
-   **/
-  NS_IMETHOD ReleaseGC( void ) = 0;
-
+				  
 };
 
 #endif  // nsIDrawingSurfacePh_h___ 

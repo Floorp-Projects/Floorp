@@ -32,6 +32,7 @@ class nsDrawingSurfacePh : public nsIDrawingSurface,
 {
 public:
   nsDrawingSurfacePh();
+  virtual ~nsDrawingSurfacePh();
   
   NS_DECL_ISUPPORTS
 
@@ -40,7 +41,6 @@ public:
   NS_IMETHOD Lock(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
                   void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
                   PRUint32 aFlags);
-  NS_IMETHOD XOR(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight);
   NS_IMETHOD Unlock(void);
   NS_IMETHOD GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight);
   NS_IMETHOD IsOffscreen(PRBool *aOffScreen);
@@ -49,37 +49,51 @@ public:
 
   //nsIDrawingSurfacePh interface
 
+  /* Initialize a On-Screen Drawing Surface */
   NS_IMETHOD Init(PhGC_t * &aGC);
-  NS_IMETHOD Init(PhGC_t * &aGC, PRUint32 aWidth, PRUint32 aHeight,
-                  PRUint32 aFlags);
-  NS_IMETHOD GetGC(PhGC_t** aGC);
-  NS_IMETHOD ReleaseGC(void);
-  NS_IMETHOD Select(void);
-  void Stop(void);
 
-  // locals
-  PhGC_t *GetGC(void);
-  PhImage_t     *mPixmap;
+  /* Initizlize a Off-Screen Drawing Surface */
+  NS_IMETHOD Init(PhGC_t * &aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
+
+  /* Make this DrawingSurface active */
+  NS_IMETHOD Select(void);
+
+  /* Deactivate an Off-Screen Drawing Surface */
+  NS_IMETHOD Stop(void);
+
+  /* Flush the Off-Screen draw buffer to the pixmap or PgFlush the On-Screen */
+  NS_IMETHOD Flush(void);
+
+  /* The GC is not ref counted, make sure you know what your doing */
+  PhGC_t     *GetGC(void);
+
+  /* Is this Drawing Surface Active? */
+  PRBool      IsActive();
+
+public:
+  /* This needs to be accessed by nsRenderingPh a lot so make it public */
+  PhImage_t  *mPixmap;
 
 private:
-  ~nsDrawingSurfacePh();
 
-  PhGC_t        *mGC;
-  PhGC_t        *mholdGC;
-  PRUint32	mWidth;
-  PRUint32	mHeight;
-  PRUint32	mFlags;
-  PRBool	mIsOffscreen;
-  nsPixelFormat mPixFormat;
+  PRBool			mIsOffscreen;
+  PhGC_t        	*mGC;
+  PmMemoryContext_t *mMC;
+  PhDrawContext_t	*mDrawContext;
+  
+  PRUint32			mWidth;
+  PRUint32			mHeight;
+  PRUint32			mFlags;
+  nsPixelFormat 	mPixFormat;
 
-  /* for locks */
-  PhImage_t 	*mImage;
-  PRInt32	mLockX;
-  PRInt32	mLockY;
-  PRUint32	mLockWidth;
-  PRUint32	mLockHeight;
-  PRUint32	mLockFlags;
-  PRBool	mLocked;
+  /* for lock & unlock */
+  PhImage_t 		*mImage;
+  PRInt32			mLockX;
+  PRInt32			mLockY;
+  PRUint32			mLockWidth;
+  PRUint32			mLockHeight;
+  PRUint32			mLockFlags;
+  PRBool			mLocked;
 };
 
 #endif

@@ -34,22 +34,18 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
+#include "nsImagePh.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
-//#include "nsIRenderingContextPh.h"
 
 #include "nsDrawingSurfacePh.h"
-
-class GraphicsState;
-class nsDrawingSurfacePh;
-class nsImagePh;
-class nsIRegion;
-class nsRegionPh;
+#include "nsRegionPh.h"
 
 class nsRenderingContextPh : public nsIRenderingContext
 {
 public:
   nsRenderingContextPh();
+  virtual ~nsRenderingContextPh();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -164,7 +160,6 @@ public:
   // NS_IMETHOD CreateDrawingSurface(PhGC_t *aGC, nsDrawingSurface &aSurface);
 
 private:
-  ~nsRenderingContextPh();
   void PushClipState(void);
   void holdSetGC();
   void SetGC();
@@ -194,7 +189,6 @@ protected:
 
   //default objects
   //state management
-  GraphicsState     *mStates;
   nsVoidArray       *mStateCache;
   PRUint8           *mGammaTable;
 

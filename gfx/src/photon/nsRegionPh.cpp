@@ -147,7 +147,7 @@ void nsRegionPh :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect2 this=<%p> aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", this, aX, aY, aWidth, aHeight));
 
-  if(( aWidth > 0 ) && ( aHeight > 0 ))
+  if ( (aWidth > 0) && (aHeight > 0) )
   {
     /* Create a temporary tile to  assign to mRegion */
     PhTile_t *tile = PhGetTile();
