@@ -774,7 +774,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       //
       if (aStatus == NS_ERROR_UNKNOWN_HOST ||
           aStatus == NS_ERROR_CONNECTION_REFUSED ||
-          aStatus == NS_ERROR_NET_TIMEOUT)
+          aStatus == NS_ERROR_NET_TIMEOUT ||
+          aStatus == NS_ERROR_NET_RESET)
       {
         mURIFixup->CreateFixupURI(oldSpecW.get(),
             nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP, getter_AddRefs(newURI));
@@ -783,7 +784,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       //
       // Now try change the address, e.g. turn http://foo into http://www.foo.com
       //
-      if (aStatus == NS_ERROR_UNKNOWN_HOST)
+      if (aStatus == NS_ERROR_UNKNOWN_HOST ||
+          aStatus == NS_ERROR_NET_RESET)
       {
         // Test if keyword lookup produced a new URI or not
         PRBool doCreateAlternate = PR_TRUE;
@@ -1008,10 +1010,30 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
           }
         }
     }
-    //
-    // Doc failed to load because the server generated too many redirects
-    //
-    else if (aStatus == NS_ERROR_REDIRECT_LOOP) {
+    else {
+      //
+      // handle errors that have simple messages w/ no arguments.
+      //
+      const char *errorStr = nsnull;
+      switch (aStatus) {
+        case NS_ERROR_REDIRECT_LOOP:
+          // Doc failed to load because the server generated too many redirects
+          errorStr = "redirectLoop";
+          break;
+        case NS_ERROR_UNKNOWN_SOCKET_TYPE:
+          // Doc failed to load because PSM is not installed
+          errorStr = "unknownSocketType";
+          break;
+        case NS_ERROR_NET_RESET:
+          // Doc failed to load because the server kept reseting the connection
+          // before we could read any data from it
+          errorStr = "netReset";
+          break;
+        default:
+          NS_NOTREACHED("would be nice to add an alert here");
+          errorStr = "unknownError";
+          break;
+      }
       nsCOMPtr<nsIPrompt> prompter;
       nsCOMPtr<nsIStringBundle> stringBundle;
 
@@ -1022,24 +1044,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       }
 
       nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("redirectLoop").get(),
-                                           getter_Copies(messageStr));
-      if (NS_FAILED(rv)) return rv;
-
-      prompter->Alert(nsnull, messageStr);
-    }
-    else if (aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE) {
-      nsCOMPtr<nsIPrompt> prompter;
-      nsCOMPtr<nsIStringBundle> stringBundle;
-
-      rv = GetPromptAndStringBundle(getter_AddRefs(prompter),
-                                    getter_AddRefs(stringBundle));
-      if (!stringBundle) {
-        return rv;
-      }
-
-      nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("unknownSocketType").get(),
+      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(errorStr).get(),
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 

@@ -70,6 +70,24 @@ static PRLogModuleInfo *gSocketTransportLog = nsnull;
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
+static nsresult
+ErrorAccordingToNSPR()
+{
+    nsresult rv = NS_ErrorAccordingToNSPR();
+    if (rv == NS_ERROR_FAILURE) {
+        LOG(("PR_GetError() returned %d\n", PR_GetError()));
+        // maybe this really maps to a more specific necko error
+        switch (PR_GetError()) {
+        case PR_CONNECT_ABORTED_ERROR:
+        case PR_CONNECT_RESET_ERROR:
+            LOG(("mapping to NS_ERROR_NET_RESET\n"));
+            rv = NS_ERROR_NET_RESET;
+            break;
+        }
+    }
+    return rv;
+}
+
 //
 //----------------------------------------------------------------------------
 // nsSocketTransport
@@ -2218,7 +2236,7 @@ nsSocketBIS::Read(char *aBuf, PRUint32 aCount, PRUint32 *aBytesRead)
 tryRead:
     total = PR_Read(sock, aBuf, aCount);
     if (total < 0) {
-        rv = NS_ErrorAccordingToNSPR();
+        rv = ErrorAccordingToNSPR();
         if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
             //
             // Block until the socket is readable and then try again.
@@ -2231,7 +2249,7 @@ tryRead:
             LOG(("nsSocketBIS::Read [this=%x] Poll succeeded; looping back to PR_Read\n", this));
             goto tryRead;
         }
-        LOG(("nsSocketBIS::Read [this=%x] PR_Read failed  [error=%x]\n", this, PR_GetError()));
+        LOG(("nsSocketBIS::Read [this=%x] PR_Read failed [error=%d]\n", this, PR_GetError()));
         goto end;
     }
     *aBytesRead = (PRUint32) total;
@@ -2302,7 +2320,7 @@ tryWrite:
     LOG(("nsSocketBOS PR_Write [this=%x] wrote %d of %d\n", this, total, aCount));
 
     if (written < 0) {
-        rv = NS_ErrorAccordingToNSPR();
+        rv = ErrorAccordingToNSPR();
         if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
             //
             // Block until the socket is writable and then try again.
@@ -2315,7 +2333,7 @@ tryWrite:
             LOG(("nsSocketBOS::Write [this=%x] Poll succeeded; looping back to PR_Write\n", this));
             goto tryWrite;
         }
-        LOG(("nsSocketBOS::Write [this=%x] PR_Write failed [error=%x]\n", this, PR_GetError()));
+        LOG(("nsSocketBOS::Write [this=%x] PR_Write failed [error=%d]\n", this, PR_GetError()));
         goto end;
     }
     
@@ -2406,9 +2424,9 @@ nsSocketIS::Read(char *aBuf, PRUint32 aCount, PRUint32 *aBytesRead)
             rv = NS_BASE_STREAM_WOULD_BLOCK;
         }
         else {
-            LOG(("nsSocketIS: PR_Read() failed [error=%x, os_error=%x]\n",
+            LOG(("nsSocketIS: PR_Read() failed [error=%d, os_error=%d]\n",
                 mError, PR_GetOSError()));
-            rv = NS_ERROR_FAILURE;
+            rv = ErrorAccordingToNSPR();
         }
         *aBytesRead = 0;
     }
@@ -2512,9 +2530,9 @@ nsSocketOS::Write(const char *aBuf, PRUint32 aCount, PRUint32 *aBytesWritten)
             LOG(("nsSocketTransport: PR_Write() failed with PR_WOULD_BLOCK_ERROR\n"));
             rv = NS_BASE_STREAM_WOULD_BLOCK;
         } else {
-            LOG(("nsSocketTransport: PR_Write() failed [error=%x, os_error=%x]\n",
+            LOG(("nsSocketTransport: PR_Write() failed [error=%d, os_error=%d]\n",
                 mError, PR_GetOSError()));
-            rv = NS_ERROR_FAILURE;
+            rv = ErrorAccordingToNSPR();
         }
         *aBytesWritten = 0;
     }
