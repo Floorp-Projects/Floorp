@@ -288,6 +288,8 @@ $vars->{'version'} = $::versions{$product} || [];
 if (exists $::COOKIE{"VERSION-$product"} &&
     lsearch($vars->{'version'}, $::COOKIE{"VERSION-$product"}) != -1) {
     $default{'version'} = $::COOKIE{"VERSION-$product"};
+} elsif (formvalue('version')) {
+    $default{'version'} = formvalue('version');
 } else {
     $default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
 }
