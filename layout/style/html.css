@@ -451,7 +451,7 @@ input {
   color: black;
 	background-color: white;
   -moz-box-sizing: border-box;
-  font-family:-moz-fixed;
+  font:field;
   -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
 	cursor: text;
 }
@@ -502,7 +502,7 @@ input[type="file"] > input {
 /* browse button for file selector */
 input[type="file"] > input[type="button"] {
   height:inherit;
-  font-family: sans-serif;
+  font:button;
   -moz-user-select: none !important;
 }
 
@@ -729,16 +729,11 @@ input[type="button"] {
   background-color: rgb(206, 207, 206);
   color:black; 
   padding: 1px;
-  font-family: sans-serif;
-  font-size: small;
+  font:button;
   -moz-binding: none;
   white-space: pre;
   -moz-user-select: none !important;
 	cursor: default;
-}
-
-input[type="button"]:hover {
-/*   border : 2px solid black;  */
 }
 
 input[type="button"]:active:hover {
@@ -780,8 +775,7 @@ input[type="button"][disabled], input[type="button"][disabled]:active {
 
 /* HTML 4 Button */
 button { 
-  font-family: sans-serif;
-  font-size: small;
+  font:button;
   -moz-user-select: none !important;
   display: inline;
   vertical-align: bottom;
@@ -834,7 +828,7 @@ button[disabled], button[disabled]:active {
 /* text input */
 input[type="text"] {
   -moz-box-sizing: border-box;
-  font-family:-moz-fixed;
+  font:field;
   border: 2px inset rgb(204, 204, 204); /* for Nav Quirks */
   padding: 0px;                         /* for Nav Quirks */
   background-color: white;
@@ -843,6 +837,7 @@ input[type="text"] {
   margin-bottom: 0px;
   margin-left:   0px;
   margin-right:  0px;
+  padding:  1px;
 } 
 
 input[type="text"][disabled] {
@@ -851,6 +846,7 @@ input[type="text"][disabled] {
 }
 
 input[type="password"] {
+  font:field;
   border: 2px inset rgb(204, 204, 204);
   background-color: white;
   color:black;
@@ -891,8 +887,7 @@ select:-moz-dummy-option {
 select[size] {
   -moz-user-select: none !important;
   -moz-box-sizing: border-box;
-  font-family: sans-serif;
-  font-size: small;
+  font: button;
   background-color: white;
   border: 2px inset rgb(153, 153, 153);
   padding-left:   0px;
@@ -905,8 +900,7 @@ select[size] {
 select, select[size="1"] {
   -moz-user-select: none !important;
   -moz-box-sizing: border-box;
-  font-family: sans-serif;
-  font-size: small;
+  font: button;
   background-color: white;
   border: inset 2px rgb(192, 192, 192);
   padding: 0px;
@@ -1004,8 +998,7 @@ option[disabled] {
 }
 
 optgroup {
-  font-family: sans-serif;
-  font-size: small;
+  font: button;
   display:block;
   font-style:italic;
   font-weight:bold;
@@ -1058,7 +1051,7 @@ td textarea {
 textarea {
   text-align: start;
   -moz-box-sizing: border-box;
-  font-family:-moz-fixed;
+  font:field;
   vertical-align: bottom;
   border: 2px inset #c0c0c0;
   background-color:white;

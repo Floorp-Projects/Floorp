@@ -71,7 +71,6 @@ li > ol:first-node {
 
 /* text input */
 input[type="text"] {
-  font-family:-moz-fixed;
   border-width: 2px !important;
   border-style: inset !important;
   border-color: rgb(204, 204, 204); 
@@ -80,8 +79,3 @@ input[type="text"] {
   padding-left:   0px;
   padding-right:  0px;
 } 
-
-/* text input */
-textarea {
-  font-family:-moz-fixed;
-}
