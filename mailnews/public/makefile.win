@@ -19,6 +19,7 @@ DEPTH=..\..
 IGNORE_MANIFEST=1
 
 EXPORTS = MailNewsTypes.h \
+		rosetta_mailnews.h\
         $(NULL)
 
 MODULE=mailnews
