@@ -760,7 +760,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		// Call in to BrowserAppCore instead of replacing 
 		// the url in the content area so that B/F buttons work right
 
-      if (!(defaultSearchURL == fallbackDefaultURL))
+      if (!(defaultSearchURL == fallbackDefaultSearchURL))
       {
         if (appCore)
           appCore.loadUrl(defaultSearchURL);
