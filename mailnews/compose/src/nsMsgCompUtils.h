@@ -119,9 +119,6 @@ char        *mime_generate_attachment_headers (
 
 char        *msg_generate_message_id (nsIMsgIdentity*);
 
-char        *RFC2231ParmFolding(const char *parmName, const char *charset, 
-                                const char *language, const char *parmValue);
-
 PRBool      mime_7bit_data_p (const char *string, PRUint32 size);
 
 char        *mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_p);

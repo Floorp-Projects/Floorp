@@ -796,6 +796,10 @@ char
            rand_buf[8], rand_buf[9], rand_buf[10], rand_buf[11]);
 }
 
+static  char *
+RFC2231ParmFolding(const char *parmName, const nsAFlatCString& charset,
+                   const char *language, const nsAFlatString& parmValue);
+
 char * 
 mime_generate_attachment_headers (const char *type,
                   const char *type_param,
@@ -813,14 +817,9 @@ mime_generate_attachment_headers (const char *type,
                   const char *content_id, 
                   PRBool      aBodyDocument)
 {
-  nsresult rv;
-
-  nsCString buf;
-
   NS_ASSERTION (encoding, "null encoding");
 
-  PRBool usemime = nsMsgMIMEGetConformToStandard();
-  PRInt32 parmFolding = 0;
+  PRInt32 parmFolding = 2; // RFC 2231-compliant
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs)
     prefs->GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
@@ -828,11 +827,12 @@ mime_generate_attachment_headers (const char *type,
   /* Let's encode the real name */
   char *encodedRealName = nsnull;
   nsXPIDLCString charset;   // actual charset used for MIME encode
+  nsAutoString realName;
   if (real_name)
   {
     // first try main body's charset to encode the file name, 
     // then try local file system charset if fails
-    NS_ConvertUTF8toUCS2 realName(real_name);
+    CopyUTF8toUTF16(real_name, realName);
     if (bodyCharset && *bodyCharset &&
         nsMsgI18Ncheck_data_in_charset_range(bodyCharset, realName.get()))
       charset.Assign(bodyCharset);
@@ -843,23 +843,45 @@ mime_generate_attachment_headers (const char *type,
         charset.Assign("UTF-8"); // set to UTF-8 if fails again
     }
 
-    encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name, PR_FALSE, charset.get(), 0, usemime);
-    if (!encodedRealName || !*encodedRealName)
-    {
-      PR_Free(encodedRealName);
-      encodedRealName = PL_strdup(real_name);
-      charset.Assign("us-ascii");
+
+    if (parmFolding == 2) {
+      encodedRealName = RFC2231ParmFolding("filename", charset, nsnull, 
+                                           realName);
+      // somehow RFC2231ParamFolding failed. fall back to RFC 2047     
+      if (!encodedRealName || !*encodedRealName) {
+        PR_FREEIF(encodedRealName);
+        parmFolding = 0; 
+      }
     }
 
-    /* ... and then put backslashes before special characters (RFC 822 tells us to). */
-    char *qtextName = msg_make_filename_qtext(encodedRealName, (parmFolding == 0 ? PR_TRUE : PR_FALSE));    
-    if (qtextName)
-    {
-      PR_FREEIF(encodedRealName);
-      encodedRealName = qtextName;
+    // Not RFC 2231 style encoding (it's not standard-compliant)
+    // parmFolding = 0  or 1
+    if (parmFolding != 2) {
+      PRBool usemime = nsMsgMIMEGetConformToStandard();
+      encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name, PR_FALSE,
+                                                     charset.get(), 0, usemime);
+                          
+      if (!encodedRealName || !*encodedRealName)
+      {
+        PR_FREEIF(encodedRealName);
+        encodedRealName = (char *) PR_Malloc(strlen(real_name) + 1);
+        if (encodedRealName)
+          PL_strcpy(encodedRealName, real_name);
+        charset.Assign("us-ascii");
+      }
+
+      // Now put backslashes before special characters per RFC 822 
+      char *qtextName = msg_make_filename_qtext(encodedRealName,
+                        (parmFolding == 0 ? PR_TRUE : PR_FALSE));    
+      if (qtextName)
+      {
+        PR_FREEIF(encodedRealName);
+        encodedRealName = qtextName;
+      }
     }
   }
 
+  nsCString buf;  // very likely to be longer than 64 characters
   buf.Append("Content-Type: ");
   buf.Append(type);
   if (type_param && *type_param)
@@ -954,15 +976,14 @@ mime_generate_attachment_headers (const char *type,
       buf.Append(encodedRealName);
       buf.Append("\"");
     }
-    else // if (parmFolding == 2)
+    else 
     {
-      char *rfc2231Parm = RFC2231ParmFolding("name", charset.get(),
-                         nsMsgI18NGetAcceptLanguage(), encodedRealName);
-      if (rfc2231Parm) {
+      char *nameParm = RFC2231ParmFolding("name", charset, nsnull, realName);
+      if (nameParm && *nameParm) {
         buf.Append(";\r\n ");
-        buf.Append(rfc2231Parm);
-        PR_Free(rfc2231Parm);
+        buf.Append(nameParm);
       }
+      PR_FREEIF(nameParm);
     }
   }
 #endif /* EMIT_NAME_IN_CONTENT_TYPE */
@@ -970,8 +991,7 @@ mime_generate_attachment_headers (const char *type,
 
   buf.Append("Content-Transfer-Encoding: ");
   buf.Append(encoding);
-
-	buf.Append(CRLF);
+  buf.Append(CRLF);
 
   if (description && *description) {
     char *s = mime_fix_header (description);
@@ -996,8 +1016,8 @@ mime_generate_attachment_headers (const char *type,
     PRInt32 pref_content_disposition = 0;
 
     if (prefs) {
-      rv = prefs->GetIntPref("mail.content_disposition_type",
-                             &pref_content_disposition);
+      nsresult rv = prefs->GetIntPref("mail.content_disposition_type",
+                                      &pref_content_disposition);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get mail.content_disposition_type");
     }
 
@@ -1028,14 +1048,9 @@ mime_generate_attachment_headers (const char *type,
     }
     else // if (parmFolding == 2)
     {
-      char *rfc2231Parm = RFC2231ParmFolding("filename", charset.get(),
-                       nsMsgI18NGetAcceptLanguage(), encodedRealName);
-      if (rfc2231Parm) {
-        buf.Append(";\r\n ");
-        buf.Append(rfc2231Parm);
-        buf.Append(CRLF);
-        PR_Free(rfc2231Parm);
-      }
+      buf.Append(";\r\n ");
+      buf.Append(encodedRealName);
+      buf.Append(CRLF);
     }
   }
   else
@@ -1128,7 +1143,10 @@ GIVE_UP_ON_CONTENT_BASE:
 
   /* realloc it smaller... */
 
-  PR_FREEIF(encodedRealName);
+#ifdef DEBUG_jungshik
+  printf ("header=%s\n", buf.get());
+#endif
+  PR_Free(encodedRealName);
   return PL_strdup(buf.get());
 }
 
@@ -1195,58 +1213,73 @@ msg_generate_message_id (nsIMsgIdentity *identity)
            (unsigned long) now, (unsigned long) salt, host);
 }
 
-char *
-RFC2231ParmFolding(const char *parmName, const char *charset, 
-           const char *language, const char *parmValue)
+
+// In Shift_JIS, Big5 and GB18030 (and GBK, UHC), octets in the ASCII
+// range can represent a non-first byte of a multi-byte character.
+inline static PRBool isAsciiPreserving(const nsAFlatCString& charset)
 {
+  // charset name is canonical (no worry about case-sensitivity)
+  return !charset.EqualsLiteral("Shift_JIS") &&
+         !Substring(charset, 0, 4).EqualsLiteral("Big5") &&
+         !charset.EqualsLiteral("gb18030"); 
+}
+
+inline static PRBool is7bitCharset(const nsAFlatCString& charset)
+{
+  // charset name is canonical (no worry about case-sensitivity)
+  return charset.EqualsLiteral("HZ-GB-2312") ||
+         Substring(charset, 0, 8).EqualsLiteral("ISO-2022-");
+}
+
 #define PR_MAX_FOLDING_LEN 75     // this is to gurantee the folded line will
                                   // never be greater than 78 = 75 + CRLFLWSP
-  char *foldedParm = NULL;
-  char *dupParm = NULL;
-  PRInt32 parmNameLen = 0;
-  PRInt32 parmValueLen = 0;
-  PRInt32 charsetLen = 0;
-  PRInt32 languageLen = 0;
-  PRBool needEscape = PR_FALSE;
+/*static */ char *
+RFC2231ParmFolding(const char *parmName, const nsAFlatCString& charset,
+                   const char *language, const nsAFlatString& parmValue)
+{
+  NS_ENSURE_TRUE(parmName && *parmName && !parmValue.IsEmpty(), nsnull);
 
-  NS_ASSERTION(parmName && *parmName && parmValue && *parmValue, "null parameters");
-  if (!parmName || !*parmName || !parmValue || !*parmValue)
-    return NULL;
-  if ((charset && *charset && PL_strcasecmp(charset, "us-ascii") != 0) || 
-    (language && *language && PL_strcasecmp(language, "en") != 0 &&
-     PL_strcasecmp(language, "en-us") != 0))
+  PRBool needEscape;
+  char *dupParm = nsnull; 
+
+  if (!IsASCII(parmValue) || is7bitCharset(charset)) {
     needEscape = PR_TRUE;
-
-  if (needEscape)
-    dupParm = nsEscape(parmValue, url_Path);
-  else 
-    dupParm = nsCRT::strdup(parmValue);
+    nsCAutoString nativeParmValue; 
+    ConvertFromUnicode(charset.get(), parmValue, nativeParmValue);
+    dupParm = nsEscape(nativeParmValue.get(), isAsciiPreserving(charset) ?
+                       url_Path : url_All); 
+  }
+  else {
+    needEscape = PR_FALSE;
+    dupParm = 
+      msg_make_filename_qtext(NS_LossyConvertUTF16toASCII(parmValue).get(),
+                              PR_TRUE);
+  }
 
   if (!dupParm)
-    return NULL;
+    return nsnull; 
 
-  if (needEscape)
-  {
-    parmValueLen = PL_strlen(dupParm);
-    parmNameLen = PL_strlen(parmName);
-  }
+  PRInt32 parmNameLen = PL_strlen(parmName);
+  PRInt32 parmValueLen = PL_strlen(dupParm);
 
   if (needEscape)
     parmNameLen += 5;   // *=__'__'___ or *[0]*=__'__'__ or *[1]*=___
   else
     parmNameLen += 5;   // *[0]="___";
-  charsetLen = charset ? PL_strlen(charset) : 0;
-  languageLen = language ? PL_strlen(language) : 0;
+
+  PRInt32 languageLen = language ?  PL_strlen(language) : 0;
+  PRInt32 charsetLen = charset.Length();
+  char *foldedParm = nsnull; 
 
   if ((parmValueLen + parmNameLen + charsetLen + languageLen) <
-    PR_MAX_FOLDING_LEN)
+      PR_MAX_FOLDING_LEN)
   {
     foldedParm = PL_strdup(parmName);
     if (needEscape)
     {
       NS_MsgSACat(&foldedParm, "*=");
       if (charsetLen)
-        NS_MsgSACat(&foldedParm, charset);
+        NS_MsgSACat(&foldedParm, charset.get());
       NS_MsgSACat(&foldedParm, "'");
       if (languageLen)
         NS_MsgSACat(&foldedParm, language);
@@ -1291,7 +1324,7 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
         if (counter == 0)
         {
           if (charsetLen)
-            NS_MsgSACat(&foldedParm, charset);
+            NS_MsgSACat(&foldedParm, charset.get());
           NS_MsgSACat(&foldedParm, "'");
           if (languageLen)
             NS_MsgSACat(&foldedParm, language);
@@ -1334,6 +1367,7 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
       }
       else
       {
+        // XXX should check if we are in the middle of escaped char (RFC 822)
         tmp = *end; *end = nsnull;
       }
       NS_MsgSACat(&foldedParm, start);
@@ -1348,7 +1382,10 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
   }
 
 done:
-  nsCRT::free(dupParm);
+  if (needEscape) 
+    nsMemory::Free(dupParm);
+  else 
+    PR_Free(dupParm);
   return foldedParm;
 }
 
@@ -1659,23 +1696,7 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const PRUnichar *propose
   }
 
   PRInt32 parmFolding = 0;
-  nsresult rv;
 
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
-  if (NS_SUCCEEDED(rv)) 
-    prefs->GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
-
-  if (parmFolding == 0 || parmFolding == 1)
-    if (!proposedName || !(*proposedName))
-  {
-    /* Convert to unicode */
-    nsAutoString uStr;
-    rv = nsMsgI18NCopyNativeToUTF16(attachment->m_real_name, uStr);
-    if (NS_FAILED(rv)) 
-      CopyASCIItoUTF16(attachment->m_real_name, uStr);
-
-  }
-  
   /* Now a special case for attaching uuencoded files...
 
    If we attach a file "foo.txt.uu", we will send it out with
