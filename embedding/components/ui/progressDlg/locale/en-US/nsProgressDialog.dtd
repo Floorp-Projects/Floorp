@@ -2,6 +2,9 @@
      See: http://lxr.mozilla.org/seamonkey/source/embedding/components/ui/progressDlg/nsProgressDialog.xul
 -->
 
+<!-- This is used prior to initializing with a proper title -->
+<!ENTITY defaultTitle     "Saving">
+
 <!-- These are used when saving -->
 <!ENTITY savingTitle      "Saving #1 (#2&#037;)"> 
 <!ENTITY savingAlertTitle "Saving #1"> 
@@ -30,12 +33,6 @@
 <!ENTITY close  "Close">
 <!ENTITY reveal "Reveal Location">
 <!ENTITY launch "Launch File">
-
-<!-- LOCALIZATION NOTE (filesFolder):
-     This is the name of the folder that is created parallel to a HTML file 
-     when it is saved "With Images". The ^BASE^ section is replaced with the
-     leaf name of the file being saved (minus extension). -->
-<!ENTITY filesFolder  "^BASE^_files">
 
 <!-- Status/progress messages -->
 
@@ -96,11 +93,3 @@
 
     #1 will be replaced by the percentage of the file that has been saved -->
 <!ENTITY percentMsg "#1&#037;">
-
-<!-- LOCALIZATION NOTE (filesFolder):
-     This is the name of the folder that is created parallel to a HTML file 
-     when it is saved "With Images". The ^BASE^ section is replaced with the
-     leaf name of the file being saved (minus extension). -->
-<!ENTITY filesFolder  "^BASE^_files">
-
-
