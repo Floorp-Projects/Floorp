@@ -22,7 +22,7 @@
  */
 
 #include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
+#include "nsIComponentManager.h" 
 #include "rdf.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
