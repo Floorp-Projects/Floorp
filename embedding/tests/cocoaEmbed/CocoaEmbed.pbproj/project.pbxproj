@@ -53,7 +53,7 @@
 		1058C7A0FEA54F0111CA2CBB = {
 			children = (
 				1058C7A1FEA54F0111CA2CBB,
-				F6C0910901B59CF701A962F7,
+				F6C4515D01B5A8A601A962F7,
 			);
 			isa = PBXGroup;
 			name = "Linked Frameworks";
@@ -225,8 +225,8 @@
 				29B9732DFDCFA39411CA2CEA,
 			);
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = /Users/vidur/Library/Frameworks;
-				HEADER_SEARCH_PATHS = /Users/vidur/Library/Frameworks/NSBrowserView.framework/Headers;
+				FRAMEWORK_SEARCH_PATHS = ../../../embedding/browser/cocoa/src/build;
+				HEADER_SEARCH_PATHS = ../../../embedding/browser/cocoa/src/build/NSBrowserView.framework/Headers;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = ../../../dist/bin;
 				OTHER_CFLAGS = "";
@@ -311,7 +311,7 @@
 				F6BD652701B3194901A962F7,
 				F6BD652801B3194901A962F7,
 				F6BD652901B3194901A962F7,
-				F6C0910A01B59CF701A962F7,
+				F6C4515E01B5A8A701A962F7,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -2440,14 +2440,14 @@
 			settings = {
 			};
 		};
-		F6C0910901B59CF701A962F7 = {
+		F6C4515D01B5A8A601A962F7 = {
 			isa = PBXFrameworkReference;
 			name = NSBrowserView.framework;
-			path = /Users/vidur/Library/Frameworks/NSBrowserView.framework;
-			refType = 0;
+			path = ../../browser/cocoa/src/build/NSBrowserView.framework;
+			refType = 2;
 		};
-		F6C0910A01B59CF701A962F7 = {
-			fileRef = F6C0910901B59CF701A962F7;
+		F6C4515E01B5A8A701A962F7 = {
+			fileRef = F6C4515D01B5A8A601A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
