@@ -209,7 +209,7 @@ class nsCOMArray : public nsCOMArray_base
 private:
 
     // don't implement these!
-    nsCOMArray& operator=(const nsCOMArray& other);
+    nsCOMArray<T>& operator=(const nsCOMArray<T>& other);
 };
 
 
