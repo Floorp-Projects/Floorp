@@ -971,6 +971,8 @@ nsHTMLSelectElement::GetStyleHintForAttributeChange(
 {
   if (nsHTMLAtoms::multiple == aAttribute) {
     *aHint = NS_STYLE_HINT_FRAMECHANGE;
+  } else if (nsHTMLAtoms::size == aAttribute) {
+    *aHint = NS_STYLE_HINT_REFLOW;
   } else {
     nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
   }
