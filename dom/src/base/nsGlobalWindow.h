@@ -65,6 +65,7 @@ public:
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext);
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument);
   NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell);
+  NS_IMETHOD_(void)       GetWebShell(nsIWebShell **aWebShell);// XXX This may be temporary - rods
   NS_IMETHOD_(void)       SetOpenerWindow(nsIDOMWindow *aOpener);
 
   NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow);
