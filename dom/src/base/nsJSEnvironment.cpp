@@ -417,6 +417,9 @@ nsJSContext::~nsJSContext()
                               this);
   }
 
+  // Release mGlobalWrapperRef before the context is destroyed
+  mGlobalWrapperRef = nsnull;
+
   // Let xpconnect destroy the JSContext when it thinks the time is right.
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
   if (xpc) {
@@ -1103,12 +1106,12 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
   JSObject *global = ::JS_GetGlobalObject(mContext);
 
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+
   // If there's already a global object in mContext we won't tell
   // XPConnect to wrap aGlobalObject since it's already wrapped.
 
   if (!global) {
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-
     rv = xpc->InitClassesWithNewWrappedGlobal(mContext, aGlobalObject,
                                               NS_GET_IID(nsISupports),
                                               PR_FALSE,
@@ -1125,8 +1128,6 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(aGlobalObject));
 
     if (ci) {
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-
       rv = xpc->WrapNative(mContext, global, aGlobalObject,
                            NS_GET_IID(nsISupports),
                            getter_AddRefs(holder));
@@ -1139,6 +1140,11 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
+
+  // Hold a strong reference to the wrapper for the global to avoid
+  // rooting and unrooting the global object every time its AddRef()
+  // or Release() methods are called
+  mGlobalWrapperRef = holder;
 
   rv = InitClasses(); // this will complete global object initialization
   NS_ENSURE_SUCCESS(rv, rv);
