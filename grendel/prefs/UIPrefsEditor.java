@@ -110,8 +110,28 @@ public class UIPrefsEditor extends JPanel
   public Object getValue() {
     fPanel.saveAll();
 
-    // AbstractCtrl c = fPanel.getCtrlByName(kLAFKey);
-    // fPrefs.setLAF((LookAndFeel) c.getValue());
+    JList l = (JList)fPanel.getCtrlByName(kLAFKey);
+    String str = (String)l.getSelectedValue();
+
+    // sigh. we now search for the LAF
+    UIManager.LookAndFeelInfo[] info = 
+      UIManager.getInstalledLookAndFeels();
+    LookAndFeel lf = null;
+
+    for (int i = 0; i < info.length; i++) {
+      try {
+        String cn = info[i].getClassName();
+        Class c = Class.forName(cn);
+        LookAndFeel current = (LookAndFeel)c.newInstance();
+        if (current.getDescription().equals(str)) {
+          lf = current;
+        }
+      } catch (Exception e) {
+      }
+    }
+    if (lf != null) {    // fPrefs.setLAF((LookAndFeel) c.getValue());
+      fPrefs.setLAF(lf);
+    }
 
     return fPrefs;
   }
@@ -131,8 +151,8 @@ public class UIPrefsEditor extends JPanel
       UIPrefs oldPrefs = fPrefs;
       fPrefs = (UIPrefs) aValue;
 
-      // AbstractCtrl c = fPanel.getCtrlByName(kLAFKey);
-      // c.setValue(fPrefs.getLAF());
+      JList l = (JList)fPanel.getCtrlByName(kLAFKey);
+      l.setSelectedValue(fPrefs.getLAF().getDescription(), true);
 
       fListeners.firePropertyChange(null, oldPrefs, fPrefs);
     }
@@ -157,7 +177,6 @@ public class UIPrefsEditor extends JPanel
     }
 
     public void propertyChange(PropertyChangeEvent aEvent) {
-      System.out.println("propertyChange" + aEvent);
       event(aEvent);
     }
   }
@@ -166,14 +185,17 @@ public class UIPrefsEditor extends JPanel
     LookAndFeel fLAFs[] = null;
 
     LAFListModel() {
-      /* Hack until this works
-      fLAFs = UIManager.getAuxiliaryLookAndFeels();
-      */
-      fLAFs = new LookAndFeel[] {
-        new javax.swing.plaf.metal.MetalLookAndFeel(),
-          // new javax.swing.plaf.motif.MotifLookAndFeel(),
-          // new javax.swing.windows.WindowsLookAndFeel()
-      };
+      UIManager.LookAndFeelInfo[] info = 
+        UIManager.getInstalledLookAndFeels();
+      fLAFs = new LookAndFeel[info.length];
+      for (int i = 0; i < info.length; i++) {
+        try {
+          String name = info[i].getClassName();
+          Class c = Class.forName(name);
+          fLAFs[i] = (LookAndFeel)c.newInstance();
+        } catch (Exception e){
+        }
+      }
     }
 
     public int getSize() {
@@ -185,7 +207,9 @@ public class UIPrefsEditor extends JPanel
 
     public Object getElementAt(int index) {
       if (fLAFs != null && index < fLAFs.length) {
-        return fLAFs[index];
+        // this is a hack. the toString() returns a string which is
+        // best described as "unwieldly"
+        return fLAFs[index].getDescription();
       }
       return null;
     }

@@ -170,7 +170,7 @@ class PreferencesAction extends UIAction {
     public void run() {
       synchronized(fThis) {
         setEnabled(false);
-        PrefsDialog.EditPrefs(fFrame);
+        new PrefsDialog(fFrame);
         setEnabled(true);
       }
     }

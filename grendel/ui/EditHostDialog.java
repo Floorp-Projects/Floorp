@@ -108,6 +108,7 @@ public class EditHostDialog extends GeneralDialog {
                                               JOptionPane.OK_CANCEL_OPTION);
     actionPanel.addPropertyChangeListener(new OptionListener());
     getContentPane().add(actionPanel);
+    fPanel.initAll();
 
     // XXX This is a stupid hack because PageUI doesn't to a resource lookup
     // on it's title. Bleh.

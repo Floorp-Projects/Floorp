@@ -195,9 +195,13 @@ public class MailServerPrefsEditor implements PropertyEditor
     c.addPropertyChangeListener(ca);
 
     c = fPanel.getCtrlByName(kHostListKey);
-    ((JList) c).setModel(fHostListModel);
-    c.addPropertyChangeListener(new ListListener());
+    ((JList)c).setModel(fHostListModel);
+    ((JList)c).addListSelectionListener(new ListListener());
 
+    c = fPanel.getCtrlByName(kEditKey);
+    c.setEnabled(false);
+    c = fPanel.getCtrlByName(kDeleteKey);
+    c.setEnabled(false);
   }
 
   public String getAsText() {
@@ -267,11 +271,14 @@ public class MailServerPrefsEditor implements PropertyEditor
     fListeners.removePropertyChangeListener(l);
   }
 
-  class ListListener implements PropertyChangeListener {
-    public void propertyChange(PropertyChangeEvent e) {
+  class ListListener 
+    implements ListSelectionListener {
+    public void valueChanged(ListSelectionEvent e) {
+      System.out.println("foo");
       JComponent c;
       c = (JComponent)e.getSource();
-      boolean enabled = (((JList)c).getSelectedValue() != null);
+      boolean enabled = !(((JList)c).isSelectionEmpty());
+      System.out.println(((JList)c).getSelectedValue());
 
       c = fPanel.getCtrlByName(kDeleteKey);
       c.setEnabled(enabled);
@@ -324,20 +331,15 @@ public class MailServerPrefsEditor implements PropertyEditor
 
     public void add(URLName aURLName) {
       fEditableStores.addElement(aURLName);
-
       fireIntervalAdded(this, fEditableStores.size() - 1,
                         fEditableStores.size() - 1);
-
-      //fScrollPane.validate();
     }
 
     public void remove(URLName aURLName) {
       int idx = fEditableStores.indexOf(aURLName);
       if (idx != -1) {
         fEditableStores.removeElementAt(idx);
-
         fireIntervalRemoved(this, idx, idx);
-        //fScrollPane.validate();
       }
     }
 
@@ -358,13 +360,5 @@ public class MailServerPrefsEditor implements PropertyEditor
     public void propertyChange(PropertyChangeEvent aEvent) {
       event(aEvent);
     }
-  }
-
-  public static void main(String[] args) {
-    javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
-    MailServerPrefsEditor ui = new MailServerPrefsEditor();
-    frame.getContentPane().add(ui.fPanel);
-    frame.pack();
-    frame.setVisible(true);
   }
 }

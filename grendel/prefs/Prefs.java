@@ -51,7 +51,6 @@ public class Prefs {
 
   public UserPrefs getUserPrefs() {
     UserPrefs res = new UserPrefs();
-
     res.setUserName(fPrefs.getString(kUserName, "John Doe"));
     res.setUserEmailAddress(fPrefs.getString(kEmailAddress, "john@doe.com"));
     res.setUserOrganization(fPrefs.getString(kOrganization, ""));
@@ -149,6 +148,16 @@ public class Prefs {
       } catch (UnsupportedLookAndFeelException e) {
         e.printStackTrace();
       }
+    }
+  }
+
+  public void set(Object obj) {
+    if (obj instanceof UserPrefs) {
+      setUserPrefs((UserPrefs)obj);
+    } else if (obj instanceof UIPrefs) {
+      setUIPrefs((UIPrefs)obj);
+    } else if (obj instanceof MailServerPrefs) {
+      setMailServerPrefs((MailServerPrefs)obj);
     }
   }
 }

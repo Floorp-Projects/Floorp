@@ -42,94 +42,88 @@ import javax.swing.JPanel;
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
-//import netscape.orion.propeditor.PropertyEditorDlg;
-
 import grendel.prefs.Prefs;
 
-public class PrefsDialog {
-  // XXX do we really need these here? they sort of break abstraction
-  static String sPrefNames[] = {"mail.email_address",
-                                "mail.host",
-                                "mail.user",
-                                "mail.directory",
-                                "smtp.host"};
+/**
+ * This class handles preference dialog box handling for Grendel. Why
+ * was all this stuff static?
+ */
+public class PrefsDialog 
+  extends JDialog {
+  public static String OK = "Okay";
+  public static String CANCEL = "Cancel";
+  JTabbedPane pane;
+  PropertyEditor[] editors;
 
   public static void CheckPrefs(JFrame aParent) {
     if (!ValidPrefs()) {
-      EditPrefs(aParent);
+      new PrefsDialog(aParent);
     }
   }
 
-  public static void EditPrefs(JFrame aParent) {
+  public PrefsDialog(JFrame aParent) {
     Object objs[] = {new Prefs()};
-    //    PropertyEditorDlg.Edit(aParent, objs, false, true, "",
-    //                     PropertyEditorDlg.UI_TREE);
-    // JOptionPane.showMessageDialog(aParent, "This part of the UI is\nstill being worked on.", "Under Construction", JOptionPane.INFORMATION_MESSAGE);
-    propertyEditorDialog(aParent, new Prefs(), false);
+    propertyEditorDialog(aParent, new Prefs());
   }
 
   public static boolean ValidPrefs() {
     Preferences prefs = PreferencesFactory.Get();
 
     boolean res = true;
-    /*
-    for (int i = 0; i < sPrefNames.length; i++) {
-      res &= !prefs.getString(sPrefNames[i], "").equals("");
-    }
-    */
+
     return res;
   }
 
-  private static void propertyEditorDialog(JFrame parent, Object obj, 
-                                           boolean modal) {
+  private void propertyEditorDialog(JFrame parent, Object obj) {
     Class reference = obj.getClass();
     String name = reference.getName();
-    Class beanie = null;
-    SimpleBeanInfo info;
-    Object o;
-    JDialog dialog = new JDialog(parent, modal);
-    JTabbedPane pane = new JTabbedPane();
-    Container content = dialog.getContentPane();
-    String[] labels = {"Okay", "Cancel"};
+    Container content = getContentPane();
+    String[] labels = {OK, CANCEL};
+    pane = new JTabbedPane();
 
+    // gui handling
     content.setLayout(new BorderLayout());
     content.add(pane, BorderLayout.CENTER);
     content.add(buttonPanel(labels,
-                            new DialogListener(dialog)), 
+                            new PrefsDialogListener()), 
                 BorderLayout.SOUTH);
 
     try {
       // get the beaninfo
-      beanie = Class.forName(name + "BeanInfo");
+      Object o;
+      SimpleBeanInfo info;
+      Class beanie = Class.forName(name + "BeanInfo");
+      PropertyDescriptor[] desc;
       o = beanie.newInstance();
       if (!(o instanceof SimpleBeanInfo)) return; // bummer
 
       // process the descriptors
-      PropertyDescriptor[] desc;
       info = (SimpleBeanInfo)o;
       desc = info.getPropertyDescriptors();
+      editors = new PropertyEditor[desc.length];
 
       for (int i = 0; i < desc.length; i++) {
         o = desc[i].getPropertyEditorClass().newInstance();
         if (!(o instanceof PropertyEditor)) continue;
-        PropertyEditor editor = (PropertyEditor)o;
-        pane.add(desc[i].getDisplayName(), editor.getCustomEditor());
+        editors[i] = (PropertyEditor)o;
+        pane.add(desc[i].getDisplayName(), editors[i].getCustomEditor());
       }
-      dialog.pack();
-      dialog.setVisible(true);
+      pack();
+      setVisible(true);
     } catch (Exception e) {
       System.out.println("welp, that sucked. beans is broke. And stuff");
     }
   }
 
-  public static JPanel buttonPanel(String[] labels, 
-                                   ActionListener listener) {
+  private JPanel buttonPanel(String[] labels, 
+                            ActionListener listener) {
     JPanel panel = new JPanel();
     panel.setLayout(new FlowLayout());
     
     if (labels != null) {
       for (int i = 0; i < labels.length; i++) {
         JButton button = new JButton(labels[i]);
+        button.setActionCommand(labels[i]);
         if (listener != null) button.addActionListener(listener);
         panel.add(button);
       }
@@ -137,17 +131,24 @@ public class PrefsDialog {
 
     return panel;
   }
-}
 
-class DialogListener 
-  implements ActionListener {
-  JDialog dialog;
-  
-  public DialogListener(JDialog dialog) {
-    this.dialog = dialog;
-  }
-  
-  public void actionPerformed(ActionEvent event) {
-    dialog.setVisible(false);
+  class PrefsDialogListener 
+    implements ActionListener {
+    JDialog dialog;
+    
+    public PrefsDialogListener() {
+      dialog = PrefsDialog.this;
+    }
+    
+    public void actionPerformed(ActionEvent event) {
+      String command = event.getActionCommand();
+      Prefs prefs = new Prefs();
+      if (command.equals(PrefsDialog.OK)) {
+        for (int i = 0; i < editors.length; i++) {
+          prefs.set(editors[i].getValue());
+        }
+      }
+      dialog.setVisible(false);
+    }
   }
 }
