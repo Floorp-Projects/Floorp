@@ -149,7 +149,10 @@ var gPrivacyPane = {
   {
     var category = aButton.getAttribute("item");
     this._sanitizer.clearItem(category);
-    aButton.disabled = !this._sanitizer.canClearItem(category);
+    if (category == "cache")
+      aButton.disabled = true;
+    else
+      aButton.disabled = !this._sanitizer.canClearItem(category);
     if (this._updateInterval == -1)
       this._updateInterval = setInterval("gPrivacyPane._updateClearButtons()", 10000);
   },
