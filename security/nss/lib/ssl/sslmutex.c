@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.c,v 1.4 2001/10/06 00:14:33 jpierre%netscape.com Exp $
+ * $Id: sslmutex.c,v 1.5 2001/10/06 00:16:56 jpierre%netscape.com Exp $
  */
 
 #include "sslmutex.h"
@@ -349,7 +349,7 @@ SECStatus sslMutex_2LevelInit(sslMutex *sem)
     */
     PR_ASSERT(sem);
     if (sem) {
-        /* we need to reset the sslLock in the children or the 2Level init
+        /* we need to reset the sslLock in the children or the single_process init
            function below will assert */
         sem->u.sslLock = NULL;
     }
