@@ -120,6 +120,7 @@ interface nsILDAPOperation : nsISupports
      * @exception NS_ERROR_OUT_OF_MEMORY
      * @exception NS_ERROR_INVALID_ARG
      * @exception NS_ERROR_LDAP_NOT_SUPPORTED
+     * @exception NS_ERROR_LDAP_FILTER_ERROR
      *
      * XXX doesn't currently handle LDAPControl params
      */

@@ -281,6 +281,9 @@ nsLDAPOperation::SearchExt(const PRUnichar *aBaseDn, PRInt32 aScope,
     case LDAP_PARAM_ERROR:
         return NS_ERROR_INVALID_ARG;
 
+    case LDAP_FILTER_ERROR:
+        return NS_ERROR_LDAP_FILTER_ERROR;
+
     default:
         NS_ERROR("nsLDAPOperation::SearchExt(): unexpected return value");
         return NS_ERROR_UNEXPECTED;
