@@ -40,6 +40,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include <nsFileStream.h> // For console logging.
+#include "nspr.h" // PR_fprintf
 
 #ifdef HAVE_LONG_LONG
 #undef HAVE_LONG_LONG
@@ -201,7 +202,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 
 void LogMessage(const char *prefix, const char *pszMessageText)
 {
-	fprintf(stderr, "%s", pszMessageText);
+	PR_fprintf(PR_STDERR, "%s", pszMessageText);
 }
 
 void LogMessage(const char *prefix, nsACString &text)
