@@ -151,6 +151,16 @@ function prepareCalendarUnifinder( )
 }
 
 /**
+*   Called when the calendar is unloaded
+*/
+
+function finishCalendarUnifinder( eventSource )
+{
+   gICalLib.removeObserver( unifinderEventDataSourceObserver  );
+}
+
+
+/**
 *   Helper function to display event dates in the unifinder
 */
 
