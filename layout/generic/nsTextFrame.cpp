@@ -3587,7 +3587,8 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
     nsRect frameRect;
     GetRect(frameRect);
     nsRect rect(0, 0, frameRect.width, frameRect.height);
-    Invalidate(aPresContext, rect, PR_FALSE);
+    if (!rect.IsEmpty())
+      Invalidate(aPresContext, rect, PR_FALSE);
 //    ForceDrawFrame(this);
   }
   if (aSpread == eSpreadDown)
