@@ -349,7 +349,6 @@ nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory)
             return NS_OK;
         }
         
-        delete [] destPath;
     }
     return NS_FILE_FAILURE;
 } // nsFileSpec::Move
