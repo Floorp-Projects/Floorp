@@ -104,7 +104,7 @@ public:
    * @param aUpdateMask specifies how whether or not the document should be
    * notified of the attribute change.
    */
-  NS_IMETHOD SetAttribute(const nsString& aName,
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsString& aValue,
                           PRBool aNotify) = 0;
 
@@ -125,7 +125,8 @@ public:
    *
    * </UL>
    */
-  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aResult) const = 0;
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                          nsString& aResult) const = 0;
 
   /**
    * Remove an attribute so that it is no longer explicitly specified.
@@ -136,21 +137,21 @@ public:
    * notified of the attribute change
    *
    */
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) = 0;
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+                            PRBool aNotify) = 0;
 
 
   /**
-   * Get the list of all specified attribute. The returned array
-   * contains nsIAtom's representing the attribute names.
+   * Get the namespace & name of a given attribute.
    * 
-   * @param aArray an array to be filled in with attribute names
-   * 
-   * @param aCountResult an out parameter to be filled in with
-   *        the number of attributes
+   * @param aIndex the index of the attribute name
+   * @param aNameSpace an out param of the name space ID of the attribute name
+   * @param aName an out param if the attribute name
    *
    */
-  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
-                                  PRInt32& aCountResult) const = 0;
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
+                                PRInt32& aNameSpaceID, 
+                                nsIAtom*& aName) const = 0;
 
   /**
    * Get the number of all specified attributes.
