@@ -129,9 +129,12 @@ js/src/liveconnect/Makefile
 js/src/liveconnect/classes/Makefile
 # js/src/xpcom/Makefile
 js/src/xpconnect/Makefile
-js/src/xpconnect/md/Makefile
-js/src/xpconnect/md/unix/Makefile
-js/src/xpconnect/test/Makefile
+js/src/xpconnect/public/Makefile
+js/src/xpconnect/src/Makefile
+js/src/xpconnect/tests/Makefile
+# js/src/xpconnect/md/Makefile
+# js/src/xpconnect/md/unix/Makefile
+# js/src/xpconnect/test/Makefile
 layout/Makefile
 layout/base/Makefile
 layout/base/public/Makefile
@@ -300,6 +303,12 @@ xpcom/libxpt/public/Makefile
 xpcom/libxpt/src/Makefile
 xpcom/libxpt/tests/Makefile
 xpcom/libxpt/tools/Makefile
+xpcom/libxpt/xptcall/Makefile
+xpcom/libxpt/xptcall/public/Makefile
+xpcom/libxpt/xptcall/src/Makefile
+xpcom/libxpt/xptcall/src/md/Makefile
+xpcom/libxpt/xptcall/src/md/unix/Makefile
+xpcom/libxpt/xptcall/tests/Makefile
 xpcom/libxpt/xptinfo/Makefile
 xpcom/libxpt/xptinfo/public/Makefile
 xpcom/libxpt/xptinfo/src/Makefile
