@@ -37,6 +37,12 @@ class nsTreeItemDragCapturer : public nsIDOMDragListener
 {
 public:
 
+    // special values for the Y value of the drop location.
+  enum { 
+    kNoDropLoc = -2,            // unset, no drop feedback to be drawn.
+    kContainerDropLoc = -1      // a container Y is meaningless, but indicates feedback is still needed
+  } ;
+  
     // default ctor and dtor
   nsTreeItemDragCapturer ( nsTreeRowGroupFrame* inToolbar, nsIPresContext* inPresContext );
   virtual ~nsTreeItemDragCapturer();
