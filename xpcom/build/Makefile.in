@@ -54,9 +54,11 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libmozreg_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libstring_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libstring_obsolete_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxpcomglue.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
+		-I$(srcdir)/../glue \
 		-I$(srcdir)/../base \
 		-I$(srcdir)/../ds \
 		-I$(srcdir)/../io \
