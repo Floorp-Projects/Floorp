@@ -78,15 +78,10 @@ void EachRegionRect (RgnHandle r, void (* proc)(Rect *, void *), void* data) ;
 
 #pragma mark -
 
-//#define PAINT_DEBUGGING
-//#define BLINK_DEBUGGING
+//#define PAINT_DEBUGGING         // flash areas as they are painted
+//#define INVALIDATE_DEBUGGING    // flash areas as they are invalidated
 
-#if TARGET_CARBON
-#undef PAINT_DEBUGGING
-#undef BLINK_DEBUGGING
-#endif
-
-#ifdef BLINK_DEBUGGING
+#if defined(INVALIDATE_DEBUGGING) || defined(PAINT_DEBUGGING)
 static void blinkRect(Rect* r);
 static void blinkRgn(RgnHandle rgn);
 #endif
@@ -746,7 +741,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
  
   return NS_OK;
   
-} // nsWindow :: SetCursor
+} // nsWindow::SetCursor
 
 #pragma mark -
 //-------------------------------------------------------------------------
@@ -892,13 +887,18 @@ NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 
 #pragma mark -
 
-#ifdef BLINK_DEBUGGING
+static Boolean KeyDown(const UInt8 theKey)
+{
+	KeyMap map;
+	GetKeys(map);
+	return ((*((UInt8 *)map + (theKey >> 3)) >> (theKey & 7)) & 1) != 0;
+}
+
+#if defined(INVALIDATE_DEBUGGING) || defined(PAINT_DEBUGGING)
 
 static Boolean caps_lock()
 {
-	EventRecord event;
-	::OSEventAvail(0, &event);
-	return ((event.modifiers & alphaLock) != 0);
+  return KeyDown(0x39);
 }
 
 static void blinkRect(Rect* r)
@@ -969,7 +969,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 	::GetWindowPortBounds(mWindowPtr, &savePortRect);
 	::SetOrigin(0, 0);
 
-#ifdef BLINK_DEBUGGING
+#ifdef INVALIDATE_DEBUGGING
 	if (caps_lock())
 		::blinkRect(&macRect);
 #endif
@@ -1009,7 +1009,7 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 	::GetWindowPortBounds(mWindowPtr, &savePortRect);
 	::SetOrigin(0, 0);
 
-#ifdef BLINK_DEBUGGING
+#ifdef INVALIDATE_DEBUGGING
 	if (caps_lock())
 		::blinkRgn(windowRgn);
 #endif
@@ -1179,8 +1179,10 @@ NS_IMETHODIMP	nsWindow::Update()
 
 		// restore the window update rgn
 #if TARGET_CARBON
-		//¥PINK - hrm, can't do this in Carbon for re-entrancy reasons
-		// ::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
+		// saveUpdateRgn is in global coords, so we need to shift it to local coords
+		Point origin = {0, 0};
+		::GlobalToLocal(&origin);
+		::OffsetRgn(saveUpdateRgn, origin.h, origin.v);
 		::InvalWindowRgn(mWindowPtr, saveUpdateRgn);
 #else
 	  ::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
@@ -1223,7 +1225,7 @@ static long long microseconds()
 // this. |refCon| contains the |nsWindow| being updated. 
 //
 OSStatus
-nsWindow :: PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
+nsWindow::PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
 {
   if (message == kQDRegionToRectsMsgParse) {
     nsWindow* self = NS_REINTERPRET_CAST(nsWindow*, refCon);
@@ -1257,7 +1259,7 @@ nsWindow :: PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDi
 // pointer to the TRectArray we're adding to.
 //
 OSStatus
-nsWindow :: AddRectToArrayProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *inArray)
+nsWindow::AddRectToArrayProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *inArray)
 {
   if (message == kQDRegionToRectsMsgParse) {
     NS_ASSERTION ( inArray, "You better pass an array!" );
@@ -1279,7 +1281,7 @@ nsWindow :: AddRectToArrayProc (UInt16 message, RgnHandle rgn, const Rect *inDir
 // the number of rects.
 //
 OSStatus
-nsWindow :: CountRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
+nsWindow::CountRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
 {
   if (message == kQDRegionToRectsMsgParse) {
     NS_ASSERTION ( refCon, "You better pass a counter!" );
@@ -1291,18 +1293,6 @@ nsWindow :: CountRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRec
 
 #endif
 
-
-#if PINK_PROFILING
-static Boolean KeyDown(const UInt8 theKey);
-static Boolean KeyDown(const UInt8 theKey)
-{
-	KeyMap map;
-	GetKeys(map);
-	return ((*((UInt8 *)map + (theKey >> 3)) >> (theKey & 7)) & 1) != 0;
-}
-#endif
-
-
 //
 // UpdateRect
 //
@@ -1310,7 +1300,7 @@ static Boolean KeyDown(const UInt8 theKey)
 // this. |inData| contains the |nsWindow| being updated. 
 //
 void 
-nsWindow :: PaintUpdateRect (Rect *inDirtyRect, void* inData)
+nsWindow::PaintUpdateRect (Rect *inDirtyRect, void* inData)
 {
   nsWindow* self = NS_REINTERPRET_CAST(nsWindow*, inData);
   Rect dirtyRect = *inDirtyRect;
@@ -1341,7 +1331,7 @@ nsWindow :: PaintUpdateRect (Rect *inDirtyRect, void* inData)
 // the number of rects.
 //
 void
-nsWindow :: CountRect ( Rect *inDirtyRect, void *refCon )
+nsWindow::CountRect ( Rect *inDirtyRect, void *refCon )
 {
   NS_ASSERTION ( refCon, "You better pass a counter!" );
   (*NS_REINTERPRET_CAST(long*, refCon))++;                  // increment
@@ -1355,7 +1345,7 @@ nsWindow :: CountRect ( Rect *inDirtyRect, void *refCon )
 // pointer to the TRectArray we're adding to.
 //
 void
-nsWindow :: AddRectToArray ( Rect* inDirtyRect, void* inArray )
+nsWindow::AddRectToArray ( Rect* inDirtyRect, void* inArray )
 {
   NS_ASSERTION ( inArray, "You better pass an array!" );
   TRectArray* rectArray = NS_REINTERPRET_CAST(TRectArray*, inArray);
@@ -1532,7 +1522,7 @@ else
 // region).
 //
 void
-nsWindow :: SortRectsLeftToRight ( TRectArray & inRectArray )
+nsWindow::SortRectsLeftToRight ( TRectArray & inRectArray )
 {
   PRInt32 numRects = inRectArray.Count();
   
@@ -1561,7 +1551,7 @@ nsWindow :: SortRectsLeftToRight ( TRectArray & inRectArray )
 // As a side effect, the rects will be sorted left->right.
 //
 void
-nsWindow :: CombineRects ( TRectArray & rectArray )
+nsWindow::CombineRects ( TRectArray & rectArray )
 {
   const float kCombineThresholdRatio = 0.50;      // 50%
   
@@ -1702,7 +1692,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 // our prayers with ::ScrollWindowRect().
 //
 void
-nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTopDelta )
+nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTopDelta )
 {                        
 #if TARGET_CARBON
   ::ScrollWindowRect ( mWindowPtr, &inRectToScroll, inLeftDelta, inTopDelta, 
