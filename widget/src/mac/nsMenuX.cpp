@@ -1093,13 +1093,21 @@ nsMenuX::OnCreate()
               else grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
             }
 
+            // The menu's value and checked states need to be updated to match the command.
+            // Note that (unlike the disabled state) if the command has *no* value for either, we
+            // assume the menu is supplying its own.
+            nsAutoString commandChecked, menuChecked;
+            commandContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked);
+            grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, menuChecked);
+            if (!commandChecked.Equals(menuChecked)) {
+              if (!commandChecked.IsEmpty()) 
+                grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked, PR_TRUE);
+            }
+
             nsAutoString commandValue, menuValue;
             commandContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, commandValue);
             grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, menuValue);
             if (!commandValue.Equals(menuValue)) {
-              // The menu's label state needs to be updated to match the command.
-              // Note that (unlike the disabled state) if the command has *no* label, we
-              // assume the menu is supplying its own.
               if (!commandValue.IsEmpty()) 
                 grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, PR_TRUE);
             }

@@ -189,7 +189,6 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
                           nsIStyleContext* aContext,
                           nsIFrame*        aPrevInFlow)
 {
-#ifdef USE_IMG2
   if (!mListener) {
     nsImageBoxListener *listener;
     NS_NEWXPCOM(listener, nsImageBoxListener);
@@ -198,78 +197,8 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
     listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
     NS_RELEASE(listener);
   }
-#endif
 
   nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  
-  mHasImage = PR_FALSE;
-
-  // Always set the image loader's base URL, because someone may
-  // decide to change a button _without_ an image to have an image
-  // later.
-  nsCOMPtr<nsIURI> baseURL;
-  GetBaseURI(getter_AddRefs(baseURL));
-
-  // Initialize the image loader. Make sure the source is correct so
-  // that UpdateAttributes doesn't double start an image load.
-  nsAutoString src;
-  GetImageSource(src);
-
-#ifdef USE_IMG2
-
-  PRBool needLoad = PR_FALSE;
-
-  if (!src.IsEmpty()) {
-    mHasImage = PR_TRUE;
-    needLoad = PR_TRUE;
-  }
-
-  nsCOMPtr<nsIURI> srcURI;
-  NS_NewURI(getter_AddRefs(srcURI), src, baseURL);
-
-  // if we don't have an image request, then we certainly need to load
-  if (!mImageRequest) {
-    needLoad = PR_TRUE;
-  } else {
-    // check to see if the uri we are about to load is the same as the
-    // one the image request came from.
-    nsCOMPtr<nsIURI> requestURI;
-    rv = mImageRequest->GetURI(getter_AddRefs(requestURI));
-    NS_ASSERTION(NS_SUCCEEDED(rv) && requestURI,"no request URI");
-    if (NS_FAILED(rv) || !requestURI) return NS_ERROR_UNEXPECTED;
-
-    PRBool eq;
-    requestURI->Equals(srcURI, &eq);
-
-    if (eq) {
-      needLoad = PR_FALSE;
-    } else {
-      needLoad = PR_TRUE;
-      mImageRequest->Cancel(NS_ERROR_FAILURE);
-      mImageRequest = nsnull;
-    }
-  }
-
-  if (mHasImage && needLoad) {
-    nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
-
-    il->LoadImage(srcURI, loadGroup, mListener, aPresContext, getter_AddRefs(mImageRequest));
-  }
-#else
-  if (!src.IsEmpty()) {
-    mHasImage = PR_TRUE;
-  }
-
-  mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
-#endif
-
-  PRBool a,b;
-  UpdateAttributes(aPresContext, nsnull, a, b);
 
   return rv;
 }

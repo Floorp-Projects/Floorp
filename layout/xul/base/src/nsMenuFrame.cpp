@@ -1510,13 +1510,21 @@ nsMenuFrame::OnCreate()
               else grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, commandDisabled, PR_TRUE);
             }
 
+            // The menu's value and checked states need to be updated to match the command.
+            // Note that (unlike the disabled state) if the command has *no* value for either, we
+            // assume the menu is supplying its own.
+            nsAutoString commandChecked, menuChecked;
+            commandContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, commandChecked);
+            grandChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, menuChecked);
+            if (!commandChecked.Equals(menuChecked)) {
+              if (!commandChecked.IsEmpty()) 
+                grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, commandChecked, PR_TRUE);
+            }
+            
             nsAutoString commandValue, menuValue;
             commandContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::value, commandValue);
             grandChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::value, menuValue);
             if (!commandValue.Equals(menuValue)) {
-              // The menu's value state needs to be updated to match the command.
-              // Note that (unlike the disabled state) if the command has *no* value, we
-              // assume the menu is supplying its own.
               if (!commandValue.IsEmpty()) 
                 grandChild->SetAttribute(kNameSpaceID_None, nsXULAtoms::value, commandValue, PR_TRUE);
             }
