@@ -95,6 +95,7 @@ CPPSRCS		= \
 		nsHTMLContentSerializer.cpp \
 		nsParserUtils.cpp \
 		nsPlainTextSerializer.cpp \
+		mozSanitizingSerializer.cpp \
 		nsScriptLoader.cpp \
 		nsStyleLinkElement.cpp \
 		nsContentAreaDragDrop.cpp \

@@ -59,6 +59,7 @@ class nsIHTMLToTextSink : public nsISupports {
 
   NS_IMETHOD Initialize(nsAString* aOutString,
                         PRUint32 aFlags, PRUint32 aWrapCol) = 0;
+     // This function violates string ownership rules, see impl.
 };
 
 #endif

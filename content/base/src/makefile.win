@@ -94,6 +94,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLContentSerializer.obj	\
 	.\$(OBJDIR)\nsParserUtils.obj           \
 	.\$(OBJDIR)\nsPlainTextSerializer.obj   \
+	.\$(OBJDIR)\mozSanitizingSerializer.obj   \
 	.\$(OBJDIR)\nsContentUtils.obj   \
 	.\$(OBJDIR)\nsScriptLoader.obj   \
 	.\$(OBJDIR)\nsStyleLinkElement.obj   \
