@@ -57,13 +57,13 @@ DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\"
 REQUIRES = 
 
 EXPORTS = \
-	blapi.h \
 	blapit.h \
 	secrng.h \
 	shsign.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
+	blapi.h \
 	secmpi.h \
 	ec.h \
 	$(NULL)

@@ -37,7 +37,7 @@
  * secrng.h - public data structures and prototypes for the secure random
  *	      number generator
  *
- * $Id: secrng.h,v 1.2 2003/05/23 23:01:26 wtc%netscape.com Exp $
+ * $Id: secrng.h,v 1.3 2003/05/24 03:34:53 wtc%netscape.com Exp $
  */
 
 /******************************************/
@@ -46,7 +46,7 @@
 ** generator.
 */
 
-#include "blapi.h"
+#include "blapit.h"
 
 SEC_BEGIN_PROTOS
 
