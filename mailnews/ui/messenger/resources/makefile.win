@@ -57,7 +57,6 @@ install::
 	$(MAKE_INSTALL) am-server-top.xul	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) am-server-pop3.xul	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) am-copies.xul		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) am-advanced.xul		$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) SearchDialog.xul	$(DIST)\bin\res\mailnews\messenger
 
 
