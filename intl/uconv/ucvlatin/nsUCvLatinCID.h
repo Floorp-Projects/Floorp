@@ -152,6 +152,11 @@
 #define NS_CP874TOUNICODE_CID \
   { 0x6394eea4, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
+// Class ID for our TIS620ToUnicode charset converter
+// {66634f68-be19-42d0-a4ca-d1c21fa059b8}
+#define NS_TIS620TOUNICODE_CID \
+  { 0x66634f68, 0xbe19, 0x42d0, {0xa4, 0xca, 0xd1, 0xc2, 0x1f, 0xa0, 0x59, 0xb8}}
+
 // Class ID for our KOI8RToUnicode charset converter
 // {6394EEA5-FC3D-11d2-B3B8-00805F8A6670}
 #define NS_KOI8RTOUNICODE_CID \
@@ -348,6 +353,11 @@
 #define NS_UNICODETOCP874_CID \
   { 0x6394eeb4, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
+// Class ID for our UnicodeToTIS620 charset converter
+// {c5de4da2-d667-42d2-b8c2-efdbcf3302ef}
+#define NS_UNICODETOTIS620_CID \
+  { 0xc5de4da2, 0xd667, 0x42d2, {0xb8, 0xc2, 0xef, 0xdb, 0xcf, 0x33, 0x02, 0xef}}
+
 // Class ID for our UnicodeToKOI8R charset converter
 // {6394EEB5-FC3D-11d2-B3B8-00805F8A6670}
 #define NS_UNICODETOKOI8R_CID \
@@ -488,6 +498,11 @@
 #define NS_UNICODETOISO885910_CID \
   { 0xba6151ab, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
+// Class ID for our UnicodeToISO885911 charset converter
+// {9c0ff6f4-deda-40e5-806c-b6cc449c21ce}
+#define NS_UNICODETOISO885911_CID \
+  { 0x9c0ff6f4, 0xdeda, 0x40e5, {0x80, 0x6c, 0xb6, 0xcc, 0x44, 0x9c, 0x21, 0xce}}
+
 // Class ID for our UnicodeToISO885913 charset converter
 // {BA6151AC-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_UNICODETOISO885913_CID \
@@ -512,6 +527,11 @@
 // {BA6151B0-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_ISO885910TOUNICODE_CID \
   { 0xba6151b0, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
+
+// Class ID for our ISO885911ToUnicode charset converter
+// {776588a6-86d5-47e2-b6b3-992810078202}
+#define NS_ISO885911TOUNICODE_CID \
+  { 0x776588a6, 0x86d5, 0x47e2, {0xb6, 0xb3, 0x99, 0x28, 0x10, 0x07, 0x82, 0x02}}
 
 // Class ID for our ISO885913ToUnicode charset converter
 // {BA6151B1-1DFA-11d3-B3BF-00805F8A6670}

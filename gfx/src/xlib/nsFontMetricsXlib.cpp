@@ -352,16 +352,22 @@ static nsFontCharSetInfoXlib KOI8R =
 static nsFontCharSetInfoXlib KOI8U =
   { "KOI8-U", SingleByteConvert, 0,
     TT_OS2_CPR1_CYRILLIC, TT_OS2_CPR2_RUSSIAN | TT_OS2_CPR2_CYRILLIC };
-static nsFontCharSetInfoXlib TIS620 =
+static nsFontCharSetInfoXlib TIS6202 =
 /* Added to support thai context sensitive shaping if
  * CTL extension is is in force */
 #ifdef SUNCTL
   { "tis620-2", SingleByteConvert, 0,
     TT_OS2_CPR1_THAI, 0 };
 #else
-  { "TIS-620", SingleByteConvert, 0,
+  { "windows-874", SingleByteConvert, 0,
     TT_OS2_CPR1_THAI, 0 };
 #endif /* SUNCTL */
+static nsFontCharSetInfoXlib TIS620 =
+  { "TIS-620", SingleByteConvert, 0,
+    TT_OS2_CPR1_THAI, 0 };
+static nsFontCharSetInfoXlib ISO885911 =
+  { "ISO-8859-11", SingleByteConvert, 0,
+    TT_OS2_CPR1_THAI, 0 };
 static nsFontCharSetInfoXlib Big5 =
   { "x-x-big5", DoubleByteConvert, 1,
     TT_OS2_CPR1_CHINESE_TRAD, 0 };
@@ -618,7 +624,8 @@ static const nsFontCharSetMapXlib gConstCharSetMap[] =
   { "tis620.2533-0",      &FLG_THAI,    &TIS620        },
   { "tis620.2533-1",      &FLG_THAI,    &TIS620        },
   { "tis620-0",           &FLG_THAI,    &TIS620        },
-  { "iso8859-11",         &FLG_THAI,    &TIS620        },
+  { "tis620-2",           &FLG_THAI,    &TIS6202       },
+  { "iso8859-11",         &FLG_THAI,    &ISO885911     },
   { "ucs2.cjk-0",         &FLG_NONE,    &ISO106461     },
   { "ucs2.cjk_china-0",   &FLG_ZHCN,    &ISO106461     },
   { "ucs2.cjk_japan-0",   &FLG_JA,      &ISO106461     },
