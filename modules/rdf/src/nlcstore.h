@@ -54,7 +54,7 @@ extern	int		RDF_PERSONAL_TOOLBAR_NAME;
 typedef struct _DBMAsStruct {
   uint8 size[3];
   char tag;
-  char *data;
+  char data[1]; /* me & the compiler man, we're like _this_ */
 } DBMAsStruct;
 
 typedef DBMAsStruct* DBMAs;
@@ -67,10 +67,10 @@ typedef struct _DBMRDFStruct {
 } *DBMRDF;
 
 
-#define dataOfDBMAs(dbmas) ((char*)((char*)dbmas + 4))
+#define dataOfDBMAs(dbmas) ((dbmas)->data)
 #define dbmasSize(dbmas) ((size_t)(((1 << 16) * dbmas->size[0]) + ((1 << 8) * dbmas->size[1]) + dbmas->size[2]))
 #define nthdbmas(data, n) ((DBMAs)((char*)data + n))
-#define valueTypeOfAs(nas) ((RDF_ValueType) ((*(((unsigned char *)nas)+3)) & 0x0F))
+#define valueTypeOfAs(nas) (RDF_ValueType) (((DBMAs)(nas))->tag & 0x0F)
 #define tvOfAs(nas) ((PRBool)((nas->tag & 0x10) != 0))
 #define valueEqual(type, v1, v2) (((type == RDF_RESOURCE_TYPE) && stringEquals((char*)v1, resourceID((RDF_Resource)v2))) || \
 	  ((type == RDF_INT_TYPE) && (compareUnalignedUINT32Ptrs(v1,v2))) || \

@@ -38,7 +38,9 @@ RDFT gSessionDB = 0;
 	/* externs */
 extern	char	*profileDirURL;
 
-
+#define INITIAL_RESOURCE_LIST_SIZE 50
+#define INITIAL_ASSERTION_LIST_SIZE 100
+#define GROW_LIST_INCR 50
 
 int
 compareStrings(char *s1, char *s2)
@@ -73,7 +75,6 @@ makeRDFFile (char* url, RDF_Resource top, PRBool localp)
 }
 
 
-
 void
 initRDFFile (RDFFile ans)
 {
@@ -81,10 +82,10 @@ initRDFFile (RDFFile ans)
   ans->rtop = getMCFFrtop(url);
   ans->line = (char*)getMem(RDF_BUF_SIZE);
   ans->currentSlot = (char*)getMem(100);
-  ans->resourceList = (RDF_Resource*)getMem(200);
-  ans->assertionList = (Assertion*)getMem(400);
-  ans->resourceListSize = 50;
-  ans->assertionListSize = 100;
+  ans->resourceList = (RDF_Resource*)getMem(INITIAL_RESOURCE_LIST_SIZE * sizeof(RDF_Resource));
+  ans->assertionList = (Assertion*)getMem(INITIAL_ASSERTION_LIST_SIZE * sizeof(Assertion));
+  ans->resourceListSize = INITIAL_RESOURCE_LIST_SIZE;
+  ans->assertionListSize = INITIAL_ASSERTION_LIST_SIZE;
   ans->holdOver = (char*)getMem(RDF_BUF_SIZE);
   ans->depth = 1;
   ans->lastItem = ans->stack[0] = ans->top;
@@ -94,16 +95,15 @@ initRDFFile (RDFFile ans)
 }
 
 
-
 void
 addToResourceList (RDFFile f, RDF_Resource u)
 {
   if (f->resourceListSize == f->resourceCount) {
-    RDF_Resource* newResourceList = (RDF_Resource*)getMem(4*(f->resourceListSize + 50));
+    RDF_Resource* newResourceList = (RDF_Resource*)getMem(sizeof(RDF_Resource)*(f->resourceListSize + GROW_LIST_INCR));
     RDF_Resource* old = f->resourceList;
-    memcpy((char*)newResourceList, (char*)f->resourceList, 4*f->resourceListSize);
+    memcpy((char*)newResourceList, (char*)f->resourceList, sizeof(RDF_Resource)*f->resourceListSize);
     f->resourceList = newResourceList;
-    f->resourceListSize = f->resourceListSize + 50;
+    f->resourceListSize = f->resourceListSize + GROW_LIST_INCR;
     freeMem(old);
   }
   *(f->resourceList + f->resourceCount++) = u;
@@ -115,11 +115,11 @@ void
 addToAssertionList (RDFFile f, Assertion as)
 {
   if (f->assertionListSize == f->assertionCount) {
-    Assertion* newAssertionList = (Assertion*)getMem(4*(f->assertionListSize + 50));
+    Assertion* newAssertionList = (Assertion*)getMem(sizeof(RDF_Resource)*(f->assertionListSize + GROW_LIST_INCR));
     Assertion* old = f->assertionList;
-    memcpy((char*)newAssertionList, (char*)f->assertionList, 4*f->assertionListSize);
+    memcpy((char*)newAssertionList, (char*)f->assertionList, sizeof(RDF_Resource)*f->assertionListSize);
     f->assertionList = newAssertionList;
-    f->assertionListSize = f->assertionListSize + 50;
+    f->assertionListSize = f->assertionListSize + GROW_LIST_INCR;
     freeMem(old);
   }
   *(f->assertionList + f->assertionCount++) = as;
