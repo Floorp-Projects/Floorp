@@ -87,8 +87,7 @@ NS_IMETHODIMP nsDecodeAppleFile::Close(void)
   /* Check if the file is complete and if it's the case, write file attributes */
   if (m_headerOk)
   {
-    PRBool dataOk = PR_FALSE;
-    PRBool resourceOk = PR_FALSE;
+    PRBool dataOk = PR_TRUE; /* It's ok if the file doesn't have a datafork, therefore set it to true by default. */
     if (m_headers.magic == APPLESINGLE_MAGIC)
     {
       for (i = 0; i < m_headers.entriesCount; i ++)
@@ -98,9 +97,8 @@ NS_IMETHODIMP nsDecodeAppleFile::Close(void)
           break;
         }
     }
-    else
-      dataOk = PR_TRUE;
 
+    PRBool resourceOk = FALSE;
     for (i = 0; i < m_headers.entriesCount; i ++)
       if (ENT_RFORK == m_entries[i].id)
       {
