@@ -105,8 +105,15 @@ static nsresult NewTimer(const nsCID & aClass,
 
   if (nsnull == timer) 
     return NS_ERROR_OUT_OF_MEMORY;
+
+  *aInstancePtrResult = timer;
   
-  return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+  return rv;
+
+// Dont QI() cause the factory above will do it for us.  Otherwise
+// the refcnt will be one too much and every single timer will leak.
+
+//  return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
 //////////////////////////////////////////////////////////////////////////
 static const nsCID *
