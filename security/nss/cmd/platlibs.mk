@@ -49,7 +49,6 @@ EXTRA_LIBS += \
 	$(DIST)/lib/certdb.lib \
 	$(DIST)/lib/softoken.lib \
 	$(DIST)/lib/freebl.lib \
-	$(DIST)/lib/crypto.lib \
 	$(DIST)/lib/swfci.lib \
 	$(DIST)/lib/secutil.lib \
 	$(DIST)/lib/dbm.lib \
@@ -57,6 +56,16 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
 	$(NULL)
+
+ifdef MOZILLA_SECURITY_BUILD
+EXTRA_LIBS += $(DIST)/lib/crypto.lib
+endif
+ifdef MOZILLA_BSAFE_BUILD
+EXTRA_LIBS += \
+	$(DIST)/lib/bsafe41.lib \
+	$(DIST)/lib/freebl.lib \
+	$(NULL)
+endif
 
 # $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
 OS_LIBS += \
@@ -82,12 +91,20 @@ EXTRA_LIBS += \
 	$(DIST)/lib/libsoftoken.a \
 	$(DIST)/lib/libcertdb.a \
 	$(DIST)/lib/libswfci.a \
-	$(DIST)/lib/libcrypto.a \
 	$(DIST)/lib/libfreebl.a \
 	$(DIST)/lib/libsecutil.a \
-	$(DIST)/lib/libcrypto.a \
 	$(DIST)/lib/libdbm.a \
 	$(NULL)
+
+ifdef MOZILLA_SECURITY_BUILD
+EXTRA_LIBS += $(DIST)/lib/libcrypto.a
+endif
+ifdef MOZILLA_BSAFE_BUILD
+EXTRA_LIBS += \
+	$(DIST)/lib/libbsafe.a \
+	$(DIST)/lib/libfreebl.a \
+	$(NULL)
+endif
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
