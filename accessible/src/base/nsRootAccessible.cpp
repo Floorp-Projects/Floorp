@@ -835,8 +835,9 @@ void nsRootAccessible::FireDocLoadFinished()
     if (mBusy != eBusyStateDone) {
       mBusy = eBusyStateDone;
 #ifndef MOZ_ACCESSIBILITY_ATK
-      if (mListener)
+      if (mListener) {
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this, nsnull);
+      }
 #endif
     }
   }

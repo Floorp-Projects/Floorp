@@ -97,6 +97,8 @@ class nsHTMLIFrameRootAccessible : public nsRootAccessible
     virtual ~nsHTMLIFrameRootAccessible();
 
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
+    NS_IMETHOD GetAccName(nsAString& aAccName);
+    NS_IMETHOD GetAccValue(nsAString& aAccValue);
 
     // ----- nsIAccessibleEventReceiver -------------------
     NS_IMETHOD AddAccessibleEventListener(nsIAccessibleEventListener *aListener);

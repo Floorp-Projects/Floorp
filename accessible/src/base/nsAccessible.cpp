@@ -558,14 +558,7 @@ NS_IMETHODIMP nsAccessible::GetAccId(PRInt32 *aAccId)
 
 NS_IMETHODIMP nsAccessible::CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList)
 {
-  if (aParent) {
-    PRUint32 role = 0;
-    aParent->GetAccRole(&role);
-    // prevent from invalid caching nsHTMLIFrameRootAccessible
-    if (role != ROLE_NOTHING) {
-      mParent = aParent;
-    }
-  }
+  mParent = aParent;
   if (aSiblingList) 
     mSiblingList = aSiblingList;
   mSiblingIndex = aSiblingIndex;
