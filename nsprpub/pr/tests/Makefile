@@ -431,14 +431,6 @@ else
 
 # All platforms that are not AIX pre-4.2.
 
-
-ifeq ($(USE_PTHREADS), 1)
-$(OBJDIR)/attach: $(OBJDIR)/attach.$(OBJ_SUFFIX)
-	@$(MAKE_OBJDIR)
-	$(CC) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
-endif
-
-
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
@@ -475,7 +467,18 @@ install:: export
 clean::
 	rm -f $(TARGETS)
 
+# The prpoll test calls BSD socket functions, so it needs to link
+# with -lsocket on some platforms.
+ifeq ($(OS_ARCH),SunOS)
+ifneq ($(OS_RELEASE),4.1.3_U1)
+$(OBJDIR)/prpoll: $(OBJDIR)/prpoll.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lsocket $(EXTRA_LIBS) -o $@
+endif
+endif
+
 ifeq ($(USE_PTHREADS), 1)
+$(OBJDIR)/attach: $(OBJDIR)/attach.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/foreign: $(OBJDIR)/foreign.o
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/provider: $(OBJDIR)/provider.o
