@@ -133,21 +133,21 @@
     
     
   /* Personal Toolbar items */    
-  .bookmarkitem.button-toolbar
+  .bookmarkitem.button-toolbar, .bookmarkfolder.button-toolbar
     {
       border              : none;
       margin              : 0px; 
       padding             : 1px 0px 1px 0px;
     }
 
-  .bookmarkitem.button-toolbar:hover
+  .bookmarkitem.button-toolbar:hover, .bookmarkfolder.button-toolbar:hover
     {
       color               : #0000FF;
       text-decoration     : underline;
       cursor              : pointer;
     }
     
-  .bookmarkitem.button-toolbar:hover:active
+  .bookmarkitem.button-toolbar:hover:active, .bookmarkfolder.button-toolbar:hover:active
     {
       padding             : 1px 0px 1px 0px;
       color               : #FF0000;
