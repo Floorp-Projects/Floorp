@@ -446,6 +446,8 @@ pref("dom.disable_window_open_feature.resizable",   false);
 pref("dom.disable_window_open_feature.minimizable", false);
 pref("dom.disable_window_open_feature.status",      false);
 
+pref("dom.allow_scripts_to_close_windows",          false);
+
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
