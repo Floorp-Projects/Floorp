@@ -151,14 +151,12 @@ private:
 //----------------------------------------------------------------------
 
 #ifdef NS_DEBUG
+#include "prlog.h"
 /**
  * Note: the log module is created during initialization which
  * means that you cannot perform logging before then.
  */
 static PRLogModuleInfo* gLogModule = PR_NewLogModule("webwidget");
-#ifndef prlog_h___
-vc++ is buggy;
-#endif
 #endif
 
 #define WEB_TRACE_CALLS        0x1
