@@ -35,7 +35,16 @@ class nsIGfxTextControlFrame : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IGFXTEXTCONTROLFRAME_IID; return iid; }
 
-	NS_IMETHOD GetEditor(nsIEditor **aEditor) = 0;
-  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) = 0;
-  NS_IMETHOD SetInnerFocus() = 0;
+	NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
+  NS_IMETHOD    GetDocShell(nsIDocShell** aDocShell) = 0;
+  NS_IMETHOD    SetInnerFocus() = 0;
+  
+  NS_IMETHOD    GetTextLength(PRInt32* aTextLength) = 0;
+  
+  NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart) = 0;
+  NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd) = 0;
+  
+  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd) = 0;
+  NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd) = 0;
+  
 };

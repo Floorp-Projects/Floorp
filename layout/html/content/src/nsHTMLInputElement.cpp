@@ -42,6 +42,7 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
+#include "nsIGfxTextControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
@@ -124,46 +125,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLInputElement
-  NS_IMETHOD GetDefaultValue(nsString& aDefaultValue);
-  NS_IMETHOD SetDefaultValue(const nsString& aDefaultValue);
-  NS_IMETHOD GetDefaultChecked(PRBool* aDefaultChecked);
-  NS_IMETHOD SetDefaultChecked(PRBool aDefaultChecked);
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD GetAccept(nsString& aAccept);
-  NS_IMETHOD SetAccept(const nsString& aAccept);
-  NS_IMETHOD GetAccessKey(nsString& aAccessKey);
-  NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
-  NS_IMETHOD GetAlt(nsString& aAlt);
-  NS_IMETHOD SetAlt(const nsString& aAlt);
-  NS_IMETHOD GetChecked(PRBool* aChecked);
-  NS_IMETHOD SetChecked(PRBool aChecked);
-  NS_IMETHOD GetDisabled(PRBool* aDisabled);
-  NS_IMETHOD SetDisabled(PRBool aDisabled);
-  NS_IMETHOD GetMaxLength(PRInt32* aMaxLength);
-  NS_IMETHOD SetMaxLength(PRInt32 aMaxLength);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetReadOnly(PRBool* aReadOnly);
-  NS_IMETHOD SetReadOnly(PRBool aReadOnly);
-  NS_IMETHOD GetSize(nsString& aSize);
-  NS_IMETHOD SetSize(const nsString& aSize);
-  NS_IMETHOD GetSrc(nsString& aSrc);
-  NS_IMETHOD SetSrc(const nsString& aSrc);
-  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
-  NS_IMETHOD GetUseMap(nsString& aUseMap);
-  NS_IMETHOD SetUseMap(const nsString& aUseMap);
-  NS_IMETHOD GetValue(nsString& aValue);
-  NS_IMETHOD SetValue(const nsString& aValue);
-  NS_IMETHOD Blur();
-  NS_IMETHOD Focus();
-  NS_IMETHOD Select();
-  NS_IMETHOD Click();
-
+  NS_DECL_IDOMHTMLINPUTELEMENT
 
   // nsIDOMNSHTMLInputElement
   NS_DECL_IDOMNSHTMLINPUTELEMENT
@@ -191,6 +153,10 @@ public:
   NS_IMETHOD SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
                                  nsIStatefulFrame::StateType aStateType,
                                  PRBool aValue);
+
+protected:
+
+  nsresult   GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
 protected:
   nsGenericHTMLLeafElement mInner;
@@ -701,11 +667,11 @@ nsHTMLInputElement::Select()
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
-    if (nsnull != formControlFrame ) { 
-      nsIPresContext* presContext;
-      nsGenericHTMLElement::GetPresContext(this, &presContext);
+    if (formControlFrame )
+    {
+      nsCOMPtr<nsIPresContext> presContext;
+      nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
       formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, "");
-      NS_IF_RELEASE(presContext);
       return NS_OK;
     }
   }
@@ -725,16 +691,16 @@ nsHTMLInputElement::Click()
       if (shell) {
         rv = shell->GetPresContext(getter_AddRefs(context));
         if (NS_SUCCEEDED(rv) && context) {
-	  nsEventStatus status = nsEventStatus_eIgnore;
-	  nsMouseEvent event;
-	  event.eventStructType = NS_GUI_EVENT;
-	  event.message = NS_MOUSE_LEFT_CLICK;
-    event.isShift = PR_FALSE;
-    event.isControl = PR_FALSE;
-    event.isAlt = PR_FALSE;
-    event.isMeta = PR_FALSE;
-    event.clickCount = 0;
-    event.widget = nsnull;
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_GUI_EVENT;
+          event.message = NS_MOUSE_LEFT_CLICK;
+          event.isShift = PR_FALSE;
+          event.isControl = PR_FALSE;
+          event.isAlt = PR_FALSE;
+          event.isMeta = PR_FALSE;
+          event.clickCount = 0;
+          event.widget = nsnull;
           rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
       }
@@ -1188,3 +1154,103 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetTextLength(PRInt32* aTextLength)
+{
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv) && formControlFrame)
+  {
+    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    if (textControlFrame)
+      textControlFrame->GetTextLength(aTextLength);
+      
+    return NS_OK;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd)
+{
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv) && formControlFrame)
+  {
+    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    if (textControlFrame)
+      textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd);
+      
+    return NS_OK;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetSelectionStart(PRInt32* aSelectionStart)
+{
+  NS_ENSURE_ARG_POINTER(aSelectionStart);
+  
+  PRInt32 selEnd;
+  return GetSelectionRange(aSelectionStart, &selEnd);
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
+{
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv) && formControlFrame)
+  {
+    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    if (textControlFrame)
+      textControlFrame->SetSelectionStart(aSelectionStart);
+      
+    return NS_OK;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetSelectionEnd(PRInt32* aSelectionEnd)
+{
+  NS_ENSURE_ARG_POINTER(aSelectionEnd);
+  
+  PRInt32 selStart;
+  return GetSelectionRange(&selStart, aSelectionEnd);
+}
+
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
+{
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv) && formControlFrame)
+  {
+    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    if (textControlFrame)
+      textControlFrame->SetSelectionEnd(aSelectionEnd);
+      
+    return NS_OK;
+  }
+  return rv;
+}
+
+nsresult
+nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd)
+{
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv) && formControlFrame)
+  {
+    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    if (textControlFrame)
+      textControlFrame->GetSelectionRange(aSelectionStart, aSelectionEnd);
+      
+    return NS_OK;
+  }
+  return rv;
+}
+

@@ -80,11 +80,13 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPresShell.h"
 #include "nsIEventStateManager.h"
 #include "nsStyleUtil.h"
 #include "nsLinebreakConverter.h"
+#include "nsRange.h"
 
 // for anonymous content and frames
 #include "nsHTMLParts.h"
@@ -99,7 +101,6 @@
 #include "nsIDOMXULCommandDispatcher.h"
 
 #include "nsLayoutAtoms.h"
-
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -181,144 +182,6 @@ NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-// Frames are not refcounted, no need to AddRef
-NS_IMETHODIMP
-nsGfxTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-
-  } else  if (aIID.Equals(NS_GET_IID(nsIGfxTextControlFrame))) {
-    *aInstancePtr = (void*)(nsIGfxTextControlFrame*) this;
-    return NS_OK;
-    
-  } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    return NS_OK;                                                        
-  }
-  
-  return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP
-nsGfxTextControlFrame::Init(nsIPresContext*  aPresContext,
-                            nsIContent*      aContent,
-                            nsIFrame*        aParent,
-                            nsIStyleContext* aContext,
-                            nsIFrame*        aPrevInFlow)
-{
-  mFramePresContext = aPresContext;
-  return nsFormControlFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-}
-
-NS_IMETHODIMP
-nsGfxTextControlFrame::GetEditor(nsIEditor **aEditor)
-{
-  NS_ENSURE_ARG_POINTER(aEditor);
-
-  *aEditor = mEditor;
-  NS_IF_ADDREF(*aEditor);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGfxTextControlFrame::GetFrameType(nsIAtom** aType) const
-{
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = NS_NewAtom("textControlFrame");
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsGfxTextControlFrame::GetDocShell(nsIDocShell **aDocShell)
-{
-  NS_ENSURE_ARG_POINTER(aDocShell);
-
-  *aDocShell = mDocShell;
-  NS_IF_ADDREF(*aDocShell);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGfxTextControlFrame::SetInnerFocus()
-{
-  SetFocus();
-  return NS_OK;
-}
-  
-NS_IMETHODIMP
-nsGfxTextControlFrame::CreateEditor()
-{
-  nsresult result = NS_OK;
-
-  mDocShell       = nsnull;
-  mCreatingViewer = PR_FALSE;
-
-  // create the stream observer
-  mTempObserver   = new EnderTempObserver();
-  if (!mTempObserver) { return NS_ERROR_OUT_OF_MEMORY; }
-  mTempObserver->SetFrame(this);
-  NS_ADDREF(mTempObserver);
-
-  // create the document observer
-  mDocObserver   = new nsEnderDocumentObserver();
-  if (!mDocObserver) { return NS_ERROR_OUT_OF_MEMORY; }
-  mDocObserver->SetFrame(this);
-  NS_ADDREF(mDocObserver);
-
-  // create the drag listener for the content node
-  if (mContent)
-  {
-    mListenerForContent = new nsEnderListenerForContent();
-    if (!mListenerForContent) { return NS_ERROR_OUT_OF_MEMORY; }
-    mListenerForContent->SetFrame(this);
-    NS_ADDREF(mListenerForContent);
-
-    // get the DOM event receiver
-    nsCOMPtr<nsIDOMEventReceiver> contentER;
-    result = mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(contentER));
-    if NS_FAILED(result) { return result; }
-    if (contentER) 
-    {
-      nsCOMPtr<nsIDOMDragListener> dragListenerForContent;
-      mListenerForContent->QueryInterface(NS_GET_IID(nsIDOMDragListener), getter_AddRefs(dragListenerForContent));
-      if (dragListenerForContent)
-      {
-        result = contentER->AddEventListenerByIID(dragListenerForContent, NS_GET_IID(nsIDOMDragListener));
-        if NS_FAILED(result) { return result; }
-      }
-    }
-  }
-
-  // create the focus listener for HTML Input display content
-  if (mDisplayContent)
-  {
-    mFocusListenerForDisplayContent = new nsEnderFocusListenerForDisplayContent();
-    if (!mFocusListenerForDisplayContent) { return NS_ERROR_OUT_OF_MEMORY; }
-    mFocusListenerForDisplayContent->SetFrame(this);
-    NS_ADDREF(mFocusListenerForDisplayContent);
-    // get the DOM event receiver
-    nsCOMPtr<nsIDOMEventReceiver> er;
-    result = mDisplayContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(er));
-    if (NS_SUCCEEDED(result) && er) 
-      result = er->AddEventListenerByIID(mFocusListenerForDisplayContent, NS_GET_IID(nsIDOMFocusListener));
-    // should check to see if mDisplayContent or mContent has focus and call CreateSubDoc instead if it does
-    // do something with result
-  }
-
-  nsCOMPtr<nsIHTMLEditor> theEditor;
-  result = nsComponentManager::CreateInstance(kHTMLEditorCID,
-                                              nsnull,
-                                              NS_GET_IID(nsIHTMLEditor), getter_AddRefs(theEditor));
-  if (NS_FAILED(result)) { return result; }
-  if (!theEditor) { return NS_ERROR_OUT_OF_MEMORY; }
-  mEditor = do_QueryInterface(theEditor);
-  if (!mEditor) { return NS_ERROR_NO_INTERFACE; }
-  return NS_OK;
-}
-
 nsGfxTextControlFrame::nsGfxTextControlFrame()
 : mTempObserver(0), mDocObserver(0),
   mCreatingViewer(PR_FALSE),
@@ -328,6 +191,7 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
   mDidSetFocus(PR_FALSE),
   mGotSelectionState(PR_FALSE),
   mSelectionWasCollapsed(PR_FALSE),
+  mIsInput(PR_TRUE),
   mFramePresContext(nsnull),
   mCachedState(nsnull),
   mWeakReferent(this),
@@ -524,6 +388,458 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
 #endif
 #endif
 }
+
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
+nsGfxTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+
+  } else  if (aIID.Equals(NS_GET_IID(nsIGfxTextControlFrame))) {
+    *aInstancePtr = (void*)(nsIGfxTextControlFrame*) this;
+    return NS_OK;
+    
+  } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
+    return NS_OK;                                                        
+  }
+  
+  return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::Init(nsIPresContext*  aPresContext,
+                            nsIContent*      aContent,
+                            nsIFrame*        aParent,
+                            nsIStyleContext* aContext,
+                            nsIFrame*        aPrevInFlow)
+{
+  mFramePresContext = aPresContext;
+  nsresult rv = nsFormControlFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  if (NS_FAILED(rv)) return rv;
+  
+  // we are an input (hence single line)?
+  NS_ASSERTION(mContent, "Should have content here");  
+  nsCOMPtr<nsIDOMHTMLInputElement> contentAsInput = do_QueryInterface(mContent);
+  mIsInput = (contentAsInput.get() != nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetEditor(nsIEditor **aEditor)
+{
+  NS_ENSURE_ARG_POINTER(aEditor);
+
+  *aEditor = mEditor;
+  NS_IF_ADDREF(*aEditor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = NS_NewAtom("textControlFrame");
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetDocShell(nsIDocShell **aDocShell)
+{
+  NS_ENSURE_ARG_POINTER(aDocShell);
+
+  *aDocShell = mDocShell;
+  NS_IF_ADDREF(*aDocShell);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::SetInnerFocus()
+{
+  SetFocus();
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode)
+{
+  *aFirstTextNode = nsnull;
+  
+  // get the doc
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDoc);
+  if (!htmlDoc) return NS_ERROR_FAILURE;
+    
+  nsCOMPtr<nsIDOMHTMLElement> bodyElement;
+  htmlDoc->GetBody(getter_AddRefs(bodyElement));
+  if (!bodyElement) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
+  if (!bodyNode) return NS_ERROR_FAILURE;
+  
+  // for a text widget, the text of the document is in a single
+  // text node under the body. Let's make sure that's true.
+  nsCOMPtr<nsIDOMNodeList> childNodesList;
+  bodyNode->GetChildNodes(getter_AddRefs(childNodesList));
+  if (!childNodesList)
+  {
+    NS_WARNING("Subdoc has no text node list");
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 numChildNodes = 0;
+  childNodesList->GetLength(&numChildNodes);
+  if (numChildNodes != 1)
+  {
+    NS_WARNING("Found zero or several child nodes in a text widget doc!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMNode> firstChild;
+  nsresult rv = bodyNode->GetFirstChild(getter_AddRefs(firstChild));
+  if (NS_FAILED(rv)) return rv;
+  if (!firstChild) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMCharacterData> charDataNode = do_QueryInterface(firstChild, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  NS_ADDREF(*aFirstTextNode = charDataNode);
+  return NS_OK;
+}
+
+
+nsresult
+nsGfxTextControlFrame::SelectAllContents()
+{
+  nsresult rv;
+  
+  if (IsSingleLineInput())
+  {
+    rv = SetSelectionRange(0, 0x7FFFFFFF);
+  }
+  else
+  {
+    // we have to select all
+    rv = EnsureEditor();
+    if (NS_FAILED(rv)) return rv;
+    
+    NS_ASSERTION(mEditor, "Should have an editor here");    
+    rv = mEditor->SelectAll();
+  }
+
+  return rv;
+}
+
+
+nsresult
+nsGfxTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
+{
+  NS_ASSERTION(IsSingleLineInput(), "Should only call this on a single line input");
+  NS_ASSERTION(mEditor, "Should have an editor here");
+  NS_ASSERTION(mDoc, "Should have an editor here");
+
+  nsCOMPtr<nsIDOMCharacterData> firstTextNode;
+  nsresult rv = GetFirstTextNode(getter_AddRefs(firstTextNode));
+  if (NS_FAILED(rv) || !firstTextNode)
+  {
+    NS_WARNING("No first child node!");
+    return rv;
+  }
+  
+  nsCOMPtr<nsIDOMNode> firstNode = do_QueryInterface(firstTextNode, &rv);
+  if (!firstNode) return rv;
+  
+  // constrain the selection to this node
+  PRUint32 nodeLengthU;
+  firstTextNode->GetLength(&nodeLengthU);
+  PRInt32 nodeLength = (PRInt32)nodeLengthU;
+  
+  if (aSelStart < 0)
+    aSelStart = 0;
+  if (aSelStart > nodeLength)
+    aSelStart = nodeLength;
+
+  if (aSelEnd < 0)
+    aSelEnd = 0;
+  if (aSelEnd > nodeLength)
+    aSelEnd = nodeLength;
+  
+  nsCOMPtr<nsIDOMSelection> selection;
+  mEditor->GetSelection(getter_AddRefs(selection));  
+  if (!selection) return NS_ERROR_FAILURE;
+
+  // are we setting both start and end?
+  if (aSelStart != -1 && aSelEnd != -1)
+  {
+    // remove existing ranges
+    selection->ClearSelection();  
+
+    nsCOMPtr<nsIDOMRange> selectionRange;
+    NS_NewRange(getter_AddRefs(selectionRange));
+    if (!selectionRange) return NS_ERROR_OUT_OF_MEMORY;
+    
+    selectionRange->SetStart(firstTextNode, aSelStart);
+    selectionRange->SetEnd(firstTextNode, aSelEnd);
+    
+    selection->AddRange(selectionRange);
+  }
+  else    // we're setting either start or end but not both
+  {
+    // does a range exist?
+    nsCOMPtr<nsIDOMRange> firstRange;
+    selection->GetRangeAt(0, getter_AddRefs(firstRange));
+    if (!firstRange)
+    {
+      // no range. Make a new one. We'll have to rearrange
+      // the endpoints to be in legal order
+      nsCOMPtr<nsIDOMRange> selectionRange;
+      NS_NewRange(getter_AddRefs(selectionRange));
+      if (!selectionRange) return NS_ERROR_OUT_OF_MEMORY;
+      
+      PRInt32 selStart = 0, selEnd = 0;
+      
+      if (aSelStart != -1)
+        selStart = aSelStart;
+
+      if (aSelEnd != -1)
+        selEnd = aSelEnd;
+      
+      // swap them
+      if (selEnd < selStart)
+      {
+        PRInt32 temp = selStart;
+        selStart = selEnd;
+        selEnd = temp;
+      }
+      
+      selectionRange->SetStart(firstTextNode, selStart);
+      selectionRange->SetEnd(firstTextNode, selEnd);      
+      selection->AddRange(selectionRange);
+    }
+    else
+    {
+      // we have a range. Just set the endpoints
+      if (aSelStart != -1)
+        firstRange->SetStart(firstNode, aSelStart);
+
+      if (aSelEnd != -1)
+        firstRange->SetStart(firstNode, aSelEnd);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
+{
+  if (!IsSingleLineInput()) return NS_ERROR_NOT_IMPLEMENTED;
+  
+  // make sure we have an editor
+  nsresult rv = EnsureEditor();
+  if (NS_FAILED(rv)) return rv;
+
+  NS_ASSERTION(mEditor, "Should have an editor here");
+  NS_ASSERTION(mDoc, "Should have an editor here");
+  
+  return SetSelectionEndPoints(aSelStart, aSelEnd);
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::SetSelectionStart(PRInt32 aSelectionStart)
+{
+  if (!IsSingleLineInput()) return NS_ERROR_NOT_IMPLEMENTED;
+
+  // make sure we have an editor
+  nsresult rv = EnsureEditor();
+  if (NS_FAILED(rv)) return rv;
+
+  NS_ASSERTION(mEditor, "Should have an editor here");
+  NS_ASSERTION(mDoc, "Should have an editor here");
+  
+  return SetSelectionEndPoints(aSelectionStart, -1);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::SetSelectionEnd(PRInt32 aSelectionEnd)
+{
+  if (!IsSingleLineInput()) return NS_ERROR_NOT_IMPLEMENTED;
+
+  // make sure we have an editor
+  nsresult rv = EnsureEditor();
+  if (NS_FAILED(rv)) return rv;
+
+  NS_ASSERTION(mEditor, "Should have an editor here");
+  NS_ASSERTION(mDoc, "Should have an editor here");
+  
+  return SetSelectionEndPoints(-1, aSelectionEnd);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetTextLength(PRInt32* aTextLength)
+{
+  if (!IsSingleLineInput()) return NS_ERROR_NOT_IMPLEMENTED;
+
+  NS_ENSURE_ARG_POINTER(aTextLength);  
+  *aTextLength = 0;
+  
+  nsresult rv = EnsureEditor();
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDOMCharacterData> firstTextNode;
+  rv = GetFirstTextNode(getter_AddRefs(firstTextNode));
+  if (NS_FAILED(rv) || !firstTextNode)
+  {
+    NS_WARNING("No first child node!");
+    return rv;
+  }
+
+  PRUint32 nodeLengthU;
+  firstTextNode->GetLength(&nodeLengthU);
+  *aTextLength = (PRInt32)nodeLengthU;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd)
+{
+  if (!IsSingleLineInput()) return NS_ERROR_NOT_IMPLEMENTED;
+
+  NS_ENSURE_ARG_POINTER((aSelectionStart && aSelectionEnd));
+
+  nsresult rv = EnsureEditor();
+  if (NS_FAILED(rv)) return rv;
+
+  NS_ASSERTION(mEditor, "Should have an editor here");
+  NS_ASSERTION(mDoc, "Should have an editor here");
+  
+  nsCOMPtr<nsIDOMSelection> selection;
+  mEditor->GetSelection(getter_AddRefs(selection));  
+  if (!selection) return NS_ERROR_FAILURE;
+
+  // we should have only zero or one range
+  PRInt32 numRanges = 0;
+  selection->GetRangeCount(&numRanges);
+  if (numRanges > 1)
+  {
+    NS_ASSERTION(0, "Found more than on range in GetSelectionRange");
+  }
+  
+  if (numRanges == 0)
+  {
+    *aSelectionStart = 0;
+    *aSelectionEnd = 0;
+  }
+  else
+  {
+    nsCOMPtr<nsIDOMRange> firstRange;
+    selection->GetRangeAt(0, getter_AddRefs(firstRange));
+    if (!firstRange) return NS_ERROR_FAILURE;
+    
+    // make sure this range is pointing at the first child
+    nsCOMPtr<nsIDOMCharacterData> firstTextNode;
+    rv = GetFirstTextNode(getter_AddRefs(firstTextNode));
+    nsCOMPtr<nsIDOMNode> firstNode = do_QueryInterface(firstTextNode);
+  
+    nsCOMPtr<nsIDOMNode> rangeStartNode;
+    firstRange->GetStartParent(getter_AddRefs(rangeStartNode));   // maybe we should compare the end too?
+    if (rangeStartNode != firstNode) return NS_ERROR_FAILURE;
+    
+    firstRange->GetStartOffset(aSelectionStart);
+    firstRange->GetEndOffset(aSelectionEnd);
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::EnsureEditor()
+{
+  nsresult rv = NS_OK;
+  if (!mDocShell)
+  {
+    rv = CreateSubDoc(nsnull);
+    if (NS_FAILED(rv)) return rv;
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::CreateEditor()
+{
+  nsresult result = NS_OK;
+
+  mDocShell       = nsnull;
+  mCreatingViewer = PR_FALSE;
+
+  // create the stream observer
+  mTempObserver   = new EnderTempObserver();
+  if (!mTempObserver) { return NS_ERROR_OUT_OF_MEMORY; }
+  mTempObserver->SetFrame(this);
+  NS_ADDREF(mTempObserver);
+
+  // create the document observer
+  mDocObserver   = new nsEnderDocumentObserver();
+  if (!mDocObserver) { return NS_ERROR_OUT_OF_MEMORY; }
+  mDocObserver->SetFrame(this);
+  NS_ADDREF(mDocObserver);
+
+  // create the drag listener for the content node
+  if (mContent)
+  {
+    mListenerForContent = new nsEnderListenerForContent();
+    if (!mListenerForContent) { return NS_ERROR_OUT_OF_MEMORY; }
+    mListenerForContent->SetFrame(this);
+    NS_ADDREF(mListenerForContent);
+
+    // get the DOM event receiver
+    nsCOMPtr<nsIDOMEventReceiver> contentER;
+    result = mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(contentER));
+    if NS_FAILED(result) { return result; }
+    if (contentER) 
+    {
+      nsCOMPtr<nsIDOMDragListener> dragListenerForContent;
+      mListenerForContent->QueryInterface(NS_GET_IID(nsIDOMDragListener), getter_AddRefs(dragListenerForContent));
+      if (dragListenerForContent)
+      {
+        result = contentER->AddEventListenerByIID(dragListenerForContent, NS_GET_IID(nsIDOMDragListener));
+        if NS_FAILED(result) { return result; }
+      }
+    }
+  }
+
+  // create the focus listener for HTML Input display content
+  if (mDisplayContent)
+  {
+    mFocusListenerForDisplayContent = new nsEnderFocusListenerForDisplayContent();
+    if (!mFocusListenerForDisplayContent) { return NS_ERROR_OUT_OF_MEMORY; }
+    mFocusListenerForDisplayContent->SetFrame(this);
+    NS_ADDREF(mFocusListenerForDisplayContent);
+    // get the DOM event receiver
+    nsCOMPtr<nsIDOMEventReceiver> er;
+    result = mDisplayContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(er));
+    if (NS_SUCCEEDED(result) && er) 
+      result = er->AddEventListenerByIID(mFocusListenerForDisplayContent, NS_GET_IID(nsIDOMFocusListener));
+    // should check to see if mDisplayContent or mContent has focus and call CreateSubDoc instead if it does
+    // do something with result
+  }
+
+  nsCOMPtr<nsIHTMLEditor> theEditor;
+  result = nsComponentManager::CreateInstance(kHTMLEditorCID,
+                                              nsnull,
+                                              NS_GET_IID(nsIHTMLEditor), getter_AddRefs(theEditor));
+  if (NS_FAILED(result)) { return result; }
+  if (!theEditor) { return NS_ERROR_OUT_OF_MEMORY; }
+  mEditor = do_QueryInterface(theEditor);
+  if (!mEditor) { return NS_ERROR_NO_INTERFACE; }
+  return NS_OK;
+}
+
 
 NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                              nsGUIEvent* aEvent,
@@ -1036,7 +1352,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
          subBounds.width, subBounds.height, PR_FALSE);
     }
     mCreatingViewer=PR_TRUE;
-
+    
     // create document
     nsCOMPtr<nsIDocument> doc;
     rv = NS_NewHTMLDocument(getter_AddRefs(doc));
@@ -1430,9 +1746,10 @@ nsGfxTextControlFrame::ContentChanged(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
-  if (PR_FALSE==mIsProcessing)
+  if (!mIsProcessing)
   {
     mIsProcessing = PR_TRUE;
+    
     if (nsHTMLAtoms::value == aName) 
     {
       if (mEditor) {
@@ -1443,7 +1760,13 @@ NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIPresContext* aPresContext, n
         mEditor->EnableUndo(PR_TRUE);     // fire up a new txn stack
       }
     }
-    else {
+    else if (nsHTMLAtoms::select == aName)
+    {
+      // select all the text
+      SelectAllContents();
+    }
+    else
+    {
       return Inherited::SetProperty(aPresContext, aName, aValue);
     }
     mIsProcessing = PR_FALSE;
@@ -1477,14 +1800,12 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   // 3) from clicking on it
   //
   // If removing any of this code PLEASE read comment below
-  nsresult result = NS_OK;
-  if (!mDocShell)
-  {
-    result = CreateSubDoc(nsnull);
-    if (NS_FAILED(result)) return;
-  }
-  if (aOn) {
 
+  nsresult rv = EnsureEditor();
+  if (NS_FAILED(rv)) return;
+  
+  if (aOn)
+  {
     nsCOMPtr<nsIContentViewer> viewer;
     mDocShell->GetContentViewer(getter_AddRefs(viewer));
     if (viewer) {
@@ -1517,7 +1838,7 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
                   // and setting this to true won't propigate into the DOM, because we
                   // got here via the DOM
                   // See: nsEnderEventListener::Focus
-                  result = widget->SetFocus();
+                  rv = widget->SetFocus();
                   mDidSetFocus = PR_TRUE;
                 }
               }
