@@ -432,14 +432,16 @@ alpha*-*-linux*)
 
 alpha*-*-osf*)
     if test "$GNU_CC"; then
-        DSO_LDOPTS='-shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+	DSO_LDOPTS='-shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     else
 	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
 	CXXFLAGS="$CXXFLAGS -std1 -ieee_with_inexact"
-        DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-        DSO_CFLAGS=
-        MKSHLIB_FORCE_ALL='-all'
-        MKSHLIB_UNFORCE_ALL='-none'
+	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+	DSO_CFLAGS=
+	MKSHLIB='-$(LD) $(DSO_LDOPTS)'
+	MKCSHLIB='-$(LD) $(DSO_LDOPTS)'
+	MKSHLIB_FORCE_ALL='-all'
+	MKSHLIB_UNFORCE_ALL='-none'
 	dnl Might fix the libxpcom.so breakage on this platform as well....
 	AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
 	AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
