@@ -6,9 +6,9 @@ LogComment("communicatorFolder: " + communicatorFolder);
 
 err = AddDirectory("Program",
                    "$Version$",
-                   "bin",              // fileName in jar, 
+                   "viewer",           // fileName in jar, 
                    communicatorFolder, // Where to put this file (Returned from GetFolder) 
-                   "",                 // fileName in jar, 
+                   "Mozilla Folder",   // target subdir 
                    false);             // Force Flag 
 
 LogComment("AddDirectory() returned: " + err);
