@@ -141,6 +141,11 @@ typedef struct PRLogModuleInfo {
 PR_EXTERN(PRLogModuleInfo*) PR_NewLogModule(const char *name);
 
 /*
+** Destroys a log module.
+*/
+PR_EXTERN(void) PR_DestroyLogModule(PRLogModuleInfo* logModule);
+
+/*
 ** Set the file to use for logging. Returns PR_FALSE if the file cannot
 ** be created
 */

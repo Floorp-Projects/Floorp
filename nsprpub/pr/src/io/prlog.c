@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -308,6 +308,27 @@ PR_IMPLEMENT(PRLogModuleInfo*) PR_NewLogModule(const char *name)
     }
     _PR_SetLogModuleLevel(lm);
     return lm;
+}
+
+PR_IMPLEMENT(void) PR_DestroyLogModule(PRLogModuleInfo* lm)
+{
+    PR_LogFlush();
+
+    /* unlink this log module from the list */
+    if (lm == logModules) {
+        logModules = logModules->next;
+    }
+    else {
+        PRLogModuleInfo* chain = logModules;
+        while (chain && chain->next != lm)
+            chain = chain->next;
+        PR_ASSERT(chain && chain->next);
+        chain->next = chain->next->next;
+    }
+
+    /* and free it */
+    free((void*)lm->name);
+    PR_Free(lm);
 }
 
 PR_IMPLEMENT(PRBool) PR_SetLogFile(const char *file)
