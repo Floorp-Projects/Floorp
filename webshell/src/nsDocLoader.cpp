@@ -141,6 +141,12 @@ public:
                               nsIContentViewer** aDocViewer);
 
     nsresult InitUAStyleSheet();
+
+    nsresult CreateImageDocument(nsIURL* aURL, 
+                                 const char* aCommand,
+                                 nsIContentViewerContainer* aContainer,
+                                 nsIStreamListener** aDocListener,
+                                 nsIContentViewer** aDocViewer);
 };
 
 static nsIStyleSheet* gUAStyleSheet;
@@ -156,6 +162,8 @@ nsDocFactoryImpl::nsDocFactoryImpl()
 NS_IMPL_ISUPPORTS(nsDocFactoryImpl,kIDocumentLoaderFactoryIID);
 
 static char* gValidTypes[] = {"text/html","text/xml","application/rtf",0};
+
+static char* gImageTypes[] = {"image/gif", "image/jpeg", 0 };
 
 NS_IMETHODIMP
 nsDocFactoryImpl::CreateInstance(nsIURL* aURL, 
@@ -173,6 +181,17 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
     while(gValidTypes[typeIndex]) {
       if (0== PL_strcmp(gValidTypes[typeIndex++], aContentType)) {
         goto nextstep;
+      }
+    }
+
+    // Try secondary types
+    typeIndex = 0;
+    while(gImageTypes[typeIndex]) {
+      if (0== PL_strcmp(gImageTypes[typeIndex++], aContentType)) {
+          return CreateImageDocument(aURL, aCommand,
+                                     aContainer,
+                                     aDocListener,
+                                     aDocViewer);
       }
     }
     goto done;
@@ -193,6 +212,62 @@ nextstep:
 
     /*
      * Create the HTML Content Viewer...
+     */
+    rv = NS_NewDocumentViewer(docv);
+    if (NS_OK != rv) {
+        goto done;
+    }
+    docv->SetUAStyleSheet(gUAStyleSheet);
+
+    /* 
+     * Initialize the document to begin loading the data...
+     *
+     * An nsIStreamListener connected to the parser is returned in
+     * aDocListener.
+     */
+    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener);
+    if (NS_OK != rv) {
+        NS_IF_RELEASE(docv);
+        goto done;
+    }
+
+    /*
+     * Bind the document to the Content Viewer...
+     */
+    rv = docv->BindToDocument(doc, aCommand);
+    *aDocViewer = docv;
+
+done:
+    NS_IF_RELEASE(doc);
+    return rv;
+}
+
+nsresult
+nsDocFactoryImpl::CreateImageDocument(nsIURL* aURL, 
+                                      const char* aCommand,
+                                      nsIContentViewerContainer* aContainer,
+                                      nsIStreamListener** aDocListener,
+                                      nsIContentViewer** aDocViewer)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    nsIDocument* doc = nsnull;
+    nsIDocumentViewer* docv = nsnull;
+
+    // Load the UA style sheet if we haven't already done that
+    if (nsnull == gUAStyleSheet) {
+        InitUAStyleSheet();
+    }
+
+    /*
+     * Create the image document...
+     */
+    rv = NS_NewImageDocument(&doc);
+    if (NS_OK != rv) {
+        goto done;
+    }
+
+    /*
+     * Create the image content viewer...
      */
     rv = NS_NewDocumentViewer(docv);
     if (NS_OK != rv) {
