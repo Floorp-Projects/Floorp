@@ -968,15 +968,40 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* urlLi
   {
     nsXPIDLString folderName;
     GetName(getter_Copies(folderName));
-    status = msgParent->CreateSubfolder(folderName);
+    status = msgParent->CreateSubfolder(folderName,nsnull);
   }
   return status;
 }
 
 nsresult
-nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
+nsMsgLocalMailFolder::AlertFolderExists(nsIMsgWindow *msgWindow) 
+{
+    nsresult rv = NS_OK;
+	nsCOMPtr<nsIDocShell> docShell;
+	msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+	if (!mMsgStringService)
+		mMsgStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
+	if (!mMsgStringService) return NS_ERROR_FAILURE;
+		PRUnichar *alertString = nsnull;
+	mMsgStringService->GetStringByID(POP3_FOLDER_ALREADY_EXISTS, &alertString);
+	if (!alertString) return rv;
+		if (docShell)
+		{
+			nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+			if (dialog)
+			{
+				rv = dialog->Alert(nsnull, alertString);
+				return rv;
+			}
+		}
+	return rv;
+}
+
+nsresult
+nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow )
 {
 	nsresult rv = NS_OK;
+	PRBool exists = PR_FALSE;
     
 	nsFileSpec path;
     nsCOMPtr<nsIMsgFolder> child;
@@ -985,12 +1010,17 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
 	if(NS_FAILED(rv))
 		return rv;
 
-
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
 	path += nsAutoString(folderName);
-	path.MakeUnique();
-
+	exists=path.Exists();
+        if (exists){
+		if (msgWindow)
+		AlertFolderExists(msgWindow);
+                return NS_MSG_FOLDER_EXISTS;
+	}
+		
+		
 	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
    
 	// Create an empty database for this mail folder, set its name from the user  
@@ -1163,7 +1193,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
         rv = trashFolder->GetParent(getter_AddRefs(parent));
         if (NS_SUCCEEDED(rv) && parent)
         {
-            nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent, &rv);
+            nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent, &rv)
+;
             if (NS_SUCCEEDED(rv) && parentFolder)
             {
                 nsXPIDLString idlFolderName;
@@ -1177,13 +1208,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                     nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parent);
                     if (trashSupport && parentSupport)
                       NotifyItemDeleted(parentSupport, trashSupport, "folderView");
-                    parentFolder->CreateSubfolder(folderName.GetUnicode());
-                    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID,
-                                    &rv);  
+                    parentFolder->CreateSubfolder(folderName.GetUnicode(),msgWindow);
+                    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID,&rv);
                     if (NS_FAILED(rv)) return rv;
                     nsCOMPtr<nsIRDFResource> res;
-                    rv = rdfService->GetResource(trashUri,
-                                                 getter_AddRefs(res));
+                    rv = rdfService->GetResource(trashUri,getter_AddRefs(res));
                     if (NS_SUCCEEDED(rv))
                     {
                         nsCOMPtr<nsIMsgFolder> newfolder =
@@ -1359,7 +1388,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
   return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
+NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWindow *msgWindow)
 {
     nsCOMPtr<nsIFileSpec> oldPathSpec;
     nsCOMPtr<nsIFolder> parent;
@@ -1367,7 +1396,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
     if (NS_FAILED(rv)) return rv;
     rv = GetParent(getter_AddRefs(parent));
     if (NS_FAILED(rv)) return rv;
-    ForceDBClosed();
     nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent);
     nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parent);
     
@@ -1376,19 +1404,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
     nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
     nsFileSpec dirSpec;
 
-    PRUint32 cnt = 0;
+	PRUint32 cnt = 0;
     if (mSubFolders)
       mSubFolders->Count(&cnt);
 
+
     if (cnt > 0)
       rv = CreateDirectoryForFolder(dirSpec);
-
-    if (parentFolder)
-    {
-        SetParent(nsnull);
-        parentFolder->PropagateDelete(this, PR_FALSE);
-    }
-
+	
 	// convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
 	// function in nsIFileSpec
 
@@ -1396,11 +1419,46 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
 	char *convertedNewName;
 	if (NS_FAILED(ConvertFromUnicode(fileCharset, nsAutoString(aNewName), &convertedNewName)))
 		return NS_ERROR_FAILURE;
-
 	nsCAutoString newNameStr(convertedNewName);
-	oldPathSpec->Rename(newNameStr.GetBuffer());
+
+    PRBool sameName = PR_FALSE;
+	PRBool exists = PR_FALSE;
+	nsXPIDLCString oldLeafName;
+	oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
+
+	if (strcmp(oldLeafName.get(), convertedNewName) == 0) {
+		sameName = PR_TRUE;
+    }
+	else
+	{
+	   oldPathSpec->SetLeafName(convertedNewName);
+	   oldPathSpec->Exists(&exists);
+       //Set it back to oldLeafName so that actual renaming on disk can be done....
+	   oldPathSpec->SetLeafName(oldLeafName);
+
+	}
+
+	if ( exists || sameName ){
+		if(msgWindow)
+	    rv=AlertFolderExists(msgWindow);
+		return NS_MSG_FOLDER_EXISTS;
+	}
+
+	NotifyStoreClosedAllHeaders();
+	ForceDBClosed();
+	
+    if (parentFolder)
+    {
+        SetParent(nsnull);
+        parentFolder->PropagateDelete(this, PR_FALSE);
+    }
+
+    oldPathSpec->Rename(newNameStr.GetBuffer());
+
 	newNameStr += ".msf";
 	oldSummarySpec.Rename(newNameStr.GetBuffer());
+
+	
 	if (NS_SUCCEEDED(rv) && cnt > 0) {
 		// rename "*.sbd" directory
 		nsCAutoString newNameDirStr(convertedNewName);
