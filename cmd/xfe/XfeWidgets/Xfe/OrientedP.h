@@ -31,7 +31,25 @@
 #include <Xfe/DynamicManagerP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
-   
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeOriented method inheritance macros								*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeInheritEnter						((XfeOrientedProc)		_XtInherit)
+#define XfeInheritLeave						((XfeOrientedProc)		_XtInherit)
+#define XfeInheritMotion					((XfeOrientedProc)		_XtInherit)
+#define XfeInheritDragStart					((XfeOrientedProc)		_XtInherit)
+#define XfeInheritDragEnd					((XfeOrientedProc)		_XtInherit)
+#define XfeInheritDragMotion				((XfeOrientedProc)		_XtInherit)
+#define XfeInheritDescendantEnter			((XfeOrientedProc)		_XtInherit)
+#define XfeInheritDescendantLeave			((XfeOrientedProc)		_XtInherit)
+#define XfeInheritDescendantMotion			((XfeOrientedProc)		_XtInherit)
+#define XfeInheritDescendantDragStart		((XfeOrientedProc)		_XtInherit)
+#define XfeInheritDescendantDragEnd			((XfeOrientedProc)		_XtInherit)
+#define XfeInheritDescendantDragMotion		((XfeOrientedProc)		_XtInherit)
+
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeOrientedClassPart													*/

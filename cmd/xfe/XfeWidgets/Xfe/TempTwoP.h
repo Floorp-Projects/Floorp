@@ -29,6 +29,7 @@
 
 #include <Xfe/TempTwo.h>
 #include <Xfe/DynamicManagerP.h>
+#include <Xfe/LabelP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 	

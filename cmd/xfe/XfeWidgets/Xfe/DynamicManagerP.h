@@ -34,6 +34,17 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeDynamicManager method inheritance macros							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeInheritAcceptDynamicChild		((XfeChildFunc)			_XtInherit)
+#define XfeInheritDeleteDynamicChild		((XfeChildFunc)			_XtInherit)
+#define XfeInheritInsertDynamicChild		((XfeChildFunc)			_XtInherit)
+#define XfeInheritLayoutDynamicChildren		((XtWidgetProc)			_XtInherit)
+#define XfeInheritGetChildDimensions		((XfeGeometryProc)		_XtInherit)
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeDynamicManagerClassPart											*/
 /*																		*/
 /*----------------------------------------------------------------------*/

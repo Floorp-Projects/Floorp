@@ -31,6 +31,17 @@
 #include <Xfe/LabelP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeButton method inheritance macros									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeInheritLayoutPixmap				((XtWidgetProc)			_XtInherit)
+#define XfeInheritDrawPixmap				((XfeExposeProc)		_XtInherit)
+#define XfeInheritDrawRaiseBorder			((XfeExposeProc)		_XtInherit)
+#define XfeInheritDrawUnderline				((XfeExposeProc)		_XtInherit)
+#define XfeInheritArmTimeout				((XtTimerCallbackProc)	_XtInherit)
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -96,7 +107,7 @@ typedef struct _XfeButtonPart
     Boolean				fill_on_arm;			/* Fill on arm ?		*/
 
     /* Raise resources */
-    Boolean				fill_on_enter;			/* Fill on raise ?		*/
+    Boolean				fill_on_enter;			/* Fill on enter ?		*/
     Pixel				raise_foreground;		/* Raise foreground		*/
     Pixel				raise_background;		/* Raise background		*/
 	Dimension			raise_border_thickness;	/* Raise border thickness*/

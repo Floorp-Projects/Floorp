@@ -38,6 +38,19 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeManager method inheritance macros									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeInheritUpdateChildrenInfo		((XtWidgetProc)			_XtInherit)
+#define XfeInheritLayoutWidget				((XtWidgetProc)			_XtInherit)
+#define XfeInheritAcceptStaticChild			((XfeChildFunc)			_XtInherit)
+#define XfeInheritInsertStaticChild			((XfeChildFunc)			_XtInherit)
+#define XfeInheritDeleteStaticChild			((XfeChildFunc)			_XtInherit)
+#define XfeInheritLayoutStaticChildren		((XtWidgetProc)			_XtInherit)
+#define XfeInheritChangeManaged				((XtWidgetProc)			_XtInherit)
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeManagerClassPart													*/
 /*																		*/
 /*----------------------------------------------------------------------*/

@@ -105,62 +105,6 @@ typedef int	XfeBitGravityType;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Widget method inheritance macros										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#define XfeInheritAcceptDynamicChild		((XfeChildFunc)			_XtInherit)
-#define XfeInheritAcceptStaticChild			((XfeChildFunc)			_XtInherit)
-#define XfeInheritArmTimeout				((XtTimerCallbackProc)	_XtInherit)
-#define XfeInheritBitGravity				((XfeBitGravityType)	_XtInherit)
-#define XfeInheritChangeManaged				((XtWidgetProc)			_XtInherit)
-#define XfeInheritClickTimeout				((XtTimerCallbackProc)	_XtInherit)
-#define XfeInheritDeleteDynamicChild		((XfeChildFunc)			_XtInherit)
-#define XfeInheritDeleteStaticChild			((XfeChildFunc)			_XtInherit)
-#define XfeInheritDescendantDragEnd			((XfeOrientedProc)		_XtInherit)
-#define XfeInheritDescendantDragMotion		((XfeOrientedProc)		_XtInherit)
-#define XfeInheritDescendantDragStart		((XfeOrientedProc)		_XtInherit)
-#define XfeInheritDescendantEnter			((XfeOrientedProc)		_XtInherit)
-#define XfeInheritDescendantLeave			((XfeOrientedProc)		_XtInherit)
-#define XfeInheritDescendantMotion			((XfeOrientedProc)		_XtInherit)
-#define XfeInheritDragEnd					((XfeOrientedProc)		_XtInherit)
-#define XfeInheritDragMotion				((XfeOrientedProc)		_XtInherit)
-#define XfeInheritDragStart					((XfeOrientedProc)		_XtInherit)
-#define XfeInheritDrawBackground			((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawComponents			((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawHighlight				((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawPixmap				((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawRaiseBorder			((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawSelection				((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawShadow				((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawString				((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawTitleShadow			((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawUnderline				((XfeExposeProc)		_XtInherit)
-#define XfeInheritEnter						((XfeOrientedProc)		_XtInherit)
-#define XfeInheritGetBackgroundGC			((XfeGetGCFunc)			_XtInherit)
-#define XfeInheritGetChildDimensions		((XfeGeometryProc)		_XtInherit)
-#define XfeInheritGetLabelGC				((XfeGetGCFunc)			_XtInherit)
-#define XfeInheritGetPixmapGC				((XfeGetGCFunc)			_XtInherit)
-#define XfeInheritGetSelectionGC			((XfeGetGCFunc)			_XtInherit)
-#define XfeInheritInsertDynamicChild		((XfeChildFunc)			_XtInherit)
-#define XfeInheritInsertStaticChild			((XfeChildFunc)			_XtInherit)
-#define XfeInheritLayoutArrow				((XtWidgetProc)			_XtInherit)
-#define XfeInheritLayoutComponents			((XtWidgetProc)			_XtInherit)
-#define XfeInheritLayoutDynamicChildren		((XtWidgetProc)			_XtInherit)
-#define XfeInheritLayoutIndicator			((XtWidgetProc)			_XtInherit)
-#define XfeInheritLayoutPixmap				((XtWidgetProc)			_XtInherit)
-#define XfeInheritLayoutStaticChildren		((XtWidgetProc)			_XtInherit)
-#define XfeInheritLayoutString				((XtWidgetProc)			_XtInherit)
-#define XfeInheritLayoutTitle				((XtWidgetProc)			_XtInherit)
-#define XfeInheritLayoutWidget				((XtWidgetProc)			_XtInherit)
-#define XfeInheritLeave						((XfeOrientedProc)		_XtInherit)
-#define XfeInheritMotion					((XfeOrientedProc)		_XtInherit)
-#define XfeInheritPreferredGeometry			((XfeGeometryProc)		_XtInherit)
-#define XfeInheritToggleSelection			((XtWidgetProc)			_XtInherit)
-#define XfeInheritUpdateBoundary			((XtWidgetProc)			_XtInherit)
-#define XfeInheritUpdateChildrenInfo		((XtWidgetProc)			_XtInherit)
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* Method inheritance resolution macro									*/
 /*																		*/
 /*----------------------------------------------------------------------*/

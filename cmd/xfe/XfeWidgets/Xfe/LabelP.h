@@ -31,7 +31,18 @@
 #include <Xfe/PrimitiveP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
-   
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeLabel method inheritance macros									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeInheritLayoutString				((XtWidgetProc)			_XtInherit)
+#define XfeInheritDrawString				((XfeExposeProc)		_XtInherit)
+#define XfeInheritDrawSelection				((XfeExposeProc)		_XtInherit)
+#define XfeInheritGetLabelGC				((XfeGetGCFunc)			_XtInherit)
+#define XfeInheritGetSelectionGC			((XfeGetGCFunc)			_XtInherit)
+
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeLabelClassPart													*/

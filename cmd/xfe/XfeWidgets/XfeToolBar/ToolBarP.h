@@ -31,7 +31,18 @@
 #include <Xfe/OrientedP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
-	
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolBar method inheritance macros									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeInheritLayoutIndicator			((XtWidgetProc)			_XtInherit)
+
+#ifndef XfeInheritDrawRaiseBorder
+#define XfeInheritDrawRaiseBorder			((XfeExposeProc)		_XtInherit)
+#endif
+
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeToolBarClassPart													*/

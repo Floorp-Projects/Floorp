@@ -31,6 +31,16 @@
 #include <Xfe/ManagerP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeComboBox method inheritance macros								*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeInheritLayoutTitle				((XtWidgetProc)			_XtInherit)
+#define XfeInheritLayoutArrow				((XtWidgetProc)			_XtInherit)
+#define XfeInheritDrawHighlight				((XfeExposeProc)		_XtInherit)
+#define XfeInheritDrawTitleShadow			((XfeExposeProc)		_XtInherit)
 	
 /*----------------------------------------------------------------------*/
 /*																		*/
