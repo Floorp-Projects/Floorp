@@ -129,6 +129,7 @@ nsMathMLTokenFrame::SetInitialChildList(nsIPresContext* aPresContext,
     childFrame->GetNextSibling(&childFrame);
   }
 
+  SetQuotes(aPresContext);
   ProcessTextData(aPresContext);
   return rv;
 }
