@@ -28,6 +28,7 @@
 #define JRI_MD_H
 
 #include <assert.h>
+#include "prtypes.h" /* Needed for HAS_LONG_LONG ifdefs */
 
 #ifdef __cplusplus
 extern "C" {
