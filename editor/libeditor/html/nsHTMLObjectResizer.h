@@ -110,14 +110,14 @@ public:
 };
 
 // ==================================================================
-// ResizeEventListener
+// DocumentResizeEventListener
 // ==================================================================
 
-class ResizeEventListener: public nsIDOMEventListener
+class DocumentResizeEventListener: public nsIDOMEventListener
 {
 public:
-  ResizeEventListener(nsIHTMLEditor * aEditor);
-  virtual ~ResizeEventListener();
+  DocumentResizeEventListener(nsIHTMLEditor * aEditor);
+  virtual ~DocumentResizeEventListener();
 
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -128,6 +128,5 @@ public:
   nsIHTMLEditor * mEditor;
 
 };
-
 
 #endif /* _nshtmlobjectresizer__h */

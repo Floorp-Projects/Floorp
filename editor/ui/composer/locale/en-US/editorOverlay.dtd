@@ -395,6 +395,9 @@
 <!ENTITY decreaseindent.accesskey "D">
 <!ENTITY decreaseindentkb "-">
 
+<!ENTITY grid.label "Positioning grid">
+<!ENTITY grid.accesskey "t">
+
 <!ENTITY pageProperties.label "Page Title and Properties...">
 <!ENTITY pageproperties.accesskey "g">
 <!ENTITY colorsAndBackground.label "Page Colors and Background...">

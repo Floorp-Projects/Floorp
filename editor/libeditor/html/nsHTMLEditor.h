@@ -49,7 +49,6 @@
 #include "nsITableEditor.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
-#include "nsIDocumentObserver.h"
 
 #include "nsEditor.h"
 #include "nsIDOMElement.h"
@@ -68,6 +67,11 @@
 #include "nsVoidArray.h"
 
 #include "nsHTMLObjectResizer.h"
+#include "nsIHTMLAbsPosEditor.h"
+#include "nsIHTMLInlineTableEditor.h"
+#include "nsIHTMLObjectResizeListener.h"
+
+#include "nsIDocumentObserver.h"
 
 #include "nsPoint.h"
 
@@ -87,7 +91,9 @@ class nsIContentFilter;
 class nsHTMLEditor : public nsPlaintextEditor,
                      public nsIHTMLEditor,
                      public nsIHTMLObjectResizer,
+                     public nsIHTMLAbsPosEditor,
                      public nsITableEditor,
+                     public nsIHTMLInlineTableEditor,
                      public nsIEditorStyleSheets,
                      public nsICSSLoaderObserver
 {
@@ -111,7 +117,11 @@ public:
     kOpRemoveTextProperty  = 3011,
     kOpHTMLPaste           = 3012,
     kOpLoadHTML            = 3013,
-    kOpResetTextProperties = 3014
+    kOpResetTextProperties = 3014,
+    kOpSetAbsolutePosition = 3015,
+    kOpRemoveAbsolutePosition = 3016,
+    kOpDecreaseZIndex      = 3017,
+    kOpIncreaseZIndex      = 3018
   };
 
   enum ResizingRequestID
@@ -139,110 +149,36 @@ public:
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
   NS_IMETHODIMP BeginningOfDocument();
 
+  /* ------------ nsIHTMLEditor methods -------------- */
+
+  NS_DECL_NSIHTMLEDITOR
+
   /* ------------ nsIHTMLObjectResizer methods -------------- */
+  /* -------- Implemented in nsHTMLObjectResizer.cpp -------- */
   NS_DECL_NSIHTMLOBJECTRESIZER
 
-  /* ------------ nsIHTMLEditor methods -------------- */
-  NS_IMETHOD UpdateBaseURL();
+  /* ------------ nsIHTMLAbsPosEditor methods -------------- */
+  /* -------- Implemented in nsHTMLAbsPosition.cpp --------- */
+  NS_DECL_NSIHTMLABSPOSEDITOR
 
+  /* ------------ nsIHTMLInlineTableEditor methods -------------- */
+  /* ------- Implemented in nsHTMLInlineTableEditor.cpp --------- */
+  NS_DECL_NSIHTMLINLINETABLEEDITOR
+
+  /* ------------ nsIHTMLEditor methods -------------- */
   NS_IMETHOD CopyLastEditableChildStyles(nsIDOMNode *aPreviousBlock, nsIDOMNode *aNewBlock,
                                          nsIDOMNode **aOutBrNode);
 
-  NS_IMETHOD ParseStyleAttrIntoCSSRule(const nsAString& aString,
-                                       nsIDOMCSSStyleRule **_retval); 
-
-  NS_IMETHOD AddDefaultProperty(nsIAtom *aProperty, 
-                                const nsAString & aAttribute, 
-                                const nsAString & aValue);
-
-  NS_IMETHOD RemoveDefaultProperty(nsIAtom *aProperty, 
-                                   const nsAString & aAttribute, 
-                                   const nsAString & aValue);
-
-  NS_IMETHOD RemoveAllDefaultProperties();
-
-  NS_IMETHOD SetCSSInlineProperty(nsIAtom *aProperty, 
-                             const nsAString & aAttribute, 
-                             const nsAString & aValue);
-                            
-  NS_IMETHOD SetInlineProperty(nsIAtom *aProperty, 
-                             const nsAString & aAttribute, 
-                             const nsAString & aValue);
-  
-  NS_IMETHOD GetInlineProperty(nsIAtom *aProperty, 
-                             const nsAString & aAttribute, 
-                             const nsAString & aValue, 
-                             PRBool *aFirst, 
-                             PRBool *aAny, 
-                             PRBool *aAll);
-  NS_IMETHOD GetInlinePropertyWithAttrValue(nsIAtom *aProperty, 
-                             const nsAString &aAttribute,
-                             const nsAString &aValue,
-                             PRBool *aFirst, 
-                             PRBool *aAny, 
-                             PRBool *aAll,
-                             nsAString &outValue);
-  NS_IMETHOD RemoveAllInlineProperties();
-  NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsAString & aAttribute);
-  NS_IMETHOD IncreaseFontSize();
-  NS_IMETHOD DecreaseFontSize();
-
-  NS_IMETHOD PasteNoFormatting(PRInt32 aSelectionType);
-  NS_IMETHOD InsertHTML(const nsAString &aInputString);
-  NS_IMETHOD InsertHTMLWithContext(const nsAString & aInputString,
-                                   const nsAString & aContextStr,
-                                   const nsAString & aInfoStr,
-                                   const nsAString & aFlavor,
-                                   nsIDOMDocument *aSourceDoc,
-                                   nsIDOMNode *aDestinationNode,
-                                   PRInt32 aDestinationOffset,
-                                   PRBool aDeleteSelection);
-
   NS_IMETHOD LoadHTML(const nsAString &aInputString);
-  NS_IMETHOD RebuildDocumentFromSource(const nsAString& aSourceString);
-  NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
-  
-  NS_IMETHOD SelectElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
-
-  NS_IMETHOD SetParagraphFormat(const nsAString& aParagraphFormat);
 
   NS_IMETHOD GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists);
 
-  NS_IMETHOD GetParagraphState(PRBool *aMixed, nsAString &outFormat);
-  NS_IMETHOD GetFontFaceState(PRBool *aMixed, nsAString &outFace);
-  NS_IMETHOD GetFontColorState(PRBool *aMixed, nsAString &outColor);
-  NS_IMETHOD GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, PRBool aBlockLevel);
+  nsresult GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor,
+                                      PRBool aBlockLevel);
   NS_IMETHOD GetHTMLBackgroundColorState(PRBool *aMixed, nsAString &outColor);
-  NS_IMETHOD GetBackgroundColorState(PRBool *aMixed, nsAString &outColor);
-  NS_IMETHOD GetHighlightColorState(PRBool *aMixed, nsAString &outColor);
   NS_IMETHOD GetHighlightColor(PRBool *mixed, PRUnichar **_retval);
-  NS_IMETHOD GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *aDL);
-  NS_IMETHOD GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBool *aDD);
-  NS_IMETHOD GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign);
-  NS_IMETHOD GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent);
 
-  NS_IMETHOD MakeOrChangeList(const nsAString& aListType, PRBool entireList, const nsAString& aBulletType);
-  NS_IMETHOD RemoveList(const nsAString& aListType);
-  NS_IMETHOD Indent(const nsAString& aIndent);
-  NS_IMETHOD Align(const nsAString& aAlign);
-
-  NS_IMETHOD GetElementOrParentByTagName(const nsAString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn);
-  NS_IMETHOD GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aReturn);
-  NS_IMETHOD CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD GetNextElementByTagName(nsIDOMElement *aCurrentElement, const nsAString *aTagName, nsIDOMElement **aReturn);
-
-
-  NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
-
-  NS_IMETHOD GetLinkedObjects(nsISupportsArray** aNodeList);
-
-  NS_IMETHOD SetIsCSSEnabled(PRBool aIsCSSPrefChecked);
-  NS_IMETHOD GetIsCSSEnabled(PRBool *aIsCSSEnabled);
-  NS_IMETHOD AddInsertionListener(nsIContentFilter *aFilter);
-  NS_IMETHOD RemoveInsertionListener(nsIContentFilter *aFilter);
-
-  NS_IMETHOD IsAnonymousElement(nsIDOMElement * aElement, PRBool * aReturn);
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
@@ -340,11 +276,6 @@ public:
   //   or calls into nsTextEditor to set the page background
   NS_IMETHOD SetCSSBackgroundColor(const nsAString& aColor);
   NS_IMETHOD SetHTMLBackgroundColor(const nsAString& aColor);
-  NS_IMETHOD SetBackgroundColor(const nsAString& aColor);
-  NS_IMETHOD SetBodyAttribute(const nsAString& aAttr, const nsAString& aValue);
-  // aTitle may be null or empty string to remove child contents of <title>
-
-  NS_IMETHOD SetDocumentTitle(const nsAString &aTitle);
 
   /* ------------ Block methods moved from nsEditor -------------- */
   static nsCOMPtr<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
@@ -406,8 +337,6 @@ public:
   /** Internal, static version */
   static nsresult NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock);
 
-  /** This version is for exposure to JavaScript */
-  NS_IMETHOD NodeIsBlock(nsIDOMNode *aNode, PRBool *aIsBlock);
 
   /** we override this here to install event listeners */
   NS_IMETHOD PostCreate();
@@ -417,13 +346,6 @@ public:
 
   NS_IMETHOD Paste(PRInt32 aSelectionType);
   NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste);
-
-  NS_IMETHOD CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDrag);
-  NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
-  NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
-
-  NS_IMETHOD GetHeadContentsAsHTML(nsAString& aOutputString);
-  NS_IMETHOD ReplaceHeadContentsWithHTML(const nsAString &aSourceToInsert);
 
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
@@ -831,7 +753,6 @@ protected:
 
   //XXX Kludge: Used to suppress spurious drag/drop events (bug 50703)
   PRBool   mIgnoreSpuriousDragEvent;
-  NS_IMETHOD IgnoreSpuriousDragEvent(PRBool aIgnoreSpuriousDragEvent) {mIgnoreSpuriousDragEvent = aIgnoreSpuriousDragEvent; return NS_OK;}
 
   nsresult GetInlinePropertyBase(nsIAtom *aProperty, 
                              const nsAString *aAttribute,
@@ -892,11 +813,42 @@ protected:
   static PRInt32 sInstanceCount;
 
 protected:
-  PRPackedBool mIsImageResizingEnabled;
-  PRPackedBool mIsShowingResizeHandles;
+
+  /* ANONYMOUS UTILS */
+  void     DeleteRefToAnonymousNode(nsIDOMElement* aElement,
+                                    nsIContent * aParentContent,
+                                    nsIDocumentObserver * aDocObserver);
+  nsresult GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 & aY);
+  nsresult GetPositionAndDimensions(nsIDOMElement * aElement,
+                                    PRInt32 & aX, PRInt32 & aY,
+                                    PRInt32 & aW, PRInt32 & aH,
+                                    PRInt32 & aBorderLeft,
+                                    PRInt32 & aBorderTop,
+                                    PRInt32 & aMarginLeft,
+                                    PRInt32 & aMarginTop);
+
+  /* PACKED BOOLEANS FOR RESIZING, ABSOLUTE POSITIONING AND */
+  /* INLINE TABLE EDITING */
+
+  // resizing
+  PRPackedBool mIsObjectResizingEnabled;
   PRPackedBool mIsResizing;
   PRPackedBool mPreserveRatio;
   PRPackedBool mResizedObjectIsAnImage;
+
+  // absolute positioning
+  PRPackedBool mIsAbsolutelyPositioningEnabled;
+  PRPackedBool mResizedObjectIsAbsolutelyPositioned;
+
+  PRPackedBool mGrabberClicked;
+  PRPackedBool mIsMoving;
+
+  PRPackedBool mSnapToGridEnabled;
+
+  // inline table editing
+  PRPackedBool mIsInlineTableEditingEnabled;
+
+  /* RESIZING */
 
   nsCOMPtr<nsIDOMElement> mTopLeftHandle;
   nsCOMPtr<nsIDOMElement> mTopHandle;
@@ -907,14 +859,19 @@ protected:
   nsCOMPtr<nsIDOMElement> mBottomHandle;
   nsCOMPtr<nsIDOMElement> mBottomRightHandle;
 
+  nsCOMPtr<nsIDOMElement> mActivatedHandle;
+
   nsCOMPtr<nsIDOMElement> mResizingShadow;
   nsCOMPtr<nsIDOMElement> mResizingInfo;
 
   nsCOMPtr<nsIDOMElement> mResizedObject;
 
   nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
+  nsCOMPtr<nsIDOMEventListener>  mMutationListenerP;
   nsCOMPtr<nsISelectionListener> mSelectionListenerP;
   nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
+
+  nsCOMArray<nsIHTMLObjectResizeListener> objectResizeEventListeners;
 
   PRInt32 mOriginalX;
   PRInt32 mOriginalY;
@@ -924,18 +881,32 @@ protected:
   PRInt32 mResizedObjectWidth;
   PRInt32 mResizedObjectHeight;
 
+  PRInt32 mResizedObjectMarginLeft;
+  PRInt32 mResizedObjectMarginTop;
+  PRInt32 mResizedObjectBorderLeft;
+  PRInt32 mResizedObjectBorderTop;
+
   PRInt32 mXIncrementFactor;
   PRInt32 mYIncrementFactor;
   PRInt32 mWidthIncrementFactor;
   PRInt32 mHeightIncrementFactor;
 
-  nsresult CreateResizer(nsIDOMElement ** aReturn, PRInt16 aLocation, nsISupportsArray * aArray);
-  void     SetResizerPosition(PRInt32 aX, PRInt32 aY, nsIDOMElement *aResizer);
-  nsresult SetAllResizersPosition(nsIDOMElement * aResizedElement, PRInt32 & aX, PRInt32 & aY);
-  nsresult CreateShadow(nsIDOMElement ** aReturn, nsISupportsArray * aArray);
-  nsresult SetShadowPosition(nsIDOMElement *aResizedObject,
-                             PRInt32 aX, PRInt32 aY);
-  nsresult CreateResizingInfo(nsIDOMElement ** aReturn, nsISupportsArray * aArray);
+  PRInt8  mInfoXIncrement;
+  PRInt8  mInfoYIncrement;
+
+  nsresult SetAllResizersPosition();
+
+  nsresult CreateResizer(nsIDOMElement ** aReturn, PRInt16 aLocation, nsIDOMNode * aParentNode);
+  void     SetAnonymousElementPosition(PRInt32 aX, PRInt32 aY, nsIDOMElement *aResizer);
+
+  nsresult CreateShadow(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode,
+                        nsIDOMElement * aOriginalObject);
+  nsresult SetShadowPosition(nsIDOMElement * aShadow,
+                             nsIDOMElement * aOriginalObject,
+                             PRInt32 aOriginalObjectX,
+                             PRInt32 aOriginalObjectY);
+
+  nsresult CreateResizingInfo(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode);
   nsresult SetResizingInfoPosition(PRInt32 aX, PRInt32 aY,
                                    PRInt32 aW, PRInt32 aH);
 
@@ -947,11 +918,53 @@ protected:
   PRInt32  GetNewResizingHeight(PRInt32 aX, PRInt32 aY);
   void     HideShadowAndInfo();
   void     SetFinalSize(PRInt32 aX, PRInt32 aY);
-  void     DeleteRefToAnonymousNode(nsIDOMElement* aElement,
-                                    nsIContent * aParentContent,
-                                    nsIDocumentObserver * aDocObserver);
+  void     DeleteRefToAnonymousNode(nsIDOMNode * aNode);
   void     SetResizeIncrements(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH, PRBool aPreserveRatio);
-  nsresult GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 & aY);
+  void     SetInfoIncrements(PRInt8 aX, PRInt8 aY);
+
+  /* ABSOLUTE POSITIONING */
+
+  PRInt32 mPositionedObjectX;
+  PRInt32 mPositionedObjectY;
+  PRInt32 mPositionedObjectWidth;
+  PRInt32 mPositionedObjectHeight;
+
+  PRInt32 mPositionedObjectMarginLeft;
+  PRInt32 mPositionedObjectMarginTop;
+  PRInt32 mPositionedObjectBorderLeft;
+  PRInt32 mPositionedObjectBorderTop;
+
+  nsCOMPtr<nsIDOMElement> mAbsolutelyPositionedObject;
+  nsCOMPtr<nsIDOMElement> mGrabber;
+  nsCOMPtr<nsIDOMElement> mPositioningShadow;
+
+  PRInt32      mGridSize;
+
+  nsresult CreateGrabber(nsIDOMNode * aParentNode, nsIDOMElement ** aReturn);
+  nsresult StartMoving(nsIDOMElement * aHandle);
+  nsresult SetFinalPosition(PRInt32 aX, PRInt32 aY);
+  void     AddPositioningOffet(PRInt32 & aX, PRInt32 & aY);
+  void     SnapToGrid(PRInt32 & newX, PRInt32 & newY);
+  nsresult GrabberClicked();
+  nsresult EndMoving();
+  nsresult CheckPositionedElementBGandFG(nsIDOMElement * aElement,
+                                         nsAString & aReturn);
+
+  /* INLINE TABLE EDITING */
+
+  nsCOMPtr<nsIDOMElement> mInlineEditedCell;
+
+  nsCOMPtr<nsIDOMElement> mAddColumnBeforeButton;
+  nsCOMPtr<nsIDOMElement> mRemoveColumnButton;
+  nsCOMPtr<nsIDOMElement> mAddColumnAfterButton;
+
+  nsCOMPtr<nsIDOMElement> mAddRowBeforeButton;
+  nsCOMPtr<nsIDOMElement> mRemoveRowButton;
+  nsCOMPtr<nsIDOMElement> mAddRowAfterButton;
+
+  void     AddMouseClickListener(nsIDOMElement * aElement);
+  void     RemoveMouseClickListener(nsIDOMElement * aElement);
+
 public:
 
 // friends

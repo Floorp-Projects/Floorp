@@ -59,6 +59,8 @@ function SetupHTMLEditorCommands()
 
   commandTable.registerCommand("cmd_renderedHTMLEnabler", nsDummyHTMLCommand);
 
+  commandTable.registerCommand("cmd_grid",  nsGridCommand);
+
   commandTable.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
   commandTable.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
   commandTable.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
@@ -286,9 +288,12 @@ function goUpdateCommandState(command)
       case "cmd_fontColor":
       case "cmd_fontFace":
       case "cmd_fontSize":
+      case "cmd_absPos":
         pokeMultiStateUI(command, params);
         break;
 
+      case "cmd_decreaseZIndex":
+      case "cmd_increaseZIndex":
       case "cmd_indent":
       case "cmd_outdent":
       case "cmd_increaseFont":
@@ -2883,6 +2888,25 @@ var nsInsertBreakAllCommand =
     } catch (e) {}
   }
 };
+
+//-----------------------------------------------------------------------------------
+var nsGridCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
+  },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
+  doCommand: function(aCommand)
+  {
+    window.openDialog("chrome://editor/content/EdSnapToGrid.xul","_blank", "chrome,close,titlebar,modal");
+    window.content.focus();
+  }
+};
+
 
 //-----------------------------------------------------------------------------------
 var nsListPropertiesCommand =

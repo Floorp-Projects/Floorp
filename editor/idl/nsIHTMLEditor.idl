@@ -43,6 +43,7 @@
 #include "nsIAtom.idl"
 
 interface nsISupportsArray;
+interface nsISelection;
 interface nsIContentFilter;
 
 %{C++
@@ -434,108 +435,108 @@ interface nsIHTMLEditor : nsISupports
   void  align(in AString aAlign);
 
   /** 
-    * Return the input node or a parent matching the given aTagName,
-    *   starting the search at the supplied node.
-    * An example of use is for testing if a node is in a table cell
-    *   given a selection anchor node.
-    *
-    * @param aTagName  The HTML tagname
-    *  Special input values:
-    *    Use "href" to get a link node 
-    *      (an "A" tag with the "href" attribute set)
-    *    Use "anchor" or "namedanchor" to get a named anchor node
-    *      (an "A" tag with the "name" attribute set)
-    *    Use "list" to get an OL, UL, or DL list node
-    *    Use "td" to get either a TD or TH cell node
-    *
-    * @param aNode    The node in the document to start the search.
-    *     If it is null, the anchor node of the current selection is used.
-    * @return         NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    *                 (passes NS_SUCCEEDED macro)
-    */
+   * Return the input node or a parent matching the given aTagName,
+   *   starting the search at the supplied node.
+   * An example of use is for testing if a node is in a table cell
+   *   given a selection anchor node.
+   *
+   * @param aTagName  The HTML tagname
+   *  Special input values:
+   *    Use "href" to get a link node 
+   *      (an "A" tag with the "href" attribute set)
+   *    Use "anchor" or "namedanchor" to get a named anchor node
+   *      (an "A" tag with the "name" attribute set)
+   *    Use "list" to get an OL, UL, or DL list node
+   *    Use "td" to get either a TD or TH cell node
+   *
+   * @param aNode    The node in the document to start the search.
+   *     If it is null, the anchor node of the current selection is used.
+   * @return         NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+   *                 (passes NS_SUCCEEDED macro)
+   */
   nsIDOMElement getElementOrParentByTagName(in AString aTagName,
                                             in nsIDOMNode aNode);
 
   /** 
-    * Return an element only if it is the only node selected,
-    *    such as an image, horizontal rule, etc.
-    * The exception is a link, which is more like a text attribute:
-    *    The Anchor tag is returned if the selection is within the textnode(s)
-    *    that are children of the "A" node.
-    *    This could be a collapsed selection, i.e., a caret
-    *    within the link text.
-    *
-    * @param aTagName  The HTML tagname or and empty string 
-    *       to get any element (but only if it is the only element selected)
-    *    Special input values for Links and Named anchors:
-    *    Use "href" to get a link node
-    *      (an "A" tag with the "href" attribute set)
-    *    Use "anchor" or "namedanchor" to get a named anchor node
-    *      (an "A" tag with the "name" attribute set)
-    * @return          NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    *                  (passes NS_SUCCEEDED macro)
-    */
+   * Return an element only if it is the only node selected,
+   *    such as an image, horizontal rule, etc.
+   * The exception is a link, which is more like a text attribute:
+   *    The Anchor tag is returned if the selection is within the textnode(s)
+   *    that are children of the "A" node.
+   *    This could be a collapsed selection, i.e., a caret
+   *    within the link text.
+   *
+   * @param aTagName  The HTML tagname or and empty string 
+   *       to get any element (but only if it is the only element selected)
+   *    Special input values for Links and Named anchors:
+   *    Use "href" to get a link node
+   *      (an "A" tag with the "href" attribute set)
+   *    Use "anchor" or "namedanchor" to get a named anchor node
+   *      (an "A" tag with the "name" attribute set)
+   * @return          NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+   *                  (passes NS_SUCCEEDED macro)
+   */
   nsIDOMElement getSelectedElement(in AString aTagName);
 
   /** 
-    * Output the contents of the <HEAD> section as text/HTML format
-    */
+   * Output the contents of the <HEAD> section as text/HTML format
+   */
   AString getHeadContentsAsHTML();
 
   /** 
-    * Replace all children of <HEAD> with string of HTML source
-    */
+   * Replace all children of <HEAD> with string of HTML source
+   */
   void replaceHeadContentsWithHTML(in AString aSourceToInsert);
 
   /** 
-    * Return a new element with default attribute values
-    * 
-    * This does not rely on the selection, and is not sensitive to context.
-    * 
-    * Used primarily to supply new element for various insert element dialogs
-    *  (Image, Link, NamedAnchor, Table, and HorizontalRule 
-    *   are the only returned elements as of 7/25/99)
-    *
-    * @param aTagName  The HTML tagname
-    *    Special input values for Links and Named anchors:
-    *    Use "href" to get a link node
-    *      (an "A" tag with the "href" attribute set)
-    *    Use "anchor" or "namedanchor" to get a named anchor node
-    *      (an "A" tag with the "name" attribute set)
-    * @return          The new element created.
-    */
+   * Return a new element with default attribute values
+   * 
+   * This does not rely on the selection, and is not sensitive to context.
+   * 
+   * Used primarily to supply new element for various insert element dialogs
+   *  (Image, Link, NamedAnchor, Table, and HorizontalRule 
+   *   are the only returned elements as of 7/25/99)
+   *
+   * @param aTagName  The HTML tagname
+   *    Special input values for Links and Named anchors:
+   *    Use "href" to get a link node
+   *      (an "A" tag with the "href" attribute set)
+   *    Use "anchor" or "namedanchor" to get a named anchor node
+   *      (an "A" tag with the "name" attribute set)
+   * @return          The new element created.
+   */
   nsIDOMElement createElementWithDefaults(in AString aTagName);
 
   /** 
-    * Insert an link element as the parent of the current selection
-    *
-    * @param aElement   An "A" element with a non-empty "href" attribute
-    */
+   * Insert an link element as the parent of the current selection
+   *
+   * @param aElement   An "A" element with a non-empty "href" attribute
+   */
   void insertLinkAroundSelection(in nsIDOMElement aAnchorElement);
 
   /** 
-    * Set the value of the "bgcolor" attribute on the document's <body> element
-    *
-    * @param aColor  The HTML color string, such as "#ffccff" or "yellow"
-    */
+   * Set the value of the "bgcolor" attribute on the document's <body> element
+   *
+   * @param aColor  The HTML color string, such as "#ffccff" or "yellow"
+   */
   void setBackgroundColor(in AString aColor);
 
 
   /** 
-    * Set an attribute on the document's <body> element
-    *    such as text, link, background colors
-    *
-    * 8/31/00 THIS ISN'T BEING USED? SHOULD WE DROP IT?
-    *
-    * @param aAttr   The attribute to be set
-    * @param aValue  The value of the attribute
-    */
+   * Set an attribute on the document's <body> element
+   *    such as text, link, background colors
+   *
+   * 8/31/00 THIS ISN'T BEING USED? SHOULD WE DROP IT?
+   *
+   * @param aAttr   The attribute to be set
+   * @param aValue  The value of the attribute
+   */
   void setBodyAttribute(in AString aAttr, in AString aValue);
   
   /** 
-    * XXX Used to suppress spurious drag/drop events to workaround bug 50703
-    * Don't use this method! It will go away after first release!
-    */
+   * XXX Used to suppress spurious drag/drop events to workaround bug 50703
+   * Don't use this method! It will go away after first release!
+   */
   void ignoreSpuriousDragEvent(in boolean aIgnoreSpuriousDragEvent);
 
   /**
@@ -548,28 +549,62 @@ interface nsIHTMLEditor : nsISupports
   nsISupportsArray getLinkedObjects();
 
   /** 
-    * A boolean which is true is the HTMLEditor has been instantiated
-    * with CSS knowledge and if the CSS pref is currently checked
-    *
-    * @return    true if CSS handled and enabled
-    */
+   * A boolean which is true is the HTMLEditor has been instantiated
+   * with CSS knowledge and if the CSS pref is currently checked
+   *
+   * @return    true if CSS handled and enabled
+   */
   attribute boolean isCSSEnabled;
 
   /**
    * Add listener for insertion override
    * @param inFilter  function which callers want called during insertion
    */
-
   void addInsertionListener(in nsIContentFilter inFilter);
 
   /**
    * Remove listener for insertion override
    * @param inFilter  function which callers do not want called during insertion
    */
-
   void removeInsertionListener(in nsIContentFilter inFilter);
 
+  /**
+   * parse a string containing CSS declarations and returns a DOM CSSStyleRule
+   * @return        a DOM CSSStyleRule
+   * @param aString [IN] a string containing CSS declarations
+   */
   nsIDOMCSSStyleRule parseStyleAttrIntoCSSRule(in AString aString);
+
+  /**
+   * Returns an anonymous nsDOMElement of type aTag,
+   * child of aParentNode. If aIsCreatedHidden is true, the class
+   * "hidden" is added to the created element. If aAnonClass is not
+   * the empty string, it becomes the value of the attribute "_moz_anonclass"
+   * @return a DOM Element
+   * @param aTag             [IN] a string representing the desired type of
+   *                              the element to create
+   * @param aParentNode      [IN] the parent node of the created anonymous
+   *                              element
+   * @param aAnonClass       [IN] contents of the _moz_anonclass attribute
+   * @param aIsCreatedHidden [IN] a boolean specifying if the class "hidden"
+   *                              is to be added to the created anonymous
+   *                              element
+   */
+  nsIDOMElement createAnonymousElement(in AString aTag, in nsIDOMNode aParentNode,
+                                       in AString aAnonClass, in boolean aIsCreatedHidden);
+
+  /**
+   * returns the deepest container of the selection
+   * @return a DOM Element
+   */
+  nsIDOMElement getSelectionContainer();
+
+  /**
+   * Checks if the anonymous nodes created by the HTML editor have to be
+   * refreshed or hidden depending on a possible new state of the selection
+   * @param aSelection [IN] a selection
+   */
+  void checkSelectionStateForAnonymousButtons(in nsISelection aSelection);
 
   boolean isAnonymousElement(in nsIDOMElement aElement);
 };

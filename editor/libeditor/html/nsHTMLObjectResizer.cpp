@@ -43,6 +43,9 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMText.h"
 
+#include "nsIDOMCSSValue.h"
+#include "nsIDOMCSSPrimitiveValue.h"
+
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
@@ -57,34 +60,40 @@
 
 #include "nsPoint.h"
 
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIServiceManager.h"
+
+#include "nsIPresContext.h"
+#include "nsILookAndFeel.h"
+
 class nsHTMLEditUtils;
 
 // ==================================================================
-// ResizeEventListener
+// DocumentResizeEventListener
 // ==================================================================
-NS_IMPL_ADDREF(ResizeEventListener)
-NS_IMPL_RELEASE(ResizeEventListener)
+NS_IMPL_ADDREF(DocumentResizeEventListener)
+NS_IMPL_RELEASE(DocumentResizeEventListener)
 
-NS_INTERFACE_MAP_BEGIN(ResizeEventListener)
+NS_INTERFACE_MAP_BEGIN(DocumentResizeEventListener)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
 NS_INTERFACE_MAP_END
 
-ResizeEventListener::ResizeEventListener(nsIHTMLEditor * aEditor) :
+DocumentResizeEventListener::DocumentResizeEventListener(nsIHTMLEditor * aEditor) :
  mEditor(aEditor)
 {
 }
 
-ResizeEventListener::~ResizeEventListener()
+DocumentResizeEventListener::~DocumentResizeEventListener()
 {
 }
 
 NS_IMETHODIMP
-ResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
+DocumentResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIHTMLObjectResizer> objectResizer = do_QueryInterface(mEditor);
-  objectResizer->RefreshResizers();
-  return NS_OK;
+  return objectResizer->RefreshResizers();
 }
 
 // ==================================================================
@@ -116,8 +125,7 @@ ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection 
                   nsISelectionListener::SELECTALL_REASON)) && aSelection) {
     // the selection changed and we need to check if we have to
     // hide and/or redisplay resizing handles
-    nsCOMPtr<nsIHTMLObjectResizer> objectResizer = do_QueryInterface(mEditor);
-    objectResizer->CheckResizingState(aSelection);
+    mEditor->CheckSelectionStateForAnonymousButtons(aSelection);
   }
 
   return NS_OK;
@@ -186,18 +194,17 @@ NS_INTERFACE_MAP_END
 // ==================================================================
 
 nsresult
-nsHTMLEditor::CreateResizer(nsIDOMElement ** aReturn, PRInt16 aLocation, nsISupportsArray * aArray)
+nsHTMLEditor::CreateResizer(nsIDOMElement ** aReturn, PRInt16 aLocation, nsIDOMNode * aParentNode)
 {
-  // let's create a span through the element factory
-  nsCOMPtr<nsIContent> newContent;
-  nsresult res = CreateHTMLContent(NS_LITERAL_STRING("span"), getter_AddRefs(newContent));
-  if (NS_FAILED(res)) return res;
+  nsresult res = CreateAnonymousElement(NS_LITERAL_STRING("span"),
+                                        aParentNode,
+                                        NS_LITERAL_STRING("mozResizer"),
+                                        PR_FALSE,
+                                        aReturn);
 
-  nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);
-  if (!newElement)
+  if (NS_FAILED(res)) return res;
+  if (!*aReturn)
     return NS_ERROR_FAILURE;
-  *aReturn = newElement;
-  NS_ADDREF(*aReturn);
 
   // add the mouse listener so we can detect a click on a resizer
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(*aReturn));
@@ -233,109 +240,82 @@ nsHTMLEditor::CreateResizer(nsIDOMElement ** aReturn, PRInt16 aLocation, nsISupp
       break;
   }
 
-
-  res = newElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
-                                 NS_LITERAL_STRING("mozResizer"));
-  if (NS_FAILED(res)) return res;
-  res = newElement->SetAttribute(NS_LITERAL_STRING("anonlocation"),
+  res = (*aReturn)->SetAttribute(NS_LITERAL_STRING("anonlocation"),
                                  locationStr);
-  if (NS_FAILED(res)) return res;
-
-  return aArray->AppendElement(newContent);
+  return res;
 }
 
 nsresult
-nsHTMLEditor::CreateShadow(nsIDOMElement ** aReturn, nsISupportsArray * aArray)
+nsHTMLEditor::CreateShadow(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode,
+                           nsIDOMElement * aOriginalObject)
 {
   // let's create an image through the element factory
-  nsCOMPtr<nsIContent> newContent;
   nsAutoString name;
-  if (NodeIsType(mResizedObject, NS_LITERAL_STRING("img")))
+  if (NodeIsType(aOriginalObject, NS_LITERAL_STRING("img")))
     name = NS_LITERAL_STRING("img");
   else
     name = NS_LITERAL_STRING("span");
-  nsresult res = CreateHTMLContent(name, getter_AddRefs(newContent));
-  if (NS_FAILED(res)) return res;
+  nsresult res = CreateAnonymousElement(name,
+                                        aParentNode,
+                                        NS_LITERAL_STRING("mozResizingShadow"),
+                                        PR_TRUE,
+                                        aReturn);
 
-  nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);
-  if (!newElement)
+  if (!*aReturn)
     return NS_ERROR_FAILURE;
-  *aReturn = newElement;
-  NS_ADDREF(*aReturn);
 
-  return aArray->AppendElement(newContent);
+  return res;
 }
 
 nsresult
-nsHTMLEditor::CreateResizingInfo(nsIDOMElement ** aReturn, nsISupportsArray * aArray)
+nsHTMLEditor::CreateResizingInfo(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode)
 {
-  // let's create an image through the element factory
-  nsCOMPtr<nsIContent> newContent;
-  nsresult res = CreateHTMLContent(NS_LITERAL_STRING("span"), getter_AddRefs(newContent));
-  if (NS_FAILED(res)) return res;
+  // let's create an info box through the element factory
+  nsresult res = CreateAnonymousElement(NS_LITERAL_STRING("span"),
+                                        aParentNode,
+                                        NS_LITERAL_STRING("mozResizingInfo"),
+                                        PR_TRUE,
+                                        aReturn);
 
-  nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);
-  if (NS_FAILED(res) || !newElement)
+  if (!*aReturn)
     return NS_ERROR_FAILURE;
-  *aReturn = newElement;
-  NS_ADDREF(*aReturn);
 
-  res = newElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
-                                 NS_LITERAL_STRING("mozResizingInfo"));
-  if (NS_FAILED(res)) return res;
-  res = newElement->SetAttribute(NS_LITERAL_STRING("class"),
-                                 NS_LITERAL_STRING("hidden"));
-  if (NS_FAILED(res)) return res;
-
-  return aArray->AppendElement(newContent);
-}
-
-void
-nsHTMLEditor::SetResizerPosition(PRInt32 aX, PRInt32 aY, nsIDOMElement *aResizer)
-{
-  nsAutoString x, y;
-  x.AppendInt(aX);
-  y.AppendInt(aY);
-
-  mHTMLCSSUtils->SetCSSProperty(aResizer,
-                                nsEditProperty::cssLeft,
-                                x + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
-  mHTMLCSSUtils->SetCSSProperty(aResizer,
-                                nsEditProperty::cssTop,
-                                y + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+  return res;
 }
 
 nsresult
-nsHTMLEditor::SetAllResizersPosition(nsIDOMElement * aResizedElement, PRInt32 & aX, PRInt32 & aY)
+nsHTMLEditor::SetAllResizersPosition()
 {
-  nsCOMPtr<nsIDOMNSHTMLElement> nsElement = do_QueryInterface(aResizedElement);
-  if (!nsElement) {return NS_ERROR_NULL_POINTER; }
-
-  GetElementOrigin(aResizedElement, aX, aY);
-
-  mResizedObjectX = aX;
-  mResizedObjectY = aY;
-
-  nsresult res = nsElement->GetOffsetWidth(&mResizedObjectWidth );
-  if (NS_FAILED(res)) return res;
-  res = nsElement->GetOffsetHeight(&mResizedObjectHeight);
-  if (NS_FAILED(res)) return res;
+  PRInt32 x = mResizedObjectX;
+  PRInt32 y = mResizedObjectY;
   PRInt32 w = mResizedObjectWidth;
   PRInt32 h = mResizedObjectHeight;
 
   // now let's place all the resizers around the image
-  SetResizerPosition(aX-4,     aY-4, mTopLeftHandle);
-  SetResizerPosition(aX+w/2-3, aY-4, mTopHandle);
-  SetResizerPosition(aX+w-2,   aY-4, mTopRightHandle);
 
-  SetResizerPosition(aX-4,     aY+h/2-3, mLeftHandle);
-  SetResizerPosition(aX+w-2,   aY+h/2-3, mRightHandle);
+  // get the size of resizers
+  nsAutoString value;
+  float resizerWidth, resizerHeight;
+  nsCOMPtr<nsIAtom> dummyUnit;
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mTopLeftHandle);
+  mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssWidth, value);
+  mHTMLCSSUtils->ParseLength(value, &resizerWidth, getter_AddRefs(dummyUnit));
+  mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssHeight, value);
+  mHTMLCSSUtils->ParseLength(value, &resizerHeight, getter_AddRefs(dummyUnit));
 
-  SetResizerPosition(aX-4,     aY+h-2, mBottomLeftHandle);
-  SetResizerPosition(aX+w/2-3, aY+h-2, mBottomHandle);
-  SetResizerPosition(aX+w-2,   aY+h-2, mBottomRightHandle);
+  PRInt32 rw  = (PRInt32)((resizerWidth + 1) / 2);
+  PRInt32 rh =  (PRInt32)((resizerHeight+ 1) / 2);
+
+  SetAnonymousElementPosition(x-rw,     y-rh, mTopLeftHandle);
+  SetAnonymousElementPosition(x+w/2-rw, y-rh, mTopHandle);
+  SetAnonymousElementPosition(x+w-rw-1, y-rh, mTopRightHandle);
+
+  SetAnonymousElementPosition(x-rw,     y+h/2-rh, mLeftHandle);
+  SetAnonymousElementPosition(x+w-rw-1, y+h/2-rh, mRightHandle);
+
+  SetAnonymousElementPosition(x-rw,     y+h-rh-1, mBottomLeftHandle);
+  SetAnonymousElementPosition(x+w/2-rw, y+h-rh-1, mBottomHandle);
+  SetAnonymousElementPosition(x+w-rw-1, y+h-rh-1, mBottomRightHandle);
 
   return NS_OK;
 }
@@ -343,140 +323,123 @@ nsHTMLEditor::SetAllResizersPosition(nsIDOMElement * aResizedElement, PRInt32 & 
 NS_IMETHODIMP
 nsHTMLEditor::RefreshResizers()
 {
-  PRInt32 x, y;
-  nsresult res = SetAllResizersPosition(mResizedObject, x, y);
+  // nothing to do if resizers are not displayed...
+  if (!mResizedObject)
+    return NS_OK;
+
+  nsresult res = GetPositionAndDimensions(mResizedObject,
+                                          mResizedObjectX,
+                                          mResizedObjectY,
+                                          mResizedObjectWidth,
+                                          mResizedObjectHeight,
+                                          mResizedObjectBorderLeft,
+                                          mResizedObjectBorderTop,
+                                          mResizedObjectMarginLeft,
+                                          mResizedObjectMarginTop);
+
   if (NS_FAILED(res)) return res;
-  return SetShadowPosition(mResizedObject, x, y);
+  res = SetAllResizersPosition();
+  if (NS_FAILED(res)) return res;
+  return SetShadowPosition(mResizingShadow, mResizedObject,
+                           mResizedObjectX, mResizedObjectY);
 }
 
 NS_IMETHODIMP 
 nsHTMLEditor::ShowResizers(nsIDOMElement *aResizedElement)
 {
-  // we are going to need the PresShell
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsISupportsArray> anonymousItems;
-  NS_NewISupportsArray(getter_AddRefs(anonymousItems));
-  if (!anonymousItems) return NS_ERROR_NULL_POINTER;
-
+  NS_ENSURE_ARG_POINTER(aResizedElement);
   mResizedObject = aResizedElement;
 
   // the resizers and the shadow will be anonymous children of the body
   nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
+  nsresult res = GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(res)) return res;
   if (!bodyElement)   return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
+  nsCOMPtr<nsIDOMNode> bodyNode( do_QueryInterface(bodyElement) );
 
   // let's create the resizers
   res = CreateResizer(getter_AddRefs(mTopLeftHandle),
-                      nsIHTMLObjectResizer::eTopLeft, anonymousItems);
+                      nsIHTMLObjectResizer::eTopLeft,     bodyNode);
   if (NS_FAILED(res)) return res;
   res = CreateResizer(getter_AddRefs(mTopHandle),
-                      nsIHTMLObjectResizer::eTop,  anonymousItems);
+                      nsIHTMLObjectResizer::eTop,         bodyNode);
   if (NS_FAILED(res)) return res;
   res = CreateResizer(getter_AddRefs(mTopRightHandle),
-                      nsIHTMLObjectResizer::eTopRight,  anonymousItems);
+                      nsIHTMLObjectResizer::eTopRight,    bodyNode);
   if (NS_FAILED(res)) return res;
 
   res = CreateResizer(getter_AddRefs(mLeftHandle),
-                      nsIHTMLObjectResizer::eLeft,  anonymousItems);
+                      nsIHTMLObjectResizer::eLeft,        bodyNode);
   if (NS_FAILED(res)) return res;
   res = CreateResizer(getter_AddRefs(mRightHandle),
-                      nsIHTMLObjectResizer::eRight,  anonymousItems);
+                      nsIHTMLObjectResizer::eRight,       bodyNode);
   if (NS_FAILED(res)) return res;
 
   res = CreateResizer(getter_AddRefs(mBottomLeftHandle),
-                      nsIHTMLObjectResizer::eBottomLeft,  anonymousItems);
+                      nsIHTMLObjectResizer::eBottomLeft,  bodyNode);
   if (NS_FAILED(res)) return res;
   res = CreateResizer(getter_AddRefs(mBottomHandle),
-                      nsIHTMLObjectResizer::eBottom,  anonymousItems);
+                      nsIHTMLObjectResizer::eBottom,      bodyNode);
   if (NS_FAILED(res)) return res;
   res = CreateResizer(getter_AddRefs(mBottomRightHandle),
-                      nsIHTMLObjectResizer::eBottomRight,  anonymousItems);
+                      nsIHTMLObjectResizer::eBottomRight, bodyNode);
+  if (NS_FAILED(res)) return res;
+
+  res = GetPositionAndDimensions(aResizedElement,
+                                 mResizedObjectX,
+                                 mResizedObjectY,
+                                 mResizedObjectWidth,
+                                 mResizedObjectHeight,
+                                 mResizedObjectBorderLeft,
+                                 mResizedObjectBorderTop,
+                                 mResizedObjectMarginLeft,
+                                 mResizedObjectMarginTop);
   if (NS_FAILED(res)) return res;
 
   // and let's set their absolute positions in the document
-  PRInt32 x, y;
-  res = SetAllResizersPosition(aResizedElement, x, y);
+  res = SetAllResizersPosition();
   if (NS_FAILED(res)) return res;
 
   // now, let's create the resizing shadow
-  res = CreateShadow(getter_AddRefs(mResizingShadow), anonymousItems);
+  res = CreateShadow(getter_AddRefs(mResizingShadow), bodyNode,
+                     aResizedElement);
   if (NS_FAILED(res)) return res;
   // and set its position
-  res = SetShadowPosition(aResizedElement, x, y);
+  res = SetShadowPosition(mResizingShadow, mResizedObject,
+                          mResizedObjectX, mResizedObjectY);
   if (NS_FAILED(res)) return res;
-  mResizingShadow->SetAttribute(NS_LITERAL_STRING("class"),
-                                NS_LITERAL_STRING("hidden"));
-
 
   // and then the resizing info tooltip
-  res = CreateResizingInfo(getter_AddRefs(mResizingInfo), anonymousItems);
+  res = CreateResizingInfo(getter_AddRefs(mResizingInfo), bodyNode);
   if (NS_FAILED(res)) return res;
 
-  PRUint32 count = 0;
-  anonymousItems->Count(&count);
 
-  // we are going to need the document too
+  // and listen to the "resize" event on the window
+  // first, get the script global object from the document...
   nsCOMPtr<nsIDOMDocument> domDoc;
   GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (!doc) return NS_ERROR_NULL_POINTER;
 
-  for (PRUint32 i=0; i < count; i++) {
-    // for each anonymous node we created, set what's needed to make it work
-    // and create its frames
-    nsCOMPtr<nsIContent> content;
-    if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
-      continue;
-
-    content->SetNativeAnonymous(PR_TRUE);
-    content->SetParent(bodyContent);
-    content->SetDocument(doc, PR_TRUE, PR_TRUE);
-    content->SetBindingParent(content);
-    ps->RecreateFramesFor(content);
-  }
-
-  // and listen to the "resize" event on the window
-  // first, get the script global object from the document...
   nsCOMPtr<nsIScriptGlobalObject> global;
   res = doc->GetScriptGlobalObject(getter_AddRefs(global));
   if (NS_FAILED(res)) return res;
   if (!global) { return NS_ERROR_NULL_POINTER; }
 
-  mResizeEventListenerP = new ResizeEventListener(this);
+  mResizeEventListenerP = new DocumentResizeEventListener(this);
   if (!mResizeEventListenerP) { return NS_ERROR_NULL_POINTER; }
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(global);
   res = target->AddEventListener(NS_LITERAL_STRING("resize"), mResizeEventListenerP, PR_FALSE);
 
+  aResizedElement->SetAttribute(NS_LITERAL_STRING("_moz_resizing"), NS_LITERAL_STRING("true"));
   return res;
 }
-
-void
-nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
-                                       nsIContent * aParentContent,
-                                       nsIDocumentObserver * aDocObserver)
-{
-  // call ContentRemoved() for the anonymous content
-  // node so its references get removed from the frame manager's
-  // undisplay map, and its layout frames get destroyed!
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  if (content) {
-    aDocObserver->ContentRemoved(nsnull, aParentContent, content, -1);
-    content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    content->SetParent(nsnull);
-  }
-}  
 
 NS_IMETHODIMP 
 nsHTMLEditor::HideResizers(void)
 {
-  if (!mIsShowingResizeHandles || !mResizedObject)
+  if (!mResizedObject)
     return NS_OK;
 
   // get the presshell's document observer interface.
@@ -491,7 +454,7 @@ nsHTMLEditor::HideResizers(void)
   // get the root content node.
 
   nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
+  nsresult res = GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(res)) return res;
   if (!bodyElement)   return NS_ERROR_NULL_POINTER;
 
@@ -547,9 +510,8 @@ nsHTMLEditor::HideResizers(void)
   }
   mResizeEventListenerP = nsnull;
 
-  mIsShowingResizeHandles = PR_FALSE;
+  mResizedObject->RemoveAttribute(NS_LITERAL_STRING("_moz_resizing"));
   mResizedObject = nsnull;
-  mIsResizing = PR_FALSE;
 
   return NS_OK;
 }
@@ -563,31 +525,82 @@ nsHTMLEditor::HideShadowAndInfo()
     mResizingInfo->SetAttribute(NS_LITERAL_STRING("class"), NS_LITERAL_STRING("hidden"));
 }
 
+void
+nsHTMLEditor::SetInfoIncrements(PRInt8 aX, PRInt8 aY)
+{
+  mInfoXIncrement = aX;
+  mInfoYIncrement = aY;
+}
+
 nsresult
 nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
 {
+  // First notify the listeners if any
+  PRInt32 listenersCount = objectResizeEventListeners.Count();
+  if (listenersCount) {
+    nsCOMPtr<nsIHTMLObjectResizeListener> listener;
+    PRInt32 index;
+    for (index = 0; index < listenersCount; index++) {
+      listener = objectResizeEventListeners[index];
+      listener->OnStartResizing(mResizedObject);
+    }
+  }
+
   mIsResizing = PR_TRUE;
+  mActivatedHandle = aHandle;
+  mActivatedHandle->SetAttribute(NS_LITERAL_STRING("_moz_activated"), NS_LITERAL_STRING("true"));
+
+  // do we want to preserve ratio or not?
+  PRBool preserveRatio = NodeIsType(mResizedObject, NS_LITERAL_STRING("img"));
+  nsresult result;
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
+  if (NS_SUCCEEDED(result) && prefBranch && preserveRatio) {
+    result = prefBranch->GetBoolPref("editor.resizing.preserve_ratio", &preserveRatio);
+    if (NS_FAILED(result)) {
+      // just in case Anvil does not update its prefs file
+      // and because it really does not make sense to me to allow free
+      // resizing on corners without a modifier key
+      preserveRatio = PR_TRUE;
+    }
+  }
 
   // the way we change the position/size of the shadow depends on
   // the handle
   nsAutoString locationStr;
   aHandle->GetAttribute(NS_LITERAL_STRING("anonlocation"), locationStr);
-  if (locationStr.Equals(kTopLeft))
-    SetResizeIncrements(1, 1, -1, -1, PR_TRUE);
-  else if (locationStr.Equals(kTop))
+  if (locationStr.Equals(kTopLeft)) {
+    SetResizeIncrements(1, 1, -1, -1, preserveRatio);
+    SetInfoIncrements(20, 20);
+  }
+  else if (locationStr.Equals(kTop)) {
     SetResizeIncrements(0, 1, 0, -1, PR_FALSE);
-  else if (locationStr.Equals(kTopRight))
-    SetResizeIncrements(0, 1, 1, -1, PR_TRUE);
-  else if (locationStr.Equals(kLeft))
+    SetInfoIncrements(0, 20);
+  }
+  else if (locationStr.Equals(kTopRight)) {
+    SetResizeIncrements(0, 1, 1, -1, preserveRatio);
+    SetInfoIncrements(-20, 20);
+  }
+  else if (locationStr.Equals(kLeft)) {
     SetResizeIncrements(1, 0, -1, 0, PR_FALSE);
-  else if (locationStr.Equals(kRight))
+    SetInfoIncrements(20, 20);
+  }
+  else if (locationStr.Equals(kRight)) {
     SetResizeIncrements(0, 0, 1, 0, PR_FALSE);
-  else if (locationStr.Equals(kBottomLeft))
-    SetResizeIncrements(1, 0, -1, 1, PR_TRUE);
-  else if (locationStr.Equals(kBottom))
+    SetInfoIncrements(-20, 0);
+  }
+  else if (locationStr.Equals(kBottomLeft)) {
+    SetResizeIncrements(1, 0, -1, 1, preserveRatio);
+    SetInfoIncrements(20, -20);
+  }
+  else if (locationStr.Equals(kBottom)) {
     SetResizeIncrements(0, 0, 0, 1, PR_FALSE);
-  else if (locationStr.Equals(kBottomRight))
-    SetResizeIncrements(0, 0, 1, 1, PR_TRUE);
+    SetInfoIncrements(0, -20);
+  }
+  else if (locationStr.Equals(kBottomRight)) {
+    SetResizeIncrements(0, 0, 1, 1, preserveRatio);
+    SetInfoIncrements(-20, -20);
+  }
 
   // make the shadow appear
   mResizingShadow->RemoveAttribute(NS_LITERAL_STRING("class"));
@@ -597,19 +610,14 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
   w.AppendInt(mResizedObjectWidth);
   h.AppendInt(mResizedObjectHeight);
   mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsEditProperty::cssWidth,
-                                w + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+                                NS_LITERAL_STRING("width"),
+                                w + NS_LITERAL_STRING("px"));
   mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsEditProperty::cssHeight,
-                                h + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+                                NS_LITERAL_STRING("height"),
+                                h + NS_LITERAL_STRING("px"));
 
-  nsresult result = NS_OK;
-
-  if (!mMouseMotionListenerP)
-  {
-    // add a mouse move listener to the editor
+  // add a mouse move listener to the editor
+  if (!mMouseMotionListenerP) {
     mMouseMotionListenerP = new ResizerMouseMotionListener(this);
     if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
 
@@ -623,9 +631,9 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
     else
       HandleEventListenerError();
   }
-
   return result;
 }
+
 
 NS_IMETHODIMP 
 nsHTMLEditor::MouseDown(PRInt32 aClientX, PRInt32 aClientY,
@@ -642,17 +650,21 @@ nsHTMLEditor::MouseDown(PRInt32 aClientX, PRInt32 aClientY,
         // and that element is a resizer, let's start resizing!
         mOriginalX = aClientX;
         mOriginalY = aClientY;
-        res = StartResizing(aTarget);
-        if (NS_FAILED(res)) return res;
+        return StartResizing(aTarget);
       }
-      return NS_OK;
+      if (anonclass.Equals(NS_LITERAL_STRING("mozGrabber"))) {
+        // and that element is a grabber, let's start moving the element!
+        mOriginalX = aClientX;
+        mOriginalY = aClientY;
+        return GrabberClicked();
+      }
     }
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsHTMLEditor::MouseUp(PRInt32 aClientX, PRInt32 aClientY,
-                      nsIDOMElement *aResizedObject)
+                      nsIDOMElement *aTarget)
 {
   if (mIsResizing) {
     // we are resizing and release the mouse button, so let's
@@ -661,7 +673,17 @@ nsHTMLEditor::MouseUp(PRInt32 aClientX, PRInt32 aClientY,
     HideShadowAndInfo();
     SetFinalSize(aClientX, aClientY);
   }
-
+  else if (mIsMoving || mGrabberClicked) {
+    if (mIsMoving) {
+      mPositioningShadow->SetAttribute(NS_LITERAL_STRING("class"), NS_LITERAL_STRING("hidden"));
+      SetFinalPosition(aClientX, aClientY);
+    }
+    if (mGrabberClicked) {
+      EndMoving();
+      mGrabberClicked = PR_FALSE;
+      mIsMoving = PR_FALSE;
+    }
+  }
   return NS_OK;
 }
 
@@ -681,17 +703,76 @@ nsHTMLEditor::SetResizeIncrements(PRInt32 aX, PRInt32 aY,
 nsresult
 nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH)
 {
-  nsAutoString x, y;
-  x.AppendInt(aX + 20);
-  y.AppendInt(aY + 20);
+  // get the root content
+  nsCOMPtr<nsIContent> rootContent;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsEditor::GetDocument(getter_AddRefs(domdoc));
+
+  nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
+  if (!doc)
+    return NS_ERROR_UNEXPECTED;
+
+  doc->GetRootContent(getter_AddRefs(rootContent));
+  nsCOMPtr<nsIDOMNSHTMLElement> nsElement = do_QueryInterface(rootContent);
+  if (!nsElement) {return NS_ERROR_NULL_POINTER; }
+
+  // let's get the size of the document
+  PRInt32 w, h;
+  nsElement->GetOffsetWidth(&w);
+  nsElement->GetOffsetHeight(&h);
+  
+  if (mInfoXIncrement < 0)
+    aX = w - aX ;
+  if (mInfoYIncrement < 0)
+    aY = h - aY;
+
+  nsAutoString xStr, yStr;
+  xStr.AppendInt(aX + PR_ABS(mInfoXIncrement));
+  yStr.AppendInt(aY + PR_ABS(mInfoYIncrement));
+  NS_NAMED_LITERAL_STRING(rightStr, "right");
+  NS_NAMED_LITERAL_STRING(leftStr, "left");
+  NS_NAMED_LITERAL_STRING(topStr, "top");
+  NS_NAMED_LITERAL_STRING(bottomStr, "bottom");
   mHTMLCSSUtils->SetCSSProperty(mResizingInfo,
-                                nsEditProperty::cssLeft,
-                                x + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+                                (mInfoXIncrement < 0) ? rightStr : leftStr,
+                                xStr + NS_LITERAL_STRING("px"));
   mHTMLCSSUtils->SetCSSProperty(mResizingInfo,
-                                nsEditProperty::cssTop,
-                                y + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+                                (mInfoYIncrement < 0) ? bottomStr : topStr,
+                                yStr + NS_LITERAL_STRING("px"));
+
+  mHTMLCSSUtils->RemoveCSSProperty(mResizingInfo,
+                                   (mInfoXIncrement >= 0) ? rightStr  : leftStr);
+  mHTMLCSSUtils->RemoveCSSProperty(mResizingInfo,
+                                   (mInfoYIncrement >= 0) ? bottomStr  : topStr);
+
+  // let's make sure the info box does not go beyond the limits of the viewport
+  nsAutoString value;
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mResizingInfo);
+  float f;
+  nsCOMPtr<nsIAtom> unit;
+  if (mInfoXIncrement < 0) {
+    mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssLeft, value);
+    mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
+    if (f <= 0) {
+      mHTMLCSSUtils->SetCSSProperty(mResizingInfo,
+                                    leftStr,
+                                    NS_LITERAL_STRING("0px"));
+      mHTMLCSSUtils->RemoveCSSProperty(mResizingInfo,
+                                       rightStr);
+    }
+  }
+  if (mInfoYIncrement < 0) {
+    mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssTop, value);
+    mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
+    if (f <= 0) {
+      mHTMLCSSUtils->SetCSSProperty(mResizingInfo,
+                                    topStr,
+                                    NS_LITERAL_STRING("0px"));
+      mHTMLCSSUtils->RemoveCSSProperty(mResizingInfo,
+                                       bottomStr);
+    }
+  }
 
   nsCOMPtr<nsIDOMNode> textInfo;
   nsresult res = mResizingInfo->GetFirstChild(getter_AddRefs(textInfo));
@@ -703,8 +784,6 @@ nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt3
     textInfo = nsnull;
     junk = nsnull;
   }
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  GetDocument(getter_AddRefs(domDoc));
 
   nsAutoString widthStr, heightStr, diffWidthStr, diffHeightStr;
   widthStr.AppendInt(aW);
@@ -724,7 +803,7 @@ nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt3
                     NS_LITERAL_STRING(")"));
 
   nsCOMPtr<nsIDOMText> nodeAsText;
-  res = domDoc->CreateTextNode(info, getter_AddRefs(nodeAsText));
+  res = domdoc->CreateTextNode(info, getter_AddRefs(nodeAsText));
   if (NS_FAILED(res)) return res;
   textInfo = do_QueryInterface(nodeAsText);
   res =  mResizingInfo->AppendChild(textInfo, getter_AddRefs(junk));
@@ -738,31 +817,22 @@ nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt3
 }
 
 nsresult
-nsHTMLEditor::SetShadowPosition(nsIDOMElement *aResizedObject,
-                                PRInt32 aX, PRInt32 aY)
+nsHTMLEditor::SetShadowPosition(nsIDOMElement * aShadow,
+                                nsIDOMElement * aOriginalObject,
+                                PRInt32 aOriginalObjectX,
+                                PRInt32 aOriginalObjectY)
 {
-  nsAutoString x, y;
-  x.AppendInt(aX);
-  y.AppendInt(aY);
-  mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsEditProperty::cssLeft,
-                                x + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
-  mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsEditProperty::cssTop,
-                                y + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+  SetAnonymousElementPosition(aOriginalObjectX, aOriginalObjectY, aShadow);
 
-  if(NodeIsType(mResizedObject, NS_LITERAL_STRING("img"))) {
+  if(NodeIsType(aOriginalObject, NS_LITERAL_STRING("img"))) {
     nsAutoString imageSource;
-    nsresult res = aResizedObject->GetAttribute(NS_LITERAL_STRING("src"),
+    nsresult res = aOriginalObject->GetAttribute(NS_LITERAL_STRING("src"),
                                                 imageSource);
     if (NS_FAILED(res)) return res;
-    res = mResizingShadow->SetAttribute(NS_LITERAL_STRING("src"), imageSource);
+    res = aShadow->SetAttribute(NS_LITERAL_STRING("src"), imageSource);
     if (NS_FAILED(res)) return res;
   }
-  return mResizingShadow->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
-                                       NS_LITERAL_STRING("mozResizingShadow"));
+  return NS_OK;
 }
 
 PRInt32
@@ -792,14 +862,14 @@ nsHTMLEditor::GetNewResizingIncrement(PRInt32 aX, PRInt32 aY, PRInt32 aID)
     case kX:
     case kWidth:
       if (result == yi)
-        result *= objectSizeRatio;
-      result *= mWidthIncrementFactor;
+        result = (PRInt32) (((float) result) * objectSizeRatio);
+      result = (PRInt32) (((float) result) * mWidthIncrementFactor);
       break;
     case kY:
     case kHeight:
       if (result == xi)
-        result /=  objectSizeRatio;
-      result *= mHeightIncrementFactor;
+        result =  (PRInt32) (((float) result) / objectSizeRatio);
+      result = (PRInt32) (((float) result) * mHeightIncrementFactor);
       break;
   }
   return result;
@@ -845,6 +915,11 @@ nsHTMLEditor::GetNewResizingHeight(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP
 nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
 {
+  NS_NAMED_LITERAL_STRING(leftStr, "left");
+  NS_NAMED_LITERAL_STRING(topStr, "top");
+  NS_NAMED_LITERAL_STRING(widthStr, "width");
+  NS_NAMED_LITERAL_STRING(heightStr, "height");
+
   if (mIsResizing) {
     // we are resizing and the mouse pointer's position has changed
     // we have to resdisplay the shadow
@@ -862,23 +937,70 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
     h.AppendInt(newHeight);
 
     mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsEditProperty::cssLeft,
-                                x + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+                                  leftStr,
+                                  x + NS_LITERAL_STRING("px"));
     mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsEditProperty::cssTop,
-                                y + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+                                  topStr,
+                                  y + NS_LITERAL_STRING("px"));
     mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsEditProperty::cssWidth,
-                                w + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+                                  widthStr,
+                                  w + NS_LITERAL_STRING("px"));
     mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsEditProperty::cssHeight,
-                                h + NS_LITERAL_STRING("px"),
-                                PR_TRUE);
+                                  heightStr,
+                                  h + NS_LITERAL_STRING("px"));
 
-    SetResizingInfoPosition(clientX, clientY, newWidth, newHeight);
+    return SetResizingInfoPosition(clientX, clientY, newWidth, newHeight);
+  }
+
+  if (mGrabberClicked) {
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
+    PRInt32 clientX, clientY;
+    mouseEvent->GetClientX(&clientX);
+    mouseEvent->GetClientY(&clientY);
+
+    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    if (!ps) return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIPresContext> pcontext;
+    ps->GetPresContext(getter_AddRefs(pcontext));
+    if (!pcontext) return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsILookAndFeel> look;
+    nsresult res = pcontext->GetLookAndFeel(getter_AddRefs(look));
+
+    PRInt32 xThreshold, yThreshold;
+    if (NS_SUCCEEDED(res) && look) {
+      look->GetMetric(nsILookAndFeel::eMetric_DragThresholdX, xThreshold);
+      look->GetMetric(nsILookAndFeel::eMetric_DragThresholdY, yThreshold);
+    }
+
+    if (PR_ABS(clientX - mOriginalX ) * 2 >= xThreshold ||
+        PR_ABS(clientY - mOriginalY ) * 2 >= yThreshold) {
+      mGrabberClicked = PR_FALSE;
+      StartMoving(nsnull);
+    }
+  }
+  if (mIsMoving) {
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
+    PRInt32 clientX, clientY;
+    mouseEvent->GetClientX(&clientX);
+    mouseEvent->GetClientY(&clientY);
+
+    nsAutoString x, y, w, h;
+    PRInt32 newX = mPositionedObjectX + clientX - mOriginalX;
+    PRInt32 newY = mPositionedObjectY + clientY - mOriginalY;
+
+    SnapToGrid(newX, newY);
+
+    x.AppendInt(newX);
+    y.AppendInt(newY);
+    w.AppendInt(mPositionedObjectWidth);
+    h.AppendInt(mPositionedObjectHeight);
+    mHTMLCSSUtils->SetCSSProperty(mPositioningShadow,
+                                  leftStr,
+                                  x + NS_LITERAL_STRING("px"));
+    mHTMLCSSUtils->SetCSSProperty(mPositioningShadow,
+                                  topStr,
+                                  y + NS_LITERAL_STRING("px"));
   }
   return NS_OK;
 }
@@ -886,20 +1008,31 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
 void
 nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
 {
-  NS_ASSERTION(mResizedObject, "SetFinalSize() called with null mResizedObject ptr!");
-  if (!mResizedObject) return;
+  if (!mResizedObject) {
+    // paranoia
+    return;
+  }
+
+  if (mActivatedHandle) {
+    mActivatedHandle->RemoveAttribute(NS_LITERAL_STRING("_moz_activated"));
+    mActivatedHandle = nsnull;
+  }
 
   // we have now to set the new width and height of the resized object
   // we don't set the x and y position because we don't control that in
   // a normal HTML layout
+  PRInt32 left   = GetNewResizingX(aX, aY);
+  PRInt32 top    = GetNewResizingY(aX, aY);
   PRInt32 width  = GetNewResizingWidth(aX, aY);
   PRInt32 height = GetNewResizingHeight(aX, aY);
-  nsAutoString w, h;
+  PRBool setWidth  = !mResizedObjectIsAbsolutelyPositioned || (width != mResizedObjectWidth);
+  PRBool setHeight = !mResizedObjectIsAbsolutelyPositioned || (height != mResizedObjectHeight);
+  
+  nsAutoString x, y, w, h;
+  x.AppendInt(left - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderLeft+mResizedObjectMarginLeft : 0));
+  y.AppendInt(top - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderTop+mResizedObjectMarginTop : 0));
   w.AppendInt(width);
   h.AppendInt(height);
-  // keep track of that size
-  mResizedObjectWidth  = width;
-  mResizedObjectHeight = height;
 
   // we need to know if we're in a CSS-enabled editor or not
   PRBool useCSS;
@@ -912,22 +1045,36 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
   NS_NAMED_LITERAL_STRING(heightStr, "height");
   
   PRBool hasAttr = PR_FALSE;
-  if (useCSS) {
-    if (NS_SUCCEEDED(mResizedObject->HasAttribute(widthStr, &hasAttr)) && hasAttr)
+  if (mResizedObjectIsAbsolutelyPositioned) {
+    if (setHeight)
+      mHTMLCSSUtils->SetCSSProperty(mResizedObject,
+                                    nsEditProperty::cssTop,
+                                    y + NS_LITERAL_STRING("px"),
+                                    PR_FALSE);
+    if (setWidth)
+      mHTMLCSSUtils->SetCSSProperty(mResizedObject,
+                                    nsEditProperty::cssLeft,
+                                    x + NS_LITERAL_STRING("px"),
+                                    PR_FALSE);
+  }
+  if (useCSS || mResizedObjectIsAbsolutelyPositioned) {
+    if (setWidth && NS_SUCCEEDED(mResizedObject->HasAttribute(widthStr, &hasAttr)) && hasAttr)
       RemoveAttribute(mResizedObject, widthStr);
 
     hasAttr = PR_FALSE;
-    if (NS_SUCCEEDED(mResizedObject->HasAttribute(heightStr, &hasAttr)) && hasAttr)
+    if (setHeight && NS_SUCCEEDED(mResizedObject->HasAttribute(heightStr, &hasAttr)) && hasAttr)
       RemoveAttribute(mResizedObject, heightStr);
 
-    mHTMLCSSUtils->SetCSSProperty(mResizedObject,
-                                  nsEditProperty::cssWidth,
-                                  w + NS_LITERAL_STRING("px"),
-                                  PR_FALSE);
-    mHTMLCSSUtils->SetCSSProperty(mResizedObject,
-                                  nsEditProperty::cssHeight,
-                                  h + NS_LITERAL_STRING("px"),
-                                  PR_FALSE);
+    if (setWidth)
+      mHTMLCSSUtils->SetCSSProperty(mResizedObject,
+                                    nsEditProperty::cssWidth,
+                                    w + NS_LITERAL_STRING("px"),
+                                    PR_FALSE);
+    if (setHeight)
+      mHTMLCSSUtils->SetCSSProperty(mResizedObject,
+                                    nsEditProperty::cssHeight,
+                                    h + NS_LITERAL_STRING("px"),
+                                    PR_FALSE);
   }
   else {
     // we use HTML size and remove all equivalent CSS properties
@@ -935,199 +1082,102 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
     // we set the CSS width and height to remove it later,
     // triggering an immediate reflow; otherwise, we have problems
     // with asynchronous reflow
-    mHTMLCSSUtils->SetCSSProperty(mResizedObject,
-                                  nsEditProperty::cssWidth,
-                                  w + NS_LITERAL_STRING("px"),
-                                  PR_FALSE);
-    mHTMLCSSUtils->SetCSSProperty(mResizedObject,
-                                  nsEditProperty::cssHeight,
-                                  h + NS_LITERAL_STRING("px"),
-                                  PR_FALSE);
-
-    SetAttribute(mResizedObject, widthStr, w);
-    SetAttribute(mResizedObject, heightStr, h);
-
-    mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
-                                     nsEditProperty::cssWidth,
-                                     NS_LITERAL_STRING(""),
-                                     PR_FALSE);
-    mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
-                                    nsEditProperty::cssHeight,
-                                    NS_LITERAL_STRING(""),
+    if (setWidth)
+      mHTMLCSSUtils->SetCSSProperty(mResizedObject,
+                                    nsEditProperty::cssWidth,
+                                    w + NS_LITERAL_STRING("px"),
                                     PR_FALSE);
+    if (setHeight)
+      mHTMLCSSUtils->SetCSSProperty(mResizedObject,
+                                    nsEditProperty::cssHeight,
+                                    h + NS_LITERAL_STRING("px"),
+                                    PR_FALSE);
+
+    if (setWidth)
+      SetAttribute(mResizedObject, widthStr, w);
+    if (setHeight)
+      SetAttribute(mResizedObject, heightStr, h);
+
+    if (setWidth)
+      mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
+                                       nsEditProperty::cssWidth,
+                                       NS_LITERAL_STRING(""),
+                                       PR_FALSE);
+    if (setHeight)
+      mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
+                                      nsEditProperty::cssHeight,
+                                      NS_LITERAL_STRING(""),
+                                      PR_FALSE);
   }
+  // finally notify the listeners if any
+  PRInt32 listenersCount = objectResizeEventListeners.Count();
+  if (listenersCount) {
+    nsCOMPtr<nsIHTMLObjectResizeListener> listener;
+    PRInt32 index;
+    for (index = 0; index < listenersCount; index++) {
+      listener = objectResizeEventListeners[index];
+      listener->OnEndResizing(mResizedObject,
+                              mResizedObjectWidth, mResizedObjectHeight,
+                              width, height);
+    }
+  }
+
+  // keep track of that size
+  mResizedObjectWidth  = width;
+  mResizedObjectHeight = height;
+
   RefreshResizers();
-}
-
-NS_IMETHODIMP
-nsHTMLEditor::CheckResizingState(nsISelection *aSelection)
-{
-  NS_ENSURE_ARG_POINTER(aSelection);
-
-  if (!mIsImageResizingEnabled)
-    return NS_OK;
-
-  PRBool bCollapsed;
-  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsIDOMNode> focusNode;
-
-  if (bCollapsed) {
-    res = aSelection->GetFocusNode(getter_AddRefs(focusNode));
-    if (NS_FAILED(res)) return res;
-  }
-  else {
-
-    PRInt32 rangeCount;
-    res = aSelection->GetRangeCount(&rangeCount);
-    if (NS_FAILED(res)) return res;
-
-    if (rangeCount == 1) {
-
-      nsCOMPtr<nsIDOMRange> range;
-      res = aSelection->GetRangeAt(0, getter_AddRefs(range));
-      if (NS_FAILED(res)) return res;
-      if (!range) return NS_ERROR_NULL_POINTER;
-
-      nsCOMPtr<nsIDOMNode> startContainer, endContainer;
-      res = range->GetStartContainer(getter_AddRefs(startContainer));
-      if (NS_FAILED(res)) return res;
-      res = range->GetEndContainer(getter_AddRefs(endContainer));
-      if (NS_FAILED(res)) return res;
-      PRInt32 startOffset, endOffset;
-      res = range->GetStartOffset(&startOffset);
-      if (NS_FAILED(res)) return res;
-      res = range->GetEndOffset(&endOffset);
-      if (NS_FAILED(res)) return res;
-
-      nsCOMPtr<nsIDOMElement> focusElement;
-      if (startContainer == endContainer && startOffset + 1 == endOffset) {
-        res = GetSelectedElement(NS_LITERAL_STRING(""), getter_AddRefs(focusElement));
-        if (NS_FAILED(res)) return res;
-        if (focusElement)
-          focusNode = do_QueryInterface(focusElement);
-      }
-      if (!focusNode) {
-        res = range->GetCommonAncestorContainer(getter_AddRefs(focusNode));
-        if (NS_FAILED(res)) return res;
-      }
-    }
-    else {
-      PRInt32 i;
-      nsCOMPtr<nsIDOMRange> range;
-      for (i = 0; i < rangeCount; i++)
-      {
-        res = aSelection->GetRangeAt(i, getter_AddRefs(range));
-        if (NS_FAILED(res)) return res;
-        nsCOMPtr<nsIDOMNode> startContainer;
-        range->GetStartContainer(getter_AddRefs(startContainer));
-        if (!focusNode)
-          focusNode = startContainer;
-        else if (focusNode != startContainer) {
-          res = startContainer->GetParentNode(getter_AddRefs(focusNode));
-          if (NS_FAILED(res)) return res;
-          break;
-        }
-      }
-    }
-  }
-
-  if (focusNode) {
-    PRUint16 nodeType;
-    focusNode->GetNodeType(&nodeType);
-    if (nsIDOMNode::TEXT_NODE == nodeType) {
-      nsCOMPtr<nsIDOMNode> parent;
-      res = focusNode->GetParentNode(getter_AddRefs(parent));
-      if (NS_FAILED(res)) return res;
-      focusNode = parent;
-    }
-
-    nsCOMPtr<nsIDOMElement>element;
-    element = do_QueryInterface(focusNode);
-    nsAutoString tagName;
-    res = element->GetTagName(tagName);
-    if (NS_FAILED(res)) return res;
-
-    ToLowerCase(tagName);
-    nsCOMPtr<nsIAtom> tagAtom = getter_AddRefs(NS_NewAtom(tagName));
-    if (!tagAtom) return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIDOMNode> tableContainer = GetEnclosingTable(focusNode);
-
-    if (nsEditProperty::img == tagAtom ||
-        tableContainer) {
-      mResizedObjectIsAnImage = PR_FALSE;
-
-      if (nsEditProperty::img == tagAtom)
-        mResizedObjectIsAnImage = PR_TRUE;
-      else {
-        focusNode = tableContainer;
-      }
-
-      // that node is an image, we have to show resizers
-      element = do_QueryInterface(focusNode);
-      if (mIsShowingResizeHandles) {
-        // we were already displaying resizers and we only have to
-        // refresh the position
-        nsCOMPtr<nsIDOMNode> resizedNode = do_QueryInterface(mResizedObject);
-        if (!NodesSameType(focusNode, resizedNode)) {
-          res = HideResizers();
-          if (NS_FAILED(res)) return res;
-          mResizedObject = element;
-          res = ShowResizers(element);
-        }
-        else {
-          mResizedObject = element;
-          res = RefreshResizers();
-        }
-      }
-      else {
-        // run through the whole thing
-        res = ShowResizers(element);
-      }
-      if (NS_FAILED(res)) return res;
-      mIsShowingResizeHandles = PR_TRUE;
-      return NS_OK;
-    }
-  }
-  if (mIsShowingResizeHandles) {
-    // we were showing resizers but the selection is not an image any longer
-    res = HideResizers();
-    // just in case we were resizing... (bug 195412)
-    mIsResizing = PR_FALSE;
-    if (NS_FAILED(res)) return res;
-    // paranoia...
-    // mIsResizing = PR_FALSE;
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLEditor::GetResizedObject(nsIDOMElement * *aResizedObject)
 {
-  NS_IF_ADDREF(*aResizedObject = mResizedObject);
+  *aResizedObject = mResizedObject;
+  NS_IF_ADDREF(*aResizedObject);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetResizedObjectSize(PRInt32 *aWidth, PRInt32 *aHeight)
+nsHTMLEditor::GetObjectResizingEnabled(PRBool *aIsObjectResizingEnabled)
 {
-  *aWidth  = mResizedObjectWidth;
-  *aHeight = mResizedObjectHeight;
+  *aIsObjectResizingEnabled = mIsObjectResizingEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetIsImageResizingEnabled(PRBool *aIsImageResizingEnabled)
+nsHTMLEditor::SetObjectResizingEnabled(PRBool aObjectResizingEnabled)
 {
-  *aIsImageResizingEnabled = mIsImageResizingEnabled;
+  mIsObjectResizingEnabled = aObjectResizingEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetIsImageResizingEnabled(PRBool aIsImageResizingEnabled)
+nsHTMLEditor::AddObjectResizeEventListener(nsIHTMLObjectResizeListener * aListener)
 {
-  mIsImageResizingEnabled = aIsImageResizingEnabled;
+  NS_ENSURE_ARG_POINTER(aListener);
+  if (objectResizeEventListeners.Count() &&
+      objectResizeEventListeners.IndexOf(aListener) != -1) {
+    /* listener already registered */
+    NS_ASSERTION(PR_FALSE,
+                 "trying to register an already registered object resize event listener");
+    return NS_OK;
+  }
+  objectResizeEventListeners.AppendObject(aListener);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLEditor::RemoveObjectResizeEventListener(nsIHTMLObjectResizeListener * aListener)
+{
+  NS_ENSURE_ARG_POINTER(aListener);
+  if (!objectResizeEventListeners.Count() ||
+      objectResizeEventListeners.IndexOf(aListener) == -1) {
+    /* listener was not registered */
+    NS_ASSERTION(PR_FALSE,
+                 "trying to remove an object resize event listener that was not already registered");
+    return NS_OK;
+  }
+  objectResizeEventListeners.RemoveObject(aListener);
+  return NS_OK;
+}
+

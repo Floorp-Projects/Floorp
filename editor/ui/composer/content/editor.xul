@@ -143,6 +143,8 @@
 
     <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
       <menupopup id="formatMenuPopup">
+        <menuitem id="snapToGrid"/>
+        <menuseparator/>
         <menuitem id="objectProperties"/>
         <menuitem id="colorsAndBackground"/>
         <menuitem id="pageProperties"/>
@@ -229,6 +231,10 @@
     <toolbarbutton id="align-center-button"/>
     <toolbarbutton id="align-right-button"/>
     <toolbarbutton id="align-justify-button"/>
+
+    <toolbarbutton id="absolutePositionButton"/>
+    <toolbarbutton id="decreaseZIndexButton"/>
+    <toolbarbutton id="increaseZIndexButton"/>
 
     <!-- TODO: Change to a menulist? -->
     <!-- menu>

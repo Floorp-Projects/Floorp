@@ -11,14 +11,15 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is Editor Toolbar Preferences.
+   - The Original Code is Mozilla.org.
    -
    - The Initial Developer of the Original Code is
-   - Neil Rashbrook.
+   - Netscape Communications Corporation.
    - Portions created by the Initial Developer are Copyright (C) 2003
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Neil Rashbrook <neil@parkwaycc.co.uk>
+   - Contributor(s):
+   -   Daniel Glazman (glazman@netscape.com) (Original author)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,38 +35,14 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY header.title "Toolbars">
 
-<!ENTITY composition.caption "Show these buttons in the Composition Toolbar:">
+<!-- Window title -->
+<!ENTITY windowTitle.label "Snap to Grid">
 
-<!ENTITY new.label "New">
-<!ENTITY open.label "Open">
-<!ENTITY save.label "Save">
-<!ENTITY publish.label "Publish">
-<!ENTITY preview.label "Browse">
-<!ENTITY cut.label "Cut">
-<!ENTITY copy.label "Copy">
-<!ENTITY paste.label "Paste">
-<!ENTITY print.label "Print">
-<!ENTITY find.label "Find">
-<!ENTITY image.label "Image">
-<!ENTITY hline.label "H. Line">
-<!ENTITY table.label "Table">
-<!ENTITY link.label "Link">
-<!ENTITY anchor.label "Anchor">
+<!ENTITY enableSnapToGrid.label "enable Snap to Grid">
+<!ENTITY enableSnapToGrid.accessKey "e">
 
-<!ENTITY formatting.caption "Show these buttons in the Formatting Toolbar:">
+<!ENTITY sizeEditField.label "Size:">
+<!ENTITY sizeEditField.accessKey "S">
 
-<!ENTITY smaller.label "Smaller">
-<!ENTITY larger.label "Larger">
-<!ENTITY bold.label "Bold">
-<!ENTITY bullets.label "Bullets">
-<!ENTITY numbers.label "Numbers">
-<!ENTITY italic.label "Italic">
-<!ENTITY outdent.label "Outdent">
-<!ENTITY indent.label "Indent">
-<!ENTITY underline.label "Underline">
-
-<!ENTITY absolutePosition.label "Absolute positioning">
-<!ENTITY decreaseZIndex.label "Sent to back">
-<!ENTITY increaseZIndex.label "Bring to front">
+<!ENTITY pixelsLabel.value "pixels">

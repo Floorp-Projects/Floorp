@@ -49,6 +49,8 @@ REQUIRES	= xpcom \
 
 CPPSRCS  = \
            nsEditProperty.cpp             \
+           nsHTMLAbsPosition.cpp          \
+           nsHTMLAnonymousUtils.cpp       \
            nsHTMLDataTransfer.cpp         \
            nsHTMLCSSUtils.cpp             \
            nsHTMLEditor.cpp               \
@@ -57,6 +59,7 @@ CPPSRCS  = \
            nsHTMLEditUtils.cpp            \
            nsHTMLObjectResizer.cpp        \
            nsHTMLEditorMouseListener.cpp  \
+           nsHTMLInlineTableEditor.cpp    \
 	     nsHTMLURIRefObject.cpp         \
            nsTableEditor.cpp              \
            nsWSRunObject.cpp              \

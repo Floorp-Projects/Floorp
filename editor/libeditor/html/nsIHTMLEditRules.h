@@ -56,6 +56,7 @@ public:
   NS_IMETHOD GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)=0;
   NS_IMETHOD GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)=0;
   NS_IMETHOD GetParagraphState(PRBool *aMixed, nsAString &outFormat)=0;
+  NS_IMETHOD MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode)=0;
 };
 
 

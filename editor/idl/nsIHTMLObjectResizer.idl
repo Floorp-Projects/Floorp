@@ -41,6 +41,8 @@
 #include "nsIAtom.idl"
 #include "nsISelection.idl"
 
+interface nsIHTMLObjectResizeListener;
+
 [scriptable, uuid(b0338f6c-ded3-4c39-a953-56e8bae494f5)]
 
 interface nsIHTMLObjectResizer : nsISupports
@@ -57,18 +59,69 @@ interface nsIHTMLObjectResizer : nsISupports
   const short eBottom = 6;
   const short eBottomRight = 7;
 
+  /**
+   * the element currently displaying resizers
+   */
   readonly attribute nsIDOMElement resizedObject;
-           attribute boolean       isImageResizingEnabled;
 
-  void getResizedObjectSize(out long aWidth, out long aHeight);
+  /**
+   * a boolean indicating if object resizing is enabled in the editor
+   */
+  attribute boolean objectResizingEnabled;
+
+  /**
+   * Shows active resizers around an element's frame
+   * @param aResizedElement [IN] a DOM Element
+   */
   void showResizers(in nsIDOMElement aResizedElement);
+
+  /**
+   * Hide resizers if they are visible
+   */
   void hideResizers();
+
+  /**
+   * Refresh visible resizers
+   */
   void refreshResizers();
+
+  /**
+   * event callback when a mouse button is pressed
+   * @param aX      [IN] horizontal position of the pointer
+   * @param aY      [IN] vertical position of the pointer
+   * @param aTarget [IN] the element triggering the event
+   */
   void mouseDown(in long aX, in long aY,
-                 in nsIDOMElement aResizedObject);
+                 in nsIDOMElement aTarget);
+
+  /**
+   * event callback when a mouse button is released
+   * @param aX      [IN] horizontal position of the pointer
+   * @param aY      [IN] vertical position of the pointer
+   * @param aTarget [IN] the element triggering the event
+   */
   void mouseUp(in long aX, in long aY,
-               in nsIDOMElement aResizedObject);
+               in nsIDOMElement aTarget);
+
+  /**
+   * event callback when the mouse pointer is moved
+   * @param aMouseEvent [IN] the event
+   */
   void mouseMove(in nsIDOMEvent aMouseEvent);
-  void checkResizingState(in nsISelection aSelection);
+
+  /* Event Listeners */
+
+  /**
+   * Creates a resize listener that can be used to get notifications
+   * that the user started to resize an object or finalized such an operation
+   * @param aListener [IN] an instance of nsIHTMLObjectResizeListener
+   */
+  void addObjectResizeEventListener(in nsIHTMLObjectResizeListener aListener);
+
+  /**
+   * Deletes a resize listener
+   * @param aListener [IN] an instance of nsIHTMLObjectResizeListener
+   */
+  void removeObjectResizeEventListener(in nsIHTMLObjectResizeListener aListener);
 };
 

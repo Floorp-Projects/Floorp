@@ -99,7 +99,12 @@ public:
     kRemoveList          = 3006,
     kMakeDefListItem     = 3007,
     kInsertElement       = 3008,
-    kLoadHTML            = 3013
+    kLoadHTML            = 3013,
+    kSetAbsolutePosition = 3015,
+    kRemoveAbsolutePosition = 3016,
+    kDecreaseZIndex      = 3017,
+    kIncreaseZIndex      = 3018
+
   };
   
 public:

@@ -1429,3 +1429,31 @@ nsHTMLCSSUtils::GetElementContainerOrSelf(nsIDOMNode * aNode, nsIDOMElement ** a
   NS_IF_ADDREF(*aElement);
   return NS_OK;
 }
+
+nsresult
+nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement * aElement,
+                               const nsAString & aProperty,
+                               const nsAString & aValue)
+{
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+  PRUint32 length = 0;
+  nsresult res = GetInlineStyles(aElement, getter_AddRefs(cssDecl), &length);
+  if (NS_FAILED(res)) return res;
+
+  return cssDecl->SetProperty(aProperty,
+                              aValue,
+                              nsString());
+}
+nsresult
+nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement * aElement,
+                                  const nsAString & aProperty)
+{
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+  PRUint32 length = 0;
+  nsresult res = GetInlineStyles(aElement, getter_AddRefs(cssDecl), &length);
+  if (NS_FAILED(res)) return res;
+
+  nsAutoString returnString;
+  return cssDecl->RemoveProperty(aProperty, returnString);
+}
+

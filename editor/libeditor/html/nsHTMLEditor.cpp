@@ -170,10 +170,14 @@ nsHTMLEditor::nsHTMLEditor()
 , mTypeInState(nsnull)
 , mSelectedCellIndex(0)
 , mHTMLCSSUtils(nsnull)
-, mIsImageResizingEnabled(PR_TRUE) // this can be overriden
-, mIsShowingResizeHandles(PR_FALSE)
+, mIsObjectResizingEnabled(PR_TRUE)
 , mIsResizing(PR_FALSE)
-, mResizedObject(nsnull)
+, mIsAbsolutelyPositioningEnabled(PR_TRUE)
+, mIsMoving(PR_FALSE)
+, mResizedObjectIsAbsolutelyPositioned(PR_FALSE)
+, mIsInlineTableEditingEnabled(PR_TRUE)
+, mSnapToGridEnabled(PR_FALSE)
+, mGridSize(0)
 {
   mBoldAtom = getter_AddRefs(NS_NewAtom("b"));
   mItalicAtom = getter_AddRefs(NS_NewAtom("i"));
@@ -225,7 +229,21 @@ nsHTMLEditor::~nsHTMLEditor()
 NS_IMPL_ADDREF_INHERITED(nsHTMLEditor, nsEditor)
 NS_IMPL_RELEASE_INHERITED(nsHTMLEditor, nsEditor)
 
+NS_INTERFACE_MAP_BEGIN(nsHTMLEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIPlaintextEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLObjectResizer)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLAbsPosEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLInlineTableEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
+  NS_INTERFACE_MAP_ENTRY(nsITableEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIEditorStyleSheets)
+  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIHTMLEditor)
+NS_INTERFACE_MAP_END
 
+/*
 NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (!aInstancePtr)
@@ -245,6 +263,16 @@ NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(NS_GET_IID(nsIHTMLObjectResizer))) {
     *aInstancePtr = NS_STATIC_CAST(nsIHTMLObjectResizer*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIHTMLAbsPosEditor))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIHTMLAbsPosEditor*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIHTMLInlineTableEditor))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIHTMLInlineTableEditor*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -271,7 +299,7 @@ NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   return nsEditor::QueryInterface(aIID, aInstancePtr);
 }
-
+*/
 
 NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, 
                                  nsIPresShell   *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)
@@ -301,6 +329,13 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
 
     // the HTML Editor is CSS-aware only in the case of Composer
     mCSSAware = (0 == aFlags);
+
+    // disable Composer-only features
+    if (aFlags & eEditorMailMask)
+    {
+      SetAbsolutePositioningEnabled(PR_FALSE);
+      SetSnapToGridEnabled(PR_FALSE);
+    }
 
     // Init the HTML-CSS utils
     if (mHTMLCSSUtils)
@@ -6172,9 +6207,108 @@ nsHTMLEditor::EndUpdateViewBatch()
     res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     if (!selection) return NS_ERROR_NOT_INITIALIZED;
-    res = CheckResizingState(selection);
+    res = CheckSelectionStateForAnonymousButtons(selection);
   }
   return res;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::IgnoreSpuriousDragEvent(PRBool aIgnoreSpuriousDragEvent)
+{
+  mIgnoreSpuriousDragEvent = aIgnoreSpuriousDragEvent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
+{
+  nsCOMPtr<nsISelection>selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  // if we don't get the selection, just skip this
+  if (NS_FAILED(res) || !selection) return res;
+
+  PRBool bCollapsed;
+  res = selection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> focusNode;
+
+  if (bCollapsed) {
+    res = selection->GetFocusNode(getter_AddRefs(focusNode));
+    if (NS_FAILED(res)) return res;
+  }
+  else {
+
+    PRInt32 rangeCount;
+    res = selection->GetRangeCount(&rangeCount);
+    if (NS_FAILED(res)) return res;
+
+    if (rangeCount == 1) {
+
+      nsCOMPtr<nsIDOMRange> range;
+      res = selection->GetRangeAt(0, getter_AddRefs(range));
+      if (NS_FAILED(res)) return res;
+      if (!range) return NS_ERROR_NULL_POINTER;
+
+      nsCOMPtr<nsIDOMNode> startContainer, endContainer;
+      res = range->GetStartContainer(getter_AddRefs(startContainer));
+      if (NS_FAILED(res)) return res;
+      res = range->GetEndContainer(getter_AddRefs(endContainer));
+      if (NS_FAILED(res)) return res;
+      PRInt32 startOffset, endOffset;
+      res = range->GetStartOffset(&startOffset);
+      if (NS_FAILED(res)) return res;
+      res = range->GetEndOffset(&endOffset);
+      if (NS_FAILED(res)) return res;
+
+      nsCOMPtr<nsIDOMElement> focusElement;
+      if (startContainer == endContainer && startOffset + 1 == endOffset) {
+        res = GetSelectedElement(NS_LITERAL_STRING(""), getter_AddRefs(focusElement));
+        if (NS_FAILED(res)) return res;
+        if (focusElement)
+          focusNode = do_QueryInterface(focusElement);
+      }
+      if (!focusNode) {
+        res = range->GetCommonAncestorContainer(getter_AddRefs(focusNode));
+        if (NS_FAILED(res)) return res;
+      }
+    }
+    else {
+      PRInt32 i;
+      nsCOMPtr<nsIDOMRange> range;
+      for (i = 0; i < rangeCount; i++)
+      {
+        res = selection->GetRangeAt(i, getter_AddRefs(range));
+        if (NS_FAILED(res)) return res;
+        nsCOMPtr<nsIDOMNode> startContainer;
+        range->GetStartContainer(getter_AddRefs(startContainer));
+        if (!focusNode)
+          focusNode = startContainer;
+        else if (focusNode != startContainer) {
+          res = startContainer->GetParentNode(getter_AddRefs(focusNode));
+          if (NS_FAILED(res)) return res;
+          break;
+        }
+      }
+    }
+  }
+
+  if (focusNode) {
+    PRUint16 nodeType;
+    focusNode->GetNodeType(&nodeType);
+    if (nsIDOMNode::TEXT_NODE == nodeType) {
+      nsCOMPtr<nsIDOMNode> parent;
+      res = focusNode->GetParentNode(getter_AddRefs(parent));
+      if (NS_FAILED(res)) return res;
+      focusNode = parent;
+    }
+  }
+
+  nsCOMPtr<nsIDOMElement> focusElement = do_QueryInterface(focusNode);
+  *aReturn = focusElement;
+  NS_IF_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -6185,3 +6319,4 @@ nsHTMLEditor::IsAnonymousElement(nsIDOMElement * aElement, PRBool * aReturn)
   *aReturn = content->IsNativeAnonymous();
   return NS_OK;
 }
+
