@@ -2713,18 +2713,19 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     display = new (mPresContext) nsStyleDisplay();
   const nsStyleDisplay* parentDisplay = display;
 
-  if (parentContext && 
-      aRuleDetail != eRuleFullReset &&
-      aRuleDetail != eRulePartialReset &&
-      aRuleDetail != eRuleNone)
-    parentDisplay = NS_STATIC_CAST(const nsStyleDisplay*,
-                            parentContext->GetStyleData(eStyleStruct_Display));
-  PRBool inherited = aInherited;
-
   nsCOMPtr<nsIAtom> pseudoTag;
   aContext->GetPseudoType(*getter_AddRefs(pseudoTag));
   PRBool generatedContent = (pseudoTag == nsCSSAtoms::beforePseudo || 
                              pseudoTag == nsCSSAtoms::afterPseudo);
+
+  if (parentContext && 
+      ((aRuleDetail != eRuleFullReset &&
+        aRuleDetail != eRulePartialReset &&
+        aRuleDetail != eRuleNone) ||
+       generatedContent))
+    parentDisplay = NS_STATIC_CAST(const nsStyleDisplay*,
+                            parentContext->GetStyleData(eStyleStruct_Display));
+  PRBool inherited = aInherited;
 
   // display: enum, none, inherit
   if (eCSSUnit_Enumerated == displayData.mDisplay.GetUnit()) {
@@ -2886,53 +2887,61 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   }
 
   // CSS2 specified fixups:
-  // :before and :after elements must not be positioned or floated (CSS2 12.1).
   if (generatedContent) {
+    // According to CSS2 section 12.1, :before and :after
+    // pseudo-elements must not be positioned or floated (CSS2 12.1) and
+    // must be limited to certain display types (depending on the
+    // display type of the element to which they are attached).
+
     if (display->mPosition != NS_STYLE_POSITION_STATIC)
       display->mPosition = NS_STYLE_POSITION_STATIC;
     if (display->mFloats != NS_STYLE_FLOAT_NONE)
       display->mFloats = NS_STYLE_FLOAT_NONE;
-  }
 
-  // 1) if float is not none, and display is not none, then we must set display to block
-  //    XXX - there are problems with following the spec here: what we will do instead of
-  //          following the letter of the spec is to make sure that floated elements are
-  //          some kind of block, not strictly 'block' - see EnsureBlockDisplay method
-  if (display->mDisplay != NS_STYLE_DISPLAY_NONE &&
-      display->mFloats != NS_STYLE_FLOAT_NONE)
-    EnsureBlockDisplay(display->mDisplay);
-  
-  // 2) if position is 'absolute' or 'fixed' then display must be 'block and float must be 'none'
-  //    XXX - see note for fixup 1) above...
-  if (display->IsAbsolutelyPositioned() && display->mDisplay != NS_STYLE_DISPLAY_NONE) {
-    // Backup original display value for calculation of a hypothetical box (CSS2 10.6.4/10.6.5)
-    // See nsHTMLReflowState::CalculateHypotheticalBox
-    display->mOriginalDisplay = display->mDisplay;
-    EnsureBlockDisplay(display->mDisplay);
-    display->mFloats = NS_STYLE_FLOAT_NONE;
-  }
-
-  if (generatedContent) {
     PRUint8 displayValue = display->mDisplay;
-    if (parentDisplay->IsBlockLevel()) {
-      // For block-level elements the only allowed 'display' values are:
-      // 'none', 'inline', 'block', and 'marker'
-      if ((NS_STYLE_DISPLAY_INLINE != displayValue) &&
-          (NS_STYLE_DISPLAY_BLOCK != displayValue) &&
-          (NS_STYLE_DISPLAY_MARKER != displayValue)) {
-        // Pseudo-element behaves as if the value were 'block'
-        displayValue = NS_STYLE_DISPLAY_BLOCK;
+    if (displayValue != NS_STYLE_DISPLAY_NONE &&
+        displayValue != NS_STYLE_DISPLAY_INLINE) {
+      if (parentDisplay->IsBlockLevel()) {
+        // If the subject of the selector is a block-level element,
+        // allowed values are 'none', 'inline', 'block', and 'marker'.
+        // If the value of the 'display' has any other value, the
+        // pseudo-element will behave as if the value were 'block'.
+        if (displayValue != NS_STYLE_DISPLAY_BLOCK &&
+            displayValue != NS_STYLE_DISPLAY_MARKER)
+          display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
+      } else {
+        // If the subject of the selector is an inline-level element,
+        // allowed values are 'none' and 'inline'. If the value of the
+        // 'display' has any other value, the pseudo-element will behave
+        // as if the value were 'inline'.
+        display->mDisplay = NS_STYLE_DISPLAY_INLINE;
       }
-
-    } else {
-      // For inline-level elements the only allowed 'display' values are
-      // 'none' and 'inline'
-      displayValue = NS_STYLE_DISPLAY_INLINE;
     }
-  
-    if (display->mDisplay != displayValue) {
-      // Reset the value
-      display->mDisplay = displayValue;
+  } else if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
+    // CSS2 9.7 specifies display type corrections dealing with 'float'
+    // and 'position'.  Since generated content can't be floated or
+    // positioned, we can deal with it here.
+
+    // 1) if float is not none, and display is not none, then we must
+    // set display to block
+    //    XXX - there are problems with following the spec here: what we
+    //          will do instead of following the letter of the spec is
+    //          to make sure that floated elements are some kind of
+    //          block, not strictly 'block' - see EnsureBlockDisplay
+    //          method
+    if (display->mFloats != NS_STYLE_FLOAT_NONE)
+      EnsureBlockDisplay(display->mDisplay);
+    
+    // 2) if position is 'absolute' or 'fixed' then display must be
+    // 'block and float must be 'none'
+    //    XXX - see note for fixup 1) above...
+    if (display->IsAbsolutelyPositioned()) {
+      // Backup original display value for calculation of a hypothetical
+      // box (CSS2 10.6.4/10.6.5).
+      // See nsHTMLReflowState::CalculateHypotheticalBox
+      display->mOriginalDisplay = display->mDisplay;
+      EnsureBlockDisplay(display->mDisplay);
+      display->mFloats = NS_STYLE_FLOAT_NONE;
     }
   }
 
