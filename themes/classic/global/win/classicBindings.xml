@@ -161,12 +161,13 @@
     </content>
   </binding>
 
+<!--  
   <binding id="throbber" extends="xul:box">
     <content autostretch="never">
       <button allowevents="true" class="throbber-button" inherits="throbberaction:oncommand,throbbertooltip:tooltip,throbbertooltiptext:tooltiptext"/>
     </content>
   </binding>
-
+-->
 
   
 </bindings>

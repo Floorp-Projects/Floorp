@@ -320,10 +320,7 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menubutton>
 
-      <throbber id="navigator-throbber" 
-                throbberaction="goClickThrobber('browser.throbber.url')" 
-                throbbertooltip="aTooltip" 
-                throbbertooltiptext="&throbber.tooltip;"/>
+      <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
     </toolbar>
   
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"

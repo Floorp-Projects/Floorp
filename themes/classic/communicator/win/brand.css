@@ -1,5 +1,5 @@
 
-.throbber-button
+#navigator-throbber
   {
     behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
     border                : 1px solid threeddarkshadow;
@@ -9,7 +9,7 @@
     cursor                : pointer;
   }  
   
-.throbber-button > .button-internal-box
+#navigator-throbber > .button-internal-box
   {
     border-left           : 1px solid threedhighlight;
     border-top            : 1px solid threedhighlight;
@@ -18,12 +18,12 @@
     padding               : 1px;
   }
   
-.throbber-button > .button-internal-box > .button-text-container
+#navigator-throbber > .button-internal-box > .button-text-container
   {
     display               : none;
   }  
 
-.throbber-button:hover:active > .button-internal-box
+#navigator-throbber:hover:active > .button-internal-box
   {
     border-left           : 1px solid threedshadow !important;
     border-top            : 1px solid threedshadow !important;
@@ -32,7 +32,7 @@
     padding               : 2px 0xp 0xp 2px !important;
   }  
   
-.throbber-button[busy="true"]
+#navigator-throbber[busy="true"]
   {
     list-style-image      : url("chrome://global/skin/animthrob.gif");
   }
