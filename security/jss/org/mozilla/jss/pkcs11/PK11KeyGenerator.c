@@ -49,6 +49,13 @@
 #include <pk11func.h>
 #include <secoid.h>
 
+PBEBitGenContext *
+PBE_CreateContext(SECOidTag hashAlgorithm, PBEBitGenID bitGenPurpose,
+        SECItem *pwitem, SECItem *salt, unsigned int bitsNeeded,
+        unsigned int iterations);
+
+SECItem *
+PBE_GenerateBits(PBEBitGenContext *context);
 /***********************************************************************
  *
  * PK11KeyGenerator.generateNormal
@@ -239,14 +246,14 @@ constructSHA1PBAKey(JNIEnv *env, SECItem *pwitem, SECItem *salt,
     SECItem *keyBits=NULL;
     PK11SymKey *key=NULL;
 
-    pbeCtxt = (PBEBitGenContext*) PBE_CreateContext( SEC_OID_SHA1, pbeBitGenIntegrityKey,
+    pbeCtxt = PBE_CreateContext( SEC_OID_SHA1, pbeBitGenIntegrityKey,
                     pwitem, salt, 160 /* SHA1 key length */, iterationCount);
     if( pbeCtxt == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to create PBE context");
         goto finish;
     }
 
-    keyBits = (SECItem*) pBE_GenerateBits(pbeCtxt);
+    keyBits = PBE_GenerateBits(pbeCtxt);
     if( keyBits == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to generate bits from"
                 "PBE context");
