@@ -319,36 +319,17 @@ function evalInTargetScope (script)
         display (MSG_ERR_NO_STACK, MT_ERROR);
         return null;
     }
-
-    try
-    {
-        return getCurrentFrame().eval (script, MSG_VAL_CONSOLE, 1);
-    }
-    catch (ex)
-    {
-        display (formatEvalException (ex), MT_ERROR);
-        return null;
-    }
-
-    return null;
-    
-    /*
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return null;
-    }
     
     var rval = new Object();
     
     if (!getCurrentFrame().eval (script, MSG_VAL_CONSOLE, 1, rval))
     {
-        dd ("exception: " + dumpObjectTree(rval.value));
+        //dd ("exception: " + dumpObjectTree(rval.value));
         display (formatEvalException (rval.value), MT_ERROR);
         return null;
     }
+
     return ("value" in rval) ? rval.value : null;
-    */
 }
 
 function formatException (ex)

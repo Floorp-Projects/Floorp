@@ -36,6 +36,7 @@
 const JSD_CTRID = "@mozilla.org/js/jsd/debugger-service;1";
 const jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
 const jsdIExecutionHook   = Components.interfaces.jsdIExecutionHook;
+const jsdIErrorHook       = Components.interfaces.jsdIErrorHook;
 const jsdICallHook        = Components.interfaces.jsdICallHook;
 const jsdIValue           = Components.interfaces.jsdIValue;
 const jsdIProperty        = Components.interfaces.jsdIProperty;
@@ -100,19 +101,28 @@ console._callHook = {
             }
 };
 
-console._debugHook = {
-    onExecute: function debughook (frame, type, rv) {
-                   display ("debug hook");
-               }
-};
-
 console._errorHook = {
     onError: function errorhook (message, fileName, line, pos, flags,
                                  exception) {
                  try {
+                     var flagstr;
+                     flagstr =
+                         (flags && jsdIErrorHook.REPORT_EXCEPTION) ? "x" : "-";
+                     flagstr +=
+                         (flags && jsdIErrorHook.REPORT_STRICT) ? "s" : "-";
                      
-                     dd ("===\n" + message + "\n" + fileName + "@" + line + ":" +
-                         pos + "; " + flags);
+                     //dd ("===\n" + message + "\n" + fileName + "@" + 
+                     //    line + ":" + pos + "; " + flagstr);
+                     var msn = (flags & jsdIErrorHook.REPORT_WARNING) ?
+                         MSN_ERPT_WARN : MSN_ERPT_ERROR;
+
+                     if (console.errorMode != EMODE_IGNORE)
+                         display (getMsg(msn, [message, flagstr, fileName,
+                                               line, pos]), MT_ETRACE);
+                     
+                     if (console.errorMode == EMODE_BREAK)
+                         return false;
+
                      return true;
                  }
                  catch (ex)
@@ -141,8 +151,8 @@ function initDebugger()
     console.jsds.on();
     console.jsds.breakpointHook = console._executionHook;
     console.jsds.debuggerHook = console._executionHook;
-    //console.jsds.debugHook = console._debugHook;
-    //console.jsds.errorHook = console._errorHook;
+    console.jsds.debugHook = console._executionHook;
+    console.jsds.errorHook = console._errorHook;
     console.jsds.scriptHook = console._scriptHook;
 
     var venkmanFilter1 = { /* glob based filter goes first, because it's the */
@@ -163,7 +173,8 @@ function initDebugger()
     console.jsds.appendFilter (venkmanFilter1);
     console.jsds.appendFilter (venkmanFilter2);
     
-    setThrowMode(TMODE_IGNORE);
+    console.throwMode = TMODE_IGNORE;
+    console.errorMode = EMODE_IGNORE;
 
     var enumer = {
         enumerateScript: function _es (script) {
@@ -291,57 +302,13 @@ function unrealizeScript(script)
     }
 }
 
+const EMODE_IGNORE = 0;
+const EMODE_TRACE  = 1;
+const EMODE_BREAK  = 2;
+
 const TMODE_IGNORE = 0;
-const TMODE_TRACE = 1;
-const TMODE_BREAK = 2;
-
-function getThrowMode (tmode)
-{
-    return console.throwMode;
-}
-
-function cycleThrowMode ()
-{
-    switch (console.throwMode)
-    {
-        case TMODE_IGNORE:
-            setThrowMode(TMODE_TRACE);
-            break;            
-
-        case TMODE_TRACE:
-            setThrowMode(TMODE_BREAK);
-            break;
-
-        case TMODE_BREAK:
-            setThrowMode(TMODE_IGNORE);
-            break;
-    }
-}
-
-function setThrowMode (tmode)
-{    
-    switch (tmode) {
-        case TMODE_IGNORE:
-            console.jsds.throwHook = null;
-            display (MSG_TMODE_IGNORE);
-            break;            
-
-        case TMODE_TRACE:
-            console.jsds.throwHook = console._executionHook;
-            display (MSG_TMODE_TRACE);
-            break;
-
-        case TMODE_BREAK:
-            console.jsds.throwHook = console._executionHook;
-            display (MSG_TMODE_BREAK);
-            break;
-            
-        default:
-            throw new BadMojo (ERR_INVALID_PARAM, "tmode");
-    }
-    
-    console.throwMode = tmode;
-}
+const TMODE_TRACE  = 1;
+const TMODE_BREAK  = 2;
 
 function debugTrap (frame, type, rv)
 {

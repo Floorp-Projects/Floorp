@@ -53,6 +53,7 @@ function initCommands(commandObject)
          ["clear-script",   cmdClearScript,        0],
          ["commands",       cmdCommands,           CMD_CONSOLE],
          ["cont",           cmdCont,               CMD_CONSOLE | CMD_NEED_STACK],
+         ["emode",          cmdEMode,              CMD_CONSOLE],
          ["eval",           cmdEval,               CMD_CONSOLE | CMD_NEED_STACK],
          ["evald",          cmdEvald,              CMD_CONSOLE],
          ["fbreak",         cmdFBreak,             CMD_CONSOLE],
@@ -86,6 +87,10 @@ function initCommands(commandObject)
          /* aliases */
          ["this",          "props this",           CMD_CONSOLE],
          ["toggle-ias",    "startup-init toggle",  0],
+         ["em-cycle",      "emode cycle",          0],
+         ["em-ignore",     "emode ignore",         0],
+         ["em-trace",      "emode trace",          0],
+         ["em-break",      "emode break",          0],
          ["tm-cycle",      "tmode cycle",          0],
          ["tm-ignore",     "tmode ignore",         0],
          ["tm-trace",      "tmode trace",          0],
@@ -309,6 +314,62 @@ function cmdCont (e)
     --console._stopLevel;
     console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
+}
+
+function cmdEMode (e)
+{    
+    if (e.mode != null)
+    {
+        e.mode = e.mode.toLowerCase();
+
+        if (e.mode == "cycle")
+        {
+            switch (console.errorMode)
+            {
+                case EMODE_IGNORE:
+                    e.mode = "trace";
+                    break;
+                case EMODE_TRACE:
+                    e.mode = "break";
+                    break;
+                case EMODE_BREAK:
+                    e.mode = "ignore";
+                    break;
+            }
+        }
+
+        switch (e.mode)
+        {
+            case "ignore":
+                console.errorMode = EMODE_IGNORE;
+                break;
+            case "trace": 
+                console.errorMode = EMODE_TRACE;
+                break;
+            case "break":
+                console.errorMode = EMODE_BREAK;
+                break;
+            default:
+                display (getMsg(MSN_ERR_INVALID_PARAM, ["mode", e.mode]),
+                         MT_ERROR);
+                return false;
+        }
+    }
+    
+    switch (console.errorMode)
+    {
+        case EMODE_IGNORE:
+            display (MSG_EMODE_IGNORE);
+            break;
+        case EMODE_TRACE:
+            display (MSG_EMODE_TRACE);
+            break;
+        case EMODE_BREAK:
+            display (MSG_EMODE_BREAK);
+            break;
+    }
+
+    return true;
 }
 
 function cmdEval (e)
@@ -733,34 +794,60 @@ function cmdStop (e)
 
 function cmdTMode (e)
 {
-    if (e.mode.search(/ignore/i) != -1)
+    if (e.mode != null)
     {
-        setThrowMode(TMODE_IGNORE);
-        return true;
+        e.mode = e.mode.toLowerCase();
+
+        if (e.mode == "cycle")
+        {
+            switch (console.throwMode)
+            {
+                case TMODE_IGNORE:
+                    e.mode = "trace";
+                    break;
+                case TMODE_TRACE:
+                    e.mode = "break";
+                    break;
+                case TMODE_BREAK:
+                    e.mode = "ignore";
+                    break;
+            }
+        }
+
+        switch (e.mode.toLowerCase())
+        {
+            case "ignore":
+                console.jsds.throwHook = null;
+                console.throwMode = TMODE_IGNORE;
+                break;
+            case "trace": 
+                console.jsds.throwHook = console._executionHook;
+                console.throwMode = TMODE_TRACE;
+                break;
+            case "break":
+                console.jsds.throwHook = console._executionHook;
+                console.throwMode = TMODE_BREAK;
+                break;
+            default:
+                display (getMsg(MSN_ERR_INVALID_PARAM, ["mode", e.mode]),
+                         MT_ERROR);
+                return false;
+        }
     }
-    else if (e.mode.search(/trace/i) != -1)
+    
+    switch (console.throwMode)
     {
-        setThrowMode(TMODE_TRACE);
-        return true;
-    }
-    else if (e.mode.search(/breaK/i) != -1)
-    {
-        setThrowMode(TMODE_BREAK);
-        return true;
-    }
-    else if (e.mode.search(/cycle/i) != -1)
-    {
-        cycleThrowMode();
-        return true;
-    }
-    else if (e.mode)
-    {
-        display (getMsg(MSN_ERR_INVALID_PARAM, ["mode", e.mode]), MT_ERROR);
-        return false;
+        case EMODE_IGNORE:
+            display (MSG_TMODE_IGNORE);
+            break;
+        case EMODE_TRACE:
+            display (MSG_TMODE_TRACE);
+            break;
+        case EMODE_BREAK:
+            display (MSG_TMODE_BREAK);
+            break;
     }
 
-    /* display the current throw mode */
-    setThrowMode(getThrowMode());
     return true;
 }
 

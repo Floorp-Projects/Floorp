@@ -80,16 +80,45 @@ function initMenus()
      m("step");
      m("finish");
      m("-");
-     m("tm-ignore", {type: "radio",
+     m("em-ignore", {type: "radio", name: "em",
+                     checkedif: "console.errorMode == EMODE_IGNORE"});
+     m("em-trace",  {type: "radio", name: "em",
+                     checkedif: "console.errorMode == EMODE_TRACE"});
+     m("em-break",  {type: "radio", name: "em",
+                     checkedif: "console.errorMode == EMODE_BREAK"});
+     m("-");
+     m("tm-ignore", {type: "radio", name: "tm",
                      checkedif: "console.throwMode == TMODE_IGNORE"});
-     m("tm-trace",  {type: "radio",
+     m("tm-trace",  {type: "radio", name: "tm",
                      checkedif: "console.throwMode == TMODE_TRACE"});
-     m("tm-break",  {type: "radio",
+     m("tm-break",  {type: "radio", name: "tm",
                      checkedif: "console.throwMode == TMODE_BREAK"});
      m("-");
      m("toggle-ias", {type: "checkbox",
                       checkedif: "console.jsds.initAtStartup"});
 
+    /* Context menu for console view */
+    C("output-iframe", "console");
+     m("stop");
+     m("cont");
+     m("next");
+     m("step");
+     m("finish");
+     m("-");
+     m("em-ignore", {type: "radio", name: "em",
+                     checkedif: "console.errorMode == EMODE_IGNORE"});
+     m("em-trace",  {type: "radio", name: "em",
+                     checkedif: "console.errorMode == EMODE_TRACE"});
+     m("em-break",  {type: "radio", name: "em",
+                     checkedif: "console.errorMode == EMODE_BREAK"});
+     m("-");
+     m("tm-ignore", {type: "radio", name: "tm",
+                     checkedif: "console.throwMode == TMODE_IGNORE"});
+     m("tm-trace",  {type: "radio", name: "tm",
+                     checkedif: "console.throwMode == TMODE_TRACE"});
+     m("tm-break",  {type: "radio", name: "tm",
+                     checkedif: "console.throwMode == TMODE_BREAK"});
+     
     /* Context menu for project view */
     C("project-outliner", "project");
      m("clear-all", {enabledif:

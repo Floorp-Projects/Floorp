@@ -158,6 +158,10 @@ const MSG_TIP_HELP           = getMsg("msg.tip.help");
 const MSG_NO_BREAKPOINTS_SET = getMsg("msg.no.breakpoints.set");
 const MSG_NO_FBREAKS_SET     = getMsg("msg.no.fbreaks.set");
 
+const MSG_EMODE_IGNORE     = getMsg("msg.emode.ignore");
+const MSG_EMODE_TRACE      = getMsg("msg.emode.trace");
+const MSG_EMODE_BREAK      = getMsg("msg.emode.break");
+
 const MSG_TMODE_IGNORE     = getMsg("msg.tmode.ignore");
 const MSG_TMODE_TRACE      = getMsg("msg.tmode.trace");
 const MSG_TMODE_BREAK      = getMsg("msg.tmode.break");
@@ -225,6 +229,8 @@ const MSN_FBP_DISABLED       = "msg.fbp.disabled";
 const MSN_FBP_EXISTS         = "msg.fbp.exists";
 const MSN_SOURCE_LINE        = "msg.source.line";
 const MSN_EXCP_TRACE         = "msg.exception.trace";
+const MSN_ERPT_ERROR         = "msg.erpt.error";
+const MSN_ERPT_WARN          = "msg.erpt.warn";
 const MSN_VERSION            = "msg.version";
 const MSN_DEFAULT_ALIAS_HELP = "msg.default.alias.help";
 
