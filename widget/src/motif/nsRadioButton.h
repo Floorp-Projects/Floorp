@@ -25,17 +25,25 @@
 /**
  * Native Motif Radiobutton wrapper
  */
-
-class nsRadioButton : public nsWindow
-                      
+class nsRadioButton : public nsWindow,
+                      public nsIRadioButton
 {
 
 public:
-
-  nsRadioButton(nsISupports *aOuter);
+                            nsRadioButton();
   virtual                 ~nsRadioButton();
 
-  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  // nsIRadioButton part
+  NS_IMETHOD              SetLabel(const nsString& aText);
+  NS_IMETHOD              GetLabel(nsString& aBuffer);
+  NS_IMETHOD              SetState(const PRBool aState);
+  NS_IMETHOD              GetState(PRBool& aState);
+
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -54,15 +62,10 @@ public:
               nsWidgetInitData *aInitData = nsnull);
 
   // nsIRadioButton part
-  virtual void            SetLabel(const nsString& aText);
-  virtual void            GetLabel(nsString& aBuffer);
-
   virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool          OnPaint(nsPaintEvent &aEvent);
   virtual PRBool          OnResize(nsSizeEvent &aEvent);
 
-  virtual void            SetState(PRBool aState);
-  virtual PRBool          GetState();
 
   // These are needed to Override the auto check behavior
   void Armed();
@@ -70,36 +73,11 @@ public:
 
 private:
 
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsRadioButton,mAggWidget);
-  }
-
   Widget  mRadioBtn;
   Boolean mInitialState;
   Boolean mNewValue;
   Boolean mValueWasSet;
   Boolean mIsArmed;
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIButton interface to nsRadioButton w/o using multiple
-  // inheritance.
-  class AggRadioButton : public nsIRadioButton {
-  public:
-    AggRadioButton();
-    virtual ~AggRadioButton();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsIRadioButton
-    virtual void   SetLabel(const nsString &aText);
-    virtual void   GetLabel(nsString &aBuffer);
-    virtual void   SetState(PRBool aState);
-    virtual PRBool GetState();
-
-  };
-  AggRadioButton mAggWidget;
-  friend class AggRadioButton;
 
 };
 

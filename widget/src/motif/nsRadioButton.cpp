@@ -26,17 +26,19 @@
 #include <Xm/ToggleB.h>
 #include <Xm/RowColumn.h>
 
-#define DBG 0
+NS_IMPL_ADDREF(nsRadioButton)
+NS_IMPL_RELEASE(nsRadioButton)
+
 //-------------------------------------------------------------------------
 //
 // nsRadioButton constructor
 //
 //-------------------------------------------------------------------------
-nsRadioButton::nsRadioButton(nsISupports *aOuter) : 
-  nsWindow(aOuter),
-  mIsArmed(PR_FALSE)
+nsRadioButton::nsRadioButton() : nsWindow(), nsIRadioButton()
 {
+  NS_INIT_REFCNT();
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -46,6 +48,26 @@ nsRadioButton::nsRadioButton(nsISupports *aOuter) :
 nsRadioButton::~nsRadioButton()
 {
 }
+
+
+//-------------------------------------------------------------------------
+//
+// Query interface implementation
+//
+//-------------------------------------------------------------------------
+nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+
+  static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
+  if (result == NS_NOINTERFACE && aIID.Equals(kIRadioButtonIID)) {
+      *aInstancePtr = (void*) ((nsIRadioButton*)this);
+      AddRef();
+      result = NS_OK;
+  }
+  return result;
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -63,8 +85,6 @@ void nsRadioButton::Create(nsIWidget *aParent,
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
@@ -73,8 +93,6 @@ void nsRadioButton::Create(nsIWidget *aParent,
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   mWidget = ::XmCreateRadioBox(parentWidget, "radio", nsnull, 0);
   XtVaSetValues(mWidget, XmNwidth, aRect.width,
@@ -118,8 +136,6 @@ void nsRadioButton::Create(nsIWidget *aParent,
 
   XtManageChild(mRadioBtn);
 
-  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
-
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
@@ -161,23 +177,6 @@ void nsRadioButton::Create(nsNativeWidget aParent,
 
 //-------------------------------------------------------------------------
 //
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsRadioButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
-{
-  static NS_DEFINE_IID(kIRadioButtonIID,    NS_IRADIOBUTTON_IID);
-
-  if (aIID.Equals(kIRadioButtonIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
-}
-
-//-------------------------------------------------------------------------
-//
 // Armed
 //
 //-------------------------------------------------------------------------
@@ -186,7 +185,6 @@ void nsRadioButton::Armed()
   mIsArmed      = PR_TRUE;
   mValueWasSet  = PR_FALSE;
   mInitialState = XmToggleButtonGetState(mRadioBtn);
-  if (DBG) printf("Arm: InitialValue: %d\n", mInitialState);
 }
 
 //-------------------------------------------------------------------------
@@ -196,11 +194,6 @@ void nsRadioButton::Armed()
 //-------------------------------------------------------------------------
 void nsRadioButton::DisArmed() 
 {
-  if (DBG) printf("DisArm: InitialValue: %d\n", mInitialState);
-  if (DBG) printf("DisArm: ActualValue:  %d\n", XmToggleButtonGetState(mRadioBtn));
-  if (DBG) printf("DisArm: mValueWasSet  %d\n", mValueWasSet);
-  if (DBG) printf("DisArm: mNewValue     %d\n", mNewValue);
-
   if (mValueWasSet) {
     XmToggleButtonSetState(mRadioBtn, mNewValue, TRUE);
   } else {
@@ -214,7 +207,7 @@ void nsRadioButton::DisArmed()
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::SetState(PRBool aState) 
+NS_METHOD nsRadioButton::SetState(PRBool aState) 
 {
   int state = aState;
   if (mIsArmed) {
@@ -222,6 +215,8 @@ void nsRadioButton::SetState(PRBool aState)
     mValueWasSet = PR_TRUE;
   }
   XmToggleButtonSetState(mRadioBtn, aState, TRUE);
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -229,7 +224,7 @@ void nsRadioButton::SetState(PRBool aState)
 // Set this button label
 //
 //-------------------------------------------------------------------------
-PRBool nsRadioButton::GetState()
+NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
   int state = XmToggleButtonGetState(mRadioBtn);
   if (mIsArmed) {
@@ -248,7 +243,7 @@ PRBool nsRadioButton::GetState()
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::SetLabel(const nsString& aText)
+NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   XmString str;
@@ -264,7 +259,7 @@ void nsRadioButton::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::GetLabel(nsString& aBuffer)
+NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
 {
   XmString str;
   XtVaGetValues(mRadioBtn, XmNlabelString, &str, nsnull);
@@ -297,36 +292,4 @@ PRBool nsRadioButton::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-
-#define GET_OUTER() \
-  ((nsRadioButton*) ((char*)this - nsRadioButton::GetOuterOffset()))
-
-PRBool nsRadioButton::AggRadioButton::GetState()
-{
-  return GET_OUTER()->GetState();
-}
-
-void nsRadioButton::AggRadioButton::SetState(PRBool aState)
-{
-  GET_OUTER()->SetState(aState);
-}
-
-void nsRadioButton::AggRadioButton::SetLabel(const nsString& aText)
-{
-  GET_OUTER()->SetLabel(aText);
-}
-
-void nsRadioButton::AggRadioButton::GetLabel(nsString& aText)
-{
-  GET_OUTER()->GetLabel(aText);
-}
-
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsRadioButton, AggRadioButton);
 
