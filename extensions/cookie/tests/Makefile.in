@@ -32,9 +32,4 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-# hack until necko lands
-ifndef NECKO
-PUBLIC		= $(DEPTH)/netwerk/dist/include
-endif
-
 include $(topsrcdir)/config/rules.mk
