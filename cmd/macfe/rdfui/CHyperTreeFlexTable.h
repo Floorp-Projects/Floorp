@@ -44,8 +44,7 @@
 
 
 class CHyperTreeFlexTable :
-	public CStandardFlexTable, public CDynamicTooltipMixin, public CHTAwareURLDragMixin,
-		public CTiledImageMixin
+	public CStandardFlexTable, public CHTAwareURLDragMixin, public CTiledImageMixin
 {
 public:
 	enum {
@@ -106,7 +105,7 @@ protected:
 		
 		// Stuff related to hiliting
 	virtual TableIndexT	GetHiliteColumn() const { return 1; } ;
-	virtual Boolean GetHiliteTextRect ( TableIndexT inRow, Rect& outRect) const ;
+	virtual Boolean GetHiliteTextRect ( TableIndexT inRow, Boolean inOkIfRowHidden, Rect& outRect) const ;
 	virtual void GetMainRowText( TableIndexT inRow, char* outText, UInt16 inMaxBufferLength) const ;
 	virtual void DoHiliteRgn ( RgnHandle inHiliteRgn ) const;
 	virtual void DoHiliteRect ( const Rect & inHiliteRect ) const;
@@ -130,11 +129,11 @@ protected:
 											ItemReference inItemRef, Rect & /*inItemBounds*/ ) ;
 
 		// for dynamic tooltip tracking and mouse cursor tracking
-	virtual void MouseWithin ( Point inPortPt, const EventRecord& ) ;	
-	virtual void MouseLeave ( ) ;
 	virtual void AdjustCursorSelf ( Point /*inPoint*/, const EventRecord& inEvent ) ;
-	virtual void FindTooltipForMouseLocation ( const EventRecord& inMacEvent,
-													StringPtr outTip ) ;
+	virtual void CalcToolTipText( const STableCell& inCell,
+									StringPtr outText,
+									TextDrawingStuff& outStuff,
+									Boolean& outTruncationOnly);	
 
 		// Tree behavior properties
 	virtual Boolean CanDoInlineEditing ( ) const;
@@ -144,7 +143,7 @@ protected:
 	virtual void InlineEditorDone ( ) ;
 
 		// command stuff
-	virtual void	DeleteSelection ( );
+	virtual void	DeleteSelection ( const EventRecord& inEvent );
 	virtual void	FindCommandStatus ( CommandT inCommand, Boolean &outEnabled,
 										Boolean &outUsesMark, Char16 &outMark, Str255 outName) ;
 

@@ -70,6 +70,8 @@ CHyperTreeFlexTable::CHyperTreeFlexTable(LStream* inStream)
 	mSendDataUPP = NewDragSendDataProc(LDropArea::HandleDragSendData);
 	ThrowIfNil_(mSendDataUPP);
 
+	// turn on spring-loading of folders during d&d
+	mAllowAutoExpand = true;
 }
 
 
@@ -125,7 +127,7 @@ CHyperTreeFlexTable :: SetUpTableHelpers()
 // based on the item title.
 //
 Boolean
-CHyperTreeFlexTable::GetHiliteTextRect ( TableIndexT inRow, Rect& outRect) const
+CHyperTreeFlexTable::GetHiliteTextRect ( TableIndexT inRow, Boolean /*inOkIfRowHidden*/, Rect& outRect) const
 {
 	STableCell cell(inRow, GetHiliteColumn());
 	if (!GetLocalCellRect(cell, outRect))
@@ -136,7 +138,7 @@ CHyperTreeFlexTable::GetHiliteTextRect ( TableIndexT inRow, Rect& outRect) const
 
 	// Get cell data for first column
 	char buffer[1000];
-	GetHiliteText(inRow, buffer, 1000, &outRect);
+	GetHiliteText(inRow, buffer, 1000, false, &outRect);
 
 	return true;
 	
@@ -576,7 +578,7 @@ CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inL
 				else
 					URDFUtilities::SetupForegroundTextColor ( TopNode(), gNavCenter->viewFGColor, 
 																kThemeListViewTextColor );
-				DrawTextString(str, &mTextFontInfo, 0, localRect);
+				DrawTextString(str, &mTextDrawingStuff.mTextFontInfo, 0, localRect);
 			}
 		} // else a normal item
 	} // if node valid
@@ -809,7 +811,7 @@ CHyperTreeFlexTable :: FindCommandStatus ( CommandT inCommand, Boolean &outEnabl
 // during a drag and drop.
 //
 void
-CHyperTreeFlexTable::DeleteSelection ( )
+CHyperTreeFlexTable::DeleteSelection ( const EventRecord& /*inEvent*/ )
 {
 	HT_Pane pane = HT_GetPane(mHTView);
 	if ( HT_IsMenuCmdEnabled(pane, HT_CMD_CUT) )	//еее these should be HT_CMD_CLEAR
@@ -1360,98 +1362,6 @@ CHyperTreeFlexTable :: ChangeSort ( const LTableHeader::SortChange* inSortChange
 
 
 //
-// MouseLeave
-//
-// Called when the mouse leaves the tree view. Just update our "hot" cell to 0,0.
-//
-void 
-CHyperTreeFlexTable :: MouseLeave ( ) 
-{
-	mTooltipCell = STableCell(0, 0);
-		
-} // MouseLeave
-
-
-//
-// MouseWithin
-//
-// Called while the mouse moves w/in the tree view. Find which cell the mouse is
-// currently over and if it differs from the last cell it was in, hide the 
-// tooltip and remember the new cell.
-//
-void 
-CHyperTreeFlexTable :: MouseWithin ( Point inPortPt, const EventRecord& ) 
-{
-	SPoint32 imagePt;	
-	PortToLocalPoint(inPortPt);
-	LocalToImagePoint(inPortPt, imagePt);
-	
-	STableCell hitCell;
-	if ( GetCellHitBy(imagePt, hitCell) )
-		if ( mTooltipCell != hitCell ) {
-			mTooltipCell = hitCell;
-			ExecuteAttachments(msg_HideTooltip, this);	// hide tooltip
-		}
-
-} // MouseWithin
-
-
-//
-// FindTooltipForMouseLocation
-//
-// Return the appropriate title for the current mouse location.
-void
-CHyperTreeFlexTable :: FindTooltipForMouseLocation ( const EventRecord& inMacEvent,
-														StringPtr outTip )
-{
-	Point temp = inMacEvent.where;
-	SPoint32 where;	
-	GlobalToPortPoint(temp);
-	PortToLocalPoint(temp);
-	LocalToImagePoint(temp, where);
-
-	STableCell hitCell;
-	if ( GetCellHitBy(where, hitCell) && hitCell.col <= mCols ) {
-	
-		CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
-		Assert_(header != NULL);
-		CHyperTreeHeader::ColumnInfo info = header->GetColumnInfo(hitCell.col - 1);
-		
-		HT_Resource node = HT_GetNthItem( GetHTView(), URDFUtilities::PPRowToHTRow(hitCell.row) );
-		void* data;
-		if ( HT_GetTemplateData(node, info.token, info.tokenType, &data) && data ) {
-			switch (info.tokenType) {
-				case HT_COLUMN_STRING:
-					if ( ! HT_IsSeparator(node) ) {
-						const char* str = static_cast<char*>(data);
-						if ( str ) {
-							outTip[0] = strlen(str);
-	 						strcpy ( (char*) &outTip[1], str );
-	 					}
-	 					else
-	 						outTip[0] = 0;
-	 				}
-	 				else
-	 					outTip[0] = 0;
- 					break;
-					
- 				default:
- 					outTip[0] = 0;		// don't display tooltip for other data types
-
-			} // case of column data type
-		} // if data is valid
- 		else
- 			outTip[0] = 0;
-
-	} // if valid cell
-	else
-		::GetIndString ( outTip, 10506, 16);		// supply a helpful message...
-
-} // FindTooltipForMouseLocation
-
-
-
-//
 // AdjustCursorSelf
 //
 // Handle changing cursor to contextual menu cursor if cmd key is down
@@ -1500,6 +1410,58 @@ CHyperTreeFlexTable :: GetTargetFrame ( ) const
 	else
 		return NULL;
 }
+
+
+//
+// CalcToolTipText
+//
+// Used with the CTableToolTipPane/Attachment to provide a better tooltip experience
+// for the table. Will only show the tip when the text is truncated.
+//
+void
+CHyperTreeFlexTable :: CalcToolTipText( const STableCell& inCell,
+										StringPtr outText,
+										TextDrawingStuff& outStuff,
+										Boolean& outTruncationOnly)
+{
+	outText[0] = 0;
+	outTruncationOnly = true;		// Only show tip if truncated.
+
+	// never show the tip while inline editing is alive
+	if ( mRowBeingEdited != LArray::index_Bad )
+		return;
+
+	outStuff = GetTextStyle(inCell.row);
+
+	CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
+	Assert_(header != NULL);
+	CHyperTreeHeader::ColumnInfo info = header->GetColumnInfo(inCell.col - 1);
+	
+	HT_Resource node = HT_GetNthItem( GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
+	void* data;
+	if ( HT_GetTemplateData(node, info.token, info.tokenType, &data) && data ) {
+		switch (info.tokenType) {
+			case HT_COLUMN_STRING:
+				if ( ! HT_IsSeparator(node) ) {
+					const char* str = static_cast<char*>(data);
+					if ( str ) {
+						outText[0] = strlen(str);
+ 						strcpy ( (char*) &outText[1], str );
+ 					}
+ 					else
+ 						outText[0] = 0;
+ 				}
+ 				else
+ 					outText[0] = 0;
+				break;
+				
+			default:
+				outText[0] = 0;		// don't display tooltip for other data types
+
+		} // case of column data type
+	} // if data is valid
+
+} // CalcToolTipText
 
 
 #pragma mark -- class CHyperTreeSelector --
