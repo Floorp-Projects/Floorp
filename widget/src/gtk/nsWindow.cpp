@@ -639,7 +639,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
   PRBool nNeedToShow = PR_FALSE;
 
-#if 1
+#if 0
   printf("nsWindow::Resize %s (%p) to %d %d\n",
          (const char *) debug_GetName(mWidget),
          this,
