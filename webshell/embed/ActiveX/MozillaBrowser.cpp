@@ -3,6 +3,10 @@
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 
+
+#define NS_DEFAULT_PREFS			"prefs.js"
+#define NS_DEFAULT_PREFS_HOMEPAGE	"browser.startup.homepage"
+
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 
@@ -13,10 +17,16 @@ CMozillaBrowser::CMozillaBrowser()
 	m_bWindowOnly = TRUE;
 	m_bWndLess = FALSE;
 
+	// Initialize layout interfaces
     m_pIWebShell = nsnull;
+#ifdef USE_NGPREF
+	m_pIPref = nsnull;
+#endif
 
 	// Create the container that handles some things for us
 	m_pWebShellContainer = NULL;
+
+	m_bBusy = FALSE;
 
 	PL_InitializeEventsLib("");
 	// Register everything
@@ -33,7 +43,7 @@ STDMETHODIMP CMozillaBrowser::InterfaceSupportsErrorInfo(REFIID riid)
 {
 	static const IID* arr[] = 
 	{
-		&IID_IMozillaBrowser,
+		&IID_IWebBrowser,
 	};
 	for (int i=0;i<sizeof(arr)/sizeof(arr[0]);i++)
 	{
@@ -58,14 +68,27 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    /* Destroy NGLayout... */
+    /* Destroy layout... */
     if (m_pIWebShell != nsnull)
 	{
 		m_pIWebShell->Destroy();
         NS_RELEASE(m_pIWebShell);
+	}
+
+	if (m_pWebShellContainer)
+	{
 		m_pWebShellContainer->Release();
 		m_pWebShellContainer = NULL;
 	}
+
+#ifdef USE_NGPREF
+	if (m_pIPref)
+	{
+		m_pIPref->Shutdown();
+		NS_RELEASE(m_pIPref);
+	}
+#endif
+
 	return 0;
 }
 
@@ -78,6 +101,17 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 		m_pIWebShell->SetBounds(0, 0, LOWORD(lParam), HIWORD(lParam));
     }
 	return 0;
+}
+
+
+BOOL CMozillaBrowser::IsValid()
+{
+	if (m_pIWebShell == nsnull)
+	{
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -108,6 +142,15 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	nsresult rv;
 
+	// Load preferences
+#ifdef USE_NGPREF
+	rv = nsRepository::CreateInstance(kPrefCID, NULL, kIPrefIID, (void **) &m_pIPref);
+	if (NS_OK != rv) {
+		return E_FAIL;
+	}
+	m_pIPref->Startup(NS_DEFAULT_PREFS);
+#endif
+	
 	rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
 									kIWebShellIID,
 									(void**)&m_pIWebShell);
@@ -115,7 +158,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	{
 		return E_FAIL;
 	}
-	
+
 	nsRect r;
 	r.x = 0;
 	r.y = 0;
@@ -130,23 +173,15 @@ HRESULT CMozillaBrowser::CreateWebShell()
 					nsScrollPreference_kAuto, aAllowPlugins);
 
 	// Create the container object
-	m_pWebShellContainer = new CWebShellContainer;
+	m_pWebShellContainer = new CWebShellContainer(this);
 	m_pWebShellContainer->AddRef();
 
 	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
-//	m_pIWebShell->SetObserver((nsIStreamObserver*)this);
-//	m_pIWebShell->SetPrefs(aPrefs);
+	m_pIWebShell->SetObserver((nsIStreamObserver*) m_pWebShellContainer);
+#ifdef USE_NGPREF
+	m_pIWebShell->SetPrefs(m_pIPref);
+#endif
 	m_pIWebShell->Show();
-
-	// TODO
-	// -- remove
-	// Use the IWebBrowser::Navigate() method
-	USES_CONVERSION;
-	LPOLESTR pszUrl = T2OLE(_T("http://www.mozilla.org"));
-	BSTR bstrUrl = ::SysAllocString(pszUrl);
-	Navigate(bstrUrl, NULL, NULL, NULL, NULL);
-	::SysFreeString(bstrUrl);
-	// -- remove
 
 	return S_OK;
 }
@@ -156,12 +191,12 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoBack(void)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	if (m_pIWebShell->CanBack())
+	if (m_pIWebShell->CanBack() == NS_OK)
 	{
 		m_pIWebShell->Back();
 	}
@@ -172,12 +207,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoBack(void)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoForward(void)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	if (m_pIWebShell->CanForward())
+	if (m_pIWebShell->CanForward() == NS_OK)
 	{
 		m_pIWebShell->Forward();
 	}
@@ -188,14 +223,30 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoForward(void)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	// TODO find and navigate to the home page somehow
 	USES_CONVERSION;
-	Navigate(T2OLE(_T("http://home.netscape.com")), NULL, NULL, NULL, NULL);
+
+	// Find the home page stored in prefs
+	TCHAR * sUrl = _T("http://home.netscape.com");
+#ifdef USE_NGPREF
+	if (m_pIPref)
+	{
+		char szBuffer[512];
+		nsresult rv;
+		memset(szBuffer, 0, sizeof(szBuffer);
+		rv = m_pIPref->GetCharPref(NS_DEFAULT_PREFS_HOMEPAGE, szBuffer, sizeof(szBuffer));
+		if (rv == NS_OK)
+		{
+			sUrl = A2T(szBuffer);
+		}
+	}
+#endif
+	// Navigate to the home page
+	Navigate(T2OLE(sUrl), NULL, NULL, NULL, NULL);
 	
 	return S_OK;
 }
@@ -203,15 +254,18 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoSearch(void)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	// TODO find and navigate to the search page somehow
+	// TODO find and navigate to the search page stored in prefs
+	//      and not this hard coded address
+
+	TCHAR * sUrl = _T("http://search.netscape.com");
 	
 	USES_CONVERSION;
-	Navigate(T2OLE(_T("http://search.netscape.com")), NULL, NULL, NULL, NULL);
+	Navigate(T2OLE(sUrl), NULL, NULL, NULL, NULL);
 	
 	return S_OK;
 }
@@ -219,7 +273,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoSearch(void)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR *Flags, VARIANT __RPC_FAR *TargetFrameName, VARIANT __RPC_FAR *PostData, VARIANT __RPC_FAR *Headers)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -228,7 +282,6 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	nsString sUrl;
 	if (URL == NULL)
 	{
-//		ASSERT(0);
 		return E_INVALIDARG;
 	}
 	else
@@ -252,28 +305,18 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Extract the target frame parameter
 	nsString sTargetFrame;
-	if (TargetFrameName)
+	if (TargetFrameName && TargetFrameName->vt == VT_BSTR)
 	{
 		USES_CONVERSION;
-		CComVariant vTargetFrame;
-		if (VariantChangeType(TargetFrameName, &vTargetFrame, 0, VT_BSTR) != S_OK)
-		{
-			return E_INVALIDARG;
-		}
-		sTargetFrame = nsString(OLE2A(vTargetFrame.bstrVal));
+		sTargetFrame = nsString(OLE2A(TargetFrameName->bstrVal));
 	}
 
 	// Extract the post data parameter
 	nsString sPostData;
-	if (PostData)
+	if (PostData && PostData->vt == VT_BSTR)
 	{
 		USES_CONVERSION;
-		CComVariant vPostData;
-		if (VariantChangeType(PostData, &vPostData, 0, VT_BSTR) != S_OK)
-		{
-			return E_INVALIDARG;
-		}
-		sPostData = nsString(OLE2A(vPostData.bstrVal));
+		sPostData = nsString(OLE2A(PostData->bstrVal));
 	}
 
 
@@ -314,7 +357,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh(void)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -327,7 +370,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh(void)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -343,7 +386,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -356,7 +399,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Application(IDispatch __RPC_FAR *__RPC_FAR *ppDisp)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -368,7 +411,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Application(IDispatch __RPC_FAR *
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Parent(IDispatch __RPC_FAR *__RPC_FAR *ppDisp)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -380,7 +423,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Parent(IDispatch __RPC_FAR *__RPC
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Container(IDispatch __RPC_FAR *__RPC_FAR *ppDisp)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -392,7 +435,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Container(IDispatch __RPC_FAR *__
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__RPC_FAR *ppDisp)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -401,10 +444,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
 	return E_NOTIMPL;
 }
 
-
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TopLevelContainer(VARIANT_BOOL __RPC_FAR *pBool)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -416,7 +458,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TopLevelContainer(VARIANT_BOOL __
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Type(BSTR __RPC_FAR *Type)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
@@ -428,132 +470,187 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Type(BSTR __RPC_FAR *Type)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Left(long __RPC_FAR *pl)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (pl == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*pl = 0; // TODO
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Left(long Left)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
 	// TODO
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Top(long __RPC_FAR *pl)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	// TODO
+	if (pl == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*pl = 0; // TODO
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Top(long Top)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
 	// TODO
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Width(long __RPC_FAR *pl)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (pl == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*pl = 0; // TODO
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Width(long Width)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
 	// TODO
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Height(long __RPC_FAR *pl)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (pl == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*pl = 0; // TODO
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Height(long Height)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
 	// TODO
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *LocationName)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (LocationName == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	// Get the url from the web shell
+	PRUnichar *pszLocationName = nsnull;
+	m_pIWebShell->GetTitle(&pszLocationName);
+	if (pszLocationName == nsnull)
+	{
+		return E_FAIL;
+	}
+
+	// Convert the string to a BSTR
+	USES_CONVERSION;
+	LPOLESTR pszConvertedLocationName = W2OLE(pszLocationName);
+	*LocationName = SysAllocString(pszConvertedLocationName);
+
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *LocationURL)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	// TODO
-	return E_NOTIMPL;
+	if (LocationURL == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	// Get the url from the web shell
+	PRUnichar *pszUrl = nsnull;
+	m_pIWebShell->GetURL(0, &pszUrl);
+	if (pszUrl == nsnull)
+	{
+		return E_FAIL;
+	}
+
+	// Convert the string to a BSTR
+	USES_CONVERSION;
+	LPOLESTR pszConvertedUrl = W2OLE(pszUrl);
+	*LocationURL = SysAllocString(pszConvertedUrl);
+
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Busy(VARIANT_BOOL __RPC_FAR *pBool)
 {
-    if (m_pIWebShell == nsnull)
+    if (!IsValid())
 	{
 		return E_UNEXPECTED;
 	}
 
-	// TODO
+	if (!NgIsValidAddress(pBool, sizeof(*pBool)))
+	{
+		return E_INVALIDARG;
+	}
 
-	return E_NOTIMPL;
+	*pBool = (m_bBusy) ? VARIANT_TRUE : VARIANT_FALSE;
+
+	return S_OK;
 }
