@@ -318,7 +318,7 @@ sub record_votes {
     # need to clear the user's votes from the database.
     my %affected;
     SendSQL("LOCK TABLES bugs write, votes write, products read, cc read,
-             user_group_map read, bug_group_map read");
+             fielddefs read, user_group_map read, bug_group_map read");
     
     # Take note of, and delete the user's old votes from the database.
     SendSQL("SELECT bug_id FROM votes WHERE who = $who");
