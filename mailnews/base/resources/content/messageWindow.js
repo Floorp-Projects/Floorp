@@ -95,6 +95,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 function OnLoadMessageWindow()
 {
 	HideMenus();
+	HideToolbarButtons();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
 	verifyAccounts();
@@ -155,6 +156,40 @@ function HideMenus()
 	var viewMessagesMenu = document.getElementById('viewMessagesMenu');
 	if(viewMessagesMenu)
 		viewMessagesMenu.setAttribute("hidden", "true");
+
+	var openMessageMenu = document.getElementById('openMessageWindowMenuitem');
+	if(openMessageMenu)
+		openMessageMenu.setAttribute("hidden", "true");
+
+	var viewSortMenu = document.getElementById('viewSortMenu');
+	if(viewSortMenu)
+		viewSortMenu.setAttribute("hidden", "true");
+
+	var viewThreadedMenu = document.getElementById('menu_showThreads');
+	if(viewThreadedMenu)
+		viewThreadedMenu.setAttribute("hidden", "true");
+
+	var goNextMenu = document.getElementById('goNextMenu');
+	if(goNextMenu)
+		goNextMenu.setAttribute("hidden", "true");
+
+	var goPreviousMenu = document.getElementById('goPreviousMenu');
+	if(goPreviousMenu)
+		goPreviousMenu.setAttribute("hidden", "true");
+
+	var goNextSeparator = document.getElementById('goNextSeparator');
+	if(goNextSeparator)
+		goNextSeparator.setAttribute("hidden", "true");
+
+
+}
+
+function HideToolbarButtons()
+{
+	var nextButton = document.getElementById('button-next');
+	if(nextButton)
+		nextButton.setAttribute("hidden", "true");
+
 }
 
 function OnUnloadMessageWindow()
@@ -263,6 +298,11 @@ var MessageWindowController =
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
+			case "cmd_print":
+			case "cmd_saveAsFile":
+			case "cmd_saveAsTemplate":
+			case "cmd_viewPageSource":
+			case "cmd_reload":
 				return true;
 			default:
 				return false;
@@ -276,6 +316,11 @@ var MessageWindowController =
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
+			case "cmd_print":
+			case "cmd_saveAsFile":
+			case "cmd_saveAsTemplate":
+			case "cmd_viewPageSource":
+			case "cmd_reload":
 				if ( command == "cmd_delete")
 				{
 					goSetMenuValue(command, 'valueMessage');
@@ -301,6 +346,21 @@ var MessageWindowController =
 			case "button_delete":
 				MsgDeleteMessage(false, true);
 				break;
+			case "cmd_print":
+				PrintEnginePrint();
+				break;
+			case "cmd_saveAsFile":
+				MsgSaveAsFile();
+				break;
+			case "cmd_saveAsTemplate":
+				MsgSaveAsTemplate();
+				break;
+			case "cmd_viewPageSource":
+				MsgViewPageSource();
+				break;
+			case "cmd_reload":
+				MsgReload();
+				break;
 		}
 	},
 	
@@ -315,6 +375,11 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_delete');
 	goUpdateCommand('button_delete');
 	goUpdateCommand('cmd_shiftDelete');
+	goUpdateCommand('cmd_print');
+	goUpdateCommand('cmd_saveAsFile');
+	goUpdateCommand('cmd_saveAsTemplate');
+	goUpdateCommand('cmd_viewPageSource');
+	goUpdateCommand('cmd_reload');
 }
 
 function SetupCommandUpdateHandlers()

@@ -206,6 +206,12 @@ var DefaultController =
 			case "cmd_expandAllThreads":
 			case "cmd_collapseAllThreads":
 			case "cmd_renameFolder":
+			case "cmd_openMessage":
+			case "cmd_print":
+			case "cmd_saveAsFile":
+			case "cmd_saveAsTemplate":
+			case "cmd_viewPageSource":
+			case "cmd_reload":
 				return true;
 			default:
 				return false;
@@ -225,6 +231,12 @@ var DefaultController =
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
+			case "cmd_openMessage":
+			case "cmd_print":
+			case "cmd_saveAsFile":
+			case "cmd_saveAsTemplate":
+			case "cmd_viewPageSource":
+			case "cmd_reload":
 				var threadTree = GetThreadTree();
 				var numSelected = 0;
 				if ( threadTree && threadTree.selectedItems )
@@ -386,6 +398,24 @@ var DefaultController =
 			case "cmd_renameFolder":
 				MsgRenameFolder();
 				return;
+			case "cmd_openMessage":
+				MsgOpenNewWindowForMessage(null, null);
+				return;
+			case "cmd_print":
+				PrintEnginePrint();
+				return;
+			case "cmd_saveAsFile":
+				MsgSaveAsFile();
+				return;
+			case "cmd_saveAsTemplate":
+				MsgSaveAsTemplate();
+				return;
+			case "cmd_viewPageSource":
+				MsgViewPageSource();
+				return;
+			case "cmd_reload":
+				MsgReload();
+				return;
 		}
 	},
 	
@@ -446,6 +476,12 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_expandAllThreads');
 	goUpdateCommand('cmd_collapseAllThreads');
 	goUpdateCommand('cmd_renameFolder');
+	goUpdateCommand('cmd_openMessage');
+	goUpdateCommand('cmd_print');
+	goUpdateCommand('cmd_saveAsFile');
+	goUpdateCommand('cmd_saveAsTemplate');
+	goUpdateCommand('cmd_viewPageSource');
+	goUpdateCommand('cmd_reload');
 }
 
 function SetupUndoRedoCommand(command)

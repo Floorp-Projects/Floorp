@@ -98,6 +98,13 @@ Rights Reserved.
 	<broadcaster id="cmd_expandAllThreads" oncommand="goDoCommand('cmd_expandAllThreads')" disabled="true"/>
 	<broadcaster id="cmd_collapseAllThreads" oncommand="goDoCommand('cmd_collapseAllThreads')" disabled="true"/>
 
+	<broadcaster id="cmd_openMessage" oncommand="goDoCommand('cmd_openMessage')" disabled="true"/>
+	<broadcaster id="cmd_print" oncommand="goDoCommand('cmd_print')" disabled="true"/>
+	<broadcaster id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')" disabled="true"/>
+	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')" disabled="true"/>
+	<broadcaster id="cmd_viewPageSource" oncommand="goDoCommand('cmd_viewPageSource')" disabled="true"/>
+	<broadcaster id="cmd_reload" oncommand="goDoCommand('cmd_reload')" disabled="true"/>
+
 </broadcasterset>
 
 <keyset id="keyset">
@@ -124,6 +131,11 @@ Rights Reserved.
 	<key id="key_reply" key="&replyMsgCmd.key;" xulkey="true" shift="false" observes="cmd_reply"/>
 	<key id="key_replyall" key="&replyToAllMsgCmd.key;" xulkey="true" shift="true" observes="cmd_replyall"/>
 	<key id="key_forward" key="&forwardMsgCmd.key;" xulkey="true" shift="false" observes="cmd_forward"/>
+	<key id="key_openMessage" key="&openMessageWindowCmd.key;" xulkey="true" shift="false" observes="cmd_openMessage"/>
+	<key id="key_print" key="&printCmd.key;" xulkey="true" shift="false" observes="cmd_print"/>
+	<key id="key_saveAsFile" key="&saveAsFileCmd.key;" xulkey="true" shift="false" observes="cmd_saveAsFile"/>
+	<key id="key_viewPageSource" key="&pageSourceCmd.key;" xulkey="true" shift="false" observes="cmd_viewPageSource"/>
+
 </keyset>
 
 	<popup id="threadPaneContext" oncreate="return fillThreadPaneContextMenu();" >
@@ -528,16 +540,21 @@ Rights Reserved.
 					<menuitem id="menu_newEditor"/>
 				</menupopup>
 			</menu>
+			<menuitem id="openMessageWindowMenuitem" value="&openMessageWindowCmd.label;"
+				observes="cmd_openMessage"
+				accesskey="&openMessageWindowCmd.accesskey;"
+				key="key_openMessage"/>
 			<menuseparator/>
 			<menuitem id="menu_close"/>
 			<menu value="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">
 				<menupopup>
 					<menuitem value="&saveAsFileCmd.label;"
 					 accesskey="&saveAsFileCmd.accesskey;"
-					 oncommand="MsgSaveAsFile();"/>
+					 key="key_saveAsFile"
+					 observes="cmd_saveAsFile"/>
 					<menuitem value="&saveAsTemplateCmd.label;"
 					 accesskey="&saveAsTemplateCmd.accesskey;"
-					 oncommand="MsgSaveAsTemplate();"/>
+					 observes="cmd_saveAsTemplate"/>
 				</menupopup>
 			</menu>
 			<menuseparator/>
@@ -561,7 +578,7 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
 			<menuseparator/>
-			<menuitem id="printMenuItem" value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="PrintEnginePrint();"/>
+			<menuitem id="printMenuItem" key="key_print" value="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print"/>
 			<menuseparator/>
 		</menupopup>
 	</menu>
@@ -607,7 +624,7 @@ Rights Reserved.
 			 accesskey="&showMessageCmd.accesskey;"
 			 oncommand="MsgToggleMessagePane();"/>
 			<menuseparator/>
-			<menu value="&sortMenu.label;">
+			<menu id="viewSortMenu" value="&sortMenu.label;">
 				<menupopup>
 					<menuitem id="sortByDateMenuitem" type="checkbox" value="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" observes="cmd_sortByDate"/>
 					<menuitem id="sortByFlagMenuitem" type="checkbox" value="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" observes="cmd_sortByFlag"/>
@@ -655,12 +672,10 @@ Rights Reserved.
 				</menupopup>
 			</menu>
 			<menuseparator/>
-			<menuitem value="&viewAttachmentsInlineCmd.label;" accesskey="&viewAttachmentsInlineCmd.accesskey;" disabled="true" oncommand="MsgViewAttachInline();"/>
+			<menuitem value="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
+			<menuitem id="stopMenuitem" value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>
 			<menuseparator/>
-			<menuitem value="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" oncommand="MsgReload();"/>
-			<menuitem value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>
-			<menuseparator/>
-			<menuitem value="&pageSourceCmd.label;" accesskey="&pageSourceCmd.accesskey;" oncommand="MsgViewPageSource();"/>
+			<menuitem value="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
 			<menuseparator/>
 			<menu id = "mailviewCharsetMenu" />
 		</menupopup>
@@ -677,7 +692,7 @@ Rights Reserved.
 	</menu>
 	<menu value="&goMenu.label;" accesskey="&goMenu.accesskey;">
 		<menupopup>
-			<menu value="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
+			<menu id="goNextMenu" value="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
 				<menupopup>
 					<menuitem value="&nextMsgCmd.label;" key="key_nextMsg" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"/>
 					<menuitem value="&nextUnreadMsgCmd.label;" key="key_nextUnreadMsg" accesskey="&nextUnreadMsgCmd.accesskey;" observes="cmd_nextUnreadMsg"/>
@@ -686,14 +701,14 @@ Rights Reserved.
 					<menuitem value="&nextUnreadThread.label;" key="key_nextUnreadThread" accesskey="&nextUnreadThreadCmd.accesskey;" observes="cmd_nextUnreadThread"/>
 				</menupopup>
 			</menu>
-			<menu value="&prevMenu.label;" accesskey="&prevMenu.accesskey;">
+			<menu id="goPreviousMenu" value="&prevMenu.label;" accesskey="&prevMenu.accesskey;">
 				<menupopup>
 					<menuitem value="&prevMsgCmd.label;" key="key_previousMsg" accesskey="&previousMsgCmd.accesskey;" observes="cmd_previousMsg"/>
 					<menuitem value="&prevUnreadMsgCmd.label;" key="key_previousUnreadMsg" accesskey="&previousUnreadMsgCmd.accesskey;" observes="cmd_previousUnreadMsg"/>
 					<menuitem value="&prevFlaggedMsgCmd.label;" accesskey="&previousFlaggedMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
 				</menupopup>
 			</menu>
-			<menuseparator/>
+			<menuseparator id="goNextSeparator"/>
 			<menuitem value="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
 		</menupopup>
 	</menu>
@@ -908,12 +923,10 @@ Rights Reserved.
 			</menu>
 			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" onclick="MsgNextUnreadMessage()"/>
 			<button class="button-toolbar-2 top" id="button-delete" value="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" onclick="goDoCommand('button_delete')"/>
-      <menubutton class="menubutton-dual toolbar" id="button-print" value="&printButton.label;" 
-                  crop="right" buttonaction="PrintEnginePrint();" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
+      <menubutton class="menubutton-dual toolbar top" id="button-print" value="&printButton.label;" 
+                  crop="right" observes="cmd_print" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
      	  <menupopup id="printMenu">
-    			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="PrintEnginePrint();" default="true"/>
-    			<menuitem observes="cmd_pageSetup" />
-		    	<menuitem value="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" disabled="true" oncommand="PrintPreview();"/>
+    			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print" default="true"/>
         </menupopup>
   	  </menubutton>
 			<button class="button-toolbar-2 top" id="button-stop" value="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" onclick="MsgStop();"/>

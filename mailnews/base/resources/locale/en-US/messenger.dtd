@@ -37,6 +37,7 @@ Rights Reserved.
 <!ENTITY saveAsMenu.accesskey			"s"> 
 <!ENTITY saveAsFileCmd.label			"File">  
 <!ENTITY saveAsFileCmd.accesskey		"f">  
+<!ENTITY saveAsFileCmd.key				"s">  
 <!ENTITY saveAsTemplateCmd.label		"Template">  
 <!ENTITY saveAsTemplateCmd.accesskey	"t">  
 <!ENTITY getNewMsgCmd.label				"Get New Messages">  
@@ -62,6 +63,8 @@ Rights Reserved.
 <!ENTITY printPreviewCmd.label			".Print Preview">  
 <!ENTITY printCmd.label					"Print">  
 <!ENTITY printCmd.accesskey				"p">  
+<!ENTITY printCmd.accesskey				"p">  
+<!ENTITY printCmd.key					"p">
 
 <!-- Edit Menu -->
 <!ENTITY deleteMsgCmd.label "Delete Message">  
@@ -153,6 +156,7 @@ Rights Reserved.
 <!ENTITY stopCmd.accesskey "s">  
 <!ENTITY pageSourceCmd.label "Page Source">  
 <!ENTITY pageSourceCmd.accesskey "u">  
+<!ENTITY pageSourceCmd.key "u">  
 <!ENTITY translateMenu.label ".Translate"> 
 <!ENTITY dcharMenu.label "Character Set  ISO">
 <!ENTITY dcharMenu1.label "Character Set  Multibyte">
@@ -322,12 +326,9 @@ Rights Reserved.
 <!ENTITY markAllReadCmd.accesskey "a">  
 <!ENTITY markFlaggedCmd.label "Flag">  
 <!ENTITY markFlaggedCmd.accesskey "f">  
-<!ENTITY markUnflaggedCmd.label "UnFlagged">  
-<!ENTITY markUnflaggedCmd.accesskey "u">  
-<!ENTITY ignoreThreadCmd.label ".Ignore Thread">  
-<!ENTITY ignoreThreadCmd.accesskey "i">  
-<!ENTITY watchThreadCmd.label ".Watch Thread">  
-<!ENTITY watchThreadCmd.accesskey "w">  
+<!ENTITY openMessageWindowCmd.label "Open Message">
+<!ENTITY openMessageWindowCmd.accesskey "o">
+<!ENTITY openMessageWindowCmd.key "o">
 
 <!-- Sidebar -->
 <!ENTITY mail-sidebar-header.label "Mail Folders">

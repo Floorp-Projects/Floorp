@@ -57,6 +57,8 @@ var messageDataSource;
 var gStatusText;
 var gStatusBar;
 var gThrobber;
+var gStopMenu;
+var gStopButton;
 var bindCount = 0;
 var startTime = 0;
 //End progress and Status variables
@@ -225,12 +227,18 @@ nsMsgStatusFeedback.prototype =
 		{
       if (!gStatusBar) gStatusBar = document.getElementById("statusbar-icon");
       if(!gThrobber) gThrobber = document.getElementById("navigator-throbber");
+	  if(!gStopButton) gStopButton = document.getElementById("button-stop");
+	  if(!gStopMenu) gStopMenu = document.getElementById("stopMenuitem");
 
       // Turn progress meter on.
       gStatusBar.setAttribute("mode","undetermined");
       
       // turn throbber on 
       gThrobber.setAttribute("busy", true);
+
+	  //turn on stop button and menu
+	  gStopButton.setAttribute("disabled", false);
+	  gStopMenu.setAttribute("disabled", false);
       
       // Remember when loading commenced.
     	startTime = (new Date()).getTime();
@@ -242,6 +250,8 @@ nsMsgStatusFeedback.prototype =
                 gStatusBar = document.getElementById("statusbar-icon");
             if(!gThrobber)
                 gThrobber = document.getElementById("navigator-throbber");
+			if(!gStopButton) gStopButton = document.getElementById("button-stop");
+			if(!gStopMenu) gStopMenu = document.getElementById("stopMenuitem");
 
 			// Record page loading time.
 			var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
@@ -257,6 +267,9 @@ nsMsgStatusFeedback.prototype =
       gStatusBar.setAttribute("mode","normal");
       gStatusBar.value = 0;  // be sure to clear the progress bar
       gStatusBar.progresstext = "";
+	  gStopButton.setAttribute("disabled", true);
+	  gStopMenu.setAttribute("disabled", true);
+
 		},
 	ShowProgress : function(percentage)
 		{
