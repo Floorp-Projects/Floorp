@@ -37,23 +37,23 @@
 # ***** END LICENSE BLOCK *****
 
 
-# phpMyAdmin SQL Dump
-# version 2.5.7
-# http://www.phpmyadmin.net
-#
-# Host: localhost
-# Generation Time: Aug 21, 2004 at 10:38 PM
-# Server version: 4.0.18
-# PHP Version: 4.3.8
-# 
-# Database : `mozillaupdate`
-# 
+-- phpMyAdmin SQL Dump
+-- version 2.6.0-rc1
+-- http://www.phpmyadmin.net
+-- 
+-- Host: localhost
+-- Generation Time: Sep 12, 2004 at 05:07 AM
+-- Server version: 4.0.18
+-- PHP Version: 4.3.8
+-- 
+-- Database: `mozillaupdate`
+-- 
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_applications`
-#
+-- 
+-- Table structure for table `t_applications`
+-- 
 
 CREATE TABLE `t_applications` (
   `AppID` int(11) NOT NULL auto_increment,
@@ -67,13 +67,13 @@ CREATE TABLE `t_applications` (
   `GUID` varchar(50) NOT NULL default '',
   PRIMARY KEY  (`AppID`),
   KEY `AppName` (`AppName`)
-) TYPE=InnoDB PACK_KEYS=0;
+) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=25 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_approvallog`
-#
+-- 
+-- Table structure for table `t_approvallog`
+-- 
 
 CREATE TABLE `t_approvallog` (
   `LogID` int(5) NOT NULL auto_increment,
@@ -88,27 +88,26 @@ CREATE TABLE `t_approvallog` (
   KEY `vID` (`vID`),
   KEY `UserID` (`UserID`),
   KEY `UserID_2` (`UserID`)
-) TYPE=InnoDB;
+) TYPE=InnoDB AUTO_INCREMENT=430 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_authorxref`
-#
+-- 
+-- Table structure for table `t_authorxref`
+-- 
 
 CREATE TABLE `t_authorxref` (
   `ID` int(11) NOT NULL default '0',
   `UserID` int(11) NOT NULL default '0',
   KEY `ID` (`ID`),
   KEY `UserID` (`UserID`)
-  CONSTRAINT `0_126` FOREIGN KEY (`UserID`) REFERENCES `t_userprofiles` (`UserID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) TYPE=InnoDB;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_categories`
-#
+-- 
+-- Table structure for table `t_categories`
+-- 
 
 CREATE TABLE `t_categories` (
   `CategoryID` int(11) NOT NULL auto_increment,
@@ -116,27 +115,26 @@ CREATE TABLE `t_categories` (
   `CatDesc` varchar(100) NOT NULL default '',
   `CatType` enum('E','T','P') NOT NULL default 'E',
   PRIMARY KEY  (`CategoryID`)
-) TYPE=InnoDB;
+) TYPE=InnoDB AUTO_INCREMENT=28 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_categoryxref`
-#
+-- 
+-- Table structure for table `t_categoryxref`
+-- 
 
 CREATE TABLE `t_categoryxref` (
   `ID` int(11) NOT NULL default '0',
   `CategoryID` int(11) NOT NULL default '0',
   KEY `IDIndex` (`ID`,`CategoryID`),
   KEY `CategoryID` (`CategoryID`)
-  CONSTRAINT `0_129` FOREIGN KEY (`CategoryID`) REFERENCES `t_categories` (`CategoryID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) TYPE=InnoDB;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_downloads`
-#
+-- 
+-- Table structure for table `t_downloads`
+-- 
 
 CREATE TABLE `t_downloads` (
   `dID` int(11) NOT NULL auto_increment,
@@ -148,13 +146,13 @@ CREATE TABLE `t_downloads` (
   `user_agent` text NOT NULL,
   `type` enum('count','download') NOT NULL default 'download',
   PRIMARY KEY  (`dID`)
-) TYPE=InnoDB PACK_KEYS=0;
+) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=3 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_faq`
-#
+-- 
+-- Table structure for table `t_faq`
+-- 
 
 CREATE TABLE `t_faq` (
   `id` int(3) NOT NULL auto_increment,
@@ -165,13 +163,13 @@ CREATE TABLE `t_faq` (
   `lastupdated` timestamp(14) NOT NULL,
   `active` enum('YES','NO') NOT NULL default 'YES',
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB PACK_KEYS=0;
+) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=7 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_feedback`
-#
+-- 
+-- Table structure for table `t_feedback`
+-- 
 
 CREATE TABLE `t_feedback` (
   `CommentID` int(11) NOT NULL auto_increment,
@@ -181,15 +179,16 @@ CREATE TABLE `t_feedback` (
   `CommentTitle` varchar(75) NOT NULL default '',
   `CommentNote` text,
   `CommentDate` datetime NOT NULL default '0000-00-00 00:00:00',
+  `commentip` varchar(15) NOT NULL default '',
   PRIMARY KEY  (`CommentID`),
   KEY `ID` (`ID`)
-) TYPE=InnoDB PACK_KEYS=0;
+) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=15487 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_main`
-#
+-- 
+-- Table structure for table `t_main`
+-- 
 
 CREATE TABLE `t_main` (
   `ID` int(11) NOT NULL auto_increment,
@@ -205,26 +204,26 @@ CREATE TABLE `t_main` (
   `TotalDownloads` int(18) NOT NULL default '0',
   PRIMARY KEY  (`ID`),
   KEY `Type` (`Type`)
-) TYPE=InnoDB PACK_KEYS=0;
+) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=218 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_os`
-#
+-- 
+-- Table structure for table `t_os`
+-- 
 
 CREATE TABLE `t_os` (
   `OSID` int(11) NOT NULL auto_increment,
   `OSName` varchar(20) NOT NULL default '',
   PRIMARY KEY  (`OSID`),
   UNIQUE KEY `OSName` (`OSName`)
-) TYPE=InnoDB;
+) TYPE=InnoDB AUTO_INCREMENT=7 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_previews`
-#
+-- 
+-- Table structure for table `t_previews`
+-- 
 
 CREATE TABLE `t_previews` (
   `PreviewID` int(11) NOT NULL auto_increment,
@@ -232,13 +231,13 @@ CREATE TABLE `t_previews` (
   `vID` int(11) NOT NULL default '0',
   PRIMARY KEY  (`PreviewID`),
   KEY `vID` (`vID`)
-) TYPE=InnoDB PACK_KEYS=0;
+) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=24 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_reviews`
-#
+-- 
+-- Table structure for table `t_reviews`
+-- 
 
 CREATE TABLE `t_reviews` (
   `rID` int(11) NOT NULL auto_increment,
@@ -254,14 +253,13 @@ CREATE TABLE `t_reviews` (
   KEY `ID` (`ID`),
   KEY `AppID` (`AppID`),
   KEY `AuthorID` (`AuthorID`)
-  CONSTRAINT `0_136` FOREIGN KEY (`AppID`) REFERENCES `t_applications` (`AppID`) ON DELETE CASCADE ON UPDATE CASCADE
-) TYPE=InnoDB PACK_KEYS=0;
+) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=3 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_userprofiles`
-#
+-- 
+-- Table structure for table `t_userprofiles`
+-- 
 
 CREATE TABLE `t_userprofiles` (
   `UserID` int(11) NOT NULL auto_increment,
@@ -274,13 +272,13 @@ CREATE TABLE `t_userprofiles` (
   `UserEmailHide` tinyint(1) NOT NULL default '1',
   PRIMARY KEY  (`UserID`),
   UNIQUE KEY `UserEmail` (`UserEmail`)
-) TYPE=InnoDB PACK_KEYS=0;
+) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=142 ;
 
-# --------------------------------------------------------
+-- --------------------------------------------------------
 
-#
-# Table structure for table `t_version`
-#
+-- 
+-- Table structure for table `t_version`
+-- 
 
 CREATE TABLE `t_version` (
   `vID` int(11) NOT NULL auto_increment,
@@ -303,51 +301,48 @@ CREATE TABLE `t_version` (
   KEY `AppID` (`AppID`),
   KEY `OSID` (`OSID`),
   KEY `Version` (`Version`)
-  CONSTRAINT `0_140` FOREIGN KEY (`AppID`) REFERENCES `t_applications` (`AppID`) ON DELETE CASCADE ON UPDATE CASCADE
-) TYPE=InnoDB PACK_KEYS=0;
+) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=558 ;
 
-#
-# Constraints for dumped tables
-#
+-- 
+-- Constraints for dumped tables
+-- 
 
-#
-# Constraints for table `t_authorxref`
-#
+-- 
+-- Constraints for table `t_authorxref`
+-- 
 ALTER TABLE `t_authorxref`
+  ADD CONSTRAINT `0_125` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `0_126` FOREIGN KEY (`UserID`) REFERENCES `t_userprofiles` (`UserID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
-  ADD CONSTRAINT `0_125` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,;
-
-#
-# Constraints for table `t_categoryxref`
-#
+-- 
+-- Constraints for table `t_categoryxref`
+-- 
 ALTER TABLE `t_categoryxref`
+  ADD CONSTRAINT `0_128` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `0_129` FOREIGN KEY (`CategoryID`) REFERENCES `t_categories` (`CategoryID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
-  ADD CONSTRAINT `0_128` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,;
-
-#
-# Constraints for table `t_feedback`
-#
+-- 
+-- Constraints for table `t_feedback`
+-- 
 ALTER TABLE `t_feedback`
-
   ADD CONSTRAINT `0_131` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
-#
-# Constraints for table `t_previews`
-#
+-- 
+-- Constraints for table `t_previews`
+-- 
 ALTER TABLE `t_previews`
-
   ADD CONSTRAINT `0_133` FOREIGN KEY (`vID`) REFERENCES `t_version` (`vID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
-#
-# Constraints for table `t_reviews`
-#
+-- 
+-- Constraints for table `t_reviews`
+-- 
 ALTER TABLE `t_reviews`
+  ADD CONSTRAINT `0_135` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `0_136` FOREIGN KEY (`AppID`) REFERENCES `t_applications` (`AppID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
-  ADD CONSTRAINT `0_135` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,;
-
-#
-# Constraints for table `t_version`
-#
+-- 
+-- Constraints for table `t_version`
+-- 
 ALTER TABLE `t_version`
-
-  ADD CONSTRAINT `0_139` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,;
+  ADD CONSTRAINT `0_139` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `0_140` FOREIGN KEY (`AppID`) REFERENCES `t_applications` (`AppID`) ON DELETE CASCADE ON UPDATE CASCADE;
