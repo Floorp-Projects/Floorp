@@ -84,12 +84,7 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult ProcessPrefsCallback(const char* oldProfilePathStr, const char * newProfilePathStr);
       void WaitForThread();
 
-      PRUint32 mErrorCode;
-
-      enum
-      {
-            NOT_ENOUGH_SPACE            = 200
-      };
+      nsresult mErrorCode;
 
     private:
       
