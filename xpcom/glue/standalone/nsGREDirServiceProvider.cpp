@@ -41,11 +41,34 @@
 
 #include "nspr.h"
 #include "prenv.h"
+#include "plstr.h"
 
 #ifdef XP_WIN32
 #include <windows.h>
 #include <stdlib.h>
-#endif 
+#elif defined(XP_OS2)
+#define MAX_PATH _MAX_PATH
+#define INCL_WINWORKPLACE
+#include <os2.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "prenv.h"
+#elif defined(XP_UNIX)
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/param.h>
+#include "prenv.h"
+#elif defined(XP_BEOS)
+#include <FindDirectory.h>
+#include <Path.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/param.h>
+#include <OS.h>
+#include <image.h>
+#include "prenv.h"
+#endif
+
 
 #include <sys/stat.h>
 
@@ -113,6 +136,151 @@ nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
   return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
 }
 
+
+static 
+char* GetCurrentProcessDirectory()
+{
+    char* resultPath = nsnull;
+
+#ifdef XP_WIN
+    char buf[MAX_PATH];
+    if ( ::GetModuleFileName(0, buf, sizeof(buf)) ) {
+        // chop of the executable name by finding the rightmost backslash
+        char* lastSlash = PL_strrchr(buf, '\\');
+        if (lastSlash)
+            *(lastSlash) = '\0';
+
+        resultPath = strdup(buf);
+        return resultPath;
+    }
+
+#elif defined(XP_MACOSX)
+    // Works even if we're not bundled.
+    CFBundleRef appBundle = CFBundleGetMainBundle();
+    if (appBundle != nsnull)
+    {
+        CFURLRef bundleURL = CFBundleCopyExecutableURL(appBundle);
+        if (bundleURL != nsnull)
+        {
+            CFURLRef parentURL = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, bundleURL);
+            if (parentURL)
+            {
+                CFStringRef path = CFURLCopyFileSystemPath(parentURL, kCFURLPOSIXPathStyle);
+                if (path)
+                {
+                    char buffer[512];
+                    if (CFStringGetCString(path, buffer, sizeof(buffer), kCFStringEncodingUTF8))
+                    {
+                      resultPath = strdup(buffer);
+                    }
+                    CFRelease(path);
+                }
+                CFRelease(parentURL);
+            }
+            CFRelease(bundleURL);
+        }
+    }
+    return resultPath;
+
+#elif defined(XP_UNIX)
+
+    // In the absence of a good way to get the executable directory let
+    // us try this for unix:
+    //	- if MOZILLA_FIVE_HOME is defined, that is it
+    //	- else give the current directory
+    char buf[1024];
+
+    // The MOZ_DEFAULT_MOZILLA_FIVE_HOME variable can be set at configure time with
+    // a --with-default-mozilla-five-home=foo autoconf flag.
+    // 
+    // The idea here is to allow for builds that have a default MOZILLA_FIVE_HOME
+    // regardless of the environment.  This makes it easier to write apps that
+    // embed mozilla without having to worry about setting up the environment 
+    //
+    // We do this py putenv()ing the default value into the environment.  Note that
+    // we only do this if it is not already set.
+#ifdef MOZ_DEFAULT_MOZILLA_FIVE_HOME
+    if (PR_GetEnv("MOZILLA_FIVE_HOME") == nsnull)
+    {
+        putenv("MOZILLA_FIVE_HOME=" MOZ_DEFAULT_MOZILLA_FIVE_HOME);
+    }
+#endif
+
+    char *moz5 = PR_GetEnv("MOZILLA_FIVE_HOME");
+
+    if (moz5)
+    {
+        resultPath = strdup(moz5);
+        return resultPath;
+    }
+    else
+    {
+#if defined(DEBUG)
+        static PRBool firstWarning = PR_TRUE;
+
+        if(firstWarning) {
+            // Warn that MOZILLA_FIVE_HOME not set, once.
+            printf("Warning: MOZILLA_FIVE_HOME not set.\n");
+            firstWarning = PR_FALSE;
+        }
+#endif /* DEBUG */
+
+        // Fall back to current directory.
+        if (getcwd(buf, sizeof(buf)))
+        {
+          resultPath = strdup(buf);
+          return resultPath;
+        }
+    }
+
+#elif defined(XP_OS2)
+    PPIB ppib;
+    PTIB ptib;
+    char buffer[CCHMAXPATH];
+    char* p;
+    DosGetInfoBlocks( &ptib, &ppib);
+    DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
+    p = strrchr( buffer, '\\'); // XXX DBCS misery
+    if (p)
+      *p  = '\0';
+
+    resultPath = strdup(buffer);
+    return resultPath;
+
+#elif defined(XP_BEOS)
+
+    char *moz5 = getenv("MOZILLA_FIVE_HOME");
+    if (moz5)
+    {
+      resultPath = strdup(moz5);
+      return resultPath;
+    }
+    else
+    {
+      static char buf[MAXPATHLEN];
+      int32 cookie = 0;
+      image_info info;
+      char *p;
+      *buf = 0;
+      if(get_next_image_info(0, &cookie, &info) == B_OK)
+      {
+        strcpy(buf, info.name);
+        if((p = strrchr(buf, '/')) != 0)
+        {
+          *p = 0;
+
+          resultPath = strdup(buf);
+          return resultPath;
+        }
+      }
+    }
+
+#endif
+    
+    return nsnull;
+}
+
+
 // Get the location of the GRE version we're compatible with from 
 // the registry
 //
@@ -121,14 +289,26 @@ nsGREDirServiceProvider::GetGREDirectoryPath()
 {
   char *pGreLocation = nsnull;
   
-  // If the xpcom library exists in the current working directory,
+  // If the xpcom library exists in the current process directory,
   // then we will not use any GRE.  The assumption here is that the GRE is in the
   // same directory as the executable.
+  char* cpd = GetCurrentProcessDirectory();
+  
+  if (cpd) {
+    char* xpcomLibPath= (char *)malloc(strlen(cpd) + sizeof(XPCOM_DLL) + sizeof(XPCOM_FILE_PATH_SEPARATOR));
+    sprintf(xpcomLibPath, "%s" XPCOM_FILE_PATH_SEPARATOR XPCOM_DLL, cpd);
+    
+    struct stat libStat;
+    int statResult = stat(xpcomLibPath, &libStat);
+    free (xpcomLibPath);
 
-  struct stat configStat;
-  if (stat(XPCOM_DLL, &configStat) != -1)
-    return nsnull;
-
+    if (statResult != -1) {
+      //found our xpcom lib in the current process directory
+      return cpd;
+    }
+    free(cpd);
+  }
+  
   // the Gecko bits that sit next to the application or in the LD_LIBRARY_PATH
   if (PR_GetEnv("USE_LOCAL_GRE"))
     return nsnull;
@@ -138,12 +318,12 @@ nsGREDirServiceProvider::GetGREDirectoryPath()
   if (path) {
     char* greConfHomePath= (char *)malloc(strlen(path) + sizeof(GRE_CONF_NAME) + sizeof(XPCOM_FILE_PATH_SEPARATOR));
     
-	sprintf(greConfHomePath, "%s" XPCOM_FILE_PATH_SEPARATOR GRE_CONF_NAME, path);
+    sprintf(greConfHomePath, "%s" XPCOM_FILE_PATH_SEPARATOR GRE_CONF_NAME, path);
     
-	pGreLocation = GetPathFromConfigFile(greConfHomePath);
-        free(greConfHomePath);
-        if (pGreLocation)
-          return pGreLocation;
+    pGreLocation = GetPathFromConfigFile(greConfHomePath);
+    free(greConfHomePath);
+    if (pGreLocation)
+      return pGreLocation;
   }
   
   path = PR_GetEnv("MOZ_GRE_CONF");
