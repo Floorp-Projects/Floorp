@@ -1707,14 +1707,9 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionError(const PRUnichar *pErrMsg, 
   NS_ENSURE_TRUE(smtpServer, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(m_logonRedirector, NS_ERROR_FAILURE);
 
-  // step (1) force a log off...
-  // logoff 
-  nsXPIDLCString userName;
-	smtpServer->GetUsername(getter_Copies(userName));
-  m_logonRedirector->Logoff(userName);
   m_logonRedirector = nsnull; // we don't care about it anymore
 	
-  // step (2) alert the user about the error
+  // step (1) alert the user about the error
   nsCOMPtr<nsIPrompt> dialog;
   if (m_runningURL && pErrMsg && pErrMsg[0]) 
   {
@@ -1723,11 +1718,11 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionError(const PRUnichar *pErrMsg, 
       dialog->Alert(nsnull, pErrMsg);
   }
 
-  // step (3) if they entered a bad password, forget about it!
+  // step (2) if they entered a bad password, forget about it!
   if (aBadPassword && smtpServer)
     smtpServer->ForgetPassword();
 
-  // step (4) we need to let the originator of the send url request know that an
+  // step (3) we need to let the originator of the send url request know that an
   // error occurred and we aren't sending the message...in our case, this will
   // force the user back into the compose window and they can try to send it 
   // again.
