@@ -3702,6 +3702,8 @@ nsFontMetricsGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
   return NS_OK;
 }
 
+#ifdef MOZ_MATHML
+
 nsresult
 nsFontMetricsGTK::GetBoundingMetrics(const char *aString, PRUint32 aLength,
                                      nsBoundingMetrics &aBoundingMetrics,
@@ -3850,6 +3852,8 @@ nsFontMetricsGTK::GetBoundingMetrics(const PRUnichar *aString,
 
     return NS_OK;
 }
+
+#endif /* MOZ_MATHML */
 
 nsresult
 nsFontMetricsGTK::GetTextDimensions (const PRUnichar* aString,

@@ -100,6 +100,7 @@ public:
                                 nsRenderingContextGTK *aContext,
                                 nsDrawingSurfaceGTK *aSurface) = 0;
 
+#ifdef MOZ_MATHML
     // These two functions get the bounding metrics for this handle,
     // updating the aBoundingMetrics in Points.  This means that the
     // caller will have to update them to twips before passing it
@@ -113,6 +114,7 @@ public:
                                         nsBoundingMetrics &aBoundingMetrics,
                                         PRInt32 *aFontID,
                                         nsRenderingContextGTK *aContext) = 0;
+#endif /* MOZ_MATHML */
 
     // Get a GdkFont for this handle, if there is one.  This can
     // return 0, which means there is no GdkFont associated with this

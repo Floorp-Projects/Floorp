@@ -184,6 +184,7 @@ public:
                                 nsRenderingContextGTK *aContext,
                                 nsDrawingSurfaceGTK *aSurface);
 
+#ifdef MOZ_MATHML
     virtual nsresult GetBoundingMetrics(const char *aString, PRUint32 aLength,
                                         nsBoundingMetrics &aBoundingMetrics,
                                         nsRenderingContextGTK *aContext);
@@ -192,6 +193,7 @@ public:
                                         nsBoundingMetrics &aBoundingMetrics,
                                         PRInt32 *aFontID,
                                         nsRenderingContextGTK *aContext);
+#endif /* MOZ_MATHML */
 
     virtual GdkFont* GetCurrentGDKFont(void);
 

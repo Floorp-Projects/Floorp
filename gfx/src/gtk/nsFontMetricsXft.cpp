@@ -68,11 +68,14 @@ public:
     gint       GetWidth8  (const char *aString, PRUint32 aLength);
     gint       GetWidth16 (const PRUnichar *aString, PRUint32 aLength);
 
+#ifdef MOZ_MATHML
     void       GetBoundingMetrics8  (const char *aString, PRUint32 aLength,
                                      nsBoundingMetrics &aBoundingMetrics);
     void       GetBoundingMetrics16 (const PRUnichar *aString,
                                      PRUint32 aLength,
                                      nsBoundingMetrics &aBoundingMetrics);
+#endif /* MOZ_MATHML */
+
     PRInt16    GetMaxAscent(void);
     PRInt16    GetMaxDescent(void);
 
@@ -683,6 +686,8 @@ nsFontMetricsXft::DrawString(const PRUnichar* aString, PRUint32 aLength,
     return NS_OK;
 }
 
+#ifdef MOZ_MATHML
+
 nsresult
 nsFontMetricsXft::GetBoundingMetrics(const char *aString, PRUint32 aLength,
                                      nsBoundingMetrics &aBoundingMetrics,
@@ -702,6 +707,8 @@ nsFontMetricsXft::GetBoundingMetrics(const PRUnichar *aString,
     NS_NOTREACHED("GetBoundingMetrics");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+#endif /* MOZ_MATHML */
 
 GdkFont*
 nsFontMetricsXft::GetCurrentGDKFont(void)
@@ -1511,6 +1518,7 @@ nsFontXft::GetWidth16(const PRUnichar *aString, PRUint32 aLength)
     return glyphInfo.xOff;
 }
 
+#ifdef MOZ_MATHML
 void
 nsFontXft::GetBoundingMetrics8 (const char *aString, PRUint32 aLength,
                                 nsBoundingMetrics &aBoundingMetrics)
@@ -1525,6 +1533,7 @@ nsFontXft::GetBoundingMetrics16 (const PRUnichar *aString,
 {
     NS_NOTREACHED("GetBoundingMetrics16");
 }
+#endif /* MOZ_MATHML */
 
 PRInt16
 nsFontXft::GetMaxAscent(void)
