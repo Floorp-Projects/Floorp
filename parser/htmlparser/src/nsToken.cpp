@@ -117,7 +117,7 @@ void CToken::DebugDumpToken(ostream& anOutputStream) {
   anOutputStream << "[" << GetClassName() << "] ";
   int i=0;
   for(i=0;i<mTextValue.Length();i++){
-    anOutputStream << char(mTextValue[i]);
+    anOutputStream << char(mTextValue.CharAt(i));
   }
   anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << endl;
 }

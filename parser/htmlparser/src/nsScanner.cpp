@@ -346,7 +346,7 @@ nsresult nsScanner::GetChar(PRUnichar& aChar) {
     result=Eof();
 
   if(NS_OK == result) {
-    aChar=mBuffer[(PRInt32)mOffset++];
+    aChar=mBuffer.CharAt(mOffset++);
   }
   return result;
 }
@@ -367,7 +367,7 @@ nsresult nsScanner::Peek(PRUnichar& aChar) {
     result=Eof();
 
   if(NS_OK == result) {
-    aChar=mBuffer[(PRInt32)mOffset];        
+    aChar=mBuffer.CharAt(mOffset); 
   }
   return result;
 }

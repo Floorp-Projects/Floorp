@@ -428,7 +428,7 @@ void nsHTMLToTXTSinkStream::UnicodeToTXTString(const nsString& aSrc)
     EnsureBufferSize(length);
     for (PRInt32 i = 0; i < length; i++)
     {
-      ch = aSrc[i];
+      ch = aSrc.CharAt(i);
       switch (ch)
       {  
         case CH_QUOT: ch = '"'; break;

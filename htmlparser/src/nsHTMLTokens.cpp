@@ -1391,13 +1391,13 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
   PRInt32 theRadix[2]={16,10};
 
   if(mTextValue.Length()>1) {
-    PRUnichar theChar0=mTextValue[0];
+    PRUnichar theChar0=mTextValue.CharAt(0);
     PRBool    isDigit0=nsString::IsDigit(theChar0);
 
     if(kHashsign==theChar0) {
       PRInt32 err=0;
       
-      PRUnichar theChar1=mTextValue[1];
+      PRUnichar theChar1=mTextValue.CharAt(1);
       PRBool    isDigit1=nsString::IsDigit(theChar1);
       value=mTextValue.ToInteger(&err,theRadix[isDigit1]);
       if(0==err) {
