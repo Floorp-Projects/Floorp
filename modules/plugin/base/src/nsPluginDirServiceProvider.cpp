@@ -215,7 +215,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
   *persistant = PR_TRUE;
 
 #if defined(XP_WIN)    
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID))
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (!prefs) return rv;
 
   if (nsCRT::strcmp(prop, NS_WIN_4DOTX_SCAN_KEY) == 0) {
