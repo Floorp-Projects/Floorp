@@ -2772,6 +2772,10 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
 {
   *_retval = nsnull;
 
+  if (!aRoot) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aRoot);
   if (NS_FAILED(rv)) {
     return rv;
