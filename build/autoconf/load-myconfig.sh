@@ -45,16 +45,26 @@ ac_add_options() {
     # Escape shell characters, space, tab, dollar, quote, backslash.
     _opt=`echo $_opt | sed -e 's/\([\ \	\$\"\\]\)/\\\\\1/g;'`
 
-    config_file_options="$config_file_options $_opt"
+    # Avoid adding duplicates
+    case "$ac_options" in
+      *"$_opt"* ) ;;
+      * ) myconfig_ac_options="$myconfig_ac_options $_opt" ;;
+    esac
   done
+}
+
+mk_add_options() {
+  # These options are for client.mk
+  # configure can safely ignore them.
+  :
 }
 
 ac_echo_options() {
   echo "Adding options from `pwd`/myconfig.sh:"
-  eval "set -- $config_file_options"
-  for opt
+  eval "set -- $myconfig_ac_options"
+  for _opt
   do
-    echo "  $opt"
+    echo "  $_opt"
   done
 }
 
@@ -62,7 +72,7 @@ ac_echo_options() {
 # Define load the options
 #
 ac_options=
-config_file_options=
+myconfig_ac_options=
 
 # Save the real command-line options
 for _opt
@@ -77,5 +87,5 @@ done
 
 ac_echo_options 1>&2
 
-eval "set -- $config_file_options $ac_options"
+eval "set -- $myconfig_ac_options $ac_options"
 
