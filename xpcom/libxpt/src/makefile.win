@@ -47,6 +47,6 @@ MODULE	= 	libxpt
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)
+export:: $(DLL)
 	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
 	$(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib

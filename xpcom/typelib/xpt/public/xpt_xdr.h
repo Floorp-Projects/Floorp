@@ -53,13 +53,13 @@ extern XPT_PUBLIC_API(PRBool)
 XPT_Do64(XPTCursor *cursor, PRInt64 *u64p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do32(XPTCursor *cursor, uint32 *u32p);
+XPT_Do32(XPTCursor *cursor, PRUint32 *u32p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do16(XPTCursor *cursor, uint16 *u16p);
+XPT_Do16(XPTCursor *cursor, PRUint16 *u16p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do8(XPTCursor *cursor, uint8 *u8p);
+XPT_Do8(XPTCursor *cursor, PRUint8 *u8p);
 
 /*
  * When working with bitfields, use the DoBits call with a uint8.
@@ -72,7 +72,7 @@ XPT_Do8(XPTCursor *cursor, uint8 *u8p);
  */
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoBits(XPTCursor *cursor, uint8 *u8p, int nbits);
+XPT_DoBits(XPTCursor *cursor, PRUint8 *u8p, int nbits);
 
 #define XPT_DO_BITS(curs, field, width, scr) (PR_TRUE)
 
@@ -95,33 +95,33 @@ typedef enum {
 
 struct XPTState {
     XPTMode          mode;
-    uint32           data_offset;
-    uint32           next_cursor[2];
+    PRUint32           data_offset;
+    PRUint32           next_cursor[2];
     XPTDatapool      *pool;
 };
 
 struct XPTDatapool {
     PLHashTable      *offset_map;
     char             *data;
-    uint32           count;
-    uint32           allocated;
+    PRUint32           count;
+    PRUint32           allocated;
 };
 
 struct XPTCursor {
     XPTState    *state;
     XPTPool     pool;
-    uint32      offset;
-    uint8       bits;
+    PRUint32      offset;
+    PRUint8       bits;
 };
 
 extern XPT_PUBLIC_API(XPTState *)
-XPT_NewXDRState(XPTMode mode, char *data, uint32 len);
+XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_MakeCursor(XPTState *state, XPTPool pool, uint32 len, XPTCursor *cursor);
+XPT_MakeCursor(XPTState *state, XPTPool pool, PRUint32 len, XPTCursor *cursor);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_SeekTo(XPTCursor *cursor, uint32 offset);
+XPT_SeekTo(XPTCursor *cursor, PRUint32 offset);
 
 extern XPT_PUBLIC_API(void)
 XPT_DestroyXDRState(XPTState *state);
@@ -131,26 +131,26 @@ extern XPT_PUBLIC_API(PRBool)
 XPT_UpdateFileLength(XPTState *state);
 
 extern XPT_PUBLIC_API(void)
-XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32 *len);
+XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, PRUint32 *len);
 
 /* set or get the data offset for the state, depending on mode */
 extern XPT_PUBLIC_API(void)
-XPT_DataOffset(XPTState *state, uint32 *data_offsetp);
+XPT_DataOffset(XPTState *state, PRUint32 *data_offsetp);
 
 extern XPT_PUBLIC_API(void)
-XPT_SetDataOffset(XPTState *state, uint32 data_offset);
+XPT_SetDataOffset(XPTState *state, PRUint32 data_offset);
 
-extern XPT_PUBLIC_API(uint32)
+extern XPT_PUBLIC_API(PRUint32)
 XPT_GetOffsetForAddr(XPTCursor *cursor, void *addr);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, uint32 offset);
+XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, PRUint32 offset);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_SetAddrForOffset(XPTCursor *cursor, uint32 offset, void *addr);
+XPT_SetAddrForOffset(XPTCursor *cursor, PRUint32 offset, void *addr);
 
 extern XPT_PUBLIC_API(void *)
-XPT_GetAddrForOffset(XPTCursor *cursor, uint32 offset);
+XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset);
 
 /* all data structures are big-endian */
 

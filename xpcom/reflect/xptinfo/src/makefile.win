@@ -65,6 +65,6 @@ MODULE	= 	xptinfo
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)
+install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
