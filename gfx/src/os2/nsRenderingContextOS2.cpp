@@ -1120,7 +1120,7 @@ void nsRenderingContextOS2::PMDrawRect( nsRect &rect, BOOL fill)
    {
       long lOps = DRO_OUTLINE;
       if( fill)
-         lOps |= DRO_FILL;
+         lOps = DRO_FILL;
    
       GpiBox( mSurface->mPS, lOps, ((PPOINTL)&rcl) + 1, 0, 0);
    }
@@ -1212,7 +1212,7 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFul
 
    if( bFull)
    {
-      long lOps = (bFilled) ? DRO_OUTLINEFILL : DRO_OUTLINE;
+      long lOps = (bFilled) ? DRO_FILL : DRO_OUTLINE;
 
       // draw ellipse
       GpiFullArc( mSurface->mPS, lOps, MAKEFIXED(1,0));
@@ -1228,9 +1228,12 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFul
       // draw an arc or a pie
       if( bFilled)
       {
+         long lLineType = GpiQueryLineType( mSurface->mPS);
+         GpiSetLineType( mSurface->mPS, LINETYPE_INVISIBLE);
          GpiBeginArea( mSurface->mPS, BA_BOUNDARY);
          GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0), StartAngle, SweepAngle);
          GpiEndArea( mSurface->mPS);
+         GpiSetLineType( mSurface->mPS, lLineType);
       }
       else
       {
