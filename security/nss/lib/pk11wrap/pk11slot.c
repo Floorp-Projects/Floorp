@@ -51,6 +51,9 @@
 #include "secerr.h"
 /*#include "secpkcs5.h" */
 
+#include "dev3hack.h"
+#include "pki3hack.h"
+
 
 /*************************************************************
  * local static and global data
@@ -722,6 +725,9 @@ PK11_Logout(PK11SlotInfo *slot)
     PK11_EnterSlotMonitor(slot);
     crv = PK11_GETTAB(slot)->C_Logout(slot->session);
     PK11_ExitSlotMonitor(slot);
+    if (slot->nssToken) {
+	   nssToken_DestroyCertList(slot->nssToken, PR_TRUE);
+    }
     if (crv != CKR_OK) {
 	PORT_SetError(PK11_MapError(crv));
 	return SECFailure;
@@ -1137,6 +1143,10 @@ PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx)
     }
     if (rv == SECSuccess) {
 	rv = pk11_CheckVerifyTest(slot);
+	if (rv == SECSuccess && slot->nssToken) {
+	    /* notify stan about the login */
+	    nssToken_LoadCerts(slot->nssToken);
+	}
     } else if (!attempt) PORT_SetError(SEC_ERROR_BAD_PASSWORD);
     return rv;
 }
