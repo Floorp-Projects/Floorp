@@ -87,7 +87,7 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
 	// option selected from menu.
    PRInt32 numEntries = 5;
    PRInt32 theIndex;
-   PRInt32 theMaxLength = 1;
+   PRInt32 theMaxLength = 100;
 
    CString shString;
 
@@ -110,8 +110,10 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
 	   QAOutput("theSessionHistory object wasn't created. No session history tests performed.", 2);
 	   return;
    }
-   else
+   else {
 	   QAOutput("theSessionHistory object was created.", 2);
+	   theSessionHistory->GetCount(&numEntries);
+   }
 
 	theSessionHistory->GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
 	if (!theHistoryEntry)
@@ -169,7 +171,7 @@ void CNsIHistory::RunAllTests()
 
    PRInt32 numEntries = 5;
    PRInt32 theIndex;
-   PRInt32 theMaxLength = 1;
+   PRInt32 theMaxLength = 100;
 
    CString shString;
 
@@ -190,9 +192,10 @@ void CNsIHistory::RunAllTests()
 	   QAOutput("theSessionHistory object wasn't created. No session history tests performed.", 2);
 	   return;
    }
-   else
+   else {
 	   QAOutput("theSessionHistory object was created.", 2);
-
+	   theSessionHistory->GetCount(&numEntries);
+   }
 
 		// test count attribute in nsISHistory.idl
    GetCountTest(theSessionHistory, &numEntries);
@@ -414,7 +417,7 @@ void CNsIHistory::RunAllHistoryEntryTests()
 {
    PRInt32 numEntries = 5;
    PRInt32 theIndex;
-   PRInt32 theMaxLength = 1;
+   PRInt32 theMaxLength = 100;
 
    CString shString;
 

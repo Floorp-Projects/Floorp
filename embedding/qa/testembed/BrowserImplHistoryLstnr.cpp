@@ -144,7 +144,7 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryPurge(PRInt32 theNumEntries, PRBool *notify
 	*notify = PR_TRUE;
 	FormatAndPrintOutput("OnHistoryPurge() notification = ", *notify, 1);
 
-	FormatAndPrintOutput("OnHistoryGotoIndex() theNumEntries = ", theNumEntries, 2);
+	FormatAndPrintOutput("OnHistoryPurge() theNumEntries = ", theNumEntries, 2);
 
 	return NS_OK;
 }
