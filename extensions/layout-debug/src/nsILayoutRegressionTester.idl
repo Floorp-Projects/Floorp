@@ -44,7 +44,7 @@ interface nsIDOMWindow;
 interface nsILocalFile;
 
 [scriptable, uuid(1B4CD090-0531-11d6-A876-00105A183419)]
-interface nsIFrameDebugObject : nsISupports
+interface nsILayoutRegressionTester : nsISupports
 {
 
   /**

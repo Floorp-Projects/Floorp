@@ -40,21 +40,21 @@
 #include "nsLayoutDebugCIID.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsDebugObject.h"
+#include "nsRegressionTester.h"
 #include "nsIGenericFactory.h"
 
 
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDebugObject)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegressionTester)
 
 
 
 static const nsModuleComponentInfo components[] =
 {
-  { "nsDebugObject",
-    NS_FRAME_DEBUG_OBJECT_CID,
-    "@mozilla.org/layout_debug/framedebugobject;1",
-    nsDebugObjectConstructor 
+  { "nsRegressionTester",
+    NS_REGRESSION_TESTER_CID,
+    "@mozilla.org/layout_debug/regressiontester;1",
+    nsRegressionTesterConstructor 
   }
 };
 

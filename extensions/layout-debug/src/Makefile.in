@@ -28,32 +28,39 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout_debug
 LIBRARY_NAME	= gkdebug
-EXPORT_LIBRARY = 1
+EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutDebugModule
 
 REQUIRES=	xpcom \
-					string \
-					debugobject\
-					windowwatcher\
-					docshell\
-					string \
-					dom\
-					gfx\
-					content\
-					necko\
-					layout\
-					widget \
-					locale \
-					view \
-					pref \
-					imglib2 \
-					unicharutil \
-					$(NULL)
+		string \
+		windowwatcher\
+		docshell\
+		string \
+		dom\
+		gfx\
+		content\
+		necko\
+		layout\
+		widget \
+		locale \
+		view \
+		pref \
+		imglib2 \
+		unicharutil \
+		$(NULL)
+
+XPIDLSRCS	= \
+		nsILayoutRegressionTester.idl \
+		$(NULL)
+
+EXPORTS		= \
+		nsLayoutDebugCIID.h \
+		$(NULL)
 
 CPPSRCS		= \
-		nsDebugObject.cpp \
 		nsDebugFactory.cpp \
+		nsRegressionTester.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

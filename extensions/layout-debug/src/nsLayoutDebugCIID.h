@@ -43,7 +43,7 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-#define NS_FRAME_DEBUG_OBJECT_CID \
+#define NS_REGRESSION_TESTER_CID \
 { 0x698c54f4, 0x4ea9, 0x11d7, \
 { 0x85, 0x9f, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 } }
 

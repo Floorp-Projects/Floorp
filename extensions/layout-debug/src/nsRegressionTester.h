@@ -19,12 +19,12 @@
  * Contributor(s):
  */
 
-#ifndef nsDebugObject_h__
-#define nsDebugObject_h__
+#ifndef nsRegressionTester_h__
+#define nsRegressionTester_h__
 
 #include "nsCOMPtr.h"
 
-#include "nsIFrameDebugObject.h"  
+#include "nsILayoutRegressionTester.h"  
 #include "nsILayoutDebugger.h"
 
 class nsIDOMWindow;
@@ -33,16 +33,16 @@ class nsIDocShell;
 class nsIDocShellTreeItem;
 
 //*****************************************************************************
-//***    nsDebugObject
+//***    nsRegressionTester
 //*****************************************************************************
-class  nsDebugObject : public nsIFrameDebugObject
+class  nsRegressionTester : public nsILayoutRegressionTester
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIFRAMEDEBUGOBJECT
+  NS_DECL_NSILAYOUTREGRESSIONTESTER
 
-  nsDebugObject();
-  virtual ~nsDebugObject();
+  nsRegressionTester();
+  virtual ~nsRegressionTester();
 
 protected:
   
@@ -66,4 +66,4 @@ protected:
 
 
 
-#endif /* nsDebugObject_h__ */
+#endif /* nsRegressionTester_h__ */
