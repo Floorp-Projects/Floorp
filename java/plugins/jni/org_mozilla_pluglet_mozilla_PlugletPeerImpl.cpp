@@ -104,7 +104,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_newSt
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_showStatus
     (JNIEnv *env, jobject jthis, jstring _msg) {
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
-    if (!instancePeer) {
+    if (!instancePeer
+        || !_msg) {
 	return;
     }
     const char *msg = NULL;
