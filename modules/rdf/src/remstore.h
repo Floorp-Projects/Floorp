@@ -41,8 +41,6 @@ XP_BEGIN_PROTOS
 
 RDFT		MakeRemoteStore (char* url);
 RDFT		MakeFileDB (char* url);
-PRBool		asEqual(Assertion as, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
-Assertion	makeNewAssertion (RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 void		freeAssertion (Assertion as);
 PRBool		remoteAssert3 (RDFFile fi, RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 Assertion	remoteStoreAdd (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
@@ -56,10 +54,10 @@ RDF_Cursor	remoteStoreGetSlotValues (RDFT mcf, RDF_Resource u, RDF_Resource s, R
 void *		remoteStoreNextValue (RDFT mcf, RDF_Cursor c);
 RDF_Error	remoteStoreDisposeCursor (RDFT mcf, RDF_Cursor c);
 void		gcRDFFile (RDFFile f);
-RDFFile		readRDFFile (char* url, RDF_Resource top, PRBool localp);
+void RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) ;
 void		possiblyRefreshRDFFiles ();
 
-static PRBool	fileReadp (char* url, PRBool mark);
+static PRBool	fileReadp (RDFT rdf, char* url, PRBool mark);
 static void	possiblyAccessFile (RDFT mcf, RDF_Resource u, RDF_Resource s, PRBool inversep);
 static RDFFile	leastRecentlyUsedRDFFile (RDF mcf);
 static PRBool	freeSomeRDFSpace (RDF mcf);

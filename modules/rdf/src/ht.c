@@ -913,7 +913,7 @@ newHTPaneDB()
 char *
 gNavCenterDataSources1[15] = 
 {
-	"rdf:localStore", "rdf:remoteStore", "rdf:history",
+	"rdf:localStore", "rdf:remoteStore", "rdf:remoteStore", "rdf:history",
 	 /* "rdf:ldap", */
 	"rdf:esftp", "rdf:mail",
 
@@ -924,6 +924,22 @@ gNavCenterDataSources1[15] =
 	"rdf:lfs",  "rdf:ht",
 	"rdf:columns",  NULL
 };
+
+RDF HTRDF_GetDB () {
+  RDF ans;
+  char* navCenterURL;
+ PREF_SetDefaultCharPref("browser.NavCenter", "http://rdf.netscape.com/rdf/navcntr.rdf");
+ PREF_CopyCharPref("browser.NavCenter", &navCenterURL);
+  if (!strchr(navCenterURL, ':')) {
+    navCenterURL = makeDBURL(navCenterURL);
+  } else {
+    copyString(navCenterURL);
+  }
+  *(gNavCenterDataSources1 + 1) = copyString(navCenterURL);
+  ans = RDF_GetDB(gNavCenterDataSources1);
+  freeMem(navCenterURL);
+  return ans;
+}
 
 
 
@@ -951,7 +967,7 @@ HT_NewPane (HT_Notification notify)
 			break;
 		}
 		ev->eventType = HT_EVENT_DEFAULT_NOTIFICATION_MASK;
-		pane->db = RDF_GetDB((char**)gNavCenterDataSources1);
+		pane->db = HTRDF_GetDB();
 		pane->rns = RDF_AddNotifiable(pane->db, htrdfNotifFunc, ev, pane);
 		freeMem(ev);
 
@@ -6839,7 +6855,8 @@ RDF_GetNavCenterDB()
 #define RDF_RELATED_LINKS 2
 #define FROM_PAGE 1
 #define GUESS_FROM_PREVIOUS_PAGE 2
-
+#define HTADD remoteStoreAdd
+#define HTDEL remoteStoreRemove
 
 HT_URLSiteMapAssoc *
 makeNewSMP (HT_Pane htPane, char* pUrl, char* sitemapUrl)
@@ -6872,6 +6889,7 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
 
 	
 	sp = RDFTNamed(htPane->db, "rdf:ht");
+	if (sp == NULL) return;
 	nu = RDF_GetResource(htPane->db, pSitemapUrl, 1);
 	nsmp = makeNewSMP(htPane, pUrl, pSitemapUrl);
         nsmp->sitemap = nu;
@@ -6889,10 +6907,10 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
 	
 	setContainerp(nu, 1);
     
-        nsmp->origin =  FROM_PAGE;
-        nsmp->onDisplayp = 1;
-	SCookAssert3(sp, nu, gCoreVocab->RDF_name, nm,  RDF_STRING_TYPE, 1);
-	SCookAssert3(sp, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Top, 
+    nsmp->origin =  FROM_PAGE;
+    nsmp->onDisplayp = 1;
+	HTADD(sp, nu, gCoreVocab->RDF_name, nm,  RDF_STRING_TYPE, 1);
+	HTADD(sp, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Top, 
                      RDF_RESOURCE_TYPE, 1);
 	 
 
@@ -6907,6 +6925,7 @@ RetainOldSitemaps (HT_Pane htPane, char *pUrl)
   RDFT			sp;
   
   sp = RDFTNamed(htPane->db, "rdf:ht");
+  if (sp == NULL) return;
   nsmp = htPane->smp;
   while (nsmp != NULL) {
     if ((nsmp->siteToolType == RDF_SITEMAP)) {
@@ -6918,13 +6937,13 @@ RetainOldSitemaps (HT_Pane htPane, char *pUrl)
             nsmp->sitemap = nu;
             nsmp->origin =  GUESS_FROM_PREVIOUS_PAGE;
             nsmp->onDisplayp = 1;
-            SCookAssert3(sp, nu, gCoreVocab->RDF_name, copyString(nsmp->name),  
+            HTADD(sp, nu, gCoreVocab->RDF_name, copyString(nsmp->name),  
                          RDF_STRING_TYPE, 1);
-            SCookAssert3(sp, nu, gCoreVocab->RDF_parent, 
+            HTADD(sp, nu, gCoreVocab->RDF_parent, 
                          gNavCenter->RDF_Top, RDF_RESOURCE_TYPE, 1);
           }
         } else if (nsmp->onDisplayp) {
-          SCookUnassert(sp, nsmp->sitemap, gCoreVocab->RDF_parent,
+          HTDEL(sp, nsmp->sitemap, gCoreVocab->RDF_parent,
                         gNavCenter->RDF_Top, RDF_RESOURCE_TYPE);
           nsmp->onDisplayp = 0;
         }
@@ -6945,7 +6964,7 @@ HT_ExitPage(HT_Pane htPane, char *pUrl)
   nsmp = htPane->sbp;
   while (nsmp != NULL) {    
     HT_URLSiteMapAssoc *next;
-    SCookUnassert(sp, nsmp->sitemap, gCoreVocab->RDF_parent,
+    HTDEL(sp, nsmp->sitemap, gCoreVocab->RDF_parent,
                   gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE);      
     next = nsmp->next;
     freeMem(nsmp->url);
@@ -7156,8 +7175,8 @@ HT_AddRelatedLinksFor(HT_Pane htPane, char *pUrl)
                 nsmp->next = htPane->sbp;
                 htPane->sbp = nsmp;
 		nsmp->siteToolType = RDF_RELATED_LINKS;
-		SCookAssert3(sp, nu, gCoreVocab->RDF_name, copyString(prov->name), RDF_STRING_TYPE, 1);
-		SCookAssert3(sp, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE, 1);
+		HTADD(sp, nu, gCoreVocab->RDF_name, copyString(prov->name), RDF_STRING_TYPE, 1);
+		HTADD(sp, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE, 1);
 		prov = prov->next;
 		freeMem(buffer);
 	}

@@ -43,7 +43,7 @@ extern	int	RDF_RELATEDLINKSNAME;
 
 	/* globals */
 PLHashTable     *hostHash = 0;
-RDF grdf = NULL;
+RDFT grdf = NULL;
 RDFT gHistoryStore = 0;
 PRBool ByDateOpened = 0;
 
@@ -66,7 +66,7 @@ char   *intermediateList[] = {
 
 
 void
-collateHistory (RDF r, RDF_Resource u, PRBool byDateFlag)
+collateHistory (RDFT r, RDF_Resource u, PRBool byDateFlag)
 {
   HASHINFO hash = { 4*1024, 0, 0, 0, 0, 0};
   DBT key, data;
@@ -103,7 +103,7 @@ collateHistory (RDF r, RDF_Resource u, PRBool byDateFlag)
 
 
 void
-collateOneHist (RDF r, RDF_Resource u, char* url, char* title, time_t lastAccessDate,
+collateOneHist (RDFT r, RDF_Resource u, char* url, char* title, time_t lastAccessDate,
 		time_t firstAccessDate, uint32 numAccesses, PRBool byDateFlag)
 {
   RDF_Resource		hostUnit, urlUnit;
@@ -126,17 +126,17 @@ collateOneHist (RDF r, RDF_Resource u, char* url, char* title, time_t lastAccess
   if (hostUnit != urlUnit) remoteAddParent(urlUnit, hostUnit);
   remoteStoreAdd(gRemoteStore, urlUnit, gWebData->RDF_lastVisitDate,
 		 (void *)lastAccessDate, RDF_INT_TYPE, 1);
-  remoteStoreAdd(gRemoteStore, urlUnit, gWebData->RDF_firstVisitDate,
+  remoteStoreAdd(gHistoryStore, urlUnit, gWebData->RDF_firstVisitDate,
 		 (void *)firstAccessDate, RDF_INT_TYPE, 1);
   if (numAccesses==0)	++numAccesses;
-  remoteStoreAdd(gRemoteStore, urlUnit, gWebData->RDF_numAccesses,
+  remoteStoreAdd(gHistoryStore, urlUnit, gWebData->RDF_numAccesses,
 		 (void *)numAccesses, RDF_INT_TYPE, 1);
 }
 
 
 
 RDF_Resource
-hostUnitOfURL (RDF r, RDF_Resource top, RDF_Resource nu, char* title)
+hostUnitOfURL (RDFT r, RDF_Resource top, RDF_Resource nu, char* title)
 {
   char host[100];
   char* url =  resourceID(nu);
@@ -166,7 +166,7 @@ hostUnitOfURL (RDF r, RDF_Resource top, RDF_Resource nu, char* title)
       } else if (existing == top) {
 	return hostResource;
       } else {
-	remoteStoreRemove(gRemoteStore, existing, gCoreVocab->RDF_parent, top, RDF_RESOURCE_TYPE);
+	remoteStoreRemove(gHistoryStore, existing, gCoreVocab->RDF_parent, top, RDF_RESOURCE_TYPE);
 	histAddParent(existing, hostResource);
 	histAddParent(hostResource, top);
 	PL_HashTableAdd(hostHash, hostResource, top);
@@ -197,7 +197,7 @@ hourRange(char *buffer, struct tm *theTm)
 
 
 RDF_Resource
-hostUnitOfDate (RDF r, RDF_Resource u, time_t lastAccessDate)
+hostUnitOfDate (RDFT r, RDF_Resource u, time_t lastAccessDate)
 {
 	RDF_Resource		node = NULL, parentNode;
 /*
@@ -294,9 +294,9 @@ hostUnitOfDate (RDF r, RDF_Resource u, time_t lastAccessDate)
 		}
 		setContainerp(node, 1);
 		setResourceType(node, HISTORY_RT);
-		remoteStoreAdd(gRemoteStore, node, gCoreVocab->RDF_parent,
+		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_parent,
 				parentNode, RDF_RESOURCE_TYPE, 1);
-		remoteStoreAdd(gRemoteStore, node, gCoreVocab->RDF_name,
+		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_name,
 				copyString(weekBuffer), RDF_STRING_TYPE, 1);
 		parentNode = node;
 	}
@@ -314,7 +314,7 @@ hostUnitOfDate (RDF r, RDF_Resource u, time_t lastAccessDate)
 		setResourceType(node, HISTORY_RT);
 		histAddParent(node, parentNode);
 		sprintf(bigBuffer,"%s - %s",weekBuffer,dayBuffer);
-		remoteStoreAdd(gRemoteStore, node, gCoreVocab->RDF_name,
+		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_name,
 				copyString(dayBuffer), RDF_STRING_TYPE, 1);
 		parentNode = node;
 	}
@@ -328,36 +328,14 @@ hostUnitOfDate (RDF r, RDF_Resource u, time_t lastAccessDate)
 		}
 		setContainerp(node, 1);
 		setResourceType(node, HISTORY_RT);
-		remoteStoreAdd(gRemoteStore, node, gCoreVocab->RDF_parent,
+		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_parent,
 				parentNode, RDF_RESOURCE_TYPE, 1);
-		remoteStoreAdd(gRemoteStore, node, gCoreVocab->RDF_name,
+		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_name,
 				copyString(hourBuffer), RDF_STRING_TYPE, 1);
 		parentNode = node;
 	}
 	return (node);
 }
-
-
-
-void
-deleteCurrentSitemaps (char *address)
-{
-  RDF_Resource          children[40];
-  int16                n = 0;
-  RDF_Cursor c = remoteStoreGetSlotValues(gRemoteStore, gNavCenter->RDF_Sitemaps, gCoreVocab->RDF_parent, 
-				RDF_RESOURCE_TYPE,1, 1);
-  RDF_Resource child;
-  while (c && (child = remoteStoreNextValue(gRemoteStore, c))) {
-    children[n++] = child;
-  }
-  remoteStoreDisposeCursor(gRemoteStore, c);
-  n--;
-  while (n > -1) {
-    remoteStoreRemove(gRemoteStore, children[n--], 
-		      gCoreVocab->RDF_parent, gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE);
-  }
-}
-
 
 
 PR_PUBLIC_API(void)
@@ -455,11 +433,11 @@ histAddParent (RDF_Resource child, RDF_Resource parent)
   RDF_ValueType type = RDF_RESOURCE_TYPE;
   nextAs = prevAs = child->rarg1;
   while (nextAs != null) {
-    if (asEqual(nextAs, child, s, parent, type)) return null;
+    if (asEqual(gHistoryStore, nextAs, child, s, parent, type)) return null;
     prevAs = nextAs;
     nextAs = nextAs->next;
   }
-  newAs = makeNewAssertion(child, s, parent, type, 1);
+  newAs = makeNewAssertion(gHistoryStore, child, s, parent, type, 1);
   if (prevAs == null) {
     child->rarg1 = newAs;
   } else {
@@ -492,7 +470,7 @@ histAddParent (RDF_Resource child, RDF_Resource parent)
   }
   sendNotifications2(gHistoryStore, RDF_ASSERT_NOTIFY, child, s, parent, type, 1);
   /* XXX have to mark the entire subtree XXX */
-  /*  sendNotifications(gRemoteStore->rdf, RDF_ASSERT_NOTIFY, child, s, parent, type, 1); */
+  /*  sendNotifications(gHistoryStore->rdf, RDF_ASSERT_NOTIFY, child, s, parent, type, 1); */
 }
 
 
@@ -518,7 +496,7 @@ historyUnassert (RDFT hst,  RDF_Resource u, RDF_Resource s, void* v,
     while (n > 0) {
 		n = n - 1;
 		if (parents[n]) {
-		    Assertion nas = remoteStoreRemove (gRemoteStore, u, gCoreVocab->RDF_parent, 
+		    Assertion nas = remoteStoreRemove (gHistoryStore, u, gCoreVocab->RDF_parent, 
 			     parents[n], RDF_RESOURCE_TYPE);
 			freeMem(nas);
 		} 
@@ -528,34 +506,12 @@ historyUnassert (RDFT hst,  RDF_Resource u, RDF_Resource s, void* v,
   return 0;
 }
 
-
-
-RDF_Cursor
-historyStoreGetSlotValuesInt (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  
-					 PRBool inversep, PRBool tv)
-{
-    if ((type == RDF_RESOURCE_TYPE) && (resourceType(u) == HISTORY_RT) && inversep &&
-	(s == gCoreVocab->RDF_parent)) {
-      return remoteStoreGetSlotValuesInt(mcf, u, s, type, inversep, tv);
-    } else {
-      return NULL;
-    }
+void HistPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) {
+  if ((s ==  gCoreVocab->RDF_parent) && inversep && (rdf == gHistoryStore) &&
+      ((u == gNavCenter->RDF_HistoryByDate) ||  (u ==  gNavCenter->RDF_HistoryBySite))) {
+    collateHistory(rdf, u, (u == gNavCenter->RDF_HistoryByDate));
+  } 
 }
-
-
-
-PRBool
-historyStoreHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv)
-{
-  if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE) && (resourceType((RDF_Resource)v) == HISTORY_RT))
-    {
-      remoteStoreHasAssertionInt(mcf, u, s, v, type, tv);
-    } else {
-      return 0;
-    }
-}
-
-
 
 RDFT
 MakeHistoryStore (char* url)
@@ -566,10 +522,11 @@ MakeHistoryStore (char* url)
       ntr->assert = NULL;
       ntr->unassert = historyUnassert;
       ntr->getSlotValue = remoteStoreGetSlotValue;
-      ntr->getSlotValues = historyStoreGetSlotValuesInt;
-      ntr->hasAssertion = historyStoreHasAssertion;
+      ntr->getSlotValues = remoteStoreGetSlotValues;
+      ntr->hasAssertion = remoteStoreHasAssertion;
       ntr->nextValue = remoteStoreNextValue;
       ntr->disposeCursor = remoteStoreDisposeCursor;
+      ntr->possiblyAccessFile = HistPossiblyAccessFile;
       gHistoryStore = ntr;
       ntr->url = copyString(url);
       return ntr;
@@ -579,7 +536,7 @@ MakeHistoryStore (char* url)
 
 
 
-
+/*
 void
 dumpHist ()
 {
@@ -602,3 +559,5 @@ dumpHist ()
   fclose(fp);
   (*db->close)(db);
 }
+
+*/

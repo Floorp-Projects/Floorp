@@ -159,7 +159,7 @@ typedef RDF_Error (*destroyProc)(struct RDF_TranslatorStruct*);
 typedef RDF_Cursor (*arcLabelsOutProc)(RDFT r, RDF_Resource u);
 typedef RDF_Cursor (*arcLabelsInProc)(RDFT r, RDF_Resource u);
 typedef PRBool (*fAssert1Proc) (RDFFile  file, RDFT mcf,  RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv) ;
-
+typedef void (*accessFileProc) (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) ;
 struct RDF_ListStruct {
   struct RDF_DBStruct*   rdf;
   struct RDF_ListStruct* next;
@@ -182,6 +182,7 @@ struct RDF_TranslatorStruct {
   disposeResourceProc disposeResource;
   arcLabelsInProc   arcLabelsIn;
   arcLabelsInProc   arcLabelsOut;
+  accessFileProc    possiblyAccessFile;
 };
 
 
@@ -252,7 +253,7 @@ struct RDF_FileStruct {
 RDF_Resource nextFindValue (RDF_Cursor c) ;
 PRBool isTypeOf (RDF rdf, RDF_Resource u,  RDF_Resource v); 
 RDF getRDFDB (void);
-RDFFile readRDFFile (char* url, RDF_Resource top, PRBool localp);
+RDFFile readRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT rdf);
 void sendNotifications (RDF rdf, RDF_EventType opType, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv, char* ds);
 void sendNotifications2 (RDFT rdf, RDF_EventType opType, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv) ;
 RDF_Error exitRDF (RDF rdf);
@@ -270,8 +271,9 @@ uint8  resourceType (RDF_Resource r);
 void   setResourceType (RDF_Resource r, uint8 type);
 char* getBaseURL (const char* url) ;
 void freeNamespaces (RDFFile f) ;
-PRBool asEqual(Assertion as, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
-Assertion makeNewAssertion (RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
+PRBool		asEqual(RDFT r, Assertion as, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
+Assertion	makeNewAssertion (RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
+
 
 
 void readResourceFile(RDF rdf, RDF_Resource u);

@@ -30,7 +30,7 @@
 #include "bmk2mcf.h"
 
 	/* globals */
-RDFFile rdfFiles = 0;
+
 
 
 
@@ -47,6 +47,7 @@ MakeRemoteStore (char* url)
       ntr->hasAssertion = remoteStoreHasAssertion;
       ntr->nextValue = remoteStoreNextValue;
       ntr->disposeCursor = remoteStoreDisposeCursor;
+      ntr->possiblyAccessFile = RDFFilePossiblyAccessFile ;
       gRemoteStore = ntr;
       ntr->url = copyString(url);
       return ntr;
@@ -54,25 +55,44 @@ MakeRemoteStore (char* url)
   } else return NULL;
 }
 
+PLHashTable* RDFFileDBHash = 0;
+
+RDFT existingRDFFileDB (char* url) {  
+  if (RDFFileDBHash == 0) 
+    RDFFileDBHash = PL_NewHashTable(100, PL_HashString, PL_CompareStrings, PL_CompareValues, NULL, NULL);
+  return  PL_HashTableLookup(RDFFileDBHash, url);
+}
 
 
 RDFT
 MakeFileDB (char* url)
 {
   if (endsWith(".rdf", url) || endsWith(".mcf", url)) {
-    if (gRemoteStore == 0) MakeRemoteStore("rdf:remoteStore");
-    if (!fileReadp(url, 1)) readRDFFile(url, NULL, 1);
-    return gRemoteStore;
+    RDFT ntr = existingRDFFileDB(url);
+    if (ntr) return ntr;    
+    ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct));
+    ntr->assert = NULL;
+    ntr->unassert = NULL;
+    ntr->getSlotValue = remoteStoreGetSlotValue;
+    ntr->getSlotValues = remoteStoreGetSlotValues;
+    ntr->hasAssertion = remoteStoreHasAssertion;
+    ntr->nextValue = remoteStoreNextValue;
+    ntr->disposeCursor = remoteStoreDisposeCursor;
+    ntr->possiblyAccessFile = RDFFilePossiblyAccessFile ;
+    ntr->url = copyString(url);
+    PL_HashTableAdd(RDFFileDBHash, url, ntr);
+    readRDFFile(url, NULL, 1, ntr);
+    return ntr;
   } else return NULL;
 }
 
 
 
 PRBool
-asEqual(Assertion as, RDF_Resource u, RDF_Resource s, void* v, 
+asEqual(RDFT r, Assertion as, RDF_Resource u, RDF_Resource s, void* v, 
 	       RDF_ValueType type)
 {
-  return ((as->u == u) && (as->s == s) && (as->type == type) && 
+  return ((as->db == r) && (as->u == u) && (as->s == s) && (as->type == type) && 
 	  ((as->value == v) || 
 	   ((type == RDF_STRING_TYPE) && (strcmp(v, as->value) == 0))));
 }
@@ -80,7 +100,7 @@ asEqual(Assertion as, RDF_Resource u, RDF_Resource s, void* v,
 
 
 Assertion
-makeNewAssertion (RDF_Resource u, RDF_Resource s, void* v, 
+makeNewAssertion (RDFT r, RDF_Resource u, RDF_Resource s, void* v, 
 			    RDF_ValueType type, PRBool tv)
 {
   Assertion newAs = (Assertion) getMem(sizeof(struct RDF_AssertionStruct));
@@ -89,6 +109,10 @@ makeNewAssertion (RDF_Resource u, RDF_Resource s, void* v,
   newAs->value = v;
   newAs->type = type;
   newAs->tv = tv;
+  newAs->db = r;
+  if (strcmp(r->url, "rdf:history")) {
+    int n = 0;
+  }
   return newAs;
 }
 
@@ -127,11 +151,11 @@ remoteStoreAdd (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v,
   nextAs = prevAs = u->rarg1;
   
   while (nextAs != null) {
-    if (asEqual(nextAs, u, s, v, type)) return null;
+    if (asEqual(mcf, nextAs, u, s, v, type)) return null;
     prevAs = nextAs;
     nextAs = nextAs->next;
   }
-  newAs = makeNewAssertion(u, s, v, type, tv);
+  newAs = makeNewAssertion(mcf, u, s, v, type, tv);
   if (prevAs == null) {
     u->rarg1 = newAs;
   } else {
@@ -163,7 +187,7 @@ remoteStoreRemove (RDFT mcf, RDF_Resource u, RDF_Resource s,
   PRBool found = false;
   nextAs = prevAs = u->rarg1;
   while (nextAs != null) {
-    if (asEqual(nextAs, u, s, v, type)) {
+    if (asEqual(mcf, nextAs, u, s, v, type)) {
       if (prevAs == null) {
 	u->rarg1 = nextAs->next;
       } else {
@@ -198,9 +222,10 @@ remoteStoreRemove (RDFT mcf, RDF_Resource u, RDF_Resource s,
 
 
 static PRBool
-fileReadp (char* url, PRBool mark)
+fileReadp (RDFT rdf, char* url, PRBool mark)
 {
   RDFFile f;
+  RDFFile rdfFiles = (RDFFile) rdf->pdata;
   uint n = 0;
   for (f = rdfFiles; (f != NULL) ; f = f->next) {
     if (urlEquals(url, f->url)) {
@@ -216,46 +241,32 @@ fileReadp (char* url, PRBool mark)
 static void
 possiblyAccessFile (RDFT mcf, RDF_Resource u, RDF_Resource s, PRBool inversep)
 {
-  if ((s ==  gCoreVocab->RDF_parent) && inversep &&
-      ((u == gNavCenter->RDF_HistoryByDate) ||  (u ==  gNavCenter->RDF_HistoryBySite))) {
-    collateHistory(mcf->rdf->rdf, u, (u == gNavCenter->RDF_HistoryByDate));
-  } else if ((resourceType(u) == RDF_RT) && 
-	     (s == gCoreVocab->RDF_parent) && (containerp(u)) && (strstr(resourceID(u), ":/") !=NULL) 
-	       && (!fileReadp(resourceID(u), true))) {
-    RDFFile newFile = readRDFFile( resourceID(u), u, false);
+  if (mcf->possiblyAccessFile) (*(mcf->possiblyAccessFile))(mcf, u, s, inversep);
+}
+
+void RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) {
+  if ((resourceType(u) == RDF_RT) && (strstr(rdf->url, ".rdf") || strstr(rdf->url, ".mcf")) &&
+	  (strstr(resourceID(u), ".rdf") || strstr(resourceID(u), ".mcf")) &&
+      (s == gCoreVocab->RDF_parent) && (containerp(u))) {
+    RDFFile newFile = readRDFFile( resourceID(u), u, false, rdf);
     if(newFile) newFile->lastReadTime = PR_Now();
   }
 }
 
 
 
-PRBool
-remoteStoreHasAssertionInt (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv)
-{
-  Assertion nextAs;
-  nextAs = u->rarg1;
-  while (nextAs != null) {
-    if (asEqual(nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
-    nextAs = nextAs->next;
-  }
-  possiblyAccessFile(mcf, u, s, 0);
-  return false;
-}
-
-
 
 PRBool
 remoteStoreHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv)
 {
-  if (!((s == gCoreVocab->RDF_parent) && 
-	(type == RDF_RESOURCE_TYPE) && 
-	((resourceType((RDF_Resource)v) == HISTORY_RT) ||
-	 (resourceType((RDF_Resource)v) == ES_RT) ||
-	 (resourceType((RDF_Resource)v) == FTP_RT)))) {
-      return remoteStoreHasAssertionInt(mcf, u, s, v, type, tv);
-    } else {
-      return 0;
-    }
+  Assertion nextAs;
+  nextAs = u->rarg1;
+  while (nextAs != null) {
+    if (asEqual(mcf, nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
+    nextAs = nextAs->next;
+  }
+  possiblyAccessFile(mcf, u, s, 0);
+  return false;
 }
 
 
@@ -266,7 +277,7 @@ remoteStoreGetSlotValue (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType
   Assertion nextAs;
   nextAs = (inversep ? u->rarg2 : u->rarg1);
   while (nextAs != null) {
-    if ((nextAs->s == s) && (nextAs->tv == tv) && (nextAs->type == type)) {
+    if ((nextAs->db == mcf) && (nextAs->s == s) && (nextAs->tv == tv) && (nextAs->type == type)) {
       void* ans = (inversep ? nextAs->u : nextAs->value);
       if (type == RDF_STRING_TYPE) {
 #ifdef DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
@@ -310,7 +321,7 @@ remoteStoreGetSlotValuesInt (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_Value
 RDF_Cursor
 remoteStoreGetSlotValues (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv)
 {
-  if (resourceType(u) == HISTORY_RT) return NULL;
+ 
   return remoteStoreGetSlotValuesInt(mcf, u, s, type, inversep, tv);
 }
 
@@ -321,11 +332,11 @@ remoteStoreNextValue (RDFT mcf, RDF_Cursor c)
 {
   while (c->pdata != null) {
     Assertion as = (Assertion) c->pdata;
-    if ((as->s == c->s) && (as->tv == c->tv) && (c->type == as->type)) {
+    if ((as->db == mcf) && (as->s == c->s) && (as->tv == c->tv) && (c->type == as->type)) {
       if (c->s == gCoreVocab->RDF_slotsHere) {
-	c->value = as->s;
+        c->value = as->s;
       } else { 
-	c->value = (c->inversep ? as->u : as->value);
+        c->value = (c->inversep ? as->u : as->value);
       }
       c->pdata = (c->inversep ? as->invNext : as->next);
       return c->value;
@@ -377,14 +388,12 @@ void
 gcRDFFile (RDFFile f)
 {
   int16 n = 0;
-  RDFFile f1;
+  RDFFile f1 = (RDFFile) f->db->pdata;
 
-  f1 = rdfFiles;
-  
   if (f->locked) return;
   
   if (f == f1) {
-    rdfFiles = f->next;
+    f->db->pdata = f->next;
   } else {
     RDFFile prev = f1;
     while (f1 != NULL) {
@@ -399,7 +408,7 @@ gcRDFFile (RDFFile f)
   
   while (n < f->assertionCount) {
     Assertion as = *(f->assertionList + n);
-    remoteStoreRemove(gRemoteStore, as->u, as->s, as->value, as->type);
+    remoteStoreRemove(f->db, as->u, as->s, as->value, as->type);
     freeAssertion(as);
     *(f->assertionList + n) = NULL;
     n++;
@@ -432,30 +441,35 @@ freeSomeRDFSpace (RDF mcf)
 
 
 RDFFile
-readRDFFile (char* url, RDF_Resource top, PRBool localp)
+readRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
 {
-  RDFFile newFile = makeRDFFile(url, top, localp);
-  if (rdfFiles) {  
-    newFile->next = rdfFiles;
-    rdfFiles = newFile;
+  if ((!strstr(url, ":/")) ||
+      (fileReadp(db, url, true))) {
+    return NULL;
   } else {
-    rdfFiles = newFile;
-  }
-  newFile->db = gRemoteStore;
-  newFile->assert = remoteAssert3;
-  if (top) {
-    if (resourceType(top) == RDF_RT) {
-      if (strstr(url, ".mcf")) {
-	newFile->fileType = RDF_MCF;
-      } else {
-	newFile->fileType = RDF_XML;
-      }
+    RDFFile newFile = makeRDFFile(url, top, localp);  
+    if (db->pdata) {  
+      newFile->next = (RDFFile) db->pdata;
+      db->pdata = newFile;
     } else {
-      newFile->fileType = resourceType(top);
-    }
+      db->pdata = (RDFFile) newFile;
   }
-  beginReadingRDFFile(newFile);
-  return newFile;
+    newFile->assert = remoteAssert3;
+    if (top) {
+      if (resourceType(top) == RDF_RT) {
+        if (strstr(url, ".mcf")) {
+          newFile->fileType = RDF_MCF;
+        } else {
+          newFile->fileType = RDF_XML;
+      }
+      } else {
+        newFile->fileType = resourceType(top);
+      }
+    }
+    newFile->db = db;
+    beginReadingRDFFile(newFile);
+    return newFile;
+  }
 }
 
 
@@ -463,7 +477,7 @@ readRDFFile (char* url, RDF_Resource top, PRBool localp)
 void
 possiblyRefreshRDFFiles ()
 {
-  RDFFile f = rdfFiles;
+  RDFFile f = (RDFFile)gRemoteStore->pdata;
   PRTime tm = PR_Now();  
   while (f != NULL) {
     if (f->expiryTime != NULL) {
@@ -474,7 +488,7 @@ possiblyRefreshRDFFiles ()
       int64 result;
       LL_SUB(result, tm, *expiry);
       if ((!LL_IS_ZERO(result) && LL_GE_ZERO(result)))
-#endif /* !HAVE_LONG_LONG */
+#endif
 	{
       gcRDFFile (f);
       initRDFFile(f);
@@ -483,5 +497,37 @@ possiblyRefreshRDFFiles ()
     }
 	f = f->next;
   }
-  /*  flushBookmarks(); */
+
 }
+
+
+void  SCookPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) {
+	if ((resourceType(u) == RDF_RT) && (strcmp(rdf->url, "rdf:ht") ==0) &&
+	  (strstr(resourceID(u), ".rdf") || strstr(resourceID(u), ".mcf")) &&
+	     (s == gCoreVocab->RDF_parent) && 
+        (containerp(u))) {
+    RDFFile newFile = readRDFFile( resourceID(u), u, false, rdf);
+    if(newFile) newFile->lastReadTime = PR_Now();
+  }
+}
+
+
+RDFT
+MakeSCookDB (char* url)
+{
+  if (startsWith("rdf:scook:", url) || (startsWith("rdf:ht", url))) {
+    RDFT ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct));
+    ntr->assert = NULL;
+    ntr->unassert = NULL;
+    ntr->getSlotValue = remoteStoreGetSlotValue;
+    ntr->getSlotValues = remoteStoreGetSlotValues;
+    ntr->hasAssertion = remoteStoreHasAssertion;
+    ntr->nextValue = remoteStoreNextValue;
+    ntr->disposeCursor = remoteStoreDisposeCursor;
+    ntr->possiblyAccessFile = RDFFilePossiblyAccessFile ;
+    ntr->url = copyString(url);
+    return ntr;
+  } else return NULL;
+}
+
+

@@ -41,7 +41,6 @@ CSRCS		= bmk2mcf.c \
 		  pm2rdf.c \
 		  es2mcf.c \
 		  columns.c \
-		  scook.c \
 		  rdfjava.c \
 		  mcf.c \
 		  ht.c \

@@ -43,7 +43,7 @@ static PRBool sRDFInitedB = PR_FALSE;
 
 
 char * gNavCenterDataSources[15] = 
-{"rdf:localStore", "rdf:remoteStore", "rdf:history",
+{"rdf:localStore", "rdf:remoteStore", "rdf:remoteStore", "rdf:history",
  /* "rdf:ldap", */
  "rdf:esftp",
  "rdf:lfs",
@@ -69,6 +69,7 @@ RDF_Init(RDF_InitParams params)
   resourceHash = PL_NewHashTable(500, PL_HashString, PL_CompareStrings, PL_CompareValues,  
 				 NULL, NULL);
   RDFglueInitialize();
+  MakeRemoteStore("rdf:remoteStore");
   createVocabs();
   sRDFInitedB = PR_TRUE;
 
@@ -136,27 +137,3 @@ RDF_Shutdown ()
   return 0;
 }
 
-
-
-PR_PUBLIC_API(PRBool)
-RDF_CanAssert(RDF r, RDF_Resource u, RDF_Resource s, 
-		    void* v, RDF_ValueType type)
-{
-	return true;
-}
-
-
-
-PR_PUBLIC_API(PRBool)
-RDF_CanAssertFalse(RDF r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
-{
-	return true;
-}
-
-
-
-PR_PUBLIC_API(PRBool)
-RDF_CanUnassert(RDF r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
-{
-	return true;
-}

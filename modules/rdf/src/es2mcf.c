@@ -29,6 +29,7 @@
 
 	/* externs */
 extern	RDF	gNCDB;
+#define ESFTPRT(x) ((resourceType((RDF_Resource)x) == ES_RT) || (resourceType((RDF_Resource)x) == FTP_RT))
 
 
 
@@ -38,24 +39,24 @@ MakeESFTPStore (char* url)
   RDFT ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct));
   ntr->assert = ESAssert;
   ntr->unassert = ESUnassert;
-  ntr->getSlotValue = ESGetSlotValue;
-  ntr->getSlotValues = ESGetSlotValues;
-  ntr->hasAssertion = ESHasAssertion;
-  ntr->nextValue = ESNextValue;
-  ntr->disposeCursor = ESDisposeCursor;
+  ntr->getSlotValue = remoteStoreGetSlotValue;
+  ntr->getSlotValues = remoteStoreGetSlotValues;
+  ntr->hasAssertion = remoteStoreHasAssertion;
+  ntr->nextValue = remoteStoreNextValue;
+  ntr->disposeCursor = remoteStoreDisposeCursor;
+  ntr->possiblyAccessFile =  ESFTPPossiblyAccessFile;
   ntr->url = copyString(url);
   return ntr;
 }
 
 
-
-PRBool
-ESFTPRT (RDF_Resource u)
-{
-  return ((resourceType(u) == ES_RT) ||
-	  (resourceType(u) == FTP_RT));
+void ESFTPPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) {
+  if (((resourceType(u) == ES_RT) ||	  (resourceType(u) == FTP_RT)) &&
+             (s == gCoreVocab->RDF_parent) && (containerp(u))) {
+    char* id =  resourceID(u);
+    readRDFFile((resourceType(u) == ES_RT ? &id[4] : id), u, false, rdf);
+   }
 }
-
 
 
 PRBool
@@ -87,173 +88,6 @@ ESUnassert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
 }
 
 
-
-PRBool
-ESDBAdd (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, 
-		RDF_ValueType type)
-{
-  Assertion nextAs, prevAs, newAs; 
-  if ((s == gCoreVocab->RDF_instanceOf) && (v == gWebData->RDF_Container)) {
-    setContainerp(u, true);
-    return 1;
-  }
- 	
-  nextAs = prevAs = u->rarg1;
-  while (nextAs != null) {
-    if (asEqual(nextAs, u, s, v, type)) return 1;
-    prevAs = nextAs;
-    nextAs = nextAs->next;
-  }
-  newAs = makeNewAssertion(u, s, v, type, 1);
-  if (prevAs == null) {
-    u->rarg1 = newAs;
-  } else {
-    prevAs->next = newAs;
-  }
-  if (type == RDF_RESOURCE_TYPE) {
-    nextAs = prevAs = ((RDF_Resource)v)->rarg2;
-    while (nextAs != null) {
-      prevAs = nextAs;
-      nextAs = nextAs->invNext;
-    }
-    if (prevAs == null) {
-      ((RDF_Resource)v)->rarg2 = newAs;
-    } else {
-      prevAs->invNext = newAs;
-    }
-  }
-  sendNotifications2(rdf, RDF_ASSERT_NOTIFY, u, s, v, type, 1);
-  return true;
-}
-
-
-
-PRBool
-ESDBRemove (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
-{
-  Assertion nextAs, prevAs,  ans;
-  PRBool found = false;
-  nextAs = prevAs = u->rarg1;
-  while (nextAs != null) {
-    if (asEqual(nextAs, u, s, v, type)) {
-      if (prevAs == null) {
-	u->rarg1 = nextAs->next;
-      } else {
-	prevAs->next = nextAs->next;
-      }
-      found = true;
-      ans = nextAs;
-      break;
-    }
-    prevAs = nextAs;
-    nextAs = nextAs->next; 
-  }
-  if (found == false) return false;
-  if (type == RDF_RESOURCE_TYPE) {
-    nextAs = prevAs = ((RDF_Resource)v)->rarg2;
-    while (nextAs != null) {
-      if (nextAs == ans) {
-	if (prevAs == nextAs) {
-	  ((RDF_Resource)v)->rarg2 =  nextAs->invNext;
-	} else {
-	  prevAs->invNext = nextAs->invNext;
-	}
-      }
-      prevAs = nextAs;
-      nextAs = nextAs->invNext;
-    }
-  }
-  sendNotifications2(rdf, RDF_DELETE_NOTIFY, u, s, v, type, 1);
-  return true;
-}
-
-
-
-PRBool
-ESHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, 
-		       RDF_ValueType type, PRBool tv)
-{
-	Assertion	nextAs;
-
-	if (!ESFTPRT(u)) return 0;
-
-	nextAs = u->rarg1;
-	while (nextAs != NULL)
-	{
-		if (asEqual(nextAs, u, s, v, type) && (nextAs->tv == tv))
-		{
-			return(true);
-		}
-		nextAs = nextAs->next;
-	}
-	possiblyAccessES(rdf, u, s, false);
-	return false;
-}
-
-
-
-void *
-ESGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,
-		PRBool inversep,  PRBool tv)
-{
-	if (!ESFTPRT(u)) return NULL;
-
-	if ((s == gCoreVocab->RDF_name) && (type == RDF_STRING_TYPE) && (tv))
-	{
-		char *pathname, *name = NULL;
-		int16 n,len;
-
-		if (pathname = copyString(resourceID(u)))
-		{
-			len = strlen(pathname);
-			if (pathname[len-1] == '/')  pathname[--len] = '\0';
-			n = revCharSearch('/', pathname);
-			name = unescapeURL(&pathname[n+1]);
-			freeMem(pathname);
-		}
-		return(name);
-	}
-	else
-	if (u->rarg1 == NULL) possiblyAccessES(rdf, u, s, inversep);
-	return null;
-}
-
-
-
-RDF_Cursor
-ESGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s,
-		RDF_ValueType type,  PRBool inversep, PRBool tv)
-{
-  Assertion as;
-  if (!ESFTPRT(u)) return 0;
-  as  = (inversep ? u->rarg2 : u->rarg1);
-  if (as == null) {
-    possiblyAccessES(rdf, u, s, inversep);
-    return null;
-  }
-  return NULL;
-}
-
-
-
-void *
-ESNextValue (RDFT mcf, RDF_Cursor c)
-{
-  return null;
-}
-
-
-
-RDF_Error
-ESDisposeCursor (RDFT mcf, RDF_Cursor c)
-{
-  freeMem(c);
-  return noRDFErr;
-}
-
-
-
-/** To be written **/
 
 
 
@@ -380,7 +214,7 @@ esFreeFEData(_esFEData *feData)
 
 
 
-  /** go tell the directory that child got added to parent **/
+/** go tell the directory that child got added to parent **/
 void
 ESAddChild (RDF_Resource parent, RDF_Resource child)
 {
@@ -451,18 +285,6 @@ ESRemoveChild (RDF_Resource parent, RDF_Resource child)
 
 
 void
-possiblyAccessES(RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
-{
-   if ((ESFTPRT(u)) && 
-       (s == gCoreVocab->RDF_parent) && (containerp(u))) {
-     char* id =  resourceID(u);
-     readRDFFile((resourceType(u) == ES_RT ? &id[4] : id), u, false);
-   }
-}
-
-
-
-void
 parseNextESFTPLine (RDFFile f, char* line)
 {
   int16 i1, i2;
@@ -496,10 +318,7 @@ parseNextESFTPLine (RDFFile f, char* line)
   ru = RDF_GetResource(NULL, url, 1);
   setResourceType(ru, resourceType(f->top));
   if (directoryp) setContainerp(ru, 1);
-/*
-  remoteStoreAdd(gRemoteStore, ru, gCoreVocab->RDF_name, NET_UnEscape(line), RDF_STRING_TYPE, 1);
-*/
-  remoteStoreAdd(gRemoteStore, ru, gCoreVocab->RDF_parent, f->top, RDF_RESOURCE_TYPE, 1);
+  addSlotValue(f, ru, gCoreVocab->RDF_parent, f->top, RDF_RESOURCE_TYPE, 1);
 }
 
 
@@ -543,4 +362,5 @@ parseNextESFTPBlob(NET_StreamClass *stream, char* blob, int32 size)
   }
   return(size);
 }
+
 

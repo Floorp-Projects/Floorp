@@ -220,6 +220,31 @@ RDF_AssertFalse (RDF rdf, RDF_Resource u, RDF_Resource  s, void* value, RDF_Valu
 
 
 PR_PUBLIC_API(PRBool)
+RDF_CanAssert(RDF r, RDF_Resource u, RDF_Resource s, 
+		    void* v, RDF_ValueType type)
+{
+	return true;
+}
+
+
+
+PR_PUBLIC_API(PRBool)
+RDF_CanAssertFalse(RDF r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
+{
+	return true;
+}
+
+
+
+PR_PUBLIC_API(PRBool)
+RDF_CanUnassert(RDF r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
+{
+	return true;
+}
+
+
+
+PR_PUBLIC_API(PRBool)
 RDF_Unassert (RDF rdf, RDF_Resource u, RDF_Resource s, void* value, RDF_ValueType type)
 {
   PRBool allok = 1;
@@ -263,7 +288,7 @@ makeNewID ()
 	id = (char *)getMem(ID_BUF_SIZE);
 
 #ifdef HAVE_LONG_LONG
-	PR_snprintf(id, ID_BUF_SIZE, "%u", (double)tm);
+	PR_snprintf(id, ID_BUF_SIZE, "%1.0f", (double)tm);
 #else
 	LL_L2D(doubletm, tm);
 	PR_snprintf(id, ID_BUF_SIZE, "%1.0f", doubletm);
@@ -274,7 +299,7 @@ makeNewID ()
 	{
 #ifdef HAVE_LONG_LONG
 		tm = tm + (PR_MSEC_PER_SEC * 60); /* fix me - not sure what the increment should be */
-		PR_snprintf(id, ID_BUF_SIZE, "%u", (double)tm);
+		PR_snprintf(id, ID_BUF_SIZE, "%1.0f", (double)tm);
 #else
 		int64 incr;
 		LL_I2L(incr, (PR_MSEC_PER_SEC * 60));

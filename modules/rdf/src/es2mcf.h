@@ -41,6 +41,7 @@ XP_BEGIN_PROTOS
 RDFT		MakeESFTPStore (char* url);
 _esFEData *     esMakeFEData(RDF_Resource parent, RDF_Resource child, int method);
 void            esFreeFEData(_esFEData *feData);
+void ESFTPPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) ;
 RDF_Error	ESInit (RDFT ntr);
 PRBool		ESFTPRT (RDF_Resource u);
 PRBool		ESAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);

@@ -99,11 +99,11 @@ SCookAssert (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v,
   Assertion nextAs, prevAs, newAs; 
   nextAs = prevAs = getArg1(mcf, u);
   while (nextAs != null) {
-    if (asEqual(nextAs, u, s, v, type)) return null;
+    if (asEqual(mcf, nextAs, u, s, v, type)) return null;
     prevAs = nextAs;
     nextAs = nextAs->next;
   }
-  newAs = makeNewAssertion(u, s, v, type, tv);
+  newAs = makeNewAssertion(mcf, u, s, v, type, tv);
   if (prevAs == null) {
     setArg1(mcf, u, newAs);
   } else {
@@ -147,7 +147,7 @@ SCookRemove (RDFT mcf, RDF_Resource u, RDF_Resource s,
   PRBool found = false;
   nextAs = prevAs = getArg1(mcf, u);
   while (nextAs != null) {
-    if (asEqual(nextAs, u, s, v, type)) {
+    if (asEqual(mcf, nextAs, u, s, v, type)) {
       if (prevAs == nextAs) {
 	setArg1(mcf, u, nextAs->next);
       } else {
@@ -189,7 +189,7 @@ SCookHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueT
   Assertion nextAs;
   nextAs = getArg1(mcf, u);
   while (nextAs != null) {
-    if (asEqual(nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
+    if (asEqual(mcf, nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
     nextAs = nextAs->next;
   }
   possiblyAccessSCookFile(mcf, u, s, 0);
@@ -410,32 +410,30 @@ possiblyAccessSCookFile (RDFT mcf, RDF_Resource u, RDF_Resource s, PRBool invers
   }
 }
 
+void  SCookPossiblyAccessFile1 (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) {
+	if ((resourceType(u) == RDF_RT) && (strcmp(rdf->url, "rdf:ht") ==0) &&
+	  (strstr(resourceID(u), ".rdf") || strstr(resourceID(u), ".mcf")) &&
+	     (s == gCoreVocab->RDF_parent) && 
+        (containerp(u))) {
+    RDFFile newFile = readRDFFile( resourceID(u), u, false, rdf);
+    if(newFile) newFile->lastReadTime = PR_Now();
+  }
+}
 
 
 RDFT
-MakeSCookDB (char* url)
+MakeSCookDB1 (char* url)
 {
   if (startsWith("rdf:scook:", url) || (startsWith("rdf:ht", url))) {
     RDFT ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct));
-    SCookDB sk = (SCookDB)getMem(sizeof(SCookDBStruct));    
-    ntr->pdata = sk;
-    sk->db     = ntr;
-    sk->lhash = PL_NewHashTable(500, idenHash, PL_CompareValues, PL_CompareValues,  NULL, NULL);
-    sk->rhash = PL_NewHashTable(500, idenHash, PL_CompareValues, PL_CompareValues,  NULL, NULL);
-    ntr->assert = (startsWith("rdf:scook", url) ? SCookAssert3 : SCookAssert1);
-    ntr->unassert = SCookUnassert;
-    ntr->getSlotValue = SCookGetSlotValue;
-    ntr->getSlotValues = SCookGetSlotValues;
-    ntr->hasAssertion = SCookHasAssertion;
-    ntr->nextValue = SCookNextValue;
-    ntr->disposeCursor = SCookDisposeCursor;
-    if (startsWith("rdf:scook:", url)) {
-        sk->rf = makeRDFFile(makeSCookPathname(&url[10]), NULL, 0);    
-        sk->rf->db = (RDFT)ntr;
-        sk->rf->assert = SCookAssert2;
-	sk->rf->localp = 1;
-        beginReadingRDFFile(sk->rf);
-	}
+    ntr->assert = NULL;
+    ntr->unassert = NULL;
+    ntr->getSlotValue = remoteStoreGetSlotValue;
+    ntr->getSlotValues = remoteStoreGetSlotValues;
+    ntr->hasAssertion = remoteStoreHasAssertion;
+    ntr->nextValue = remoteStoreNextValue;
+    ntr->disposeCursor = remoteStoreDisposeCursor;
+    ntr->possiblyAccessFile = RDFFilePossiblyAccessFile ;
     ntr->url = copyString(url);
     return ntr;
   } else return NULL;
