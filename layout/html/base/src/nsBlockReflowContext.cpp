@@ -41,6 +41,7 @@
 #include "nsSpaceManager.h"
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"
+#include "nsIFrameManager.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"
 #include "nsHTMLReflowCommand.h"
@@ -291,6 +292,14 @@ ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth, nsMa
   }
 }
 
+static void
+nsPointDtor(nsIPresContext *aPresContext, nsIFrame *aFrame,
+             nsIAtom *aPropertyName, void *aPropertyValue)
+{
+  nsPoint *point = NS_STATIC_CAST(nsPoint*, aPropertyValue);
+  delete point;
+}
+
 nsresult
 nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
                                   PRBool              aApplyTopMargin,
@@ -373,6 +382,23 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   }
 
   aComputedOffsets = aFrameRS.mComputedOffsets;
+  if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
+    nsIFrameManager *frameManager = mPresContext->GetFrameManager();
+    nsPoint *offsets;
+    frameManager->GetFrameProperty(mFrame,
+                                   nsLayoutAtoms::computedOffsetProperty, 0,
+                                   (void**)&offsets);
+    if (offsets)
+      offsets->MoveTo(aComputedOffsets.left, aComputedOffsets.top);
+    else {
+      offsets = new nsPoint(aComputedOffsets.left, aComputedOffsets.top);
+      if (offsets)
+        frameManager->SetFrameProperty(mFrame,
+                                       nsLayoutAtoms::computedOffsetProperty,
+                                       offsets, nsPointDtor);
+    }
+  }
+
   aFrameRS.mLineLayout = nsnull;
   if (!aIsAdjacentWithTop) {
     aFrameRS.mFlags.mIsTopOfPage = PR_FALSE;  // make sure this is cleared
@@ -452,6 +478,16 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     }
   }
 
+   // Compute the translation to be used for adjusting the spacemanagager
+   // coordinate system for the frame.  The spacemanager coordinates are
+   // <b>inside</b> the callers border+padding, but the x/y coordinates
+   // are not (recall that frame coordinates are relative to the parents
+   // origin and that the parents border/padding is <b>inside</b> the
+   // parent frame. Therefore we have to subtract out the parents
+   // border+padding before translating.
+   nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
+   nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
+ 
   // If the element is relatively positioned, then adjust x and y accordingly
   if (NS_STYLE_POSITION_RELATIVE == aFrameRS.mStyleDisplay->mPosition) {
     x += aFrameRS.mComputedOffsets.left;
@@ -477,15 +513,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   }
 #endif
 
-  // Adjust spacemanager coordinate system for the frame. The
-  // spacemanager coordinates are <b>inside</b> the callers
-  // border+padding, but the x/y coordinates are not (recall that
-  // frame coordinates are relative to the parents origin and that the
-  // parents border/padding is <b>inside</b> the parent
-  // frame. Therefore we have to subtract out the parents
-  // border+padding before translating.
-  nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
-  nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
   mOuterReflowState.mSpaceManager->Translate(tx, ty);
 
   // See if this is the child's initial reflow and we are supposed to

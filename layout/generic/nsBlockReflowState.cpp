@@ -484,9 +484,25 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
   } else if (aLine->IsBlock()) {
     nsBlockFrame *kid = nsnull;
     aLine->mFirstChild->QueryInterface(kBlockFrameCID, (void**)&kid);
-    if (kid) {
-      nscoord kidx = kid->mRect.x, kidy = kid->mRect.y;
-      mSpaceManager->Translate(kidx, kidy);
+    // don't recover any state inside a block that has its own space
+    // manager (we don't currently have any blocks like this, though,
+    // thanks to our use of extra frames for 'overflow')
+    if (kid && !(kid->GetStateBits() & NS_BLOCK_SPACE_MGR)) {
+      nscoord tx = kid->mRect.x, ty = kid->mRect.y;
+
+      // If the element is relatively positioned, then adjust x and y
+      // accordingly so that we consider relatively positioned frames
+      // at their original position.
+      if (NS_STYLE_POSITION_RELATIVE == kid->GetStyleDisplay()->mPosition) {
+        nsPoint *offsets;
+        if (NS_OK == mPresContext->GetFrameManager()->GetFrameProperty(kid,
+               nsLayoutAtoms::computedOffsetProperty, 0, (void**)&offsets)) {
+          tx -= offsets->x;
+          ty -= offsets->y;
+        }
+      }
+ 
+      mSpaceManager->Translate(tx, ty);
       for (nsBlockFrame::line_iterator line = kid->begin_lines(),
                                    line_end = kid->end_lines();
            line != line_end;
@@ -495,7 +511,7 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
         // moving relative to their parent block, only relative to
         // the space manager.
         RecoverFloats(line, 0);
-      mSpaceManager->Translate(-kidx, -kidy);
+      mSpaceManager->Translate(-tx, -ty);
     }
   }
 }
@@ -966,8 +982,6 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache* aFloatCache,
   else {
     isLeftFloat = PR_FALSE;
     if (NS_UNCONSTRAINEDSIZE != mAvailSpaceRect.width) {
-      nsIFrame* prevInFlow;
-      floatFrame->GetPrevInFlow(&prevInFlow);
       if (prevInFlow) {
         region.x = prevRect.x;
       }
