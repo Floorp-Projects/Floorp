@@ -103,7 +103,7 @@ CPPSRCS		= \
 		$(NULL)
 
 
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 STACKWALK_SRC_LCSRCS =               \
 		nsStackFrameUnix.cpp \
 		nsStackFrameUnix.h   \
@@ -276,13 +276,13 @@ endif
 
 SRCS_IN_OBJDIR=1 
 
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 GARBAGE         += $(STACKWALK_SRC_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
 endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 export:: $(STACKWALK_CPPSRCS)
 	$(INSTALL) $^ .
 endif
