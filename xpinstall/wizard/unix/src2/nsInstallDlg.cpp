@@ -639,7 +639,8 @@ nsInstallDlg::PerformInstall()
     // run post-install applications to complete installation
     if (sPostInstallRun)
     {
-        MajorProgressCB("", 1, 1, ACT_COMPLETE);
+        if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+            MajorProgressCB("", 1, 1, ACT_COMPLETE);
         RunApps(sPostInstallRun, 1);
         FreeRunAppList(sPostInstallRun);
     }
