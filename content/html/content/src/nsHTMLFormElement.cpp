@@ -106,7 +106,13 @@ public:
                             nsEventStatus* aEventStatus);
 
 protected:
+  nsresult DoSubmitOrReset(nsIPresContext* aPresContext,
+                           nsEvent* aEvent,
+                           PRInt32 aMessage);
+
   nsFormControlList*       mControls;
+  PRPackedBool             mGeneratingSubmit;
+  PRPackedBool             mGeneratingReset;
 };
 
 // nsFormControlList
@@ -235,7 +241,9 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
 }
 
 
-nsHTMLFormElement::nsHTMLFormElement()
+nsHTMLFormElement::nsHTMLFormElement():
+  mGeneratingSubmit(PR_FALSE),
+  mGeneratingReset(PR_FALSE)
 {
   mControls = new nsFormControlList(this);
   NS_IF_ADDREF(mControls);
@@ -327,17 +335,12 @@ NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
 NS_IMETHODIMP
 nsHTMLFormElement::Submit()
 {
-  // Generate submit event
+  // Submit without calling event handlers. (bug 76694)
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
-    nsFormEvent event;
-    event.eventStructType = NS_FORM_EVENT;
-    event.message         = NS_FORM_SUBMIT;
-    event.originator      = nsnull;
-    nsEventStatus status  = nsEventStatus_eIgnore;
-    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_SUBMIT);
   }
   return rv;
 }
@@ -345,17 +348,12 @@ nsHTMLFormElement::Submit()
 NS_IMETHODIMP
 nsHTMLFormElement::Reset()
 {
-  // Generate reset event
+  // Reset without calling event handlers.
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
-    nsFormEvent event;
-    event.eventStructType = NS_FORM_EVENT;
-    event.message         = NS_FORM_RESET;
-    event.originator      = nsnull;
-    nsEventStatus status  = nsEventStatus_eIgnore;
-    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_RESET);
   }
   return rv;
 }
@@ -419,6 +417,22 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEvent);
+
+  // Ignore recursive calls to submit and reset
+  if (NS_FORM_SUBMIT == aEvent->message) {
+    if (mGeneratingSubmit) {
+      return NS_OK;
+    }
+    mGeneratingSubmit = PR_TRUE;
+  }
+  else if (NS_FORM_RESET == aEvent->message) {
+    if (mGeneratingReset) {
+      return NS_OK;
+    }
+    mGeneratingReset = PR_TRUE;
+  }
+
   nsresult ret = nsGenericHTMLContainerElement::HandleDOMEvent(aPresContext,
                                                                aEvent,
                                                                aDOMEvent,
@@ -432,50 +446,69 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
       case NS_FORM_RESET:
       case NS_FORM_SUBMIT:
       {
-        // Make sure the presentation is up-to-date
-        nsCOMPtr<nsIDocument> doc;
-        GetDocument(*getter_AddRefs(doc));
-        if (doc) {
-          doc->FlushPendingNotifications();
-        }
-
-        nsCOMPtr<nsIPresShell> shell;
-        aPresContext->GetShell(getter_AddRefs(shell));
-        if (shell) {
-          nsIFrame* frame;
-          shell->GetPrimaryFrameFor(this, &frame);
-          if (frame) {
-            nsIFormManager* formMan = nsnull;
-            ret = frame->QueryInterface(NS_GET_IID(nsIFormManager),
-                                        (void**)&formMan);
-            if (formMan) {
-              if (NS_FORM_RESET == aEvent->message) {
-                ret = formMan->OnReset(aPresContext);
-              }
-              else {
-                nsIFrame *originatingFrame = nsnull;
-
-                // Get the originating frame (failure is non-fatal)
-                if (aEvent) {
-                  if (NS_FORM_EVENT == aEvent->eventStructType) {
-                    nsIContent *originator = ((nsFormEvent *)aEvent)->originator;
-                    if (originator) {
-                      shell->GetPrimaryFrameFor(originator, &originatingFrame);
-                    }
-                  }
-                }
-
-                ret = formMan->OnSubmit(aPresContext, originatingFrame);
-              }
-            }
-          }
-        }
+        ret = DoSubmitOrReset(aPresContext, aEvent, aEvent->message);
       }
       break;
     }
   }
 
+  if (NS_FORM_SUBMIT == aEvent->message) {
+    mGeneratingSubmit = PR_FALSE;
+  }
+  else if (NS_FORM_RESET == aEvent->message) {
+    mGeneratingReset = PR_FALSE;
+  }
+
   return ret;
+}
+
+nsresult
+nsHTMLFormElement::DoSubmitOrReset(nsIPresContext* aPresContext,
+                                   nsEvent* aEvent,
+                                   PRInt32 aMessage) {
+  NS_ENSURE_ARG_POINTER(aPresContext);
+
+  // Make sure the presentation is up-to-date
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(*getter_AddRefs(doc));
+  if (doc) {
+    doc->FlushPendingNotifications();
+  }
+
+  // Get the form manager
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  NS_ENSURE_TRUE(shell, NS_OK);
+
+  nsIFrame* frame = nsnull;
+  shell->GetPrimaryFrameFor(this, &frame);
+  NS_ENSURE_TRUE(frame, NS_OK);
+
+  nsIFormManager* formMan = nsnull;
+  frame->QueryInterface(NS_GET_IID(nsIFormManager), (void**)&formMan);
+  NS_ENSURE_TRUE(formMan, NS_OK);
+
+  // Submit or Reset the form
+  nsresult rv = NS_OK;
+  if (NS_FORM_RESET == aMessage) {
+    rv = formMan->OnReset(aPresContext);
+  }
+  else if (NS_FORM_SUBMIT == aMessage) {
+    nsIFrame *originatingFrame = nsnull;
+
+    // Get the originating frame (failure is non-fatal)
+    if (aEvent) {
+      if (NS_FORM_EVENT == aEvent->eventStructType) {
+        nsIContent *originator = ((nsFormEvent *)aEvent)->originator;
+        if (originator) {
+          shell->GetPrimaryFrameFor(originator, &originatingFrame);
+        }
+      }
+    }
+
+    rv = formMan->OnSubmit(aPresContext, originatingFrame);
+  }
+  return rv;
 }
 
 // nsIForm
