@@ -328,7 +328,7 @@ Rights Reserved.
           </rule>
         </template>
       </menu>
-      <menu value="&copyMsgMenu.label;" id="copyMenu" datasources="rdf:null" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menu value="&copyMsgMenu.label;" id="copyMenu" datasources="rdf:null"  rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <menupopup/>
 		<template>
           <rule iscontainer="true" isempty="false">
