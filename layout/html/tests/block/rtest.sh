@@ -50,13 +50,12 @@ else
   MOZ_OBJ=$MOZ_TEST_BASE/mozilla/
 fi
 
-w1='uname | grep WIN'
+w1=`uname | grep WIN`
 if [ "$w1" = "" ]; then
  MOZ_TEST_VIEWER="${MOZ_OBJ}dist/bin/mozilla-viewer.sh -- -d 500"
 else
  MOZ_TEST_VIEWER="${MOZ_OBJ}dist/bin/viewer.exe"
- if test -f $MOZ_TEST_VIEWER; then
- else
+ if test ! -f $MOZ_TEST_VIEWER; then
   MOZ_TEST_VIEWER="${MOZ_OBJ}dist/win32_d.obj/bin/viewer.exe"
  fi
 fi
