@@ -254,6 +254,14 @@ nsHTMLImageElement::GetImageFrame(nsImageFrame** aImageFrame)
   nsCOMPtr<nsIPresContext> context;
   nsCOMPtr<nsIPresShell> shell;
   
+  if (mInner.mDocument) {
+    // Make sure the presentation is up-to-date
+    result = mInner.mDocument->FlushPendingNotifications();
+    if (NS_FAILED(result)) {
+      return result;
+    }
+  }
+  
   result = nsGenericHTMLElement::GetPresContext(this, 
                                                 getter_AddRefs(context));
   if (NS_FAILED(result)) {

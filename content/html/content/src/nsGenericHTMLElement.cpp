@@ -1592,6 +1592,10 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
    // Get the document
   if (NS_OK == aContent->GetDocument(doc)) {
     if (nsnull != doc) {
+      // Cause a flushing of notifications, so we get
+      // up-to-date presentation information
+      doc->FlushPendingNotifications();
+
        // Get presentation shell 0
       nsIPresShell* presShell = doc->GetShellAt(0);
       if (nsnull != presShell) {

@@ -310,6 +310,9 @@ nsHTMLFormElement::Submit()
   nsIDocument* doc = nsnull;
   nsresult res = GetDocument(doc);
   if (NS_SUCCEEDED(res) && doc) {
+    // Make sure the presentation is up-to-date
+    doc->FlushPendingNotifications();
+
     nsIPresShell *shell = doc->GetShellAt(0);
     if (nsnull != shell) {
       nsIFrame* frame;
@@ -344,6 +347,9 @@ nsHTMLFormElement::Reset()
   nsIDocument* doc = nsnull; // Strong
   nsresult res = GetDocument(doc);
   if (NS_SUCCEEDED(res) && doc) {
+    // Make sure the presentation is up-to-date
+    doc->FlushPendingNotifications();
+
     nsIPresShell *shell = doc->GetShellAt(0); // Strong
     if (nsnull != shell) {
       nsIFrame* frame;

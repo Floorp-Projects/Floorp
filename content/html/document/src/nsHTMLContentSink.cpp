@@ -170,6 +170,7 @@ public:
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD NotifyError(const nsParserError* aError);
+  NS_IMETHOD FlushPendingNotifications();
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
@@ -4251,6 +4252,17 @@ HTMLContentSink::NotifyError(const nsParserError* aError)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HTMLContentSink::FlushPendingNotifications()
+{
+  /* XXX This is temporarily commented out so that this change can be tested locally.
+  nsresult result = NS_OK;
+  if (mCurrentContext) {
+    result = mCurrentContext->FlushTags();
+  }
+  */
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 HTMLContentSink::DoFragment(PRBool aFlag) 

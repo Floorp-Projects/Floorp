@@ -281,6 +281,11 @@ NS_WITH_SERVICE(nsIJVMManager, jvm, nsIJVMManager::GetCID(), &rv);
 if (NS_SUCCEEDED(rv)) {
 	// nsresult rv = NS_OK;
 	if (!mReflectedApplet) {
+    // 0. Make sure the presentation is up-to-date
+    if (mInner.mDocument) {
+      mInner.mDocument->FlushPendingNotifications();
+    }
+
 		// 1. get the script object corresponding to the <APPLET> element itself.
 		JSObject* elementObject = nsnull;
 		rv = mInner.GetScriptObject(aContext, (void**)&elementObject);

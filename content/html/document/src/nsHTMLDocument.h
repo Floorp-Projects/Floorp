@@ -109,6 +109,7 @@ public:
   NS_IMETHOD ContentRemoved(nsIContent* aContainer,
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer);
+  NS_IMETHOD FlushPendingNotifications();
 
   // nsIDOMDocument interface
   NS_DECL_IDOMDOCUMENT

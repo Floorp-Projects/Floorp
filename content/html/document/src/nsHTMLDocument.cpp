@@ -1167,6 +1167,26 @@ nsHTMLDocument::ContentRemoved(nsIContent* aContainer,
   return nsDocument::ContentRemoved(aContainer, aChild, aIndexInContainer);
 }
 
+NS_IMETHODIMP 
+nsHTMLDocument::FlushPendingNotifications()
+{
+  nsresult result = NS_OK;
+  if (mParser) {
+    nsCOMPtr<nsIContentSink> sink;
+    
+    // XXX Ack! Parser doesn't addref sink before passing it back
+    sink = mParser->GetContentSink();
+    if (sink) {
+      result = sink->FlushPendingNotifications();
+    }
+  }
+  if (NS_SUCCEEDED(result)) {
+    result = nsDocument::FlushPendingNotifications();
+  }
+
+  return result;
+}
+
 //
 // nsIDOMDocument interface implementation
 //
